@@ -1,0 +1,15 @@
+## make
+CMakeFiles
+*/CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+makefile
+build*
+prebuilt
+
+## windows build process
+/deps
+/MSVC*
+
+lib
