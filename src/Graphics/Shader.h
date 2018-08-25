@@ -5,6 +5,9 @@
 #include "OpenGL.h"
 
 #include <vector>
+#include <cstdlib>
+#include <cstring>
+#include <cstdio>
 
 namespace OpenBlack
 {

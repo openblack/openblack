@@ -3,6 +3,8 @@
 #include <LH3D/LHOSFile.h>
 #include <LH3D/oldLH3DIsland.h>
 
+#include <stdexcept>
+
 using namespace OpenBlack;
 
 LandIsland::LandIsland()

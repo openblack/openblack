@@ -1,13 +1,13 @@
-#include <lh3d/oldLH3DIsland.h>
+#include <LH3D/oldLH3DIsland.h>
 
 #define GLEW_STATIC
 #include <GL/glew.h>
-#include <gl/GLU.h>
+#include <GL/glu.h>
 
 #include <stdio.h>
 #include <stdexcept>
 #include <vector>
-#include <lh3d/LHOSFile.h>
+#include <LH3D/LHOSFile.h>
 
 #include <string>
 

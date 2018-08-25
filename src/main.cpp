@@ -1,6 +1,9 @@
 #include <Game.h>
 #include <SDL.h>
+#include <memory>
+#ifdef _WIN32
 #include <Windows.h>
+#endif // defined(_WIN32)
 
 int main(int argc, char **argv)
 {
