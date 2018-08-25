@@ -7,6 +7,7 @@ Porting this to LandIsland.h
 
 #include <stdint.h>
 #include <vector>
+#include <cstring>
 #include <Graphics/Texture2D.h>
 #include <Graphics/Texture2DArray.h>
 

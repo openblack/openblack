@@ -1,8 +1,131 @@
-#include <lh3d/LHOSFile.h>
+#include <LH3D/LHOSFile.h>
 
 #include <stdexcept>
 #include <sstream>
 #include <cassert>
+
+#if FILE_API == FILE_API_POSIX
+LHOSFile::LHOSFile()
+{
+	mHandle = -1;
+}
+
+LHOSFile::~LHOSFile()
+{
+	if (mHandle != -1)
+		close(mHandle);
+}
+
+void LHOSFile::Open(char const *filename, LH_FILE_MODE mode)
+{
+	assert(mHandle == -1);
+
+	int handle = -1;
+	if (mode == LH_FILE_MODE::Read)
+		handle = open(filename, O_RDONLY);
+	else if (mode == LH_FILE_MODE::Create)
+		handle = open(filename, O_CREAT | O_EXCL | O_RDWR);
+
+	if (handle == -1)
+	{
+		std::ostringstream os;
+		os << "Failed to open '" << filename << "' for reading.";
+		throw std::runtime_error(os.str());
+	}
+
+	mHandle = handle;
+}
+
+void LHOSFile::Close()
+{
+	assert(mHandle != -1);
+
+	close(mHandle);
+	mHandle = -1;
+}
+
+size_t LHOSFile::Read(void * data, size_t size)
+{
+	assert(mHandle != -1);
+
+	ssize_t readb;
+
+	readb = read(mHandle, data, size);
+	if (readb == -1)
+		throw std::runtime_error("A read operation on a file failed.");
+
+	return (size_t)read;
+}
+
+void LHOSFile::Seek(size_t position, LH_SEEK_MODE mode)
+{
+	assert(mHandle != -1);
+
+	int seekMode;
+	switch (mode)
+	{
+	case LH_SEEK_MODE::Set:
+		seekMode = SEEK_SET;
+		break;
+	case LH_SEEK_MODE::Current:
+		seekMode = SEEK_CUR;
+		break;
+	case LH_SEEK_MODE::End:
+		seekMode = SEEK_END;
+		break;
+	default:
+		throw std::runtime_error("Invalid seek mode.");
+		break;
+	}
+
+	if (lseek(mHandle, position, seekMode) == -1)
+		throw std::runtime_error("A seek operation on a file failed.");
+}
+
+size_t LHOSFile::Position()
+{
+	assert(mHandle != -1);
+
+	off_t value = lseek(mHandle, 0, SEEK_CUR);
+
+	if (value == -1)
+		throw std::runtime_error("A query operation on a file failed.");
+
+	return value;
+}
+
+size_t LHOSFile::Size()
+{
+	assert(mHandle != -1);
+
+ struct stat info;
+ if(fstat(mHandle, &info) != 0)
+		throw std::runtime_error("A query operation on a file failed.");
+
+	// should be fine, no files are over 4GB..
+	if (info.st_size > SIZE_MAX)
+		throw std::runtime_error("Files greater that 4GB are not supported.");
+
+	return info.st_size;
+}
+
+/* static */
+
+bool LHOSFile::Delete(const char * filename)
+{
+	return !unlink(filename);
+}
+
+bool LHOSFile::Rename(const char * srcfile, const char * dstfile)
+{
+	return !rename(srcfile, dstfile);
+}
+
+bool LHOSFile::Exists(const char * filename)
+{
+	return !access(filename, F_OK);
+}
+#endif
 
 #if FILE_API == FILE_API_WIN32
 LHOSFile::LHOSFile()
@@ -129,6 +252,8 @@ bool LHOSFile::Exists(const char * filename)
 	return !(result == INVALID_FILE_ATTRIBUTES && (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND));
 }
 
+#endif
+
 char * LHOSFile::ReadAll(const char * filename, size_t* sizeOut)
 {
     LHOSFile* file = new LHOSFile;
@@ -149,5 +274,3 @@ char * LHOSFile::ReadAll(const char * filename, size_t* sizeOut)
 
 	return buffer;
 }
-
-#endif

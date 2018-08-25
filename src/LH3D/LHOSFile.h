@@ -17,11 +17,16 @@
 #if FILE_API == FILE_API_STDIO
 #include <cstdio>
 #elif FILE_API == FILE_API_POSIX
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
 #elif FILE_API == FILE_API_WIN32
 #include <windows.h>
 #else
 #error Unsupported File API
 #endif
+#include <cstddef>
 
 enum LH_FILE_MODE {
 	Create,

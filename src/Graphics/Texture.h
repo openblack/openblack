@@ -3,6 +3,7 @@
 #define OPENBLACK_TEXTURE_H
 
 #include "OpenGL.h"
+#include <cstdio>
 
 namespace OpenBlack
 {
