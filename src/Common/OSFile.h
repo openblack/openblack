@@ -1,6 +1,6 @@
 #pragma once
-#ifndef OPENBLACK_LHOSFILE_H
-#define OPENBLACK_LHOSFILE_H
+#ifndef OPENBLACK_OSFILE_H
+#define OPENBLACK_OSFILE_H
 
 #define FILE_API_STDIO  0
 #define FILE_API_POSIX  1
@@ -40,10 +40,10 @@ enum LH_SEEK_MODE {
 	End
 };
 
-class LHOSFile {
+class OSFile {
 public:
-	LHOSFile();
-	~LHOSFile();
+	OSFile();
+	~OSFile();
 
 	void Open(char const* filename, LH_FILE_MODE filemode); // lh: bool return & checks exists
 	void Close();
