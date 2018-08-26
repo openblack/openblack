@@ -1,7 +1,7 @@
 #include "LandIsland.h"
 
-#include <LH3D/LHOSFile.h>
-#include <LH3D/oldLH3DIsland.h>
+#include <Common/OSFile.h>
+#include <3D/oldLH3DIsland.h>
 
 #include <stdexcept>
 
@@ -12,12 +12,16 @@ LandIsland::LandIsland()
 
 }
 
+LandIsland::~LandIsland()
+{
+}
+
 void LandIsland::LoadFromDisk(std::string fileName)
 {
-    if (!LHOSFile::Exists(fileName.c_str()))
+    if (!OSFile::Exists(fileName.c_str()))
         throw std::runtime_error("Land file does not exist.");
 
-    LHOSFile* file = new LHOSFile();
+    OSFile* file = new OSFile();
     file->Open(fileName.c_str(), LH_FILE_MODE::Read);
     size_t fileSize = file->Size();
 
@@ -33,23 +37,30 @@ void LandIsland::LoadFromDisk(std::string fileName)
     file->Read(&countrySize, 4);
     file->Read(&lowResTextureCount, 4);
 
-    printf("Materials Count: %d\n", materialCount);
-    printf("Countries Count: %d\n", countryCount);
-    printf("LowRes Textures: %d\n", lowResTextureCount);
-
-    // we don't care about low resolution textures, but if we ever do, they're just DXT3 w/o DDS magic
+	m_LowResTextureArray = std::make_unique<Texture2DArray>();
     for (uint32_t i = 0; i < lowResTextureCount; i++)
     {
         uint32_t textureSize;
         file->Seek(16, LH_SEEK_MODE::Current);
         file->Read(&textureSize, 4);
         file->Seek(textureSize - 4, LH_SEEK_MODE::Current);
+
+		// GL_COMPRESSED_RGBA_S3TC_DXT3_EXT
     }
 
-    file->Seek(blockCount * blockSize, LH_SEEK_MODE::Current);
-    file->Seek(countryCount * countrySize, LH_SEEK_MODE::Current);
+	blockCount--; // take away a block from the count, because it's not in the file?
+	m_LandBlocks = std::make_unique<LandBlock*[]>(blockCount);
+	for (uint32_t i = 0; i < blockCount; i++)
+	{
+		auto block = new LandBlock();
 
-    mMaterialArray = new Texture2DArray;
+		m_LandBlocks[i] = block;
+		file->Seek(blockSize, LH_SEEK_MODE::Current);
+	}
+
+	file->Seek(countryCount * countrySize, LH_SEEK_MODE::Current);
+
+	m_MaterialArray = std::make_unique<Texture2DArray>();
     for (uint32_t i = 0; i < materialCount; i++)
     {
         uint16_t terrainType;
@@ -58,18 +69,25 @@ void LandIsland::LoadFromDisk(std::string fileName)
         file->Read(&terrainType, 2);
         file->Read((void*)textureData, 256*256*sizeof(uint16_t));
 
+		//printf("%d\n", terrainType);
+
         AddTexture(textureData);
 
         delete textureData;
     }
-    mMaterialArray->Create();
+    m_MaterialArray->Create();
     
-    file->Seek(65536, LH_SEEK_MODE::Current);
-    file->Seek(65536, LH_SEEK_MODE::Current);
+    file->Seek(65536, LH_SEEK_MODE::Current); // Noisemap
+    file->Seek(65536, LH_SEEK_MODE::Current); // Bumpmap
 
-    printf("Read %d of %d\n", file->Position(), fileSize);
+    printf("Read %d/%d\n", file->Position(), fileSize);
 
     file->Close();
+}
+
+void LandIsland::Draw()
+{
+
 }
 
 void LandIsland::AddTexture(uint16_t* data)
@@ -97,5 +115,5 @@ void LandIsland::AddTexture(uint16_t* data)
         ((uint8_t*)tex.data)[i * 4 + 0] = 255;
     }
 
-    mMaterialArray->AddTexture(tex);
+    m_MaterialArray->AddTexture(tex);
 }

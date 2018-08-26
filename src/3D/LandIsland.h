@@ -6,8 +6,9 @@
 
 #include <string>
 
+#include <Graphics/Texture2D.h>
 #include <Graphics/Texture2DArray.h>
-#include <LH3D/LandBlock.h>
+#include <3D/LandBlock.h>
 
 using namespace OpenBlack::Graphics;
 
@@ -21,13 +22,18 @@ namespace OpenBlack
 
 		void LoadFromDisk(std::string filePath);
 
+		void Draw();
+
 		const int GetAltitudeAt(glm::ivec2) const;
 		const float GetHeightAt(glm::ivec2) const;
 	private:
 		void AddTexture(uint16_t* data);
+		void CreateCountryLookupTexture();
 
-		Texture2DArray* mMaterialArray;
-		LandBlock* mLandBlocks;
+		std::unique_ptr<Texture2DArray> m_LowResTextureArray;
+		std::unique_ptr<Texture2DArray> m_MaterialArray;
+		std::unique_ptr<Texture2D> m_CountryLookup;
+		std::unique_ptr<LandBlock*[]> m_LandBlocks;
 	};
 }
 

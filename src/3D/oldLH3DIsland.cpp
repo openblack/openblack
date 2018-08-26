@@ -1,5 +1,3 @@
-#include <LH3D/oldLH3DIsland.h>
-
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GL/glu.h>
@@ -7,9 +5,11 @@
 #include <stdio.h>
 #include <stdexcept>
 #include <vector>
-#include <LH3D/LHOSFile.h>
 
 #include <string>
+
+#include <3D/oldLH3DIsland.h>
+#include <Common/OSFile.h>
 
 /*
 Porting this to LandIsland.cpp
@@ -119,10 +119,10 @@ bool loadDDS(uint8_t* buffer)
 
 void LH3DIsland::LoadFromDisk(const char * filename)
 {
-	if (!LHOSFile::Exists(filename))
+	if (!OSFile::Exists(filename))
 		throw std::runtime_error("Land file does not exist.");
 
-	LHOSFile* file = new LHOSFile();
+	OSFile* file = new OSFile();
 	file->Open(filename, LH_FILE_MODE::Read);
 	size_t fileSize = file->Size();
 

@@ -19,6 +19,7 @@ namespace OpenBlack
 		~LandBlock();
 
 		void Draw();
+
 	private:
 		LandCell mCells[OPENBLACK_LANDBLOCK_TOTAL_CELLS];
 		uint32_t index;

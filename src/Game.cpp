@@ -11,11 +11,13 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <3D/Camera.h>
+#include <3D/LandIsland.h>
+#include <3D/oldLH3DIsland.h>
+
+#include <Common/OSFile.h>
+
 #include <Graphics/Shader.h>
 #include <Graphics/Texture2D.h>
-#include <LH3D/LandIsland.h>
-#include <LH3D/oldLH3DIsland.h>
-#include <LH3D/LHOSFile.h>
 
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
@@ -140,8 +142,8 @@ void Game::Run()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, mIndicesArray.size() * sizeof(uint32_t), mIndicesArray.data(), GL_STATIC_DRAW);
 
-    char* terrainVertSource = LHOSFile::ReadAll("shaders/terrain.vert.glsl", nullptr);
-    char* terrainFragSource = LHOSFile::ReadAll("shaders/terrain.frag.glsl", nullptr);
+    char* terrainVertSource = OSFile::ReadAll("shaders/terrain.vert.glsl", nullptr);
+    char* terrainFragSource = OSFile::ReadAll("shaders/terrain.frag.glsl", nullptr);
 
     Shader* terrainShader = new Shader();
 
