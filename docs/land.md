@@ -1,3 +1,0 @@
-# Loading Black & White Landscape Files
-
-...
