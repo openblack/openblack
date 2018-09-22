@@ -2,31 +2,37 @@ cmake_minimum_required(VERSION 3.2)
 
 project(OpenBlack)
 
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
-
-if(MSVC OR MINGW)
-	add_definitions(-D_WINDOWS)
-	if(CMAKE_CL_64)
-		add_definitions(-DWIN64)
-	ELSE(CMAKE_CL_64)
-		add_definitions(-DWIN32)
-	ENDIF(CMAKE_CL_64)
-endif(MSVC OR MINGW)
-
-option(SDL2_STATIC "Link static build of SDL into the binaries" FALSE)
+set(OS_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(GLEW_USE_STATIC_LIBS true)
 
 if (WIN32)
     option(USE_DEBUG_CONSOLE "whether a debug console should be enabled for debug builds, if false debug output is redirected to Visual Studio output" ON)
 endif()
 
-find_package(OpenGL REQUIRED)
-find_package(SDL2 REQUIRED)
-find_package(GLEW REQUIRED)
-find_package(GLM REQUIRED)
+include(FindOpenGL)
+if(NOT OPENGL_FOUND AND NOT OPENGL_XMESA_FOUND AND NOT OPENGL_GLU_FOUND)
+	message(FATAL_ERROR "OpenGL not found, please install it")
+endif()
+
+include(cmake/FindSDL2.cmake)
+if(NOT SDL2_FOUND)
+	message(FATAL_ERROR "SDL 2.0 not found, set ENV{SDL2DIR} to point to SDL 2.0, and optionally set the cmake var SDL2_LIBRARY_TEMP to the lib dir")
+endif()
+
+include(cmake/FindGLEW2.cmake)
+if(NOT GLEW_FOUND)
+	message(FATAL_ERROR "GLEW not found, ${GLEW_ROOT_DIR}")
+endif()
+
+include(cmake/FindGLM.cmake)
+if(NOT GLM_FOUND)
+	message(FATAL_ERROR "GLM not found")
+endif()
+
 #find_package(FFmpeg REQUIRED)
 #find_package(FFmpeg REQUIRED COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE SWRESAMPLE)
 
-if (WIN32)
+#[[if (WIN32)
     # Suppress WinMain(), provided by SDL
     add_definitions(-DSDL_MAIN_HANDLED)
     # Get rid of useless crud from windows.h
@@ -46,19 +52,18 @@ if (WIN32)
 	set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "${CMAKE_EXE_LINKER_FLAGS_MINSIZEREL} /SAFESEH:NO")
 	set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /SAFESEH:NO")
 	set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} /SAFESEH:NO")
+endif()]]
+
+if(OPENGL_INCLUDE_DIR)
+	include_directories("${OPENGL_INCLUDE_DIR}")
 endif()
+include_directories("${SDL2_INCLUDE_DIR}")
+include_directories("${GLEW_INCLUDE_DIRS}")
+include_directories("${GLM_INCLUDE_DIRS}")
 
-include_directories("."
-	SYSTEM
-	${CMAKE_CURRENT_SOURCE_DIR}/src
-	${SDL2_INCLUDE_DIR}
-	${OPENGL_INCLUDE_DIR}
-	${GLEW_INCLUDE_DIRS}
-	${GLM_INCLUDE_DIRS}
-	${FFMPEG_INCLUDE_DIR}
-)
+add_subdirectory(src)
 
-file(GLOB_RECURSE OPENBLACK_SRCS RELATIVE
+#[[file(GLOB_RECURSE OPENBLACK_SRCS RELATIVE
 	"${CMAKE_CURRENT_SOURCE_DIR}"
     "src/**.cpp"
     "src/**.h"
@@ -123,4 +128,4 @@ endif (MSVC)
 # Copy the license to the build directory (for CI)
 #file(COPY COPYING
 #    DESTINATION "${PROJECT_BINARY_DIR}"
-#)
+#)]]

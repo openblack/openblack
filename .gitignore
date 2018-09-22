@@ -7,8 +7,10 @@ Makefile
 makefile
 build*
 prebuilt
+GameData
 
 ## windows build process
+.vs
 /deps
 /MSVC*
 
