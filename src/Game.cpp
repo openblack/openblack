@@ -46,7 +46,7 @@ Game::Game(int argc, char **argv)
             throw std::runtime_error("Could not initialize SDL! " + std::string(SDL_GetError()));
     }
 
-    createWindow(1600, 1200);
+    createWindow(800, 600);
     createContext();
 
     std::cout << "Game Path: " << GetGamePath() << std::endl;
@@ -288,5 +288,5 @@ void Game::LoadMap(std::string name)
 
 std::string Game::GetGamePath()
 {
-    return "H:\\Program Files (x86)\\Lionhead Studios Ltd\\Black & White";
+    return "C:\\Users\\Matt\\Development\\openblack\\GameData";
 }
