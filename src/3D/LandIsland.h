@@ -26,6 +26,19 @@ namespace OpenBlack
 
 		const int GetAltitudeAt(glm::ivec2) const;
 		const float GetHeightAt(glm::ivec2) const;
+
+		// AdjustAlti
+		// BuildSoundTGA(char*)
+		// CreateSmallBump()
+		// GetAltitude(LH3DMapCoords)
+		// GetCell(long, long)
+		// GetCountry(long, long, uchar &)
+		// GetIndex(long, long)
+		// GetTerrainMaterial(ulong, ulong)
+		// SetColor(long, long, uchar)
+		// SetCountry(long, long long)
+		// SetHeightAsByte(long, long, long)
+
 	private:
 		void AddTexture(uint16_t* data);
 		void CreateCountryLookupTexture();
