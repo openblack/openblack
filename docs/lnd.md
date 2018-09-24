@@ -21,7 +21,7 @@ They follow a constant order and can be read easily by cycling through the follo
 ```cpp
 struct LH3DLandHeader {
     uint32_t blockCount; // The number of Block structs.
-    uint8_t  indexBlock;
+    uint8_t  indexBlock[1024];
     uint32_t materialCount; // The number of Material structs.
     uint32_t countryCount; // The number of Country structs.
     uint32_t blockSize; // The size of the Block struct.
