@@ -38,3 +38,25 @@ A `uint32_t` prefixes this section with the amount of instructions to read.
 | Parameter   | uint32_t | Data used by instruction, if applicable. Most instructions use the,stack as their source of data. Though, obviously, the data has to get,onto the stack some how, this is where this field comes into play.                                                                                                                                                                                                                                               |
 | Line Number | uint32_t | This field holds the line number that was responsible for,generating this instruction. On occasion this field will be null due to,auto generated instructions that do not link directly to any one line in,the code. These, luckily, are very few.                                                                                                                                                                                                        |
 
+### Auto Start Procedures
+
+A `uint32_t` at the start of this section represents the number of procedures that
+need to be auto started. Each procedure is represented as a `uint32_t` of the
+procedure's id read in the next section.
+
+### Procedures
+
+A `uint32_t` at the start of this section represents the number of procedures that
+need to be read.
+
+#### Procedure Format
+|                     | Type            | Description                                                                                     |
+|---------------------|-----------------|-------------------------------------------------------------------------------------------------|
+| Name                | string          | The name of the procedure.                                                                      |
+| Source Filename     | string          | The filename of the source file this was compiled from.                                         |
+| ?                   | uint32_t        | Unknown.                                                                                        |
+| ?                   | uint32_t        | Unknown.                                                                                        |
+| Local Variables     | uint32_t + data | Names of the local variables, read the integer and then that amount of null terminated strings. |
+| Instruction Address | uint32_t        | The location of the instruction to start at in the instruction array.                           |
+| Parameter Count     | uint32_t        | How many local variables are parameters.                                                        |
+| Procedure ID        | uint32_t        | Unique ID of this procedure, used by instructions to call it.                                   |
