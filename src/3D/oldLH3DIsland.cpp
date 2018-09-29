@@ -11,6 +11,8 @@
 #include <3D/oldLH3DIsland.h>
 #include <Common/OSFile.h>
 
+using namespace OpenBlack;
+
 /*
 Porting this to LandIsland.cpp
 */

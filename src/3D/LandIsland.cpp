@@ -69,8 +69,6 @@ void LandIsland::LoadFromDisk(std::string fileName)
         file->Read(&terrainType, 2);
         file->Read((void*)textureData, 256*256*sizeof(uint16_t));
 
-		//printf("%d\n", terrainType);
-
         AddTexture(textureData);
 
         delete textureData;
@@ -80,6 +78,7 @@ void LandIsland::LoadFromDisk(std::string fileName)
     file->Seek(65536, LH_SEEK_MODE::Current); // Noisemap
     file->Seek(65536, LH_SEEK_MODE::Current); // Bumpmap
 
+	// Read 2709680/2711300 (1620 bytes left..)
     printf("Read %d/%d\n", file->Position(), fileSize);
 
     file->Close();
