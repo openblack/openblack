@@ -16,6 +16,11 @@ glm::vec3 Camera::GetPosition() const
 
 glm::mat4 Camera::GetViewMatrix() const
 {
+	return glm::lookAt(m_position, glm::vec3(0.0f, 2.5f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+	/*auto up = m_rotation * glm::vec3(0.0f, 1.0f, 0.0f);
+	return glm::lookAt(m_position, m_position + m_rotation * glm::vec3(1.0f, 0.0f, 0.0f), up);*/
+
 	glm::mat4 rotM = glm::mat4(1.0f);
 	rotM = glm::rotate(rotM, glm::radians(m_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
 	rotM = glm::rotate(rotM, glm::radians(m_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
