@@ -6,6 +6,20 @@ file(GLOB_RECURSE OPENBLACK_SRCS RELATIVE
     "**.h"
 )
 
+foreach(FILE ${OPENBLACK_SRCS})
+  get_filename_component(PARENT_DIR "${FILE}" PATH)
+
+  string(REPLACE "/" "\\" GROUP "${PARENT_DIR}")
+
+  if ("${FILE}" MATCHES ".*\\.cpp")
+    set(GROUP "Source Files\\${GROUP}")
+  elseif("${FILE}" MATCHES ".*\\.h")
+    set(GROUP "Header Files\\${GROUP}")
+  endif()
+
+  source_group("${GROUP}" FILES "${FILE}")
+endforeach()
+
 include_directories(BEFORE "${OS_SRC_DIR}")
 
 if (WIN32)
@@ -24,7 +38,9 @@ if (WIN32)
 	set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} /SAFESEH:NO")
 endif()
 
-add_executable(OpenBlack ${OPENBLACK_SRCS})
+set(OPENBLACK_ICON "../resource/icon/openblack.rc")
+
+add_executable(OpenBlack ${OPENBLACK_SRCS} ${OPENBLACK_ICON})
 set_target_properties(OpenBlack PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(OpenBlack PROPERTIES OUTPUT_NAME openblack)
 set_target_properties(OpenBlack PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -32,6 +48,27 @@ set_target_properties(OpenBlack PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINA
 set_target_properties(OpenBlack PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 target_link_libraries(OpenBlack ${SDL2_LIBRARY} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
+
+if (WIN32)
+	if (USE_DEBUG_CONSOLE)
+		set_target_properties(OpenBlack PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
+		set_target_properties(OpenBlack PROPERTIES LINK_FLAGS_RELWITHDEBINFO "/SUBSYSTEM:CONSOLE")
+		set_target_properties(OpenBlack PROPERTIES COMPILE_DEFINITIONS_DEBUG "_CONSOLE")
+	else (USE_DEBUG_CONSOLE)
+		# Turn off debug console, debug output will be written to visual studio output instead
+		set_target_properties(OpenBlack PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:WINDOWS")
+		set_target_properties(OpenBlack PROPERTIES LINK_FLAGS_RELWITHDEBINFO "/SUBSYSTEM:WINDOWS")
+	endif()
+
+	# Release builds don't use the debug console
+    set_target_properties(OpenBlack PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+    set_target_properties(OpenBlack PROPERTIES COMPILE_DEFINITIONS_RELEASE "_WINDOWS")
+	set_target_properties(OpenBlack PROPERTIES LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:WINDOWS")
+endif (WIN32)
+
+if (MSVC)
+	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT openblack)
+endif (MSVC)
 
 if(WIN32)
 	foreach(LIB ${SDL2_LIBRARY})
