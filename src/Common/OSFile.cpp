@@ -4,6 +4,8 @@
 #include <sstream>
 #include <cassert>
 
+using namespace OpenBlack;
+
 #if FILE_API == FILE_API_POSIX
 LHOSFile::LHOSFile()
 {
@@ -253,6 +255,75 @@ bool OSFile::Exists(const char * filename)
 }
 
 #endif
+
+/* Non platform specific */
+
+// Lookup is strcmp until it finds it :)
+
+// todo: this sucks shit, I shouldn't read the entire file into a buffer
+bool OSFile::GetSegment(const char* segmentName, OpenBlack::LHSegment* segment, bool allocateMemory)
+{
+	Seek(0, LH_SEEK_MODE::Set);
+	size_t fileSize = this->Size();
+
+	void* buffer = malloc(fileSize);
+	Read(buffer, fileSize);
+
+	char* segmentFull = new char[32];
+	memset(segmentFull, 0, 32);
+	strcpy(segmentFull, segmentName);
+
+	char* cur = (char*)buffer;
+	while (strncmp(cur, segmentFull, 32)) cur++; // todo: check this doesn't exceed total file length
+
+	memcpy(segment, cur, 36);
+	segment->SegmentData = malloc(segment->SegmentSize);
+	memcpy(segment->SegmentData, cur + 36, segment->SegmentSize);
+
+	free(buffer);
+
+	return true;
+}
+
+/*
+int __thiscall LHFile::GetSegment(_DWORD *this, const char *segment, int dataOut, int bUnknown)
+{
+  char *lthis; // ebp
+  const char *v6; // edi
+  char *v7; // ebx
+  int v8; // eax
+  int *segmenta; // [esp+14h] [ebp+4h]
+
+  lthis = (char *)this;
+  if ( !this[3] )
+	return 3;
+  if ( this[20] != 2 )
+	return 3;
+  if ( this[21] )
+	LHFile::CloseSegment();
+  v6 = segment;
+  segmenta = LHFile::Lookup(lthis, segment);
+  if ( !segmenta )
+	return 2;
+  if ( LHFile::SetLHFilePointer(lthis, v6, 0) )
+	return 2;
+  v7 = strcpy((char *)dataOut, v6);
+  v8 = segmenta[10];
+  *(_DWORD *)(dataOut + 36) = v8;
+  if ( bUnknown )
+  {
+	if ( LHFile::AllocSegDataMem(lthis, (size_t *)v7) )
+	  return 3;
+  }
+  else if ( !*((_DWORD *)v7 + 10) || v8 != segmenta[10] )
+  {
+	return 3;
+  }
+  return LHCachedFile::ReadData(*((LPVOID *)v7 + 10), segmenta[10]);
+}
+
+
+*/
 
 char * OSFile::ReadAll(const char * filename, size_t* sizeOut)
 {

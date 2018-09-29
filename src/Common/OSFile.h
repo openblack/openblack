@@ -28,51 +28,61 @@
 #endif
 #include <cstddef>
 
-enum LH_FILE_MODE {
-	Create,
-	Write,
-	Read,
-};
+#include <Common/LHSegment.h>
 
-enum LH_SEEK_MODE {
-	Set,
-	Current,
-	End
-};
+namespace OpenBlack
+{
+	enum LH_FILE_MODE {
+		Create,
+		Write,
+		Read,
+	};
 
-class OSFile {
-public:
-	OSFile();
-	~OSFile();
+	enum LH_SEEK_MODE {
+		Set,
+		Current,
+		End
+	};
 
-	void Open(char const* filename, LH_FILE_MODE filemode); // lh: bool return & checks exists
-	void Close();
+	class OSFile {
+	public:
+		OSFile();
+		~OSFile();
 
-	size_t Read(void* data, size_t size); // lh: Read((void *, ulong, ulong *))
-	// LHOSFile::Write((void *, ulong, ulong *))
+		void Open(char const* filename, LH_FILE_MODE filemode); // lh: bool return & checks exists
+		void Close();
 
-	void Seek(size_t position, LH_SEEK_MODE); // lh: void Seek(long, int, unsigned long*);
-	size_t Position(); // lh: seek
-	size_t Size(); // lh: void Length(*ulong);
+		size_t Read(void* data, size_t size); // lh: Read((void *, ulong, ulong *))
+		// LHOSFile::Write((void *, ulong, ulong *))
 
-	static bool Delete(const char* filename);
-	static bool Rename(const char* filename_before, const char* filename_after);
-	static bool Exists(const char* filename);
+		void Seek(size_t position, LH_SEEK_MODE); // lh: void Seek(long, int, unsigned long*);
+		size_t Position(); // lh: seek
+		size_t Size(); // lh: void Length(*ulong);
 
-	static char* ReadAll(const char* filename, size_t* size);
-	
-	// ConvertDirInfo((LHDir *))
-	//int DirFindFirst(char * filename, LHDir *, ulong);
-	//int DirFindNext(LHDir*);
-	//int DirFindEnd(LHDir*);
-private:
+		// Lionhead specific methods:
+
+		bool GetSegment(const char* segment, OpenBlack::LHSegment* segmentOut, bool allocateMemory);
+
+		static bool Delete(const char* filename);
+		static bool Rename(const char* filename_before, const char* filename_after);
+		static bool Exists(const char* filename);
+
+		static char* ReadAll(const char* filename, size_t* size);
+
+		// ConvertDirInfo((LHDir *))
+		//int DirFindFirst(char * filename, LHDir *, ulong);
+		//int DirFindNext(LHDir*);
+		//int DirFindEnd(LHDir*);
+	private:
 #if FILE_API == FILE_API_STDIO
-	FILE* mHandle;
+		FILE* mHandle;
 #elif FILE_API == FILE_API_POSIX
-	int mHandle;
+		int mHandle;
 #elif FILE_API == FILE_API_WIN32
-	HANDLE mHandle;
+		HANDLE mHandle;
 #endif
-};
+	};
+
+}
 
 #endif
