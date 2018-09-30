@@ -31,10 +31,14 @@ namespace OpenBlack
 		void * mGLContext;
 		std::vector<uint32_t> mIndicesArray;
 
+		int mCurrentMesh;
+		bool mRunning;
+
 		void createWindow(int width, int height);
 		void setWindowIcon();
 		void createContext();
 
+		void guiLoop();
 		void loop();
 	};
 }

@@ -21,6 +21,8 @@ namespace OpenBlack
 	protected:
 		unsigned int m_submeshCount;
 
+		GLuint m_vao;
+
 		GLuint* m_vertexBuffers;
 		GLuint* m_indexBuffers;
 

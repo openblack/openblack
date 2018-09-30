@@ -71,12 +71,20 @@ Mesh::Mesh() {
 Mesh::~Mesh() {
 	delete m_submeshSizes;
 
+	if (m_vao != NULL)
+	{
+		glDeleteVertexArrays(1, &m_vao);
+	}
+
 	// add if
 	glDeleteBuffers(m_submeshCount, m_vertexBuffers);
 	glDeleteBuffers(m_submeshCount, m_indexBuffers);
 }
 
 void Mesh::LoadFromL3D(void* data_, size_t size) {
+	glGenVertexArrays(1, &m_vao);
+	glBindVertexArray(m_vao);
+
 	uint8_t* buffer = static_cast<uint8_t*>(data_);
 	if (buffer[0] != 'L' || buffer[1] != '3' || buffer[2] != 'D' || buffer[3] != '0') {
 		throw std::runtime_error("Invalid L3D file");
@@ -118,6 +126,8 @@ void Mesh::LoadFromL3D(void* data_, size_t size) {
 }
 
 void Mesh::Draw() {
+	glBindVertexArray(m_vao);
+
 	for (int i = 0; i < m_submeshCount; i++) {
 		glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffers[i]);
 
