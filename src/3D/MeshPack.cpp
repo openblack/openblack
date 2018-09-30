@@ -14,8 +14,36 @@ struct L3DSMiniHeader {
 	uint32_t l3dSize;
 };
 
+struct G3DHiResTexture {
+	uint32_t size;
+	uint32_t id;
+	uint32_t type;
+
+	uint32_t dxSize;
+	// surface desc shit.
+};
+
 MeshPack::MeshPack(OSFile* file)
 {
+	// LiOnHeAd and a block header, but we already know it's high res textures
+	file->Seek(44, LH_SEEK_MODE::Set);
+
+	TextureArray = new Texture2DArray();
+
+	int totalTextures = 110;
+	for (int i = 0; i < totalTextures; i++)
+	{
+		// probably need to convert from DXT1/DXT3 to RGBA for texture arrays
+		//TextureArray->AddTexture
+	}
+
+	TextureArray->Create();
+
+	// each high res texture is actually a lionhead block...
+	// char textureid[32];
+	// uint32_t size;
+	// AWKWARD...............
+
 	LHSegment meshesSegment;
 	file->GetSegment("MESHES", &meshesSegment, true);
 
