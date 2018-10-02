@@ -4,6 +4,7 @@
 
 #include "OpenGL.h"
 #include <cstdio>
+#include <stdint.h>
 
 namespace OpenBlack
 {
@@ -12,20 +13,24 @@ namespace OpenBlack
 		class VertexBuffer {
 		public:
 			VertexBuffer();
+			VertexBuffer(const VertexBuffer &other);
 			~VertexBuffer();
-
-			// copying and assignment
-			//VertexBuffer(const VertexBuffer &other);
-			// VertexBuffer &operator=(const VertexBuffer &other);
 
 			bool Create(void* data, size_t size);
 
-			void Bind();
-			size_t Size() const;
-			GLuint GetHandle() const;
-		protected:
-			GLuint m_handle; /// Vertex Buffer Object
-			size_t m_size; /// Size of a buffer element in b ytes
+			//GLvoid *GetData();
+			//const GLvoid *GetData() const;
+
+			//uint32_t GetCount() const;
+			size_t GetSize() const;
+			GLuint GetVBO() const;
+		private:
+			uint32_t m_count;
+			size_t m_size;
+			//uint8_t* m_data;
+
+			GLuint m_vbo;
+			GLuint m_hint;
 		};
 
 	}

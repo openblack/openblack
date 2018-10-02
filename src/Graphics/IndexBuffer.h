@@ -4,6 +4,7 @@
 
 #include "OpenGL.h"
 #include <cstdio>
+#include <stdint.h>
 
 namespace OpenBlack
 {
@@ -12,16 +13,23 @@ namespace OpenBlack
 		class IndexBuffer {
 		public:
 			IndexBuffer();
+			IndexBuffer(const IndexBuffer &other);
 			~IndexBuffer();
 
-			bool Create(const unsigned int* indices, unsigned int count);
+			bool Create(void* indices, size_t size, GLenum type);
 
-			void Bind() const;
 			unsigned int GetCount() const;
-			GLuint GetHandle() const;
-		protected:
-			GLuint m_handle; /// Index Buffer Object
-			unsigned int m_count;
+			GLenum GetType() const;
+			GLuint GetIBO() const;
+		private:
+			uint32_t m_count;
+			uint32_t m_size;
+			GLenum m_type;
+
+			GLuint m_ibo;
+			GLuint m_hint;
+
+			static uint32_t GetTypeSize(GLenum type);
 		};
 
 	}
