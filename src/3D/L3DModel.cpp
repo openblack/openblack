@@ -1,9 +1,10 @@
-#include "Mesh.h"
+#include "L3DModel.h"
 
 #include <stdint.h>
 #include <stdexcept>
 
 using namespace OpenBlack;
+using namespace OpenBlack::Graphics;
 
 struct L3DHeader {
 	uint32_t modelSize;
@@ -64,27 +65,11 @@ struct L3D_Triangle {
 	uint16_t indices[3];
 };
 
-Mesh::Mesh() {
+L3DModel::L3DModel() {}
 
-}
+L3DModel::~L3DModel() {}
 
-Mesh::~Mesh() {
-	delete m_submeshSizes;
-
-	if (m_vao != NULL)
-	{
-		glDeleteVertexArrays(1, &m_vao);
-	}
-
-	// add if
-	glDeleteBuffers(m_submeshCount, m_vertexBuffers);
-	glDeleteBuffers(m_submeshCount, m_indexBuffers);
-}
-
-void Mesh::LoadFromL3D(void* data_, size_t size) {
-	glGenVertexArrays(1, &m_vao);
-	glBindVertexArray(m_vao);
-
+void L3DModel::LoadFromL3D(void* data_, size_t size) {
 	uint8_t* buffer = static_cast<uint8_t*>(data_);
 	if (buffer[0] != 'L' || buffer[1] != '3' || buffer[2] != 'D' || buffer[3] != '0') {
 		throw std::runtime_error("Invalid L3D file");
@@ -97,27 +82,32 @@ void Mesh::LoadFromL3D(void* data_, size_t size) {
 	{
 		L3D_Mesh* mesh = (L3D_Mesh*)(buffer + meshOffsets[m]);
 
-		m_vertexBuffers = new GLuint[mesh->numSubMeshes];
-		m_indexBuffers = new GLuint[mesh->numSubMeshes];
-
-		glGenBuffers(mesh->numSubMeshes, m_vertexBuffers);
-		glGenBuffers(mesh->numSubMeshes, m_indexBuffers);
-		m_submeshSizes = new GLsizei[mesh->numSubMeshes];
-		m_submeshSizesV = new GLsizei[mesh->numSubMeshes];
-		m_submeshCount = mesh->numSubMeshes;
+		m_subMeshes = new Mesh*[mesh->numSubMeshes];
+		m_subMeshCount = mesh->numSubMeshes;
 
 		uint32_t* submeshOffsets = (uint32_t*)(buffer + mesh->subMeshOffset);
 		for (int sm = 0; sm < mesh->numSubMeshes; sm++)
 		{
 			L3D_SubMesh* subMesh = (L3D_SubMesh*)(buffer + submeshOffsets[sm]);
 
-			glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffers[sm]);
-			glBufferData(GL_ARRAY_BUFFER, subMesh->numVerticies * sizeof(L3D_Vertex), (buffer + subMesh->verticiesOffset), GL_STATIC_DRAW);
+			void* verticiesOffset = (void*)(buffer + subMesh->verticiesOffset);
+			void* trianglesOffset = (void*)(buffer + subMesh->trianglesOffset);
 
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffers[sm]);
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, subMesh->numTriangles * 3 * 2, (buffer + subMesh->trianglesOffset), GL_STATIC_DRAW);
+			size_t verticiesSize = subMesh->numVerticies * sizeof(L3D_Vertex);
+			size_t indiciesSize = subMesh->numTriangles * 3 * sizeof(GLushort);
 
-			m_submeshSizes[sm] = subMesh->numTriangles * 3;
+			Mesh* sub = new Mesh();
+
+			VertexDecl decl(3);
+			decl[0] = VertexAttrib(0, 3, GL_FLOAT, 32, (void*)0);
+			decl[1] = VertexAttrib(1, 2, GL_FLOAT, 32, (void*)12);
+			decl[2] = VertexAttrib(2, 3, GL_FLOAT, 32, (void*)20);
+
+			sub->SetVertexDecl(decl);
+
+			sub->Create(verticiesOffset, verticiesSize, trianglesOffset, indiciesSize/*, subMesh->skinID*/);
+
+			m_subMeshes[sm] = sub;
 		}
 
 		// stop idk how we should handle more then 1 mesh yet!
@@ -125,21 +115,13 @@ void Mesh::LoadFromL3D(void* data_, size_t size) {
 	}
 }
 
-void Mesh::Draw() {
-	glBindVertexArray(m_vao);
-
-	for (int i = 0; i < m_submeshCount; i++) {
-		glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffers[i]);
-
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 32, 0);
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 32, (void*)12);
-		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 32, (void*)20);
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffers[i]);
-
-		glDrawElements(GL_TRIANGLES, m_submeshSizes[i], GL_UNSIGNED_SHORT, 0);
+void L3DModel::Draw() {
+	for (int subMesh = 0; subMesh < m_subMeshCount; subMesh++) {
+		m_subMeshes[subMesh]->Render();
 	}
+}
+
+unsigned int L3DModel::GetSubMeshCount()
+{
+	return m_subMeshCount;
 }

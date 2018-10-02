@@ -3,7 +3,7 @@
 #define OPENBLACK_MESHPACK_H
 
 #include <Common/OSFile.h>
-#include <3D/Mesh.h>
+#include <3D/L3DModel.h>
 #include <Graphics/Texture2DArray.h>
 
 namespace OpenBlack
@@ -13,8 +13,12 @@ namespace OpenBlack
 	public:
 		MeshPack(OSFile* allMeshes);
 
-		Mesh** Meshes;
-		Texture2DArray* TextureArray;
+		L3DModel** Models;
+		GLuint* Textures;
+
+		int GetMeshCount();
+	private:
+		int m_meshCount;
 	};
 }
 
