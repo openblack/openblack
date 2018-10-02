@@ -22,10 +22,9 @@
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/VertexBuffer.h>
 
-#include <3D/Mesh.h>
 #include <3D/MeshPack.h>
 
-#include <AllMeshes.h>
+// #include <AllMeshes.h>
 
 #define IMGUI_IMPL_OPENGL_LOADER_GLEW
 
@@ -38,6 +37,9 @@ using namespace OpenBlack::Graphics;
 
 void GLAPIENTRY OpenGLMsgCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 {
+	if (severity == GL_DEBUG_SEVERITY_NOTIFICATION)
+		return;
+
     fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
         (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type, severity, message);
 }
@@ -48,10 +50,14 @@ void checkSDLError(int ret)
         std::cerr << "SDL error: " << SDL_GetError() << std::endl;
 }
 
+Game* Game::sInstance = nullptr;
+
 Game::Game(int argc, char **argv)
-    : mWindow(NULL),
-    mGLContext(NULL)
+    : m_Window(NULL),
+    m_GLContext(NULL)
 {
+	sInstance = this;
+
     uint32_t flags = SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE | SDL_INIT_TIMER;
     if (SDL_WasInit(flags) == 0)
     {
@@ -65,12 +71,12 @@ Game::Game(int argc, char **argv)
 
 Game::~Game()
 {
-    SDL_GL_DeleteContext(mGLContext);
+    SDL_GL_DeleteContext(m_GLContext);
 
-    if (mWindow)
+    if (m_Window)
     {
-        SDL_DestroyWindow(mWindow);
-        mWindow = NULL;
+        SDL_DestroyWindow(m_Window);
+		m_Window = NULL;
     }
 
     SDL_Quit();
@@ -80,26 +86,23 @@ void Game::Run()
 {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGuiIO& io = ImGui::GetIO();
+	io.IniFilename = NULL;
 
-	ImGui_ImplSDL2_InitForOpenGL(mWindow, mGLContext);
+	ImGui_ImplSDL2_InitForOpenGL(m_Window, m_GLContext);
 	ImGui_ImplOpenGL3_Init("#version 130");
 
 	ImGui::StyleColorsDark();
 
-    mCamera = new Camera;
-    mCamera->SetProjectionMatrixPerspective(60.0f, (float)1280 / (float)960, 0.1f, 8192.f);
+    m_Camera = new Camera;
+    m_Camera->SetProjectionMatrixPerspective(60.0f, (float)1280 / (float)960, 0.1f, 8192.f);
 	//mCamera->SetPosition(glm::vec3(2500.0f, 240.0f, 1600.0f));
 	//mCamera->SetPosition(glm::vec3(1441.56f, 240.0f, 2081.76));
-	mCamera->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-    mCamera->SetRotation(glm::vec3(0.0f, 0.0f, 0.0f));
+	m_Camera->SetPosition(glm::vec3(5.0f, 5.0f, 5.0f));
+    m_Camera->SetRotation(glm::vec3(0.0f, 0.0f, 0.0f));
 
-	std::string allMeshesFilePath = GetGamePath() + "\\Data\\AllMeshes.g3d";
-
-	OSFile* allMeshesFile = new OSFile();
-	allMeshesFile->Open(allMeshesFilePath.c_str(), LH_FILE_MODE::Read);
-	MeshPack* pack = new MeshPack(allMeshesFile);
-	allMeshesFile->Close();
+	m_MeshViewer = new MeshViewer();
+	m_MeshViewer->LoadPack(GetGamePath() + "\\Data\\AllMeshes.g3d");
 
     LandIsland* island = new LandIsland();
     island->LoadFromDisk(GetGamePath() + "\\Data\\Landscape\\Land1.lnd");
@@ -114,71 +117,50 @@ void Game::Run()
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(100.0f / 255.0f, 149.0f / 255.0f, 237.0f / 255.0f, 1);
 
-	mCurrentMesh = 0;
-	mRunning = true;
-	while (mRunning)
+	m_Running = true;
+	while (m_Running)
 	{
 		while (SDL_PollEvent(&event)) {
 			ImGui_ImplSDL2_ProcessEvent(&event);
 			if (event.type == SDL_QUIT)
-				mRunning = false;
-			if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(mWindow))
-				mRunning = false;
+				m_Running = false;
+			if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(m_Window))
+				m_Running = false;
 		}
 
 		this->guiLoop();
 
-		SDL_GL_MakeCurrent(mWindow, mGLContext);
-		glViewport(0, 0, (int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y);
-		glClearColor(100.0f / 255.0f, 149.0f / 255.0f, 237.0f / 255.0f, 1);
+		SDL_GL_MakeCurrent(m_Window, m_GLContext);
+		//glViewport(0, 0, (int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glUseProgram(modelShader->GetHandle());
-		glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(mCamera->GetViewProjectionMatrix()));
-
-		pack->Meshes[mCurrentMesh]->Draw();
+		glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(m_Camera->GetViewProjectionMatrix()));
+		m_MeshViewer->Render();
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		SDL_GL_SwapWindow(mWindow);
+		SDL_GL_SwapWindow(m_Window);
 	}
 }
 
 void Game::guiLoop()
 {
 	ImGui_ImplOpenGL3_NewFrame();
-	ImGui_ImplSDL2_NewFrame(mWindow);
+	ImGui_ImplSDL2_NewFrame(m_Window);
 	ImGui::NewFrame();
 
 	if (ImGui::BeginMainMenuBar())
 	{
 		if (ImGui::BeginMenu("File"))
 		{
-			ImGui::MenuItem("(dummy menu)", NULL, false, false);
-			if (ImGui::MenuItem("New")) {}
-			if (ImGui::MenuItem("Open", "Ctrl+O")) {}
-			ImGui::Separator();
-			if (ImGui::MenuItem("Quit", "Alt+F4")) { mRunning = false; }
+			if (ImGui::MenuItem("Quit", "Alt+F4")) { m_Running = false; }
 			ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();
 	}
 
-	{
-		ImGui::Begin("Mesh Viewer");
-
-		glm::vec3 v = mCamera->GetPosition();
-		ImGui::SliderFloat3("Camera", glm::value_ptr(v), -50.0f, 50.0f);
-		mCamera->SetPosition(v);
-
-		ImGui::Separator();
-		ImGui::PushItemWidth(-1);
-		ImGui::ListBox("", &mCurrentMesh, gG3DStringList, IM_ARRAYSIZE(gG3DStringList), 8);
-		ImGui::Separator();
-
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		ImGui::End();
-	}
+	m_MeshViewer->GUI();
 
 	ImGui::Render();
 }
@@ -204,16 +186,16 @@ void Game::createWindow(int width, int height)
 
 	uint32_t flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
 
-	mWindow = SDL_CreateWindow("OpenBlack", pos_x, pos_y, width, height, flags);
-	if (!mWindow)
+	m_Window = SDL_CreateWindow("OpenBlack", pos_x, pos_y, width, height, flags);
+	if (!m_Window)
 	{
 		std::stringstream error;
 		error << "Failed to create SDL window: " << SDL_GetError() << std::endl;
 		throw std::runtime_error(error.str());
 	}
 
-	mGLContext = SDL_GL_CreateContext(mWindow);
-	if (!mGLContext)
+	m_GLContext = SDL_GL_CreateContext(m_Window);
+	if (!m_GLContext)
 		throw std::runtime_error("Failed to create a GL context\n");
 
 	SDL_GL_SetSwapInterval(1);
@@ -227,8 +209,8 @@ void Game::createWindow(int width, int height)
 		throw std::runtime_error(error.str());
 	}
 
-	//glEnable(GL_DEBUG_OUTPUT);
-	//glDebugMessageCallback(OpenGLMsgCallback, 0);
+	glEnable(GL_DEBUG_OUTPUT);
+	glDebugMessageCallback(OpenGLMsgCallback, 0);
 }
 
 void Game::LoadMap(std::string name)

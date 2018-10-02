@@ -6,6 +6,10 @@
 #include <string>
 #include <vector>
 
+#include <3D/MeshPack.h>
+
+#include <MeshViewer.h>
+
 struct SDL_Window;
 
 namespace OpenBlack
@@ -21,22 +25,26 @@ namespace OpenBlack
 
 		std::string GetGamePath();
 
-		Camera& GetCamera() { return *mCamera; }
+		Camera& GetCamera() { return *m_Camera; }
+		MeshPack& GetMeshPack() { return *m_MeshPack; }
 		
-
+		static Game* instance() {
+			return sInstance;
+		}
 	private:
-		Camera *mCamera;
+		static Game* sInstance;
 
-		SDL_Window * mWindow;
-		void * mGLContext;
-		std::vector<uint32_t> mIndicesArray;
+		MeshViewer *m_MeshViewer;
 
-		int mCurrentMesh;
-		bool mRunning;
+		Camera *m_Camera;
+		MeshPack *m_MeshPack;
+
+		SDL_Window * m_Window;
+		void * m_GLContext;
+
+		bool m_Running;
 
 		void createWindow(int width, int height);
-		void setWindowIcon();
-		void createContext();
 
 		void guiLoop();
 		void loop();
