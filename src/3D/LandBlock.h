@@ -8,7 +8,7 @@
 
 #include "LandCell.h"
 
-#define OPENBLACK_LANDBLOCK_TOTAL_CELLS 289 // 17 * 17
+#define OPENBLACK_LANDBLOCK_TOTAL_CELLS 289
 
 namespace OpenBlack
 {
@@ -16,19 +16,17 @@ namespace OpenBlack
 	{
 	public:
 		LandBlock();
-		~LandBlock();
 
-		void Draw();
-
+		void LoadFromFile(void* block, size_t block_size);
+		LandCell* GetCells() {
+			return m_cells;
+		};
+		glm::vec2* GetMapPosition() { return &m_mapPosition; }
 	private:
-		LandCell mCells[OPENBLACK_LANDBLOCK_TOTAL_CELLS];
-		uint32_t index;
-		glm::ivec2 blockPosition;
-		glm::vec2 mapPosition;
-	private:
-		GLuint mVertexArray;
-		GLuint mVertexBuffer;
-		GLuint mElementBuffer;
+		LandCell m_cells[OPENBLACK_LANDBLOCK_TOTAL_CELLS];
+		uint32_t m_index;
+		glm::ivec2 m_blockPosition;
+		glm::vec2 m_mapPosition;
 	};
 }
 

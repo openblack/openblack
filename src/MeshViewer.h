@@ -11,12 +11,9 @@ namespace OpenBlack
 		MeshViewer();
 		~MeshViewer();
 
-		void LoadPack(std::string filePath);
-
 		void GUI();
 		void Render();
 	private:
-		MeshPack* m_meshPack;
 		int m_currentMesh;
 
 		L3DModel* GetCurrentModel();

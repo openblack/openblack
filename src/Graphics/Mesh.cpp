@@ -39,6 +39,10 @@ void Mesh::SetVertexDecl(const VertexDecl &decl) {
 }
 
 void Mesh::Render() {
+	if (m_vao == NULL) {
+		throw new std::runtime_error("Trying to render Mesh with no VAO.");
+	}
+
 	glBindVertexArray(m_vao);
 
 	//printf("Rendering Mesh (VAO: %d) w/ %d verts and %d indicies\n", m_vao, m_vertexBuffer.GetSize(), m_indexBuffer.GetCount());

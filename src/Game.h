@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <3D/MeshPack.h>
+#include <3D/LandIsland.h>
 
 #include <MeshViewer.h>
 
@@ -35,9 +36,13 @@ namespace OpenBlack
 		static Game* sInstance;
 
 		MeshViewer *m_MeshViewer;
+		LandIsland *m_LandIsland;
 
 		Camera *m_Camera;
 		MeshPack *m_MeshPack;
+
+		glm::vec3 m_meshPos;
+		glm::vec3 m_meshRot;
 
 		SDL_Window * m_Window;
 		void * m_GLContext;

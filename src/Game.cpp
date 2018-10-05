@@ -96,26 +96,40 @@ void Game::Run()
 
     m_Camera = new Camera;
     m_Camera->SetProjectionMatrixPerspective(60.0f, (float)1280 / (float)960, 0.1f, 8192.f);
-	//mCamera->SetPosition(glm::vec3(2500.0f, 240.0f, 1600.0f));
-	//mCamera->SetPosition(glm::vec3(1441.56f, 240.0f, 2081.76));
-	m_Camera->SetPosition(glm::vec3(5.0f, 5.0f, 5.0f));
-    m_Camera->SetRotation(glm::vec3(0.0f, 0.0f, 0.0f));
+	//m_Camera->SetPosition(glm::vec3(0, 0, 0));
+	//m_Camera->SetRotation(glm::vec3(0, 0, 0));
+	m_Camera->SetPosition(glm::vec3(2742.0f, 61.0f, 1730.0f));
+	//m_Camera->SetPosition(glm::vec3(1441.56f, 240.0f, 2081.76));
+	m_Camera->SetRotation(glm::vec3(14.0f, 122.0f, 0.0f));
+
+	m_meshPos = glm::vec3(2695.0f, 70.0f, 1761.0f);
+	m_meshRot = glm::vec3(0.0f, 0.0f, 0.0f);
+
+	LoadMap(GetGamePath() + "\\Data\\Landscape\\Land1.lnd");
+
+	OSFile* allMeshesFile = new OSFile();
+	allMeshesFile->Open((GetGamePath() + "\\Data\\AllMeshes.g3d").c_str(), LH_FILE_MODE::Read);
+	m_MeshPack = new MeshPack(allMeshesFile);
+	allMeshesFile->Close();
 
 	m_MeshViewer = new MeshViewer();
-	m_MeshViewer->LoadPack(GetGamePath() + "\\Data\\AllMeshes.g3d");
-
-    LandIsland* island = new LandIsland();
-    island->LoadFromDisk(GetGamePath() + "\\Data\\Landscape\\Land1.lnd");
 
 	Shader* modelShader = new Shader();
 	modelShader->Create(OpenBlack::Shaders::WorldObject::VertexShader, OpenBlack::Shaders::WorldObject::FragmentShader);
 
-	GLint uniView = glGetUniformLocation(modelShader->GetHandle(), "viewProj");
+	Shader* terrainShader = new Shader();
+	terrainShader->Create(OpenBlack::Shaders::Terrain::VertexShader, OpenBlack::Shaders::Terrain::FragmentShader);
+
+	GLint uniMVP = glGetUniformLocation(modelShader->GetHandle(), "MVP");
+	GLint uniTerrainView = glGetUniformLocation(terrainShader->GetHandle(), "viewProj");
 	
 	SDL_Event event;
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(100.0f / 255.0f, 149.0f / 255.0f, 237.0f / 255.0f, 1);
+
+	//glm::mat4 modelMatrix = glm::translate(glm::mat4(), glm::vec3(5.0f, 0.0f, 0.0f));
+	//glm::mat4 modelMatrix = glm::mat4(1.0f);
 
 	m_Running = true;
 	while (m_Running)
@@ -134,8 +148,21 @@ void Game::Run()
 		//glViewport(0, 0, (int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		glUseProgram(terrainShader->GetHandle());
+		glUniformMatrix4fv(uniTerrainView, 1, GL_FALSE, glm::value_ptr(m_Camera->GetViewProjectionMatrix()));
+		m_LandIsland->Draw();
+
 		glUseProgram(modelShader->GetHandle());
-		glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(m_Camera->GetViewProjectionMatrix()));
+
+		glm::mat4 model = glm::mat4(1.0f);
+
+		model = glm::translate(model, m_meshPos);
+		model = glm::rotate(model, glm::radians(m_meshRot.x), glm::vec3(1, 0, 0));
+		model = glm::rotate(model, glm::radians(m_meshRot.y), glm::vec3(0, 1, 0));
+		model = glm::rotate(model, glm::radians(m_meshRot.z), glm::vec3(0, 0, 1));
+		model = glm::scale(model, glm::vec3(1, 1, 1));
+
+		glUniformMatrix4fv(uniMVP, 1, GL_FALSE, glm::value_ptr(m_Camera->GetViewProjectionMatrix() * model));
 		m_MeshViewer->Render();
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -157,10 +184,26 @@ void Game::guiLoop()
 			if (ImGui::MenuItem("Quit", "Alt+F4")) { m_Running = false; }
 			ImGui::EndMenu();
 		}
+
 		ImGui::EndMainMenuBar();
 	}
 
 	m_MeshViewer->GUI();
+
+	ImGui::Begin("Camera");
+
+	glm::vec3 pos = m_Camera->GetPosition();
+	glm::vec3 rot = m_Camera->GetRotation();
+
+	ImGui::DragFloat3("Position", &pos[0]);
+	ImGui::DragFloat3("Rotation", &rot[0]);
+	ImGui::DragFloat3("Mesh Pos", &m_meshPos[0]);
+	ImGui::DragFloat3("Mesh Rot", &m_meshRot[0]);
+
+	m_Camera->SetPosition(pos);
+	m_Camera->SetRotation(rot);
+
+	ImGui::End();
 
 	ImGui::Render();
 }
@@ -215,6 +258,9 @@ void Game::createWindow(int width, int height)
 
 void Game::LoadMap(std::string name)
 {
+	m_LandIsland = new LandIsland();
+	m_LandIsland->LoadFromDisk(name);
+
 	// GGame::ClearMap()
 	// LH3DLandscape::Release()
 	// LH3DIsland::Release()

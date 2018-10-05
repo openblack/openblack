@@ -3,17 +3,32 @@
 #define OPENBLACK_LANDISLAND_H
 
 #define OPENBLACK_LANDISLAND_HEIGHT_UNIT 0.67f;
+// #define OPENBLACK_LANDISLAND_HEIGHT_UNIT 1.0f;
 
 #include <string>
+#include <vector>
 
+#include <Graphics/Mesh.h>
 #include <Graphics/Texture2D.h>
 #include <Graphics/Texture2DArray.h>
+
 #include <3D/LandBlock.h>
 
 using namespace OpenBlack::Graphics;
 
 namespace OpenBlack
 {
+	#pragma pack(push, 1)
+	struct LandVertex
+	{
+		GLfloat position[3];
+		GLubyte color[3];
+		GLfloat uv[2];
+		GLubyte country;
+		GLubyte altitude;
+	};
+	#pragma pack(pop)
+
 	class LandIsland
 	{
 	public:
@@ -24,7 +39,7 @@ namespace OpenBlack
 
 		void Draw();
 
-		const int GetAltitudeAt(glm::ivec2) const;
+		const uint8_t GetAltitudeAt(glm::ivec2) const;
 		const float GetHeightAt(glm::ivec2) const;
 
 		// AdjustAlti
@@ -40,43 +55,24 @@ namespace OpenBlack
 		// SetHeightAsByte(long, long, long)
 
 	private:
-		void AddTexture(uint16_t* data);
-		void CreateCountryLookupTexture();
+		void addTexture(uint16_t* data);
+		void buildMesh();
+		std::vector<LandVertex> getVerticies();
+		std::vector<uint16_t> getIndices();
+		void createCountryLookupTexture();
+
+		Mesh* m_Mesh;
 
 		std::unique_ptr<Texture2DArray> m_LowResTextureArray;
 		std::unique_ptr<Texture2DArray> m_MaterialArray;
 		std::unique_ptr<Texture2D> m_CountryLookup;
-		std::unique_ptr<LandBlock*[]> m_LandBlocks;
+		std::unique_ptr<LandBlock[]> m_LandBlocks;
+
+		unsigned int m_blockCount;
+		unsigned int m_materialCount;
+		unsigned int m_countryCount;
+		unsigned int m_lowresCount;
 	};
 }
-
-/*class LH3DIsland {
-public:
-	static void CreateCommonPart();
-	static void LoadFromDisk(const char* filename);
-	static void Release();
-	static std::vector<LH3DVertex> GetVerticies();
-	static std::vector<uint32_t> GetIndices();
-
-	static bool g_b_created;
-	static bool g_b_need_rebuild_all;
-	static bool g_b_use_small_bump;
-	static uint8_t g_index_block[1024];
-	static LH3DLandBlock** g_blocks;
-	//static LandBlock TC_g_index_block[1024];
-
-	static uint32_t g_block_count;
-	static uint32_t g_material_count;
-	static uint32_t g_country_count;
-	static uint32_t g_lowrestexture_count;
-
-	static Texture2DArray* g_materialarray;
-	static Texture2D* g_materials;
-	static LNDCountry* g_countries;
-	static uint32_t* g_lowrestextures;
-
-	static const float g_height_unit;
-
-};*/
 
 #endif

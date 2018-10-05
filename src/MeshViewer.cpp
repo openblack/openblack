@@ -32,6 +32,8 @@
 #include <imgui/imgui_impl_sdl.h>
 #include <imgui/imgui_impl_opengl3.h>
 
+#include <Game.h>
+
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
 
@@ -48,17 +50,13 @@ void MeshViewer::GUI() {
 
 	L3DModel* model = GetCurrentModel();
 	if (model != nullptr) {
-		ImGui::Text("# Submeshes: %d", m_meshPack->Models[m_currentMesh]->GetSubMeshCount());
+		ImGui::Text("# Submeshes: %d", model->GetSubMeshCount());
 	}
 
 	ImGui::End();
 }
 
 void MeshViewer::Render() {
-	if (m_meshPack == nullptr) {
-		return;
-	}
-
 	L3DModel* model = GetCurrentModel();
 	if (model == nullptr) {
 		return;
@@ -67,19 +65,13 @@ void MeshViewer::Render() {
 	model->Draw();
 }
 
-void MeshViewer::LoadPack(std::string filePath)
-{
-	OSFile* allMeshesFile = new OSFile();
-	allMeshesFile->Open(filePath.c_str(), LH_FILE_MODE::Read);
-	m_meshPack = new MeshPack(allMeshesFile);
-	allMeshesFile->Close();
-}
-
 L3DModel* MeshViewer::GetCurrentModel()
 {
-	if (m_currentMesh < 0 || m_currentMesh >= m_meshPack->GetMeshCount()) {
+	MeshPack meshPack = Game::instance()->GetMeshPack();
+
+	if (m_currentMesh < 0 || m_currentMesh >= meshPack.GetMeshCount()) {
 		return nullptr;
 	}
 
-	return m_meshPack->Models[m_currentMesh];
+	return meshPack.Models[m_currentMesh];
 }
