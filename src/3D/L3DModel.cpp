@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <stdexcept>
 
+#include <Game.h>
+
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
 
@@ -83,6 +85,7 @@ void L3DModel::LoadFromL3D(void* data_, size_t size) {
 		L3D_Mesh* mesh = (L3D_Mesh*)(buffer + meshOffsets[m]);
 
 		m_subMeshes = new Mesh*[mesh->numSubMeshes];
+		m_subMeshTextures = new GLuint[mesh->numSubMeshes];
 		m_subMeshCount = mesh->numSubMeshes;
 
 		uint32_t* submeshOffsets = (uint32_t*)(buffer + mesh->subMeshOffset);
@@ -108,6 +111,7 @@ void L3DModel::LoadFromL3D(void* data_, size_t size) {
 			sub->Create(verticiesOffset, verticiesSize, trianglesOffset, indiciesSize/*, subMesh->skinID*/);
 
 			m_subMeshes[sm] = sub;
+			m_subMeshTextures[sm] = subMesh->skinID;
 		}
 
 		// stop idk how we should handle more then 1 mesh yet!
@@ -117,7 +121,15 @@ void L3DModel::LoadFromL3D(void* data_, size_t size) {
 
 void L3DModel::Draw() {
 	for (int subMesh = 0; subMesh < m_subMeshCount; subMesh++) {
+		// no texture no render (todo: handle actual nodraw flags)
+		if (m_subMeshTextures[subMesh] == -1) {
+			continue;
+		}
+
+		MeshPack meshPack = Game::instance()->GetMeshPack();
+		glBindTexture(GL_TEXTURE_2D, meshPack.Textures[m_subMeshTextures[subMesh] - 1]);
 		m_subMeshes[subMesh]->Render();
+		glBindTexture(GL_TEXTURE_2D, GL_NONE);
 	}
 }
 

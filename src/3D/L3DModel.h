@@ -19,6 +19,7 @@ namespace OpenBlack
 
 		unsigned int GetSubMeshCount();
 	protected:
+		GLuint* m_subMeshTextures;
 		Mesh** m_subMeshes;
 		unsigned int m_subMeshCount;
 	};

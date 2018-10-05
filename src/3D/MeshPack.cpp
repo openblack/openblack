@@ -51,10 +51,7 @@ MeshPack::MeshPack(OSFile* file) : m_meshCount(0)
 
 		DDSurfaceDesc* desc = (DDSurfaceDesc*)surfaceDesc;
 
-		printf("texture %d size: %d x %d (type: %d)\n", hiresTexture->id, desc->width, desc->height, hiresTexture->type);
-
 		glBindTexture(GL_TEXTURE_2D, Textures[hiresTexture->id - 1]);
-
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
