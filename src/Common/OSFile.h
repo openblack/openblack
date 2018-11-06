@@ -27,6 +27,7 @@
 #error Unsupported File API
 #endif
 #include <cstddef>
+#include <cstring>
 
 #include <Common/LHSegment.h>
 
