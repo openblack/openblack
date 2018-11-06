@@ -2,6 +2,8 @@
 #ifndef OPENBLACK_LANDBLOCK_H
 #define OPENBLACK_LANDBLOCK_H
 
+#include <stdexcept>
+
 #include <stdint.h>
 #include <Graphics/OpenGL.h>
 #include <glm/glm.hpp>
