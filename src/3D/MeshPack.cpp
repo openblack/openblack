@@ -86,7 +86,7 @@ MeshPack::MeshPack(OSFile* file) : m_meshCount(0)
 	uint32_t* meshCount = (uint32_t*)(data + 4);
 	uint32_t* meshOffsets = (uint32_t*)(data + 8);
 
-	m_meshCount = (int)meshCount;
+	m_meshCount = *meshCount;
 
 	printf("%d meshes\n", *meshCount);
 
@@ -103,6 +103,6 @@ MeshPack::MeshPack(OSFile* file) : m_meshCount(0)
 	}
 }
 
-int MeshPack::GetMeshCount() {
+uint32_t MeshPack::GetMeshCount() {
 	return m_meshCount;
 }
