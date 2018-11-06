@@ -24,6 +24,8 @@
 
 #include <3D/MeshPack.h>
 
+#include <Script/LHScriptX.h>
+
 // #include <AllMeshes.h>
 
 #define IMGUI_IMPL_OPENGL_LOADER_GLEW
@@ -106,6 +108,10 @@ void Game::Run()
 	m_meshRot = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	LoadMap(GetGamePath() + "\\Data\\Landscape\\Land1.lnd");
+
+	LHScriptX* script = new LHScriptX();
+
+	script->LoadFile(GetGamePath() + "\\Scripts\\Land1.txt");
 
 	OSFile* allMeshesFile = new OSFile();
 	allMeshesFile->Open((GetGamePath() + "\\Data\\AllMeshes.g3d").c_str(), LH_FILE_MODE::Read);
