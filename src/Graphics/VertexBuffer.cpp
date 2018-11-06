@@ -28,7 +28,7 @@ const GLvoid *VertexBuffer::GetData() const {
 	return static_cast<const GLvoid *>(m_data);
 }*/
 
-uint32_t VertexBuffer::GetSize() const {
+size_t VertexBuffer::GetSize() const {
 	return m_size;
 }
 
