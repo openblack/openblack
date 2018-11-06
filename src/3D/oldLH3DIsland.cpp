@@ -24,9 +24,9 @@ uint8_t LH3DIsland::g_index_block[1024];
 LH3DLandBlock** LH3DIsland::g_blocks = nullptr;
 const float LH3DIsland::g_height_unit = 0.67;
 
-uint32_t LH3DIsland::g_lowrestexture_count = NULL;
-uint32_t LH3DIsland::g_country_count = NULL;
-uint32_t LH3DIsland::g_material_count = NULL;
+uint32_t LH3DIsland::g_lowrestexture_count = 0;
+uint32_t LH3DIsland::g_country_count = 0;
+uint32_t LH3DIsland::g_material_count = 0;
 
 Texture2DArray* LH3DIsland::g_materialarray = nullptr;
 Texture2D* LH3DIsland::g_materials = nullptr;

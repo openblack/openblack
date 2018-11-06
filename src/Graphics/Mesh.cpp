@@ -12,7 +12,7 @@ Mesh::Mesh(GLuint type, GLuint hint) : m_type(type), m_hint(hint), m_vao(0) {
 
 Mesh::~Mesh()
 {
-	if (m_vao != NULL)
+	if (m_vao != 0)
 	{
 		glDeleteVertexArrays(1, &m_vao);
 	}
@@ -39,7 +39,7 @@ void Mesh::SetVertexDecl(const VertexDecl &decl) {
 }
 
 void Mesh::Render() {
-	if (m_vao == NULL) {
+	if (m_vao == 0) {
 		throw new std::runtime_error("Trying to render Mesh with no VAO.");
 	}
 
