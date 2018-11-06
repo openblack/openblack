@@ -270,6 +270,7 @@ void Game::LoadMap(std::string name)
 
 std::string Game::GetGamePath()
 {
+#ifdef _WIN32
 	// todo: cache this
 	DWORD dataLen;
 	LSTATUS status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ, nullptr, nullptr, &dataLen);
@@ -277,10 +278,15 @@ std::string Game::GetGamePath()
 	{
 		char* path = new char[dataLen];
 		status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ, nullptr, path, &dataLen);
-
 		return path;
 	}
+#endif // _WIN32
 
 	// no key? guess
-    return std::string("C:\\Program Files (x86)\\Lionhead Studios Ltd\\Black & White");
+#ifdef _WIN32
+	std::string guessPath = std::string("C:\\Program Files (x86)\\Lionhead Studios Ltd\\Black & White");
+#else
+	std::string guessPath = std::string("/mnt/windows/Program Files (x86/Lionhead Studios Ltd/Black & White");
+#endif // _WIN32
+	return guessPath;
 }
