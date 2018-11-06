@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include <Graphics/Mesh.h>
 #include <Graphics/Texture2D.h>
