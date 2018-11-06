@@ -16,9 +16,9 @@ namespace OpenBlack
 		L3DModel** Models;
 		GLuint* Textures;
 
-		int GetMeshCount();
+		uint32_t GetMeshCount();
 	private:
-		int m_meshCount;
+		uint32_t m_meshCount;
 	};
 }
 
