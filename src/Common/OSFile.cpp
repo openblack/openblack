@@ -7,18 +7,18 @@
 using namespace OpenBlack;
 
 #if FILE_API == FILE_API_POSIX
-LHOSFile::LHOSFile()
+OSFile::OSFile()
 {
 	mHandle = -1;
 }
 
-LHOSFile::~LHOSFile()
+OSFile::~OSFile()
 {
 	if (mHandle != -1)
 		close(mHandle);
 }
 
-void LHOSFile::Open(char const *filename, LH_FILE_MODE mode)
+void OSFile::Open(char const *filename, LH_FILE_MODE mode)
 {
 	assert(mHandle == -1);
 
@@ -38,7 +38,7 @@ void LHOSFile::Open(char const *filename, LH_FILE_MODE mode)
 	mHandle = handle;
 }
 
-void LHOSFile::Close()
+void OSFile::Close()
 {
 	assert(mHandle != -1);
 
@@ -46,7 +46,7 @@ void LHOSFile::Close()
 	mHandle = -1;
 }
 
-size_t LHOSFile::Read(void * data, size_t size)
+size_t OSFile::Read(void * data, size_t size)
 {
 	assert(mHandle != -1);
 
@@ -59,7 +59,7 @@ size_t LHOSFile::Read(void * data, size_t size)
 	return (size_t)read;
 }
 
-void LHOSFile::Seek(size_t position, LH_SEEK_MODE mode)
+void OSFile::Seek(size_t position, LH_SEEK_MODE mode)
 {
 	assert(mHandle != -1);
 
@@ -84,7 +84,7 @@ void LHOSFile::Seek(size_t position, LH_SEEK_MODE mode)
 		throw std::runtime_error("A seek operation on a file failed.");
 }
 
-size_t LHOSFile::Position()
+size_t OSFile::Position()
 {
 	assert(mHandle != -1);
 
@@ -96,7 +96,7 @@ size_t LHOSFile::Position()
 	return value;
 }
 
-size_t LHOSFile::Size()
+size_t OSFile::Size()
 {
 	assert(mHandle != -1);
 
@@ -113,17 +113,17 @@ size_t LHOSFile::Size()
 
 /* static */
 
-bool LHOSFile::Delete(const char * filename)
+bool OSFile::Delete(const char * filename)
 {
 	return !unlink(filename);
 }
 
-bool LHOSFile::Rename(const char * srcfile, const char * dstfile)
+bool OSFile::Rename(const char * srcfile, const char * dstfile)
 {
 	return !rename(srcfile, dstfile);
 }
 
-bool LHOSFile::Exists(const char * filename)
+bool OSFile::Exists(const char * filename)
 {
 	return !access(filename, F_OK);
 }
