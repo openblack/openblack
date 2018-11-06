@@ -117,6 +117,7 @@ bool loadDDS(uint8_t* buffer)
 		width /= 2;
 		height /= 2;
 	}
+	return true;
 }
 
 void LH3DIsland::LoadFromDisk(const char * filename)
