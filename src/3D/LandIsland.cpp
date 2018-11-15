@@ -4,6 +4,9 @@
 
 #include <stdexcept>
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <Common/stb_image_write.h>
+
 using namespace OpenBlack;
 
 LandIsland::LandIsland() : m_Mesh(0)
@@ -84,6 +87,10 @@ void LandIsland::LoadFromDisk(std::string fileName)
 
 	// Read 2709680/2711300 (1620 bytes left..)
     printf("Read %d/%d\n", file->Position(), fileSize);
+
+	printf("m_blockCount: %d\n", m_blockCount);
+	printf("m_materialCount: %d\n", m_materialCount);
+	printf("m_countryCount: %d\n", m_countryCount);
 
     file->Close();
 
@@ -220,4 +227,35 @@ void LandIsland::addTexture(uint16_t* data)
     }
 
     m_MaterialArray->AddTexture(tex);
+}
+
+void LandIsland::DumpTextures()
+{
+	/*
+		Dumps Textures from VRAM using a FBO (Works on OpenGL 3.2+)
+		A better way would be glGetTexSubImage from OpenGL 4.5.
+	*/
+
+	GLuint textureID = m_MaterialArray->GetHandle();
+
+	GLuint fboID = 0;
+	glGenFramebuffers(1, &fboID);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, fboID);
+
+	for (int i = 0; i < m_materialCount; i++) {
+		uint8_t* pixels = new uint8_t[256 * 256 * 4];
+
+		glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureID, 0, i);
+		glReadPixels(0, 0, 256, 256, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+		auto filename = "dump/landtex" + std::to_string(i) + ".png";
+
+		printf("Writing texture %d to %s\n", i, filename.c_str());
+		stbi_write_png(filename.c_str(), 256, 256, 4, pixels, 256 * 4);
+
+		delete pixels;
+	}
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	glDeleteFramebuffers(1, &fboID);
 }

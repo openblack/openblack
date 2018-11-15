@@ -187,6 +187,7 @@ void Game::guiLoop()
 	{
 		if (ImGui::BeginMenu("File"))
 		{
+			if (ImGui::MenuItem("Dump Textures")) { m_LandIsland->DumpTextures(); }
 			if (ImGui::MenuItem("Quit", "Alt+F4")) { m_Running = false; }
 			ImGui::EndMenu();
 		}

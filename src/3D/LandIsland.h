@@ -43,6 +43,9 @@ namespace OpenBlack
 		const uint8_t GetAltitudeAt(glm::ivec2) const;
 		const float GetHeightAt(glm::ivec2) const;
 
+		void DumpTextures();
+
+
 		// AdjustAlti
 		// BuildSoundTGA(char*)
 		// CreateSmallBump()
