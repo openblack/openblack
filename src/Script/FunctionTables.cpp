@@ -1,12 +1,37 @@
-#pragma once
-#ifndef OPENBLACK_SCRIPT_FUNCTION_TABLES_H
-#define OPENBLACK_SCRIPT_FUNCTION_TABLES_H
-
 #include "Functions.h"
 
 using namespace OpenBlack::Script;
 
-const Functions::FunctionPointer Functions::kFunctionPointers[] = {
+/*
+* Function pointers for map.txt
+*/
+const Functions::FunctionPointer Functions::kMapFunctionPointers[] = {	
+	{ 0,   "SET_NO_PLAYERS",       { kTypeNumber },                                        &Functions::setNoPlayers },
+	{ 1,   "LOAD_TRIBE_DANCE",     { kTypeVector, kTypeNumber },                           &Functions::loadTribeDance },
+	{ 2,   "SET_DATE",             { kTypeNumber, kTypeNumber, kTypeNumber },              &Functions::setDate },
+	{ 3,   "SET_TIME",             { kTypeNumber, kTypeNumber, kTypeNumber },              &Functions::setTime },
+	{ 4,   "SET_TURNS_PER_YEAR",   { kTypeNumber },                                        &Functions::setTurnsPerYear },
+	{ 5,   "SET_GAME_TICK_TIME",   { kTypeNumber },                                        &Functions::setGameTickTime },
+	{ 6,   "LOAD_FEATURE_SCRIPT",  { kTypeVector },                                        &Functions::loadFeatureScript },
+	{ 7,   "PAUSE_GAME",           {  },                                                   &Functions::pauseGame },
+	{ 8,   "CREATE_CREATURE",      { kTypeNumber, kTypeNumber, kTypeNumber, kTypeNumber }, &Functions::createCreature },
+	{ 9,   "OUTPUT_VILLAGERS",     {  },                                                   &Functions::outputVillagers },
+	{ 10,  "OUTPUT_TOWN",          {  },                                                   &Functions::outputTown },
+	{ 11,  "OUTPUT_CREATURES",     {  },                                                   &Functions::outputCreatures },
+	{ 12,  "OUTPUT_COLLIDE",       {  },                                                   &Functions::outputCollide },
+	{ 13,  "OUTPUT_ALLOC",         {  },                                                   &Functions::outputAlloc },
+	{ 14,  "SAVE_FOR_NET_DEBUG",   { kTypeNumber, kTypeNumber },                           &Functions::saveForNetDebug },
+	{ 15,  "LOAD_FOR_NET_DEBUG",   { kTypeNumber },                                        &Functions::loadForNetDebug },
+	{ 16,  "LOAD_LANDSCAPE",       { kTypeVector },                                        &Functions::loadLandscape },
+	{ 17,  "LOAD_GAME_SCRIPT",     { kTypeVector },                                        &Functions::loadGameScript },
+	{ 18,  "LOAD_RAW_GAME_SCRIPT", { kTypeVector },                                        &Functions::loadRawGameScript },
+	{ 19,  "LOAD_LANGUAGE",        {  },                                                   &Functions::loadLanguage },
+};
+
+/*
+* Function pointers for land scripts. (Land*.txt, Playgrounds/*.txt, etc..).
+*/
+const Functions::FunctionPointer Functions::kLandFunctionPointers[] = {
 	{ 0,   "CREATE_MIST",                       { kTypeVector, kTypeFloat, kTypeNumber, kTypeFloat, kTypeFloat },                                                      &Functions::createMist },
 	{ 1,   "CREATE_PATH",                       { kTypeNumber, kTypeNumber, kTypeNumber, kTypeNumber },                                                                &Functions::createPath },
 	{ 2,   "CREATE_TOWN",                       { kTypeNumber, kTypeVector, kTypeString, kTypeNumber, kTypeString },                                                   &Functions::createTown },
@@ -113,5 +138,3 @@ const Functions::FunctionPointer Functions::kFunctionPointers[] = {
 	{ 103, "MAKE_LAST_OBJECT_ARTIFACT",         { kTypeNumber, kTypeString, kTypeFloat },                                                                              &Functions::makeLastObjectArtifact },
 	{ 104, "SET_LOST_TOWN_SCALE",               { kTypeFloat },                                                                                                        &Functions::setLostTownScale },
 };
-
-#endif
