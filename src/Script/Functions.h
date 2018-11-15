@@ -11,7 +11,8 @@ namespace OpenBlack
 	namespace Script
 	{
 		enum Type {
-			kTypeString = 0, // L
+			kTypeNone = 0,
+			kTypeString,     // L
 			kTypeFloat,		 // F
 			kTypeNumber,	 // N
 			kTypeVector		 // A
