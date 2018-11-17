@@ -97,7 +97,7 @@ MeshPack::MeshPack(OSFile* file) : m_meshCount(0)
 		L3DSMiniHeader* header = (L3DSMiniHeader*)(data + meshOffsets[i]);
 
 		L3DModel* model = new L3DModel();
-		model->LoadFromL3D(data + meshOffsets[i], header->l3dSize);
+		model->LoadFromL3D(data + meshOffsets[i], header->l3dSize, true);
 
 		Models[i] = model;
 	}

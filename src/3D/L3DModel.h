@@ -14,7 +14,7 @@ namespace OpenBlack
 		L3DModel();
 		~L3DModel();
 
-		void LoadFromL3D(void* data, size_t size);
+		void LoadFromL3D(void* data, size_t size, bool pack);
 		void Draw();
 
 		unsigned int GetSubMeshCount();
