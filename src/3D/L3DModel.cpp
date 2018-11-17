@@ -189,10 +189,19 @@ void L3DModel::Draw() {
 			continue;
 		}
 
-		MeshPack meshPack = Game::instance()->GetMeshPack();
-		glBindTexture(GL_TEXTURE_2D, meshPack.Textures[m_subMeshTextures[subMesh] - 1]);
-		m_subMeshes[subMesh]->Render();
-		glBindTexture(GL_TEXTURE_2D, GL_NONE);
+		// todo: handle non meshpack textures
+		if (m_bPackedMesh) {
+			MeshPack meshPack = Game::instance()->GetMeshPack();
+			glBindTexture(GL_TEXTURE_2D, meshPack.Textures[m_subMeshTextures[subMesh] - 1]);
+			m_subMeshes[subMesh]->Render();
+			glBindTexture(GL_TEXTURE_2D, GL_NONE);
+		}
+		else
+		{
+			glBindTexture(GL_TEXTURE_2D, m_glSkins[0]);
+			m_subMeshes[subMesh]->Render();
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
 	}
 }
 
