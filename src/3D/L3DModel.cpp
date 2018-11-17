@@ -5,6 +5,8 @@
 
 #include <Game.h>
 
+#include <Common/stb_image_write.h>
+
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
 
@@ -67,15 +69,26 @@ struct L3D_Triangle {
 	uint16_t indices[3];
 };
 
+struct L3D_Skin {
+	uint32_t skinID;
+	uint16_t data[256 * 256]; // RGBA4444
+};
+
 L3DModel::L3DModel() {}
 
-L3DModel::~L3DModel() {}
+L3DModel::~L3DModel()
+{
+	// free textures
+}
 
-void L3DModel::LoadFromL3D(void* data_, size_t size) {
+void L3DModel::LoadFromL3D(void* data_, size_t size, bool pack) {
 	uint8_t* buffer = static_cast<uint8_t*>(data_);
 	if (buffer[0] != 'L' || buffer[1] != '3' || buffer[2] != 'D' || buffer[3] != '0') {
 		throw std::runtime_error("Invalid L3D file");
 	}
+
+	// if our mesh is from AllMeshes.g3d make sure we keep track of it.
+	m_bPackedMesh = pack;
 
 	L3DHeader* header = (L3DHeader*)(buffer + 4);
 	uint32_t* meshOffsets = (uint32_t*)(buffer + header->meshListOffset);
@@ -115,7 +128,57 @@ void L3DModel::LoadFromL3D(void* data_, size_t size) {
 		}
 
 		// stop idk how we should handle more then 1 mesh yet!
-		return;
+		break;
+	}
+
+	// Inside packed meshes, there are no skins.
+	uint32_t* skinOffsets = (uint32_t*)(buffer + header->skinListOffset);
+
+	m_glSkins = new GLuint[header->numSkins];
+	glGenTextures(header->numSkins, m_glSkins);
+
+	for (int s = 0; s < header->numSkins; s++)
+	{
+		L3D_Skin* skin = (L3D_Skin*)(buffer + skinOffsets[s]);
+		printf("%d skin = %d\n", s, skin->skinID);
+
+		glBindTexture(GL_TEXTURE_2D, m_glSkins[s]);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		// reorganize the data because color order.
+		uint8_t* data = new uint8_t[256 * 256 * 4];
+		for (int i = 0; i < 256 * 256; i++) {
+			uint8_t b1 = skin->data[i*2];
+			uint8_t b2 = skin->data[i*2+1];
+
+			uint8_t r = (b1 & 15) * 17;
+			uint8_t g = ((b1 >> 4) & 15) * 17;
+			uint8_t b = (b2 & 15) * 17;
+			uint8_t a = ((b2 >> 4) & 15) * 17;
+
+			data[i * 4] = r;
+			data[i * 4 + 1] = g;
+			data[i * 4 + 2] = b;
+			data[i*4 + 3] = a;
+		}
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA,
+			GL_UNSIGNED_SHORT_4_4_4_4, skin->data);
+
+		uint8_t* pixels = new uint8_t[256 * 256 * 4];
+
+		//glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, 256, 256, 0);
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+		printf("Writing texture %s\n", "dump/handtex.png");
+		stbi_write_png("dump/handtex.png", 256, 256, 4, pixels, 256 * 4);
+
+		delete pixels;
 	}
 }
 
