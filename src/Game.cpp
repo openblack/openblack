@@ -100,11 +100,11 @@ void Game::Run()
     m_Camera->SetProjectionMatrixPerspective(60.0f, (float)1280 / (float)960, 0.1f, 8192.f);
 	//m_Camera->SetPosition(glm::vec3(0, 0, 0));
 	//m_Camera->SetRotation(glm::vec3(0, 0, 0));
-	m_Camera->SetPosition(glm::vec3(2742.0f, 61.0f, 1730.0f));
+	m_Camera->SetPosition(glm::vec3(2174.0f, 185.0f, 1679.0f));
 	//m_Camera->SetPosition(glm::vec3(1441.56f, 240.0f, 2081.76));
-	m_Camera->SetRotation(glm::vec3(14.0f, 122.0f, 0.0f));
+	m_Camera->SetRotation(glm::vec3(20.0f, 114.0f, 0.0f));
 
-	m_meshPos = glm::vec3(2695.0f, 70.0f, 1761.0f);
+	m_meshPos = glm::vec3(2415.0f, 86.0f, 1689.0f);
 	m_meshRot = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	LoadMap(GetGamePath() + "\\Data\\Landscape\\Land1.lnd");
@@ -119,6 +119,19 @@ void Game::Run()
 	allMeshesFile->Close();
 
 	m_MeshViewer = new MeshViewer();
+
+	OSFile* handMeshFile = new OSFile();
+	handMeshFile->Open((GetGamePath() + "\\Data\\CreatureMesh\\Hand_Boned_Base2.l3d").c_str(), LH_FILE_MODE::Read);
+
+	size_t handMeshSize = handMeshFile->Size();
+	uint8_t* handMeshData = new uint8_t[handMeshSize];
+	handMeshFile->Read(handMeshData, handMeshSize);
+
+	L3DModel* handModel = new L3DModel();
+	handModel->LoadFromL3D(handMeshData, handMeshSize, false);
+
+	delete handMeshData;
+	handMeshFile->Close();
 
 	Shader* modelShader = new Shader();
 	modelShader->Create(OpenBlack::Shaders::WorldObject::VertexShader, OpenBlack::Shaders::WorldObject::FragmentShader);
@@ -156,7 +169,10 @@ void Game::Run()
 
 		glUseProgram(terrainShader->GetHandle());
 		glUniformMatrix4fv(uniTerrainView, 1, GL_FALSE, glm::value_ptr(m_Camera->GetViewProjectionMatrix()));
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		m_LandIsland->Draw();
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 		glUseProgram(modelShader->GetHandle());
 
@@ -169,7 +185,8 @@ void Game::Run()
 		model = glm::scale(model, glm::vec3(1, 1, 1));
 
 		glUniformMatrix4fv(uniMVP, 1, GL_FALSE, glm::value_ptr(m_Camera->GetViewProjectionMatrix() * model));
-		m_MeshViewer->Render();
+		//m_MeshViewer->Render();
+		handModel->Draw();
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
