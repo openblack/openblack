@@ -74,6 +74,20 @@ struct L3D_Skin {
 	uint16_t data[256 * 256]; // RGBA4444
 };
 
+struct L3D_Bone {
+	int32_t parentBone; // -1 = root
+	int32_t childBone; // -1 = no children
+	int32_t siblingBone; // -1 = no siblings
+
+	// rotation matrix
+	float rotXAxis[3];
+	float rotYAxis[3];
+	float rotZAxis[3];
+
+	// bone origin position
+	float position[3];
+};
+
 L3DModel::L3DModel() {}
 
 L3DModel::~L3DModel()
@@ -125,6 +139,12 @@ void L3DModel::LoadFromL3D(void* data_, size_t size, bool pack) {
 
 			m_subMeshes[sm] = sub;
 			m_subMeshTextures[sm] = subMesh->skinID;
+		}
+
+		L3D_Bone* bones = (L3D_Bone*)(buffer + mesh->bonesOffset);
+		for (int b = 0; b < mesh->numBones; b++)
+		{
+			L3D_Bone bone = bones[b];
 		}
 
 		// stop idk how we should handle more then 1 mesh yet!
