@@ -147,6 +147,9 @@ void Game::Run()
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(100.0f / 255.0f, 149.0f / 255.0f, 237.0f / 255.0f, 1);
 
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	//glm::mat4 modelMatrix = glm::translate(glm::mat4(), glm::vec3(5.0f, 0.0f, 0.0f));
 	//glm::mat4 modelMatrix = glm::mat4(1.0f);
 
