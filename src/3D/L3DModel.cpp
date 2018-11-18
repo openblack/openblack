@@ -149,36 +149,27 @@ void L3DModel::LoadFromL3D(void* data_, size_t size, bool pack) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		// reorganize the data because color order.
+		// 16bit BGRA to RGBA
+		// todo: can we upload the raw data using glTexImage2D?
 		uint8_t* data = new uint8_t[256 * 256 * 4];
 		for (int i = 0; i < 256 * 256; i++) {
-			uint8_t b1 = skin->data[i*2];
-			uint8_t b2 = skin->data[i*2+1];
+			uint16_t p = skin->data[i];
 
-			uint8_t r = (b1 & 15) * 17;
-			uint8_t g = ((b1 >> 4) & 15) * 17;
-			uint8_t b = (b2 & 15) * 17;
-			uint8_t a = ((b2 >> 4) & 15) * 17;
+			uint8_t b = (p & 0x0F) * 17; // 0000 0000 0000 1111
+			uint8_t g = ((p >> 4) &  0x0F) * 17; // 0000 0000 1111 0000
+			uint8_t r = ((p >> 8) &  0x0F) * 17; // 0000 1111 0000 0000
+			uint8_t a = ((p >> 12) & 0x0F) * 17; // 1111 0000 0000 0000
 
-			data[i * 4] = r;
+			data[i * 4 + 0] = r;
 			data[i * 4 + 1] = g;
 			data[i * 4 + 2] = b;
-			data[i*4 + 3] = a;
+			data[i * 4 + 3] = a;
 		}
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA,
-			GL_UNSIGNED_SHORT_4_4_4_4, skin->data);
+			GL_UNSIGNED_BYTE, data);
 
-		uint8_t* pixels = new uint8_t[256 * 256 * 4];
-
-		//glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, 256, 256, 0);
-		glPixelStorei(GL_PACK_ALIGNMENT, 1);
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-		printf("Writing texture %s\n", "dump/handtex.png");
-		stbi_write_png("dump/handtex.png", 256, 256, 4, pixels, 256 * 4);
-
-		delete pixels;
+		delete data;
 	}
 }
 
