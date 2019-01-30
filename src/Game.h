@@ -2,19 +2,18 @@
 #ifndef OPENBLACK_GAME_H
 #define OPENBLACK_GAME_H
 
-#include <3D/Camera.h>
 #include <string>
 #include <vector>
 
-#include <3D/MeshPack.h>
-#include <3D/LandIsland.h>
-
-#include <MeshViewer.h>
-
-struct SDL_Window;
+#include "GameWindow.h"
 
 namespace OpenBlack
 {
+	class Camera;
+	class MeshPack;
+	class MeshViewer;
+	class LandIsland;
+
 	class Game {
 	public:
 		Game(int argc, char **argv);
@@ -26,8 +25,8 @@ namespace OpenBlack
 
 		std::string GetGamePath();
 
-		Camera& GetCamera() { return *m_Camera; }
-		MeshPack& GetMeshPack() { return *m_MeshPack; }
+		Camera& GetCamera() { return *_camera; }
+		MeshPack& GetMeshPack() { return *_meshPack; }
 		
 		static Game* instance() {
 			return sInstance;
@@ -35,24 +34,15 @@ namespace OpenBlack
 	private:
 		static Game* sInstance;
 
-		MeshViewer *m_MeshViewer;
-		LandIsland *m_LandIsland;
+		//std::unique_ptr<MeshViewer> _meshViewer;
+		std::unique_ptr<LandIsland> _landIsland;
+		std::unique_ptr<MeshPack> _meshPack;
+		std::unique_ptr<Camera> _camera;
+		std::unique_ptr<GameWindow> _window;
 
-		Camera *m_Camera;
-		MeshPack *m_MeshPack;
-
-		glm::vec3 m_meshPos;
-		glm::vec3 m_meshRot;
-
-		SDL_Window * m_Window;
-		void * m_GLContext;
-
-		bool m_Running;
-
-		void createWindow(int width, int height);
+		bool _running;
 
 		void guiLoop();
-		void loop();
 	};
 }
 

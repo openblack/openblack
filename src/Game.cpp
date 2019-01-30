@@ -2,17 +2,15 @@
 
 #include <iostream>
 #include <sstream>
+#include <string>
 
 #include <SDL.h>
-#define GLEW_STATIC
-#include <GL/glew.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include <3D/Camera.h>
 #include <3D/LandIsland.h>
-#include <3D/oldLH3DIsland.h>
 
 #include <Common/OSFile.h>
 
@@ -34,54 +32,42 @@
 #include <imgui/imgui_impl_sdl.h>
 #include <imgui/imgui_impl_opengl3.h>
 
+#include "GitSHA1.h"
+
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
 
-void GLAPIENTRY OpenGLMsgCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
-{
-	if (severity == GL_DEBUG_SEVERITY_NOTIFICATION)
-		return;
-
-    fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-        (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type, severity, message);
-}
-
-void checkSDLError(int ret)
-{
-    if (ret != 0)
-        std::cerr << "SDL error: " << SDL_GetError() << std::endl;
-}
+const std::string kBuildStr(kGitSHA1Hash, 8);
+const std::string kWindowTitle = "OpenBlack";
 
 Game* Game::sInstance = nullptr;
 
-Game::Game(int argc, char **argv)
-    : m_Window(NULL),
-    m_GLContext(NULL)
+void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 {
+	fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+		(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+		type, severity, message);
+}
+
+Game::Game(int argc, char **argv)
+{
+	// todo: parse arg
+
 	sInstance = this;
 
-    uint32_t flags = SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE | SDL_INIT_TIMER;
-    if (SDL_WasInit(flags) == 0)
-    {
-        SDL_SetMainReady();
-        if (SDL_Init(flags) != 0)
-            throw std::runtime_error("Could not initialize SDL! " + std::string(SDL_GetError()));
-    }
+	// create the game window
+	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", 1024, 768, DisplayMode::Windowed);
+	_window->SetSwapInterval(1);
 
-    createWindow(1280, 960);
+	glEnable(GL_DEBUG_OUTPUT);
+	glDebugMessageCallback(MessageCallback, 0);
+
+	GetGamePath(); // lazy precache the game path todo: better
 }
 
 Game::~Game()
 {
-    SDL_GL_DeleteContext(m_GLContext);
-
-    if (m_Window)
-    {
-        SDL_DestroyWindow(m_Window);
-		m_Window = NULL;
-    }
-
-    SDL_Quit();
+    SDL_Quit(); // todo: move to GameWindow
 }
 
 void Game::Run()
@@ -91,208 +77,102 @@ void Game::Run()
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
 
-	ImGui_ImplSDL2_InitForOpenGL(m_Window, m_GLContext);
+	ImGui_ImplSDL2_InitForOpenGL(_window->GetHandle(), _window->GetGLContext());
 	ImGui_ImplOpenGL3_Init("#version 130");
 
-	ImGui::StyleColorsDark();
+	// create our camera
+	_camera = std::make_unique<Camera>();
+	_camera->SetProjectionMatrixPerspective(60.0f, (float)1280 / (float)960, 0.1f, 8192.f);
+	_camera->SetPosition(glm::vec3(2174.0f, 185.0f, 1679.0f));
+	_camera->SetRotation(glm::vec3(20.0f, 114.0f, 0.0f));
 
-    m_Camera = new Camera;
-    m_Camera->SetProjectionMatrixPerspective(60.0f, (float)1280 / (float)960, 0.1f, 8192.f);
-	//m_Camera->SetPosition(glm::vec3(0, 0, 0));
-	//m_Camera->SetRotation(glm::vec3(0, 0, 0));
-	m_Camera->SetPosition(glm::vec3(2174.0f, 185.0f, 1679.0f));
-	//m_Camera->SetPosition(glm::vec3(1441.56f, 240.0f, 2081.76));
-	m_Camera->SetRotation(glm::vec3(20.0f, 114.0f, 0.0f));
-
-	m_meshPos = glm::vec3(2415.0f, 86.0f, 1689.0f);
-	m_meshRot = glm::vec3(0.0f, 0.0f, 0.0f);
-
-	LoadMap(GetGamePath() + "\\Data\\Landscape\\Land1.lnd");
-
-	LHScriptX* script = new LHScriptX();
-
-	script->LoadFile(GetGamePath() + "\\Scripts\\Land1.txt");
-
-	OSFile* allMeshesFile = new OSFile();
-	allMeshesFile->Open((GetGamePath() + "\\Data\\AllMeshes.g3d").c_str(), LH_FILE_MODE::Read);
-	m_MeshPack = new MeshPack(allMeshesFile);
-	allMeshesFile->Close();
-
-	m_MeshViewer = new MeshViewer();
-
-	OSFile* handMeshFile = new OSFile();
-	handMeshFile->Open((GetGamePath() + "\\Data\\CreatureMesh\\Hand_Boned_Base2.l3d").c_str(), LH_FILE_MODE::Read);
-
-	size_t handMeshSize = handMeshFile->Size();
-	uint8_t* handMeshData = new uint8_t[handMeshSize];
-	handMeshFile->Read(handMeshData, handMeshSize);
-
-	L3DModel* handModel = new L3DModel();
-	handModel->LoadFromL3D(handMeshData, handMeshSize, false);
-
-	delete handMeshData;
-	handMeshFile->Close();
-
-	Shader* modelShader = new Shader();
-	modelShader->Create(OpenBlack::Shaders::WorldObject::VertexShader, OpenBlack::Shaders::WorldObject::FragmentShader);
+	//LoadMap(GetGamePath() + "\\Data\\Landscape\\Land1.lnd");
+	LoadMap("Land1.lnd");
 
 	Shader* terrainShader = new Shader();
 	terrainShader->Create(OpenBlack::Shaders::Terrain::VertexShader, OpenBlack::Shaders::Terrain::FragmentShader);
 
-	GLint uniMVP = glGetUniformLocation(modelShader->GetHandle(), "MVP");
 	GLint uniTerrainView = glGetUniformLocation(terrainShader->GetHandle(), "viewProj");
-	
-	SDL_Event event;
 
 	glEnable(GL_DEPTH_TEST);
-	glClearColor(100.0f / 255.0f, 149.0f / 255.0f, 237.0f / 255.0f, 1);
-
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	//glm::mat4 modelMatrix = glm::translate(glm::mat4(), glm::vec3(5.0f, 0.0f, 0.0f));
-	//glm::mat4 modelMatrix = glm::mat4(1.0f);
-
-	m_Running = true;
-	while (m_Running)
+	_running = true;
+	SDL_Event e;
+	while (_running)
 	{
-		while (SDL_PollEvent(&event)) {
-			ImGui_ImplSDL2_ProcessEvent(&event);
-			if (event.type == SDL_QUIT)
-				m_Running = false;
-			if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(m_Window))
-				m_Running = false;
+		while (SDL_PollEvent(&e)) {
+			if (e.type == SDL_QUIT)
+				_running = false;
+			if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_CLOSE && e.window.windowID == _window->GetID())
+				_running = false;
+			if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
+				_running = false;
+			if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_f)
+				_window->SetFullscreen(true);
+
+			ImGui_ImplSDL2_ProcessEvent(&e);
 		}
 
 		this->guiLoop();
 
-		SDL_GL_MakeCurrent(m_Window, m_GLContext);
-		//glViewport(0, 0, (int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y);
+		glClearColor(39.0f / 255.0f, 70.0f / 255.0f, 89.0f / 255.0f, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glUseProgram(terrainShader->GetHandle());
-		glUniformMatrix4fv(uniTerrainView, 1, GL_FALSE, glm::value_ptr(m_Camera->GetViewProjectionMatrix()));
+		glUniformMatrix4fv(uniTerrainView, 1, GL_FALSE, glm::value_ptr(_camera->GetViewProjectionMatrix()));
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		m_LandIsland->Draw();
+		_landIsland->Draw();
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-		glUseProgram(modelShader->GetHandle());
-
-		glm::mat4 model = glm::mat4(1.0f);
-
-		model = glm::translate(model, m_meshPos);
-		model = glm::rotate(model, glm::radians(m_meshRot.x), glm::vec3(1, 0, 0));
-		model = glm::rotate(model, glm::radians(m_meshRot.y), glm::vec3(0, 1, 0));
-		model = glm::rotate(model, glm::radians(m_meshRot.z), glm::vec3(0, 0, 1));
-		model = glm::scale(model, glm::vec3(1, 1, 1));
-
-		glUniformMatrix4fv(uniMVP, 1, GL_FALSE, glm::value_ptr(m_Camera->GetViewProjectionMatrix() * model));
-		//m_MeshViewer->Render();
-		handModel->Draw();
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		SDL_GL_SwapWindow(m_Window);
+		_window->SwapWindow();
 	}
 }
 
 void Game::guiLoop()
 {
 	ImGui_ImplOpenGL3_NewFrame();
-	ImGui_ImplSDL2_NewFrame(m_Window);
+	ImGui_ImplSDL2_NewFrame(_window->GetHandle());
 	ImGui::NewFrame();
 
 	if (ImGui::BeginMainMenuBar())
 	{
 		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::MenuItem("Dump Textures")) { m_LandIsland->DumpTextures(); }
-			if (ImGui::MenuItem("Quit", "Alt+F4")) { m_Running = false; }
+			if (ImGui::MenuItem("Dump Land Textures")) { _landIsland->DumpTextures(); }
+			if (ImGui::MenuItem("Quit", "Alt+F4")) { _running = false; }
 			ImGui::EndMenu();
 		}
 
 		ImGui::EndMainMenuBar();
 	}
 
-	m_MeshViewer->GUI();
+	//m_MeshViewer->GUI();
 
 	ImGui::Begin("Camera");
 
-	glm::vec3 pos = m_Camera->GetPosition();
-	glm::vec3 rot = m_Camera->GetRotation();
+	glm::vec3 pos = _camera->GetPosition();
+	glm::vec3 rot = _camera->GetRotation();
 
 	ImGui::DragFloat3("Position", &pos[0]);
 	ImGui::DragFloat3("Rotation", &rot[0]);
-	ImGui::DragFloat3("Mesh Pos", &m_meshPos[0]);
-	ImGui::DragFloat3("Mesh Rot", &m_meshRot[0]);
 
-	m_Camera->SetPosition(pos);
-	m_Camera->SetRotation(rot);
+	_camera->SetPosition(pos);
+	_camera->SetRotation(rot);
 
 	ImGui::End();
 
 	ImGui::Render();
 }
 
-void Game::loop()
-{
-
-}
-
-void Game::createWindow(int width, int height)
-{
-	int pos_x = SDL_WINDOWPOS_CENTERED,
-		pos_y = SDL_WINDOWPOS_CENTERED;
-
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-
-	uint32_t flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
-
-	m_Window = SDL_CreateWindow("OpenBlack", pos_x, pos_y, width, height, flags);
-	if (!m_Window)
-	{
-		std::stringstream error;
-		error << "Failed to create SDL window: " << SDL_GetError() << std::endl;
-		throw std::runtime_error(error.str());
-	}
-
-	m_GLContext = SDL_GL_CreateContext(m_Window);
-	if (!m_GLContext)
-		throw std::runtime_error("Failed to create a GL context\n");
-
-	SDL_GL_SetSwapInterval(1);
-
-	glewExperimental = GL_TRUE;
-	GLenum err = glewInit();
-	if (GLEW_OK != err)
-	{
-		std::stringstream error;
-		error << "glewInit failed: " << glewGetErrorString(err) << std::endl;
-		throw std::runtime_error(error.str());
-	}
-
-	glEnable(GL_DEBUG_OUTPUT);
-	glDebugMessageCallback(OpenGLMsgCallback, 0);
-}
-
 void Game::LoadMap(std::string name)
 {
-	m_LandIsland = new LandIsland();
-	m_LandIsland->LoadFromDisk(name);
-
-	// GGame::ClearMap()
-	// LH3DLandscape::Release()
-	// LH3DIsland::Release()
-	// GSetup::LoadMapFeatures(name)
-	// Town::AsssignTownFeature()
+	_landIsland = std::make_unique<LandIsland>();
+	_landIsland->LoadFromDisk(name);
 }
 
 std::string Game::GetGamePath()
@@ -307,6 +187,8 @@ std::string Game::GetGamePath()
 		status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ, nullptr, path, &dataLen);
 		return path;
 	}
+
+	std::cerr << "Failed to find GameDir registry value, game not installed" << std::endl;
 #endif // _WIN32
 
 	// no key? guess
@@ -315,5 +197,8 @@ std::string Game::GetGamePath()
 #else
 	std::string guessPath = std::string("/mnt/windows/Program Files (x86/Lionhead Studios Ltd/Black & White");
 #endif // _WIN32
+
+	std::clog << "Guessing GamePath: " << guessPath << std::endl;
+
 	return guessPath;
 }
