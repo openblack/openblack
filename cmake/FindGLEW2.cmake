@@ -1,60 +1,45 @@
+# Find GLEW
 #
-# Try to find GLEW library and include path.
 # Once done this will define
+#  GLEW_FOUND - system has GLEW
+#  GLEW_INCLUDE_DIR - the GLEW include directory
+#  GLEW_LIBRARY - The library needed to use GLEW
 #
-# GLEW_FOUND
-# GLEW_INCLUDE_DIR
-# GLEW_LIBRARY
-# 
 
-IF (WIN32)
-	FIND_PATH( GLEW_INCLUDE_DIR GL/glew.h
-		$ENV{PROGRAMFILES}/GLEW/include
-		${GLEW_ROOT_DIR}/include
-		DOC "The directory where GL/glew.h resides")
+include(FindPackageHandleStandardArgs)
 
-	if (GLEW_USE_STATIC_LIBS)
-		set(GLEW_LIBRARY_NAME glew32s)
-		set(GLEW_DEFINITIONS -DGLEW_STATIC)
+# Set up architectures (for windows) and prefixes (for mingw builds)
+if(WIN32)
+	if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+		set(GLEW_LIB_PATH_SUFFIX Release/x64)
 	else()
-		set(GLEW_LIBRARY_NAME glew32)
+		set(GLEW_LIB_PATH_SUFFIX Release/Win32)
 	endif()
-
-	FIND_LIBRARY( GLEW_LIBRARY
-		NAMES ${GLEW_LIBRARY_NAME}
-		PATHS
-		$ENV{PROGRAMFILES}/GLEW/lib
-		${GLEW_ROOT_DIR}/lib/Release/Win32
-		DOC "The GLEW library")
-
-		unset(GLEW_LIBRARY_NAME)
-ELSE (WIN32)
-	FIND_PATH( GLEW_INCLUDE_DIR GL/glew.h
-		/usr/include
-		/usr/local/include
-		/sw/include
-		/opt/local/include
-		DOC "The directory where GL/glew.h resides")
-	FIND_LIBRARY( GLEW_LIBRARY
-		NAMES GLEW glew
-		PATHS
-		/usr/lib64
-		/usr/lib
-		/usr/local/lib64
-		/usr/local/lib
-		/sw/lib
-		/opt/local/lib
-		DOC "The GLEW library")
-ENDIF (WIN32)
-
-# Handle REQUIRD argument, define *_FOUND variable
-find_package_handle_standard_args(GLEW DEFAULT_MSG GLEW_INCLUDE_DIR GLEW_LIBRARY)
-
-# Define GLEW_LIBRARIES and GLEW_INCLUDE_DIRS
-if (GLEW_FOUND)
-	set(GLEW_LIBRARIES ${OPENGL_LIBRARIES} ${GLEW_LIBRARY})
-	set(GLEW_INCLUDE_DIRS ${GLEW_INCLUDE_DIR})
 endif()
 
-# Hide some variables
-mark_as_advanced(GLEW_INCLUDE_DIR GLEW_LIBRARY)
+find_path( GLEW_INCLUDE_DIR GL/glew.h
+            /usr/include
+            /usr/local/include
+            /sw/include
+            /opt/local/include
+            $ENV{PROGRAMFILES}/GLEW/include
+			${GLEW_ROOT_DIR}/include
+            DOC "The directory where GL/glew.h resides")
+
+find_library( GLEW_LIBRARY
+            NAMES GLEW glew glew32s glew32
+            PATHS
+            /usr/lib64
+            /usr/lib
+            /usr/local/lib64
+            /usr/local/lib
+            /sw/lib
+            /opt/local/lib
+            $ENV{PROGRAMFILES}/GLEW/lib
+			${GLEW_ROOT_DIR}/lib
+			${GLEW_ROOT_DIR}/lib/${GLEW_LIB_PATH_SUFFIX}
+            DOC "The GLEW library")
+
+find_package_handle_standard_args(GLEW DEFAULT_MSG GLEW_LIBRARY GLEW_INCLUDE_DIR)
+mark_as_advanced(GLEW_LIBRARY GLEW_INCLUDE_DIR)
+
