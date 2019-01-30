@@ -17,7 +17,7 @@ namespace OpenBlack
 
 			GLuint GetHandle() const;
 		protected:
-			GLuint m_textureID;
+			GLuint _textureID;
 
 		private:
 			// No copying or assignment

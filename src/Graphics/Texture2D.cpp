@@ -6,7 +6,7 @@ using namespace OpenBlack::Graphics;
 
 bool Texture2D::Create(const TextureDef2D& textureData)
 {
-	glBindTexture(GL_TEXTURE_2D, m_textureID);
+	glBindTexture(GL_TEXTURE_2D, _textureID);
 	glTexImage2D(GL_TEXTURE_2D, 0, textureData.internalFormat, textureData.width, textureData.height, 0, textureData.format, textureData.type, textureData.data);
 
 	// todo: expose this
@@ -20,7 +20,7 @@ bool Texture2D::Create(const TextureDef2D& textureData)
 
 void Texture2D::Bind()
 {
-	glBindTexture(GL_TEXTURE_2D, m_textureID);
+	glBindTexture(GL_TEXTURE_2D, _textureID);
 }
 
 void Texture2D::Unbind()

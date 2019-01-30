@@ -4,19 +4,19 @@
 
 using namespace OpenBlack::Graphics;
 
-Texture::Texture() : m_textureID(0)
+Texture::Texture() : _textureID(0)
 {
-	glGenTextures(1, &m_textureID);
-	assert(m_textureID);
+	glGenTextures(1, &_textureID);
+	assert(_textureID);
 }
 
 Texture::~Texture()
 {
-	if (m_textureID != 0)
-		glDeleteTextures(1, &m_textureID);
+	if (_textureID != 0)
+		glDeleteTextures(1, &_textureID);
 }
 
 GLuint Texture::GetHandle() const
 {
-	return m_textureID;
+	return _textureID;
 }

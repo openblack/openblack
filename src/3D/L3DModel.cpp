@@ -6,6 +6,7 @@
 #include <Game.h>
 
 #include <Common/stb_image_write.h>
+#include <3D/MeshPack.h>
 
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;

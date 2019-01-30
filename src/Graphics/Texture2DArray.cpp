@@ -9,7 +9,7 @@ void Texture2DArray::AddTexture(const TextureDef2D& textureData)
 
 void Texture2DArray::Create()
 {
-	glBindTexture(GL_TEXTURE_2D_ARRAY, m_textureID);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, _textureID);
 	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8, 256, 256, m_textures.size());
 	//glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB5_A1, 256, 256, m_textures.size(), 0, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, NULL);
 
@@ -28,7 +28,7 @@ void Texture2DArray::Create()
 
 void Texture2DArray::Bind()
 {
-    glBindTexture(GL_TEXTURE_2D_ARRAY, m_textureID);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, _textureID);
 }
 
 void Texture2DArray::Unbind()
