@@ -15,3 +15,6 @@ GameData
 /MSVC*
 
 lib
+
+# 3rd party libs
+/3rdparty
