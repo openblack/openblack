@@ -1,3 +1,5 @@
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/GitSHA1.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" @ONLY)
+
 set(OS_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 file(GLOB_RECURSE OPENBLACK_SRCS RELATIVE
@@ -40,14 +42,14 @@ endif()
 
 set(OPENBLACK_ICON "../resource/icon/openblack.rc")
 
-add_executable(OpenBlack ${OPENBLACK_SRCS} ${OPENBLACK_ICON})
+add_executable(OpenBlack ${OPENBLACK_SRCS} "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" ${OPENBLACK_ICON})
 set_target_properties(OpenBlack PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(OpenBlack PROPERTIES OUTPUT_NAME openblack)
 set_target_properties(OpenBlack PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set_target_properties(OpenBlack PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set_target_properties(OpenBlack PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-target_link_libraries(OpenBlack ${SDL2_LIBRARY} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
+target_link_libraries(OpenBlack ${SDL2_LIBRARY} ${OPENGL_LIBRARIES} ${GLEW_LIBRARY})
 
 if (WIN32)
 	if (USE_DEBUG_CONSOLE)
