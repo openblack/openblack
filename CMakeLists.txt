@@ -2,41 +2,42 @@ cmake_minimum_required(VERSION 3.2)
 
 project(OpenBlack)
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+#where to build libs and bins
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+#these variables are for non-makefile generators
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${EXECUTABLE_OUTPUT_PATH})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${EXECUTABLE_OUTPUT_PATH})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${LIBRARY_OUTPUT_PATH})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${LIBRARY_OUTPUT_PATH})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${LIBRARY_OUTPUT_PATH})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${LIBRARY_OUTPUT_PATH})
+
+
 set(OS_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(GLEW_USE_STATIC_LIBS true)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 if (WIN32)
     option(USE_DEBUG_CONSOLE "whether a debug console should be enabled for debug builds, if false debug output is redirected to Visual Studio output" ON)
 endif()
 
-include(FindOpenGL)
-if(NOT OPENGL_FOUND AND NOT OPENGL_XMESA_FOUND AND NOT OPENGL_GLU_FOUND)
-	message(FATAL_ERROR "OpenGL not found, please install it")
-endif()
-
-include(cmake/FindSDL2.cmake)
-if(NOT SDL2_FOUND)
-	message(FATAL_ERROR "SDL 2.0 not found, set ENV{SDL2DIR} to point to SDL 2.0, and optionally set the cmake var SDL2_LIBRARY_TEMP to the lib dir")
-endif()
-
-include(cmake/FindGLEW2.cmake)
-if(NOT GLEW_FOUND)
-	message(FATAL_ERROR "GLEW not found, ${GLEW_ROOT_DIR}")
-endif()
-
-include(cmake/FindGLM.cmake)
-if(NOT GLM_FOUND)
-	message(FATAL_ERROR "GLM not found")
-endif()
-
-#find_package(FFmpeg REQUIRED)
-#find_package(FFmpeg REQUIRED COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE SWRESAMPLE)
+find_package(OpenGL REQUIRED)
+find_package(SDL2 REQUIRED)
+find_package(GLEW2 REQUIRED)
+find_package(GLM REQUIRED)
 
 if(OPENGL_INCLUDE_DIR)
 	include_directories("${OPENGL_INCLUDE_DIR}")
 endif()
 include_directories("${SDL2_INCLUDE_DIR}")
-include_directories("${GLEW_INCLUDE_DIRS}")
+include_directories("${GLEW_INCLUDE_DIR}")
 include_directories("${GLM_INCLUDE_DIRS}")
 
 add_subdirectory(src)
