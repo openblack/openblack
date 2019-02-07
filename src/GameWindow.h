@@ -31,6 +31,7 @@ namespace OpenBlack
 		void GrabInput(bool b = true);
 		void SetMousePosition(int x, int y);
 		bool IsInputGrabbed();
+		float GetAspectRatio() const;
 
 		void SetTitle(const std::string& str);
 		std::string GetTitle() const;
