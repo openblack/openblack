@@ -24,13 +24,13 @@
 
 #include <Script/LHScriptX.h>
 
-// #include <AllMeshes.h>
-
 #define IMGUI_IMPL_OPENGL_LOADER_GLEW
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_sdl.h>
 #include <imgui/imgui_impl_opengl3.h>
+
+#include <Common/CmdLineArgs.h>
 
 #include "GitSHA1.h"
 
@@ -51,18 +51,22 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 
 Game::Game(int argc, char **argv)
 {
-	// todo: parse arg
+	int windowWidth = 1280, windowHeight = 768;
+	DisplayMode displayMode = DisplayMode::Windowed;
 
-	sInstance = this;
+	auto args = CmdLineArgs(argc, argv);
+	args.Get("w", windowWidth);
+	args.Get("h", windowHeight);
 
-	// create the game window
-	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", 1024, 768, DisplayMode::Windowed);
+	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", windowWidth, windowHeight, displayMode);
 	_window->SetSwapInterval(1);
 
-	glEnable(GL_DEBUG_OUTPUT);
-	glDebugMessageCallback(MessageCallback, 0);
+	//glEnable(GL_DEBUG_OUTPUT);
+	//glDebugMessageCallback(MessageCallback, 0);
 
-	GetGamePath(); // lazy precache the game path todo: better
+	// GetGamePath(); // lazy precache the game path todo: better
+
+	sInstance = this;
 }
 
 Game::~Game()
