@@ -22,7 +22,10 @@
 
 #include <3D/MeshPack.h>
 
-#include <Script/LHScriptX.h>
+//#include <Script/LHScriptX.h>
+#include <LHScriptX/Script.h>
+#include <LHScriptX/Command.h>
+#include <LHScriptX/Impl_LandCommands.h>
 
 #define IMGUI_IMPL_OPENGL_LOADER_GLEW
 
@@ -36,6 +39,7 @@
 
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
+using namespace OpenBlack::LHScriptX;
 
 const std::string kBuildStr(kGitSHA1Hash, 8);
 const std::string kWindowTitle = "OpenBlack";
@@ -50,6 +54,7 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 }
 
 Game::Game(int argc, char **argv)
+	: _running(true), _wireframe(false)
 {
 	int windowWidth = 1280, windowHeight = 768;
 	DisplayMode displayMode = DisplayMode::Windowed;
@@ -59,12 +64,10 @@ Game::Game(int argc, char **argv)
 	args.Get("h", windowHeight);
 
 	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", windowWidth, windowHeight, displayMode);
-	_window->SetSwapInterval(1);
+	_window->SetSwapInterval(0);
 
 	//glEnable(GL_DEBUG_OUTPUT);
 	//glDebugMessageCallback(MessageCallback, 0);
-
-	// GetGamePath(); // lazy precache the game path todo: better
 
 	sInstance = this;
 }
@@ -87,11 +90,31 @@ void Game::Run()
 	// create our camera
 	_camera = std::make_unique<Camera>();
 	_camera->SetProjectionMatrixPerspective(60.0f, _window->GetAspectRatio(), 0.1f, 8192.f);
-	_camera->SetPosition(glm::vec3(2174.0f, 185.0f, 1679.0f));
-	_camera->SetRotation(glm::vec3(20.0f, 114.0f, 0.0f));
+	_camera->SetPosition(glm::vec3(2458.0f, 169.0f, 1743.0f));
+	_camera->SetRotation(glm::vec3(104.0f, 15.0f, 0.0f));
 
-	//LoadMap(GetGamePath() + "\\Data\\Landscape\\Land1.lnd");
-	LoadMap("Land1.lnd");
+	LoadMap(GetGamePath() + "\\Data\\Landscape\\Land1.lnd");
+	//LoadMap("Land1.lnd");
+
+	/* we pass the unique_ptr straight to the Script, so do not reuse this */
+	auto commands = std::make_unique<ScriptCommands>();
+	commands->RegisterCommands(
+		Impl_LandCommands::Definitions,
+		sizeof(Impl_LandCommands::Definitions) / sizeof(*Impl_LandCommands::Definitions)
+	);
+
+	/*ScriptParameters parameters{ ScriptParameter(2.3000f) };
+	ScriptCommandContext ctx(this, &parameters);
+	_commands->Call("VERSION", ctx);*/
+
+	_scriptx = std::make_unique<Script>();
+	_scriptx->SetCommands(commands);
+
+	//_scriptx->ScanLine("VERSION(\"LOL\")");
+	_scriptx->LoadFile(GetGamePath() + "\\Scripts\\Land1.txt");
+
+	//LHScriptX* script = new LHScriptX();
+	//script->LoadFile(GetGamePath() + "\\Scripts\\Land1.txt");
 
 	Shader* terrainShader = new Shader();
 	terrainShader->Create(OpenBlack::Shaders::Terrain::VertexShader, OpenBlack::Shaders::Terrain::FragmentShader);
@@ -126,20 +149,29 @@ void Game::Run()
 			if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_f)
 				_window->SetFullscreen(true);
 
+			_camera->ProcessSDLEvent(&e);
+
 			ImGui_ImplSDL2_ProcessEvent(&e);
 		}
 
+		_camera->Update(deltaTime);
+
 		this->guiLoop();
 
+		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 		glClearColor(39.0f / 255.0f, 70.0f / 255.0f, 89.0f / 255.0f, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glUseProgram(terrainShader->GetHandle());
 		glUniformMatrix4fv(uniTerrainView, 1, GL_FALSE, glm::value_ptr(_camera->GetViewProjectionMatrix()));
 
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		if (_wireframe)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 		_landIsland->Draw();
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		if (_wireframe)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -155,28 +187,62 @@ void Game::guiLoop()
 
 	if (ImGui::BeginMainMenuBar())
 	{
+
 		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::MenuItem("Dump Land Textures")) { _landIsland->DumpTextures(); }
-			if (ImGui::MenuItem("Quit", "Alt+F4")) { _running = false; }
+			if (ImGui::MenuItem("Quit", "Esc")) { _running = false; }
 			ImGui::EndMenu();
 		}
+
+		if (ImGui::BeginMenu("View"))
+		{
+			ImGui::Checkbox("Wireframe", &_wireframe);
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Tools"))
+		{
+			if (ImGui::MenuItem("Dump Land Textures")) { _landIsland->DumpTextures(); }
+			ImGui::EndMenu();
+		}
+
+		ImGui::SameLine(ImGui::GetWindowWidth() - 154.0f);
+		ImGui::Text("%.2f FPS (%.2f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
 
 		ImGui::EndMainMenuBar();
 	}
 
 	//m_MeshViewer->GUI();
 
-	ImGui::Begin("Camera");
+	int width, height;
+	_window->GetSize(width, height);
+	ImGui::SetNextWindowPos(ImVec2(width - 300.0f, 32.0f), ImGuiCond_FirstUseEver);
+	ImGui::Begin("Camera", NULL, ImGuiWindowFlags_AlwaysAutoResize);
 
 	glm::vec3 pos = _camera->GetPosition();
 	glm::vec3 rot = _camera->GetRotation();
 
 	ImGui::DragFloat3("Position", &pos[0]);
 	ImGui::DragFloat3("Rotation", &rot[0]);
+	ImGui::DragFloat3("Forward", &_camera->GetForward()[0]);
 
 	_camera->SetPosition(pos);
 	_camera->SetRotation(rot);
+
+	ImGui::End();
+
+	if (_scriptx) {
+		ImGui::Begin("LHScriptX", NULL, ImVec2(300, 200), -1.0f, NULL);
+
+		ImGui::TextColored(ImVec4(1, 1, 0, 1), "Commands");
+		ImGui::BeginChild("Scrolling");
+
+		for (const auto& kv : _scriptx->GetCommands().GetCommands()) {
+			ImGui::Text("%s", kv.first.c_str());
+		}
+
+		ImGui::EndChild();
+	}
 
 	ImGui::End();
 
@@ -193,7 +259,7 @@ std::string Game::GetGamePath()
 {
 #ifdef _WIN32
 	// todo: cache this
-	DWORD dataLen;
+	DWORD dataLen = 0;
 	LSTATUS status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ, nullptr, nullptr, &dataLen);
 	if (status == ERROR_SUCCESS)
 	{
