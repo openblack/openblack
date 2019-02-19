@@ -1,18 +1,58 @@
-#include "Lexer.h"
+/*#include "Lexer.h"
 #include "Token.h"
 
 using namespace OpenBlack::Script;
 
-Lexer::Lexer(std::string &input) : m_source(input) {
-	m_current = m_source.begin();
-	m_end = m_source.end();
+/*
+
+
+std::list<Token> Script::tokenize(const std::string &source)
+{
+	// create a list to contain our tokens
+	std::list<Token> tokens;
+
+	auto current = source.begin();
+	auto end = source.end();
+
+	while (current != end)
+	{
+		// consume all white space
+		if (*current == '\n' || *current == '\r' || *current == '\t' || *current == ' ')
+		{
+			current++;
+			continue;
+		}
+
+		// consume comments (rem)
+		// todo
+
+		// consume identifiers
+		if ((*current >= 'a' && *current <= 'z') || (*current >= 'A' && *current <= 'Z'))
+		{
+
+		}
+
+	}
+
+	Token token(TokenType::Identifier, "lol");
+	tokens.emplace_back(token);
+
+	return tokens;
+}
+
+
+*/
+
+/*Lexer::Lexer(std::string &input) : _source(input) {
+	_current = _source.begin();
+	_end = _source.end();
 };
 
 std::list<Token> Lexer::GetTokens()
 {
 	std::list<Token> tokens;
 
-	while (m_current != m_end)
+	while (_current != _end)
 	{
 		auto token = GetToken();
 		tokens.push_back(token);
@@ -21,16 +61,17 @@ std::list<Token> Lexer::GetTokens()
 	return tokens;
 }
 
-Token Lexer::GetToken()
+Token& Lexer::GetToken()
 {
-	if (m_current == m_end) {
-		return Token(TokenType::EndOfFile);
+	if (_current == _end) {
+		_token.Type = TokenType::EndOfFile;
+		return _token;
 	}
 
-	if (*m_current == '\r' || *m_current == '\n') {
+	if (*_current == '\r' || *_current == '\n') {
 		return MakeEndOfLine();
 	}
-	//else if (IsWhitespace(*m_current))
+	//else if (isWhitespace(*m_current))
 	//{
 	//	return MakeWhitespace();
 	//}
@@ -38,95 +79,112 @@ Token Lexer::GetToken()
 	//{
 	//	return MakeComment()
 	//}
-	else if (IsLetter(*m_current))
+	else if (IsLetter(*_current))
 	{
 		return MakeIdentifier();
 	}
-	else if (*m_current == '"')
+	else if (*_current == '"')
 	{
 		return MakeStringLiteral();
 	}
-	else if (IsDigit(*m_current))
+	else if (IsDigit(*_current))
 	{
 		return MakeNumberLiteral();
 	}
 
 	// consume symbols: , ( )
-	switch (*m_current)
+	switch (*_current)
 	{
-	case ',': return MakePunctuation(TokenType::Comma);
-	case '(': return MakePunctuation(TokenType::LeftParen);
-	case ')': return MakePunctuation(TokenType::RightParen);
+	case ',': return MakePunctuation(TokenType::ListSeparator);
+	case '(': return MakePunctuation(TokenType::OpenParanthesis);
+	case ')': return MakePunctuation(TokenType::CloseParanethesis);
 	}
 
-	// default
-	char value = *m_current;
-	m_current++;
-	return Token(TokenType::Unknown, std::string(1, value));
+	// return unknown on default
+	_token.Type = TokenType::Unknown;
+	_token.Value = std::string(1, *_current);
+	Advance();
+	return _token;
 }
 
-Token Lexer::MakeEndOfLine()
+void Lexer::Advance()
 {
-	if (*m_current == '\n') { // consume \n
-		m_current++;
-	} else if (*m_current == '\r') { // consume \r\n
-		m_current++;
+	// don't advance if we're at EOF
+	if (_current == _end || *_current == '\0')
+		return;
 
-		if (*m_current == '\n') {
-			m_current++;
+	// advance our source iterator
+	_current++;
+}
+
+Token &Lexer::MakeEndOfLine()
+{
+	_token.Type = TokenType::EndOfLine;
+
+	if (*_current == '\n') { // consume \n
+		Advance();
+	} else if (*_current == '\r') { // consume \r\n
+		Advance();
+
+		if (*_current == '\n') {
+			Advance();
 		}
 	}
 
-	return Token(TokenType::EndOfLine);
+	return _token;
 }
 
-Token Lexer::MakeIdentifier()
+Token &Lexer::MakeIdentifier()
 {
-	auto identifier_begin = m_current;
+	auto identifier_begin = _current;
 
-	// A-Z 0-9 _ continue
-	while (IsLetter(*m_current) || IsDigit(*m_current) || *m_current == '_')
-	{
-		m_current++;
-	}
+	// A-Z 0-9 _
+	while (IsLetter(*_current) || IsDigit(*_current) || *_current == '_')
+		_current++;
 
-	std::string value(identifier_begin, m_current);
-	return Token(TokenType::Identifier, value);
+	_token.Type = TokenType::Identifier;
+	_token.Value = std::string(identifier_begin, _current);
+	return _token;
 }
 
-Token Lexer::MakeStringLiteral()
+Token &Lexer::MakeStringLiteral()
 {
-	auto string_begin = m_current + 1;
+	// consume opening "
+	Advance();
 
-	m_current++;
-	while (*m_current != '"')
-	{
-		m_current++;
-	}
+	auto string_begin = _current;
 
-	std::string value(string_begin, m_current);
+	// consume until "
+	while (*_current != '"')
+		Advance();
 
-	m_current++;
-	return Token(TokenType::StringLiteral, value);
+	// consume closing " (?)
+	Advance();
+
+	_token.Type = TokenType::StringLiteral;
+	_token.Value = std::string(string_begin, _current);
+
+	return _token;
 }
 
-Token Lexer::MakeNumberLiteral()
+Token &Lexer::MakeNumberLiteral()
 {
 	// todo: change token type for float.
-	auto number_begin = m_current;
+	auto number_begin = _current;
 
-	while (IsDigit(*m_current) || *m_current == '.')
-	{
-		m_current++;
-	}
+	while (IsDigit(*_current) || *_current == '.')
+		_current++;
 
-	std::string value(number_begin, m_current);
-	return Token(TokenType::NumberLiteral, value);
+	_token.Type = TokenType::NumberLiteral;
+	_token.Value = std::string(number_begin, _current);
+	return _token;
 }
 
-Token Lexer::MakePunctuation(TokenType type)
+Token &Lexer::MakePunctuation(TokenType type)
 {
-	m_current++;
-
-	return Token(type);
+	_token.Type = type;
+	_token.Value = *_current;
+	Advance();
+	return _token;
 }
+*/

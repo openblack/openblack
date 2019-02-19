@@ -1,5 +1,7 @@
 # LHScriptX
 
+LHScriptX is a simple interpreted scripting language used by Black & White.
+
 ## Language
 
 #### Commands
@@ -7,6 +9,8 @@
 Commands are set at runtime and consist of a list of commands and their parameters, for instance: `VERSION` has a `F` parameter for float.
 
 `VERSION(2.3000000)`
+
+Commands do **NOT** return any value.
 
 #### Variables
 

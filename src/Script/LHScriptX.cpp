@@ -4,10 +4,9 @@
 #include <vector>
 
 #include <Script/Lexer.h>
-#include <Script/Functions.h>
 
-using namespace OpenBlack;
-using namespace OpenBlack::Script;
+/*using namespace OpenBlack;
+//using namespace OpenBlack::Script;
 
 void LHScriptX::LoadFile(std::string fileName)
 {
@@ -16,13 +15,6 @@ void LHScriptX::LoadFile(std::string fileName)
 	OSFile* file = new OSFile();
 	file->Open(fileName.c_str(), LH_FILE_MODE::Read);
 
-	LoadOneLine(file);
-	LoadOneLine(file);
-	LoadOneLine(file);
-	LoadOneLine(file);
-	LoadOneLine(file);
-	LoadOneLine(file);
-	LoadOneLine(file);
 	LoadOneLine(file);
 
 	file->Close();
@@ -68,20 +60,23 @@ void LHScriptX::ScanLine(std::string line)
 	{
 		// assume it's a simple function call: Identifer, LeftPareth, Vars, RightPareth
 		auto identifier = tokens.front();
-		auto func = Functions::GetFunctionFromName(identifier.Value);
+		/*Functions::FunctionPointer func = Functions::GetFunctionFromName(identifier.Value);
 
-		std::cout << identifier.Value << ": ID=" << func->id << "(";
+		std::cout << identifier.Value << ": ID=" << func.id << "(";
 
 		for (int i = 0; i < 12; i++) {
-			Type param = func->parameters[i];
+			Type param = func.parameters[i];
+			if (param == Type::kTypeNone)
+				break;
+
 			std::cout << param;
 			//std::cout << "\tP" << i << " Type = " << param << std::endl;
 		}
 
-		std::cout << std::endl;
+		std::cout << ")" << std::endl;*/
 
 		// next token should be: LeftParen
-	}
+/*	}
 	else {
 		throw std::logic_error(std::string{} +"Line " + line + " does not start with an identifier.");
 	}
@@ -91,4 +86,4 @@ void LHScriptX::ScanLine(std::string line)
 	}
 
 	std::cout << std::endl;*/
-}
+//}
