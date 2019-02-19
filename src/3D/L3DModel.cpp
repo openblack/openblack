@@ -190,7 +190,7 @@ void L3DModel::LoadFromL3D(void* data_, size_t size, bool pack) {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA,
 			GL_UNSIGNED_BYTE, data);
 
-		delete data;
+		delete[] data;
 	}
 }
 

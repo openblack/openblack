@@ -144,6 +144,13 @@ void GameWindow::SetSwapInterval(int interval) {
 	SDL_GL_SetSwapInterval(interval);
 }
 
+float GameWindow::GetAspectRatio() const {
+	int width, height;
+	SDL_GetWindowSize(_window.get(), &width, &height);
+
+	return (float)width / (float)height;
+}
+
 void GameWindow::SetPosition(int x, int y) {
 	SDL_SetWindowPosition(_window.get(), x, y);
 }

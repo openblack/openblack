@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "GameWindow.h"
+#include <LHScriptX/Command.h>
 
 namespace OpenBlack
 {
@@ -13,6 +14,10 @@ namespace OpenBlack
 	class MeshPack;
 	class MeshViewer;
 	class LandIsland;
+
+	namespace LHScriptX {
+		class Script;
+	}
 
 	class Game {
 	public:
@@ -25,6 +30,7 @@ namespace OpenBlack
 
 		std::string GetGamePath();
 
+		GameWindow& GetWindow() { return *_window;  }
 		Camera& GetCamera() { return *_camera; }
 		MeshPack& GetMeshPack() { return *_meshPack; }
 		
@@ -34,11 +40,15 @@ namespace OpenBlack
 	private:
 		static Game* sInstance;
 
-		//std::unique_ptr<MeshViewer> _meshViewer;
+		std::unique_ptr<GameWindow> _window;
+		std::unique_ptr<Camera> _camera;
+
 		std::unique_ptr<LandIsland> _landIsland;
 		std::unique_ptr<MeshPack> _meshPack;
-		std::unique_ptr<Camera> _camera;
-		std::unique_ptr<GameWindow> _window;
+
+		std::unique_ptr<LHScriptX::Script> _scriptx;
+
+		bool _wireframe;
 
 		bool _running;
 

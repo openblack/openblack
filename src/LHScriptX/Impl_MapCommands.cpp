@@ -1,93 +1,103 @@
-#include "Functions.h"
+#include "Impl_MapCommands.h"
 
-using namespace OpenBlack::Script;
+using namespace OpenBlack::LHScriptX;
 
-void Functions::setNoPlayers(FunctionContext &ctx)
+void Impl_MapCommands::setNoPlayers(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void Functions::loadTribeDance(FunctionContext &ctx)
+void Impl_MapCommands::loadTribeDance(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void Functions::setDate(FunctionContext &ctx)
+void Impl_MapCommands::setDate(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void Functions::setTime(FunctionContext &ctx)
+void Impl_MapCommands::setTime(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void Functions::setTurnsPerYear(FunctionContext &ctx)
+void Impl_MapCommands::setTurnsPerYear(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void Functions::setGameTickTime(FunctionContext &ctx)
+void Impl_MapCommands::setGameTickTime(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void Functions::loadFeatureScript(FunctionContext &ctx)
+void Impl_MapCommands::loadFeatureScript(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void Functions::pauseGame(FunctionContext &ctx)
+void Impl_MapCommands::pauseGame(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void Functions::outputVillagers(FunctionContext &ctx)
+void Impl_MapCommands::createCreature(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void Functions::outputTown(FunctionContext &ctx)
+void Impl_MapCommands::outputVillagers(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void Functions::outputCreatures(FunctionContext &ctx)
+void Impl_MapCommands::outputTown(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void Functions::outputCollide(FunctionContext &ctx)
+void Impl_MapCommands::outputCreatures(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void Functions::outputAlloc(FunctionContext &ctx)
+void Impl_MapCommands::outputCollide(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void Functions::saveForNetDebug(FunctionContext &ctx)
+void Impl_MapCommands::outputAlloc(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void Functions::loadForNetDebug(FunctionContext &ctx)
+void Impl_MapCommands::saveForNetDebug(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void Functions::loadGameScript(FunctionContext &ctx)
+void Impl_MapCommands::loadForNetDebug(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void Functions::loadRawGameScript(FunctionContext &ctx)
+void Impl_MapCommands::loadLandscape(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void Functions::loadLanguage(FunctionContext &ctx)
+void Impl_MapCommands::loadGameScript(const ScriptCommandContext &ctx)
+{
+	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+}
+
+void Impl_MapCommands::loadRawGameScript(const ScriptCommandContext &ctx)
+{
+	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+}
+
+void Impl_MapCommands::loadLanguage(const ScriptCommandContext &ctx)
 {
 	throw std::logic_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }

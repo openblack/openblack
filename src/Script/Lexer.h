@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 #ifndef OPENBLACK_SCRIPT_LEXER_H
 #define OPENBLACK_SCRIPT_LEXER_H
 
@@ -13,34 +13,37 @@ namespace OpenBlack
 			Lexer(std::string &input);
 
 			std::list<Token> GetTokens();
+			Token &GetToken();
 		private:
-			Token GetToken();
+			void Advance();
 
-			Token MakeEndOfLine();
-			Token MakeWhitespace();
-			Token MakeComment();
+			Token &MakeEndOfLine();
+			Token &MakeWhitespace();
+			Token &MakeComment();
 
-			Token MakeIdentifier();
-			Token MakeStringLiteral();
-			Token MakeNumberLiteral();
+			Token &MakeIdentifier();
+			Token &MakeStringLiteral();
+			Token &MakeNumberLiteral();
 
-			Token MakePunctuation(TokenType type);
+			Token &MakePunctuation(TokenType type);
 
-			std::string &m_source;
-			std::string::iterator m_current;
-			std::string::iterator m_end;
+			Token _token;
+			std::string &_source;
+			std::string::iterator _current;
+			std::string::iterator _end;
+
 
 			inline bool IsLetter(char c)
 			{
-				return isalpha(c);
+				return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 			}
 
 			inline bool IsDigit(char c)
 			{
-				return isdigit(c);
+				return (c >= '0' && c <= '9');
 			}
 
-			inline bool IsWhitespace(char c)
+			inline bool isWhitespace(char c)
 			{
 				return (c == ' ' || c == '\t');
 			}
@@ -49,3 +52,4 @@ namespace OpenBlack
 }
 
 #endif
+*/
