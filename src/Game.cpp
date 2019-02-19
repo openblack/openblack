@@ -102,10 +102,20 @@ void Game::Run()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	// measure our delta time
+	uint64_t now = SDL_GetPerformanceCounter();
+	uint64_t last = 0;
+	double deltaTime = 0.0;
+
 	_running = true;
 	SDL_Event e;
 	while (_running)
 	{
+		last = now;
+		now = SDL_GetPerformanceCounter();
+
+		deltaTime = ((now - last) * 1000 / (double)SDL_GetPerformanceFrequency());
+
 		while (SDL_PollEvent(&e)) {
 			if (e.type == SDL_QUIT)
 				_running = false;
