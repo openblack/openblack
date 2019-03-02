@@ -1,3 +1,7 @@
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+
 #include <Graphics/Shader.h>
 
 using namespace OpenBlack::Graphics;

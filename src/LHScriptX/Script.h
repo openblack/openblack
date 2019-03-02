@@ -4,6 +4,7 @@
 
 #include <LHScriptX/Command.h>
 
+#include <memory>
 #include <list>
 
 namespace OpenBlack {
