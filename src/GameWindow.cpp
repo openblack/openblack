@@ -13,20 +13,30 @@ GameWindow::GameWindow(const std::string & title, const SDL_DisplayMode & displa
 
 GameWindow::GameWindow(const std::string& title, int width, int height, DisplayMode displaymode)
 {
-	uint32_t sdl_flags = SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE | SDL_INIT_TIMER;
-	if (SDL_WasInit(sdl_flags) == 0)
-	{
+	SDL_version compiledVersion, linkedVersion;
+	SDL_VERSION(&compiledVersion);
+	SDL_GetVersion(&linkedVersion);
+
+	std::clog << "Initializing SDL..." << std::endl;
+	std::clog << "Version/Compiled " << uint32_t(compiledVersion.major) << "." << uint32_t(compiledVersion.minor) << "." << uint32_t(compiledVersion.patch) << std::endl;
+	std::clog << "Version/Linked " << uint32_t(linkedVersion.major) << "." << uint32_t(linkedVersion.minor) << "." << uint32_t(linkedVersion.patch) << std::endl;
+
+	// Initialize SDL
+	if (SDL_WasInit(0) == 0) {
 		SDL_SetMainReady();
-		if (SDL_Init(sdl_flags) != 0)
-			throw std::runtime_error("Could not initialize SDL! " + std::string(SDL_GetError()));
+		if (SDL_Init(0) != 0)
+			throw std::runtime_error("Could not initialize SDL: " + std::string(SDL_GetError()));
+
+		if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0)
+			throw std::runtime_error("Could not initialize SDL Video Subsystem: " + std::string(SDL_GetError()));
+
+		if (SDL_InitSubSystem(SDL_INIT_TIMER) != 0)
+			throw std::runtime_error("Could not initialize SDL Timer Subsystem: " + std::string(SDL_GetError()));
 	}
 
-	SDL_version version;
-	SDL_GetVersion(&version);
+	SDL_ShowCursor(SDL_DISABLE);
 
-	std::clog << "Initialized SDL " << uint32_t(version.major) << "." << uint32_t(version.minor) << "." << uint32_t(version.patch) << std::endl;
-
-	uint32_t flags = SDL_WINDOW_OPENGL;
+	uint32_t flags = SDL_WINDOW_OPENGL | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_ALLOW_HIGHDPI;
 
 	if (displaymode == DisplayMode::Fullscreen)
 		flags |= SDL_WINDOW_FULLSCREEN;
@@ -46,10 +56,12 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
+	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 	// Create a debug context?
