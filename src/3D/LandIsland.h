@@ -28,7 +28,7 @@ namespace OpenBlack
 	struct Country
 	{
 		uint32_t TerrainType;
-		MapMaterial MapMaterial[256]; // altitude 0-255
+		MapMaterial MapMaterials[256]; // altitude 0-255
 	};
 
 	#pragma pack(push, 1)
