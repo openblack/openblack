@@ -4,19 +4,19 @@ using namespace OpenBlack::Graphics;
 
 void Texture2DArray::AddTexture(const TextureDef2D& textureData)
 {
-	m_textures.push_back(textureData);
+	_textureDefinitions.push_back(textureData);
 }
 
 void Texture2DArray::Create()
 {
 	glBindTexture(GL_TEXTURE_2D_ARRAY, _textureID);
-	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8, 256, 256, m_textures.size());
-	//glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB5_A1, 256, 256, m_textures.size(), 0, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, NULL);
+	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8, 256, 256, _textureDefinitions.size());
+	//glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB5_A1, 256, 256, _textureDefinitions.size(), 0, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, NULL);
 
-	printf("building 2d array with %d textures\n", m_textures.size());
-	for (unsigned int i = 0; i < m_textures.size(); ++i)
+	printf("building 2d array with %d textures\n", _textureDefinitions.size());
+	for (unsigned int i = 0; i < _textureDefinitions.size(); ++i)
 	{
-		TextureDef2D tex = m_textures[i];
+		TextureDef2D tex = _textureDefinitions[i];
 		glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, tex.width, tex.height, 1, tex.format, tex.type, tex.data);
 	}
 
@@ -45,17 +45,17 @@ void TextureArray::SetData()
 		m_data.m_internalFormat,
 		m_data.m_width,
 		m_data.m_height,
-		m_textures.size(),
+		_textureDefinitions.size(),
 		m_data.m_border,
 		m_data.m_format,
-		m_data.m_type,
+		m_data._type,
 		NULL);
 
 	Texture2D::Data::Buffer b((m_data.m_width * m_data.m_height) * m_data.m_bytesPerPixel, 0);
 
-	for (unsigned int i = 0; i < m_textures.size(); ++i)
+	for (unsigned int i = 0; i < _textureDefinitions.size(); ++i)
 	{
-		Texture2D* texture = m_textures[i];
+		Texture2D* texture = _textureDefinitions[i];
 		const Texture2D::Data& data = texture->GetData();
 		const unsigned char* bufferPointer = NULL;
 
@@ -85,7 +85,7 @@ void TextureArray::SetData()
 			m_data.m_height,
 			1,
 			data.m_format,
-			data.m_type,
+			data._type,
 			bufferPointer);
 	}
 }
