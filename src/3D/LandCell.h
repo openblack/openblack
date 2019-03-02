@@ -16,6 +16,17 @@ namespace OpenBlack
 		inline bool Coastline()   { return properties & 0x20; }
 		inline bool FullWater()	  { return properties & 0x40; } 
 		inline uint8_t Country()  { return properties & 0x0F; }
+		inline float Alpha() {
+
+			if (properties & 0x40)
+				return 0.0f;
+			if (properties & 0x20)
+				return 0.5f;
+			if (properties & 0x10)
+				return 0.0f;
+
+			return 1.0f;
+		}
 	private:
 		rgba_t color;
 

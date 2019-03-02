@@ -44,26 +44,31 @@ void main()
 const char* Terrain::VertexShader = R"(
 #version 330 core
 layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 color;
-layout(location = 2) in vec2 texcoord;
-layout(location = 3) in float country;
-layout(location = 4) in float altitude;
+layout(location = 1) in vec2 texcoord;
+layout(location = 2) in vec3 weights;
+layout(location = 3) in uvec3 firstMaterialID;
+layout(location = 4) in uvec3 secondMaterialID;
+layout(location = 5) in uvec3 materialBlendCoefficient;
+layout(location = 6) in float waterAlpha;
 
-out vec3 Color;
 out vec2 Texcoord;
-flat out float Country;
-flat out float Altitude;
+out vec3 Weights;
+flat out uvec3 FirstMaterialID;
+flat out uvec3 SecondMaterialID;
+flat out uvec3 MaterialBlendCoefficient;
+out float WaterAlpha;
 
 uniform mat4 viewProj;
 
 void main()
 {
-    Color = color;
 	Texcoord = texcoord;
-	Country = country;
-	Altitude = altitude;
-    //gl_Position = viewProj * vec4(position.x, altitude * 0.67, position.z, 1.0);
-	//Texcoord = vec2(1/position.x, 1/position.z);
+	Weights = weights;
+	FirstMaterialID = firstMaterialID;
+	SecondMaterialID = secondMaterialID;
+	MaterialBlendCoefficient = materialBlendCoefficient;
+	WaterAlpha = waterAlpha;
+
     gl_Position = viewProj * vec4(position, 1.0);
 }
 )";
@@ -71,19 +76,41 @@ void main()
 const char* Terrain::FragmentShader = R"(
 #version 330 core
 
-precision highp int;
-precision highp usampler2D;
-
-in vec3 Color;
 in vec2 Texcoord;
-flat in float Country;
-flat in float Altitude;
-//uniform sampler2DArray sMaterials;
-//uniform usampler2D sCountryLookup;
+in vec3 Weights;
+flat in uvec3 FirstMaterialID;
+flat in uvec3 SecondMaterialID;
+flat in uvec3 MaterialBlendCoefficient;
+in float WaterAlpha;
+
+uniform sampler2DArray sMaterials;
+
 out vec4 FragColor;
 
 void main()
 {
+	// do each vert with both materials
+	vec4 colOne = mix(
+		texture(sMaterials, vec3(Texcoord, FirstMaterialID.r)),
+		texture(sMaterials, vec3(Texcoord, SecondMaterialID.r)),
+		float(MaterialBlendCoefficient.r) / 255.0f
+	) * Weights.r;
+	vec4 colTwo = mix(
+		texture(sMaterials, vec3(Texcoord, FirstMaterialID.g)),
+		texture(sMaterials, vec3(Texcoord, SecondMaterialID.g)),
+		float(MaterialBlendCoefficient.g) / 255.0f
+	) * Weights.g;
+	vec4 colThree = mix(
+		texture(sMaterials, vec3(Texcoord, FirstMaterialID.b)),
+		texture(sMaterials, vec3(Texcoord, SecondMaterialID.b)),
+		float(MaterialBlendCoefficient.b) / 255.0f
+	) * Weights.b;
+
+	FragColor = colOne + colTwo + colThree;
+	FragColor.a = WaterAlpha;
+
+	//FragColor = vec4(1, 1, 1, 1);
+
 	//uvec4 lookup = texelFetch(sCountryLookup, ivec2(Country, Altitude), 0);
 
 	//vec4 colOne = texture(sMaterials, vec3(Texcoord, lookup.r));
@@ -94,8 +121,7 @@ void main()
 
 	//FragColor = texture(sMaterials, vec3(Texcoord, 6));
 
-    FragColor = vec4(vec3(Altitude/255), 1);
-	//FragColor = vec4(1, 1, 1, 1);
+    //FragColor = vec4(vec3(Altitude/255), 1);
 	//FragColor = vec4(vec3(Country/10), 1);
 	//FragColor = vec4(vec3(lookup.r/14), 1);
 }
