@@ -242,9 +242,8 @@ void Game::guiLoop()
 		}
 
 		ImGui::EndChild();
+		ImGui::End();
 	}
-
-	ImGui::End();
 
 	ImGui::Render();
 }
