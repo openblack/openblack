@@ -2,6 +2,7 @@
 #ifndef OPENBLACK_GAMEWINDOW_H
 #define OPENBLACK_GAMEWINDOW_H
 
+#include <memory>
 #include <string>
 #include <cstdint>
 #include <SDL.h>
