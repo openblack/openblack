@@ -8,7 +8,7 @@
 
 #include <Common/OSFile.h>
 #include <Graphics/Texture2D.h>
-#include <Video/Bink.h>
+// #include <Video/Bink.h>
 
 namespace OpenBlack
 {
@@ -34,7 +34,7 @@ namespace OpenBlack
 
 		private:
 			std::unique_ptr<OSFile> _file;
-			std::unique_ptr<Bink> _bink;
+			//std::unique_ptr<Bink> _bink;
 			std::shared_ptr<Graphics::Texture2D> _texture;
 
 			// Create a surface for video of these dimensions.

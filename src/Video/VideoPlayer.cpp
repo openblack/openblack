@@ -12,12 +12,12 @@ VideoPlayer::VideoPlayer(const std::string& file)
 
 	std::cout << "Opening Video: " << file << std::endl;
 
-	_bink = std::make_unique<Bink>(_file.get());
+	/*_bink = std::make_unique<Bink>(_file.get());
 
 	std::cout << "Dimensions: " << _bink->GetWidth() << "x" << _bink->GetHeight() << std::endl;
 	std::cout << "Frame Count: " << _bink->GetFrameCount() << " @ " << _bink->GetFPS() << "FPS" << std::endl;
 
-	_bink->DoFrame();
+	_bink->DoFrame();*/
 }
 
 VideoPlayer::~VideoPlayer()
