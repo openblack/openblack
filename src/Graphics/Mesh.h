@@ -9,51 +9,53 @@
 
 using namespace OpenBlack::Graphics;
 
-namespace OpenBlack
+namespace OpenBlack {
+namespace Graphics {
+
+struct VertexAttrib {
+	GLuint index;          ///< Index of the vertex attribute.
+	GLint size;            ///< Number of components per vertex attribute, must be 1, 2, 3, 4.
+	GLenum type;           ///< Data type of each attribute component in the array.
+	GLsizei stride;        ///< Byte offset between consecutive vertex attributes.
+	const GLvoid *offset; ///< Offset of the first component of the first generic vertex attribute.
+	bool normalized;
+	bool integer;
+
+	VertexAttrib() { }
+	VertexAttrib(GLuint i, GLint s, GLenum t, GLsizei st = 0, const GLvoid *of = 0) :
+		index(i), size(s), type(t), stride(st), offset(of), normalized(false), integer(false) { }
+	VertexAttrib(GLuint i, GLint s, GLenum t, bool intg, GLsizei st = 0, const GLvoid *of = 0) :
+		index(i), size(s), type(t), stride(st), offset(of), normalized(false), integer(intg) { }
+};
+
+typedef std::vector<VertexAttrib> VertexDecl;
+
+class Mesh
 {
-	namespace Graphics
-	{
-		struct VertexAttrib {
-			GLuint index;          ///< Index of the vertex attribute.
-			GLint size;            ///< Number of components per vertex attribute, must be 1, 2, 3, 4.
-			GLenum type;           ///< Data type of each attribute component in the array.
-			GLsizei stride;        ///< Byte offset between consecutive vertex attributes.
-			const GLvoid *offset; ///< Offset of the first component of the first generic vertex attribute.
+public:
+	Mesh(std::shared_ptr<VertexBuffer>, const VertexDecl &decl, GLuint type = GL_TRIANGLES);
+	Mesh(std::shared_ptr<VertexBuffer>, std::shared_ptr<IndexBuffer>, const VertexDecl &decl, GLuint type = GL_TRIANGLES);
+	~Mesh();
 
-			VertexAttrib() { }
-			VertexAttrib(GLuint i, GLint s, GLenum t, GLsizei st = 0, const GLvoid *of = 0) :
-				index(i), size(s), type(t), stride(st), offset(of) { }
-		};
+	std::shared_ptr<VertexBuffer> GetVertexBuffer();
+	std::shared_ptr<IndexBuffer> GetIndexBuffer();
 
-		typedef std::vector<VertexAttrib> VertexDecl;
+	const GLuint GetType() const noexcept;
 
-		class Mesh
-		{
-		public:
-			Mesh(GLuint type = GL_TRIANGLES, GLuint hint = GL_STATIC_DRAW);
-			~Mesh();
+	void Draw();
+protected:
+	std::shared_ptr<VertexBuffer> _vertexBuffer;
+	std::shared_ptr<IndexBuffer> _indexBuffer;
+private:
+	GLuint _vao;
+	GLuint _type;
 
-			void Create(void* vertexData, size_t vertexDataSize, void* indicesData, size_t indiciesSize);
+	VertexDecl _vertexDecl;
 
-			VertexBuffer* GetVertexBuffer();
-			IndexBuffer* GetIndexBuffer();
+	void bindVertexDecl();
+};
 
-			void SetType(GLuint type);
-			GLuint GetType() const;
-
-			void SetVertexDecl(const VertexDecl &decl);
-
-			void Render();
-		protected:
-			VertexBuffer m_vertexBuffer;
-			IndexBuffer m_indexBuffer;
-		private:
-			GLuint m_vao;
-			GLuint m_type;
-			GLuint m_hint;
-			VertexDecl m_vertexDecl;
-		};
-	}
+}
 }
 
 #endif

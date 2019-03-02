@@ -127,18 +127,18 @@ void L3DModel::LoadFromL3D(void* data_, size_t size, bool pack) {
 			size_t verticiesSize = subMesh->numVerticies * sizeof(L3D_Vertex);
 			size_t indiciesSize = subMesh->numTriangles * 3 * sizeof(GLushort);
 
-			Mesh* sub = new Mesh();
+			//Mesh* sub = new Mesh();
 
 			VertexDecl decl(3);
 			decl[0] = VertexAttrib(0, 3, GL_FLOAT, 32, (void*)0);
 			decl[1] = VertexAttrib(1, 2, GL_FLOAT, 32, (void*)12);
 			decl[2] = VertexAttrib(2, 3, GL_FLOAT, 32, (void*)20);
 
-			sub->SetVertexDecl(decl);
+			//sub->SetVertexDecl(decl);
 
-			sub->Create(verticiesOffset, verticiesSize, trianglesOffset, indiciesSize/*, subMesh->skinID*/);
+			//sub->Create(verticiesOffset, verticiesSize, trianglesOffset, indiciesSize/*, subMesh->skinID*/);
 
-			m_subMeshes[sm] = sub;
+			m_subMeshes[sm] = nullptr; // sub;
 			m_subMeshTextures[sm] = subMesh->skinID;
 		}
 
@@ -205,13 +205,13 @@ void L3DModel::Draw() {
 		if (m_bPackedMesh) {
 			MeshPack meshPack = Game::instance()->GetMeshPack();
 			glBindTexture(GL_TEXTURE_2D, meshPack.Textures[m_subMeshTextures[subMesh] - 1]);
-			m_subMeshes[subMesh]->Render();
+			m_subMeshes[subMesh]->Draw();
 			glBindTexture(GL_TEXTURE_2D, GL_NONE);
 		}
 		else
 		{
 			glBindTexture(GL_TEXTURE_2D, m_glSkins[0]);
-			m_subMeshes[subMesh]->Render();
+			m_subMeshes[subMesh]->Draw();
 			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 	}

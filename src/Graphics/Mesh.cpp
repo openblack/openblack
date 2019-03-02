@@ -7,82 +7,79 @@
 
 using namespace OpenBlack::Graphics;
 
-Mesh::Mesh(GLuint type, GLuint hint) : m_type(type), m_hint(hint), m_vao(0) {
+Mesh::Mesh(std::shared_ptr<VertexBuffer> vertexBuffer, const VertexDecl &decl, GLuint type)
+	: _vertexBuffer(std::move(vertexBuffer)),
+	_vertexDecl(decl),
+	_type(type)
+{
+	glGenVertexArrays(1, &_vao);
+	glBindVertexArray(_vao);
+
+	_vertexBuffer->Bind();
+	bindVertexDecl();
 }
+
+Mesh::Mesh(std::shared_ptr<VertexBuffer> vertexBuffer, std::shared_ptr<IndexBuffer> indexBuffer, const VertexDecl &decl, GLuint type)
+	: _vertexBuffer(std::move(vertexBuffer)),
+	_indexBuffer(std::move(indexBuffer)),
+	_vertexDecl(decl),
+	_type(type)
+{
+	glGenVertexArrays(1, &_vao);
+	glBindVertexArray(_vao);
+
+	_vertexBuffer->Bind();
+	bindVertexDecl();
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBuffer->GetIBO());
+}	
 
 Mesh::~Mesh()
 {
-	if (m_vao != 0)
-	{
-		glDeleteVertexArrays(1, &m_vao);
-	}
+	if (_vao != 0)
+		glDeleteVertexArrays(1, &_vao);
 }
 
-VertexBuffer* Mesh::GetVertexBuffer() {
-	return &m_vertexBuffer;
+std::shared_ptr<VertexBuffer> Mesh::GetVertexBuffer() {
+	return _vertexBuffer;
 }
 
-IndexBuffer* Mesh::GetIndexBuffer() {
-	return &m_indexBuffer;
+std::shared_ptr<IndexBuffer> Mesh::GetIndexBuffer() {
+	return _indexBuffer;
 }
 
-void Mesh::SetType(GLuint type) {
-	m_type = type;
+const GLuint Mesh::GetType() const noexcept {
+	return _type;
 }
 
-GLuint Mesh::GetType() const {
-	return m_type;
+void Mesh::Draw() {
+	glBindVertexArray(_vao);
+	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
+		glDrawElements(_type, _indexBuffer->GetCount(), _indexBuffer->GetType(), 0);
+	else
+		glDrawArrays(_type, 0, _vertexBuffer->GetVertexCount());
 }
 
-void Mesh::SetVertexDecl(const VertexDecl &decl) {
-	m_vertexDecl = decl;
-}
-
-void Mesh::Render() {
-	if (m_vao == 0) {
-		throw new std::runtime_error("Trying to render Mesh with no VAO.");
-	}
-
-	glBindVertexArray(m_vao);
-
-	//printf("Rendering Mesh (VAO: %d) w/ %d verts and %d indicies\n", m_vao, m_vertexBuffer.GetSize(), m_indexBuffer.GetCount());
-
-	if (m_indexBuffer.GetCount()) {
-		glDrawElements(m_type, m_indexBuffer.GetCount(), m_indexBuffer.GetType(), 0);
-	}
-	else {
-		//glDrawArrays(m_type, 0, m_vertexBuffer.GetCount());
-	}
-
-	// not needed really.
-	glBindVertexArray(0);
-}
-
-void Mesh::Create(void* vertexData, size_t vertexDataSize, void* indicesData, size_t indiciesSize)
+void Mesh::bindVertexDecl()
 {
-	m_vertexBuffer.Create(vertexData, vertexDataSize);
-	m_indexBuffer.Create(indicesData, indiciesSize, GL_UNSIGNED_SHORT); //  todo: unhardcode
+	for (size_t i = 0; i < _vertexDecl.size(); i++) {
+		if (_vertexDecl[i].integer == true)
+		{
+			glVertexAttribIPointer(_vertexDecl[i].index,
+				_vertexDecl[i].size,
+				_vertexDecl[i].type,
+				_vertexDecl[i].stride,
+				_vertexDecl[i].offset);
+		}
+		else
+		{
+			glVertexAttribPointer(_vertexDecl[i].index,
+				_vertexDecl[i].size,
+				_vertexDecl[i].type,
+				GL_FALSE,//_vertexDecl[i].normalized ? GL_TRUE : GL_FALSE,
+				_vertexDecl[i].stride,
+				_vertexDecl[i].offset);
+		}
 
-	glGenVertexArrays(1, &m_vao);
-	glBindVertexArray(m_vao);
-
-	glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer.GetVBO());
-
-	for (uint32_t i = 0; i < m_vertexDecl.size(); ++i) {
-		glVertexAttribPointer(m_vertexDecl[i].index,
-			m_vertexDecl[i].size,
-			m_vertexDecl[i].type,
-			GL_FALSE,
-			m_vertexDecl[i].stride,
-			m_vertexDecl[i].offset);
-		glEnableVertexAttribArray(m_vertexDecl[i].index);
+		glEnableVertexAttribArray(_vertexDecl[i].index);
 	}
-
-	if (m_indexBuffer.GetCount()) {
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer.GetIBO());
-	}
-
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }

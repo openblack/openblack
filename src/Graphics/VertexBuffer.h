@@ -2,9 +2,8 @@
 #ifndef OPENBLACK_VERTEXBUFFER_H
 #define OPENBLACK_VERTEXBUFFER_H
 
-#include "OpenGL.h"
-#include <cstdio>
-#include <stdint.h>
+#include <Graphics/OpenGL.h>
+#include <memory>
 
 namespace OpenBlack
 {
@@ -12,25 +11,31 @@ namespace OpenBlack
 	{
 		class VertexBuffer {
 		public:
-			VertexBuffer();
-			VertexBuffer(const VertexBuffer &other);
+			VertexBuffer() = delete;
+			VertexBuffer(const VertexBuffer &other) = delete;
+			VertexBuffer(VertexBuffer&&) = default;
+
+			VertexBuffer(const void* vertices, size_t vertexCount, size_t strideBytes);
+
 			~VertexBuffer();
 
-			bool Create(void* data, size_t size);
+			VertexBuffer& operator=(const VertexBuffer&) = delete;
+			VertexBuffer& operator=(VertexBuffer&&) = default;
 
-			//GLvoid *GetData();
-			//const GLvoid *GetData() const;
+			size_t GetVertexCount() const noexcept;
+			size_t GetStrideBytes() const noexcept;
+			size_t GetSizeInBytes() const noexcept;
+			GLuint GetHint()		const noexcept;
+			GLuint GetVBO()			const noexcept;
 
-			//uint32_t GetCount() const;
-			size_t GetSize() const;
-			GLuint GetVBO() const;
+			//const std::unique_ptr<GLvoid*> GetData() const;
+
+			inline void Bind() { glBindBuffer(GL_ARRAY_BUFFER, _vbo); }
 		private:
-			uint32_t m_count;
-			size_t m_size;
-			//uint8_t* m_data;
-
-			GLuint m_vbo;
-			GLuint m_hint;
+			GLuint _vbo;
+			size_t _vertexCount;
+			size_t _strideBytes;
+			GLuint _hint;
 		};
 
 	}
