@@ -257,28 +257,34 @@ void Game::LoadMap(std::string name)
 
 std::string Game::GetGamePath()
 {
-#ifdef _WIN32
-	// todo: cache this
-	DWORD dataLen = 0;
-	LSTATUS status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ, nullptr, nullptr, &dataLen);
-	if (status == ERROR_SUCCESS)
+	static std::string sGamePath;
+
+	if (sGamePath.empty())
 	{
-		char* path = new char[dataLen];
-		status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ, nullptr, path, &dataLen);
-		return path;
+#ifdef _WIN32
+		DWORD dataLen = 0;
+		LSTATUS status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ, nullptr, nullptr, &dataLen);
+		if (status == ERROR_SUCCESS)
+		{
+			char* path = new char[dataLen];
+			status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ, nullptr, path, &dataLen);
+
+			sGamePath = std::string(path);
+			return sGamePath;
+		}
+
+		std::cerr << "Failed to find GameDir registry value, game not installed" << std::endl;
+#endif // _WIN32
+
+		// no key? guess
+#ifdef _WIN32
+		sGamePath = std::string("C:\\Program Files (x86)\\Lionhead Studios Ltd\\Black & White");
+#else
+		sGamePath = std::string("/mnt/windows/Program Files (x86/Lionhead Studios Ltd/Black & White");
+#endif // _WIN32
+
+		std::clog << "Guessing GamePath: " << sGamePath << std::endl;
 	}
 
-	std::cerr << "Failed to find GameDir registry value, game not installed" << std::endl;
-#endif // _WIN32
-
-	// no key? guess
-#ifdef _WIN32
-	std::string guessPath = std::string("C:\\Program Files (x86)\\Lionhead Studios Ltd\\Black & White");
-#else
-	std::string guessPath = std::string("/mnt/windows/Program Files (x86/Lionhead Studios Ltd/Black & White");
-#endif // _WIN32
-
-	std::clog << "Guessing GamePath: " << guessPath << std::endl;
-
-	return guessPath;
+	return sGamePath;
 }
