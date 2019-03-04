@@ -35,7 +35,7 @@
 #include <Common/OSFile.h>
 
 #include <Graphics/GameShaders.h>
-#include <Graphics/Shader.h>
+#include <Graphics/ShaderProgram.h>
 #include <Graphics/Texture2D.h>
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/VertexBuffer.h>
@@ -150,8 +150,7 @@ void Game::Run()
 	//LHScriptX* script = new LHScriptX();
 	//script->LoadFile(GetGamePath() + "\\Scripts\\Land1.txt");
 
-	Shader* terrainShader = new Shader();
-	terrainShader->Create(OpenBlack::Shaders::Terrain::VertexShader, OpenBlack::Shaders::Terrain::FragmentShader);
+	ShaderProgram* terrainShader = new ShaderProgram(OpenBlack::Shaders::Terrain::VertexShader, OpenBlack::Shaders::Terrain::FragmentShader);
 
 	GLint uniTerrainView = glGetUniformLocation(terrainShader->GetHandle(), "viewProj");
 	GLint uniTerrainMaterialArray = glGetUniformLocation(terrainShader->GetHandle(), "sMaterials");

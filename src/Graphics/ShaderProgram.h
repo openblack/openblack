@@ -19,41 +19,28 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_SHADER_H
-#define OPENBLACK_SHADER_H
+#ifndef OPENBLACK_GRAPHICS_SHADERPROGRAM_H
+#define OPENBLACK_GRAPHICS_SHADERPROGRAM_H
 
-#include "OpenGL.h"
-
-#include <vector>
+#include <Graphics/OpenGL.h>
+#include <string>
 
 namespace OpenBlack {
 namespace Graphics {
 
-class Shader {
+class ShaderProgram {
 public:
-	struct Uniform
-	{
-		char* name;
-		GLint location;
-		int globalID;
-	};
+	ShaderProgram() = delete;
+	ShaderProgram(const std::string &vertexSource, const std::string &fragmentSource);
+	~ShaderProgram();
 
-	Shader();
-	virtual ~Shader();
-	bool Create(const char* vert, const char* frag);
-
-	GLuint GetHandle() const;
-
-	const Uniform* Uniforms() const;
-	size_t NumUniforms() const;
+	GLuint GetHandle() const { return _shaderProgram; }
 private:
-	GLuint _program;
-	GLuint _vert;
-	GLuint _frag;
+	GLuint _shaderProgram;
+	GLuint _shaderVertex;
+	GLuint _shaderFragment;
 
-	std::vector<Uniform> _parameters;
-
-	GLenum createSubShader(GLenum type, const void* source);
+	GLenum createSubShader(GLenum type, const std::string& source);
 };
 
 }
