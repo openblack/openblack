@@ -12,7 +12,6 @@
 
 #include <3D/Camera.h>
 #include <3D/LandIsland.h>
-#include <3D/oldLH3DIsland.h>
 
 #include <Common/OSFile.h>
 
