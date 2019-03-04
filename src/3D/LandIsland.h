@@ -92,8 +92,7 @@ namespace OpenBlack
 	private:
 		void convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixels);
 		void buildMesh();
-		std::vector<LandVertex> getVerticies();
-		std::vector<uint32_t> getIndices();
+		std::vector<LandVertex> buildVertexList();
 
 		std::unique_ptr<Mesh> _mesh;
 		std::shared_ptr<Texture2DArray> _lowResTextureArray;

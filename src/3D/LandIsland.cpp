@@ -132,7 +132,7 @@ void LandIsland::buildMesh()
 	decl[5] = VertexAttrib(5, 3, GL_UNSIGNED_BYTE,	true,  sizeof(LandVertex), (void*)offsetof(LandVertex, materialBlendCoefficient));
 	decl[6] = VertexAttrib(6, 1, GL_FLOAT,			false, sizeof(LandVertex), (void*)offsetof(LandVertex, alpha));
 	
-	auto verts = getVerticies();
+	auto verts = buildVertexList();
 
 	printf("LandIsland made with %d verticies\n", verts.size());
 
@@ -140,7 +140,7 @@ void LandIsland::buildMesh()
 	_mesh = std::make_unique<Mesh>(vertexBuffer, decl, GL_TRIANGLES);
 }
 
-std::vector<LandVertex> LandIsland::getVerticies()
+std::vector<LandVertex> LandIsland::buildVertexList()
 {
 	std::vector<LandVertex> verts;
 
