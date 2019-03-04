@@ -93,7 +93,11 @@ void Game::Run()
 	_camera->SetPosition(glm::vec3(2458.0f, 169.0f, 1743.0f));
 	_camera->SetRotation(glm::vec3(104.0f, 15.0f, 0.0f));
 
+#ifdef _WIN32
 	LoadMap(GetGamePath() + "\\Data\\Landscape\\Land1.lnd");
+#else
+	LoadMap(GetGamePath() + "/Data/Landscape/Land1.lnd");
+#endif // _WIN32
 	//LoadMap("Land1.lnd");
 
 	/* we pass the unique_ptr straight to the Script, so do not reuse this */
@@ -111,7 +115,11 @@ void Game::Run()
 	_scriptx->SetCommands(commands);
 
 	//_scriptx->ScanLine("VERSION(\"LOL\")");
+#ifdef _WIN32
 	_scriptx->LoadFile(GetGamePath() + "\\Scripts\\Land1.txt");
+#else
+	_scriptx->LoadFile(GetGamePath() + "/Scripts/Land1.txt");
+#endif // _WIN32
 
 	//LHScriptX* script = new LHScriptX();
 	//script->LoadFile(GetGamePath() + "\\Scripts\\Land1.txt");

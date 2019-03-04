@@ -183,10 +183,10 @@ std::vector<LandVertex> LandIsland::buildVertexList()
 				glm::vec2 uvBL(x / 16.0f, (y+1) / 16.0f);
 				glm::vec2 uvBR((x+1) / 16.0f, (y+1) / 16.0f);
 
-				auto tlMat = _countries[tl.Country()].MapMaterial[tl.Altitude()];
-				auto trMat = _countries[tr.Country()].MapMaterial[tr.Altitude()];
-				auto blMat = _countries[bl.Country()].MapMaterial[bl.Altitude()];
-				auto brMat = _countries[br.Country()].MapMaterial[br.Altitude()];
+				auto tlMat = _countries[tl.Country()].MapMaterials[tl.Altitude()];
+				auto trMat = _countries[tr.Country()].MapMaterials[tr.Altitude()];
+				auto blMat = _countries[bl.Country()].MapMaterials[bl.Altitude()];
+				auto brMat = _countries[br.Country()].MapMaterials[br.Altitude()];
 
 				// triangle one: TL -> TR -> BR
 				verts.push_back(LandVertex(pTL, uvTL, glm::vec3(1.0f, 0.0f, 0.0f),
