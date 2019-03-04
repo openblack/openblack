@@ -86,8 +86,17 @@ void LandIsland::LoadFromDisk(std::string fileName)
 		delete[] rgba8TextureData;
     }
 
-    file->Seek(65536, LH_SEEK_MODE::Current); // Noisemap
-    file->Seek(65536, LH_SEEK_MODE::Current); // Bumpmap
+	// read noise map into texture2d
+	uint8_t* noiseMapTextureData = new uint8_t[256 * 256];
+	file->Read(noiseMapTextureData, 256 * 256);
+	_textureNoiseMap = std::make_shared<Texture2D>(256, 256, GL_RED, GL_RED, GL_UNSIGNED_BYTE, noiseMapTextureData);
+	delete[] noiseMapTextureData;
+
+	// read bump map into texture2d
+	uint8_t* bumpMapTextureData = new uint8_t[256 * 256];
+	file->Read(bumpMapTextureData, 256 * 256);
+	_textureBumpMap = std::make_shared<Texture2D>(256, 256, GL_RED, GL_RED, GL_UNSIGNED_BYTE, bumpMapTextureData);
+	delete[] bumpMapTextureData;
 
 	// Read 2709680/2711300 (1620 bytes left..)
     printf("Read %d/%d\n", file->Position(), fileSize);

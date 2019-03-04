@@ -231,6 +231,15 @@ void Game::guiLoop()
 
 	ImGui::End();
 
+	ImGui::Begin("Land Island");
+	auto noisemap = _landIsland->GetNoiseMap();
+	auto bumpmap = _landIsland->GetBumpMap();
+	ImGui::Text("Noisemap");
+	ImGui::Image((void*)(intptr_t)noisemap->GetHandle(), ImVec2(noisemap->GetWidth(), noisemap->GetHeight()));
+	ImGui::Text("Bumpmap");
+	ImGui::Image((void*)(intptr_t)bumpmap->GetHandle(), ImVec2(bumpmap->GetWidth(), bumpmap->GetHeight()));
+	ImGui::End();
+
 	if (_scriptx) {
 		ImGui::Begin("LHScriptX", NULL, ImVec2(300, 200), -1.0f, NULL);
 
