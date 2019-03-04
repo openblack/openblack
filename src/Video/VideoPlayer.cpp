@@ -31,7 +31,7 @@ void VideoPlayer::createTexture()
 	if (_texture != nullptr)
 		_texture.reset();
 
-	TextureDef2D tex;
+	/*TextureDef2D tex;
 	tex.width = 256;
 	tex.height = 256;
 	tex.format = GL_RGBA;
@@ -41,5 +41,5 @@ void VideoPlayer::createTexture()
 	memset((void*)tex.data, 100, 256 * 256 * 4);
 
 	_texture = std::make_shared<Texture2D>();
-	_texture->Create(tex);
+	_texture->Create(tex);*/
 }
