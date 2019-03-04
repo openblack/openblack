@@ -128,6 +128,8 @@ void Game::Run()
 	terrainShader->Create(OpenBlack::Shaders::Terrain::VertexShader, OpenBlack::Shaders::Terrain::FragmentShader);
 
 	GLint uniTerrainView = glGetUniformLocation(terrainShader->GetHandle(), "viewProj");
+	GLint uniTerrainMaterialArray = glGetUniformLocation(terrainShader->GetHandle(), "sMaterials");
+	GLint uniTerrainBumpMap = glGetUniformLocation(terrainShader->GetHandle(), "sBumpMap");
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
@@ -172,6 +174,14 @@ void Game::Run()
 
 		glUseProgram(terrainShader->GetHandle());
 		glUniformMatrix4fv(uniTerrainView, 1, GL_FALSE, glm::value_ptr(_camera->GetViewProjectionMatrix()));
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, _landIsland->GetMaterialArray()->GetHandle());
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, _landIsland->GetBumpMap()->GetHandle());
+
+		glUniform1i(uniTerrainMaterialArray, 0);
+		glUniform1i(uniTerrainBumpMap, 1);
 
 		if (_wireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

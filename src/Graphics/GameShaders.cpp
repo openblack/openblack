@@ -84,11 +84,14 @@ flat in uvec3 MaterialBlendCoefficient;
 in float WaterAlpha;
 
 uniform sampler2DArray sMaterials;
+uniform sampler2D sBumpMap;
 
 out vec4 FragColor;
 
 void main()
 {
+	vec4 bump = texture(sBumpMap, Texcoord);
+
 	// do each vert with both materials
 	vec4 colOne = mix(
 		texture(sMaterials, vec3(Texcoord, FirstMaterialID.r)),
@@ -106,23 +109,7 @@ void main()
 		float(MaterialBlendCoefficient.b) / 255.0f
 	) * Weights.b;
 
-	FragColor = colOne + colTwo + colThree;
-	FragColor.a = WaterAlpha;
-
-	//FragColor = vec4(1, 1, 1, 1);
-
-	//uvec4 lookup = texelFetch(sCountryLookup, ivec2(Country, Altitude), 0);
-
-	//vec4 colOne = texture(sMaterials, vec3(Texcoord, lookup.r));
-	//vec4 colTwo = texture(sMaterials, vec3(Texcoord, lookup.g));
-	//float coeff = float(lookup.b)/255;
-
-	//FragColor = mix(colOne, colTwo, coeff); // lookup.b
-
-	//FragColor = texture(sMaterials, vec3(Texcoord, 6));
-
-    //FragColor = vec4(vec3(Altitude/255), 1);
-	//FragColor = vec4(vec3(Country/10), 1);
-	//FragColor = vec4(vec3(lookup.r/14), 1);
+	vec4 col = colOne + colTwo + colThree;
+	FragColor = vec4(col.r * bump.r, col.g * bump.r, col.b * bump.r, WaterAlpha);
 }
 )";
