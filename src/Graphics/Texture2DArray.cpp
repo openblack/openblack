@@ -1,24 +1,12 @@
-#include "Texture2DArray.h"
+#include <Graphics/Texture2DArray.h>
 
-using namespace OpenBlack::Graphics;
+using OpenBlack::Graphics::Texture2DArray;
 
-void Texture2DArray::AddTexture(const TextureDef2D& textureData)
-{
-	_textureDefinitions.push_back(textureData);
-}
-
-void Texture2DArray::Create()
+Texture2DArray::Texture2DArray(GLsizei width, GLsizei height, GLsizei depth, GLenum internalFormat)
+	: _width(width), _height(height), _depth(depth), _internalFormat(internalFormat)
 {
 	glBindTexture(GL_TEXTURE_2D_ARRAY, _textureID);
-	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8, 256, 256, _textureDefinitions.size());
-	//glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB5_A1, 256, 256, _textureDefinitions.size(), 0, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, NULL);
-
-	printf("building 2d array with %d textures\n", _textureDefinitions.size());
-	for (unsigned int i = 0; i < _textureDefinitions.size(); ++i)
-	{
-		TextureDef2D tex = _textureDefinitions[i];
-		glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, tex.width, tex.height, 1, tex.format, tex.type, tex.data);
-	}
+	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, _internalFormat, _width, _height, _depth);
 
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -26,67 +14,7 @@ void Texture2DArray::Create()
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
-void Texture2DArray::Bind()
+void Texture2DArray::SetTexture(GLsizei layer, GLsizei width, GLsizei height, GLenum format, GLenum type, const void * textureData)
 {
-    glBindTexture(GL_TEXTURE_2D_ARRAY, _textureID);
+	glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, layer, width, height, 1, format, type, textureData);
 }
-
-void Texture2DArray::Unbind()
-{
-    glBindTexture(GL_TEXTURE_2D_ARRAY, GL_NONE);
-}
-
-/*
-
-void TextureArray::SetData()
-{
-	GLExt::glTexImage3D(m_data.m_target,
-		m_data.m_level,
-		m_data.m_internalFormat,
-		m_data.m_width,
-		m_data.m_height,
-		_textureDefinitions.size(),
-		m_data.m_border,
-		m_data.m_format,
-		m_data._type,
-		NULL);
-
-	Texture2D::Data::Buffer b((m_data.m_width * m_data.m_height) * m_data.m_bytesPerPixel, 0);
-
-	for (unsigned int i = 0; i < _textureDefinitions.size(); ++i)
-	{
-		Texture2D* texture = _textureDefinitions[i];
-		const Texture2D::Data& data = texture->GetData();
-		const unsigned char* bufferPointer = NULL;
-
-		if (data.m_bytesPerPixel != m_data.m_bytesPerPixel)
-		{
-			continue;
-		}
-
-		if (data.m_width != m_data.m_width ||
-			data.m_height != m_data.m_height)
-		{
-			Util::ScaleImageNearestNeighbor(&data.m_buffer[0], &b[0], data.m_width, data.m_height, m_data.m_width, m_data.m_height, m_data.m_bytesPerPixel);
-
-			bufferPointer = &b[0];
-		}
-		else
-		{
-			bufferPointer = &data.m_buffer[0];
-		}
-
-		GLExt::glTexSubImage3D(m_data.m_target,
-			m_data.m_level,
-			0,
-			0,
-			i,
-			m_data.m_width,
-			m_data.m_height,
-			1,
-			data.m_format,
-			data._type,
-			bufferPointer);
-	}
-}
-*/

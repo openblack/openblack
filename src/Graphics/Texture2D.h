@@ -2,34 +2,29 @@
 #ifndef OPENBLACK_TEXTURE2D_H
 #define OPENBLACK_TEXTURE2D_H
 
-#include "Texture.h"
+#include <Graphics/Texture.h>
 
-namespace OpenBlack
-{
-	namespace Graphics
-	{
+namespace OpenBlack {
+namespace Graphics {
 
-		struct TextureDef2D
-		{
-			GLsizei width;
-			GLsizei height;
-			GLenum internalFormat;
-			GLenum format;
-			GLenum type;
+class Texture2D : public Texture {
+public:
+	Texture2D() = delete;
+	Texture2D(GLsizei width, GLsizei height, GLenum internalFormat, GLenum format, GLenum type, const void* textureData);
 
-			const void* data;
-			//unsigned size;
-		};
+	inline void Bind() { glBindTexture(GL_TEXTURE_2D, _textureID); }
 
-		class Texture2D : public Texture {
-		public:
-			bool Create(const TextureDef2D& textureData);
+	const GLsizei GetWidth() const { return _width; }
+	const GLsizei GetHeight() const { return _height; }
+private:
+	GLsizei _width;
+	GLsizei _height;
+	GLenum _internalFormat;
+	GLenum _format;
+	GLenum _type;
+};
 
-			void Bind();
-			void Unbind();
-		};
-
-	}
+}
 }
 
 #endif

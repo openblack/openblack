@@ -1,31 +1,28 @@
 #pragma once
-#ifndef OPENBLACK_TEXTURE_H
-#define OPENBLACK_TEXTURE_H
+#ifndef OPENBLACK_GRAPHICS_TEXTURE_H
+#define OPENBLACK_GRAPHICS_TEXTURE_H
 
-#include "OpenGL.h"
-#include <cstdio>
+#include <Graphics/OpenGL.h>
 
-namespace OpenBlack
-{
-	namespace Graphics
-	{
+namespace OpenBlack {
+namespace Graphics {
 
-		class Texture {
-		public:
-			Texture();
-			~Texture();
+class Texture {
+public:
+	Texture();
+	~Texture();
 
-			GLuint GetHandle() const;
-		protected:
-			GLuint _textureID;
+	GLuint GetHandle() const;
+protected:
+	GLuint _textureID;
 
-		private:
-			// No copying or assignment
-			Texture(const Texture&) = delete;
-			Texture& operator=(const Texture&) = delete;
-		};
+private:
+	// No copying or assignment
+	Texture(const Texture&) = delete;
+	Texture& operator=(const Texture&) = delete;
+};
 
-	}
+}
 }
 
 #endif
