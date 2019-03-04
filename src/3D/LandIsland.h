@@ -90,7 +90,7 @@ namespace OpenBlack
 		std::shared_ptr<Texture2DArray> GetMaterialArray() const { return _materialArray; }
 		std::shared_ptr<Texture2DArray> GetLowResArray() const { return _lowResTextureArray; }
 	private:
-		void addTexture(uint16_t* data);
+		void convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixels);
 		void buildMesh();
 		std::vector<LandVertex> getVerticies();
 		std::vector<uint32_t> getIndices();

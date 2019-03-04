@@ -39,7 +39,7 @@ void LandIsland::LoadFromDisk(std::string fileName)
     file->Read(&countrySize, 4);
     file->Read(&_lowresCount, 4);
 
-	_lowResTextureArray = std::make_shared<Texture2DArray>();
+	//_lowResTextureArray = std::make_shared<Texture2DArray>();
     for (uint32_t i = 0; i < _lowresCount; i++)
     {
         uint32_t textureSize;
@@ -69,21 +69,23 @@ void LandIsland::LoadFromDisk(std::string fileName)
 
 	//file->Seek(_countryCount * countrySize, LH_SEEK_MODE::Current);
 
-	_materialArray = std::make_shared<Texture2DArray>();
+	_materialArray = std::make_shared<Texture2DArray>(256, 256, _materialCount, GL_RGBA8);
     for (uint32_t i = 0; i < _materialCount; i++)
     {
+		uint16_t* rgba5TextureData = new uint16_t[256 * 256];
+		uint32_t* rgba8TextureData = new uint32_t[256 * 256];
+
         uint16_t terrainType;
-        uint16_t* textureData = new uint16_t[256 * 256];
-
         file->Read(&terrainType, 2);
-        file->Read(textureData, 256*256*sizeof(uint16_t));
+        file->Read(rgba5TextureData, 256*256*sizeof(uint16_t));
 
-        addTexture(textureData);
+		convertRGB5ToRGB8(rgba5TextureData, rgba8TextureData, 256 * 256);
+		_materialArray->SetTexture(i, 256, 256, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, rgba8TextureData);
 
-        delete[] textureData;
+        delete[] rgba5TextureData;
+		delete[] rgba8TextureData;
     }
-    _materialArray->Create();
-    
+
     file->Seek(65536, LH_SEEK_MODE::Current); // Noisemap
     file->Seek(65536, LH_SEEK_MODE::Current); // Bumpmap
 
@@ -223,32 +225,21 @@ std::vector<LandVertex> LandIsland::getVerticies()
 	return verts;
 }
 
-void LandIsland::addTexture(uint16_t* data)
+void LandIsland::convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixels)
 {
-    TextureDef2D tex;
-    tex.width = 256;
-    tex.height = 256;
-    tex.format = GL_RGBA;
-    tex.internalFormat = GL_RGBA;
-    tex.type = GL_UNSIGNED_INT_8_8_8_8;
-    tex.data = new uint8_t[256 * 256 * 4];
+	for (int i = 0; i < pixels; i++)
+	{
+		uint16_t col = rgba5[i];
 
-	// convert the data from RGB5 to RGB8
-    for (int i = 0; i < 256 * 256; i++)
-    {
-        uint16_t col = data[i];
+		uint8_t r = (col & 0x7C00) >> 10;
+		uint8_t g = (col & 0x3E0) >> 5;
+		uint8_t b = (col & 0x1F);
 
-        uint8_t r = (col & 0x7C00) >> 10;
-        uint8_t g = (col & 0x3E0) >> 5;
-        uint8_t b = (col & 0x1F);
-
-        ((uint8_t*)tex.data)[i * 4 + 3] = r << 3; // 5
-        ((uint8_t*)tex.data)[i * 4 + 2] = g << 3; // 5
-        ((uint8_t*)tex.data)[i * 4 + 1] = b << 3; // 5
-        ((uint8_t*)tex.data)[i * 4 + 0] = 255;
-    }
-
-    _materialArray->AddTexture(tex);
+		((uint8_t*)rgba8)[i * 4 + 3] = r << 3; // 5
+		((uint8_t*)rgba8)[i * 4 + 2] = g << 3; // 5
+		((uint8_t*)rgba8)[i * 4 + 1] = b << 3; // 5
+		((uint8_t*)rgba8)[i * 4 + 0] = 255;
+	}
 }
 
 void LandIsland::DumpTextures()
