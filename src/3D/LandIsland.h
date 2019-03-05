@@ -54,6 +54,7 @@ namespace OpenBlack
 	#pragma pack(push, 1)
 	struct LandVertex
 	{
+		GLfloat color[4];
 		GLfloat position[3];
 		GLfloat textureCoords[2];
 		GLfloat weight[3];
@@ -62,12 +63,13 @@ namespace OpenBlack
 		GLubyte materialBlendCoefficient[4];
 		GLfloat alpha;
 
-		LandVertex(glm::vec3 _position, glm::vec2 _uv, glm::vec3 _weight,
+		LandVertex(rgba_t _color, glm::vec3 _position, glm::vec2 _uv, glm::vec3 _weight,
 			GLubyte mat1, GLubyte mat2, GLubyte mat3,
 			GLubyte mat4, GLubyte mat5, GLubyte mat6,
 			GLubyte blend1, GLubyte blend2, GLubyte blend3,
 			GLfloat _alpha)
 		{
+			color[0] = _color.r / 255.f; color[1] = _color.g / 255.f; color[2] = _color.b / 255.f; color[3] = _color.a / 255.f;
 			position[0] = _position.x; position[1] = _position.y; position[2] = _position.z;
 			textureCoords[0] = _uv.x; textureCoords[1] = _uv.y;
 			weight[0] = _weight.x; weight[1] = _weight.y; weight[2] = _weight.z;

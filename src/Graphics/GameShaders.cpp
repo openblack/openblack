@@ -63,25 +63,28 @@ void main()
 
 const char* Terrain::VertexShader = R"(
 #version 330 core
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec2 texcoord;
-layout(location = 2) in vec3 weights;
-layout(location = 3) in uvec3 firstMaterialID;
-layout(location = 4) in uvec3 secondMaterialID;
-layout(location = 5) in uvec3 materialBlendCoefficient;
-layout(location = 6) in float waterAlpha;
+layout(location = 0) in vec4 color;
+layout(location = 1) in vec3 position;
+layout(location = 2) in vec2 texcoord;
+layout(location = 3) in vec3 weights;
+layout(location = 4) in uvec3 firstMaterialID;
+layout(location = 5) in uvec3 secondMaterialID;
+layout(location = 6) in vec3 materialBlendCoefficient;
+layout(location = 7) in float waterAlpha;
 
+out vec4 Color;
 out vec2 Texcoord;
 out vec3 Weights;
 flat out uvec3 FirstMaterialID;
 flat out uvec3 SecondMaterialID;
-flat out uvec3 MaterialBlendCoefficient;
+flat out vec3 MaterialBlendCoefficient;
 out float WaterAlpha;
 
 uniform mat4 viewProj;
 
 void main()
 {
+	Color = color;
 	Texcoord = texcoord;
 	Weights = weights;
 	FirstMaterialID = firstMaterialID;
@@ -96,11 +99,12 @@ void main()
 const char* Terrain::FragmentShader = R"(
 #version 330 core
 
+in vec4 Color;
 in vec2 Texcoord;
 in vec3 Weights;
 flat in uvec3 FirstMaterialID;
 flat in uvec3 SecondMaterialID;
-flat in uvec3 MaterialBlendCoefficient;
+flat in vec3 MaterialBlendCoefficient;
 in float WaterAlpha;
 
 uniform sampler2DArray sMaterials;
@@ -110,26 +114,31 @@ out vec4 FragColor;
 
 void main()
 {
-	vec4 bump = texture(sBumpMap, Texcoord);
-
 	// do each vert with both materials
 	vec4 colOne = mix(
 		texture(sMaterials, vec3(Texcoord, FirstMaterialID.r)),
 		texture(sMaterials, vec3(Texcoord, SecondMaterialID.r)),
-		float(MaterialBlendCoefficient.r) / 255.0f
+		MaterialBlendCoefficient.r
 	) * Weights.r;
 	vec4 colTwo = mix(
 		texture(sMaterials, vec3(Texcoord, FirstMaterialID.g)),
 		texture(sMaterials, vec3(Texcoord, SecondMaterialID.g)),
-		float(MaterialBlendCoefficient.g) / 255.0f
+		MaterialBlendCoefficient.g
 	) * Weights.g;
 	vec4 colThree = mix(
 		texture(sMaterials, vec3(Texcoord, FirstMaterialID.b)),
 		texture(sMaterials, vec3(Texcoord, SecondMaterialID.b)),
-		float(MaterialBlendCoefficient.b) / 255.0f
+		MaterialBlendCoefficient.b
 	) * Weights.b;
 
+	// add the 3 blended textures together
 	vec4 col = colOne + colTwo + colThree;
+
+	// apply light map
+	col = col * Color.a;
+
+	// apply bump map
+	vec4 bump = texture(sBumpMap, Texcoord);
 	FragColor = vec4(col.r * bump.r, col.g * bump.r, col.b * bump.r, WaterAlpha);
 }
 )";

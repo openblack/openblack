@@ -152,14 +152,15 @@ void LandIsland::buildMesh()
 		return;
 	}
 
-	VertexDecl decl(7);
-	decl[0] = VertexAttrib(0, 3, GL_FLOAT,			false, sizeof(LandVertex), nullptr); // position
-	decl[1] = VertexAttrib(1, 2, GL_FLOAT,			false, sizeof(LandVertex), (void*)offsetof(LandVertex, textureCoords));
-	decl[2] = VertexAttrib(2, 3, GL_FLOAT,			false, sizeof(LandVertex), (void*)offsetof(LandVertex, weight));
-	decl[3] = VertexAttrib(3, 3, GL_UNSIGNED_BYTE,	true,  sizeof(LandVertex), (void*)offsetof(LandVertex, firstMaterialID));
-	decl[4] = VertexAttrib(4, 3, GL_UNSIGNED_BYTE,	true,  sizeof(LandVertex), (void*)offsetof(LandVertex, secondMaterialID));
-	decl[5] = VertexAttrib(5, 3, GL_UNSIGNED_BYTE,	true,  sizeof(LandVertex), (void*)offsetof(LandVertex, materialBlendCoefficient));
-	decl[6] = VertexAttrib(6, 1, GL_FLOAT,			false, sizeof(LandVertex), (void*)offsetof(LandVertex, alpha));
+	VertexDecl decl(8);
+	decl[0] = VertexAttrib(0, 4, GL_FLOAT,			false, false, sizeof(LandVertex), nullptr); // position
+	decl[1] = VertexAttrib(1, 3, GL_FLOAT,			false, false, sizeof(LandVertex), (void*)offsetof(LandVertex, position)); // position
+	decl[2] = VertexAttrib(2, 2, GL_FLOAT,			false, false, sizeof(LandVertex), (void*)offsetof(LandVertex, textureCoords));
+	decl[3] = VertexAttrib(3, 3, GL_FLOAT,			false, false, sizeof(LandVertex), (void*)offsetof(LandVertex, weight));
+	decl[4] = VertexAttrib(4, 3, GL_UNSIGNED_BYTE,	true,  false, sizeof(LandVertex), (void*)offsetof(LandVertex, firstMaterialID));
+	decl[5] = VertexAttrib(5, 3, GL_UNSIGNED_BYTE,	true,  false, sizeof(LandVertex), (void*)offsetof(LandVertex, secondMaterialID));
+	decl[6] = VertexAttrib(6, 3, GL_UNSIGNED_BYTE,	false, true,  sizeof(LandVertex), (void*)offsetof(LandVertex, materialBlendCoefficient));
+	decl[7] = VertexAttrib(7, 1, GL_FLOAT,			false, true,  sizeof(LandVertex), (void*)offsetof(LandVertex, alpha));
 	
 	auto verts = buildVertexList();
 
@@ -209,19 +210,19 @@ std::vector<LandVertex> LandIsland::buildVertexList()
 				auto brMat = _countries[br.Country()].MapMaterials[br.Altitude()];
 
 				// triangle one: TL -> TR -> BR
-				verts.push_back(LandVertex(pTL, uvTL, glm::vec3(1.0f, 0.0f, 0.0f),
+				verts.push_back(LandVertex(tl.Color(), pTL, uvTL, glm::vec3(1.0f, 0.0f, 0.0f),
 					tlMat.FirstMaterialIndex, trMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
 					tlMat.SecondMaterialIndex, trMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
 					tlMat.Coeficient, trMat.Coeficient, brMat.Coeficient,
 					tl.Alpha()
 				));
-				verts.push_back(LandVertex(pTR, uvTR, glm::vec3(0.0f, 1.0f, 0.0f),
+				verts.push_back(LandVertex(tr.Color(), pTR, uvTR, glm::vec3(0.0f, 1.0f, 0.0f),
 					tlMat.FirstMaterialIndex, trMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
 					tlMat.SecondMaterialIndex, trMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
 					tlMat.Coeficient, trMat.Coeficient, brMat.Coeficient,
 					tr.Alpha()
 				));
-				verts.push_back(LandVertex(pBR, uvBR, glm::vec3(0.0f, 0.0f, 1.0f),
+				verts.push_back(LandVertex(br.Color(), pBR, uvBR, glm::vec3(0.0f, 0.0f, 1.0f),
 					tlMat.FirstMaterialIndex, trMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
 					tlMat.SecondMaterialIndex, trMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
 					tlMat.Coeficient, trMat.Coeficient, brMat.Coeficient,
@@ -229,19 +230,19 @@ std::vector<LandVertex> LandIsland::buildVertexList()
 				));
 
 				// triangle two: BR -> BL -> TL
-				verts.push_back(LandVertex(pBR, uvBR, glm::vec3(0.0f, 0.0f, 1.0f),
+				verts.push_back(LandVertex(br.Color(), pBR, uvBR, glm::vec3(0.0f, 0.0f, 1.0f),
 					tlMat.FirstMaterialIndex, blMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
 					tlMat.SecondMaterialIndex, blMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
 					tlMat.Coeficient, blMat.Coeficient, brMat.Coeficient,
 					br.Alpha()
 				));
-				verts.push_back(LandVertex(pBL, uvBL, glm::vec3(0.0f, 1.0f, 0.0f),
+				verts.push_back(LandVertex(bl.Color(), pBL, uvBL, glm::vec3(0.0f, 1.0f, 0.0f),
 					tlMat.FirstMaterialIndex, blMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
 					tlMat.SecondMaterialIndex, blMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
 					tlMat.Coeficient, blMat.Coeficient, brMat.Coeficient,
 					bl.Alpha()
 				));
-				verts.push_back(LandVertex(pTL, uvTL, glm::vec3(1.0f, 0.0f, 0.0f),
+				verts.push_back(LandVertex(tl.Color(), pTL, uvTL, glm::vec3(1.0f, 0.0f, 0.0f),
 					tlMat.FirstMaterialIndex, blMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
 					tlMat.SecondMaterialIndex, blMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
 					tlMat.Coeficient, blMat.Coeficient, brMat.Coeficient,
