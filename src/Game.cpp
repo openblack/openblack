@@ -84,10 +84,11 @@ Game::Game(int argc, char **argv)
 	args.Get("h", windowHeight);
 
 	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", windowWidth, windowHeight, displayMode);
-	_window->SetSwapInterval(0);
+	_window->SetSwapInterval(1);
 
 	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(MessageCallback, 0);
+	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, 0, GL_FALSE);
 
 	sInstance = this;
 }
