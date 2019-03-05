@@ -114,12 +114,7 @@ void Game::Run()
 	_camera->SetPosition(glm::vec3(2458.0f, 169.0f, 1743.0f));
 	_camera->SetRotation(glm::vec3(104.0f, 15.0f, 0.0f));
 
-#ifdef _WIN32
-	LoadMap(GetGamePath() + "\\Data\\Landscape\\Land1.lnd");
-#else
 	LoadMap(GetGamePath() + "/Data/Landscape/Land1.lnd");
-#endif // _WIN32
-	//LoadMap("Land1.lnd");
 
 	/* we pass the unique_ptr straight to the Script, so do not reuse this */
 	auto commands = std::make_unique<ScriptCommands>();
@@ -136,11 +131,11 @@ void Game::Run()
 	_scriptx->SetCommands(commands);
 
 	//_scriptx->ScanLine("VERSION(\"LOL\")");
-#ifdef _WIN32
-	_scriptx->LoadFile(GetGamePath() + "\\Scripts\\Land1.txt");
-#else
-	_scriptx->LoadFile(GetGamePath() + "/Scripts/Land1.txt");
-#endif // _WIN32
+//#ifdef _WIN32
+//	_scriptx->LoadFile(GetGamePath() + "\\Scripts\\Land1.txt");
+//#else
+//	_scriptx->LoadFile(GetGamePath() + "/Scripts/Land1.txt");
+//#endif // _WIN32
 
 	//LHScriptX* script = new LHScriptX();
 	//script->LoadFile(GetGamePath() + "\\Scripts\\Land1.txt");
@@ -271,15 +266,35 @@ void Game::guiLoop()
 	ImGui::End();
 
 	ImGui::Begin("Land Island");
+
+	ImGui::Text("Load Land Island:");
+	ImGui::BeginGroup();
+	if (ImGui::Button("1"))
+		LoadMap(GetGamePath() + "/Data/Landscape/Land1.lnd");
+	ImGui::SameLine();
+	if (ImGui::Button("2"))
+		LoadMap(GetGamePath() + "/Data/Landscape/Land2.lnd");
+	ImGui::SameLine();
+	if (ImGui::Button("3"))
+		LoadMap(GetGamePath() + "/Data/Landscape/Land3.lnd");
+	ImGui::SameLine();
+	if (ImGui::Button("4"))
+		LoadMap(GetGamePath() + "/Data/Landscape/Land4.lnd");
+	ImGui::SameLine();
+	if (ImGui::Button("5"))
+		LoadMap(GetGamePath() + "/Data/Landscape/Land5.lnd");
+	ImGui::SameLine();
+	ImGui::EndGroup();
+
 	auto noisemap = _landIsland->GetNoiseMap();
 	auto bumpmap = _landIsland->GetBumpMap();
 	ImGui::Text("Noisemap");
-	ImGui::Image((void*)(intptr_t)noisemap->GetHandle(), ImVec2(noisemap->GetWidth(), noisemap->GetHeight()));
+	ImGui::Image((void*)(intptr_t)noisemap->GetHandle(), ImVec2(noisemap->GetWidth() / 2, noisemap->GetHeight() / 2));
 	ImGui::Text("Bumpmap");
-	ImGui::Image((void*)(intptr_t)bumpmap->GetHandle(), ImVec2(bumpmap->GetWidth(), bumpmap->GetHeight()));
+	ImGui::Image((void*)(intptr_t)bumpmap->GetHandle(), ImVec2(bumpmap->GetWidth() / 2, bumpmap->GetHeight() / 2));
 	ImGui::End();
 
-	if (_scriptx) {
+	/*if (_scriptx) {
 		ImGui::Begin("LHScriptX", NULL, ImVec2(300, 200), -1.0f, NULL);
 
 		ImGui::TextColored(ImVec4(1, 1, 0, 1), "Commands");
@@ -291,13 +306,16 @@ void Game::guiLoop()
 
 		ImGui::EndChild();
 		ImGui::End();
-	}
+	}*/
 
 	ImGui::Render();
 }
 
 void Game::LoadMap(std::string name)
 {
+	if (_landIsland)
+		_landIsland.reset();
+
 	_landIsland = std::make_unique<LandIsland>();
 	_landIsland->LoadFromDisk(name);
 }
