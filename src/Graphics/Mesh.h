@@ -44,8 +44,8 @@ struct VertexAttrib {
 	VertexAttrib() { }
 	VertexAttrib(GLuint i, GLint s, GLenum t, GLsizei st = 0, const GLvoid *of = 0) :
 		index(i), size(s), type(t), stride(st), offset(of), normalized(false), integer(false) { }
-	VertexAttrib(GLuint i, GLint s, GLenum t, bool intg, GLsizei st = 0, const GLvoid *of = 0) :
-		index(i), size(s), type(t), stride(st), offset(of), normalized(false), integer(intg) { }
+	VertexAttrib(GLuint i, GLint s, GLenum t, bool intg, bool norm, GLsizei st = 0, const GLvoid *of = 0) :
+		index(i), size(s), type(t), stride(st), offset(of), normalized(norm), integer(intg) { }
 };
 
 typedef std::vector<VertexAttrib> VertexDecl;

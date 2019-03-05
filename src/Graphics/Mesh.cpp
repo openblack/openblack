@@ -95,7 +95,7 @@ void Mesh::bindVertexDecl()
 			glVertexAttribPointer(_vertexDecl[i].index,
 				_vertexDecl[i].size,
 				_vertexDecl[i].type,
-				GL_FALSE,//_vertexDecl[i].normalized ? GL_TRUE : GL_FALSE,
+				_vertexDecl[i].normalized ? GL_TRUE : GL_FALSE,
 				_vertexDecl[i].stride,
 				_vertexDecl[i].offset);
 		}
