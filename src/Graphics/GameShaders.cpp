@@ -109,6 +109,8 @@ in float WaterAlpha;
 
 uniform sampler2DArray sMaterials;
 uniform sampler2D sBumpMap;
+uniform float timeOfDay;
+uniform float bumpmapStrength;
 
 out vec4 FragColor;
 
@@ -134,11 +136,13 @@ void main()
 	// add the 3 blended textures together
 	vec4 col = colOne + colTwo + colThree;
 
-	// apply light map
-	col = col * Color.a;
+	// apply bump map (2x because it's half bright?)
+	float bump = mix(1.0f, texture(sBumpMap, Texcoord).r * 2, bumpmapStrength);
+	col = col * bump;
 
-	// apply bump map
-	vec4 bump = texture(sBumpMap, Texcoord);
-	FragColor = vec4(col.r * bump.r, col.g * bump.r, col.b * bump.r, WaterAlpha);
+	// apply light map
+	col = col * mix(.25f, Color.a, timeOfDay);
+
+	FragColor = vec4(col.r, col.g, col.b, WaterAlpha);
 }
 )";

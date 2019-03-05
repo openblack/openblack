@@ -69,6 +69,8 @@ namespace OpenBlack
 		std::unique_ptr<LHScriptX::Script> _scriptx;
 
 		bool _wireframe;
+		float _timeOfDay;
+		float _bumpmapStrength;
 
 		bool _running;
 

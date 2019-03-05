@@ -74,7 +74,7 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 }
 
 Game::Game(int argc, char **argv)
-	: _running(true), _wireframe(false)
+	: _running(true), _wireframe(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f)
 {
 	int windowWidth = 1280, windowHeight = 768;
 	DisplayMode displayMode = DisplayMode::Windowed;
@@ -146,6 +146,8 @@ void Game::Run()
 	GLint uniTerrainView = glGetUniformLocation(terrainShader->GetHandle(), "viewProj");
 	GLint uniTerrainMaterialArray = glGetUniformLocation(terrainShader->GetHandle(), "sMaterials");
 	GLint uniTerrainBumpMap = glGetUniformLocation(terrainShader->GetHandle(), "sBumpMap");
+	GLint uniTimeOfDay = glGetUniformLocation(terrainShader->GetHandle(), "timeOfDay");
+	GLint uniBumpStrength = glGetUniformLocation(terrainShader->GetHandle(), "bumpmapStrength");
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
@@ -198,6 +200,8 @@ void Game::Run()
 
 		glUniform1i(uniTerrainMaterialArray, 0);
 		glUniform1i(uniTerrainBumpMap, 1);
+		glUniform1f(uniTimeOfDay, _timeOfDay);
+		glUniform1f(uniBumpStrength, _bumpmapStrength);
 
 		if (_wireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -286,6 +290,9 @@ void Game::guiLoop()
 	ImGui::SameLine();
 	ImGui::EndGroup();
 
+	ImGui::SliderFloat("Day", &_timeOfDay, 0.0f, 1.0f, "%.3f");
+	ImGui::SliderFloat("Bump", &_bumpmapStrength, 0.0f, 1.0f, "%.3f");
+	
 	auto noisemap = _landIsland->GetNoiseMap();
 	auto bumpmap = _landIsland->GetBumpMap();
 	ImGui::Text("Noisemap");
