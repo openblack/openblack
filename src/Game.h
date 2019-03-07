@@ -36,7 +36,11 @@ namespace OpenBlack
 	class LandIsland;
 
 	namespace LHScriptX {
-		class Script;
+	class Script;
+	}
+
+	namespace Video {
+	class VideoPlayer;
 	}
 
 	class Game {
@@ -65,6 +69,7 @@ namespace OpenBlack
 
 		std::unique_ptr<LandIsland> _landIsland;
 		std::unique_ptr<MeshPack> _meshPack;
+		std::unique_ptr<Video::VideoPlayer> _videoPlayer;
 
 		std::unique_ptr<LHScriptX::Script> _scriptx;
 

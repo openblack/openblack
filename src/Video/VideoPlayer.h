@@ -28,7 +28,7 @@
 
 #include <Common/OSFile.h>
 #include <Graphics/Texture2D.h>
-// #include <Video/Bink.h>
+#include <Video/Bink/BinkVideo.h>
 
 namespace OpenBlack
 {
@@ -51,14 +51,15 @@ namespace OpenBlack
 
 			/** Returns the height of the video's frames. */
 			uint32_t GetHeight() const;
-
 		private:
 			std::unique_ptr<OSFile> _file;
-			//std::unique_ptr<Bink> _bink;
+			std::unique_ptr<BinkVideo> _bink;
 			std::shared_ptr<Graphics::Texture2D> _texture;
 
 			// Create a surface for video of these dimensions.
 			void createTexture();
+		public:
+			std::shared_ptr<Graphics::Texture2D> GetTexture() const { return _texture; };
 		};
 	}
 }

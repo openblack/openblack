@@ -42,6 +42,8 @@
 
 #include <3D/MeshPack.h>
 
+#include <Video/VideoPlayer.h>
+
 //#include <Script/LHScriptX.h>
 #include <LHScriptX/Script.h>
 #include <LHScriptX/Command.h>
@@ -113,6 +115,8 @@ void Game::Run()
 	_camera->SetProjectionMatrixPerspective(60.0f, _window->GetAspectRatio(), 0.1f, 8192.f);
 	_camera->SetPosition(glm::vec3(2458.0f, 169.0f, 1743.0f));
 	_camera->SetRotation(glm::vec3(104.0f, 15.0f, 0.0f));
+
+	_videoPlayer = std::make_unique<Video::VideoPlayer>(GetGamePath() + "/Data/tips.bik");
 
 	LoadMap(GetGamePath() + "/Data/Landscape/Land1.lnd");
 
@@ -267,6 +271,12 @@ void Game::guiLoop()
 	_camera->SetPosition(pos);
 	_camera->SetRotation(rot);
 
+	ImGui::End();
+
+	ImGui::Begin("Video Player");
+	ImGui::Image((void*)(intptr_t)_videoPlayer->GetTexture()->GetHandle(),
+		ImVec2(_videoPlayer->GetWidth() / 2, _videoPlayer->GetHeight() / 2)
+	);
 	ImGui::End();
 
 	ImGui::Begin("Land Island");

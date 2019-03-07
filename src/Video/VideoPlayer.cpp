@@ -32,12 +32,14 @@ VideoPlayer::VideoPlayer(const std::string& file)
 
 	std::cout << "Opening Video: " << file << std::endl;
 
-	/*_bink = std::make_unique<Bink>(_file.get());
+	_bink = std::make_unique<BinkVideo>(_file.get());
 
 	std::cout << "Dimensions: " << _bink->GetWidth() << "x" << _bink->GetHeight() << std::endl;
 	std::cout << "Frame Count: " << _bink->GetFrameCount() << " @ " << _bink->GetFPS() << "FPS" << std::endl;
 
-	_bink->DoFrame();*/
+	createTexture();
+
+	_bink->CopyToTexture(_texture.get());
 }
 
 VideoPlayer::~VideoPlayer()
@@ -46,20 +48,17 @@ VideoPlayer::~VideoPlayer()
 		_file->Close();
 }
 
+uint32_t VideoPlayer::GetWidth() const { return _bink->GetWidth(); }
+uint32_t VideoPlayer::GetHeight() const { return _bink->GetHeight(); }
+
 void VideoPlayer::createTexture()
 {
 	if (_texture != nullptr)
 		_texture.reset();
 
-	/*TextureDef2D tex;
-	tex.width = 256;
-	tex.height = 256;
-	tex.format = GL_RGBA;
-	tex.internalFormat = GL_RGBA;
-	tex.type = GL_UNSIGNED_INT_8_8_8_8;
-	tex.data = new uint8_t[256 * 256 * 4];
-	memset((void*)tex.data, 100, 256 * 256 * 4);
-
-	_texture = std::make_shared<Texture2D>();
-	_texture->Create(tex);*/
+	_texture = std::make_shared<Texture2D>(
+		_bink->GetWidth(), _bink->GetHeight(),
+		GL_RGBA, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8,
+		nullptr // just allocate the texture :)
+	);
 }
