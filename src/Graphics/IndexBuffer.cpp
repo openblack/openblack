@@ -24,52 +24,39 @@
 
 using namespace OpenBlack::Graphics;
 
-IndexBuffer::IndexBuffer() : m_count(0), m_size(0), m_type(GL_UNSIGNED_INT), m_ibo(0), m_hint(GL_STATIC_DRAW) {
-}
+IndexBuffer::IndexBuffer(const void* indices, size_t indicesCount, GLenum type)
+	: _ibo(0), _count(indicesCount), _type(type), _hint(GL_STATIC_DRAW)
+{
+	assert(indices != nullptr);
+	assert(indicesCount > 0);
 
-IndexBuffer::IndexBuffer(const IndexBuffer &other) : m_ibo(0), m_hint(GL_STATIC_DRAW) {
-	*this = other;
+	glGenBuffers(1, &_ibo);
+	if (glGetError() != GL_NO_ERROR)
+		return;
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, _count * GetTypeSize(_type), indices, _hint);
 }
 
 IndexBuffer::~IndexBuffer() {
-	if (m_ibo != 0) {
-		glDeleteBuffers(1, &m_ibo);
-	}
+	if (_ibo != 0)
+		glDeleteBuffers(1, &_ibo);
 }
 
-bool IndexBuffer::Create(void* indices, size_t size, GLenum type) {
-	assert(m_ibo == 0); // VertexBuffer already initialised
-
-	glGenBuffers(1, &m_ibo);
-	if (glGetError() != GL_NO_ERROR)
-		return false;
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, m_hint);
-
-	if (glGetError() != GL_NO_ERROR)
-	{
-		glDeleteBuffers(1, &m_ibo);
-		m_ibo = 0;
-		return false;
-	}
-
-	m_size = size;
-	m_count = size / GetTypeSize(type);
-	m_type = type;
-	return true;
+size_t IndexBuffer::GetCount() const {
+	return _count;
 }
 
-unsigned int IndexBuffer::GetCount() const {
-	return m_count;
+size_t IndexBuffer::GetSize() const {
+	return _count * GetTypeSize(_type);
 }
 
 GLenum IndexBuffer::GetType() const {
-	return m_type;
+	return _type;
 }
 
 GLuint IndexBuffer::GetIBO() const {
-	return m_ibo;
+	return _ibo;
 }
 
 uint32_t IndexBuffer::GetTypeSize(GLenum type) {

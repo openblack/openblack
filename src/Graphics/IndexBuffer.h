@@ -32,24 +32,26 @@ namespace OpenBlack
 	{
 		class IndexBuffer {
 		public:
-			IndexBuffer();
-			IndexBuffer(const IndexBuffer &other);
+			IndexBuffer() = delete;
+			IndexBuffer(const IndexBuffer &other) = delete;
+			IndexBuffer(IndexBuffer&&) = default;
+
+			IndexBuffer(const void* indices, size_t indicesCount, GLenum type);
+
 			~IndexBuffer();
 
-			bool Create(void* indices, size_t size, GLenum type);
-
-			unsigned int GetCount() const;
+			size_t GetCount() const;
+			size_t GetSize() const;
 			GLenum GetType() const;
 			GLuint GetIBO() const;
 		private:
-			uint32_t m_count;
-			uint32_t m_size;
-			GLenum m_type;
+			size_t _count;
+			GLenum _type;
 
-			GLuint m_ibo;
-			GLuint m_hint;
+			GLuint _ibo;
+			GLuint _hint;
 
-			static uint32_t GetTypeSize(GLenum type);
+			static size_t GetTypeSize(GLenum type);
 		};
 
 	}
