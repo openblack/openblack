@@ -26,43 +26,24 @@
  * Copyright (c) 2009 Konstantin Shishkov
 */
 
-#include "BinkVideo.h"
+#include <Video/Bink/BinkVideo.h>
 
-#include "rational.h"
-#include "binkdata.h"
+#include <Video/Bink/rational.h>
+#include <Video/Bink/binkdata.h>
 
 #include <cassert>
 #include <cstdio>
 
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
 using OpenBlack::OSFile;
+using OpenBlack::Graphics::Texture2D;
 using namespace OpenBlack::Video;
 
-static int g_truecolor;
-static unsigned int *cbAtFrame = NULL;
-static unsigned int *strRef = NULL;
-
-static const int ff_wma_critical_freqs[25] = {
-	100,   200,  300, 400,   510,  630,  770,    920,
-	1080, 1270, 1480, 1720, 2000, 2320, 2700,   3150,
-	3700, 4400, 5300, 6400, 7700, 9500, 12000, 15500,
-	24500,
-};
-
-BinkVideo::BinkVideo(OSFile* _file)
+BinkVideo::BinkVideo(OSFile* _file) :
+	file(_file), currentFrame(0), c_col_lastval(0), frameBuffer(NULL)
 {
-	//video = core->GetVideoDriver();
-	inbuff = NULL;
-	maxRow = 0;
-	rowCount = 0;
-	currentFrame = 0;
 	//force initialisation of static tables
 	memset(bink_trees, 0, sizeof(bink_trees));
 	memset(table, 0, sizeof(table));
-
 	memset(&v_timebase, 0, sizeof(v_timebase));
 	memset(&c_scantable, 0, sizeof(c_scantable));
 	memset(&c_bundle, 0, sizeof(c_bundle));
@@ -70,24 +51,16 @@ BinkVideo::BinkVideo(OSFile* _file)
 	memset(&c_pic, 0, sizeof(c_pic));
 	memset(&c_last, 0, sizeof(c_last));
 	memset(&header, 0, sizeof(header));
-	memset(s_coeffs_ptr, 0, sizeof(s_coeffs_ptr));
-	timer_last_sec = timer_last_usec = frame_wait = c_col_lastval = 0;
-	outputwidth = outputheight = video_frameskip = video_skippedframes = 0;
-	s_frame_len = s_overlap_len = s_num_bands = s_block_size = 0;
-	video_rendered_frame = done = validVideo = s_audio = false;
-	s_channels = s_first = s_stream = s_root = 0;
-	s_bands = NULL;
-
-	validVideo = false;
-	file = _file;
-
+	
 	file->Seek(0, LH_SEEK_MODE::Set);
 	file->Read(&header.signature, BIK_SIGNATURE_LEN);
 	if (memcmp(header.signature, BIK_SIGNATURE_DATA, 4) != 0)
 		throw std::runtime_error("invalid bink header");
 
-	if (ReadHeader() != 0)
+	if (!readHeader())
 		throw std::runtime_error("invalid bink header");
+
+	initVideoTables();
 }
 
 static inline void release_buffer(AVFrame *p) {
@@ -104,13 +77,52 @@ BinkVideo::~BinkVideo(void)
 		av_freep((void **)&c_bundle[i].data);
 	}
 
-	av_freep((void **) &inbuff);
+	av_freep((void **) &frameBuffer);
 }
 
-void OpenBlack::Video::BinkVideo::CopyToTexture(Graphics::Texture2D * texture)
+bool BinkVideo::SetFrame(unsigned int frameNum)
 {
+	if (frameNum >= header.framecount) {
+		return false;
+	}
+
+	currentFrame = frameNum;
+
+	binkframe frame = frames[currentFrame];
+	file->Seek(frame.pos, LH_SEEK_MODE::Set);
+	file->Read(frameBuffer, frame.size);
+
+	return decodeVideoFrame(frameBuffer, frame.size);
+}
+
+bool BinkVideo::nextFrame()
+{
+	if (currentFrame >= header.framecount) {
+		return false;
+	}
+
+	binkframe frame = frames[currentFrame++];
+	file->Seek(frame.pos, LH_SEEK_MODE::Set);
+	file->Read(frameBuffer, frame.size);
+
+	return decodeVideoFrame(frameBuffer, frame.size);
+}
+
+void BinkVideo::CopyToTexture(Texture2D* texture)
+{
+	//showFrame((uint8_t **)c_pic.data, (unsigned int *)c_pic.linesize, header.width, header.height, header.width, header.height, dest_x, dest_y);
+
 	uint8_t* data = new uint8_t[header.width * header.height * 4];
-	memset(data, 0xAA, header.width * header.height * 4);
+	memset(data, 0xFF, header.width * header.height * 4);
+
+	// copy YUV to RGBA
+	for (int i = 0; i < header.width * header.height; i++)
+	{
+		data[i * 4 + 0] = 0xFF; //c_last.data[0][i]; // A
+		data[i * 4 + 1] = c_last.data[0][i]; // B
+		data[i * 4 + 2] = c_last.data[0][i]; // G
+		data[i * 4 + 3] = c_last.data[0][i]; // R
+	}
 
 	texture->Bind();
 	glTexSubImage2D(
@@ -139,7 +151,7 @@ void BinkVideo::av_set_pts_info(AVRational &time_base, unsigned int pts_num, uns
 	time_base.num = time_base.den = 0;
 }
 
-int BinkVideo::ReadHeader()
+bool BinkVideo::readHeader()
 {
 	file->Seek(0, LH_SEEK_MODE::Set);
 	file->Read(&header.signature, BIK_SIGNATURE_LEN);
@@ -147,14 +159,12 @@ int BinkVideo::ReadHeader()
 	header.filesize += 8;
 
 	file->Read(&header.framecount, 4);
-	if (header.framecount > 1000000) {
-		return -1;
-	}
+	if (header.framecount > 1000000) 
+		return false;
 
 	file->Read(&header.maxframesize, 4);
-	if (header.maxframesize > header.filesize) {
-		return -1;
-	}
+	if (header.maxframesize > header.filesize)
+		return false;
 
 	file->Seek(4, LH_SEEK_MODE::Current);
 
@@ -166,8 +176,8 @@ int BinkVideo::ReadHeader()
 	file->Read(&fps_den, 4);
 
 	if (fps_num == 0 || fps_den == 0) {
-		//av_log(s, AV_LOG_ERROR, "invalid header: invalid fps (%d/%d)\n", fps_num, fps_den);
-		return -1;
+		printf("bink: invalid header: invalid fps (%d/%d)\n", fps_num, fps_den);
+		return false;
 	}
 	//also sets pts_wrap_bits to 64
 	av_set_pts_info(v_timebase, fps_den, fps_num);
@@ -175,24 +185,8 @@ int BinkVideo::ReadHeader()
 	file->Seek(4, LH_SEEK_MODE::Current);
 	file->Read(&header.tracks, 4);
 
-	//we handle only single tracks, is this a problem with multi language iwd2?
-	if (header.tracks > 1) {
-		return -1;
-	}
-
-	if (header.tracks) {
-		file->Seek(4 * header.tracks, LH_SEEK_MODE::Current);
-		//make sure we use one track, if more needed, rewrite this part
-		assert(header.tracks==1);
-
-		file->Read(&header.samplerate, 2);
-
-		//also sets pts_wrap_bits to 64
-		//av_set_pts_info(s_timebase, 1, header.samplerate);  //unused, we simply use header.samplerate
-		file->Read(&header.audioflag, 2);
-
-		file->Seek(4 * header.tracks, LH_SEEK_MODE::Current);
-	}
+	// if there are audio tracks, you have the wrong game
+	assert(header.tracks == 0);
 
 	/* build frame index table */
 	unsigned int pos, next_pos;
@@ -204,114 +198,39 @@ int BinkVideo::ReadHeader()
 
 	frames.reserve(header.framecount);
 	for (unsigned int i = 0; i < header.framecount; i++) {
-	if (i == header.framecount - 1) {
-		next_pos = header.filesize;
-	} else {
-		file->Read(&next_pos, 4);
-	}
-	if (next_pos <= pos) {
-		// av_log(s, AV_LOG_ERROR, "invalid frame index table\n");
-		return -1;
-	}
-	//offset, size, keyframe
-	binkframe frame;
+		if (i == header.framecount - 1) {
+			next_pos = header.filesize;
+		} else {
+			file->Read(&next_pos, 4);
+		}
+		if (next_pos <= pos) {
+			printf("bink: invalid frame index table\n");
+			return false;
+		}
+		//offset, size, keyframe
+		binkframe frame;
 
-	//the order of instructions is important here!
-	frame.pos=pos;
-	frame.keyframe=keyframe;
-	pos = next_pos&~1;
-	keyframe = next_pos&1;
-	frame.size=pos-frame.pos;
-	//sanity hack, we might as well just go belly up and refuse playing
-	if (frame.size>header.maxframesize) {
-		frame.size = header.maxframesize;
+		//the order of instructions is important here!
+		frame.pos=pos;
+		frame.keyframe=keyframe;
+		pos = next_pos&~1;
+		keyframe = next_pos&1;
+		frame.size=pos-frame.pos;
+		//sanity hack, we might as well just go belly up and refuse playing
+		if (frame.size>header.maxframesize) {
+			frame.size = header.maxframesize;
+		}
+
+		frames.push_back(frame);
+
 	}
 
-	frames.push_back(frame);
-
-	}
-	inbuff = (uint8_t *) av_malloc(header.maxframesize);
-	if (!inbuff) {
-		return -2;
-	}
+	// allocate our frame buffer from max frame size
+	frameBuffer = (uint8_t *) av_malloc(header.maxframesize);
 
 	file->Seek(4, LH_SEEK_MODE::Current);
-	return 0;
-}
-
-bool BinkVideo::next_frame()
-{
-	if(currentFrame>=header.framecount) {
-		return false;
-	}
-
-	binkframe frame = frames[currentFrame++];
-	file->Seek(frame.pos, LH_SEEK_MODE::Set);
-	unsigned int audframesize;
-	file->Read(&audframesize, 4);
-	frame.size = file->Read(inbuff, frame.size - 4);
-
-	// we're not equipped to handle audio
-	assert(audframesize == 0);
-
-	if (DecodeVideoFrame(inbuff+audframesize, frame.size-audframesize)) {
-		//buggy frame, we stop immediately
-		return false;
-	}
 
 	return true;
-}
-
-int BinkVideo::doPlay()
-{
-	int done = 0;
-
-	//bink is always truecolor
-	g_truecolor = 1;
-
-	frame_wait = 0;
-	timer_last_sec = 0;
-	video_frameskip = 0;
-
-	//last parameter is to enable YUV overlay
-	outputwidth = (int) header.width;
-	outputheight= (int) header.height;
-	//video->InitMovieScreen(outputwidth,outputheight, true);
-
-	if (video_init(outputwidth,outputheight)) {
-		return 2;
-	}
-
-	/*while (!done && next_frame()) {
-		done = video->PollMovieEvents();
-	}*/
-
-	//video->DestroyMovieScreen();
-	return 0;
-}
-
-unsigned int BinkVideo::fileRead(unsigned int pos, void* buf, unsigned int count)
-{
-	file->Seek(pos, LH_SEEK_MODE::Set);
-	return file->Read( buf, count );
-}
-
-void BinkVideo::showFrame(unsigned char** buf, unsigned int *strides, unsigned int bufw,
-	unsigned int bufh, unsigned int w, unsigned int h, unsigned int dstx, unsigned int dsty)
-{
-	unsigned int titleref = 0;
-
-	if (cbAtFrame && strRef) {
-		if ((rowCount<maxRow) && (currentFrame >= cbAtFrame[rowCount]) ) {
-			rowCount++;
-		}
-		//draw subtitle here
-		if (rowCount) {
-			titleref = strRef[rowCount-1];
-		}
-	}
-
-	//video->showYUVFrame(buf,strides,bufw,bufh,w,h,dstx,dsty, titleref);
 }
 
 void BinkVideo::ff_init_scantable(ScanTable *st, const uint8_t *src_scantable){
@@ -333,7 +252,7 @@ void BinkVideo::ff_init_scantable(ScanTable *st, const uint8_t *src_scantable){
 	}
 }
 
-int BinkVideo::video_init(int w, int h)
+void BinkVideo::initVideoTables()
 {
 	int bw, bh, blocks;
 	int i;
@@ -348,13 +267,8 @@ int BinkVideo::video_init(int w, int h)
 		}
 	}
 
-	memset(&c_pic,0, sizeof(AVFrame));
-	memset(&c_last,0, sizeof(AVFrame));
-
-	if (w<(signed) header.width || h<(signed) header.height) {
-		//movie dimensions are higher than available screen
-		return 1;
-	}
+	memset(&c_pic,  0, sizeof(AVFrame));
+	memset(&c_last, 0, sizeof(AVFrame));
 
 	ff_init_scantable(&c_scantable, bink_scan);
 
@@ -364,14 +278,8 @@ int BinkVideo::video_init(int w, int h)
 
 	for (i = 0; i < BINK_NB_SRC; i++) {
 		c_bundle[i].data = (uint8_t *) av_malloc(blocks * 64);
-		//not enough memory
-		if(!c_bundle[i].data) {
-			return 2;
-		}
 		c_bundle[i].data_end = (uint8_t *) c_bundle[i].data + blocks * 64;
 	}
-
-	return 0;
 }
 
 static inline void ff_fill_linesize(AVFrame *picture, int width)
@@ -445,96 +353,6 @@ static void ff_float_to_int16_interleave_c(int16_t *dst, const float **src, long
 	for(i=0; i<len; i++) {
 		dst[i] = float_to_int16_one(src[0]+i);
 	}
-}
-
-/**
- * Decode Bink Audio block
- * @param[out] out Output buffer (must contain s->block_size elements)
- */
-void BinkVideo::DecodeBlock(short *out)
-{
-	unsigned int ch, i, j, k;
-	float q, quant[25];
-	int width, coeff;
-
-	if (header.audioflag&BINK_AUD_USEDCT) {
-		s_gb.skip_bits(2);
-	}
-
-	for (ch = 0; ch < s_channels; ch++) {
-		FFTSample *coeffs = s_coeffs_ptr[ch];
-		q = 0.0;
-		coeffs[0] = s_gb.get_float() * s_root;
-		coeffs[1] = s_gb.get_float() * s_root;
-
-		for (i = 0; i < s_num_bands; i++) {
-			int value = s_gb.get_bits(8);
-			quant[i] = (float) pow(10.0, FFMIN(value, 95) * 0.066399999) * s_root;
-		}
-
-		// find band (k)
-		for (k = 0; s_bands[k] * 2 < 2; k++) {
-			q = quant[k];
-		}
-
-		// parse coefficients
-		i = 2;
-		while (i < s_frame_len) {
-			if (s_gb.get_bits(1)) {
-				j = i + rle_length_tab[s_gb.get_bits(4)] * 8;
-			} else {
-				j = i + 8;
-			}
-
-			if (j > s_frame_len)
-				j = s_frame_len;
-
-			width = s_gb.get_bits(4);
-			if (width == 0) {
-				memset(coeffs + i, 0, (j - i) * sizeof(*coeffs));
-				i = j;
-				while (s_bands[k] * 2 < i)
-					q = quant[k++];
-			} else {
-				while (i < j) {
-					if (s_bands[k] * 2 == i)
-						q = quant[k++];
-					coeff = s_gb.get_bits(width);
-					if (coeff) {
-						if (s_gb.get_bits(1))
-							coeffs[i] = -q * coeff;
-						else
-							coeffs[i] =  q * coeff;
-					} else {
-						coeffs[i] = 0.0;
-					}
-					i++;
-				}
-			}
-		}
-
-		if (header.audioflag&BINK_AUD_USEDCT) {
-			coeffs[0] /= 0.5;
-			ff_dct_calc (&s_trans.dct,  coeffs);
-			for (i = 0; i < s_frame_len; i++)
-				coeffs[i] *= s_frame_len / 2;
-		} else
-			ff_rdft_calc(&s_trans.rdft, coeffs);
-	}
-
-	ff_float_to_int16_interleave_c(out, (const float **)s_coeffs_ptr, s_frame_len, s_channels);
-
-	if (!s_first) {
-		unsigned int count = s_overlap_len * s_channels;
-		int shift = av_log2(count);
-		for (i = 0; i < count; i++) {
-			out[i] = (s_previous[i] * (count - i) + out[i] * i) >> shift;
-		}
-	}
-
-	memcpy(s_previous, out + s_block_size, s_overlap_len * s_channels * sizeof(*out));
-
-	s_first = 0;
 }
 
 /**
@@ -958,6 +776,7 @@ int BinkVideo::read_dcs(Bundle *b, int start_bits, int has_sign)
 				SET_INT_VALUE(dst, v);
 				//*dst++ = v;
 				if (v < -32768 || v > 32767) {
+					printf("bink: DC value went out of bounds: %d\n", v);
 					return -1;
 				}
 			}
@@ -1148,7 +967,7 @@ static void idct_add(uint8_t *dest, int line_size, DCTELEM *block)
 	add_pixels_nonclamped(block, dest, line_size);
 }
 
-int BinkVideo::DecodeVideoFrame(void *data, int data_size)
+bool BinkVideo::decodeVideoFrame(void *data, int data_size)
 {
 	int blk, bw, bh;
 	int i, j, plane, bx, by;
@@ -1162,6 +981,7 @@ int BinkVideo::DecodeVideoFrame(void *data, int data_size)
 
 	int bits = data_size*8;
 	v_gb.init_get_bits((uint8_t *) data, bits);
+
 	//this is compatible only with the BIKi version
 	v_gb.skip_bits(32);
 
@@ -1184,23 +1004,23 @@ int BinkVideo::DecodeVideoFrame(void *data, int data_size)
 
 		for (by = 0; by < bh; by++) {
 			if (read_block_types(&c_bundle[BINK_SRC_BLOCK_TYPES]) < 0)
-				return -1;
+				return false;
 			if (read_block_types(&c_bundle[BINK_SRC_SUB_BLOCK_TYPES]) < 0)
-				return -1;
+				return false;
 			if (read_colors(&c_bundle[BINK_SRC_COLORS]) < 0)
-				return -1;
+				return false;
 			if (read_patterns(&c_bundle[BINK_SRC_PATTERN]) < 0)
-				return -1;
+				return false;
 			if (read_motion_values(&c_bundle[BINK_SRC_X_OFF]) < 0)
-				return -1;
+				return false;
 			if (read_motion_values(&c_bundle[BINK_SRC_Y_OFF]) < 0)
-				return -1;
+				return false;
 			if (read_dcs(&c_bundle[BINK_SRC_INTRA_DC], DC_START_BITS, 0) < 0)
-				return -1;
+				return false;
 			if (read_dcs(&c_bundle[BINK_SRC_INTER_DC], DC_START_BITS, 1) < 0)
-				return -1;
+				return false;
 			if (read_runs(&c_bundle[BINK_SRC_RUN]) < 0)
-				return -1;
+				return false;
 
 			//why is this here?
 			if (by == bh)
@@ -1283,7 +1103,7 @@ int BinkVideo::DecodeVideoFrame(void *data, int data_size)
 						break;
 					default:
 						printf("Incorrect 16x16 block type!");
-						return -1;
+						return false;
 					}
 					bx++;
 					dst += 8;
@@ -1366,25 +1186,18 @@ int BinkVideo::DecodeVideoFrame(void *data, int data_size)
 					break;
 				default:
 					printf("Unknown block type!");
-					return -1;
+					return false;
 				}
 			}
 		}
 		v_gb.get_bits_align32();
 	}
 
-	if (video_frameskip) {
-		video_frameskip--;
-		video_skippedframes++;
-	} else {
-		unsigned int dest_x = (outputwidth - header.width) >> 1;
-		unsigned int dest_y = (outputheight - header.height) >> 1;
-		showFrame((uint8_t **) c_pic.data, (unsigned int *) c_pic.linesize, header.width, header.height, header.width, header.height, dest_x, dest_y);
-	}
+	//showFrame((uint8_t **) c_pic.data, (unsigned int *) c_pic.linesize, header.width, header.height, header.width, header.height, dest_x, dest_y);
 
 	//release the old frame even when frame is skipped
 	release_buffer(&c_last);
 	memcpy(&c_last, &c_pic, sizeof(AVFrame));
 	memset(&c_pic, 0, sizeof(AVFrame));
-	return 0;
+	return true;
 }

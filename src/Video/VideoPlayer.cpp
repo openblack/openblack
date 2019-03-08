@@ -39,7 +39,8 @@ VideoPlayer::VideoPlayer(const std::string& file)
 
 	createTexture();
 
-	_bink->CopyToTexture(_texture.get());
+	//_bink->NextFrame();
+	//_bink->CopyToTexture(_texture.get());
 }
 
 VideoPlayer::~VideoPlayer()
@@ -50,6 +51,12 @@ VideoPlayer::~VideoPlayer()
 
 uint32_t VideoPlayer::GetWidth() const { return _bink->GetWidth(); }
 uint32_t VideoPlayer::GetHeight() const { return _bink->GetHeight(); }
+
+void VideoPlayer::NextFrame()
+{
+	//_bink->NextFrame();
+	//_bink->CopyToTexture(_texture.get());
+}
 
 void VideoPlayer::createTexture()
 {
