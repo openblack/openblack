@@ -41,6 +41,7 @@
 #include <Graphics/VertexBuffer.h>
 
 #include <3D/MeshPack.h>
+#include <3D/Sky.h>
 
 #include <Video/VideoPlayer.h>
 
@@ -112,11 +113,13 @@ void Game::Run()
 
 	// create our camera
 	_camera = std::make_unique<Camera>();
-	_camera->SetProjectionMatrixPerspective(60.0f, _window->GetAspectRatio(), 0.1f, 8192.f);
+	_camera->SetProjectionMatrixPerspective(60.0f, _window->GetAspectRatio(), 0.1f, 13107200.f);
 	_camera->SetPosition(glm::vec3(2458.0f, 169.0f, 1743.0f));
 	_camera->SetRotation(glm::vec3(104.0f, 15.0f, 0.0f));
 
-	_videoPlayer = std::make_unique<Video::VideoPlayer>(GetGamePath() + "/Data/tips.bik");
+	_videoPlayer = std::make_unique<Video::VideoPlayer>(GetGamePath() + "/Data/logo.bik");
+
+	_sky = std::make_unique<Sky>();
 
 	LoadMap(GetGamePath() + "/Data/Landscape/Land1.lnd");
 
@@ -194,6 +197,11 @@ void Game::Run()
 		glClearColor(39.0f / 255.0f, 70.0f / 255.0f, 89.0f / 255.0f, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		_sky->Draw();
+
+		if (_wireframe)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 		glUseProgram(terrainShader->GetHandle());
 		glUniformMatrix4fv(uniTerrainView, 1, GL_FALSE, glm::value_ptr(_camera->GetViewProjectionMatrix()));
 
@@ -206,9 +214,6 @@ void Game::Run()
 		glUniform1i(uniTerrainBumpMap, 1);
 		glUniform1f(uniTimeOfDay, _timeOfDay);
 		glUniform1f(uniBumpStrength, _bumpmapStrength);
-
-		if (_wireframe)
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 		_landIsland->Draw();
 
@@ -229,7 +234,6 @@ void Game::guiLoop()
 
 	if (ImGui::BeginMainMenuBar())
 	{
-
 		if (ImGui::BeginMenu("File"))
 		{
 			if (ImGui::MenuItem("Quit", "Esc")) { _running = false; }
@@ -273,11 +277,15 @@ void Game::guiLoop()
 
 	ImGui::End();
 
+	/*
 	ImGui::Begin("Video Player");
 	ImGui::Image((void*)(intptr_t)_videoPlayer->GetTexture()->GetHandle(),
-		ImVec2(_videoPlayer->GetWidth() / 2, _videoPlayer->GetHeight() / 2)
+		ImVec2(_videoPlayer->GetWidth(), _videoPlayer->GetHeight())
 	);
+	if (ImGui::Button("Next Frame"))
+		_videoPlayer->NextFrame();
 	ImGui::End();
+	*/
 
 	ImGui::Begin("Land Island");
 

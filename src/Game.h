@@ -34,6 +34,8 @@ namespace OpenBlack
 	class MeshPack;
 	class MeshViewer;
 	class LandIsland;
+	class L3DModel;
+	class Sky;
 
 	namespace LHScriptX {
 	class Script;
@@ -71,6 +73,7 @@ namespace OpenBlack
 		std::unique_ptr<MeshPack> _meshPack;
 		std::unique_ptr<Video::VideoPlayer> _videoPlayer;
 
+		std::unique_ptr<Sky> _sky;
 		std::unique_ptr<LHScriptX::Script> _scriptx;
 
 		bool _wireframe;

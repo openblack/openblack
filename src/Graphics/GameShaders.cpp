@@ -32,13 +32,14 @@ layout(location = 2) in vec3 normal;
 out vec3 v_norm;
 out vec2 TexCoord;
 
-uniform mat4 MVP;
+uniform mat4 viewProj;
 
 void main()
 {
-    gl_Position = MVP * vec4(position, 1.0);
 	v_norm = normal;
 	TexCoord = tex;
+
+	gl_Position = viewProj * vec4(position, 1.0);
 }
 )";
 
@@ -54,10 +55,10 @@ uniform sampler2D tex;
 
 void main()
 {
-	//vec3 col = 0.5 + 0.5 * v_norm;
-    //outColor = vec4(col, 1.0);
+	vec3 col = 0.5 + 0.5 * v_norm;
+    outColor = vec4(col, 1.0);
 
-	outColor = texture(tex, TexCoord);
+	//outColor = texture(tex, TexCoord);
 }
 )";
 
