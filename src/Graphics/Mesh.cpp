@@ -27,7 +27,7 @@
 
 using namespace OpenBlack::Graphics;
 
-Mesh::Mesh(std::shared_ptr<VertexBuffer> vertexBuffer, const VertexDecl &decl, GLuint type)
+Mesh::Mesh(VertexBuffer* vertexBuffer, const VertexDecl &decl, GLuint type)
 	: _vertexBuffer(std::move(vertexBuffer)),
 	_vertexDecl(decl),
 	_type(type)
@@ -39,7 +39,7 @@ Mesh::Mesh(std::shared_ptr<VertexBuffer> vertexBuffer, const VertexDecl &decl, G
 	bindVertexDecl();
 }
 
-Mesh::Mesh(std::shared_ptr<VertexBuffer> vertexBuffer, std::shared_ptr<IndexBuffer> indexBuffer, const VertexDecl &decl, GLuint type)
+Mesh::Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, const VertexDecl &decl, GLuint type)
 	: _vertexBuffer(std::move(vertexBuffer)),
 	_indexBuffer(std::move(indexBuffer)),
 	_vertexDecl(decl),

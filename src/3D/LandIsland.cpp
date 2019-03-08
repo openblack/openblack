@@ -166,7 +166,7 @@ void LandIsland::buildMesh()
 
 	printf("LandIsland made with %d verticies\n", verts.size());
 
-	std::shared_ptr<VertexBuffer> vertexBuffer = std::make_shared<VertexBuffer>(verts.data(), verts.size(), sizeof(LandVertex));
+	VertexBuffer* vertexBuffer = new VertexBuffer(verts.data(), verts.size(), sizeof(LandVertex));
 	_mesh = std::make_unique<Mesh>(vertexBuffer, decl, GL_TRIANGLES);
 }
 

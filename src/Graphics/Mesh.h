@@ -53,8 +53,8 @@ typedef std::vector<VertexAttrib> VertexDecl;
 class Mesh
 {
 public:
-	Mesh(std::shared_ptr<VertexBuffer>, const VertexDecl &decl, GLuint type = GL_TRIANGLES);
-	Mesh(std::shared_ptr<VertexBuffer>, std::shared_ptr<IndexBuffer>, const VertexDecl &decl, GLuint type = GL_TRIANGLES);
+	Mesh(VertexBuffer*, const VertexDecl &decl, GLuint type = GL_TRIANGLES);
+	Mesh(VertexBuffer*, IndexBuffer*, const VertexDecl &decl, GLuint type = GL_TRIANGLES);
 	~Mesh();
 
 	std::shared_ptr<VertexBuffer> GetVertexBuffer();

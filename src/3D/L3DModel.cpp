@@ -144,9 +144,6 @@ void L3DModel::LoadFromL3D(void* data_, size_t size, bool pack) {
 			void* verticiesOffset = (void*)(buffer + subMesh->verticiesOffset);
 			void* trianglesOffset = (void*)(buffer + subMesh->trianglesOffset);
 
-			size_t verticiesSize = subMesh->numVerticies * sizeof(L3D_Vertex);
-			size_t indiciesSize = subMesh->numTriangles * 3 * sizeof(GLushort);
-
 			//Mesh* sub = new Mesh();
 
 			VertexDecl decl(3);
@@ -154,11 +151,11 @@ void L3DModel::LoadFromL3D(void* data_, size_t size, bool pack) {
 			decl[1] = VertexAttrib(1, 2, GL_FLOAT, 32, (void*)12);
 			decl[2] = VertexAttrib(2, 3, GL_FLOAT, 32, (void*)20);
 
-			//sub->SetVertexDecl(decl);
+			VertexBuffer *vertexBuffer = new VertexBuffer(verticiesOffset, subMesh->numVerticies, sizeof(L3D_Vertex));
+			IndexBuffer *indexBuffer = new IndexBuffer(trianglesOffset, subMesh->numTriangles * 3, GL_UNSIGNED_SHORT);
 
-			//sub->Create(verticiesOffset, verticiesSize, trianglesOffset, indiciesSize/*, subMesh->skinID*/);
-
-			m_subMeshes[sm] = nullptr; // sub;
+			Mesh* sub = new Mesh(vertexBuffer, indexBuffer, decl);
+			m_subMeshes[sm] = sub; // sub;
 			m_subMeshTextures[sm] = subMesh->skinID;
 		}
 
@@ -218,6 +215,7 @@ void L3DModel::Draw() {
 	for (int subMesh = 0; subMesh < m_subMeshCount; subMesh++) {
 		// no texture no render (todo: handle actual nodraw flags)
 		if (m_subMeshTextures[subMesh] == -1) {
+			m_subMeshes[subMesh]->Draw();
 			continue;
 		}
 
