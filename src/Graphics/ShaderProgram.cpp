@@ -21,6 +21,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <cassert>
 
 #include <Graphics/ShaderProgram.h>
 
@@ -28,24 +29,52 @@ using OpenBlack::Graphics::ShaderProgram;
 
 ShaderProgram::ShaderProgram(const std::string &vertexSource, const std::string &fragmentSource)
 {
+	_shaderProgram = glCreateProgram();
+
+	// lazy assert, todo: better error handling
+	assert(_shaderProgram != 0);
+
 	_shaderVertex = createSubShader(GL_VERTEX_SHADER, vertexSource);
 	_shaderFragment = createSubShader(GL_FRAGMENT_SHADER, fragmentSource);
 
-	_shaderProgram = glCreateProgram();
+	// lazy assert, todo: better error handling
+	assert(_shaderVertex != 0 && _shaderFragment != 0);
+
 	glAttachShader(_shaderProgram, _shaderVertex);
 	glAttachShader(_shaderProgram, _shaderFragment);
 	glLinkProgram(_shaderProgram);
 
-	GLint linkStatus;
+	GLint linkStatus = GL_FALSE;
 	glGetProgramiv(_shaderProgram, GL_LINK_STATUS, &linkStatus);
 
 	if (linkStatus == GL_FALSE)
 	{
+		GLint infoLogLen = 0;
+		glGetShaderiv(_shaderProgram, GL_INFO_LOG_LENGTH, &infoLogLen);
+
+		char* infoLog = new char[infoLogLen];
+		glGetProgramInfoLog(_shaderProgram, infoLogLen, &infoLogLen, infoLog);
+		std::fprintf(stderr, "ShaderProgram linking errors:\n%s\n", infoLog); // throw an exception?
+		delete[] infoLog;
+
 		glDeleteProgram(_shaderProgram);
 		glDeleteShader(_shaderVertex);
 		glDeleteShader(_shaderFragment);
 
-		throw std::runtime_error("Shader link failed");
+		return;
+	}
+
+	int uniformCount = -1;
+	glGetProgramiv(_shaderProgram, GL_ACTIVE_UNIFORMS, &uniformCount);
+	for (int i = 0; i < uniformCount; i++)
+	{
+		int name_len = -1, num = -1;
+		GLenum type = GL_ZERO;
+		char name[64];
+		glGetActiveUniform(_shaderProgram, GLuint(i), sizeof(name) - 1, &name_len, &num, &type, name);
+		name[name_len] = 0;
+
+		_uniforms[std::string(name)] = glGetUniformLocation(_shaderProgram, name);
 	}
 }
 
@@ -61,16 +90,15 @@ ShaderProgram::~ShaderProgram()
 		glDeleteShader(_shaderFragment);
 }
 
-GLenum ShaderProgram::createSubShader(GLenum type, const std::string& source)
+GLuint ShaderProgram::createSubShader(GLenum type, const std::string& source)
 {
-	GLenum shader = glCreateShader(type);
+	GLuint shader = glCreateShader(type);
 
 	const GLchar* glsource = (const GLchar*)source.c_str();
-
 	glShaderSource(shader, 1, &glsource, nullptr);
 	glCompileShader(shader);
 
-	GLint compileStatus = 0;
+	GLint compileStatus = GL_FALSE;
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &compileStatus);
 
 	if (compileStatus == GL_FALSE)
@@ -78,11 +106,10 @@ GLenum ShaderProgram::createSubShader(GLenum type, const std::string& source)
 		GLint infoLogLen = 0;
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLen);
 
-		// todo: I don't like malloc..
-		char* log = (char*)malloc(infoLogLen);
-		glGetShaderInfoLog(shader, infoLogLen, &infoLogLen, log);
-		std::fprintf(stderr, "ShaderProgram compile errors: \n %s\n", log);
-		free(log);
+		char* infoLog = new char[infoLogLen];
+		glGetShaderInfoLog(shader, infoLogLen, &infoLogLen, infoLog);
+		std::fprintf(stderr, "ShaderProgram compile errors:\n%s\n", infoLog); // throw an exception?
+		delete[] infoLog;
 
 		glDeleteShader(shader);
 		return 0;

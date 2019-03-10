@@ -23,6 +23,8 @@
 #define OPENBLACK_GRAPHICS_SHADERPROGRAM_H
 
 #include <Graphics/OpenGL.h>
+
+#include <map>
 #include <string>
 
 namespace OpenBlack {
@@ -39,6 +41,8 @@ private:
 	GLuint _shaderProgram;
 	GLuint _shaderVertex;
 	GLuint _shaderFragment;
+
+	std::map<std::string, GLint> _uniforms;
 
 	GLenum createSubShader(GLenum type, const std::string& source);
 };
