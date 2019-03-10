@@ -9,7 +9,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-using OpenBlack::Sky;
+using namespace OpenBlack;
 
 Sky::Sky()
 {
@@ -23,6 +23,11 @@ Sky::Sky()
 	_model = std::make_unique<L3DModel>();
 	_model->LoadFromL3D(skyMesh, skyMeshSize, false);
 	free(skyMesh);
+
+	// load some sky bitmaps
+	Bitmap16B* bitmap = Bitmap16B::LoadFromFile(Game::instance()->GetGamePath() + "/Data/WeatherSystem/Sky_Ntrl_Day.555");
+	_texture = std::make_unique<Texture2D>(bitmap->Width(), bitmap->Height(), GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV, bitmap->Data());
+	delete bitmap;
 }
 
 void Sky::Draw()
@@ -30,6 +35,9 @@ void Sky::Draw()
 	glUseProgram(_shader->GetHandle());
 	GLint viewProj = glGetUniformLocation(_shader->GetHandle(), "viewProj");
 	glUniformMatrix4fv(viewProj, 1, GL_FALSE, glm::value_ptr(Game::instance()->GetCamera().GetViewProjectionMatrix()));
+
+	glActiveTexture(GL_TEXTURE0);
+	_texture->Bind();
 
 	_model->Draw();
 }

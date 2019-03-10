@@ -58,7 +58,8 @@ void main()
 	vec3 col = 0.5 + 0.5 * v_norm;
     outColor = vec4(col, 1.0);
 
-	//outColor = texture(tex, TexCoord);
+	outColor = texture(tex, TexCoord);
+	outColor.a = 1.0f;
 }
 )";
 
