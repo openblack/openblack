@@ -43,6 +43,7 @@ namespace OpenBlack
 		LandCell* GetCells() {
 			return m_cells;
 		};
+		glm::ivec2* GetBlockPosition() { return &m_blockPosition; }
 		glm::vec2* GetMapPosition() { return &m_mapPosition; }
 	private:
 		LandCell m_cells[OPENBLACK_LANDBLOCK_TOTAL_CELLS];
