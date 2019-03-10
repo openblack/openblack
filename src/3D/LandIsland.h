@@ -97,6 +97,7 @@ namespace OpenBlack
 
 		// Debug
 		void DumpTextures();
+		void DumpMaps();
 	private:
 		std::unique_ptr<LandBlock[]> _landBlocks;
 		std::unique_ptr<Country[]> _countries;
