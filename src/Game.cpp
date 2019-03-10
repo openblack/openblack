@@ -80,7 +80,7 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 Game::Game(int argc, char **argv)
 	: _running(true), _wireframe(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f)
 {
-	int windowWidth = 1280, windowHeight = 768;
+	int windowWidth = 1280, windowHeight = 1024;
 	DisplayMode displayMode = DisplayMode::Windowed;
 
 	auto args = CmdLineArgs(argc, argv);
