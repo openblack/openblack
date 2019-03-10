@@ -37,6 +37,8 @@ Mesh::Mesh(VertexBuffer* vertexBuffer, const VertexDecl &decl, GLuint type)
 
 	_vertexBuffer->Bind();
 	bindVertexDecl();
+
+	glBindVertexArray(0);
 }
 
 Mesh::Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, const VertexDecl &decl, GLuint type)
@@ -51,6 +53,8 @@ Mesh::Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, const VertexDec
 	_vertexBuffer->Bind();
 	bindVertexDecl();
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBuffer->GetIBO());
+
+	glBindVertexArray(0);
 }	
 
 Mesh::~Mesh()
