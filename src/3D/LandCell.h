@@ -26,6 +26,7 @@
 
 namespace OpenBlack
 {
+	#pragma pack(push, 1)
 	class LandCell
 	{
 	public:
@@ -37,13 +38,12 @@ namespace OpenBlack
 		inline bool FullWater()	  { return properties & 0x40; } 
 		inline uint8_t Country()  { return properties & 0x0F; }
 		inline float Alpha() {
-
 			if (properties & 0x40)
+				return 0.0f;
+			if (properties & 0x10)
 				return 0.0f;
 			if (properties & 0x20)
 				return 0.5f;
-			if (properties & 0x10)
-				return 0.0f;
 
 			return 1.0f;
 		}
@@ -57,6 +57,7 @@ namespace OpenBlack
 		// Sound properties: coastal sound, land sound, sea sound, freshwater sound
 		uint8_t flags2;
 	};
+	#pragma pack(pop)
 }
 
 #endif
