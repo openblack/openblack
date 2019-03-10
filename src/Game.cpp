@@ -310,6 +310,9 @@ void Game::guiLoop()
 	if (ImGui::Button("5"))
 		LoadMap(GetGamePath() + "/Data/Landscape/Land5.lnd");
 	ImGui::SameLine();
+	if (ImGui::Button("T"))
+		LoadMap(GetGamePath() + "/Data/Landscape/LandT.lnd");
+	ImGui::SameLine();
 	ImGui::EndGroup();
 
 	ImGui::SliderFloat("Day", &_timeOfDay, 0.0f, 1.0f, "%.3f");
