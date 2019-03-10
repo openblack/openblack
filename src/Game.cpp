@@ -42,6 +42,7 @@
 
 #include <3D/MeshPack.h>
 #include <3D/Sky.h>
+#include <3D/Water.h>
 
 #include <Video/VideoPlayer.h>
 
@@ -113,15 +114,17 @@ void Game::Run()
 
 	// create our camera
 	_camera = std::make_unique<Camera>();
-	_camera->SetProjectionMatrixPerspective(60.0f, _window->GetAspectRatio(), 0.1f, 13107200.f);
+	_camera->SetProjectionMatrixPerspective(60.0f, _window->GetAspectRatio(), 0.1f, 65536.0f);
 	_camera->SetPosition(glm::vec3(2458.0f, 169.0f, 1743.0f));
 	_camera->SetRotation(glm::vec3(104.0f, 15.0f, 0.0f));
 
 	_videoPlayer = std::make_unique<Video::VideoPlayer>(GetGamePath() + "/Data/logo.bik");
 
 	_sky = std::make_unique<Sky>();
+	_water = std::make_unique<Water>();
 
 	LoadMap(GetGamePath() + "/Data/Landscape/Land1.lnd");
+	//_landIsland->DumpMaps();
 
 	/* we pass the unique_ptr straight to the Script, so do not reuse this */
 	auto commands = std::make_unique<ScriptCommands>();
@@ -198,6 +201,7 @@ void Game::Run()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		_sky->Draw();
+		//_water->Draw();
 
 		if (_wireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

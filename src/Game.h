@@ -36,6 +36,7 @@ namespace OpenBlack
 	class LandIsland;
 	class L3DModel;
 	class Sky;
+	class Water;
 
 	namespace LHScriptX {
 	class Script;
@@ -74,6 +75,7 @@ namespace OpenBlack
 		std::unique_ptr<Video::VideoPlayer> _videoPlayer;
 
 		std::unique_ptr<Sky> _sky;
+		std::unique_ptr<Water> _water;
 		std::unique_ptr<LHScriptX::Script> _scriptx;
 
 		bool _wireframe;

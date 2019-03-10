@@ -22,15 +22,27 @@
 #ifndef OPENBLACK_3D_WATER_H
 #define OPENBLACK_3D_WATER_H
 
+#include <Graphics/Mesh.h>
+#include <glm/glm.hpp>
+
 namespace OpenBlack {
 
 class Water
 {
 public:
 	Water();
-	~Water();
+	~Water() = default;
 
-	
+	void Draw();
+private:
+	struct WaterVertex
+	{
+		glm::vec3 position;
+	};
+
+	void createMesh();
+
+	std::unique_ptr<Mesh> _mesh;
 };
 
 }
