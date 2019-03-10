@@ -90,5 +90,5 @@ void LandBlock::LoadFromFile(void* block, size_t block_size)
 	m_mapPosition = glm::vec2(lhBlock->mapX, lhBlock->mapY);
 
 	// this should just work, not graceful lol
-	memcpy(&m_cells, lhBlock->cells, 17 * 17 * 8);
+	memcpy(&m_cells, lhBlock->cells, 17 * 17 * sizeof(LH3DLandCell));
 }
