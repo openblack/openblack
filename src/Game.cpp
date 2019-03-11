@@ -159,10 +159,6 @@ void Game::Run()
 	GLint uniTimeOfDay = glGetUniformLocation(terrainShader->GetHandle(), "timeOfDay");
 	GLint uniBumpStrength = glGetUniformLocation(terrainShader->GetHandle(), "bumpmapStrength");
 
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 	// measure our delta time
 	uint64_t now = SDL_GetPerformanceCounter();
 	uint64_t last = 0;
@@ -203,6 +199,10 @@ void Game::Run()
 		_sky->Draw();
 		//_water->Draw();
 
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 		if (_wireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -223,6 +223,9 @@ void Game::Run()
 
 		if (_wireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_BLEND);
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
