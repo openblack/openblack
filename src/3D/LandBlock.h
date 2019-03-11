@@ -28,12 +28,29 @@
 #include <Graphics/OpenGL.h>
 #include <glm/glm.hpp>
 
+#include <Graphics/Mesh.h>
+
 #include "LandCell.h"
 
+#define OPENBLACK_LANDISLAND_HEIGHT_UNIT 0.67f
 #define OPENBLACK_LANDBLOCK_TOTAL_CELLS 289
 
 namespace OpenBlack
 {
+	#pragma pack(push, 1)
+	struct LandBlockVertex
+	{
+		GLfloat position[3];
+		GLfloat weight[3]; // interpolated
+		GLubyte firstMaterialID[3];
+		GLubyte secondMaterialID[3];
+		GLubyte materialBlendCoefficient[3];
+		GLubyte lightLevel;
+		GLfloat alpha;
+	};
+
+	#pragma pack(pop)
+
 	class LandBlock
 	{
 	public:
@@ -41,15 +58,19 @@ namespace OpenBlack
 
 		void LoadFromFile(void* block, size_t block_size);
 		LandCell* GetCells() {
-			return m_cells;
+			return _cells;
 		};
-		glm::ivec2* GetBlockPosition() { return &m_blockPosition; }
-		glm::vec2* GetMapPosition() { return &m_mapPosition; }
+		glm::ivec2* GetBlockPosition() { return &_blockPosition; }
+		glm::vec2* GetMapPosition() { return &_mapPosition; }
 	private:
-		LandCell m_cells[OPENBLACK_LANDBLOCK_TOTAL_CELLS];
-		uint32_t m_index;
-		glm::ivec2 m_blockPosition;
-		glm::vec2 m_mapPosition;
+		LandCell _cells[OPENBLACK_LANDBLOCK_TOTAL_CELLS];
+		uint32_t _index;
+		glm::ivec2 _blockPosition;
+		glm::vec2 _mapPosition;
+
+		void buildMesh();
+		std::vector<LandBlockVertex> buildVertexList();
+		std::unique_ptr<Mesh> _mesh;
 	};
 }
 
