@@ -124,7 +124,7 @@ void Game::Run()
 	_water = std::make_unique<Water>();
 
 	LoadMap(GetGamePath() + "/Data/Landscape/Land1.lnd");
-	//_landIsland->DumpMaps();
+	_landIsland->DumpMaps();
 
 	/* we pass the unique_ptr straight to the Script, so do not reuse this */
 	auto commands = std::make_unique<ScriptCommands>();

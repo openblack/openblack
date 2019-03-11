@@ -304,28 +304,28 @@ void LandIsland::DumpTextures()
 
 void LandIsland::DumpMaps()
 {
-	// 32x32 block grid with 17x17 cells
-	// 544 x 544 pixels
+	// 32x32 block grid with 16x16 cells
+	// 512 x 512 pixels
 	// lets go with 3 channels for a laugh
-	uint8_t* data = new uint8_t[32 * 32 * 17 * 17];
+	uint8_t* data = new uint8_t[32 * 32 * 16 * 16];
 
-	memset(data, 0xFF, 32 * 32 * 17 * 17);
+	memset(data, 0xFF, 32 * 32 * 16 * 16);
 
 	for (auto b = 0; b < _blockCount; b++)
 	{
 		LandBlock* block = &_landBlocks[b];
 		int mapx = block->GetBlockPosition()->x;
 		int mapz = block->GetBlockPosition()->y;
-		int lineStride = 32 * 17;
+		int lineStride = 32 * 16;
 
-		for (int x = 0; x < 17; x++)
+		for (int x = 0; x < 16; x++)
 		{
-			for (int y = 0; y < 17; y++)
+			for (int y = 0; y < 16; y++)
 			{
 				LandCell cell = block->GetCells()[y * 17 + x];
 
-				int cellX = (mapx * 17) + x;
-				int cellY = (mapz * 17) + y;
+				int cellX = (mapx * 16) + x;
+				int cellY = (mapz * 16) + y;
 
 				uint8_t col = 0x00;
 				if (cell.Coastline())
@@ -341,7 +341,7 @@ void LandIsland::DumpMaps()
 	}
 
 	FILE *fptr = fopen("dump.raw", "wb");
-	fwrite(data, 32 * 32 * 17 * 17, 1, fptr);
+	fwrite(data, 32 * 32 * 16 * 16, 1, fptr);
 	fclose(fptr);
 
 	delete[] data;
