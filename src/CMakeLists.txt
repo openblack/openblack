@@ -22,6 +22,11 @@ foreach(FILE ${OPENBLACK_SRCS})
   source_group("${GROUP}" FILES "${FILE}")
 endforeach()
 
+file(GLOB OPENBLACK_SHADERS
+    "${OS_BASE_DIR}/shaders/**.vert"
+    "${OS_BASE_DIR}/shaders/**.frag"
+)
+
 include_directories(BEFORE "${OS_SRC_DIR}")
 
 if (WIN32)
@@ -42,7 +47,7 @@ endif()
 
 set(OPENBLACK_ICON "../resource/icon/openblack.rc")
 
-add_executable(OpenBlack ${OPENBLACK_SRCS} "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" ${OPENBLACK_ICON})
+add_executable(OpenBlack ${OPENBLACK_SRCS} "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" ${OPENBLACK_SHADERS} ${OPENBLACK_ICON})
 set_target_properties(OpenBlack PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(OpenBlack PROPERTIES OUTPUT_NAME openblack)
 set_target_properties(OpenBlack PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -80,3 +85,12 @@ if(WIN32)
 		endif()
 	endforeach()
 endif()
+
+foreach(SHADER ${OPENBLACK_SHADERS})
+  source_group("Shaders" FILES "${SHADER}")
+	if(WIN32)
+		add_custom_command(TARGET OpenBlack PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SHADER} "${CMAKE_BINARY_DIR}/bin/shaders/")
+	elseif(UNIX)
+		file(COPY ${SHADER} DESTINATION ${CMAKE_BINARY_DIR}/bin/shaders)
+	endif(WIN32)
+endforeach()
