@@ -30,7 +30,7 @@ namespace OpenBlack
 	class LandCell
 	{
 	public:
-		inline rgba_t Color()     { return color; }
+		inline uint8_t Light()    { return color.a; }
 		inline uint8_t Altitude() { return altitude; }
 		inline bool Split()       { return properties & 0x80; }
 		inline bool HasWater()    { return properties & 0x10; }

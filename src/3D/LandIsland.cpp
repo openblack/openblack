@@ -127,7 +127,12 @@ void LandIsland::LoadFromDisk(std::string fileName)
 
     file->Close();
 
-	buildMesh();
+	// build the meshes
+	for (auto b = 0; b < _blockCount; b++)
+	{
+		LandBlock* block = &_landBlocks[b];
+		block->BuildMesh(this);
+	}
 }
 
 const uint8_t LandIsland::GetAltitudeAt(glm::ivec2 vec) const
@@ -140,118 +145,13 @@ const float LandIsland::GetHeightAt(glm::ivec2 vec) const
 	return GetAltitudeAt(vec) * OPENBLACK_LANDISLAND_HEIGHT_UNIT;
 }
 
-void LandIsland::Draw()
+void LandIsland::Draw(Shader* program)
 {
-	_mesh->Draw();
-}
-
-void LandIsland::buildMesh()
-{
-	if (_mesh != NULL) {
-		printf("ERROR: LandIsland mesh already exists... (todo: rebuild)\n");
-		return;
-	}
-
-	VertexDecl decl(8);
-	decl[0] = VertexAttrib(0, 4, GL_FLOAT,			false, false, sizeof(LandVertex), nullptr); // position
-	decl[1] = VertexAttrib(1, 3, GL_FLOAT,			false, false, sizeof(LandVertex), (void*)offsetof(LandVertex, position)); // position
-	decl[2] = VertexAttrib(2, 2, GL_FLOAT,			false, false, sizeof(LandVertex), (void*)offsetof(LandVertex, textureCoords));
-	decl[3] = VertexAttrib(3, 3, GL_FLOAT,			false, false, sizeof(LandVertex), (void*)offsetof(LandVertex, weight));
-	decl[4] = VertexAttrib(4, 3, GL_UNSIGNED_BYTE,	true,  false, sizeof(LandVertex), (void*)offsetof(LandVertex, firstMaterialID));
-	decl[5] = VertexAttrib(5, 3, GL_UNSIGNED_BYTE,	true,  false, sizeof(LandVertex), (void*)offsetof(LandVertex, secondMaterialID));
-	decl[6] = VertexAttrib(6, 3, GL_UNSIGNED_BYTE,	false, true,  sizeof(LandVertex), (void*)offsetof(LandVertex, materialBlendCoefficient));
-	decl[7] = VertexAttrib(7, 1, GL_FLOAT,			false, true,  sizeof(LandVertex), (void*)offsetof(LandVertex, alpha));
-	
-	auto verts = buildVertexList();
-
-	printf("LandIsland made with %d verticies\n", verts.size());
-
-	VertexBuffer* vertexBuffer = new VertexBuffer(verts.data(), verts.size(), sizeof(LandVertex));
-	_mesh = std::make_unique<Mesh>(vertexBuffer, decl, GL_TRIANGLES);
-}
-
-std::vector<LandVertex> LandIsland::buildVertexList()
-{
-	std::vector<LandVertex> verts;
-
-	// 16*16 quads * 2 tris * 3 verts = 1536
-	auto maxVerts = _blockCount * 1536;
-	verts.reserve(maxVerts);
-
 	for (auto b = 0; b < _blockCount; b++)
 	{
 		LandBlock* block = &_landBlocks[b];
-		float mapx = block->GetMapPosition()->x;
-		float mapz = block->GetMapPosition()->y;
-
-		for (int x = 0; x < 16; x++)
-		{
-			for (int y = 0; y < 16; y++)
-			{
-				LandCell tl = block->GetCells()[(y + 0) * 17 + (x + 0)];
-				LandCell tr = block->GetCells()[(y + 0) * 17 + (x + 1)];
-				LandCell bl = block->GetCells()[(y + 1) * 17 + (x + 0)];
-				LandCell br = block->GetCells()[(y + 1) * 17 + (x + 1)];
-
-				glm::vec3 pTL(mapx + ((x + 0) * 10.0f), tl.Altitude() * OPENBLACK_LANDISLAND_HEIGHT_UNIT, mapz + ((y + 0) * 10.0f));
-				glm::vec3 pTR(mapx + ((x + 1) * 10.0f), tr.Altitude() * OPENBLACK_LANDISLAND_HEIGHT_UNIT, mapz + ((y + 0) * 10.0f));
-				glm::vec3 pBL(mapx + ((x + 0) * 10.0f), bl.Altitude() * OPENBLACK_LANDISLAND_HEIGHT_UNIT, mapz + ((y + 1) * 10.0f));
-				glm::vec3 pBR(mapx + ((x + 1) * 10.0f), br.Altitude() * OPENBLACK_LANDISLAND_HEIGHT_UNIT, mapz + ((y + 1) * 10.0f));
-
-				glm::vec2 uvTL(x / 16.0f, y / 16.0f);
-				glm::vec2 uvTR((x+1) / 16.0f, y / 16.0f);
-				glm::vec2 uvBL(x / 16.0f, (y+1) / 16.0f);
-				glm::vec2 uvBR((x+1) / 16.0f, (y+1) / 16.0f);
-
-				auto tlMat = _countries[tl.Country()].MapMaterials[tl.Altitude()];
-				auto trMat = _countries[tr.Country()].MapMaterials[tr.Altitude()];
-				auto blMat = _countries[bl.Country()].MapMaterials[bl.Altitude()];
-				auto brMat = _countries[br.Country()].MapMaterials[br.Altitude()];
-
-				// triangle one: TL -> TR -> BR
-				verts.push_back(LandVertex(tl.Color(), pTL, uvTL, glm::vec3(1.0f, 0.0f, 0.0f),
-					tlMat.FirstMaterialIndex, trMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
-					tlMat.SecondMaterialIndex, trMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
-					tlMat.Coeficient, trMat.Coeficient, brMat.Coeficient,
-					tl.Alpha()
-				));
-				verts.push_back(LandVertex(tr.Color(), pTR, uvTR, glm::vec3(0.0f, 1.0f, 0.0f),
-					tlMat.FirstMaterialIndex, trMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
-					tlMat.SecondMaterialIndex, trMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
-					tlMat.Coeficient, trMat.Coeficient, brMat.Coeficient,
-					tr.Alpha()
-				));
-				verts.push_back(LandVertex(br.Color(), pBR, uvBR, glm::vec3(0.0f, 0.0f, 1.0f),
-					tlMat.FirstMaterialIndex, trMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
-					tlMat.SecondMaterialIndex, trMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
-					tlMat.Coeficient, trMat.Coeficient, brMat.Coeficient,
-					br.Alpha()
-				));
-
-				// triangle two: BR -> BL -> TL
-				verts.push_back(LandVertex(br.Color(), pBR, uvBR, glm::vec3(0.0f, 0.0f, 1.0f),
-					tlMat.FirstMaterialIndex, blMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
-					tlMat.SecondMaterialIndex, blMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
-					tlMat.Coeficient, blMat.Coeficient, brMat.Coeficient,
-					br.Alpha()
-				));
-				verts.push_back(LandVertex(bl.Color(), pBL, uvBL, glm::vec3(0.0f, 1.0f, 0.0f),
-					tlMat.FirstMaterialIndex, blMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
-					tlMat.SecondMaterialIndex, blMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
-					tlMat.Coeficient, blMat.Coeficient, brMat.Coeficient,
-					bl.Alpha()
-				));
-				verts.push_back(LandVertex(tl.Color(), pTL, uvTL, glm::vec3(1.0f, 0.0f, 0.0f),
-					tlMat.FirstMaterialIndex, blMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
-					tlMat.SecondMaterialIndex, blMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
-					tlMat.Coeficient, blMat.Coeficient, brMat.Coeficient,
-					tl.Alpha()
-				));
-			}
-		}
+		block->Draw(program);
 	}
-	
-	return verts;
 }
 
 void LandIsland::convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixels)

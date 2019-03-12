@@ -219,7 +219,7 @@ void Game::Run()
 		glUniform1f(uniTimeOfDay, _timeOfDay);
 		glUniform1f(uniBumpStrength, _bumpmapStrength);
 
-		_landIsland->Draw();
+		_landIsland->Draw(terrainShader);
 
 		if (_wireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

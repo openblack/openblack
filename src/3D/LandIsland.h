@@ -51,39 +51,6 @@ namespace OpenBlack
 		MapMaterial MapMaterials[256]; // altitude 0-255
 	};
 
-	#pragma pack(push, 1)
-	struct LandVertex
-	{
-		GLfloat color[4];
-		GLfloat position[3];
-		GLfloat textureCoords[2];
-		GLfloat weight[3];
-		GLubyte firstMaterialID[4];
-		GLubyte secondMaterialID[4];
-		GLubyte materialBlendCoefficient[4];
-		GLfloat alpha;
-
-		LandVertex(rgba_t _color, glm::vec3 _position, glm::vec2 _uv, glm::vec3 _weight,
-			GLubyte mat1, GLubyte mat2, GLubyte mat3,
-			GLubyte mat4, GLubyte mat5, GLubyte mat6,
-			GLubyte blend1, GLubyte blend2, GLubyte blend3,
-			GLfloat _alpha)
-		{
-			color[0] = _color.r / 255.f; color[1] = _color.g / 255.f; color[2] = _color.b / 255.f; color[3] = _color.a / 255.f;
-			position[0] = _position.x; position[1] = _position.y; position[2] = _position.z;
-			textureCoords[0] = _uv.x; textureCoords[1] = _uv.y;
-			weight[0] = _weight.x; weight[1] = _weight.y; weight[2] = _weight.z;
-			firstMaterialID[0] = mat1; firstMaterialID[1] = mat2; firstMaterialID[2] = mat3;
-			secondMaterialID[0] = mat4; secondMaterialID[1] = mat5; secondMaterialID[2] = mat6;
-			materialBlendCoefficient[0] = blend1; materialBlendCoefficient[1] = blend2; materialBlendCoefficient[2] = blend3;
-			alpha = _alpha;
-		}
-	};
-
-	#pragma pack(pop)
-
-
-
 	class LandIsland
 	{
 	public:
@@ -109,18 +76,16 @@ namespace OpenBlack
 
 		// Renderer
 	public:
-		void Draw();
+		void Draw(Shader* program);
 		std::shared_ptr<Texture2DArray> GetMaterialArray() const { return _materialArray; }
 		std::shared_ptr<Texture2DArray> GetLowResArray() const { return _lowResTextureArray; }
+		Country* GetCountries() const { return _countries.get(); }
 
 		std::shared_ptr<Texture2D> GetNoiseMap() { return _textureNoiseMap; }
 		std::shared_ptr<Texture2D> GetBumpMap() { return _textureBumpMap; }
 	private:
 		void convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixels);
-		void buildMesh();
-		std::vector<LandVertex> buildVertexList();
 
-		std::unique_ptr<Mesh> _mesh;
 		std::shared_ptr<Texture2DArray> _lowResTextureArray;
 		std::shared_ptr<Texture2DArray> _materialArray;
 		std::unique_ptr<Texture2D> _countryLookup;

@@ -65,48 +65,49 @@ void main()
 
 const char* Terrain::VertexShader = R"(
 #version 330 core
-layout(location = 0) in vec4 color;
-layout(location = 1) in vec3 position;
-layout(location = 2) in vec2 texcoord;
-layout(location = 3) in vec3 weights;
-layout(location = 4) in uvec3 firstMaterialID;
-layout(location = 5) in uvec3 secondMaterialID;
-layout(location = 6) in vec3 materialBlendCoefficient;
-layout(location = 7) in float waterAlpha;
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec3 weights;
+layout(location = 2) in uvec3 firstMaterialID;
+layout(location = 3) in uvec3 secondMaterialID;
+layout(location = 4) in vec3 materialBlendCoefficient;
+layout(location = 5) in float lightLevel;
+layout(location = 6) in float waterAlpha;
 
-out vec4 Color;
-out vec2 Texcoord;
+out vec2 UV;
 out vec3 Weights;
 flat out uvec3 FirstMaterialID;
 flat out uvec3 SecondMaterialID;
 flat out vec3 MaterialBlendCoefficient;
+out float LightLevel;
 out float WaterAlpha;
 
 uniform mat4 viewProj;
+uniform vec2 blockPosition;
 
 void main()
 {
-	Color = color;
-	Texcoord = texcoord;
+	UV = vec2(position.x / 160.0f, position.z / 160.0f);
 	Weights = weights;
 	FirstMaterialID = firstMaterialID;
 	SecondMaterialID = secondMaterialID;
 	MaterialBlendCoefficient = materialBlendCoefficient;
+	LightLevel = lightLevel;
 	WaterAlpha = waterAlpha;
 
-    gl_Position = viewProj * vec4(position, 1.0);
+	vec3 transformedPosition = vec3(position.x + blockPosition.x, position.y, position.z + blockPosition.y);
+    gl_Position = viewProj * vec4(transformedPosition, 1.0);
 }
 )";
 
 const char* Terrain::FragmentShader = R"(
 #version 330 core
 
-in vec4 Color;
-in vec2 Texcoord;
+in vec2 UV;
 in vec3 Weights;
 flat in uvec3 FirstMaterialID;
 flat in uvec3 SecondMaterialID;
 flat in vec3 MaterialBlendCoefficient;
+in float LightLevel;
 in float WaterAlpha;
 
 uniform sampler2DArray sMaterials;
@@ -120,18 +121,18 @@ void main()
 {
 	// do each vert with both materials
 	vec4 colOne = mix(
-		texture(sMaterials, vec3(Texcoord, FirstMaterialID.r)),
-		texture(sMaterials, vec3(Texcoord, SecondMaterialID.r)),
+		texture(sMaterials, vec3(UV, FirstMaterialID.r)),
+		texture(sMaterials, vec3(UV, SecondMaterialID.r)),
 		MaterialBlendCoefficient.r
 	) * Weights.r;
 	vec4 colTwo = mix(
-		texture(sMaterials, vec3(Texcoord, FirstMaterialID.g)),
-		texture(sMaterials, vec3(Texcoord, SecondMaterialID.g)),
+		texture(sMaterials, vec3(UV, FirstMaterialID.g)),
+		texture(sMaterials, vec3(UV, SecondMaterialID.g)),
 		MaterialBlendCoefficient.g
 	) * Weights.g;
 	vec4 colThree = mix(
-		texture(sMaterials, vec3(Texcoord, FirstMaterialID.b)),
-		texture(sMaterials, vec3(Texcoord, SecondMaterialID.b)),
+		texture(sMaterials, vec3(UV, FirstMaterialID.b)),
+		texture(sMaterials, vec3(UV, SecondMaterialID.b)),
 		MaterialBlendCoefficient.b
 	) * Weights.b;
 
@@ -139,11 +140,11 @@ void main()
 	vec4 col = colOne + colTwo + colThree;
 
 	// apply bump map (2x because it's half bright?)
-	float bump = mix(1.0f, texture(sBumpMap, Texcoord).r * 2, bumpmapStrength);
+	float bump = mix(1.0f, texture(sBumpMap, UV).r * 2, bumpmapStrength);
 	col = col * bump;
 
 	// apply light map
-	col = col * mix(.25f, Color.a, timeOfDay);
+	col = col * mix(.25f, LightLevel, timeOfDay);
 
 	FragColor = vec4(col.r, col.g, col.b, WaterAlpha);
 }
