@@ -29,7 +29,7 @@
 #include <glm/glm.hpp>
 
 #include <Graphics/Mesh.h>
-#include <Graphics/Shader.h>
+#include <Graphics/ShaderProgram.h>
 
 #include "LandCell.h"
 
@@ -77,7 +77,7 @@ namespace OpenBlack
 		glm::ivec2* GetBlockPosition() { return &_blockPosition; }
 		glm::vec2* GetMapPosition() { return &_mapPosition; }
 
-		void Draw(Shader* program);
+		void Draw(ShaderProgram* program);
 		void BuildMesh(LandIsland* island);
 	private:
 		LandCell _cells[OPENBLACK_LANDBLOCK_TOTAL_CELLS];

@@ -39,12 +39,13 @@ public:
 
 	void Bind();
 
-	void SetUniformValue(std::string& uniformName, float value);
-	void SetUniformValue(std::string& uniformName, const glm::vec2 & v);
-	void SetUniformValue(std::string& uniformName, const glm::vec3 & v);
-	void SetUniformValue(std::string& uniformName, const glm::vec4 & v);
-	void SetUniformValue(std::string& uniformName, const glm::mat3 & m);
-	void SetUniformValue(std::string& uniformName, const glm::mat4 & m);
+	void SetUniformValue(const char* uniformName, int value);
+	void SetUniformValue(const char* uniformName, float value);
+	void SetUniformValue(const char* uniformName, const glm::vec2 & v);
+	void SetUniformValue(const char* uniformName, const glm::vec3 & v);
+	void SetUniformValue(const char* uniformName, const glm::vec4 & v);
+	void SetUniformValue(const char* uniformName, const glm::mat3 & m);
+	void SetUniformValue(const char* uniformName, const glm::mat4 & m);
 
 	GLuint GetRawHandle() const { return _program; }
 private:

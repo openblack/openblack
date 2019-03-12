@@ -145,7 +145,7 @@ const float LandIsland::GetHeightAt(glm::ivec2 vec) const
 	return GetAltitudeAt(vec) * OPENBLACK_LANDISLAND_HEIGHT_UNIT;
 }
 
-void LandIsland::Draw(Shader* program)
+void LandIsland::Draw(ShaderProgram* program)
 {
 	for (auto b = 0; b < _blockCount; b++)
 	{

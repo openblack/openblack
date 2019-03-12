@@ -14,8 +14,10 @@ using namespace OpenBlack;
 Sky::Sky()
 {
 	// create our shader
-	_shader = std::make_unique<Shader>();
-	_shader->Create(OpenBlack::Shaders::WorldObject::VertexShader, OpenBlack::Shaders::WorldObject::FragmentShader);
+	_shader = std::make_unique<ShaderProgram>(
+		OpenBlack::Shaders::WorldObject::VertexShader,
+		OpenBlack::Shaders::WorldObject::FragmentShader
+	);
 
 	// load in the mesh
 	size_t skyMeshSize;
@@ -32,9 +34,8 @@ Sky::Sky()
 
 void Sky::Draw()
 {
-	glUseProgram(_shader->GetHandle());
-	GLint viewProj = glGetUniformLocation(_shader->GetHandle(), "viewProj");
-	glUniformMatrix4fv(viewProj, 1, GL_FALSE, glm::value_ptr(Game::instance()->GetCamera().GetViewProjectionMatrix()));
+	_shader->Bind();
+	_shader->SetUniformValue("viewProj", Game::instance()->GetCamera().GetViewProjectionMatrix());
 
 	glActiveTexture(GL_TEXTURE0);
 	_texture->Bind();

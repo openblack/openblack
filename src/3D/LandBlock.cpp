@@ -192,13 +192,8 @@ std::vector<LandVertex> LandBlock::buildVertexList(LandIsland* island)
 	return verts;
 }
 
-void LandBlock::Draw(Shader* program)
+void LandBlock::Draw(ShaderProgram* program)
 {
-	GLint blockPositionLocation = glGetUniformLocation(program->GetHandle(), "blockPosition");
-	glUniform2fv(blockPositionLocation, 1, glm::value_ptr(_mapPosition));
-
-	// set uniforms for position
-	program->GetHandle();
-
+	program->SetUniformValue("blockPosition", _mapPosition);		
 	_mesh->Draw();
 }

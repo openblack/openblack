@@ -152,12 +152,6 @@ void Game::Run()
 
 	ShaderProgram* terrainShader = new ShaderProgram(OpenBlack::Shaders::Terrain::VertexShader, OpenBlack::Shaders::Terrain::FragmentShader);
 
-	GLint uniTerrainView = glGetUniformLocation(terrainShader->GetHandle(), "viewProj");
-	GLint uniTerrainMaterialArray = glGetUniformLocation(terrainShader->GetHandle(), "sMaterials");
-	GLint uniTerrainBumpMap = glGetUniformLocation(terrainShader->GetHandle(), "sBumpMap");
-	GLint uniTimeOfDay = glGetUniformLocation(terrainShader->GetHandle(), "timeOfDay");
-	GLint uniBumpStrength = glGetUniformLocation(terrainShader->GetHandle(), "bumpmapStrength");
-
 	// measure our delta time
 	uint64_t now = SDL_GetPerformanceCounter();
 	uint64_t last = 0;
@@ -205,18 +199,17 @@ void Game::Run()
 		if (_wireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-		glUseProgram(terrainShader->GetHandle());
-		glUniformMatrix4fv(uniTerrainView, 1, GL_FALSE, glm::value_ptr(_camera->GetViewProjectionMatrix()));
+		terrainShader->Bind();
+		terrainShader->SetUniformValue("viewProj", _camera->GetViewProjectionMatrix());
+		terrainShader->SetUniformValue("timeOfDay", _timeOfDay);
+		terrainShader->SetUniformValue("bumpmapStrength", _bumpmapStrength);
+		terrainShader->SetUniformValue("sMaterials", 0);
+		terrainShader->SetUniformValue("sBumpMap", 1);
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D_ARRAY, _landIsland->GetMaterialArray()->GetHandle());
+		_landIsland->GetMaterialArray()->Bind();
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, _landIsland->GetBumpMap()->GetHandle());
-
-		glUniform1i(uniTerrainMaterialArray, 0);
-		glUniform1i(uniTerrainBumpMap, 1);
-		glUniform1f(uniTimeOfDay, _timeOfDay);
-		glUniform1f(uniBumpStrength, _bumpmapStrength);
+		_landIsland->GetBumpMap()->Bind();
 
 		_landIsland->Draw(terrainShader);
 

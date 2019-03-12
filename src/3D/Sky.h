@@ -23,12 +23,12 @@
 #define OPENBLACK_3D_SKY_H
 
 #include <memory>
-#include <Graphics/Shader.h>
+#include <Graphics/ShaderProgram.h>
 #include <3D/L3DModel.h>
 #include <Common/Bitmap16B.h>
 #include <Graphics/Texture2D.h>
 
-using OpenBlack::Graphics::Shader;
+using OpenBlack::Graphics::ShaderProgram;
 
 namespace OpenBlack {
 
@@ -41,7 +41,7 @@ public:
 	void Draw();
 
 private:
-	std::unique_ptr<Shader> _shader;
+	std::unique_ptr<ShaderProgram> _shader;
 	std::unique_ptr<L3DModel> _model;
 	std::unique_ptr<Bitmap16B> _bitmap;
 	std::unique_ptr<Texture2D> _texture;

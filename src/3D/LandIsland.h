@@ -76,7 +76,7 @@ namespace OpenBlack
 
 		// Renderer
 	public:
-		void Draw(Shader* program);
+		void Draw(ShaderProgram* program);
 		std::shared_ptr<Texture2DArray> GetMaterialArray() const { return _materialArray; }
 		std::shared_ptr<Texture2DArray> GetLowResArray() const { return _lowResTextureArray; }
 		Country* GetCountries() const { return _countries.get(); }
