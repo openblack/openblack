@@ -90,6 +90,11 @@ ShaderProgram::~ShaderProgram()
 		glDeleteProgram(_program);
 }
 
+void ShaderProgram::Bind()
+{
+	glUseProgram(_program);
+}
+
 void ShaderProgram::SetUniformValue(std::string & uniformName, float value)
 {
 	glUniform1f(_uniforms[uniformName], value);
