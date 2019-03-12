@@ -25,69 +25,99 @@
 
 #include <Graphics/ShaderProgram.h>
 
+#include <glm/gtc/type_ptr.hpp>
+
 using OpenBlack::Graphics::ShaderProgram;
 
 ShaderProgram::ShaderProgram(const std::string &vertexSource, const std::string &fragmentSource)
 {
-	_shaderProgram = glCreateProgram();
+	_program = glCreateProgram();
 
 	// lazy assert, todo: better error handling
-	assert(_shaderProgram != 0);
+	assert(_program != 0);
 
-	_shaderVertex = createSubShader(GL_VERTEX_SHADER, vertexSource);
-	_shaderFragment = createSubShader(GL_FRAGMENT_SHADER, fragmentSource);
+	GLuint vertexShader = createSubShader(GL_VERTEX_SHADER, vertexSource);
+	GLuint fragmentShader = createSubShader(GL_FRAGMENT_SHADER, fragmentSource);
 
 	// lazy assert, todo: better error handling
-	assert(_shaderVertex != 0 && _shaderFragment != 0);
+	assert(vertexShader != 0 && fragmentShader != 0);
 
-	glAttachShader(_shaderProgram, _shaderVertex);
-	glAttachShader(_shaderProgram, _shaderFragment);
-	glLinkProgram(_shaderProgram);
+	glAttachShader(_program, vertexShader);
+	glAttachShader(_program, fragmentShader);
+	glLinkProgram(_program);
 
 	GLint linkStatus = GL_FALSE;
-	glGetProgramiv(_shaderProgram, GL_LINK_STATUS, &linkStatus);
+	glGetProgramiv(_program, GL_LINK_STATUS, &linkStatus);
 
 	if (linkStatus == GL_FALSE)
 	{
 		GLint infoLogLen = 0;
-		glGetShaderiv(_shaderProgram, GL_INFO_LOG_LENGTH, &infoLogLen);
+		glGetShaderiv(_program, GL_INFO_LOG_LENGTH, &infoLogLen);
 
 		char* infoLog = new char[infoLogLen];
-		glGetProgramInfoLog(_shaderProgram, infoLogLen, &infoLogLen, infoLog);
+		glGetProgramInfoLog(_program, infoLogLen, &infoLogLen, infoLog);
 		std::fprintf(stderr, "ShaderProgram linking errors:\n%s\n", infoLog); // throw an exception?
 		delete[] infoLog;
 
-		glDeleteProgram(_shaderProgram);
-		glDeleteShader(_shaderVertex);
-		glDeleteShader(_shaderFragment);
+		glDeleteProgram(_program);
+		glDeleteShader(vertexShader);
+		glDeleteShader(fragmentShader);
 
 		return;
 	}
 
+	// we can delete these now they exist in the program
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+
 	int uniformCount = -1;
-	glGetProgramiv(_shaderProgram, GL_ACTIVE_UNIFORMS, &uniformCount);
+	glGetProgramiv(_program, GL_ACTIVE_UNIFORMS, &uniformCount);
 	for (int i = 0; i < uniformCount; i++)
 	{
 		int name_len = -1, num = -1;
 		GLenum type = GL_ZERO;
 		char name[64];
-		glGetActiveUniform(_shaderProgram, GLuint(i), sizeof(name) - 1, &name_len, &num, &type, name);
+		glGetActiveUniform(_program, GLuint(i), sizeof(name) - 1, &name_len, &num, &type, name);
 		name[name_len] = 0;
 
-		_uniforms[std::string(name)] = glGetUniformLocation(_shaderProgram, name);
+		_uniforms[std::string(name)] = glGetUniformLocation(_program, name);
 	}
 }
 
 ShaderProgram::~ShaderProgram()
 {
-	if (_shaderProgram != 0)
-		glDeleteProgram(_shaderProgram);
+	if (_program != 0)
+		glDeleteProgram(_program);
+}
 
-	if (_shaderVertex != 0)
-		glDeleteShader(_shaderVertex);
+void ShaderProgram::SetUniformValue(std::string & uniformName, float value)
+{
+	glUniform1f(_uniforms[uniformName], value);
+}
 
-	if (_shaderFragment != 0)
-		glDeleteShader(_shaderFragment);
+void ShaderProgram::SetUniformValue(std::string& uniformName, const glm::vec2 & v)
+{
+	glUniform2fv(_uniforms[uniformName], 1, glm::value_ptr(v));
+}
+
+void ShaderProgram::SetUniformValue(std::string& uniformName, const glm::vec3 & v)
+{
+	glUniform3fv(_uniforms[uniformName], 1, glm::value_ptr(v));
+}
+
+void ShaderProgram::SetUniformValue(std::string& uniformName, const glm::vec4 & v)
+{
+	glUniform4fv(_uniforms[uniformName], 1, glm::value_ptr(v));
+}
+
+void ShaderProgram::SetUniformValue(std::string& uniformName, const glm::mat3 & m)
+{
+	glUniformMatrix3fv(_uniforms[uniformName], 1, GL_FALSE, glm::value_ptr(m));
+}
+
+void ShaderProgram::SetUniformValue(std::string& uniformName, const glm::mat4 & m)
+{
+	glUniformMatrix4fv(_uniforms[uniformName], 1, GL_FALSE, glm::value_ptr(m));
 }
 
 GLuint ShaderProgram::createSubShader(GLenum type, const std::string& source)

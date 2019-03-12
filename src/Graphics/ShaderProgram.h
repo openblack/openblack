@@ -23,6 +23,7 @@
 #define OPENBLACK_GRAPHICS_SHADERPROGRAM_H
 
 #include <Graphics/OpenGL.h>
+#include <glm/glm.hpp>
 
 #include <map>
 #include <string>
@@ -36,15 +37,21 @@ public:
 	ShaderProgram(const std::string &vertexSource, const std::string &fragmentSource);
 	~ShaderProgram();
 
-	GLuint GetHandle() const { return _shaderProgram; }
-private:
-	GLuint _shaderProgram;
-	GLuint _shaderVertex;
-	GLuint _shaderFragment;
+	void Bind();
 
+	void SetUniformValue(std::string& uniformName, float value);
+	void SetUniformValue(std::string& uniformName, const glm::vec2 & v);
+	void SetUniformValue(std::string& uniformName, const glm::vec3 & v);
+	void SetUniformValue(std::string& uniformName, const glm::vec4 & v);
+	void SetUniformValue(std::string& uniformName, const glm::mat3 & m);
+	void SetUniformValue(std::string& uniformName, const glm::mat4 & m);
+
+	GLuint GetRawHandle() const { return _program; }
+private:
+	GLuint _program;
 	std::map<std::string, GLint> _uniforms;
 
-	GLenum createSubShader(GLenum type, const std::string& source);
+	GLuint createSubShader(GLenum type, const std::string& source);
 };
 
 }
