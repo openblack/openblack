@@ -24,6 +24,7 @@
 #include <cassert>
 
 #include <Graphics/ShaderProgram.h>
+#include <Common/OSFile.h>
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -36,8 +37,14 @@ ShaderProgram::ShaderProgram(const std::string &vertexSource, const std::string 
 	// lazy assert, todo: better error handling
 	assert(_program != 0);
 
-	GLuint vertexShader = createSubShader(GL_VERTEX_SHADER, vertexSource);
-	GLuint fragmentShader = createSubShader(GL_FRAGMENT_SHADER, fragmentSource);
+	char* vertexShaderSource = OSFile::ReadAll(vertexSource.c_str(), nullptr);
+	char* fragmentShaderSource = OSFile::ReadAll(fragmentSource.c_str(), nullptr);
+
+	GLuint vertexShader = createSubShader(GL_VERTEX_SHADER, vertexShaderSource);
+	GLuint fragmentShader = createSubShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
+
+	delete[] vertexShaderSource;
+	delete[] fragmentShaderSource;
 
 	// lazy assert, todo: better error handling
 	assert(vertexShader != 0 && fragmentShader != 0);

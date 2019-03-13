@@ -4,7 +4,6 @@
 #include <3D/Camera.h>
 
 #include <Common/OSFile.h>
-#include <Graphics/GameShaders.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -14,10 +13,7 @@ using namespace OpenBlack;
 Sky::Sky()
 {
 	// create our shader
-	_shader = std::make_unique<ShaderProgram>(
-		OpenBlack::Shaders::WorldObject::VertexShader,
-		OpenBlack::Shaders::WorldObject::FragmentShader
-	);
+	_shader = std::make_unique<ShaderProgram>("shaders/sky.vert", "shaders/sky.frag");
 
 	// load in the mesh
 	size_t skyMeshSize;

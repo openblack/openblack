@@ -352,7 +352,7 @@ char * OSFile::ReadAll(const char * filename, size_t* sizeOut)
 
     size_t fileSize = file->Size();
 
-    char* buffer = (char*)malloc(fileSize+1);
+	char* buffer = new char[fileSize + 1];
 
     file->Read(buffer, fileSize);
 

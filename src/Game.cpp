@@ -34,7 +34,6 @@
 
 #include <Common/OSFile.h>
 
-#include <Graphics/GameShaders.h>
 #include <Graphics/ShaderProgram.h>
 #include <Graphics/Texture2D.h>
 #include <Graphics/IndexBuffer.h>
@@ -126,31 +125,7 @@ void Game::Run()
 	LoadMap(GetGamePath() + "/Data/Landscape/Land1.lnd");
 	_landIsland->DumpMaps();
 
-	/* we pass the unique_ptr straight to the Script, so do not reuse this */
-	auto commands = std::make_unique<ScriptCommands>();
-	commands->RegisterCommands(
-		Impl_LandCommands::Definitions,
-		sizeof(Impl_LandCommands::Definitions) / sizeof(*Impl_LandCommands::Definitions)
-	);
-
-	/*ScriptParameters parameters{ ScriptParameter(2.3000f) };
-	ScriptCommandContext ctx(this, &parameters);
-	_commands->Call("VERSION", ctx);*/
-
-	_scriptx = std::make_unique<Script>();
-	_scriptx->SetCommands(commands);
-
-	//_scriptx->ScanLine("VERSION(\"LOL\")");
-//#ifdef _WIN32
-//	_scriptx->LoadFile(GetGamePath() + "\\Scripts\\Land1.txt");
-//#else
-//	_scriptx->LoadFile(GetGamePath() + "/Scripts/Land1.txt");
-//#endif // _WIN32
-
-	//LHScriptX* script = new LHScriptX();
-	//script->LoadFile(GetGamePath() + "\\Scripts\\Land1.txt");
-
-	ShaderProgram* terrainShader = new ShaderProgram(OpenBlack::Shaders::Terrain::VertexShader, OpenBlack::Shaders::Terrain::FragmentShader);
+	ShaderProgram* terrainShader = new ShaderProgram("shaders/terrain.vert", "shaders/terrain.frag");
 
 	// measure our delta time
 	uint64_t now = SDL_GetPerformanceCounter();
@@ -223,6 +198,8 @@ void Game::Run()
 
 		_window->SwapWindow();
 	}
+
+	delete terrainShader;
 }
 
 void Game::guiLoop()
@@ -276,16 +253,6 @@ void Game::guiLoop()
 
 	ImGui::End();
 
-	/*
-	ImGui::Begin("Video Player");
-	ImGui::Image((void*)(intptr_t)_videoPlayer->GetTexture()->GetHandle(),
-		ImVec2(_videoPlayer->GetWidth(), _videoPlayer->GetHeight())
-	);
-	if (ImGui::Button("Next Frame"))
-		_videoPlayer->NextFrame();
-	ImGui::End();
-	*/
-
 	ImGui::Begin("Land Island");
 
 	ImGui::Text("Load Land Island:");
@@ -320,20 +287,6 @@ void Game::guiLoop()
 	ImGui::Text("Bumpmap");
 	ImGui::Image((void*)(intptr_t)bumpmap->GetHandle(), ImVec2(bumpmap->GetWidth() / 2, bumpmap->GetHeight() / 2));
 	ImGui::End();
-
-	/*if (_scriptx) {
-		ImGui::Begin("LHScriptX", NULL, ImVec2(300, 200), -1.0f, NULL);
-
-		ImGui::TextColored(ImVec4(1, 1, 0, 1), "Commands");
-		ImGui::BeginChild("Scrolling");
-
-		for (const auto& kv : _scriptx->GetCommands().GetCommands()) {
-			ImGui::Text("%s", kv.first.c_str());
-		}
-
-		ImGui::EndChild();
-		ImGui::End();
-	}*/
 
 	ImGui::Render();
 }

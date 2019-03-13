@@ -35,7 +35,6 @@
 
 #include <Common/OSFile.h>
 
-#include <Graphics/GameShaders.h>
 #include <Graphics/ShaderProgram.h>
 #include <Graphics/Texture2D.h>
 #include <Graphics/IndexBuffer.h>
