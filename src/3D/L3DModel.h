@@ -34,14 +34,15 @@ namespace OpenBlack
 		L3DModel();
 		~L3DModel();
 
+		void LoadFromFile(std::string& fileName);
 		void LoadFromL3D(void* data, size_t size, bool pack);
 		void Draw();
 
 		unsigned int GetSubMeshCount();
 	protected:
-		GLuint* m_subMeshTextures;
-		Mesh** m_subMeshes;
-		unsigned int m_subMeshCount;
+		GLuint* _submeshSkinIds;
+		Mesh** _submeshes;
+		unsigned int _submeshCount;
 
 		GLuint* m_glSkins;
 

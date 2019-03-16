@@ -116,6 +116,14 @@ L3DModel::~L3DModel()
 	// free textures
 }
 
+void L3DModel::LoadFromFile(std::string &fileName)
+{
+	size_t meshSize;
+	char* mesh = OSFile::ReadAll((fileName).c_str(), &meshSize);
+	LoadFromL3D(mesh, meshSize, false);
+	delete[] mesh;
+}
+
 void L3DModel::LoadFromL3D(void* data_, size_t size, bool pack) {
 	uint8_t* buffer = static_cast<uint8_t*>(data_);
 	if (buffer[0] != 'L' || buffer[1] != '3' || buffer[2] != 'D' || buffer[3] != '0') {
@@ -132,9 +140,9 @@ void L3DModel::LoadFromL3D(void* data_, size_t size, bool pack) {
 	{
 		L3D_Mesh* mesh = (L3D_Mesh*)(buffer + meshOffsets[m]);
 
-		m_subMeshes = new Mesh*[mesh->numSubMeshes];
-		m_subMeshTextures = new GLuint[mesh->numSubMeshes];
-		m_subMeshCount = mesh->numSubMeshes;
+		_submeshes = new Mesh*[mesh->numSubMeshes];
+		_submeshSkinIds = new GLuint[mesh->numSubMeshes];
+		_submeshCount = mesh->numSubMeshes;
 
 		uint32_t* submeshOffsets = (uint32_t*)(buffer + mesh->subMeshOffset);
 		for (int sm = 0; sm < mesh->numSubMeshes; sm++)
@@ -155,8 +163,8 @@ void L3DModel::LoadFromL3D(void* data_, size_t size, bool pack) {
 			IndexBuffer *indexBuffer = new IndexBuffer(trianglesOffset, subMesh->numTriangles * 3, GL_UNSIGNED_SHORT);
 
 			Mesh* sub = new Mesh(vertexBuffer, indexBuffer, decl);
-			m_subMeshes[sm] = sub; // sub;
-			m_subMeshTextures[sm] = subMesh->skinID;
+			_submeshes[sm] = sub; // sub;
+			_submeshSkinIds[sm] = subMesh->skinID;
 		}
 
 		L3D_Bone* bones = (L3D_Bone*)(buffer + mesh->bonesOffset);
@@ -212,24 +220,24 @@ void L3DModel::LoadFromL3D(void* data_, size_t size, bool pack) {
 }
 
 void L3DModel::Draw() {
-	for (int subMesh = 0; subMesh < m_subMeshCount; subMesh++) {
+	for (int subMesh = 0; subMesh < _submeshCount; subMesh++) {
 		// no texture no render (todo: handle actual nodraw flags)
-		if (m_subMeshTextures[subMesh] == -1) {
-			m_subMeshes[subMesh]->Draw();
+		if (_submeshSkinIds[subMesh] == -1) {
+			_submeshes[subMesh]->Draw();
 			continue;
 		}
 
 		// todo: handle non meshpack textures
 		if (m_bPackedMesh) {
 			MeshPack meshPack = Game::instance()->GetMeshPack();
-			glBindTexture(GL_TEXTURE_2D, meshPack.Textures[m_subMeshTextures[subMesh] - 1]);
-			m_subMeshes[subMesh]->Draw();
+			glBindTexture(GL_TEXTURE_2D, meshPack.Textures[_submeshSkinIds[subMesh] - 1]);
+			_submeshes[subMesh]->Draw();
 			glBindTexture(GL_TEXTURE_2D, GL_NONE);
 		}
 		else
 		{
 			glBindTexture(GL_TEXTURE_2D, m_glSkins[0]);
-			m_subMeshes[subMesh]->Draw();
+			_submeshes[subMesh]->Draw();
 			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 	}
@@ -237,5 +245,5 @@ void L3DModel::Draw() {
 
 unsigned int L3DModel::GetSubMeshCount()
 {
-	return m_subMeshCount;
+	return _submeshCount;
 }

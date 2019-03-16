@@ -16,11 +16,8 @@ Sky::Sky()
 	_shader = std::make_unique<ShaderProgram>("shaders/sky.vert", "shaders/sky.frag");
 
 	// load in the mesh
-	size_t skyMeshSize;
-	char* skyMesh = OSFile::ReadAll((Game::instance()->GetGamePath() + "/Data/WeatherSystem/sky.l3d").c_str(), &skyMeshSize);
 	_model = std::make_unique<L3DModel>();
-	_model->LoadFromL3D(skyMesh, skyMeshSize, false);
-	free(skyMesh);
+	_model->LoadFromFile(Game::instance()->GetGamePath() + "/Data/WeatherSystem/sky.l3d");
 
 	// load some sky bitmaps
 	Bitmap16B* bitmap = Bitmap16B::LoadFromFile(Game::instance()->GetGamePath() + "/Data/WeatherSystem/Sky_Ntrl_Day.555");
