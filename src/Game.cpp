@@ -41,6 +41,7 @@
 
 #include <3D/MeshPack.h>
 #include <3D/Sky.h>
+#include <3D/SkinnedModel.h>
 #include <3D/Water.h>
 
 #include <Video/VideoPlayer.h>
@@ -114,16 +115,22 @@ void Game::Run()
 	// create our camera
 	_camera = std::make_unique<Camera>();
 	_camera->SetProjectionMatrixPerspective(60.0f, _window->GetAspectRatio(), 0.1f, 65536.0f);
-	_camera->SetPosition(glm::vec3(2458.0f, 169.0f, 1743.0f));
-	_camera->SetRotation(glm::vec3(104.0f, 15.0f, 0.0f));
+	_camera->SetPosition(glm::vec3(2393.0f, 67.0f, 1858.0f));
+	_camera->SetRotation(glm::vec3(117.0f, 12.0f, 0.0f));
+
+	_modelPosition = glm::vec3(2484.0f, 34.0f, 1907.0f);
 
 	_videoPlayer = std::make_unique<Video::VideoPlayer>(GetGamePath() + "/Data/logo.bik");
+
+	_worldObjectShader = std::make_unique<ShaderProgram>("shaders/skin.vert", "shaders/skin.frag");
+	_testModel = std::make_unique<SkinnedModel>();
+	_testModel->LoadFromFile(GetGamePath() + "/Data/CreatureMesh/C_Tortoise_Base.l3d");
 
 	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
 
 	LoadMap(GetGamePath() + "/Data/Landscape/Land1.lnd");
-	_landIsland->DumpMaps();
+	//_landIsland->DumpMaps();
 
 	ShaderProgram* terrainShader = new ShaderProgram("shaders/terrain.vert", "shaders/terrain.frag");
 
@@ -181,15 +188,22 @@ void Game::Run()
 		terrainShader->SetUniformValue("sMaterials", 0);
 		terrainShader->SetUniformValue("sBumpMap", 1);
 
-		glActiveTexture(GL_TEXTURE0);
-		_landIsland->GetMaterialArray()->Bind();
-		glActiveTexture(GL_TEXTURE1);
-		_landIsland->GetBumpMap()->Bind();
+		_landIsland->GetMaterialArray()->Bind(0);
+		_landIsland->GetBumpMap()->Bind(1);
 
 		_landIsland->Draw(terrainShader);
 
 		if (_wireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		glm::mat4 modelMatrix = glm::mat4(1.0f);
+		modelMatrix = glm::translate(modelMatrix, _modelPosition);
+
+		_worldObjectShader->Bind();
+		_worldObjectShader->SetUniformValue("u_viewProjection", _camera->GetViewProjectionMatrix());
+		_worldObjectShader->SetUniformValue("u_modelTransform", modelMatrix);
+
+		_testModel->Draw(_worldObjectShader.get());
 
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
@@ -250,6 +264,8 @@ void Game::guiLoop()
 
 	_camera->SetPosition(pos);
 	_camera->SetRotation(rot);
+
+	ImGui::DragFloat3("Model Position", glm::value_ptr(_modelPosition));
 
 	ImGui::End();
 

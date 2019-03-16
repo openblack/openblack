@@ -28,6 +28,8 @@
 #include "GameWindow.h"
 #include <LHScriptX/Command.h>
 
+#include <glm/glm.hpp>
+
 namespace OpenBlack
 {
 	class Camera;
@@ -35,8 +37,13 @@ namespace OpenBlack
 	class MeshViewer;
 	class LandIsland;
 	class L3DModel;
+	class SkinnedModel;
 	class Sky;
 	class Water;
+
+	namespace Graphics {
+	class ShaderProgram;
+	}
 
 	namespace LHScriptX {
 	class Script;
@@ -74,6 +81,8 @@ namespace OpenBlack
 		std::unique_ptr<MeshPack> _meshPack;
 		std::unique_ptr<Video::VideoPlayer> _videoPlayer;
 
+		std::unique_ptr<Graphics::ShaderProgram> _worldObjectShader;
+		std::unique_ptr<SkinnedModel> _testModel;
 		std::unique_ptr<Sky> _sky;
 		std::unique_ptr<Water> _water;
 		std::unique_ptr<LHScriptX::Script> _scriptx;
@@ -81,6 +90,8 @@ namespace OpenBlack
 		bool _wireframe;
 		float _timeOfDay;
 		float _bumpmapStrength;
+
+		glm::vec3 _modelPosition;
 
 		bool _running;
 
