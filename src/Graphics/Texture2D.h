@@ -32,7 +32,14 @@ public:
 	Texture2D() = delete;
 	Texture2D(GLsizei width, GLsizei height, GLenum internalFormat, GLenum format, GLenum type, const void* textureData);
 
-	inline void Bind() { glBindTexture(GL_TEXTURE_2D, _textureID); }
+	inline void Bind() {
+		glBindTexture(GL_TEXTURE_2D, _textureID);
+	}
+
+	inline void Bind(unsigned char slot) {
+		glActiveTexture(GL_TEXTURE0 + slot);
+		glBindTexture(GL_TEXTURE_2D, _textureID);
+	}
 
 	const GLsizei GetWidth() const { return _width; }
 	const GLsizei GetHeight() const { return _height; }

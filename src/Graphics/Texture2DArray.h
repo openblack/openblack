@@ -35,7 +35,14 @@ public:
 
 	void SetTexture(GLsizei layer, GLsizei width, GLsizei height, GLenum format, GLenum type, const void* textureData);
 
-	inline void Bind() { glBindTexture(GL_TEXTURE_2D_ARRAY, _textureID); }
+	inline void Bind() {
+		glBindTexture(GL_TEXTURE_2D_ARRAY, _textureID);
+	}
+
+	inline void Bind(unsigned char slot) {
+		glActiveTexture(GL_TEXTURE0 + slot);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, _textureID);
+	}
 
 	const GLsizei GetWidth() const { return _width; }
 	const GLsizei GetHeight() const { return _height; }
