@@ -115,10 +115,12 @@ void Game::Run()
 	// create our camera
 	_camera = std::make_unique<Camera>();
 	_camera->SetProjectionMatrixPerspective(60.0f, _window->GetAspectRatio(), 0.1f, 65536.0f);
-	_camera->SetPosition(glm::vec3(2393.0f, 67.0f, 1858.0f));
+	_camera->SetPosition(glm::vec3(2441.865f, 56.764f, 1887.351f));
 	_camera->SetRotation(glm::vec3(117.0f, 12.0f, 0.0f));
 
-	_modelPosition = glm::vec3(2484.0f, 34.0f, 1907.0f);
+	_modelPosition = glm::vec3(2485.0f, 39.0f, 1907.0f);
+	_modelRotation = glm::vec3(0.0f, 24.0f, 90.0f);
+	_modelScale = glm::vec3(0.5f);
 
 	_videoPlayer = std::make_unique<Video::VideoPlayer>(GetGamePath() + "/Data/logo.bik");
 
@@ -199,6 +201,12 @@ void Game::Run()
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		modelMatrix = glm::translate(modelMatrix, _modelPosition);
 
+		modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		modelMatrix = glm::scale(modelMatrix, _modelScale);
+
 		_worldObjectShader->Bind();
 		_worldObjectShader->SetUniformValue("u_viewProjection", _camera->GetViewProjectionMatrix());
 		_worldObjectShader->SetUniformValue("u_modelTransform", modelMatrix);
@@ -266,6 +274,8 @@ void Game::guiLoop()
 	_camera->SetRotation(rot);
 
 	ImGui::DragFloat3("Model Position", glm::value_ptr(_modelPosition));
+	ImGui::DragFloat3("Model Rotation", glm::value_ptr(_modelRotation));
+	ImGui::DragFloat3("Model Scale", glm::value_ptr(_modelScale));
 
 	ImGui::End();
 

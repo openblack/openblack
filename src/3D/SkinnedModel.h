@@ -41,12 +41,27 @@ namespace OpenBlack
 		void LoadFromFile(std::string& fileName);
 		void LoadFromL3D(void* data, size_t size);
 		void Draw(ShaderProgram* program);
-	protected:
+	private:
 		std::map<uint32_t, std::unique_ptr<Texture2D>> _textures;
 		std::map<uint32_t, uint32_t> _submeshSkinMap;
 		std::vector<std::unique_ptr<Mesh>> _submeshes;
 
+		struct SkinnedModel_Bone {
+
+			int32_t parentBone; // -1 = root;
+			int32_t childBone; // -1 = no children
+			int32_t siblingBone; // -1 = no siblings
+
+			glm::vec3 rotXAxis;
+			glm::vec3 rotYAxis;
+			glm::vec3 rotZAxis;
+			glm::vec3 position;
+		};
+
+		std::vector<SkinnedModel_Bone> _bones;
 		std::vector<glm::mat4> _boneMatrices;
+
+		void calculateBoneMatrices();
 	};
 }
 

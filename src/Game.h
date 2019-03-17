@@ -92,6 +92,8 @@ namespace OpenBlack
 		float _bumpmapStrength;
 
 		glm::vec3 _modelPosition;
+		glm::vec3 _modelRotation;
+		glm::vec3 _modelScale;
 
 		bool _running;
 

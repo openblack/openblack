@@ -27,6 +27,8 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
@@ -197,34 +199,11 @@ void SkinnedModel::LoadFromL3D(void* data_, size_t size) {
 		}
 
 		SkinnedModel_Bone* bones = (SkinnedModel_Bone*)(buffer + mesh->bonesOffset);
-		_boneMatrices.resize(mesh->numBones);
-		for (int b = 0; b < mesh->numBones; b++)
-		{
-			SkinnedModel_Bone &bone = bones[b];
 
-			// todo: move this into it's own dedicated update bone transforms func
-
-			if (bone.parentBone != -1)
-			{
-				SkinnedModel_Bone &parent_bone = bones[bone.parentBone];
-
-				glm::mat3 matRot = glm::mat3x3({
-					parent_bone.rotXAxis[0], parent_bone.rotYAxis[0], parent_bone.rotZAxis[0],
-					parent_bone.rotXAxis[1], parent_bone.rotYAxis[1], parent_bone.rotZAxis[1],
-					parent_bone.rotXAxis[2], parent_bone.rotYAxis[2], parent_bone.rotZAxis[2]
-				});
-
-				glm::vec3 localPos = matRot * bone.position + parent_bone.position;
-
-				glm::mat4 parentMatPos = glm::translate(localPos);
-				_boneMatrices[b] = parentMatPos;
-			}
-			else // root bone
-			{
-				_boneMatrices[b] = glm::translate(bone.position);
-			}
-		}
-
+		_bones.resize(mesh->numBones);
+		_bones.assign(bones, &bones[mesh->numBones]);
+		_boneMatrices.resize(64);
+		
 		// stop idk how we should handle more then 1 mesh yet!
 		break;
 	}
@@ -239,7 +218,8 @@ void SkinnedModel::LoadFromL3D(void* data_, size_t size) {
 }
 
 void SkinnedModel::Draw(ShaderProgram* program) {
-	program->SetUniformValue("u_boneMatrices", _boneMatrices.data(), _boneMatrices.size());
+	calculateBoneMatrices();
+	program->SetUniformValue("u_boneMatrices[0]", _boneMatrices.size(), _boneMatrices.data());
 
 	for (int i = 0; i < _submeshes.size(); i++)
 	{
@@ -260,4 +240,32 @@ void SkinnedModel::Draw(ShaderProgram* program) {
 		glBindTexture(m_data.m_target, 0);
 
 	*/
+}
+
+void SkinnedModel::calculateBoneMatrices() {
+
+	for (int b = 0; b < _bones.size(); b++)
+	{
+		SkinnedModel_Bone &bone = _bones[b];
+
+		if (bone.parentBone != -1)
+		{
+			SkinnedModel_Bone &parent_bone = _bones[bone.parentBone];
+
+			glm::mat3 matRot = glm::mat3x3({
+				parent_bone.rotXAxis[0], parent_bone.rotYAxis[0], parent_bone.rotZAxis[0],
+				parent_bone.rotXAxis[1], parent_bone.rotYAxis[1], parent_bone.rotZAxis[1],
+				parent_bone.rotXAxis[2], parent_bone.rotYAxis[2], parent_bone.rotZAxis[2]
+			});
+
+			glm::vec3 localPos = matRot * bone.position + parent_bone.position;
+
+			glm::mat4 parentMatPos = glm::translate(localPos);
+			_boneMatrices[b] = parentMatPos;
+		}
+		else // root bone
+		{
+			_boneMatrices[b] = glm::translate(bone.position);
+		}
+	}
 }
