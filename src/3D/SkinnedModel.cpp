@@ -24,6 +24,10 @@
 #include <stdint.h>
 #include <stdexcept>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/transform.hpp>
+
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
 
@@ -111,6 +115,25 @@ struct L3D_Bone {
 	float position[3];
 };
 
+struct SkinnedModel_Bone {
+
+	int32_t parentBone; // -1 = root;
+	int32_t childBone; // -1 = no children
+	int32_t siblingBone; // -1 = no siblings
+
+	glm::vec3 rotXAxis;
+	glm::vec3 rotYAxis;
+	glm::vec3 rotZAxis;
+	glm::vec3 position;
+};
+
+struct SkinnedModel_Vertex {
+	glm::vec3 pos;
+	glm::vec2 uv;
+	glm::vec3 norm;
+	uint32_t bone;
+};
+
 void SkinnedModel::LoadFromFile(std::string &fileName)
 {
 	size_t meshSize;
@@ -147,23 +170,59 @@ void SkinnedModel::LoadFromL3D(void* data_, size_t size) {
 
 			//Mesh* sub = new Mesh();
 
-			VertexDecl decl(3);
-			decl[0] = VertexAttrib(0, 3, GL_FLOAT, 32, (void*)0);
-			decl[1] = VertexAttrib(1, 2, GL_FLOAT, 32, (void*)12);
-			decl[2] = VertexAttrib(2, 3, GL_FLOAT, 32, (void*)20);
+			VertexDecl decl(4);
+			decl[0] = VertexAttrib(0, 3, GL_FLOAT, false, false, sizeof(SkinnedModel_Vertex), (GLvoid*)offsetof(SkinnedModel_Vertex, pos));
+			decl[1] = VertexAttrib(1, 2, GL_FLOAT, false, false, sizeof(SkinnedModel_Vertex), (GLvoid*)offsetof(SkinnedModel_Vertex, uv));
+			decl[2] = VertexAttrib(2, 3, GL_FLOAT, false, false, sizeof(SkinnedModel_Vertex), (GLvoid*)offsetof(SkinnedModel_Vertex, norm));
+			decl[3] = VertexAttrib(3, 1, GL_INT,   true, false,  sizeof(SkinnedModel_Vertex), (GLvoid*)offsetof(SkinnedModel_Vertex, bone));
 
-			VertexBuffer *vertexBuffer = new VertexBuffer(verticiesOffset, subMesh->numVerticies, sizeof(L3D_Vertex));
+			// create our vertex buffer real quick
+			std::vector<SkinnedModel_Vertex> verts(subMesh->numVerticies);
+			for (int i = 0; i < subMesh->numVerticies; i++)
+			{
+				// epic gamer
+				memcpy(&verts[i], &verticiesOffset[i], sizeof(L3D_Vertex));
+			}
+
+			int vertind = 0;
+			for (int boneVert = 0; boneVert < subMesh->boneVertLUTSize; boneVert++)
+				for (int vert = 0; vert < boneVertOffset[boneVert].nVertices; vert++)
+					verts[vertind++].bone = boneVertOffset[boneVert].boneIndex;
+
+			VertexBuffer *vertexBuffer = new VertexBuffer(verts.data(), subMesh->numVerticies, sizeof(SkinnedModel_Vertex));
 			IndexBuffer *indexBuffer = new IndexBuffer(trianglesOffset, subMesh->numTriangles * 3, GL_UNSIGNED_SHORT);
 
 			_submeshes.emplace_back(std::make_unique<Mesh>(vertexBuffer, indexBuffer, decl));
 			_submeshSkinMap[sm] = subMesh->skinID;
 		}
 
-		L3D_Bone* bones = (L3D_Bone*)(buffer + mesh->bonesOffset);
+		SkinnedModel_Bone* bones = (SkinnedModel_Bone*)(buffer + mesh->bonesOffset);
+		_boneMatrices.resize(mesh->numBones);
 		for (int b = 0; b < mesh->numBones; b++)
 		{
-			L3D_Bone bone = bones[b];
-			printf("bone[%d] - parent=%d\n", b, bone.parentBone);
+			SkinnedModel_Bone &bone = bones[b];
+
+			// todo: move this into it's own dedicated update bone transforms func
+
+			if (bone.parentBone != -1)
+			{
+				SkinnedModel_Bone &parent_bone = bones[bone.parentBone];
+
+				glm::mat3 matRot = glm::mat3x3({
+					parent_bone.rotXAxis[0], parent_bone.rotYAxis[0], parent_bone.rotZAxis[0],
+					parent_bone.rotXAxis[1], parent_bone.rotYAxis[1], parent_bone.rotZAxis[1],
+					parent_bone.rotXAxis[2], parent_bone.rotYAxis[2], parent_bone.rotZAxis[2]
+				});
+
+				glm::vec3 localPos = matRot * bone.position + parent_bone.position;
+
+				glm::mat4 parentMatPos = glm::translate(localPos);
+				_boneMatrices[b] = parentMatPos;
+			}
+			else // root bone
+			{
+				_boneMatrices[b] = glm::translate(bone.position);
+			}
 		}
 
 		// stop idk how we should handle more then 1 mesh yet!
@@ -180,6 +239,8 @@ void SkinnedModel::LoadFromL3D(void* data_, size_t size) {
 }
 
 void SkinnedModel::Draw(ShaderProgram* program) {
+	program->SetUniformValue("u_boneMatrices", _boneMatrices.data(), _boneMatrices.size());
+
 	for (int i = 0; i < _submeshes.size(); i++)
 	{
 		_textures[_submeshSkinMap[i]]->Bind(0);

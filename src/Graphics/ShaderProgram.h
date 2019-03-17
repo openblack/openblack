@@ -46,6 +46,7 @@ public:
 	void SetUniformValue(const char* uniformName, const glm::vec4 & v);
 	void SetUniformValue(const char* uniformName, const glm::mat3 & m);
 	void SetUniformValue(const char* uniformName, const glm::mat4 & m);
+	void SetUniformValue(const char* uniformName, const glm::mat4 * m, size_t size);
 
 	GLuint GetRawHandle() const { return _program; }
 private:
