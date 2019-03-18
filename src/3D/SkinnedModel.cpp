@@ -104,21 +104,6 @@ struct L3D_Skin {
 };
 
 struct L3D_Bone {
-	int32_t parentBone; // -1 = root
-	int32_t childBone; // -1 = no children
-	int32_t siblingBone; // -1 = no siblings
-
-	// rotation matrix
-	float rotXAxis[3];
-	float rotYAxis[3];
-	float rotZAxis[3];
-
-	// bone origin position
-	float position[3];
-};
-
-struct SkinnedModel_Bone {
-
 	int32_t parentBone; // -1 = root;
 	int32_t childBone; // -1 = no children
 	int32_t siblingBone; // -1 = no siblings
@@ -198,11 +183,30 @@ void SkinnedModel::LoadFromL3D(void* data_, size_t size) {
 			_submeshSkinMap[sm] = subMesh->skinID;
 		}
 
-		SkinnedModel_Bone* bones = (SkinnedModel_Bone*)(buffer + mesh->bonesOffset);
-
+		/* copy bones into our own format */
+		L3D_Bone* bones = (L3D_Bone*)(buffer + mesh->bonesOffset);
 		_bones.resize(mesh->numBones);
-		_bones.assign(bones, &bones[mesh->numBones]);
-		_boneMatrices.resize(64);
+
+		for (size_t i = 0; i < mesh->numBones; i++)
+		{
+			const L3D_Bone &bone = bones[i];
+			SkinnedModel_Bone &dstBone = _bones[i];
+
+			dstBone.parentBone = bone.parentBone;
+			dstBone.childBone = bone.childBone;
+			dstBone.siblingBone = bone.siblingBone;
+
+			dstBone.position = bone.position;
+			glm::mat3 boneRotationMatrix = glm::mat3({
+				bone.rotXAxis[0], bone.rotYAxis[0], bone.rotZAxis[0],
+				bone.rotXAxis[1], bone.rotYAxis[1], bone.rotZAxis[1],
+				bone.rotXAxis[2], bone.rotYAxis[2], bone.rotZAxis[2],
+			});
+
+			dstBone.rotation = glm::quat_cast(boneRotationMatrix);
+		}
+
+		calculateBoneMatrices();
 		
 		// stop idk how we should handle more then 1 mesh yet!
 		break;
@@ -218,7 +222,6 @@ void SkinnedModel::LoadFromL3D(void* data_, size_t size) {
 }
 
 void SkinnedModel::Draw(ShaderProgram* program) {
-	calculateBoneMatrices();
 	program->SetUniformValue("u_boneMatrices[0]", _boneMatrices.size(), _boneMatrices.data());
 
 	for (int i = 0; i < _submeshes.size(); i++)
@@ -242,30 +245,27 @@ void SkinnedModel::Draw(ShaderProgram* program) {
 	*/
 }
 
-void SkinnedModel::calculateBoneMatrices() {
-
-	for (int b = 0; b < _bones.size(); b++)
+void SkinnedModel::calculateBoneMatrices()
+{
+	_boneMatrices.resize(64);
+	for (size_t i = 0; i < _bones.size(); i++)
 	{
-		SkinnedModel_Bone &bone = _bones[b];
+		SkinnedModel_Bone &bone = _bones[i];
 
+		// only bones with parents need to be transformed by their parents
 		if (bone.parentBone != -1)
 		{
-			SkinnedModel_Bone &parent_bone = _bones[bone.parentBone];
+			const SkinnedModel_Bone parentBone = _bones[bone.parentBone];
 
-			glm::mat3 matRot = glm::mat3x3({
-				parent_bone.rotXAxis[0], parent_bone.rotYAxis[0], parent_bone.rotZAxis[0],
-				parent_bone.rotXAxis[1], parent_bone.rotYAxis[1], parent_bone.rotZAxis[1],
-				parent_bone.rotXAxis[2], parent_bone.rotYAxis[2], parent_bone.rotZAxis[2]
-			});
-
-			glm::vec3 localPos = matRot * bone.position + parent_bone.position;
-
-			glm::mat4 parentMatPos = glm::translate(localPos);
-			_boneMatrices[b] = parentMatPos;
+			bone.position = parentBone.position + parentBone.rotation * bone.position;
+			bone.rotation = parentBone.rotation * bone.rotation;
 		}
-		else // root bone
-		{
-			_boneMatrices[b] = glm::translate(bone.position);
-		}
+
+		glm::mat4 mat = glm::mat4(1.0f);
+		mat = glm::translate(mat, bone.position);
+		mat = mat * glm::mat4_cast(bone.rotation);
+
+		// m_boneMatrices[i] = poseBone.Concatenate() * m_skeleton->GetBindPoseBone(i).inverseTransform;
+		_boneMatrices[i] = mat;
 	}
 }

@@ -123,8 +123,8 @@ void Game::Run()
 	_camera->SetPosition(glm::vec3(2441.865f, 56.764f, 1887.351f));
 	_camera->SetRotation(glm::vec3(117.0f, 12.0f, 0.0f));
 
-	_modelPosition = glm::vec3(2485.0f, 39.0f, 1907.0f);
-	_modelRotation = glm::vec3(0.0f, 24.0f, 90.0f);
+	_modelPosition = glm::vec3(2485.0f, 50.0f, 1907.0f);
+	_modelRotation = glm::vec3(180.0f, 111.0f, 0.0f);
 	_modelScale = glm::vec3(0.5f);
 
 	_videoPlayer = std::make_unique<Video::VideoPlayer>(GetGamePath() + "/Data/logo.bik");
@@ -171,6 +171,7 @@ void Game::Run()
 		}
 
 		_camera->Update(deltaTime);
+		_modelRotation.y += deltaTime * .1f;
 
 		this->guiLoop();
 

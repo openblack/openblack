@@ -27,6 +27,7 @@
 #include <Graphics/Texture2D.h>
 
 #include <map>
+#include <glm/gtc/quaternion.hpp>
 
 using namespace OpenBlack::Graphics;
 
@@ -52,16 +53,16 @@ namespace OpenBlack
 			int32_t childBone; // -1 = no children
 			int32_t siblingBone; // -1 = no siblings
 
-			glm::vec3 rotXAxis;
-			glm::vec3 rotYAxis;
-			glm::vec3 rotZAxis;
 			glm::vec3 position;
+			glm::quat rotation;
 		};
 
 		std::vector<SkinnedModel_Bone> _bones;
 		std::vector<glm::mat4> _boneMatrices;
 
 		void calculateBoneMatrices();
+	public:
+		std::vector<SkinnedModel_Bone>& GetBones() { return _bones; }
 	};
 }
 
