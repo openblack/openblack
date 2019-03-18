@@ -109,6 +109,11 @@ void Game::Run()
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = NULL;
 
+	ImGui::StyleColorsLight();
+
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.FrameBorderSize = 1.0f;
+
 	ImGui_ImplSDL2_InitForOpenGL(_window->GetHandle(), _window->GetGLContext());
 	ImGui_ImplOpenGL3_Init("#version 130");
 
@@ -256,6 +261,8 @@ void Game::guiLoop()
 		ImGui::EndMainMenuBar();
 	}
 
+	//ImGui::ShowDemoWindow();
+
 	//m_MeshViewer->GUI();
 
 	int width, height;
@@ -268,14 +275,33 @@ void Game::guiLoop()
 
 	ImGui::DragFloat3("Position", &pos[0]);
 	ImGui::DragFloat3("Rotation", &rot[0]);
-	ImGui::DragFloat3("Forward", &_camera->GetForward()[0]);
 
 	_camera->SetPosition(pos);
 	_camera->SetRotation(rot);
 
-	ImGui::DragFloat3("Model Position", glm::value_ptr(_modelPosition));
-	ImGui::DragFloat3("Model Rotation", glm::value_ptr(_modelRotation));
-	ImGui::DragFloat3("Model Scale", glm::value_ptr(_modelScale));
+	ImGui::End();
+
+	ImGui::SetNextWindowPos(ImVec2(width - 300.0f, 128.0f), ImGuiCond_FirstUseEver);
+	ImGui::Begin("Model", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+
+	ImGui::DragFloat3("Position", glm::value_ptr(_modelPosition));
+	ImGui::DragFloat3("Rotation", glm::value_ptr(_modelRotation));
+	ImGui::SliderFloat3("Scale", glm::value_ptr(_modelScale), 0.0f, 2.0f, "%.1f");
+
+	ImGui::End();
+
+	ImGui::Begin("Bones");
+
+	ImGui::BeginChild("Scrolling");
+
+	auto &bones = _testModel->GetBones();
+	for (int b = 0; b < bones.size(); b++)
+	{
+		auto &bone = bones[b];
+		ImGui::DragFloat3(std::to_string(b).c_str(), &bone.position[0]);
+	}
+
+	ImGui::EndChild();
 
 	ImGui::End();
 
@@ -306,12 +332,12 @@ void Game::guiLoop()
 	ImGui::SliderFloat("Day", &_timeOfDay, 0.0f, 1.0f, "%.3f");
 	ImGui::SliderFloat("Bump", &_bumpmapStrength, 0.0f, 1.0f, "%.3f");
 	
-	auto noisemap = _landIsland->GetNoiseMap();
+	/*auto noisemap = _landIsland->GetNoiseMap();
 	auto bumpmap = _landIsland->GetBumpMap();
 	ImGui::Text("Noisemap");
 	ImGui::Image((void*)(intptr_t)noisemap->GetHandle(), ImVec2(noisemap->GetWidth() / 2, noisemap->GetHeight() / 2));
 	ImGui::Text("Bumpmap");
-	ImGui::Image((void*)(intptr_t)bumpmap->GetHandle(), ImVec2(bumpmap->GetWidth() / 2, bumpmap->GetHeight() / 2));
+	ImGui::Image((void*)(intptr_t)bumpmap->GetHandle(), ImVec2(bumpmap->GetWidth() / 2, bumpmap->GetHeight() / 2));*/
 	ImGui::End();
 
 	ImGui::Render();
