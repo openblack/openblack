@@ -69,38 +69,36 @@ A `uint32_t` prefixes the number of bytes of data that follow. This array of dat
 
 ### Black & White 1
 
-The opcodes are defined as enums like so:
-
-```
-END = 0
-WAIT = 1
-PUSH = 2
-POP = 3
-ADD = 4
-CALL = 5
-MINUS = 6
-UMINUS = 7
-TIMES = 8
-DIVIDE = 9
-MODULUS = 10
-NOT = 11
-AND = 12
-OR = 13
-EQ = 14
-NEQ = 15
-GEQ = 16
-LEQ = 17
-GT = 18
-LT = 19
-JUMP = 20
-SLEEP = 21
-EXCEPT = 22
-INTCAST = 23
-RUN = 24
-ENDEXCEPT = 25
-RETEXCEPT = 26
-FAILEXCEPT = 27
-BRKEXCEPT = 28
-SWAP = 29
-LINE = 30
-```
+| ID | Opcode       |
+|:--:| ------------ |
+| 0  | `END`        |
+| 1  | `WAIT`       |
+| 2  | `PUSH`       |
+| 3  | `POP`        |
+| 4  | `ADD`        |
+| 5  | `CALL`       |
+| 6  | `MINUS`      |
+| 7  | `UMINUS`     |
+| 8  | `TIMES`      |
+| 9  | `DIVIDE`     |
+| 10 | `MODULUS`    |
+| 11 | `NOT`        |
+| 12 | `AND`        |
+| 13 | `OR`         |
+| 14 | `EQ`         |
+| 15 | `NEQ`        |
+| 16 | `GEQ`        |
+| 17 | `LEQ`        |
+| 18 | `GT`         |
+| 19 | `LT`         |
+| 20 | `JUMP`       |
+| 21 | `SLEEP`      |
+| 22 | `EXCEPT`     |
+| 23 | `INTCAST`    |
+| 24 | `RUN`        |
+| 25 | `ENDEXCEPT`  |
+| 26 | `RETEXCEPT`  |
+| 27 | `FAILEXCEPT` |
+| 28 | `BRKEXCEPT`  |
+| 29 | `SWAP`       |
+| 30 | `LINE`       |
