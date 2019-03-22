@@ -34,7 +34,43 @@ using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
 
 struct L3DHeader {
-	uint32_t modelSize;
+	uint32_t flags;
+
+	/*
+	flags & 0x1 = ? (bit 31)
+	flags & 0x2 = ? (bit 30)
+	flags & 0x4 = ? (bit 29)
+	flags & 0x8 = ? (bit 28)
+	flags & 0x10 = ? (bit 27)
+	flags & 0x20 = ? (bit 26)
+	flags & 0x40 = ? (bit 25)
+	flags & 0x80 = ? (bit 24)
+	flags & 0x100 = LH3DMesh::IsBoned (bit 23)
+	flags & 0x200 = ? (bit 22)
+	flags & 0x400 = ? (bit 21)
+	flags & 0x800 = ? (bit 20)
+	flags & 0x1000 = ? (bit 19)
+	flags & 0x2000 = nodraw? (bit 18)
+	flags & 0x4000 = ? (bit 17)
+	flags & 0x8000 = LH3DMesh::IsContainsLandscapeFeature (bit 16)
+	flags & 0x10000 = ? (bit 15)
+	flags & 0x20000 = ? (bit 14)
+	flags & 0x40000 = LH3DMesh::IsContainsUV2 (bit 13)
+	flags & 0x80000 = LH3DMesh::IsContainsNameData (bit 12)
+	flags & 0x100000 = LH3DMesh::IsContainsExtraMetrics (bit 11)
+	flags & 0x200000 = LH3DMesh::IsContainsEBone (bit 10)
+	flags & 0x400000 = LH3DMesh::IsContainsTnLData (bit 9)
+	flags & 0x800000 = LH3DMesh::IsContainsNewEP (bit 8)
+	flags & 0x1000000 = ? (bit 7)
+	flags & 0x2000000 = ? (bit 6)
+	flags & 0x4000000 = ? (bit 5)
+	flags & 0x8000000 = ? (bit 4)
+	flags & 0x10000000 = ? (bit 3)
+	flags & 0x20000000 = ? (bit 2)
+	flags & 0x40000000 = ? (bit 1)
+	flags & 0x80000000 = ? (bit 0)
+	*/
+
 	uint32_t skinOffset;
 	uint32_t numMeshes;
 	uint32_t meshListOffset; // L3D_Mesh
@@ -55,10 +91,7 @@ struct L3DHeader {
 };
 
 struct L3D_Mesh {
-	uint8_t unknown_1;
-	uint8_t unknown_2; // 20: nodraw
-	uint8_t unknown_3;
-	uint8_t unknown_4; // e0: transparent
+	uint32_t flags; // nodraw, transparent
 
 	uint32_t numSubMeshes;
 	uint32_t subMeshOffset; // L3D_SubMesh
@@ -229,20 +262,6 @@ void SkinnedModel::Draw(ShaderProgram* program) {
 		_textures[_submeshSkinMap[i]]->Bind(0);
 		_submeshes[i]->Draw();
 	}
-
-
-	/*
-		m_matrixBuffer->SetBuffer(m_animatingSkeleton.GetBoneMatrices(), boneCount * sizeof(Matrix4x4));
-
-		GLExt::glBindBufferARB(m_data.m_target, m_bufferHandle);
-		GLExt::glBufferDataARB(m_data.m_target, m_data.m_buffer.size(), &m_data.m_buffer[0], GL_DYNAMIC_READ);
-		GLExt::glBindBufferARB(m_data.m_target, 0);
-
-		glBindTexture(m_data.m_target, m_handle);
-		GLExt::glTexBufferARB(m_data.m_target, GL_RGBA32F_ARB, m_bufferHandle);
-		glBindTexture(m_data.m_target, 0);
-
-	*/
 }
 
 void SkinnedModel::calculateBoneMatrices()
@@ -265,7 +284,6 @@ void SkinnedModel::calculateBoneMatrices()
 		mat = glm::translate(mat, bone.position);
 		mat = mat * glm::mat4_cast(bone.rotation);
 
-		// m_boneMatrices[i] = poseBone.Concatenate() * m_skeleton->GetBindPoseBone(i).inverseTransform;
 		_boneMatrices[i] = mat;
 	}
 }

@@ -32,7 +32,7 @@ using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
 
 struct L3DHeader {
-	uint32_t modelSize;
+	uint32_t flags;
 	uint32_t skinOffset;
 	uint32_t numMeshes;
 	uint32_t meshListOffset; // L3D_Mesh

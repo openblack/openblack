@@ -291,18 +291,17 @@ void Game::guiLoop()
 
 	ImGui::End();
 
-	ImGui::Begin("Bones");
+	ImGui::Begin("Model Flags", NULL, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::BeginChild("Scrolling");
-
-	auto &bones = _testModel->GetBones();
-	for (int b = 0; b < bones.size(); b++)
-	{
-		auto &bone = bones[b];
-		ImGui::DragFloat3(std::to_string(b).c_str(), &bone.position[0]);
-	}
-
-	ImGui::EndChild();
+	ImGui::Text("Is Boned: %d", _testModel->IsBoned());
+	ImGui::Text("Contains Extra Bone: %d", _testModel->IsContainsEBone());
+	ImGui::Text("Contains Extra Metrics: %d", _testModel->IsContainsExtraMetrics());
+	ImGui::Text("Contains Landscape Feature: %d", _testModel->IsContainsLandscapeFeature());
+	ImGui::Text("Contains Name Data: %d", _testModel->IsContainsNameData());
+	ImGui::Text("Contains New EP: %d", _testModel->IsContainsNewEP());
+	ImGui::Text("Contains TnL Data: %d", _testModel->IsContainsTnLData());
+	ImGui::Text("Contains UV2: %d", _testModel->IsContainsUV2());
+	ImGui::Text("Nodraw?: %d", _testModel->IsNoDraw());
 
 	ImGui::End();
 

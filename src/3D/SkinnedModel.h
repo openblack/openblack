@@ -42,7 +42,11 @@ namespace OpenBlack
 		void LoadFromFile(std::string& fileName);
 		void LoadFromL3D(void* data, size_t size);
 		void Draw(ShaderProgram* program);
+
+
 	private:
+		uint32_t _flags;
+
 		std::map<uint32_t, std::unique_ptr<Texture2D>> _textures;
 		std::map<uint32_t, uint32_t> _submeshSkinMap;
 		std::vector<std::unique_ptr<Mesh>> _submeshes;
@@ -62,6 +66,18 @@ namespace OpenBlack
 
 		void calculateBoneMatrices();
 	public:
+		const bool IsBoned() const { return _flags & 0x100; } // 23
+		const bool IsNoDraw() const { return _flags & 0x2000; } // 18
+		const bool IsContainsLandscapeFeature() const { return _flags & 0x8000; } // 16
+		const bool IsContainsUV2() const { return _flags & 0x40000; } // 13
+		const bool IsContainsNameData() const { return _flags & 0x80000; } // 12
+		const bool IsContainsExtraMetrics() const { return _flags & 0x100000; } // 11
+		const bool IsContainsEBone() const { return _flags & 0x200000; } // 10
+		const bool IsContainsTnLData() const { return _flags & 0x400000; } // 9
+		const bool IsContainsNewEP() const { return _flags & 0x800000; } // 8
+
+		//const bool IsContainsNewData() const { return _flags & 0xFC8000; } // ???
+
 		std::vector<SkinnedModel_Bone>& GetBones() { return _bones; }
 	};
 }
