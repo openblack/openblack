@@ -48,6 +48,7 @@
 #endif
 #include <cstddef>
 #include <cstring>
+#include <string>
 
 #include <Common/LHSegment.h>
 
@@ -74,6 +75,7 @@ namespace OpenBlack
 		void Close();
 
 		size_t Read(void* data, size_t size); // lh: Read((void *, ulong, ulong *))
+		std::string ReadString();
 		// LHOSFile::Write((void *, ulong, ulong *))
 
 		void Seek(size_t position, LH_SEEK_MODE); // lh: void Seek(long, int, unsigned long*);

@@ -305,45 +305,20 @@ bool OSFile::GetSegment(const char* segmentName, OpenBlack::LHSegment* segment, 
 	return true;
 }
 
-/*
-int __thiscall LHFile::GetSegment(_DWORD *this, const char *segment, int dataOut, int bUnknown)
+std::string OSFile::ReadString()
 {
-  char *lthis; // ebp
-  const char *v6; // edi
-  char *v7; // ebx
-  int v8; // eax
-  int *segmenta; // [esp+14h] [ebp+4h]
+	std::string str;
+	char c;
 
-  lthis = (char *)this;
-  if ( !this[3] )
-	return 3;
-  if ( this[20] != 2 )
-	return 3;
-  if ( this[21] )
-	LHFile::CloseSegment();
-  v6 = segment;
-  segmenta = LHFile::Lookup(lthis, segment);
-  if ( !segmenta )
-	return 2;
-  if ( LHFile::SetLHFilePointer(lthis, v6, 0) )
-	return 2;
-  v7 = strcpy((char *)dataOut, v6);
-  v8 = segmenta[10];
-  *(_DWORD *)(dataOut + 36) = v8;
-  if ( bUnknown )
-  {
-	if ( LHFile::AllocSegDataMem(lthis, (size_t *)v7) )
-	  return 3;
-  }
-  else if ( !*((_DWORD *)v7 + 10) || v8 != segmenta[10] )
-  {
-	return 3;
-  }
-  return LHCachedFile::ReadData(*((LPVOID *)v7 + 10), segmenta[10]);
+	do {
+		Read(&c, 1);
+		str.push_back(c);
+	} while (c != '\0');
+
+	return str;
 }
 
 
-*/
 
 char * OSFile::ReadAll(const char * filename, size_t* sizeOut)
 {
