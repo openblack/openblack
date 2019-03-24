@@ -81,6 +81,24 @@ namespace OpenBlack {
 		}
 	};
 
+	class VMScript
+	{
+	public:
+		VMScript(const std::string &name, const std::string &filename, uint32_t type) : _name(name), _filename(filename), _type(type) {}
+
+		const std::string &GetName() const { return _name; }
+		const std::string &GetFileName() const { return _filename; }
+
+		std::vector<std::string> &GetVariables() { return _variables; }
+		const std::vector<std::string> &GetVariables() const { return _variables; }
+
+	private:
+		std::string _name;
+		std::string _filename;
+		uint32_t _type;
+		std::vector<std::string> _variables;
+	};
+
 	class LHVM
 	{
 	public:
@@ -96,16 +114,23 @@ namespace OpenBlack {
 		void loadScript(OSFile* file);
 		void loadData(OSFile* file);
 
-		std::vector<std::string> _variables;
-		std::vector<VMInstruction> _instructions;
-		std::vector<uint8_t> _data;
+		typedef std::vector<std::string> Variables;
+		typedef std::vector<VMInstruction> Instructions;
+		typedef std::vector<VMScript> Scripts;
+		typedef std::vector<uint8_t> Data;
+
+		Variables _variables;
+		Instructions _instructions;
+		Scripts _scripts;
+		Data _data;
 	private:
 		uint32_t _version;
 
 	public:
-		const std::vector<VMInstruction> &GetInstructions() const { return _instructions; }
-		const std::vector<std::string> &GetVariables() const { return _variables; }
-		const std::vector<uint8_t> &GetData() const { return _data; }
+		const Variables &GetVariables() const { return _variables; }
+		const Instructions &GetInstructions() const { return _instructions; }
+		const Scripts &GetScripts() const { return _scripts; }
+		const Data &GetData() const { return _data; }
 	};
 }
 

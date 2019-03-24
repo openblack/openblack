@@ -112,26 +112,27 @@ void LHVM::loadScript(OSFile* file)
 
 	for (int i = 0; i < count; i++)
 	{
+		uint32_t script_type;
 		std::string name = file->ReadString();
 		std::string file_name = file->ReadString();
+		file->Read(&script_type, 4); // script type
 
-		//printf("script %s from %s\n", name.c_str(), file_name.c_str());
+		_scripts.emplace_back(name, file_name, script_type);
+		VMScript &script = _scripts.back(); // C++17 emplace_back returns this
 
-		uint32_t shit;
+		uint32_t shit, variable_count, instruction_address, parameter_count, script_id;
 		file->Read(&shit, 4);
-		file->Read(&shit, 4);
-		file->Read(&shit, 4);
+		file->Read(&variable_count, 4); // variable_count
 
-		for (int j = 0; j < shit; j++)
+		for (int j = 0; j < variable_count; j++)
 		{
 			std::string var_name = file->ReadString();
-			//printf("\t[%d] = %s\n", j, var_name.c_str());
+			script.GetVariables().push_back(var_name);
 		}
 
-		file->Read(&shit, 4);
-		file->Read(&shit, 4);
-		file->Read(&shit, 4);
-
+		file->Read(&instruction_address, 4); // instruction address
+		file->Read(&parameter_count, 4); // parameter count
+		file->Read(&script_id, 4); // script 
 	}
 }
 
