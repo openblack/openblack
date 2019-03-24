@@ -296,6 +296,65 @@ void Game::guiLoop()
 
 	ImGui::End();
 
+	drawLHVM();
+
+	ImGui::Begin("Land Island");
+
+	ImGui::Text("Load Land Island:");
+	ImGui::BeginGroup();
+	if (ImGui::Button("1"))
+		LoadMap(GetGamePath() + "/Data/Landscape/Land1.lnd");
+	ImGui::SameLine();
+	if (ImGui::Button("2"))
+		LoadMap(GetGamePath() + "/Data/Landscape/Land2.lnd");
+	ImGui::SameLine();
+	if (ImGui::Button("3"))
+		LoadMap(GetGamePath() + "/Data/Landscape/Land3.lnd");
+	ImGui::SameLine();
+	if (ImGui::Button("4"))
+		LoadMap(GetGamePath() + "/Data/Landscape/Land4.lnd");
+	ImGui::SameLine();
+	if (ImGui::Button("5"))
+		LoadMap(GetGamePath() + "/Data/Landscape/Land5.lnd");
+	ImGui::SameLine();
+	if (ImGui::Button("T"))
+		LoadMap(GetGamePath() + "/Data/Landscape/LandT.lnd");
+	ImGui::SameLine();
+	ImGui::EndGroup();
+
+	ImGui::SliderFloat("Day", &_timeOfDay, 0.0f, 1.0f, "%.3f");
+	ImGui::SliderFloat("Bump", &_bumpmapStrength, 0.0f, 1.0f, "%.3f");
+	
+	/*auto noisemap = _landIsland->GetNoiseMap();
+	auto bumpmap = _landIsland->GetBumpMap();
+	ImGui::Text("Noisemap");
+	ImGui::Image((void*)(intptr_t)noisemap->GetHandle(), ImVec2(noisemap->GetWidth() / 2, noisemap->GetHeight() / 2));
+	ImGui::Text("Bumpmap");
+	ImGui::Image((void*)(intptr_t)bumpmap->GetHandle(), ImVec2(bumpmap->GetWidth() / 2, bumpmap->GetHeight() / 2));*/
+	ImGui::End();
+
+	ImGui::Render();
+}
+
+/*
+static auto vector_getter = [](void* vec, int idx, const char** out_text)
+{
+	auto& vector = *static_cast<std::vector<std::string>*>(vec);
+	if (idx < 0 || idx >= static_cast<int>(vector.size())) { return false; }
+	*out_text = vector.at(idx).c_str();
+	return true;
+};
+
+bool ListBox(const char* label, int* currIndex, std::vector<std::string>& values)
+{
+	if (values.empty()) { return false; }
+	return ListBox(label, currIndex, vector_getter,
+		static_cast<void*>(&values), values.size());
+}
+*/
+
+void Game::drawLHVM()
+{
 	ImGui::SetNextWindowSize(ImVec2(500.0f, 440.0f), ImGuiCond_FirstUseEver);
 	ImGui::Begin("LHVM");
 
@@ -339,6 +398,36 @@ void Game::guiLoop()
 
 		if (ImGui::BeginTabItem("Scripts"))
 		{
+			// left
+			static int selected = 0;
+			ImGui::BeginChild("left pane", ImVec2(240, 0), true);
+
+			auto scripts = _lhvm->GetScripts();
+			for (int i = 0; i < scripts.size(); i++)
+			{
+				if (ImGui::Selectable(scripts[i].GetName().c_str(), selected == i))
+					selected = i;
+			}
+
+			ImGui::EndChild();
+			ImGui::SameLine();
+
+			// right
+			ImGui::BeginChild("item view"); // Leave room for 1 line below us
+			ImGui::Text("Script ID: %d", selected);
+			ImGui::Text("Script Name: %s", scripts[selected].GetName().c_str());
+			ImGui::Text("File Name: %s", scripts[selected].GetFileName().c_str());
+
+			ImGui::Text("Variables");
+			ImGui::BeginChild("script vars");
+			auto script_vars = scripts[selected].GetVariables();
+			for (int i = 0; i < script_vars.size(); i++)
+				ImGui::Text(script_vars[i].c_str());
+
+			ImGui::EndChild();
+
+			ImGui::EndChild();
+
 			ImGui::EndTabItem();
 		}
 
@@ -381,43 +470,6 @@ void Game::guiLoop()
 	}
 
 	ImGui::End();
-
-	ImGui::Begin("Land Island");
-
-	ImGui::Text("Load Land Island:");
-	ImGui::BeginGroup();
-	if (ImGui::Button("1"))
-		LoadMap(GetGamePath() + "/Data/Landscape/Land1.lnd");
-	ImGui::SameLine();
-	if (ImGui::Button("2"))
-		LoadMap(GetGamePath() + "/Data/Landscape/Land2.lnd");
-	ImGui::SameLine();
-	if (ImGui::Button("3"))
-		LoadMap(GetGamePath() + "/Data/Landscape/Land3.lnd");
-	ImGui::SameLine();
-	if (ImGui::Button("4"))
-		LoadMap(GetGamePath() + "/Data/Landscape/Land4.lnd");
-	ImGui::SameLine();
-	if (ImGui::Button("5"))
-		LoadMap(GetGamePath() + "/Data/Landscape/Land5.lnd");
-	ImGui::SameLine();
-	if (ImGui::Button("T"))
-		LoadMap(GetGamePath() + "/Data/Landscape/LandT.lnd");
-	ImGui::SameLine();
-	ImGui::EndGroup();
-
-	ImGui::SliderFloat("Day", &_timeOfDay, 0.0f, 1.0f, "%.3f");
-	ImGui::SliderFloat("Bump", &_bumpmapStrength, 0.0f, 1.0f, "%.3f");
-	
-	/*auto noisemap = _landIsland->GetNoiseMap();
-	auto bumpmap = _landIsland->GetBumpMap();
-	ImGui::Text("Noisemap");
-	ImGui::Image((void*)(intptr_t)noisemap->GetHandle(), ImVec2(noisemap->GetWidth() / 2, noisemap->GetHeight() / 2));
-	ImGui::Text("Bumpmap");
-	ImGui::Image((void*)(intptr_t)bumpmap->GetHandle(), ImVec2(bumpmap->GetWidth() / 2, bumpmap->GetHeight() / 2));*/
-	ImGui::End();
-
-	ImGui::Render();
 }
 
 void Game::LoadMap(std::string name)

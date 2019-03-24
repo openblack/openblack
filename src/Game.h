@@ -100,6 +100,7 @@ namespace OpenBlack
 		bool _running;
 
 		void guiLoop();
+		void drawLHVM();
 	};
 }
 
