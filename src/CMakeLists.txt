@@ -23,8 +23,8 @@ foreach(FILE ${OPENBLACK_SRCS})
 endforeach()
 
 file(GLOB OPENBLACK_SHADERS
-    "${OS_BASE_DIR}/shaders/**.vert"
-    "${OS_BASE_DIR}/shaders/**.frag"
+    "${OS_BASE_DIR}/assets/shaders/**.vert"
+    "${OS_BASE_DIR}/assets/shaders/**.frag"
 )
 
 include_directories(BEFORE "${OS_SRC_DIR}")
@@ -45,7 +45,7 @@ if (WIN32)
 	set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} /SAFESEH:NO")
 endif()
 
-set(OPENBLACK_ICON "../resource/icon/openblack.rc")
+set(OPENBLACK_ICON "../assets/resource/icon/openblack.rc")
 
 add_executable(OpenBlack ${OPENBLACK_SRCS} "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" ${OPENBLACK_SHADERS} ${OPENBLACK_ICON})
 set_target_properties(OpenBlack PROPERTIES LINKER_LANGUAGE CXX)
