@@ -47,15 +47,15 @@
 #include <Video/VideoPlayer.h>
 
 //#include <Script/LHScriptX.h>
-#include <Script/LHVM.h>
+//#include <Script/LHVM.h>
 #include <LHScriptX/Script.h>
 #include <LHScriptX/Command.h>
 #include <LHScriptX/Impl_LandCommands.h>
+#include <LHVMViewer.h>
 
 #define IMGUI_IMPL_OPENGL_LOADER_GLEW
 
 #include <imgui/imgui.h>
-#include <imgui/imgui_memory_editor.h>
 #include <imgui/imgui_impl_sdl.h>
 #include <imgui/imgui_impl_opengl3.h>
 
@@ -141,8 +141,10 @@ void Game::Run()
 	LoadMap(GetGamePath() + "/Data/Landscape/Land1.lnd");
 	//_landIsland->DumpMaps();
 
-	_lhvm = std::make_unique<LHVM>();
+	_lhvm = std::make_unique<LHVM::LHVM>();
 	_lhvm->LoadBinary(GetGamePath() + "/Scripts/Quests/challenge.chl");
+
+	printf("LHVM Version: %d\n", _lhvm->GetVersion());
 
 	ShaderProgram* terrainShader = new ShaderProgram("shaders/terrain.vert", "shaders/terrain.frag");
 
@@ -176,7 +178,7 @@ void Game::Run()
 		}
 
 		_camera->Update(deltaTime);
-		_modelRotation.y += deltaTime * .1f;
+		_modelRotation.y = fmod(_modelRotation.y + deltaTime * .1f, 360.f);
 
 		this->guiLoop();
 
@@ -296,7 +298,8 @@ void Game::guiLoop()
 
 	ImGui::End();
 
-	drawLHVM();
+	//drawLHVM();
+	LHVMViewer::Draw(_lhvm.get());
 
 	ImGui::Begin("Land Island");
 
@@ -355,121 +358,7 @@ bool ListBox(const char* label, int* currIndex, std::vector<std::string>& values
 
 void Game::drawLHVM()
 {
-	ImGui::SetNextWindowSize(ImVec2(500.0f, 440.0f), ImGuiCond_FirstUseEver);
-	ImGui::Begin("LHVM");
 
-	if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
-	{
-		if (ImGui::BeginTabItem("Code"))
-		{
-			auto code = _lhvm->GetInstructions();
-
-			ImGui::Text("Total # Instructions: %d", code.size());
-
-			ImGui::Columns(5, "codecolumns");
-			ImGui::Separator();
-			ImGui::Text("OPCode"); ImGui::NextColumn();
-			ImGui::Text("VMAccess"); ImGui::NextColumn();
-			ImGui::Text("Data Type"); ImGui::NextColumn();
-			ImGui::Text("Data"); ImGui::NextColumn();
-			ImGui::Text("Line Number"); ImGui::NextColumn();
-			ImGui::Separator();
-			ImGui::Columns(1);
-
-			ImGui::BeginChild("codeinstructions");
-
-			ImGui::Columns(5, "codecolumns");
-
-			for (int i = 0; i < 1000; i++)
-			{
-				ImGui::Text(code[i].getOPCodeName()); ImGui::NextColumn();
-				ImGui::Text(code[i].getAccess()); ImGui::NextColumn();
-				ImGui::Text(code[i].getDataTypeName()); ImGui::NextColumn();
-				ImGui::Text(code[i].getDataToString().c_str()); ImGui::NextColumn();
-				ImGui::Text(std::to_string(code[i].line).c_str()); ImGui::NextColumn();
-			}
-
-			ImGui::Columns(1);
-
-			ImGui::EndChild();
-
-			ImGui::EndTabItem();
-		}
-
-		if (ImGui::BeginTabItem("Scripts"))
-		{
-			// left
-			static int selected = 0;
-			ImGui::BeginChild("left pane", ImVec2(240, 0), true);
-
-			auto scripts = _lhvm->GetScripts();
-			for (int i = 0; i < scripts.size(); i++)
-			{
-				if (ImGui::Selectable(scripts[i].GetName().c_str(), selected == i))
-					selected = i;
-			}
-
-			ImGui::EndChild();
-			ImGui::SameLine();
-
-			// right
-			ImGui::BeginChild("item view"); // Leave room for 1 line below us
-			ImGui::Text("Script ID: %d", selected);
-			ImGui::Text("Script Name: %s", scripts[selected].GetName().c_str());
-			ImGui::Text("File Name: %s", scripts[selected].GetFileName().c_str());
-
-			ImGui::Text("Variables");
-			ImGui::BeginChild("script vars");
-			auto script_vars = scripts[selected].GetVariables();
-			for (int i = 0; i < script_vars.size(); i++)
-				ImGui::Text(script_vars[i].c_str());
-
-			ImGui::EndChild();
-
-			ImGui::EndChild();
-
-			ImGui::EndTabItem();
-		}
-
-		if (ImGui::BeginTabItem("Variables"))
-		{
-			// left
-			static int selected = 0;
-			ImGui::BeginChild("left pane", ImVec2(240, 0), true);
-
-			auto variables = _lhvm->GetVariables();
-			for (int i = 0; i < variables.size(); i++)
-			{
-				if (ImGui::Selectable(variables[i].c_str(), selected == i))
-					selected = i;
-			}
-
-			ImGui::EndChild();
-			ImGui::SameLine();
-
-			// right
-			ImGui::BeginChild("item view"); // Leave room for 1 line below us
-			ImGui::Text("Variable ID: %d", selected);
-			ImGui::Text("Variable Name: %s", variables[selected].c_str());
-			ImGui::EndChild();
-
-			ImGui::EndTabItem();
-		}
-
-		if (ImGui::BeginTabItem("Data"))
-		{
-			static MemoryEditor lhvm_data_editor;
-			lhvm_data_editor.DrawContents((void*)_lhvm->GetData().data(), _lhvm->GetData().size(), 0);
-			//lhvm_data_editor.DrawContents()
-
-			ImGui::EndTabItem();
-		}
-
-
-		ImGui::EndTabBar();
-	}
-
-	ImGui::End();
 }
 
 void Game::LoadMap(std::string name)

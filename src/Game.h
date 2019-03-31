@@ -30,6 +30,8 @@
 
 #include <glm/glm.hpp>
 
+#include <LHVM/LHVM.hpp>
+
 namespace OpenBlack
 {
 	class Camera;
@@ -40,7 +42,6 @@ namespace OpenBlack
 	class SkinnedModel;
 	class Sky;
 	class Water;
-	class LHVM;
 
 	namespace Graphics {
 	class ShaderProgram;
@@ -87,7 +88,7 @@ namespace OpenBlack
 		std::unique_ptr<Sky> _sky;
 		std::unique_ptr<Water> _water;
 		std::unique_ptr<LHScriptX::Script> _scriptx;
-		std::unique_ptr<LHVM> _lhvm;
+		std::unique_ptr<LHVM::LHVM> _lhvm;
 
 		bool _wireframe;
 		float _timeOfDay;

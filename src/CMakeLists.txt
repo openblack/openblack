@@ -28,6 +28,7 @@ file(GLOB OPENBLACK_SHADERS
 )
 
 include_directories(BEFORE "${OS_SRC_DIR}")
+include_directories("${SCRIPTLIBRARY_INCLUDE_DIR}")
 
 if (WIN32)
     # Suppress WinMain(), provided by SDL
@@ -54,7 +55,7 @@ set_target_properties(OpenBlack PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINA
 set_target_properties(OpenBlack PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set_target_properties(OpenBlack PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-target_link_libraries(OpenBlack ${SDL2_LIBRARY} ${OPENGL_LIBRARIES} ${GLEW_LIBRARY})
+target_link_libraries(OpenBlack ScriptLibrary ${SDL2_LIBRARY} ${OPENGL_LIBRARIES} ${GLEW_LIBRARY})
 
 if (WIN32)
 	if (USE_DEBUG_CONSOLE)
