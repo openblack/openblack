@@ -62,6 +62,8 @@
 
 #include "GitSHA1.h"
 
+#include <Graphics/DebugDraw.h>
+
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
 using namespace OpenBlack::LHScriptX;
@@ -108,14 +110,18 @@ Game::Game(int argc, char **argv)
 	ImGui_ImplSDL2_InitForOpenGL(_window->GetHandle(), _window->GetGLContext());
 	ImGui_ImplOpenGL3_Init("#version 130");
 
+	_shaderManager->LoadShader("DebugLine", "shaders/line.vert", "shaders/line.frag");
 	_shaderManager->LoadShader("Terrain", "shaders/terrain.vert", "shaders/terrain.frag");
 	_shaderManager->LoadShader("SkinnedMesh", "shaders/skin.vert", "shaders/skin.frag");
+
+	DebugDraw::Init();
 
 	sInstance = this;
 }
 
 Game::~Game()
 {
+	DebugDraw::Shutdown();
     SDL_Quit(); // todo: move to GameWindow
 }
 

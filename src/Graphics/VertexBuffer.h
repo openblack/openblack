@@ -35,7 +35,7 @@ namespace OpenBlack
 			VertexBuffer(const VertexBuffer &other) = delete;
 			VertexBuffer(VertexBuffer&&) = default;
 
-			VertexBuffer(const void* vertices, size_t vertexCount, size_t strideBytes);
+			VertexBuffer(const void* vertices, size_t vertexCount, size_t strideBytes, GLuint hint = GL_STATIC_DRAW);
 
 			~VertexBuffer();
 

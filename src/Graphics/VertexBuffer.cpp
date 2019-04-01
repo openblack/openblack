@@ -24,12 +24,12 @@
 
 using namespace OpenBlack::Graphics;
 
-VertexBuffer::VertexBuffer(const void* vertices, size_t vertexCount, size_t strideBytes)
+VertexBuffer::VertexBuffer(const void* vertices, size_t vertexCount, size_t strideBytes, GLuint hint)
 	: _vertexCount(vertexCount),
 	_strideBytes(strideBytes),
-	_hint(GL_STATIC_DRAW)
+	_hint(hint)
 {
-	assert(vertices != nullptr);
+	// assert(vertices != nullptr);
 	assert(vertexCount > 0);
 	assert(strideBytes > 0);
 
