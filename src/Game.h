@@ -45,6 +45,7 @@ namespace OpenBlack
 
 	namespace Graphics {
 	class ShaderProgram;
+	class ShaderManager;
 	}
 
 	namespace LHScriptX {
@@ -62,13 +63,14 @@ namespace OpenBlack
 
 		void Run();
 
-		void LoadMap(std::string name);
+		void LoadMap(std::string &name);
 
 		std::string GetGamePath();
 
 		GameWindow& GetWindow() { return *_window;  }
 		Camera& GetCamera() { return *_camera; }
 		MeshPack& GetMeshPack() { return *_meshPack; }
+		Graphics::ShaderManager& GetShaderManager() { return *_shaderManager; }
 		
 		static Game* instance() {
 			return sInstance;
@@ -76,14 +78,15 @@ namespace OpenBlack
 	private:
 		static Game* sInstance;
 
+		std::unique_ptr<Graphics::ShaderManager> _shaderManager;
+
 		std::unique_ptr<GameWindow> _window;
 		std::unique_ptr<Camera> _camera;
 
 		std::unique_ptr<LandIsland> _landIsland;
 		std::unique_ptr<MeshPack> _meshPack;
-		std::unique_ptr<Video::VideoPlayer> _videoPlayer;
+		//std::unique_ptr<Video::VideoPlayer> _videoPlayer;
 
-		std::unique_ptr<Graphics::ShaderProgram> _worldObjectShader;
 		std::unique_ptr<SkinnedModel> _testModel;
 		std::unique_ptr<Sky> _sky;
 		std::unique_ptr<Water> _water;
@@ -101,7 +104,6 @@ namespace OpenBlack
 		bool _running;
 
 		void guiLoop();
-		void drawLHVM();
 	};
 }
 

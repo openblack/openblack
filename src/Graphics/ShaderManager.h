@@ -22,17 +22,25 @@
 #ifndef OPENBLACK_GRAPHICS_SHADERMANAGER_H
 #define OPENBLACK_GRAPHICS_SHADERMANAGER_H
 
-#include <Graphics/OpenGL.h>
 #include <Graphics/ShaderProgram.h>
-
+#include <string>
 #include <map>
 
 namespace OpenBlack {
 namespace Graphics {
 
 class ShaderManager {
+public:
+	ShaderManager() = default;
+	~ShaderManager();
+
+	ShaderProgram* LoadShader(const std::string &name, const std::string &vertexShaderFile, const std::string &fragmentShaderFile);
+	ShaderProgram* GetShader(const std::string &name);
+
 private:
-	std::map<std::string, ShaderProgram*> _shaderPrograms;
+	typedef std::map<std::string, ShaderProgram*> ShaderMap;
+
+	ShaderMap _shaderPrograms;
 };
 
 }

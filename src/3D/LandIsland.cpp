@@ -38,7 +38,7 @@ LandIsland::~LandIsland()
 {
 }
 
-void LandIsland::LoadFromDisk(std::string fileName)
+void LandIsland::LoadFromDisk(std::string &fileName)
 {
     if (!OSFile::Exists(fileName.c_str()))
         throw std::runtime_error("Land file does not exist.");

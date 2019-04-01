@@ -187,7 +187,6 @@ void LHVMViewer::DrawScriptsTab(OpenBlack::LHVM::LHVM *lhvm)
 
 	ImGui::ListBoxFooter();
 
-
 	ImGui::SameLine();
 
 	auto script = scripts[SelectedScriptID - 1];

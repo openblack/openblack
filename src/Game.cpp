@@ -35,6 +35,7 @@
 #include <Common/OSFile.h>
 
 #include <Graphics/ShaderProgram.h>
+#include <Graphics/ShaderManager.h>
 #include <Graphics/Texture2D.h>
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/VertexBuffer.h>
@@ -44,10 +45,8 @@
 #include <3D/SkinnedModel.h>
 #include <3D/Water.h>
 
-#include <Video/VideoPlayer.h>
+//#include <Video/VideoPlayer.h>
 
-//#include <Script/LHScriptX.h>
-//#include <Script/LHVM.h>
 #include <LHScriptX/Script.h>
 #include <LHScriptX/Command.h>
 #include <LHScriptX/Impl_LandCommands.h>
@@ -80,7 +79,7 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 }
 
 Game::Game(int argc, char **argv)
-	: _running(true), _wireframe(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f)
+	: _running(true), _wireframe(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f), _shaderManager(std::make_unique<ShaderManager>())
 {
 	int windowWidth = 1280, windowHeight = 1024;
 	DisplayMode displayMode = DisplayMode::Windowed;
@@ -96,16 +95,6 @@ Game::Game(int argc, char **argv)
 	glDebugMessageCallback(MessageCallback, 0);
 	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, 0, GL_FALSE);
 
-	sInstance = this;
-}
-
-Game::~Game()
-{
-    SDL_Quit(); // todo: move to GameWindow
-}
-
-void Game::Run()
-{
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
@@ -119,6 +108,19 @@ void Game::Run()
 	ImGui_ImplSDL2_InitForOpenGL(_window->GetHandle(), _window->GetGLContext());
 	ImGui_ImplOpenGL3_Init("#version 130");
 
+	_shaderManager->LoadShader("Terrain", "shaders/terrain.vert", "shaders/terrain.frag");
+	_shaderManager->LoadShader("SkinnedMesh", "shaders/skin.vert", "shaders/skin.frag");
+
+	sInstance = this;
+}
+
+Game::~Game()
+{
+    SDL_Quit(); // todo: move to GameWindow
+}
+
+void Game::Run()
+{
 	// create our camera
 	_camera = std::make_unique<Camera>();
 	_camera->SetProjectionMatrixPerspective(60.0f, _window->GetAspectRatio(), 0.1f, 65536.0f);
@@ -129,9 +131,8 @@ void Game::Run()
 	_modelRotation = glm::vec3(180.0f, 111.0f, 0.0f);
 	_modelScale = glm::vec3(0.5f);
 
-	_videoPlayer = std::make_unique<Video::VideoPlayer>(GetGamePath() + "/Data/logo.bik");
+	//_videoPlayer = std::make_unique<Video::VideoPlayer>(GetGamePath() + "/Data/logo.bik");
 
-	_worldObjectShader = std::make_unique<ShaderProgram>("shaders/skin.vert", "shaders/skin.frag");
 	_testModel = std::make_unique<SkinnedModel>();
 	_testModel->LoadFromFile(GetGamePath() + "/Data/CreatureMesh/C_Tortoise_Base.l3d");
 
@@ -139,14 +140,9 @@ void Game::Run()
 	_water = std::make_unique<Water>();
 
 	LoadMap(GetGamePath() + "/Data/Landscape/Land1.lnd");
-	//_landIsland->DumpMaps();
 
-	_lhvm = std::make_unique<LHVM::LHVM>();
-	_lhvm->LoadBinary(GetGamePath() + "/Scripts/Quests/challenge.chl");
-
-	printf("LHVM Version: %d\n", _lhvm->GetVersion());
-
-	ShaderProgram* terrainShader = new ShaderProgram("shaders/terrain.vert", "shaders/terrain.frag");
+	/*_lhvm = std::make_unique<LHVM::LHVM>();
+	_lhvm->LoadBinary(GetGamePath() + "/Scripts/Quests/challenge.chl");*/
 
 	// measure our delta time
 	uint64_t now = SDL_GetPerformanceCounter();
@@ -182,6 +178,7 @@ void Game::Run()
 
 		this->guiLoop();
 
+		ImGuiIO& io = ImGui::GetIO();
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 		glClearColor(39.0f / 255.0f, 70.0f / 255.0f, 89.0f / 255.0f, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -196,6 +193,7 @@ void Game::Run()
 		if (_wireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+		ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
 		terrainShader->Bind();
 		terrainShader->SetUniformValue("viewProj", _camera->GetViewProjectionMatrix());
 		terrainShader->SetUniformValue("timeOfDay", _timeOfDay);
@@ -220,11 +218,11 @@ void Game::Run()
 
 		modelMatrix = glm::scale(modelMatrix, _modelScale);
 
-		_worldObjectShader->Bind();
-		_worldObjectShader->SetUniformValue("u_viewProjection", _camera->GetViewProjectionMatrix());
-		_worldObjectShader->SetUniformValue("u_modelTransform", modelMatrix);
-
-		_testModel->Draw(_worldObjectShader.get());
+		ShaderProgram* objectShader = _shaderManager->GetShader("SkinnedMesh");
+		objectShader->Bind();
+		objectShader->SetUniformValue("u_viewProjection", _camera->GetViewProjectionMatrix());
+		objectShader->SetUniformValue("u_modelTransform", modelMatrix);
+		_testModel->Draw(objectShader);
 
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
@@ -233,8 +231,6 @@ void Game::Run()
 
 		_window->SwapWindow();
 	}
-
-	delete terrainShader;
 }
 
 void Game::guiLoop()
@@ -269,9 +265,7 @@ void Game::guiLoop()
 		ImGui::EndMainMenuBar();
 	}
 
-	//ImGui::ShowDemoWindow();
-
-	//m_MeshViewer->GUI();
+	// ImGui::ShowDemoWindow();
 
 	int width, height;
 	_window->GetSize(width, height);
@@ -298,8 +292,8 @@ void Game::guiLoop()
 
 	ImGui::End();
 
-	//drawLHVM();
-	LHVMViewer::Draw(_lhvm.get());
+	if (_lhvm != nullptr)
+		LHVMViewer::Draw(_lhvm.get());
 
 	ImGui::Begin("Land Island");
 
@@ -327,41 +321,13 @@ void Game::guiLoop()
 
 	ImGui::SliderFloat("Day", &_timeOfDay, 0.0f, 1.0f, "%.3f");
 	ImGui::SliderFloat("Bump", &_bumpmapStrength, 0.0f, 1.0f, "%.3f");
-	
-	/*auto noisemap = _landIsland->GetNoiseMap();
-	auto bumpmap = _landIsland->GetBumpMap();
-	ImGui::Text("Noisemap");
-	ImGui::Image((void*)(intptr_t)noisemap->GetHandle(), ImVec2(noisemap->GetWidth() / 2, noisemap->GetHeight() / 2));
-	ImGui::Text("Bumpmap");
-	ImGui::Image((void*)(intptr_t)bumpmap->GetHandle(), ImVec2(bumpmap->GetWidth() / 2, bumpmap->GetHeight() / 2));*/
+
 	ImGui::End();
 
 	ImGui::Render();
 }
 
-/*
-static auto vector_getter = [](void* vec, int idx, const char** out_text)
-{
-	auto& vector = *static_cast<std::vector<std::string>*>(vec);
-	if (idx < 0 || idx >= static_cast<int>(vector.size())) { return false; }
-	*out_text = vector.at(idx).c_str();
-	return true;
-};
-
-bool ListBox(const char* label, int* currIndex, std::vector<std::string>& values)
-{
-	if (values.empty()) { return false; }
-	return ListBox(label, currIndex, vector_getter,
-		static_cast<void*>(&values), values.size());
-}
-*/
-
-void Game::drawLHVM()
-{
-
-}
-
-void Game::LoadMap(std::string name)
+void Game::LoadMap(std::string &name)
 {
 	if (_landIsland)
 		_landIsland.reset();
