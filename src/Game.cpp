@@ -147,8 +147,8 @@ void Game::Run()
 
 	LoadMap(GetGamePath() + "/Data/Landscape/Land1.lnd");
 
-	/*_lhvm = std::make_unique<LHVM::LHVM>();
-	_lhvm->LoadBinary(GetGamePath() + "/Scripts/Quests/challenge.chl");*/
+	// _lhvm = std::make_unique<LHVM::LHVM>();
+	// _lhvm->LoadBinary(GetGamePath() + "/Scripts/Quests/challenge.chl");
 
 	// measure our delta time
 	uint64_t now = SDL_GetPerformanceCounter();
@@ -173,6 +173,34 @@ void Game::Run()
 				_running = false;
 			if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_f)
 				_window->SetFullscreen(true);
+			if (e.type == SDL_MOUSEMOTION)
+			{
+				SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y);
+				int wWidth, wHeight;
+				_window->GetSize(wWidth, wHeight);
+
+				float mouseX = _mousePosition.x / (wWidth * 0.5f) - 1.0f;
+				float mouseY = _mousePosition.y / (wHeight * 0.5f) - 1.0f;
+
+				glm::mat4 inverseViewProj = glm::inverse(_camera->GetViewProjectionMatrix());
+				glm::vec4 screenPos = glm::vec4(mouseX, -mouseY, 1.0f, 1.0f);
+				glm::vec4 worldPos = inverseViewProj * screenPos;
+
+				glm::vec3 direction = glm::normalize(glm::vec3(worldPos));
+
+				/*
+				vec4f r = projection_to_view_matrix * vec4f(screen_x, screen_y, 0, 1);
+				vec3f rdir = transpose(world_to_view_rotation_matrix) * vec3f(r.x, r.y, r.z);
+				*/
+
+				DebugDraw::Line(
+					_camera->GetPosition() + _camera->GetForward() * 1.0f,
+					_camera->GetPosition() + direction * 500.0f,
+					glm::vec3(0.0f, 1.0f, 0.0f)
+				);
+
+				_modelPosition = _camera->GetPosition() + direction * 100.0f;
+			}
 
 			_camera->ProcessSDLEvent(&e);
 
@@ -230,6 +258,11 @@ void Game::Run()
 		objectShader->SetUniformValue("u_modelTransform", modelMatrix);
 		_testModel->Draw(objectShader);
 
+		ShaderProgram* debugShader = _shaderManager->GetShader("DebugLine");
+		debugShader->Bind();
+		debugShader->SetUniformValue("u_viewProjection", _camera->GetViewProjectionMatrix());
+		DebugDraw::DrawDebugLines();
+
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
 
@@ -264,6 +297,8 @@ void Game::guiLoop()
 			if (ImGui::MenuItem("Dump Land Textures")) { _landIsland->DumpTextures(); }
 			ImGui::EndMenu();
 		}
+
+		ImGui::Text("%d, %d", _mousePosition.x, _mousePosition.y);
 
 		ImGui::SameLine(ImGui::GetWindowWidth() - 154.0f);
 		ImGui::Text("%.2f FPS (%.2f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);

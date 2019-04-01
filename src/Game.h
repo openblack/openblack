@@ -97,6 +97,8 @@ namespace OpenBlack
 		float _timeOfDay;
 		float _bumpmapStrength;
 
+		glm::ivec2 _mousePosition;
+
 		glm::vec3 _modelPosition;
 		glm::vec3 _modelRotation;
 		glm::vec3 _modelScale;
