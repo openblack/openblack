@@ -114,6 +114,43 @@ glm::vec3 Camera::GetUp() const
     return glm::normalize(glm::cross(GetRight(), GetForward()));
 }
 
+void Camera::DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::ivec2 screenSize, glm::vec3 & out_worldOrigin, glm::vec3 & out_worldDirection)
+{
+	const float normalizedX = (float)screenPosition.x / (float)screenSize.x;
+	const float normalizedY = (float)screenPosition.y / (float)screenSize.y;
+
+	const float screenSpaceX = (normalizedX - 0.5f) * 2.0f;
+	const float screenSpaceY = ((1.0f - normalizedY) - 0.5f) * 2.0f;
+
+	// The start of the ray trace is defined to be at mousex,mousey,1 in projection space (z=0 is near, z=1 is far - this gives us better precision)
+	// To get the direction of the ray trace we need to use any z between the near and the far plane, so let's use (mousex, mousey, 0.5)
+	const glm::vec4 rayStartProjectionSpace = glm::vec4(screenSpaceX, screenSpaceY, 0.0f, 1.0f);
+	const glm::vec4 rayEndProjectionSpace = glm::vec4(screenSpaceX, screenSpaceY, 0.5f, 1.0f);
+
+	// Calculate our inverse view projection matrix
+	glm::mat4 inverseViewProj = glm::inverse(GetViewProjectionMatrix());
+
+	// Get our homogeneous coordinates for our start and end ray positions
+	const glm::vec4 hgRayStartWorldSpace = inverseViewProj * rayStartProjectionSpace;
+	const glm::vec4 hgRayEndWorldSpace = inverseViewProj * rayEndProjectionSpace;
+
+	glm::vec3 rayStartWorldSpace(hgRayStartWorldSpace.x, hgRayStartWorldSpace.y, hgRayStartWorldSpace.z);
+	glm::vec3 rayEndWorldSpace(hgRayEndWorldSpace.x, hgRayEndWorldSpace.y, hgRayEndWorldSpace.z);
+
+	// divide vectors by W to undo any projection and get the 3-space coord
+	if (hgRayStartWorldSpace.w != 0.0f)
+		rayStartWorldSpace /= hgRayStartWorldSpace.w;
+
+	if (hgRayEndWorldSpace.w != 0.0f)
+		rayEndWorldSpace /= hgRayEndWorldSpace.w;
+
+	const glm::vec3 rayDirWorldSpace = glm::normalize(rayEndWorldSpace - rayStartWorldSpace);
+
+	// finally, store the results in the outputs
+	out_worldOrigin = rayStartWorldSpace;
+	out_worldDirection = rayDirWorldSpace;
+}
+
 void Camera::ProcessSDLEvent(SDL_Event* e)
 {
 	if (e->type == SDL_KEYDOWN)

@@ -57,6 +57,8 @@ public:
 	glm::vec3 GetRight() const;
 	glm::vec3 GetUp() const;
 
+	void DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::ivec2 screenSize, glm::vec3& out_worldOrigin, glm::vec3& out_worldDirection);
+
 	void Update(double dt);
 	void ProcessSDLEvent(SDL_Event* e);
 	void HandleMouseMoveEvent(int x, int y);
