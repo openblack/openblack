@@ -28,6 +28,8 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/intersect.hpp>
 
 #include <3D/Camera.h>
 #include <3D/LandIsland.h>
@@ -176,36 +178,32 @@ void Game::Run()
 			if (e.type == SDL_MOUSEMOTION)
 			{
 				SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y);
-				int wWidth, wHeight;
-				_window->GetSize(wWidth, wHeight);
+				glm::ivec2 screenSize;
+				_window->GetSize(screenSize.x, screenSize.y);
 
-				float mouseX = _mousePosition.x / (wWidth * 0.5f) - 1.0f;
-				float mouseY = _mousePosition.y / (wHeight * 0.5f) - 1.0f;
+				glm::vec3 rayOrigin, rayDirection;
+				_camera->DeprojectScreenToWorld(_mousePosition, screenSize, rayOrigin, rayDirection);
 
-				glm::mat4 inverseViewProj = glm::inverse(_camera->GetViewProjectionMatrix());
-				glm::vec4 screenPos = glm::vec4(mouseX, -mouseY, 1.0f, 1.0f);
-				glm::vec4 worldPos = inverseViewProj * screenPos;
 
-				glm::vec3 direction = glm::normalize(glm::vec3(worldPos));
-
-				/*
-				vec4f r = projection_to_view_matrix * vec4f(screen_x, screen_y, 0, 1);
-				vec3f rdir = transpose(world_to_view_rotation_matrix) * vec3f(r.x, r.y, r.z);
-				*/
-
-				DebugDraw::Line(
-					_camera->GetPosition() + _camera->GetForward() * 1.0f,
-					_camera->GetPosition() + direction * 500.0f,
-					glm::vec3(0.0f, 1.0f, 0.0f)
+				float intersectDistance = 0.0f;
+				bool intersects = glm::intersectRayPlane(
+					rayOrigin,
+					rayDirection,
+					glm::vec3(0.0f, 0.0f, 0.0f), // plane origin
+					glm::vec3(0.0f, 1.0f, 0.0f), // plane normal
+					intersectDistance
 				);
 
-				_modelPosition = _camera->GetPosition() + direction * 100.0f;
+				if (intersects)
+					_intersection = rayOrigin + rayDirection * intersectDistance;
 			}
 
 			_camera->ProcessSDLEvent(&e);
 
 			ImGui_ImplSDL2_ProcessEvent(&e);
 		}
+
+		DebugDraw::Cross(_intersection, 50.0f);
 
 		_camera->Update(deltaTime);
 		_modelRotation.y = fmod(_modelRotation.y + deltaTime * .1f, 360.f);
@@ -258,13 +256,13 @@ void Game::Run()
 		objectShader->SetUniformValue("u_modelTransform", modelMatrix);
 		_testModel->Draw(objectShader);
 
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_BLEND);
+
 		ShaderProgram* debugShader = _shaderManager->GetShader("DebugLine");
 		debugShader->Bind();
 		debugShader->SetUniformValue("u_viewProjection", _camera->GetViewProjectionMatrix());
 		DebugDraw::DrawDebugLines();
-
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_BLEND);
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

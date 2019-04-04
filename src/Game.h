@@ -98,6 +98,7 @@ namespace OpenBlack
 		float _bumpmapStrength;
 
 		glm::ivec2 _mousePosition;
+		glm::vec3 _intersection;
 
 		glm::vec3 _modelPosition;
 		glm::vec3 _modelRotation;
