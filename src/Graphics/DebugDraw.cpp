@@ -62,6 +62,27 @@ void DebugDraw::Line(glm::vec3 from, glm::vec3 to, glm::vec3 color)
 	v1.col = color;
 }
 
+void DebugDraw::Cross(glm::vec3 center, float size)
+{
+	// red line: X - length/2 to X + length / 2
+	Line( glm::vec3(center.x - size * 0.5f, center.y, center.z),
+		  glm::vec3(center.x + size * 0.5f, center.y, center.z),
+	      glm::vec3(1.0f, 0.0f, 0.0f)
+	);
+
+	// green line: Y - length/2 to Y + length / 2
+	Line(glm::vec3(center.x, center.y - size * 0.5f, center.z),
+		glm::vec3(center.x, center.y + size * 0.5f, center.z),
+		glm::vec3(0.0f, 1.0f, 0.0f)
+	);
+
+	// blue line: Z - length/2 to Z + length / 2
+	Line(glm::vec3(center.x, center.y, center.z - size * 0.5f),
+		glm::vec3(center.x, center.y, center.z + size * 0.5f),
+		glm::vec3(0.0f, 0.0f, 1.0f)
+	);
+}
+
 void DebugDraw::DrawDebugLines()
 {
 	if (vertexCount == 0)
