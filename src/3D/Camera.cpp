@@ -95,13 +95,6 @@ glm::vec3 Camera::GetForward() const
 		(glm::vec3(0.f, -1.0f, 0.0f) * sin(glm::radians(_rotation.y))) +
 		(glm::vec3(1.f, 0.0f, 0.0f) * sin(glm::radians(_rotation.x)));
 	return glm::normalize(forward);
-
-    //glm::vec3 front;
-    //front.x = cos(glm::radians(_rotation.x)) * cos(glm::radians(_rotation.y));
-    //front.y = sin(glm::radians(_rotation.y));
-    //front.z = sin(glm::radians(_rotation.x)) * cos(glm::radians(_rotation.y));
-	//
-    //return glm::normalize(front);
 }
 
 glm::vec3 Camera::GetRight() const

@@ -259,7 +259,9 @@ void SkinnedModel::Draw(ShaderProgram* program) {
 
 	for (int i = 0; i < _submeshes.size(); i++)
 	{
-		_textures[_submeshSkinMap[i]]->Bind(0);
+		if (_textures[_submeshSkinMap[i]] != nullptr)
+			_textures[_submeshSkinMap[i]]->Bind(0);
+
 		_submeshes[i]->Draw();
 	}
 }
