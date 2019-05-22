@@ -19,144 +19,211 @@
  */
 
 #include <LHScriptX/Lexer.h>
+#include <cctype>
 
 using namespace OpenBlack::LHScriptX;
 
-Lexer::Lexer(const std::string &input) : _source(input), _currentLine(1) {
-	_current = _source.begin();
-	_end = _source.end();
+Lexer::Lexer(const std::string &source) : source_(source) {
+	current_ = source_.begin();
+	end_ = source_.end();
 };
-
-void Lexer::advance()
-{
-	// don't advance if we're at EOF
-	if (_current == _end)
-		return;
-
-	// if it's a new line, increment the line conter and reset the current character
-	if (*_current == '\n')
-		_currentLine++;
-
-	// advance our source iterator
-	_current++;
-}
-
-inline void Lexer::skip_whitespace()
-{
-	while (_current != _end && is_whitespace(*_current))
-		advance();
-}
-
-inline void Lexer::skip_comments()
-{
-	// rem ... \n
-	// **** ... ****
-
-	// check if the end is within the next 3 characters
-	if (_current == _end || _current + 1 == _end || _current + 2 == _end)
-		return;
-
-	// unless we have rem, don't skip
-	if (!(imatch(*_current, 'r') && imatch(*(_current + 1), 'e') && imatch(*(_current + 2), 'm')))
-		return;
-
-	// consume all characters until newline or eof
-	while (_current != _end && *_current != '\n')
-		advance();
-
-	// consume the final newline character
-	advance();
-	_currentLine++;
-
-	if (_current != _end)
-	{
-		skip_whitespace();
-		skip_comments();
-	}
-}
 
 Token Lexer::GetToken()
 {
 	// skip all whitespace
-	skip_whitespace();
+	while (hasMore() && std::isspace(*current_))
+		current_++;
 
-	// skip all comments
-	skip_comments();
+	// todo: while_loop this shit
 
-	// if we're at the end of the file, return EoF token
-	if (_current == _end) return Token(EndOfFile, "", _currentLine);
+	if (current_ == end_)
+		return Token::MakeEOFToken();
 
-	if (is_letter(*_current))
-		return make_identifier();
-	if (is_digit(*_current) || *_current == '-')
-		return make_number_literal();
-	if (*_current == '"')
-		return make_string_literal();
-
-	switch (*_current)
+	unsigned char cc = *current_;
+	switch (cc)
 	{
-	case ',': return make_symbol(ListSeparator);
-	case '(': return make_symbol(OpenParanthesis);
-	case ')': return make_symbol(CloseParanethesis);
-	case '=': return make_symbol(Assignment);
+	case ' ': case '\t': case '\r':
+		current_++;
+
+		// skip over whitespace quickly
+		while (*current_ == ' ' || *current_ == '\t' || *current_ == '\r')
+			current_++;
+		break;
+	case '\n':
+		break; // ?
+
+	case '*':
+		break;
+
+		/* gather identifiers */
+	case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
+	case 'G': case 'H': case 'I': case 'J': case 'K': case 'L':
+	case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R':
+	case 'S': case 'T': case 'U': case 'V': case 'W': case 'X':
+	case 'Y': case 'Z':
+	case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
+	case 'g': case 'h': case 'i': case 'j': case 'k': case 'l':
+	case 'm': case 'n': case 'o': case 'p': case 'q': case 'r':
+	case 's': case 't': case 'u': case 'v': case 'w': case 'x':
+	case 'y': case 'z':
+	case '_':
+		return gatherIdentifer();
+
+	/* gather numbers */
+	case '0': case '1': case '2': case '3': case '4':
+	case '5': case '6': case '7': case '8': case '9':
+	case '-':
+		return gatherNumber();
+
+	/* gather strings */
+	case '"':
+		return gatherString();
+
+	case '=':
+		current_++;
+		return Token::MakeOperatorToken(Operator::Equal);
+	case ',':
+		current_++;
+		return Token::MakeOperatorToken(Operator::Comma);
+	case '(':
+		current_++;
+		return Token::MakeOperatorToken(Operator::LeftParentheses);
+	case ')':
+		current_++;
+		return Token::MakeOperatorToken(Operator::RightParentheses);
+	default:
+		// todo: ignore BOM
+
+		throw LexerException("unexpected character: " + std::string(1, *current_++));
+	}
+}
+
+Token Lexer::gatherIdentifer()
+{
+	auto id_start = current_;
+	while (hasMore())
+	{
+		unsigned char cc = *current_;
+
+		/* check for invalid characters */
+		if ((cc < 'A' || cc > 'Z')
+			&& (cc < 'a' || cc > 'z')
+			&& cc != '_'
+			&& (cc < '0' || cc > '9'))
+		{
+			if ((cc >= ' ' && cc < 0x7f)
+				|| cc == '\t'
+				|| cc == '\r'
+				|| cc == '\n')
+				break;
+
+			throw LexerException("invalid character " + std::string(1, cc) + "in identifer");
+		}
+
+		current_++;
 	}
 
-	Token unknown(Unknown, std::string(1, *_current), _currentLine);
-	advance();
-
-	return unknown;
+	return Token::MakeIdentifierToken(std::string(id_start, current_));
 }
 
-Token Lexer::make_identifier()
+Token Lexer::gatherNumber()
 {
-	std::string::iterator identifier_begin = _current;
+	bool is_float = false;
+	bool is_neg = false;
 
-	while (_current != _end && (is_letter(*_current) || is_digit(*_current) || *_current == '_'))
-		advance();
-
-	return Token(Identifier, std::string(identifier_begin, _current), _currentLine);
-}
-
-Token Lexer::make_number_literal()
-{
-	// Match the following formats:
-	// 123456
-	// 123.456
-
-	std::string::iterator number_begin = _current;
-	bool found_dot = false;
-
-	while (_current != _end && (is_digit(*_current) || *_current == '.' || *_current == '-'))
+	if (*current_ == '-')
 	{
-		if (*_current == '.')
-			found_dot = true;
-		advance();
+		current_++;
+		is_neg = true;
 	}
 
-	return Token(found_dot ? FloatLiteral : NumberLiteral, std::string(number_begin, _current), _currentLine);
+	auto number_start = current_;
+
+	// consume all digits and .
+	while (hasMore())
+	{
+		if (std::isdigit(*current_)) {
+			current_++;
+		}
+		else if (*current_ == '.') {
+			current_++;
+			is_float = true;
+		}
+		else {
+			break;
+		}
+	}
+
+	if (is_float) {
+		float value = std::stof(std::string(number_start, current_));
+		if (is_neg)
+			value = -value;
+		return Token::MakeFloatToken(value);
+	}
+
+	int value = std::stoi(std::string(number_start, current_));
+	if (is_neg)
+		value = -value;
+	return Token::MakeIntegerToken(value);
 }
 
-Token Lexer::make_string_literal()
+Token Lexer::gatherString()
 {
-	// consume opening "
-	advance();
+	auto string_start = ++current_;
 
-	auto string_begin = _current;
+	// todo: we should check for unterminated strings
+	while (hasMore() && *current_ != '"')
+		current_++;
 
-	// consume until closing "
-	while (_current != _end && *_current != '"')
-		advance();
-
-	auto string_finish = _current;
-
-	// consume closing "
-	advance();
-
-	return Token(StringLiteral, std::string(string_begin, string_finish), _currentLine);
+	return Token::MakeStringToken(std::string(string_start, current_++));
 }
 
-Token Lexer::make_symbol(TokenType type)
+void Token::Print(FILE* file) const
 {
-	advance();
-	return Token(type, "", _currentLine);
+	switch (this->type_)
+	{
+	case Type::Invalid:
+		fprintf(file, "invalid");
+		break;
+	case Type::EndOfFile:
+		fprintf(file, "EOF");
+		break;
+	case Type::Identifier:
+		fprintf(file, "identifier \"%s\"", this->u_.identifierValue->c_str());
+		break;
+	case Type::String:
+		fprintf(file, "quoted string \"%s\"", this->u_.stringValue->c_str());
+		break;
+	case Type::Integer:
+		fprintf(file, "integer %d", this->u_.integerValue);
+		break;
+	case Type::Float:
+		fprintf(file, "float %f", this->u_.floatValue);
+		break;
+	case Type::Operator:
+		fprintf(file, "operator ");
+		switch (this->u_.op)
+		{
+		case Operator::Invalid:
+			fprintf(file, "invalid");
+			break;
+		case Operator::Equal:
+			fprintf(file, "=");
+			break;
+		case Operator::Comma:
+			fprintf(file, ",");
+			break;
+		case Operator::LeftParentheses:
+			fprintf(file, "(");
+			break;
+		case Operator::RightParentheses:
+			fprintf(file, ")");
+			break;
+		default:
+			__assume(0);
+		}
+		break;
+	default:
+		__assume(0);
+	}
 }

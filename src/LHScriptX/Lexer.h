@@ -1,4 +1,4 @@
-/* OpenBlack - A reimplementation of Lionheads's Black & White engine
+/* OpenBlack - An implementation of Lionhead's Black & White engine.
  *
  * OpenBlack is the legal property of its developers, whose names
  * can be found in the AUTHORS.md file distributed with this source
@@ -19,67 +19,127 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_LHSCRIPTX_LEXER_H
-#define OPENBLACK_LHSCRIPTX_LEXER_H
 
+#include <string>
 
-#include <cctype>
-#include <list>
-#include <iostream>
+namespace OpenBlack::LHScriptX {
 
-#include <LHScriptX/Token.h>
+class LexerException : public std::exception {
+public:
+	LexerException(const std::string &msg) : std::exception(msg.c_str()) { }
+};
 
-namespace OpenBlack {
-namespace LHScriptX {
+enum class Operator
+{
+	Invalid,
+	Equal, // =
+	Comma, // ,
+	LeftParentheses, // (
+	RightParentheses, // )
+};
+
+class Token
+{
+public:
+	enum class Type
+	{
+		// Token is invalid.
+		Invalid,
+		// Token indicates end of input.
+		EndOfFile,
+		// Token is an identifer.
+		Identifier,
+		// Token is a string of characters.
+		String,
+		// Token is an integer.
+		Integer,
+		// Token is a floating point number.
+		Float,
+		// Token is an operator.
+		Operator,
+	};
+
+	Type GetType() const { return this->type_; }
+
+	static Token MakeInvalidToken() { return Token(Type::Invalid); }
+	static Token MakeEOFToken() { return Token(Type::EndOfFile); }
+	static Token MakeIdentifierToken(const std::string& value) {
+		Token tok(Type::Identifier);
+		tok.u_.identifierValue = new std::string(value);
+		return tok;
+	}
+	static Token MakeStringToken(const std::string& value) {
+		Token tok(Type::String);
+		tok.u_.stringValue = new std::string(value);
+		return tok;
+	}
+	static Token MakeIntegerToken(int value) {
+		Token tok(Type::Integer);
+		tok.u_.integerValue = value;
+		return tok;
+	}
+	static Token MakeFloatToken(float value) {
+		Token tok(Type::Float);
+		tok.u_.floatValue = value;
+		return tok;
+	}
+	static Token MakeOperatorToken(Operator op)
+	{
+		Token tok(Type::Operator);
+		tok.u_.op = op;
+		return tok;
+	}
+
+	bool IsInvalid() const { return this->type_ == Type::Invalid; }
+	bool IsEOF() const { return this->type_ == Type::EndOfFile; }
+	bool IsIdentifier() const { return this->type_ == Type::Identifier; }
+	bool IsString() const { return this->type_ == Type::String; }
+	bool IsOP(Operator op) const { return this->type_ == Type::Operator && this->u_.op == op; }
+
+	// todo: assert check the type for each of these?
+	const std::string& Identifier() const { return *this->u_.identifierValue; }
+	const std::string& StringValue() const { return *this->u_.stringValue; }
+	const int* IntegerValue() const { return &this->u_.integerValue; }
+	const float* FloatValue() const { return &this->u_.floatValue; }
+	Operator Op() const { return this->u_.op; }
+
+	// print the token for debugging
+	void Print(FILE* file) const;
+
+private:
+	Token(Type type) : type_(type) {}
+
+	Type type_;
+	union {
+		std::string* identifierValue;
+		std::string* stringValue;
+		int integerValue;
+		float floatValue;
+		Operator op;
+	} u_;
+};
 
 class Lexer {
 public:
-	Lexer(const std::string &input);
+	Lexer(const std::string &source);
 
 	Token GetToken();
 private:
-	void advance();
-
-	inline void skip_whitespace();
-	inline void skip_comments();
-
-	inline Token make_identifier();
-	inline Token make_string_literal();
-	inline Token make_number_literal();
-	inline Token make_symbol(TokenType type);
-
-	std::string _source;
-	std::string::iterator _current;
-	std::string::iterator _end;
-
-	int _currentLine;
-
-	inline bool is_letter(const char c)
-	{
-		return (('a' <= c) && (c <= 'z')) || (('A' <= c) && (c <= 'Z'));
+	const size_t remaining() const noexcept {
+		return static_cast<size_t>(end_ - current_);
 	}
 
-	inline bool is_digit(const char c)
-	{
-		return (c >= '0' && c <= '9');
+	const bool hasMore() const noexcept {
+		return current_ != end_;
 	}
 
-	inline bool is_whitespace(const char c)
-	{
-		return (' ' == c) || ('\n' == c) ||
-			('\r' == c) || ('\t' == c) ||
-			('\b' == c) || ('\v' == c) ||
-			('\f' == c);
-	}
+	Token gatherIdentifer();
+	Token gatherNumber();
+	Token gatherString();
 
-	inline bool imatch(const char c1, const char c2)
-	{
-		return std::tolower(c1) == std::tolower(c2);
-	}
-
+	std::string source_;
+	std::string::iterator current_;
+	std::string::iterator end_;
 };
 
 }
-}
-
-#endif
