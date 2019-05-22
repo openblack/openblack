@@ -50,6 +50,7 @@ set(OPENBLACK_ICON "../assets/resource/icon/openblack.rc")
 
 add_executable(OpenBlack ${OPENBLACK_SRCS} "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" ${OPENBLACK_SHADERS} ${OPENBLACK_ICON})
 set_target_properties(OpenBlack PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(OpenBlack PROPERTIES CXX_STANDARD 17)
 set_target_properties(OpenBlack PROPERTIES OUTPUT_NAME openblack)
 set_target_properties(OpenBlack PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set_target_properties(OpenBlack PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
