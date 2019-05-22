@@ -37,45 +37,20 @@ void Script::LoadFile(const std::string &file)
 	char* contents = new char[totalFileSize];
 	osfile.Read(contents, totalFileSize);
 
-	ScanLine(contents);
-
-	delete[] contents;
-}
-
-void Script::ScanLine(const std::string &line)
-{
-	//std::cout << "Scanning line: " << line << std::endl;
-
-	Lexer lexer(line);
+	Lexer lexer(contents);
 
 	Token token = lexer.GetToken();
 
-	while (token.type != EndOfFile)
+	while (!token.IsEOF())
 	{
-		if (token.GetType() == Identifier && _commands->Has(token.GetValue()))
-		{
-
-			std::cout << "identifer call: " << token.GetValue() << std::endl;
-		}
-		else if (token.GetType() == Identifier)
-		{
-			std::cout << "UNKNOWN IDENTIFIER call: " << token.GetValue() << std::endl;
-		}
-
-
-		if (token.GetType() == Unknown)
-			std::cout << token.GetType() << " \"" << token.GetValue() << "\" @ line " << token.GetLine() << std::endl;
+		token.Print(stdout);
+		printf("\n");
 
 		// get next token
 		token = lexer.GetToken();
 	};
 
-	/*auto tokens = tokenize(line);
-	std::cout << "Got " << tokens.size() << " tokens" << std::endl;
-
-	for (auto const& i : tokens) {
-		std::cout << i.Type << ": \"" << i.Value << "\"" << std::endl;
-	}*/
+	delete[] contents;
 }
 
 void Script::processCommand(const std::string& command, std::vector<std::string> params)
