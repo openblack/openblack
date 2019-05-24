@@ -36,22 +36,22 @@ namespace OpenBlack
 			IndexBuffer(const IndexBuffer &other) = delete;
 			IndexBuffer(IndexBuffer&&) = default;
 
-			IndexBuffer(const void* indices, size_t indicesCount, GLenum type);
+			IndexBuffer(const void* indices, std::size_t indicesCount, GLenum type);
 
 			~IndexBuffer();
 
-			size_t GetCount() const;
-			size_t GetSize() const;
+			std::size_t GetCount() const;
+			std::size_t GetSize() const;
 			GLenum GetType() const;
 			GLuint GetIBO() const;
 		private:
-			size_t _count;
+			std::size_t _count;
 			GLenum _type;
 
 			GLuint _ibo;
 			GLuint _hint;
 
-			static size_t GetTypeSize(GLenum type);
+			static std::size_t GetTypeSize(GLenum type);
 		};
 
 	}
