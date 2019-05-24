@@ -28,6 +28,8 @@
 #ifndef AVUTIL_RATIONAL_H
 #define AVUTIL_RATIONAL_H
 
+#include <stdint.h>
+
 /**
  * rational number numerator/denominator
  */
@@ -43,7 +45,7 @@ typedef struct AVRational{
  * @return 0 if a==b, 1 if a>b and -1 if a<b
  */
 static inline int av_cmp_q(AVRational a, AVRational b){
-    const int64_t tmp= a.num * (int64_t)b.den - b.num * (int64_t)a.den;
+    const int64_t tmp = a.num * (int64_t)b.den - b.num * (int64_t)a.den;
 
     if(tmp) return (int) ((tmp>>63)|1);
     else    return 0;
