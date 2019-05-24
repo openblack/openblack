@@ -220,10 +220,10 @@ void Token::Print(FILE* file) const
 			fprintf(file, ")");
 			break;
 		default:
-			__assume(0);
+			__builtin_unreachable();
 		}
 		break;
 	default:
-		__assume(0);
+		__builtin_unreachable();
 	}
 }
