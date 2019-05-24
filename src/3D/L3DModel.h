@@ -34,7 +34,7 @@ namespace OpenBlack
 		L3DModel();
 		~L3DModel();
 
-		void LoadFromFile(std::string& fileName);
+		void LoadFromFile(const std::string& fileName);
 		void LoadFromL3D(void* data, size_t size, bool pack);
 		void Draw();
 

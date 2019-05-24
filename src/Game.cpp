@@ -366,7 +366,7 @@ void Game::guiLoop()
 	ImGui::Render();
 }
 
-void Game::LoadMap(std::string &name)
+void Game::LoadMap(const std::string &name)
 {
 	if (_landIsland)
 		_landIsland.reset();
@@ -375,7 +375,7 @@ void Game::LoadMap(std::string &name)
 	_landIsland->LoadFromDisk(name);
 }
 
-std::string Game::GetGamePath()
+const std::string& Game::GetGamePath()
 {
 	static std::string sGamePath;
 

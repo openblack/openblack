@@ -63,9 +63,9 @@ namespace OpenBlack
 
 		void Run();
 
-		void LoadMap(std::string &name);
+		void LoadMap(const std::string &name);
 
-		std::string GetGamePath();
+		const std::string& GetGamePath();
 
 		GameWindow& GetWindow() { return *_window;  }
 		Camera& GetCamera() { return *_camera; }

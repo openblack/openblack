@@ -154,7 +154,7 @@ struct SkinnedModel_Vertex {
 	uint32_t bone;
 };
 
-void SkinnedModel::LoadFromFile(std::string &fileName)
+void SkinnedModel::LoadFromFile(const std::string &fileName)
 {
 	size_t meshSize;
 	char* mesh = OSFile::ReadAll((fileName).c_str(), &meshSize);

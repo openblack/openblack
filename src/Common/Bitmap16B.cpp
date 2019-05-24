@@ -56,7 +56,7 @@ const unsigned int Bitmap16B::Width() const { return _width; }
 const unsigned int Bitmap16B::Height() const { return _height; }
 const uint16_t* Bitmap16B::Data() const { return _data; }
 
-Bitmap16B* Bitmap16B::LoadFromFile(std::string& file)
+Bitmap16B* Bitmap16B::LoadFromFile(const std::string& file)
 {
 	size_t fileSize;
 	char* fileData = OSFile::ReadAll(file.c_str(), &fileSize);
