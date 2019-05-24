@@ -21,12 +21,17 @@
 #pragma once
 
 #include <string>
+#include <stdexcept>
+
+#ifdef _MSC_VER
+#define __builtin_unreachable() __assume(0)
+#endif
 
 namespace OpenBlack::LHScriptX {
 
-class LexerException : public std::exception {
+class LexerException : public std::runtime_error {
 public:
-	LexerException(const std::string &msg) : std::exception(msg.c_str()) { }
+	LexerException(const std::string &msg) : std::runtime_error(msg.c_str()) { }
 };
 
 enum class Operator

@@ -33,6 +33,7 @@
 
 #include <cassert>
 #include <cstdio>
+#include <stdexcept>
 
 using OpenBlack::OSFile;
 using OpenBlack::Graphics::Texture2D;

@@ -23,6 +23,8 @@
 #include <LHVM/OpcodeNames.hpp>
 
 #include <cstdio>
+#include <cstring>
+#include <stdexcept>
 
 namespace OpenBlack {
 namespace LHVM {
@@ -31,19 +33,19 @@ void LHVM::LoadBinary(const std::string &filename)
 {
 	std::FILE* file = std::fopen(filename.c_str(), "rb");
 	if (file == nullptr)
-		throw std::exception("no such file");
+		throw std::runtime_error("no such file");
 
 	char lhvm[4];
 	std::fread(&lhvm, 1, 4, file);
 
 	if (std::strncmp(lhvm, "LHVM", 4) != 0)
-		throw std::exception("invalid LHVM header");
+		throw std::runtime_error("invalid LHVM header");
 
 	std::fread(&_version, 1, 4, file);
 
 	/* only support bw1 at the moment */
 	if (_version != Version::BlackAndWhite)
-		throw std::exception("unsupported LHVM version");
+		throw std::runtime_error("unsupported LHVM version");
 
 	loadVariables(file, _variables);
 	loadCode(file);
