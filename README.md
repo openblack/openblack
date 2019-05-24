@@ -20,7 +20,16 @@ Starting with Visual Studio 2017, the project folder can simply be opened with V
 
 #### Linux
 
-Simply running `cmake && make` should suffice.
+I have tested this build personally on Ubuntu 19.04, if someone wants to elaborate
+on these instructions further, please feel free.
+
+Installing dependencies:
+
+```
+sudo apt install cmake libglew-dev libsdl2-dev libglm-dev
+```
+
+And then simply running `cmake && make` should suffice.
 
 ### Documentation
 Documentation on various different file formats used throughout Black and White can all be
