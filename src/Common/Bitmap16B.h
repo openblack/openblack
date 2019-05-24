@@ -44,7 +44,7 @@ namespace OpenBlack
 		uint16_t* _data;
 
 	public:
-		static Bitmap16B* LoadFromFile(std::string &file);
+		static Bitmap16B* LoadFromFile(const std::string &file);
 	};
 
 }

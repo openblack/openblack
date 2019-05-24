@@ -57,7 +57,7 @@ namespace OpenBlack
 		LandIsland();
 		~LandIsland();
 
-		void LoadFromDisk(std::string &filePath);
+		void LoadFromDisk(const std::string &filePath);
 
 		const uint8_t GetAltitudeAt(glm::ivec2) const;
 		const float GetHeightAt(glm::ivec2) const;

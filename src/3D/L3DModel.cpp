@@ -116,7 +116,7 @@ L3DModel::~L3DModel()
 	// free textures
 }
 
-void L3DModel::LoadFromFile(std::string &fileName)
+void L3DModel::LoadFromFile(const std::string &fileName)
 {
 	size_t meshSize;
 	char* mesh = OSFile::ReadAll((fileName).c_str(), &meshSize);
