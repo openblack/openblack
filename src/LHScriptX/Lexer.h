@@ -52,6 +52,8 @@ public:
 		Invalid,
 		// Token indicates end of input.
 		EndOfFile,
+		// Token indicates end of line.
+		EndOfLine,
 		// Token is an identifer.
 		Identifier,
 		// Token is a string of characters.
@@ -68,6 +70,7 @@ public:
 
 	static Token MakeInvalidToken() { return Token(Type::Invalid); }
 	static Token MakeEOFToken() { return Token(Type::EndOfFile); }
+	static Token MakeEOLToken() { return Token(Type::EndOfLine); }
 	static Token MakeIdentifierToken(const std::string& value) {
 		Token tok(Type::Identifier);
 		tok.u_.identifierValue = new std::string(value);
@@ -145,6 +148,8 @@ private:
 	std::string source_;
 	std::string::iterator current_;
 	std::string::iterator end_;
+
+	int currentLine_;
 };
 
 }

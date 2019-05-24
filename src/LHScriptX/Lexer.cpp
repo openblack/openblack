@@ -23,79 +23,94 @@
 
 using namespace OpenBlack::LHScriptX;
 
-Lexer::Lexer(const std::string &source) : source_(source) {
+Lexer::Lexer(const std::string &source) : source_(source), currentLine_(1) {
 	current_ = source_.begin();
 	end_ = source_.end();
 };
 
 Token Lexer::GetToken()
 {
-	// skip all whitespace
-	while (hasMore() && std::isspace(*current_))
-		current_++;
-
-	// todo: while_loop this shit
-
-	if (current_ == end_)
-		return Token::MakeEOFToken();
-
-	unsigned char cc = *current_;
-	switch (cc)
+	while (true)
 	{
-	case ' ': case '\t': case '\r':
-		current_++;
+		if (current_ == end_)
+			return Token::MakeEOFToken();
 
-		// skip over whitespace quickly
-		while (*current_ == ' ' || *current_ == '\t' || *current_ == '\r')
+		unsigned char cc = *current_;
+		switch (cc)
+		{
+		case ' ': case '\t': case '\r':
 			current_++;
-		break;
-	case '\n':
-		break; // ?
 
-	case '*':
-		break;
+			// skip over whitespace quickly
+			while (*current_ == ' ' || *current_ == '\t' || *current_ == '\r')
+				current_++;
+			break;
+		case '\n':
+			current_++;
+			currentLine_++;
+			return Token::MakeEOLToken();
+
+		// not sure if it's **** or just *, this can be drastically improved on though
+		case '*':
+			while (*current_ != '\n')
+				current_++;
+			break;
+
+		// handle potential rem/REM
+		case 'R': case 'r':
+			// todo: potential out of bounds here:
+			if ((current_[1] == 'e' || current_[1] == 'E') && (current_[2] == 'm' || current_[2] == 'M')) {
+				while (*current_ != '\n')
+					current_++;
+				break;
+			}
+			return gatherIdentifer();
 
 		/* gather identifiers */
-	case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
-	case 'G': case 'H': case 'I': case 'J': case 'K': case 'L':
-	case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R':
-	case 'S': case 'T': case 'U': case 'V': case 'W': case 'X':
-	case 'Y': case 'Z':
-	case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
-	case 'g': case 'h': case 'i': case 'j': case 'k': case 'l':
-	case 'm': case 'n': case 'o': case 'p': case 'q': case 'r':
-	case 's': case 't': case 'u': case 'v': case 'w': case 'x':
-	case 'y': case 'z':
-	case '_':
-		return gatherIdentifer();
+		case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
+		case 'G': case 'H': case 'I': case 'J': case 'K': case 'L':
+		case 'M': case 'N': case 'O': case 'P': case 'Q': /* case 'R': handled above for REM */
+		case 'S': case 'T': case 'U': case 'V': case 'W': case 'X':
+		case 'Y': case 'Z':
+		case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
+		case 'g': case 'h': case 'i': case 'j': case 'k': case 'l':
+		case 'm': case 'n': case 'o': case 'p': case 'q': /* case 'r': handled above for rem */
+		case 's': case 't': case 'u': case 'v': case 'w': case 'x':
+		case 'y': case 'z':
+		case '_':
+			return gatherIdentifer();
 
-	/* gather numbers */
-	case '0': case '1': case '2': case '3': case '4':
-	case '5': case '6': case '7': case '8': case '9':
-	case '-':
-		return gatherNumber();
+		/* gather numbers */
+		case '0': case '1': case '2': case '3': case '4':
+		case '5': case '6': case '7': case '8': case '9':
+		case '-':
+			return gatherNumber();
 
-	/* gather strings */
-	case '"':
-		return gatherString();
+		/* gather strings */
+		case '"':
+			return gatherString();
 
-	case '=':
-		current_++;
-		return Token::MakeOperatorToken(Operator::Equal);
-	case ',':
-		current_++;
-		return Token::MakeOperatorToken(Operator::Comma);
-	case '(':
-		current_++;
-		return Token::MakeOperatorToken(Operator::LeftParentheses);
-	case ')':
-		current_++;
-		return Token::MakeOperatorToken(Operator::RightParentheses);
-	default:
-		// todo: ignore BOM
+		case '=':
+			current_++;
+			return Token::MakeOperatorToken(Operator::Equal);
+		case ',':
+			current_++;
+			return Token::MakeOperatorToken(Operator::Comma);
+		case '(':
+			current_++;
+			return Token::MakeOperatorToken(Operator::LeftParentheses);
+		case ')':
+			current_++;
+			return Token::MakeOperatorToken(Operator::RightParentheses);
+		default:
+			// todo: ignore BOM
 
-		throw LexerException("unexpected character: " + std::string(1, *current_++));
+			current_++;
+			throw LexerException("unexpected character: " + std::string(1, cc));
+		}
 	}
+
+	__assume(0); // unreachable
 }
 
 Token Lexer::gatherIdentifer()
@@ -187,6 +202,9 @@ void Token::Print(FILE* file) const
 		break;
 	case Type::EndOfFile:
 		fprintf(file, "EOF");
+		break;
+	case Type::EndOfLine:
+		fprintf(file, "\n");
 		break;
 	case Type::Identifier:
 		fprintf(file, "identifier \"%s\"", this->u_.identifierValue->c_str());
