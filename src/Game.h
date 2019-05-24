@@ -26,7 +26,6 @@
 #include <vector>
 
 #include "GameWindow.h"
-#include <LHScriptX/Command.h>
 
 #include <glm/glm.hpp>
 

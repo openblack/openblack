@@ -50,8 +50,6 @@
 //#include <Video/VideoPlayer.h>
 
 #include <LHScriptX/Script.h>
-#include <LHScriptX/Command.h>
-#include <LHScriptX/Impl_LandCommands.h>
 #include <LHVMViewer.h>
 
 #define IMGUI_IMPL_OPENGL_LOADER_GLEW
@@ -148,6 +146,9 @@ void Game::Run()
 	_water = std::make_unique<Water>();
 
 	LoadMap(GetGamePath() + "/Data/Landscape/Land1.lnd");
+
+	Script script;
+	script.LoadFile(GetGamePath() + "/Scripts/Land1.txt");
 
 	// _lhvm = std::make_unique<LHVM::LHVM>();
 	// _lhvm->LoadBinary(GetGamePath() + "/Scripts/Quests/challenge.chl");
