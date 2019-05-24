@@ -43,11 +43,11 @@ IndexBuffer::~IndexBuffer() {
 		glDeleteBuffers(1, &_ibo);
 }
 
-size_t IndexBuffer::GetCount() const {
+std::size_t IndexBuffer::GetCount() const {
 	return _count;
 }
 
-size_t IndexBuffer::GetSize() const {
+std::size_t IndexBuffer::GetSize() const {
 	return _count * GetTypeSize(_type);
 }
 
@@ -59,7 +59,7 @@ GLuint IndexBuffer::GetIBO() const {
 	return _ibo;
 }
 
-uint32_t IndexBuffer::GetTypeSize(GLenum type) {
+std::size_t IndexBuffer::GetTypeSize(GLenum type) {
 	switch (type) {
 	case GL_UNSIGNED_BYTE:
 		return 1;
