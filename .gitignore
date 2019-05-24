@@ -8,6 +8,7 @@ makefile
 build*
 prebuilt
 GameData
+/bin
 
 ## windows build process
 .vs
