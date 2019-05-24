@@ -20,11 +20,8 @@
 
 #pragma once
 
-#include <LHScriptX/Command.h>
 #include <LHScriptX/Lexer.h>
-
-#include <memory>
-#include <list>
+#include <vector>
 
 namespace OpenBlack::LHScriptX {
 
@@ -33,17 +30,17 @@ public:
 	Script() : token_(Token::MakeInvalidToken()) {}
 
 	void LoadFile(const std::string& file);
-	void SetCommands(std::unique_ptr<ScriptCommands> &commands) { _commands = std::move(commands); }
-	ScriptCommands &GetCommands() const { return *_commands; }
+	//void SetCommands(std::unique_ptr<ScriptCommands> &commands) { _commands = std::move(commands); }
+	//ScriptCommands &GetCommands() const { return *_commands; }
 private:
-	std::unique_ptr<ScriptCommands> _commands;
-	void processCommand(const std::string& command, std::vector<std::string> parameters);
+	//std::unique_ptr<ScriptCommands> _commands;
+	//void processCommand(const std::string& command, std::vector<std::string> parameters);
 
 	const Token* peekToken();
 	const Token* advanceToken();
 
 	// The lexer output we are parsing
-	// Lexer lexer_;
+	Lexer* lexer_;
 	// The current token.
 	Token token_;
 };

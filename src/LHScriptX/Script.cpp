@@ -25,6 +25,8 @@
 
 #include <iostream>
 
+#include <LHScriptX/FeatureScriptCommands.h>
+
 using namespace OpenBlack::LHScriptX;
 
 void Script::LoadFile(const std::string &file)
@@ -37,25 +39,120 @@ void Script::LoadFile(const std::string &file)
 	char* contents = new char[totalFileSize];
 	osfile.Read(contents, totalFileSize);
 
-	Lexer lexer(contents);
+	lexer_ = new Lexer(std::string(contents, totalFileSize));
 
-	Token token = lexer.GetToken();
+	const Token* token = this->peekToken();
 
-	while (!token.IsEOF())
+	while (!token->IsEOF())
 	{
-		token.Print(stdout);
-		printf("\n");
+		token = this->peekToken();
 
-		// get next token
-		token = lexer.GetToken();
-	};
+		if (token->IsIdentifier())
+		{
+			const std::string& identifier = token->Identifier();
 
+			for (const auto &signature : FeatureScriptCommands::Signatures)
+			{
+				if (identifier == signature.name) {
+					ScriptCommandContext ctx(nullptr, nullptr);
+
+					try {
+						signature.command(ctx);
+					}
+					catch (std::runtime_error &e) {
+						printf("%s\n", e.what());
+					}
+				}
+			}
+			
+		}
+
+		this->advanceToken();
+	}
+
+	delete lexer_;
 	delete[] contents;
 }
 
-void Script::processCommand(const std::string& command, std::vector<std::string> params)
+/*void Script::processCommand(const std::string& command, std::vector<std::string> params)
 {
-	ScriptParameters parameters{ ScriptParameter(2.3000f) };
+	ScriptParameters parameters{ ScriptCommandParameter(2.3000f) };
 	ScriptCommandContext ctx(nullptr, &parameters);
 	_commands->Call(command, ctx);
+}*/
+
+const Token* Script::peekToken()
+{
+	if (token_.IsInvalid())
+		token_ = lexer_->GetToken();
+	return &token_;
 }
+
+const Token* Script::advanceToken()
+{
+	token_ = lexer_->GetToken();
+	return &token_;
+}
+
+/*void Parser::Parse()
+{
+	const Token* token = this->peekToken();
+
+	while (!token->IsEOF())
+	{
+		token = this->peekToken();
+
+		if (token->IsIdentifier())
+			call();
+		else
+			throw ParserException("expected identifier", 0, 0);
+	}
+}*/
+
+// Call           = "(" [ ArgumentList [ "," ] ] ")" .
+// ArgumentList   = Identifer Literals
+
+/*void Parser::call()
+{
+	assert(this->peekToken()->IsIdentifier());
+	std::string identifier = this->peekToken()->Identifier();
+
+	const Token* token = this->advanceToken();
+	if (!token->IsOP(Operator::LeftParentheses))
+		throw ParserException("expected left parentheses after identifier " + identifier, 0, 0);
+
+	token = this->advanceToken();
+
+	std::vector<Token> args;
+
+	// if it's an immediate right parentheses there are no args
+	if (!token->IsOP(Operator::RightParentheses))
+	{
+		while (true)
+		{
+			const Token* token = this->peekToken();
+			args.push_back(*token);
+
+			// consume the ,
+			token = this->advanceToken();
+			if (!token->IsOP(Operator::Comma))
+				break;
+
+			this->advanceToken();
+		}
+	}
+
+	if (!token->IsOP(Operator::RightParentheses))
+	{
+		throw ParserException("missing )", 0, 0);
+	}
+
+	// move token to whatever is after ')'
+	this->advanceToken();
+
+	printf("call: %s with args: (", identifier.c_str());
+	for (auto const& tok : args) {
+		tok.Print(stdout);
+	}
+	printf(")\n");
+}*/
