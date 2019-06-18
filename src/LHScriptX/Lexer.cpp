@@ -110,7 +110,7 @@ Token Lexer::GetToken()
 		}
 	}
 
-	__assume(0); // unreachable
+	__builtin_unreachable(); // unreachable
 }
 
 Token Lexer::gatherIdentifer()
