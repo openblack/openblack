@@ -1,4 +1,4 @@
-/* OpenBlack - An implementation of Lionhead's Black & White engine.
+/* OpenBlack - A reimplementation of Lionhead's Black & White.
  *
  * OpenBlack is the legal property of its developers, whose names
  * can be found in the AUTHORS.md file distributed with this source

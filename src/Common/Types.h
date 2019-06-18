@@ -1,5 +1,4 @@
-
-/* OpenBlack - A reimplementation of Lionheads's Black & White engine
+/* OpenBlack - A reimplementation of Lionhead's Black & White.
  *
  * OpenBlack is the legal property of its developers, whose names
  * can be found in the AUTHORS.md file distributed with this source
@@ -18,6 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
+
 #pragma once
 #ifndef OPENBLACK_TYPES_H
 #define OPENBLACK_TYPES_H
