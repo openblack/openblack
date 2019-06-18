@@ -51,20 +51,46 @@ void Script::LoadFile(const std::string &file)
 		{
 			const std::string& identifier = token->Identifier();
 
-			for (const auto &signature : FeatureScriptCommands::Signatures)
-			{
-				if (identifier == signature.name) {
-					ScriptCommandContext ctx(nullptr, nullptr);
+			if (!isCommand(identifier))
+				throw std::runtime_error("unknown command: " + identifier);
 
-					try {
-						signature.command(ctx);
-					}
-					catch (std::runtime_error &e) {
-						printf("%s\n", e.what());
-					}
+			token = this->advanceToken();
+			if (!token->IsOP(Operator::LeftParentheses))
+				throw std::runtime_error("expected ( after identifier " + identifier);
+
+			std::vector<Token> args;
+
+			// if it's an immediate right parentheses there are no args
+			token = this->advanceToken();
+			if (!token->IsOP(Operator::RightParentheses))
+			{
+				while (true)
+				{
+					const Token* token = this->peekToken();
+					args.push_back(*token);
+
+					// consume the ,
+					token = this->advanceToken();
+					if (!token->IsOP(Operator::Comma))
+						break;
+
+					this->advanceToken();
 				}
 			}
-			
+
+			if (!token->IsOP(Operator::RightParentheses))
+				throw std::runtime_error("missing )");
+
+			// move token to whatever is after ')'
+			this->advanceToken();
+
+			printf("run command %s with %d args\n", identifier.c_str(), args.size());
+
+			// expect (
+
+			// check for (, then collect all Tokens seperated by , until )
+			// that is our paremter list
+
 		}
 
 		this->advanceToken();
@@ -74,12 +100,37 @@ void Script::LoadFile(const std::string &file)
 	delete[] contents;
 }
 
-/*void Script::processCommand(const std::string& command, std::vector<std::string> params)
+const bool Script::isCommand(const std::string & identifier) const
 {
-	ScriptParameters parameters{ ScriptCommandParameter(2.3000f) };
-	ScriptCommandContext ctx(nullptr, &parameters);
-	_commands->Call(command, ctx);
-}*/
+	// this could be done a lot better
+	for (const auto &signature : FeatureScriptCommands::Signatures)
+		if (signature.name == identifier)
+			return true;
+
+	return false;
+}
+
+void Script::runCommand(const std::string& identifier)
+{
+	const ScriptCommandSignature* command_signature;
+
+	for (const auto &signature : FeatureScriptCommands::Signatures)
+	{
+		if (signature.name != identifier)
+			continue;
+
+		command_signature = &signature;
+		break;
+	}
+
+	// 1. check the script parameters
+	// 2. create the ScriptCommandContext
+	// ScriptParameters parameters{ ScriptCommandParameter(2.3000f) };
+	// ScriptCommandContext ctx(nullptr, &parameters);
+
+	// 3. run it
+	// signature.command(ctx);
+}
 
 const Token* Script::peekToken()
 {
@@ -94,20 +145,6 @@ const Token* Script::advanceToken()
 	return &token_;
 }
 
-/*void Parser::Parse()
-{
-	const Token* token = this->peekToken();
-
-	while (!token->IsEOF())
-	{
-		token = this->peekToken();
-
-		if (token->IsIdentifier())
-			call();
-		else
-			throw ParserException("expected identifier", 0, 0);
-	}
-}*/
 
 // Call           = "(" [ ArgumentList [ "," ] ] ")" .
 // ArgumentList   = Identifer Literals

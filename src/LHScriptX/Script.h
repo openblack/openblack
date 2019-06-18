@@ -36,6 +36,9 @@ private:
 	//std::unique_ptr<ScriptCommands> _commands;
 	//void processCommand(const std::string& command, std::vector<std::string> parameters);
 
+	const bool isCommand(const std::string& identifier) const;
+	void runCommand(const std::string& identifier);
+
 	const Token* peekToken();
 	const Token* advanceToken();
 
