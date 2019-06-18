@@ -1,8 +1,26 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 project(OpenBlack)
 
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 17)
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+# Project Options
+
+if (WIN32)
+    option(USE_DEBUG_CONSOLE "whether a debug console should be enabled for debug builds, if false debug output is redirected to Visual Studio output" ON)
+endif()
+
+# Dependencies
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+
+find_package(OpenGL REQUIRED)
+find_package(SDL2 REQUIRED)
+find_package(GLEW2 REQUIRED)
+find_package(GLM REQUIRED)
 
 #where to build libs and bins
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
@@ -26,16 +44,6 @@ message(STATUS "Building ${CMAKE_PROJECT_NAME} GIT SHA1: ${GIT_SHA1}")
 set(OS_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(GLEW_USE_STATIC_LIBS true)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
-if (WIN32)
-    option(USE_DEBUG_CONSOLE "whether a debug console should be enabled for debug builds, if false debug output is redirected to Visual Studio output" ON)
-endif()
-
-find_package(OpenGL REQUIRED)
-find_package(SDL2 REQUIRED)
-find_package(GLEW2 REQUIRED)
-find_package(GLM REQUIRED)
 
 if(OPENGL_INCLUDE_DIR)
 	include_directories("${OPENGL_INCLUDE_DIR}")
