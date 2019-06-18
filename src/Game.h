@@ -63,6 +63,7 @@ namespace OpenBlack
 		void Run();
 
 		void LoadMap(const std::string &name);
+		void LoadLandscape(const std::string &name);
 
 		const std::string& GetGamePath();
 

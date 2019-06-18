@@ -114,6 +114,7 @@ Game::Game(int argc, char **argv)
 	_shaderManager->LoadShader("Terrain", "shaders/terrain.vert", "shaders/terrain.frag");
 	_shaderManager->LoadShader("SkinnedMesh", "shaders/skin.vert", "shaders/skin.frag");
 
+	// allocate vertex buffers for our debug draw
 	DebugDraw::Init();
 
 	sInstance = this;
@@ -145,10 +146,7 @@ void Game::Run()
 	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
 
-	LoadMap(GetGamePath() + "/Data/Landscape/Land1.lnd");
-
-	Script script;
-	script.LoadFile(GetGamePath() + "/Scripts/Land1.txt");
+	LoadLandscape(GetGamePath() + "/Data/Landscape/Land1.lnd");
 
 	// _lhvm = std::make_unique<LHVM::LHVM>();
 	// _lhvm->LoadBinary(GetGamePath() + "/Scripts/Quests/challenge.chl");
@@ -368,6 +366,12 @@ void Game::guiLoop()
 }
 
 void Game::LoadMap(const std::string &name)
+{
+	Script script;
+	script.LoadFile(name);
+}
+
+void Game::LoadLandscape(const std::string &name)
 {
 	if (_landIsland)
 		_landIsland.reset();
