@@ -38,8 +38,8 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 	SDL_GetVersion(&linkedVersion);
 
 	std::clog << "Initializing SDL..." << std::endl;
-	std::clog << "Version/Compiled " << uint32_t(compiledVersion.major) << "." << uint32_t(compiledVersion.minor) << "." << uint32_t(compiledVersion.patch) << std::endl;
-	std::clog << "Version/Linked " << uint32_t(linkedVersion.major) << "." << uint32_t(linkedVersion.minor) << "." << uint32_t(linkedVersion.patch) << std::endl;
+	std::clog << "SDL Version/Compiled " << uint32_t(compiledVersion.major) << "." << uint32_t(compiledVersion.minor) << "." << uint32_t(compiledVersion.patch) << "\n";
+	std::clog << "SDL Version/Linked " << uint32_t(linkedVersion.major) << "." << uint32_t(linkedVersion.minor) << "." << uint32_t(linkedVersion.patch) << "\n";
 
 	// Initialize SDL
 	if (SDL_WasInit(0) == 0) {
@@ -106,7 +106,7 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 		_glcontext = std::unique_ptr<SDL_GLContext, SDLDestroyer>(&context);
 	}
 
-	std::clog << "OpenGL context successfully created:" << std::endl;
+	std::clog << "OpenGL context successfully created." << std::endl;
 
 	int majorVersion, minorVersion;
 	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &majorVersion);
