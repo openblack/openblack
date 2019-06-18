@@ -117,7 +117,7 @@ void LHVMViewer::Draw(OpenBlack::LHVM::LHVM *lhvm)
 			ImGui::BeginChild("left pane", ImVec2(240, 0), true);
 
 			auto variables = lhvm->GetVariables();
-			for (int i = 0; i < variables.size(); i++)
+			for (size_t i = 0; i < variables.size(); i++)
 			{
 				if (ImGui::Selectable(variables[i].c_str(), selected == i))
 					selected = i;
@@ -239,7 +239,7 @@ void LHVMViewer::DrawScriptDisassembly(OpenBlack::LHVM::LHVM * lhvm, OpenBlack::
 
 	auto const &code = lhvm->GetInstructions();
 
-	for (int i = script.GetInstructionAddress(); i < code.size(); i++)
+	for (unsigned int i = script.GetInstructionAddress(); i < code.size(); i++)
 	{
 		auto const &instruction = code[i];
 

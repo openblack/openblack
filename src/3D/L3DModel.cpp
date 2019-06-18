@@ -136,7 +136,7 @@ void L3DModel::LoadFromL3D(void* data_, size_t size, bool pack) {
 	L3DHeader* header = (L3DHeader*)(buffer + 4);
 	uint32_t* meshOffsets = (uint32_t*)(buffer + header->meshListOffset);
 
-	for (int m = 0; m < header->numMeshes; m++)
+	for (uint32_t m = 0; m < header->numMeshes; m++)
 	{
 		L3D_Mesh* mesh = (L3D_Mesh*)(buffer + meshOffsets[m]);
 
@@ -145,7 +145,7 @@ void L3DModel::LoadFromL3D(void* data_, size_t size, bool pack) {
 		_submeshCount = mesh->numSubMeshes;
 
 		uint32_t* submeshOffsets = (uint32_t*)(buffer + mesh->subMeshOffset);
-		for (int sm = 0; sm < mesh->numSubMeshes; sm++)
+		for (uint32_t sm = 0; sm < mesh->numSubMeshes; sm++)
 		{
 			L3D_SubMesh* subMesh = (L3D_SubMesh*)(buffer + submeshOffsets[sm]);
 
@@ -168,7 +168,7 @@ void L3DModel::LoadFromL3D(void* data_, size_t size, bool pack) {
 		}
 
 		L3D_Bone* bones = (L3D_Bone*)(buffer + mesh->bonesOffset);
-		for (int b = 0; b < mesh->numBones; b++)
+		for (uint32_t b = 0; b < mesh->numBones; b++)
 		{
 			L3D_Bone bone = bones[b];
 		}
@@ -183,7 +183,7 @@ void L3DModel::LoadFromL3D(void* data_, size_t size, bool pack) {
 	m_glSkins = new GLuint[header->numSkins];
 	glGenTextures(header->numSkins, m_glSkins);
 
-	for (int s = 0; s < header->numSkins; s++)
+	for (uint32_t s = 0; s < header->numSkins; s++)
 	{
 		L3D_Skin* skin = (L3D_Skin*)(buffer + skinOffsets[s]);
 		printf("%d skin = %d\n", s, skin->skinID);
@@ -220,7 +220,7 @@ void L3DModel::LoadFromL3D(void* data_, size_t size, bool pack) {
 }
 
 void L3DModel::Draw() {
-	for (int subMesh = 0; subMesh < _submeshCount; subMesh++) {
+	for (unsigned int subMesh = 0; subMesh < _submeshCount; subMesh++) {
 		// no texture no render (todo: handle actual nodraw flags)
 		if (_submeshSkinIds[subMesh] == -1) {
 			_submeshes[subMesh]->Draw();

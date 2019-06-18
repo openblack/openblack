@@ -128,7 +128,7 @@ void LandIsland::LoadFromDisk(const std::string &fileName)
     file->Close();
 
 	// build the meshes
-	for (auto b = 0; b < _blockCount; b++)
+	for (unsigned int b = 0; b < _blockCount; b++)
 	{
 		LandBlock* block = &_landBlocks[b];
 		block->BuildMesh(this);
@@ -147,7 +147,7 @@ const float LandIsland::GetHeightAt(glm::ivec2 vec) const
 
 void LandIsland::Draw(ShaderProgram* program)
 {
-	for (auto b = 0; b < _blockCount; b++)
+	for (unsigned int b = 0; b < _blockCount; b++)
 	{
 		LandBlock* block = &_landBlocks[b];
 		block->Draw(program);
@@ -156,7 +156,7 @@ void LandIsland::Draw(ShaderProgram* program)
 
 void LandIsland::convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixels)
 {
-	for (int i = 0; i < pixels; i++)
+	for (size_t i = 0; i < pixels; i++)
 	{
 		uint16_t col = rgba5[i];
 
@@ -184,7 +184,7 @@ void LandIsland::DumpTextures()
 	glGenFramebuffers(1, &fboID);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, fboID);
 
-	for (int i = 0; i < _materialCount; i++) {
+	for (unsigned int i = 0; i < _materialCount; i++) {
 		uint8_t* pixels = new uint8_t[256 * 256 * 4];
 
 		glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureID, 0, i);
@@ -211,7 +211,7 @@ void LandIsland::DumpMaps()
 
 	memset(data, 0xFF, 32 * 32 * 16 * 16);
 
-	for (auto b = 0; b < _blockCount; b++)
+	for (unsigned int b = 0; b < _blockCount; b++)
 	{
 		LandBlock* block = &_landBlocks[b];
 		int mapx = block->GetBlockPosition()->x;

@@ -207,7 +207,7 @@ void Game::Run()
 		DebugDraw::Cross(_intersection, 50.0f);
 
 		_camera->Update(deltaTime);
-		_modelRotation.y = fmod(_modelRotation.y + deltaTime * .1f, 360.f);
+		_modelRotation.y = fmod(_modelRotation.y + float(deltaTime) * .1f, 360.f);
 
 		this->guiLoop();
 

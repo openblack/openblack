@@ -112,7 +112,7 @@ MeshPack::MeshPack(OSFile* file) : m_meshCount(0)
 
 	Models = new L3DModel*[*meshCount];
 
-	for (int i = 0; i < *meshCount; i++)
+	for (uint32_t i = 0; i < *meshCount; i++)
 	{
 		L3DSMiniHeader* header = (L3DSMiniHeader*)(data + meshOffsets[i]);
 

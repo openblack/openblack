@@ -117,7 +117,7 @@ void BinkVideo::CopyToTexture(Texture2D* texture)
 	memset(data, 0xFF, header.width * header.height * 4);
 
 	// copy YUV to RGBA
-	for (int i = 0; i < header.width * header.height; i++)
+	for (unsigned int i = 0; i < header.width * header.height; i++)
 	{
 		data[i * 4 + 0] = 0xFF; //c_last.data[0][i]; // A
 		data[i * 4 + 1] = c_last.data[0][i]; // B

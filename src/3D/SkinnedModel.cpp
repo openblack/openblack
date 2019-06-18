@@ -173,14 +173,14 @@ void SkinnedModel::LoadFromL3D(void* data_, size_t size) {
 
 	printf("loading mesh with %d meshes (only 1st will be loaded)\n", header->numMeshes);
 
-	for (int m = 0; m < header->numMeshes; m++)
+	for (uint32_t m = 0; m < header->numMeshes; m++)
 	{
 		L3D_Mesh* mesh = (L3D_Mesh*)(buffer + meshOffsets[m]);
 
 		_submeshes.reserve(mesh->numSubMeshes);
 
 		uint32_t* submeshOffsets = (uint32_t*)(buffer + mesh->subMeshOffset);
-		for (int sm = 0; sm < mesh->numSubMeshes; sm++)
+		for (uint32_t sm = 0; sm < mesh->numSubMeshes; sm++)
 		{
 			L3D_SubMesh* subMesh = (L3D_SubMesh*)(buffer + submeshOffsets[sm]);
 
@@ -198,15 +198,15 @@ void SkinnedModel::LoadFromL3D(void* data_, size_t size) {
 
 			// create our vertex buffer real quick
 			std::vector<SkinnedModel_Vertex> verts(subMesh->numVerticies);
-			for (int i = 0; i < subMesh->numVerticies; i++)
+			for (uint32_t i = 0; i < subMesh->numVerticies; i++)
 			{
 				// epic gamer
 				memcpy(&verts[i], &verticiesOffset[i], sizeof(L3D_Vertex));
 			}
 
 			int vertind = 0;
-			for (int boneVert = 0; boneVert < subMesh->boneVertLUTSize; boneVert++)
-				for (int vert = 0; vert < boneVertOffset[boneVert].nVertices; vert++)
+			for (uint32_t boneVert = 0; boneVert < subMesh->boneVertLUTSize; boneVert++)
+				for (uint32_t vert = 0; vert < boneVertOffset[boneVert].nVertices; vert++)
 					verts[vertind++].bone = boneVertOffset[boneVert].boneIndex;
 
 			VertexBuffer *vertexBuffer = new VertexBuffer(verts.data(), subMesh->numVerticies, sizeof(SkinnedModel_Vertex));
@@ -248,7 +248,7 @@ void SkinnedModel::LoadFromL3D(void* data_, size_t size) {
 	// Inside packed meshes, there are no skins.
 	uint32_t* skinOffsets = (uint32_t*)(buffer + header->skinListOffset);
 
-	for (int s = 0; s < header->numSkins; s++) {
+	for (uint32_t s = 0; s < header->numSkins; s++) {
 		L3D_Skin* skin = static_cast<L3D_Skin*>((void*)(buffer + skinOffsets[s]));
 		_textures[skin->skinID] = std::make_unique<Texture2D>(256, 256, GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_4_4_4_4_REV, skin->data);
 	}
@@ -257,7 +257,7 @@ void SkinnedModel::LoadFromL3D(void* data_, size_t size) {
 void SkinnedModel::Draw(ShaderProgram* program) {
 	program->SetUniformValue("u_boneMatrices[0]", _boneMatrices.size(), _boneMatrices.data());
 
-	for (int i = 0; i < _submeshes.size(); i++)
+	for (size_t i = 0; i < _submeshes.size(); i++)
 	{
 		if (_textures[_submeshSkinMap[i]] != nullptr)
 			_textures[_submeshSkinMap[i]]->Bind(0);
