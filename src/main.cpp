@@ -21,12 +21,20 @@
 #include <Game.h>
 #include <SDL.h>
 #include <memory>
+#include <iostream>
+
 #ifdef _WIN32
 #include <Windows.h>
-#endif // defined(_WIN32)
+#endif
 
 int main(int argc, char **argv)
 {
+	std::cout  <<
+		"==============================================================================\n"
+		"   openblack - A modern reimplementation of Lionhead's Black & White (2001)   \n"
+		"==============================================================================\n"
+		"\n";
+
     try
     {
         std::unique_ptr<OpenBlack::Game> game(new OpenBlack::Game(argc, argv));
