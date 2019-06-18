@@ -25,7 +25,7 @@
 
 namespace OpenBlack::LHScriptX {
 
-static class MapScriptCommands {
+class MapScriptCommands {
 public:
 	static const std::array<const ScriptCommandSignature, 20> Signatures;
 
