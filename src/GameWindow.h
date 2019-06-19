@@ -29,7 +29,7 @@
 
 struct SDLDestroyer {
 	void operator()(SDL_Window* window) const { SDL_DestroyWindow(window); }
-	void operator()(SDL_GLContext* glcontext) const { SDL_GL_DeleteContext(glcontext); }
+	void operator()(SDL_GLContext* glcontext) const { SDL_GL_DeleteContext(*glcontext); }
 };
 
 namespace OpenBlack
