@@ -23,9 +23,11 @@
 
 using namespace OpenBlack::LHScriptX;
 
-Lexer::Lexer(const std::string &source) : source_(source), currentLine_(1) {
+Lexer::Lexer(const std::string& source):
+    source_(source), currentLine_(1)
+{
 	current_ = source_.begin();
-	end_ = source_.end();
+	end_     = source_.end();
 };
 
 Token Lexer::GetToken()
@@ -38,7 +40,9 @@ Token Lexer::GetToken()
 		unsigned char cc = *current_;
 		switch (cc)
 		{
-		case ' ': case '\t': case '\r':
+		case ' ':
+		case '\t':
+		case '\r':
 			current_++;
 
 			// skip over whitespace quickly
@@ -57,9 +61,11 @@ Token Lexer::GetToken()
 			break;
 
 		// handle potential rem/REM
-		case 'R': case 'r':
+		case 'R':
+		case 'r':
 			// todo: potential out of bounds here:
-			if ((current_[1] == 'e' || current_[1] == 'E') && (current_[2] == 'm' || current_[2] == 'M')) {
+			if ((current_[1] == 'e' || current_[1] == 'E') && (current_[2] == 'm' || current_[2] == 'M'))
+			{
 				while (*current_ != '\n')
 					current_++;
 				break;
@@ -67,22 +73,70 @@ Token Lexer::GetToken()
 			return gatherIdentifer();
 
 		/* gather identifiers */
-		case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
-		case 'G': case 'H': case 'I': case 'J': case 'K': case 'L':
-		case 'M': case 'N': case 'O': case 'P': case 'Q': /* case 'R': handled above for REM */
-		case 'S': case 'T': case 'U': case 'V': case 'W': case 'X':
-		case 'Y': case 'Z':
-		case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
-		case 'g': case 'h': case 'i': case 'j': case 'k': case 'l':
-		case 'm': case 'n': case 'o': case 'p': case 'q': /* case 'r': handled above for rem */
-		case 's': case 't': case 'u': case 'v': case 'w': case 'x':
-		case 'y': case 'z':
+		case 'A':
+		case 'B':
+		case 'C':
+		case 'D':
+		case 'E':
+		case 'F':
+		case 'G':
+		case 'H':
+		case 'I':
+		case 'J':
+		case 'K':
+		case 'L':
+		case 'M':
+		case 'N':
+		case 'O':
+		case 'P':
+		case 'Q': /* case 'R': handled above for REM */
+		case 'S':
+		case 'T':
+		case 'U':
+		case 'V':
+		case 'W':
+		case 'X':
+		case 'Y':
+		case 'Z':
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+		case 'f':
+		case 'g':
+		case 'h':
+		case 'i':
+		case 'j':
+		case 'k':
+		case 'l':
+		case 'm':
+		case 'n':
+		case 'o':
+		case 'p':
+		case 'q': /* case 'r': handled above for rem */
+		case 's':
+		case 't':
+		case 'u':
+		case 'v':
+		case 'w':
+		case 'x':
+		case 'y':
+		case 'z':
 		case '_':
 			return gatherIdentifer();
 
 		/* gather numbers */
-		case '0': case '1': case '2': case '3': case '4':
-		case '5': case '6': case '7': case '8': case '9':
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
 		case '-':
 			return gatherNumber();
 
@@ -121,15 +175,9 @@ Token Lexer::gatherIdentifer()
 		unsigned char cc = *current_;
 
 		/* check for invalid characters */
-		if ((cc < 'A' || cc > 'Z')
-			&& (cc < 'a' || cc > 'z')
-			&& cc != '_'
-			&& (cc < '0' || cc > '9'))
+		if ((cc < 'A' || cc > 'Z') && (cc < 'a' || cc > 'z') && cc != '_' && (cc < '0' || cc > '9'))
 		{
-			if ((cc >= ' ' && cc < 0x7f)
-				|| cc == '\t'
-				|| cc == '\r'
-				|| cc == '\n')
+			if ((cc >= ' ' && cc < 0x7f) || cc == '\t' || cc == '\r' || cc == '\n')
 				break;
 
 			throw LexerException("invalid character " + std::string(1, cc) + "in identifer");
@@ -144,7 +192,7 @@ Token Lexer::gatherIdentifer()
 Token Lexer::gatherNumber()
 {
 	bool is_float = false;
-	bool is_neg = false;
+	bool is_neg   = false;
 
 	if (*current_ == '-')
 	{
@@ -157,19 +205,23 @@ Token Lexer::gatherNumber()
 	// consume all digits and .
 	while (hasMore())
 	{
-		if (std::isdigit(*current_)) {
+		if (std::isdigit(*current_))
+		{
 			current_++;
 		}
-		else if (*current_ == '.') {
+		else if (*current_ == '.')
+		{
 			current_++;
 			is_float = true;
 		}
-		else {
+		else
+		{
 			break;
 		}
 	}
 
-	if (is_float) {
+	if (is_float)
+	{
 		float value = std::stof(std::string(number_start, current_));
 		if (is_neg)
 			value = -value;

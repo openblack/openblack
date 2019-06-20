@@ -25,9 +25,10 @@ using namespace OpenBlack::LHScriptX;
 // alias parameter types for signature list readability
 const constexpr ParameterType TString = ParameterType::String;
 const constexpr ParameterType TNumber = ParameterType::Number;
-const constexpr ParameterType TFloat = ParameterType::Float;
+const constexpr ParameterType TFloat  = ParameterType::Float;
 const constexpr ParameterType TVector = ParameterType::Vector;
 
+// clang-format off
 const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signatures = { {
 	{ "CREATE_MIST",                       &FeatureScriptCommands::CreateMist,                    { TVector, TFloat, TNumber, TFloat, TFloat }                                      },
 	{ "CREATE_PATH",                       &FeatureScriptCommands::CreatePath,                    { TNumber, TNumber, TNumber, TNumber }                                            },
@@ -135,524 +136,525 @@ const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signa
 	{ "MAKE_LAST_OBJECT_ARTIFACT",         &FeatureScriptCommands::MakeLastObjectArtifact,        { TNumber, TString, TFloat },                                                     },
 	{ "SET_LOST_TOWN_SCALE",               &FeatureScriptCommands::SetLostTownScale,              { TFloat },                                                                       },
 } };
+// clang-format on
 
-void FeatureScriptCommands::Version(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::Version(const ScriptCommandContext& ctx)
 {
 	//float version = ctx.GetParameter<float>(0);
 	//printf("[LHScriptX] VERSION called: %f\n", version);
 }
 
-void FeatureScriptCommands::CreateMist(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateMist(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreatePath(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreatePath(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateTown(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateTown(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::SetTownBelief(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::SetTownBelief(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::SetTownBeliefCap(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::SetTownBeliefCap(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::SetTownUninhabitable(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::SetTownUninhabitable(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::SetTownCongregationPos(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::SetTownCongregationPos(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateAbode(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreatePlannedAbode(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreatePlannedAbode(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateTownCentre(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateTownCentre(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateTownSpell(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateTownSpell(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateNewTownSpell(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateNewTownSpell(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateTownCentreSpellIcon(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateTownCentreSpellIcon(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateSpellIcon(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateSpellIcon(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreatePlannedSpellIcon(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreatePlannedSpellIcon(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateVillager(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateVillager(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateTownVillager(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateTownVillager(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateSpecialTownVillager(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateSpecialTownVillager(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateVillagerPos(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateVillagerPos(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateCitadel(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateCitadel(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreatePlannedCitadel(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreatePlannedCitadel(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateCreaturePen(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateCreaturePen(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateWorshipSite(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateWorshipSite(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreatePlannedWorshipSite(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreatePlannedWorshipSite(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateAnimal(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateAnimal(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateNewAnimal(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateNewAnimal(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateForest(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateForest(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateTree(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateTree(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateNewTree(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateNewTree(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateField(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateField(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateTownField(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateTownField(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateFishFarm(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateFishFarm(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateTownFishFarm(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateTownFishFarm(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateFeature(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateFeature(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateFlowers(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateFlowers(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateWallSection(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateWallSection(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreatePlannedWallSection(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreatePlannedWallSection(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreatePitch(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreatePitch(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreatePot(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreatePot(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateTownTemporaryPots(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateTownTemporaryPots(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateMobileobject(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateMobileobject(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateMobileStatic(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateMobileStatic(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateDeadTree(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateDeadTree(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateScaffold(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateScaffold(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CountryChange(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CountryChange(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::HeightChange(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::HeightChange(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateCreature(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateCreature(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateCreatureFromFile(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateCreatureFromFile(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateFlock(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateFlock(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::LoadLandscape(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::LoadLandscape(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateArea(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateArea(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::StartCameraPos(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::StartCameraPos(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::FlyByFile(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::FlyByFile(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::TownNeedsPos(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::TownNeedsPos(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateFurniture(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateFurniture(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateBigForest(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateBigForest(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateNewBigForest(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateNewBigForest(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateInfluenceRing(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateInfluenceRing(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateWeatherClimate(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateWeatherClimate(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateWeatherClimateRain(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateWeatherClimateRain(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateWeatherClimateTemp(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateWeatherClimateTemp(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateWeatherClimateWind(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateWeatherClimateWind(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateWeatherStorm(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateWeatherStorm(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::BrushSize(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::BrushSize(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateStream(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateStream(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateStreamPoint(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateStreamPoint(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateWaterfall(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateWaterfall(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateArena(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateArena(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateFootpath(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateFootpath(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateFootpathNode(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateFootpathNode(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::LinkFootpath(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::LinkFootpath(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateBonfire(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateBonfire(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateBase(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateBase(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateNewFeature(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateNewFeature(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::SetInteractDesire(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::SetInteractDesire(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::ToggleComputerPlayer(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::ToggleComputerPlayer(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::SetComputerPlayerCreatureLike(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::SetComputerPlayerCreatureLike(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::MultiplayerDebug(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::MultiplayerDebug(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateStreetLantern(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateStreetLantern(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateStreetLight(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateStreetLight(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::SetLandNumber(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::SetLandNumber(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateOneShotSpell(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateOneShotSpell(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateOneShotSpellPu(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateOneShotSpellPu(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateFireFly(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateFireFly(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::TownDesireBoost(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::TownDesireBoost(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateAnimatedStatic(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateAnimatedStatic(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::FireFlySpellRewardProb(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::FireFlySpellRewardProb(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateNewTownField(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateNewTownField(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateSpellDispenser(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateSpellDispenser(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::LoadComputerPlayerPersonallty(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::LoadComputerPlayerPersonallty(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::SetComputerPlayerPersonallty(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::SetComputerPlayerPersonallty(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::SetGlobalLandBalance(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::SetGlobalLandBalance(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::SetLandBalance(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::SetLandBalance(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::CreateDrinkWaypoint(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::CreateDrinkWaypoint(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::SetTownInfluenceMultiplier(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::SetTownInfluenceMultiplier(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::SetPlayerInfluenceMultiplier(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::SetPlayerInfluenceMultiplier(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::SetTownBalanceBeliefScale(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::SetTownBalanceBeliefScale(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::StartGameMessage(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::StartGameMessage(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::AddGameMessageLine(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::AddGameMessageLine(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::EditLevel(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::EditLevel(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::SetNighttime(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::SetNighttime(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::MakeLastObjectArtifact(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::MakeLastObjectArtifact(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }
 
-void FeatureScriptCommands::SetLostTownScale(const ScriptCommandContext &ctx)
+void FeatureScriptCommands::SetLostTownScale(const ScriptCommandContext& ctx)
 {
-	throw std::runtime_error(std::string{} +"Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
+	throw std::runtime_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__));
 }

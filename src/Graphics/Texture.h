@@ -24,25 +24,29 @@
 
 #include <Graphics/OpenGL.h>
 
-namespace OpenBlack {
-namespace Graphics {
+namespace OpenBlack
+{
+namespace Graphics
+{
 
-class Texture {
-public:
+class Texture
+{
+  public:
 	Texture();
 	~Texture();
 
 	GLuint GetHandle() const;
-protected:
+
+  protected:
 	GLuint _textureID;
 
-private:
+  private:
 	// No copying or assignment
 	Texture(const Texture&) = delete;
 	Texture& operator=(const Texture&) = delete;
 };
 
-}
-}
+} // namespace Graphics
+} // namespace OpenBlack
 
 #endif

@@ -26,38 +26,40 @@
 
 namespace OpenBlack
 {
-	#pragma pack(push, 1)
-	class LandCell
+#pragma pack(push, 1)
+class LandCell
+{
+  public:
+	inline uint8_t Light() { return color.a; }
+	inline uint8_t Altitude() { return altitude; }
+	inline bool Split() { return properties & 0x80; }
+	inline bool HasWater() { return properties & 0x10; }
+	inline bool Coastline() { return properties & 0x20; }
+	inline bool FullWater() { return properties & 0x40; }
+	inline uint8_t Country() { return properties & 0x0F; }
+	inline float Alpha()
 	{
-	public:
-		inline uint8_t Light()    { return color.a; }
-		inline uint8_t Altitude() { return altitude; }
-		inline bool Split()       { return properties & 0x80; }
-		inline bool HasWater()    { return properties & 0x10; }
-		inline bool Coastline()   { return properties & 0x20; }
-		inline bool FullWater()	  { return properties & 0x40; } 
-		inline uint8_t Country()  { return properties & 0x0F; }
-		inline float Alpha() {
-			if (properties & 0x40)
-				return 0.0f;
-			if (properties & 0x10)
-				return 0.0f;
-			if (properties & 0x20)
-				return 0.5f;
+		if (properties & 0x40)
+			return 0.0f;
+		if (properties & 0x10)
+			return 0.0f;
+		if (properties & 0x20)
+			return 0.5f;
 
-			return 1.0f;
-		}
-	private:
-		rgba_t color;
+		return 1.0f;
+	}
 
-		uint8_t altitude;
-		uint8_t savecolor;
+  private:
+	rgba_t color;
 
-		uint8_t properties;
-		// Sound properties: coastal sound, land sound, sea sound, freshwater sound
-		uint8_t flags2;
-	};
-	#pragma pack(pop)
-}
+	uint8_t altitude;
+	uint8_t savecolor;
+
+	uint8_t properties;
+	// Sound properties: coastal sound, land sound, sea sound, freshwater sound
+	uint8_t flags2;
+};
+#pragma pack(pop)
+} // namespace OpenBlack
 
 #endif

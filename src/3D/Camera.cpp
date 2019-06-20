@@ -37,13 +37,13 @@ glm::vec3 Camera::GetPosition() const
 
 glm::mat4 Camera::GetViewMatrix() const
 {
-	glm::mat4 matRoll = glm::mat4(1.0f);
+	glm::mat4 matRoll  = glm::mat4(1.0f);
 	glm::mat4 matPitch = glm::mat4(1.0f);
-	glm::mat4 matYaw = glm::mat4(1.0f);
+	glm::mat4 matYaw   = glm::mat4(1.0f);
 
-	glm::mat4 mRoll =  glm::rotate(glm::mat4(1.0f), glm::radians(_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f)); // roll
+	glm::mat4 mRoll  = glm::rotate(glm::mat4(1.0f), glm::radians(_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f)); // roll
 	glm::mat4 mPitch = glm::rotate(glm::mat4(1.0f), glm::radians(_rotation.y), glm::vec3(1.0f, 0.0f, 0.0f)); // pitch
-	glm::mat4 mYaw =   glm::rotate(glm::mat4(1.0f), glm::radians(_rotation.x), glm::vec3(0.0f, 1.0f, 0.0f)); // yaw
+	glm::mat4 mYaw   = glm::rotate(glm::mat4(1.0f), glm::radians(_rotation.x), glm::vec3(0.0f, 1.0f, 0.0f)); // yaw
 
 	glm::mat4 mRot = mRoll * mPitch * mYaw;
 
@@ -82,7 +82,6 @@ void Camera::SetProjectionMatrixPerspective(float fov, float aspect, float nearc
 	_projectionMatrix = glm::perspective(glm::radians(fov), aspect, nearclip, farclip);
 }
 
-
 void Camera::SetProjectionMatrix(const glm::mat4x4& projection)
 {
 	_projectionMatrix = projection;
@@ -91,23 +90,23 @@ void Camera::SetProjectionMatrix(const glm::mat4x4& projection)
 glm::vec3 Camera::GetForward() const
 {
 	glm::vec3 forward =
-		(glm::vec3(0.f, 0.f, -1.f) * cos(glm::radians(_rotation.x))) +
-		(glm::vec3(0.f, -1.0f, 0.0f) * sin(glm::radians(_rotation.y))) +
-		(glm::vec3(1.f, 0.0f, 0.0f) * sin(glm::radians(_rotation.x)));
+	    (glm::vec3(0.f, 0.f, -1.f) * cos(glm::radians(_rotation.x))) +
+	    (glm::vec3(0.f, -1.0f, 0.0f) * sin(glm::radians(_rotation.y))) +
+	    (glm::vec3(1.f, 0.0f, 0.0f) * sin(glm::radians(_rotation.x)));
 	return glm::normalize(forward);
 }
 
 glm::vec3 Camera::GetRight() const
 {
-    return glm::normalize(glm::cross(GetForward(), glm::vec3(0.0f, 1.0f, 0.0f)));
+	return glm::normalize(glm::cross(GetForward(), glm::vec3(0.0f, 1.0f, 0.0f)));
 }
 
 glm::vec3 Camera::GetUp() const
 {
-    return glm::normalize(glm::cross(GetRight(), GetForward()));
+	return glm::normalize(glm::cross(GetRight(), GetForward()));
 }
 
-void Camera::DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::ivec2 screenSize, glm::vec3 & out_worldOrigin, glm::vec3 & out_worldDirection)
+void Camera::DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::ivec2 screenSize, glm::vec3& out_worldOrigin, glm::vec3& out_worldDirection)
 {
 	const float normalizedX = (float)screenPosition.x / (float)screenSize.x;
 	const float normalizedY = (float)screenPosition.y / (float)screenSize.y;
@@ -118,14 +117,14 @@ void Camera::DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::
 	// The start of the ray trace is defined to be at mousex,mousey,1 in projection space (z=0 is near, z=1 is far - this gives us better precision)
 	// To get the direction of the ray trace we need to use any z between the near and the far plane, so let's use (mousex, mousey, 0.5)
 	const glm::vec4 rayStartProjectionSpace = glm::vec4(screenSpaceX, screenSpaceY, 0.0f, 1.0f);
-	const glm::vec4 rayEndProjectionSpace = glm::vec4(screenSpaceX, screenSpaceY, 0.5f, 1.0f);
+	const glm::vec4 rayEndProjectionSpace   = glm::vec4(screenSpaceX, screenSpaceY, 0.5f, 1.0f);
 
 	// Calculate our inverse view projection matrix
 	glm::mat4 inverseViewProj = glm::inverse(GetViewProjectionMatrix());
 
 	// Get our homogeneous coordinates for our start and end ray positions
 	const glm::vec4 hgRayStartWorldSpace = inverseViewProj * rayStartProjectionSpace;
-	const glm::vec4 hgRayEndWorldSpace = inverseViewProj * rayEndProjectionSpace;
+	const glm::vec4 hgRayEndWorldSpace   = inverseViewProj * rayEndProjectionSpace;
 
 	glm::vec3 rayStartWorldSpace(hgRayStartWorldSpace.x, hgRayStartWorldSpace.y, hgRayStartWorldSpace.z);
 	glm::vec3 rayEndWorldSpace(hgRayEndWorldSpace.x, hgRayEndWorldSpace.y, hgRayEndWorldSpace.z);
@@ -140,7 +139,7 @@ void Camera::DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::
 	const glm::vec3 rayDirWorldSpace = glm::normalize(rayEndWorldSpace - rayStartWorldSpace);
 
 	// finally, store the results in the outputs
-	out_worldOrigin = rayStartWorldSpace;
+	out_worldOrigin    = rayStartWorldSpace;
 	out_worldDirection = rayDirWorldSpace;
 }
 

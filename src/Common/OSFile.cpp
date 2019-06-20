@@ -19,10 +19,9 @@
  */
 
 #include <Common/OSFile.h>
-
-#include <stdexcept>
-#include <sstream>
 #include <cassert>
+#include <sstream>
+#include <stdexcept>
 
 using namespace OpenBlack;
 
@@ -38,7 +37,7 @@ OSFile::~OSFile()
 		close(mHandle);
 }
 
-void OSFile::Open(char const *filename, LH_FILE_MODE mode)
+void OSFile::Open(char const* filename, LH_FILE_MODE mode)
 {
 	assert(mHandle == -1);
 
@@ -66,7 +65,7 @@ void OSFile::Close()
 	mHandle = -1;
 }
 
-size_t OSFile::Read(void * data, size_t size)
+size_t OSFile::Read(void* data, size_t size)
 {
 	assert(mHandle != -1);
 
@@ -120,8 +119,8 @@ size_t OSFile::Size()
 {
 	assert(mHandle != -1);
 
- struct stat info;
- if(fstat(mHandle, &info) != 0)
+	struct stat info;
+	if (fstat(mHandle, &info) != 0)
 		throw std::runtime_error("A query operation on a file failed.");
 
 	// should be fine, no files are over 4GB..
@@ -133,17 +132,17 @@ size_t OSFile::Size()
 
 /* static */
 
-bool OSFile::Delete(const char * filename)
+bool OSFile::Delete(const char* filename)
 {
 	return !unlink(filename);
 }
 
-bool OSFile::Rename(const char * srcfile, const char * dstfile)
+bool OSFile::Rename(const char* srcfile, const char* dstfile)
 {
 	return !rename(srcfile, dstfile);
 }
 
-bool OSFile::Exists(const char * filename)
+bool OSFile::Exists(const char* filename)
 {
 	return !access(filename, F_OK);
 }
@@ -161,7 +160,7 @@ OSFile::~OSFile()
 		CloseHandle(mHandle);
 }
 
-void OSFile::Open(char const *filename, LH_FILE_MODE mode)
+void OSFile::Open(char const* filename, LH_FILE_MODE mode)
 {
 	assert(mHandle == INVALID_HANDLE_VALUE);
 
@@ -170,7 +169,7 @@ void OSFile::Open(char const *filename, LH_FILE_MODE mode)
 		handle = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
 	else if (mode == LH_FILE_MODE::Create)
 		handle = CreateFileA(filename, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, CREATE_ALWAYS, 0, 0);
-	
+
 	if (handle == INVALID_HANDLE_VALUE)
 	{
 		std::ostringstream os;
@@ -189,7 +188,7 @@ void OSFile::Close()
 	mHandle = INVALID_HANDLE_VALUE;
 }
 
-size_t OSFile::Read(void * data, size_t size)
+size_t OSFile::Read(void* data, size_t size)
 {
 	assert(mHandle != INVALID_HANDLE_VALUE);
 
@@ -257,20 +256,20 @@ size_t OSFile::Size()
 
 /* static */
 
-bool OSFile::Delete(const char * filename)
+bool OSFile::Delete(const char* filename)
 {
 	return DeleteFileA(filename);
 }
 
-bool OSFile::Rename(const char * srcfile, const char * dstfile)
+bool OSFile::Rename(const char* srcfile, const char* dstfile)
 {
 	return MoveFileA(srcfile, dstfile);
 }
 
-bool OSFile::Exists(const char * filename)
+bool OSFile::Exists(const char* filename)
 {
 	DWORD result = GetFileAttributesA(filename);
-	DWORD error = GetLastError();
+	DWORD error  = GetLastError();
 	return !(result == INVALID_FILE_ATTRIBUTES && (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND));
 }
 
@@ -310,7 +309,8 @@ std::string OSFile::ReadString()
 	std::string str;
 	char c;
 
-	do {
+	do
+	{
 		Read(&c, 1);
 		str.push_back(c);
 	} while (c != '\0');
@@ -318,25 +318,23 @@ std::string OSFile::ReadString()
 	return str;
 }
 
-
-
-char * OSFile::ReadAll(const char * filename, size_t* sizeOut)
+char* OSFile::ReadAll(const char* filename, size_t* sizeOut)
 {
-    OSFile* file = new OSFile;
-    file->Open(filename, LH_FILE_MODE::Read);
+	OSFile* file = new OSFile;
+	file->Open(filename, LH_FILE_MODE::Read);
 
-    size_t fileSize = file->Size();
+	size_t fileSize = file->Size();
 
 	char* buffer = new char[fileSize + 1];
 
-    file->Read(buffer, fileSize);
+	file->Read(buffer, fileSize);
 
-    file->Close();
+	file->Close();
 
-    if (sizeOut != 0)
-        *sizeOut = fileSize+1;
+	if (sizeOut != 0)
+		*sizeOut = fileSize + 1;
 
-    buffer[fileSize] = 0;
+	buffer[fileSize] = 0;
 
 	return buffer;
 }

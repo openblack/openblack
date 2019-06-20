@@ -22,64 +22,64 @@
 #ifndef OPENBLACK_SKINNEDMODEL_H
 #define OPENBLACK_SKINNEDMODEL_H
 
-#include <Graphics/ShaderProgram.h>
 #include <Graphics/Mesh.h>
+#include <Graphics/ShaderProgram.h>
 #include <Graphics/Texture2D.h>
-
-#include <map>
 #include <glm/gtc/quaternion.hpp>
+#include <map>
 
 using namespace OpenBlack::Graphics;
 
 namespace OpenBlack
 {
-	class SkinnedModel
+class SkinnedModel
+{
+  public:
+	SkinnedModel()  = default;
+	~SkinnedModel() = default;
+
+	void LoadFromFile(const std::string& fileName);
+	void LoadFromL3D(void* data, size_t size);
+	void Draw(ShaderProgram* program);
+
+  private:
+	uint32_t _flags;
+
+	std::map<uint32_t, std::unique_ptr<Texture2D>> _textures;
+	std::map<uint32_t, uint32_t> _submeshSkinMap;
+	std::vector<std::unique_ptr<Mesh>> _submeshes;
+
+	struct SkinnedModel_Bone
 	{
-	public:
-		SkinnedModel() = default;
-		~SkinnedModel() = default;
 
-		void LoadFromFile(const std::string& fileName);
-		void LoadFromL3D(void* data, size_t size);
-		void Draw(ShaderProgram* program);
+		int32_t parentBone;  // -1 = root;
+		int32_t childBone;   // -1 = no children
+		int32_t siblingBone; // -1 = no siblings
 
-
-	private:
-		uint32_t _flags;
-
-		std::map<uint32_t, std::unique_ptr<Texture2D>> _textures;
-		std::map<uint32_t, uint32_t> _submeshSkinMap;
-		std::vector<std::unique_ptr<Mesh>> _submeshes;
-
-		struct SkinnedModel_Bone {
-
-			int32_t parentBone; // -1 = root;
-			int32_t childBone; // -1 = no children
-			int32_t siblingBone; // -1 = no siblings
-
-			glm::vec3 position;
-			glm::quat rotation;
-		};
-
-		std::vector<SkinnedModel_Bone> _bones;
-		std::vector<glm::mat4> _boneMatrices;
-
-		void calculateBoneMatrices();
-	public:
-		const bool IsBoned() const { return _flags & 0x100; } // 23
-		const bool IsNoDraw() const { return _flags & 0x2000; } // 18
-		const bool IsContainsLandscapeFeature() const { return _flags & 0x8000; } // 16
-		const bool IsContainsUV2() const { return _flags & 0x40000; } // 13
-		const bool IsContainsNameData() const { return _flags & 0x80000; } // 12
-		const bool IsContainsExtraMetrics() const { return _flags & 0x100000; } // 11
-		const bool IsContainsEBone() const { return _flags & 0x200000; } // 10
-		const bool IsContainsTnLData() const { return _flags & 0x400000; } // 9
-		const bool IsContainsNewEP() const { return _flags & 0x800000; } // 8
-
-		//const bool IsContainsNewData() const { return _flags & 0xFC8000; } // ???
-
-		std::vector<SkinnedModel_Bone>& GetBones() { return _bones; }
+		glm::vec3 position;
+		glm::quat rotation;
 	};
-}
+
+	std::vector<SkinnedModel_Bone> _bones;
+	std::vector<glm::mat4> _boneMatrices;
+
+	void calculateBoneMatrices();
+
+  public:
+	const bool IsBoned() const { return _flags & 0x100; }                     // 23
+	const bool IsNoDraw() const { return _flags & 0x2000; }                   // 18
+	const bool IsContainsLandscapeFeature() const { return _flags & 0x8000; } // 16
+	const bool IsContainsUV2() const { return _flags & 0x40000; }             // 13
+	const bool IsContainsNameData() const { return _flags & 0x80000; }        // 12
+	const bool IsContainsExtraMetrics() const { return _flags & 0x100000; }   // 11
+	const bool IsContainsEBone() const { return _flags & 0x200000; }          // 10
+	const bool IsContainsTnLData() const { return _flags & 0x400000; }        // 9
+	const bool IsContainsNewEP() const { return _flags & 0x800000; }          // 8
+
+	//const bool IsContainsNewData() const { return _flags & 0xFC8000; } // ???
+
+	std::vector<SkinnedModel_Bone>& GetBones() { return _bones; }
+};
+} // namespace OpenBlack
 
 #endif

@@ -20,16 +20,17 @@
 
 #include "GameWindow.h"
 
-#include <sstream>
 #include <iostream>
+#include <sstream>
 #define GLEW_STATIC
 #include <GL/glew.h>
 
 using namespace OpenBlack;
 
-GameWindow::GameWindow(const std::string & title, const SDL_DisplayMode & display, DisplayMode displaymode)
-	: GameWindow::GameWindow(title, display.w, display.h, displaymode)
-{}
+GameWindow::GameWindow(const std::string& title, const SDL_DisplayMode& display, DisplayMode displaymode):
+    GameWindow::GameWindow(title, display.w, display.h, displaymode)
+{
+}
 
 GameWindow::GameWindow(const std::string& title, int width, int height, DisplayMode displaymode)
 {
@@ -42,7 +43,8 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 	std::clog << "SDL Version/Linked " << uint32_t(linkedVersion.major) << "." << uint32_t(linkedVersion.minor) << "." << uint32_t(linkedVersion.patch) << "\n";
 
 	// Initialize SDL
-	if (SDL_WasInit(0) == 0) {
+	if (SDL_WasInit(0) == 0)
+	{
 		SDL_SetMainReady();
 		if (SDL_Init(0) != 0)
 			throw std::runtime_error("Could not initialize SDL: " + std::string(SDL_GetError()));
@@ -64,10 +66,11 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 		flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 
 	auto window = std::unique_ptr<SDL_Window, SDLDestroyer>(SDL_CreateWindow(
-		title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		width, height, flags));
+	    title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+	    width, height, flags));
 
-	if (window == nullptr) {
+	if (window == nullptr)
+	{
 		throw std::runtime_error("Failed creating window: " + std::string(SDL_GetError()));
 	}
 	_window = std::move(window);
@@ -91,9 +94,12 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 
 	auto context = SDL_GL_CreateContext(_window.get());
 
-	if (context == nullptr) {
+	if (context == nullptr)
+	{
 		throw std::runtime_error("Could not create OpenGL context: " + std::string(SDL_GetError()));
-	} else {
+	}
+	else
+	{
 		_glcontext = std::unique_ptr<SDL_GLContext, SDLDestroyer>(&context);
 	}
 
@@ -118,73 +124,90 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 	std::cout << "Using GLEW " << glewGetString(GLEW_VERSION) << std::endl;
 }
 
-SDL_Window* GameWindow::GetHandle() const {
+SDL_Window* GameWindow::GetHandle() const
+{
 	return _window.get();
 }
 
-SDL_GLContext* GameWindow::GetGLContext() const {
+SDL_GLContext* GameWindow::GetGLContext() const
+{
 	return _glcontext.get();
 }
 
-bool GameWindow::IsOpen() const {
+bool GameWindow::IsOpen() const
+{
 	return _window != nullptr;
 }
 
-float GameWindow::GetBrightness() const {
+float GameWindow::GetBrightness() const
+{
 	return SDL_GetWindowBrightness(_window.get());
 }
 
-void GameWindow::SetBrightness(float brightness) {
-	if (SDL_SetWindowBrightness(_window.get(), brightness)) {
+void GameWindow::SetBrightness(float brightness)
+{
+	if (SDL_SetWindowBrightness(_window.get(), brightness))
+	{
 		throw std::runtime_error("SDL_SetWindowBrightness Error: " + std::string(SDL_GetError()));
 	}
 }
 
-uint32_t GameWindow::GetID() const {
+uint32_t GameWindow::GetID() const
+{
 	return SDL_GetWindowID(_window.get());
 }
 
-uint32_t GameWindow::GetFlags() const {
+uint32_t GameWindow::GetFlags() const
+{
 	return SDL_GetWindowFlags(_window.get());
 }
 
-void GameWindow::GrabInput(bool b) {
+void GameWindow::GrabInput(bool b)
+{
 	SDL_SetWindowGrab(_window.get(), b ? SDL_TRUE : SDL_FALSE);
 }
 
-void GameWindow::SetMousePosition(int x, int y) {
+void GameWindow::SetMousePosition(int x, int y)
+{
 	SDL_WarpMouseInWindow(_window.get(), x, y);
 }
 
-bool GameWindow::IsInputGrabbed() {
+bool GameWindow::IsInputGrabbed()
+{
 	return SDL_GetWindowGrab(_window.get()) != SDL_FALSE;
 }
 
-std::string GameWindow::GetTitle() const {
+std::string GameWindow::GetTitle() const
+{
 	return SDL_GetWindowTitle(_window.get());
 }
 
-void GameWindow::SetTitle(const std::string& str) {
+void GameWindow::SetTitle(const std::string& str)
+{
 	SDL_SetWindowTitle(_window.get(), str.c_str());
 }
 
-int GameWindow::GetSwapInterval() {
+int GameWindow::GetSwapInterval()
+{
 	return SDL_GL_GetSwapInterval();
 }
 
-void GameWindow::SetSwapInterval(int interval) {
+void GameWindow::SetSwapInterval(int interval)
+{
 	// todo: throw on error
 	SDL_GL_SetSwapInterval(interval);
 }
 
-float GameWindow::GetAspectRatio() const {
+float GameWindow::GetAspectRatio() const
+{
 	int width, height;
 	SDL_GetWindowSize(_window.get(), &width, &height);
 
 	return (float)width / (float)height;
 }
 
-void GameWindow::SetPosition(int x, int y) {
+void GameWindow::SetPosition(int x, int y)
+{
 	SDL_SetWindowPosition(_window.get(), x, y);
 }
 
@@ -193,7 +216,8 @@ void GameWindow::GetPosition(int& x, int& y)
 	SDL_GetWindowPosition(_window.get(), &x, &y);
 }
 
-void GameWindow::SetMinimumSize(int width, int height) {
+void GameWindow::SetMinimumSize(int width, int height)
+{
 	SDL_SetWindowMinimumSize(_window.get(), width, height);
 }
 
@@ -202,7 +226,8 @@ void GameWindow::GetMinimumSize(int& width, int& height)
 	SDL_GetWindowMinimumSize(_window.get(), &width, &height);
 }
 
-void GameWindow::SetMaximumSize(int width, int height) {
+void GameWindow::SetMaximumSize(int width, int height)
+{
 	SDL_SetWindowMaximumSize(_window.get(), width, height);
 }
 
@@ -211,7 +236,8 @@ void GameWindow::GetMaximumSize(int& width, int& height)
 	SDL_GetWindowMaximumSize(_window.get(), &width, &height);
 }
 
-void GameWindow::SetSize(int width, int height) {
+void GameWindow::SetSize(int width, int height)
+{
 	SDL_SetWindowSize(_window.get(), width, height);
 }
 
@@ -258,16 +284,19 @@ void GameWindow::SetBordered(bool b)
 void GameWindow::SetFullscreen(bool b)
 {
 	// todo: use DisplayMode
-	if (SDL_SetWindowFullscreen(_window.get(), b ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0)) {
+	if (SDL_SetWindowFullscreen(_window.get(), b ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0))
+	{
 		throw std::runtime_error("SDL_SetWindowFullscreen Error: " + std::string(SDL_GetError()));
 	}
 }
 
-void GameWindow::Close() {
+void GameWindow::Close()
+{
 	_glcontext.reset(nullptr);
 	_window.reset(nullptr);
 }
 
-void GameWindow::SwapWindow() {
+void GameWindow::SwapWindow()
+{
 	SDL_GL_SwapWindow(_window.get());
 }

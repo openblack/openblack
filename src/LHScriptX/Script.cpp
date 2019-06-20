@@ -18,18 +18,15 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <LHScriptX/Script.h>
-#include <LHScriptX/Lexer.h>
-
 #include <Common/OSFile.h>
-
-#include <iostream>
-
 #include <LHScriptX/FeatureScriptCommands.h>
+#include <LHScriptX/Lexer.h>
+#include <LHScriptX/Script.h>
+#include <iostream>
 
 using namespace OpenBlack::LHScriptX;
 
-void Script::LoadFile(const std::string &file)
+void Script::LoadFile(const std::string& file)
 {
 	OSFile osfile;
 	osfile.Open(file.c_str(), LH_FILE_MODE::Read);
@@ -90,7 +87,6 @@ void Script::LoadFile(const std::string &file)
 
 			// check for (, then collect all Tokens seperated by , until )
 			// that is our paremter list
-
 		}
 
 		this->advanceToken();
@@ -100,10 +96,10 @@ void Script::LoadFile(const std::string &file)
 	delete[] contents;
 }
 
-const bool Script::isCommand(const std::string & identifier) const
+const bool Script::isCommand(const std::string& identifier) const
 {
 	// this could be done a lot better
-	for (const auto &signature : FeatureScriptCommands::Signatures)
+	for (const auto& signature : FeatureScriptCommands::Signatures)
 		if (signature.name == identifier)
 			return true;
 
@@ -114,7 +110,7 @@ void Script::runCommand(const std::string& identifier)
 {
 	const ScriptCommandSignature* command_signature;
 
-	for (const auto &signature : FeatureScriptCommands::Signatures)
+	for (const auto& signature : FeatureScriptCommands::Signatures)
 	{
 		if (signature.name != identifier)
 			continue;
@@ -144,7 +140,6 @@ const Token* Script::advanceToken()
 	token_ = lexer_->GetToken();
 	return &token_;
 }
-
 
 // Call           = "(" [ ArgumentList [ "," ] ] ")" .
 // ArgumentList   = Identifer Literals

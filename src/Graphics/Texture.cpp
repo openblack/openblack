@@ -24,7 +24,8 @@
 
 using namespace OpenBlack::Graphics;
 
-Texture::Texture() : _textureID(0)
+Texture::Texture():
+    _textureID(0)
 {
 	glGenTextures(1, &_textureID);
 	assert(_textureID);

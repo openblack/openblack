@@ -18,29 +18,27 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
-#include <cassert>
-
-#include <Graphics/ShaderProgram.h>
 #include <Common/OSFile.h>
-
+#include <Graphics/ShaderProgram.h>
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <glm/gtc/type_ptr.hpp>
 
 using OpenBlack::Graphics::ShaderProgram;
 
-ShaderProgram::ShaderProgram(const std::string &vertexSource, const std::string &fragmentSource)
+ShaderProgram::ShaderProgram(const std::string& vertexSource, const std::string& fragmentSource)
 {
 	_program = glCreateProgram();
 
 	// lazy assert, todo: better error handling
 	assert(_program != 0);
 
-	char* vertexShaderSource = OSFile::ReadAll(vertexSource.c_str(), nullptr);
+	char* vertexShaderSource   = OSFile::ReadAll(vertexSource.c_str(), nullptr);
 	char* fragmentShaderSource = OSFile::ReadAll(fragmentSource.c_str(), nullptr);
 
-	GLuint vertexShader = createSubShader(GL_VERTEX_SHADER, vertexShaderSource);
+	GLuint vertexShader   = createSubShader(GL_VERTEX_SHADER, vertexShaderSource);
 	GLuint fragmentShader = createSubShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
 
 	delete[] vertexShaderSource;
@@ -112,32 +110,32 @@ void ShaderProgram::SetUniformValue(const char* uniformName, float value)
 	glUniform1f(_uniforms[uniformName], value);
 }
 
-void ShaderProgram::SetUniformValue(const char* uniformName, const glm::vec2 & v)
+void ShaderProgram::SetUniformValue(const char* uniformName, const glm::vec2& v)
 {
 	glUniform2fv(_uniforms[uniformName], 1, glm::value_ptr(v));
 }
 
-void ShaderProgram::SetUniformValue(const char* uniformName, const glm::vec3 & v)
+void ShaderProgram::SetUniformValue(const char* uniformName, const glm::vec3& v)
 {
 	glUniform3fv(_uniforms[uniformName], 1, glm::value_ptr(v));
 }
 
-void ShaderProgram::SetUniformValue(const char* uniformName, const glm::vec4 & v)
+void ShaderProgram::SetUniformValue(const char* uniformName, const glm::vec4& v)
 {
 	glUniform4fv(_uniforms[uniformName], 1, glm::value_ptr(v));
 }
 
-void ShaderProgram::SetUniformValue(const char* uniformName, const glm::mat3 & m)
+void ShaderProgram::SetUniformValue(const char* uniformName, const glm::mat3& m)
 {
 	glUniformMatrix3fv(_uniforms[uniformName], 1, GL_FALSE, glm::value_ptr(m));
 }
 
-void ShaderProgram::SetUniformValue(const char* uniformName, const glm::mat4 & m)
+void ShaderProgram::SetUniformValue(const char* uniformName, const glm::mat4& m)
 {
 	glUniformMatrix4fv(_uniforms[uniformName], 1, GL_FALSE, glm::value_ptr(m));
 }
 
-void ShaderProgram::SetUniformValue(const char* uniformName, size_t count, const glm::mat4 * m)
+void ShaderProgram::SetUniformValue(const char* uniformName, size_t count, const glm::mat4* m)
 {
 	glUniformMatrix4fv(_uniforms[uniformName], count, GL_FALSE, glm::value_ptr(m[0]));
 }

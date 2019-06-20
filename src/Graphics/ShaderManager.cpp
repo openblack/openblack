@@ -32,18 +32,18 @@ ShaderManager::~ShaderManager()
 	_shaderPrograms.clear();
 }
 
-ShaderProgram * OpenBlack::Graphics::ShaderManager::LoadShader(const std::string & name, const std::string & vertexShaderFile, const std::string & fragmentShaderFile)
+ShaderProgram* OpenBlack::Graphics::ShaderManager::LoadShader(const std::string& name, const std::string& vertexShaderFile, const std::string& fragmentShaderFile)
 {
 	ShaderMap::iterator i = _shaderPrograms.find(name);
 	if (i != _shaderPrograms.end())
 		return i->second;
 
 	ShaderProgram* program = new ShaderProgram(vertexShaderFile, fragmentShaderFile);
-	_shaderPrograms[name] = program;
+	_shaderPrograms[name]  = program;
 	return program;
 }
 
-ShaderProgram * OpenBlack::Graphics::ShaderManager::GetShader(const std::string & name)
+ShaderProgram* OpenBlack::Graphics::ShaderManager::GetShader(const std::string& name)
 {
 	ShaderMap::iterator i = _shaderPrograms.find(name);
 	if (i != _shaderPrograms.end())

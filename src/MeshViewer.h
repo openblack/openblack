@@ -26,18 +26,20 @@
 
 namespace OpenBlack
 {
-	class MeshViewer {
-	public:
-		MeshViewer();
-		~MeshViewer();
+class MeshViewer
+{
+  public:
+	MeshViewer();
+	~MeshViewer();
 
-		void GUI();
-		void Render();
-	private:
-		int m_currentMesh;
+	void GUI();
+	void Render();
 
-		L3DModel* GetCurrentModel();
-	};
-}
+  private:
+	int m_currentMesh;
+
+	L3DModel* GetCurrentModel();
+};
+} // namespace OpenBlack
 
 #endif

@@ -22,92 +22,96 @@
 #ifndef OPENBLACK_GAME_H
 #define OPENBLACK_GAME_H
 
+#include "GameWindow.h"
+
+#include <LHVM/LHVM.hpp>
+#include <glm/glm.hpp>
 #include <string>
 #include <vector>
 
-#include "GameWindow.h"
-
-#include <glm/glm.hpp>
-
-#include <LHVM/LHVM.hpp>
-
 namespace OpenBlack
 {
-	class Camera;
-	class MeshPack;
-	class MeshViewer;
-	class LandIsland;
-	class L3DModel;
-	class SkinnedModel;
-	class Sky;
-	class Water;
+class Camera;
+class MeshPack;
+class MeshViewer;
+class LandIsland;
+class L3DModel;
+class SkinnedModel;
+class Sky;
+class Water;
 
-	namespace Graphics {
-	class ShaderProgram;
-	class ShaderManager;
-	}
+namespace Graphics
+{
+class ShaderProgram;
+class ShaderManager;
+} // namespace Graphics
 
-	namespace LHScriptX {
-	class Script;
-	}
-
-	namespace Video {
-	class VideoPlayer;
-	}
-
-	class Game {
-	public:
-		Game(int argc, char **argv);
-		~Game();
-
-		void Run();
-
-		void LoadMap(const std::string &name);
-		void LoadLandscape(const std::string &name);
-
-		const std::string& GetGamePath();
-
-		GameWindow& GetWindow() { return *_window;  }
-		Camera& GetCamera() { return *_camera; }
-		MeshPack& GetMeshPack() { return *_meshPack; }
-		Graphics::ShaderManager& GetShaderManager() { return *_shaderManager; }
-		
-		static Game* instance() {
-			return sInstance;
-		}
-	private:
-		static Game* sInstance;
-
-		std::unique_ptr<Graphics::ShaderManager> _shaderManager;
-
-		std::unique_ptr<GameWindow> _window;
-		std::unique_ptr<Camera> _camera;
-
-		std::unique_ptr<LandIsland> _landIsland;
-		std::unique_ptr<MeshPack> _meshPack;
-		//std::unique_ptr<Video::VideoPlayer> _videoPlayer;
-
-		std::unique_ptr<SkinnedModel> _testModel;
-		std::unique_ptr<Sky> _sky;
-		std::unique_ptr<Water> _water;
-		std::unique_ptr<LHScriptX::Script> _scriptx;
-		std::unique_ptr<LHVM::LHVM> _lhvm;
-
-		bool _wireframe;
-		float _timeOfDay;
-		float _bumpmapStrength;
-
-		glm::ivec2 _mousePosition;
-		glm::vec3 _intersection;
-
-		glm::vec3 _modelPosition;
-		glm::vec3 _modelRotation;
-		glm::vec3 _modelScale;
-
-		bool _running;
-
-		void guiLoop();
-	};
+namespace LHScriptX
+{
+class Script;
 }
+
+namespace Video
+{
+class VideoPlayer;
+}
+
+class Game
+{
+  public:
+	Game(int argc, char** argv);
+	~Game();
+
+	void Run();
+
+	void LoadMap(const std::string& name);
+	void LoadLandscape(const std::string& name);
+
+	const std::string& GetGamePath();
+
+	GameWindow& GetWindow() { return *_window; }
+	Camera& GetCamera() { return *_camera; }
+	MeshPack& GetMeshPack() { return *_meshPack; }
+	Graphics::ShaderManager& GetShaderManager() { return *_shaderManager; }
+
+	static Game* instance()
+	{
+		return sInstance;
+	}
+
+  private:
+	static Game* sInstance;
+
+	std::unique_ptr<Graphics::ShaderManager> _shaderManager;
+
+	std::unique_ptr<GameWindow> _window;
+	std::unique_ptr<Camera> _camera;
+
+	std::unique_ptr<LandIsland> _landIsland;
+	std::unique_ptr<MeshPack> _meshPack;
+	//std::unique_ptr<Video::VideoPlayer> _videoPlayer;
+
+	std::unique_ptr<SkinnedModel> _testModel;
+	std::unique_ptr<Sky> _sky;
+	std::unique_ptr<Water> _water;
+	std::unique_ptr<LHScriptX::Script> _scriptx;
+	std::unique_ptr<LHVM::LHVM> _lhvm;
+
+	bool _wireframe;
+	float _timeOfDay;
+	float _bumpmapStrength;
+
+	glm::ivec2 _mousePosition;
+	glm::vec3 _intersection;
+
+	glm::vec3 _modelPosition;
+	glm::vec3 _modelRotation;
+	glm::vec3 _modelScale;
+
+	bool _running;
+
+	void guiLoop();
+};
+} // namespace OpenBlack
 
 #endif

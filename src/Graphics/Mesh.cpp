@@ -20,17 +20,16 @@
 
 #include "Mesh.h"
 
-#include <stdint.h>
-#include <stdexcept>
-
 #include <Game.h>
+#include <stdexcept>
+#include <stdint.h>
 
 using namespace OpenBlack::Graphics;
 
-Mesh::Mesh(VertexBuffer* vertexBuffer, const VertexDecl &decl, GLuint type)
-	: _vertexBuffer(std::move(vertexBuffer)),
-	_vertexDecl(decl),
-	_type(type)
+Mesh::Mesh(VertexBuffer* vertexBuffer, const VertexDecl& decl, GLuint type):
+    _vertexBuffer(std::move(vertexBuffer)),
+    _vertexDecl(decl),
+    _type(type)
 {
 	glGenVertexArrays(1, &_vao);
 	glBindVertexArray(_vao);
@@ -41,11 +40,11 @@ Mesh::Mesh(VertexBuffer* vertexBuffer, const VertexDecl &decl, GLuint type)
 	glBindVertexArray(0);
 }
 
-Mesh::Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, const VertexDecl &decl, GLuint type)
-	: _vertexBuffer(std::move(vertexBuffer)),
-	_indexBuffer(std::move(indexBuffer)),
-	_vertexDecl(decl),
-	_type(type)
+Mesh::Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, const VertexDecl& decl, GLuint type):
+    _vertexBuffer(std::move(vertexBuffer)),
+    _indexBuffer(std::move(indexBuffer)),
+    _vertexDecl(decl),
+    _type(type)
 {
 	glGenVertexArrays(1, &_vao);
 	glBindVertexArray(_vao);
@@ -55,7 +54,7 @@ Mesh::Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, const VertexDec
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBuffer->GetIBO());
 
 	glBindVertexArray(0);
-}	
+}
 
 Mesh::~Mesh()
 {
@@ -63,19 +62,23 @@ Mesh::~Mesh()
 		glDeleteVertexArrays(1, &_vao);
 }
 
-std::shared_ptr<VertexBuffer> Mesh::GetVertexBuffer() {
+std::shared_ptr<VertexBuffer> Mesh::GetVertexBuffer()
+{
 	return _vertexBuffer;
 }
 
-std::shared_ptr<IndexBuffer> Mesh::GetIndexBuffer() {
+std::shared_ptr<IndexBuffer> Mesh::GetIndexBuffer()
+{
 	return _indexBuffer;
 }
 
-const GLuint Mesh::GetType() const noexcept {
+const GLuint Mesh::GetType() const noexcept
+{
 	return _type;
 }
 
-void Mesh::Draw() {
+void Mesh::Draw()
+{
 	glBindVertexArray(_vao);
 	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
 		glDrawElements(_type, _indexBuffer->GetCount(), _indexBuffer->GetType(), 0);
@@ -85,23 +88,24 @@ void Mesh::Draw() {
 
 void Mesh::bindVertexDecl()
 {
-	for (size_t i = 0; i < _vertexDecl.size(); i++) {
+	for (size_t i = 0; i < _vertexDecl.size(); i++)
+	{
 		if (_vertexDecl[i].integer == true)
 		{
 			glVertexAttribIPointer(_vertexDecl[i].index,
-				_vertexDecl[i].size,
-				_vertexDecl[i].type,
-				_vertexDecl[i].stride,
-				_vertexDecl[i].offset);
+			                       _vertexDecl[i].size,
+			                       _vertexDecl[i].type,
+			                       _vertexDecl[i].stride,
+			                       _vertexDecl[i].offset);
 		}
 		else
 		{
 			glVertexAttribPointer(_vertexDecl[i].index,
-				_vertexDecl[i].size,
-				_vertexDecl[i].type,
-				_vertexDecl[i].normalized ? GL_TRUE : GL_FALSE,
-				_vertexDecl[i].stride,
-				_vertexDecl[i].offset);
+			                      _vertexDecl[i].size,
+			                      _vertexDecl[i].type,
+			                      _vertexDecl[i].normalized ? GL_TRUE : GL_FALSE,
+			                      _vertexDecl[i].stride,
+			                      _vertexDecl[i].offset);
 		}
 
 		glEnableVertexAttribArray(_vertexDecl[i].index);

@@ -24,76 +24,76 @@
 
 #define OPENBLACK_LANDISLAND_HEIGHT_UNIT 0.67f
 
-#include <string>
-#include <vector>
-#include <memory>
-
+#include <3D/LandBlock.h>
 #include <Graphics/Mesh.h>
 #include <Graphics/Texture2D.h>
 #include <Graphics/Texture2DArray.h>
-
-#include <3D/LandBlock.h>
+#include <memory>
+#include <string>
+#include <vector>
 
 using namespace OpenBlack::Graphics;
 
 namespace OpenBlack
 {
-	struct MapMaterial
-	{
-		uint32_t FirstMaterialIndex;
-		uint32_t SecondMaterialIndex;
-		uint32_t Coeficient;
-	};
+struct MapMaterial
+{
+	uint32_t FirstMaterialIndex;
+	uint32_t SecondMaterialIndex;
+	uint32_t Coeficient;
+};
 
-	struct Country
-	{
-		uint32_t TerrainType;
-		MapMaterial MapMaterials[256]; // altitude 0-255
-	};
+struct Country
+{
+	uint32_t TerrainType;
+	MapMaterial MapMaterials[256]; // altitude 0-255
+};
 
-	class LandIsland
-	{
-	public:
-		LandIsland();
-		~LandIsland();
+class LandIsland
+{
+  public:
+	LandIsland();
+	~LandIsland();
 
-		void LoadFromDisk(const std::string &filePath);
+	void LoadFromDisk(const std::string& filePath);
 
-		const uint8_t GetAltitudeAt(glm::ivec2) const;
-		const float GetHeightAt(glm::ivec2) const;
+	const uint8_t GetAltitudeAt(glm::ivec2) const;
+	const float GetHeightAt(glm::ivec2) const;
 
-		// Debug
-		void DumpTextures();
-		void DumpMaps();
-	private:
-		std::unique_ptr<LandBlock[]> _landBlocks;
-		std::unique_ptr<Country[]> _countries;
+	// Debug
+	void DumpTextures();
+	void DumpMaps();
 
-		unsigned int _blockCount;
-		unsigned int _materialCount;
-		unsigned int _countryCount;
-		unsigned int _lowresCount;
+  private:
+	std::unique_ptr<LandBlock[]> _landBlocks;
+	std::unique_ptr<Country[]> _countries;
 
-		// Renderer
-	public:
-		void Draw(ShaderProgram* program);
-		std::shared_ptr<Texture2DArray> GetMaterialArray() const { return _materialArray; }
-		std::shared_ptr<Texture2DArray> GetLowResArray() const { return _lowResTextureArray; }
-		Country* GetCountries() const { return _countries.get(); }
+	unsigned int _blockCount;
+	unsigned int _materialCount;
+	unsigned int _countryCount;
+	unsigned int _lowresCount;
 
-		std::shared_ptr<Texture2D> GetNoiseMap() { return _textureNoiseMap; }
-		std::shared_ptr<Texture2D> GetBumpMap() { return _textureBumpMap; }
-	private:
-		void convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixels);
+	// Renderer
+  public:
+	void Draw(ShaderProgram* program);
+	std::shared_ptr<Texture2DArray> GetMaterialArray() const { return _materialArray; }
+	std::shared_ptr<Texture2DArray> GetLowResArray() const { return _lowResTextureArray; }
+	Country* GetCountries() const { return _countries.get(); }
 
-		std::shared_ptr<Texture2DArray> _lowResTextureArray;
-		std::shared_ptr<Texture2DArray> _materialArray;
-		std::unique_ptr<Texture2D> _countryLookup;
+	std::shared_ptr<Texture2D> GetNoiseMap() { return _textureNoiseMap; }
+	std::shared_ptr<Texture2D> GetBumpMap() { return _textureBumpMap; }
 
-		std::shared_ptr<Texture2D> _textureNoiseMap;
-		std::shared_ptr<Texture2D> _textureBumpMap;
-	};
-}
+  private:
+	void convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixels);
+
+	std::shared_ptr<Texture2DArray> _lowResTextureArray;
+	std::shared_ptr<Texture2DArray> _materialArray;
+	std::unique_ptr<Texture2D> _countryLookup;
+
+	std::shared_ptr<Texture2D> _textureNoiseMap;
+	std::shared_ptr<Texture2D> _textureBumpMap;
+};
+} // namespace OpenBlack
 
 /*
 LH3DIsland methods:

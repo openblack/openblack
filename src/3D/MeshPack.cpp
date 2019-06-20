@@ -20,19 +20,21 @@
 
 #include "MeshPack.h"
 
-#include <stdint.h>
 #include <stdexcept>
+#include <stdint.h>
 
 using namespace OpenBlack;
 
 // Just enough for us to parse
-struct L3DSMiniHeader {
+struct L3DSMiniHeader
+{
 	char magic[4];
 	uint32_t unknown;
 	uint32_t l3dSize;
 };
 
-struct G3DHiResTexture {
+struct G3DHiResTexture
+{
 	uint32_t size;
 	uint32_t id;
 	uint32_t type;
@@ -41,14 +43,16 @@ struct G3DHiResTexture {
 	// surface desc shit.
 };
 
-struct DDSurfaceDesc {
+struct DDSurfaceDesc
+{
 	uint32_t size;
 	uint32_t flags;
 	uint32_t height;
 	uint32_t width;
 };
 
-MeshPack::MeshPack(OSFile* file) : m_meshCount(0)
+MeshPack::MeshPack(OSFile* file):
+    m_meshCount(0)
 {
 	// LiOnHeAd and a block header, but we already know it's high res textures
 	file->Seek(8, LH_SEEK_MODE::Set);
@@ -81,12 +85,12 @@ MeshPack::MeshPack(OSFile* file) : m_meshCount(0)
 		if (hiresTexture->type == 1)
 		{
 			glCompressedTexImage2DARB(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT,
-				desc->width, desc->height, 0, ((desc->width + 3) / 4)*((desc->height + 3) / 4) * 8, (uint8_t*)surfaceDesc + desc->size);
+			                          desc->width, desc->height, 0, ((desc->width + 3) / 4) * ((desc->height + 3) / 4) * 8, (uint8_t*)surfaceDesc + desc->size);
 		}
 		else if (hiresTexture->type == 2)
 		{
 			glCompressedTexImage2DARB(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_S3TC_DXT3_EXT,
-				desc->width, desc->height, 0, ((desc->width + 3) / 4)*((desc->height + 3) / 4) * 16, (uint8_t*)surfaceDesc + desc->size);
+			                          desc->width, desc->height, 0, ((desc->width + 3) / 4) * ((desc->height + 3) / 4) * 16, (uint8_t*)surfaceDesc + desc->size);
 		}
 
 		free(surfaceDesc);
@@ -102,8 +106,8 @@ MeshPack::MeshPack(OSFile* file) : m_meshCount(0)
 
 	printf("Meshes Segment %s of %d bytes\n", meshesSegment.Name, meshesSegment.SegmentSize);
 
-	uint8_t* data = (uint8_t*)meshesSegment.SegmentData;
-	uint32_t* meshCount = (uint32_t*)(data + 4);
+	uint8_t* data         = (uint8_t*)meshesSegment.SegmentData;
+	uint32_t* meshCount   = (uint32_t*)(data + 4);
 	uint32_t* meshOffsets = (uint32_t*)(data + 8);
 
 	m_meshCount = *meshCount;
@@ -123,6 +127,7 @@ MeshPack::MeshPack(OSFile* file) : m_meshCount(0)
 	}
 }
 
-uint32_t MeshPack::GetMeshCount() {
+uint32_t MeshPack::GetMeshCount()
+{
 	return m_meshCount;
 }

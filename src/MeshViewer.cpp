@@ -20,45 +20,39 @@
 
 #include "MeshViewer.h"
 
+#include <SDL.h>
 #include <iostream>
 #include <sstream>
-
-#include <SDL.h>
 #define GLEW_STATIC
+#include <3D/Camera.h>
+#include <3D/LandIsland.h>
+#include <3D/MeshPack.h>
+#include <AllMeshes.h>
+#include <Common/OSFile.h>
 #include <GL/glew.h>
-
+#include <Graphics/IndexBuffer.h>
+#include <Graphics/ShaderProgram.h>
+#include <Graphics/Texture2D.h>
+#include <Graphics/VertexBuffer.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <3D/Camera.h>
-#include <3D/LandIsland.h>
-
-#include <Common/OSFile.h>
-
-#include <Graphics/ShaderProgram.h>
-#include <Graphics/Texture2D.h>
-#include <Graphics/IndexBuffer.h>
-#include <Graphics/VertexBuffer.h>
-
-#include <3D/MeshPack.h>
-
-#include <AllMeshes.h>
-
 #define IMGUI_IMPL_OPENGL_LOADER_GLEW
 
-#include <imgui/imgui.h>
-#include <imgui/imgui_impl_sdl.h>
-#include <imgui/imgui_impl_opengl3.h>
-
 #include <Game.h>
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_opengl3.h>
+#include <imgui/imgui_impl_sdl.h>
 
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
 
-MeshViewer::MeshViewer() : m_currentMesh(0) { }
-MeshViewer::~MeshViewer() { }
+MeshViewer::MeshViewer():
+    m_currentMesh(0) {}
+MeshViewer::~MeshViewer() {}
 
-void MeshViewer::GUI() {
+void MeshViewer::GUI()
+{
 	ImGui::Begin("Mesh Viewer");
 
 	ImGui::PushItemWidth(-1);
@@ -67,16 +61,19 @@ void MeshViewer::GUI() {
 	ImGui::Separator();
 
 	L3DModel* model = GetCurrentModel();
-	if (model != nullptr) {
+	if (model != nullptr)
+	{
 		ImGui::Text("# Submeshes: %d", model->GetSubMeshCount());
 	}
 
 	ImGui::End();
 }
 
-void MeshViewer::Render() {
+void MeshViewer::Render()
+{
 	L3DModel* model = GetCurrentModel();
-	if (model == nullptr) {
+	if (model == nullptr)
+	{
 		return;
 	}
 
@@ -87,7 +84,8 @@ L3DModel* MeshViewer::GetCurrentModel()
 {
 	MeshPack meshPack = Game::instance()->GetMeshPack();
 
-	if (m_currentMesh < 0 || m_currentMesh >= meshPack.GetMeshCount()) {
+	if (m_currentMesh < 0 || m_currentMesh >= meshPack.GetMeshCount())
+	{
 		return nullptr;
 	}
 

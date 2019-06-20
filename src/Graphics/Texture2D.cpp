@@ -22,8 +22,8 @@
 
 using namespace OpenBlack::Graphics;
 
-Texture2D::Texture2D(GLsizei width, GLsizei height, GLenum internalFormat, GLenum format, GLenum type, const void* textureData)
-	: _width(width), _height(height), _internalFormat(internalFormat), _format(format), _type(type)
+Texture2D::Texture2D(GLsizei width, GLsizei height, GLenum internalFormat, GLenum format, GLenum type, const void* textureData):
+    _width(width), _height(height), _internalFormat(internalFormat), _format(format), _type(type)
 {
 	glBindTexture(GL_TEXTURE_2D, _textureID);
 	glTexImage2D(GL_TEXTURE_2D, 0, _internalFormat, _width, _height, 0, _format, _type, textureData);

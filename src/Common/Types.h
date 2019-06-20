@@ -22,18 +22,19 @@
 #ifndef OPENBLACK_TYPES_H
 #define OPENBLACK_TYPES_H
 
+#include <glm/glm.hpp>
 #include <stdint.h>
 #include <string>
 
-#include <glm/glm.hpp>
-
-typedef struct rgb {
+typedef struct rgb
+{
 	uint8_t r;
 	uint8_t g;
 	uint8_t b;
 } rgb_t;
 
-typedef struct rgba {
+typedef struct rgba
+{
 	uint8_t r;
 	uint8_t g;
 	uint8_t b;

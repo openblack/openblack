@@ -22,10 +22,9 @@
 #ifndef OPENBLACK_DEBUGDRAW_H
 #define OPENBLACK_DEBUGDRAW_H
 
+#include <Graphics/VertexBuffer.h>
 #include <glm/glm.hpp>
 #include <vector>
-
-#include <Graphics/VertexBuffer.h>
 
 #define DEBUG_DRAW_VERTEX_BUFFER_SIZE 4096
 
@@ -33,8 +32,9 @@ namespace OpenBlack
 {
 namespace Graphics
 {
-class DebugDraw {
-public:
+class DebugDraw
+{
+  public:
 	static void Init();
 	static void Shutdown();
 	static void DrawDebugLines();
@@ -44,9 +44,9 @@ public:
 	static void Box(glm::vec3 center, glm::vec3 color, glm::vec3 size);
 	static void Cross(glm::vec3 center, float size);
 
-
-protected:
-	struct Vertex {
+  protected:
+	struct Vertex
+	{
 		glm::vec3 pos;
 		glm::vec3 col;
 	};
@@ -56,10 +56,9 @@ protected:
 
 	static GLuint gpuVertexArray;
 	static std::unique_ptr<VertexBuffer> gpuVertexBuffer;
-
 };
 
-}
-}
+} // namespace Graphics
+} // namespace OpenBlack
 
 #endif // OPENBLACK_DEBUGDRAW_H

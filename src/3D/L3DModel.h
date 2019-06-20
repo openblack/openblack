@@ -28,26 +28,27 @@ using namespace OpenBlack::Graphics;
 
 namespace OpenBlack
 {
-	class L3DModel
-	{
-	public:
-		L3DModel();
-		~L3DModel();
+class L3DModel
+{
+  public:
+	L3DModel();
+	~L3DModel();
 
-		void LoadFromFile(const std::string& fileName);
-		void LoadFromL3D(void* data, size_t size, bool pack);
-		void Draw();
+	void LoadFromFile(const std::string& fileName);
+	void LoadFromL3D(void* data, size_t size, bool pack);
+	void Draw();
 
-		unsigned int GetSubMeshCount();
-	protected:
-		GLuint* _submeshSkinIds;
-		Mesh** _submeshes;
-		unsigned int _submeshCount;
+	unsigned int GetSubMeshCount();
 
-		GLuint* m_glSkins;
+  protected:
+	GLuint* _submeshSkinIds;
+	Mesh** _submeshes;
+	unsigned int _submeshCount;
 
-		bool m_bPackedMesh;
-	};
-}
+	GLuint* m_glSkins;
+
+	bool m_bPackedMesh;
+};
+} // namespace OpenBlack
 
 #endif

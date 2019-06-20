@@ -19,6 +19,7 @@
  */
 
 #include "CmdLineArgs.h"
+
 #include <algorithm>
 
 using namespace OpenBlack;

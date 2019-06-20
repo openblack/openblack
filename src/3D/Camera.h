@@ -24,22 +24,23 @@
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 #include <SDL_events.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
-namespace OpenBlack {
+namespace OpenBlack
+{
 
 class Camera
 {
 
-public:
-	Camera(glm::vec3 position, glm::vec3 rotation) :
-		_position(position), _rotation(_rotation), _projectionMatrix(1.0f),
-		_velForward(0.0f), _velRight(0.0f) {}
-	Camera() : Camera(glm::vec3(0.0f), glm::vec3(0.0f)) {}
+  public:
+	Camera(glm::vec3 position, glm::vec3 rotation):
+	    _position(position), _rotation(_rotation), _projectionMatrix(1.0f),
+	    _velForward(0.0f), _velRight(0.0f) {}
+	Camera():
+	    Camera(glm::vec3(0.0f), glm::vec3(0.0f)) {}
 
 	glm::vec3 GetRotation() const;
 	glm::vec3 GetPosition() const;
@@ -63,14 +64,14 @@ public:
 	void ProcessSDLEvent(SDL_Event* e);
 	void HandleMouseMoveEvent(int x, int y);
 	void HandleMouseScrollEvent(int x);
-private:
 
+  private:
 	glm::vec3 _position;
 	glm::vec3 _rotation;
 	glm::mat4 _projectionMatrix;
 
 	float _velForward, _velRight;
 };
-}
+} // namespace OpenBlack
 
 #endif

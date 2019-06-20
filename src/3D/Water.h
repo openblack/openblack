@@ -25,16 +25,18 @@
 #include <Graphics/Mesh.h>
 #include <glm/glm.hpp>
 
-namespace OpenBlack {
+namespace OpenBlack
+{
 
 class Water
 {
-public:
+  public:
 	Water();
 	~Water() = default;
 
 	void Draw();
-private:
+
+  private:
 	struct WaterVertex
 	{
 		glm::vec3 position;
@@ -45,6 +47,6 @@ private:
 	std::unique_ptr<Mesh> _mesh;
 };
 
-}
+} // namespace OpenBlack
 
 #endif

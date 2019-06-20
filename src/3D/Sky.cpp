@@ -18,13 +18,10 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/Sky.h>
-
-#include <Game.h>
 #include <3D/Camera.h>
-
+#include <3D/Sky.h>
 #include <Common/OSFile.h>
-
+#include <Game.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -41,7 +38,7 @@ Sky::Sky()
 
 	// load some sky bitmaps
 	Bitmap16B* bitmap = Bitmap16B::LoadFromFile(Game::instance()->GetGamePath() + "/Data/WeatherSystem/Sky_Ntrl_Day.555");
-	_texture = std::make_unique<Texture2D>(bitmap->Width(), bitmap->Height(), GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV, bitmap->Data());
+	_texture          = std::make_unique<Texture2D>(bitmap->Width(), bitmap->Height(), GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV, bitmap->Data());
 	delete bitmap;
 }
 

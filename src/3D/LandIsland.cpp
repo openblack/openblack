@@ -21,7 +21,6 @@
 #include "LandIsland.h"
 
 #include <Common/OSFile.h>
-
 #include <stdexcept>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -31,44 +30,43 @@ using namespace OpenBlack;
 
 LandIsland::LandIsland()
 {
-
 }
 
 LandIsland::~LandIsland()
 {
 }
 
-void LandIsland::LoadFromDisk(const std::string &fileName)
+void LandIsland::LoadFromDisk(const std::string& fileName)
 {
-    if (!OSFile::Exists(fileName.c_str()))
-        throw std::runtime_error("Land file does not exist.");
+	if (!OSFile::Exists(fileName.c_str()))
+		throw std::runtime_error("Land file does not exist.");
 
-    OSFile* file = new OSFile();
-    file->Open(fileName.c_str(), LH_FILE_MODE::Read);
-    size_t fileSize = file->Size();
+	OSFile* file = new OSFile();
+	file->Open(fileName.c_str(), LH_FILE_MODE::Read);
+	size_t fileSize = file->Size();
 
-    uint32_t blockSize, matSize, countrySize;
-    uint8_t blockIndex[1024];
+	uint32_t blockSize, matSize, countrySize;
+	uint8_t blockIndex[1024];
 
-    file->Read(&_blockCount, 4);
-    file->Read(&blockIndex, 1024);
-    file->Read(&_materialCount, 4);
-    file->Read(&_countryCount, 4);
-    file->Read(&blockSize, 4);
-    file->Read(&matSize, 4);
-    file->Read(&countrySize, 4);
-    file->Read(&_lowresCount, 4);
+	file->Read(&_blockCount, 4);
+	file->Read(&blockIndex, 1024);
+	file->Read(&_materialCount, 4);
+	file->Read(&_countryCount, 4);
+	file->Read(&blockSize, 4);
+	file->Read(&matSize, 4);
+	file->Read(&countrySize, 4);
+	file->Read(&_lowresCount, 4);
 
 	//_lowResTextureArray = std::make_shared<Texture2DArray>();
-    for (uint32_t i = 0; i < _lowresCount; i++)
-    {
-        uint32_t textureSize;
-        file->Seek(16, LH_SEEK_MODE::Current);
-        file->Read(&textureSize, 4);
-        file->Seek(textureSize - 4, LH_SEEK_MODE::Current);
+	for (uint32_t i = 0; i < _lowresCount; i++)
+	{
+		uint32_t textureSize;
+		file->Seek(16, LH_SEEK_MODE::Current);
+		file->Read(&textureSize, 4);
+		file->Seek(textureSize - 4, LH_SEEK_MODE::Current);
 
 		// GL_COMPRESSED_RGBA_S3TC_DXT3_EXT
-    }
+	}
 
 	_blockCount--; // take away a block from the count, because it's not in the file?
 	_landBlocks = std::make_unique<LandBlock[]>(_blockCount);
@@ -90,21 +88,21 @@ void LandIsland::LoadFromDisk(const std::string &fileName)
 	//file->Seek(_countryCount * countrySize, LH_SEEK_MODE::Current);
 
 	_materialArray = std::make_shared<Texture2DArray>(256, 256, _materialCount, GL_RGBA8);
-    for (uint32_t i = 0; i < _materialCount; i++)
-    {
+	for (uint32_t i = 0; i < _materialCount; i++)
+	{
 		uint16_t* rgba5TextureData = new uint16_t[256 * 256];
 		uint32_t* rgba8TextureData = new uint32_t[256 * 256];
 
-        uint16_t terrainType;
-        file->Read(&terrainType, 2);
-        file->Read(rgba5TextureData, 256*256*sizeof(uint16_t));
+		uint16_t terrainType;
+		file->Read(&terrainType, 2);
+		file->Read(rgba5TextureData, 256 * 256 * sizeof(uint16_t));
 
 		convertRGB5ToRGB8(rgba5TextureData, rgba8TextureData, 256 * 256);
 		_materialArray->SetTexture(i, 256, 256, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, rgba8TextureData);
 
-        delete[] rgba5TextureData;
+		delete[] rgba5TextureData;
 		delete[] rgba8TextureData;
-    }
+	}
 
 	// read noise map into texture2d
 	uint8_t* noiseMapTextureData = new uint8_t[256 * 256];
@@ -119,13 +117,13 @@ void LandIsland::LoadFromDisk(const std::string &fileName)
 	delete[] bumpMapTextureData;
 
 	// Read 2709680/2711300 (1620 bytes left..)
-    printf("Read %d/%d\n", file->Position(), fileSize);
+	printf("Read %d/%d\n", file->Position(), fileSize);
 
 	printf("_blockCount: %d\n", _blockCount);
 	printf("_materialCount: %d\n", _materialCount);
 	printf("_countryCount: %d\n", _countryCount);
 
-    file->Close();
+	file->Close();
 
 	// build the meshes
 	for (unsigned int b = 0; b < _blockCount; b++)
@@ -184,7 +182,8 @@ void LandIsland::DumpTextures()
 	glGenFramebuffers(1, &fboID);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, fboID);
 
-	for (unsigned int i = 0; i < _materialCount; i++) {
+	for (unsigned int i = 0; i < _materialCount; i++)
+	{
 		uint8_t* pixels = new uint8_t[256 * 256 * 4];
 
 		glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureID, 0, i);
@@ -214,9 +213,9 @@ void LandIsland::DumpMaps()
 	for (unsigned int b = 0; b < _blockCount; b++)
 	{
 		LandBlock* block = &_landBlocks[b];
-		int mapx = block->GetBlockPosition()->x;
-		int mapz = block->GetBlockPosition()->y;
-		int lineStride = 32 * 16;
+		int mapx         = block->GetBlockPosition()->x;
+		int mapz         = block->GetBlockPosition()->y;
+		int lineStride   = 32 * 16;
 
 		for (int x = 0; x < 16; x++)
 		{
@@ -240,7 +239,7 @@ void LandIsland::DumpMaps()
 		}
 	}
 
-	FILE *fptr = fopen("dump.raw", "wb");
+	FILE* fptr = fopen("dump.raw", "wb");
 	fwrite(data, 32 * 32 * 16 * 16, 1, fptr);
 	fclose(fptr);
 

@@ -20,32 +20,26 @@
 
 #include "Game.h"
 
+#include <SDL.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <sstream>
 #include <string>
-
-#include <SDL.h>
-
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/intersect.hpp>
-
 #include <3D/Camera.h>
 #include <3D/LandIsland.h>
-
-#include <Common/OSFile.h>
-
-#include <Graphics/ShaderProgram.h>
-#include <Graphics/ShaderManager.h>
-#include <Graphics/Texture2D.h>
-#include <Graphics/IndexBuffer.h>
-#include <Graphics/VertexBuffer.h>
-
 #include <3D/MeshPack.h>
-#include <3D/Sky.h>
 #include <3D/SkinnedModel.h>
+#include <3D/Sky.h>
 #include <3D/Water.h>
+#include <Common/OSFile.h>
+#include <Graphics/IndexBuffer.h>
+#include <Graphics/ShaderManager.h>
+#include <Graphics/ShaderProgram.h>
+#include <Graphics/Texture2D.h>
+#include <Graphics/VertexBuffer.h>
+#include <glm/gtx/intersect.hpp>
 
 //#include <Video/VideoPlayer.h>
 
@@ -54,15 +48,13 @@
 
 #define IMGUI_IMPL_OPENGL_LOADER_GLEW
 
-#include <imgui/imgui.h>
-#include <imgui/imgui_impl_sdl.h>
-#include <imgui/imgui_impl_opengl3.h>
-
-#include <Common/CmdLineArgs.h>
-
 #include "GitSHA1.h"
 
+#include <Common/CmdLineArgs.h>
 #include <Graphics/DebugDraw.h>
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_opengl3.h>
+#include <imgui/imgui_impl_sdl.h>
 
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
@@ -76,12 +68,12 @@ Game* Game::sInstance = nullptr;
 void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 {
 	fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-		(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-		type, severity, message);
+	        (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+	        type, severity, message);
 }
 
-Game::Game(int argc, char **argv)
-	: _running(true), _wireframe(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f), _shaderManager(std::make_unique<ShaderManager>())
+Game::Game(int argc, char** argv):
+    _running(true), _wireframe(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f), _shaderManager(std::make_unique<ShaderManager>())
 {
 	int windowWidth = 1280, windowHeight = 1024;
 	DisplayMode displayMode = DisplayMode::Windowed;
@@ -123,7 +115,7 @@ Game::Game(int argc, char **argv)
 Game::~Game()
 {
 	DebugDraw::Shutdown();
-    SDL_Quit(); // todo: move to GameWindow
+	SDL_Quit(); // todo: move to GameWindow
 }
 
 void Game::Run()
@@ -165,7 +157,8 @@ void Game::Run()
 
 		deltaTime = ((now - last) * 1000 / (double)SDL_GetPerformanceFrequency());
 
-		while (SDL_PollEvent(&e)) {
+		while (SDL_PollEvent(&e))
+		{
 			if (e.type == SDL_QUIT)
 				_running = false;
 			if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_CLOSE && e.window.windowID == _window->GetID())
@@ -183,15 +176,13 @@ void Game::Run()
 				glm::vec3 rayOrigin, rayDirection;
 				_camera->DeprojectScreenToWorld(_mousePosition, screenSize, rayOrigin, rayDirection);
 
-
 				float intersectDistance = 0.0f;
 				bool intersects = glm::intersectRayPlane(
-					rayOrigin,
-					rayDirection,
-					glm::vec3(0.0f, 0.0f, 0.0f), // plane origin
-					glm::vec3(0.0f, 1.0f, 0.0f), // plane normal
-					intersectDistance
-				);
+				    rayOrigin,
+				    rayDirection,
+				    glm::vec3(0.0f, 0.0f, 0.0f), // plane origin
+				    glm::vec3(0.0f, 1.0f, 0.0f), // plane normal
+				    intersectDistance);
 
 				if (intersects)
 					_intersection = rayOrigin + rayDirection * intersectDistance;
@@ -365,13 +356,13 @@ void Game::guiLoop()
 	ImGui::Render();
 }
 
-void Game::LoadMap(const std::string &name)
+void Game::LoadMap(const std::string& name)
 {
 	Script script;
 	script.LoadFile(name);
 }
 
-void Game::LoadLandscape(const std::string &name)
+void Game::LoadLandscape(const std::string& name)
 {
 	if (_landIsland)
 		_landIsland.reset();

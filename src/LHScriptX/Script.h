@@ -23,16 +23,19 @@
 #include <LHScriptX/Lexer.h>
 #include <vector>
 
-namespace OpenBlack::LHScriptX {
+namespace OpenBlack::LHScriptX
+{
 
-class Script {
-public:
-	Script() : token_(Token::MakeInvalidToken()) {}
+class Script
+{
+  public:
+	Script():
+	    token_(Token::MakeInvalidToken()) {}
 
 	void LoadFile(const std::string& file);
 	//void SetCommands(std::unique_ptr<ScriptCommands> &commands) { _commands = std::move(commands); }
 	//ScriptCommands &GetCommands() const { return *_commands; }
-private:
+  private:
 	//std::unique_ptr<ScriptCommands> _commands;
 	//void processCommand(const std::string& command, std::vector<std::string> parameters);
 
@@ -48,4 +51,4 @@ private:
 	Token token_;
 };
 
-}
+} // namespace OpenBlack::LHScriptX

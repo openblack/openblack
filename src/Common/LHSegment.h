@@ -26,12 +26,12 @@
 
 namespace OpenBlack
 {
-	struct LHSegment
-	{
-		char Name[32];
-		uint32_t SegmentSize;
-		void* SegmentData;
-	};
-}
+struct LHSegment
+{
+	char Name[32];
+	uint32_t SegmentSize;
+	void* SegmentData;
+};
+} // namespace OpenBlack
 
 #endif

@@ -24,8 +24,8 @@
 
 using namespace OpenBlack::Graphics;
 
-IndexBuffer::IndexBuffer(const void* indices, size_t indicesCount, GLenum type)
-	: _ibo(0), _count(indicesCount), _type(type), _hint(GL_STATIC_DRAW)
+IndexBuffer::IndexBuffer(const void* indices, size_t indicesCount, GLenum type):
+    _ibo(0), _count(indicesCount), _type(type), _hint(GL_STATIC_DRAW)
 {
 	assert(indices != nullptr);
 	assert(indicesCount > 0);
@@ -38,29 +38,36 @@ IndexBuffer::IndexBuffer(const void* indices, size_t indicesCount, GLenum type)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, _count * GetTypeSize(_type), indices, _hint);
 }
 
-IndexBuffer::~IndexBuffer() {
+IndexBuffer::~IndexBuffer()
+{
 	if (_ibo != 0)
 		glDeleteBuffers(1, &_ibo);
 }
 
-std::size_t IndexBuffer::GetCount() const {
+std::size_t IndexBuffer::GetCount() const
+{
 	return _count;
 }
 
-std::size_t IndexBuffer::GetSize() const {
+std::size_t IndexBuffer::GetSize() const
+{
 	return _count * GetTypeSize(_type);
 }
 
-GLenum IndexBuffer::GetType() const {
+GLenum IndexBuffer::GetType() const
+{
 	return _type;
 }
 
-GLuint IndexBuffer::GetIBO() const {
+GLuint IndexBuffer::GetIBO() const
+{
 	return _ibo;
 }
 
-std::size_t IndexBuffer::GetTypeSize(GLenum type) {
-	switch (type) {
+std::size_t IndexBuffer::GetTypeSize(GLenum type)
+{
+	switch (type)
+	{
 	case GL_UNSIGNED_BYTE:
 		return 1;
 	case GL_SHORT:

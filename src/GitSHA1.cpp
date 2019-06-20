@@ -1,4 +1,4 @@
-/* OpenBlack - A reimplementation of Lionhead's Black & White.
+/* OpenBlack - A reimplementation of Lionheads's Black & White engine
  *
  * OpenBlack is the legal property of its developers, whose names
  * can be found in the AUTHORS.md file distributed with this source
@@ -18,35 +18,5 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-#ifndef OPENBLACK_GRAPHICS_SHADERMANAGER_H
-#define OPENBLACK_GRAPHICS_SHADERMANAGER_H
-
-#include <Graphics/ShaderProgram.h>
-#include <map>
-#include <string>
-
-namespace OpenBlack
-{
-namespace Graphics
-{
-
-class ShaderManager
-{
-  public:
-	ShaderManager() = default;
-	~ShaderManager();
-
-	ShaderProgram* LoadShader(const std::string& name, const std::string& vertexShaderFile, const std::string& fragmentShaderFile);
-	ShaderProgram* GetShader(const std::string& name);
-
-  private:
-	typedef std::map<std::string, ShaderProgram*> ShaderMap;
-
-	ShaderMap _shaderPrograms;
-};
-
-} // namespace Graphics
-} // namespace OpenBlack
-
-#endif
+#define GIT_SHA1 "b6f0fb3c26cfa799cca810f38d3b402375fff870"
+const char* kGitSHA1Hash = GIT_SHA1;

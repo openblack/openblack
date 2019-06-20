@@ -20,40 +20,40 @@
 
 #include <Game.h>
 #include <SDL.h>
-#include <memory>
 #include <iostream>
+#include <memory>
 
 #ifdef _WIN32
 #include <Windows.h>
 #endif
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
-	std::cout  <<
-		"==============================================================================\n"
-		"   openblack - A modern reimplementation of Lionhead's Black & White (2001)   \n"
-		"==============================================================================\n"
-		"\n";
+	std::cout << "==============================================================================\n"
+	             "   openblack - A modern reimplementation of Lionhead's Black & White (2001)   \n"
+	             "==============================================================================\n"
+	             "\n";
 
-    try
-    {
-        std::unique_ptr<OpenBlack::Game> game(new OpenBlack::Game(argc, argv));
-        game->Run();
-    }
-    catch (std::runtime_error &e) {
-        // Only catch runtime_error as these should be user issues.
-        // Catching other types would just make debugging them more difficult.
+	try
+	{
+		std::unique_ptr<OpenBlack::Game> game(new OpenBlack::Game(argc, argv));
+		game->Run();
+	}
+	catch (std::runtime_error& e)
+	{
+		// Only catch runtime_error as these should be user issues.
+		// Catching other types would just make debugging them more difficult.
 
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Fatal error", e.what(), nullptr);
-        return EXIT_FAILURE;
-    }
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Fatal error", e.what(), nullptr);
+		return EXIT_FAILURE;
+	}
 
-    return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
 
 #if defined(_WIN32) && !defined(_CONSOLE)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-    return main(__argc, __argv);
+	return main(__argc, __argv);
 }
 #endif

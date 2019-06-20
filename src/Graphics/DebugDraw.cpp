@@ -36,9 +36,9 @@ void DebugDraw::Init()
 	gpuVertexBuffer = std::make_unique<VertexBuffer>(nullptr, DEBUG_DRAW_VERTEX_BUFFER_SIZE, sizeof(Vertex), GL_STREAM_DRAW);
 
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(0));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(sizeof(float) * 3));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float) * 3));
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -65,22 +65,19 @@ void DebugDraw::Line(glm::vec3 from, glm::vec3 to, glm::vec3 color)
 void DebugDraw::Cross(glm::vec3 center, float size)
 {
 	// red line: X - length/2 to X + length / 2
-	Line( glm::vec3(center.x - size * 0.5f, center.y, center.z),
-		  glm::vec3(center.x + size * 0.5f, center.y, center.z),
-	      glm::vec3(1.0f, 0.0f, 0.0f)
-	);
+	Line(glm::vec3(center.x - size * 0.5f, center.y, center.z),
+	     glm::vec3(center.x + size * 0.5f, center.y, center.z),
+	     glm::vec3(1.0f, 0.0f, 0.0f));
 
 	// green line: Y - length/2 to Y + length / 2
 	Line(glm::vec3(center.x, center.y - size * 0.5f, center.z),
-		glm::vec3(center.x, center.y + size * 0.5f, center.z),
-		glm::vec3(0.0f, 1.0f, 0.0f)
-	);
+	     glm::vec3(center.x, center.y + size * 0.5f, center.z),
+	     glm::vec3(0.0f, 1.0f, 0.0f));
 
 	// blue line: Z - length/2 to Z + length / 2
 	Line(glm::vec3(center.x, center.y, center.z - size * 0.5f),
-		glm::vec3(center.x, center.y, center.z + size * 0.5f),
-		glm::vec3(0.0f, 0.0f, 1.0f)
-	);
+	     glm::vec3(center.x, center.y, center.z + size * 0.5f),
+	     glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
 void DebugDraw::DrawDebugLines()

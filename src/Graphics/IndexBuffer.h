@@ -23,38 +23,41 @@
 #define OPENBLACK_INDEXBUFFER_H
 
 #include "OpenGL.h"
+
 #include <cstdio>
 #include <stdint.h>
 
 namespace OpenBlack
 {
-	namespace Graphics
-	{
-		class IndexBuffer {
-		public:
-			IndexBuffer() = delete;
-			IndexBuffer(const IndexBuffer &other) = delete;
-			IndexBuffer(IndexBuffer&&) = default;
+namespace Graphics
+{
+class IndexBuffer
+{
+  public:
+	IndexBuffer()                         = delete;
+	IndexBuffer(const IndexBuffer& other) = delete;
+	IndexBuffer(IndexBuffer&&)            = default;
 
-			IndexBuffer(const void* indices, std::size_t indicesCount, GLenum type);
+	IndexBuffer(const void* indices, std::size_t indicesCount, GLenum type);
 
-			~IndexBuffer();
+	~IndexBuffer();
 
-			std::size_t GetCount() const;
-			std::size_t GetSize() const;
-			GLenum GetType() const;
-			GLuint GetIBO() const;
-		private:
-			std::size_t _count;
-			GLenum _type;
+	std::size_t GetCount() const;
+	std::size_t GetSize() const;
+	GLenum GetType() const;
+	GLuint GetIBO() const;
 
-			GLuint _ibo;
-			GLuint _hint;
+  private:
+	std::size_t _count;
+	GLenum _type;
 
-			static std::size_t GetTypeSize(GLenum type);
-		};
+	GLuint _ibo;
+	GLuint _hint;
 
-	}
-}
+	static std::size_t GetTypeSize(GLenum type);
+};
+
+} // namespace Graphics
+} // namespace OpenBlack
 
 #endif // OPENBLACK_INDEXBUFFER_H

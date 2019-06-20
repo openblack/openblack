@@ -24,10 +24,10 @@
 
 using namespace OpenBlack::Graphics;
 
-VertexBuffer::VertexBuffer(const void* vertices, size_t vertexCount, size_t strideBytes, GLuint hint)
-	: _vertexCount(vertexCount),
-	_strideBytes(strideBytes),
-	_hint(hint)
+VertexBuffer::VertexBuffer(const void* vertices, size_t vertexCount, size_t strideBytes, GLuint hint):
+    _vertexCount(vertexCount),
+    _strideBytes(strideBytes),
+    _hint(hint)
 {
 	// assert(vertices != nullptr);
 	assert(vertexCount > 0);
@@ -41,7 +41,8 @@ VertexBuffer::VertexBuffer(const void* vertices, size_t vertexCount, size_t stri
 	glBufferData(GL_ARRAY_BUFFER, vertexCount * strideBytes, vertices, _hint);
 }
 
-VertexBuffer::~VertexBuffer() {
+VertexBuffer::~VertexBuffer()
+{
 	if (_vbo != 0)
 		glDeleteBuffers(1, &_vbo);
 }
@@ -57,22 +58,27 @@ VertexBuffer::~VertexBuffer() {
 	return std::move(data);
 }*/
 
-size_t VertexBuffer::GetVertexCount() const noexcept {
+size_t VertexBuffer::GetVertexCount() const noexcept
+{
 	return _vertexCount;
 }
 
-size_t VertexBuffer::GetStrideBytes() const noexcept {
+size_t VertexBuffer::GetStrideBytes() const noexcept
+{
 	return _strideBytes;
 }
 
-size_t VertexBuffer::GetSizeInBytes() const noexcept {
+size_t VertexBuffer::GetSizeInBytes() const noexcept
+{
 	return _vertexCount * _strideBytes;
 }
 
-GLuint VertexBuffer::GetHint() const noexcept {
+GLuint VertexBuffer::GetHint() const noexcept
+{
 	return _hint;
 }
 
-GLuint VertexBuffer::GetVBO() const noexcept {
+GLuint VertexBuffer::GetVBO() const noexcept
+{
 	return _vbo;
 }

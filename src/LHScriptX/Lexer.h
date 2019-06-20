@@ -20,32 +20,35 @@
 
 #pragma once
 
-#include <string>
 #include <stdexcept>
+#include <string>
 
 #ifdef _MSC_VER
 #define __builtin_unreachable() __assume(0)
 #endif
 
-namespace OpenBlack::LHScriptX {
+namespace OpenBlack::LHScriptX
+{
 
-class LexerException : public std::runtime_error {
-public:
-	LexerException(const std::string &msg) : std::runtime_error(msg.c_str()) { }
+class LexerException: public std::runtime_error
+{
+  public:
+	LexerException(const std::string& msg):
+	    std::runtime_error(msg.c_str()) {}
 };
 
 enum class Operator
 {
 	Invalid,
-	Equal, // =
-	Comma, // ,
-	LeftParentheses, // (
+	Equal,            // =
+	Comma,            // ,
+	LeftParentheses,  // (
 	RightParentheses, // )
 };
 
 class Token
 {
-public:
+  public:
 	enum class Type
 	{
 		// Token is invalid.
@@ -71,22 +74,26 @@ public:
 	static Token MakeInvalidToken() { return Token(Type::Invalid); }
 	static Token MakeEOFToken() { return Token(Type::EndOfFile); }
 	static Token MakeEOLToken() { return Token(Type::EndOfLine); }
-	static Token MakeIdentifierToken(const std::string& value) {
+	static Token MakeIdentifierToken(const std::string& value)
+	{
 		Token tok(Type::Identifier);
 		tok.u_.identifierValue = new std::string(value);
 		return tok;
 	}
-	static Token MakeStringToken(const std::string& value) {
+	static Token MakeStringToken(const std::string& value)
+	{
 		Token tok(Type::String);
 		tok.u_.stringValue = new std::string(value);
 		return tok;
 	}
-	static Token MakeIntegerToken(int value) {
+	static Token MakeIntegerToken(int value)
+	{
 		Token tok(Type::Integer);
 		tok.u_.integerValue = value;
 		return tok;
 	}
-	static Token MakeFloatToken(float value) {
+	static Token MakeFloatToken(float value)
+	{
 		Token tok(Type::Float);
 		tok.u_.floatValue = value;
 		return tok;
@@ -114,8 +121,9 @@ public:
 	// print the token for debugging
 	void Print(FILE* file) const;
 
-private:
-	Token(Type type) : type_(type) {}
+  private:
+	Token(Type type):
+	    type_(type) {}
 
 	Type type_;
 	union {
@@ -127,17 +135,21 @@ private:
 	} u_;
 };
 
-class Lexer {
-public:
-	Lexer(const std::string &source);
+class Lexer
+{
+  public:
+	Lexer(const std::string& source);
 
 	Token GetToken();
-private:
-	const size_t remaining() const noexcept {
+
+  private:
+	const size_t remaining() const noexcept
+	{
 		return static_cast<size_t>(end_ - current_);
 	}
 
-	const bool hasMore() const noexcept {
+	const bool hasMore() const noexcept
+	{
 		return current_ != end_;
 	}
 
@@ -152,4 +164,4 @@ private:
 	int currentLine_;
 };
 
-}
+} // namespace OpenBlack::LHScriptX

@@ -27,26 +27,28 @@
 
 namespace OpenBlack
 {
-	class Bitmap16B {
-	public:
-		Bitmap16B() = delete;
+class Bitmap16B
+{
+  public:
+	Bitmap16B() = delete;
 
-		Bitmap16B(unsigned int width, unsigned int height);
-		Bitmap16B(const void* data, size_t size);
-		~Bitmap16B();
+	Bitmap16B(unsigned int width, unsigned int height);
+	Bitmap16B(const void* data, size_t size);
+	~Bitmap16B();
 
-		const unsigned int Width() const;
-		const unsigned int Height() const;
-		const uint16_t* Data() const;
-	private:
-		unsigned int _width;
-		unsigned int _height;
-		uint16_t* _data;
+	const unsigned int Width() const;
+	const unsigned int Height() const;
+	const uint16_t* Data() const;
 
-	public:
-		static Bitmap16B* LoadFromFile(const std::string &file);
-	};
+  private:
+	unsigned int _width;
+	unsigned int _height;
+	uint16_t* _data;
 
-}
+  public:
+	static Bitmap16B* LoadFromFile(const std::string& file);
+};
+
+} // namespace OpenBlack
 
 #endif
