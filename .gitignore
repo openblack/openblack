@@ -19,3 +19,6 @@ lib
 
 # VSCode cache files
 /.vscode/ipch/
+
+# git commit
+/src/GitSHA1.cpp
