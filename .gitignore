@@ -17,5 +17,5 @@ GameData
 
 lib
 
-# 3rd party libs
-/3rdparty
+# VSCode cache files
+/.vscode/ipch/
