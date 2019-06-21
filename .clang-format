@@ -25,6 +25,7 @@ IndentCaseLabels: false
 IndentWidth: 4
 NamespaceIndentation: None
 PointerAlignment: Left
+ReflowComments: true
 SortIncludes: true
 SortUsingDeclarations: true
 SpaceBeforeAssignmentOperators: true
@@ -33,6 +34,7 @@ SpaceBeforeCtorInitializerColon: false
 SpaceBeforeInheritanceColon: false
 SpaceBeforeParens: ControlStatements
 SpaceBeforeRangeBasedForLoopColon: true
+SpacesBeforeTrailingComments: 1
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
 Standard: Cpp11
