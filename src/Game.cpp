@@ -27,31 +27,29 @@
 #include <sstream>
 #include <string>
 #define GLM_ENABLE_EXPERIMENTAL
+#include "GitSHA1.h"
+
 #include <3D/Camera.h>
 #include <3D/LandIsland.h>
 #include <3D/MeshPack.h>
 #include <3D/SkinnedModel.h>
 #include <3D/Sky.h>
 #include <3D/Water.h>
+#include <Common/CmdLineArgs.h>
+#include <Common/FileSystem.h>
 #include <Common/OSFile.h>
+#include <Graphics/DebugDraw.h>
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/ShaderManager.h>
 #include <Graphics/ShaderProgram.h>
 #include <Graphics/Texture2D.h>
 #include <Graphics/VertexBuffer.h>
-#include <glm/gtx/intersect.hpp>
-
-//#include <Video/VideoPlayer.h>
-
 #include <LHScriptX/Script.h>
 #include <LHVMViewer.h>
+#include <glm/gtx/intersect.hpp>
 
 #define IMGUI_IMPL_OPENGL_LOADER_GLEW
 
-#include "GitSHA1.h"
-
-#include <Common/CmdLineArgs.h>
-#include <Graphics/DebugDraw.h>
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_opengl3.h>
 #include <imgui/imgui_impl_sdl.h>
@@ -73,7 +71,9 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 }
 
 Game::Game(int argc, char** argv):
-    _running(true), _wireframe(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f), _shaderManager(std::make_unique<ShaderManager>())
+    _running(true), _wireframe(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f),
+    _fileSystem(std::make_unique<FileSystem>()),
+    _shaderManager(std::make_unique<ShaderManager>())
 {
 	int windowWidth = 1280, windowHeight = 1024;
 	DisplayMode displayMode = DisplayMode::Windowed;
@@ -91,12 +91,12 @@ Game::Game(int argc, char** argv):
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
+	ImGuiIO& io    = ImGui::GetIO();
 	io.IniFilename = NULL;
 
 	ImGui::StyleColorsLight();
 
-	ImGuiStyle& style = ImGui::GetStyle();
+	ImGuiStyle& style     = ImGui::GetStyle();
 	style.FrameBorderSize = 1.0f;
 
 	ImGui_ImplSDL2_InitForOpenGL(_window->GetHandle(), _window->GetGLContext());
@@ -128,14 +128,14 @@ void Game::Run()
 
 	_modelPosition = glm::vec3(2485.0f, 50.0f, 1907.0f);
 	_modelRotation = glm::vec3(180.0f, 111.0f, 0.0f);
-	_modelScale = glm::vec3(0.5f);
+	_modelScale    = glm::vec3(0.5f);
 
 	//_videoPlayer = std::make_unique<Video::VideoPlayer>(GetGamePath() + "/Data/logo.bik");
 
 	_testModel = std::make_unique<SkinnedModel>();
 	_testModel->LoadFromFile(GetGamePath() + "/Data/CreatureMesh/C_Tortoise_Base.l3d");
 
-	_sky = std::make_unique<Sky>();
+	_sky   = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
 
 	LoadLandscape(GetGamePath() + "/Data/Landscape/Land1.lnd");
@@ -144,8 +144,8 @@ void Game::Run()
 	// _lhvm->LoadBinary(GetGamePath() + "/Scripts/Quests/challenge.chl");
 
 	// measure our delta time
-	uint64_t now = SDL_GetPerformanceCounter();
-	uint64_t last = 0;
+	uint64_t now     = SDL_GetPerformanceCounter();
+	uint64_t last    = 0;
 	double deltaTime = 0.0;
 
 	_running = true;
@@ -153,7 +153,7 @@ void Game::Run()
 	while (_running)
 	{
 		last = now;
-		now = SDL_GetPerformanceCounter();
+		now  = SDL_GetPerformanceCounter();
 
 		deltaTime = ((now - last) * 1000 / (double)SDL_GetPerformanceFrequency());
 
@@ -177,12 +177,12 @@ void Game::Run()
 				_camera->DeprojectScreenToWorld(_mousePosition, screenSize, rayOrigin, rayDirection);
 
 				float intersectDistance = 0.0f;
-				bool intersects = glm::intersectRayPlane(
-				    rayOrigin,
-				    rayDirection,
-				    glm::vec3(0.0f, 0.0f, 0.0f), // plane origin
-				    glm::vec3(0.0f, 1.0f, 0.0f), // plane normal
-				    intersectDistance);
+				bool intersects         = glm::intersectRayPlane(
+                    rayOrigin,
+                    rayDirection,
+                    glm::vec3(0.0f, 0.0f, 0.0f), // plane origin
+                    glm::vec3(0.0f, 1.0f, 0.0f), // plane normal
+                    intersectDistance);
 
 				if (intersects)
 					_intersection = rayOrigin + rayDirection * intersectDistance;
@@ -232,7 +232,7 @@ void Game::Run()
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
-		modelMatrix = glm::translate(modelMatrix, _modelPosition);
+		modelMatrix           = glm::translate(modelMatrix, _modelPosition);
 
 		modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
 		modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -378,12 +378,12 @@ const std::string& Game::GetGamePath()
 	if (sGamePath.empty())
 	{
 #ifdef _WIN32
-		DWORD dataLen = 0;
+		DWORD dataLen  = 0;
 		LSTATUS status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ, nullptr, nullptr, &dataLen);
 		if (status == ERROR_SUCCESS)
 		{
 			char* path = new char[dataLen];
-			status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ, nullptr, path, &dataLen);
+			status     = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ, nullptr, path, &dataLen);
 
 			sGamePath = std::string(path);
 			return sGamePath;

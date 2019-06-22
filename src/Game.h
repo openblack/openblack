@@ -32,6 +32,7 @@
 namespace OpenBlack
 {
 class Camera;
+class FileSystem;
 class MeshPack;
 class MeshViewer;
 class LandIsland;
@@ -72,6 +73,7 @@ class Game
 	GameWindow& GetWindow() { return *_window; }
 	Camera& GetCamera() { return *_camera; }
 	MeshPack& GetMeshPack() { return *_meshPack; }
+	FileSystem& GetFileSystem() { return *_fileSystem; }
 	Graphics::ShaderManager& GetShaderManager() { return *_shaderManager; }
 
 	static Game* instance()
@@ -87,6 +89,7 @@ class Game
 	std::unique_ptr<GameWindow> _window;
 	std::unique_ptr<Camera> _camera;
 
+	std::unique_ptr<FileSystem> _fileSystem;
 	std::unique_ptr<LandIsland> _landIsland;
 	std::unique_ptr<MeshPack> _meshPack;
 	//std::unique_ptr<Video::VideoPlayer> _videoPlayer;
