@@ -31,7 +31,7 @@ File::File(const std::filesystem::path& path, FileMode mode):
     _path(path)
 {
 	_file = fopen(
-	    path.c_str(),
+	    path.u8string().c_str(),
 	    mode == FileMode::Read ? "rb" : "wb");
 
 	// todo: throw a real exception with errno

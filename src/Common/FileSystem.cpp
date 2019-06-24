@@ -25,7 +25,7 @@ namespace OpenBlack
 
 // todo: exceptions need to be replaced with real exceptions
 
-File* FileSystem::Open(const std::string& path, FileMode mode)
+std::shared_ptr<File> FileSystem::Open(const std::filesystem::path& path, FileMode mode)
 {
 	if (path.empty())
 		throw std::invalid_argument("filename");
@@ -34,15 +34,17 @@ File* FileSystem::Open(const std::string& path, FileMode mode)
 		path = gamePath / path;
 
 	if (path.is_absolute() && std::filesystem::exists(path)) */
-	return new File(path, mode);
+	return std::make_shared<File>(path, mode);
 
-	throw std::runtime_error(path + " not found");
+	//throw std::runtime_error(path + " not found");
 }
 
-bool FileSystem::Exists(const std::string& filename)
+bool FileSystem::Exists(const std::filesystem::path& path)
 {
-	if (filename.empty())
+	if (path.empty())
 		return false;
+
+
 
 	return false;
 }

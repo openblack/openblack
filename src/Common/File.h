@@ -43,7 +43,7 @@ enum class FileSeekMode
 class File
 {
   public:
-	File(const std::filesystem::path& path, FileMode mode) {};
+	File(const std::filesystem::path& path, FileMode mode);
 	~File();
 
 	size_t Read(uint8_t* buffer, size_t size);

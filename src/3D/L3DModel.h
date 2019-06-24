@@ -19,9 +19,8 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_L3DMODEL_H
-#define OPENBLACK_L3DMODEL_H
 
+#include <string>
 #include <Graphics/Mesh.h>
 
 using namespace OpenBlack::Graphics;
@@ -50,5 +49,3 @@ class L3DModel
 	bool m_bPackedMesh;
 };
 } // namespace OpenBlack
-
-#endif

@@ -85,6 +85,9 @@ Game::Game(int argc, char** argv):
 	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", windowWidth, windowHeight, displayMode);
 	_window->SetSwapInterval(1);
 
+	_fileSystem->SetGamePath(GetGamePath());
+	std::clog << "GamePath: " << _fileSystem->GetGamePath() << std::endl;
+
 	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(MessageCallback, 0);
 	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, 0, GL_FALSE);
