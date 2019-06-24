@@ -30,11 +30,11 @@ File* FileSystem::Open(const std::string& path, FileMode mode)
 	if (path.empty())
 		throw std::invalid_argument("filename");
 
-	/*for (const auto& filesystem : _fileSystems)
-	{
-		if (filesystem->Exists(filename))
-			return filesystem->Open(filename);
-	} */
+	/*if (path.is_relative())
+		path = gamePath / path;
+
+	if (path.is_absolute() && std::filesystem::exists(path)) */
+	return new File(path, mode);
 
 	throw std::runtime_error(path + " not found");
 }

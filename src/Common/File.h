@@ -21,6 +21,7 @@
 #pragma once
 
 #include <cstdio>
+#include <filesystem>
 #include <string>
 
 namespace OpenBlack
@@ -34,7 +35,7 @@ enum class FileMode
 
 enum class FileSeekMode
 {
-	Set,
+	Begin,
 	Current,
 	End
 };
@@ -42,10 +43,11 @@ enum class FileSeekMode
 class File
 {
   public:
-	File(const std::string& filename, FileMode mode) {};
+	File(const std::filesystem::path& path, FileMode mode) {};
 	~File();
 
-	size_t Read(void* buffer, size_t size);
+	size_t Read(uint8_t* buffer, size_t size);
+	size_t Write(uint8_t* buffer, size_t size);
 
 	void Seek(size_t position, FileSeekMode mode);
 	const size_t Position() const;
@@ -53,6 +55,7 @@ class File
 
   protected:
 	FILE* _file;
+	std::filesystem::path _path;
 };
 
 } // namespace OpenBlack

@@ -21,6 +21,7 @@
 #pragma once
 
 #include <Common/File.h>
+#include <filesystem>
 #include <list>
 #include <memory>
 #include <string>
@@ -29,28 +30,25 @@
 namespace OpenBlack
 {
 
+/*
+FileSystem
+ */
 class FileSystem
 {
   public:
-	enum class SearchPathAdd
-	{
-		Head, // First path searched
-		Tail, // Last path searched
-	};
+	std::shared_ptr<File> Open(const std::filesystem::path& path, FileMode mode);
+	bool Exists(const std::filesystem::path& path);
 
-	FileSystem()  = default;
-	~FileSystem() = default;
+	void SetGamePath(const std::filesystem::path& path) { _gamePath = path; }
+	const std::filesystem::path& GetGamePath() const { return _gamePath; }
 
-	File* Open(const std::string& path, FileMode mode);
-	bool Exists(const std::string& path);
+	std::vector<std::filesystem::path> EnumFiles(const std::filesystem::path& directory);
 
-	// Search paths
-	void AddSearchPath(const std::string& path, SearchPathAdd addType = SearchPathAdd::Tail);
-
-	std::vector<std::string> EnumFiles(std::string& directory);
+	void Delete();
+	void Rename();
 
   private:
-	std::list<std::string> _searchPaths;
+	std::filesystem::path _gamePath;
 };
 
 } // namespace OpenBlack

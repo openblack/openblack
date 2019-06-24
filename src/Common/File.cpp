@@ -26,11 +26,12 @@
 namespace OpenBlack
 {
 
-File::File(const std::string& filename, FileMode mode):
-    _file(nullptr)
+File::File(const std::filesystem::path& path, FileMode mode):
+    _file(nullptr),
+    _path(path)
 {
 	_file = fopen(
-	    filename.c_str(),
+	    path.c_str(),
 	    mode == FileMode::Read ? "rb" : "wb");
 
 	// todo: throw a real exception with errno
@@ -44,7 +45,7 @@ File::~File()
 		fclose(_file);
 }
 
-size_t File::Read(void* buffer, size_t size)
+size_t File::Read(uint8_t* buffer, size_t size)
 {
 	assert(_file != nullptr);
 
@@ -59,7 +60,7 @@ void File::Seek(size_t position, FileSeekMode mode)
 	int origin;
 	switch (mode)
 	{
-	case FileSeekMode::Set:
+	case FileSeekMode::Begin:
 		origin = SEEK_SET;
 		break;
 	case FileSeekMode::Current:
