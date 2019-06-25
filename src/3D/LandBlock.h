@@ -79,7 +79,7 @@ class LandBlock
   public:
 	LandBlock();
 
-	void LoadFromFile(void* block, size_t block_size);
+	void Load(void* block, size_t block_size);
 	LandCell* GetCells()
 	{
 		return _cells;

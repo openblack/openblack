@@ -20,8 +20,12 @@
 
 #include "LandIsland.h"
 
+#include <Common/FileSystem.h>
 #include <Common/OSFile.h>
+#include <Game.h>
 #include <stdexcept>
+
+#include <inttypes.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <Common/stb_image_write.h>
@@ -36,56 +40,44 @@ LandIsland::~LandIsland()
 {
 }
 
-void LandIsland::LoadFromDisk(const std::string& fileName)
+void LandIsland::LoadFromFile(File& file)
 {
-	if (!OSFile::Exists(fileName.c_str()))
-		throw std::runtime_error("Land file does not exist.");
-
-	OSFile* file = new OSFile();
-	file->Open(fileName.c_str(), LH_FILE_MODE::Read);
-	size_t fileSize = file->Size();
-
 	uint32_t blockSize, matSize, countrySize;
 	uint8_t blockIndex[1024];
 
-	file->Read(&_blockCount, 4);
-	file->Read(&blockIndex, 1024);
-	file->Read(&_materialCount, 4);
-	file->Read(&_countryCount, 4);
-	file->Read(&blockSize, 4);
-	file->Read(&matSize, 4);
-	file->Read(&countrySize, 4);
-	file->Read(&_lowresCount, 4);
+	file.ReadBytes(&_blockCount, 4);
+	file.ReadBytes(&blockIndex, 1024);
+	file.ReadBytes(&_materialCount, 4);
+	file.ReadBytes(&_countryCount, 4);
+	file.ReadBytes(&blockSize, 4);
+	file.ReadBytes(&matSize, 4);
+	file.ReadBytes(&countrySize, 4);
+	file.ReadBytes(&_lowresCount, 4);
 
-	//_lowResTextureArray = std::make_shared<Texture2DArray>();
-	for (uint32_t i = 0; i < _lowresCount; i++)
+	// skip over low resolution textures
+	// for future reference these are formatted GL_COMPRESSED_RGBA_S3TC_DXT3_EXT
+	for (unsigned int i = 0; i < _lowresCount; i++)
 	{
 		uint32_t textureSize;
-		file->Seek(16, LH_SEEK_MODE::Current);
-		file->Read(&textureSize, 4);
-		file->Seek(textureSize - 4, LH_SEEK_MODE::Current);
-
-		// GL_COMPRESSED_RGBA_S3TC_DXT3_EXT
+		file.Seek(16, FileSeekMode::Current);
+		file.ReadBytes(&textureSize, 4);
+		file.Seek(textureSize - 4, FileSeekMode::Current);
 	}
 
 	_blockCount--; // take away a block from the count, because it's not in the file?
 	_landBlocks = std::make_unique<LandBlock[]>(_blockCount);
-	for (uint32_t i = 0; i < _blockCount; i++)
+	for (unsigned int i = 0; i < _blockCount; i++)
 	{
-		char* blockData = new char[blockSize];
-		file->Read(blockData, blockSize);
+		uint8_t* blockData = new uint8_t[blockSize];
+		file.ReadBytes(blockData, blockSize);
 
-		auto block = &_landBlocks[i];
-
-		block->LoadFromFile(blockData, blockSize);
+		_landBlocks[i].Load(blockData, blockSize);
 
 		delete[] blockData;
 	}
 
 	_countries = std::make_unique<Country[]>(_countryCount);
-	file->Read(_countries.get(), _countryCount * sizeof(Country));
-
-	//file->Seek(_countryCount * countrySize, LH_SEEK_MODE::Current);
+	file.ReadBytes(_countries.get(), _countryCount * sizeof(Country));
 
 	_materialArray = std::make_shared<Texture2DArray>(256, 256, _materialCount, GL_RGBA8);
 	for (uint32_t i = 0; i < _materialCount; i++)
@@ -94,8 +86,8 @@ void LandIsland::LoadFromDisk(const std::string& fileName)
 		uint32_t* rgba8TextureData = new uint32_t[256 * 256];
 
 		uint16_t terrainType;
-		file->Read(&terrainType, 2);
-		file->Read(rgba5TextureData, 256 * 256 * sizeof(uint16_t));
+		file.ReadBytes(&terrainType, 2);
+		file.ReadBytes(rgba5TextureData, 256 * 256 * sizeof(uint16_t));
 
 		convertRGB5ToRGB8(rgba5TextureData, rgba8TextureData, 256 * 256);
 		_materialArray->SetTexture(i, 256, 256, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, rgba8TextureData);
@@ -106,24 +98,23 @@ void LandIsland::LoadFromDisk(const std::string& fileName)
 
 	// read noise map into texture2d
 	uint8_t* noiseMapTextureData = new uint8_t[256 * 256];
-	file->Read(noiseMapTextureData, 256 * 256);
+	file.ReadBytes(noiseMapTextureData, 256 * 256);
 	_textureNoiseMap = std::make_shared<Texture2D>(256, 256, GL_RED, GL_RED, GL_UNSIGNED_BYTE, noiseMapTextureData);
 	delete[] noiseMapTextureData;
 
 	// read bump map into texture2d
 	uint8_t* bumpMapTextureData = new uint8_t[256 * 256];
-	file->Read(bumpMapTextureData, 256 * 256);
+	file.ReadBytes(bumpMapTextureData, 256 * 256);
 	_textureBumpMap = std::make_shared<Texture2D>(256, 256, GL_RED, GL_RED, GL_UNSIGNED_BYTE, bumpMapTextureData);
 	delete[] bumpMapTextureData;
 
-	// Read 2709680/2711300 (1620 bytes left..)
-	printf("Read %d/%d\n", file->Position(), fileSize);
+	printf("Read %" PRIu64 "/%" PRIu64 "\n", file.Position(), file.Size());
 
 	printf("_blockCount: %d\n", _blockCount);
 	printf("_materialCount: %d\n", _materialCount);
 	printf("_countryCount: %d\n", _countryCount);
 
-	file->Close();
+	file.Close();
 
 	// build the meshes
 	for (unsigned int b = 0; b < _blockCount; b++)

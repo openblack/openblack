@@ -25,6 +25,7 @@
 #define OPENBLACK_LANDISLAND_HEIGHT_UNIT 0.67f
 
 #include <3D/LandBlock.h>
+#include <Common/File.h>
 #include <Graphics/Mesh.h>
 #include <Graphics/Texture2D.h>
 #include <Graphics/Texture2DArray.h>
@@ -55,7 +56,7 @@ class LandIsland
 	LandIsland();
 	~LandIsland();
 
-	void LoadFromDisk(const std::string& filePath);
+	void LoadFromFile(File& file);
 
 	const uint8_t GetAltitudeAt(glm::ivec2) const;
 	const float GetHeightAt(glm::ivec2) const;

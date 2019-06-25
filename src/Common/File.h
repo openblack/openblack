@@ -22,12 +22,7 @@
 
 #include <filesystem>
 #include <string>
-
-#ifdef _WIN32
-#include <windows.h>
-#else
 #include <cstdio>
-#endif
 
 namespace OpenBlack
 {
@@ -40,38 +35,43 @@ enum class FileMode
 
 enum class FileSeekMode
 {
-	Begin,
-	Current,
-	End
+	Begin   = SEEK_SET,
+	Current = SEEK_CUR,
+	End     = SEEK_END
 };
 
 class File
 {
   public:
-	File(const std::filesystem::path& path, FileMode mode);
+	File();
+	File(const std::filesystem::path& filename, FileMode mode);
 	~File();
 
+	void Open(const std::filesystem::path& filename, FileMode mode);
 	void Close();
 
-	const size_t Read(uint8_t* buffer, size_t size);
-	const size_t Write(const uint8_t* buffer, size_t size);
+	template <typename T>
+	std::size_t Read(T* data, std::size_t length) const
+	{
+		assert(_file != nullptr);
+		static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
+		return std::fread(data, sizeof(T), length, _file);
+	}
 
 	template <typename T>
-	const T Read();
+	std::size_t ReadBytes(T* data, std::size_t length) const
+	{
+		assert(_file != nullptr);
+		static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
+		return Read(reinterpret_cast<uint8_t*>(data), length);
+	}
 
-	void Seek(size_t position, FileSeekMode mode);
-	const size_t Position() const;
-	const size_t Size() const;
-
-	const std::filesystem::path GetPath() { return _path; }
-
+	void Seek(size_t position, FileSeekMode mode) const;
+	size_t Position() const;
+	size_t Size() const;
+	void Flush();
   protected:
-#ifdef _WIN32
-	HANDLE _file;
-#else
 	FILE* _file;
-#endif
-	std::filesystem::path _path;
 };
 
 } // namespace OpenBlack

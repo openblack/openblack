@@ -141,7 +141,7 @@ void Game::Run()
 	_sky   = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
 
-	LoadLandscape(GetGamePath() + "/Data/Landscape/Land1.lnd");
+	LoadLandscape("./Data/Landscape/Land1.lnd");
 
 	// _lhvm = std::make_unique<LHVM::LHVM>();
 	// _lhvm->LoadBinary(GetGamePath() + "/Scripts/Quests/challenge.chl");
@@ -370,8 +370,13 @@ void Game::LoadLandscape(const std::string& name)
 	if (_landIsland)
 		_landIsland.reset();
 
+	if (!_fileSystem->Exists(name))
+		throw std::runtime_error("Could not find landscape " + name);
+
+	auto file = _fileSystem->Open(name, FileMode::Read);
+
 	_landIsland = std::make_unique<LandIsland>();
-	_landIsland->LoadFromDisk(name);
+	_landIsland->LoadFromFile(*file);
 }
 
 const std::string& Game::GetGamePath()

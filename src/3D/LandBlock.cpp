@@ -78,7 +78,7 @@ struct LH3DLandBlock
 	uint32_t smallTextUpdated;
 };
 
-void LandBlock::LoadFromFile(void* block, size_t block_size)
+void LandBlock::Load(void* block, size_t block_size)
 {
 	if (block_size != sizeof(LH3DLandBlock))
 	{

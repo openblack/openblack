@@ -28,15 +28,21 @@ namespace OpenBlack
 std::shared_ptr<File> FileSystem::Open(const std::filesystem::path& path, FileMode mode)
 {
 	if (path.empty())
-		throw std::invalid_argument("filename");
+		throw std::invalid_argument("empty path");
 
-	/*if (path.is_relative())
-		path = gamePath / path;
+	// try absolute first
+	if (path.is_absolute() && std::filesystem::exists(path))
+		return std::make_shared<File>(path, mode);
 
-	if (path.is_absolute() && std::filesystem::exists(path)) */
-	return std::make_shared<File>(path, mode);
+	// try relative to current directory
+	if (path.is_relative() && std::filesystem::exists(path))
+		return std::make_shared<File>(path, mode);
+		
+	// try relative to game directory
+	if (path.is_relative() && std::filesystem::exists(_gamePath / path))
+		return std::make_shared<File>(_gamePath / path, mode);
 
-	//throw std::runtime_error(path + " not found");
+	throw std::runtime_error("File " + path.string() + " not found");
 }
 
 bool FileSystem::Exists(const std::filesystem::path& path)
@@ -44,7 +50,14 @@ bool FileSystem::Exists(const std::filesystem::path& path)
 	if (path.empty())
 		return false;
 
+	if (path.is_absolute() && std::filesystem::exists(path))
+		return true;
 
+	if (path.is_relative() && std::filesystem::exists(path))
+		return true;
+
+	if (path.is_relative() && std::filesystem::exists(_gamePath / path))
+		return true;
 
 	return false;
 }
