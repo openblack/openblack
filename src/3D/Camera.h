@@ -61,14 +61,15 @@ class Camera
 	void DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::ivec2 screenSize, glm::vec3& out_worldOrigin, glm::vec3& out_worldDirection);
 
 	void Update(double dt);
-	void ProcessSDLEvent(SDL_Event* e);
-	void HandleMouseMoveEvent(int x, int y);
-	void HandleMouseScrollEvent(int x);
+	void ProcessSDLEvent(const SDL_Event*);
 
   private:
 	glm::vec3 _position;
 	glm::vec3 _rotation;
 	glm::mat4 _projectionMatrix;
+
+	bool _mouseHeld;
+	glm::vec3 _heldOrigin;
 
 	float _velForward, _velRight;
 };

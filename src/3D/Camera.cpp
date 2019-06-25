@@ -20,6 +20,7 @@
 
 #include "Camera.h"
 
+#include <Game.h>
 #include <cmath>
 #include <iostream>
 
@@ -143,10 +144,11 @@ void Camera::DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::
 	out_worldDirection = rayDirWorldSpace;
 }
 
-void Camera::ProcessSDLEvent(SDL_Event* e)
+void Camera::ProcessSDLEvent(const SDL_Event* e)
 {
-	if (e->type == SDL_KEYDOWN)
+	switch (e->type)
 	{
+	case SDL_KEYDOWN:
 		if (e->key.repeat > 0)
 			return;
 
@@ -156,13 +158,9 @@ void Camera::ProcessSDLEvent(SDL_Event* e)
 		case SDLK_s: _velForward -= 1.0f; break;
 		case SDLK_a: _velRight -= 1.0f; break;
 		case SDLK_d: _velRight += 1.0f; break;
-		case SDLK_SPACE:
-			std::cout << "forward: " << GetForward().x << "," << GetForward().y << "," << GetForward().z << std::endl;
-			break;
 		}
-	}
-	else if (e->type == SDL_KEYUP)
-	{
+		break;
+	case SDL_KEYUP:
 		if (e->key.repeat > 0)
 			return;
 
@@ -173,7 +171,42 @@ void Camera::ProcessSDLEvent(SDL_Event* e)
 		case SDLK_a: _velRight += 1.0f; break;
 		case SDLK_d: _velRight -= 1.0f; break;
 		}
+		break;
+	case SDL_MOUSEBUTTONDOWN:
+		if (e->button.button == SDL_BUTTON_LEFT)
+		{
+			_mouseHeld = true;
+			glm::ivec2 mousePosition(e->button.x, e->button.y);
+		}
+		break;
+	case SDL_MOUSEBUTTONUP:
+		if (e->button.button == SDL_BUTTON_LEFT)
+			_mouseHeld = false;
+		break;
+	case SDL_MOUSEMOTION:
+		glm::ivec2 mousePosition, screenSize;
+		SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
+		Game::instance()->GetWindow().GetSize(screenSize.x, screenSize.y);
+
+		glm::vec3 rayOrigin, rayDirection;
+		DeprojectScreenToWorld(mousePosition, screenSize, rayOrigin, rayDirection);
+
+		break;
 	}
+
+	/*if (e.type == SDL_MOUSEMOTION)
+	{
+		float intersectDistance = 0.0f;
+		bool intersects         = glm::intersectRayPlane(
+            rayOrigin,
+            rayDirection,
+            glm::vec3(0.0f, 0.0f, 0.0f), // plane origin
+            glm::vec3(0.0f, 1.0f, 0.0f), // plane normal
+            intersectDistance);
+
+		if (intersects)
+			_intersection = rayOrigin + rayDirection * intersectDistance;
+	}*/
 }
 
 void Camera::Update(double dt)
