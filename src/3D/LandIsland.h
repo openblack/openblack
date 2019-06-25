@@ -19,10 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_LANDISLAND_H
-#define OPENBLACK_LANDISLAND_H
-
-#define OPENBLACK_LANDISLAND_HEIGHT_UNIT 0.67f
 
 #include <3D/LandBlock.h>
 #include <Common/File.h>
@@ -53,6 +49,8 @@ struct Country
 class LandIsland
 {
   public:
+	static const float HeightUnit;
+
 	LandIsland();
 	~LandIsland();
 
@@ -133,5 +131,3 @@ SetFogMinMax((float,float))
 SetHeightAsByte((long,long,long))
 UseLowResTexture((int))
 */
-
-#endif

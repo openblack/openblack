@@ -32,7 +32,10 @@
 
 using namespace OpenBlack;
 
-LandIsland::LandIsland()
+const float LandIsland::HeightUnit = 0.67f;
+
+LandIsland::LandIsland():
+    _blockCount(0), _countryCount(0), _lowresCount(0), _materialCount(0)
 {
 }
 
@@ -131,7 +134,7 @@ const uint8_t LandIsland::GetAltitudeAt(glm::ivec2 vec) const
 
 const float LandIsland::GetHeightAt(glm::ivec2 vec) const
 {
-	return GetAltitudeAt(vec) * OPENBLACK_LANDISLAND_HEIGHT_UNIT;
+	return GetAltitudeAt(vec) * LandIsland::HeightUnit;
 }
 
 void LandIsland::Draw(ShaderProgram* program)
@@ -160,13 +163,12 @@ void LandIsland::convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixe
 	}
 }
 
+/*
+	Dumps Textures from VRAM using a FBO (Works on OpenGL 3.2+)
+	A better way would be glGetTexSubImage from OpenGL 4.5.
+*/
 void LandIsland::DumpTextures()
 {
-	/*
-		Dumps Textures from VRAM using a FBO (Works on OpenGL 3.2+)
-		A better way would be glGetTexSubImage from OpenGL 4.5.
-	*/
-
 	GLuint textureID = _materialArray->GetHandle();
 
 	GLuint fboID = 0;
@@ -185,7 +187,7 @@ void LandIsland::DumpTextures()
 		printf("Writing texture %d to %s\n", i, filename.c_str());
 		stbi_write_png(filename.c_str(), 256, 256, 4, pixels, 256 * 4);
 
-		delete pixels;
+		delete[] pixels;
 	}
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);

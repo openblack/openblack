@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_LANDBLOCK_H
-#define OPENBLACK_LANDBLOCK_H
 
 #include "LandCell.h"
 
@@ -31,11 +29,9 @@
 #include <stdexcept>
 #include <stdint.h>
 
-#define OPENBLACK_LANDISLAND_HEIGHT_UNIT 0.67f
-#define OPENBLACK_LANDBLOCK_TOTAL_CELLS 289
-
 namespace OpenBlack
 {
+
 struct LandVertex
 {
 	GLfloat position[3];
@@ -91,7 +87,7 @@ class LandBlock
 	void BuildMesh(LandIsland* island);
 
   private:
-	LandCell _cells[OPENBLACK_LANDBLOCK_TOTAL_CELLS];
+	LandCell _cells[289];
 	uint32_t _index;
 	glm::ivec2 _blockPosition;
 	glm::vec2 _mapPosition;
@@ -100,5 +96,3 @@ class LandBlock
 	std::unique_ptr<Mesh> _mesh;
 };
 } // namespace OpenBlack
-
-#endif

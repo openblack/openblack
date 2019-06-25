@@ -136,10 +136,10 @@ std::vector<LandVertex> LandBlock::buildVertexList(LandIsland* island)
 			LandCell bl = _cells[(z + 1) * 17 + (x + 0)];
 			LandCell br = _cells[(z + 1) * 17 + (x + 1)];
 
-			glm::vec3 pTL((x + 0) * 10.0f, tl.Altitude() * OPENBLACK_LANDISLAND_HEIGHT_UNIT, ((z + 0) * 10.0f));
-			glm::vec3 pTR((x + 1) * 10.0f, tr.Altitude() * OPENBLACK_LANDISLAND_HEIGHT_UNIT, ((z + 0) * 10.0f));
-			glm::vec3 pBL((x + 0) * 10.0f, bl.Altitude() * OPENBLACK_LANDISLAND_HEIGHT_UNIT, ((z + 1) * 10.0f));
-			glm::vec3 pBR((x + 1) * 10.0f, br.Altitude() * OPENBLACK_LANDISLAND_HEIGHT_UNIT, ((z + 1) * 10.0f));
+			glm::vec3 pTL((x + 0) * 10.0f, tl.Altitude() * LandIsland::HeightUnit, ((z + 0) * 10.0f));
+			glm::vec3 pTR((x + 1) * 10.0f, tr.Altitude() * LandIsland::HeightUnit, ((z + 0) * 10.0f));
+			glm::vec3 pBL((x + 0) * 10.0f, bl.Altitude() * LandIsland::HeightUnit, ((z + 1) * 10.0f));
+			glm::vec3 pBR((x + 1) * 10.0f, br.Altitude() * LandIsland::HeightUnit, ((z + 1) * 10.0f));
 
 			auto tlMat = countries[tl.Country()].MapMaterials[tl.Altitude()];
 			auto trMat = countries[tr.Country()].MapMaterials[tr.Altitude()];
