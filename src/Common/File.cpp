@@ -26,12 +26,100 @@
 namespace OpenBlack
 {
 
+#ifdef _WIN32
+File::File(const std::filesystem::path& path, FileMode mode):
+    _file(INVALID_HANDLE_VALUE),
+    _path(path)
+{
+	_file = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	if (_file == INVALID_HANDLE_VALUE)
+		throw std::runtime_error("CreateFileW failed");
+}
+
+File::~File()
+{
+	if (_file != INVALID_HANDLE_VALUE)
+		CloseHandle(_file);
+}
+
+void File::Close()
+{
+	if (_file != INVALID_HANDLE_VALUE)
+		CloseHandle(_file);
+}
+
+const size_t File::Read(uint8_t* buffer, size_t size)
+{
+	assert(_file != INVALID_HANDLE_VALUE);
+
+	DWORD read;
+	if (!ReadFile(mHandle, data, size, &read, NULL))
+		throw std::runtime_error("A read operation on a file failed.");
+
+	return read;
+}
+
+void File::Seek(size_t position, FileSeekMode mode)
+{
+	assert(_file != INVALID_HANDLE_VALUE);
+
+	int origin;
+	switch (mode)
+	{
+	case FileSeekMode::Begin:
+		origin = FILE_BEGIN;
+		break;
+	case FileSeekMode::Current:
+		origin = FILE_CURRENT;
+		break;
+	case FileSeekMode::End:
+		origin = FILE_END;
+		break;
+	default:
+		throw std::runtime_error("invalid seek mode");
+	}
+
+	if (SetFilePointer(_file, position, NULL, origin) == INVALID_SET_FILE_POINTER)
+		if (GetLastError() != NO_ERROR)
+			throw std::runtime_error("A seek operation on a file failed.");
+}
+
+const size_t File::Position() const
+{
+	assert(_file != INVALID_HANDLE_VALUE);
+
+	DWORD value = SetFilePointer(_file, 0, NULL, SEEK_CUR);
+
+	if (value == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+		throw std::runtime_error("A query operation on a file failed.");
+
+	return static_cast<size_t>(value);
+}
+
+const size_t File::Size() const
+{
+	assert(_file != INVALID_HANDLE_VALUE);
+
+	LARGE_INTEGER size;
+	DWORD high;
+	DWORD low = GetFileSize(_file, &high);
+	if (low != 0xFFFFFFFF || GetLastError() == NO_ERROR)
+	{
+		size.LowPart  = low;
+		size.HighPart = high;
+		return size.QuadPart;
+	}
+	return 0;
+}
+
+#else
 File::File(const std::filesystem::path& path, FileMode mode):
     _file(nullptr),
     _path(path)
 {
 	_file = fopen(
-	    path.u8string().c_str(),
+	    path.c_str(),
 	    mode == FileMode::Read ? "rb" : "wb");
 
 	// todo: throw a real exception with errno
@@ -45,7 +133,13 @@ File::~File()
 		fclose(_file);
 }
 
-size_t File::Read(uint8_t* buffer, size_t size)
+void File::Close()
+{
+	if (_file != nullptr)
+		fclose(_file);
+}
+
+const size_t File::Read(uint8_t* buffer, size_t size)
 {
 	assert(_file != nullptr);
 
@@ -76,5 +170,9 @@ void File::Seek(size_t position, FileSeekMode mode)
 	// todo: erro rcheck
 	fseek(_file, position, origin);
 }
+
+// todo: File::Position
+// todo: File::Size
+#endif
 
 } // namespace OpenBlack

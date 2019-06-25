@@ -20,9 +20,14 @@
 
 #pragma once
 
-#include <cstdio>
 #include <filesystem>
 #include <string>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <cstdio>
+#endif
 
 namespace OpenBlack
 {
@@ -46,15 +51,26 @@ class File
 	File(const std::filesystem::path& path, FileMode mode);
 	~File();
 
-	size_t Read(uint8_t* buffer, size_t size);
-	size_t Write(uint8_t* buffer, size_t size);
+	void Close();
+
+	const size_t Read(uint8_t* buffer, size_t size);
+	const size_t Write(const uint8_t* buffer, size_t size);
+
+	template <typename T>
+	const T Read();
 
 	void Seek(size_t position, FileSeekMode mode);
 	const size_t Position() const;
 	const size_t Size() const;
 
+	const std::filesystem::path GetPath() { return _path; }
+
   protected:
+#ifdef _WIN32
+	HANDLE _file;
+#else
 	FILE* _file;
+#endif
 	std::filesystem::path _path;
 };
 
