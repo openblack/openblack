@@ -332,22 +332,22 @@ void Game::guiLoop()
 	ImGui::Text("Load Land Island:");
 	ImGui::BeginGroup();
 	if (ImGui::Button("1"))
-		LoadMap(GetGamePath() + "/Data/Landscape/Land1.lnd");
+		LoadLandscape("./Data/Landscape/Land1.lnd");
 	ImGui::SameLine();
 	if (ImGui::Button("2"))
-		LoadMap(GetGamePath() + "/Data/Landscape/Land2.lnd");
+		LoadLandscape("./Data/Landscape/Land2.lnd");
 	ImGui::SameLine();
 	if (ImGui::Button("3"))
-		LoadMap(GetGamePath() + "/Data/Landscape/Land3.lnd");
+		LoadLandscape("./Data/Landscape/Land3.lnd");
 	ImGui::SameLine();
 	if (ImGui::Button("4"))
-		LoadMap(GetGamePath() + "/Data/Landscape/Land4.lnd");
+		LoadLandscape("./Data/Landscape/Land4.lnd");
 	ImGui::SameLine();
 	if (ImGui::Button("5"))
-		LoadMap(GetGamePath() + "/Data/Landscape/Land5.lnd");
+		LoadLandscape("./Data/Landscape/Land5.lnd");
 	ImGui::SameLine();
 	if (ImGui::Button("T"))
-		LoadMap(GetGamePath() + "/Data/Landscape/LandT.lnd");
+		LoadLandscape("./Data/Landscape/LandT.lnd");
 	ImGui::SameLine();
 	ImGui::EndGroup();
 
