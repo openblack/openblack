@@ -111,12 +111,6 @@ void LandIsland::LoadFromFile(File& file)
 	_textureBumpMap = std::make_shared<Texture2D>(256, 256, GL_RED, GL_RED, GL_UNSIGNED_BYTE, bumpMapTextureData);
 	delete[] bumpMapTextureData;
 
-	printf("Read %" PRIu64 "/%" PRIu64 "\n", file.Position(), file.Size());
-
-	printf("_blockCount: %d\n", _blockCount);
-	printf("_materialCount: %d\n", _materialCount);
-	printf("_countryCount: %d\n", _countryCount);
-
 	file.Close();
 
 	// build the meshes

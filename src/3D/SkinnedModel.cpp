@@ -179,8 +179,6 @@ void SkinnedModel::LoadFromL3D(void* data_, size_t size)
 	L3DHeader* header     = (L3DHeader*)(buffer + 4);
 	uint32_t* meshOffsets = (uint32_t*)(buffer + header->meshListOffset);
 
-	printf("loading mesh with %d meshes (only 1st will be loaded)\n", header->numMeshes);
-
 	for (uint32_t m = 0; m < header->numMeshes; m++)
 	{
 		L3D_Mesh* mesh = (L3D_Mesh*)(buffer + meshOffsets[m]);
