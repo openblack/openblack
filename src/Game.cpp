@@ -191,7 +191,7 @@ void Game::Run()
 					_intersection = rayOrigin + rayDirection * intersectDistance;
 			}
 
-			_camera->ProcessSDLEvent(&e);
+			_camera->ProcessSDLEvent(e);
 
 			ImGui_ImplSDL2_ProcessEvent(&e);
 		}

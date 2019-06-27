@@ -38,7 +38,8 @@ class Camera
   public:
 	Camera(glm::vec3 position, glm::vec3 rotation):
 	    _position(position), _rotation(_rotation), _projectionMatrix(1.0f),
-	    _velForward(0.0f), _velRight(0.0f) {}
+	    _movementSpeed(1.0f), _freeLookSensitivity(1.0f),
+	    _velocity(0.0f, 0.0f, 0.0f) {}
 	Camera():
 	    Camera(glm::vec3(0.0f), glm::vec3(0.0f)) {}
 
@@ -61,17 +62,19 @@ class Camera
 	void DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::ivec2 screenSize, glm::vec3& out_worldOrigin, glm::vec3& out_worldDirection);
 
 	void Update(double dt);
-	void ProcessSDLEvent(const SDL_Event*);
+	void ProcessSDLEvent(const SDL_Event&);
+
+	void handleKeyboardInput(const SDL_Event&);
+	void handleMouseInput(const SDL_Event&);
 
   private:
 	glm::vec3 _position;
 	glm::vec3 _rotation;
 	glm::mat4 _projectionMatrix;
 
-	bool _mouseHeld;
-	glm::vec3 _heldOrigin;
-
-	float _velForward, _velRight;
+	glm::vec3 _velocity;
+	float _movementSpeed;
+	float _freeLookSensitivity;
 };
 } // namespace OpenBlack
 

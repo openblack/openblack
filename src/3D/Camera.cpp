@@ -46,13 +46,7 @@ glm::mat4 Camera::GetViewMatrix() const
 	glm::mat4 mPitch = glm::rotate(glm::mat4(1.0f), glm::radians(_rotation.y), glm::vec3(1.0f, 0.0f, 0.0f)); // pitch
 	glm::mat4 mYaw   = glm::rotate(glm::mat4(1.0f), glm::radians(_rotation.x), glm::vec3(0.0f, 1.0f, 0.0f)); // yaw
 
-	glm::mat4 mRot = mRoll * mPitch * mYaw;
-
-	/*glm::mat4 rotM = glm::mat4(1.0f);
-	rotM = glm::rotate(rotM, glm::radians(_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f)); 
-	rotM = glm::rotate(rotM, glm::radians(_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-	rotM = glm::rotate(rotM, glm::radians(_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));*/
-
+	glm::mat4 mRot   = mRoll * mPitch * mYaw;
 	glm::mat4 transM = glm::translate(glm::mat4(1.0f), -_position);
 
 	return mRot * transM;
@@ -144,73 +138,48 @@ void Camera::DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::
 	out_worldDirection = rayDirWorldSpace;
 }
 
-void Camera::ProcessSDLEvent(const SDL_Event* e)
+void Camera::ProcessSDLEvent(const SDL_Event& e)
 {
-	switch (e->type)
+	if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP)
+		handleKeyboardInput(e);
+	else if (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP)
+		handleMouseInput(e);
+}
+
+void Camera::handleKeyboardInput(const SDL_Event& e)
+{
+	// ignore all repeated keys
+	if (e.key.repeat > 0)
+		return;
+
+	if (e.key.keysym.scancode == SDL_SCANCODE_W)
+		_velocity.z += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
+	else if (e.key.keysym.scancode == SDL_SCANCODE_S)
+		_velocity.z += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
+	else if (e.key.keysym.scancode == SDL_SCANCODE_A)
+		_velocity.x += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
+	else if (e.key.keysym.scancode == SDL_SCANCODE_D)
+		_velocity.x += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
+}
+
+void Camera::handleMouseInput(const SDL_Event& e)
+{
+	if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP)
 	{
-	case SDL_KEYDOWN:
-		if (e->key.repeat > 0)
-			return;
-
-		switch (e->key.keysym.sym)
-		{
-		case SDLK_w: _velForward += 1.0f; break;
-		case SDLK_s: _velForward -= 1.0f; break;
-		case SDLK_a: _velRight -= 1.0f; break;
-		case SDLK_d: _velRight += 1.0f; break;
-		}
-		break;
-	case SDL_KEYUP:
-		if (e->key.repeat > 0)
-			return;
-
-		switch (e->key.keysym.sym)
-		{
-		case SDLK_w: _velForward -= 1.0f; break;
-		case SDLK_s: _velForward += 1.0f; break;
-		case SDLK_a: _velRight += 1.0f; break;
-		case SDLK_d: _velRight -= 1.0f; break;
-		}
-		break;
-	case SDL_MOUSEBUTTONDOWN:
-		if (e->button.button == SDL_BUTTON_LEFT)
-		{
-			_mouseHeld = true;
-			glm::ivec2 mousePosition(e->button.x, e->button.y);
-		}
-		break;
-	case SDL_MOUSEBUTTONUP:
-		if (e->button.button == SDL_BUTTON_LEFT)
-			_mouseHeld = false;
-		break;
-	case SDL_MOUSEMOTION:
-		glm::ivec2 mousePosition, screenSize;
-		SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
-		Game::instance()->GetWindow().GetSize(screenSize.x, screenSize.y);
-
-		glm::vec3 rayOrigin, rayDirection;
-		DeprojectScreenToWorld(mousePosition, screenSize, rayOrigin, rayDirection);
-
-		break;
+		if (e.button.button == SDL_BUTTON_MIDDLE)
+			SDL_SetRelativeMouseMode((e.type == SDL_MOUSEBUTTONDOWN) ? SDL_TRUE : SDL_FALSE);
 	}
 
-	/*if (e.type == SDL_MOUSEMOTION)
+	// Holding down the middle mouse button enables free look.
+	if (e.type == SDL_MOUSEMOTION && e.motion.state & SDL_BUTTON(SDL_BUTTON_MIDDLE))
 	{
-		float intersectDistance = 0.0f;
-		bool intersects         = glm::intersectRayPlane(
-            rayOrigin,
-            rayDirection,
-            glm::vec3(0.0f, 0.0f, 0.0f), // plane origin
-            glm::vec3(0.0f, 1.0f, 0.0f), // plane normal
-            intersectDistance);
-
-		if (intersects)
-			_intersection = rayOrigin + rayDirection * intersectDistance;
-	}*/
+		_rotation.x += e.motion.xrel * _freeLookSensitivity * 0.25f;
+		_rotation.y += e.motion.yrel * _freeLookSensitivity * 0.25f;
+	}
 }
 
 void Camera::Update(double dt)
 {
-	_position += GetForward() * (float)(_velForward * dt);
-	_position += GetRight() * (float)(_velRight * dt);
+	_position += GetForward() * (float)(_velocity.z * _movementSpeed * dt);
+	_position += GetRight() * (float)(_velocity.x * _movementSpeed * dt);
 }
