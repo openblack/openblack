@@ -23,9 +23,8 @@
 #include <Common/FileSystem.h>
 #include <Common/OSFile.h>
 #include <Game.h>
-#include <stdexcept>
-
 #include <inttypes.h>
+#include <stdexcept>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <Common/stb_image_write.h>
@@ -33,9 +32,11 @@
 using namespace OpenBlack;
 
 const float LandIsland::HeightUnit = 0.67f;
+const float LandIsland::CellSize = 10.0f;
 
 LandIsland::LandIsland():
-    _blockCount(0), _countryCount(0), _lowresCount(0), _materialCount(0)
+    _countryCount(0), _lowresCount(0), _materialCount(0),
+    _blockIndexLookup {0}
 {
 }
 
@@ -45,13 +46,14 @@ LandIsland::~LandIsland()
 
 void LandIsland::LoadFromFile(File& file)
 {
-	uint32_t blockSize, matSize, countrySize;
-	uint8_t blockIndex[1024];
+	uint32_t blockCount, blockSize, matSize, countrySize;
 
-	file.ReadBytes(&_blockCount, 4);
-	file.ReadBytes(&blockIndex, 1024);
+	file.ReadBytes(&blockCount, 4);
+	file.ReadBytes(&_blockIndexLookup, 1024);
 	file.ReadBytes(&_materialCount, 4);
 	file.ReadBytes(&_countryCount, 4);
+
+	// todo: lets assert these against sizeof(LandBlock) etc..
 	file.ReadBytes(&blockSize, 4);
 	file.ReadBytes(&matSize, 4);
 	file.ReadBytes(&countrySize, 4);
@@ -67,17 +69,24 @@ void LandIsland::LoadFromFile(File& file)
 		file.Seek(textureSize - 4, FileSeekMode::Current);
 	}
 
-	_blockCount--; // take away a block from the count, because it's not in the file?
-	_landBlocks = std::make_unique<LandBlock[]>(_blockCount);
-	for (unsigned int i = 0; i < _blockCount; i++)
+	blockCount--; // take away a block from the count, because it's not in the file?
+	_landBlocks.reserve(blockCount);
+	for (unsigned int i = 0; i < blockCount; i++)
 	{
 		uint8_t* blockData = new uint8_t[blockSize];
 		file.ReadBytes(blockData, blockSize);
 
+		_landBlocks.push_back(LandBlock());
 		_landBlocks[i].Load(blockData, blockSize);
 
 		delete[] blockData;
 	}
+
+	/*_countries.reserve(_countryCount);
+	for (unsigned int i = 0; i < _blockCount; i++)
+	{
+		uint8_t* countryData = new uint8_t[sizeof(Country)];
+	}*/
 
 	_countries = std::make_unique<Country[]>(_countryCount);
 	file.ReadBytes(_countries.get(), _countryCount * sizeof(Country));
@@ -99,13 +108,13 @@ void LandIsland::LoadFromFile(File& file)
 		delete[] rgba8TextureData;
 	}
 
-	// read noise map into texture2d
+	// read noise map into Texture2D
 	uint8_t* noiseMapTextureData = new uint8_t[256 * 256];
 	file.ReadBytes(noiseMapTextureData, 256 * 256);
 	_textureNoiseMap = std::make_shared<Texture2D>(256, 256, GL_RED, GL_RED, GL_UNSIGNED_BYTE, noiseMapTextureData);
 	delete[] noiseMapTextureData;
 
-	// read bump map into texture2d
+	// read bump map into Texture2D
 	uint8_t* bumpMapTextureData = new uint8_t[256 * 256];
 	file.ReadBytes(bumpMapTextureData, 256 * 256);
 	_textureBumpMap = std::make_shared<Texture2D>(256, 256, GL_RED, GL_RED, GL_UNSIGNED_BYTE, bumpMapTextureData);
@@ -113,15 +122,12 @@ void LandIsland::LoadFromFile(File& file)
 
 	file.Close();
 
-	// build the meshes
-	for (unsigned int b = 0; b < _blockCount; b++)
-	{
-		LandBlock* block = &_landBlocks[b];
-		block->BuildMesh(this);
-	}
+	// build the meshes (we could move this elsewhere)
+	for (auto& block : _landBlocks)
+		block.BuildMesh(*this);
 }
 
-const uint8_t LandIsland::GetAltitudeAt(glm::ivec2 vec) const
+/*const uint8_t LandIsland::GetAltitudeAt(glm::ivec2 vec) const
 {
 	return uint8_t();
 }
@@ -129,15 +135,25 @@ const uint8_t LandIsland::GetAltitudeAt(glm::ivec2 vec) const
 const float LandIsland::GetHeightAt(glm::ivec2 vec) const
 {
 	return GetAltitudeAt(vec) * LandIsland::HeightUnit;
+}*/
+
+const LandBlock* LandIsland::GetBlock(int8_t x, int8_t y) const
+{
+	// our blocks can only be between [0-31, 0-31]
+	if (x < 0 || x > 32 || y < 0 || y > 32)
+		return nullptr;
+
+	const uint8_t blockIndex = _blockIndexLookup[y * 32 + x];
+	if (blockIndex == 0)
+		return nullptr;
+
+	return &_landBlocks[blockIndex - 1];
 }
 
-void LandIsland::Draw(ShaderProgram* program)
+void LandIsland::Draw(ShaderProgram& program)
 {
-	for (unsigned int b = 0; b < _blockCount; b++)
-	{
-		LandBlock* block = &_landBlocks[b];
-		block->Draw(program);
-	}
+	for (auto &block : _landBlocks)
+		block.Draw(program);
 }
 
 void LandIsland::convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixels)
@@ -190,28 +206,30 @@ void LandIsland::DumpTextures()
 
 void LandIsland::DumpMaps()
 {
+	const int cellsize = 17;
+
 	// 32x32 block grid with 16x16 cells
 	// 512 x 512 pixels
 	// lets go with 3 channels for a laugh
-	uint8_t* data = new uint8_t[32 * 32 * 16 * 16];
+	uint8_t* data = new uint8_t[32 * 32 * cellsize * cellsize];
 
-	memset(data, 0xFF, 32 * 32 * 16 * 16);
+	memset(data, 0x00, 32 * 32 * cellsize * cellsize);
 
-	for (unsigned int b = 0; b < _blockCount; b++)
+	/*for (unsigned int b = 0; b < _blockCount; b++)
 	{
 		LandBlock* block = &_landBlocks[b];
 		int mapx         = block->GetBlockPosition()->x;
 		int mapz         = block->GetBlockPosition()->y;
-		int lineStride   = 32 * 16;
+		int lineStride   = 32 * cellsize;
 
-		for (int x = 0; x < 16; x++)
+		for (int x = 0; x < cellsize; x++)
 		{
-			for (int y = 0; y < 16; y++)
+			for (int y = 0; y < cellsize; y++)
 			{
 				LandCell cell = block->GetCells()[y * 17 + x];
 
-				int cellX = (mapx * 16) + x;
-				int cellY = (mapz * 16) + y;
+				int cellX = (mapx * cellsize) + x;
+				int cellY = (mapz * cellsize) + y;
 
 				uint8_t col = 0x00;
 				if (cell.Coastline())
@@ -221,13 +239,13 @@ void LandIsland::DumpMaps()
 				else if (cell.FullWater())
 					col = 255;
 
-				data[(cellY * lineStride) + cellX] = col;
+				data[(cellY * lineStride) + cellX] = cell.Altitude();
 			}
 		}
-	}
+	}*/
 
 	FILE* fptr = fopen("dump.raw", "wb");
-	fwrite(data, 32 * 32 * 16 * 16, 1, fptr);
+	fwrite(data, 32 * 32 * cellsize * cellsize, 1, fptr);
 	fclose(fptr);
 
 	delete[] data;

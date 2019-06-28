@@ -26,6 +26,7 @@
 #include <Graphics/OpenGL.h>
 #include <Graphics/ShaderProgram.h>
 #include <glm/glm.hpp>
+#include <array> 
 #include <stdexcept>
 #include <stdint.h>
 
@@ -42,6 +43,7 @@ struct LandVertex
 	GLubyte lightLevel;
 	GLfloat waterAlpha;
 
+	LandVertex() { }
 	LandVertex(glm::vec3 _position, glm::vec3 _weight,
 	           GLubyte mat1, GLubyte mat2, GLubyte mat3,
 	           GLubyte mat4, GLubyte mat5, GLubyte mat6,
@@ -73,26 +75,25 @@ class LandIsland;
 class LandBlock
 {
   public:
-	LandBlock();
+	LandBlock() :
+	    _index(0), _blockPosition(0, 0), _mapPosition(0, 0), _cells() {}
 
 	void Load(void* block, size_t block_size);
-	LandCell* GetCells()
-	{
-		return _cells;
-	};
-	glm::ivec2* GetBlockPosition() { return &_blockPosition; }
-	glm::vec2* GetMapPosition() { return &_mapPosition; }
+	void Draw(ShaderProgram& program);
+	void BuildMesh(LandIsland& island);
 
-	void Draw(ShaderProgram* program);
-	void BuildMesh(LandIsland* island);
+	LandCell* GetCells() { return _cells.data(); };
+	const glm::ivec2& GetBlockPosition() { return _blockPosition; }
+	const glm::vec2& GetMapPosition() { return _mapPosition; }
+
 
   private:
-	LandCell _cells[289];
-	uint32_t _index;
-	glm::ivec2 _blockPosition;
-	glm::vec2 _mapPosition;
-
-	std::vector<LandVertex> buildVertexList(LandIsland* island);
+	uint32_t _index; // the blocks index in the block array (do we need to know this?)
+	std::array<LandCell, 289> _cells;
+	glm::ivec2 _blockPosition; // position in the 32x32 block map
+	glm::vec2 _mapPosition; // absolute position in the world
 	std::unique_ptr<Mesh> _mesh;
+
+	std::vector<LandVertex> buildVertexList(LandIsland& island);
 };
 } // namespace OpenBlack

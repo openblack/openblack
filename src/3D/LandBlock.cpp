@@ -25,10 +25,6 @@
 
 using namespace OpenBlack;
 
-LandBlock::LandBlock()
-{
-}
-
 struct LH3DLandCell // 8 bytes
 {
 	uint8_t r;
@@ -95,7 +91,7 @@ void LandBlock::Load(void* block, size_t block_size)
 	memcpy(&_cells, lhBlock->cells, 17 * 17 * sizeof(LH3DLandCell));
 }
 
-void LandBlock::BuildMesh(LandIsland* island)
+void LandBlock::BuildMesh(LandIsland& island)
 {
 	if (_mesh != nullptr)
 		_mesh.reset();
@@ -115,36 +111,66 @@ void LandBlock::BuildMesh(LandIsland* island)
 	_mesh                      = std::make_unique<Mesh>(vertexBuffer, decl, GL_TRIANGLES);
 }
 
-std::vector<LandVertex> LandBlock::buildVertexList(LandIsland* island)
+std::vector<LandVertex> LandBlock::buildVertexList(LandIsland& island)
 {
 	// reserve 16*16 quads of 2 tris with 3 verts = 1536
 	std::vector<LandVertex> verts;
 	verts.reserve(1536);
 
-	auto countries = island->GetCountries();
+	auto countries = island.GetCountries();
 
+	auto neighbourBlockR  = island.GetBlock(_blockPosition.x + 1, _blockPosition.y);
+	auto neighbourBlockUp = island.GetBlock(_blockPosition.x, _blockPosition.y + 1);
+
+	// we'll loop through each cell, 16x16
+	// (the array is 17x17 but the 17th block is questionable data)
 	for (int x = 0; x < 16; x++)
 	{
 		for (int z = 0; z < 16; z++)
 		{
-			// our main cell
-			LandCell cell = _cells[(z + 0) * 17 + (x + 0)];
-
-			// vertex information
+			// start by grabbing 4 cells
 			LandCell tl = _cells[(z + 0) * 17 + (x + 0)];
 			LandCell tr = _cells[(z + 0) * 17 + (x + 1)];
 			LandCell bl = _cells[(z + 1) * 17 + (x + 0)];
 			LandCell br = _cells[(z + 1) * 17 + (x + 1)];
 
-			glm::vec3 pTL((x + 0) * 10.0f, tl.Altitude() * LandIsland::HeightUnit, ((z + 0) * 10.0f));
-			glm::vec3 pTR((x + 1) * 10.0f, tr.Altitude() * LandIsland::HeightUnit, ((z + 0) * 10.0f));
-			glm::vec3 pBL((x + 0) * 10.0f, bl.Altitude() * LandIsland::HeightUnit, ((z + 1) * 10.0f));
-			glm::vec3 pBR((x + 1) * 10.0f, br.Altitude() * LandIsland::HeightUnit, ((z + 1) * 10.0f));
+			// if x or z is too far, grab cells from neighbouring blocks
+			if (x == 15)
+			{
+				//tr = tl;
+				//br = tl;
+
+				if (neighbourBlockR == nullptr)
+				{
+					tr = LandCell();
+					br = LandCell();
+				}
+			}
+
+			if (z == 15)
+			{
+				//br = tl;
+				//bl = tl;
+
+				if (neighbourBlockUp == nullptr)
+				{
+					br = LandCell();
+					bl = LandCell();
+				}
+			}
+
+			// construct positions from cell altitudes
+			glm::vec3 pTL((x + 0) * LandIsland::CellSize, tl.Altitude() * LandIsland::HeightUnit, ((z + 0) * LandIsland::CellSize));
+			glm::vec3 pTR((x + 1) * LandIsland::CellSize, tr.Altitude() * LandIsland::HeightUnit, ((z + 0) * LandIsland::CellSize));
+			glm::vec3 pBL((x + 0) * LandIsland::CellSize, bl.Altitude() * LandIsland::HeightUnit, ((z + 1) * LandIsland::CellSize));
+			glm::vec3 pBR((x + 1) * LandIsland::CellSize, br.Altitude() * LandIsland::HeightUnit, ((z + 1) * LandIsland::CellSize));
 
 			auto tlMat = countries[tl.Country()].MapMaterials[tl.Altitude()];
 			auto trMat = countries[tr.Country()].MapMaterials[tr.Altitude()];
 			auto blMat = countries[bl.Country()].MapMaterials[bl.Altitude()];
 			auto brMat = countries[br.Country()].MapMaterials[br.Altitude()];
+
+			/* VERY FUN TODO: CHANGE THIS SO IT SPLITS PROPERLY ON CELL.SPLIT */
 
 			// triangle one: TL -> TR -> BR
 			verts.push_back(LandVertex(pTL, glm::vec3(1.0f, 0.0f, 0.0f),
@@ -185,8 +211,8 @@ std::vector<LandVertex> LandBlock::buildVertexList(LandIsland* island)
 	return verts;
 }
 
-void LandBlock::Draw(ShaderProgram* program)
+void LandBlock::Draw(ShaderProgram& program)
 {
-	program->SetUniformValue("blockPosition", _mapPosition);
+	program.SetUniformValue("blockPosition", _mapPosition);
 	_mesh->Draw();
 }

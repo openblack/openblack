@@ -229,7 +229,7 @@ void Game::Run()
 		_landIsland->GetMaterialArray()->Bind(0);
 		_landIsland->GetBumpMap()->Bind(1);
 
-		_landIsland->Draw(terrainShader);
+		_landIsland->Draw(*terrainShader);
 
 		if (_wireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

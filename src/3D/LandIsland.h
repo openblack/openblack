@@ -50,33 +50,43 @@ class LandIsland
 {
   public:
 	static const float HeightUnit;
+	static const float CellSize;
 
 	LandIsland();
 	~LandIsland();
 
 	void LoadFromFile(File& file);
 
-	const uint8_t GetAltitudeAt(glm::ivec2) const;
-	const float GetHeightAt(glm::ivec2) const;
+	// const uint8_t GetAltitudeAt(glm::ivec2) const;
+	// const float GetHeightAt(glm::ivec2) const;
+
+	const LandBlock* GetBlock(int8_t x, int8_t y) const;
 
 	// Debug
 	void DumpTextures();
 	void DumpMaps();
 
   private:
-	std::unique_ptr<LandBlock[]> _landBlocks;
+	std::vector<LandBlock> _landBlocks;
+	//std::vector<Country> _countries;
+
+	//std::unique_ptr<LandBlock[]> _landBlocks;
 	std::unique_ptr<Country[]> _countries;
 
-	unsigned int _blockCount;
 	unsigned int _materialCount;
 	unsigned int _countryCount;
 	unsigned int _lowresCount;
 
+	uint8_t _blockIndexLookup[1024];
+
 	// Renderer
   public:
-	void Draw(ShaderProgram* program);
+	void Draw(ShaderProgram& program);
 	std::shared_ptr<Texture2DArray> GetMaterialArray() const { return _materialArray; }
 	std::shared_ptr<Texture2DArray> GetLowResArray() const { return _lowResTextureArray; }
+
+	const std::vector<LandBlock>& GetBlocks() { return _landBlocks; }
+
 	Country* GetCountries() const { return _countries.get(); }
 
 	std::shared_ptr<Texture2D> GetNoiseMap() { return _textureNoiseMap; }
