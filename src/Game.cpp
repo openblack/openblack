@@ -345,6 +345,14 @@ void Game::guiLoop()
 	ImGui::SliderFloat("Day", &_timeOfDay, 0.0f, 1.0f, "%.3f");
 	ImGui::SliderFloat("Bump", &_bumpmapStrength, 0.0f, 1.0f, "%.3f");
 
+	ImGui::Separator();
+
+	if (ImGui::Button("Dump Textures"))
+		_landIsland->DumpTextures();
+
+	if (ImGui::Button("Dump Heightmap"))
+		_landIsland->DumpMaps();
+
 	ImGui::End();
 
 	ImGui::Render();
