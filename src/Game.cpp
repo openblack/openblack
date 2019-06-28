@@ -297,31 +297,22 @@ void Game::guiLoop()
 		ImGui::EndMainMenuBar();
 	}
 
-	// ImGui::ShowDemoWindow();
+	//ImGui::ShowDemoWindow();
 
-	int width, height;
-	_window->GetSize(width, height);
-	ImGui::SetNextWindowPos(ImVec2(width - 300.0f, 32.0f), ImGuiCond_FirstUseEver);
-	ImGui::Begin("Camera", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGuiIO& io          = ImGui::GetIO();
+	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 8.0f, io.DisplaySize.y - 8.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
+	ImGui::SetNextWindowBgAlpha(0.35f);
 
-	glm::vec3 pos = _camera->GetPosition();
-	glm::vec3 rot = _camera->GetRotation();
+	if (ImGui::Begin("Camera position overlay", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
+	{
+		auto camPos = _camera->GetPosition();
+		ImGui::Text("Camera Position: (%.1f,%.1f, %.1f)", camPos.x, camPos.y, camPos.z);
 
-	ImGui::DragFloat3("Position", &pos[0]);
-	ImGui::DragFloat3("Rotation", &rot[0]);
-
-	_camera->SetPosition(pos);
-	_camera->SetRotation(rot);
-
-	ImGui::End();
-
-	ImGui::SetNextWindowPos(ImVec2(width - 300.0f, 128.0f), ImGuiCond_FirstUseEver);
-	ImGui::Begin("Model", NULL, ImGuiWindowFlags_AlwaysAutoResize);
-
-	ImGui::DragFloat3("Position", glm::value_ptr(_modelPosition));
-	ImGui::DragFloat3("Rotation", glm::value_ptr(_modelRotation));
-	ImGui::SliderFloat3("Scale", glm::value_ptr(_modelScale), 0.0f, 2.0f, "%.1f");
-
+		if (ImGui::IsMousePosValid())
+			ImGui::Text("Mouse Position: (%.1f,%.1f)", io.MousePos.x, io.MousePos.y);
+		else
+			ImGui::Text("Mouse Position: <invalid>");
+	}
 	ImGui::End();
 
 	if (_lhvm != nullptr)
