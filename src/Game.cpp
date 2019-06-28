@@ -339,7 +339,15 @@ void Game::guiLoop()
 	ImGui::SameLine();
 	if (ImGui::Button("T"))
 		LoadLandscape("./Data/Landscape/LandT.lnd");
+	if (ImGui::Button("2P"))
+		LoadLandscape("./Data/Landscape/Multi_Player/MPM_2P_1.lnd");
 	ImGui::SameLine();
+	if (ImGui::Button("3P"))
+		LoadLandscape("./Data/Landscape/Multi_Player/MPM_3P_1.lnd");
+	ImGui::SameLine();
+	if (ImGui::Button("4P"))
+		LoadLandscape("./Data/Landscape/Multi_Player/MPM_4P_1.lnd");
+
 	ImGui::EndGroup();
 
 	ImGui::SliderFloat("Day", &_timeOfDay, 0.0f, 1.0f, "%.3f");
