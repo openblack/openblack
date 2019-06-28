@@ -44,12 +44,16 @@ LandIsland::~LandIsland()
 {
 }
 
+/*
+Loads from the original Black & White .lnd file format and
+converts the data into our own
+*/
 void LandIsland::LoadFromFile(File& file)
 {
 	uint32_t blockCount, blockSize, matSize, countrySize;
 
 	file.ReadBytes(&blockCount, 4);
-	file.ReadBytes(&_blockIndexLookup, 1024);
+	file.ReadBytes(_blockIndexLookup.data(), 1024);
 	file.ReadBytes(&_materialCount, 4);
 	file.ReadBytes(&_countryCount, 4);
 
@@ -82,14 +86,13 @@ void LandIsland::LoadFromFile(File& file)
 		delete[] blockData;
 	}
 
-	/*_countries.reserve(_countryCount);
-	for (unsigned int i = 0; i < _blockCount; i++)
+	_countries.reserve(_countryCount);
+	for (unsigned int i = 0; i < _countryCount; i++)
 	{
-		uint8_t* countryData = new uint8_t[sizeof(Country)];
-	}*/
-
-	_countries = std::make_unique<Country[]>(_countryCount);
-	file.ReadBytes(_countries.get(), _countryCount * sizeof(Country));
+		Country country;
+		file.ReadBytes(&country, sizeof(Country));
+		_countries.push_back(country);
+	}
 
 	_materialArray = std::make_shared<Texture2DArray>(256, 256, _materialCount, GL_RGBA8);
 	for (uint32_t i = 0; i < _materialCount; i++)

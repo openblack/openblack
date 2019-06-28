@@ -25,6 +25,7 @@
 #include <Graphics/Mesh.h>
 #include <Graphics/Texture2D.h>
 #include <Graphics/Texture2DArray.h>
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -68,16 +69,16 @@ class LandIsland
 
   private:
 	std::vector<LandBlock> _landBlocks;
-	//std::vector<Country> _countries;
+	std::vector<Country> _countries;
 
 	//std::unique_ptr<LandBlock[]> _landBlocks;
-	std::unique_ptr<Country[]> _countries;
+	//std::unique_ptr<Country[]> _countries;
 
 	unsigned int _materialCount;
 	unsigned int _countryCount;
 	unsigned int _lowresCount;
 
-	uint8_t _blockIndexLookup[1024];
+	std::array<uint8_t, 1024> _blockIndexLookup;
 
 	// Renderer
   public:
@@ -85,9 +86,8 @@ class LandIsland
 	std::shared_ptr<Texture2DArray> GetMaterialArray() const { return _materialArray; }
 	std::shared_ptr<Texture2DArray> GetLowResArray() const { return _lowResTextureArray; }
 
-	const std::vector<LandBlock>& GetBlocks() { return _landBlocks; }
-
-	Country* GetCountries() const { return _countries.get(); }
+	const std::vector<LandBlock>& GetBlocks() const { return _landBlocks; }
+	const std::vector<Country>& GetCountries() const { return _countries; }
 
 	std::shared_ptr<Texture2D> GetNoiseMap() { return _textureNoiseMap; }
 	std::shared_ptr<Texture2D> GetBumpMap() { return _textureBumpMap; }
