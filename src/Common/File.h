@@ -23,6 +23,7 @@
 #include <filesystem>
 #include <string>
 #include <cstdio>
+#include <cassert>
 
 namespace OpenBlack
 {
