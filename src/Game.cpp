@@ -189,6 +189,9 @@ void Game::Run()
 
 				if (intersects)
 					_intersection = rayOrigin + rayDirection * intersectDistance;
+
+				float height = _landIsland->GetHeightAt(glm::vec2(_intersection.x, _intersection.z));
+				_intersection.y = height;
 			}
 
 			_camera->ProcessSDLEvent(e);
