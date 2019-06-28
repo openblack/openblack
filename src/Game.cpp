@@ -209,7 +209,7 @@ void Game::Run()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		_sky->Draw();
-		//_water->Draw();
+		_water->Draw();
 
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
