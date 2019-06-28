@@ -32,11 +32,10 @@
 using namespace OpenBlack;
 
 const float LandIsland::HeightUnit = 0.67f;
-const float LandIsland::CellSize = 10.0f;
+const float LandIsland::CellSize   = 10.0f;
 
 LandIsland::LandIsland():
-    _countryCount(0), _lowresCount(0), _materialCount(0),
-    _blockIndexLookup {0}
+    _lowresCount(0), _materialCount(0), _blockIndexLookup { 0 }
 {
 }
 
@@ -50,12 +49,12 @@ converts the data into our own
 */
 void LandIsland::LoadFromFile(File& file)
 {
-	uint32_t blockCount, blockSize, matSize, countrySize;
+	uint32_t blockCount, countryCount, blockSize, matSize, countrySize;
 
 	file.ReadBytes(&blockCount, 4);
 	file.ReadBytes(_blockIndexLookup.data(), 1024);
 	file.ReadBytes(&_materialCount, 4);
-	file.ReadBytes(&_countryCount, 4);
+	file.ReadBytes(&countryCount, 4);
 
 	// todo: lets assert these against sizeof(LandBlock) etc..
 	file.ReadBytes(&blockSize, 4);
@@ -75,7 +74,7 @@ void LandIsland::LoadFromFile(File& file)
 
 	blockCount--; // take away a block from the count, because it's not in the file?
 	_landBlocks.reserve(blockCount);
-	for (unsigned int i = 0; i < blockCount; i++)
+	for (uint32_t i = 0; i < blockCount; i++)
 	{
 		uint8_t* blockData = new uint8_t[blockSize];
 		file.ReadBytes(blockData, blockSize);
@@ -86,8 +85,8 @@ void LandIsland::LoadFromFile(File& file)
 		delete[] blockData;
 	}
 
-	_countries.reserve(_countryCount);
-	for (unsigned int i = 0; i < _countryCount; i++)
+	_countries.reserve(countryCount);
+	for (uint32_t i = 0; i < countryCount; i++)
 	{
 		Country country;
 		file.ReadBytes(&country, sizeof(Country));
@@ -134,11 +133,12 @@ void LandIsland::LoadFromFile(File& file)
 {
 	return uint8_t();
 }
+*/
 
-const float LandIsland::GetHeightAt(glm::ivec2 vec) const
+const float LandIsland::GetHeightAt(glm::vec2 vec) const
 {
-	return GetAltitudeAt(vec) * LandIsland::HeightUnit;
-}*/
+	return GetCell(vec.x * 0.1f, vec.y * 0.1f).Altitude() * LandIsland::HeightUnit;
+}
 
 const LandBlock* LandIsland::GetBlock(int8_t x, int8_t y) const
 {
@@ -153,9 +153,22 @@ const LandBlock* LandIsland::GetBlock(int8_t x, int8_t y) const
 	return &_landBlocks[blockIndex - 1];
 }
 
+const LandCell& LandIsland::GetCell(int x, int y) const
+{
+	if (x < 0 || x > 511 || y < 0 || y > 511)
+		return LandCell(); // return empty water cell
+
+	const uint8_t blockIndex = _blockIndexLookup[32 * (y >> 4) + (x >> 4)];
+
+	if (blockIndex == 0)
+		return LandCell(); // return empty water cell
+
+	return _landBlocks[blockIndex - 1].GetCells()[(x & 0xF) + 17 * (y & 0xF)];
+}
+
 void LandIsland::Draw(ShaderProgram& program)
 {
-	for (auto &block : _landBlocks)
+	for (auto& block : _landBlocks)
 		block.Draw(program);
 }
 

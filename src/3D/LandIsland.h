@@ -59,9 +59,10 @@ class LandIsland
 	void LoadFromFile(File& file);
 
 	// const uint8_t GetAltitudeAt(glm::ivec2) const;
-	// const float GetHeightAt(glm::ivec2) const;
 
+	const float GetHeightAt(glm::vec2) const;
 	const LandBlock* GetBlock(int8_t x, int8_t y) const;
+	const LandCell& GetCell(int x, int y) const;
 
 	// Debug
 	void DumpTextures();
@@ -75,7 +76,6 @@ class LandIsland
 	//std::unique_ptr<Country[]> _countries;
 
 	unsigned int _materialCount;
-	unsigned int _countryCount;
 	unsigned int _lowresCount;
 
 	std::array<uint8_t, 1024> _blockIndexLookup;

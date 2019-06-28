@@ -124,40 +124,18 @@ std::vector<LandVertex> LandBlock::buildVertexList(LandIsland& island)
 
 	// we'll loop through each cell, 16x16
 	// (the array is 17x17 but the 17th block is questionable data)
+
+	int bx = _blockPosition.x * 16;
+	int by = _blockPosition.y * 16;
+
 	for (int x = 0; x < 16; x++)
 	{
 		for (int z = 0; z < 16; z++)
 		{
-			// start by grabbing 4 cells
-			LandCell tl = _cells[(z + 0) * 17 + (x + 0)];
-			LandCell tr = _cells[(z + 0) * 17 + (x + 1)];
-			LandCell bl = _cells[(z + 1) * 17 + (x + 0)];
-			LandCell br = _cells[(z + 1) * 17 + (x + 1)];
-
-			// if x or z is too far, grab cells from neighbouring blocks
-			if (x == 15)
-			{
-				//tr = tl;
-				//br = tl;
-
-				if (neighbourBlockR == nullptr)
-				{
-					tr = LandCell();
-					br = LandCell();
-				}
-			}
-
-			if (z == 15)
-			{
-				//br = tl;
-				//bl = tl;
-
-				if (neighbourBlockUp == nullptr)
-				{
-					br = LandCell();
-					bl = LandCell();
-				}
-			}
+			LandCell tl = island.GetCell(bx + x + 0, by + z + 0);
+			LandCell tr = island.GetCell(bx + x + 1, by + z + 0);
+			LandCell bl = island.GetCell(bx + x + 0, by + z + 1);
+			LandCell br = island.GetCell(bx + x + 1, by + z + 1);
 
 			// construct positions from cell altitudes
 			glm::vec3 pTL((x + 0) * LandIsland::CellSize, tl.Altitude() * LandIsland::HeightUnit, ((z + 0) * LandIsland::CellSize));

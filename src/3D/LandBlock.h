@@ -82,7 +82,7 @@ class LandBlock
 	void Draw(ShaderProgram& program);
 	void BuildMesh(LandIsland& island);
 
-	LandCell* GetCells() { return _cells.data(); };
+	const LandCell* GetCells() const { return _cells.data(); };
 	const glm::ivec2& GetBlockPosition() { return _blockPosition; }
 	const glm::vec2& GetMapPosition() { return _mapPosition; }
 

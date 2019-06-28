@@ -33,7 +33,7 @@ class LandCell
 	LandCell() : altitude(0), properties(0x40) {}
 
 	inline uint8_t Light() { return color.a; }
-	inline uint8_t Altitude() { return altitude; }
+	inline uint8_t Altitude() const { return altitude; }
 	inline bool Split() { return properties & 0x80; }
 	inline bool HasWater() { return properties & 0x10; }
 	inline bool Coastline() { return properties & 0x20; }
