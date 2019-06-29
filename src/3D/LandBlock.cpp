@@ -148,41 +148,45 @@ std::vector<LandVertex> LandBlock::buildVertexList(LandIsland& island)
 			auto blMat = countries[bl.Country()].MapMaterials[bl.Altitude()];
 			auto brMat = countries[br.Country()].MapMaterials[br.Altitude()];
 
-			/* VERY FUN TODO: CHANGE THIS SO IT SPLITS PROPERLY ON CELL.SPLIT */
 
-			// triangle one: TL -> TR -> BR
-			verts.push_back(LandVertex(pTL, glm::vec3(1.0f, 0.0f, 0.0f),
-			                           tlMat.FirstMaterialIndex, trMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
-			                           tlMat.SecondMaterialIndex, trMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
-			                           tlMat.Coeficient, trMat.Coeficient, brMat.Coeficient,
-			                           tl.Light(), tl.Alpha()));
-			verts.push_back(LandVertex(pTR, glm::vec3(0.0f, 1.0f, 0.0f),
-			                           tlMat.FirstMaterialIndex, trMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
-			                           tlMat.SecondMaterialIndex, trMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
-			                           tlMat.Coeficient, trMat.Coeficient, brMat.Coeficient,
-			                           tr.Light(), tr.Alpha()));
-			verts.push_back(LandVertex(pBR, glm::vec3(0.0f, 0.0f, 1.0f),
-			                           tlMat.FirstMaterialIndex, trMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
-			                           tlMat.SecondMaterialIndex, trMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
-			                           tlMat.Coeficient, trMat.Coeficient, brMat.Coeficient,
-			                           br.Light(), br.Alpha()));
+			// use a lambda so we're not repeating ourselves
+			auto make_vert = [](glm::vec3 height, glm::vec3 weight, MapMaterial m1, MapMaterial m2, MapMaterial m3, LandCell cell) -> LandVertex {
+				return LandVertex(height, weight,
+				                  m1.FirstMaterialIndex, m2.FirstMaterialIndex, m3.FirstMaterialIndex,
+				                  m1.SecondMaterialIndex, m2.SecondMaterialIndex, m3.SecondMaterialIndex,
+				                  m1.Coeficient, m2.Coeficient, m3.Coeficient,
+				                  cell.Light(), cell.Alpha());
+			};
 
-			// triangle two: BR -> BL -> TL
-			verts.push_back(LandVertex(pBR, glm::vec3(0.0f, 0.0f, 1.0f),
-			                           tlMat.FirstMaterialIndex, blMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
-			                           tlMat.SecondMaterialIndex, blMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
-			                           tlMat.Coeficient, blMat.Coeficient, brMat.Coeficient,
-			                           br.Light(), br.Alpha()));
-			verts.push_back(LandVertex(pBL, glm::vec3(0.0f, 1.0f, 0.0f),
-			                           tlMat.FirstMaterialIndex, blMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
-			                           tlMat.SecondMaterialIndex, blMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
-			                           tlMat.Coeficient, blMat.Coeficient, brMat.Coeficient,
-			                           bl.Light(), bl.Alpha()));
-			verts.push_back(LandVertex(pTL, glm::vec3(1.0f, 0.0f, 0.0f),
-			                           tlMat.FirstMaterialIndex, blMat.FirstMaterialIndex, brMat.FirstMaterialIndex,
-			                           tlMat.SecondMaterialIndex, blMat.SecondMaterialIndex, brMat.SecondMaterialIndex,
-			                           tlMat.Coeficient, blMat.Coeficient, brMat.Coeficient,
-			                           tl.Light(), tl.Alpha()));
+			// cell splitting
+			if (!tl.Split())
+			{
+				// TL/TR/BR  # #
+				//             #
+				verts.push_back(make_vert(pTL, glm::vec3(1, 0, 0), tlMat, trMat, brMat, tl));
+				verts.push_back(make_vert(pTR, glm::vec3(0, 1, 0), tlMat, trMat, brMat, tr));
+				verts.push_back(make_vert(pBR, glm::vec3(0, 0, 1), tlMat, trMat, brMat, br));
+
+				// BR/BL/TL  #
+				//           # #
+				verts.push_back(make_vert(pBR, glm::vec3(0, 0, 1), tlMat, blMat, brMat, br));
+				verts.push_back(make_vert(pBL, glm::vec3(0, 1, 0), tlMat, blMat, brMat, bl));
+				verts.push_back(make_vert(pTL, glm::vec3(1, 0, 0), tlMat, blMat, brMat, tl));
+			}
+			else
+			{
+				// BL/TL/TR  # #
+				//           #
+				verts.push_back(make_vert(pBL, glm::vec3(1, 0, 0), blMat, tlMat, trMat, bl));
+				verts.push_back(make_vert(pTL, glm::vec3(0, 1, 0), blMat, tlMat, trMat, tl));
+				verts.push_back(make_vert(pTR, glm::vec3(0, 0, 1), blMat, tlMat, trMat, tr));	
+
+				// TR/BR/BL    #
+				//           # #
+				verts.push_back(make_vert(pTR, glm::vec3(0, 0, 1), blMat, brMat, trMat, tr));
+				verts.push_back(make_vert(pBR, glm::vec3(0, 1, 0), blMat, brMat, trMat, br));
+				verts.push_back(make_vert(pBL, glm::vec3(1, 0, 0), blMat, brMat, trMat, bl));
+			}
 		}
 	}
 

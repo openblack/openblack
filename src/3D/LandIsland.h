@@ -72,9 +72,6 @@ class LandIsland
 	std::vector<LandBlock> _landBlocks;
 	std::vector<Country> _countries;
 
-	//std::unique_ptr<LandBlock[]> _landBlocks;
-	//std::unique_ptr<Country[]> _countries;
-
 	unsigned int _materialCount;
 	unsigned int _lowresCount;
 
