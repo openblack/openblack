@@ -359,11 +359,17 @@ void Game::guiLoop()
 
 	ImGui::Separator();
 
+	ImGui::Text("Block Count: %d", _landIsland->GetBlocks().size());
+	ImGui::Text("Country Count: %d", _landIsland->GetCountries().size());
+
+	ImGui::Separator();
+
 	if (ImGui::Button("Dump Textures"))
 		_landIsland->DumpTextures();
 
 	if (ImGui::Button("Dump Heightmap"))
 		_landIsland->DumpMaps();
+
 
 	ImGui::End();
 
