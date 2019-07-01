@@ -45,4 +45,8 @@ void main()
 	col = col * mix(.25f, LightLevel, timeOfDay);
 
 	FragColor = vec4(col.r, col.g, col.b, WaterAlpha);
+
+	if (WaterAlpha == 0.0) {
+		discard;
+	}
 }
