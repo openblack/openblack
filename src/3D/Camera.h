@@ -37,7 +37,7 @@ class Camera
 
   public:
 	Camera(glm::vec3 position, glm::vec3 rotation):
-	    _position(position), _rotation(_rotation), _projectionMatrix(1.0f),
+	    _position(position), _projectionMatrix(1.0f), _rotationMatrix(1.0f),
 	    _movementSpeed(1.0f), _freeLookSensitivity(1.0f),
 	    _velocity(0.0f, 0.0f, 0.0f) {}
 	Camera():
@@ -46,6 +46,7 @@ class Camera
 	glm::vec3 GetRotation() const;
 	glm::vec3 GetPosition() const;
 	glm::mat4 GetViewMatrix() const;
+	glm::mat3 GetRotationMatrix() const;
 	glm::mat4 GetProjectionMatrix() const;
 	glm::mat4 GetViewProjectionMatrix() const;
 
@@ -54,6 +55,7 @@ class Camera
 
 	void SetProjectionMatrixPerspective(float fov, float aspect, float nearclip, float farcli);
 	void SetProjectionMatrix(const glm::mat4x4& projection);
+	void SetRotationMatrix(const glm::mat3x3& rotation);
 
 	glm::vec3 GetForward() const;
 	glm::vec3 GetRight() const;
@@ -69,8 +71,9 @@ class Camera
 
   private:
 	glm::vec3 _position;
-	glm::vec3 _rotation;
+
 	glm::mat4 _projectionMatrix;
+	glm::mat3 _rotationMatrix;
 
 	glm::vec3 _velocity;
 	float _movementSpeed;

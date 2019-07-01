@@ -22,6 +22,7 @@
 #ifndef OPENBLACK_3D_SKY_H
 #define OPENBLACK_3D_SKY_H
 
+#include <3D/Camera.h>
 #include <3D/L3DModel.h>
 #include <Common/Bitmap16B.h>
 #include <Graphics/ShaderProgram.h>
@@ -39,7 +40,7 @@ class Sky
 	Sky();
 	~Sky() = default;
 
-	void Draw();
+	void Draw(const Camera&);
 
   private:
 	std::unique_ptr<ShaderProgram> _shader;

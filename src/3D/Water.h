@@ -22,7 +22,10 @@
 #ifndef OPENBLACK_3D_WATER_H
 #define OPENBLACK_3D_WATER_H
 
+#include <3D/Camera.h>
 #include <Graphics/Mesh.h>
+#include <Graphics/ShaderProgram.h>
+#include <Graphics/FrameBuffer.h>
 #include <glm/glm.hpp>
 
 namespace OpenBlack
@@ -34,17 +37,31 @@ class Water
 	Water();
 	~Water() = default;
 
-	void Draw();
+	void Draw(ShaderProgram& program);
+
+	void BeginReflection(const Camera& sceneCamera);
+	void EndReflection();
+
+	void DebugGUI();
+
+	Camera& GetReflectionCamera() { return _reflectionCamera; }
+
+	static const int FrameBufferSize = 2048;
 
   private:
 	struct WaterVertex
 	{
-		glm::vec3 position;
+		glm::vec2 position;
 	};
 
 	void createMesh();
+	void reflectMatrix(glm::mat4x4& m, const glm::vec4& plane);
 
 	std::unique_ptr<Mesh> _mesh;
+	std::unique_ptr<ShaderProgram> _shaderProgram;
+	std::unique_ptr<FrameBuffer> _reflectionFrameBuffer;
+
+	Camera _reflectionCamera;
 };
 
 } // namespace OpenBlack

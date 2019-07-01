@@ -18,7 +18,6 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/Camera.h>
 #include <3D/Sky.h>
 #include <Common/OSFile.h>
 #include <Game.h>
@@ -42,10 +41,10 @@ Sky::Sky()
 	delete bitmap;
 }
 
-void Sky::Draw()
+void Sky::Draw(const Camera& camera)
 {
 	_shader->Bind();
-	_shader->SetUniformValue("viewProj", Game::instance()->GetCamera().GetViewProjectionMatrix());
+	_shader->SetUniformValue("viewProj", camera.GetViewProjectionMatrix());
 
 	glActiveTexture(GL_TEXTURE0);
 	_texture->Bind();

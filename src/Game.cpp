@@ -108,6 +108,7 @@ Game::Game(int argc, char** argv):
 	_shaderManager->LoadShader("DebugLine", "shaders/line.vert", "shaders/line.frag");
 	_shaderManager->LoadShader("Terrain", "shaders/terrain.vert", "shaders/terrain.frag");
 	_shaderManager->LoadShader("SkinnedMesh", "shaders/skin.vert", "shaders/skin.frag");
+	_shaderManager->LoadShader("Water", "shaders/water.vert", "shaders/water.frag");
 
 	// allocate vertex buffers for our debug draw
 	DebugDraw::Init();
@@ -127,8 +128,8 @@ void Game::Run()
 	_camera = std::make_unique<Camera>();
 	_camera->SetProjectionMatrixPerspective(70.0f, _window->GetAspectRatio(), 0.1f, 65536.0f);
 
-	_camera->SetPosition(glm::vec3(2441.865f, 56.764f, 1887.351f));
-	_camera->SetRotation(glm::vec3(117.0f, 12.0f, 0.0f));
+	_camera->SetPosition(glm::vec3(2441.865f, 24.764f, 1887.351f));
+	_camera->SetRotation(glm::vec3(12.0f, 117.0f, 0.0f));
 
 	_modelPosition = glm::vec3(2485.0f, 50.0f, 1907.0f);
 	_modelRotation = glm::vec3(180.0f, 111.0f, 0.0f);
@@ -191,7 +192,7 @@ void Game::Run()
 				if (intersects)
 					_intersection = rayOrigin + rayDirection * intersectDistance;
 
-				float height = _landIsland->GetHeightAt(glm::vec2(_intersection.x, _intersection.z));
+				float height    = _landIsland->GetHeightAt(glm::vec2(_intersection.x, _intersection.z));
 				_intersection.y = height;
 			}
 
@@ -212,46 +213,15 @@ void Game::Run()
 		glClearColor(39.0f / 255.0f, 70.0f / 255.0f, 89.0f / 255.0f, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		_sky->Draw();
-		_water->Draw();
+		_water->BeginReflection(*_camera);
+		DebugDraw::Cross(_water->GetReflectionCamera().GetPosition(), 50.0f);
+		drawScene(_water->GetReflectionCamera(), false);
+		_water->EndReflection();
 
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		// reset viewport here, should be done in EndReflection
+		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 
-		if (_wireframe)
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-		ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
-		terrainShader->Bind();
-		terrainShader->SetUniformValue("viewProj", _camera->GetViewProjectionMatrix());
-		terrainShader->SetUniformValue("timeOfDay", _timeOfDay);
-		terrainShader->SetUniformValue("bumpmapStrength", _bumpmapStrength);
-		terrainShader->SetUniformValue("sMaterials", 0);
-		terrainShader->SetUniformValue("sBumpMap", 1);
-
-		_landIsland->GetMaterialArray()->Bind(0);
-		_landIsland->GetBumpMap()->Bind(1);
-
-		_landIsland->Draw(*terrainShader);
-
-		if (_wireframe)
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-		glm::mat4 modelMatrix = glm::mat4(1.0f);
-		modelMatrix           = glm::translate(modelMatrix, _modelPosition);
-
-		modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-		modelMatrix = glm::scale(modelMatrix, _modelScale);
-
-		ShaderProgram* objectShader = _shaderManager->GetShader("SkinnedMesh");
-		objectShader->Bind();
-		objectShader->SetUniformValue("u_viewProjection", _camera->GetViewProjectionMatrix());
-		objectShader->SetUniformValue("u_modelTransform", modelMatrix);
-		_testModel->Draw(objectShader);
+		drawScene(*_camera, true);
 
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
@@ -265,6 +235,57 @@ void Game::Run()
 
 		_window->SwapWindow();
 	}
+}
+
+void Game::drawScene(const Camera& camera, bool drawWater)
+{
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	_sky->Draw(camera);
+
+	if (drawWater)
+	{
+		ShaderProgram* waterShader = _shaderManager->GetShader("Water");
+		waterShader->Bind();
+		waterShader->SetUniformValue("viewProj", _camera->GetViewProjectionMatrix());
+		_water->Draw(*waterShader);
+	}
+
+	if (_wireframe)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
+	terrainShader->Bind();
+	terrainShader->SetUniformValue("viewProj", camera.GetViewProjectionMatrix());
+	terrainShader->SetUniformValue("timeOfDay", _timeOfDay);
+	terrainShader->SetUniformValue("bumpmapStrength", _bumpmapStrength);
+	terrainShader->SetUniformValue("sMaterials", 0);
+	terrainShader->SetUniformValue("sBumpMap", 1);
+
+	_landIsland->GetMaterialArray()->Bind(0);
+	_landIsland->GetBumpMap()->Bind(1);
+
+	_landIsland->Draw(*terrainShader);
+
+	if (_wireframe)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	glm::mat4 modelMatrix = glm::mat4(1.0f);
+	modelMatrix           = glm::translate(modelMatrix, _modelPosition);
+
+	modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+	modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+	modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+	modelMatrix = glm::scale(modelMatrix, _modelScale);
+
+	ShaderProgram* objectShader = _shaderManager->GetShader("SkinnedMesh");
+	objectShader->Bind();
+	objectShader->SetUniformValue("u_viewProjection", camera.GetViewProjectionMatrix());
+	objectShader->SetUniformValue("u_modelTransform", modelMatrix);
+	_testModel->Draw(objectShader);
 }
 
 void Game::guiLoop()
@@ -303,20 +324,35 @@ void Game::guiLoop()
 
 	//ImGui::ShowDemoWindow();
 
-	ImGuiIO& io          = ImGui::GetIO();
+	ImGuiIO& io = ImGui::GetIO();
 	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 8.0f, io.DisplaySize.y - 8.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
 	ImGui::SetNextWindowBgAlpha(0.35f);
 
 	if (ImGui::Begin("Camera position overlay", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
 	{
 		auto camPos = _camera->GetPosition();
+		auto camRot = _camera->GetRotation();
 		ImGui::Text("Camera Position: (%.1f,%.1f, %.1f)", camPos.x, camPos.y, camPos.z);
+		ImGui::Text("Camera Rotation: (%.1f,%.1f, %.1f)", camRot.x, camRot.y, camRot.z);
 
 		if (ImGui::IsMousePosValid())
 			ImGui::Text("Mouse Position: (%.1f,%.1f)", io.MousePos.x, io.MousePos.y);
 		else
 			ImGui::Text("Mouse Position: <invalid>");
 	}
+	ImGui::End();
+
+	ImGui::Begin("Camera", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+
+	glm::vec3 pos = _camera->GetPosition();
+	glm::vec3 rot = _camera->GetRotation();
+
+	ImGui::DragFloat3("Position", &pos[0]);
+	ImGui::DragFloat3("Rotation", &rot[0]);
+
+	// _camera->SetPosition(pos);
+	// _camera->SetRotation(rot);
+
 	ImGui::End();
 
 	if (_lhvm != nullptr)
@@ -370,8 +406,10 @@ void Game::guiLoop()
 	if (ImGui::Button("Dump Heightmap"))
 		_landIsland->DumpMaps();
 
-
 	ImGui::End();
+
+	if (_water != nullptr)
+		_water->DebugGUI();
 
 	ImGui::Render();
 }

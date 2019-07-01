@@ -82,6 +82,8 @@ class Game
 	}
 
   private:
+	void drawScene(const Camera& camera, bool drawWater);
+
 	static Game* sInstance;
 
 	std::unique_ptr<Graphics::ShaderManager> _shaderManager;
