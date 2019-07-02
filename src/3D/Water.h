@@ -31,6 +31,20 @@
 namespace OpenBlack
 {
 
+class ReflectionCamera: public Camera
+{
+  public:
+	ReflectionCamera():
+	    ReflectionCamera(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f)) {}
+	ReflectionCamera(glm::vec3 position, glm::vec3 rotation, glm::vec3 reflectionPlane):
+	    Camera(position, rotation), _reflectionPlane(reflectionPlane) {}
+	glm::mat4 GetViewProjectionMatrix() const;
+
+  private:
+	glm::vec3 _reflectionPlane;
+	void reflectMatrix(glm::mat4x4& m, const glm::vec4& plane) const;
+};
+
 class Water
 {
   public:
@@ -44,7 +58,10 @@ class Water
 
 	void DebugGUI();
 
-	Camera& GetReflectionCamera() { return _reflectionCamera; }
+	ReflectionCamera& GetReflectionCamera() { return _reflectionCamera; }
+
+	void ReflectMatrix(glm::mat4x4& m, const glm::vec4& plane);
+
 
 	static const int FrameBufferSize = 2048;
 
@@ -55,13 +72,12 @@ class Water
 	};
 
 	void createMesh();
-	void reflectMatrix(glm::mat4x4& m, const glm::vec4& plane);
 
 	std::unique_ptr<Mesh> _mesh;
 	std::unique_ptr<ShaderProgram> _shaderProgram;
 	std::unique_ptr<FrameBuffer> _reflectionFrameBuffer;
 
-	Camera _reflectionCamera;
+	ReflectionCamera _reflectionCamera;
 };
 
 } // namespace OpenBlack

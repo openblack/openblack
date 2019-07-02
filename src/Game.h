@@ -103,6 +103,8 @@ class Game
 	std::unique_ptr<LHVM::LHVM> _lhvm;
 
 	bool _wireframe;
+	bool _waterDebug;
+
 	float _timeOfDay;
 	float _bumpmapStrength;
 

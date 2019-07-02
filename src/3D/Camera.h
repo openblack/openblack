@@ -22,8 +22,6 @@
 #ifndef OPENBLACK_CAMERA_H
 #define OPENBLACK_CAMERA_H
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <SDL_events.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -37,25 +35,23 @@ class Camera
 
   public:
 	Camera(glm::vec3 position, glm::vec3 rotation):
-	    _position(position), _projectionMatrix(1.0f), _rotationMatrix(1.0f),
+	    _position(position), _rotation(glm::radians(rotation)), _projectionMatrix(1.0f),
 	    _movementSpeed(1.0f), _freeLookSensitivity(1.0f),
 	    _velocity(0.0f, 0.0f, 0.0f) {}
 	Camera():
 	    Camera(glm::vec3(0.0f), glm::vec3(0.0f)) {}
 
-	glm::vec3 GetRotation() const;
-	glm::vec3 GetPosition() const;
-	glm::mat4 GetViewMatrix() const;
-	glm::mat3 GetRotationMatrix() const;
-	glm::mat4 GetProjectionMatrix() const;
-	glm::mat4 GetViewProjectionMatrix() const;
+	virtual glm::mat4 GetViewProjectionMatrix() const;
+	glm::mat4 GetProjectionMatrix() const { return _projectionMatrix; }
 
-	void SetPosition(const glm::vec3& position);
-	void SetRotation(const glm::vec3& rotation);
+	glm::vec3 GetPosition() const { return _position; }
+	glm::vec3 GetRotation() const { return glm::degrees(_rotation); }
 
-	void SetProjectionMatrixPerspective(float fov, float aspect, float nearclip, float farcli);
-	void SetProjectionMatrix(const glm::mat4x4& projection);
-	void SetRotationMatrix(const glm::mat3x3& rotation);
+	void SetPosition(const glm::vec3& position) { _position = position; }
+	void SetRotation(const glm::vec3& eulerDegrees) { _rotation = glm::radians(eulerDegrees); }
+
+	void SetProjectionMatrixPerspective(float fov, float aspect, float nearclip, float farclip);
+	void SetProjectionMatrix(const glm::mat4x4& projection) { _projectionMatrix = projection; }
 
 	glm::vec3 GetForward() const;
 	glm::vec3 GetRight() const;
@@ -69,11 +65,13 @@ class Camera
 	void handleKeyboardInput(const SDL_Event&);
 	void handleMouseInput(const SDL_Event&);
 
-  private:
+	glm::mat4 getRotationMatrix() const;
+
+  protected:
 	glm::vec3 _position;
+	glm::vec3 _rotation;
 
 	glm::mat4 _projectionMatrix;
-	glm::mat3 _rotationMatrix;
 
 	glm::vec3 _velocity;
 	float _movementSpeed;

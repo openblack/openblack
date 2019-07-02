@@ -23,6 +23,50 @@
 
 using namespace OpenBlack;
 
+glm::mat4 ReflectionCamera::GetViewProjectionMatrix() const
+{
+	glm::mat4 mRotation = getRotationMatrix();
+	glm::mat4 mView     = mRotation * glm::translate(glm::mat4(1.0f), -_position);
+
+	const glm::vec4 reflectionPlane = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+
+	// M''camera = Mreflection * Mcamera * Mflip
+	glm::mat4x4 reflectionMatrix;
+	reflectMatrix(reflectionMatrix, reflectionPlane);
+
+	return GetProjectionMatrix() * mView * reflectionMatrix;
+}
+
+/*
+              | 1-2Nx2   -2NxNy  -2NxNz  -2NxD |
+Mreflection = |  -2NxNy 1-2Ny2   -2NyNz  -2NyD |
+              |  -2NxNz  -2NyNz 1-2Nz2   -2NzD |
+              |    0       0       0       1   |
+*/
+void ReflectionCamera::reflectMatrix(glm::mat4x4& m, const glm::vec4& plane) const
+{
+	m[0][0] = (1.0f - 2.0f * plane[0] * plane[0]);
+	m[1][0] = (-2.0f * plane[0] * plane[1]);
+	m[2][0] = (-2.0f * plane[0] * plane[2]);
+	m[3][0] = (-2.0f * plane[3] * plane[0]);
+
+	m[0][1] = (-2.0f * plane[1] * plane[0]);
+	m[1][1] = (1.0f - 2.0f * plane[1] * plane[1]);
+	m[2][1] = (-2.0f * plane[1] * plane[2]);
+	m[3][1] = (-2.0f * plane[3] * plane[1]);
+
+	m[0][2] = (-2.0f * plane[2] * plane[0]);
+	m[1][2] = (-2.0f * plane[2] * plane[1]);
+	m[2][2] = (1.0f - 2.0f * plane[2] * plane[2]);
+	m[3][2] = (-2.0f * plane[3] * plane[2]);
+
+	m[0][3] = 0.0f;
+	m[1][3] = 0.0f;
+	m[2][3] = 0.0f;
+	m[3][3] = 1.0f;
+}
+
+
 Water::Water()
 {
 	// _shaderProgram = std::make_unique<ShaderProgram>();
@@ -64,23 +108,14 @@ void Water::Draw(ShaderProgram& program)
 
 void Water::BeginReflection(const Camera& sceneCamera)
 {
-	glm::vec3 cameraPosition = sceneCamera.GetPosition();
-	glm::vec3 cameraRotation = sceneCamera.GetRotation();
-	const glm::vec3 planeNormal    = glm::vec3(0.0f, 1.0f, 0.0f);
-
-	glm::vec4 reflectionPlane(planeNormal, 0.0f);
+	_reflectionCamera = ReflectionCamera(
+	    sceneCamera.GetPosition(),
+	    sceneCamera.GetRotation(),
+	    glm::vec3(0.0f, 1.0f, 0.0f)
+	);
+	_reflectionCamera.SetProjectionMatrix(sceneCamera.GetProjectionMatrix());
 
 	glViewport(0, 0, _reflectionFrameBuffer->GetWidth(), _reflectionFrameBuffer->GetHeight());
-
-	// M''camera = Mreflection * Mcamera * Mflip
-	glm::mat4x4 reflectionMatrix;
-	reflectMatrix(reflectionMatrix, reflectionPlane);
-
-	glm::vec4 cameraReflectPosition = reflectionMatrix * glm::vec4(cameraPosition, 0.0f);
-
-	_reflectionCamera.SetPosition(cameraReflectPosition);
-	_reflectionCamera.SetRotationMatrix(sceneCamera.GetRotationMatrix() * glm::mat3(reflectionMatrix));
-	_reflectionCamera.SetProjectionMatrix(sceneCamera.GetProjectionMatrix());
 
 	_reflectionFrameBuffer->Bind();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -95,9 +130,7 @@ void Water::EndReflection()
 void Water::DebugGUI()
 {
 	ImGui::Begin("Water Debug");
-
-	ImGui::Image((void*)(intptr_t)_reflectionFrameBuffer->GetTexture()->GetHandle(), ImVec2(256, 256));
-
+	ImGui::Image((void*)(intptr_t)_reflectionFrameBuffer->GetTexture()->GetHandle(), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::End();
 }
 
@@ -107,7 +140,7 @@ Mreflection = |  -2NxNy 1-2Ny2   -2NyNz  -2NyD |
               |  -2NxNz  -2NyNz 1-2Nz2   -2NzD |
               |    0       0       0       1   |
 */
-void Water::reflectMatrix(glm::mat4x4& m, const glm::vec4& plane)
+void Water::ReflectMatrix(glm::mat4x4& m, const glm::vec4& plane)
 {
 	m[0][0] = (1.0f - 2.0f * plane[0] * plane[0]);
 	m[1][0] = (-2.0f * plane[0] * plane[1]);

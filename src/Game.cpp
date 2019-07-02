@@ -71,7 +71,7 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 }
 
 Game::Game(int argc, char** argv):
-    _running(true), _wireframe(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f),
+    _running(true), _wireframe(false), _waterDebug(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f),
     _fileSystem(std::make_unique<FileSystem>()),
     _shaderManager(std::make_unique<ShaderManager>())
 {
@@ -214,7 +214,6 @@ void Game::Run()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		_water->BeginReflection(*_camera);
-		DebugDraw::Cross(_water->GetReflectionCamera().GetPosition(), 50.0f);
 		drawScene(_water->GetReflectionCamera(), false);
 		_water->EndReflection();
 
@@ -249,7 +248,7 @@ void Game::drawScene(const Camera& camera, bool drawWater)
 	{
 		ShaderProgram* waterShader = _shaderManager->GetShader("Water");
 		waterShader->Bind();
-		waterShader->SetUniformValue("viewProj", _camera->GetViewProjectionMatrix());
+		waterShader->SetUniformValue("viewProj", camera.GetViewProjectionMatrix());
 		_water->Draw(*waterShader);
 	}
 
@@ -305,6 +304,7 @@ void Game::guiLoop()
 		if (ImGui::BeginMenu("View"))
 		{
 			ImGui::Checkbox("Wireframe", &_wireframe);
+			ImGui::Checkbox("Water Debug", &_waterDebug);
 			ImGui::EndMenu();
 		}
 
@@ -340,19 +340,6 @@ void Game::guiLoop()
 		else
 			ImGui::Text("Mouse Position: <invalid>");
 	}
-	ImGui::End();
-
-	ImGui::Begin("Camera", NULL, ImGuiWindowFlags_AlwaysAutoResize);
-
-	glm::vec3 pos = _camera->GetPosition();
-	glm::vec3 rot = _camera->GetRotation();
-
-	ImGui::DragFloat3("Position", &pos[0]);
-	ImGui::DragFloat3("Rotation", &rot[0]);
-
-	// _camera->SetPosition(pos);
-	// _camera->SetRotation(rot);
-
 	ImGui::End();
 
 	if (_lhvm != nullptr)
@@ -408,7 +395,7 @@ void Game::guiLoop()
 
 	ImGui::End();
 
-	if (_water != nullptr)
+	if (_waterDebug)
 		_water->DebugGUI();
 
 	ImGui::Render();

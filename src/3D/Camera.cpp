@@ -24,77 +24,30 @@
 #include <cmath>
 #include <iostream>
 
+#define GLM_FORCE_RADIANS
 #define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 using namespace OpenBlack;
 
-glm::vec3 Camera::GetPosition() const
+glm::mat4 Camera::getRotationMatrix() const
 {
-	return _position;
-}
+	glm::mat4 pitch, yaw, roll = glm::mat4(1.0f);
 
-glm::mat4 Camera::GetViewMatrix() const
-{
-	return glm::mat4(_rotationMatrix) * glm::translate(glm::mat4(1.0f), -_position);
-}
+	pitch = glm::rotate(glm::mat4(1.0f), _rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+	yaw   = glm::rotate(glm::mat4(1.0f), _rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+	roll  = glm::rotate(glm::mat4(1.0f), _rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 
-glm::mat3 Camera::GetRotationMatrix() const
-{
-	return _rotationMatrix;
-}
-
-glm::mat4 Camera::GetProjectionMatrix() const
-{
-	return _projectionMatrix;
+	return roll * pitch * yaw;
 }
 
 glm::mat4 Camera::GetViewProjectionMatrix() const
 {
-	return GetProjectionMatrix() * GetViewMatrix();
-}
+	glm::mat4 mRotation = getRotationMatrix();
+	glm::mat4 mView     = mRotation * glm::translate(glm::mat4(1.0f), -_position);
 
-void Camera::SetPosition(const glm::vec3& position)
-{
-	_position = position;
-}
-
-glm::vec3 Camera::GetRotation() const
-{
-	float sy = sqrtf(_rotationMatrix[0][0] * _rotationMatrix[0][0] + _rotationMatrix[1][0] * _rotationMatrix[1][0]);
-
-	bool singular = sy < 1e-6;
-
-	float x, y, z;
-	if (!singular) {
-		x = atan2f(_rotationMatrix[2][1], _rotationMatrix[2][2]);
-		y = atan2f(-_rotationMatrix[2][0], sy);
-		z = atan2f(_rotationMatrix[1][0], _rotationMatrix[0][0]);
-	}
-	else
-	{
-		x = atan2f(_rotationMatrix[1][2], _rotationMatrix[1][1]);
-		y = atan2f(-_rotationMatrix[2][0], sy);
-		z = 0;
-	}
-
-	return glm::degrees(glm::vec3(x, y, z));
-
-
-	// return glm::eulerAngles(glm::toQuat(_rotationMatrix));
-	// return glm::degrees(glm::eulerAngles(glm::toQuat(_rotationMatrix)));
-}
-
-void Camera::SetRotation(const glm::vec3& rotation)
-{
-	glm::mat4 pitch, yaw, roll = glm::mat4(1.0f);
-
-	pitch = glm::rotate(glm::mat4(1.0f), glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-	yaw   = glm::rotate(glm::mat4(1.0f), glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-	roll  = glm::rotate(glm::mat4(1.0f), glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-	_rotationMatrix = roll * pitch * yaw;
+	return GetProjectionMatrix() * mView;
 }
 
 void Camera::SetProjectionMatrixPerspective(float fov, float aspect, float nearclip, float farclip)
@@ -102,25 +55,16 @@ void Camera::SetProjectionMatrixPerspective(float fov, float aspect, float nearc
 	_projectionMatrix = glm::perspective(glm::radians(fov), aspect, nearclip, farclip);
 }
 
-void Camera::SetProjectionMatrix(const glm::mat4x4& projection)
-{
-	_projectionMatrix = projection;
-}
-
-void Camera::SetRotationMatrix(const glm::mat3x3& rotation)
-{
-	_rotationMatrix = rotation;
-}
-
-
 glm::vec3 Camera::GetForward() const
 {
-	return glm::normalize(glm::vec3(0.0f, 0.0f, -1.0f) * _rotationMatrix);
+	glm::mat4 mRotation = getRotationMatrix();
+	return -glm::vec3(mRotation[0][2], mRotation[1][2], mRotation[2][2]);
 }
 
 glm::vec3 Camera::GetRight() const
 {
-	return glm::normalize(glm::cross(GetForward(), glm::vec3(0.0f, 1.0f, 0.0f)));
+	glm::mat4 mRotation = getRotationMatrix();
+	return glm::vec3(mRotation[0][0], mRotation[1][0], mRotation[2][0]);
 }
 
 glm::vec3 Camera::GetUp() const
@@ -187,6 +131,10 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 		_velocity.x += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
 	else if (e.key.keysym.scancode == SDL_SCANCODE_D)
 		_velocity.x += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
+	else if (e.key.keysym.scancode == SDL_SCANCODE_LCTRL)
+		_velocity.y -= (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
+	else if (e.key.keysym.scancode == SDL_SCANCODE_SPACE)
+		_velocity.y += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
 }
 
 void Camera::handleMouseInput(const SDL_Event& e)
@@ -202,8 +150,8 @@ void Camera::handleMouseInput(const SDL_Event& e)
 	{
 		glm::vec3 rot = GetRotation();
 
-		rot.x += e.motion.xrel * _freeLookSensitivity * 0.25f;
-		rot.y += e.motion.yrel * _freeLookSensitivity * 0.25f;
+		rot.y += e.motion.xrel * _freeLookSensitivity * 0.1f;
+		rot.x += e.motion.yrel * _freeLookSensitivity * 0.1f;
 
 		SetRotation(rot);
 	}
@@ -212,5 +160,6 @@ void Camera::handleMouseInput(const SDL_Event& e)
 void Camera::Update(double dt)
 {
 	_position += GetForward() * (float)(_velocity.z * _movementSpeed * dt);
+	_position += GetUp() * (float)(_velocity.y * _movementSpeed * dt);
 	_position += GetRight() * (float)(_velocity.x * _movementSpeed * dt);
 }
