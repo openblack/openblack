@@ -159,33 +159,34 @@ std::vector<LandVertex> LandBlock::buildVertexList(LandIsland& island)
 			};
 
 			// cell splitting
-			if (!tl.Split())
+			// winding order = counter-clockwise
+			if (!true)
 			{
-				// TL/TR/BR  # #
+				// TL/BR/TR  # #
 				//             #
 				verts.push_back(make_vert(pTL, glm::vec3(1, 0, 0), tlMat, trMat, brMat, tl));
-				verts.push_back(make_vert(pTR, glm::vec3(0, 1, 0), tlMat, trMat, brMat, tr));
 				verts.push_back(make_vert(pBR, glm::vec3(0, 0, 1), tlMat, trMat, brMat, br));
+				verts.push_back(make_vert(pTR, glm::vec3(0, 1, 0), tlMat, trMat, brMat, tr));
 
-				// BR/BL/TL  #
+				// TL/BL/BR  #
 				//           # #
-				verts.push_back(make_vert(pBR, glm::vec3(0, 0, 1), tlMat, blMat, brMat, br));
-				verts.push_back(make_vert(pBL, glm::vec3(0, 1, 0), tlMat, blMat, brMat, bl));
 				verts.push_back(make_vert(pTL, glm::vec3(1, 0, 0), tlMat, blMat, brMat, tl));
+				verts.push_back(make_vert(pBL, glm::vec3(0, 1, 0), tlMat, blMat, brMat, bl));
+				verts.push_back(make_vert(pBR, glm::vec3(0, 0, 1), tlMat, blMat, brMat, br));
 			}
 			else
 			{
-				// BL/TL/TR  # #
+				// TR/TL/BL  # #
 				//           #
-				verts.push_back(make_vert(pBL, glm::vec3(1, 0, 0), blMat, tlMat, trMat, bl));
-				verts.push_back(make_vert(pTL, glm::vec3(0, 1, 0), blMat, tlMat, trMat, tl));
 				verts.push_back(make_vert(pTR, glm::vec3(0, 0, 1), blMat, tlMat, trMat, tr));	
+				verts.push_back(make_vert(pTL, glm::vec3(0, 1, 0), blMat, tlMat, trMat, tl));
+				verts.push_back(make_vert(pBL, glm::vec3(1, 0, 0), blMat, tlMat, trMat, bl));
 
-				// TR/BR/BL    #
+				// BL/BR/TR    #
 				//           # #
-				verts.push_back(make_vert(pTR, glm::vec3(0, 0, 1), blMat, brMat, trMat, tr));
-				verts.push_back(make_vert(pBR, glm::vec3(0, 1, 0), blMat, brMat, trMat, br));
 				verts.push_back(make_vert(pBL, glm::vec3(1, 0, 0), blMat, brMat, trMat, bl));
+				verts.push_back(make_vert(pBR, glm::vec3(0, 1, 0), blMat, brMat, trMat, br));
+				verts.push_back(make_vert(pTR, glm::vec3(0, 0, 1), blMat, brMat, trMat, tr));
 			}
 		}
 	}
