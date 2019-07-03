@@ -90,7 +90,7 @@ void Water::createMesh()
 		glm::vec2(-1.0f, -1.0f),
 	};
 
-	static const unsigned short indices[6] = { 0, 1, 2, 2, 3, 0 };
+	static const unsigned short indices[6] = { 2, 1, 0, 0, 3, 2 };
 
 	VertexBuffer* vertexBuffer = new VertexBuffer(points, 4, sizeof(glm::vec2));
 	IndexBuffer* indexBuffer   = new IndexBuffer(indices, 6, GL_UNSIGNED_SHORT);
