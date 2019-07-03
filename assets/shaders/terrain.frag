@@ -10,8 +10,10 @@ in float WaterAlpha;
 
 uniform sampler2DArray sMaterials;
 uniform sampler2D sBumpMap;
+uniform sampler2D sSmallBumpMap;
 uniform float timeOfDay;
 uniform float bumpmapStrength;
+uniform float smallBumpmapStrength;
 
 out vec4 FragColor;
 
@@ -40,6 +42,10 @@ void main()
 	// apply bump map (2x because it's half bright?)
 	float bump = mix(1.0f, texture(sBumpMap, UV).r * 2, bumpmapStrength);
 	col = col * bump;
+
+	// apply small bump map
+	float smallbump = mix(0.0f, texture(sSmallBumpMap, UV * 10).r / 2, smallBumpmapStrength);
+	col = col - smallbump;
 
 	// apply light map
 	col = col * mix(.25f, LightLevel, timeOfDay);

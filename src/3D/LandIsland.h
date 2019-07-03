@@ -88,6 +88,7 @@ class LandIsland
 
 	std::shared_ptr<Texture2D> GetNoiseMap() { return _textureNoiseMap; }
 	std::shared_ptr<Texture2D> GetBumpMap() { return _textureBumpMap; }
+	Texture2D* GetSmallBumpMap() { return _textureSmallBump.get(); }
 
   private:
 	void convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixels);
@@ -98,6 +99,7 @@ class LandIsland
 
 	std::shared_ptr<Texture2D> _textureNoiseMap;
 	std::shared_ptr<Texture2D> _textureBumpMap;
+	std::unique_ptr<Texture2D> _textureSmallBump;
 };
 } // namespace OpenBlack
 

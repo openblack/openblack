@@ -107,6 +107,7 @@ class Game
 
 	float _timeOfDay;
 	float _bumpmapStrength;
+	float _smallBumpmapStrength;
 
 	glm::ivec2 _mousePosition;
 	glm::vec3 _intersection;

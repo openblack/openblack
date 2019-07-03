@@ -71,7 +71,7 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 }
 
 Game::Game(int argc, char** argv):
-    _running(true), _wireframe(false), _waterDebug(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f),
+    _running(true), _wireframe(false), _waterDebug(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f), _smallBumpmapStrength(1.0f),
     _fileSystem(std::make_unique<FileSystem>()),
     _shaderManager(std::make_unique<ShaderManager>())
 {
@@ -264,11 +264,14 @@ void Game::drawScene(const Camera& camera, bool drawWater)
 	terrainShader->SetUniformValue("viewProj", camera.GetViewProjectionMatrix());
 	terrainShader->SetUniformValue("timeOfDay", _timeOfDay);
 	terrainShader->SetUniformValue("bumpmapStrength", _bumpmapStrength);
+	terrainShader->SetUniformValue("smallBumpmapStrength", _smallBumpmapStrength);
 	terrainShader->SetUniformValue("sMaterials", 0);
 	terrainShader->SetUniformValue("sBumpMap", 1);
+	terrainShader->SetUniformValue("sSmallBumpMap", 2);
 
 	_landIsland->GetMaterialArray()->Bind(0);
 	_landIsland->GetBumpMap()->Bind(1);
+	_landIsland->GetSmallBumpMap()->Bind(2);
 
 	_landIsland->Draw(*terrainShader);
 
@@ -385,6 +388,7 @@ void Game::guiLoop()
 
 	ImGui::SliderFloat("Day", &_timeOfDay, 0.0f, 1.0f, "%.3f");
 	ImGui::SliderFloat("Bump", &_bumpmapStrength, 0.0f, 1.0f, "%.3f");
+	ImGui::SliderFloat("Small Bump", &_smallBumpmapStrength, 0.0f, 1.0f, "%.3f");
 
 	ImGui::Separator();
 

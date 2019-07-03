@@ -37,6 +37,15 @@ const float LandIsland::CellSize   = 10.0f;
 LandIsland::LandIsland():
     _lowresCount(0), _materialCount(0), _blockIndexLookup { 0 }
 {
+	auto file = Game::instance()->GetFileSystem().Open("Data/Textures/smallbumpa.raw", FileMode::Read);
+	uint8_t* smallbumpa = new uint8_t[file->Size()];
+	file->Read(smallbumpa, file->Size());
+	file->Close();
+
+	_textureSmallBump = std::make_unique<Texture2D>(256, 256, GL_R8, GL_RED, GL_UNSIGNED_BYTE, smallbumpa);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	delete[] smallbumpa;
 }
 
 LandIsland::~LandIsland()
