@@ -45,7 +45,6 @@ class Sky
   private:
 	std::unique_ptr<ShaderProgram> _shader;
 	std::unique_ptr<L3DModel> _model;
-	std::unique_ptr<Bitmap16B> _bitmap;
 	std::unique_ptr<Texture2D> _texture;
 };
 
