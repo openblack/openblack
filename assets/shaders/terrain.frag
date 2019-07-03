@@ -43,9 +43,8 @@ void main()
 	float bump = mix(1.0f, texture(sBumpMap, UV).r * 2, bumpmapStrength);
 	col = col * bump;
 
-	// apply small bump map
-	float smallbump = mix(0.0f, texture(sSmallBumpMap, UV * 10).r / 2, smallBumpmapStrength);
-	col = col - smallbump;
+	float smallbump = 1 - mix(0.0f, texture(sSmallBumpMap, UV * 10).r, smallBumpmapStrength);
+	col = col * smallbump;
 
 	// apply light map
 	col = col * mix(.25f, LightLevel, timeOfDay);
