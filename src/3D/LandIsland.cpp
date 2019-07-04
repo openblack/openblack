@@ -168,15 +168,17 @@ const LandBlock* LandIsland::GetBlock(int8_t x, int8_t y) const
 	return &_landBlocks[blockIndex - 1];
 }
 
+const LandCell EmptyCell;
+
 const LandCell& LandIsland::GetCell(int x, int y) const
 {
 	if (x < 0 || x > 511 || y < 0 || y > 511)
-		return LandCell(); // return empty water cell
+		return EmptyCell; // return empty water cell
 
 	const uint8_t blockIndex = _blockIndexLookup[32 * (y >> 4) + (x >> 4)];
 
 	if (blockIndex == 0)
-		return LandCell(); // return empty water cell
+		return EmptyCell; // return empty water cell
 
 	return _landBlocks[blockIndex - 1].GetCells()[(x & 0xF) + 17 * (y & 0xF)];
 }

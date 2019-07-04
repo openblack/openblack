@@ -62,9 +62,6 @@ class Water
 
 	void ReflectMatrix(glm::mat4x4& m, const glm::vec4& plane);
 
-
-	static const int FrameBufferSize = 2048;
-
   private:
 	struct WaterVertex
 	{

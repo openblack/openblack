@@ -73,7 +73,7 @@ Water::Water()
 
 	// _waterShader = resourceCaches.shaderProgram->Request("water.program");
 
-	_reflectionFrameBuffer = std::make_unique<FrameBuffer>(FrameBufferSize, FrameBufferSize, GL_RGBA);
+	_reflectionFrameBuffer = std::make_unique<FrameBuffer>(1024, 1024, GL_RGBA);
 
 	createMesh();
 }
