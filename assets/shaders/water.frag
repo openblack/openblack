@@ -10,8 +10,7 @@ void main()
 {
 
 	vec3 reflect_colour = texture2DProj(sReflection, screenSpacePosition).rgb;
-	vec3 water_color = vec3(0.604, 0.867, 0.851);
+	vec3 water_color = vec3(0.35, 0.612, 0.643);
 
-	outColor = vec4(mix(reflect_colour, water_color, 0.4), 1.0);
-	// outColor = vec4(reflect_colour, 1.0);
+	outColor = vec4(mix(reflect_colour, water_color, 0.8), 1.0);
 }
