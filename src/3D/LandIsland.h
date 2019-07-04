@@ -86,6 +86,7 @@ class LandIsland
 	const std::vector<LandBlock>& GetBlocks() const { return _landBlocks; }
 	const std::vector<Country>& GetCountries() const { return _countries; }
 
+	uint8_t GetNoise(int x, int y);
 	std::shared_ptr<Texture2D> GetNoiseMap() { return _textureNoiseMap; }
 	std::shared_ptr<Texture2D> GetBumpMap() { return _textureBumpMap; }
 	Texture2D* GetSmallBumpMap() { return _textureSmallBump.get(); }
@@ -100,6 +101,8 @@ class LandIsland
 	std::shared_ptr<Texture2D> _textureNoiseMap;
 	std::shared_ptr<Texture2D> _textureBumpMap;
 	std::unique_ptr<Texture2D> _textureSmallBump;
+
+	uint8_t* _noiseMap;
 };
 } // namespace OpenBlack
 

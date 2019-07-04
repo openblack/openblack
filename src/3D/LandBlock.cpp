@@ -143,10 +143,10 @@ std::vector<LandVertex> LandBlock::buildVertexList(LandIsland& island)
 			glm::vec3 pBL((x + 0) * LandIsland::CellSize, bl.Altitude() * LandIsland::HeightUnit, ((z + 1) * LandIsland::CellSize));
 			glm::vec3 pBR((x + 1) * LandIsland::CellSize, br.Altitude() * LandIsland::HeightUnit, ((z + 1) * LandIsland::CellSize));
 
-			auto tlMat = countries[tl.Country()].MapMaterials[tl.Altitude()];
-			auto trMat = countries[tr.Country()].MapMaterials[tr.Altitude()];
-			auto blMat = countries[bl.Country()].MapMaterials[bl.Altitude()];
-			auto brMat = countries[br.Country()].MapMaterials[br.Altitude()];
+			auto tlMat = countries[tl.Country()].MapMaterials[tl.Altitude() + island.GetNoise(bx + x + 0, by + z + 0)];
+			auto trMat = countries[tr.Country()].MapMaterials[tr.Altitude() + island.GetNoise(bx + x + 1, by + z + 0)];
+			auto blMat = countries[bl.Country()].MapMaterials[bl.Altitude() + island.GetNoise(bx + x + 0, by + z + 1)];
+			auto brMat = countries[br.Country()].MapMaterials[br.Altitude() + island.GetNoise(bx + x + 1, by + z + 1)];
 
 
 			// use a lambda so we're not repeating ourselves

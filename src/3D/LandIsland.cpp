@@ -35,9 +35,9 @@ const float LandIsland::HeightUnit = 0.67f;
 const float LandIsland::CellSize   = 10.0f;
 
 LandIsland::LandIsland():
-    _lowresCount(0), _materialCount(0), _blockIndexLookup { 0 }
+    _lowresCount(0), _materialCount(0), _blockIndexLookup { 0 }, _noiseMap(nullptr)
 {
-	auto file = Game::instance()->GetFileSystem().Open("Data/Textures/smallbumpa.raw", FileMode::Read);
+	auto file           = Game::instance()->GetFileSystem().Open("Data/Textures/smallbumpa.raw", FileMode::Read);
 	uint8_t* smallbumpa = new uint8_t[file->Size()];
 	file->Read(smallbumpa, file->Size());
 	file->Close();
@@ -50,6 +50,8 @@ LandIsland::LandIsland():
 
 LandIsland::~LandIsland()
 {
+	if (_noiseMap != nullptr)
+		delete[] _noiseMap;
 }
 
 /*
@@ -120,10 +122,9 @@ void LandIsland::LoadFromFile(File& file)
 	}
 
 	// read noise map into Texture2D
-	uint8_t* noiseMapTextureData = new uint8_t[256 * 256];
-	file.ReadBytes(noiseMapTextureData, 256 * 256);
-	_textureNoiseMap = std::make_shared<Texture2D>(256, 256, GL_RED, GL_RED, GL_UNSIGNED_BYTE, noiseMapTextureData);
-	delete[] noiseMapTextureData;
+	_noiseMap = new uint8_t[256 * 256];
+	file.ReadBytes(_noiseMap, 256 * 256);
+	_textureNoiseMap = std::make_shared<Texture2D>(256, 256, GL_RED, GL_RED, GL_UNSIGNED_BYTE, _noiseMap);
 
 	// read bump map into Texture2D
 	uint8_t* bumpMapTextureData = new uint8_t[256 * 256];
@@ -147,6 +148,11 @@ void LandIsland::LoadFromFile(File& file)
 const float LandIsland::GetHeightAt(glm::vec2 vec) const
 {
 	return GetCell(vec.x * 0.1f, vec.y * 0.1f).Altitude() * LandIsland::HeightUnit;
+}
+
+uint8_t LandIsland::GetNoise(int x, int y)
+{
+	return _noiseMap[(y & 0xFF) + 256 * (x & 0xFF)];
 }
 
 const LandBlock* LandIsland::GetBlock(int8_t x, int8_t y) const
