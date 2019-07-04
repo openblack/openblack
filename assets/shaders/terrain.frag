@@ -47,7 +47,7 @@ void main()
 	col = col * smallbump;
 
 	// apply light map
-	col = col * mix(.25f, LightLevel, timeOfDay);
+	col = col * mix(.25f, clamp(LightLevel * 2, 0.5, 1), timeOfDay);
 
 	FragColor = vec4(col.r, col.g, col.b, WaterAlpha);
 
