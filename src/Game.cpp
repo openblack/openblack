@@ -126,7 +126,7 @@ void Game::Run()
 {
 	// create our camera
 	_camera = std::make_unique<Camera>();
-	_camera->SetProjectionMatrixPerspective(70.0f, _window->GetAspectRatio(), 0.1f, 65536.0f);
+	_camera->SetProjectionMatrixPerspective(70.0f, _window->GetAspectRatio(), 1.0f, 65536.0f);
 
 	_camera->SetPosition(glm::vec3(2441.865f, 24.764f, 1887.351f));
 	_camera->SetRotation(glm::vec3(12.0f, 117.0f, 0.0f));
