@@ -20,19 +20,31 @@
 
 #pragma once
 
+#include <Common/File.h>
+#include <Game.h>
 #include <LHScriptX/Lexer.h>
 #include <vector>
+
+using namespace OpenBlack;
 
 namespace OpenBlack::LHScriptX
 {
 
+class NotImplemented: public std::logic_error
+{
+  public:
+	NotImplemented():
+	    std::logic_error("Function not yet implemented") {};
+};
+
 class Script
 {
   public:
-	Script():
+	Script(Game* game):
+	    _game(game),
 	    token_(Token::MakeInvalidToken()) {}
 
-	void LoadFile(const std::string& file);
+	void LoadFromFile(File& file);
 	//void SetCommands(std::unique_ptr<ScriptCommands> &commands) { _commands = std::move(commands); }
 	//ScriptCommands &GetCommands() const { return *_commands; }
   private:
@@ -40,11 +52,13 @@ class Script
 	//void processCommand(const std::string& command, std::vector<std::string> parameters);
 
 	const bool isCommand(const std::string& identifier) const;
-	void runCommand(const std::string& identifier);
+	void runCommand(const std::string& identifier, const std::vector<Token>& args);
 
 	const Token* peekToken();
 	const Token* advanceToken();
 
+	// Game instance
+	Game* _game;
 	// The lexer output we are parsing
 	Lexer* lexer_;
 	// The current token.

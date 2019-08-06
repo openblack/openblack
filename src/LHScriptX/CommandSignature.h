@@ -89,6 +89,9 @@ class ScriptCommandContext
 	    _game(game), _parameters(parameters) {}
 
 	Game& GetGame() const { return *_game; }
+
+
+
 	const ScriptCommandParameters& GetParameters() const { return *_parameters; }
 
 	const ScriptCommandParameter& operator[](unsigned int arg) const
@@ -96,8 +99,8 @@ class ScriptCommandContext
 		return _parameters->at(arg);
 	}
 
-	//template <class T>
-	//T GetParameter(unsigned int arg) const;
+	template <class T>
+	T GetParameter(unsigned int arg) const;
   private:
 	Game* _game;
 	const ScriptCommandParameters* _parameters;

@@ -144,6 +144,7 @@ void Game::Run()
 	_water = std::make_unique<Water>();
 
 	LoadLandscape("./Data/Landscape/Land1.lnd");
+	LoadMap("./Scripts/Land1.txt");
 
 	// _lhvm = std::make_unique<LHVM::LHVM>();
 	// _lhvm->LoadBinary(GetGamePath() + "/Scripts/Quests/challenge.chl");
@@ -413,8 +414,13 @@ void Game::guiLoop()
 
 void Game::LoadMap(const std::string& name)
 {
-	Script script;
-	script.LoadFile(name);
+	if (!_fileSystem->Exists(name))
+		throw std::runtime_error("Could not find script " + name);
+
+	auto file = _fileSystem->Open(name, FileMode::Read);
+
+	Script script(this);
+	script.LoadFromFile(*file);
 }
 
 void Game::LoadLandscape(const std::string& name)
