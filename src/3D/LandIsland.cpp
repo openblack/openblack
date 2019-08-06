@@ -239,7 +239,7 @@ void LandIsland::DumpTextures()
 
 void LandIsland::DumpMaps()
 {
-	const int cellsize = 17;
+	const int cellsize = 16;
 
 	// 32x32 block grid with 16x16 cells
 	// 512 x 512 pixels
@@ -248,34 +248,27 @@ void LandIsland::DumpMaps()
 
 	memset(data, 0x00, 32 * 32 * cellsize * cellsize);
 
-	/*for (unsigned int b = 0; b < _blockCount; b++)
+	for (unsigned int b = 0; b < _landBlocks.size(); b++)
 	{
-		LandBlock* block = &_landBlocks[b];
-		int mapx         = block->GetBlockPosition()->x;
-		int mapz         = block->GetBlockPosition()->y;
+		LandBlock& block = _landBlocks[b];
+
+		int mapx         = block.GetBlockPosition().x;
+		int mapz         = block.GetBlockPosition().y;
 		int lineStride   = 32 * cellsize;
 
 		for (int x = 0; x < cellsize; x++)
 		{
 			for (int y = 0; y < cellsize; y++)
 			{
-				LandCell cell = block->GetCells()[y * 17 + x];
+				LandCell cell = block.GetCells()[y * 17 + x];
 
 				int cellX = (mapx * cellsize) + x;
 				int cellY = (mapz * cellsize) + y;
 
-				uint8_t col = 0x00;
-				if (cell.Coastline())
-					col = 100;
-				else if (cell.HasWater())
-					col = 200;
-				else if (cell.FullWater())
-					col = 255;
-
 				data[(cellY * lineStride) + cellX] = cell.Altitude();
 			}
 		}
-	}*/
+	}
 
 	FILE* fptr = fopen("dump.raw", "wb");
 	fwrite(data, 32 * 32 * cellsize * cellsize, 1, fptr);
