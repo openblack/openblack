@@ -247,7 +247,7 @@ void Game::drawScene(const Camera& camera, bool drawWater)
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
-	glFrontFace(GL_CW);
+	glFrontFace(GL_CCW);
 
 	if (drawWater)
 	{

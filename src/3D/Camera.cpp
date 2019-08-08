@@ -18,16 +18,8 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Camera.h"
-
+#include <3D/Camera.h>
 #include <Game.h>
-#include <cmath>
-#include <iostream>
-
-#define GLM_FORCE_RADIANS
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/euler_angles.hpp>
-#include <glm/gtx/quaternion.hpp>
 
 using namespace OpenBlack;
 
@@ -124,9 +116,9 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 		return;
 
 	if (e.key.keysym.scancode == SDL_SCANCODE_W)
-		_velocity.z += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
-	else if (e.key.keysym.scancode == SDL_SCANCODE_S)
 		_velocity.z += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
+	else if (e.key.keysym.scancode == SDL_SCANCODE_S)
+		_velocity.z += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
 	else if (e.key.keysym.scancode == SDL_SCANCODE_A)
 		_velocity.x += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
 	else if (e.key.keysym.scancode == SDL_SCANCODE_D)
@@ -150,8 +142,8 @@ void Camera::handleMouseInput(const SDL_Event& e)
 	{
 		glm::vec3 rot = GetRotation();
 
-		rot.y += e.motion.xrel * _freeLookSensitivity * 0.1f;
-		rot.x += e.motion.yrel * _freeLookSensitivity * 0.1f;
+		rot.y -= e.motion.xrel * _freeLookSensitivity * 0.1f;
+		rot.x -= e.motion.yrel * _freeLookSensitivity * 0.1f;
 
 		SetRotation(rot);
 	}

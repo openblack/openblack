@@ -43,10 +43,10 @@ struct LH3DLandBlock
 {
 	LH3DLandCell cells[289];   // 17*17
 	uint32_t index;            // 2312
-	float mapY;                // 2316
 	float mapX;                // 2320
-	uint32_t blockY;           // 2324
+	float mapZ;                // 2316
 	uint32_t blockX;           // 2328
+	uint32_t blockZ;           // 2324
 	uint32_t clipped;          // 2332 0
 	uint32_t frameVisibility;  // 0
 	uint32_t highestAltitude;  // 0
@@ -84,8 +84,8 @@ void LandBlock::Load(void* block, size_t block_size)
 	auto lhBlock = static_cast<LH3DLandBlock*>(block);
 
 	_index         = lhBlock->index;
-	_blockPosition = glm::ivec2(lhBlock->blockX, lhBlock->blockY);
-	_mapPosition   = glm::vec2(lhBlock->mapX, lhBlock->mapY);
+	_blockPosition = glm::ivec2(lhBlock->blockX, lhBlock->blockZ);
+	_mapPosition   = glm::vec2(lhBlock->mapX, lhBlock->mapZ);
 
 	// this should just work, not graceful lol
 	memcpy(&_cells, lhBlock->cells, 17 * 17 * sizeof(LH3DLandCell));
@@ -126,16 +126,16 @@ std::vector<LandVertex> LandBlock::buildVertexList(LandIsland& island)
 	// (the array is 17x17 but the 17th block is questionable data)
 
 	int bx = _blockPosition.x * 16;
-	int by = _blockPosition.y * 16;
+	int bz = _blockPosition.y * 16;
 
 	for (int x = 0; x < 16; x++)
 	{
 		for (int z = 0; z < 16; z++)
 		{
-			LandCell tl = island.GetCell(bx + x + 0, by + z + 0);
-			LandCell tr = island.GetCell(bx + x + 1, by + z + 0);
-			LandCell bl = island.GetCell(bx + x + 0, by + z + 1);
-			LandCell br = island.GetCell(bx + x + 1, by + z + 1);
+			LandCell tl = island.GetCell(bx + x + 0, bz + z + 0);
+			LandCell tr = island.GetCell(bx + x + 1, bz + z + 0);
+			LandCell bl = island.GetCell(bx + x + 0, bz + z + 1);
+			LandCell br = island.GetCell(bx + x + 1, bz + z + 1);
 
 			// construct positions from cell altitudes
 			glm::vec3 pTL((x + 0) * LandIsland::CellSize, tl.Altitude() * LandIsland::HeightUnit, ((z + 0) * LandIsland::CellSize));
@@ -143,10 +143,10 @@ std::vector<LandVertex> LandBlock::buildVertexList(LandIsland& island)
 			glm::vec3 pBL((x + 0) * LandIsland::CellSize, bl.Altitude() * LandIsland::HeightUnit, ((z + 1) * LandIsland::CellSize));
 			glm::vec3 pBR((x + 1) * LandIsland::CellSize, br.Altitude() * LandIsland::HeightUnit, ((z + 1) * LandIsland::CellSize));
 
-			auto tlMat = countries[tl.Country()].MapMaterials[tl.Altitude() + island.GetNoise(bx + x + 0, by + z + 0)];
-			auto trMat = countries[tr.Country()].MapMaterials[tr.Altitude() + island.GetNoise(bx + x + 1, by + z + 0)];
-			auto blMat = countries[bl.Country()].MapMaterials[bl.Altitude() + island.GetNoise(bx + x + 0, by + z + 1)];
-			auto brMat = countries[br.Country()].MapMaterials[br.Altitude() + island.GetNoise(bx + x + 1, by + z + 1)];
+			auto tlMat = countries[tl.Country()].MapMaterials[tl.Altitude() + island.GetNoise(bx + x + 0, bz + z + 0)];
+			auto trMat = countries[tr.Country()].MapMaterials[tr.Altitude() + island.GetNoise(bx + x + 1, bz + z + 0)];
+			auto blMat = countries[bl.Country()].MapMaterials[bl.Altitude() + island.GetNoise(bx + x + 0, bz + z + 1)];
+			auto brMat = countries[br.Country()].MapMaterials[br.Altitude() + island.GetNoise(bx + x + 1, bz + z + 1)];
 
 
 			// use a lambda so we're not repeating ourselves

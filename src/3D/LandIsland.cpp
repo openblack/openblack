@@ -155,13 +155,13 @@ uint8_t LandIsland::GetNoise(int x, int y)
 	return _noiseMap[(y & 0xFF) + 256 * (x & 0xFF)];
 }
 
-const LandBlock* LandIsland::GetBlock(int8_t x, int8_t y) const
+const LandBlock* LandIsland::GetBlock(int8_t x, int8_t z) const
 {
 	// our blocks can only be between [0-31, 0-31]
-	if (x < 0 || x > 32 || y < 0 || y > 32)
+	if (x < 0 || x > 32 || z < 0 || z > 32)
 		return nullptr;
 
-	const uint8_t blockIndex = _blockIndexLookup[y * 32 + x];
+	const uint8_t blockIndex = _blockIndexLookup[x * 32 + z];
 	if (blockIndex == 0)
 		return nullptr;
 
@@ -170,17 +170,17 @@ const LandBlock* LandIsland::GetBlock(int8_t x, int8_t y) const
 
 const LandCell EmptyCell;
 
-const LandCell& LandIsland::GetCell(int x, int y) const
+const LandCell& LandIsland::GetCell(int x, int z) const
 {
-	if (x < 0 || x > 511 || y < 0 || y > 511)
+	if (x < 0 || x > 511 || z < 0 || z > 511)
 		return EmptyCell; // return empty water cell
 
-	const uint8_t blockIndex = _blockIndexLookup[32 * (y >> 4) + (x >> 4)];
+	const uint8_t blockIndex = _blockIndexLookup[32 * (x >> 4) + (z >> 4)];
 
 	if (blockIndex == 0)
 		return EmptyCell; // return empty water cell
 
-	return _landBlocks[blockIndex - 1].GetCells()[(x & 0xF) + 17 * (y & 0xF)];
+	return _landBlocks[blockIndex - 1].GetCells()[(z & 0xF) + 17 * (x & 0xF)];
 }
 
 void LandIsland::Draw(ShaderProgram& program)
