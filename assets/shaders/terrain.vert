@@ -20,7 +20,7 @@ uniform vec2 blockPosition;
 
 void main()
 {
-	UV = vec2(position.x / 160.0f, position.z / 160.0f);
+	UV = vec2(position.z / 160.0f, position.x / 160.0f);
 	Weights = weights;
 	FirstMaterialID = firstMaterialID;
 	SecondMaterialID = secondMaterialID;
