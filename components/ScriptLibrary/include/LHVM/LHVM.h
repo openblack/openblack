@@ -25,8 +25,8 @@
 #include <string>
 #include <vector>
 
-#include <LHVM/VMInstruction.hpp>
-#include <LHVM/VMScript.hpp>
+#include <LHVM/VMInstruction.h>
+#include <LHVM/VMScript.h>
 
 namespace OpenBlack {
 namespace LHVM {

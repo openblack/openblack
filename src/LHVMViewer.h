@@ -22,7 +22,7 @@
 #ifndef OPENBLACK_LHVMVIEWER_H
 #define OPENBLACK_LHVMVIEWER_H
 
-#include <LHVM/LHVM.hpp>
+#include <LHVM/LHVM.h>
 #include <imgui/imgui.h>
 
 namespace OpenBlack

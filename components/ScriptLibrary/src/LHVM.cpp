@@ -18,9 +18,9 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <LHVM/LHVM.hpp>
-#include <LHVM/VMInstruction.hpp>
-#include <LHVM/OpcodeNames.hpp>
+#include <LHVM/LHVM.h>
+#include <LHVM/VMInstruction.h>
+#include <LHVM/OpcodeNames.h>
 
 #include <cstdio>
 #include <cstring>

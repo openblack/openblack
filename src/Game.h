@@ -24,7 +24,7 @@
 
 #include "GameWindow.h"
 
-#include <LHVM/LHVM.hpp>
+#include <LHVM/LHVM.h>
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>

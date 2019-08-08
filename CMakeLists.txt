@@ -1,49 +1,58 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
-project(OpenBlack)
-
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_STANDARD 17)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# Project Options
+project(openblack)
 
+# Set C++17 Standard
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 17)
+
+# Output binaries to bin/
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+
+# disable in-source builds
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+
+# Project Options
 if (WIN32)
     option(USE_DEBUG_CONSOLE "whether a debug console should be enabled for debug builds, if false debug output is redirected to Visual Studio output" ON)
 endif()
 
+# Default build type to release
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: Debug Release" FORCE)
+endif()
+
+# Check that all Git submodules are present
+function(check_submodules_present)
+    file(READ "${PROJECT_SOURCE_DIR}/.gitmodules" gitmodules)
+    string(REGEX MATCHALL "path *= *[^ \t\r\n]*" gitmodules ${gitmodules})
+    foreach(module ${gitmodules})
+        string(REGEX REPLACE "path *= *" "" module ${module})
+        if (NOT EXISTS "${PROJECT_SOURCE_DIR}/${module}/.git")
+            message(FATAL_ERROR "Git submodule ${module} not found. "
+                    "Please run: git submodule update --init --recursive")
+        endif()
+    endforeach()
+endfunction()
+# check_submodules_present()
+
 # Dependencies
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
-
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(GLEW2 REQUIRED)
 find_package(GLM REQUIRED)
-
-#where to build libs and bins
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-#these variables are for non-makefile generators
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${EXECUTABLE_OUTPUT_PATH})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${EXECUTABLE_OUTPUT_PATH})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${LIBRARY_OUTPUT_PATH})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${LIBRARY_OUTPUT_PATH})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${LIBRARY_OUTPUT_PATH})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${LIBRARY_OUTPUT_PATH})
 
 # Include git hash in source
 include(cmake/GetGitRevisionDescription.cmake)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 message(STATUS "Building ${CMAKE_PROJECT_NAME} GIT SHA1: ${GIT_SHA1}")
 
-set(OS_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(GLEW_USE_STATIC_LIBS true)
-
 
 if(OPENGL_INCLUDE_DIR)
 	include_directories("${OPENGL_INCLUDE_DIR}")
@@ -55,5 +64,4 @@ include_directories("${GLM_INCLUDE_DIRS}")
 add_subdirectory(components/ScriptLibrary)
 add_subdirectory(src)
 
-#add_subdirectory(files)
-
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT openblack)
