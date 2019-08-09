@@ -30,45 +30,44 @@
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
 
+enum class L3DFlag : uint32_t
+{
+	Unknown1 = 1 << 0,
+	Unknown2 = 1 << 1,
+	Unknown3 = 1 << 2,
+	Unknown4 = 1 << 3,
+	Unknown5 = 1 << 4,
+	Unknown6 = 1 << 5,
+	Unknown7 = 1 << 6,
+	Unknown8 = 1 << 7,
+	HasBones = 1 << 8,
+	Unknown10 = 1 << 9,
+	Unknown11 = 1 << 10,
+	Unknown12 = 1 << 11,
+	Unknown13 = 1 << 12,
+	NoDraw = 1 << 13,
+	Unknown15 = 1 << 14,
+	ContainsLandscapeFeature = 1 << 15,
+	Unknown17 = 1 << 16,
+	Unknown18 = 1 << 17,
+	ContainsUV2 = 1 << 18,
+	ContainsNameData = 1 << 19,
+	ContainsExtraMetrics = 1 << 20,
+	ContainsEBone = 1 << 21,
+	ContainsTnLData = 1 << 22,
+	ContainsNewEP = 1 << 23,
+	Unknown25 = 1 << 24,
+	Unknown26 = 1 << 25,
+	Unknown27 = 1 << 26,
+	Unknown28 = 1 << 27,
+	Unknown29 = 1 << 28,
+	Unknown30 = 1 << 29,
+	Unknown31 = 1 << 30,
+};
+
 struct L3DHeader
 {
-	uint32_t flags;
-
-	/*
-	flags & 0x1 = ? (bit 31)
-	flags & 0x2 = ? (bit 30)
-	flags & 0x4 = ? (bit 29)
-	flags & 0x8 = ? (bit 28)
-	flags & 0x10 = ? (bit 27)
-	flags & 0x20 = ? (bit 26)
-	flags & 0x40 = ? (bit 25)
-	flags & 0x80 = ? (bit 24)
-	flags & 0x100 = LH3DMesh::IsBoned (bit 23)
-	flags & 0x200 = ? (bit 22)
-	flags & 0x400 = ? (bit 21)
-	flags & 0x800 = ? (bit 20)
-	flags & 0x1000 = ? (bit 19)
-	flags & 0x2000 = nodraw? (bit 18)
-	flags & 0x4000 = ? (bit 17)
-	flags & 0x8000 = LH3DMesh::IsContainsLandscapeFeature (bit 16)
-	flags & 0x10000 = ? (bit 15)
-	flags & 0x20000 = ? (bit 14)
-	flags & 0x40000 = LH3DMesh::IsContainsUV2 (bit 13)
-	flags & 0x80000 = LH3DMesh::IsContainsNameData (bit 12)
-	flags & 0x100000 = LH3DMesh::IsContainsExtraMetrics (bit 11)
-	flags & 0x200000 = LH3DMesh::IsContainsEBone (bit 10)
-	flags & 0x400000 = LH3DMesh::IsContainsTnLData (bit 9)
-	flags & 0x800000 = LH3DMesh::IsContainsNewEP (bit 8)
-	flags & 0x1000000 = ? (bit 7)
-	flags & 0x2000000 = ? (bit 6)
-	flags & 0x4000000 = ? (bit 5)
-	flags & 0x8000000 = ? (bit 4)
-	flags & 0x10000000 = ? (bit 3)
-	flags & 0x20000000 = ? (bit 2)
-	flags & 0x40000000 = ? (bit 1)
-	flags & 0x80000000 = ? (bit 0)
-	*/
-
+	uint32_t flags; // L3DFlag
 	uint32_t skinOffset;
 	uint32_t numMeshes;
 	uint32_t meshListOffset; // L3D_Mesh
