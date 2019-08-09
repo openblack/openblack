@@ -45,7 +45,7 @@ void OSFile::Open(char const* filename, LH_FILE_MODE mode)
 	if (mode == LH_FILE_MODE::Read)
 		handle = open(filename, O_RDONLY);
 	else if (mode == LH_FILE_MODE::Create)
-		handle = open(filename, O_CREAT | O_EXCL | O_RDWR);
+		handle = open(filename, O_CREAT | O_EXCL | O_RDWR, 0600);
 
 	if (handle == -1)
 	{
