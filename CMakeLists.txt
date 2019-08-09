@@ -62,6 +62,6 @@ include_directories("${GLEW_INCLUDE_DIR}")
 include_directories("${GLM_INCLUDE_DIRS}")
 
 add_subdirectory(components/ScriptLibrary)
-add_subdirectory(src)
+include(src/CMakeLists.txt)
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT openblack)

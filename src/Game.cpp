@@ -26,7 +26,6 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#define GLM_ENABLE_EXPERIMENTAL
 #include "GitSHA1.h"
 
 #include <3D/Camera.h>
