@@ -76,6 +76,8 @@ if (MSVC)
     # windows_copy_files(openblack ${OPENAL_DLL_DIR} "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/" soft_oal.dll)
 endif()
 
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/shaders")
+
 foreach(SHADER ${OPENBLACK_SHADERS})
   source_group("Shaders" FILES "${SHADER}")
 	if(WIN32)
