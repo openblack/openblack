@@ -331,6 +331,19 @@ void Game::guiLoop()
 		ImGui::EndMainMenuBar();
 	}
 
+	ImGui::Begin("Mesh Pack");
+
+	int i = 0;
+	for (auto tex : _meshPack->textures)
+	{
+		ImGui::Image((ImTextureID)tex, ImVec2(128, 128));
+
+		if (++i % 8 != 0)
+			ImGui::SameLine();
+	}
+
+	ImGui::End();
+
 	//ImGui::ShowDemoWindow();
 
 	ImGuiIO& io = ImGui::GetIO();
