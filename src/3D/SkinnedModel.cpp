@@ -280,7 +280,7 @@ void SkinnedModel::Draw(ShaderProgram* program)
 
 void SkinnedModel::calculateBoneMatrices()
 {
-	_boneMatrices.resize(64);
+	_boneMatrices.resize(64, glm::mat4(1.0f));
 	for (size_t i = 0; i < _bones.size(); i++)
 	{
 		SkinnedModel_Bone& bone = _bones[i];
