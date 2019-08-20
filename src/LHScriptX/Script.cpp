@@ -139,9 +139,8 @@ void Script::runCommand(const std::string& identifier, const std::vector<Token>&
 		break;
 	}
 
-	// todo handle this
 	if (command_signature == nullptr)
-		return;
+		throw std::runtime_error("Missing script command signature");
 
 	// turn tokens into parameters
 
