@@ -142,11 +142,34 @@ void Script::runCommand(const std::string& identifier, const std::vector<Token>&
 	if (command_signature == nullptr)
 		throw std::runtime_error("Missing script command signature");
 
-	// turn tokens into parameters
+	// Turn tokens into parameters
+	auto parameters = ScriptCommandParameters();
 
-	ScriptCommandParameters parameters { ScriptCommandParameter(2.3000f) };
+	for (auto arg : args)
+	{
+		ScriptCommandParameter param = GetParameter(arg);
+		parameters.push_back(param);
+	}
+
+	const auto expected_parameters = command_signature->parameters;
+	const auto expected_size       = expected_parameters.size();
+
+	// Validate the number of given arguments against what is expected
+	if (parameters.size() != expected_size)
+	{
+		throw std::runtime_error("Invalid number of script arguments");
+	}
+
+	// Validate the typing of the given arguments against what is expected
+	for (auto i = 0; i < parameters.size(); i++)
+	{
+		if (parameters[i].GetType() != expected_parameters[i])
+		{
+			std::runtime_error("Invalid script argument type");
+		}
+	}
+
 	ScriptCommandContext ctx(_game, &parameters);
-
 	command_signature->command(ctx);
 }
 
