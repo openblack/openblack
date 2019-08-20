@@ -22,6 +22,7 @@
 
 #include <Common/Types.h>
 #include <functional>
+#include <vector>
 
 namespace OpenBlack
 {
@@ -112,6 +113,6 @@ struct ScriptCommandSignature
 {
 	const char name[128];
 	ScriptCommand command;
-	ParameterType parameters[12];
+	std::vector<ParameterType> parameters;
 };
 } // namespace OpenBlack::LHScriptX
