@@ -45,8 +45,13 @@ class ScriptCommandParameter
   public:
 	ScriptCommandParameter(ParameterType type = ParameterType::None):
 	    _type(type) {}
-	ScriptCommandParameter(const std::string& value):
-	    _type(ParameterType::String) { SetString(value); }
+	ScriptCommandParameter(const std::string value):
+	    _type(ParameterType::String)
+	{
+		// TODO: Hacky, avoid new
+		_value._string = new std::string();
+		*_value._string = value;
+	}
 	ScriptCommandParameter(float value):
 	    _type(ParameterType::Float) { SetFloat(value); }
 	ScriptCommandParameter(int32_t value):
