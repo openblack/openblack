@@ -18,13 +18,23 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "MeshPack.h"
-
+#include <3D/MeshPack.h>
+#include <Common/File.h>
+#include <Graphics/OpenGL.h>
 #include <algorithm>
 #include <stdexcept>
 #include <stdint.h>
 
-using namespace OpenBlack;
+constexpr size_t StrLen(const char* s) noexcept
+{
+	return *s ? 1 + StrLen(s + 1) : 0;
+}
+
+struct G3DMeshes
+{
+	char magic[4];
+	uint32_t meshCount;
+};
 
 // Just enough for us to parse
 struct L3DSMiniHeader
@@ -110,11 +120,11 @@ void createCompressedDDS(char* buffer)
 	{
 	case ('D' | ('X' << 8) | ('T' << 16) | ('1' << 24)):
 		internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
-		bytesPerBlock           = 8;
+		bytesPerBlock  = 8;
 		break;
 	case ('D' | ('X' << 8) | ('T' << 16) | ('3' << 24)):
 		internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
-		bytesPerBlock           = 16;
+		bytesPerBlock  = 16;
 		break;
 	default:
 		throw std::runtime_error("Unsupported compressed texture format");
@@ -124,19 +134,48 @@ void createCompressedDDS(char* buffer)
 	GLsizei size = std::max(1, (width + 3) >> 2) * std::max(1, (height + 3) >> 2) * bytesPerBlock;
 
 	glCompressedTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, size,
-		reinterpret_cast<void*>(buffer + header->dwSize));
+	                       reinterpret_cast<void*>(buffer + header->dwSize));
 }
 
-MeshPack::MeshPack(OSFile* file):
-    m_meshCount(0)
+namespace OpenBlack
 {
-	// LiOnHeAd and a block header, but we already know it's high res textures
-	file->Seek(8, LH_SEEK_MODE::Set);
 
-	int totalTextures = 110;
+char kLionheadMagic[] = "LiOnHeAd";
 
-	Textures = new GLuint[totalTextures];
-	glGenTextures(totalTextures, Textures);
+void MeshPack::LoadFromFile(File& file)
+{
+	// check magic header
+	char magic[8];
+	file.ReadBytes<char>(magic, 8);
+	if (!std::equal(kLionheadMagic, kLionheadMagic + 8, magic))
+		throw std::runtime_error("invalid MeshPack file magic");
+
+	struct LHBlockHeader
+	{
+		char blockName[32];
+		uint32_t blockSize;
+	};
+
+	LHBlockHeader header;
+	file.Read<LHBlockHeader>(&header, 1);
+
+	const int totalTextures = 110;
+
+
+	/*std::size_t fileSize = file.Size();
+	std::vector<char> fileData(fileSize);
+	
+	// We now access the data using the vector's underlying array
+	const auto rawFileData = fileData.data();
+	file.Read(rawFileData, fileSize);
+	file.Close();
+
+	const int totalTextures            = 110;
+	const auto modelMagic              = std::string("MKJC");
+	constexpr auto lionheadMagicLength = StrLen("LiOnHeAd");
+	auto* blockHeaderOffset            = rawFileData + lionheadMagicLength;
+	// The end of the contiguous array of file data
+	const auto rawFileDataEndOffset = &rawFileData[fileSize - 1];
 
 	for (int i = 0; i < totalTextures; i++)
 	{
@@ -197,20 +236,8 @@ MeshPack::MeshPack(OSFile* file):
 			// Low resolution textures; skipping
 		}
 
-	Models = new L3DModel*[*meshCount];
-
-	for (uint32_t i = 0; i < *meshCount; i++)
-	{
-		L3DSMiniHeader* header = (L3DSMiniHeader*)(data + meshOffsets[i]);
-
-		L3DModel* model = new L3DModel();
-		model->LoadFromL3D(data + meshOffsets[i], header->l3dSize, true);
-
-		Models[i] = model;
-	}
+		blockHeaderOffset += 36l + blockHeader->blockSize;
+	}*/
 }
 
-uint32_t MeshPack::GetMeshCount()
-{
-	return m_meshCount;
-}
+} // namespace OpenBlack

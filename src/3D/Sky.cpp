@@ -32,7 +32,7 @@ Sky::Sky()
 	_shader = std::make_unique<ShaderProgram>("shaders/sky.vert", "shaders/sky.frag");
 
 	// load in the mesh
-	_model = std::make_unique<L3DModel>();
+	_model = std::make_unique<SkinnedModel>();
 	_model->LoadFromFile(Game::instance()->GetGamePath() + "/Data/WeatherSystem/sky.l3d");
 
 	// load some sky bitmaps
@@ -46,8 +46,7 @@ void Sky::Draw(const Camera& camera)
 	_shader->Bind();
 	_shader->SetUniformValue("viewProj", camera.GetViewProjectionMatrix());
 
-	glActiveTexture(GL_TEXTURE0);
-	_texture->Bind();
+	_texture->Bind(0);
 
-	_model->Draw();
+	_model->Draw(_shader.get());
 }

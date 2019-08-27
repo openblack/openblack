@@ -266,6 +266,7 @@ void SkinnedModel::LoadFromL3D(void* data_, size_t size)
 void SkinnedModel::Draw(ShaderProgram* program)
 {
 	program->SetUniformValue("u_boneMatrices[0]", _boneMatrices.size(), _boneMatrices.data());
+	auto& textureBinds = Game::instance()->GetMeshPack().GetTextures();
 
 	for (size_t i = 0; i < _submeshes.size(); i++)
 	{
@@ -281,11 +282,9 @@ void SkinnedModel::Draw(ShaderProgram* program)
 			if (index == -1)
 				continue;
 
-			auto textureBind = textureBinds[index - 1];
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, textureBind);
+			const auto& textureBind = textureBinds[index - 1];
+			textureBind->Bind(0);
 			_submeshes[i]->Draw();
-			//glBindTexture(GL_TEXTURE_2D, GL_NONE);
 		}
 	}
 }

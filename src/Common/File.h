@@ -67,9 +67,9 @@ class File
 		return Read(reinterpret_cast<uint8_t*>(data), length);
 	}
 
-	void Seek(size_t position, FileSeekMode mode) const;
-	size_t Position() const;
-	size_t Size() const;
+	void Seek(std::size_t position, FileSeekMode mode) const;
+	std::size_t Position() const;
+	std::size_t Size() const;
 	void Flush();
   protected:
 	FILE* _file;
