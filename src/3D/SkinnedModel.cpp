@@ -276,7 +276,12 @@ void SkinnedModel::Draw(ShaderProgram* program)
 		else if (i < textureBinds.size())
 		{
 			auto index       = _submeshSkinMap[i];
-			auto textureBind = textureBinds[index];
+
+			// skip
+			if (index == -1)
+				continue;
+
+			auto textureBind = textureBinds[index - 1];
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, textureBind);
 			_submeshes[i]->Draw();
