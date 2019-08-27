@@ -18,8 +18,9 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Common/OSFile.h>
 #include <Graphics/ShaderProgram.h>
+#include <Game.h>
+#include <Common/FileSystem.h>
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
@@ -35,14 +36,11 @@ ShaderProgram::ShaderProgram(const std::string& vertexSource, const std::string&
 	// lazy assert, todo: better error handling
 	assert(_program != 0);
 
-	char* vertexShaderSource   = OSFile::ReadAll(vertexSource.c_str(), nullptr);
-	char* fragmentShaderSource = OSFile::ReadAll(fragmentSource.c_str(), nullptr);
+	auto const& vertexShaderSource = Game::instance()->GetFileSystem().ReadAll(vertexSource);
+	auto const& fragmentShaderSource = Game::instance()->GetFileSystem().ReadAll(fragmentSource);
 
-	GLuint vertexShader   = createSubShader(GL_VERTEX_SHADER, vertexShaderSource);
-	GLuint fragmentShader = createSubShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
-
-	delete[] vertexShaderSource;
-	delete[] fragmentShaderSource;
+	GLuint vertexShader   = createSubShader(GL_VERTEX_SHADER, std::string(reinterpret_cast<const char*>(vertexShaderSource.data()), vertexShaderSource.size()));
+	GLuint fragmentShader = createSubShader(GL_FRAGMENT_SHADER, std::string(reinterpret_cast<const char*>(fragmentShaderSource.data()), fragmentShaderSource.size()));
 
 	// lazy assert, todo: better error handling
 	assert(vertexShader != 0 && fragmentShader != 0);

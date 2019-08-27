@@ -46,6 +46,10 @@
 #include <LHScriptX/Script.h>
 #include <LHVMViewer.h>
 #include <glm/gtx/intersect.hpp>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <Windows.h>
 
 #define IMGUI_IMPL_OPENGL_LOADER_GLEW
 
@@ -74,6 +78,8 @@ Game::Game(int argc, char** argv):
     _fileSystem(std::make_unique<FileSystem>()),
     _shaderManager(std::make_unique<ShaderManager>())
 {
+	sInstance = this;
+
 	int windowWidth = 1280, windowHeight = 1024;
 	DisplayMode displayMode = DisplayMode::Windowed;
 
@@ -111,8 +117,6 @@ Game::Game(int argc, char** argv):
 
 	// allocate vertex buffers for our debug draw
 	DebugDraw::Init();
-
-	sInstance = this;
 }
 
 Game::~Game()

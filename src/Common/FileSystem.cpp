@@ -25,22 +25,22 @@ namespace OpenBlack
 
 // todo: exceptions need to be replaced with real exceptions
 
-std::shared_ptr<File> FileSystem::Open(const std::filesystem::path& path, FileMode mode)
+std::unique_ptr<File> FileSystem::Open(const std::filesystem::path& path, FileMode mode)
 {
 	if (path.empty())
 		throw std::invalid_argument("empty path");
 
 	// try absolute first
 	if (path.is_absolute() && std::filesystem::exists(path))
-		return std::make_shared<File>(path, mode);
+		return std::make_unique<File>(path, mode);
 
 	// try relative to current directory
 	if (path.is_relative() && std::filesystem::exists(path))
-		return std::make_shared<File>(path, mode);
+		return std::make_unique<File>(path, mode);
 		
 	// try relative to game directory
 	if (path.is_relative() && std::filesystem::exists(_gamePath / path))
-		return std::make_shared<File>(_gamePath / path, mode);
+		return std::make_unique<File>(_gamePath / path, mode);
 
 	throw std::runtime_error("File " + path.string() + " not found");
 }
@@ -60,6 +60,18 @@ bool FileSystem::Exists(const std::filesystem::path& path)
 		return true;
 
 	return false;
+}
+
+std::vector<std::byte> FileSystem::ReadAll(const std::filesystem::path& path)
+{
+	auto file = Open(path, FileMode::Read);
+	std::size_t size = file->Size();
+
+	std::vector<std::byte> data(size);
+	file->ReadBytes(data.data(), size);
+	file->Close();
+
+	return data;
 }
 
 } // namespace OpenBlack

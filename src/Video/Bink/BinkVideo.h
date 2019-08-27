@@ -21,7 +21,7 @@
 #ifndef OPENBLACK_VIDEO_BINK_VIDEO_H
 #define OPENBLACK_VIDEO_BINK_VIDEO_H
 
-#include <Common/OSFile.h>
+#include <Common/File.h>
 #include <Graphics/Texture2D.h>
 #include <vector>
 
@@ -152,7 +152,7 @@ private:
 	binkheader header;
 	unsigned int currentFrame;
 public:
-	BinkVideo(OSFile* file);
+	BinkVideo(File* file);
 	~BinkVideo();
 
 	bool SetFrame(unsigned int frame);
@@ -164,7 +164,7 @@ public:
 	unsigned int GetHeight() { return header.height; }
 	unsigned int GetCurrentFrame() { return currentFrame; }
 private:
-	OSFile* file;
+	File* file;
 
 	std::vector<binkframe> frames;
 	uint8_t *frameBuffer;

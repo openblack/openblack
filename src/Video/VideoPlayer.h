@@ -22,7 +22,7 @@
 #ifndef OPENBLACK_VIDEO_VIDEOPLAYER_H
 #define OPENBLACK_VIDEO_VIDEOPLAYER_H
 
-#include <Common/OSFile.h>
+#include <Common/File.h>
 #include <Graphics/Texture2D.h>
 #include <Video/Bink/BinkVideo.h>
 #include <memory>
@@ -55,7 +55,7 @@ class VideoPlayer
 	uint32_t GetHeight() const;
 
   private:
-	std::unique_ptr<OSFile> _file;
+	std::unique_ptr<File> _file;
 	std::unique_ptr<BinkVideo> _bink;
 	std::shared_ptr<Graphics::Texture2D> _texture;
 

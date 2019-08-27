@@ -19,7 +19,8 @@
  */
 
 #include <Common/Bitmap16B.h>
-#include <Common/OSFile.h>
+#include <Common/FileSystem.h>
+#include <Game.h>
 #include <cassert>
 #include <sstream>
 #include <stdexcept>
@@ -63,12 +64,10 @@ const uint16_t* Bitmap16B::Data() const
 	return _data;
 }
 
-Bitmap16B* Bitmap16B::LoadFromFile(const std::string& file)
+Bitmap16B* Bitmap16B::LoadFromFile(const std::string& strFile)
 {
-	size_t fileSize;
-	char* fileData    = OSFile::ReadAll(file.c_str(), &fileSize);
-	Bitmap16B* bitmap = new Bitmap16B(fileData, fileSize);
-	free(fileData);
+	auto const& data = Game::instance()->GetFileSystem().ReadAll(strFile);
+	Bitmap16B* bitmap = new Bitmap16B(data.data(), data.size());
 
 	return bitmap;
 }

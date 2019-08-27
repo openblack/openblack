@@ -35,11 +35,11 @@
 #include <cstdio>
 #include <stdexcept>
 
-using OpenBlack::OSFile;
+using OpenBlack::File;
 using OpenBlack::Graphics::Texture2D;
 using namespace OpenBlack::Video;
 
-BinkVideo::BinkVideo(OSFile* _file) :
+BinkVideo::BinkVideo(File* _file) :
 	file(_file), currentFrame(0), c_col_lastval(0), frameBuffer(NULL)
 {
 	//force initialisation of static tables
@@ -53,7 +53,7 @@ BinkVideo::BinkVideo(OSFile* _file) :
 	memset(&c_last, 0, sizeof(c_last));
 	memset(&header, 0, sizeof(header));
 	
-	file->Seek(0, LH_SEEK_MODE::Set);
+	file->Seek(0, FileSeekMode::Begin);
 	file->Read(&header.signature, BIK_SIGNATURE_LEN);
 	if (memcmp(header.signature, BIK_SIGNATURE_DATA, 4) != 0)
 		throw std::runtime_error("invalid bink header");
@@ -90,7 +90,7 @@ bool BinkVideo::SetFrame(unsigned int frameNum)
 	currentFrame = frameNum;
 
 	binkframe frame = frames[currentFrame];
-	file->Seek(frame.pos, LH_SEEK_MODE::Set);
+	file->Seek(frame.pos, FileSeekMode::Begin);
 	file->Read(frameBuffer, frame.size);
 
 	return decodeVideoFrame(frameBuffer, frame.size);
@@ -103,7 +103,7 @@ bool BinkVideo::nextFrame()
 	}
 
 	binkframe frame = frames[currentFrame++];
-	file->Seek(frame.pos, LH_SEEK_MODE::Set);
+	file->Seek(frame.pos, FileSeekMode::Begin);
 	file->Read(frameBuffer, frame.size);
 
 	return decodeVideoFrame(frameBuffer, frame.size);
@@ -154,7 +154,7 @@ void BinkVideo::av_set_pts_info(AVRational &time_base, unsigned int pts_num, uns
 
 bool BinkVideo::readHeader()
 {
-	file->Seek(0, LH_SEEK_MODE::Set);
+	file->Seek(0, FileSeekMode::Begin);
 	file->Read(&header.signature, BIK_SIGNATURE_LEN);
 	file->Read(&header.filesize, 4);
 	header.filesize += 8;
@@ -167,7 +167,7 @@ bool BinkVideo::readHeader()
 	if (header.maxframesize > header.filesize)
 		return false;
 
-	file->Seek(4, LH_SEEK_MODE::Current);
+	file->Seek(4, FileSeekMode::Current);
 
 	file->Read(&header.width, 4);
 	file->Read(&header.height, 4);
@@ -183,7 +183,7 @@ bool BinkVideo::readHeader()
 	//also sets pts_wrap_bits to 64
 	av_set_pts_info(v_timebase, fps_den, fps_num);
 
-	file->Seek(4, LH_SEEK_MODE::Current);
+	file->Seek(4, FileSeekMode::Current);
 	file->Read(&header.tracks, 4);
 
 	// if there are audio tracks, you have the wrong game
@@ -229,7 +229,7 @@ bool BinkVideo::readHeader()
 	// allocate our frame buffer from max frame size
 	frameBuffer = (uint8_t *) av_malloc(header.maxframesize);
 
-	file->Seek(4, LH_SEEK_MODE::Current);
+	file->Seek(4, FileSeekMode::Current);
 
 	return true;
 }

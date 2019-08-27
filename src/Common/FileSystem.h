@@ -36,7 +36,7 @@ FileSystem
 class FileSystem
 {
   public:
-	std::shared_ptr<File> Open(const std::filesystem::path& path, FileMode mode);
+	std::unique_ptr<File> Open(const std::filesystem::path& path, FileMode mode);
 	bool Exists(const std::filesystem::path& path);
 
 	void SetGamePath(const std::filesystem::path& path) { _gamePath = path; }
@@ -46,6 +46,8 @@ class FileSystem
 
 	void Delete();
 	void Rename();
+
+	std::vector<std::byte> ReadAll(const std::filesystem::path& path);
 
   private:
 	std::filesystem::path _gamePath;

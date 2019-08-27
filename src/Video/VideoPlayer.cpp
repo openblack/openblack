@@ -27,8 +27,8 @@ using namespace OpenBlack::Video;
 
 VideoPlayer::VideoPlayer(const std::string& file)
 {
-	_file = std::make_unique<OSFile>();
-	_file->Open(file.c_str(), LH_FILE_MODE::Read);
+	_file = std::make_unique<File>();
+	_file->Open(file, FileMode::Read);
 
 	std::cout << "Opening Video: " << file << std::endl;
 

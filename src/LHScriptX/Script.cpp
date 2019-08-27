@@ -18,7 +18,7 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Common/OSFile.h>
+#include <Common/File.h>
 #include <LHScriptX/FeatureScriptCommands.h>
 #include <LHScriptX/Lexer.h>
 #include <LHScriptX/Script.h>

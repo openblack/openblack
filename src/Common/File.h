@@ -24,6 +24,7 @@
 #include <string>
 #include <cstdio>
 #include <cassert>
+#include <unordered_map>
 
 namespace OpenBlack
 {
@@ -73,6 +74,22 @@ class File
 	void Flush();
   protected:
 	FILE* _file;
+};
+
+class LHSegmentedFile
+{
+	struct LHSegment
+	{
+		uint32_t offset;
+		std::size_t size;
+	};
+
+  public:
+	LHSegmentedFile(const std::filesystem::path& filename, FileMode mode);
+
+  protected:
+	std::unique_ptr<File> _file;
+	std::unordered_map<std::string, LHSegment> _segments;
 };
 
 } // namespace OpenBlack

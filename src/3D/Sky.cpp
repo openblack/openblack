@@ -19,7 +19,6 @@
  */
 
 #include <3D/Sky.h>
-#include <Common/OSFile.h>
 #include <Game.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>

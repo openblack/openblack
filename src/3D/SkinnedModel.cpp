@@ -19,10 +19,7 @@
  */
 
 #include <3D/SkinnedModel.h>
-#include <Common/OSFile.h>
-#include <stdexcept>
-#include <stdint.h>
-
+#include <Game.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/transform.hpp>
@@ -161,9 +158,9 @@ struct SkinnedModel_Vertex
 void SkinnedModel::LoadFromFile(const std::string& fileName)
 {
 	size_t meshSize;
-	char* mesh = OSFile::ReadAll((fileName).c_str(), &meshSize);
-	LoadFromL3D(mesh, meshSize);
-	delete[] mesh;
+	// char* mesh = OSFile::ReadAll((fileName).c_str(), &meshSize);
+	// LoadFromL3D(mesh, meshSize);
+	// delete[] mesh;
 }
 
 void SkinnedModel::LoadFromL3D(void* data_, size_t size)
