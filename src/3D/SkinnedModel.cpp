@@ -19,6 +19,7 @@
  */
 
 #include <3D/SkinnedModel.h>
+#include <3D/MeshPack.h>
 #include <Game.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -267,7 +268,7 @@ void SkinnedModel::Draw(ShaderProgram* program)
 
 	for (size_t i = 0; i < _submeshes.size(); i++)
 	{
-		if (_textures[_submeshSkinMap[i]] != nullptr)
+		if (_textures[_submeshSkinMap[i]] != nullptr) {
 			_textures[_submeshSkinMap[i]]->Bind(0);
 			_submeshes[i]->Draw();
 		}

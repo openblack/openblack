@@ -36,7 +36,6 @@
 #include <3D/Water.h>
 #include <Common/CmdLineArgs.h>
 #include <Common/FileSystem.h>
-#include <Common/OSFile.h>
 #include <Graphics/DebugDraw.h>
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/ShaderManager.h>
@@ -49,7 +48,10 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+
+#ifdef WIN32
 #include <Windows.h>
+#endif
 
 #define IMGUI_IMPL_OPENGL_LOADER_GLEW
 

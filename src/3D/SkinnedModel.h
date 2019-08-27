@@ -32,6 +32,8 @@ using namespace OpenBlack::Graphics;
 
 namespace OpenBlack
 {
+typedef uint32_t SkinId;
+
 class SkinnedModel
 {
   public:
