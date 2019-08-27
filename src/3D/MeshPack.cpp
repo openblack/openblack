@@ -20,6 +20,7 @@
 
 #include "MeshPack.h"
 
+#include <algorithm>
 #include <stdexcept>
 #include <stdint.h>
 
@@ -51,6 +52,81 @@ struct DDSurfaceDesc
 	uint32_t width;
 };
 
+void createCompressedDDS(char* buffer)
+{
+	// DDS file structures.
+	struct dds_pixel_format
+	{
+		uint32_t dwSize;
+		uint32_t dwFlags;
+		uint32_t dwFourCC;
+		uint32_t dwRGBBitCount;
+		uint32_t dwRBitMask;
+		uint32_t dwGBitMask;
+		uint32_t dwBBitMask;
+		uint32_t dwABitMask;
+	};
+
+	struct dds_header
+	{
+		uint32_t dwSize;
+		uint32_t dwFlags;
+		uint32_t dwHeight;
+		uint32_t dwWidth;
+		uint32_t dwPitchOrLinearSize;
+		uint32_t dwDepth;
+		uint32_t dwMipMapCount;
+		uint32_t dwReserved1[11];
+		dds_pixel_format ddspf;
+		uint32_t dwCaps;
+		uint32_t dwCaps2;
+		uint32_t dwCaps3;
+		uint32_t dwCaps4;
+		uint32_t dwReserved2;
+	};
+
+	struct dds_mip_level
+	{
+		GLubyte* data;
+		GLsizei width;
+		GLsizei height;
+		GLsizei size;
+	};
+
+	dds_header* header = reinterpret_cast<dds_header*>(buffer);
+
+	// some assumptions:
+	// - no mipmaps
+	// - no cubemap or volume textures
+	// - always dxt1 or dxt3
+	// - all are compressed
+
+	GLenum internalFormat = 0;
+	GLsizei width         = header->dwWidth;
+	GLsizei height        = header->dwHeight;
+	int bytesPerBlock;
+
+	switch (header->ddspf.dwFourCC)
+	{
+	case ('D' | ('X' << 8) | ('T' << 16) | ('1' << 24)):
+		internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+		bytesPerBlock           = 8;
+		break;
+	case ('D' | ('X' << 8) | ('T' << 16) | ('3' << 24)):
+		internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+		bytesPerBlock           = 16;
+		break;
+	default:
+		throw std::runtime_error("Unsupported compressed texture format");
+		break;
+	}
+
+	GLsizei size = std::max(1, (width + 3) >> 2) * std::max(1, (height + 3) >> 2) * bytesPerBlock;
+
+	glCompressedTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, size,
+		reinterpret_cast<void*>(buffer + header->dwSize));
+}
+
 MeshPack::MeshPack(OSFile* file):
     m_meshCount(0)
 {
@@ -75,25 +151,16 @@ MeshPack::MeshPack(OSFile* file):
 
 		DDSurfaceDesc* desc = (DDSurfaceDesc*)surfaceDesc;
 
-		glBindTexture(GL_TEXTURE_2D, Textures[hiresTexture->id - 1]);
+		assert(id == texture->id);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glBindTexture(GL_TEXTURE_2D, textures[texture->id - 1]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		if (hiresTexture->type == 1)
-		{
-			glCompressedTexImage2DARB(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT,
-			                          desc->width, desc->height, 0, ((desc->width + 3) / 4) * ((desc->height + 3) / 4) * 8, (uint8_t*)surfaceDesc + desc->size);
-		}
-		else if (hiresTexture->type == 2)
-		{
-			glCompressedTexImage2DARB(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_S3TC_DXT3_EXT,
-			                          desc->width, desc->height, 0, ((desc->width + 3) / 4) * ((desc->height + 3) / 4) * 16, (uint8_t*)surfaceDesc + desc->size);
-		}
+		// texture->type = 1 = DXT1, texture->type = 2 = DXT3 (lets read the DXT header anyway just in case)
+		createCompressedDDS(reinterpret_cast<char*>(&texture->dxSurfDesc));
 
-		free(surfaceDesc);
+		blockHeaderOffset += 36 + blockHeader->blockSize;
 	}
 
 	// each high res texture is actually a lionhead block...
@@ -112,7 +179,23 @@ MeshPack::MeshPack(OSFile* file):
 
 	m_meshCount = *meshCount;
 
-	printf("%d meshes\n", *meshCount);
+			for (uint32_t i = 0; i < meshes->meshCount; i++)
+			{
+				const auto header = reinterpret_cast<L3DSMiniHeader*>(dataAfterHeader + meshOffsets[i]);
+				auto model        = std::make_shared<SkinnedModel>();
+				auto* modelData   = dataAfterHeader + meshOffsets[i];
+				model->LoadFromL3D(modelData, header->l3dSize);
+				models.push_back(model);
+			}
+		}
+		else if (blockName == "INFO")
+		{
+			// Skip
+		}
+		else if (blockName == "LOW")
+		{
+			// Low resolution textures; skipping
+		}
 
 	Models = new L3DModel*[*meshCount];
 
