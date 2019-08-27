@@ -154,13 +154,48 @@ void MeshPack::LoadFromFile(File& file)
 	{
 		char blockName[32];
 		uint32_t blockSize;
+		uint32_t position;
 	};
 
-	LHBlockHeader header;
-	file.Read<LHBlockHeader>(&header, 1);
+	std::unordered_map<std::string, LHBlockHeader> blocks;
 
-	const int totalTextures = 110;
+	std::size_t size = file.Size();
+	while (file.Position() < size)
+	{
+		LHBlockHeader header;
+		file.ReadBytes<LHBlockHeader>(&header, 36);
 
+		header.position = file.Position();
+		file.Seek(header.blockSize, FileSeekMode::Current);
+
+		blocks[header.blockName] = header;
+	}
+
+	if (blocks.find("MESHES") == blocks.end())
+		throw std::runtime_error("no MESHES block in mesh pack");
+
+	if (blocks.find("INFO") == blocks.end())
+		throw std::runtime_error("no INFO block in mesh pack");
+
+	file.Seek(blocks.find("INFO")->second.position, FileSeekMode::Begin);
+	uint32_t totalTextures;
+	file.Read<uint32_t>(&totalTextures, 1);
+
+	// INFO block should be 0x1004 long
+	// assert(totalTextures == 110);
+
+	for (uint32_t i = 0; i < totalTextures; i++)
+	{
+		uint32_t textureID, textureType;
+		file.Read<uint32_t>(&textureID, 1);
+		file.Read<uint32_t>(&textureType, 1);
+
+		// 1/2 = DXT1/3
+
+		printf("texture %d: type=%d\n", textureID, textureType);
+	}
+
+	//const int totalTextures = 110;
 
 	/*std::size_t fileSize = file.Size();
 	std::vector<char> fileData(fileSize);
