@@ -1,46 +1,33 @@
-<p align="center">
-  <img src="https://github.com/openblack.png"/><br>
-  <i>OpenBlack</i><br>
-  A reimplementation of the Black & White game engine
-</p>
+# openblack
 
-## What's this?
-OpenBlack aims to be an open-source reimplementation of [Black & White (2001)](https://en.wikipedia.org/wiki/Black_&_White_(video_game)), an award winning god game by [Lionhead Studios](https://en.wikipedia.org/wiki/Lionhead_Studios).
+[![Travis Build](https://img.shields.io/travis/com/openblack/openblack?logo=travis)](https://travis-ci.com/openblack/openblack)
+[![Appveyor Build](https://img.shields.io/appveyor/ci/handsomematt/openblack?logo=appveyor)](https://ci.appveyor.com/project/handsomematt/openblack)
+[![GitHub Stars](https://img.shields.io/github/stars/openblack/openblack?logo=github)](https://github.com/openblack/openblack/stargazers)
+[![Discord chat](https://img.shields.io/discord/608729286513262622?logo=discord&logoColor=white)](https://discord.gg/5QTexBU)
+[![License](https://img.shields.io/github/license/openblack/openblack)](LICENSE.md)
+
+openblack is an open source reimplementation of [Black & White (2001)](https://en.wikipedia.org/wiki/Black_&_White_(video_game)) written in modern C++ and modern OpenGL.
 
 You still need to have the original game assets in order to use this.
 
-## Features
-* Multi-platform: Windows and Linux support.
-* Graphics rendering in modern OpenGL.
+---
 
-## Building
+# Building
 
-You will need the following to build OpenBlack:
+Clone the code using: `git clone --recursive https://github.com/openblack/openblack.git`
 
-* [CMake 3.12+](https://cmake.org)
-* [SDL2](https://www.libsdl.org)
-* [GLEW]()
-* [GLM]()
+## Windows
 
-### Windows
+* Install [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/)
+* Install [CMake](https://cmake.org/download/)
+* Open CMake GUI and point it to `openblack` folder, set build directory to `openblack/build`
+* Configure the following variables:
+  * `SDL2_ROOT_DIR` - [SDL2](https://www.libsdl.org)
+  * `GLEW_ROOT_DIR`
+  * `GLM_ROOT_DIR`
+* Press Configure, Generate, Open Project and then build.
 
-**Visual Studio 2017 or higher is required.**
-
-#### Generate project files with CMake
-
-You will need to download the above dependencies manually and configure their paths in CMake by defining:
-
-* `SDL2_ROOT_DIR`
-* `GLEW_ROOT_DIR`
-* `GLM_ROOT_DIR`
-
-You can then generate project files and compile the project.
-
-#### Open project with VS2017+ using Ninja
-
-You should be able to open the project folder if you have CMake support installed on VS2017+.
-
-### Linux
+## Linux
 
 Building has been tested on Ubuntu 19.04 and works fine, however **GCC 9.1.0+ is required** due to bugs in earlier versions with C++17 std.
 
@@ -50,7 +37,15 @@ Dependencies can be installed simply from apt:
 sudo apt install cmake libglew-dev libsdl2-dev libglm-dev
 ```
 
-Running `cmake .` in the project root directory will configure a Makefile with all the required dependencies, `make` should then build the project.
+Then to build run CMake in a build directory:
+
+```bash
+mkdir build && cd build
+cmake ../
+make
+```
+
+**Mesa drivers on Linux:** if you are trying to run with Mesa drivers and are getting issues with OpenGL context try messing with `MESA_GL_VERSION_OVERRIDE` when running like so: `MESA_GL_VERSION_OVERRIDE=4.3FC MESA_GLSL_VERSION_OVERRIDE=430 bin/donut`
 
 ## Documentation
 Documentation on various different file formats used throughout Black and White can all be
