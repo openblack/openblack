@@ -23,6 +23,7 @@
 #define OPENBLACK_MESHPACK_H
 
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace OpenBlack
@@ -38,23 +39,40 @@ class Texture2D;
 
 class MeshPack
 {
-public:
+	struct LHBlockHeader
+	{
+		char blockName[32];
+		uint32_t blockSize;
+		uint32_t position;
+	};
+
+	enum class TextureType : uint32_t
+	{
+		DXT1 = 1,
+		DXT3 = 2,
+	};
+
+  public:
 	MeshPack() = default;
 
 	void LoadFromFile(File&);
 
-	using ModelsVec = std::vector<std::shared_ptr<SkinnedModel>>;
-	using TexturesVec = std::vector<std::shared_ptr<Graphics::Texture2D>>;
+	using ModelsVec   = std::vector<std::unique_ptr<SkinnedModel>>;
+	using TexturesVec = std::vector<std::unique_ptr<Graphics::Texture2D>>;
 
 	const ModelsVec& GetModels() const { return _models; }
 	const TexturesVec& GetTextures() const { return _textures; }
 
-	std::shared_ptr<SkinnedModel> GetModel(int id) { return _models.at(id); }
-	Graphics::Texture2D& GetTexture(int id) { return *_textures.at(id); }
+	const SkinnedModel& GetModel(int id) const { return *_models.at(id); }
+	const Graphics::Texture2D& GetTexture(int id) const { return *_textures.at(id); }
 
-private:
+  private:
+	void loadTextures(File&);
+
 	ModelsVec _models;
 	TexturesVec _textures;
+
+	std::unordered_map<std::string, LHBlockHeader> _blocks;
 };
 } // namespace OpenBlack
 

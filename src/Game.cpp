@@ -342,7 +342,7 @@ void Game::guiLoop()
 	{
 		ImGui::Image((ImTextureID)tex->GetNativeHandle(), ImVec2(128, 128));
 
-		if (++i % 8 != 0)
+		if (++i % 4 != 0)
 			ImGui::SameLine();
 	}
 
