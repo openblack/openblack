@@ -23,40 +23,33 @@
 #define OPENBLACK_GRAPHICS_TEXTURE2DARRAY_H
 
 #include <Graphics/Texture2D.h>
-#include <vector>
 
 namespace OpenBlack
 {
 namespace Graphics
 {
 
-class Texture2DArray: public Texture
+class Texture2DArray
 {
   public:
-	Texture2DArray() = delete;
-	Texture2DArray(GLsizei width, GLsizei height, GLsizei depth, GLenum internalFormat);
+	Texture2DArray();
+	~Texture2DArray();
 
-	void SetTexture(GLsizei layer, GLsizei width, GLsizei height, GLenum format, GLenum type, const void* textureData);
+	void Create(unsigned int width, unsigned int height, unsigned int depth, InternalFormat internalFormat);
 
-	inline void Bind()
-	{
-		glBindTexture(GL_TEXTURE_2D_ARRAY, _textureID);
-	}
+	void SetTexture(unsigned int layer, unsigned int width, unsigned int height, Format format, DataType type, const void* textureData);
 
-	inline void Bind(unsigned char slot)
-	{
-		glActiveTexture(GL_TEXTURE0 + slot);
-		glBindTexture(GL_TEXTURE_2D_ARRAY, _textureID);
-	}
+	void Bind() const;
 
-	const GLsizei GetWidth() const { return _width; }
-	const GLsizei GetHeight() const { return _height; }
+	unsigned int GetNativeHandle() const { return _texture; }
+	unsigned int GetWidth() const { return _width; }
+	unsigned int GetHeight() const { return _height; }
 
   private:
-	GLsizei _width;
-	GLsizei _height;
-	GLsizei _depth;
-	GLenum _internalFormat;
+	unsigned int _texture;
+	unsigned int _width;
+	unsigned int _height;
+	unsigned int _depth;
 };
 
 } // namespace Graphics

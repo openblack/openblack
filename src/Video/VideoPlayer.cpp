@@ -69,9 +69,6 @@ void VideoPlayer::createTexture()
 	if (_texture != nullptr)
 		_texture.reset();
 
-	_texture = std::make_shared<Texture2D>(
-	    _bink->GetWidth(), _bink->GetHeight(),
-	    GL_RGBA, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8,
-	    nullptr // just allocate the texture :)
-	);
+	_texture = std::make_shared<Texture2D>();
+	_texture->Create(_bink->GetWidth(), _bink->GetHeight());
 }

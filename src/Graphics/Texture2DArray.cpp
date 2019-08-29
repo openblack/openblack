@@ -19,14 +19,35 @@
  */
 
 #include <Graphics/Texture2DArray.h>
+#include <stdio.h>
 
-using OpenBlack::Graphics::Texture2DArray;
-
-Texture2DArray::Texture2DArray(GLsizei width, GLsizei height, GLsizei depth, GLenum internalFormat):
-    _width(width), _height(height), _depth(depth), _internalFormat(internalFormat)
+namespace OpenBlack::Graphics
 {
-	glBindTexture(GL_TEXTURE_2D_ARRAY, _textureID);
-	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, _internalFormat, _width, _height, _depth);
+
+Texture2DArray::Texture2DArray()
+{
+	GLuint texture;
+	glGenTextures(1, &texture);
+	_texture = static_cast<unsigned int>(texture);
+}
+
+Texture2DArray::~Texture2DArray()
+{
+	if (_texture)
+	{
+		GLuint texture = static_cast<GLuint>(_texture);
+		glDeleteTextures(1, &_texture);
+	}
+}
+
+void Texture2DArray::Create(unsigned int width, unsigned int height, unsigned int depth, InternalFormat internalFormat)
+{
+	_width = width;
+	_height = height;
+	_depth  = depth;
+
+	glBindTexture(GL_TEXTURE_2D_ARRAY, _texture);
+	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, static_cast<GLenum>(internalFormat), _width, _height, _depth);
 
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -34,7 +55,23 @@ Texture2DArray::Texture2DArray(GLsizei width, GLsizei height, GLsizei depth, GLe
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
-void Texture2DArray::SetTexture(GLsizei layer, GLsizei width, GLsizei height, GLenum format, GLenum type, const void* textureData)
+void Texture2DArray::SetTexture(unsigned int layer, unsigned int width, unsigned int height, Format format, DataType type, const void* textureData)
 {
-	glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, layer, width, height, 1, format, type, textureData);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, _texture);
+	glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, layer, width, height, 1, static_cast<GLenum>(format), static_cast<GLenum>(type), textureData);
 }
+
+void Texture2DArray::Bind() const
+{
+	if (_texture)
+	{
+		GLuint texture = static_cast<GLuint>(_texture);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, texture);
+	}
+	else
+	{
+		glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+	}
+}
+
+} // namespace OpenBlack::Graphics

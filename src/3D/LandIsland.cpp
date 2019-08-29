@@ -41,7 +41,8 @@ LandIsland::LandIsland():
 	file->Read(smallbumpa, file->Size());
 	file->Close();
 
-	_textureSmallBump = std::make_unique<Texture2D>(256, 256, GL_R8, GL_RED, GL_UNSIGNED_BYTE, smallbumpa);
+	_textureSmallBump = std::make_unique<Texture2D>();
+	_textureSmallBump->Create(smallbumpa, DataType::UnsignedByte, Format::Red, 256, 256, InternalFormat::R8);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	delete[] smallbumpa;
@@ -103,7 +104,8 @@ void LandIsland::LoadFromFile(File& file)
 		_countries.push_back(country);
 	}
 
-	_materialArray = std::make_shared<Texture2DArray>(256, 256, _materialCount, GL_RGBA8);
+	_materialArray = std::make_shared<Texture2DArray>();
+	_materialArray->Create(256, 256, _materialCount, InternalFormat::RGBA8);
 	for (uint32_t i = 0; i < _materialCount; i++)
 	{
 		uint16_t* rgba5TextureData = new uint16_t[256 * 256];
@@ -114,21 +116,23 @@ void LandIsland::LoadFromFile(File& file)
 		file.ReadBytes(rgba5TextureData, 256 * 256 * sizeof(uint16_t));
 
 		convertRGB5ToRGB8(rgba5TextureData, rgba8TextureData, 256 * 256);
-		_materialArray->SetTexture(i, 256, 256, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, rgba8TextureData);
+		_materialArray->SetTexture(i, 256, 256, Format::RGBA, DataType::UnsignedInt8888, rgba8TextureData);
 
 		delete[] rgba5TextureData;
 		delete[] rgba8TextureData;
 	}
 
 	// read noise map into Texture2D
-	_noiseMap = new uint8_t[256 * 256];
+	_noiseMap = new uint8_t[256 * 256]; // (delete handled by destructor)
 	file.ReadBytes(_noiseMap, 256 * 256);
-	_textureNoiseMap = std::make_shared<Texture2D>(256, 256, GL_RED, GL_RED, GL_UNSIGNED_BYTE, _noiseMap);
+	_textureNoiseMap = std::make_shared<Texture2D>();
+	_textureNoiseMap->Create(_noiseMap, DataType::UnsignedByte, Format::Red, 256, 256, InternalFormat::Red);
 
 	// read bump map into Texture2D
 	uint8_t* bumpMapTextureData = new uint8_t[256 * 256];
 	file.ReadBytes(bumpMapTextureData, 256 * 256);
-	_textureBumpMap = std::make_shared<Texture2D>(256, 256, GL_RED, GL_RED, GL_UNSIGNED_BYTE, bumpMapTextureData);
+	_textureBumpMap = std::make_shared<Texture2D>();
+	_textureBumpMap->Create(bumpMapTextureData, DataType::UnsignedByte, Format::Red, 256, 256, InternalFormat::Red);
 	delete[] bumpMapTextureData;
 
 	file.Close();
@@ -184,6 +188,19 @@ const LandCell& LandIsland::GetCell(int x, int z) const
 
 void LandIsland::Draw(ShaderProgram& program)
 {
+	program.SetUniformValue("sMaterials", 0);
+	program.SetUniformValue("sBumpMap", 1);
+	program.SetUniformValue("sSmallBumpMap", 2);
+
+	glActiveTexture(GL_TEXTURE0);
+	_materialArray->Bind();
+
+	glActiveTexture(GL_TEXTURE1);
+	_textureBumpMap->Bind();
+
+	glActiveTexture(GL_TEXTURE2);
+	_textureSmallBump->Bind();
+
 	for (auto& block : _landBlocks)
 		block.Draw(program);
 }
@@ -211,7 +228,7 @@ void LandIsland::convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixe
 */
 void LandIsland::DumpTextures()
 {
-	GLuint textureID = _materialArray->GetHandle();
+	GLuint textureID = _materialArray->GetNativeHandle();
 
 	GLuint fboID = 0;
 	glGenFramebuffers(1, &fboID);

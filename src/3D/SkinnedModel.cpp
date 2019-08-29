@@ -24,6 +24,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/transform.hpp>
+#include <stdexcept>
 
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
@@ -257,19 +258,22 @@ void SkinnedModel::LoadFromL3D(void* data_, size_t size)
 	for (uint32_t s = 0; s < header->numSkins; s++)
 	{
 		L3D_Skin* skin          = static_cast<L3D_Skin*>((void*)(buffer + skinOffsets[s]));
-		_textures[skin->skinID] = std::make_unique<Texture2D>(256, 256, GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_4_4_4_4_REV, skin->data);
+		_textures[skin->skinID] = std::make_unique<Texture2D>();
+		_textures[skin->skinID]->Create(skin->data, DataType::UnsignedShort4444Rev, Format::BGRA, 256, 256, InternalFormat::RGB5A1);
 	}
 }
 
 void SkinnedModel::Draw(ShaderProgram* program)
 {
-	program->SetUniformValue("u_boneMatrices[0]", _boneMatrices.size(), _boneMatrices.data());
+	// program->SetUniformValue("u_boneMatrices[0]", _boneMatrices.size(), _boneMatrices.data());
 	auto& textureBinds = Game::instance()->GetMeshPack().GetTextures();
+
+	glActiveTexture(GL_TEXTURE0);
 
 	for (size_t i = 0; i < _submeshes.size(); i++)
 	{
 		if (_textures[_submeshSkinMap[i]] != nullptr) {
-			_textures[_submeshSkinMap[i]]->Bind(0);
+			_textures[_submeshSkinMap[i]]->Bind();
 			_submeshes[i]->Draw();
 		}
 		else if (i < textureBinds.size())
@@ -281,7 +285,7 @@ void SkinnedModel::Draw(ShaderProgram* program)
 				continue;
 
 			const auto& textureBind = textureBinds[index - 1];
-			textureBind->Bind(0);
+			textureBind->Bind();
 			_submeshes[i]->Draw();
 		}
 	}

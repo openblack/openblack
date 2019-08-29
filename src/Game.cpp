@@ -276,13 +276,6 @@ void Game::drawScene(const Camera& camera, bool drawWater)
 	terrainShader->SetUniformValue("timeOfDay", _timeOfDay);
 	terrainShader->SetUniformValue("bumpmapStrength", _bumpmapStrength);
 	terrainShader->SetUniformValue("smallBumpmapStrength", _smallBumpmapStrength);
-	terrainShader->SetUniformValue("sMaterials", 0);
-	terrainShader->SetUniformValue("sBumpMap", 1);
-	terrainShader->SetUniformValue("sSmallBumpMap", 2);
-
-	_landIsland->GetMaterialArray()->Bind(0);
-	_landIsland->GetBumpMap()->Bind(1);
-	_landIsland->GetSmallBumpMap()->Bind(2);
 
 	_landIsland->Draw(*terrainShader);
 
@@ -347,7 +340,7 @@ void Game::guiLoop()
 	int i = 0;
 	for (const auto& tex : _meshPack->GetTextures())
 	{
-		ImGui::Image((ImTextureID)tex->GetHandle(), ImVec2(128, 128));
+		ImGui::Image((ImTextureID)tex->GetNativeHandle(), ImVec2(128, 128));
 
 		if (++i % 8 != 0)
 			ImGui::SameLine();

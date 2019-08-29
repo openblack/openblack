@@ -101,7 +101,8 @@ void Water::createMesh()
 void Water::Draw(ShaderProgram& program)
 {
 	program.SetUniformValue("sReflection", 0);
-	_reflectionFrameBuffer->GetTexture()->Bind(0);
+	glActiveTexture(GL_TEXTURE0);
+	_reflectionFrameBuffer->GetTexture()->Bind();
 
 	_mesh->Draw();
 }
@@ -130,7 +131,7 @@ void Water::EndReflection()
 void Water::DebugGUI()
 {
 	ImGui::Begin("Water Debug");
-	ImGui::Image((void*)(intptr_t)_reflectionFrameBuffer->GetTexture()->GetHandle(), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Image((void*)(intptr_t)_reflectionFrameBuffer->GetTexture()->GetNativeHandle(), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::End();
 }
 

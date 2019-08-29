@@ -33,8 +33,10 @@ FrameBuffer::FrameBuffer(GLsizei width, GLsizei height, GLenum format) :
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _handle);
 
-	_texture = new Texture2D(_width, _height, GL_RGBA, _format, GL_UNSIGNED_BYTE, NULL);
-	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _texture->GetHandle(), 0);
+	_texture = new Texture2D();
+	_texture->Create(_width, _height);
+
+	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _texture->GetNativeHandle(), 0);
 
 	if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		throw std::runtime_error("failed to create framebuffer");
