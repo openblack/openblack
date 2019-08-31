@@ -29,7 +29,7 @@
 
 //don't return more than 25 bits this way
 unsigned int GetBitContext::get_bits(int n) {
-	register unsigned int tmp;
+	unsigned int tmp;
 
 	tmp = AV_RL32(buffer+(index>>3))>>(index&7);
 	index+=n;
@@ -38,7 +38,7 @@ unsigned int GetBitContext::get_bits(int n) {
 
 //peek at the next <25 bits (without bumping the bit counter)
 unsigned int GetBitContext::peek_bits(int n) {
-	register unsigned int tmp;
+	unsigned int tmp;
 
 	tmp = AV_RL32(buffer+(index>>3))>>(index&7);
 	return tmp& (0xffffffff>>(32-n));
