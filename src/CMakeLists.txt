@@ -9,14 +9,14 @@ add_definitions(-DGLM_FORCE_LEFT_HANDED -DGLM_FORCE_RADIANS -DGLM_ENABLE_EXPERIM
 configure_file("${CMAKE_CURRENT_LIST_DIR}/GitSHA1.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" @ONLY)
 
 file(GLOB OPENBLACK_SHADERS
-    "${CMAKE_CURRENT_SOURCE_DIR}/assets/shaders/**.vert"
-    "${CMAKE_CURRENT_SOURCE_DIR}/assets/shaders/**.frag"
+	"${CMAKE_CURRENT_SOURCE_DIR}/assets/shaders/**.vert"
+	"${CMAKE_CURRENT_SOURCE_DIR}/assets/shaders/**.frag"
 )
 
 if (WIN32)
-    # Suppress WinMain(), provided by SDL
-    add_definitions(-DSDL_MAIN_HANDLED)
-    # Get rid of useless crud from windows.h
+	# Suppress WinMain(), provided by SDL
+	add_definitions(-DSDL_MAIN_HANDLED)
+	# Get rid of useless crud from windows.h
 	add_definitions(-DNOMINMAX -DWIN32_LEAN_AND_MEAN)
 	# disable CRT warnings on windows cause they're annoying as shit and we use C functions everywhere
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
@@ -41,6 +41,10 @@ set_target_properties(openblack PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(openblack PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 target_link_libraries(openblack PRIVATE ScriptLibrary SDL2::Main ${OPENGL_LIBRARIES} ${GLEW_LIBRARY})
 
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	target_link_libraries(openblack PRIVATE stdc++fs)
+endif()
+
 if (WIN32)
 	if (USE_DEBUG_CONSOLE)
 		set_target_properties(openblack PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
@@ -53,8 +57,8 @@ if (WIN32)
 	endif()
 
 	# Release builds don't use the debug console
-    set_target_properties(openblack PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
-    set_target_properties(openblack PROPERTIES COMPILE_DEFINITIONS_RELEASE "_WINDOWS")
+	set_target_properties(openblack PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+	set_target_properties(openblack PROPERTIES COMPILE_DEFINITIONS_RELEASE "_WINDOWS")
 	set_target_properties(openblack PROPERTIES LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:WINDOWS")
 endif (WIN32)
 
@@ -72,14 +76,14 @@ if (MSVC)
 		)
 	endfunction()
 
-    # windows_copy_files(openblack ${SDL2_DLL_DIR} "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/" SDL2.dll)
-    # windows_copy_files(openblack ${OPENAL_DLL_DIR} "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/" soft_oal.dll)
+	# windows_copy_files(openblack ${SDL2_DLL_DIR} "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/" SDL2.dll)
+	# windows_copy_files(openblack ${OPENAL_DLL_DIR} "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/" soft_oal.dll)
 endif()
 
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/shaders")
 
 foreach(SHADER ${OPENBLACK_SHADERS})
-  source_group("Shaders" FILES "${SHADER}")
+	source_group("Shaders" FILES "${SHADER}")
 	if(WIN32)
 		add_custom_command(TARGET openblack PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SHADER} "${CMAKE_BINARY_DIR}/bin/shaders/")
 	elseif(UNIX)
