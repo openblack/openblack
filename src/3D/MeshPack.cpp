@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <stdint.h>
+#include <stdlib.h> // snprintf
 
 namespace OpenBlack
 {
@@ -158,7 +159,7 @@ void MeshPack::loadTextures(File& file)
 	char sBlockID[4];
 	for (auto const& tex : textureTypeMap)
 	{
-		itoa(tex.first, sBlockID, 16);
+		snprintf(sBlockID, sizeof(sBlockID), "%x", tex.first);
 
 		auto const& textureBlock = _blocks.find(sBlockID);
 		if (textureBlock == _blocks.end())
