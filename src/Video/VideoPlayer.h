@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_VIDEO_VIDEOPLAYER_H
-#define OPENBLACK_VIDEO_VIDEOPLAYER_H
 
 #include <Common/File.h>
 #include <Graphics/Texture2D.h>
@@ -68,5 +66,3 @@ class VideoPlayer
 
 } // namespace Video
 } // namespace OpenBlack
-
-#endif

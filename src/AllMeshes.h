@@ -18,8 +18,7 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _ALL_MESHES_AND_ANIMS_H_
-#define _ALL_MESHES_AND_ANIMS_H_
+#pragma once
 
 //  626 Meshes.
 //  441 Anims.

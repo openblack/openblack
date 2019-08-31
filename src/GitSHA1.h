@@ -18,4 +18,5 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
 extern const char* kGitSHA1Hash;

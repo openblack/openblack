@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_TYPES_H
-#define OPENBLACK_TYPES_H
 
 #include <glm/glm.hpp>
 #include <stdint.h>
@@ -40,5 +38,3 @@ typedef struct rgba
 	uint8_t b;
 	uint8_t a;
 } rgba_t;
-
-#endif

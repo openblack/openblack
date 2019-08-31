@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_GRAPHICS_MESH_H
-#define OPENBLACK_GRAPHICS_MESH_H
 
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/VertexBuffer.h>
@@ -81,5 +79,3 @@ class Mesh
 
 } // namespace Graphics
 } // namespace OpenBlack
-
-#endif

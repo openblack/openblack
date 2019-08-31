@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_GRAPHICS_SHADERMANAGER_H
-#define OPENBLACK_GRAPHICS_SHADERMANAGER_H
 
 #include <Graphics/ShaderProgram.h>
 #include <map>
@@ -48,5 +46,3 @@ class ShaderManager
 
 } // namespace Graphics
 } // namespace OpenBlack
-
-#endif

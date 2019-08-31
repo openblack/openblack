@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_GRAPHICS_TEXTURE_H
-#define OPENBLACK_GRAPHICS_TEXTURE_H
 
 #include <Graphics/OpenGL.h>
 
@@ -181,5 +179,3 @@ class Texture2D
 
 } // namespace Graphics
 } // namespace OpenBlack
-
-#endif

@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_LHVMVIEWER_H
-#define OPENBLACK_LHVMVIEWER_H
 
 #include <LHVM/LHVM.h>
 #include <imgui/imgui.h>
@@ -41,5 +39,3 @@ class LHVMViewer
 	static void SelectScript(int idx);
 };
 } // namespace OpenBlack
-
-#endif

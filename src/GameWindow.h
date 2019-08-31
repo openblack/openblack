@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_GAMEWINDOW_H
-#define OPENBLACK_GAMEWINDOW_H
 
 #include <SDL.h>
 #include <cstdint>
@@ -94,5 +92,3 @@ class GameWindow
 	std::unique_ptr<SDL_GLContext, SDLDestroyer> _glcontext;
 };
 } // namespace OpenBlack
-
-#endif

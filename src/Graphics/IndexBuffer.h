@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_INDEXBUFFER_H
-#define OPENBLACK_INDEXBUFFER_H
 
 #include "OpenGL.h"
 
@@ -59,5 +57,3 @@ class IndexBuffer
 
 } // namespace Graphics
 } // namespace OpenBlack
-
-#endif // OPENBLACK_INDEXBUFFER_H

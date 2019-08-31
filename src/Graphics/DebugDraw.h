@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_DEBUGDRAW_H
-#define OPENBLACK_DEBUGDRAW_H
 
 #include <Graphics/VertexBuffer.h>
 #include <glm/glm.hpp>
@@ -60,5 +58,3 @@ class DebugDraw
 
 } // namespace Graphics
 } // namespace OpenBlack
-
-#endif // OPENBLACK_DEBUGDRAW_H

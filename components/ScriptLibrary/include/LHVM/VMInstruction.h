@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_SCRIPTLIBRARY_LHVM_VMINSTRUCTIONH
-#define OPENBLACK_SCRIPTLIBRARY_LHVM_VMINSTRUCTIONH
 
 #include <stdint.h>
 #include <string>
@@ -60,5 +58,3 @@ private:
 
 }
 }
-
-#endif

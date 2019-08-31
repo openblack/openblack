@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_BITMAP16_H
-#define OPENBLACK_BITMAP16_H
 
 #include <stdint.h>
 #include <string>
@@ -50,5 +48,3 @@ class Bitmap16B
 };
 
 } // namespace OpenBlack
-
-#endif

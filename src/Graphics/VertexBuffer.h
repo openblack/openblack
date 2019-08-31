@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_VERTEXBUFFER_H
-#define OPENBLACK_VERTEXBUFFER_H
 
 #include <Graphics/OpenGL.h>
 #include <memory>
@@ -62,5 +60,3 @@ class VertexBuffer
 
 } // namespace Graphics
 } // namespace OpenBlack
-
-#endif // OPENBLACK_VERTEXBUFFER_H

@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_3D_SKY_H
-#define OPENBLACK_3D_SKY_H
 
 #include <3D/Camera.h>
 #include <3D/SkinnedModel.h>
@@ -49,5 +47,3 @@ class Sky
 };
 
 } // namespace OpenBlack
-
-#endif

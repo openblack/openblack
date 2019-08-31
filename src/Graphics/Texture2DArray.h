@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_GRAPHICS_TEXTURE2DARRAY_H
-#define OPENBLACK_GRAPHICS_TEXTURE2DARRAY_H
 
 #include <Graphics/Texture2D.h>
 
@@ -54,5 +52,3 @@ class Texture2DArray
 
 } // namespace Graphics
 } // namespace OpenBlack
-
-#endif

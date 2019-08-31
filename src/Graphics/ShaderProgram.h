@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_GRAPHICS_SHADERPROGRAM_H
-#define OPENBLACK_GRAPHICS_SHADERPROGRAM_H
 
 #include <Graphics/OpenGL.h>
 #include <glm/glm.hpp>
@@ -61,5 +59,3 @@ class ShaderProgram
 
 } // namespace Graphics
 } // namespace OpenBlack
-
-#endif

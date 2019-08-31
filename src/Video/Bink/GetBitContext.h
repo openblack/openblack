@@ -21,10 +21,12 @@
 //code derived from FFMPEG
 //using code from get_bits.h, bitstream.c
 
+#pragma once
+
 #include "common.h"
 
 #define INIT_VLC_LE         2
-#define INIT_VLC_USE_NEW_STATIC 4 
+#define INIT_VLC_USE_NEW_STATIC 4
 
 class VLC
 {
@@ -83,7 +85,7 @@ private:
 	((((const uint8_t*)(x))[3] << 24) |  \
 	(((const uint8_t*)(x))[2] << 16) |   \
 	(((const uint8_t*)(x))[1] <<  8) |   \
-	((const uint8_t*)(x))[0]) 
+	((const uint8_t*)(x))[0])
 
 class GetBitContext
 {

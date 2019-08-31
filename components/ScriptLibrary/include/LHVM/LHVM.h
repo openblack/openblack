@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_SCRIPTLIBRARY_LHVM_LHVMH
-#define OPENBLACK_SCRIPTLIBRARY_LHVM_LHVMH
 
 #include <string>
 #include <vector>
@@ -67,5 +65,3 @@ private:
 
 }
 }
-
-#endif

@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_LANDCELL_H
-#define OPENBLACK_LANDCELL_H
 
 #include <Common/Types.h>
 
@@ -63,5 +61,3 @@ class LandCell
 };
 #pragma pack(pop)
 } // namespace OpenBlack
-
-#endif

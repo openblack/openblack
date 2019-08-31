@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_SCRIPTLIBRARY_LHVM_TASKH
-#define OPENBLACK_SCRIPTLIBRARY_LHVM_TASKH
 
 namespace OpenBlack {
 namespace LHVM {
@@ -31,5 +29,3 @@ class VMTask {
 
 }
 }
-
-#endif

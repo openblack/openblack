@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_SCRIPTLIBRARY_LHVM_OPCODENAMESH
-#define OPENBLACK_SCRIPTLIBRARY_LHVM_OPCODENAMESH
 
 #include <array>
 
@@ -63,5 +61,3 @@ static const std::array<std::string, 31> Opcode_Names = {
 
 }
 }
-
-#endif
