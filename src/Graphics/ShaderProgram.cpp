@@ -59,7 +59,7 @@ ShaderProgram::ShaderProgram(const std::string& vertexSource, const std::string&
 
 		char* infoLog = new char[infoLogLen];
 		glGetProgramInfoLog(_program, infoLogLen, &infoLogLen, infoLog);
-		std::fprintf(stderr, "ShaderProgram linking errors:\n%s\n", infoLog); // throw an exception?
+		_logger->error("There are linking errors: {}", infoLog);
 		delete[] infoLog;
 
 		glDeleteProgram(_program);
@@ -156,7 +156,7 @@ GLuint ShaderProgram::createSubShader(GLenum type, const std::string& source)
 
 		char* infoLog = new char[infoLogLen];
 		glGetShaderInfoLog(shader, infoLogLen, &infoLogLen, infoLog);
-		std::fprintf(stderr, "ShaderProgram compile errors:\n%s\n", infoLog); // throw an exception?
+		_logger->error("There are compile errors: {}", infoLog);
 		delete[] infoLog;
 
 		glDeleteShader(shader);

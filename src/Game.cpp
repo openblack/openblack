@@ -80,6 +80,7 @@ Game::Game(int argc, char** argv):
     _fileSystem(std::make_unique<FileSystem>()),
     _shaderManager(std::make_unique<ShaderManager>())
 {
+	spdlog::set_level(spdlog::level::debug);
 	sInstance = this;
 
 	int windowWidth = 1280, windowHeight = 1024;
@@ -98,7 +99,7 @@ Game::Game(int argc, char** argv):
 	_window->SetSwapInterval(1);
 
 	_fileSystem->SetGamePath(GetGamePath());
-	std::clog << "GamePath: " << _fileSystem->GetGamePath() << std::endl;
+	_logger->debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
 
 	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(MessageCallback, 0);
@@ -488,7 +489,7 @@ const std::string& Game::GetGamePath()
 			return sGamePath;
 		}
 
-		std::cerr << "Failed to find GameDir registry value, game not installed" << std::endl;
+		_logger->error("Failed to find the GameDir registry value, game not installed.");
 #endif // _WIN32
 
 		// no key? guess
@@ -498,7 +499,7 @@ const std::string& Game::GetGamePath()
 		sGamePath = std::string("/mnt/windows/Program Files (x86/Lionhead Studios Ltd/Black & White");
 #endif // _WIN32
 
-		std::clog << "Guessing GamePath: " << sGamePath << std::endl;
+		_logger->debug("Guessing the GamePath using \"{}\".", sGamePath);
 	}
 
 	return sGamePath;
