@@ -69,15 +69,15 @@ class SkinnedModel
 	void calculateBoneMatrices();
 
   public:
-	const bool IsBoned() const { return _flags & 0x100; }                     // 23
-	const bool IsNoDraw() const { return _flags & 0x2000; }                   // 18
-	const bool IsContainsLandscapeFeature() const { return _flags & 0x8000; } // 16
-	const bool IsContainsUV2() const { return _flags & 0x40000; }             // 13
-	const bool IsContainsNameData() const { return _flags & 0x80000; }        // 12
-	const bool IsContainsExtraMetrics() const { return _flags & 0x100000; }   // 11
-	const bool IsContainsEBone() const { return _flags & 0x200000; }          // 10
-	const bool IsContainsTnLData() const { return _flags & 0x400000; }        // 9
-	const bool IsContainsNewEP() const { return _flags & 0x800000; }          // 8
+	bool IsBoned() const { return _flags & 0x100; }                     // 23
+	bool IsNoDraw() const { return _flags & 0x2000; }                   // 18
+	bool IsContainsLandscapeFeature() const { return _flags & 0x8000; } // 16
+	bool IsContainsUV2() const { return _flags & 0x40000; }             // 13
+	bool IsContainsNameData() const { return _flags & 0x80000; }        // 12
+	bool IsContainsExtraMetrics() const { return _flags & 0x100000; }   // 11
+	bool IsContainsEBone() const { return _flags & 0x200000; }          // 10
+	bool IsContainsTnLData() const { return _flags & 0x400000; }        // 9
+	bool IsContainsNewEP() const { return _flags & 0x800000; }          // 8
 
 	//const bool IsContainsNewData() const { return _flags & 0xFC8000; } // ???
 

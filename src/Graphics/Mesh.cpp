@@ -72,7 +72,7 @@ std::shared_ptr<IndexBuffer> Mesh::GetIndexBuffer()
 	return _indexBuffer;
 }
 
-const GLuint Mesh::GetType() const noexcept
+GLuint Mesh::GetType() const noexcept
 {
 	return _type;
 }

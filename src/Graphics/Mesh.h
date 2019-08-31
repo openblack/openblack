@@ -62,7 +62,7 @@ class Mesh
 	std::shared_ptr<VertexBuffer> GetVertexBuffer();
 	std::shared_ptr<IndexBuffer> GetIndexBuffer();
 
-	const GLuint GetType() const noexcept;
+	GLuint GetType() const noexcept;
 
 	void Draw();
 

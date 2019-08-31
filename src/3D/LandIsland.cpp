@@ -148,7 +148,7 @@ void LandIsland::LoadFromFile(File& file)
 }
 */
 
-const float LandIsland::GetHeightAt(glm::vec2 vec) const
+float LandIsland::GetHeightAt(glm::vec2 vec) const
 {
 	return GetCell(vec.x * 0.1f, vec.y * 0.1f).Altitude() * LandIsland::HeightUnit;
 }

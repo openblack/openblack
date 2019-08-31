@@ -52,11 +52,11 @@ Bitmap16B::~Bitmap16B()
 		delete[] _data;
 }
 
-const unsigned int Bitmap16B::Width() const
+unsigned int Bitmap16B::Width() const
 {
 	return _width;
 }
-const unsigned int Bitmap16B::Height() const
+unsigned int Bitmap16B::Height() const
 {
 	return _height;
 }
