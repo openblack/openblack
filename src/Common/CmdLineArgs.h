@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_COMMON_CMDLINEARGS_H
-#define OPENBLACK_COMMON_CMDLINEARGS_H
 
 #include <sstream>
 #include <string>
@@ -110,5 +108,3 @@ inline bool CmdLineArgs::ArgValue::ValueAs<bool>() const
 	return AsBool();
 }
 } // namespace OpenBlack
-
-#endif

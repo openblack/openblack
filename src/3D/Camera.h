@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_CAMERA_H
-#define OPENBLACK_CAMERA_H
 
 #include <SDL_events.h>
 #include <glm/glm.hpp>
@@ -78,5 +76,3 @@ class Camera
 	float _freeLookSensitivity;
 };
 } // namespace OpenBlack
-
-#endif

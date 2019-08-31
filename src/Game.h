@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_GAME_H
-#define OPENBLACK_GAME_H
 
 #include "GameWindow.h"
 
@@ -121,5 +119,3 @@ class Game
 	void guiLoop();
 };
 } // namespace OpenBlack
-
-#endif

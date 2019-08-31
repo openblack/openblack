@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_3D_WATER_H
-#define OPENBLACK_3D_WATER_H
 
 #include <3D/Camera.h>
 #include <Graphics/Mesh.h>
@@ -78,5 +76,3 @@ class Water
 };
 
 } // namespace OpenBlack
-
-#endif

@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_SKINNEDMODEL_H
-#define OPENBLACK_SKINNEDMODEL_H
 
 #include <Graphics/Mesh.h>
 #include <Graphics/ShaderProgram.h>
@@ -84,5 +82,3 @@ class SkinnedModel
 	std::vector<SkinnedModel_Bone>& GetBones() { return _bones; }
 };
 } // namespace OpenBlack
-
-#endif

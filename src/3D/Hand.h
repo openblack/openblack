@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_3D_HAND_H
-#define OPENBLACK_3D_HAND_H
 
 #include <3D/SkinnedModel.h>
 #include <Graphics/Mesh.h>
@@ -42,5 +40,3 @@ class Hand
 	std::unique_ptr<SkinnedModel> m_HandModel;
 };
 } // namespace OpenBlack
-
-#endif
