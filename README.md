@@ -47,9 +47,8 @@ sudo apt install cmake libglew-dev libsdl2-dev libglm-dev
 Then to build run CMake in a build directory:
 
 ```bash
-mkdir build && cd build
-cmake ../
-make
+cmake -S . -B build
+cmake --build build
 ```
 
 **Mesa drivers on Linux:** if you are trying to run with Mesa drivers and are getting issues with OpenGL context try messing with `MESA_GL_VERSION_OVERRIDE` when running like so: `MESA_GL_VERSION_OVERRIDE=4.3FC MESA_GLSL_VERSION_OVERRIDE=430 bin/donut`
