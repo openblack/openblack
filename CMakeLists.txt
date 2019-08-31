@@ -4,6 +4,14 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+option(HUNTER_ENABLED "Enable Hunter package manager support" OFF)
+include(cmake/HunterGate.cmake)
+
+HunterGate(
+  URL "https://github.com/ruslo/hunter/archive/v0.23.214.tar.gz"
+  SHA1 "e14bc153a7f16d6a5eeec845fb0283c8fad8c358"
+)
+
 project(openblack)
 
 # Set C++17 Standard
@@ -50,6 +58,9 @@ endfunction()
 # check_submodules_present()
 
 # Dependencies
+hunter_add_package(SDL2)
+hunter_add_package(glew)
+hunter_add_package(glm)
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(GLEW2 REQUIRED)
