@@ -22,6 +22,7 @@
 #include <Common/FileSystem.h>
 #include <Game.h>
 #include <cassert>
+#include <cstring>
 #include <sstream>
 #include <stdexcept>
 
