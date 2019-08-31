@@ -60,7 +60,7 @@ class LandIsland
 
 	// const uint8_t GetAltitudeAt(glm::ivec2) const;
 
-	const float GetHeightAt(glm::vec2) const;
+	float GetHeightAt(glm::vec2) const;
 	const LandBlock* GetBlock(int8_t x, int8_t y) const;
 	const LandCell& GetCell(int x, int y) const;
 

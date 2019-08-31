@@ -89,7 +89,7 @@ void Script::LoadFromFile(File& file)
 	delete[] contents;
 }
 
-const bool Script::isCommand(const std::string& identifier) const
+bool Script::isCommand(const std::string& identifier) const
 {
 	// this could be done a lot better
 	for (const auto& signature : FeatureScriptCommands::Signatures)

@@ -34,8 +34,8 @@ class Bitmap16B
 	Bitmap16B(const void* data, size_t size);
 	~Bitmap16B();
 
-	const unsigned int Width() const;
-	const unsigned int Height() const;
+	unsigned int Width() const;
+	unsigned int Height() const;
 	const uint16_t* Data() const;
 
   private:

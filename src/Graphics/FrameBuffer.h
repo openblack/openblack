@@ -39,8 +39,8 @@ public:
 
 	//inline void Bind() { glBindTexture(GL_TEXTURE_RECTANGLE, _textureID); }
 
-	const GLsizei GetWidth() const { return _width; }
-	const GLsizei GetHeight() const { return _height; }
+	GLsizei GetWidth() const { return _width; }
+	GLsizei GetHeight() const { return _height; }
 private:
 	GLuint _handle;
 

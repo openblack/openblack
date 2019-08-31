@@ -143,12 +143,12 @@ class Lexer
 	Token GetToken();
 
   private:
-	const size_t remaining() const noexcept
+	size_t remaining() const noexcept
 	{
 		return static_cast<size_t>(end_ - current_);
 	}
 
-	const bool hasMore() const noexcept
+	bool hasMore() const noexcept
 	{
 		return current_ != end_;
 	}

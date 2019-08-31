@@ -41,11 +41,11 @@ public:
 		_code(code), _access(access), _type(type), _data(data), _line(line) { }
 	~VMInstruction() = default;
 
-	const Opcode GetOpcode() const { return _code; }
-	const Access GetAccess() const { return _access; }
-	const DataType GetDataType() const { return _type; }
-	const uint32_t GetData() const { return _data; }
-	const uint32_t GetLineNumber() const { return _line; }
+	Opcode GetOpcode() const { return _code; }
+	Access GetAccess() const { return _access; }
+	DataType GetDataType() const { return _type; }
+	uint32_t GetData() const { return _data; }
+	uint32_t GetLineNumber() const { return _line; }
 
 	std::string Disassemble() const;
 private:

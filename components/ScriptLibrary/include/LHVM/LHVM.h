@@ -47,7 +47,7 @@ public:
 	const std::vector<VMScript> &GetScripts() const { return _scripts; }
 	const std::vector<uint8_t> &GetData() const { return _data; }
 
-	const Version GetVersion() const { return _version; }
+	Version GetVersion() const { return _version; }
 private:
 	void loadVariables(std::FILE* file, std::vector<std::string> &variables);
 	void loadCode(std::FILE* file);

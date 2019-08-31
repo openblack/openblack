@@ -38,10 +38,10 @@ public:
 	const std::string &GetName() const { return _name; }
 	const std::string &GetFileName() const { return _filename; }
 	const std::vector<std::string> &GetVariables() const { return _variables; }
-	const uint32_t GetVariableOffset() const { return _variables_offset; }
-	const uint32_t GetInstructionAddress() const { return _instruction_address; }
-	const uint32_t GetParameterCount() const { return _parameter_count; }
-	const uint32_t GetScriptID() const { return _script_id;  }
+	uint32_t GetVariableOffset() const { return _variables_offset; }
+	uint32_t GetInstructionAddress() const { return _instruction_address; }
+	uint32_t GetParameterCount() const { return _parameter_count; }
+	uint32_t GetScriptID() const { return _script_id;  }
 private:
 	std::string _name;
 	std::string _filename;
