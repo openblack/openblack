@@ -78,7 +78,7 @@ void LandBlock::Load(void* block, size_t block_size)
 {
 	if (block_size != sizeof(LH3DLandBlock))
 	{
-		throw new std::runtime_error("LandBlock size does not match struct size.");
+		throw std::runtime_error("LandBlock size does not match struct size.");
 	}
 
 	auto lhBlock = static_cast<LH3DLandBlock*>(block);
@@ -180,7 +180,7 @@ std::vector<LandVertex> LandBlock::buildVertexList(LandIsland& island)
 				//           #
 				verts.push_back(make_vert(pBL, glm::vec3(1, 0, 0), blMat, tlMat, trMat, bl));
 				verts.push_back(make_vert(pTL, glm::vec3(0, 1, 0), blMat, tlMat, trMat, tl));
-				verts.push_back(make_vert(pTR, glm::vec3(0, 0, 1), blMat, tlMat, trMat, tr));	
+				verts.push_back(make_vert(pTR, glm::vec3(0, 0, 1), blMat, tlMat, trMat, tr));
 
 				// TR/BR/BL    #
 				//           # #
