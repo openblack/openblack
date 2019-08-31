@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <Common/Logging.h>
 #include <Graphics/OpenGL.h>
 #include <glm/glm.hpp>
 #include <map>
@@ -55,6 +56,7 @@ class ShaderProgram
 	std::map<std::string, GLint> _uniforms;
 
 	GLuint createSubShader(GLenum type, const std::string& source);
+	static inline std::shared_ptr<spdlog::logger> _logger = Logging::CreateLogger(__FILE__);
 };
 
 } // namespace Graphics
