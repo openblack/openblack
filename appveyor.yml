@@ -1,0 +1,36 @@
+# global environment variables
+environment:
+  global:
+    # path to source directory of project to be built
+    PROJECT_DIR: .
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    GENERATOR_ARCH: x64
+
+  # test matrix
+  matrix:
+
+    - TOOLCHAIN: "vs-16-2019-win64-cxx17"
+      GENERATOR: "Visual Studio 16 2019"
+
+    - TOOLCHAIN: "mingw-cxx17"
+      GENERATOR: "MinGW Makefiles"
+      MINGW_PATH: "C:\\mingw-w64\\x86_64-8.1.0-posix-seh-rt_v6-rev0\\mingw64\\bin"
+
+install:
+  # Remove entry with sh.exe from PATH to fix error with MinGW toolchain
+  # (For MinGW make to work correctly sh.exe must NOT be in your path)
+  # * http://stackoverflow.com/a/3870338/2288008
+  - cmd: set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
+
+  # set MINGW path
+  - cmd: IF DEFINED MINGW_PATH set PATH=%MINGW_PATH%;%PATH%
+
+  # Visual Studio 15 2017: Mimic behavior of older versions
+  - cmd: set VS150COMNTOOLS=C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools
+
+build_script:
+  - cmd: cmake -H. -B_build_%TOOLCHAIN%_Debug -G "%GENERATOR%" -A %GENERATOR_ARCH% -DCMAKE_INSTALL_PREFIX=%cd%\_install_%TOOLCHAIN%_DEBUG -DCMAKE_TOOLCHAIN_FILE="%cd%\ci\toolchains\%TOOLCHAIN%.cmake" -DHUNTER_ENABLED=YES
+  - cmd: cmake --build _build_%TOOLCHAIN%_Debug --config Debug
+  #- cmd: cmake -H. -B_build_%TOOLCHAIN%_Release -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX=%cd%\_install_%TOOLCHAIN%_Release -DCMAKE_TOOLCHAIN_FILE="%cd%\toolchains\%TOOLCHAIN%.cmake" -DHUNTER_ENABLED=YES
+  #- cmd: cmake --build _build_%TOOLCHAIN%_Release --config Release
+
