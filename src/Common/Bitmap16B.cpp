@@ -24,6 +24,7 @@
 #include <cassert>
 #include <sstream>
 #include <stdexcept>
+#include <cstring> // memset, memcpy
 
 using namespace OpenBlack;
 
@@ -31,7 +32,7 @@ Bitmap16B::Bitmap16B(unsigned int width, unsigned int height):
     _width(width), _height(height)
 {
 	_data = new uint16_t[width * height];
-	std::memset(_data, 0x00, width * height * 2);
+	memset(_data, 0x00, width * height * 2);
 }
 
 Bitmap16B::Bitmap16B(const void* fileData, size_t size)
@@ -42,7 +43,7 @@ Bitmap16B::Bitmap16B(const void* fileData, size_t size)
 	_height = *((uint32_t*)fileData + 2);
 
 	_data = new uint16_t[_width * _height];
-	std::memcpy(_data, (uint32_t*)fileData + 4, _width * _height * 2);
+	memcpy(_data, (uint32_t*)fileData + 4, _width * _height * 2);
 }
 
 Bitmap16B::~Bitmap16B()
