@@ -7,6 +7,7 @@ services:
 env:
   global:
     - RUN_TESTS: false
+    - HUNTER_ENABLED: "NO"
 
 matrix:
   include:
@@ -37,6 +38,7 @@ matrix:
         BUILD_ARCH=amd64
         TOOLCHAIN=linux-mingw-w64-cxx17
         BUILD_PACKAGES="mingw-w64 wine-stable"
+        HUNTER_ENABLED=YES
 
 before_install:
   # use the Dockerfile.<distro>.template file for building the image with sed magic
@@ -57,5 +59,6 @@ script: |
   -e BUILD_ARCH="$BUILD_ARCH" \
   -e TOOLCHAIN="$TOOLCHAIN" \
   -e RUN_TESTS="$RUN_TESTS" \
+  -e HUNTER_ENABLED="$HUNTER_ENABLED" \
   -it openblack-devel_${TOOLCHAIN} ci/travis.$BUILD_FLAVOR.sh
 
