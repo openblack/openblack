@@ -1,0 +1,24 @@
+language: cpp
+dist: bionic
+compiler: gcc
+
+before_install:
+  - sudo apt purge --auto-remove cmake
+  - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo apt-key add -
+  - sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main'
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+  - sudo apt update -q
+  - sudo apt install -y cmake freeglut3-dev libsdl2-dev libglm-dev libglew-dev gcc-9 g++-9
+
+before_script:
+  - export CC=gcc-9
+  - export CXX=g++-9
+  - cmake --version
+  - g++ --version
+  - mkdir -p build
+  - cd build
+  - cmake ..
+
+
+script:
+  - cmake --build .
