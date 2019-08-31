@@ -37,7 +37,7 @@ matrix:
         BUILD_RELEASE=disco
         BUILD_ARCH=amd64
         TOOLCHAIN=linux-mingw-w64-cxx17
-        BUILD_PACKAGES="mingw-w64 wine-stable"
+        BUILD_PACKAGES="mingw-w64 wine-stable ca-certificates"
         HUNTER_ENABLED=YES
 
 before_install:
