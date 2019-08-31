@@ -64,6 +64,10 @@ find_package(SDL2 REQUIRED)
 find_package(GLEW2 REQUIRED)
 find_package(GLM REQUIRED)
 
+# Add dependencies from the external directory
+set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
+add_subdirectory("${EXTERNAL_DIR}/spdlog")
+
 # Include git hash in source
 include(cmake/GetGitRevisionDescription.cmake)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
