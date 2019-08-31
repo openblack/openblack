@@ -39,7 +39,11 @@ add_executable(openblack ${OPENBLACK_SOURCES} ${OPENBLACK_HEADERS} "${CMAKE_CURR
 set_target_properties(openblack PROPERTIES LINKER_LANGUAGE CXX)
 
 target_include_directories(openblack PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-target_link_libraries(openblack PRIVATE ScriptLibrary SDL2::Main ${OPENGL_LIBRARIES} ${GLEW_LIBRARY})
+if(HUNTER_ENABLED)
+	target_link_libraries(openblack PRIVATE ScriptLibrary SDL2::SDL2Main ${OPENGL_LIBRARIES} glew::glew)
+else()
+	target_link_libraries(openblack PRIVATE ScriptLibrary SDL2::Main ${OPENGL_LIBRARIES} ${GLEW_LIBRARY})
+endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	target_link_libraries(openblack PRIVATE stdc++fs)
