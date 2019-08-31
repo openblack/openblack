@@ -409,8 +409,8 @@ void Game::guiLoop()
 
 	ImGui::Separator();
 
-	ImGui::Text("Block Count: %d", _landIsland->GetBlocks().size());
-	ImGui::Text("Country Count: %d", _landIsland->GetCountries().size());
+	ImGui::Text("Block Count: %zu", _landIsland->GetBlocks().size());
+	ImGui::Text("Country Count: %zu", _landIsland->GetCountries().size());
 
 	ImGui::Separator();
 
