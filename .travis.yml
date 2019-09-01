@@ -13,6 +13,15 @@ matrix:
   include:
     # Linux {
 
+    #   Ubuntu 18.04 bionic
+    - os: linux
+      env: >
+        BUILD_FLAVOR=ubuntu
+        BUILD_RELEASE=bionic
+        BUILD_ARCH=amd64
+        BUILD_PACKAGES="g++"
+        TOOLCHAIN=gcc-cxx17
+
     #   Ubuntu 19.04 disco
     - os: linux
       env: >
