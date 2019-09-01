@@ -55,6 +55,11 @@ namespace Video
 class VideoPlayer;
 }
 
+namespace Entities
+{
+class Registry;
+}
+
 class Game
 {
   public:
@@ -99,6 +104,7 @@ class Game
 	std::unique_ptr<Water> _water;
 	std::unique_ptr<LHScriptX::Script> _scriptx;
 	std::unique_ptr<LHVM::LHVM> _lhvm;
+	std::unique_ptr<Entities::Registry> _entityRegistry;
 
 	bool _wireframe;
 	bool _waterDebug;
