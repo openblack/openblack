@@ -41,8 +41,10 @@ set_target_properties(openblack PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(openblack PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 target_link_libraries(openblack PRIVATE ScriptLibrary SDL2::Main ${OPENGL_LIBRARIES} ${GLEW_LIBRARY})
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT HAS_FILESYSTEM)
 	target_link_libraries(openblack PRIVATE stdc++fs)
+else()
+	target_compile_definitions(openblack PRIVATE HAS_FILESYSTEM)
 endif()
 
 if (WIN32)

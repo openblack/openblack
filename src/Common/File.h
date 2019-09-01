@@ -20,13 +20,21 @@
 
 #pragma once
 
+#ifdef HAS_FILESYSTEM
+#include <filesystem>
+#else
 #include <experimental/filesystem>
+#endif // HAS_FILESYSTEM
 #include <string>
 #include <cstdio>
 #include <cassert>
 #include <unordered_map>
 
+#ifdef HAS_FILESYSTEM
+namespace fs = std::filesystem;
+#else
 namespace fs = std::experimental::filesystem;
+#endif // HAS_FILESYSTEM
 
 namespace OpenBlack
 {

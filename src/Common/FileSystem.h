@@ -21,14 +21,11 @@
 #pragma once
 
 #include <Common/File.h>
-#include <experimental/filesystem>
 #include <cstddef>
 #include <list>
 #include <memory>
 #include <string>
 #include <vector>
-
-namespace fs = std::experimental::filesystem;
 
 namespace OpenBlack
 {
