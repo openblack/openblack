@@ -79,6 +79,7 @@ class Game
 	FileSystem& GetFileSystem() { return *_fileSystem; }
 	Graphics::ShaderManager& GetShaderManager() { return *_shaderManager; }
 	Entities::Registry& GetEntityRegistry() { return *_entityRegistry; }
+	LandIsland& GetLandIsland() { return *_landIsland; }
 
 	static Game* instance()
 	{
