@@ -78,6 +78,7 @@ class Game
 	MeshPack& GetMeshPack() { return *_meshPack; }
 	FileSystem& GetFileSystem() { return *_fileSystem; }
 	Graphics::ShaderManager& GetShaderManager() { return *_shaderManager; }
+	Entities::Registry& GetEntityRegistry() { return *_entityRegistry; }
 
 	static Game* instance()
 	{
