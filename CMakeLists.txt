@@ -55,7 +55,7 @@ function(check_submodules_present)
         endif()
     endforeach()
 endfunction()
-# check_submodules_present()
+check_submodules_present()
 
 # check compiler for various features
 include(CheckIncludeFileCXX)
