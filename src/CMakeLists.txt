@@ -26,7 +26,7 @@ if (WIN32)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /nologo")
 
 		# fast FP
-		add_definitions(/fp:fast)
+		add_compile_options(/fp:fast)
 
 		set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /SAFESEH:NO")
 		set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "${CMAKE_EXE_LINKER_FLAGS_MINSIZEREL} /SAFESEH:NO")
@@ -40,9 +40,9 @@ set_target_properties(openblack PROPERTIES LINKER_LANGUAGE CXX)
 
 target_include_directories(openblack PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 if(HUNTER_ENABLED)
-	target_link_libraries(openblack PRIVATE ScriptLibrary SDL2::SDL2 SDL2::SDL2main ${OPENGL_LIBRARIES} glew::glew glm)
+	target_link_libraries(openblack PRIVATE ScriptLibrary SDL2::SDL2 SDL2::SDL2main ${OPENGL_LIBRARIES} glew::glew glm spdlog::spdlog)
 else()
-	target_link_libraries(openblack PRIVATE ScriptLibrary SDL2::Main ${OPENGL_LIBRARIES} ${GLEW_LIBRARY})
+	target_link_libraries(openblack PRIVATE ScriptLibrary SDL2::Main ${OPENGL_LIBRARIES} ${GLEW_LIBRARY} spdlog::spdlog)
 endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT HAS_FILESYSTEM)
