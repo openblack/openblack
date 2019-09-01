@@ -300,6 +300,7 @@ void Game::drawScene(const Camera& camera, bool drawWater)
 	objectShader->SetUniformValue("u_viewProjection", camera.GetViewProjectionMatrix());
 	objectShader->SetUniformValue("u_modelTransform", modelMatrix);
 	_testModel->Draw(objectShader);
+	_entityRegistry->DrawModels(camera, *_shaderManager);
 
 	glDisable(GL_CULL_FACE);
 }
