@@ -45,8 +45,10 @@ else()
 	target_link_libraries(openblack PRIVATE ScriptLibrary SDL2::Main ${OPENGL_LIBRARIES} ${GLEW_LIBRARY})
 endif()
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT HAS_FILESYSTEM)
 	target_link_libraries(openblack PRIVATE stdc++fs)
+else()
+	target_compile_definitions(openblack PRIVATE HAS_FILESYSTEM)
 endif()
 
 if (WIN32)
