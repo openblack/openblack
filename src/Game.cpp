@@ -466,6 +466,7 @@ void Game::SetGamePath(const std::string &gamePath)
 	}
 	if (!fs::exists(gamePath))
 	{
+		std::clog << "GamePath does not exist: '" << gamePath << "'" << std::endl;
 		return;
 	}
 	sGamePath = gamePath;
