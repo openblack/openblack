@@ -36,6 +36,9 @@
 #include <3D/Water.h>
 #include <Common/CmdLineArgs.h>
 #include <Common/FileSystem.h>
+#include <Entities/Registry.h>
+#include <Entities/Components/Model.h>
+#include <Entities/Components/Transform.h>
 #include <Graphics/DebugDraw.h>
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/ShaderManager.h>
@@ -78,7 +81,8 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 Game::Game(int argc, char** argv):
     _running(true), _wireframe(false), _waterDebug(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f), _smallBumpmapStrength(1.0f),
     _fileSystem(std::make_unique<FileSystem>()),
-    _shaderManager(std::make_unique<ShaderManager>())
+    _shaderManager(std::make_unique<ShaderManager>()),
+    _entityRegistry(std::make_unique<Entities::Registry>())
 {
 	sInstance = this;
 
