@@ -28,7 +28,7 @@ namespace OpenBlack
 
 File::File() {}
 
-File::File(const std::filesystem::path& path, FileMode mode):
+File::File(const fs::path& path, FileMode mode):
     _file(nullptr)
 {
 	Open(path, mode);
@@ -39,7 +39,7 @@ File::~File()
 	Close();
 }
 
-void File::Open(const std::filesystem::path& path, FileMode mode)
+void File::Open(const fs::path& path, FileMode mode)
 {
 	Close();
 

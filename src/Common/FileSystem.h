@@ -21,11 +21,14 @@
 #pragma once
 
 #include <Common/File.h>
-#include <filesystem>
+#include <experimental/filesystem>
+#include <cstddef>
 #include <list>
 #include <memory>
 #include <string>
 #include <vector>
+
+namespace fs = std::experimental::filesystem;
 
 namespace OpenBlack
 {
@@ -36,21 +39,21 @@ FileSystem
 class FileSystem
 {
   public:
-	std::unique_ptr<File> Open(const std::filesystem::path& path, FileMode mode);
-	bool Exists(const std::filesystem::path& path);
+	std::unique_ptr<File> Open(const fs::path& path, FileMode mode);
+	bool Exists(const fs::path& path);
 
-	void SetGamePath(const std::filesystem::path& path) { _gamePath = path; }
-	const std::filesystem::path& GetGamePath() const { return _gamePath; }
+	void SetGamePath(const fs::path& path) { _gamePath = path; }
+	const fs::path& GetGamePath() const { return _gamePath; }
 
-	std::vector<std::filesystem::path> EnumFiles(const std::filesystem::path& directory);
+	std::vector<fs::path> EnumFiles(const fs::path& directory);
 
 	void Delete();
 	void Rename();
 
-	std::vector<std::byte> ReadAll(const std::filesystem::path& path);
+	std::vector<std::byte> ReadAll(const fs::path& path);
 
   private:
-	std::filesystem::path _gamePath;
+	fs::path _gamePath;
 };
 
 } // namespace OpenBlack
