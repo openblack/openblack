@@ -1,8 +1,16 @@
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+option(HUNTER_ENABLED "Enable Hunter package manager support" OFF)
+include(cmake/HunterGate.cmake)
+
+HunterGate(
+  URL "https://github.com/ruslo/hunter/archive/v0.23.214.tar.gz"
+  SHA1 "e14bc153a7f16d6a5eeec845fb0283c8fad8c358"
+)
 
 project(openblack)
 
@@ -49,12 +57,34 @@ function(check_submodules_present)
 endfunction()
 # check_submodules_present()
 
+# check compiler for various features
+include(CheckIncludeFileCXX)
+CHECK_INCLUDE_FILE_CXX(filesystem HAS_FILESYSTEM)
+if(HAS_FILESYSTEM)
+	message("compiler has CXX header <filesystem>")
+else()
+	message("compiler has no CXX header <filesystem>, need to use <experimental/filesystem>")
+endif()
+
 # Dependencies
+hunter_add_package(SDL2)
+hunter_add_package(glew)
+hunter_add_package(glm)
 find_package(OpenGL REQUIRED)
-find_package(SDL2 REQUIRED)
-find_package(GLEW2 REQUIRED)
-find_package(GLM REQUIRED)
 find_package(EnTT REQUIRED)
+if(HUNTER_ENABLED)
+	find_package(SDL2 CONFIG REQUIRED)
+	find_package(glew CONFIG REQUIRED)
+	find_package(glm REQUIRED)
+else()
+	find_package(SDL2 REQUIRED)
+	find_package(GLEW2 REQUIRED)
+	find_package(GLM REQUIRED)
+endif()
+
+# Add dependencies from the external directory
+set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
+add_subdirectory("${EXTERNAL_DIR}/spdlog")
 
 # Include git hash in source
 include(cmake/GetGitRevisionDescription.cmake)
@@ -66,9 +96,11 @@ set(GLEW_USE_STATIC_LIBS true)
 if(OPENGL_INCLUDE_DIR)
 	include_directories("${OPENGL_INCLUDE_DIR}")
 endif()
-include_directories("${SDL2_INCLUDE_DIR}")
-include_directories("${GLEW_INCLUDE_DIR}")
-include_directories("${GLM_INCLUDE_DIRS}")
+if(NOT HUNTER_ENABLED)
+	include_directories("${SDL2_INCLUDE_DIR}")
+	include_directories("${GLEW_INCLUDE_DIR}")
+	include_directories("${GLM_INCLUDE_DIRS}")
+endif()
 
 add_subdirectory(components/ScriptLibrary)
 include(src/CMakeLists.txt)

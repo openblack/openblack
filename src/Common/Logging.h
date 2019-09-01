@@ -20,37 +20,13 @@
 
 #pragma once
 
-#include <Common/File.h>
-#include <cstddef>
-#include <list>
-#include <memory>
-#include <string>
-#include <vector>
+#include <spdlog/spdlog.h>
 
 namespace OpenBlack
 {
-
-/*
-FileSystem
- */
-class FileSystem
+class Logging
 {
-  public:
-	std::unique_ptr<File> Open(const fs::path& path, FileMode mode);
-	bool Exists(const fs::path& path);
-
-	void SetGamePath(const fs::path& path) { _gamePath = path; }
-	const fs::path& GetGamePath() const { return _gamePath; }
-
-	std::vector<fs::path> EnumFiles(const fs::path& directory);
-
-	void Delete();
-	void Rename();
-
-	std::vector<std::byte> ReadAll(const fs::path& path);
-
-  private:
-	fs::path _gamePath;
+public:
+  static std::shared_ptr<spdlog::logger> CreateLogger(std::string sourceFilePath);
 };
-
 } // namespace OpenBlack
