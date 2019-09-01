@@ -20,11 +20,13 @@
 
 #pragma once
 
-#include <filesystem>
+#include <experimental/filesystem>
 #include <string>
 #include <cstdio>
 #include <cassert>
 #include <unordered_map>
+
+namespace fs = std::experimental::filesystem;
 
 namespace OpenBlack
 {
@@ -46,10 +48,10 @@ class File
 {
   public:
 	File();
-	File(const std::filesystem::path& filename, FileMode mode);
+	File(const fs::path& filename, FileMode mode);
 	~File();
 
-	void Open(const std::filesystem::path& filename, FileMode mode);
+	void Open(const fs::path& filename, FileMode mode);
 	void Close();
 
 	template <typename T>
@@ -85,7 +87,7 @@ class LHSegmentedFile
 	};
 
   public:
-	LHSegmentedFile(const std::filesystem::path& filename, FileMode mode);
+	LHSegmentedFile(const fs::path& filename, FileMode mode);
 
   protected:
 	std::unique_ptr<File> _file;
