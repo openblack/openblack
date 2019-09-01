@@ -4,6 +4,14 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+option(HUNTER_ENABLED "Enable Hunter package manager support" OFF)
+include(cmake/HunterGate.cmake)
+
+HunterGate(
+  URL "https://github.com/ruslo/hunter/archive/v0.23.214.tar.gz"
+  SHA1 "e14bc153a7f16d6a5eeec845fb0283c8fad8c358"
+)
+
 project(openblack)
 
 # Set C++17 Standard
@@ -59,10 +67,19 @@ else()
 endif()
 
 # Dependencies
+hunter_add_package(SDL2)
+hunter_add_package(glew)
+hunter_add_package(glm)
 find_package(OpenGL REQUIRED)
-find_package(SDL2 REQUIRED)
-find_package(GLEW2 REQUIRED)
-find_package(GLM REQUIRED)
+if(HUNTER_ENABLED)
+	find_package(SDL2 CONFIG REQUIRED)
+	find_package(glew CONFIG REQUIRED)
+	find_package(glm REQUIRED)
+else()
+	find_package(SDL2 REQUIRED)
+	find_package(GLEW2 REQUIRED)
+	find_package(GLM REQUIRED)
+endif()
 
 # Add dependencies from the external directory
 set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
@@ -78,9 +95,11 @@ set(GLEW_USE_STATIC_LIBS true)
 if(OPENGL_INCLUDE_DIR)
 	include_directories("${OPENGL_INCLUDE_DIR}")
 endif()
-include_directories("${SDL2_INCLUDE_DIR}")
-include_directories("${GLEW_INCLUDE_DIR}")
-include_directories("${GLM_INCLUDE_DIRS}")
+if(NOT HUNTER_ENABLED)
+	include_directories("${SDL2_INCLUDE_DIR}")
+	include_directories("${GLEW_INCLUDE_DIR}")
+	include_directories("${GLM_INCLUDE_DIRS}")
+endif()
 
 add_subdirectory(components/ScriptLibrary)
 include(src/CMakeLists.txt)
