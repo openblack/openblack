@@ -49,6 +49,15 @@ function(check_submodules_present)
 endfunction()
 # check_submodules_present()
 
+# check compiler for various features
+include(CheckIncludeFileCXX)
+CHECK_INCLUDE_FILE_CXX(filesystem HAS_FILESYSTEM)
+if(HAS_FILESYSTEM)
+	message("compiler has CXX header <filesystem>")
+else()
+	message("compiler has no CXX header <filesystem>, need to use <experimental/filesystem>")
+endif()
+
 # Dependencies
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
