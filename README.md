@@ -36,7 +36,7 @@ Clone the code using: `git clone --recursive https://github.com/openblack/openbl
 
 ## Linux
 
-Building has been tested on Ubuntu 19.04 and works fine, however **GCC 9.1.0+ is required** due to bugs in earlier versions with C++17 std.
+Building has been tested on Ubuntu 19.04 and works fine, however GCC7 (e.g. Ubuntu 18.04) should suffice for building.
 
 Dependencies can be installed simply from apt:
 
