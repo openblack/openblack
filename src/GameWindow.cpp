@@ -114,6 +114,13 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 	// initalize glew
 	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
+	#ifdef GLEW_ERROR_NO_GLX_DISPLAY
+	if (GLEW_ERROR_NO_GLX_DISPLAY == err)
+	{
+		std::clog << "GLEW couldn't open GLX display" << std::endl;
+	}
+	else
+	#endif
 	if (GLEW_OK != err)
 	{
 		std::stringstream error;
