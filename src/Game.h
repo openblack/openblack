@@ -22,8 +22,6 @@
 
 #include "GameWindow.h"
 
-#include <Common/Logging.h>
-
 #include <LHVM/LHVM.h>
 #include <glm/glm.hpp>
 #include <string>
@@ -130,6 +128,5 @@ class Game
 	bool _running;
 
 	void guiLoop();
-	static inline std::shared_ptr<spdlog::logger> _logger = Logging::CreateLogger(__FILE__);
 };
 } // namespace OpenBlack

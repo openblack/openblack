@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <glm/gtc/type_ptr.hpp>
+#include <spdlog/spdlog.h>
 
 using OpenBlack::Graphics::ShaderProgram;
 
@@ -59,7 +60,7 @@ ShaderProgram::ShaderProgram(const std::string& vertexSource, const std::string&
 
 		char* infoLog = new char[infoLogLen];
 		glGetProgramInfoLog(_program, infoLogLen, &infoLogLen, infoLog);
-		_logger->error("There are linking errors: {}", infoLog);
+		spdlog::error("There are linking errors: {}", infoLog);
 		delete[] infoLog;
 
 		glDeleteProgram(_program);
@@ -156,7 +157,7 @@ GLuint ShaderProgram::createSubShader(GLenum type, const std::string& source)
 
 		char* infoLog = new char[infoLogLen];
 		glGetShaderInfoLog(shader, infoLogLen, &infoLogLen, infoLog);
-		_logger->error("There are compile errors: {}", infoLog);
+		spdlog::error("There are compile errors: {}", infoLog);
 		delete[] infoLog;
 
 		glDeleteShader(shader);

@@ -62,6 +62,8 @@
 #include <imgui/imgui_impl_opengl3.h>
 #include <imgui/imgui_impl_sdl.h>
 
+#include <spdlog/spdlog.h>
+
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
 using namespace OpenBlack::LHScriptX;
@@ -73,7 +75,7 @@ Game* Game::sInstance = nullptr;
 
 void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 {
-	fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+	spdlog::debug("GL CALLBACK: {} type = {0:x}, severity = {0:x}, message = {}\n",
 	        (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
 	        type, severity, message);
 }
@@ -103,7 +105,7 @@ Game::Game(int argc, char** argv):
 	_window->SetSwapInterval(1);
 
 	_fileSystem->SetGamePath(GetGamePath());
-	_logger->debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
+	spdlog::debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
 
 	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(MessageCallback, 0);
@@ -503,7 +505,7 @@ void Game::SetGamePath(const std::string &gamePath)
 	}
 	if (!fs::exists(gamePath))
 	{
-		std::clog << "GamePath does not exist: '" << gamePath << "'" << std::endl;
+		spdlog::error("GamePath does not exist: '{}'", gamePath);
 		return;
 	}
 	sGamePath = gamePath;
@@ -525,7 +527,7 @@ const std::string& Game::GetGamePath()
 			return sGamePath;
 		}
 
-		_logger->error("Failed to find the GameDir registry value, game not installed.");
+		spdlog::error("Failed to find the GameDir registry value, game not installed.");
 #endif // _WIN32
 
 		// no key? guess
@@ -535,7 +537,7 @@ const std::string& Game::GetGamePath()
 		sGamePath = std::string("/mnt/windows/Program Files (x86/Lionhead Studios Ltd/Black & White");
 #endif // _WIN32
 
-		_logger->debug("Guessing the GamePath using \"{}\".", sGamePath);
+		spdlog::debug("Guessing the GamePath using \"{}\".", sGamePath);
 	}
 
 	return sGamePath;

@@ -24,6 +24,7 @@
 #include <sstream>
 #define GLEW_STATIC
 #include <GL/glew.h>
+#include <spdlog/spdlog.h>
 
 using namespace OpenBlack;
 
@@ -38,9 +39,9 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 	SDL_VERSION(&compiledVersion);
 	SDL_GetVersion(&linkedVersion);
 
-	std::clog << "Initializing SDL..." << std::endl;
-	std::clog << "SDL Version/Compiled " << uint32_t(compiledVersion.major) << "." << uint32_t(compiledVersion.minor) << "." << uint32_t(compiledVersion.patch) << "\n";
-	std::clog << "SDL Version/Linked " << uint32_t(linkedVersion.major) << "." << uint32_t(linkedVersion.minor) << "." << uint32_t(linkedVersion.patch) << "\n";
+	spdlog::info("Initializing SDL...");
+	spdlog::info("SDL Version/Compiled {}.{}.{}", compiledVersion.major, compiledVersion.minor, compiledVersion.patch);
+	spdlog::info("SDL Version/Linked {}.{}.{}", linkedVersion.major, linkedVersion.minor, linkedVersion.patch);
 
 	// Initialize SDL
 	if (SDL_WasInit(0) == 0)
@@ -103,13 +104,13 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 		_glcontext = std::unique_ptr<SDL_GLContext, SDLDestroyer>(&context);
 	}
 
-	std::clog << "OpenGL context successfully created." << std::endl;
-
+	spdlog::info("OpenGL context successfully created.");
+	
 	int majorVersion, minorVersion;
 	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &majorVersion);
 	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minorVersion);
 
-	std::clog << "OpenGL version: " << majorVersion << "." << minorVersion << std::endl;
+	spdlog::info("OpenGL version: {}.{}", majorVersion, minorVersion);
 
 	// initalize glew
 	glewExperimental = GL_TRUE;
@@ -117,7 +118,7 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 	#ifdef GLEW_ERROR_NO_GLX_DISPLAY
 	if (GLEW_ERROR_NO_GLX_DISPLAY == err)
 	{
-		std::clog << "GLEW couldn't open GLX display" << std::endl;
+		spdlog::warn("GLEW couldn't open GLX display");
 	}
 	else
 	#endif
@@ -128,7 +129,7 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 		throw std::runtime_error(error.str());
 	}
 
-	std::cout << "Using GLEW " << glewGetString(GLEW_VERSION) << std::endl;
+	spdlog::info("Using GLEW {0}", glewGetString(GLEW_VERSION));
 }
 
 SDL_Window* GameWindow::GetHandle() const

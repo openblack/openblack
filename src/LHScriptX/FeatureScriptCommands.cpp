@@ -19,8 +19,8 @@
  */
 
 #include <LHScriptX/FeatureScriptCommands.h>
-#include <iostream>
 #include <Game.h>
+#include <spdlog/spdlog.h>
 
 using namespace OpenBlack::LHScriptX;
 
@@ -143,7 +143,7 @@ const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signa
 void FeatureScriptCommands::Version(const ScriptCommandContext& ctx)
 {
 	float version = ctx.GetParameters()[0].GetFloat();
-	printf("[LHScriptX] Land Version set to: %f\n", version);
+	spdlog::debug("Land version set to: {}", version);
 }
 
 void FeatureScriptCommands::CreateMist(const ScriptCommandContext& ctx)
