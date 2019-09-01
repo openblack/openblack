@@ -20,7 +20,19 @@
 
 #include <LHScriptX/FeatureScriptCommands.h>
 #include <Game.h>
+#include <AllMeshes.h>
+#include <3D/LandIsland.h>
+#include <Entities/Components/Model.h>
+#include <Entities/Components/Transform.h>
+#include <Entities/Components/Villager.h>
+#include <Entities/Components/Abode.h>
+#include <Entities/Registry.h>
 #include <spdlog/spdlog.h>
+#include <cmath>
+#include <iostream>
+#include <random>
+#include <tuple>
+
 
 using namespace OpenBlack::LHScriptX;
 
@@ -140,6 +152,33 @@ const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signa
 } };
 // clang-format on
 
+glm::vec2 GetXYPosFromString(const std::string& str)
+{
+	const auto pos = str.find_first_of(',');
+	const auto y   = std::stof(str.substr(pos + 1));
+	const auto x   = std::stof(str.substr(0, pos));
+	return glm::vec2(x, y);
+}
+
+std::tuple<VillageEthnicities, VillagerTypes> GetVillagerEthnicityAndType(const std::string& villagerEthnicityWithType)
+{
+	const auto pos          = villagerEthnicityWithType.find_first_of('_');
+	const auto ethnicityStr = villagerEthnicityWithType.substr(0, pos);
+	const auto typeStr      = villagerEthnicityWithType.substr(pos + 1);
+
+	try
+	{
+
+		const auto ethnicity = VillageEthnicitiesLookup.at(ethnicityStr);
+		const auto type      = VillagerTypesLookup.at(typeStr);
+		return std::make_tuple(ethnicity, type);
+	}
+	catch (std::out_of_range& ex)
+	{
+		throw std::runtime_error("Could not recognize either villager ethnicity or type");
+	}
+}
+
 void FeatureScriptCommands::Version(const ScriptCommandContext& ctx)
 {
 	float version = ctx.GetParameters()[0].GetFloat();
@@ -183,7 +222,45 @@ void FeatureScriptCommands::SetTownCongregationPos(const ScriptCommandContext& c
 
 void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	Game& game                  = ctx.GetGame();
+	const auto& params          = ctx.GetParameters();
+	auto& island                = game.GetLandIsland();
+	auto& registry              = game.GetEntityRegistry();
+	const auto entity           = registry.Create();
+	const uint32_t townId       = params[0].GetNumber();
+	const auto position         = GetXYPosFromString(params[1].GetString());
+	const auto& abodeType       = params[2].GetString();
+	float rotation              = params[3].GetNumber();
+	float size                  = params[4].GetNumber();
+	const uint32_t foodAmount   = params[5].GetNumber();
+	const uint32_t woodAmount   = params[6].GetNumber();
+	uint32_t meshId             = 0;
+
+	if (abodeType == "NORSE_ABODE_STORAGE_PIT")
+		meshId = MESH_LIST::MSH_B_NORS_STORAGE_PIT;
+	else if (abodeType == "NORSE_ABODE_GRAVEYARD")
+		meshId = MESH_LIST::MSH_B_NORS_GRAVEYARD;
+	else if (abodeType == "NORSE_ABODE_CRECHE")
+		meshId = MESH_LIST::MSH_B_NORS_CRECHE;
+	else if (abodeType == "NORSE_ABODE_A")
+		meshId = MESH_LIST::MSH_B_NORS_1;
+	else if (abodeType == "NORSE_ABODE_B")
+		meshId = MESH_LIST::MSH_B_NORS_2;
+	else if (abodeType == "NORSE_ABODE_C")
+		meshId = MESH_LIST::MSH_B_NORS_3;
+	else if (abodeType == "NORSE_ABODE_D")
+		meshId = MESH_LIST::MSH_B_NORS_4;
+	else if (abodeType == "NORSE_ABODE_E")
+		meshId = MESH_LIST::MSH_B_NORS_2_A;
+	else if (abodeType == "NORSE_ABODE_F")
+		meshId = MESH_LIST::MSH_B_NORS_2;
+
+	float radians = -(rotation * 0.001);
+	size          = (size * 0.001);
+
+	registry.Assign<Abode>(entity, townId, foodAmount, woodAmount);
+	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
+	registry.Assign<Model>(entity, meshId, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::CreatePlannedAbode(const ScriptCommandContext& ctx)
@@ -193,7 +270,27 @@ void FeatureScriptCommands::CreatePlannedAbode(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateTownCentre(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	Game& game                  = ctx.GetGame();
+	const auto& params          = ctx.GetParameters();
+	auto& island                = game.GetLandIsland();
+	auto& registry              = game.GetEntityRegistry();
+	const auto entity           = registry.Create();
+	const auto associatedTownId = params[0].GetNumber();
+	const auto position         = GetXYPosFromString(params[1].GetString());
+	const auto& centreType      = params[2].GetString();
+	float rotation              = params[3].GetNumber();
+	float size                  = params[4].GetNumber();
+	//const auto unknown          = params[5].GetNumber();
+	uint32_t meshId = 0;
+
+	if (centreType == "NORSE_ABODE_TOWN_CENTRE")
+		meshId = MESH_LIST::MSH_B_NORS_VILLAGECENTRE;
+
+	float radians = -(rotation * 0.001);
+	size          = (size * 0.001);
+
+	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
+	registry.Assign<Model>(entity, meshId, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::CreateTownSpell(const ScriptCommandContext& ctx)
@@ -238,7 +335,87 @@ void FeatureScriptCommands::CreateSpecialTownVillager(const ScriptCommandContext
 
 void FeatureScriptCommands::CreateVillagerPos(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	Game& game          = ctx.GetGame();
+	const auto& params  = ctx.GetParameters();
+	auto& island        = game.GetLandIsland();
+	const auto position = GetXYPosFromString(params[0].GetString());
+	auto& registry      = game.GetEntityRegistry();
+	const auto entity   = registry.Create();
+	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, 1.0f, 3.14159f, 0.0f, 0.0f);
+	uint32_t health       = 100;
+	uint32_t age          = 18;
+	uint32_t hunger       = 100;
+	auto ethnicityAndType = GetVillagerEthnicityAndType(params[2].GetString());
+	auto ethnicity        = std::get<0>(ethnicityAndType);
+	auto type             = std::get<1>(ethnicityAndType);
+	auto sex              = (type == VillagerTypes::HOUSEWIFE) ? VillagerSex::FEMALE : VillagerSex::MALE;
+	registry.Assign<Villager>(entity, health, age, hunger, sex, ethnicity, type);
+
+	MESH_LIST maleMesh;
+	MESH_LIST femaleMesh;
+
+	switch (ethnicity)
+	{
+	case VillageEthnicities::AZTEC:
+	{
+		maleMesh   = MESH_LIST::MSH_P_AZTC_M_A_1;
+		femaleMesh = MESH_LIST::MSH_P_AZTC_F_A_1;
+	}
+	break;
+	case VillageEthnicities::CELTIC:
+	{
+		maleMesh   = MESH_LIST::MSH_P_CELT_M_A_1;
+		femaleMesh = MESH_LIST::MSH_P_CELT_F_A_1;
+	}
+	break;
+	case VillageEthnicities::EGYPTIAN:
+	{
+		maleMesh   = MESH_LIST::MSH_P_EGPT_M_A_1;
+		femaleMesh = MESH_LIST::MSH_P_EGPT_F_A_1;
+	}
+	break;
+	case VillageEthnicities::GREEK:
+	{
+		maleMesh   = MESH_LIST::MSH_P_GREK_M_A_1;
+		femaleMesh = MESH_LIST::MSH_P_GREK_F_A_1;
+	}
+	break;
+	case VillageEthnicities::INDIAN:
+	{
+		maleMesh   = MESH_LIST::MSH_P_AZTC_M_A_1;
+		femaleMesh = MESH_LIST::MSH_P_AZTC_F_A_1;
+	}
+	break;
+	case VillageEthnicities::JAPANESE:
+	{
+		maleMesh   = MESH_LIST::MSH_P_JAPN_M_A_1;
+		femaleMesh = MESH_LIST::MSH_P_JAPN_F_A_1;
+	}
+	break;
+	case VillageEthnicities::NORSE:
+	{
+		maleMesh   = MESH_LIST::MSH_P_NORS_M_A_1;
+		femaleMesh = MESH_LIST::MSH_P_NORS_F_A_1;
+	}
+	break;
+	case VillageEthnicities::TIBETAN:
+	{
+		maleMesh   = MESH_LIST::MSH_P_TIBT_M_A_1;
+		femaleMesh = MESH_LIST::MSH_P_TIBT_F_A_1;
+	}
+	break;
+	case VillageEthnicities::AFRICAN:
+	{
+		maleMesh   = MESH_LIST::MSH_P_EGPT_M_A_1;
+		femaleMesh = MESH_LIST::MSH_P_EGPT_F_A_1;
+	}
+	break;
+	default:
+		throw std::runtime_error("Unknown ethnic type");
+	}
+
+	uint32_t meshId = (sex == VillagerSex::MALE) ? maleMesh : femaleMesh;
+	registry.Assign<Model>(entity, meshId, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::CreateCitadel(const ScriptCommandContext& ctx)
@@ -248,7 +425,26 @@ void FeatureScriptCommands::CreateCitadel(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreatePlannedCitadel(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	Game& game                  = ctx.GetGame();
+	const auto& params          = ctx.GetParameters();
+	auto& island                = game.GetLandIsland();
+	auto& registry              = game.GetEntityRegistry();
+	const auto entity           = registry.Create();
+	const auto associatedTownId = params[0].GetNumber();
+	const auto position         = GetXYPosFromString(params[1].GetString());
+	//const auto unknown          = params[2].GetString();
+	const auto& affiliation     = params[3].GetString();
+	auto rotation               = params[4].GetNumber();
+	float size                   = params[5].GetNumber();
+	uint32_t meshId = 0;
+
+	meshId = MESH_LIST::MSH_DUMMY;
+
+	float radians = -(rotation * 0.001);
+	size          = (size * 0.001) * 10;
+
+	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
+	registry.Assign<Model>(entity, meshId, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::CreateCreaturePen(const ScriptCommandContext& ctx)
@@ -288,7 +484,47 @@ void FeatureScriptCommands::CreateTree(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateNewTree(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	Game& game                  = ctx.GetGame();
+	const auto& params          = ctx.GetParameters();
+	auto& island                = game.GetLandIsland();
+	auto& registry              = game.GetEntityRegistry();
+	const auto entity           = registry.Create();
+	const auto associatedForest = params[0].GetNumber();
+	const auto position         = GetXYPosFromString(params[1].GetString());
+	const auto& treeType        = params[2].GetNumber();
+	const bool isScenic         = params[3].GetNumber() >= 1;
+	float radians               = -(params[4].GetFloat());
+	float size                  = params[5].GetFloat();  // Initial size
+	float finalSize             = params[6].GetNumber(); // Max growth size of the tree
+	uint32_t meshId             = 0;
+
+	switch (treeType)
+	{
+	case 8:
+		meshId = MESH_LIST::MSH_T_PALM;
+		break;
+	case 9:
+		meshId = MESH_LIST::MSH_T_PALM_B;
+		break;
+	case 22:
+		meshId = MESH_LIST::MSH_O_BURNT_TREE;
+		break;
+	// todo: Figure out the different IDs to their types
+	case 3:
+		meshId = MESH_LIST::MSH_T_CONIFER;
+		break;
+	case 4:
+		meshId = MESH_LIST::MSH_T_CONIFER_A;
+		break;
+	case 1:
+		meshId = MESH_LIST::MSH_T_OAK;
+		break;
+	case 2:
+		meshId = MESH_LIST::MSH_T_OAK_A;
+	}
+
+	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
+	registry.Assign<Model>(entity, meshId, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::CreateField(const ScriptCommandContext& ctx)
@@ -348,12 +584,272 @@ void FeatureScriptCommands::CreateTownTemporaryPots(const ScriptCommandContext& 
 
 void FeatureScriptCommands::CreateMobileobject(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	Game& game            = ctx.GetGame();
+	const auto& params    = ctx.GetParameters();
+	auto& island          = game.GetLandIsland();
+	auto& registry        = game.GetEntityRegistry();
+	const auto entity     = registry.Create();
+	const auto position   = GetXYPosFromString(params[0].GetString());
+	const auto objectType = params[1].GetNumber();
+	const auto rotation   = params[2].GetNumber();
+	float size            = params[3].GetNumber();
+	uint32_t meshId       = 0;
+
+	switch (objectType)
+	{
+	case 0: // Barrel
+		meshId = MESH_LIST::MSH_B_EGPT_BARREL;
+		break;
+	case 1: // Egyptian Cart
+		meshId = MESH_LIST::MSH_B_EGPT_CART;
+		break;
+	case 2: // A pot
+		meshId = MESH_LIST::MSH_B_EGPT_POT_A;
+		break;
+	case 3: // A pot
+		meshId = MESH_LIST::MSH_B_EGPT_POT_B;
+		break;
+	case 4: // Cube w/ baby picture
+		meshId = MESH_LIST::MSH_DUMMY;
+		break;
+	case 5: // A piece of poo
+		meshId = MESH_LIST::MSH_O_CREATURE_TURD;
+		break;
+	case 6: // Cube w/ baby picture
+		meshId = MESH_LIST::MSH_DUMMY;
+		break;
+	case 7: // Tiny triangular prism
+		break;
+	case 8: // Cube w/ baby picture
+		meshId = MESH_LIST::MSH_DUMMY;
+		break;
+	case 9: // Egyptian cart
+		meshId = MESH_LIST::MSH_B_EGPT_CART;
+		break;
+	case 10: // A pot
+		break;
+	case 11: // A pot
+		break;
+	case 12: // A pot
+		break;
+	case 13: // Another pot!!
+		break;
+	case 14: // Stack of wood
+		break;
+	case 15: // Bush that turns into grain
+		break;
+	case 16: // Cube w/ baby picture
+		meshId = MESH_LIST::MSH_DUMMY;
+		break;
+	case 17: // Grey mushroom
+		meshId = MESH_LIST::MSH_O_MAGIC_MUSHROOM;
+		break;
+	case 18: // Blue mushroom
+		meshId = MESH_LIST::MSH_O_MAGIC_MUSHROOM;
+		break;
+	case 19: // Red mushroom
+		meshId = MESH_LIST::MSH_O_MAGIC_MUSHROOM;
+		break;
+	case 20: // Cube
+		break;
+	case 21: // Part of the Creed
+		meshId = MESH_LIST::MSH_CREED;
+		break;
+	case 22: // Part of the Creed
+		meshId = MESH_LIST::MSH_CREED;
+		break;
+	case 23: // Ship (Land 1)
+		meshId = MESH_LIST::MSH_O_ARK_DRY_DOCK;
+		break;
+	case 24: // A fish
+		break;
+	case 25: // Cube
+		break;
+	case 26: // Pole (Land 2 flooding puzzle)
+		break;
+	case 27: // Base of temple (Land 2 flooding puzzle)
+		break;
+	case 28: // Large ring of temple (Land 2 flooding puzzle)
+		break;
+	case 29: // Middle ring of temple (Land 2 flooding puzzle)
+		break;
+	case 30: // Small ring of temple (Land 2 flooding puzzle)
+		break;
+	case 31: // A cauldron
+		meshId = MESH_LIST::MSH_O_CAULDRON;
+		break;
+	}
+
+	float radians = -(rotation * 0.001);
+	size          = (size * 0.001);
+
+	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
+	registry.Assign<Model>(entity, meshId, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::CreateMobileStatic(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	Game& game                = ctx.GetGame();
+	const auto& params        = ctx.GetParameters();
+	auto& island              = game.GetLandIsland();
+	auto& registry            = game.GetEntityRegistry();
+	const auto entity         = registry.Create();
+	const auto position       = GetXYPosFromString(params[0].GetString());
+	const auto itemType       = params[1].GetNumber();
+	const auto verticalOffset = params[2].GetFloat();
+	const auto UpOrDownPitch  = params[3].GetFloat();
+	float radians             = -(params[4].GetFloat());
+	float leftOrRightLean     = params[5].GetFloat();
+	float size                = params[6].GetFloat();
+	uint32_t meshId           = 0;
+
+	switch (itemType)
+	{
+	case 0: // Fence - Short
+		meshId = MESH_LIST::MSH_B_CELT_FENCE_SHORT;
+		break;
+	case 1: // Fence - Tall
+		meshId = MESH_LIST::MSH_B_CELT_FENCE_TALL;
+		break;
+	case 2: // Rock - Grey, round
+		break;
+	case 3: // Cube w/ baby picture
+		meshId = MESH_LIST::MSH_DUMMY;
+		break;
+	case 4:                                     // 'Physical Shield' web
+		meshId = MESH_LIST::MSH_S_SOLID_SHIELD; // todo: Check right mesh
+		break;
+	case 5: // Singing Stone
+		meshId = MESH_LIST::MSH_SINGING_STONE;
+		break;
+	case 6: // Black Circle
+		break;
+	case 7: // Nothing (Invisible?)
+		break;
+	case 8: // Campfire
+		meshId = MESH_LIST::MSH_B_CAMPFIRE;
+		break;
+	case 9: // Cube w/ baby picture (throwable)
+		meshId = MESH_LIST::MSH_DUMMY;
+		break;
+	case 10: // Idol (Land 2)
+		meshId = MESH_LIST::MSH_F_IDOL;
+		break;
+	case 11: // Idol (Land 2)
+		meshId = MESH_LIST::MSH_F_IDOL;
+		break;
+	case 12: // Cube w/ baby picture
+		meshId = MESH_LIST::MSH_DUMMY;
+		break;
+	case 13: // Cube w/ baby picture
+		meshId = MESH_LIST::MSH_DUMMY;
+		break;
+	case 14: // Stone w/ face (Land 3)
+		break;
+	case 15: // Stone w/ face (Land 3)
+		break;
+	case 16: // Rock - Light grey, small, oval
+		break;
+	case 17: // Rock - Grey, small, oval
+		break;
+	case 18: // Rock - Brown, small oval
+		break;
+	case 19: // Rock - Black, small oval
+		break;
+	case 20: // Rock - Light grey, flat, oval
+		break;
+	case 21: // Rock - Grey, flat, oval
+		break;
+	case 22: // Rock - Brown, flat, oval
+		break;
+	case 23: // Rock - Black, flat, oval
+		break;
+	case 24: // Rock - Light grey, oval
+		break;
+	case 25: // Rock - Grey, oval
+		break;
+	case 26: // Rock - Brown, oval
+		break;
+	case 27: // Rock - Black, oval
+		break;
+	case 28: // Rock - Light grey, flat
+		break;
+	case 29: // Rock - Grey, flat
+		break;
+	case 30: // Rock - Brown, flat
+		break;
+	case 31: // Rock - Black, flat
+		break;
+	case 32: // Rock - Light grey, long
+		break;
+	case 33: // Rock - Grey, long
+		break;
+	case 34: // Rock - Brown, long
+		break;
+	case 35: // Rock - Black, long
+		break;
+	case 36: // Rock - Light grey
+		break;
+	case 37: // Rock - Grey
+		break;
+	case 38: // Rock - Brown
+		break;
+	case 39: // Rock - Black
+		break;
+	case 40: // Rock - Light grey, triangle
+		break;
+	case 41: // Rock - Grey, triangle
+		break;
+	case 42: // Rock - Brown, triangle
+		break;
+	case 43: // Rock - Black, triangle
+		break;
+	case 44: // Rock - Light grey, square
+		break;
+	case 45: // Rock - Grey, square
+		break;
+	case 46: // Rock - Brown, square
+		break;
+	case 47: // Rock - Black, square
+		break;
+	case 48: // Rock - Black
+		break;
+	case 49: // Gate Stone - Ape
+		meshId = MESH_LIST::MSH_O_GATE_TOTEM_APE;
+		break;
+	case 50: // Gate Stone - Blank
+		break;
+	case 51: // Gate Stone - Cow
+		meshId = MESH_LIST::MSH_O_GATE_TOTEM_COW;
+		break;
+	case 52: // Gate Stone - Tiger
+		meshId = MESH_LIST::MSH_O_GATE_TOTEM_TIGER;
+		break;
+	case 53: // Toy ball
+		meshId = MESH_LIST::MSH_O_TOY_BALL;
+		break;
+	case 54: // Teddy bear
+		meshId = MESH_LIST::MSH_O_TOY_CUDDLY;
+		break;
+	case 55: // Die (as in half a pair of dice)
+		meshId = MESH_LIST::MSH_O_TOY_DIE;
+		break;
+	case 56: // Bowling pins
+		break;
+	case 57: // Bowling ball
+		meshId = MESH_LIST::MSH_O_TOY_BOWLING_BALL;
+		break;
+	case 58: // Statue
+		meshId = MESH_LIST::MSH_B_GREK_STATUE;
+		break;
+	case 59: // Blackened ground
+		break;
+	case 60: // Glass prism
+		break;
+	}
+
+	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
+	registry.Assign<Model>(entity, meshId, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::CreateDeadTree(const ScriptCommandContext& ctx)
@@ -573,7 +1069,35 @@ void FeatureScriptCommands::TownDesireBoost(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateAnimatedStatic(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	Game& game            = ctx.GetGame();
+	const auto& params    = ctx.GetParameters();
+	auto& island          = game.GetLandIsland();
+	auto& registry        = game.GetEntityRegistry();
+	const auto entity     = registry.Create();
+	const auto position   = GetXYPosFromString(params[0].GetString());
+	const auto objectType = params[1].GetString();
+	const auto rotation   = params[2].GetNumber();
+	float size            = params[3].GetNumber();
+	uint32_t meshId       = 0;
+
+	if (objectType == "Norse Gate")
+	{
+		meshId = MESH_LIST::MSH_B_NORS_GATE;
+	}
+	else if (objectType == "Gate Stone Plinth")
+	{
+		meshId = MESH_LIST::MSH_O_GATE_TOTEM_PLINTHE;
+	}
+	else if (objectType == "Piper Cave Entrance")
+	{
+		meshId = MESH_LIST::MSH_F_PIPER_CAVE;
+	}
+
+	float radians = -(rotation * 0.001) + 3.14159;
+	size          = (size * 0.001);
+
+	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
+	registry.Assign<Model>(entity, meshId, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::FireFlySpellRewardProb(const ScriptCommandContext& ctx)
@@ -583,7 +1107,20 @@ void FeatureScriptCommands::FireFlySpellRewardProb(const ScriptCommandContext& c
 
 void FeatureScriptCommands::CreateNewTownField(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	Game& game                  = ctx.GetGame();
+	const auto& params          = ctx.GetParameters();
+	auto& island                = game.GetLandIsland();
+	auto& registry              = game.GetEntityRegistry();
+	const auto entity           = registry.Create();
+	const auto associatedTownId = params[0].GetNumber();
+	const auto position         = GetXYPosFromString(params[1].GetString());
+	//const auto unknown          = params[2].GetNumber();
+	float rotation  = params[3].GetNumber();
+	uint32_t meshId = MESH_LIST::MSH_T_WHEAT;
+	float radians   = -(rotation * 0.001);
+
+	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, 1.0f, 0.0f, radians, 0.0f);
+	registry.Assign<Model>(entity, meshId, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::CreateSpellDispenser(const ScriptCommandContext& ctx)
