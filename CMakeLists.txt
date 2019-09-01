@@ -54,6 +54,7 @@ find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(GLEW2 REQUIRED)
 find_package(GLM REQUIRED)
+find_package(EnTT REQUIRED)
 
 # Include git hash in source
 include(cmake/GetGitRevisionDescription.cmake)
