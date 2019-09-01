@@ -89,6 +89,11 @@ Game::Game(int argc, char** argv):
 	args.Get("w", windowWidth);
 	args.Get("h", windowHeight);
 
+	{
+		std::string gamePath;
+		args.Get("g", gamePath);
+		SetGamePath(gamePath);
+	}
 	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", windowWidth, windowHeight, displayMode);
 	_window->SetSwapInterval(1);
 
@@ -453,10 +458,21 @@ void Game::LoadLandscape(const std::string& name)
 	_landIsland->LoadFromFile(*file);
 }
 
+void Game::SetGamePath(const std::string &gamePath)
+{
+	if (gamePath.empty())
+	{
+		return;
+	}
+	if (!fs::exists(gamePath))
+	{
+		return;
+	}
+	sGamePath = gamePath;
+}
+
 const std::string& Game::GetGamePath()
 {
-	static std::string sGamePath;
-
 	if (sGamePath.empty())
 	{
 #ifdef _WIN32

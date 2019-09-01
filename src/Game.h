@@ -66,6 +66,7 @@ class Game
 	void LoadMap(const std::string& name);
 	void LoadLandscape(const std::string& name);
 
+	void SetGamePath(const std::string &gamePath);
 	const std::string& GetGamePath();
 
 	GameWindow& GetWindow() { return *_window; }
@@ -83,6 +84,8 @@ class Game
 	void drawScene(const Camera& camera, bool drawWater);
 
 	static Game* sInstance;
+
+	std::string sGamePath; // path to Lionhead Studios Ltd/Black & White folder
 
 	std::unique_ptr<Graphics::ShaderManager> _shaderManager;
 
