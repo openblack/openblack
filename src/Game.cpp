@@ -36,6 +36,9 @@
 #include <3D/Water.h>
 #include <Common/CmdLineArgs.h>
 #include <Common/FileSystem.h>
+#include <Entities/Registry.h>
+#include <Entities/Components/Model.h>
+#include <Entities/Components/Transform.h>
 #include <Graphics/DebugDraw.h>
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/ShaderManager.h>
@@ -78,7 +81,8 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 Game::Game(int argc, char** argv):
     _running(true), _wireframe(false), _waterDebug(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f), _smallBumpmapStrength(1.0f),
     _fileSystem(std::make_unique<FileSystem>()),
-    _shaderManager(std::make_unique<ShaderManager>())
+    _shaderManager(std::make_unique<ShaderManager>()),
+    _entityRegistry(std::make_unique<Entities::Registry>())
 {
 	spdlog::set_level(spdlog::level::debug);
 	sInstance = this;
@@ -302,6 +306,7 @@ void Game::drawScene(const Camera& camera, bool drawWater)
 	objectShader->SetUniformValue("u_viewProjection", camera.GetViewProjectionMatrix());
 	objectShader->SetUniformValue("u_modelTransform", modelMatrix);
 	_testModel->Draw(objectShader);
+	_entityRegistry->DrawModels(camera, *_shaderManager);
 
 	glDisable(GL_CULL_FACE);
 }
@@ -382,30 +387,60 @@ void Game::guiLoop()
 	ImGui::Text("Load Land Island:");
 	ImGui::BeginGroup();
 	if (ImGui::Button("1"))
+	{
 		LoadLandscape("./Data/Landscape/Land1.lnd");
+		LoadMap("./Scripts/Land1.txt");
+	}
 	ImGui::SameLine();
 	if (ImGui::Button("2"))
+	{
 		LoadLandscape("./Data/Landscape/Land2.lnd");
+		LoadMap("./Scripts/Land2.txt");
+	}
 	ImGui::SameLine();
 	if (ImGui::Button("3"))
+	{
 		LoadLandscape("./Data/Landscape/Land3.lnd");
+		LoadMap("./Scripts/Land3.txt");
+	}
 	ImGui::SameLine();
 	if (ImGui::Button("4"))
+	{
 		LoadLandscape("./Data/Landscape/Land4.lnd");
+		LoadMap("./Scripts/Land4.txt");
+	}
 	ImGui::SameLine();
 	if (ImGui::Button("5"))
+	{
 		LoadLandscape("./Data/Landscape/Land5.lnd");
+		LoadMap("./Scripts/Land5.txt");
+	}
+
 	ImGui::SameLine();
 	if (ImGui::Button("T"))
+	{
 		LoadLandscape("./Data/Landscape/LandT.lnd");
+		LoadMap("./Scripts/LandT.txt");
+	}
+
 	if (ImGui::Button("2P"))
+	{
 		LoadLandscape("./Data/Landscape/Multi_Player/MPM_2P_1.lnd");
+		LoadMap("./Scripts/Playgrounds/TwoGods.txt");
+	}
+
 	ImGui::SameLine();
 	if (ImGui::Button("3P"))
+	{
 		LoadLandscape("./Data/Landscape/Multi_Player/MPM_3P_1.lnd");
+		LoadMap("./Scripts/Playgrounds/ThreeGods.txt");
+	}
 	ImGui::SameLine();
 	if (ImGui::Button("4P"))
+	{
 		LoadLandscape("./Data/Landscape/Multi_Player/MPM_4P_1.lnd");
+		LoadMap("./Scripts/Playgrounds/FourGods.txt");
+	}
 
 	ImGui::EndGroup();
 
@@ -441,6 +476,7 @@ void Game::LoadMap(const std::string& name)
 
 	auto file = _fileSystem->Open(name, FileMode::Read);
 
+	_entityRegistry->Reset();
 	Script script(this);
 	script.LoadFromFile(*file);
 }

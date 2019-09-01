@@ -1107,7 +1107,7 @@ enum ANIM_LIST
 	MAX_COUNT_3D_ANIMS = 441,                    //
 };
 
-const char* gG3DStringList[626] = {
+constexpr char* gG3DStringList[626] = {
 	"MSH_DUMMY",
 	"MSH_A_BAT_1",
 	"MSH_A_BAT_2",
@@ -1745,5 +1745,4 @@ const char* gG3DStringList[626] = {
 	"MSH_U_WASHING_LINE_TIBT"
 };
 
-#endif
 // Last Saved,#2001-02-01 13:28:36#,"opurkiss"

@@ -57,6 +57,11 @@ namespace Video
 class VideoPlayer;
 }
 
+namespace Entities
+{
+class Registry;
+}
+
 class Game
 {
   public:
@@ -76,6 +81,8 @@ class Game
 	MeshPack& GetMeshPack() { return *_meshPack; }
 	FileSystem& GetFileSystem() { return *_fileSystem; }
 	Graphics::ShaderManager& GetShaderManager() { return *_shaderManager; }
+	Entities::Registry& GetEntityRegistry() { return *_entityRegistry; }
+	LandIsland& GetLandIsland() { return *_landIsland; }
 
 	static Game* instance()
 	{
@@ -104,6 +111,7 @@ class Game
 	std::unique_ptr<Water> _water;
 	std::unique_ptr<LHScriptX::Script> _scriptx;
 	std::unique_ptr<LHVM::LHVM> _lhvm;
+	std::unique_ptr<Entities::Registry> _entityRegistry;
 
 	bool _wireframe;
 	bool _waterDebug;
