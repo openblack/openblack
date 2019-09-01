@@ -1,9 +1,10 @@
 #include "Registry.h"
 
-#include <Graphics/ShaderManager.h>
-#include <3D/Camera.h>
-#include <3D/MeshPack.h>
 #include <Game.h>
+#include <3D/SkinnedModel.h>
+#include <3D/MeshPack.h>
+#include <3D/Camera.h>
+#include <Graphics/ShaderManager.h>
 #include <Entities/Components/Transform.h>
 #include <Entities/Components/Model.h>
 #include <Entities/Components/Villager.h>
