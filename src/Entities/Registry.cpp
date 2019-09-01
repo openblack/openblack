@@ -25,34 +25,36 @@ void Registry::DebugCreateEntities(float x, float y, float z)
 
 void Registry::DrawModels(const Camera& camera, Graphics::ShaderManager& shaderManager)
 {
-	auto meshPack = Game::instance()->GetMeshPack();
-	auto view = _registry.view<Model, Transform>();
+	auto& meshPack = Game::instance()->GetMeshPack();
+	auto& view = _registry.view<Model, Transform>();
 	const auto projectionMatrix = camera.GetViewProjectionMatrix();
-
+	
 	for (auto entity : view)
 	{
 		auto& model = view.get<Model>(entity);
 		auto& position = view.get<Transform>(entity);
-
+	
 		auto _modelPosition = glm::vec3(position.x + model.xOffset, position.y + model.yOffset, position.z + model.zOffset);
 		auto _modelRotation = glm::vec3(position.rotX, position.rotY, position.rotZ);
 		auto _modelScale    = glm::vec3(position.scale);
-
+	
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		modelMatrix           = glm::translate(modelMatrix, _modelPosition);
-
+	
 		modelMatrix = glm::rotate(modelMatrix, _modelRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
 		modelMatrix = glm::rotate(modelMatrix, _modelRotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
 		modelMatrix = glm::rotate(modelMatrix, _modelRotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-
+	
 		modelMatrix = glm::scale(modelMatrix, _modelScale);
-
+	
 		Graphics::ShaderProgram* objectShader = shaderManager.GetShader("SkinnedMesh");
 		objectShader->Bind();
 		objectShader->SetUniformValue("u_viewProjection", projectionMatrix);
 		objectShader->SetUniformValue("u_modelTransform", modelMatrix);
 
-		//meshPack.models[model.meshId]->Draw(objectShader);
+		// Waiting on MeshPack implementation
+		// const SkinnedModel& modelGeometry = meshPack.GetModel(model.meshId);
+		// modelGeometry.Draw(objectShader);
 	}
 }
 
