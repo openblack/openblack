@@ -30,7 +30,7 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 # disable in-source builds
-set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+# set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 # Project Options
@@ -71,7 +71,6 @@ hunter_add_package(SDL2)
 hunter_add_package(glew)
 hunter_add_package(glm)
 find_package(OpenGL REQUIRED)
-find_package(EnTT REQUIRED)
 if(HUNTER_ENABLED)
 	find_package(SDL2 CONFIG REQUIRED)
 	find_package(glew CONFIG REQUIRED)
@@ -85,6 +84,7 @@ endif()
 # Add dependencies from the external directory
 set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
 add_subdirectory("${EXTERNAL_DIR}/spdlog")
+add_subdirectory("${EXTERNAL_DIR}/entt")
 
 # Include git hash in source
 include(cmake/GetGitRevisionDescription.cmake)

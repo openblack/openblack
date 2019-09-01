@@ -40,9 +40,9 @@ set_target_properties(openblack PROPERTIES LINKER_LANGUAGE CXX)
 
 target_include_directories(openblack PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 if(HUNTER_ENABLED)
-	target_link_libraries(openblack PRIVATE ScriptLibrary SDL2::SDL2 SDL2::SDL2main ${OPENGL_LIBRARIES} glew::glew glm spdlog::spdlog)
+	target_link_libraries(openblack PRIVATE ScriptLibrary SDL2::SDL2 SDL2::SDL2main ${OPENGL_LIBRARIES} glew::glew glm spdlog::spdlog EnTT)
 else()
-	target_link_libraries(openblack PRIVATE ScriptLibrary SDL2::Main ${OPENGL_LIBRARIES} ${GLEW_LIBRARY} spdlog::spdlog)
+	target_link_libraries(openblack PRIVATE ScriptLibrary SDL2::Main ${OPENGL_LIBRARIES} ${GLEW_LIBRARY} spdlog::spdlog EnTT)
 endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT HAS_FILESYSTEM)
