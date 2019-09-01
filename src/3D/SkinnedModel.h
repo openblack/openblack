@@ -40,7 +40,7 @@ class SkinnedModel
 
 	void LoadFromFile(const std::string& fileName);
 	void LoadFromL3D(void* data, size_t size);
-	void Draw(ShaderProgram* program);
+	void Draw(ShaderProgram* program) const;
 
   private:
 	uint32_t _flags;
