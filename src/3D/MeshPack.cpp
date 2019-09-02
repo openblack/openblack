@@ -26,6 +26,7 @@
 #include <stdexcept>
 #include <stdint.h>
 #include <stdlib.h> // snprintf
+#include <spdlog/spdlog.h>
 
 namespace OpenBlack
 {
@@ -81,8 +82,8 @@ void createCompressedDDS(Graphics::Texture2D* texture, uint8_t* buffer)
 	// - all are compressed
 
 	Graphics::InternalFormat internalFormat;
-	GLsizei width         = header->dwWidth;
-	GLsizei height        = header->dwHeight;
+	GLsizei width  = header->dwWidth;
+	GLsizei height = header->dwHeight;
 	int bytesPerBlock;
 
 	switch (header->ddspf.dwFourCC)
@@ -123,11 +124,8 @@ void MeshPack::LoadFromFile(File& file)
 		_blocks[header.blockName] = header;
 	}
 
-	if (_blocks.find("MESHES") == _blocks.end())
-		throw std::runtime_error("no MESHES block in mesh pack");
-
 	loadTextures(file);
-	// loadMeshes(file);
+	loadMeshes(file);
 }
 
 void MeshPack::loadTextures(File& file)
@@ -180,8 +178,25 @@ void MeshPack::loadTextures(File& file)
 		createCompressedDDS(_textures[id].get(), ddsBuffer);
 
 		delete[] ddsBuffer;
-
 	}
+}
+
+void MeshPack::loadMeshes(File& file)
+{
+	auto const& block = _blocks.find("MESHES");
+	if (block == _blocks.end())
+		throw std::runtime_error("no MESHES block in mesh pack");
+
+	// seek to the MESHES block
+	file.Seek(block->second.position, FileSeekMode::Begin);
+
+	// todo: check MKJC
+	file.Seek(4, FileSeekMode::Current);
+
+	uint32_t meshCount;
+	file.Read<uint32_t>(&meshCount, 1);
+	
+	spdlog::debug("load {0} meshes", meshCount);
 }
 
 } // namespace OpenBlack

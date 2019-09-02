@@ -68,6 +68,7 @@ class MeshPack
 
   private:
 	void loadTextures(File&);
+	void loadMeshes(File&);
 
 	ModelsVec _models;
 	TexturesVec _textures;
