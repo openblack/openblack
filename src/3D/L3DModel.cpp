@@ -187,7 +187,7 @@ void L3DModel::LoadFromL3D(const void* data_, size_t size)
 
 		for (size_t i = 0; i < mesh->numBones; i++)
 		{
-			const L3D_Bone& bone       = bones[i];
+			const L3D_Bone& bone   = bones[i];
 			L3DModel_Bone& dstBone = _bones[i];
 
 			dstBone.parentBone  = bone.parentBone;
@@ -230,28 +230,28 @@ void L3DModel::LoadFromL3D(const void* data_, size_t size)
 void L3DModel::Draw(ShaderProgram* program) const
 {
 	// program->SetUniformValue("u_boneMatrices[0]", _boneMatrices.size(), _boneMatrices.data());
-	auto& textureBinds = Game::instance()->GetMeshPack().GetTextures();
+	auto& meshPackTextures = Game::instance()->GetMeshPack().GetTextures();
 
 	glActiveTexture(GL_TEXTURE0);
 
 	for (size_t i = 0; i < _submeshes.size(); i++)
 	{
-		if (_textures.at(_submeshSkinMap.at(i)) != nullptr) {
-			_textures.at(_submeshSkinMap.at(i))->Bind();
-			_submeshes[i]->Draw();
-		}
-		else if (i < textureBinds.size())
-		{
-			auto index = _submeshSkinMap.at(i);
+		auto const& submesh = _submeshes[i];
+		auto skinID         = _submeshSkinMap.at(i);
 
-			// skip
-			if (index == -1)
-				continue;
-
-			const auto& textureBind = textureBinds[index - 1];
-			textureBind->Bind();
-			_submeshes[i]->Draw();
+		// assumption: texture should be set before, this isn't a nodraw.
+		if (skinID == -1) {
+			submesh->Draw();
+			continue;
 		}
+
+		// try to find a texture locally or in mesh pack (todo: there are flags?)
+		if (_textures.find(skinID) != _textures.end())
+			_textures.at(skinID)->Bind();
+		else if (i < meshPackTextures.size())
+			meshPackTextures.at(skinID)->Bind();
+
+		submesh->Draw();
 	}
 }
 
