@@ -1,0 +1,3 @@
+hunter_config(glm
+  VERSION ${HUNTER_glm_VERSION}
+  CMAKE_ARGS GLM_TEST_ENABLE=OFF)
