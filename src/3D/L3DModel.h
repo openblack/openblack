@@ -35,6 +35,41 @@ typedef uint32_t SkinId;
 class L3DModel
 {
   public:
+	enum class Flags : uint32_t
+	{
+		Unknown1                 = 1 << 0,
+		Unknown2                 = 1 << 1,
+		Unknown3                 = 1 << 2,
+		Unknown4                 = 1 << 3,
+		Unknown5                 = 1 << 4,
+		Unknown6                 = 1 << 5,
+		Unknown7                 = 1 << 6,
+		Unknown8                 = 1 << 7,
+		HasBones                 = 1 << 8,
+		Unknown10                = 1 << 9,
+		Unknown11                = 1 << 10,
+		Unknown12                = 1 << 11,
+		Unknown13                = 1 << 12,
+		NoDraw                   = 1 << 13,
+		Unknown15                = 1 << 14,
+		ContainsLandscapeFeature = 1 << 15,
+		Unknown17                = 1 << 16,
+		Unknown18                = 1 << 17,
+		ContainsUV2              = 1 << 18,
+		ContainsNameData         = 1 << 19,
+		ContainsExtraMetrics     = 1 << 20,
+		ContainsEBone            = 1 << 21,
+		ContainsTnLData          = 1 << 22,
+		ContainsNewEP            = 1 << 23,
+		Unknown25                = 1 << 24,
+		Unknown26                = 1 << 25,
+		Unknown27                = 1 << 26,
+		Unknown28                = 1 << 27,
+		Unknown29                = 1 << 28,
+		Unknown30                = 1 << 29,
+		Unknown31                = 1 << 30,
+	};
+
 	L3DModel()  = default;
 	~L3DModel() = default;
 
