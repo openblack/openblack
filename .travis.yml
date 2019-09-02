@@ -14,7 +14,8 @@ matrix:
     # Linux {
 
     #   Ubuntu 18.04 bionic
-    - os: linux
+    - name: "bionic: gcc"
+      os: linux
       env: >
         BUILD_FLAVOR=ubuntu
         BUILD_RELEASE=bionic
@@ -23,14 +24,16 @@ matrix:
         TOOLCHAIN=gcc-cxx17
 
     #   Ubuntu 19.04 disco
-    - os: linux
+    - name: "disco: gcc"
+      os: linux
       env: >
         BUILD_FLAVOR=ubuntu
         BUILD_RELEASE=disco
         BUILD_ARCH=amd64
         BUILD_PACKAGES="g++"
         TOOLCHAIN=gcc-cxx17
-    - os: linux
+    - name: "disco: clang"
+      os: linux
       env: >
         BUILD_FLAVOR=ubuntu
         BUILD_RELEASE=disco
@@ -40,7 +43,8 @@ matrix:
     # } // end Linux
 
     # Windows build with mingw-w64 on Ubuntu 19.04
-    - os: linux
+    - name: "disco: mingw-w64"
+      os: linux
       env: >
         BUILD_FLAVOR=ubuntu
         BUILD_RELEASE=disco
