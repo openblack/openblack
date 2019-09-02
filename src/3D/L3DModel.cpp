@@ -18,7 +18,7 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/SkinnedModel.h>
+#include <3D/L3DModel.h>
 #include <3D/MeshPack.h>
 #include <Game.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -149,7 +149,7 @@ struct L3D_Bone
 	glm::vec3 position;
 };
 
-struct SkinnedModel_Vertex
+struct L3DModel_Vertex
 {
 	glm::vec3 pos;
 	glm::vec2 uv;
@@ -157,7 +157,7 @@ struct SkinnedModel_Vertex
 	uint32_t bone;
 };
 
-void SkinnedModel::LoadFromFile(const std::string& fileName)
+void L3DModel::LoadFromFile(const std::string& fileName)
 {
 	size_t meshSize;
 	// char* mesh = OSFile::ReadAll((fileName).c_str(), &meshSize);
@@ -165,7 +165,7 @@ void SkinnedModel::LoadFromFile(const std::string& fileName)
 	// delete[] mesh;
 }
 
-void SkinnedModel::LoadFromL3D(void* data_, size_t size)
+void L3DModel::LoadFromL3D(void* data_, size_t size)
 {
 	uint8_t* buffer = static_cast<uint8_t*>(data_);
 	if (buffer[0] != 'L' || buffer[1] != '3' || buffer[2] != 'D' || buffer[3] != '0')
@@ -192,13 +192,13 @@ void SkinnedModel::LoadFromL3D(void* data_, size_t size)
 			LH3D_BoneVert* boneVertOffset = static_cast<LH3D_BoneVert*>((void*)(buffer + subMesh->boneVertLUTOffset));
 
 			VertexDecl decl(4);
-			decl[0] = VertexAttrib(0, 3, GL_FLOAT, false, false, sizeof(SkinnedModel_Vertex), (GLvoid*)offsetof(SkinnedModel_Vertex, pos));
-			decl[1] = VertexAttrib(1, 2, GL_FLOAT, false, false, sizeof(SkinnedModel_Vertex), (GLvoid*)offsetof(SkinnedModel_Vertex, uv));
-			decl[2] = VertexAttrib(2, 3, GL_FLOAT, false, false, sizeof(SkinnedModel_Vertex), (GLvoid*)offsetof(SkinnedModel_Vertex, norm));
-			decl[3] = VertexAttrib(3, 1, GL_INT, true, false, sizeof(SkinnedModel_Vertex), (GLvoid*)offsetof(SkinnedModel_Vertex, bone));
+			decl[0] = VertexAttrib(0, 3, GL_FLOAT, false, false, sizeof(L3DModel_Vertex), (GLvoid*)offsetof(L3DModel_Vertex, pos));
+			decl[1] = VertexAttrib(1, 2, GL_FLOAT, false, false, sizeof(L3DModel_Vertex), (GLvoid*)offsetof(L3DModel_Vertex, uv));
+			decl[2] = VertexAttrib(2, 3, GL_FLOAT, false, false, sizeof(L3DModel_Vertex), (GLvoid*)offsetof(L3DModel_Vertex, norm));
+			decl[3] = VertexAttrib(3, 1, GL_INT, true, false, sizeof(L3DModel_Vertex), (GLvoid*)offsetof(L3DModel_Vertex, bone));
 
 			// create our vertex buffer real quick
-			std::vector<SkinnedModel_Vertex> verts(subMesh->numVerticies);
+			std::vector<L3DModel_Vertex> verts(subMesh->numVerticies);
 			for (uint32_t i = 0; i < subMesh->numVerticies; i++)
 			{
 				// epic gamer
@@ -210,7 +210,7 @@ void SkinnedModel::LoadFromL3D(void* data_, size_t size)
 				for (uint32_t vert = 0; vert < boneVertOffset[boneVert].nVertices; vert++)
 					verts[vertind++].bone = boneVertOffset[boneVert].boneIndex;
 
-			VertexBuffer* vertexBuffer = new VertexBuffer(verts.data(), subMesh->numVerticies, sizeof(SkinnedModel_Vertex));
+			VertexBuffer* vertexBuffer = new VertexBuffer(verts.data(), subMesh->numVerticies, sizeof(L3DModel_Vertex));
 			IndexBuffer* indexBuffer   = new IndexBuffer(trianglesOffset, subMesh->numTriangles * 3, GL_UNSIGNED_SHORT);
 
 			_submeshes.emplace_back(std::make_unique<Mesh>(vertexBuffer, indexBuffer, decl));
@@ -224,7 +224,7 @@ void SkinnedModel::LoadFromL3D(void* data_, size_t size)
 		for (size_t i = 0; i < mesh->numBones; i++)
 		{
 			const L3D_Bone& bone       = bones[i];
-			SkinnedModel_Bone& dstBone = _bones[i];
+			L3DModel_Bone& dstBone = _bones[i];
 
 			dstBone.parentBone  = bone.parentBone;
 			dstBone.childBone   = bone.childBone;
@@ -263,7 +263,7 @@ void SkinnedModel::LoadFromL3D(void* data_, size_t size)
 	}
 }
 
-void SkinnedModel::Draw(ShaderProgram* program) const
+void L3DModel::Draw(ShaderProgram* program) const
 {
 	// program->SetUniformValue("u_boneMatrices[0]", _boneMatrices.size(), _boneMatrices.data());
 	auto& textureBinds = Game::instance()->GetMeshPack().GetTextures();
@@ -291,17 +291,17 @@ void SkinnedModel::Draw(ShaderProgram* program) const
 	}
 }
 
-void SkinnedModel::calculateBoneMatrices()
+void L3DModel::calculateBoneMatrices()
 {
 	_boneMatrices.resize(64, glm::mat4(1.0f));
 	for (size_t i = 0; i < _bones.size(); i++)
 	{
-		SkinnedModel_Bone& bone = _bones[i];
+		L3DModel_Bone& bone = _bones[i];
 
 		// only bones with parents need to be transformed by their parents
 		if (bone.parentBone != -1)
 		{
-			const SkinnedModel_Bone parentBone = _bones[bone.parentBone];
+			const L3DModel_Bone parentBone = _bones[bone.parentBone];
 
 			bone.position = parentBone.position + parentBone.rotation * bone.position;
 			bone.rotation = parentBone.rotation * bone.rotation;

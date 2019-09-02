@@ -30,7 +30,7 @@
 #include <3D/Camera.h>
 #include <3D/LandIsland.h>
 #include <3D/MeshPack.h>
-#include <3D/SkinnedModel.h>
+#include <3D/L3DModel.h>
 #include <3D/Sky.h>
 #include <3D/Water.h>
 #include <Common/CmdLineArgs.h>
@@ -141,7 +141,7 @@ void Game::Run()
 
 	//_videoPlayer = std::make_unique<Video::VideoPlayer>(GetGamePath() + "/Data/logo.bik");
 
-	_testModel = std::make_unique<SkinnedModel>();
+	_testModel = std::make_unique<L3DModel>();
 	_testModel->LoadFromFile(GetGamePath() + "/Data/CreatureMesh/C_Tortoise_Base.l3d");
 
 	_sky   = std::make_unique<Sky>();

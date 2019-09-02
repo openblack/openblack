@@ -1,7 +1,7 @@
 #include "Registry.h"
 
 #include <Game.h>
-#include <3D/SkinnedModel.h>
+#include <3D/L3DModel.h>
 #include <3D/MeshPack.h>
 #include <3D/Camera.h>
 #include <Graphics/ShaderManager.h>
@@ -53,7 +53,7 @@ void Registry::DrawModels(const Camera& camera, Graphics::ShaderManager& shaderM
 		objectShader->SetUniformValue("u_modelTransform", modelMatrix);
 
 		// Waiting on MeshPack implementation
-		// const SkinnedModel& modelGeometry = meshPack.GetModel(model.meshId);
+		// const L3DModel& modelGeometry = meshPack.GetModel(model.meshId);
 		// modelGeometry.Draw(objectShader);
 	}
 }

@@ -31,7 +31,7 @@ Sky::Sky()
 	_shader = std::make_unique<ShaderProgram>("shaders/sky.vert", "shaders/sky.frag");
 
 	// load in the mesh
-	_model = std::make_unique<SkinnedModel>();
+	_model = std::make_unique<L3DModel>();
 	_model->LoadFromFile(Game::instance()->GetGamePath() + "/Data/WeatherSystem/sky.l3d");
 
 	// load some sky bitmaps

@@ -32,11 +32,11 @@ namespace OpenBlack
 {
 typedef uint32_t SkinId;
 
-class SkinnedModel
+class L3DModel
 {
   public:
-	SkinnedModel()  = default;
-	~SkinnedModel() = default;
+	L3DModel()  = default;
+	~L3DModel() = default;
 
 	void LoadFromFile(const std::string& fileName);
 	void LoadFromL3D(void* data, size_t size);
@@ -50,7 +50,7 @@ class SkinnedModel
 	std::map<int32_t, SkinId> _submeshSkinMap;
 	std::vector<std::unique_ptr<Mesh>> _submeshes;
 
-	struct SkinnedModel_Bone
+	struct L3DModel_Bone
 	{
 
 		int32_t parentBone;  // -1 = root;
@@ -61,7 +61,7 @@ class SkinnedModel
 		glm::quat rotation;
 	};
 
-	std::vector<SkinnedModel_Bone> _bones;
+	std::vector<L3DModel_Bone> _bones;
 	std::vector<glm::mat4> _boneMatrices;
 
 	void calculateBoneMatrices();
@@ -79,6 +79,6 @@ class SkinnedModel
 
 	//const bool IsContainsNewData() const { return _flags & 0xFC8000; } // ???
 
-	std::vector<SkinnedModel_Bone>& GetBones() { return _bones; }
+	std::vector<L3DModel_Bone>& GetBones() { return _bones; }
 };
 } // namespace OpenBlack

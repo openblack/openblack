@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <3D/SkinnedModel.h>
+#include <3D/L3DModel.h>
 #include <Graphics/Mesh.h>
 #include <Graphics/Texture2D.h>
 #include <memory>
@@ -37,6 +37,6 @@ class Hand
 	void Draw();
 
   private:
-	std::unique_ptr<SkinnedModel> m_HandModel;
+	std::unique_ptr<L3DModel> m_HandModel;
 };
 } // namespace OpenBlack

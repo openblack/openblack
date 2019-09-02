@@ -30,7 +30,7 @@ namespace OpenBlack
 {
 
 class File;
-class SkinnedModel;
+class L3DModel;
 
 namespace Graphics
 {
@@ -57,13 +57,13 @@ class MeshPack
 
 	void LoadFromFile(File&);
 
-	using ModelsVec   = std::vector<std::unique_ptr<SkinnedModel>>;
+	using ModelsVec   = std::vector<std::unique_ptr<L3DModel>>;
 	using TexturesVec = std::vector<std::unique_ptr<Graphics::Texture2D>>;
 
 	const ModelsVec& GetModels() const { return _models; }
 	const TexturesVec& GetTextures() const { return _textures; }
 
-	const SkinnedModel& GetModel(int id) const { return *_models.at(id); }
+	const L3DModel& GetModel(int id) const { return *_models.at(id); }
 	const Graphics::Texture2D& GetTexture(int id) const { return *_textures.at(id); }
 
   private:
