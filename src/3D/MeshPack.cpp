@@ -23,10 +23,10 @@
 #include <Graphics/OpenGL.h>
 #include <Graphics/Texture2D.h>
 #include <algorithm>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <stdint.h>
 #include <stdlib.h> // snprintf
-#include <spdlog/spdlog.h>
 
 namespace OpenBlack
 {
@@ -179,6 +179,8 @@ void MeshPack::loadTextures(File& file)
 
 		delete[] ddsBuffer;
 	}
+
+	spdlog::debug("MeshPack loaded {0} textures", totalTextures);
 }
 
 void MeshPack::loadMeshes(File& file)
@@ -190,13 +192,29 @@ void MeshPack::loadMeshes(File& file)
 	// seek to the MESHES block
 	file.Seek(block->second.position, FileSeekMode::Begin);
 
-	// todo: check MKJC
-	file.Seek(4, FileSeekMode::Current);
+	uint32_t magic;
+	file.Read<uint32_t>(&magic, 1);
+
+	// Greetings Jean-Claude Cottier
+	constexpr uint32_t kMKJC = ('C' << 24) | ('J' << 16) | ('K' << 8) | 'M';
+	if (magic != kMKJC)
+	{
+		spdlog::error("MeshPack MESHES magic mismatch, expected MKJC");
+		return;
+	}
 
 	uint32_t meshCount;
 	file.Read<uint32_t>(&meshCount, 1);
-	
-	spdlog::debug("load {0} meshes", meshCount);
+
+	std::vector<uint32_t> meshOffsets(meshCount);
+	file.Read<uint32_t>(meshOffsets.data(), meshCount);
+
+	for (uint32_t i = 0; i < meshCount; i++)
+	{
+		spdlog::debug("MeshPack mesh {0:d} at offset {1:#x}", i, meshOffsets[i]);
+	}
+
+	spdlog::debug("MeshPack loaded {0} meshes", meshCount);
 }
 
 } // namespace OpenBlack
