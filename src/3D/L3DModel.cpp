@@ -20,6 +20,7 @@
 
 #include <3D/L3DModel.h>
 #include <3D/MeshPack.h>
+#include <Common/FileSystem.h>
 #include <Game.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -159,15 +160,13 @@ struct L3DModel_Vertex
 
 void L3DModel::LoadFromFile(const std::string& fileName)
 {
-	size_t meshSize;
-	// char* mesh = OSFile::ReadAll((fileName).c_str(), &meshSize);
-	// LoadFromL3D(mesh, meshSize);
-	// delete[] mesh;
+	auto const meshData = Game::instance()->GetFileSystem().ReadAll(fileName);
+	LoadFromL3D(reinterpret_cast<const void*>(meshData.data()), meshData.size());
 }
 
-void L3DModel::LoadFromL3D(void* data_, size_t size)
+void L3DModel::LoadFromL3D(const void* data_, size_t size)
 {
-	uint8_t* buffer = static_cast<uint8_t*>(data_);
+	const uint8_t* buffer = static_cast<const uint8_t*>(data_);
 	if (buffer[0] != 'L' || buffer[1] != '3' || buffer[2] != 'D' || buffer[3] != '0')
 	{
 		throw std::runtime_error("Invalid L3D file");

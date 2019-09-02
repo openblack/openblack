@@ -39,7 +39,7 @@ class L3DModel
 	~L3DModel() = default;
 
 	void LoadFromFile(const std::string& fileName);
-	void LoadFromL3D(void* data, size_t size);
+	void LoadFromL3D(const void* data, size_t size);
 	void Draw(ShaderProgram* program) const;
 
   private:
