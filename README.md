@@ -41,7 +41,7 @@ Building has been tested on Ubuntu 19.04 and works fine, however GCC7 (e.g. Ubun
 Dependencies can be installed simply from apt:
 
 ```
-sudo apt install cmake libglew-dev libsdl2-dev libglm-dev
+sudo apt install cmake libglew-dev libsdl2-dev libglm-dev libspdlog-dev
 ```
 
 Then to build run CMake in a build directory:

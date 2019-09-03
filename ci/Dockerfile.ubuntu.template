@@ -9,7 +9,8 @@ RUN apt-get update && \
   cmake \
   libglew-dev \
   libsdl2-dev \
-  libglm-dev
+  libglm-dev \
+  libspdlog-dev
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
