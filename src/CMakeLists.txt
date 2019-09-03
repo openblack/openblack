@@ -44,6 +44,7 @@ if(HUNTER_ENABLED)
 else()
 	target_link_libraries(openblack PRIVATE ScriptLibrary SDL2::Main ${OPENGL_LIBRARIES} ${GLEW_LIBRARY} spdlog::spdlog EnTT)
 endif()
+target_link_libraries(openblack PRIVATE imgui)
 
 if (HAS_FILESYSTEM)
 	message(STATUS "Got <filesystem>: add compiler definition HAS_FILESYSTEM")

@@ -96,6 +96,7 @@ if (USE_SUBMODULES)
 else()
     find_package(EnTT REQUIRED)
 endif()
+add_subdirectory(external/imgui)
 
 # Include git hash in source
 include(cmake/GetGitRevisionDescription.cmake)

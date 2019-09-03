@@ -56,11 +56,9 @@
 #include <Windows.h>
 #endif
 
-#define IMGUI_IMPL_OPENGL_LOADER_GLEW
-
 #include <imgui/imgui.h>
-#include <imgui/imgui_impl_opengl3.h>
-#include <imgui/imgui_impl_sdl.h>
+#include <imgui/examples/imgui_impl_opengl3.h>
+#include <imgui/examples/imgui_impl_sdl.h>
 
 #include <spdlog/spdlog.h>
 
