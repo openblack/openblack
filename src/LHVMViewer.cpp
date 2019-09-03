@@ -20,13 +20,11 @@
 
 #include <LHVMViewer.h>
 
-#define IMGUI_IMPL_OPENGL_LOADER_GLEW
-
 #include <array>
 #include <imgui/imgui.h>
-#include <imgui/imgui_impl_opengl3.h>
-#include <imgui/imgui_impl_sdl.h>
-#include <imgui/imgui_memory_editor.h>
+#include <imgui/examples/imgui_impl_opengl3.h>
+#include <imgui/examples/imgui_impl_sdl.h>
+#include <imgui_club/imgui_memory_editor/imgui_memory_editor.h>
 
 using OpenBlack::LHVMViewer;
 
