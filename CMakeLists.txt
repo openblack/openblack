@@ -4,6 +4,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+option(USE_SUBMODULES "Use git submodules for external dependencies instead of system installed deps (such as on linux)" ON)
+
 option(HUNTER_ENABLED "Enable Hunter package manager support" OFF)
 include(cmake/HunterGate.cmake)
 
@@ -56,7 +58,9 @@ function(check_submodules_present)
         endif()
     endforeach()
 endfunction()
-check_submodules_present()
+if (USE_SUBMODULES)
+    check_submodules_present()
+endif()
 
 # check compiler for various features
 include(CheckIncludeFileCXX)
@@ -82,10 +86,15 @@ else()
 	find_package(GLM REQUIRED)
 endif()
 
-# Add dependencies from the external directory
-set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
-add_subdirectory("${EXTERNAL_DIR}/spdlog")
-add_subdirectory("${EXTERNAL_DIR}/entt")
+if (USE_SUBMODULES)
+    # Add dependencies from the external directory
+    set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
+    add_subdirectory("${EXTERNAL_DIR}/spdlog")
+    add_subdirectory("${EXTERNAL_DIR}/entt")
+else()
+    find_package(spdlog REQUIRED)
+    find_package(EnTT REQUIRED)
+endif()
 
 # Include git hash in source
 include(cmake/GetGitRevisionDescription.cmake)
