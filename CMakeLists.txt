@@ -116,3 +116,11 @@ add_subdirectory(components/ScriptLibrary)
 include(src/CMakeLists.txt)
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT openblack)
+
+# Installation configuration
+if (UNIX)
+  install(TARGETS openblack RUNTIME DESTINATION bin)
+  install(FILES src/imgui/LICENSE.txt
+          DESTINATION "share/licenses/openblack"
+          RENAME "IMGUI_LICENSE.txt")
+endif()
