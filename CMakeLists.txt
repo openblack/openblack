@@ -73,6 +73,7 @@ endif()
 
 # Dependencies
 hunter_add_package(SDL2)
+hunter_add_package(spdlog)
 hunter_add_package(glew)
 hunter_add_package(glm)
 find_package(OpenGL REQUIRED)
