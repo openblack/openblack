@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=openblack
+GenericName=Role Playing Game
+Comment=Open source reimplementation of the game Black & White (2001).
+Keywords=Black & White;Reimplementation Mods;esm;bsa;
+TryExec=openblack
+Exec=openblack
+Icon=openblack
+Categories=Game;Strategy;
