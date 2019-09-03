@@ -26,16 +26,6 @@ target_include_directories(imgui PUBLIC
 # tell imgui we want to use GLEW as OpenGL loader
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLEW=1)
 
-if(HUNTER_ENABLED)
-	target_link_libraries(imgui PRIVATE
-		SDL2::SDL2
-		glew::glew )
-else()
-	target_include_directories(imgui PRIVATE
-		${SDL2_INCLUDE_DIR}
-		${GLEW_INCLUDE_DIR}
-	)
-	target_link_libraries(imgui PRIVATE
-		${GLEW_LIBRARY}
-	)
-endif()
+target_link_libraries(imgui PRIVATE
+	SDL2::SDL2
+	glew::glew)
