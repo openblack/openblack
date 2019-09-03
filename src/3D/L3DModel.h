@@ -30,6 +30,8 @@ using namespace OpenBlack::Graphics;
 
 namespace OpenBlack
 {
+class File;
+
 typedef uint32_t SkinId;
 
 class L3DModel
@@ -49,7 +51,7 @@ class L3DModel
 		Unknown10                = 1 << 9,
 		Unknown11                = 1 << 10,
 		Unknown12                = 1 << 11,
-		Unknown13                = 1 << 12,
+		IsPacked                 = 1 << 12,
 		NoDraw                   = 1 << 13,
 		Unknown15                = 1 << 14,
 		ContainsLandscapeFeature = 1 << 15,
@@ -74,6 +76,7 @@ class L3DModel
 	~L3DModel() = default;
 
 	void LoadFromFile(const std::string& fileName);
+	void Load(File& file);
 	void LoadFromL3D(const void* data, size_t size);
 	void Draw(ShaderProgram* program) const;
 
@@ -103,6 +106,7 @@ class L3DModel
 
   public:
 	bool IsBoned() const { return _flags & 0x100; }                     // 23
+	bool IsPacked() const { return _flags & 0x1000; }
 	bool IsNoDraw() const { return _flags & 0x2000; }                   // 18
 	bool IsContainsLandscapeFeature() const { return _flags & 0x8000; } // 16
 	bool IsContainsUV2() const { return _flags & 0x40000; }             // 13

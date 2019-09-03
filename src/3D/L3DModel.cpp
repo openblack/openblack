@@ -26,6 +26,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/transform.hpp>
 #include <stdexcept>
+#include <spdlog/spdlog.h>
 
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
@@ -129,6 +130,45 @@ void L3DModel::LoadFromFile(const std::string& fileName)
 	LoadFromL3D(reinterpret_cast<const void*>(meshData.data()), meshData.size());
 }
 
+void L3DModel::Load(File& file)
+{
+	constexpr char kMagic[4] = { 'L', '3', 'D', '0' };
+	char magic[4];
+	file.Read<char>(magic, 4);
+
+	// check L3D0 validity first..
+	if (std::memcmp(magic, kMagic, 4) != 0)
+	{
+		spdlog::error("l3dmodel: invalid magic number (expected {:.4} got {:.4})", magic, kMagic);
+		return;
+	}
+
+	uint32_t flags; // L3DFlag
+	uint32_t size;
+	uint32_t numMeshes;
+	uint32_t meshListOffset; // L3D_Mesh
+
+	file.Read<uint32_t>(&flags, 1);
+	file.Read<uint32_t>(&size, 1);
+	file.Read<uint32_t>(&numMeshes, 1);
+	file.Read<uint32_t>(&meshListOffset, 1);
+
+	_flags = flags;
+
+	// firstly they load skins
+	// if IsPacked LH3DTexture::GetThisTexture(skinListOffset[i])
+	// else create the texture from offset
+
+	// then submeshes
+	// for each mesh in offset list
+	// LH3DSubMesh::Create, which in turn create LH3DPrimitive::Create (should remove naming confusion)
+
+	// size: 2520, num meshes: 1, offset: 76
+	// size: 6100, num meshes: 4, offset: 100
+
+	spdlog::debug("size: {0}, num meshes: {1}, offset: {2}, packed: {3}", size, numMeshes, meshListOffset, IsPacked());
+}
+
 void L3DModel::LoadFromL3D(const void* data_, size_t size)
 {
 	const uint8_t* buffer = static_cast<const uint8_t*>(data_);
@@ -139,6 +179,9 @@ void L3DModel::LoadFromL3D(const void* data_, size_t size)
 
 	L3DHeader* header     = (L3DHeader*)(buffer + 4);
 	uint32_t* meshOffsets = (uint32_t*)(buffer + header->meshListOffset);
+
+	_flags = header->flags;
+	spdlog::debug("packed: {}", IsPacked());
 
 	for (uint32_t m = 0; m < header->numMeshes; m++)
 	{
@@ -240,7 +283,8 @@ void L3DModel::Draw(ShaderProgram* program) const
 		auto skinID         = _submeshSkinMap.at(i);
 
 		// assumption: texture should be set before, this isn't a nodraw.
-		if (skinID == -1) {
+		if (skinID == -1)
+		{
 			submesh->Draw();
 			continue;
 		}

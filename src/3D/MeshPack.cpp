@@ -19,6 +19,7 @@
  */
 
 #include <3D/MeshPack.h>
+#include <3D/L3DModel.h>
 #include <Common/File.h>
 #include <Graphics/OpenGL.h>
 #include <Graphics/Texture2D.h>
@@ -211,7 +212,14 @@ void MeshPack::loadMeshes(File& file)
 
 	for (uint32_t i = 0; i < meshCount; i++)
 	{
-		spdlog::debug("MeshPack mesh {0:d} at offset {1:#x}", i, meshOffsets[i]);
+		spdlog::debug("MeshPack mesh {0:d} at offset {1:#x}", i, block->second.position + meshOffsets[i]);
+
+		L3DModel* model = new L3DModel();
+
+		file.Seek(block->second.position + meshOffsets[i], FileSeekMode::Begin);
+		model->Load(file);
+
+		delete model;
 	}
 
 	spdlog::debug("MeshPack loaded {0} meshes", meshCount);
