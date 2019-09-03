@@ -12,6 +12,9 @@ environment:
     - TOOLCHAIN: "vs-16-2019-win64-cxx17"
       GENERATOR: "Visual Studio 16 2019"
 
+cache:
+  - C:\.hunter
+
 install:
   # clone git submodules
   - cmd: git submodule update --init --recursive
