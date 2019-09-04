@@ -131,12 +131,6 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 
 void Camera::handleMouseInput(const SDL_Event& e)
 {
-	if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP)
-	{
-		if (e.button.button == SDL_BUTTON_MIDDLE)
-			SDL_SetRelativeMouseMode((e.type == SDL_MOUSEBUTTONDOWN) ? SDL_TRUE : SDL_FALSE);
-	}
-
 	// Holding down the middle mouse button enables free look.
 	if (e.type == SDL_MOUSEMOTION && e.motion.state & SDL_BUTTON(SDL_BUTTON_MIDDLE))
 	{
