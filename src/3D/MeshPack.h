@@ -29,8 +29,8 @@
 namespace OpenBlack
 {
 
-class File;
-class L3DModel;
+class IStream;
+class L3DMesh;
 
 namespace Graphics
 {
@@ -55,20 +55,20 @@ class MeshPack
   public:
 	MeshPack() = default;
 
-	void LoadFromFile(File&);
+	void Load(IStream&);
 
-	using ModelsVec   = std::vector<std::unique_ptr<L3DModel>>;
+	using ModelsVec   = std::vector<std::unique_ptr<L3DMesh>>;
 	using TexturesVec = std::vector<std::unique_ptr<Graphics::Texture2D>>;
 
 	const ModelsVec& GetModels() const { return _models; }
 	const TexturesVec& GetTextures() const { return _textures; }
 
-	const L3DModel& GetModel(int id) const { return *_models.at(id); }
+	const L3DMesh& GetModel(int id) const { return *_models.at(id); }
 	const Graphics::Texture2D& GetTexture(int id) const { return *_textures.at(id); }
 
   private:
-	void loadTextures(File&);
-	void loadMeshes(File&);
+	void loadTextures(IStream&);
+	void loadMeshes(IStream&);
 
 	ModelsVec _models;
 	TexturesVec _textures;

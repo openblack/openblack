@@ -19,8 +19,8 @@
  */
 
 #include <3D/MeshPack.h>
-#include <3D/L3DModel.h>
-#include <Common/File.h>
+#include <3D/L3DMesh.h>
+#include <Common/IStream.h>
 #include <Graphics/OpenGL.h>
 #include <Graphics/Texture2D.h>
 #include <algorithm>
@@ -103,33 +103,34 @@ void createCompressedDDS(Graphics::Texture2D* texture, uint8_t* buffer)
 	texture->CreateCompressed(buffer + header->dwSize, width, height, internalFormat);
 }
 
-char kLionheadMagic[] = "LiOnHeAd";
 
-void MeshPack::LoadFromFile(File& file)
+void MeshPack::Load(IStream& stream)
 {
 	// check magic header
+	constexpr char kLionheadMagic[] = "LiOnHeAd";
+
 	char magic[8];
-	file.ReadBytes<char>(magic, 8);
+	stream.Read(magic, 8);
 	if (!std::equal(kLionheadMagic, kLionheadMagic + 8, magic))
 		throw std::runtime_error("invalid MeshPack file magic");
 
-	std::size_t size = file.Size();
-	while (file.Position() < size)
+	std::size_t size = stream.Size();
+	while (stream.Position() < size)
 	{
 		LHBlockHeader header;
-		file.ReadBytes<LHBlockHeader>(&header, 36);
+		stream.Read(&header, 36);
 
-		header.position = file.Position();
-		file.Seek(header.blockSize, FileSeekMode::Current);
+		header.position = stream.Position();
+		stream.Seek(header.blockSize, SeekMode::Current);
 
 		_blocks[header.blockName] = header;
 	}
 
-	loadTextures(file);
-	loadMeshes(file);
+	loadTextures(stream);
+	loadMeshes(stream);
 }
 
-void MeshPack::loadTextures(File& file)
+void MeshPack::loadTextures(IStream& stream)
 {
 	auto const& block = _blocks.find("INFO");
 	if (block == _blocks.end())
@@ -138,19 +139,20 @@ void MeshPack::loadTextures(File& file)
 	auto const& infoBlock = block->second;
 	assert(infoBlock.blockSize == 0x1004);
 
-	file.Seek(infoBlock.position, FileSeekMode::Begin);
+	stream.Seek(infoBlock.position, SeekMode::Begin);
 
-	uint32_t totalTextures;
-	file.Read<uint32_t>(&totalTextures, 1);
+	uint32_t totalTextures = stream.ReadValue<uint32_t>();
 
-	// todo: CI / mods will change this
-	assert(totalTextures == 110);
+	// todo: CI/mod support
+	if (totalTextures != 110) {
+		spdlog::warn("MeshPack contains {} textures, expected 110", totalTextures);
+	}
 
 	// firstly read ids
 	std::vector<std::pair<uint32_t, uint32_t>> textureTypeMap(totalTextures);
-	file.Read<uint32_t>(reinterpret_cast<uint32_t*>(textureTypeMap.data()), totalTextures * 2);
+	stream.Read(textureTypeMap.data(), totalTextures * 2 * sizeof(uint32_t));
 
-	_textures.resize(totalTextures + 1);
+	_textures.resize(static_cast<std::size_t>(totalTextures + 1));
 
 	// textures start at 1 - 0 would be an error texture
 	_textures[0] = std::make_unique<Graphics::Texture2D>();
@@ -164,16 +166,15 @@ void MeshPack::loadTextures(File& file)
 		if (textureBlock == _blocks.end())
 			throw std::runtime_error("no " + std::string(sBlockID) + " block in mesh pack");
 
-		file.Seek(textureBlock->second.position, FileSeekMode::Begin);
+		stream.Seek(textureBlock->second.position, SeekMode::Begin);
 
-		uint32_t size, id, type, ddsSize;
-		file.Read<uint32_t>(&size, 1);
-		file.Read<uint32_t>(&id, 1);
-		file.Read<uint32_t>(&type, 1);
-		file.Read<uint32_t>(&ddsSize, 1);
+		uint32_t size = stream.ReadValue<uint32_t>();
+		uint32_t id = stream.ReadValue<uint32_t>();
+		uint32_t type = stream.ReadValue<uint32_t>();
+		uint32_t ddsSize = stream.ReadValue<uint32_t>();
 
 		uint8_t* ddsBuffer = new uint8_t[ddsSize];
-		file.ReadBytes<uint8_t>(ddsBuffer, ddsSize);
+		stream.Read(ddsBuffer, ddsSize);
 
 		_textures[id] = std::make_unique<Graphics::Texture2D>();
 		createCompressedDDS(_textures[id].get(), ddsBuffer);
@@ -184,19 +185,17 @@ void MeshPack::loadTextures(File& file)
 	spdlog::debug("MeshPack loaded {0} textures", totalTextures);
 }
 
-void MeshPack::loadMeshes(File& file)
+void MeshPack::loadMeshes(IStream& stream)
 {
 	auto const& block = _blocks.find("MESHES");
 	if (block == _blocks.end())
 		throw std::runtime_error("no MESHES block in mesh pack");
 
 	// seek to the MESHES block
-	file.Seek(block->second.position, FileSeekMode::Begin);
-
-	uint32_t magic;
-	file.Read<uint32_t>(&magic, 1);
+	stream.Seek(block->second.position, SeekMode::Begin);
 
 	// Greetings Jean-Claude Cottier
+	uint32_t magic = stream.ReadValue<uint32_t>();
 	constexpr uint32_t kMKJC = ('C' << 24) | ('J' << 16) | ('K' << 8) | 'M';
 	if (magic != kMKJC)
 	{
@@ -204,20 +203,19 @@ void MeshPack::loadMeshes(File& file)
 		return;
 	}
 
-	uint32_t meshCount;
-	file.Read<uint32_t>(&meshCount, 1);
-
+	uint32_t meshCount = stream.ReadValue<uint32_t>();
 	std::vector<uint32_t> meshOffsets(meshCount);
-	file.Read<uint32_t>(meshOffsets.data(), meshCount);
+	stream.Read(meshOffsets.data(), meshCount * sizeof(uint32_t));
 
 	for (uint32_t i = 0; i < meshCount; i++)
 	{
-		spdlog::debug("MeshPack mesh {0:d} at offset {1:#x}", i, block->second.position + meshOffsets[i]);
+		spdlog::debug("MeshPack mesh {:d} at offset {:#x}", i, block->second.position + meshOffsets[i]);
 
-		L3DModel model;
+		stream.Seek(block->second.position + meshOffsets[i], SeekMode::Begin);
 
-		file.Seek(block->second.position + meshOffsets[i], FileSeekMode::Begin);
-		model.Load(file);
+		// todo: contained stream
+		L3DMesh model;
+		model.Load(stream);
 	}
 
 	spdlog::debug("MeshPack loaded {0} meshes", meshCount);

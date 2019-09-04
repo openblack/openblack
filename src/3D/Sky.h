@@ -21,7 +21,7 @@
 #pragma once
 
 #include <3D/Camera.h>
-#include <3D/L3DModel.h>
+#include <3D/L3DMesh.h>
 #include <Common/Bitmap16B.h>
 #include <Graphics/ShaderProgram.h>
 #include <Graphics/Texture2D.h>
@@ -42,7 +42,7 @@ class Sky
 
   private:
 	std::unique_ptr<ShaderProgram> _shader;
-	std::unique_ptr<L3DModel> _model;
+	std::unique_ptr<L3DMesh> _model;
 	std::unique_ptr<Texture2D> _texture;
 };
 

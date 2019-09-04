@@ -18,9 +18,10 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/L3DModel.h>
+#include <3D/L3DMesh.h>
 #include <3D/MeshPack.h>
 #include <Common/FileSystem.h>
+#include <Common/IStream.h>
 #include <Game.h>
 #include <array>
 #include <glm/gtc/matrix_transform.hpp>
@@ -32,39 +33,16 @@
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
 
-struct L3DHeader
-{
-	uint32_t flags; // L3DFlag
-	uint32_t skinOffset;
-	uint32_t numMeshes;
-	uint32_t meshListOffset; // L3D_Mesh
-	uint32_t unknown_1;
-	uint32_t unknown_2;
-	uint32_t unknown_3;
-	uint32_t unknown_4;
-	uint32_t unknown_5;
-	uint32_t unknown_6;
-	uint32_t unknown_7;
-	uint32_t unknown_8;
-	uint32_t unknown_9;
-	uint32_t numSkins;
-	uint32_t skinListOffset;
-	uint32_t unknown_10;
-	uint32_t unknown_11;
-	uint32_t pSkinName;
-};
-
-struct L3D_Mesh
+struct L3DSubMesh
 {
 	uint32_t flags; // nodraw, transparent
-
-	uint32_t numSubMeshes;
-	uint32_t subMeshOffset; // L3D_SubMesh
+	uint32_t numPrimitives;
+	uint32_t primitivesOffset;
 	uint32_t numBones;
 	uint32_t bonesOffset;
 };
 
-struct L3D_SubMesh
+struct L3DPrimitive
 {
 	uint32_t unknown_1;
 	uint32_t unknown_2;
@@ -125,59 +103,110 @@ struct L3DModel_Vertex
 	uint32_t bone;
 };
 
-void L3DModel::LoadFromFile(const std::string& fileName)
+void L3DMesh::LoadFromFile(const std::string& fileName)
 {
-	auto const meshData = Game::instance()->GetFileSystem().ReadAll(fileName);
-	LoadFromL3D(reinterpret_cast<const void*>(meshData.data()), meshData.size());
+	spdlog::debug("Loading L3DMesh from file: {}", fileName);
+	auto file = Game::instance()->GetFileSystem().Open(fileName, FileMode::Read);
+	//Load(*file);
+
+	//auto const meshData = Game::instance()->GetFileSystem().ReadAll(fileName);
+	//LoadFromL3D(reinterpret_cast<const void*>(meshData.data()), meshData.size());
 }
 
-void L3DModel::Load(File& file)
+void L3DMesh::Load(IStream& stream)
 {
-	// grab the base position since we can be reading from the middle of a G3D
-	std::size_t basePosition = file.Position();
-
-	constexpr char kMagic[4] = { 'L', '3', 'D', '0' };
+	constexpr const char kMagic[4] = { 'L', '3', 'D', '0' };
 	char magic[4];
-	file.Read<char>(magic, 4);
+	stream.Read(magic, 4);
 
 	// check L3D0 validity first..
 	if (std::memcmp(magic, kMagic, 4) != 0)
 	{
-		spdlog::error("l3dmodel: invalid magic number (expected {:.4} got {:.4})", magic, kMagic);
-		return; // todo: return an error model?
+		spdlog::error("l3dmodel: invalid magic number (expected {:.4} got {:.4})", kMagic, magic);
+		return; // todo: return an error moadel?
 	}
 
-	uint32_t size, numSubMeshes, meshListOffset, anotherOffset, numSkins, skinListOffset, numSomething, somethingList, pSkinName;
+	struct L3DHeader
+	{
+		L3DMeshFlags flags;
+		uint32_t size;
+		uint32_t submeshCount;
+		uint32_t submeshPointersOffset;
+		uint8_t padding[32]; // always zero
+		uint32_t anotherOffset;
+		uint32_t texturesCount;
+		uint32_t texturePointersOffset;
+		uint32_t pointsCount;
+		uint32_t pointsListOffset;
+		uint32_t extraDataOffset;
+	} header;
 
-	file.Read<uint32_t>(&_flags, 1);
-	file.Read<uint32_t>(&size, 1);
-	file.Read<uint32_t>(&numSubMeshes, 1);
-	file.Read<uint32_t>(&meshListOffset, 1);
+	stream.Read<L3DHeader>(&header);
 
 #ifdef _DEBUG
-	std::array<uint32_t, 8> padding;
-	file.Read<uint32_t>(padding.data(), 8);
-	assert(std::all_of(padding.begin(), padding.end(), [](int i) { return i == 0; }));
-#else
-	file.Seek(32, FileSeekMode::Current);
+	assert(std::all_of(&header.padding[0], &header.padding[32], [](int i) { return i == 0; }));
 #endif
 
-	file.Read<uint32_t>(&anotherOffset, 1);
-	file.Read<uint32_t>(&numSkins, 1);
-	file.Read<uint32_t>(&skinListOffset, 1);
-	file.Read<uint32_t>(&numSomething, 1);
-	file.Read<uint32_t>(&somethingList, 1);
-	file.Read<uint32_t>(&pSkinName, 1);
+	/*if (IsBoned())
+		spdlog::debug("\tcontains bones");
 
-	if (numSubMeshes > 0)
-		spdlog::debug("\t{} submeshes at offset {}", numSubMeshes, meshListOffset);
+	if (IsContainsLandscapeFeature())
+		spdlog::debug("\tcontains landscape feature");
 
-	if (numSkins > 0)
-		spdlog::debug("\t{} skins at offset {}", numSkins, skinListOffset);
+	if (IsContainsUV2())
+		spdlog::debug("\tcontains uv2");
 
-	if (numSomething > 0)
-		spdlog::debug("\t{} somethings at offset {}", numSomething, somethingList);
+	if (IsContainsNameData())
+		spdlog::debug("\tcontains name data");
 
+	if (IsContainsEBone())
+		spdlog::debug("\tcontains ebone");
+
+	if (IsContainsExtraMetrics())
+		spdlog::debug("\tcontains extra metrics");*/
+
+	// read textures
+	if (header.texturesCount > 0) {
+		std::vector<uint32_t> offsets(header.texturesCount);
+
+		// file.Seek(basePosition + header.texturePointersOffset, FileSeekMode::Begin);
+		// file.Read<uint32_t>(offsets.data(), offsets.size());
+
+		for (int i = 0; i < offsets.size(); i++)
+			spdlog::debug("\tTexture[{}] at {:#x}", i, offsets[i]);
+	}
+
+	// read submeshes
+	if (header.submeshCount > 0) {
+		std::vector<uint32_t> offsets(header.submeshCount);
+
+		// file.Seek(basePosition + header.submeshPointersOffset, FileSeekMode::Begin);
+		// file.Read<uint32_t>(offsets.data(), offsets.size());
+
+		for (int i = 0; i < offsets.size(); i++) {
+			L3DSubMesh submesh;
+
+			// file.Seek(basePosition + offsets[i], FileSeekMode::Begin);
+			// file.Read<L3DSubMesh>(&submesh, 1);
+
+			spdlog::debug("\tSubMesh[{}] has {} primitives and {} bones", i, submesh.numPrimitives, submesh.numBones);
+		}
+	}
+
+	/*if (header.pointsCount > 0) {
+		spdlog::debug("\t{} points at {:#x}", header.pointsCount, header.pointsListOffset);
+
+		file.Seek(basePosition + header.pointsListOffset, FileSeekMode::Begin);
+
+		for (auto i = 0; i < header.pointsCount; i++) {
+			glm::vec3 point;
+			file.Read<float>(glm::value_ptr(point), 3);
+			spdlog::debug("\t\tpoint[{}] = [{}, {}, {}]", i, point.x, point.y, point.z);
+		}
+	}*/
+
+	//if (header.extraDataOffset != -1)
+	//	spdlog::debug("\textraDataOffset: {:#x}", header.extraDataOffset);
 
 	// firstly they load skins
 	// if IsPacked LH3DTexture::GetThisTexture(skinListOffset[i])
@@ -191,7 +220,7 @@ void L3DModel::Load(File& file)
 	// size: 6100, num meshes: 4, offset: 100
 }
 
-void L3DModel::LoadFromL3D(const void* data_, size_t size)
+/*void L3DMesh::LoadFromL3D(const void* data_, size_t size)
 {
 	const uint8_t* buffer = static_cast<const uint8_t*>(data_);
 	if (buffer[0] != 'L' || buffer[1] != '3' || buffer[2] != 'D' || buffer[3] != '0')
@@ -202,13 +231,7 @@ void L3DModel::LoadFromL3D(const void* data_, size_t size)
 	L3DHeader* header     = (L3DHeader*)(buffer + 4);
 	uint32_t* meshOffsets = (uint32_t*)(buffer + header->meshListOffset);
 
-	_flags = header->flags;
-
-	if (header->unknown_1 != 0 || header->unknown_2 != 0 || header->unknown_3 != 0 || header->unknown_4 != 0 || header->unknown_5 != 0 || header->unknown_6 != 0 ||
-	    header->unknown_7 != 0 || header->unknown_8 != 0)
-	{
-		spdlog::debug("non zero");
-	}
+	_flags = static_cast<L3DMeshFlags>(header->flags);
 
 	for (uint32_t m = 0; m < header->numMeshes; m++)
 	{
@@ -251,7 +274,7 @@ void L3DModel::LoadFromL3D(const void* data_, size_t size)
 			_submeshSkinMap[sm] = subMesh->skinID;
 		}
 
-		/* copy bones into our own format */
+		// copy bones into our own format
 		L3D_Bone* bones = (L3D_Bone*)(buffer + mesh->bonesOffset);
 		_bones.resize(mesh->numBones);
 
@@ -295,9 +318,9 @@ void L3DModel::LoadFromL3D(const void* data_, size_t size)
 		_textures[skin->skinID] = std::make_unique<Texture2D>();
 		_textures[skin->skinID]->Create(skin->data, DataType::UnsignedShort4444Rev, Format::BGRA, 256, 256, InternalFormat::RGB5A1);
 	}
-}
+}*/
 
-void L3DModel::Draw(ShaderProgram* program) const
+void L3DMesh::Draw(ShaderProgram* program) const
 {
 	// program->SetUniformValue("u_boneMatrices[0]", _boneMatrices.size(), _boneMatrices.data());
 	auto& meshPackTextures = Game::instance()->GetMeshPack().GetTextures();
@@ -326,7 +349,7 @@ void L3DModel::Draw(ShaderProgram* program) const
 	}
 }
 
-void L3DModel::calculateBoneMatrices()
+void L3DMesh::calculateBoneMatrices()
 {
 	_boneMatrices.resize(64, glm::mat4(1.0f));
 	for (size_t i = 0; i < _bones.size(); i++)
