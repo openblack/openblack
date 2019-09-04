@@ -114,6 +114,8 @@ Game::Game(int argc, char** argv):
 		SetGamePath(gamePath);
 	}
 
+	_fileSystem->SetGamePath(GetGamePath());
+	spdlog::debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
 
 	// setup all that is needed for the GUI
 	std::string window_title =  kWindowTitle + " [" + kBuildStr + "]";
@@ -124,15 +126,15 @@ Game::Game(int argc, char** argv):
 		throw std::runtime_error(std::string("SDL_Init failed with Error: ") + SDL_GetError());
 	}
 	{
+		// print SDL version
 		SDL_version compiledVersion, linkedVersion;
-		SDL_VERSION(&compiledVersion);
+		SDL_VERSION(&compiledVersion)
 		SDL_GetVersion(&linkedVersion);
 
 		spdlog::info("Initializing SDL...");
 		spdlog::info("SDL Version/Compiled {}.{}.{}", compiledVersion.major, compiledVersion.minor, compiledVersion.patch);
 		spdlog::info("SDL Version/Linked {}.{}.{}", linkedVersion.major, linkedVersion.minor, linkedVersion.patch);
 	}
-
 
 	// Decide GL+GLSL versions
 	// GL 3.0 + GLSL 130
@@ -192,6 +194,11 @@ Game::Game(int argc, char** argv):
 		spdlog::info("OpenGL version: {}.{}", majorVersion, minorVersion);
 	}
 
+	// debug outputs
+	glEnable(GL_DEBUG_OUTPUT);
+	glDebugMessageCallback(MessageCallback, 0);
+	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, 0, GL_FALSE);
+
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -223,66 +230,10 @@ Game::Game(int argc, char** argv):
 	//ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
 	//IM_ASSERT(font != NULL);
 
-
 	// create GameWindow handle
 	_window = std::make_unique<GameWindow>(window);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	//_window = std::make_unique<GameWindow>(
-	//			kWindowTitle + " [" + kBuildStr + "]",
-	//			windowWidth, windowHeight, displayMode);
-	//_window->SetSwapInterval(1);
-
-	_fileSystem->SetGamePath(GetGamePath());
-	spdlog::debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
-
-	//glEnable(GL_DEBUG_OUTPUT);
-	//glDebugMessageCallback(MessageCallback, 0);
-	//glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, 0, GL_FALSE);
-
-	//IMGUI_CHECKVERSION();
-	//ImGui::CreateContext();
-	//ImGuiIO& io = ImGui::GetIO(); (void)io;
-	//io.IniFilename = NULL;
-
-	//ImGui::StyleColorsLight();
-	//ImGui::StyleColorsDark();
-	//ImGui::StyleColorsClassic();
-
-	//ImGuiStyle& style     = ImGui::GetStyle();
-	//style.FrameBorderSize = 1.0f;
-
-	//ImGui_ImplSDL2_InitForOpenGL(_window->GetHandle(), _window->GetGLContext());
-	//ImGui_ImplOpenGL3_Init("#version 130");
-
+	// load shader
 	_shaderManager->LoadShader("DebugLine", "shaders/line.vert", "shaders/line.frag");
 	_shaderManager->LoadShader("Terrain", "shaders/terrain.vert", "shaders/terrain.frag");
 	_shaderManager->LoadShader("SkinnedMesh", "shaders/skin.vert", "shaders/skin.frag");
