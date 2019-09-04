@@ -21,7 +21,6 @@
 #pragma once
 
 #include <3D/LandBlock.h>
-#include <Common/File.h>
 #include <Graphics/Mesh.h>
 #include <Graphics/Texture2D.h>
 #include <Graphics/Texture2DArray.h>
@@ -34,6 +33,8 @@ using namespace OpenBlack::Graphics;
 
 namespace OpenBlack
 {
+class IStream;
+
 struct MapMaterial
 {
 	uint32_t FirstMaterialIndex;
@@ -56,7 +57,7 @@ class LandIsland
 	LandIsland();
 	~LandIsland();
 
-	void LoadFromFile(File& file);
+	void LoadFromFile(IStream& file);
 
 	// const uint8_t GetAltitudeAt(glm::ivec2) const;
 

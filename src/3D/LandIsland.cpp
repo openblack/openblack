@@ -21,9 +21,12 @@
 #include "LandIsland.h"
 
 #include <Common/FileSystem.h>
+#include <Common/IStream.h>
+
 #include <Game.h>
 #include <inttypes.h>
 #include <stdexcept>
+#include <spdlog/spdlog.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <Common/stb_image_write.h>
@@ -39,7 +42,6 @@ LandIsland::LandIsland():
 	auto file           = Game::instance()->GetFileSystem().Open("Data/Textures/smallbumpa.raw", FileMode::Read);
 	uint8_t* smallbumpa = new uint8_t[file->Size()];
 	file->Read(smallbumpa, file->Size());
-	file->Close();
 
 	_textureSmallBump = std::make_unique<Texture2D>();
 	_textureSmallBump->Create(smallbumpa, DataType::UnsignedByte, Format::Red, 256, 256, InternalFormat::R8);
@@ -58,37 +60,38 @@ LandIsland::~LandIsland()
 Loads from the original Black & White .lnd file format and
 converts the data into our own
 */
-void LandIsland::LoadFromFile(File& file)
+void LandIsland::LoadFromFile(IStream& stream)
 {
 	uint32_t blockCount, countryCount, blockSize, matSize, countrySize;
 
-	file.ReadBytes(&blockCount, 4);
-	file.ReadBytes(_blockIndexLookup.data(), 1024);
-	file.ReadBytes(&_materialCount, 4);
-	file.ReadBytes(&countryCount, 4);
+	stream.Read<uint32_t>(&blockCount);
+	stream.Read(_blockIndexLookup.data(), 1024);
+	stream.Read<uint32_t>(&_materialCount);
+	stream.Read<uint32_t>(&countryCount);
 
 	// todo: lets assert these against sizeof(LandBlock) etc..
-	file.ReadBytes(&blockSize, 4);
-	file.ReadBytes(&matSize, 4);
-	file.ReadBytes(&countrySize, 4);
-	file.ReadBytes(&_lowresCount, 4);
+	stream.Read<uint32_t>(&blockSize);
+	stream.Read<uint32_t>(&matSize);
+	stream.Read<uint32_t>(&countrySize);
+	stream.Read<uint32_t>(&_lowresCount);
 
 	// skip over low resolution textures
 	// for future reference these are formatted GL_COMPRESSED_RGBA_S3TC_DXT3_EXT
 	for (unsigned int i = 0; i < _lowresCount; i++)
 	{
-		uint32_t textureSize;
-		file.Seek(16, FileSeekMode::Current);
-		file.ReadBytes(&textureSize, 4);
-		file.Seek(textureSize - 4, FileSeekMode::Current);
+		stream.Seek(16, SeekMode::Current);
+		uint32_t textureSize = stream.ReadValue<uint32_t>();
+		stream.Seek(textureSize - 4, SeekMode::Current);
 	}
 
 	blockCount--; // take away a block from the count, because it's not in the file?
+
+	spdlog::debug("[LandIsland] loading {} blocks", blockCount);
 	_landBlocks.reserve(blockCount);
 	for (uint32_t i = 0; i < blockCount; i++)
 	{
 		uint8_t* blockData = new uint8_t[blockSize];
-		file.ReadBytes(blockData, blockSize);
+		stream.Read(blockData, blockSize);
 
 		_landBlocks.push_back(LandBlock());
 		_landBlocks[i].Load(blockData, blockSize);
@@ -96,46 +99,42 @@ void LandIsland::LoadFromFile(File& file)
 		delete[] blockData;
 	}
 
+	spdlog::debug("[LandIsland] loading {} countries", countryCount);
 	_countries.reserve(countryCount);
 	for (uint32_t i = 0; i < countryCount; i++)
 	{
 		Country country;
-		file.ReadBytes(&country, sizeof(Country));
+		stream.Read(&country);
 		_countries.push_back(country);
 	}
 
+	spdlog::debug("[LandIsland] loading {} textures", _materialCount);
 	_materialArray = std::make_shared<Texture2DArray>();
 	_materialArray->Create(256, 256, _materialCount, InternalFormat::RGBA8);
 	for (uint32_t i = 0; i < _materialCount; i++)
 	{
-		uint16_t* rgba5TextureData = new uint16_t[256 * 256];
-		uint32_t* rgba8TextureData = new uint32_t[256 * 256];
+		std::vector<uint16_t> rgba5TextureData(256 * 256);
+		std::vector<uint32_t> rgba8TextureData(256 * 256);
 
-		uint16_t terrainType;
-		file.ReadBytes(&terrainType, 2);
-		file.ReadBytes(rgba5TextureData, 256 * 256 * sizeof(uint16_t));
+		uint16_t terrainType = stream.ReadValue<uint16_t>();
+		stream.Read(rgba5TextureData.data(), static_cast<std::size_t>(256 * 256 * sizeof(uint16_t)));
 
-		convertRGB5ToRGB8(rgba5TextureData, rgba8TextureData, 256 * 256);
-		_materialArray->SetTexture(i, 256, 256, Format::RGBA, DataType::UnsignedInt8888, rgba8TextureData);
-
-		delete[] rgba5TextureData;
-		delete[] rgba8TextureData;
+		convertRGB5ToRGB8(rgba5TextureData.data(), rgba8TextureData.data(), 256 * 256);
+		_materialArray->SetTexture(i, 256, 256, Format::RGBA, DataType::UnsignedInt8888, rgba8TextureData.data());
 	}
 
 	// read noise map into Texture2D
 	_noiseMap = new uint8_t[256 * 256]; // (delete handled by destructor)
-	file.ReadBytes(_noiseMap, 256 * 256);
+	stream.Read(_noiseMap, 256 * 256);
 	_textureNoiseMap = std::make_shared<Texture2D>();
 	_textureNoiseMap->Create(_noiseMap, DataType::UnsignedByte, Format::Red, 256, 256, InternalFormat::Red);
 
 	// read bump map into Texture2D
 	uint8_t* bumpMapTextureData = new uint8_t[256 * 256];
-	file.ReadBytes(bumpMapTextureData, 256 * 256);
+	stream.Read(bumpMapTextureData, 256 * 256);
 	_textureBumpMap = std::make_shared<Texture2D>();
 	_textureBumpMap->Create(bumpMapTextureData, DataType::UnsignedByte, Format::Red, 256, 256, InternalFormat::Red);
 	delete[] bumpMapTextureData;
-
-	file.Close();
 
 	// build the meshes (we could move this elsewhere)
 	for (auto& block : _landBlocks)

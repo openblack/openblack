@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include <Common/File.h>
 #include <Game.h>
 #include <LHScriptX/Lexer.h>
 #include <vector>
@@ -44,7 +43,8 @@ class Script
 	    _game(game),
 	    token_(Token::MakeInvalidToken()) {}
 
-	void LoadFromFile(File& file);
+	void Load(const std::string&);
+
 	//void SetCommands(std::unique_ptr<ScriptCommands> &commands) { _commands = std::move(commands); }
 	//ScriptCommands &GetCommands() const { return *_commands; }
   private:

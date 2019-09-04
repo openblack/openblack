@@ -134,15 +134,12 @@ void Game::Run()
 	_modelRotation = glm::vec3(180.0f, 111.0f, 0.0f);
 	_modelScale    = glm::vec3(0.5f);
 
-	File file(GetGamePath() + "/Data/AllMeshes.g3d", FileMode::Read);
+	auto file = _fileSystem->Open("Data/AllMeshes.g3d", FileMode::Read);
 	_meshPack = std::make_unique<MeshPack>();
-	_meshPack->LoadFromFile(file);
-	file.Close();
+	_meshPack->Load(*file);
 
-	//_videoPlayer = std::make_unique<Video::VideoPlayer>(GetGamePath() + "/Data/logo.bik");
-
-	_testModel = std::make_unique<L3DModel>();
-	_testModel->LoadFromFile(GetGamePath() + "/Data/CreatureMesh/C_Tortoise_Base.l3d");
+	_testModel = std::make_unique<L3DMesh>();
+	_testModel->LoadFromFile("Data/CreatureMesh/C_Tortoise_Base.l3d");
 
 	_sky   = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
@@ -405,11 +402,11 @@ void Game::LoadMap(const std::string& name)
 	if (!_fileSystem->Exists(name))
 		throw std::runtime_error("Could not find script " + name);
 
-	auto file = _fileSystem->Open(name, FileMode::Read);
+	//auto file = _fileSystem->Open(name, FileMode::Read);
 
 	_entityRegistry->Reset();
-	Script script(this);
-	script.LoadFromFile(*file);
+	//Script script(this);
+	//script.LoadFromFile(*file);
 }
 
 void Game::LoadLandscape(const std::string& name)

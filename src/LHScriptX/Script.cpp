@@ -18,7 +18,6 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Common/File.h>
 #include <LHScriptX/FeatureScriptCommands.h>
 #include <LHScriptX/Lexer.h>
 #include <LHScriptX/Script.h>
@@ -27,17 +26,11 @@
 using namespace OpenBlack;
 using namespace OpenBlack::LHScriptX;
 
-void Script::LoadFromFile(File& file)
+void Script::Load(const std::string& source)
 {
-	size_t totalFileSize = file.Size();
-
-	char* contents = new char[totalFileSize];
-	file.Read(contents, totalFileSize);
-
-	lexer_ = new Lexer(std::string(contents, totalFileSize));
+	Lexer lexer(source);
 
 	const Token* token = this->peekToken();
-
 	while (!token->IsEOF())
 	{
 		token = this->peekToken();
@@ -84,9 +77,6 @@ void Script::LoadFromFile(File& file)
 
 		this->advanceToken();
 	}
-
-	delete lexer_;
-	delete[] contents;
 }
 
 bool Script::isCommand(const std::string& identifier) const
