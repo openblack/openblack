@@ -72,13 +72,6 @@ const std::string kWindowTitle = "OpenBlack";
 
 Game* Game::sInstance = nullptr;
 
-void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
-{
-	spdlog::debug("GL CALLBACK: {} type = {0:x}, severity = {0:x}, message = {}\n",
-	        (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-	        type, severity, message);
-}
-
 Game::Game(int argc, char** argv):
     _running(true), _wireframe(false), _waterDebug(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f), _smallBumpmapStrength(1.0f),
     _fileSystem(std::make_unique<FileSystem>()),
@@ -107,10 +100,6 @@ Game::Game(int argc, char** argv):
 
 	_fileSystem->SetGamePath(GetGamePath());
 	spdlog::debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
-
-	glEnable(GL_DEBUG_OUTPUT);
-	glDebugMessageCallback(MessageCallback, 0);
-	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, 0, GL_FALSE);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
