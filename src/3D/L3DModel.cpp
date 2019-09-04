@@ -22,11 +22,12 @@
 #include <3D/MeshPack.h>
 #include <Common/FileSystem.h>
 #include <Game.h>
+#include <array>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/transform.hpp>
-#include <stdexcept>
 #include <spdlog/spdlog.h>
+#include <stdexcept>
 
 using namespace OpenBlack;
 using namespace OpenBlack::Graphics;
@@ -132,6 +133,9 @@ void L3DModel::LoadFromFile(const std::string& fileName)
 
 void L3DModel::Load(File& file)
 {
+	// grab the base position since we can be reading from the middle of a G3D
+	std::size_t basePosition = file.Position();
+
 	constexpr char kMagic[4] = { 'L', '3', 'D', '0' };
 	char magic[4];
 	file.Read<char>(magic, 4);
@@ -140,20 +144,40 @@ void L3DModel::Load(File& file)
 	if (std::memcmp(magic, kMagic, 4) != 0)
 	{
 		spdlog::error("l3dmodel: invalid magic number (expected {:.4} got {:.4})", magic, kMagic);
-		return;
+		return; // todo: return an error model?
 	}
 
-	uint32_t flags; // L3DFlag
-	uint32_t size;
-	uint32_t numMeshes;
-	uint32_t meshListOffset; // L3D_Mesh
+	uint32_t size, numSubMeshes, meshListOffset, anotherOffset, numSkins, skinListOffset, numSomething, somethingList, pSkinName;
 
-	file.Read<uint32_t>(&flags, 1);
+	file.Read<uint32_t>(&_flags, 1);
 	file.Read<uint32_t>(&size, 1);
-	file.Read<uint32_t>(&numMeshes, 1);
+	file.Read<uint32_t>(&numSubMeshes, 1);
 	file.Read<uint32_t>(&meshListOffset, 1);
 
-	_flags = flags;
+#ifdef _DEBUG
+	std::array<uint32_t, 8> padding;
+	file.Read<uint32_t>(padding.data(), 8);
+	assert(std::all_of(padding.begin(), padding.end(), [](int i) { return i == 0; }));
+#else
+	file.Seek(32, FileSeekMode::Current);
+#endif
+
+	file.Read<uint32_t>(&anotherOffset, 1);
+	file.Read<uint32_t>(&numSkins, 1);
+	file.Read<uint32_t>(&skinListOffset, 1);
+	file.Read<uint32_t>(&numSomething, 1);
+	file.Read<uint32_t>(&somethingList, 1);
+	file.Read<uint32_t>(&pSkinName, 1);
+
+	if (numSubMeshes > 0)
+		spdlog::debug("\t{} submeshes at offset {}", numSubMeshes, meshListOffset);
+
+	if (numSkins > 0)
+		spdlog::debug("\t{} skins at offset {}", numSkins, skinListOffset);
+
+	if (numSomething > 0)
+		spdlog::debug("\t{} somethings at offset {}", numSomething, somethingList);
+
 
 	// firstly they load skins
 	// if IsPacked LH3DTexture::GetThisTexture(skinListOffset[i])
@@ -165,8 +189,6 @@ void L3DModel::Load(File& file)
 
 	// size: 2520, num meshes: 1, offset: 76
 	// size: 6100, num meshes: 4, offset: 100
-
-	spdlog::debug("size: {0}, num meshes: {1}, offset: {2}, packed: {3}", size, numMeshes, meshListOffset, IsPacked());
 }
 
 void L3DModel::LoadFromL3D(const void* data_, size_t size)
@@ -181,7 +203,12 @@ void L3DModel::LoadFromL3D(const void* data_, size_t size)
 	uint32_t* meshOffsets = (uint32_t*)(buffer + header->meshListOffset);
 
 	_flags = header->flags;
-	spdlog::debug("packed: {}", IsPacked());
+
+	if (header->unknown_1 != 0 || header->unknown_2 != 0 || header->unknown_3 != 0 || header->unknown_4 != 0 || header->unknown_5 != 0 || header->unknown_6 != 0 ||
+	    header->unknown_7 != 0 || header->unknown_8 != 0)
+	{
+		spdlog::debug("non zero");
+	}
 
 	for (uint32_t m = 0; m < header->numMeshes; m++)
 	{
