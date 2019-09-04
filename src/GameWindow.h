@@ -25,12 +25,6 @@
 #include <memory>
 #include <string>
 
-struct SDLDestroyer
-{
-	void operator()(SDL_Window* window) const { SDL_DestroyWindow(window); }
-	void operator()(SDL_GLContext* glcontext) const { SDL_GL_DeleteContext(*glcontext); }
-};
-
 namespace OpenBlack
 {
 enum DisplayMode
@@ -42,12 +36,16 @@ enum DisplayMode
 
 class GameWindow
 {
+  struct SDLDestroyer
+  {
+	void operator()(SDL_Window* window) const { SDL_DestroyWindow(window); }
+  };
+
   public:
 	GameWindow(const std::string& title, const SDL_DisplayMode& display, DisplayMode displaymode);
 	GameWindow(const std::string& title, int width, int height, DisplayMode displaymode);
 
 	SDL_Window* GetHandle() const;
-	SDL_GLContext* GetGLContext() const;
 	void GetNativeHandles(void*& native_window, void*& native_display) const;
 
 	bool IsOpen() const;
@@ -91,6 +89,5 @@ class GameWindow
 
   private:
 	std::unique_ptr<SDL_Window, SDLDestroyer> _window;
-	std::unique_ptr<SDL_GLContext, SDLDestroyer> _glcontext;
 };
 } // namespace OpenBlack

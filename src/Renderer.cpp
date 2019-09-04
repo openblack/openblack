@@ -20,7 +20,11 @@
 
 #include "Renderer.h"
 
+#include <sstream>
+
+#include <GL/glew.h>
 #include <SDL_video.h>
+#include <spdlog/spdlog.h>
 
 #include <GameWindow.h>
 
@@ -50,4 +54,50 @@ uint32_t Renderer::GetRequiredFlags()
 
 Renderer::Renderer(std::unique_ptr<GameWindow>& window)
 {
+	// Create a debug context?
+	bool useDebug = true;
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, useDebug ? SDL_GL_CONTEXT_DEBUG_FLAG : 0);
+
+	auto context = SDL_GL_CreateContext(window->GetHandle());
+
+	if (context == nullptr)
+	{
+		throw std::runtime_error("Could not create OpenGL context: " + std::string(SDL_GetError()));
+	}
+	else
+	{
+		_glcontext = std::unique_ptr<SDL_GLContext, SDLDestroyer>(&context);
+	}
+
+	spdlog::info("OpenGL context successfully created.");
+
+	int majorVersion, minorVersion;
+	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &majorVersion);
+	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minorVersion);
+
+	spdlog::info("OpenGL version: {}.{}", majorVersion, minorVersion);
+
+	// initalize glew
+	glewExperimental = GL_TRUE;
+	GLenum err = glewInit();
+#ifdef GLEW_ERROR_NO_GLX_DISPLAY
+	if (GLEW_ERROR_NO_GLX_DISPLAY == err)
+	{
+		spdlog::warn("GLEW couldn't open GLX display");
+	}
+	else
+#endif
+	if (GLEW_OK != err)
+	{
+		std::stringstream error;
+		error << "glewInit failed: " << glewGetErrorString(err) << std::endl;
+		throw std::runtime_error(error.str());
+	}
+
+	spdlog::info("Using GLEW {0}", glewGetString(GLEW_VERSION));
+}
+
+SDL_GLContext& Renderer::GetGLContext() const
+{
+	return *_glcontext;
 }
