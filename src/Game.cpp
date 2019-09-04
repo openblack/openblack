@@ -133,22 +133,29 @@ Game::Game(int argc, char** argv):
 		spdlog::info("SDL Version/Linked {}.{}.{}", linkedVersion.major, linkedVersion.minor, linkedVersion.patch);
 	}
 
+
 	// Decide GL+GLSL versions
 	// GL 3.0 + GLSL 130
 	const char* glsl_version = "#version 130";
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
+	SDL_ShowCursor(SDL_DISABLE);
+	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
 	// Create window with graphics context
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-	SDL_WindowFlags window_flags = (SDL_WindowFlags)(
+	uint32_t window_flags =
 				SDL_WINDOW_OPENGL |
+				SDL_WINDOW_INPUT_FOCUS |
 				SDL_WINDOW_RESIZABLE |
-				SDL_WINDOW_ALLOW_HIGHDPI);
+				SDL_WINDOW_ALLOW_HIGHDPI;
 	SDL_Window* window = SDL_CreateWindow(
 				window_title.c_str(),
 				SDL_WINDOWPOS_UNDEFINED,
@@ -170,7 +177,19 @@ Game::Game(int argc, char** argv):
 #endif
 	if (err)
 	{
+#if defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
+		std::stringstream error;
+		error << "glewInit failed: " << glewGetErrorString(err) << std::endl;
+		throw std::runtime_error(error.str());
+#else
 		throw std::runtime_error("Failed to initialize OpenGL loader!");
+#endif
+	}
+	{
+		int majorVersion, minorVersion;
+		SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &majorVersion);
+		SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minorVersion);
+		spdlog::info("OpenGL version: {}.{}", majorVersion, minorVersion);
 	}
 
 	// Setup Dear ImGui context
@@ -204,13 +223,6 @@ Game::Game(int argc, char** argv):
 	//ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
 	//IM_ASSERT(font != NULL);
 
-
-	{
-		int majorVersion, minorVersion;
-		SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &majorVersion);
-		SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minorVersion);
-		spdlog::info("OpenGL version: {}.{}", majorVersion, minorVersion);
-	}
 
 	// create GameWindow handle
 	_window = std::make_unique<GameWindow>(window);
