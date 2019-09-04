@@ -82,7 +82,7 @@ inline void AddUnderLine(ImColor col_)
 inline bool TextButtonColored(ImVec4 color, const char* name_)
 {
 	bool pressed = false;
-	ImGui::TextColored(color, name_);
+	ImGui::TextColored(color, "%s", name_);
 	if (ImGui::IsItemHovered())
 	{
 		if (ImGui::IsMouseClicked(0))
@@ -113,7 +113,7 @@ void LHVMViewer::Draw(OpenBlack::LHVM::LHVM* lhvm)
 		if (ImGui::BeginTabItem("Variables"))
 		{
 			// left
-			static int selected = 0;
+			static size_t selected = 0;
 			ImGui::BeginChild("left pane", ImVec2(240, 0), true);
 
 			auto variables = lhvm->GetVariables();
@@ -128,7 +128,7 @@ void LHVMViewer::Draw(OpenBlack::LHVM::LHVM* lhvm)
 
 			// right
 			ImGui::BeginChild("item view"); // Leave room for 1 line below us
-			ImGui::Text("Variable ID: %d", selected);
+			ImGui::Text("Variable ID: %s", std::to_string(selected).c_str());
 			ImGui::Text("Variable Name: %s", variables[selected].c_str());
 			ImGui::EndChild();
 
@@ -280,7 +280,7 @@ void LHVMViewer::DrawScriptDisassembly(OpenBlack::LHVM::LHVM* lhvm, OpenBlack::L
 		case LHVM::VMInstruction::Opcode::CALL:
 			ImGui::TextColored(Disassembly_ColorKeyword, "CALL");
 			ImGui::SameLine();
-			ImGui::TextColored(Disassembly_ColorFuncName, Function_Names[instruction.GetData()].c_str());
+			ImGui::TextColored(Disassembly_ColorFuncName, "%s", Function_Names[instruction.GetData()].c_str());
 			break;
 		case LHVM::VMInstruction::Opcode::RUN:
 		{
@@ -303,7 +303,7 @@ void LHVMViewer::DrawScriptDisassembly(OpenBlack::LHVM::LHVM* lhvm, OpenBlack::L
 			ImGui::TextColored(Disassembly_ColorConstant, "0x%04x", instruction.GetData());
 			break;
 		default:
-			ImGui::TextColored(Disassembly_ColorKeyword, instruction.Disassemble().c_str());
+			ImGui::TextColored(Disassembly_ColorKeyword, "%s", instruction.Disassemble().c_str());
 			break;
 		}
 
