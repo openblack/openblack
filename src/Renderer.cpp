@@ -30,6 +30,20 @@
 
 using namespace OpenBlack;
 
+namespace {
+void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
+{
+	if (auto renderer = reinterpret_cast<const Renderer*>(userParam))
+	{
+		renderer->MessageCallback(source, type, id, severity, length, message);
+	}
+	else
+	{
+		spdlog::warn("MessageCallback user param not properly installed");
+	}
+}
+}
+
 std::vector<Renderer::RequiredAttribute> Renderer::GetRequiredWindowingAttributes() {
 	return std::vector<RequiredAttribute> {
 		{Api::OpenGl, SDL_GL_RED_SIZE, 8},
@@ -106,9 +120,20 @@ Renderer::Renderer(std::unique_ptr<GameWindow>& window)
 	}
 
 	spdlog::info("Using GLEW {0}", glewGetString(GLEW_VERSION));
+
+	glEnable(GL_DEBUG_OUTPUT);
+	glDebugMessageCallback(::MessageCallback, this);
+	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
 }
 
 SDL_GLContext& Renderer::GetGLContext() const
 {
 	return *_glcontext;
+}
+
+void Renderer::MessageCallback(uint32_t source, uint32_t type, uint32_t id, uint32_t severity, int32_t length, const std::string& message) const
+{
+	spdlog::debug("GL CALLBACK: {} type = {0:x}, severity = {0:x}, message = {}\n",
+				  (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+				  type, severity, message);
 }

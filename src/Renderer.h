@@ -54,6 +54,7 @@ class Renderer {
 	~Renderer() = default;
 
 	[[nodiscard]] SDL_GLContext& GetGLContext() const;
+	void MessageCallback(uint32_t source, uint32_t type, uint32_t id, uint32_t severity, int32_t length, const std::string& message) const;
 
   private:
   static std::vector<RequiredAttribute> GetRequiredContextAttributes();
