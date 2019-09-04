@@ -27,6 +27,9 @@
 #endif
 #include <GL/glew.h>
 #include <spdlog/spdlog.h>
+#if USE_VULKAN
+#include <SDL_vulkan.h>
+#endif  // USE_VULKAN
 
 using namespace OpenBlack;
 
@@ -254,6 +257,16 @@ void GameWindow::SetSize(int width, int height)
 void GameWindow::GetSize(int& width, int& height)
 {
 	SDL_GetWindowSize(_window.get(), &width, &height);
+}
+
+void GameWindow::GetDrawableSize(int &width, int &height)
+{
+	// TODO(bwrsandman): Make this a runtime branch
+#if USE_VULKAN
+	SDL_Vulkan_GetDrawableSize(_window.get(), &drawable_width, &drawable_height);
+#else
+	SDL_GL_GetDrawableSize(_window.get(), &width, &height);
+#endif  // USE_VULKAN
 }
 
 void GameWindow::Show()
