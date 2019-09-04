@@ -107,10 +107,7 @@ void L3DMesh::LoadFromFile(const std::string& fileName)
 {
 	spdlog::debug("Loading L3DMesh from file: {}", fileName);
 	auto file = Game::instance()->GetFileSystem().Open(fileName, FileMode::Read);
-	//Load(*file);
-
-	//auto const meshData = Game::instance()->GetFileSystem().ReadAll(fileName);
-	//LoadFromL3D(reinterpret_cast<const void*>(meshData.data()), meshData.size());
+	Load(*file);
 }
 
 void L3DMesh::Load(IStream& stream)
@@ -169,8 +166,8 @@ void L3DMesh::Load(IStream& stream)
 	if (header.texturesCount > 0) {
 		std::vector<uint32_t> offsets(header.texturesCount);
 
-		// file.Seek(basePosition + header.texturePointersOffset, FileSeekMode::Begin);
-		// file.Read<uint32_t>(offsets.data(), offsets.size());
+		stream.Seek(header.texturePointersOffset, SeekMode::Begin);
+		stream.Read(offsets.data(), offsets.size() * sizeof(uint32_t));
 
 		for (int i = 0; i < offsets.size(); i++)
 			spdlog::debug("\tTexture[{}] at {:#x}", i, offsets[i]);
@@ -180,14 +177,14 @@ void L3DMesh::Load(IStream& stream)
 	if (header.submeshCount > 0) {
 		std::vector<uint32_t> offsets(header.submeshCount);
 
-		// file.Seek(basePosition + header.submeshPointersOffset, FileSeekMode::Begin);
-		// file.Read<uint32_t>(offsets.data(), offsets.size());
+		stream.Seek(header.submeshPointersOffset, SeekMode::Begin);
+		stream.Read(offsets.data(), offsets.size() * sizeof(uint32_t));
 
 		for (int i = 0; i < offsets.size(); i++) {
-			L3DSubMesh submesh;
+			stream.Seek(offsets[i], SeekMode::Begin);
 
-			// file.Seek(basePosition + offsets[i], FileSeekMode::Begin);
-			// file.Read<L3DSubMesh>(&submesh, 1);
+			L3DSubMesh submesh;
+			stream.Read(&submesh);
 
 			spdlog::debug("\tSubMesh[{}] has {} primitives and {} bones", i, submesh.numPrimitives, submesh.numBones);
 		}
