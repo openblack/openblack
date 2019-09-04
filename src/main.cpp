@@ -34,10 +34,13 @@ int main(int argc, char** argv)
 	             "==============================================================================\n"
 	             "\n";
 
+#ifdef NDEBUG
 	try
 	{
+#endif
 		std::unique_ptr<OpenBlack::Game> game(new OpenBlack::Game(argc, argv));
 		game->Run();
+#ifdef NDEBUG
 	}
 	catch (std::runtime_error& e)
 	{
@@ -47,6 +50,7 @@ int main(int argc, char** argv)
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Fatal error", e.what(), nullptr);
 		return EXIT_FAILURE;
 	}
+#endif
 
 	return EXIT_SUCCESS;
 }
