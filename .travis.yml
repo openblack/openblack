@@ -47,15 +47,15 @@ matrix:
         BUILD_PACKAGES="clang"
     # } // end Linux
 
-    # Windows build with mingw-w64 on Ubuntu 19.04
-    - name: "disco: mingw-w64"
+    # Windows build with mingw-w64 on fedora 31
+    - name: "fedora 31: mingw-w64"
       os: linux
       env: >
-        BUILD_FLAVOR=ubuntu
-        BUILD_RELEASE=disco
+        BUILD_FLAVOR=fedora
+        BUILD_RELEASE=31
         BUILD_ARCH=amd64
         TOOLCHAIN=linux-mingw-w64-cxx17
-        BUILD_PACKAGES="mingw-w64 wine-stable ca-certificates"
+        BUILD_PACKAGES="mingw64-gcc-c++ ca-certificates"
         HUNTER_ENABLED=YES
         USE_SUBMODULES=NO
 
