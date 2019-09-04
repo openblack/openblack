@@ -25,8 +25,10 @@ matrix:
         BUILD_FLAVOR=ubuntu
         BUILD_RELEASE=bionic
         BUILD_ARCH=amd64
-        BUILD_PACKAGES="g++"
+        BUILD_PACKAGES="g++ ca-certificates"
         TOOLCHAIN=gcc-cxx17
+        HUNTER_ENABLED=YES
+        USE_SUBMODULES=NO
 
     #   Ubuntu 19.04 disco
     - name: "disco: gcc"
