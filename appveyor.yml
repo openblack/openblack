@@ -14,13 +14,25 @@ environment:
 
 cache:
   - C:\.hunter
+  
+before_build:
+  # Required by -Gninja
+  - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
 
 install:
+  ############################################################################
+  # Install Ninja
+  ############################################################################
+  - set NINJA_URL="https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-win.zip"
+  - appveyor DownloadFile %NINJA_URL% -FileName ninja.zip
+  - 7z x ninja.zip -oC:\projects\deps\ninja > nul
+  - set PATH=C:\projects\deps\ninja;%PATH%
+  - ninja --version
   # clone git submodules
   - cmd: git submodule update --init --recursive
 
 build_script:
-  - cmd: cmake -H. -B_build_%TOOLCHAIN%_Debug -G "%GENERATOR%" -A %GENERATOR_ARCH% -DCMAKE_INSTALL_PREFIX=%cd%\_install_%TOOLCHAIN%_DEBUG -DCMAKE_TOOLCHAIN_FILE="%cd%\ci\toolchains\%TOOLCHAIN%.cmake" -DHUNTER_ENABLED=YES
+  - cmd: cmake -H. -B_build_%TOOLCHAIN%_Debug -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX=%cd%\_install_%TOOLCHAIN%_DEBUG -DCMAKE_TOOLCHAIN_FILE="%cd%\ci\toolchains\%TOOLCHAIN%.cmake" -DHUNTER_ENABLED=YES
   - cmd: cmake --build _build_%TOOLCHAIN%_Debug --config Debug
   #- cmd: cmake -H. -B_build_%TOOLCHAIN%_Release -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX=%cd%\_install_%TOOLCHAIN%_Release -DCMAKE_TOOLCHAIN_FILE="%cd%\toolchains\%TOOLCHAIN%.cmake" -DHUNTER_ENABLED=YES
   #- cmd: cmake --build _build_%TOOLCHAIN%_Release --config Release
