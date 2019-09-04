@@ -45,7 +45,7 @@ class Renderer {
 		uint32_t name;
 		int value;
 	};
-	static std::vector<RequiredAttribute> GetRequiredAttributes();
+	static std::vector<RequiredAttribute> GetRequiredWindowingAttributes();
 	static uint32_t GetRequiredFlags();
 
 	Renderer() = delete;
@@ -56,6 +56,8 @@ class Renderer {
 	[[nodiscard]] SDL_GLContext& GetGLContext() const;
 
   private:
+  static std::vector<RequiredAttribute> GetRequiredContextAttributes();
+
   std::unique_ptr<SDL_GLContext, SDLDestroyer> _glcontext;
 };
 } // namespace OpenBlack

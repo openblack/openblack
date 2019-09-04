@@ -30,12 +30,19 @@
 
 using namespace OpenBlack;
 
-std::vector<Renderer::RequiredAttribute> Renderer::GetRequiredAttributes() {
+std::vector<Renderer::RequiredAttribute> Renderer::GetRequiredWindowingAttributes() {
 	return std::vector<RequiredAttribute> {
 		{Api::OpenGl, SDL_GL_RED_SIZE, 8},
 		{Api::OpenGl, SDL_GL_GREEN_SIZE, 8},
 		{Api::OpenGl, SDL_GL_BLUE_SIZE, 8},
 		{Api::OpenGl, SDL_GL_ALPHA_SIZE, 8},
+	};
+}
+
+std::vector<Renderer::RequiredAttribute> Renderer::GetRequiredContextAttributes() {
+	// Create a debug context?
+	bool useDebug = true;
+	return std::vector<RequiredAttribute> {
 		{Api::OpenGl, SDL_GL_DOUBLEBUFFER, 1},
 
 		{Api::OpenGl, SDL_GL_MULTISAMPLEBUFFERS, 1},
@@ -44,6 +51,8 @@ std::vector<Renderer::RequiredAttribute> Renderer::GetRequiredAttributes() {
 		{Api::OpenGl, SDL_GL_CONTEXT_MAJOR_VERSION, 3},
 		{Api::OpenGl, SDL_GL_CONTEXT_MINOR_VERSION, 3},
 		{Api::OpenGl, SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE},
+
+		{Api::OpenGl, SDL_GL_CONTEXT_FLAGS, useDebug ? SDL_GL_CONTEXT_DEBUG_FLAG : 0},
 	};
 }
 
@@ -54,9 +63,11 @@ uint32_t Renderer::GetRequiredFlags()
 
 Renderer::Renderer(std::unique_ptr<GameWindow>& window)
 {
-	// Create a debug context?
-	bool useDebug = true;
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, useDebug ? SDL_GL_CONTEXT_DEBUG_FLAG : 0);
+	for (auto& attr: GetRequiredContextAttributes()) {
+		if (attr.api == Renderer::Api::OpenGl) {;
+			SDL_GL_SetAttribute(static_cast<SDL_GLattr>(attr.name), attr.value);
+		}
+	}
 
 	auto context = SDL_GL_CreateContext(window->GetHandle());
 
