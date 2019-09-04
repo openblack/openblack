@@ -149,9 +149,9 @@ void Camera::handleMouseInput(const SDL_Event& e)
 	}
 }
 
-void Camera::Update(double dt)
+void Camera::Update(std::chrono::microseconds dt)
 {
-	_position += GetForward() * (float)(_velocity.z * _movementSpeed * dt);
-	_position += GetUp() * (float)(_velocity.y * _movementSpeed * dt);
-	_position += GetRight() * (float)(_velocity.x * _movementSpeed * dt);
+	_position += GetForward() * (float)(_velocity.z * _movementSpeed * dt.count());
+	_position += GetUp() * (float)(_velocity.y * _movementSpeed * dt.count());
+	_position += GetRight() * (float)(_velocity.x * _movementSpeed * dt.count());
 }
