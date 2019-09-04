@@ -21,6 +21,7 @@
 #include <3D/MeshPack.h>
 #include <3D/L3DMesh.h>
 #include <Common/IStream.h>
+#include <Common/MemoryStream.h>
 #include <Graphics/OpenGL.h>
 #include <Graphics/Texture2D.h>
 #include <algorithm>
@@ -213,9 +214,22 @@ void MeshPack::loadMeshes(IStream& stream)
 
 		stream.Seek(block->second.position + meshOffsets[i], SeekMode::Begin);
 
-		// todo: contained stream
+		// slightly hacky, but lets read the header, get the size, and return a MemoryStream
+		struct {
+			uint32_t magic;
+			uint32_t flags;
+			uint32_t size;
+		} header;
+		stream.Read(&header, 12);
+		stream.Seek(-12, SeekMode::Current);
+
+		std::vector<std::byte> data(header.size);
+		stream.Read(data.data(), data.size());
+
+		MemoryStream modelStream(data.data(), data.size());
+
 		L3DMesh model;
-		model.Load(stream);
+		model.Load(modelStream);
 	}
 
 	spdlog::debug("MeshPack loaded {0} meshes", meshCount);
