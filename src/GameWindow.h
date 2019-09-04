@@ -43,6 +43,7 @@ enum DisplayMode
 class GameWindow
 {
   public:
+	GameWindow(SDL_Window *window);
 	GameWindow(const std::string& title, const SDL_DisplayMode& display, DisplayMode displaymode);
 	GameWindow(const std::string& title, int width, int height, DisplayMode displaymode);
 

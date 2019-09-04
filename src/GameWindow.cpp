@@ -30,6 +30,11 @@
 
 using namespace OpenBlack;
 
+GameWindow::GameWindow(SDL_Window *window)
+	: _window(window)
+{
+}
+
 GameWindow::GameWindow(const std::string& title, const SDL_DisplayMode& display, DisplayMode displaymode):
     GameWindow::GameWindow(title, display.w, display.h, displaymode)
 {
