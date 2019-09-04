@@ -20,37 +20,43 @@
 
 #pragma once
 
-#include <Common/FileStream.h>
 #include <cstddef>
-#include <list>
-#include <memory>
-#include <string>
-#include <vector>
 
 namespace OpenBlack
 {
 
-/*
-FileSystem
- */
-class FileSystem
+enum class SeekMode
+{
+	Begin,
+	Current,
+	End
+};
+
+class IStream
 {
   public:
-	std::unique_ptr<FileStream> Open(const fs::path& path, FileMode mode);
-	bool Exists(const fs::path& path);
+	// virtual ~IStream() {}
 
-	void SetGamePath(const fs::path& path) { _gamePath = path; }
-	const fs::path& GetGamePath() const { return _gamePath; }
+	virtual std::size_t Position() const abstract;
+	virtual std::size_t Size() const abstract;
+	virtual void Seek(std::size_t position, SeekMode seek) abstract;
 
-	std::vector<fs::path> EnumFiles(const fs::path& directory);
+	virtual void Read(void* buffer, std::size_t length) abstract;
+	// virtual void Write(const void* buffer, std::size_t length) abstract;
 
-	void Delete();
-	void Rename();
+	template <typename T>
+	void Read(T* value) { Read(value, sizeof(T)); }
 
-	std::vector<std::byte> ReadAll(const fs::path& path);
+	// template <typename T>
+	// void Write(const T* value) { Read(value, sizeof(T)); }
 
-  private:
-	fs::path _gamePath;
+	template <typename T>
+	T ReadValue()
+	{
+		T value;
+		Read(&value);
+		return value;
+	}
 };
 
 } // namespace OpenBlack

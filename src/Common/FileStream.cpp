@@ -18,31 +18,17 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Common/File.h>
+#include <Common/FileStream.h>
 #include <cassert>
+#include <spdlog/fmt/fmt.h>
 #include <sstream>
 #include <stdexcept>
 
 namespace OpenBlack
 {
 
-File::File() {}
-
-File::File(const fs::path& path, FileMode mode):
-    _file(nullptr)
+FileStream::FileStream(const fs::path& path, FileMode mode)
 {
-	Open(path, mode);
-}
-
-File::~File()
-{
-	Close();
-}
-
-void File::Open(const fs::path& path, FileMode mode)
-{
-	Close();
-
 #ifdef _WIN32
 	_wfopen_s(&_file, path.wstring().c_str(), L"rb");
 #else
@@ -50,46 +36,49 @@ void File::Open(const fs::path& path, FileMode mode)
 #endif
 
 	if (_file == nullptr)
-		throw std::runtime_error("fopen failed");
+		throw std::runtime_error(fmt::format("Failed to open file '{}'", path.string()));
+
+	Seek(0, SeekMode::End);
+	_fileSize = Position();
+	Seek(0, SeekMode::Begin);
 }
 
-void File::Close()
+FileStream::~FileStream()
 {
 	if (_file != nullptr)
 		std::fclose(_file);
-
-	_file = nullptr;
 }
 
-void File::Seek(size_t position, FileSeekMode mode) const
+std::size_t FileStream::Position() const
 {
-	assert(_file != nullptr);
-	std::fseek(_file, static_cast<long>(position), static_cast<int>(mode));
+	return static_cast<std::size_t>(std::ftell(_file));
 }
 
-size_t File::Position() const
+std::size_t FileStream::Size() const
 {
-	assert(_file != nullptr);
-	return static_cast<size_t>(std::ftell(_file));
+	return _fileSize;
 }
 
-size_t File::Size() const
+void FileStream::Seek(std::size_t position, SeekMode seek)
 {
-	assert(_file != nullptr);
-
-	size_t origPos = Position();
-	Seek(0, FileSeekMode::End);
-
-	size_t size = Position();
-	Seek(origPos, FileSeekMode::Begin);
-
-	return size;
+	switch (seek)
+	{
+	case SeekMode::Begin:
+		std::fseek(_file, static_cast<long>(position), SEEK_SET);
+		break;
+	case SeekMode::Current:
+		std::fseek(_file, static_cast<long>(position), SEEK_CUR);
+		break;
+	case SeekMode::End:
+		std::fseek(_file, static_cast<long>(position), SEEK_END);
+		break;
+	}
 }
 
-void File::Flush()
+void FileStream::Read(void* buffer, std::size_t length)
 {
-	assert(_file != nullptr);
-	std::fflush(_file);
+	// todo: error check
+	std::fread(buffer, length, 1, _file);
 }
 
 } // namespace OpenBlack

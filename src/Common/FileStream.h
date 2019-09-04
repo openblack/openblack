@@ -20,49 +20,36 @@
 
 #pragma once
 
-#include <Common/File.h>
-#include <Graphics/Texture2D.h>
-#include <Video/Bink/BinkVideo.h>
-#include <memory>
-#include <stdint.h>
-#include <string>
+#include <Common/IStream.h>
+
+#ifdef HAS_FILESYSTEM
+#include <filesystem>
+namespace fs = std::filesystem;
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif // HAS_FILESYSTEM
 
 namespace OpenBlack
 {
-namespace Video
-{
 
-/** VideoPlayer based on LHVideoPlayer, used to play Bink movies */
-class VideoPlayer
+enum class FileMode { Read, Write, Append };
+
+class FileStream: public IStream
 {
   public:
-	VideoPlayer(const std::string& file);
-	~VideoPlayer();
+	FileStream(const fs::path& filename, FileMode mode);
+	~FileStream();
 
-	void NextFrame();
-	void SetFrame(int frame);
-	int CurrentFrame() const;
+	std::size_t Position() const override;
+	std::size_t Size() const override;
+	void Seek(std::size_t position, SeekMode seek) override;
 
-	/** Is the video currently playing? */
-	bool IsPlaying() const;
+	void Read(void* buffer, std::size_t length) override;
 
-	/** Returns the width of the video's frames. */
-	uint32_t GetWidth() const;
-
-	/** Returns the height of the video's frames. */
-	uint32_t GetHeight() const;
-
-  private:
-	std::unique_ptr<File> _file;
-	std::unique_ptr<BinkVideo> _bink;
-	std::shared_ptr<Graphics::Texture2D> _texture;
-
-	// Create a surface for video of these dimensions.
-	void createTexture();
-
-  public:
-	std::shared_ptr<Graphics::Texture2D> GetTexture() const { return _texture; };
+  protected:
+	FILE* _file;
+	std::size_t _fileSize;
 };
 
-} // namespace Video
 } // namespace OpenBlack
