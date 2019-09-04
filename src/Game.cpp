@@ -93,10 +93,9 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 }
 
 Game::Game(int argc, char** argv):
-    _running(true), _wireframe(false), _waterDebug(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f), _smallBumpmapStrength(1.0f),
-    _fileSystem(std::make_unique<FileSystem>()),
-    _shaderManager(std::make_unique<ShaderManager>()),
-    _entityRegistry(std::make_unique<Entities::Registry>())
+	_shaderManager(std::make_unique<ShaderManager>()),
+	_fileSystem(std::make_unique<FileSystem>()),
+	_entityRegistry(std::make_unique<Entities::Registry>())
 {
 	spdlog::set_level(spdlog::level::debug);
 	sInstance = this;

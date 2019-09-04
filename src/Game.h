@@ -111,12 +111,12 @@ class Game
 	std::unique_ptr<LHVM::LHVM> _lhvm;
 	std::unique_ptr<Entities::Registry> _entityRegistry;
 
-	bool _wireframe;
-	bool _waterDebug;
+	bool _wireframe = false;
+	bool _waterDebug = false;
 
-	float _timeOfDay;
-	float _bumpmapStrength;
-	float _smallBumpmapStrength;
+	float _timeOfDay = 1.0f;
+	float _bumpmapStrength = 1.0f;
+	float _smallBumpmapStrength = 1.0f;
 
 	glm::ivec2 _mousePosition;
 	glm::vec3 _intersection;
@@ -125,7 +125,7 @@ class Game
 	glm::vec3 _modelRotation;
 	glm::vec3 _modelScale;
 
-	bool _running;
+	bool _running = true;
 
 	void guiLoop();
 };
