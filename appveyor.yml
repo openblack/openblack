@@ -10,7 +10,7 @@ environment:
   matrix:
 
     - TOOLCHAIN: "vs-16-2019-win64-cxx17"
-      GENERATOR: "Visual Studio 16 2019"
+      GENERATOR: Ninja
 
 cache:
   - C:\.hunter
