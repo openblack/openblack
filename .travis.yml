@@ -8,6 +8,11 @@ env:
   global:
     - RUN_TESTS: false
     - HUNTER_ENABLED: "NO"
+    - USE_SUBMODULES: "YES"
+
+cache:
+  directories:
+    - $HOME/.hunter
 
 matrix:
   include:
@@ -52,6 +57,7 @@ matrix:
         TOOLCHAIN=linux-mingw-w64-cxx17
         BUILD_PACKAGES="mingw-w64 wine-stable ca-certificates"
         HUNTER_ENABLED=YES
+        USE_SUBMODULES=NO
 
 before_install:
   # use the Dockerfile.<distro>.template file for building the image with sed magic
@@ -73,5 +79,7 @@ script: |
   -e TOOLCHAIN="$TOOLCHAIN" \
   -e RUN_TESTS="$RUN_TESTS" \
   -e HUNTER_ENABLED="$HUNTER_ENABLED" \
+  -e USE_SUBMODULES="$USE_SUBMODULES" \
+  -v ${HOME}:/root \
   -it openblack-devel_${TOOLCHAIN} ci/travis.$BUILD_FLAVOR.sh
 
