@@ -159,9 +159,10 @@ void Game::Run()
 	// _lhvm->LoadBinary(GetGamePath() + "/Scripts/Quests/challenge.chl");
 
 	// measure our delta time
+	using namespace std::chrono_literals;
 	uint64_t now     = SDL_GetPerformanceCounter();
 	uint64_t last    = 0;
-	double deltaTime = 0.0;
+	std::chrono::microseconds deltaTime = 0us;
 
 	_running = true;
 	SDL_Event e;
@@ -170,7 +171,7 @@ void Game::Run()
 		last = now;
 		now  = SDL_GetPerformanceCounter();
 
-		deltaTime = ((now - last) * 1000 / (double)SDL_GetPerformanceFrequency());
+		deltaTime = std::chrono::microseconds((now - last) * 1000000 / SDL_GetPerformanceFrequency());
 
 		while (SDL_PollEvent(&e))
 		{
@@ -214,7 +215,7 @@ void Game::Run()
 		DebugDraw::Cross(_intersection, 50.0f);
 
 		_camera->Update(deltaTime);
-		_modelRotation.y = fmod(_modelRotation.y + float(deltaTime) * .1f, 360.f);
+		_modelRotation.y = fmod(_modelRotation.y + float(deltaTime.count()) * .0001f, 360.f);
 
 		this->guiLoop();
 
@@ -222,16 +223,15 @@ void Game::Run()
 		_renderer->ClearScene((int)io.DisplaySize.x, (int)io.DisplaySize.y);
 
 		_water->BeginReflection(*_camera);
-		_renderer->DrawScene(0, *this, _water->GetReflectionCamera(), false);
+		_renderer->DrawScene(deltaTime, *this, _water->GetReflectionCamera(), false);
 		_water->EndReflection();
 
 		// reset viewport here, should be done in EndReflection
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 
-		_renderer->DrawScene(0, *this, *_camera, true);
+		_renderer->DrawScene(deltaTime, *this, *_camera, true);
 
-		// TODO(bwrsandman): Get delta time
-		_renderer->DebugDraw(0, *this);
+		_renderer->DebugDraw(deltaTime, *this);
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

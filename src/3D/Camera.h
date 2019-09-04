@@ -24,6 +24,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <chrono>
 
 namespace OpenBlack
 {
@@ -34,7 +35,7 @@ class Camera
   public:
 	Camera(glm::vec3 position, glm::vec3 rotation):
 	    _position(position), _rotation(glm::radians(rotation)), _projectionMatrix(1.0f),
-	    _movementSpeed(0.5f), _freeLookSensitivity(1.0f),
+	    _movementSpeed(0.0005f), _freeLookSensitivity(1.0f),
 	    _velocity(0.0f, 0.0f, 0.0f) {}
 	Camera():
 	    Camera(glm::vec3(0.0f), glm::vec3(0.0f)) {}
@@ -57,7 +58,7 @@ class Camera
 
 	void DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::ivec2 screenSize, glm::vec3& out_worldOrigin, glm::vec3& out_worldDirection);
 
-	void Update(double dt);
+	void Update(std::chrono::microseconds dt);
 	void ProcessSDLEvent(const SDL_Event&);
 
 	void handleKeyboardInput(const SDL_Event&);

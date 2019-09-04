@@ -170,7 +170,7 @@ void Renderer::ClearScene(int width, int height)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Renderer::DebugDraw(uint32_t dt, const Game &game)
+void Renderer::DebugDraw(std::chrono::microseconds dt, const Game &game)
 {
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
@@ -181,7 +181,7 @@ void Renderer::DebugDraw(uint32_t dt, const Game &game)
 	DebugDraw::DrawDebugLines();
 }
 
-void Renderer::DrawScene(uint32_t dt, const Game &game, const Camera& camera, bool drawWater)
+void Renderer::DrawScene(std::chrono::microseconds dt, const Game &game, const Camera& camera, bool drawWater)
 {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);

@@ -22,6 +22,7 @@
 
 #include <cstdint>
 #include <array>
+#include <chrono>
 #include <memory>
 #include <vector>
 
@@ -83,9 +84,8 @@ class Renderer {
 	void MessageCallback(uint32_t source, uint32_t type, uint32_t id, uint32_t severity, int32_t length, const std::string& message) const;
 
 	void ClearScene(int width, int height);
-	// TODO(bwrsandman): Use std duration or ms
-	void DebugDraw(uint32_t dt, const Game& game);
-	void DrawScene(uint32_t dt, const Game& game, const Camera& camera, bool drawWater);
+	void DebugDraw(std::chrono::microseconds dt, const Game& game);
+	void DrawScene(std::chrono::microseconds dt, const Game& game, const Camera& camera, bool drawWater);
 
   private:
   static std::vector<RequiredAttribute> GetRequiredContextAttributes();
