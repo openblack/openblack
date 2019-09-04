@@ -49,6 +49,7 @@ target_link_libraries(openblack PRIVATE
 	spdlog::spdlog
 	EnTT
 )
+target_compile_definitions(openblack PRIVATE GLEW_STATIC)
 if (UNIX)
 	find_library(WAYLAND wayland-egl)
 	if (WAYLAND)

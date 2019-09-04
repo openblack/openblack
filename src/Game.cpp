@@ -122,7 +122,7 @@ Game::Game(int argc, char** argv):
 	ImGuiStyle& style     = ImGui::GetStyle();
 	style.FrameBorderSize = 1.0f;
 
-	ImGui_ImplSDL2_InitForOpenGL(_window->GetHandle(), _window->GetGLContext());
+	ImGui_ImplSDL2_InitForOpenGL(_window->GetHandle(), _renderer->GetGLContext());
 	ImGui_ImplOpenGL3_Init("#version 130");
 
 	_shaderManager->LoadShader("DebugLine", "shaders/line.vert", "shaders/line.frag");

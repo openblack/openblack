@@ -24,11 +24,18 @@
 #include <memory>
 #include <vector>
 
+#include <SDL.h>
+
 namespace OpenBlack
 {
 class GameWindow;
 
 class Renderer {
+  struct SDLDestroyer
+  {
+	void operator()(SDL_GLContext* glcontext) const { SDL_GL_DeleteContext(*glcontext); }
+  };
+
   public:
 	enum class Api {
 		OpenGl,
@@ -45,5 +52,10 @@ class Renderer {
 	explicit Renderer(std::unique_ptr<GameWindow>& window);
 
 	~Renderer() = default;
+
+	[[nodiscard]] SDL_GLContext& GetGLContext() const;
+
+  private:
+  std::unique_ptr<SDL_GLContext, SDLDestroyer> _glcontext;
 };
 } // namespace OpenBlack
