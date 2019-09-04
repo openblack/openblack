@@ -113,8 +113,15 @@ if(NOT TARGET glew::glew)
 endif()
 if(NOT TARGET glm::glm)
 	add_library(glm::glm IMPORTED INTERFACE)
-	target_include_directories(glm::glm INTERFACE ${GLM_INCLUDE_DIRS})
-	target_link_libraries(glm::glm INTERFACE ${GLM_LIBRARY})
+	if(CMAKE_VERSION VERSION_LESS 3.11)
+		# for 3.10 support we need to do this
+		set_property(TARGET glm::glm PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${GLM_INCLUDE_DIRS}")
+		set_property(TARGET glm::glm PROPERTY INTERFACE_LINK_LIBRARIES ${GLM_LIBRARY})
+	else()
+		# starting with cmake 3.11 we can do this
+		target_include_directories(glm::glm INTERFACE ${GLM_INCLUDE_DIRS})
+		target_link_libraries(glm::glm INTERFACE ${GLM_LIBRARY})
+	endif()
 endif()
 
 # Include git hash in source
