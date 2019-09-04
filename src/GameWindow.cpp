@@ -27,6 +27,10 @@
 #endif
 #include <GL/glew.h>
 #include <spdlog/spdlog.h>
+#include <SDL_syswm.h>
+#if defined(SDL_VIDEO_DRIVER_WAYLAND)
+#include <wayland-egl.h>
+#endif  // defined(SDL_VIDEO_DRIVER_WAYLAND)
 #if USE_VULKAN
 #include <SDL_vulkan.h>
 #endif  // USE_VULKAN
@@ -145,6 +149,75 @@ SDL_Window* GameWindow::GetHandle() const
 SDL_GLContext* GameWindow::GetGLContext() const
 {
 	return _glcontext.get();
+}
+
+void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) const
+{
+	SDL_SysWMinfo wmi;
+	SDL_VERSION(&wmi.version);
+	if (!SDL_GetWindowWMInfo(_window.get(), &wmi) )
+	{
+		throw std::runtime_error("Failed getting native window handles: " + std::string(SDL_GetError()));
+	}
+
+	// Linux
+#if defined(SDL_VIDEO_DRIVER_WAYLAND)
+	if (wmi.subsystem == SDL_SYSWM_WAYLAND)
+	{
+		auto win_impl = static_cast<wl_egl_window *>(SDL_GetWindowData(_window.get(), "wl_egl_window"));
+		if (!win_impl) {
+			int width, height;
+			SDL_GetWindowSize(_window.get(), &width, &height);
+			struct wl_surface *surface = wmi.info.wl.surface;
+			if (!surface) {
+				throw std::runtime_error("Failed getting native window handles: " + std::string(SDL_GetError()));
+			}
+			win_impl = wl_egl_window_create(surface, width, height);
+			SDL_SetWindowData(_window.get(), "wl_egl_window", win_impl);
+		}
+		native_window = reinterpret_cast<void *>(win_impl);
+		native_display = wmi.info.wl.display;
+	}
+	else
+#endif  // defined(SDL_VIDEO_DRIVER_WAYLAND)
+#if defined(SDL_VIDEO_DRIVER_X11)
+	if (wmi.subsystem == SDL_SYSWM_X11)
+	{
+		native_window = reinterpret_cast<void *>(wmi.info.x11.window);
+		native_display = wmi.info.x11.display;
+	}
+	else
+#endif  // defined(SDL_VIDEO_DRIVER_X11)
+		// Mac
+#if defined(SDL_VIDEO_DRIVER_COCOA)
+		if (wmi.subsystem == SDL_SYSWM_COCOA)
+	{
+		native_window = wmi.info.cocoa.window;
+		native_display = nullptr;
+	}
+	else
+#endif  // defined(SDL_VIDEO_DRIVER_COCOA)
+		// Windows
+#if defined(SDL_VIDEO_DRIVER_WINDOWS)
+		if (wmi.subsystem == SDL_SYSWM_WINDOWS)
+	{
+		native_window = wmi.info.win.window;
+		native_display = nullptr;
+	}
+	else
+#endif  // defined(SDL_VIDEO_DRIVER_WINDOWS)
+		// Steam Link
+#if defined(SDL_VIDEO_DRIVER_VIVANTE)
+		if (wmi.subsystem == SDL_SYSWM_VIVANTE)
+	{
+		native_window = wmi.info.vivante.window;
+		native_display = wmi.info.vivante.display;
+	}
+	else
+#endif  // defined(SDL_VIDEO_DRIVER_VIVANTE)
+	{
+		throw std::runtime_error("Unsupported platform or window manager: " + std::to_string(wmi.subsystem));
+	}
 }
 
 bool GameWindow::IsOpen() const
