@@ -47,6 +47,7 @@
 #include <Graphics/VertexBuffer.h>
 #include <LHScriptX/Script.h>
 #include <LHVMViewer.h>
+#include <Renderer.h>
 #include <glm/gtx/intersect.hpp>
 #include <iostream>
 #include <sstream>
@@ -101,6 +102,8 @@ Game::Game(int argc, char** argv):
 	}
 	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", windowWidth, windowHeight, displayMode);
 	_window->SetSwapInterval(1);
+
+	_renderer = std::make_unique<Renderer>(_window);
 
 	_fileSystem->SetGamePath(GetGamePath());
 	spdlog::debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());

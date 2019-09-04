@@ -35,6 +35,7 @@ class MeshPack;
 class MeshViewer;
 class LandIsland;
 class L3DModel;
+class Renderer;
 class SkinnedModel;
 class Sky;
 class Water;
@@ -97,6 +98,7 @@ class Game
 	std::unique_ptr<Graphics::ShaderManager> _shaderManager;
 
 	std::unique_ptr<GameWindow> _window;
+	std::unique_ptr<Renderer> _renderer;
 	std::unique_ptr<Camera> _camera;
 
 	std::unique_ptr<FileSystem> _fileSystem;
