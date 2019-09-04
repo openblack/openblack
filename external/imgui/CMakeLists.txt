@@ -35,3 +35,4 @@ target_link_libraries(imgui PUBLIC
 add_executable(imgui-example
 	imgui/examples/example_sdl_opengl3/main.cpp)
 target_link_libraries(imgui-example PRIVATE imgui)
+target_compile_definitions(imgui-example PRIVATE SDL_MAIN_HANDLED)
