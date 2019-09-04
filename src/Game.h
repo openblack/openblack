@@ -40,12 +40,6 @@ class SkinnedModel;
 class Sky;
 class Water;
 
-namespace Graphics
-{
-class ShaderProgram;
-class ShaderManager;
-} // namespace Graphics
-
 namespace LHScriptX
 {
 class Script;
@@ -77,11 +71,21 @@ class Game
 
 	GameWindow& GetWindow() { return *_window; }
 	Camera& GetCamera() { return *_camera; }
+	[[nodiscard]] Camera& GetCamera() const { return *_camera; }
+	[[nodiscard]] Sky& GetSky() const { return *_sky; }
+	[[nodiscard]] Water& GetWater() const { return *_water; }
+	LandIsland& GetLandIsland() { return *_landIsland; }
+	[[nodiscard]] LandIsland& GetLandIsland() const { return *_landIsland; }
+	[[nodiscard]] SkinnedModel& GetTestModel() const { return *_testModel; }
 	MeshPack& GetMeshPack() { return *_meshPack; }
 	FileSystem& GetFileSystem() { return *_fileSystem; }
-	Graphics::ShaderManager& GetShaderManager() { return *_shaderManager; }
 	Entities::Registry& GetEntityRegistry() { return *_entityRegistry; }
-	LandIsland& GetLandIsland() { return *_landIsland; }
+	[[nodiscard]] Entities::Registry& GetEntityRegistry() const { return *_entityRegistry; }
+	[[nodiscard]] float GetTimeOfDay() const { return _timeOfDay; }
+	[[nodiscard]] float GetBumpmapStrength() const { return _bumpmapStrength; }
+	[[nodiscard]] float GetSmallBumpmapStrength() const { return _smallBumpmapStrength; }
+	[[nodiscard]] glm::mat4 GetModelMatrix() const;
+	[[nodiscard]] bool GetIsWireframe() const { return _wireframe; }
 
 	static Game* instance()
 	{
@@ -89,13 +93,9 @@ class Game
 	}
 
   private:
-	void drawScene(const Camera& camera, bool drawWater);
-
 	static Game* sInstance;
 
 	std::string sGamePath; // path to Lionhead Studios Ltd/Black & White folder
-
-	std::unique_ptr<Graphics::ShaderManager> _shaderManager;
 
 	std::unique_ptr<GameWindow> _window;
 	std::unique_ptr<Renderer> _renderer;

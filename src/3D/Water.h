@@ -49,7 +49,7 @@ class Water
 	Water();
 	~Water() = default;
 
-	void Draw(ShaderProgram& program);
+	void Draw(ShaderProgram& program) const;
 
 	void BeginReflection(const Camera& sceneCamera);
 	void EndReflection();

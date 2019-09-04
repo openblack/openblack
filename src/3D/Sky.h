@@ -38,7 +38,7 @@ class Sky
 	Sky();
 	~Sky() = default;
 
-	void Draw(const Camera&);
+	void Draw(const Camera&) const;
 
   private:
 	std::unique_ptr<ShaderProgram> _shader;

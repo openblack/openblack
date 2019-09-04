@@ -26,9 +26,17 @@
 #include <SDL_video.h>
 #include <spdlog/spdlog.h>
 
+#include <Game.h>
 #include <GameWindow.h>
+#include <Entities/Registry.h>
+#include <Graphics/DebugDraw.h>
+#include <Graphics/ShaderManager.h>
+#include <3D/Sky.h>
+#include <3D/Water.h>
+#include <3D/LandIsland.h>
 
 using namespace OpenBlack;
+using namespace OpenBlack::Graphics;
 
 namespace {
 void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
@@ -75,7 +83,8 @@ uint32_t Renderer::GetRequiredFlags()
 	return SDL_WINDOW_OPENGL;
 }
 
-Renderer::Renderer(std::unique_ptr<GameWindow>& window)
+Renderer::Renderer(std::unique_ptr<GameWindow>& window):
+	_shaderManager(std::make_unique<ShaderManager>())
 {
 	for (auto& attr: GetRequiredContextAttributes()) {
 		if (attr.api == Renderer::Api::OpenGl) {;
@@ -124,6 +133,17 @@ Renderer::Renderer(std::unique_ptr<GameWindow>& window)
 	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(::MessageCallback, this);
 	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
+
+	LoadShaders();
+}
+
+Renderer::~Renderer() = default;
+
+void Renderer::LoadShaders()
+{
+	for (auto& shader: Shaders) {
+		_shaderManager->LoadShader(shader.name, shader.vertexShaderFile, shader.fragmentShaderFile);
+	}
 }
 
 SDL_GLContext& Renderer::GetGLContext() const
@@ -131,9 +151,79 @@ SDL_GLContext& Renderer::GetGLContext() const
 	return *_glcontext;
 }
 
+Graphics::ShaderManager &Renderer::GetShaderManager() const
+{
+	return *_shaderManager;
+}
+
 void Renderer::MessageCallback(uint32_t source, uint32_t type, uint32_t id, uint32_t severity, int32_t length, const std::string& message) const
 {
 	spdlog::debug("GL CALLBACK: {} type = {0:x}, severity = {0:x}, message = {}\n",
 				  (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
 				  type, severity, message);
+}
+
+void Renderer::ClearScene(int width, int height)
+{
+	glViewport(0, 0, width, height);
+	glClearColor(39.0f / 255.0f, 70.0f / 255.0f, 89.0f / 255.0f, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void Renderer::DebugDraw(uint32_t dt, const Game &game)
+{
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+
+	ShaderProgram* debugShader = _shaderManager->GetShader("DebugLine");
+	debugShader->Bind();
+	debugShader->SetUniformValue("u_viewProjection", game.GetCamera().GetViewProjectionMatrix());
+	DebugDraw::DrawDebugLines();
+}
+
+void Renderer::DrawScene(uint32_t dt, const Game &game, const Camera& camera, bool drawWater)
+{
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	game.GetSky().Draw(camera);
+
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);
+
+	if (drawWater)
+	{
+		ShaderProgram* waterShader = _shaderManager->GetShader("Water");
+		waterShader->Bind();
+		waterShader->SetUniformValue("viewProj", camera.GetViewProjectionMatrix());
+		game.GetWater().Draw(*waterShader);
+	}
+
+	if (game.GetIsWireframe())
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
+	terrainShader->Bind();
+	terrainShader->SetUniformValue("viewProj", camera.GetViewProjectionMatrix());
+	terrainShader->SetUniformValue("timeOfDay", game.GetTimeOfDay());
+	terrainShader->SetUniformValue("bumpmapStrength", game.GetBumpmapStrength());
+	terrainShader->SetUniformValue("smallBumpmapStrength", game.GetSmallBumpmapStrength());
+
+	game.GetLandIsland().Draw(*terrainShader);
+
+	if (game.GetIsWireframe())
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	glm::mat4 modelMatrix = game.GetModelMatrix();
+
+	ShaderProgram* objectShader = _shaderManager->GetShader("SkinnedMesh");
+	objectShader->Bind();
+	objectShader->SetUniformValue("u_viewProjection", camera.GetViewProjectionMatrix());
+	objectShader->SetUniformValue("u_modelTransform", modelMatrix);
+	game.GetTestModel().Draw(objectShader);
+	game.GetEntityRegistry().DrawModels(camera, *_shaderManager);
+
+	glDisable(GL_CULL_FACE);
 }

@@ -24,7 +24,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include "GitSHA1.h"
 
@@ -38,20 +37,13 @@
 #include <Common/FileSystem.h>
 #include <Entities/Registry.h>
 #include <Entities/Components/Model.h>
-#include <Entities/Components/Transform.h>
 #include <Graphics/DebugDraw.h>
-#include <Graphics/IndexBuffer.h>
-#include <Graphics/ShaderManager.h>
-#include <Graphics/ShaderProgram.h>
 #include <Graphics/Texture2D.h>
 #include <Graphics/VertexBuffer.h>
 #include <LHScriptX/Script.h>
 #include <LHVMViewer.h>
 #include <Renderer.h>
 #include <glm/gtx/intersect.hpp>
-#include <iostream>
-#include <sstream>
-#include <string>
 
 #ifdef WIN32
 #include <Windows.h>
@@ -64,7 +56,6 @@
 #include <spdlog/spdlog.h>
 
 using namespace OpenBlack;
-using namespace OpenBlack::Graphics;
 using namespace OpenBlack::LHScriptX;
 
 const std::string kBuildStr(kGitSHA1Hash, 8);
@@ -75,7 +66,6 @@ Game* Game::sInstance = nullptr;
 Game::Game(int argc, char** argv):
     _running(true), _wireframe(false), _waterDebug(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f), _smallBumpmapStrength(1.0f),
     _fileSystem(std::make_unique<FileSystem>()),
-    _shaderManager(std::make_unique<ShaderManager>()),
     _entityRegistry(std::make_unique<Entities::Registry>())
 {
 	spdlog::set_level(spdlog::level::debug);
@@ -114,11 +104,6 @@ Game::Game(int argc, char** argv):
 	ImGui_ImplSDL2_InitForOpenGL(_window->GetHandle(), _renderer->GetGLContext());
 	ImGui_ImplOpenGL3_Init("#version 130");
 
-	_shaderManager->LoadShader("DebugLine", "shaders/line.vert", "shaders/line.frag");
-	_shaderManager->LoadShader("Terrain", "shaders/terrain.vert", "shaders/terrain.frag");
-	_shaderManager->LoadShader("SkinnedMesh", "shaders/skin.vert", "shaders/skin.frag");
-	_shaderManager->LoadShader("Water", "shaders/water.vert", "shaders/water.frag");
-
 	// allocate vertex buffers for our debug draw
 	DebugDraw::Init();
 }
@@ -127,6 +112,18 @@ Game::~Game()
 {
 	DebugDraw::Shutdown();
 	SDL_Quit(); // todo: move to GameWindow
+}
+
+glm::mat4 Game::GetModelMatrix() const
+{
+	glm::mat4 modelMatrix = glm::mat4(1.0f);
+	modelMatrix           = glm::translate(modelMatrix, _modelPosition);
+
+	modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+	modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+	modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+	return glm::scale(modelMatrix, _modelScale);
 }
 
 void Game::Run()
@@ -222,85 +219,24 @@ void Game::Run()
 		this->guiLoop();
 
 		ImGuiIO& io = ImGui::GetIO();
-		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-		glClearColor(39.0f / 255.0f, 70.0f / 255.0f, 89.0f / 255.0f, 1);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		_renderer->ClearScene((int)io.DisplaySize.x, (int)io.DisplaySize.y);
 
 		_water->BeginReflection(*_camera);
-		drawScene(_water->GetReflectionCamera(), false);
+		_renderer->DrawScene(0, *this, _water->GetReflectionCamera(), false);
 		_water->EndReflection();
 
 		// reset viewport here, should be done in EndReflection
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 
-		drawScene(*_camera, true);
+		_renderer->DrawScene(0, *this, *_camera, true);
 
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_BLEND);
-
-		ShaderProgram* debugShader = _shaderManager->GetShader("DebugLine");
-		debugShader->Bind();
-		debugShader->SetUniformValue("u_viewProjection", _camera->GetViewProjectionMatrix());
-		DebugDraw::DrawDebugLines();
+		// TODO(bwrsandman): Get delta time
+		_renderer->DebugDraw(0, *this);
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		_window->SwapWindow();
 	}
-}
-
-void Game::drawScene(const Camera& camera, bool drawWater)
-{
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	_sky->Draw(camera);
-
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-	glFrontFace(GL_CCW);
-
-	if (drawWater)
-	{
-		ShaderProgram* waterShader = _shaderManager->GetShader("Water");
-		waterShader->Bind();
-		waterShader->SetUniformValue("viewProj", camera.GetViewProjectionMatrix());
-		_water->Draw(*waterShader);
-	}
-
-	if (_wireframe)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
-	terrainShader->Bind();
-	terrainShader->SetUniformValue("viewProj", camera.GetViewProjectionMatrix());
-	terrainShader->SetUniformValue("timeOfDay", _timeOfDay);
-	terrainShader->SetUniformValue("bumpmapStrength", _bumpmapStrength);
-	terrainShader->SetUniformValue("smallBumpmapStrength", _smallBumpmapStrength);
-
-	_landIsland->Draw(*terrainShader);
-
-	if (_wireframe)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-	glm::mat4 modelMatrix = glm::mat4(1.0f);
-	modelMatrix           = glm::translate(modelMatrix, _modelPosition);
-
-	modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-	modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-	modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-	modelMatrix = glm::scale(modelMatrix, _modelScale);
-
-	ShaderProgram* objectShader = _shaderManager->GetShader("SkinnedMesh");
-	objectShader->Bind();
-	objectShader->SetUniformValue("u_viewProjection", camera.GetViewProjectionMatrix());
-	objectShader->SetUniformValue("u_modelTransform", modelMatrix);
-	_testModel->Draw(objectShader);
-	_entityRegistry->DrawModels(camera, *_shaderManager);
-
-	glDisable(GL_CULL_FACE);
 }
 
 void Game::guiLoop()

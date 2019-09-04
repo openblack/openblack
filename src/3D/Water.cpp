@@ -98,7 +98,7 @@ void Water::createMesh()
 	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, decl, GL_TRIANGLES);
 }
 
-void Water::Draw(ShaderProgram& program)
+void Water::Draw(ShaderProgram& program) const
 {
 	program.SetUniformValue("sReflection", 0);
 	glActiveTexture(GL_TEXTURE0);
