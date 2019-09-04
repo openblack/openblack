@@ -5,6 +5,7 @@ add_library(imgui STATIC
 	imgui/imgui_demo.cpp
 	imgui/imgui_draw.cpp
 	imgui/imgui.h
+	imgui/imgui.cpp
 	imgui/imgui_internal.h
 	imgui/imgui_widgets.cpp
 	imgui/imstb_rectpack.h
@@ -21,11 +22,17 @@ add_library(imgui STATIC
 target_include_directories(imgui PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/imgui
-	${CMAKE_CURRENT_SOURCE_DIR}/imgui/example)
+	${CMAKE_CURRENT_SOURCE_DIR}/imgui/examples)
 
 # tell imgui we want to use GLEW as OpenGL loader
-target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLEW=1)
+target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLEW)
 
-target_link_libraries(imgui PRIVATE
+target_link_libraries(imgui PUBLIC
 	SDL2::SDL2
-	glew::glew)
+	glew::glew
+	${OPENGL_LIBRARIES})
+
+add_executable(imgui-example
+	imgui/examples/example_sdl_opengl3/main.cpp)
+target_link_libraries(imgui-example PRIVATE imgui)
+target_compile_definitions(imgui-example PRIVATE SDL_MAIN_HANDLED)
