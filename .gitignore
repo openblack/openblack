@@ -24,3 +24,6 @@ lib
 
 # git commit
 /src/GitSHA1.cpp
+
+# vim swp files
+*.swp
