@@ -41,7 +41,7 @@ Sky::Sky()
 	delete bitmap;
 }
 
-void Sky::Draw(const Camera& camera)
+void Sky::Draw(const Camera& camera) const
 {
 	_shader->Bind();
 	_shader->SetUniformValue("viewProj", camera.GetViewProjectionMatrix());

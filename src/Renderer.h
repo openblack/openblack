@@ -21,14 +21,37 @@
 #pragma once
 
 #include <cstdint>
+#include <array>
 #include <memory>
 #include <vector>
 
 #include <SDL.h>
+#include <3D/Camera.h>
 
 namespace OpenBlack
 {
 class GameWindow;
+class Game;
+
+namespace Graphics
+{
+class ShaderProgram;
+class ShaderManager;
+} // namespace Graphics
+
+
+struct ShaderDefinition {
+  const std::string name;
+  const std::string vertexShaderFile;
+  const std::string fragmentShaderFile;
+};
+
+static const std::array Shaders {
+	ShaderDefinition{"DebugLine", "shaders/line.vert", "shaders/line.frag"},
+	ShaderDefinition{"Terrain", "shaders/terrain.vert", "shaders/terrain.frag"},
+	ShaderDefinition{"SkinnedMesh", "shaders/skin.vert", "shaders/skin.frag"},
+	ShaderDefinition{"Water", "shaders/water.vert", "shaders/water.frag"},
+};
 
 class Renderer {
   struct SDLDestroyer
@@ -45,20 +68,29 @@ class Renderer {
 		uint32_t name;
 		int value;
 	};
+
 	static std::vector<RequiredAttribute> GetRequiredWindowingAttributes();
 	static uint32_t GetRequiredFlags();
 
 	Renderer() = delete;
 	explicit Renderer(std::unique_ptr<GameWindow>& window);
 
-	~Renderer() = default;
+	virtual ~Renderer();
 
+	void LoadShaders();
 	[[nodiscard]] SDL_GLContext& GetGLContext() const;
+	[[nodiscard]] Graphics::ShaderManager& GetShaderManager() const;
 	void MessageCallback(uint32_t source, uint32_t type, uint32_t id, uint32_t severity, int32_t length, const std::string& message) const;
+
+	void ClearScene(int width, int height);
+	// TODO(bwrsandman): Use std duration or ms
+	void DebugDraw(uint32_t dt, const Game& game);
+	void DrawScene(uint32_t dt, const Game& game, const Camera& camera, bool drawWater);
 
   private:
   static std::vector<RequiredAttribute> GetRequiredContextAttributes();
 
   std::unique_ptr<SDL_GLContext, SDLDestroyer> _glcontext;
+  std::unique_ptr<Graphics::ShaderManager> _shaderManager;
 };
 } // namespace OpenBlack
