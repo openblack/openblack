@@ -76,6 +76,7 @@ class GameWindow
 	void GetMinimumSize(int& width, int& height);
 	void SetMaximumSize(int width, int height);
 	void GetMaximumSize(int& width, int& height);
+	void GetDrawableSize(int& width, int& height);
 
 	void Minimise();
 	void Maximise();
