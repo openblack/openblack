@@ -10,7 +10,8 @@ RUN apt-get update && \
   libglew-dev \
   libsdl2-dev \
   libglm-dev \
-  libspdlog-dev
+  libspdlog-dev \
+  libwayland-dev
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app

@@ -48,6 +48,7 @@ class GameWindow
 
 	SDL_Window* GetHandle() const;
 	SDL_GLContext* GetGLContext() const;
+	void GetNativeHandles(void*& native_window, void*& native_display) const;
 
 	bool IsOpen() const;
 	float GetBrightness() const;

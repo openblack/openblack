@@ -49,6 +49,12 @@ target_link_libraries(openblack PRIVATE
 	spdlog::spdlog
 	EnTT
 )
+if (UNIX)
+	find_library(WAYLAND wayland-egl)
+	if (WAYLAND)
+		target_link_libraries(openblack PRIVATE ${WAYLAND})
+	endif()
+endif()
 
 if (HAS_FILESYSTEM)
 	message(STATUS "Got <filesystem>: add compiler definition HAS_FILESYSTEM")
