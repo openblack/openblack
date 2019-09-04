@@ -214,12 +214,10 @@ void MeshPack::loadMeshes(File& file)
 	{
 		spdlog::debug("MeshPack mesh {0:d} at offset {1:#x}", i, block->second.position + meshOffsets[i]);
 
-		L3DModel* model = new L3DModel();
+		L3DModel model;
 
 		file.Seek(block->second.position + meshOffsets[i], FileSeekMode::Begin);
-		model->Load(file);
-
-		delete model;
+		model.Load(file);
 	}
 
 	spdlog::debug("MeshPack loaded {0} meshes", meshCount);
