@@ -67,7 +67,6 @@ enum class L3DMeshFlags : uint32_t
 	Unknown29                = 1 << 28, // 0x10000000 (3)
 	Unknown30                = 1 << 29, // 0x20000000 (2)
 	Unknown31                = 1 << 30, // 0x40000000 (1)
-	Unknown32                = 1 << 31, // 0x80000000 (0) Possibly contains a nodraw mesh
 };
 
 // todo: template this
