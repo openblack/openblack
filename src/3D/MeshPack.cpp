@@ -211,8 +211,6 @@ void MeshPack::loadMeshes(IStream& stream)
 	_meshes.resize(meshCount);
 	for (uint32_t i = 0; i < meshCount; i++)
 	{
-		spdlog::debug("MeshPack mesh {:d} at offset {:#x}", i, block->second.position + meshOffsets[i]);
-
 		stream.Seek(block->second.position + meshOffsets[i], SeekMode::Begin);
 
 		// slightly hacky, but lets read the header, get the size, and return a MemoryStream

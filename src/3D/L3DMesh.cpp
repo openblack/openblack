@@ -144,6 +144,8 @@ void L3DMesh::Load(IStream& stream)
 	assert(std::all_of(&header.padding[0], &header.padding[32], [](int i) { return i == 0; }));
 #endif
 
+	_flags = header.flags;
+
 	/*if (IsBoned())
 		spdlog::debug("\tcontains bones");
 
@@ -187,13 +189,10 @@ void L3DMesh::Load(IStream& stream)
 		stream.Seek(header.submeshPointersOffset, SeekMode::Begin);
 		stream.Read(offsets.data(), offsets.size() * sizeof(uint32_t));
 
+		_subMeshes.resize(offsets.size());
 		for (int i = 0; i < offsets.size(); i++) {
 			stream.Seek(offsets[i], SeekMode::Begin);
-
-			L3DSubMesh submesh;
-			stream.Read(&submesh);
-
-			spdlog::debug("\tSubMesh[{}] has {} primitives and {} bones", i, submesh.numPrimitives, submesh.numBones);
+			_subMeshes[i]->Load(stream);
 		}
 	}
 
@@ -331,7 +330,7 @@ void L3DMesh::Draw(ShaderProgram* program) const
 
 	glActiveTexture(GL_TEXTURE0);
 
-	for (size_t i = 0; i < _submeshes.size(); i++)
+	/*for (size_t i = 0; i < _submeshes.size(); i++)
 	{
 		auto const& submesh = _submeshes[i];
 		auto skinID         = _submeshSkinMap.at(i);
@@ -350,7 +349,7 @@ void L3DMesh::Draw(ShaderProgram* program) const
 			meshPackTextures.at(skinID)->Bind();
 
 		submesh->Draw();
-	}
+	}*/
 }
 
 void L3DMesh::calculateBoneMatrices()

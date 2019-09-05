@@ -23,6 +23,7 @@
 #include <Graphics/Mesh.h>
 #include <Graphics/ShaderProgram.h>
 #include <Graphics/Texture2D.h>
+#include <3D/L3DSubMesh.h>
 #include <glm/gtc/quaternion.hpp>
 #include <unordered_map>
 
@@ -89,10 +90,11 @@ class L3DMesh
   private:
 	L3DMeshFlags _flags;
 
-	std::unordered_map<SkinId, std::unique_ptr<Texture2D>> _skins;
 	// Map submesh index to their required skin IDs
 	std::map<int32_t, SkinId> _submeshSkinMap;
-	std::vector<std::unique_ptr<Mesh>> _submeshes;
+
+	std::unordered_map<SkinId, std::unique_ptr<Texture2D>> _skins;
+	std::vector<std::unique_ptr<L3DSubMesh>> _subMeshes;
 
 	struct L3DModel_Bone
 	{
