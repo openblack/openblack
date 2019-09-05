@@ -18,17 +18,18 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <MeshViewer.h>
-#include <Game.h>
+#include <3D/L3DMesh.h>
 #include <3D/MeshPack.h>
+#include <Game.h>
 #include <Graphics/Texture2D.h>
+#include <MeshViewer.h>
 #include <imgui/imgui.h>
 
 namespace OpenBlack
 {
 MeshViewer::MeshViewer()
 {
-	_frameBuffer = std::make_unique<Graphics::FrameBuffer>(512, 512, GL_RGBA);
+	_frameBuffer  = std::make_unique<Graphics::FrameBuffer>(512, 512, GL_RGBA);
 	_selectedMesh = Mesh::Dummy;
 }
 
@@ -42,14 +43,15 @@ void MeshViewer::DrawWindow()
 	if (!_open)
 		return;
 
-	const ImGuiStyle& style = ImGui::GetStyle();
-	float fontSize = ImGui::GetFontSize();
-	auto const& meshPack = Game::instance()->GetMeshPack();
+	const ImGuiStyle& style   = ImGui::GetStyle();
+	float fontSize            = ImGui::GetFontSize();
+	auto const& meshPack      = Game::instance()->GetMeshPack();
+	auto const& meshes        = meshPack.GetMeshes();
+	const float meshListWidth = fontSize * 15.0f;
 
 	ImGui::SetNextWindowSize(ImVec2(720.0f, 612.0f), ImGuiCond_FirstUseEver);
 	ImGui::Begin("MeshPack Viewer", &_open);
 
-	auto const& meshes = meshPack.GetMeshes();
 	ImGui::BeginChild("meshes", ImVec2(fontSize * 15.0f, 0), true);
 	for (int i = 0; i < meshes.size(); i++)
 	{
@@ -63,9 +65,14 @@ void MeshViewer::DrawWindow()
 
 	ImGui::SameLine();
 
+	auto const& mesh = meshes[static_cast<int>(_selectedMesh)];
 	ImGui::BeginChild("viewer");
 
-	ImGui::Text("Selected Mesh: %d", static_cast<int>(_selectedMesh));
+	if (mesh->IsBoned())
+		ImGui::Text("Has %d bones", mesh->GetBones().size());
+	else
+		ImGui::Text("No bones");
+
 	ImGui::Image((void*)(intptr_t)_frameBuffer->GetTexture()->GetNativeHandle(), ImVec2(512, 512), ImVec2(0, 1), ImVec2(1, 0));
 
 	ImGui::EndChild();
