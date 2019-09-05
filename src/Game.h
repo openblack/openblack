@@ -44,11 +44,6 @@ namespace LHScriptX
 class Script;
 }
 
-namespace Video
-{
-class VideoPlayer;
-}
-
 namespace Entities
 {
 class Registry;
@@ -103,7 +98,7 @@ class Game
 	std::unique_ptr<FileSystem> _fileSystem;
 	std::unique_ptr<LandIsland> _landIsland;
 	std::unique_ptr<MeshPack> _meshPack;
-	//std::unique_ptr<Video::VideoPlayer> _videoPlayer;
+	std::unique_ptr<MeshViewer> _meshViewer;
 
 	std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<Sky> _sky;

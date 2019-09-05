@@ -19,14 +19,22 @@
  */
 
 #pragma once
+#ifndef OPENBLACK_MESHVIEWER_H
+#define OPENBLACK_MESHVIEWER_H
 
-#include <spdlog/spdlog.h>
+#include <imgui/imgui.h>
 
 namespace OpenBlack
 {
-class Logging
+class MeshViewer
 {
-public:
-  static std::shared_ptr<spdlog::logger> CreateLogger(std::string sourceFilePath);
+  public:
+	void Open();
+	void DrawWindow();
+
+  private:
+	bool _open;
 };
 } // namespace OpenBlack
+
+#endif
