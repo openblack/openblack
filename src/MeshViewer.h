@@ -21,19 +21,22 @@
 #pragma once
 
 #include <AllMeshes.h>
+#include <Graphics/FrameBuffer.h>
+#include <memory>
 
 namespace OpenBlack
 {
 class MeshViewer
 {
   public:
+	MeshViewer();
 	void Open();
 	void DrawWindow();
+	void DrawScene();
 
   private:
-	void drawScene();
-
 	bool _open;
 	Mesh _selectedMesh;
+	std::unique_ptr<Graphics::FrameBuffer> _frameBuffer;
 };
 } // namespace OpenBlack

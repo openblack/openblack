@@ -226,6 +226,8 @@ void Game::Run()
 		_camera->Update(deltaTime);
 		_modelRotation.y = fmod(_modelRotation.y + float(deltaTime.count()) * .0001f, 360.f);
 
+		_meshViewer->DrawScene();
+
 		this->guiLoop();
 
 		ImGuiIO& io = ImGui::GetIO();

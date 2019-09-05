@@ -26,6 +26,12 @@
 
 namespace OpenBlack
 {
+MeshViewer::MeshViewer()
+{
+	_frameBuffer = std::make_unique<Graphics::FrameBuffer>(512, 512, GL_RGBA);
+	_selectedMesh = Mesh::Dummy;
+}
+
 void MeshViewer::Open()
 {
 	_open = true;
@@ -57,7 +63,12 @@ void MeshViewer::DrawWindow()
 
 	ImGui::SameLine();
 
+	ImGui::BeginChild("viewer");
+
 	ImGui::Text("Selected Mesh: %d", static_cast<int>(_selectedMesh));
+	ImGui::Image((void*)(intptr_t)_frameBuffer->GetTexture()->GetNativeHandle(), ImVec2(512, 512), ImVec2(0, 1), ImVec2(1, 0));
+
+	ImGui::EndChild();
 
 	/*
 	int i = 0;
@@ -74,4 +85,14 @@ void MeshViewer::DrawWindow()
 
 	ImGui::End();
 }
+
+void MeshViewer::DrawScene()
+{
+	_frameBuffer->Bind();
+	glViewport(0, 0, _frameBuffer->GetWidth(), _frameBuffer->GetHeight());
+	glClearColor(39.0f / 255.0f, 70.0f / 255.0f, 89.0f / 255.0f, 1);
+	glClear(GL_COLOR_BUFFER_BIT);
+	_frameBuffer->Unbind();
+}
+
 } // namespace OpenBlack
