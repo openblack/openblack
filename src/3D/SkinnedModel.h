@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <Common/File.h>
 #include <Graphics/Mesh.h>
 #include <Graphics/ShaderProgram.h>
 #include <Graphics/Texture2D.h>
@@ -38,7 +39,7 @@ class SkinnedModel
 	SkinnedModel()  = default;
 	~SkinnedModel() = default;
 
-	void LoadFromFile(const std::string& fileName);
+	void LoadFromFile(const File& file);
 	void LoadFromL3D(void* data, size_t size);
 	void Draw(ShaderProgram* program) const;
 

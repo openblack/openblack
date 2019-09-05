@@ -139,21 +139,47 @@ void Game::Run()
 	_modelRotation = glm::vec3(180.0f, 111.0f, 0.0f);
 	_modelScale    = glm::vec3(0.5f);
 
-	File file(GetGamePath() + "/Data/AllMeshes.g3d", FileMode::Read);
-	_meshPack = std::make_unique<MeshPack>();
-	_meshPack->LoadFromFile(file);
-	file.Close();
+	_meshPack = TryLoadFromFile<MeshPack>("Data/AllMeshes.g3d");
 
 	//_videoPlayer = std::make_unique<Video::VideoPlayer>(GetGamePath() + "/Data/logo.bik");
 
-	_testModel = std::make_unique<SkinnedModel>();
-	_testModel->LoadFromFile(GetGamePath() + "/Data/CreatureMesh/C_Tortoise_Base.l3d");
+	_testModel = TryLoadFromFile<SkinnedModel>("Data/CreatureMesh/C_Tortoise_Base.l3d");
 
 	_sky   = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
 
 	LoadLandscape("./Data/Landscape/Land1.lnd");
 	LoadMap("./Scripts/Land1.txt");
+	// define LandScape, Scripts and their button name
+	_LandScapes = std::vector<LandScapeContainer> {
+		LandScapeContainer("1",
+		                   "Data/Landscape/Land1.lnd",
+		                   "Scripts/Land1.txt", *_fileSystem),
+		LandScapeContainer("2",
+		                   "Data/Landscape/Land2.lnd",
+		                   "Scripts/Land2.txt", *_fileSystem),
+		LandScapeContainer("3",
+		                   "Data/Landscape/Land3.lnd",
+		                   "Scripts/Land3.txt", *_fileSystem),
+		LandScapeContainer("4",
+		                   "Data/Landscape/Land4.lnd",
+		                   "Scripts/Land4.txt", *_fileSystem),
+		LandScapeContainer("5",
+		                   "Data/Landscape/Land5.lnd",
+		                   "Scripts/Land5.txt", *_fileSystem),
+		LandScapeContainer("T",
+		                   "Data/Landscape/LandT.lnd",
+		                   "Scripts/LandT.txt", *_fileSystem),
+		LandScapeContainer("2P",
+		                   "Data/Landscape/Multi_Player/MPM_2P_1.lnd",
+		                   "Scripts/Playgrounds/TwoGods.txt", *_fileSystem),
+		LandScapeContainer("3P",
+		                   "Data/Landscape/Multi_Player/MPM_3P_1.lnd",
+		                   "Scripts/Playgrounds/ThreeGods.txt", *_fileSystem),
+		LandScapeContainer("4P",
+		                   "Data/Landscape/Multi_Player/MPM_4P_1.lnd",
+		                   "Scripts/Playgrounds/FourGods.txt", *_fileSystem),
+	};
 
 	// _lhvm = std::make_unique<LHVM::LHVM>();
 	// _lhvm->LoadBinary(GetGamePath() + "/Scripts/Quests/challenge.chl");
@@ -285,16 +311,21 @@ void Game::guiLoop()
 	}
 
 	ImGui::Begin("Mesh Pack");
-
-	int i = 0;
-	for (const auto& tex : _meshPack->GetTextures())
+	if (_meshPack)
 	{
-		ImGui::Image((ImTextureID)tex->GetNativeHandle(), ImVec2(128, 128));
+		int i = 0;
+		for (const auto& tex : _meshPack->GetTextures())
+		{
+			ImGui::Image((ImTextureID)tex->GetNativeHandle(), ImVec2(128, 128));
 
-		if (++i % 4 != 0)
-			ImGui::SameLine();
+			if (++i % 4 != 0)
+				ImGui::SameLine();
+		}
 	}
-
+	else
+	{
+		ImGui::Text("no meshes loaded");
+	}
 	ImGui::End();
 
 	//ImGui::ShowDemoWindow();
@@ -321,65 +352,38 @@ void Game::guiLoop()
 		LHVMViewer::Draw(_lhvm.get());
 
 	ImGui::Begin("Land Island");
+	auto handleLandButton = [&](
+			const LandScapeContainer &container)
+	{
+		if (container.filesExist)
+		{
+			if (ImGui::Button(container.btnName.c_str()))
+			{
+				LoadLandscape(container.landScapeFile.c_str());
+				LoadMap(container.landScapeScript.c_str());
+			}
+		}
+	};
 
 	ImGui::Text("Load Land Island:");
 	ImGui::BeginGroup();
-	if (ImGui::Button("1"))
-	{
-		LoadLandscape("./Data/Landscape/Land1.lnd");
-		LoadMap("./Scripts/Land1.txt");
-	}
+	handleLandButton(_LandScapes.at(0)); // btn1
 	ImGui::SameLine();
-	if (ImGui::Button("2"))
-	{
-		LoadLandscape("./Data/Landscape/Land2.lnd");
-		LoadMap("./Scripts/Land2.txt");
-	}
+	handleLandButton(_LandScapes.at(1)); // btn2
 	ImGui::SameLine();
-	if (ImGui::Button("3"))
-	{
-		LoadLandscape("./Data/Landscape/Land3.lnd");
-		LoadMap("./Scripts/Land3.txt");
-	}
+	handleLandButton(_LandScapes.at(2)); // btn3
 	ImGui::SameLine();
-	if (ImGui::Button("4"))
-	{
-		LoadLandscape("./Data/Landscape/Land4.lnd");
-		LoadMap("./Scripts/Land4.txt");
-	}
+	handleLandButton(_LandScapes.at(3)); // btn4
 	ImGui::SameLine();
-	if (ImGui::Button("5"))
-	{
-		LoadLandscape("./Data/Landscape/Land5.lnd");
-		LoadMap("./Scripts/Land5.txt");
-	}
+	handleLandButton(_LandScapes.at(4)); // btn5
+	ImGui::SameLine();
+	handleLandButton(_LandScapes.at(5)); // btnT
 
+	handleLandButton(_LandScapes.at(6)); // btn2P
 	ImGui::SameLine();
-	if (ImGui::Button("T"))
-	{
-		LoadLandscape("./Data/Landscape/LandT.lnd");
-		LoadMap("./Scripts/LandT.txt");
-	}
-
-	if (ImGui::Button("2P"))
-	{
-		LoadLandscape("./Data/Landscape/Multi_Player/MPM_2P_1.lnd");
-		LoadMap("./Scripts/Playgrounds/TwoGods.txt");
-	}
-
+	handleLandButton(_LandScapes.at(7)); // btn3P
 	ImGui::SameLine();
-	if (ImGui::Button("3P"))
-	{
-		LoadLandscape("./Data/Landscape/Multi_Player/MPM_3P_1.lnd");
-		LoadMap("./Scripts/Playgrounds/ThreeGods.txt");
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("4P"))
-	{
-		LoadLandscape("./Data/Landscape/Multi_Player/MPM_4P_1.lnd");
-		LoadMap("./Scripts/Playgrounds/FourGods.txt");
-	}
-
+	handleLandButton(_LandScapes.at(8)); // btn4P
 	ImGui::EndGroup();
 
 	ImGui::SliderFloat("Day", &_timeOfDay, 0.0f, 1.0f, "%.3f");

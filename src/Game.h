@@ -21,6 +21,7 @@
 #pragma once
 
 #include "GameWindow.h"
+#include "Common/FileSystem.h"
 
 #include <LHVM/LHVM.h>
 #include <glm/glm.hpp>
@@ -55,6 +56,25 @@ namespace Entities
 class Registry;
 }
 
+struct LandScapeContainer
+{
+	bool filesExist = true;
+	const std::string btnName;
+	const std::string landScapeFile;
+	const std::string landScapeScript;
+	LandScapeContainer(
+				const std::string &name,
+				const std::string &landFile,
+				const std::string &scriptFile,
+				FileSystem &fileSystem) :
+		btnName(name),
+		landScapeFile(landFile),
+		landScapeScript(scriptFile)
+	{
+		filesExist = fileSystem.Exists(landScapeFile) &&
+				fileSystem.Exists(landScapeScript);
+	}
+};
 class Game
 {
   public:
@@ -90,6 +110,31 @@ class Game
 	static Game* instance()
 	{
 		return sInstance;
+	}
+	template<typename data_t>
+	std::unique_ptr<data_t> TryLoadFromFile(const std::string &filename)
+	{
+		if (_fileSystem->Exists(filename))
+		{
+			std::unique_ptr<File> file = _fileSystem->Open(filename, FileMode::Read);
+			std::unique_ptr<data_t> obj = std::make_unique<data_t>();
+			obj->LoadFromFile(*file);
+			return obj;
+		}
+		return nullptr;
+	}
+	template<typename data_t>
+	std::unique_ptr<data_t> ForceLoadFromFile(const std::string &filename)
+	{
+		auto obj = TryLoadFromFile<data_t>(filename);
+		if (obj)
+		{
+			return obj;
+		}
+		else
+		{
+			throw std::runtime_error("Could not find file " + filename);
+		}
 	}
 
   private:
@@ -127,6 +172,7 @@ class Game
 	glm::vec3 _modelRotation;
 	glm::vec3 _modelScale;
 
+	std::vector<LandScapeContainer> _LandScapes;
 	bool _running;
 
 	void guiLoop();
