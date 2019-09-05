@@ -19,10 +19,8 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_MESHVIEWER_H
-#define OPENBLACK_MESHVIEWER_H
 
-#include <imgui/imgui.h>
+#include <AllMeshes.h>
 
 namespace OpenBlack
 {
@@ -33,8 +31,9 @@ class MeshViewer
 	void DrawWindow();
 
   private:
+	void drawScene();
+
 	bool _open;
+	Mesh _selectedMesh;
 };
 } // namespace OpenBlack
-
-#endif
