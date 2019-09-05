@@ -101,6 +101,13 @@ Game::Game(int argc, char** argv):
 	style.FrameBorderSize = 1.0f;
 
 	ImGui_ImplSDL2_InitForOpenGL(_window->GetHandle(), _renderer->GetGLContext());
+	{
+		float scale = 1.0f;
+		args.Get<float>("scale", scale);
+		style.ScaleAllSizes(scale);
+		io.FontGlobalScale = scale;
+	}
+
 	ImGui_ImplOpenGL3_Init("#version 130");
 	_meshViewer = std::make_unique<MeshViewer>();
 	_meshViewer->Open();
