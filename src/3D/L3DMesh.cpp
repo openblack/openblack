@@ -131,8 +131,8 @@ void L3DMesh::Load(IStream& stream)
 		uint32_t submeshPointersOffset;
 		uint8_t padding[32]; // always zero
 		uint32_t anotherOffset;
-		uint32_t texturesCount;
-		uint32_t texturePointersOffset;
+		uint32_t skinsCount;
+		uint32_t skinsOffset;
 		uint32_t pointsCount;
 		uint32_t pointsListOffset;
 		uint32_t extraDataOffset;
@@ -163,14 +163,21 @@ void L3DMesh::Load(IStream& stream)
 		spdlog::debug("\tcontains extra metrics");*/
 
 	// read textures
-	if (header.texturesCount > 0) {
-		std::vector<uint32_t> offsets(header.texturesCount);
+	if (header.skinsCount > 0) {
+		std::vector<uint32_t> offsets(header.skinsCount);
 
-		stream.Seek(header.texturePointersOffset, SeekMode::Begin);
+		stream.Seek(header.skinsOffset, SeekMode::Begin);
 		stream.Read(offsets.data(), offsets.size() * sizeof(uint32_t));
 
-		for (int i = 0; i < offsets.size(); i++)
-			spdlog::debug("\tTexture[{}] at {:#x}", i, offsets[i]);
+		spdlog::debug("\tLoading {} skins", header.skinsCount);
+		for (int i = 0; i < offsets.size(); i++) {
+			uint32_t id = stream.ReadValue<uint32_t>();
+			std::vector<uint16_t> data(256 * 256); // RGBA4444
+			stream.Read(data.data(), 256 * 256 * sizeof(uint16_t));
+
+			_skins[id] = std::make_unique<Texture2D>();
+			_skins[id]->Create(data.data(), DataType::UnsignedShort4444Rev, Format::BGRA, 256, 256, InternalFormat::RGB5A1);
+		}
 	}
 
 	// read submeshes
@@ -337,8 +344,8 @@ void L3DMesh::Draw(ShaderProgram* program) const
 		}
 
 		// try to find a texture locally or in mesh pack (todo: there are flags?)
-		if (_textures.find(skinID) != _textures.end())
-			_textures.at(skinID)->Bind();
+		if (_skins.find(skinID) != _skins.end())
+			_skins.at(skinID)->Bind();
 		else if (i < meshPackTextures.size())
 			meshPackTextures.at(skinID)->Bind();
 

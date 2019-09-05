@@ -24,7 +24,7 @@
 #include <Graphics/ShaderProgram.h>
 #include <Graphics/Texture2D.h>
 #include <glm/gtc/quaternion.hpp>
-#include <map>
+#include <unordered_map>
 
 using namespace OpenBlack::Graphics;
 
@@ -90,7 +90,7 @@ class L3DMesh
   private:
 	L3DMeshFlags _flags;
 
-	std::map<SkinId, std::unique_ptr<Texture2D>> _textures;
+	std::unordered_map<SkinId, std::unique_ptr<Texture2D>> _skins;
 	// Map submesh index to their required skin IDs
 	std::map<int32_t, SkinId> _submeshSkinMap;
 	std::vector<std::unique_ptr<Mesh>> _submeshes;
