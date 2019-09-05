@@ -208,6 +208,7 @@ void MeshPack::loadMeshes(IStream& stream)
 	std::vector<uint32_t> meshOffsets(meshCount);
 	stream.Read(meshOffsets.data(), meshCount * sizeof(uint32_t));
 
+	_meshes.resize(meshCount);
 	for (uint32_t i = 0; i < meshCount; i++)
 	{
 		spdlog::debug("MeshPack mesh {:d} at offset {:#x}", i, block->second.position + meshOffsets[i]);
@@ -228,8 +229,10 @@ void MeshPack::loadMeshes(IStream& stream)
 
 		MemoryStream modelStream(data.data(), data.size());
 
-		L3DMesh model;
-		model.Load(modelStream);
+		std::unique_ptr<L3DMesh> mesh = std::make_unique<L3DMesh>();
+		mesh->Load(modelStream);
+
+		_meshes[i] = std::move(mesh);
 	}
 
 	spdlog::debug("MeshPack loaded {0} meshes", meshCount);

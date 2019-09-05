@@ -57,20 +57,20 @@ class MeshPack
 
 	void Load(IStream&);
 
-	using ModelsVec   = std::vector<std::unique_ptr<L3DMesh>>;
+	using MeshesVec   = std::vector<std::unique_ptr<L3DMesh>>;
 	using TexturesVec = std::vector<std::unique_ptr<Graphics::Texture2D>>;
 
-	const ModelsVec& GetModels() const { return _models; }
+	const MeshesVec& GetMeshes() const { return _meshes; }
 	const TexturesVec& GetTextures() const { return _textures; }
 
-	const L3DMesh& GetModel(int id) const { return *_models.at(id); }
+	const L3DMesh& GetMesh(int id) const { return *_meshes.at(id); }
 	const Graphics::Texture2D& GetTexture(int id) const { return *_textures.at(id); }
 
   private:
 	void loadTextures(IStream&);
 	void loadMeshes(IStream&);
 
-	ModelsVec _models;
+	MeshesVec _meshes;
 	TexturesVec _textures;
 
 	std::unordered_map<std::string, LHBlockHeader> _blocks;
