@@ -29,7 +29,7 @@
 #include <Game.h>
 #include <GameWindow.h>
 #include <Entities/Registry.h>
-#include <Graphics/DebugDraw.h>
+#include <Graphics/DebugLines.h>
 #include <Graphics/ShaderManager.h>
 #include <3D/Sky.h>
 #include <3D/Water.h>
@@ -137,13 +137,10 @@ Renderer::Renderer(std::unique_ptr<GameWindow>& window):
 	LoadShaders();
 
 	// allocate vertex buffers for our debug draw
-	DebugDraw::Init();
+	_debugCross = DebugLines::CreateCross();
 }
 
-Renderer::~Renderer()
-{
-	DebugDraw::Shutdown();
-}
+Renderer::~Renderer() = default;
 
 void Renderer::LoadShaders()
 {
@@ -178,7 +175,7 @@ void Renderer::ClearScene(int width, int height)
 
 void Renderer::DebugDraw(std::chrono::microseconds dt, const Game &game, const glm::vec3 &position, float scale)
 {
-	DebugDraw::Cross(position, 50.0f);
+	_debugCross->SetPose(position, 50.0f);
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
@@ -186,7 +183,7 @@ void Renderer::DebugDraw(std::chrono::microseconds dt, const Game &game, const g
 	ShaderProgram* debugShader = _shaderManager->GetShader("DebugLine");
 	debugShader->Bind();
 	debugShader->SetUniformValue("u_viewProjection", game.GetCamera().GetViewProjectionMatrix());
-	DebugDraw::DrawDebugLines();
+	_debugCross->Draw(*debugShader);
 }
 
 void Renderer::DrawScene(std::chrono::microseconds dt, const Game &game, const Camera& camera, bool drawWater)

@@ -20,9 +20,11 @@
 
 #pragma once
 
-#include <Graphics/VertexBuffer.h>
+#include <cstdint>
+#include <memory>
+
 #include <glm/glm.hpp>
-#include <vector>
+#include "ShaderProgram.h"
 
 #define DEBUG_DRAW_VERTEX_BUFFER_SIZE 4096
 
@@ -30,30 +32,28 @@ namespace OpenBlack
 {
 namespace Graphics
 {
-class DebugDraw
+class VertexBuffer;
+class DebugLines
 {
   public:
-	static void Init();
-	static void Shutdown();
-	static void DrawDebugLines();
+	static std::unique_ptr<DebugLines> CreateCross();
+	std::unique_ptr<DebugLines> CreateBox(const glm::vec3& color);
+	std::unique_ptr<DebugLines> CreateLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color);
 
-	/* methods to add to draw queue */
-	static void Line(glm::vec3 point1, glm::vec3 point2, glm::vec3 color);
-	static void Box(glm::vec3 center, glm::vec3 color, glm::vec3 size);
-	static void Cross(const glm::vec3 &center, float size);
+	virtual ~DebugLines();
+
+	void Draw(ShaderProgram &program);
+
+	void SetPose(const glm::vec3 &center, float size);
 
   protected:
-	struct Vertex
-	{
-		glm::vec3 pos;
-		glm::vec3 col;
-	};
+	static std::unique_ptr<DebugLines> CreateDebugLines(uint32_t size, const void* data, uint32_t vertexCount);
+	DebugLines(std::unique_ptr<VertexBuffer>&& gpuVertexBuffer, uint32_t arrayHandle, uint32_t vertexCount);
 
-	static int vertexCount;
-	static Vertex vertexBuffer[DEBUG_DRAW_VERTEX_BUFFER_SIZE];
-
-	static GLuint gpuVertexArray;
-	static std::unique_ptr<VertexBuffer> gpuVertexBuffer;
+	std::unique_ptr<VertexBuffer> _gpuVertexBuffer;
+	uint32_t _arrayHandle;
+	uint32_t _vertexCount;
+	glm::mat4 _model;
 };
 
 } // namespace Graphics
