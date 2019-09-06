@@ -40,7 +40,7 @@ class DebugDraw
 	/* methods to add to draw queue */
 	static void Line(glm::vec3 point1, glm::vec3 point2, glm::vec3 color);
 	static void Box(glm::vec3 center, glm::vec3 color, glm::vec3 size);
-	static void Cross(glm::vec3 center, float size);
+	static void Cross(const glm::vec3 &center, float size);
 
   protected:
 	struct Vertex

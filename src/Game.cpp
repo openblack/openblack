@@ -37,7 +37,6 @@
 #include <Common/FileSystem.h>
 #include <Entities/Registry.h>
 #include <Entities/Components/Model.h>
-#include <Graphics/DebugDraw.h>
 #include <Graphics/Texture2D.h>
 #include <Graphics/VertexBuffer.h>
 #include <LHScriptX/Script.h>
@@ -103,14 +102,10 @@ Game::Game(int argc, char** argv):
 
 	ImGui_ImplSDL2_InitForOpenGL(_window->GetHandle(), _renderer->GetGLContext());
 	ImGui_ImplOpenGL3_Init("#version 130");
-
-	// allocate vertex buffers for our debug draw
-	DebugDraw::Init();
 }
 
 Game::~Game()
 {
-	DebugDraw::Shutdown();
 	SDL_Quit(); // todo: move to GameWindow
 }
 
@@ -222,8 +217,6 @@ void Game::Run()
 			ImGui_ImplSDL2_ProcessEvent(&e);
 		}
 
-		DebugDraw::Cross(_intersection, 50.0f);
-
 		_camera->Update(deltaTime);
 		_modelRotation.y = fmod(_modelRotation.y + float(deltaTime.count()) * .0001f, 360.f);
 
@@ -241,7 +234,7 @@ void Game::Run()
 
 		_renderer->DrawScene(deltaTime, *this, *_camera, true);
 
-		_renderer->DebugDraw(deltaTime, *this);
+		_renderer->DebugDraw(deltaTime, *this, _intersection, 50.0f);
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

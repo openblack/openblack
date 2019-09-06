@@ -84,7 +84,7 @@ class Renderer {
 	void MessageCallback(uint32_t source, uint32_t type, uint32_t id, uint32_t severity, int32_t length, const std::string& message) const;
 
 	void ClearScene(int width, int height);
-	void DebugDraw(std::chrono::microseconds dt, const Game& game);
+	void DebugDraw(std::chrono::microseconds dt, const Game &game, const glm::vec3 &position, float scale);
 	void DrawScene(std::chrono::microseconds dt, const Game& game, const Camera& camera, bool drawWater);
 
   private:
