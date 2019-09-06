@@ -28,6 +28,7 @@
 namespace OpenBlack
 {
 class IStream;
+class L3DMesh;
 
 enum class L3DSubMeshFlags : uint32_t
 {
@@ -36,17 +37,25 @@ enum class L3DSubMeshFlags : uint32_t
 
 class L3DSubMesh
 {
+	struct Primitive
+	{
+		uint32_t skinID;
+		uint32_t indicesOffset;
+		uint32_t indicesCount;
+	};
+
   public:
 	L3DSubMesh();
 	~L3DSubMesh();
 
 	void Load(IStream& stream);
-	void Draw(ShaderProgram& program) const;
+	void Draw(const L3DMesh& mesh, ShaderProgram& program) const;
   private:
 	L3DSubMeshFlags _flags;
 
 	GLuint _vertexArray;
 	std::unique_ptr<VertexBuffer> _vertexBuffer;
 	std::unique_ptr<IndexBuffer> _indexBuffer;
+	std::vector<Primitive> _primitives;
 };
 } // namespace OpenBlack

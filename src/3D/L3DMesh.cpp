@@ -226,5 +226,5 @@ void L3DMesh::Load(IStream& stream)
 
 void L3DMesh::Draw(ShaderProgram& program, int mesh) const
 {
-	_subMeshes[mesh]->Draw(program);
+	_subMeshes[mesh]->Draw(*this, program);
 }

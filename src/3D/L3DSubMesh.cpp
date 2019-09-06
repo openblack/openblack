@@ -18,9 +18,11 @@
  * along with OpenBlack. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <3D/L3DMesh.h>
 #include <3D/L3DSubMesh.h>
 #include <Common/IStream.h>
 #include <Game.h>
+#include <3D/MeshPack.h>
 #include <spdlog/spdlog.h>
 
 namespace OpenBlack
@@ -71,7 +73,8 @@ void L3DSubMesh::Load(IStream& stream)
 	stream.Seek(header.primitivesOffset, SeekMode::Begin);
 	stream.Read(offsets.data(), offsets.size() * sizeof(uint32_t));
 
-	int primVertOffset = 0;
+	int primVertOffset  = 0;
+	int primIndexOffset = 0;
 	for (int i = 0; i < header.numPrimitives; i++)
 	{
 		struct
@@ -110,7 +113,15 @@ void L3DSubMesh::Load(IStream& stream)
 			indices.push_back(index + primVertOffset);
 		}
 
-		primVertOffset += primitive.numTriangles * 3;
+		Primitive prim;
+		prim.indicesCount  = primitive.numTriangles * 3;
+		prim.indicesOffset = primIndexOffset;
+		prim.skinID        = primitive.skinID;
+
+		_primitives.push_back(prim);
+
+		primVertOffset += primitive.numVerticies;
+		primIndexOffset += primitive.numTriangles * 3;
 	}
 
 	// build our buffers
@@ -139,13 +150,26 @@ void L3DSubMesh::Load(IStream& stream)
 	//spdlog::debug("# bones: {} @ {}", header.numBones, header.bonesOffset);
 }
 
-void L3DSubMesh::Draw(ShaderProgram& program) const
+void L3DSubMesh::Draw(const L3DMesh& mesh, ShaderProgram& program) const
 {
 	if (_vertexBuffer == nullptr)
 		return;
 
+	auto const& skins = mesh.GetSkins();
 	glBindVertexArray(_vertexArray);
-	glDrawElements(GL_TRIANGLES, _indexBuffer->GetCount(), _indexBuffer->GetType(), 0);
+	for (auto const& prim : _primitives)
+	{
+		if (prim.skinID != 0xFFFFFFFF)
+		{
+			glActiveTexture(GL_TEXTURE0);
+			if (skins.find(prim.skinID) != skins.end())
+				skins.at(prim.skinID)->Bind();
+			else
+				Game::instance()->GetMeshPack().GetTexture(prim.skinID).Bind();
+		}
+
+		glDrawElements(GL_TRIANGLES, prim.indicesCount, _indexBuffer->GetType(), (void*)(prim.indicesOffset * sizeof(uint16_t)));
+	}
 }
 
 } // namespace OpenBlack

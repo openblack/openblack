@@ -34,6 +34,7 @@ MeshViewer::MeshViewer()
 	_frameBuffer  = std::make_unique<Graphics::FrameBuffer>(512, 512, GL_RGBA);
 	_selectedMesh = Mesh::Dummy;
 	_selectedSubMesh = 0;
+	_cameraPosition  = glm::vec3(5.0f, 3.0f, 5.0f);
 }
 
 void MeshViewer::Open()
@@ -78,34 +79,31 @@ void MeshViewer::DrawWindow()
 	if (_selectedSubMesh >= mesh->GetSubMeshes().size())
 		_selectedSubMesh = mesh->GetSubMeshes().size() - 1;
 
+	ImGui::DragFloat3("position", &_cameraPosition[0], 0.5f);
+
 	ImGui::Image((void*)(intptr_t)_frameBuffer->GetTexture()->GetNativeHandle(), ImVec2(512, 512), ImVec2(0, 1), ImVec2(1, 0));
 
 	ImGui::EndChild();
-
-	/*
-	int i = 0;
-	for (const auto& tex : meshPack.GetTextures())
-	{
-		ImGui::Image((ImTextureID)tex->GetNativeHandle(), ImVec2(128, 128));
-		if (ImGui::IsItemHovered())
-			ImGui::SetTooltip("ID: %d", i);
-
-		if (++i % 4 != 0)
-			ImGui::SameLine();
-	}
-	*/
 
 	ImGui::End();
 }
 
 void MeshViewer::DrawScene()
 {
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glEnable(GL_CULL_FACE);
+
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CW);
+
 	auto const& meshPack        = Game::instance()->GetMeshPack();
 	auto const& meshes          = meshPack.GetMeshes();
 	ShaderProgram* objectShader = Game::instance()->GetShaderManager().GetShader("SkinnedMesh");
 
-	glm::mat4 perspective = glm::perspective(glm::radians(90.0f), 4.0f / 3.0f, 1.0f, 1024.0f);
-	glm::mat4 view      = glm::lookAt(glm::vec3(5.0f, 3.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 perspective = glm::perspective(glm::radians(70.0f), 1.0f, 1.0f, 1024.0f);
+	glm::mat4 view        = glm::lookAt(_cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	_frameBuffer->Bind();
 	glViewport(0, 0, _frameBuffer->GetWidth(), _frameBuffer->GetHeight());

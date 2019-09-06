@@ -86,13 +86,11 @@ class L3DMesh
 	void Load(IStream& stream);
 	void Draw(ShaderProgram& program, int mesh) const;
 
-	std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() { return _subMeshes; }
+	const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }
+	const std::unordered_map<SkinId, std::unique_ptr<Texture2D>>& GetSkins() const { return _skins; }
 
   private:
 	L3DMeshFlags _flags;
-
-	// Map submesh index to their required skin IDs
-	std::map<int32_t, SkinId> _submeshSkinMap;
 
 	std::unordered_map<SkinId, std::unique_ptr<Texture2D>> _skins;
 	std::vector<std::unique_ptr<L3DSubMesh>> _subMeshes;
