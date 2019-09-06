@@ -65,12 +65,13 @@ class Game
 
 	GameWindow& GetWindow() { return *_window; }
 	Camera& GetCamera() { return *_camera; }
+	[[nodiscard]] Renderer& GetRenderer() const { return *_renderer; }
 	[[nodiscard]] Camera& GetCamera() const { return *_camera; }
 	[[nodiscard]] Sky& GetSky() const { return *_sky; }
 	[[nodiscard]] Water& GetWater() const { return *_water; }
 	LandIsland& GetLandIsland() { return *_landIsland; }
 	[[nodiscard]] LandIsland& GetLandIsland() const { return *_landIsland; }
-	[[nodiscard]] SkinnedModel& GetTestModel() const { return *_testModel; }
+	[[nodiscard]] L3DMesh& GetTestModel() const { return *_testModel; }
 	MeshPack& GetMeshPack() { return *_meshPack; }
 	FileSystem& GetFileSystem() { return *_fileSystem; }
 	Entities::Registry& GetEntityRegistry() { return *_entityRegistry; }

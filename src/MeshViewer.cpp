@@ -21,6 +21,7 @@
 #include <3D/L3DMesh.h>
 #include <3D/MeshPack.h>
 #include <Game.h>
+#include <Renderer.h>
 #include <Graphics/ShaderManager.h>
 #include <Graphics/Texture2D.h>
 #include <MeshViewer.h>
@@ -100,7 +101,7 @@ void MeshViewer::DrawScene()
 
 	auto const& meshPack        = Game::instance()->GetMeshPack();
 	auto const& meshes          = meshPack.GetMeshes();
-	ShaderProgram* objectShader = Game::instance()->GetShaderManager().GetShader("SkinnedMesh");
+	ShaderProgram* objectShader = Game::instance()->GetRenderer().GetShaderManager().GetShader("SkinnedMesh");
 
 	glm::mat4 perspective = glm::perspective(glm::radians(70.0f), 1.0f, 1.0f, 1024.0f);
 	glm::mat4 view        = glm::lookAt(_cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));

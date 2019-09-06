@@ -192,7 +192,10 @@ void Renderer::DrawScene(std::chrono::microseconds dt, const Game &game, const C
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	game.GetSky().Draw(camera);
+	ShaderProgram* objectShader = _shaderManager->GetShader("SkinnedMesh");
+	objectShader->Bind();
+	objectShader->SetUniformValue("u_viewProjection", camera.GetViewProjectionMatrix());
+	game.GetSky().Draw(*objectShader);
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
@@ -223,11 +226,10 @@ void Renderer::DrawScene(std::chrono::microseconds dt, const Game &game, const C
 
 	glm::mat4 modelMatrix = game.GetModelMatrix();
 
-	ShaderProgram* objectShader = _shaderManager->GetShader("SkinnedMesh");
 	objectShader->Bind();
 	objectShader->SetUniformValue("u_viewProjection", camera.GetViewProjectionMatrix());
 	objectShader->SetUniformValue("u_modelTransform", modelMatrix);
-	game.GetTestModel().Draw(objectShader);
+	game.GetTestModel().Draw(*objectShader, 0);
 	game.GetEntityRegistry().DrawModels(camera, *_shaderManager);
 
 	glDisable(GL_CULL_FACE);
