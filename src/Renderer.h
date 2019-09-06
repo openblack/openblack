@@ -38,6 +38,7 @@ namespace Graphics
 {
 class ShaderProgram;
 class ShaderManager;
+class DebugLines;
 } // namespace Graphics
 
 
@@ -92,5 +93,7 @@ class Renderer {
 
   std::unique_ptr<SDL_GLContext, SDLDestroyer> _glcontext;
   std::unique_ptr<Graphics::ShaderManager> _shaderManager;
+
+  std::unique_ptr<Graphics::DebugLines> _debugCross;
 };
 } // namespace OpenBlack
