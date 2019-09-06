@@ -84,8 +84,9 @@ class L3DMesh
 
 	void LoadFromFile(const std::string& fileName);
 	void Load(IStream& stream);
-	void LoadFromL3D(const void* data, size_t size);
-	void Draw(ShaderProgram* program) const;
+	void Draw(ShaderProgram& program, int mesh) const;
+
+	std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() { return _subMeshes; }
 
   private:
 	L3DMeshFlags _flags;
@@ -95,23 +96,6 @@ class L3DMesh
 
 	std::unordered_map<SkinId, std::unique_ptr<Texture2D>> _skins;
 	std::vector<std::unique_ptr<L3DSubMesh>> _subMeshes;
-
-	struct L3DModel_Bone
-	{
-
-		int32_t parentBone;  // -1 = root;
-		int32_t childBone;   // -1 = no children
-		int32_t siblingBone; // -1 = no siblings
-
-		glm::vec3 position;
-		glm::quat rotation;
-	};
-
-	std::vector<L3DModel_Bone> _bones;
-	std::vector<glm::mat4> _boneMatrices;
-
-	void calculateBoneMatrices();
-
   public:
 	bool IsBoned() const { return static_cast<bool>(_flags & L3DMeshFlags::HasBones); }
 	bool IsPacked() const { return static_cast<bool>(_flags & L3DMeshFlags::Packed); }
@@ -123,9 +107,6 @@ class L3DMesh
 	bool IsContainsEBone() const { return static_cast<bool>(_flags & L3DMeshFlags::ContainsEBone); }
 	bool IsContainsTnLData() const { return static_cast<bool>(_flags & L3DMeshFlags::ContainsTnLData); }
 	bool IsContainsNewEP() const { return static_cast<bool>(_flags & L3DMeshFlags::ContainsNewEP); }
-
 	//const bool IsContainsNewData() const { return _flags & 0xFC8000; } // ???
-
-	std::vector<L3DModel_Bone>& GetBones() { return _bones; }
 };
 } // namespace OpenBlack

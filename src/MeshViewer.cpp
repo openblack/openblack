@@ -21,9 +21,11 @@
 #include <3D/L3DMesh.h>
 #include <3D/MeshPack.h>
 #include <Game.h>
+#include <Graphics/ShaderManager.h>
 #include <Graphics/Texture2D.h>
 #include <MeshViewer.h>
 #include <imgui/imgui.h>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace OpenBlack
 {
@@ -31,6 +33,7 @@ MeshViewer::MeshViewer()
 {
 	_frameBuffer  = std::make_unique<Graphics::FrameBuffer>(512, 512, GL_RGBA);
 	_selectedMesh = Mesh::Dummy;
+	_selectedSubMesh = 0;
 }
 
 void MeshViewer::Open()
@@ -68,10 +71,12 @@ void MeshViewer::DrawWindow()
 	auto const& mesh = meshes[static_cast<int>(_selectedMesh)];
 	ImGui::BeginChild("viewer");
 
-	if (mesh->IsBoned())
-		ImGui::Text("Has %d bones", mesh->GetBones().size());
-	else
-		ImGui::Text("No bones");
+	ImGui::Text("%d submeshes", mesh->GetSubMeshes().size());
+	ImGui::InputInt("submesh", &_selectedSubMesh, 1, 1);
+	if (_selectedSubMesh < 0)
+		_selectedSubMesh = 0;
+	if (_selectedSubMesh >= mesh->GetSubMeshes().size())
+		_selectedSubMesh = mesh->GetSubMeshes().size() - 1;
 
 	ImGui::Image((void*)(intptr_t)_frameBuffer->GetTexture()->GetNativeHandle(), ImVec2(512, 512), ImVec2(0, 1), ImVec2(1, 0));
 
@@ -95,10 +100,26 @@ void MeshViewer::DrawWindow()
 
 void MeshViewer::DrawScene()
 {
+	auto const& meshPack        = Game::instance()->GetMeshPack();
+	auto const& meshes          = meshPack.GetMeshes();
+	ShaderProgram* objectShader = Game::instance()->GetShaderManager().GetShader("SkinnedMesh");
+
+	glm::mat4 perspective = glm::perspective(glm::radians(90.0f), 4.0f / 3.0f, 1.0f, 1024.0f);
+	glm::mat4 view      = glm::lookAt(glm::vec3(5.0f, 3.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
 	_frameBuffer->Bind();
 	glViewport(0, 0, _frameBuffer->GetWidth(), _frameBuffer->GetHeight());
 	glClearColor(39.0f / 255.0f, 70.0f / 255.0f, 89.0f / 255.0f, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	objectShader->Bind();
+	objectShader->SetUniformValue("u_viewProjection", perspective * view);
+	objectShader->SetUniformValue("u_modelTransform", glm::mat4(1.0f));
+
+	const auto& mesh = meshes[static_cast<int>(_selectedMesh)];
+	if (_selectedSubMesh >= 0 && _selectedSubMesh < mesh->GetSubMeshes().size())
+		mesh->Draw(*objectShader, _selectedSubMesh);
+
 	_frameBuffer->Unbind();
 }
 

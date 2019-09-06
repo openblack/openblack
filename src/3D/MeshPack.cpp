@@ -227,6 +227,7 @@ void MeshPack::loadMeshes(IStream& stream)
 
 		MemoryStream modelStream(data.data(), data.size());
 
+		//spdlog::debug("L3DMesh {}", i);
 		std::unique_ptr<L3DMesh> mesh = std::make_unique<L3DMesh>();
 		mesh->Load(modelStream);
 

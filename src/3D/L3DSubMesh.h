@@ -21,6 +21,8 @@
 #pragma once
 
 #include <Graphics/Mesh.h>
+#include <Graphics/VertexBuffer.h>
+#include <Graphics/IndexBuffer.h>
 #include <Graphics/ShaderProgram.h>
 
 namespace OpenBlack
@@ -29,18 +31,22 @@ class IStream;
 
 enum class L3DSubMeshFlags : uint32_t
 {
-
+	Unknown1 = 1 << 0, // 0x1      (31)
 };
 
 class L3DSubMesh
 {
   public:
-	L3DSubMesh()  = default;
-	~L3DSubMesh() = default;
+	L3DSubMesh();
+	~L3DSubMesh();
 
 	void Load(IStream& stream);
-	void Draw(ShaderProgram* program) const;
+	void Draw(ShaderProgram& program) const;
   private:
 	L3DSubMeshFlags _flags;
+
+	GLuint _vertexArray;
+	std::unique_ptr<VertexBuffer> _vertexBuffer;
+	std::unique_ptr<IndexBuffer> _indexBuffer;
 };
 } // namespace OpenBlack

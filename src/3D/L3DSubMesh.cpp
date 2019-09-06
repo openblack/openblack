@@ -26,10 +26,34 @@
 namespace OpenBlack
 {
 
+struct L3DVertex
+{
+	glm::vec3 pos;
+	glm::vec2 uv;
+	glm::vec3 norm;
+};
+
+L3DSubMesh::L3DSubMesh()
+{
+	glGenVertexArrays(1, &_vertexArray);
+}
+
+L3DSubMesh::~L3DSubMesh()
+{
+	if (_vertexArray != 0)
+		glDeleteVertexArrays(1, &_vertexArray);
+}
+
 void L3DSubMesh::Load(IStream& stream)
 {
-	struct {
-		uint32_t flags; // nodraw, transparent
+	// IsPhysics: 18
+	// IsWindow: 19
+	// Status: 22-28 (6)
+	// GetLOD: 29-32 (3)
+
+	struct
+	{
+		uint32_t flags;
 		uint32_t numPrimitives;
 		uint32_t primitivesOffset;
 		uint32_t numBones;
@@ -38,11 +62,90 @@ void L3DSubMesh::Load(IStream& stream)
 
 	stream.Read(&header);
 
+	// load up some buffers, todo: preallocate
+	std::vector<L3DVertex> verticies;
+	std::vector<uint16_t> indices;
+
+	// load primitives first
+	std::vector<uint32_t> offsets(header.numPrimitives);
+	stream.Seek(header.primitivesOffset, SeekMode::Begin);
+	stream.Read(offsets.data(), offsets.size() * sizeof(uint32_t));
+
+	int primVertOffset = 0;
+	for (int i = 0; i < header.numPrimitives; i++)
+	{
+		struct
+		{
+			uint32_t unknown_1;
+			uint32_t unknown_2;
+			int32_t skinID;
+			uint32_t unknown_3;
+
+			uint32_t numVerticies;
+			uint32_t verticiesOffset;
+			uint32_t numTriangles;
+			uint32_t trianglesOffset;
+			uint32_t boneVertLUTSize;
+			uint32_t boneVertLUTOffset;
+			uint32_t numVertexBlends;
+			uint32_t vertexBlendsOffset;
+		} primitive;
+
+		stream.Seek(offsets[i], SeekMode::Begin);
+		stream.Read(&primitive);
+
+		// todo: THIS IS SLOW
+		stream.Seek(primitive.verticiesOffset, SeekMode::Begin);
+		for (int j = 0; j < primitive.numVerticies; j++)
+		{
+			L3DVertex vertex;
+			stream.Read(&vertex);
+			verticies.push_back(vertex);
+		}
+
+		stream.Seek(primitive.trianglesOffset, SeekMode::Begin);
+		for (int j = 0; j < primitive.numTriangles * 3; j++)
+		{
+			uint16_t index = stream.ReadValue<uint16_t>();
+			indices.push_back(index + primVertOffset);
+		}
+
+		primVertOffset += primitive.numTriangles * 3;
+	}
+
+	// build our buffers
+	_vertexBuffer = std::make_unique<VertexBuffer>(reinterpret_cast<const void*>(verticies.data()), verticies.size(), sizeof(L3DVertex), GL_STATIC_DRAW);
+	_indexBuffer  = std::make_unique<IndexBuffer>(indices.data(), indices.size(), GL_UNSIGNED_SHORT);
+
+	glBindVertexArray(_vertexArray);
+	_vertexBuffer->Bind();
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(L3DVertex), reinterpret_cast<const void*>(offsetof(L3DVertex, pos)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(L3DVertex), reinterpret_cast<const void*>(offsetof(L3DVertex, uv)));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(L3DVertex), reinterpret_cast<const void*>(offsetof(L3DVertex, norm)));
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBuffer->GetIBO());
+	glBindVertexArray(0);
+
+	// uint32_t lod = (header.flags & 0xE0000000) >> 30;
+
+	// spdlog::debug("flags: {:b}", header.flags);
+
 	// offsets are local to stream :D
 
 	//spdlog::debug("position: {}", stream.Position());
 	//spdlog::debug("# prims: {} @ {}", header.numPrimitives, header.primitivesOffset);
 	//spdlog::debug("# bones: {} @ {}", header.numBones, header.bonesOffset);
+}
+
+void L3DSubMesh::Draw(ShaderProgram& program) const
+{
+	if (_vertexBuffer == nullptr)
+		return;
+
+	glBindVertexArray(_vertexArray);
+	glDrawElements(GL_TRIANGLES, _indexBuffer->GetCount(), _indexBuffer->GetType(), 0);
 }
 
 } // namespace OpenBlack

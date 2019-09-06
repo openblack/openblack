@@ -37,6 +37,7 @@ class MeshViewer
   private:
 	bool _open;
 	Mesh _selectedMesh;
+	int _selectedSubMesh;
 	std::unique_ptr<Graphics::FrameBuffer> _frameBuffer;
 };
 } // namespace OpenBlack

@@ -20,6 +20,7 @@
 
 #include <3D/Sky.h>
 #include <Game.h>
+#include <Graphics/ShaderManager.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -27,9 +28,6 @@ using namespace OpenBlack;
 
 Sky::Sky()
 {
-	// create our shader
-	_shader = std::make_unique<ShaderProgram>("shaders/sky.vert", "shaders/sky.frag");
-
 	// load in the mesh
 	_model = std::make_unique<L3DMesh>();
 	_model->LoadFromFile(Game::instance()->GetGamePath() + "/Data/WeatherSystem/sky.l3d");
@@ -41,13 +39,12 @@ Sky::Sky()
 	delete bitmap;
 }
 
-void Sky::Draw(const Camera& camera) const
+void Sky::Draw(ShaderProgram& program)
 {
-	_shader->Bind();
-	_shader->SetUniformValue("viewProj", camera.GetViewProjectionMatrix());
+	program.SetUniformValue("u_modelTransform", glm::mat4(1.0f));
 
 	glActiveTexture(GL_TEXTURE0);
 	_texture->Bind();
 
-	_model->Draw(_shader.get());
+	_model->Draw(program, 0);
 }
