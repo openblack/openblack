@@ -135,9 +135,15 @@ Renderer::Renderer(std::unique_ptr<GameWindow>& window):
 	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
 
 	LoadShaders();
+
+	// allocate vertex buffers for our debug draw
+	DebugDraw::Init();
 }
 
-Renderer::~Renderer() = default;
+Renderer::~Renderer()
+{
+	DebugDraw::Shutdown();
+}
 
 void Renderer::LoadShaders()
 {
@@ -170,8 +176,10 @@ void Renderer::ClearScene(int width, int height)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Renderer::DebugDraw(std::chrono::microseconds dt, const Game &game)
+void Renderer::DebugDraw(std::chrono::microseconds dt, const Game &game, const glm::vec3 &position, float scale)
 {
+	DebugDraw::Cross(position, 50.0f);
+
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 

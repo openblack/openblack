@@ -62,7 +62,7 @@ void DebugDraw::Line(glm::vec3 from, glm::vec3 to, glm::vec3 color)
 	v1.col = color;
 }
 
-void DebugDraw::Cross(glm::vec3 center, float size)
+void DebugDraw::Cross(const glm::vec3 &center, float size)
 {
 	// red line: X - length/2 to X + length / 2
 	Line(glm::vec3(center.x - size * 0.5f, center.y, center.z),
