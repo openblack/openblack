@@ -2,11 +2,12 @@
 set -e
 set -x
 
+#lsb_release -a
 uname -a
 cmake --version
 
-cmake -H. -B_build_${TOOLCHAIN} -DCMAKE_INSTALL_PREFIX=${PWD}/_install_${TOOLCHAIN} -DCMAKE_TOOLCHAIN_FILE="${PWD}/ci/toolchains/${TOOLCHAIN}.cmake" -DHUNTER_ENABLED=${HUNTER_ENABLED} -DUSE_SUBMODULES=${USE_SUBMODULES}
-cmake --build _build_${TOOLCHAIN} -- -j2
+cmake -H. -B_build_${TOOLCHAIN} -DCMAKE_INSTALL_PREFIX=${PWD}/_install_${TOOLCHAIN} -DCMAKE_TOOLCHAIN_FILE="${PWD}/ci/toolchains/${TOOLCHAIN}.cmake" -DHUNTER_ENABLED=${HUNTER_ENABLED} -DUSE_SUBMODULES=${USE_SUBMODULES} -G Ninja
+cmake --build _build_${TOOLCHAIN}
 
 if [ "$RUN_TESTS" = true ]; then
 	case "$TOOLCHAIN" in linux-mingw*)

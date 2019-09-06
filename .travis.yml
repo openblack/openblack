@@ -23,30 +23,24 @@ matrix:
       os: linux
       env: >
         BUILD_FLAVOR=ubuntu
-        BUILD_RELEASE=bionic
-        BUILD_ARCH=amd64
-        BUILD_PACKAGES="g++ ca-certificates"
         TOOLCHAIN=gcc-cxx17
         HUNTER_ENABLED=YES
         USE_SUBMODULES=NO
+        DOCKER_TAG=ubuntu-lts-gcc
 
     #   Ubuntu 19.04 disco
     - name: "disco: gcc"
       os: linux
       env: >
         BUILD_FLAVOR=ubuntu
-        BUILD_RELEASE=disco
-        BUILD_ARCH=amd64
-        BUILD_PACKAGES="g++"
+        DOCKER_TAG=ubuntu-rolling-gcc
         TOOLCHAIN=gcc-cxx17
     - name: "disco: clang"
       os: linux
       env: >
         BUILD_FLAVOR=ubuntu
-        BUILD_RELEASE=disco
-        BUILD_ARCH=amd64
+        DOCKER_TAG=ubuntu-rolling-clang
         TOOLCHAIN=clang-cxx17
-        BUILD_PACKAGES="clang"
     # } // end Linux
 
     # Windows build with mingw-w64 on fedora 31
@@ -54,34 +48,25 @@ matrix:
       os: linux
       env: >
         BUILD_FLAVOR=fedora
-        BUILD_RELEASE=31
-        BUILD_ARCH=amd64
         TOOLCHAIN=linux-mingw-w64-cxx17
-        BUILD_PACKAGES="mingw64-gcc-c++ ca-certificates"
         HUNTER_ENABLED=YES
         USE_SUBMODULES=NO
+        DOCKER_TAG=fedora-mingw
 
 before_install:
-  # use the Dockerfile.<distro>.template file for building the image with sed magic
-  - |
-    sed \
-    -e "s/@BUILD_FLAVOR@/${BUILD_FLAVOR}/g" \
-    -e "s/@BUILD_RELEASE@/${BUILD_RELEASE}/g" \
-    -e "s/@BUILD_ARCH@/${BUILD_ARCH}/g" \
-    -e "s/@BUILD_PACKAGES@/${BUILD_PACKAGES}/g" \
-    ci/Dockerfile.$BUILD_FLAVOR.template | tee ci/Dockerfile.$BUILD_FLAVOR.$BUILD_RELEASE.$BUILD_ARCH
-  - docker build -f ci/Dockerfile.$BUILD_FLAVOR.$BUILD_RELEASE.$BUILD_ARCH -t openblack-devel_${TOOLCHAIN} .
+  - docker pull openblack/openblack:$DOCKER_TAG
 
-script: |
+script:
+ - |
   # run the respective .travis.<distro>.sh script
   docker run \
   -e BUILD_FLAVOR="$BUILD_FLAVOR" \
-  -e BUILD_RELEASE="$BUILD_RELEASE" \
-  -e BUILD_ARCH="$BUILD_ARCH" \
   -e TOOLCHAIN="$TOOLCHAIN" \
   -e RUN_TESTS="$RUN_TESTS" \
   -e HUNTER_ENABLED="$HUNTER_ENABLED" \
   -e USE_SUBMODULES="$USE_SUBMODULES" \
   -v ${HOME}:/root \
-  -it openblack-devel_${TOOLCHAIN} ci/travis.$BUILD_FLAVOR.sh
+  -v ${PWD}:/usr/src/openblack \
+  -w /usr/src/openblack \
+  -it openblack/openblack:$DOCKER_TAG ci/travis.$BUILD_FLAVOR.sh
 
