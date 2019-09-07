@@ -284,9 +284,8 @@ void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
 	const uint32_t foodAmount = params[5].GetNumber();
 	const uint32_t woodAmount = params[6].GetNumber();
 	auto mesh                 = GetAbodeMesh(abodeType);
-
-	float radians = -(rotation * 0.001);
-	size          = (size * 0.001);
+	float radians             = GetRadians(rotation);
+	size                      = GetSize(size);
 
 	registry.Assign<Abode>(entity, townId, foodAmount, woodAmount);
 	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
