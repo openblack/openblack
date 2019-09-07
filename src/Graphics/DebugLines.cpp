@@ -44,14 +44,12 @@ std::unique_ptr<DebugLines> DebugLines::CreateDebugLines(uint32_t size, const vo
 	glGenVertexArrays(1, &gpuVertexArray);
 	glBindVertexArray(gpuVertexArray);
 
-	auto gpuVertexBuffer = std::make_unique<VertexBuffer>(nullptr, DEBUG_DRAW_VERTEX_BUFFER_SIZE, sizeof(Vertex), GL_STREAM_DRAW);
+	auto gpuVertexBuffer = std::make_unique<VertexBuffer>(data, vertexCount, sizeof(Vertex));
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float) * 3));
-
-	glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
