@@ -20,6 +20,13 @@
 
 #include "Renderer.h"
 
+#include <sstream>
+
+#include <glad/glad.h>
+#include <bgfx/platform.h>
+#include <SDL_video.h>
+#include <spdlog/spdlog.h>
+
 #include <3D/L3DMesh.h>
 #include <3D/LandIsland.h>
 #include <3D/Sky.h>
@@ -29,10 +36,6 @@
 #include <GameWindow.h>
 #include <Graphics/DebugLines.h>
 #include <Graphics/ShaderManager.h>
-#include <SDL_video.h>
-#include <glad/glad.h>
-#include <spdlog/spdlog.h>
-#include <sstream>
 
 #ifdef HAS_FILESYSTEM
 #include <filesystem>
@@ -44,7 +47,7 @@ namespace fs = std::experimental::filesystem;
 using namespace openblack;
 using namespace openblack::graphics;
 
-namespace
+namespace openblack
 {
 void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 {
@@ -57,18 +60,90 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 		spdlog::warn("MessageCallback user param not properly installed");
 	}
 }
-} // namespace
 
-std::vector<Renderer::RequiredAttribute> Renderer::GetRequiredWindowingAttributes()
+struct BgfxCallback : public bgfx::CallbackI
 {
-	return std::vector<RequiredAttribute> {
-		{ Api::OpenGl, SDL_GL_RED_SIZE, 8 },
-		{ Api::OpenGl, SDL_GL_GREEN_SIZE, 8 },
-		{ Api::OpenGl, SDL_GL_BLUE_SIZE, 8 },
-		{ Api::OpenGl, SDL_GL_ALPHA_SIZE, 8 },
-		{ Api::OpenGl, SDL_GL_DOUBLEBUFFER, 1 },
-	};
-}
+	~BgfxCallback() override = default;
+
+	void fatal(const char* filePath, uint16_t line, bgfx::Fatal::Enum code, const char* str) override
+	{
+		const static std::array CodeLookup = {
+			"DebugCheck",
+			"InvalidShader",
+			"UnableToInitialize",
+			"UnableToCreateTexture",
+			"DeviceLost",
+		};
+		spdlog::critical("bgfx: {}:{}: FATAL ({}): {}",
+			filePath, line, CodeLookup[code], str);
+
+		// Must terminate, continuing will cause crash anyway.
+		throw std::runtime_error(
+			std::string("bgfx: ") + filePath + ":" + std::to_string(line) +
+				": FATAL (" + CodeLookup[code] + "): " + str);
+	}
+
+	void traceVargs(const char* filePath, uint16_t line, const char* format, va_list argList) override
+	{
+		char temp[0x2000];
+		char* out = temp;
+		int32_t len = vsnprintf(out, sizeof(temp), format, argList);
+		if ( (int32_t)sizeof(temp) < len)
+		{
+			out = (char*)alloca(len + 1);
+			len = vsnprintf(out, len, format, argList);
+		}
+		out[len] = '\0';
+		if (len > 0 && out[len - 1] == '\n') {
+			out[len - 1] = '\0';
+		}
+		spdlog::debug("bgfx: {}:{}: {}", filePath, line, out);
+	}
+	void profilerBegin(const char* name, uint32_t abgr, const char* filePath, uint16_t line) override
+	{
+	}
+	void profilerBeginLiteral(const char* name, uint32_t abgr, const char* filePath, uint16_t line) override
+	{
+	}
+	void profilerEnd() override
+	{
+	}
+	// Reading and writing to shader cache
+	uint32_t cacheReadSize(uint64_t id) override
+	{
+		return 0;
+	}
+	bool cacheRead(uint64_t id, void* data, uint32_t size) override
+	{
+		return false;
+	}
+	void cacheWrite(uint64_t id, const void* data, uint32_t size) override
+	{
+	}
+	// Saving a screen shot
+	void screenShot(const char* filePath, uint32_t width, uint32_t height, uint32_t pitch, const void* data, uint32_t size, bool yflip) override
+	{
+	}
+	// Saving a video
+	void captureBegin(uint32_t width, uint32_t height, uint32_t pitch, bgfx::TextureFormat::Enum _format, bool yflip) override
+	{
+	}
+	void captureEnd() override
+	{
+	}
+	void captureFrame(const void* data, uint32_t size) override
+	{
+	}
+};
+
+struct ApiThreadArgs
+{
+  bgfx::PlatformData platformData;
+  uint32_t width;
+  uint32_t height;
+};
+
+}  // namespace openblack
 
 std::vector<Renderer::RequiredAttribute> Renderer::GetRequiredContextAttributes()
 {
@@ -83,14 +158,49 @@ std::vector<Renderer::RequiredAttribute> Renderer::GetRequiredContextAttributes(
 	};
 }
 
-uint32_t Renderer::GetRequiredFlags()
+uint32_t Renderer::GetRequiredWindowFlags()
 {
 	return SDL_WINDOW_OPENGL;
 }
 
-Renderer::Renderer(const GameWindow& window, const std::string binaryPath):
-    _shaderManager(std::make_unique<ShaderManager>())
+Renderer::Renderer(const GameWindow& window, const std::string binaryPath)
+	: _shaderManager(std::make_unique<ShaderManager>())
+	, _bgfxCallback(std::make_unique<BgfxCallback>())
 {
+	// Call bgfx::renderFrame before bgfx::init to signal to bgfx not to create a render thread.
+	// Most graphics APIs must be used on the same thread that created the window.
+	bgfx::renderFrame();
+
+	// Create a thread to call the bgfx API from (except bgfx::renderFrame).
+	ApiThreadArgs apiThreadArgs {};
+
+	// Get render area size
+	int drawable_width;
+	int drawable_height;
+	window.GetDrawableSize(drawable_width, drawable_height);
+	apiThreadArgs.width = drawable_width;
+	apiThreadArgs.height = drawable_height;
+
+	// Get Native Handles from SDL window
+	window.GetNativeHandles(apiThreadArgs.platformData.nwh, apiThreadArgs.platformData.ndt);
+
+	// TODO(bwrsandman): This is single threaded init. Replace with multithreaded
+	bgfx::Init init {};
+#if USE_VULKAN
+	init.type = bgfx::RendererType::Vulkan;
+#else
+	init.type = bgfx::RendererType::OpenGL;
+#endif  // USE_VULKAN
+	init.platformData = apiThreadArgs.platformData;
+	init.resolution.width = (uint32_t)drawable_width;
+	init.resolution.height = (uint32_t)drawable_height;
+	init.resolution.reset = BGFX_RESET_VSYNC;
+	init.callback = dynamic_cast<bgfx::CallbackI*>(_bgfxCallback.get());
+
+	if (!bgfx::init(init)) {
+		throw std::runtime_error("Failed to initialize bgfx.");
+	}
+
 	for (auto& attr : GetRequiredContextAttributes())
 	{
 		if (attr.api == Renderer::Api::OpenGl)
@@ -149,7 +259,11 @@ Renderer::Renderer(const GameWindow& window, const std::string binaryPath):
 	_debugCross = DebugLines::CreateCross();
 }
 
-Renderer::~Renderer() = default;
+Renderer::~Renderer()
+{
+	// TODO(bwrsandman): uncomment this once rendering is taken over
+	// bgfx::shutdown();
+}
 
 void Renderer::LoadShaders(const std::string &binaryPath)
 {
