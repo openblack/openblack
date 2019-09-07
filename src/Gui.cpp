@@ -30,14 +30,15 @@
 #include <MeshViewer.h>
 #include <3D/Camera.h>
 #include <3D/LandIsland.h>
+#include <3D/MeshPack.h>
 #include <3D/Water.h>
 
 using namespace OpenBlack;
 
-void Gui::Init(const GameWindow &window, const SDL_GLContext& context, float scale)
+std::unique_ptr<Gui> Gui::create(const GameWindow &window, const SDL_GLContext &context, float scale)
 {
 	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
+	auto imgui = ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 
 	ImGui::StyleColorsLight();
@@ -52,16 +53,34 @@ void Gui::Init(const GameWindow &window, const SDL_GLContext& context, float sca
 	}
 
 	ImGui_ImplOpenGL3_Init("#version 130");
+	auto meshViewer = std::make_unique<MeshViewer>();
+	//meshViewer->Open();
+
+	return std::unique_ptr<Gui>(new Gui(imgui, std::move(meshViewer)));
+}
+
+Gui::Gui(ImGuiContext* imgui, std::unique_ptr<MeshViewer>&& meshViewer)
+	: _imgui(imgui)
+	, _meshViewer(std::move(meshViewer))
+{
+}
+
+Gui::~Gui()
+{
+	ImGui::DestroyContext(_imgui);
 }
 
 void Gui::ProcessSDLEvent(const SDL_Event& event)
 {
+	ImGui::SetCurrentContext(_imgui);
 	ImGui_ImplSDL2_ProcessEvent(&event);
 }
 
-void Gui::Loop(Game& game, MeshViewer& meshViewer)
+void Gui::Loop(Game& game)
 {
-	meshViewer.DrawScene();
+	ImGui::SetCurrentContext(_imgui);
+
+	_meshViewer->DrawScene();
 
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplSDL2_NewFrame(game.GetWindow().GetHandle());
@@ -95,7 +114,7 @@ void Gui::Loop(Game& game, MeshViewer& meshViewer)
 			}
 			if (ImGui::MenuItem("Mesh Viewer"))
 			{
-				meshViewer.Open();
+				_meshViewer->Open();
 			}
 			ImGui::EndMenu();
 		}
@@ -109,7 +128,7 @@ void Gui::Loop(Game& game, MeshViewer& meshViewer)
 		ImGui::EndMainMenuBar();
 	}
 
-	meshViewer.DrawWindow();
+	_meshViewer->DrawWindow();
 
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 8.0f, io.DisplaySize.y - 8.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
@@ -228,5 +247,7 @@ void Gui::Loop(Game& game, MeshViewer& meshViewer)
 
 void Gui::Draw()
 {
+	ImGui::SetCurrentContext(_imgui);
+
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
