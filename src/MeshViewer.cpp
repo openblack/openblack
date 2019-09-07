@@ -74,7 +74,7 @@ void MeshViewer::DrawWindow()
 	auto const& mesh = meshes[static_cast<int>(_selectedMesh)];
 	ImGui::BeginChild("viewer");
 
-	ImGui::Text("%d submeshes", mesh->GetSubMeshes().size());
+	ImGui::Text("%zu submeshes", mesh->GetSubMeshes().size());
 	ImGui::InputInt("submesh", &_selectedSubMesh, 1, 1);
 	if (_selectedSubMesh < 0)
 		_selectedSubMesh = 0;
