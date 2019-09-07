@@ -52,7 +52,26 @@ class Registry;
 class Game
 {
   public:
-	Game(int argc, char** argv);
+	struct Config
+	{
+		Config()
+			: wireframe(false)
+			, waterDebug(false)
+			, timeOfDay(1.0f)
+			, bumpMapStrength(1.0f)
+			, smallBumpMapStrength(1.0f)
+		{
+		}
+
+		bool wireframe;
+		bool waterDebug;
+
+		float timeOfDay;
+		float bumpMapStrength;
+		float smallBumpMapStrength;
+	};
+
+  Game(int argc, char** argv);
 	~Game();
 
 	void Run();
@@ -76,13 +95,11 @@ class Game
 	FileSystem& GetFileSystem() { return *_fileSystem; }
 	Entities::Registry& GetEntityRegistry() { return *_entityRegistry; }
 	[[nodiscard]] Entities::Registry& GetEntityRegistry() const { return *_entityRegistry; }
-	[[nodiscard]] float GetTimeOfDay() const { return _timeOfDay; }
-	[[nodiscard]] float GetBumpmapStrength() const { return _bumpmapStrength; }
-	[[nodiscard]] float GetSmallBumpmapStrength() const { return _smallBumpmapStrength; }
 	[[nodiscard]] glm::mat4 GetModelMatrix() const;
-	[[nodiscard]] bool GetIsWireframe() const { return _wireframe; }
+	Config& GetConfig() { return _config; }
+	[[nodiscard]] const Config& GetConfig() const { return _config; }
 
-	static Game* instance()
+  static Game* instance()
 	{
 		return sInstance;
 	}
@@ -108,12 +125,7 @@ class Game
 	std::unique_ptr<LHVM::LHVM> _lhvm;
 	std::unique_ptr<Entities::Registry> _entityRegistry;
 
-	bool _wireframe;
-	bool _waterDebug;
-
-	float _timeOfDay;
-	float _bumpmapStrength;
-	float _smallBumpmapStrength;
+	Config _config;
 
 	glm::ivec2 _mousePosition;
 	glm::vec3 _intersection;

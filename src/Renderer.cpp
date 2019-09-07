@@ -209,19 +209,19 @@ void Renderer::DrawScene(std::chrono::microseconds dt, const Game &game, const C
 		game.GetWater().Draw(*waterShader);
 	}
 
-	if (game.GetIsWireframe())
+	if (game.GetConfig().wireframe)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
 	terrainShader->Bind();
 	terrainShader->SetUniformValue("viewProj", camera.GetViewProjectionMatrix());
-	terrainShader->SetUniformValue("timeOfDay", game.GetTimeOfDay());
-	terrainShader->SetUniformValue("bumpmapStrength", game.GetBumpmapStrength());
-	terrainShader->SetUniformValue("smallBumpmapStrength", game.GetSmallBumpmapStrength());
+	terrainShader->SetUniformValue("timeOfDay", game.GetConfig().timeOfDay);
+	terrainShader->SetUniformValue("bumpmapStrength", game.GetConfig().bumpMapStrength);
+	terrainShader->SetUniformValue("smallBumpmapStrength", game.GetConfig().smallBumpMapStrength);
 
 	game.GetLandIsland().Draw(*terrainShader);
 
-	if (game.GetIsWireframe())
+	if (game.GetConfig().wireframe)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	glm::mat4 modelMatrix = game.GetModelMatrix();
