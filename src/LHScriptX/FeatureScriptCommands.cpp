@@ -274,33 +274,14 @@ void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
 	float size                = params[4].GetNumber();
 	const uint32_t foodAmount = params[5].GetNumber();
 	const uint32_t woodAmount = params[6].GetNumber();
-	uint32_t meshId           = 0;
-
-	if (abodeType == "NORSE_ABODE_STORAGE_PIT")
-		meshId = static_cast<uint32_t>(MeshId::BuildingNorseStoragePit);
-	else if (abodeType == "NORSE_ABODE_GRAVEYARD")
-		meshId = static_cast<uint32_t>(MeshId::BuildingNorseGraveyard);
-	else if (abodeType == "NORSE_ABODE_CRECHE")
-		meshId = static_cast<uint32_t>(MeshId::BuildingNorseCreche);
-	else if (abodeType == "NORSE_ABODE_A")
-		meshId = static_cast<uint32_t>(MeshId::BuildingNorse1);
-	else if (abodeType == "NORSE_ABODE_B")
-		meshId = static_cast<uint32_t>(MeshId::BuildingNorse2);
-	else if (abodeType == "NORSE_ABODE_C")
-		meshId = static_cast<uint32_t>(MeshId::BuildingNorse3);
-	else if (abodeType == "NORSE_ABODE_D")
-		meshId = static_cast<uint32_t>(MeshId::BuildingNorse4);
-	else if (abodeType == "NORSE_ABODE_E")
-		meshId = static_cast<uint32_t>(MeshId::BuildingNorse2A);
-	else if (abodeType == "NORSE_ABODE_F")
-		meshId = static_cast<uint32_t>(MeshId::BuildingNorse2);
+	auto mesh                 = GetAbodeMesh(abodeType);
 
 	float radians = -(rotation * 0.001);
 	size          = (size * 0.001);
 
 	registry.Assign<Abode>(entity, townId, foodAmount, woodAmount);
 	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
-	registry.Assign<Model>(entity, meshId, 0.0f, 0.0f, 0.0f);
+	registry.Assign<Model>(entity, mesh, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::CreatePlannedAbode(const ScriptCommandContext& ctx)
