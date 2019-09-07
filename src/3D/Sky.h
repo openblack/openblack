@@ -27,9 +27,9 @@
 #include <Graphics/Texture2D.h>
 #include <memory>
 
-using OpenBlack::Graphics::ShaderProgram;
+using openblack::Graphics::ShaderProgram;
 
-namespace OpenBlack
+namespace openblack
 {
 
 class Sky
@@ -45,4 +45,4 @@ class Sky
 	std::unique_ptr<Texture2D> _texture;
 };
 
-} // namespace OpenBlack
+} // namespace openblack

@@ -24,7 +24,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-using namespace OpenBlack;
+using namespace openblack;
 
 Sky::Sky()
 {

@@ -22,7 +22,7 @@
 
 #include <cstddef>
 
-namespace OpenBlack
+namespace openblack
 {
 
 enum class SeekMode
@@ -59,4 +59,4 @@ class IStream
 	}
 };
 
-} // namespace OpenBlack
+} // namespace openblack

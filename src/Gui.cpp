@@ -33,7 +33,7 @@
 #include <3D/MeshPack.h>
 #include <3D/Water.h>
 
-using namespace OpenBlack;
+using namespace openblack;
 
 std::unique_ptr<Gui> Gui::create(const GameWindow &window, const SDL_GLContext &context, float scale)
 {

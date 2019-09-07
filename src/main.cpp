@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 	try
 	{
 #endif
-		std::unique_ptr<OpenBlack::Game> game(new OpenBlack::Game(argc, argv));
+		std::unique_ptr<openblack::Game> game(new openblack::Game(argc, argv));
 		game->Run();
 #ifdef NDEBUG
 	}

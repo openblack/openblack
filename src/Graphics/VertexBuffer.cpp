@@ -22,7 +22,7 @@
 
 #include <cassert>
 
-using namespace OpenBlack::Graphics;
+using namespace openblack::Graphics;
 
 VertexBuffer::VertexBuffer(const void* vertices, size_t vertexCount, size_t strideBytes, GLuint hint):
     _vertexCount(vertexCount),

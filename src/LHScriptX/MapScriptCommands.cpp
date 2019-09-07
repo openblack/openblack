@@ -20,7 +20,7 @@
 
 #include <LHScriptX/MapScriptCommands.h>
 
-using namespace OpenBlack::LHScriptX;
+using namespace openblack::LHScriptX;
 
 // alias parameter types for signature list readability
 const constexpr ParameterType TString = ParameterType::String;

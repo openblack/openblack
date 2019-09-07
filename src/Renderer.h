@@ -29,7 +29,7 @@
 #include <SDL.h>
 #include <3D/Camera.h>
 
-namespace OpenBlack
+namespace openblack
 {
 class GameWindow;
 class Game;
@@ -96,4 +96,4 @@ class Renderer {
 
   std::unique_ptr<Graphics::DebugLines> _debugCross;
 };
-} // namespace OpenBlack
+} // namespace openblack

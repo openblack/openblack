@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <cassert>
 
-namespace OpenBlack::Graphics
+namespace openblack::Graphics
 {
 Texture2D::Texture2D()
 {
@@ -106,4 +106,4 @@ void Texture2D::GenerateMipmap()
 	glGenerateMipmap(GL_TEXTURE_2D);
 }
 
-} // namespace OpenBlack::Graphics
+} // namespace openblack::Graphics

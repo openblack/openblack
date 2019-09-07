@@ -24,9 +24,9 @@
 #include <LHScriptX/Lexer.h>
 #include <vector>
 
-using namespace OpenBlack;
+using namespace openblack;
 
-namespace OpenBlack::LHScriptX
+namespace openblack::LHScriptX
 {
 
 class NotImplemented: public std::logic_error
@@ -63,4 +63,4 @@ class Script
 	Token token_;
 };
 
-} // namespace OpenBlack::LHScriptX
+} // namespace openblack::LHScriptX

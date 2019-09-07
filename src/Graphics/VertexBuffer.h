@@ -23,7 +23,7 @@
 #include <Graphics/OpenGL.h>
 #include <memory>
 
-namespace OpenBlack
+namespace openblack
 {
 namespace Graphics
 {
@@ -49,4 +49,4 @@ class VertexBuffer
 };
 
 } // namespace Graphics
-} // namespace OpenBlack
+} // namespace openblack

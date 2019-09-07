@@ -30,7 +30,7 @@
 #include <stdexcept>
 #include <stdint.h>
 
-namespace OpenBlack
+namespace openblack
 {
 
 struct LandVertex
@@ -96,4 +96,4 @@ class LandBlock
 
 	std::vector<LandVertex> buildVertexList(LandIsland& island);
 };
-} // namespace OpenBlack
+} // namespace openblack

@@ -27,7 +27,7 @@
 #include <Graphics/OpenGL.h>
 #include <Graphics/VertexBuffer.h>
 
-using namespace OpenBlack::Graphics;
+using namespace openblack::Graphics;
 
 namespace
 {

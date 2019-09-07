@@ -1,19 +1,19 @@
 #include <entt/entt.hpp>
 
-namespace OpenBlack
+namespace openblack
 {
 class Camera;
 }
 
-namespace OpenBlack
+namespace openblack
 {
 namespace Graphics
 {
 class ShaderManager;
 }
-} // namespace OpenBlack
+} // namespace openblack
 
-namespace OpenBlack
+namespace openblack
 {
 namespace Entities
 {
@@ -33,4 +33,4 @@ class Registry
 };
 
 } // namespace Entities
-} // namespace OpenBlack
+} // namespace openblack

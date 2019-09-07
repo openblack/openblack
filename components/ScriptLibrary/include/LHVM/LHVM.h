@@ -26,7 +26,7 @@
 #include <LHVM/VMInstruction.h>
 #include <LHVM/VMScript.h>
 
-namespace OpenBlack {
+namespace openblack {
 namespace LHVM {
 
 class LHVM {

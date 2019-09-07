@@ -30,8 +30,8 @@
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 
-using namespace OpenBlack;
-using namespace OpenBlack::Graphics;
+using namespace openblack;
+using namespace openblack::Graphics;
 
 struct L3DSubMesh
 {

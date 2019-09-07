@@ -29,9 +29,9 @@
 #include <string>
 #include <vector>
 
-using namespace OpenBlack::Graphics;
+using namespace openblack::Graphics;
 
-namespace OpenBlack
+namespace openblack
 {
 class IStream;
 
@@ -105,7 +105,7 @@ class LandIsland
 
 	uint8_t* _noiseMap;
 };
-} // namespace OpenBlack
+} // namespace openblack
 
 /*
 LH3DIsland methods:

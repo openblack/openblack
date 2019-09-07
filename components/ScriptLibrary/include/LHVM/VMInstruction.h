@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <string>
 
-namespace OpenBlack {
+namespace openblack {
 namespace LHVM {
 
 class VMInstruction

@@ -26,7 +26,7 @@
 #include <Graphics/FrameBuffer.h>
 #include <glm/glm.hpp>
 
-namespace OpenBlack
+namespace openblack
 {
 
 class ReflectionCamera: public Camera
@@ -75,4 +75,4 @@ class Water
 	ReflectionCamera _reflectionCamera;
 };
 
-} // namespace OpenBlack
+} // namespace openblack

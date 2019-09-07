@@ -27,7 +27,7 @@
 //  0 with substitution.
 //  0 with dummy object.
 
-namespace OpenBlack
+namespace openblack
 {
 
 enum class Mesh
@@ -664,7 +664,7 @@ enum class Mesh
 
 namespace magic_enum {
 template <>
-struct enum_range<OpenBlack::Mesh> {
+struct enum_range<openblack::Mesh> {
   static constexpr int min = 0;
   static constexpr int max = 625;
 };

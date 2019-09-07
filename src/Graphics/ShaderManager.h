@@ -24,7 +24,7 @@
 #include <map>
 #include <string>
 
-namespace OpenBlack
+namespace openblack
 {
 namespace Graphics
 {
@@ -45,4 +45,4 @@ class ShaderManager
 };
 
 } // namespace Graphics
-} // namespace OpenBlack
+} // namespace openblack

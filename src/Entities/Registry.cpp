@@ -9,7 +9,7 @@
 #include <Entities/Components/Model.h>
 #include <Entities/Components/Villager.h>
 
-namespace OpenBlack::Entities
+namespace openblack::Entities
 {
 void Registry::DebugCreateEntities(float x, float y, float z)
 {
@@ -60,4 +60,4 @@ void Registry::DrawModels(const Camera& camera, Graphics::ShaderManager& shaderM
 void Registry::Update()
 {
 }
-} // namespace OpenBlack::Entities
+} // namespace openblack::Entities

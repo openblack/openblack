@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <string>
 
-namespace OpenBlack
+namespace openblack
 {
 class Bitmap16B
 {
@@ -47,4 +47,4 @@ class Bitmap16B
 	static Bitmap16B* LoadFromFile(const std::string& file);
 };
 
-} // namespace OpenBlack
+} // namespace openblack

@@ -30,7 +30,7 @@
 #include <stdint.h>
 #include <stdlib.h> // snprintf
 
-namespace OpenBlack
+namespace openblack
 {
 
 // todo: move this code to it's own image parser
@@ -237,4 +237,4 @@ void MeshPack::loadMeshes(IStream& stream)
 	spdlog::debug("MeshPack loaded {0} meshes", meshCount);
 }
 
-} // namespace OpenBlack
+} // namespace openblack

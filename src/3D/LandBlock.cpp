@@ -23,7 +23,7 @@
 #include <3D/LandIsland.h>
 #include <glm/gtc/type_ptr.hpp>
 
-using namespace OpenBlack;
+using namespace openblack;
 
 struct LH3DLandCell // 8 bytes
 {

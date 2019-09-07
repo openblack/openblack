@@ -26,7 +26,7 @@
 #include <cstring>
 #include <stdexcept>
 
-namespace OpenBlack {
+namespace openblack {
 namespace LHVM {
 
 void LHVM::LoadBinary(const std::string &filename)

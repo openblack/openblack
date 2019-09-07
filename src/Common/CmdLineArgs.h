@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-namespace OpenBlack
+namespace openblack
 {
 class CmdLineArgs
 {
@@ -107,4 +107,4 @@ inline bool CmdLineArgs::ArgValue::ValueAs<bool>() const
 {
 	return AsBool();
 }
-} // namespace OpenBlack
+} // namespace openblack

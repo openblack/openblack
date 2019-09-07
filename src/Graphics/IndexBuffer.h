@@ -25,7 +25,7 @@
 #include <cstdio>
 #include <stdint.h>
 
-namespace OpenBlack
+namespace openblack
 {
 namespace Graphics
 {
@@ -56,4 +56,4 @@ class IndexBuffer
 };
 
 } // namespace Graphics
-} // namespace OpenBlack
+} // namespace openblack

@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 
-namespace OpenBlack
+namespace openblack
 {
 class Camera;
 class FileSystem;
@@ -140,4 +140,4 @@ class Game
 
 	bool _running;
 };
-} // namespace OpenBlack
+} // namespace openblack

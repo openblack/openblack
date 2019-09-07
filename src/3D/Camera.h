@@ -26,7 +26,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <chrono>
 
-namespace OpenBlack
+namespace openblack
 {
 
 class Camera
@@ -76,4 +76,4 @@ class Camera
 	float _movementSpeed;
 	float _freeLookSensitivity;
 };
-} // namespace OpenBlack
+} // namespace openblack

@@ -25,7 +25,7 @@
 #include <Graphics/Texture2D.h>
 #include <memory>
 
-namespace OpenBlack
+namespace openblack
 {
 class Hand
 {
@@ -39,4 +39,4 @@ class Hand
   private:
 	std::unique_ptr<L3DMesh> m_HandModel;
 };
-} // namespace OpenBlack
+} // namespace openblack
