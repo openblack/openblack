@@ -31,8 +31,8 @@ namespace OpenBlack
 {
 class Camera;
 class FileSystem;
+class Gui;
 class MeshPack;
-class MeshViewer;
 class LandIsland;
 class Renderer;
 class L3DMesh;
@@ -71,7 +71,7 @@ class Game
 		float smallBumpMapStrength;
 	};
 
-  Game(int argc, char** argv);
+	Game(int argc, char** argv);
 	~Game();
 
 	void Run();
@@ -115,12 +115,12 @@ class Game
 
 	std::unique_ptr<GameWindow> _window;
 	std::unique_ptr<Renderer> _renderer;
+	std::unique_ptr<Gui> _gui;
 	std::unique_ptr<Camera> _camera;
 
 	std::unique_ptr<FileSystem> _fileSystem;
 	std::unique_ptr<LandIsland> _landIsland;
 	std::unique_ptr<MeshPack> _meshPack;
-	std::unique_ptr<MeshViewer> _meshViewer;
 
 	std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<Sky> _sky;

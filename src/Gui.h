@@ -20,7 +20,10 @@
 
 #pragma once
 
+#include <memory>
+
 typedef void *SDL_GLContext;
+struct ImGuiContext;
 union SDL_Event;
 
 namespace OpenBlack
@@ -32,9 +35,16 @@ class MeshViewer;
 class Gui
 {
   public:
-	static void Init(const GameWindow &window, const SDL_GLContext &context, float scale);
-	static void ProcessSDLEvent(const SDL_Event& event);
-	static void Loop(Game& game, MeshViewer& meshViewer);
-	static void Draw();
+	static std::unique_ptr<Gui> create(const GameWindow &window, const SDL_GLContext &context, float scale);
+
+	virtual ~Gui();
+
+	void ProcessSDLEvent(const SDL_Event&);
+	void Loop(Game& game);
+	void Draw();
+ private:
+	Gui(ImGuiContext* imgui, std::unique_ptr<MeshViewer>&& meshViewer);
+	ImGuiContext* _imgui;
+	std::unique_ptr<MeshViewer> _meshViewer;
 };
 } // namespace OpenBlack

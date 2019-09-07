@@ -43,6 +43,7 @@
 #include <LHScriptX/Script.h>
 #include <MeshViewer.h>
 #include <Renderer.h>
+#include <Gui.h>
 #include <glm/gtx/intersect.hpp>
 
 #ifdef WIN32
@@ -90,10 +91,7 @@ Game::Game(int argc, char** argv):
 
 	float scale = 1.0f;
 	args.Get<float>("scale", scale);
-	Gui::Init(*_window, _renderer->GetGLContext(), scale);
-
-	_meshViewer = std::make_unique<MeshViewer>();
-	//_meshViewer->Open();
+	_gui = Gui::create(*_window, _renderer->GetGLContext(), scale);
 }
 
 Game::~Game()
@@ -203,13 +201,13 @@ void Game::Run()
 
 			_camera->ProcessSDLEvent(e);
 
-			Gui::ProcessSDLEvent(e);
+			_gui->ProcessSDLEvent(e);
 		}
 
 		_camera->Update(deltaTime);
 		_modelRotation.y = fmod(_modelRotation.y + float(deltaTime.count()) * .0001f, 360.f);
 
-		Gui::Loop(*this, *_meshViewer);
+		_gui->Loop(*this);
 
 		int width, height;
 		_window->GetDrawableSize(width, height);
@@ -226,7 +224,7 @@ void Game::Run()
 
 		_renderer->DebugDraw(deltaTime, *this, _intersection, 50.0f);
 
-		Gui::Draw();
+		_gui->Draw();
 
 		_window->SwapWindow();
 	}
