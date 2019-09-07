@@ -36,6 +36,7 @@ MeshViewer::MeshViewer()
 	_selectedMesh = Mesh::Dummy;
 	_selectedSubMesh = 0;
 	_cameraPosition  = glm::vec3(5.0f, 3.0f, 5.0f);
+	_open            = false;
 }
 
 void MeshViewer::Open()
@@ -91,6 +92,9 @@ void MeshViewer::DrawWindow()
 
 void MeshViewer::DrawScene()
 {
+	if (!_open)
+		return;
+
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glEnable(GL_CULL_FACE);

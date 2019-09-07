@@ -110,7 +110,7 @@ Game::Game(int argc, char** argv):
 
 	ImGui_ImplOpenGL3_Init("#version 130");
 	_meshViewer = std::make_unique<MeshViewer>();
-	_meshViewer->Open();
+	//_meshViewer->Open();
 }
 
 Game::~Game()
