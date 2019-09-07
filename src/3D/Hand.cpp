@@ -20,7 +20,7 @@
 
 #include "Hand.h"
 
-using namespace OpenBlack;
+using namespace openblack;
 
 void Hand::Init()
 {

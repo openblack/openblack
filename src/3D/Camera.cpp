@@ -21,7 +21,7 @@
 #include <3D/Camera.h>
 #include <Game.h>
 
-using namespace OpenBlack;
+using namespace openblack;
 
 glm::mat4 Camera::getRotationMatrix() const
 {

@@ -22,7 +22,7 @@
 
 #include <algorithm>
 
-using namespace OpenBlack;
+using namespace openblack;
 
 CmdLineArgs::CmdLineArgs(int argc, char* argv[])
 {

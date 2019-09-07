@@ -26,7 +26,7 @@
 #include <imgui/examples/imgui_impl_sdl.h>
 #include <imgui_club/imgui_memory_editor/imgui_memory_editor.h>
 
-using OpenBlack::LHVMViewer;
+using openblack::LHVMViewer;
 
 int LHVMViewer::SelectedScriptID = 1;
 static bool ScrollToSelected = false;
@@ -94,7 +94,7 @@ inline bool TextButtonColored(ImVec4 color, const char* name_)
 
 } // namespace ImGui
 
-void LHVMViewer::Draw(const OpenBlack::LHVM::LHVM* lhvm)
+void LHVMViewer::Draw(const openblack::LHVM::LHVM* lhvm)
 {
 	ImGui::SetNextWindowSize(ImVec2(720.0f, 612.0f), ImGuiCond_FirstUseEver);
 	ImGui::Begin("LHVM");
@@ -148,10 +148,10 @@ void LHVMViewer::Draw(const OpenBlack::LHVM::LHVM* lhvm)
 	ImGui::End();
 }
 
-void LHVMViewer::DrawScriptsTab(const OpenBlack::LHVM::LHVM* lhvm)
+void LHVMViewer::DrawScriptsTab(const openblack::LHVM::LHVM* lhvm)
 {
 	static auto scripts_vector_getter = [](void* vec, int idx, const char** out_text) {
-		auto& vector = *static_cast<std::vector<OpenBlack::LHVM::VMScript>*>(vec);
+		auto& vector = *static_cast<std::vector<openblack::LHVM::VMScript>*>(vec);
 		if (idx < 0 || idx >= static_cast<int>(vector.size())) { return false; }
 		*out_text = vector.at(idx).GetName().c_str();
 		return true;
@@ -219,7 +219,7 @@ void LHVMViewer::DrawScriptsTab(const OpenBlack::LHVM::LHVM* lhvm)
 	ImGui::EndChild();
 }
 
-void LHVMViewer::DrawScriptDisassembly(const OpenBlack::LHVM::LHVM* lhvm, OpenBlack::LHVM::VMScript& script)
+void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM* lhvm, openblack::LHVM::VMScript& script)
 {
 	ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, Disassembly_ColorBG);
 	ImGui::PushStyleColor(ImGuiCol_Text, Disassembly_ColorFG);
@@ -314,7 +314,7 @@ void LHVMViewer::DrawScriptDisassembly(const OpenBlack::LHVM::LHVM* lhvm, OpenBl
 	ImGui::PopStyleColor(4);
 }
 
-void OpenBlack::LHVMViewer::DrawVariable(const OpenBlack::LHVM::LHVM* lhvm, OpenBlack::LHVM::VMScript& script, uint32_t idx)
+void openblack::LHVMViewer::DrawVariable(const openblack::LHVM::LHVM* lhvm, openblack::LHVM::VMScript& script, uint32_t idx)
 {
 	// local variable
 	if (idx > script.GetVariableOffset())
@@ -329,7 +329,7 @@ void OpenBlack::LHVMViewer::DrawVariable(const OpenBlack::LHVM::LHVM* lhvm, Open
 	ImGui::TextColored(Disassembly_ColorVariable, "global %s", variable.c_str());
 }
 
-std::string OpenBlack::LHVMViewer::DataToString(uint32_t data, OpenBlack::LHVM::VMInstruction::DataType type)
+std::string openblack::LHVMViewer::DataToString(uint32_t data, openblack::LHVM::VMInstruction::DataType type)
 {
 	switch (type)
 	{
@@ -345,7 +345,7 @@ std::string OpenBlack::LHVMViewer::DataToString(uint32_t data, OpenBlack::LHVM::
 	}
 }
 
-void OpenBlack::LHVMViewer::SelectScript(int idx)
+void openblack::LHVMViewer::SelectScript(int idx)
 {
 	SelectedScriptID = idx;
 	ScrollToSelected = true;

@@ -28,7 +28,7 @@
 
 #define DEBUG_DRAW_VERTEX_BUFFER_SIZE 4096
 
-namespace OpenBlack
+namespace openblack
 {
 namespace Graphics
 {
@@ -57,4 +57,4 @@ class DebugLines
 };
 
 } // namespace Graphics
-} // namespace OpenBlack
+} // namespace openblack

@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 
-namespace OpenBlack
+namespace openblack
 {
 
 /*
@@ -53,4 +53,4 @@ class FileSystem
 	fs::path _gamePath;
 };
 
-} // namespace OpenBlack
+} // namespace openblack

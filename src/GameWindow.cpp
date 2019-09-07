@@ -32,7 +32,7 @@
 
 #include "Renderer.h"
 
-using namespace OpenBlack;
+using namespace openblack;
 
 GameWindow::GameWindow(const std::string& title, const SDL_DisplayMode& display, DisplayMode displaymode):
     GameWindow::GameWindow(title, display.w, display.h, displaymode)

@@ -26,7 +26,7 @@ typedef void *SDL_GLContext;
 struct ImGuiContext;
 union SDL_Event;
 
-namespace OpenBlack
+namespace openblack
 {
 class Game;
 class GameWindow;
@@ -47,4 +47,4 @@ class Gui
 	ImGuiContext* _imgui;
 	std::unique_ptr<MeshViewer> _meshViewer;
 };
-} // namespace OpenBlack
+} // namespace openblack

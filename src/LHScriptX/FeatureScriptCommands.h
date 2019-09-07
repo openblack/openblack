@@ -23,7 +23,7 @@
 #include <LHScriptX/CommandSignature.h>
 #include <array>
 
-namespace OpenBlack::LHScriptX
+namespace openblack::LHScriptX
 {
 
 class FeatureScriptCommands
@@ -138,4 +138,4 @@ class FeatureScriptCommands
 	static void SetLostTownScale(const ScriptCommandContext& ctx);
 };
 
-} // namespace OpenBlack::LHScriptX
+} // namespace openblack::LHScriptX

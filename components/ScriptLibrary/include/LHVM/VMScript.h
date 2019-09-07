@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-namespace OpenBlack {
+namespace openblack {
 namespace LHVM {
 
 class VMScript {

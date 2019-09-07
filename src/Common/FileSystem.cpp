@@ -21,7 +21,7 @@
 #include <Common/FileSystem.h>
 #include <cstddef>
 
-namespace OpenBlack
+namespace openblack
 {
 
 // todo: exceptions need to be replaced with real exceptions
@@ -74,4 +74,4 @@ std::vector<std::byte> FileSystem::ReadAll(const fs::path& path)
 	return data;
 }
 
-} // namespace OpenBlack
+} // namespace openblack

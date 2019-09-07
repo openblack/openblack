@@ -23,7 +23,7 @@
 #include <cstdint> // uint8_t
 #include <algorithm>
 
-namespace OpenBlack
+namespace openblack
 {
 
 MemoryStream::MemoryStream(void* data, std::size_t size)
@@ -65,4 +65,4 @@ void MemoryStream::Read(void* buffer, std::size_t length)
 	_position += length;
 }
 
-} // namespace OpenBlack
+} // namespace openblack

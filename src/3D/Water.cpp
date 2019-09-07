@@ -21,7 +21,7 @@
 #include <3D/Water.h>
 #include <imgui/imgui.h>
 
-using namespace OpenBlack;
+using namespace openblack;
 
 glm::mat4 ReflectionCamera::GetViewProjectionMatrix() const
 {

@@ -24,7 +24,7 @@
 #include <Graphics/FrameBuffer.h>
 #include <memory>
 
-namespace OpenBlack
+namespace openblack
 {
 class MeshViewer
 {
@@ -41,4 +41,4 @@ class MeshViewer
 	glm::vec3 _cameraPosition;
 	std::unique_ptr<Graphics::FrameBuffer> _frameBuffer;
 };
-} // namespace OpenBlack
+} // namespace openblack

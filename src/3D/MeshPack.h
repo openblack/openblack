@@ -26,7 +26,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace OpenBlack
+namespace openblack
 {
 
 class IStream;
@@ -75,6 +75,6 @@ class MeshPack
 
 	std::unordered_map<std::string, LHBlockHeader> _blocks;
 };
-} // namespace OpenBlack
+} // namespace openblack
 
 #endif // OPENBLACK_MESHPACK_H

@@ -22,7 +22,7 @@
 
 #include <array>
 
-namespace OpenBlack {
+namespace openblack {
 namespace LHVM {
 
 static const std::array<std::string, 31> Opcode_Names = {

@@ -22,7 +22,7 @@
 #include <cassert>
 #include <stdexcept>
 
-namespace OpenBlack::Graphics
+namespace openblack::Graphics
 {
 
 FrameBuffer::FrameBuffer(GLsizei width, GLsizei height, GLenum format) :

@@ -21,7 +21,7 @@
 #include <Graphics/Texture2DArray.h>
 #include <stdio.h>
 
-namespace OpenBlack::Graphics
+namespace openblack::Graphics
 {
 
 Texture2DArray::Texture2DArray()
@@ -74,4 +74,4 @@ void Texture2DArray::Bind() const
 	}
 }
 
-} // namespace OpenBlack::Graphics
+} // namespace openblack::Graphics

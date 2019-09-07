@@ -23,7 +23,7 @@
 #include <Graphics/OpenGL.h>
 #include <Graphics/Texture2D.h>
 
-namespace OpenBlack {
+namespace openblack {
 namespace Graphics {
 
 class FrameBuffer {

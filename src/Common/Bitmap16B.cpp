@@ -26,7 +26,7 @@
 #include <stdexcept>
 #include <cstring> // memset, memcpy
 
-using namespace OpenBlack;
+using namespace openblack;
 
 Bitmap16B::Bitmap16B(unsigned int width, unsigned int height):
     _width(width), _height(height)

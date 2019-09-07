@@ -25,7 +25,7 @@
 #include <memory>
 #include <string>
 
-namespace OpenBlack
+namespace openblack
 {
 enum DisplayMode
 {
@@ -90,4 +90,4 @@ class GameWindow
   private:
 	std::unique_ptr<SDL_Window, SDLDestroyer> _window;
 };
-} // namespace OpenBlack
+} // namespace openblack

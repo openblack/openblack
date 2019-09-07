@@ -22,7 +22,7 @@
 
 #include <Graphics/Texture2D.h>
 
-namespace OpenBlack
+namespace openblack
 {
 namespace Graphics
 {
@@ -51,4 +51,4 @@ class Texture2DArray
 };
 
 } // namespace Graphics
-} // namespace OpenBlack
+} // namespace openblack

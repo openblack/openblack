@@ -30,7 +30,7 @@ namespace fs = std::filesystem;
 namespace fs = std::experimental::filesystem;
 #endif // HAS_FILESYSTEM
 
-namespace OpenBlack
+namespace openblack
 {
 
 enum class FileMode { Read, Write, Append };
@@ -52,4 +52,4 @@ class FileStream: public IStream
 	std::size_t _fileSize;
 };
 
-} // namespace OpenBlack
+} // namespace openblack

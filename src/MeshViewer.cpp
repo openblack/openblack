@@ -28,7 +28,7 @@
 #include <imgui/imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-namespace OpenBlack
+namespace openblack
 {
 MeshViewer::MeshViewer()
 {
@@ -126,4 +126,4 @@ void MeshViewer::DrawScene()
 	_frameBuffer->Unbind();
 }
 
-} // namespace OpenBlack
+} // namespace openblack

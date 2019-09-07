@@ -25,7 +25,7 @@
 #include <map>
 #include <string>
 
-namespace OpenBlack
+namespace openblack
 {
 namespace Graphics
 {
@@ -58,4 +58,4 @@ class ShaderProgram
 };
 
 } // namespace Graphics
-} // namespace OpenBlack
+} // namespace openblack

@@ -27,9 +27,9 @@
 #include <glm/gtc/quaternion.hpp>
 #include <unordered_map>
 
-using namespace OpenBlack::Graphics;
+using namespace openblack::Graphics;
 
-namespace OpenBlack
+namespace openblack
 {
 class IStream;
 
@@ -107,4 +107,4 @@ class L3DMesh
 	bool IsContainsNewEP() const { return static_cast<bool>(_flags & L3DMeshFlags::ContainsNewEP); }
 	//const bool IsContainsNewData() const { return _flags & 0xFC8000; } // ???
 };
-} // namespace OpenBlack
+} // namespace openblack

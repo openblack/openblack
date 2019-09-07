@@ -24,12 +24,12 @@
 #include <functional>
 #include <vector>
 
-namespace OpenBlack
+namespace openblack
 {
 class Game;
 }
 
-namespace OpenBlack::LHScriptX
+namespace openblack::LHScriptX
 {
 enum class ParameterType
 {
@@ -120,4 +120,4 @@ struct ScriptCommandSignature
 	ScriptCommand command;
 	std::vector<ParameterType> parameters;
 };
-} // namespace OpenBlack::LHScriptX
+} // namespace openblack::LHScriptX

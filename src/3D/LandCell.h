@@ -22,7 +22,7 @@
 
 #include <Common/Types.h>
 
-namespace OpenBlack
+namespace openblack
 {
 #pragma pack(push, 1)
 class LandCell
@@ -60,4 +60,4 @@ class LandCell
 	uint8_t flags2;
 };
 #pragma pack(pop)
-} // namespace OpenBlack
+} // namespace openblack

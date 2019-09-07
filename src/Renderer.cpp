@@ -35,8 +35,8 @@
 #include <3D/Water.h>
 #include <3D/LandIsland.h>
 
-using namespace OpenBlack;
-using namespace OpenBlack::Graphics;
+using namespace openblack;
+using namespace openblack::Graphics;
 
 namespace {
 void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)

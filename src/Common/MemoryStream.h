@@ -22,7 +22,7 @@
 
 #include <Common/IStream.h>
 
-namespace OpenBlack
+namespace openblack
 {
 
 class MemoryStream: public IStream
@@ -42,4 +42,4 @@ class MemoryStream: public IStream
 	std::size_t _position;
 };
 
-} // namespace OpenBlack
+} // namespace openblack

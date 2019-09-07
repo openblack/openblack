@@ -25,7 +25,7 @@
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/ShaderProgram.h>
 
-namespace OpenBlack
+namespace openblack
 {
 class IStream;
 class L3DMesh;
@@ -58,4 +58,4 @@ class L3DSubMesh
 	std::unique_ptr<IndexBuffer> _indexBuffer;
 	std::vector<Primitive> _primitives;
 };
-} // namespace OpenBlack
+} // namespace openblack

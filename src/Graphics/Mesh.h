@@ -24,9 +24,9 @@
 #include <Graphics/VertexBuffer.h>
 #include <vector>
 
-using namespace OpenBlack::Graphics;
+using namespace openblack::Graphics;
 
-namespace OpenBlack
+namespace openblack
 {
 namespace Graphics
 {
@@ -78,4 +78,4 @@ class Mesh
 };
 
 } // namespace Graphics
-} // namespace OpenBlack
+} // namespace openblack

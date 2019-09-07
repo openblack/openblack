@@ -22,7 +22,7 @@
 
 #include <Graphics/OpenGL.h>
 
-namespace OpenBlack
+namespace openblack
 {
 namespace Graphics
 {
@@ -178,4 +178,4 @@ class Texture2D
 };
 
 } // namespace Graphics
-} // namespace OpenBlack
+} // namespace openblack

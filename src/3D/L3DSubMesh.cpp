@@ -25,7 +25,7 @@
 #include <3D/MeshPack.h>
 #include <spdlog/spdlog.h>
 
-namespace OpenBlack
+namespace openblack
 {
 
 struct L3DVertex
@@ -172,4 +172,4 @@ void L3DSubMesh::Draw(const L3DMesh& mesh, ShaderProgram& program) const
 	}
 }
 
-} // namespace OpenBlack
+} // namespace openblack

@@ -52,8 +52,8 @@
 
 #include <spdlog/spdlog.h>
 
-using namespace OpenBlack;
-using namespace OpenBlack::LHScriptX;
+using namespace openblack;
+using namespace openblack::LHScriptX;
 
 const std::string kBuildStr(kGitSHA1Hash, 8);
 const std::string kWindowTitle = "OpenBlack";

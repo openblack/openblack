@@ -24,7 +24,7 @@
 #include <sstream>
 #include <stdexcept>
 
-namespace OpenBlack
+namespace openblack
 {
 
 FileStream::FileStream(const fs::path& path, FileMode mode)
@@ -81,4 +81,4 @@ void FileStream::Read(void* buffer, std::size_t length)
 	std::fread(buffer, length, 1, _file);
 }
 
-} // namespace OpenBlack
+} // namespace openblack

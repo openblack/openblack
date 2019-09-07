@@ -20,7 +20,7 @@
 
 #pragma once
 
-namespace OpenBlack {
+namespace openblack {
 namespace LHVM {
 
 class VMTask {

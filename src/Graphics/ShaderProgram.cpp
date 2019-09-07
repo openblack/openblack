@@ -28,7 +28,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <spdlog/spdlog.h>
 
-using OpenBlack::Graphics::ShaderProgram;
+using openblack::Graphics::ShaderProgram;
 
 ShaderProgram::ShaderProgram(const std::string& vertexSource, const std::string& fragmentSource)
 {

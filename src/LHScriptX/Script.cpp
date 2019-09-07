@@ -24,8 +24,8 @@
 #include <spdlog/spdlog.h>
 #include <iostream>
 
-using namespace OpenBlack;
-using namespace OpenBlack::LHScriptX;
+using namespace openblack;
+using namespace openblack::LHScriptX;
 
 void Script::Load(const std::string& source)
 {

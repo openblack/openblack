@@ -23,19 +23,19 @@
 #include <LHVM/LHVM.h>
 #include <imgui/imgui.h>
 
-namespace OpenBlack
+namespace openblack
 {
 class LHVMViewer
 {
   public:
-	static void Draw(const OpenBlack::LHVM::LHVM*);
-	static void DrawScriptsTab(const OpenBlack::LHVM::LHVM*);
-	static void DrawScriptDisassembly(const OpenBlack::LHVM::LHVM*, OpenBlack::LHVM::VMScript&);
+	static void Draw(const openblack::LHVM::LHVM*);
+	static void DrawScriptsTab(const openblack::LHVM::LHVM*);
+	static void DrawScriptDisassembly(const openblack::LHVM::LHVM*, openblack::LHVM::VMScript&);
 
-	static void DrawVariable(const OpenBlack::LHVM::LHVM*, OpenBlack::LHVM::VMScript&, uint32_t idx);
-	static std::string DataToString(uint32_t data, OpenBlack::LHVM::VMInstruction::DataType type);
+	static void DrawVariable(const openblack::LHVM::LHVM*, openblack::LHVM::VMScript&, uint32_t idx);
+	static std::string DataToString(uint32_t data, openblack::LHVM::VMInstruction::DataType type);
 
 	static int SelectedScriptID;
 	static void SelectScript(int idx);
 };
-} // namespace OpenBlack
+} // namespace openblack
