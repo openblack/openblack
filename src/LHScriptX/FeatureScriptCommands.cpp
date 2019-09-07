@@ -205,6 +205,20 @@ glm::vec2 GetXYPosFromString(const std::string& str)
 	return glm::vec2(x, y);
 }
 
+openblack::MeshId GetAbodeMesh(const std::string& abodeType)
+{
+    auto item = openblack::abodeLookup.find(abodeType);
+
+    if (item == openblack::abodeLookup.end())
+    {
+        spdlog::error("Missing abode mesh lookup for \"{}\".", abodeType);
+		return openblack::MeshId::Dummy;
+    }
+
+	return item->second;
+}
+
+
 void FeatureScriptCommands::Version(const ScriptCommandContext& ctx)
 {
 	float version = ctx.GetParameters()[0].GetFloat();
