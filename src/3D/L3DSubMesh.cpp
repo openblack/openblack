@@ -125,7 +125,7 @@ void L3DSubMesh::Load(IStream& stream)
 	}
 
 	// build our buffers
-	_vertexBuffer = std::make_unique<VertexBuffer>(reinterpret_cast<const void*>(verticies.data()), verticies.size(), sizeof(L3DVertex), GL_STATIC_DRAW);
+	_vertexBuffer = std::make_unique<VertexBuffer>(reinterpret_cast<const void*>(verticies.data()), verticies.size(), sizeof(L3DVertex));
 	_indexBuffer  = std::make_unique<IndexBuffer>(indices.data(), indices.size(), GL_UNSIGNED_SHORT);
 
 	glBindVertexArray(_vertexArray);

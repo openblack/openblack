@@ -26,8 +26,6 @@
 #include <glm/glm.hpp>
 #include "ShaderProgram.h"
 
-#define DEBUG_DRAW_VERTEX_BUFFER_SIZE 4096
-
 namespace openblack
 {
 namespace graphics

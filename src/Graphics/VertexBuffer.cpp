@@ -22,12 +22,14 @@
 
 #include <cassert>
 
+#include <Graphics/OpenGL.h>
+
 using namespace openblack::graphics;
 
-VertexBuffer::VertexBuffer(const void* vertices, size_t vertexCount, size_t strideBytes, GLuint hint):
+VertexBuffer::VertexBuffer(const void* vertices, size_t vertexCount, size_t strideBytes):
     _vertexCount(vertexCount),
     _strideBytes(strideBytes),
-    _hint(hint)
+    _vbo()
 {
 	// assert(vertices != nullptr);
 	assert(vertexCount > 0);
@@ -38,7 +40,7 @@ VertexBuffer::VertexBuffer(const void* vertices, size_t vertexCount, size_t stri
 		return;
 
 	glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertexCount * strideBytes, vertices, _hint);
+	glBufferData(GL_ARRAY_BUFFER, vertexCount * strideBytes, vertices, GL_STATIC_DRAW);
 }
 
 VertexBuffer::~VertexBuffer()
@@ -73,12 +75,12 @@ size_t VertexBuffer::GetSizeInBytes() const noexcept
 	return _vertexCount * _strideBytes;
 }
 
-GLuint VertexBuffer::GetHint() const noexcept
-{
-	return _hint;
-}
-
 GLuint VertexBuffer::GetVBO() const noexcept
 {
 	return _vbo;
+}
+
+void VertexBuffer::Bind()
+{
+	glBindBuffer(GL_ARRAY_BUFFER, _vbo);
 }

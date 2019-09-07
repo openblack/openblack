@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <Graphics/OpenGL.h>
+#include <cstdint>
 #include <memory>
 
 namespace openblack
@@ -30,22 +30,20 @@ namespace graphics
 class VertexBuffer
 {
   public:
-	VertexBuffer(const void* vertices, size_t vertexCount, size_t strideBytes, GLuint hint = GL_STATIC_DRAW);
+	VertexBuffer(const void* vertices, size_t vertexCount, size_t strideBytes);
 	~VertexBuffer();
 
-	size_t GetVertexCount() const noexcept;
-	size_t GetStrideBytes() const noexcept;
-	size_t GetSizeInBytes() const noexcept;
-	GLuint GetHint() const noexcept;
-	GLuint GetVBO() const noexcept;
+	[[nodiscard]] size_t GetVertexCount() const noexcept;
+	[[nodiscard]] size_t GetStrideBytes() const noexcept;
+	[[nodiscard]] size_t GetSizeInBytes() const noexcept;
+	[[nodiscard]] uint32_t GetVBO() const noexcept;
 
-	void Bind() { glBindBuffer(GL_ARRAY_BUFFER, _vbo); }
+	void Bind();
 
   private:
-	GLuint _vbo;
+	uint32_t _vbo;
 	size_t _vertexCount;
 	size_t _strideBytes;
-	GLuint _hint;
 };
 
 } // namespace graphics
