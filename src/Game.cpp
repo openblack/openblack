@@ -401,11 +401,12 @@ void Game::LoadMap(const std::string& name)
 	if (!_fileSystem->Exists(name))
 		throw std::runtime_error("Could not find script " + name);
 
-	//auto file = _fileSystem->Open(name, FileMode::Read);
+	auto data = _fileSystem->ReadAll(name);
+	std::string source(reinterpret_cast<const char*>(data.data()), data.size());
 
 	_entityRegistry->Reset();
-	//Script script(this);
-	//script.LoadFromFile(*file);
+	Script script(this);
+	script.Load(source);
 }
 
 void Game::LoadLandscape(const std::string& name)

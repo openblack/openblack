@@ -21,6 +21,7 @@
 #include <LHScriptX/FeatureScriptCommands.h>
 #include <LHScriptX/Lexer.h>
 #include <LHScriptX/Script.h>
+#include <spdlog/spdlog.h>
 #include <iostream>
 
 using namespace OpenBlack;
@@ -30,10 +31,10 @@ void Script::Load(const std::string& source)
 {
 	Lexer lexer(source);
 
-	const Token* token = this->peekToken();
+	const Token* token = this->peekToken(lexer);
 	while (!token->IsEOF())
 	{
-		token = this->peekToken();
+		token = this->peekToken(lexer);
 
 		if (token->IsIdentifier())
 		{
@@ -42,27 +43,27 @@ void Script::Load(const std::string& source)
 			if (!isCommand(identifier))
 				throw std::runtime_error("unknown command: " + identifier);
 
-			token = this->advanceToken();
+			token = this->advanceToken(lexer);
 			if (!token->IsOP(Operator::LeftParentheses))
 				throw std::runtime_error("expected ( after identifier " + identifier);
 
 			std::vector<Token> args;
 
 			// if it's an immediate right parentheses there are no args
-			token = this->advanceToken();
+			token = this->advanceToken(lexer);
 			if (!token->IsOP(Operator::RightParentheses))
 			{
 				while (true)
 				{
-					const Token* token = this->peekToken();
+					const Token* token = this->peekToken(lexer);
 					args.push_back(*token);
 
 					// consume the ,
-					token = this->advanceToken();
+					token = this->advanceToken(lexer);
 					if (!token->IsOP(Operator::Comma))
 						break;
 
-					this->advanceToken();
+					this->advanceToken(lexer);
 				}
 			}
 
@@ -70,12 +71,12 @@ void Script::Load(const std::string& source)
 				throw std::runtime_error("missing )");
 
 			// move token to whatever is after ')'
-			this->advanceToken();
+			this->advanceToken(lexer);
 
 			runCommand(identifier, args);
 		}
 
-		this->advanceToken();
+		this->advanceToken(lexer);
 	}
 }
 
@@ -163,15 +164,15 @@ void Script::runCommand(const std::string& identifier, const std::vector<Token>&
 	command_signature->command(ctx);
 }
 
-const Token* Script::peekToken()
+const Token* Script::peekToken(Lexer& lexer)
 {
 	if (token_.IsInvalid())
-		token_ = lexer_->GetToken();
+		token_ = lexer.GetToken();
 	return &token_;
 }
 
-const Token* Script::advanceToken()
+const Token* Script::advanceToken(Lexer& lexer)
 {
-	token_ = lexer_->GetToken();
+	token_ = lexer.GetToken();
 	return &token_;
 }

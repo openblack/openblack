@@ -54,13 +54,11 @@ class Script
 	bool isCommand(const std::string& identifier) const;
 	void runCommand(const std::string& identifier, const std::vector<Token>& args);
 
-	const Token* peekToken();
-	const Token* advanceToken();
+	const Token* peekToken(Lexer&);
+	const Token* advanceToken(Lexer&);
 
 	// Game instance
 	Game* _game;
-	// The lexer output we are parsing
-	Lexer* lexer_;
 	// The current token.
 	Token token_;
 };
