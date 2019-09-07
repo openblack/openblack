@@ -226,5 +226,10 @@ void L3DMesh::Load(IStream& stream)
 
 void L3DMesh::Draw(ShaderProgram& program, int mesh) const
 {
+	if (mesh >= _subMeshes.size()) {
+		spdlog::warn("tried to draw submesh out of range ({}/{})", mesh, _subMeshes.size());
+		mesh = _subMeshes.size() - 1;
+	}
+
 	_subMeshes[mesh]->Draw(*this, program);
 }

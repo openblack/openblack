@@ -67,8 +67,8 @@ std::vector<Renderer::RequiredAttribute> Renderer::GetRequiredContextAttributes(
 	return std::vector<RequiredAttribute> {
 		{Api::OpenGl, SDL_GL_DOUBLEBUFFER, 1},
 
-		//{Api::OpenGl, SDL_GL_MULTISAMPLEBUFFERS, 1},
-		//{Api::OpenGl, SDL_GL_MULTISAMPLESAMPLES, 4},
+		{Api::OpenGl, SDL_GL_MULTISAMPLEBUFFERS, 1},
+		{Api::OpenGl, SDL_GL_MULTISAMPLESAMPLES, 4},
 
 		{Api::OpenGl, SDL_GL_CONTEXT_MAJOR_VERSION, 3},
 		{Api::OpenGl, SDL_GL_CONTEXT_MINOR_VERSION, 3},
@@ -230,7 +230,8 @@ void Renderer::DrawScene(std::chrono::microseconds dt, const Game &game, const C
 	objectShader->SetUniformValue("u_viewProjection", camera.GetViewProjectionMatrix());
 	objectShader->SetUniformValue("u_modelTransform", modelMatrix);
 	game.GetTestModel().Draw(*objectShader, 0);
-	game.GetEntityRegistry().DrawModels(camera, *_shaderManager);
 
 	glDisable(GL_CULL_FACE);
+	game.GetEntityRegistry().DrawModels(camera, *_shaderManager);
+	
 }

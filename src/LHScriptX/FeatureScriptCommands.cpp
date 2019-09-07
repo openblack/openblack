@@ -20,7 +20,18 @@
 
 #include <LHScriptX/FeatureScriptCommands.h>
 #include <Game.h>
+#include <AllMeshes.h>
+#include <3D/LandIsland.h>
+#include <Entities/Components/Model.h>
+#include <Entities/Components/Transform.h>
+#include <Entities/Components/Villager.h>
+#include <Entities/Components/Abode.h>
+#include <Entities/Registry.h>
 #include <spdlog/spdlog.h>
+#include <cmath>
+#include <iostream>
+#include <random>
+#include <tuple>
 
 using namespace OpenBlack::LHScriptX;
 
@@ -140,6 +151,15 @@ const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signa
 } };
 // clang-format on
 
+
+glm::vec2 GetXYPosFromString(const std::string& str)
+{
+	const auto pos = str.find_first_of(',');
+	const auto y   = std::stof(str.substr(pos + 1));
+	const auto x   = std::stof(str.substr(0, pos));
+	return glm::vec2(x, y);
+}
+
 void FeatureScriptCommands::Version(const ScriptCommandContext& ctx)
 {
 	float version = ctx.GetParameters()[0].GetFloat();
@@ -183,7 +203,45 @@ void FeatureScriptCommands::SetTownCongregationPos(const ScriptCommandContext& c
 
 void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	Game& game                = ctx.GetGame();
+	const auto& params        = ctx.GetParameters();
+	auto& island              = game.GetLandIsland();
+	auto& registry            = game.GetEntityRegistry();
+	const auto entity         = registry.Create();
+	const uint32_t townId     = params[0].GetNumber();
+	const auto position       = GetXYPosFromString(params[1].GetString());
+	const auto& abodeType     = params[2].GetString();
+	float rotation            = params[3].GetNumber();
+	float size                = params[4].GetNumber();
+	const uint32_t foodAmount = params[5].GetNumber();
+	const uint32_t woodAmount = params[6].GetNumber();
+	uint32_t meshId           = 0;
+
+	if (abodeType == "NORSE_ABODE_STORAGE_PIT")
+		meshId = static_cast<uint32_t>(Mesh::BuildingNorseStoragePit);
+	else if (abodeType == "NORSE_ABODE_GRAVEYARD")
+		meshId = static_cast<uint32_t>(Mesh::BuildingNorseGraveyard);
+	else if (abodeType == "NORSE_ABODE_CRECHE")
+        meshId = static_cast<uint32_t>(Mesh::BuildingNorseCreche);
+	else if (abodeType == "NORSE_ABODE_A")
+	    meshId = static_cast<uint32_t>(Mesh::BuildingNorse1);
+	else if (abodeType == "NORSE_ABODE_B")
+		meshId = static_cast<uint32_t>(Mesh::BuildingNorse2);
+	else if (abodeType == "NORSE_ABODE_C")
+		meshId = static_cast<uint32_t>(Mesh::BuildingNorse3);
+	else if (abodeType == "NORSE_ABODE_D")
+		meshId = static_cast<uint32_t>(Mesh::BuildingNorse4);
+	else if (abodeType == "NORSE_ABODE_E")
+		meshId = static_cast<uint32_t>(Mesh::BuildingNorse2A);
+	else if (abodeType == "NORSE_ABODE_F")
+	    meshId = static_cast<uint32_t>(Mesh::BuildingNorse2);
+
+	float radians = -(rotation * 0.001);
+	size          = (size * 0.001);
+
+	registry.Assign<Abode>(entity, townId, foodAmount, woodAmount);
+	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
+	registry.Assign<Model>(entity, meshId, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::CreatePlannedAbode(const ScriptCommandContext& ctx)

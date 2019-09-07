@@ -52,9 +52,8 @@ void Registry::DrawModels(const Camera& camera, Graphics::ShaderManager& shaderM
 		objectShader->SetUniformValue("u_viewProjection", projectionMatrix);
 		objectShader->SetUniformValue("u_modelTransform", modelMatrix);
 
-		// Waiting on MeshPack implementation
-		// const L3DMesh& modelGeometry = meshPack.GetModel(model.meshId);
-		// modelGeometry.Draw(objectShader);
+		const L3DMesh& mesh = meshPack.GetMesh(model.meshId);
+		mesh.Draw(*objectShader, 2);
 	}
 }
 
