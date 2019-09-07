@@ -20,6 +20,7 @@
 
 #include <Common/MemoryStream.h>
 #include <cstddef>
+#include <cstdint> // uint8_t
 #include <algorithm>
 
 namespace OpenBlack
