@@ -64,7 +64,8 @@ const std::string kWindowTitle = "OpenBlack";
 Game* Game::sInstance = nullptr;
 
 Game::Game(int argc, char** argv):
-    _running(true), _wireframe(false), _waterDebug(false), _timeOfDay(1.0f), _bumpmapStrength(1.0f), _smallBumpmapStrength(1.0f),
+    _running(true),
+    _config(),
     _fileSystem(std::make_unique<FileSystem>()),
     _entityRegistry(std::make_unique<Entities::Registry>())
 {
@@ -266,8 +267,8 @@ void Game::guiLoop()
 
 		if (ImGui::BeginMenu("View"))
 		{
-			ImGui::Checkbox("Wireframe", &_wireframe);
-			ImGui::Checkbox("Water Debug", &_waterDebug);
+			ImGui::Checkbox("Wireframe", &GetConfig().wireframe);
+			ImGui::Checkbox("Water Debug", &GetConfig().waterDebug);
 			ImGui::EndMenu();
 		}
 
@@ -371,9 +372,9 @@ void Game::guiLoop()
 
 	ImGui::EndGroup();
 
-	ImGui::SliderFloat("Day", &_timeOfDay, 0.0f, 1.0f, "%.3f");
-	ImGui::SliderFloat("Bump", &_bumpmapStrength, 0.0f, 1.0f, "%.3f");
-	ImGui::SliderFloat("Small Bump", &_smallBumpmapStrength, 0.0f, 1.0f, "%.3f");
+	ImGui::SliderFloat("Day", &GetConfig().timeOfDay, 0.0f, 1.0f, "%.3f");
+	ImGui::SliderFloat("Bump", &GetConfig().bumpMapStrength, 0.0f, 1.0f, "%.3f");
+	ImGui::SliderFloat("Small Bump", &GetConfig().smallBumpMapStrength, 0.0f, 1.0f, "%.3f");
 
 	ImGui::Separator();
 
@@ -390,7 +391,7 @@ void Game::guiLoop()
 
 	ImGui::End();
 
-	if (_waterDebug)
+	if (GetConfig().waterDebug)
 		_water->DebugGUI();
 
 	ImGui::Render();
