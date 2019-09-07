@@ -41,6 +41,52 @@ const constexpr ParameterType TNumber = ParameterType::Number;
 const constexpr ParameterType TFloat  = ParameterType::Float;
 const constexpr ParameterType TVector = ParameterType::Vector;
 
+namespace openblack {
+std::unordered_map<std::string, MeshId> abodeLookup {
+	// Norse
+	{ "NORSE_ABODE_TOWN_CENTRE", MeshId::BuildingNorseVillageCentre },
+	{ "NORSE_ABODE_STORAGE_PIT", MeshId::BuildingNorseStoragePit },
+	{ "NORSE_ABODE_GRAVEYARD", MeshId::BuildingNorseGraveyard },
+	{ "NORSE_ABODE_CRECHE", MeshId::BuildingNorseCreche },
+	{ "NORSE_ABODE_A", MeshId::BuildingNorse1 },
+	{ "NORSE_ABODE_B", MeshId::BuildingNorse2 },
+	{ "NORSE_ABODE_C", MeshId::BuildingNorse3 },
+	{ "NORSE_ABODE_D", MeshId::BuildingNorse4 },
+	{ "NORSE_ABODE_E", MeshId::BuildingNorse5 },
+	{ "NORSE_ABODE_F", MeshId::BuildingNorse2A },
+	// Celtic
+	{ "CELTIC_ABODE_TOWN_CENTRE", MeshId::BuildingCelticVillageCentre },
+	{ "CELTIC_ABODE_STORAGE_PIT", MeshId::BuildingCelticStoragePit },
+	{ "CELTIC_ABODE_GRAVEYARD", MeshId::BuildingCelticGraveyard },
+	{ "CELTIC_ABODE_CRECHE", MeshId::BuildingCelticCreche },
+	{ "CELTIC_ABODE_A", MeshId::BuildingCeltic1 },
+	{ "CELTIC_ABODE_B", MeshId::BuildingCeltic2 },
+	{ "CELTIC_ABODE_C", MeshId::BuildingCeltic3 },
+	{ "CELTIC_ABODE_D", MeshId::BuildingCeltic4 },
+	{ "CELTIC_ABODE_E", MeshId::BuildingCeltic5 },
+	// Japanese
+	{ "JAPANESE_ABODE_TOWN_CENTRE", MeshId::BuildingJapaneseVillageCentre },
+	{ "JAPANESE_ABODE_STORAGE_PIT", MeshId::BuildingJapaneseStoragePit },
+	{ "JAPANESE_ABODE_GRAVEYARD", MeshId::BuildingJapaneseGraveyard },
+	{ "JAPANESE_ABODE_CRECHE", MeshId::BuildingJapaneseCreche },
+	{ "JAPANESE_ABODE_A", MeshId::BuildingJapanese1 },
+	{ "JAPANESE_ABODE_B", MeshId::BuildingJapanese2 },
+	{ "JAPANESE_ABODE_C", MeshId::BuildingJapanese3 },
+	{ "JAPANESE_ABODE_D", MeshId::BuildingJapanese4 },
+	{ "JAPANESE_ABODE_E", MeshId::BuildingJapanese5 },
+	// Aztec
+	{ "AZTEC_ABODE_TOWN_CENTRE", MeshId::BuildingAztecVillageCentre },
+	{ "AZTEC_ABODE_STORAGE_PIT", MeshId::BuildingAztecStoragePit },
+	{ "AZTEC_ABODE_GRAVEYARD", MeshId::BuildingAztecGraveyard },
+	{ "AZTEC_ABODE_CRECHE", MeshId::BuildingAztecCreche },
+	{ "AZTEC_ABODE_A", MeshId::BuildingAztec1 },
+	{ "AZTEC_ABODE_B", MeshId::BuildingAztec2 },
+	{ "AZTEC_ABODE_C", MeshId::BuildingAztec3 },
+	{ "AZTEC_ABODE_D", MeshId::BuildingAztec4 },
+	{ "AZTEC_ABODE_E", MeshId::BuildingAztec5 }
+};
+}
+
 // clang-format off
 const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signatures = { {
 	{ "CREATE_MIST",                       &FeatureScriptCommands::CreateMist,                    { TVector, TFloat, TNumber, TFloat, TFloat }                                      },
