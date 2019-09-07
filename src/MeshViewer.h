@@ -36,7 +36,7 @@ class MeshViewer
 
   private:
 	bool _open;
-	Mesh _selectedMesh;
+	MeshId _selectedMesh;
 	int _selectedSubMesh;
 	glm::vec3 _cameraPosition;
 	std::unique_ptr<Graphics::FrameBuffer> _frameBuffer;

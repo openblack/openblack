@@ -33,7 +33,7 @@ namespace openblack
 MeshViewer::MeshViewer()
 {
 	_frameBuffer  = std::make_unique<Graphics::FrameBuffer>(512, 512, GL_RGBA);
-	_selectedMesh = Mesh::Dummy;
+	_selectedMesh    = MeshId::Dummy;
 	_selectedSubMesh = 0;
 	_cameraPosition  = glm::vec3(5.0f, 3.0f, 5.0f);
 	_open            = false;
@@ -61,7 +61,7 @@ void MeshViewer::DrawWindow()
 	ImGui::BeginChild("meshes", ImVec2(fontSize * 15.0f, 0), true);
 	for (int i = 0; i < meshes.size(); i++)
 	{
-		Mesh meshEnum = static_cast<Mesh>(i);
+		MeshId meshEnum = static_cast<MeshId>(i);
 		auto enumName = std::string(magic_enum::enum_name(meshEnum));
 
 		if (ImGui::Selectable(enumName.c_str(), meshEnum == _selectedMesh))
