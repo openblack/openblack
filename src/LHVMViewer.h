@@ -28,11 +28,11 @@ namespace OpenBlack
 class LHVMViewer
 {
   public:
-	static void Draw(OpenBlack::LHVM::LHVM*);
-	static void DrawScriptsTab(OpenBlack::LHVM::LHVM*);
-	static void DrawScriptDisassembly(OpenBlack::LHVM::LHVM*, OpenBlack::LHVM::VMScript&);
+	static void Draw(const OpenBlack::LHVM::LHVM*);
+	static void DrawScriptsTab(const OpenBlack::LHVM::LHVM*);
+	static void DrawScriptDisassembly(const OpenBlack::LHVM::LHVM*, OpenBlack::LHVM::VMScript&);
 
-	static void DrawVariable(OpenBlack::LHVM::LHVM*, OpenBlack::LHVM::VMScript&, uint32_t idx);
+	static void DrawVariable(const OpenBlack::LHVM::LHVM*, OpenBlack::LHVM::VMScript&, uint32_t idx);
 	static std::string DataToString(uint32_t data, OpenBlack::LHVM::VMInstruction::DataType type);
 
 	static int SelectedScriptID;

@@ -94,7 +94,7 @@ inline bool TextButtonColored(ImVec4 color, const char* name_)
 
 } // namespace ImGui
 
-void LHVMViewer::Draw(OpenBlack::LHVM::LHVM* lhvm)
+void LHVMViewer::Draw(const OpenBlack::LHVM::LHVM* lhvm)
 {
 	ImGui::SetNextWindowSize(ImVec2(720.0f, 612.0f), ImGuiCond_FirstUseEver);
 	ImGui::Begin("LHVM");
@@ -148,7 +148,7 @@ void LHVMViewer::Draw(OpenBlack::LHVM::LHVM* lhvm)
 	ImGui::End();
 }
 
-void LHVMViewer::DrawScriptsTab(OpenBlack::LHVM::LHVM* lhvm)
+void LHVMViewer::DrawScriptsTab(const OpenBlack::LHVM::LHVM* lhvm)
 {
 	static auto scripts_vector_getter = [](void* vec, int idx, const char** out_text) {
 		auto& vector = *static_cast<std::vector<OpenBlack::LHVM::VMScript>*>(vec);
@@ -219,7 +219,7 @@ void LHVMViewer::DrawScriptsTab(OpenBlack::LHVM::LHVM* lhvm)
 	ImGui::EndChild();
 }
 
-void LHVMViewer::DrawScriptDisassembly(OpenBlack::LHVM::LHVM* lhvm, OpenBlack::LHVM::VMScript& script)
+void LHVMViewer::DrawScriptDisassembly(const OpenBlack::LHVM::LHVM* lhvm, OpenBlack::LHVM::VMScript& script)
 {
 	ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, Disassembly_ColorBG);
 	ImGui::PushStyleColor(ImGuiCol_Text, Disassembly_ColorFG);
@@ -314,7 +314,7 @@ void LHVMViewer::DrawScriptDisassembly(OpenBlack::LHVM::LHVM* lhvm, OpenBlack::L
 	ImGui::PopStyleColor(4);
 }
 
-void OpenBlack::LHVMViewer::DrawVariable(OpenBlack::LHVM::LHVM* lhvm, OpenBlack::LHVM::VMScript& script, uint32_t idx)
+void OpenBlack::LHVMViewer::DrawVariable(const OpenBlack::LHVM::LHVM* lhvm, OpenBlack::LHVM::VMScript& script, uint32_t idx)
 {
 	// local variable
 	if (idx > script.GetVariableOffset())
