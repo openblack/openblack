@@ -138,7 +138,7 @@ endif()
 add_subdirectory(components/ScriptLibrary)
 add_subdirectory(external/glad)
 add_subdirectory(external/imgui)
-include(src/CMakeLists.txt)
+add_subdirectory(src)
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT openblack)
 
