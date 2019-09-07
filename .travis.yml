@@ -41,6 +41,14 @@ matrix:
         BUILD_FLAVOR=ubuntu
         DOCKER_TAG=ubuntu-rolling-clang
         TOOLCHAIN=clang-cxx17
+
+    # Fedora rawhide
+    - name: "fedora rawhide"
+      os: linux
+      env: >
+        BUILD_FLAVOR=fedora
+        TOOLCHAIN=gcc-cxx17
+        DOCKER_TAG=fedora-rawhide-gcc
     # } // end Linux
 
     # Windows build with mingw-w64 on fedora 31
