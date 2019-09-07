@@ -26,6 +26,7 @@
 #include <iostream>
 #include <string>
 #include "GitSHA1.h"
+#include "Gui.h"
 
 #include <3D/Camera.h>
 #include <3D/LandIsland.h>
@@ -40,7 +41,6 @@
 #include <Graphics/Texture2D.h>
 #include <Graphics/VertexBuffer.h>
 #include <LHScriptX/Script.h>
-#include <LHVMViewer.h>
 #include <MeshViewer.h>
 #include <Renderer.h>
 #include <glm/gtx/intersect.hpp>
@@ -48,10 +48,6 @@
 #ifdef WIN32
 #include <Windows.h>
 #endif
-
-#include <imgui/imgui.h>
-#include <imgui/examples/imgui_impl_opengl3.h>
-#include <imgui/examples/imgui_impl_sdl.h>
 
 #include <spdlog/spdlog.h>
 
@@ -92,24 +88,10 @@ Game::Game(int argc, char** argv):
 	_fileSystem->SetGamePath(GetGamePath());
 	spdlog::debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
 
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io    = ImGui::GetIO();
+	float scale = 1.0f;
+	args.Get<float>("scale", scale);
+	Gui::Init(*_window, _renderer->GetGLContext(), scale);
 
-	ImGui::StyleColorsLight();
-
-	ImGuiStyle& style     = ImGui::GetStyle();
-	style.FrameBorderSize = 1.0f;
-
-	ImGui_ImplSDL2_InitForOpenGL(_window->GetHandle(), _renderer->GetGLContext());
-	{
-		float scale = 1.0f;
-		args.Get<float>("scale", scale);
-		style.ScaleAllSizes(scale);
-		io.FontGlobalScale = scale;
-	}
-
-	ImGui_ImplOpenGL3_Init("#version 130");
 	_meshViewer = std::make_unique<MeshViewer>();
 	//_meshViewer->Open();
 }
@@ -221,180 +203,33 @@ void Game::Run()
 
 			_camera->ProcessSDLEvent(e);
 
-			ImGui_ImplSDL2_ProcessEvent(&e);
+			Gui::ProcessSDLEvent(e);
 		}
 
 		_camera->Update(deltaTime);
 		_modelRotation.y = fmod(_modelRotation.y + float(deltaTime.count()) * .0001f, 360.f);
 
-		_meshViewer->DrawScene();
+		Gui::Loop(*this, *_meshViewer);
 
-		this->guiLoop();
-
-		ImGuiIO& io = ImGui::GetIO();
-		_renderer->ClearScene((int)io.DisplaySize.x, (int)io.DisplaySize.y);
+		int width, height;
+		_window->GetDrawableSize(width, height);
+		_renderer->ClearScene(width, height);
 
 		_water->BeginReflection(*_camera);
 		_renderer->DrawScene(deltaTime, *this, _water->GetReflectionCamera(), false);
 		_water->EndReflection();
 
 		// reset viewport here, should be done in EndReflection
-		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+		glViewport(0, 0, width, height);
 
 		_renderer->DrawScene(deltaTime, *this, *_camera, true);
 
 		_renderer->DebugDraw(deltaTime, *this, _intersection, 50.0f);
 
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		Gui::Draw();
 
 		_window->SwapWindow();
 	}
-}
-
-void Game::guiLoop()
-{
-	ImGui_ImplOpenGL3_NewFrame();
-	ImGui_ImplSDL2_NewFrame(_window->GetHandle());
-	ImGui::NewFrame();
-
-	if (ImGui::BeginMainMenuBar())
-	{
-		if (ImGui::BeginMenu("File"))
-		{
-			if (ImGui::MenuItem("Quit", "Esc")) { _running = false; }
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginMenu("View"))
-		{
-			ImGui::Checkbox("Wireframe", &GetConfig().wireframe);
-			ImGui::Checkbox("Water Debug", &GetConfig().waterDebug);
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginMenu("Tools"))
-		{
-			if (ImGui::MenuItem("Dump Land Textures")) { _landIsland->DumpTextures(); }
-			if (ImGui::MenuItem("Mesh Viewer")) { _meshViewer->Open(); }
-			ImGui::EndMenu();
-		}
-
-		ImGui::Text("%d, %d", _mousePosition.x, _mousePosition.y);
-
-		ImGui::SameLine(ImGui::GetWindowWidth() - 154.0f);
-		ImGui::Text("%.2f FPS (%.2f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
-
-		ImGui::EndMainMenuBar();
-	}
-
-	_meshViewer->DrawWindow();
-
-	ImGuiIO& io = ImGui::GetIO();
-	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 8.0f, io.DisplaySize.y - 8.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
-	ImGui::SetNextWindowBgAlpha(0.35f);
-
-	if (ImGui::Begin("Camera position overlay", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
-	{
-		auto camPos = _camera->GetPosition();
-		auto camRot = _camera->GetRotation();
-		ImGui::Text("Camera Position: (%.1f,%.1f, %.1f)", camPos.x, camPos.y, camPos.z);
-		ImGui::Text("Camera Rotation: (%.1f,%.1f, %.1f)", camRot.x, camRot.y, camRot.z);
-
-		if (ImGui::IsMousePosValid())
-			ImGui::Text("Mouse Position: (%.1f,%.1f)", io.MousePos.x, io.MousePos.y);
-		else
-			ImGui::Text("Mouse Position: <invalid>");
-	}
-	ImGui::End();
-
-	if (_lhvm != nullptr)
-		LHVMViewer::Draw(_lhvm.get());
-
-	ImGui::Begin("Land Island");
-
-	ImGui::Text("Load Land Island:");
-	ImGui::BeginGroup();
-	if (ImGui::Button("1"))
-	{
-		LoadLandscape("./Data/Landscape/Land1.lnd");
-		LoadMap("./Scripts/Land1.txt");
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("2"))
-	{
-		LoadLandscape("./Data/Landscape/Land2.lnd");
-		LoadMap("./Scripts/Land2.txt");
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("3"))
-	{
-		LoadLandscape("./Data/Landscape/Land3.lnd");
-		LoadMap("./Scripts/Land3.txt");
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("4"))
-	{
-		LoadLandscape("./Data/Landscape/Land4.lnd");
-		LoadMap("./Scripts/Land4.txt");
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("5"))
-	{
-		LoadLandscape("./Data/Landscape/Land5.lnd");
-		LoadMap("./Scripts/Land5.txt");
-	}
-
-	ImGui::SameLine();
-	if (ImGui::Button("T"))
-	{
-		LoadLandscape("./Data/Landscape/LandT.lnd");
-		LoadMap("./Scripts/LandT.txt");
-	}
-
-	if (ImGui::Button("2P"))
-	{
-		LoadLandscape("./Data/Landscape/Multi_Player/MPM_2P_1.lnd");
-		LoadMap("./Scripts/Playgrounds/TwoGods.txt");
-	}
-
-	ImGui::SameLine();
-	if (ImGui::Button("3P"))
-	{
-		LoadLandscape("./Data/Landscape/Multi_Player/MPM_3P_1.lnd");
-		LoadMap("./Scripts/Playgrounds/ThreeGods.txt");
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("4P"))
-	{
-		LoadLandscape("./Data/Landscape/Multi_Player/MPM_4P_1.lnd");
-		LoadMap("./Scripts/Playgrounds/FourGods.txt");
-	}
-
-	ImGui::EndGroup();
-
-	ImGui::SliderFloat("Day", &GetConfig().timeOfDay, 0.0f, 1.0f, "%.3f");
-	ImGui::SliderFloat("Bump", &GetConfig().bumpMapStrength, 0.0f, 1.0f, "%.3f");
-	ImGui::SliderFloat("Small Bump", &GetConfig().smallBumpMapStrength, 0.0f, 1.0f, "%.3f");
-
-	ImGui::Separator();
-
-	ImGui::Text("Block Count: %zu", _landIsland->GetBlocks().size());
-	ImGui::Text("Country Count: %zu", _landIsland->GetCountries().size());
-
-	ImGui::Separator();
-
-	if (ImGui::Button("Dump Textures"))
-		_landIsland->DumpTextures();
-
-	if (ImGui::Button("Dump Heightmap"))
-		_landIsland->DumpMaps();
-
-	ImGui::End();
-
-	if (GetConfig().waterDebug)
-		_water->DebugGUI();
-
-	ImGui::Render();
 }
 
 void Game::LoadMap(const std::string& name)

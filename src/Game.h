@@ -139,7 +139,5 @@ class Game
 	glm::vec3 _modelScale;
 
 	bool _running;
-
-	void guiLoop();
 };
 } // namespace OpenBlack
