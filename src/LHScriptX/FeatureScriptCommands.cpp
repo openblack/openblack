@@ -299,7 +299,23 @@ void FeatureScriptCommands::CreatePlannedAbode(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateTownCentre(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+    Game& game                  = ctx.GetGame();
+    const auto& params          = ctx.GetParameters();
+    auto& island                = game.GetLandIsland();
+    auto& registry              = game.GetEntityRegistry();
+    const auto entity           = registry.Create();
+    const auto associatedTownId = params[0].GetNumber();
+    const auto position         = GetXYPosFromString(params[1].GetString());
+    const auto& centreType      = params[2].GetString();
+    float rotation              = params[3].GetNumber();
+    float size                  = params[4].GetNumber();
+    //const auto unknown          = params[5].GetNumber();
+    auto mesh                   = GetAbodeMesh(centreType);
+    float radians               = GetRadians(rotation);
+    size                        = GetSize(size);
+
+    registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
+    registry.Assign<Model>(entity, mesh, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::CreateTownSpell(const ScriptCommandContext& ctx)
