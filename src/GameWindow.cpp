@@ -202,7 +202,7 @@ void GameWindow::SetMousePosition(int x, int y)
 	SDL_WarpMouseInWindow(_window.get(), x, y);
 }
 
-bool GameWindow::IsInputGrabbed()
+bool GameWindow::IsInputGrabbed() const
 {
 	return SDL_GetWindowGrab(_window.get()) != SDL_FALSE;
 }
@@ -217,7 +217,7 @@ void GameWindow::SetTitle(const std::string& str)
 	SDL_SetWindowTitle(_window.get(), str.c_str());
 }
 
-int GameWindow::GetSwapInterval()
+int GameWindow::GetSwapInterval() const
 {
 	return SDL_GL_GetSwapInterval();
 }
@@ -242,7 +242,7 @@ void GameWindow::SetPosition(int x, int y)
 	SDL_SetWindowPosition(_window.get(), x, y);
 }
 
-void GameWindow::GetPosition(int& x, int& y)
+void GameWindow::GetPosition(int& x, int& y) const
 {
 	SDL_GetWindowPosition(_window.get(), &x, &y);
 }
@@ -252,7 +252,7 @@ void GameWindow::SetMinimumSize(int width, int height)
 	SDL_SetWindowMinimumSize(_window.get(), width, height);
 }
 
-void GameWindow::GetMinimumSize(int& width, int& height)
+void GameWindow::GetMinimumSize(int& width, int& height) const
 {
 	SDL_GetWindowMinimumSize(_window.get(), &width, &height);
 }
@@ -262,7 +262,7 @@ void GameWindow::SetMaximumSize(int width, int height)
 	SDL_SetWindowMaximumSize(_window.get(), width, height);
 }
 
-void GameWindow::GetMaximumSize(int& width, int& height)
+void GameWindow::GetMaximumSize(int& width, int& height) const
 {
 	SDL_GetWindowMaximumSize(_window.get(), &width, &height);
 }
@@ -272,12 +272,12 @@ void GameWindow::SetSize(int width, int height)
 	SDL_SetWindowSize(_window.get(), width, height);
 }
 
-void GameWindow::GetSize(int& width, int& height)
+void GameWindow::GetSize(int& width, int& height) const
 {
 	SDL_GetWindowSize(_window.get(), &width, &height);
 }
 
-void GameWindow::GetDrawableSize(int &width, int &height)
+void GameWindow::GetDrawableSize(int &width, int &height) const
 {
 	// TODO(bwrsandman): Make this a runtime branch
 #if USE_VULKAN

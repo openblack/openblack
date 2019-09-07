@@ -45,37 +45,37 @@ class GameWindow
 	GameWindow(const std::string& title, const SDL_DisplayMode& display, DisplayMode displaymode);
 	GameWindow(const std::string& title, int width, int height, DisplayMode displaymode);
 
-	SDL_Window* GetHandle() const;
+	[[nodiscard]] SDL_Window* GetHandle() const;
 	void GetNativeHandles(void*& native_window, void*& native_display) const;
 
-	bool IsOpen() const;
-	float GetBrightness() const;
+	[[nodiscard]] bool IsOpen() const;
+	[[nodiscard]] float GetBrightness() const;
 	void SetBrightness(float bright);
-	uint32_t GetID() const;
-	uint32_t GetFlags() const;
+	[[nodiscard]] uint32_t GetID() const;
+	[[nodiscard]] uint32_t GetFlags() const;
 	void GrabInput(bool b = true);
 	void SetMousePosition(int x, int y);
-	bool IsInputGrabbed();
-	float GetAspectRatio() const;
+	[[nodiscard]] bool IsInputGrabbed() const;
+	[[nodiscard]] float GetAspectRatio() const;
 
 	void SetTitle(const std::string& str);
-	std::string GetTitle() const;
+	[[nodiscard]] std::string GetTitle() const;
 
-	int GetSwapInterval();
+	[[nodiscard]] int GetSwapInterval() const;
 	void SetSwapInterval(int interval);
 
 	void Show();
 	void Hide();
 
 	void SetPosition(int x, int y);
-	void GetPosition(int& x, int& y);
+	void GetPosition(int& x, int& y) const;
 	void SetSize(int width, int height);
-	void GetSize(int& width, int& height);
+	void GetSize(int& width, int& height) const;
 	void SetMinimumSize(int width, int height);
-	void GetMinimumSize(int& width, int& height);
+	void GetMinimumSize(int& width, int& height) const;
 	void SetMaximumSize(int width, int height);
-	void GetMaximumSize(int& width, int& height);
-	void GetDrawableSize(int& width, int& height);
+	void GetMaximumSize(int& width, int& height) const;
+	void GetDrawableSize(int& width, int& height) const;
 
 	void Minimise();
 	void Maximise();
