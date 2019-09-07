@@ -87,21 +87,25 @@ Renderer::Renderer(const GameWindow& window):
 	_shaderManager(std::make_unique<ShaderManager>())
 {
 	for (auto& attr: GetRequiredContextAttributes()) {
-		if (attr.api == Renderer::Api::OpenGl) {;
+		if (attr.api == Renderer::Api::OpenGl) {
 			SDL_GL_SetAttribute(static_cast<SDL_GLattr>(attr.name), attr.value);
 		}
 	}
 
 	auto context = SDL_GL_CreateContext(window.GetHandle());
-
 	if (context == nullptr)
 	{
-		throw std::runtime_error("Could not create OpenGL context: " + std::string(SDL_GetError()));
+		// try again, maybe on wayland
+		spdlog::debug("Could not create OpenGL context, try again without MULTISAMPLEBUFFERS");
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+		context = SDL_GL_CreateContext(window.GetHandle());
+		if (context == nullptr)
+		{
+			throw std::runtime_error("Could not create OpenGL context: " + std::string(SDL_GetError()));
+		}
 	}
-	else
-	{
-		_glcontext = std::unique_ptr<SDL_GLContext, SDLDestroyer>(&context);
-	}
+	_glcontext = std::unique_ptr<SDL_GLContext, SDLDestroyer>(&context);
 
 	spdlog::info("OpenGL context successfully created.");
 

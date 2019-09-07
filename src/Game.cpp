@@ -81,6 +81,7 @@ Game::Game(int argc, char** argv):
 		args.Get("g", gamePath);
 		SetGamePath(gamePath);
 	}
+
 	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", windowWidth, windowHeight, displayMode);
 	_window->SetSwapInterval(1);
 

@@ -228,6 +228,7 @@ void GameWindow::SetSwapInterval(int interval)
 	SDL_GL_SetSwapInterval(interval);
 }
 
+
 float GameWindow::GetAspectRatio() const
 {
 	int width, height;
