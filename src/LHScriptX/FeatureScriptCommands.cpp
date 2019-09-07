@@ -218,6 +218,15 @@ openblack::MeshId GetAbodeMesh(const std::string& abodeType)
 	return item->second;
 }
 
+inline float GetRadians(const float rotation)
+{
+    return -(rotation * 0.001);
+}
+
+inline float GetSize(const float size)
+{
+    return size * 0.001;
+}
 
 void FeatureScriptCommands::Version(const ScriptCommandContext& ctx)
 {
