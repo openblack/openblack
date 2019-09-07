@@ -218,23 +218,23 @@ void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
 	uint32_t meshId           = 0;
 
 	if (abodeType == "NORSE_ABODE_STORAGE_PIT")
-		meshId = static_cast<uint32_t>(Mesh::BuildingNorseStoragePit);
+		meshId = static_cast<uint32_t>(MeshId::BuildingNorseStoragePit);
 	else if (abodeType == "NORSE_ABODE_GRAVEYARD")
-		meshId = static_cast<uint32_t>(Mesh::BuildingNorseGraveyard);
+		meshId = static_cast<uint32_t>(MeshId::BuildingNorseGraveyard);
 	else if (abodeType == "NORSE_ABODE_CRECHE")
-        meshId = static_cast<uint32_t>(Mesh::BuildingNorseCreche);
+		meshId = static_cast<uint32_t>(MeshId::BuildingNorseCreche);
 	else if (abodeType == "NORSE_ABODE_A")
-	    meshId = static_cast<uint32_t>(Mesh::BuildingNorse1);
+		meshId = static_cast<uint32_t>(MeshId::BuildingNorse1);
 	else if (abodeType == "NORSE_ABODE_B")
-		meshId = static_cast<uint32_t>(Mesh::BuildingNorse2);
+		meshId = static_cast<uint32_t>(MeshId::BuildingNorse2);
 	else if (abodeType == "NORSE_ABODE_C")
-		meshId = static_cast<uint32_t>(Mesh::BuildingNorse3);
+		meshId = static_cast<uint32_t>(MeshId::BuildingNorse3);
 	else if (abodeType == "NORSE_ABODE_D")
-		meshId = static_cast<uint32_t>(Mesh::BuildingNorse4);
+		meshId = static_cast<uint32_t>(MeshId::BuildingNorse4);
 	else if (abodeType == "NORSE_ABODE_E")
-		meshId = static_cast<uint32_t>(Mesh::BuildingNorse2A);
+		meshId = static_cast<uint32_t>(MeshId::BuildingNorse2A);
 	else if (abodeType == "NORSE_ABODE_F")
-	    meshId = static_cast<uint32_t>(Mesh::BuildingNorse2);
+		meshId = static_cast<uint32_t>(MeshId::BuildingNorse2);
 
 	float radians = -(rotation * 0.001);
 	size          = (size * 0.001);

@@ -30,7 +30,7 @@
 namespace openblack
 {
 
-enum class Mesh
+enum class MeshId
 {
 	Dummy = 0,
 	AnimalBat1 = 1,
@@ -664,7 +664,7 @@ enum class Mesh
 
 namespace magic_enum {
 template <>
-struct enum_range<openblack::Mesh> {
+struct enum_range<openblack::MeshId> {
   static constexpr int min = 0;
   static constexpr int max = 625;
 };
