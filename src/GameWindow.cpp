@@ -72,35 +72,10 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 		flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 
 	// Get SDL Window requirements from Renderer
-	flags |= Renderer::GetRequiredFlags();
-	for (auto& attr : Renderer::GetRequiredWindowingAttributes())
-	{
-		if (attr.api == Renderer::Api::OpenGl)
-			SDL_GL_SetAttribute(static_cast<SDL_GLattr>(attr.name), attr.value);
-	}
 	const int x = SDL_WINDOWPOS_UNDEFINED;
 	const int y = SDL_WINDOWPOS_UNDEFINED;
 
-	// todo: make this configurable, and less opengl specific
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-	for (unsigned int sample = 4; sample > 0; sample >>= 1)
-	{
-		spdlog::debug("Attempting to create window with {} MSAA samples", sample);
-		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, sample);
-		auto window = std::unique_ptr<SDL_Window, SDLDestroyer>(SDL_CreateWindow(
-		    title.c_str(), x, y,
-		    width, height, flags));
-	
-		if (window == nullptr)
-			continue;
-	
-		_window = std::move(window);
-		return;
-	}
-
-	// obviously no sample worked, try disabling them completely
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+	flags |= Renderer::GetRequiredWindowFlags();
 
 	auto window = std::unique_ptr<SDL_Window, SDLDestroyer>(SDL_CreateWindow(
 	    title.c_str(), x, y,

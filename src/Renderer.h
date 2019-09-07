@@ -31,6 +31,7 @@
 
 namespace openblack
 {
+struct BgfxCallback;
 class GameWindow;
 class Game;
 
@@ -71,8 +72,7 @@ class Renderer {
 		int value;
 	};
 
-	static std::vector<RequiredAttribute> GetRequiredWindowingAttributes();
-	static uint32_t GetRequiredFlags();
+	static uint32_t GetRequiredWindowFlags();
 
 	Renderer() = delete;
 	explicit Renderer(const GameWindow& window, const std::string binaryPath);
@@ -95,6 +95,7 @@ class Renderer {
 
   std::unique_ptr<SDL_GLContext, SDLDestroyer> _glcontext;
   std::unique_ptr<graphics::ShaderManager> _shaderManager;
+  std::unique_ptr<BgfxCallback> _bgfxCallback;
 
   std::unique_ptr<graphics::DebugLines> _debugCross;
 };
