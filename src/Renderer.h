@@ -75,7 +75,7 @@ class Renderer {
 	static uint32_t GetRequiredFlags();
 
 	Renderer() = delete;
-	explicit Renderer(std::unique_ptr<GameWindow>& window);
+	explicit Renderer(const GameWindow& window);
 
 	virtual ~Renderer();
 
