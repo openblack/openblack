@@ -83,7 +83,7 @@ uint32_t Renderer::GetRequiredFlags()
 	return SDL_WINDOW_OPENGL;
 }
 
-Renderer::Renderer(std::unique_ptr<GameWindow>& window):
+Renderer::Renderer(const GameWindow& window):
 	_shaderManager(std::make_unique<ShaderManager>())
 {
 	for (auto& attr: GetRequiredContextAttributes()) {
@@ -92,7 +92,7 @@ Renderer::Renderer(std::unique_ptr<GameWindow>& window):
 		}
 	}
 
-	auto context = SDL_GL_CreateContext(window->GetHandle());
+	auto context = SDL_GL_CreateContext(window.GetHandle());
 
 	if (context == nullptr)
 	{
