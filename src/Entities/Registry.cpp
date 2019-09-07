@@ -15,7 +15,7 @@ void Registry::DebugCreateEntities(float x, float y, float z)
 {
 	auto entity = _registry.create();
 	_registry.assign<Transform>(entity, x, y, z, 2.5f, 180.0f, 111.0f, 0.0f);
-	uint32_t meshId = 0;
+	MeshId meshId = MeshId::Dummy;
 	_registry.assign<Model>(entity, meshId);
 	uint32_t health = 100;
 	uint32_t age = 18;
@@ -52,7 +52,7 @@ void Registry::DrawModels(const Camera& camera, Graphics::ShaderManager& shaderM
 		objectShader->SetUniformValue("u_viewProjection", projectionMatrix);
 		objectShader->SetUniformValue("u_modelTransform", modelMatrix);
 
-		const L3DMesh& mesh = meshPack.GetMesh(model.meshId);
+		const L3DMesh& mesh = meshPack.GetMesh(static_cast<uint32_t>(model.meshId));
 		mesh.Draw(*objectShader, 2);
 	}
 }
