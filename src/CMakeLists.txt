@@ -20,6 +20,8 @@ if (WIN32)
 	add_definitions(-DNOMINMAX -DWIN32_LEAN_AND_MEAN)
 	# disable CRT warnings on windows cause they're annoying as shit and we use C functions everywhere
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+	# turn off debug iterators
+	add_definitions(-D_ITERATOR_DEBUG_LEVEL=0)
 
 	if (MSVC)
 		# build on all cores
