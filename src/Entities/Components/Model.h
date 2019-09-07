@@ -1,8 +1,9 @@
+#include <AllMeshes.h>
 #include <cstdint>
 
 struct Model
 {
-	uint32_t meshId;
+	openblack::MeshId meshId;
 	float xOffset;
 	float yOffset;
 	float zOffset;
