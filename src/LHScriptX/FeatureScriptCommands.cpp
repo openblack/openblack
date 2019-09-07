@@ -197,7 +197,6 @@ const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signa
 } };
 // clang-format on
 
-
 glm::vec2 GetXYPosFromString(const std::string& str)
 {
 	const auto pos = str.find_first_of(',');
