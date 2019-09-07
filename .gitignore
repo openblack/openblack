@@ -1,4 +1,6 @@
-.idea
+# Intellij directories
+.idea/
+cmake-build-*/
 
 ## make
 CMakeFiles
