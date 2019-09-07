@@ -83,6 +83,7 @@ class Game
 	const std::string& GetGamePath();
 
 	GameWindow& GetWindow() { return *_window; }
+	[[nodiscard]] const GameWindow& GetWindow() const { return *_window; }
 	Camera& GetCamera() { return *_camera; }
 	[[nodiscard]] Renderer& GetRenderer() const { return *_renderer; }
 	[[nodiscard]] Camera& GetCamera() const { return *_camera; }
@@ -92,12 +93,15 @@ class Game
 	[[nodiscard]] LandIsland& GetLandIsland() const { return *_landIsland; }
 	[[nodiscard]] L3DMesh& GetTestModel() const { return *_testModel; }
 	MeshPack& GetMeshPack() { return *_meshPack; }
+	[[nodiscard]] const LHVM::LHVM* GetLhvm() { return _lhvm.get(); }
 	FileSystem& GetFileSystem() { return *_fileSystem; }
 	Entities::Registry& GetEntityRegistry() { return *_entityRegistry; }
 	[[nodiscard]] Entities::Registry& GetEntityRegistry() const { return *_entityRegistry; }
 	[[nodiscard]] glm::mat4 GetModelMatrix() const;
 	Config& GetConfig() { return _config; }
 	[[nodiscard]] const Config& GetConfig() const { return _config; }
+	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
+	void ScheduleQuit() { _running = false; }
 
   static Game* instance()
 	{
