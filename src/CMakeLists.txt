@@ -44,7 +44,7 @@ target_link_libraries(openblack PRIVATE
 	ScriptLibrary
 	SDL2::SDL2 SDL2::SDL2main
 	${OPENGL_LIBRARIES}
-	glew::glew
+	#glew::glew
 	glm::glm
 	spdlog::spdlog
 	EnTT
