@@ -144,6 +144,7 @@ if (MSVC)
 endif()
 
 add_subdirectory(components/ScriptLibrary)
+add_subdirectory(external/glad)
 add_subdirectory(external/imgui)
 include(src/CMakeLists.txt)
 
