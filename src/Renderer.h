@@ -59,7 +59,7 @@ static const std::array Shaders {
 class Renderer {
   struct SDLDestroyer
   {
-	void operator()(SDL_GLContext* glcontext) const { SDL_GL_DeleteContext(*glcontext); }
+	void operator()(SDL_GLContext* glcontext) const {}
   };
 
   public:
