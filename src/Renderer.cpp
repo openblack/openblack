@@ -311,7 +311,7 @@ void Renderer::ClearScene(int width, int height)
 		clearColor,
 		1.0f,
 		0);
-	bgfx::setViewRect(0, 0, 0, bgfx::BackbufferRatio::Equal);
+	bgfx::setViewRect(0, 0, 0, width, height);
 	// This dummy draw call is here to make sure that view 0 is cleared if no other draw calls are submitted to view 0.
 	bgfx::touch(0);
 }

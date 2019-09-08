@@ -93,7 +93,7 @@ Game::Game(int argc, char** argv)
 
 	float scale = 1.0f;
 	args.Get<float>("scale", scale);
-	_gui = Gui::create(*_window, _renderer->GetGLContext(), scale);
+	_gui = Gui::create(*_window, 0, scale);
 }
 
 Game::~Game()
@@ -207,7 +207,7 @@ void Game::Run()
 
 			_camera->ProcessSDLEvent(e);
 
-			_gui->ProcessSDLEvent(e);
+			_gui->ProcessEventSdl2(e);
 		}
 
 		_camera->Update(deltaTime);
@@ -234,7 +234,6 @@ void Game::Run()
 		_renderer->DrawScene(*this, true, true);
 
 		_gui->Draw();
-
 		_renderer->Frame();
 
 		_window->SwapWindow();

@@ -20,9 +20,11 @@
 
 #include "Gui.h"
 
+#include <bx/math.h>
+#include <bx/timer.h>
+#include <bgfx/bgfx.h>
+#include <bgfx/embedded_shader.h>
 #include <imgui.h>
-#include <imgui_impl_opengl3.h>
-#include <imgui_impl_sdl.h>
 
 #include <Game.h>
 #include <GameWindow.h>
@@ -34,9 +36,44 @@
 #include <3D/Sky.h>
 #include <3D/Water.h>
 
+#include "Graphics/Shaders/vs_ocornut_imgui.bin.h"
+#include "Graphics/Shaders/fs_ocornut_imgui.bin.h"
+#include "Graphics/Shaders/vs_imgui_image.bin.h"
+#include "Graphics/Shaders/fs_imgui_image.bin.h"
+
 using namespace openblack;
 
-std::unique_ptr<Gui> Gui::create(const GameWindow &window, const SDL_GLContext &context, float scale)
+#define IMGUI_FLAGS_NONE        UINT8_C(0x00)
+#define IMGUI_FLAGS_ALPHA_BLEND UINT8_C(0x01)
+
+namespace
+{
+const bgfx::EmbeddedShader s_embeddedShaders[] =
+	{
+		BGFX_EMBEDDED_SHADER(vs_ocornut_imgui),
+		BGFX_EMBEDDED_SHADER(fs_ocornut_imgui),
+		BGFX_EMBEDDED_SHADER(vs_imgui_image),
+		BGFX_EMBEDDED_SHADER(fs_imgui_image),
+
+		BGFX_EMBEDDED_SHADER_END()
+	};
+
+/// Returns true if both internal transient index and vertex buffer have
+/// enough space.
+///
+/// @param[in] _numVertices Number of vertices.
+/// @param[in] _layout Vertex layout.
+/// @param[in] _numIndices Number of indices.
+///
+inline bool checkAvailTransientBuffers(uint32_t _numVertices, const bgfx::VertexLayout& _layout, uint32_t _numIndices)
+{
+	return _numVertices == bgfx::getAvailTransientVertexBuffer(_numVertices, _layout)
+		&& (0 == _numIndices || _numIndices == bgfx::getAvailTransientIndexBuffer(_numIndices) )
+		;
+}
+}  // namespace
+
+std::unique_ptr<Gui> Gui::create(const GameWindow &window, bgfx::ViewId viewId, float scale)
 {
 	IMGUI_CHECKVERSION();
 	auto imgui = ImGui::CreateContext();
@@ -46,22 +83,38 @@ std::unique_ptr<Gui> Gui::create(const GameWindow &window, const SDL_GLContext &
 
 	ImGuiStyle& style = ImGui::GetStyle();
 	style.FrameBorderSize = 1.0f;
+	style.ScaleAllSizes(scale);
+	io.FontGlobalScale = scale;
 
-	ImGui_ImplSDL2_InitForOpenGL(window.GetHandle(), context);
-	{
-		style.ScaleAllSizes(scale);
-		io.FontGlobalScale = scale;
-	}
-
-	ImGui_ImplOpenGL3_Init("#version 130");
+	io.BackendRendererName = "imgui_impl_bgfx";
 	auto meshViewer = std::make_unique<MeshViewer>();
 	//meshViewer->Open();
 
-	return std::unique_ptr<Gui>(new Gui(imgui, std::move(meshViewer)));
+	auto gui = std::unique_ptr<Gui>(new Gui(imgui, viewId, std::move(meshViewer)));
+
+	if (!gui->InitSdl2(window.GetHandle()))
+	{
+		return nullptr;
+	}
+
+	return gui;
 }
 
-Gui::Gui(ImGuiContext* imgui, std::unique_ptr<MeshViewer>&& meshViewer)
+Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer> &&meshViewer)
 	: _imgui(imgui)
+	, _time(0)
+	, _program(BGFX_INVALID_HANDLE)
+	, _imageProgram(BGFX_INVALID_HANDLE)
+	, _texture(BGFX_INVALID_HANDLE)
+	, _fontTexture(BGFX_INVALID_HANDLE)
+	, _s_tex(BGFX_INVALID_HANDLE)
+	, _u_imageLodEnabled(BGFX_INVALID_HANDLE)
+	, _mousePressed { false, false, false }
+	, _mouseCursors { 0 }
+	, _clipboardTextData(nullptr)
+	, _last(bx::getHPCounter())
+	, _lastScroll(0)
+	, _viewId(viewId)
 	, _meshViewer(std::move(meshViewer))
 {
 }
@@ -69,18 +122,323 @@ Gui::Gui(ImGuiContext* imgui, std::unique_ptr<MeshViewer>&& meshViewer)
 Gui::~Gui()
 {
 	ImGui::DestroyContext(_imgui);
+
+	bgfx::destroy(_s_tex);
+	bgfx::destroy(_texture);
+
+	bgfx::destroy(_u_imageLodEnabled);
+	bgfx::destroy(_imageProgram);
+	bgfx::destroy(_program);
 }
 
-void Gui::ProcessSDLEvent(const SDL_Event& event)
+bool Gui::ProcessEventSdl2(const SDL_Event& event)
 {
 	ImGui::SetCurrentContext(_imgui);
-	ImGui_ImplSDL2_ProcessEvent(&event);
+
+	ImGuiIO& io = ImGui::GetIO();
+	switch (event.type)
+	{
+		case SDL_MOUSEWHEEL:
+		{
+			if (event.wheel.x > 0) io.MouseWheelH += 1;
+			if (event.wheel.x < 0) io.MouseWheelH -= 1;
+			if (event.wheel.y > 0) io.MouseWheel += 1;
+			if (event.wheel.y < 0) io.MouseWheel -= 1;
+			return true;
+		}
+		case SDL_MOUSEBUTTONDOWN:
+		{
+			if (event.button.button == SDL_BUTTON_LEFT) _mousePressed[0] = true;
+			if (event.button.button == SDL_BUTTON_RIGHT) _mousePressed[1] = true;
+			if (event.button.button == SDL_BUTTON_MIDDLE) _mousePressed[2] = true;
+			return true;
+		}
+		case SDL_TEXTINPUT:
+		{
+			io.AddInputCharactersUTF8(event.text.text);
+			return true;
+		}
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+		{
+			int key = event.key.keysym.scancode;
+			IM_ASSERT(key >= 0 && key < IM_ARRAYSIZE(io.KeysDown));
+			io.KeysDown[key] = (event.type == SDL_KEYDOWN);
+			io.KeyShift = ((SDL_GetModState() & KMOD_SHIFT) != 0);
+			io.KeyCtrl = ((SDL_GetModState() & KMOD_CTRL) != 0);
+			io.KeyAlt = ((SDL_GetModState() & KMOD_ALT) != 0);
+			io.KeySuper = ((SDL_GetModState() & KMOD_GUI) != 0);
+			return true;
+		}
+	}
+	return false;
+}
+
+const char* Gui::GetClipboardText()
+{
+	if (_clipboardTextData)
+		SDL_free(_clipboardTextData);
+	_clipboardTextData = SDL_GetClipboardText();
+	return _clipboardTextData;
+}
+
+void Gui::SetClipboardText(const char* text)
+{
+	SDL_SetClipboardText(text);
+}
+
+bool Gui::InitSdl2(SDL_Window* window)
+{
+	_window = window;
+
+	// Setup back-end capabilities flags
+	ImGuiIO& io = ImGui::GetIO();
+	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;       // We can honor GetMouseCursor() values (optional)
+	io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;        // We can honor io.WantSetMousePos requests (optional, rarely used)
+	io.BackendPlatformName = "imgui_impl_sdl";
+
+	// Keyboard mapping. ImGui will use those indices to peek into the io.KeysDown[] array.
+	io.KeyMap[ImGuiKey_Tab] = SDL_SCANCODE_TAB;
+	io.KeyMap[ImGuiKey_LeftArrow] = SDL_SCANCODE_LEFT;
+	io.KeyMap[ImGuiKey_RightArrow] = SDL_SCANCODE_RIGHT;
+	io.KeyMap[ImGuiKey_UpArrow] = SDL_SCANCODE_UP;
+	io.KeyMap[ImGuiKey_DownArrow] = SDL_SCANCODE_DOWN;
+	io.KeyMap[ImGuiKey_PageUp] = SDL_SCANCODE_PAGEUP;
+	io.KeyMap[ImGuiKey_PageDown] = SDL_SCANCODE_PAGEDOWN;
+	io.KeyMap[ImGuiKey_Home] = SDL_SCANCODE_HOME;
+	io.KeyMap[ImGuiKey_End] = SDL_SCANCODE_END;
+	io.KeyMap[ImGuiKey_Insert] = SDL_SCANCODE_INSERT;
+	io.KeyMap[ImGuiKey_Delete] = SDL_SCANCODE_DELETE;
+	io.KeyMap[ImGuiKey_Backspace] = SDL_SCANCODE_BACKSPACE;
+	io.KeyMap[ImGuiKey_Space] = SDL_SCANCODE_SPACE;
+	io.KeyMap[ImGuiKey_Enter] = SDL_SCANCODE_RETURN;
+	io.KeyMap[ImGuiKey_Escape] = SDL_SCANCODE_ESCAPE;
+	io.KeyMap[ImGuiKey_KeyPadEnter] = SDL_SCANCODE_RETURN2;
+	io.KeyMap[ImGuiKey_A] = SDL_SCANCODE_A;
+	io.KeyMap[ImGuiKey_C] = SDL_SCANCODE_C;
+	io.KeyMap[ImGuiKey_V] = SDL_SCANCODE_V;
+	io.KeyMap[ImGuiKey_X] = SDL_SCANCODE_X;
+	io.KeyMap[ImGuiKey_Y] = SDL_SCANCODE_Y;
+	io.KeyMap[ImGuiKey_Z] = SDL_SCANCODE_Z;
+
+	io.SetClipboardTextFn = StaticSetClipboardText;
+	io.GetClipboardTextFn = StaticGetClipboardText;
+	io.ClipboardUserData = this;
+
+	_mouseCursors[ImGuiMouseCursor_Arrow] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
+	_mouseCursors[ImGuiMouseCursor_TextInput] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_IBEAM);
+	_mouseCursors[ImGuiMouseCursor_ResizeAll] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEALL);
+	_mouseCursors[ImGuiMouseCursor_ResizeNS] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENS);
+	_mouseCursors[ImGuiMouseCursor_ResizeEW] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEWE);
+	_mouseCursors[ImGuiMouseCursor_ResizeNESW] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENESW);
+	_mouseCursors[ImGuiMouseCursor_ResizeNWSE] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENWSE);
+	_mouseCursors[ImGuiMouseCursor_Hand] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
+
+#ifdef _WIN32
+	SDL_SysWMinfo wmInfo;
+	SDL_VERSION(&wmInfo.version);
+	SDL_GetWindowWMInfo(window, &wmInfo);
+	io.ImeWindowHandle = wmInfo.info.win.window;
+#else
+	(void)window;
+#endif
+
+	return true;
+}
+
+bool Gui::CreateFontsTextureBgfx()
+{
+	// Build texture atlas
+	ImGuiIO& io = ImGui::GetIO();
+	unsigned char* pixels;
+	int width, height;
+	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);   // Load as RGBA 32-bits (75% of the memory is wasted, but default font is so small) because it is more likely to be compatible with user's existing shaders. If your ImTextureId represent a higher-level concept than just a GL texture id, consider calling GetTexDataAsAlpha8() instead to save on GPU memory.
+
+	_texture = bgfx::createTexture2D(
+		static_cast<uint16_t>(width),
+		static_cast<uint16_t>(height),
+		false,
+		1,
+		bgfx::TextureFormat::BGRA8,
+		0,
+		bgfx::copy(pixels, width * height * 4));
+
+	return true;
+}
+
+bool Gui::CreateDeviceObjectsBgfx()
+{
+	// Create shaders
+	bgfx::RendererType::Enum type = bgfx::getRendererType();
+	_program = bgfx::createProgram(
+		bgfx::createEmbeddedShader(s_embeddedShaders, type, "vs_ocornut_imgui"),
+		bgfx::createEmbeddedShader(s_embeddedShaders, type, "fs_ocornut_imgui"),
+		true
+	);
+	_imageProgram = bgfx::createProgram(
+		bgfx::createEmbeddedShader(s_embeddedShaders, type, "vs_imgui_image"),
+		bgfx::createEmbeddedShader(s_embeddedShaders, type, "fs_imgui_image"),
+		true
+	);
+
+	// Create buffers
+	_u_imageLodEnabled = bgfx::createUniform("u_imageLodEnabled", bgfx::UniformType::Vec4);
+
+	_layout
+		.begin()
+		.add(bgfx::Attrib::Position,  2, bgfx::AttribType::Float)
+		.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+		.add(bgfx::Attrib::Color0,    4, bgfx::AttribType::Uint8, true)
+		.end();
+
+	_s_tex = bgfx::createUniform("s_tex", bgfx::UniformType::Sampler);
+
+	CreateFontsTextureBgfx();
+
+	return true;
+}
+
+void Gui::UpdateMousePosAndButtons()
+{
+	ImGuiIO& io = ImGui::GetIO();
+
+	// Set OS mouse position if requested (rarely used, only when ImGuiConfigFlags_NavEnableSetMousePos is enabled by user)
+	if (io.WantSetMousePos)
+		SDL_WarpMouseInWindow(_window, (int)io.MousePos.x, (int)io.MousePos.y);
+	else
+		io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
+
+	int mx, my;
+	Uint32 mouse_buttons = SDL_GetMouseState(&mx, &my);
+	io.MouseDown[0] = _mousePressed[0] || (mouse_buttons & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0;  // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
+	io.MouseDown[1] = _mousePressed[1] || (mouse_buttons & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0;
+	io.MouseDown[2] = _mousePressed[2] || (mouse_buttons & SDL_BUTTON(SDL_BUTTON_MIDDLE)) != 0;
+	_mousePressed[0] = _mousePressed[1] = _mousePressed[2] = false;
+
+#if SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__) && !(defined(__APPLE__) && TARGET_OS_IOS)
+	SDL_Window* focused_window = SDL_GetKeyboardFocus();
+    if (_window == focused_window)
+    {
+        // SDL_GetMouseState() gives mouse position seemingly based on the last window entered/focused(?)
+        // The creation of a new windows at runtime and SDL_CaptureMouse both seems to severely mess up with that, so we retrieve that position globally.
+        int wx, wy;
+        SDL_GetWindowPosition(focused_window, &wx, &wy);
+        SDL_GetGlobalMouseState(&mx, &my);
+        mx -= wx;
+        my -= wy;
+        io.MousePos = ImVec2((float)mx, (float)my);
+    }
+
+    // SDL_CaptureMouse() let the OS know e.g. that our imgui drag outside the SDL window boundaries shouldn't e.g. trigger the OS window resize cursor.
+    // The function is only supported from SDL 2.0.4 (released Jan 2016)
+    bool any_mouse_button_down = ImGui::IsAnyMouseDown();
+    SDL_CaptureMouse(any_mouse_button_down ? SDL_TRUE : SDL_FALSE);
+#else
+	if (SDL_GetWindowFlags(_window) & SDL_WINDOW_INPUT_FOCUS)
+		io.MousePos = ImVec2((float)mx, (float)my);
+#endif
+}
+
+void Gui::UpdateMouseCursor()
+{
+	ImGuiIO& io = ImGui::GetIO();
+	if (io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)
+		return;
+
+	ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
+	if (io.MouseDrawCursor || imgui_cursor == ImGuiMouseCursor_None)
+	{
+		// Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
+		SDL_ShowCursor(SDL_FALSE);
+	}
+	else
+	{
+		// Show OS mouse cursor
+		SDL_SetCursor(_mouseCursors[imgui_cursor] ? _mouseCursors[imgui_cursor] : _mouseCursors[ImGuiMouseCursor_Arrow]);
+		SDL_ShowCursor(SDL_TRUE);
+	}
+}
+
+void Gui::UpdateGamepads()
+{
+	ImGuiIO& io = ImGui::GetIO();
+	memset(io.NavInputs, 0, sizeof(io.NavInputs));
+	if ((io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) == 0)
+		return;
+
+	// Get gamepad
+	SDL_GameController* game_controller = SDL_GameControllerOpen(0);
+	if (!game_controller)
+	{
+		io.BackendFlags &= ~ImGuiBackendFlags_HasGamepad;
+		return;
+	}
+
+	// Update gamepad inputs
+#define MAP_BUTTON(NAV_NO, BUTTON_NO)       { io.NavInputs[NAV_NO] = (SDL_GameControllerGetButton(game_controller, BUTTON_NO) != 0) ? 1.0f : 0.0f; }
+#define MAP_ANALOG(NAV_NO, AXIS_NO, V0, V1) { float vn = (float)(SDL_GameControllerGetAxis(game_controller, AXIS_NO) - V0) / (float)(V1 - V0); if (vn > 1.0f) vn = 1.0f; if (vn > 0.0f && io.NavInputs[NAV_NO] < vn) io.NavInputs[NAV_NO] = vn; }
+	const int thumb_dead_zone = 8000;           // SDL_gamecontroller.h suggests using this value.
+	MAP_BUTTON(ImGuiNavInput_Activate,      SDL_CONTROLLER_BUTTON_A);               // Cross / A
+	MAP_BUTTON(ImGuiNavInput_Cancel,        SDL_CONTROLLER_BUTTON_B);               // Circle / B
+	MAP_BUTTON(ImGuiNavInput_Menu,          SDL_CONTROLLER_BUTTON_X);               // Square / X
+	MAP_BUTTON(ImGuiNavInput_Input,         SDL_CONTROLLER_BUTTON_Y);               // Triangle / Y
+	MAP_BUTTON(ImGuiNavInput_DpadLeft,      SDL_CONTROLLER_BUTTON_DPAD_LEFT);       // D-Pad Left
+	MAP_BUTTON(ImGuiNavInput_DpadRight,     SDL_CONTROLLER_BUTTON_DPAD_RIGHT);      // D-Pad Right
+	MAP_BUTTON(ImGuiNavInput_DpadUp,        SDL_CONTROLLER_BUTTON_DPAD_UP);         // D-Pad Up
+	MAP_BUTTON(ImGuiNavInput_DpadDown,      SDL_CONTROLLER_BUTTON_DPAD_DOWN);       // D-Pad Down
+	MAP_BUTTON(ImGuiNavInput_FocusPrev,     SDL_CONTROLLER_BUTTON_LEFTSHOULDER);    // L1 / LB
+	MAP_BUTTON(ImGuiNavInput_FocusNext,     SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);   // R1 / RB
+	MAP_BUTTON(ImGuiNavInput_TweakSlow,     SDL_CONTROLLER_BUTTON_LEFTSHOULDER);    // L1 / LB
+	MAP_BUTTON(ImGuiNavInput_TweakFast,     SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);   // R1 / RB
+	MAP_ANALOG(ImGuiNavInput_LStickLeft,    SDL_CONTROLLER_AXIS_LEFTX, -thumb_dead_zone, -32768);
+	MAP_ANALOG(ImGuiNavInput_LStickRight,   SDL_CONTROLLER_AXIS_LEFTX, +thumb_dead_zone, +32767);
+	MAP_ANALOG(ImGuiNavInput_LStickUp,      SDL_CONTROLLER_AXIS_LEFTY, -thumb_dead_zone, -32767);
+	MAP_ANALOG(ImGuiNavInput_LStickDown,    SDL_CONTROLLER_AXIS_LEFTY, +thumb_dead_zone, +32767);
+
+	io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
+#undef MAP_BUTTON
+#undef MAP_ANALOG
+}
+
+void Gui::NewFrameSdl2(SDL_Window* window)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	IM_ASSERT(io.Fonts->IsBuilt() && "Font atlas not built! It is generally built by the renderer back-end. Missing call to renderer _NewFrame() function? e.g. ImGui_ImplOpenGL3_NewFrame().");
+
+	// Setup display size (every frame to accommodate for window resizing)
+	int w, h;
+	int display_w, display_h;
+	SDL_GetWindowSize(window, &w, &h);
+	SDL_GL_GetDrawableSize(window, &display_w, &display_h);
+	io.DisplaySize = ImVec2((float)w, (float)h);
+	if (w > 0 && h > 0)
+		io.DisplayFramebufferScale = ImVec2((float)display_w / w, (float)display_h / h);
+
+	// Setup time step (we don't use SDL_GetTicks() because it is using millisecond resolution)
+	static Uint64 frequency = SDL_GetPerformanceFrequency();
+	Uint64 current_time = SDL_GetPerformanceCounter();
+	io.DeltaTime = _time > 0 ? (float)((double)(current_time - _time) / frequency) : (float)(1.0f / 60.0f);
+	_time = current_time;
+
+	UpdateMousePosAndButtons();
+	UpdateMouseCursor();
+
+	// Update game controllers (if enabled and available)
+	UpdateGamepads();
+}
+
+void Gui::NewFrameBgfx()
+{
+	if (!isValid(_fontTexture))
+		CreateDeviceObjectsBgfx();
 }
 
 void Gui::NewFrame(GameWindow& window)
 {
-	ImGui_ImplOpenGL3_NewFrame();
-	ImGui_ImplSDL2_NewFrame(window.GetHandle());
+	ImGui::SetCurrentContext(_imgui);
+
+	NewFrameBgfx();
+	NewFrameSdl2(window.GetHandle());
 	ImGui::NewFrame();
 }
 
@@ -256,9 +614,108 @@ void Gui::Loop(Game& game)
 	ImGui::Render();
 }
 
+void Gui::RenderDrawDataBgfx(ImDrawData* drawData)
+{
+	const ImGuiIO& io = ImGui::GetIO();
+	const float width  = io.DisplaySize.x;
+	const float height = io.DisplaySize.y;
+
+	bgfx::setViewName(_viewId, "ImGui");
+	bgfx::setViewMode(_viewId, bgfx::ViewMode::Sequential);
+
+	const bgfx::Caps* caps = bgfx::getCaps();
+	{
+		float ortho[16];
+		bx::mtxOrtho(ortho, 0.0f, width, height, 0.0f, 0.0f, 1000.0f, 0.0f, caps->homogeneousDepth);
+		bgfx::setViewTransform(_viewId, NULL, ortho);
+		bgfx::setViewRect(_viewId, 0, 0, uint16_t(width), uint16_t(height) );
+	}
+
+	// Render command lists
+	for (int32_t ii = 0, num = drawData->CmdListsCount; ii < num; ++ii)
+	{
+		bgfx::TransientVertexBuffer tvb;
+		bgfx::TransientIndexBuffer tib;
+
+		const ImDrawList* drawList = drawData->CmdLists[ii];
+		uint32_t numVertices = (uint32_t)drawList->VtxBuffer.size();
+		uint32_t numIndices  = (uint32_t)drawList->IdxBuffer.size();
+
+		if (!checkAvailTransientBuffers(numVertices, _layout, numIndices) )
+		{
+			// not enough space in transient buffer just quit drawing the rest...
+			break;
+		}
+
+		bgfx::allocTransientVertexBuffer(&tvb, numVertices, _layout);
+		bgfx::allocTransientIndexBuffer(&tib, numIndices);
+
+		ImDrawVert* verts = (ImDrawVert*)tvb.data;
+		bx::memCopy(verts, drawList->VtxBuffer.begin(), numVertices * sizeof(ImDrawVert) );
+
+		ImDrawIdx* indices = (ImDrawIdx*)tib.data;
+		bx::memCopy(indices, drawList->IdxBuffer.begin(), numIndices * sizeof(ImDrawIdx) );
+
+		uint32_t offset = 0;
+		for (const ImDrawCmd* cmd = drawList->CmdBuffer.begin(), *cmdEnd = drawList->CmdBuffer.end(); cmd != cmdEnd; ++cmd)
+		{
+			if (cmd->UserCallback)
+			{
+				cmd->UserCallback(drawList, cmd);
+			}
+			else if (0 != cmd->ElemCount)
+			{
+				uint64_t state = 0u
+					| BGFX_STATE_WRITE_RGB
+					| BGFX_STATE_WRITE_A
+					| BGFX_STATE_MSAA
+				;
+
+				bgfx::TextureHandle th = _texture;
+				bgfx::ProgramHandle program = _program;
+
+				if (cmd->TextureId != nullptr)
+				{
+					union { ImTextureID ptr; struct { bgfx::TextureHandle handle; uint8_t flags; uint8_t mip; } s; } texture = { cmd->TextureId };
+					state |= 0 != (IMGUI_FLAGS_ALPHA_BLEND & texture.s.flags)
+							 ? BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
+							 : BGFX_STATE_NONE
+						;
+					th = texture.s.handle;
+					if (0 != texture.s.mip)
+					{
+						const float lodEnabled[4] = { float(texture.s.mip), 1.0f, 0.0f, 0.0f };
+						bgfx::setUniform(_u_imageLodEnabled, lodEnabled);
+						program = _imageProgram;
+					}
+				}
+				else
+				{
+					state |= BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
+				}
+
+				const uint16_t xx = uint16_t(bx::max(cmd->ClipRect.x, 0.0f) );
+				const uint16_t yy = uint16_t(bx::max(cmd->ClipRect.y, 0.0f) );
+				bgfx::setScissor(xx, yy
+					, uint16_t(bx::min(cmd->ClipRect.z, 65535.0f)-xx)
+					, uint16_t(bx::min(cmd->ClipRect.w, 65535.0f)-yy)
+				);
+
+				bgfx::setState(state);
+				bgfx::setTexture(0, _s_tex, th);
+				bgfx::setVertexBuffer(0, &tvb, 0, numVertices);
+				bgfx::setIndexBuffer(&tib, offset, cmd->ElemCount);
+				bgfx::submit(_viewId, program);
+			}
+
+			offset += cmd->ElemCount;
+		}
+	}
+}
+
 void Gui::Draw()
 {
 	ImGui::SetCurrentContext(_imgui);
 
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	RenderDrawDataBgfx(ImGui::GetDrawData());
 }

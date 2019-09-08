@@ -13,6 +13,21 @@ file(GLOB OPENBLACK_SHADERS
 	"${CMAKE_SOURCE_DIR}/assets/shaders/**.frag"
 )
 
+file(GLOB OPENBLACK_IMGUI_VS_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/../assets/shaders/imgui/vs_*.sc")
+file(GLOB OPENBLACK_IMGUI_FS_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/../assets/shaders/imgui/fs_*.sc")
+mark_shaders_for_compilation_to_header(TYPE vertex
+	SHADERS ${OPENBLACK_IMGUI_VS_SHADERS}
+	VARYING_DEF ${CMAKE_CURRENT_SOURCE_DIR}/../assets/shaders/imgui/varying.def.sc
+	OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/../include/generated/imgui/shaders)
+mark_shaders_for_compilation_to_header(TYPE fragment
+	SHADERS ${OPENBLACK_IMGUI_FS_SHADERS}
+	VARYING_DEF ${CMAKE_CURRENT_SOURCE_DIR}/../assets/shaders/imgui/varying.def.sc
+	OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/../include/generated/imgui/shaders)
+
+list(APPEND OPENBLACK_SHADERS ${OPENBLACK_IMGUI_VS_SHADERS})
+list(APPEND OPENBLACK_SHADERS ${OPENBLACK_IMGUI_FS_SHADERS})
+list(APPEND OPENBLACK_SHADERS ${CMAKE_CURRENT_SOURCE_DIR}/../assets/shaders/imgui/varying.def.sc)
+
 if (WIN32)
 	# Suppress WinMain(), provided by SDL
 	add_definitions(-DSDL_MAIN_HANDLED)
@@ -60,7 +75,7 @@ else(MSVC)
 	)
 endif(MSVC)
 
-target_include_directories(openblack PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+target_include_directories(openblack PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_BINARY_DIR}/../include)
 target_link_libraries(openblack PRIVATE
 	imgui
 	ScriptLibrary
