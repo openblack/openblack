@@ -10,5 +10,4 @@ out vec4 color;
 void main()
 {
 	color = texture2D(tex, v_tex);
-	color.a = 1.0f;
 }
