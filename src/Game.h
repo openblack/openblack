@@ -60,6 +60,7 @@ class Game
 			, timeOfDay(1.0f)
 			, bumpMapStrength(1.0f)
 			, smallBumpMapStrength(1.0f)
+			, bgfxDebug(false)
 		{
 		}
 
@@ -69,6 +70,8 @@ class Game
 		float timeOfDay;
 		float bumpMapStrength;
 		float smallBumpMapStrength;
+
+		bool bgfxDebug;
 	};
 
 	Game(int argc, char** argv);
