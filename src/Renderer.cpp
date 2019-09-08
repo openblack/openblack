@@ -209,20 +209,10 @@ Renderer::Renderer(const GameWindow& window, const std::string binaryPath)
 		}
 	}
 
-	auto context = SDL_GL_CreateContext(window.GetHandle());
-	if (context == nullptr)
-	{
-		// try again, maybe on wayland
-		spdlog::debug("Could not create OpenGL context, try again without MULTISAMPLEBUFFERS");
-		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
-		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
-		context = SDL_GL_CreateContext(window.GetHandle());
-		if (context == nullptr)
-		{
-			throw std::runtime_error("Could not create OpenGL context: " + std::string(SDL_GetError()));
-		}
-	}
-	_glcontext = std::unique_ptr<SDL_GLContext, SDLDestroyer>(&context);
+	// TODO(bwrsandman): uncomment this once rendering is taken over
+	auto internal = bgfx::getInternalData();
+	SDL_GL_MakeCurrent(window.GetHandle(), internal->context);
+	_glcontext = std::unique_ptr<SDL_GLContext, SDLDestroyer>((SDL_GLContext*)&internal->context);
 
 	spdlog::info("OpenGL context successfully created.");
 
