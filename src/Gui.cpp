@@ -77,15 +77,20 @@ void Gui::ProcessSDLEvent(const SDL_Event& event)
 	ImGui_ImplSDL2_ProcessEvent(&event);
 }
 
+void Gui::NewFrame(GameWindow& window)
+{
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplSDL2_NewFrame(window.GetHandle());
+	ImGui::NewFrame();
+}
+
 void Gui::Loop(Game& game)
 {
 	ImGui::SetCurrentContext(_imgui);
 
 	_meshViewer->DrawScene();
 
-	ImGui_ImplOpenGL3_NewFrame();
-	ImGui_ImplSDL2_NewFrame(game.GetWindow().GetHandle());
-	ImGui::NewFrame();
+	NewFrame(game.GetWindow());
 
 	auto& config = game.GetConfig();
 

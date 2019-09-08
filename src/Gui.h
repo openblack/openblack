@@ -40,6 +40,7 @@ class Gui
 	virtual ~Gui();
 
 	void ProcessSDLEvent(const SDL_Event&);
+	void NewFrame(GameWindow& window);
 	void Loop(Game& game);
 	void Draw();
  private:
