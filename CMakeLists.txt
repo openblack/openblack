@@ -71,6 +71,10 @@ else()
 	message("compiler has no CXX header <filesystem>, need to use <experimental/filesystem>")
 endif()
 
+if(POLICY CMP0072)
+  cmake_policy(SET CMP0072 NEW)
+endif()
+
 # Dependencies
 hunter_add_package(SDL2)
 hunter_add_package(spdlog)
