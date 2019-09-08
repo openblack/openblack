@@ -146,6 +146,7 @@ Renderer::Renderer(const GameWindow& window):
 		error << "glewInit failed: " << glewGetErrorString(err) << std::endl;
 		throw std::runtime_error(error.str());
 	}
+	spdlog::info("Using GLEW {0}", glewGetString(GLEW_VERSION));
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
 	bool err = gladLoadGL() == 0;
 	if (err)
@@ -156,7 +157,6 @@ Renderer::Renderer(const GameWindow& window):
     bool err = false; // If you use IMGUI_IMPL_OPENGL_LOADER_CUSTOM, your loader is likely to requires some form of initialization.
 #endif
 
-	spdlog::info("Using GLEW {0}", glewGetString(GLEW_VERSION));
 
 	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(::MessageCallback, this);
