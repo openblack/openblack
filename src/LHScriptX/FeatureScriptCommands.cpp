@@ -289,7 +289,7 @@ void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
 
 	registry.Assign<Abode>(entity, townId, foodAmount, woodAmount);
 	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
-	registry.Assign<Model>(entity, mesh, 0.0f, 0.0f, 0.0f);
+	registry.Assign<Model>(entity, mesh, 2, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::CreatePlannedAbode(const ScriptCommandContext& ctx)
@@ -315,7 +315,7 @@ void FeatureScriptCommands::CreateTownCentre(const ScriptCommandContext& ctx)
     size                        = GetSize(size);
 
     registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
-    registry.Assign<Model>(entity, mesh, 0.0f, 0.0f, 0.0f);
+    registry.Assign<Model>(entity, mesh, 3, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::CreateTownSpell(const ScriptCommandContext& ctx)
