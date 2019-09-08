@@ -28,28 +28,29 @@ void Registry::DrawModels(const Camera& camera, Graphics::ShaderManager& shaderM
 	const auto& meshPack = Game::instance()->GetMeshPack();
 	const auto& view     = _registry.view<Model, Transform>();
 	const auto projectionMatrix = camera.GetViewProjectionMatrix();
-	
-	for (auto entity : view)
+
+	Graphics::ShaderProgram* objectShader = shaderManager.GetShader("SkinnedMesh");
+	objectShader->Bind();
+	objectShader->SetUniformValue("u_viewProjection", projectionMatrix);
+
+	for (auto const& entity : view)
 	{
 		const auto& model = view.get<Model>(entity);
 		const auto& position = view.get<Transform>(entity);
-	
+
 		const auto _modelPosition = glm::vec3(position.x + model.xOffset, position.y + model.yOffset, position.z + model.zOffset);
 		const auto _modelRotation = glm::vec3(position.rotX, position.rotY, position.rotZ);
 		const auto _modelScale    = glm::vec3(position.scale);
-	
+
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		modelMatrix           = glm::translate(modelMatrix, _modelPosition);
-	
+
 		modelMatrix = glm::rotate(modelMatrix, _modelRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
 		modelMatrix = glm::rotate(modelMatrix, _modelRotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
 		modelMatrix = glm::rotate(modelMatrix, _modelRotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-	
+
 		modelMatrix = glm::scale(modelMatrix, _modelScale);
-	
-		Graphics::ShaderProgram* objectShader = shaderManager.GetShader("SkinnedMesh");
-		objectShader->Bind();
-		objectShader->SetUniformValue("u_viewProjection", projectionMatrix);
+
 		objectShader->SetUniformValue("u_modelTransform", modelMatrix);
 
 		const L3DMesh& mesh = meshPack.GetMesh(static_cast<uint32_t>(model.meshId));
