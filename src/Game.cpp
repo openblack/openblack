@@ -188,15 +188,16 @@ void Game::Run()
 
 				float height    = _landIsland->GetHeightAt(glm::vec2(_intersection.x, _intersection.z));
 				_intersection.y = height;
-
-				// rotation mode on middle mouse button
-				if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP)
+			}
+			// rotation mode on middle mouse button
+			else if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP)
+			{
+				if (e.button.button == SDL_BUTTON_MIDDLE)
 				{
-					if (e.button.button == SDL_BUTTON_MIDDLE)
-					{
-						SDL_SetRelativeMouseMode((e.type == SDL_MOUSEBUTTONDOWN) ? SDL_TRUE : SDL_FALSE);
-						SDL_WarpMouseInWindow(_window->GetHandle(), screenSize.x/2, screenSize.y/2);
-					}
+					glm::ivec2 screenSize;
+					_window->GetSize(screenSize.x, screenSize.y);
+					SDL_SetRelativeMouseMode((e.type == SDL_MOUSEBUTTONDOWN) ? SDL_TRUE : SDL_FALSE);
+					SDL_WarpMouseInWindow(_window->GetHandle(), screenSize.x/2, screenSize.y/2);
 				}
 			}
 
