@@ -4,7 +4,7 @@
 struct Model
 {
 	openblack::MeshId meshId;
-	int submeshId;
+	std::vector<int> submeshIds;
 	float xOffset;
 	float yOffset;
 	float zOffset;

@@ -286,10 +286,11 @@ void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
 	auto mesh                 = GetAbodeMesh(abodeType);
 	float radians             = GetRadians(rotation);
 	size                      = GetSize(size);
+	auto submeshIds           = std::vector { 2 };
 
 	registry.Assign<Abode>(entity, townId, foodAmount, woodAmount);
 	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
-	registry.Assign<Model>(entity, mesh, 2, 0.0f, 0.0f, 0.0f);
+	registry.Assign<Model>(entity, mesh, submeshIds, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::CreatePlannedAbode(const ScriptCommandContext& ctx)
@@ -313,9 +314,10 @@ void FeatureScriptCommands::CreateTownCentre(const ScriptCommandContext& ctx)
     auto mesh                   = GetAbodeMesh(centreType);
     float radians               = GetRadians(rotation);
     size                        = GetSize(size);
+	auto submeshIds             = std::vector { 3 };
 
     registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
-    registry.Assign<Model>(entity, mesh, 3, 0.0f, 0.0f, 0.0f);
+	registry.Assign<Model>(entity, mesh, submeshIds, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::CreateTownSpell(const ScriptCommandContext& ctx)
@@ -423,7 +425,7 @@ void FeatureScriptCommands::CreateNewTree(const ScriptCommandContext& ctx)
 	float size                  = params[5].GetFloat();  // Initial size
 	float finalSize             = params[6].GetNumber(); // Max growth size of the tree
 	auto meshId                 = MeshId::Dummy;
-	auto submeshId              = 0;
+	auto submeshIds             = std::vector {1, 2};
 
 	switch (treeType)
 	{
@@ -475,14 +477,14 @@ void FeatureScriptCommands::CreateNewTree(const ScriptCommandContext& ctx)
 	case 22:
 		// Bizarre case. Need to investigate further
 		meshId = MeshId::ObjectBurntTree;
-		submeshId = 1;
+		submeshIds = { 1 };
 		break;
 	default:
 		spdlog::error("Missing tree mesh lookup for \"{}\".", treeType);
 	}
 
 	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
-	registry.Assign<Model>(entity, meshId, submeshId, 0.0f, 0.0f, 0.0f);
+	registry.Assign<Model>(entity, meshId, submeshIds, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::CreateField(const ScriptCommandContext& ctx)
