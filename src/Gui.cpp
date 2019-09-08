@@ -159,86 +159,90 @@ void Gui::Loop(Game& game)
 	if (game.GetLhvm() != nullptr)
 		LHVMViewer::Draw(game.GetLhvm());
 
-	ImGui::Begin("Land Island");
-
-	ImGui::Text("Load Land Island:");
-	ImGui::BeginGroup();
-	if (ImGui::Button("1"))
+	if (ImGui::Begin("Land Island"))
 	{
-		game.LoadLandscape("./Data/Landscape/Land1.lnd");
-		game.LoadMap("./Scripts/Land1.txt");
+		ImGui::Text("Load Land Island:");
+
+		{
+			ImGui::BeginGroup();
+			if (ImGui::Button("1"))
+			{
+				game.LoadLandscape("./Data/Landscape/Land1.lnd");
+				game.LoadMap("./Scripts/Land1.txt");
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("2"))
+			{
+				game.LoadLandscape("./Data/Landscape/Land2.lnd");
+				game.LoadMap("./Scripts/Land2.txt");
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("3"))
+			{
+				game.LoadLandscape("./Data/Landscape/Land3.lnd");
+				game.LoadMap("./Scripts/Land3.txt");
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("4"))
+			{
+				game.LoadLandscape("./Data/Landscape/Land4.lnd");
+				game.LoadMap("./Scripts/Land4.txt");
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("5"))
+			{
+				game.LoadLandscape("./Data/Landscape/Land5.lnd");
+				game.LoadMap("./Scripts/Land5.txt");
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button("T"))
+			{
+				game.LoadLandscape("./Data/Landscape/LandT.lnd");
+				game.LoadMap("./Scripts/LandT.txt");
+			}
+
+			if (ImGui::Button("2P"))
+			{
+				game.LoadLandscape("./Data/Landscape/Multi_Player/MPM_2P_1.lnd");
+				game.LoadMap("./Scripts/Playgrounds/TwoGods.txt");
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button("3P"))
+			{
+				game.LoadLandscape("./Data/Landscape/Multi_Player/MPM_3P_1.lnd");
+				game.LoadMap("./Scripts/Playgrounds/ThreeGods.txt");
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("4P"))
+			{
+				game.LoadLandscape("./Data/Landscape/Multi_Player/MPM_4P_1.lnd");
+				game.LoadMap("./Scripts/Playgrounds/FourGods.txt");
+			}
+
+			ImGui::EndGroup();
+		}
+
+		if (ImGui::SliderFloat("Day", &config.timeOfDay, 0.0f, 1.0f, "%.3f"))
+			Game::instance()->GetSky().SetTime(config.timeOfDay);
+		ImGui::SliderFloat("Bump", &config.bumpMapStrength, 0.0f, 1.0f, "%.3f");
+		ImGui::SliderFloat("Small Bump", &config.smallBumpMapStrength, 0.0f, 1.0f, "%.3f");
+
+		ImGui::Separator();
+
+		ImGui::Text("Block Count: %zu", game.GetLandIsland().GetBlocks().size());
+		ImGui::Text("Country Count: %zu", game.GetLandIsland().GetCountries().size());
+
+		ImGui::Separator();
+
+		if (ImGui::Button("Dump Textures"))
+			game.GetLandIsland().DumpTextures();
+
+		if (ImGui::Button("Dump Heightmap"))
+			game.GetLandIsland().DumpMaps();
+
 	}
-	ImGui::SameLine();
-	if (ImGui::Button("2"))
-	{
-		game.LoadLandscape("./Data/Landscape/Land2.lnd");
-		game.LoadMap("./Scripts/Land2.txt");
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("3"))
-	{
-		game.LoadLandscape("./Data/Landscape/Land3.lnd");
-		game.LoadMap("./Scripts/Land3.txt");
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("4"))
-	{
-		game.LoadLandscape("./Data/Landscape/Land4.lnd");
-		game.LoadMap("./Scripts/Land4.txt");
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("5"))
-	{
-		game.LoadLandscape("./Data/Landscape/Land5.lnd");
-		game.LoadMap("./Scripts/Land5.txt");
-	}
-
-	ImGui::SameLine();
-	if (ImGui::Button("T"))
-	{
-		game.LoadLandscape("./Data/Landscape/LandT.lnd");
-		game.LoadMap("./Scripts/LandT.txt");
-	}
-
-	if (ImGui::Button("2P"))
-	{
-		game.LoadLandscape("./Data/Landscape/Multi_Player/MPM_2P_1.lnd");
-		game.LoadMap("./Scripts/Playgrounds/TwoGods.txt");
-	}
-
-	ImGui::SameLine();
-	if (ImGui::Button("3P"))
-	{
-		game.LoadLandscape("./Data/Landscape/Multi_Player/MPM_3P_1.lnd");
-		game.LoadMap("./Scripts/Playgrounds/ThreeGods.txt");
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("4P"))
-	{
-		game.LoadLandscape("./Data/Landscape/Multi_Player/MPM_4P_1.lnd");
-		game.LoadMap("./Scripts/Playgrounds/FourGods.txt");
-	}
-
-	ImGui::EndGroup();
-
-	if (ImGui::SliderFloat("Day", &config.timeOfDay, 0.0f, 1.0f, "%.3f"))
-		Game::instance()->GetSky().SetTime(config.timeOfDay);
-	ImGui::SliderFloat("Bump", &config.bumpMapStrength, 0.0f, 1.0f, "%.3f");
-	ImGui::SliderFloat("Small Bump", &config.smallBumpMapStrength, 0.0f, 1.0f, "%.3f");
-
-	ImGui::Separator();
-
-	ImGui::Text("Block Count: %zu", game.GetLandIsland().GetBlocks().size());
-	ImGui::Text("Country Count: %zu", game.GetLandIsland().GetCountries().size());
-
-	ImGui::Separator();
-
-	if (ImGui::Button("Dump Textures"))
-		game.GetLandIsland().DumpTextures();
-
-	if (ImGui::Button("Dump Heightmap"))
-		game.GetLandIsland().DumpMaps();
-
 	ImGui::End();
 
 	if (config.waterDebug)
