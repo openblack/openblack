@@ -410,7 +410,79 @@ void FeatureScriptCommands::CreateTree(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateNewTree(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	Game& game                  = ctx.GetGame();
+	const auto& params          = ctx.GetParameters();
+	auto& island                = game.GetLandIsland();
+	auto& registry              = game.GetEntityRegistry();
+	const auto entity           = registry.Create();
+	const auto associatedForest = params[0].GetNumber();
+	const auto position         = GetXYPosFromString(params[1].GetString());
+	const auto& treeType        = params[2].GetNumber();
+	const bool isScenic         = params[3].GetNumber() >= 1;
+	float radians               = -(params[4].GetFloat());
+	float size                  = params[5].GetFloat();  // Initial size
+	float finalSize             = params[6].GetNumber(); // Max growth size of the tree
+	auto meshId                 = MeshId::Dummy;
+	auto submeshId              = 0;
+
+	switch (treeType)
+	{
+	case 0:
+		meshId = MeshId::TreeBeech;
+		break;
+	case 1:
+		meshId = MeshId::TreeBirch;
+		break;
+	case 3:
+		meshId = MeshId::TreeConifer;
+		break;
+	case 4:
+		meshId = MeshId::TreeConiferA;
+		break;
+	case 5:
+		meshId = MeshId::TreeOak;
+		break;
+	case 6:
+		meshId = MeshId::TreeOakA;
+		break;
+	case 7:
+		meshId = MeshId::TreeOlive;
+		break;
+	case 8:
+		meshId = MeshId::TreePalm;
+		break;
+	case 9:
+		meshId = MeshId::TreePalmA;
+		break;
+	case 10:
+		meshId = MeshId::TreePalmB;
+		break;
+	case 11:
+		meshId = MeshId::TreePalmC;
+		break;
+	case 12:
+		meshId = MeshId::TreePine;
+		break;
+	case 13:
+		meshId = MeshId::TreeBush;
+		break;
+	case 14:
+		meshId = MeshId::TreeBushA;
+		break;
+	case 15:
+		meshId = MeshId::TreeBushB;
+		break;
+	case 22:
+		// Bizarre case. Need to investigate further
+		meshId = MeshId::ObjectBurntTree;
+		submeshId = 1;
+		break;
+	default:
+		spdlog::error("Missing tree mesh lookup for \"{}\".", treeType);
+	}
+
+	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
+	registry.Assign<Model>(entity, meshId, submeshId, 0.0f, 0.0f, 0.0f);
 }
 
 void FeatureScriptCommands::CreateField(const ScriptCommandContext& ctx)
