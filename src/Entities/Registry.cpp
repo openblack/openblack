@@ -54,7 +54,11 @@ void Registry::DrawModels(const Camera& camera, graphics::ShaderManager& shaderM
 		objectShader->SetUniformValue("u_modelTransform", modelMatrix);
 
 		const L3DMesh& mesh = meshPack.GetMesh(static_cast<uint32_t>(model.meshId));
-		mesh.Draw(*objectShader, model.submeshId);
+
+		for (auto& submeshId : model.submeshIds)
+		{
+			mesh.Draw(*objectShader, submeshId);
+		}
 	}
 }
 
