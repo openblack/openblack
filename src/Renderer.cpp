@@ -304,9 +304,16 @@ void Renderer::UploadUniforms(std::chrono::microseconds dt, const Game &game, co
 
 void Renderer::ClearScene(int width, int height)
 {
-	glViewport(0, 0, width, height);
-	glClearColor(39.0f / 255.0f, 70.0f / 255.0f, 89.0f / 255.0f, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	static const uint32_t clearColor = 0x274659ff;
+
+	bgfx::setViewClear(0,
+		BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
+		clearColor,
+		1.0f,
+		0);
+	bgfx::setViewRect(0, 0, 0, bgfx::BackbufferRatio::Equal);
+	// This dummy draw call is here to make sure that view 0 is cleared if no other draw calls are submitted to view 0.
+	bgfx::touch(0);
 }
 
 void Renderer::DrawScene(const Game &game, bool drawWater, bool drawDebugCross, bool cullBack)
@@ -351,4 +358,19 @@ void Renderer::DrawScene(const Game &game, bool drawWater, bool drawDebugCross, 
 
 		_debugCross->Draw(*debugShader);
 	}
+
+	// Enable stats or debug text.
+	if (game.GetConfig().bgfxDebug)
+	{
+		bgfx::setDebug(BGFX_DEBUG_STATS);
+	} else
+	{
+		bgfx::setDebug(BGFX_DEBUG_NONE);
+	}
+}
+
+void Renderer::Frame()
+{
+	// Advance to next frame. Process submitted rendering primitives.
+	bgfx::frame();
 }

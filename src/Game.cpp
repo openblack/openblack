@@ -168,6 +168,8 @@ void Game::Run()
 				_running = false;
 			if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_f)
 				_window->SetFullscreen(true);
+			if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_F1)
+				_config.bgfxDebug = !_config.bgfxDebug;
 			if (e.type == SDL_MOUSEMOTION)
 			{
 				SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y);
@@ -232,6 +234,8 @@ void Game::Run()
 		_renderer->DrawScene(*this, true, true);
 
 		_gui->Draw();
+
+		_renderer->Frame();
 
 		_window->SwapWindow();
 	}
