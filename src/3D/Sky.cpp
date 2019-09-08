@@ -34,6 +34,12 @@ Sky::Sky()
 
 	// load some sky bitmaps
 	Bitmap16B* bitmap = Bitmap16B::LoadFromFile(Game::instance()->GetGamePath() + "/Data/WeatherSystem/Sky_Ntrl_Day.555");
+
+	uint16_t* data = bitmap->Data();
+	for (unsigned int i = 0; i < bitmap->Width() * bitmap->Height(); i++) {
+		data[i] = data[i] | 0x8000;
+	}
+
 	_texture          = std::make_unique<Texture2D>();
 	_texture->Create(bitmap->Data(), DataType::UnsignedShort1555Rev, Format::BGRA, bitmap->Width(), bitmap->Height(), InternalFormat::RGB5A1);
 	delete bitmap;

@@ -52,19 +52,6 @@ Bitmap16B::~Bitmap16B()
 		delete[] _data;
 }
 
-unsigned int Bitmap16B::Width() const
-{
-	return _width;
-}
-unsigned int Bitmap16B::Height() const
-{
-	return _height;
-}
-const uint16_t* Bitmap16B::Data() const
-{
-	return _data;
-}
-
 Bitmap16B* Bitmap16B::LoadFromFile(const std::string& strFile)
 {
 	auto const& data = Game::instance()->GetFileSystem().ReadAll(strFile);
