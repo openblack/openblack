@@ -24,13 +24,11 @@ target_include_directories(imgui PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/imgui
 	${CMAKE_CURRENT_SOURCE_DIR}/imgui/examples)
 
-# tell imgui we want to use GLEW as OpenGL loader
-#target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLEW)
+# tell imgui we want to use GLAD as OpenGL loader
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
 target_link_libraries(imgui PUBLIC
 	SDL2::SDL2
-	#glew::glew
 	glad
 	${OPENGL_LIBRARIES})
 
