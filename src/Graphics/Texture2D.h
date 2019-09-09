@@ -54,7 +54,6 @@ enum class InternalFormat : GLint
 	R8I                      = GL_R8I,
 	R8SNorm                  = GL_R8_SNORM,
 	R8UI                     = GL_R8UI,
-	Red                      = GL_RED,
 	RG                       = GL_RG,
 	RG16                     = GL_RG16,
 	RG16F                    = GL_RG16F,
