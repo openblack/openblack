@@ -20,26 +20,25 @@
 
 #include "Renderer.h"
 
-#include <sstream>
-
-#include <glad/glad.h>
-#include <SDL_video.h>
-#include <spdlog/spdlog.h>
-
-#include <Game.h>
-#include <GameWindow.h>
-#include <Entities/Registry.h>
-#include <Graphics/DebugLines.h>
-#include <Graphics/ShaderManager.h>
+#include <3D/L3DMesh.h>
+#include <3D/LandIsland.h>
 #include <3D/Sky.h>
 #include <3D/Water.h>
-#include <3D/LandIsland.h>
-#include <3D/L3DMesh.h>
+#include <Entities/Registry.h>
+#include <Game.h>
+#include <GameWindow.h>
+#include <Graphics/DebugLines.h>
+#include <Graphics/ShaderManager.h>
+#include <SDL_video.h>
+#include <glad/glad.h>
+#include <spdlog/spdlog.h>
+#include <sstream>
 
 using namespace openblack;
 using namespace openblack::graphics;
 
-namespace {
+namespace
+{
 void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 {
 	if (auto renderer = reinterpret_cast<const Renderer*>(userParam))
@@ -51,31 +50,33 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 		spdlog::warn("MessageCallback user param not properly installed");
 	}
 }
-}
+} // namespace
 
-std::vector<Renderer::RequiredAttribute> Renderer::GetRequiredWindowingAttributes() {
+std::vector<Renderer::RequiredAttribute> Renderer::GetRequiredWindowingAttributes()
+{
 	return std::vector<RequiredAttribute> {
-		{Api::OpenGl, SDL_GL_RED_SIZE, 8},
-		{Api::OpenGl, SDL_GL_GREEN_SIZE, 8},
-		{Api::OpenGl, SDL_GL_BLUE_SIZE, 8},
-		{Api::OpenGl, SDL_GL_ALPHA_SIZE, 8},
+		{ Api::OpenGl, SDL_GL_RED_SIZE, 8 },
+		{ Api::OpenGl, SDL_GL_GREEN_SIZE, 8 },
+		{ Api::OpenGl, SDL_GL_BLUE_SIZE, 8 },
+		{ Api::OpenGl, SDL_GL_ALPHA_SIZE, 8 },
 	};
 }
 
-std::vector<Renderer::RequiredAttribute> Renderer::GetRequiredContextAttributes() {
+std::vector<Renderer::RequiredAttribute> Renderer::GetRequiredContextAttributes()
+{
 	// Create a debug context?
 	bool useDebug = true;
 	return std::vector<RequiredAttribute> {
-		{Api::OpenGl, SDL_GL_DOUBLEBUFFER, 1},
+		{ Api::OpenGl, SDL_GL_DOUBLEBUFFER, 1 },
 
-		{Api::OpenGl, SDL_GL_MULTISAMPLEBUFFERS, 1},
-		{Api::OpenGl, SDL_GL_MULTISAMPLESAMPLES, 4},
+		{ Api::OpenGl, SDL_GL_MULTISAMPLEBUFFERS, 1 },
+		{ Api::OpenGl, SDL_GL_MULTISAMPLESAMPLES, 4 },
 
-		{Api::OpenGl, SDL_GL_CONTEXT_MAJOR_VERSION, 3},
-		{Api::OpenGl, SDL_GL_CONTEXT_MINOR_VERSION, 3},
-		{Api::OpenGl, SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE},
+		{ Api::OpenGl, SDL_GL_CONTEXT_MAJOR_VERSION, 3 },
+		{ Api::OpenGl, SDL_GL_CONTEXT_MINOR_VERSION, 3 },
+		{ Api::OpenGl, SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE },
 
-		{Api::OpenGl, SDL_GL_CONTEXT_FLAGS, useDebug ? SDL_GL_CONTEXT_DEBUG_FLAG : 0},
+		{ Api::OpenGl, SDL_GL_CONTEXT_FLAGS, useDebug ? SDL_GL_CONTEXT_DEBUG_FLAG : 0 },
 	};
 }
 
@@ -85,10 +86,12 @@ uint32_t Renderer::GetRequiredFlags()
 }
 
 Renderer::Renderer(const GameWindow& window):
-	_shaderManager(std::make_unique<ShaderManager>())
+    _shaderManager(std::make_unique<ShaderManager>())
 {
-	for (auto& attr: GetRequiredContextAttributes()) {
-		if (attr.api == Renderer::Api::OpenGl) {
+	for (auto& attr : GetRequiredContextAttributes())
+	{
+		if (attr.api == Renderer::Api::OpenGl)
+		{
 			SDL_GL_SetAttribute(static_cast<SDL_GLattr>(attr.name), attr.value);
 		}
 	}
@@ -116,7 +119,8 @@ Renderer::Renderer(const GameWindow& window):
 
 	spdlog::info("OpenGL version: {}.{}", majorVersion, minorVersion);
 
-	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
+	{
 		throw std::runtime_error("Failed to initialize OpenGL loader!\n");
 	}
 
@@ -131,6 +135,11 @@ Renderer::Renderer(const GameWindow& window):
 		spdlog::warn("GL_ARB_debug_output not supported");
 	}
 
+	if (!GLAD_GL_ARB_texture_storage)
+		spdlog::error("GL_ARB_texture_storage unsupported");
+	if (!GLAD_GL_EXT_texture_compression_s3tc)
+		spdlog::error("GL_EXT_texture_compression_s3tc unsupported");
+
 	LoadShaders();
 
 	// allocate vertex buffers for our debug draw
@@ -141,7 +150,8 @@ Renderer::~Renderer() = default;
 
 void Renderer::LoadShaders()
 {
-	for (auto& shader: Shaders) {
+	for (auto& shader : Shaders)
+	{
 		_shaderManager->LoadShader(shader.name, shader.vertexShaderFile, shader.fragmentShaderFile);
 	}
 }
@@ -151,7 +161,7 @@ SDL_GLContext& Renderer::GetGLContext() const
 	return *_glcontext;
 }
 
-graphics::ShaderManager &Renderer::GetShaderManager() const
+graphics::ShaderManager& Renderer::GetShaderManager() const
 {
 	return *_shaderManager;
 }
@@ -159,8 +169,8 @@ graphics::ShaderManager &Renderer::GetShaderManager() const
 void Renderer::MessageCallback(uint32_t source, uint32_t type, uint32_t id, uint32_t severity, int32_t length, const std::string& message) const
 {
 	spdlog::debug("GL CALLBACK: {} type = {0:x}, severity = {0:x}, message = {}\n",
-				  (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-				  type, severity, message);
+	              (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+	              type, severity, message);
 }
 
 void Renderer::ClearScene(int width, int height)
@@ -170,7 +180,7 @@ void Renderer::ClearScene(int width, int height)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Renderer::DebugDraw(std::chrono::microseconds dt, const Game &game, const glm::vec3 &position, float scale)
+void Renderer::DebugDraw(std::chrono::microseconds dt, const Game& game, const glm::vec3& position, float scale)
 {
 	_debugCross->SetPose(position, 50.0f);
 
@@ -183,7 +193,7 @@ void Renderer::DebugDraw(std::chrono::microseconds dt, const Game &game, const g
 	_debugCross->Draw(*debugShader);
 }
 
-void Renderer::DrawScene(std::chrono::microseconds dt, const Game &game, const Camera& camera, bool drawWater)
+void Renderer::DrawScene(std::chrono::microseconds dt, const Game& game, const Camera& camera, bool drawWater)
 {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
@@ -230,5 +240,4 @@ void Renderer::DrawScene(std::chrono::microseconds dt, const Game &game, const C
 
 	glDisable(GL_CULL_FACE);
 	game.GetEntityRegistry().DrawModels(camera, *_shaderManager);
-	
 }
