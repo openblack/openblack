@@ -56,7 +56,7 @@ void Texture2D::Create(uint32_t width, uint32_t height, uint32_t layers)
 	glTexParameteri(bindPoint, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
-void Texture2D::Create(const void* data, DataType type, Format format, uint32_t width, uint32_t height, uint32_t layers, InternalFormat internalFormat)
+void Texture2D::Create(const void* data, size_t size, DataType type, Format format, uint32_t width, uint32_t height, uint32_t layers, InternalFormat internalFormat)
 {
 	auto bindPoint = layers > 1 ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
 
@@ -77,7 +77,7 @@ void Texture2D::Create(const void* data, DataType type, Format format, uint32_t 
 	_layers = layers;
 }
 
-void Texture2D::CreateCompressed(const void *data, uint32_t width, uint32_t height, uint32_t layers, InternalFormat internalFormat)
+void Texture2D::CreateCompressed(const void *data, size_t size, uint32_t width, uint32_t height, uint32_t layers, InternalFormat internalFormat)
 {
 	auto bindPoint = layers > 1 ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
 
@@ -87,8 +87,6 @@ void Texture2D::CreateCompressed(const void *data, uint32_t width, uint32_t heig
 	_width = width;
 	_height = height;
 	_layers = layers;
-
-	GLsizei size = std::max(1, ((int) width + 3) >> 2) * std::max(1, ((int) height + 3) >> 2) * bpp * layers;
 
 	glBindTexture(bindPoint, static_cast<GLuint>(_handle));
 
