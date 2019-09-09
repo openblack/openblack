@@ -18,34 +18,102 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <3D/L3DMesh.h>
 #include <3D/Sky.h>
-#include <Game.h>
-#include <Graphics/ShaderManager.h>
+#include <Common/Bitmap16B.h>
+#include <Graphics/ShaderProgram.h>
+#include <Graphics/Texture2D.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <spdlog/fmt/fmt.h>
+#include <spdlog/spdlog.h>
 
-using namespace openblack;
+constexpr std::array<std::string_view, 3> alignments = { "Ntrl", "Good", "Evil" };
+constexpr std::array<std::string_view, 3> times      = { "Day", "Dusk", "Night" };
+
+using namespace openblack::graphics;
+
+namespace openblack
+{
 
 Sky::Sky()
 {
+	SetDayNightTimes(4.5, 7.0, 7.5, 8.25);
+
 	// load in the mesh
 	_model = std::make_unique<L3DMesh>();
-	_model->LoadFromFile(Game::instance()->GetGamePath() + "/Data/WeatherSystem/sky.l3d");
+	_model->LoadFromFile("./Data/WeatherSystem/sky.l3d");
 
-	// load some sky bitmaps
-	Bitmap16B* bitmap = Bitmap16B::LoadFromFile(Game::instance()->GetGamePath() + "/Data/WeatherSystem/Sky_Ntrl_Day.555");
+	for (int i = 0; i < alignments.size(); i++)
+	{
+		for (int j = 0; j < times.size(); j++)
+		{
+			std::string path = fmt::format("./Data/WeatherSystem/Sky_{}_{}.555", alignments[i], times[j]);
+			spdlog::debug("Loading sky texture: {}", path);
 
-	uint16_t* data = bitmap->Data();
-	for (unsigned int i = 0; i < bitmap->Width() * bitmap->Height(); i++) {
-		data[i] = data[i] | 0x8000;
+			Bitmap16B* bitmap = Bitmap16B::LoadFromFile(path);
+			memcpy(_bitmaps[i * 3 + j].data(), bitmap->Data(), 256 * 256 * 2);
+			delete bitmap;
+		}
 	}
 
-	_texture          = std::make_unique<Texture2D>();
-	_texture->Create(bitmap->Data(), DataType::UnsignedShort1555Rev, Format::BGRA, bitmap->Width(), bitmap->Height(), InternalFormat::RGB5A1);
-	delete bitmap;
+	_texture   = std::make_unique<Texture2D>();
+	_timeOfDay = 1.0f;
+	CalculateTextures();
 }
 
-void Sky::Draw(ShaderProgram& program)
+void Sky::SetDayNightTimes(float nightFull, float duskStart, float duskEnd, float dayFull)
+{
+	_nightFullTime = nightFull;
+	_duskStartTime = duskStart;
+	_duskEndTime   = duskEnd;
+	_dayFullTime   = dayFull;
+}
+
+void Sky::SetTime(float time)
+{
+	_timeOfDay = time;
+	CalculateTextures();
+}
+
+void Sky::Interpolate555Texture(uint16_t* bitmap, uint16_t* bitmap1, uint16_t* bitmap2, float interpolate)
+{
+	for (int i = 0; i < 256 * 256; i++)
+	{
+		uint16_t r1 = (bitmap1[i] & 0x7C00) >> 10;
+		uint16_t g1 = (bitmap1[i] & 0x3E0) >> 5;
+		uint16_t b1 = (bitmap1[i] & 0x1F);
+
+		uint16_t r2 = (bitmap2[i] & 0x7C00) >> 10;
+		uint16_t g2 = (bitmap2[i] & 0x3E0) >> 5;
+		uint16_t b2 = (bitmap2[i] & 0x1F);
+
+		uint16_t r = (r1 * interpolate) + (r2 * (1.0f - interpolate));
+		uint16_t g = (g1 * interpolate) + (g2 * (1.0f - interpolate));
+		uint16_t b = (b1 * interpolate) + (b2 * (1.0f - interpolate));
+
+		bitmap[i] = (r << 10) | (g << 5) | b;
+	}
+}
+
+void Sky::CalculateTextures()
+{
+	std::array<uint16_t, 256 * 256> bitmap;
+
+	uint16_t* day   = _bitmaps[0].data();
+	uint16_t* dusk  = _bitmaps[1].data();
+	uint16_t* night = _bitmaps[2].data();
+
+	Interpolate555Texture(bitmap.data(), day, dusk, _timeOfDay);
+
+	// set alpha=1
+	for (unsigned int i = 0; i < 256 * 256; i++)
+		bitmap[i] = bitmap[i] | 0x8000;
+
+	_texture->Create(bitmap.data(), DataType::UnsignedShort1555Rev, Format::BGRA, 256, 256, InternalFormat::RGB5A1);
+}
+
+void Sky::Draw(graphics::ShaderProgram& program)
 {
 	program.SetUniformValue("u_modelTransform", glm::mat4(1.0f));
 
@@ -54,3 +122,5 @@ void Sky::Draw(ShaderProgram& program)
 
 	_model->Draw(program, 0);
 }
+
+} // namespace openblack

@@ -31,6 +31,7 @@
 #include <3D/Camera.h>
 #include <3D/LandIsland.h>
 #include <3D/MeshPack.h>
+#include <3D/Sky.h>
 #include <3D/Water.h>
 
 using namespace openblack;
@@ -220,7 +221,8 @@ void Gui::Loop(Game& game)
 
 	ImGui::EndGroup();
 
-	ImGui::SliderFloat("Day", &config.timeOfDay, 0.0f, 1.0f, "%.3f");
+	if (ImGui::SliderFloat("Day", &config.timeOfDay, 0.0f, 1.0f, "%.3f"))
+		Game::instance()->GetSky().SetTime(config.timeOfDay);
 	ImGui::SliderFloat("Bump", &config.bumpMapStrength, 0.0f, 1.0f, "%.3f");
 	ImGui::SliderFloat("Small Bump", &config.smallBumpMapStrength, 0.0f, 1.0f, "%.3f");
 

@@ -20,17 +20,19 @@
 
 #pragma once
 
-#include <3D/Camera.h>
-#include <3D/L3DMesh.h>
-#include <Common/Bitmap16B.h>
-#include <Graphics/ShaderProgram.h>
-#include <Graphics/Texture2D.h>
+#include <array>
 #include <memory>
-
-using openblack::Graphics::ShaderProgram;
 
 namespace openblack
 {
+
+class L3DMesh;
+
+namespace graphics
+{
+class ShaderProgram;
+class Texture2D;
+}
 
 class Sky
 {
@@ -38,11 +40,28 @@ class Sky
 	Sky();
 	~Sky() = default;
 
-	void Draw(ShaderProgram& program);
+	void SetDayNightTimes(float nightFull, float duskStart, float duskEnd, float dayFull);
+
+	void Interpolate555Texture(uint16_t* bitmap, uint16_t*, uint16_t*, float);
+
+	void CalculateTextures();
+	void Draw(graphics::ShaderProgram& program);
+	void SetTime(float time);
+	void Update();
+
+	float TimeOfDay;
 
   private:
 	std::unique_ptr<L3DMesh> _model;
-	std::unique_ptr<Texture2D> _texture;
+	std::unique_ptr<graphics::Texture2D> _texture;
+
+	std::array<std::array<uint16_t, 256 * 256>, 9> _bitmaps;
+
+	float _timeOfDay;
+	float _nightFullTime;
+	float _duskStartTime;
+	float _duskEndTime;
+	float _dayFullTime;
 };
 
 } // namespace openblack
