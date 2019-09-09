@@ -36,7 +36,6 @@ class VertexBuffer
 	[[nodiscard]] size_t GetVertexCount() const noexcept;
 	[[nodiscard]] size_t GetStrideBytes() const noexcept;
 	[[nodiscard]] size_t GetSizeInBytes() const noexcept;
-	[[nodiscard]] uint32_t GetVBO() const noexcept;
 
 	void Bind();
 

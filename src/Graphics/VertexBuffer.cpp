@@ -75,11 +75,6 @@ size_t VertexBuffer::GetSizeInBytes() const noexcept
 	return _vertexCount * _strideBytes;
 }
 
-GLuint VertexBuffer::GetVBO() const noexcept
-{
-	return _vbo;
-}
-
 void VertexBuffer::Bind()
 {
 	glBindBuffer(GL_ARRAY_BUFFER, _vbo);
