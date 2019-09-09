@@ -24,6 +24,8 @@
 
 #include <Graphics/OpenGL.h>
 
+#include <cstddef>
+
 namespace openblack
 {
 namespace graphics
@@ -161,9 +163,9 @@ class Texture2D
 	Texture2D(const Texture2D&) = delete;
 	Texture2D& operator=(const Texture2D&) = delete;
 
-	void Create(unsigned int width, unsigned int height, uint32_t layers);
-	void Create(const void* data, DataType type, Format format, unsigned int width, unsigned int height, uint32_t layers, InternalFormat internalFormat);
-	void CreateCompressed(const void* data, unsigned int width, unsigned int height, uint32_t layers, InternalFormat internalFormat);
+	void Create(uint32_t width, uint32_t height, uint32_t layers);
+	void Create(const void* data, size_t size, DataType type, Format format, uint32_t width, uint32_t height, uint32_t layers, InternalFormat internalFormat);
+	void CreateCompressed(const void* data, size_t size, uint32_t width, uint32_t height, uint32_t layers, InternalFormat internalFormat);
 
 	[[nodiscard]] uint32_t GetNativeHandle() const { return _handle; }
 	[[nodiscard]] uint32_t GetWidth() const { return _width; }

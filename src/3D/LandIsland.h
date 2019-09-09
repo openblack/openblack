@@ -97,7 +97,7 @@ class LandIsland
 	std::unique_ptr<Texture2D> _textureBumpMap;
 	std::unique_ptr<Texture2D> _textureSmallBump;
 
-	uint8_t* _noiseMap;
+	std::array<uint8_t, 256 * 256> _noiseMap;
 };
 } // namespace openblack
 

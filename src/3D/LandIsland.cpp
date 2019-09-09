@@ -37,24 +37,20 @@ const float LandIsland::HeightUnit = 0.67f;
 const float LandIsland::CellSize   = 10.0f;
 
 LandIsland::LandIsland():
-    _lowresCount(0), _materialCount(0), _blockIndexLookup { 0 }, _noiseMap(nullptr)
+    _lowresCount(0), _materialCount(0), _blockIndexLookup { 0 }
 {
 	auto file           = Game::instance()->GetFileSystem().Open("Data/Textures/smallbumpa.raw", FileMode::Read);
 	uint8_t* smallbumpa = new uint8_t[file->Size()];
 	file->Read(smallbumpa, file->Size());
 
 	_textureSmallBump = std::make_unique<Texture2D>();
-	_textureSmallBump->Create(smallbumpa, DataType::UnsignedByte, Format::Red, 256, 256, 1, InternalFormat::R8);
+	_textureSmallBump->Create(smallbumpa, file->Size(), DataType::UnsignedByte, Format::Red, 256, 256, 1, InternalFormat::R8);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	delete[] smallbumpa;
 }
 
-LandIsland::~LandIsland()
-{
-	if (_noiseMap != nullptr)
-		delete[] _noiseMap;
-}
+LandIsland::~LandIsland() = default;
 
 /*
 Loads from the original Black & White .lnd file format and
@@ -121,20 +117,18 @@ void LandIsland::LoadFromFile(IStream& stream)
 		convertRGB5ToRGB8(rgba5TextureData.data(), rgba8TextureData.data() + i * rgba5TextureData.size(), 256 * 256);
 	}
 	_materialArray = std::make_unique<Texture2D>();
-	_materialArray->Create(rgba8TextureData.data(), DataType::UnsignedByte, Format::RGBA, 256, 256, _materialCount, InternalFormat::RGBA8);
+	_materialArray->Create(rgba8TextureData.data(), rgba8TextureData.size() * sizeof(rgba8TextureData[0]), DataType::UnsignedByte, Format::RGBA, 256, 256, _materialCount, InternalFormat::RGBA8);
 
 	// read noise map into Texture2D
-	_noiseMap = new uint8_t[256 * 256]; // (delete handled by destructor)
-	stream.Read(_noiseMap, 256 * 256);
+	stream.Read(_noiseMap.data(), _noiseMap.size() * sizeof(_noiseMap[0]));
 	_textureNoiseMap = std::make_unique<Texture2D>();
-	_textureNoiseMap->Create(_noiseMap, DataType::UnsignedByte, Format::Red, 256, 256, 1, InternalFormat::Red);
+	_textureNoiseMap->Create(_noiseMap.data(), _noiseMap.size() * sizeof(_noiseMap[0]), DataType::UnsignedByte, Format::Red, 256, 256, 1, InternalFormat::Red);
 
 	// read bump map into Texture2D
-	uint8_t* bumpMapTextureData = new uint8_t[256 * 256];
-	stream.Read(bumpMapTextureData, 256 * 256);
+	std::array<uint8_t, 256* 256> bumpMapTextureData;
+	stream.Read(bumpMapTextureData.data(), bumpMapTextureData.size() * sizeof(bumpMapTextureData[0]));
 	_textureBumpMap = std::make_unique<Texture2D>();
-	_textureBumpMap->Create(bumpMapTextureData, DataType::UnsignedByte, Format::Red, 256, 256, 1, InternalFormat::Red);
-	delete[] bumpMapTextureData;
+	_textureBumpMap->Create(bumpMapTextureData.data(), bumpMapTextureData.size() * sizeof(bumpMapTextureData[0]), DataType::UnsignedByte, Format::Red, 256, 256, 1, InternalFormat::Red);
 
 	// build the meshes (we could move this elsewhere)
 	for (auto& block : _landBlocks)

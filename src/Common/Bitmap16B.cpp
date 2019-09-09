@@ -28,22 +28,16 @@
 
 using namespace openblack;
 
-Bitmap16B::Bitmap16B(unsigned int width, unsigned int height):
-    _width(width), _height(height)
-{
-	_data = new uint16_t[width * height];
-	memset(_data, 0x00, width * height * 2);
-}
-
 Bitmap16B::Bitmap16B(const void* fileData, size_t size)
 {
 	auto cast = reinterpret_cast<const uint32_t*>(fileData);
 
 	_width  = *((uint32_t*)fileData + 1);
 	_height = *((uint32_t*)fileData + 2);
+	_size = _width * _height * 2;
 
 	_data = new uint16_t[_width * _height];
-	memcpy(_data, (uint32_t*)fileData + 4, _width * _height * 2);
+	memcpy(_data, (uint32_t*)fileData + 4, _size);
 }
 
 Bitmap16B::~Bitmap16B()
