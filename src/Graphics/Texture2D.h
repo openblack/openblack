@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include <Graphics/OpenGL.h>
 
 namespace openblack
@@ -159,22 +161,24 @@ class Texture2D
 	Texture2D(const Texture2D&) = delete;
 	Texture2D& operator=(const Texture2D&) = delete;
 
-	void Create(unsigned int width, unsigned int height);
-	void Create(const void* data, DataType type, Format format, unsigned int width, unsigned int height, InternalFormat internalFormat);
-	void CreateCompressed(const void* data, unsigned int width, unsigned int height, InternalFormat internalFormat);
+	void Create(unsigned int width, unsigned int height, uint32_t layers);
+	void Create(const void* data, DataType type, Format format, unsigned int width, unsigned int height, uint32_t layers, InternalFormat internalFormat);
+	void CreateCompressed(const void* data, unsigned int width, unsigned int height, uint32_t layers, InternalFormat internalFormat);
 
-	unsigned int GetNativeHandle() const { return _texture; }
-	unsigned int GetWidth() const { return _width; }
-	unsigned int GetHeight() const { return _height; }
+	[[nodiscard]] uint32_t GetNativeHandle() const { return _handle; }
+	[[nodiscard]] uint32_t GetWidth() const { return _width; }
+	[[nodiscard]] uint32_t GetHeight() const { return _height; }
+	[[nodiscard]] uint32_t GetLayerCount() const { return _layers; }
 
 	void Bind() const;
 
 	void GenerateMipmap();
 
   protected:
-	unsigned int _texture;
-	unsigned int _width;
-	unsigned int _height;
+	uint32_t _handle;
+	uint32_t _width;
+	uint32_t _height;
+	uint32_t _layers;
 };
 
 } // namespace graphics

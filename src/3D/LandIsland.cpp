@@ -44,7 +44,7 @@ LandIsland::LandIsland():
 	file->Read(smallbumpa, file->Size());
 
 	_textureSmallBump = std::make_unique<Texture2D>();
-	_textureSmallBump->Create(smallbumpa, DataType::UnsignedByte, Format::Red, 256, 256, InternalFormat::R8);
+	_textureSmallBump->Create(smallbumpa, DataType::UnsignedByte, Format::Red, 256, 256, 1, InternalFormat::R8);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	delete[] smallbumpa;
@@ -109,31 +109,31 @@ void LandIsland::LoadFromFile(IStream& stream)
 	}
 
 	spdlog::debug("[LandIsland] loading {} textures", _materialCount);
-	_materialArray = std::make_shared<Texture2DArray>();
-	_materialArray->Create(256, 256, _materialCount, InternalFormat::RGBA8);
+	std::vector<uint32_t> rgba8TextureData;
+	rgba8TextureData.resize(256 * 256 * _materialCount);
 	for (uint32_t i = 0; i < _materialCount; i++)
 	{
-		std::vector<uint16_t> rgba5TextureData(256 * 256);
-		std::vector<uint32_t> rgba8TextureData(256 * 256);
+		std::array<uint16_t, 256 * 256> rgba5TextureData;
 
 		uint16_t terrainType = stream.ReadValue<uint16_t>();
 		stream.Read(rgba5TextureData.data(), static_cast<std::size_t>(256 * 256 * sizeof(uint16_t)));
 
-		convertRGB5ToRGB8(rgba5TextureData.data(), rgba8TextureData.data(), 256 * 256);
-		_materialArray->SetTexture(i, 256, 256, Format::RGBA, DataType::UnsignedInt8888, rgba8TextureData.data());
+		convertRGB5ToRGB8(rgba5TextureData.data(), rgba8TextureData.data() + i * rgba5TextureData.size(), 256 * 256);
 	}
+	_materialArray = std::make_unique<Texture2D>();
+	_materialArray->Create(rgba8TextureData.data(), DataType::UnsignedByte, Format::RGBA, 256, 256, _materialCount, InternalFormat::RGBA8);
 
 	// read noise map into Texture2D
 	_noiseMap = new uint8_t[256 * 256]; // (delete handled by destructor)
 	stream.Read(_noiseMap, 256 * 256);
-	_textureNoiseMap = std::make_shared<Texture2D>();
-	_textureNoiseMap->Create(_noiseMap, DataType::UnsignedByte, Format::Red, 256, 256, InternalFormat::Red);
+	_textureNoiseMap = std::make_unique<Texture2D>();
+	_textureNoiseMap->Create(_noiseMap, DataType::UnsignedByte, Format::Red, 256, 256, 1, InternalFormat::Red);
 
 	// read bump map into Texture2D
 	uint8_t* bumpMapTextureData = new uint8_t[256 * 256];
 	stream.Read(bumpMapTextureData, 256 * 256);
-	_textureBumpMap = std::make_shared<Texture2D>();
-	_textureBumpMap->Create(bumpMapTextureData, DataType::UnsignedByte, Format::Red, 256, 256, InternalFormat::Red);
+	_textureBumpMap = std::make_unique<Texture2D>();
+	_textureBumpMap->Create(bumpMapTextureData, DataType::UnsignedByte, Format::Red, 256, 256, 1, InternalFormat::Red);
 	delete[] bumpMapTextureData;
 
 	// build the meshes (we could move this elsewhere)
@@ -214,10 +214,10 @@ void LandIsland::convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixe
 		uint8_t g = (col & 0x3E0) >> 5;
 		uint8_t b = (col & 0x1F);
 
-		((uint8_t*)rgba8)[i * 4 + 3] = r << 3; // 5
-		((uint8_t*)rgba8)[i * 4 + 2] = g << 3; // 5
-		((uint8_t*)rgba8)[i * 4 + 1] = b << 3; // 5
-		((uint8_t*)rgba8)[i * 4 + 0] = 255;
+		((uint8_t*)rgba8)[i * 4 + 0] = r << 3; // 5
+		((uint8_t*)rgba8)[i * 4 + 1] = g << 3; // 5
+		((uint8_t*)rgba8)[i * 4 + 2] = b << 3; // 5
+		((uint8_t*)rgba8)[i * 4 + 3] = 255;
 	}
 }
 

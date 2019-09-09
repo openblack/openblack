@@ -101,7 +101,7 @@ void createCompressedDDS(graphics::Texture2D* texture, uint8_t* buffer)
 		break;
 	}
 
-	texture->CreateCompressed(buffer + header->dwSize, width, height, internalFormat);
+	texture->CreateCompressed(buffer + header->dwSize, width, height, 1, internalFormat);
 }
 
 
