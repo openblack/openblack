@@ -23,13 +23,13 @@ void Registry::DebugCreateEntities(float x, float y, float z)
 	_registry.assign<Villager>(entity, health, age, hunger);
 }
 
-void Registry::DrawModels(const Camera& camera, Graphics::ShaderManager& shaderManager)
+void Registry::DrawModels(const Camera& camera, graphics::ShaderManager& shaderManager)
 {
 	const auto& meshPack = Game::instance()->GetMeshPack();
 	const auto& view     = _registry.view<Model, Transform>();
 	const auto projectionMatrix = camera.GetViewProjectionMatrix();
 
-	Graphics::ShaderProgram* objectShader = shaderManager.GetShader("SkinnedMesh");
+	graphics::ShaderProgram* objectShader = shaderManager.GetShader("SkinnedMesh");
 	objectShader->Bind();
 	objectShader->SetUniformValue("u_viewProjection", projectionMatrix);
 

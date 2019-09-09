@@ -27,7 +27,7 @@
 
 namespace openblack
 {
-namespace Graphics
+namespace graphics
 {
 class IndexBuffer
 {
@@ -55,5 +55,5 @@ class IndexBuffer
 	static std::size_t GetTypeSize(GLenum type);
 };
 
-} // namespace Graphics
+} // namespace graphics
 } // namespace openblack

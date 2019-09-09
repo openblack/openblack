@@ -30,7 +30,7 @@
 
 namespace openblack
 {
-namespace Graphics
+namespace graphics
 {
 class VertexBuffer;
 class DebugLines
@@ -56,5 +56,5 @@ class DebugLines
 	glm::mat4 _model;
 };
 
-} // namespace Graphics
+} // namespace graphics
 } // namespace openblack

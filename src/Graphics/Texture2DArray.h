@@ -24,7 +24,7 @@
 
 namespace openblack
 {
-namespace Graphics
+namespace graphics
 {
 
 class Texture2DArray
@@ -50,5 +50,5 @@ class Texture2DArray
 	unsigned int _depth;
 };
 
-} // namespace Graphics
+} // namespace graphics
 } // namespace openblack

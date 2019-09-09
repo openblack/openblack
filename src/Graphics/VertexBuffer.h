@@ -25,7 +25,7 @@
 
 namespace openblack
 {
-namespace Graphics
+namespace graphics
 {
 class VertexBuffer
 {
@@ -48,5 +48,5 @@ class VertexBuffer
 	GLuint _hint;
 };
 
-} // namespace Graphics
+} // namespace graphics
 } // namespace openblack

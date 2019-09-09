@@ -27,7 +27,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <unordered_map>
 
-using namespace openblack::Graphics;
+using namespace openblack::graphics;
 
 namespace openblack
 {

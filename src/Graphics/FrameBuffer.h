@@ -24,7 +24,7 @@
 #include <Graphics/Texture2D.h>
 
 namespace openblack {
-namespace Graphics {
+namespace graphics {
 
 class FrameBuffer {
 public:

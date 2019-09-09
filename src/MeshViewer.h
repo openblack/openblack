@@ -39,6 +39,6 @@ class MeshViewer
 	MeshId _selectedMesh;
 	int _selectedSubMesh;
 	glm::vec3 _cameraPosition;
-	std::unique_ptr<Graphics::FrameBuffer> _frameBuffer;
+	std::unique_ptr<graphics::FrameBuffer> _frameBuffer;
 };
 } // namespace openblack

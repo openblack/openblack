@@ -34,7 +34,7 @@ namespace openblack
 {
 
 // todo: move this code to it's own image parser
-void createCompressedDDS(Graphics::Texture2D* texture, uint8_t* buffer)
+void createCompressedDDS(graphics::Texture2D* texture, uint8_t* buffer)
 {
 	// DDS file structures.
 	struct dds_pixel_format
@@ -83,7 +83,7 @@ void createCompressedDDS(Graphics::Texture2D* texture, uint8_t* buffer)
 	// - always dxt1 or dxt3
 	// - all are compressed
 
-	Graphics::InternalFormat internalFormat;
+	graphics::InternalFormat internalFormat;
 	GLsizei width  = header->dwWidth;
 	GLsizei height = header->dwHeight;
 	int bytesPerBlock;
@@ -91,10 +91,10 @@ void createCompressedDDS(Graphics::Texture2D* texture, uint8_t* buffer)
 	switch (header->ddspf.dwFourCC)
 	{
 	case ('D' | ('X' << 8) | ('T' << 16) | ('1' << 24)):
-		internalFormat = Graphics::InternalFormat::CompressedRGBAS3TCDXT1;
+		internalFormat = graphics::InternalFormat::CompressedRGBAS3TCDXT1;
 		break;
 	case ('D' | ('X' << 8) | ('T' << 16) | ('3' << 24)):
-		internalFormat = Graphics::InternalFormat::CompressedRGBAS3TCDXT3;
+		internalFormat = graphics::InternalFormat::CompressedRGBAS3TCDXT3;
 		break;
 	default:
 		throw std::runtime_error("Unsupported compressed texture format");
@@ -156,7 +156,7 @@ void MeshPack::loadTextures(IStream& stream)
 	_textures.resize(static_cast<std::size_t>(totalTextures + 1));
 
 	// textures start at 1 - 0 would be an error texture
-	_textures[0] = std::make_unique<Graphics::Texture2D>();
+	_textures[0] = std::make_unique<graphics::Texture2D>();
 
 	char sBlockID[4];
 	for (auto const& tex : textureTypeMap)
@@ -177,7 +177,7 @@ void MeshPack::loadTextures(IStream& stream)
 		uint8_t* ddsBuffer = new uint8_t[ddsSize];
 		stream.Read(ddsBuffer, ddsSize);
 
-		_textures[id] = std::make_unique<Graphics::Texture2D>();
+		_textures[id] = std::make_unique<graphics::Texture2D>();
 		createCompressedDDS(_textures[id].get(), ddsBuffer);
 
 		delete[] ddsBuffer;

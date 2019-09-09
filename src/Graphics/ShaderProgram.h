@@ -27,7 +27,7 @@
 
 namespace openblack
 {
-namespace Graphics
+namespace graphics
 {
 
 class ShaderProgram
@@ -57,5 +57,5 @@ class ShaderProgram
 	GLuint createSubShader(GLenum type, const std::string& source);
 };
 
-} // namespace Graphics
+} // namespace graphics
 } // namespace openblack

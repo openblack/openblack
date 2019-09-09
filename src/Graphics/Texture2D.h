@@ -24,7 +24,7 @@
 
 namespace openblack
 {
-namespace Graphics
+namespace graphics
 {
 
 enum class InternalFormat : GLint
@@ -177,5 +177,5 @@ class Texture2D
 	unsigned int _height;
 };
 
-} // namespace Graphics
+} // namespace graphics
 } // namespace openblack

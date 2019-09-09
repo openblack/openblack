@@ -7,7 +7,7 @@ class Camera;
 
 namespace openblack
 {
-namespace Graphics
+namespace graphics
 {
 class ShaderManager;
 }
@@ -21,7 +21,7 @@ class Registry
 {
   public:
 	void DebugCreateEntities(float x, float y, float z);
-	void DrawModels(const Camera& camera, Graphics::ShaderManager& shaderManager);
+	void DrawModels(const Camera& camera, graphics::ShaderManager& shaderManager);
 	void Update();
 	decltype(auto) Create() { return _registry.create(); }
 	template <typename Component, typename... Args>

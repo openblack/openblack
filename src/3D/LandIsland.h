@@ -29,7 +29,7 @@
 #include <string>
 #include <vector>
 
-using namespace openblack::Graphics;
+using namespace openblack::graphics;
 
 namespace openblack
 {

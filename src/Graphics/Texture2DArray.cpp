@@ -21,7 +21,7 @@
 #include <Graphics/Texture2DArray.h>
 #include <stdio.h>
 
-namespace openblack::Graphics
+namespace openblack::graphics
 {
 
 Texture2DArray::Texture2DArray()

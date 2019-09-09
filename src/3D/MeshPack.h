@@ -32,7 +32,7 @@ namespace openblack
 class IStream;
 class L3DMesh;
 
-namespace Graphics
+namespace graphics
 {
 class Texture2D;
 }
@@ -58,13 +58,13 @@ class MeshPack
 	void Load(IStream&);
 
 	using MeshesVec   = std::vector<std::unique_ptr<L3DMesh>>;
-	using TexturesVec = std::vector<std::unique_ptr<Graphics::Texture2D>>;
+	using TexturesVec = std::vector<std::unique_ptr<graphics::Texture2D>>;
 
 	const MeshesVec& GetMeshes() const { return _meshes; }
 	const TexturesVec& GetTextures() const { return _textures; }
 
 	const L3DMesh& GetMesh(int id) const { return *_meshes.at(id); }
-	const Graphics::Texture2D& GetTexture(int id) const { return *_textures.at(id); }
+	const graphics::Texture2D& GetTexture(int id) const { return *_textures.at(id); }
 
   private:
 	void loadTextures(IStream&);

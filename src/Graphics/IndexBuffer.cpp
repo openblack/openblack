@@ -22,7 +22,7 @@
 
 #include <cassert>
 
-using namespace openblack::Graphics;
+using namespace openblack::graphics;
 
 IndexBuffer::IndexBuffer(const void* indices, size_t indicesCount, GLenum type):
     _ibo(0), _count(indicesCount), _type(type), _hint(GL_STATIC_DRAW)

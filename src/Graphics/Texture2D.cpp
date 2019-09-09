@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <cassert>
 
-namespace openblack::Graphics
+namespace openblack::graphics
 {
 Texture2D::Texture2D()
 {

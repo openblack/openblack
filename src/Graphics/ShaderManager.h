@@ -26,7 +26,7 @@
 
 namespace openblack
 {
-namespace Graphics
+namespace graphics
 {
 
 class ShaderManager
@@ -44,5 +44,5 @@ class ShaderManager
 	ShaderMap _shaderPrograms;
 };
 
-} // namespace Graphics
+} // namespace graphics
 } // namespace openblack

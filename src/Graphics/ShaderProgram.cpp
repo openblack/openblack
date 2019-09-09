@@ -18,9 +18,9 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Graphics/ShaderProgram.h>
-#include <Game.h>
 #include <Common/FileSystem.h>
+#include <Game.h>
+#include <Graphics/ShaderProgram.h>
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
@@ -28,7 +28,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <spdlog/spdlog.h>
 
-using openblack::Graphics::ShaderProgram;
+namespace openblack::graphics
+{
 
 ShaderProgram::ShaderProgram(const std::string& vertexSource, const std::string& fragmentSource)
 {
@@ -37,7 +38,7 @@ ShaderProgram::ShaderProgram(const std::string& vertexSource, const std::string&
 	// lazy assert, todo: better error handling
 	assert(_program != 0);
 
-	auto const& vertexShaderSource = Game::instance()->GetFileSystem().ReadAll(vertexSource);
+	auto const& vertexShaderSource   = Game::instance()->GetFileSystem().ReadAll(vertexSource);
 	auto const& fragmentShaderSource = Game::instance()->GetFileSystem().ReadAll(fragmentSource);
 
 	GLuint vertexShader   = createSubShader(GL_VERTEX_SHADER, std::string(reinterpret_cast<const char*>(vertexShaderSource.data()), vertexShaderSource.size()));
@@ -166,3 +167,5 @@ GLuint ShaderProgram::createSubShader(GLenum type, const std::string& source)
 
 	return shader;
 }
+
+} // namespace openblack::graphics

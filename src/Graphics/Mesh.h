@@ -24,11 +24,11 @@
 #include <Graphics/VertexBuffer.h>
 #include <vector>
 
-using namespace openblack::Graphics;
+using namespace openblack::graphics;
 
 namespace openblack
 {
-namespace Graphics
+namespace graphics
 {
 
 struct VertexAttrib
@@ -77,5 +77,5 @@ class Mesh
 	void bindVertexDecl();
 };
 
-} // namespace Graphics
+} // namespace graphics
 } // namespace openblack

@@ -34,9 +34,10 @@
 #include <3D/Sky.h>
 #include <3D/Water.h>
 #include <3D/LandIsland.h>
+#include <3D/L3DMesh.h>
 
 using namespace openblack;
-using namespace openblack::Graphics;
+using namespace openblack::graphics;
 
 namespace {
 void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
@@ -158,7 +159,7 @@ SDL_GLContext& Renderer::GetGLContext() const
 	return *_glcontext;
 }
 
-Graphics::ShaderManager &Renderer::GetShaderManager() const
+graphics::ShaderManager &Renderer::GetShaderManager() const
 {
 	return *_shaderManager;
 }

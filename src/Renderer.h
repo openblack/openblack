@@ -34,12 +34,12 @@ namespace openblack
 class GameWindow;
 class Game;
 
-namespace Graphics
+namespace graphics
 {
 class ShaderProgram;
 class ShaderManager;
 class DebugLines;
-} // namespace Graphics
+} // namespace graphics
 
 
 struct ShaderDefinition {
@@ -81,7 +81,7 @@ class Renderer {
 
 	void LoadShaders();
 	[[nodiscard]] SDL_GLContext& GetGLContext() const;
-	[[nodiscard]] Graphics::ShaderManager& GetShaderManager() const;
+	[[nodiscard]] graphics::ShaderManager& GetShaderManager() const;
 	void MessageCallback(uint32_t source, uint32_t type, uint32_t id, uint32_t severity, int32_t length, const std::string& message) const;
 
 	void ClearScene(int width, int height);
@@ -92,8 +92,8 @@ class Renderer {
   static std::vector<RequiredAttribute> GetRequiredContextAttributes();
 
   std::unique_ptr<SDL_GLContext, SDLDestroyer> _glcontext;
-  std::unique_ptr<Graphics::ShaderManager> _shaderManager;
+  std::unique_ptr<graphics::ShaderManager> _shaderManager;
 
-  std::unique_ptr<Graphics::DebugLines> _debugCross;
+  std::unique_ptr<graphics::DebugLines> _debugCross;
 };
 } // namespace openblack

@@ -20,7 +20,8 @@
 
 #include <Graphics/ShaderManager.h>
 
-using namespace openblack::Graphics;
+namespace openblack::graphics
+{
 
 ShaderManager::~ShaderManager()
 {
@@ -32,7 +33,7 @@ ShaderManager::~ShaderManager()
 	_shaderPrograms.clear();
 }
 
-ShaderProgram* openblack::Graphics::ShaderManager::LoadShader(const std::string& name, const std::string& vertexShaderFile, const std::string& fragmentShaderFile)
+ShaderProgram* ShaderManager::LoadShader(const std::string& name, const std::string& vertexShaderFile, const std::string& fragmentShaderFile)
 {
 	ShaderMap::iterator i = _shaderPrograms.find(name);
 	if (i != _shaderPrograms.end())
@@ -43,7 +44,7 @@ ShaderProgram* openblack::Graphics::ShaderManager::LoadShader(const std::string&
 	return program;
 }
 
-ShaderProgram* openblack::Graphics::ShaderManager::GetShader(const std::string& name)
+ShaderProgram* ShaderManager::GetShader(const std::string& name)
 {
 	ShaderMap::iterator i = _shaderPrograms.find(name);
 	if (i != _shaderPrograms.end())
@@ -52,3 +53,5 @@ ShaderProgram* openblack::Graphics::ShaderManager::GetShader(const std::string& 
 	// todo: return an empty shader?
 	return nullptr;
 }
+
+} // namespace openblack::graphics

@@ -24,7 +24,7 @@
 #include <stdexcept>
 #include <stdint.h>
 
-using namespace openblack::Graphics;
+using namespace openblack::graphics;
 
 Mesh::Mesh(VertexBuffer* vertexBuffer, const VertexDecl& decl, GLuint type):
     _vertexBuffer(std::move(vertexBuffer)),

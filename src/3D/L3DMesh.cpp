@@ -31,7 +31,7 @@
 #include <stdexcept>
 
 using namespace openblack;
-using namespace openblack::Graphics;
+using namespace openblack::graphics;
 
 struct L3DSubMesh
 {
