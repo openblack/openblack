@@ -28,8 +28,8 @@
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
 
-constexpr std::array<std::string_view, 3> alignments = { "Ntrl", "Good", "Evil" };
-constexpr std::array<std::string_view, 3> times      = { "Day", "Dusk", "Night" };
+constexpr std::array<std::string_view, 3> alignments = { "Ntrl", "good", "evil" };
+constexpr std::array<std::string_view, 3> times      = { "day", "dusk", "night" };
 
 using namespace openblack::graphics;
 
@@ -48,7 +48,17 @@ Sky::Sky()
 	{
 		for (int j = 0; j < times.size(); j++)
 		{
-			std::string path = fmt::format("./Data/WeatherSystem/Sky_{}_{}.555", alignments[i], times[j]);
+			auto time = std::string(times[j]);
+			if (i == 0)
+			{
+				time[0] = std::toupper(time[0]);
+			}
+			std::string filename = fmt::format("sky_{}_{}.555", alignments[i], time);
+			if (i == 0)
+			{
+				filename[0] = std::toupper(filename[0]);
+			}
+			std::string path = fmt::format("./Data/WeatherSystem/{}", filename);
 			spdlog::debug("Loading sky texture: {}", path);
 
 			Bitmap16B* bitmap = Bitmap16B::LoadFromFile(path);
