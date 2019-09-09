@@ -23,6 +23,9 @@
 #include <cstdint>
 #include <cstddef>
 
+#include <bgfx/bgfx.h>
+
+
 namespace openblack
 {
 namespace graphics
@@ -120,6 +123,7 @@ class Texture2D
 	void GenerateMipmap();
 
   protected:
+	bgfx::TextureHandle _bgfxHandle;
 	uint32_t _handle;
 	uint16_t _width;
 	uint16_t _height;
