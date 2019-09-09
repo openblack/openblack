@@ -30,7 +30,7 @@ namespace openblack
 {
 namespace graphics
 {
-class VertexBuffer;
+class Mesh;
 class DebugLines
 {
   public:
@@ -46,11 +46,9 @@ class DebugLines
 
   protected:
 	static std::unique_ptr<DebugLines> CreateDebugLines(uint32_t size, const void* data, uint32_t vertexCount);
-	DebugLines(std::unique_ptr<VertexBuffer>&& gpuVertexBuffer, uint32_t arrayHandle, uint32_t vertexCount);
+	explicit DebugLines(std::unique_ptr<Mesh>&& mesh);
 
-	std::unique_ptr<VertexBuffer> _gpuVertexBuffer;
-	uint32_t _arrayHandle;
-	uint32_t _vertexCount;
+	std::unique_ptr<Mesh> _mesh;
 	glm::mat4 _model;
 };
 

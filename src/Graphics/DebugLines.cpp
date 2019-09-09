@@ -26,6 +26,7 @@
 
 #include <Graphics/OpenGL.h>
 #include <Graphics/VertexBuffer.h>
+#include "Mesh.h"
 
 using namespace openblack::graphics;
 
@@ -40,21 +41,15 @@ struct Vertex
 
 std::unique_ptr<DebugLines> DebugLines::CreateDebugLines(uint32_t size, const void* data, uint32_t vertexCount)
 {
-	uint32_t gpuVertexArray;
-	glGenVertexArrays(1, &gpuVertexArray);
-	glBindVertexArray(gpuVertexArray);
+	auto vertexBuffer = new VertexBuffer(data, vertexCount, sizeof(Vertex));
 
-	auto gpuVertexBuffer = std::make_unique<VertexBuffer>(data, vertexCount, sizeof(Vertex));
+	VertexDecl decl(2);
+	decl[0] = VertexAttrib(0, 3, GL_FLOAT, false, false, sizeof(Vertex), offsetof(Vertex, pos)); // position
+	decl[1] = VertexAttrib(0, 3, GL_FLOAT, false, false, sizeof(Vertex), offsetof(Vertex, col)); // color
 
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(sizeof(float) * 3));
+	auto mesh = std::make_unique<Mesh>(vertexBuffer, decl, GL_TRIANGLES);
 
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	return std::unique_ptr<DebugLines>(new DebugLines(std::move(gpuVertexBuffer), gpuVertexArray, vertexCount));
+	return std::unique_ptr<DebugLines>(new DebugLines(std::move(mesh)));
 }
 
 std::unique_ptr<DebugLines> DebugLines::CreateCross()
@@ -122,23 +117,14 @@ void DebugLines::SetPose(const glm::vec3 &center, float size)
 
 void DebugLines::Draw(ShaderProgram& program)
 {
-	glBindVertexArray(_arrayHandle);
-
-	_gpuVertexBuffer->Bind();
-
 	program.SetUniformValue("u_model", _model);
-	glDrawArrays(GL_LINES, 0, _vertexCount);
+	_mesh->Draw();
 }
 
-DebugLines::DebugLines(std::unique_ptr<VertexBuffer> &&gpuVertexBuffer, uint32_t arrayHandle, uint32_t vertexCount)
-	: _gpuVertexBuffer(std::move(gpuVertexBuffer))
-	, _arrayHandle(arrayHandle)
-	, _vertexCount(vertexCount)
+DebugLines::DebugLines(std::unique_ptr<Mesh> &&mesh)
+	: _mesh(std::move(mesh))
 	, _model()
 {
 }
 
-DebugLines::~DebugLines()
-{
-	glDeleteVertexArrays(1, &_arrayHandle);
-}
+DebugLines::~DebugLines() = default;

@@ -88,26 +88,26 @@ void Mesh::Draw()
 
 void Mesh::bindVertexDecl()
 {
-	for (size_t i = 0; i < _vertexDecl.size(); i++)
+	for (auto& d : _vertexDecl)
 	{
-		if (_vertexDecl[i].integer == true)
+		if (d.integer)
 		{
-			glVertexAttribIPointer(_vertexDecl[i].index,
-			                       _vertexDecl[i].size,
-			                       _vertexDecl[i].type,
-			                       _vertexDecl[i].stride,
-			                       _vertexDecl[i].offset);
+			glVertexAttribIPointer(d.index,
+			                       d.size,
+			                       d.type,
+			                       d.stride,
+			                       reinterpret_cast<const void*>(d.offset));
 		}
 		else
 		{
-			glVertexAttribPointer(_vertexDecl[i].index,
-			                      _vertexDecl[i].size,
-			                      _vertexDecl[i].type,
-			                      _vertexDecl[i].normalized ? GL_TRUE : GL_FALSE,
-			                      _vertexDecl[i].stride,
-			                      _vertexDecl[i].offset);
+			glVertexAttribPointer(d.index,
+			                      d.size,
+			                      d.type,
+			                      d.normalized ? GL_TRUE : GL_FALSE,
+			                      d.stride,
+			                      reinterpret_cast<const void*>(d.offset));
 		}
 
-		glEnableVertexAttribArray(_vertexDecl[i].index);
+		glEnableVertexAttribArray(d.index);
 	}
 }

@@ -97,13 +97,13 @@ void LandBlock::BuildMesh(LandIsland& island)
 		_mesh.reset();
 
 	VertexDecl decl(7);
-	decl[0] = VertexAttrib(0, 3, GL_FLOAT, false, false, sizeof(LandVertex), (GLvoid*)offsetof(LandVertex, position));
-	decl[1] = VertexAttrib(1, 3, GL_FLOAT, false, false, sizeof(LandVertex), (GLvoid*)offsetof(LandVertex, weight));
-	decl[2] = VertexAttrib(2, 3, GL_UNSIGNED_BYTE, true, false, sizeof(LandVertex), (GLvoid*)offsetof(LandVertex, firstMaterialID));
-	decl[3] = VertexAttrib(3, 3, GL_UNSIGNED_BYTE, true, false, sizeof(LandVertex), (GLvoid*)offsetof(LandVertex, secondMaterialID));
-	decl[4] = VertexAttrib(4, 3, GL_UNSIGNED_BYTE, false, true, sizeof(LandVertex), (GLvoid*)offsetof(LandVertex, materialBlendCoefficient));
-	decl[5] = VertexAttrib(5, 1, GL_UNSIGNED_BYTE, false, true, sizeof(LandVertex), (GLvoid*)offsetof(LandVertex, lightLevel));
-	decl[6] = VertexAttrib(6, 1, GL_FLOAT, false, true, sizeof(LandVertex), (GLvoid*)offsetof(LandVertex, waterAlpha));
+	decl[0] = VertexAttrib(0, 3, GL_FLOAT, false, false, sizeof(LandVertex), offsetof(LandVertex, position));
+	decl[1] = VertexAttrib(1, 3, GL_FLOAT, false, false, sizeof(LandVertex), offsetof(LandVertex, weight));
+	decl[2] = VertexAttrib(2, 3, GL_UNSIGNED_BYTE, true, false, sizeof(LandVertex), offsetof(LandVertex, firstMaterialID));
+	decl[3] = VertexAttrib(3, 3, GL_UNSIGNED_BYTE, true, false, sizeof(LandVertex), offsetof(LandVertex, secondMaterialID));
+	decl[4] = VertexAttrib(4, 3, GL_UNSIGNED_BYTE, false, true, sizeof(LandVertex), offsetof(LandVertex, materialBlendCoefficient));
+	decl[5] = VertexAttrib(5, 1, GL_UNSIGNED_BYTE, false, true, sizeof(LandVertex), offsetof(LandVertex, lightLevel));
+	decl[6] = VertexAttrib(6, 1, GL_FLOAT, false, true, sizeof(LandVertex), offsetof(LandVertex, waterAlpha));
 
 	auto verts = buildVertexList(island);
 
