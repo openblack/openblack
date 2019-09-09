@@ -34,7 +34,7 @@ FrameBuffer::FrameBuffer(GLsizei width, GLsizei height, GLenum format) :
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _handle);
 
 	_texture = new Texture2D();
-	_texture->Create(_width, _height);
+	_texture->Create(_width, _height, 1);
 
 	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _texture->GetNativeHandle(), 0);
 
