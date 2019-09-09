@@ -81,7 +81,7 @@ Water::Water()
 void Water::createMesh()
 {
 	VertexDecl decl(1);
-	decl[0] = VertexAttrib(0, 2, GL_FLOAT, false, false, sizeof(glm::vec2), nullptr); // position
+	decl[0] = VertexAttrib(0, 2, GL_FLOAT, false, false, sizeof(glm::vec2), 0); // position
 
 	static const glm::vec2 points[] = {
 		glm::vec2(-1.0f, 1.0f),
