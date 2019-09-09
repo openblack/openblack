@@ -122,13 +122,13 @@ void LandIsland::LoadFromFile(IStream& stream)
 	// read noise map into Texture2D
 	stream.Read(_noiseMap.data(), _noiseMap.size() * sizeof(_noiseMap[0]));
 	_textureNoiseMap = std::make_unique<Texture2D>();
-	_textureNoiseMap->Create(_noiseMap.data(), _noiseMap.size() * sizeof(_noiseMap[0]), DataType::UnsignedByte, Format::Red, 256, 256, 1, InternalFormat::Red);
+	_textureNoiseMap->Create(_noiseMap.data(), _noiseMap.size() * sizeof(_noiseMap[0]), DataType::UnsignedByte, Format::Red, 256, 256, 1, InternalFormat::R8);
 
 	// read bump map into Texture2D
 	std::array<uint8_t, 256* 256> bumpMapTextureData;
 	stream.Read(bumpMapTextureData.data(), bumpMapTextureData.size() * sizeof(bumpMapTextureData[0]));
 	_textureBumpMap = std::make_unique<Texture2D>();
-	_textureBumpMap->Create(bumpMapTextureData.data(), bumpMapTextureData.size() * sizeof(bumpMapTextureData[0]), DataType::UnsignedByte, Format::Red, 256, 256, 1, InternalFormat::Red);
+	_textureBumpMap->Create(bumpMapTextureData.data(), bumpMapTextureData.size() * sizeof(bumpMapTextureData[0]), DataType::UnsignedByte, Format::Red, 256, 256, 1, InternalFormat::R8);
 
 	// build the meshes (we could move this elsewhere)
 	for (auto& block : _landBlocks)
