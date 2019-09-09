@@ -20,6 +20,4 @@
 
 #pragma once
 
-#if defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
-#include <glad/glad.h>  // Initialize with gladLoadGL()
-#endif
+#include <glad/glad.h>

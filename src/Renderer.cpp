@@ -22,9 +22,7 @@
 
 #include <sstream>
 
-#if defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
-#include <glad/glad.h>  // Initialize with gladLoadGL()
-#endif
+#include <glad/glad.h>
 #include <SDL_video.h>
 #include <spdlog/spdlog.h>
 
@@ -118,17 +116,20 @@ Renderer::Renderer(const GameWindow& window):
 
 	spdlog::info("OpenGL version: {}.{}", majorVersion, minorVersion);
 
-#if defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
-	bool err = gladLoadGL() == 0;
-	if (err)
-	{
+	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
 		throw std::runtime_error("Failed to initialize OpenGL loader!\n");
 	}
-#endif
 
-	glEnable(GL_DEBUG_OUTPUT);
-	glDebugMessageCallback(::MessageCallback, this);
-	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
+	if (GLAD_GL_ARB_debug_output)
+	{
+		glEnable(GL_DEBUG_OUTPUT);
+		glDebugMessageCallback(::MessageCallback, this);
+		glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
+	}
+	else
+	{
+		spdlog::warn("GL_ARB_debug_output not supported");
+	}
 
 	LoadShaders();
 
