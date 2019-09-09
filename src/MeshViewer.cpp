@@ -61,10 +61,10 @@ void MeshViewer::DrawWindow()
 	ImGui::BeginChild("meshes", ImVec2(fontSize * 15.0f, 0), true);
 	for (int i = 0; i < meshes.size(); i++)
 	{
-		MeshId meshEnum = static_cast<MeshId>(i);
-		auto enumName = std::string(magic_enum::enum_name(meshEnum));
+		const auto meshEnum  = static_cast<MeshId>(i);
+		const auto& enumName   = std::string(MeshNames[i]);
 
-		if (ImGui::Selectable(enumName.c_str(), meshEnum == _selectedMesh))
+		if (ImGui::Selectable(enumName.c_str(), static_cast<MeshId>(meshEnum) == _selectedMesh))
 			_selectedMesh = meshEnum;
 	}
 	ImGui::EndChild();

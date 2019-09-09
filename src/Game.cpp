@@ -20,31 +20,31 @@
 
 #include "Game.h"
 
-#include <SDL.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <iostream>
-#include <string>
 #include "GitSHA1.h"
 #include "Gui.h"
 
 #include <3D/Camera.h>
+#include <3D/L3DMesh.h>
 #include <3D/LandIsland.h>
 #include <3D/MeshPack.h>
-#include <3D/L3DMesh.h>
 #include <3D/Sky.h>
 #include <3D/Water.h>
 #include <Common/CmdLineArgs.h>
 #include <Common/FileSystem.h>
-#include <Entities/Registry.h>
 #include <Entities/Components/Model.h>
+#include <Entities/Registry.h>
 #include <Graphics/Texture2D.h>
 #include <Graphics/VertexBuffer.h>
+#include <Gui.h>
 #include <LHScriptX/Script.h>
 #include <MeshViewer.h>
 #include <Renderer.h>
-#include <Gui.h>
+#include <SDL.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/intersect.hpp>
+#include <iostream>
+#include <string>
 
 #ifdef WIN32
 #include <Windows.h>
@@ -143,8 +143,8 @@ void Game::Run()
 
 	// measure our delta time
 	using namespace std::chrono_literals;
-	uint64_t now     = SDL_GetPerformanceCounter();
-	uint64_t last    = 0;
+	uint64_t now                        = SDL_GetPerformanceCounter();
+	uint64_t last                       = 0;
 	std::chrono::microseconds deltaTime = 0us;
 
 	_running = true;
@@ -197,7 +197,7 @@ void Game::Run()
 					glm::ivec2 screenSize;
 					_window->GetSize(screenSize.x, screenSize.y);
 					SDL_SetRelativeMouseMode((e.type == SDL_MOUSEBUTTONDOWN) ? SDL_TRUE : SDL_FALSE);
-					SDL_WarpMouseInWindow(_window->GetHandle(), screenSize.x/2, screenSize.y/2);
+					SDL_WarpMouseInWindow(_window->GetHandle(), screenSize.x / 2, screenSize.y / 2);
 				}
 			}
 
@@ -259,7 +259,7 @@ void Game::LoadLandscape(const std::string& name)
 	_landIsland->LoadFromFile(*file);
 }
 
-void Game::SetGamePath(const std::string &gamePath)
+void Game::SetGamePath(const std::string& gamePath)
 {
 	if (gamePath.empty())
 	{
