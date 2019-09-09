@@ -141,18 +141,3 @@ add_subdirectory(external/imgui)
 add_subdirectory(src)
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT openblack)
-
-# Installation configuration
-if (UNIX)
-  install(TARGETS openblack RUNTIME DESTINATION bin)
-  install(FILES src/imgui/LICENSE.txt
-          DESTINATION "share/licenses/openblack"
-          RENAME "IMGUI_LICENSE.txt")
-  install(FILES assets/resource/shortcut/openblack.desktop
-          DESTINATION "share/applications")
-  foreach(RES 64 128 256)
-      install(FILES assets/resource/icon/openblack-${RES}x${RES}.png
-              DESTINATION "share/icons/hicolor/${RES}x${RES}/apps"
-              RENAME "openblack.png")
-  endforeach()
-endif()
