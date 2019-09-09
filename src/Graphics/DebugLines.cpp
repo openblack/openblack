@@ -124,8 +124,7 @@ void DebugLines::Draw(ShaderProgram& program)
 {
 	glBindVertexArray(_arrayHandle);
 
-	GLuint vbo = _gpuVertexBuffer->GetVBO();
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	_gpuVertexBuffer->Bind();
 
 	program.SetUniformValue("u_model", _model);
 	glDrawArrays(GL_LINES, 0, _vertexCount);
