@@ -45,12 +45,24 @@ void Texture2D::Create(uint32_t width, uint32_t height, uint32_t layers, Interna
 {
 	auto bindPoint = layers > 1 ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
 
+	bool isCompressed = internalFormat == InternalFormat::CompressedRGBAS3TCDXT1 || internalFormat == InternalFormat::CompressedRGBAS3TCDXT3;
+
 	glBindTexture(bindPoint, static_cast<GLuint>(_handle));
 
-	if (layers == 1)
-		glTexImage2D(bindPoint, 0, static_cast<GLint>(internalFormat), width, height, 0, static_cast<GLenum>(format), static_cast<GLenum>(type), data);
+	if (isCompressed)
+	{
+		if (layers == 1)
+			glCompressedTexImage2D(bindPoint, 0, static_cast<GLenum>(internalFormat), width, height, 0, size, data);
+		else
+			glCompressedTexImage3D(bindPoint, 0, static_cast<GLenum>(internalFormat), width, height, layers, 0, size, data);
+	}
 	else
-		glTexImage3D(bindPoint, 0, static_cast<GLint>(internalFormat), width, height, layers, 0, static_cast<GLenum>(format), static_cast<GLenum>(type), data);
+	{
+		if (layers==1)
+			glTexImage2D(bindPoint, 0, static_cast<GLint>(internalFormat), width, height, 0, static_cast<GLenum>(format), static_cast<GLenum>(type), data);
+		else
+			glTexImage3D(bindPoint, 0, static_cast<GLint>(internalFormat), width, height, layers, 0, static_cast<GLenum>(format), static_cast<GLenum>(type), data);
+	}
 
 	glTexParameteri(bindPoint, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(bindPoint, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -60,31 +72,6 @@ void Texture2D::Create(uint32_t width, uint32_t height, uint32_t layers, Interna
 	_width = width;
 	_height = height;
 	_layers = layers;
-}
-
-void Texture2D::CreateCompressed(const void *data, size_t size, uint32_t width, uint32_t height, uint32_t layers, InternalFormat internalFormat)
-{
-	auto bindPoint = layers > 1 ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
-
-	// DXT1 = 8bpp or DXT3 = 16bpp
-	int bpp = internalFormat == InternalFormat::CompressedRGBAS3TCDXT3 ? 16 : 8;
-
-	_width = width;
-	_height = height;
-	_layers = layers;
-
-	glBindTexture(bindPoint, static_cast<GLuint>(_handle));
-
-	if (layers == 1)
-		glCompressedTexImage2D(bindPoint, 0, static_cast<GLenum>(internalFormat), width, height, 0, size, data);
-	else
-		glCompressedTexImage3D(bindPoint, 0, static_cast<GLenum>(internalFormat), width, height, layers, 0, size, data);
-
-	glTexParameteri(bindPoint, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(bindPoint, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(bindPoint, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(bindPoint, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
 }
 
 void Texture2D::Bind() const
