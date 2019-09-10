@@ -39,20 +39,24 @@ add_executable(openblack ${OPENBLACK_SOURCES} ${OPENBLACK_HEADERS} "${CMAKE_CURR
 set_target_properties(openblack PROPERTIES LINKER_LANGUAGE CXX)
 
 if(MSVC)
-	#target_compile_options(openblack PRIVATE /W4 /WX)
+	target_compile_options(
+		openblack
+		PRIVATE
+		/W4
+#		/WX
+	)
 else(MSVC)
 	target_compile_options(
 		openblack
 		PRIVATE
-		-Werror
-		-Wreorder
-		-Wdelete-non-abstract-non-virtual-dtor
-		-Wsign-compare
-#		-Wall
-#		-Wextra
-#		-pedantic
-#		-Wno-unused-private-field
-#		-Wno-unused-variable
+#		-Werror
+		-Wall
+		-Wextra
+		-pedantic
+		# disable acceptable errors
+		-Wno-unused-private-field
+		-Wno-unused-variable
+		-Wno-unused-parameter
 	)
 endif(MSVC)
 
