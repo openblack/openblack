@@ -20,10 +20,11 @@
 
 #pragma once
 
-#include <Graphics/OpenGL.h>
-#include <glm/glm.hpp>
+#include <cstdint>
 #include <map>
 #include <string>
+
+#include <glm/glm.hpp>
 
 namespace openblack
 {
@@ -33,6 +34,13 @@ namespace graphics
 class ShaderProgram
 {
   public:
+	enum class Type
+	{
+		Vertex,
+		Fragment,
+		Compute,
+	};
+
 	ShaderProgram() = delete;
 	ShaderProgram(const std::string& vertexSource, const std::string& fragmentSource);
 	~ShaderProgram();
@@ -48,13 +56,13 @@ class ShaderProgram
 	void SetUniformValue(const char* uniformName, const glm::mat4& m);
 	void SetUniformValue(const char* uniformName, size_t count, const glm::mat4* m);
 
-	GLuint GetRawHandle() const { return _program; }
+	[[nodiscard]] uint32_t GetRawHandle() const { return _program; }
 
   private:
-	GLuint _program;
-	std::map<std::string, GLint> _uniforms;
+	uint32_t _program;
+	std::map<std::string, int32_t> _uniforms;
 
-	GLuint createSubShader(GLenum type, const std::string& source);
+	uint32_t createSubShader(Type type, const std::string& source);
 };
 
 } // namespace graphics
