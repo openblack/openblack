@@ -85,7 +85,17 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 
 	if (window == nullptr)
 	{
-		throw std::runtime_error("Failed creating window: " + std::string(SDL_GetError()));
+		// try again, maybe on wayland
+		spdlog::debug("Could not create SLDWindow, try again without MULTISAMPLEBUFFERS");
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+		window = std::unique_ptr<SDL_Window, SDLDestroyer>(SDL_CreateWindow(
+			title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+			width, height, flags));
+		if (window == nullptr)
+		{
+			throw std::runtime_error("Failed creating window: " + std::string(SDL_GetError()));
+		}
 	}
 	_window = std::move(window);
 }
