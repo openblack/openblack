@@ -98,13 +98,13 @@ void LandBlock::BuildMesh(LandIsland& island)
 
 	VertexDecl decl;
 	decl.reserve(7);
-	decl.emplace_back(0, 3, GL_FLOAT, false, false, sizeof(LandVertex), offsetof(LandVertex, position));
-	decl.emplace_back(1, 3, GL_FLOAT, false, false, sizeof(LandVertex), offsetof(LandVertex, weight));
-	decl.emplace_back(2, 3, GL_UNSIGNED_BYTE, true, false, sizeof(LandVertex), offsetof(LandVertex, firstMaterialID));
-	decl.emplace_back(3, 3, GL_UNSIGNED_BYTE, true, false, sizeof(LandVertex), offsetof(LandVertex, secondMaterialID));
-	decl.emplace_back(4, 3, GL_UNSIGNED_BYTE, false, true, sizeof(LandVertex), offsetof(LandVertex, materialBlendCoefficient));
-	decl.emplace_back(5, 1, GL_UNSIGNED_BYTE, false, true, sizeof(LandVertex), offsetof(LandVertex, lightLevel));
-	decl.emplace_back(6, 1, GL_FLOAT, false, true, sizeof(LandVertex), offsetof(LandVertex, waterAlpha));
+	decl.emplace_back(3, GL_FLOAT, false, false, sizeof(LandVertex), offsetof(LandVertex, position));
+	decl.emplace_back(3, GL_FLOAT, false, false, sizeof(LandVertex), offsetof(LandVertex, weight));
+	decl.emplace_back(3, GL_UNSIGNED_BYTE, true, false, sizeof(LandVertex), offsetof(LandVertex, firstMaterialID));
+	decl.emplace_back(3, GL_UNSIGNED_BYTE, true, false, sizeof(LandVertex), offsetof(LandVertex, secondMaterialID));
+	decl.emplace_back(3, GL_UNSIGNED_BYTE, false, true, sizeof(LandVertex), offsetof(LandVertex, materialBlendCoefficient));
+	decl.emplace_back(1, GL_UNSIGNED_BYTE, false, true, sizeof(LandVertex), offsetof(LandVertex, lightLevel));
+	decl.emplace_back(1, GL_FLOAT, false, true, sizeof(LandVertex), offsetof(LandVertex, waterAlpha));
 
 	auto verts = buildVertexList(island);
 
