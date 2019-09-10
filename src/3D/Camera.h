@@ -33,10 +33,15 @@ class Camera
 {
 
   public:
-	Camera(glm::vec3 position, glm::vec3 rotation):
-	    _position(position), _rotation(glm::radians(rotation)), _projectionMatrix(1.0f),
-	    _movementSpeed(0.0005f), _freeLookSensitivity(1.0f),
-	    _velocity(0.0f, 0.0f, 0.0f) {}
+	Camera(glm::vec3 position, glm::vec3 rotation)
+		: _position(position)
+		, _rotation(glm::radians(rotation))
+		, _projectionMatrix(1.0f)
+		, _velocity(0.0f, 0.0f, 0.0f)
+		, _movementSpeed(0.0005f)
+		, _freeLookSensitivity(1.0f)
+	{
+	}
 	Camera():
 	    Camera(glm::vec3(0.0f), glm::vec3(0.0f)) {}
 

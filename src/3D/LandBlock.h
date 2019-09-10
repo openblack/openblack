@@ -65,8 +65,12 @@ class LandIsland;
 class LandBlock
 {
   public:
-	LandBlock() :
-	    _index(0), _blockPosition(0, 0), _mapPosition(0, 0), _cells() {}
+	LandBlock()
+		: _index(0)
+		, _cells()
+		, _blockPosition(0, 0)
+		, _mapPosition(0, 0)
+	{}
 
 	void Load(void* block, size_t block_size);
 	void Draw(ShaderProgram& program);

@@ -27,11 +27,11 @@
 
 using namespace openblack::graphics;
 
-VertexBuffer::VertexBuffer(const void* vertices, size_t vertexCount, VertexDecl decl):
-	_vertexCount(vertexCount),
-	_strideBytes(0),
-	_vertexDecl(std::move(decl)),
-	_vbo()
+VertexBuffer::VertexBuffer(const void* vertices, size_t vertexCount, VertexDecl decl)
+	: _vbo()
+	, _vertexCount(vertexCount)
+	, _vertexDecl(std::move(decl))
+	, _strideBytes(0)
 {
 	// assert(vertices != nullptr);
 	assert(vertexCount > 0);

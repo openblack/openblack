@@ -38,6 +38,22 @@ endif()
 add_executable(openblack ${OPENBLACK_SOURCES} ${OPENBLACK_HEADERS} "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" ${OPENBLACK_RC} ${OPENBLACK_SHADERS})
 set_target_properties(openblack PROPERTIES LINKER_LANGUAGE CXX)
 
+if(MSVC)
+	#target_compile_options(openblack PRIVATE /W4 /WX)
+else(MSVC)
+	target_compile_options(
+		openblack
+		PRIVATE
+		-Werror
+		-Wreorder
+#		-Wall
+#		-Wextra
+#		-pedantic
+#		-Wno-unused-private-field
+#		-Wno-unused-variable
+	)
+endif(MSVC)
+
 target_include_directories(openblack PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 target_link_libraries(openblack PRIVATE
 	imgui
