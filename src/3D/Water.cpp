@@ -93,10 +93,10 @@ void Water::createMesh()
 
 	static const unsigned short indices[6] = { 2, 1, 0, 0, 3, 2 };
 
-	VertexBuffer* vertexBuffer = new VertexBuffer(points, 4, sizeof(glm::vec2));
+	VertexBuffer* vertexBuffer = new VertexBuffer(points, 4, decl);
 	IndexBuffer* indexBuffer   = new IndexBuffer(indices, 6, GL_UNSIGNED_SHORT);
 
-	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, decl, GL_TRIANGLES);
+	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, GL_TRIANGLES);
 }
 
 void Water::Draw(ShaderProgram& program) const

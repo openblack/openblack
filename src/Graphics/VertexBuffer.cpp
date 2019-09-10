@@ -26,14 +26,17 @@
 
 using namespace openblack::graphics;
 
-VertexBuffer::VertexBuffer(const void* vertices, size_t vertexCount, size_t strideBytes):
-    _vertexCount(vertexCount),
-    _strideBytes(strideBytes),
-    _vbo()
+VertexBuffer::VertexBuffer(const void* vertices, size_t vertexCount, VertexDecl decl):
+	_vertexCount(vertexCount),
+	_vertexDecl(std::move(decl)),
+	_vbo()
 {
 	// assert(vertices != nullptr);
 	assert(vertexCount > 0);
-	assert(strideBytes > 0);
+	assert(!_vertexDecl.empty());
+	assert(_vertexDecl[0]._stride > 0);
+
+	auto strideBytes = _vertexDecl[0]._stride;
 
 	glGenBuffers(1, &_vbo);
 	if (glGetError() != GL_NO_ERROR)
@@ -67,15 +70,41 @@ size_t VertexBuffer::GetVertexCount() const noexcept
 
 size_t VertexBuffer::GetStrideBytes() const noexcept
 {
-	return _strideBytes;
+	return _vertexDecl[0]._stride;;
 }
 
 size_t VertexBuffer::GetSizeInBytes() const noexcept
 {
-	return _vertexCount * _strideBytes;
+	return _vertexCount * _vertexDecl[0]._stride;;
 }
 
 void VertexBuffer::Bind()
 {
 	glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+}
+
+void VertexBuffer::bindVertexDecl()
+{
+	for (auto& d : _vertexDecl)
+	{
+		if (d._asInt)
+		{
+			glVertexAttribIPointer(d._index,
+								   d._size,
+								   d._type,
+								   d._stride,
+								   reinterpret_cast<const void*>(d._offset));
+		}
+		else
+		{
+			glVertexAttribPointer(d._index,
+								  d._size,
+								  d._type,
+								  d._normalized ? GL_TRUE : GL_FALSE,
+								  d._stride,
+								  reinterpret_cast<const void*>(d._offset));
+		}
+
+		glEnableVertexAttribArray(d._index);
+	}
 }

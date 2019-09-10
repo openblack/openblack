@@ -128,9 +128,9 @@ void L3DSubMesh::Load(IStream& stream)
 	decl.emplace_back(2, 3, GL_FLOAT, false, false, sizeof(L3DVertex), offsetof(L3DVertex, norm));
 
 	// build our buffers
-	auto vertexBuffer = new VertexBuffer(reinterpret_cast<const void*>(verticies.data()), verticies.size(), sizeof(L3DVertex));
+	auto vertexBuffer = new VertexBuffer(reinterpret_cast<const void*>(verticies.data()), verticies.size(), decl);
 	auto indexBuffer  = new IndexBuffer(indices.data(), indices.size(), GL_UNSIGNED_SHORT);
-	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, decl, GL_TRIANGLES);
+	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, GL_TRIANGLES);
 
 
 	// uint32_t lod = (header.flags & 0xE0000000) >> 30;
