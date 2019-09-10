@@ -178,7 +178,7 @@ void L3DMesh::Load(IStream& stream)
 			stream.Read(data.data(), 256 * 256 * sizeof(uint16_t));
 
 			_skins[id] = std::make_unique<Texture2D>();
-			_skins[id]->Create(data.data(), data.size() * sizeof(data[0]), DataType::UnsignedShort4444Rev, Format::BGRA, 256, 256, 1, InternalFormat::RGB5A1);
+			_skins[id]->Create(256, 256, 1, InternalFormat::RGB5A1, DataType::UnsignedShort4444Rev, Format::BGRA, data.data(), data.size() * sizeof(data[0]));
 		}
 	}
 
