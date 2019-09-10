@@ -31,28 +31,22 @@ namespace graphics
 
 struct VertexAttrib
 {
-	uint8_t _size;        ///< Number of components per vertex attribute, must be 1, 2, 3, 4.
-	uint32_t _type;       ///< Data type of each attribute component in the array.
-	intptr_t _stride;     ///< Byte offset between consecutive vertex attributes.
-	ptrdiff_t _offset;    ///< Offset of the first component of the first generic vertex attribute.
+	enum class Type : uint8_t
+	{
+		Uint8,
+		Int16,
+		Float,
+	};
+
+	uint8_t _num;         ///< Number of components per vertex attribute, must be 1, 2, 3, 4.
+	Type _type;           ///< Data type of each attribute component in the array.
 	bool _normalized;     /// < When using fixed point values, range will be normalized to 0.0-1.0 in shader.
 	bool _asInt;          /// < Should not be altered. Unpacking will have to be done in vertex shader.
 
 	VertexAttrib() {}
-	VertexAttrib(uint8_t size, uint32_t type, intptr_t stride = 0, const ptrdiff_t offset = 0)
-		: _size(size)
+	VertexAttrib(uint8_t num, Type type, bool normalized=false, bool asInt=false)
+		: _num(num)
 		, _type(type)
-		, _stride(stride)
-		, _offset(offset)
-		, _normalized(false)
-		, _asInt(false)
-	{
-	}
-	VertexAttrib(uint8_t size, uint32_t type, bool asInt, bool normalized, intptr_t stride = 0, const ptrdiff_t offset = 0)
-		: _size(size)
-		, _type(type)
-		, _stride(stride)
-		, _offset(offset)
 		, _normalized(normalized)
 		, _asInt(asInt)
 		{
@@ -78,6 +72,8 @@ class VertexBuffer
 	uint32_t _vbo;
 	size_t _vertexCount;
 	const VertexDecl _vertexDecl;
+	size_t _strideBytes;
+	std::vector<const void*> _vertexDeclOffsets;
 };
 
 } // namespace graphics

@@ -123,9 +123,9 @@ void L3DSubMesh::Load(IStream& stream)
 
 	VertexDecl decl;
 	decl.reserve(3);
-	decl.emplace_back(3, GL_FLOAT, false, false, sizeof(L3DVertex), offsetof(L3DVertex, pos));
-	decl.emplace_back(3, GL_FLOAT, false, false, sizeof(L3DVertex), offsetof(L3DVertex, uv));
-	decl.emplace_back(3, GL_FLOAT, false, false, sizeof(L3DVertex), offsetof(L3DVertex, norm));
+	decl.emplace_back(3, VertexAttrib::Type::Float);  // position
+	decl.emplace_back(2, VertexAttrib::Type::Float);  // texture coordinate
+	decl.emplace_back(3, VertexAttrib::Type::Float);  // normals
 
 	// build our buffers
 	auto vertexBuffer = new VertexBuffer(reinterpret_cast<const void*>(verticies.data()), verticies.size(), decl);

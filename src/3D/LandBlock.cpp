@@ -98,13 +98,13 @@ void LandBlock::BuildMesh(LandIsland& island)
 
 	VertexDecl decl;
 	decl.reserve(7);
-	decl.emplace_back(3, GL_FLOAT, false, false, sizeof(LandVertex), offsetof(LandVertex, position));
-	decl.emplace_back(3, GL_FLOAT, false, false, sizeof(LandVertex), offsetof(LandVertex, weight));
-	decl.emplace_back(3, GL_UNSIGNED_BYTE, true, false, sizeof(LandVertex), offsetof(LandVertex, firstMaterialID));
-	decl.emplace_back(3, GL_UNSIGNED_BYTE, true, false, sizeof(LandVertex), offsetof(LandVertex, secondMaterialID));
-	decl.emplace_back(3, GL_UNSIGNED_BYTE, false, true, sizeof(LandVertex), offsetof(LandVertex, materialBlendCoefficient));
-	decl.emplace_back(1, GL_UNSIGNED_BYTE, false, true, sizeof(LandVertex), offsetof(LandVertex, lightLevel));
-	decl.emplace_back(1, GL_FLOAT, false, true, sizeof(LandVertex), offsetof(LandVertex, waterAlpha));
+	decl.emplace_back(3, VertexAttrib::Type::Float);  // position
+	decl.emplace_back(3, VertexAttrib::Type::Float);  // weight
+	decl.emplace_back(3, VertexAttrib::Type::Uint8, false, true);  // first material id
+	decl.emplace_back(3, VertexAttrib::Type::Uint8, false, true);  // second material id
+	decl.emplace_back(3, VertexAttrib::Type::Uint8, true);  // material blend coefficient
+	decl.emplace_back(1, VertexAttrib::Type::Uint8, true);  // light level
+	decl.emplace_back(1, VertexAttrib::Type::Float, true);  // water alpha
 
 	auto verts = buildVertexList(island);
 
