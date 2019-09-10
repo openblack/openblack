@@ -85,26 +85,26 @@ void VertexBuffer::Bind()
 
 void VertexBuffer::bindVertexDecl()
 {
-	for (auto& d : _vertexDecl)
+	for (size_t i = 0; i < _vertexDecl.size(); ++i)
 	{
-		if (d._asInt)
+		if (_vertexDecl[i]._asInt)
 		{
-			glVertexAttribIPointer(d._index,
-								   d._size,
-								   d._type,
-								   d._stride,
-								   reinterpret_cast<const void*>(d._offset));
+			glVertexAttribIPointer(i,
+			                       _vertexDecl[i]._size,
+			                       _vertexDecl[i]._type,
+			                       _vertexDecl[i]._stride,
+			                       reinterpret_cast<const void*>(_vertexDecl[i]._offset));
 		}
 		else
 		{
-			glVertexAttribPointer(d._index,
-								  d._size,
-								  d._type,
-								  d._normalized ? GL_TRUE : GL_FALSE,
-								  d._stride,
-								  reinterpret_cast<const void*>(d._offset));
+			glVertexAttribPointer(i,
+			                      _vertexDecl[i]._size,
+			                      _vertexDecl[i]._type,
+			                      _vertexDecl[i]._normalized ? GL_TRUE : GL_FALSE,
+			                      _vertexDecl[i]._stride,
+			                      reinterpret_cast<const void*>(_vertexDecl[i]._offset));
 		}
 
-		glEnableVertexAttribArray(d._index);
+		glEnableVertexAttribArray(i);
 	}
 }
