@@ -45,9 +45,9 @@ std::unique_ptr<DebugLines> DebugLines::CreateDebugLines(uint32_t size, const vo
 
 	VertexDecl decl(2);
 	decl[0] = VertexAttrib(0, 3, GL_FLOAT, false, false, sizeof(Vertex), offsetof(Vertex, pos)); // position
-	decl[1] = VertexAttrib(0, 3, GL_FLOAT, false, false, sizeof(Vertex), offsetof(Vertex, col)); // color
+	decl[1] = VertexAttrib(1, 3, GL_FLOAT, false, false, sizeof(Vertex), offsetof(Vertex, col)); // color
 
-	auto mesh = std::make_unique<Mesh>(vertexBuffer, decl, GL_TRIANGLES);
+	auto mesh = std::make_unique<Mesh>(vertexBuffer, decl, GL_LINES);
 
 	return std::unique_ptr<DebugLines>(new DebugLines(std::move(mesh)));
 }
