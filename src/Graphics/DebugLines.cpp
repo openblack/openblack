@@ -41,14 +41,13 @@ struct Vertex
 
 std::unique_ptr<DebugLines> DebugLines::CreateDebugLines(uint32_t size, const void* data, uint32_t vertexCount)
 {
-	auto vertexBuffer = new VertexBuffer(data, vertexCount, sizeof(Vertex));
-
 	VertexDecl decl;
 	decl.reserve(2);
 	decl.emplace_back(0, 3, GL_FLOAT, false, false, sizeof(Vertex), offsetof(Vertex, pos)); // position
 	decl.emplace_back(1, 3, GL_FLOAT, false, false, sizeof(Vertex), offsetof(Vertex, col)); // color
 
-	auto mesh = std::make_unique<Mesh>(vertexBuffer, decl, GL_LINES);
+	auto vertexBuffer = new VertexBuffer(data, vertexCount, decl);
+	auto mesh = std::make_unique<Mesh>(vertexBuffer, GL_LINES);
 
 	return std::unique_ptr<DebugLines>(new DebugLines(std::move(mesh)));
 }

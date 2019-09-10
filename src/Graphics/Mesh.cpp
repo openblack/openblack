@@ -26,31 +26,29 @@
 
 using namespace openblack::graphics;
 
-Mesh::Mesh(VertexBuffer* vertexBuffer, const VertexDecl& decl, GLuint type):
+Mesh::Mesh(VertexBuffer* vertexBuffer, GLuint type):
     _vertexBuffer(std::move(vertexBuffer)),
-    _vertexDecl(decl),
     _type(type)
 {
 	glGenVertexArrays(1, &_vao);
 	glBindVertexArray(_vao);
 
 	_vertexBuffer->Bind();
-	bindVertexDecl();
+	_vertexBuffer->bindVertexDecl();
 
 	glBindVertexArray(0);
 }
 
-Mesh::Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, const VertexDecl& decl, GLuint type):
+Mesh::Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, GLuint type):
     _vertexBuffer(std::move(vertexBuffer)),
     _indexBuffer(std::move(indexBuffer)),
-    _vertexDecl(decl),
     _type(type)
 {
 	glGenVertexArrays(1, &_vao);
 	glBindVertexArray(_vao);
 
 	_vertexBuffer->Bind();
-	bindVertexDecl();
+	_vertexBuffer->bindVertexDecl();
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBuffer->GetIBO());
 
 	glBindVertexArray(0);
@@ -100,31 +98,5 @@ void Mesh::Draw(uint32_t count, uint32_t startIndex)
 	else
 	{
 		glDrawArrays(_type, 0, count);
-	}
-}
-
-void Mesh::bindVertexDecl()
-{
-	for (auto& d : _vertexDecl)
-	{
-		if (d._asInt)
-		{
-			glVertexAttribIPointer(d._index,
-			                       d._size,
-			                       d._type,
-			                       d._stride,
-			                       reinterpret_cast<const void*>(d._offset));
-		}
-		else
-		{
-			glVertexAttribPointer(d._index,
-			                      d._size,
-			                      d._type,
-			                      d._normalized ? GL_TRUE : GL_FALSE,
-			                      d._stride,
-			                      reinterpret_cast<const void*>(d._offset));
-		}
-
-		glEnableVertexAttribArray(d._index);
 	}
 }

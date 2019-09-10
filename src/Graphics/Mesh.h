@@ -33,8 +33,8 @@ namespace graphics
 class Mesh
 {
   public:
-	Mesh(VertexBuffer*, const VertexDecl& decl, GLuint type = GL_TRIANGLES);
-	Mesh(VertexBuffer*, IndexBuffer*, const VertexDecl& decl, GLuint type = GL_TRIANGLES);
+	Mesh(VertexBuffer*, GLuint type = GL_TRIANGLES);
+	Mesh(VertexBuffer*, IndexBuffer*, GLuint type = GL_TRIANGLES);
 	~Mesh();
 
 	std::shared_ptr<VertexBuffer> GetVertexBuffer();
@@ -52,10 +52,6 @@ class Mesh
   private:
 	GLuint _vao;
 	GLuint _type;
-
-	VertexDecl _vertexDecl;
-
-	void bindVertexDecl();
 };
 
 } // namespace graphics

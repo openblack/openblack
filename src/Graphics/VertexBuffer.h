@@ -67,7 +67,7 @@ typedef std::vector<VertexAttrib> VertexDecl;
 class VertexBuffer
 {
   public:
-	VertexBuffer(const void* vertices, size_t vertexCount, size_t strideBytes);
+	VertexBuffer(const void* vertices, size_t vertexCount, VertexDecl decl);
 	~VertexBuffer();
 
 	[[nodiscard]] size_t GetVertexCount() const noexcept;
@@ -75,11 +75,12 @@ class VertexBuffer
 	[[nodiscard]] size_t GetSizeInBytes() const noexcept;
 
 	void Bind();
+	void bindVertexDecl();
 
   private:
 	uint32_t _vbo;
 	size_t _vertexCount;
-	size_t _strideBytes;
+	const VertexDecl _vertexDecl;
 };
 
 } // namespace graphics
