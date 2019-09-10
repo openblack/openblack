@@ -26,8 +26,11 @@
 
 using namespace openblack::graphics;
 
-IndexBuffer::IndexBuffer(const void* indices, size_t indicesCount, Type type):
-    _ibo(0), _count(indicesCount), _type(type), _hint(GL_STATIC_DRAW)
+IndexBuffer::IndexBuffer(const void* indices, size_t indicesCount, Type type)
+	: _count(indicesCount)
+	, _type(type)
+	, _ibo(0)
+	, _hint(GL_STATIC_DRAW)
 {
 	assert(indices != nullptr);
 	assert(indicesCount > 0);

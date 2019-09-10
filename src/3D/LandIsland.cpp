@@ -37,8 +37,10 @@ using namespace openblack;
 const float LandIsland::HeightUnit = 0.67f;
 const float LandIsland::CellSize   = 10.0f;
 
-LandIsland::LandIsland():
-    _lowresCount(0), _materialCount(0), _blockIndexLookup { 0 }
+LandIsland::LandIsland()
+	: _materialCount(0)
+	, _lowresCount(0)
+	, _blockIndexLookup{ 0 }
 {
 	auto file           = Game::instance()->GetFileSystem().Open("Data/Textures/smallbumpa.raw", FileMode::Read);
 	uint8_t* smallbumpa = new uint8_t[file->Size()];
