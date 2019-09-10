@@ -45,6 +45,8 @@ class Camera
 	Camera():
 	    Camera(glm::vec3(0.0f), glm::vec3(0.0f)) {}
 
+	virtual ~Camera() = default;
+
 	virtual glm::mat4 GetViewProjectionMatrix() const;
 	glm::mat4 GetProjectionMatrix() const { return _projectionMatrix; }
 

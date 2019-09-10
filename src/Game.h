@@ -72,7 +72,7 @@ class Game
 	};
 
 	Game(int argc, char** argv);
-	~Game();
+	virtual ~Game();
 
 	void Run();
 

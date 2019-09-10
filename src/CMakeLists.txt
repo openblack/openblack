@@ -46,6 +46,7 @@ else(MSVC)
 		PRIVATE
 		-Werror
 		-Wreorder
+		-Wdelete-non-abstract-non-virtual-dtor
 #		-Wall
 #		-Wextra
 #		-pedantic

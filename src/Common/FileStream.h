@@ -39,7 +39,7 @@ class FileStream: public IStream
 {
   public:
 	FileStream(const fs::path& filename, FileMode mode);
-	~FileStream();
+	virtual ~FileStream();
 
 	std::size_t Position() const override;
 	std::size_t Size() const override;
