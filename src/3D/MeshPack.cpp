@@ -27,8 +27,6 @@
 #include <algorithm>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
-#include <stdint.h>
-#include <stdlib.h> // snprintf
 
 namespace openblack
 {
@@ -83,7 +81,7 @@ void createCompressedDDS(graphics::Texture2D* texture, uint8_t* buffer)
 	// - always dxt1 or dxt3
 	// - all are compressed
 
-	graphics::InternalFormat internalFormat;
+	graphics::Format internalFormat;
 	GLsizei width  = header->dwWidth;
 	GLsizei height = header->dwHeight;
 	int bytesPerBlock;
@@ -91,10 +89,10 @@ void createCompressedDDS(graphics::Texture2D* texture, uint8_t* buffer)
 	switch (header->ddspf.dwFourCC)
 	{
 	case ('D' | ('X' << 8) | ('T' << 16) | ('1' << 24)):
-		internalFormat = graphics::InternalFormat::CompressedRGBAS3TCDXT1;
+		internalFormat = graphics::Format::BlockCompression1;
 		break;
 	case ('D' | ('X' << 8) | ('T' << 16) | ('3' << 24)):
-		internalFormat = graphics::InternalFormat::CompressedRGBAS3TCDXT3;
+		internalFormat = graphics::Format::BlockCompression2;
 		break;
 	default:
 		throw std::runtime_error("Unsupported compressed texture format");
@@ -102,10 +100,10 @@ void createCompressedDDS(graphics::Texture2D* texture, uint8_t* buffer)
 	}
 
 	// DXT1 = 8bpp or DXT3 = 16bpp
-	int bpp = internalFormat == InternalFormat::CompressedRGBAS3TCDXT3 ? 16 : 8;
+	int bpp = internalFormat == Format::BlockCompression2 ? 16 : 8;
 	size_t size = std::max(1, ((int) width + 3) >> 2) * std::max(1, ((int) height + 3) >> 2) * bpp;
 
-	texture->Create(width, height, 1, internalFormat, graphics::DataType::UnsignedByte, Format::RGBA, buffer + header->dwSize, size);
+	texture->Create(width, height, 1, internalFormat, Wrapping::ClampEdge, buffer + header->dwSize, size);
 }
 
 
