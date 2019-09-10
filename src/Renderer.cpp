@@ -59,6 +59,10 @@ std::vector<Renderer::RequiredAttribute> Renderer::GetRequiredWindowingAttribute
 		{ Api::OpenGl, SDL_GL_GREEN_SIZE, 8 },
 		{ Api::OpenGl, SDL_GL_BLUE_SIZE, 8 },
 		{ Api::OpenGl, SDL_GL_ALPHA_SIZE, 8 },
+
+		{ Api::OpenGl, SDL_GL_DOUBLEBUFFER, 1 },
+		{ Api::OpenGl, SDL_GL_MULTISAMPLEBUFFERS, 1 },
+		{ Api::OpenGl, SDL_GL_MULTISAMPLESAMPLES, 4 },
 	};
 }
 
@@ -67,11 +71,6 @@ std::vector<Renderer::RequiredAttribute> Renderer::GetRequiredContextAttributes(
 	// Create a debug context?
 	bool useDebug = true;
 	return std::vector<RequiredAttribute> {
-		{ Api::OpenGl, SDL_GL_DOUBLEBUFFER, 1 },
-
-		{ Api::OpenGl, SDL_GL_MULTISAMPLEBUFFERS, 1 },
-		{ Api::OpenGl, SDL_GL_MULTISAMPLESAMPLES, 4 },
-
 		{ Api::OpenGl, SDL_GL_CONTEXT_MAJOR_VERSION, 3 },
 		{ Api::OpenGl, SDL_GL_CONTEXT_MINOR_VERSION, 3 },
 		{ Api::OpenGl, SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE },
