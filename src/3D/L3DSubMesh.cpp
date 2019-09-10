@@ -154,11 +154,10 @@ void L3DSubMesh::Draw(const L3DMesh& mesh, ShaderProgram& program) const
 	{
 		if (prim.skinID != 0xFFFFFFFF)
 		{
-			glActiveTexture(GL_TEXTURE0);
 			if (skins.find(prim.skinID) != skins.end())
-				skins.at(prim.skinID)->Bind();
+				skins.at(prim.skinID)->Bind(0);
 			else
-				Game::instance()->GetMeshPack().GetTexture(prim.skinID).Bind();
+				Game::instance()->GetMeshPack().GetTexture(prim.skinID).Bind(0);
 		}
 
 		_mesh->Draw(prim.indicesCount, prim.indicesOffset);
