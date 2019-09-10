@@ -24,8 +24,6 @@
 #include <memory>
 #include <vector>
 
-#include "OpenGL.h"
-
 namespace openblack
 {
 namespace graphics
@@ -33,19 +31,35 @@ namespace graphics
 
 struct VertexAttrib
 {
-	GLuint index;         ///< Index of the vertex attribute.
-	GLint size;           ///< Number of components per vertex attribute, must be 1, 2, 3, 4.
-	GLenum type;          ///< Data type of each attribute component in the array.
-	GLsizei stride;       ///< Byte offset between consecutive vertex attributes.
-	ptrdiff_t offset;     ///< Offset of the first component of the first generic vertex attribute.
-	bool normalized;
-	bool integer;
+	uint8_t _index;       ///< Index of the vertex attribute.
+	uint8_t _size;        ///< Number of components per vertex attribute, must be 1, 2, 3, 4.
+	uint32_t _type;       ///< Data type of each attribute component in the array.
+	intptr_t _stride;     ///< Byte offset between consecutive vertex attributes.
+	ptrdiff_t _offset;    ///< Offset of the first component of the first generic vertex attribute.
+	bool _normalized;     /// < When using fixed point values, range will be normalized to 0.0-1.0 in shader.
+	bool _asInt;          /// < Should not be altered. Unpacking will have to be done in vertex shader.
 
 	VertexAttrib() {}
-	VertexAttrib(GLuint i, GLint s, GLenum t, GLsizei st = 0, const ptrdiff_t of = 0):
-	  index(i), size(s), type(t), stride(st), offset(of), normalized(false), integer(false) {}
-	VertexAttrib(GLuint i, GLint s, GLenum t, bool intg, bool norm, GLsizei st = 0, const ptrdiff_t of = 0):
-	index(i), size(s), type(t), stride(st), offset(of), normalized(norm), integer(intg) {}
+	VertexAttrib(uint8_t index, uint8_t size, uint32_t type, intptr_t stride = 0, const ptrdiff_t offset = 0)
+		: _index(index)
+		, _size(size)
+		, _type(type)
+		, _stride(stride)
+		, _offset(offset)
+		, _normalized(false)
+		, _asInt(false)
+	{
+	}
+	VertexAttrib(uint8_t index, uint8_t size, uint32_t type, bool asInt, bool normalized, intptr_t stride = 0, const ptrdiff_t offset = 0)
+		: _index(index)
+		, _size(size)
+		, _type(type)
+		, _stride(stride)
+		, _offset(offset)
+		, _normalized(normalized)
+		, _asInt(asInt)
+		{
+		}
 };
 
 typedef std::vector<VertexAttrib> VertexDecl;
