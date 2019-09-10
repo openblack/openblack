@@ -93,7 +93,8 @@ void Mesh::Draw(uint32_t count, uint32_t startIndex)
 	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
 	{
 		auto indexBufferOffset = startIndex * _indexBuffer->GetStride();
-		glDrawElements(_type, count, _indexBuffer->GetType(), reinterpret_cast<void*>(indexBufferOffset));
+		auto indexType = _indexBuffer->GetType() == IndexBuffer::Type::Uint16 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT;
+		glDrawElements(_type, count, indexType, reinterpret_cast<void*>(indexBufferOffset));
 	}
 	else
 	{

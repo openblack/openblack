@@ -20,10 +20,8 @@
 
 #pragma once
 
-#include "OpenGL.h"
-
-#include <cstdio>
-#include <stdint.h>
+#include <cstddef>
+#include <cstdint>
 
 namespace openblack
 {
@@ -32,28 +30,33 @@ namespace graphics
 class IndexBuffer
 {
   public:
+	enum class Type : uint8_t
+	{
+		Uint16,
+		Uint32,
+	};
+	static std::size_t GetTypeSize(Type type);
+
 	IndexBuffer()                         = delete;
 	IndexBuffer(const IndexBuffer& other) = delete;
 	IndexBuffer(IndexBuffer&&)            = default;
 
-	IndexBuffer(const void* indices, std::size_t indicesCount, GLenum type);
+	IndexBuffer(const void* indices, std::size_t indicesCount, Type type);
 
 	~IndexBuffer();
 
 	std::size_t GetCount() const;
 	std::size_t GetSize() const;
 	std::size_t GetStride() const;
-	GLenum GetType() const;
-	GLuint GetIBO() const;
+	Type GetType() const;
+	uint32_t GetIBO() const;
 
   private:
 	std::size_t _count;
-	GLenum _type;
+	Type _type;
 
-	GLuint _ibo;
-	GLuint _hint;
-
-	static std::size_t GetTypeSize(GLenum type);
+	uint32_t _ibo;
+	uint32_t _hint;
 };
 
 } // namespace graphics

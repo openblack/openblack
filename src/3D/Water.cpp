@@ -91,10 +91,10 @@ void Water::createMesh()
 		glm::vec2(-1.0f, -1.0f),
 	};
 
-	static const unsigned short indices[6] = { 2, 1, 0, 0, 3, 2 };
+	static const uint16_t indices[6] = { 2, 1, 0, 0, 3, 2 };
 
 	VertexBuffer* vertexBuffer = new VertexBuffer(points, 4, decl);
-	IndexBuffer* indexBuffer   = new IndexBuffer(indices, 6, GL_UNSIGNED_SHORT);
+	IndexBuffer* indexBuffer   = new IndexBuffer(indices, 6, IndexBuffer::Type::Uint16);
 
 	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, GL_TRIANGLES);
 }
