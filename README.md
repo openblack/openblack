@@ -1,7 +1,7 @@
 # openblack
 
-[![Travis Build](https://img.shields.io/travis/com/openblack/openblack?logo=travis)](https://travis-ci.com/openblack/openblack)
-[![Appveyor Build](https://img.shields.io/appveyor/ci/handsomematt/openblack?logo=appveyor)](https://ci.appveyor.com/project/handsomematt/openblack)
+[![Travis Build](https://img.shields.io/travis/com/openblack/openblack/master?logo=travis)](https://travis-ci.com/openblack/openblack)
+[![Appveyor Build](https://img.shields.io/appveyor/ci/handsomematt/openblack/master?logo=appveyor)](https://ci.appveyor.com/project/handsomematt/openblack)
 [![GitHub Stars](https://img.shields.io/github/stars/openblack/openblack?logo=github)](https://github.com/openblack/openblack/stargazers)
 [![Discord chat](https://img.shields.io/discord/608729286513262622?logo=discord&logoColor=white)](https://discord.gg/5QTexBU)
 [![License](https://img.shields.io/github/license/openblack/openblack)](LICENSE.md)
