@@ -18,15 +18,17 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Common/FileSystem.h>
-#include <Game.h>
 #include <Graphics/ShaderProgram.h>
+
 #include <cassert>
-#include <cstdio>
-#include <cstdlib>
 #include <cstring>
+
 #include <glm/gtc/type_ptr.hpp>
 #include <spdlog/spdlog.h>
+
+#include <Graphics/OpenGL.h>
+#include <Common/FileSystem.h>
+#include <Game.h>
 
 namespace openblack::graphics
 {
@@ -41,8 +43,8 @@ ShaderProgram::ShaderProgram(const std::string& vertexSource, const std::string&
 	auto const& vertexShaderSource   = Game::instance()->GetFileSystem().ReadAll(vertexSource);
 	auto const& fragmentShaderSource = Game::instance()->GetFileSystem().ReadAll(fragmentSource);
 
-	GLuint vertexShader   = createSubShader(GL_VERTEX_SHADER, std::string(reinterpret_cast<const char*>(vertexShaderSource.data()), vertexShaderSource.size()));
-	GLuint fragmentShader = createSubShader(GL_FRAGMENT_SHADER, std::string(reinterpret_cast<const char*>(fragmentShaderSource.data()), fragmentShaderSource.size()));
+	GLuint vertexShader   = createSubShader(Type::Vertex, std::string(reinterpret_cast<const char*>(vertexShaderSource.data()), vertexShaderSource.size()));
+	GLuint fragmentShader = createSubShader(Type::Fragment, std::string(reinterpret_cast<const char*>(fragmentShaderSource.data()), fragmentShaderSource.size()));
 
 	// lazy assert, todo: better error handling
 	assert(vertexShader != 0 && fragmentShader != 0);
@@ -140,11 +142,16 @@ void ShaderProgram::SetUniformValue(const char* uniformName, size_t count, const
 	glUniformMatrix4fv(_uniforms[uniformName], count, GL_FALSE, glm::value_ptr(m[0]));
 }
 
-GLuint ShaderProgram::createSubShader(GLenum type, const std::string& source)
+uint32_t ShaderProgram::createSubShader(Type type, const std::string& source)
 {
-	GLuint shader = glCreateShader(type);
+	static const std::array<GLenum, 3> types = {
+		GL_VERTEX_SHADER,
+		GL_FRAGMENT_SHADER,
+		0x91B9, // GL_COMPUTE_SHADER, core in 4.3
+	};
+	GLuint shader = glCreateShader(types[static_cast<uint32_t>(type)]);
 
-	const GLchar* glsource = (const GLchar*)source.c_str();
+	auto glsource = reinterpret_cast<const GLchar*>(source.c_str());
 	glShaderSource(shader, 1, &glsource, nullptr);
 	glCompileShader(shader);
 
