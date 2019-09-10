@@ -22,52 +22,41 @@
 
 #include "LandCell.h"
 
-#include <Graphics/Mesh.h>
-#include <Graphics/OpenGL.h>
-#include <Graphics/ShaderProgram.h>
-#include <glm/glm.hpp>
-#include <array> 
+#include <cstdint>
+#include <array>
 #include <stdexcept>
-#include <stdint.h>
+
+#include <glm/glm.hpp>
+
+#include <Graphics/Mesh.h>
+#include <Graphics/ShaderProgram.h>
 
 namespace openblack
 {
 
-
 struct LandVertex
 {
-	GLfloat position[3];
-	GLfloat weight[3]; // interpolated
-	GLubyte firstMaterialID[4];  // force alignment 4 bytes to prevent packing
-	GLubyte secondMaterialID[4];  // force alignment 4 bytes to prevent packing
-	GLubyte materialBlendCoefficient[4];  // force alignment 4 bytes to prevent packing
-	GLubyte lightLevel;  // aligned to 4 bytes
-	GLfloat waterAlpha;
+	const float position[3];
+	const float weight[3]; // interpolated
+	const uint8_t firstMaterialID[4];  // force alignment 4 bytes to prevent packing
+	const uint8_t secondMaterialID[4];  // force alignment 4 bytes to prevent packing
+	const uint8_t materialBlendCoefficient[4];  // force alignment 4 bytes to prevent packing
+	const uint8_t lightLevel;  // aligned to 4 bytes
+	const float waterAlpha;
 
-	LandVertex() { }
 	LandVertex(glm::vec3 _position, glm::vec3 _weight,
-	           GLubyte mat1, GLubyte mat2, GLubyte mat3,
-	           GLubyte mat4, GLubyte mat5, GLubyte mat6,
-	           GLubyte blend1, GLubyte blend2, GLubyte blend3,
-	           GLubyte _lightLevel, GLfloat _alpha)
+	           uint8_t mat1, uint8_t mat2, uint8_t mat3,
+	           uint8_t mat4, uint8_t mat5, uint8_t mat6,
+	           uint8_t blend1, uint8_t blend2, uint8_t blend3,
+	           uint8_t _lightLevel, float _alpha)
+		: position{_position.x, _position.y, _position.z}
+		, weight{_weight.x, _weight.y, _weight.z}
+		, firstMaterialID{mat1, mat2, mat3}
+		, secondMaterialID{mat4, mat5, mat6}
+		, materialBlendCoefficient{blend1, blend2, blend3}
+		, lightLevel{_lightLevel}
+		, waterAlpha{_alpha}
 	{
-		position[0]                 = _position.x;
-		position[1]                 = _position.y;
-		position[2]                 = _position.z;
-		weight[0]                   = _weight.x;
-		weight[1]                   = _weight.y;
-		weight[2]                   = _weight.z;
-		firstMaterialID[0]          = mat1;
-		firstMaterialID[1]          = mat2;
-		firstMaterialID[2]          = mat3;
-		secondMaterialID[0]         = mat4;
-		secondMaterialID[1]         = mat5;
-		secondMaterialID[2]         = mat6;
-		materialBlendCoefficient[0] = blend1;
-		materialBlendCoefficient[1] = blend2;
-		materialBlendCoefficient[2] = blend3;
-		lightLevel                  = _lightLevel;
-		waterAlpha                  = _alpha;
 	}
 };
 
@@ -83,10 +72,9 @@ class LandBlock
 	void Draw(ShaderProgram& program);
 	void BuildMesh(LandIsland& island);
 
-	const LandCell* GetCells() const { return _cells.data(); };
+	[[nodiscard]] const LandCell* GetCells() const { return _cells.data(); };
 	const glm::ivec2& GetBlockPosition() { return _blockPosition; }
 	const glm::vec2& GetMapPosition() { return _mapPosition; }
-
 
   private:
 	uint32_t _index; // the blocks index in the block array (do we need to know this?)
