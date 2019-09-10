@@ -22,7 +22,6 @@
 
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/VertexBuffer.h>
-#include <vector>
 
 using namespace openblack::graphics;
 
@@ -30,25 +29,6 @@ namespace openblack
 {
 namespace graphics
 {
-
-struct VertexAttrib
-{
-	GLuint index;         ///< Index of the vertex attribute.
-	GLint size;           ///< Number of components per vertex attribute, must be 1, 2, 3, 4.
-	GLenum type;          ///< Data type of each attribute component in the array.
-	GLsizei stride;       ///< Byte offset between consecutive vertex attributes.
-	ptrdiff_t offset;     ///< Offset of the first component of the first generic vertex attribute.
-	bool normalized;
-	bool integer;
-
-	VertexAttrib() {}
-	VertexAttrib(GLuint i, GLint s, GLenum t, GLsizei st = 0, const ptrdiff_t of = 0):
-	    index(i), size(s), type(t), stride(st), offset(of), normalized(false), integer(false) {}
-	VertexAttrib(GLuint i, GLint s, GLenum t, bool intg, bool norm, GLsizei st = 0, const ptrdiff_t of = 0):
-	    index(i), size(s), type(t), stride(st), offset(of), normalized(norm), integer(intg) {}
-};
-
-typedef std::vector<VertexAttrib> VertexDecl;
 
 class Mesh
 {
