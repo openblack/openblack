@@ -59,7 +59,7 @@ void MeshViewer::DrawWindow()
 	ImGui::Begin("MeshPack Viewer", &_open);
 
 	ImGui::BeginChild("meshes", ImVec2(fontSize * 15.0f, 0), true);
-	for (int i = 0; i < meshes.size(); i++)
+	for (size_t i = 0; i < meshes.size(); i++)
 	{
 		const auto meshEnum  = static_cast<MeshId>(i);
 		const auto& enumName   = std::string(MeshNames[i]);
@@ -78,7 +78,7 @@ void MeshViewer::DrawWindow()
 	ImGui::InputInt("submesh", &_selectedSubMesh, 1, 1);
 	if (_selectedSubMesh < 0)
 		_selectedSubMesh = 0;
-	if (_selectedSubMesh >= mesh->GetSubMeshes().size())
+	if (static_cast<uint32_t>(_selectedSubMesh) >= mesh->GetSubMeshes().size())
 		_selectedSubMesh = mesh->GetSubMeshes().size() - 1;
 
 	ImGui::DragFloat3("position", &_cameraPosition[0], 0.5f);
@@ -120,7 +120,7 @@ void MeshViewer::DrawScene()
 	objectShader->SetUniformValue("u_modelTransform", glm::mat4(1.0f));
 
 	const auto& mesh = meshes[static_cast<int>(_selectedMesh)];
-	if (_selectedSubMesh >= 0 && _selectedSubMesh < mesh->GetSubMeshes().size())
+	if (_selectedSubMesh >= 0 && static_cast<uint32_t>(_selectedSubMesh) < mesh->GetSubMeshes().size())
 		mesh->Draw(*objectShader, _selectedSubMesh);
 
 	_frameBuffer->Unbind();

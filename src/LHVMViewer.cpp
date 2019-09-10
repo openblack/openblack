@@ -28,7 +28,7 @@
 
 using openblack::LHVMViewer;
 
-int LHVMViewer::SelectedScriptID = 1;
+uint32_t LHVMViewer::SelectedScriptID = 1;
 static bool ScrollToSelected = false;
 static bool ResetScriptDisassemblyScroll = false;
 const ImVec4 Disassembly_ColorBG = ImVec4(0.152f, 0.156f, 0.133f, 1.0f);
@@ -345,7 +345,7 @@ std::string openblack::LHVMViewer::DataToString(uint32_t data, openblack::LHVM::
 	}
 }
 
-void openblack::LHVMViewer::SelectScript(int idx)
+void openblack::LHVMViewer::SelectScript(uint32_t idx)
 {
 	SelectedScriptID = idx;
 	ScrollToSelected = true;

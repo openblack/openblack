@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include <LHVM/LHVM.h>
 #include <imgui/imgui.h>
 
@@ -35,7 +37,7 @@ class LHVMViewer
 	static void DrawVariable(const openblack::LHVM::LHVM*, openblack::LHVM::VMScript&, uint32_t idx);
 	static std::string DataToString(uint32_t data, openblack::LHVM::VMInstruction::DataType type);
 
-	static int SelectedScriptID;
-	static void SelectScript(int idx);
+	static uint32_t SelectedScriptID;
+	static void SelectScript(uint32_t idx);
 };
 } // namespace openblack

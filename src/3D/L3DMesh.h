@@ -84,7 +84,7 @@ class L3DMesh
 
 	void LoadFromFile(const std::string& fileName);
 	void Load(IStream& stream);
-	void Draw(ShaderProgram& program, int mesh) const;
+	void Draw(ShaderProgram& program, uint32_t mesh) const;
 
 	const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }
 	const std::unordered_map<SkinId, std::unique_ptr<Texture2D>>& GetSkins() const { return _skins; }

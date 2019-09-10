@@ -172,7 +172,7 @@ void L3DMesh::Load(IStream& stream)
 		stream.Read(offsets.data(), offsets.size() * sizeof(uint32_t));
 
 		spdlog::debug("\tLoading {} skins", header.skinsCount);
-		for (int i = 0; i < offsets.size(); i++) {
+		for (size_t i = 0; i < offsets.size(); i++) {
 			uint32_t id = stream.ReadValue<uint32_t>();
 			std::vector<uint16_t> data(256 * 256); // RGBA4444
 			stream.Read(data.data(), 256 * 256 * sizeof(uint16_t));
@@ -190,7 +190,7 @@ void L3DMesh::Load(IStream& stream)
 		stream.Read(offsets.data(), offsets.size() * sizeof(uint32_t));
 
 		_subMeshes.resize(offsets.size());
-		for (int i = 0; i < offsets.size(); i++) {
+		for (size_t i = 0; i < offsets.size(); i++) {
 			stream.Seek(offsets[i], SeekMode::Begin);
 			_subMeshes[i] = std::make_unique<L3DSubMesh>();
 			_subMeshes[i]->Load(stream);
@@ -224,7 +224,7 @@ void L3DMesh::Load(IStream& stream)
 	// size: 6100, num meshes: 4, offset: 100
 }
 
-void L3DMesh::Draw(ShaderProgram& program, int mesh) const
+void L3DMesh::Draw(ShaderProgram& program, uint32_t mesh) const
 {
 	if (mesh >= _subMeshes.size()) {
 		//spdlog::warn("tried to draw submesh out of range ({}/{})", mesh, _subMeshes.size());
