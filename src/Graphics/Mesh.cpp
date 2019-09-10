@@ -79,11 +79,28 @@ GLuint Mesh::GetType() const noexcept
 
 void Mesh::Draw()
 {
+	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
+	{
+		Draw(_indexBuffer->GetCount(), 0);
+	}
+	else
+	{
+		Draw(_vertexBuffer->GetVertexCount(), 0);
+	}
+}
+
+void Mesh::Draw(uint32_t count, uint32_t startIndex)
+{
 	glBindVertexArray(_vao);
 	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
-		glDrawElements(_type, _indexBuffer->GetCount(), _indexBuffer->GetType(), 0);
+	{
+		auto indexBufferOffset = startIndex * _indexBuffer->GetStride();
+		glDrawElements(_type, count, _indexBuffer->GetType(), reinterpret_cast<void*>(indexBufferOffset));
+	}
 	else
-		glDrawArrays(_type, 0, _vertexBuffer->GetVertexCount());
+	{
+		glDrawArrays(_type, 0, count);
+	}
 }
 
 void Mesh::bindVertexDecl()

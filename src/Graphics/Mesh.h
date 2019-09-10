@@ -63,6 +63,7 @@ class Mesh
 	GLuint GetType() const noexcept;
 
 	void Draw();
+	void Draw(uint32_t count, uint32_t startIndex);
 
   protected:
 	std::shared_ptr<VertexBuffer> _vertexBuffer;

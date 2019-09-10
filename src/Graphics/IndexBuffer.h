@@ -42,6 +42,7 @@ class IndexBuffer
 
 	std::size_t GetCount() const;
 	std::size_t GetSize() const;
+	std::size_t GetStride() const;
 	GLenum GetType() const;
 	GLuint GetIBO() const;
 
