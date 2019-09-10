@@ -20,15 +20,15 @@
 
 #include "GameWindow.h"
 
+#include <SDL_syswm.h>
 #include <iostream>
 #include <spdlog/spdlog.h>
-#include <SDL_syswm.h>
 #if defined(SDL_VIDEO_DRIVER_WAYLAND)
 #include <wayland-egl.h>
-#endif  // defined(SDL_VIDEO_DRIVER_WAYLAND)
+#endif // defined(SDL_VIDEO_DRIVER_WAYLAND)
 #if USE_VULKAN
 #include <SDL_vulkan.h>
-#endif  // USE_VULKAN
+#endif // USE_VULKAN
 
 #include "Renderer.h"
 
@@ -73,20 +73,45 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 
 	// Get SDL Window requirements from Renderer
 	flags |= Renderer::GetRequiredFlags();
-	for (auto& attr: Renderer::GetRequiredWindowingAttributes()) {
-		if (attr.api == Renderer::Api::OpenGl) {;
+	for (auto& attr : Renderer::GetRequiredWindowingAttributes())
+	{
+		if (attr.api == Renderer::Api::OpenGl)
 			SDL_GL_SetAttribute(static_cast<SDL_GLattr>(attr.name), attr.value);
-		}
+	}
+	const int x = SDL_WINDOWPOS_UNDEFINED;
+	const int y = SDL_WINDOWPOS_UNDEFINED;
+
+	// todo: make this configurable, and less opengl specific
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+	for (unsigned int sample = 4; sample > 0; sample >>= 1)
+	{
+		spdlog::debug("Attempting to create window with {} MSAA samples", sample);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, sample);
+		auto window = std::unique_ptr<SDL_Window, SDLDestroyer>(SDL_CreateWindow(
+		    title.c_str(), x, y,
+		    width, height, flags));
+	
+		if (window == nullptr)
+			continue;
+	
+		_window = std::move(window);
+		return;
 	}
 
+	// obviously no sample worked, try disabling them completely
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+
 	auto window = std::unique_ptr<SDL_Window, SDLDestroyer>(SDL_CreateWindow(
-	    title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+	    title.c_str(), x, y,
 	    width, height, flags));
 
 	if (window == nullptr)
 	{
-		throw std::runtime_error("Failed creating window: " + std::string(SDL_GetError()));
+		spdlog::error("Failed to create SDL2 window: '{}'", SDL_GetError());
+		throw std::runtime_error("Failed creating SDL2 window: " + std::string(SDL_GetError()));
 	}
+
 	_window = std::move(window);
 }
 
@@ -99,7 +124,7 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 {
 	SDL_SysWMinfo wmi;
 	SDL_VERSION(&wmi.version);
-	if (!SDL_GetWindowWMInfo(_window.get(), &wmi) )
+	if (!SDL_GetWindowWMInfo(_window.get(), &wmi))
 	{
 		throw std::runtime_error("Failed getting native window handles: " + std::string(SDL_GetError()));
 	}
@@ -108,57 +133,59 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 #if defined(SDL_VIDEO_DRIVER_WAYLAND)
 	if (wmi.subsystem == SDL_SYSWM_WAYLAND)
 	{
-		auto win_impl = static_cast<wl_egl_window *>(SDL_GetWindowData(_window.get(), "wl_egl_window"));
-		if (!win_impl) {
+		auto win_impl = static_cast<wl_egl_window*>(SDL_GetWindowData(_window.get(), "wl_egl_window"));
+		if (!win_impl)
+		{
 			int width, height;
 			SDL_GetWindowSize(_window.get(), &width, &height);
-			struct wl_surface *surface = wmi.info.wl.surface;
-			if (!surface) {
+			struct wl_surface* surface = wmi.info.wl.surface;
+			if (!surface)
+			{
 				throw std::runtime_error("Failed getting native window handles: " + std::string(SDL_GetError()));
 			}
 			win_impl = wl_egl_window_create(surface, width, height);
 			SDL_SetWindowData(_window.get(), "wl_egl_window", win_impl);
 		}
-		native_window = reinterpret_cast<void *>(win_impl);
+		native_window  = reinterpret_cast<void*>(win_impl);
 		native_display = wmi.info.wl.display;
 	}
 	else
-#endif  // defined(SDL_VIDEO_DRIVER_WAYLAND)
+#endif // defined(SDL_VIDEO_DRIVER_WAYLAND)
 #if defined(SDL_VIDEO_DRIVER_X11)
-	if (wmi.subsystem == SDL_SYSWM_X11)
+	    if (wmi.subsystem == SDL_SYSWM_X11)
 	{
-		native_window = reinterpret_cast<void *>(wmi.info.x11.window);
+		native_window  = reinterpret_cast<void*>(wmi.info.x11.window);
 		native_display = wmi.info.x11.display;
 	}
 	else
-#endif  // defined(SDL_VIDEO_DRIVER_X11)
-		// Mac
+#endif // defined(SDL_VIDEO_DRIVER_X11) \
+       // Mac
 #if defined(SDL_VIDEO_DRIVER_COCOA)
-		if (wmi.subsystem == SDL_SYSWM_COCOA)
+	    if (wmi.subsystem == SDL_SYSWM_COCOA)
 	{
-		native_window = wmi.info.cocoa.window;
+		native_window  = wmi.info.cocoa.window;
 		native_display = nullptr;
 	}
 	else
-#endif  // defined(SDL_VIDEO_DRIVER_COCOA)
-		// Windows
+#endif // defined(SDL_VIDEO_DRIVER_COCOA) \
+       // Windows
 #if defined(SDL_VIDEO_DRIVER_WINDOWS)
-		if (wmi.subsystem == SDL_SYSWM_WINDOWS)
+	    if (wmi.subsystem == SDL_SYSWM_WINDOWS)
 	{
-		native_window = wmi.info.win.window;
+		native_window  = wmi.info.win.window;
 		native_display = nullptr;
 	}
 	else
-#endif  // defined(SDL_VIDEO_DRIVER_WINDOWS)
-		// Steam Link
+#endif // defined(SDL_VIDEO_DRIVER_WINDOWS) \
+       // Steam Link
 #if defined(SDL_VIDEO_DRIVER_VIVANTE)
-		if (wmi.subsystem == SDL_SYSWM_VIVANTE)
+	    if (wmi.subsystem == SDL_SYSWM_VIVANTE)
 	{
-		native_window = wmi.info.vivante.window;
+		native_window  = wmi.info.vivante.window;
 		native_display = wmi.info.vivante.display;
 	}
 	else
-#endif  // defined(SDL_VIDEO_DRIVER_VIVANTE)
+#endif // defined(SDL_VIDEO_DRIVER_VIVANTE)
 	{
 		throw std::runtime_error("Unsupported platform or window manager: " + std::to_string(wmi.subsystem));
 	}
@@ -228,7 +255,6 @@ void GameWindow::SetSwapInterval(int interval)
 	SDL_GL_SetSwapInterval(interval);
 }
 
-
 float GameWindow::GetAspectRatio() const
 {
 	int width, height;
@@ -277,14 +303,14 @@ void GameWindow::GetSize(int& width, int& height) const
 	SDL_GetWindowSize(_window.get(), &width, &height);
 }
 
-void GameWindow::GetDrawableSize(int &width, int &height) const
+void GameWindow::GetDrawableSize(int& width, int& height) const
 {
 	// TODO(bwrsandman): Make this a runtime branch
 #if USE_VULKAN
 	SDL_Vulkan_GetDrawableSize(_window.get(), &drawable_width, &drawable_height);
 #else
 	SDL_GL_GetDrawableSize(_window.get(), &width, &height);
-#endif  // USE_VULKAN
+#endif // USE_VULKAN
 }
 
 void GameWindow::Show()
