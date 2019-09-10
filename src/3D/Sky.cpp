@@ -120,7 +120,7 @@ void Sky::CalculateTextures()
 	for (unsigned int i = 0; i < 256 * 256; i++)
 		bitmap[i] = bitmap[i] | 0x8000;
 
-	_texture->Create(bitmap.data(), bitmap.size() * sizeof(bitmap[0]), DataType::UnsignedShort1555Rev, Format::BGRA, 256, 256, 1, InternalFormat::RGB5A1);
+	_texture->Create(256, 256, 1, InternalFormat::RGB5A1, DataType::UnsignedShort1555Rev, Format::BGRA, bitmap.data(), bitmap.size() * sizeof(bitmap[0]));
 }
 
 void Sky::Draw(graphics::ShaderProgram& program)

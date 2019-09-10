@@ -41,22 +41,7 @@ Texture2D::~Texture2D()
 	}
 }
 
-void Texture2D::Create(uint32_t width, uint32_t height, uint32_t layers)
-{
-	auto bindPoint = layers > 1 ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
-
-	glBindTexture(bindPoint, static_cast<GLuint>(_handle));
-
-	if (layers == 1)
-		glTexImage2D(bindPoint, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-	else
-		glTexImage3D(bindPoint, 0, GL_RGBA, width, height, layers, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-	glTexParameteri(bindPoint, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(bindPoint, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-}
-
-void Texture2D::Create(const void* data, size_t size, DataType type, Format format, uint32_t width, uint32_t height, uint32_t layers, InternalFormat internalFormat)
+void Texture2D::Create(uint32_t width, uint32_t height, uint32_t layers, InternalFormat internalFormat, DataType type, Format format, const void* data, size_t size)
 {
 	auto bindPoint = layers > 1 ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
 
