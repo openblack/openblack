@@ -105,7 +105,7 @@ void createCompressedDDS(graphics::Texture2D* texture, uint8_t* buffer)
 	int bpp = internalFormat == InternalFormat::CompressedRGBAS3TCDXT3 ? 16 : 8;
 	size_t size = std::max(1, ((int) width + 3) >> 2) * std::max(1, ((int) height + 3) >> 2) * bpp;
 
-	texture->CreateCompressed(buffer + header->dwSize, size, width, height, 1, internalFormat);
+	texture->Create(width, height, 1, internalFormat, graphics::DataType::UnsignedByte, Format::RGBA, buffer + header->dwSize, size);
 }
 
 

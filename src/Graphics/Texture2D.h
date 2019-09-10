@@ -163,7 +163,6 @@ class Texture2D
 	Texture2D& operator=(const Texture2D&) = delete;
 
 	void Create(uint32_t width, uint32_t height, uint32_t layers, InternalFormat internalFormat=InternalFormat::RGBA, DataType type=DataType::UnsignedByte, Format format=Format::RGBA, const void* data=nullptr, size_t size=0);
-	void CreateCompressed(const void* data, size_t size, uint32_t width, uint32_t height, uint32_t layers, InternalFormat internalFormat);
 
 	[[nodiscard]] uint32_t GetNativeHandle() const { return _handle; }
 	[[nodiscard]] uint32_t GetWidth() const { return _width; }
