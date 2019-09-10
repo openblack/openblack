@@ -33,14 +33,15 @@
 namespace openblack
 {
 
+
 struct LandVertex
 {
 	GLfloat position[3];
 	GLfloat weight[3]; // interpolated
-	GLubyte firstMaterialID[3];
-	GLubyte secondMaterialID[3];
-	GLubyte materialBlendCoefficient[3];
-	GLubyte lightLevel;
+	GLubyte firstMaterialID[4];  // force alignment 4 bytes to prevent packing
+	GLubyte secondMaterialID[4];  // force alignment 4 bytes to prevent packing
+	GLubyte materialBlendCoefficient[4];  // force alignment 4 bytes to prevent packing
+	GLubyte lightLevel;  // aligned to 4 bytes
 	GLfloat waterAlpha;
 
 	LandVertex() { }
