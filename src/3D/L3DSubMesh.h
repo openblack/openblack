@@ -53,9 +53,7 @@ class L3DSubMesh
   private:
 	L3DSubMeshFlags _flags;
 
-	GLuint _vertexArray;
-	std::unique_ptr<VertexBuffer> _vertexBuffer;
-	std::unique_ptr<IndexBuffer> _indexBuffer;
+	std::unique_ptr<Mesh> _mesh;
 	std::vector<Primitive> _primitives;
 };
 } // namespace openblack

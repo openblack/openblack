@@ -51,7 +51,12 @@ std::size_t IndexBuffer::GetCount() const
 
 std::size_t IndexBuffer::GetSize() const
 {
-	return _count * GetTypeSize(_type);
+	return _count * GetStride();
+}
+
+std::size_t IndexBuffer::GetStride() const
+{
+	return GetTypeSize(_type);
 }
 
 GLenum IndexBuffer::GetType() const

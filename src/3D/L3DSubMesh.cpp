@@ -37,13 +37,10 @@ struct L3DVertex
 
 L3DSubMesh::L3DSubMesh()
 {
-	glGenVertexArrays(1, &_vertexArray);
 }
 
 L3DSubMesh::~L3DSubMesh()
 {
-	if (_vertexArray != 0)
-		glDeleteVertexArrays(1, &_vertexArray);
 }
 
 void L3DSubMesh::Load(IStream& stream)
@@ -124,20 +121,16 @@ void L3DSubMesh::Load(IStream& stream)
 		primIndexOffset += primitive.numTriangles * 3;
 	}
 
-	// build our buffers
-	_vertexBuffer = std::make_unique<VertexBuffer>(reinterpret_cast<const void*>(verticies.data()), verticies.size(), sizeof(L3DVertex));
-	_indexBuffer  = std::make_unique<IndexBuffer>(indices.data(), indices.size(), GL_UNSIGNED_SHORT);
+	VertexDecl decl(3);
+	decl[0] = VertexAttrib(0, 3, GL_FLOAT, false, false, sizeof(L3DVertex), offsetof(L3DVertex, pos));
+	decl[1] = VertexAttrib(1, 3, GL_FLOAT, false, false, sizeof(L3DVertex), offsetof(L3DVertex, uv));
+	decl[2] = VertexAttrib(2, 3, GL_FLOAT, false, false, sizeof(L3DVertex), offsetof(L3DVertex, norm));
 
-	glBindVertexArray(_vertexArray);
-	_vertexBuffer->Bind();
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(L3DVertex), reinterpret_cast<const void*>(offsetof(L3DVertex, pos)));
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(L3DVertex), reinterpret_cast<const void*>(offsetof(L3DVertex, uv)));
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(L3DVertex), reinterpret_cast<const void*>(offsetof(L3DVertex, norm)));
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBuffer->GetIBO());
-	glBindVertexArray(0);
+	// build our buffers
+	auto vertexBuffer = new VertexBuffer(reinterpret_cast<const void*>(verticies.data()), verticies.size(), sizeof(L3DVertex));
+	auto indexBuffer  = new IndexBuffer(indices.data(), indices.size(), GL_UNSIGNED_SHORT);
+	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, decl, GL_TRIANGLES);
+
 
 	// uint32_t lod = (header.flags & 0xE0000000) >> 30;
 
@@ -152,11 +145,10 @@ void L3DSubMesh::Load(IStream& stream)
 
 void L3DSubMesh::Draw(const L3DMesh& mesh, ShaderProgram& program) const
 {
-	if (_vertexBuffer == nullptr)
+	if (!_mesh)
 		return;
 
 	auto const& skins = mesh.GetSkins();
-	glBindVertexArray(_vertexArray);
 	for (auto const& prim : _primitives)
 	{
 		if (prim.skinID != 0xFFFFFFFF)
@@ -168,7 +160,7 @@ void L3DSubMesh::Draw(const L3DMesh& mesh, ShaderProgram& program) const
 				Game::instance()->GetMeshPack().GetTexture(prim.skinID).Bind();
 		}
 
-		glDrawElements(GL_TRIANGLES, prim.indicesCount, _indexBuffer->GetType(), (void*)(prim.indicesOffset * sizeof(uint16_t)));
+		_mesh->Draw(prim.indicesCount, prim.indicesOffset);
 	}
 }
 
