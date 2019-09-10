@@ -121,10 +121,11 @@ void L3DSubMesh::Load(IStream& stream)
 		primIndexOffset += primitive.numTriangles * 3;
 	}
 
-	VertexDecl decl(3);
-	decl[0] = VertexAttrib(0, 3, GL_FLOAT, false, false, sizeof(L3DVertex), offsetof(L3DVertex, pos));
-	decl[1] = VertexAttrib(1, 3, GL_FLOAT, false, false, sizeof(L3DVertex), offsetof(L3DVertex, uv));
-	decl[2] = VertexAttrib(2, 3, GL_FLOAT, false, false, sizeof(L3DVertex), offsetof(L3DVertex, norm));
+	VertexDecl decl;
+	decl.reserve(3);
+	decl.emplace_back(0, 3, GL_FLOAT, false, false, sizeof(L3DVertex), offsetof(L3DVertex, pos));
+	decl.emplace_back(1, 3, GL_FLOAT, false, false, sizeof(L3DVertex), offsetof(L3DVertex, uv));
+	decl.emplace_back(2, 3, GL_FLOAT, false, false, sizeof(L3DVertex), offsetof(L3DVertex, norm));
 
 	// build our buffers
 	auto vertexBuffer = new VertexBuffer(reinterpret_cast<const void*>(verticies.data()), verticies.size(), sizeof(L3DVertex));

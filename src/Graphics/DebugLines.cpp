@@ -43,9 +43,10 @@ std::unique_ptr<DebugLines> DebugLines::CreateDebugLines(uint32_t size, const vo
 {
 	auto vertexBuffer = new VertexBuffer(data, vertexCount, sizeof(Vertex));
 
-	VertexDecl decl(2);
-	decl[0] = VertexAttrib(0, 3, GL_FLOAT, false, false, sizeof(Vertex), offsetof(Vertex, pos)); // position
-	decl[1] = VertexAttrib(1, 3, GL_FLOAT, false, false, sizeof(Vertex), offsetof(Vertex, col)); // color
+	VertexDecl decl;
+	decl.reserve(2);
+	decl.emplace_back(0, 3, GL_FLOAT, false, false, sizeof(Vertex), offsetof(Vertex, pos)); // position
+	decl.emplace_back(1, 3, GL_FLOAT, false, false, sizeof(Vertex), offsetof(Vertex, col)); // color
 
 	auto mesh = std::make_unique<Mesh>(vertexBuffer, decl, GL_LINES);
 
