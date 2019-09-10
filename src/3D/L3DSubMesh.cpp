@@ -18,12 +18,12 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/L3DMesh.h>
 #include <3D/L3DSubMesh.h>
+
+#include <3D/L3DMesh.h>
 #include <Common/IStream.h>
 #include <Game.h>
 #include <3D/MeshPack.h>
-#include <spdlog/spdlog.h>
 
 namespace openblack
 {
@@ -130,7 +130,7 @@ void L3DSubMesh::Load(IStream& stream)
 	// build our buffers
 	auto vertexBuffer = new VertexBuffer(reinterpret_cast<const void*>(verticies.data()), verticies.size(), decl);
 	auto indexBuffer  = new IndexBuffer(indices.data(), indices.size(), IndexBuffer::Type::Uint16);
-	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, GL_TRIANGLES);
+	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, Mesh::Topology::TriangleList);
 
 
 	// uint32_t lod = (header.flags & 0xE0000000) >> 30;

@@ -20,7 +20,8 @@
 
 #pragma once
 
-#include "OpenGL.h"
+#include <cstdint>
+
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/VertexBuffer.h>
 
@@ -34,25 +35,34 @@ namespace graphics
 class Mesh
 {
   public:
-	Mesh(VertexBuffer*, GLuint type = GL_TRIANGLES);
-	Mesh(VertexBuffer*, IndexBuffer*, GLuint type = GL_TRIANGLES);
+	enum class Topology
+	{
+		PointList,
+		LineList,
+		LineStrip,
+		TriangleList,
+		TriangleStrip,
+	};
+
+	explicit Mesh(VertexBuffer* vertexBuffer, Topology topology = Topology::TriangleList);
+	Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, Topology topology = Topology::TriangleList);
 	~Mesh();
 
-	std::shared_ptr<VertexBuffer> GetVertexBuffer();
-	std::shared_ptr<IndexBuffer> GetIndexBuffer();
+	[[nodiscard]] const VertexBuffer& GetVertexBuffer() const;
+	[[nodiscard]] const IndexBuffer& GetIndexBuffer() const;
 
-	GLuint GetType() const noexcept;
+	[[nodiscard]] Topology GetTopology() const noexcept;
 
 	void Draw();
 	void Draw(uint32_t count, uint32_t startIndex);
 
   protected:
-	std::shared_ptr<VertexBuffer> _vertexBuffer;
-	std::shared_ptr<IndexBuffer> _indexBuffer;
+	std::unique_ptr<VertexBuffer> _vertexBuffer;
+	std::unique_ptr<IndexBuffer> _indexBuffer;
 
   private:
-	GLuint _vao;
-	GLuint _type;
+	uint32_t _vao;
+	Topology _topology;
 };
 
 } // namespace graphics

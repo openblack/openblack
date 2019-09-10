@@ -96,7 +96,7 @@ void Water::createMesh()
 	VertexBuffer* vertexBuffer = new VertexBuffer(points, 4, decl);
 	IndexBuffer* indexBuffer   = new IndexBuffer(indices, 6, IndexBuffer::Type::Uint16);
 
-	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, GL_TRIANGLES);
+	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, Mesh::Topology::TriangleList);
 }
 
 void Water::Draw(ShaderProgram& program) const
