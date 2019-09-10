@@ -72,8 +72,8 @@ class FeatureScriptCommands
 	static void CreatePot(const ScriptCommandContext& ctx);
 	static void CreateTownTemporaryPots(const ScriptCommandContext& ctx);
 	static void CreateMobileobject(const ScriptCommandContext& ctx);
-	static void CreateMobilestatic(const ScriptCommandContext& ctx);
 	static void CreateMobileStatic(const ScriptCommandContext& ctx);
+	static void CreateMobileUStatic(const ScriptCommandContext& ctx);
 	static void CreateDeadTree(const ScriptCommandContext& ctx);
 	static void CreateScaffold(const ScriptCommandContext& ctx);
 	static void CountryChange(const ScriptCommandContext& ctx);

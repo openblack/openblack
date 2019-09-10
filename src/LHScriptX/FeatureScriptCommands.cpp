@@ -18,19 +18,20 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <LHScriptX/FeatureScriptCommands.h>
-#include <Game.h>
-#include <AllMeshes.h>
 #include <3D/LandIsland.h>
+#include <AllMeshes.h>
+#include <Entities/Components/Abode.h>
+#include <Entities/Components/AnimatedStatic.h>
 #include <Entities/Components/Model.h>
 #include <Entities/Components/Transform.h>
 #include <Entities/Components/Villager.h>
-#include <Entities/Components/Abode.h>
 #include <Entities/Registry.h>
-#include <spdlog/spdlog.h>
+#include <Game.h>
+#include <LHScriptX/FeatureScriptCommands.h>
 #include <cmath>
 #include <iostream>
 #include <random>
+#include <spdlog/spdlog.h>
 #include <tuple>
 
 using namespace openblack::LHScriptX;
@@ -41,7 +42,8 @@ const constexpr ParameterType TNumber = ParameterType::Number;
 const constexpr ParameterType TFloat  = ParameterType::Float;
 const constexpr ParameterType TVector = ParameterType::Vector;
 
-namespace openblack {
+namespace openblack
+{
 std::unordered_map<std::string, MeshId> abodeLookup {
 	// Norse
 	{ "NORSE_ABODE_TOWN_CENTRE", MeshId::BuildingNorseVillageCentre },
@@ -131,7 +133,7 @@ const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signa
 	{ "CREATE_TOWN_TEMPORARY_POTS",        &FeatureScriptCommands::CreateTownTemporaryPots,       { TNumber, TNumber, TNumber },                                                    },
 	{ "CREATE_MOBILEOBJECT",               &FeatureScriptCommands::CreateMobileobject,            { TVector, TNumber, TNumber, TNumber },                                           },
 	{ "CREATE_MOBILESTATIC",               &FeatureScriptCommands::CreateMobileStatic,            { TVector, TNumber, TFloat, TFloat },                                             },
-	{ "CREATE_MOBILE_STATIC",              &FeatureScriptCommands::CreateMobileStatic,            { TVector, TNumber, TFloat, TFloat, TFloat, TFloat, TFloat },                     },
+	{ "CREATE_MOBILE_STATIC",              &FeatureScriptCommands::CreateMobileUStatic,           { TVector, TNumber, TFloat, TFloat, TFloat, TFloat, TFloat },                     },
 	{ "CREATE_DEAD_TREE",                  &FeatureScriptCommands::CreateDeadTree,                { TVector, TString, TNumber, TFloat, TFloat, TFloat, TFloat },                    },
 	{ "CREATE_SCAFFOLD",                   &FeatureScriptCommands::CreateScaffold,                { TNumber, TVector, TNumber, TNumber, TNumber },                                  },
 	{ "COUNTRY_CHANGE",                    &FeatureScriptCommands::CountryChange,                 { TVector, TNumber },                                                             },
@@ -207,25 +209,25 @@ glm::vec2 GetXYPosFromString(const std::string& str)
 
 openblack::MeshId GetAbodeMesh(const std::string& abodeType)
 {
-    auto item = openblack::abodeLookup.find(abodeType);
+	auto item = openblack::abodeLookup.find(abodeType);
 
-    if (item == openblack::abodeLookup.end())
-    {
-        spdlog::error("Missing abode mesh lookup for \"{}\".", abodeType);
+	if (item == openblack::abodeLookup.end())
+	{
+		spdlog::error("Missing abode mesh lookup for \"{}\".", abodeType);
 		return openblack::MeshId::Dummy;
-    }
+	}
 
 	return item->second;
 }
 
 inline float GetRadians(const float rotation)
 {
-    return -(rotation * 0.001);
+	return -(rotation * 0.001);
 }
 
 inline float GetSize(const float size)
 {
-    return size * 0.001;
+	return size * 0.001;
 }
 
 void FeatureScriptCommands::Version(const ScriptCommandContext& ctx)
@@ -284,12 +286,14 @@ void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
 	const uint32_t foodAmount = params[5].GetNumber();
 	const uint32_t woodAmount = params[6].GetNumber();
 	auto mesh                 = GetAbodeMesh(abodeType);
-	float radians             = GetRadians(rotation);
 	size                      = GetSize(size);
 	auto submeshIds           = std::vector { 2 };
 
+	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
+	const glm::vec3 rot(0.0f, GetRadians(rotation), 0.0f);
+
 	registry.Assign<Abode>(entity, townId, foodAmount, woodAmount);
-	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
+	registry.Assign<Transform>(entity, pos, rot, glm::vec3(size));
 	registry.Assign<Model>(entity, mesh, submeshIds, 0.0f, 0.0f, 0.0f);
 }
 
@@ -300,23 +304,25 @@ void FeatureScriptCommands::CreatePlannedAbode(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateTownCentre(const ScriptCommandContext& ctx)
 {
-    Game& game                  = ctx.GetGame();
-    const auto& params          = ctx.GetParameters();
-    auto& island                = game.GetLandIsland();
-    auto& registry              = game.GetEntityRegistry();
-    const auto entity           = registry.Create();
-    const auto associatedTownId = params[0].GetNumber();
-    const auto position         = GetXYPosFromString(params[1].GetString());
-    const auto& centreType      = params[2].GetString();
-    float rotation              = params[3].GetNumber();
-    float size                  = params[4].GetNumber();
-    //const auto unknown          = params[5].GetNumber();
-    auto mesh                   = GetAbodeMesh(centreType);
-    float radians               = GetRadians(rotation);
-    size                        = GetSize(size);
-	auto submeshIds             = std::vector { 3 };
+	Game& game                  = ctx.GetGame();
+	const auto& params          = ctx.GetParameters();
+	auto& island                = game.GetLandIsland();
+	auto& registry              = game.GetEntityRegistry();
+	const auto entity           = registry.Create();
+	const auto associatedTownId = params[0].GetNumber();
+	const auto position         = GetXYPosFromString(params[1].GetString());
+	const auto& centreType      = params[2].GetString();
+	float rotation              = params[3].GetNumber();
+	float size                  = params[4].GetNumber();
+	//const auto unknown          = params[5].GetNumber();
+	auto mesh       = GetAbodeMesh(centreType);
+	size            = GetSize(size);
+	auto submeshIds = std::vector { 3 };
 
-    registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
+	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
+	const glm::vec3 rot(0.0f, GetRadians(rotation), 0.0f);
+
+	registry.Assign<Transform>(entity, pos, rot, glm::vec3(size));
 	registry.Assign<Model>(entity, mesh, submeshIds, 0.0f, 0.0f, 0.0f);
 }
 
@@ -425,7 +431,7 @@ void FeatureScriptCommands::CreateNewTree(const ScriptCommandContext& ctx)
 	float size                  = params[5].GetFloat();  // Initial size
 	float finalSize             = params[6].GetNumber(); // Max growth size of the tree
 	auto meshId                 = MeshId::Dummy;
-	auto submeshIds             = std::vector {1, 2};
+	auto submeshIds             = std::vector { 1, 2 };
 
 	switch (treeType)
 	{
@@ -476,14 +482,17 @@ void FeatureScriptCommands::CreateNewTree(const ScriptCommandContext& ctx)
 		break;
 	case 22:
 		// Bizarre case. Need to investigate further
-		meshId = MeshId::ObjectBurntTree;
+		meshId     = MeshId::ObjectBurntTree;
 		submeshIds = { 1 };
 		break;
 	default:
 		spdlog::error("Missing tree mesh lookup for \"{}\".", treeType);
 	}
 
-	registry.Assign<Transform>(entity, position.x, island.GetHeightAt(position), position.y, size, 0.0f, radians, 0.0f);
+	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
+	const glm::vec3 rot(0.0f, radians, 0.0f);
+
+	registry.Assign<Transform>(entity, pos, rot, glm::vec3(size));
 	registry.Assign<Model>(entity, meshId, submeshIds, 0.0f, 0.0f, 0.0f);
 }
 
@@ -549,7 +558,54 @@ void FeatureScriptCommands::CreateMobileobject(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateMobileStatic(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	auto& game                = ctx.GetGame();
+	const auto& params        = ctx.GetParameters();
+	auto& island              = game.GetLandIsland();
+	auto& registry            = game.GetEntityRegistry();
+	const auto entity         = registry.Create();
+	const auto position       = GetXYPosFromString(params[0].GetString());
+	const auto type           = params[1].GetNumber();
+	const auto verticalOffset = params[2].GetNumber();
+	float UpOrDownPitch       = params[3].GetNumber();
+	float rotation            = params[4].GetNumber();
+	float leftOrRightLean     = params[5].GetFloat();
+	float size                = params[6].GetFloat();
+
+	// CREATE_MOBILE_STATIC("1325.97,2431.08", 2, 0.372027, 0.155651, -3.112364, 0.081321, 0.267000)
+
+	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
+	const glm::vec3 rot(0.0f, GetRadians(rotation), 0.0f);
+
+	float radians = GetRadians(rotation) + 3.14159; // todo: not right?
+	size          = GetSize(size);
+
+	registry.Assign<MobileStatic>(entity, static_cast<uint32_t>(type));
+	registry.Assign<Transform>(entity, pos, rot, glm::vec3(1.0f));
+}
+
+void FeatureScriptCommands::CreateMobileUStatic(const ScriptCommandContext& ctx)
+{
+	auto& game                = ctx.GetGame();
+	const auto& params        = ctx.GetParameters();
+	auto& island              = game.GetLandIsland();
+	auto& registry            = game.GetEntityRegistry();
+	const auto entity         = registry.Create();
+	const auto position       = GetXYPosFromString(params[0].GetString());
+	const auto type           = params[1].GetNumber();
+	const auto verticalOffset = params[2].GetNumber();
+	float UpOrDownPitch       = params[3].GetNumber();
+	float rotation            = params[4].GetNumber();
+	float leftOrRightLean     = params[5].GetFloat();
+	float size                = params[6].GetFloat();
+
+	// CREATE_MOBILE_STATIC("1325.97,2431.08", 2, 0.372027, 0.155651, -3.112364, 0.081321, 0.267000)
+
+	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
+	const glm::vec3 rot(0.0f, GetRadians(rotation), 0.0f);
+	const glm::vec3 scale(size);
+
+	registry.Assign<MobileStatic>(entity, static_cast<uint32_t>(type));
+	registry.Assign<Transform>(entity, pos, rot, scale);
 }
 
 void FeatureScriptCommands::CreateDeadTree(const ScriptCommandContext& ctx)
@@ -744,7 +800,8 @@ void FeatureScriptCommands::CreateStreetLight(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::SetLandNumber(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	int landNumber = ctx.GetParameters()[0].GetNumber();
+	spdlog::debug("Land number set to: {}", landNumber);
 }
 
 void FeatureScriptCommands::CreateOneShotSpell(const ScriptCommandContext& ctx)
@@ -769,7 +826,24 @@ void FeatureScriptCommands::TownDesireBoost(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateAnimatedStatic(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	auto& game            = ctx.GetGame();
+	const auto& params    = ctx.GetParameters();
+	auto& island          = game.GetLandIsland();
+	auto& registry        = game.GetEntityRegistry();
+	const auto entity     = registry.Create();
+	const auto position   = GetXYPosFromString(params[0].GetString());
+	const auto objectType = params[1].GetString();
+	const auto rotation   = params[2].GetNumber();
+	float size            = params[3].GetNumber();
+
+	float radians = GetRadians(rotation) + 3.14159; // todo: not right?
+	size          = GetSize(size);
+
+	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
+	const glm::vec3 rot(0.0f,radians, 0.0f);
+
+	registry.Assign<AnimatedStatic>(entity, objectType);
+	registry.Assign<Transform>(entity, pos, rot, glm::vec3(size));
 }
 
 void FeatureScriptCommands::FireFlySpellRewardProb(const ScriptCommandContext& ctx)
