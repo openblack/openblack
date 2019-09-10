@@ -28,7 +28,7 @@ Lexer::Lexer(const std::string& source):
 {
 	current_ = source_.begin();
 	end_     = source_.end();
-};
+}
 
 Token Lexer::GetToken()
 {
