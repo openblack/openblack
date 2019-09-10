@@ -20,15 +20,27 @@
 
 #include "Mesh.h"
 
-#include <Game.h>
 #include <stdexcept>
-#include <stdint.h>
+#include <array>
+
+#include "OpenGL.h"
 
 using namespace openblack::graphics;
 
-Mesh::Mesh(VertexBuffer* vertexBuffer, GLuint type):
-    _vertexBuffer(std::move(vertexBuffer)),
-    _type(type)
+namespace
+{
+constexpr std::array<GLenum, 5> topologies = {
+	GL_POINTS,
+	GL_LINES,
+	GL_LINE_STRIP,
+	GL_TRIANGLES,
+	GL_TRIANGLE_STRIP,
+};
+}
+
+Mesh::Mesh(VertexBuffer* vertexBuffer, Topology topology)
+	: _vertexBuffer(vertexBuffer)
+	, _topology(topology)
 {
 	glGenVertexArrays(1, &_vao);
 	glBindVertexArray(_vao);
@@ -39,10 +51,10 @@ Mesh::Mesh(VertexBuffer* vertexBuffer, GLuint type):
 	glBindVertexArray(0);
 }
 
-Mesh::Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, GLuint type):
-    _vertexBuffer(std::move(vertexBuffer)),
-    _indexBuffer(std::move(indexBuffer)),
-    _type(type)
+Mesh::Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, Topology topology)
+	: _vertexBuffer(vertexBuffer)
+	, _indexBuffer(indexBuffer)
+	, _topology(topology)
 {
 	glGenVertexArrays(1, &_vao);
 	glBindVertexArray(_vao);
@@ -60,19 +72,19 @@ Mesh::~Mesh()
 		glDeleteVertexArrays(1, &_vao);
 }
 
-std::shared_ptr<VertexBuffer> Mesh::GetVertexBuffer()
+const VertexBuffer& Mesh::GetVertexBuffer() const
 {
-	return _vertexBuffer;
+	return *_vertexBuffer;
 }
 
-std::shared_ptr<IndexBuffer> Mesh::GetIndexBuffer()
+const IndexBuffer& Mesh::GetIndexBuffer() const
 {
-	return _indexBuffer;
+	return *_indexBuffer;
 }
 
-GLuint Mesh::GetType() const noexcept
+Mesh::Topology Mesh::GetTopology() const noexcept
 {
-	return _type;
+	return _topology;
 }
 
 void Mesh::Draw()
@@ -89,15 +101,16 @@ void Mesh::Draw()
 
 void Mesh::Draw(uint32_t count, uint32_t startIndex)
 {
+	auto topology = topologies[static_cast<size_t>(_topology)];
 	glBindVertexArray(_vao);
 	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
 	{
 		auto indexBufferOffset = startIndex * _indexBuffer->GetStride();
 		auto indexType = _indexBuffer->GetType() == IndexBuffer::Type::Uint16 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT;
-		glDrawElements(_type, count, indexType, reinterpret_cast<void*>(indexBufferOffset));
+		glDrawElements(topology, count, indexType, reinterpret_cast<void*>(indexBufferOffset));
 	}
 	else
 	{
-		glDrawArrays(_type, 0, count);
+		glDrawArrays(topology, 0, count);
 	}
 }

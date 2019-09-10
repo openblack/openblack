@@ -109,7 +109,7 @@ void LandBlock::BuildMesh(LandIsland& island)
 	auto verts = buildVertexList(island);
 
 	VertexBuffer* vertexBuffer = new VertexBuffer(verts.data(), verts.size(), decl);
-	_mesh                      = std::make_unique<Mesh>(vertexBuffer, GL_TRIANGLES);
+	_mesh = std::make_unique<Mesh>(vertexBuffer, Mesh::Topology::TriangleList);
 }
 
 std::vector<LandVertex> LandBlock::buildVertexList(LandIsland& island)
