@@ -74,8 +74,10 @@ void Texture2D::Create(uint32_t width, uint32_t height, uint32_t layers, Interna
 	_layers = layers;
 }
 
-void Texture2D::Bind() const
+void Texture2D::Bind(uint8_t textureBindingPoint) const
 {
+	glActiveTexture(GL_TEXTURE0 + textureBindingPoint);
+
 	auto bindPoint = _layers > 1 ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
 	auto texture = static_cast<GLuint>(_handle);
 	glBindTexture(bindPoint, texture);

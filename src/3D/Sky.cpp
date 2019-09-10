@@ -127,8 +127,7 @@ void Sky::Draw(graphics::ShaderProgram& program)
 {
 	program.SetUniformValue("u_modelTransform", glm::mat4(1.0f));
 
-	glActiveTexture(GL_TEXTURE0);
-	_texture->Bind();
+	_texture->Bind(0);
 
 	_model->Draw(program, 0);
 }

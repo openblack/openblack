@@ -169,7 +169,7 @@ class Texture2D
 	[[nodiscard]] uint32_t GetHeight() const { return _height; }
 	[[nodiscard]] uint32_t GetLayerCount() const { return _layers; }
 
-	void Bind() const;
+	void Bind(uint8_t textureBindingPoint) const;
 
 	void GenerateMipmap();
 

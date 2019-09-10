@@ -185,14 +185,9 @@ void LandIsland::Draw(ShaderProgram& program)
 	program.SetUniformValue("sBumpMap", 1);
 	program.SetUniformValue("sSmallBumpMap", 2);
 
-	glActiveTexture(GL_TEXTURE0);
-	_materialArray->Bind();
-
-	glActiveTexture(GL_TEXTURE1);
-	_textureBumpMap->Bind();
-
-	glActiveTexture(GL_TEXTURE2);
-	_textureSmallBump->Bind();
+	_materialArray->Bind(0);
+	_textureBumpMap->Bind(1);
+	_textureSmallBump->Bind(2);
 
 	for (auto& block : _landBlocks)
 		block.Draw(program);

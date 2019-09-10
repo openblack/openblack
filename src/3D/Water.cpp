@@ -102,8 +102,7 @@ void Water::createMesh()
 void Water::Draw(ShaderProgram& program) const
 {
 	program.SetUniformValue("sReflection", 0);
-	glActiveTexture(GL_TEXTURE0);
-	_reflectionFrameBuffer->GetTexture()->Bind();
+	_reflectionFrameBuffer->GetTexture()->Bind(0);
 
 	_mesh->Draw();
 }
