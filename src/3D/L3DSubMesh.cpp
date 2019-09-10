@@ -129,7 +129,7 @@ void L3DSubMesh::Load(IStream& stream)
 
 	// build our buffers
 	auto vertexBuffer = new VertexBuffer(reinterpret_cast<const void*>(verticies.data()), verticies.size(), decl);
-	auto indexBuffer  = new IndexBuffer(indices.data(), indices.size(), GL_UNSIGNED_SHORT);
+	auto indexBuffer  = new IndexBuffer(indices.data(), indices.size(), IndexBuffer::Type::Uint16);
 	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, GL_TRIANGLES);
 
 

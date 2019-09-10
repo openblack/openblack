@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "OpenGL.h"
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/VertexBuffer.h>
 

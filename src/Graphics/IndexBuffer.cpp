@@ -22,9 +22,11 @@
 
 #include <cassert>
 
+#include "OpenGL.h"
+
 using namespace openblack::graphics;
 
-IndexBuffer::IndexBuffer(const void* indices, size_t indicesCount, GLenum type):
+IndexBuffer::IndexBuffer(const void* indices, size_t indicesCount, Type type):
     _ibo(0), _count(indicesCount), _type(type), _hint(GL_STATIC_DRAW)
 {
 	assert(indices != nullptr);
@@ -59,34 +61,17 @@ std::size_t IndexBuffer::GetStride() const
 	return GetTypeSize(_type);
 }
 
-GLenum IndexBuffer::GetType() const
+IndexBuffer::Type IndexBuffer::GetType() const
 {
 	return _type;
 }
 
-GLuint IndexBuffer::GetIBO() const
+uint32_t IndexBuffer::GetIBO() const
 {
 	return _ibo;
 }
 
-std::size_t IndexBuffer::GetTypeSize(GLenum type)
+std::size_t IndexBuffer::GetTypeSize(Type type)
 {
-	switch (type)
-	{
-	case GL_UNSIGNED_BYTE:
-		return 1;
-	case GL_SHORT:
-	case GL_UNSIGNED_SHORT:
-		return 2;
-	case GL_INT:
-	case GL_UNSIGNED_INT:
-	case GL_FLOAT:
-		return 4;
-	case GL_DOUBLE:
-		return 8;
-	default:
-		break;
-	}
-
-	return 0;
+	return type == Type::Uint16 ? sizeof(uint16_t) : sizeof(uint32_t);
 }
