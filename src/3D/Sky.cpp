@@ -44,9 +44,9 @@ Sky::Sky()
 	_model = std::make_unique<L3DMesh>();
 	_model->LoadFromFile("./Data/WeatherSystem/sky.l3d");
 
-	for (int i = 0; i < alignments.size(); i++)
+	for (uint32_t i = 0; i < alignments.size(); i++)
 	{
-		for (int j = 0; j < times.size(); j++)
+		for (uint32_t j = 0; j < times.size(); j++)
 		{
 			auto time = std::string(times[j]);
 			if (i == 0)

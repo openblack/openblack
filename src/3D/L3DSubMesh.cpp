@@ -72,7 +72,7 @@ void L3DSubMesh::Load(IStream& stream)
 
 	int primVertOffset  = 0;
 	int primIndexOffset = 0;
-	for (int i = 0; i < header.numPrimitives; i++)
+	for (uint32_t i = 0; i < header.numPrimitives; i++)
 	{
 		struct
 		{
@@ -96,7 +96,7 @@ void L3DSubMesh::Load(IStream& stream)
 
 		// todo: THIS IS SLOW
 		stream.Seek(primitive.verticiesOffset, SeekMode::Begin);
-		for (int j = 0; j < primitive.numVerticies; j++)
+		for (uint32_t j = 0; j < primitive.numVerticies; j++)
 		{
 			L3DVertex vertex;
 			stream.Read(&vertex);
@@ -104,7 +104,7 @@ void L3DSubMesh::Load(IStream& stream)
 		}
 
 		stream.Seek(primitive.trianglesOffset, SeekMode::Begin);
-		for (int j = 0; j < primitive.numTriangles * 3; j++)
+		for (uint32_t j = 0; j < primitive.numTriangles * 3; j++)
 		{
 			uint16_t index = stream.ReadValue<uint16_t>();
 			indices.push_back(index + primVertOffset);

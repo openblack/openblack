@@ -152,7 +152,7 @@ void Script::runCommand(const std::string& identifier, const std::vector<Token>&
 	}
 
 	// Validate the typing of the given arguments against what is expected
-	for (auto i = 0; i < parameters.size(); i++)
+	for (auto i = 0u; i < parameters.size(); i++)
 	{
 		if (parameters[i].GetType() != expected_parameters[i])
 		{

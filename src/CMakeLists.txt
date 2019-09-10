@@ -47,6 +47,7 @@ else(MSVC)
 		-Werror
 		-Wreorder
 		-Wdelete-non-abstract-non-virtual-dtor
+		-Wsign-compare
 #		-Wall
 #		-Wextra
 #		-pedantic
