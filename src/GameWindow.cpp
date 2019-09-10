@@ -74,7 +74,7 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 	// Get SDL Window requirements from Renderer
 	flags |= Renderer::GetRequiredFlags();
 	for (auto& attr: Renderer::GetRequiredWindowingAttributes()) {
-		if (attr.api == Renderer::Api::OpenGl) {;
+		if (attr.api == Renderer::Api::OpenGl) {
 			SDL_GL_SetAttribute(static_cast<SDL_GLattr>(attr.name), attr.value);
 		}
 	}
