@@ -28,39 +28,29 @@ Clone the code using: `git clone --recursive https://github.com/openblack/openbl
 * Install [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/)
 * Install [CMake](https://cmake.org/download/)
 * Open CMake GUI and point it to `openblack` folder, set build directory to `openblack/build`
-* Configure the following variables:
-  * `SDL2_ROOT_DIR` - [SDL2](https://www.libsdl.org)
-  * `GLEW_ROOT_DIR`
-  * `GLM_ROOT_DIR`
+* Ensure `HUNTER_ENABLED=1` which will download all dependencies automatically for you.
 * Press Configure, Generate, Open Project and then build.
 
 ## Linux
 
-Building has been tested on Ubuntu 19.04 and works fine, however GCC7 (e.g. Ubuntu 18.04) should suffice for building.
-
-Dependencies can be installed simply from apt:
-
-```
-sudo apt install cmake libglew-dev libsdl2-dev libglm-dev libspdlog-dev
-```
-
-Then to build run CMake in a build directory:
+Dependencies can be installed simply from your package manager, compiled from source
+or you can enable Hunter to manage dependencies for you.
 
 ```bash
+sudo apt install cmake libsdl2-dev libglm-dev libspdlog-dev
+git clone --recursive https://github.com/openblack/openblack.git
+cd openblack
 cmake -S . -B build
 cmake --build build
 ```
-
-**Mesa drivers on Linux:** if you are trying to run with Mesa drivers and are getting issues with OpenGL context try messing with `MESA_GL_VERSION_OVERRIDE` when running like so: `MESA_GL_VERSION_OVERRIDE=4.3FC MESA_GLSL_VERSION_OVERRIDE=430 bin/donut`
-
-## Documentation
-Documentation on various different file formats used throughout Black and White can all be
-found in the `docs` folder in the project root directory.
 
 ## Contributing
 Contributions are always welcome, whether it's modifying source code to add new
 features or bug fixes, documenting new file formats or simply editing some
 grammar.
+
+You can also join the [Discord for development discussion]((https://discord.gg/5QTexBU))
+if you are unsure of anything.
 
 ## License
 openblack is released as open source software under the [GPL v3](https://opensource.org/licenses/gpl-3.0.html)
