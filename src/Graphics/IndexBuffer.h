@@ -22,6 +22,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <bgfx/bgfx.h>
 
 namespace openblack
 {
@@ -58,6 +59,8 @@ class IndexBuffer
 
 	uint32_t _ibo;
 	uint32_t _hint;
+
+	bgfx::IndexBufferHandle _bgfxHandle;
 };
 
 } // namespace graphics
