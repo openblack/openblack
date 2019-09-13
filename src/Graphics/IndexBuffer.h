@@ -49,7 +49,8 @@ class IndexBuffer
 	std::size_t GetSize() const;
 	std::size_t GetStride() const;
 	Type GetType() const;
-	uint32_t GetIBO() const;
+
+	void Bind();
 
   private:
 	std::size_t _count;
