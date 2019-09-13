@@ -21,7 +21,7 @@ class Registry
 {
   public:
 	void DebugCreateEntities(float x, float y, float z);
-	void DrawModels(const Camera& camera, graphics::ShaderManager& shaderManager);
+	void DrawModels(graphics::ShaderManager& shaderManager);
 	void Update();
 	decltype(auto) Create() { return _registry.create(); }
 	template <typename Component, typename... Args>
