@@ -20,36 +20,37 @@
 
 #pragma once
 
-#include <Graphics/OpenGL.h>
+#include <cstdint>
+#include <memory>
+
 #include <Graphics/Texture2D.h>
 
-namespace openblack {
-namespace graphics {
+namespace openblack::graphics {
 
 class FrameBuffer {
 public:
 	FrameBuffer() = delete;
-	FrameBuffer(GLsizei width, GLsizei height, GLenum format);
+	FrameBuffer(uint32_t width, uint32_t height, Format format);
 	~FrameBuffer();
 
-	void Bind() { glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _handle); }
-	void Unbind() { glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); }
+	void Bind();
+	void Unbind();
 
-	Texture2D* GetTexture() { return _texture; }
+	Texture2D& GetTexture() { return *_texture; }
 
 	//inline void Bind() { glBindTexture(GL_TEXTURE_RECTANGLE, _textureID); }
 
-	GLsizei GetWidth() const { return _width; }
-	GLsizei GetHeight() const { return _height; }
+	[[nodiscard]] uint32_t GetWidth() const { return _width; }
+	[[nodiscard]] uint32_t GetHeight() const { return _height; }
+
 private:
-	GLuint _handle;
+	uint32_t _handle;
 
-	GLsizei _width;
-	GLsizei _height;
-	GLenum _format;
+	uint32_t _width;
+	uint32_t _height;
+	Format _format;
 
-	Texture2D* _texture;
+	std::unique_ptr<Texture2D> _texture;
 };
 
-}
-}
+}  // namespace openblack::graphics

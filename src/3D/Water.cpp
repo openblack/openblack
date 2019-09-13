@@ -18,8 +18,10 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/Water.h>
 #include <imgui/imgui.h>
+
+#include <3D/Water.h>
+#include <Graphics/OpenGL.h>
 
 using namespace openblack;
 
@@ -73,7 +75,7 @@ Water::Water()
 
 	// _waterShader = resourceCaches.shaderProgram->Request("water.program");
 
-	_reflectionFrameBuffer = std::make_unique<FrameBuffer>(1024, 1024, GL_RGBA);
+	_reflectionFrameBuffer = std::make_unique<FrameBuffer>(1024, 1024, graphics::Format::RGBA8);
 
 	createMesh();
 }
@@ -102,7 +104,7 @@ void Water::createMesh()
 void Water::Draw(ShaderProgram& program) const
 {
 	program.SetUniformValue("sReflection", 0);
-	_reflectionFrameBuffer->GetTexture()->Bind(0);
+	_reflectionFrameBuffer->GetTexture().Bind(0);
 
 	_mesh->Draw(program);
 }
@@ -131,7 +133,7 @@ void Water::EndReflection()
 void Water::DebugGUI()
 {
 	ImGui::Begin("Water Debug");
-	ImGui::Image((void*)(intptr_t)_reflectionFrameBuffer->GetTexture()->GetNativeHandle(), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Image((void*)(intptr_t)_reflectionFrameBuffer->GetTexture().GetNativeHandle(), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::End();
 }
 
