@@ -22,6 +22,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 
 #include <Graphics/Texture2D.h>
 
@@ -30,13 +31,13 @@ namespace openblack::graphics {
 class FrameBuffer {
 public:
 	FrameBuffer() = delete;
-	FrameBuffer(uint32_t width, uint32_t height, Format format);
+	FrameBuffer(uint32_t width, uint32_t height, Format colorFormat, std::optional<Format> depthStencilFormat={});
 	~FrameBuffer();
 
 	void Bind();
 	void Unbind();
 
-	Texture2D& GetTexture() { return *_texture; }
+	Texture2D& GetColorAttachment() { return *_colorAttachment; }
 
 	//inline void Bind() { glBindTexture(GL_TEXTURE_RECTANGLE, _textureID); }
 
@@ -48,9 +49,11 @@ private:
 
 	uint32_t _width;
 	uint32_t _height;
-	Format _format;
+	Format _colorFormat;
+	std::optional<Format> _depthStencilFormat;
 
-	std::unique_ptr<Texture2D> _texture;
+	std::unique_ptr<Texture2D> _colorAttachment;
+	std::unique_ptr<Texture2D> _depthStencilAttachment;
 };
 
 }  // namespace openblack::graphics

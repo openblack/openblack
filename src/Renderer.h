@@ -88,7 +88,7 @@ class Renderer {
 
 	void UploadUniforms(std::chrono::microseconds dt, const Game& game, const Camera& camera);
 	void ClearScene(int width, int height);
-	void DrawScene(const Game &game, bool drawWater, bool drawDebugCross=false);
+	void DrawScene(const Game &game, bool drawWater, bool drawDebugCross, bool cullBack=true);
 
   private:
   static std::vector<RequiredAttribute> GetRequiredContextAttributes();

@@ -75,7 +75,7 @@ Water::Water()
 
 	// _waterShader = resourceCaches.shaderProgram->Request("water.program");
 
-	_reflectionFrameBuffer = std::make_unique<FrameBuffer>(1024, 1024, graphics::Format::RGBA8);
+	_reflectionFrameBuffer = std::make_unique<FrameBuffer>(1024, 1024, graphics::Format::RGBA8, graphics::Format::Depth24Stencil8);
 
 	createMesh();
 }
@@ -104,7 +104,7 @@ void Water::createMesh()
 void Water::Draw(ShaderProgram& program) const
 {
 	program.SetUniformValue("sReflection", 0);
-	_reflectionFrameBuffer->GetTexture().Bind(0);
+	_reflectionFrameBuffer->GetColorAttachment().Bind(0);
 
 	_mesh->Draw(program);
 }
@@ -133,7 +133,7 @@ void Water::EndReflection()
 void Water::DebugGUI()
 {
 	ImGui::Begin("Water Debug");
-	ImGui::Image((void*)(intptr_t)_reflectionFrameBuffer->GetTexture().GetNativeHandle(), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Image((void*)(intptr_t) _reflectionFrameBuffer->GetColorAttachment().GetNativeHandle(), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::End();
 }
 

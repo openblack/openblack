@@ -27,18 +27,27 @@
 
 using namespace openblack::graphics;
 
-FrameBuffer::FrameBuffer(uint32_t width, uint32_t height, Format format) :
-    _handle(0), _width(width), _height(height), _format(format)
+FrameBuffer::FrameBuffer(uint32_t width, uint32_t height, Format colorFormat, std::optional<Format> depthStencilFormat) :
+	_handle(0), _width(width), _height(height), _colorFormat(colorFormat), _depthStencilFormat(depthStencilFormat)
 {
 	glGenFramebuffers(1, &_handle);
 	assert(_handle);
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _handle);
 
-	_texture = std::make_unique<Texture2D>();
-	_texture->Create(_width, _height, 1, format);
+	_colorAttachment = std::make_unique<Texture2D>();
+	_colorAttachment->Create(_width, _height, 1, _colorFormat);
+	if (depthStencilFormat)
+	{
+		_depthStencilAttachment = std::make_unique<Texture2D>();
+		_depthStencilAttachment->Create(_width, _height, 1, _depthStencilFormat.value());
+	}
 
-	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _texture->GetNativeHandle(), 0);
+	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _colorAttachment->GetNativeHandle(), 0);
+	if (depthStencilFormat)
+	{
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, _depthStencilAttachment->GetNativeHandle(), 0);
+	}
 
 	if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		throw std::runtime_error("failed to create framebuffer");

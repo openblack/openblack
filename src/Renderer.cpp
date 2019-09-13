@@ -194,7 +194,7 @@ void Renderer::ClearScene(int width, int height)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Renderer::DrawScene(const Game &game, bool drawWater, bool drawDebugCross)
+void Renderer::DrawScene(const Game &game, bool drawWater, bool drawDebugCross, bool cullBack)
 {
 	ShaderProgram* objectShader = _shaderManager->GetShader("SkinnedMesh");
 	ShaderProgram* waterShader = _shaderManager->GetShader("Water");
@@ -208,7 +208,7 @@ void Renderer::DrawScene(const Game &game, bool drawWater, bool drawDebugCross)
 	game.GetSky().Draw(*objectShader);
 
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	glCullFace(cullBack ? GL_BACK : GL_FRONT);
 	glFrontFace(GL_CCW);
 
 	if (drawWater)
