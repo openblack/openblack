@@ -4,7 +4,7 @@ layout(location = 0) in vec2 vertPos;
 
 uniform mat4 u_viewProj;
 
-varying vec4 screenSpacePosition;
+varying vec4 v_texcoord0;
 
 vec4 ScreenSpacePosition(vec4 position)
 {
@@ -20,6 +20,6 @@ void main()
 	vec4 vertex = vec4(vec3(vertPos.x * 10000, 0.0, vertPos.y * 10000), 1.0);
 	vec4 position = u_viewProj * vertex;
 	gl_Position = position;
-	
-	screenSpacePosition = ScreenSpacePosition(position);
+
+	v_texcoord0 = ScreenSpacePosition(position);
 }
