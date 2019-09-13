@@ -23,6 +23,8 @@
 #include <stdexcept>
 #include <array>
 
+#include "ShaderProgram.h"
+
 #include "OpenGL.h"
 
 using namespace openblack::graphics;
@@ -87,22 +89,23 @@ Mesh::Topology Mesh::GetTopology() const noexcept
 	return _topology;
 }
 
-void Mesh::Draw()
+void Mesh::Draw(const openblack::graphics::ShaderProgram &program)
 {
 	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
 	{
-		Draw(_indexBuffer->GetCount(), 0);
+		Draw(program, _indexBuffer->GetCount(), 0);
 	}
 	else
 	{
-		Draw(_vertexBuffer->GetVertexCount(), 0);
+		Draw(program, _vertexBuffer->GetVertexCount(), 0);
 	}
 }
 
-void Mesh::Draw(uint32_t count, uint32_t startIndex)
+void Mesh::Draw(const openblack::graphics::ShaderProgram &program, uint32_t count, uint32_t startIndex)
 {
 	auto topology = topologies[static_cast<size_t>(_topology)];
 	glBindVertexArray(_vao);
+	glUseProgram(program.GetRawHandle());
 	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
 	{
 		auto indexBufferOffset = startIndex * _indexBuffer->GetStride();

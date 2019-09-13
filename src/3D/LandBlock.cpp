@@ -198,5 +198,5 @@ std::vector<LandVertex> LandBlock::buildVertexList(LandIsland& island)
 void LandBlock::Draw(ShaderProgram& program)
 {
 	program.SetUniformValue("blockPosition", _mapPosition);
-	_mesh->Draw();
+	_mesh->Draw(program);
 }

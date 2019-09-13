@@ -32,6 +32,8 @@ namespace openblack
 namespace graphics
 {
 
+class ShaderProgram;
+
 class Mesh
 {
   public:
@@ -53,8 +55,8 @@ class Mesh
 
 	[[nodiscard]] Topology GetTopology() const noexcept;
 
-	void Draw();
-	void Draw(uint32_t count, uint32_t startIndex);
+	void Draw(const openblack::graphics::ShaderProgram &program);
+	void Draw(const openblack::graphics::ShaderProgram &program, uint32_t count, uint32_t startIndex);
 
   protected:
 	std::unique_ptr<VertexBuffer> _vertexBuffer;

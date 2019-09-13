@@ -45,8 +45,6 @@ class ShaderProgram
 	ShaderProgram(const std::string& vertexSource, const std::string& fragmentSource);
 	~ShaderProgram();
 
-	void Bind();
-
 	void SetUniformValue(const char* uniformName, int value);
 	void SetUniformValue(const char* uniformName, float value);
 	void SetUniformValue(const char* uniformName, const glm::vec2& v);

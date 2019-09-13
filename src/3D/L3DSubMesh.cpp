@@ -160,7 +160,7 @@ void L3DSubMesh::Draw(const L3DMesh& mesh, ShaderProgram& program) const
 				Game::instance()->GetMeshPack().GetTexture(prim.skinID).Bind(0);
 		}
 
-		_mesh->Draw(prim.indicesCount, prim.indicesOffset);
+		_mesh->Draw(program, prim.indicesCount, prim.indicesOffset);
 	}
 }
 
