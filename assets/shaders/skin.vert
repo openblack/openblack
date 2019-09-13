@@ -7,15 +7,16 @@ layout(location = 2) in vec3 a_normal;
 uniform mat4 u_viewProj;
 uniform mat4 u_model;
 
-out vec3 v_position;
+out vec4 v_position;
 out vec3 v_normal;
 out vec2 v_texcoord0;
 
 void main()
 {
-	gl_Position = u_viewProj * u_model * vec4(a_position, 1.0);
-
-	v_position = (u_model * vec4(a_position, 1.0)).xyz;
+	v_position = u_model * vec4(a_position, 1.0f);
 	v_normal = a_normal;
 	v_texcoord0 = a_texcoord0;
+
+	gl_Position = u_viewProj * v_position;
+
 }
