@@ -125,7 +125,7 @@ void Sky::CalculateTextures()
 
 void Sky::Draw(graphics::ShaderProgram& program)
 {
-	program.SetUniformValue("u_modelTransform", glm::mat4(1.0f));
+	program.SetUniformValue("u_model", glm::mat4(1.0f));
 
 	_texture->Bind(0);
 

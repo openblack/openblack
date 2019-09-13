@@ -15,8 +15,8 @@ flat out vec3 MaterialBlendCoefficient;
 out float LightLevel;
 out float WaterAlpha;
 
-uniform mat4 viewProj;
-uniform vec2 blockPosition;
+uniform mat4 u_viewProj;
+uniform vec2 u_blockPosition;
 
 void main()
 {
@@ -28,6 +28,6 @@ void main()
 	LightLevel = lightLevel;
 	WaterAlpha = waterAlpha;
 
-	vec3 transformedPosition = vec3(position.x + blockPosition.x, position.y, position.z + blockPosition.y);
-    gl_Position = viewProj * vec4(transformedPosition, 1.0);
+	vec3 transformedPosition = vec3(position.x + u_blockPosition.x, position.y, position.z + u_blockPosition.y);
+	gl_Position = u_viewProj * vec4(transformedPosition, 1.0);
 }
