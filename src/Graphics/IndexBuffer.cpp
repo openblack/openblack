@@ -31,9 +31,14 @@ IndexBuffer::IndexBuffer(const void* indices, size_t indicesCount, Type type)
 	, _type(type)
 	, _ibo(0)
 	, _hint(GL_STATIC_DRAW)
+	, _bgfxHandle(BGFX_INVALID_HANDLE)
 {
 	assert(indices != nullptr);
 	assert(indicesCount > 0);
+
+	auto mem = bgfx::makeRef(indices, indicesCount * GetTypeSize(_type));
+	_bgfxHandle = bgfx::createIndexBuffer(mem, type == Type::Uint32 ? BGFX_BUFFER_INDEX32 : 0);
+	bgfx::frame();
 
 	glGenBuffers(1, &_ibo);
 	if (glGetError() != GL_NO_ERROR)
@@ -47,6 +52,8 @@ IndexBuffer::~IndexBuffer()
 {
 	if (_ibo != 0)
 		glDeleteBuffers(1, &_ibo);
+	if (bgfx::isValid(_bgfxHandle))
+		bgfx::destroy(_bgfxHandle);
 }
 
 std::size_t IndexBuffer::GetCount() const
@@ -77,4 +84,5 @@ std::size_t IndexBuffer::GetTypeSize(Type type)
 void IndexBuffer::Bind()
 {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
+	bgfx::setIndexBuffer(_bgfxHandle);
 }
