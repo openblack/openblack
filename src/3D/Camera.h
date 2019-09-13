@@ -47,8 +47,9 @@ class Camera
 
 	virtual ~Camera() = default;
 
-	virtual glm::mat4 GetViewProjectionMatrix() const;
-	glm::mat4 GetProjectionMatrix() const { return _projectionMatrix; }
+	[[nodiscard]] glm::mat4 GetViewMatrix() const;
+	[[nodiscard]] const glm::mat4& GetProjectionMatrix() const { return _projectionMatrix; }
+	[[nodiscard]] virtual glm::mat4 GetViewProjectionMatrix() const;
 
 	glm::vec3 GetPosition() const { return _position; }
 	glm::vec3 GetRotation() const { return glm::degrees(_rotation); }
