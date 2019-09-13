@@ -35,8 +35,8 @@ class DebugLines
 {
   public:
 	static std::unique_ptr<DebugLines> CreateCross();
-	std::unique_ptr<DebugLines> CreateBox(const glm::vec3& color);
-	std::unique_ptr<DebugLines> CreateLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color);
+	std::unique_ptr<DebugLines> CreateBox(const glm::vec4 &color);
+	std::unique_ptr<DebugLines> CreateLine(const glm::vec4& from, const glm::vec4& to, const glm::vec4& color);
 
 	virtual ~DebugLines();
 

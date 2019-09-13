@@ -34,8 +34,8 @@ namespace
 {
 struct Vertex
 {
-  glm::vec3 pos;
-  glm::vec3 col;
+  glm::vec4 pos;
+  glm::vec4 col;
 };
 }
 
@@ -43,8 +43,8 @@ std::unique_ptr<DebugLines> DebugLines::CreateDebugLines(uint32_t size, const vo
 {
 	VertexDecl decl;
 	decl.reserve(2);
-	decl.emplace_back(3, VertexAttrib::Type::Float); // position
-	decl.emplace_back(3, VertexAttrib::Type::Float); // color
+	decl.emplace_back(4, VertexAttrib::Type::Float); // position
+	decl.emplace_back(4, VertexAttrib::Type::Float); // color
 
 	auto vertexBuffer = new VertexBuffer(data, vertexCount, decl);
 	auto mesh = std::make_unique<Mesh>(vertexBuffer, Mesh::Topology::LineList);
@@ -55,52 +55,52 @@ std::unique_ptr<DebugLines> DebugLines::CreateDebugLines(uint32_t size, const vo
 std::unique_ptr<DebugLines> DebugLines::CreateCross()
 {
 	static const std::array<Vertex, 6> cross = {
-		Vertex {glm::vec3(0.5f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f)},
-		Vertex {glm::vec3(-0.5f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f)},
-		Vertex {glm::vec3(0.0f, 0.5f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)},
-		Vertex {glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)},
-		Vertex {glm::vec3(0.0f, 0.0f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f)},
-		Vertex {glm::vec3(0.0f, 0.0f, -0.5f), glm::vec3(0.0f, 0.0f, 1.0f)},
+		Vertex {glm::vec4(0.5f, 0.0f, 0.0f, 1.0f), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)},
+		Vertex {glm::vec4(-0.5f, 0.0f, 0.0f, 1.0f), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)},
+		Vertex {glm::vec4(0.0f, 0.5f, 0.0f, 1.0f), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f)},
+		Vertex {glm::vec4(0.0f, -0.5f, 0.0f, 1.0f), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f)},
+		Vertex {glm::vec4(0.0f, 0.0f, 0.5f, 1.0f), glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)},
+		Vertex {glm::vec4(0.0f, 0.0f, -0.5f, 1.0f), glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)},
 	};
 
 	return CreateDebugLines(cross.size() * sizeof(cross[0]), cross.data(), cross.size());
 }
 
-std::unique_ptr<DebugLines> DebugLines::CreateBox(const glm::vec3 &color)
+std::unique_ptr<DebugLines> DebugLines::CreateBox(const glm::vec4 &color)
 {
 	std::array<Vertex, 24> box = {
-		Vertex{glm::vec3(-0.5f, 0.5f, -0.5f), color},
-		Vertex{glm::vec3(0.5f, 0.5f, -0.5f), color},
-		Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), color},
-		Vertex{glm::vec3(0.5f, -0.5f, -0.5f), color},
-		Vertex{glm::vec3(-0.5f, 0.5f, -0.5f), color},
-		Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), color},
-		Vertex{glm::vec3(0.5f, 0.5f, -0.5f), color},
-		Vertex{glm::vec3(0.5f, -0.5f, -0.5f), color},
+		Vertex{glm::vec4(-0.5f, 0.5f, -0.5f, 1.0f), color},
+		Vertex{glm::vec4(0.5f, 0.5f, -0.5f, 1.0f), color},
+		Vertex{glm::vec4(-0.5f, -0.5f, -0.5f, 1.0f), color},
+		Vertex{glm::vec4(0.5f, -0.5f, -0.5f, 1.0f), color},
+		Vertex{glm::vec4(-0.5f, 0.5f, -0.5f, 1.0f), color},
+		Vertex{glm::vec4(-0.5f, -0.5f, -0.5f, 1.0f), color},
+		Vertex{glm::vec4(0.5f, 0.5f, -0.5f, 1.0f), color},
+		Vertex{glm::vec4(0.5f, -0.5f, -0.5f, 1.0f), color},
 
-		Vertex{glm::vec3(-0.5f, 0.5f, -0.5f), color},
-		Vertex{glm::vec3(-0.5f, 0.5f, 0.5f), color},
-		Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), color},
-		Vertex{glm::vec3(-0.5f, -0.5f, 0.5f), color},
-		Vertex{glm::vec3(0.5f, 0.5f, -0.5f), color},
-		Vertex{glm::vec3(0.5f, 0.5f, 0.5f), color},
-		Vertex{glm::vec3(0.5f, -0.5f, -0.5f), color},
-		Vertex{glm::vec3(0.5f, -0.5f, 0.5f), color},
+		Vertex{glm::vec4(-0.5f, 0.5f, -0.5f, 1.0f), color},
+		Vertex{glm::vec4(-0.5f, 0.5f, 0.5f, 1.0f), color},
+		Vertex{glm::vec4(-0.5f, -0.5f, -0.5f, 1.0f), color},
+		Vertex{glm::vec4(-0.5f, -0.5f, 0.5f, 1.0f), color},
+		Vertex{glm::vec4(0.5f, 0.5f, -0.5f, 1.0f), color},
+		Vertex{glm::vec4(0.5f, 0.5f, 0.5f, 1.0f), color},
+		Vertex{glm::vec4(0.5f, -0.5f, -0.5f, 1.0f), color},
+		Vertex{glm::vec4(0.5f, -0.5f, 0.5f, 1.0f), color},
 
-		Vertex{glm::vec3(-0.5f, 0.5f, 0.5f), color},
-		Vertex{glm::vec3(0.5f, 0.5f, 0.5f), color},
-		Vertex{glm::vec3(-0.5f, -0.5f, 0.5f), color},
-		Vertex{glm::vec3(0.5f, -0.5f, 0.5f), color},
-		Vertex{glm::vec3(-0.5f, 0.5f, 0.5f), color},
-		Vertex{glm::vec3(-0.5f, -0.5f, 0.5f), color},
-		Vertex{glm::vec3(0.5f, 0.5f, 0.5f), color},
-		Vertex{glm::vec3(0.5f, -0.5f, 0.5f), color},
+		Vertex{glm::vec4(-0.5f, 0.5f, 0.5f, 1.0f), color},
+		Vertex{glm::vec4(0.5f, 0.5f, 0.5f, 1.0f), color},
+		Vertex{glm::vec4(-0.5f, -0.5f, 0.5f, 1.0f), color},
+		Vertex{glm::vec4(0.5f, -0.5f, 0.5f, 1.0f), color},
+		Vertex{glm::vec4(-0.5f, 0.5f, 0.5f, 1.0f), color},
+		Vertex{glm::vec4(-0.5f, -0.5f, 0.5f, 1.0f), color},
+		Vertex{glm::vec4(0.5f, 0.5f, 0.5f, 1.0f), color},
+		Vertex{glm::vec4(0.5f, -0.5f, 0.5f, 1.0f), color},
 	};
 
 	return CreateDebugLines(box.size() * sizeof(box[0]), box.data(), box.size());
 }
 
-std::unique_ptr<DebugLines> DebugLines::CreateLine(const glm::vec3& from, const glm::vec3 &to, const glm::vec3 &color)
+std::unique_ptr<DebugLines> DebugLines::CreateLine(const glm::vec4& from, const glm::vec4 &to, const glm::vec4 &color)
 {
 	std::array<Vertex, 2> line = {
 		Vertex{from, color},
