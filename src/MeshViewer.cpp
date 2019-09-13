@@ -115,8 +115,8 @@ void MeshViewer::DrawScene()
 	glClearColor(39.0f / 255.0f, 70.0f / 255.0f, 89.0f / 255.0f, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	objectShader->SetUniformValue("u_viewProjection", perspective * view);
-	objectShader->SetUniformValue("u_modelTransform", glm::mat4(1.0f));
+	objectShader->SetUniformValue("u_viewProj", perspective * view);
+	objectShader->SetUniformValue("u_model", glm::mat4(1.0f));
 
 	const auto& mesh = meshes[static_cast<int>(_selectedMesh)];
 	if (_selectedSubMesh >= 0 && static_cast<uint32_t>(_selectedSubMesh) < mesh->GetSubMeshes().size())

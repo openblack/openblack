@@ -176,14 +176,15 @@ void Renderer::UploadUniforms(std::chrono::microseconds dt, const Game &game, co
 	ShaderProgram* waterShader = _shaderManager->GetShader("Water");
 	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
 
-	debugShader->SetUniformValue("u_viewProjection", game.GetCamera().GetViewProjectionMatrix());
-	waterShader->SetUniformValue("viewProj", camera.GetViewProjectionMatrix());
-	terrainShader->SetUniformValue("viewProj", camera.GetViewProjectionMatrix());
-	terrainShader->SetUniformValue("timeOfDay", game.GetConfig().timeOfDay);
-	terrainShader->SetUniformValue("bumpmapStrength", game.GetConfig().bumpMapStrength);
-	terrainShader->SetUniformValue("smallBumpmapStrength", game.GetConfig().smallBumpMapStrength);
-	objectShader->SetUniformValue("u_viewProjection", camera.GetViewProjectionMatrix());
-	objectShader->SetUniformValue("u_modelTransform", game.GetModelMatrix());
+	debugShader->SetUniformValue("u_viewProj", game.GetCamera().GetViewProjectionMatrix());
+	waterShader->SetUniformValue("u_viewProj", camera.GetViewProjectionMatrix());
+	terrainShader->SetUniformValue("u_viewProj", camera.GetViewProjectionMatrix());
+	objectShader->SetUniformValue("u_viewProj", camera.GetViewProjectionMatrix());
+
+	terrainShader->SetUniformValue("u_timeOfDay", game.GetConfig().timeOfDay);
+	terrainShader->SetUniformValue("u_bumpmapStrength", game.GetConfig().bumpMapStrength);
+	terrainShader->SetUniformValue("u_smallBumpmapStrength", game.GetConfig().smallBumpMapStrength);
+	objectShader->SetUniformValue("u_model", game.GetModelMatrix());
 }
 
 void Renderer::ClearScene(int width, int height)

@@ -6,11 +6,11 @@ layout(location = 2) in vec3 normal;
 
 out vec3 v_norm;
 
-uniform mat4 viewProj;
-uniform mat4 modelTransform;
+uniform mat4 u_viewProj;
+uniform mat4 u_model;
 
 void main()
 {
 	v_norm = normal;
-	gl_Position = viewProj * modelTransform * vec4(position, 1.0);
+	gl_Position = u_viewProj * u_model * vec4(position, 1.0);
 }

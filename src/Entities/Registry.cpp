@@ -28,7 +28,7 @@ void Registry::DrawModels(graphics::ShaderManager& shaderManager)
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 		modelMatrix           = glm::scale(modelMatrix, transform.scale);
 
-		objectShader->SetUniformValue("u_modelTransform", modelMatrix);
+		objectShader->SetUniformValue("u_model", modelMatrix);
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(model.meshId));
 
 		for (auto& submeshId : model.submeshIds)
@@ -43,7 +43,7 @@ void Registry::DrawModels(graphics::ShaderManager& shaderManager)
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 		modelMatrix           = glm::scale(modelMatrix, transform.scale);
 
-		objectShader->SetUniformValue("u_modelTransform", modelMatrix);
+		objectShader->SetUniformValue("u_model", modelMatrix);
 
 		// temporary-ish:
 		MeshId meshID = MeshId::Dummy;
@@ -77,7 +77,7 @@ void Registry::DrawModels(graphics::ShaderManager& shaderManager)
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 		modelMatrix           = glm::scale(modelMatrix, transform.scale);
 
-		objectShader->SetUniformValue("u_modelTransform", modelMatrix);
+		objectShader->SetUniformValue("u_model", modelMatrix);
 
 		// temporary-ish until we read info.dat:
 		MeshId meshID = MeshId::Dummy;

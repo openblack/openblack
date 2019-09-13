@@ -7,12 +7,12 @@ layout(location = 2) in vec3 normal;
 out vec3 v_norm;
 out vec2 TexCoord;
 
-uniform mat4 viewProj;
+uniform mat4 u_viewProj;
 
 void main()
 {
 	v_norm = normal;
 	TexCoord = tex;
 
-	gl_Position = viewProj * vec4(position, 1.0);
+	gl_Position = u_viewProj * vec4(position, 1.0);
 }
