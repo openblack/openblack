@@ -6,6 +6,8 @@ in vec3 v_position;
 in vec3 v_normal;
 in vec2 v_texcoord0;
 
+out vec4 o_color;
+
 float alphaThreshold = 1.0 / 255.0;
 
 void main()
@@ -26,5 +28,5 @@ void main()
 	vec4 diffuseTex = texture2D(s_diffuse, v_texcoord0);
 	diffuseTex.rgb = diffuseTex.rgb * (ambient + diffuse);
 	if(diffuseTex.a <= alphaThreshold) discard;
-	gl_FragColor = diffuseTex;
+	o_color = diffuseTex;
 }

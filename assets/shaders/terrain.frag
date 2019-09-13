@@ -15,7 +15,7 @@ uniform float u_timeOfDay;
 uniform float u_bumpmapStrength;
 uniform float u_smallBumpmapStrength;
 
-out vec4 FragColor;
+out vec4 o_color;
 
 void main()
 {
@@ -49,7 +49,7 @@ void main()
 	// apply light map
 	col = col * mix(.25f, clamp(v_LightLevel * 2, 0.5, 1), u_timeOfDay);
 
-	FragColor = vec4(col.r, col.g, col.b, v_WaterAlpha);
+	o_color = vec4(col.r, col.g, col.b, v_WaterAlpha);
 
 	if (v_WaterAlpha == 0.0) {
 		discard;
