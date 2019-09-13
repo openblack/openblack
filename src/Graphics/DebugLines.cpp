@@ -118,7 +118,7 @@ void DebugLines::SetPose(const glm::vec3 &center, float size)
 void DebugLines::Draw(ShaderProgram& program)
 {
 	program.SetUniformValue("u_model", _model);
-	_mesh->Draw();
+	_mesh->Draw(program);
 }
 
 DebugLines::DebugLines(std::unique_ptr<Mesh> &&mesh)

@@ -19,7 +19,6 @@ void Registry::DebugCreateEntities(float x, float y, float z)
 void Registry::DrawModels(const Camera& camera, graphics::ShaderManager& shaderManager)
 {
 	graphics::ShaderProgram* objectShader = shaderManager.GetShader("SkinnedMesh");
-	objectShader->Bind();
 	objectShader->SetUniformValue("u_viewProjection", camera.GetViewProjectionMatrix());
 
 	_registry.view<Model, Transform>().each([objectShader](Model& model, Transform& transform) {

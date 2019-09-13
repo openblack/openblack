@@ -97,48 +97,51 @@ ShaderProgram::~ShaderProgram()
 		glDeleteProgram(_program);
 }
 
-void ShaderProgram::Bind()
-{
-	glUseProgram(_program);
-}
-
 void ShaderProgram::SetUniformValue(const char* uniformName, int value)
 {
+	glUseProgram(_program);
 	glUniform1i(_uniforms[uniformName], value);
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, float value)
 {
+	glUseProgram(_program);
 	glUniform1f(_uniforms[uniformName], value);
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, const glm::vec2& v)
 {
+	glUseProgram(_program);
 	glUniform2fv(_uniforms[uniformName], 1, glm::value_ptr(v));
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, const glm::vec3& v)
 {
+	glUseProgram(_program);
 	glUniform3fv(_uniforms[uniformName], 1, glm::value_ptr(v));
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, const glm::vec4& v)
 {
+	glUseProgram(_program);
 	glUniform4fv(_uniforms[uniformName], 1, glm::value_ptr(v));
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, const glm::mat3& m)
 {
+	glUseProgram(_program);
 	glUniformMatrix3fv(_uniforms[uniformName], 1, GL_FALSE, glm::value_ptr(m));
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, const glm::mat4& m)
 {
+	glUseProgram(_program);
 	glUniformMatrix4fv(_uniforms[uniformName], 1, GL_FALSE, glm::value_ptr(m));
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, size_t count, const glm::mat4* m)
 {
+	glUseProgram(_program);
 	glUniformMatrix4fv(_uniforms[uniformName], count, GL_FALSE, glm::value_ptr(m[0]));
 }
 

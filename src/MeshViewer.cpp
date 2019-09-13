@@ -115,7 +115,6 @@ void MeshViewer::DrawScene()
 	glClearColor(39.0f / 255.0f, 70.0f / 255.0f, 89.0f / 255.0f, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	objectShader->Bind();
 	objectShader->SetUniformValue("u_viewProjection", perspective * view);
 	objectShader->SetUniformValue("u_modelTransform", glm::mat4(1.0f));
 

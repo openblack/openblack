@@ -184,7 +184,6 @@ void Renderer::DebugDraw(std::chrono::microseconds dt, const Game& game, const g
 	glDisable(GL_BLEND);
 
 	ShaderProgram* debugShader = _shaderManager->GetShader("DebugLine");
-	debugShader->Bind();
 	debugShader->SetUniformValue("u_viewProjection", game.GetCamera().GetViewProjectionMatrix());
 	_debugCross->Draw(*debugShader);
 }
@@ -196,7 +195,6 @@ void Renderer::DrawScene(std::chrono::microseconds dt, const Game& game, const C
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	ShaderProgram* objectShader = _shaderManager->GetShader("SkinnedMesh");
-	objectShader->Bind();
 	objectShader->SetUniformValue("u_viewProjection", camera.GetViewProjectionMatrix());
 	game.GetSky().Draw(*objectShader);
 
@@ -207,7 +205,6 @@ void Renderer::DrawScene(std::chrono::microseconds dt, const Game& game, const C
 	if (drawWater)
 	{
 		ShaderProgram* waterShader = _shaderManager->GetShader("Water");
-		waterShader->Bind();
 		waterShader->SetUniformValue("viewProj", camera.GetViewProjectionMatrix());
 		game.GetWater().Draw(*waterShader);
 	}
@@ -216,7 +213,6 @@ void Renderer::DrawScene(std::chrono::microseconds dt, const Game& game, const C
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
-	terrainShader->Bind();
 	terrainShader->SetUniformValue("viewProj", camera.GetViewProjectionMatrix());
 	terrainShader->SetUniformValue("timeOfDay", game.GetConfig().timeOfDay);
 	terrainShader->SetUniformValue("bumpmapStrength", game.GetConfig().bumpMapStrength);
@@ -229,7 +225,6 @@ void Renderer::DrawScene(std::chrono::microseconds dt, const Game& game, const C
 
 	glm::mat4 modelMatrix = game.GetModelMatrix();
 
-	objectShader->Bind();
 	objectShader->SetUniformValue("u_viewProjection", camera.GetViewProjectionMatrix());
 	objectShader->SetUniformValue("u_modelTransform", modelMatrix);
 	game.GetTestModel().Draw(*objectShader, 0);

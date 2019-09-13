@@ -104,7 +104,7 @@ void Water::Draw(ShaderProgram& program) const
 	program.SetUniformValue("sReflection", 0);
 	_reflectionFrameBuffer->GetTexture()->Bind(0);
 
-	_mesh->Draw();
+	_mesh->Draw(program);
 }
 
 void Water::BeginReflection(const Camera& sceneCamera)
