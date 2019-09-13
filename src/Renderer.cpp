@@ -169,6 +169,11 @@ void Renderer::MessageCallback(uint32_t source, uint32_t type, uint32_t id, uint
 	              type, severity, message);
 }
 
+void Renderer::UpdateDebugCrossPose(std::chrono::microseconds dt, const glm::vec3 &position, float scale)
+{
+	_debugCross->SetPose(position, scale);
+}
+
 void Renderer::UploadUniforms(std::chrono::microseconds dt, const Game &game, const Camera &camera)
 {
 	_shaderManager->SetCamera(camera);
@@ -189,22 +194,12 @@ void Renderer::ClearScene(int width, int height)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Renderer::DebugDraw(std::chrono::microseconds dt, const Game& game, const glm::vec3& position, float scale)
-{
-	_debugCross->SetPose(position, scale);
-
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
-
-	ShaderProgram* debugShader = _shaderManager->GetShader("DebugLine");
-	_debugCross->Draw(*debugShader);
-}
-
-void Renderer::DrawScene(const Game &game, bool drawWater)
+void Renderer::DrawScene(const Game &game, bool drawWater, bool drawDebugCross)
 {
 	ShaderProgram* objectShader = _shaderManager->GetShader("SkinnedMesh");
 	ShaderProgram* waterShader = _shaderManager->GetShader("Water");
 	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
+	ShaderProgram* debugShader = _shaderManager->GetShader("DebugLine");
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
@@ -233,4 +228,12 @@ void Renderer::DrawScene(const Game &game, bool drawWater)
 
 	glDisable(GL_CULL_FACE);
 	game.GetEntityRegistry().DrawModels(*_shaderManager);
+
+	if (drawDebugCross)
+	{
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_BLEND);
+
+		_debugCross->Draw(*debugShader);
+	}
 }
