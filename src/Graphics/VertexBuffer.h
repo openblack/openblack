@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include <bgfx/bgfx.h>
 
 namespace openblack
 {
@@ -31,6 +32,27 @@ namespace graphics
 
 struct VertexAttrib
 {
+	enum class Attribute : uint8_t
+	{
+		Position,
+		Normal,
+		Tangent,
+		Bitangent,
+		Color0,
+		Color1,
+		Color2,
+		Color3,
+		Indices,
+		Weight,
+		TexCoord0,
+		TexCoord1,
+		TexCoord2,
+		TexCoord3,
+		TexCoord4,
+		TexCoord5,
+		TexCoord6,
+		TexCoord7,
+	};
 	enum class Type : uint8_t
 	{
 		Uint8,
@@ -38,19 +60,21 @@ struct VertexAttrib
 		Float,
 	};
 
+	Attribute _attribute; ///< Type of data represented
 	uint8_t _num;         ///< Number of components per vertex attribute, must be 1, 2, 3, 4.
 	Type _type;           ///< Data type of each attribute component in the array.
 	bool _normalized;     /// < When using fixed point values, range will be normalized to 0.0-1.0 in shader.
 	bool _asInt;          /// < Should not be altered. Unpacking will have to be done in vertex shader.
 
 	VertexAttrib() {}
-	VertexAttrib(uint8_t num, Type type, bool normalized=false, bool asInt=false)
-		: _num(num)
+	VertexAttrib(Attribute attribute, uint8_t num, Type type, bool normalized=false, bool asInt=false)
+		: _attribute(attribute)
+		, _num(num)
 		, _type(type)
 		, _normalized(normalized)
 		, _asInt(asInt)
-		{
-		}
+	{
+	}
 };
 
 typedef std::vector<VertexAttrib> VertexDecl;
@@ -74,6 +98,7 @@ class VertexBuffer
 	const VertexDecl _vertexDecl;
 	size_t _strideBytes;
 	std::vector<const void*> _vertexDeclOffsets;
+	bgfx::VertexBufferHandle _bgfxHandle;
 };
 
 } // namespace graphics

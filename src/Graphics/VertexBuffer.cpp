@@ -27,11 +27,42 @@
 
 using namespace openblack::graphics;
 
+namespace {
+
+constexpr std::array<bgfx::AttribType::Enum, 3> types {
+	bgfx::AttribType::Uint8,
+	bgfx::AttribType::Int16,
+	bgfx::AttribType::Float,
+};
+constexpr std::array<bgfx::Attrib::Enum, 18> attributes {
+	bgfx::Attrib::Enum::Position,
+	bgfx::Attrib::Enum::Normal,
+	bgfx::Attrib::Enum::Tangent,
+	bgfx::Attrib::Enum::Bitangent,
+	bgfx::Attrib::Enum::Color0,
+	bgfx::Attrib::Enum::Color1,
+	bgfx::Attrib::Enum::Color2,
+	bgfx::Attrib::Enum::Color3,
+	bgfx::Attrib::Enum::Indices,
+	bgfx::Attrib::Enum::Weight,
+	bgfx::Attrib::Enum::TexCoord0,
+	bgfx::Attrib::Enum::TexCoord1,
+	bgfx::Attrib::Enum::TexCoord2,
+	bgfx::Attrib::Enum::TexCoord3,
+	bgfx::Attrib::Enum::TexCoord4,
+	bgfx::Attrib::Enum::TexCoord5,
+	bgfx::Attrib::Enum::TexCoord6,
+	bgfx::Attrib::Enum::TexCoord7,
+};
+
+}
+
 VertexBuffer::VertexBuffer(const void* vertices, size_t vertexCount, VertexDecl decl)
 	: _vbo()
 	, _vertexCount(vertexCount)
 	, _vertexDecl(std::move(decl))
 	, _strideBytes(0)
+	, _bgfxHandle(BGFX_INVALID_HANDLE)
 {
 	// assert(vertices != nullptr);
 	assert(vertexCount > 0);
@@ -45,11 +76,20 @@ VertexBuffer::VertexBuffer(const void* vertices, size_t vertexCount, VertexDecl 
 		std::array<size_t, 4>{  4,  8, 12, 16 }, // Float
 	};
 
+	bgfx::VertexLayout layout;
+	layout.begin();
 	for (auto& d: _vertexDecl)
 	{
 		_vertexDeclOffsets.push_back(reinterpret_cast<const void*>(_strideBytes));
 		_strideBytes += strides[static_cast<size_t>(d._type)][d._num - 1];
+		layout.add(attributes[static_cast<size_t>(d._attribute)], d._num, types[static_cast<size_t>(d._type)], d._normalized, d._asInt);
 	}
+	layout.end();
+	assert(layout.m_stride == _strideBytes);
+
+	auto mem = bgfx::makeRef(vertices, vertexCount * layout.m_stride);
+	_bgfxHandle = bgfx::createVertexBuffer(mem, layout);
+	bgfx::frame();
 
 	glGenBuffers(1, &_vbo);
 	if (glGetError() != GL_NO_ERROR)
@@ -63,6 +103,8 @@ VertexBuffer::~VertexBuffer()
 {
 	if (_vbo != 0)
 		glDeleteBuffers(1, &_vbo);
+	if (bgfx::isValid(_bgfxHandle))
+		bgfx::destroy(_bgfxHandle);
 }
 
 /*const std::unique_ptr<GLvoid*> VertexBuffer::GetData() const
@@ -94,6 +136,7 @@ size_t VertexBuffer::GetSizeInBytes() const noexcept
 void VertexBuffer::Bind()
 {
 	glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+	bgfx::setVertexBuffer(0, _bgfxHandle);
 }
 
 void VertexBuffer::bindVertexDecl()

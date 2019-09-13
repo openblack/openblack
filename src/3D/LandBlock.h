@@ -41,7 +41,7 @@ struct LandVertex
 	const uint8_t firstMaterialID[4];  // force alignment 4 bytes to prevent packing
 	const uint8_t secondMaterialID[4];  // force alignment 4 bytes to prevent packing
 	const uint8_t materialBlendCoefficient[4];  // force alignment 4 bytes to prevent packing
-	const uint8_t lightLevel;  // aligned to 4 bytes
+	const uint8_t lightLevel[4];  // aligned to 4 bytes
 	const float waterAlpha;
 
 	LandVertex(glm::vec3 _position, glm::vec3 _weight,
