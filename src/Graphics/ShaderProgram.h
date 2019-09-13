@@ -60,6 +60,7 @@ class ShaderProgram
   private:
 	bgfx::ProgramHandle _program;
 	std::map<std::string, int32_t> _uniforms;
+	std::map<std::string, bgfx::UniformHandle> _uniformsBgfx;
 
 	uint32_t createSubShader(Type type, const std::string& source);
 };

@@ -105,7 +105,19 @@ void Water::Draw(ShaderProgram& program) const
 {
 	program.SetTextureSampler("s_reflection", 0, _reflectionFrameBuffer->GetColorAttachment());
 
-	_mesh->Draw(program);
+	uint64_t state = 0u
+		| BGFX_STATE_WRITE_R
+		| BGFX_STATE_WRITE_G
+		| BGFX_STATE_WRITE_B
+		| BGFX_STATE_WRITE_A
+		| BGFX_STATE_WRITE_Z
+		| BGFX_STATE_DEPTH_TEST_LESS
+		| BGFX_STATE_CULL_CW
+		| BGFX_STATE_MSAA
+	;
+
+	_mesh->Draw(program, state);
+	_reflectionFrameBuffer->Unbind();
 }
 
 void Water::BeginReflection(const Camera& sceneCamera)

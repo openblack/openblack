@@ -37,7 +37,7 @@ public:
 	void Bind();
 	void Unbind();
 
-	Texture2D& GetColorAttachment() { return *_colorAttachment; }
+	Texture2D& GetColorAttachment() { return _colorAttachment; }
 
 	//inline void Bind() { glBindTexture(GL_TEXTURE_RECTANGLE, _textureID); }
 
@@ -45,15 +45,15 @@ public:
 	[[nodiscard]] uint16_t GetHeight() const { return _height; }
 
 private:
-	uint32_t _handle;
+	bgfx::FrameBufferHandle _handle;
 
 	uint16_t _width;
 	uint16_t _height;
 	Format _colorFormat;
 	std::optional<Format> _depthStencilFormat;
 
-	std::unique_ptr<Texture2D> _colorAttachment;
-	std::unique_ptr<Texture2D> _depthStencilAttachment;
+	Texture2D _colorAttachment;
+	Texture2D _depthStencilAttachment;
 };
 
 }  // namespace openblack::graphics
