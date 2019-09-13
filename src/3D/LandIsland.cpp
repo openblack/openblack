@@ -182,9 +182,9 @@ const LandCell& LandIsland::GetCell(int x, int z) const
 
 void LandIsland::Draw(ShaderProgram& program)
 {
-	program.SetUniformValue("sMaterials", 0);
-	program.SetUniformValue("sBumpMap", 1);
-	program.SetUniformValue("sSmallBumpMap", 2);
+	program.SetUniformValue("s_materials", 0);
+	program.SetUniformValue("s_bump", 1);
+	program.SetUniformValue("s_smallBump", 2);
 
 	_materialArray->Bind(0);
 	_textureBumpMap->Bind(1);

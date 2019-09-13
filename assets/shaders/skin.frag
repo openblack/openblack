@@ -1,6 +1,6 @@
 #version 330
 
-uniform sampler2D tex;
+uniform sampler2D s_diffuse;
 
 in vec3 v_position;
 in vec3 v_normal;
@@ -23,7 +23,7 @@ void main()
 	float diff = max(dot(v_normal, lightDir), 0.0);
 	vec3 diffuse = diff * lightColor * 0.5;
 
-	vec4 diffuseTex = texture2D(tex, v_texcoord0);
+	vec4 diffuseTex = texture2D(s_diffuse, v_texcoord0);
 	diffuseTex.rgb = diffuseTex.rgb * (ambient + diffuse);
 	if(diffuseTex.a <= alphaThreshold) discard;
 	gl_FragColor = diffuseTex;

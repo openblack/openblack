@@ -8,9 +8,9 @@ flat in vec3 v_MaterialBlendCoefficient;
 in float v_LightLevel;
 in float v_WaterAlpha;
 
-uniform sampler2DArray sMaterials;
-uniform sampler2D sBumpMap;
-uniform sampler2D sSmallBumpMap;
+uniform sampler2DArray s_materials;
+uniform sampler2D s_bump;
+uniform sampler2D s_smallBump;
 uniform float u_timeOfDay;
 uniform float u_bumpmapStrength;
 uniform float u_smallBumpmapStrength;
@@ -21,18 +21,18 @@ void main()
 {
 	// do each vert with both materials
 	vec4 colOne = mix(
-		texture(sMaterials, vec3(v_texcoord0, v_FirstMaterialID.r)),
-		texture(sMaterials, vec3(v_texcoord0, v_SecondMaterialID.r)),
+		texture(s_materials, vec3(v_texcoord0, v_FirstMaterialID.r)),
+		texture(s_materials, vec3(v_texcoord0, v_SecondMaterialID.r)),
 		v_MaterialBlendCoefficient.r
 	) * v_weights.r;
 	vec4 colTwo = mix(
-		texture(sMaterials, vec3(v_texcoord0, v_FirstMaterialID.g)),
-		texture(sMaterials, vec3(v_texcoord0, v_SecondMaterialID.g)),
+		texture(s_materials, vec3(v_texcoord0, v_FirstMaterialID.g)),
+		texture(s_materials, vec3(v_texcoord0, v_SecondMaterialID.g)),
 		v_MaterialBlendCoefficient.g
 	) * v_weights.g;
 	vec4 colThree = mix(
-		texture(sMaterials, vec3(v_texcoord0, v_FirstMaterialID.b)),
-		texture(sMaterials, vec3(v_texcoord0, v_SecondMaterialID.b)),
+		texture(s_materials, vec3(v_texcoord0, v_FirstMaterialID.b)),
+		texture(s_materials, vec3(v_texcoord0, v_SecondMaterialID.b)),
 		v_MaterialBlendCoefficient.b
 	) * v_weights.b;
 
@@ -40,10 +40,10 @@ void main()
 	vec4 col = colOne + colTwo + colThree;
 
 	// apply bump map (2x because it's half bright?)
-	float bump = mix(1.0f, texture(sBumpMap, v_texcoord0).r * 2, u_bumpmapStrength);
+	float bump = mix(1.0f, texture(s_bump, v_texcoord0).r * 2, u_bumpmapStrength);
 	col = col * bump;
 
-	float smallbump = 1 - mix(0.0f, texture(sSmallBumpMap, v_texcoord0 * 10).r, u_smallBumpmapStrength);
+	float smallbump = 1 - mix(0.0f, texture(s_smallBump, v_texcoord0 * 10).r, u_smallBumpmapStrength);
 	col = col * smallbump;
 
 	// apply light map
