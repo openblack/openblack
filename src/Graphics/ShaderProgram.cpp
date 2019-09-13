@@ -65,13 +65,34 @@ ShaderProgram::ShaderProgram(const std::string& vertexSource, const std::string&
 			break;
 	}
 
-	auto const& vertexShaderSource   = Game::instance()->GetFileSystem().ReadAll(vertexSource + suffix);
-	auto const& fragmentShaderSource = Game::instance()->GetFileSystem().ReadAll(fragmentSource + suffix);
+	uint16_t numShaderUniforms = 0;
+	bgfx::UniformInfo info = {};
+	std::vector<bgfx::UniformHandle> uniforms;
 
+	auto const& vertexShaderSource = Game::instance()->GetFileSystem().ReadAll(vertexSource + suffix);
 	auto vs_mem = bgfx::makeRef(vertexShaderSource.data(), vertexShaderSource.size());
-	auto fs_mem = bgfx::makeRef(fragmentShaderSource.data(), fragmentShaderSource.size());
 	auto vs_shader = bgfx::createShader(vs_mem);
+	numShaderUniforms = bgfx::getShaderUniforms(vs_shader);
+	uniforms.resize(numShaderUniforms);
+	bgfx::getShaderUniforms(vs_shader, uniforms.data(), uniforms.size());
+	for (uint16_t i = 0; i < numShaderUniforms; ++i)
+	{
+		bgfx::getUniformInfo(uniforms[i], info);
+		_uniformsBgfx.emplace(std::string(info.name), uniforms[i]);
+	}
+
+	auto const& fragmentShaderSource = Game::instance()->GetFileSystem().ReadAll(fragmentSource + suffix);
+	auto fs_mem = bgfx::makeRef(fragmentShaderSource.data(), fragmentShaderSource.size());
 	auto fs_shader = bgfx::createShader(fs_mem);
+	numShaderUniforms = bgfx::getShaderUniforms(fs_shader);
+	uniforms.resize(numShaderUniforms);
+	bgfx::getShaderUniforms(fs_shader, uniforms.data(), uniforms.size());
+	for (uint16_t i = 0; i < numShaderUniforms; ++i)
+	{
+		bgfx::getUniformInfo(uniforms[i], info);
+		_uniformsBgfx.emplace(std::string(info.name), uniforms[i]);
+	}
+
 	_program = bgfx::createProgram(vs_shader, fs_shader);
 	bgfx::frame();
 }
@@ -83,9 +104,7 @@ ShaderProgram::~ShaderProgram()
 
 void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture)
 {
-//	glUseProgram(_program);
-//	glUniform1i(_uniforms[samplerName], bindPoint);
-	texture.Bind(bindPoint);
+	bgfx::setTexture(bindPoint, _uniformsBgfx[samplerName], texture.GetBgfxHandle());
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, int value)

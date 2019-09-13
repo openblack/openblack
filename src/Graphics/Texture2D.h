@@ -101,6 +101,10 @@ enum class Wrapping : uint8_t
 	MirroredRepeat,
 };
 
+bgfx::TextureFormat::Enum getBgfxTextureFormat(Format format);
+
+class FrameBuffer;
+
 class Texture2D
 {
   public:
@@ -114,6 +118,7 @@ class Texture2D
 	void Create(uint16_t width, uint16_t height, uint16_t layers, Format format=Format::RGBA8, Wrapping wrapping=Wrapping::ClampEdge, const void* data=nullptr, size_t size=0);
 
 	[[nodiscard]] uint32_t GetNativeHandle() const { return _handle; }
+	[[nodiscard]] bgfx::TextureHandle GetBgfxHandle() const { return _bgfxHandle; }
 	[[nodiscard]] uint16_t GetWidth() const { return _width; }
 	[[nodiscard]] uint16_t GetHeight() const { return _height; }
 	[[nodiscard]] uint16_t GetLayerCount() const { return _layers; }
@@ -128,6 +133,8 @@ class Texture2D
 	uint16_t _width;
 	uint16_t _height;
 	uint16_t _layers;
+
+	friend FrameBuffer;
 };
 
 } // namespace graphics

@@ -138,6 +138,11 @@ constexpr std::array<bgfx::TextureFormat::Enum, static_cast<size_t>(Format::RGBA
 	bgfx::TextureFormat::RGBA4, // RGBA4
 };
 
+bgfx::TextureFormat::Enum getBgfxTextureFormat(Format format)
+{
+	return textureFormatsBgfx[static_cast<size_t>(format)];
+}
+
 constexpr std::array<GLenum, static_cast<size_t>(Filter::LinearMipmapLinear) + 1> filters {
 	GL_NEAREST,
 	GL_LINEAR,
@@ -180,7 +185,7 @@ void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format 
 	// TODO (bwrsandman): When removing opengl, uncomment bgfx::frame and makeRef (instead of copy)
 	// auto memory = bgfx::makeRef(data, size);
 	auto memory = bgfx::copy(data, size);
-	_bgfxHandle = bgfx::createTexture2D(width, height, false, layers, textureFormatsBgfx[static_cast<size_t>(format)], BGFX_TEXTURE_NONE, memory);
+	_bgfxHandle = bgfx::createTexture2D(width, height, false, layers, getBgfxTextureFormat(format), BGFX_TEXTURE_NONE, memory);
 	// bgfx::frame();
 
 	glBindTexture(bindPoint, static_cast<GLuint>(_handle));

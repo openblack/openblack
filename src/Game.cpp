@@ -134,7 +134,7 @@ void Game::Run()
 	_testModel->LoadFromFile("Data/CreatureMesh/C_Tortoise_Base.l3d");
 
 	_sky   = std::make_unique<Sky>();
-//	_water = std::make_unique<Water>();
+	_water = std::make_unique<Water>();
 
 	LoadVariables();
 	LoadLandscape("./Data/Landscape/Land1.lnd");

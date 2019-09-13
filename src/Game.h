@@ -93,7 +93,7 @@ class Game
 	[[nodiscard]] Renderer& GetRenderer() const { return *_renderer; }
 	[[nodiscard]] Camera& GetCamera() const { return *_camera; }
 	[[nodiscard]] Sky& GetSky() const { return *_sky; }
-//	[[nodiscard]] Water& GetWater() const { return *_water; }
+	[[nodiscard]] Water& GetWater() const { return *_water; }
 	LandIsland& GetLandIsland() { return *_landIsland; }
 	[[nodiscard]] LandIsland& GetLandIsland() const { return *_landIsland; }
 	[[nodiscard]] L3DMesh& GetTestModel() const { return *_testModel; }
@@ -129,7 +129,7 @@ class Game
 
 	std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<Sky> _sky;
-//	std::unique_ptr<Water> _water;
+	std::unique_ptr<Water> _water;
 	std::unique_ptr<LHScriptX::Script> _scriptx;
 	std::unique_ptr<LHVM::LHVM> _lhvm;
 	std::unique_ptr<Entities::Registry> _entityRegistry;

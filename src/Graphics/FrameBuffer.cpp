@@ -21,53 +21,55 @@
 #include <Graphics/FrameBuffer.h>
 
 #include <cassert>
-#include <stdexcept>
-
-#include <Graphics/OpenGL.h>
 
 using namespace openblack::graphics;
 
-FrameBuffer::FrameBuffer(uint16_t width, uint16_t height, Format colorFormat, std::optional<Format> depthStencilFormat) :
-	_handle(0), _width(width), _height(height), _colorFormat(colorFormat), _depthStencilFormat(depthStencilFormat)
+FrameBuffer::FrameBuffer(uint16_t width, uint16_t height, Format colorFormat, std::optional<Format> depthStencilFormat)
+	: _handle(BGFX_INVALID_HANDLE)
+	, _width(width)
+	, _height(height)
+	, _colorFormat(colorFormat)
+	, _depthStencilFormat(depthStencilFormat)
 {
-	glGenFramebuffers(1, &_handle);
-	assert(_handle);
+	_colorAttachment._bgfxHandle = BGFX_INVALID_HANDLE;
+	_colorAttachment._width = width;
+	_colorAttachment._height = height;
+	_colorAttachment._layers = 1;
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _handle);
+	_depthStencilAttachment._bgfxHandle = BGFX_INVALID_HANDLE;
+	_depthStencilAttachment._width = width;
+	_depthStencilAttachment._height = height;
+	_depthStencilAttachment._layers = 1;
 
-	_colorAttachment = std::make_unique<Texture2D>();
-	_colorAttachment->Create(_width, _height, 1, _colorFormat);
 	if (depthStencilFormat)
 	{
-		_depthStencilAttachment = std::make_unique<Texture2D>();
-		_depthStencilAttachment->Create(_width, _height, 1, _depthStencilFormat.value());
+		_handle = bgfx::createFrameBuffer(_width, _height, getBgfxTextureFormat(colorFormat), getBgfxTextureFormat(depthStencilFormat.value()));
+		_colorAttachment._bgfxHandle = bgfx::getTexture(_handle, 0);
+		_depthStencilAttachment._bgfxHandle = bgfx::getTexture(_handle, 1);
 	}
-
-	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _colorAttachment->GetNativeHandle(), 0);
-	if (depthStencilFormat)
+	else
 	{
-		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, _depthStencilAttachment->GetNativeHandle(), 0);
+		_handle = bgfx::createFrameBuffer(_width, _height, getBgfxTextureFormat(colorFormat));
+		_colorAttachment._bgfxHandle = bgfx::getTexture(_handle, 0);
 	}
 
-	if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		throw std::runtime_error("failed to create framebuffer");
-
-	// unbind it (restore state in future?)
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	assert(bgfx::isValid(_handle));
 }
 
 FrameBuffer::~FrameBuffer()
 {
-	if (_handle != 0)
-		glDeleteFramebuffers(1, &_handle);
+	if (bgfx::isValid(_handle))
+	{
+		bgfx::destroy(_handle);
+	}
 }
 
 void FrameBuffer::Bind()
 {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _handle);
+	bgfx::setViewFrameBuffer(0, _handle);
 }
 
 void FrameBuffer::Unbind()
 {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	bgfx::setViewFrameBuffer(0, BGFX_INVALID_HANDLE);
 }
