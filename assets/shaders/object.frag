@@ -2,8 +2,10 @@
 
 in vec3 v_normal;
 
+out vec4 o_color;
+
 void main()
 {
 	vec3 col = 0.5 + 0.5 * v_normal;
-	gl_FragColor = vec4(col, 1.0);
+	o_color = vec4(col, 1.0);
 }
