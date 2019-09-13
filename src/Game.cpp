@@ -20,9 +20,16 @@
 
 #include "Game.h"
 
+#include <string>
+
+#include <SDL.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/intersect.hpp>
+
 #include "GitSHA1.h"
 #include "Gui.h"
-
+#include <Graphics/OpenGL.h>
 #include <3D/Camera.h>
 #include <3D/L3DMesh.h>
 #include <3D/LandIsland.h>
@@ -33,18 +40,9 @@
 #include <Common/FileSystem.h>
 #include <Entities/Components/Model.h>
 #include <Entities/Registry.h>
-#include <Graphics/Texture2D.h>
-#include <Graphics/VertexBuffer.h>
-#include <Gui.h>
 #include <LHScriptX/Script.h>
 #include <MeshViewer.h>
 #include <Renderer.h>
-#include <SDL.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/intersect.hpp>
-#include <iostream>
-#include <string>
 
 #ifdef WIN32
 #include <Windows.h>

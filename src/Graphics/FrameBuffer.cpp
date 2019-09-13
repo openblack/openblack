@@ -19,13 +19,15 @@
  */
 
 #include <Graphics/FrameBuffer.h>
+
 #include <cassert>
 #include <stdexcept>
 
-namespace openblack::graphics
-{
+#include <Graphics/OpenGL.h>
 
-FrameBuffer::FrameBuffer(GLsizei width, GLsizei height, GLenum format) :
+using namespace openblack::graphics;
+
+FrameBuffer::FrameBuffer(uint32_t width, uint32_t height, Format format) :
     _handle(0), _width(width), _height(height), _format(format)
 {
 	glGenFramebuffers(1, &_handle);
@@ -33,8 +35,8 @@ FrameBuffer::FrameBuffer(GLsizei width, GLsizei height, GLenum format) :
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _handle);
 
-	_texture = new Texture2D();
-	_texture->Create(_width, _height, 1);
+	_texture = std::make_unique<Texture2D>();
+	_texture->Create(_width, _height, 1, format);
 
 	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _texture->GetNativeHandle(), 0);
 
@@ -49,9 +51,14 @@ FrameBuffer::~FrameBuffer()
 {
 	if (_handle != 0)
 		glDeleteFramebuffers(1, &_handle);
-
-	if (_texture != nullptr)
-		delete _texture;
 }
 
+void FrameBuffer::Bind()
+{
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _handle);
+}
+
+void FrameBuffer::Unbind()
+{
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }

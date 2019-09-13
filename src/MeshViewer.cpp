@@ -18,6 +18,10 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <imgui/imgui.h>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <Graphics/OpenGL.h>
 #include <3D/L3DMesh.h>
 #include <3D/MeshPack.h>
 #include <Game.h>
@@ -25,14 +29,12 @@
 #include <Graphics/ShaderManager.h>
 #include <Graphics/Texture2D.h>
 #include <MeshViewer.h>
-#include <imgui/imgui.h>
-#include <glm/gtc/matrix_transform.hpp>
 
-namespace openblack
-{
+using namespace openblack;
+
 MeshViewer::MeshViewer()
 {
-	_frameBuffer  = std::make_unique<graphics::FrameBuffer>(512, 512, GL_RGBA);
+	_frameBuffer  = std::make_unique<graphics::FrameBuffer>(512, 512, graphics::Format::RGBA8);
 	_selectedMesh    = MeshId::Dummy;
 	_selectedSubMesh = 0;
 	_cameraPosition  = glm::vec3(5.0f, 3.0f, 5.0f);
@@ -83,7 +85,7 @@ void MeshViewer::DrawWindow()
 
 	ImGui::DragFloat3("position", &_cameraPosition[0], 0.5f);
 
-	ImGui::Image((void*)(intptr_t)_frameBuffer->GetTexture()->GetNativeHandle(), ImVec2(512, 512), ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Image((void*)(intptr_t)_frameBuffer->GetTexture().GetNativeHandle(), ImVec2(512, 512), ImVec2(0, 1), ImVec2(1, 0));
 
 	ImGui::EndChild();
 
@@ -124,5 +126,3 @@ void MeshViewer::DrawScene()
 
 	_frameBuffer->Unbind();
 }
-
-} // namespace openblack
