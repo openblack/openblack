@@ -335,7 +335,7 @@ void Renderer::DrawScene(const Game &game, bool drawWater, bool drawDebugCross, 
 
 	if (drawWater)
 	{
-		game.GetWater().Draw(*waterShader);
+//		game.GetWater().Draw(*waterShader);
 	}
 
 	if (game.GetConfig().wireframe)
