@@ -209,25 +209,25 @@ void Game::Run()
 		_camera->Update(deltaTime);
 		_modelRotation.y = fmod(_modelRotation.y + float(deltaTime.count()) * .0001f, 360.f);
 
+		_renderer->UpdateDebugCrossPose(deltaTime, _intersection, 50.0f);
+
 		_gui->Loop(*this);
 
 		int width, height;
 		_window->GetDrawableSize(width, height);
 		_renderer->ClearScene(width, height);
 
+		// Reflection Pass
 		_water->BeginReflection(*_camera);
 		_renderer->UploadUniforms(deltaTime, *this, _water->GetReflectionCamera());
 		_renderer->DrawScene(*this, false);
 		_water->EndReflection();
 
+		// Main Draw Pass
 		// reset viewport here, should be done in EndReflection
 		glViewport(0, 0, width, height);
-
 		_renderer->UploadUniforms(deltaTime, *this, *_camera);
-
-		_renderer->DrawScene(*this, true);
-
-		_renderer->DebugDraw(deltaTime, *this, _intersection, 50.0f);
+		_renderer->DrawScene(*this, true, true);
 
 		_gui->Draw();
 

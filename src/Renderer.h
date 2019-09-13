@@ -84,10 +84,11 @@ class Renderer {
 	[[nodiscard]] graphics::ShaderManager& GetShaderManager() const;
 	void MessageCallback(uint32_t source, uint32_t type, uint32_t id, uint32_t severity, int32_t length, const std::string& message) const;
 
+	void UpdateDebugCrossPose(std::chrono::microseconds dt, const glm::vec3 &position, float scale);
+
 	void UploadUniforms(std::chrono::microseconds dt, const Game& game, const Camera& camera);
 	void ClearScene(int width, int height);
-	void DebugDraw(std::chrono::microseconds dt, const Game &game, const glm::vec3 &position, float scale);
-	void DrawScene(const Game &game, bool drawWater);
+	void DrawScene(const Game &game, bool drawWater, bool drawDebugCross=false);
 
   private:
   static std::vector<RequiredAttribute> GetRequiredContextAttributes();
