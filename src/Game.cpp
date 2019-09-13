@@ -216,13 +216,16 @@ void Game::Run()
 		_renderer->ClearScene(width, height);
 
 		_water->BeginReflection(*_camera);
-		_renderer->DrawScene(deltaTime, *this, _water->GetReflectionCamera(), false);
+		_renderer->UploadUniforms(deltaTime, *this, _water->GetReflectionCamera());
+		_renderer->DrawScene(*this, false);
 		_water->EndReflection();
 
 		// reset viewport here, should be done in EndReflection
 		glViewport(0, 0, width, height);
 
-		_renderer->DrawScene(deltaTime, *this, *_camera, true);
+		_renderer->UploadUniforms(deltaTime, *this, *_camera);
+
+		_renderer->DrawScene(*this, true);
 
 		_renderer->DebugDraw(deltaTime, *this, _intersection, 50.0f);
 
