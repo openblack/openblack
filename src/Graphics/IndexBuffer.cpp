@@ -69,12 +69,12 @@ IndexBuffer::Type IndexBuffer::GetType() const
 	return _type;
 }
 
-uint32_t IndexBuffer::GetIBO() const
-{
-	return _ibo;
-}
-
 std::size_t IndexBuffer::GetTypeSize(Type type)
 {
 	return type == Type::Uint16 ? sizeof(uint16_t) : sizeof(uint32_t);
+}
+
+void IndexBuffer::Bind()
+{
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
 }

@@ -61,7 +61,7 @@ Mesh::Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, Topology topolo
 
 	_vertexBuffer->Bind();
 	_vertexBuffer->bindVertexDecl();
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBuffer->GetIBO());
+	_indexBuffer->Bind();
 
 	glBindVertexArray(0);
 }
