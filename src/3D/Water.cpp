@@ -84,7 +84,7 @@ void Water::createMesh()
 {
 	VertexDecl decl;
 	decl.reserve(1);
-	decl.emplace_back(2, VertexAttrib::Type::Float); // position
+	decl.emplace_back(VertexAttrib::Attribute::Position, 2, VertexAttrib::Type::Float);
 
 	static const glm::vec2 points[] = {
 		glm::vec2(-1.0f, 1.0f),
