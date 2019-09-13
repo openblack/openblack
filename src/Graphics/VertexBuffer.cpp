@@ -135,7 +135,6 @@ size_t VertexBuffer::GetSizeInBytes() const noexcept
 
 void VertexBuffer::Bind()
 {
-	glBindBuffer(GL_ARRAY_BUFFER, _vbo);
 	bgfx::setVertexBuffer(0, _bgfxHandle);
 }
 

@@ -55,8 +55,8 @@ class Mesh
 
 	[[nodiscard]] Topology GetTopology() const noexcept;
 
-	void Draw(const openblack::graphics::ShaderProgram &program);
-	void Draw(const openblack::graphics::ShaderProgram &program, uint32_t count, uint32_t startIndex);
+	void Draw(const openblack::graphics::ShaderProgram &program, uint64_t state=0, uint32_t rgba=0);
+	void Draw(const openblack::graphics::ShaderProgram &program, uint32_t count, uint32_t startIndex, uint64_t state, uint32_t rgba);
 
   protected:
 	std::unique_ptr<VertexBuffer> _vertexBuffer;

@@ -25,6 +25,7 @@
 #include <string>
 
 #include <glm/glm.hpp>
+#include <bgfx/bgfx.h>
 
 namespace openblack::graphics
 {
@@ -54,10 +55,10 @@ class ShaderProgram
 	void SetUniformValue(const char* uniformName, const glm::mat4& m);
 	void SetUniformValue(const char* uniformName, size_t count, const glm::mat4* m);
 
-	[[nodiscard]] uint32_t GetRawHandle() const { return _program; }
+	[[nodiscard]] bgfx::ProgramHandle GetRawHandle() const { return _program; }
 
   private:
-	uint32_t _program;
+	bgfx::ProgramHandle _program;
 	std::map<std::string, int32_t> _uniforms;
 
 	uint32_t createSubShader(Type type, const std::string& source);

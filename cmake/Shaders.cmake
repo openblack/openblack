@@ -149,3 +149,108 @@ function(mark_shaders_for_compilation_to_header)
 		)
 	endforeach()
 endfunction()
+
+function(mark_shaders_for_compilation)
+	set(options "")
+	set(oneValueArgs TYPE VARYING_DEF OUTPUT_DIR)
+	set(multiValueArgs SHADERS)
+	cmake_parse_arguments(
+		SHADER_COMPILATION
+			"${options}"
+			"${oneValueArgs}"
+			"${multiValueArgs}"
+			"${ARGN}")
+	foreach(SHADER_FILE ${SHADER_COMPILATION_SHADERS})
+		source_group("Shaders" FILES "${SHADER}")
+		get_filename_component(SHADER_FILE_BASENAME ${SHADER_FILE} NAME)
+		get_filename_component(SHADER_FILE_ABSOLUTE ${SHADER_FILE} ABSOLUTE)
+		set (EXTRA_PROFILES spirv) # pssl
+		if (UNIX)
+			set (PLATFORM linux)
+		elseif (EMSCRIPTEN)
+			set (PLATFORM emscripten)
+		elseif (APPLE)
+			set (PLATFORM osx)
+			list(APPEND EXTRA_PROFILES metal)
+		elseif (WIN32)
+			set (PLATFORM windows)
+			list(APPEND EXTRA_PROFILES s_3)
+			list(APPEND EXTRA_PROFILES s_4)
+			list(APPEND EXTRA_PROFILES s_4_0_level)
+			list(APPEND EXTRA_PROFILES s_5)
+		elseif (MINGW)
+			set (PLATFORM windows)
+			list(APPEND EXTRA_PROFILES s_3)
+			list(APPEND EXTRA_PROFILES s_4)
+			list(APPEND EXTRA_PROFILES s_4_0_level)
+		elseif (MSYS)
+			set (PLATFORM windows)
+			list(APPEND EXTRA_PROFILES s_3)
+			list(APPEND EXTRA_PROFILES s_4)
+			list(APPEND EXTRA_PROFILES s_4_0_level)
+		elseif (CYGWIN)
+			set (PLATFORM windows)
+			list(APPEND EXTRA_PROFILES s_3)
+			list(APPEND EXTRA_PROFILES s_4)
+			list(APPEND EXTRA_PROFILES s_4_0_level)
+		else ()
+			message(error "shaderc: Unsupported platform")
+		endif ()
+
+		# Build output targets and their commands
+		foreach(PROFILE ${EXTRA_PROFILES})
+			list(APPEND EXTRA_OUTPUTS ${SHADER_COMPILATION_OUTPUT_DIR}/${SHADER_FILE_BASENAME}.${PROFILE})
+			list(APPEND EXTRA_COMMANDS
+				COMMAND
+					bgfx::shaderc
+					--verbose
+					-f ${SHADER_FILE_ABSOLUTE}
+					-o ${SHADER_COMPILATION_OUTPUT_DIR}/${SHADER_FILE_BASENAME}.${PROFILE}
+					-i ${BGFX_SHADER_INCLUDE_PATH}
+					--platform ${PLATFORM}
+					--profile ${PROFILE}
+					--type ${SHADER_COMPILATION_TYPE}
+					--varyingdef ${SHADER_COMPILATION_VARYING_DEF}
+					"$<$<CONFIG:debug>:--debug>$<$<CONFIG:relwithdebinfo>:--debug>"
+					"$<$<CONFIG:debug>:-O 0>$<$<CONFIG:release>:-O 3>$<$<CONFIG:relwithdebinfo>:-O 3>$<$<CONFIG:minsizerel>:-O 3>"
+			)
+		endforeach()
+
+		add_custom_command(
+			OUTPUT
+				${SHADER_COMPILATION_OUTPUT_DIR}/${SHADER_FILE_BASENAME}.essl
+				${SHADER_COMPILATION_OUTPUT_DIR}/${SHADER_FILE_BASENAME}.glsl
+				${EXTRA_OUTPUTS}
+			# OpenGL ES
+			COMMAND
+				bgfx::shaderc
+				--verbose
+				-f ${SHADER_FILE_ABSOLUTE}
+				-o ${SHADER_COMPILATION_OUTPUT_DIR}/${SHADER_FILE_BASENAME}.essl
+				-i ${BGFX_SHADER_INCLUDE_PATH}
+				--platform ${PLATFORM}
+				--profile 140
+				--type ${SHADER_COMPILATION_TYPE}
+				--varyingdef ${SHADER_COMPILATION_VARYING_DEF}
+				"$<$<CONFIG:debug>:--debug>$<$<CONFIG:relwithdebinfo>:--debug>"
+				"$<$<CONFIG:debug>:-O 0>$<$<CONFIG:release>:-O 3>$<$<CONFIG:relwithdebinfo>:-O 3>$<$<CONFIG:minsizerel>:-O 3>"
+			# TODO: try 4.40
+			# OpenGL GLSL 1.40
+		 	COMMAND
+				bgfx::shaderc
+		 		--verbose
+		 		-f ${SHADER_FILE_ABSOLUTE}
+		 		-o ${SHADER_COMPILATION_OUTPUT_DIR}/${SHADER_FILE_BASENAME}.glsl
+		 		-i ${BGFX_SHADER_INCLUDE_PATH}
+		 		--platform ${PLATFORM}
+		 		--profile 150
+		 		--type ${SHADER_COMPILATION_TYPE}
+		 		--varyingdef ${SHADER_COMPILATION_VARYING_DEF}
+		 		"$<$<CONFIG:debug>:--debug>$<$<CONFIG:relwithdebinfo>:--debug>"
+		 		"$<$<CONFIG:debug>:-O 0>$<$<CONFIG:release>:-O 3>$<$<CONFIG:relwithdebinfo>:-O 3>$<$<CONFIG:minsizerel>:-O 3>"
+			${EXTRA_COMMANDS}
+		 	MAIN_DEPENDENCY ${SHADER_FILE_ABSOLUTE}
+			DEPENDS ${SHADER_COMPILATION_VARYING_DEF}
+		)
+	endforeach()
+endfunction()

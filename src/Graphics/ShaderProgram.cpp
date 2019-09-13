@@ -35,122 +35,105 @@ namespace openblack::graphics
 {
 
 ShaderProgram::ShaderProgram(const std::string& vertexSource, const std::string& fragmentSource)
+	: _program(BGFX_INVALID_HANDLE)
 {
-	_program = glCreateProgram();
-
-	// lazy assert, todo: better error handling
-	assert(_program != 0);
-
-	auto const& vertexShaderSource   = Game::instance()->GetFileSystem().ReadAll(vertexSource);
-	auto const& fragmentShaderSource = Game::instance()->GetFileSystem().ReadAll(fragmentSource);
-
-	GLuint vertexShader   = createSubShader(Type::Vertex, std::string(reinterpret_cast<const char*>(vertexShaderSource.data()), vertexShaderSource.size()));
-	GLuint fragmentShader = createSubShader(Type::Fragment, std::string(reinterpret_cast<const char*>(fragmentShaderSource.data()), fragmentShaderSource.size()));
-
-	// lazy assert, todo: better error handling
-	assert(vertexShader != 0 && fragmentShader != 0);
-
-	glAttachShader(_program, vertexShader);
-	glAttachShader(_program, fragmentShader);
-	glLinkProgram(_program);
-
-	GLint linkStatus = GL_FALSE;
-	glGetProgramiv(_program, GL_LINK_STATUS, &linkStatus);
-
-	if (linkStatus == GL_FALSE)
+	std::string suffix;
+	switch (bgfx::getRendererType())
 	{
-		GLint infoLogLen = 0;
-		glGetShaderiv(_program, GL_INFO_LOG_LENGTH, &infoLogLen);
-
-		char* infoLog = new char[infoLogLen];
-		glGetProgramInfoLog(_program, infoLogLen, &infoLogLen, infoLog);
-		spdlog::error("There are linking errors: {}", infoLog);
-		delete[] infoLog;
-
-		glDeleteProgram(_program);
-		glDeleteShader(vertexShader);
-		glDeleteShader(fragmentShader);
-
-		return;
+		case bgfx::RendererType::Noop:
+		case bgfx::RendererType::Direct3D9:
+			suffix = ".dx9";
+			break;
+		case bgfx::RendererType::Direct3D11:
+		case bgfx::RendererType::Direct3D12:
+			suffix = ".dx11";
+			break;
+		case bgfx::RendererType::Metal:
+			suffix = ".metal";
+			break;
+		case bgfx::RendererType::OpenGL:
+			suffix = ".glsl";
+			break;
+		case bgfx::RendererType::OpenGLES:
+			suffix = ".essl";
+			break;
+		case bgfx::RendererType::Vulkan:
+			suffix = ".spirv";
+			break;
+		default:
+			throw std::runtime_error("Could not associate shader for renderer type.");
+			break;
 	}
 
-	// we can delete these now they exist in the program
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+	auto const& vertexShaderSource   = Game::instance()->GetFileSystem().ReadAll(vertexSource + suffix);
+	auto const& fragmentShaderSource = Game::instance()->GetFileSystem().ReadAll(fragmentSource + suffix);
 
-	int uniformCount = -1;
-	glGetProgramiv(_program, GL_ACTIVE_UNIFORMS, &uniformCount);
-	for (int i = 0; i < uniformCount; i++)
-	{
-		int name_len = -1, num = -1;
-		GLenum type = GL_ZERO;
-		char name[64];
-		glGetActiveUniform(_program, GLuint(i), sizeof(name) - 1, &name_len, &num, &type, name);
-		name[name_len] = 0;
-
-		_uniforms[std::string(name)] = glGetUniformLocation(_program, name);
-	}
+	auto vs_mem = bgfx::makeRef(vertexShaderSource.data(), vertexShaderSource.size());
+	auto fs_mem = bgfx::makeRef(fragmentShaderSource.data(), fragmentShaderSource.size());
+	auto vs_shader = bgfx::createShader(vs_mem);
+	auto fs_shader = bgfx::createShader(fs_mem);
+	_program = bgfx::createProgram(vs_shader, fs_shader);
+	bgfx::frame();
 }
 
 ShaderProgram::~ShaderProgram()
 {
-	if (_program != 0)
-		glDeleteProgram(_program);
+	bgfx::destroy(_program);
 }
 
 void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture)
 {
-	glUseProgram(_program);
-	glUniform1i(_uniforms[samplerName], bindPoint);
+//	glUseProgram(_program);
+//	glUniform1i(_uniforms[samplerName], bindPoint);
 	texture.Bind(bindPoint);
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, int value)
 {
-	glUseProgram(_program);
-	glUniform1i(_uniforms[uniformName], value);
+//	glUseProgram(_program);
+//	glUniform1i(_uniforms[uniformName], value);
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, float value)
 {
-	glUseProgram(_program);
-	glUniform1f(_uniforms[uniformName], value);
+//	glUseProgram(_program);
+//	glUniform1f(_uniforms[uniformName], value);
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, const glm::vec2& v)
 {
-	glUseProgram(_program);
-	glUniform2fv(_uniforms[uniformName], 1, glm::value_ptr(v));
+//	glUseProgram(_program);
+//	glUniform2fv(_uniforms[uniformName], 1, glm::value_ptr(v));
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, const glm::vec3& v)
 {
-	glUseProgram(_program);
-	glUniform3fv(_uniforms[uniformName], 1, glm::value_ptr(v));
+//	glUseProgram(_program);
+//	glUniform3fv(_uniforms[uniformName], 1, glm::value_ptr(v));
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, const glm::vec4& v)
 {
-	glUseProgram(_program);
-	glUniform4fv(_uniforms[uniformName], 1, glm::value_ptr(v));
+//	glUseProgram(_program);
+//	glUniform4fv(_uniforms[uniformName], 1, glm::value_ptr(v));
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, const glm::mat3& m)
 {
-	glUseProgram(_program);
-	glUniformMatrix3fv(_uniforms[uniformName], 1, GL_FALSE, glm::value_ptr(m));
+//	glUseProgram(_program);
+//	glUniformMatrix3fv(_uniforms[uniformName], 1, GL_FALSE, glm::value_ptr(m));
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, const glm::mat4& m)
 {
-	glUseProgram(_program);
-	glUniformMatrix4fv(_uniforms[uniformName], 1, GL_FALSE, glm::value_ptr(m));
+//	glUseProgram(_program);
+//	glUniformMatrix4fv(_uniforms[uniformName], 1, GL_FALSE, glm::value_ptr(m));
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, size_t count, const glm::mat4* m)
 {
-	glUseProgram(_program);
-	glUniformMatrix4fv(_uniforms[uniformName], count, GL_FALSE, glm::value_ptr(m[0]));
+//	glUseProgram(_program);
+//	glUniformMatrix4fv(_uniforms[uniformName], count, GL_FALSE, glm::value_ptr(m[0]));
 }
 
 uint32_t ShaderProgram::createSubShader(Type type, const std::string& source)
