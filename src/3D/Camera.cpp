@@ -34,12 +34,14 @@ glm::mat4 Camera::getRotationMatrix() const
 	return roll * pitch * yaw;
 }
 
+glm::mat4 Camera::GetViewMatrix() const
+{
+	return getRotationMatrix() * glm::translate(glm::mat4(1.0f), -_position);
+}
+
 glm::mat4 Camera::GetViewProjectionMatrix() const
 {
-	glm::mat4 mRotation = getRotationMatrix();
-	glm::mat4 mView     = mRotation * glm::translate(glm::mat4(1.0f), -_position);
-
-	return GetProjectionMatrix() * mView;
+	return GetProjectionMatrix() * GetViewMatrix();
 }
 
 void Camera::SetProjectionMatrixPerspective(float fov, float aspect, float nearclip, float farclip)
