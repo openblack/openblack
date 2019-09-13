@@ -31,7 +31,7 @@ namespace openblack::graphics {
 class FrameBuffer {
 public:
 	FrameBuffer() = delete;
-	FrameBuffer(uint32_t width, uint32_t height, Format colorFormat, std::optional<Format> depthStencilFormat={});
+	FrameBuffer(uint16_t width, uint16_t height, Format colorFormat, std::optional<Format> depthStencilFormat={});
 	~FrameBuffer();
 
 	void Bind();
@@ -41,14 +41,14 @@ public:
 
 	//inline void Bind() { glBindTexture(GL_TEXTURE_RECTANGLE, _textureID); }
 
-	[[nodiscard]] uint32_t GetWidth() const { return _width; }
-	[[nodiscard]] uint32_t GetHeight() const { return _height; }
+	[[nodiscard]] uint16_t GetWidth() const { return _width; }
+	[[nodiscard]] uint16_t GetHeight() const { return _height; }
 
 private:
 	uint32_t _handle;
 
-	uint32_t _width;
-	uint32_t _height;
+	uint16_t _width;
+	uint16_t _height;
 	Format _colorFormat;
 	std::optional<Format> _depthStencilFormat;
 
