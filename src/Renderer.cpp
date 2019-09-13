@@ -171,19 +171,14 @@ void Renderer::MessageCallback(uint32_t source, uint32_t type, uint32_t id, uint
 
 void Renderer::UploadUniforms(std::chrono::microseconds dt, const Game &game, const Camera &camera)
 {
-	ShaderProgram* debugShader = _shaderManager->GetShader("DebugLine");
-	ShaderProgram* objectShader = _shaderManager->GetShader("SkinnedMesh");
-	ShaderProgram* waterShader = _shaderManager->GetShader("Water");
+	_shaderManager->SetCamera(camera);
+
 	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
-
-	debugShader->SetUniformValue("u_viewProj", game.GetCamera().GetViewProjectionMatrix());
-	waterShader->SetUniformValue("u_viewProj", camera.GetViewProjectionMatrix());
-	terrainShader->SetUniformValue("u_viewProj", camera.GetViewProjectionMatrix());
-	objectShader->SetUniformValue("u_viewProj", camera.GetViewProjectionMatrix());
-
 	terrainShader->SetUniformValue("u_timeOfDay", game.GetConfig().timeOfDay);
 	terrainShader->SetUniformValue("u_bumpmapStrength", game.GetConfig().bumpMapStrength);
 	terrainShader->SetUniformValue("u_smallBumpmapStrength", game.GetConfig().smallBumpMapStrength);
+
+	ShaderProgram* objectShader = _shaderManager->GetShader("SkinnedMesh");
 	objectShader->SetUniformValue("u_model", game.GetModelMatrix());
 }
 

@@ -26,6 +26,9 @@
 
 namespace openblack
 {
+
+class Camera;
+
 namespace graphics
 {
 
@@ -37,6 +40,8 @@ class ShaderManager
 
 	ShaderProgram* LoadShader(const std::string& name, const std::string& vertexShaderFile, const std::string& fragmentShaderFile);
 	ShaderProgram* GetShader(const std::string& name);
+
+	void SetCamera(const Camera &camera);
 
   private:
 	typedef std::map<std::string, ShaderProgram*> ShaderMap;

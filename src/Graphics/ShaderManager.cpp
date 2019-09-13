@@ -20,6 +20,8 @@
 
 #include <Graphics/ShaderManager.h>
 
+#include <3D/Camera.h>
+
 namespace openblack::graphics
 {
 
@@ -52,6 +54,14 @@ ShaderProgram* ShaderManager::GetShader(const std::string& name)
 
 	// todo: return an empty shader?
 	return nullptr;
+}
+
+void ShaderManager::SetCamera(const Camera &camera)
+{
+	for (auto& [key, program]: _shaderPrograms)
+	{
+		program->SetUniformValue("u_viewProj", camera.GetViewProjectionMatrix());
+	}
 }
 
 } // namespace openblack::graphics
