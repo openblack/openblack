@@ -195,7 +195,7 @@ void Renderer::ClearScene(int width, int height)
 
 void Renderer::DebugDraw(std::chrono::microseconds dt, const Game& game, const glm::vec3& position, float scale)
 {
-	_debugCross->SetPose(position, 50.0f);
+	_debugCross->SetPose(position, scale);
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
