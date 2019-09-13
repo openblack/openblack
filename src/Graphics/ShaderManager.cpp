@@ -58,10 +58,9 @@ ShaderProgram* ShaderManager::GetShader(const std::string& name)
 
 void ShaderManager::SetCamera(const Camera &camera)
 {
-	for (auto& [key, program]: _shaderPrograms)
-	{
-		program->SetUniformValue("u_viewProj", camera.GetViewProjectionMatrix());
-	}
+	auto view = camera.GetViewMatrix();
+	auto proj = camera.GetProjectionMatrix();
+	bgfx::setViewTransform(0, &view, &proj);
 }
 
 } // namespace openblack::graphics

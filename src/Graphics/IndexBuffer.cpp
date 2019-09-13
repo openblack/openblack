@@ -81,8 +81,7 @@ std::size_t IndexBuffer::GetTypeSize(Type type)
 	return type == Type::Uint16 ? sizeof(uint16_t) : sizeof(uint32_t);
 }
 
-void IndexBuffer::Bind()
+void IndexBuffer::Bind(uint32_t count, uint32_t startIndex)
 {
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
-	bgfx::setIndexBuffer(_bgfxHandle);
+	bgfx::setIndexBuffer(_bgfxHandle, startIndex, count);
 }

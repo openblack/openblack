@@ -353,8 +353,6 @@ void Renderer::DrawScene(const Game &game, bool drawWater, bool drawDebugCross, 
 
 	if (drawDebugCross)
 	{
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_BLEND);
 
 		_debugCross->Draw(*debugShader);
 	}

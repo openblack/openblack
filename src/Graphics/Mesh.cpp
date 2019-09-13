@@ -63,7 +63,7 @@ Mesh::Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, Topology topolo
 
 	_vertexBuffer->Bind();
 	_vertexBuffer->bindVertexDecl();
-	_indexBuffer->Bind();
+	_indexBuffer->Bind(_indexBuffer->GetCount());
 
 	glBindVertexArray(0);
 }
@@ -89,31 +89,29 @@ Mesh::Topology Mesh::GetTopology() const noexcept
 	return _topology;
 }
 
-void Mesh::Draw(const openblack::graphics::ShaderProgram &program)
+void Mesh::Draw(const openblack::graphics::ShaderProgram &program, uint64_t state, uint32_t rgba)
 {
 	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
 	{
-		Draw(program, _indexBuffer->GetCount(), 0);
+		Draw(program, _indexBuffer->GetCount(), 0, state, rgba);
 	}
 	else
 	{
-		Draw(program, _vertexBuffer->GetVertexCount(), 0);
+		Draw(program, _vertexBuffer->GetVertexCount(), 0, state, rgba);
 	}
 }
 
-void Mesh::Draw(const openblack::graphics::ShaderProgram &program, uint32_t count, uint32_t startIndex)
+void Mesh::Draw(const openblack::graphics::ShaderProgram &program, uint32_t count, uint32_t startIndex, uint64_t state=0, uint32_t rgba=0)
 {
 	auto topology = topologies[static_cast<size_t>(_topology)];
-	glBindVertexArray(_vao);
-	glUseProgram(program.GetRawHandle());
 	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
 	{
-		auto indexBufferOffset = startIndex * _indexBuffer->GetStride();
-		auto indexType = _indexBuffer->GetType() == IndexBuffer::Type::Uint16 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT;
-		glDrawElements(topology, count, indexType, reinterpret_cast<void*>(indexBufferOffset));
+		_indexBuffer->Bind(count, startIndex);
 	}
-	else
-	{
-		glDrawArrays(topology, 0, count);
-	}
+	_vertexBuffer->Bind();
+
+	// Set render states.
+	bgfx::setState(state);
+
+	bgfx::submit(0, program.GetRawHandle());
 }
