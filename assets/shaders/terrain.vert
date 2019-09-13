@@ -1,11 +1,11 @@
 #version 330 core
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 weights;
-layout(location = 2) in uvec3 firstMaterialID;
-layout(location = 3) in uvec3 secondMaterialID;
-layout(location = 4) in vec3 materialBlendCoefficient;
-layout(location = 5) in float lightLevel;
-layout(location = 6) in float waterAlpha;
+layout(location = 0) in vec3 a_position;
+layout(location = 1) in vec3 a_weights;
+layout(location = 2) in uvec3 a_firstMaterialID;
+layout(location = 3) in uvec3 a_secondMaterialID;
+layout(location = 4) in vec3 a_materialBlendCoefficient;
+layout(location = 5) in float a_lightLevel;
+layout(location = 6) in float a_waterAlpha;
 
 out vec2 UV;
 out vec3 Weights;
@@ -20,14 +20,14 @@ uniform vec2 u_blockPosition;
 
 void main()
 {
-	UV = vec2(position.z / 160.0f, position.x / 160.0f);
-	Weights = weights;
-	FirstMaterialID = firstMaterialID;
-	SecondMaterialID = secondMaterialID;
-	MaterialBlendCoefficient = materialBlendCoefficient;
-	LightLevel = lightLevel;
-	WaterAlpha = waterAlpha;
+	UV = vec2(a_position.z / 160.0f, a_position.x / 160.0f);
+	Weights = a_weights;
+	FirstMaterialID = a_firstMaterialID;
+	SecondMaterialID = a_secondMaterialID;
+	MaterialBlendCoefficient = a_materialBlendCoefficient;
+	LightLevel = a_lightLevel;
+	WaterAlpha = a_waterAlpha;
 
-	vec3 transformedPosition = vec3(position.x + u_blockPosition.x, position.y, position.z + u_blockPosition.y);
+	vec3 transformedPosition = vec3(a_position.x + u_blockPosition.x, a_position.y, a_position.z + u_blockPosition.y);
 	gl_Position = u_viewProj * vec4(transformedPosition, 1.0);
 }
