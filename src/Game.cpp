@@ -218,7 +218,7 @@ void Game::Run()
 		// Reflection Pass
 		_water->BeginReflection(*_camera);
 		_renderer->UploadUniforms(deltaTime, *this, _water->GetReflectionCamera());
-		_renderer->DrawScene(*this, false);
+		_renderer->DrawScene(*this, false, false, false);
 		_water->EndReflection();
 
 		// Main Draw Pass
