@@ -118,7 +118,7 @@ Texture2D::~Texture2D()
 	}
 }
 
-void Texture2D::Create(uint32_t width, uint32_t height, uint32_t layers, Format format, Wrapping wrapping, const void* data, size_t size)
+void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format format, Wrapping wrapping, const void* data, size_t size)
 {
 	auto bindPoint = layers > 1 ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
 	auto textureFormat = textureFormats[static_cast<size_t>(format)];

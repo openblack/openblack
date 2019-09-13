@@ -108,12 +108,12 @@ class Texture2D
 	Texture2D(const Texture2D&) = delete;
 	Texture2D& operator=(const Texture2D&) = delete;
 
-	void Create(uint32_t width, uint32_t height, uint32_t layers, Format format=Format::RGBA8, Wrapping wrapping=Wrapping::ClampEdge, const void* data=nullptr, size_t size=0);
+	void Create(uint16_t width, uint16_t height, uint16_t layers, Format format=Format::RGBA8, Wrapping wrapping=Wrapping::ClampEdge, const void* data=nullptr, size_t size=0);
 
 	[[nodiscard]] uint32_t GetNativeHandle() const { return _handle; }
-	[[nodiscard]] uint32_t GetWidth() const { return _width; }
-	[[nodiscard]] uint32_t GetHeight() const { return _height; }
-	[[nodiscard]] uint32_t GetLayerCount() const { return _layers; }
+	[[nodiscard]] uint16_t GetWidth() const { return _width; }
+	[[nodiscard]] uint16_t GetHeight() const { return _height; }
+	[[nodiscard]] uint16_t GetLayerCount() const { return _layers; }
 
 	void Bind(uint8_t textureBindingPoint) const;
 
@@ -121,9 +121,9 @@ class Texture2D
 
   protected:
 	uint32_t _handle;
-	uint32_t _width;
-	uint32_t _height;
-	uint32_t _layers;
+	uint16_t _width;
+	uint16_t _height;
+	uint16_t _layers;
 };
 
 } // namespace graphics
