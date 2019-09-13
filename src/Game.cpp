@@ -134,7 +134,7 @@ void Game::Run()
 	_testModel->LoadFromFile("Data/CreatureMesh/C_Tortoise_Base.l3d");
 
 	_sky   = std::make_unique<Sky>();
-	_water = std::make_unique<Water>();
+//	_water = std::make_unique<Water>();
 
 	LoadVariables();
 	LoadLandscape("./Data/Landscape/Land1.lnd");
@@ -222,10 +222,10 @@ void Game::Run()
 		_renderer->ClearScene(width, height);
 
 		// Reflection Pass
-		_water->BeginReflection(*_camera);
-		_renderer->UploadUniforms(deltaTime, *this, _water->GetReflectionCamera());
-		_renderer->DrawScene(*this, false, false, false);
-		_water->EndReflection();
+//		_water->BeginReflection(*_camera);
+//		_renderer->UploadUniforms(deltaTime, *this, _water->GetReflectionCamera());
+//		_renderer->DrawScene(*this, false, false, false);
+//		_water->EndReflection();
 
 		// Main Draw Pass
 		// reset viewport here, should be done in EndReflection
