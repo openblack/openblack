@@ -1,8 +1,8 @@
 #version 330 core
 
-layout(location = 0) in vec3 in_pos;
-layout(location = 1) in vec2 in_tex;
-layout(location = 2) in vec3 in_norm;
+layout(location = 0) in vec3 a_position;
+layout(location = 1) in vec2 a_texcoord0;
+layout(location = 2) in vec3 a_normal;
 
 uniform mat4 u_viewProj;
 uniform mat4 u_model;
@@ -13,9 +13,9 @@ out vec2 v_tex;
 
 void main()
 {
-	gl_Position = u_viewProj * u_model * vec4(in_pos, 1.0);
+	gl_Position = u_viewProj * u_model * vec4(a_position, 1.0);
 
-	v_pos = (u_model * vec4(in_pos, 1.0)).xyz;
-	v_norm = in_norm;
-	v_tex = in_tex;
+	v_pos = (u_model * vec4(a_position, 1.0)).xyz;
+	v_norm = a_normal;
+	v_tex = a_texcoord0;
 }
