@@ -79,6 +79,8 @@ class Game
 	void LoadMap(const std::string& name);
 	void LoadLandscape(const std::string& name);
 
+	void LoadVariables();
+
 	void SetGamePath(const std::string &gamePath);
 	const std::string& GetGamePath();
 
