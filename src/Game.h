@@ -20,17 +20,17 @@
 
 #pragma once
 
-#include "GameWindow.h"
-
 #include <LHVM/LHVM.h>
 #include <glm/glm.hpp>
 #include <string>
+#include <memory>
 #include <vector>
 
 namespace openblack
 {
 class Camera;
 class FileSystem;
+class GameWindow;
 class Gui;
 class MeshPack;
 class LandIsland;

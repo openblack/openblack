@@ -18,7 +18,7 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Game.h"
+#include <Game.h>
 
 #include <string>
 
@@ -29,6 +29,7 @@
 
 #include "GitSHA1.h"
 #include "Gui.h"
+#include <GameWindow.h>
 #include <Graphics/OpenGL.h>
 #include <3D/Camera.h>
 #include <3D/L3DMesh.h>
