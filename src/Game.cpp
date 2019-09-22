@@ -264,7 +264,7 @@ void Game::LoadLandscape(const std::string& name)
 
 void Game::LoadVariables()
 {
-	auto file = _fileSystem->Open("scripts/info.dat", FileMode::Read);
+	auto file = _fileSystem->Open("Scripts/info.dat", FileMode::Read);
 
 	// check magic header
 	constexpr char kLionheadMagic[] = "LiOnHeAd";
