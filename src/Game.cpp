@@ -37,6 +37,7 @@
 #include <3D/MeshPack.h>
 #include <3D/Sky.h>
 #include <3D/Water.h>
+#include <Entities/Components/Transform.h>
 #include <Common/CmdLineArgs.h>
 #include <Common/FileSystem.h>
 #include <Entities/Registry.h>
