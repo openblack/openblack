@@ -20,6 +20,10 @@ class Registry
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args) { return _registry.assign<Component>(entity, std::forward<Args>(args)...); }
 	void Reset() { _registry.reset(); };
+	template <typename Component>
+	size_t Size() { return _registry.size<Component>(); }
+	template <typename Component>
+	decltype(auto) Get(entt::entity entity) { return _registry.get<Component>(entity); }
 
   private:
 	entt::registry _registry;
