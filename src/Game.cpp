@@ -39,7 +39,6 @@
 #include <3D/Water.h>
 #include <Common/CmdLineArgs.h>
 #include <Common/FileSystem.h>
-#include <Entities/Components/Model.h>
 #include <Entities/Registry.h>
 #include <LHScriptX/Script.h>
 #include <MeshViewer.h>
