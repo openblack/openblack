@@ -53,6 +53,7 @@ struct Field
 
 struct Forest
 {
+	int type;
 };
 
 struct Town
