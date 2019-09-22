@@ -530,14 +530,13 @@ const std::string& Game::GetGamePath()
 		spdlog::error("Failed to find the GameDir registry value, game not installed.");
 #endif // _WIN32
 
-		// no key? guess
-#ifdef _WIN32
-		sGamePath = std::string("C:\\Program Files (x86)\\Lionhead Studios Ltd\\Black & White");
-#else
-		sGamePath = std::string("/mnt/windows/Program Files (x86/Lionhead Studios Ltd/Black & White");
-#endif // _WIN32
-
-		spdlog::debug("Guessing the GamePath using \"{}\".", sGamePath);
+		// no key, don't guess, let the user know to set the command param
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+                                 "Game Path missing",
+                                 "Game path was not supplied, use the -g command parameter to set it.",
+                                 nullptr);
+        spdlog::error("Failed to find the GameDir.");
+        exit(1);
 	}
 
 	return sGamePath;
