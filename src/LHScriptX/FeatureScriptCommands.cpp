@@ -270,14 +270,27 @@ glm::vec2 GetXYPosFromString(const std::string& str)
 	return glm::vec2(x, y);
 }
 
-openblack::MeshId GetAbodeMesh(const std::string& abodeType)
+openblack::AbodeInfo GetAbodeInfo(const std::string& abodeType)
 {
-	auto item = openblack::abodeLookup.find(abodeType);
+	auto item = openblack::abodeIdLookup.find(abodeType);
 
-	if (item == openblack::abodeLookup.end())
+	if (item == openblack::abodeIdLookup.end())
 	{
 		spdlog::error("Missing abode mesh lookup for \"{}\".", abodeType);
-		return openblack::MeshId::Dummy;
+		return openblack::AbodeInfo::TibetanWonder;
+	}
+
+	return item->second;
+}
+
+openblack::FeatureInfo GetFeatureInfo(const std::string& featureType)
+{
+	auto item = openblack::featureInfoLookup.find(featureType);
+
+	if (item == openblack::featureInfoLookup.end())
+	{
+		spdlog::error("Missing abode mesh lookup for \"{}\".", featureType);
+		return openblack::FeatureInfo::Ark;
 	}
 
 	return item->second;
