@@ -85,7 +85,7 @@ void LandBlock::Load(void* block, size_t block_size)
 
 	_index         = lhBlock->index;
 	_blockPosition = glm::ivec2(lhBlock->blockX, lhBlock->blockZ);
-	_mapPosition   = glm::vec2(lhBlock->mapX, lhBlock->mapZ);
+	_mapPosition   = glm::vec4(lhBlock->mapX, lhBlock->mapZ, 0, 0);
 
 	// this should just work, not graceful lol
 	memcpy(&_cells, lhBlock->cells, 17 * 17 * sizeof(LH3DLandCell));
@@ -197,6 +197,18 @@ std::vector<LandVertex> LandBlock::buildVertexList(LandIsland& island)
 
 void LandBlock::Draw(ShaderProgram& program)
 {
-	program.SetUniformValue("u_blockPosition", _mapPosition);
-	_mesh->Draw(program);
+	program.SetUniformValue("u_blockPosition", &_mapPosition);
+
+	uint64_t state = 0u
+		| BGFX_STATE_WRITE_R
+		| BGFX_STATE_WRITE_G
+		| BGFX_STATE_WRITE_B
+		| BGFX_STATE_WRITE_A
+		| BGFX_STATE_WRITE_Z
+		| BGFX_STATE_DEPTH_TEST_LESS
+		| BGFX_STATE_CULL_CW
+		| BGFX_STATE_MSAA
+	;
+
+	_mesh->Draw(program, state);
 }

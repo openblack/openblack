@@ -104,7 +104,7 @@ void createCompressedDDS(graphics::Texture2D* texture, uint8_t* buffer)
 	int bpp = internalFormat == Format::BlockCompression2 ? 16 : 8;
 	size_t size = std::max(1, ((int) width + 3) >> 2) * std::max(1, ((int) height + 3) >> 2) * bpp;
 
-	texture->Create(width, height, 1, internalFormat, Wrapping::ClampEdge, buffer + header->dwSize, size);
+	//texture->Create(width, height, 1, internalFormat, Wrapping::ClampEdge, buffer + header->dwSize, size);
 }
 
 

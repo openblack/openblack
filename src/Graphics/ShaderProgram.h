@@ -42,27 +42,17 @@ class ShaderProgram
 	};
 
 	ShaderProgram() = delete;
-	ShaderProgram(const std::string& vertexSource, const std::string& fragmentSource);
+	ShaderProgram(const std::string& name, const std::string& vertexSource, const std::string& fragmentSource);
 	~ShaderProgram();
 
 	void SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture);
-	void SetUniformValue(const char* uniformName, int value);
-	void SetUniformValue(const char* uniformName, float value);
-	void SetUniformValue(const char* uniformName, const glm::vec2& v);
-	void SetUniformValue(const char* uniformName, const glm::vec3& v);
-	void SetUniformValue(const char* uniformName, const glm::vec4& v);
-	void SetUniformValue(const char* uniformName, const glm::mat3& m);
-	void SetUniformValue(const char* uniformName, const glm::mat4& m);
-	void SetUniformValue(const char* uniformName, size_t count, const glm::mat4* m);
+	void SetUniformValue(const char* uniformName, const void* value);
 
 	[[nodiscard]] bgfx::ProgramHandle GetRawHandle() const { return _program; }
 
   private:
 	bgfx::ProgramHandle _program;
-	std::map<std::string, int32_t> _uniforms;
-	std::map<std::string, bgfx::UniformHandle> _uniformsBgfx;
-
-	uint32_t createSubShader(Type type, const std::string& source);
+	std::map<std::string, bgfx::UniformHandle> _uniforms;
 };
 
 } // namespace openblack::graphics

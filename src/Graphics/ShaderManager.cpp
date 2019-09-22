@@ -41,7 +41,7 @@ ShaderProgram* ShaderManager::LoadShader(const std::string& name, const std::str
 	if (i != _shaderPrograms.end())
 		return i->second;
 
-	ShaderProgram* program = new ShaderProgram(vertexShaderFile, fragmentShaderFile);
+	ShaderProgram* program = new ShaderProgram(name, vertexShaderFile, fragmentShaderFile);
 	_shaderPrograms[name]  = program;
 	return program;
 }
