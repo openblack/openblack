@@ -26,8 +26,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <spdlog/spdlog.h>
 
-#include <Graphics/OpenGL.h>
 #include <Common/FileSystem.h>
+#include <Graphics/OpenGL.h>
+#include <Graphics/Texture2D.h>
 #include <Game.h>
 
 namespace openblack::graphics
@@ -95,6 +96,13 @@ ShaderProgram::~ShaderProgram()
 {
 	if (_program != 0)
 		glDeleteProgram(_program);
+}
+
+void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture)
+{
+	glUseProgram(_program);
+	glUniform1i(_uniforms[samplerName], bindPoint);
+	texture.Bind(bindPoint);
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, int value)

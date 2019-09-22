@@ -26,10 +26,9 @@
 
 #include <glm/glm.hpp>
 
-namespace openblack
+namespace openblack::graphics
 {
-namespace graphics
-{
+class Texture2D;
 
 class ShaderProgram
 {
@@ -45,6 +44,7 @@ class ShaderProgram
 	ShaderProgram(const std::string& vertexSource, const std::string& fragmentSource);
 	~ShaderProgram();
 
+	void SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture);
 	void SetUniformValue(const char* uniformName, int value);
 	void SetUniformValue(const char* uniformName, float value);
 	void SetUniformValue(const char* uniformName, const glm::vec2& v);
@@ -63,5 +63,4 @@ class ShaderProgram
 	uint32_t createSubShader(Type type, const std::string& source);
 };
 
-} // namespace graphics
-} // namespace openblack
+} // namespace openblack::graphics
