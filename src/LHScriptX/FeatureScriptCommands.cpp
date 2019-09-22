@@ -18,14 +18,17 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "3D/Camera.h"
+
 #include <3D/LandIsland.h>
 #include <AllMeshes.h>
 #include <Entities/Components/Abode.h>
 #include <Entities/Components/AnimatedStatic.h>
-#include <Entities/Components/Model.h>
 #include <Entities/Components/Transform.h>
+#include <Entities/Components/Tree.h>
 #include <Entities/Components/Villager.h>
 #include <Entities/Registry.h>
+#include <Enums.h>
 #include <Game.h>
 #include <LHScriptX/FeatureScriptCommands.h>
 #include <cmath>
@@ -44,50 +47,110 @@ const constexpr ParameterType TVector = ParameterType::Vector;
 
 namespace openblack
 {
-std::unordered_map<std::string, MeshId> abodeLookup {
+std::unordered_map<std::string, AbodeInfo> abodeIdLookup {
 	// Norse
-	{ "NORSE_ABODE_TOWN_CENTRE", MeshId::BuildingNorseVillageCentre },
-	{ "NORSE_ABODE_STORAGE_PIT", MeshId::BuildingNorseStoragePit },
-	{ "NORSE_ABODE_GRAVEYARD", MeshId::BuildingNorseGraveyard },
-	{ "NORSE_ABODE_CRECHE", MeshId::BuildingNorseCreche },
-	{ "NORSE_ABODE_A", MeshId::BuildingNorse1 },
-	{ "NORSE_ABODE_B", MeshId::BuildingNorse2 },
-	{ "NORSE_ABODE_C", MeshId::BuildingNorse3 },
-	{ "NORSE_ABODE_D", MeshId::BuildingNorse4 },
-	{ "NORSE_ABODE_E", MeshId::BuildingNorse5 },
-	{ "NORSE_ABODE_F", MeshId::BuildingNorse2A },
+	{ "NORSE_ABODE_TOWN_CENTRE", AbodeInfo::NorseTownCentre },
+	{ "NORSE_ABODE_STORAGE_PIT", AbodeInfo::NorseStoragePit },
+	{ "NORSE_ABODE_GRAVEYARD", AbodeInfo::NorseGraveyard },
+	{ "NORSE_ABODE_WORKSHOP", AbodeInfo::NorseWorkshop },
+	{ "NORSE_ABODE_CRECHE", AbodeInfo::NorseCreche },
+	{ "NORSE_ABODE_A", AbodeInfo::NorseHut },
+	{ "NORSE_ABODE_B", AbodeInfo::NorseShackX },
+	{ "NORSE_ABODE_C", AbodeInfo::NorseShackY },
+	{ "NORSE_ABODE_D", AbodeInfo::NorseTent },
+	{ "NORSE_ABODE_E", AbodeInfo::NorseTempleX },
+	{ "NORSE_ABODE_F", AbodeInfo::NorseTempleY },
+	{ "NORSE_WONDER", AbodeInfo::NorseWonder },
 	// Celtic
-	{ "CELTIC_ABODE_TOWN_CENTRE", MeshId::BuildingCelticVillageCentre },
-	{ "CELTIC_ABODE_STORAGE_PIT", MeshId::BuildingCelticStoragePit },
-	{ "CELTIC_ABODE_GRAVEYARD", MeshId::BuildingCelticGraveyard },
-	{ "CELTIC_ABODE_CRECHE", MeshId::BuildingCelticCreche },
-	{ "CELTIC_ABODE_A", MeshId::BuildingCeltic1 },
-	{ "CELTIC_ABODE_B", MeshId::BuildingCeltic2 },
-	{ "CELTIC_ABODE_C", MeshId::BuildingCeltic3 },
-	{ "CELTIC_ABODE_D", MeshId::BuildingCeltic4 },
-	{ "CELTIC_ABODE_E", MeshId::BuildingCeltic5 },
+	{ "CELTIC_ABODE_TOWN_CENTRE", AbodeInfo::CelticTownCentre },
+	{ "CELTIC_ABODE_STORAGE_PIT", AbodeInfo::CelticStoragePit },
+	{ "CELTIC_ABODE_GRAVEYARD", AbodeInfo::CelticGraveyard },
+	{ "CELTIC_ABODE_WORKSHOP", AbodeInfo::CelticGraveyard },
+	{ "CELTIC_ABODE_CRECHE", AbodeInfo::CelticCreche },
+	{ "CELTIC_ABODE_A", AbodeInfo::CelticHut },
+	{ "CELTIC_ABODE_B", AbodeInfo::CelticShackX },
+	{ "CELTIC_ABODE_C", AbodeInfo::CelticShackY },
+	{ "CELTIC_ABODE_D", AbodeInfo::CelticTent },
+	{ "CELTIC_ABODE_E", AbodeInfo::CelticTempleX },
+	{ "CELTIC_ABODE_F", AbodeInfo::CelticTempleY },
+	{ "CELTIC_WONDER", AbodeInfo::CelticWonder },
 	// Japanese
-	{ "JAPANESE_ABODE_TOWN_CENTRE", MeshId::BuildingJapaneseVillageCentre },
-	{ "JAPANESE_ABODE_STORAGE_PIT", MeshId::BuildingJapaneseStoragePit },
-	{ "JAPANESE_ABODE_GRAVEYARD", MeshId::BuildingJapaneseGraveyard },
-	{ "JAPANESE_ABODE_CRECHE", MeshId::BuildingJapaneseCreche },
-	{ "JAPANESE_ABODE_A", MeshId::BuildingJapanese1 },
-	{ "JAPANESE_ABODE_B", MeshId::BuildingJapanese2 },
-	{ "JAPANESE_ABODE_C", MeshId::BuildingJapanese3 },
-	{ "JAPANESE_ABODE_D", MeshId::BuildingJapanese4 },
-	{ "JAPANESE_ABODE_E", MeshId::BuildingJapanese5 },
+	{ "JAPANESE_ABODE_TOWN_CENTRE", AbodeInfo::JapaneseTownCentre },
+	{ "JAPANESE_ABODE_STORAGE_PIT", AbodeInfo::JapaneseStoragePit },
+	{ "JAPANESE_ABODE_GRAVEYARD", AbodeInfo::JapaneseGraveyard },
+	{ "JAPANESE_ABODE_WORKSHOP", AbodeInfo::JapaneseWorkshop },
+	{ "JAPANESE_ABODE_CRECHE", AbodeInfo::JapaneseCreche },
+	{ "JAPANESE_ABODE_A", AbodeInfo::JapaneseHut },
+	{ "JAPANESE_ABODE_B", AbodeInfo::JapaneseShackX },
+	{ "JAPANESE_ABODE_C", AbodeInfo::JapaneseShackY },
+	{ "JAPANESE_ABODE_D", AbodeInfo::JapaneseTent },
+	{ "JAPANESE_ABODE_E", AbodeInfo::JapaneseTempleX },
+	{ "JAPANESE_ABODE_F", AbodeInfo::JapaneseTempleY },
+	{ "JAPANESE_WONDER", AbodeInfo::JapaneseWonder },
 	// Aztec
-	{ "AZTEC_ABODE_TOWN_CENTRE", MeshId::BuildingAztecVillageCentre },
-	{ "AZTEC_ABODE_STORAGE_PIT", MeshId::BuildingAztecStoragePit },
-	{ "AZTEC_ABODE_GRAVEYARD", MeshId::BuildingAztecGraveyard },
-	{ "AZTEC_ABODE_CRECHE", MeshId::BuildingAztecCreche },
-	{ "AZTEC_ABODE_A", MeshId::BuildingAztec1 },
-	{ "AZTEC_ABODE_B", MeshId::BuildingAztec2 },
-	{ "AZTEC_ABODE_C", MeshId::BuildingAztec3 },
-	{ "AZTEC_ABODE_D", MeshId::BuildingAztec4 },
-	{ "AZTEC_ABODE_E", MeshId::BuildingAztec5 }
+	{ "AZTEC_ABODE_TOWN_CENTRE", AbodeInfo::AztecTownCentre },
+	{ "AZTEC_ABODE_STORAGE_PIT", AbodeInfo::AztecStoragePit },
+	{ "AZTEC_ABODE_GRAVEYARD", AbodeInfo::AztecGraveyard },
+	{ "AZTEC_ABODE_WORKSHOP", AbodeInfo::AztecGraveyard },
+	{ "AZTEC_ABODE_CRECHE", AbodeInfo::AztecCreche },
+	{ "AZTEC_ABODE_A", AbodeInfo::AztecHut },
+	{ "AZTEC_ABODE_B", AbodeInfo::AztecShackX },
+	{ "AZTEC_ABODE_C", AbodeInfo::AztecShackY },
+	{ "AZTEC_ABODE_D", AbodeInfo::AztecTent },
+	{ "AZTEC_ABODE_E", AbodeInfo::AztecTempleX },
+	{ "AZTEC_ABODE_F", AbodeInfo::AztecTempleY },
+	{ "AZTEC_WONDER", AbodeInfo::AztecWonder },
+	// Tibetan
+	{ "TIBETAN_ABODE_TOWN_CENTRE", AbodeInfo::TibetanTownCentre },
+	{ "TIBETAN_ABODE_STORAGE_PIT", AbodeInfo::TibetanStoragePit },
+	{ "TIBETAN_ABODE_GRAVEYARD", AbodeInfo::TibetanGraveyard },
+	{ "TIBETAN_ABODE_WORKSHOP", AbodeInfo::TibetanWorkshop },
+	{ "TIBETAN_ABODE_CRECHE", AbodeInfo::TibetanCreche },
+	{ "TIBETAN_ABODE_A", AbodeInfo::TibetanHut },
+	{ "TIBETAN_ABODE_B", AbodeInfo::TibetanShackX },
+	{ "TIBETAN_ABODE_C", AbodeInfo::TibetanShackY },
+	{ "TIBETAN_ABODE_D", AbodeInfo::TibetanTent },
+	{ "TIBETAN_ABODE_E", AbodeInfo::TibetanTempleX },
+	{ "TIBETAN_ABODE_F", AbodeInfo::TibetanTempleY },
+	{ "TIBETAN_WONDER", AbodeInfo::TibetanWonder },
+	// American Indian
+	{ "INDIAN_ABODE_TOWN_CENTRE", AbodeInfo::IndianTownCentre },
+	{ "INDIAN_ABODE_STORAGE_PIT", AbodeInfo::IndianStoragePit },
+	{ "INDIAN_ABODE_GRAVEYARD", AbodeInfo::IndianGraveyard },
+	{ "INDIAN_ABODE_WORKSHOP", AbodeInfo::IndianWorkshop },
+	{ "INDIAN_ABODE_CRECHE", AbodeInfo::IndianCreche },
+	{ "INDIAN_ABODE_A", AbodeInfo::IndianHut },
+	{ "INDIAN_ABODE_B", AbodeInfo::IndianShackX },
+	{ "INDIAN_ABODE_C", AbodeInfo::IndianShackY },
+	{ "INDIAN_ABODE_D", AbodeInfo::IndianTent },
+	{ "INDIAN_ABODE_E", AbodeInfo::IndianTempleX },
+	{ "INDIAN_ABODE_F", AbodeInfo::IndianTempleY },
+	{ "INDIAN_WONDER", AbodeInfo::IndianWonder },
+	// Greek
+	{ "GREEK_ABODE_TOWN_CENTRE", AbodeInfo::GreekTownCentre },
+	{ "GREEK_ABODE_STORAGE_PIT", AbodeInfo::GreekStoragePit },
+	{ "GREEK_ABODE_GRAVEYARD", AbodeInfo::GreekGraveyard },
+	{ "GREEK_ABODE_WORKSHOP", AbodeInfo::GreekWorkshop },
+	{ "GREEK_ABODE_CRECHE", AbodeInfo::GreekCreche },
+	{ "GREEK_ABODE_A", AbodeInfo::GreekHut },
+	{ "GREEK_ABODE_B", AbodeInfo::GreekShackX },
+	{ "GREEK_ABODE_C", AbodeInfo::GreekShackY },
+	{ "GREEK_ABODE_D", AbodeInfo::GreekTent },
+	{ "GREEK_ABODE_E", AbodeInfo::GreekTempleX },
+	{ "GREEK_ABODE_F", AbodeInfo::GreekTempleY },
+	{ "GREEK_WONDER", AbodeInfo::GreekWonder },
 };
-}
+
+std::unordered_map<std::string, FeatureInfo> featureInfoLookup {
+	{ "Fat Pilar Lime", FeatureInfo::FatPilarLime },
+	{ "Pilar3 Lime", FeatureInfo::Pilar3Lime },
+	{ "Aztec Statue Feature", FeatureInfo::AztcStatue },
+	{ "Spikey Pilar Lime", FeatureInfo::SpikeyPilarLime },
+	{ "Pilar2 Lime", FeatureInfo::Pilar2Lime },
+	{ "Crater", FeatureInfo::Crater },
+	{ "Pier", FeatureInfo::Pier }
+};
+} // namespace openblack
 
 // clang-format off
 const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signatures = { {
