@@ -175,7 +175,7 @@ graphics::ShaderManager& Renderer::GetShaderManager() const
 
 void Renderer::MessageCallback(uint32_t source, uint32_t type, uint32_t id, uint32_t severity, int32_t length, const std::string& message) const
 {
-	spdlog::debug("GL CALLBACK: {} type = {0:x}, severity = {0:x}, message = {}\n",
+	spdlog::debug("GL CALLBACK: {} type = {}, severity = {}, message = {}\n",
 	              (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
 	              type, severity, message);
 }
