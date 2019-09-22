@@ -89,6 +89,7 @@ enum class VillagerSex
 
 struct Villager
 {
+	openblack::VillagerId villagerId;
 	uint32_t health;
 	uint32_t age;
 	uint32_t hunger;
