@@ -324,7 +324,19 @@ void FeatureScriptCommands::CreatePath(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateTown(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	Game& game                = ctx.GetGame();
+	const auto& params        = ctx.GetParameters();
+	auto& island              = game.GetLandIsland();
+	auto& registry            = game.GetEntityRegistry();
+	const auto entity         = registry.Create();
+	int townId          = params[0].GetNumber();
+	const auto position       = GetXYPosFromString(params[1].GetString());
+	const auto& playerOwner   = params[2].GetString();
+	// float notUsed          = params[3].GetNumber();
+	const auto& civilisation  = params[4].GetString();
+
+	spdlog::debug("Creating town {} for \"{}\" with civilisation \"{}\".", townId, playerOwner, civilisation);
+	registry.Assign<Town>(entity, townId);
 }
 
 void FeatureScriptCommands::SetTownBelief(const ScriptCommandContext& ctx)

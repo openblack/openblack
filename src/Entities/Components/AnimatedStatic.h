@@ -55,4 +55,9 @@ struct Forest
 {
 };
 
+struct Town
+{
+	int id;
+};
+
 } // namespace openblack
