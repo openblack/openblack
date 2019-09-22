@@ -320,7 +320,7 @@ void Renderer::DrawScene(const Game &game, bool drawWater, bool drawDebugCross, 
 {
 //	ShaderProgram* objectShader = _shaderManager->GetShader("SkinnedMesh");
 	ShaderProgram* waterShader = _shaderManager->GetShader("Water");
-//	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
+	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
 	ShaderProgram* debugShader = _shaderManager->GetShader("DebugLine");
 //
 //	glEnable(GL_DEPTH_TEST);
@@ -335,14 +335,14 @@ void Renderer::DrawScene(const Game &game, bool drawWater, bool drawDebugCross, 
 
 	if (drawWater)
 	{
-		game.GetWater().Draw(*waterShader);
+		//game.GetWater().Draw(*waterShader);
 	}
 
 //	if (game.GetConfig().wireframe)
 //		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-//
-//	game.GetLandIsland().Draw(*terrainShader);
-//
+
+	game.GetLandIsland().Draw(*terrainShader);
+
 //	if (game.GetConfig().wireframe)
 //		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 //
@@ -353,8 +353,7 @@ void Renderer::DrawScene(const Game &game, bool drawWater, bool drawDebugCross, 
 
 	if (drawDebugCross)
 	{
-
-		_debugCross->Draw(*debugShader);
+		//_debugCross->Draw(*debugShader);
 	}
 
 	// Enable stats or debug text.

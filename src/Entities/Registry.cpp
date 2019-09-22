@@ -31,25 +31,8 @@ void Registry::DrawModels(graphics::ShaderManager& shaderManager)
 		objectShader->SetUniformValue("u_model", modelMatrix);
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
 
-		std::vector<int> submeshIds = { 2, 3 };
-
-		for (auto& submeshId : submeshIds)
-		{
-			mesh.Draw(*objectShader, submeshId);		
-		}
-	});
-
-	_registry.view<Abode, Transform>().each([objectShader](Abode& abode, Transform& transform) {
-		glm::mat4 modelMatrix = glm::mat4(1.0f);
-		modelMatrix           = glm::translate(modelMatrix, transform.position);
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-		modelMatrix           = glm::scale(modelMatrix, transform.scale);
-		auto abodeId          = abode.abodeInfo;
-
 		objectShader->SetUniformValue("u_model", modelMatrix);
-		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(abodeMeshLookup[abodeId]));
+		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(model.meshId));
 
 		std::vector<int> submeshIds = { 2 };
 
@@ -72,9 +55,7 @@ void Registry::DrawModels(graphics::ShaderManager& shaderManager)
 		}
 
 		for (auto& submeshId : submeshIds)
-		{
-			mesh.Draw(*objectShader, submeshId);
-		}
+			mesh.Draw(viewId, *objectShader, submeshId, state);
 	});
 
 	_registry.view<AnimatedStatic, Transform>().each([objectShader](AnimatedStatic& animated, Transform& transform) {
@@ -84,7 +65,7 @@ void Registry::DrawModels(graphics::ShaderManager& shaderManager)
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 		modelMatrix           = glm::scale(modelMatrix, transform.scale);
-		objectShader->SetUniformValue("u_model", modelMatrix);
+
 
 		// temporary-ish:
 		if (animated.type == "Norse Gate")

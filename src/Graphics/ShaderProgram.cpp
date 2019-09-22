@@ -34,7 +34,7 @@
 namespace openblack::graphics
 {
 
-ShaderProgram::ShaderProgram(const std::string& vertexSource, const std::string& fragmentSource)
+ShaderProgram::ShaderProgram(const std::string& name, const std::string& vertexSource, const std::string& fragmentSource)
 	: _program(BGFX_INVALID_HANDLE)
 {
 	std::string suffix;
@@ -72,14 +72,16 @@ ShaderProgram::ShaderProgram(const std::string& vertexSource, const std::string&
 	auto const& vertexShaderSource = Game::instance()->GetFileSystem().ReadAll(vertexSource + suffix);
 	auto vs_mem = bgfx::makeRef(vertexShaderSource.data(), vertexShaderSource.size());
 	auto vs_shader = bgfx::createShader(vs_mem);
+	bgfx::frame();
 	numShaderUniforms = bgfx::getShaderUniforms(vs_shader);
 	uniforms.resize(numShaderUniforms);
 	bgfx::getShaderUniforms(vs_shader, uniforms.data(), uniforms.size());
 	for (uint16_t i = 0; i < numShaderUniforms; ++i)
 	{
 		bgfx::getUniformInfo(uniforms[i], info);
-		_uniformsBgfx.emplace(std::string(info.name), uniforms[i]);
+		_uniforms.emplace(std::string(info.name), uniforms[i]);
 	}
+	bgfx::setName(vs_shader, (name + "_vs").c_str());
 
 	auto const& fragmentShaderSource = Game::instance()->GetFileSystem().ReadAll(fragmentSource + suffix);
 	auto fs_mem = bgfx::makeRef(fragmentShaderSource.data(), fragmentShaderSource.size());
@@ -90,8 +92,9 @@ ShaderProgram::ShaderProgram(const std::string& vertexSource, const std::string&
 	for (uint16_t i = 0; i < numShaderUniforms; ++i)
 	{
 		bgfx::getUniformInfo(uniforms[i], info);
-		_uniformsBgfx.emplace(std::string(info.name), uniforms[i]);
+		_uniforms.emplace(std::string(info.name), uniforms[i]);
 	}
+	bgfx::setName(vs_shader, (name + "_fs").c_str());
 
 	_program = bgfx::createProgram(vs_shader, fs_shader);
 	bgfx::frame();
@@ -104,88 +107,12 @@ ShaderProgram::~ShaderProgram()
 
 void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture)
 {
-	bgfx::setTexture(bindPoint, _uniformsBgfx[samplerName], texture.GetBgfxHandle());
+	bgfx::setTexture(bindPoint, _uniforms[samplerName], texture.GetBgfxHandle());
 }
 
-void ShaderProgram::SetUniformValue(const char* uniformName, int value)
+void ShaderProgram::SetUniformValue(const char* uniformName, const void* value)
 {
-//	glUseProgram(_program);
-//	glUniform1i(_uniforms[uniformName], value);
-}
-
-void ShaderProgram::SetUniformValue(const char* uniformName, float value)
-{
-//	glUseProgram(_program);
-//	glUniform1f(_uniforms[uniformName], value);
-}
-
-void ShaderProgram::SetUniformValue(const char* uniformName, const glm::vec2& v)
-{
-//	glUseProgram(_program);
-//	glUniform2fv(_uniforms[uniformName], 1, glm::value_ptr(v));
-}
-
-void ShaderProgram::SetUniformValue(const char* uniformName, const glm::vec3& v)
-{
-//	glUseProgram(_program);
-//	glUniform3fv(_uniforms[uniformName], 1, glm::value_ptr(v));
-}
-
-void ShaderProgram::SetUniformValue(const char* uniformName, const glm::vec4& v)
-{
-//	glUseProgram(_program);
-//	glUniform4fv(_uniforms[uniformName], 1, glm::value_ptr(v));
-}
-
-void ShaderProgram::SetUniformValue(const char* uniformName, const glm::mat3& m)
-{
-//	glUseProgram(_program);
-//	glUniformMatrix3fv(_uniforms[uniformName], 1, GL_FALSE, glm::value_ptr(m));
-}
-
-void ShaderProgram::SetUniformValue(const char* uniformName, const glm::mat4& m)
-{
-//	glUseProgram(_program);
-//	glUniformMatrix4fv(_uniforms[uniformName], 1, GL_FALSE, glm::value_ptr(m));
-}
-
-void ShaderProgram::SetUniformValue(const char* uniformName, size_t count, const glm::mat4* m)
-{
-//	glUseProgram(_program);
-//	glUniformMatrix4fv(_uniforms[uniformName], count, GL_FALSE, glm::value_ptr(m[0]));
-}
-
-uint32_t ShaderProgram::createSubShader(Type type, const std::string& source)
-{
-	static const std::array<GLenum, 3> types = {
-		GL_VERTEX_SHADER,
-		GL_FRAGMENT_SHADER,
-		0x91B9, // GL_COMPUTE_SHADER, core in 4.3
-	};
-	GLuint shader = glCreateShader(types[static_cast<uint32_t>(type)]);
-
-	auto glsource = reinterpret_cast<const GLchar*>(source.c_str());
-	glShaderSource(shader, 1, &glsource, nullptr);
-	glCompileShader(shader);
-
-	GLint compileStatus = GL_FALSE;
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &compileStatus);
-
-	if (compileStatus == GL_FALSE)
-	{
-		GLint infoLogLen = 0;
-		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLen);
-
-		char* infoLog = new char[infoLogLen];
-		glGetShaderInfoLog(shader, infoLogLen, &infoLogLen, infoLog);
-		spdlog::error("There are compile errors: {}", infoLog);
-		delete[] infoLog;
-
-		glDeleteShader(shader);
-		return 0;
-	}
-
-	return shader;
+	bgfx::setUniform(_uniforms[uniformName], value);
 }
 
 } // namespace openblack::graphics

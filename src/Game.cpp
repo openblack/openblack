@@ -229,11 +229,11 @@ void Game::Run()
 
 		// Main Draw Pass
 		// reset viewport here, should be done in EndReflection
-		glViewport(0, 0, width, height);
+		//glViewport(0, 0, width, height);
 		_renderer->UploadUniforms(deltaTime, *this, *_camera);
 		_renderer->DrawScene(*this, true, true);
 
-		_gui->Draw();
+//		_gui->Draw();
 		_renderer->Frame();
 
 		_window->SwapWindow();
