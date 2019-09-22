@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <Enums.h>
 #include <string>
 
 namespace openblack
@@ -32,7 +33,26 @@ struct AnimatedStatic
 
 struct MobileStatic
 {
-	uint32_t type;
+	MobileStaticInfo type;
+};
+
+struct MobileObject
+{
+	MobileObjectInfo type;
+};
+
+struct Feature
+{
+	FeatureInfo type;
+};
+
+struct Field
+{
+	int town;
+};
+
+struct Forest
+{
 };
 
 } // namespace openblack
