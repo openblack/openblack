@@ -795,7 +795,22 @@ void FeatureScriptCommands::LinkFootpath(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateBonfire(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	auto& game          = ctx.GetGame();
+	const auto& params  = ctx.GetParameters();
+	auto& island        = game.GetLandIsland();
+	auto& registry      = game.GetEntityRegistry();
+	const auto entity   = registry.Create();
+	const auto position = GetXYPosFromString(params[0].GetString());
+	float rotation      = -params[1].GetFloat();
+	// auto unknown        = params[1].GetFloat();
+	float size          = params[3].GetFloat() * 1;
+
+	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
+	const glm::vec3 rot(0, rotation, 0);
+	const glm::vec3 scale(size);
+
+	registry.Assign<MobileStatic>(entity, MobileStaticInfo::Bonfire);
+	registry.Assign<Transform>(entity, pos, rot, scale);
 }
 
 void FeatureScriptCommands::CreateBase(const ScriptCommandContext& ctx)
