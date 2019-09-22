@@ -5,24 +5,17 @@ namespace openblack
 class Camera;
 }
 
-namespace openblack
-{
-namespace graphics
+namespace openblack::graphics
 {
 class ShaderManager;
-}
 } // namespace openblack
 
-namespace openblack
-{
-namespace Entities
+namespace openblack::Entities
 {
 class Registry
 {
   public:
-	void DebugCreateEntities(float x, float y, float z);
 	void DrawModels(graphics::ShaderManager& shaderManager);
-	void Update();
 	decltype(auto) Create() { return _registry.create(); }
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args) { return _registry.assign<Component>(entity, std::forward<Args>(args)...); }
@@ -32,5 +25,4 @@ class Registry
 	entt::registry _registry;
 };
 
-} // namespace Entities
 } // namespace openblack
