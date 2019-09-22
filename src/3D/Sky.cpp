@@ -126,8 +126,7 @@ void Sky::CalculateTextures()
 void Sky::Draw(graphics::ShaderProgram& program)
 {
 	program.SetUniformValue("u_model", glm::mat4(1.0f));
-
-	_texture->Bind(0);
+	program.SetTextureSampler("s_diffuse", 0, *_texture);
 
 	_model->Draw(program, 0);
 }

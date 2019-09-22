@@ -154,10 +154,13 @@ void L3DSubMesh::Draw(const L3DMesh& mesh, ShaderProgram& program) const
 	{
 		if (prim.skinID != 0xFFFFFFFF)
 		{
+			const Texture2D* texture = nullptr;
 			if (skins.find(prim.skinID) != skins.end())
-				skins.at(prim.skinID)->Bind(0);
+				texture = skins.at(prim.skinID).get();
 			else
-				Game::instance()->GetMeshPack().GetTexture(prim.skinID).Bind(0);
+				texture = &Game::instance()->GetMeshPack().GetTexture(prim.skinID);
+
+			program.SetTextureSampler("s_diffuse", 0, *texture);
 		}
 
 		_mesh->Draw(program, prim.indicesCount, prim.indicesOffset);

@@ -103,8 +103,7 @@ void Water::createMesh()
 
 void Water::Draw(ShaderProgram& program) const
 {
-	program.SetUniformValue("sReflection", 0);
-	_reflectionFrameBuffer->GetColorAttachment().Bind(0);
+	program.SetTextureSampler("s_reflection", 0, _reflectionFrameBuffer->GetColorAttachment());
 
 	_mesh->Draw(program);
 }
