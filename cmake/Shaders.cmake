@@ -218,22 +218,22 @@ function(mark_shaders_for_compilation)
 
 		add_custom_command(
 			OUTPUT
-				${SHADER_COMPILATION_OUTPUT_DIR}/${SHADER_FILE_BASENAME}.essl
+#				${SHADER_COMPILATION_OUTPUT_DIR}/${SHADER_FILE_BASENAME}.essl
 				${SHADER_COMPILATION_OUTPUT_DIR}/${SHADER_FILE_BASENAME}.glsl
 				${EXTRA_OUTPUTS}
 			# OpenGL ES
 			COMMAND
-				bgfx::shaderc
-				--verbose
-				-f ${SHADER_FILE_ABSOLUTE}
-				-o ${SHADER_COMPILATION_OUTPUT_DIR}/${SHADER_FILE_BASENAME}.essl
-				-i ${BGFX_SHADER_INCLUDE_PATH}
-				--platform ${PLATFORM}
-				--profile 140
-				--type ${SHADER_COMPILATION_TYPE}
-				--varyingdef ${SHADER_COMPILATION_VARYING_DEF}
-				"$<$<CONFIG:debug>:--debug>$<$<CONFIG:relwithdebinfo>:--debug>"
-				"$<$<CONFIG:debug>:-O 0>$<$<CONFIG:release>:-O 3>$<$<CONFIG:relwithdebinfo>:-O 3>$<$<CONFIG:minsizerel>:-O 3>"
+#				bgfx::shaderc
+#				--verbose
+#				-f ${SHADER_FILE_ABSOLUTE}
+#				-o ${SHADER_COMPILATION_OUTPUT_DIR}/${SHADER_FILE_BASENAME}.essl
+#				-i ${BGFX_SHADER_INCLUDE_PATH}
+#				--platform ${PLATFORM}
+#				--profile 140
+#				--type ${SHADER_COMPILATION_TYPE}
+#				--varyingdef ${SHADER_COMPILATION_VARYING_DEF}
+#				"$<$<CONFIG:debug>:--debug>$<$<CONFIG:relwithdebinfo>:--debug>"
+#				"$<$<CONFIG:debug>:-O 0>$<$<CONFIG:release>:-O 3>$<$<CONFIG:relwithdebinfo>:-O 3>$<$<CONFIG:minsizerel>:-O 3>"
 			# TODO: try 4.40
 			# OpenGL GLSL 1.40
 		 	COMMAND
@@ -243,7 +243,7 @@ function(mark_shaders_for_compilation)
 		 		-o ${SHADER_COMPILATION_OUTPUT_DIR}/${SHADER_FILE_BASENAME}.glsl
 		 		-i ${BGFX_SHADER_INCLUDE_PATH}
 		 		--platform ${PLATFORM}
-		 		--profile 150
+		 		--profile 120
 		 		--type ${SHADER_COMPILATION_TYPE}
 		 		--varyingdef ${SHADER_COMPILATION_VARYING_DEF}
 		 		"$<$<CONFIG:debug>:--debug>$<$<CONFIG:relwithdebinfo>:--debug>"

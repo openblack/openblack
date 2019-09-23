@@ -12,7 +12,7 @@ $input v_weight
 #include <bgfx_shader.sh>
 
 //uniform sampler2DArray s_materials;
-SAMPLER2DARRAY(s_materials, 0);
+//SAMPLER2DARRAY(s_materials, 0);
 SAMPLER2D(s_bump, 1);
 SAMPLER2D(s_smallBump, 0);
 //uniform sampler2D s_bump;
