@@ -9,8 +9,8 @@ add_definitions(-DGLM_FORCE_LEFT_HANDED -DGLM_FORCE_RADIANS -DGLM_ENABLE_EXPERIM
 configure_file("${CMAKE_CURRENT_LIST_DIR}/GitSHA1.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" @ONLY)
 
 file(GLOB OPENBLACK_SHADERS
-	"${CMAKE_CURRENT_SOURCE_DIR}/assets/shaders/**.vert"
-	"${CMAKE_CURRENT_SOURCE_DIR}/assets/shaders/**.frag"
+	"${CMAKE_SOURCE_DIR}/assets/shaders/**.vert"
+	"${CMAKE_SOURCE_DIR}/assets/shaders/**.frag"
 )
 
 if (WIN32)
