@@ -93,7 +93,7 @@ endif()
 if (USE_SUBMODULES)
     # Add dependencies from the external directory
     set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
-    add_subdirectory("${EXTERNAL_DIR}/entt")
+    add_subdirectory("${EXTERNAL_DIR}/entt" EXCLUDE_FROM_ALL)
 else()
     find_package(EnTT REQUIRED)
 endif()
