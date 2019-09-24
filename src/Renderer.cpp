@@ -293,11 +293,11 @@ void Renderer::UploadUniforms(std::chrono::microseconds dt, const Game &game, co
 {
 	_shaderManager->SetCamera(camera);
 
-//	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
-//	terrainShader->SetUniformValue("u_timeOfDay", game.GetConfig().timeOfDay);
-//	terrainShader->SetUniformValue("u_bumpmapStrength", game.GetConfig().bumpMapStrength);
-//	terrainShader->SetUniformValue("u_smallBumpmapStrength", game.GetConfig().smallBumpMapStrength);
-//
+	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
+	terrainShader->SetUniformValue("u_timeOfDay", &game.GetConfig().timeOfDay);
+	terrainShader->SetUniformValue("u_bumpmapStrength", &game.GetConfig().bumpMapStrength);
+	terrainShader->SetUniformValue("u_smallBumpmapStrength", &game.GetConfig().smallBumpMapStrength);
+
 //	ShaderProgram* objectShader = _shaderManager->GetShader("SkinnedMesh");
 //	objectShader->SetUniformValue("u_model", game.GetModelMatrix());
 }

@@ -23,7 +23,7 @@ function(mark_shaders_for_compilation_to_header)
 		source_group("Shaders" FILES "${SHADER}")
 		get_filename_component(SHADER_FILE_BASENAME ${SHADER_FILE} NAME_WE)
 		get_filename_component(SHADER_FILE_ABSOLUTE ${SHADER_FILE} ABSOLUTE)
-		set (EXTRA_PROFILES spirv)
+		#set (EXTRA_PROFILES spirv)
 #		set (EMPTY_PROFILES pssl)
 		if (UNIX)
 			set (PLATFORM linux)
@@ -164,7 +164,7 @@ function(mark_shaders_for_compilation)
 		source_group("Shaders" FILES "${SHADER}")
 		get_filename_component(SHADER_FILE_BASENAME ${SHADER_FILE} NAME)
 		get_filename_component(SHADER_FILE_ABSOLUTE ${SHADER_FILE} ABSOLUTE)
-		set (EXTRA_PROFILES spirv) # pssl
+		#set (EXTRA_PROFILES spirv) # pssl
 		if (UNIX)
 			set (PLATFORM linux)
 		elseif (EMSCRIPTEN)
@@ -237,7 +237,7 @@ function(mark_shaders_for_compilation)
 			# TODO: try 4.40
 			# OpenGL GLSL 1.40
 		 	COMMAND
-				bgfx::shaderc
+			/home/sandy/code/bgfx.cmake/cmake-build-debug/shaderc
 		 		--verbose
 		 		-f ${SHADER_FILE_ABSOLUTE}
 		 		-o ${SHADER_COMPILATION_OUTPUT_DIR}/${SHADER_FILE_BASENAME}.glsl
