@@ -18,7 +18,7 @@ namespace openblack::Entities
 
 void Registry::DrawModels(graphics::ShaderManager& shaderManager)
 {
-	graphics::ShaderProgram* objectShader = shaderManager.GetShader("SkinnedMesh");
+	graphics::ShaderProgram* objectShader = shaderManager.GetShader("Object");
 
 	_registry.view<Tree, Transform>().each([objectShader](Tree& tree, Transform& transform) {
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
@@ -31,7 +31,9 @@ void Registry::DrawModels(graphics::ShaderManager& shaderManager)
 		objectShader->SetUniformValue("u_model", modelMatrix);
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
 
-		objectShader->SetUniformValue("u_model", modelMatrix);
+//		objectShader->SetUniformValue("u_model", modelMatrix);
+		bgfx::setTransform(&modelMatrix);
+
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(model.meshId));
 
 		std::vector<int> submeshIds = { 2 };
@@ -66,6 +68,8 @@ void Registry::DrawModels(graphics::ShaderManager& shaderManager)
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 		modelMatrix           = glm::scale(modelMatrix, transform.scale);
 
+//		objectShader->SetUniformValue("u_model", modelMatrix);
+		bgfx::setTransform(&modelMatrix);
 
 		// temporary-ish:
 		if (animated.type == "Norse Gate")
@@ -98,6 +102,9 @@ void Registry::DrawModels(graphics::ShaderManager& shaderManager)
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 		modelMatrix           = glm::scale(modelMatrix, transform.scale);
 		objectShader->SetUniformValue("u_model", modelMatrix);
+
+//		objectShader->SetUniformValue("u_model", modelMatrix);
+		bgfx::setTransform(&modelMatrix);
 
 		auto meshId = mobileStaticMeshLookup[mobile.type];
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));

@@ -163,7 +163,16 @@ void L3DSubMesh::Draw(const L3DMesh& mesh, ShaderProgram& program) const
 			program.SetTextureSampler("s_diffuse", 0, *texture);
 		}
 
-		_mesh->Draw(program, prim.indicesCount, prim.indicesOffset);
+		uint64_t state = 0u
+			| BGFX_STATE_WRITE_RGB
+			| BGFX_STATE_WRITE_A
+			| BGFX_STATE_WRITE_Z
+			| BGFX_STATE_DEPTH_TEST_LESS
+			// | BGFX_STATE_CULL_CCW  // TODO(bwrsandman): Some meshes wind one way and some others (i.e. rocks, gate)
+			| BGFX_STATE_MSAA
+		;
+
+		_mesh->Draw(program, prim.indicesCount, prim.indicesOffset, state, 0);
 	}
 }
 
