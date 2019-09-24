@@ -112,7 +112,7 @@ void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint
 
 void ShaderProgram::SetUniformValue(const char* uniformName, const void* value)
 {
-	bgfx::setUniform(_uniforms[uniformName], value);
+	bgfx::setUniform(_uniforms.at(uniformName), value);
 }
 
 } // namespace openblack::graphics
