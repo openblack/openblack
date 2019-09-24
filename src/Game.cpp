@@ -75,6 +75,8 @@ Game::Game(int argc, char** argv)
 	args.Get("w", windowWidth);
 	args.Get("h", windowHeight);
 
+	std::string binaryPath = fs::path{argv[0]}.parent_path().generic_string();
+	spdlog::info("current binary path: {}", binaryPath);
 	{
 		std::string gamePath;
 		args.Get("g", gamePath);
@@ -84,7 +86,7 @@ Game::Game(int argc, char** argv)
 	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", windowWidth, windowHeight, displayMode);
 	_window->SetSwapInterval(1);
 
-	_renderer = std::make_unique<Renderer>(*_window);
+	_renderer = std::make_unique<Renderer>(*_window, binaryPath);
 
 	_fileSystem->SetGamePath(GetGamePath());
 	spdlog::debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
