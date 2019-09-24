@@ -34,6 +34,13 @@
 #include <spdlog/spdlog.h>
 #include <sstream>
 
+#ifdef HAS_FILESYSTEM
+#include <filesystem>
+namespace fs = std::filesystem;
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif // HAS_FILESYSTEM
 using namespace openblack;
 using namespace openblack::graphics;
 
@@ -81,7 +88,7 @@ uint32_t Renderer::GetRequiredFlags()
 	return SDL_WINDOW_OPENGL;
 }
 
-Renderer::Renderer(const GameWindow& window):
+Renderer::Renderer(const GameWindow& window, const std::string binaryPath):
     _shaderManager(std::make_unique<ShaderManager>())
 {
 	for (auto& attr : GetRequiredContextAttributes())
@@ -136,7 +143,7 @@ Renderer::Renderer(const GameWindow& window):
 	if (!GLAD_GL_EXT_texture_compression_s3tc)
 		spdlog::error("GL_EXT_texture_compression_s3tc unsupported");
 
-	LoadShaders();
+	LoadShaders(binaryPath);
 
 	// allocate vertex buffers for our debug draw
 	_debugCross = DebugLines::CreateCross();
@@ -144,11 +151,15 @@ Renderer::Renderer(const GameWindow& window):
 
 Renderer::~Renderer() = default;
 
-void Renderer::LoadShaders()
+void Renderer::LoadShaders(const std::string &binaryPath)
 {
+	fs::path binPath{binaryPath};
 	for (auto& shader : Shaders)
 	{
-		_shaderManager->LoadShader(shader.name, shader.vertexShaderFile, shader.fragmentShaderFile);
+		_shaderManager->LoadShader(
+					shader.name,
+					(binPath / shader.vertexShaderFile).generic_string(),
+					(binPath / shader.fragmentShaderFile).generic_string());
 	}
 }
 

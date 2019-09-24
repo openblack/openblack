@@ -75,11 +75,11 @@ class Renderer {
 	static uint32_t GetRequiredFlags();
 
 	Renderer() = delete;
-	explicit Renderer(const GameWindow& window);
+	explicit Renderer(const GameWindow& window, const std::string binaryPath);
 
 	virtual ~Renderer();
 
-	void LoadShaders();
+	void LoadShaders(const std::string &binaryPath);
 	[[nodiscard]] SDL_GLContext& GetGLContext() const;
 	[[nodiscard]] graphics::ShaderManager& GetShaderManager() const;
 	void MessageCallback(uint32_t source, uint32_t type, uint32_t id, uint32_t severity, int32_t length, const std::string& message) const;
