@@ -52,7 +52,7 @@ struct ShaderDefinition {
 static const std::array Shaders {
 	ShaderDefinition{"DebugLine", "shaders/vs_line.sc", "shaders/fs_line.sc"},
 	ShaderDefinition{"Terrain", "shaders/vs_terrain.sc", "shaders/fs_terrain.sc"},
-//	ShaderDefinition{"SkinnedMesh", "shaders/skin.vert", "shaders/skin.frag"},
+	ShaderDefinition{"Object", "shaders/vs_object.sc", "shaders/fs_object.sc"},
 	ShaderDefinition{"Water", "shaders/vs_water.sc", "shaders/fs_water.sc"},
 };
 

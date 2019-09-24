@@ -186,31 +186,6 @@ void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format 
 	// auto memory = bgfx::makeRef(data, size);
 	auto memory = bgfx::copy(data, size);
 	_bgfxHandle = bgfx::createTexture2D(width, height, false, layers, getBgfxTextureFormat(format), BGFX_TEXTURE_NONE, memory);
-	// bgfx::frame();
-
-	assert(!textureFormat._compressed);
-
-//	glBindTexture(bindPoint, static_cast<GLuint>(_handle));
-//
-//	if (textureFormat._compressed)
-//	{
-//		if (layers == 1)
-//			glCompressedTexImage2D(bindPoint, 0, textureFormat._internalFormat, width, height, 0, size, data);
-//		else
-//			glCompressedTexImage3D(bindPoint, 0, textureFormat._internalFormat, width, height, layers, 0, size, data);
-//	}
-//	else
-//	{
-//		if (layers==1)
-//			glTexImage2D(bindPoint, 0, textureFormat._internalFormat, width, height, 0, textureFormat._format, textureFormat._type, data);
-//		else
-//			glTexImage3D(bindPoint, 0, textureFormat._internalFormat, width, height, layers, 0, textureFormat._format, textureFormat._type, data);
-//	}
-//
-//	glTexParameteri(bindPoint, GL_TEXTURE_WRAP_S, wrappingModes[static_cast<size_t>(wrapping)]);
-//	glTexParameteri(bindPoint, GL_TEXTURE_WRAP_T, wrappingModes[static_cast<size_t>(wrapping)]);
-//	glTexParameteri(bindPoint, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//	glTexParameteri(bindPoint, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	_width = width;
 	_height = height;

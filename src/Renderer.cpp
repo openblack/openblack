@@ -318,7 +318,7 @@ void Renderer::ClearScene(int width, int height)
 
 void Renderer::DrawScene(const Game &game, bool drawWater, bool drawDebugCross, bool cullBack)
 {
-//	ShaderProgram* objectShader = _shaderManager->GetShader("SkinnedMesh");
+//	ShaderProgram* objectShader = _shaderManager->GetShader("Object");
 	ShaderProgram* waterShader = _shaderManager->GetShader("Water");
 	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
 	ShaderProgram* debugShader = _shaderManager->GetShader("DebugLine");
@@ -349,7 +349,7 @@ void Renderer::DrawScene(const Game &game, bool drawWater, bool drawDebugCross, 
 //	game.GetTestModel().Draw(*objectShader, 0);
 //
 //	glDisable(GL_CULL_FACE);
-//	game.GetEntityRegistry().DrawModels(*_shaderManager);
+	game.GetEntityRegistry().DrawModels(*_shaderManager);
 
 	if (drawDebugCross)
 	{
