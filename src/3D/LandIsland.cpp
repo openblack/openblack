@@ -207,10 +207,6 @@ void LandIsland::convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixe
 	}
 }
 
-/*
-	Dumps Textures from VRAM using a FBO (Works on OpenGL 3.2+)
-	A better way would be glGetTexSubImage from OpenGL 4.5.
-*/
 void LandIsland::DumpTextures()
 {
 	_materialArray->DumpTexture();

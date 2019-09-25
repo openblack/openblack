@@ -85,7 +85,7 @@ void MeshViewer::DrawWindow()
 
 	ImGui::DragFloat3("position", &_cameraPosition[0], 0.5f);
 
-	ImGui::Image((void*)(intptr_t) _frameBuffer->GetColorAttachment().GetNativeHandle(), ImVec2(512, 512), ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Image((void*)&_frameBuffer->GetColorAttachment().GetNativeHandle(), ImVec2(512, 512), ImVec2(0, 1), ImVec2(1, 0));
 
 	ImGui::EndChild();
 

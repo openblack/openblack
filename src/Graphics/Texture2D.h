@@ -23,12 +23,11 @@
 #include <cstdint>
 #include <cstddef>
 
-#include <bgfx/bgfx.h>
 #include <string>
 
-namespace openblack
-{
-namespace graphics
+#include <bgfx/bgfx.h>
+
+namespace openblack::graphics
 {
 
 enum class Format : uint8_t
@@ -117,26 +116,19 @@ class Texture2D
 
 	void Create(uint16_t width, uint16_t height, uint16_t layers, Format format=Format::RGBA8, Wrapping wrapping=Wrapping::ClampEdge, const void* data=nullptr, size_t size=0);
 
-	[[nodiscard]] uint32_t GetNativeHandle() const { return _handle; }
-	[[nodiscard]] bgfx::TextureHandle GetBgfxHandle() const { return _bgfxHandle; }
+	[[nodiscard]] const bgfx::TextureHandle& GetNativeHandle() const { return _handle; }
 	[[nodiscard]] uint16_t GetWidth() const { return _info.width; }
 	[[nodiscard]] uint16_t GetHeight() const { return _info.height; }
 	[[nodiscard]] uint16_t GetLayerCount() const { return _info.numLayers; }
-
-	void Bind(uint8_t textureBindingPoint) const;
-
-	void GenerateMipmap();
 
 	void DumpTexture();
 
   protected:
 	std::string _name;
-	bgfx::TextureHandle _bgfxHandle;
-	uint32_t _handle;
+	bgfx::TextureHandle _handle;
 	bgfx::TextureInfo _info;
 
 	friend FrameBuffer;
 };
 
-} // namespace graphics
-} // namespace openblack
+} // namespace openblack::graphics
