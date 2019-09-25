@@ -87,8 +87,7 @@ std::unique_ptr<Gui> Gui::create(const GameWindow &window, bgfx::ViewId viewId, 
 	io.FontGlobalScale = scale;
 
 	io.BackendRendererName = "imgui_impl_bgfx";
-	auto meshViewer = nullptr;  // std::make_unique<MeshViewer>();
-	//meshViewer->Open();
+	auto meshViewer = std::make_unique<MeshViewer>(viewId - 1);
 
 	auto gui = std::unique_ptr<Gui>(new Gui(imgui, viewId, std::move(meshViewer)));
 
@@ -446,7 +445,7 @@ void Gui::Loop(Game& game)
 {
 	ImGui::SetCurrentContext(_imgui);
 
-//	_meshViewer->DrawScene();
+	_meshViewer->DrawScene();
 
 	NewFrame(game.GetWindow());
 
@@ -492,7 +491,7 @@ void Gui::Loop(Game& game)
 		ImGui::EndMainMenuBar();
 	}
 
-//	_meshViewer->DrawWindow();
+	_meshViewer->DrawWindow();
 
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 8.0f, io.DisplaySize.y - 8.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
@@ -608,8 +607,8 @@ void Gui::Loop(Game& game)
 	}
 	ImGui::End();
 
-//	if (config.waterDebug)
-//		game.GetWater().DebugGUI();
+	if (config.waterDebug)
+		game.GetWater().DebugGUI();
 
 	ImGui::Render();
 }
