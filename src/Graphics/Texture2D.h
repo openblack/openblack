@@ -119,21 +119,21 @@ class Texture2D
 
 	[[nodiscard]] uint32_t GetNativeHandle() const { return _handle; }
 	[[nodiscard]] bgfx::TextureHandle GetBgfxHandle() const { return _bgfxHandle; }
-	[[nodiscard]] uint16_t GetWidth() const { return _width; }
-	[[nodiscard]] uint16_t GetHeight() const { return _height; }
-	[[nodiscard]] uint16_t GetLayerCount() const { return _layers; }
+	[[nodiscard]] uint16_t GetWidth() const { return _info.width; }
+	[[nodiscard]] uint16_t GetHeight() const { return _info.height; }
+	[[nodiscard]] uint16_t GetLayerCount() const { return _info.numLayers; }
 
 	void Bind(uint8_t textureBindingPoint) const;
 
 	void GenerateMipmap();
 
+	void DumpTexture();
+
   protected:
 	std::string _name;
 	bgfx::TextureHandle _bgfxHandle;
 	uint32_t _handle;
-	uint16_t _width;
-	uint16_t _height;
-	uint16_t _layers;
+	bgfx::TextureInfo _info;
 
 	friend FrameBuffer;
 };

@@ -35,14 +35,14 @@ FrameBuffer::FrameBuffer(std::string name, uint16_t width, uint16_t height, Form
 	, _depthStencilAttachment(_name + "_depthStencil")
 {
 	_colorAttachment._bgfxHandle = BGFX_INVALID_HANDLE;
-	_colorAttachment._width = width;
-	_colorAttachment._height = height;
-	_colorAttachment._layers = 1;
+	_colorAttachment._info.width = width;
+	_colorAttachment._info.height = height;
+	_colorAttachment._info.numLayers = 1;
 
 	_depthStencilAttachment._bgfxHandle = BGFX_INVALID_HANDLE;
-	_depthStencilAttachment._width = width;
-	_depthStencilAttachment._height = height;
-	_depthStencilAttachment._layers = 1;
+	_depthStencilAttachment._info.width = width;
+	_depthStencilAttachment._info.height = height;
+	_depthStencilAttachment._info.numLayers = 1;
 
 	if (depthStencilFormat)
 	{

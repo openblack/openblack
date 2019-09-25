@@ -213,29 +213,7 @@ void LandIsland::convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixe
 */
 void LandIsland::DumpTextures()
 {
-	GLuint textureID = _materialArray->GetNativeHandle();
-
-	GLuint fboID = 0;
-	glGenFramebuffers(1, &fboID);
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, fboID);
-
-	for (unsigned int i = 0; i < _materialCount; i++)
-	{
-		uint8_t* pixels = new uint8_t[256 * 256 * 4];
-
-		glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureID, 0, i);
-		glReadPixels(0, 0, 256, 256, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-		auto filename = "dump/landtex" + std::to_string(i) + ".png";
-
-		printf("Writing texture %d to %s\n", i, filename.c_str());
-		stbi_write_png(filename.c_str(), 256, 256, 4, pixels, 256 * 4);
-
-		delete[] pixels;
-	}
-
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-	glDeleteFramebuffers(1, &fboID);
+	_materialArray->DumpTexture();
 }
 
 void LandIsland::DumpMaps()
