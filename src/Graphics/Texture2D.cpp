@@ -25,6 +25,8 @@
 #include <array>
 
 #include <Graphics/OpenGL.h>
+#include <spdlog/spdlog.h>
+#include <Common/stb_image_write.h>
 
 namespace openblack::graphics
 {
@@ -189,27 +191,49 @@ void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format 
 	_bgfxHandle = bgfx::createTexture2D(width, height, false, layers, getBgfxTextureFormat(format), BGFX_TEXTURE_NONE, memory);
 	bgfx::setName(_bgfxHandle, _name.c_str());
 
-	_width = width;
-	_height = height;
-	_layers = layers;
+	bgfx::calcTextureSize(_info, width, height, 1, false, false, layers, getBgfxTextureFormat(format));
 }
 
 void Texture2D::Bind(uint8_t textureBindingPoint) const
 {
 	glActiveTexture(GL_TEXTURE0 + textureBindingPoint);
 
-	auto bindPoint = _layers > 1 ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
+	auto bindPoint = _info.numLayers > 1 ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
 	auto texture = static_cast<GLuint>(_handle);
 	glBindTexture(bindPoint, texture);
 }
 
 void Texture2D::GenerateMipmap()
 {
-	auto bindPoint = _layers > 1 ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
+	auto bindPoint = _info.numLayers > 1 ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
 
 	auto texture = static_cast<GLuint>(_handle);
 	glBindTexture(bindPoint, texture);
 	glGenerateMipmap(bindPoint);
+}
+
+void Texture2D::DumpTexture()
+{
+	assert(!_name.empty());
+	std::vector<uint8_t> pixels;
+	pixels.resize(_info.storageSize);
+	bgfx::readTexture(_bgfxHandle, pixels.data());
+	bgfx::frame();
+	const auto stride = _info.width * _info.bitsPerPixel / 8;
+	// TODO(bwrsandman): get the number of components from _info.format
+	const auto numComponents = 4u;
+	for (uint16_t i = 0; i < _info.numLayers; ++i)
+	{
+		auto filename = "dump/" + _name + "_" + std::to_string(i) + ".png";
+		spdlog::info("Writing texture layer {} to {}.", i, filename.c_str());
+		auto current_pixels = &pixels[i * stride * _info.height];
+		auto writeResult = stbi_write_png(filename.c_str(), _info.width, _info.height, numComponents, current_pixels, stride);
+		if (writeResult == 0)
+		{
+			spdlog::error("Writing texture to {} failed!", filename.c_str());
+			break;
+		}
+	}
 }
 
 } // namespace openblack::Graphics
