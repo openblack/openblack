@@ -32,7 +32,7 @@ class MeshViewer
 	MeshViewer();
 	void Open();
 	void DrawWindow();
-	void DrawScene();
+	void DrawScene(uint8_t viewId);
 
   private:
 	bool _open;

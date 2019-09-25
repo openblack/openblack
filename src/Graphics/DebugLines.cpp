@@ -115,7 +115,7 @@ void DebugLines::SetPose(const glm::vec3 &center, float size)
 	_model = glm::translate(center) * glm::scale(glm::vec3(size, size, size));
 }
 
-void DebugLines::Draw(ShaderProgram& program)
+void DebugLines::Draw(uint8_t viewId, ShaderProgram &program)
 {
 	uint64_t state = 0u
 		| BGFX_STATE_WRITE_R
@@ -130,7 +130,7 @@ void DebugLines::Draw(ShaderProgram& program)
 	;
 
 	bgfx::setTransform(&_model);
-	_mesh->Draw(program, state);
+	_mesh->Draw(viewId, program, state, 0);
 }
 
 DebugLines::DebugLines(std::unique_ptr<Mesh> &&mesh)

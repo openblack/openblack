@@ -195,7 +195,7 @@ std::vector<LandVertex> LandBlock::buildVertexList(LandIsland& island)
 	return verts;
 }
 
-void LandBlock::Draw(ShaderProgram& program)
+void LandBlock::Draw(uint8_t viewId, ShaderProgram &program, bool cullBack)
 {
 	program.SetUniformValue("u_blockPosition", &_mapPosition);
 
@@ -204,9 +204,9 @@ void LandBlock::Draw(ShaderProgram& program)
 		| BGFX_STATE_WRITE_A
 		| BGFX_STATE_WRITE_Z
 		| BGFX_STATE_DEPTH_TEST_LESS
-		| BGFX_STATE_CULL_CW
+		| (cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW)
 		| BGFX_STATE_MSAA
 	;
 
-	_mesh->Draw(program, state);
+	_mesh->Draw(viewId, program, state, 0);
 }

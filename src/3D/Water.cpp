@@ -101,7 +101,7 @@ void Water::createMesh()
 	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, Mesh::Topology::TriangleList);
 }
 
-void Water::Draw(ShaderProgram& program) const
+void Water::Draw(uint8_t viewId, ShaderProgram &program) const
 {
 	program.SetTextureSampler("s_reflection", 0, _reflectionFrameBuffer->GetColorAttachment());
 
@@ -116,11 +116,11 @@ void Water::Draw(ShaderProgram& program) const
 		| BGFX_STATE_MSAA
 	;
 
-	_mesh->Draw(program, state);
-	_reflectionFrameBuffer->Unbind();
+	_mesh->Draw(viewId, program, state, 0);
+	_reflectionFrameBuffer->Unbind(viewId);
 }
 
-void Water::BeginReflection(const Camera& sceneCamera)
+void Water::BeginReflection(uint8_t viewId, const Camera &sceneCamera)
 {
 	_reflectionCamera = ReflectionCamera(
 	    sceneCamera.GetPosition(),
@@ -129,16 +129,12 @@ void Water::BeginReflection(const Camera& sceneCamera)
 	);
 	_reflectionCamera.SetProjectionMatrix(sceneCamera.GetProjectionMatrix());
 
-	glViewport(0, 0, _reflectionFrameBuffer->GetWidth(), _reflectionFrameBuffer->GetHeight());
-
-	_reflectionFrameBuffer->Bind();
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	_reflectionFrameBuffer->Bind(viewId);
 }
 
-void Water::EndReflection()
+void Water::EndReflection(uint8_t viewId)
 {
-	_reflectionFrameBuffer->Unbind();
-	// restore original view port
+	_reflectionFrameBuffer->Unbind(viewId);
 }
 
 void Water::DebugGUI()
@@ -175,4 +171,10 @@ void Water::ReflectMatrix(glm::mat4x4& m, const glm::vec4& plane)
 	m[1][3] = 0.0f;
 	m[2][3] = 0.0f;
 	m[3][3] = 1.0f;
+}
+
+void Water::GetFramebufferSize(uint16_t& width, uint16_t& height) const
+{
+	width = _reflectionFrameBuffer->GetWidth();
+	height = _reflectionFrameBuffer->GetHeight();
 }

@@ -15,7 +15,9 @@ namespace openblack::Entities
 class Registry
 {
   public:
-	void DrawModels(graphics::ShaderManager& shaderManager);
+	void DebugCreateEntities(float x, float y, float z);
+	void DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager);
+	void Update();
 	decltype(auto) Create() { return _registry.create(); }
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args) { return _registry.assign<Component>(entity, std::forward<Args>(args)...); }

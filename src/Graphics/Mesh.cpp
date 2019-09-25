@@ -89,19 +89,19 @@ Mesh::Topology Mesh::GetTopology() const noexcept
 	return _topology;
 }
 
-void Mesh::Draw(const openblack::graphics::ShaderProgram &program, uint64_t state, uint32_t rgba)
+void Mesh::Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &program, uint64_t state, uint32_t rgba)
 {
 	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
 	{
-		Draw(program, _indexBuffer->GetCount(), 0, state, rgba);
+		Draw(viewId, program, _indexBuffer->GetCount(), 0, state, rgba);
 	}
 	else
 	{
-		Draw(program, _vertexBuffer->GetVertexCount(), 0, state, rgba);
+		Draw(viewId, program, _vertexBuffer->GetVertexCount(), 0, state, rgba);
 	}
 }
 
-void Mesh::Draw(const openblack::graphics::ShaderProgram &program, uint32_t count, uint32_t startIndex, uint64_t state=0, uint32_t rgba=0)
+void Mesh::Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &program, uint32_t count, uint32_t startIndex, uint64_t state = 0, uint32_t rgba = 0)
 {
 	auto topology = topologies[static_cast<size_t>(_topology)];
 	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
@@ -113,5 +113,5 @@ void Mesh::Draw(const openblack::graphics::ShaderProgram &program, uint32_t coun
 	// Set render states.
 	bgfx::setState(state);
 
-	bgfx::submit(0, program.GetRawHandle());
+	bgfx::submit(viewId, program.GetRawHandle());
 }

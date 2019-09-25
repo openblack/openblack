@@ -16,7 +16,7 @@
 namespace openblack::Entities
 {
 
-void Registry::DrawModels(graphics::ShaderManager& shaderManager)
+void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager)
 {
 	graphics::ShaderProgram* objectShader = shaderManager.GetShader("Object");
 
@@ -60,7 +60,7 @@ void Registry::DrawModels(graphics::ShaderManager& shaderManager)
 			mesh.Draw(viewId, *objectShader, submeshId, state);
 	});
 
-	_registry.view<AnimatedStatic, Transform>().each([objectShader](AnimatedStatic& animated, Transform& transform) {
+	_registry.view<AnimatedStatic, Transform>().each([viewId, objectShader](AnimatedStatic& animated, Transform& transform) {
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		modelMatrix           = glm::translate(modelMatrix, transform.position);
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -75,26 +75,26 @@ void Registry::DrawModels(graphics::ShaderManager& shaderManager)
 		if (animated.type == "Norse Gate")
 		{
 			const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh((int)MeshId::BuildingNorseGate);
-			mesh.Draw(*objectShader, 0);
+			mesh.Draw(viewId, *objectShader, 0);
 		}
 		else if (animated.type == "Gate Stone Plinth")
 		{
 			const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh((int)MeshId::ObjectGateTotemPlinthe);
-			mesh.Draw(*objectShader, 0);
+			mesh.Draw(viewId, *objectShader, 0);
 		}
 		else if (animated.type == "Piper Cave Entrance")
 		{
 			const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh((int)MeshId::BuildingMineEntrance);
-			mesh.Draw(*objectShader, 0);
+			mesh.Draw(viewId, *objectShader, 0);
 		}
 		else
 		{
 			const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(0);
-			mesh.Draw(*objectShader, 0);
+			mesh.Draw(viewId, *objectShader, 0);
 		}
 	});
 
-	_registry.view<MobileStatic, Transform>().each([objectShader](MobileStatic& mobile, Transform& transform) {
+	_registry.view<MobileStatic, Transform>().each([viewId, objectShader](MobileStatic& mobile, Transform& transform) {
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		modelMatrix           = glm::translate(modelMatrix, transform.position);
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
