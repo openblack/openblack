@@ -23,11 +23,10 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
+
 #include <bgfx/bgfx.h>
 
-namespace openblack
-{
-namespace graphics
+namespace openblack::graphics
 {
 
 struct VertexAttrib
@@ -90,16 +89,13 @@ class VertexBuffer
 	[[nodiscard]] size_t GetSizeInBytes() const noexcept;
 
 	void Bind();
-	void bindVertexDecl();
 
   private:
-	uint32_t _vbo;
 	size_t _vertexCount;
 	const VertexDecl _vertexDecl;
 	size_t _strideBytes;
 	std::vector<const void*> _vertexDeclOffsets;
-	bgfx::VertexBufferHandle _bgfxHandle;
+	bgfx::VertexBufferHandle _handle;
 };
 
-} // namespace graphics
 } // namespace openblack
