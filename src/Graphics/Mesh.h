@@ -27,9 +27,7 @@
 
 using namespace openblack::graphics;
 
-namespace openblack
-{
-namespace graphics
+namespace openblack::graphics
 {
 
 class ShaderProgram;
@@ -46,8 +44,7 @@ class Mesh
 		TriangleStrip,
 	};
 
-	explicit Mesh(VertexBuffer* vertexBuffer, Topology topology = Topology::TriangleList);
-	Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, Topology topology = Topology::TriangleList);
+	explicit Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer = nullptr, Topology topology = Topology::TriangleList);
 	~Mesh();
 
 	[[nodiscard]] const VertexBuffer& GetVertexBuffer() const;
@@ -55,17 +52,15 @@ class Mesh
 
 	[[nodiscard]] Topology GetTopology() const noexcept;
 
-	void Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &program, uint64_t state, uint32_t rgba);
-	void Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &program, uint32_t count, uint32_t startIndex, uint64_t state, uint32_t rgba);
+	void Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &program, uint64_t state, uint32_t rgba = 0);
+	void Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &program, uint32_t count, uint32_t startIndex, uint64_t state, uint32_t rgba = 0);
 
   protected:
 	std::unique_ptr<VertexBuffer> _vertexBuffer;
 	std::unique_ptr<IndexBuffer> _indexBuffer;
 
   private:
-	uint32_t _vao;
 	Topology _topology;
 };
 
-} // namespace graphics
 } // namespace openblack
