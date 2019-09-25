@@ -24,7 +24,6 @@
 
 #include <glm/gtx/transform.hpp>
 
-#include <Graphics/OpenGL.h>
 #include <Graphics/VertexBuffer.h>
 #include "Mesh.h"
 

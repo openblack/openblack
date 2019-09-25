@@ -20,14 +20,9 @@
 
 #include <Graphics/ShaderProgram.h>
 
-#include <cassert>
-#include <cstring>
-
 #include <glm/gtc/type_ptr.hpp>
-#include <spdlog/spdlog.h>
 
 #include <Common/FileSystem.h>
-#include <Graphics/OpenGL.h>
 #include <Graphics/Texture2D.h>
 #include <Game.h>
 

@@ -30,7 +30,6 @@
 #include "GitSHA1.h"
 #include "Gui.h"
 #include <GameWindow.h>
-#include <Graphics/OpenGL.h>
 #include <3D/Camera.h>
 #include <3D/L3DMesh.h>
 #include <3D/LandIsland.h>
