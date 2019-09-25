@@ -93,7 +93,7 @@ Game::Game(int argc, char** argv)
 
 	float scale = 1.0f;
 	args.Get<float>("scale", scale);
-	_gui = Gui::create(*_window, 0, scale);
+	_gui = Gui::create(*_window, 255, scale);
 }
 
 Game::~Game()
@@ -240,7 +240,7 @@ void Game::Run()
 		_renderer->UploadUniforms(deltaTime, 1, *this, *_camera);
 		_renderer->DrawScene(*this, 1, true, true, false);
 
-//		_gui->Draw();
+		_gui->Draw();
 		_renderer->Frame();
 
 		_window->SwapWindow();
