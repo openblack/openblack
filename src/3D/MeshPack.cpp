@@ -19,14 +19,15 @@
  */
 
 #include <3D/MeshPack.h>
+
+#include <algorithm>
+#include <stdexcept>
+
+#include <spdlog/spdlog.h>
 #include <3D/L3DMesh.h>
 #include <Common/IStream.h>
 #include <Common/MemoryStream.h>
-#include <Graphics/OpenGL.h>
 #include <Graphics/Texture2D.h>
-#include <algorithm>
-#include <spdlog/spdlog.h>
-#include <stdexcept>
 
 namespace openblack
 {
@@ -67,10 +68,10 @@ void createCompressedDDS(graphics::Texture2D* texture, uint8_t* buffer)
 
 	struct dds_mip_level
 	{
-		GLubyte* data;
-		GLsizei width;
-		GLsizei height;
-		GLsizei size;
+		uint8_t* data;
+		int32_t width;
+		int32_t height;
+		int32_t size;
 	};
 
 	dds_header* header = reinterpret_cast<dds_header*>(buffer);
@@ -82,8 +83,8 @@ void createCompressedDDS(graphics::Texture2D* texture, uint8_t* buffer)
 	// - all are compressed
 
 	graphics::Format internalFormat;
-	GLsizei width  = header->dwWidth;
-	GLsizei height = header->dwHeight;
+	int32_t width  = header->dwWidth;
+	int32_t height = header->dwHeight;
 	int bytesPerBlock;
 
 	switch (header->ddspf.dwFourCC)

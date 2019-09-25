@@ -19,8 +19,6 @@
  */
 
 #pragma once
-#ifndef OPENBLACK_MESHPACK_H
-#define OPENBLACK_MESHPACK_H
 
 #include <memory>
 #include <unordered_map>
@@ -76,5 +74,3 @@ class MeshPack
 	std::unordered_map<std::string, LHBlockHeader> _blocks;
 };
 } // namespace openblack
-
-#endif // OPENBLACK_MESHPACK_H
