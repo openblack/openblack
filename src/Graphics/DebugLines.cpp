@@ -47,7 +47,7 @@ std::unique_ptr<DebugLines> DebugLines::CreateDebugLines(uint32_t size, const vo
 	decl.emplace_back(VertexAttrib::Attribute::Color0, 4, VertexAttrib::Type::Float);
 
 	auto vertexBuffer = new VertexBuffer(data, vertexCount, decl);
-	auto mesh = std::make_unique<Mesh>(vertexBuffer, Mesh::Topology::LineList);
+	auto mesh = std::make_unique<Mesh>(vertexBuffer, nullptr, Mesh::Topology::LineList);
 
 	return std::unique_ptr<DebugLines>(new DebugLines(std::move(mesh)));
 }
