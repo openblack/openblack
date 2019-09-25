@@ -36,7 +36,7 @@ class ReflectionCamera: public Camera
 	    ReflectionCamera(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f)) {}
 	ReflectionCamera(glm::vec3 position, glm::vec3 rotation, glm::vec3 reflectionPlane):
 	    Camera(position, rotation), _reflectionPlane(reflectionPlane) {}
-	glm::mat4 GetViewProjectionMatrix() const;
+	[[nodiscard]] glm::mat4 GetViewMatrix() const override;
 
   private:
 	glm::vec3 _reflectionPlane;

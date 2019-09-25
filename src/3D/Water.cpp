@@ -25,7 +25,7 @@
 
 using namespace openblack;
 
-glm::mat4 ReflectionCamera::GetViewProjectionMatrix() const
+glm::mat4 ReflectionCamera::GetViewMatrix() const
 {
 	glm::mat4 mRotation = getRotationMatrix();
 	glm::mat4 mView     = mRotation * glm::translate(glm::mat4(1.0f), -_position);
@@ -36,7 +36,7 @@ glm::mat4 ReflectionCamera::GetViewProjectionMatrix() const
 	glm::mat4x4 reflectionMatrix;
 	reflectMatrix(reflectionMatrix, reflectionPlane);
 
-	return GetProjectionMatrix() * mView * reflectionMatrix;
+	return mView * reflectionMatrix;
 }
 
 /*
