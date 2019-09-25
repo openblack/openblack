@@ -21,7 +21,6 @@
 #include <imgui.h>
 
 #include <3D/Water.h>
-#include <Graphics/OpenGL.h>
 
 using namespace openblack;
 

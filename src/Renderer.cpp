@@ -22,7 +22,6 @@
 
 #include <sstream>
 
-#include <glad/glad.h>
 #include <bgfx/platform.h>
 #include <SDL_video.h>
 #include <spdlog/spdlog.h>
@@ -49,18 +48,6 @@ using namespace openblack::graphics;
 
 namespace openblack
 {
-void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
-{
-	if (auto renderer = reinterpret_cast<const Renderer*>(userParam))
-	{
-		renderer->MessageCallback(source, type, id, severity, length, message);
-	}
-	else
-	{
-		spdlog::warn("MessageCallback user param not properly installed");
-	}
-}
-
 struct BgfxCallback : public bgfx::CallbackI
 {
 	~BgfxCallback() override = default;
@@ -145,24 +132,6 @@ struct ApiThreadArgs
 
 }  // namespace openblack
 
-std::vector<Renderer::RequiredAttribute> Renderer::GetRequiredContextAttributes()
-{
-	// Create a debug context?
-	bool useDebug = true;
-	return std::vector<RequiredAttribute> {
-		{ Api::OpenGl, SDL_GL_CONTEXT_MAJOR_VERSION, 3 },
-		{ Api::OpenGl, SDL_GL_CONTEXT_MINOR_VERSION, 3 },
-		{ Api::OpenGl, SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE },
-
-		{ Api::OpenGl, SDL_GL_CONTEXT_FLAGS, useDebug ? SDL_GL_CONTEXT_DEBUG_FLAG : 0 },
-	};
-}
-
-uint32_t Renderer::GetRequiredWindowFlags()
-{
-	return SDL_WINDOW_OPENGL;
-}
-
 Renderer::Renderer(const GameWindow& window, const std::string binaryPath)
 	: _shaderManager(std::make_unique<ShaderManager>())
 	, _bgfxCallback(std::make_unique<BgfxCallback>())
@@ -201,19 +170,6 @@ Renderer::Renderer(const GameWindow& window, const std::string binaryPath)
 		throw std::runtime_error("Failed to initialize bgfx.");
 	}
 
-	for (auto& attr : GetRequiredContextAttributes())
-	{
-		if (attr.api == Renderer::Api::OpenGl)
-		{
-			SDL_GL_SetAttribute(static_cast<SDL_GLattr>(attr.name), attr.value);
-		}
-	}
-
-	// TODO(bwrsandman): uncomment this once rendering is taken over
-	auto internal = bgfx::getInternalData();
-	SDL_GL_MakeCurrent(window.GetHandle(), internal->context);
-	_glcontext = std::unique_ptr<SDL_GLContext, SDLDestroyer>((SDL_GLContext*)&internal->context);
-
 	spdlog::info("OpenGL context successfully created.");
 
 	int majorVersion, minorVersion;
@@ -221,27 +177,6 @@ Renderer::Renderer(const GameWindow& window, const std::string binaryPath)
 	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minorVersion);
 
 	spdlog::info("OpenGL version: {}.{}", majorVersion, minorVersion);
-
-	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
-	{
-		throw std::runtime_error("Failed to initialize OpenGL loader!\n");
-	}
-
-	if (GLAD_GL_ARB_debug_output)
-	{
-		glEnable(GL_DEBUG_OUTPUT);
-		glDebugMessageCallback(::MessageCallback, this);
-		glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
-	}
-	else
-	{
-		spdlog::warn("GL_ARB_debug_output not supported");
-	}
-
-	if (!GLAD_GL_ARB_texture_storage)
-		spdlog::error("GL_ARB_texture_storage unsupported");
-	if (!GLAD_GL_EXT_texture_compression_s3tc)
-		spdlog::error("GL_EXT_texture_compression_s3tc unsupported");
 
 	LoadShaders(binaryPath);
 
@@ -251,8 +186,7 @@ Renderer::Renderer(const GameWindow& window, const std::string binaryPath)
 
 Renderer::~Renderer()
 {
-	// TODO(bwrsandman): uncomment this once rendering is taken over
-	// bgfx::shutdown();
+	 bgfx::shutdown();
 }
 
 void Renderer::LoadShaders(const std::string &binaryPath)
@@ -267,21 +201,9 @@ void Renderer::LoadShaders(const std::string &binaryPath)
 	}
 }
 
-SDL_GLContext& Renderer::GetGLContext() const
-{
-	return *_glcontext;
-}
-
 graphics::ShaderManager& Renderer::GetShaderManager() const
 {
 	return *_shaderManager;
-}
-
-void Renderer::MessageCallback(uint32_t source, uint32_t type, uint32_t id, uint32_t severity, int32_t length, const std::string& message) const
-{
-	spdlog::debug("GL CALLBACK: {} type = {}, severity = {}, message = {}\n",
-	              (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-	              type, severity, message);
 }
 
 void Renderer::UpdateDebugCrossPose(std::chrono::microseconds dt, const glm::vec3 &position, float scale)

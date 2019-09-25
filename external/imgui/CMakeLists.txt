@@ -34,8 +34,6 @@ add_library(imgui STATIC
 	# opengl helper
 	${imgui_SOURCE_DIR}/examples/imgui_impl_sdl.h
 	${imgui_SOURCE_DIR}/examples/imgui_impl_sdl.cpp
-	${imgui_SOURCE_DIR}/examples/imgui_impl_opengl3.h
-	${imgui_SOURCE_DIR}/examples/imgui_impl_opengl3.cpp
 	# memory_editor
 	${imgui_club_SOURCE_DIR}/imgui_memory_editor/imgui_memory_editor.h
 	)
@@ -43,10 +41,7 @@ target_include_directories(imgui PUBLIC
 	${imgui_SOURCE_DIR}
 	${imgui_SOURCE_DIR}/examples
 	${imgui_club_SOURCE_DIR})
-# tell imgui we want to use GLAD as OpenGL loader
-target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
 target_link_libraries(imgui PUBLIC
 	SDL2::SDL2
-	glad
 	${OPENGL_LIBRARIES})

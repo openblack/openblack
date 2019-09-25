@@ -24,7 +24,6 @@
 
 #include <spdlog/spdlog.h>
 
-#include <Graphics/OpenGL.h>
 #include <Common/FileSystem.h>
 #include <Common/IStream.h>
 #include <Game.h>

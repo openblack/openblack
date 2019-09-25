@@ -75,8 +75,6 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 	const int x = SDL_WINDOWPOS_UNDEFINED;
 	const int y = SDL_WINDOWPOS_UNDEFINED;
 
-	flags |= Renderer::GetRequiredWindowFlags();
-
 	auto window = std::unique_ptr<SDL_Window, SDLDestroyer>(SDL_CreateWindow(
 	    title.c_str(), x, y,
 	    width, height, flags));

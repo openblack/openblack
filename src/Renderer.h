@@ -57,10 +57,6 @@ static const std::array Shaders {
 };
 
 class Renderer {
-  struct SDLDestroyer
-  {
-	void operator()(SDL_GLContext* glcontext) const {}
-  };
 
   public:
 	enum class Api {
@@ -72,17 +68,13 @@ class Renderer {
 		int value;
 	};
 
-	static uint32_t GetRequiredWindowFlags();
-
 	Renderer() = delete;
 	explicit Renderer(const GameWindow& window, const std::string binaryPath);
 
 	virtual ~Renderer();
 
 	void LoadShaders(const std::string &binaryPath);
-	[[nodiscard]] SDL_GLContext& GetGLContext() const;
 	[[nodiscard]] graphics::ShaderManager& GetShaderManager() const;
-	void MessageCallback(uint32_t source, uint32_t type, uint32_t id, uint32_t severity, int32_t length, const std::string& message) const;
 
 	void UpdateDebugCrossPose(std::chrono::microseconds dt, const glm::vec3 &position, float scale);
 
@@ -92,12 +84,9 @@ class Renderer {
 	void Frame();
 
   private:
-  static std::vector<RequiredAttribute> GetRequiredContextAttributes();
+	std::unique_ptr<graphics::ShaderManager> _shaderManager;
+	std::unique_ptr<BgfxCallback> _bgfxCallback;
 
-  std::unique_ptr<SDL_GLContext, SDLDestroyer> _glcontext;
-  std::unique_ptr<graphics::ShaderManager> _shaderManager;
-  std::unique_ptr<BgfxCallback> _bgfxCallback;
-
-  std::unique_ptr<graphics::DebugLines> _debugCross;
+	std::unique_ptr<graphics::DebugLines> _debugCross;
 };
 } // namespace openblack
