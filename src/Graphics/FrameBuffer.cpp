@@ -34,12 +34,12 @@ FrameBuffer::FrameBuffer(std::string name, uint16_t width, uint16_t height, Form
 	, _colorAttachment(_name + "_color")
 	, _depthStencilAttachment(_name + "_depthStencil")
 {
-	_colorAttachment._bgfxHandle = BGFX_INVALID_HANDLE;
+	_colorAttachment._handle = BGFX_INVALID_HANDLE;
 	_colorAttachment._info.width = width;
 	_colorAttachment._info.height = height;
 	_colorAttachment._info.numLayers = 1;
 
-	_depthStencilAttachment._bgfxHandle = BGFX_INVALID_HANDLE;
+	_depthStencilAttachment._handle = BGFX_INVALID_HANDLE;
 	_depthStencilAttachment._info.width = width;
 	_depthStencilAttachment._info.height = height;
 	_depthStencilAttachment._info.numLayers = 1;
@@ -51,13 +51,13 @@ FrameBuffer::FrameBuffer(std::string name, uint16_t width, uint16_t height, Form
 			bgfx::createTexture2D(width, height, false, 1, getBgfxTextureFormat(depthStencilFormat.value())),
 		};
 		_handle = bgfx::createFrameBuffer(textures.size(), textures.data());
-		_colorAttachment._bgfxHandle = bgfx::getTexture(_handle, 0);
-		_depthStencilAttachment._bgfxHandle = bgfx::getTexture(_handle, 1);
+		_colorAttachment._handle = bgfx::getTexture(_handle, 0);
+		_depthStencilAttachment._handle = bgfx::getTexture(_handle, 1);
 	}
 	else
 	{
 		_handle = bgfx::createFrameBuffer(_width, _height, getBgfxTextureFormat(colorFormat));
-		_colorAttachment._bgfxHandle = bgfx::getTexture(_handle, 0);
+		_colorAttachment._handle = bgfx::getTexture(_handle, 0);
 	}
 
 	assert(bgfx::isValid(_handle));

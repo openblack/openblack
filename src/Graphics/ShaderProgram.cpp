@@ -107,7 +107,7 @@ ShaderProgram::~ShaderProgram()
 
 void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture)
 {
-	bgfx::setTexture(bindPoint, _uniforms[samplerName], texture.GetBgfxHandle());
+	bgfx::setTexture(bindPoint, _uniforms[samplerName], texture.GetNativeHandle());
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, const void* value)

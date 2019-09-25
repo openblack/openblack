@@ -133,7 +133,7 @@ void Water::EndReflection(uint8_t viewId)
 void Water::DebugGUI()
 {
 	ImGui::Begin("Water Debug");
-	ImGui::Image((void*)(intptr_t) _reflectionFrameBuffer->GetColorAttachment().GetNativeHandle(), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Image((void*)&_reflectionFrameBuffer->GetColorAttachment().GetNativeHandle(), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::End();
 }
 
