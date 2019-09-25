@@ -108,7 +108,7 @@ void LandBlock::BuildMesh(LandIsland& island)
 
 	auto verts = buildVertexList(island);
 
-	auto vertexBuffer = new VertexBuffer(verts.data(), verts.size(), decl);
+	auto vertexBuffer = new VertexBuffer("LandBlock", verts.data(), verts.size(), decl);
 	_mesh = std::make_unique<Mesh>(vertexBuffer);
 }
 

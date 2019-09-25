@@ -46,7 +46,7 @@ LandIsland::LandIsland()
 	uint8_t* smallbumpa = new uint8_t[file->Size()];
 	file->Read(smallbumpa, file->Size());
 
-	_textureSmallBump = std::make_unique<Texture2D>();
+	_textureSmallBump = std::make_unique<Texture2D>("LandIslandSmallBump");
 	_textureSmallBump->Create(256, 256, 1, Format::R8, Wrapping::Repeat, smallbumpa, file->Size());
 	delete[] smallbumpa;
 }
@@ -117,18 +117,18 @@ void LandIsland::LoadFromFile(IStream& stream)
 
 		convertRGB5ToRGB8(rgba5TextureData.data(), rgba8TextureData.data() + i * rgba5TextureData.size(), 256 * 256);
 	}
-	_materialArray = std::make_unique<Texture2D>();
+	_materialArray = std::make_unique<Texture2D>("LandIslandMaterialArray");
 	_materialArray->Create(256, 256, _materialCount, Format::RGBA8, Wrapping::ClampEdge, rgba8TextureData.data(), rgba8TextureData.size() * sizeof(rgba8TextureData[0]));
 
 	// read noise map into Texture2D
 	stream.Read(_noiseMap.data(), _noiseMap.size() * sizeof(_noiseMap[0]));
-	_textureNoiseMap = std::make_unique<Texture2D>();
+	_textureNoiseMap = std::make_unique<Texture2D>("LandIslandNoiseMap");
 	_textureNoiseMap->Create(256, 256, 1, Format::R8, Wrapping::ClampEdge, _noiseMap.data(), _noiseMap.size() * sizeof(_noiseMap[0]));
 
 	// read bump map into Texture2D
 	std::array<uint8_t, 256* 256> bumpMapTextureData;
 	stream.Read(bumpMapTextureData.data(), bumpMapTextureData.size() * sizeof(bumpMapTextureData[0]));
-	_textureBumpMap = std::make_unique<Texture2D>();
+	_textureBumpMap = std::make_unique<Texture2D>("LandIslandBumpMap");
 	_textureBumpMap->Create(256, 256, 1, Format::R8, Wrapping::ClampEdge, bumpMapTextureData.data(), bumpMapTextureData.size() * sizeof(bumpMapTextureData[0]));
 
 	// build the meshes (we could move this elsewhere)

@@ -81,7 +81,7 @@ typedef std::vector<VertexAttrib> VertexDecl;
 class VertexBuffer
 {
   public:
-	VertexBuffer(const void* vertices, size_t vertexCount, VertexDecl decl);
+	VertexBuffer(std::string name, const void *vertices, size_t vertexCount, VertexDecl decl);
 	~VertexBuffer();
 
 	[[nodiscard]] size_t GetVertexCount() const noexcept;
@@ -91,6 +91,7 @@ class VertexBuffer
 	void Bind();
 
   private:
+	std::string _name;
 	size_t _vertexCount;
 	const VertexDecl _vertexDecl;
 	size_t _strideBytes;

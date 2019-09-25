@@ -34,7 +34,7 @@ using namespace openblack;
 
 MeshViewer::MeshViewer()
 {
-	_frameBuffer  = std::make_unique<graphics::FrameBuffer>(512, 512, graphics::Format::RGBA8);
+	_frameBuffer  = std::make_unique<graphics::FrameBuffer>("MeshViewer", 512, 512, graphics::Format::RGBA8);
 	_selectedMesh    = MeshId::Dummy;
 	_selectedSubMesh = 0;
 	_cameraPosition  = glm::vec3(5.0f, 3.0f, 5.0f);

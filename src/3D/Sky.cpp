@@ -67,7 +67,7 @@ Sky::Sky()
 		}
 	}
 
-	_texture   = std::make_unique<Texture2D>();
+	_texture   = std::make_unique<Texture2D>("Sky");
 	_timeOfDay = 1.0f;
 	CalculateTextures();
 }

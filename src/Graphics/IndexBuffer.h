@@ -24,6 +24,7 @@
 #include <cstdint>
 
 #include <bgfx/bgfx.h>
+#include <string>
 
 namespace openblack::graphics
 {
@@ -41,7 +42,7 @@ class IndexBuffer
 	IndexBuffer(const IndexBuffer& other) = delete;
 	IndexBuffer(IndexBuffer&&)            = default;
 
-	IndexBuffer(const void* indices, std::size_t indicesCount, Type type);
+	IndexBuffer(std::string name, const void *indices, size_t indicesCount, Type type);
 
 	~IndexBuffer();
 
@@ -53,6 +54,7 @@ class IndexBuffer
 	void Bind(uint32_t count, uint32_t startIndex=0);
 
   private:
+	std::string _name;
 	std::size_t _count;
 	Type _type;
 	bgfx::IndexBufferHandle _handle;

@@ -62,7 +62,7 @@ void L3DSubMesh::Load(IStream& stream)
 	stream.Read(&header);
 
 	// load up some buffers, todo: preallocate
-	std::vector<L3DVertex> verticies;
+	std::vector<L3DVertex> vertices;
 	std::vector<uint16_t> indices;
 
 	// load primitives first
@@ -100,7 +100,7 @@ void L3DSubMesh::Load(IStream& stream)
 		{
 			L3DVertex vertex;
 			stream.Read(&vertex);
-			verticies.push_back(vertex);
+			vertices.push_back(vertex);
 		}
 
 		stream.Seek(primitive.trianglesOffset, SeekMode::Begin);
@@ -128,8 +128,9 @@ void L3DSubMesh::Load(IStream& stream)
 	decl.emplace_back(VertexAttrib::Attribute::Normal, 3, VertexAttrib::Type::Float);
 
 	// build our buffers
-	auto vertexBuffer = new VertexBuffer(reinterpret_cast<const void*>(verticies.data()), verticies.size(), decl);
-	auto indexBuffer  = new IndexBuffer(indices.data(), indices.size(), IndexBuffer::Type::Uint16);
+	// TODO(bwrsandman): Get a unique name for this submesh to add to Vertex and Index Buffers. Will be useful for debugging.
+	auto vertexBuffer = new VertexBuffer("", reinterpret_cast<const void *>(vertices.data()), vertices.size(), decl);
+	auto indexBuffer  = new IndexBuffer("", indices.data(), indices.size(), IndexBuffer::Type::Uint16);
 	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, Mesh::Topology::TriangleList);
 
 

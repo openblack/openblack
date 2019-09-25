@@ -21,11 +21,14 @@
 #include "IndexBuffer.h"
 
 #include <cassert>
+#include <string>
+#include <utility>
 
 using namespace openblack::graphics;
 
-IndexBuffer::IndexBuffer(const void* indices, size_t indicesCount, Type type)
-	: _count(indicesCount)
+IndexBuffer::IndexBuffer(std::string name, const void *indices, size_t indicesCount, Type type)
+	: _name(std::move(name))
+	, _count(indicesCount)
 	, _type(type)
 	, _handle(BGFX_INVALID_HANDLE)
 {
@@ -34,6 +37,7 @@ IndexBuffer::IndexBuffer(const void* indices, size_t indicesCount, Type type)
 
 	auto mem = bgfx::makeRef(indices, indicesCount * GetTypeSize(_type));
 	_handle = bgfx::createIndexBuffer(mem, type == Type::Uint32 ? BGFX_BUFFER_INDEX32 : 0);
+	bgfx::setName(_handle, _name.c_str());
 	bgfx::frame();
 }
 
