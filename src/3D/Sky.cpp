@@ -128,7 +128,10 @@ void Sky::Draw(uint8_t viewId, graphics::ShaderProgram &program)
 //	program.SetUniformValue("u_model", glm::mat4(1.0f));
 	program.SetTextureSampler("s_diffuse", 0, *_texture);
 
-	_model->Draw(viewId, program, 0);
+	uint64_t state = 0u
+		| BGFX_STATE_DEFAULT;
+	;
+	_model->Draw(viewId, program, 0, state);
 }
 
 } // namespace openblack

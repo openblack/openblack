@@ -120,9 +120,12 @@ void MeshViewer::DrawScene(uint8_t viewId)
 //	objectShader->SetUniformValue("u_viewProj", perspective * view);
 //	objectShader->SetUniformValue("u_model", glm::mat4(1.0f));
 
+	uint64_t state = 0u
+		| BGFX_STATE_DEFAULT;
+
 	const auto& mesh = meshes[static_cast<int>(_selectedMesh)];
 	if (_selectedSubMesh >= 0 && static_cast<uint32_t>(_selectedSubMesh) < mesh->GetSubMeshes().size())
-		mesh->Draw(viewId, *objectShader, _selectedSubMesh);
+		mesh->Draw(viewId, *objectShader, _selectedSubMesh, state);
 
 	_frameBuffer->Unbind(viewId);
 }
