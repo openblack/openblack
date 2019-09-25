@@ -47,7 +47,7 @@ class Camera
 
 	virtual ~Camera() = default;
 
-	[[nodiscard]] glm::mat4 GetViewMatrix() const;
+	[[nodiscard]] virtual glm::mat4 GetViewMatrix() const;
 	[[nodiscard]] const glm::mat4& GetProjectionMatrix() const { return _projectionMatrix; }
 	[[nodiscard]] virtual glm::mat4 GetViewProjectionMatrix() const;
 
