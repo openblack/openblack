@@ -34,8 +34,8 @@ public:
 	FrameBuffer(uint16_t width, uint16_t height, Format colorFormat, std::optional<Format> depthStencilFormat={});
 	~FrameBuffer();
 
-	void Bind();
-	void Unbind();
+	void Bind(uint8_t viewId);
+	void Unbind(uint8_t viewId);
 
 	Texture2D& GetColorAttachment() { return _colorAttachment; }
 

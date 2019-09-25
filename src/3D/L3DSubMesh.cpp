@@ -144,7 +144,7 @@ void L3DSubMesh::Load(IStream& stream)
 	//spdlog::debug("# bones: {} @ {}", header.numBones, header.bonesOffset);
 }
 
-void L3DSubMesh::Draw(const L3DMesh& mesh, ShaderProgram& program) const
+void L3DSubMesh::Draw(uint8_t viewId, const L3DMesh &mesh, ShaderProgram &program) const
 {
 	if (!_mesh)
 		return;
@@ -172,7 +172,7 @@ void L3DSubMesh::Draw(const L3DMesh& mesh, ShaderProgram& program) const
 			| BGFX_STATE_MSAA
 		;
 
-		_mesh->Draw(program, prim.indicesCount, prim.indicesOffset, state, 0);
+		_mesh->Draw(viewId, program, prim.indicesCount, prim.indicesOffset, state, 0);
 	}
 }
 

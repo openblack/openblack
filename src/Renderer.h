@@ -86,9 +86,9 @@ class Renderer {
 
 	void UpdateDebugCrossPose(std::chrono::microseconds dt, const glm::vec3 &position, float scale);
 
-	void UploadUniforms(std::chrono::microseconds dt, const Game& game, const Camera& camera);
-	void ClearScene(int width, int height);
-	void DrawScene(const Game &game, bool drawWater, bool drawDebugCross, bool cullBack=true);
+	void UploadUniforms(std::chrono::microseconds dt, uint8_t viewId, const Game &game, const Camera &camera);
+	void ClearScene(uint8_t viewId, int width, int height);
+	void DrawScene(const Game &game, uint8_t viewId, bool drawWater, bool drawDebugCross, bool cullBack = true);
 	void Frame();
 
   private:

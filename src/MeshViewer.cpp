@@ -92,7 +92,7 @@ void MeshViewer::DrawWindow()
 	ImGui::End();
 }
 
-void MeshViewer::DrawScene()
+void MeshViewer::DrawScene(uint8_t viewId)
 {
 	if (!_open)
 		return;
@@ -112,7 +112,7 @@ void MeshViewer::DrawScene()
 	glm::mat4 perspective = glm::perspective(glm::radians(70.0f), 1.0f, 1.0f, 1024.0f);
 	glm::mat4 view        = glm::lookAt(_cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-	_frameBuffer->Bind();
+	_frameBuffer->Bind(viewId);
 	glViewport(0, 0, _frameBuffer->GetWidth(), _frameBuffer->GetHeight());
 	glClearColor(39.0f / 255.0f, 70.0f / 255.0f, 89.0f / 255.0f, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -122,7 +122,7 @@ void MeshViewer::DrawScene()
 
 	const auto& mesh = meshes[static_cast<int>(_selectedMesh)];
 	if (_selectedSubMesh >= 0 && static_cast<uint32_t>(_selectedSubMesh) < mesh->GetSubMeshes().size())
-		mesh->Draw(*objectShader, _selectedSubMesh);
+		mesh->Draw(viewId, *objectShader, _selectedSubMesh);
 
-	_frameBuffer->Unbind();
+	_frameBuffer->Unbind(viewId);
 }

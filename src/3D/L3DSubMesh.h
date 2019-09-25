@@ -49,7 +49,7 @@ class L3DSubMesh
 	~L3DSubMesh();
 
 	void Load(IStream& stream);
-	void Draw(const L3DMesh& mesh, ShaderProgram& program) const;
+	void Draw(uint8_t viewId, const L3DMesh &mesh, ShaderProgram &program) const;
   private:
 	L3DSubMeshFlags _flags;
 

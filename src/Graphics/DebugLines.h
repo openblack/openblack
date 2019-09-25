@@ -40,7 +40,7 @@ class DebugLines
 
 	virtual ~DebugLines();
 
-	void Draw(ShaderProgram &program);
+	void Draw(uint8_t viewId, ShaderProgram &program);
 
 	void SetPose(const glm::vec3 &center, float size);
 

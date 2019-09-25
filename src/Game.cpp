@@ -217,21 +217,28 @@ void Game::Run()
 
 		_gui->Loop(*this);
 
-		int width, height;
-		_window->GetDrawableSize(width, height);
-		_renderer->ClearScene(width, height);
-
 		// Reflection Pass
-//		_water->BeginReflection(*_camera);
-//		_renderer->UploadUniforms(deltaTime, *this, _water->GetReflectionCamera());
-//		_renderer->DrawScene(*this, false, false, false);
-//		_water->EndReflection();
+		bgfx::setViewName(0, "Reflection Pass");
+		_water->BeginReflection(0,*_camera);
+		{
+			uint16_t width, height;
+			_water->GetFramebufferSize(width, height);
+			_renderer->ClearScene(0, width, height);
+		}
+		auto reflectionCamera = _water->GetReflectionCamera();
+		_renderer->UploadUniforms(deltaTime, 0, *this, reflectionCamera);
+		_renderer->DrawScene(*this, 0, false, false, true);
+//		_water->EndReflection(1);
 
 		// Main Draw Pass
-		// reset viewport here, should be done in EndReflection
-		//glViewport(0, 0, width, height);
-		_renderer->UploadUniforms(deltaTime, *this, *_camera);
-		_renderer->DrawScene(*this, true, true);
+		bgfx::setViewName(1, "Main Pass");
+		{
+			int width, height;
+			_window->GetDrawableSize(width, height);
+			_renderer->ClearScene(1, width, height);
+		}
+		_renderer->UploadUniforms(deltaTime, 1, *this, *_camera);
+		_renderer->DrawScene(*this, 1, true, true, false);
 
 //		_gui->Draw();
 		_renderer->Frame();

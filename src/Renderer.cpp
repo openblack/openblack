@@ -289,9 +289,9 @@ void Renderer::UpdateDebugCrossPose(std::chrono::microseconds dt, const glm::vec
 	_debugCross->SetPose(position, scale);
 }
 
-void Renderer::UploadUniforms(std::chrono::microseconds dt, const Game &game, const Camera &camera)
+void Renderer::UploadUniforms(std::chrono::microseconds dt, uint8_t viewId, const Game &game, const Camera &camera)
 {
-	_shaderManager->SetCamera(camera);
+	_shaderManager->SetCamera(viewId, camera);
 
 	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
 	terrainShader->SetUniformValue("u_timeOfDay", &game.GetConfig().timeOfDay);
@@ -302,23 +302,23 @@ void Renderer::UploadUniforms(std::chrono::microseconds dt, const Game &game, co
 //	objectShader->SetUniformValue("u_model", game.GetModelMatrix());
 }
 
-void Renderer::ClearScene(int width, int height)
+void Renderer::ClearScene(uint8_t viewId, int width, int height)
 {
 	static const uint32_t clearColor = 0x274659ff;
 
-	bgfx::setViewClear(0,
+	bgfx::setViewClear(viewId,
 		BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
 		clearColor,
 		1.0f,
 		0);
-	bgfx::setViewRect(0, 0, 0, width, height);
+	bgfx::setViewRect(viewId, 0, 0, width, height);
 	// This dummy draw call is here to make sure that view 0 is cleared if no other draw calls are submitted to view 0.
-	bgfx::touch(0);
+	bgfx::touch(viewId);
 }
 
-void Renderer::DrawScene(const Game &game, bool drawWater, bool drawDebugCross, bool cullBack)
+void Renderer::DrawScene(const Game &game, uint8_t viewId, bool drawWater, bool drawDebugCross, bool cullBack)
 {
-//	ShaderProgram* objectShader = _shaderManager->GetShader("Object");
+	ShaderProgram* objectShader = _shaderManager->GetShader("Object");
 	ShaderProgram* waterShader = _shaderManager->GetShader("Water");
 	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
 	ShaderProgram* debugShader = _shaderManager->GetShader("DebugLine");
@@ -327,7 +327,7 @@ void Renderer::DrawScene(const Game &game, bool drawWater, bool drawDebugCross, 
 //	glEnable(GL_BLEND);
 //	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 //
-//	game.GetSky().Draw(*objectShader);
+	game.GetSky().Draw(viewId, *objectShader);
 //
 //	glEnable(GL_CULL_FACE);
 //	glCullFace(cullBack ? GL_BACK : GL_FRONT);
@@ -335,13 +335,13 @@ void Renderer::DrawScene(const Game &game, bool drawWater, bool drawDebugCross, 
 
 	if (drawWater)
 	{
-		game.GetWater().Draw(*waterShader);
+		game.GetWater().Draw(viewId, *waterShader);
 	}
 
 //	if (game.GetConfig().wireframe)
 //		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	game.GetLandIsland().Draw(*terrainShader);
+	game.GetLandIsland().Draw(viewId, *terrainShader, cullBack);
 
 //	if (game.GetConfig().wireframe)
 //		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -349,11 +349,11 @@ void Renderer::DrawScene(const Game &game, bool drawWater, bool drawDebugCross, 
 //	game.GetTestModel().Draw(*objectShader, 0);
 //
 //	glDisable(GL_CULL_FACE);
-	game.GetEntityRegistry().DrawModels(*_shaderManager);
+	game.GetEntityRegistry().DrawModels(viewId, *_shaderManager);
 
 	if (drawDebugCross)
 	{
-		_debugCross->Draw(*debugShader);
+		_debugCross->Draw(viewId, *debugShader);
 	}
 
 	// Enable stats or debug text.
