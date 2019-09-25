@@ -22,11 +22,10 @@
 
 #include <cstddef>
 #include <cstdint>
+
 #include <bgfx/bgfx.h>
 
-namespace openblack
-{
-namespace graphics
+namespace openblack::graphics
 {
 class IndexBuffer
 {
@@ -46,22 +45,17 @@ class IndexBuffer
 
 	~IndexBuffer();
 
-	std::size_t GetCount() const;
-	std::size_t GetSize() const;
-	std::size_t GetStride() const;
-	Type GetType() const;
+	[[nodiscard]] std::size_t GetCount() const;
+	[[nodiscard]] std::size_t GetSize() const;
+	[[nodiscard]] std::size_t GetStride() const;
+	[[nodiscard]] Type GetType() const;
 
 	void Bind(uint32_t count, uint32_t startIndex=0);
 
   private:
 	std::size_t _count;
 	Type _type;
-
-	uint32_t _ibo;
-	uint32_t _hint;
-
-	bgfx::IndexBufferHandle _bgfxHandle;
+	bgfx::IndexBufferHandle _handle;
 };
 
-} // namespace graphics
 } // namespace openblack
