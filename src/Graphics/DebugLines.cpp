@@ -118,14 +118,7 @@ void DebugLines::SetPose(const glm::vec3 &center, float size)
 void DebugLines::Draw(uint8_t viewId, ShaderProgram &program)
 {
 	uint64_t state = 0u
-		| BGFX_STATE_WRITE_R
-		| BGFX_STATE_WRITE_G
-		| BGFX_STATE_WRITE_B
-		| BGFX_STATE_WRITE_A
-		| BGFX_STATE_WRITE_Z
-		| BGFX_STATE_DEPTH_TEST_LESS
-		| BGFX_STATE_CULL_CW
-		| BGFX_STATE_MSAA
+		| BGFX_STATE_DEFAULT
 		| BGFX_STATE_PT_LINES
 	;
 

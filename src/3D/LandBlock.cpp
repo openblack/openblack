@@ -200,9 +200,7 @@ void LandBlock::Draw(uint8_t viewId, ShaderProgram &program, bool cullBack)
 	program.SetUniformValue("u_blockPosition", &_mapPosition);
 
 	uint64_t state = 0u
-		| BGFX_STATE_WRITE_RGB
-		| BGFX_STATE_WRITE_A
-		| BGFX_STATE_WRITE_Z
+		| BGFX_STATE_WRITE_MASK
 		| BGFX_STATE_DEPTH_TEST_LESS
 		| (cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW)
 		| BGFX_STATE_MSAA
