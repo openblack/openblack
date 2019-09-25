@@ -159,8 +159,9 @@ constexpr std::array<GLenum, static_cast<size_t>(Wrapping::MirroredRepeat) + 1> 
 	GL_MIRRORED_REPEAT
 };
 
-Texture2D::Texture2D()
-	: _bgfxHandle(BGFX_INVALID_HANDLE)
+Texture2D::Texture2D(std::string name)
+	: _name(std::move(name))
+	, _bgfxHandle(BGFX_INVALID_HANDLE)
 {
 	GLuint texture;
 	glGenTextures(1, &texture);
@@ -186,6 +187,7 @@ void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format 
 	// auto memory = bgfx::makeRef(data, size);
 	auto memory = bgfx::copy(data, size);
 	_bgfxHandle = bgfx::createTexture2D(width, height, false, layers, getBgfxTextureFormat(format), BGFX_TEXTURE_NONE, memory);
+	bgfx::setName(_bgfxHandle, _name.c_str());
 
 	_width = width;
 	_height = height;

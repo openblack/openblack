@@ -24,7 +24,7 @@
 #include <cstddef>
 
 #include <bgfx/bgfx.h>
-
+#include <string>
 
 namespace openblack
 {
@@ -108,7 +108,7 @@ class FrameBuffer;
 class Texture2D
 {
   public:
-	Texture2D();
+	explicit Texture2D(std::string name);
 	~Texture2D();
 
 	// No copying or assignment
@@ -128,6 +128,7 @@ class Texture2D
 	void GenerateMipmap();
 
   protected:
+	std::string _name;
 	bgfx::TextureHandle _bgfxHandle;
 	uint32_t _handle;
 	uint16_t _width;

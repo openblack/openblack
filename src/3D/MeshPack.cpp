@@ -159,7 +159,7 @@ void MeshPack::loadTextures(IStream& stream)
 	_textures.resize(static_cast<std::size_t>(totalTextures + 1));
 
 	// textures start at 1 - 0 would be an error texture
-	_textures[0] = std::make_unique<graphics::Texture2D>();
+	_textures[0] = std::make_unique<graphics::Texture2D>("Error Texture");
 
 	char sBlockID[4];
 	for (auto const& tex : textureTypeMap)
@@ -180,7 +180,8 @@ void MeshPack::loadTextures(IStream& stream)
 		uint8_t* ddsBuffer = new uint8_t[ddsSize];
 		stream.Read(ddsBuffer, ddsSize);
 
-		_textures[id] = std::make_unique<graphics::Texture2D>();
+		// TODO(bwrsandman): Give unique name to Texture for better debugging
+		_textures[id] = std::make_unique<graphics::Texture2D>("");
 		createCompressedDDS(_textures[id].get(), ddsBuffer);
 
 		delete[] ddsBuffer;

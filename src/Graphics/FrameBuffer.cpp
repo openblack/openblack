@@ -24,12 +24,15 @@
 
 using namespace openblack::graphics;
 
-FrameBuffer::FrameBuffer(uint16_t width, uint16_t height, Format colorFormat, std::optional<Format> depthStencilFormat)
-	: _handle(BGFX_INVALID_HANDLE)
+FrameBuffer::FrameBuffer(std::string name, uint16_t width, uint16_t height, Format colorFormat, std::optional<Format> depthStencilFormat)
+	: _name(std::move(name))
+	, _handle(BGFX_INVALID_HANDLE)
 	, _width(width)
 	, _height(height)
 	, _colorFormat(colorFormat)
 	, _depthStencilFormat(depthStencilFormat)
+	, _colorAttachment(_name + "_color")
+	, _depthStencilAttachment(_name + "_depthStencil")
 {
 	_colorAttachment._bgfxHandle = BGFX_INVALID_HANDLE;
 	_colorAttachment._width = width;

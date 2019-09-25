@@ -55,8 +55,9 @@ constexpr std::array<bgfx::Attrib::Enum, 18> attributes {
 
 }
 
-VertexBuffer::VertexBuffer(const void* vertices, size_t vertexCount, VertexDecl decl)
-	: _vertexCount(vertexCount)
+VertexBuffer::VertexBuffer(std::string name, const void *vertices, size_t vertexCount, VertexDecl decl)
+	: _name(std::move(name))
+	, _vertexCount(vertexCount)
 	, _vertexDecl(std::move(decl))
 	, _strideBytes(0)
 	, _handle(BGFX_INVALID_HANDLE)
@@ -86,6 +87,7 @@ VertexBuffer::VertexBuffer(const void* vertices, size_t vertexCount, VertexDecl 
 
 	auto mem = bgfx::makeRef(vertices, vertexCount * layout.m_stride);
 	_handle = bgfx::createVertexBuffer(mem, layout);
+	bgfx::setName(_handle, name.c_str());
 	bgfx::frame();
 }
 

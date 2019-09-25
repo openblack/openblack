@@ -75,7 +75,7 @@ Water::Water()
 
 	// _waterShader = resourceCaches.shaderProgram->Request("water.program");
 
-	_reflectionFrameBuffer = std::make_unique<FrameBuffer>(1024, 1024, graphics::Format::RGBA8, graphics::Format::Depth24Stencil8);
+	_reflectionFrameBuffer = std::make_unique<FrameBuffer>("Reflection", 1024, 1024, graphics::Format::RGBA8, graphics::Format::Depth24Stencil8);
 
 	createMesh();
 }
@@ -95,8 +95,8 @@ void Water::createMesh()
 
 	static const uint16_t indices[6] = { 2, 1, 0, 0, 3, 2 };
 
-	VertexBuffer* vertexBuffer = new VertexBuffer(points, 4, decl);
-	IndexBuffer* indexBuffer   = new IndexBuffer(indices, 6, IndexBuffer::Type::Uint16);
+	VertexBuffer* vertexBuffer = new VertexBuffer("Water", points, 4, decl);
+	IndexBuffer* indexBuffer   = new IndexBuffer("Water", indices, 6, IndexBuffer::Type::Uint16);
 
 	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, Mesh::Topology::TriangleList);
 }

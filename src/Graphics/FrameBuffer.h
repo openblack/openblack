@@ -31,7 +31,7 @@ namespace openblack::graphics {
 class FrameBuffer {
 public:
 	FrameBuffer() = delete;
-	FrameBuffer(uint16_t width, uint16_t height, Format colorFormat, std::optional<Format> depthStencilFormat={});
+	FrameBuffer(std::string name, uint16_t width, uint16_t height, Format colorFormat, std::optional<Format> depthStencilFormat = {});
 	~FrameBuffer();
 
 	void Bind(uint8_t viewId);
@@ -45,6 +45,7 @@ public:
 	[[nodiscard]] uint16_t GetHeight() const { return _height; }
 
 private:
+	std::string _name;
 	bgfx::FrameBufferHandle _handle;
 
 	uint16_t _width;
