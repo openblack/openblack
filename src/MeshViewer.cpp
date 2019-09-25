@@ -21,7 +21,6 @@
 #include <imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <Graphics/OpenGL.h>
 #include <3D/L3DMesh.h>
 #include <3D/MeshPack.h>
 #include <Game.h>
@@ -32,13 +31,52 @@
 
 using namespace openblack;
 
-MeshViewer::MeshViewer()
+namespace ImGui
 {
-	_frameBuffer  = std::make_unique<graphics::FrameBuffer>("MeshViewer", 512, 512, graphics::Format::RGBA8);
-	_selectedMesh    = MeshId::Dummy;
-	_selectedSubMesh = 0;
-	_cameraPosition  = glm::vec3(5.0f, 3.0f, 5.0f);
-	_open            = false;
+#define IMGUI_FLAGS_NONE        UINT8_C(0x00)
+#define IMGUI_FLAGS_ALPHA_BLEND UINT8_C(0x01)
+
+// Helper function for passing bgfx::TextureHandle to ImGui::Image.
+inline void Image(bgfx::TextureHandle _handle
+	, uint8_t _flags
+	, uint8_t _mip
+	, const ImVec2& _size
+	, const ImVec2& _uv0       = ImVec2(0.0f, 0.0f)
+	, const ImVec2& _uv1       = ImVec2(1.0f, 1.0f)
+	, const ImVec4& _tintCol   = ImVec4(1.0f, 1.0f, 1.0f, 1.0f)
+	, const ImVec4& _borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f)
+)
+{
+	union { struct { bgfx::TextureHandle handle; uint8_t flags; uint8_t mip; } s; ImTextureID ptr; } texture;
+	texture.s.handle = _handle;
+	texture.s.flags  = _flags;
+	texture.s.mip    = _mip;
+	Image(texture.ptr, _size, _uv0, _uv1, _tintCol, _borderCol);
+}
+
+// Helper function for passing bgfx::TextureHandle to ImGui::Image.
+inline void Image(bgfx::TextureHandle _handle
+	, const ImVec2& _size
+	, const ImVec2& _uv0       = ImVec2(0.0f, 0.0f)
+	, const ImVec2& _uv1       = ImVec2(1.0f, 1.0f)
+	, const ImVec4& _tintCol   = ImVec4(1.0f, 1.0f, 1.0f, 1.0f)
+	, const ImVec4& _borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f)
+)
+{
+	Image(_handle, IMGUI_FLAGS_ALPHA_BLEND, 0, _size, _uv0, _uv1, _tintCol, _borderCol);
+}
+
+}  // namespace ImGui
+
+MeshViewer::MeshViewer(uint8_t viewId)
+	: _open(false)
+	, _viewId(viewId)
+	, _selectedMesh(MeshId::Dummy)
+	, _selectedSubMesh(0)
+	, _cameraPosition(5.0f, 3.0f, 5.0f)
+	, _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", 512, 512, graphics::Format::RGBA8))
+{
+	bgfx::setViewName(_viewId, "MeshViewer");
 }
 
 void MeshViewer::Open()
@@ -85,47 +123,50 @@ void MeshViewer::DrawWindow()
 
 	ImGui::DragFloat3("position", &_cameraPosition[0], 0.5f);
 
-	ImGui::Image((void*)&_frameBuffer->GetColorAttachment().GetNativeHandle(), ImVec2(512, 512), ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Image(_frameBuffer->GetColorAttachment().GetNativeHandle(), ImVec2(512, 512), ImVec2(0, 1), ImVec2(1, 0));
 
 	ImGui::EndChild();
 
 	ImGui::End();
 }
 
-void MeshViewer::DrawScene(uint8_t viewId)
+void MeshViewer::DrawScene()
 {
 	if (!_open)
 		return;
 
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glEnable(GL_CULL_FACE);
-
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glCullFace(GL_BACK);
-	glFrontFace(GL_CW);
-
 	auto const& meshPack        = Game::instance()->GetMeshPack();
 	auto const& meshes          = meshPack.GetMeshes();
-	ShaderProgram* objectShader = Game::instance()->GetRenderer().GetShaderManager().GetShader("SkinnedMesh");
+	auto& shaderManager         = Game::instance()->GetRenderer().GetShaderManager();
+	ShaderProgram* objectShader = shaderManager.GetShader("Object");
 
+	auto model = glm::mat4(1.0f);
+	bgfx::setTransform(&model);
+
+	// TODO(bwrsandman): use camera class
 	glm::mat4 perspective = glm::perspective(glm::radians(70.0f), 1.0f, 1.0f, 1024.0f);
 	glm::mat4 view        = glm::lookAt(_cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	bgfx::setViewTransform(_viewId, &view, &perspective);
 
-	_frameBuffer->Bind(viewId);
-	glViewport(0, 0, _frameBuffer->GetWidth(), _frameBuffer->GetHeight());
-	glClearColor(39.0f / 255.0f, 70.0f / 255.0f, 89.0f / 255.0f, 1);
-	glClear(GL_COLOR_BUFFER_BIT);
-
-//	objectShader->SetUniformValue("u_viewProj", perspective * view);
-//	objectShader->SetUniformValue("u_model", glm::mat4(1.0f));
+	_frameBuffer->Bind(_viewId);
+	// TODO(bwrsandman): The setting of viewport and clearing should probably be done in framebuffer bind
+	static const uint32_t clearColor = 0x274659ff;
+	bgfx::setViewClear(_viewId,
+		BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
+		clearColor,
+		1.0f,
+		0);
+	bgfx::setViewRect(_viewId, 0, 0, _frameBuffer->GetWidth(), _frameBuffer->GetHeight());
 
 	uint64_t state = 0u
-		| BGFX_STATE_DEFAULT;
+		| BGFX_STATE_WRITE_MASK
+		| BGFX_STATE_CULL_CCW  // TODO(bwrsandman): Some meshes wind one way and some others (i.e. rocks, gate)
+		| BGFX_STATE_MSAA
+	;
 
 	const auto& mesh = meshes[static_cast<int>(_selectedMesh)];
 	if (_selectedSubMesh >= 0 && static_cast<uint32_t>(_selectedSubMesh) < mesh->GetSubMeshes().size())
-		mesh->Draw(viewId, *objectShader, _selectedSubMesh, state);
+		mesh->Draw(_viewId, *objectShader, _selectedSubMesh, state);
 
-	_frameBuffer->Unbind(viewId);
+	_frameBuffer->Unbind(_viewId);
 }

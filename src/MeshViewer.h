@@ -29,13 +29,14 @@ namespace openblack
 class MeshViewer
 {
   public:
-	MeshViewer();
+	explicit MeshViewer(uint8_t viewId);
 	void Open();
 	void DrawWindow();
-	void DrawScene(uint8_t viewId);
+	void DrawScene();
 
   private:
 	bool _open;
+	const uint8_t _viewId;
 	MeshId _selectedMesh;
 	int _selectedSubMesh;
 	glm::vec3 _cameraPosition;

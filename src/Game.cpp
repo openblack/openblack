@@ -221,6 +221,7 @@ void Game::Run()
 		bgfx::setViewName(0, "Reflection Pass");
 		_water->BeginReflection(0,*_camera);
 		{
+			// TODO(bwrsandman): The setting of viewport and clearing should probably be done in framebuffer bind
 			uint16_t width, height;
 			_water->GetFramebufferSize(width, height);
 			_renderer->ClearScene(0, width, height);
