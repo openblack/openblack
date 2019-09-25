@@ -225,12 +225,12 @@ void L3DMesh::Load(IStream& stream)
 	// size: 6100, num meshes: 4, offset: 100
 }
 
-void L3DMesh::Draw(uint8_t viewId, ShaderProgram &program, uint32_t mesh) const
+void L3DMesh::Draw(uint8_t viewId, ShaderProgram &program, uint32_t mesh, uint64_t state, uint32_t rgba) const
 {
 	if (mesh >= _subMeshes.size()) {
 		//spdlog::warn("tried to draw submesh out of range ({}/{})", mesh, _subMeshes.size());
 		mesh = _subMeshes.size() - 1;
 	}
 
-	_subMeshes[mesh]->Draw(viewId, *this, program);
+	_subMeshes[mesh]->Draw(viewId, *this, program, state, rgba);
 }

@@ -145,7 +145,7 @@ void L3DSubMesh::Load(IStream& stream)
 	//spdlog::debug("# bones: {} @ {}", header.numBones, header.bonesOffset);
 }
 
-void L3DSubMesh::Draw(uint8_t viewId, const L3DMesh &mesh, ShaderProgram &program) const
+void L3DSubMesh::Draw(uint8_t viewId, const L3DMesh &mesh, ShaderProgram &program, uint64_t state, uint32_t rgba) const
 {
 	if (!_mesh)
 		return;
@@ -164,14 +164,7 @@ void L3DSubMesh::Draw(uint8_t viewId, const L3DMesh &mesh, ShaderProgram &progra
 			program.SetTextureSampler("s_diffuse", 0, *texture);
 		}
 
-		uint64_t state = 0u
-			| BGFX_STATE_WRITE_MASK
-			| BGFX_STATE_DEPTH_TEST_LESS
-			// | BGFX_STATE_CULL_CCW  // TODO(bwrsandman): Some meshes wind one way and some others (i.e. rocks, gate)
-			| BGFX_STATE_MSAA
-		;
-
-		_mesh->Draw(viewId, program, prim.indicesCount, prim.indicesOffset, state, 0);
+		_mesh->Draw(viewId, program, prim.indicesCount, prim.indicesOffset, state, rgba);
 	}
 }
 

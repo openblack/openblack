@@ -20,6 +20,13 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 {
 	graphics::ShaderProgram* objectShader = shaderManager.GetShader("Object");
 
+	uint64_t state = 0u
+		| BGFX_STATE_WRITE_MASK
+		| BGFX_STATE_DEPTH_TEST_LESS
+			// | BGFX_STATE_CULL_CCW  // TODO(bwrsandman): Some meshes wind one way and some others (i.e. rocks, gate)
+		| BGFX_STATE_MSAA
+	;
+
 	_registry.view<Tree, Transform>().each([objectShader](Tree& tree, Transform& transform) {
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		modelMatrix           = glm::translate(modelMatrix, transform.position);
@@ -60,7 +67,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 			mesh.Draw(viewId, *objectShader, submeshId, state);
 	});
 
-	_registry.view<AnimatedStatic, Transform>().each([viewId, objectShader](AnimatedStatic& animated, Transform& transform) {
+	_registry.view<AnimatedStatic, Transform>().each([viewId, state, objectShader](AnimatedStatic& animated, Transform& transform) {
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		modelMatrix           = glm::translate(modelMatrix, transform.position);
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -75,26 +82,26 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		if (animated.type == "Norse Gate")
 		{
 			const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh((int)MeshId::BuildingNorseGate);
-			mesh.Draw(viewId, *objectShader, 0);
+			mesh.Draw(viewId, *objectShader, 0, state);
 		}
 		else if (animated.type == "Gate Stone Plinth")
 		{
 			const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh((int)MeshId::ObjectGateTotemPlinthe);
-			mesh.Draw(viewId, *objectShader, 0);
+			mesh.Draw(viewId, *objectShader, 0, state);
 		}
 		else if (animated.type == "Piper Cave Entrance")
 		{
 			const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh((int)MeshId::BuildingMineEntrance);
-			mesh.Draw(viewId, *objectShader, 0);
+			mesh.Draw(viewId, *objectShader, 0, state);
 		}
 		else
 		{
 			const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(0);
-			mesh.Draw(viewId, *objectShader, 0);
+			mesh.Draw(viewId, *objectShader, 0, state);
 		}
 	});
 
-	_registry.view<MobileStatic, Transform>().each([viewId, objectShader](MobileStatic& mobile, Transform& transform) {
+	_registry.view<MobileStatic, Transform>().each([viewId, state, objectShader](MobileStatic& mobile, Transform& transform) {
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		modelMatrix           = glm::translate(modelMatrix, transform.position);
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
