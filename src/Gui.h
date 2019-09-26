@@ -30,6 +30,43 @@ typedef struct SDL_Window SDL_Window;
 typedef struct SDL_Cursor SDL_Cursor;
 union SDL_Event;
 
+namespace ImGui
+{
+#define IMGUI_FLAGS_NONE        UINT8_C(0x00)
+#define IMGUI_FLAGS_ALPHA_BLEND UINT8_C(0x01)
+
+// Helper function for passing bgfx::TextureHandle to ImGui::Image.
+inline void Image(bgfx::TextureHandle _handle
+	, uint8_t _flags
+	, uint8_t _mip
+	, const ImVec2& _size
+	, const ImVec2& _uv0       = ImVec2(0.0f, 0.0f)
+	, const ImVec2& _uv1       = ImVec2(1.0f, 1.0f)
+	, const ImVec4& _tintCol   = ImVec4(1.0f, 1.0f, 1.0f, 1.0f)
+	, const ImVec4& _borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f)
+)
+{
+	union { struct { bgfx::TextureHandle handle; uint8_t flags; uint8_t mip; } s; ImTextureID ptr; } texture;
+	texture.s.handle = _handle;
+	texture.s.flags  = _flags;
+	texture.s.mip    = _mip;
+	Image(texture.ptr, _size, _uv0, _uv1, _tintCol, _borderCol);
+}
+
+// Helper function for passing bgfx::TextureHandle to ImGui::Image.
+inline void Image(bgfx::TextureHandle _handle
+	, const ImVec2& _size
+	, const ImVec2& _uv0       = ImVec2(0.0f, 0.0f)
+	, const ImVec2& _uv1       = ImVec2(1.0f, 1.0f)
+	, const ImVec4& _tintCol   = ImVec4(1.0f, 1.0f, 1.0f, 1.0f)
+	, const ImVec4& _borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f)
+)
+{
+	Image(_handle, IMGUI_FLAGS_ALPHA_BLEND, 0, _size, _uv0, _uv1, _tintCol, _borderCol);
+}
+
+}  // namespace ImGui
+
 namespace openblack
 {
 class Game;
