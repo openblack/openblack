@@ -279,13 +279,16 @@ void Renderer::DrawScene(const Game &game, uint8_t viewId, bool drawWater, bool 
 	}
 
 	// Enable stats or debug text.
+	auto debugMode = BGFX_DEBUG_NONE;
 	if (game.GetConfig().bgfxDebug)
 	{
-		bgfx::setDebug(BGFX_DEBUG_STATS);
-	} else
-	{
-		bgfx::setDebug(BGFX_DEBUG_NONE);
+		debugMode |= BGFX_DEBUG_STATS;
 	}
+	if (game.GetConfig().wireframe)
+	{
+		debugMode |= BGFX_DEBUG_WIREFRAME;
+	}
+	bgfx::setDebug(debugMode);
 }
 
 void Renderer::Frame()
