@@ -129,7 +129,12 @@ void Sky::Draw(uint8_t viewId, graphics::ShaderProgram &program)
 	program.SetTextureSampler("s_diffuse", 0, *_texture);
 
 	uint64_t state = 0u
-		| BGFX_STATE_DEFAULT;
+		| BGFX_STATE_WRITE_RGB
+		| BGFX_STATE_WRITE_A
+		| BGFX_STATE_WRITE_Z
+		| BGFX_STATE_DEPTH_TEST_LESS
+		| BGFX_STATE_CULL_CCW
+		| BGFX_STATE_MSAA
 	;
 	_model->Draw(viewId, program, 0, state);
 }
