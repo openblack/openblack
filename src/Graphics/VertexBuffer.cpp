@@ -87,6 +87,7 @@ VertexBuffer::VertexBuffer(std::string name, const void *vertices, size_t vertex
 
 	auto mem = bgfx::makeRef(vertices, vertexCount * layout.m_stride);
 	_handle = bgfx::createVertexBuffer(mem, layout);
+	_layoutHandle = bgfx::createVertexLayout(layout);
 	bgfx::setName(_handle, _name.c_str());
 	bgfx::frame();
 }
@@ -95,6 +96,8 @@ VertexBuffer::~VertexBuffer()
 {
 	if (bgfx::isValid(_handle))
 		bgfx::destroy(_handle);
+	if (bgfx::isValid(_layoutHandle))
+		bgfx::destroy(_layoutHandle);
 }
 
 size_t VertexBuffer::GetVertexCount() const noexcept
@@ -114,5 +117,5 @@ size_t VertexBuffer::GetSizeInBytes() const noexcept
 
 void VertexBuffer::Bind()
 {
-	bgfx::setVertexBuffer(0, _handle);
+	bgfx::setVertexBuffer(0, _handle, 0, _vertexCount, _layoutHandle);
 }

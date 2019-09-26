@@ -97,6 +97,7 @@ class VertexBuffer
 	size_t _strideBytes;
 	std::vector<const void*> _vertexDeclOffsets;
 	bgfx::VertexBufferHandle _handle;
+	bgfx::VertexLayoutHandle _layoutHandle;
 };
 
 } // namespace openblack
