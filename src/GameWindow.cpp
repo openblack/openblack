@@ -280,7 +280,7 @@ void GameWindow::GetDrawableSize(int& width, int& height) const
 {
 	// TODO(bwrsandman): Make this a runtime branch
 #if USE_VULKAN
-	SDL_Vulkan_GetDrawableSize(_window.get(), &drawable_width, &drawable_height);
+	SDL_Vulkan_GetDrawableSize(_window.get(), &width, &height);
 #else
 	SDL_GL_GetDrawableSize(_window.get(), &width, &height);
 #endif // USE_VULKAN
