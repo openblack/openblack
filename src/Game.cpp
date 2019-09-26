@@ -83,7 +83,6 @@ Game::Game(int argc, char** argv)
 	}
 
 	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", windowWidth, windowHeight, displayMode);
-	_window->SetSwapInterval(1);
 
 	_renderer = std::make_unique<Renderer>(*_window, binaryPath);
 
@@ -242,8 +241,6 @@ void Game::Run()
 
 		_gui->Draw();
 		_renderer->Frame();
-
-		_window->SwapWindow();
 	}
 }
 

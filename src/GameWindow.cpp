@@ -217,17 +217,6 @@ void GameWindow::SetTitle(const std::string& str)
 	SDL_SetWindowTitle(_window.get(), str.c_str());
 }
 
-int GameWindow::GetSwapInterval() const
-{
-	return SDL_GL_GetSwapInterval();
-}
-
-void GameWindow::SetSwapInterval(int interval)
-{
-	// todo: throw on error
-	SDL_GL_SetSwapInterval(interval);
-}
-
 float GameWindow::GetAspectRatio() const
 {
 	int width, height;
@@ -333,9 +322,4 @@ void GameWindow::SetFullscreen(bool b)
 void GameWindow::Close()
 {
 	_window.reset(nullptr);
-}
-
-void GameWindow::SwapWindow()
-{
-	SDL_GL_SwapWindow(_window.get());
 }
