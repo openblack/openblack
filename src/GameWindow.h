@@ -20,10 +20,11 @@
 
 #pragma once
 
-#include <SDL.h>
 #include <cstdint>
 #include <memory>
 #include <string>
+
+#include <SDL.h>
 
 namespace openblack
 {
@@ -61,9 +62,6 @@ class GameWindow
 	void SetTitle(const std::string& str);
 	[[nodiscard]] std::string GetTitle() const;
 
-	[[nodiscard]] int GetSwapInterval() const;
-	void SetSwapInterval(int interval);
-
 	void Show();
 	void Hide();
 
@@ -85,7 +83,6 @@ class GameWindow
 	void SetFullscreen(bool f = true);
 
 	void Close();
-	void SwapWindow();
 
   private:
 	std::unique_ptr<SDL_Window, SDLDestroyer> _window;
