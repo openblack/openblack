@@ -21,10 +21,8 @@
 #include <LHVMViewer.h>
 
 #include <array>
-#include <imgui/imgui.h>
-#include <imgui/examples/imgui_impl_opengl3.h>
-#include <imgui/examples/imgui_impl_sdl.h>
-#include <imgui_club/imgui_memory_editor/imgui_memory_editor.h>
+#include <imgui.h>
+#include <imgui_memory_editor/imgui_memory_editor.h>
 
 using openblack::LHVMViewer;
 
