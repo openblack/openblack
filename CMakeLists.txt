@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-option(OPENBLACK_USE_SYSTEM_DEPS "Use system installed libaries instead of submodules (such as on linux)" OFF)
+option(OPENBLACK_USE_SYSTEM_DEPS "Use system installed libaries instead of fetching them" OFF)
 
 # Override default hunter option
 set(HUNTER_ENABLED OFF CACHE BOOL "Enable Hunter package manager support")
@@ -47,22 +47,6 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: Debug Release" FORCE)
 endif()
 
-# Check that all Git submodules are present
-function(check_submodules_present)
-    file(READ "${PROJECT_SOURCE_DIR}/.gitmodules" gitmodules)
-    string(REGEX MATCHALL "path *= *[^ \t\r\n]*" gitmodules ${gitmodules})
-    foreach(module ${gitmodules})
-        string(REGEX REPLACE "path *= *" "" module ${module})
-        if (NOT EXISTS "${PROJECT_SOURCE_DIR}/${module}/.git")
-            message(FATAL_ERROR "Git submodule ${module} not found. "
-                    "Please run: git submodule update --init --recursive")
-        endif()
-    endforeach()
-endfunction()
-if (NOT OPENBLACK_USE_SYSTEM_DEPS)
-    check_submodules_present()
-endif()
-
 # check compiler for various features
 include(CheckIncludeFileCXX)
 CHECK_INCLUDE_FILE_CXX(filesystem HAS_FILESYSTEM)
@@ -94,9 +78,13 @@ endif()
 if (OPENBLACK_USE_SYSTEM_DEPS)
 	find_package(EnTT REQUIRED)
 else()
-	# Add dependencies from the external directory
-	set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
-	add_subdirectory("${EXTERNAL_DIR}/entt" EXCLUDE_FROM_ALL)
+	include(FetchContent)
+	FetchContent_Declare(
+		entt
+		GIT_REPOSITORY https://github.com/skypjack/entt.git
+		GIT_TAG        master
+	)
+	FetchContent_MakeAvailable(entt)
 endif()
 
 # unify includes as targets

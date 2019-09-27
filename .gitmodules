@@ -1,9 +1,0 @@
-[submodule "external/entt"]
-	path = external/entt
-	url = https://github.com/skypjack/entt.git
-[submodule "external/imgui/imgui"]
-	path = external/imgui/imgui
-	url = https://github.com/ocornut/imgui.git
-[submodule "external/imgui/imgui_club"]
-	path = external/imgui/imgui_club
-	url = https://github.com/ocornut/imgui_club.git

@@ -1,29 +1,43 @@
 # add imgui library to use for debugging
+
+include(FetchContent)
+FetchContent_Declare(
+	imgui
+	GIT_REPOSITORY https://github.com/ocornut/imgui.git
+	GIT_TAG        master
+)
+FetchContent_Declare(
+	imgui_club
+	GIT_REPOSITORY https://github.com/ocornut/imgui_club.git
+	GIT_TAG        master
+)
+FetchContent_MakeAvailable(imgui)
+FetchContent_MakeAvailable(imgui_club)
+
 add_library(imgui STATIC
-	imgui/imconfig.h
-	imgui/imgui.cpp
-	imgui/imgui_demo.cpp
-	imgui/imgui_draw.cpp
-	imgui/imgui.h
-	imgui/imgui.cpp
-	imgui/imgui_internal.h
-	imgui/imgui_widgets.cpp
-	imgui/imstb_rectpack.h
-	imgui/imstb_textedit.h
-	imgui/imstb_truetype.h
+	${imgui_SOURCE_DIR}/imconfig.h
+	${imgui_SOURCE_DIR}/imgui.cpp
+	${imgui_SOURCE_DIR}/imgui_demo.cpp
+	${imgui_SOURCE_DIR}/imgui_draw.cpp
+	${imgui_SOURCE_DIR}/imgui.h
+	${imgui_SOURCE_DIR}/imgui.cpp
+	${imgui_SOURCE_DIR}/imgui_internal.h
+	${imgui_SOURCE_DIR}/imgui_widgets.cpp
+	${imgui_SOURCE_DIR}/imstb_rectpack.h
+	${imgui_SOURCE_DIR}/imstb_textedit.h
+	${imgui_SOURCE_DIR}/imstb_truetype.h
 	# opengl helper
-	imgui/examples/imgui_impl_sdl.h
-	imgui/examples/imgui_impl_sdl.cpp
-	imgui/examples/imgui_impl_opengl3.h
-	imgui/examples/imgui_impl_opengl3.cpp
+	${imgui_SOURCE_DIR}/examples/imgui_impl_sdl.h
+	${imgui_SOURCE_DIR}/examples/imgui_impl_sdl.cpp
+	${imgui_SOURCE_DIR}/examples/imgui_impl_opengl3.h
+	${imgui_SOURCE_DIR}/examples/imgui_impl_opengl3.cpp
 	# memory_editor
-	imgui_club/imgui_memory_editor/imgui_memory_editor.h
+	${imgui_club_SOURCE_DIR}/imgui_memory_editor/imgui_memory_editor.h
 	)
 target_include_directories(imgui PUBLIC
-	${CMAKE_CURRENT_SOURCE_DIR}
-	${CMAKE_CURRENT_SOURCE_DIR}/imgui
-	${CMAKE_CURRENT_SOURCE_DIR}/imgui/examples)
-
+	${imgui_SOURCE_DIR}
+	${imgui_SOURCE_DIR}/examples
+	${imgui_club_SOURCE_DIR})
 # tell imgui we want to use GLAD as OpenGL loader
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
 

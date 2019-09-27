@@ -18,7 +18,7 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <imgui/imgui.h>
+#include <imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <Graphics/OpenGL.h>

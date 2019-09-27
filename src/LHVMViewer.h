@@ -23,7 +23,7 @@
 #include <cstdint>
 
 #include <LHVM/LHVM.h>
-#include <imgui/imgui.h>
+#include <imgui.h>
 
 namespace openblack
 {
