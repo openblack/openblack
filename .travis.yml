@@ -8,7 +8,7 @@ env:
   global:
     - RUN_TESTS: false
     - HUNTER_ENABLED: "NO"
-    - USE_SUBMODULES: "YES"
+    - OPENBLACK_USE_SUBMODULES: "YES"
 
 cache:
   directories:
@@ -25,7 +25,7 @@ matrix:
         BUILD_FLAVOR=ubuntu
         TOOLCHAIN=gcc-cxx17
         HUNTER_ENABLED=YES
-        USE_SUBMODULES=NO
+        OPENBLACK_USE_SUBMODULES=NO
         DOCKER_TAG=ubuntu-lts-gcc
 
     #   Ubuntu 19.04 disco
@@ -58,7 +58,7 @@ matrix:
         BUILD_FLAVOR=fedora
         TOOLCHAIN=linux-mingw-w64-cxx17
         HUNTER_ENABLED=YES
-        USE_SUBMODULES=NO
+        OPENBLACK_USE_SUBMODULES=NO
         DOCKER_TAG=fedora-mingw
 
 before_install:
@@ -72,7 +72,7 @@ script:
   -e TOOLCHAIN="$TOOLCHAIN" \
   -e RUN_TESTS="$RUN_TESTS" \
   -e HUNTER_ENABLED="$HUNTER_ENABLED" \
-  -e USE_SUBMODULES="$USE_SUBMODULES" \
+  -e OPENBLACK_USE_SUBMODULES="$OPENBLACK_USE_SUBMODULES" \
   -v ${HOME}:/root \
   -v ${PWD}:/usr/src/openblack \
   -w /usr/src/openblack \

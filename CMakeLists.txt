@@ -4,9 +4,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-option(USE_SUBMODULES "Use git submodules for external dependencies instead of system installed deps (such as on linux)" ON)
+option(OPENBLACK_USE_SUBMODULES "Use git submodules for external dependencies instead of system installed deps (such as on linux)" ON)
 
-option(HUNTER_ENABLED "Enable Hunter package manager support" OFF)
+# Override default hunter option
+set(HUNTER_ENABLED OFF CACHE BOOL "Enable Hunter package manager support")
 include(cmake/HunterGate.cmake)
 
 HunterGate(
@@ -38,7 +39,7 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 # Project Options
 if (WIN32)
-    option(USE_DEBUG_CONSOLE "whether a debug console should be enabled for debug builds, if false debug output is redirected to Visual Studio output" ON)
+    option(OPENBLACK_USE_DEBUG_CONSOLE "whether a debug console should be enabled for debug builds, if false debug output is redirected to Visual Studio output" ON)
 endif()
 
 # Default build type to release
@@ -58,7 +59,7 @@ function(check_submodules_present)
         endif()
     endforeach()
 endfunction()
-if (USE_SUBMODULES)
+if (OPENBLACK_USE_SUBMODULES)
     check_submodules_present()
 endif()
 
@@ -90,7 +91,7 @@ else()
 	find_package(GLM REQUIRED)
 endif()
 
-if (USE_SUBMODULES)
+if (OPENBLACK_USE_SUBMODULES)
     # Add dependencies from the external directory
     set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
     add_subdirectory("${EXTERNAL_DIR}/entt" EXCLUDE_FROM_ALL)
