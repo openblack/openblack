@@ -72,7 +72,6 @@ hunter_add_package(spdlog)
 hunter_add_package(glm)
 find_package(OpenGL REQUIRED)
 find_package(spdlog REQUIRED)
-find_package(bgfx REQUIRED COMPONENTS bgfx)
 if(HUNTER_ENABLED)
 	find_package(SDL2 CONFIG REQUIRED)
 	find_package(glm REQUIRED)
@@ -83,13 +82,28 @@ endif()
 
 if (OPENBLACK_USE_SYSTEM_DEPS)
 	find_package(EnTT REQUIRED)
+	find_package(bgfx REQUIRED COMPONENTS bgfx)
 else()
 	FetchContent_Declare(
 		entt
 		GIT_REPOSITORY https://github.com/skypjack/entt.git
 		GIT_TAG        master
 	)
-	FetchContent_MakeAvailable(entt)
+	FetchContent_Declare(
+		bgfx
+		GIT_REPOSITORY https://github.com/bwrsandman/bgfx.cmake.git
+		GIT_TAG        materials
+		#GIT_REPOSITORY https://github.com/JoshuaBrookover/bgfx.cmake.git
+		#GIT_TAG        master
+	)
+
+    set(BGFX_BUILD_EXAMPLES OFF CACHE BOOL "Build bgfx examples.")
+    set(BGFX_INSTALL OFF CACHE BOOL "Create installation target.")
+    set(BGFX_CUSTOM_TARGETS OFF CACHE BOOL "Include convenience custom targets.")
+    set(BGFX_USE_DEBUG_SUFFIX OFF CACHE BOOL "Add 'd' suffix to debug output targets")
+	FetchContent_MakeAvailable(entt bgfx)
+
+    add_library(bgfx::bgfx ALIAS bgfx)
 endif()
 
 # unify includes as targets
