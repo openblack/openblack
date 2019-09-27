@@ -4,7 +4,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-option(OPENBLACK_USE_SUBMODULES "Use git submodules for external dependencies instead of system installed deps (such as on linux)" ON)
+option(OPENBLACK_USE_SYSTEM_DEPS "Use system installed libaries instead of submodules (such as on linux)" OFF)
 
 # Override default hunter option
 set(HUNTER_ENABLED OFF CACHE BOOL "Enable Hunter package manager support")
@@ -59,7 +59,7 @@ function(check_submodules_present)
         endif()
     endforeach()
 endfunction()
-if (OPENBLACK_USE_SUBMODULES)
+if (NOT OPENBLACK_USE_SYSTEM_DEPS)
     check_submodules_present()
 endif()
 
@@ -91,12 +91,12 @@ else()
 	find_package(GLM REQUIRED)
 endif()
 
-if (OPENBLACK_USE_SUBMODULES)
-    # Add dependencies from the external directory
-    set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
-    add_subdirectory("${EXTERNAL_DIR}/entt" EXCLUDE_FROM_ALL)
+if (OPENBLACK_USE_SYSTEM_DEPS)
+	find_package(EnTT REQUIRED)
 else()
-    find_package(EnTT REQUIRED)
+	# Add dependencies from the external directory
+	set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external")
+	add_subdirectory("${EXTERNAL_DIR}/entt" EXCLUDE_FROM_ALL)
 endif()
 
 # unify includes as targets
