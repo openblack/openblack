@@ -25,7 +25,7 @@ matrix:
         BUILD_FLAVOR=ubuntu
         TOOLCHAIN=gcc-cxx17
         HUNTER_ENABLED=YES
-        OPENBLACK_USE_SYSTEM_DEPS=YES
+        OPENBLACK_USE_SYSTEM_DEPS=OFF
         DOCKER_TAG=ubuntu-lts-gcc
 
     #   Ubuntu 19.04 disco
@@ -58,7 +58,7 @@ matrix:
         BUILD_FLAVOR=fedora
         TOOLCHAIN=linux-mingw-w64-cxx17
         HUNTER_ENABLED=YES
-        OPENBLACK_USE_SYSTEM_DEPS=YES
+        OPENBLACK_USE_SYSTEM_DEPS=OFF
         DOCKER_TAG=fedora-mingw
 
 before_install:
