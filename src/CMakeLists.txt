@@ -10,31 +10,36 @@ configure_file("${CMAKE_CURRENT_LIST_DIR}/GitSHA1.cpp.in" "${CMAKE_CURRENT_BINAR
 
 file(GLOB OPENBLACK_IMGUI_VS_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/imgui/vs_*.sc")
 file(GLOB OPENBLACK_IMGUI_FS_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/imgui/fs_*.sc")
-mark_shaders_for_compilation_to_header(TYPE vertex
+mark_shaders_for_compilation(
+	HEADER
+	TYPE VERTEX
 	SHADERS ${OPENBLACK_IMGUI_VS_SHADERS}
-	VARYING_DEF ${CMAKE_CURRENT_SOURCE_DIR}/../assets/shaders/imgui/varying.def.sc
-	OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/../include/generated/imgui/shaders)
-mark_shaders_for_compilation_to_header(TYPE fragment
+	VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/shaders/imgui/varying.def.sc
+	OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/imgui/shaders)
+mark_shaders_for_compilation(
+	HEADER
+	TYPE FRAGMENT
 	SHADERS ${OPENBLACK_IMGUI_FS_SHADERS}
-	VARYING_DEF ${CMAKE_CURRENT_SOURCE_DIR}/../assets/shaders/imgui/varying.def.sc
-	OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/../include/generated/imgui/shaders)
+	VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/shaders/imgui/varying.def.sc
+	OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/imgui/shaders)
+
+file(GLOB OPENBLACK_VERTEX_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/vs_*.sc")
+file(GLOB OPENBLACK_FRAGMENT_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/fs_*.sc")
+file(GLOB OPENBLACK_VARYING_DEF_FILE "${CMAKE_SOURCE_DIR}/assets/shaders/varying.def.sc")
+mark_shaders_for_compilation(
+	TYPE VERTEX
+	SHADERS ${OPENBLACK_VERTEX_SHADERS}
+	VARYING_DEF ${OPENBLACK_VARYING_DEF_FILE}
+	OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/shaders)
+mark_shaders_for_compilation(
+	TYPE FRAGMENT
+	SHADERS ${OPENBLACK_FRAGMENT_SHADERS}
+	VARYING_DEF ${OPENBLACK_VARYING_DEF_FILE}
+	OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/shaders)
 
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_IMGUI_VS_SHADERS})
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_IMGUI_FS_SHADERS})
-list(APPEND OPENBLACK_SHADERS ${CMAKE_CURRENT_SOURCE_DIR}/../assets/shaders/imgui/varying.def.sc)
-
-file(GLOB OPENBLACK_VERTEX_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/../assets/shaders/vs_*.sc")
-file(GLOB OPENBLACK_FRAGMENT_SHADERS "${CMAKE_CURRENT_SOURCE_DIR}/../assets/shaders/fs_*.sc")
-file(GLOB OPENBLACK_VARYING_DEF_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../assets/shaders/varying.def.sc")
-mark_shaders_for_compilation(TYPE vertex
-	SHADERS ${OPENBLACK_VERTEX_SHADERS}
-	VARYING_DEF ${OPENBLACK_VARYING_DEF_FILE}
-	OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/../bin/shaders)
-mark_shaders_for_compilation(TYPE fragment
-	SHADERS ${OPENBLACK_FRAGMENT_SHADERS}
-	VARYING_DEF ${OPENBLACK_VARYING_DEF_FILE}
-	OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/../bin/shaders)
-
+list(APPEND OPENBLACK_SHADERS ${CMAKE_SOURCE_DIR}/assets/shaders/imgui/varying.def.sc)
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_VERTEX_SHADERS})
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_FRAGMENT_SHADERS})
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_VARYING_DEF_FILE})
