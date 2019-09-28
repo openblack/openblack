@@ -1,6 +1,11 @@
 # add imgui library to use for debugging
 
-include(FetchContent)
+if(${CMAKE_VERSION} VERSION_LESS 3.14)
+	include(${CMAKE_SOURCE_DIR}/cmake/backport/FetchContent.cmake)
+else()
+	include(FetchContent)
+endif()
+
 FetchContent_Declare(
 	imgui
 	GIT_REPOSITORY https://github.com/ocornut/imgui.git

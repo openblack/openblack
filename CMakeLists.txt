@@ -1,18 +1,12 @@
-cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
-
-if(${CMAKE_VERSION} VERSION_LESS 3.14)
-	macro(FetchContent_MakeAvailable)
-		foreach(NAME ${ARGN})
-			FetchContent_GetProperties(${NAME})
-			if(NOT ${NAME}_POPULATED)
-				FetchContent_Populate(${NAME})
-				add_subdirectory(${${NAME}_SOURCE_DIR} ${${NAME}_BINARY_DIR})
-			endif()
-		endforeach()
-	endmacro()
-endif()
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+if(${CMAKE_VERSION} VERSION_LESS 3.14)
+	include(${CMAKE_SOURCE_DIR}/cmake/backport/FetchContent.cmake)
+else()
+	include(FetchContent)
+endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -76,7 +70,6 @@ endif()
 hunter_add_package(SDL2)
 hunter_add_package(spdlog)
 hunter_add_package(glm)
-hunter_add_package(EnTT)
 find_package(OpenGL REQUIRED)
 find_package(spdlog REQUIRED)
 if(HUNTER_ENABLED)
@@ -90,7 +83,6 @@ endif()
 if (OPENBLACK_USE_SYSTEM_DEPS)
 	find_package(EnTT REQUIRED)
 else()
-	include(FetchContent)
 	FetchContent_Declare(
 		entt
 		GIT_REPOSITORY https://github.com/skypjack/entt.git
