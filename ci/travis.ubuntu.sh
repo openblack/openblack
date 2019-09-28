@@ -6,8 +6,11 @@ set -x
 uname -a
 cmake --version
 
-cmake -H. -B_build_${TOOLCHAIN} -DCMAKE_INSTALL_PREFIX=${PWD}/_install_${TOOLCHAIN} -DCMAKE_TOOLCHAIN_FILE="${PWD}/ci/toolchains/${TOOLCHAIN}.cmake" -DHUNTER_ENABLED=${HUNTER_ENABLED} -DOPENBLACK_USE_SYSTEM_DEPS=${OPENBLACK_USE_SYSTEM_DEPS} -G Ninja
-cmake --build _build_${TOOLCHAIN}
+mkdir _build_${TOOLCHAIN}
+pushd _build_${TOOLCHAIN}
+cmake .. -DCMAKE_INSTALL_PREFIX=${PWD}/../_install_${TOOLCHAIN} -DCMAKE_TOOLCHAIN_FILE="${PWD}/../ci/toolchains/${TOOLCHAIN}.cmake" -DHUNTER_ENABLED=${HUNTER_ENABLED} -DOPENBLACK_USE_SYSTEM_DEPS=${OPENBLACK_USE_SYSTEM_DEPS} -G Ninja
+cmake --build .
+popd
 
 if [ "$RUN_TESTS" = true ]; then
 	case "$TOOLCHAIN" in linux-mingw*)
