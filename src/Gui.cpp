@@ -25,6 +25,9 @@
 #include <bgfx/bgfx.h>
 #include <bgfx/embedded_shader.h>
 #include <imgui.h>
+#ifdef _WIN32
+#include <SDL2/SDL_syswm.h>
+#endif
 
 #include <Game.h>
 #include <GameWindow.h>

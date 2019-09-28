@@ -21,6 +21,7 @@
 #include <Graphics/FrameBuffer.h>
 
 #include <cassert>
+#include <array>
 
 using namespace openblack::graphics;
 
