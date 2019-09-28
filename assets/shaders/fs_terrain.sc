@@ -4,7 +4,7 @@ $input v_texcoord0, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_l
 
 SAMPLER2DARRAY(s_materials, 0);
 SAMPLER2D(s_bump, 1);
-SAMPLER2D(s_smallBump, 0);
+SAMPLER2D(s_smallBump, 2);
 
 uniform vec4 u_timeOfDay;
 uniform vec4 u_bumpmapStrength;
