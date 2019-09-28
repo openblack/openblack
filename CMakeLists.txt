@@ -1,4 +1,16 @@
-cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
+
+if(${CMAKE_VERSION} VERSION_LESS 3.14)
+	macro(FetchContent_MakeAvailable)
+		foreach(NAME ${ARGN})
+			FetchContent_GetProperties(${NAME})
+			if(NOT ${NAME}_POPULATED)
+				FetchContent_Populate(${NAME})
+				add_subdirectory(${${NAME}_SOURCE_DIR} ${${NAME}_BINARY_DIR})
+			endif()
+		endforeach()
+	endmacro()
+endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
