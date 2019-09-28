@@ -138,11 +138,6 @@ if(OPENGL_INCLUDE_DIR)
 	include_directories("${OPENGL_INCLUDE_DIR}")
 endif()
 
-if (MSVC)
-  # turn off debug iterators
-  add_definitions(-D_ITERATOR_DEBUG_LEVEL=0)
-endif()
-
 include(cmake/Shaders.cmake)
 add_subdirectory(components/ScriptLibrary)
 add_subdirectory(external/imgui)
