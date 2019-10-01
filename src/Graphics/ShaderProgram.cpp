@@ -53,7 +53,7 @@ ShaderProgram::ShaderProgram(const std::string& name, const std::string& vertexS
 			suffix = ".essl";
 			break;
 		case bgfx::RendererType::Vulkan:
-			suffix = ".spirv";
+			suffix = ".spv";
 			break;
 		default:
 			throw std::runtime_error("Could not associate shader for renderer type.");
