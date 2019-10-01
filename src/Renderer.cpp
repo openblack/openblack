@@ -186,7 +186,9 @@ Renderer::Renderer(const GameWindow& window, const std::string binaryPath)
 
 Renderer::~Renderer()
 {
-	 bgfx::shutdown();
+	_shaderManager.reset();
+	_debugCross.reset();
+	bgfx::shutdown();
 }
 
 void Renderer::LoadShaders(const std::string &binaryPath)

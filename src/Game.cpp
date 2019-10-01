@@ -96,6 +96,14 @@ Game::Game(int argc, char** argv)
 
 Game::~Game()
 {
+	_water.reset();
+	_sky.reset();
+	_testModel.reset();
+	_meshPack.reset();
+	_landIsland.reset();
+	_gui.reset();
+	_renderer.reset();
+	_window.reset();
 	SDL_Quit(); // todo: move to GameWindow
 }
 
