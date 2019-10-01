@@ -88,7 +88,6 @@ class Gui
 	Gui(ImGuiContext *imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer> &&meshViewer);
 	bool InitSdl2(SDL_Window* window);
 	void NewFrameSdl2(SDL_Window* window);
-	void NewFrameBgfx();
 	bool CreateFontsTextureBgfx();
 	bool CreateDeviceObjectsBgfx();
 	void RenderDrawDataBgfx(ImDrawData* drawData);
@@ -108,7 +107,6 @@ class Gui
 	bgfx::ProgramHandle _program;
 	bgfx::ProgramHandle _imageProgram;
 	bgfx::TextureHandle _texture;
-	bgfx::TextureHandle _fontTexture;
 	bgfx::UniformHandle _s_tex;
 	bgfx::UniformHandle _u_imageLodEnabled;
 	SDL_Window* _window;

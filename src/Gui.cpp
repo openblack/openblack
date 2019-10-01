@@ -108,7 +108,6 @@ Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer> &
 	, _program(BGFX_INVALID_HANDLE)
 	, _imageProgram(BGFX_INVALID_HANDLE)
 	, _texture(BGFX_INVALID_HANDLE)
-	, _fontTexture(BGFX_INVALID_HANDLE)
 	, _s_tex(BGFX_INVALID_HANDLE)
 	, _u_imageLodEnabled(BGFX_INVALID_HANDLE)
 	, _mousePressed { false, false, false }
@@ -119,18 +118,23 @@ Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer> &
 	, _viewId(viewId)
 	, _meshViewer(std::move(meshViewer))
 {
+	CreateDeviceObjectsBgfx();
 }
 
 Gui::~Gui()
 {
 	ImGui::DestroyContext(_imgui);
 
-	bgfx::destroy(_s_tex);
-	bgfx::destroy(_texture);
-
-	bgfx::destroy(_u_imageLodEnabled);
-	bgfx::destroy(_imageProgram);
-	bgfx::destroy(_program);
+	if (bgfx::isValid(_u_imageLodEnabled))
+		bgfx::destroy(_u_imageLodEnabled);
+	if (bgfx::isValid(_s_tex))
+		bgfx::destroy(_s_tex);
+	if (bgfx::isValid(_texture))
+		bgfx::destroy(_texture);
+	if (bgfx::isValid(_imageProgram))
+		bgfx::destroy(_imageProgram);
+	if (bgfx::isValid(_program))
+		bgfx::destroy(_program);
 }
 
 bool Gui::ProcessEventSdl2(const SDL_Event& event)
@@ -429,25 +433,16 @@ void Gui::NewFrameSdl2(SDL_Window* window)
 	UpdateGamepads();
 }
 
-void Gui::NewFrameBgfx()
-{
-	if (!isValid(_fontTexture))
-		CreateDeviceObjectsBgfx();
-}
-
 void Gui::NewFrame(GameWindow& window)
 {
 	ImGui::SetCurrentContext(_imgui);
 
-	NewFrameBgfx();
 	NewFrameSdl2(window.GetHandle());
 	ImGui::NewFrame();
 }
 
 void Gui::Loop(Game& game)
 {
-	ImGui::SetCurrentContext(_imgui);
-
 	_meshViewer->DrawScene();
 
 	NewFrame(game.GetWindow());
