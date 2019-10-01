@@ -91,13 +91,14 @@ ShaderProgram::ShaderProgram(const std::string& name, const std::string& vertexS
 	}
 	bgfx::setName(vs_shader, (name + "_fs").c_str());
 
-	_program = bgfx::createProgram(vs_shader, fs_shader);
+	_program = bgfx::createProgram(vs_shader, fs_shader, true);
 	bgfx::frame();
 }
 
 ShaderProgram::~ShaderProgram()
 {
-	bgfx::destroy(_program);
+	if (bgfx::isValid(_program))
+		bgfx::destroy(_program);
 }
 
 void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture)
