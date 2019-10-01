@@ -22,7 +22,6 @@
 
 #include <cstdint>
 #include <unordered_map>
-#include "Entities/Entities.h"
 
 enum class VillageEthnicities
 {
@@ -89,7 +88,7 @@ enum class VillagerSex
 
 struct Villager
 {
-	openblack::VillagerId villagerId;
+	int villagerId;
 	uint32_t health;
 	uint32_t age;
 	uint32_t hunger;
