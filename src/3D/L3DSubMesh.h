@@ -20,15 +20,20 @@
 
 #pragma once
 
-#include <Graphics/Mesh.h>
-#include <Graphics/VertexBuffer.h>
-#include <Graphics/IndexBuffer.h>
-#include <Graphics/ShaderProgram.h>
+#include <cstdint>
+#include <memory>
 
 namespace openblack
 {
 class IStream;
 class L3DMesh;
+
+namespace graphics
+{
+class VertexBuffer;
+class IndexBuffer;
+class ShaderProgram;
+}
 
 enum class L3DSubMeshFlags : uint32_t
 {
@@ -49,11 +54,12 @@ class L3DSubMesh
 	~L3DSubMesh();
 
 	void Load(IStream& stream);
-	void Draw(uint8_t viewId, const L3DMesh &mesh, ShaderProgram &program, uint64_t state, uint32_t rgba = 0) const;
+	void Draw(uint8_t viewId, const L3DMesh& mesh, ShaderProgram& program, uint64_t state, uint32_t rgba = 0) const;
   private:
 	L3DSubMeshFlags _flags;
 
-	std::unique_ptr<Mesh> _mesh;
+	std::unique_ptr<VertexBuffer> _vertexBuffer;
+	std::unique_ptr<IndexBuffer> _indexBuffer;
 	std::vector<Primitive> _primitives;
 };
 } // namespace openblack

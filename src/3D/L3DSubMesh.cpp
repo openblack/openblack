@@ -18,12 +18,14 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/L3DSubMesh.h>
-
 #include <3D/L3DMesh.h>
+#include <3D/L3DSubMesh.h>
+#include <3D/MeshPack.h>
 #include <Common/IStream.h>
 #include <Game.h>
-#include <3D/MeshPack.h>
+#include <Graphics/IndexBuffer.h>
+#include <Graphics/ShaderProgram.h>
+#include <Graphics/VertexBuffer.h>
 
 namespace openblack
 {
@@ -129,10 +131,8 @@ void L3DSubMesh::Load(IStream& stream)
 
 	// build our buffers
 	// TODO(bwrsandman): Get a unique name for this submesh to add to Vertex and Index Buffers. Will be useful for debugging.
-	auto vertexBuffer = new VertexBuffer("", reinterpret_cast<const void *>(vertices.data()), vertices.size(), decl);
-	auto indexBuffer  = new IndexBuffer("", indices.data(), indices.size(), IndexBuffer::Type::Uint16);
-	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, Mesh::Topology::TriangleList);
-
+	_vertexBuffer = std::make_unique<VertexBuffer>("", reinterpret_cast<const void*>(vertices.data()), vertices.size(), decl);
+	_indexBuffer  = std::make_unique<IndexBuffer>("", indices.data(), indices.size(), IndexBuffer::Type::Uint16);
 
 	// uint32_t lod = (header.flags & 0xE0000000) >> 30;
 
@@ -145,14 +145,21 @@ void L3DSubMesh::Load(IStream& stream)
 	//spdlog::debug("# bones: {} @ {}", header.numBones, header.bonesOffset);
 }
 
-void L3DSubMesh::Draw(uint8_t viewId, const L3DMesh &mesh, ShaderProgram &program, uint64_t state, uint32_t rgba) const
+void L3DSubMesh::Draw(uint8_t viewId, const L3DMesh& mesh, ShaderProgram& program, uint64_t state, uint32_t rgba) const
 {
-	if (!_mesh)
+	if (!_vertexBuffer || !_indexBuffer)
 		return;
 
+	bgfx::setState(state, rgba);
+
+	_vertexBuffer->Bind();
+
 	auto const& skins = mesh.GetSkins();
-	for (auto const& prim : _primitives)
+
+	for (auto it = _primitives.begin(); it != _primitives.end(); ++it)
 	{
+		const Primitive& prim = *it;
+
 		if (prim.skinID != 0xFFFFFFFF)
 		{
 			const Texture2D* texture = nullptr;
@@ -164,7 +171,9 @@ void L3DSubMesh::Draw(uint8_t viewId, const L3DMesh &mesh, ShaderProgram &progra
 			program.SetTextureSampler("s_diffuse", 0, *texture);
 		}
 
-		_mesh->Draw(viewId, program, prim.indicesCount, prim.indicesOffset, state, rgba);
+		_indexBuffer->Bind(prim.indicesCount, prim.indicesOffset);
+
+		bgfx::submit(viewId, program.GetRawHandle(), 0, std::next(it) != _primitives.end());
 	}
 }
 
