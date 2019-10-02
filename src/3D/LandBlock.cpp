@@ -203,6 +203,7 @@ void LandBlock::Draw(uint8_t viewId, ShaderProgram &program, bool cullBack)
 		| BGFX_STATE_WRITE_MASK
 		| BGFX_STATE_DEPTH_TEST_LESS
 		| (cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW)
+		| BGFX_STATE_BLEND_ALPHA
 		| BGFX_STATE_MSAA
 	;
 
