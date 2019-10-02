@@ -37,7 +37,8 @@ struct L3DVertex
 	glm::vec3 norm;
 };
 
-L3DSubMesh::L3DSubMesh()
+L3DSubMesh::L3DSubMesh(L3DMesh& mesh):
+    _l3dMesh(mesh)
 {
 }
 
@@ -130,9 +131,8 @@ void L3DSubMesh::Load(IStream& stream)
 	decl.emplace_back(VertexAttrib::Attribute::Normal, 3, VertexAttrib::Type::Float);
 
 	// build our buffers
-	// TODO(bwrsandman): Get a unique name for this submesh to add to Vertex and Index Buffers. Will be useful for debugging.
-	_vertexBuffer = std::make_unique<VertexBuffer>("", reinterpret_cast<const void*>(vertices.data()), vertices.size(), decl);
-	_indexBuffer  = std::make_unique<IndexBuffer>("", indices.data(), indices.size(), IndexBuffer::Type::Uint16);
+	_vertexBuffer = std::make_unique<VertexBuffer>(_l3dMesh.GetDebugName(), reinterpret_cast<const void*>(vertices.data()), vertices.size(), decl);
+	_indexBuffer  = std::make_unique<IndexBuffer>(_l3dMesh.GetDebugName(), indices.data(), indices.size(), IndexBuffer::Type::Uint16);
 
 	// uint32_t lod = (header.flags & 0xE0000000) >> 30;
 

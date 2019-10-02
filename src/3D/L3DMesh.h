@@ -79,7 +79,7 @@ inline L3DMeshFlags operator&(L3DMeshFlags a, L3DMeshFlags b)
 class L3DMesh
 {
   public:
-	L3DMesh()  = default;
+	L3DMesh(const std::string& debugName = "");
 	~L3DMesh() = default;
 
 	void LoadFromFile(const std::string& fileName);
@@ -91,10 +91,13 @@ class L3DMesh
 
   private:
 	L3DMeshFlags _flags;
+	std::string _debugName;
 
 	std::unordered_map<SkinId, std::unique_ptr<Texture2D>> _skins;
 	std::vector<std::unique_ptr<L3DSubMesh>> _subMeshes;
   public:
+	const std::string& GetDebugName() const { return _debugName; }
+
 	bool IsBoned() const { return static_cast<bool>(_flags & L3DMeshFlags::HasBones); }
 	bool IsPacked() const { return static_cast<bool>(_flags & L3DMeshFlags::Packed); }
 	bool IsNoDraw() const { return static_cast<bool>(_flags & L3DMeshFlags::NoDraw); }
