@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include <AllMeshes.h>
 #include <spdlog/spdlog.h>
 #include <3D/L3DMesh.h>
 #include <Common/IStream.h>
@@ -232,7 +233,7 @@ void MeshPack::loadMeshes(IStream& stream)
 		MemoryStream modelStream(data.data(), data.size());
 
 		//spdlog::debug("L3DMesh {}", i);
-		std::unique_ptr<L3DMesh> mesh = std::make_unique<L3DMesh>();
+		std::unique_ptr<L3DMesh> mesh = std::make_unique<L3DMesh>(MeshNames[i].data());
 		mesh->Load(modelStream);
 
 		_meshes[i] = std::move(mesh);

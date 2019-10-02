@@ -103,6 +103,11 @@ struct L3DModel_Vertex
 	uint32_t bone;
 };
 
+L3DMesh::L3DMesh(const std::string& debugName) :
+	_debugName(debugName) {
+
+}
+
 void L3DMesh::LoadFromFile(const std::string& fileName)
 {
 	spdlog::debug("Loading L3DMesh from file: {}", fileName);
@@ -193,7 +198,7 @@ void L3DMesh::Load(IStream& stream)
 		_subMeshes.resize(offsets.size());
 		for (size_t i = 0; i < offsets.size(); i++) {
 			stream.Seek(offsets[i], SeekMode::Begin);
-			_subMeshes[i] = std::make_unique<L3DSubMesh>();
+			_subMeshes[i] = std::make_unique<L3DSubMesh>(*this);
 			_subMeshes[i]->Load(stream);
 		}
 	}

@@ -50,12 +50,14 @@ class L3DSubMesh
 	};
 
   public:
-	L3DSubMesh();
+	L3DSubMesh(L3DMesh& mesh);
 	~L3DSubMesh();
 
 	void Load(IStream& stream);
 	void Draw(uint8_t viewId, const L3DMesh& mesh, ShaderProgram& program, uint64_t state, uint32_t rgba = 0) const;
   private:
+	L3DMesh& _l3dMesh;
+
 	L3DSubMeshFlags _flags;
 
 	std::unique_ptr<VertexBuffer> _vertexBuffer;
