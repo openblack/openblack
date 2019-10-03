@@ -92,6 +92,39 @@ VertexBuffer::VertexBuffer(std::string name, const void *vertices, size_t vertex
 	bgfx::frame();
 }
 
+VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl decl):
+    _name(std::move(name)), _vertexDecl(std::move(decl)), _strideBytes(0), _handle(BGFX_INVALID_HANDLE)
+{
+	// assert(vertices != nullptr);
+	assert(vertexCount > 0);
+	assert(!_vertexDecl.empty());
+
+	// Extract gl types from decl
+	_vertexDeclOffsets.reserve(_vertexDecl.size());
+	static const std::array<std::array<size_t, 4>, 3> strides = {
+		std::array<size_t, 4> { 4, 4, 4, 4 },   // Uint8
+		std::array<size_t, 4> { 4, 4, 8, 8 },   // Int16
+		std::array<size_t, 4> { 4, 8, 12, 16 }, // Float
+	};
+
+	bgfx::VertexLayout layout;
+	layout.begin();
+	for (auto& d : _vertexDecl)
+	{
+		_vertexDeclOffsets.push_back(reinterpret_cast<const void*>(_strideBytes));
+		_strideBytes += strides[static_cast<size_t>(d._type)][d._num - 1];
+		layout.add(attributes[static_cast<size_t>(d._attribute)], d._num, types[static_cast<size_t>(d._type)], d._normalized, d._asInt);
+	}
+	layout.end();
+	assert(layout.m_stride == _strideBytes);
+
+	// auto mem      = bgfx::makeRef(vertices, vertexCount * layout.m_stride);
+	_handle       = bgfx::createVertexBuffer(mem, layout);
+	_layoutHandle = bgfx::createVertexLayout(layout);
+	bgfx::setName(_handle, _name.c_str());
+	bgfx::frame();
+}
+
 VertexBuffer::~VertexBuffer()
 {
 	if (bgfx::isValid(_handle))
