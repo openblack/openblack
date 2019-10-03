@@ -91,7 +91,7 @@ else()
 	)
 	FetchContent_Declare(
 		bgfx
-		GIT_REPOSITORY https://github.com/bwrsandman/bgfx.cmake.git
+		GIT_REPOSITORY https://github.com/openblack/bgfx.cmake.git
 		GIT_TAG        materials
 		#GIT_REPOSITORY https://github.com/JoshuaBrookover/bgfx.cmake.git
 		#GIT_TAG        master
