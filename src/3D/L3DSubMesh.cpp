@@ -26,6 +26,7 @@
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/ShaderProgram.h>
 #include <Graphics/VertexBuffer.h>
+#include <spdlog/spdlog.h>
 
 namespace openblack
 {
@@ -46,6 +47,23 @@ L3DSubMesh::~L3DSubMesh()
 {
 }
 
+struct L3DPrimitive
+{
+	uint32_t unknown_1;
+	uint32_t unknown_2;
+	uint32_t skinID;
+	uint32_t unknown_3;
+
+	uint32_t numVerticies;
+	uint32_t verticiesOffset;
+	uint32_t numTriangles;
+	uint32_t trianglesOffset;
+	uint32_t boneVertLUTSize;
+	uint32_t boneVertLUTOffset;
+	uint32_t numVertexBlends;
+	uint32_t vertexBlendsOffset;
+};
+
 void L3DSubMesh::Load(IStream& stream)
 {
 	// IsPhysics: 18
@@ -64,64 +82,49 @@ void L3DSubMesh::Load(IStream& stream)
 
 	stream.Read(&header);
 
-	// load up some buffers, todo: preallocate
-	std::vector<L3DVertex> vertices;
-	std::vector<uint16_t> indices;
-
 	// load primitives first
 	std::vector<uint32_t> offsets(header.numPrimitives);
 	stream.Seek(header.primitivesOffset, SeekMode::Begin);
 	stream.Read(offsets.data(), offsets.size() * sizeof(uint32_t));
 
-	int primVertOffset  = 0;
-	int primIndexOffset = 0;
+	std::vector<L3DPrimitive> l3dPrims(header.numPrimitives);
+
+	std::size_t nVertices = 0, nIndices = 0;
 	for (uint32_t i = 0; i < header.numPrimitives; i++)
 	{
-		struct
-		{
-			uint32_t unknown_1;
-			uint32_t unknown_2;
-			int32_t skinID;
-			uint32_t unknown_3;
-
-			uint32_t numVerticies;
-			uint32_t verticiesOffset;
-			uint32_t numTriangles;
-			uint32_t trianglesOffset;
-			uint32_t boneVertLUTSize;
-			uint32_t boneVertLUTOffset;
-			uint32_t numVertexBlends;
-			uint32_t vertexBlendsOffset;
-		} primitive;
-
 		stream.Seek(offsets[i], SeekMode::Begin);
-		stream.Read(&primitive);
+		stream.Read(&l3dPrims[i]);
 
-		// todo: THIS IS SLOW
-		stream.Seek(primitive.verticiesOffset, SeekMode::Begin);
-		for (uint32_t j = 0; j < primitive.numVerticies; j++)
-		{
-			L3DVertex vertex;
-			stream.Read(&vertex);
-			vertices.push_back(vertex);
-		}
+		nVertices += l3dPrims[i].numVerticies;
+		nIndices += l3dPrims[i].numTriangles * 3;
+	}
 
-		stream.Seek(primitive.trianglesOffset, SeekMode::Begin);
-		for (uint32_t j = 0; j < primitive.numTriangles * 3; j++)
-		{
-			uint16_t index = stream.ReadValue<uint16_t>();
-			indices.push_back(index + primVertOffset);
-		}
+	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(L3DVertex) * nVertices);
+	const bgfx::Memory* indicesMem  = bgfx::alloc(sizeof(uint16_t) * nIndices);
 
-		Primitive prim;
-		prim.indicesCount  = primitive.numTriangles * 3;
-		prim.indicesOffset = primIndexOffset;
-		prim.skinID        = primitive.skinID;
+	auto vertices = (L3DVertex*)verticesMem->data;
+	auto indices  = (uint16_t*)indicesMem->data;
 
-		_primitives.push_back(prim);
+	uint32_t startIndex = 0, startVertex = 0;
+	for (const auto& prim : l3dPrims)
+	{
+		stream.Seek(prim.verticiesOffset, SeekMode::Begin);
+		for (uint32_t j = 0; j < prim.numVerticies; j++)
+			stream.Read(&vertices[startVertex + j]);
 
-		primVertOffset += primitive.numVerticies;
-		primIndexOffset += primitive.numTriangles * 3;
+		stream.Seek(prim.trianglesOffset, SeekMode::Begin);
+		for (uint32_t j = 0; j < prim.numTriangles * 3; j++)
+			indices[startIndex + j] = stream.ReadValue<uint16_t>() + startVertex;
+
+		Primitive p;
+		p.indicesCount  = prim.numTriangles * 3;
+		p.indicesOffset = startIndex;
+		p.skinID        = prim.skinID;
+
+		_primitives.emplace_back(p);
+
+		startVertex += prim.numVerticies;
+		startIndex += prim.numTriangles * 3;
 	}
 
 	VertexDecl decl;
@@ -131,8 +134,10 @@ void L3DSubMesh::Load(IStream& stream)
 	decl.emplace_back(VertexAttrib::Attribute::Normal, 3, VertexAttrib::Type::Float);
 
 	// build our buffers
-	_vertexBuffer = std::make_unique<VertexBuffer>(_l3dMesh.GetDebugName(), reinterpret_cast<const void*>(vertices.data()), vertices.size(), decl);
-	_indexBuffer  = std::make_unique<IndexBuffer>(_l3dMesh.GetDebugName(), indices.data(), indices.size(), IndexBuffer::Type::Uint16);
+	_vertexBuffer = std::make_unique<VertexBuffer>(_l3dMesh.GetDebugName(), verticesMem, decl);
+	_indexBuffer  = std::make_unique<IndexBuffer>(_l3dMesh.GetDebugName(), indicesMem, IndexBuffer::Type::Uint16);
+
+	spdlog::debug("{} with {} verts and {} indices", _l3dMesh.GetDebugName(), nVertices, nIndices);
 
 	// uint32_t lod = (header.flags & 0xE0000000) >> 30;
 
@@ -172,8 +177,37 @@ void L3DSubMesh::Draw(uint8_t viewId, const L3DMesh& mesh, ShaderProgram& progra
 		}
 
 		_indexBuffer->Bind(prim.indicesCount, prim.indicesOffset);
-
 		bgfx::submit(viewId, program.GetRawHandle(), 0, std::next(it) != _primitives.end());
+	}
+}
+
+void L3DSubMesh::Submit(uint8_t viewId, ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const
+{
+	if (!_vertexBuffer || !_indexBuffer)
+		return;
+
+	bgfx::setState(state, rgba);
+
+	_vertexBuffer->Bind();
+
+	auto const& skins = _l3dMesh.GetSkins();
+	for (auto it = _primitives.begin(); it != _primitives.end(); ++it)
+	{
+		const Primitive& prim = *it;
+
+		if (prim.skinID != 0xFFFFFFFF)
+		{
+			const Texture2D* texture = nullptr;
+			if (skins.find(prim.skinID) != skins.end())
+				texture = skins.at(prim.skinID).get();
+			else
+				texture = &Game::instance()->GetMeshPack().GetTexture(prim.skinID);
+
+			program.SetTextureSampler("s_diffuse", 0, *texture);
+		}
+
+		_indexBuffer->Bind(prim.indicesCount, prim.indicesOffset);
+		bgfx::submit(viewId, program.GetRawHandle(), 0, preserveState || std::next(it) != _primitives.end());
 	}
 }
 
