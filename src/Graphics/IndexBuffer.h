@@ -42,7 +42,8 @@ class IndexBuffer
 	IndexBuffer(const IndexBuffer& other) = delete;
 	IndexBuffer(IndexBuffer&&)            = default;
 
-	IndexBuffer(std::string name, const void *indices, size_t indicesCount, Type type);
+	IndexBuffer(std::string name, const void* indices, size_t indicesCount, Type type);
+	IndexBuffer(std::string name, const bgfx::Memory* memory, Type type);
 
 	~IndexBuffer();
 
