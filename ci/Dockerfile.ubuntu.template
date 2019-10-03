@@ -6,6 +6,7 @@ RUN apt-get update && \
   apt-get install -y --no-install-recommends \
   @BUILD_PACKAGES@ \
   build-essential \
+  git \
   cmake \
   libglew-dev \
   libsdl2-dev \
