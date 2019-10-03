@@ -181,7 +181,7 @@ void L3DSubMesh::Draw(uint8_t viewId, const L3DMesh& mesh, ShaderProgram& progra
 	}
 }
 
-void L3DSubMesh::Submit(uint8_t viewId, ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const
+void L3DSubMesh::Submit(uint8_t viewId, ShaderProgram& program, uint64_t state, uint32_t rgba, bool preserveState) const
 {
 	if (!_vertexBuffer || !_indexBuffer)
 		return;
