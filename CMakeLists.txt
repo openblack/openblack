@@ -2,12 +2,6 @@ cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-if(${CMAKE_VERSION} VERSION_LESS 3.14)
-	include(${CMAKE_SOURCE_DIR}/cmake/backport/FetchContent.cmake)
-else()
-	include(FetchContent)
-endif()
-
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 project(openblack)
