@@ -1,9 +1,4 @@
-if(OPENBLACK_USE_SYSTEM_DEPS)
-	find_package(bgfx REQUIRED COMPONENTS shaderc)
-else()
-	add_executable(bgfx::shaderc ALIAS shaderc)
-	set(BGFX_SHADER_INCLUDE_PATH ${bgfx_SOURCE_DIR}/bgfx/src)
-endif()
+find_package(bgfx REQUIRED COMPONENTS shaderc)
 
 # shaderc_parse(
 #	FILE filename
