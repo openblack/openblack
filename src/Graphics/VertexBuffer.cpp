@@ -96,7 +96,6 @@ VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl
     _name(std::move(name)), _vertexDecl(std::move(decl)), _strideBytes(0), _handle(BGFX_INVALID_HANDLE)
 {
 	// assert(vertices != nullptr);
-	assert(vertexCount > 0);
 	assert(!_vertexDecl.empty());
 
 	// Extract gl types from decl
