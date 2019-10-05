@@ -54,36 +54,11 @@ if(POLICY CMP0072)
 endif()
 
 # Dependencies
-
-find_package(OpenGL REQUIRED)
-find_package(spdlog REQUIRED)
-find_package(SDL2 REQUIRED)
-find_package(GLM REQUIRED)
-find_package(EnTT REQUIRED)
+find_package(SDL2 CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
+find_package(EnTT CONFIG REQUIRED)
 find_package(bgfx REQUIRED COMPONENTS bgfx)
-
-# unify includes as targets
-if(NOT TARGET SDL2::SDL2)
-	add_library(SDL2::SDL2 IMPORTED INTERFACE)
-	target_include_directories(SDL2::SDL2 INTERFACE ${SDL2_INCLUDE_DIR})
-	set_property(TARGET SDL2::SDL2 PROPERTY INTERFACE_LINK_LIBRARIES ${SDL2_LIBRARIES})
-endif()
-if(NOT TARGET SDL2::SDL2main)
-	add_library(SDL2::SDL2main IMPORTED INTERFACE)
-	target_link_libraries(SDL2::SDL2main INTERFACE SDL2::Main)
-endif()
-if(NOT TARGET glm::glm)
-	add_library(glm::glm IMPORTED INTERFACE)
-	if(CMAKE_VERSION VERSION_LESS 3.11)
-		# for 3.10 support we need to do this
-		set_property(TARGET glm::glm PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${GLM_INCLUDE_DIRS}")
-		set_property(TARGET glm::glm PROPERTY INTERFACE_LINK_LIBRARIES ${GLM_LIBRARY})
-	else()
-		# starting with cmake 3.11 we can do this
-		target_include_directories(glm::glm INTERFACE ${GLM_INCLUDE_DIRS})
-		target_link_libraries(glm::glm INTERFACE ${GLM_LIBRARY})
-	endif()
-endif()
 
 # Include git hash in source
 include(cmake/GetGitRevisionDescription.cmake)

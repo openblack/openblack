@@ -105,7 +105,7 @@ target_link_libraries(openblack PRIVATE
 	ScriptLibrary
 	SDL2::SDL2 SDL2::SDL2main
 	${OPENGL_LIBRARIES}
-	glm::glm
+	glm
 	spdlog::spdlog
 	EnTT
 	bgfx::bgfx
