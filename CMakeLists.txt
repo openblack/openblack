@@ -1,11 +1,27 @@
+# Dependencies:
+# - SDL2 (vcpkg or system)
+# - spdlog (ExternalProject_Add or vcpkg or system)
+# - glm (ExternalProject_Add or vcpkg or system)
+# - EnTT (ExternalProject_Add or vcpkg)
+# - bgfx (heavy & complicated)
+
+# General Find Order:
+# 1. Check for definitions
+# 2. Check for vcpkg
+# 3. Check for system
+# 4. ExternalProject_Add
+
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-  set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-      CACHE STRING "")
-endif()
+#if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+#  message(STATUS "Using VCPKG_ROOT $ENV{VCPKG_ROOT}")
+#  set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+#      CACHE STRING "")
+#endif()
+
+message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}.")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -31,6 +47,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 # Project Options
+option(OPENBLACK_DOWNLOAD_DEPENDENCIES "download some dependencies" ON)
+
 if (WIN32)
     option(OPENBLACK_USE_DEBUG_CONSOLE "whether a debug console should be enabled for debug builds, if false debug output is redirected to Visual Studio output" ON)
 endif()
@@ -55,35 +73,19 @@ endif()
 
 # Dependencies
 
-find_package(OpenGL REQUIRED)
-find_package(spdlog REQUIRED)
-find_package(SDL2 REQUIRED)
-find_package(GLM REQUIRED)
-find_package(EnTT REQUIRED)
-find_package(bgfx REQUIRED COMPONENTS bgfx)
+if(VCPKG)
+  find_package(SDL2 CONFIG REQUIRED)
+  find_package(spdlog CONFIG REQUIRED)
+  find_package(glm CONFIG REQUIRED)
+  find_package(EnTT CONFIG REQUIRED)
+else()
+  find_package(SDL2 REQUIRED)
+  find_package(spdlog REQUIRED)
+  #find_package(glm REQUIRED)
+  #find_package(EnTT REQUIRED)
+endif()
 
-# unify includes as targets
-if(NOT TARGET SDL2::SDL2)
-	add_library(SDL2::SDL2 IMPORTED INTERFACE)
-	target_include_directories(SDL2::SDL2 INTERFACE ${SDL2_INCLUDE_DIR})
-	set_property(TARGET SDL2::SDL2 PROPERTY INTERFACE_LINK_LIBRARIES ${SDL2_LIBRARIES})
-endif()
-if(NOT TARGET SDL2::SDL2main)
-	add_library(SDL2::SDL2main IMPORTED INTERFACE)
-	target_link_libraries(SDL2::SDL2main INTERFACE SDL2::Main)
-endif()
-if(NOT TARGET glm::glm)
-	add_library(glm::glm IMPORTED INTERFACE)
-	if(CMAKE_VERSION VERSION_LESS 3.11)
-		# for 3.10 support we need to do this
-		set_property(TARGET glm::glm PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${GLM_INCLUDE_DIRS}")
-		set_property(TARGET glm::glm PROPERTY INTERFACE_LINK_LIBRARIES ${GLM_LIBRARY})
-	else()
-		# starting with cmake 3.11 we can do this
-		target_include_directories(glm::glm INTERFACE ${GLM_INCLUDE_DIRS})
-		target_link_libraries(glm::glm INTERFACE ${GLM_LIBRARY})
-	endif()
-endif()
+# find_package(bgfx REQUIRED)
 
 # Include git hash in source
 include(cmake/GetGitRevisionDescription.cmake)
@@ -96,7 +98,6 @@ endif()
 
 include(cmake/Shaders.cmake)
 add_subdirectory(components/ScriptLibrary)
-add_subdirectory(external/imgui)
 add_subdirectory(src)
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT openblack)

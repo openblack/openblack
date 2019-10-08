@@ -103,12 +103,12 @@ target_include_directories(openblack PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_C
 target_link_libraries(openblack PRIVATE
 	imgui
 	ScriptLibrary
-	SDL2::SDL2 SDL2::SDL2main
+	SDL2::Main
 	${OPENGL_LIBRARIES}
-	glm::glm
+	# glm
 	spdlog::spdlog
-	EnTT
-	bgfx::bgfx
+	# EnTT
+	# bgfx::bgfx
 )
 if (UNIX)
 	find_library(WAYLAND wayland-egl)
