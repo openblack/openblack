@@ -4,35 +4,24 @@
 #   BGFX_LIBRARY
 #   BGFX_FOUND
 
-# Search for the header file
+# Search for the bgfx include directory
 find_path(BGFX_INCLUDE_DIR bgfx.h
-  PATH_SUFFIXES include)
+  PATH_SUFFIXES bgfx include/bgfx include
+  PATHS ${BGFX_PATH}
+  DOC "Where the bgfx headers can be found"
+)
 
-find_path(BX_INCLUDE_DIR bx/bx.h
-  PATH_SUFFIXES include)
+find_path(BX_INCLUDE_DIR bx.h
+  PATH_SUFFIXES bx include/bx include
+  PATHS ${BGFX_PATH}
+  DOC "Where the bx headers can be found"
+)
 
-# Search for the library
-find_library(BGFX_LIBRARY NAMES bgfx
-  PATH_SUFFIXES lib)
+find_library(BGFX_LIBRARY
+  NAMES bgfx
+  PATH_SUFFIXES lib
+  PATHS ${BGFX_PATH}
+  DOC "Where the BGFX Library can be found"
+)
 
-# Set to false if something isn't found
-set(BGFX_FOUND TRUE)
-
-if(${BGFX_INCLUDE_DIR-NOTFOUND})
-	set(BGFX_FOUND FALSE)
-	message(FATAL_ERROR "bgfx.h not found.")
-endif()
-
-if(${BX_INCLUDE_DIR-NOTFOUND})
-	set(BGFX_FOUND FALSE)
-	message(FATAL_ERROR "bx/bx.h not found.")
-endif()
-
-if(${BGFX_LIBRARY-NOTFOUND})
-	set(BGFX_FOUND FALSE)
-	message(FATAL_ERROR "bgfx lib not found.")
-endif()
-
-if(${BGFX_FOUND})
-	message(STATUS "bgfx found in ${BGFX_INCLUDE_DIR}")
-endif()
+# add_library(bgfx::bgfx INTERFACE IMPORTED)
