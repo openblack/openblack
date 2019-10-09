@@ -177,7 +177,7 @@ void L3DSubMesh::Draw(uint8_t viewId, const L3DMesh& mesh, ShaderProgram& progra
 		}
 
 		_indexBuffer->Bind(prim.indicesCount, prim.indicesOffset);
-		bgfx::submit(viewId, program.GetRawHandle(), 0, std::next(it) != _primitives.end());
+		bgfx::submit(viewId, program.GetRawHandle(), 0, false/*std::next(it) != _primitives.end()*/);
 	}
 }
 
