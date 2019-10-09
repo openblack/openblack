@@ -1,20 +1,8 @@
-# Dependencies:
-# - SDL2 (vcpkg or system)
-# - spdlog (ExternalProject_Add or vcpkg or system)
-# - glm (ExternalProject_Add or vcpkg or system)
-# - EnTT (ExternalProject_Add or vcpkg)
-# - bgfx (heavy & complicated)
-
-# General Find Order:
-# 1. Check for definitions
-# 2. Check for vcpkg
-# 3. Check for system
-# 4. ExternalProject_Add
-
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+# automatically use vcpkg if VCPKG_ROOT is defined
 if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   message(STATUS "Using VCPKG_ROOT $ENV{VCPKG_ROOT}")
   set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
@@ -23,11 +11,16 @@ endif()
 
 message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}.")
 
+# https://cmake.org/cmake/help/git-stage/policy/CMP0072.html
+if(POLICY CMP0072)
+  cmake_policy(SET CMP0072 NEW)
+endif()
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 project(openblack)
 
-# Set C++17 Standard
+# Set C++17 Standard or user defined
 # https://cmake.org/cmake/help/latest/prop_tgt/CXX_STANDARD.html
 string(COMPARE EQUAL "${CMAKE_CXX_STANDARD}" "" no_cmake_cxx_standard_set)
 if(no_cmake_cxx_standard_set)
@@ -45,9 +38,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 # disable in-source builds
 # set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
-
-# Project Options
-option(OPENBLACK_DOWNLOAD_DEPENDENCIES "download some dependencies" ON)
 
 if (WIN32)
     option(OPENBLACK_USE_DEBUG_CONSOLE "whether a debug console should be enabled for debug builds, if false debug output is redirected to Visual Studio output" ON)
@@ -67,18 +57,14 @@ else()
 	message("compiler has no CXX header <filesystem>, need to use <experimental/filesystem>")
 endif()
 
-if(POLICY CMP0072)
-  cmake_policy(SET CMP0072 NEW)
-endif()
-
 # Dependencies: prefer config (vcpkg), but fallback on modules if required
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
 
 find_package(SDL2 REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(glm REQUIRED)
-find_package(EnTT REQUIRED)
-# find_package(bgfx REQUIRED)
+find_package(EnTT CONFIG REQUIRED) # only avaliable as a config
+find_package(bgfx REQUIRED)
 
 # Include git hash in source
 include(cmake/GetGitRevisionDescription.cmake)
@@ -88,6 +74,8 @@ message(STATUS "Building ${CMAKE_PROJECT_NAME} GIT SHA1: ${GIT_SHA1}")
 if(OPENGL_INCLUDE_DIR)
 	include_directories("${OPENGL_INCLUDE_DIR}")
 endif()
+
+add_subdirectory(external/imgui)
 
 include(cmake/Shaders.cmake)
 add_subdirectory(components/ScriptLibrary)

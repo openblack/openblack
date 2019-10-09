@@ -103,11 +103,12 @@ target_include_directories(openblack PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_C
 target_link_libraries(openblack PRIVATE
 	imgui
 	ScriptLibrary
-	SDL2::Main
+	SDL2::SDL2main
+	# SDL2::SDL2-static
 	${OPENGL_LIBRARIES}
-	# glm
+	glm
 	spdlog::spdlog
-	# EnTT
+	EnTT
 	# bgfx::bgfx
 )
 if (UNIX)
