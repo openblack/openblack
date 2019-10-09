@@ -150,21 +150,6 @@ endif ()
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT openblack)
 source_group(TREE ${CMAKE_CURRENT_LIST_DIR} FILES ${OPENBLACK_SOURCES} ${OPENBLACK_HEADERS})
 
-# copy SDL2.dll & soft_oal.dll
-if (MSVC)
-	function(windows_copy_files TARGET SOURCE_DIR DEST_DIR)
-		string(REPLACE "/" "\\\\" SOURCE_DIR ${SOURCE_DIR})
-		string(REPLACE "/" "\\\\" DEST_DIR ${DEST_DIR})
-		add_custom_command(TARGET ${TARGET} POST_BUILD
-			COMMAND if not exist ${DEST_DIR} mkdir ${DEST_DIR} 2> nul
-			COMMAND robocopy ${SOURCE_DIR} ${DEST_DIR} ${ARGN} /NJH /NJS /NDL /NFL /NC /NS /NP || cmd /c "exit /b 0"
-		)
-	endfunction()
-
-	# windows_copy_files(openblack ${SDL2_DLL_DIR} "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/" SDL2.dll)
-	# windows_copy_files(openblack ${OPENAL_DLL_DIR} "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/" soft_oal.dll)
-endif()
-
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/shaders")
 
 foreach(SHADER ${OPENBLACK_SHADERS})
