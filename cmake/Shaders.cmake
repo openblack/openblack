@@ -1,4 +1,17 @@
+# Shaders.cmake
+# provides functions to compile shaders with bgfx
+
+# mark_shaders_for_compilation(
+#   TYPE VERTEX|FRAGMENT|COMPUTE
+#   SHADERS filenames
+#   VARYING_DEF filename
+#   OUTPUT_DIR directory
+#)
+#
+
 find_package(bgfx REQUIRED COMPONENTS shaderc)
+
+get_target_property(BGFX_SHADER_INCLUDE_PATH bgfx::bgfx INTERFACE_INCLUDE_DIRECTORIES)
 
 # shaderc_parse(
 #	FILE filename
@@ -259,7 +272,7 @@ function(mark_shaders_for_compilation)
 				PROFILE ${PROFILE}
 				O "$<$<CONFIG:debug>:0>$<$<CONFIG:release>:3>$<$<CONFIG:relwithdebinfo>:3>$<$<CONFIG:minsizerel>:3>"
 				VARYINGDEF ${ARGS_VARYING_DEF}
-				INCLUDES ${BGFX_SHADER_INCLUDE_PATH}
+				INCLUDES ${BGFX_SHADER_INCLUDE_PATH}/bgfx
 				VERBOSE
 				${BIN2C}
 				WERROR
