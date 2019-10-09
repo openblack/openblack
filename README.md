@@ -23,6 +23,12 @@ You still need to have the original game assets in order to use this.
 
 Clone the code using: `git clone --recursive https://github.com/openblack/openblack.git`
 
+The simplest way to get going is to install the required dependencies using vcpkg:
+`vcpkg install sdl2 spdlog glm entt`
+
+If you don't want to use vcpkg, CMake will fallback on installed system dependencies,
+or manually specified package directories.
+
 ## Windows
 
 * Install [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/)
