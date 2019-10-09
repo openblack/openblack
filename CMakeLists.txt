@@ -11,15 +11,15 @@
 # 3. Check for system
 # 4. ExternalProject_Add
 
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-#if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-#  message(STATUS "Using VCPKG_ROOT $ENV{VCPKG_ROOT}")
-#  set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-#      CACHE STRING "")
-#endif()
+if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+  message(STATUS "Using VCPKG_ROOT $ENV{VCPKG_ROOT}")
+  set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      CACHE STRING "")
+endif()
 
 message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}.")
 
@@ -71,20 +71,13 @@ if(POLICY CMP0072)
   cmake_policy(SET CMP0072 NEW)
 endif()
 
-# Dependencies
+# Dependencies: prefer config (vcpkg), but fallback on modules if required
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
 
-if(VCPKG)
-  find_package(SDL2 CONFIG REQUIRED)
-  find_package(spdlog CONFIG REQUIRED)
-  find_package(glm CONFIG REQUIRED)
-  find_package(EnTT CONFIG REQUIRED)
-else()
-  find_package(SDL2 REQUIRED)
-  find_package(spdlog REQUIRED)
-  #find_package(glm REQUIRED)
-  #find_package(EnTT REQUIRED)
-endif()
-
+find_package(SDL2 REQUIRED)
+find_package(spdlog REQUIRED)
+find_package(glm REQUIRED)
+find_package(EnTT REQUIRED)
 # find_package(bgfx REQUIRED)
 
 # Include git hash in source
