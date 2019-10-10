@@ -16,6 +16,12 @@ if(POLICY CMP0072)
   cmake_policy(SET CMP0072 NEW)
 endif()
 
+if(${CMAKE_VERSION} VERSION_LESS 3.14)
+	include(${CMAKE_SOURCE_DIR}/cmake/backport/FetchContent.cmake)
+else()
+	include(FetchContent)
+endif()
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 project(openblack)
