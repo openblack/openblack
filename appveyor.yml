@@ -12,6 +12,8 @@ environment:
     - TOOLCHAIN: "vs-16-2019-win64-cxx17"
       GENERATOR: Ninja
 
+platform: x64
+
 cache: c:\tools\vcpkg\installed\
   
 before_build:
