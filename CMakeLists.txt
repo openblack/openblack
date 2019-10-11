@@ -1,90 +1,98 @@
-cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
+if(${CMAKE_VERSION} VERSION_LESS 3.14)
+	include(${CMAKE_SOURCE_DIR}/CMakeModules/backport/FetchContent.cmake)
+else()
+	include(FetchContent)
+endif()
 
 # automatically use vcpkg if VCPKG_ROOT is defined
 if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   message(STATUS "Using VCPKG_ROOT $ENV{VCPKG_ROOT}")
   set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-      CACHE STRING "")
+CACHE STRING "")
 endif()
-
-message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}.")
-
-# https://cmake.org/cmake/help/git-stage/policy/CMP0072.html
-if(POLICY CMP0072)
-  cmake_policy(SET CMP0072 NEW)
-endif()
-
-if(${CMAKE_VERSION} VERSION_LESS 3.14)
-	include(${CMAKE_SOURCE_DIR}/cmake/backport/FetchContent.cmake)
-else()
-	include(FetchContent)
-endif()
-
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 project(openblack)
 
-# Set C++17 Standard or user defined
-# https://cmake.org/cmake/help/latest/prop_tgt/CXX_STANDARD.html
-string(COMPARE EQUAL "${CMAKE_CXX_STANDARD}" "" no_cmake_cxx_standard_set)
-if(no_cmake_cxx_standard_set)
-  set(CMAKE_CXX_STANDARD 17)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-  set(CMAKE_CXX_EXTENSIONS OFF) # disable gnu extensions like gnu++17
-  message(STATUS "Using default C++ standard ${CMAKE_CXX_STANDARD}")
-else()
-  message(STATUS "Using user specified C++ standard ${CMAKE_CXX_STANDARD}")
-endif()
+# Configure C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# don't allow in source builds
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 # Output binaries to bin/
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
-# disable in-source builds
-# set(CMAKE_DISABLE_SOURCE_CHANGES ON)
-set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
-
-if (WIN32)
-    option(OPENBLACK_USE_DEBUG_CONSOLE "whether a debug console should be enabled for debug builds, if false debug output is redirected to Visual Studio output" ON)
-endif()
-
-# Default build type to release
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: Debug Release" FORCE)
-endif()
-
 # check compiler for various features
 include(CheckIncludeFileCXX)
 CHECK_INCLUDE_FILE_CXX(filesystem HAS_FILESYSTEM)
-if(HAS_FILESYSTEM)
-	message("compiler has CXX header <filesystem>")
+
+# Dependencies: we search for config first, then module this helps package managers.
+if(CMAKE_VERSION VERSION_GREATER 3.15 OR CMAKE_VERSION VERSION_EQUAL 3.15)
+  set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
+
+  find_package(SDL2 REQUIRED)
+  find_package(spdlog REQUIRED)
+  find_package(glm REQUIRED)
+  find_package(EnTT CONFIG REQUIRED) # only available as a config
 else()
-	message("compiler has no CXX header <filesystem>, need to use <experimental/filesystem>")
+  find_package(SDL2 CONFIG QUIET)
+  find_package(spdlog CONFIG QUIET)
+  find_package(glm CONFIG QUIET)
+  find_package(EnTT CONFIG REQUIRED) # only available as a config
+
+  if(NOT DEFINED SDL2_DIR)
+    find_package(SDL2 MODULE REQUIRED)
+  endif()
+
+  if (NOT DEFINED spdlog_DIR)
+    find_package(spdlog MODULE REQUIRED)
+  endif()
+
+  if (NOT DEFINED glm_DIR)
+    find_package(glm MODULE REQUIRED)
+  endif()
 endif()
 
-# Dependencies: prefer config (vcpkg), but fallback on modules if required
-set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
+# todo: support find_package(bgfx)
+if (NOT bgfx_FOUND)
+  FetchContent_Declare(
+    bgfx
+    GIT_REPOSITORY https://github.com/openblack/bgfx.cmake.git
+    GIT_TAG        materials
+    #GIT_REPOSITORY https://github.com/JoshuaBrookover/bgfx.cmake.git
+    #GIT_TAG        master
+  )
 
-find_package(SDL2 REQUIRED)
-find_package(spdlog REQUIRED)
-find_package(glm REQUIRED)
-find_package(EnTT CONFIG REQUIRED) # only avaliable as a config
-find_package(bgfx REQUIRED)
+  set(BGFX_BUILD_EXAMPLES OFF CACHE BOOL "Build bgfx examples.")
+  set(BGFX_INSTALL OFF CACHE BOOL "Create installation target.")
+  set(BGFX_CUSTOM_TARGETS OFF CACHE BOOL "Include convenience custom targets.")
+  set(BGFX_USE_DEBUG_SUFFIX OFF CACHE BOOL "Add 'd' suffix to debug output targets")
+
+  # declare this here so bgfx compiles in a reasonable time
+  if (MSVC)
+    add_compile_options(/MP)
+  endif()
+
+  FetchContent_MakeAvailable(bgfx)
+  add_library(bgfx::bgfx ALIAS bgfx)
+endif()
 
 # Include git hash in source
-include(cmake/GetGitRevisionDescription.cmake)
+include(CMakeModules/GetGitRevisionDescription.cmake)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 message(STATUS "Building ${CMAKE_PROJECT_NAME} GIT SHA1: ${GIT_SHA1}")
 
-if(OPENGL_INCLUDE_DIR)
-	include_directories("${OPENGL_INCLUDE_DIR}")
-endif()
-
 add_subdirectory(external/imgui)
 
-include(cmake/Shaders.cmake)
+include(CMakeModules/Shaders.cmake)
+
 add_subdirectory(components/ScriptLibrary)
 add_subdirectory(src)
 
+# Set openblack project as default startup project in Visual Studio
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT openblack)
+# set_property(GLOBAL PROPERTY USE_FOLDERS ON)
