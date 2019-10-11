@@ -126,10 +126,10 @@ if (MSVC)
 	set_target_properties(openblack PROPERTIES LINK_FLAGS_RELWITHDEBINFO "/SUBSYSTEM:CONSOLE")
 	set_target_properties(openblack PROPERTIES COMPILE_DEFINITIONS_DEBUG "_CONSOLE")
 
-	# Release builds don't use the debug console
-	set_target_properties(openblack PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
-	set_target_properties(openblack PROPERTIES COMPILE_DEFINITIONS_RELEASE "_WINDOWS")
-	set_target_properties(openblack PROPERTIES LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:WINDOWS")
+	# Release builds also have a console, for now..
+	set_target_properties(openblack PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:CONSOLE")
+	set_target_properties(openblack PROPERTIES COMPILE_DEFINITIONS_RELEASE "CONSOLE")
+	set_target_properties(openblack PROPERTIES LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:CONSOLE")
 endif ()
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT openblack)
