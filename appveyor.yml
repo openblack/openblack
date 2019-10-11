@@ -12,8 +12,7 @@ environment:
     - TOOLCHAIN: "vs-16-2019-win64-cxx17"
       GENERATOR: Ninja
 
-cache:
-  - C:\.hunter
+cache: c:\tools\vcpkg\installed\
   
 before_build:
   # Required by -Gninja
@@ -28,9 +27,18 @@ install:
   - 7z x ninja.zip -oC:\projects\deps\ninja > nul
   - set PATH=C:\projects\deps\ninja;%PATH%
   - ninja --version
+  - cd C:\Tools\vcpkg
+  - git pull
+  - .\bootstrap-vcpkg.bat
+  - cd %APPVEYOR_BUILD_FOLDER%
+  - vcpkg install
+            sdl2:%PLATFORM%-windows
+            spdlog:%PLATFORM%-windows
+            entt:%PLATFORM%-windows
+            glm:%PLATFORM%-windows
 
 build_script:
-  - cmd: cmake -H. -B_build_%TOOLCHAIN%_Debug -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX=%cd%\_install_%TOOLCHAIN%_DEBUG -DCMAKE_TOOLCHAIN_FILE="%cd%\ci\toolchains\%TOOLCHAIN%.cmake" -DHUNTER_ENABLED=YES
+  - cmd: cmake -H. -B_build_%TOOLCHAIN%_Debug -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX=%cd%\_install_%TOOLCHAIN%_DEBUG -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
   - cmd: cmake --build _build_%TOOLCHAIN%_Debug --config Debug
   #- cmd: cmake -H. -B_build_%TOOLCHAIN%_Release -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX=%cd%\_install_%TOOLCHAIN%_Release -DCMAKE_TOOLCHAIN_FILE="%cd%\toolchains\%TOOLCHAIN%.cmake" -DHUNTER_ENABLED=YES
   #- cmd: cmake --build _build_%TOOLCHAIN%_Release --config Release
