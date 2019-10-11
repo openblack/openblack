@@ -46,6 +46,8 @@ list(APPEND OPENBLACK_SHADERS ${OPENBLACK_FRAGMENT_SHADERS})
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_VARYING_DEF_FILE})
 
 if (MSVC)
+	set(CMAKE_CONFIGURATION_TYPES Debug Release CACHE STRING "" FORCE)
+
 	# Suppress WinMain(), provided by SDL
 	add_definitions(-DSDL_MAIN_HANDLED)
 	# Get rid of useless crud from windows.h
