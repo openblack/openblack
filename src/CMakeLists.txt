@@ -26,16 +26,17 @@ mark_shaders_for_compilation(
 file(GLOB OPENBLACK_VERTEX_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/vs_*.sc")
 file(GLOB OPENBLACK_FRAGMENT_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/fs_*.sc")
 file(GLOB OPENBLACK_VARYING_DEF_FILE "${CMAKE_SOURCE_DIR}/assets/shaders/varying.def.sc")
+
 mark_shaders_for_compilation(
 	TYPE VERTEX
 	SHADERS ${OPENBLACK_VERTEX_SHADERS}
 	VARYING_DEF ${OPENBLACK_VARYING_DEF_FILE}
-	OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/shaders)
+	OUTPUT_DIR $<TARGET_FILE_DIR:openblack>/shaders)
 mark_shaders_for_compilation(
 	TYPE FRAGMENT
 	SHADERS ${OPENBLACK_FRAGMENT_SHADERS}
 	VARYING_DEF ${OPENBLACK_VARYING_DEF_FILE}
-	OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/shaders)
+	OUTPUT_DIR $<TARGET_FILE_DIR:openblack>/shaders)
 
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_IMGUI_VS_SHADERS})
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_IMGUI_FS_SHADERS})
@@ -150,15 +151,9 @@ endif ()
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT openblack)
 source_group(TREE ${CMAKE_CURRENT_LIST_DIR} FILES ${OPENBLACK_SOURCES} ${OPENBLACK_HEADERS})
 
-file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/shaders")
 
 foreach(SHADER ${OPENBLACK_SHADERS})
 	source_group("Shaders" FILES "${SHADER}")
-	if(WIN32)
-		add_custom_command(TARGET openblack PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SHADER} "${CMAKE_BINARY_DIR}/bin/shaders/")
-	elseif(UNIX)
-		file(COPY ${SHADER} DESTINATION ${CMAKE_BINARY_DIR}/bin/shaders)
-	endif(WIN32)
 endforeach()
 
 # Installation configuration

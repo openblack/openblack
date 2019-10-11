@@ -9,9 +9,13 @@
 #)
 #
 
-find_package(bgfx REQUIRED COMPONENTS shaderc)
+# find_package(bgfx REQUIRED COMPONENTS shaderc)
 
-get_target_property(BGFX_SHADER_INCLUDE_PATH bgfx::bgfx INTERFACE_INCLUDE_DIRECTORIES)
+# get_target_property(BGFX_INCLUDE_PATH bgfx::bgfx INTERFACE_INCLUDE_DIRECTORIES)
+# set(BGFX_SHADER_INCLUDE_PATH ${BGFX_INCLUDE_PATH}/bgfx)
+
+add_executable(bgfx::shaderc ALIAS shaderc)
+set(BGFX_SHADER_INCLUDE_PATH ${bgfx_SOURCE_DIR}/bgfx/src)
 
 # shaderc_parse(
 #	FILE filename
@@ -272,12 +276,11 @@ function(mark_shaders_for_compilation)
 				PROFILE ${PROFILE}
 				O "$<$<CONFIG:debug>:0>$<$<CONFIG:release>:3>$<$<CONFIG:relwithdebinfo>:3>$<$<CONFIG:minsizerel>:3>"
 				VARYINGDEF ${ARGS_VARYING_DEF}
-				INCLUDES ${BGFX_SHADER_INCLUDE_PATH}/bgfx
-				VERBOSE
+				INCLUDES ${BGFX_SHADER_INCLUDE_PATH}
 				${BIN2C}
 				WERROR
 			)
-			list(APPEND OUTPUTS ${OUTPUT})
+			list(APPEND OUTPUTS ${SHADER_FILE_BASENAME}.${PROFILE_EXT})
 			list(APPEND COMMANDS COMMAND bgfx::shaderc ${CLI})
 		endforeach()
 
