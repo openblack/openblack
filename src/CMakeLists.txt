@@ -45,27 +45,37 @@ list(APPEND OPENBLACK_SHADERS ${OPENBLACK_VERTEX_SHADERS})
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_FRAGMENT_SHADERS})
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_VARYING_DEF_FILE})
 
-if (WIN32)
+if (MSVC)
 	# Suppress WinMain(), provided by SDL
 	add_definitions(-DSDL_MAIN_HANDLED)
 	# Get rid of useless crud from windows.h
 	add_definitions(-DNOMINMAX -DWIN32_LEAN_AND_MEAN)
 	# disable CRT warnings on windows cause they're annoying as shit and we use C functions everywhere
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+	
+	# /W4                 - Level 4 warnings
+	# /MP                 - Multi-threaded compilation
+	# /permissive-        - Enables stricter C++ standards conformance checks
+	add_compile_options(
+		/W4
+		/MP
+		/permissive-
+	)
 
-	if (MSVC)
-		# build on all cores
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /nologo")
-
-		# fast FP
-		add_compile_options(/fp:fast)
-
-		set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /SAFESEH:NO")
-		set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "${CMAKE_EXE_LINKER_FLAGS_MINSIZEREL} /SAFESEH:NO")
-		set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /SAFESEH:NO")
-		set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} /SAFESEH:NO")
-	endif()
-endif()
+	set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /SAFESEH:NO")
+	set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "${CMAKE_EXE_LINKER_FLAGS_MINSIZEREL} /SAFESEH:NO")
+	set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /SAFESEH:NO")
+	set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} /SAFESEH:NO")
+else(MSVC)
+    add_compile_options(
+        -Wall
+		-Wextra
+		-pedantic
+		-Wno-unused-private-field
+		-Wno-unused-variable
+		-Wno-unused-parameter
+    )
+endif(MSVC)
 
 add_executable(openblack
 	${OPENBLACK_SOURCES}
@@ -78,35 +88,12 @@ add_executable(openblack
 	${OPENBLACK_VARYING_DEF_FILE})
 set_target_properties(openblack PROPERTIES LINKER_LANGUAGE CXX)
 
-if(MSVC)
-	target_compile_options(
-		openblack
-		PRIVATE
-		/W4
-#		/WX
-	)
-else(MSVC)
-	target_compile_options(
-		openblack
-		PRIVATE
-#		-Werror
-		-Wall
-		-Wextra
-		-pedantic
-		# disable acceptable errors
-		-Wno-unused-private-field
-		-Wno-unused-variable
-		-Wno-unused-parameter
-	)
-endif(MSVC)
-
 target_include_directories(openblack PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_BINARY_DIR}/../include)
 target_link_libraries(openblack PRIVATE
 	imgui
 	ScriptLibrary
 	SDL2::SDL2main
 	# SDL2::SDL2-static
-	${OPENGL_LIBRARIES}
 	glm
 	spdlog::spdlog
 	EnTT
@@ -132,15 +119,10 @@ else()
 endif()
 
 if (MSVC)
-	if (USE_DEBUG_CONSOLE)
-		set_target_properties(openblack PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
-		set_target_properties(openblack PROPERTIES LINK_FLAGS_RELWITHDEBINFO "/SUBSYSTEM:CONSOLE")
-		set_target_properties(openblack PROPERTIES COMPILE_DEFINITIONS_DEBUG "_CONSOLE")
-	else (USE_DEBUG_CONSOLE)
-		# Turn off debug console, debug output will be written to visual studio output instead
-		set_target_properties(openblack PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:WINDOWS")
-		set_target_properties(openblack PROPERTIES LINK_FLAGS_RELWITHDEBINFO "/SUBSYSTEM:WINDOWS")
-	endif()
+	# Debug builds create a debug console
+	set_target_properties(openblack PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
+	set_target_properties(openblack PROPERTIES LINK_FLAGS_RELWITHDEBINFO "/SUBSYSTEM:CONSOLE")
+	set_target_properties(openblack PROPERTIES COMPILE_DEFINITIONS_DEBUG "_CONSOLE")
 
 	# Release builds don't use the debug console
 	set_target_properties(openblack PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
