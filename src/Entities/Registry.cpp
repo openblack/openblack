@@ -154,7 +154,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 
 		bgfx::setTransform(&modelMatrix);
 
-		auto meshId = mobileStaticMeshLookup[mobile.type];
+		auto meshId         = mobileStaticMeshLookup[mobile.type];
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
 		mesh.Draw(viewId, *objectShader, 1, state);
 	});
