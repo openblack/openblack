@@ -7,34 +7,26 @@ services:
 env:
   global:
     - RUN_TESTS: false
-    - HUNTER_ENABLED: "NO"
-    - OPENBLACK_USE_SYSTEM_DEPS: "NO"
-
-cache:
-  directories:
-    - $HOME/.hunter
 
 matrix:
   include:
-    # Linux {
-
-    #   Ubuntu 18.04 bionic
+    # Ubuntu 18.04 bionic (gcc)
     - name: "bionic: gcc"
       os: linux
       env: >
         BUILD_FLAVOR=ubuntu
         TOOLCHAIN=gcc-cxx17
-        HUNTER_ENABLED=YES
-        OPENBLACK_USE_SYSTEM_DEPS=OFF
         DOCKER_TAG=ubuntu-lts-gcc
 
-    #   Ubuntu 19.04 disco
+    # Ubuntu 19.04 disco (gcc)
     - name: "disco: gcc"
       os: linux
       env: >
         BUILD_FLAVOR=ubuntu
         DOCKER_TAG=ubuntu-rolling-gcc
         TOOLCHAIN=gcc-cxx17
+
+    # Ubuntu 19.04 disco (clang)
     - name: "disco: clang"
       os: linux
       env: >
@@ -49,17 +41,6 @@ matrix:
         BUILD_FLAVOR=fedora
         TOOLCHAIN=gcc-cxx17
         DOCKER_TAG=fedora-rawhide-gcc
-    # } // end Linux
-
-    # Windows build with mingw-w64 on fedora 31
-    - name: "fedora 31: mingw-w64"
-      os: linux
-      env: >
-        BUILD_FLAVOR=fedora
-        TOOLCHAIN=linux-mingw-w64-cxx17
-        HUNTER_ENABLED=YES
-        OPENBLACK_USE_SYSTEM_DEPS=OFF
-        DOCKER_TAG=fedora-mingw
 
 before_install:
   - docker pull openblack/openblack:$DOCKER_TAG
@@ -71,8 +52,6 @@ script:
   -e BUILD_FLAVOR="$BUILD_FLAVOR" \
   -e TOOLCHAIN="$TOOLCHAIN" \
   -e RUN_TESTS="$RUN_TESTS" \
-  -e HUNTER_ENABLED="$HUNTER_ENABLED" \
-  -e OPENBLACK_USE_SYSTEM_DEPS="$OPENBLACK_USE_SYSTEM_DEPS" \
   -v ${HOME}:/root \
   -v ${PWD}:/usr/src/openblack \
   -w /usr/src/openblack \

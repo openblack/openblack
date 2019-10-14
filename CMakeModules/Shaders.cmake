@@ -1,9 +1,21 @@
-if(OPENBLACK_USE_SYSTEM_DEPS)
-	find_package(bgfx REQUIRED COMPONENTS shaderc)
-else()
-	add_executable(bgfx::shaderc ALIAS shaderc)
-	set(BGFX_SHADER_INCLUDE_PATH ${bgfx_SOURCE_DIR}/bgfx/src)
-endif()
+# Shaders.cmake
+# provides functions to compile shaders with bgfx
+
+# mark_shaders_for_compilation(
+#   TYPE VERTEX|FRAGMENT|COMPUTE
+#   SHADERS filenames
+#   VARYING_DEF filename
+#   OUTPUT_DIR directory
+#)
+#
+
+# find_package(bgfx REQUIRED COMPONENTS shaderc)
+
+# get_target_property(BGFX_INCLUDE_PATH bgfx::bgfx INTERFACE_INCLUDE_DIRECTORIES)
+# set(BGFX_SHADER_INCLUDE_PATH ${BGFX_INCLUDE_PATH}/bgfx)
+
+add_executable(bgfx::shaderc ALIAS shaderc)
+set(BGFX_SHADER_INCLUDE_PATH ${bgfx_SOURCE_DIR}/bgfx/src)
 
 # shaderc_parse(
 #	FILE filename
@@ -265,11 +277,10 @@ function(mark_shaders_for_compilation)
 				O "$<$<CONFIG:debug>:0>$<$<CONFIG:release>:3>$<$<CONFIG:relwithdebinfo>:3>$<$<CONFIG:minsizerel>:3>"
 				VARYINGDEF ${ARGS_VARYING_DEF}
 				INCLUDES ${BGFX_SHADER_INCLUDE_PATH}
-				VERBOSE
 				${BIN2C}
 				WERROR
 			)
-			list(APPEND OUTPUTS ${OUTPUT})
+			list(APPEND OUTPUTS ${SHADER_FILE_BASENAME}.${PROFILE_EXT})
 			list(APPEND COMMANDS COMMAND bgfx::shaderc ${CLI})
 		endforeach()
 

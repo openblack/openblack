@@ -23,25 +23,41 @@ You still need to have the original game assets in order to use this.
 
 Clone the code using: `git clone --recursive https://github.com/openblack/openblack.git`
 
+The simplest way to obtain all the required dependencies is through [vcpkg](https://github.com/Microsoft/vcpkg).
+
+```bash
+PS> .\vcpkg install sdl2 spdlog glm entt
+Linux:~/$ ./vcpkg install sdl2 spdlog glm entt
+```
+
+If you don't want to use vcpkg; CMake will fallback on installed system dependencies, or manually specified
+package directories.
+
 ## Windows
 
 * Install [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/)
 * Install [CMake](https://cmake.org/download/)
-* Open CMake GUI and point it to `openblack` folder, set build directory to `openblack/build`
-* Ensure `HUNTER_ENABLED=1` which will download all dependencies automatically for you.
-* Press Configure, Generate, Open Project and then build.
+
+You can either:
+
+1. [Open the `openblack` folder directly in Visual Studio](https://docs.microsoft.com/en-us/cpp/build/cmake-projects-in-visual-studio?view=vs-2019).
+2. Generate project files with the following:
+
+```bash
+cd openblack
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
+```
 
 ## Linux
 
-Dependencies can be installed simply from your package manager, compiled from source
-or you can enable Hunter to manage dependencies for you.
+*Note: These instructions are for Ubuntu, but can be easily applied to other distros.*
 
+Ensure you have dependencies first
 ```bash
-sudo apt install cmake libsdl2-dev libglm-dev libspdlog-dev
-git clone --recursive https://github.com/openblack/openblack.git
+sudo apt install cmake
 cd openblack
-cmake -S . -B build
-cmake --build build
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux
+cmake --build build -j 5
 ```
 
 ## Contributing
