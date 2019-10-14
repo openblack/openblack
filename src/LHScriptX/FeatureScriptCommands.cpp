@@ -337,11 +337,24 @@ void FeatureScriptCommands::CreateTown(const ScriptCommandContext& ctx)
 
 	spdlog::debug("Creating town {} for \"{}\" with civilisation \"{}\".", townId, playerOwner, civilisation);
 	registry.Assign<Town>(entity, townId);
+	auto& registryContext = registry.Context();
+	registryContext.towns.insert({ townId, entity });
 }
 
 void FeatureScriptCommands::SetTownBelief(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	Game& game         = ctx.GetGame();
+	const auto& params = ctx.GetParameters();
+	auto& island       = game.GetLandIsland();
+	auto& registry     = game.GetEntityRegistry();
+	const auto entity  = registry.Create();
+	auto& registryContext = registry.Context();
+	int townId            = params[0].GetNumber();
+	const auto& playerOwner = params[1].GetString();
+	const auto& belief      = params[2].GetFloat();
+
+	Town& town = registry.Get<Town>(registryContext.towns.at(townId));
+	town.beliefs.insert({ playerOwner, belief});
 }
 
 void FeatureScriptCommands::SetTownBeliefCap(const ScriptCommandContext& ctx)
