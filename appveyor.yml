@@ -13,7 +13,9 @@ environment:
 
 platform: x64
 
-cache: c:\tools\vcpkg\installed\
+cache:
+  - c:\tools\vcpkg\installed\
+  - B_build_%TOOLCHAIN%_Release\_deps\bgfx-build
 
 before_build:
   # Required by -Gninja
