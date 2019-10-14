@@ -8,10 +8,6 @@ env:
   global:
     - RUN_TESTS: false
 
-cache:
-  directories:
-    - $HOME/vcpkg
-
 matrix:
   include:
     # Ubuntu 18.04 bionic (gcc)
