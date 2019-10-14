@@ -262,7 +262,7 @@ const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signa
 } };
 // clang-format on
 
-glm::vec2 GetXYPosFromString(const std::string& str)
+glm::vec2 GetHorizontalPosition(const std::string& str)
 {
 	const auto pos = str.find_first_of(',');
 	const auto y   = std::stof(str.substr(pos + 1));
@@ -298,7 +298,7 @@ openblack::FeatureInfo GetFeatureInfo(const std::string& featureType)
 
 inline float GetRadians(const float rotation)
 {
-	return -(rotation * 0.001);
+	return -(rotation * 0.001f);
 }
 
 inline float GetSize(const float size)
@@ -314,26 +314,26 @@ void FeatureScriptCommands::Version(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateMist(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
 }
 
 void FeatureScriptCommands::CreatePath(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
 }
 
 void FeatureScriptCommands::CreateTown(const ScriptCommandContext& ctx)
 {
-	Game& game                = ctx.GetGame();
-	const auto& params        = ctx.GetParameters();
-	auto& island              = game.GetLandIsland();
-	auto& registry            = game.GetEntityRegistry();
-	const auto entity         = registry.Create();
-	int townId          = params[0].GetNumber();
-	const auto position       = GetXYPosFromString(params[1].GetString());
-	const auto& playerOwner   = params[2].GetString();
+	Game& game              = ctx.GetGame();
+	const auto& params      = ctx.GetParameters();
+	auto& island            = game.GetLandIsland();
+	auto& registry          = game.GetEntityRegistry();
+	const auto entity       = registry.Create();
+	int townId              = params[0].GetNumber();
+	const auto position     = GetHorizontalPosition(params[1].GetString());
+	const auto& playerOwner = params[2].GetString();
 	// float notUsed          = params[3].GetNumber();
-	const auto& civilisation  = params[4].GetString();
+	const auto& civilisation = params[4].GetString();
 
 	spdlog::debug("Creating town {} for \"{}\" with civilisation \"{}\".", townId, playerOwner, civilisation);
 	registry.Assign<Town>(entity, townId);
@@ -346,17 +346,17 @@ void FeatureScriptCommands::SetTownBelief(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::SetTownBeliefCap(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
 }
 
 void FeatureScriptCommands::SetTownUninhabitable(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
 }
 
 void FeatureScriptCommands::SetTownCongregationPos(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
 }
 
 void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
@@ -367,7 +367,7 @@ void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
 	auto& registry            = game.GetEntityRegistry();
 	const auto entity         = registry.Create();
 	const uint32_t townId     = params[0].GetNumber();
-	const auto position       = GetXYPosFromString(params[1].GetString());
+	const auto position       = GetHorizontalPosition(params[1].GetString());
 	const auto& abodeType     = params[2].GetString();
 	float rotation            = params[3].GetNumber();
 	float size                = params[4].GetNumber();
@@ -385,7 +385,7 @@ void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreatePlannedAbode(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
 }
 
 void FeatureScriptCommands::CreateTownCentre(const ScriptCommandContext& ctx)
@@ -396,7 +396,7 @@ void FeatureScriptCommands::CreateTownCentre(const ScriptCommandContext& ctx)
 	auto& registry            = game.GetEntityRegistry();
 	const auto entity         = registry.Create();
 	uint32_t associatedTownId = params[0].GetNumber();
-	const auto position       = GetXYPosFromString(params[1].GetString());
+	const auto position       = GetHorizontalPosition(params[1].GetString());
 	const auto& centreType    = params[2].GetString();
 	float rotation            = params[3].GetNumber();
 	float size                = params[4].GetNumber();
@@ -414,42 +414,42 @@ void FeatureScriptCommands::CreateTownCentre(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateTownSpell(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
 }
 
 void FeatureScriptCommands::CreateNewTownSpell(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
 }
 
 void FeatureScriptCommands::CreateTownCentreSpellIcon(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
 }
 
 void FeatureScriptCommands::CreateSpellIcon(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
 }
 
 void FeatureScriptCommands::CreatePlannedSpellIcon(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
 }
 
 void FeatureScriptCommands::CreateVillager(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
 }
 
 void FeatureScriptCommands::CreateTownVillager(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
 }
 
 void FeatureScriptCommands::CreateSpecialTownVillager(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
 }
 
 void FeatureScriptCommands::CreateVillagerPos(const ScriptCommandContext& ctx)
@@ -510,7 +510,7 @@ void FeatureScriptCommands::CreateNewTree(const ScriptCommandContext& ctx)
 	auto& registry     = game.GetEntityRegistry();
 	const auto entity  = registry.Create();
 	//const auto associatedForest = params[0].GetNumber();
-	const auto position  = GetXYPosFromString(params[1].GetString());
+	const auto position  = GetHorizontalPosition(params[1].GetString());
 	const auto& treeType = params[2].GetNumber();
 	//const bool isScenic = params[3].GetNumber() >= 1;
 	float rotation = -params[4].GetFloat();
@@ -585,7 +585,7 @@ void FeatureScriptCommands::CreateMobileobject(const ScriptCommandContext& ctx)
 	auto& island          = game.GetLandIsland();
 	auto& registry        = game.GetEntityRegistry();
 	const auto entity     = registry.Create();
-	const auto position   = GetXYPosFromString(params[0].GetString());
+	const auto position   = GetHorizontalPosition(params[0].GetString());
 	const auto objectType = params[1].GetNumber();
 	const auto rotation   = GetRadians(params[2].GetNumber());
 	float size            = GetSize(params[3].GetNumber());
@@ -611,7 +611,7 @@ void FeatureScriptCommands::CreateMobileUStatic(const ScriptCommandContext& ctx)
 	auto& island              = game.GetLandIsland();
 	auto& registry            = game.GetEntityRegistry();
 	const auto entity         = registry.Create();
-	const auto position       = GetXYPosFromString(params[0].GetString());
+	const auto position       = GetHorizontalPosition(params[0].GetString());
 	const auto type           = params[1].GetNumber();
 	const auto verticalOffset = params[2].GetFloat();
 	float pitch               = -params[3].GetFloat();
@@ -676,7 +676,7 @@ void FeatureScriptCommands::CreateArea(const ScriptCommandContext& ctx)
 void FeatureScriptCommands::StartCameraPos(const ScriptCommandContext& ctx)
 {
 	auto params  = ctx.GetParameters();
-	auto pos     = GetXYPosFromString(params[0].GetString());
+	auto pos     = GetHorizontalPosition(params[0].GetString());
 	auto& camera = ctx.GetGame().GetCamera();
 	auto height  = ctx.GetGame().GetLandIsland().GetHeightAt(pos) + 10.0f;
 	camera.SetPosition(glm::vec3(pos[0], height, pos[1]));
@@ -704,16 +704,16 @@ void FeatureScriptCommands::CreateBigForest(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateNewBigForest(const ScriptCommandContext& ctx)
 {
-	auto& game                = ctx.GetGame();
-	const auto& params        = ctx.GetParameters();
-	auto& island              = game.GetLandIsland();
-	auto& registry            = game.GetEntityRegistry();
-	const auto entity         = registry.Create();
-	const auto position       = GetXYPosFromString(params[0].GetString());
+	auto& game          = ctx.GetGame();
+	const auto& params  = ctx.GetParameters();
+	auto& island        = game.GetLandIsland();
+	auto& registry      = game.GetEntityRegistry();
+	const auto entity   = registry.Create();
+	const auto position = GetHorizontalPosition(params[0].GetString());
 	// const auto type = params[1].GetNumber(); // Circular == 0, Oval == 1
 	// auto unknown = params[2].GetFloat();
-	float rotation            = -params[3].GetFloat();
-	float size                = params[4].GetFloat();
+	float rotation = -params[3].GetFloat();
+	float size     = params[4].GetFloat();
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
 	const glm::vec3 rot(0, rotation, 0);
@@ -800,10 +800,10 @@ void FeatureScriptCommands::CreateBonfire(const ScriptCommandContext& ctx)
 	auto& island        = game.GetLandIsland();
 	auto& registry      = game.GetEntityRegistry();
 	const auto entity   = registry.Create();
-	const auto position = GetXYPosFromString(params[0].GetString());
+	const auto position = GetHorizontalPosition(params[0].GetString());
 	float rotation      = -params[1].GetFloat();
 	// auto unknown        = params[1].GetFloat();
-	float size          = params[3].GetFloat() * 1;
+	float size = params[3].GetFloat() * 1;
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
 	const glm::vec3 rot(0, rotation, 0);
@@ -825,7 +825,7 @@ void FeatureScriptCommands::CreateNewFeature(const ScriptCommandContext& ctx)
 	auto& island        = game.GetLandIsland();
 	auto& registry      = game.GetEntityRegistry();
 	const auto entity   = registry.Create();
-	const auto position = GetXYPosFromString(params[0].GetString());
+	const auto position = GetHorizontalPosition(params[0].GetString());
 	auto type           = GetFeatureInfo(params[1].GetString());
 	float rotation      = GetRadians(params[2].GetNumber());
 	float size          = GetSize(params[3].GetNumber());
@@ -901,7 +901,7 @@ void FeatureScriptCommands::CreateAnimatedStatic(const ScriptCommandContext& ctx
 	auto& island          = game.GetLandIsland();
 	auto& registry        = game.GetEntityRegistry();
 	const auto entity     = registry.Create();
-	const auto position   = GetXYPosFromString(params[0].GetString());
+	const auto position   = GetHorizontalPosition(params[0].GetString());
 	const auto objectType = params[1].GetString();
 	const auto rotation   = -params[2].GetFloat() + 3.14159;
 	auto size             = GetSize(params[3].GetNumber());
@@ -920,13 +920,13 @@ void FeatureScriptCommands::FireFlySpellRewardProb(const ScriptCommandContext& c
 
 void FeatureScriptCommands::CreateNewTownField(const ScriptCommandContext& ctx)
 {
-	auto& game            = ctx.GetGame();
-	const auto& params    = ctx.GetParameters();
-	auto& island          = game.GetLandIsland();
-	auto& registry        = game.GetEntityRegistry();
-	const auto entity     = registry.Create();
-	auto townId           = params[0].GetNumber();
-	const auto position   = GetXYPosFromString(params[1].GetString());
+	auto& game          = ctx.GetGame();
+	const auto& params  = ctx.GetParameters();
+	auto& island        = game.GetLandIsland();
+	auto& registry      = game.GetEntityRegistry();
+	const auto entity   = registry.Create();
+	auto townId         = params[0].GetNumber();
+	const auto position = GetHorizontalPosition(params[1].GetString());
 	// auto unknown = params[2].GetNumber();
 	const auto rotation = -params[3].GetFloat() + 3.14159;
 
