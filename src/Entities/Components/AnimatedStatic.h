@@ -22,6 +22,7 @@
 
 #include <Enums.h>
 #include <string>
+#include <unordered_map>
 
 namespace openblack
 {
@@ -59,6 +60,8 @@ struct Forest
 struct Town
 {
 	int id;
+	std::unordered_map<std::string, float> beliefs;
+	bool uninhabitable = false;
 };
 
 } // namespace openblack
