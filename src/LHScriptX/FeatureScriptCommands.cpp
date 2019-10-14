@@ -24,9 +24,9 @@
 #include <AllMeshes.h>
 #include <Entities/Components/Abode.h>
 #include <Entities/Components/AnimatedStatic.h>
+#include <Entities/Components/Stream.h>
 #include <Entities/Components/Transform.h>
 #include <Entities/Components/Tree.h>
-#include <Entities/Components/Villager.h>
 #include <Entities/Registry.h>
 #include <Enums.h>
 #include <Game.h>
@@ -760,12 +760,30 @@ void FeatureScriptCommands::BrushSize(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateStream(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	auto& game          = ctx.GetGame();
+	const auto& params  = ctx.GetParameters();
+	auto& registry      = game.GetEntityRegistry();
+	const auto entity   = registry.Create();
+	const auto streamId = params[0].GetNumber();
+	registry.Assign<Stream>(entity, streamId);
+	auto& registryContext = registry.Context();
+	registryContext.streams.insert({ streamId, entity });
 }
 
 void FeatureScriptCommands::CreateStreamPoint(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	auto& game          = ctx.GetGame();
+	const auto& params  = ctx.GetParameters();
+	auto& island        = game.GetLandIsland();
+	auto& registry      = game.GetEntityRegistry();
+	const auto streamId = params[0].GetNumber();
+	const auto pos      = GetHorizontalPosition(params[1].GetString());
+	const glm::vec3 position(pos.x, island.GetHeightAt(pos), pos.y);
+	auto& registryContext = registry.Context();
+
+	Stream& stream      = registry.Get<Stream>(registryContext.streams.at(streamId));
+	const StreamNode newNode(position, stream.streamNodes);
+	stream.streamNodes.push_back(newNode);
 }
 
 void FeatureScriptCommands::CreateWaterfall(const ScriptCommandContext& ctx)
