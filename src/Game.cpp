@@ -62,6 +62,7 @@ Game::Game(int argc, char** argv)
 	: _fileSystem(std::make_unique<FileSystem>())
 	, _entityRegistry(std::make_unique<Entities::Registry>())
 	, _config()
+	, _intersection()
 	,_running(true)
 {
 	spdlog::set_level(spdlog::level::debug);
