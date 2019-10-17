@@ -26,8 +26,8 @@ void openblack::Profiler::Begin(Stage stage)
 {
 	assert(_currentLevel < 255);
 	auto& entry = _entries[_currentEntry]._stages[static_cast<uint8_t>(stage)];
-	_currentLevel++;
 	entry._level = _currentLevel;
+	_currentLevel++;
 	entry._start = std::chrono::system_clock::now();
 	entry._finalized = false;
 }
@@ -37,8 +37,8 @@ void openblack::Profiler::End(Stage stage)
 	assert(_currentLevel > 0);
 	auto& entry = _entries[_currentEntry]._stages[static_cast<uint8_t>(stage)];
 	assert(!entry._finalized);
-	assert(entry._level == _currentLevel);
 	_currentLevel--;
+	assert(entry._level == _currentLevel);
 	entry._end = std::chrono::system_clock::now();
 	entry._finalized = true;
 }

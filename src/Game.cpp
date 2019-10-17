@@ -253,7 +253,11 @@ void Game::Run()
 			_renderer->ClearScene(0, width, height);
 		}
 		auto reflectionCamera = _water->GetReflectionCamera();
+
+		_profiler->Begin(Profiler::Stage::ReflectionUploadUniforms);
 		_renderer->UploadUniforms(deltaTime, 0, *this, reflectionCamera);
+		_profiler->End(Profiler::Stage::ReflectionUploadUniforms);
+
 		_renderer->DrawScene(*this, 0, false, false, true);
 		_profiler->End(Profiler::Stage::ReflectionPass);
 
@@ -269,9 +273,7 @@ void Game::Run()
 		_renderer->UploadUniforms(deltaTime, 1, *this, *_camera);
 		_profiler->End(Profiler::Stage::MainPassUploadUniforms);
 
-		_profiler->Begin(Profiler::Stage::MainPassDrawScene);
 		_renderer->DrawScene(*this, 1, true, true, false);
-		_profiler->End(Profiler::Stage::MainPassDrawScene);
 		_profiler->End(Profiler::Stage::MainPass);
 
 		_profiler->Begin(Profiler::Stage::GuiDraw);
