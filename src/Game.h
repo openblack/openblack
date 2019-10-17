@@ -22,8 +22,8 @@
 
 #include <LHVM/LHVM.h>
 #include <glm/glm.hpp>
-#include <string>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace openblack
@@ -34,6 +34,7 @@ class GameWindow;
 class Gui;
 class MeshPack;
 class LandIsland;
+class Profiler;
 class Renderer;
 class L3DMesh;
 class Sky;
@@ -90,6 +91,7 @@ class Game
 	GameWindow& GetWindow() { return *_window; }
 	[[nodiscard]] const GameWindow& GetWindow() const { return *_window; }
 	Camera& GetCamera() { return *_camera; }
+	[[nodiscard]] Profiler& GetProfiler() const { return *_profiler; }
 	[[nodiscard]] Renderer& GetRenderer() const { return *_renderer; }
 	[[nodiscard]] Camera& GetCamera() const { return *_camera; }
 	[[nodiscard]] Sky& GetSky() const { return *_sky; }
@@ -122,6 +124,7 @@ class Game
 	std::unique_ptr<Renderer> _renderer;
 	std::unique_ptr<Gui> _gui;
 	std::unique_ptr<Camera> _camera;
+	std::unique_ptr<Profiler> _profiler;
 
 	std::unique_ptr<FileSystem> _fileSystem;
 	std::unique_ptr<LandIsland> _landIsland;
