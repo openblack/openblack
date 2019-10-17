@@ -42,6 +42,7 @@
 #include <Entities/Registry.h>
 #include <LHScriptX/Script.h>
 #include <MeshViewer.h>
+#include <Profiler.h>
 #include <Renderer.h>
 
 #ifdef WIN32
@@ -129,6 +130,9 @@ glm::mat4 Game::GetModelMatrix() const
 
 void Game::Run()
 {
+	// Create profiler
+	_profiler = std::make_unique<Profiler>();
+
 	// create our camera
 	_camera = std::make_unique<Camera>();
 	_camera->SetProjectionMatrixPerspective(70.0f, _window->GetAspectRatio(), 1.0f, 65536.0f);
@@ -167,11 +171,13 @@ void Game::Run()
 	SDL_Event e;
 	while (_running)
 	{
+		_profiler->Frame();
 		last = now;
 		now  = SDL_GetPerformanceCounter();
 
 		deltaTime = std::chrono::microseconds((now - last) * 1000000 / SDL_GetPerformanceFrequency());
 
+		_profiler->Begin(Profiler::Stage::SdlInput);
 		while (SDL_PollEvent(&e))
 		{
 			if (e.type == SDL_QUIT)
@@ -223,15 +229,21 @@ void Game::Run()
 
 			_gui->ProcessEventSdl2(e);
 		}
+		_profiler->End(Profiler::Stage::SdlInput);
 
+		_profiler->Begin(Profiler::Stage::UpdatePositions);
 		_camera->Update(deltaTime);
 		_modelRotation.y = fmod(_modelRotation.y + float(deltaTime.count()) * .0001f, 360.f);
 
 		_renderer->UpdateDebugCrossPose(deltaTime, _intersection, 50.0f);
+		_profiler->End(Profiler::Stage::UpdatePositions);
 
+		_profiler->Begin(Profiler::Stage::GuiLoop);
 		_gui->Loop(*this);
+		_profiler->End(Profiler::Stage::GuiLoop);
 
 		// Reflection Pass
+		_profiler->Begin(Profiler::Stage::ReflectionPass);
 		bgfx::setViewName(0, "Reflection Pass");
 		_water->BeginReflection(0,*_camera);
 		{
@@ -243,20 +255,33 @@ void Game::Run()
 		auto reflectionCamera = _water->GetReflectionCamera();
 		_renderer->UploadUniforms(deltaTime, 0, *this, reflectionCamera);
 		_renderer->DrawScene(*this, 0, false, false, true);
-//		_water->EndReflection(1);
+		_profiler->End(Profiler::Stage::ReflectionPass);
 
 		// Main Draw Pass
+		_profiler->Begin(Profiler::Stage::MainPass);
 		bgfx::setViewName(1, "Main Pass");
 		{
 			int width, height;
 			_window->GetDrawableSize(width, height);
 			_renderer->ClearScene(1, width, height);
 		}
+		_profiler->Begin(Profiler::Stage::MainPassUploadUniforms);
 		_renderer->UploadUniforms(deltaTime, 1, *this, *_camera);
-		_renderer->DrawScene(*this, 1, true, true, false);
+		_profiler->End(Profiler::Stage::MainPassUploadUniforms);
 
+		_profiler->Begin(Profiler::Stage::MainPassDrawScene);
+		_renderer->DrawScene(*this, 1, true, true, false);
+		_profiler->End(Profiler::Stage::MainPassDrawScene);
+		_profiler->End(Profiler::Stage::MainPass);
+
+		_profiler->Begin(Profiler::Stage::GuiDraw);
 		_gui->Draw();
+		_profiler->End(Profiler::Stage::GuiDraw);
+
+		_profiler->Begin(Profiler::Stage::RendererFrame);
 		_renderer->Frame();
+		_profiler->End(Profiler::Stage::RendererFrame);
+
 	}
 }
 
