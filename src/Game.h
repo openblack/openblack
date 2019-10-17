@@ -58,6 +58,7 @@ class Game
 		Config()
 			: wireframe(false)
 			, waterDebug(false)
+			, showProfiler(false)
 			, timeOfDay(1.0f)
 			, bumpMapStrength(1.0f)
 			, smallBumpMapStrength(1.0f)
@@ -67,6 +68,7 @@ class Game
 
 		bool wireframe;
 		bool waterDebug;
+		bool showProfiler;
 
 		float timeOfDay;
 		float bumpMapStrength;

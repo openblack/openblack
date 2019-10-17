@@ -25,6 +25,7 @@
 #include <bgfx/bgfx.h>
 #include <bgfx/embedded_shader.h>
 #include <imgui.h>
+#include <imgui_widget_flamegraph.h>
 #ifdef _WIN32
 #include <SDL2/SDL_syswm.h>
 #endif
@@ -43,6 +44,7 @@
 #include "Graphics/Shaders/fs_ocornut_imgui.bin.h"
 #include "Graphics/Shaders/vs_imgui_image.bin.h"
 #include "Graphics/Shaders/fs_imgui_image.bin.h"
+#include "Profiler.h"
 
 using namespace openblack;
 
@@ -464,6 +466,7 @@ void Gui::Loop(Game& game)
 		{
 			ImGui::Checkbox("Wireframe", &config.wireframe);
 			ImGui::Checkbox("Water Debug", &config.waterDebug);
+			ImGui::Checkbox("Profiler", &config.showProfiler);
 			ImGui::EndMenu();
 		}
 
@@ -605,6 +608,9 @@ void Gui::Loop(Game& game)
 	}
 	ImGui::End();
 
+	if (config.showProfiler)
+		ShowProfilerWindow(game);
+
 	if (config.waterDebug)
 		game.GetWater().DebugGUI();
 
@@ -715,4 +721,74 @@ void Gui::Draw()
 	ImGui::SetCurrentContext(_imgui);
 
 	RenderDrawDataBgfx(ImGui::GetDrawData());
+}
+
+void Gui::ShowProfilerWindow(const Game& game)
+{
+	if (ImGui::Begin("Profiler"))
+	{
+		const bgfx::Stats* stats = bgfx::getStats();
+		const double toMsCpu     = 1000.0 / stats->cpuTimerFreq;
+		const double toMsGpu     = 1000.0 / stats->gpuTimerFreq;
+		const double frameMs     = double(stats->cpuTimeFrame) * toMsCpu;
+		_times.pushBack(frameMs);
+		_fps.pushBack(1000.0f / frameMs);
+
+		char frameTextOverlay[256];
+		std::snprintf(frameTextOverlay, sizeof(frameTextOverlay), "%.3fms, %.1f FPS", _times.back(), _fps.back());
+
+		//	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImColor(0.0f, 0.5f, 0.15f, 1.0f).Value);
+		ImGui::PlotHistogram("Frame", _times._values, decltype(_times)::_bufferSize, _times._offset, frameTextOverlay, 0.0f, FLT_MAX, ImVec2(0.0f, 45.0f));
+		//	ImGui::PopStyleColor();
+
+		ImGui::Text("Submit CPU %0.3f, GPU %0.3f (Max GPU Latency: %d)", double(stats->cpuTimeEnd - stats->cpuTimeBegin) * toMsCpu, double(stats->gpuTimeEnd - stats->gpuTimeBegin) * toMsGpu, stats->maxGpuLatency);
+		ImGui::Text("Wait Submit %0.3f, Wait Render %0.3f", stats->waitSubmit * toMsCpu, stats->waitRender * toMsCpu);
+
+		auto& entry = game.GetProfiler()._entries[game.GetProfiler().GetCurrentEntryIndex()];
+
+		ImGuiWidgetFlameGraph::PlotFlame("CPU",
+			[](float* startTimestamp, float* endTimestamp, ImU8* level, const char** caption, const void* data, int idx) -> void {
+				auto entry = reinterpret_cast<const Profiler::Entry*>(data);
+				auto& stage = entry->_stages[idx];
+				if (startTimestamp)
+				{
+					std::chrono::duration<float, std::milli> fltStart = stage._start - entry->_frameStart;
+					*startTimestamp = fltStart.count();
+				}
+				if (endTimestamp)
+				{
+					*endTimestamp = stage._end.time_since_epoch().count() / 1e6f;
+
+					std::chrono::duration<float, std::milli> fltEnd = stage._end - entry->_frameStart;
+					*endTimestamp = fltEnd.count();
+				}
+				if (level)
+				{
+					*level = stage._level;
+				}
+				if (caption)
+				{
+					*caption = Profiler::stageNames[idx].data();
+				}
+			}, &entry, static_cast<uint8_t>(Profiler::Stage::_count), 0, "Main Thread");
+
+		if (ImGui::CollapsingHeader("Details (CPU)"))
+		{
+			std::chrono::duration<float, std::milli> frameDuration = entry._frameEnd - entry._frameStart;
+			ImGui::Text("Full Frame: %0.3f", frameDuration.count());
+			auto cursorX = ImGui::GetCursorPosX();
+			auto indentSize = ImGui::CalcTextSize("    ").x;
+
+			for (uint8_t i = 0; i < static_cast<uint8_t>(Profiler::Stage::_count); ++i)
+			{
+				std::chrono::duration<float, std::milli> duration = entry._stages[i]._end - entry._stages[i]._start;
+				ImGui::SetCursorPosX(cursorX + indentSize * entry._stages[i]._level);
+				ImGui::Text("    %s: %0.3f", Profiler::stageNames[i].data(), duration.count());
+				if (entry._stages[i]._level == 0)
+					frameDuration -= duration;
+			}
+			ImGui::Text("    Unaccounted: %0.3f", frameDuration.count());
+		}
+	}
+	ImGui::End();
 }

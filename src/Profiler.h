@@ -32,6 +32,35 @@ namespace openblack
 
 class Profiler
 {
+public:
+
+	enum class Stage : uint8_t
+	{
+		SdlInput,
+		UpdatePositions,
+		GuiLoop,
+		ReflectionPass,
+		ReflectionUploadUniforms,
+		ReflectionDrawScene,
+		ReflectionDrawSky,
+		ReflectionDrawWater,
+		ReflectionDrawIsland,
+		ReflectionDrawModels,
+		ReflectionDrawDebugCross,
+		MainPass,
+		MainPassUploadUniforms,
+		MainPassDrawScene,
+		MainPassDrawSky,
+		MainPassDrawWater,
+		MainPassDrawIsland,
+		MainPassDrawModels,
+		MainPassDrawDebugCross,
+		GuiDraw,
+		RendererFrame,
+
+		_count,
+	};
+
 	struct Scope
 	{
 		uint8_t _level;
@@ -40,32 +69,28 @@ class Profiler
 		bool _finalized = false;
 	};
 
-public:
-	enum class Stage : uint8_t
-	{
-		SdlInput,
-		UpdatePositions,
-		GuiLoop,
-		ReflectionPass,
-		MainPass,
-		MainPassUploadUniforms,
-		MainPassDrawScene,
-		GuiDraw,
-		RendererFrame,
-
-		_count,
-	};
-
 	static constexpr std::array<std::string_view, static_cast<uint8_t>(Stage::_count)> stageNames = {
-		"SdlInput",
-		"UpdatePositions",
-		"GuiLoop",
-		"ReflectionPass",
-		"MainPass",
-		"MainPassUploadUniforms",
-		"MainPassDrawScene",
-		"GuiDraw",
-		"RendererFrame",
+		"SDL Input",
+		"Update Positions",
+		"GUI Loop",
+		"Reflection Pass",
+		"Upload Uniforms",
+		"Draw Scene",
+		"Draw Sky",
+		"Draw Water",
+		"Draw Island",
+		"Draw Models",
+		"Draw Debug Cross",
+		"Main Pass",
+		"Upload Uniforms",
+		"Draw Scene",
+		"Draw Sky",
+		"Draw Water",
+		"Draw Island",
+		"Draw Models",
+		"Draw Debug Cross",
+		"GUI Draw",
+		"Renderer Frame",
 	};
 
 	struct Entry
@@ -78,6 +103,11 @@ public:
 	void Frame();
 	void Begin(Stage stage);
 	void End(Stage stage);
+
+	[[ nodiscard ]] uint8_t GetCurrentEntryIndex() const
+	{
+		return (_currentEntry + _bufferSize - 1) % _bufferSize;
+	}
 
 	static constexpr uint8_t _bufferSize = 100;
 	std::array<Entry, _bufferSize> _entries;
