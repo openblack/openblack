@@ -13,7 +13,6 @@
 #include <Game.h>
 #include <Graphics/DebugLines.h>
 #include <Graphics/ShaderManager.h>
-#include <glad/glad.h>
 #include <spdlog/spdlog.h>
 
 namespace openblack::Entities
@@ -21,7 +20,6 @@ namespace openblack::Entities
 
 void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager)
 {
-	graphics::ShaderProgram* objectShader = shaderManager.GetShader("SkinnedMesh");
 	graphics::ShaderProgram* debugShader            = shaderManager.GetShader("DebugLine");
 	graphics::ShaderProgram* objectShader = shaderManager.GetShader("Object");
 
@@ -50,24 +48,20 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		mesh.Draw(viewId, *objectShader, 3, state);
 	});
 
-	_registry.view<Stream>().each([debugShader](Stream& stream) {
+	_registry.view<Stream>().each([viewId, debugShader](Stream& stream) {
 		auto nodes       = stream.streamNodes;
-		const auto color = glm::vec3(1, 0, 0);
+		const auto color = glm::vec4(1, 0, 0, 1);
 
 		for (const auto& from : nodes)
 		{
 			for (const auto& to : from.edges)
 			{
 				auto startPos = from.position;
-				auto startOffset = glm::vec3(0, 0, 0);
-				auto endOffset = to.position - startPos;
-				auto line = DebugLines::CreateLine(startOffset, endOffset, color);
-				line->SetPose(startPos, 1);
-				glDisable(GL_DEPTH_TEST);
-				glDisable(GL_BLEND);
-				line->Draw(*debugShader);
-				glEnable(GL_DEPTH_TEST);
-				glEnable(GL_BLEND);
+				auto startOffset = glm::vec4(0, 0, 0, 0.0f);
+				auto endOffset = glm::vec4(to.position - startPos, 0.0f);
+				// auto line = DebugLines::CreateLine(startOffset, endOffset, color);
+				// line->SetPose(startPos, 1);
+				// line->Draw(viewId, *debugShader);
 			}
 		}
 	});
