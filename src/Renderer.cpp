@@ -170,14 +170,6 @@ Renderer::Renderer(const GameWindow& window, const std::string binaryPath)
 		throw std::runtime_error("Failed to initialize bgfx.");
 	}
 
-	spdlog::info("OpenGL context successfully created.");
-
-	int majorVersion, minorVersion;
-	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &majorVersion);
-	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minorVersion);
-
-	spdlog::info("OpenGL version: {}.{}", majorVersion, minorVersion);
-
 	LoadShaders(binaryPath);
 
 	// allocate vertex buffers for our debug draw
