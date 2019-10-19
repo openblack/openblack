@@ -93,6 +93,7 @@ set_target_properties(openblack PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(openblack PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_BINARY_DIR}/../include)
 target_link_libraries(openblack PRIVATE
 	imgui
+	imgui-flame-graph
 	ScriptLibrary
 	SDL2::SDL2main
 	# SDL2::SDL2-static

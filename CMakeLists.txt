@@ -81,6 +81,14 @@ if (NOT bgfx_FOUND)
   add_library(bgfx::bgfx ALIAS bgfx)
 endif()
 
+FetchContent_Declare(
+  imgui-flame-graph
+  GIT_REPOSITORY https://github.com/bwrsandman/imgui-flame-graph.git
+  GIT_TAG        master
+)
+set(IMGUI_FLAME_GRAPH_BUILD_EXAMPLE OFF CACHE BOOL "imgui-flame bgfx examples.")
+FetchContent_MakeAvailable(imgui-flame-graph)
+
 # Include git hash in source
 include(CMakeModules/GetGitRevisionDescription.cmake)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
