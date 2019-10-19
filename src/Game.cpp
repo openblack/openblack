@@ -282,6 +282,8 @@ void Game::LoadLandscape(const std::string& name)
 
 void Game::LoadVariables()
 {
+	return;
+
 	auto file = _fileSystem->Open("Scripts/info.dat", FileMode::Read);
 
 	// check magic header
