@@ -283,6 +283,10 @@ void Renderer::DrawScene(const Game &game, uint8_t viewId, bool drawWater, bool 
 	{
 		debugMode |= BGFX_DEBUG_WIREFRAME;
 	}
+	if (game.GetConfig().showProfiler)
+	{
+		debugMode |= BGFX_DEBUG_PROFILER;
+	}
 	bgfx::setDebug(debugMode);
 	game.GetProfiler().End(viewId == 0 ? Profiler::Stage::ReflectionDrawScene : Profiler::Stage::MainPassDrawScene);
 }
