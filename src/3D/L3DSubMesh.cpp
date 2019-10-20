@@ -150,37 +150,6 @@ void L3DSubMesh::Load(IStream& stream)
 	//spdlog::debug("# bones: {} @ {}", header.numBones, header.bonesOffset);
 }
 
-void L3DSubMesh::Draw(uint8_t viewId, const L3DMesh& mesh, ShaderProgram& program, uint64_t state, uint32_t rgba) const
-{
-	if (!_vertexBuffer || !_indexBuffer)
-		return;
-
-	bgfx::setState(state, rgba);
-
-	_vertexBuffer->Bind();
-
-	auto const& skins = mesh.GetSkins();
-
-	for (auto it = _primitives.begin(); it != _primitives.end(); ++it)
-	{
-		const Primitive& prim = *it;
-
-		if (prim.skinID != 0xFFFFFFFF)
-		{
-			const Texture2D* texture = nullptr;
-			if (skins.find(prim.skinID) != skins.end())
-				texture = skins.at(prim.skinID).get();
-			else
-				texture = &Game::instance()->GetMeshPack().GetTexture(prim.skinID);
-
-			program.SetTextureSampler("s_diffuse", 0, *texture);
-		}
-
-		_indexBuffer->Bind(prim.indicesCount, prim.indicesOffset);
-		bgfx::submit(viewId, program.GetRawHandle(), 0, false/*std::next(it) != _primitives.end()*/);
-	}
-}
-
 void L3DSubMesh::Submit(uint8_t viewId, ShaderProgram& program, uint64_t state, uint32_t rgba, bool preserveState) const
 {
 	if (!_vertexBuffer || !_indexBuffer)

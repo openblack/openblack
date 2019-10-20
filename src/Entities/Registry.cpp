@@ -43,9 +43,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
 
 		bgfx::setTransform(&modelMatrix);
-
-		mesh.Draw(viewId, *objectShader, 2, state);
-		mesh.Draw(viewId, *objectShader, 3, state);
+		mesh.Submit(viewId, *objectShader, state);
 	});
 
 	_registry.view<Stream>().each([viewId, debugShader](Stream& stream) {
@@ -78,31 +76,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		bgfx::setTransform(&modelMatrix);
 
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(abodeMeshLookup[abodeId]));
-
-		std::vector<int> submeshIds = { 2 };
-
-		// Temporary
-		switch (abodeId)
-		{
-		case AbodeInfo::AfricanTownCentre:
-		case AbodeInfo::AztecTownCentre:
-		case AbodeInfo::CelticTownCentre:
-		case AbodeInfo::EgyptianTownCentre:
-		case AbodeInfo::AfricanCreche:
-		case AbodeInfo::GreekTownCentre:
-		case AbodeInfo::NorseTownCentre:
-		case AbodeInfo::JapaneseTownCentre:
-		case AbodeInfo::TibetanTownCentre:
-			submeshIds = { 0, 3 };
-			break;
-		case AbodeInfo::IndianTownCentre:
-			submeshIds = { 1, 2 };
-		}
-
-		for (auto& submeshId : submeshIds)
-		{
-			mesh.Draw(viewId, *objectShader, submeshId, state);
-		}
+		mesh.Submit(viewId, *objectShader, state);
 	});
 
 	_registry.view<AnimatedStatic, Transform>().each([viewId, state, objectShader](AnimatedStatic& animated, Transform& transform) {
@@ -119,22 +93,22 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		if (animated.type == "Norse Gate")
 		{
 			const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh((int)MeshId::BuildingNorseGate);
-			mesh.Draw(viewId, *objectShader, 0, state);
+			mesh.Submit(viewId, *objectShader, state);
 		}
 		else if (animated.type == "Gate Stone Plinth")
 		{
 			const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh((int)MeshId::ObjectGateTotemPlinthe);
-			mesh.Draw(viewId, *objectShader, 0, state);
+			mesh.Submit(viewId, *objectShader, state);
 		}
 		else if (animated.type == "Piper Cave Entrance")
 		{
 			const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh((int)MeshId::BuildingMineEntrance);
-			mesh.Draw(viewId, *objectShader, 0, state);
+			mesh.Submit(viewId, *objectShader, state);
 		}
 		else
 		{
 			const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(0);
-			mesh.Draw(viewId, *objectShader, 0, state);
+			mesh.Submit(viewId, *objectShader, state);
 		}
 	});
 
@@ -146,11 +120,11 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 		modelMatrix           = glm::scale(modelMatrix, transform.scale);
 
-		bgfx::setTransform(&modelMatrix);
-
 		auto meshId         = mobileStaticMeshLookup[mobile.type];
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
-		mesh.Draw(viewId, *objectShader, 1, state);
+
+		bgfx::setTransform(&modelMatrix);
+		mesh.Submit(viewId, *objectShader, state);
 	});
 
 	_registry.view<Feature, Transform>().each([viewId, state, objectShader](Feature& feature, Transform& transform) {
@@ -165,7 +139,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 
 		auto meshId         = featureMeshLookup[feature.type];
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
-		mesh.Draw(viewId, *objectShader, 1, state);
+		mesh.Submit(viewId, *objectShader, state);
 	});
 
 	_registry.view<Field, Transform>().each([viewId, state, objectShader](Field& feature, Transform& transform) {
@@ -180,7 +154,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 
 		auto meshId         = MeshId::TreeWheat;
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
-		mesh.Draw(viewId, *objectShader, 0, state);
+		mesh.Submit(viewId, *objectShader, state);
 	});
 
 	_registry.view<Forest, Transform>().each([viewId, state, objectShader](Forest& forest, Transform& transform) {
@@ -195,7 +169,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 
 		auto meshId         = MeshId::FeatureForest;
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
-		mesh.Draw(viewId, *objectShader, 1, state);
+		mesh.Submit(viewId, *objectShader, state);
 	});
 
 	_registry.view<MobileObject, Transform>().each([viewId, state, objectShader](MobileObject& mobileObject, Transform& transform) {
@@ -210,7 +184,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 
 		auto meshId         = mobileObjectMeshLookup[mobileObject.type];
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
-		mesh.Draw(viewId, *objectShader, 1, state);
+		mesh.Submit(viewId, *objectShader, state);
 	});
 }
 } // namespace openblack::Entities

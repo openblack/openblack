@@ -237,5 +237,15 @@ void L3DMesh::Draw(uint8_t viewId, ShaderProgram &program, uint32_t mesh, uint64
 		mesh = _subMeshes.size() - 1;
 	}
 
-	_subMeshes[mesh]->Draw(viewId, *this, program, state, rgba);
+	_subMeshes[mesh]->Submit(viewId, program, state, rgba, false);
+}
+
+
+void L3DMesh::Submit(uint8_t viewId, ShaderProgram& program, uint64_t state, uint32_t rgba) const
+{
+	for (auto it = _subMeshes.begin(); it != _subMeshes.end(); ++it)
+	{
+		const L3DSubMesh& submesh = *it->get();
+		submesh.Submit(viewId, program, state, rgba, std::next(it) != _subMeshes.end());
+	}
 }
