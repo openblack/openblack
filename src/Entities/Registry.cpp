@@ -27,7 +27,6 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		| BGFX_STATE_WRITE_MASK
 		| BGFX_STATE_DEPTH_TEST_LESS
 		| BGFX_STATE_MSAA
-		| BGFX_STATE_BLEND_ALPHA
 	;
 
 	_registry.view<Tree, Transform>().each([viewId, objectShader, state](Tree& tree, Transform& transform) {
