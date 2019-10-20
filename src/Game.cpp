@@ -69,11 +69,13 @@ Game::Game(int argc, char** argv)
 	sInstance = this;
 
 	int windowWidth = 1280, windowHeight = 1024;
+	bool vsync = false;
 	DisplayMode displayMode = DisplayMode::Windowed;
 
 	auto args = CmdLineArgs(argc, argv);
 	args.Get("w", windowWidth);
 	args.Get("h", windowHeight);
+	args.Get("v", vsync);
 
 	std::string binaryPath = fs::path{argv[0]}.parent_path().generic_string();
 	spdlog::info("current binary path: {}", binaryPath);
@@ -85,7 +87,7 @@ Game::Game(int argc, char** argv)
 
 	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", windowWidth, windowHeight, displayMode);
 
-	_renderer = std::make_unique<Renderer>(*_window, binaryPath);
+	_renderer = std::make_unique<Renderer>(*_window, vsync, binaryPath);
 
 	_fileSystem->SetGamePath(GetGamePath());
 	spdlog::debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
