@@ -35,7 +35,7 @@ class StreamNode
 	glm::vec3 position;
 	std::vector<StreamNode> edges;
 
-	StreamNode(const glm::vec3 position, std::vector<StreamNode>& streamNodes):
+	StreamNode(const glm::vec3 position, const std::vector<StreamNode>& streamNodes):
 	    position(position)
 	{
 		if (streamNodes.empty())
@@ -43,15 +43,15 @@ class StreamNode
 			return;
 		}
 
-		std::sort(std::begin(streamNodes), std::end(streamNodes), [](const auto& first, const auto& second) -> bool {
+		auto element = std::min_element(std::cbegin(streamNodes), std::cend(streamNodes), [](const auto& first, const auto& second) -> bool {
 			auto firstDistance  = glm::distance(first.position, second.position);
 			auto secondDistance = glm::distance(second.position, second.position);
-			return true ? firstDistance > secondDistance : false;
+			return firstDistance > secondDistance;
 		});
 
-		if (glm::distance(position, streamNodes[0].position) < maxNodeDistance)
+		if (glm::distance(position, element->position) < maxNodeDistance)
 		{
-			edges.push_back(streamNodes[0]);
+			edges.push_back(*element);
 		}
 	}
   private:
