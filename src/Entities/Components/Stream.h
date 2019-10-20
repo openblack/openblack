@@ -43,10 +43,10 @@ class StreamNode
 			return;
 		}
 
-		auto element = std::min_element(std::cbegin(streamNodes), std::cend(streamNodes), [](const auto& first, const auto& second) -> bool {
-			auto firstDistance  = glm::distance(first.position, second.position);
-			auto secondDistance = glm::distance(second.position, second.position);
-			return firstDistance > secondDistance;
+		auto element = std::min_element(std::cbegin(streamNodes), std::cend(streamNodes), [&position](const auto& first, const auto& second) {
+			auto firstDistance  = glm::distance(position, first.position);
+			auto secondDistance = glm::distance(position, second.position);
+			return firstDistance < secondDistance;
 		});
 
 		if (glm::distance(position, element->position) < maxNodeDistance)
