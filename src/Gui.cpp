@@ -737,9 +737,8 @@ void Gui::ShowProfilerWindow(const Game& game)
 		char frameTextOverlay[256];
 		std::snprintf(frameTextOverlay, sizeof(frameTextOverlay), "%.3fms, %.1f FPS", _times.back(), _fps.back());
 
-		//	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImColor(0.0f, 0.5f, 0.15f, 1.0f).Value);
-		ImGui::PlotHistogram("Frame", _times._values, decltype(_times)::_bufferSize, _times._offset, frameTextOverlay, 0.0f, FLT_MAX, ImVec2(0.0f, 45.0f));
-		//	ImGui::PopStyleColor();
+		auto width = ImGui::GetColumnWidth() - ImGui::CalcTextSize("Frame").x;
+		ImGui::PlotHistogram("Frame", _times._values, decltype(_times)::_bufferSize, _times._offset, frameTextOverlay, 0.0f, FLT_MAX, ImVec2(width, 45.0f));
 
 		ImGui::Text("Submit CPU %0.3f, GPU %0.3f (Max GPU Latency: %d)", double(stats->cpuTimeEnd - stats->cpuTimeBegin) * toMsCpu, double(stats->gpuTimeEnd - stats->gpuTimeBegin) * toMsGpu, stats->maxGpuLatency);
 		ImGui::Text("Wait Submit %0.3f, Wait Render %0.3f", stats->waitSubmit * toMsCpu, stats->waitRender * toMsCpu);
@@ -770,7 +769,7 @@ void Gui::ShowProfilerWindow(const Game& game)
 				{
 					*caption = Profiler::stageNames[idx].data();
 				}
-			}, &entry, static_cast<uint8_t>(Profiler::Stage::_count), 0, "Main Thread");
+			}, &entry, static_cast<uint8_t>(Profiler::Stage::_count), 0, "Main Thread", 0, FLT_MAX, ImVec2(width, 0));
 
 		ImGuiWidgetFlameGraph::PlotFlame("GPU",
 			[](float* startTimestamp, float* endTimestamp, ImU8* level, const char** caption, const void* data, int idx) -> void {
@@ -791,7 +790,8 @@ void Gui::ShowProfilerWindow(const Game& game)
 				{
 					*caption = stats->viewStats[idx].name;
 				}
-			}, stats, stats->numViews, 0, "GPU Frame", 0, 1000.0f * (stats->gpuTimeEnd - stats->gpuTimeBegin) / (double)stats->gpuTimerFreq);
+			}, stats, stats->numViews, 0, "GPU Frame",
+            0, 1000.0f * (stats->gpuTimeEnd - stats->gpuTimeBegin) / (double)stats->gpuTimerFreq, ImVec2(width, 0));
 
 		ImGui::Columns(2);
 		if (ImGui::CollapsingHeader("Details (CPU)", ImGuiTreeNodeFlags_DefaultOpen))
