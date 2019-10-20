@@ -70,12 +70,17 @@ Game::Game(int argc, char** argv)
 
 	int windowWidth = 1280, windowHeight = 1024;
 	bool vsync = false;
-	DisplayMode displayMode = DisplayMode::Windowed;
+	bool fullscreen = false;
+	bool borderless = false;
 
 	auto args = CmdLineArgs(argc, argv);
 	args.Get("w", windowWidth);
 	args.Get("h", windowHeight);
 	args.Get("v", vsync);
+	args.Get("f", fullscreen);
+	args.Get("b", borderless);
+
+	DisplayMode displayMode = borderless ? DisplayMode::Borderless : (fullscreen ? DisplayMode::Fullscreen : DisplayMode::Windowed);
 
 	std::string binaryPath = fs::path{argv[0]}.parent_path().generic_string();
 	spdlog::info("current binary path: {}", binaryPath);
