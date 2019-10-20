@@ -69,7 +69,7 @@ class Renderer {
 	};
 
 	Renderer() = delete;
-	explicit Renderer(const GameWindow& window, const std::string binaryPath);
+	explicit Renderer(const GameWindow& window, bool vsync, const std::string binaryPath);
 
 	virtual ~Renderer();
 

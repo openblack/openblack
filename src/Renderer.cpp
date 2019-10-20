@@ -132,7 +132,7 @@ struct ApiThreadArgs
 
 }  // namespace openblack
 
-Renderer::Renderer(const GameWindow& window, const std::string binaryPath)
+Renderer::Renderer(const GameWindow& window, bool vsync, const std::string binaryPath)
 	: _shaderManager(std::make_unique<ShaderManager>())
 	, _bgfxCallback(std::make_unique<BgfxCallback>())
 {
@@ -163,7 +163,11 @@ Renderer::Renderer(const GameWindow& window, const std::string binaryPath)
 	init.platformData = apiThreadArgs.platformData;
 	init.resolution.width = (uint32_t)drawable_width;
 	init.resolution.height = (uint32_t)drawable_height;
-	init.resolution.reset = BGFX_RESET_VSYNC;
+	init.resolution.reset = BGFX_RESET_NONE;
+	if (vsync)
+	{
+		init.resolution.reset |= BGFX_RESET_VSYNC;
+	}
 	init.callback = dynamic_cast<bgfx::CallbackI*>(_bgfxCallback.get());
 
 	if (!bgfx::init(init)) {
