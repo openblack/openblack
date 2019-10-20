@@ -772,7 +772,29 @@ void Gui::ShowProfilerWindow(const Game& game)
 				}
 			}, &entry, static_cast<uint8_t>(Profiler::Stage::_count), 0, "Main Thread");
 
-		if (ImGui::CollapsingHeader("Details (CPU)"))
+		ImGuiWidgetFlameGraph::PlotFlame("GPU",
+			[](float* startTimestamp, float* endTimestamp, ImU8* level, const char** caption, const void* data, int idx) -> void {
+				auto stats = reinterpret_cast<const bgfx::Stats*>(data);
+				if (startTimestamp)
+				{
+					*startTimestamp = 1000.0f * (stats->viewStats[idx].gpuTimeBegin - stats->gpuTimeBegin) / (double)stats->gpuTimerFreq;
+				}
+				if (endTimestamp)
+				{
+					*endTimestamp = 1000.0f * (stats->viewStats[idx].gpuTimeEnd - stats->gpuTimeBegin) / (double)stats->gpuTimerFreq;
+				}
+				if (level)
+				{
+					*level = 0;
+				}
+				if (caption)
+				{
+					*caption = stats->viewStats[idx].name;
+				}
+			}, stats, stats->numViews, 0, "GPU Frame", 0, 1000.0f * (stats->gpuTimeEnd - stats->gpuTimeBegin) / (double)stats->gpuTimerFreq);
+
+		ImGui::Columns(2);
+		if (ImGui::CollapsingHeader("Details (CPU)", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			std::chrono::duration<float, std::milli> frameDuration = entry._frameEnd - entry._frameStart;
 			ImGui::Text("Full Frame: %0.3f", frameDuration.count());
@@ -789,6 +811,20 @@ void Gui::ShowProfilerWindow(const Game& game)
 			}
 			ImGui::Text("    Unaccounted: %0.3f", frameDuration.count());
 		}
+		ImGui::NextColumn();
+		if (ImGui::CollapsingHeader("Details (GPU)", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			auto frameDuration = stats->gpuTimeEnd - stats->gpuTimeBegin;
+			ImGui::Text("Full Frame: %0.3f", 1000.0f * frameDuration / (double)stats->gpuTimerFreq);
+
+			for (uint8_t i = 0; i < stats->numViews; ++i)
+			{
+				ImGui::Text("    %s: %0.3f", stats->viewStats[i].name, 1000.0f * stats->viewStats[i].gpuTimeElapsed  / (double)stats->gpuTimerFreq);
+				frameDuration -= stats->viewStats[i].gpuTimeElapsed;
+			}
+			ImGui::Text("    Unaccounted: %0.3f", 1000.0f * frameDuration / (double)stats->gpuTimerFreq);
+		}
+		ImGui::Columns(1);
 	}
 	ImGui::End();
 }
