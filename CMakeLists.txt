@@ -37,12 +37,12 @@ if(CMAKE_VERSION VERSION_GREATER 3.15 OR CMAKE_VERSION VERSION_EQUAL 3.15)
   find_package(SDL2 REQUIRED)
   find_package(spdlog REQUIRED)
   find_package(glm REQUIRED)
-  find_package(EnTT CONFIG REQUIRED) # only available as a config
+  find_package(EnTT 3.1.0 CONFIG REQUIRED) # only available as a config
 else()
   find_package(SDL2 CONFIG QUIET)
   find_package(spdlog CONFIG QUIET)
   find_package(glm CONFIG QUIET)
-  find_package(EnTT CONFIG REQUIRED) # only available as a config
+  find_package(EnTT 3.1.0 CONFIG REQUIRED) # only available as a config
 
   if(NOT DEFINED SDL2_DIR)
     find_package(SDL2 MODULE REQUIRED)
