@@ -65,20 +65,6 @@ const bgfx::EmbeddedShader s_embeddedShaders[] =
 
 		BGFX_EMBEDDED_SHADER_END()
 	};
-
-/// Returns true if both internal transient index and vertex buffer have
-/// enough space.
-///
-/// @param[in] _numVertices Number of vertices.
-/// @param[in] _layout Vertex layout.
-/// @param[in] _numIndices Number of indices.
-///
-inline bool checkAvailTransientBuffers(uint32_t _numVertices, const bgfx::VertexLayout& _layout, uint32_t _numIndices)
-{
-	return _numVertices == bgfx::getAvailTransientVertexBuffer(_numVertices, _layout)
-		&& (0 == _numIndices || _numIndices == bgfx::getAvailTransientIndexBuffer(_numIndices) )
-		;
-}
 }  // namespace
 
 std::unique_ptr<Gui> Gui::create(const GameWindow &window, bgfx::ViewId viewId, float scale)
@@ -110,6 +96,8 @@ std::unique_ptr<Gui> Gui::create(const GameWindow &window, bgfx::ViewId viewId, 
 Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer> &&meshViewer)
 	: _imgui(imgui)
 	, _time(0)
+	, _vertexBuffer(BGFX_INVALID_HANDLE)
+	, _indexBuffer(BGFX_INVALID_HANDLE)
 	, _program(BGFX_INVALID_HANDLE)
 	, _imageProgram(BGFX_INVALID_HANDLE)
 	, _texture(BGFX_INVALID_HANDLE)
@@ -130,6 +118,10 @@ Gui::~Gui()
 {
 	ImGui::DestroyContext(_imgui);
 
+	if (bgfx::isValid(_vertexBuffer))
+		bgfx::destroy(_vertexBuffer);
+	if (bgfx::isValid(_indexBuffer))
+		bgfx::destroy(_indexBuffer);
 	if (bgfx::isValid(_u_imageLodEnabled))
 		bgfx::destroy(_u_imageLodEnabled);
 	if (bgfx::isValid(_s_tex))
@@ -638,31 +630,46 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData)
 	}
 
 	// Render command lists
+	uint32_t vertexCount = 0;
+	uint32_t indexCount = 0;
 	for (int32_t ii = 0, num = drawData->CmdListsCount; ii < num; ++ii)
 	{
-		bgfx::TransientVertexBuffer tvb;
-		bgfx::TransientIndexBuffer tib;
+		const ImDrawList* drawList = drawData->CmdLists[ii];
+		vertexCount += (uint32_t)drawList->VtxBuffer.size();
+		indexCount += (uint32_t)drawList->IdxBuffer.size();
+	}
 
+	if (!bgfx::isValid(_vertexBuffer) || vertexCount > _vertexCount)
+	{
+		if (bgfx::isValid(_vertexBuffer))
+		{
+			bgfx::destroy(_vertexBuffer);
+		}
+		_vertexBuffer = bgfx::createDynamicVertexBuffer(vertexCount, _layout);
+		_vertexCount = vertexCount;
+	}
+	if (!bgfx::isValid(_indexBuffer) || indexCount > _indexCount)
+	{
+		if (bgfx::isValid(_indexBuffer))
+		{
+			bgfx::destroy(_indexBuffer);
+		}
+		_indexBuffer = bgfx::createDynamicIndexBuffer(indexCount);
+		_indexCount = indexCount;
+	}
+
+	uint32_t vertexBufferOffset = 0;
+	uint32_t indexBufferOffset = 0;
+	for (int32_t ii = 0, num = drawData->CmdListsCount; ii < num; ++ii)
+	{
 		const ImDrawList* drawList = drawData->CmdLists[ii];
 		uint32_t numVertices = (uint32_t)drawList->VtxBuffer.size();
 		uint32_t numIndices  = (uint32_t)drawList->IdxBuffer.size();
 
-		if (!checkAvailTransientBuffers(numVertices, _layout, numIndices) )
-		{
-			// not enough space in transient buffer just quit drawing the rest...
-			break;
-		}
+		bgfx::update(_vertexBuffer, vertexBufferOffset, bgfx::makeRef(drawList->VtxBuffer.begin(), numVertices * sizeof(ImDrawVert)));
+		bgfx::update(_indexBuffer, indexBufferOffset, bgfx::makeRef(drawList->IdxBuffer.begin(), numIndices * sizeof(ImDrawIdx)));
 
-		bgfx::allocTransientVertexBuffer(&tvb, numVertices, _layout);
-		bgfx::allocTransientIndexBuffer(&tib, numIndices);
-
-		ImDrawVert* verts = (ImDrawVert*)tvb.data;
-		bx::memCopy(verts, drawList->VtxBuffer.begin(), numVertices * sizeof(ImDrawVert) );
-
-		ImDrawIdx* indices = (ImDrawIdx*)tib.data;
-		bx::memCopy(indices, drawList->IdxBuffer.begin(), numIndices * sizeof(ImDrawIdx) );
-
-		uint32_t offset = 0;
+		uint32_t offset = indexBufferOffset;
 		for (const ImDrawCmd* cmd = drawList->CmdBuffer.begin(), *cmdEnd = drawList->CmdBuffer.end(); cmd != cmdEnd; ++cmd)
 		{
 			if (cmd->UserCallback)
@@ -709,13 +716,15 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData)
 
 				bgfx::setState(state);
 				bgfx::setTexture(0, _s_tex, th);
-				bgfx::setVertexBuffer(0, &tvb, 0, numVertices);
-				bgfx::setIndexBuffer(&tib, offset, cmd->ElemCount);
+				bgfx::setVertexBuffer(0, _vertexBuffer, vertexBufferOffset, numVertices);
+				bgfx::setIndexBuffer(_indexBuffer, offset, cmd->ElemCount);
 				bgfx::submit(_viewId, program);
 			}
 
 			offset += cmd->ElemCount;
 		}
+		vertexBufferOffset += numVertices;
+		indexBufferOffset += numIndices;
 	}
 }
 

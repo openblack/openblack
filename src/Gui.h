@@ -122,6 +122,10 @@ class Gui
 	uint64_t _time;
 	CircularBuffer<float, 100> _times;
 	CircularBuffer<float, 100> _fps;
+	bgfx::DynamicVertexBufferHandle _vertexBuffer;
+	bgfx::DynamicIndexBufferHandle _indexBuffer;
+	uint32_t _vertexCount;
+	uint32_t _indexCount;
 	bgfx::VertexLayout  _layout;
 	bgfx::ProgramHandle _program;
 	bgfx::ProgramHandle _imageProgram;
