@@ -35,14 +35,14 @@ class DebugLines
 {
   public:
 	static std::unique_ptr<DebugLines> CreateCross();
-	std::unique_ptr<DebugLines> CreateBox(const glm::vec4 &color);
+	static std::unique_ptr<DebugLines> CreateBox(const glm::vec4 &color);
 	static std::unique_ptr<DebugLines> CreateLine(const glm::vec4& from, const glm::vec4& to, const glm::vec4& color);
 
 	virtual ~DebugLines();
 
 	void Draw(uint8_t viewId, ShaderProgram &program) const;
 
-	void SetPose(const glm::vec3 &center, float size);
+	void SetPose(const glm::vec3& center, const glm::vec3& size);
 
   protected:
 	static std::unique_ptr<DebugLines> CreateDebugLines(uint32_t size, const void* data, uint32_t vertexCount);

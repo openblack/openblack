@@ -38,7 +38,9 @@ MeshViewer::MeshViewer(uint8_t viewId)
 	, _selectedMesh(MeshId::Dummy)
 	, _selectedSubMesh(0)
 	, _cameraPosition(5.0f, 3.0f, 5.0f)
-	, _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", 512, 512, graphics::Format::RGBA8))
+	, _viewBoundingBox(false)
+	, _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f)))
+	, _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", 512, 512, graphics::Format::RGBA8, graphics::Format::Depth24Stencil8))
 {
 	bgfx::setViewName(_viewId, "MeshViewer");
 }
@@ -86,6 +88,7 @@ void MeshViewer::DrawWindow()
 	ImGui::Text("%zu submeshes", mesh->GetSubMeshes().size());
 	ImGui::SliderInt("submesh", &_selectedSubMesh, 0, mesh->GetSubMeshes().size() - 1);
 	ImGui::DragFloat3("position", &_cameraPosition[0], 0.5f);
+	ImGui::Checkbox("View bounding box", &_viewBoundingBox);
 
 	auto const& submesh = mesh->GetSubMeshes()[_selectedSubMesh];
 
@@ -112,6 +115,7 @@ void MeshViewer::DrawScene()
 	auto const& meshes          = meshPack.GetMeshes();
 	auto& shaderManager         = Game::instance()->GetRenderer().GetShaderManager();
 	ShaderProgram* objectShader = shaderManager.GetShader("Object");
+	ShaderProgram* debugShader  = shaderManager.GetShader("DebugLine");
 
 	// TODO(bwrsandman): use camera class
 	glm::mat4 perspective = glm::perspective(glm::radians(70.0f), 1.0f, 1.0f, 1024.0f);
@@ -130,13 +134,22 @@ void MeshViewer::DrawScene()
 
 	uint64_t state = 0u
 		| BGFX_STATE_WRITE_MASK
+		| BGFX_STATE_DEPTH_TEST_LESS
 		| BGFX_STATE_CULL_CCW  // TODO(bwrsandman): Some meshes wind one way and some others (i.e. rocks, gate)
 		| BGFX_STATE_MSAA
 	;
 
 	const auto& mesh = meshes[static_cast<int>(_selectedMesh)];
 	if (_selectedSubMesh >= 0 && static_cast<uint32_t>(_selectedSubMesh) < mesh->GetSubMeshes().size())
+	{
 		mesh->Draw(_viewId, glm::mat4(1.0f), *objectShader, _selectedSubMesh, state);
+		if (_viewBoundingBox)
+		{
+			auto box = mesh->GetSubMeshes()[_selectedSubMesh]->GetBoundingBox();
+			_boundingBox->SetPose(box.center(), box.size());
+			_boundingBox->Draw(_viewId, *debugShader);
+		}
+	}
 
 	_frameBuffer->Unbind(_viewId);
 }

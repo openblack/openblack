@@ -22,6 +22,11 @@
 
 #include <cstdint>
 #include <memory>
+#include <vector>
+
+#include <glm/fwd.hpp>
+
+#include "AxisAlignedBoundingBox.h"
 
 namespace openblack
 {
@@ -54,22 +59,25 @@ class L3DSubMesh
 	~L3DSubMesh();
 
 	void Load(IStream& stream);
-	void Submit(uint8_t viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
+	void Submit(uint8_t viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
 
 	[[ nodiscard ]] uint8_t GetLOD() const { return static_cast<uint8_t>(_flags & 0x7u); } // 29-32 (3)
 	[[ nodiscard ]] uint8_t GetStatus() const { return static_cast<uint8_t>((_flags >> 3u) & 0x3Fu); } // 22-28 (6)
 	[[ nodiscard ]] bool IsWindow() const { return static_cast<bool>(_flags & 0x1000u); } // 19
 	[[ nodiscard ]] bool IsPhysics() const { return static_cast<bool>(_flags & 0x2000u); } // 18
-	[[ nodiscard ]] uint32_t GetVertexCount() const { return _vertexBuffer->GetCount(); }
-	[[ nodiscard ]] uint32_t GetIndexCount() const { return _indexBuffer->GetCount(); }
+	[[ nodiscard ]] uint32_t GetVertexCount() const;
+	[[ nodiscard ]] uint32_t GetIndexCount() const;
+	[[ nodiscard ]] AxisAlignedBoundingBox GetBoundingBox() const { return _boundingBox; }
 
   private:
 	L3DMesh& _l3dMesh;
 
 	uint32_t _flags;
 
-	std::unique_ptr<VertexBuffer> _vertexBuffer;
-	std::unique_ptr<IndexBuffer> _indexBuffer;
+	std::unique_ptr<graphics::VertexBuffer> _vertexBuffer;
+	std::unique_ptr<graphics::IndexBuffer> _indexBuffer;
 	std::vector<Primitive> _primitives;
+
+	AxisAlignedBoundingBox _boundingBox;
 };
 } // namespace openblack

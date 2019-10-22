@@ -18,39 +18,24 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <memory>
-
-#include <AllMeshes.h>
-#include <Graphics/FrameBuffer.h>
-#include <Graphics/DebugLines.h>
+#include <glm/vec3.hpp>
 
 namespace openblack
 {
 
-namespace graphics
+struct AxisAlignedBoundingBox
 {
-class DebugLines;
-}
+	glm::vec3 minima;
+	glm::vec3 maxima;
 
-class MeshViewer
-{
-  public:
-	explicit MeshViewer(uint8_t viewId);
-	void Open();
-	void DrawWindow();
-	void DrawScene();
-
-  private:
-	bool _open;
-	const uint8_t _viewId;
-	MeshId _selectedMesh;
-	int _selectedSubMesh;
-	ImGuiTextFilter _filter;
-	glm::vec3 _cameraPosition;
-	bool _viewBoundingBox;
-	std::unique_ptr<graphics::DebugLines> _boundingBox;
-	std::unique_ptr<graphics::FrameBuffer> _frameBuffer;
+	[[nodiscard]] inline glm::vec3 center() const
+	{
+		return (maxima + minima) * 0.5f;
+	}
+	[[nodiscard]] inline glm::vec3 size() const
+	{
+		return maxima - minima;
+	}
 };
-} // namespace openblack
+
+}  // namespace openblack::graphics
