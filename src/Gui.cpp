@@ -726,7 +726,7 @@ void Gui::Draw()
 	RenderDrawDataBgfx(ImGui::GetDrawData());
 }
 
-void Gui::ShowProfilerWindow(const Game& game)
+void Gui::ShowProfilerWindow(Game& game)
 {
 	if (ImGui::Begin("Profiler"))
 	{
@@ -742,6 +742,14 @@ void Gui::ShowProfilerWindow(const Game& game)
 
 		ImGui::Text("Submit CPU %0.3f, GPU %0.3f (Max GPU Latency: %d)", double(stats->cpuTimeEnd - stats->cpuTimeBegin) * toMsCpu, double(stats->gpuTimeEnd - stats->gpuTimeBegin) * toMsGpu, stats->maxGpuLatency);
 		ImGui::Text("Wait Submit %0.3f, Wait Render %0.3f", stats->waitSubmit * toMsCpu, stats->waitRender * toMsCpu);
+
+		ImGui::Columns(5);
+		ImGui::Checkbox("Sky", &game.GetConfig().drawSky); ImGui::NextColumn();
+		ImGui::Checkbox("Water", &game.GetConfig().drawWater); ImGui::NextColumn();
+		ImGui::Checkbox("Island", &game.GetConfig().drawIsland); ImGui::NextColumn();
+		ImGui::Checkbox("Entities", &game.GetConfig().drawEntities); ImGui::NextColumn();
+		ImGui::Checkbox("Debug Cross", &game.GetConfig().drawDebugCross);
+		ImGui::Columns(1);
 
 		auto width = ImGui::GetColumnWidth() - ImGui::CalcTextSize("Frame").x;
 		ImGui::PlotHistogram("Frame", _times._values, decltype(_times)::_bufferSize, _times._offset, frameTextOverlay, 0.0f, FLT_MAX, ImVec2(width, 45.0f));

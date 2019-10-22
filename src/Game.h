@@ -59,6 +59,11 @@ class Game
 			: wireframe(false)
 			, waterDebug(false)
 			, showProfiler(false)
+			, drawSky(true)
+			, drawWater(true)
+			, drawIsland(true)
+			, drawEntities(true)
+			, drawDebugCross(true)
 			, timeOfDay(1.0f)
 			, bumpMapStrength(1.0f)
 			, smallBumpMapStrength(1.0f)
@@ -69,6 +74,12 @@ class Game
 		bool wireframe;
 		bool waterDebug;
 		bool showProfiler;
+
+		bool drawSky;
+		bool drawWater;
+		bool drawIsland;
+		bool drawEntities;
+		bool drawDebugCross;
 
 		float timeOfDay;
 		float bumpMapStrength;

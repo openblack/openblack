@@ -245,15 +245,15 @@ void Game::Run()
 		Renderer::DrawSceneDesc drawDesc {
 			/*viewId =*/ 0,
 			/*profiler =*/ *_profiler,
-			/*drawSky =*/ true,
+			/*drawSky =*/ _config.drawSky,
 			/*sky =*/ *_sky,
-			/*drawWater =*/ true,
+			/*drawWater =*/ _config.drawWater,
 			/*water =*/ *_water,
-			/*drawIsland =*/ true,
+			/*drawIsland =*/ _config.drawIsland,
 			/*island =*/ *_landIsland,
-			/*drawEntities =*/ true,
+			/*drawEntities =*/ _config.drawEntities,
 			/*entities =*/ *_entityRegistry,
-			/*drawDebugCross =*/ true,
+			/*drawDebugCross =*/ _config.drawDebugCross,
 			/*cullBack =*/ true,
 			/*bgfxDebug =*/ _config.bgfxDebug,
 			/*wireframe =*/ _config.wireframe,
@@ -296,8 +296,8 @@ void Game::Run()
 		_profiler->End(Profiler::Stage::MainPassUploadUniforms);
 
 		drawDesc.viewId = 1;
-		drawDesc.drawWater = true;
-		drawDesc.drawDebugCross = true;
+		drawDesc.drawWater = _config.drawWater;
+		drawDesc.drawDebugCross = _config.drawDebugCross;
 		drawDesc.cullBack = false;
 		_renderer->DrawScene(drawDesc);
 		_profiler->End(Profiler::Stage::MainPass);
