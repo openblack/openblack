@@ -48,7 +48,7 @@ Mesh::Topology Mesh::GetTopology() const noexcept
 	return _topology;
 }
 
-void Mesh::Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &program, uint64_t state, uint32_t rgba)
+void Mesh::Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &program, uint64_t state, uint32_t rgba) const
 {
 	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
 	{
@@ -60,7 +60,7 @@ void Mesh::Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &progra
 	}
 }
 
-void Mesh::Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &program, uint32_t count, uint32_t startIndex, uint64_t state, uint32_t rgba)
+void Mesh::Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &program, uint32_t count, uint32_t startIndex, uint64_t state, uint32_t rgba) const
 {
 	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
 	{

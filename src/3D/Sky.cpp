@@ -123,7 +123,7 @@ void Sky::CalculateTextures()
 	_texture->Create(256, 256, 1, Format::RGB5A1, Wrapping::ClampEdge, bitmap.data(), bitmap.size() * sizeof(bitmap[0]));
 }
 
-void Sky::Draw(uint8_t viewId, graphics::ShaderProgram &program)
+void Sky::Draw(uint8_t viewId, graphics::ShaderProgram &program) const
 {
 //	program.SetUniformValue("u_model", glm::mat4(1.0f));
 	program.SetTextureSampler("s_diffuse", 0, *_texture);
