@@ -34,6 +34,15 @@ namespace openblack
 struct BgfxCallback;
 class GameWindow;
 class Game;
+class LandIsland;
+class Profiler;
+class Sky;
+class Water;
+
+namespace Entities
+{
+class Registry;
+}
 
 namespace graphics
 {
@@ -67,6 +76,23 @@ class Renderer {
 		uint32_t name;
 		int value;
 	};
+	struct DrawSceneDesc {
+		uint8_t viewId;
+		Profiler& profiler;
+		bool drawSky;
+		Sky& sky;
+		bool drawWater;
+		Water& water;
+		bool drawIsland;
+		LandIsland& island;
+		bool drawEntities;
+		Entities::Registry& entities;
+		bool drawDebugCross;
+		bool cullBack;
+		bool bgfxDebug;
+		bool wireframe;
+		bool profile;
+	};
 
 	Renderer() = delete;
 	explicit Renderer(const GameWindow& window, bool vsync, const std::string binaryPath);
@@ -80,7 +106,7 @@ class Renderer {
 
 	void UploadUniforms(std::chrono::microseconds dt, uint8_t viewId, const Game &game, const Camera &camera);
 	void ClearScene(uint8_t viewId, int width, int height);
-	void DrawScene(const Game &game, uint8_t viewId, bool drawWater, bool drawDebugCross, bool cullBack = true);
+	void DrawScene(const DrawSceneDesc &desc);
 	void Frame();
 
   private:

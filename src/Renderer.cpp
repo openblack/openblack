@@ -237,58 +237,65 @@ void Renderer::ClearScene(uint8_t viewId, int width, int height)
 	bgfx::touch(viewId);
 }
 
-void Renderer::DrawScene(const Game &game, uint8_t viewId, bool drawWater, bool drawDebugCross, bool cullBack)
+void Renderer::DrawScene(const DrawSceneDesc &desc)
 {
-	game.GetProfiler().Begin(viewId == 0 ? Profiler::Stage::ReflectionDrawScene : Profiler::Stage::MainPassDrawScene);
+	desc.profiler.Begin(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawScene : Profiler::Stage::MainPassDrawScene);
 	ShaderProgram* objectShader = _shaderManager->GetShader("Object");
 	ShaderProgram* waterShader = _shaderManager->GetShader("Water");
 	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
 	ShaderProgram* debugShader = _shaderManager->GetShader("DebugLine");
 
-	game.GetProfiler().Begin(viewId == 0 ? Profiler::Stage::ReflectionDrawSky : Profiler::Stage::MainPassDrawSky);
-	game.GetSky().Draw(viewId, *objectShader);
-	game.GetProfiler().End(viewId == 0 ? Profiler::Stage::ReflectionDrawSky : Profiler::Stage::MainPassDrawSky);
-
-	game.GetProfiler().Begin(viewId == 0 ? Profiler::Stage::ReflectionDrawWater : Profiler::Stage::MainPassDrawWater);
-	if (drawWater)
+	desc.profiler.Begin(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawSky : Profiler::Stage::MainPassDrawSky);
+	if (desc.drawSky)
 	{
-		game.GetWater().Draw(viewId, *waterShader);
+		desc.sky.Draw(desc.viewId, *objectShader);
 	}
-	game.GetProfiler().End(viewId == 0 ? Profiler::Stage::ReflectionDrawWater : Profiler::Stage::MainPassDrawWater);
+	desc.profiler.End(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawSky : Profiler::Stage::MainPassDrawSky);
 
-	game.GetProfiler().Begin(viewId == 0 ? Profiler::Stage::ReflectionDrawIsland : Profiler::Stage::MainPassDrawIsland);
-	game.GetLandIsland().Draw(viewId, *terrainShader, cullBack);
-	game.GetProfiler().End(viewId == 0 ? Profiler::Stage::ReflectionDrawIsland : Profiler::Stage::MainPassDrawIsland);
-
-//	game.GetTestModel().Draw(*objectShader, 0);
-
-	game.GetProfiler().Begin(viewId == 0 ? Profiler::Stage::ReflectionDrawModels : Profiler::Stage::MainPassDrawModels);
-	game.GetEntityRegistry().DrawModels(viewId, *_shaderManager);
-	game.GetProfiler().End(viewId == 0 ? Profiler::Stage::ReflectionDrawModels : Profiler::Stage::MainPassDrawModels);
-
-	game.GetProfiler().Begin(viewId == 0 ? Profiler::Stage::ReflectionDrawDebugCross : Profiler::Stage::MainPassDrawDebugCross);
-	if (drawDebugCross)
+	desc.profiler.Begin(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawWater : Profiler::Stage::MainPassDrawWater);
+	if (desc.drawWater)
 	{
-		_debugCross->Draw(viewId, *debugShader);
+		desc.water.Draw(desc.viewId, *waterShader);
 	}
-	game.GetProfiler().End(viewId == 0 ? Profiler::Stage::ReflectionDrawDebugCross : Profiler::Stage::MainPassDrawDebugCross);
+	desc.profiler.End(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawWater : Profiler::Stage::MainPassDrawWater);
+
+	desc.profiler.Begin(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawIsland : Profiler::Stage::MainPassDrawIsland);
+	if (desc.drawIsland)
+	{
+		desc.island.Draw(desc.viewId, *terrainShader, desc.cullBack);
+	}
+	desc.profiler.End(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawIsland : Profiler::Stage::MainPassDrawIsland);
+
+	desc.profiler.Begin(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawModels : Profiler::Stage::MainPassDrawModels);
+	if (desc.drawEntities)
+	{
+		desc.entities.DrawModels(desc.viewId, *_shaderManager);
+	}
+	desc.profiler.End(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawModels : Profiler::Stage::MainPassDrawModels);
+
+	desc.profiler.Begin(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawDebugCross : Profiler::Stage::MainPassDrawDebugCross);
+	if (desc.drawDebugCross)
+	{
+		_debugCross->Draw(desc.viewId, *debugShader);
+	}
+	desc.profiler.End(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawDebugCross : Profiler::Stage::MainPassDrawDebugCross);
 
 	// Enable stats or debug text.
 	auto debugMode = BGFX_DEBUG_NONE;
-	if (game.GetConfig().bgfxDebug)
+	if (desc.bgfxDebug)
 	{
 		debugMode |= BGFX_DEBUG_STATS;
 	}
-	if (game.GetConfig().wireframe)
+	if (desc.wireframe)
 	{
 		debugMode |= BGFX_DEBUG_WIREFRAME;
 	}
-	if (game.GetConfig().showProfiler)
+	if (desc.profile)
 	{
 		debugMode |= BGFX_DEBUG_PROFILER;
 	}
 	bgfx::setDebug(debugMode);
-	game.GetProfiler().End(viewId == 0 ? Profiler::Stage::ReflectionDrawScene : Profiler::Stage::MainPassDrawScene);
+	desc.profiler.End(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawScene : Profiler::Stage::MainPassDrawScene);
 }
 
 void Renderer::Frame()

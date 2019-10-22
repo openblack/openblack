@@ -242,6 +242,24 @@ void Game::Run()
 		_gui->Loop(*this);
 		_profiler->End(Profiler::Stage::GuiLoop);
 
+		Renderer::DrawSceneDesc drawDesc {
+			/*viewId =*/ 0,
+			/*profiler =*/ *_profiler,
+			/*drawSky =*/ true,
+			/*sky =*/ *_sky,
+			/*drawWater =*/ true,
+			/*water =*/ *_water,
+			/*drawIsland =*/ true,
+			/*island =*/ *_landIsland,
+			/*drawEntities =*/ true,
+			/*entities =*/ *_entityRegistry,
+			/*drawDebugCross =*/ true,
+			/*cullBack =*/ true,
+			/*bgfxDebug =*/ _config.bgfxDebug,
+			/*wireframe =*/ _config.wireframe,
+			/*profile =*/ _config.showProfiler,
+		};
+
 		// Reflection Pass
 		_profiler->Begin(Profiler::Stage::ReflectionPass);
 		bgfx::setViewName(0, "Reflection Pass");
@@ -258,7 +276,11 @@ void Game::Run()
 		_renderer->UploadUniforms(deltaTime, 0, *this, reflectionCamera);
 		_profiler->End(Profiler::Stage::ReflectionUploadUniforms);
 
-		_renderer->DrawScene(*this, 0, false, false, true);
+		drawDesc.viewId = 0;
+		drawDesc.drawWater = false;
+		drawDesc.drawDebugCross = false;
+		drawDesc.cullBack = true;
+		_renderer->DrawScene(drawDesc);
 		_profiler->End(Profiler::Stage::ReflectionPass);
 
 		// Main Draw Pass
@@ -273,7 +295,11 @@ void Game::Run()
 		_renderer->UploadUniforms(deltaTime, 1, *this, *_camera);
 		_profiler->End(Profiler::Stage::MainPassUploadUniforms);
 
-		_renderer->DrawScene(*this, 1, true, true, false);
+		drawDesc.viewId = 1;
+		drawDesc.drawWater = true;
+		drawDesc.drawDebugCross = true;
+		drawDesc.cullBack = false;
+		_renderer->DrawScene(drawDesc);
 		_profiler->End(Profiler::Stage::MainPass);
 
 		_profiler->Begin(Profiler::Stage::GuiDraw);
