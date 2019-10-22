@@ -18,7 +18,7 @@
 namespace openblack::Entities
 {
 
-void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager)
+void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager) const
 {
 	graphics::ShaderProgram* debugShader            = shaderManager.GetShader("DebugLine");
 	graphics::ShaderProgram* objectShader = shaderManager.GetShader("Object");
@@ -29,7 +29,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		| BGFX_STATE_MSAA
 	;
 
-	_registry.view<Tree, Transform>().each([viewId, objectShader, state](Tree& tree, Transform& transform) {
+	_registry.view<const Tree, const Transform>().each([viewId, objectShader, state](const Tree& tree, const Transform& transform) {
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		modelMatrix           = glm::translate(modelMatrix, transform.position);
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -44,7 +44,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		mesh.Submit(viewId, *objectShader, state);
 	});
 
-	_registry.view<Stream>().each([viewId, debugShader](Stream& stream) {
+	_registry.view<const Stream>().each([viewId, debugShader](const Stream& stream) {
 		auto nodes       = stream.streamNodes;
 		const auto color = glm::vec4(1, 0, 0, 1);
 
@@ -62,7 +62,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		}
 	});
 
-	_registry.view<Abode, Transform>().each([viewId, state, objectShader](Abode& abode, Transform& transform) {
+	_registry.view<const Abode, const Transform>().each([viewId, state, objectShader](const Abode& abode, const Transform& transform) {
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		modelMatrix           = glm::translate(modelMatrix, transform.position);
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -77,7 +77,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		mesh.Submit(viewId, *objectShader, state);
 	});
 
-	_registry.view<AnimatedStatic, Transform>().each([viewId, state, objectShader](AnimatedStatic& animated, Transform& transform) {
+	_registry.view<const AnimatedStatic, const Transform>().each([viewId, state, objectShader](const AnimatedStatic& animated, const Transform& transform) {
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		modelMatrix           = glm::translate(modelMatrix, transform.position);
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -110,7 +110,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		}
 	});
 
-	_registry.view<MobileStatic, Transform>().each([viewId, state, objectShader](MobileStatic& mobile, Transform& transform) {
+	_registry.view<const MobileStatic, const Transform>().each([viewId, state, objectShader](const MobileStatic& mobile, const Transform& transform) {
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		modelMatrix           = glm::translate(modelMatrix, transform.position);
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -125,7 +125,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		mesh.Submit(viewId, *objectShader, state);
 	});
 
-	_registry.view<Feature, Transform>().each([viewId, state, objectShader](Feature& feature, Transform& transform) {
+	_registry.view<const Feature, const Transform>().each([viewId, state, objectShader](const Feature& feature, const Transform& transform) {
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		modelMatrix           = glm::translate(modelMatrix, transform.position);
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -140,7 +140,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		mesh.Submit(viewId, *objectShader, state);
 	});
 
-	_registry.view<Field, Transform>().each([viewId, state, objectShader](Field& feature, Transform& transform) {
+	_registry.view<const Field, const Transform>().each([viewId, state, objectShader](const Field& feature, const Transform& transform) {
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		modelMatrix           = glm::translate(modelMatrix, transform.position);
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -155,7 +155,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		mesh.Submit(viewId, *objectShader, state);
 	});
 
-	_registry.view<Forest, Transform>().each([viewId, state, objectShader](Forest& forest, Transform& transform) {
+	_registry.view<const Forest, const Transform>().each([viewId, state, objectShader](const Forest& forest, const Transform& transform) {
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		modelMatrix           = glm::translate(modelMatrix, transform.position);
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -170,7 +170,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		mesh.Submit(viewId, *objectShader, state);
 	});
 
-	_registry.view<MobileObject, Transform>().each([viewId, state, objectShader](MobileObject& mobileObject, Transform& transform) {
+	_registry.view<const MobileObject, const Transform>().each([viewId, state, objectShader](const MobileObject& mobileObject, const Transform& transform) {
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		modelMatrix           = glm::translate(modelMatrix, transform.position);
 		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));

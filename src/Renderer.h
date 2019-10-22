@@ -80,13 +80,13 @@ class Renderer {
 		uint8_t viewId;
 		Profiler& profiler;
 		bool drawSky;
-		Sky& sky;
+		const Sky& sky;
 		bool drawWater;
-		Water& water;
+		const Water& water;
 		bool drawIsland;
-		LandIsland& island;
+		const LandIsland& island;
 		bool drawEntities;
-		Entities::Registry& entities;
+		const Entities::Registry& entities;
 		bool drawDebugCross;
 		bool cullBack;
 		bool bgfxDebug;
