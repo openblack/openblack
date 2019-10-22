@@ -39,7 +39,9 @@
 #include <3D/MeshPack.h>
 #include <3D/Sky.h>
 #include <3D/Water.h>
+#include <Entities/Components/Transform.h>
 
+#include "Entities/Registry.h"
 #include "Graphics/Shaders/vs_ocornut_imgui.bin.h"
 #include "Graphics/Shaders/fs_ocornut_imgui.bin.h"
 #include "Graphics/Shaders/vs_imgui_image.bin.h"
@@ -737,11 +739,26 @@ void Gui::ShowProfilerWindow(const Game& game)
 		char frameTextOverlay[256];
 		std::snprintf(frameTextOverlay, sizeof(frameTextOverlay), "%.3fms, %.1f FPS", _times.back(), _fps.back());
 
+		ImGui::Text("Submit CPU %0.3f, GPU %0.3f (Max GPU Latency: %d)", double(stats->cpuTimeEnd - stats->cpuTimeBegin) * toMsCpu, double(stats->gpuTimeEnd - stats->gpuTimeBegin) * toMsGpu, stats->maxGpuLatency);
+		ImGui::Text("Wait Submit %0.3f, Wait Render %0.3f", stats->waitSubmit * toMsCpu, stats->waitRender * toMsCpu);
+
 		auto width = ImGui::GetColumnWidth() - ImGui::CalcTextSize("Frame").x;
 		ImGui::PlotHistogram("Frame", _times._values, decltype(_times)::_bufferSize, _times._offset, frameTextOverlay, 0.0f, FLT_MAX, ImVec2(width, 45.0f));
 
-		ImGui::Text("Submit CPU %0.3f, GPU %0.3f (Max GPU Latency: %d)", double(stats->cpuTimeEnd - stats->cpuTimeBegin) * toMsCpu, double(stats->gpuTimeEnd - stats->gpuTimeBegin) * toMsGpu, stats->maxGpuLatency);
-		ImGui::Text("Wait Submit %0.3f, Wait Render %0.3f", stats->waitSubmit * toMsCpu, stats->waitRender * toMsCpu);
+		ImGui::Text("Primitives Triangles %u, Triangle Strips %u, Lines %u Line Strips %u, Points %u", stats->numPrims[0], stats->numPrims[1], stats->numPrims[2], stats->numPrims[3], stats->numPrims[4]);
+		ImGui::Columns(2);
+		ImGui::Text("Num Draw %u, Num Compute %u, Num Blit %u", stats->numDraw, stats->numCompute, stats->numBlit);
+		ImGui::Text("Num Buffers Index %u, Vertex %u", stats->numIndexBuffers, stats->numVertexBuffers);
+		ImGui::Text("Num Dynamic Buffers Index %u, Vertex %u", stats->numDynamicIndexBuffers, stats->numDynamicVertexBuffers);
+		ImGui::Text("Num Transient Buffers Index %u, Vertex %u", stats->transientIbUsed, stats->transientVbUsed);
+		ImGui::NextColumn();
+		ImGui::Text("Num Vertex Layouts %u", stats->numVertexLayouts);
+		ImGui::Text("Num Textures %u, FrameBuffers %u", stats->numTextures, stats->numFrameBuffers);
+		ImGui::Text("Memory Texture %ld, RenderTarget %ld", stats->textureMemoryUsed, stats->rtMemoryUsed);
+		ImGui::Text("Num Programs %u, Num Shaders %u, Uniforms %u", stats->numPrograms, stats->numShaders, stats->numUniforms);
+		ImGui::Text("Num Occlusion Queries %u", stats->numOcclusionQueries);
+
+		ImGui::Columns(1);
 
 		auto& entry = game.GetProfiler()._entries[game.GetProfiler().GetCurrentEntryIndex()];
 
