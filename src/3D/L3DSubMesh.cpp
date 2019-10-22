@@ -66,11 +66,6 @@ struct L3DPrimitive
 
 void L3DSubMesh::Load(IStream& stream)
 {
-	// IsPhysics: 18
-	// IsWindow: 19
-	// Status: 22-28 (6)
-	// GetLOD: 29-32 (3)
-
 	struct
 	{
 		uint32_t flags;
@@ -81,6 +76,8 @@ void L3DSubMesh::Load(IStream& stream)
 	} header;
 
 	stream.Read(&header);
+
+	_flags = header.flags;
 
 	// load primitives first
 	std::vector<uint32_t> offsets(header.numPrimitives);
@@ -153,6 +150,10 @@ void L3DSubMesh::Load(IStream& stream)
 void L3DSubMesh::Submit(uint8_t viewId, ShaderProgram& program, uint64_t state, uint32_t rgba, bool preserveState) const
 {
 	if (!_vertexBuffer || !_indexBuffer)
+		return;
+
+	// ignore physics meshes
+	if (IsPhysics())
 		return;
 
 	bgfx::setState(state, rgba);

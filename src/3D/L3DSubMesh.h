@@ -55,10 +55,15 @@ class L3DSubMesh
 
 	void Load(IStream& stream);
 	void Submit(uint8_t viewId, ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
+
+	uint8_t GetLOD() const { return static_cast<uint8_t>(_flags & 0x7); } // 29-32 (3)
+	uint8_t GetStatus() const { return static_cast<uint8_t>((_flags >> 3) & 0x3F); } // 22-28 (6)
+	bool IsWindow() const { return static_cast<bool>(_flags & 0x1000); } // 19
+	bool IsPhysics() const { return static_cast<bool>(_flags & 0x2000); } // 18
   private:
 	L3DMesh& _l3dMesh;
 
-	L3DSubMeshFlags _flags;
+	uint32_t _flags;
 
 	std::unique_ptr<VertexBuffer> _vertexBuffer;
 	std::unique_ptr<IndexBuffer> _indexBuffer;
