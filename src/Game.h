@@ -64,6 +64,7 @@ class Game
 			, drawIsland(true)
 			, drawEntities(true)
 			, drawDebugCross(true)
+			, drawBoundingBoxes(false)
 			, timeOfDay(1.0f)
 			, bumpMapStrength(1.0f)
 			, smallBumpMapStrength(1.0f)
@@ -80,6 +81,7 @@ class Game
 		bool drawIsland;
 		bool drawEntities;
 		bool drawDebugCross;
+		bool drawBoundingBoxes;
 
 		float timeOfDay;
 		float bumpMapStrength;

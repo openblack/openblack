@@ -254,6 +254,7 @@ void Game::Run()
 			/*drawEntities =*/ _config.drawEntities,
 			/*entities =*/ *_entityRegistry,
 			/*drawDebugCross =*/ _config.drawDebugCross,
+			/*drawBoundingBoxes =*/ _config.drawBoundingBoxes,
 			/*cullBack =*/ true,
 			/*bgfxDebug =*/ _config.bgfxDebug,
 			/*wireframe =*/ _config.wireframe,
@@ -279,6 +280,7 @@ void Game::Run()
 		drawDesc.viewId = 0;
 		drawDesc.drawWater = false;
 		drawDesc.drawDebugCross = false;
+		drawDesc.drawBoundingBoxes = false;
 		drawDesc.cullBack = true;
 		_renderer->DrawScene(drawDesc);
 		_profiler->End(Profiler::Stage::ReflectionPass);
@@ -298,6 +300,7 @@ void Game::Run()
 		drawDesc.viewId = 1;
 		drawDesc.drawWater = _config.drawWater;
 		drawDesc.drawDebugCross = _config.drawDebugCross;
+		drawDesc.drawBoundingBoxes = _config.drawBoundingBoxes;
 		drawDesc.cullBack = false;
 		_renderer->DrawScene(drawDesc);
 		_profiler->End(Profiler::Stage::MainPass);
