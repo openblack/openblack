@@ -89,6 +89,7 @@ class Renderer {
 		bool drawEntities;
 		const Entities::Registry& entities;
 		bool drawDebugCross;
+		bool drawBoundingBoxes;
 		bool cullBack;
 		bool bgfxDebug;
 		bool wireframe;
@@ -115,5 +116,6 @@ class Renderer {
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
 
 	std::unique_ptr<graphics::DebugLines> _debugCross;
+	std::unique_ptr<graphics::DebugLines> _boundingBox;
 };
 } // namespace openblack

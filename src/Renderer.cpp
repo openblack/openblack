@@ -20,8 +20,6 @@
 
 #include "Renderer.h"
 
-#include <sstream>
-
 #include <bgfx/platform.h>
 #include <SDL_video.h>
 #include <spdlog/spdlog.h>
@@ -179,12 +177,14 @@ Renderer::Renderer(const GameWindow &window, bool vsync)
 
 	// allocate vertex buffers for our debug draw
 	_debugCross = DebugLines::CreateCross();
+	_boundingBox = DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f));
 }
 
 Renderer::~Renderer()
 {
 	_shaderManager.reset();
 	_debugCross.reset();
+	_boundingBox.reset();
 	bgfx::shutdown();
 }
 
@@ -268,7 +268,7 @@ void Renderer::DrawScene(const DrawSceneDesc &desc)
 	desc.profiler.Begin(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawModels : Profiler::Stage::MainPassDrawModels);
 	if (desc.drawEntities)
 	{
-		desc.entities.DrawModels(desc.viewId, *_shaderManager);
+		desc.entities.DrawModels(desc.viewId, *_shaderManager, desc.drawBoundingBoxes ? _boundingBox.get() : nullptr);
 	}
 	desc.profiler.End(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawModels : Profiler::Stage::MainPassDrawModels);
 
