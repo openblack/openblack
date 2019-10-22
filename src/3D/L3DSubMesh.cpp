@@ -18,15 +18,19 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/L3DMesh.h>
 #include <3D/L3DSubMesh.h>
+
+#include <spdlog/spdlog.h>
+#include <glm/gtx/norm.hpp>
+#include <glm/gtx/component_wise.hpp>
+
+#include <3D/L3DMesh.h>
 #include <3D/MeshPack.h>
 #include <Common/IStream.h>
 #include <Game.h>
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/ShaderProgram.h>
 #include <Graphics/VertexBuffer.h>
-#include <spdlog/spdlog.h>
 
 namespace openblack
 {
@@ -103,11 +107,21 @@ void L3DSubMesh::Load(IStream& stream)
 	auto indices  = (uint16_t*)indicesMem->data;
 
 	uint32_t startIndex = 0, startVertex = 0;
+	_boundingBox.maxima = glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+	_boundingBox.minima = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
 	for (const auto& prim : l3dPrims)
 	{
 		stream.Seek(prim.verticiesOffset, SeekMode::Begin);
 		for (uint32_t j = 0; j < prim.numVerticies; j++)
+		{
 			stream.Read(&vertices[startVertex + j]);
+			_boundingBox.maxima.x = glm::max(_boundingBox.maxima.x, vertices[startVertex + j].pos.x);
+			_boundingBox.maxima.y = glm::max(_boundingBox.maxima.y, vertices[startVertex + j].pos.y);
+			_boundingBox.maxima.z = glm::max(_boundingBox.maxima.z, vertices[startVertex + j].pos.z);
+			_boundingBox.minima.x = glm::min(_boundingBox.minima.x, vertices[startVertex + j].pos.x);
+			_boundingBox.minima.y = glm::min(_boundingBox.minima.y, vertices[startVertex + j].pos.y);
+			_boundingBox.minima.z = glm::min(_boundingBox.minima.z, vertices[startVertex + j].pos.z);
+		}
 
 		stream.Seek(prim.trianglesOffset, SeekMode::Begin);
 		for (uint32_t j = 0; j < prim.numTriangles * 3; j++)
@@ -196,6 +210,16 @@ void L3DSubMesh::Submit(uint8_t viewId, const glm::mat4& modelMatrix, const Shad
 		bgfx::submit(viewId, program.GetRawHandle(), 0, primitivePreserveState);
 		lastPreserveState = primitivePreserveState;
 	}
+}
+
+uint32_t L3DSubMesh::GetVertexCount() const
+{
+	return _vertexBuffer->GetCount();
+}
+
+uint32_t L3DSubMesh::GetIndexCount() const
+{
+	return _indexBuffer->GetCount();
 }
 
 } // namespace openblack

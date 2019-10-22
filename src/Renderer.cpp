@@ -206,7 +206,7 @@ graphics::ShaderManager& Renderer::GetShaderManager() const
 
 void Renderer::UpdateDebugCrossPose(std::chrono::microseconds dt, const glm::vec3 &position, float scale)
 {
-	_debugCross->SetPose(position, scale);
+	_debugCross->SetPose(position, glm::vec3(scale, scale, scale));
 }
 
 void Renderer::UploadUniforms(std::chrono::microseconds dt, uint8_t viewId, const Game &game, const Camera &camera)

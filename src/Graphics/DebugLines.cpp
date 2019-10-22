@@ -109,9 +109,9 @@ std::unique_ptr<DebugLines> DebugLines::CreateLine(const glm::vec4& from, const 
 	return CreateDebugLines(line.size() * sizeof(line[0]), line.data(), line.size());
 }
 
-void DebugLines::SetPose(const glm::vec3 &center, float size)
+void DebugLines::SetPose(const glm::vec3 &center, const glm::vec3& size)
 {
-	_model = glm::translate(center) * glm::scale(glm::vec3(size, size, size));
+	_model = glm::translate(center) * glm::scale(size);
 }
 
 void DebugLines::Draw(uint8_t viewId, ShaderProgram &program) const
