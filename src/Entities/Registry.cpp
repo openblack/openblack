@@ -19,6 +19,8 @@ namespace openblack::Entities
 
 Registry::Registry()
 	: _instanceUniformBuffer(BGFX_INVALID_HANDLE)
+	, _dirty(true)
+	, _hasBoundingBoxes(false)
 {
 	_registry.set<RegistryContext>();
 }
@@ -269,8 +271,14 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 
 void Registry::PrepareDraw(bool drawBoundingBox)
 {
-	PrepareDrawDescs(drawBoundingBox);
-	PrepareDrawUploadUniforms(drawBoundingBox);
+	if (_dirty || _hasBoundingBoxes != drawBoundingBox)
+	{
+		PrepareDrawDescs(drawBoundingBox);
+		PrepareDrawUploadUniforms(drawBoundingBox);
+
+		_dirty = false;
+		_hasBoundingBoxes = drawBoundingBox;
+	}
 }
 
 void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager, graphics::DebugLines* boundingBox) const
