@@ -62,6 +62,7 @@ class Registry
 		_registry.reset();
 		_registry.unset<RegistryContext>();
 		_registry.set<RegistryContext>();
+		_dirty = true;
 	};
 	template <typename Component>
 	size_t Size() { return _registry.size<Component>(); }
@@ -98,6 +99,9 @@ class Registry
 	/// The values stored are a list of uniforms (model matrix) needed for both
 	/// the instances of entities and their bounding boxes.
 	bgfx::DynamicVertexBufferHandle _instanceUniformBuffer;
+
+	bool _dirty;
+	bool _hasBoundingBoxes;
 };
 
 } // namespace openblack::Entities
