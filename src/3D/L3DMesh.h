@@ -84,8 +84,8 @@ class L3DMesh
 
 	void LoadFromFile(const std::string& fileName);
 	void Load(IStream& stream);
-	void Draw(uint8_t viewId, ShaderProgram& program, uint32_t mesh, uint64_t state, uint32_t rgba = 0) const;
-	void Submit(uint8_t viewId, ShaderProgram& program, uint64_t state, uint32_t rgba = 0) const;
+	void Draw(uint8_t viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint32_t mesh, uint64_t state, uint32_t rgba = 0) const;
+	void Submit(uint8_t viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state, uint32_t rgba = 0) const;
 
 	const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }
 	const std::unordered_map<SkinId, std::unique_ptr<Texture2D>>& GetSkins() const { return _skins; }

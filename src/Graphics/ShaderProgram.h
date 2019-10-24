@@ -45,8 +45,8 @@ class ShaderProgram
 	ShaderProgram(const std::string& name, bgfx::ShaderHandle&& vertexShader, bgfx::ShaderHandle&& fragmentShader);
 	~ShaderProgram();
 
-	void SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture);
-	void SetUniformValue(const char* uniformName, const void* value);
+	void SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture) const;
+	void SetUniformValue(const char* uniformName, const void* value) const;
 
 	[[nodiscard]] bgfx::ProgramHandle GetRawHandle() const { return _program; }
 
