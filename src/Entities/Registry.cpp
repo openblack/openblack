@@ -35,6 +35,14 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 	uint32_t instanceCount = 0;
 	std::map<MeshId, uint32_t> meshIds;
 
+	// Mobile Statics
+	_registry.view<const MobileStatic, const Transform>().each([&meshIds, &instanceCount](const MobileStatic& entity, const Transform& transform) {
+		const auto meshId = mobileStaticMeshLookup[entity.type];
+		auto count = meshIds.insert(std::make_pair(meshId, 0));
+		count.first->second++;
+		instanceCount++;
+	});
+
 	// Features
 	_registry.view<const Feature, const Transform>().each([&meshIds, &instanceCount](const Feature& entity, const Transform& transform) {
 		const auto meshId = featureMeshLookup[entity.type];
@@ -122,6 +130,16 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	};
 	// Store offsets of uniforms for descs
 	std::map<MeshId, uint32_t> uniformOffsets;
+
+	// Mobile Statics
+	_registry.view<const MobileStatic, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const MobileStatic& entity, const Transform& transform) {
+		const auto meshId = mobileStaticMeshLookup[entity.type];
+		auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
+		auto desc = _instancedDrawDescs.find(meshId);
+		_instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+		prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 1);
+		offset.first->second++;
+	});
 
 	// Features
 	_registry.view<const Feature, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const Feature& entity, const Transform& transform) {
@@ -255,21 +273,6 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		if (boundingBox)
 		{
 			auto box = mesh.GetSubMeshes()[0]->GetBoundingBox();
-			boundingBox->SetPose(box.center() + transform.position, box.size() * transform.scale);
-			boundingBox->Draw(viewId, *debugShader);
-		}
-	});
-
-	_registry.view<const MobileStatic, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const MobileStatic& entity, const Transform& transform) {
-		auto modelMatrix = static_cast<const glm::mat4>(transform);
-
-		auto meshId = mobileStaticMeshLookup[entity.type];
-		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
-		mesh.Submit(viewId, modelMatrix, *objectShader, state);
-
-		if (boundingBox)
-		{
-			auto box = mesh.GetSubMeshes()[1]->GetBoundingBox();
 			boundingBox->SetPose(box.center() + transform.position, box.size() * transform.scale);
 			boundingBox->Draw(viewId, *debugShader);
 		}
