@@ -72,6 +72,16 @@ if (NOT bgfx_FOUND)
   set(BGFX_CUSTOM_TARGETS OFF CACHE BOOL "Include convenience custom targets.")
   set(BGFX_USE_DEBUG_SUFFIX OFF CACHE BOOL "Add 'd' suffix to debug output targets")
 
+  include(CMakeDependentOption)
+  option(OPENBLACK_BGFX_USE_SYSTEM_DEPS "Search for system libraries for all 3rd parties of bgfx" OFF)
+  cmake_dependent_option(OPENBLACK_BGFX_USE_SYSTEM_SPIRV_TOOLS "Search for system spirv tools instead of building it" ON "OPENBLACK_BGFX_USE_SYSTEM_DEPS" OFF)
+
+  if (OPENBLACK_BGFX_USE_SYSTEM_SPIRV_TOOLS)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(SPIRV_TOOLS REQUIRED IMPORTED_TARGET GLOBAL SPIRV-Tools)
+    add_library(spirv-tools ALIAS PkgConfig::SPIRV_TOOLS)
+  endif()
+
   # declare this here so bgfx compiles in a reasonable time
   if (MSVC)
     add_compile_options(/MP)
