@@ -28,7 +28,7 @@ class Registry
 	}
 
 	void DebugCreateEntities(float x, float y, float z);
-	void DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager);
+	void DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager) const;
 	void Update();
 	decltype(auto) Create() { return _registry.create(); }
 	template <typename Component, typename... Args>

@@ -72,6 +72,32 @@ if (NOT bgfx_FOUND)
   set(BGFX_CUSTOM_TARGETS OFF CACHE BOOL "Include convenience custom targets.")
   set(BGFX_USE_DEBUG_SUFFIX OFF CACHE BOOL "Add 'd' suffix to debug output targets")
 
+  include(CMakeDependentOption)
+  option(OPENBLACK_BGFX_USE_SYSTEM_DEPS "Search for system libraries for all 3rd parties of bgfx" OFF)
+  cmake_dependent_option(OPENBLACK_BGFX_USE_SYSTEM_SPIRV_TOOLS "Search for system spirv tools instead of building it" ON "OPENBLACK_BGFX_USE_SYSTEM_DEPS" OFF)
+  cmake_dependent_option(OPENBLACK_BGFX_USE_SYSTEM_SPIRV_CROSS "Search for system spirv cross instead of building it" ON "OPENBLACK_BGFX_USE_SYSTEM_DEPS" OFF)
+
+  if (OPENBLACK_BGFX_USE_SYSTEM_SPIRV_TOOLS)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(SPIRV_TOOLS REQUIRED IMPORTED_TARGET GLOBAL SPIRV-Tools)
+    add_library(spirv-tools ALIAS PkgConfig::SPIRV_TOOLS)
+  endif()
+  if (OPENBLACK_BGFX_USE_SYSTEM_SPIRV_CROSS)
+    find_package(spirv_cross_c_shared REQUIRED)
+    find_package(spirv_cross_glsl REQUIRED)
+    find_package(spirv_cross_msl REQUIRED)
+    find_package(spirv_cross_reflect REQUIRED)
+    #set_target_properties(spirv-cross-c-shared PROPERTIES IMPORTED_GLOBAL TRUE)
+    add_library(spirv-cross INTERFACE)
+    target_link_libraries(spirv-cross
+      INTERFACE
+        spirv-cross-c-shared
+        spirv-cross-glsl
+        spirv-cross-msl
+        spirv-cross-reflect
+    )
+  endif()
+
   # declare this here so bgfx compiles in a reasonable time
   if (MSVC)
     add_compile_options(/MP)
@@ -80,6 +106,14 @@ if (NOT bgfx_FOUND)
   FetchContent_MakeAvailable(bgfx)
   add_library(bgfx::bgfx ALIAS bgfx)
 endif()
+
+FetchContent_Declare(
+  imgui-flame-graph
+  GIT_REPOSITORY https://github.com/bwrsandman/imgui-flame-graph.git
+  GIT_TAG        master
+)
+set(IMGUI_FLAME_GRAPH_BUILD_EXAMPLE OFF CACHE BOOL "imgui-flame bgfx examples.")
+FetchContent_MakeAvailable(imgui-flame-graph)
 
 # Include git hash in source
 include(CMakeModules/GetGitRevisionDescription.cmake)

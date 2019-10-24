@@ -35,6 +35,7 @@
 #include <GameWindow.h>
 #include <Graphics/DebugLines.h>
 #include <Graphics/ShaderManager.h>
+#include <Profiler.h>
 
 #ifdef HAS_FILESYSTEM
 #include <filesystem>
@@ -235,57 +236,65 @@ void Renderer::ClearScene(uint8_t viewId, int width, int height)
 	bgfx::touch(viewId);
 }
 
-void Renderer::DrawScene(const Game &game, uint8_t viewId, bool drawWater, bool drawDebugCross, bool cullBack)
+void Renderer::DrawScene(const DrawSceneDesc &desc)
 {
+	desc.profiler.Begin(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawScene : Profiler::Stage::MainPassDrawScene);
 	ShaderProgram* objectShader = _shaderManager->GetShader("Object");
 	ShaderProgram* waterShader = _shaderManager->GetShader("Water");
 	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
 	ShaderProgram* debugShader = _shaderManager->GetShader("DebugLine");
-//
-//	glEnable(GL_DEPTH_TEST);
-//	glEnable(GL_BLEND);
-//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//
-	game.GetSky().Draw(viewId, *objectShader);
-//
-//	glEnable(GL_CULL_FACE);
-//	glCullFace(cullBack ? GL_BACK : GL_FRONT);
-//	glFrontFace(GL_CCW);
 
-	if (drawWater)
+	desc.profiler.Begin(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawSky : Profiler::Stage::MainPassDrawSky);
+	if (desc.drawSky)
 	{
-		game.GetWater().Draw(viewId, *waterShader);
+		desc.sky.Draw(desc.viewId, *objectShader);
 	}
+	desc.profiler.End(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawSky : Profiler::Stage::MainPassDrawSky);
 
-//	if (game.GetConfig().wireframe)
-//		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-	game.GetLandIsland().Draw(viewId, *terrainShader, cullBack);
-
-//	if (game.GetConfig().wireframe)
-//		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-//
-//	game.GetTestModel().Draw(*objectShader, 0);
-//
-//	glDisable(GL_CULL_FACE);
-	game.GetEntityRegistry().DrawModels(viewId, *_shaderManager);
-
-	if (drawDebugCross)
+	desc.profiler.Begin(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawWater : Profiler::Stage::MainPassDrawWater);
+	if (desc.drawWater)
 	{
-		_debugCross->Draw(viewId, *debugShader);
+		desc.water.Draw(desc.viewId, *waterShader);
 	}
+	desc.profiler.End(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawWater : Profiler::Stage::MainPassDrawWater);
+
+	desc.profiler.Begin(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawIsland : Profiler::Stage::MainPassDrawIsland);
+	if (desc.drawIsland)
+	{
+		desc.island.Draw(desc.viewId, *terrainShader, desc.cullBack);
+	}
+	desc.profiler.End(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawIsland : Profiler::Stage::MainPassDrawIsland);
+
+	desc.profiler.Begin(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawModels : Profiler::Stage::MainPassDrawModels);
+	if (desc.drawEntities)
+	{
+		desc.entities.DrawModels(desc.viewId, *_shaderManager);
+	}
+	desc.profiler.End(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawModels : Profiler::Stage::MainPassDrawModels);
+
+	desc.profiler.Begin(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawDebugCross : Profiler::Stage::MainPassDrawDebugCross);
+	if (desc.drawDebugCross)
+	{
+		_debugCross->Draw(desc.viewId, *debugShader);
+	}
+	desc.profiler.End(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawDebugCross : Profiler::Stage::MainPassDrawDebugCross);
 
 	// Enable stats or debug text.
 	auto debugMode = BGFX_DEBUG_NONE;
-	if (game.GetConfig().bgfxDebug)
+	if (desc.bgfxDebug)
 	{
 		debugMode |= BGFX_DEBUG_STATS;
 	}
-	if (game.GetConfig().wireframe)
+	if (desc.wireframe)
 	{
 		debugMode |= BGFX_DEBUG_WIREFRAME;
 	}
+	if (desc.profile)
+	{
+		debugMode |= BGFX_DEBUG_PROFILER;
+	}
 	bgfx::setDebug(debugMode);
+	desc.profiler.End(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawScene : Profiler::Stage::MainPassDrawScene);
 }
 
 void Renderer::Frame()
