@@ -125,6 +125,16 @@ void DebugLines::Draw(uint8_t viewId, ShaderProgram &program) const
 	_mesh->Draw(viewId, program, state, 0);
 }
 
+void DebugLines::Draw(uint8_t viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount, ShaderProgram &program) const
+{
+	uint64_t state = 0u
+		| BGFX_STATE_DEFAULT
+		| BGFX_STATE_PT_LINES
+	;
+	// Don't set transform since it's in instanceBuffer
+	_mesh->Draw(viewId, program, instanceBuffer, instanceStart, instanceCount, state, 0);
+}
+
 DebugLines::DebugLines(std::unique_ptr<Mesh> &&mesh)
 	: _mesh(std::move(mesh))
 	, _model()
