@@ -35,6 +35,14 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 	uint32_t instanceCount = 0;
 	std::map<MeshId, uint32_t> meshIds;
 
+	// Trees
+	_registry.view<const Tree, const Transform>().each([&meshIds, &instanceCount](const Tree& entity, const Transform& transform) {
+		const auto meshId = treeMeshLookup[entity.treeInfo];
+		auto count = meshIds.insert(std::make_pair(meshId, 0));
+		count.first->second++;
+		instanceCount++;
+	});
+
 	// Abodes
 	_registry.view<const Abode, const Transform>().each([&meshIds, &instanceCount](const Abode& entity, const Transform& transform) {
 		const auto meshId = abodeMeshLookup[entity.abodeInfo];
@@ -160,6 +168,16 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	// Store offsets of uniforms for descs
 	std::map<MeshId, uint32_t> uniformOffsets;
 
+	// Trees
+	_registry.view<const Tree, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const Tree& entity, const Transform& transform) {
+		const auto meshId = treeMeshLookup[entity.treeInfo];
+		auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
+		auto desc = _instancedDrawDescs.find(meshId);
+		_instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+		prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, -1);
+		offset.first->second++;
+	});
+
 	// Abodes
 	_registry.view<const Abode, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const Abode& entity, const Transform& transform) {
 		const auto meshId = abodeMeshLookup[entity.abodeInfo];
@@ -280,21 +298,6 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		auto boundBoxCount  = _instanceUniforms.size() / 2;
 		boundingBox->Draw(viewId, _instanceUniformBuffer, boundBoxOffset, boundBoxCount, *debugShaderInstanced);
 	}
-
-	_registry.view<const Tree, const Transform>().each([viewId, debugShader, objectShader, state, &boundingBox](const Tree& entity, const Transform& transform) {
-		auto modelMatrix = static_cast<const glm::mat4>(transform);
-
-		auto meshId = treeMeshLookup[entity.treeInfo];
-		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
-		mesh.Submit(viewId, modelMatrix, *objectShader, state);
-
-		if (boundingBox)
-		{
-			auto box = mesh.GetSubMeshes()[mesh.GetNumSubMeshes() - 1]->GetBoundingBox();
-			boundingBox->SetPose(box.center() + transform.position, box.size() * transform.scale);
-			boundingBox->Draw(viewId, *debugShader);
-		}
-	});
 
 	// FIXME(bwrsandman): Add unique_ptr<DebugLine> _streamLine on class
 	//                    Move CreateLine to PrepareDraw when null and keep result
