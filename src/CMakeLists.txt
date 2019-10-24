@@ -11,17 +11,15 @@ configure_file("${CMAKE_CURRENT_LIST_DIR}/GitSHA1.cpp.in" "${CMAKE_CURRENT_BINAR
 file(GLOB OPENBLACK_IMGUI_VS_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/imgui/vs_*.sc")
 file(GLOB OPENBLACK_IMGUI_FS_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/imgui/fs_*.sc")
 mark_shaders_for_compilation(
-	HEADER
 	TYPE VERTEX
 	SHADERS ${OPENBLACK_IMGUI_VS_SHADERS}
 	VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/shaders/imgui/varying.def.sc
-	OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/imgui/shaders)
+	OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders/imgui)
 mark_shaders_for_compilation(
-	HEADER
 	TYPE FRAGMENT
 	SHADERS ${OPENBLACK_IMGUI_FS_SHADERS}
 	VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/shaders/imgui/varying.def.sc
-	OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/imgui/shaders)
+	OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders/imgui)
 
 file(GLOB OPENBLACK_VERTEX_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/vs_*.sc")
 file(GLOB OPENBLACK_FRAGMENT_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/fs_*.sc")
@@ -31,12 +29,12 @@ mark_shaders_for_compilation(
 	TYPE VERTEX
 	SHADERS ${OPENBLACK_VERTEX_SHADERS}
 	VARYING_DEF ${OPENBLACK_VARYING_DEF_FILE}
-	OUTPUT_DIR $<TARGET_FILE_DIR:openblack>/shaders)
+	OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders)
 mark_shaders_for_compilation(
 	TYPE FRAGMENT
 	SHADERS ${OPENBLACK_FRAGMENT_SHADERS}
 	VARYING_DEF ${OPENBLACK_VARYING_DEF_FILE}
-	OUTPUT_DIR $<TARGET_FILE_DIR:openblack>/shaders)
+	OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders)
 
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_IMGUI_VS_SHADERS})
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_IMGUI_FS_SHADERS})
@@ -93,6 +91,7 @@ set_target_properties(openblack PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(openblack PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_BINARY_DIR}/../include)
 target_link_libraries(openblack PRIVATE
 	imgui
+	imgui-flame-graph
 	ScriptLibrary
 	SDL2::SDL2main
 	# SDL2::SDL2-static

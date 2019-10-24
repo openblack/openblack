@@ -25,6 +25,7 @@
 #include <bgfx/bgfx.h>
 #include <bgfx/embedded_shader.h>
 #include <imgui.h>
+#include <imgui_widget_flamegraph.h>
 #ifdef _WIN32
 #include <SDL2/SDL_syswm.h>
 #endif
@@ -38,11 +39,15 @@
 #include <3D/MeshPack.h>
 #include <3D/Sky.h>
 #include <3D/Water.h>
+#include <Entities/Components/Transform.h>
+#include <Entities/Components/Tree.h>
 
-#include "Graphics/Shaders/vs_ocornut_imgui.bin.h"
-#include "Graphics/Shaders/fs_ocornut_imgui.bin.h"
-#include "Graphics/Shaders/vs_imgui_image.bin.h"
-#include "Graphics/Shaders/fs_imgui_image.bin.h"
+#include "Entities/Registry.h"
+#include "Graphics/Shaders/imgui/vs_ocornut_imgui.bin.h"
+#include "Graphics/Shaders/imgui/fs_ocornut_imgui.bin.h"
+#include "Graphics/Shaders/imgui/vs_imgui_image.bin.h"
+#include "Graphics/Shaders/imgui/fs_imgui_image.bin.h"
+#include "Profiler.h"
 
 using namespace openblack;
 
@@ -464,6 +469,7 @@ void Gui::Loop(Game& game)
 		{
 			ImGui::Checkbox("Wireframe", &config.wireframe);
 			ImGui::Checkbox("Water Debug", &config.waterDebug);
+			ImGui::Checkbox("Profiler", &config.showProfiler);
 			ImGui::EndMenu();
 		}
 
@@ -605,6 +611,9 @@ void Gui::Loop(Game& game)
 	}
 	ImGui::End();
 
+	if (config.showProfiler)
+		ShowProfilerWindow(game);
+
 	if (config.waterDebug)
 		game.GetWater().DebugGUI();
 
@@ -715,4 +724,134 @@ void Gui::Draw()
 	ImGui::SetCurrentContext(_imgui);
 
 	RenderDrawDataBgfx(ImGui::GetDrawData());
+}
+
+void Gui::ShowProfilerWindow(Game& game)
+{
+	if (ImGui::Begin("Profiler"))
+	{
+		const bgfx::Stats* stats = bgfx::getStats();
+		const double toMsCpu     = 1000.0 / stats->cpuTimerFreq;
+		const double toMsGpu     = 1000.0 / stats->gpuTimerFreq;
+		const double frameMs     = double(stats->cpuTimeFrame) * toMsCpu;
+		_times.pushBack(frameMs);
+		_fps.pushBack(1000.0f / frameMs);
+
+		char frameTextOverlay[256];
+		std::snprintf(frameTextOverlay, sizeof(frameTextOverlay), "%.3fms, %.1f FPS", _times.back(), _fps.back());
+
+		ImGui::Text("Submit CPU %0.3f, GPU %0.3f (Max GPU Latency: %d)", double(stats->cpuTimeEnd - stats->cpuTimeBegin) * toMsCpu, double(stats->gpuTimeEnd - stats->gpuTimeBegin) * toMsGpu, stats->maxGpuLatency);
+		ImGui::Text("Wait Submit %0.3f, Wait Render %0.3f", stats->waitSubmit * toMsCpu, stats->waitRender * toMsCpu);
+
+		ImGui::Columns(5);
+		ImGui::Checkbox("Sky", &game.GetConfig().drawSky); ImGui::NextColumn();
+		ImGui::Checkbox("Water", &game.GetConfig().drawWater); ImGui::NextColumn();
+		ImGui::Checkbox("Island", &game.GetConfig().drawIsland); ImGui::NextColumn();
+		ImGui::Checkbox("Entities", &game.GetConfig().drawEntities); ImGui::NextColumn();
+		ImGui::Checkbox("Debug Cross", &game.GetConfig().drawDebugCross);
+		ImGui::Columns(1);
+
+		auto width = ImGui::GetColumnWidth() - ImGui::CalcTextSize("Frame").x;
+		ImGui::PlotHistogram("Frame", _times._values, decltype(_times)::_bufferSize, _times._offset, frameTextOverlay, 0.0f, FLT_MAX, ImVec2(width, 45.0f));
+
+		ImGui::Text("Primitives Triangles %u, Triangle Strips %u, Lines %u Line Strips %u, Points %u", stats->numPrims[0], stats->numPrims[1], stats->numPrims[2], stats->numPrims[3], stats->numPrims[4]);
+		ImGui::Columns(2);
+		ImGui::Text("Num Entities %u, Trees %u", static_cast<uint32_t>(game.GetEntityRegistry().Size<const Transform>()), static_cast<uint32_t>(game.GetEntityRegistry().Size<const Tree>()));
+		ImGui::Text("Num Draw %u, Num Compute %u, Num Blit %u", stats->numDraw, stats->numCompute, stats->numBlit);
+		ImGui::Text("Num Buffers Index %u, Vertex %u", stats->numIndexBuffers, stats->numVertexBuffers);
+		ImGui::Text("Num Dynamic Buffers Index %u, Vertex %u", stats->numDynamicIndexBuffers, stats->numDynamicVertexBuffers);
+		ImGui::Text("Num Transient Buffers Index %u, Vertex %u", stats->transientIbUsed, stats->transientVbUsed);
+		ImGui::NextColumn();
+		ImGui::Text("Num Vertex Layouts %u", stats->numVertexLayouts);
+		ImGui::Text("Num Textures %u, FrameBuffers %u", stats->numTextures, stats->numFrameBuffers);
+		ImGui::Text("Memory Texture %ld, RenderTarget %ld", stats->textureMemoryUsed, stats->rtMemoryUsed);
+		ImGui::Text("Num Programs %u, Num Shaders %u, Uniforms %u", stats->numPrograms, stats->numShaders, stats->numUniforms);
+		ImGui::Text("Num Occlusion Queries %u", stats->numOcclusionQueries);
+
+		ImGui::Columns(1);
+
+		auto& entry = game.GetProfiler()._entries[game.GetProfiler().GetCurrentEntryIndex()];
+
+		ImGuiWidgetFlameGraph::PlotFlame("CPU",
+			[](float* startTimestamp, float* endTimestamp, ImU8* level, const char** caption, const void* data, int idx) -> void {
+				auto entry = reinterpret_cast<const Profiler::Entry*>(data);
+				auto& stage = entry->_stages[idx];
+				if (startTimestamp)
+				{
+					std::chrono::duration<float, std::milli> fltStart = stage._start - entry->_frameStart;
+					*startTimestamp = fltStart.count();
+				}
+				if (endTimestamp)
+				{
+					*endTimestamp = stage._end.time_since_epoch().count() / 1e6f;
+
+					std::chrono::duration<float, std::milli> fltEnd = stage._end - entry->_frameStart;
+					*endTimestamp = fltEnd.count();
+				}
+				if (level)
+				{
+					*level = stage._level;
+				}
+				if (caption)
+				{
+					*caption = Profiler::stageNames[idx].data();
+				}
+			}, &entry, static_cast<uint8_t>(Profiler::Stage::_count), 0, "Main Thread", 0, FLT_MAX, ImVec2(width, 0));
+
+		ImGuiWidgetFlameGraph::PlotFlame("GPU",
+			[](float* startTimestamp, float* endTimestamp, ImU8* level, const char** caption, const void* data, int idx) -> void {
+				auto stats = reinterpret_cast<const bgfx::Stats*>(data);
+				if (startTimestamp)
+				{
+					*startTimestamp = 1000.0f * (stats->viewStats[idx].gpuTimeBegin - stats->gpuTimeBegin) / (double)stats->gpuTimerFreq;
+				}
+				if (endTimestamp)
+				{
+					*endTimestamp = 1000.0f * (stats->viewStats[idx].gpuTimeEnd - stats->gpuTimeBegin) / (double)stats->gpuTimerFreq;
+				}
+				if (level)
+				{
+					*level = 0;
+				}
+				if (caption)
+				{
+					*caption = stats->viewStats[idx].name;
+				}
+			}, stats, stats->numViews, 0, "GPU Frame",
+            0, 1000.0f * (stats->gpuTimeEnd - stats->gpuTimeBegin) / (double)stats->gpuTimerFreq, ImVec2(width, 0));
+
+		ImGui::Columns(2);
+		if (ImGui::CollapsingHeader("Details (CPU)", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			std::chrono::duration<float, std::milli> frameDuration = entry._frameEnd - entry._frameStart;
+			ImGui::Text("Full Frame: %0.3f", frameDuration.count());
+			auto cursorX = ImGui::GetCursorPosX();
+			auto indentSize = ImGui::CalcTextSize("    ").x;
+
+			for (uint8_t i = 0; i < static_cast<uint8_t>(Profiler::Stage::_count); ++i)
+			{
+				std::chrono::duration<float, std::milli> duration = entry._stages[i]._end - entry._stages[i]._start;
+				ImGui::SetCursorPosX(cursorX + indentSize * entry._stages[i]._level);
+				ImGui::Text("    %s: %0.3f", Profiler::stageNames[i].data(), duration.count());
+				if (entry._stages[i]._level == 0)
+					frameDuration -= duration;
+			}
+			ImGui::Text("    Unaccounted: %0.3f", frameDuration.count());
+		}
+		ImGui::NextColumn();
+		if (ImGui::CollapsingHeader("Details (GPU)", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			auto frameDuration = stats->gpuTimeEnd - stats->gpuTimeBegin;
+			ImGui::Text("Full Frame: %0.3f", 1000.0f * frameDuration / (double)stats->gpuTimerFreq);
+
+			for (uint8_t i = 0; i < stats->numViews; ++i)
+			{
+				ImGui::Text("    %s: %0.3f", stats->viewStats[i].name, 1000.0f * stats->viewStats[i].gpuTimeElapsed  / (double)stats->gpuTimerFreq);
+				frameDuration -= stats->viewStats[i].gpuTimeElapsed;
+			}
+			ImGui::Text("    Unaccounted: %0.3f", 1000.0f * frameDuration / (double)stats->gpuTimerFreq);
+		}
+		ImGui::Columns(1);
+	}
+	ImGui::End();
 }

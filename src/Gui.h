@@ -92,6 +92,8 @@ class Gui
 	bool CreateDeviceObjectsBgfx();
 	void RenderDrawDataBgfx(ImDrawData* drawData);
 
+	void ShowProfilerWindow(Game& game);
+
 	static const char* StaticGetClipboardText(void* ud) { return reinterpret_cast<Gui*>(ud)->GetClipboardText(); }
 	static void StaticSetClipboardText(void* ud, const char* text)  { reinterpret_cast<Gui*>(ud)->SetClipboardText(text); }
 	const char* GetClipboardText();
@@ -101,8 +103,25 @@ class Gui
 	void UpdateMouseCursor();
 	void UpdateGamepads();
 
+	template<typename T, uint8_t N>
+	struct CircularBuffer
+	{
+		static constexpr uint8_t _bufferSize = N;
+		T _values[_bufferSize] = {};
+		uint8_t _offset = 0;
+
+		[[nodiscard]] T back() const { return _values[_offset]; }
+		void pushBack(T value)
+		{
+			_values[_offset] = value;
+			_offset = (_offset + 1u) % _bufferSize;
+		}
+	};
+
 	ImGuiContext* _imgui;
 	uint64_t _time;
+	CircularBuffer<float, 100> _times;
+	CircularBuffer<float, 100> _fps;
 	bgfx::VertexLayout  _layout;
 	bgfx::ProgramHandle _program;
 	bgfx::ProgramHandle _imageProgram;

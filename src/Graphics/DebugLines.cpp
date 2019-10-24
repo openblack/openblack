@@ -114,7 +114,7 @@ void DebugLines::SetPose(const glm::vec3 &center, float size)
 	_model = glm::translate(center) * glm::scale(glm::vec3(size, size, size));
 }
 
-void DebugLines::Draw(uint8_t viewId, ShaderProgram &program)
+void DebugLines::Draw(uint8_t viewId, ShaderProgram &program) const
 {
 	uint64_t state = 0u
 		| BGFX_STATE_DEFAULT

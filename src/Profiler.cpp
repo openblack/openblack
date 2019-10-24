@@ -18,39 +18,34 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "Profiler.h"
 
-#include <cstdint>
-#include <memory>
+#include <cassert>
 
-#include <glm/glm.hpp>
-#include "ShaderProgram.h"
-
-namespace openblack
+void openblack::Profiler::Begin(Stage stage)
 {
-namespace graphics
+	assert(_currentLevel < 255);
+	auto& entry = _entries[_currentEntry]._stages[static_cast<uint8_t>(stage)];
+	entry._level = _currentLevel;
+	_currentLevel++;
+	entry._start = std::chrono::system_clock::now();
+	entry._finalized = false;
+}
+
+void openblack::Profiler::End(Stage stage)
 {
-class Mesh;
-class DebugLines
+	assert(_currentLevel > 0);
+	auto& entry = _entries[_currentEntry]._stages[static_cast<uint8_t>(stage)];
+	assert(!entry._finalized);
+	_currentLevel--;
+	assert(entry._level == _currentLevel);
+	entry._end = std::chrono::system_clock::now();
+	entry._finalized = true;
+}
+
+void openblack::Profiler::Frame()
 {
-  public:
-	static std::unique_ptr<DebugLines> CreateCross();
-	std::unique_ptr<DebugLines> CreateBox(const glm::vec4 &color);
-	static std::unique_ptr<DebugLines> CreateLine(const glm::vec4& from, const glm::vec4& to, const glm::vec4& color);
-
-	virtual ~DebugLines();
-
-	void Draw(uint8_t viewId, ShaderProgram &program) const;
-
-	void SetPose(const glm::vec3 &center, float size);
-
-  protected:
-	static std::unique_ptr<DebugLines> CreateDebugLines(uint32_t size, const void* data, uint32_t vertexCount);
-	explicit DebugLines(std::unique_ptr<Mesh>&& mesh);
-
-	std::unique_ptr<Mesh> _mesh;
-	glm::mat4 _model;
-};
-
-} // namespace graphics
-} // namespace openblack
+	auto& prevEntry = _entries[_currentEntry];
+	_currentEntry = (_currentEntry + 1) % _bufferSize;
+	prevEntry._frameEnd = _entries[_currentEntry]._frameStart = std::chrono::system_clock::now();
+}
