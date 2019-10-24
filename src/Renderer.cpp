@@ -133,7 +133,7 @@ struct ApiThreadArgs
 
 }  // namespace openblack
 
-Renderer::Renderer(const GameWindow& window, bool vsync, const std::string binaryPath)
+Renderer::Renderer(const GameWindow &window, bool vsync)
 	: _shaderManager(std::make_unique<ShaderManager>())
 	, _bgfxCallback(std::make_unique<BgfxCallback>())
 {
@@ -175,7 +175,7 @@ Renderer::Renderer(const GameWindow& window, bool vsync, const std::string binar
 		throw std::runtime_error("Failed to initialize bgfx.");
 	}
 
-	LoadShaders(binaryPath);
+	LoadShaders();
 
 	// allocate vertex buffers for our debug draw
 	_debugCross = DebugLines::CreateCross();
@@ -188,15 +188,14 @@ Renderer::~Renderer()
 	bgfx::shutdown();
 }
 
-void Renderer::LoadShaders(const std::string &binaryPath)
+void Renderer::LoadShaders()
 {
-	fs::path binPath{binaryPath};
-	for (auto& shader : Shaders)
+	for (const auto& shader : Shaders)
 	{
 		_shaderManager->LoadShader(
-					shader.name,
-					(binPath / shader.vertexShaderFile).generic_string(),
-					(binPath / shader.fragmentShaderFile).generic_string());
+					shader.name.data(),
+					shader.vertexShaderName.data(),
+					shader.fragmentShaderName.data());
 	}
 }
 

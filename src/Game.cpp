@@ -93,7 +93,7 @@ Game::Game(int argc, char** argv)
 
 	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", windowWidth, windowHeight, displayMode);
 
-	_renderer = std::make_unique<Renderer>(*_window, vsync, binaryPath);
+	_renderer = std::make_unique<Renderer>(*_window, vsync);
 
 	_fileSystem->SetGamePath(GetGamePath());
 	spdlog::debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
