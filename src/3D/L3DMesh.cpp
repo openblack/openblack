@@ -240,12 +240,21 @@ void L3DMesh::Draw(uint8_t viewId, const glm::mat4& modelMatrix, const ShaderPro
 	_subMeshes[mesh]->Submit(viewId, modelMatrix, program, state, rgba, false);
 }
 
-
 void L3DMesh::Submit(uint8_t viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state, uint32_t rgba) const
 {
 	for (auto it = _subMeshes.begin(); it != _subMeshes.end(); ++it)
 	{
 		const L3DSubMesh& submesh = *it->get();
 		submesh.Submit(viewId, modelMatrix, program, state, rgba, std::next(it) != _subMeshes.end());
+	}
+}
+
+void L3DMesh::Submit(uint8_t viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
+                     const ShaderProgram& program, uint64_t state, uint32_t rgba) const
+{
+	for (auto it = _subMeshes.begin(); it != _subMeshes.end(); ++it)
+	{
+		const L3DSubMesh& submesh = *it->get();
+		submesh.Submit(viewId, instanceBuffer, instanceStart, instanceCount, program, state, rgba, std::next(it) != _subMeshes.end());
 	}
 }

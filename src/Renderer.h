@@ -61,8 +61,10 @@ struct ShaderDefinition {
 
 constexpr std::array Shaders {
 	ShaderDefinition{"DebugLine", "vs_line", "fs_line"},
+	ShaderDefinition{"DebugLineInstanced", "vs_line_instanced", "fs_line"},
 	ShaderDefinition{"Terrain", "vs_terrain", "fs_terrain"},
 	ShaderDefinition{"Object", "vs_object", "fs_object"},
+	ShaderDefinition{"ObjectInstanced", "vs_object_instanced", "fs_object"},
 	ShaderDefinition{"Water", "vs_water", "fs_water"},
 };
 

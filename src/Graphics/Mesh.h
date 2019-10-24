@@ -53,6 +53,7 @@ class Mesh
 	[[nodiscard]] Topology GetTopology() const noexcept;
 
 	void Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &program, uint64_t state, uint32_t rgba = 0) const;
+	void Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &program, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount, uint64_t state, uint32_t rgba = 0) const;
 	void Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &program, uint32_t count, uint32_t startIndex, uint64_t state, uint32_t rgba = 0) const;
 
   protected:

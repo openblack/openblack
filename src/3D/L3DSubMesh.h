@@ -25,6 +25,7 @@
 #include <vector>
 
 #include <glm/fwd.hpp>
+#include <bgfx/bgfx.h>
 
 #include "AxisAlignedBoundingBox.h"
 
@@ -60,6 +61,8 @@ class L3DSubMesh
 
 	void Load(IStream& stream);
 	void Submit(uint8_t viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
+	void Submit(uint8_t viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
+                const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
 
 	[[ nodiscard ]] uint8_t GetLOD() const { return static_cast<uint8_t>(_flags & 0x7u); } // 29-32 (3)
 	[[ nodiscard ]] uint8_t GetStatus() const { return static_cast<uint8_t>((_flags >> 3u) & 0x3Fu); } // 22-28 (6)
@@ -70,6 +73,10 @@ class L3DSubMesh
 	[[ nodiscard ]] AxisAlignedBoundingBox GetBoundingBox() const { return _boundingBox; }
 
   private:
+	void Submit_(uint8_t viewId, const glm::mat4* modelMatrix,
+	             const bgfx::DynamicVertexBufferHandle* instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
+	             const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
+
 	L3DMesh& _l3dMesh;
 
 	uint32_t _flags;

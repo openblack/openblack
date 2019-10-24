@@ -25,8 +25,10 @@
 #include <3D/Camera.h>
 
 #include "Shaders/vs_line.bin.h"
+#include "Shaders/vs_line_instanced.bin.h"
 #include "Shaders/fs_line.bin.h"
 #include "Shaders/vs_object.bin.h"
+#include "Shaders/vs_object_instanced.bin.h"
 #include "Shaders/fs_object.bin.h"
 #include "Shaders/vs_terrain.bin.h"
 #include "Shaders/fs_terrain.bin.h"
@@ -39,9 +41,11 @@ namespace openblack::graphics
 const bgfx::EmbeddedShader s_embeddedShaders[] =
 	{
 		BGFX_EMBEDDED_SHADER(vs_line),
+		BGFX_EMBEDDED_SHADER(vs_line_instanced),
 		BGFX_EMBEDDED_SHADER(fs_line),
 
 		BGFX_EMBEDDED_SHADER(vs_object),
+		BGFX_EMBEDDED_SHADER(vs_object_instanced),
 		BGFX_EMBEDDED_SHADER(fs_object),
 
 		BGFX_EMBEDDED_SHADER(vs_terrain),

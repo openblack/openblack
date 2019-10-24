@@ -86,6 +86,8 @@ class L3DMesh
 	void Load(IStream& stream);
 	void Draw(uint8_t viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint32_t mesh, uint64_t state, uint32_t rgba = 0) const;
 	void Submit(uint8_t viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state, uint32_t rgba = 0) const;
+	void Submit(uint8_t viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
+	            const ShaderProgram& program, uint64_t state, uint32_t rgba = 0) const;
 
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return _subMeshes.size(); }
 	const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }
