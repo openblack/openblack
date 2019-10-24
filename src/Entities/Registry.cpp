@@ -35,6 +35,14 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 	uint32_t instanceCount = 0;
 	std::map<MeshId, uint32_t> meshIds;
 
+	// Abodes
+	_registry.view<const Abode, const Transform>().each([&meshIds, &instanceCount](const Abode& entity, const Transform& transform) {
+		const auto meshId = abodeMeshLookup[entity.abodeInfo];
+		auto count = meshIds.insert(std::make_pair(meshId, 0));
+		count.first->second++;
+		instanceCount++;
+	});
+
 	// Animated Statics
 	_registry.view<const AnimatedStatic, const Transform>().each([&meshIds, &instanceCount](const AnimatedStatic& entity, const Transform& transform) {
 		// temporary-ish:
@@ -151,6 +159,16 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	};
 	// Store offsets of uniforms for descs
 	std::map<MeshId, uint32_t> uniformOffsets;
+
+	// Abodes
+	_registry.view<const Abode, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const Abode& entity, const Transform& transform) {
+		const auto meshId = abodeMeshLookup[entity.abodeInfo];
+		auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
+		auto desc = _instancedDrawDescs.find(meshId);
+		_instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+		prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 0);
+		offset.first->second++;
+	});
 
 	// Animated Statics
 	_registry.view<const AnimatedStatic, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const AnimatedStatic& entity, const Transform& transform) {
@@ -273,21 +291,6 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		if (boundingBox)
 		{
 			auto box = mesh.GetSubMeshes()[mesh.GetNumSubMeshes() - 1]->GetBoundingBox();
-			boundingBox->SetPose(box.center() + transform.position, box.size() * transform.scale);
-			boundingBox->Draw(viewId, *debugShader);
-		}
-	});
-
-	_registry.view<const Abode, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const Abode& entity, const Transform& transform) {
-		auto modelMatrix = static_cast<const glm::mat4>(transform);
-
-		auto meshId = abodeMeshLookup[entity.abodeInfo];
-		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
-		mesh.Submit(viewId, modelMatrix, *objectShader, state);
-
-		if (boundingBox)
-		{
-			auto box = mesh.GetSubMeshes()[0]->GetBoundingBox();
 			boundingBox->SetPose(box.center() + transform.position, box.size() * transform.scale);
 			boundingBox->Draw(viewId, *debugShader);
 		}
