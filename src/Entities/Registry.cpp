@@ -13,10 +13,18 @@
 #include <Game.h>
 #include <Graphics/DebugLines.h>
 #include <Graphics/ShaderManager.h>
-#include <spdlog/spdlog.h>
 
 namespace openblack::Entities
 {
+
+Registry::Registry()
+{
+	_registry.set<RegistryContext>();
+}
+
+Registry::~Registry()
+{
+}
 
 void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager, graphics::DebugLines* boundingBox) const
 {
@@ -31,17 +39,11 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		| BGFX_STATE_MSAA
 	;
 
-	_registry.view<const Tree, const Transform>().each([viewId, debugShader, objectShader, state, &boundingBox](const Tree& tree, const Transform& transform) {
-		glm::mat4 modelMatrix = glm::mat4(1.0f);
-		modelMatrix           = glm::translate(modelMatrix, transform.position);
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-		modelMatrix           = glm::scale(modelMatrix, transform.scale);
+	_registry.view<const Tree, const Transform>().each([viewId, debugShader, objectShader, state, &boundingBox](const Tree& entity, const Transform& transform) {
+		auto modelMatrix = static_cast<const glm::mat4>(transform);
 
-		auto meshId           = treeMeshLookup[tree.treeInfo];
+		auto meshId = treeMeshLookup[entity.treeInfo];
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
-
 		mesh.Submit(viewId, modelMatrix, *objectShader, state);
 
 		if (boundingBox)
@@ -52,34 +54,11 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		}
 	});
 
-	_registry.view<const Stream>().each([viewId, debugShader](const Stream& stream) {
-		auto nodes       = stream.streamNodes;
-		const auto color = glm::vec4(1, 0, 0, 1);
+	_registry.view<const Abode, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const Abode& entity, const Transform& transform) {
+		auto modelMatrix = static_cast<const glm::mat4>(transform);
 
-		for (const auto& from : nodes)
-		{
-			for (const auto& to : from.edges)
-			{
-				auto startPos = from.position;
-				auto startOffset = glm::vec4(0, 0, 0, 0.0f);
-				auto endOffset = glm::vec4(to.position - startPos, 0.0f);
-				// auto line = DebugLines::CreateLine(startOffset, endOffset, color);
-				// line->SetPose(startPos, 1);
-				// line->Draw(viewId, *debugShader);
-			}
-		}
-	});
-
-	_registry.view<const Abode, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const Abode& abode, const Transform& transform) {
-		glm::mat4 modelMatrix = glm::mat4(1.0f);
-		modelMatrix           = glm::translate(modelMatrix, transform.position);
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-		modelMatrix           = glm::scale(modelMatrix, transform.scale);
-		auto abodeId          = abode.abodeInfo;
-
-		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(abodeMeshLookup[abodeId]));
+		auto meshId = abodeMeshLookup[entity.abodeInfo];
+		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
 		mesh.Submit(viewId, modelMatrix, *objectShader, state);
 
 		if (boundingBox)
@@ -90,25 +69,20 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		}
 	});
 
-	_registry.view<const AnimatedStatic, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const AnimatedStatic& animated, const Transform& transform) {
-		glm::mat4 modelMatrix = glm::mat4(1.0f);
-		modelMatrix           = glm::translate(modelMatrix, transform.position);
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-		modelMatrix           = glm::scale(modelMatrix, transform.scale);
+	_registry.view<const AnimatedStatic, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const AnimatedStatic& entity, const Transform& transform) {
+		auto modelMatrix = static_cast<const glm::mat4>(transform);
 
 		// temporary-ish:
 		MeshId meshId = MeshId::Dummy;
-		if (animated.type == "Norse Gate")
+		if (entity.type == "Norse Gate")
 		{
 			meshId = MeshId::BuildingNorseGate;
 		}
-		else if (animated.type == "Gate Stone Plinth")
+		else if (entity.type == "Gate Stone Plinth")
 		{
 			meshId = MeshId::ObjectGateTotemPlinthe;
 		}
-		else if (animated.type == "Piper Cave Entrance")
+		else if (entity.type == "Piper Cave Entrance")
 		{
 			meshId = MeshId::BuildingMineEntrance;
 		}
@@ -124,15 +98,10 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		}
 	});
 
-	_registry.view<const MobileStatic, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const MobileStatic& mobile, const Transform& transform) {
-		glm::mat4 modelMatrix = glm::mat4(1.0f);
-		modelMatrix           = glm::translate(modelMatrix, transform.position);
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-		modelMatrix           = glm::scale(modelMatrix, transform.scale);
+	_registry.view<const MobileStatic, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const MobileStatic& entity, const Transform& transform) {
+		auto modelMatrix = static_cast<const glm::mat4>(transform);
 
-		auto meshId         = mobileStaticMeshLookup[mobile.type];
+		auto meshId = mobileStaticMeshLookup[entity.type];
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
 		mesh.Submit(viewId, modelMatrix, *objectShader, state);
 
@@ -144,15 +113,10 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		}
 	});
 
-	_registry.view<const Feature, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const Feature& feature, const Transform& transform) {
-		glm::mat4 modelMatrix = glm::mat4(1.0f);
-		modelMatrix           = glm::translate(modelMatrix, transform.position);
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-		modelMatrix           = glm::scale(modelMatrix, transform.scale);
+	_registry.view<const Feature, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const Feature& entity, const Transform& transform) {
+		auto modelMatrix = static_cast<const glm::mat4>(transform);
 
-		auto meshId         = featureMeshLookup[feature.type];
+		auto meshId = featureMeshLookup[entity.type];
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
 		mesh.Submit(viewId, modelMatrix, *objectShader, state);
 
@@ -164,15 +128,10 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		}
 	});
 
-	_registry.view<const Field, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const Field& feature, const Transform& transform) {
-		glm::mat4 modelMatrix = glm::mat4(1.0f);
-		modelMatrix           = glm::translate(modelMatrix, transform.position);
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-		modelMatrix           = glm::scale(modelMatrix, transform.scale);
+	_registry.view<const Field, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const Field& entity, const Transform& transform) {
+		auto modelMatrix = static_cast<const glm::mat4>(transform);
 
-		auto meshId         = MeshId::TreeWheat;
+		auto meshId = MeshId::TreeWheat;
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
 		mesh.Submit(viewId, modelMatrix, *objectShader, state);
 
@@ -184,15 +143,10 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		}
 	});
 
-	_registry.view<const Forest, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const Forest& forest, const Transform& transform) {
-		glm::mat4 modelMatrix = glm::mat4(1.0f);
-		modelMatrix           = glm::translate(modelMatrix, transform.position);
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-		modelMatrix           = glm::scale(modelMatrix, transform.scale);
+	_registry.view<const Forest, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const Forest& entity, const Transform& transform) {
+		auto modelMatrix = static_cast<const glm::mat4>(transform);
 
-		auto meshId         = MeshId::FeatureForest;
+		auto meshId = MeshId::FeatureForest;
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
 		mesh.Submit(viewId, modelMatrix, *objectShader, state);
 
@@ -204,15 +158,10 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		}
 	});
 
-	_registry.view<const MobileObject, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const MobileObject& mobileObject, const Transform& transform) {
-		glm::mat4 modelMatrix = glm::mat4(1.0f);
-		modelMatrix           = glm::translate(modelMatrix, transform.position);
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-		modelMatrix           = glm::rotate(modelMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-		modelMatrix           = glm::scale(modelMatrix, transform.scale);
+	_registry.view<const MobileObject, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const MobileObject& entity, const Transform& transform) {
+		auto modelMatrix = static_cast<const glm::mat4>(transform);
 
-		auto meshId         = mobileObjectMeshLookup[mobileObject.type];
+		auto meshId = mobileObjectMeshLookup[entity.type];
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
 		mesh.Submit(viewId, modelMatrix, *objectShader, state);
 
@@ -221,6 +170,29 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 			auto box = mesh.GetSubMeshes()[1]->GetBoundingBox();
 			boundingBox->SetPose(box.center() + transform.position, box.size() * transform.scale);
 			boundingBox->Draw(viewId, *debugShader);
+		}
+	});
+
+	// FIXME(bwrsandman): Add unique_ptr<DebugLine> _streamLine on class
+	//                    Move CreateLine to PrepareDraw when null and keep result
+	//                    Don't use offset, just create a line from 0, 1 in x
+	//                    Build matrix for position, rotation and scale
+	//                    Add to instanced drawing desc in PrepareDraw and draw one line instanced
+	_registry.view<const Stream>().each([viewId, debugShader](const Stream& entity) {
+		auto nodes = entity.streamNodes;
+		const auto color = glm::vec4(1, 0, 0, 1);
+
+		for (const auto& from : nodes)
+		{
+			for (const auto& to : from.edges)
+			{
+				auto startPos = from.position;
+				auto startOffset = glm::vec4(0, 0, 0, 0.0f);
+				auto endOffset = glm::vec4(to.position - startPos, 0.0f);
+				// auto line = DebugLines::CreateLine(startOffset, endOffset, color);
+				// line->SetPose(startPos, 1);
+				// line->Draw(viewId, *debugShader);
+			}
 		}
 	});
 }

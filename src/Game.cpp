@@ -110,6 +110,7 @@ Game::~Game()
 	_testModel.reset();
 	_meshPack.reset();
 	_landIsland.reset();
+	_entityRegistry.reset();
 	_gui.reset();
 	_renderer.reset();
 	_window.reset();

@@ -43,14 +43,10 @@ class RegistryContext
 class Registry
 {
   public:
-	Registry()
-	{
-		_registry.set<RegistryContext>();
-	}
+	Registry();
+	virtual ~Registry();
 
-	void DebugCreateEntities(float x, float y, float z);
 	void DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager, graphics::DebugLines* boundingBox) const;
-	void Update();
 	decltype(auto) Create() { return _registry.create(); }
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args) { return _registry.assign<Component>(entity, std::forward<Args>(args)...); }
