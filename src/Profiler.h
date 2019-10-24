@@ -38,6 +38,7 @@ public:
 	{
 		SdlInput,
 		UpdatePositions,
+		UpdateEntities,
 		GuiLoop,
 		ReflectionPass,
 		ReflectionUploadUniforms,
@@ -72,6 +73,7 @@ public:
 	static constexpr std::array<std::string_view, static_cast<uint8_t>(Stage::_count)> stageNames = {
 		"SDL Input",
 		"Update Positions",
+		"Entities",
 		"GUI Loop",
 		"Reflection Pass",
 		"Upload Uniforms",
