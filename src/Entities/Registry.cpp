@@ -277,7 +277,6 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 {
 	graphics::ShaderProgram* debugShader = shaderManager.GetShader("DebugLine");
 	graphics::ShaderProgram* debugShaderInstanced = shaderManager.GetShader("DebugLineInstanced");
-	graphics::ShaderProgram* objectShader = shaderManager.GetShader("Object");
 	graphics::ShaderProgram* objectShaderInstanced = shaderManager.GetShader("ObjectInstanced");
 
 	uint64_t state = 0u
