@@ -18,12 +18,89 @@ namespace openblack::Entities
 {
 
 Registry::Registry()
+	: _instanceUniformBuffer(BGFX_INVALID_HANDLE)
 {
 	_registry.set<RegistryContext>();
 }
 
 Registry::~Registry()
 {
+	if (bgfx::isValid(_instanceUniformBuffer))
+		bgfx::destroy(_instanceUniformBuffer);
+}
+
+void Registry::PrepareDrawDescs(bool drawBoundingBox)
+{
+	// Count number of instances
+	uint32_t instanceCount = 0;
+	std::map<MeshId, uint32_t> meshIds;
+
+	if (drawBoundingBox)
+	{
+		instanceCount *= 2;
+	}
+
+	// Recreate instancing uniform buffer if it is too small
+	if (_instanceUniforms.size() < instanceCount)
+	{
+		if (bgfx::isValid(_instanceUniformBuffer))
+		{
+			bgfx::destroy(_instanceUniformBuffer);
+		}
+		bgfx::VertexLayout layout;
+		layout.begin()
+		      .add(bgfx::Attrib::TexCoord7, 4, bgfx::AttribType::Float)
+		      .add(bgfx::Attrib::TexCoord6, 4, bgfx::AttribType::Float)
+		      .add(bgfx::Attrib::TexCoord5, 4, bgfx::AttribType::Float)
+		      .add(bgfx::Attrib::TexCoord4, 4, bgfx::AttribType::Float)
+		      .end();
+		_instanceUniformBuffer = bgfx::createDynamicVertexBuffer(instanceCount, layout);
+		_instanceUniforms.resize(instanceCount);
+	}
+
+	// Determine uniform buffer offsets and instance count for draw
+	uint32_t offset = 0;
+	_instancedDrawDescs.clear();
+	for (const auto& [meshId, count] : meshIds)
+	{
+		_instancedDrawDescs.emplace(std::piecewise_construct, std::forward_as_tuple(meshId), std::forward_as_tuple(offset, count));
+		offset += count;
+	}
+
+}
+
+void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
+{
+	// Set transforms for instanced draw at offsets
+	auto prepareDrawBoundingBox = [drawBoundingBox, this](uint32_t idx, const Transform& transform, MeshId meshId, int8_t submeshId) {
+		if (drawBoundingBox)
+		{
+			const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
+			auto box = mesh.GetSubMeshes()[(mesh.GetNumSubMeshes() + submeshId) % mesh.GetNumSubMeshes()]->GetBoundingBox();
+
+			glm::mat4 boxMatrix = glm::mat4(1.0f);
+			boxMatrix           = glm::translate(boxMatrix, transform.position + box.center());
+//			boxMatrix           = glm::rotate(boxMatrix, transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+//			boxMatrix           = glm::rotate(boxMatrix, transform.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+//			boxMatrix           = glm::rotate(boxMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+			boxMatrix           = glm::scale(boxMatrix, transform.scale * box.size());
+
+			_instanceUniforms[idx + _instanceUniforms.size() / 2] = boxMatrix;
+		}
+	};
+	// Store offsets of uniforms for descs
+	std::map<MeshId, uint32_t> uniformOffsets;
+
+	if (!_instanceUniforms.empty())
+	{
+		bgfx::update(_instanceUniformBuffer, 0, bgfx::makeRef(_instanceUniforms.data(), _instanceUniforms.size()*sizeof(glm::mat4)));
+	}
+}
+
+void Registry::PrepareDraw(bool drawBoundingBox)
+{
+	PrepareDrawDescs(drawBoundingBox);
+	PrepareDrawUploadUniforms(drawBoundingBox);
 }
 
 void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager, graphics::DebugLines* boundingBox) const
@@ -38,6 +115,19 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		| BGFX_STATE_DEPTH_TEST_LESS
 		| BGFX_STATE_MSAA
 	;
+
+	for (const auto& [meshId, placers]: _instancedDrawDescs)
+	{
+		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
+		mesh.Submit(viewId, &_instanceUniformBuffer, placers.offset, placers.count, *objectShaderInstanced, state);
+	}
+
+	if (boundingBox)
+	{
+		auto boundBoxOffset = _instanceUniforms.size() / 2;
+		auto boundBoxCount  = _instanceUniforms.size() / 2;
+		boundingBox->Draw(viewId, _instanceUniformBuffer, boundBoxOffset, boundBoxCount, *debugShaderInstanced);
+	}
 
 	_registry.view<const Tree, const Transform>().each([viewId, debugShader, objectShader, state, &boundingBox](const Tree& entity, const Transform& transform) {
 		auto modelMatrix = static_cast<const glm::mat4>(transform);

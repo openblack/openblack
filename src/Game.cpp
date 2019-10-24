@@ -237,6 +237,14 @@ void Game::Run()
 		_modelRotation.y = fmod(_modelRotation.y + float(deltaTime.count()) * .0001f, 360.f);
 
 		_renderer->UpdateDebugCrossPose(deltaTime, _intersection, 50.0f);
+
+		_profiler->Begin(Profiler::Stage::UpdateEntities);
+		if (_config.drawEntities)
+		{
+			_entityRegistry->PrepareDraw(_config.drawBoundingBoxes);
+		}
+		_profiler->End(Profiler::Stage::UpdateEntities);
+
 		_profiler->End(Profiler::Stage::UpdatePositions);
 
 		_profiler->Begin(Profiler::Stage::GuiLoop);
