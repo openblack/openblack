@@ -29,69 +29,32 @@
 namespace openblack::graphics
 {
 
-ShaderProgram::ShaderProgram(const std::string& name, const std::string& vertexSource, const std::string& fragmentSource)
+ShaderProgram::ShaderProgram(const std::string& name, bgfx::ShaderHandle&& vertexShader, bgfx::ShaderHandle&& fragmentShader)
 	: _program(BGFX_INVALID_HANDLE)
 {
-	std::string suffix;
-	switch (bgfx::getRendererType())
-	{
-		case bgfx::RendererType::Noop:
-		case bgfx::RendererType::Direct3D9:
-			suffix = ".dx9";
-			break;
-		case bgfx::RendererType::Direct3D11:
-		case bgfx::RendererType::Direct3D12:
-			suffix = ".dx11";
-			break;
-		case bgfx::RendererType::Metal:
-			suffix = ".metal";
-			break;
-		case bgfx::RendererType::OpenGL:
-			suffix = ".glsl";
-			break;
-		case bgfx::RendererType::OpenGLES:
-			suffix = ".essl";
-			break;
-		case bgfx::RendererType::Vulkan:
-			suffix = ".spv";
-			break;
-		default:
-			throw std::runtime_error("Could not associate shader for renderer type.");
-			break;
-	}
-
 	uint16_t numShaderUniforms = 0;
 	bgfx::UniformInfo info = {};
 	std::vector<bgfx::UniformHandle> uniforms;
 
-	auto const& vertexShaderSource = Game::instance()->GetFileSystem().ReadAll(vertexSource + suffix);
-	auto vs_mem = bgfx::makeRef(vertexShaderSource.data(), vertexShaderSource.size());
-	auto vs_shader = bgfx::createShader(vs_mem);
-	bgfx::frame();
-	numShaderUniforms = bgfx::getShaderUniforms(vs_shader);
+	numShaderUniforms = bgfx::getShaderUniforms(vertexShader);
 	uniforms.resize(numShaderUniforms);
-	bgfx::getShaderUniforms(vs_shader, uniforms.data(), uniforms.size());
+	bgfx::getShaderUniforms(vertexShader, uniforms.data(), uniforms.size());
 	for (uint16_t i = 0; i < numShaderUniforms; ++i)
 	{
 		bgfx::getUniformInfo(uniforms[i], info);
 		_uniforms.emplace(std::string(info.name), uniforms[i]);
 	}
-	bgfx::setName(vs_shader, (name + "_vs").c_str());
 
-	auto const& fragmentShaderSource = Game::instance()->GetFileSystem().ReadAll(fragmentSource + suffix);
-	auto fs_mem = bgfx::makeRef(fragmentShaderSource.data(), fragmentShaderSource.size());
-	auto fs_shader = bgfx::createShader(fs_mem);
-	numShaderUniforms = bgfx::getShaderUniforms(fs_shader);
+	numShaderUniforms = bgfx::getShaderUniforms(fragmentShader);
 	uniforms.resize(numShaderUniforms);
-	bgfx::getShaderUniforms(fs_shader, uniforms.data(), uniforms.size());
+	bgfx::getShaderUniforms(fragmentShader, uniforms.data(), uniforms.size());
 	for (uint16_t i = 0; i < numShaderUniforms; ++i)
 	{
 		bgfx::getUniformInfo(uniforms[i], info);
 		_uniforms.emplace(std::string(info.name), uniforms[i]);
 	}
-	bgfx::setName(vs_shader, (name + "_fs").c_str());
 
-	_program = bgfx::createProgram(vs_shader, fs_shader, true);
+	_program = bgfx::createProgram(vertexShader, fragmentShader, true);
 	bgfx::frame();
 }
 

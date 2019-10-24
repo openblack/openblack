@@ -38,7 +38,7 @@ class ShaderManager
 	ShaderManager() = default;
 	~ShaderManager();
 
-	ShaderProgram* LoadShader(const std::string& name, const std::string& vertexShaderFile, const std::string& fragmentShaderFile);
+	ShaderProgram* LoadShader(const std::string& name, const std::string& vertexShaderName, const std::string& fragmentShaderName);
 	ShaderProgram* GetShader(const std::string& name);
 
 	void SetCamera(uint8_t viewId, const Camera &camera);

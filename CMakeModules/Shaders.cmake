@@ -207,7 +207,7 @@ function(get_profile_ext PROFILE PROFILE_EXT)
 endfunction()
 
 function(mark_shaders_for_compilation)
-	set(options HEADER)
+	set(options "")
 	set(oneValueArgs TYPE VARYING_DEF OUTPUT_DIR)
 	set(multiValueArgs SHADERS)
 	cmake_parse_arguments(
@@ -256,13 +256,7 @@ function(mark_shaders_for_compilation)
 		set(COMMANDS "")
 		foreach(PROFILE ${PROFILES})
 			get_profile_ext(${PROFILE} PROFILE_EXT)
-			if (ARGS_HEADER)
-				set(OUTPUT ${ARGS_OUTPUT_DIR}/${SHADER_FILE_BASENAME}.${PROFILE_EXT}.bin.h)
-				set(BIN2C BIN2C ${SHADER_FILE_NAME_WE}_${PROFILE_EXT})
-			else()
-				set(OUTPUT ${ARGS_OUTPUT_DIR}/${SHADER_FILE_BASENAME}.${PROFILE_EXT})
-				set(BIN2C "")
-			endif()
+			set(OUTPUT ${ARGS_OUTPUT_DIR}/${SHADER_FILE_BASENAME}.${PROFILE_EXT}.bin.h)
 			set(PLATFORM_I ${PLATFORM})
 			if (PROFILE STREQUAL "spirv")
 				set(PLATFORM_I LINUX)
@@ -277,10 +271,10 @@ function(mark_shaders_for_compilation)
 				O "$<$<CONFIG:debug>:0>$<$<CONFIG:release>:3>$<$<CONFIG:relwithdebinfo>:3>$<$<CONFIG:minsizerel>:3>"
 				VARYINGDEF ${ARGS_VARYING_DEF}
 				INCLUDES ${BGFX_SHADER_INCLUDE_PATH}
-				${BIN2C}
+				BIN2C BIN2C ${SHADER_FILE_NAME_WE}_${PROFILE_EXT}
 				WERROR
 			)
-			list(APPEND OUTPUTS ${SHADER_FILE_BASENAME}.${PROFILE_EXT})
+			list(APPEND OUTPUTS ${OUTPUT})
 			list(APPEND COMMANDS COMMAND bgfx::shaderc ${CLI})
 		endforeach()
 

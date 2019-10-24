@@ -24,6 +24,7 @@
 #include <array>
 #include <chrono>
 #include <memory>
+#include <string_view>
 #include <vector>
 
 #include <SDL.h>
@@ -44,16 +45,16 @@ class DebugLines;
 
 
 struct ShaderDefinition {
-  const std::string name;
-  const std::string vertexShaderFile;
-  const std::string fragmentShaderFile;
+  const std::string_view name;
+  const std::string_view vertexShaderName;
+  const std::string_view fragmentShaderName;
 };
 
-static const std::array Shaders {
-	ShaderDefinition{"DebugLine", "shaders/vs_line.sc", "shaders/fs_line.sc"},
-	ShaderDefinition{"Terrain", "shaders/vs_terrain.sc", "shaders/fs_terrain.sc"},
-	ShaderDefinition{"Object", "shaders/vs_object.sc", "shaders/fs_object.sc"},
-	ShaderDefinition{"Water", "shaders/vs_water.sc", "shaders/fs_water.sc"},
+constexpr std::array Shaders {
+	ShaderDefinition{"DebugLine", "vs_line", "fs_line"},
+	ShaderDefinition{"Terrain", "vs_terrain", "fs_terrain"},
+	ShaderDefinition{"Object", "vs_object", "fs_object"},
+	ShaderDefinition{"Water", "vs_water", "fs_water"},
 };
 
 class Renderer {
@@ -69,11 +70,11 @@ class Renderer {
 	};
 
 	Renderer() = delete;
-	explicit Renderer(const GameWindow& window, bool vsync, const std::string binaryPath);
+	explicit Renderer(const GameWindow& window, bool vsync);
 
 	virtual ~Renderer();
 
-	void LoadShaders(const std::string &binaryPath);
+	void LoadShaders();
 	[[nodiscard]] graphics::ShaderManager& GetShaderManager() const;
 
 	void UpdateDebugCrossPose(std::chrono::microseconds dt, const glm::vec3 &position, float scale);

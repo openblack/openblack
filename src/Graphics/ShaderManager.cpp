@@ -20,10 +20,39 @@
 
 #include <Graphics/ShaderManager.h>
 
+#include <bgfx/embedded_shader.h>
+
 #include <3D/Camera.h>
+
+#include "Shaders/vs_line.bin.h"
+#include "Shaders/fs_line.bin.h"
+#include "Shaders/vs_object.bin.h"
+#include "Shaders/fs_object.bin.h"
+#include "Shaders/vs_terrain.bin.h"
+#include "Shaders/fs_terrain.bin.h"
+#include "Shaders/vs_water.bin.h"
+#include "Shaders/fs_water.bin.h"
 
 namespace openblack::graphics
 {
+
+const bgfx::EmbeddedShader s_embeddedShaders[] =
+	{
+		BGFX_EMBEDDED_SHADER(vs_line),
+		BGFX_EMBEDDED_SHADER(fs_line),
+
+		BGFX_EMBEDDED_SHADER(vs_object),
+		BGFX_EMBEDDED_SHADER(fs_object),
+
+		BGFX_EMBEDDED_SHADER(vs_terrain),
+		BGFX_EMBEDDED_SHADER(fs_terrain),
+
+		BGFX_EMBEDDED_SHADER(vs_water),
+		BGFX_EMBEDDED_SHADER(fs_water),
+
+
+		BGFX_EMBEDDED_SHADER_END()
+	};
 
 ShaderManager::~ShaderManager()
 {
@@ -35,13 +64,18 @@ ShaderManager::~ShaderManager()
 	_shaderPrograms.clear();
 }
 
-ShaderProgram* ShaderManager::LoadShader(const std::string& name, const std::string& vertexShaderFile, const std::string& fragmentShaderFile)
+ShaderProgram* ShaderManager::LoadShader(const std::string& name, const std::string& vertexShaderName, const std::string& fragmentShaderName)
 {
+	bgfx::RendererType::Enum type = bgfx::getRendererType();
+
 	ShaderMap::iterator i = _shaderPrograms.find(name);
 	if (i != _shaderPrograms.end())
 		return i->second;
 
-	ShaderProgram* program = new ShaderProgram(name, vertexShaderFile, fragmentShaderFile);
+	ShaderProgram* program = new ShaderProgram(name,
+		bgfx::createEmbeddedShader(s_embeddedShaders, type, vertexShaderName.c_str()),
+		bgfx::createEmbeddedShader(s_embeddedShaders, type, fragmentShaderName.c_str())
+	);
 	_shaderPrograms[name]  = program;
 	return program;
 }

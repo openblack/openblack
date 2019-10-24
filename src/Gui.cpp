@@ -39,10 +39,10 @@
 #include <3D/Sky.h>
 #include <3D/Water.h>
 
-#include "Graphics/Shaders/vs_ocornut_imgui.bin.h"
-#include "Graphics/Shaders/fs_ocornut_imgui.bin.h"
-#include "Graphics/Shaders/vs_imgui_image.bin.h"
-#include "Graphics/Shaders/fs_imgui_image.bin.h"
+#include "Graphics/Shaders/imgui/vs_ocornut_imgui.bin.h"
+#include "Graphics/Shaders/imgui/fs_ocornut_imgui.bin.h"
+#include "Graphics/Shaders/imgui/vs_imgui_image.bin.h"
+#include "Graphics/Shaders/imgui/fs_imgui_image.bin.h"
 
 using namespace openblack;
 
