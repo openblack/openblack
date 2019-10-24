@@ -230,22 +230,22 @@ void L3DMesh::Load(IStream& stream)
 	// size: 6100, num meshes: 4, offset: 100
 }
 
-void L3DMesh::Draw(uint8_t viewId, ShaderProgram &program, uint32_t mesh, uint64_t state, uint32_t rgba) const
+void L3DMesh::Draw(uint8_t viewId, const glm::mat4& modelMatrix, const ShaderProgram &program, uint32_t mesh, uint64_t state, uint32_t rgba) const
 {
 	if (mesh >= _subMeshes.size()) {
 		//spdlog::warn("tried to draw submesh out of range ({}/{})", mesh, _subMeshes.size());
 		mesh = _subMeshes.size() - 1;
 	}
 
-	_subMeshes[mesh]->Submit(viewId, program, state, rgba, false);
+	_subMeshes[mesh]->Submit(viewId, modelMatrix, program, state, rgba, false);
 }
 
 
-void L3DMesh::Submit(uint8_t viewId, ShaderProgram& program, uint64_t state, uint32_t rgba) const
+void L3DMesh::Submit(uint8_t viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state, uint32_t rgba) const
 {
 	for (auto it = _subMeshes.begin(); it != _subMeshes.end(); ++it)
 	{
 		const L3DSubMesh& submesh = *it->get();
-		submesh.Submit(viewId, program, state, rgba, std::next(it) != _subMeshes.end());
+		submesh.Submit(viewId, modelMatrix, program, state, rgba, std::next(it) != _subMeshes.end());
 	}
 }

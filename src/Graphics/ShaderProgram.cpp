@@ -101,12 +101,12 @@ ShaderProgram::~ShaderProgram()
 		bgfx::destroy(_program);
 }
 
-void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture)
+void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture) const
 {
 	bgfx::setTexture(bindPoint, _uniforms.at(samplerName), texture.GetNativeHandle());
 }
 
-void ShaderProgram::SetUniformValue(const char* uniformName, const void* value)
+void ShaderProgram::SetUniformValue(const char* uniformName, const void* value) const
 {
 	bgfx::setUniform(_uniforms.at(uniformName), value);
 }

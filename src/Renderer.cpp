@@ -242,16 +242,8 @@ void Renderer::DrawScene(const Game &game, uint8_t viewId, bool drawWater, bool 
 	ShaderProgram* waterShader = _shaderManager->GetShader("Water");
 	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
 	ShaderProgram* debugShader = _shaderManager->GetShader("DebugLine");
-//
-//	glEnable(GL_DEPTH_TEST);
-//	glEnable(GL_BLEND);
-//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//
-	game.GetSky().Draw(viewId, *objectShader);
-//
-//	glEnable(GL_CULL_FACE);
-//	glCullFace(cullBack ? GL_BACK : GL_FRONT);
-//	glFrontFace(GL_CCW);
+
+	game.GetSky().Draw(viewId, glm::mat4(1.0f), *objectShader);
 
 	if (drawWater)
 	{

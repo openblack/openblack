@@ -54,7 +54,7 @@ class L3DSubMesh
 	~L3DSubMesh();
 
 	void Load(IStream& stream);
-	void Submit(uint8_t viewId, ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
+	void Submit(uint8_t viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
 
 	uint8_t GetLOD() const { return static_cast<uint8_t>(_flags & 0x7); } // 29-32 (3)
 	uint8_t GetStatus() const { return static_cast<uint8_t>((_flags >> 3) & 0x3F); } // 22-28 (6)

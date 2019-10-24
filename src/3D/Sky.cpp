@@ -123,9 +123,8 @@ void Sky::CalculateTextures()
 	_texture->Create(256, 256, 1, Format::RGB5A1, Wrapping::ClampEdge, bitmap.data(), bitmap.size() * sizeof(bitmap[0]));
 }
 
-void Sky::Draw(uint8_t viewId, graphics::ShaderProgram &program)
+void Sky::Draw(uint8_t viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram &program) const
 {
-//	program.SetUniformValue("u_model", glm::mat4(1.0f));
 	program.SetTextureSampler("s_diffuse", 0, *_texture);
 
 	uint64_t state = 0u
@@ -136,7 +135,7 @@ void Sky::Draw(uint8_t viewId, graphics::ShaderProgram &program)
 		| BGFX_STATE_CULL_CCW
 		| BGFX_STATE_MSAA
 	;
-	_model->Draw(viewId, program, 0, state);
+	_model->Draw(viewId, modelMatrix, program, 0, state);
 }
 
 } // namespace openblack

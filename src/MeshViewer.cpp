@@ -108,9 +108,6 @@ void MeshViewer::DrawScene()
 	auto& shaderManager         = Game::instance()->GetRenderer().GetShaderManager();
 	ShaderProgram* objectShader = shaderManager.GetShader("Object");
 
-	auto model = glm::mat4(1.0f);
-	bgfx::setTransform(&model);
-
 	// TODO(bwrsandman): use camera class
 	glm::mat4 perspective = glm::perspective(glm::radians(70.0f), 1.0f, 1.0f, 1024.0f);
 	glm::mat4 view        = glm::lookAt(_cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -134,7 +131,7 @@ void MeshViewer::DrawScene()
 
 	const auto& mesh = meshes[static_cast<int>(_selectedMesh)];
 	if (_selectedSubMesh >= 0 && static_cast<uint32_t>(_selectedSubMesh) < mesh->GetSubMeshes().size())
-		mesh->Draw(_viewId, *objectShader, _selectedSubMesh, state);
+		mesh->Draw(_viewId, glm::mat4(1.0f), *objectShader, _selectedSubMesh, state);
 
 	_frameBuffer->Unbind(_viewId);
 }
