@@ -35,6 +35,14 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 	uint32_t instanceCount = 0;
 	std::map<MeshId, uint32_t> meshIds;
 
+	// Mobile Objects
+	_registry.view<const MobileObject, const Transform>().each([&meshIds, &instanceCount](const MobileObject& entity, const Transform& transform) {
+		const auto meshId = mobileObjectMeshLookup[entity.type];
+		auto count = meshIds.insert(std::make_pair(meshId, 0));
+		count.first->second++;
+		instanceCount++;
+	});
+
 	if (drawBoundingBox)
 	{
 		instanceCount *= 2;
@@ -91,6 +99,16 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	// Store offsets of uniforms for descs
 	std::map<MeshId, uint32_t> uniformOffsets;
 
+	// Mobile Objects
+	_registry.view<const MobileObject, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const MobileObject& entity, const Transform& transform) {
+		const auto meshId = mobileObjectMeshLookup[entity.type];
+		auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
+		auto desc = _instancedDrawDescs.find(meshId);
+		_instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+		prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 1);
+		offset.first->second++;
+	});
+
 	if (!_instanceUniforms.empty())
 	{
 		bgfx::update(_instanceUniformBuffer, 0, bgfx::makeRef(_instanceUniforms.data(), _instanceUniforms.size()*sizeof(glm::mat4)));
@@ -119,7 +137,7 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 	for (const auto& [meshId, placers]: _instancedDrawDescs)
 	{
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
-		mesh.Submit(viewId, &_instanceUniformBuffer, placers.offset, placers.count, *objectShaderInstanced, state);
+		mesh.Submit(viewId, _instanceUniformBuffer, placers.offset, placers.count, *objectShaderInstanced, state);
 	}
 
 	if (boundingBox)
@@ -243,21 +261,6 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		if (boundingBox)
 		{
 			auto box = mesh.GetSubMeshes()[0]->GetBoundingBox();
-			boundingBox->SetPose(box.center() + transform.position, box.size() * transform.scale);
-			boundingBox->Draw(viewId, *debugShader);
-		}
-	});
-
-	_registry.view<const MobileObject, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const MobileObject& entity, const Transform& transform) {
-		auto modelMatrix = static_cast<const glm::mat4>(transform);
-
-		auto meshId = mobileObjectMeshLookup[entity.type];
-		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
-		mesh.Submit(viewId, modelMatrix, *objectShader, state);
-
-		if (boundingBox)
-		{
-			auto box = mesh.GetSubMeshes()[1]->GetBoundingBox();
 			boundingBox->SetPose(box.center() + transform.position, box.size() * transform.scale);
 			boundingBox->Draw(viewId, *debugShader);
 		}
