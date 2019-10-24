@@ -35,6 +35,14 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 	uint32_t instanceCount = 0;
 	std::map<MeshId, uint32_t> meshIds;
 
+	// Fields
+	_registry.view<const Field, const Transform>().each([&meshIds, &instanceCount](const Field& entity, const Transform& transform) {
+		const auto meshId = MeshId::TreeWheat;
+		auto count = meshIds.insert(std::make_pair(meshId, 0));
+		count.first->second++;
+		instanceCount++;
+	});
+
 	// Forests
 	_registry.view<const Forest, const Transform>().each([&meshIds, &instanceCount](const Forest& entity, const Transform& transform) {
 		const auto meshId = MeshId::FeatureForest;
@@ -106,6 +114,16 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	};
 	// Store offsets of uniforms for descs
 	std::map<MeshId, uint32_t> uniformOffsets;
+
+	// Fields
+	_registry.view<const Field, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const Field& entity, const Transform& transform) {
+		const auto meshId = MeshId::TreeWheat;
+		auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
+		auto desc = _instancedDrawDescs.find(meshId);
+		_instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+		prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 0);
+		offset.first->second++;
+	});
 
 	// Forests
 	_registry.view<const Forest, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const Forest& entity, const Transform& transform) {
@@ -249,21 +267,6 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 		if (boundingBox)
 		{
 			auto box = mesh.GetSubMeshes()[1]->GetBoundingBox();
-			boundingBox->SetPose(box.center() + transform.position, box.size() * transform.scale);
-			boundingBox->Draw(viewId, *debugShader);
-		}
-	});
-
-	_registry.view<const Field, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const Field& entity, const Transform& transform) {
-		auto modelMatrix = static_cast<const glm::mat4>(transform);
-
-		auto meshId = MeshId::TreeWheat;
-		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
-		mesh.Submit(viewId, modelMatrix, *objectShader, state);
-
-		if (boundingBox)
-		{
-			auto box = mesh.GetSubMeshes()[0]->GetBoundingBox();
 			boundingBox->SetPose(box.center() + transform.position, box.size() * transform.scale);
 			boundingBox->Draw(viewId, *debugShader);
 		}
