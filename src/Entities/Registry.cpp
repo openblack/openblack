@@ -35,6 +35,27 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 	uint32_t instanceCount = 0;
 	std::map<MeshId, uint32_t> meshIds;
 
+	// Animated Statics
+	_registry.view<const AnimatedStatic, const Transform>().each([&meshIds, &instanceCount](const AnimatedStatic& entity, const Transform& transform) {
+		// temporary-ish:
+		MeshId meshId = MeshId::Dummy;
+		if (entity.type == "Norse Gate")
+		{
+			meshId = MeshId::BuildingNorseGate;
+		}
+		else if (entity.type == "Gate Stone Plinth")
+		{
+			meshId = MeshId::ObjectGateTotemPlinthe;
+		}
+		else if (entity.type == "Piper Cave Entrance")
+		{
+			meshId = MeshId::BuildingMineEntrance;
+		}
+		auto count = meshIds.insert(std::make_pair(meshId, 0));
+		count.first->second++;
+		instanceCount++;
+	});
+
 	// Mobile Statics
 	_registry.view<const MobileStatic, const Transform>().each([&meshIds, &instanceCount](const MobileStatic& entity, const Transform& transform) {
 		const auto meshId = mobileStaticMeshLookup[entity.type];
@@ -130,6 +151,29 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	};
 	// Store offsets of uniforms for descs
 	std::map<MeshId, uint32_t> uniformOffsets;
+
+	// Animated Statics
+	_registry.view<const AnimatedStatic, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const AnimatedStatic& entity, const Transform& transform) {
+		// temporary-ish:
+		MeshId meshId = MeshId::Dummy;
+		if (entity.type == "Norse Gate")
+		{
+			meshId = MeshId::BuildingNorseGate;
+		}
+		else if (entity.type == "Gate Stone Plinth")
+		{
+			meshId = MeshId::ObjectGateTotemPlinthe;
+		}
+		else if (entity.type == "Piper Cave Entrance")
+		{
+			meshId = MeshId::BuildingMineEntrance;
+		}
+		auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
+		auto desc = _instancedDrawDescs.find(meshId);
+		_instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+		prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 0);
+		offset.first->second++;
+	});
 
 	// Mobile Statics
 	_registry.view<const MobileStatic, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const MobileStatic& entity, const Transform& transform) {
@@ -239,35 +283,6 @@ void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager
 
 		auto meshId = abodeMeshLookup[entity.abodeInfo];
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
-		mesh.Submit(viewId, modelMatrix, *objectShader, state);
-
-		if (boundingBox)
-		{
-			auto box = mesh.GetSubMeshes()[0]->GetBoundingBox();
-			boundingBox->SetPose(box.center() + transform.position, box.size() * transform.scale);
-			boundingBox->Draw(viewId, *debugShader);
-		}
-	});
-
-	_registry.view<const AnimatedStatic, const Transform>().each([viewId, state, objectShader, debugShader, boundingBox](const AnimatedStatic& entity, const Transform& transform) {
-		auto modelMatrix = static_cast<const glm::mat4>(transform);
-
-		// temporary-ish:
-		MeshId meshId = MeshId::Dummy;
-		if (entity.type == "Norse Gate")
-		{
-			meshId = MeshId::BuildingNorseGate;
-		}
-		else if (entity.type == "Gate Stone Plinth")
-		{
-			meshId = MeshId::ObjectGateTotemPlinthe;
-		}
-		else if (entity.type == "Piper Cave Entrance")
-		{
-			meshId = MeshId::BuildingMineEntrance;
-		}
-
-		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<int>(meshId));
 		mesh.Submit(viewId, modelMatrix, *objectShader, state);
 
 		if (boundingBox)
