@@ -56,7 +56,7 @@ void Mesh::Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &progra
 	}
 	else
 	{
-		Draw(viewId, program, _vertexBuffer->GetVertexCount(), 0, state, rgba);
+		Draw(viewId, program, _vertexBuffer->GetCount(), 0, state, rgba);
 	}
 }
 

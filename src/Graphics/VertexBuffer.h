@@ -82,11 +82,11 @@ typedef std::vector<VertexAttrib> VertexDecl;
 class VertexBuffer
 {
   public:
-	VertexBuffer(std::string name, const void* vertices, size_t vertexCount, VertexDecl decl);
+	VertexBuffer(std::string name, const void* vertices, uint32_t vertexCount, VertexDecl decl);
 	VertexBuffer(std::string name, const bgfx::Memory* memory, VertexDecl decl);
 	~VertexBuffer();
 
-	[[nodiscard]] size_t GetVertexCount() const noexcept;
+	[[nodiscard]] uint32_t GetCount() const noexcept;
 	[[nodiscard]] size_t GetStrideBytes() const noexcept;
 	[[nodiscard]] size_t GetSizeInBytes() const noexcept;
 
@@ -94,7 +94,7 @@ class VertexBuffer
 
   private:
 	std::string _name;
-	size_t _vertexCount;
+	uint32_t _vertexCount;
 	const VertexDecl _vertexDecl;
 	size_t _strideBytes;
 	std::vector<const void*> _vertexDeclOffsets;
