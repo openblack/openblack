@@ -156,42 +156,45 @@ void L3DSubMesh::Submit(uint8_t viewId, const glm::mat4& modelMatrix, const Shad
 	if (IsPhysics())
 		return;
 
-	bgfx::setState(state, rgba);
-
-	_vertexBuffer->Bind();
-
 	auto const& skins = _l3dMesh.GetSkins();
 
-	const Texture2D* lastTexture = nullptr;
-	bool subMeshPreserveState = false;
+	auto getTexture = [&skins](uint32_t skinID) -> const Texture2D* {
+		if (skinID != 0xFFFFFFFF)
+		{
+			if (skins.find(skinID) != skins.end())
+				return skins.at(skinID).get();
+			else
+				return &Game::instance()->GetMeshPack().GetTexture(skinID);
+		}
+		return nullptr;
+	};
+
+	bool lastPreserveState = false;
 	for (auto it = _primitives.begin(); it != _primitives.end(); ++it)
 	{
 		const Primitive& prim = *it;
 
-		if (!subMeshPreserveState)
+		const bool hasNext = std::next(it) != _primitives.end();
+
+		const Texture2D* texture = getTexture(prim.skinID);
+		const Texture2D* nextTexture = !hasNext ? nullptr : getTexture(std::next(it)->skinID);
+
+		bool primitivePreserveState = (texture == nextTexture || !hasNext) && (preserveState || hasNext);
+
+		if (!lastPreserveState)
 		{
 			bgfx::setTransform(&modelMatrix);
-		}
-
-		subMeshPreserveState = preserveState || std::next(it) != _primitives.end();
-
-		const Texture2D* texture = nullptr;
-		if (prim.skinID != 0xFFFFFFFF)
-		{
-			if (skins.find(prim.skinID) != skins.end())
-				texture = skins.at(prim.skinID).get();
-			else
-				texture = &Game::instance()->GetMeshPack().GetTexture(prim.skinID);
-
-			subMeshPreserveState &= lastTexture == texture;
-
-			if (!subMeshPreserveState)
+			bgfx::setState(state, rgba);
+			_vertexBuffer->Bind();
+			if (texture)
+			{
 				program.SetTextureSampler("s_diffuse", 0, *texture);
+			}
 		}
 
 		_indexBuffer->Bind(prim.indicesCount, prim.indicesOffset);
-		bgfx::submit(viewId, program.GetRawHandle(), 0, subMeshPreserveState);
-		lastTexture = texture;
+		bgfx::submit(viewId, program.GetRawHandle(), 0, primitivePreserveState);
+		lastPreserveState = primitivePreserveState;
 	}
 }
 
