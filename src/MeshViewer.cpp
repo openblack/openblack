@@ -62,14 +62,19 @@ void MeshViewer::DrawWindow()
 	ImGui::SetNextWindowSize(ImVec2(720.0f, 612.0f), ImGuiCond_FirstUseEver);
 	ImGui::Begin("MeshPack Viewer", &_open);
 
+	_filter.Draw();
+
 	ImGui::BeginChild("meshes", ImVec2(fontSize * 15.0f, 0), true);
 	for (size_t i = 0; i < meshes.size(); i++)
 	{
-		const auto meshEnum  = static_cast<MeshId>(i);
-		const auto& enumName   = std::string(MeshNames[i]);
+		if (_filter.PassFilter(MeshNames[i].data()))
+		{
+			const auto meshEnum = static_cast<MeshId>(i);
+			const auto &enumName = std::string(MeshNames[i]);
 
-		if (ImGui::Selectable(enumName.c_str(), static_cast<MeshId>(meshEnum) == _selectedMesh))
-			_selectedMesh = meshEnum;
+			if (ImGui::Selectable(enumName.c_str(), static_cast<MeshId>(meshEnum)==_selectedMesh))
+				_selectedMesh = meshEnum;
+		}
 	}
 	ImGui::EndChild();
 
