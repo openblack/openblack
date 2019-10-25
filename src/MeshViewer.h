@@ -39,6 +39,7 @@ class MeshViewer
 	const uint8_t _viewId;
 	MeshId _selectedMesh;
 	int _selectedSubMesh;
+	ImGuiTextFilter _filter;
 	glm::vec3 _cameraPosition;
 	std::unique_ptr<graphics::FrameBuffer> _frameBuffer;
 };
