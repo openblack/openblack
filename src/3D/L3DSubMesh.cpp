@@ -179,7 +179,7 @@ void L3DSubMesh::Submit(uint8_t viewId, const glm::mat4& modelMatrix, const Shad
 		const Texture2D* texture = getTexture(prim.skinID);
 		const Texture2D* nextTexture = !hasNext ? nullptr : getTexture(std::next(it)->skinID);
 
-		bool primitivePreserveState = (texture == nextTexture || !hasNext) && (preserveState || hasNext);
+		bool primitivePreserveState = texture == nextTexture && (preserveState || hasNext);
 
 		if (!lastPreserveState)
 		{
