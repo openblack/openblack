@@ -50,16 +50,19 @@ class L3DSubMesh
 	};
 
   public:
-	L3DSubMesh(L3DMesh& mesh);
+	explicit L3DSubMesh(L3DMesh& mesh);
 	~L3DSubMesh();
 
 	void Load(IStream& stream);
 	void Submit(uint8_t viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
 
-	uint8_t GetLOD() const { return static_cast<uint8_t>(_flags & 0x7); } // 29-32 (3)
-	uint8_t GetStatus() const { return static_cast<uint8_t>((_flags >> 3) & 0x3F); } // 22-28 (6)
-	bool IsWindow() const { return static_cast<bool>(_flags & 0x1000); } // 19
-	bool IsPhysics() const { return static_cast<bool>(_flags & 0x2000); } // 18
+	[[ nodiscard ]] uint8_t GetLOD() const { return static_cast<uint8_t>(_flags & 0x7u); } // 29-32 (3)
+	[[ nodiscard ]] uint8_t GetStatus() const { return static_cast<uint8_t>((_flags >> 3u) & 0x3Fu); } // 22-28 (6)
+	[[ nodiscard ]] bool IsWindow() const { return static_cast<bool>(_flags & 0x1000u); } // 19
+	[[ nodiscard ]] bool IsPhysics() const { return static_cast<bool>(_flags & 0x2000u); } // 18
+	[[ nodiscard ]] uint32_t GetVertexCount() const { return _vertexBuffer->GetCount(); }
+	[[ nodiscard ]] uint32_t GetIndexCount() const { return _indexBuffer->GetCount(); }
+
   private:
 	L3DMesh& _l3dMesh;
 

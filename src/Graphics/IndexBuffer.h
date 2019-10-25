@@ -47,7 +47,7 @@ class IndexBuffer
 
 	~IndexBuffer();
 
-	[[nodiscard]] std::size_t GetCount() const;
+	[[nodiscard]] uint32_t GetCount() const;
 	[[nodiscard]] std::size_t GetSize() const;
 	[[nodiscard]] std::size_t GetStride() const;
 	[[nodiscard]] Type GetType() const;
@@ -56,7 +56,7 @@ class IndexBuffer
 
   private:
 	std::string _name;
-	std::size_t _count;
+	uint32_t _count;
 	Type _type;
 	bgfx::IndexBufferHandle _handle;
 };

@@ -54,7 +54,7 @@ IndexBuffer::~IndexBuffer()
 		bgfx::destroy(_handle);
 }
 
-std::size_t IndexBuffer::GetCount() const
+uint32_t IndexBuffer::GetCount() const
 {
 	return _count;
 }

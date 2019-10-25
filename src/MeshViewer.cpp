@@ -79,17 +79,17 @@ void MeshViewer::DrawWindow()
 	ImGui::BeginChild("viewer");
 
 	ImGui::Text("%zu submeshes", mesh->GetSubMeshes().size());
-	ImGui::InputInt("submesh", &_selectedSubMesh, 1, 1);
-	if (_selectedSubMesh < 0)
-		_selectedSubMesh = 0;
-	if (static_cast<uint32_t>(_selectedSubMesh) >= mesh->GetSubMeshes().size())
-		_selectedSubMesh = mesh->GetSubMeshes().size() - 1;
-
+	ImGui::SliderInt("submesh", &_selectedSubMesh, 0, mesh->GetSubMeshes().size() - 1);
 	ImGui::DragFloat3("position", &_cameraPosition[0], 0.5f);
 
 	auto const& submesh = mesh->GetSubMeshes()[_selectedSubMesh];
 
-	ImGui::Text("submesh phys=%d win=%d lod=%d status=%d", submesh->IsPhysics(), submesh->IsWindow(), submesh->GetLOD(), submesh->GetStatus());
+	ImGui::Text("SubMesh LOD=%u Status=%u%s%s",
+	            submesh->GetLOD(),
+	            submesh->GetStatus(),
+	            submesh->IsPhysics() ? " [Physics]" : "",
+	            submesh->IsWindow() ? " [Window]" : "");
+	ImGui::Text("Vertices %u, Indices %u", submesh->GetVertexCount(), submesh->GetIndexCount());
 
 	ImGui::Image(_frameBuffer->GetColorAttachment().GetNativeHandle(), ImVec2(512, 512), ImVec2(0, 1), ImVec2(1, 0));
 
