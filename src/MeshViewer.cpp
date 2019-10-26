@@ -150,6 +150,4 @@ void MeshViewer::DrawScene()
 			_boundingBox->Draw(_viewId, *debugShader);
 		}
 	}
-
-	_frameBuffer->Unbind(_viewId);
 }

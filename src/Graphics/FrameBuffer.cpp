@@ -76,8 +76,3 @@ void FrameBuffer::Bind(uint8_t viewId)
 {
 	bgfx::setViewFrameBuffer(viewId, _handle);
 }
-
-void FrameBuffer::Unbind(uint8_t viewId)
-{
-	//bgfx::setViewFrameBuffer(viewId, BGFX_INVALID_HANDLE);
-}
