@@ -247,7 +247,7 @@ void Renderer::DrawScene(const DrawSceneDesc &desc)
 	desc.profiler.Begin(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawSky : Profiler::Stage::MainPassDrawSky);
 	if (desc.drawSky)
 	{
-		desc.sky.Draw(desc.viewId, glm::mat4(1.0f), *objectShader);
+		desc.sky.Draw(desc.viewId, glm::mat4(1.0f), *objectShader, desc.cullBack);
 	}
 	desc.profiler.End(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawSky : Profiler::Stage::MainPassDrawSky);
 

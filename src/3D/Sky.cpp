@@ -123,7 +123,7 @@ void Sky::CalculateTextures()
 	_texture->Create(256, 256, 1, Format::RGB5A1, Wrapping::ClampEdge, bitmap.data(), bitmap.size() * sizeof(bitmap[0]));
 }
 
-void Sky::Draw(uint8_t viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram &program) const
+void Sky::Draw(uint8_t viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram &program, bool cullBack) const
 {
 	program.SetTextureSampler("s_diffuse", 0, *_texture);
 
@@ -132,7 +132,7 @@ void Sky::Draw(uint8_t viewId, const glm::mat4& modelMatrix, const graphics::Sha
 		| BGFX_STATE_WRITE_A
 		| BGFX_STATE_WRITE_Z
 		| BGFX_STATE_DEPTH_TEST_LESS
-		| BGFX_STATE_CULL_CCW
+		| (cullBack ? BGFX_STATE_CULL_CW : BGFX_STATE_CULL_CCW)
 		| BGFX_STATE_MSAA
 	;
 	_model->Draw(viewId, modelMatrix, program, 0, state);
