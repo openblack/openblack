@@ -26,7 +26,8 @@
 
 #include <Graphics/Texture2D.h>
 
-namespace openblack::graphics {
+namespace openblack::graphics
+{
 
 class FrameBuffer {
 public:
@@ -35,12 +36,8 @@ public:
 	~FrameBuffer();
 
 	void Bind(uint8_t viewId);
-	void Unbind(uint8_t viewId);
 
 	Texture2D& GetColorAttachment() { return _colorAttachment; }
-
-	//inline void Bind() { glBindTexture(GL_TEXTURE_RECTANGLE, _textureID); }
-
 	[[nodiscard]] uint16_t GetWidth() const { return _width; }
 	[[nodiscard]] uint16_t GetHeight() const { return _height; }
 

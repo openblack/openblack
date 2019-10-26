@@ -54,7 +54,6 @@ class Water
 	void GetFramebufferSize(uint16_t& width, uint16_t& height) const;
 
 	void BeginReflection(uint8_t viewId, const Camera &sceneCamera);
-	void EndReflection(uint8_t viewId);
 
 	void DebugGUI();
 

@@ -110,7 +110,6 @@ void Water::Draw(uint8_t viewId, ShaderProgram &program) const
 	;
 
 	_mesh->Draw(viewId, program, state, 0);
-	_reflectionFrameBuffer->Unbind(viewId);
 }
 
 void Water::BeginReflection(uint8_t viewId, const Camera &sceneCamera)
@@ -123,11 +122,6 @@ void Water::BeginReflection(uint8_t viewId, const Camera &sceneCamera)
 	_reflectionCamera.SetProjectionMatrix(sceneCamera.GetProjectionMatrix());
 
 	_reflectionFrameBuffer->Bind(viewId);
-}
-
-void Water::EndReflection(uint8_t viewId)
-{
-	_reflectionFrameBuffer->Unbind(viewId);
 }
 
 void Water::DebugGUI()
