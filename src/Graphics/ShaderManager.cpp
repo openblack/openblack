@@ -68,7 +68,7 @@ ShaderManager::~ShaderManager()
 	_shaderPrograms.clear();
 }
 
-ShaderProgram* ShaderManager::LoadShader(const std::string& name, const std::string& vertexShaderName, const std::string& fragmentShaderName)
+const ShaderProgram* ShaderManager::LoadShader(const std::string& name, const std::string& vertexShaderName, const std::string& fragmentShaderName)
 {
 	bgfx::RendererType::Enum type = bgfx::getRendererType();
 
@@ -84,9 +84,9 @@ ShaderProgram* ShaderManager::LoadShader(const std::string& name, const std::str
 	return program;
 }
 
-ShaderProgram* ShaderManager::GetShader(const std::string& name)
+const ShaderProgram* ShaderManager::GetShader(const std::string& name) const
 {
-	ShaderMap::iterator i = _shaderPrograms.find(name);
+	auto i = _shaderPrograms.find(name);
 	if (i != _shaderPrograms.end())
 		return i->second;
 

@@ -281,11 +281,11 @@ void Registry::PrepareDraw(bool drawBoundingBox)
 	}
 }
 
-void Registry::DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager, graphics::DebugLines* boundingBox) const
+void Registry::DrawModels(uint8_t viewId, const graphics::ShaderManager& shaderManager, const graphics::DebugLines* boundingBox) const
 {
-	graphics::ShaderProgram* debugShader = shaderManager.GetShader("DebugLine");
-	graphics::ShaderProgram* debugShaderInstanced = shaderManager.GetShader("DebugLineInstanced");
-	graphics::ShaderProgram* objectShaderInstanced = shaderManager.GetShader("ObjectInstanced");
+	auto debugShader = shaderManager.GetShader("DebugLine");
+	auto debugShaderInstanced = shaderManager.GetShader("DebugLineInstanced");
+	auto objectShaderInstanced = shaderManager.GetShader("ObjectInstanced");
 
 	uint64_t state = 0u
 		| BGFX_STATE_WRITE_MASK

@@ -53,7 +53,7 @@ class Registry
 	virtual ~Registry();
 
 	void PrepareDraw(bool drawBoundingBox);
-	void DrawModels(uint8_t viewId, graphics::ShaderManager &shaderManager, graphics::DebugLines* boundingBox) const;
+	void DrawModels(uint8_t viewId, const graphics::ShaderManager& shaderManager, const graphics::DebugLines* boundingBox) const;
 	decltype(auto) Create() { return _registry.create(); }
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args) { return _registry.assign<Component>(entity, std::forward<Args>(args)...); }

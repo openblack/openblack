@@ -179,7 +179,7 @@ const LandCell& LandIsland::GetCell(int x, int z) const
 	return _landBlocks[blockIndex - 1].GetCells()[(z & 0xF) + 17 * (x & 0xF)];
 }
 
-void LandIsland::Draw(uint8_t viewId, ShaderProgram &program, bool cullBack) const
+void LandIsland::Draw(uint8_t viewId, const ShaderProgram& program, bool cullBack) const
 {
 	program.SetTextureSampler("s_materials", 0, *_materialArray);
 	program.SetTextureSampler("s_bump", 1, *_textureBumpMap);

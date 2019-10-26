@@ -40,8 +40,8 @@ class DebugLines
 
 	virtual ~DebugLines();
 
-	void Draw(uint8_t viewId, ShaderProgram &program) const;
-	void Draw(uint8_t viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount, ShaderProgram &program) const;
+	void Draw(uint8_t viewId, const ShaderProgram& program) const;
+	void Draw(uint8_t viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount, const ShaderProgram& program) const;
 
 	void SetPose(const glm::vec3& center, const glm::vec3& size);
 

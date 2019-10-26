@@ -79,7 +79,7 @@ class LandIsland
 
 	// Renderer
   public:
-	void Draw(uint8_t viewId, ShaderProgram &program, bool cullBack) const;
+	void Draw(uint8_t viewId, const ShaderProgram& program, bool cullBack) const;
 
 	const std::vector<LandBlock>& GetBlocks() const { return _landBlocks; }
 	const std::vector<Country>& GetCountries() const { return _countries; }

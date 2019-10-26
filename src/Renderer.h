@@ -110,7 +110,7 @@ class Renderer {
 
 	void UploadUniforms(std::chrono::microseconds dt, uint8_t viewId, const Game &game, const Camera &camera);
 	void ClearScene(uint8_t viewId, int width, int height);
-	void DrawScene(const DrawSceneDesc &desc);
+	void DrawScene(const DrawSceneDesc &desc) const;
 	void Frame();
 
   private:
