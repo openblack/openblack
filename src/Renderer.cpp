@@ -213,7 +213,7 @@ void Renderer::UploadUniforms(std::chrono::microseconds dt, uint8_t viewId, cons
 {
 	_shaderManager->SetCamera(viewId, camera);
 
-	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
+	auto terrainShader = _shaderManager->GetShader("Terrain");
 	terrainShader->SetUniformValue("u_timeOfDay", &game.GetConfig().timeOfDay);
 	terrainShader->SetUniformValue("u_bumpmapStrength", &game.GetConfig().bumpMapStrength);
 	terrainShader->SetUniformValue("u_smallBumpmapStrength", &game.GetConfig().smallBumpMapStrength);
@@ -236,13 +236,13 @@ void Renderer::ClearScene(uint8_t viewId, int width, int height)
 	bgfx::touch(viewId);
 }
 
-void Renderer::DrawScene(const DrawSceneDesc &desc)
+void Renderer::DrawScene(const DrawSceneDesc &desc) const
 {
 	desc.profiler.Begin(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawScene : Profiler::Stage::MainPassDrawScene);
-	ShaderProgram* objectShader = _shaderManager->GetShader("Object");
-	ShaderProgram* waterShader = _shaderManager->GetShader("Water");
-	ShaderProgram* terrainShader = _shaderManager->GetShader("Terrain");
-	ShaderProgram* debugShader = _shaderManager->GetShader("DebugLine");
+	auto objectShader = _shaderManager->GetShader("Object");
+	auto waterShader = _shaderManager->GetShader("Water");
+	auto terrainShader = _shaderManager->GetShader("Terrain");
+	auto debugShader = _shaderManager->GetShader("DebugLine");
 
 	desc.profiler.Begin(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawSky : Profiler::Stage::MainPassDrawSky);
 	if (desc.drawSky)

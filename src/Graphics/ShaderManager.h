@@ -38,13 +38,13 @@ class ShaderManager
 	ShaderManager() = default;
 	~ShaderManager();
 
-	ShaderProgram* LoadShader(const std::string& name, const std::string& vertexShaderName, const std::string& fragmentShaderName);
-	ShaderProgram* GetShader(const std::string& name);
+	const ShaderProgram* LoadShader(const std::string& name, const std::string& vertexShaderName, const std::string& fragmentShaderName);
+	[[nodiscard]] const ShaderProgram* GetShader(const std::string& name) const;
 
 	void SetCamera(uint8_t viewId, const Camera &camera);
 
   private:
-	typedef std::map<std::string, ShaderProgram*> ShaderMap;
+	typedef std::map<std::string, const ShaderProgram*> ShaderMap;
 
 	ShaderMap _shaderPrograms;
 };

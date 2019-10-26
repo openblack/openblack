@@ -114,8 +114,8 @@ void MeshViewer::DrawScene()
 	auto const& meshPack        = Game::instance()->GetMeshPack();
 	auto const& meshes          = meshPack.GetMeshes();
 	auto& shaderManager         = Game::instance()->GetRenderer().GetShaderManager();
-	ShaderProgram* objectShader = shaderManager.GetShader("Object");
-	ShaderProgram* debugShader  = shaderManager.GetShader("DebugLine");
+	auto objectShader = shaderManager.GetShader("Object");
+	auto debugShader  = shaderManager.GetShader("DebugLine");
 
 	// TODO(bwrsandman): use camera class
 	glm::mat4 perspective = glm::perspective(glm::radians(70.0f), 1.0f, 1.0f, 1024.0f);

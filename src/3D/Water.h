@@ -49,7 +49,7 @@ class Water
 	Water();
 	~Water() = default;
 
-	void Draw(uint8_t viewId, ShaderProgram &program) const;
+	void Draw(uint8_t viewId, const ShaderProgram &program) const;
 
 	void GetFramebufferSize(uint16_t& width, uint16_t& height) const;
 
