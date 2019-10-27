@@ -145,8 +145,9 @@ void L3DSubMesh::Load(IStream& stream)
 	decl.emplace_back(VertexAttrib::Attribute::Normal, 3, VertexAttrib::Type::Float);
 
 	// build our buffers
-	_vertexBuffer = std::make_unique<VertexBuffer>(_l3dMesh.GetDebugName(), verticesMem, decl);
-	_indexBuffer  = std::make_unique<IndexBuffer>(_l3dMesh.GetDebugName(), indicesMem, IndexBuffer::Type::Uint16);
+	auto vertexBuffer = new VertexBuffer(_l3dMesh.GetDebugName(), verticesMem, decl);
+	auto indexBuffer  = new IndexBuffer(_l3dMesh.GetDebugName(), indicesMem, IndexBuffer::Type::Uint16);
+	_mesh = std::make_unique<graphics::Mesh>(vertexBuffer, indexBuffer);
 
 	spdlog::debug("{} with {} verts and {} indices", _l3dMesh.GetDebugName(), nVertices, nIndices);
 
@@ -176,7 +177,7 @@ void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatr
                          const bgfx::DynamicVertexBufferHandle* instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
                          const ShaderProgram& program, uint64_t state, uint32_t rgba, bool preserveState) const
 {
-	if (!_vertexBuffer || !_indexBuffer)
+	if (!_mesh)
 		return;
 
 	// ignore physics meshes
@@ -215,7 +216,7 @@ void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatr
 				bgfx::setTransform(modelMatrix);
 			}
 			bgfx::setState(state, rgba);
-			_vertexBuffer->Bind();
+			_mesh->GetVertexBuffer().Bind();
 			if (texture)
 			{
 				program.SetTextureSampler("s_diffuse", 0, *texture);
@@ -226,20 +227,15 @@ void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatr
 		{
 			bgfx::setInstanceDataBuffer(*instanceBuffer, instanceStart, instanceCount);
 		}
-		_indexBuffer->Bind(prim.indicesCount, prim.indicesOffset);
+		_mesh->GetIndexBuffer().Bind(prim.indicesCount, prim.indicesOffset);
 		bgfx::submit(static_cast<bgfx::ViewId>(viewId), program.GetRawHandle(), 0, primitivePreserveState);
 		lastPreserveState = primitivePreserveState;
 	}
 }
 
-uint32_t L3DSubMesh::GetVertexCount() const
+Mesh& L3DSubMesh::GetMesh() const
 {
-	return _vertexBuffer->GetCount();
-}
-
-uint32_t L3DSubMesh::GetIndexCount() const
-{
-	return _indexBuffer->GetCount();
+	return *_mesh;
 }
 
 } // namespace openblack

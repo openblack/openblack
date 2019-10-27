@@ -90,7 +90,7 @@ class VertexBuffer
 	[[nodiscard]] size_t GetStrideBytes() const noexcept;
 	[[nodiscard]] size_t GetSizeInBytes() const noexcept;
 
-	void Bind();
+	void Bind() const;
 
   private:
 	std::string _name;

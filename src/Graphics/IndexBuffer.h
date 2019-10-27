@@ -52,7 +52,7 @@ class IndexBuffer
 	[[nodiscard]] std::size_t GetStride() const;
 	[[nodiscard]] Type GetType() const;
 
-	void Bind(uint32_t count, uint32_t startIndex=0);
+	void Bind(uint32_t count, uint32_t startIndex=0) const;
 
   private:
 	std::string _name;

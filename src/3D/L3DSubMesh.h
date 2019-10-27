@@ -38,8 +38,7 @@ class L3DMesh;
 
 namespace graphics
 {
-class VertexBuffer;
-class IndexBuffer;
+class Mesh;
 class ShaderProgram;
 }
 
@@ -70,8 +69,7 @@ class L3DSubMesh
 	[[ nodiscard ]] uint8_t GetStatus() const { return static_cast<uint8_t>((_flags >> 3u) & 0x3Fu); } // 22-28 (6)
 	[[ nodiscard ]] bool IsWindow() const { return static_cast<bool>(_flags & 0x1000u); } // 19
 	[[ nodiscard ]] bool IsPhysics() const { return static_cast<bool>(_flags & 0x2000u); } // 18
-	[[ nodiscard ]] uint32_t GetVertexCount() const;
-	[[ nodiscard ]] uint32_t GetIndexCount() const;
+	[[ nodiscard ]] graphics::Mesh& GetMesh() const;
 	[[ nodiscard ]] AxisAlignedBoundingBox GetBoundingBox() const { return _boundingBox; }
 
   private:
@@ -83,8 +81,7 @@ class L3DSubMesh
 
 	uint32_t _flags;
 
-	std::unique_ptr<graphics::VertexBuffer> _vertexBuffer;
-	std::unique_ptr<graphics::IndexBuffer> _indexBuffer;
+	std::unique_ptr<graphics::Mesh> _mesh;
 	std::vector<Primitive> _primitives;
 
 	AxisAlignedBoundingBox _boundingBox;
