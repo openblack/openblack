@@ -106,9 +106,9 @@ public:
 	void Begin(Stage stage);
 	void End(Stage stage);
 
-	[[ nodiscard ]] uint8_t GetCurrentEntryIndex() const
+	[[ nodiscard ]] uint8_t GetEntryIndex(int8_t offset) const
 	{
-		return (_currentEntry + _bufferSize - 1) % _bufferSize;
+		return (_currentEntry + _bufferSize + offset) % _bufferSize;
 	}
 
 	static constexpr uint8_t _bufferSize = 100;
