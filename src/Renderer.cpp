@@ -238,7 +238,7 @@ void Renderer::ClearScene(uint8_t viewId, int width, int height)
 
 void Renderer::DrawScene(const DrawSceneDesc &desc) const
 {
-	desc.profiler.Begin(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawScene : Profiler::Stage::MainPassDrawScene);
+	auto drawProfilerScope = desc.profiler.BeginScoped(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawScene : Profiler::Stage::MainPassDrawScene);
 	auto objectShader = _shaderManager->GetShader("Object");
 	auto waterShader = _shaderManager->GetShader("Water");
 	auto terrainShader = _shaderManager->GetShader("Terrain");
@@ -294,7 +294,6 @@ void Renderer::DrawScene(const DrawSceneDesc &desc) const
 		debugMode |= BGFX_DEBUG_PROFILER;
 	}
 	bgfx::setDebug(debugMode);
-	desc.profiler.End(desc.viewId == 0 ? Profiler::Stage::ReflectionDrawScene : Profiler::Stage::MainPassDrawScene);
 }
 
 void Renderer::Frame()

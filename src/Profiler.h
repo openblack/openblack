@@ -62,6 +62,25 @@ public:
 		_count,
 	};
 
+private:
+	struct ScopedSection
+	{
+		inline explicit ScopedSection(Profiler* profiler, Stage stage)
+			: _profiler(profiler)
+			, _stage(stage)
+		{
+			_profiler->Begin(_stage);
+		}
+		inline ~ScopedSection()
+		{
+			_profiler->End(_stage);
+		}
+
+		Profiler* const _profiler;
+		const Stage _stage;
+	};
+
+public:
 	struct Scope
 	{
 		uint8_t _level;
@@ -105,6 +124,10 @@ public:
 	void Frame();
 	void Begin(Stage stage);
 	void End(Stage stage);
+	inline ScopedSection BeginScoped(Stage stage)
+	{
+		return ScopedSection(this, stage);
+	}
 
 	[[ nodiscard ]] uint8_t GetEntryIndex(int8_t offset) const
 	{
