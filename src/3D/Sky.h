@@ -47,7 +47,6 @@ class Sky
 	void CalculateTextures();
 	void Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram &program, bool cullBack) const;
 	void SetTime(float time);
-	void Update();
 
 	float TimeOfDay;
 
