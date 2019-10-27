@@ -26,8 +26,10 @@
 #include <Game.h>
 #include <Gui.h>
 #include <Renderer.h>
+#include <Graphics/IndexBuffer.h>
 #include <Graphics/ShaderManager.h>
 #include <Graphics/Texture2D.h>
+#include <Graphics/VertexBuffer.h>
 #include <MeshViewer.h>
 
 using namespace openblack;

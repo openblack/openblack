@@ -23,9 +23,11 @@
 #include <Gui.h>
 #include <3D/Water.h>
 #include <Graphics/FrameBuffer.h>
+#include <Graphics/IndexBuffer.h>
 #include <Graphics/Mesh.h>
 #include <Graphics/ShaderProgram.h>
 #include <Graphics/Texture2D.h>
+#include <Graphics/VertexBuffer.h>
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -61,11 +63,20 @@ void Water::Draw(graphics::RenderPass viewId, const ShaderProgram& program) cons
 {
 	program.SetTextureSampler("s_reflection", 0, _reflectionFrameBuffer->GetColorAttachment());
 
-	uint64_t state = 0u
-		| BGFX_STATE_DEFAULT
-	;
-
-	_mesh->Draw(viewId, program, state, 0);
+	Mesh::DrawDesc desc = {
+		/*viewId =*/ viewId,
+		/*program =*/ program,
+		/*count =*/ _mesh->GetIndexBuffer().GetCount(),
+		/*offset =*/ 0,
+		/*instanceBuffer =*/ nullptr,
+		/*instanceStart =*/ 0,
+		/*instanceCount =*/ 1,
+		/*state =*/ BGFX_STATE_DEFAULT,
+		/*rgba =*/ 0,
+		/*skip =*/ Mesh::SkipState::SkipNone,
+		/*preserveState =*/ false,
+	};
+	_mesh->Draw(desc);
 }
 
 void Water::DebugGUI()
