@@ -64,7 +64,6 @@ Game::Game(int argc, char** argv)
 	, _entityRegistry(std::make_unique<Entities::Registry>())
 	, _config()
 	, _intersection()
-	,_running(true)
 {
 	spdlog::set_level(spdlog::level::debug);
 	sInstance = this;
@@ -129,6 +128,135 @@ glm::mat4 Game::GetModelMatrix() const
 	return glm::scale(modelMatrix, _modelScale);
 }
 
+bool Game::ProcessEvents()
+{
+	SDL_Event e;
+	while (SDL_PollEvent(&e))
+	{
+		switch (e.type)
+		{
+			case SDL_QUIT:
+				return true;
+			case SDL_WINDOWEVENT:
+				if (e.window.event == SDL_WINDOWEVENT_CLOSE && e.window.windowID == _window->GetID())
+				{
+					return true;
+				}
+				break;
+			case SDL_KEYDOWN:
+				switch (e.key.keysym.sym)
+				{
+					case SDLK_ESCAPE:
+						return true;
+					case SDLK_f:
+						_window->SetFullscreen(true);
+						break;
+					case SDLK_F1:
+						_config.bgfxDebug = !_config.bgfxDebug;
+						break;
+				}
+				break;
+			case SDL_MOUSEMOTION:
+				SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y);
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+			case SDL_MOUSEBUTTONUP:
+				switch (e.button.button)
+				{
+					case SDL_BUTTON_MIDDLE:
+					{
+						glm::ivec2 screenSize;
+						_window->GetSize(screenSize.x, screenSize.y);
+						SDL_SetRelativeMouseMode((e.type == SDL_MOUSEBUTTONDOWN) ? SDL_TRUE : SDL_FALSE);
+						SDL_WarpMouseInWindow(_window->GetHandle(), screenSize.x / 2, screenSize.y / 2);
+					} break;
+				}
+				break;
+		}
+
+		_camera->ProcessSDLEvent(e);
+		_gui->ProcessEventSdl2(e);
+	}
+	return false;
+}
+
+bool Game::Update()
+{
+	_profiler->Frame();
+	auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(
+		_profiler->_entries[_profiler->GetEntryIndex(0)]._frameStart -
+			_profiler->_entries[_profiler->GetEntryIndex(-1)]._frameStart);
+
+	// Input events
+	{
+		auto sdlInput = _profiler->BeginScoped(Profiler::Stage::SdlInput);
+		if (ProcessEvents())
+		{
+			return false;  // Quit event
+		}
+	}
+
+	// ImGui events + prepare
+	{
+		auto guiLoop = _profiler->BeginScoped(Profiler::Stage::GuiLoop);
+		if (_gui->Loop(*this))
+		{
+			return false; // Quit event
+		}
+	}
+
+	// Update Camera
+	{
+		_camera->Update(deltaTime);
+		_modelRotation.y = fmod(_modelRotation.y + float(deltaTime.count())*.0001f, 360.f);
+	}
+
+	// Update Uniforms
+	{
+		auto profilerScopedUpdateUniforms = _profiler->BeginScoped(Profiler::Stage::UpdateUniforms);
+
+		// Update Debug Cross
+		{
+			glm::ivec2 screenSize;
+			_window->GetSize(screenSize.x, screenSize.y);
+
+			glm::vec3 rayOrigin, rayDirection;
+			_camera->DeprojectScreenToWorld(_mousePosition, screenSize, rayOrigin, rayDirection);
+
+			float intersectDistance = 0.0f;
+			bool intersects = glm::intersectRayPlane(
+				rayOrigin,
+				rayDirection,
+				glm::vec3(0.0f, 0.0f, 0.0f), // plane origin
+				glm::vec3(0.0f, 1.0f, 0.0f), // plane normal
+				intersectDistance);
+
+			if (intersects)
+				_intersection = rayOrigin + rayDirection*intersectDistance;
+
+			_intersection.y = _landIsland->GetHeightAt(glm::vec2(_intersection.x, _intersection.z));
+
+			_renderer->UpdateDebugCrossUniforms(_intersection, 50.0f);
+		}
+
+		// Update Terrain
+		{
+			_renderer->UpdateTerrainUniforms(_config.timeOfDay, _config.bumpMapStrength, _config.smallBumpMapStrength);
+		}
+
+		// Update Entities
+		{
+			auto updateEntities = _profiler->BeginScoped(Profiler::Stage::UpdateEntities);
+			if (_config.drawEntities)
+			{
+				_entityRegistry->PrepareDraw(_config.drawBoundingBoxes);
+			}
+		}
+	}  // Update Uniforms
+
+	return true;
+}
+
 void Game::Run()
 {
 	// Create profiler
@@ -162,165 +290,49 @@ void Game::Run()
 	// _lhvm = std::make_unique<LHVM::LHVM>();
 	// _lhvm->LoadBinary(GetGamePath() + "/Scripts/Quests/challenge.chl");
 
-	// measure our delta time
-	using namespace std::chrono_literals;
-	uint64_t now                        = SDL_GetPerformanceCounter();
-	uint64_t last                       = 0;
-	std::chrono::microseconds deltaTime = 0us;
-
-	_running = true;
-	SDL_Event e;
-	while (_running)
+	while (Update())
 	{
-		_profiler->Frame();
-		last = now;
-		now  = SDL_GetPerformanceCounter();
-
-		deltaTime = std::chrono::microseconds((now - last) * 1000000 / SDL_GetPerformanceFrequency());
-
-		_profiler->Begin(Profiler::Stage::SdlInput);
-		while (SDL_PollEvent(&e))
 		{
-			if (e.type == SDL_QUIT)
-				_running = false;
-			if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_CLOSE && e.window.windowID == _window->GetID())
-				_running = false;
-			if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
-				_running = false;
-			if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_f)
-				_window->SetFullscreen(true);
-			if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_F1)
-				_config.bgfxDebug = !_config.bgfxDebug;
-			if (e.type == SDL_MOUSEMOTION)
-			{
-				SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y);
-				glm::ivec2 screenSize;
-				_window->GetSize(screenSize.x, screenSize.y);
+			auto section = _profiler->BeginScoped(Profiler::Stage::SceneDraw);
 
-				glm::vec3 rayOrigin, rayDirection;
-				_camera->DeprojectScreenToWorld(_mousePosition, screenSize, rayOrigin, rayDirection);
-
-				float intersectDistance = 0.0f;
-				bool intersects         = glm::intersectRayPlane(
-                    rayOrigin,
-                    rayDirection,
-                    glm::vec3(0.0f, 0.0f, 0.0f), // plane origin
-                    glm::vec3(0.0f, 1.0f, 0.0f), // plane normal
-                    intersectDistance);
-
-				if (intersects)
-					_intersection = rayOrigin + rayDirection * intersectDistance;
-
-				float height    = _landIsland->GetHeightAt(glm::vec2(_intersection.x, _intersection.z));
-				_intersection.y = height;
-			}
-			// rotation mode on middle mouse button
-			else if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP)
-			{
-				if (e.button.button == SDL_BUTTON_MIDDLE)
-				{
-					glm::ivec2 screenSize;
-					_window->GetSize(screenSize.x, screenSize.y);
-					SDL_SetRelativeMouseMode((e.type == SDL_MOUSEBUTTONDOWN) ? SDL_TRUE : SDL_FALSE);
-					SDL_WarpMouseInWindow(_window->GetHandle(), screenSize.x / 2, screenSize.y / 2);
-				}
-			}
-
-			_camera->ProcessSDLEvent(e);
-
-			_gui->ProcessEventSdl2(e);
-		}
-		_profiler->End(Profiler::Stage::SdlInput);
-
-		_profiler->Begin(Profiler::Stage::UpdatePositions);
-		_camera->Update(deltaTime);
-		_modelRotation.y = fmod(_modelRotation.y + float(deltaTime.count()) * .0001f, 360.f);
-
-		_renderer->UpdateDebugCrossPose(deltaTime, _intersection, 50.0f);
-
-		_profiler->Begin(Profiler::Stage::UpdateEntities);
-		if (_config.drawEntities)
-		{
-			_entityRegistry->PrepareDraw(_config.drawBoundingBoxes);
-		}
-		_profiler->End(Profiler::Stage::UpdateEntities);
-
-		_profiler->End(Profiler::Stage::UpdatePositions);
-
-		_profiler->Begin(Profiler::Stage::GuiLoop);
-		_gui->Loop(*this);
-		_profiler->End(Profiler::Stage::GuiLoop);
-
-		Renderer::DrawSceneDesc drawDesc {
-			/*viewId =*/ graphics::RenderPass::Main,
-			/*profiler =*/ *_profiler,
-			/*drawSky =*/ _config.drawSky,
-			/*sky =*/ *_sky,
-			/*drawWater =*/ _config.drawWater,
-			/*water =*/ *_water,
-			/*drawIsland =*/ _config.drawIsland,
-			/*island =*/ *_landIsland,
-			/*drawEntities =*/ _config.drawEntities,
-			/*entities =*/ *_entityRegistry,
-			/*drawDebugCross =*/ _config.drawDebugCross,
-			/*drawBoundingBoxes =*/ _config.drawBoundingBoxes,
-			/*cullBack =*/ true,
-			/*bgfxDebug =*/ _config.bgfxDebug,
-			/*wireframe =*/ _config.wireframe,
-			/*profile =*/ _config.showProfiler,
-		};
-
-		// Reflection Pass
-		_profiler->Begin(Profiler::Stage::ReflectionPass);
-		{
-			// TODO(bwrsandman): The setting of viewport and clearing should probably be done in framebuffer bind
-			uint16_t width, height;
-			auto& frameBuffer = _water->GetFrameBuffer();
-			frameBuffer.GetSize(width, height);
-			frameBuffer.Bind(RenderPass::Reflection);
-			_renderer->ClearScene(RenderPass::Reflection, width, height);
-		}
-		auto reflectionCamera = _camera->Reflect(_water->GetReflectionPlane());
-
-		_profiler->Begin(Profiler::Stage::ReflectionUploadUniforms);
-		_renderer->UploadUniforms(deltaTime, RenderPass::Reflection, *this, *reflectionCamera);
-		_profiler->End(Profiler::Stage::ReflectionUploadUniforms);
-
-		drawDesc.viewId = RenderPass::Reflection;
-		drawDesc.drawWater = false;
-		drawDesc.drawDebugCross = false;
-		drawDesc.drawBoundingBoxes = false;
-		drawDesc.cullBack = true;
-		_renderer->DrawScene(drawDesc);
-		_profiler->End(Profiler::Stage::ReflectionPass);
-
-		// Main Draw Pass
-		_profiler->Begin(Profiler::Stage::MainPass);
-		{
 			int width, height;
 			_window->GetDrawableSize(width, height);
-			_renderer->ClearScene(RenderPass::Main, width, height);
+
+			Renderer::DrawSceneDesc drawDesc{
+				/*viewId =*/ graphics::RenderPass::Main,
+				/*profiler =*/ *_profiler,
+				/*camera =*/ _camera.get(),
+				/*frameBuffer =*/ nullptr,
+				/*width =*/ static_cast<uint16_t>(width),
+				/*height =*/ static_cast<uint16_t>(height),
+				/*drawSky =*/ _config.drawSky,
+				/*sky =*/ *_sky,
+				/*drawWater =*/ _config.drawWater,
+				/*water =*/ *_water,
+				/*drawIsland =*/ _config.drawIsland,
+				/*island =*/ *_landIsland,
+				/*drawEntities =*/ _config.drawEntities,
+				/*entities =*/ *_entityRegistry,
+				/*drawDebugCross =*/ _config.drawDebugCross,
+				/*drawBoundingBoxes =*/ _config.drawBoundingBoxes,
+				/*cullBack =*/ false,
+				/*bgfxDebug =*/ _config.bgfxDebug,
+				/*wireframe =*/ _config.wireframe,
+				/*profile =*/ _config.showProfiler,
+			};
+
+			_renderer->DrawScene(drawDesc);
 		}
-		_profiler->Begin(Profiler::Stage::MainPassUploadUniforms);
-		_renderer->UploadUniforms(deltaTime, RenderPass::Main, *this, *_camera);
-		_profiler->End(Profiler::Stage::MainPassUploadUniforms);
 
-		drawDesc.viewId = RenderPass::Main;
-		drawDesc.drawWater = _config.drawWater;
-		drawDesc.drawDebugCross = _config.drawDebugCross;
-		drawDesc.drawBoundingBoxes = _config.drawBoundingBoxes;
-		drawDesc.cullBack = false;
-		_renderer->DrawScene(drawDesc);
-		_profiler->End(Profiler::Stage::MainPass);
+		{
+			auto section = _profiler->BeginScoped(Profiler::Stage::GuiDraw);
+			_gui->Draw();
+		}
 
-		_profiler->Begin(Profiler::Stage::GuiDraw);
-		_gui->Draw();
-		_profiler->End(Profiler::Stage::GuiDraw);
-
-		_profiler->Begin(Profiler::Stage::RendererFrame);
-		_renderer->Frame();
-		_profiler->End(Profiler::Stage::RendererFrame);
-
+		{
+			auto section = _profiler->BeginScoped(Profiler::Stage::RendererFrame);
+			_renderer->Frame();
+		}
 	}
 }
 

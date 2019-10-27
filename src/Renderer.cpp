@@ -24,24 +24,18 @@
 #include <SDL_video.h>
 #include <spdlog/spdlog.h>
 
+#include <3D/Camera.h>
 #include <3D/L3DMesh.h>
 #include <3D/LandIsland.h>
 #include <3D/Sky.h>
 #include <3D/Water.h>
 #include <Entities/Registry.h>
-#include <Game.h>
 #include <GameWindow.h>
 #include <Graphics/DebugLines.h>
+#include <Graphics/FrameBuffer.h>
 #include <Graphics/ShaderManager.h>
 #include <Profiler.h>
 
-#ifdef HAS_FILESYSTEM
-#include <filesystem>
-namespace fs = std::filesystem;
-#else
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif // HAS_FILESYSTEM
 using namespace openblack;
 using namespace openblack::graphics;
 
@@ -210,41 +204,67 @@ graphics::ShaderManager& Renderer::GetShaderManager() const
 	return *_shaderManager;
 }
 
-void Renderer::UpdateDebugCrossPose(std::chrono::microseconds dt, const glm::vec3 &position, float scale)
+void Renderer::UpdateDebugCrossUniforms(const glm::vec3 &position, float scale)
 {
 	_debugCross->SetPose(position, glm::vec3(scale, scale, scale));
 }
 
-void Renderer::UploadUniforms(std::chrono::microseconds dt, graphics::RenderPass viewId, const Game &game, const Camera &camera)
+void Renderer::UpdateTerrainUniforms(float timeOfDay, float bumpMapStrength, float smallBumpMapStrength)
 {
-	_shaderManager->SetCamera(viewId, camera);
-
 	auto terrainShader = _shaderManager->GetShader("Terrain");
-	terrainShader->SetUniformValue("u_timeOfDay", &game.GetConfig().timeOfDay);
-	terrainShader->SetUniformValue("u_bumpmapStrength", &game.GetConfig().bumpMapStrength);
-	terrainShader->SetUniformValue("u_smallBumpmapStrength", &game.GetConfig().smallBumpMapStrength);
-
-//	ShaderProgram* objectShader = _shaderManager->GetShader("SkinnedMesh");
-//	objectShader->SetUniformValue("u_model", game.GetModelMatrix());
+	terrainShader->SetUniformValue("u_timeOfDay", &timeOfDay);
+	terrainShader->SetUniformValue("u_bumpmapStrength", &bumpMapStrength);
+	terrainShader->SetUniformValue("u_smallBumpmapStrength", &smallBumpMapStrength);
 }
 
-void Renderer::ClearScene(graphics::RenderPass viewId, int width, int height)
+void Renderer::DrawScene(const DrawSceneDesc &drawDesc) const
+{
+	// Reflection Pass
+	{
+		DrawSceneDesc drawPassDesc = drawDesc;
+		auto section = drawDesc.profiler.BeginScoped(Profiler::Stage::ReflectionPass);
+
+		auto& frameBuffer = drawDesc.water.GetFrameBuffer();
+		auto reflectionCamera = drawDesc.camera->Reflect(drawDesc.water.GetReflectionPlane());
+
+		drawPassDesc.viewId = graphics::RenderPass::Reflection;
+		drawPassDesc.camera = reflectionCamera.get();
+		drawPassDesc.frameBuffer = &frameBuffer;
+		drawPassDesc.frameBuffer->GetSize(drawPassDesc.width, drawPassDesc.height);
+		drawPassDesc.drawWater = false;
+		drawPassDesc.drawDebugCross = false;
+		drawPassDesc.drawBoundingBoxes = false;
+		drawPassDesc.cullBack = true;
+		DrawPass(drawPassDesc);
+	}
+
+	// Main Draw Pass
+	{
+		auto section = drawDesc.profiler.BeginScoped(Profiler::Stage::MainPass);
+		DrawPass(drawDesc);
+	}
+}
+
+void Renderer::DrawPass(const DrawSceneDesc &desc) const
 {
 	static const uint32_t clearColor = 0x274659ff;
 
-	bgfx::setViewClear(static_cast<bgfx::ViewId>(viewId),
-		BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
-		clearColor,
-		1.0f,
-		0);
-	bgfx::setViewRect(static_cast<bgfx::ViewId>(viewId), 0, 0, width, height);
-	// This dummy draw call is here to make sure that view 0 is cleared if no other draw calls are submitted to view 0.
-	bgfx::touch(static_cast<bgfx::ViewId>(viewId));
-}
+	if (desc.frameBuffer)
+	{
+		desc.frameBuffer->Bind(desc.viewId);
+	}
 
-void Renderer::DrawScene(const DrawSceneDesc &desc) const
-{
-	auto drawProfilerScope = desc.profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawScene : Profiler::Stage::MainPassDrawScene);
+	bgfx::setViewClear(static_cast<bgfx::ViewId>(desc.viewId),
+	                   BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
+	                   clearColor,
+	                   1.0f,
+	                   0);
+	bgfx::setViewRect(static_cast<bgfx::ViewId>(desc.viewId), 0, 0, desc.width, desc.height);
+	// This dummy draw call is here to make sure that view is cleared if no other draw calls are submitted to view
+	bgfx::touch(static_cast<bgfx::ViewId>(desc.viewId));
+
+	_shaderManager->SetCamera(desc.viewId, *desc.camera);
+
 	auto objectShader = _shaderManager->GetShader("Object");
 	auto waterShader = _shaderManager->GetShader("Water");
 	auto terrainShader = _shaderManager->GetShader("Terrain");
