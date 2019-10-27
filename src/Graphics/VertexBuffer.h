@@ -102,4 +102,4 @@ class VertexBuffer
 	bgfx::VertexLayoutHandle _layoutHandle;
 };
 
-} // namespace openblack
+} // namespace openblack::graphics

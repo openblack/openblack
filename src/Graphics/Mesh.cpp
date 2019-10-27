@@ -20,7 +20,9 @@
 
 #include "Mesh.h"
 
+#include "IndexBuffer.h"
 #include "ShaderProgram.h"
+#include "VertexBuffer.h"
 
 using namespace openblack::graphics;
 
@@ -48,34 +50,24 @@ Mesh::Topology Mesh::GetTopology() const noexcept
 	return _topology;
 }
 
-void Mesh::Draw(graphics::RenderPass viewId, const openblack::graphics::ShaderProgram &program, uint64_t state, uint32_t rgba) const
+void Mesh::Draw(const DrawDesc& desc) const
 {
-	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
+	if (desc.instanceBuffer && (desc.skip & SkipState::SkipInstanceBuffer) == 0)
 	{
-		Draw(viewId, program, _indexBuffer->GetCount(), 0, state, rgba);
+		bgfx::setInstanceDataBuffer(*desc.instanceBuffer, desc.instanceStart, desc.instanceCount);
 	}
-	else
+	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0 && (desc.skip & SkipState::SkipIndexBuffer) == 0)
 	{
-		Draw(viewId, program, _vertexBuffer->GetCount(), 0, state, rgba);
+		_indexBuffer->Bind(desc.count, desc.offset);
 	}
-}
-
-void Mesh::Draw(graphics::RenderPass viewId, const openblack::graphics::ShaderProgram& program, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount, uint64_t state, uint32_t rgba) const
-{
-	bgfx::setInstanceDataBuffer(instanceBuffer, instanceStart, instanceCount);
-	Draw(viewId, program, state, rgba);
-}
-
-void Mesh::Draw(graphics::RenderPass viewId, const openblack::graphics::ShaderProgram &program, uint32_t count, uint32_t startIndex, uint64_t state, uint32_t rgba) const
-{
-	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
+	if ((desc.skip & SkipState::SkipVertexBuffer) == 0)
 	{
-		_indexBuffer->Bind(count, startIndex);
+		_vertexBuffer->Bind();
 	}
-	_vertexBuffer->Bind();
+	if ((desc.skip & SkipState::SkipRenderState) == 0)
+	{
+		bgfx::setState(desc.state, desc.rgba);
+	}
 
-	// Set render states.
-	bgfx::setState(state, rgba);
-
-	bgfx::submit(static_cast<bgfx::ViewId>(viewId), program.GetRawHandle());
+	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), desc.program.GetRawHandle(), desc.preserveState);
 }

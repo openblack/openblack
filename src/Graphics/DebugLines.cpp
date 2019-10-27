@@ -116,23 +116,46 @@ void DebugLines::SetPose(const glm::vec3 &center, const glm::vec3& size)
 
 void DebugLines::Draw(RenderPass viewId, const ShaderProgram &program) const
 {
-	uint64_t state = 0u
-		| BGFX_STATE_DEFAULT
-		| BGFX_STATE_PT_LINES
-	;
-
 	bgfx::setTransform(&_model);
-	_mesh->Draw(viewId, program, state, 0);
+
+	Mesh::DrawDesc desc = {
+		/*viewId =*/ viewId,
+		/*program =*/ program,
+		/*offset =*/ _mesh->GetVertexBuffer().GetCount(),
+		/*start =*/ 0,
+		/*instanceBuffer =*/ nullptr,
+		/*instanceStart =*/ 0,
+		/*instanceCount =*/ 1,
+		/*state =*/ 0u
+			| BGFX_STATE_DEFAULT
+			| BGFX_STATE_PT_LINES
+		,
+		/*rgba =*/ 0,
+		/*skip =*/ Mesh::SkipState::SkipNone,
+		/*preserveState =*/ false,
+	};
+	_mesh->Draw(desc);
 }
 
 void DebugLines::Draw(RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount, const ShaderProgram& program) const
 {
-	uint64_t state = 0u
-		| BGFX_STATE_DEFAULT
-		| BGFX_STATE_PT_LINES
-	;
-	// Don't set transform since it's in instanceBuffer
-	_mesh->Draw(viewId, program, instanceBuffer, instanceStart, instanceCount, state, 0);
+	Mesh::DrawDesc desc = {
+		/*viewId =*/ viewId,
+		/*program =*/ program,
+		/*count =*/ _mesh->GetVertexBuffer().GetCount(),
+		/*offset =*/ 0,
+		/*instanceBuffer =*/ &instanceBuffer,
+		/*instanceStart =*/ instanceStart,
+		/*instanceCount =*/ instanceCount,
+		/*state =*/ 0u
+			| BGFX_STATE_DEFAULT
+			| BGFX_STATE_PT_LINES
+		,
+		/*rgba =*/ 0,
+		/*skip =*/ Mesh::SkipState::SkipNone,
+		/*preserveState =*/ false,
+	};
+	_mesh->Draw(desc);
 }
 
 DebugLines::DebugLines(std::unique_ptr<Mesh> &&mesh)

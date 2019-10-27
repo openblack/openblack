@@ -22,6 +22,7 @@
 
 #include <3D/LandIsland.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <Graphics/VertexBuffer.h>
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -200,13 +201,24 @@ void LandBlock::Draw(graphics::RenderPass viewId, const ShaderProgram& program, 
 {
 	program.SetUniformValue("u_blockPosition", &_mapPosition);
 
-	uint64_t state = 0u
-		| BGFX_STATE_WRITE_MASK
-		| BGFX_STATE_DEPTH_TEST_LESS
-		| (cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW)
-		| BGFX_STATE_BLEND_ALPHA
-		| BGFX_STATE_MSAA
-	;
-
-	_mesh->Draw(viewId, program, state, 0);
+	Mesh::DrawDesc desc = {
+		/*viewId =*/ viewId,
+		/*program =*/ program,
+		/*count =*/ _mesh->GetVertexBuffer().GetCount(),
+		/*offset =*/ 0,
+		/*instanceBuffer =*/ nullptr,
+		/*instanceStart =*/ 0,
+		/*instanceCount =*/ 1,
+		/*state =*/ 0u
+			| BGFX_STATE_WRITE_MASK
+			| BGFX_STATE_DEPTH_TEST_LESS
+			| (cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW)
+			| BGFX_STATE_BLEND_ALPHA
+			| BGFX_STATE_MSAA
+		,
+		/*rgba =*/ 0,
+		/*skip =*/ Mesh::SkipState::SkipNone,
+		/*preserveState =*/ false,
+	};
+	_mesh->Draw(desc);
 }

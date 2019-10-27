@@ -199,6 +199,20 @@ void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatr
 		return nullptr;
 	};
 
+	Mesh::DrawDesc desc = {
+		/*viewId =*/ viewId,
+		/*program =*/ program,
+		/*count =*/ 0,
+		/*offset =*/ 0,
+		/*instanceBuffer =*/ instanceBuffer,
+		/*instanceStart =*/ instanceStart,
+		/*instanceCount =*/ instanceCount,
+		/*state =*/ state,
+		/*rgba =*/ rgba,
+		/*skip =*/ Mesh::SkipState::SkipNone,
+		/*preserveState =*/ preserveState,
+	};
+
 	bool lastPreserveState = false;
 	for (auto it = _primitives.begin(); it != _primitives.end(); ++it)
 	{
@@ -211,26 +225,29 @@ void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatr
 
 		bool primitivePreserveState = texture == nextTexture && (preserveState || hasNext);
 
+		desc.skip = Mesh::SkipState::SkipNone;
 		if (!lastPreserveState)
 		{
 			if (modelMatrix)
 			{
 				bgfx::setTransform(modelMatrix);
 			}
-			bgfx::setState(state, rgba);
-			_mesh->GetVertexBuffer().Bind();
 			if (texture)
 			{
 				program.SetTextureSampler("s_diffuse", 0, *texture);
 			}
 		}
-
-		if (instanceBuffer)
+		else
 		{
-			bgfx::setInstanceDataBuffer(*instanceBuffer, instanceStart, instanceCount);
+			desc.skip |= Mesh::SkipState::SkipRenderState;
+			desc.skip |= Mesh::SkipState::SkipVertexBuffer;
 		}
-		_mesh->GetIndexBuffer().Bind(prim.indicesCount, prim.indicesOffset);
-		bgfx::submit(static_cast<bgfx::ViewId>(viewId), program.GetRawHandle(), 0, primitivePreserveState);
+
+		desc.count = prim.indicesCount;
+		desc.offset = prim.indicesOffset;
+		desc.preserveState = primitivePreserveState;
+
+		_mesh->Draw(desc);
 		lastPreserveState = primitivePreserveState;
 	}
 }

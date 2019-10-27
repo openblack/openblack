@@ -22,14 +22,21 @@
 
 #include <cstdint>
 
-#include <Graphics/IndexBuffer.h>
-#include <Graphics/VertexBuffer.h>
+#include <memory>
+
 #include <Graphics/RenderPass.h>
+
+namespace bgfx
+{
+struct DynamicVertexBufferHandle;
+}
 
 namespace openblack::graphics
 {
 
+class IndexBuffer;
 class ShaderProgram;
+class VertexBuffer;
 
 class Mesh
 {
@@ -51,13 +58,35 @@ class Mesh
 
 	[[nodiscard]] Topology GetTopology() const noexcept;
 
-	void Draw(graphics::RenderPass viewId, const openblack::graphics::ShaderProgram &program, uint64_t state, uint32_t rgba = 0) const;
-	void Draw(graphics::RenderPass viewId, const openblack::graphics::ShaderProgram &program, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount, uint64_t state, uint32_t rgba = 0) const;
-	void Draw(graphics::RenderPass viewId, const openblack::graphics::ShaderProgram &program, uint32_t count, uint32_t startIndex, uint64_t state, uint32_t rgba = 0) const;
+	enum SkipState : uint8_t
+	{
+		SkipNone           = 0b00000000,
+		SkipRenderState    = 0b00000001,
+		SkipVertexBuffer   = 0b00000010,
+		SkipIndexBuffer    = 0b00000100,
+		SkipInstanceBuffer = 0b00001000,
+	};
+
+	struct DrawDesc
+	{
+		graphics::RenderPass viewId;
+		const openblack::graphics::ShaderProgram &program;
+		uint32_t count;
+		uint32_t offset;
+		const bgfx::DynamicVertexBufferHandle* instanceBuffer;
+		uint32_t instanceStart;
+		uint32_t instanceCount;
+		uint64_t state;
+		uint32_t rgba;
+		uint8_t skip;
+		bool preserveState;
+	};
+
+	void Draw(const DrawDesc& desc) const;
 
   protected:
-	std::unique_ptr<VertexBuffer> _vertexBuffer;
-	std::unique_ptr<IndexBuffer> _indexBuffer;
+	std::unique_ptr<graphics::VertexBuffer> _vertexBuffer;
+	std::unique_ptr<graphics::IndexBuffer> _indexBuffer;
 
   private:
 	Topology _topology;
