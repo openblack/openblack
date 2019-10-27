@@ -73,7 +73,7 @@ class LandBlock
 	{}
 
 	void Load(void* block, size_t block_size);
-	void Draw(graphics::RenderPass viewId, const ShaderProgram& program, bool cullBack) const;
+	void Draw(graphics::RenderPass viewId, const graphics::ShaderProgram& program, bool cullBack) const;
 	void BuildMesh(LandIsland& island);
 
 	[[nodiscard]] const LandCell* GetCells() const { return _cells.data(); };
@@ -85,7 +85,7 @@ class LandBlock
 	std::array<LandCell, 289> _cells;
 	glm::ivec2 _blockPosition; // position in the 32x32 block map
 	glm::vec4 _mapPosition; // absolute position in the world
-	std::unique_ptr<Mesh> _mesh;
+	std::unique_ptr<graphics::Mesh> _mesh;
 
 	std::vector<LandVertex> buildVertexList(LandIsland& island);
 };

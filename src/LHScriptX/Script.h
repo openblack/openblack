@@ -24,8 +24,6 @@
 #include <LHScriptX/Lexer.h>
 #include <vector>
 
-using namespace openblack;
-
 namespace openblack::LHScriptX
 {
 

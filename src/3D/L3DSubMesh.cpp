@@ -32,6 +32,8 @@
 #include <Graphics/ShaderProgram.h>
 #include <Graphics/VertexBuffer.h>
 
+using namespace openblack::graphics;
+
 namespace openblack
 {
 

@@ -24,6 +24,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 using namespace openblack;
+using namespace openblack::graphics;
 
 struct LH3DLandCell // 8 bytes
 {
