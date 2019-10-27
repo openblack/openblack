@@ -18,13 +18,13 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Graphics/DebugLines.h>
+#include "DebugLines.h"
 
 #include <array>
 
 #include <glm/gtx/transform.hpp>
 
-#include <Graphics/VertexBuffer.h>
+#include "VertexBuffer.h"
 #include "Mesh.h"
 
 using namespace openblack::graphics;
@@ -114,7 +114,7 @@ void DebugLines::SetPose(const glm::vec3 &center, const glm::vec3& size)
 	_model = glm::translate(center) * glm::scale(size);
 }
 
-void DebugLines::Draw(uint8_t viewId, const ShaderProgram &program) const
+void DebugLines::Draw(RenderPass viewId, const ShaderProgram &program) const
 {
 	uint64_t state = 0u
 		| BGFX_STATE_DEFAULT
@@ -125,7 +125,7 @@ void DebugLines::Draw(uint8_t viewId, const ShaderProgram &program) const
 	_mesh->Draw(viewId, program, state, 0);
 }
 
-void DebugLines::Draw(uint8_t viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount, const ShaderProgram& program) const
+void DebugLines::Draw(RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount, const ShaderProgram& program) const
 {
 	uint64_t state = 0u
 		| BGFX_STATE_DEFAULT

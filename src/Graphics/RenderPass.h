@@ -20,37 +20,28 @@
 
 #pragma once
 
-#include <map>
-#include <string>
+#include <cstdint>
 
-#include <Graphics/ShaderProgram.h>
+#include <array>
 
-#include "RenderPass.h"
-
-namespace openblack
+namespace openblack::graphics
 {
 
-class Camera;
-
-namespace graphics
+enum class RenderPass : uint8_t
 {
+	Main,
+	Reflection,
+	ImGui,
+	MeshViewer,
 
-class ShaderManager
-{
-  public:
-	ShaderManager() = default;
-	~ShaderManager();
-
-	const ShaderProgram* LoadShader(const std::string& name, const std::string& vertexShaderName, const std::string& fragmentShaderName);
-	[[nodiscard]] const ShaderProgram* GetShader(const std::string& name) const;
-
-	void SetCamera(RenderPass viewId, const Camera &camera);
-
-  private:
-	typedef std::map<std::string, const ShaderProgram*> ShaderMap;
-
-	ShaderMap _shaderPrograms;
+	_count
 };
 
-} // namespace graphics
-} // namespace openblack
+static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_count)> RenderPassNames {
+	"Reflection Pass",
+	"Main Pass",
+	"ImGui Pass",
+	"Mesh Viewer Pass",
+};
+
+}  // namespace openblack::graphics

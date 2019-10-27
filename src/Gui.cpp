@@ -67,7 +67,7 @@ const bgfx::EmbeddedShader s_embeddedShaders[] =
 	};
 }  // namespace
 
-std::unique_ptr<Gui> Gui::create(const GameWindow &window, bgfx::ViewId viewId, float scale)
+std::unique_ptr<Gui> Gui::create(const GameWindow &window, graphics::RenderPass viewId, float scale)
 {
 	IMGUI_CHECKVERSION();
 	auto imgui = ImGui::CreateContext();
@@ -81,9 +81,9 @@ std::unique_ptr<Gui> Gui::create(const GameWindow &window, bgfx::ViewId viewId, 
 	io.FontGlobalScale = scale;
 
 	io.BackendRendererName = "imgui_impl_bgfx";
-	auto meshViewer = std::make_unique<MeshViewer>(viewId - 1);
+	auto meshViewer = std::make_unique<MeshViewer>();
 
-	auto gui = std::unique_ptr<Gui>(new Gui(imgui, viewId, std::move(meshViewer)));
+	auto gui = std::unique_ptr<Gui>(new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(meshViewer)));
 
 	if (!gui->InitSdl2(window.GetHandle()))
 	{
@@ -619,7 +619,6 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData)
 	const float width  = io.DisplaySize.x;
 	const float height = io.DisplaySize.y;
 
-	bgfx::setViewName(_viewId, "ImGui");
 	bgfx::setViewMode(_viewId, bgfx::ViewMode::Sequential);
 
 	const bgfx::Caps* caps = bgfx::getCaps();

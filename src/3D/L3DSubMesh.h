@@ -27,6 +27,8 @@
 #include <glm/fwd.hpp>
 #include <bgfx/bgfx.h>
 
+#include <Graphics/RenderPass.h>
+
 #include "AxisAlignedBoundingBox.h"
 
 namespace openblack
@@ -60,8 +62,8 @@ class L3DSubMesh
 	~L3DSubMesh();
 
 	void Load(IStream& stream);
-	void Submit(uint8_t viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
-	void Submit(uint8_t viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
+	void Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
+	void Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
                 const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
 
 	[[ nodiscard ]] uint8_t GetLOD() const { return static_cast<uint8_t>(_flags & 0x7u); } // 29-32 (3)
@@ -73,7 +75,7 @@ class L3DSubMesh
 	[[ nodiscard ]] AxisAlignedBoundingBox GetBoundingBox() const { return _boundingBox; }
 
   private:
-	void Submit_(uint8_t viewId, const glm::mat4* modelMatrix,
+	void Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatrix,
 	             const bgfx::DynamicVertexBufferHandle* instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
 	             const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
 

@@ -32,9 +32,8 @@
 
 using namespace openblack;
 
-MeshViewer::MeshViewer(uint8_t viewId)
+MeshViewer::MeshViewer()
 	: _open(false)
-	, _viewId(viewId)
 	, _selectedMesh(MeshId::Dummy)
 	, _selectedSubMesh(0)
 	, _cameraPosition(5.0f, 3.0f, 5.0f)
@@ -42,7 +41,6 @@ MeshViewer::MeshViewer(uint8_t viewId)
 	, _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f)))
 	, _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", 512, 512, graphics::Format::RGBA8, graphics::Format::Depth24Stencil8))
 {
-	bgfx::setViewName(_viewId, "MeshViewer");
 }
 
 void MeshViewer::Open()
@@ -120,19 +118,19 @@ void MeshViewer::DrawScene()
 	// TODO(bwrsandman): use camera class
 	glm::mat4 perspective = glm::perspective(glm::radians(70.0f), 1.0f, 1.0f, 1024.0f);
 	glm::mat4 view        = glm::lookAt(_cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	bgfx::setViewTransform(_viewId, &view, &perspective);
+	bgfx::setViewTransform(static_cast<bgfx::ViewId>(_viewId), &view, &perspective);
 
 	_frameBuffer->Bind(_viewId);
 	// TODO(bwrsandman): The setting of viewport and clearing should probably be done in framebuffer bind
 	static const uint32_t clearColor = 0x274659ff;
-	bgfx::setViewClear(_viewId,
+	bgfx::setViewClear(static_cast<bgfx::ViewId>(_viewId),
 		BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
 		clearColor,
 		1.0f,
 		0);
 	uint16_t width, height;
 	_frameBuffer->GetSize(width, height);
-	bgfx::setViewRect(_viewId, 0, 0, width, height);
+	bgfx::setViewRect(static_cast<bgfx::ViewId>(_viewId), 0, 0, width, height);
 
 	uint64_t state = 0u
 		| BGFX_STATE_WRITE_MASK

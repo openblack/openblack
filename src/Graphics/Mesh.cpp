@@ -48,7 +48,7 @@ Mesh::Topology Mesh::GetTopology() const noexcept
 	return _topology;
 }
 
-void Mesh::Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &program, uint64_t state, uint32_t rgba) const
+void Mesh::Draw(graphics::RenderPass viewId, const openblack::graphics::ShaderProgram &program, uint64_t state, uint32_t rgba) const
 {
 	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
 	{
@@ -60,13 +60,13 @@ void Mesh::Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &progra
 	}
 }
 
-void Mesh::Draw(uint8_t viewId, const openblack::graphics::ShaderProgram& program, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount, uint64_t state, uint32_t rgba) const
+void Mesh::Draw(graphics::RenderPass viewId, const openblack::graphics::ShaderProgram& program, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount, uint64_t state, uint32_t rgba) const
 {
 	bgfx::setInstanceDataBuffer(instanceBuffer, instanceStart, instanceCount);
 	Draw(viewId, program, state, rgba);
 }
 
-void Mesh::Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &program, uint32_t count, uint32_t startIndex, uint64_t state, uint32_t rgba) const
+void Mesh::Draw(graphics::RenderPass viewId, const openblack::graphics::ShaderProgram &program, uint32_t count, uint32_t startIndex, uint64_t state, uint32_t rgba) const
 {
 	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0)
 	{
@@ -77,5 +77,5 @@ void Mesh::Draw(uint8_t viewId, const openblack::graphics::ShaderProgram &progra
 	// Set render states.
 	bgfx::setState(state, rgba);
 
-	bgfx::submit(viewId, program.GetRawHandle());
+	bgfx::submit(static_cast<bgfx::ViewId>(viewId), program.GetRawHandle());
 }

@@ -37,14 +37,14 @@ class DebugLines;
 class MeshViewer
 {
   public:
-	explicit MeshViewer(uint8_t viewId);
+	explicit MeshViewer();
 	void Open();
 	void DrawWindow();
 	void DrawScene();
 
   private:
 	bool _open;
-	const uint8_t _viewId;
+	static constexpr graphics::RenderPass _viewId = graphics::RenderPass::MeshViewer;
 	MeshId _selectedMesh;
 	int _selectedSubMesh;
 	ImGuiTextFilter _filter;

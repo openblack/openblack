@@ -24,7 +24,8 @@
 #include <memory>
 #include <optional>
 
-#include <Graphics/Texture2D.h>
+#include "RenderPass.h"
+#include "Texture2D.h"
 
 namespace openblack::graphics
 {
@@ -35,7 +36,7 @@ public:
 	FrameBuffer(std::string name, uint16_t width, uint16_t height, Format colorFormat, std::optional<Format> depthStencilFormat = {});
 	~FrameBuffer();
 
-	void Bind(uint8_t viewId) const;
+	void Bind(RenderPass viewId) const;
 
 	Texture2D& GetColorAttachment() { return _colorAttachment; }
 	void GetSize(uint16_t& width, uint16_t& height) const { width = _width, height = _height; }

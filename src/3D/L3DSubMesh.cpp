@@ -161,18 +161,18 @@ void L3DSubMesh::Load(IStream& stream)
 	//spdlog::debug("# bones: {} @ {}", header.numBones, header.bonesOffset);
 }
 
-void L3DSubMesh::Submit(uint8_t viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state, uint32_t rgba, bool preserveState) const
+void L3DSubMesh::Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state, uint32_t rgba, bool preserveState) const
 {
 	Submit_(viewId, &modelMatrix, nullptr, 0, 1, program, state, rgba, preserveState);
 }
 
-void L3DSubMesh::Submit(uint8_t viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
+void L3DSubMesh::Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
                         const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba, bool preserveState) const
 {
 	Submit_(viewId, nullptr, &instanceBuffer, instanceStart, instanceCount, program, state, rgba, preserveState);
 }
 
-void L3DSubMesh::Submit_(uint8_t viewId, const glm::mat4* modelMatrix,
+void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatrix,
                          const bgfx::DynamicVertexBufferHandle* instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
                          const ShaderProgram& program, uint64_t state, uint32_t rgba, bool preserveState) const
 {
@@ -227,7 +227,7 @@ void L3DSubMesh::Submit_(uint8_t viewId, const glm::mat4* modelMatrix,
 			bgfx::setInstanceDataBuffer(*instanceBuffer, instanceStart, instanceCount);
 		}
 		_indexBuffer->Bind(prim.indicesCount, prim.indicesOffset);
-		bgfx::submit(viewId, program.GetRawHandle(), 0, primitivePreserveState);
+		bgfx::submit(static_cast<bgfx::ViewId>(viewId), program.GetRawHandle(), 0, primitivePreserveState);
 		lastPreserveState = primitivePreserveState;
 	}
 }

@@ -22,6 +22,8 @@
 
 #include <glm/glm.hpp>
 
+#include <Graphics/RenderPass.h>
+
 namespace openblack
 {
 
@@ -40,7 +42,7 @@ class Water
 
 	[[nodiscard]] glm::vec4 GetReflectionPlane() const { return glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); };
 
-	void Draw(uint8_t viewId, const graphics::ShaderProgram& program) const;
+	void Draw(graphics::RenderPass viewId, const graphics::ShaderProgram& program) const;
 	[[nodiscard]] graphics::FrameBuffer& GetFrameBuffer() const;
 	void DebugGUI();
 
