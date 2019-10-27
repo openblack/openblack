@@ -780,7 +780,7 @@ void Gui::ShowProfilerWindow(Game& game)
 
 		ImGui::Columns(1);
 
-		auto& entry = game.GetProfiler()._entries[game.GetProfiler().GetCurrentEntryIndex()];
+		auto& entry = game.GetProfiler()._entries[game.GetProfiler().GetEntryIndex(-1)];
 
 		ImGuiWidgetFlameGraph::PlotFlame("CPU",
 			[](float* startTimestamp, float* endTimestamp, ImU8* level, const char** caption, const void* data, int idx) -> void {
