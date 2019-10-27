@@ -93,6 +93,8 @@ class Game
 	Game(int argc, char** argv);
 	virtual ~Game();
 
+	bool ProcessEvents();
+	bool Update();
 	void Run();
 
 	void LoadMap(const std::string& name);
@@ -123,7 +125,6 @@ class Game
 	Config& GetConfig() { return _config; }
 	[[nodiscard]] const Config& GetConfig() const { return _config; }
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
-	void ScheduleQuit() { _running = false; }
 
   static Game* instance()
 	{
@@ -160,7 +161,5 @@ class Game
 	glm::vec3 _modelPosition;
 	glm::vec3 _modelRotation;
 	glm::vec3 _modelScale;
-
-	bool _running;
 };
 } // namespace openblack

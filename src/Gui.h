@@ -84,7 +84,7 @@ class Gui
 
 	bool ProcessEventSdl2(const SDL_Event& event);
 	void NewFrame(GameWindow& window);
-	void Loop(Game& game);
+	bool Loop(Game& game);
 	void Draw();
  private:
 	Gui(ImGuiContext *imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer> &&meshViewer);

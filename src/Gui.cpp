@@ -438,7 +438,7 @@ void Gui::NewFrame(GameWindow& window)
 	ImGui::NewFrame();
 }
 
-void Gui::Loop(Game& game)
+bool Gui::Loop(Game& game)
 {
 	_meshViewer->DrawScene();
 
@@ -452,7 +452,7 @@ void Gui::Loop(Game& game)
 		{
 			if (ImGui::MenuItem("Quit", "Esc"))
 			{
-				game.ScheduleQuit();
+				return true;
 			}
 			ImGui::EndMenu();
 		}
@@ -611,6 +611,8 @@ void Gui::Loop(Game& game)
 		game.GetWater().DebugGUI();
 
 	ImGui::Render();
+
+	return false;
 }
 
 void Gui::RenderDrawDataBgfx(ImDrawData* drawData)

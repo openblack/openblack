@@ -28,13 +28,14 @@
 #include <vector>
 
 #include <SDL.h>
+#include <glm/fwd.hpp>
 
-#include <3D/Camera.h>
 #include <Graphics/RenderPass.h>
 
 namespace openblack
 {
 struct BgfxCallback;
+class Camera;
 class GameWindow;
 class Game;
 class LandIsland;
@@ -49,9 +50,10 @@ class Registry;
 
 namespace graphics
 {
-class ShaderProgram;
-class ShaderManager;
 class DebugLines;
+class FrameBuffer;
+class ShaderManager;
+class ShaderProgram;
 } // namespace graphics
 
 
@@ -76,6 +78,7 @@ class Renderer {
 	enum class Api {
 		OpenGl,
 	};
+
 	struct RequiredAttribute {
 		Api api;
 		uint32_t name;
@@ -84,6 +87,10 @@ class Renderer {
 	struct DrawSceneDesc {
 		graphics::RenderPass viewId;
 		Profiler& profiler;
+		const Camera* camera;
+		const graphics::FrameBuffer* frameBuffer;
+		uint16_t width;
+		uint16_t height;
 		bool drawSky;
 		const Sky& sky;
 		bool drawWater;
@@ -108,14 +115,15 @@ class Renderer {
 	void LoadShaders();
 	[[nodiscard]] graphics::ShaderManager& GetShaderManager() const;
 
-	void UpdateDebugCrossPose(std::chrono::microseconds dt, const glm::vec3 &position, float scale);
+	void UpdateDebugCrossUniforms(const glm::vec3 &position, float scale);
+	void UpdateTerrainUniforms(float timeOfDay, float bumpMapStrength, float smallBumpMapStrength);
 
-	void UploadUniforms(std::chrono::microseconds dt, graphics::RenderPass viewId, const Game &game, const Camera &camera);
-	void ClearScene(graphics::RenderPass viewId, int width, int height);
 	void DrawScene(const DrawSceneDesc &desc) const;
 	void Frame();
 
   private:
+	void DrawPass(const DrawSceneDesc &desc) const;
+
 	std::unique_ptr<graphics::ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
 
