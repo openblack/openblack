@@ -22,61 +22,16 @@
 
 #include <Gui.h>
 #include <3D/Water.h>
+#include <Graphics/FrameBuffer.h>
+#include <Graphics/Mesh.h>
+#include <Graphics/ShaderProgram.h>
+#include <Graphics/Texture2D.h>
 
 using namespace openblack;
 
-glm::mat4 ReflectionCamera::GetViewMatrix() const
-{
-	glm::mat4 mRotation = getRotationMatrix();
-	glm::mat4 mView     = mRotation * glm::translate(glm::mat4(1.0f), -_position);
-
-	const glm::vec4 reflectionPlane = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
-
-	// M''camera = Mreflection * Mcamera * Mflip
-	glm::mat4x4 reflectionMatrix;
-	reflectMatrix(reflectionMatrix, reflectionPlane);
-
-	return mView * reflectionMatrix;
-}
-
-/*
-              | 1-2Nx2   -2NxNy  -2NxNz  -2NxD |
-Mreflection = |  -2NxNy 1-2Ny2   -2NyNz  -2NyD |
-              |  -2NxNz  -2NyNz 1-2Nz2   -2NzD |
-              |    0       0       0       1   |
-*/
-void ReflectionCamera::reflectMatrix(glm::mat4x4& m, const glm::vec4& plane) const
-{
-	m[0][0] = (1.0f - 2.0f * plane[0] * plane[0]);
-	m[1][0] = (-2.0f * plane[0] * plane[1]);
-	m[2][0] = (-2.0f * plane[0] * plane[2]);
-	m[3][0] = (-2.0f * plane[3] * plane[0]);
-
-	m[0][1] = (-2.0f * plane[1] * plane[0]);
-	m[1][1] = (1.0f - 2.0f * plane[1] * plane[1]);
-	m[2][1] = (-2.0f * plane[1] * plane[2]);
-	m[3][1] = (-2.0f * plane[3] * plane[1]);
-
-	m[0][2] = (-2.0f * plane[2] * plane[0]);
-	m[1][2] = (-2.0f * plane[2] * plane[1]);
-	m[2][2] = (1.0f - 2.0f * plane[2] * plane[2]);
-	m[3][2] = (-2.0f * plane[3] * plane[2]);
-
-	m[0][3] = 0.0f;
-	m[1][3] = 0.0f;
-	m[2][3] = 0.0f;
-	m[3][3] = 1.0f;
-}
-
-
 Water::Water()
 {
-	// _shaderProgram = std::make_unique<ShaderProgram>();
-
-	// _waterShader = resourceCaches.shaderProgram->Request("water.program");
-
 	_reflectionFrameBuffer = std::make_unique<FrameBuffer>("Reflection", 1024, 1024, graphics::Format::RGBA8, graphics::Format::Depth24Stencil8);
-
 	createMesh();
 }
 
@@ -95,13 +50,13 @@ void Water::createMesh()
 
 	static const uint16_t indices[6] = { 2, 1, 0, 0, 3, 2 };
 
-	VertexBuffer* vertexBuffer = new VertexBuffer("Water", points, 4, decl);
-	IndexBuffer* indexBuffer   = new IndexBuffer("Water", indices, 6, IndexBuffer::Type::Uint16);
+	auto vertexBuffer = new VertexBuffer("Water", points, 4, decl);
+	auto indexBuffer  = new IndexBuffer("Water", indices, 6, IndexBuffer::Type::Uint16);
 
-	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, Mesh::Topology::TriangleList);
+	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, graphics::Mesh::Topology::TriangleList);
 }
 
-void Water::Draw(uint8_t viewId, const ShaderProgram &program) const
+void Water::Draw(uint8_t viewId, const ShaderProgram& program) const
 {
 	program.SetTextureSampler("s_reflection", 0, _reflectionFrameBuffer->GetColorAttachment());
 
@@ -112,18 +67,6 @@ void Water::Draw(uint8_t viewId, const ShaderProgram &program) const
 	_mesh->Draw(viewId, program, state, 0);
 }
 
-void Water::BeginReflection(uint8_t viewId, const Camera &sceneCamera)
-{
-	_reflectionCamera = ReflectionCamera(
-	    sceneCamera.GetPosition(),
-	    sceneCamera.GetRotation(),
-	    glm::vec3(0.0f, 1.0f, 0.0f)
-	);
-	_reflectionCamera.SetProjectionMatrix(sceneCamera.GetProjectionMatrix());
-
-	_reflectionFrameBuffer->Bind(viewId);
-}
-
 void Water::DebugGUI()
 {
 	ImGui::Begin("Water Debug");
@@ -131,37 +74,7 @@ void Water::DebugGUI()
 	ImGui::End();
 }
 
-/*
-              | 1-2Nx2   -2NxNy  -2NxNz  -2NxD |
-Mreflection = |  -2NxNy 1-2Ny2   -2NyNz  -2NyD |
-              |  -2NxNz  -2NyNz 1-2Nz2   -2NzD |
-              |    0       0       0       1   |
-*/
-void Water::ReflectMatrix(glm::mat4x4& m, const glm::vec4& plane)
+graphics::FrameBuffer& Water::GetFrameBuffer() const
 {
-	m[0][0] = (1.0f - 2.0f * plane[0] * plane[0]);
-	m[1][0] = (-2.0f * plane[0] * plane[1]);
-	m[2][0] = (-2.0f * plane[0] * plane[2]);
-	m[3][0] = (-2.0f * plane[3] * plane[0]);
-
-	m[0][1] = (-2.0f * plane[1] * plane[0]);
-	m[1][1] = (1.0f - 2.0f * plane[1] * plane[1]);
-	m[2][1] = (-2.0f * plane[1] * plane[2]);
-	m[3][1] = (-2.0f * plane[3] * plane[1]);
-
-	m[0][2] = (-2.0f * plane[2] * plane[0]);
-	m[1][2] = (-2.0f * plane[2] * plane[1]);
-	m[2][2] = (1.0f - 2.0f * plane[2] * plane[2]);
-	m[3][2] = (-2.0f * plane[3] * plane[2]);
-
-	m[0][3] = 0.0f;
-	m[1][3] = 0.0f;
-	m[2][3] = 0.0f;
-	m[3][3] = 1.0f;
-}
-
-void Water::GetFramebufferSize(uint16_t& width, uint16_t& height) const
-{
-	width = _reflectionFrameBuffer->GetWidth();
-	height = _reflectionFrameBuffer->GetHeight();
+	return *_reflectionFrameBuffer;
 }

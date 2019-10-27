@@ -273,17 +273,18 @@ void Game::Run()
 		// Reflection Pass
 		_profiler->Begin(Profiler::Stage::ReflectionPass);
 		bgfx::setViewName(0, "Reflection Pass");
-		_water->BeginReflection(0,*_camera);
 		{
 			// TODO(bwrsandman): The setting of viewport and clearing should probably be done in framebuffer bind
 			uint16_t width, height;
-			_water->GetFramebufferSize(width, height);
+			auto& frameBuffer = _water->GetFrameBuffer();
+			frameBuffer.GetSize(width, height);
+			frameBuffer.Bind(0);
 			_renderer->ClearScene(0, width, height);
 		}
-		auto reflectionCamera = _water->GetReflectionCamera();
+		auto reflectionCamera = _camera->Reflect(_water->GetReflectionPlane());
 
 		_profiler->Begin(Profiler::Stage::ReflectionUploadUniforms);
-		_renderer->UploadUniforms(deltaTime, 0, *this, reflectionCamera);
+		_renderer->UploadUniforms(deltaTime, 0, *this, *reflectionCamera);
 		_profiler->End(Profiler::Stage::ReflectionUploadUniforms);
 
 		drawDesc.viewId = 0;

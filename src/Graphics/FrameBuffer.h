@@ -35,11 +35,10 @@ public:
 	FrameBuffer(std::string name, uint16_t width, uint16_t height, Format colorFormat, std::optional<Format> depthStencilFormat = {});
 	~FrameBuffer();
 
-	void Bind(uint8_t viewId);
+	void Bind(uint8_t viewId) const;
 
 	Texture2D& GetColorAttachment() { return _colorAttachment; }
-	[[nodiscard]] uint16_t GetWidth() const { return _width; }
-	[[nodiscard]] uint16_t GetHeight() const { return _height; }
+	void GetSize(uint16_t& width, uint16_t& height) const { width = _width, height = _height; }
 
 private:
 	std::string _name;
