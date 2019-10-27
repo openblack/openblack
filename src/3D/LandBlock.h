@@ -77,8 +77,8 @@ class LandBlock
 	void BuildMesh(LandIsland& island);
 
 	[[nodiscard]] const LandCell* GetCells() const { return _cells.data(); };
-	const glm::ivec2& GetBlockPosition() { return _blockPosition; }
-	const glm::vec2& GetMapPosition() { return _mapPosition; }
+	[[nodiscard]] const glm::ivec2& GetBlockPosition() const { return _blockPosition; }
+	[[nodiscard]] const glm::vec4& GetMapPosition() const { return _mapPosition; }
 
   private:
 	uint32_t _index; // the blocks index in the block array (do we need to know this?)
