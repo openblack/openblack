@@ -20,28 +20,17 @@
 
 #pragma once
 
-#include <3D/Camera.h>
-#include <Graphics/Mesh.h>
-#include <Graphics/ShaderProgram.h>
-#include <Graphics/FrameBuffer.h>
 #include <glm/glm.hpp>
 
 namespace openblack
 {
 
-class ReflectionCamera: public Camera
+namespace graphics
 {
-  public:
-	ReflectionCamera():
-	    ReflectionCamera(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f)) {}
-	ReflectionCamera(glm::vec3 position, glm::vec3 rotation, glm::vec3 reflectionPlane):
-	    Camera(position, rotation), _reflectionPlane(reflectionPlane) {}
-	[[nodiscard]] glm::mat4 GetViewMatrix() const override;
-
-  private:
-	glm::vec3 _reflectionPlane;
-	void reflectMatrix(glm::mat4x4& m, const glm::vec4& plane) const;
-};
+class FrameBuffer;
+class Mesh;
+class ShaderProgram;
+}
 
 class Water
 {
@@ -49,31 +38,17 @@ class Water
 	Water();
 	~Water() = default;
 
-	void Draw(uint8_t viewId, const ShaderProgram &program) const;
+	[[nodiscard]] glm::vec4 GetReflectionPlane() const { return glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); };
 
-	void GetFramebufferSize(uint16_t& width, uint16_t& height) const;
-
-	void BeginReflection(uint8_t viewId, const Camera &sceneCamera);
-
+	void Draw(uint8_t viewId, const graphics::ShaderProgram& program) const;
+	[[nodiscard]] graphics::FrameBuffer& GetFrameBuffer() const;
 	void DebugGUI();
 
-	ReflectionCamera& GetReflectionCamera() { return _reflectionCamera; }
-
-	void ReflectMatrix(glm::mat4x4& m, const glm::vec4& plane);
-
   private:
-	struct WaterVertex
-	{
-		glm::vec2 position;
-	};
-
 	void createMesh();
 
-	std::unique_ptr<Mesh> _mesh;
-	std::unique_ptr<ShaderProgram> _shaderProgram;
-	std::unique_ptr<FrameBuffer> _reflectionFrameBuffer;
-
-	ReflectionCamera _reflectionCamera;
+	std::unique_ptr<graphics::Mesh> _mesh;
+	std::unique_ptr<graphics::FrameBuffer> _reflectionFrameBuffer;
 };
 
 } // namespace openblack

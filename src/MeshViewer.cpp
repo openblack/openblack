@@ -130,7 +130,9 @@ void MeshViewer::DrawScene()
 		clearColor,
 		1.0f,
 		0);
-	bgfx::setViewRect(_viewId, 0, 0, _frameBuffer->GetWidth(), _frameBuffer->GetHeight());
+	uint16_t width, height;
+	_frameBuffer->GetSize(width, height);
+	bgfx::setViewRect(_viewId, 0, 0, width, height);
 
 	uint64_t state = 0u
 		| BGFX_STATE_WRITE_MASK

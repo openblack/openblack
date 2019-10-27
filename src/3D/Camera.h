@@ -20,11 +20,13 @@
 
 #pragma once
 
+#include <chrono>
+#include <memory>
+
 #include <SDL_events.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <chrono>
 
 namespace openblack
 {
@@ -51,8 +53,8 @@ class Camera
 	[[nodiscard]] const glm::mat4& GetProjectionMatrix() const { return _projectionMatrix; }
 	[[nodiscard]] virtual glm::mat4 GetViewProjectionMatrix() const;
 
-	glm::vec3 GetPosition() const { return _position; }
-	glm::vec3 GetRotation() const { return glm::degrees(_rotation); }
+	[[nodiscard]] glm::vec3 GetPosition() const { return _position; }
+	[[nodiscard]] glm::vec3 GetRotation() const { return glm::degrees(_rotation); }
 
 	void SetPosition(const glm::vec3& position) { _position = position; }
 	void SetRotation(const glm::vec3& eulerDegrees) { _rotation = glm::radians(eulerDegrees); }
@@ -60,9 +62,11 @@ class Camera
 	void SetProjectionMatrixPerspective(float fov, float aspect, float nearclip, float farclip);
 	void SetProjectionMatrix(const glm::mat4x4& projection) { _projectionMatrix = projection; }
 
-	glm::vec3 GetForward() const;
-	glm::vec3 GetRight() const;
-	glm::vec3 GetUp() const;
+	[[nodiscard]] glm::vec3 GetForward() const;
+	[[nodiscard]] glm::vec3 GetRight() const;
+	[[nodiscard]] glm::vec3 GetUp() const;
+
+	[[nodiscard]] std::unique_ptr<Camera> Reflect(const glm::vec4& relectionPlane) const;
 
 	void DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::ivec2 screenSize, glm::vec3& out_worldOrigin, glm::vec3& out_worldDirection);
 
@@ -83,5 +87,19 @@ class Camera
 	glm::vec3 _velocity;
 	float _movementSpeed;
 	float _freeLookSensitivity;
+};
+
+class ReflectionCamera: public Camera
+{
+ public:
+	ReflectionCamera():
+	ReflectionCamera(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec4(0.0f)) {}
+	ReflectionCamera(glm::vec3 position, glm::vec3 rotation, glm::vec4 reflectionPlane):
+		Camera(position, rotation), _reflectionPlane(reflectionPlane) {}
+	[[nodiscard]] glm::mat4 GetViewMatrix() const override;
+
+ private:
+	glm::vec4 _reflectionPlane;
+	void reflectMatrix(glm::mat4x4& m, const glm::vec4& plane) const;
 };
 } // namespace openblack
