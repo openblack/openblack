@@ -100,7 +100,7 @@ Game::Game(int argc, char** argv)
 
 	float scale = 1.0f;
 	args.Get<float>("scale", scale);
-	_gui = Gui::create(*_window, 255, scale);
+	_gui = Gui::create(*_window, graphics::RenderPass::ImGui, scale);
 }
 
 Game::~Game()
@@ -252,7 +252,7 @@ void Game::Run()
 		_profiler->End(Profiler::Stage::GuiLoop);
 
 		Renderer::DrawSceneDesc drawDesc {
-			/*viewId =*/ 0,
+			/*viewId =*/ graphics::RenderPass::Main,
 			/*profiler =*/ *_profiler,
 			/*drawSky =*/ _config.drawSky,
 			/*sky =*/ *_sky,
@@ -272,22 +272,21 @@ void Game::Run()
 
 		// Reflection Pass
 		_profiler->Begin(Profiler::Stage::ReflectionPass);
-		bgfx::setViewName(0, "Reflection Pass");
 		{
 			// TODO(bwrsandman): The setting of viewport and clearing should probably be done in framebuffer bind
 			uint16_t width, height;
 			auto& frameBuffer = _water->GetFrameBuffer();
 			frameBuffer.GetSize(width, height);
-			frameBuffer.Bind(0);
-			_renderer->ClearScene(0, width, height);
+			frameBuffer.Bind(RenderPass::Reflection);
+			_renderer->ClearScene(RenderPass::Reflection, width, height);
 		}
 		auto reflectionCamera = _camera->Reflect(_water->GetReflectionPlane());
 
 		_profiler->Begin(Profiler::Stage::ReflectionUploadUniforms);
-		_renderer->UploadUniforms(deltaTime, 0, *this, *reflectionCamera);
+		_renderer->UploadUniforms(deltaTime, RenderPass::Reflection, *this, *reflectionCamera);
 		_profiler->End(Profiler::Stage::ReflectionUploadUniforms);
 
-		drawDesc.viewId = 0;
+		drawDesc.viewId = RenderPass::Reflection;
 		drawDesc.drawWater = false;
 		drawDesc.drawDebugCross = false;
 		drawDesc.drawBoundingBoxes = false;
@@ -297,17 +296,16 @@ void Game::Run()
 
 		// Main Draw Pass
 		_profiler->Begin(Profiler::Stage::MainPass);
-		bgfx::setViewName(1, "Main Pass");
 		{
 			int width, height;
 			_window->GetDrawableSize(width, height);
-			_renderer->ClearScene(1, width, height);
+			_renderer->ClearScene(RenderPass::Main, width, height);
 		}
 		_profiler->Begin(Profiler::Stage::MainPassUploadUniforms);
-		_renderer->UploadUniforms(deltaTime, 1, *this, *_camera);
+		_renderer->UploadUniforms(deltaTime, RenderPass::Main, *this, *_camera);
 		_profiler->End(Profiler::Stage::MainPassUploadUniforms);
 
-		drawDesc.viewId = 1;
+		drawDesc.viewId = RenderPass::Main;
 		drawDesc.drawWater = _config.drawWater;
 		drawDesc.drawDebugCross = _config.drawDebugCross;
 		drawDesc.drawBoundingBoxes = _config.drawBoundingBoxes;

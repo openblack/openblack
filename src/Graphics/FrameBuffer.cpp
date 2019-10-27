@@ -72,7 +72,7 @@ FrameBuffer::~FrameBuffer()
 	}
 }
 
-void FrameBuffer::Bind(uint8_t viewId) const
+void FrameBuffer::Bind(RenderPass viewId) const
 {
-	bgfx::setViewFrameBuffer(viewId, _handle);
+	bgfx::setViewFrameBuffer(static_cast<uint8_t>(viewId), _handle);
 }

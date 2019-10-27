@@ -281,7 +281,7 @@ void Registry::PrepareDraw(bool drawBoundingBox)
 	}
 }
 
-void Registry::DrawModels(uint8_t viewId, const graphics::ShaderManager& shaderManager, const graphics::DebugLines* boundingBox) const
+void Registry::DrawModels(graphics::RenderPass viewId, const graphics::ShaderManager& shaderManager, const graphics::DebugLines* boundingBox) const
 {
 	auto debugShader = shaderManager.GetShader("DebugLine");
 	auto debugShaderInstanced = shaderManager.GetShader("DebugLineInstanced");

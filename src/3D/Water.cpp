@@ -56,7 +56,7 @@ void Water::createMesh()
 	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, graphics::Mesh::Topology::TriangleList);
 }
 
-void Water::Draw(uint8_t viewId, const ShaderProgram& program) const
+void Water::Draw(graphics::RenderPass viewId, const ShaderProgram& program) const
 {
 	program.SetTextureSampler("s_reflection", 0, _reflectionFrameBuffer->GetColorAttachment());
 

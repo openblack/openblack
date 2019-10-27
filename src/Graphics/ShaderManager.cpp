@@ -94,11 +94,11 @@ const ShaderProgram* ShaderManager::GetShader(const std::string& name) const
 	return nullptr;
 }
 
-void ShaderManager::SetCamera(uint8_t viewId, const Camera &camera)
+void ShaderManager::SetCamera(graphics::RenderPass viewId, const Camera &camera)
 {
 	auto view = camera.GetViewMatrix();
 	auto proj = camera.GetProjectionMatrix();
-	bgfx::setViewTransform(viewId, &view, &proj);
+	bgfx::setViewTransform(static_cast<bgfx::ViewId>(viewId), &view, &proj);
 }
 
 } // namespace openblack::graphics

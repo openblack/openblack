@@ -28,7 +28,9 @@
 #include <vector>
 
 #include <SDL.h>
+
 #include <3D/Camera.h>
+#include <Graphics/RenderPass.h>
 
 namespace openblack
 {
@@ -80,7 +82,7 @@ class Renderer {
 		int value;
 	};
 	struct DrawSceneDesc {
-		uint8_t viewId;
+		graphics::RenderPass viewId;
 		Profiler& profiler;
 		bool drawSky;
 		const Sky& sky;
@@ -108,8 +110,8 @@ class Renderer {
 
 	void UpdateDebugCrossPose(std::chrono::microseconds dt, const glm::vec3 &position, float scale);
 
-	void UploadUniforms(std::chrono::microseconds dt, uint8_t viewId, const Game &game, const Camera &camera);
-	void ClearScene(uint8_t viewId, int width, int height);
+	void UploadUniforms(std::chrono::microseconds dt, graphics::RenderPass viewId, const Game &game, const Camera &camera);
+	void ClearScene(graphics::RenderPass viewId, int width, int height);
 	void DrawScene(const DrawSceneDesc &desc) const;
 	void Frame();
 

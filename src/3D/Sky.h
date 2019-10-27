@@ -45,7 +45,7 @@ class Sky
 	void Interpolate555Texture(uint16_t* bitmap, uint16_t*, uint16_t*, float);
 
 	void CalculateTextures();
-	void Draw(uint8_t viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram &program, bool cullBack) const;
+	void Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram &program, bool cullBack) const;
 	void SetTime(float time);
 	void Update();
 

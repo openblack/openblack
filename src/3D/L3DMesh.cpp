@@ -230,7 +230,7 @@ void L3DMesh::Load(IStream& stream)
 	// size: 6100, num meshes: 4, offset: 100
 }
 
-void L3DMesh::Draw(uint8_t viewId, const glm::mat4& modelMatrix, const ShaderProgram &program, uint32_t mesh, uint64_t state, uint32_t rgba) const
+void L3DMesh::Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram &program, uint32_t mesh, uint64_t state, uint32_t rgba) const
 {
 	if (mesh >= _subMeshes.size()) {
 		//spdlog::warn("tried to draw submesh out of range ({}/{})", mesh, _subMeshes.size());
@@ -240,7 +240,7 @@ void L3DMesh::Draw(uint8_t viewId, const glm::mat4& modelMatrix, const ShaderPro
 	_subMeshes[mesh]->Submit(viewId, modelMatrix, program, state, rgba, false);
 }
 
-void L3DMesh::Submit(uint8_t viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state, uint32_t rgba) const
+void L3DMesh::Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state, uint32_t rgba) const
 {
 	for (auto it = _subMeshes.begin(); it != _subMeshes.end(); ++it)
 	{
@@ -249,7 +249,7 @@ void L3DMesh::Submit(uint8_t viewId, const glm::mat4& modelMatrix, const ShaderP
 	}
 }
 
-void L3DMesh::Submit(uint8_t viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
+void L3DMesh::Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
                      const ShaderProgram& program, uint64_t state, uint32_t rgba) const
 {
 	for (auto it = _subMeshes.begin(); it != _subMeshes.end(); ++it)

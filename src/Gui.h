@@ -26,6 +26,8 @@
 #include <bgfx/bgfx.h>
 #include <imgui.h>
 
+#include <Graphics/RenderPass.h>
+
 typedef struct SDL_Window SDL_Window;
 typedef struct SDL_Cursor SDL_Cursor;
 union SDL_Event;
@@ -76,7 +78,7 @@ class MeshViewer;
 class Gui
 {
   public:
-	static std::unique_ptr<Gui> create(const GameWindow &window, bgfx::ViewId viewId, float scale);
+	static std::unique_ptr<Gui> create(const GameWindow &window, graphics::RenderPass viewId, float scale);
 
 	virtual ~Gui();
 

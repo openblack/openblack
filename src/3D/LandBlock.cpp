@@ -195,7 +195,7 @@ std::vector<LandVertex> LandBlock::buildVertexList(LandIsland& island)
 	return verts;
 }
 
-void LandBlock::Draw(uint8_t viewId, const ShaderProgram& program, bool cullBack) const
+void LandBlock::Draw(graphics::RenderPass viewId, const ShaderProgram& program, bool cullBack) const
 {
 	program.SetUniformValue("u_blockPosition", &_mapPosition);
 

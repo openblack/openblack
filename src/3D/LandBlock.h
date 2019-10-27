@@ -73,7 +73,7 @@ class LandBlock
 	{}
 
 	void Load(void* block, size_t block_size);
-	void Draw(uint8_t viewId, const ShaderProgram& program, bool cullBack) const;
+	void Draw(graphics::RenderPass viewId, const ShaderProgram& program, bool cullBack) const;
 	void BuildMesh(LandIsland& island);
 
 	[[nodiscard]] const LandCell* GetCells() const { return _cells.data(); };
