@@ -89,8 +89,6 @@ class Renderer {
 		Profiler& profiler;
 		const Camera* camera;
 		const graphics::FrameBuffer* frameBuffer;
-		uint16_t width;
-		uint16_t height;
 		bool drawSky;
 		const Sky& sky;
 		bool drawWater;
@@ -117,6 +115,8 @@ class Renderer {
 
 	void UpdateDebugCrossUniforms(const glm::vec3 &position, float scale);
 	void UpdateTerrainUniforms(float timeOfDay, float bumpMapStrength, float smallBumpMapStrength);
+
+	void ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height) const;
 
 	void DrawScene(const DrawSceneDesc &desc) const;
 	void Frame();

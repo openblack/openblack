@@ -290,21 +290,27 @@ void Game::Run()
 	// _lhvm = std::make_unique<LHVM::LHVM>();
 	// _lhvm->LoadBinary(GetGamePath() + "/Scripts/Quests/challenge.chl");
 
+	{
+		int width, height;
+		_window->GetDrawableSize(width, height);
+		_renderer->ConfigureView(graphics::RenderPass::Main, width, height);
+	}
+	{
+		uint16_t width, height;
+		_water->GetFrameBuffer().GetSize(width, height);
+		_renderer->ConfigureView(graphics::RenderPass::Reflection, width, height);
+	}
+
 	while (Update())
 	{
 		{
 			auto section = _profiler->BeginScoped(Profiler::Stage::SceneDraw);
-
-			int width, height;
-			_window->GetDrawableSize(width, height);
 
 			Renderer::DrawSceneDesc drawDesc{
 				/*viewId =*/ graphics::RenderPass::Main,
 				/*profiler =*/ *_profiler,
 				/*camera =*/ _camera.get(),
 				/*frameBuffer =*/ nullptr,
-				/*width =*/ static_cast<uint16_t>(width),
-				/*height =*/ static_cast<uint16_t>(height),
 				/*drawSky =*/ _config.drawSky,
 				/*sky =*/ *_sky,
 				/*drawWater =*/ _config.drawWater,

@@ -199,6 +199,18 @@ void Renderer::LoadShaders()
 	}
 }
 
+void Renderer::ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height) const
+{
+	static const uint32_t clearColor = 0x274659ff;
+
+	bgfx::setViewClear(static_cast<bgfx::ViewId>(viewId),
+	                   BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
+	                   clearColor,
+	                   1.0f,
+	                   0);
+	bgfx::setViewRect(static_cast<bgfx::ViewId>(viewId), 0, 0, width, height);
+}
+
 graphics::ShaderManager& Renderer::GetShaderManager() const
 {
 	return *_shaderManager;
@@ -230,7 +242,6 @@ void Renderer::DrawScene(const DrawSceneDesc &drawDesc) const
 		drawPassDesc.viewId = graphics::RenderPass::Reflection;
 		drawPassDesc.camera = reflectionCamera.get();
 		drawPassDesc.frameBuffer = &frameBuffer;
-		drawPassDesc.frameBuffer->GetSize(drawPassDesc.width, drawPassDesc.height);
 		drawPassDesc.drawWater = false;
 		drawPassDesc.drawDebugCross = false;
 		drawPassDesc.drawBoundingBoxes = false;
@@ -247,19 +258,10 @@ void Renderer::DrawScene(const DrawSceneDesc &drawDesc) const
 
 void Renderer::DrawPass(const DrawSceneDesc &desc) const
 {
-	static const uint32_t clearColor = 0x274659ff;
-
 	if (desc.frameBuffer)
 	{
 		desc.frameBuffer->Bind(desc.viewId);
 	}
-
-	bgfx::setViewClear(static_cast<bgfx::ViewId>(desc.viewId),
-	                   BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
-	                   clearColor,
-	                   1.0f,
-	                   0);
-	bgfx::setViewRect(static_cast<bgfx::ViewId>(desc.viewId), 0, 0, desc.width, desc.height);
 	// This dummy draw call is here to make sure that view is cleared if no other draw calls are submitted to view
 	bgfx::touch(static_cast<bgfx::ViewId>(desc.viewId));
 
