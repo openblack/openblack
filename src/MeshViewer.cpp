@@ -95,7 +95,9 @@ void MeshViewer::DrawWindow()
 	            submesh->GetStatus(),
 	            submesh->IsPhysics() ? " [Physics]" : "",
 	            submesh->IsWindow() ? " [Window]" : "");
-	ImGui::Text("Vertices %u, Indices %u", submesh->GetVertexCount(), submesh->GetIndexCount());
+
+	auto const& graphicsMesh = submesh->GetMesh();
+	ImGui::Text("Vertices %u, Indices %u", graphicsMesh.GetVertexBuffer().GetCount(), graphicsMesh.GetIndexBuffer().GetCount());
 
 	ImGui::Image(_frameBuffer->GetColorAttachment().GetNativeHandle(), ImVec2(512, 512), ImVec2(0, 1), ImVec2(1, 0));
 

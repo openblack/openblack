@@ -79,7 +79,7 @@ std::size_t IndexBuffer::GetTypeSize(Type type)
 	return type == Type::Uint16 ? sizeof(uint16_t) : sizeof(uint32_t);
 }
 
-void IndexBuffer::Bind(uint32_t count, uint32_t startIndex)
+void IndexBuffer::Bind(uint32_t count, uint32_t startIndex) const
 {
 	bgfx::setIndexBuffer(_handle, startIndex, count);
 }

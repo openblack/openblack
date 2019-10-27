@@ -155,7 +155,7 @@ size_t VertexBuffer::GetSizeInBytes() const noexcept
 	return _vertexCount * _strideBytes;
 }
 
-void VertexBuffer::Bind()
+void VertexBuffer::Bind() const
 {
 	bgfx::setVertexBuffer(0, _handle, 0, _vertexCount, _layoutHandle);
 }
