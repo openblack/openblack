@@ -27,8 +27,6 @@
 #include <glm/gtc/quaternion.hpp>
 #include <unordered_map>
 
-using namespace openblack::graphics;
-
 namespace openblack
 {
 class IStream;
@@ -84,20 +82,20 @@ class L3DMesh
 
 	void LoadFromFile(const std::string& fileName);
 	void Load(IStream& stream);
-	void Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint32_t mesh, uint64_t state, uint32_t rgba = 0) const;
-	void Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state, uint32_t rgba = 0) const;
+	void Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program, uint32_t mesh, uint64_t state, uint32_t rgba = 0) const;
+	void Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0) const;
 	void Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
-	            const ShaderProgram& program, uint64_t state, uint32_t rgba = 0) const;
+	            const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0) const;
 
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return _subMeshes.size(); }
 	const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }
-	const std::unordered_map<SkinId, std::unique_ptr<Texture2D>>& GetSkins() const { return _skins; }
+	const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& GetSkins() const { return _skins; }
 
   private:
 	L3DMeshFlags _flags;
 	std::string _debugName;
 
-	std::unordered_map<SkinId, std::unique_ptr<Texture2D>> _skins;
+	std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>> _skins;
 	std::vector<std::unique_ptr<L3DSubMesh>> _subMeshes;
   public:
 	const std::string& GetDebugName() const { return _debugName; }

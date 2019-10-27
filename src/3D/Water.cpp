@@ -28,6 +28,7 @@
 #include <Graphics/Texture2D.h>
 
 using namespace openblack;
+using namespace openblack::graphics;
 
 Water::Water()
 {

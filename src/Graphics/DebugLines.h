@@ -24,14 +24,14 @@
 #include <memory>
 
 #include <glm/glm.hpp>
-#include <Graphics/RenderPass.h>
+
+#include "RenderPass.h"
 #include "ShaderProgram.h"
 
-namespace openblack
-{
-namespace graphics
+namespace openblack::graphics
 {
 class Mesh;
+
 class DebugLines
 {
   public:
@@ -54,5 +54,4 @@ class DebugLines
 	glm::mat4 _model;
 };
 
-} // namespace graphics
-} // namespace openblack
+} // namespace openblack::graphics

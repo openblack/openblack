@@ -32,6 +32,7 @@
 #include <Common/stb_image_write.h>
 
 using namespace openblack;
+using namespace openblack::graphics;
 
 const float LandIsland::HeightUnit = 0.67f;
 const float LandIsland::CellSize   = 10.0f;

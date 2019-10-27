@@ -26,8 +26,6 @@
 #include <Graphics/VertexBuffer.h>
 #include <Graphics/RenderPass.h>
 
-using namespace openblack::graphics;
-
 namespace openblack::graphics
 {
 
