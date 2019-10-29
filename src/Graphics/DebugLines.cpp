@@ -29,16 +29,7 @@
 
 using namespace openblack::graphics;
 
-namespace
-{
-struct Vertex
-{
-  glm::vec4 pos;
-  glm::vec4 col;
-};
-}
-
-std::unique_ptr<DebugLines> DebugLines::CreateDebugLines(uint32_t size, const void* data, uint32_t vertexCount)
+std::unique_ptr<DebugLines> DebugLines::CreateDebugLines(const Vertex* data, uint32_t vertexCount)
 {
 	VertexDecl decl;
 	decl.reserve(2);
@@ -62,7 +53,7 @@ std::unique_ptr<DebugLines> DebugLines::CreateCross()
 		Vertex {glm::vec4(0.0f, 0.0f, -0.5f, 1.0f), glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)},
 	};
 
-	return CreateDebugLines(cross.size() * sizeof(cross[0]), cross.data(), cross.size());
+	return CreateDebugLines(cross.data(), cross.size());
 }
 
 std::unique_ptr<DebugLines> DebugLines::CreateBox(const glm::vec4 &color)
@@ -96,7 +87,7 @@ std::unique_ptr<DebugLines> DebugLines::CreateBox(const glm::vec4 &color)
 		Vertex{glm::vec4(0.5f, -0.5f, 0.5f, 1.0f), color},
 	};
 
-	return CreateDebugLines(box.size() * sizeof(box[0]), box.data(), box.size());
+	return CreateDebugLines(box.data(), box.size());
 }
 
 std::unique_ptr<DebugLines> DebugLines::CreateLine(const glm::vec4& from, const glm::vec4 &to, const glm::vec4 &color)
@@ -106,7 +97,7 @@ std::unique_ptr<DebugLines> DebugLines::CreateLine(const glm::vec4& from, const 
 		Vertex{to, color},
 	};
 
-	return CreateDebugLines(line.size() * sizeof(line[0]), line.data(), line.size());
+	return CreateDebugLines(line.data(), line.size());
 }
 
 void DebugLines::SetPose(const glm::vec3 &center, const glm::vec3& size)
@@ -121,8 +112,8 @@ void DebugLines::Draw(RenderPass viewId, const ShaderProgram &program) const
 	Mesh::DrawDesc desc = {
 		/*viewId =*/ viewId,
 		/*program =*/ program,
-		/*offset =*/ _mesh->GetVertexBuffer().GetCount(),
-		/*start =*/ 0,
+		/*start =*/ _mesh->GetVertexBuffer().GetCount(),
+		/*offset =*/ 0,
 		/*instanceBuffer =*/ nullptr,
 		/*instanceStart =*/ 0,
 		/*instanceCount =*/ 1,
@@ -160,7 +151,7 @@ void DebugLines::Draw(RenderPass viewId, const bgfx::DynamicVertexBufferHandle& 
 
 DebugLines::DebugLines(std::unique_ptr<Mesh> &&mesh)
 	: _mesh(std::move(mesh))
-	, _model()
+	, _model(1.0f)
 {
 }
 

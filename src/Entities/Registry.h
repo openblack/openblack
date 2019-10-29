@@ -53,8 +53,8 @@ class Registry
 	Registry();
 	virtual ~Registry();
 
-	void PrepareDraw(bool drawBoundingBox);
-	void DrawModels(graphics::RenderPass viewId, const graphics::ShaderManager& shaderManager, const graphics::DebugLines* boundingBox) const;
+	void PrepareDraw(bool drawBoundingBox, bool drawStreams);
+	void DrawModels(graphics::RenderPass viewId, const graphics::ShaderManager& shaderManager) const;
 	decltype(auto) Create() { return _registry.create(); }
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args) { return _registry.assign<Component>(entity, std::forward<Args>(args)...); }
@@ -83,6 +83,9 @@ class Registry
 		uint32_t offset;
 		uint32_t count;
 	};
+
+	std::unique_ptr<graphics::DebugLines> _streams;
+	std::unique_ptr<graphics::DebugLines> _boundingBox;
 
 	/// A list of cpu-side uniforms which is refilled at every \ref PrepareDraw.
 	/// This vector will resize to the number of instances it manages

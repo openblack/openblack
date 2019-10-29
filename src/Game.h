@@ -82,6 +82,7 @@ class Game
 		bool drawEntities;
 		bool drawDebugCross;
 		bool drawBoundingBoxes;
+		bool drawStreams;
 
 		float timeOfDay;
 		float bumpMapStrength;

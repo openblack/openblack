@@ -171,7 +171,7 @@ Renderer::Renderer(const GameWindow &window, bool vsync)
 
 	// allocate vertex buffers for our debug draw
 	_debugCross = DebugLines::CreateCross();
-	_boundingBox = DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f));
+
 
 	// give debug names to views
 	for (bgfx::ViewId i = 0; i < static_cast<bgfx::ViewId>(graphics::RenderPass::_count); ++i)
@@ -184,7 +184,6 @@ Renderer::~Renderer()
 {
 	_shaderManager.reset();
 	_debugCross.reset();
-	_boundingBox.reset();
 	bgfx::shutdown();
 }
 
@@ -300,7 +299,7 @@ void Renderer::DrawPass(const DrawSceneDesc &desc) const
 		auto section = desc.profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawModels : Profiler::Stage::MainPassDrawModels);
 		if (desc.drawEntities)
 		{
-			desc.entities.DrawModels(desc.viewId, *_shaderManager, desc.drawBoundingBoxes ? _boundingBox.get() : nullptr);
+			desc.entities.DrawModels(desc.viewId, *_shaderManager);
 		}
 	}
 

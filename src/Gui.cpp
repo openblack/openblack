@@ -462,6 +462,7 @@ bool Gui::Loop(Game& game)
 			ImGui::Checkbox("Wireframe", &config.wireframe);
 			ImGui::Checkbox("Water Debug", &config.waterDebug);
 			ImGui::Checkbox("Bounding Boxes", &config.drawBoundingBoxes);
+			ImGui::Checkbox("Streams", &config.drawStreams);
 			ImGui::Checkbox("Profiler", &config.showProfiler);
 			ImGui::EndMenu();
 		}
