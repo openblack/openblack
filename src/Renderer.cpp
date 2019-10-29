@@ -116,46 +116,29 @@ struct BgfxCallback : public bgfx::CallbackI
 	}
 };
 
-struct ApiThreadArgs
-{
-  bgfx::PlatformData platformData;
-  uint32_t width;
-  uint32_t height;
-};
-
 }  // namespace openblack
 
 Renderer::Renderer(const GameWindow &window, bool vsync)
 	: _shaderManager(std::make_unique<ShaderManager>())
 	, _bgfxCallback(std::make_unique<BgfxCallback>())
 {
-	// Call bgfx::renderFrame before bgfx::init to signal to bgfx not to create a render thread.
-	// Most graphics APIs must be used on the same thread that created the window.
-	bgfx::renderFrame();
-
-	// Create a thread to call the bgfx API from (except bgfx::renderFrame).
-	ApiThreadArgs apiThreadArgs {};
-
-	// Get render area size
-	int drawable_width;
-	int drawable_height;
-	window.GetDrawableSize(drawable_width, drawable_height);
-	apiThreadArgs.width = drawable_width;
-	apiThreadArgs.height = drawable_height;
-
-	// Get Native Handles from SDL window
-	window.GetNativeHandles(apiThreadArgs.platformData.nwh, apiThreadArgs.platformData.ndt);
-
-	// TODO(bwrsandman): This is single threaded init. Replace with multithreaded
 	bgfx::Init init {};
 #if USE_VULKAN
 	init.type = bgfx::RendererType::Vulkan;
 #else
 	init.type = bgfx::RendererType::OpenGL;
 #endif  // USE_VULKAN
-	init.platformData = apiThreadArgs.platformData;
+
+	// Get render area size
+	int drawable_width;
+	int drawable_height;
+	window.GetDrawableSize(drawable_width, drawable_height);
 	init.resolution.width = (uint32_t)drawable_width;
 	init.resolution.height = (uint32_t)drawable_height;
+
+	// Get Native Handles from SDL window
+	window.GetNativeHandles(init.platformData.nwh, init.platformData.ndt);
+
 	init.resolution.reset = BGFX_RESET_NONE;
 	if (vsync)
 	{
