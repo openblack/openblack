@@ -35,9 +35,16 @@ class Mesh;
 class DebugLines
 {
   public:
+	struct Vertex
+	{
+		glm::vec4 pos;
+		glm::vec4 col;
+	};
+
 	static std::unique_ptr<DebugLines> CreateCross();
 	static std::unique_ptr<DebugLines> CreateBox(const glm::vec4 &color);
 	static std::unique_ptr<DebugLines> CreateLine(const glm::vec4& from, const glm::vec4& to, const glm::vec4& color);
+	static std::unique_ptr<DebugLines> CreateDebugLines(const Vertex* data, uint32_t vertexCount);
 
 	virtual ~DebugLines();
 
@@ -47,7 +54,6 @@ class DebugLines
 	void SetPose(const glm::vec3& center, const glm::vec3& size);
 
   protected:
-	static std::unique_ptr<DebugLines> CreateDebugLines(uint32_t size, const void* data, uint32_t vertexCount);
 	explicit DebugLines(std::unique_ptr<Mesh>&& mesh);
 
 	std::unique_ptr<Mesh> _mesh;

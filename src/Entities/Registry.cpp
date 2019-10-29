@@ -29,6 +29,8 @@ Registry::~Registry()
 {
 	if (bgfx::isValid(_instanceUniformBuffer))
 		bgfx::destroy(_instanceUniformBuffer);
+	_boundingBox.reset();
+	_streams.reset();
 }
 
 void Registry::PrepareDrawDescs(bool drawBoundingBox)
@@ -269,19 +271,51 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	}
 }
 
-void Registry::PrepareDraw(bool drawBoundingBox)
+void Registry::PrepareDraw(bool drawBoundingBox, bool drawBoundingStreams)
 {
-	if (_dirty || _hasBoundingBoxes != drawBoundingBox)
+	if (_dirty || _hasBoundingBoxes != drawBoundingBox || (_streams != nullptr) != drawBoundingStreams)
 	{
 		PrepareDrawDescs(drawBoundingBox);
 		PrepareDrawUploadUniforms(drawBoundingBox);
+
+		_boundingBox.reset();
+		if (drawBoundingBox)
+		{
+			_boundingBox = graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f));
+		}
+
+		_streams.reset();
+		if (drawBoundingStreams)
+		{
+			uint32_t streamEdgeCount = 0;
+			_registry.view<const Stream>().each([&streamEdgeCount](const Stream& entity) {
+				for (const auto& from : entity.streamNodes)
+				{
+					streamEdgeCount += from.edges.size();
+				}
+			});
+			std::vector<graphics::DebugLines::Vertex> streamEdges;
+			streamEdges.reserve(streamEdgeCount * 2);
+			_registry.view<const Stream>().each([&streamEdges](const Stream& entity) {
+				const auto color = glm::vec4(1, 0, 0, 1);
+				for (const auto& from : entity.streamNodes)
+				{
+					for (const auto& to : from.edges)
+					{
+						streamEdges.push_back({glm::vec4(from.position, 1.0f), color});
+						streamEdges.push_back({glm::vec4(to.position, 1.0f), color});
+					}
+				}
+			});
+			_streams = graphics::DebugLines::CreateDebugLines(streamEdges.data(), streamEdges.size());
+		}
 
 		_dirty = false;
 		_hasBoundingBoxes = drawBoundingBox;
 	}
 }
 
-void Registry::DrawModels(graphics::RenderPass viewId, const graphics::ShaderManager& shaderManager, const graphics::DebugLines* boundingBox) const
+void Registry::DrawModels(graphics::RenderPass viewId, const graphics::ShaderManager& shaderManager) const
 {
 	auto debugShader = shaderManager.GetShader("DebugLine");
 	auto debugShaderInstanced = shaderManager.GetShader("DebugLineInstanced");
@@ -299,34 +333,18 @@ void Registry::DrawModels(graphics::RenderPass viewId, const graphics::ShaderMan
 		mesh.Submit(viewId, _instanceUniformBuffer, placers.offset, placers.count, *objectShaderInstanced, state);
 	}
 
-	if (boundingBox)
+	if (viewId == graphics::RenderPass::Main)
 	{
-		auto boundBoxOffset = _instanceUniforms.size() / 2;
-		auto boundBoxCount  = _instanceUniforms.size() / 2;
-		boundingBox->Draw(viewId, _instanceUniformBuffer, boundBoxOffset, boundBoxCount, *debugShaderInstanced);
-	}
-
-	// FIXME(bwrsandman): Add unique_ptr<DebugLine> _streamLine on class
-	//                    Move CreateLine to PrepareDraw when null and keep result
-	//                    Don't use offset, just create a line from 0, 1 in x
-	//                    Build matrix for position, rotation and scale
-	//                    Add to instanced drawing desc in PrepareDraw and draw one line instanced
-	_registry.view<const Stream>().each([viewId, debugShader](const Stream& entity) {
-		auto nodes = entity.streamNodes;
-		const auto color = glm::vec4(1, 0, 0, 1);
-
-		for (const auto& from : nodes)
+		if(_boundingBox)
 		{
-			for (const auto& to : from.edges)
-			{
-				auto startPos = from.position;
-				auto startOffset = glm::vec4(0, 0, 0, 0.0f);
-				auto endOffset = glm::vec4(to.position - startPos, 0.0f);
-				// auto line = DebugLines::CreateLine(startOffset, endOffset, color);
-				// line->SetPose(startPos, 1);
-				// line->Draw(viewId, *debugShader);
-			}
+			auto boundBoxOffset = _instanceUniforms.size() / 2;
+			auto boundBoxCount  = _instanceUniforms.size() / 2;
+			_boundingBox->Draw(viewId, _instanceUniformBuffer, boundBoxOffset, boundBoxCount, *debugShaderInstanced);
 		}
-	});
+		if (_streams)
+		{
+			_streams->Draw(viewId, *debugShader);
+		}
+	}
 }
 } // namespace openblack::Entities

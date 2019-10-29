@@ -249,7 +249,7 @@ bool Game::Update()
 			auto updateEntities = _profiler->BeginScoped(Profiler::Stage::UpdateEntities);
 			if (_config.drawEntities)
 			{
-				_entityRegistry->PrepareDraw(_config.drawBoundingBoxes);
+				_entityRegistry->PrepareDraw(_config.drawBoundingBoxes, _config.drawStreams);
 			}
 		}
 	}  // Update Uniforms
