@@ -37,7 +37,9 @@ std::unique_ptr<DebugLines> DebugLines::CreateDebugLines(const Vertex* data, uin
 	decl.emplace_back(VertexAttrib::Attribute::Color0, 4, VertexAttrib::Type::Float);
 
 	auto vertexBuffer = new VertexBuffer("DebugLines", data, vertexCount, decl);
+	bgfx::frame();
 	auto mesh = std::make_unique<Mesh>(vertexBuffer, nullptr, Mesh::Topology::LineList);
+	bgfx::frame();
 
 	return std::unique_ptr<DebugLines>(new DebugLines(std::move(mesh)));
 }

@@ -37,13 +37,13 @@ namespace openblack
 
 struct LandVertex
 {
-	const float position[3];
-	const float weight[3]; // interpolated
-	const uint8_t firstMaterialID[4];  // force alignment 4 bytes to prevent packing
-	const uint8_t secondMaterialID[4];  // force alignment 4 bytes to prevent packing
-	const uint8_t materialBlendCoefficient[4];  // force alignment 4 bytes to prevent packing
-	const uint8_t lightLevel[4];  // aligned to 4 bytes
-	const float waterAlpha;
+	float position[3];
+	float weight[3]; // interpolated
+	uint8_t firstMaterialID[4];  // force alignment 4 bytes to prevent packing
+	uint8_t secondMaterialID[4];  // force alignment 4 bytes to prevent packing
+	uint8_t materialBlendCoefficient[4];  // force alignment 4 bytes to prevent packing
+	uint8_t lightLevel[4];  // aligned to 4 bytes
+	float waterAlpha;
 
 	LandVertex(glm::vec3 _position, glm::vec3 _weight,
 	           uint8_t mat1, uint8_t mat2, uint8_t mat3,
@@ -88,6 +88,6 @@ class LandBlock
 	glm::vec4 _mapPosition; // absolute position in the world
 	std::unique_ptr<graphics::Mesh> _mesh;
 
-	std::vector<LandVertex> buildVertexList(LandIsland& island);
+	const bgfx::Memory* buildVertexList(LandIsland& island);
 };
 } // namespace openblack

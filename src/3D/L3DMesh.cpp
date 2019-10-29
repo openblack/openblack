@@ -201,6 +201,7 @@ void L3DMesh::Load(IStream& stream)
 			_subMeshes[i] = std::make_unique<L3DSubMesh>(*this);
 			_subMeshes[i]->Load(stream);
 		}
+		bgfx::frame();
 	}
 
 	/*if (header.pointsCount > 0) {
