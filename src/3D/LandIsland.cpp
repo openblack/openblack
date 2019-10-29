@@ -134,6 +134,7 @@ void LandIsland::LoadFromFile(IStream& stream)
 	// build the meshes (we could move this elsewhere)
 	for (auto& block : _landBlocks)
 		block.BuildMesh(*this);
+	bgfx::frame();
 }
 
 /*const uint8_t LandIsland::GetAltitudeAt(glm::ivec2 vec) const

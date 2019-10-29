@@ -110,15 +110,15 @@ void LandBlock::BuildMesh(LandIsland& island)
 
 	auto verts = buildVertexList(island);
 
-	auto vertexBuffer = new VertexBuffer("LandBlock", verts.data(), verts.size(), decl);
+	auto vertexBuffer = new VertexBuffer("LandBlock", verts, decl);
 	_mesh = std::make_unique<Mesh>(vertexBuffer);
 }
 
-std::vector<LandVertex> LandBlock::buildVertexList(LandIsland& island)
+const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 {
 	// reserve 16*16 quads of 2 tris with 3 verts = 1536
-	std::vector<LandVertex> verts;
-	verts.reserve(1536);
+	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(LandVertex) * 1536);
+	auto vertices = (LandVertex*)verticesMem->data;
 
 	auto countries = island.GetCountries();
 
@@ -131,6 +131,7 @@ std::vector<LandVertex> LandBlock::buildVertexList(LandIsland& island)
 	int bx = _blockPosition.x * 16;
 	int bz = _blockPosition.y * 16;
 
+	uint16_t i = 0;
 	for (int x = 0; x < 16; x++)
 	{
 		for (int z = 0; z < 16; z++)
@@ -167,34 +168,34 @@ std::vector<LandVertex> LandBlock::buildVertexList(LandIsland& island)
 			{
 				// TR/BR/TL  # #
 				//             #
-				verts.push_back(make_vert(pTR, glm::vec3(0, 1, 0), tlMat, trMat, brMat, tr));
-				verts.push_back(make_vert(pBR, glm::vec3(0, 0, 1), tlMat, trMat, brMat, br));
-				verts.push_back(make_vert(pTL, glm::vec3(1, 0, 0), tlMat, trMat, brMat, tl));
+				vertices[i++] = make_vert(pTR, glm::vec3(0, 1, 0), tlMat, trMat, brMat, tr);
+				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), tlMat, trMat, brMat, br);
+				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), tlMat, trMat, brMat, tl);
 
 				// BR/BL/TL  #
 				//           # #
-				verts.push_back(make_vert(pBR, glm::vec3(0, 0, 1), tlMat, blMat, brMat, br));
-				verts.push_back(make_vert(pBL, glm::vec3(0, 1, 0), tlMat, blMat, brMat, bl));
-				verts.push_back(make_vert(pTL, glm::vec3(1, 0, 0), tlMat, blMat, brMat, tl));
+				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), tlMat, blMat, brMat, br);
+				vertices[i++] = make_vert(pBL, glm::vec3(0, 1, 0), tlMat, blMat, brMat, bl);
+				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), tlMat, blMat, brMat, tl);
 			}
 			else
 			{
 				// BL/TL/TR  # #
 				//           #
-				verts.push_back(make_vert(pBL, glm::vec3(1, 0, 0), blMat, tlMat, trMat, bl));
-				verts.push_back(make_vert(pTL, glm::vec3(0, 1, 0), blMat, tlMat, trMat, tl));
-				verts.push_back(make_vert(pTR, glm::vec3(0, 0, 1), blMat, tlMat, trMat, tr));
+				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), blMat, tlMat, trMat, bl);
+				vertices[i++] = make_vert(pTL, glm::vec3(0, 1, 0), blMat, tlMat, trMat, tl);
+				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), blMat, tlMat, trMat, tr);
 
 				// TR/BR/BL    #
 				//           # #
-				verts.push_back(make_vert(pTR, glm::vec3(0, 0, 1), blMat, brMat, trMat, tr));
-				verts.push_back(make_vert(pBR, glm::vec3(0, 1, 0), blMat, brMat, trMat, br));
-				verts.push_back(make_vert(pBL, glm::vec3(1, 0, 0), blMat, brMat, trMat, bl));
+				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), blMat, brMat, trMat, tr);
+				vertices[i++] = make_vert(pBR, glm::vec3(0, 1, 0), blMat, brMat, trMat, br);
+				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), blMat, brMat, trMat, bl);
 			}
 		}
 	}
 
-	return verts;
+	return verticesMem;
 }
 
 void LandBlock::Draw(graphics::RenderPass viewId, const ShaderProgram& program, bool cullBack) const

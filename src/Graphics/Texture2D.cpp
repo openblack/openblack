@@ -108,6 +108,7 @@ void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format 
 	bgfx::frame();
 
 	bgfx::calcTextureSize(_info, width, height, 1, false, false, layers, getBgfxTextureFormat(format));
+	bgfx::frame();
 }
 
 void Texture2D::DumpTexture()

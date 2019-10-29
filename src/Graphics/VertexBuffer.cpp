@@ -90,7 +90,6 @@ VertexBuffer::VertexBuffer(std::string name, const void *vertices, uint32_t vert
 	_handle = bgfx::createVertexBuffer(mem, layout);
 	_layoutHandle = bgfx::createVertexLayout(layout);
 	bgfx::setName(_handle, _name.c_str());
-	bgfx::frame();
 }
 
 VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl decl)
@@ -125,11 +124,9 @@ VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl
 
 	_vertexCount = mem->size / _strideBytes;
 
-	// auto mem      = bgfx::makeRef(vertices, vertexCount * layout.m_stride);
 	_handle       = bgfx::createVertexBuffer(mem, layout);
 	_layoutHandle = bgfx::createVertexLayout(layout);
 	bgfx::setName(_handle, _name.c_str());
-	bgfx::frame();
 }
 
 VertexBuffer::~VertexBuffer()
