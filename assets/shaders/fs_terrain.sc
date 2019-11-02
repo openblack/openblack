@@ -42,7 +42,7 @@ void main()
 	// apply light map
 	col = col * mix(.25f, clamp(v_lightLevel * 2, 0.5, 1), u_timeOfDay.r);
 
-	gl_FragColor = vec4(col.r, col.g, col.b, v_waterAlpha);
+	gl_FragColor = vec4(col.rgb, v_waterAlpha);
 
 	if (v_waterAlpha == 0.0) {
 		discard;
