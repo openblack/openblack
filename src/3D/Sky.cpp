@@ -102,7 +102,7 @@ void Sky::Interpolate555Texture(uint16_t* bitmap, uint16_t* bitmap1, uint16_t* b
 		uint16_t g = (g1 * interpolate) + (g2 * (1.0f - interpolate));
 		uint16_t b = (b1 * interpolate) + (b2 * (1.0f - interpolate));
 
-		bitmap[i] = (b << 10) | (g << 5) | r;
+		bitmap[i] = (r << 10) | (g << 5) | b;
 	}
 }
 
