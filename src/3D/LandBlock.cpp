@@ -101,10 +101,10 @@ void LandBlock::BuildMesh(LandIsland& island)
 	VertexDecl decl;
 	decl.reserve(7);
 	decl.emplace_back(VertexAttrib::Attribute::Position, 3, VertexAttrib::Type::Float);
-	decl.emplace_back(VertexAttrib::Attribute::Weight, 3, VertexAttrib::Type::Float);  // weight
+	decl.emplace_back(VertexAttrib::Attribute::TexCoord1, 3, VertexAttrib::Type::Float);  // weight
 	decl.emplace_back(VertexAttrib::Attribute::Color1, 3, VertexAttrib::Type::Uint8);  // first material id
 	decl.emplace_back(VertexAttrib::Attribute::Color2, 3, VertexAttrib::Type::Uint8);  // second material id
-	decl.emplace_back(VertexAttrib::Attribute::Indices, 3, VertexAttrib::Type::Uint8, true);  // material blend coefficient
+	decl.emplace_back(VertexAttrib::Attribute::TexCoord2, 3, VertexAttrib::Type::Uint8, true); // material blend coefficient
 	decl.emplace_back(VertexAttrib::Attribute::Color0, 4, VertexAttrib::Type::Uint8, true);  // light level, align to 4 bytes
 	decl.emplace_back(VertexAttrib::Attribute::Color3, 1, VertexAttrib::Type::Float, true);  // water alpha
 
