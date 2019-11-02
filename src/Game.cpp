@@ -211,6 +211,11 @@ bool Game::Update()
 		_modelRotation.y = fmod(_modelRotation.y + float(deltaTime.count())*.0001f, 360.f);
 	}
 
+	// Update Terrain
+	{
+		_landIsland->Update(_config.timeOfDay, _config.bumpMapStrength, _config.smallBumpMapStrength);
+	}
+
 	// Update Uniforms
 	{
 		auto profilerScopedUpdateUniforms = _profiler->BeginScoped(Profiler::Stage::UpdateUniforms);
@@ -237,11 +242,6 @@ bool Game::Update()
 			_intersection.y = _landIsland->GetHeightAt(glm::vec2(_intersection.x, _intersection.z));
 
 			_renderer->UpdateDebugCrossUniforms(_intersection, 50.0f);
-		}
-
-		// Update Terrain
-		{
-			_renderer->UpdateTerrainUniforms(_config.timeOfDay, _config.bumpMapStrength, _config.smallBumpMapStrength);
 		}
 
 		// Update Entities

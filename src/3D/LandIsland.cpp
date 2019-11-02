@@ -137,6 +137,13 @@ void LandIsland::LoadFromFile(IStream& stream)
 	bgfx::frame();
 }
 
+void openblack::LandIsland::Update(float timeOfDay, float bumpMapStrength, float smallBumpMapStrength)
+{
+	_timeOfDay = timeOfDay;
+	_bumpMapStrength = bumpMapStrength;
+	_smallBumpMapStrength = smallBumpMapStrength;
+}
+
 /*const uint8_t LandIsland::GetAltitudeAt(glm::ivec2 vec) const
 {
 	return uint8_t();
@@ -183,12 +190,16 @@ const LandCell& LandIsland::GetCell(int x, int z) const
 
 void LandIsland::Draw(graphics::RenderPass viewId, const ShaderProgram& program, bool cullBack) const
 {
-	program.SetTextureSampler("s_materials", 0, *_materialArray);
-	program.SetTextureSampler("s_bump", 1, *_textureBumpMap);
-	program.SetTextureSampler("s_smallBump", 2, *_textureSmallBump);
-
 	for (auto& block : _landBlocks)
+	{
+		program.SetTextureSampler("s_materials", 0, *_materialArray);
+		program.SetTextureSampler("s_bump", 1, *_textureBumpMap);
+		program.SetTextureSampler("s_smallBump", 2, *_textureSmallBump);
+		program.SetUniformValue("u_timeOfDay", &_timeOfDay);
+		program.SetUniformValue("u_bumpmapStrength", &_bumpMapStrength);
+		program.SetUniformValue("u_smallBumpmapStrength", &_smallBumpMapStrength);
 		block.Draw(viewId, program, cullBack);
+	}
 }
 
 void LandIsland::convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixels)

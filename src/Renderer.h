@@ -114,7 +114,6 @@ class Renderer {
 	[[nodiscard]] graphics::ShaderManager& GetShaderManager() const;
 
 	void UpdateDebugCrossUniforms(const glm::vec3 &position, float scale);
-	void UpdateTerrainUniforms(float timeOfDay, float bumpMapStrength, float smallBumpMapStrength);
 
 	void ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height) const;
 
