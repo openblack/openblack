@@ -72,6 +72,7 @@ Game::Game(int argc, char** argv)
 	bool vsync = false;
 	bool fullscreen = false;
 	bool borderless = false;
+	std::string rendererTypeStr;
 
 	auto args = CmdLineArgs(argc, argv);
 	args.Get("w", windowWidth);
@@ -79,6 +80,54 @@ Game::Game(int argc, char** argv)
 	args.Get("v", vsync);
 	args.Get("f", fullscreen);
 	args.Get("b", borderless);
+	args.Get("r", rendererTypeStr);
+
+	auto rendererType = bgfx::RendererType::OpenGL;
+
+	if (rendererTypeStr.compare("OpenGL") == 0)
+	{
+		rendererType = bgfx::RendererType::OpenGL;
+	}
+	else if (rendererTypeStr.compare("OpenGLES") == 0)
+	{
+		rendererType = bgfx::RendererType::OpenGLES;
+	}
+	else if (rendererTypeStr.compare("Vulkan") == 0)
+	{
+		rendererType = bgfx::RendererType::Vulkan;
+	}
+	else if (rendererTypeStr.compare("Direct3D9") == 0)
+	{
+		rendererType = bgfx::RendererType::Direct3D9;
+	}
+	else if (rendererTypeStr.compare("Direct3D11") == 0)
+	{
+		rendererType = bgfx::RendererType::Direct3D11;
+	}
+	else if (rendererTypeStr.compare("Direct3D12") == 0)
+	{
+		rendererType = bgfx::RendererType::Direct3D12;
+	}
+	else if (rendererTypeStr.compare("Metal") == 0)
+	{
+		rendererType = bgfx::RendererType::Metal;
+	}
+	else if (rendererTypeStr.compare("Gnm") == 0)
+	{
+		rendererType = bgfx::RendererType::Gnm;
+	}
+	else if (rendererTypeStr.compare("Nvn") == 0)
+	{
+		rendererType = bgfx::RendererType::Nvn;
+	}
+	else if (rendererTypeStr.compare("Noop") == 0)
+	{
+		rendererType = bgfx::RendererType::Noop;
+	}
+	else
+	{
+		rendererType = bgfx::RendererType::OpenGL;
+	}
 
 	DisplayMode displayMode = borderless ? DisplayMode::Borderless : (fullscreen ? DisplayMode::Fullscreen : DisplayMode::Windowed);
 
@@ -92,7 +141,7 @@ Game::Game(int argc, char** argv)
 
 	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", windowWidth, windowHeight, displayMode);
 
-	_renderer = std::make_unique<Renderer>(*_window, vsync);
+	_renderer = std::make_unique<Renderer>(*_window, rendererType, vsync);
 
 	_fileSystem->SetGamePath(GetGamePath());
 	spdlog::debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
@@ -292,7 +341,7 @@ void Game::Run()
 
 	{
 		int width, height;
-		_window->GetDrawableSize(width, height);
+		_window->GetSize(width, height);
 		_renderer->ConfigureView(graphics::RenderPass::Main, width, height);
 	}
 	{

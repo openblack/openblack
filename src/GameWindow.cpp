@@ -26,9 +26,6 @@
 #if defined(SDL_VIDEO_DRIVER_WAYLAND)
 #include <wayland-egl.h>
 #endif // defined(SDL_VIDEO_DRIVER_WAYLAND)
-#if USE_VULKAN
-#include <SDL_vulkan.h>
-#endif // USE_VULKAN
 
 #include "Renderer.h"
 
@@ -263,16 +260,6 @@ void GameWindow::SetSize(int width, int height)
 void GameWindow::GetSize(int& width, int& height) const
 {
 	SDL_GetWindowSize(_window.get(), &width, &height);
-}
-
-void GameWindow::GetDrawableSize(int& width, int& height) const
-{
-	// TODO(bwrsandman): Make this a runtime branch
-#if USE_VULKAN
-	SDL_Vulkan_GetDrawableSize(_window.get(), &width, &height);
-#else
-	SDL_GL_GetDrawableSize(_window.get(), &width, &height);
-#endif // USE_VULKAN
 }
 
 void GameWindow::Show()
