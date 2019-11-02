@@ -273,6 +273,7 @@ function(mark_shaders_for_compilation)
 				INCLUDES ${BGFX_SHADER_INCLUDE_PATH}
 				BIN2C BIN2C ${SHADER_FILE_NAME_WE}_${PROFILE_EXT}
 				WERROR
+				"$<$<CONFIG:debug>:DEBUG>$<$<CONFIG:relwithdebinfo>:DEBUG>"
 			)
 			list(APPEND OUTPUTS ${OUTPUT})
 			list(APPEND COMMANDS COMMAND bgfx::shaderc ${CLI})
