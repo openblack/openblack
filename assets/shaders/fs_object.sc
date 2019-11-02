@@ -4,13 +4,13 @@ $input v_position, v_texcoord0, v_normal
 
 SAMPLER2D(s_diffuse, 0);
 
-float alphaThreshold = 1.0 / 255.0;
-vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
-vec4 lightPos = vec4(-4000, 1300, -1435, 1.0f);
-float ambientStrength = 0.5;
-
 void main()
 {
+	// constants
+	const vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
+	const vec4 lightPos = vec4(-4000.0f, 1300.0f, -1435.0f, 1.0f);
+	const float ambientStrength = 0.5f;
+	const float alphaThreshold = 1.0f / 255.0f;
 	// ambient
 	vec3 ambient = ambientStrength * lightColor;
 
