@@ -57,6 +57,8 @@ class LandIsland
 
 	void LoadFromFile(IStream& file);
 
+	void Update(float timeOfDay, float bumpMapStrength, float smallBumpMapStrength);
+
 	// const uint8_t GetAltitudeAt(glm::ivec2) const;
 
 	float GetHeightAt(glm::vec2) const;
@@ -97,6 +99,10 @@ class LandIsland
 	std::unique_ptr<graphics::Texture2D> _textureSmallBump;
 
 	std::array<uint8_t, 256 * 256> _noiseMap;
+
+	float _timeOfDay;
+	float _bumpMapStrength;
+	float _smallBumpMapStrength;
 };
 } // namespace openblack
 

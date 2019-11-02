@@ -203,14 +203,6 @@ void Renderer::UpdateDebugCrossUniforms(const glm::vec3 &position, float scale)
 	_debugCross->SetPose(position, glm::vec3(scale, scale, scale));
 }
 
-void Renderer::UpdateTerrainUniforms(float timeOfDay, float bumpMapStrength, float smallBumpMapStrength)
-{
-	auto terrainShader = _shaderManager->GetShader("Terrain");
-	terrainShader->SetUniformValue("u_timeOfDay", &timeOfDay);
-	terrainShader->SetUniformValue("u_bumpmapStrength", &bumpMapStrength);
-	terrainShader->SetUniformValue("u_smallBumpmapStrength", &smallBumpMapStrength);
-}
-
 void Renderer::DrawScene(const DrawSceneDesc &drawDesc) const
 {
 	// Reflection Pass
