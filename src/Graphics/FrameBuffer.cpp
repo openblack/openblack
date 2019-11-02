@@ -48,8 +48,8 @@ FrameBuffer::FrameBuffer(std::string name, uint16_t width, uint16_t height, Form
 	if (depthStencilFormat)
 	{
 		std::array<bgfx::TextureHandle, 2> textures = {
-			bgfx::createTexture2D(width, height, false, 1, getBgfxTextureFormat(colorFormat)),
-			bgfx::createTexture2D(width, height, false, 1, getBgfxTextureFormat(depthStencilFormat.value())),
+			bgfx::createTexture2D(width, height, false, 1, getBgfxTextureFormat(colorFormat), BGFX_TEXTURE_RT),
+			bgfx::createTexture2D(width, height, false, 1, getBgfxTextureFormat(depthStencilFormat.value()), BGFX_TEXTURE_RT),
 		};
 		_handle = bgfx::createFrameBuffer(textures.size(), textures.data());
 		_colorAttachment._handle = bgfx::getTexture(_handle, 0);
@@ -57,7 +57,7 @@ FrameBuffer::FrameBuffer(std::string name, uint16_t width, uint16_t height, Form
 	}
 	else
 	{
-		_handle = bgfx::createFrameBuffer(_width, _height, getBgfxTextureFormat(colorFormat));
+		_handle = bgfx::createFrameBuffer(_width, _height, getBgfxTextureFormat(colorFormat), BGFX_TEXTURE_RT);
 		_colorAttachment._handle = bgfx::getTexture(_handle, 0);
 	}
 
