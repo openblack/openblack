@@ -69,5 +69,5 @@ void Mesh::Draw(const DrawDesc& desc) const
 		bgfx::setState(desc.state, desc.rgba);
 	}
 
-	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), desc.program.GetRawHandle(), desc.preserveState);
+	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), desc.program.GetRawHandle(), 0, desc.preserveState);
 }
