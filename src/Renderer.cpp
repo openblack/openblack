@@ -118,21 +118,17 @@ struct BgfxCallback : public bgfx::CallbackI
 
 }  // namespace openblack
 
-Renderer::Renderer(const GameWindow &window, bool vsync)
+Renderer::Renderer(const GameWindow& window, bgfx::RendererType::Enum rendererType, bool vsync)
 	: _shaderManager(std::make_unique<ShaderManager>())
 	, _bgfxCallback(std::make_unique<BgfxCallback>())
 {
 	bgfx::Init init {};
-#if USE_VULKAN
-	init.type = bgfx::RendererType::Vulkan;
-#else
-	init.type = bgfx::RendererType::OpenGL;
-#endif  // USE_VULKAN
+	init.type = rendererType;
 
 	// Get render area size
 	int drawable_width;
 	int drawable_height;
-	window.GetDrawableSize(drawable_width, drawable_height);
+	window.GetSize(drawable_width, drawable_height);
 	init.resolution.width = (uint32_t)drawable_width;
 	init.resolution.height = (uint32_t)drawable_height;
 

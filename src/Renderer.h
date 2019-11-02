@@ -28,6 +28,7 @@
 #include <vector>
 
 #include <SDL.h>
+#include <bgfx/bgfx.h>
 #include <glm/fwd.hpp>
 
 #include <Graphics/RenderPass.h>
@@ -106,7 +107,7 @@ class Renderer {
 	};
 
 	Renderer() = delete;
-	explicit Renderer(const GameWindow& window, bool vsync);
+	explicit Renderer(const GameWindow& window, bgfx::RendererType::Enum rendererType, bool vsync);
 
 	virtual ~Renderer();
 
