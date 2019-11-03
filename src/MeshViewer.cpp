@@ -92,11 +92,12 @@ void MeshViewer::DrawWindow()
 
 	auto const& submesh = mesh->GetSubMeshes()[_selectedSubMesh];
 
+	auto flags = submesh->GetFlags();
 	ImGui::Text("SubMesh LOD=%u Status=%u%s%s",
-	            submesh->GetLOD(),
-	            submesh->GetStatus(),
-	            submesh->IsPhysics() ? " [Physics]" : "",
-	            submesh->IsWindow() ? " [Window]" : "");
+	            flags.lod,
+	            flags.status,
+	            flags.isPhysics ? " [Physics]" : "",
+	            flags.isWindow ? " [Window]" : "");
 
 	auto const& graphicsMesh = submesh->GetMesh();
 	ImGui::Text("Vertices %u, Indices %u", graphicsMesh.GetVertexBuffer().GetCount(), graphicsMesh.GetIndexBuffer().GetCount());

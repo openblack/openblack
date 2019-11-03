@@ -57,6 +57,20 @@ class L3DSubMesh
 	};
 
   public:
+
+#pragma pack(push, 1)
+	struct alignas(4) HeaderFlag
+	{
+		uint32_t lod : 3;
+		uint32_t status : 6;
+		uint32_t unknown1 : 3;  // always 0b0101
+		uint32_t isWindow : 1;
+		uint32_t isPhysics : 1;
+		uint32_t unknown2 : 16;  // always 0, probably padding on 32 bits
+	};
+#pragma pack(pop)
+	static_assert(sizeof(HeaderFlag) == 4);
+
 	explicit L3DSubMesh(L3DMesh& mesh);
 	~L3DSubMesh();
 
@@ -65,10 +79,7 @@ class L3DSubMesh
 	void Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
                 const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
 
-	[[ nodiscard ]] uint8_t GetLOD() const { return static_cast<uint8_t>(_flags & 0x7u); } // 29-32 (3)
-	[[ nodiscard ]] uint8_t GetStatus() const { return static_cast<uint8_t>((_flags >> 3u) & 0x3Fu); } // 22-28 (6)
-	[[ nodiscard ]] bool IsWindow() const { return static_cast<bool>(_flags & 0x1000u); } // 19
-	[[ nodiscard ]] bool IsPhysics() const { return static_cast<bool>(_flags & 0x2000u); } // 18
+	[[ nodiscard ]] HeaderFlag GetFlags() const { return _flags; }
 	[[ nodiscard ]] graphics::Mesh& GetMesh() const;
 	[[ nodiscard ]] AxisAlignedBoundingBox GetBoundingBox() const { return _boundingBox; }
 
@@ -79,7 +90,7 @@ class L3DSubMesh
 
 	L3DMesh& _l3dMesh;
 
-	uint32_t _flags;
+	HeaderFlag _flags;
 
 	std::unique_ptr<graphics::Mesh> _mesh;
 	std::vector<Primitive> _primitives;
