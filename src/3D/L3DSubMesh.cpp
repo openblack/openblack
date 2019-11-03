@@ -74,7 +74,7 @@ void L3DSubMesh::Load(IStream& stream)
 {
 	struct
 	{
-		uint32_t flags;
+		HeaderFlag flags;
 		uint32_t numPrimitives;
 		uint32_t primitivesOffset;
 		uint32_t numBones;
@@ -153,9 +153,11 @@ void L3DSubMesh::Load(IStream& stream)
 
 	spdlog::debug("{} with {} verts and {} indices", _l3dMesh.GetDebugName(), nVertices, nIndices);
 
-	// uint32_t lod = (header.flags & 0xE0000000) >> 30;
-
-	// spdlog::debug("flags: {:b}", header.flags);
+	// spdlog::debug("flags: {:b}", *reinterpret_cast<uint32_t*>(&header.flags));
+	// if (header.flags._unknown1)
+	// 	spdlog::debug("unknown1: {:b}", header.flags._unknown1);
+	// assert(header.flags._unknown1 == 0b100);
+	// assert(header.flags._padding == 0);
 
 	// offsets are local to stream :D
 
@@ -183,7 +185,7 @@ void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatr
 		return;
 
 	// ignore physics meshes
-	if (IsPhysics())
+	if (_flags.isPhysics)
 		return;
 
 	auto const& skins = _l3dMesh.GetSkins();
