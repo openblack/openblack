@@ -66,6 +66,42 @@ enum class L3DMeshFlags : uint32_t
 	Unknown29                = 1 << 28, // 0x10000000 (3)
 	Unknown30                = 1 << 29, // 0x20000000 (2)
 	Unknown31                = 1 << 30, // 0x40000000 (1)
+	Unknown32                = 1 << 30, // 0x80000000 (0)
+};
+
+constexpr std::array<std::string_view, 32> L3DMeshFlagNames {
+	"Unknown1",
+	"Unknown2",
+	"Unknown3",
+	"Unknown4",
+	"Unknown5",
+	"Unknown6",
+	"Unknown7",
+	"Unknown8",
+	"HasBones",
+	"Unknown10",
+	"Unknown11",
+	"Unknown12",
+	"Packed",
+	"NoDraw",
+	"Unknown15",
+	"ContainsLandscapeFeature",
+	"Unknown17",
+	"Unknown18",
+	"ContainsUV2",
+	"ContainsNameData",
+	"ContainsExtraMetrics",
+	"ContainsEBone",
+	"ContainsTnLData",
+	"ContainsNewEP",
+	"Unknown25",
+	"Unknown26",
+	"Unknown27",
+	"Unknown28",
+	"Unknown29",
+	"Unknown30",
+	"Unknown31",
+	"Unknown32",
 };
 
 // todo: template this
@@ -99,6 +135,8 @@ class L3DMesh
 	std::vector<std::unique_ptr<L3DSubMesh>> _subMeshes;
   public:
 	const std::string& GetDebugName() const { return _debugName; }
+
+	uint32_t GetFlags() const { return static_cast<uint32_t>(_flags); }
 
 	bool IsBoned() const { return static_cast<bool>(_flags & L3DMeshFlags::HasBones); }
 	bool IsPacked() const { return static_cast<bool>(_flags & L3DMeshFlags::Packed); }

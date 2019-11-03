@@ -31,6 +31,7 @@
 #include <Graphics/Texture2D.h>
 #include <Graphics/VertexBuffer.h>
 #include <MeshViewer.h>
+#include <imgui_bitfield.h>
 
 using namespace openblack;
 
@@ -38,6 +39,7 @@ MeshViewer::MeshViewer()
 	: _open(false)
 	, _selectedMesh(MeshId::Dummy)
 	, _selectedSubMesh(0)
+	, _meshFlagFilter(-1)
 	, _cameraPosition(5.0f, 3.0f, 5.0f)
 	, _viewBoundingBox(false)
 	, _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f)))
@@ -65,11 +67,30 @@ void MeshViewer::DrawWindow()
 	ImGui::Begin("MeshPack Viewer", &_open);
 
 	_filter.Draw();
+	ImGui::InputScalar("Mesh flag filter", ImGuiDataType_U32, &_meshFlagFilter, nullptr, nullptr, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+	uint32_t hoverIndex;
+	static char bitfieldTitle[0x400];
+	int32_t offset = 0;
+	int32_t newLines = 1;
+	for (uint8_t i = 0; i < 32; ++i)
+	{
+		if (_meshFlagFilter & (1u << i))
+		{
+			auto writen = std::sprintf(bitfieldTitle + offset, "%s%s%s", offset ? "|" : "", offset > newLines * 100 ? "\n" : "", L3DMeshFlagNames[i].data());
+			while (offset > newLines * 100)
+				newLines++;
+			offset += writen;
+		}
+	}
+	ImGuiBitField::BitField("Mesh flag bit-field filter", &_meshFlagFilter, &hoverIndex);
+	if (ImGui::IsItemHovered() && hoverIndex < L3DMeshFlagNames.size())
+		ImGui::SetTooltip("%s", L3DMeshFlagNames[hoverIndex].data());
+	ImGui::Text("%s", bitfieldTitle);
 
 	ImGui::BeginChild("meshes", ImVec2(fontSize * 15.0f, 0), true);
 	for (size_t i = 0; i < meshes.size(); i++)
 	{
-		if (_filter.PassFilter(MeshNames[i].data()))
+		if (_filter.PassFilter(MeshNames[i].data()) && meshes[i]->GetFlags() & _meshFlagFilter)
 		{
 			const auto meshEnum = static_cast<MeshId>(i);
 			const auto &enumName = std::string(MeshNames[i]);
@@ -89,6 +110,8 @@ void MeshViewer::DrawWindow()
 	ImGui::SliderInt("submesh", &_selectedSubMesh, 0, mesh->GetSubMeshes().size() - 1);
 	ImGui::DragFloat3("position", &_cameraPosition[0], 0.5f);
 	ImGui::Checkbox("View bounding box", &_viewBoundingBox);
+
+	ImGui::Text("Mesh flag=0x%X", mesh->GetFlags());
 
 	auto const& submesh = mesh->GetSubMeshes()[_selectedSubMesh];
 

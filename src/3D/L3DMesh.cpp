@@ -83,18 +83,6 @@ struct L3D_Skin
 	uint16_t data[256 * 256]; // RGBA4444
 };
 
-struct L3D_Bone
-{
-	int32_t parentBone;  // -1 = root;
-	int32_t childBone;   // -1 = no children
-	int32_t siblingBone; // -1 = no siblings
-
-	glm::vec3 rotXAxis;
-	glm::vec3 rotYAxis;
-	glm::vec3 rotZAxis;
-	glm::vec3 position;
-};
-
 struct L3DModel_Vertex
 {
 	glm::vec3 pos;

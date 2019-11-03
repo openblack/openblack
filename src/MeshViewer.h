@@ -48,6 +48,7 @@ class MeshViewer
 	MeshId _selectedMesh;
 	int _selectedSubMesh;
 	ImGuiTextFilter _filter;
+	uint32_t _meshFlagFilter;
 	glm::vec3 _cameraPosition;
 	bool _viewBoundingBox;
 	std::unique_ptr<graphics::DebugLines> _boundingBox;
