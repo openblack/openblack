@@ -70,16 +70,18 @@ void MeshViewer::DrawWindow()
 	ImGui::InputScalar("Mesh flag filter", ImGuiDataType_U32, &_meshFlagFilter, nullptr, nullptr, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
 	uint32_t hoverIndex;
 	static char bitfieldTitle[0x400];
-	int32_t offset = 0;
-	int32_t newLines = 1;
-	for (uint8_t i = 0; i < 32; ++i)
 	{
-		if (_meshFlagFilter & (1u << i))
+		int32_t offset = 0;
+		int32_t newLines = 1;
+		for (uint8_t i = 0; i < 32; ++i)
 		{
-			auto writen = std::sprintf(bitfieldTitle + offset, "%s%s%s", offset ? "|" : "", offset > newLines * 100 ? "\n" : "", L3DMeshFlagNames[i].data());
-			while (offset > newLines * 100)
-				newLines++;
-			offset += writen;
+			if (_meshFlagFilter & (1u << i))
+			{
+				auto writen = std::sprintf(bitfieldTitle + offset, "%s%s%s", offset ? "|" : "", offset > newLines*100 ? "\n" : "", L3DMeshFlagNames[i].data());
+				while (offset > newLines*100)
+					newLines++;
+				offset += writen;
+			}
 		}
 	}
 	ImGuiBitField::BitField("Mesh flag bit-field filter", &_meshFlagFilter, &hoverIndex);
@@ -111,7 +113,28 @@ void MeshViewer::DrawWindow()
 	ImGui::DragFloat3("position", &_cameraPosition[0], 0.5f);
 	ImGui::Checkbox("View bounding box", &_viewBoundingBox);
 
-	ImGui::Text("Mesh flag=0x%X", mesh->GetFlags());
+	{
+		int32_t offset = 0;
+		int32_t newLines = 1;
+		for (uint8_t i = 0; i < 32; ++i)
+		{
+			if (mesh->GetFlags() & (1u << i))
+			{
+				auto writen = std::sprintf(bitfieldTitle + offset, "%s%s%s", offset ? "|" : "", offset > newLines * 100 ? "\n" : "", L3DMeshFlagNames[i].data());
+				while (offset > newLines * 100)
+					newLines++;
+				offset += writen;
+			}
+		}
+	}
+	char meshFlagStr[0x20];
+	std::sprintf(meshFlagStr, "Mesh flag=0x%X", mesh->GetFlags());
+	if (ImGui::TreeNodeEx(meshFlagStr))
+	{
+		ImGui::Text("%s", bitfieldTitle);
+		ImGui::TreePop();
+	}
+
 
 	auto const& submesh = mesh->GetSubMeshes()[_selectedSubMesh];
 
