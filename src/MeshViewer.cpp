@@ -83,24 +83,35 @@ void MeshViewer::DrawWindow()
 				offset += writen;
 			}
 		}
+		if (offset == 0)
+		{
+			bitfieldTitle[0] = '\0';
+		}
 	}
 	ImGuiBitField::BitField("Mesh flag bit-field filter", &_meshFlagFilter, &hoverIndex);
 	if (ImGui::IsItemHovered() && hoverIndex < L3DMeshFlagNames.size())
 		ImGui::SetTooltip("%s", L3DMeshFlagNames[hoverIndex].data());
-	ImGui::Text("%s", bitfieldTitle);
+	if (bitfieldTitle[0])
+		ImGui::Text("%s", bitfieldTitle);
 
-	ImGui::BeginChild("meshes", ImVec2(fontSize * 15.0f, 0), true);
+	ImGui::BeginChild("meshes", ImVec2(fontSize * 15.0f, 0));
+	auto meshSize = ImGui::GetItemRectSize();
+	ImGui::BeginChild("meshesSelect", ImVec2(meshSize.x - 5,  meshSize.y - ImGui::GetTextLineHeight() - 5), true);
+	uint32_t displayedMeshes = 0;
 	for (size_t i = 0; i < meshes.size(); i++)
 	{
 		if (_filter.PassFilter(MeshNames[i].data()) && meshes[i]->GetFlags() & _meshFlagFilter)
 		{
 			const auto meshEnum = static_cast<MeshId>(i);
 			const auto &enumName = std::string(MeshNames[i]);
+			displayedMeshes++;
 
 			if (ImGui::Selectable(enumName.c_str(), static_cast<MeshId>(meshEnum)==_selectedMesh))
 				_selectedMesh = meshEnum;
 		}
 	}
+	ImGui::EndChild();
+	ImGui::Text("%u meshes", displayedMeshes);
 	ImGui::EndChild();
 
 	ImGui::SameLine();
