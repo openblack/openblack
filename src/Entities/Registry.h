@@ -26,6 +26,7 @@
 
 #include <AllMeshes.h>
 #include <Graphics/RenderPass.h>
+#include <Entities/RegistryContext.h>
 
 namespace openblack
 {
@@ -40,13 +41,6 @@ class ShaderManager;
 
 namespace openblack::Entities
 {
-class RegistryContext
-{
-  public:
-	std::unordered_map<int, entt::entity> streams;
-	std::unordered_map<int, entt::entity> towns;
-};
-
 class Registry
 {
   public:
@@ -58,51 +52,33 @@ class Registry
 	decltype(auto) Create() { return _registry.create(); }
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args) { return _registry.assign<Component>(entity, std::forward<Args>(args)...); }
+	decltype(auto) Context() { return _registry.ctx<RegistryContext>(); };
+	decltype(auto) Context() const { return _registry.ctx<RegistryContext>(); };
 	void Reset()
 	{
+		auto &renderCtx = Context().renderContext;
+
+		if (bgfx::isValid(renderCtx.instanceUniformBuffer))
+			bgfx::destroy(renderCtx.instanceUniformBuffer);
+
+		renderCtx.boundingBox.reset();
+		renderCtx.streams.reset();
 		_registry.reset();
 		_registry.unset<RegistryContext>();
 		_registry.set<RegistryContext>();
+		_registry.ctx<RegistryContext>().renderContext.instanceUniformBuffer = BGFX_INVALID_HANDLE;
 		_dirty = true;
 	};
 	template <typename Component>
 	size_t Size() { return _registry.size<Component>(); }
 	template <typename Component>
 	decltype(auto) Get(entt::entity entity) { return _registry.get<Component>(entity); }
-	decltype(auto) Context() { return _registry.ctx<RegistryContext>(); }
 
   private:
 	void PrepareDrawDescs(bool drawBoundingBox);
 	void PrepareDrawUploadUniforms(bool drawBoundingBox);
 
 	entt::registry _registry;
-
-	struct InstancedDrawDesc
-	{
-		InstancedDrawDesc(uint32_t offset, uint32_t count) : offset(offset), count(count) {}
-		uint32_t offset;
-		uint32_t count;
-	};
-
-	std::unique_ptr<graphics::DebugLines> _streams;
-	std::unique_ptr<graphics::DebugLines> _boundingBox;
-
-	/// A list of cpu-side uniforms which is refilled at every \ref PrepareDraw.
-	/// This vector will resize to the number of instances it manages
-	/// but in practice, it should only grow its reserved memory.
-	/// If debug bounding boxes are enabled, it will double in size to fit all
-	/// bounding boxes in the second half of the list.
-	std::vector<glm::mat4> _instanceUniforms;
-	/// Stores information for rendering which is prepared at \ref PrepareDraw.
-	std::map<MeshId, const InstancedDrawDesc> _instancedDrawDescs;
-	/// Not an actual vertex buffer, but a dynamic general purpose buffer which
-	/// stores uniform data as a GPU-side copy of \ref _instanceUniforms and
-	/// which is populated in \ref PrepareDraw and consumed in \ref DrawModels.
-	/// This buffer will resize if the size of \ref _instanceUniforms exceeds
-	/// its allocated size. It will never shrink.
-	/// The values stored are a list of uniforms (model matrix) needed for both
-	/// the instances of entities and their bounding boxes.
-	bgfx::DynamicVertexBufferHandle _instanceUniformBuffer;
 
 	bool _dirty;
 	bool _hasBoundingBoxes;
