@@ -12,8 +12,8 @@ You still need to have the original game assets in order to use this.
 
 ---
 
-<a href="https://user-images.githubusercontent.com/1388267/63901709-b8738c80-c9fd-11e9-9d1e-da728515ac0e.png">
-    <img src="https://user-images.githubusercontent.com/1388267/63901709-b8738c80-c9fd-11e9-9d1e-da728515ac0e.png" width="45%">
+<a href="https://user-images.githubusercontent.com/1388267/67631321-93c85380-f88c-11e9-9103-804807844af2.png">
+    <img src="https://user-images.githubusercontent.com/1388267/67631321-93c85380-f88c-11e9-9103-804807844af2.png" width="45%">
 </a>
 <a href="https://user-images.githubusercontent.com/1388267/63901712-bad5e680-c9fd-11e9-8000-9de22ad8054e.png">
     <img src="https://user-images.githubusercontent.com/1388267/63901712-bad5e680-c9fd-11e9-8000-9de22ad8054e.png" width="45%">
