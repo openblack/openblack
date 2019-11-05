@@ -18,19 +18,15 @@ namespace openblack::Entities
 {
 
 Registry::Registry()
-	: _instanceUniformBuffer(BGFX_INVALID_HANDLE)
-	, _dirty(true)
+	: _dirty(true)
 	, _hasBoundingBoxes(false)
 {
 	_registry.set<RegistryContext>();
+	_registry.ctx<RegistryContext>().renderContext.instanceUniformBuffer = BGFX_INVALID_HANDLE;
 }
 
 Registry::~Registry()
 {
-	if (bgfx::isValid(_instanceUniformBuffer))
-		bgfx::destroy(_instanceUniformBuffer);
-	_boundingBox.reset();
-	_streams.reset();
 }
 
 void Registry::PrepareDrawDescs(bool drawBoundingBox)
@@ -121,12 +117,14 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 		instanceCount *= 2;
 	}
 
+	auto &renderCtx = Context().renderContext;
+
 	// Recreate instancing uniform buffer if it is too small
-	if (_instanceUniforms.size() < instanceCount)
+	if (renderCtx.instanceUniforms.size() < instanceCount)
 	{
-		if (bgfx::isValid(_instanceUniformBuffer))
+		if (bgfx::isValid(renderCtx.instanceUniformBuffer))
 		{
-			bgfx::destroy(_instanceUniformBuffer);
+			bgfx::destroy(renderCtx.instanceUniformBuffer);
 		}
 		bgfx::VertexLayout layout;
 		layout.begin()
@@ -135,16 +133,16 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 		      .add(bgfx::Attrib::TexCoord5, 4, bgfx::AttribType::Float)
 		      .add(bgfx::Attrib::TexCoord4, 4, bgfx::AttribType::Float)
 		      .end();
-		_instanceUniformBuffer = bgfx::createDynamicVertexBuffer(instanceCount, layout);
-		_instanceUniforms.resize(instanceCount);
+		renderCtx.instanceUniformBuffer = bgfx::createDynamicVertexBuffer(instanceCount, layout);
+		renderCtx.instanceUniforms.resize(instanceCount);
 	}
 
 	// Determine uniform buffer offsets and instance count for draw
 	uint32_t offset = 0;
-	_instancedDrawDescs.clear();
+	renderCtx.instancedDrawDescs.clear();
 	for (const auto& [meshId, count] : meshIds)
 	{
-		_instancedDrawDescs.emplace(std::piecewise_construct, std::forward_as_tuple(meshId), std::forward_as_tuple(offset, count));
+		renderCtx.instancedDrawDescs.emplace(std::piecewise_construct, std::forward_as_tuple(meshId), std::forward_as_tuple(offset, count));
 		offset += count;
 	}
 
@@ -152,8 +150,10 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 
 void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 {
+	auto &renderCtx = Context().renderContext;
+
 	// Set transforms for instanced draw at offsets
-	auto prepareDrawBoundingBox = [drawBoundingBox, this](uint32_t idx, const Transform& transform, MeshId meshId, int8_t submeshId) {
+	auto prepareDrawBoundingBox = [&renderCtx, drawBoundingBox, this](uint32_t idx, const Transform& transform, MeshId meshId, int8_t submeshId) {
 		if (drawBoundingBox)
 		{
 			const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
@@ -166,34 +166,34 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 //			boxMatrix           = glm::rotate(boxMatrix, transform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 			boxMatrix           = glm::scale(boxMatrix, transform.scale * box.size());
 
-			_instanceUniforms[idx + _instanceUniforms.size() / 2] = boxMatrix;
+			renderCtx.instanceUniforms[idx + renderCtx.instanceUniforms.size() / 2] = boxMatrix;
 		}
 	};
 	// Store offsets of uniforms for descs
 	std::map<MeshId, uint32_t> uniformOffsets;
 
 	// Trees
-	_registry.view<const Tree, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const Tree& entity, const Transform& transform) {
+	_registry.view<const Tree, const Transform>().each([this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Tree& entity, const Transform& transform) {
 		const auto meshId = treeMeshLookup[entity.treeInfo];
 		auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		auto desc = _instancedDrawDescs.find(meshId);
-		_instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+		auto desc = renderCtx.instancedDrawDescs.find(meshId);
+		renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
 		prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, -1);
 		offset.first->second++;
 	});
 
 	// Abodes
-	_registry.view<const Abode, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const Abode& entity, const Transform& transform) {
+	_registry.view<const Abode, const Transform>().each([this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Abode& entity, const Transform& transform) {
 		const auto meshId = abodeMeshLookup[entity.abodeInfo];
 		auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		auto desc = _instancedDrawDescs.find(meshId);
-		_instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+		auto desc = renderCtx.instancedDrawDescs.find(meshId);
+		renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
 		prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 0);
 		offset.first->second++;
 	});
 
 	// Animated Statics
-	_registry.view<const AnimatedStatic, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const AnimatedStatic& entity, const Transform& transform) {
+	_registry.view<const AnimatedStatic, const Transform>().each([this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const AnimatedStatic& entity, const Transform& transform) {
 		// temporary-ish:
 		MeshId meshId = MeshId::Dummy;
 		if (entity.type == "Norse Gate")
@@ -209,82 +209,91 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 			meshId = MeshId::BuildingMineEntrance;
 		}
 		auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		auto desc = _instancedDrawDescs.find(meshId);
-		_instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+		auto desc = renderCtx.instancedDrawDescs.find(meshId);
+		renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
 		prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 0);
 		offset.first->second++;
 	});
 
 	// Mobile Statics
-	_registry.view<const MobileStatic, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const MobileStatic& entity, const Transform& transform) {
+	_registry.view<const MobileStatic, const Transform>().each([this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const MobileStatic& entity, const Transform& transform) {
 		const auto meshId = mobileStaticMeshLookup[entity.type];
 		auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		auto desc = _instancedDrawDescs.find(meshId);
-		_instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+		auto desc = renderCtx.instancedDrawDescs.find(meshId);
+		renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
 		prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 1);
 		offset.first->second++;
 	});
 
 	// Features
-	_registry.view<const Feature, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const Feature& entity, const Transform& transform) {
+	_registry.view<const Feature, const Transform>().each([this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Feature& entity, const Transform& transform) {
 		const auto meshId = featureMeshLookup[entity.type];
 		auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		auto desc = _instancedDrawDescs.find(meshId);
-		_instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+		auto desc = renderCtx.instancedDrawDescs.find(meshId);
+		renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
 		prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 1);
 		offset.first->second++;
 	});
 
 	// Fields
-	_registry.view<const Field, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const Field& entity, const Transform& transform) {
+	_registry.view<const Field, const Transform>().each([this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Field& entity, const Transform& transform) {
 		const auto meshId = MeshId::TreeWheat;
 		auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		auto desc = _instancedDrawDescs.find(meshId);
-		_instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+		auto desc = renderCtx.instancedDrawDescs.find(meshId);
+		renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
 		prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 0);
 		offset.first->second++;
 	});
 
 	// Forests
-	_registry.view<const Forest, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const Forest& entity, const Transform& transform) {
+	_registry.view<const Forest, const Transform>().each([this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Forest& entity, const Transform& transform) {
 		const auto meshId = MeshId::FeatureForest;
 		auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		auto desc = _instancedDrawDescs.find(meshId);
-		_instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+		auto desc = renderCtx.instancedDrawDescs.find(meshId);
+		renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
 		prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 0);
 		offset.first->second++;
 	});
 
 	// Mobile Objects
-	_registry.view<const MobileObject, const Transform>().each([this, &uniformOffsets, prepareDrawBoundingBox](const MobileObject& entity, const Transform& transform) {
+	_registry.view<const MobileObject, const Transform>().each([this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const MobileObject& entity, const Transform& transform) {
 		const auto meshId = mobileObjectMeshLookup[entity.type];
 		auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		auto desc = _instancedDrawDescs.find(meshId);
-		_instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+		auto desc = renderCtx.instancedDrawDescs.find(meshId);
+		renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
 		prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 1);
 		offset.first->second++;
 	});
 
-	if (!_instanceUniforms.empty())
+	if (!renderCtx.instanceUniforms.empty())
 	{
-		bgfx::update(_instanceUniformBuffer, 0, bgfx::makeRef(_instanceUniforms.data(), _instanceUniforms.size()*sizeof(glm::mat4)));
+		bgfx::update(
+			renderCtx.instanceUniformBuffer,
+			0,
+			bgfx::makeRef(
+				renderCtx.instanceUniforms.data(),
+				renderCtx.instanceUniforms.size() * sizeof(glm::mat4)
+			)
+		);
 	}
 }
 
 void Registry::PrepareDraw(bool drawBoundingBox, bool drawBoundingStreams)
 {
-	if (_dirty || _hasBoundingBoxes != drawBoundingBox || (_streams != nullptr) != drawBoundingStreams)
+	auto &renderCtx = Context().renderContext;
+
+	if (_dirty || _hasBoundingBoxes != drawBoundingBox || (renderCtx.streams != nullptr) != drawBoundingStreams)
 	{
 		PrepareDrawDescs(drawBoundingBox);
 		PrepareDrawUploadUniforms(drawBoundingBox);
 
-		_boundingBox.reset();
+		renderCtx.boundingBox.reset();
 		if (drawBoundingBox)
 		{
-			_boundingBox = graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f));
+			renderCtx.boundingBox = graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f));
 		}
 
-		_streams.reset();
+		renderCtx.streams.reset();
 		if (drawBoundingStreams)
 		{
 			uint32_t streamEdgeCount = 0;
@@ -307,7 +316,7 @@ void Registry::PrepareDraw(bool drawBoundingBox, bool drawBoundingStreams)
 					}
 				}
 			});
-			_streams = graphics::DebugLines::CreateDebugLines(streamEdges.data(), streamEdges.size());
+			renderCtx.streams = graphics::DebugLines::CreateDebugLines(streamEdges.data(), streamEdges.size());
 		}
 
 		_dirty = false;
@@ -320,6 +329,7 @@ void Registry::DrawModels(graphics::RenderPass viewId, const graphics::ShaderMan
 	auto debugShader = shaderManager.GetShader("DebugLine");
 	auto debugShaderInstanced = shaderManager.GetShader("DebugLineInstanced");
 	auto objectShaderInstanced = shaderManager.GetShader("ObjectInstanced");
+	auto &renderCtx = Context().renderContext;
 
 	uint64_t state = 0u
 		| BGFX_STATE_WRITE_MASK
@@ -327,23 +337,23 @@ void Registry::DrawModels(graphics::RenderPass viewId, const graphics::ShaderMan
 		| BGFX_STATE_MSAA
 	;
 
-	for (const auto& [meshId, placers]: _instancedDrawDescs)
+	for (const auto& [meshId, placers]: renderCtx.instancedDrawDescs)
 	{
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
-		mesh.Submit(viewId, _instanceUniformBuffer, placers.offset, placers.count, *objectShaderInstanced, state);
+		mesh.Submit(viewId, renderCtx.instanceUniformBuffer, placers.offset, placers.count, *objectShaderInstanced, state);
 	}
 
 	if (viewId == graphics::RenderPass::Main)
 	{
-		if(_boundingBox)
+		if(renderCtx.boundingBox)
 		{
-			auto boundBoxOffset = _instanceUniforms.size() / 2;
-			auto boundBoxCount  = _instanceUniforms.size() / 2;
-			_boundingBox->Draw(viewId, _instanceUniformBuffer, boundBoxOffset, boundBoxCount, *debugShaderInstanced);
+			auto boundBoxOffset = renderCtx.instanceUniforms.size() / 2;
+			auto boundBoxCount  = renderCtx.instanceUniforms.size() / 2;
+			renderCtx.boundingBox->Draw(viewId, renderCtx.instanceUniformBuffer, boundBoxOffset, boundBoxCount, *debugShaderInstanced);
 		}
-		if (_streams)
+		if (renderCtx.streams)
 		{
-			_streams->Draw(viewId, *debugShader);
+			renderCtx.streams->Draw(viewId, *debugShader);
 		}
 	}
 }
