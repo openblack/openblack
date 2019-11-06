@@ -43,7 +43,7 @@ Sky::Sky()
 	SetDayNightTimes(4.5, 7.0, 7.5, 8.25);
 
 	// load in the mesh
-	_model = std::make_unique<L3DMesh>();
+	_model = std::make_unique<L3DMesh>("Sky");
 	_model->LoadFromFile("./Data/WeatherSystem/sky.l3d");
 
 	for (uint32_t i = 0; i < alignments.size(); i++)
