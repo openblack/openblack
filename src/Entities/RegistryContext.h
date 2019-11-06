@@ -4,6 +4,9 @@ namespace openblack::Entities {
 class RenderContext
 {
 public:
+	RenderContext() : instanceUniformBuffer(BGFX_INVALID_HANDLE),
+	dirty(true),
+	hasBoundingBoxes(false) {};
 	std::unique_ptr<graphics::DebugLines> streams;
 	std::unique_ptr<graphics::DebugLines> boundingBox;
 
@@ -30,6 +33,9 @@ public:
 	/// The values stored are a list of uniforms (model matrix) needed for both
 	/// the instances of entities and their bounding boxes.
 	bgfx::DynamicVertexBufferHandle instanceUniformBuffer;
+
+	bool dirty;
+	bool hasBoundingBoxes;
 };
 
 using TownId = int;
