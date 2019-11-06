@@ -18,15 +18,8 @@ namespace openblack::Entities
 {
 
 Registry::Registry()
-	: _dirty(true)
-	, _hasBoundingBoxes(false)
 {
 	_registry.set<RegistryContext>();
-	_registry.ctx<RegistryContext>().renderContext.instanceUniformBuffer = BGFX_INVALID_HANDLE;
-}
-
-Registry::~Registry()
-{
 }
 
 void Registry::PrepareDrawDescs(bool drawBoundingBox)
@@ -268,21 +261,19 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	if (!renderCtx.instanceUniforms.empty())
 	{
 		bgfx::update(
-			renderCtx.instanceUniformBuffer,
-			0,
-			bgfx::makeRef(
-				renderCtx.instanceUniforms.data(),
-				renderCtx.instanceUniforms.size() * sizeof(glm::mat4)
-			)
-		);
+		    renderCtx.instanceUniformBuffer,
+		    0,
+		    bgfx::makeRef(
+		        renderCtx.instanceUniforms.data(),
+		        renderCtx.instanceUniforms.size() * sizeof(glm::mat4)));
 	}
 }
 
 void Registry::PrepareDraw(bool drawBoundingBox, bool drawBoundingStreams)
 {
-	auto &renderCtx = Context().renderContext;
+	auto& renderCtx = Context().renderContext;
 
-	if (_dirty || _hasBoundingBoxes != drawBoundingBox || (renderCtx.streams != nullptr) != drawBoundingStreams)
+	if (renderCtx.dirty || renderCtx.hasBoundingBoxes != drawBoundingBox || (renderCtx.streams != nullptr) != drawBoundingStreams)
 	{
 		PrepareDrawDescs(drawBoundingBox);
 		PrepareDrawUploadUniforms(drawBoundingBox);
@@ -319,8 +310,8 @@ void Registry::PrepareDraw(bool drawBoundingBox, bool drawBoundingStreams)
 			renderCtx.streams = graphics::DebugLines::CreateDebugLines(streamEdges.data(), streamEdges.size());
 		}
 
-		_dirty = false;
-		_hasBoundingBoxes = drawBoundingBox;
+		renderCtx.dirty            = false;
+		renderCtx.hasBoundingBoxes = drawBoundingBox;
 	}
 }
 

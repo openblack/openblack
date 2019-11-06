@@ -45,7 +45,6 @@ class Registry
 {
   public:
 	Registry();
-	virtual ~Registry();
 
 	void PrepareDraw(bool drawBoundingBox, bool drawStreams);
 	void DrawModels(graphics::RenderPass viewId, const graphics::ShaderManager& shaderManager) const;
@@ -61,13 +60,9 @@ class Registry
 		if (bgfx::isValid(renderCtx.instanceUniformBuffer))
 			bgfx::destroy(renderCtx.instanceUniformBuffer);
 
-		renderCtx.boundingBox.reset();
-		renderCtx.streams.reset();
 		_registry.reset();
 		_registry.unset<RegistryContext>();
 		_registry.set<RegistryContext>();
-		_registry.ctx<RegistryContext>().renderContext.instanceUniformBuffer = BGFX_INVALID_HANDLE;
-		_dirty = true;
 	};
 	template <typename Component>
 	size_t Size() { return _registry.size<Component>(); }
@@ -79,9 +74,6 @@ class Registry
 	void PrepareDrawUploadUniforms(bool drawBoundingBox);
 
 	entt::registry _registry;
-
-	bool _dirty;
-	bool _hasBoundingBoxes;
 };
 
 } // namespace openblack::Entities
