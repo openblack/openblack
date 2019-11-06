@@ -20,11 +20,15 @@
 
 #pragma once
 
-#include <LHVM/LHVM.h>
-#include <glm/glm.hpp>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <bgfx/bgfx.h>
+#include <glm/glm.hpp>
+
+#include <LHVM/LHVM.h>
+#include "GameWindow.h"
 
 namespace openblack
 {
@@ -49,6 +53,18 @@ namespace Entities
 {
 class Registry;
 }
+
+struct Arguments
+{
+	std::string executablePath;
+	int windowWidth;
+	int windowHeight;
+	bool vsync;
+	openblack::DisplayMode displayMode;
+	bgfx::RendererType::Enum rendererType;
+	std::string gamePath;
+	float scale;
+};
 
 class Game
 {
@@ -91,7 +107,7 @@ class Game
 		bool bgfxDebug;
 	};
 
-	Game(int argc, char** argv);
+	Game(Arguments&& args);
 	virtual ~Game();
 
 	bool ProcessEvents();

@@ -36,8 +36,6 @@
 #include <3D/MeshPack.h>
 #include <3D/Sky.h>
 #include <3D/Water.h>
-#include <Entities/Components/Transform.h>
-#include <Common/CmdLineArgs.h>
 #include <Common/FileSystem.h>
 #include <Entities/Registry.h>
 #include <LHScriptX/Script.h>
@@ -59,7 +57,7 @@ const std::string kWindowTitle = "openblack";
 
 Game* Game::sInstance = nullptr;
 
-Game::Game(int argc, char** argv)
+Game::Game(Arguments&& args)
 	: _fileSystem(std::make_unique<FileSystem>())
 	, _entityRegistry(std::make_unique<Entities::Registry>())
 	, _config()
@@ -68,87 +66,15 @@ Game::Game(int argc, char** argv)
 	spdlog::set_level(spdlog::level::debug);
 	sInstance = this;
 
-	int windowWidth = 1280, windowHeight = 1024;
-	bool vsync = false;
-	bool fullscreen = false;
-	bool borderless = false;
-	std::string rendererTypeStr;
-
-	auto args = CmdLineArgs(argc, argv);
-	args.Get("w", windowWidth);
-	args.Get("h", windowHeight);
-	args.Get("v", vsync);
-	args.Get("f", fullscreen);
-	args.Get("b", borderless);
-	args.Get("r", rendererTypeStr);
-
-	auto rendererType = bgfx::RendererType::OpenGL;
-
-	if (rendererTypeStr.compare("OpenGL") == 0)
-	{
-		rendererType = bgfx::RendererType::OpenGL;
-	}
-	else if (rendererTypeStr.compare("OpenGLES") == 0)
-	{
-		rendererType = bgfx::RendererType::OpenGLES;
-	}
-	else if (rendererTypeStr.compare("Vulkan") == 0)
-	{
-		rendererType = bgfx::RendererType::Vulkan;
-	}
-	else if (rendererTypeStr.compare("Direct3D9") == 0)
-	{
-		rendererType = bgfx::RendererType::Direct3D9;
-	}
-	else if (rendererTypeStr.compare("Direct3D11") == 0)
-	{
-		rendererType = bgfx::RendererType::Direct3D11;
-	}
-	else if (rendererTypeStr.compare("Direct3D12") == 0)
-	{
-		rendererType = bgfx::RendererType::Direct3D12;
-	}
-	else if (rendererTypeStr.compare("Metal") == 0)
-	{
-		rendererType = bgfx::RendererType::Metal;
-	}
-	else if (rendererTypeStr.compare("Gnm") == 0)
-	{
-		rendererType = bgfx::RendererType::Gnm;
-	}
-	else if (rendererTypeStr.compare("Nvn") == 0)
-	{
-		rendererType = bgfx::RendererType::Nvn;
-	}
-	else if (rendererTypeStr.compare("Noop") == 0)
-	{
-		rendererType = bgfx::RendererType::Noop;
-	}
-	else
-	{
-		rendererType = bgfx::RendererType::OpenGL;
-	}
-
-	DisplayMode displayMode = borderless ? DisplayMode::Borderless : (fullscreen ? DisplayMode::Fullscreen : DisplayMode::Windowed);
-
-	std::string binaryPath = fs::path{argv[0]}.parent_path().generic_string();
+	std::string binaryPath = fs::path{args.executablePath}.parent_path().generic_string();
 	spdlog::info("current binary path: {}", binaryPath);
-	{
-		std::string gamePath;
-		args.Get("g", gamePath);
-		SetGamePath(gamePath);
-	}
-
-	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", windowWidth, windowHeight, displayMode);
-
-	_renderer = std::make_unique<Renderer>(*_window, rendererType, vsync);
-
+	SetGamePath(args.gamePath);
+	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", args.windowWidth, args.windowHeight, args.displayMode);
+	_renderer = std::make_unique<Renderer>(*_window, args.rendererType, args.vsync);
 	_fileSystem->SetGamePath(GetGamePath());
 	spdlog::debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
 
-	float scale = 1.0f;
-	args.Get<float>("scale", scale);
-	_gui = Gui::create(*_window, graphics::RenderPass::ImGui, scale);
+	_gui = Gui::create(*_window, graphics::RenderPass::ImGui, args.scale);
 }
 
 Game::~Game()

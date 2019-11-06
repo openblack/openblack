@@ -18,14 +18,86 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Game.h>
-#include <SDL.h>
-#include <iostream>
 #include <memory>
+#include <iostream>
+#include <map>
+
+#include <Game.h>
+#include <Common/CmdLineArgs.h>
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
+
+bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return_code)
+{
+	int windowWidth = 1280, windowHeight = 1024;
+	bool vsync = false;
+	std::string displayModeStr;
+	std::string rendererTypeStr;
+	float scale = 1.0f;
+	std::string gamePath;
+
+	auto cmdArgs = openblack::CmdLineArgs(argc, argv);
+	cmdArgs.Get("w", windowWidth);
+	cmdArgs.Get("h", windowHeight);
+	cmdArgs.Get("v", vsync);
+	cmdArgs.Get("m", displayModeStr);
+	cmdArgs.Get("r", rendererTypeStr);
+	cmdArgs.Get<float>("scale", scale);
+	cmdArgs.Get("g", gamePath);
+
+	static const std::map<std::string_view, bgfx::RendererType::Enum> rendererLookup = {
+		std::pair {"OpenGL", bgfx::RendererType::OpenGL},
+		std::pair {"OpenGLES", bgfx::RendererType::OpenGLES},
+		std::pair {"Vulkan", bgfx::RendererType::Vulkan},
+		std::pair {"Direct3D9", bgfx::RendererType::Direct3D9},
+		std::pair {"Direct3D11", bgfx::RendererType::Direct3D11},
+		std::pair {"Direct3D12", bgfx::RendererType::Direct3D12},
+		std::pair {"Metal", bgfx::RendererType::Metal},
+		std::pair {"Gnm", bgfx::RendererType::Gnm},
+		std::pair {"Nvn", bgfx::RendererType::Nvn},
+		std::pair {"Noop", bgfx::RendererType::Noop},
+	};
+	bgfx::RendererType::Enum rendererType;
+	auto rendererIter = rendererLookup.find(rendererTypeStr);
+	if (rendererIter != rendererLookup.cend())
+	{
+		rendererType = rendererIter->second;
+	}
+	else
+	{
+		rendererType = bgfx::RendererType::OpenGL;
+	}
+
+	static const std::map<std::string_view, openblack::DisplayMode> displayModeLookup = {
+		std::pair{"windowed", openblack::DisplayMode::Windowed},
+		std::pair{"fullscreen", openblack::DisplayMode::Fullscreen},
+		std::pair{"borderless", openblack::DisplayMode::Borderless},
+	};
+
+	openblack::DisplayMode displayMode;
+	auto displayModeIter = displayModeLookup.find(displayModeStr);
+	if (displayModeIter != displayModeLookup.cend())
+	{
+		displayMode = displayModeIter->second;
+	}
+	else
+	{
+		displayMode = openblack::DisplayMode::Windowed;
+	}
+
+	args.executablePath = argv[0];
+	args.gamePath = gamePath;
+	args.windowWidth = windowWidth;
+	args.windowHeight = windowHeight;
+	args.scale = scale;
+	args.vsync = vsync;
+	args.displayMode = displayMode;
+	args.rendererType = rendererType;
+
+	return true;
+}
 
 int main(int argc, char** argv)
 {
@@ -38,7 +110,13 @@ int main(int argc, char** argv)
 	try
 	{
 #endif
-		std::unique_ptr<openblack::Game> game(new openblack::Game(argc, argv));
+		openblack::Arguments args;
+		int return_code = EXIT_FAILURE;
+		if (!parseOptions(argc, argv, args, return_code))
+		{
+			return return_code;
+		}
+		auto game = std::make_unique<openblack::Game>(std::move(args));
 		game->Run();
 #ifdef NDEBUG
 	}
