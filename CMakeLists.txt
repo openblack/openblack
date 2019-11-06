@@ -78,6 +78,7 @@ if (NOT bgfx_FOUND)
   cmake_dependent_option(OPENBLACK_BGFX_USE_SYSTEM_SPIRV_CROSS "Search for system spirv cross instead of building it" ON "OPENBLACK_BGFX_USE_SYSTEM_DEPS" OFF)
 
   if (OPENBLACK_BGFX_USE_SYSTEM_SPIRV_TOOLS)
+    find_library(SPIRVTOOLSOPT SPIRV-Tools-opt)
     find_package(spirv-tools QUIET)
     if (NOT spirv-tools_FOUND)
       find_package(PkgConfig REQUIRED)
@@ -105,7 +106,7 @@ if (NOT bgfx_FOUND)
         find_package(spirv_cross_hlsl REQUIRED)
         target_link_libraries(spirv-cross
           INTERFACE
-          spirv-cross-hlsl
+            spirv-cross-hlsl
         )
     endif()
   endif()
