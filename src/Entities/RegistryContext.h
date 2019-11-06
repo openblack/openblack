@@ -1,9 +1,8 @@
 #include <Graphics/DebugLines.h>
 
 namespace openblack::Entities {
-class RenderContext
+struct RenderContext
 {
-public:
 	RenderContext() : instanceUniformBuffer(BGFX_INVALID_HANDLE),
 	dirty(true),
 	hasBoundingBoxes(false) {};
@@ -41,9 +40,8 @@ public:
 using TownId = int;
 using StreamId = int;
 
-class RegistryContext
+struct RegistryContext
 {
-public:
 	RenderContext renderContext;
 	std::unordered_map<StreamId, entt::entity> streams;
 	std::unordered_map<TownId, entt::entity> towns;
