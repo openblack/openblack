@@ -288,17 +288,17 @@ void Registry::PrepareDraw(bool drawBoundingBox, bool drawBoundingStreams)
 		if (drawBoundingStreams)
 		{
 			uint32_t streamEdgeCount = 0;
-			_registry.view<const Stream>().each([&streamEdgeCount](const Stream& entity) {
-				for (const auto& from : entity.streamNodes)
+			_registry.view<const Stream>().each([&streamEdgeCount](const Stream& com) {
+				for (const auto& from : com.streamNodes)
 				{
 					streamEdgeCount += from.edges.size();
 				}
 			});
 			std::vector<graphics::DebugLines::Vertex> streamEdges;
 			streamEdges.reserve(streamEdgeCount * 2);
-			_registry.view<const Stream>().each([&streamEdges](const Stream& entity) {
+			_registry.view<const Stream>().each([&streamEdges](const Stream& com) {
 				const auto color = glm::vec4(1, 0, 0, 1);
-				for (const auto& from : entity.streamNodes)
+				for (const auto& from : com.streamNodes)
 				{
 					for (const auto& to : from.edges)
 					{
