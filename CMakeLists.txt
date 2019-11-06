@@ -78,9 +78,12 @@ if (NOT bgfx_FOUND)
   cmake_dependent_option(OPENBLACK_BGFX_USE_SYSTEM_SPIRV_CROSS "Search for system spirv cross instead of building it" ON "OPENBLACK_BGFX_USE_SYSTEM_DEPS" OFF)
 
   if (OPENBLACK_BGFX_USE_SYSTEM_SPIRV_TOOLS)
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(SPIRV_TOOLS REQUIRED IMPORTED_TARGET GLOBAL SPIRV-Tools)
-    add_library(spirv-tools ALIAS PkgConfig::SPIRV_TOOLS)
+    find_package(spirv-tools QUIET)
+    if (NOT spirv-tools_FOUND)
+      find_package(PkgConfig REQUIRED)
+      pkg_check_modules(SPIRV_TOOLS REQUIRED IMPORTED_TARGET GLOBAL SPIRV-Tools)
+      add_library(spirv-tools ALIAS PkgConfig::SPIRV_TOOLS)
+    endif()
   endif()
   if (OPENBLACK_BGFX_USE_SYSTEM_SPIRV_CROSS)
     find_package(spirv_cross_core REQUIRED)
@@ -98,6 +101,13 @@ if (NOT bgfx_FOUND)
         spirv-cross-msl
         spirv-cross-reflect
     )
+    if (WIN32)
+        find_package(spirv_cross_hlsl REQUIRED)
+        target_link_libraries(spirv-cross
+          INTERFACE
+          spirv-cross-hlsl
+        )
+    endif()
   endif()
 
   # declare this here so bgfx compiles in a reasonable time
