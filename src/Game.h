@@ -64,6 +64,7 @@ struct Arguments
 	bgfx::RendererType::Enum rendererType;
 	std::string gamePath;
 	float scale;
+	uint32_t numFramesToSimulate;
 };
 
 class Game
@@ -90,6 +91,8 @@ public:
 		float smallBumpMapStrength {1.0f};
 
 		bool bgfxDebug {false};
+
+		uint32_t numFramesToSimulate {0};
 	};
 
 	Game(Arguments&& args);
@@ -153,6 +156,8 @@ private:
 	std::unique_ptr<entities::Registry> _entityRegistry;
 
 	Config _config;
+
+	uint32_t _frameCount;
 
 	glm::ivec2 _mousePosition;
 	glm::vec3 _intersection;

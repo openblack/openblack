@@ -59,12 +59,13 @@ Game* Game::sInstance = nullptr;
 
 Game::Game(Arguments&& args)
     : _fileSystem(std::make_unique<FileSystem>()), _entityRegistry(std::make_unique<entities::Registry>()), _config(),
-      _intersection()
+      _frameCount(0), _intersection()
 {
 	spdlog::set_level(spdlog::level::debug);
 	sInstance = this;
 
 	std::string binaryPath = fs::path {args.executablePath}.parent_path().generic_string();
+	_config.numFramesToSimulate = args.numFramesToSimulate;
 	spdlog::info("current binary path: {}", binaryPath);
 	SetGamePath(args.gamePath);
 	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", args.windowWidth, args.windowHeight,
@@ -218,7 +219,7 @@ bool Game::Update()
 		}
 	} // Update Uniforms
 
-	return true;
+	return _config.numFramesToSimulate == 0 || _frameCount < _config.numFramesToSimulate;
 }
 
 void Game::Run()
@@ -263,6 +264,7 @@ void Game::Run()
 		_renderer->ConfigureView(graphics::RenderPass::Reflection, width, height);
 	}
 
+	_frameCount = 0;
 	while (Update())
 	{
 		{
@@ -301,6 +303,7 @@ void Game::Run()
 			auto section = _profiler->BeginScoped(Profiler::Stage::RendererFrame);
 			_renderer->Frame();
 		}
+		_frameCount++;
 	}
 }
 
