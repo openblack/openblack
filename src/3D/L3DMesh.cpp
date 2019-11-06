@@ -49,7 +49,7 @@ struct L3DModel_Vertex
 	uint32_t bone;
 };
 
-L3DMesh::L3DMesh(const std::string& debugName): _debugName(debugName), _flags(static_cast<L3DMeshFlags>(0)) {}
+L3DMesh::L3DMesh(const std::string& debugName): _flags(static_cast<L3DMeshFlags>(0)), _debugName(debugName) {}
 
 void L3DMesh::Load(const l3d::L3DFile& l3d)
 {
@@ -62,7 +62,7 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 	}
 
 	_subMeshes.resize(l3d.GetSubmeshHeaders().size());
-	for (auto i = 0; i < _subMeshes.size(); ++i)
+	for (size_t i = 0; i < _subMeshes.size(); ++i)
 	{
 		_subMeshes[i] = std::make_unique<L3DSubMesh>(*this);
 		_subMeshes[i]->Load(l3d, i);
@@ -109,11 +109,14 @@ void L3DMesh::LoadFromBuffer(const std::vector<uint8_t>& data)
 void L3DMesh::Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint32_t mesh,
                    uint64_t state, uint32_t rgba) const
 {
+	if (_subMeshes.empty())
+	{
+		spdlog::warn("Mesh {} has no submeshes to draw", _debugName);
+		return;
+	}
 	if (mesh >= _subMeshes.size())
 	{
-		// spdlog::warn("tried to draw submesh out of range ({}/{})", mesh,
-		// _subMeshes.size());
-		mesh = _subMeshes.size() - 1;
+		spdlog::warn("tried to draw submesh out of range ({}/{})", mesh, _subMeshes.size());
 	}
 
 	_subMeshes[mesh]->Submit(viewId, modelMatrix, program, state, rgba, false);
