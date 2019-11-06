@@ -525,62 +525,54 @@ bool Gui::Loop(Game& game)
 
 		{
 			ImGui::BeginGroup();
-			if (ImGui::Button("1"))
+			// TODO(bwrsandman): Recursively scan ./Scripts for levels and populate automatically
+			constexpr std::array<std::pair<std::string_view, std::string_view>, 6> RegularIslands = {
+				std::pair {"1", "./Scripts/Land1.txt"},
+				std::pair {"2", "./Scripts/Land2.txt"},
+				std::pair {"3", "./Scripts/Land3.txt"},
+				std::pair {"4", "./Scripts/Land4.txt"},
+				std::pair {"5", "./Scripts/Land5.txt"},
+				std::pair {"T", "./Scripts/LandT.txt"},
+			};
+			constexpr std::array<std::pair<std::string_view, std::string_view>, 3> PlaygroundIslands = {
+				std::pair {"2P", "./Scripts/Playgrounds/TwoGods.txt"},
+				std::pair {"3P", "./Scripts/Playgrounds/ThreeGods.txt"},
+				std::pair {"4P", "./Scripts/Playgrounds/FourGods.txt"},
+			};
+			bool sameLine = false;
+			for (auto& [label, path] : RegularIslands)
 			{
-				game.LoadLandscape("./Data/Landscape/Land1.lnd");
-				game.LoadMap("./Scripts/Land1.txt");
+				if (sameLine)
+				{
+					ImGui::SameLine();
+				}
+				sameLine = true;
+				if (ImGui::Button(label.data()))
+				{
+					game.LoadMap(path.data());
+				}
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltip("%s", path.data());
+				}
 			}
-			ImGui::SameLine();
-			if (ImGui::Button("2"))
+			sameLine = false;
+			for (auto& [label, path] : PlaygroundIslands)
 			{
-				game.LoadLandscape("./Data/Landscape/Land2.lnd");
-				game.LoadMap("./Scripts/Land2.txt");
+				if (sameLine)
+				{
+					ImGui::SameLine();
+				}
+				sameLine = true;
+				if (ImGui::Button(label.data()))
+				{
+					game.LoadMap(path.data());
+				}
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltip("%s", path.data());
+				}
 			}
-			ImGui::SameLine();
-			if (ImGui::Button("3"))
-			{
-				game.LoadLandscape("./Data/Landscape/Land3.lnd");
-				game.LoadMap("./Scripts/Land3.txt");
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("4"))
-			{
-				game.LoadLandscape("./Data/Landscape/Land4.lnd");
-				game.LoadMap("./Scripts/Land4.txt");
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("5"))
-			{
-				game.LoadLandscape("./Data/Landscape/Land5.lnd");
-				game.LoadMap("./Scripts/Land5.txt");
-			}
-
-			ImGui::SameLine();
-			if (ImGui::Button("T"))
-			{
-				game.LoadLandscape("./Data/Landscape/LandT.lnd");
-				game.LoadMap("./Scripts/LandT.txt");
-			}
-
-			if (ImGui::Button("2P"))
-			{
-				game.LoadLandscape("./Data/Landscape/Multi_Player/MPM_2P_1.lnd");
-				game.LoadMap("./Scripts/Playgrounds/TwoGods.txt");
-			}
-
-			ImGui::SameLine();
-			if (ImGui::Button("3P"))
-			{
-				game.LoadLandscape("./Data/Landscape/Multi_Player/MPM_3P_1.lnd");
-				game.LoadMap("./Scripts/Playgrounds/ThreeGods.txt");
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("4P"))
-			{
-				game.LoadLandscape("./Data/Landscape/Multi_Player/MPM_4P_1.lnd");
-				game.LoadMap("./Scripts/Playgrounds/FourGods.txt");
-			}
-
 			ImGui::EndGroup();
 		}
 

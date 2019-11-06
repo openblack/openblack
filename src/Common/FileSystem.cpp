@@ -19,10 +19,40 @@
  */
 
 #include <Common/FileSystem.h>
+
 #include <cstddef>
+#include <algorithm>
+#include <array>
 
 namespace openblack
 {
+
+std::string FileSystem::FixPath(const std::string& path)
+{
+	std::string result = path;
+
+	constexpr std::array<std::string_view, 3> caseFixTable = {
+		"\\Data\\",
+		"\\Landscape\\",
+		"\\Multi_Player\\",
+	};
+	for (auto& pattern : caseFixTable)
+	{
+		auto foundIter = std::search(result.cbegin(), result.cend(), pattern.cbegin(), pattern.cend(),
+		                             [] (char left, char right){ return std::toupper(left) == std::toupper(right); });
+		if (foundIter != result.cend())
+		{
+			result.replace(foundIter, foundIter + pattern.size(), pattern.data());
+		}
+	}
+
+	for (auto pos = result.find('\\'); pos != std::string::npos; pos = result.find('\\', pos + 1))
+	{
+		result[pos] = '/';
+	}
+
+	return result;
+}
 
 // todo: exceptions need to be replaced with real exceptions
 

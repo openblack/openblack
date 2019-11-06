@@ -678,7 +678,8 @@ void FeatureScriptCommands::CreateFlock(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::LoadLandscape(const ScriptCommandContext& ctx)
 {
-	//ctx.GetGame().LoadLandscape(ctx.GetParameter<std::string>(0));
+	auto params = ctx.GetParameters();
+	ctx.GetGame().LoadLandscape(params[0].GetString());
 }
 
 void FeatureScriptCommands::CreateArea(const ScriptCommandContext& ctx)

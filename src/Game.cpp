@@ -333,7 +333,6 @@ void Game::Run()
 	_water = std::make_unique<Water>();
 
 	LoadVariables();
-	LoadLandscape("./Data/Landscape/Land1.lnd");
 	LoadMap("./Scripts/Land1.txt");
 
 	// _lhvm = std::make_unique<LHVM::LHVM>();
@@ -409,10 +408,12 @@ void Game::LoadLandscape(const std::string& name)
 	if (_landIsland)
 		_landIsland.reset();
 
-	if (!_fileSystem->Exists(name))
+	auto fixedName = FileSystem::FixPath(name);
+
+	if (!_fileSystem->Exists(fixedName))
 		throw std::runtime_error("Could not find landscape " + name);
 
-	auto file = _fileSystem->Open(name, FileMode::Read);
+	auto file = _fileSystem->Open(fixedName, FileMode::Read);
 
 	_landIsland = std::make_unique<LandIsland>();
 	_landIsland->LoadFromFile(*file);
