@@ -307,7 +307,14 @@ void Registry::PrepareDraw(bool drawBoundingBox, bool drawBoundingStreams)
 					}
 				}
 			});
-			renderCtx.streams = graphics::DebugLines::CreateDebugLines(streamEdges.data(), streamEdges.size());
+
+			if (!streamEdges.empty())
+			{
+				renderCtx.streams = graphics::DebugLines::CreateDebugLines(
+					streamEdges.data(),
+					streamEdges.size()
+				);
+			}
 		}
 
 		renderCtx.dirty            = false;
