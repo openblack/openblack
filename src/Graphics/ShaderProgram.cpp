@@ -24,6 +24,8 @@
 #include "Game.h"
 #include "Texture2D.h"
 
+#include <spdlog/spdlog.h>
+
 namespace openblack::graphics
 {
 
@@ -64,12 +66,28 @@ ShaderProgram::~ShaderProgram()
 
 void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture) const
 {
-	bgfx::setTexture(bindPoint, _uniforms.at(samplerName), texture.GetNativeHandle());
+	auto uniform = _uniforms.find(samplerName);
+	if (uniform != _uniforms.cend())
+	{
+		bgfx::setTexture(bindPoint, uniform->second, texture.GetNativeHandle());
+	}
+	else
+	{
+		spdlog::warn("Could not find texture sampler {}", samplerName);
+	}
 }
 
 void ShaderProgram::SetUniformValue(const char* uniformName, const void* value) const
 {
-	bgfx::setUniform(_uniforms.at(uniformName), value);
+	auto uniform = _uniforms.find(uniformName);
+	if (uniform != _uniforms.cend())
+	{
+		bgfx::setUniform(uniform->second, value);
+	}
+	else
+	{
+		spdlog::warn("Could not find uniform {}", uniformName);
+	}
 }
 
 } // namespace openblack::graphics
