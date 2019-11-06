@@ -96,7 +96,7 @@ struct BgfxCallback: public bgfx::CallbackI
 
 } // namespace openblack
 
-Renderer::Renderer(const GameWindow& window, bgfx::RendererType::Enum rendererType, bool vsync)
+Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererType, bool vsync)
     : _shaderManager(std::make_unique<ShaderManager>()), _bgfxCallback(std::make_unique<BgfxCallback>())
 {
 	bgfx::Init init {};
@@ -105,12 +105,15 @@ Renderer::Renderer(const GameWindow& window, bgfx::RendererType::Enum rendererTy
 	// Get render area size
 	int drawable_width;
 	int drawable_height;
-	window.GetSize(drawable_width, drawable_height);
-	init.resolution.width = (uint32_t)drawable_width;
-	init.resolution.height = (uint32_t)drawable_height;
+	if (rendererType != bgfx::RendererType::Noop)
+	{
+		window->GetSize(drawable_width, drawable_height);
+		init.resolution.width = (uint32_t) drawable_width;
+		init.resolution.height = (uint32_t) drawable_height;
 
-	// Get Native Handles from SDL window
-	window.GetNativeHandles(init.platformData.nwh, init.platformData.ndt);
+		// Get Native Handles from SDL window
+		window->GetNativeHandles(init.platformData.nwh, init.platformData.ndt);
+	}
 
 	init.resolution.reset = BGFX_RESET_NONE;
 	if (vsync)

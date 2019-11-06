@@ -68,13 +68,16 @@ Game::Game(Arguments&& args)
 	_config.numFramesToSimulate = args.numFramesToSimulate;
 	spdlog::info("current binary path: {}", binaryPath);
 	SetGamePath(args.gamePath);
-	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", args.windowWidth, args.windowHeight,
-	                                       args.displayMode);
-	_renderer = std::make_unique<Renderer>(*_window, args.rendererType, args.vsync);
+	if (args.rendererType != bgfx::RendererType::Noop)
+	{
+		_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", args.windowWidth, args.windowHeight,
+		                                       args.displayMode);
+	}
+	_renderer = std::make_unique<Renderer>(_window.get(), args.rendererType, args.vsync);
 	_fileSystem->SetGamePath(GetGamePath());
 	spdlog::debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
 
-	_gui = Gui::create(*_window, graphics::RenderPass::ImGui, args.scale);
+	_gui = Gui::create(_window.get(), graphics::RenderPass::ImGui, args.scale);
 }
 
 Game::~Game()
@@ -190,8 +193,11 @@ bool Game::Update()
 
 		// Update Debug Cross
 		{
-			glm::ivec2 screenSize;
-			_window->GetSize(screenSize.x, screenSize.y);
+			glm::ivec2 screenSize {};
+			if (_window)
+			{
+				_window->GetSize(screenSize.x, screenSize.y);
+			}
 
 			glm::vec3 rayOrigin, rayDirection;
 			_camera->DeprojectScreenToWorld(_mousePosition, screenSize, rayOrigin, rayDirection);
@@ -229,7 +235,8 @@ void Game::Run()
 
 	// create our camera
 	_camera = std::make_unique<Camera>();
-	_camera->SetProjectionMatrixPerspective(70.0f, _window->GetAspectRatio(), 1.0f, 65536.0f);
+	auto aspect = _window ? _window->GetAspectRatio() : 1.0f;
+	_camera->SetProjectionMatrixPerspective(70.0f, aspect, 1.0f, 65536.0f);
 
 	_camera->SetPosition(glm::vec3(1441.56f, 24.764f, 2081.76f));
 	_camera->SetRotation(glm::vec3(0.0f, -45.0f, 0.0f));
@@ -253,6 +260,7 @@ void Game::Run()
 	// _lhvm = std::make_unique<LHVM::LHVM>();
 	// _lhvm->LoadBinary(GetGamePath() + "/Scripts/Quests/challenge.chl");
 
+	if (_window)
 	{
 		int width, height;
 		_window->GetSize(width, height);
