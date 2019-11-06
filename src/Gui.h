@@ -78,12 +78,12 @@ class MeshViewer;
 class Gui
 {
 public:
-	static std::unique_ptr<Gui> create(const GameWindow& window, graphics::RenderPass viewId, float scale);
+	static std::unique_ptr<Gui> create(const GameWindow* window, graphics::RenderPass viewId, float scale);
 
 	virtual ~Gui();
 
 	bool ProcessEventSdl2(const SDL_Event& event);
-	void NewFrame(GameWindow& window);
+	void NewFrame(GameWindow* window);
 	bool Loop(Game& game);
 	void Draw();
 

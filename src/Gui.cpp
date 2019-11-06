@@ -63,7 +63,7 @@ const bgfx::EmbeddedShader s_embeddedShaders[] = {BGFX_EMBEDDED_SHADER(vs_ocornu
                                                   BGFX_EMBEDDED_SHADER_END()};
 } // namespace
 
-std::unique_ptr<Gui> Gui::create(const GameWindow& window, graphics::RenderPass viewId, float scale)
+std::unique_ptr<Gui> Gui::create(const GameWindow* window, graphics::RenderPass viewId, float scale)
 {
 	IMGUI_CHECKVERSION();
 	auto imgui = ImGui::CreateContext();
@@ -81,9 +81,12 @@ std::unique_ptr<Gui> Gui::create(const GameWindow& window, graphics::RenderPass 
 
 	auto gui = std::unique_ptr<Gui>(new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(meshViewer)));
 
-	if (!gui->InitSdl2(window.GetHandle()))
+	if (window)
 	{
-		return nullptr;
+		if (!gui->InitSdl2(window->GetHandle()))
+		{
+			return nullptr;
+		}
 	}
 
 	return gui;
@@ -425,13 +428,21 @@ void Gui::NewFrameSdl2(SDL_Window* window)
 	                                 "ImGui_ImplOpenGL3_NewFrame().");
 
 	// Setup display size (every frame to accommodate for window resizing)
-	int w, h;
-	int display_w, display_h;
-	SDL_GetWindowSize(window, &w, &h);
-	SDL_GL_GetDrawableSize(window, &display_w, &display_h);
-	io.DisplaySize = ImVec2((float)w, (float)h);
-	if (w > 0 && h > 0)
-		io.DisplayFramebufferScale = ImVec2((float)display_w / w, (float)display_h / h);
+	if (window)
+	{
+		int w, h;
+		int display_w, display_h;
+		SDL_GetWindowSize(window, &w, &h);
+		SDL_GL_GetDrawableSize(window, &display_w, &display_h);
+		io.DisplaySize = ImVec2((float) w, (float) h);
+		if (w > 0 && h > 0)
+			io.DisplayFramebufferScale = ImVec2((float) display_w/w, (float) display_h/h);
+	}
+	else
+	{
+		io.DisplaySize = ImVec2(1.0f, 1.0f);
+		io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+	}
 
 	// Setup time step (we don't use SDL_GetTicks() because it is using
 	// millisecond resolution)
@@ -447,11 +458,11 @@ void Gui::NewFrameSdl2(SDL_Window* window)
 	UpdateGamepads();
 }
 
-void Gui::NewFrame(GameWindow& window)
+void Gui::NewFrame(GameWindow* window)
 {
 	ImGui::SetCurrentContext(_imgui);
 
-	NewFrameSdl2(window.GetHandle());
+	NewFrameSdl2(window ? window->GetHandle() : nullptr);
 	ImGui::NewFrame();
 }
 

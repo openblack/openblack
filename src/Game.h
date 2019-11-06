@@ -110,7 +110,7 @@ public:
 	void SetGamePath(const std::string& gamePath);
 	const std::string& GetGamePath();
 
-	GameWindow& GetWindow() { return *_window; }
+	GameWindow* GetWindow() { return _window.get(); }
 	[[nodiscard]] const GameWindow& GetWindow() const { return *_window; }
 	Camera& GetCamera() { return *_camera; }
 	[[nodiscard]] Profiler& GetProfiler() const { return *_profiler; }
