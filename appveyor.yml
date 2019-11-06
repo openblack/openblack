@@ -45,5 +45,8 @@ install:
 build_script:
   # - cmd: cmake -H. -B_build_%TOOLCHAIN%_Debug -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX=%cd%\_install_%TOOLCHAIN%_DEBUG -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
   # - cmd: cmake --build _build_%TOOLCHAIN%_Debug --config Debug
-  - cmd: cmake -H. -B_build_%TOOLCHAIN%_Release -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX=%cd%\_install_%TOOLCHAIN%_RELEASE -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
+  - cmd: cmake -H. -B_build_%TOOLCHAIN%_Release -G "%GENERATOR%"
+               -DOPENBLACK_BGFX_USE_SYSTEM_DEPS=ON
+               -DCMAKE_INSTALL_PREFIX=%cd%\_install_%TOOLCHAIN%_RELEASE
+               -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
   - cmd: cmake --build _build_%TOOLCHAIN%_Release --config Release

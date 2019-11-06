@@ -8,6 +8,7 @@ cmake --version
 cmake -S . -B _build_${TOOLCHAIN} -DCMAKE_INSTALL_PREFIX=${PWD}/_install_${TOOLCHAIN} \
 	-DCMAKE_TOOLCHAIN_FILE="/tools/vcpkg/scripts/buildsystems/vcpkg.cmake" \
 	-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="${PWD}/ci/toolchains/${TOOLCHAIN}.cmake" \
+	-DOPENBLACK_BGFX_USE_SYSTEM_DEPS=ON \
 	-G Ninja
 cmake --build _build_${TOOLCHAIN}
 
