@@ -51,8 +51,8 @@ class Registry
 	decltype(auto) Create() { return _registry.create(); }
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args) { return _registry.assign<Component>(entity, std::forward<Args>(args)...); }
-	decltype(auto) Context() { return _registry.ctx<RegistryContext>(); };
-	decltype(auto) Context() const { return _registry.ctx<RegistryContext>(); };
+	RegistryContext& Context();
+	const RegistryContext& Context() const;;
 	void Reset()
 	{
 		_registry.reset();

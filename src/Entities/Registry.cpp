@@ -22,6 +22,16 @@ Registry::Registry()
 	_registry.set<RegistryContext>();
 }
 
+RegistryContext& Registry::Context()
+{
+	return _registry.ctx<RegistryContext>();
+}
+
+const RegistryContext& Registry::Context() const
+{
+	return _registry.ctx<RegistryContext>();
+}
+
 void Registry::PrepareDrawDescs(bool drawBoundingBox)
 {
 	// Count number of instances
