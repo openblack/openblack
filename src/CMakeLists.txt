@@ -99,6 +99,7 @@ target_link_libraries(openblack PRIVATE
 	spdlog::spdlog
 	EnTT
 	bgfx::bgfx
+	cxxopts::cxxopts
 )
 if (UNIX)
 	find_library(WAYLAND wayland-egl)

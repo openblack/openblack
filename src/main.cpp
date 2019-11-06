@@ -22,8 +22,9 @@
 #include <iostream>
 #include <map>
 
+#include <cxxopts.hpp>
+
 #include <Game.h>
-#include <Common/CmdLineArgs.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -31,70 +32,90 @@
 
 bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return_code)
 {
-	int windowWidth = 1280, windowHeight = 1024;
-	bool vsync = false;
-	std::string displayModeStr;
-	std::string rendererTypeStr;
-	float scale = 1.0f;
-	std::string gamePath;
+	cxxopts::Options options("openblack", "Open source reimplementation of the game Black & White (2001).");
 
-	auto cmdArgs = openblack::CmdLineArgs(argc, argv);
-	cmdArgs.Get("w", windowWidth);
-	cmdArgs.Get("h", windowHeight);
-	cmdArgs.Get("v", vsync);
-	cmdArgs.Get("m", displayModeStr);
-	cmdArgs.Get("r", rendererTypeStr);
-	cmdArgs.Get<float>("scale", scale);
-	cmdArgs.Get("g", gamePath);
+	options.add_options()
+		("h,help", "Display this help message.")
+		("g,game-path", "Path to the Data/ and Scripts/ directories of the original Black & White game. (Required)", cxxopts::value<std::string>())
+		("W,width", "Window resolution in the x axis.", cxxopts::value<uint16_t>()->default_value("1280"))
+		("H,height", "Window resolution in the y axis.", cxxopts::value<uint16_t>()->default_value("1024"))
+		("s,gui-scale", "Scaling of the GUI", cxxopts::value<float>()->default_value("1.0"))
+		("V,vsync", "Enable Vertical Sync.")
+		("m,window-mode", "Which mode to run window.", cxxopts::value<std::string>()->default_value("windowed"))
+		("b,backend-type", "Which backend to use for rendering.", cxxopts::value<std::string>()->default_value("OpenGL"))
+	;
 
-	static const std::map<std::string_view, bgfx::RendererType::Enum> rendererLookup = {
-		std::pair {"OpenGL", bgfx::RendererType::OpenGL},
-		std::pair {"OpenGLES", bgfx::RendererType::OpenGLES},
-		std::pair {"Vulkan", bgfx::RendererType::Vulkan},
-		std::pair {"Direct3D9", bgfx::RendererType::Direct3D9},
-		std::pair {"Direct3D11", bgfx::RendererType::Direct3D11},
-		std::pair {"Direct3D12", bgfx::RendererType::Direct3D12},
-		std::pair {"Metal", bgfx::RendererType::Metal},
-		std::pair {"Gnm", bgfx::RendererType::Gnm},
-		std::pair {"Nvn", bgfx::RendererType::Nvn},
-		std::pair {"Noop", bgfx::RendererType::Noop},
-	};
-	bgfx::RendererType::Enum rendererType;
-	auto rendererIter = rendererLookup.find(rendererTypeStr);
-	if (rendererIter != rendererLookup.cend())
+	try
 	{
-		rendererType = rendererIter->second;
-	}
-	else
-	{
-		rendererType = bgfx::RendererType::OpenGL;
-	}
+		auto result = options.parse(argc, argv);
+		if (result["help"].as<bool>())
+		{
+			std::cout << options.help() << std::endl;
+			return_code = EXIT_SUCCESS;
+			return false;
+		}
+		static const std::map<std::string_view, bgfx::RendererType::Enum> rendererLookup = {
+			std::pair {"OpenGL", bgfx::RendererType::OpenGL},
+			std::pair {"OpenGLES", bgfx::RendererType::OpenGLES},
+			std::pair {"Vulkan", bgfx::RendererType::Vulkan},
+			std::pair {"Direct3D9", bgfx::RendererType::Direct3D9},
+			std::pair {"Direct3D11", bgfx::RendererType::Direct3D11},
+			std::pair {"Direct3D12", bgfx::RendererType::Direct3D12},
+			std::pair {"Metal", bgfx::RendererType::Metal},
+			std::pair {"Gnm", bgfx::RendererType::Gnm},
+			std::pair {"Nvn", bgfx::RendererType::Nvn},
+			std::pair {"Noop", bgfx::RendererType::Noop},
+		};
+		bgfx::RendererType::Enum rendererType;
+		auto rendererIter = rendererLookup.find(result["backend-type"].as<std::string>());
+		if (rendererIter != rendererLookup.cend())
+		{
+			rendererType = rendererIter->second;
+		}
+		else
+		{
+			throw cxxopts::option_not_exists_exception(result["backend-type"].as<std::string>());
+		}
 
-	static const std::map<std::string_view, openblack::DisplayMode> displayModeLookup = {
-		std::pair{"windowed", openblack::DisplayMode::Windowed},
-		std::pair{"fullscreen", openblack::DisplayMode::Fullscreen},
-		std::pair{"borderless", openblack::DisplayMode::Borderless},
-	};
+		static const std::map<std::string_view, openblack::DisplayMode> displayModeLookup = {
+			std::pair{"windowed", openblack::DisplayMode::Windowed},
+			std::pair{"fullscreen", openblack::DisplayMode::Fullscreen},
+			std::pair{"borderless", openblack::DisplayMode::Borderless},
+		};
 
-	openblack::DisplayMode displayMode;
-	auto displayModeIter = displayModeLookup.find(displayModeStr);
-	if (displayModeIter != displayModeLookup.cend())
-	{
-		displayMode = displayModeIter->second;
-	}
-	else
-	{
-		displayMode = openblack::DisplayMode::Windowed;
-	}
+		openblack::DisplayMode displayMode;
+		auto displayModeIter = displayModeLookup.find(result["window-mode"].as<std::string>());
+		if (displayModeIter != displayModeLookup.cend())
+		{
+			displayMode = displayModeIter->second;
+		}
+		else
+		{
+			throw cxxopts::option_not_exists_exception(result["window-mode"].as<std::string>());
+		}
 
-	args.executablePath = argv[0];
-	args.gamePath = gamePath;
-	args.windowWidth = windowWidth;
-	args.windowHeight = windowHeight;
-	args.scale = scale;
-	args.vsync = vsync;
-	args.displayMode = displayMode;
-	args.rendererType = rendererType;
+		args.executablePath = argv[0];
+		if (result.count("game-path") == 0)
+		{
+			throw cxxopts::option_required_exception("game-path");
+		}
+		args.gamePath = result["game-path"].as<std::string>();
+		args.windowWidth = result["width"].as<uint16_t>();
+		args.windowHeight = result["height"].as<uint16_t>();
+		args.scale = result["gui-scale"].as<float>();;
+		args.vsync = result["vsync"].as<bool>();
+		args.displayMode = displayMode;
+		args.rendererType = rendererType;
+
+	}
+	catch (cxxopts::OptionParseException& err)
+	{
+		std::cerr << err.what() << std::endl;
+		std::cerr << options.help() << std::endl;
+
+		return_code = EXIT_FAILURE;
+		return false;
+	}
 
 	return true;
 }

@@ -41,6 +41,7 @@ install:
             glm:%PLATFORM%-windows
             spirv-cross:%PLATFORM%-windows
             spirv-tools:%PLATFORM%-windows
+            cxxopts:%PLATFORM%-windows
 
 build_script:
   # - cmd: cmake -H. -B_build_%TOOLCHAIN%_Debug -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX=%cd%\_install_%TOOLCHAIN%_DEBUG -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
