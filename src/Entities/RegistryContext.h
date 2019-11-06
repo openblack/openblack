@@ -6,6 +6,12 @@ struct RenderContext
 	RenderContext() : instanceUniformBuffer(BGFX_INVALID_HANDLE),
 	dirty(true),
 	hasBoundingBoxes(false) {};
+	~RenderContext() {
+		if (bgfx::isValid(instanceUniformBuffer))
+		{
+			bgfx::destroy(instanceUniformBuffer);
+		}
+	}
 	std::unique_ptr<graphics::DebugLines> streams;
 	std::unique_ptr<graphics::DebugLines> boundingBox;
 

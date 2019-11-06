@@ -55,11 +55,6 @@ class Registry
 	decltype(auto) Context() const { return _registry.ctx<RegistryContext>(); };
 	void Reset()
 	{
-		auto &renderCtx = Context().renderContext;
-
-		if (bgfx::isValid(renderCtx.instanceUniformBuffer))
-			bgfx::destroy(renderCtx.instanceUniformBuffer);
-
 		_registry.reset();
 		_registry.unset<RegistryContext>();
 		_registry.set<RegistryContext>();
