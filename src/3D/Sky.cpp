@@ -64,7 +64,7 @@ Sky::Sky()
 			spdlog::debug("Loading sky texture: {}", path);
 
 			Bitmap16B* bitmap = Bitmap16B::LoadFromFile(path);
-			memcpy(_bitmaps[i * 3 + j].data(), bitmap->Data(), 256 * 256 * 2);
+			memcpy(_bitmaps[i * 3 + j].data(), bitmap->Data(), bitmap->Size());
 			delete bitmap;
 		}
 	}
