@@ -83,7 +83,8 @@ if (NOT bgfx_FOUND)
     add_library(spirv-tools ALIAS PkgConfig::SPIRV_TOOLS)
   endif()
   if (OPENBLACK_BGFX_USE_SYSTEM_SPIRV_CROSS)
-    find_package(spirv_cross_c_shared REQUIRED)
+    find_package(spirv_cross_core REQUIRED)
+    find_package(spirv_cross_cpp REQUIRED)
     find_package(spirv_cross_glsl REQUIRED)
     find_package(spirv_cross_msl REQUIRED)
     find_package(spirv_cross_reflect REQUIRED)
@@ -91,7 +92,8 @@ if (NOT bgfx_FOUND)
     add_library(spirv-cross INTERFACE)
     target_link_libraries(spirv-cross
       INTERFACE
-        spirv-cross-c-shared
+        spirv-cross-core
+        spirv-cross-cpp
         spirv-cross-glsl
         spirv-cross-msl
         spirv-cross-reflect
