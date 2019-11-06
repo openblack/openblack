@@ -56,7 +56,6 @@ class Registry
 	void Reset()
 	{
 		_registry.reset();
-		_registry.unset<RegistryContext>();
 		_registry.set<RegistryContext>();
 	};
 	template <typename Component>
