@@ -20,9 +20,8 @@
 
 #pragma once
 
-#include <cstdint>
-
 #include <array>
+#include <cstdint>
 
 namespace openblack::graphics
 {
@@ -44,4 +43,4 @@ static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_
 	"Mesh Viewer Pass",
 };
 
-}  // namespace openblack::graphics
+} // namespace openblack::graphics

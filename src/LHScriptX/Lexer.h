@@ -126,7 +126,8 @@ class Token
 	    type_(type) {}
 
 	Type type_;
-	union {
+	union
+	{
 		std::string* identifierValue;
 		std::string* stringValue;
 		int integerValue;

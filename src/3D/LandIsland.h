@@ -20,14 +20,13 @@
 
 #pragma once
 
+#include <3D/LandBlock.h>
+#include <Graphics/Mesh.h>
+#include <Graphics/Texture2D.h>
 #include <array>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <3D/LandBlock.h>
-#include <Graphics/Mesh.h>
-#include <Graphics/Texture2D.h>
 
 namespace openblack
 {

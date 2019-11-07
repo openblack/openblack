@@ -20,11 +20,9 @@
 
 #pragma once
 
-#include <cstdint>
-
-#include <memory>
-
 #include <Graphics/RenderPass.h>
+#include <cstdint>
+#include <memory>
 
 namespace bgfx
 {
@@ -70,7 +68,7 @@ class Mesh
 	struct DrawDesc
 	{
 		graphics::RenderPass viewId;
-		const openblack::graphics::ShaderProgram &program;
+		const openblack::graphics::ShaderProgram& program;
 		uint32_t count;
 		uint32_t offset;
 		const bgfx::DynamicVertexBufferHandle* instanceBuffer;
@@ -92,4 +90,4 @@ class Mesh
 	Topology _topology;
 };
 
-} // namespace openblack
+} // namespace openblack::graphics

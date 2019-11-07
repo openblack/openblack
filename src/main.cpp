@@ -32,16 +32,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 {
 	cxxopts::Options options("openblack", "Open source reimplementation of the game Black & White (2001).");
 
-	options.add_options()
-		("h,help", "Display this help message.")
-		("g,game-path", "Path to the Data/ and Scripts/ directories of the original Black & White game. (Required)", cxxopts::value<std::string>())
-		("W,width", "Window resolution in the x axis.", cxxopts::value<uint16_t>()->default_value("1280"))
-		("H,height", "Window resolution in the y axis.", cxxopts::value<uint16_t>()->default_value("1024"))
-		("s,gui-scale", "Scaling of the GUI", cxxopts::value<float>()->default_value("1.0"))
-		("V,vsync", "Enable Vertical Sync.")
-		("m,window-mode", "Which mode to run window.", cxxopts::value<std::string>()->default_value("windowed"))
-		("b,backend-type", "Which backend to use for rendering.", cxxopts::value<std::string>()->default_value("OpenGL"))
-	;
+	options.add_options()("h,help", "Display this help message.")("g,game-path", "Path to the Data/ and Scripts/ directories of the original Black & White game. (Required)", cxxopts::value<std::string>())("W,width", "Window resolution in the x axis.", cxxopts::value<uint16_t>()->default_value("1280"))("H,height", "Window resolution in the y axis.", cxxopts::value<uint16_t>()->default_value("1024"))("s,gui-scale", "Scaling of the GUI", cxxopts::value<float>()->default_value("1.0"))("V,vsync", "Enable Vertical Sync.")("m,window-mode", "Which mode to run window.", cxxopts::value<std::string>()->default_value("windowed"))("b,backend-type", "Which backend to use for rendering.", cxxopts::value<std::string>()->default_value("OpenGL"));
 
 	try
 	{

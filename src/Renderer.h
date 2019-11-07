@@ -20,18 +20,16 @@
 
 #pragma once
 
-#include <cstdint>
+#include <Graphics/RenderPass.h>
+#include <SDL.h>
 #include <array>
+#include <bgfx/bgfx.h>
 #include <chrono>
+#include <cstdint>
+#include <glm/fwd.hpp>
 #include <memory>
 #include <string_view>
 #include <vector>
-
-#include <SDL.h>
-#include <bgfx/bgfx.h>
-#include <glm/fwd.hpp>
-
-#include <Graphics/RenderPass.h>
 
 namespace openblack
 {
@@ -57,35 +55,39 @@ class ShaderManager;
 class ShaderProgram;
 } // namespace graphics
 
-
-struct ShaderDefinition {
-  const std::string_view name;
-  const std::string_view vertexShaderName;
-  const std::string_view fragmentShaderName;
+struct ShaderDefinition
+{
+	const std::string_view name;
+	const std::string_view vertexShaderName;
+	const std::string_view fragmentShaderName;
 };
 
 constexpr std::array Shaders {
-	ShaderDefinition{"DebugLine", "vs_line", "fs_line"},
-	ShaderDefinition{"DebugLineInstanced", "vs_line_instanced", "fs_line"},
-	ShaderDefinition{"Terrain", "vs_terrain", "fs_terrain"},
-	ShaderDefinition{"Object", "vs_object", "fs_object"},
-	ShaderDefinition{"ObjectInstanced", "vs_object_instanced", "fs_object"},
-	ShaderDefinition{"Water", "vs_water", "fs_water"},
+	ShaderDefinition { "DebugLine", "vs_line", "fs_line" },
+	ShaderDefinition { "DebugLineInstanced", "vs_line_instanced", "fs_line" },
+	ShaderDefinition { "Terrain", "vs_terrain", "fs_terrain" },
+	ShaderDefinition { "Object", "vs_object", "fs_object" },
+	ShaderDefinition { "ObjectInstanced", "vs_object_instanced", "fs_object" },
+	ShaderDefinition { "Water", "vs_water", "fs_water" },
 };
 
-class Renderer {
+class Renderer
+{
 
   public:
-	enum class Api {
+	enum class Api
+	{
 		OpenGl,
 	};
 
-	struct RequiredAttribute {
+	struct RequiredAttribute
+	{
 		Api api;
 		uint32_t name;
 		int value;
 	};
-	struct DrawSceneDesc {
+	struct DrawSceneDesc
+	{
 		graphics::RenderPass viewId;
 		Profiler& profiler;
 		const Camera* camera;
@@ -114,15 +116,15 @@ class Renderer {
 	void LoadShaders();
 	[[nodiscard]] graphics::ShaderManager& GetShaderManager() const;
 
-	void UpdateDebugCrossUniforms(const glm::vec3 &position, float scale);
+	void UpdateDebugCrossUniforms(const glm::vec3& position, float scale);
 
 	void ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height) const;
 
-	void DrawScene(const DrawSceneDesc &desc) const;
+	void DrawScene(const DrawSceneDesc& desc) const;
 	void Frame();
 
   private:
-	void DrawPass(const DrawSceneDesc &desc) const;
+	void DrawPass(const DrawSceneDesc& desc) const;
 
 	std::unique_ptr<graphics::ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;

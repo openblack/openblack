@@ -19,10 +19,9 @@
  */
 
 #include <Common/FileSystem.h>
-
-#include <cstddef>
 #include <algorithm>
 #include <array>
+#include <cstddef>
 
 namespace openblack
 {
@@ -39,7 +38,7 @@ std::string FileSystem::FixPath(const std::string& path)
 	for (auto& pattern : caseFixTable)
 	{
 		auto foundIter = std::search(result.cbegin(), result.cend(), pattern.cbegin(), pattern.cend(),
-		                             [] (char left, char right){ return std::toupper(left) == std::toupper(right); });
+		                             [](char left, char right) { return std::toupper(left) == std::toupper(right); });
 		if (foundIter != result.cend())
 		{
 			result.replace(foundIter, foundIter + pattern.size(), pattern.data());
@@ -68,7 +67,7 @@ std::unique_ptr<FileStream> FileSystem::Open(const fs::path& path, FileMode mode
 	// try relative to current directory
 	if (path.is_relative() && fs::exists(path))
 		return std::make_unique<FileStream>(path, mode);
-		
+
 	// try relative to game directory
 	if (path.is_relative() && fs::exists(_gamePath / path))
 		return std::make_unique<FileStream>(_gamePath / path, mode);
@@ -95,7 +94,7 @@ bool FileSystem::Exists(const fs::path& path)
 
 std::vector<std::byte> FileSystem::ReadAll(const fs::path& path)
 {
-	auto file = Open(path, FileMode::Read);
+	auto file        = Open(path, FileMode::Read);
 	std::size_t size = file->Size();
 
 	std::vector<std::byte> data(size);

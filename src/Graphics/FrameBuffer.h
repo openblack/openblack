@@ -20,18 +20,19 @@
 
 #pragma once
 
+#include "RenderPass.h"
+#include "Texture2D.h"
+
 #include <cstdint>
 #include <memory>
 #include <optional>
 
-#include "RenderPass.h"
-#include "Texture2D.h"
-
 namespace openblack::graphics
 {
 
-class FrameBuffer {
-public:
+class FrameBuffer
+{
+  public:
 	FrameBuffer() = delete;
 	FrameBuffer(std::string name, uint16_t width, uint16_t height, Format colorFormat, std::optional<Format> depthStencilFormat = {});
 	~FrameBuffer();
@@ -41,7 +42,7 @@ public:
 	Texture2D& GetColorAttachment() { return _colorAttachment; }
 	void GetSize(uint16_t& width, uint16_t& height) const { width = _width, height = _height; }
 
-private:
+  private:
 	std::string _name;
 	bgfx::FrameBufferHandle _handle;
 
@@ -54,4 +55,4 @@ private:
 	Texture2D _depthStencilAttachment;
 };
 
-}  // namespace openblack::graphics
+} // namespace openblack::graphics

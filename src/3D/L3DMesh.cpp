@@ -91,9 +91,9 @@ struct L3DModel_Vertex
 	uint32_t bone;
 };
 
-L3DMesh::L3DMesh(const std::string& debugName) :
-	_debugName(debugName) {
-
+L3DMesh::L3DMesh(const std::string& debugName):
+    _debugName(debugName)
+{
 }
 
 void L3DMesh::LoadFromFile(const std::string& fileName)
@@ -158,14 +158,16 @@ void L3DMesh::Load(IStream& stream)
 		spdlog::debug("\tcontains extra metrics");*/
 
 	// read textures
-	if (header.skinsCount > 0) {
+	if (header.skinsCount > 0)
+	{
 		std::vector<uint32_t> offsets(header.skinsCount);
 
 		stream.Seek(header.skinsOffset, SeekMode::Begin);
 		stream.Read(offsets.data(), offsets.size() * sizeof(uint32_t));
 
 		spdlog::debug("\tLoading {} skins", header.skinsCount);
-		for (size_t i = 0; i < offsets.size(); i++) {
+		for (size_t i = 0; i < offsets.size(); i++)
+		{
 			uint32_t id = stream.ReadValue<uint32_t>();
 			std::vector<uint16_t> data(256 * 256); // RGBA4444
 			stream.Read(data.data(), 256 * 256 * sizeof(uint16_t));
@@ -176,14 +178,16 @@ void L3DMesh::Load(IStream& stream)
 	}
 
 	// read submeshes
-	if (header.submeshCount > 0) {
+	if (header.submeshCount > 0)
+	{
 		std::vector<uint32_t> offsets(header.submeshCount);
 
 		stream.Seek(header.submeshPointersOffset, SeekMode::Begin);
 		stream.Read(offsets.data(), offsets.size() * sizeof(uint32_t));
 
 		_subMeshes.resize(offsets.size());
-		for (size_t i = 0; i < offsets.size(); i++) {
+		for (size_t i = 0; i < offsets.size(); i++)
+		{
 			stream.Seek(offsets[i], SeekMode::Begin);
 			_subMeshes[i] = std::make_unique<L3DSubMesh>(*this);
 			_subMeshes[i]->Load(stream);
@@ -218,9 +222,10 @@ void L3DMesh::Load(IStream& stream)
 	// size: 6100, num meshes: 4, offset: 100
 }
 
-void L3DMesh::Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram &program, uint32_t mesh, uint64_t state, uint32_t rgba) const
+void L3DMesh::Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint32_t mesh, uint64_t state, uint32_t rgba) const
 {
-	if (mesh >= _subMeshes.size()) {
+	if (mesh >= _subMeshes.size())
+	{
 		//spdlog::warn("tried to draw submesh out of range ({}/{})", mesh, _subMeshes.size());
 		mesh = _subMeshes.size() - 1;
 	}

@@ -20,12 +20,11 @@
 
 #pragma once
 
+#include <bgfx/bgfx.h>
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <bgfx/bgfx.h>
 
 namespace openblack::graphics
 {
@@ -67,12 +66,8 @@ struct VertexAttrib
 	bool _asInt;          /// < Should not be altered. Unpacking will have to be done in vertex shader.
 
 	VertexAttrib() {}
-	VertexAttrib(Attribute attribute, uint8_t num, Type type, bool normalized=false, bool asInt=false)
-		: _attribute(attribute)
-		, _num(num)
-		, _type(type)
-		, _normalized(normalized)
-		, _asInt(asInt)
+	VertexAttrib(Attribute attribute, uint8_t num, Type type, bool normalized = false, bool asInt = false):
+	    _attribute(attribute), _num(num), _type(type), _normalized(normalized), _asInt(asInt)
 	{
 	}
 };

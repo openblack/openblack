@@ -20,15 +20,14 @@
 
 #pragma once
 
+#include "GameWindow.h"
+
+#include <LHVM/LHVM.h>
+#include <bgfx/bgfx.h>
+#include <glm/glm.hpp>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <bgfx/bgfx.h>
-#include <glm/glm.hpp>
-
-#include <LHVM/LHVM.h>
-#include "GameWindow.h"
 
 namespace openblack
 {
@@ -71,20 +70,8 @@ class Game
   public:
 	struct Config
 	{
-		Config()
-			: wireframe(false)
-			, waterDebug(false)
-			, showProfiler(false)
-			, drawSky(true)
-			, drawWater(true)
-			, drawIsland(true)
-			, drawEntities(true)
-			, drawDebugCross(true)
-			, drawBoundingBoxes(false)
-			, timeOfDay(1.0f)
-			, bumpMapStrength(1.0f)
-			, smallBumpMapStrength(1.0f)
-			, bgfxDebug(false)
+		Config():
+		    wireframe(false), waterDebug(false), showProfiler(false), drawSky(true), drawWater(true), drawIsland(true), drawEntities(true), drawDebugCross(true), drawBoundingBoxes(false), timeOfDay(1.0f), bumpMapStrength(1.0f), smallBumpMapStrength(1.0f), bgfxDebug(false)
 		{
 		}
 
@@ -119,7 +106,7 @@ class Game
 
 	void LoadVariables();
 
-	void SetGamePath(const std::string &gamePath);
+	void SetGamePath(const std::string& gamePath);
 	const std::string& GetGamePath();
 
 	GameWindow& GetWindow() { return *_window; }
@@ -143,7 +130,7 @@ class Game
 	[[nodiscard]] const Config& GetConfig() const { return _config; }
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
 
-  static Game* instance()
+	static Game* instance()
 	{
 		return sInstance;
 	}

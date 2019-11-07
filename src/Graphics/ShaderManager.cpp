@@ -18,45 +18,41 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Graphics/ShaderManager.h>
-
-#include <bgfx/embedded_shader.h>
-
-#include <3D/Camera.h>
-
+#include "Shaders/fs_line.bin.h"
+#include "Shaders/fs_object.bin.h"
+#include "Shaders/fs_terrain.bin.h"
+#include "Shaders/fs_water.bin.h"
 #include "Shaders/vs_line.bin.h"
 #include "Shaders/vs_line_instanced.bin.h"
-#include "Shaders/fs_line.bin.h"
 #include "Shaders/vs_object.bin.h"
 #include "Shaders/vs_object_instanced.bin.h"
-#include "Shaders/fs_object.bin.h"
 #include "Shaders/vs_terrain.bin.h"
-#include "Shaders/fs_terrain.bin.h"
 #include "Shaders/vs_water.bin.h"
-#include "Shaders/fs_water.bin.h"
+
+#include <3D/Camera.h>
+#include <Graphics/ShaderManager.h>
+#include <bgfx/embedded_shader.h>
 
 namespace openblack::graphics
 {
 
-const bgfx::EmbeddedShader s_embeddedShaders[] =
-	{
-		BGFX_EMBEDDED_SHADER(vs_line),
-		BGFX_EMBEDDED_SHADER(vs_line_instanced),
-		BGFX_EMBEDDED_SHADER(fs_line),
+const bgfx::EmbeddedShader s_embeddedShaders[] = {
+	BGFX_EMBEDDED_SHADER(vs_line),
+	BGFX_EMBEDDED_SHADER(vs_line_instanced),
+	BGFX_EMBEDDED_SHADER(fs_line),
 
-		BGFX_EMBEDDED_SHADER(vs_object),
-		BGFX_EMBEDDED_SHADER(vs_object_instanced),
-		BGFX_EMBEDDED_SHADER(fs_object),
+	BGFX_EMBEDDED_SHADER(vs_object),
+	BGFX_EMBEDDED_SHADER(vs_object_instanced),
+	BGFX_EMBEDDED_SHADER(fs_object),
 
-		BGFX_EMBEDDED_SHADER(vs_terrain),
-		BGFX_EMBEDDED_SHADER(fs_terrain),
+	BGFX_EMBEDDED_SHADER(vs_terrain),
+	BGFX_EMBEDDED_SHADER(fs_terrain),
 
-		BGFX_EMBEDDED_SHADER(vs_water),
-		BGFX_EMBEDDED_SHADER(fs_water),
+	BGFX_EMBEDDED_SHADER(vs_water),
+	BGFX_EMBEDDED_SHADER(fs_water),
 
-
-		BGFX_EMBEDDED_SHADER_END()
-	};
+	BGFX_EMBEDDED_SHADER_END()
+};
 
 ShaderManager::~ShaderManager()
 {
@@ -77,9 +73,8 @@ const ShaderProgram* ShaderManager::LoadShader(const std::string& name, const st
 		return i->second;
 
 	ShaderProgram* program = new ShaderProgram(name,
-		bgfx::createEmbeddedShader(s_embeddedShaders, type, vertexShaderName.c_str()),
-		bgfx::createEmbeddedShader(s_embeddedShaders, type, fragmentShaderName.c_str())
-	);
+	                                           bgfx::createEmbeddedShader(s_embeddedShaders, type, vertexShaderName.c_str()),
+	                                           bgfx::createEmbeddedShader(s_embeddedShaders, type, fragmentShaderName.c_str()));
 	_shaderPrograms[name]  = program;
 	return program;
 }
@@ -94,7 +89,7 @@ const ShaderProgram* ShaderManager::GetShader(const std::string& name) const
 	return nullptr;
 }
 
-void ShaderManager::SetCamera(graphics::RenderPass viewId, const Camera &camera)
+void ShaderManager::SetCamera(graphics::RenderPass viewId, const Camera& camera)
 {
 	auto view = camera.GetViewMatrix();
 	auto proj = camera.GetProjectionMatrix();

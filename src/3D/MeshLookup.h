@@ -21,20 +21,20 @@
 #pragma once
 
 #include <AllMeshes.h>
-#include <unordered_map>
 #include <Entities/Components/AnimatedStatic.h>
 #include <spdlog/spdlog.h>
+#include <unordered_map>
 
 namespace openblack
 {
 enum class TreeInfo;
 
-
 template <typename T>
 class MeshLookup
 {
-public:
-	MeshLookup(std::initializer_list<typename std::unordered_map<T, MeshId>::value_type> init) : lookup(init) {}
+  public:
+	MeshLookup(std::initializer_list<typename std::unordered_map<T, MeshId>::value_type> init):
+	    lookup(init) {}
 	MeshId operator[](T key)
 	{
 		auto item   = lookup.find(key);
@@ -48,7 +48,8 @@ public:
 
 		return item->second;
 	}
-private:
+
+  private:
 	std::unordered_map<T, MeshId> lookup;
 };
 

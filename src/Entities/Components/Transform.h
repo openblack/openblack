@@ -43,4 +43,4 @@ struct Transform
 	}
 };
 
-}
+} // namespace openblack

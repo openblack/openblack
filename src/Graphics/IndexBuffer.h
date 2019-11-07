@@ -20,10 +20,9 @@
 
 #pragma once
 
+#include <bgfx/bgfx.h>
 #include <cstddef>
 #include <cstdint>
-
-#include <bgfx/bgfx.h>
 #include <string>
 
 namespace openblack::graphics
@@ -52,7 +51,7 @@ class IndexBuffer
 	[[nodiscard]] std::size_t GetStride() const;
 	[[nodiscard]] Type GetType() const;
 
-	void Bind(uint32_t count, uint32_t startIndex=0) const;
+	void Bind(uint32_t count, uint32_t startIndex = 0) const;
 
   private:
 	std::string _name;
@@ -61,4 +60,4 @@ class IndexBuffer
 	bgfx::IndexBufferHandle _handle;
 };
 
-} // namespace openblack
+} // namespace openblack::graphics

@@ -20,9 +20,8 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
-
 #include <Graphics/RenderPass.h>
+#include <glm/glm.hpp>
 
 namespace openblack
 {
@@ -32,7 +31,7 @@ namespace graphics
 class FrameBuffer;
 class Mesh;
 class ShaderProgram;
-}
+} // namespace graphics
 
 class Water
 {

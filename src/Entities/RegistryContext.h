@@ -20,13 +20,16 @@
 
 #include <Graphics/DebugLines.h>
 
-namespace openblack::Entities {
+namespace openblack::Entities
+{
 struct RenderContext
 {
-	RenderContext() : instanceUniformBuffer(BGFX_INVALID_HANDLE),
-	dirty(true),
-	hasBoundingBoxes(false) {};
-	~RenderContext() {
+	RenderContext():
+	    instanceUniformBuffer(BGFX_INVALID_HANDLE),
+	    dirty(true),
+	    hasBoundingBoxes(false) {};
+	~RenderContext()
+	{
 		if (bgfx::isValid(instanceUniformBuffer))
 		{
 			bgfx::destroy(instanceUniformBuffer);
@@ -37,7 +40,8 @@ struct RenderContext
 
 	struct InstancedDrawDesc
 	{
-		InstancedDrawDesc(uint32_t offset, uint32_t count) : offset(offset), count(count) {}
+		InstancedDrawDesc(uint32_t offset, uint32_t count):
+		    offset(offset), count(count) {}
 		uint32_t offset;
 		uint32_t count;
 	};
@@ -63,7 +67,7 @@ struct RenderContext
 	bool hasBoundingBoxes;
 };
 
-using TownId = int;
+using TownId   = int;
 using StreamId = int;
 
 struct RegistryContext
@@ -72,4 +76,4 @@ struct RegistryContext
 	std::unordered_map<StreamId, entt::entity> streams;
 	std::unordered_map<TownId, entt::entity> towns;
 };
-}
+} // namespace openblack::Entities

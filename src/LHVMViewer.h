@@ -20,9 +20,8 @@
 
 #pragma once
 
-#include <cstdint>
-
 #include <LHVM/LHVM.h>
+#include <cstdint>
 #include <imgui.h>
 
 namespace openblack

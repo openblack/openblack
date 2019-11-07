@@ -33,7 +33,12 @@ namespace fs = std::experimental::filesystem;
 namespace openblack
 {
 
-enum class FileMode { Read, Write, Append };
+enum class FileMode
+{
+	Read,
+	Write,
+	Append
+};
 
 class FileStream: public IStream
 {

@@ -20,12 +20,11 @@
 
 #pragma once
 
+#include <bgfx/bgfx.h>
 #include <cstdint>
+#include <glm/glm.hpp>
 #include <map>
 #include <string>
-
-#include <glm/glm.hpp>
-#include <bgfx/bgfx.h>
 
 namespace openblack::graphics
 {

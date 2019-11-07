@@ -18,19 +18,17 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/L3DSubMesh.h>
-
-#include <spdlog/spdlog.h>
-#include <glm/gtx/norm.hpp>
-#include <glm/gtx/component_wise.hpp>
-
 #include <3D/L3DMesh.h>
+#include <3D/L3DSubMesh.h>
 #include <3D/MeshPack.h>
 #include <Common/IStream.h>
 #include <Game.h>
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/ShaderProgram.h>
 #include <Graphics/VertexBuffer.h>
+#include <glm/gtx/component_wise.hpp>
+#include <glm/gtx/norm.hpp>
+#include <spdlog/spdlog.h>
 
 using namespace openblack::graphics;
 
@@ -149,7 +147,7 @@ void L3DSubMesh::Load(IStream& stream)
 	// build our buffers
 	auto vertexBuffer = new VertexBuffer(_l3dMesh.GetDebugName(), verticesMem, decl);
 	auto indexBuffer  = new IndexBuffer(_l3dMesh.GetDebugName(), indicesMem, IndexBuffer::Type::Uint16);
-	_mesh = std::make_unique<graphics::Mesh>(vertexBuffer, indexBuffer);
+	_mesh             = std::make_unique<graphics::Mesh>(vertexBuffer, indexBuffer);
 
 	spdlog::debug("{} with {} verts and {} indices", _l3dMesh.GetDebugName(), nVertices, nIndices);
 
@@ -202,17 +200,17 @@ void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatr
 	};
 
 	Mesh::DrawDesc desc = {
-		/*viewId =*/ viewId,
-		/*program =*/ program,
-		/*count =*/ 0,
-		/*offset =*/ 0,
-		/*instanceBuffer =*/ instanceBuffer,
-		/*instanceStart =*/ instanceStart,
-		/*instanceCount =*/ instanceCount,
-		/*state =*/ state,
-		/*rgba =*/ rgba,
-		/*skip =*/ Mesh::SkipState::SkipNone,
-		/*preserveState =*/ preserveState,
+		/*viewId =*/viewId,
+		/*program =*/program,
+		/*count =*/0,
+		/*offset =*/0,
+		/*instanceBuffer =*/instanceBuffer,
+		/*instanceStart =*/instanceStart,
+		/*instanceCount =*/instanceCount,
+		/*state =*/state,
+		/*rgba =*/rgba,
+		/*skip =*/Mesh::SkipState::SkipNone,
+		/*preserveState =*/preserveState,
 	};
 
 	bool lastPreserveState = false;
@@ -222,7 +220,7 @@ void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatr
 
 		const bool hasNext = std::next(it) != _primitives.end();
 
-		const Texture2D* texture = getTexture(prim.skinID);
+		const Texture2D* texture     = getTexture(prim.skinID);
 		const Texture2D* nextTexture = !hasNext ? nullptr : getTexture(std::next(it)->skinID);
 
 		bool primitivePreserveState = texture == nextTexture && (preserveState || hasNext);
@@ -245,8 +243,8 @@ void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatr
 			desc.skip |= Mesh::SkipState::SkipVertexBuffer;
 		}
 
-		desc.count = prim.indicesCount;
-		desc.offset = prim.indicesOffset;
+		desc.count         = prim.indicesCount;
+		desc.offset        = prim.indicesOffset;
 		desc.preserveState = primitivePreserveState;
 
 		_mesh->Draw(desc);

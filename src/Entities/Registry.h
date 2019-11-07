@@ -18,15 +18,13 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <map>
-
+#include <AllMeshes.h>
+#include <Entities/RegistryContext.h>
+#include <Graphics/RenderPass.h>
 #include <bgfx/bgfx.h>
 #include <entt/entt.hpp>
 #include <glm/glm.hpp>
-
-#include <AllMeshes.h>
-#include <Graphics/RenderPass.h>
-#include <Entities/RegistryContext.h>
+#include <map>
 
 namespace openblack
 {
@@ -52,7 +50,8 @@ class Registry
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args) { return _registry.assign<Component>(entity, std::forward<Args>(args)...); }
 	RegistryContext& Context();
-	const RegistryContext& Context() const;;
+	const RegistryContext& Context() const;
+	;
 	void Reset()
 	{
 		_registry.reset();

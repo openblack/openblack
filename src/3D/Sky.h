@@ -32,7 +32,7 @@ namespace graphics
 {
 class ShaderProgram;
 class Texture2D;
-}
+} // namespace graphics
 
 class Sky
 {
@@ -45,7 +45,7 @@ class Sky
 	void Interpolate555Texture(uint16_t* bitmap, uint16_t*, uint16_t*, float);
 
 	void CalculateTextures();
-	void Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram &program, bool cullBack) const;
+	void Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program, bool cullBack) const;
 	void SetTime(float time);
 
 	float TimeOfDay;

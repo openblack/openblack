@@ -18,32 +18,24 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <imgui.h>
-#include <glm/gtc/matrix_transform.hpp>
-
 #include <3D/L3DMesh.h>
 #include <3D/MeshPack.h>
 #include <Game.h>
-#include <Gui.h>
-#include <Renderer.h>
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/ShaderManager.h>
 #include <Graphics/Texture2D.h>
 #include <Graphics/VertexBuffer.h>
+#include <Gui.h>
 #include <MeshViewer.h>
+#include <Renderer.h>
+#include <glm/gtc/matrix_transform.hpp>
+#include <imgui.h>
 #include <imgui_bitfield.h>
 
 using namespace openblack;
 
-MeshViewer::MeshViewer()
-	: _open(false)
-	, _selectedMesh(MeshId::Dummy)
-	, _selectedSubMesh(0)
-	, _meshFlagFilter(-1)
-	, _cameraPosition(5.0f, 3.0f, 5.0f)
-	, _viewBoundingBox(false)
-	, _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f)))
-	, _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", 512, 512, graphics::Format::RGBA8, graphics::Format::Depth24Stencil8))
+MeshViewer::MeshViewer():
+    _open(false), _selectedMesh(MeshId::Dummy), _selectedSubMesh(0), _meshFlagFilter(-1), _cameraPosition(5.0f, 3.0f, 5.0f), _viewBoundingBox(false), _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f))), _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", 512, 512, graphics::Format::RGBA8, graphics::Format::Depth24Stencil8))
 {
 }
 
@@ -71,14 +63,14 @@ void MeshViewer::DrawWindow()
 	uint32_t hoverIndex;
 	static char bitfieldTitle[0x400];
 	{
-		int32_t offset = 0;
+		int32_t offset   = 0;
 		int32_t newLines = 1;
 		for (uint8_t i = 0; i < 32; ++i)
 		{
 			if (_meshFlagFilter & (1u << i))
 			{
-				auto writen = std::sprintf(bitfieldTitle + offset, "%s%s%s", offset ? "|" : "", offset > newLines*100 ? "\n" : "", L3DMeshFlagNames[i].data());
-				while (offset > newLines*100)
+				auto writen = std::sprintf(bitfieldTitle + offset, "%s%s%s", offset ? "|" : "", offset > newLines * 100 ? "\n" : "", L3DMeshFlagNames[i].data());
+				while (offset > newLines * 100)
 					newLines++;
 				offset += writen;
 			}
@@ -96,17 +88,17 @@ void MeshViewer::DrawWindow()
 
 	ImGui::BeginChild("meshes", ImVec2(fontSize * 15.0f, 0));
 	auto meshSize = ImGui::GetItemRectSize();
-	ImGui::BeginChild("meshesSelect", ImVec2(meshSize.x - 5,  meshSize.y - ImGui::GetTextLineHeight() - 5), true);
+	ImGui::BeginChild("meshesSelect", ImVec2(meshSize.x - 5, meshSize.y - ImGui::GetTextLineHeight() - 5), true);
 	uint32_t displayedMeshes = 0;
 	for (size_t i = 0; i < meshes.size(); i++)
 	{
 		if (_filter.PassFilter(MeshNames[i].data()) && meshes[i]->GetFlags() & _meshFlagFilter)
 		{
-			const auto meshEnum = static_cast<MeshId>(i);
-			const auto &enumName = std::string(MeshNames[i]);
+			const auto meshEnum  = static_cast<MeshId>(i);
+			const auto& enumName = std::string(MeshNames[i]);
 			displayedMeshes++;
 
-			if (ImGui::Selectable(enumName.c_str(), static_cast<MeshId>(meshEnum)==_selectedMesh))
+			if (ImGui::Selectable(enumName.c_str(), static_cast<MeshId>(meshEnum) == _selectedMesh))
 				_selectedMesh = meshEnum;
 		}
 	}
@@ -125,7 +117,7 @@ void MeshViewer::DrawWindow()
 	ImGui::Checkbox("View bounding box", &_viewBoundingBox);
 
 	{
-		int32_t offset = 0;
+		int32_t offset   = 0;
 		int32_t newLines = 1;
 		for (uint8_t i = 0; i < 32; ++i)
 		{
@@ -145,7 +137,6 @@ void MeshViewer::DrawWindow()
 		ImGui::Text("%s", bitfieldTitle);
 		ImGui::TreePop();
 	}
-
 
 	auto const& submesh = mesh->GetSubMeshes()[_selectedSubMesh];
 
@@ -171,11 +162,11 @@ void MeshViewer::DrawScene()
 	if (!_open)
 		return;
 
-	auto const& meshPack        = Game::instance()->GetMeshPack();
-	auto const& meshes          = meshPack.GetMeshes();
-	auto& shaderManager         = Game::instance()->GetRenderer().GetShaderManager();
-	auto objectShader = shaderManager.GetShader("Object");
-	auto debugShader  = shaderManager.GetShader("DebugLine");
+	auto const& meshPack = Game::instance()->GetMeshPack();
+	auto const& meshes   = meshPack.GetMeshes();
+	auto& shaderManager  = Game::instance()->GetRenderer().GetShaderManager();
+	auto objectShader    = shaderManager.GetShader("Object");
+	auto debugShader     = shaderManager.GetShader("DebugLine");
 
 	// TODO(bwrsandman): use camera class
 	glm::mat4 perspective = glm::perspective(glm::radians(70.0f), 1.0f, 1.0f, 1024.0f);
@@ -186,20 +177,16 @@ void MeshViewer::DrawScene()
 	// TODO(bwrsandman): The setting of viewport and clearing should probably be done in framebuffer bind
 	static const uint32_t clearColor = 0x274659ff;
 	bgfx::setViewClear(static_cast<bgfx::ViewId>(_viewId),
-		BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
-		clearColor,
-		1.0f,
-		0);
+	                   BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
+	                   clearColor,
+	                   1.0f,
+	                   0);
 	uint16_t width, height;
 	_frameBuffer->GetSize(width, height);
 	bgfx::setViewRect(static_cast<bgfx::ViewId>(_viewId), 0, 0, width, height);
 
-	uint64_t state = 0u
-		| BGFX_STATE_WRITE_MASK
-		| BGFX_STATE_DEPTH_TEST_LESS
-		| BGFX_STATE_CULL_CCW  // TODO(bwrsandman): Some meshes wind one way and some others (i.e. rocks, gate)
-		| BGFX_STATE_MSAA
-	;
+	uint64_t state = 0u | BGFX_STATE_WRITE_MASK | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CCW // TODO(bwrsandman): Some meshes wind one way and some others (i.e. rocks, gate)
+	                 | BGFX_STATE_MSAA;
 
 	const auto& mesh = meshes[static_cast<int>(_selectedMesh)];
 	if (_selectedSubMesh >= 0 && static_cast<uint32_t>(_selectedSubMesh) < mesh->GetSubMeshes().size())

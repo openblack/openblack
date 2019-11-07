@@ -20,10 +20,6 @@
 
 #include "Renderer.h"
 
-#include <bgfx/platform.h>
-#include <SDL_video.h>
-#include <spdlog/spdlog.h>
-
 #include <3D/Camera.h>
 #include <3D/L3DMesh.h>
 #include <3D/LandIsland.h>
@@ -35,13 +31,16 @@
 #include <Graphics/FrameBuffer.h>
 #include <Graphics/ShaderManager.h>
 #include <Profiler.h>
+#include <SDL_video.h>
+#include <bgfx/platform.h>
+#include <spdlog/spdlog.h>
 
 using namespace openblack;
 using namespace openblack::graphics;
 
 namespace openblack
 {
-struct BgfxCallback : public bgfx::CallbackI
+struct BgfxCallback: public bgfx::CallbackI
 {
 	~BgfxCallback() override = default;
 
@@ -55,26 +54,27 @@ struct BgfxCallback : public bgfx::CallbackI
 			"DeviceLost",
 		};
 		spdlog::critical("bgfx: {}:{}: FATAL ({}): {}",
-			filePath, line, CodeLookup[code], str);
+		                 filePath, line, CodeLookup[code], str);
 
 		// Must terminate, continuing will cause crash anyway.
 		throw std::runtime_error(
-			std::string("bgfx: ") + filePath + ":" + std::to_string(line) +
-				": FATAL (" + CodeLookup[code] + "): " + str);
+		    std::string("bgfx: ") + filePath + ":" + std::to_string(line) +
+		    ": FATAL (" + CodeLookup[code] + "): " + str);
 	}
 
 	void traceVargs(const char* filePath, uint16_t line, const char* format, va_list argList) override
 	{
 		char temp[0x2000];
-		char* out = temp;
+		char* out   = temp;
 		int32_t len = vsnprintf(out, sizeof(temp), format, argList);
-		if ( (int32_t)sizeof(temp) < len)
+		if ((int32_t)sizeof(temp) < len)
 		{
 			out = (char*)alloca(len + 1);
 			len = vsnprintf(out, len, format, argList);
 		}
 		out[len] = '\0';
-		if (len > 0 && out[len - 1] == '\n') {
+		if (len > 0 && out[len - 1] == '\n')
+		{
 			out[len - 1] = '\0';
 		}
 		spdlog::debug("bgfx: {}:{}: {}", filePath, line, out);
@@ -116,11 +116,10 @@ struct BgfxCallback : public bgfx::CallbackI
 	}
 };
 
-}  // namespace openblack
+} // namespace openblack
 
-Renderer::Renderer(const GameWindow& window, bgfx::RendererType::Enum rendererType, bool vsync)
-	: _shaderManager(std::make_unique<ShaderManager>())
-	, _bgfxCallback(std::make_unique<BgfxCallback>())
+Renderer::Renderer(const GameWindow& window, bgfx::RendererType::Enum rendererType, bool vsync):
+    _shaderManager(std::make_unique<ShaderManager>()), _bgfxCallback(std::make_unique<BgfxCallback>())
 {
 	bgfx::Init init {};
 	init.type = rendererType;
@@ -129,7 +128,7 @@ Renderer::Renderer(const GameWindow& window, bgfx::RendererType::Enum rendererTy
 	int drawable_width;
 	int drawable_height;
 	window.GetSize(drawable_width, drawable_height);
-	init.resolution.width = (uint32_t)drawable_width;
+	init.resolution.width  = (uint32_t)drawable_width;
 	init.resolution.height = (uint32_t)drawable_height;
 
 	// Get Native Handles from SDL window
@@ -142,7 +141,8 @@ Renderer::Renderer(const GameWindow& window, bgfx::RendererType::Enum rendererTy
 	}
 	init.callback = dynamic_cast<bgfx::CallbackI*>(_bgfxCallback.get());
 
-	if (!bgfx::init(init)) {
+	if (!bgfx::init(init))
+	{
 		throw std::runtime_error("Failed to initialize bgfx.");
 	}
 
@@ -150,7 +150,6 @@ Renderer::Renderer(const GameWindow& window, bgfx::RendererType::Enum rendererTy
 
 	// allocate vertex buffers for our debug draw
 	_debugCross = DebugLines::CreateCross();
-
 
 	// give debug names to views
 	for (bgfx::ViewId i = 0; i < static_cast<bgfx::ViewId>(graphics::RenderPass::_count); ++i)
@@ -171,9 +170,9 @@ void Renderer::LoadShaders()
 	for (const auto& shader : Shaders)
 	{
 		_shaderManager->LoadShader(
-					shader.name.data(),
-					shader.vertexShaderName.data(),
-					shader.fragmentShaderName.data());
+		    shader.name.data(),
+		    shader.vertexShaderName.data(),
+		    shader.fragmentShaderName.data());
 	}
 }
 
@@ -194,28 +193,28 @@ graphics::ShaderManager& Renderer::GetShaderManager() const
 	return *_shaderManager;
 }
 
-void Renderer::UpdateDebugCrossUniforms(const glm::vec3 &position, float scale)
+void Renderer::UpdateDebugCrossUniforms(const glm::vec3& position, float scale)
 {
 	_debugCross->SetPose(position, glm::vec3(scale, scale, scale));
 }
 
-void Renderer::DrawScene(const DrawSceneDesc &drawDesc) const
+void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const
 {
 	// Reflection Pass
 	{
 		DrawSceneDesc drawPassDesc = drawDesc;
-		auto section = drawDesc.profiler.BeginScoped(Profiler::Stage::ReflectionPass);
+		auto section               = drawDesc.profiler.BeginScoped(Profiler::Stage::ReflectionPass);
 
-		auto& frameBuffer = drawDesc.water.GetFrameBuffer();
+		auto& frameBuffer     = drawDesc.water.GetFrameBuffer();
 		auto reflectionCamera = drawDesc.camera->Reflect(drawDesc.water.GetReflectionPlane());
 
-		drawPassDesc.viewId = graphics::RenderPass::Reflection;
-		drawPassDesc.camera = reflectionCamera.get();
-		drawPassDesc.frameBuffer = &frameBuffer;
-		drawPassDesc.drawWater = false;
-		drawPassDesc.drawDebugCross = false;
+		drawPassDesc.viewId            = graphics::RenderPass::Reflection;
+		drawPassDesc.camera            = reflectionCamera.get();
+		drawPassDesc.frameBuffer       = &frameBuffer;
+		drawPassDesc.drawWater         = false;
+		drawPassDesc.drawDebugCross    = false;
 		drawPassDesc.drawBoundingBoxes = false;
-		drawPassDesc.cullBack = true;
+		drawPassDesc.cullBack          = true;
 		DrawPass(drawPassDesc);
 	}
 
@@ -226,7 +225,7 @@ void Renderer::DrawScene(const DrawSceneDesc &drawDesc) const
 	}
 }
 
-void Renderer::DrawPass(const DrawSceneDesc &desc) const
+void Renderer::DrawPass(const DrawSceneDesc& desc) const
 {
 	if (desc.frameBuffer)
 	{
@@ -237,10 +236,10 @@ void Renderer::DrawPass(const DrawSceneDesc &desc) const
 
 	_shaderManager->SetCamera(desc.viewId, *desc.camera);
 
-	auto objectShader = _shaderManager->GetShader("Object");
-	auto waterShader = _shaderManager->GetShader("Water");
+	auto objectShader  = _shaderManager->GetShader("Object");
+	auto waterShader   = _shaderManager->GetShader("Water");
 	auto terrainShader = _shaderManager->GetShader("Terrain");
-	auto debugShader = _shaderManager->GetShader("DebugLine");
+	auto debugShader   = _shaderManager->GetShader("DebugLine");
 
 	{
 		auto section = desc.profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSky : Profiler::Stage::MainPassDrawSky);

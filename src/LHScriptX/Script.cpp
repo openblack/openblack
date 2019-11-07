@@ -21,8 +21,8 @@
 #include <LHScriptX/FeatureScriptCommands.h>
 #include <LHScriptX/Lexer.h>
 #include <LHScriptX/Script.h>
-#include <spdlog/spdlog.h>
 #include <iostream>
+#include <spdlog/spdlog.h>
 
 using namespace openblack;
 using namespace openblack::LHScriptX;

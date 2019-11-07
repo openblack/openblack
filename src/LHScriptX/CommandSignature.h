@@ -49,7 +49,7 @@ class ScriptCommandParameter
 	    _type(ParameterType::String)
 	{
 		// TODO: Hacky, avoid new
-		_value._string = new std::string();
+		_value._string  = new std::string();
 		*_value._string = value;
 	}
 	ScriptCommandParameter(float value):
@@ -78,7 +78,8 @@ class ScriptCommandParameter
   private:
 	ParameterType _type;
 
-	union {
+	union
+	{
 		std::string* _string;
 		float _float;
 		int32_t _number;
@@ -96,8 +97,6 @@ class ScriptCommandContext
 
 	Game& GetGame() const { return *_game; }
 
-
-
 	const ScriptCommandParameters& GetParameters() const { return *_parameters; }
 
 	const ScriptCommandParameter& operator[](unsigned int arg) const
@@ -107,6 +106,7 @@ class ScriptCommandContext
 
 	template <class T>
 	T GetParameter(unsigned int arg) const;
+
   private:
 	Game* _game;
 	const ScriptCommandParameters* _parameters;

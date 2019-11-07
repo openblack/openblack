@@ -20,11 +20,10 @@
 
 #pragma once
 
+#include <SDL.h>
 #include <cstdint>
 #include <memory>
 #include <string>
-
-#include <SDL.h>
 
 namespace openblack
 {
@@ -37,10 +36,10 @@ enum DisplayMode
 
 class GameWindow
 {
-  struct SDLDestroyer
-  {
-	void operator()(SDL_Window* window) const { SDL_DestroyWindow(window); }
-  };
+	struct SDLDestroyer
+	{
+		void operator()(SDL_Window* window) const { SDL_DestroyWindow(window); }
+	};
 
   public:
 	GameWindow(const std::string& title, const SDL_DisplayMode& display, DisplayMode displaymode);

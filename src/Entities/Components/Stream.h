@@ -54,6 +54,7 @@ class StreamNode
 			edges.push_back(*element);
 		}
 	}
+
   private:
 	const static auto maxNodeDistance = 100;
 };

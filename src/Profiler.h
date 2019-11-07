@@ -20,10 +20,9 @@
 
 #pragma once
 
-#include <cstdint>
-
 #include <array>
 #include <chrono>
+#include <cstdint>
 #include <map>
 #include <string_view>
 
@@ -32,8 +31,7 @@ namespace openblack
 
 class Profiler
 {
-public:
-
+  public:
 	enum class Stage : uint8_t
 	{
 		SdlInput,
@@ -59,12 +57,11 @@ public:
 		_count,
 	};
 
-private:
+  private:
 	struct ScopedSection
 	{
-		inline explicit ScopedSection(Profiler* profiler, Stage stage)
-			: _profiler(profiler)
-			, _stage(stage)
+		inline explicit ScopedSection(Profiler* profiler, Stage stage):
+		    _profiler(profiler), _stage(stage)
 		{
 			_profiler->Begin(_stage);
 		}
@@ -77,7 +74,7 @@ private:
 		const Stage _stage;
 	};
 
-public:
+  public:
 	struct Scope
 	{
 		uint8_t _level;
@@ -123,7 +120,7 @@ public:
 		return ScopedSection(this, stage);
 	}
 
-	[[ nodiscard ]] uint8_t GetEntryIndex(int8_t offset) const
+	[[nodiscard]] uint8_t GetEntryIndex(int8_t offset) const
 	{
 		return (_currentEntry + _bufferSize + offset) % _bufferSize;
 	}
@@ -131,9 +128,9 @@ public:
 	static constexpr uint8_t _bufferSize = 100;
 	std::array<Entry, _bufferSize> _entries;
 
-private:
+  private:
 	uint8_t _currentEntry = _bufferSize - 1;
 	uint8_t _currentLevel = 0;
 };
 
-}  // openblack
+} // namespace openblack

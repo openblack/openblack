@@ -28,7 +28,8 @@ namespace openblack
 class LandCell
 {
   public:
-	LandCell() : altitude(0), properties(0x40) {}
+	LandCell():
+	    altitude(0), properties(0x40) {}
 
 	inline uint8_t Light() { return color.a; }
 	inline uint8_t Altitude() const { return altitude; }

@@ -38,4 +38,4 @@ struct AxisAlignedBoundingBox
 	}
 };
 
-}  // namespace openblack::graphics
+} // namespace openblack

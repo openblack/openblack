@@ -343,18 +343,18 @@ void FeatureScriptCommands::CreateTown(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::SetTownBelief(const ScriptCommandContext& ctx)
 {
-	Game& game         = ctx.GetGame();
-	const auto& params = ctx.GetParameters();
-	auto& island       = game.GetLandIsland();
-	auto& registry     = game.GetEntityRegistry();
-	const auto entity  = registry.Create();
-	auto& registryContext = registry.Context();
-	int townId            = params[0].GetNumber();
+	Game& game              = ctx.GetGame();
+	const auto& params      = ctx.GetParameters();
+	auto& island            = game.GetLandIsland();
+	auto& registry          = game.GetEntityRegistry();
+	const auto entity       = registry.Create();
+	auto& registryContext   = registry.Context();
+	int townId              = params[0].GetNumber();
 	const auto& playerOwner = params[1].GetString();
 	const auto& belief      = params[2].GetFloat();
 
 	Town& town = registry.Get<Town>(registryContext.towns.at(townId));
-	town.beliefs.insert({ playerOwner, belief});
+	town.beliefs.insert({ playerOwner, belief });
 }
 
 void FeatureScriptCommands::SetTownBeliefCap(const ScriptCommandContext& ctx)
@@ -795,7 +795,7 @@ void FeatureScriptCommands::CreateStreamPoint(const ScriptCommandContext& ctx)
 	const glm::vec3 position(pos.x, island.GetHeightAt(pos), pos.y);
 	auto& registryContext = registry.Context();
 
-	Stream& stream      = registry.Get<Stream>(registryContext.streams.at(streamId));
+	Stream& stream = registry.Get<Stream>(registryContext.streams.at(streamId));
 	const StreamNode newNode(position, stream.streamNodes);
 	stream.streamNodes.push_back(newNode);
 }

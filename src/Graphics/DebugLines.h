@@ -20,13 +20,12 @@
 
 #pragma once
 
-#include <cstdint>
-#include <memory>
-
-#include <glm/glm.hpp>
-
 #include "RenderPass.h"
 #include "ShaderProgram.h"
+
+#include <cstdint>
+#include <glm/glm.hpp>
+#include <memory>
 
 namespace openblack::graphics
 {
@@ -42,7 +41,7 @@ class DebugLines
 	};
 
 	static std::unique_ptr<DebugLines> CreateCross();
-	static std::unique_ptr<DebugLines> CreateBox(const glm::vec4 &color);
+	static std::unique_ptr<DebugLines> CreateBox(const glm::vec4& color);
 	static std::unique_ptr<DebugLines> CreateLine(const glm::vec4& from, const glm::vec4& to, const glm::vec4& color);
 	static std::unique_ptr<DebugLines> CreateDebugLines(const Vertex* data, uint32_t vertexCount);
 

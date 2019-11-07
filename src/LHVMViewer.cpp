@@ -19,23 +19,22 @@
  */
 
 #include <LHVMViewer.h>
-
 #include <array>
 #include <imgui.h>
 #include <imgui_memory_editor.h>
 
 using openblack::LHVMViewer;
 
-uint32_t LHVMViewer::SelectedScriptID = 1;
-static bool ScrollToSelected = false;
+uint32_t LHVMViewer::SelectedScriptID    = 1;
+static bool ScrollToSelected             = false;
 static bool ResetScriptDisassemblyScroll = false;
-const ImVec4 Disassembly_ColorBG = ImVec4(0.152f, 0.156f, 0.133f, 1.0f);
-const ImVec4 Disassembly_ColorFG = ImVec4(0.972f, 0.972f, 0.949f, 1.0f);
-const ImVec4 Disassembly_ColorComment = ImVec4(0.458f, 0.443f, 0.368f, 1.0f);
-const ImVec4 Disassembly_ColorFuncName = ImVec4(0.650f, 0.886f, 0.180f, 1.0f);
-const ImVec4 Disassembly_ColorKeyword = ImVec4(0.976f, 0.149f, 0.447f, 1.0f);
-const ImVec4 Disassembly_ColorVariable = ImVec4(0.972f, 0.972f, 0.949f, 1.0f);
-const ImVec4 Disassembly_ColorConstant = ImVec4(0.682f, 0.505f, 1.0f, 1.0f);
+const ImVec4 Disassembly_ColorBG         = ImVec4(0.152f, 0.156f, 0.133f, 1.0f);
+const ImVec4 Disassembly_ColorFG         = ImVec4(0.972f, 0.972f, 0.949f, 1.0f);
+const ImVec4 Disassembly_ColorComment    = ImVec4(0.458f, 0.443f, 0.368f, 1.0f);
+const ImVec4 Disassembly_ColorFuncName   = ImVec4(0.650f, 0.886f, 0.180f, 1.0f);
+const ImVec4 Disassembly_ColorKeyword    = ImVec4(0.976f, 0.149f, 0.447f, 1.0f);
+const ImVec4 Disassembly_ColorVariable   = ImVec4(0.972f, 0.972f, 0.949f, 1.0f);
+const ImVec4 Disassembly_ColorConstant   = ImVec4(0.682f, 0.505f, 1.0f, 1.0f);
 
 static const std::array<std::string, 464> Function_Names = { "NONE", "SET_CAMERA_POSITION", "SET_CAMERA_FOCUS", "MOVE_CAMERA_POSITION", "MOVE_CAMERA_FOCUS", "GET_CAMERA_POSITION", "GET_CAMERA_FOCUS", "SPIRIT_EJECT", "SPIRIT_HOME", "SPIRIT_POINT_POS", "SPIRIT_POINT_GAME_THING", "GAME_THING_FIELD_OF_VIEW", "POS_FIELD_OF_VIEW", "RUN_TEXT", "TEMP_TEXT", "TEXT_READ", "GAME_THING_CLICKED", "SET_SCRIPT_STATE", "SET_SCRIPT_STATE_POS", "SET_SCRIPT_FLOAT",
 	                                                         "SET_SCRIPT_ULONG", "GET_PROPERTY", "SET_PROPERTY", "GET_POSITION", "SET_POSITION", "GET_DISTANCE", "CALL", "CREATE", "RANDOM", "DLL_GETTIME", "START_CAMERA_CONTROL", "END_CAMERA_CONTROL", "SET_WIDESCREEN", "MOVE_GAME_THING", "SET_FOCUS", "HAS_CAMERA_ARRIVED", "FLOCK_CREATE", "FLOCK_ATTACH", "FLOCK_DETACH", "FLOCK_DISBAND",
@@ -71,7 +70,7 @@ inline void AddUnderLine(ImColor col_)
 {
 	ImVec2 min = ImGui::GetItemRectMin();
 	ImVec2 max = ImGui::GetItemRectMax();
-	min.y = max.y;
+	min.y      = max.y;
 	ImGui::GetWindowDrawList()->AddLine(min, max, col_, 1.0f);
 }
 
@@ -345,7 +344,7 @@ std::string openblack::LHVMViewer::DataToString(uint32_t data, openblack::LHVM::
 
 void openblack::LHVMViewer::SelectScript(uint32_t idx)
 {
-	SelectedScriptID = idx;
-	ScrollToSelected = true;
+	SelectedScriptID             = idx;
+	ScrollToSelected             = true;
 	ResetScriptDisassemblyScroll = true;
 }

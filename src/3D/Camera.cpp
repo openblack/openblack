@@ -69,10 +69,9 @@ glm::vec3 Camera::GetUp() const
 std::unique_ptr<Camera> Camera::Reflect(const glm::vec4& relectionPlane) const
 {
 	auto reflectionCamera = std::make_unique<ReflectionCamera>(
-		_position,
-		glm::degrees(_rotation),
-		relectionPlane
-	);
+	    _position,
+	    glm::degrees(_rotation),
+	    relectionPlane);
 	reflectionCamera->SetProjectionMatrix(_projectionMatrix);
 
 	return reflectionCamera;

@@ -21,8 +21,8 @@
 #include "LandBlock.h"
 
 #include <3D/LandIsland.h>
-#include <glm/gtc/type_ptr.hpp>
 #include <Graphics/VertexBuffer.h>
+#include <glm/gtc/type_ptr.hpp>
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -101,24 +101,24 @@ void LandBlock::BuildMesh(LandIsland& island)
 	VertexDecl decl;
 	decl.reserve(7);
 	decl.emplace_back(VertexAttrib::Attribute::Position, 3, VertexAttrib::Type::Float);
-	decl.emplace_back(VertexAttrib::Attribute::TexCoord1, 3, VertexAttrib::Type::Float);  // weight
-	decl.emplace_back(VertexAttrib::Attribute::Color1, 3, VertexAttrib::Type::Uint8);  // first material id
-	decl.emplace_back(VertexAttrib::Attribute::Color2, 3, VertexAttrib::Type::Uint8);  // second material id
+	decl.emplace_back(VertexAttrib::Attribute::TexCoord1, 3, VertexAttrib::Type::Float);       // weight
+	decl.emplace_back(VertexAttrib::Attribute::Color1, 3, VertexAttrib::Type::Uint8);          // first material id
+	decl.emplace_back(VertexAttrib::Attribute::Color2, 3, VertexAttrib::Type::Uint8);          // second material id
 	decl.emplace_back(VertexAttrib::Attribute::TexCoord2, 3, VertexAttrib::Type::Uint8, true); // material blend coefficient
-	decl.emplace_back(VertexAttrib::Attribute::Color0, 4, VertexAttrib::Type::Uint8, true);  // light level, align to 4 bytes
-	decl.emplace_back(VertexAttrib::Attribute::Color3, 1, VertexAttrib::Type::Float, true);  // water alpha
+	decl.emplace_back(VertexAttrib::Attribute::Color0, 4, VertexAttrib::Type::Uint8, true);    // light level, align to 4 bytes
+	decl.emplace_back(VertexAttrib::Attribute::Color3, 1, VertexAttrib::Type::Float, true);    // water alpha
 
 	auto verts = buildVertexList(island);
 
 	auto vertexBuffer = new VertexBuffer("LandBlock", verts, decl);
-	_mesh = std::make_unique<Mesh>(vertexBuffer);
+	_mesh             = std::make_unique<Mesh>(vertexBuffer);
 }
 
 const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 {
 	// reserve 16*16 quads of 2 tris with 3 verts = 1536
 	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(LandVertex) * 1536);
-	auto vertices = (LandVertex*)verticesMem->data;
+	auto vertices                   = (LandVertex*)verticesMem->data;
 
 	auto countries = island.GetCountries();
 
@@ -151,7 +151,6 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 			auto trMat = countries[tr.Country()].MapMaterials[tr.Altitude() + island.GetNoise(bx + x + 1, bz + z + 0)];
 			auto blMat = countries[bl.Country()].MapMaterials[bl.Altitude() + island.GetNoise(bx + x + 0, bz + z + 1)];
 			auto brMat = countries[br.Country()].MapMaterials[br.Altitude() + island.GetNoise(bx + x + 1, bz + z + 1)];
-
 
 			// use a lambda so we're not repeating ourselves
 			auto make_vert = [](glm::vec3 height, glm::vec3 weight, MapMaterial m1, MapMaterial m2, MapMaterial m3, LandCell cell) -> LandVertex {
@@ -203,23 +202,17 @@ void LandBlock::Draw(graphics::RenderPass viewId, const ShaderProgram& program, 
 	program.SetUniformValue("u_blockPosition", &_mapPosition);
 
 	Mesh::DrawDesc desc = {
-		/*viewId =*/ viewId,
-		/*program =*/ program,
-		/*count =*/ _mesh->GetVertexBuffer().GetCount(),
-		/*offset =*/ 0,
-		/*instanceBuffer =*/ nullptr,
-		/*instanceStart =*/ 0,
-		/*instanceCount =*/ 1,
-		/*state =*/ 0u
-			| BGFX_STATE_WRITE_MASK
-			| BGFX_STATE_DEPTH_TEST_LESS
-			| (cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW)
-			| BGFX_STATE_BLEND_ALPHA
-			| BGFX_STATE_MSAA
-		,
-		/*rgba =*/ 0,
-		/*skip =*/ Mesh::SkipState::SkipNone,
-		/*preserveState =*/ false,
+		/*viewId =*/viewId,
+		/*program =*/program,
+		/*count =*/_mesh->GetVertexBuffer().GetCount(),
+		/*offset =*/0,
+		/*instanceBuffer =*/nullptr,
+		/*instanceStart =*/0,
+		/*instanceCount =*/1,
+		/*state =*/0u | BGFX_STATE_WRITE_MASK | BGFX_STATE_DEPTH_TEST_LESS | (cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW) | BGFX_STATE_BLEND_ALPHA | BGFX_STATE_MSAA,
+		/*rgba =*/0,
+		/*skip =*/Mesh::SkipState::SkipNone,
+		/*preserveState =*/false,
 	};
 	_mesh->Draw(desc);
 }

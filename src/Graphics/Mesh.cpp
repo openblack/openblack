@@ -26,10 +26,8 @@
 
 using namespace openblack::graphics;
 
-Mesh::Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, Topology topology)
-	: _vertexBuffer(vertexBuffer)
-	, _indexBuffer(indexBuffer)
-	, _topology(topology)
+Mesh::Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, Topology topology):
+    _vertexBuffer(vertexBuffer), _indexBuffer(indexBuffer), _topology(topology)
 {
 }
 

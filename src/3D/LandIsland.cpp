@@ -20,13 +20,11 @@
 
 #include "LandIsland.h"
 
-#include <stdexcept>
-
-#include <spdlog/spdlog.h>
-
 #include <Common/FileSystem.h>
 #include <Common/IStream.h>
 #include <Game.h>
+#include <spdlog/spdlog.h>
+#include <stdexcept>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <Common/stb_image_write.h>
@@ -37,10 +35,8 @@ using namespace openblack::graphics;
 const float LandIsland::HeightUnit = 0.67f;
 const float LandIsland::CellSize   = 10.0f;
 
-LandIsland::LandIsland()
-	: _materialCount(0)
-	, _lowresCount(0)
-	, _blockIndexLookup{ 0 }
+LandIsland::LandIsland():
+    _materialCount(0), _lowresCount(0), _blockIndexLookup { 0 }
 {
 	auto file           = Game::instance()->GetFileSystem().Open("Data/Textures/smallbumpa.raw", FileMode::Read);
 	uint8_t* smallbumpa = new uint8_t[file->Size()];
@@ -126,7 +122,7 @@ void LandIsland::LoadFromFile(IStream& stream)
 	_textureNoiseMap->Create(256, 256, 1, Format::R8, Wrapping::ClampEdge, _noiseMap.data(), _noiseMap.size() * sizeof(_noiseMap[0]));
 
 	// read bump map into Texture2D
-	std::array<uint8_t, 256* 256> bumpMapTextureData;
+	std::array<uint8_t, 256 * 256> bumpMapTextureData;
 	stream.Read(bumpMapTextureData.data(), bumpMapTextureData.size() * sizeof(bumpMapTextureData[0]));
 	_textureBumpMap = std::make_unique<Texture2D>("LandIslandBumpMap");
 	_textureBumpMap->Create(256, 256, 1, Format::R8, Wrapping::ClampEdge, bumpMapTextureData.data(), bumpMapTextureData.size() * sizeof(bumpMapTextureData[0]));
@@ -139,8 +135,8 @@ void LandIsland::LoadFromFile(IStream& stream)
 
 void openblack::LandIsland::Update(float timeOfDay, float bumpMapStrength, float smallBumpMapStrength)
 {
-	_timeOfDay = timeOfDay;
-	_bumpMapStrength = bumpMapStrength;
+	_timeOfDay            = timeOfDay;
+	_bumpMapStrength      = bumpMapStrength;
 	_smallBumpMapStrength = smallBumpMapStrength;
 }
 
@@ -239,9 +235,9 @@ void LandIsland::DumpMaps()
 	{
 		LandBlock& block = _landBlocks[b];
 
-		int mapx         = block.GetBlockPosition().x;
-		int mapz         = block.GetBlockPosition().y;
-		int lineStride   = 32 * cellsize;
+		int mapx       = block.GetBlockPosition().x;
+		int mapz       = block.GetBlockPosition().y;
+		int lineStride = 32 * cellsize;
 
 		for (int x = 0; x < cellsize; x++)
 		{
