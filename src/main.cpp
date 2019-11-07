@@ -18,13 +18,11 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <memory>
+#include <Game.h>
+#include <cxxopts.hpp>
 #include <iostream>
 #include <map>
-
-#include <cxxopts.hpp>
-
-#include <Game.h>
+#include <memory>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -55,16 +53,16 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 			return false;
 		}
 		static const std::map<std::string_view, bgfx::RendererType::Enum> rendererLookup = {
-			std::pair {"OpenGL", bgfx::RendererType::OpenGL},
-			std::pair {"OpenGLES", bgfx::RendererType::OpenGLES},
-			std::pair {"Vulkan", bgfx::RendererType::Vulkan},
-			std::pair {"Direct3D9", bgfx::RendererType::Direct3D9},
-			std::pair {"Direct3D11", bgfx::RendererType::Direct3D11},
-			std::pair {"Direct3D12", bgfx::RendererType::Direct3D12},
-			std::pair {"Metal", bgfx::RendererType::Metal},
-			std::pair {"Gnm", bgfx::RendererType::Gnm},
-			std::pair {"Nvn", bgfx::RendererType::Nvn},
-			std::pair {"Noop", bgfx::RendererType::Noop},
+			std::pair { "OpenGL", bgfx::RendererType::OpenGL },
+			std::pair { "OpenGLES", bgfx::RendererType::OpenGLES },
+			std::pair { "Vulkan", bgfx::RendererType::Vulkan },
+			std::pair { "Direct3D9", bgfx::RendererType::Direct3D9 },
+			std::pair { "Direct3D11", bgfx::RendererType::Direct3D11 },
+			std::pair { "Direct3D12", bgfx::RendererType::Direct3D12 },
+			std::pair { "Metal", bgfx::RendererType::Metal },
+			std::pair { "Gnm", bgfx::RendererType::Gnm },
+			std::pair { "Nvn", bgfx::RendererType::Nvn },
+			std::pair { "Noop", bgfx::RendererType::Noop },
 		};
 		bgfx::RendererType::Enum rendererType;
 		auto rendererIter = rendererLookup.find(result["backend-type"].as<std::string>());
@@ -78,9 +76,9 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		}
 
 		static const std::map<std::string_view, openblack::DisplayMode> displayModeLookup = {
-			std::pair{"windowed", openblack::DisplayMode::Windowed},
-			std::pair{"fullscreen", openblack::DisplayMode::Fullscreen},
-			std::pair{"borderless", openblack::DisplayMode::Borderless},
+			std::pair { "windowed", openblack::DisplayMode::Windowed },
+			std::pair { "fullscreen", openblack::DisplayMode::Fullscreen },
+			std::pair { "borderless", openblack::DisplayMode::Borderless },
 		};
 
 		openblack::DisplayMode displayMode;
@@ -97,16 +95,36 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		args.executablePath = argv[0];
 		if (result.count("game-path") == 0)
 		{
-			throw cxxopts::option_required_exception("game-path");
-		}
-		args.gamePath = result["game-path"].as<std::string>();
-		args.windowWidth = result["width"].as<uint16_t>();
-		args.windowHeight = result["height"].as<uint16_t>();
-		args.scale = result["gui-scale"].as<float>();;
-		args.vsync = result["vsync"].as<bool>();
-		args.displayMode = displayMode;
-		args.rendererType = rendererType;
+#ifdef _WIN32
+			// if we're on windows we can find the install path
+			DWORD dataLen  = 0;
+			LSTATUS status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ, nullptr, nullptr, &dataLen);
+			if (status == ERROR_SUCCESS)
+			{
+				char* path = new char[dataLen];
+				status     = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ, nullptr, path, &dataLen);
 
+				args.gamePath = std::string(path);
+			}
+			else
+			{
+				throw cxxopts::option_required_exception("game-path");
+			}
+#else
+			throw cxxopts::option_required_exception("game-path");
+#endif
+		}
+		else
+		{
+			args.gamePath = result["game-path"].as<std::string>();
+		}
+		args.windowWidth  = result["width"].as<uint16_t>();
+		args.windowHeight = result["height"].as<uint16_t>();
+		args.scale        = result["gui-scale"].as<float>();
+		;
+		args.vsync        = result["vsync"].as<bool>();
+		args.displayMode  = displayMode;
+		args.rendererType = rendererType;
 	}
 	catch (cxxopts::OptionParseException& err)
 	{
