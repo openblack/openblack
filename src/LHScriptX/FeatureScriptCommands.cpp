@@ -335,7 +335,7 @@ void FeatureScriptCommands::CreateTown(const ScriptCommandContext& ctx)
 	// float notUsed          = params[3].GetNumber();
 	const auto& civilisation = params[4].GetString();
 
-	spdlog::debug("Creating town {} for \"{}\" with civilisation \"{}\".", townId, playerOwner, civilisation);
+	spdlog::debug(R"(Creating town {} for "{}" with civilisation "{}".)", townId, playerOwner, civilisation);
 	registry.Assign<Town>(entity, townId);
 	auto& registryContext = registry.Context();
 	registryContext.towns.insert({ townId, entity });
