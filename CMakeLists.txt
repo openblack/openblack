@@ -94,16 +94,13 @@ if (NOT bgfx_FOUND)
   endif()
   if (OPENBLACK_BGFX_USE_SYSTEM_SPIRV_CROSS)
     find_package(spirv_cross_core REQUIRED)
-    find_package(spirv_cross_cpp REQUIRED)
     find_package(spirv_cross_glsl REQUIRED)
     find_package(spirv_cross_msl REQUIRED)
     find_package(spirv_cross_reflect REQUIRED)
-    #set_target_properties(spirv-cross-c-shared PROPERTIES IMPORTED_GLOBAL TRUE)
     add_library(spirv-cross INTERFACE)
     target_link_libraries(spirv-cross
       INTERFACE
         spirv-cross-core
-        spirv-cross-cpp
         spirv-cross-glsl
         spirv-cross-msl
         spirv-cross-reflect
