@@ -14,8 +14,8 @@ environment:
 platform: x64
 
 cache:
-  - c:\tools\vcpkg\installed\
-  - _build_%TOOLCHAIN%_Release\_deps\bgfx-build
+  - c:\tools\vcpkg\installed\ -> appveyor.yml
+  - _build_%TOOLCHAIN%_Release\_deps\bgfx-build -> appveyor.yml
 
 before_build:
   # Required by -Gninja
