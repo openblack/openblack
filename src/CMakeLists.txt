@@ -114,7 +114,8 @@ target_include_directories(
                     ${CMAKE_CURRENT_BINARY_DIR}/../include)
 target_link_libraries(
   openblack
-  PRIVATE imgui
+  PRIVATE l3d
+          imgui
           imgui-flame-graph
           ScriptLibrary
           SDL2::SDL2main

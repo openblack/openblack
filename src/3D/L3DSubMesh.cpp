@@ -30,6 +30,7 @@
 
 #include <glm/gtx/component_wise.hpp>
 #include <glm/gtx/norm.hpp>
+#include <l3d_file.h>
 #include <spdlog/spdlog.h>
 
 using namespace openblack::graphics;
@@ -64,6 +65,74 @@ struct L3DPrimitive
 	uint32_t numVertexBlends;
 	uint32_t vertexBlendsOffset;
 };
+
+void L3DSubMesh::Load(l3d::L3DFile& l3d, uint32_t meshIndex)
+{
+	auto& header = l3d.GetSubmeshHeaders()[meshIndex];
+	auto primitiveSpan = l3d.GetPrimitiveSpan(meshIndex);
+	auto& verticesSpan = l3d.GetVertexSpan(meshIndex);
+	auto& indexSpan = l3d.GetIndexSpan(meshIndex);
+
+	_flags = *reinterpret_cast<const HeaderFlag*>(&header.flags);
+
+	// Count vertices and indices
+	uint32_t nVertices = 0;
+	uint32_t nIndices = 0;
+	for (auto& primitive : primitiveSpan)
+	{
+		nVertices += primitive.numVertices;
+		nIndices += primitive.numTriangles * 3;
+	}
+
+	// Construct bounding box
+	_boundingBox.maxima = glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+	_boundingBox.minima = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
+	for (uint32_t j = 0; j < nVertices; j++)
+	{
+		_boundingBox.maxima.x = glm::max(_boundingBox.maxima.x, verticesSpan[j].position.x);
+		_boundingBox.maxima.y = glm::max(_boundingBox.maxima.y, verticesSpan[j].position.y);
+		_boundingBox.maxima.z = glm::max(_boundingBox.maxima.z, verticesSpan[j].position.z);
+		_boundingBox.minima.x = glm::min(_boundingBox.minima.x, verticesSpan[j].position.x);
+		_boundingBox.minima.y = glm::min(_boundingBox.minima.y, verticesSpan[j].position.y);
+		_boundingBox.minima.z = glm::min(_boundingBox.minima.z, verticesSpan[j].position.z);
+	}
+
+	// Get vertices
+	// TODO: make ref for vertices
+	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(L3DVertex) * nVertices);
+	std::memcpy(verticesMem->data, verticesSpan.data(), verticesMem->size);
+
+	// Get Indices
+	const bgfx::Memory* indicesMem = bgfx::alloc(sizeof(uint16_t) * nIndices);
+	auto indices = (uint16_t*)indicesMem->data;
+
+	uint32_t startIndex = 0;
+	uint32_t startVertex = 0;
+	for (auto& primitive : primitiveSpan)
+	{
+		// Fix indices for merged vertex buffer
+		for (uint32_t j = 0; j < primitive.numTriangles * 3; j++)
+			indices[startIndex + j] = indexSpan[startIndex + j] + startVertex;
+
+		_primitives.emplace_back(Primitive {primitive.skinID, startIndex, primitive.numTriangles * 3});
+
+		startVertex += primitive.numVertices;
+		startIndex += primitive.numTriangles * 3;
+	}
+
+	VertexDecl decl;
+	decl.reserve(3);
+	decl.emplace_back(VertexAttrib::Attribute::Position, 3, VertexAttrib::Type::Float);
+	decl.emplace_back(VertexAttrib::Attribute::TexCoord0, 2, VertexAttrib::Type::Float);
+	decl.emplace_back(VertexAttrib::Attribute::Normal, 3, VertexAttrib::Type::Float);
+
+	// build our buffers
+	auto vertexBuffer = new VertexBuffer(_l3dMesh.GetDebugName(), verticesMem, decl);
+	auto indexBuffer = new IndexBuffer(_l3dMesh.GetDebugName(), indicesMem, IndexBuffer::Type::Uint16);
+	_mesh = std::make_unique<graphics::Mesh>(vertexBuffer, indexBuffer);
+
+	spdlog::debug("{} with {} verts and {} indices", _l3dMesh.GetDebugName(), nVertices, nIndices);
+}
 
 void L3DSubMesh::Load(IStream& stream)
 {

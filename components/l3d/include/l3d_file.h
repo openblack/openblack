@@ -27,6 +27,38 @@
 namespace openblack::l3d
 {
 
+// TODO(bwrsandman): If you read this in c++20, replace with std::span
+template <typename N>
+class Span
+{
+	const std::vector<N>& original;
+	const uint32_t start;
+	const uint32_t length;
+
+public:
+	Span(std::vector<N>& original, uint32_t start, uint32_t length)
+		: original(original)
+		, start(start)
+		, length(length)
+	{
+	}
+
+	const N* data() const noexcept { return original.data() + start; }
+
+	typename std::vector<N>::const_reference operator[](typename std::vector<N>::size_type index) const noexcept
+	{
+		return original[index + start];
+	}
+
+	constexpr typename std::vector<N>::size_type size() const noexcept { return length; }
+
+	// First element.
+	constexpr typename std::vector<N>::const_iterator begin() const noexcept { return original.begin() + start; }
+
+	// One past the last element.
+	constexpr typename std::vector<N>::const_iterator end() const noexcept { return begin() + size(); }
+};
+
 /**
   This class is used to read L3Ds.
  */
@@ -140,6 +172,10 @@ protected:
 	std::vector<uint8_t> _lookUpTable;
 	std::vector<uint8_t> _blends;
 	std::vector<L3DBone> _bones;
+	std::vector<Span<L3DPrimitiveHeader>> _primitiveSpans;
+	std::vector<Span<L3DVertex>> _vertexSpans;
+	std::vector<Span<uint16_t>> _indexSpans;
+	std::vector<Span<L3DBone>> _boneSpans;
 
 	/// Error handling
 	void Fail(const std::string& msg);
@@ -165,6 +201,13 @@ public:
 	[[nodiscard]] const std::vector<uint8_t>& GetLookUpTableData() const { return _lookUpTable; }
 	[[nodiscard]] const std::vector<uint8_t>& GetBlends() const { return _blends; }
 	[[nodiscard]] const std::vector<L3DBone>& GetBones() const { return _bones; }
+	[[nodiscard]] const Span<L3DPrimitiveHeader>& GetPrimitiveSpan(uint32_t submeshIndex) const
+	{
+		return _primitiveSpans[submeshIndex];
+	}
+	[[nodiscard]] const Span<L3DBone>& GetBoneSpan(uint32_t submeshIndex) const { return _boneSpans[submeshIndex]; }
+	[[nodiscard]] const Span<L3DVertex>& GetVertexSpan(uint32_t submeshIndex) const { return _vertexSpans[submeshIndex]; }
+	[[nodiscard]] const Span<uint16_t>& GetIndexSpan(uint32_t submeshIndex) const { return _indexSpans[submeshIndex]; }
 };
 
 } // namespace openblack::l3d

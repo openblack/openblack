@@ -25,9 +25,8 @@
 #include "Common/IStream.h"
 #include "Game.h"
 
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/transform.hpp>
+#include <l3d_file.h>
 #include <spdlog/spdlog.h>
 
 #include <array>
@@ -36,54 +35,10 @@
 using namespace openblack;
 using namespace openblack::graphics;
 
-struct L3DSubMesh
-{
-	uint32_t flags; // nodraw, transparent
-	uint32_t numPrimitives;
-	uint32_t primitivesOffset;
-	uint32_t numBones;
-	uint32_t bonesOffset;
-};
-
-struct L3DPrimitive
-{
-	uint32_t unknown_1;
-	uint32_t unknown_2;
-	int32_t skinID;
-	uint32_t unknown_3;
-
-	uint32_t numVerticies;
-	uint32_t verticiesOffset;
-	uint32_t numTriangles;
-	uint32_t trianglesOffset;
-	uint32_t boneVertLUTSize;
-	uint32_t boneVertLUTOffset;
-	uint32_t numVertexBlends;
-	uint32_t vertexBlendsOffset;
-};
-
-struct L3D_Vertex
-{
-	float position[3];
-	float texCoords[2];
-	float normal[3];
-};
-
-struct L3D_Triangle
-{
-	uint16_t indices[3];
-};
-
 struct LH3D_BoneVert
 {
 	uint16_t nVertices;
 	uint16_t boneIndex;
-};
-
-struct L3D_Skin
-{
-	uint32_t skinID;
-	uint16_t data[256 * 256]; // RGBA4444
 };
 
 struct L3DModel_Vertex
@@ -99,8 +54,34 @@ L3DMesh::L3DMesh(const std::string& debugName): _debugName(debugName), _flags(st
 void L3DMesh::LoadFromFile(const std::string& fileName)
 {
 	spdlog::debug("Loading L3DMesh from file: {}", fileName);
-	auto file = Game::instance()->GetFileSystem().Open(fileName, FileMode::Read);
-	Load(*file);
+	l3d::L3DFile l3d;
+
+	try
+	{
+		l3d.Open(Game::instance()->GetFileSystem().FindPath(fileName));
+	}
+	catch (std::runtime_error& err)
+	{
+		spdlog::error("Failed to open {}: {}", fileName, err.what());
+		return;
+	}
+
+	_flags = static_cast<L3DMeshFlags>(l3d.GetHeader().flags);
+	for (auto& skin : l3d.GetSkins())
+	{
+		_skins[skin.id] = std::make_unique<Texture2D>(_debugName.c_str());
+		_skins[skin.id]->Create(skin.width, skin.height, 1, Format::RGBA4, Wrapping::ClampEdge, skin.texels.data(),
+		                        skin.texels.size() * sizeof(skin.texels[0]));
+	}
+
+	_subMeshes.resize(l3d.GetSubmeshHeaders().size());
+	for (auto i = 0; i < _subMeshes.size(); ++i)
+	{
+		_subMeshes[i] = std::make_unique<L3DSubMesh>(*this);
+		_subMeshes.back()->Load(l3d, i);
+	}
+	// TODO(bwrsandman): store vertex and index buffers at mesh level
+	bgfx::frame();
 }
 
 void L3DMesh::Load(IStream& stream)

@@ -437,6 +437,45 @@ void L3DFile::ReadFile(std::istream& stream)
 		}
 	}
 
+	// Create spans per submesh
+	_primitiveSpans.reserve(_submeshHeaders.size());
+	_boneSpans.reserve(_submeshHeaders.size());
+	{
+		uint32_t primitiveStart = 0;
+		uint32_t boneStart = 0;
+		for (auto& _submeshHeader : _submeshHeaders)
+		{
+			_primitiveSpans.emplace_back(_primitiveHeaders, primitiveStart, _submeshHeader.numPrimitives);
+			primitiveStart += _submeshHeader.numPrimitives;
+			_boneSpans.emplace_back(_bones, boneStart, _submeshHeader.numBones);
+			boneStart += _submeshHeader.numBones;
+		}
+	}
+
+	// Create Primitive spans per submesh
+	_vertexSpans.reserve(_submeshHeaders.size());
+	_indexSpans.reserve(_submeshHeaders.size());
+	{
+		uint32_t vertexStart = 0;
+		uint32_t indexStart = 0;
+		for (uint32_t i = 0; i < _submeshHeaders.size(); ++i)
+		{
+			uint32_t vertexLength = 0;
+			uint32_t indexLength = 0;
+			for (auto& primitive : GetPrimitiveSpan(i))
+			{
+				vertexLength += primitive.numVertices;
+				indexLength += primitive.numTriangles * 3;
+			}
+
+			_vertexSpans.emplace_back(_vertices, vertexStart, vertexLength);
+			_indexSpans.emplace_back(_indices, indexStart, indexLength);
+
+			vertexStart += vertexLength;
+			indexStart += indexLength;
+		}
+	}
+
 	_isLoaded = true;
 }
 

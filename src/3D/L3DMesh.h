@@ -34,6 +34,7 @@ class IStream;
 
 typedef uint32_t SkinId;
 
+// TODO(bwrsandman): Move to l3d lib
 enum class L3DMeshFlags : uint32_t
 {
 	Unknown1 = 1 << 0,                  // 0x1      (31)
