@@ -130,6 +130,7 @@ void L3DMesh::Load(IStream& stream)
 		uint32_t pointsListOffset;
 		uint32_t extraDataOffset;
 	} header;
+	static_assert(sizeof(L3DHeader) == 4 * 18);
 
 	stream.Read<L3DHeader>(&header);
 
