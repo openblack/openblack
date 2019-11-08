@@ -115,6 +115,7 @@ target_include_directories(
 target_link_libraries(
   openblack
   PRIVATE l3d
+          g3d
           imgui
           imgui-flame-graph
           ScriptLibrary

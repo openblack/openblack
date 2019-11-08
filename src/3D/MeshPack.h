@@ -20,8 +20,9 @@
 
 #pragma once
 
+#include <map>
 #include <memory>
-#include <unordered_map>
+#include <string>
 #include <vector>
 
 namespace openblack
@@ -30,6 +31,11 @@ namespace openblack
 class IStream;
 class L3DMesh;
 
+namespace g3d
+{
+struct G3DTexture;
+}
+
 namespace graphics
 {
 class Texture2D;
@@ -37,13 +43,6 @@ class Texture2D;
 
 class MeshPack
 {
-	struct LHBlockHeader
-	{
-		char blockName[32];
-		uint32_t blockSize;
-		uint32_t position;
-	};
-
 	enum class TextureType : uint32_t
 	{
 		DXT1 = 1,
@@ -53,7 +52,7 @@ class MeshPack
 public:
 	MeshPack() = default;
 
-	void Load(IStream&);
+	void LoadFromFile(const std::string& filename);
 
 	using MeshesVec = std::vector<std::unique_ptr<L3DMesh>>;
 	using TexturesVec = std::vector<std::unique_ptr<graphics::Texture2D>>;
@@ -65,12 +64,10 @@ public:
 	[[nodiscard]] const graphics::Texture2D& GetTexture(int id) const { return *_textures.at(id); }
 
 private:
-	void loadTextures(IStream&);
-	void loadMeshes(IStream&);
+	void loadTextures(const std::map<std::string, g3d::G3DTexture>& textures);
+	void loadMeshes(const std::vector<std::vector<uint8_t>>& meshes);
 
 	MeshesVec _meshes;
 	TexturesVec _textures;
-
-	std::unordered_map<std::string, LHBlockHeader> _blocks;
 };
 } // namespace openblack

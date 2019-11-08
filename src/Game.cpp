@@ -237,9 +237,8 @@ void Game::Run()
 	_modelRotation = glm::vec3(180.0f, 111.0f, 0.0f);
 	_modelScale = glm::vec3(0.5f);
 
-	auto file = _fileSystem->Open("Data/AllMeshes.g3d", FileMode::Read);
 	_meshPack = std::make_unique<MeshPack>();
-	_meshPack->Load(*file);
+	_meshPack->LoadFromFile("Data/AllMeshes.g3d");
 
 	_testModel = std::make_unique<L3DMesh>();
 	_testModel->LoadFromFile("Data/CreatureMesh/C_Tortoise_Base.l3d");
