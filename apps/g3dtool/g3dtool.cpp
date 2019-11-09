@@ -204,6 +204,17 @@ int ViewMesh(openblack::g3d::G3DFile& g3d, uint32_t index, const std::string& ou
 	return EXIT_SUCCESS;
 }
 
+int WriteFile(const std::string& outFilename)
+{
+	openblack::g3d::G3DFile g3d;
+
+	// TODO(bwrsandman): expand on this to create files with contents
+
+	g3d.Write(outFilename);
+
+	return EXIT_SUCCESS;
+}
+
 struct Arguments
 {
 	enum class Mode
@@ -215,6 +226,7 @@ struct Arguments
 		Meshes,
 		Texture,
 		Mesh,
+		Write,
 	};
 	std::vector<std::string> filenames;
 	Mode mode;
@@ -237,6 +249,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		("T,texture-block", "View texture block statistics.")
 		("t,texture", "View texture statistics.", cxxopts::value<std::string>())
 		("e,extract", "Extract contents of a block (texture) to filename.", cxxopts::value<std::string>())
+		("w,write", "Create Mesh Pack.", cxxopts::value<std::string>())
 		("mesh-pack-files", "G3D Mesh Pack Files.", cxxopts::value<std::vector<std::string>>())
 	;
 	options.parse_positional({ "mesh-pack-files" });
@@ -252,6 +265,13 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			return_code = EXIT_SUCCESS;
 			return false;
 		}
+		if (result["write"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Write;
+			args.outFilename = result["write"].as<std::string>();
+			return true;
+		}
+		// Following this, all args require positional arguments
 		if (result["mesh-pack-files"].count() == 0)
 		{
 			throw cxxopts::missing_argument_exception("mesh-pack-files");
@@ -327,6 +347,11 @@ int main(int argc, char* argv[])
 	if (!parseOptions(argc, argv, args, return_code))
 	{
 		return return_code;
+	}
+
+	if (args.mode == Arguments::Mode::Write)
+	{
+		return WriteFile(args.outFilename);
 	}
 
 	for (auto& filename : args.filenames)

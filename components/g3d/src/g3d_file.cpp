@@ -124,6 +124,8 @@ struct G3DBlockHeader
 	char blockName[blockNameSize];
 	uint32_t blockSize;
 };
+
+constexpr const char kMeshMagic[4] = {'M', 'K', 'J', 'C'};
 } // namespace
 
 /// Error handling
@@ -151,7 +153,6 @@ void G3DFile::ReadBlocks()
 		input.seekg(0);
 	}
 
-	constexpr const char kMagic[8] = {'L', 'i', 'O', 'n', 'H', 'e', 'A', 'd'};
 	char magic[sizeof(kMagic)];
 	if (fsize < sizeof(magic) + sizeof(G3DBlockHeader))
 	{
@@ -267,10 +268,9 @@ void G3DFile::ResolveMeshBlock()
 
 	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
 	// Greetings Jean-Claude Cottier
-	constexpr const char kMKJC[4] = {'M', 'K', 'J', 'C'};
-	char magic[sizeof(kMKJC)];
+	char magic[sizeof(kMeshMagic)];
 	stream.read(magic, sizeof(magic));
-	if (std::memcmp(&magic, kMKJC, sizeof(magic)) != 0)
+	if (std::memcmp(&magic, kMeshMagic, sizeof(magic)) != 0)
 	{
 		Fail("Unrecognized Mesh Block header");
 	}
@@ -289,6 +289,87 @@ void G3DFile::ResolveMeshBlock()
 	}
 }
 
+void G3DFile::WriteBlocks(std::ostream& stream) const
+{
+	assert(!_isLoaded);
+
+	// Magic number
+	stream.write(kMagic, sizeof(kMagic));
+
+	G3DBlockHeader header;
+
+	for (auto& [name, contents] : _blocks)
+	{
+		std::snprintf(header.blockName, sizeof(header.blockName), "%s", name.c_str());
+		header.blockSize = static_cast<uint32_t>(contents.size() * sizeof(contents[0]));
+
+		stream.write(reinterpret_cast<const char*>(&header), sizeof(header));
+		stream.write(reinterpret_cast<const char*>(contents.data()), header.blockSize);
+	}
+}
+
+void G3DFile::CreateTextureBlocks()
+{
+	// TODO(bwrsandman): Loop through every texture and create a block with
+	//                   their id. Then fill in the look-up table.
+	assert(_isLoaded);
+	assert(false);
+}
+
+void G3DFile::CreateMeshBlock()
+{
+	if (HasBlock("MESHES"))
+	{
+		Fail("Mesh pack already has a MESHES block");
+	}
+
+	size_t offset = 0;
+	std::vector<uint8_t> contents;
+
+	auto meshCount = static_cast<uint32_t>(_meshes.size());
+	contents.resize(sizeof(kMeshMagic) + sizeof(meshCount));
+
+	std::memcpy(contents.data() + offset, kMeshMagic, sizeof(kMeshMagic));
+	offset += sizeof(kMeshMagic);
+	std::memcpy(contents.data() + offset, &meshCount, sizeof(meshCount));
+	offset += sizeof(meshCount);
+
+	contents.resize(offset + sizeof(uint32_t) * meshCount);
+	auto meshOffsets = reinterpret_cast<uint32_t*>(&contents[offset]);
+	offset += sizeof(uint32_t) * meshCount;
+	for (size_t i = 0; i < _meshes.size(); ++i)
+	{
+		meshOffsets[i] = static_cast<uint32_t>(offset);
+		offset += _meshes[i].size();
+	}
+	contents.resize(offset);
+	for (size_t i = 0; i < _meshes.size(); ++i)
+	{ std::memcpy(&contents[meshOffsets[i]], _meshes[i].data(), _meshes[i].size() * sizeof(_meshes[i][0])); }
+
+	_blocks["MESHES"] = std::move(contents);
+}
+
+void G3DFile::CreateInfoBlock()
+{
+	if (HasBlock("INFO"))
+	{
+		Fail("Mesh pack already has an INFO block");
+	}
+
+	uint32_t offset = 0;
+	std::vector<uint8_t> contents;
+
+	auto totalTextures = static_cast<uint32_t>(_infoBlockLookup.size());
+	contents.resize(sizeof(totalTextures) + _infoBlockLookup.size() * sizeof(_infoBlockLookup[0]));
+
+	std::memcpy(contents.data() + offset, &totalTextures, sizeof(totalTextures));
+	offset += static_cast<uint32_t>(sizeof(totalTextures));
+
+	std::memcpy(contents.data() + offset, _infoBlockLookup.data(), _infoBlockLookup.size() * sizeof(_infoBlockLookup[0]));
+
+	_blocks["INFO"] = std::move(contents);
+}
+
 G3DFile::G3DFile() : _isLoaded(false) {}
 
 void G3DFile::Open(const std::string& file)
@@ -299,6 +380,25 @@ void G3DFile::Open(const std::string& file)
 	ExtractTextureFromBlock();
 	ResolveMeshBlock();
 	_isLoaded = true;
+}
+
+void G3DFile::Write(const std::string& file)
+{
+	assert(!_isLoaded);
+
+	_filename = file;
+
+	std::ofstream stream(_filename, std::ios::binary);
+
+	if (!stream.is_open())
+	{
+		Fail("Could not open file.");
+	}
+
+	// CreateTextureBlocks();  // TODO(bwrsandman): Implement CreateTextureBlocks
+	CreateMeshBlock();
+	CreateInfoBlock();
+	WriteBlocks(stream);
 }
 
 std::unique_ptr<std::istream> G3DFile::GetBlockAsStream(const std::string& name) const

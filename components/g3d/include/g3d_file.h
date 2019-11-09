@@ -93,6 +93,9 @@ struct G3DTexture
  */
 class G3DFile
 {
+public:
+	static constexpr const char kMagic[8] = {'L', 'i', 'O', 'n', 'H', 'e', 'A', 'd'};
+
 protected:
 	/// True when a file has been loaded
 	bool _isLoaded;
@@ -112,6 +115,18 @@ protected:
 	/// Read blocks from pack
 	virtual void ReadBlocks();
 
+	/// Create Texture Blocks from textures
+	void CreateTextureBlocks();
+
+	/// Create Mesh Block from meshes
+	void CreateMeshBlock();
+
+	/// Create Info block from look-up table
+	void CreateInfoBlock();
+
+	/// Write blocks to file
+	virtual void WriteBlocks(std::ostream& stream) const;
+
 	/// Parse Info Block
 	virtual void ResolveInfoBlock();
 
@@ -126,7 +141,11 @@ public:
 
 	virtual ~G3DFile() = default;
 
+	/// Read l3d file from the filesystem
 	void Open(const std::string& file);
+
+	/// Write g3d file to path on the filesystem
+	void Write(const std::string& file);
 
 	[[nodiscard]] const std::string& GetFilename() const { return _filename; }
 	[[nodiscard]] const std::map<std::string, std::vector<uint8_t>>& GetBlocks() const { return _blocks; }
