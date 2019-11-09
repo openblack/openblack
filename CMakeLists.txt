@@ -183,10 +183,12 @@ include(CMakeModules/Shaders.cmake)
 
 add_subdirectory(components/l3d)
 add_subdirectory(components/g3d)
+add_subdirectory(components/lnd)
 add_subdirectory(components/ScriptLibrary)
 add_subdirectory(src)
 add_subdirectory(apps/l3dtool)
 add_subdirectory(apps/g3dtool)
+add_subdirectory(apps/lndtool)
 
 # Set openblack project as default startup project in Visual Studio
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT
