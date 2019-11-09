@@ -196,7 +196,6 @@ void L3DFile::ReadFile(std::istream& stream)
 
 	// First 76 bytes
 	stream.read(reinterpret_cast<char*>(&_header), sizeof(L3DHeader));
-	constexpr const char kMagic[4] = {'L', '3', 'D', '0'};
 	if (std::memcmp(&_header.magic, kMagic, sizeof(_header.magic)) != 0)
 	{
 		Fail("Unrecognized L3D header");
@@ -481,6 +480,15 @@ void L3DFile::ReadFile(std::istream& stream)
 
 L3DFile::L3DFile() : _isLoaded(false) {}
 
+void L3DFile::WriteFile(std::ostream& stream) const
+{
+	assert(!_isLoaded);
+
+	stream.write(reinterpret_cast<const char*>(&_header), sizeof(_header));
+
+	// TODO(bwrsandman): expand on this to create files with contents
+}
+
 void L3DFile::Open(const std::string& file)
 {
 	assert(!_isLoaded);
@@ -506,4 +514,23 @@ void L3DFile::Open(const std::vector<uint8_t>& buffer)
 	_filename = "buffer";
 
 	ReadFile(stream);
+}
+
+void L3DFile::Write(const std::string& file)
+{
+	assert(!_isLoaded);
+
+	_filename = file;
+
+	std::ofstream stream(_filename, std::ios::binary);
+
+	if (!stream.is_open())
+	{
+		Fail("Could not open file.");
+	}
+
+	// Set magic number
+	std::memcpy(_header.magic, kMagic, sizeof(kMagic));
+
+	WriteFile(stream);
 }

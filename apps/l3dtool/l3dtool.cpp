@@ -271,6 +271,16 @@ int PrintBlendValues(openblack::l3d::L3DFile& l3d)
 	return PrintRawBytes(blendValues.data(), blendValues.size() * sizeof(blendValues[0]));
 }
 
+int WriteFile(const std::string outFilename)
+{
+	openblack::l3d::L3DFile l3d {};
+
+	// TODO(bwrsandman): expand on this to create files with contents
+	l3d.Write(outFilename);
+
+	return EXIT_SUCCESS;
+}
+
 struct Arguments
 {
 	enum class Mode
@@ -285,9 +295,11 @@ struct Arguments
 		Indices,
 		LookUpTables,
 		VertexBlendValues,
+		Write,
 	};
 	std::vector<std::string> filenames;
 	Mode mode;
+	std::string outFilename;
 };
 
 bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
@@ -306,6 +318,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		("I,indices", "Print Indices.", cxxopts::value<std::vector<std::string>>())
 		("L,look-up-tables", "Print Look Up Table Data.", cxxopts::value<std::vector<std::string>>())
 		("B,vertex-blend-values", "Print Vertex Blend Values.", cxxopts::value<std::vector<std::string>>())
+		("w,write", "Create L3D file.", cxxopts::value<std::string>())
 	;
 
 	try
@@ -377,6 +390,12 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			args.filenames = result["vertex-blend-values"].as<std::vector<std::string>>();
 			return true;
 		}
+		if (result["write"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Write;
+			args.outFilename = result["write"].as<std::string>();
+			return true;
+		}
 	}
 	catch (cxxopts::OptionParseException& err)
 	{
@@ -395,6 +414,11 @@ int main(int argc, char* argv[])
 	if (!parseOptions(argc, argv, args, return_code))
 	{
 		return return_code;
+	}
+
+	if (args.mode == Arguments::Mode::Write)
+	{
+		return WriteFile(args.outFilename);
 	}
 
 	for (auto& filename : args.filenames)

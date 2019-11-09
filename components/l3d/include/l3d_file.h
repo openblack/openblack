@@ -65,6 +65,8 @@ public:
 class L3DFile
 {
 public:
+	static constexpr const char kMagic[4] = {'L', '3', 'D', '0'};
+
 	struct L3DHeader
 	{
 		char magic[4];
@@ -183,12 +185,22 @@ protected:
 	/// Read file from the input source
 	virtual void ReadFile(std::istream& stream);
 
+	/// Write file to the input source
+	virtual void WriteFile(std::ostream& stream) const;
+
 public:
 	L3DFile();
+
 	virtual ~L3DFile() = default;
 
+	/// Read l3d file from the filesystem
 	void Open(const std::string& file);
+
+	/// Read l3d file from a buffer
 	void Open(const std::vector<uint8_t>& buffer);
+
+	/// Write l3d file to path on the filesystem
+	void Write(const std::string& file);
 
 	[[nodiscard]] const std::string& GetFilename() const { return _filename; }
 	[[nodiscard]] const L3DHeader& GetHeader() const { return _header; }
