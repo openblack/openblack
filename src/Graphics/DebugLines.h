@@ -20,16 +20,15 @@
 
 #pragma once
 
-#include "RenderPass.h"
-#include "ShaderProgram.h"
-
-#include <cstdint>
+#include <bgfx/bgfx.h>
 #include <glm/glm.hpp>
 #include <memory>
+#include <Graphics/RenderPass.h>
 
 namespace openblack::graphics
 {
 class Mesh;
+class ShaderProgram;
 
 class DebugLines
 {

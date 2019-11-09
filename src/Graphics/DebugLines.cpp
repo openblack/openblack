@@ -18,15 +18,15 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "DebugLines.h"
-
-#include "Mesh.h"
-#include "VertexBuffer.h"
-
+#include <Graphics/DebugLines.h>
+#include <Graphics/Mesh.h>
+#include <Graphics/VertexBuffer.h>
 #include <array>
+#include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 
-using namespace openblack::graphics;
+namespace openblack::graphics
+{
 
 std::unique_ptr<DebugLines> DebugLines::CreateDebugLines(const Vertex* data, uint32_t vertexCount)
 {
@@ -150,3 +150,5 @@ DebugLines::DebugLines(std::unique_ptr<Mesh>&& mesh):
 }
 
 DebugLines::~DebugLines() = default;
+
+} // namespace openblack::graphics

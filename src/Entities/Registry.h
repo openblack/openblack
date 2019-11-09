@@ -18,13 +18,9 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <AllMeshes.h>
 #include <Entities/RegistryContext.h>
 #include <Graphics/RenderPass.h>
-#include <bgfx/bgfx.h>
 #include <entt/entt.hpp>
-#include <glm/glm.hpp>
-#include <map>
 
 namespace openblack
 {

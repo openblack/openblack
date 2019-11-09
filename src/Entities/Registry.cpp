@@ -1,4 +1,4 @@
-#include "Registry.h"
+#include <Entities/Registry.h>
 
 #include <3D/Camera.h>
 #include <3D/L3DMesh.h>
@@ -13,6 +13,7 @@
 #include <Game.h>
 #include <Graphics/DebugLines.h>
 #include <Graphics/ShaderManager.h>
+#include <algorithm>
 
 namespace openblack::Entities
 {
