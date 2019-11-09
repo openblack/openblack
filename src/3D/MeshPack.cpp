@@ -36,37 +36,6 @@
 namespace openblack
 {
 
-// todo: move this code to it's own image parser
-void createCompressedDDS(graphics::Texture2D* texture, const g3d::G3DTexture& g3dTexture)
-{
-	// some assumptions:
-	// - no mipmaps
-	// - no cubemap or volume textures
-	// - always dxt1 or dxt3
-	// - all are compressed
-
-	graphics::Format internalFormat;
-	int32_t width = g3dTexture.ddsHeader.width;
-	int32_t height = g3dTexture.ddsHeader.height;
-
-	if (g3dTexture.ddsHeader.format.fourCC == std::string("DXT1"))
-		internalFormat = graphics::Format::BlockCompression1;
-	else if (g3dTexture.ddsHeader.format.fourCC == std::string("DXT3"))
-		internalFormat = graphics::Format::BlockCompression2;
-	else
-		throw std::runtime_error("Unsupported compressed texture format");
-
-	// DXT1 = 8bpp or DXT3 = 16bpp
-	int bpp = internalFormat == graphics::Format::BlockCompression2 ? 16 : 8;
-	size_t size = std::max(1, ((int)width + 3) >> 2) * std::max(1, ((int)height + 3) >> 2) * bpp;
-
-	// TODO(bwrsandman): Remove above calculation if the following holds true
-	assert(g3dTexture.ddsData.size() == size);
-
-	texture->Create(width, height, 1, internalFormat, graphics::Wrapping::ClampEdge, g3dTexture.ddsData.data(),
-	                g3dTexture.ddsData.size());
-}
-
 void MeshPack::LoadFromFile(const std::string& filename)
 {
 	spdlog::debug("Loading Mesh Pack from file: {}", filename);
@@ -92,10 +61,26 @@ void MeshPack::loadTextures(const std::map<std::string, g3d::G3DTexture>& textur
 	_textures.resize(static_cast<std::size_t>(textures.size() + 1));
 	_textures[0] = std::make_unique<graphics::Texture2D>("Error Texture");
 
-	for (auto const& [name, tex] : textures)
+	for (auto const& [name, g3dTexture] : textures)
 	{
-		_textures[tex.header.id] = std::make_unique<graphics::Texture2D>(name);
-		createCompressedDDS(_textures[tex.header.id].get(), tex);
+		// some assumptions:
+		// - no mipmaps
+		// - no cubemap or volume textures
+		// - always dxt1 or dxt3
+		// - all are compressed
+
+		graphics::Format internalFormat;
+		if (g3dTexture.ddsHeader.format.fourCC == std::string("DXT1"))
+			internalFormat = graphics::Format::BlockCompression1;
+		else if (g3dTexture.ddsHeader.format.fourCC == std::string("DXT3"))
+			internalFormat = graphics::Format::BlockCompression2;
+		else
+			throw std::runtime_error("Unsupported compressed texture format");
+
+		_textures[g3dTexture.header.id] = std::make_unique<graphics::Texture2D>(name);
+		_textures[g3dTexture.header.id]->Create(g3dTexture.ddsHeader.width, g3dTexture.ddsHeader.height, 1, internalFormat,
+		                                        graphics::Wrapping::ClampEdge, g3dTexture.ddsData.data(),
+		                                        g3dTexture.ddsData.size());
 	}
 
 	spdlog::debug("MeshPack loaded {0} textures", textures.size());
