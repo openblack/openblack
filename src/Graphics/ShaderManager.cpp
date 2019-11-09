@@ -18,16 +18,18 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Shaders/fs_line.bin.h"
-#include "Shaders/fs_object.bin.h"
-#include "Shaders/fs_terrain.bin.h"
-#include "Shaders/fs_water.bin.h"
-#include "Shaders/vs_line.bin.h"
-#include "Shaders/vs_line_instanced.bin.h"
-#include "Shaders/vs_object.bin.h"
-#include "Shaders/vs_object_instanced.bin.h"
-#include "Shaders/vs_terrain.bin.h"
-#include "Shaders/vs_water.bin.h"
+#include <cstdint>
+
+#include <Graphics/Shaders/fs_line.bin.h>
+#include <Graphics/Shaders/fs_object.bin.h>
+#include <Graphics/Shaders/fs_terrain.bin.h>
+#include <Graphics/Shaders/fs_water.bin.h>
+#include <Graphics/Shaders/vs_line.bin.h>
+#include <Graphics/Shaders/vs_line_instanced.bin.h>
+#include <Graphics/Shaders/vs_object.bin.h>
+#include <Graphics/Shaders/vs_object_instanced.bin.h>
+#include <Graphics/Shaders/vs_terrain.bin.h>
+#include <Graphics/Shaders/vs_water.bin.h>
 
 #include <3D/Camera.h>
 #include <Graphics/ShaderManager.h>
