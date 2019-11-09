@@ -78,8 +78,7 @@ public:
 	explicit L3DSubMesh(L3DMesh& mesh);
 	~L3DSubMesh();
 
-	void Load(l3d::L3DFile& l3d, uint32_t meshIndex);
-	void Load(IStream& stream);
+	void Load(const l3d::L3DFile& l3d, uint32_t meshIndex);
 	void Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program,
 	            uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
 	void Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart,

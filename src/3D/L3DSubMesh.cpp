@@ -66,7 +66,7 @@ struct L3DPrimitive
 	uint32_t vertexBlendsOffset;
 };
 
-void L3DSubMesh::Load(l3d::L3DFile& l3d, uint32_t meshIndex)
+void L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 {
 	auto& header = l3d.GetSubmeshHeaders()[meshIndex];
 	auto primitiveSpan = l3d.GetPrimitiveSpan(meshIndex);
@@ -131,104 +131,7 @@ void L3DSubMesh::Load(l3d::L3DFile& l3d, uint32_t meshIndex)
 	auto indexBuffer = new IndexBuffer(_l3dMesh.GetDebugName(), indicesMem, IndexBuffer::Type::Uint16);
 	_mesh = std::make_unique<graphics::Mesh>(vertexBuffer, indexBuffer);
 
-	spdlog::debug("{} with {} verts and {} indices", _l3dMesh.GetDebugName(), nVertices, nIndices);
-}
-
-void L3DSubMesh::Load(IStream& stream)
-{
-	struct
-	{
-		HeaderFlag flags;
-		uint32_t numPrimitives;
-		uint32_t primitivesOffset;
-		uint32_t numBones;
-		uint32_t bonesOffset;
-	} header;
-
-	stream.Read(&header);
-
-	_flags = header.flags;
-
-	// load primitives first
-	std::vector<uint32_t> offsets(header.numPrimitives);
-	stream.Seek(header.primitivesOffset, SeekMode::Begin);
-	stream.Read(offsets.data(), offsets.size() * sizeof(uint32_t));
-
-	std::vector<L3DPrimitive> l3dPrims(header.numPrimitives);
-
-	std::size_t nVertices = 0, nIndices = 0;
-	for (uint32_t i = 0; i < header.numPrimitives; i++)
-	{
-		stream.Seek(offsets[i], SeekMode::Begin);
-		stream.Read(&l3dPrims[i]);
-
-		nVertices += l3dPrims[i].numVerticies;
-		nIndices += l3dPrims[i].numTriangles * 3;
-	}
-
-	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(L3DVertex) * nVertices);
-	const bgfx::Memory* indicesMem = bgfx::alloc(sizeof(uint16_t) * nIndices);
-
-	auto vertices = (L3DVertex*)verticesMem->data;
-	auto indices = (uint16_t*)indicesMem->data;
-
-	uint32_t startIndex = 0, startVertex = 0;
-	_boundingBox.maxima = glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-	_boundingBox.minima = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
-	for (const auto& prim : l3dPrims)
-	{
-		stream.Seek(prim.verticiesOffset, SeekMode::Begin);
-		for (uint32_t j = 0; j < prim.numVerticies; j++)
-		{
-			stream.Read(&vertices[startVertex + j]);
-			_boundingBox.maxima.x = glm::max(_boundingBox.maxima.x, vertices[startVertex + j].pos.x);
-			_boundingBox.maxima.y = glm::max(_boundingBox.maxima.y, vertices[startVertex + j].pos.y);
-			_boundingBox.maxima.z = glm::max(_boundingBox.maxima.z, vertices[startVertex + j].pos.z);
-			_boundingBox.minima.x = glm::min(_boundingBox.minima.x, vertices[startVertex + j].pos.x);
-			_boundingBox.minima.y = glm::min(_boundingBox.minima.y, vertices[startVertex + j].pos.y);
-			_boundingBox.minima.z = glm::min(_boundingBox.minima.z, vertices[startVertex + j].pos.z);
-		}
-
-		stream.Seek(prim.trianglesOffset, SeekMode::Begin);
-		for (uint32_t j = 0; j < prim.numTriangles * 3; j++)
-			indices[startIndex + j] = stream.ReadValue<uint16_t>() + startVertex;
-
-		Primitive p;
-		p.indicesCount = prim.numTriangles * 3;
-		p.indicesOffset = startIndex;
-		p.skinID = prim.skinID;
-
-		_primitives.emplace_back(p);
-
-		startVertex += prim.numVerticies;
-		startIndex += prim.numTriangles * 3;
-	}
-
-	VertexDecl decl;
-	decl.reserve(3);
-	decl.emplace_back(VertexAttrib::Attribute::Position, 3, VertexAttrib::Type::Float);
-	decl.emplace_back(VertexAttrib::Attribute::TexCoord0, 2, VertexAttrib::Type::Float);
-	decl.emplace_back(VertexAttrib::Attribute::Normal, 3, VertexAttrib::Type::Float);
-
-	// build our buffers
-	auto vertexBuffer = new VertexBuffer(_l3dMesh.GetDebugName(), verticesMem, decl);
-	auto indexBuffer = new IndexBuffer(_l3dMesh.GetDebugName(), indicesMem, IndexBuffer::Type::Uint16);
-	_mesh = std::make_unique<graphics::Mesh>(vertexBuffer, indexBuffer);
-
-	spdlog::debug("{} with {} verts and {} indices", _l3dMesh.GetDebugName(), nVertices, nIndices);
-
-	// spdlog::debug("flags: {:b}",
-	// *reinterpret_cast<uint32_t*>(&header.flags)); if (header.flags._unknown1)
-	// 	spdlog::debug("unknown1: {:b}", header.flags._unknown1);
-	// assert(header.flags._unknown1 == 0b100);
-	// assert(header.flags._padding == 0);
-
-	// offsets are local to stream :D
-
-	// spdlog::debug("position: {}", stream.Position());
-	// spdlog::debug("# prims: {} @ {}", header.numPrimitives,
-	// header.primitivesOffset); spdlog::debug("# bones: {} @ {}",
-	// header.numBones, header.bonesOffset);
+	spdlog::debug("{} submesh {} with {} verts and {} indices", _l3dMesh.GetDebugName(), meshIndex, nVertices, nIndices);
 }
 
 void L3DSubMesh::Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state,

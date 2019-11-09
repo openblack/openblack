@@ -51,21 +51,8 @@ struct L3DModel_Vertex
 
 L3DMesh::L3DMesh(const std::string& debugName): _debugName(debugName), _flags(static_cast<L3DMeshFlags>(0)) {}
 
-void L3DMesh::LoadFromFile(const std::string& fileName)
+void L3DMesh::Load(const l3d::L3DFile& l3d)
 {
-	spdlog::debug("Loading L3DMesh from file: {}", fileName);
-	l3d::L3DFile l3d;
-
-	try
-	{
-		l3d.Open(Game::instance()->GetFileSystem().FindPath(fileName));
-	}
-	catch (std::runtime_error& err)
-	{
-		spdlog::error("Failed to open {}: {}", fileName, err.what());
-		return;
-	}
-
 	_flags = static_cast<L3DMeshFlags>(l3d.GetHeader().flags);
 	for (auto& skin : l3d.GetSkins())
 	{
@@ -78,135 +65,45 @@ void L3DMesh::LoadFromFile(const std::string& fileName)
 	for (auto i = 0; i < _subMeshes.size(); ++i)
 	{
 		_subMeshes[i] = std::make_unique<L3DSubMesh>(*this);
-		_subMeshes.back()->Load(l3d, i);
+		_subMeshes[i]->Load(l3d, i);
 	}
 	// TODO(bwrsandman): store vertex and index buffers at mesh level
 	bgfx::frame();
 }
 
-void L3DMesh::Load(IStream& stream)
+void L3DMesh::LoadFromFile(const std::string& fileName)
 {
-	constexpr const char kMagic[4] = {'L', '3', 'D', '0'};
-	char magic[4];
-	stream.Read(magic, 4);
+	spdlog::debug("Loading L3DMesh from file: {}", fileName);
+	l3d::L3DFile l3d;
 
-	// check L3D0 validity first..
-	if (std::memcmp(magic, kMagic, 4) != 0)
+	try
 	{
-		spdlog::error("l3dmodel: invalid magic number (expected {:.4} got {:.4})", kMagic, magic);
-		return; // todo: return an error moadel?
+		l3d.Open(Game::instance()->GetFileSystem().FindPath(fileName).u8string());
+	}
+	catch (std::runtime_error& err)
+	{
+		spdlog::error("Failed to open l3d mesh from filesystem {}: {}", fileName, err.what());
+		return;
 	}
 
-	struct L3DHeader
+	Load(l3d);
+}
+
+void L3DMesh::LoadFromBuffer(const std::vector<uint8_t>& data)
+{
+	l3d::L3DFile l3d;
+
+	try
 	{
-		L3DMeshFlags flags;
-		uint32_t size;
-		uint32_t submeshCount;
-		uint32_t submeshPointersOffset;
-		uint8_t padding[32]; // always zero
-		uint32_t anotherOffset;
-		uint32_t skinsCount;
-		uint32_t skinsOffset;
-		uint32_t pointsCount;
-		uint32_t pointsListOffset;
-		uint32_t extraDataOffset;
-	} header;
-	static_assert(sizeof(L3DHeader) == 4 * 18);
-
-	stream.Read<L3DHeader>(&header);
-
-#ifdef _DEBUG
-	assert(std::all_of(&header.padding[0], &header.padding[32], [](int i) { return i == 0; }));
-#endif
-
-	_flags = header.flags;
-
-#if 0
-	if (IsBoned())
-	    spdlog::debug("\tcontains bones");
-
-	if (IsContainsLandscapeFeature())
-	    spdlog::debug("\tcontains landscape feature");
-
-	if (IsContainsUV2())
-	    spdlog::debug("\tcontains uv2");
-
-	if (IsContainsNameData())
-	    spdlog::debug("\tcontains name data");
-
-	if (IsContainsEBone())
-	    spdlog::debug("\tcontains ebone");
-
-	if (IsContainsExtraMetrics())
-	    spdlog::debug("\tcontains extra metrics");
-#endif
-
-	// read textures
-	if (header.skinsCount > 0)
+		l3d.Open(data);
+	}
+	catch (std::runtime_error& err)
 	{
-		std::vector<uint32_t> offsets(header.skinsCount);
-
-		stream.Seek(header.skinsOffset, SeekMode::Begin);
-		stream.Read(offsets.data(), offsets.size() * sizeof(uint32_t));
-
-		spdlog::debug("\tLoading {} skins", header.skinsCount);
-		for (size_t i = 0; i < offsets.size(); i++)
-		{
-			uint32_t id = stream.ReadValue<uint32_t>();
-			std::vector<uint16_t> data(256 * 256); // RGBA4444
-			stream.Read(data.data(), 256 * 256 * sizeof(uint16_t));
-
-			_skins[id] = std::make_unique<Texture2D>(_debugName.c_str());
-			_skins[id]->Create(256, 256, 1, Format::RGBA4, Wrapping::ClampEdge, data.data(), data.size() * sizeof(data[0]));
-		}
+		spdlog::error("Failed to open l3d mesh from buffer: {}", err.what());
+		return;
 	}
 
-	// read submeshes
-	if (header.submeshCount > 0)
-	{
-		std::vector<uint32_t> offsets(header.submeshCount);
-
-		stream.Seek(header.submeshPointersOffset, SeekMode::Begin);
-		stream.Read(offsets.data(), offsets.size() * sizeof(uint32_t));
-
-		_subMeshes.resize(offsets.size());
-		for (size_t i = 0; i < offsets.size(); i++)
-		{
-			stream.Seek(offsets[i], SeekMode::Begin);
-			_subMeshes[i] = std::make_unique<L3DSubMesh>(*this);
-			_subMeshes[i]->Load(stream);
-		}
-		bgfx::frame();
-	}
-
-#if 0
-	if (header.pointsCount > 0) {
-	    spdlog::debug("\t{} points at {:#x}", header.pointsCount, header.pointsListOffset);
-
-	    stream.Seek(header.pointsListOffset, SeekMode::Begin);
-
-	    for (auto i = 0; i < header.pointsCount; i++) {
-	        glm::vec3 point;
-			stream.Read(glm::value_ptr(point), 3);
-	        spdlog::debug("\t\tpoint[{}] = [{}, {}, {}]", i, point.x, point.y, point.z);
-	    }
-	}
-#endif
-
-	// if (header.extraDataOffset != -1)
-	//	spdlog::debug("\textraDataOffset: {:#x}", header.extraDataOffset);
-
-	// firstly they load skins
-	// if IsPacked LH3DTexture::GetThisTexture(skinListOffset[i])
-	// else create the texture from offset
-
-	// then submeshes
-	// for each mesh in offset list
-	// LH3DSubMesh::Create, which in turn create LH3DPrimitive::Create (should
-	// remove naming confusion)
-
-	// size: 2520, num meshes: 1, offset: 76
-	// size: 6100, num meshes: 4, offset: 100
+	Load(l3d);
 }
 
 void L3DMesh::Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint32_t mesh,

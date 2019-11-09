@@ -30,7 +30,10 @@
 
 namespace openblack
 {
-class IStream;
+namespace l3d
+{
+class L3DFile;
+}
 
 typedef uint32_t SkinId;
 
@@ -118,8 +121,9 @@ public:
 	L3DMesh(const std::string& debugName = "");
 	~L3DMesh() = default;
 
+	void Load(const l3d::L3DFile& l3d);
 	void LoadFromFile(const std::string& fileName);
-	void Load(IStream& stream);
+	void LoadFromBuffer(const std::vector<uint8_t>& data);
 	void Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program, uint32_t mesh,
 	          uint64_t state, uint32_t rgba = 0) const;
 	void Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program,

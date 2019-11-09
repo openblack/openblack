@@ -146,7 +146,7 @@ struct membuf: std::streambuf
 	{
 		if (way == std::ios_base::cur)
 		{
-			gbump(off);
+			gbump(static_cast<int>(off));
 		}
 		else if (way == std::ios_base::end)
 		{

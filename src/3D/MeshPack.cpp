@@ -108,10 +108,8 @@ void MeshPack::loadMeshes(const std::vector<std::vector<uint8_t>>& meshes)
 	{
 		MemoryStream modelStream(meshes[i].data(), meshes[i].size() * sizeof(meshes[i][0]));
 		// spdlog::debug("L3DMesh {} {}", i, MeshNames[i].data());
-		std::unique_ptr<L3DMesh> mesh = std::make_unique<L3DMesh>(MeshNames[i].data());
-		mesh->Load(modelStream);
-
-		_meshes[i] = std::move(mesh);
+		_meshes[i] = std::make_unique<L3DMesh>(MeshNames[i].data());
+		_meshes[i]->LoadFromBuffer(meshes[i]);
 	}
 
 	spdlog::debug("MeshPack loaded {0} meshes", meshes.size());
