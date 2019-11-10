@@ -24,6 +24,8 @@
 
 #include <glm/vec4.hpp>
 
+#include <memory>
+
 namespace openblack
 {
 
