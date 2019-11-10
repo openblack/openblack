@@ -18,9 +18,8 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "GitSHA1.h"
-#include "Gui.h"
-
+#include <GitSHA1.h>
+#include <Gui.h>
 #include <3D/Camera.h>
 #include <3D/L3DMesh.h>
 #include <3D/LandIsland.h>
@@ -40,12 +39,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/intersect.hpp>
 #include <string>
+#include <spdlog/spdlog.h>
 
 #ifdef WIN32
 #include <Windows.h>
 #endif
-
-#include <spdlog/spdlog.h>
 
 using namespace openblack;
 using namespace openblack::lhscriptx;

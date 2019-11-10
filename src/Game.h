@@ -20,8 +20,7 @@
 
 #pragma once
 
-#include "GameWindow.h"
-
+#include <GameWindow.h>
 #include <LHVM/LHVM.h>
 #include <bgfx/bgfx.h>
 #include <glm/glm.hpp>
