@@ -71,7 +71,7 @@ class Game
 	struct Config
 	{
 		Config():
-		    wireframe(false), waterDebug(false), showProfiler(false), drawSky(true), drawWater(true), drawIsland(true), drawEntities(true), drawDebugCross(true), drawBoundingBoxes(false), timeOfDay(1.0f), bumpMapStrength(1.0f), smallBumpMapStrength(1.0f), bgfxDebug(false)
+		    wireframe(false), waterDebug(false), showProfiler(false), drawSky(true), drawWater(true), drawIsland(true), drawEntities(true), drawDebugCross(true), drawBoundingBoxes(false), drawStreams(false), timeOfDay(1.0f), bumpMapStrength(1.0f), smallBumpMapStrength(1.0f), bgfxDebug(false)
 		{
 		}
 
