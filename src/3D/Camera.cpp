@@ -138,7 +138,7 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 	else if (e.key.keysym.scancode == SDL_SCANCODE_D)
 		_velocity.x += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
 	else if (e.key.keysym.scancode == SDL_SCANCODE_LCTRL)
-		_velocity.y -= (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
+		_velocity.y += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
 	else if (e.key.keysym.scancode == SDL_SCANCODE_SPACE)
 		_velocity.y += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
 }
