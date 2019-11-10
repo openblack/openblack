@@ -42,7 +42,7 @@ class Profiler;
 class Sky;
 class Water;
 
-namespace Entities
+namespace entities
 {
 class Registry;
 }
@@ -99,7 +99,7 @@ class Renderer
 		bool drawIsland;
 		const LandIsland& island;
 		bool drawEntities;
-		const Entities::Registry& entities;
+		const entities::Registry& entities;
 		bool drawDebugCross;
 		bool drawBoundingBoxes;
 		bool cullBack;

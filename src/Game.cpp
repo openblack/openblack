@@ -56,7 +56,7 @@ const std::string kWindowTitle = "openblack";
 Game* Game::sInstance = nullptr;
 
 Game::Game(Arguments&& args):
-    _fileSystem(std::make_unique<FileSystem>()), _entityRegistry(std::make_unique<Entities::Registry>()), _config(), _intersection()
+    _fileSystem(std::make_unique<FileSystem>()), _entityRegistry(std::make_unique<entities::Registry>()), _config(), _intersection()
 {
 	spdlog::set_level(spdlog::level::debug);
 	sInstance = this;

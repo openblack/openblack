@@ -15,7 +15,7 @@
 #include <Graphics/ShaderManager.h>
 #include <algorithm>
 
-namespace openblack::Entities
+namespace openblack::entities
 {
 
 Registry::Registry()
@@ -360,4 +360,4 @@ void Registry::DrawModels(graphics::RenderPass viewId, const graphics::ShaderMan
 		}
 	}
 }
-} // namespace openblack::Entities
+} // namespace openblack::entities

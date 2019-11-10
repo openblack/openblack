@@ -28,7 +28,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace openblack::Entities
+namespace openblack::entities
 {
 struct RenderContext
 {
@@ -84,4 +84,4 @@ struct RegistryContext
 	std::unordered_map<StreamId, entt::entity> streams;
 	std::unordered_map<TownId, entt::entity> towns;
 };
-} // namespace openblack::Entities
+} // namespace openblack::entities

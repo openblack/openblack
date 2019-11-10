@@ -33,7 +33,7 @@ class DebugLines;
 class ShaderManager;
 } // namespace openblack::graphics
 
-namespace openblack::Entities
+namespace openblack::entities
 {
 class Registry
 {
@@ -65,4 +65,4 @@ class Registry
 	entt::registry _registry;
 };
 
-} // namespace openblack::Entities
+} // namespace openblack::entities
