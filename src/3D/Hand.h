@@ -23,6 +23,7 @@
 #include <3D/L3DMesh.h>
 #include <Graphics/Mesh.h>
 #include <Graphics/Texture2D.h>
+
 #include <memory>
 
 namespace openblack

@@ -19,6 +19,7 @@
  */
 
 #include <3D/Water.h>
+
 #include <Graphics/FrameBuffer.h>
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/Mesh.h>
@@ -26,6 +27,7 @@
 #include <Graphics/Texture2D.h>
 #include <Graphics/VertexBuffer.h>
 #include <Gui.h>
+
 #include <imgui.h>
 
 using namespace openblack;

@@ -19,8 +19,10 @@
  */
 
 #include <Common/FileStream.h>
-#include <cassert>
+
 #include <spdlog/fmt/fmt.h>
+
+#include <cassert>
 #include <sstream>
 #include <stdexcept>
 

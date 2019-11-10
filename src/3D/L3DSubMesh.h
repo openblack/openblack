@@ -20,12 +20,13 @@
 
 #pragma once
 
-#include "AxisAlignedBoundingBox.h"
-
+#include <3D/AxisAlignedBoundingBox.h>
 #include <Graphics/RenderPass.h>
+
 #include <bgfx/bgfx.h>
-#include <cstdint>
 #include <glm/fwd.hpp>
+
+#include <cstdint>
 #include <memory>
 #include <vector>
 

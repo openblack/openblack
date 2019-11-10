@@ -18,10 +18,11 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "LandBlock.h"
+#include <3D/LandBlock.h>
 
 #include <3D/LandIsland.h>
 #include <Graphics/VertexBuffer.h>
+
 #include <glm/gtc/type_ptr.hpp>
 
 using namespace openblack;

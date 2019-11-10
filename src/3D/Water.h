@@ -21,7 +21,8 @@
 #pragma once
 
 #include <Graphics/RenderPass.h>
-#include <glm/glm.hpp>
+
+#include <glm/vec4.hpp>
 
 namespace openblack
 {

@@ -20,13 +20,14 @@
 
 #pragma once
 
-#include "LandCell.h"
-
+#include <3D/LandCell.h>
 #include <Graphics/Mesh.h>
 #include <Graphics/ShaderProgram.h>
+
+#include <glm/glm.hpp>
+
 #include <array>
 #include <cstdint>
-#include <glm/glm.hpp>
 #include <stdexcept>
 #include <vector>
 

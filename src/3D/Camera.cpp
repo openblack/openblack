@@ -19,7 +19,6 @@
  */
 
 #include <3D/Camera.h>
-#include <Game.h>
 
 using namespace openblack;
 

@@ -18,14 +18,16 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/L3DMesh.h>
 #include <3D/L3DSubMesh.h>
+
+#include <3D/L3DMesh.h>
 #include <3D/MeshPack.h>
 #include <Common/IStream.h>
 #include <Game.h>
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/ShaderProgram.h>
 #include <Graphics/VertexBuffer.h>
+
 #include <glm/gtx/component_wise.hpp>
 #include <glm/gtx/norm.hpp>
 #include <spdlog/spdlog.h>

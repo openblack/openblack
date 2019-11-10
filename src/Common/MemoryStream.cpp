@@ -19,6 +19,7 @@
  */
 
 #include <Common/MemoryStream.h>
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint> // uint8_t

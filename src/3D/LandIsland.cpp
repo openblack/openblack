@@ -18,16 +18,17 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "LandIsland.h"
-
-#include <Common/FileSystem.h>
-#include <Common/IStream.h>
-#include <Game.h>
-#include <spdlog/spdlog.h>
-#include <stdexcept>
+#include <3D/LandIsland.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <Common/FileSystem.h>
+#include <Common/IStream.h>
 #include <Common/stb_image_write.h>
+#include <Game.h>
+
+#include <spdlog/spdlog.h>
+
+#include <stdexcept>
 
 using namespace openblack;
 using namespace openblack::graphics;

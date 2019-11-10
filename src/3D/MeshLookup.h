@@ -22,7 +22,9 @@
 
 #include <AllMeshes.h>
 #include <Entities/Components/AnimatedStatic.h>
+
 #include <spdlog/spdlog.h>
+
 #include <unordered_map>
 
 namespace openblack

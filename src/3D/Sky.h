@@ -20,6 +20,10 @@
 
 #pragma once
 
+#include <Graphics/RenderPass.h>
+
+#include <glm/fwd.hpp>
+
 #include <array>
 #include <memory>
 

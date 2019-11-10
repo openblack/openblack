@@ -19,8 +19,10 @@
  */
 
 #include <Common/Bitmap16B.h>
+
 #include <Common/FileSystem.h>
 #include <Game.h>
+
 #include <cassert>
 #include <cstring> // memset, memcpy
 #include <sstream>

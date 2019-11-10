@@ -19,15 +19,18 @@
  */
 
 #include <3D/L3DMesh.h>
+
 #include <3D/MeshPack.h>
 #include <Common/FileSystem.h>
 #include <Common/IStream.h>
 #include <Game.h>
-#include <array>
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/transform.hpp>
 #include <spdlog/spdlog.h>
+
+#include <array>
 #include <stdexcept>
 
 using namespace openblack;
@@ -91,7 +94,7 @@ struct L3DModel_Vertex
 	uint32_t bone;
 };
 
-L3DMesh::L3DMesh(const std::string& debugName): _debugName(debugName) {}
+L3DMesh::L3DMesh(const std::string& debugName): _debugName(debugName), _flags(static_cast<L3DMeshFlags>(0)) {}
 
 void L3DMesh::LoadFromFile(const std::string& fileName)
 {
@@ -136,7 +139,8 @@ void L3DMesh::Load(IStream& stream)
 
 	_flags = header.flags;
 
-	/*if (IsBoned())
+#if 0
+	if (IsBoned())
 	    spdlog::debug("\tcontains bones");
 
 	if (IsContainsLandscapeFeature())
@@ -152,7 +156,8 @@ void L3DMesh::Load(IStream& stream)
 	    spdlog::debug("\tcontains ebone");
 
 	if (IsContainsExtraMetrics())
-	    spdlog::debug("\tcontains extra metrics");*/
+	    spdlog::debug("\tcontains extra metrics");
+#endif
 
 	// read textures
 	if (header.skinsCount > 0)
@@ -192,19 +197,19 @@ void L3DMesh::Load(IStream& stream)
 		bgfx::frame();
 	}
 
-	/*if (header.pointsCount > 0) {
-	    spdlog::debug("\t{} points at {:#x}", header.pointsCount,
-	header.pointsListOffset);
+#if 0
+	if (header.pointsCount > 0) {
+	    spdlog::debug("\t{} points at {:#x}", header.pointsCount, header.pointsListOffset);
 
-	    file.Seek(basePosition + header.pointsListOffset, FileSeekMode::Begin);
+	    stream.Seek(header.pointsListOffset, SeekMode::Begin);
 
 	    for (auto i = 0; i < header.pointsCount; i++) {
 	        glm::vec3 point;
-	        file.Read<float>(glm::value_ptr(point), 3);
-	        spdlog::debug("\t\tpoint[{}] = [{}, {}, {}]", i, point.x, point.y,
-	point.z);
+			stream.Read(glm::value_ptr(point), 3);
+	        spdlog::debug("\t\tpoint[{}] = [{}, {}, {}]", i, point.x, point.y, point.z);
 	    }
-	}*/
+	}
+#endif
 
 	// if (header.extraDataOffset != -1)
 	//	spdlog::debug("\textraDataOffset: {:#x}", header.extraDataOffset);

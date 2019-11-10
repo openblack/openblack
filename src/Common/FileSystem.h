@@ -21,6 +21,7 @@
 #pragma once
 
 #include <Common/FileStream.h>
+
 #include <cstddef>
 #include <list>
 #include <memory>

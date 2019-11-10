@@ -20,8 +20,9 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
-#include <stdint.h>
+#include <glm/fwd.hpp>
+
+#include <cstdint>
 #include <string>
 
 typedef struct rgb
