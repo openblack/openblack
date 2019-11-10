@@ -36,7 +36,7 @@ class Texture2D;
 
 class Sky
 {
-  public:
+public:
 	Sky();
 	~Sky() = default;
 
@@ -45,12 +45,13 @@ class Sky
 	void Interpolate555Texture(uint16_t* bitmap, uint16_t*, uint16_t*, float);
 
 	void CalculateTextures();
-	void Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program, bool cullBack) const;
+	void Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program,
+	          bool cullBack) const;
 	void SetTime(float time);
 
 	float TimeOfDay;
 
-  private:
+private:
 	std::unique_ptr<L3DMesh> _model;
 	std::unique_ptr<graphics::Texture2D> _texture;
 

@@ -35,7 +35,7 @@ class ShaderProgram;
 
 class Water
 {
-  public:
+public:
 	Water();
 	~Water() = default;
 
@@ -45,7 +45,7 @@ class Water
 	[[nodiscard]] graphics::FrameBuffer& GetFrameBuffer() const;
 	void DebugGUI();
 
-  private:
+private:
 	void createMesh();
 
 	std::unique_ptr<graphics::Mesh> _mesh;

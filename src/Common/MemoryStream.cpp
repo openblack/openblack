@@ -28,8 +28,8 @@ namespace openblack
 
 MemoryStream::MemoryStream(void* data, std::size_t size)
 {
-	_data     = data;
-	_size     = size;
+	_data = data;
+	_size = size;
 	_position = 0;
 }
 
@@ -47,15 +47,9 @@ void MemoryStream::Seek(std::size_t position, SeekMode seek)
 {
 	switch (seek)
 	{
-	case SeekMode::Begin:
-		_position = position;
-		break;
-	case SeekMode::Current:
-		_position += position;
-		break;
-	case SeekMode::End:
-		_position = _size + position;
-		break;
+	case SeekMode::Begin: _position = position; break;
+	case SeekMode::Current: _position += position; break;
+	case SeekMode::End: _position = _size + position; break;
 	}
 }
 

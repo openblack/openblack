@@ -33,7 +33,8 @@ using namespace openblack::graphics;
 
 Water::Water()
 {
-	_reflectionFrameBuffer = std::make_unique<FrameBuffer>("Reflection", 1024, 1024, graphics::Format::RGBA8, graphics::Format::Depth24Stencil8);
+	_reflectionFrameBuffer =
+	    std::make_unique<FrameBuffer>("Reflection", 1024, 1024, graphics::Format::RGBA8, graphics::Format::Depth24Stencil8);
 	createMesh();
 }
 
@@ -44,16 +45,16 @@ void Water::createMesh()
 	decl.emplace_back(VertexAttrib::Attribute::Position, 2, VertexAttrib::Type::Float);
 
 	static const glm::vec2 points[] = {
-		glm::vec2(-1.0f, 1.0f),
-		glm::vec2(1.0f, 1.0f),
-		glm::vec2(1.0f, -1.0f),
-		glm::vec2(-1.0f, -1.0f),
+	    glm::vec2(-1.0f, 1.0f),
+	    glm::vec2(1.0f, 1.0f),
+	    glm::vec2(1.0f, -1.0f),
+	    glm::vec2(-1.0f, -1.0f),
 	};
 
-	static const uint16_t indices[6] = { 2, 1, 0, 0, 3, 2 };
+	static const uint16_t indices[6] = {2, 1, 0, 0, 3, 2};
 
 	auto vertexBuffer = new VertexBuffer("Water", points, 4, decl);
-	auto indexBuffer  = new IndexBuffer("Water", indices, 6, IndexBuffer::Type::Uint16);
+	auto indexBuffer = new IndexBuffer("Water", indices, 6, IndexBuffer::Type::Uint16);
 
 	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, graphics::Mesh::Topology::TriangleList);
 }
@@ -63,17 +64,17 @@ void Water::Draw(graphics::RenderPass viewId, const ShaderProgram& program) cons
 	program.SetTextureSampler("s_reflection", 0, _reflectionFrameBuffer->GetColorAttachment());
 
 	Mesh::DrawDesc desc = {
-		/*viewId =*/viewId,
-		/*program =*/program,
-		/*count =*/_mesh->GetIndexBuffer().GetCount(),
-		/*offset =*/0,
-		/*instanceBuffer =*/nullptr,
-		/*instanceStart =*/0,
-		/*instanceCount =*/1,
-		/*state =*/BGFX_STATE_DEFAULT,
-		/*rgba =*/0,
-		/*skip =*/Mesh::SkipState::SkipNone,
-		/*preserveState =*/false,
+	    /*viewId =*/viewId,
+	    /*program =*/program,
+	    /*count =*/_mesh->GetIndexBuffer().GetCount(),
+	    /*offset =*/0,
+	    /*instanceBuffer =*/nullptr,
+	    /*instanceStart =*/0,
+	    /*instanceCount =*/1,
+	    /*state =*/BGFX_STATE_DEFAULT,
+	    /*rgba =*/0,
+	    /*skip =*/Mesh::SkipState::SkipNone,
+	    /*preserveState =*/false,
 	};
 	_mesh->Draw(desc);
 }

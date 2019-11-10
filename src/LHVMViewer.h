@@ -28,7 +28,7 @@ namespace openblack
 {
 class LHVMViewer
 {
-  public:
+public:
 	static void Draw(const openblack::LHVM::LHVM*);
 	static void DrawScriptsTab(const openblack::LHVM::LHVM*);
 	static void DrawScriptDisassembly(const openblack::LHVM::LHVM*, openblack::LHVM::VMScript&);

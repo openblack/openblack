@@ -37,14 +37,17 @@ namespace openblack::entities
 {
 class Registry
 {
-  public:
+public:
 	Registry();
 
 	void PrepareDraw(bool drawBoundingBox, bool drawStreams);
 	void DrawModels(graphics::RenderPass viewId, const graphics::ShaderManager& shaderManager) const;
 	decltype(auto) Create() { return _registry.create(); }
 	template <typename Component, typename... Args>
-	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args) { return _registry.assign<Component>(entity, std::forward<Args>(args)...); }
+	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args)
+	{
+		return _registry.assign<Component>(entity, std::forward<Args>(args)...);
+	}
 	RegistryContext& Context();
 	const RegistryContext& Context() const;
 	;
@@ -54,11 +57,17 @@ class Registry
 		_registry.set<RegistryContext>();
 	};
 	template <typename Component>
-	size_t Size() { return _registry.size<Component>(); }
+	size_t Size()
+	{
+		return _registry.size<Component>();
+	}
 	template <typename Component>
-	decltype(auto) Get(entt::entity entity) { return _registry.get<Component>(entity); }
+	decltype(auto) Get(entt::entity entity)
+	{
+		return _registry.get<Component>(entity);
+	}
 
-  private:
+private:
 	void PrepareDrawDescs(bool drawBoundingBox);
 	void PrepareDrawUploadUniforms(bool drawBoundingBox);
 

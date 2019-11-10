@@ -28,7 +28,7 @@ namespace openblack::lhscriptx
 
 class MapScriptCommands
 {
-  public:
+public:
 	static const std::array<const ScriptCommandSignature, 20> Signatures;
 
 	static void SetNoPlayers(const ScriptCommandContext& ctx);

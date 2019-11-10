@@ -32,9 +32,10 @@ namespace openblack::graphics
 
 class FrameBuffer
 {
-  public:
+public:
 	FrameBuffer() = delete;
-	FrameBuffer(std::string name, uint16_t width, uint16_t height, Format colorFormat, std::optional<Format> depthStencilFormat = {});
+	FrameBuffer(std::string name, uint16_t width, uint16_t height, Format colorFormat,
+	            std::optional<Format> depthStencilFormat = {});
 	~FrameBuffer();
 
 	void Bind(RenderPass viewId) const;
@@ -42,7 +43,7 @@ class FrameBuffer
 	Texture2D& GetColorAttachment() { return _colorAttachment; }
 	void GetSize(uint16_t& width, uint16_t& height) const { width = _width, height = _height; }
 
-  private:
+private:
 	std::string _name;
 	bgfx::FrameBufferHandle _handle;
 

@@ -38,17 +38,10 @@ enum class VillageEthnicities
 };
 
 const std::unordered_map<std::string, VillageEthnicities> VillageEthnicitiesLookup {
-	{ "AZTEC", VillageEthnicities::AZTEC },
-	{ "CELTIC", VillageEthnicities::CELTIC },
-	{ "EGYPTIAN", VillageEthnicities::EGYPTIAN },
-	{ "GREEK", VillageEthnicities::GREEK },
-	{ "INDIAN", VillageEthnicities::INDIAN },
-	{ "JAPANESE", VillageEthnicities::JAPANESE },
-	{ "NORSE", VillageEthnicities::NORSE },
-	{ "TIBETAN", VillageEthnicities::TIBETAN },
-	{ "AFRICAN", VillageEthnicities::AFRICAN },
-	{ "GLOBAL", VillageEthnicities::GLOBAL }
-};
+    {"AZTEC", VillageEthnicities::AZTEC},  {"CELTIC", VillageEthnicities::CELTIC},   {"EGYPTIAN", VillageEthnicities::EGYPTIAN},
+    {"GREEK", VillageEthnicities::GREEK},  {"INDIAN", VillageEthnicities::INDIAN},   {"JAPANESE", VillageEthnicities::JAPANESE},
+    {"NORSE", VillageEthnicities::NORSE},  {"TIBETAN", VillageEthnicities::TIBETAN}, {"AFRICAN", VillageEthnicities::AFRICAN},
+    {"GLOBAL", VillageEthnicities::GLOBAL}};
 
 enum class VillagerTypes
 {
@@ -64,16 +57,16 @@ enum class VillagerTypes
 };
 
 const std::unordered_map<std::string, VillagerTypes> VillagerTypesLookup {
-	{ "HOUSEWIFE", VillagerTypes::HOUSEWIFE }, // This is how the game decides male or female villagers lol
-	{ "FARMER", VillagerTypes::FARMER },
-	{ "FISHERMAN", VillagerTypes::FISHERMAN },
-	{ "FORESTER", VillagerTypes::FORESTER },
-	{ "BREEDER", VillagerTypes::BREEDER },
-	{ "SHEPHERD", VillagerTypes::SHEPHERD },
-	{ "MISSIONARY", VillagerTypes::MISSIONARY },
-	{ "LEADER", VillagerTypes::LEADER },
-	{ "TRADER", VillagerTypes::TRADER }
-};
+    {"HOUSEWIFE", VillagerTypes::HOUSEWIFE}, // This is how the game decides
+                                             // male or female villagers lol
+    {"FARMER", VillagerTypes::FARMER},
+    {"FISHERMAN", VillagerTypes::FISHERMAN},
+    {"FORESTER", VillagerTypes::FORESTER},
+    {"BREEDER", VillagerTypes::BREEDER},
+    {"SHEPHERD", VillagerTypes::SHEPHERD},
+    {"MISSIONARY", VillagerTypes::MISSIONARY},
+    {"LEADER", VillagerTypes::LEADER},
+    {"TRADER", VillagerTypes::TRADER}};
 
 enum class VillagerTasks
 {

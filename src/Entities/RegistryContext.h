@@ -21,8 +21,8 @@
 #include <AllMeshes.h>
 #include <Graphics/DebugLines.h>
 #include <bgfx/bgfx.h>
-#include <glm/fwd.hpp>
 #include <entt/entity/fwd.hpp>
+#include <glm/fwd.hpp>
 #include <map>
 #include <memory>
 #include <unordered_map>
@@ -32,10 +32,7 @@ namespace openblack::entities
 {
 struct RenderContext
 {
-	RenderContext():
-	    instanceUniformBuffer(BGFX_INVALID_HANDLE),
-	    dirty(true),
-	    hasBoundingBoxes(false) {};
+	RenderContext(): instanceUniformBuffer(BGFX_INVALID_HANDLE), dirty(true), hasBoundingBoxes(false) {};
 	~RenderContext()
 	{
 		if (bgfx::isValid(instanceUniformBuffer))
@@ -48,8 +45,7 @@ struct RenderContext
 
 	struct InstancedDrawDesc
 	{
-		InstancedDrawDesc(uint32_t offset, uint32_t count):
-		    offset(offset), count(count) {}
+		InstancedDrawDesc(uint32_t offset, uint32_t count): offset(offset), count(count) {}
 		uint32_t offset;
 		uint32_t count;
 	};
@@ -75,7 +71,7 @@ struct RenderContext
 	bool hasBoundingBoxes;
 };
 
-using TownId   = int;
+using TownId = int;
 using StreamId = int;
 
 struct RegistryContext

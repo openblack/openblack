@@ -35,7 +35,7 @@ FileSystem
  */
 class FileSystem
 {
-  public:
+public:
 	static std::string FixPath(const std::string& path);
 
 	std::unique_ptr<FileStream> Open(const fs::path& path, FileMode mode);
@@ -51,7 +51,7 @@ class FileSystem
 
 	std::vector<std::byte> ReadAll(const fs::path& path);
 
-  private:
+private:
 	fs::path _gamePath;
 };
 

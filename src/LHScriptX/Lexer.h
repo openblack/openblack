@@ -32,9 +32,8 @@ namespace openblack::lhscriptx
 
 class LexerException: public std::runtime_error
 {
-  public:
-	LexerException(const std::string& msg):
-	    std::runtime_error(msg.c_str()) {}
+public:
+	LexerException(const std::string& msg): std::runtime_error(msg.c_str()) {}
 };
 
 enum class Operator
@@ -48,7 +47,7 @@ enum class Operator
 
 class Token
 {
-  public:
+public:
 	enum class Type
 	{
 		// Token is invalid.
@@ -121,9 +120,8 @@ class Token
 	// print the token for debugging
 	void Print(FILE* file) const;
 
-  private:
-	Token(Type type):
-	    type_(type) {}
+private:
+	Token(Type type): type_(type) {}
 
 	Type type_;
 	union
@@ -138,21 +136,15 @@ class Token
 
 class Lexer
 {
-  public:
+public:
 	Lexer(const std::string& source);
 
 	Token GetToken();
 
-  private:
-	size_t remaining() const noexcept
-	{
-		return static_cast<size_t>(end_ - current_);
-	}
+private:
+	size_t remaining() const noexcept { return static_cast<size_t>(end_ - current_); }
 
-	bool hasMore() const noexcept
-	{
-		return current_ != end_;
-	}
+	bool hasMore() const noexcept { return current_ != end_; }
 
 	Token gatherIdentifer();
 	Token gatherNumber();

@@ -38,7 +38,7 @@ class VertexBuffer;
 
 class Mesh
 {
-  public:
+public:
 	enum class Topology
 	{
 		PointList,
@@ -58,10 +58,10 @@ class Mesh
 
 	enum SkipState : uint8_t
 	{
-		SkipNone           = 0b00000000,
-		SkipRenderState    = 0b00000001,
-		SkipVertexBuffer   = 0b00000010,
-		SkipIndexBuffer    = 0b00000100,
+		SkipNone = 0b00000000,
+		SkipRenderState = 0b00000001,
+		SkipVertexBuffer = 0b00000010,
+		SkipIndexBuffer = 0b00000100,
 		SkipInstanceBuffer = 0b00001000,
 	};
 
@@ -82,11 +82,11 @@ class Mesh
 
 	void Draw(const DrawDesc& desc) const;
 
-  protected:
+protected:
 	std::unique_ptr<graphics::VertexBuffer> _vertexBuffer;
 	std::unique_ptr<graphics::IndexBuffer> _indexBuffer;
 
-  private:
+private:
 	Topology _topology;
 };
 

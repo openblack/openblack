@@ -66,11 +66,13 @@ struct Arguments
 
 class Game
 {
-  public:
+public:
 	struct Config
 	{
-		Config():
-		    wireframe(false), waterDebug(false), showProfiler(false), drawSky(true), drawWater(true), drawIsland(true), drawEntities(true), drawDebugCross(true), drawBoundingBoxes(false), drawStreams(false), timeOfDay(1.0f), bumpMapStrength(1.0f), smallBumpMapStrength(1.0f), bgfxDebug(false)
+		Config()
+		    : wireframe(false), waterDebug(false), showProfiler(false), drawSky(true), drawWater(true), drawIsland(true),
+		      drawEntities(true), drawDebugCross(true), drawBoundingBoxes(false), drawStreams(false), timeOfDay(1.0f),
+		      bumpMapStrength(1.0f), smallBumpMapStrength(1.0f), bgfxDebug(false)
 		{
 		}
 
@@ -129,12 +131,9 @@ class Game
 	[[nodiscard]] const Config& GetConfig() const { return _config; }
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
 
-	static Game* instance()
-	{
-		return sInstance;
-	}
+	static Game* instance() { return sInstance; }
 
-  private:
+private:
 	static Game* sInstance;
 
 	std::string sGamePath; // path to Lionhead Studios Ltd/Black & White folder

@@ -29,14 +29,14 @@ namespace openblack
 {
 class Hand
 {
-  public:
+public:
 	Hand();
 	~Hand();
 
 	void Init();
 	void Draw();
 
-  private:
+private:
 	std::unique_ptr<L3DMesh> m_HandModel;
 };
 } // namespace openblack

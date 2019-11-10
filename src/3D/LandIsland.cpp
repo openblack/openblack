@@ -33,12 +33,11 @@ using namespace openblack;
 using namespace openblack::graphics;
 
 const float LandIsland::HeightUnit = 0.67f;
-const float LandIsland::CellSize   = 10.0f;
+const float LandIsland::CellSize = 10.0f;
 
-LandIsland::LandIsland():
-    _materialCount(0), _lowresCount(0), _blockIndexLookup { 0 }
+LandIsland::LandIsland(): _materialCount(0), _lowresCount(0), _blockIndexLookup {0}
 {
-	auto file           = Game::instance()->GetFileSystem().Open("Data/Textures/smallbumpa.raw", FileMode::Read);
+	auto file = Game::instance()->GetFileSystem().Open("Data/Textures/smallbumpa.raw", FileMode::Read);
 	uint8_t* smallbumpa = new uint8_t[file->Size()];
 	file->Read(smallbumpa, file->Size());
 
@@ -77,7 +76,8 @@ void LandIsland::LoadFromFile(IStream& stream)
 		stream.Seek(textureSize - 4, SeekMode::Current);
 	}
 
-	blockCount--; // take away a block from the count, because it's not in the file?
+	blockCount--; // take away a block from the count, because it's not in the
+	              // file?
 
 	spdlog::debug("[LandIsland] loading {} blocks", blockCount);
 	_landBlocks.reserve(blockCount);
@@ -114,35 +114,37 @@ void LandIsland::LoadFromFile(IStream& stream)
 		convertRGB5ToRGB8(rgba5TextureData.data(), rgba8TextureData.data() + i * rgba5TextureData.size(), 256 * 256);
 	}
 	_materialArray = std::make_unique<Texture2D>("LandIslandMaterialArray");
-	_materialArray->Create(256, 256, _materialCount, Format::RGBA8, Wrapping::ClampEdge, rgba8TextureData.data(), rgba8TextureData.size() * sizeof(rgba8TextureData[0]));
+	_materialArray->Create(256, 256, _materialCount, Format::RGBA8, Wrapping::ClampEdge, rgba8TextureData.data(),
+	                       rgba8TextureData.size() * sizeof(rgba8TextureData[0]));
 
 	// read noise map into Texture2D
 	stream.Read(_noiseMap.data(), _noiseMap.size() * sizeof(_noiseMap[0]));
 	_textureNoiseMap = std::make_unique<Texture2D>("LandIslandNoiseMap");
-	_textureNoiseMap->Create(256, 256, 1, Format::R8, Wrapping::ClampEdge, _noiseMap.data(), _noiseMap.size() * sizeof(_noiseMap[0]));
+	_textureNoiseMap->Create(256, 256, 1, Format::R8, Wrapping::ClampEdge, _noiseMap.data(),
+	                         _noiseMap.size() * sizeof(_noiseMap[0]));
 
 	// read bump map into Texture2D
 	std::array<uint8_t, 256 * 256> bumpMapTextureData;
 	stream.Read(bumpMapTextureData.data(), bumpMapTextureData.size() * sizeof(bumpMapTextureData[0]));
 	_textureBumpMap = std::make_unique<Texture2D>("LandIslandBumpMap");
-	_textureBumpMap->Create(256, 256, 1, Format::R8, Wrapping::ClampEdge, bumpMapTextureData.data(), bumpMapTextureData.size() * sizeof(bumpMapTextureData[0]));
+	_textureBumpMap->Create(256, 256, 1, Format::R8, Wrapping::ClampEdge, bumpMapTextureData.data(),
+	                        bumpMapTextureData.size() * sizeof(bumpMapTextureData[0]));
 
 	// build the meshes (we could move this elsewhere)
-	for (auto& block : _landBlocks)
-		block.BuildMesh(*this);
+	for (auto& block : _landBlocks) block.BuildMesh(*this);
 	bgfx::frame();
 }
 
 void openblack::LandIsland::Update(float timeOfDay, float bumpMapStrength, float smallBumpMapStrength)
 {
-	_timeOfDay            = timeOfDay;
-	_bumpMapStrength      = bumpMapStrength;
+	_timeOfDay = timeOfDay;
+	_bumpMapStrength = bumpMapStrength;
 	_smallBumpMapStrength = smallBumpMapStrength;
 }
 
 /*const uint8_t LandIsland::GetAltitudeAt(glm::ivec2 vec) const
 {
-	return uint8_t();
+    return uint8_t();
 }
 */
 
@@ -235,8 +237,8 @@ void LandIsland::DumpMaps()
 	{
 		LandBlock& block = _landBlocks[b];
 
-		int mapx       = block.GetBlockPosition().x;
-		int mapz       = block.GetBlockPosition().y;
+		int mapx = block.GetBlockPosition().x;
+		int mapz = block.GetBlockPosition().y;
 		int lineStride = 32 * cellsize;
 
 		for (int x = 0; x < cellsize; x++)

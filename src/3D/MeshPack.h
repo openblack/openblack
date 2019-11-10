@@ -50,12 +50,12 @@ class MeshPack
 		DXT3 = 2,
 	};
 
-  public:
+public:
 	MeshPack() = default;
 
 	void Load(IStream&);
 
-	using MeshesVec   = std::vector<std::unique_ptr<L3DMesh>>;
+	using MeshesVec = std::vector<std::unique_ptr<L3DMesh>>;
 	using TexturesVec = std::vector<std::unique_ptr<graphics::Texture2D>>;
 
 	const MeshesVec& GetMeshes() const { return _meshes; }
@@ -64,7 +64,7 @@ class MeshPack
 	const L3DMesh& GetMesh(int id) const { return *_meshes.at(id); }
 	const graphics::Texture2D& GetTexture(int id) const { return *_textures.at(id); }
 
-  private:
+private:
 	void loadTextures(IStream&);
 	void loadMeshes(IStream&);
 

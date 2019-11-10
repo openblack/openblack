@@ -28,14 +28,8 @@ struct AxisAlignedBoundingBox
 	glm::vec3 minima;
 	glm::vec3 maxima;
 
-	[[nodiscard]] inline glm::vec3 center() const
-	{
-		return (maxima + minima) * 0.5f;
-	}
-	[[nodiscard]] inline glm::vec3 size() const
-	{
-		return maxima - minima;
-	}
+	[[nodiscard]] inline glm::vec3 center() const { return (maxima + minima) * 0.5f; }
+	[[nodiscard]] inline glm::vec3 size() const { return maxima - minima; }
 };
 
 } // namespace openblack

@@ -33,13 +33,13 @@ namespace openblack
 class Camera
 {
 
-  public:
-	Camera(glm::vec3 position, glm::vec3 rotation):
-	    _position(position), _rotation(glm::radians(rotation)), _projectionMatrix(1.0f), _velocity(0.0f, 0.0f, 0.0f), _movementSpeed(0.0005f), _freeLookSensitivity(1.0f)
+public:
+	Camera(glm::vec3 position, glm::vec3 rotation)
+	    : _position(position), _rotation(glm::radians(rotation)), _projectionMatrix(1.0f), _velocity(0.0f, 0.0f, 0.0f),
+	      _movementSpeed(0.0005f), _freeLookSensitivity(1.0f)
 	{
 	}
-	Camera():
-	    Camera(glm::vec3(0.0f), glm::vec3(0.0f)) {}
+	Camera(): Camera(glm::vec3(0.0f), glm::vec3(0.0f)) {}
 
 	virtual ~Camera() = default;
 
@@ -62,7 +62,8 @@ class Camera
 
 	[[nodiscard]] std::unique_ptr<Camera> Reflect(const glm::vec4& relectionPlane) const;
 
-	void DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::ivec2 screenSize, glm::vec3& out_worldOrigin, glm::vec3& out_worldDirection);
+	void DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::ivec2 screenSize, glm::vec3& out_worldOrigin,
+	                            glm::vec3& out_worldDirection);
 
 	void Update(std::chrono::microseconds dt);
 	void ProcessSDLEvent(const SDL_Event&);
@@ -72,7 +73,7 @@ class Camera
 
 	glm::mat4 getRotationMatrix() const;
 
-  protected:
+protected:
 	glm::vec3 _position;
 	glm::vec3 _rotation;
 
@@ -85,14 +86,15 @@ class Camera
 
 class ReflectionCamera: public Camera
 {
-  public:
-	ReflectionCamera():
-	    ReflectionCamera(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec4(0.0f)) {}
-	ReflectionCamera(glm::vec3 position, glm::vec3 rotation, glm::vec4 reflectionPlane):
-	    Camera(position, rotation), _reflectionPlane(reflectionPlane) {}
+public:
+	ReflectionCamera(): ReflectionCamera(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec4(0.0f)) {}
+	ReflectionCamera(glm::vec3 position, glm::vec3 rotation, glm::vec4 reflectionPlane)
+	    : Camera(position, rotation), _reflectionPlane(reflectionPlane)
+	{
+	}
 	[[nodiscard]] glm::mat4 GetViewMatrix() const override;
 
-  private:
+private:
 	glm::vec4 _reflectionPlane;
 	void reflectMatrix(glm::mat4x4& m, const glm::vec4& plane) const;
 };

@@ -27,9 +27,8 @@ namespace openblack
 #pragma pack(push, 1)
 class LandCell
 {
-  public:
-	LandCell():
-	    altitude(0), properties(0x40) {}
+public:
+	LandCell(): altitude(0), properties(0x40) {}
 
 	inline uint8_t Light() { return color.a; }
 	inline uint8_t Altitude() const { return altitude; }
@@ -50,7 +49,7 @@ class LandCell
 		return 1.0f;
 	}
 
-  private:
+private:
 	rgba_t color;
 
 	uint8_t altitude;

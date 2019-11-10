@@ -63,15 +63,9 @@ void FileStream::Seek(std::size_t position, SeekMode seek)
 {
 	switch (seek)
 	{
-	case SeekMode::Begin:
-		std::fseek(_file, static_cast<long>(position), SEEK_SET);
-		break;
-	case SeekMode::Current:
-		std::fseek(_file, static_cast<long>(position), SEEK_CUR);
-		break;
-	case SeekMode::End:
-		std::fseek(_file, static_cast<long>(position), SEEK_END);
-		break;
+	case SeekMode::Begin: std::fseek(_file, static_cast<long>(position), SEEK_SET); break;
+	case SeekMode::Current: std::fseek(_file, static_cast<long>(position), SEEK_CUR); break;
+	case SeekMode::End: std::fseek(_file, static_cast<long>(position), SEEK_END); break;
 	}
 }
 

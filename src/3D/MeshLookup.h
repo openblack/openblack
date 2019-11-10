@@ -32,12 +32,11 @@ enum class TreeInfo;
 template <typename T>
 class MeshLookup
 {
-  public:
-	MeshLookup(std::initializer_list<typename std::unordered_map<T, MeshId>::value_type> init):
-	    lookup(init) {}
+public:
+	MeshLookup(std::initializer_list<typename std::unordered_map<T, MeshId>::value_type> init): lookup(init) {}
 	MeshId operator[](T key)
 	{
-		auto item   = lookup.find(key);
+		auto item = lookup.find(key);
 		auto meshId = MeshId::Dummy;
 
 		if (item == lookup.end())
@@ -49,7 +48,7 @@ class MeshLookup
 		return item->second;
 	}
 
-  private:
+private:
 	std::unordered_map<T, MeshId> lookup;
 };
 

@@ -31,9 +31,9 @@ std::string FileSystem::FixPath(const std::string& path)
 	std::string result = path;
 
 	constexpr std::array<std::string_view, 3> caseFixTable = {
-		"\\Data\\",
-		"\\Landscape\\",
-		"\\Multi_Player\\",
+	    "\\Data\\",
+	    "\\Landscape\\",
+	    "\\Multi_Player\\",
 	};
 	for (auto& pattern : caseFixTable)
 	{
@@ -45,10 +45,7 @@ std::string FileSystem::FixPath(const std::string& path)
 		}
 	}
 
-	for (auto pos = result.find('\\'); pos != std::string::npos; pos = result.find('\\', pos + 1))
-	{
-		result[pos] = '/';
-	}
+	for (auto pos = result.find('\\'); pos != std::string::npos; pos = result.find('\\', pos + 1)) { result[pos] = '/'; }
 
 	return result;
 }
@@ -94,7 +91,7 @@ bool FileSystem::Exists(const fs::path& path)
 
 std::vector<std::byte> FileSystem::ReadAll(const fs::path& path)
 {
-	auto file        = Open(path, FileMode::Read);
+	auto file = Open(path, FileMode::Read);
 	std::size_t size = file->Size();
 
 	std::vector<std::byte> data(size);

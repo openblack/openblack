@@ -34,8 +34,11 @@
 
 using namespace openblack;
 
-MeshViewer::MeshViewer():
-    _open(false), _selectedMesh(MeshId::Dummy), _selectedSubMesh(0), _meshFlagFilter(-1), _cameraPosition(5.0f, 3.0f, 5.0f), _viewBoundingBox(false), _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f))), _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", 512, 512, graphics::Format::RGBA8, graphics::Format::Depth24Stencil8))
+MeshViewer::MeshViewer()
+    : _open(false), _selectedMesh(MeshId::Dummy), _selectedSubMesh(0), _meshFlagFilter(-1), _cameraPosition(5.0f, 3.0f, 5.0f),
+      _viewBoundingBox(false), _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f))),
+      _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", 512, 512, graphics::Format::RGBA8,
+                                                           graphics::Format::Depth24Stencil8))
 {
 }
 
@@ -49,29 +52,30 @@ void MeshViewer::DrawWindow()
 	if (!_open)
 		return;
 
-	const ImGuiStyle& style   = ImGui::GetStyle();
-	float fontSize            = ImGui::GetFontSize();
-	auto const& meshPack      = Game::instance()->GetMeshPack();
-	auto const& meshes        = meshPack.GetMeshes();
+	const ImGuiStyle& style = ImGui::GetStyle();
+	float fontSize = ImGui::GetFontSize();
+	auto const& meshPack = Game::instance()->GetMeshPack();
+	auto const& meshes = meshPack.GetMeshes();
 	const float meshListWidth = fontSize * 15.0f;
 
 	ImGui::SetNextWindowSize(ImVec2(720.0f, 612.0f), ImGuiCond_FirstUseEver);
 	ImGui::Begin("MeshPack Viewer", &_open);
 
 	_filter.Draw();
-	ImGui::InputScalar("Mesh flag filter", ImGuiDataType_U32, &_meshFlagFilter, nullptr, nullptr, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+	ImGui::InputScalar("Mesh flag filter", ImGuiDataType_U32, &_meshFlagFilter, nullptr, nullptr, "%08X",
+	                   ImGuiInputTextFlags_CharsHexadecimal);
 	uint32_t hoverIndex;
 	static char bitfieldTitle[0x400];
 	{
-		int32_t offset   = 0;
+		int32_t offset = 0;
 		int32_t newLines = 1;
 		for (uint8_t i = 0; i < 32; ++i)
 		{
 			if (_meshFlagFilter & (1u << i))
 			{
-				auto writen = std::sprintf(bitfieldTitle + offset, "%s%s%s", offset ? "|" : "", offset > newLines * 100 ? "\n" : "", L3DMeshFlagNames[i].data());
-				while (offset > newLines * 100)
-					newLines++;
+				auto writen = std::sprintf(bitfieldTitle + offset, "%s%s%s", offset ? "|" : "",
+				                           offset > newLines * 100 ? "\n" : "", L3DMeshFlagNames[i].data());
+				while (offset > newLines * 100) newLines++;
 				offset += writen;
 			}
 		}
@@ -94,7 +98,7 @@ void MeshViewer::DrawWindow()
 	{
 		if (_filter.PassFilter(MeshNames[i].data()) && meshes[i]->GetFlags() & _meshFlagFilter)
 		{
-			const auto meshEnum  = static_cast<MeshId>(i);
+			const auto meshEnum = static_cast<MeshId>(i);
 			const auto& enumName = std::string(MeshNames[i]);
 			displayedMeshes++;
 
@@ -117,15 +121,15 @@ void MeshViewer::DrawWindow()
 	ImGui::Checkbox("View bounding box", &_viewBoundingBox);
 
 	{
-		int32_t offset   = 0;
+		int32_t offset = 0;
 		int32_t newLines = 1;
 		for (uint8_t i = 0; i < 32; ++i)
 		{
 			if (mesh->GetFlags() & (1u << i))
 			{
-				auto writen = std::sprintf(bitfieldTitle + offset, "%s%s%s", offset ? "|" : "", offset > newLines * 100 ? "\n" : "", L3DMeshFlagNames[i].data());
-				while (offset > newLines * 100)
-					newLines++;
+				auto writen = std::sprintf(bitfieldTitle + offset, "%s%s%s", offset ? "|" : "",
+				                           offset > newLines * 100 ? "\n" : "", L3DMeshFlagNames[i].data());
+				while (offset > newLines * 100) newLines++;
 				offset += writen;
 			}
 		}
@@ -141,10 +145,7 @@ void MeshViewer::DrawWindow()
 	auto const& submesh = mesh->GetSubMeshes()[_selectedSubMesh];
 
 	auto flags = submesh->GetFlags();
-	ImGui::Text("SubMesh LOD=%u Status=%u%s%s",
-	            flags.lod,
-	            flags.status,
-	            flags.isPhysics ? " [Physics]" : "",
+	ImGui::Text("SubMesh LOD=%u Status=%u%s%s", flags.lod, flags.status, flags.isPhysics ? " [Physics]" : "",
 	            flags.isWindow ? " [Window]" : "");
 
 	auto const& graphicsMesh = submesh->GetMesh();
@@ -163,29 +164,28 @@ void MeshViewer::DrawScene()
 		return;
 
 	auto const& meshPack = Game::instance()->GetMeshPack();
-	auto const& meshes   = meshPack.GetMeshes();
-	auto& shaderManager  = Game::instance()->GetRenderer().GetShaderManager();
-	auto objectShader    = shaderManager.GetShader("Object");
-	auto debugShader     = shaderManager.GetShader("DebugLine");
+	auto const& meshes = meshPack.GetMeshes();
+	auto& shaderManager = Game::instance()->GetRenderer().GetShaderManager();
+	auto objectShader = shaderManager.GetShader("Object");
+	auto debugShader = shaderManager.GetShader("DebugLine");
 
 	// TODO(bwrsandman): use camera class
 	glm::mat4 perspective = glm::perspective(glm::radians(70.0f), 1.0f, 1.0f, 1024.0f);
-	glm::mat4 view        = glm::lookAt(_cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 view = glm::lookAt(_cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	bgfx::setViewTransform(static_cast<bgfx::ViewId>(_viewId), &view, &perspective);
 
 	_frameBuffer->Bind(_viewId);
-	// TODO(bwrsandman): The setting of viewport and clearing should probably be done in framebuffer bind
+	// TODO(bwrsandman): The setting of viewport and clearing should probably be
+	// done in framebuffer bind
 	static const uint32_t clearColor = 0x274659ff;
-	bgfx::setViewClear(static_cast<bgfx::ViewId>(_viewId),
-	                   BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
-	                   clearColor,
-	                   1.0f,
-	                   0);
+	bgfx::setViewClear(static_cast<bgfx::ViewId>(_viewId), BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, clearColor, 1.0f, 0);
 	uint16_t width, height;
 	_frameBuffer->GetSize(width, height);
 	bgfx::setViewRect(static_cast<bgfx::ViewId>(_viewId), 0, 0, width, height);
 
-	uint64_t state = 0u | BGFX_STATE_WRITE_MASK | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CCW // TODO(bwrsandman): Some meshes wind one way and some others (i.e. rocks, gate)
+	uint64_t state = 0u | BGFX_STATE_WRITE_MASK | BGFX_STATE_DEPTH_TEST_LESS |
+	                 BGFX_STATE_CULL_CCW // TODO(bwrsandman): Some meshes wind one way and
+	                                     // some others (i.e. rocks, gate)
 	                 | BGFX_STATE_MSAA;
 
 	const auto& mesh = meshes[static_cast<int>(_selectedMesh)];

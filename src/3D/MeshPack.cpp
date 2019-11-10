@@ -82,25 +82,19 @@ void createCompressedDDS(graphics::Texture2D* texture, uint8_t* buffer)
 	// - all are compressed
 
 	graphics::Format internalFormat;
-	int32_t width  = header->dwWidth;
+	int32_t width = header->dwWidth;
 	int32_t height = header->dwHeight;
 	int bytesPerBlock;
 
 	switch (header->ddspf.dwFourCC)
 	{
-	case ('D' | ('X' << 8) | ('T' << 16) | ('1' << 24)):
-		internalFormat = graphics::Format::BlockCompression1;
-		break;
-	case ('D' | ('X' << 8) | ('T' << 16) | ('3' << 24)):
-		internalFormat = graphics::Format::BlockCompression2;
-		break;
-	default:
-		throw std::runtime_error("Unsupported compressed texture format");
-		break;
+	case ('D' | ('X' << 8) | ('T' << 16) | ('1' << 24)): internalFormat = graphics::Format::BlockCompression1; break;
+	case ('D' | ('X' << 8) | ('T' << 16) | ('3' << 24)): internalFormat = graphics::Format::BlockCompression2; break;
+	default: throw std::runtime_error("Unsupported compressed texture format"); break;
 	}
 
 	// DXT1 = 8bpp or DXT3 = 16bpp
-	int bpp     = internalFormat == graphics::Format::BlockCompression2 ? 16 : 8;
+	int bpp = internalFormat == graphics::Format::BlockCompression2 ? 16 : 8;
 	size_t size = std::max(1, ((int)width + 3) >> 2) * std::max(1, ((int)height + 3) >> 2) * bpp;
 
 	texture->Create(width, height, 1, internalFormat, graphics::Wrapping::ClampEdge, buffer + header->dwSize, size);
@@ -171,9 +165,9 @@ void MeshPack::loadTextures(IStream& stream)
 
 		stream.Seek(textureBlock->second.position, SeekMode::Begin);
 
-		uint32_t size    = stream.ReadValue<uint32_t>();
-		uint32_t id      = stream.ReadValue<uint32_t>();
-		uint32_t type    = stream.ReadValue<uint32_t>();
+		uint32_t size = stream.ReadValue<uint32_t>();
+		uint32_t id = stream.ReadValue<uint32_t>();
+		uint32_t type = stream.ReadValue<uint32_t>();
 		uint32_t ddsSize = stream.ReadValue<uint32_t>();
 
 		uint8_t* ddsBuffer = new uint8_t[ddsSize];
@@ -199,7 +193,7 @@ void MeshPack::loadMeshes(IStream& stream)
 	stream.Seek(block->second.position, SeekMode::Begin);
 
 	// Greetings Jean-Claude Cottier
-	uint32_t magic           = stream.ReadValue<uint32_t>();
+	uint32_t magic = stream.ReadValue<uint32_t>();
 	constexpr uint32_t kMKJC = ('C' << 24) | ('J' << 16) | ('K' << 8) | 'M';
 	if (magic != kMKJC)
 	{
@@ -216,7 +210,8 @@ void MeshPack::loadMeshes(IStream& stream)
 	{
 		stream.Seek(block->second.position + meshOffsets[i], SeekMode::Begin);
 
-		// slightly hacky, but lets read the header, get the size, and return a MemoryStream
+		// slightly hacky, but lets read the header, get the size, and return a
+		// MemoryStream
 		struct
 		{
 			uint32_t magic;
@@ -231,7 +226,7 @@ void MeshPack::loadMeshes(IStream& stream)
 
 		MemoryStream modelStream(data.data(), data.size());
 
-		//spdlog::debug("L3DMesh {}", i);
+		// spdlog::debug("L3DMesh {}", i);
 		std::unique_ptr<L3DMesh> mesh = std::make_unique<L3DMesh>(MeshNames[i].data());
 		mesh->Load(modelStream);
 

@@ -60,14 +60,17 @@ struct VertexAttrib
 	};
 
 	Attribute _attribute; ///< Type of data represented
-	uint8_t _num;         ///< Number of components per vertex attribute, must be 1, 2, 3, 4.
+	uint8_t _num;         ///< Number of components per vertex attribute, must be 1, 2,
+	                      ///< 3, 4.
 	Type _type;           ///< Data type of each attribute component in the array.
-	bool _normalized;     /// < When using fixed point values, range will be normalized to 0.0-1.0 in shader.
-	bool _asInt;          /// < Should not be altered. Unpacking will have to be done in vertex shader.
+	bool _normalized;     /// < When using fixed point values, range will be
+	                      /// normalized to 0.0-1.0 in shader.
+	bool _asInt;          /// < Should not be altered. Unpacking will have to be done in
+	                      /// vertex shader.
 
 	VertexAttrib() {}
-	VertexAttrib(Attribute attribute, uint8_t num, Type type, bool normalized = false, bool asInt = false):
-	    _attribute(attribute), _num(num), _type(type), _normalized(normalized), _asInt(asInt)
+	VertexAttrib(Attribute attribute, uint8_t num, Type type, bool normalized = false, bool asInt = false)
+	    : _attribute(attribute), _num(num), _type(type), _normalized(normalized), _asInt(asInt)
 	{
 	}
 };
@@ -76,7 +79,7 @@ typedef std::vector<VertexAttrib> VertexDecl;
 
 class VertexBuffer
 {
-  public:
+public:
 	VertexBuffer(std::string name, const void* vertices, uint32_t vertexCount, VertexDecl decl);
 	VertexBuffer(std::string name, const bgfx::Memory* memory, VertexDecl decl);
 	~VertexBuffer();
@@ -87,7 +90,7 @@ class VertexBuffer
 
 	void Bind() const;
 
-  private:
+private:
 	std::string _name;
 	uint32_t _vertexCount;
 	const VertexDecl _vertexDecl;

@@ -91,10 +91,7 @@ struct L3DModel_Vertex
 	uint32_t bone;
 };
 
-L3DMesh::L3DMesh(const std::string& debugName):
-    _debugName(debugName)
-{
-}
+L3DMesh::L3DMesh(const std::string& debugName): _debugName(debugName) {}
 
 void L3DMesh::LoadFromFile(const std::string& fileName)
 {
@@ -105,7 +102,7 @@ void L3DMesh::LoadFromFile(const std::string& fileName)
 
 void L3DMesh::Load(IStream& stream)
 {
-	constexpr const char kMagic[4] = { 'L', '3', 'D', '0' };
+	constexpr const char kMagic[4] = {'L', '3', 'D', '0'};
 	char magic[4];
 	stream.Read(magic, 4);
 
@@ -140,22 +137,22 @@ void L3DMesh::Load(IStream& stream)
 	_flags = header.flags;
 
 	/*if (IsBoned())
-		spdlog::debug("\tcontains bones");
+	    spdlog::debug("\tcontains bones");
 
 	if (IsContainsLandscapeFeature())
-		spdlog::debug("\tcontains landscape feature");
+	    spdlog::debug("\tcontains landscape feature");
 
 	if (IsContainsUV2())
-		spdlog::debug("\tcontains uv2");
+	    spdlog::debug("\tcontains uv2");
 
 	if (IsContainsNameData())
-		spdlog::debug("\tcontains name data");
+	    spdlog::debug("\tcontains name data");
 
 	if (IsContainsEBone())
-		spdlog::debug("\tcontains ebone");
+	    spdlog::debug("\tcontains ebone");
 
 	if (IsContainsExtraMetrics())
-		spdlog::debug("\tcontains extra metrics");*/
+	    spdlog::debug("\tcontains extra metrics");*/
 
 	// read textures
 	if (header.skinsCount > 0)
@@ -196,18 +193,20 @@ void L3DMesh::Load(IStream& stream)
 	}
 
 	/*if (header.pointsCount > 0) {
-		spdlog::debug("\t{} points at {:#x}", header.pointsCount, header.pointsListOffset);
+	    spdlog::debug("\t{} points at {:#x}", header.pointsCount,
+	header.pointsListOffset);
 
-		file.Seek(basePosition + header.pointsListOffset, FileSeekMode::Begin);
+	    file.Seek(basePosition + header.pointsListOffset, FileSeekMode::Begin);
 
-		for (auto i = 0; i < header.pointsCount; i++) {
-			glm::vec3 point;
-			file.Read<float>(glm::value_ptr(point), 3);
-			spdlog::debug("\t\tpoint[{}] = [{}, {}, {}]", i, point.x, point.y, point.z);
-		}
+	    for (auto i = 0; i < header.pointsCount; i++) {
+	        glm::vec3 point;
+	        file.Read<float>(glm::value_ptr(point), 3);
+	        spdlog::debug("\t\tpoint[{}] = [{}, {}, {}]", i, point.x, point.y,
+	point.z);
+	    }
 	}*/
 
-	//if (header.extraDataOffset != -1)
+	// if (header.extraDataOffset != -1)
 	//	spdlog::debug("\textraDataOffset: {:#x}", header.extraDataOffset);
 
 	// firstly they load skins
@@ -216,24 +215,28 @@ void L3DMesh::Load(IStream& stream)
 
 	// then submeshes
 	// for each mesh in offset list
-	// LH3DSubMesh::Create, which in turn create LH3DPrimitive::Create (should remove naming confusion)
+	// LH3DSubMesh::Create, which in turn create LH3DPrimitive::Create (should
+	// remove naming confusion)
 
 	// size: 2520, num meshes: 1, offset: 76
 	// size: 6100, num meshes: 4, offset: 100
 }
 
-void L3DMesh::Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint32_t mesh, uint64_t state, uint32_t rgba) const
+void L3DMesh::Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint32_t mesh,
+                   uint64_t state, uint32_t rgba) const
 {
 	if (mesh >= _subMeshes.size())
 	{
-		//spdlog::warn("tried to draw submesh out of range ({}/{})", mesh, _subMeshes.size());
+		// spdlog::warn("tried to draw submesh out of range ({}/{})", mesh,
+		// _subMeshes.size());
 		mesh = _subMeshes.size() - 1;
 	}
 
 	_subMeshes[mesh]->Submit(viewId, modelMatrix, program, state, rgba, false);
 }
 
-void L3DMesh::Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state, uint32_t rgba) const
+void L3DMesh::Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state,
+                     uint32_t rgba) const
 {
 	for (auto it = _subMeshes.begin(); it != _subMeshes.end(); ++it)
 	{
@@ -242,12 +245,13 @@ void L3DMesh::Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, 
 	}
 }
 
-void L3DMesh::Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
-                     const ShaderProgram& program, uint64_t state, uint32_t rgba) const
+void L3DMesh::Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart,
+                     uint32_t instanceCount, const ShaderProgram& program, uint64_t state, uint32_t rgba) const
 {
 	for (auto it = _subMeshes.begin(); it != _subMeshes.end(); ++it)
 	{
 		const L3DSubMesh& submesh = *it->get();
-		submesh.Submit(viewId, instanceBuffer, instanceStart, instanceCount, program, state, rgba, std::next(it) != _subMeshes.end());
+		submesh.Submit(viewId, instanceBuffer, instanceStart, instanceCount, program, state, rgba,
+		               std::next(it) != _subMeshes.end());
 	}
 }

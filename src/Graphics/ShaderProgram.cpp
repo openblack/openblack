@@ -27,11 +27,11 @@
 namespace openblack::graphics
 {
 
-ShaderProgram::ShaderProgram(const std::string& name, bgfx::ShaderHandle&& vertexShader, bgfx::ShaderHandle&& fragmentShader):
-    _program(BGFX_INVALID_HANDLE)
+ShaderProgram::ShaderProgram(const std::string& name, bgfx::ShaderHandle&& vertexShader, bgfx::ShaderHandle&& fragmentShader)
+    : _program(BGFX_INVALID_HANDLE)
 {
 	uint16_t numShaderUniforms = 0;
-	bgfx::UniformInfo info     = {};
+	bgfx::UniformInfo info = {};
 	std::vector<bgfx::UniformHandle> uniforms;
 
 	numShaderUniforms = bgfx::getShaderUniforms(vertexShader);

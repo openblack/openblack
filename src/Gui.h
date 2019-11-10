@@ -36,7 +36,10 @@ namespace ImGui
 #define IMGUI_FLAGS_ALPHA_BLEND UINT8_C(0x01)
 
 // Helper function for passing bgfx::TextureHandle to ImGui::Image.
-inline void Image(bgfx::TextureHandle _handle, uint8_t _flags, uint8_t _mip, const ImVec2& _size, const ImVec2& _uv0 = ImVec2(0.0f, 0.0f), const ImVec2& _uv1 = ImVec2(1.0f, 1.0f), const ImVec4& _tintCol = ImVec4(1.0f, 1.0f, 1.0f, 1.0f), const ImVec4& _borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f))
+inline void Image(bgfx::TextureHandle _handle, uint8_t _flags, uint8_t _mip, const ImVec2& _size,
+                  const ImVec2& _uv0 = ImVec2(0.0f, 0.0f), const ImVec2& _uv1 = ImVec2(1.0f, 1.0f),
+                  const ImVec4& _tintCol = ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
+                  const ImVec4& _borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f))
 {
 	union
 	{
@@ -49,13 +52,15 @@ inline void Image(bgfx::TextureHandle _handle, uint8_t _flags, uint8_t _mip, con
 		ImTextureID ptr;
 	} texture;
 	texture.s.handle = _handle;
-	texture.s.flags  = _flags;
-	texture.s.mip    = _mip;
+	texture.s.flags = _flags;
+	texture.s.mip = _mip;
 	Image(texture.ptr, _size, _uv0, _uv1, _tintCol, _borderCol);
 }
 
 // Helper function for passing bgfx::TextureHandle to ImGui::Image.
-inline void Image(bgfx::TextureHandle _handle, const ImVec2& _size, const ImVec2& _uv0 = ImVec2(0.0f, 0.0f), const ImVec2& _uv1 = ImVec2(1.0f, 1.0f), const ImVec4& _tintCol = ImVec4(1.0f, 1.0f, 1.0f, 1.0f), const ImVec4& _borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f))
+inline void Image(bgfx::TextureHandle _handle, const ImVec2& _size, const ImVec2& _uv0 = ImVec2(0.0f, 0.0f),
+                  const ImVec2& _uv1 = ImVec2(1.0f, 1.0f), const ImVec4& _tintCol = ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
+                  const ImVec4& _borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f))
 {
 	Image(_handle, IMGUI_FLAGS_ALPHA_BLEND, 0, _size, _uv0, _uv1, _tintCol, _borderCol);
 }
@@ -70,7 +75,7 @@ class MeshViewer;
 
 class Gui
 {
-  public:
+public:
 	static std::unique_ptr<Gui> create(const GameWindow& window, graphics::RenderPass viewId, float scale);
 
 	virtual ~Gui();
@@ -80,7 +85,7 @@ class Gui
 	bool Loop(Game& game);
 	void Draw();
 
-  private:
+private:
 	Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer>&& meshViewer);
 	bool InitSdl2(SDL_Window* window);
 	void NewFrameSdl2(SDL_Window* window);
@@ -103,14 +108,14 @@ class Gui
 	struct CircularBuffer
 	{
 		static constexpr uint8_t _bufferSize = N;
-		T _values[_bufferSize]               = {};
-		uint8_t _offset                      = 0;
+		T _values[_bufferSize] = {};
+		uint8_t _offset = 0;
 
 		[[nodiscard]] T back() const { return _values[_offset]; }
 		void pushBack(T value)
 		{
 			_values[_offset] = value;
-			_offset          = (_offset + 1u) % _bufferSize;
+			_offset = (_offset + 1u) % _bufferSize;
 		}
 	};
 

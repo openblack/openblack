@@ -54,7 +54,7 @@ class L3DSubMesh
 		uint32_t indicesCount;
 	};
 
-  public:
+public:
 #pragma pack(push, 1)
 	struct alignas(4) HeaderFlag
 	{
@@ -72,15 +72,17 @@ class L3DSubMesh
 	~L3DSubMesh();
 
 	void Load(IStream& stream);
-	void Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
-	void Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
-	            const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
+	void Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program,
+	            uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
+	void Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart,
+	            uint32_t instanceCount, const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0,
+	            bool preserveState = false) const;
 
 	[[nodiscard]] HeaderFlag GetFlags() const { return _flags; }
 	[[nodiscard]] graphics::Mesh& GetMesh() const;
 	[[nodiscard]] AxisAlignedBoundingBox GetBoundingBox() const { return _boundingBox; }
 
-  private:
+private:
 	void Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatrix,
 	             const bgfx::DynamicVertexBufferHandle* instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
 	             const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;

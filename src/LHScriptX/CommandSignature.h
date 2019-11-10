@@ -42,20 +42,16 @@ enum class ParameterType
 
 class ScriptCommandParameter
 {
-  public:
-	ScriptCommandParameter(ParameterType type = ParameterType::None):
-	    _type(type) {}
-	ScriptCommandParameter(const std::string value):
-	    _type(ParameterType::String)
+public:
+	ScriptCommandParameter(ParameterType type = ParameterType::None): _type(type) {}
+	ScriptCommandParameter(const std::string value): _type(ParameterType::String)
 	{
 		// TODO: Hacky, avoid new
-		_value._string  = new std::string();
+		_value._string = new std::string();
 		*_value._string = value;
 	}
-	ScriptCommandParameter(float value):
-	    _type(ParameterType::Float) { SetFloat(value); }
-	ScriptCommandParameter(int32_t value):
-	    _type(ParameterType::Number) { SetNumber(value); }
+	ScriptCommandParameter(float value): _type(ParameterType::Float) { SetFloat(value); }
+	ScriptCommandParameter(int32_t value): _type(ParameterType::Number) { SetNumber(value); }
 	ScriptCommandParameter(float x, float y, float z) { SetVector(x, y, z); }
 
 	ParameterType GetType() const { return _type; };
@@ -75,7 +71,7 @@ class ScriptCommandParameter
 		_value._vector[2] = z;
 	}
 
-  private:
+private:
 	ParameterType _type;
 
 	union
@@ -91,23 +87,19 @@ typedef std::vector<ScriptCommandParameter> ScriptCommandParameters;
 
 class ScriptCommandContext
 {
-  public:
-	ScriptCommandContext(Game* game, const ScriptCommandParameters* parameters):
-	    _game(game), _parameters(parameters) {}
+public:
+	ScriptCommandContext(Game* game, const ScriptCommandParameters* parameters): _game(game), _parameters(parameters) {}
 
 	Game& GetGame() const { return *_game; }
 
 	const ScriptCommandParameters& GetParameters() const { return *_parameters; }
 
-	const ScriptCommandParameter& operator[](unsigned int arg) const
-	{
-		return _parameters->at(arg);
-	}
+	const ScriptCommandParameter& operator[](unsigned int arg) const { return _parameters->at(arg); }
 
 	template <class T>
 	T GetParameter(unsigned int arg) const;
 
-  private:
+private:
 	Game* _game;
 	const ScriptCommandParameters* _parameters;
 };

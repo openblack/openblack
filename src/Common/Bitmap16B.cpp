@@ -32,9 +32,9 @@ Bitmap16B::Bitmap16B(const void* fileData, size_t size)
 {
 	auto cast = reinterpret_cast<const uint32_t*>(fileData);
 
-	_width  = *((uint32_t*)fileData + 1);
+	_width = *((uint32_t*)fileData + 1);
 	_height = *((uint32_t*)fileData + 2);
-	_size   = _width * _height * 2;
+	_size = _width * _height * 2;
 
 	_data = new uint16_t[_width * _height];
 	memcpy(_data, (uint32_t*)fileData + 4, _size);
@@ -48,7 +48,7 @@ Bitmap16B::~Bitmap16B()
 
 Bitmap16B* Bitmap16B::LoadFromFile(const std::string& strFile)
 {
-	auto const& data  = Game::instance()->GetFileSystem().ReadAll(strFile);
+	auto const& data = Game::instance()->GetFileSystem().ReadAll(strFile);
 	Bitmap16B* bitmap = new Bitmap16B(data.data(), data.size());
 
 	return bitmap;

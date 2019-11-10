@@ -35,13 +35,13 @@ class DebugLines;
 
 class MeshViewer
 {
-  public:
+public:
 	explicit MeshViewer();
 	void Open();
 	void DrawWindow();
 	void DrawScene();
 
-  private:
+private:
 	bool _open;
 	static constexpr graphics::RenderPass _viewId = graphics::RenderPass::MeshViewer;
 	MeshId _selectedMesh;

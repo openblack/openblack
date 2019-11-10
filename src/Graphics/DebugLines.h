@@ -20,10 +20,10 @@
 
 #pragma once
 
+#include <Graphics/RenderPass.h>
 #include <bgfx/bgfx.h>
 #include <glm/glm.hpp>
 #include <memory>
-#include <Graphics/RenderPass.h>
 
 namespace openblack::graphics
 {
@@ -32,7 +32,7 @@ class ShaderProgram;
 
 class DebugLines
 {
-  public:
+public:
 	struct Vertex
 	{
 		glm::vec4 pos;
@@ -47,11 +47,12 @@ class DebugLines
 	virtual ~DebugLines();
 
 	void Draw(graphics::RenderPass viewId, const ShaderProgram& program) const;
-	void Draw(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount, const ShaderProgram& program) const;
+	void Draw(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart,
+	          uint32_t instanceCount, const ShaderProgram& program) const;
 
 	void SetPose(const glm::vec3& center, const glm::vec3& size);
 
-  protected:
+protected:
 	explicit DebugLines(std::unique_ptr<Mesh>&& mesh);
 
 	std::unique_ptr<Mesh> _mesh;
