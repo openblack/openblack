@@ -29,7 +29,7 @@ namespace openblack
 class Game;
 }
 
-namespace openblack::LHScriptX
+namespace openblack::lhscriptx
 {
 enum class ParameterType
 {
@@ -120,4 +120,4 @@ struct ScriptCommandSignature
 	ScriptCommand command;
 	std::vector<ParameterType> parameters;
 };
-} // namespace openblack::LHScriptX
+} // namespace openblack::lhscriptx

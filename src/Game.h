@@ -43,7 +43,7 @@ class L3DMesh;
 class Sky;
 class Water;
 
-namespace LHScriptX
+namespace lhscriptx
 {
 class Script;
 }
@@ -153,7 +153,7 @@ class Game
 	std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<Sky> _sky;
 	std::unique_ptr<Water> _water;
-	std::unique_ptr<LHScriptX::Script> _scriptx;
+	std::unique_ptr<lhscriptx::Script> _scriptx;
 	std::unique_ptr<LHVM::LHVM> _lhvm;
 	std::unique_ptr<entities::Registry> _entityRegistry;
 

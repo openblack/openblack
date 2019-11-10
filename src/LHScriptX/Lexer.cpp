@@ -21,7 +21,7 @@
 #include <LHScriptX/Lexer.h>
 #include <cctype>
 
-using namespace openblack::LHScriptX;
+using namespace openblack::lhscriptx;
 
 Lexer::Lexer(const std::string& source):
     source_(source), currentLine_(1)

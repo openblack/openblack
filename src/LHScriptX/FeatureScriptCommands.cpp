@@ -37,7 +37,7 @@
 #include <spdlog/spdlog.h>
 #include <tuple>
 
-using namespace openblack::LHScriptX;
+using namespace openblack::lhscriptx;
 
 // alias parameter types for signature list readability
 const constexpr ParameterType TString = ParameterType::String;

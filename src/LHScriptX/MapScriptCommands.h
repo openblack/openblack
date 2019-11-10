@@ -23,7 +23,7 @@
 #include <LHScriptX/CommandSignature.h>
 #include <array>
 
-namespace openblack::LHScriptX
+namespace openblack::lhscriptx
 {
 
 class MapScriptCommands
@@ -53,4 +53,4 @@ class MapScriptCommands
 	static void LoadLanguage(const ScriptCommandContext& ctx);
 };
 
-} // namespace openblack::LHScriptX
+} // namespace openblack::lhscriptx

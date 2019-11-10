@@ -27,7 +27,7 @@
 #define __builtin_unreachable() __assume(0)
 #endif
 
-namespace openblack::LHScriptX
+namespace openblack::lhscriptx
 {
 
 class LexerException: public std::runtime_error
@@ -165,4 +165,4 @@ class Lexer
 	int currentLine_;
 };
 
-} // namespace openblack::LHScriptX
+} // namespace openblack::lhscriptx
