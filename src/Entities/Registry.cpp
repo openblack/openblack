@@ -10,6 +10,7 @@
 #include <Entities/Components/Stream.h>
 #include <Entities/Components/Transform.h>
 #include <Entities/Components/Tree.h>
+#include <Entities/Components/Villager.h>
 #include <Game.h>
 #include <Graphics/DebugLines.h>
 #include <Graphics/ShaderManager.h>
@@ -49,6 +50,15 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 	// Abodes
 	_registry.view<const Abode, const Transform>().each([&meshIds, &instanceCount](const Abode& entity, const Transform& transform) {
 		const auto meshId = abodeMeshLookup[entity.abodeInfo];
+		auto count = meshIds.insert(std::make_pair(meshId, 0));
+		count.first->second++;
+		instanceCount++;
+	});
+
+	// Villagers
+	_registry.view<const Villager, const Transform>().each([&meshIds, &instanceCount](const Villager& villager, const Transform& transform) {
+		const auto villagerType = villager.GetVillagerType();
+		const auto meshId = villagerMeshLookup[villagerType];
 		auto count = meshIds.insert(std::make_pair(meshId, 0));
 		count.first->second++;
 		instanceCount++;
@@ -188,6 +198,17 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	// Abodes
 	_registry.view<const Abode, const Transform>().each([this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Abode& entity, const Transform& transform) {
 		const auto meshId = abodeMeshLookup[entity.abodeInfo];
+		auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
+		auto desc = renderCtx.instancedDrawDescs.find(meshId);
+		renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+		prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 0);
+		offset.first->second++;
+	});
+
+	// Villagers
+	_registry.view<const Villager, const Transform>().each([this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Villager& villager, const Transform& transform) {
+		const auto villagerType = villager.GetVillagerType();
+		const auto meshId = villagerMeshLookup[villagerType];
 		auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
 		auto desc = renderCtx.instancedDrawDescs.find(meshId);
 		renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);

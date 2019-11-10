@@ -22,11 +22,12 @@
 
 #include <AllMeshes.h>
 #include <unordered_map>
+#include <optional>
 #include <Entities/Components/AnimatedStatic.h>
+#include <Entities/Components/Villager.h>
 #include <spdlog/spdlog.h>
 
-namespace openblack
-{
+namespace openblack {
 enum class TreeInfo;
 
 
@@ -56,5 +57,6 @@ extern MeshLookup<TreeInfo> treeMeshLookup;
 extern MeshLookup<MobileStaticInfo> mobileStaticMeshLookup;
 extern MeshLookup<MobileObjectInfo> mobileObjectMeshLookup;
 extern MeshLookup<AbodeInfo> abodeMeshLookup;
+extern MeshLookup<VillagerType, VillagerTypeId> villagerMeshLookup;
 extern MeshLookup<FeatureInfo> featureMeshLookup;
 } // namespace openblack

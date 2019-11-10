@@ -2,7 +2,8 @@
 
 using namespace openblack;
 
-MeshLookup<TreeInfo> openblack::treeMeshLookup {
+MeshLookup<TreeInfo> openblack::treeMeshLookup
+{
 	{ TreeInfo::Beech, MeshId::TreeBeech },
 	{ TreeInfo::Birch, MeshId::TreeBirch },
 	{ TreeInfo::Cedar, MeshId::TreeCedar },
@@ -28,7 +29,8 @@ MeshLookup<TreeInfo> openblack::treeMeshLookup {
 	{ TreeInfo::Burnt, MeshId::ObjectBurntTree }
 };
 
-MeshLookup<AbodeInfo> openblack::abodeMeshLookup {
+MeshLookup<AbodeInfo> openblack::abodeMeshLookup
+{
 	// Norse
 	{ AbodeInfo::NorseTownCentre, MeshId::BuildingNorseVillageCentre },
 	{ AbodeInfo::NorseStoragePit, MeshId::BuildingNorseStoragePit },
@@ -117,7 +119,36 @@ MeshLookup<AbodeInfo> openblack::abodeMeshLookup {
 	{ AbodeInfo::GreekWonder, MeshId::BuildingGreekWonder }
 };
 
-MeshLookup<MobileStaticInfo> openblack::mobileStaticMeshLookup {
+MeshLookup<VillagerType, VillagerTypeId> openblack::villagerMeshLookup
+{
+	{{VillageEthnicities::AZTEC, VillagerLifeStage::Adult, VillagerSex::MALE, VillagerRoles::NONE}, MeshId::PersonAztecMaleA1},
+	{{VillageEthnicities::AZTEC, VillagerLifeStage::Adult, VillagerSex::FEMALE, VillagerRoles::NONE}, MeshId::PersonAztecFemaleA1},
+	{{VillageEthnicities::AZTEC, VillagerLifeStage::Child, VillagerSex::MALE, VillagerRoles::NONE}, MeshId::PersonBoyTan1},
+	{{VillageEthnicities::AZTEC, VillagerLifeStage::Child, VillagerSex::FEMALE, VillagerRoles::NONE}, MeshId::PersonGirlTan1},
+	{{VillageEthnicities::CELTIC, VillagerLifeStage::Adult, VillagerSex::MALE, VillagerRoles::NONE}, MeshId::PersonCelticMaleA1},
+	{{VillageEthnicities::CELTIC, VillagerLifeStage::Adult, VillagerSex::FEMALE, VillagerRoles::NONE}, MeshId::PersonCelticFemaleA1},
+	{{VillageEthnicities::CELTIC, VillagerLifeStage::Child, VillagerSex::MALE, VillagerRoles::NONE}, MeshId::PersonBoyWhite},
+	{{VillageEthnicities::CELTIC, VillagerLifeStage::Child, VillagerSex::FEMALE, VillagerRoles::NONE}, MeshId::PersonGirlWhite},
+	{{VillageEthnicities::EGYPTIAN, VillagerLifeStage::Adult, VillagerSex::MALE, VillagerRoles::NONE}, MeshId::PersonEgyptianMaleA1},
+	{{VillageEthnicities::EGYPTIAN, VillagerLifeStage::Adult, VillagerSex::FEMALE, VillagerRoles::NONE}, MeshId::PersonEgyptianFemaleA1},
+	{{VillageEthnicities::GREEK, VillagerLifeStage::Adult, VillagerSex::MALE, VillagerRoles::NONE}, MeshId::PersonGreekMaleA1},
+	{{VillageEthnicities::GREEK, VillagerLifeStage::Adult, VillagerSex::FEMALE, VillagerRoles::NONE}, MeshId::PersonGreekFemaleA1},
+	{{VillageEthnicities::INDIAN, VillagerLifeStage::Adult, VillagerSex::MALE, VillagerRoles::NONE}, MeshId::PersonAmericanMaleA1},
+	{{VillageEthnicities::INDIAN, VillagerLifeStage::Adult, VillagerSex::FEMALE, VillagerRoles::NONE}, MeshId::PersonAmericanFemaleA1},
+	{{VillageEthnicities::JAPANESE, VillagerLifeStage::Adult, VillagerSex::MALE, VillagerRoles::NONE}, MeshId::PersonJapaneseMaleA1},
+	{{VillageEthnicities::JAPANESE, VillagerLifeStage::Adult, VillagerSex::FEMALE, VillagerRoles::NONE}, MeshId::PersonJapaneseFemaleA2},
+	{{VillageEthnicities::NORSE, VillagerLifeStage::Adult, VillagerSex::MALE, VillagerRoles::NONE}, MeshId::PersonNorseMaleA1},
+	{{VillageEthnicities::NORSE, VillagerLifeStage::Adult, VillagerSex::FEMALE, VillagerRoles::NONE}, MeshId::PersonNorseFemaleA1},
+	{{VillageEthnicities::NORSE, VillagerLifeStage::Child, VillagerSex::MALE, VillagerRoles::NONE}, MeshId::PersonBoyWhite},
+	{{VillageEthnicities::NORSE, VillagerLifeStage::Child, VillagerSex::FEMALE, VillagerRoles::NONE}, MeshId::PersonGirlWhite},
+	{{VillageEthnicities::TIBETAN, VillagerLifeStage::Adult, VillagerSex::MALE, VillagerRoles::NONE}, MeshId::PersonTibetanMaleA1},
+	{{VillageEthnicities::TIBETAN, VillagerLifeStage::Adult, VillagerSex::FEMALE, VillagerRoles::NONE}, MeshId::PersonTibetanFemaleA2},
+	{{VillageEthnicities::AFRICAN, VillagerLifeStage::Adult, VillagerSex::MALE, VillagerRoles::NONE}, MeshId::PersonEgyptianMaleA1},
+	{{VillageEthnicities::AFRICAN, VillagerLifeStage::Adult, VillagerSex::FEMALE, VillagerRoles::NONE}, MeshId::PersonEgyptianFemaleA1}
+};
+
+MeshLookup<MobileStaticInfo> openblack::mobileStaticMeshLookup
+{
 	{ MobileStaticInfo::Rock, MeshId::ObjectFlatRockChalk },
 	{ MobileStaticInfo::Bonfire, MeshId::BuildingCampfire },
 	{ MobileStaticInfo::Boulder1Chalk, MeshId::Boulder1Chalk },
@@ -163,7 +194,6 @@ MeshLookup<MobileStaticInfo> openblack::mobileStaticMeshLookup {
 MeshLookup<MobileObjectInfo> openblack::mobileObjectMeshLookup {
 	{ MobileObjectInfo::EgyptBarrel, MeshId::BuildingEgyptianBarrel },
 	{ MobileObjectInfo::EgyptCart, MeshId::BuildingEgyptianCart },
-
 	{ MobileObjectInfo::EgyptPotA, MeshId::BuildingEgyptianPotA },
 	{ MobileObjectInfo::EgyptPotB, MeshId::BuildingEgyptianPotB },
 	{ MobileObjectInfo::MagicFood, MeshId::Dummy },
