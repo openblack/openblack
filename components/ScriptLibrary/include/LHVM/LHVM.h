@@ -32,15 +32,15 @@ namespace LHVM
 
 class LHVM
 {
-  public:
+public:
 	enum class Version : uint32_t
 	{
-		BlackAndWhite  = 7,
-		CreatureIsle   = 8,
+		BlackAndWhite = 7,
+		CreatureIsle = 8,
 		BlackAndWhite2 = 12
 	};
 
-	LHVM()  = default;
+	LHVM() = default;
 	~LHVM() = default;
 
 	void LoadBinary(const std::string& filename);
@@ -52,7 +52,7 @@ class LHVM
 
 	Version GetVersion() const { return _version; }
 
-  private:
+private:
 	void loadVariables(std::FILE* file, std::vector<std::string>& variables);
 	void loadCode(std::FILE* file);
 	void loadAuto(std::FILE* file);

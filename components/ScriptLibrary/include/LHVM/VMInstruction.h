@@ -30,7 +30,7 @@ namespace LHVM
 
 class VMInstruction
 {
-  public:
+public:
 	enum class Opcode : uint_fast8_t
 	{
 		END = 0,
@@ -83,8 +83,10 @@ class VMInstruction
 	};
 
 	VMInstruction() = delete;
-	VMInstruction(Opcode code, Access access, DataType type, uint32_t data, uint32_t line):
-	    _code(code), _access(access), _type(type), _data(data), _line(line) {}
+	VMInstruction(Opcode code, Access access, DataType type, uint32_t data, uint32_t line)
+	    : _code(code), _access(access), _type(type), _data(data), _line(line)
+	{
+	}
 	~VMInstruction() = default;
 
 	Opcode GetOpcode() const { return _code; }
@@ -95,7 +97,7 @@ class VMInstruction
 
 	std::string Disassemble() const;
 
-  private:
+private:
 	Opcode _code;
 	Access _access;
 	DataType _type;
