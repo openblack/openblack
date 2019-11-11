@@ -89,8 +89,6 @@ public:
 	graphics::Texture2D* GetSmallBumpMap() { return _textureSmallBump.get(); }
 
 private:
-	void convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixels);
-
 	std::unique_ptr<graphics::Texture2D> _materialArray;
 	std::unique_ptr<graphics::Texture2D> _countryLookup;
 

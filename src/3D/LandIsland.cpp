@@ -103,20 +103,12 @@ void LandIsland::LoadFromFile(IStream& stream)
 	}
 
 	spdlog::debug("[LandIsland] loading {} textures", _materialCount);
-	std::vector<uint32_t> rgba8TextureData;
-	rgba8TextureData.resize(256 * 256 * _materialCount);
-	for (uint32_t i = 0; i < _materialCount; i++)
-	{
-		std::array<uint16_t, 256 * 256> rgba5TextureData;
-
-		uint16_t terrainType = stream.ReadValue<uint16_t>();
-		stream.Read(rgba5TextureData.data(), static_cast<std::size_t>(256 * 256 * sizeof(uint16_t)));
-
-		convertRGB5ToRGB8(rgba5TextureData.data(), rgba8TextureData.data() + i * rgba5TextureData.size(), 256 * 256);
-	}
+	std::vector<uint16_t> rgba5TextureData;
+	rgba5TextureData.resize(256 * 256 * _materialCount);
+	stream.Read(rgba5TextureData.data(), rgba5TextureData.size() * sizeof(rgba5TextureData[0]));
 	_materialArray = std::make_unique<Texture2D>("LandIslandMaterialArray");
-	_materialArray->Create(256, 256, _materialCount, Format::RGBA8, Wrapping::ClampEdge, rgba8TextureData.data(),
-	                       rgba8TextureData.size() * sizeof(rgba8TextureData[0]));
+	_materialArray->Create(256, 256, _materialCount, Format::RGB5A1, Wrapping::ClampEdge, rgba5TextureData.data(),
+	                       rgba5TextureData.size() * sizeof(rgba5TextureData[0]));
 
 	// read noise map into Texture2D
 	stream.Read(_noiseMap.data(), _noiseMap.size() * sizeof(_noiseMap[0]));
@@ -198,23 +190,6 @@ void LandIsland::Draw(graphics::RenderPass viewId, const ShaderProgram& program,
 		program.SetUniformValue("u_bumpmapStrength", &_bumpMapStrength);
 		program.SetUniformValue("u_smallBumpmapStrength", &_smallBumpMapStrength);
 		block.Draw(viewId, program, cullBack);
-	}
-}
-
-void LandIsland::convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixels)
-{
-	for (size_t i = 0; i < pixels; i++)
-	{
-		uint16_t col = rgba5[i];
-
-		uint8_t r = (col & 0x7C00) >> 10;
-		uint8_t g = (col & 0x3E0) >> 5;
-		uint8_t b = (col & 0x1F);
-
-		((uint8_t*)rgba8)[i * 4 + 0] = r << 3; // 5
-		((uint8_t*)rgba8)[i * 4 + 1] = g << 3; // 5
-		((uint8_t*)rgba8)[i * 4 + 2] = b << 3; // 5
-		((uint8_t*)rgba8)[i * 4 + 3] = 255;
 	}
 }
 
