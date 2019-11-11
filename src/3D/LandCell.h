@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "Common/Types.h"
+#include <cstdint>
 
 namespace openblack
 {
@@ -30,30 +30,27 @@ class LandCell
 public:
 	LandCell() {}
 
-	[[nodiscard]] inline uint8_t Light() { return color.a; }
+	[[nodiscard]] inline uint8_t Light() const { return luminosity; }
 	[[nodiscard]] inline uint8_t Altitude() const { return altitude; }
-	[[nodiscard]] inline bool Split() { return properties & 0x80; }
-	[[nodiscard]] inline bool IsWater() { return properties & 0x10; }
-	[[nodiscard]] inline bool IsCoastal() { return properties & 0x20; }
-	[[nodiscard]] inline bool FullWater() { return properties & 0x40; } // todo ? unsure (could mean deep water)
-	[[nodiscard]] inline uint8_t Country() { return properties & 0x0F; }
+	[[nodiscard]] inline bool Split() const { return properties & 0x80U; }
+	[[nodiscard]] inline bool HasWater() const { return properties & 0x10U; }
+	[[nodiscard]] inline bool Coastline() const { return properties & 0x20U; }
+	[[nodiscard]] inline bool FullWater() const { return properties & 0x40U; } // TODO ? unsure (could mean deep water)
+	[[nodiscard]] inline uint8_t Country() const { return properties & 0x0FU; }
 
-	// todo: this is temporary way for drawing landscape, should be moved to the renderer
-	[[nodiscard]] inline float Alpha()
+	// TODO: this is temporary way for drawing landscape, should be moved to the renderer
+	[[nodiscard]] inline float Alpha() const
 	{
-		if (properties & 0x40)
+		if (FullWater() || HasWater())
 			return 0.0f;
-		if (properties & 0x10)
-			return 0.0f;
-		if (properties & 0x20)
+		if (Coastline())
 			return 0.5f;
-
 		return 1.0f;
 	}
 
 private:
-	rgba_t color;
-
+	uint8_t color[3] {0, 0, 0};
+	uint8_t luminosity {0};
 	uint8_t altitude {0};
 	uint8_t savecolor;
 
