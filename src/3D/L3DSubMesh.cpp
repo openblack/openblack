@@ -20,10 +20,6 @@
 
 #include <3D/L3DSubMesh.h>
 
-#include <spdlog/spdlog.h>
-#include <glm/gtx/norm.hpp>
-#include <glm/gtx/component_wise.hpp>
-
 #include <3D/L3DMesh.h>
 #include <3D/MeshPack.h>
 #include <Common/IStream.h>
@@ -31,6 +27,10 @@
 #include <Graphics/IndexBuffer.h>
 #include <Graphics/ShaderProgram.h>
 #include <Graphics/VertexBuffer.h>
+
+#include <glm/gtx/component_wise.hpp>
+#include <glm/gtx/norm.hpp>
+#include <spdlog/spdlog.h>
 
 using namespace openblack::graphics;
 
@@ -44,14 +44,9 @@ struct L3DVertex
 	glm::vec3 norm;
 };
 
-L3DSubMesh::L3DSubMesh(L3DMesh& mesh):
-    _l3dMesh(mesh)
-{
-}
+L3DSubMesh::L3DSubMesh(L3DMesh& mesh): _l3dMesh(mesh) {}
 
-L3DSubMesh::~L3DSubMesh()
-{
-}
+L3DSubMesh::~L3DSubMesh() {}
 
 struct L3DPrimitive
 {
@@ -103,10 +98,10 @@ void L3DSubMesh::Load(IStream& stream)
 	}
 
 	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(L3DVertex) * nVertices);
-	const bgfx::Memory* indicesMem  = bgfx::alloc(sizeof(uint16_t) * nIndices);
+	const bgfx::Memory* indicesMem = bgfx::alloc(sizeof(uint16_t) * nIndices);
 
 	auto vertices = (L3DVertex*)verticesMem->data;
-	auto indices  = (uint16_t*)indicesMem->data;
+	auto indices = (uint16_t*)indicesMem->data;
 
 	uint32_t startIndex = 0, startVertex = 0;
 	_boundingBox.maxima = glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
@@ -130,9 +125,9 @@ void L3DSubMesh::Load(IStream& stream)
 			indices[startIndex + j] = stream.ReadValue<uint16_t>() + startVertex;
 
 		Primitive p;
-		p.indicesCount  = prim.numTriangles * 3;
+		p.indicesCount = prim.numTriangles * 3;
 		p.indicesOffset = startIndex;
-		p.skinID        = prim.skinID;
+		p.skinID = prim.skinID;
 
 		_primitives.emplace_back(p);
 
@@ -148,31 +143,34 @@ void L3DSubMesh::Load(IStream& stream)
 
 	// build our buffers
 	auto vertexBuffer = new VertexBuffer(_l3dMesh.GetDebugName(), verticesMem, decl);
-	auto indexBuffer  = new IndexBuffer(_l3dMesh.GetDebugName(), indicesMem, IndexBuffer::Type::Uint16);
+	auto indexBuffer = new IndexBuffer(_l3dMesh.GetDebugName(), indicesMem, IndexBuffer::Type::Uint16);
 	_mesh = std::make_unique<graphics::Mesh>(vertexBuffer, indexBuffer);
 
 	spdlog::debug("{} with {} verts and {} indices", _l3dMesh.GetDebugName(), nVertices, nIndices);
 
-	// spdlog::debug("flags: {:b}", *reinterpret_cast<uint32_t*>(&header.flags));
-	// if (header.flags._unknown1)
+	// spdlog::debug("flags: {:b}",
+	// *reinterpret_cast<uint32_t*>(&header.flags)); if (header.flags._unknown1)
 	// 	spdlog::debug("unknown1: {:b}", header.flags._unknown1);
 	// assert(header.flags._unknown1 == 0b100);
 	// assert(header.flags._padding == 0);
 
 	// offsets are local to stream :D
 
-	//spdlog::debug("position: {}", stream.Position());
-	//spdlog::debug("# prims: {} @ {}", header.numPrimitives, header.primitivesOffset);
-	//spdlog::debug("# bones: {} @ {}", header.numBones, header.bonesOffset);
+	// spdlog::debug("position: {}", stream.Position());
+	// spdlog::debug("# prims: {} @ {}", header.numPrimitives,
+	// header.primitivesOffset); spdlog::debug("# bones: {} @ {}",
+	// header.numBones, header.bonesOffset);
 }
 
-void L3DSubMesh::Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state, uint32_t rgba, bool preserveState) const
+void L3DSubMesh::Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state,
+                        uint32_t rgba, bool preserveState) const
 {
 	Submit_(viewId, &modelMatrix, nullptr, 0, 1, program, state, rgba, preserveState);
 }
 
-void L3DSubMesh::Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
-                        const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba, bool preserveState) const
+void L3DSubMesh::Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer,
+                        uint32_t instanceStart, uint32_t instanceCount, const graphics::ShaderProgram& program, uint64_t state,
+                        uint32_t rgba, bool preserveState) const
 {
 	Submit_(viewId, nullptr, &instanceBuffer, instanceStart, instanceCount, program, state, rgba, preserveState);
 }
@@ -202,17 +200,17 @@ void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatr
 	};
 
 	Mesh::DrawDesc desc = {
-		/*viewId =*/ viewId,
-		/*program =*/ program,
-		/*count =*/ 0,
-		/*offset =*/ 0,
-		/*instanceBuffer =*/ instanceBuffer,
-		/*instanceStart =*/ instanceStart,
-		/*instanceCount =*/ instanceCount,
-		/*state =*/ state,
-		/*rgba =*/ rgba,
-		/*skip =*/ Mesh::SkipState::SkipNone,
-		/*preserveState =*/ preserveState,
+	    /*viewId =*/viewId,
+	    /*program =*/program,
+	    /*count =*/0,
+	    /*offset =*/0,
+	    /*instanceBuffer =*/instanceBuffer,
+	    /*instanceStart =*/instanceStart,
+	    /*instanceCount =*/instanceCount,
+	    /*state =*/state,
+	    /*rgba =*/rgba,
+	    /*skip =*/Mesh::SkipState::SkipNone,
+	    /*preserveState =*/preserveState,
 	};
 
 	bool lastPreserveState = false;

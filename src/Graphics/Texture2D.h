@@ -20,12 +20,10 @@
 
 #pragma once
 
-#include <cstdint>
-#include <cstddef>
-
-#include <string>
-
 #include <bgfx/bgfx.h>
+#include <cstddef>
+#include <cstdint>
+#include <string>
 
 namespace openblack::graphics
 {
@@ -106,7 +104,7 @@ class FrameBuffer;
 
 class Texture2D
 {
-  public:
+public:
 	explicit Texture2D(std::string name);
 	~Texture2D();
 
@@ -114,7 +112,8 @@ class Texture2D
 	Texture2D(const Texture2D&) = delete;
 	Texture2D& operator=(const Texture2D&) = delete;
 
-	void Create(uint16_t width, uint16_t height, uint16_t layers, Format format=Format::RGBA8, Wrapping wrapping=Wrapping::ClampEdge, const void* data=nullptr, size_t size=0);
+	void Create(uint16_t width, uint16_t height, uint16_t layers, Format format = Format::RGBA8,
+	            Wrapping wrapping = Wrapping::ClampEdge, const void* data = nullptr, size_t size = 0);
 
 	[[nodiscard]] const bgfx::TextureHandle& GetNativeHandle() const { return _handle; }
 	[[nodiscard]] uint16_t GetWidth() const { return _info.width; }
@@ -123,7 +122,7 @@ class Texture2D
 
 	void DumpTexture();
 
-  protected:
+protected:
 	std::string _name;
 	bgfx::TextureHandle _handle;
 	bgfx::TextureInfo _info;

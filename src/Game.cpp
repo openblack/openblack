@@ -18,18 +18,6 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Game.h>
-
-#include <string>
-
-#include <SDL.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/intersect.hpp>
-
-#include "GitSHA1.h"
-#include "Gui.h"
-#include <GameWindow.h>
 #include <3D/Camera.h>
 #include <3D/L3DMesh.h>
 #include <3D/LandIsland.h>
@@ -38,19 +26,27 @@
 #include <3D/Water.h>
 #include <Common/FileSystem.h>
 #include <Entities/Registry.h>
+#include <Game.h>
+#include <GameWindow.h>
+#include <GitSHA1.h>
+#include <Gui.h>
 #include <LHScriptX/Script.h>
 #include <MeshViewer.h>
 #include <Profiler.h>
 #include <Renderer.h>
+#include <SDL.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/intersect.hpp>
+#include <spdlog/spdlog.h>
+#include <string>
 
 #ifdef WIN32
 #include <Windows.h>
 #endif
 
-#include <spdlog/spdlog.h>
-
 using namespace openblack;
-using namespace openblack::LHScriptX;
+using namespace openblack::lhscriptx;
 
 const std::string kBuildStr(kGitSHA1Hash, 8);
 const std::string kWindowTitle = "openblack";
@@ -58,18 +54,17 @@ const std::string kWindowTitle = "openblack";
 Game* Game::sInstance = nullptr;
 
 Game::Game(Arguments&& args)
-	: _fileSystem(std::make_unique<FileSystem>())
-	, _entityRegistry(std::make_unique<Entities::Registry>())
-	, _config()
-	, _intersection()
+    : _fileSystem(std::make_unique<FileSystem>()), _entityRegistry(std::make_unique<entities::Registry>()), _config(),
+      _intersection()
 {
 	spdlog::set_level(spdlog::level::debug);
 	sInstance = this;
 
-	std::string binaryPath = fs::path{args.executablePath}.parent_path().generic_string();
+	std::string binaryPath = fs::path {args.executablePath}.parent_path().generic_string();
 	spdlog::info("current binary path: {}", binaryPath);
 	SetGamePath(args.gamePath);
-	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", args.windowWidth, args.windowHeight, args.displayMode);
+	_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", args.windowWidth, args.windowHeight,
+	                                       args.displayMode);
 	_renderer = std::make_unique<Renderer>(*_window, args.rendererType, args.vsync);
 	_fileSystem->SetGamePath(GetGamePath());
 	spdlog::debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
@@ -94,7 +89,7 @@ Game::~Game()
 glm::mat4 Game::GetModelMatrix() const
 {
 	glm::mat4 modelMatrix = glm::mat4(1.0f);
-	modelMatrix           = glm::translate(modelMatrix, _modelPosition);
+	modelMatrix = glm::translate(modelMatrix, _modelPosition);
 
 	modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
 	modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -110,43 +105,36 @@ bool Game::ProcessEvents()
 	{
 		switch (e.type)
 		{
-			case SDL_QUIT:
+		case SDL_QUIT: return true;
+		case SDL_WINDOWEVENT:
+			if (e.window.event == SDL_WINDOWEVENT_CLOSE && e.window.windowID == _window->GetID())
+			{
 				return true;
-			case SDL_WINDOWEVENT:
-				if (e.window.event == SDL_WINDOWEVENT_CLOSE && e.window.windowID == _window->GetID())
-				{
-					return true;
-				}
-				break;
-			case SDL_KEYDOWN:
-				switch (e.key.keysym.sym)
-				{
-					case SDLK_ESCAPE:
-						return true;
-					case SDLK_f:
-						_window->SetFullscreen(true);
-						break;
-					case SDLK_F1:
-						_config.bgfxDebug = !_config.bgfxDebug;
-						break;
-				}
-				break;
-			case SDL_MOUSEMOTION:
-				SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y);
-				break;
-			case SDL_MOUSEBUTTONDOWN:
-			case SDL_MOUSEBUTTONUP:
-				switch (e.button.button)
-				{
-					case SDL_BUTTON_MIDDLE:
-					{
-						glm::ivec2 screenSize;
-						_window->GetSize(screenSize.x, screenSize.y);
-						SDL_SetRelativeMouseMode((e.type == SDL_MOUSEBUTTONDOWN) ? SDL_TRUE : SDL_FALSE);
-						SDL_WarpMouseInWindow(_window->GetHandle(), screenSize.x / 2, screenSize.y / 2);
-					} break;
-				}
-				break;
+			}
+			break;
+		case SDL_KEYDOWN:
+			switch (e.key.keysym.sym)
+			{
+			case SDLK_ESCAPE: return true;
+			case SDLK_f: _window->SetFullscreen(true); break;
+			case SDLK_F1: _config.bgfxDebug = !_config.bgfxDebug; break;
+			}
+			break;
+		case SDL_MOUSEMOTION: SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y); break;
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+			switch (e.button.button)
+			{
+			case SDL_BUTTON_MIDDLE:
+			{
+				glm::ivec2 screenSize;
+				_window->GetSize(screenSize.x, screenSize.y);
+				SDL_SetRelativeMouseMode((e.type == SDL_MOUSEBUTTONDOWN) ? SDL_TRUE : SDL_FALSE);
+				SDL_WarpMouseInWindow(_window->GetHandle(), screenSize.x / 2, screenSize.y / 2);
+			}
+			break;
+			}
+			break;
 		}
 
 		_camera->ProcessSDLEvent(e);
@@ -158,16 +146,16 @@ bool Game::ProcessEvents()
 bool Game::Update()
 {
 	_profiler->Frame();
-	auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(
-		_profiler->_entries[_profiler->GetEntryIndex(0)]._frameStart -
-			_profiler->_entries[_profiler->GetEntryIndex(-1)]._frameStart);
+	auto deltaTime =
+	    std::chrono::duration_cast<std::chrono::microseconds>(_profiler->_entries[_profiler->GetEntryIndex(0)]._frameStart -
+	                                                          _profiler->_entries[_profiler->GetEntryIndex(-1)]._frameStart);
 
 	// Input events
 	{
 		auto sdlInput = _profiler->BeginScoped(Profiler::Stage::SdlInput);
 		if (ProcessEvents())
 		{
-			return false;  // Quit event
+			return false; // Quit event
 		}
 	}
 
@@ -183,7 +171,7 @@ bool Game::Update()
 	// Update Camera
 	{
 		_camera->Update(deltaTime);
-		_modelRotation.y = fmod(_modelRotation.y + float(deltaTime.count())*.0001f, 360.f);
+		_modelRotation.y = fmod(_modelRotation.y + float(deltaTime.count()) * .0001f, 360.f);
 	}
 
 	// Update Terrain
@@ -204,15 +192,12 @@ bool Game::Update()
 			_camera->DeprojectScreenToWorld(_mousePosition, screenSize, rayOrigin, rayDirection);
 
 			float intersectDistance = 0.0f;
-			bool intersects = glm::intersectRayPlane(
-				rayOrigin,
-				rayDirection,
-				glm::vec3(0.0f, 0.0f, 0.0f), // plane origin
-				glm::vec3(0.0f, 1.0f, 0.0f), // plane normal
-				intersectDistance);
+			bool intersects = glm::intersectRayPlane(rayOrigin, rayDirection, glm::vec3(0.0f, 0.0f, 0.0f), // plane origin
+			                                         glm::vec3(0.0f, 1.0f, 0.0f),                          // plane normal
+			                                         intersectDistance);
 
 			if (intersects)
-				_intersection = rayOrigin + rayDirection*intersectDistance;
+				_intersection = rayOrigin + rayDirection * intersectDistance;
 
 			_intersection.y = _landIsland->GetHeightAt(glm::vec2(_intersection.x, _intersection.z));
 
@@ -227,7 +212,7 @@ bool Game::Update()
 				_entityRegistry->PrepareDraw(_config.drawBoundingBoxes, _config.drawStreams);
 			}
 		}
-	}  // Update Uniforms
+	} // Update Uniforms
 
 	return true;
 }
@@ -246,7 +231,7 @@ void Game::Run()
 
 	_modelPosition = glm::vec3(2485.0f, 50.0f, 1907.0f);
 	_modelRotation = glm::vec3(180.0f, 111.0f, 0.0f);
-	_modelScale    = glm::vec3(0.5f);
+	_modelScale = glm::vec3(0.5f);
 
 	auto file = _fileSystem->Open("Data/AllMeshes.g3d", FileMode::Read);
 	_meshPack = std::make_unique<MeshPack>();
@@ -255,7 +240,7 @@ void Game::Run()
 	_testModel = std::make_unique<L3DMesh>();
 	_testModel->LoadFromFile("Data/CreatureMesh/C_Tortoise_Base.l3d");
 
-	_sky   = std::make_unique<Sky>();
+	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
 
 	LoadVariables();
@@ -280,25 +265,25 @@ void Game::Run()
 		{
 			auto section = _profiler->BeginScoped(Profiler::Stage::SceneDraw);
 
-			Renderer::DrawSceneDesc drawDesc{
-				/*viewId =*/ graphics::RenderPass::Main,
-				/*profiler =*/ *_profiler,
-				/*camera =*/ _camera.get(),
-				/*frameBuffer =*/ nullptr,
-				/*drawSky =*/ _config.drawSky,
-				/*sky =*/ *_sky,
-				/*drawWater =*/ _config.drawWater,
-				/*water =*/ *_water,
-				/*drawIsland =*/ _config.drawIsland,
-				/*island =*/ *_landIsland,
-				/*drawEntities =*/ _config.drawEntities,
-				/*entities =*/ *_entityRegistry,
-				/*drawDebugCross =*/ _config.drawDebugCross,
-				/*drawBoundingBoxes =*/ _config.drawBoundingBoxes,
-				/*cullBack =*/ false,
-				/*bgfxDebug =*/ _config.bgfxDebug,
-				/*wireframe =*/ _config.wireframe,
-				/*profile =*/ _config.showProfiler,
+			Renderer::DrawSceneDesc drawDesc {
+			    /*viewId =*/graphics::RenderPass::Main,
+			    /*profiler =*/*_profiler,
+			    /*camera =*/_camera.get(),
+			    /*frameBuffer =*/nullptr,
+			    /*drawSky =*/_config.drawSky,
+			    /*sky =*/*_sky,
+			    /*drawWater =*/_config.drawWater,
+			    /*water =*/*_water,
+			    /*drawIsland =*/_config.drawIsland,
+			    /*island =*/*_landIsland,
+			    /*drawEntities =*/_config.drawEntities,
+			    /*entities =*/*_entityRegistry,
+			    /*drawDebugCross =*/_config.drawDebugCross,
+			    /*drawBoundingBoxes =*/_config.drawBoundingBoxes,
+			    /*cullBack =*/false,
+			    /*bgfxDebug =*/_config.bgfxDebug,
+			    /*wireframe =*/_config.wireframe,
+			    /*profile =*/_config.showProfiler,
 			};
 
 			_renderer->DrawScene(drawDesc);
@@ -440,12 +425,14 @@ const std::string& Game::GetGamePath()
 	if (sGamePath.empty())
 	{
 #ifdef _WIN32
-		DWORD dataLen  = 0;
-		LSTATUS status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ, nullptr, nullptr, &dataLen);
+		DWORD dataLen = 0;
+		LSTATUS status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir",
+		                             RRF_RT_REG_SZ, nullptr, nullptr, &dataLen);
 		if (status == ERROR_SUCCESS)
 		{
 			char* path = new char[dataLen];
-			status     = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ, nullptr, path, &dataLen);
+			status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ,
+			                     nullptr, path, &dataLen);
 
 			sGamePath = std::string(path);
 			return sGamePath;
@@ -455,12 +442,12 @@ const std::string& Game::GetGamePath()
 #endif // _WIN32
 
 		// no key, don't guess, let the user know to set the command param
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
-                                 "Game Path missing",
-                                 "Game path was not supplied, use the -g command parameter to set it.",
-                                 nullptr);
-        spdlog::error("Failed to find the GameDir.");
-        exit(1);
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Game Path missing",
+		                         "Game path was not supplied, use the -g "
+		                         "command parameter to set it.",
+		                         nullptr);
+		spdlog::error("Failed to find the GameDir.");
+		exit(1);
 	}
 
 	return sGamePath;

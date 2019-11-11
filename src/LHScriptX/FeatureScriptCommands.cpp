@@ -37,119 +37,117 @@
 #include <spdlog/spdlog.h>
 #include <tuple>
 
-using namespace openblack::LHScriptX;
+using namespace openblack::lhscriptx;
 
 // alias parameter types for signature list readability
 const constexpr ParameterType TString = ParameterType::String;
 const constexpr ParameterType TNumber = ParameterType::Number;
-const constexpr ParameterType TFloat  = ParameterType::Float;
+const constexpr ParameterType TFloat = ParameterType::Float;
 const constexpr ParameterType TVector = ParameterType::Vector;
 
 namespace openblack
 {
 std::unordered_map<std::string, AbodeInfo> abodeIdLookup {
-	// Norse
-	{ "NORSE_ABODE_TOWN_CENTRE", AbodeInfo::NorseTownCentre },
-	{ "NORSE_ABODE_STORAGE_PIT", AbodeInfo::NorseStoragePit },
-	{ "NORSE_ABODE_GRAVEYARD", AbodeInfo::NorseGraveyard },
-	{ "NORSE_ABODE_WORKSHOP", AbodeInfo::NorseWorkshop },
-	{ "NORSE_ABODE_CRECHE", AbodeInfo::NorseCreche },
-	{ "NORSE_ABODE_A", AbodeInfo::NorseHut },
-	{ "NORSE_ABODE_B", AbodeInfo::NorseShackX },
-	{ "NORSE_ABODE_C", AbodeInfo::NorseShackY },
-	{ "NORSE_ABODE_D", AbodeInfo::NorseTent },
-	{ "NORSE_ABODE_E", AbodeInfo::NorseTempleX },
-	{ "NORSE_ABODE_F", AbodeInfo::NorseTempleY },
-	{ "NORSE_WONDER", AbodeInfo::NorseWonder },
-	// Celtic
-	{ "CELTIC_ABODE_TOWN_CENTRE", AbodeInfo::CelticTownCentre },
-	{ "CELTIC_ABODE_STORAGE_PIT", AbodeInfo::CelticStoragePit },
-	{ "CELTIC_ABODE_GRAVEYARD", AbodeInfo::CelticGraveyard },
-	{ "CELTIC_ABODE_WORKSHOP", AbodeInfo::CelticGraveyard },
-	{ "CELTIC_ABODE_CRECHE", AbodeInfo::CelticCreche },
-	{ "CELTIC_ABODE_A", AbodeInfo::CelticHut },
-	{ "CELTIC_ABODE_B", AbodeInfo::CelticShackX },
-	{ "CELTIC_ABODE_C", AbodeInfo::CelticShackY },
-	{ "CELTIC_ABODE_D", AbodeInfo::CelticTent },
-	{ "CELTIC_ABODE_E", AbodeInfo::CelticTempleX },
-	{ "CELTIC_ABODE_F", AbodeInfo::CelticTempleY },
-	{ "CELTIC_WONDER", AbodeInfo::CelticWonder },
-	// Japanese
-	{ "JAPANESE_ABODE_TOWN_CENTRE", AbodeInfo::JapaneseTownCentre },
-	{ "JAPANESE_ABODE_STORAGE_PIT", AbodeInfo::JapaneseStoragePit },
-	{ "JAPANESE_ABODE_GRAVEYARD", AbodeInfo::JapaneseGraveyard },
-	{ "JAPANESE_ABODE_WORKSHOP", AbodeInfo::JapaneseWorkshop },
-	{ "JAPANESE_ABODE_CRECHE", AbodeInfo::JapaneseCreche },
-	{ "JAPANESE_ABODE_A", AbodeInfo::JapaneseHut },
-	{ "JAPANESE_ABODE_B", AbodeInfo::JapaneseShackX },
-	{ "JAPANESE_ABODE_C", AbodeInfo::JapaneseShackY },
-	{ "JAPANESE_ABODE_D", AbodeInfo::JapaneseTent },
-	{ "JAPANESE_ABODE_E", AbodeInfo::JapaneseTempleX },
-	{ "JAPANESE_ABODE_F", AbodeInfo::JapaneseTempleY },
-	{ "JAPANESE_WONDER", AbodeInfo::JapaneseWonder },
-	// Aztec
-	{ "AZTEC_ABODE_TOWN_CENTRE", AbodeInfo::AztecTownCentre },
-	{ "AZTEC_ABODE_STORAGE_PIT", AbodeInfo::AztecStoragePit },
-	{ "AZTEC_ABODE_GRAVEYARD", AbodeInfo::AztecGraveyard },
-	{ "AZTEC_ABODE_WORKSHOP", AbodeInfo::AztecGraveyard },
-	{ "AZTEC_ABODE_CRECHE", AbodeInfo::AztecCreche },
-	{ "AZTEC_ABODE_A", AbodeInfo::AztecHut },
-	{ "AZTEC_ABODE_B", AbodeInfo::AztecShackX },
-	{ "AZTEC_ABODE_C", AbodeInfo::AztecShackY },
-	{ "AZTEC_ABODE_D", AbodeInfo::AztecTent },
-	{ "AZTEC_ABODE_E", AbodeInfo::AztecTempleX },
-	{ "AZTEC_ABODE_F", AbodeInfo::AztecTempleY },
-	{ "AZTEC_WONDER", AbodeInfo::AztecWonder },
-	// Tibetan
-	{ "TIBETAN_ABODE_TOWN_CENTRE", AbodeInfo::TibetanTownCentre },
-	{ "TIBETAN_ABODE_STORAGE_PIT", AbodeInfo::TibetanStoragePit },
-	{ "TIBETAN_ABODE_GRAVEYARD", AbodeInfo::TibetanGraveyard },
-	{ "TIBETAN_ABODE_WORKSHOP", AbodeInfo::TibetanWorkshop },
-	{ "TIBETAN_ABODE_CRECHE", AbodeInfo::TibetanCreche },
-	{ "TIBETAN_ABODE_A", AbodeInfo::TibetanHut },
-	{ "TIBETAN_ABODE_B", AbodeInfo::TibetanShackX },
-	{ "TIBETAN_ABODE_C", AbodeInfo::TibetanShackY },
-	{ "TIBETAN_ABODE_D", AbodeInfo::TibetanTent },
-	{ "TIBETAN_ABODE_E", AbodeInfo::TibetanTempleX },
-	{ "TIBETAN_ABODE_F", AbodeInfo::TibetanTempleY },
-	{ "TIBETAN_WONDER", AbodeInfo::TibetanWonder },
-	// American Indian
-	{ "INDIAN_ABODE_TOWN_CENTRE", AbodeInfo::IndianTownCentre },
-	{ "INDIAN_ABODE_STORAGE_PIT", AbodeInfo::IndianStoragePit },
-	{ "INDIAN_ABODE_GRAVEYARD", AbodeInfo::IndianGraveyard },
-	{ "INDIAN_ABODE_WORKSHOP", AbodeInfo::IndianWorkshop },
-	{ "INDIAN_ABODE_CRECHE", AbodeInfo::IndianCreche },
-	{ "INDIAN_ABODE_A", AbodeInfo::IndianHut },
-	{ "INDIAN_ABODE_B", AbodeInfo::IndianShackX },
-	{ "INDIAN_ABODE_C", AbodeInfo::IndianShackY },
-	{ "INDIAN_ABODE_D", AbodeInfo::IndianTent },
-	{ "INDIAN_ABODE_E", AbodeInfo::IndianTempleX },
-	{ "INDIAN_ABODE_F", AbodeInfo::IndianTempleY },
-	{ "INDIAN_WONDER", AbodeInfo::IndianWonder },
-	// Greek
-	{ "GREEK_ABODE_TOWN_CENTRE", AbodeInfo::GreekTownCentre },
-	{ "GREEK_ABODE_STORAGE_PIT", AbodeInfo::GreekStoragePit },
-	{ "GREEK_ABODE_GRAVEYARD", AbodeInfo::GreekGraveyard },
-	{ "GREEK_ABODE_WORKSHOP", AbodeInfo::GreekWorkshop },
-	{ "GREEK_ABODE_CRECHE", AbodeInfo::GreekCreche },
-	{ "GREEK_ABODE_A", AbodeInfo::GreekHut },
-	{ "GREEK_ABODE_B", AbodeInfo::GreekShackX },
-	{ "GREEK_ABODE_C", AbodeInfo::GreekShackY },
-	{ "GREEK_ABODE_D", AbodeInfo::GreekTent },
-	{ "GREEK_ABODE_E", AbodeInfo::GreekTempleX },
-	{ "GREEK_ABODE_F", AbodeInfo::GreekTempleY },
-	{ "GREEK_WONDER", AbodeInfo::GreekWonder },
+    // Norse
+    {"NORSE_ABODE_TOWN_CENTRE", AbodeInfo::NorseTownCentre},
+    {"NORSE_ABODE_STORAGE_PIT", AbodeInfo::NorseStoragePit},
+    {"NORSE_ABODE_GRAVEYARD", AbodeInfo::NorseGraveyard},
+    {"NORSE_ABODE_WORKSHOP", AbodeInfo::NorseWorkshop},
+    {"NORSE_ABODE_CRECHE", AbodeInfo::NorseCreche},
+    {"NORSE_ABODE_A", AbodeInfo::NorseHut},
+    {"NORSE_ABODE_B", AbodeInfo::NorseShackX},
+    {"NORSE_ABODE_C", AbodeInfo::NorseShackY},
+    {"NORSE_ABODE_D", AbodeInfo::NorseTent},
+    {"NORSE_ABODE_E", AbodeInfo::NorseTempleX},
+    {"NORSE_ABODE_F", AbodeInfo::NorseTempleY},
+    {"NORSE_WONDER", AbodeInfo::NorseWonder},
+    // Celtic
+    {"CELTIC_ABODE_TOWN_CENTRE", AbodeInfo::CelticTownCentre},
+    {"CELTIC_ABODE_STORAGE_PIT", AbodeInfo::CelticStoragePit},
+    {"CELTIC_ABODE_GRAVEYARD", AbodeInfo::CelticGraveyard},
+    {"CELTIC_ABODE_WORKSHOP", AbodeInfo::CelticGraveyard},
+    {"CELTIC_ABODE_CRECHE", AbodeInfo::CelticCreche},
+    {"CELTIC_ABODE_A", AbodeInfo::CelticHut},
+    {"CELTIC_ABODE_B", AbodeInfo::CelticShackX},
+    {"CELTIC_ABODE_C", AbodeInfo::CelticShackY},
+    {"CELTIC_ABODE_D", AbodeInfo::CelticTent},
+    {"CELTIC_ABODE_E", AbodeInfo::CelticTempleX},
+    {"CELTIC_ABODE_F", AbodeInfo::CelticTempleY},
+    {"CELTIC_WONDER", AbodeInfo::CelticWonder},
+    // Japanese
+    {"JAPANESE_ABODE_TOWN_CENTRE", AbodeInfo::JapaneseTownCentre},
+    {"JAPANESE_ABODE_STORAGE_PIT", AbodeInfo::JapaneseStoragePit},
+    {"JAPANESE_ABODE_GRAVEYARD", AbodeInfo::JapaneseGraveyard},
+    {"JAPANESE_ABODE_WORKSHOP", AbodeInfo::JapaneseWorkshop},
+    {"JAPANESE_ABODE_CRECHE", AbodeInfo::JapaneseCreche},
+    {"JAPANESE_ABODE_A", AbodeInfo::JapaneseHut},
+    {"JAPANESE_ABODE_B", AbodeInfo::JapaneseShackX},
+    {"JAPANESE_ABODE_C", AbodeInfo::JapaneseShackY},
+    {"JAPANESE_ABODE_D", AbodeInfo::JapaneseTent},
+    {"JAPANESE_ABODE_E", AbodeInfo::JapaneseTempleX},
+    {"JAPANESE_ABODE_F", AbodeInfo::JapaneseTempleY},
+    {"JAPANESE_WONDER", AbodeInfo::JapaneseWonder},
+    // Aztec
+    {"AZTEC_ABODE_TOWN_CENTRE", AbodeInfo::AztecTownCentre},
+    {"AZTEC_ABODE_STORAGE_PIT", AbodeInfo::AztecStoragePit},
+    {"AZTEC_ABODE_GRAVEYARD", AbodeInfo::AztecGraveyard},
+    {"AZTEC_ABODE_WORKSHOP", AbodeInfo::AztecGraveyard},
+    {"AZTEC_ABODE_CRECHE", AbodeInfo::AztecCreche},
+    {"AZTEC_ABODE_A", AbodeInfo::AztecHut},
+    {"AZTEC_ABODE_B", AbodeInfo::AztecShackX},
+    {"AZTEC_ABODE_C", AbodeInfo::AztecShackY},
+    {"AZTEC_ABODE_D", AbodeInfo::AztecTent},
+    {"AZTEC_ABODE_E", AbodeInfo::AztecTempleX},
+    {"AZTEC_ABODE_F", AbodeInfo::AztecTempleY},
+    {"AZTEC_WONDER", AbodeInfo::AztecWonder},
+    // Tibetan
+    {"TIBETAN_ABODE_TOWN_CENTRE", AbodeInfo::TibetanTownCentre},
+    {"TIBETAN_ABODE_STORAGE_PIT", AbodeInfo::TibetanStoragePit},
+    {"TIBETAN_ABODE_GRAVEYARD", AbodeInfo::TibetanGraveyard},
+    {"TIBETAN_ABODE_WORKSHOP", AbodeInfo::TibetanWorkshop},
+    {"TIBETAN_ABODE_CRECHE", AbodeInfo::TibetanCreche},
+    {"TIBETAN_ABODE_A", AbodeInfo::TibetanHut},
+    {"TIBETAN_ABODE_B", AbodeInfo::TibetanShackX},
+    {"TIBETAN_ABODE_C", AbodeInfo::TibetanShackY},
+    {"TIBETAN_ABODE_D", AbodeInfo::TibetanTent},
+    {"TIBETAN_ABODE_E", AbodeInfo::TibetanTempleX},
+    {"TIBETAN_ABODE_F", AbodeInfo::TibetanTempleY},
+    {"TIBETAN_WONDER", AbodeInfo::TibetanWonder},
+    // American Indian
+    {"INDIAN_ABODE_TOWN_CENTRE", AbodeInfo::IndianTownCentre},
+    {"INDIAN_ABODE_STORAGE_PIT", AbodeInfo::IndianStoragePit},
+    {"INDIAN_ABODE_GRAVEYARD", AbodeInfo::IndianGraveyard},
+    {"INDIAN_ABODE_WORKSHOP", AbodeInfo::IndianWorkshop},
+    {"INDIAN_ABODE_CRECHE", AbodeInfo::IndianCreche},
+    {"INDIAN_ABODE_A", AbodeInfo::IndianHut},
+    {"INDIAN_ABODE_B", AbodeInfo::IndianShackX},
+    {"INDIAN_ABODE_C", AbodeInfo::IndianShackY},
+    {"INDIAN_ABODE_D", AbodeInfo::IndianTent},
+    {"INDIAN_ABODE_E", AbodeInfo::IndianTempleX},
+    {"INDIAN_ABODE_F", AbodeInfo::IndianTempleY},
+    {"INDIAN_WONDER", AbodeInfo::IndianWonder},
+    // Greek
+    {"GREEK_ABODE_TOWN_CENTRE", AbodeInfo::GreekTownCentre},
+    {"GREEK_ABODE_STORAGE_PIT", AbodeInfo::GreekStoragePit},
+    {"GREEK_ABODE_GRAVEYARD", AbodeInfo::GreekGraveyard},
+    {"GREEK_ABODE_WORKSHOP", AbodeInfo::GreekWorkshop},
+    {"GREEK_ABODE_CRECHE", AbodeInfo::GreekCreche},
+    {"GREEK_ABODE_A", AbodeInfo::GreekHut},
+    {"GREEK_ABODE_B", AbodeInfo::GreekShackX},
+    {"GREEK_ABODE_C", AbodeInfo::GreekShackY},
+    {"GREEK_ABODE_D", AbodeInfo::GreekTent},
+    {"GREEK_ABODE_E", AbodeInfo::GreekTempleX},
+    {"GREEK_ABODE_F", AbodeInfo::GreekTempleY},
+    {"GREEK_WONDER", AbodeInfo::GreekWonder},
 };
 
-std::unordered_map<std::string, FeatureInfo> featureInfoLookup {
-	{ "Fat Pilar Lime", FeatureInfo::FatPilarLime },
-	{ "Pilar3 Lime", FeatureInfo::Pilar3Lime },
-	{ "Aztec Statue Feature", FeatureInfo::AztcStatue },
-	{ "Spikey Pilar Lime", FeatureInfo::SpikeyPilarLime },
-	{ "Pilar2 Lime", FeatureInfo::Pilar2Lime },
-	{ "Crater", FeatureInfo::Crater },
-	{ "Pier", FeatureInfo::Pier }
-};
+std::unordered_map<std::string, FeatureInfo> featureInfoLookup {{"Fat Pilar Lime", FeatureInfo::FatPilarLime},
+                                                                {"Pilar3 Lime", FeatureInfo::Pilar3Lime},
+                                                                {"Aztec Statue Feature", FeatureInfo::AztcStatue},
+                                                                {"Spikey Pilar Lime", FeatureInfo::SpikeyPilarLime},
+                                                                {"Pilar2 Lime", FeatureInfo::Pilar2Lime},
+                                                                {"Crater", FeatureInfo::Crater},
+                                                                {"Pier", FeatureInfo::Pier}};
 } // namespace openblack
 
 // clang-format off
@@ -265,8 +263,8 @@ const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signa
 glm::vec2 GetHorizontalPosition(const std::string& str)
 {
 	const auto pos = str.find_first_of(',');
-	const auto y   = std::stof(str.substr(pos + 1));
-	const auto x   = std::stof(str.substr(0, pos));
+	const auto y = std::stof(str.substr(pos + 1));
+	const auto x = std::stof(str.substr(0, pos));
 	return glm::vec2(x, y);
 }
 
@@ -324,13 +322,13 @@ void FeatureScriptCommands::CreatePath(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateTown(const ScriptCommandContext& ctx)
 {
-	Game& game              = ctx.GetGame();
-	const auto& params      = ctx.GetParameters();
-	auto& island            = game.GetLandIsland();
-	auto& registry          = game.GetEntityRegistry();
-	const auto entity       = registry.Create();
-	int townId              = params[0].GetNumber();
-	const auto position     = GetHorizontalPosition(params[1].GetString());
+	Game& game = ctx.GetGame();
+	const auto& params = ctx.GetParameters();
+	auto& island = game.GetLandIsland();
+	auto& registry = game.GetEntityRegistry();
+	const auto entity = registry.Create();
+	int townId = params[0].GetNumber();
+	const auto position = GetHorizontalPosition(params[1].GetString());
 	const auto& playerOwner = params[2].GetString();
 	// float notUsed          = params[3].GetNumber();
 	const auto& civilisation = params[4].GetString();
@@ -338,23 +336,23 @@ void FeatureScriptCommands::CreateTown(const ScriptCommandContext& ctx)
 	spdlog::debug("Creating town {} for \"{}\" with civilisation \"{}\".", townId, playerOwner, civilisation);
 	registry.Assign<Town>(entity, townId);
 	auto& registryContext = registry.Context();
-	registryContext.towns.insert({ townId, entity });
+	registryContext.towns.insert({townId, entity});
 }
 
 void FeatureScriptCommands::SetTownBelief(const ScriptCommandContext& ctx)
 {
-	Game& game         = ctx.GetGame();
+	Game& game = ctx.GetGame();
 	const auto& params = ctx.GetParameters();
-	auto& island       = game.GetLandIsland();
-	auto& registry     = game.GetEntityRegistry();
-	const auto entity  = registry.Create();
+	auto& island = game.GetLandIsland();
+	auto& registry = game.GetEntityRegistry();
+	const auto entity = registry.Create();
 	auto& registryContext = registry.Context();
-	int townId            = params[0].GetNumber();
+	int townId = params[0].GetNumber();
 	const auto& playerOwner = params[1].GetString();
-	const auto& belief      = params[2].GetFloat();
+	const auto& belief = params[2].GetFloat();
 
 	Town& town = registry.Get<Town>(registryContext.towns.at(townId));
-	town.beliefs.insert({ playerOwner, belief});
+	town.beliefs.insert({playerOwner, belief});
 }
 
 void FeatureScriptCommands::SetTownBeliefCap(const ScriptCommandContext& ctx)
@@ -374,20 +372,20 @@ void FeatureScriptCommands::SetTownCongregationPos(const ScriptCommandContext& c
 
 void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
 {
-	Game& game                = ctx.GetGame();
-	const auto& params        = ctx.GetParameters();
-	auto& island              = game.GetLandIsland();
-	auto& registry            = game.GetEntityRegistry();
-	const auto entity         = registry.Create();
-	const uint32_t townId     = params[0].GetNumber();
-	const auto position       = GetHorizontalPosition(params[1].GetString());
-	const auto& abodeType     = params[2].GetString();
-	float rotation            = params[3].GetNumber();
-	float size                = params[4].GetNumber();
+	Game& game = ctx.GetGame();
+	const auto& params = ctx.GetParameters();
+	auto& island = game.GetLandIsland();
+	auto& registry = game.GetEntityRegistry();
+	const auto entity = registry.Create();
+	const uint32_t townId = params[0].GetNumber();
+	const auto position = GetHorizontalPosition(params[1].GetString());
+	const auto& abodeType = params[2].GetString();
+	float rotation = params[3].GetNumber();
+	float size = params[4].GetNumber();
 	const uint32_t foodAmount = params[5].GetNumber();
 	const uint32_t woodAmount = params[6].GetNumber();
-	auto abodeInfo            = GetAbodeInfo(abodeType);
-	size                      = GetSize(size);
+	auto abodeInfo = GetAbodeInfo(abodeType);
+	size = GetSize(size);
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
 	const glm::vec3 rot(0.0f, GetRadians(rotation), 0.0f);
@@ -403,20 +401,20 @@ void FeatureScriptCommands::CreatePlannedAbode(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateTownCentre(const ScriptCommandContext& ctx)
 {
-	Game& game                = ctx.GetGame();
-	const auto& params        = ctx.GetParameters();
-	auto& island              = game.GetLandIsland();
-	auto& registry            = game.GetEntityRegistry();
-	const auto entity         = registry.Create();
+	Game& game = ctx.GetGame();
+	const auto& params = ctx.GetParameters();
+	auto& island = game.GetLandIsland();
+	auto& registry = game.GetEntityRegistry();
+	const auto entity = registry.Create();
 	uint32_t associatedTownId = params[0].GetNumber();
-	const auto position       = GetHorizontalPosition(params[1].GetString());
-	const auto& centreType    = params[2].GetString();
-	float rotation            = params[3].GetNumber();
-	float size                = params[4].GetNumber();
-	//const auto unknown          = params[5].GetNumber();
-	auto abodeId    = GetAbodeInfo(centreType);
-	size            = GetSize(size);
-	auto submeshIds = std::vector { 3 };
+	const auto position = GetHorizontalPosition(params[1].GetString());
+	const auto& centreType = params[2].GetString();
+	float rotation = params[3].GetNumber();
+	float size = params[4].GetNumber();
+	// const auto unknown          = params[5].GetNumber();
+	auto abodeId = GetAbodeInfo(centreType);
+	size = GetSize(size);
+	auto submeshIds = std::vector {3};
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
 	const glm::vec3 rot(0.0f, GetRadians(rotation), 0.0f);
@@ -467,68 +465,78 @@ void FeatureScriptCommands::CreateSpecialTownVillager(const ScriptCommandContext
 
 void FeatureScriptCommands::CreateVillagerPos(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateCitadel(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreatePlannedCitadel(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateCreaturePen(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateWorshipSite(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreatePlannedWorshipSite(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateAnimal(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateNewAnimal(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateForest(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateTree(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateNewTree(const ScriptCommandContext& ctx)
 {
-	Game& game         = ctx.GetGame();
+	Game& game = ctx.GetGame();
 	const auto& params = ctx.GetParameters();
-	auto& island       = game.GetLandIsland();
-	auto& registry     = game.GetEntityRegistry();
-	const auto entity  = registry.Create();
-	//const auto associatedForest = params[0].GetNumber();
-	const auto position  = GetHorizontalPosition(params[1].GetString());
+	auto& island = game.GetLandIsland();
+	auto& registry = game.GetEntityRegistry();
+	const auto entity = registry.Create();
+	// const auto associatedForest = params[0].GetNumber();
+	const auto position = GetHorizontalPosition(params[1].GetString());
 	const auto& treeType = params[2].GetNumber();
-	//const bool isScenic = params[3].GetNumber() >= 1;
+	// const bool isScenic = params[3].GetNumber() >= 1;
 	float rotation = -params[4].GetFloat();
-	float size     = params[5].GetFloat();
-	//float finalSize = params[6].GetNumber(); // Max growth size of the tree
+	float size = params[5].GetFloat();
+	// float finalSize = params[6].GetNumber(); // Max growth size of the tree
 	auto treeInfo = TreeInfo(treeType);
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
 	const glm::vec3 rot(0.0f, rotation, 0.0f);
@@ -537,71 +545,79 @@ void FeatureScriptCommands::CreateNewTree(const ScriptCommandContext& ctx)
 	registry.Assign<Tree>(entity, treeInfo);
 }
 
-void FeatureScriptCommands::CreateField(const ScriptCommandContext& ctx)
-{
-}
+void FeatureScriptCommands::CreateField(const ScriptCommandContext& ctx) {}
 
 void FeatureScriptCommands::CreateTownField(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateFishFarm(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateTownFishFarm(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateFeature(const ScriptCommandContext& ctx)
 {
-	std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__)
+	          << std::endl;
 }
 
 void FeatureScriptCommands::CreateFlowers(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateWallSection(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreatePlannedWallSection(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreatePitch(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreatePot(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateTownTemporaryPots(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateMobileobject(const ScriptCommandContext& ctx)
 {
-	Game& game            = ctx.GetGame();
-	const auto& params    = ctx.GetParameters();
-	auto& island          = game.GetLandIsland();
-	auto& registry        = game.GetEntityRegistry();
-	const auto entity     = registry.Create();
-	const auto position   = GetHorizontalPosition(params[0].GetString());
+	Game& game = ctx.GetGame();
+	const auto& params = ctx.GetParameters();
+	auto& island = game.GetLandIsland();
+	auto& registry = game.GetEntityRegistry();
+	const auto entity = registry.Create();
+	const auto position = GetHorizontalPosition(params[0].GetString());
 	const auto objectType = params[1].GetNumber();
-	const auto rotation   = GetRadians(params[2].GetNumber());
-	float size            = GetSize(params[3].GetNumber());
+	const auto rotation = GetRadians(params[2].GetNumber());
+	float size = GetSize(params[3].GetNumber());
 	auto mobileObjectInfo = static_cast<MobileObjectInfo>(objectType);
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
@@ -614,24 +630,25 @@ void FeatureScriptCommands::CreateMobileobject(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateMobileStatic(const ScriptCommandContext& ctx)
 {
-	std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__)
+	          << std::endl;
 }
 
 void FeatureScriptCommands::CreateMobileUStatic(const ScriptCommandContext& ctx)
 {
-	auto& game                = ctx.GetGame();
-	const auto& params        = ctx.GetParameters();
-	auto& island              = game.GetLandIsland();
-	auto& registry            = game.GetEntityRegistry();
-	const auto entity         = registry.Create();
-	const auto position       = GetHorizontalPosition(params[0].GetString());
-	const auto type           = params[1].GetNumber();
+	auto& game = ctx.GetGame();
+	const auto& params = ctx.GetParameters();
+	auto& island = game.GetLandIsland();
+	auto& registry = game.GetEntityRegistry();
+	const auto entity = registry.Create();
+	const auto position = GetHorizontalPosition(params[0].GetString());
+	const auto type = params[1].GetNumber();
 	const auto verticalOffset = params[2].GetFloat();
-	float pitch               = -params[3].GetFloat();
-	float rotation            = -params[4].GetFloat();
-	float lean                = -params[5].GetFloat();
-	float size                = params[6].GetFloat();
-	auto mobileStaticInfo     = MobileStaticInfo(type);
+	float pitch = -params[3].GetFloat();
+	float rotation = -params[4].GetFloat();
+	float lean = -params[5].GetFloat();
+	float size = params[6].GetFloat();
+	auto mobileStaticInfo = MobileStaticInfo(type);
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position) + verticalOffset, position.y);
 	const glm::vec3 rot(pitch, rotation, lean);
@@ -643,37 +660,44 @@ void FeatureScriptCommands::CreateMobileUStatic(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateDeadTree(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateScaffold(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CountryChange(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::HeightChange(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateCreature(const ScriptCommandContext& ctx)
 {
-	std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__)
+	          << std::endl;
 }
 
 void FeatureScriptCommands::CreateCreatureFromFile(const ScriptCommandContext& ctx)
 {
-	std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__)
+	          << std::endl;
 }
 
 void FeatureScriptCommands::CreateFlock(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::LoadLandscape(const ScriptCommandContext& ctx)
@@ -684,50 +708,55 @@ void FeatureScriptCommands::LoadLandscape(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateArea(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::StartCameraPos(const ScriptCommandContext& ctx)
 {
-	auto params  = ctx.GetParameters();
-	auto pos     = GetHorizontalPosition(params[0].GetString());
+	auto params = ctx.GetParameters();
+	auto pos = GetHorizontalPosition(params[0].GetString());
 	auto& camera = ctx.GetGame().GetCamera();
-	auto height  = ctx.GetGame().GetLandIsland().GetHeightAt(pos) + 10.0f;
+	auto height = ctx.GetGame().GetLandIsland().GetHeightAt(pos) + 10.0f;
 	camera.SetPosition(glm::vec3(pos[0], height, pos[1]));
 }
 
 void FeatureScriptCommands::FlyByFile(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::TownNeedsPos(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateFurniture(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateBigForest(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateNewBigForest(const ScriptCommandContext& ctx)
 {
-	auto& game          = ctx.GetGame();
-	const auto& params  = ctx.GetParameters();
-	auto& island        = game.GetLandIsland();
-	auto& registry      = game.GetEntityRegistry();
-	const auto entity   = registry.Create();
+	auto& game = ctx.GetGame();
+	const auto& params = ctx.GetParameters();
+	auto& island = game.GetLandIsland();
+	auto& registry = game.GetEntityRegistry();
+	const auto entity = registry.Create();
 	const auto position = GetHorizontalPosition(params[0].GetString());
 	// const auto type = params[1].GetNumber(); // Circular == 0, Oval == 1
 	// auto unknown = params[2].GetFloat();
 	float rotation = -params[3].GetFloat();
-	float size     = params[4].GetFloat();
+	float size = params[4].GetFloat();
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
 	const glm::vec3 rot(0, rotation, 0);
@@ -739,101 +768,113 @@ void FeatureScriptCommands::CreateNewBigForest(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateInfluenceRing(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateWeatherClimate(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateWeatherClimateRain(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateWeatherClimateTemp(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateWeatherClimateWind(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateWeatherStorm(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::BrushSize(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateStream(const ScriptCommandContext& ctx)
 {
-	auto& game          = ctx.GetGame();
-	const auto& params  = ctx.GetParameters();
-	auto& registry      = game.GetEntityRegistry();
-	const auto entity   = registry.Create();
+	auto& game = ctx.GetGame();
+	const auto& params = ctx.GetParameters();
+	auto& registry = game.GetEntityRegistry();
+	const auto entity = registry.Create();
 	const auto streamId = params[0].GetNumber();
 	registry.Assign<Stream>(entity, streamId);
 	auto& registryContext = registry.Context();
-	registryContext.streams.insert({ streamId, entity });
+	registryContext.streams.insert({streamId, entity});
 }
 
 void FeatureScriptCommands::CreateStreamPoint(const ScriptCommandContext& ctx)
 {
-	auto& game          = ctx.GetGame();
-	const auto& params  = ctx.GetParameters();
-	auto& island        = game.GetLandIsland();
-	auto& registry      = game.GetEntityRegistry();
+	auto& game = ctx.GetGame();
+	const auto& params = ctx.GetParameters();
+	auto& island = game.GetLandIsland();
+	auto& registry = game.GetEntityRegistry();
 	const auto streamId = params[0].GetNumber();
-	const auto pos      = GetHorizontalPosition(params[1].GetString());
+	const auto pos = GetHorizontalPosition(params[1].GetString());
 	const glm::vec3 position(pos.x, island.GetHeightAt(pos), pos.y);
 	auto& registryContext = registry.Context();
 
-	Stream& stream      = registry.Get<Stream>(registryContext.streams.at(streamId));
+	Stream& stream = registry.Get<Stream>(registryContext.streams.at(streamId));
 	const StreamNode newNode(position, stream.streamNodes);
 	stream.streamNodes.push_back(newNode);
 }
 
 void FeatureScriptCommands::CreateWaterfall(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateArena(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateFootpath(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateFootpathNode(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::LinkFootpath(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateBonfire(const ScriptCommandContext& ctx)
 {
-	auto& game          = ctx.GetGame();
-	const auto& params  = ctx.GetParameters();
-	auto& island        = game.GetLandIsland();
-	auto& registry      = game.GetEntityRegistry();
-	const auto entity   = registry.Create();
+	auto& game = ctx.GetGame();
+	const auto& params = ctx.GetParameters();
+	auto& island = game.GetLandIsland();
+	auto& registry = game.GetEntityRegistry();
+	const auto entity = registry.Create();
 	const auto position = GetHorizontalPosition(params[0].GetString());
-	float rotation      = -params[1].GetFloat();
+	float rotation = -params[1].GetFloat();
 	// auto unknown        = params[1].GetFloat();
 	float size = params[3].GetFloat() * 1;
 
@@ -847,20 +888,21 @@ void FeatureScriptCommands::CreateBonfire(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateBase(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateNewFeature(const ScriptCommandContext& ctx)
 {
-	auto& game          = ctx.GetGame();
-	const auto& params  = ctx.GetParameters();
-	auto& island        = game.GetLandIsland();
-	auto& registry      = game.GetEntityRegistry();
-	const auto entity   = registry.Create();
+	auto& game = ctx.GetGame();
+	const auto& params = ctx.GetParameters();
+	auto& island = game.GetLandIsland();
+	auto& registry = game.GetEntityRegistry();
+	const auto entity = registry.Create();
 	const auto position = GetHorizontalPosition(params[0].GetString());
-	auto type           = GetFeatureInfo(params[1].GetString());
-	float rotation      = GetRadians(params[2].GetNumber());
-	float size          = GetSize(params[3].GetNumber());
+	auto type = GetFeatureInfo(params[1].GetString());
+	float rotation = GetRadians(params[2].GetNumber());
+	float size = GetSize(params[3].GetNumber());
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
 	const glm::vec3 rot(0, rotation, 0);
@@ -872,32 +914,38 @@ void FeatureScriptCommands::CreateNewFeature(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::SetInteractDesire(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::ToggleComputerPlayer(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::SetComputerPlayerCreatureLike(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::MultiplayerDebug(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateStreetLantern(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateStreetLight(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::SetLandNumber(const ScriptCommandContext& ctx)
@@ -908,35 +956,39 @@ void FeatureScriptCommands::SetLandNumber(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateOneShotSpell(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateOneShotSpellPu(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateFireFly(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::TownDesireBoost(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateAnimatedStatic(const ScriptCommandContext& ctx)
 {
-	auto& game            = ctx.GetGame();
-	const auto& params    = ctx.GetParameters();
-	auto& island          = game.GetLandIsland();
-	auto& registry        = game.GetEntityRegistry();
-	const auto entity     = registry.Create();
-	const auto position   = GetHorizontalPosition(params[0].GetString());
+	auto& game = ctx.GetGame();
+	const auto& params = ctx.GetParameters();
+	auto& island = game.GetLandIsland();
+	auto& registry = game.GetEntityRegistry();
+	const auto entity = registry.Create();
+	const auto position = GetHorizontalPosition(params[0].GetString());
 	const auto objectType = params[1].GetString();
-	const auto rotation   = -params[2].GetFloat() + 3.14159;
-	auto size             = GetSize(params[3].GetNumber());
+	const auto rotation = -params[2].GetFloat() + 3.14159;
+	auto size = GetSize(params[3].GetNumber());
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
 	const glm::vec3 rot(0.0f, rotation, 0.0f);
@@ -947,17 +999,18 @@ void FeatureScriptCommands::CreateAnimatedStatic(const ScriptCommandContext& ctx
 
 void FeatureScriptCommands::FireFlySpellRewardProb(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateNewTownField(const ScriptCommandContext& ctx)
 {
-	auto& game          = ctx.GetGame();
-	const auto& params  = ctx.GetParameters();
-	auto& island        = game.GetLandIsland();
-	auto& registry      = game.GetEntityRegistry();
-	const auto entity   = registry.Create();
-	auto townId         = params[0].GetNumber();
+	auto& game = ctx.GetGame();
+	const auto& params = ctx.GetParameters();
+	auto& island = game.GetLandIsland();
+	auto& registry = game.GetEntityRegistry();
+	const auto entity = registry.Create();
+	auto townId = params[0].GetNumber();
 	const auto position = GetHorizontalPosition(params[1].GetString());
 	// auto unknown = params[2].GetNumber();
 	const auto rotation = -params[3].GetFloat() + 3.14159;
@@ -971,75 +1024,90 @@ void FeatureScriptCommands::CreateNewTownField(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateSpellDispenser(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::LoadComputerPlayerPersonallty(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::SetComputerPlayerPersonallty(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::SetGlobalLandBalance(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::SetLandBalance(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::CreateDrinkWaypoint(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::SetTownInfluenceMultiplier(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::SetPlayerInfluenceMultiplier(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::SetTownBalanceBeliefScale(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::StartGameMessage(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::AddGameMessageLine(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::EditLevel(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::SetNighttime(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::MakeLastObjectArtifact(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }
 
 void FeatureScriptCommands::SetLostTownScale(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
+	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
 }

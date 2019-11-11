@@ -20,21 +20,19 @@
 
 #pragma once
 
-#include <cstdint>
-#include <memory>
-
+#include <Graphics/RenderPass.h>
+#include <bgfx/bgfx.h>
 #include <glm/glm.hpp>
-
-#include "RenderPass.h"
-#include "ShaderProgram.h"
+#include <memory>
 
 namespace openblack::graphics
 {
 class Mesh;
+class ShaderProgram;
 
 class DebugLines
 {
-  public:
+public:
 	struct Vertex
 	{
 		glm::vec4 pos;
@@ -42,18 +40,19 @@ class DebugLines
 	};
 
 	static std::unique_ptr<DebugLines> CreateCross();
-	static std::unique_ptr<DebugLines> CreateBox(const glm::vec4 &color);
+	static std::unique_ptr<DebugLines> CreateBox(const glm::vec4& color);
 	static std::unique_ptr<DebugLines> CreateLine(const glm::vec4& from, const glm::vec4& to, const glm::vec4& color);
 	static std::unique_ptr<DebugLines> CreateDebugLines(const Vertex* data, uint32_t vertexCount);
 
 	virtual ~DebugLines();
 
 	void Draw(graphics::RenderPass viewId, const ShaderProgram& program) const;
-	void Draw(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart, uint32_t instanceCount, const ShaderProgram& program) const;
+	void Draw(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart,
+	          uint32_t instanceCount, const ShaderProgram& program) const;
 
 	void SetPose(const glm::vec3& center, const glm::vec3& size);
 
-  protected:
+protected:
 	explicit DebugLines(std::unique_ptr<Mesh>&& mesh);
 
 	std::unique_ptr<Mesh> _mesh;

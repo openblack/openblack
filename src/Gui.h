@@ -20,13 +20,11 @@
 
 #pragma once
 
+#include <Graphics/RenderPass.h>
 #include <array>
-#include <memory>
-
 #include <bgfx/bgfx.h>
 #include <imgui.h>
-
-#include <Graphics/RenderPass.h>
+#include <memory>
 
 typedef struct SDL_Window SDL_Window;
 typedef struct SDL_Cursor SDL_Cursor;
@@ -34,40 +32,40 @@ union SDL_Event;
 
 namespace ImGui
 {
-#define IMGUI_FLAGS_NONE        UINT8_C(0x00)
+#define IMGUI_FLAGS_NONE UINT8_C(0x00)
 #define IMGUI_FLAGS_ALPHA_BLEND UINT8_C(0x01)
 
 // Helper function for passing bgfx::TextureHandle to ImGui::Image.
-inline void Image(bgfx::TextureHandle _handle
-	, uint8_t _flags
-	, uint8_t _mip
-	, const ImVec2& _size
-	, const ImVec2& _uv0       = ImVec2(0.0f, 0.0f)
-	, const ImVec2& _uv1       = ImVec2(1.0f, 1.0f)
-	, const ImVec4& _tintCol   = ImVec4(1.0f, 1.0f, 1.0f, 1.0f)
-	, const ImVec4& _borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f)
-)
+inline void Image(bgfx::TextureHandle _handle, uint8_t _flags, uint8_t _mip, const ImVec2& _size,
+                  const ImVec2& _uv0 = ImVec2(0.0f, 0.0f), const ImVec2& _uv1 = ImVec2(1.0f, 1.0f),
+                  const ImVec4& _tintCol = ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
+                  const ImVec4& _borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f))
 {
-	union { struct { bgfx::TextureHandle handle; uint8_t flags; uint8_t mip; } s; ImTextureID ptr; } texture;
+	union
+	{
+		struct
+		{
+			bgfx::TextureHandle handle;
+			uint8_t flags;
+			uint8_t mip;
+		} s;
+		ImTextureID ptr;
+	} texture;
 	texture.s.handle = _handle;
-	texture.s.flags  = _flags;
-	texture.s.mip    = _mip;
+	texture.s.flags = _flags;
+	texture.s.mip = _mip;
 	Image(texture.ptr, _size, _uv0, _uv1, _tintCol, _borderCol);
 }
 
 // Helper function for passing bgfx::TextureHandle to ImGui::Image.
-inline void Image(bgfx::TextureHandle _handle
-	, const ImVec2& _size
-	, const ImVec2& _uv0       = ImVec2(0.0f, 0.0f)
-	, const ImVec2& _uv1       = ImVec2(1.0f, 1.0f)
-	, const ImVec4& _tintCol   = ImVec4(1.0f, 1.0f, 1.0f, 1.0f)
-	, const ImVec4& _borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f)
-)
+inline void Image(bgfx::TextureHandle _handle, const ImVec2& _size, const ImVec2& _uv0 = ImVec2(0.0f, 0.0f),
+                  const ImVec2& _uv1 = ImVec2(1.0f, 1.0f), const ImVec4& _tintCol = ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
+                  const ImVec4& _borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f))
 {
 	Image(_handle, IMGUI_FLAGS_ALPHA_BLEND, 0, _size, _uv0, _uv1, _tintCol, _borderCol);
 }
 
-}  // namespace ImGui
+} // namespace ImGui
 
 namespace openblack
 {
@@ -77,8 +75,8 @@ class MeshViewer;
 
 class Gui
 {
-  public:
-	static std::unique_ptr<Gui> create(const GameWindow &window, graphics::RenderPass viewId, float scale);
+public:
+	static std::unique_ptr<Gui> create(const GameWindow& window, graphics::RenderPass viewId, float scale);
 
 	virtual ~Gui();
 
@@ -86,8 +84,9 @@ class Gui
 	void NewFrame(GameWindow& window);
 	bool Loop(Game& game);
 	void Draw();
- private:
-	Gui(ImGuiContext *imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer> &&meshViewer);
+
+private:
+	Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer>&& meshViewer);
 	bool InitSdl2(SDL_Window* window);
 	void NewFrameSdl2(SDL_Window* window);
 	bool CreateFontsTextureBgfx();
@@ -97,7 +96,7 @@ class Gui
 	void ShowProfilerWindow(Game& game);
 
 	static const char* StaticGetClipboardText(void* ud) { return reinterpret_cast<Gui*>(ud)->GetClipboardText(); }
-	static void StaticSetClipboardText(void* ud, const char* text)  { reinterpret_cast<Gui*>(ud)->SetClipboardText(text); }
+	static void StaticSetClipboardText(void* ud, const char* text) { reinterpret_cast<Gui*>(ud)->SetClipboardText(text); }
 	const char* GetClipboardText();
 	void SetClipboardText(const char* text);
 
@@ -105,7 +104,7 @@ class Gui
 	void UpdateMouseCursor();
 	void UpdateGamepads();
 
-	template<typename T, uint8_t N>
+	template <typename T, uint8_t N>
 	struct CircularBuffer
 	{
 		static constexpr uint8_t _bufferSize = N;
@@ -128,7 +127,7 @@ class Gui
 	bgfx::DynamicIndexBufferHandle _indexBuffer;
 	uint32_t _vertexCount;
 	uint32_t _indexCount;
-	bgfx::VertexLayout  _layout;
+	bgfx::VertexLayout _layout;
 	bgfx::ProgramHandle _program;
 	bgfx::ProgramHandle _imageProgram;
 	bgfx::TextureHandle _texture;

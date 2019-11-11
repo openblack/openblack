@@ -33,11 +33,16 @@ namespace fs = std::experimental::filesystem;
 namespace openblack
 {
 
-enum class FileMode { Read, Write, Append };
+enum class FileMode
+{
+	Read,
+	Write,
+	Append
+};
 
 class FileStream: public IStream
 {
-  public:
+public:
 	FileStream(const fs::path& filename, FileMode mode);
 	virtual ~FileStream();
 
@@ -47,7 +52,7 @@ class FileStream: public IStream
 
 	void Read(void* buffer, std::size_t length) override;
 
-  protected:
+protected:
 	FILE* _file;
 	std::size_t _fileSize;
 };

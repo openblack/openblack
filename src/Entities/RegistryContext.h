@@ -18,15 +18,23 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <AllMeshes.h>
 #include <Graphics/DebugLines.h>
+#include <bgfx/bgfx.h>
+#include <entt/entity/fwd.hpp>
+#include <glm/fwd.hpp>
+#include <map>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
-namespace openblack::Entities {
+namespace openblack::entities
+{
 struct RenderContext
 {
-	RenderContext() : instanceUniformBuffer(BGFX_INVALID_HANDLE),
-	dirty(true),
-	hasBoundingBoxes(false) {};
-	~RenderContext() {
+	RenderContext(): instanceUniformBuffer(BGFX_INVALID_HANDLE), dirty(true), hasBoundingBoxes(false) {};
+	~RenderContext()
+	{
 		if (bgfx::isValid(instanceUniformBuffer))
 		{
 			bgfx::destroy(instanceUniformBuffer);
@@ -37,7 +45,7 @@ struct RenderContext
 
 	struct InstancedDrawDesc
 	{
-		InstancedDrawDesc(uint32_t offset, uint32_t count) : offset(offset), count(count) {}
+		InstancedDrawDesc(uint32_t offset, uint32_t count): offset(offset), count(count) {}
 		uint32_t offset;
 		uint32_t count;
 	};
@@ -72,4 +80,4 @@ struct RegistryContext
 	std::unordered_map<StreamId, entt::entity> streams;
 	std::unordered_map<TownId, entt::entity> towns;
 };
-}
+} // namespace openblack::entities

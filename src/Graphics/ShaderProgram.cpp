@@ -18,19 +18,17 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Graphics/ShaderProgram.h>
-
-#include <glm/gtc/type_ptr.hpp>
-
 #include <Common/FileSystem.h>
-#include <Graphics/Texture2D.h>
 #include <Game.h>
+#include <Graphics/ShaderProgram.h>
+#include <Graphics/Texture2D.h>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace openblack::graphics
 {
 
 ShaderProgram::ShaderProgram(const std::string& name, bgfx::ShaderHandle&& vertexShader, bgfx::ShaderHandle&& fragmentShader)
-	: _program(BGFX_INVALID_HANDLE)
+    : _program(BGFX_INVALID_HANDLE)
 {
 	uint16_t numShaderUniforms = 0;
 	bgfx::UniformInfo info = {};

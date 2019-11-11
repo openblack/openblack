@@ -20,11 +20,10 @@
 
 #pragma once
 
-#include <memory>
-
 #include <AllMeshes.h>
-#include <Graphics/FrameBuffer.h>
 #include <Graphics/DebugLines.h>
+#include <Graphics/FrameBuffer.h>
+#include <memory>
 
 namespace openblack
 {
@@ -36,13 +35,13 @@ class DebugLines;
 
 class MeshViewer
 {
-  public:
+public:
 	explicit MeshViewer();
 	void Open();
 	void DrawWindow();
 	void DrawScene();
 
-  private:
+private:
 	bool _open;
 	static constexpr graphics::RenderPass _viewId = graphics::RenderPass::MeshViewer;
 	MeshId _selectedMesh;

@@ -19,7 +19,6 @@
  */
 
 #include <3D/Camera.h>
-#include <Game.h>
 
 using namespace openblack;
 
@@ -28,8 +27,8 @@ glm::mat4 Camera::getRotationMatrix() const
 	glm::mat4 pitch, yaw, roll = glm::mat4(1.0f);
 
 	pitch = glm::rotate(glm::mat4(1.0f), _rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-	yaw   = glm::rotate(glm::mat4(1.0f), _rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-	roll  = glm::rotate(glm::mat4(1.0f), _rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+	yaw = glm::rotate(glm::mat4(1.0f), _rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+	roll = glm::rotate(glm::mat4(1.0f), _rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 
 	return roll * pitch * yaw;
 }
@@ -68,17 +67,14 @@ glm::vec3 Camera::GetUp() const
 
 std::unique_ptr<Camera> Camera::Reflect(const glm::vec4& relectionPlane) const
 {
-	auto reflectionCamera = std::make_unique<ReflectionCamera>(
-		_position,
-		glm::degrees(_rotation),
-		relectionPlane
-	);
+	auto reflectionCamera = std::make_unique<ReflectionCamera>(_position, glm::degrees(_rotation), relectionPlane);
 	reflectionCamera->SetProjectionMatrix(_projectionMatrix);
 
 	return reflectionCamera;
 }
 
-void Camera::DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::ivec2 screenSize, glm::vec3& out_worldOrigin, glm::vec3& out_worldDirection)
+void Camera::DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::ivec2 screenSize, glm::vec3& out_worldOrigin,
+                                    glm::vec3& out_worldDirection)
 {
 	const float normalizedX = (float)screenPosition.x / (float)screenSize.x;
 	const float normalizedY = (float)screenPosition.y / (float)screenSize.y;
@@ -86,17 +82,19 @@ void Camera::DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::
 	const float screenSpaceX = (normalizedX - 0.5f) * 2.0f;
 	const float screenSpaceY = ((1.0f - normalizedY) - 0.5f) * 2.0f;
 
-	// The start of the ray trace is defined to be at mousex,mousey,1 in projection space (z=0 is near, z=1 is far - this gives us better precision)
-	// To get the direction of the ray trace we need to use any z between the near and the far plane, so let's use (mousex, mousey, 0.5)
+	// The start of the ray trace is defined to be at mousex,mousey,1 in
+	// projection space (z=0 is near, z=1 is far - this gives us better
+	// precision) To get the direction of the ray trace we need to use any z
+	// between the near and the far plane, so let's use (mousex, mousey, 0.5)
 	const glm::vec4 rayStartProjectionSpace = glm::vec4(screenSpaceX, screenSpaceY, 0.0f, 1.0f);
-	const glm::vec4 rayEndProjectionSpace   = glm::vec4(screenSpaceX, screenSpaceY, 0.5f, 1.0f);
+	const glm::vec4 rayEndProjectionSpace = glm::vec4(screenSpaceX, screenSpaceY, 0.5f, 1.0f);
 
 	// Calculate our inverse view projection matrix
 	glm::mat4 inverseViewProj = glm::inverse(GetViewProjectionMatrix());
 
 	// Get our homogeneous coordinates for our start and end ray positions
 	const glm::vec4 hgRayStartWorldSpace = inverseViewProj * rayStartProjectionSpace;
-	const glm::vec4 hgRayEndWorldSpace   = inverseViewProj * rayEndProjectionSpace;
+	const glm::vec4 hgRayEndWorldSpace = inverseViewProj * rayEndProjectionSpace;
 
 	glm::vec3 rayStartWorldSpace(hgRayStartWorldSpace.x, hgRayStartWorldSpace.y, hgRayStartWorldSpace.z);
 	glm::vec3 rayEndWorldSpace(hgRayEndWorldSpace.x, hgRayEndWorldSpace.y, hgRayEndWorldSpace.z);
@@ -111,7 +109,7 @@ void Camera::DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::
 	const glm::vec3 rayDirWorldSpace = glm::normalize(rayEndWorldSpace - rayStartWorldSpace);
 
 	// finally, store the results in the outputs
-	out_worldOrigin    = rayStartWorldSpace;
+	out_worldOrigin = rayStartWorldSpace;
 	out_worldDirection = rayDirWorldSpace;
 }
 
@@ -167,7 +165,7 @@ void Camera::Update(std::chrono::microseconds dt)
 glm::mat4 ReflectionCamera::GetViewMatrix() const
 {
 	glm::mat4 mRotation = getRotationMatrix();
-	glm::mat4 mView     = mRotation * glm::translate(glm::mat4(1.0f), -_position);
+	glm::mat4 mView = mRotation * glm::translate(glm::mat4(1.0f), -_position);
 
 	// M''camera = Mreflection * Mcamera * Mflip
 	glm::mat4x4 reflectionMatrix;

@@ -27,7 +27,7 @@ namespace openblack
 
 class MemoryStream: public IStream
 {
-  public:
+public:
 	MemoryStream(void* data, std::size_t size);
 
 	std::size_t Position() const override;
@@ -36,7 +36,7 @@ class MemoryStream: public IStream
 
 	void Read(void* buffer, std::size_t length) override;
 
-  protected:
+protected:
 	void* _data;
 	std::size_t _size;
 	std::size_t _position;

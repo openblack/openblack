@@ -18,18 +18,20 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/L3DMesh.h>
 #include <3D/Sky.h>
+
+#include <3D/L3DMesh.h>
 #include <Common/Bitmap16B.h>
 #include <Graphics/ShaderProgram.h>
 #include <Graphics/Texture2D.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
 
-constexpr std::array<std::string_view, 3> alignments = { "Ntrl", "good", "evil" };
-constexpr std::array<std::string_view, 3> times      = { "day", "dusk", "night" };
+constexpr std::array<std::string_view, 3> alignments = {"Ntrl", "good", "evil"};
+constexpr std::array<std::string_view, 3> times = {"day", "dusk", "night"};
 
 using namespace openblack::graphics;
 
@@ -67,7 +69,7 @@ Sky::Sky()
 		}
 	}
 
-	_texture   = std::make_unique<Texture2D>("Sky");
+	_texture = std::make_unique<Texture2D>("Sky");
 	_timeOfDay = 1.0f;
 	CalculateTextures();
 }
@@ -76,8 +78,8 @@ void Sky::SetDayNightTimes(float nightFull, float duskStart, float duskEnd, floa
 {
 	_nightFullTime = nightFull;
 	_duskStartTime = duskStart;
-	_duskEndTime   = duskEnd;
-	_dayFullTime   = dayFull;
+	_duskEndTime = duskEnd;
+	_dayFullTime = dayFull;
 }
 
 void Sky::SetTime(float time)
@@ -110,31 +112,25 @@ void Sky::CalculateTextures()
 {
 	std::array<uint16_t, 256 * 256> bitmap;
 
-	uint16_t* day   = _bitmaps[0].data();
-	uint16_t* dusk  = _bitmaps[1].data();
+	uint16_t* day = _bitmaps[0].data();
+	uint16_t* dusk = _bitmaps[1].data();
 	uint16_t* night = _bitmaps[2].data();
 
 	Interpolate555Texture(bitmap.data(), day, dusk, _timeOfDay);
 
 	// set alpha=1
-	for (unsigned int i = 0; i < 256 * 256; i++)
-		bitmap[i] = bitmap[i] | 0x8000;
+	for (unsigned int i = 0; i < 256 * 256; i++) bitmap[i] = bitmap[i] | 0x8000;
 
 	_texture->Create(256, 256, 1, Format::RGB5A1, Wrapping::ClampEdge, bitmap.data(), bitmap.size() * sizeof(bitmap[0]));
 }
 
-void Sky::Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram &program, bool cullBack) const
+void Sky::Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program,
+               bool cullBack) const
 {
 	program.SetTextureSampler("s_diffuse", 0, *_texture);
 
-	uint64_t state = 0u
-		| BGFX_STATE_WRITE_RGB
-		| BGFX_STATE_WRITE_A
-		| BGFX_STATE_WRITE_Z
-		| BGFX_STATE_DEPTH_TEST_LESS
-		| (cullBack ? BGFX_STATE_CULL_CW : BGFX_STATE_CULL_CCW)
-		| BGFX_STATE_MSAA
-	;
+	uint64_t state = 0u | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS |
+	                 (cullBack ? BGFX_STATE_CULL_CW : BGFX_STATE_CULL_CCW) | BGFX_STATE_MSAA;
 	_model->Draw(viewId, modelMatrix, program, 0, state);
 }
 

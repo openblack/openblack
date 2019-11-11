@@ -23,12 +23,12 @@
 #include <LHScriptX/CommandSignature.h>
 #include <array>
 
-namespace openblack::LHScriptX
+namespace openblack::lhscriptx
 {
 
 class FeatureScriptCommands
 {
-  public:
+public:
 	static const std::array<const ScriptCommandSignature, 105> Signatures;
 
 	static void CreateMist(const ScriptCommandContext& ctx);
@@ -138,4 +138,4 @@ class FeatureScriptCommands
 	static void SetLostTownScale(const ScriptCommandContext& ctx);
 };
 
-} // namespace openblack::LHScriptX
+} // namespace openblack::lhscriptx

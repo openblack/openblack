@@ -20,9 +20,9 @@
 
 #include <Common/FileSystem.h>
 
-#include <cstddef>
 #include <algorithm>
 #include <array>
+#include <cstddef>
 
 namespace openblack
 {
@@ -32,24 +32,21 @@ std::string FileSystem::FixPath(const std::string& path)
 	std::string result = path;
 
 	constexpr std::array<std::string_view, 3> caseFixTable = {
-		"\\Data\\",
-		"\\Landscape\\",
-		"\\Multi_Player\\",
+	    "\\Data\\",
+	    "\\Landscape\\",
+	    "\\Multi_Player\\",
 	};
 	for (auto& pattern : caseFixTable)
 	{
 		auto foundIter = std::search(result.cbegin(), result.cend(), pattern.cbegin(), pattern.cend(),
-		                             [] (char left, char right){ return std::toupper(left) == std::toupper(right); });
+		                             [](char left, char right) { return std::toupper(left) == std::toupper(right); });
 		if (foundIter != result.cend())
 		{
 			result.replace(foundIter, foundIter + pattern.size(), pattern.data());
 		}
 	}
 
-	for (auto pos = result.find('\\'); pos != std::string::npos; pos = result.find('\\', pos + 1))
-	{
-		result[pos] = '/';
-	}
+	for (auto pos = result.find('\\'); pos != std::string::npos; pos = result.find('\\', pos + 1)) { result[pos] = '/'; }
 
 	return result;
 }
@@ -68,7 +65,7 @@ std::unique_ptr<FileStream> FileSystem::Open(const fs::path& path, FileMode mode
 	// try relative to current directory
 	if (path.is_relative() && fs::exists(path))
 		return std::make_unique<FileStream>(path, mode);
-		
+
 	// try relative to game directory
 	if (path.is_relative() && fs::exists(_gamePath / path))
 		return std::make_unique<FileStream>(_gamePath / path, mode);

@@ -21,11 +21,11 @@
 #include <LHScriptX/FeatureScriptCommands.h>
 #include <LHScriptX/Lexer.h>
 #include <LHScriptX/Script.h>
-#include <spdlog/spdlog.h>
 #include <iostream>
+#include <spdlog/spdlog.h>
 
 using namespace openblack;
-using namespace openblack::LHScriptX;
+using namespace openblack::lhscriptx;
 
 void Script::Load(const std::string& source)
 {
@@ -96,24 +96,15 @@ ScriptCommandParameter GetParameter(Token& argument)
 
 	switch (type)
 	{
-	case Token::Type::Invalid:
-		throw std::runtime_error("Invalid token. Unable to proceed");
-	case Token::Type::EndOfFile:
-		throw std::runtime_error("Unexpected EOF in script");
-	case Token::Type::EndOfLine:
-		throw std::runtime_error("Unexpected EOL in script");
-	case Token::Type::Identifier:
-		return ScriptCommandParameter(argument.Identifier());
-	case Token::Type::String:
-		return ScriptCommandParameter(argument.StringValue());
-	case Token::Type::Integer:
-		return ScriptCommandParameter(*argument.IntegerValue());
-	case Token::Type::Float:
-		return ScriptCommandParameter(*argument.FloatValue());
-	case Token::Type::Operator:
-		throw std::runtime_error("Operator token as an argument is currently not supported");
-	default:
-		throw std::runtime_error("Missing switch case for script token argument");
+	case Token::Type::Invalid: throw std::runtime_error("Invalid token. Unable to proceed");
+	case Token::Type::EndOfFile: throw std::runtime_error("Unexpected EOF in script");
+	case Token::Type::EndOfLine: throw std::runtime_error("Unexpected EOL in script");
+	case Token::Type::Identifier: return ScriptCommandParameter(argument.Identifier());
+	case Token::Type::String: return ScriptCommandParameter(argument.StringValue());
+	case Token::Type::Integer: return ScriptCommandParameter(*argument.IntegerValue());
+	case Token::Type::Float: return ScriptCommandParameter(*argument.FloatValue());
+	case Token::Type::Operator: throw std::runtime_error("Operator token as an argument is currently not supported");
+	default: throw std::runtime_error("Missing switch case for script token argument");
 	}
 }
 
@@ -143,7 +134,7 @@ void Script::runCommand(const std::string& identifier, const std::vector<Token>&
 	}
 
 	const auto expected_parameters = command_signature->parameters;
-	const auto expected_size       = expected_parameters.size();
+	const auto expected_size = expected_parameters.size();
 
 	// Validate the number of given arguments against what is expected
 	if (parameters.size() != expected_size)

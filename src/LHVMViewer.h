@@ -20,16 +20,15 @@
 
 #pragma once
 
-#include <cstdint>
-
 #include <LHVM/LHVM.h>
+#include <cstdint>
 #include <imgui.h>
 
 namespace openblack
 {
 class LHVMViewer
 {
-  public:
+public:
 	static void Draw(const openblack::LHVM::LHVM*);
 	static void DrawScriptsTab(const openblack::LHVM::LHVM*);
 	static void DrawScriptDisassembly(const openblack::LHVM::LHVM*, openblack::LHVM::VMScript&);

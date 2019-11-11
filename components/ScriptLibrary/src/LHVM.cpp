@@ -19,17 +19,18 @@
  */
 
 #include <LHVM/LHVM.h>
-#include <LHVM/VMInstruction.h>
 #include <LHVM/OpcodeNames.h>
-
+#include <LHVM/VMInstruction.h>
 #include <cstdio>
 #include <cstring>
 #include <stdexcept>
 
-namespace openblack {
-namespace LHVM {
+namespace openblack
+{
+namespace LHVM
+{
 
-void LHVM::LoadBinary(const std::string &filename)
+void LHVM::LoadBinary(const std::string& filename)
 {
 	std::FILE* file = std::fopen(filename.c_str(), "rb");
 	if (file == nullptr)
@@ -63,7 +64,7 @@ void LHVM::LoadBinary(const std::string &filename)
 	std::fclose(file);
 }
 
-void LHVM::loadVariables(std::FILE* file, std::vector<std::string> &variables)
+void LHVM::loadVariables(std::FILE* file, std::vector<std::string>& variables)
 {
 	int32_t count;
 	std::fread(&count, 4, 1, file);
@@ -80,9 +81,7 @@ void LHVM::loadVariables(std::FILE* file, std::vector<std::string> &variables)
 		// reset cur pointer to 0
 		char* cur = &buffer[0];
 
-		while (*(cur-1) != '\0') {
-			std::fread(cur++, 1, 1, file);
-		}
+		while (*(cur - 1) != '\0') { std::fread(cur++, 1, 1, file); }
 
 		// throw it into the std::string vector
 		variables.emplace_back(buffer);
@@ -103,13 +102,9 @@ void LHVM::loadCode(std::FILE* file)
 		uint32_t instruction[5]; // quick way to minimize code
 		std::fread(&instruction, 4, 5, file);
 
-		_instructions.emplace_back(
-			static_cast<VMInstruction::Opcode>(instruction[0]),
-			static_cast<VMInstruction::Access>(instruction[1]),
-			static_cast<VMInstruction::DataType>(instruction[2]),
-			instruction[3],
-			instruction[4]
-		);
+		_instructions.emplace_back(static_cast<VMInstruction::Opcode>(instruction[0]),
+		                           static_cast<VMInstruction::Access>(instruction[1]),
+		                           static_cast<VMInstruction::DataType>(instruction[2]), instruction[3], instruction[4]);
 	}
 }
 
@@ -161,16 +156,8 @@ void LHVM::loadScripts(std::FILE* file)
 		std::fread(&parameter_count, 4, 1, file);
 		std::fread(&script_id, 4, 1, file);
 
-		_scripts.emplace_back(
-			std::string(script_name),
-			std::string(file_name),
-			script_type,
-			shit,
-			variables,
-			instruction_address,
-			parameter_count,
-			script_id
-		);
+		_scripts.emplace_back(std::string(script_name), std::string(file_name), script_type, shit, variables,
+		                      instruction_address, parameter_count, script_id);
 	}
 }
 
@@ -184,19 +171,15 @@ void LHVM::loadData(std::FILE* file)
 }
 
 /*
-	a pretty long method to turn each different opcode into a somewhat
-	human readable string
+    a pretty long method to turn each different opcode into a somewhat
+    human readable string
 */
 std::string VMInstruction::Disassemble() const
 {
 	std::string opcode_name = Opcode_Names[(int)_code];
 
-
-
-
-
 	return opcode_name;
 }
 
-}
-}
+} // namespace LHVM
+} // namespace openblack

@@ -20,31 +20,31 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 namespace openblack
 {
 class Bitmap16B
 {
-  public:
+public:
 	Bitmap16B() = delete;
 
 	Bitmap16B(const void* data, size_t size);
 	~Bitmap16B();
 
 	unsigned int Width() const { return _width; }
-	unsigned int Height() const { return _height;}
+	unsigned int Height() const { return _height; }
 	uint16_t* Data() { return _data; }
 	size_t Size() const { return _size; };
 
-  private:
+private:
 	unsigned int _width;
 	unsigned int _height;
 	uint16_t* _data;
 	size_t _size;
 
-  public:
+public:
 	static Bitmap16B* LoadFromFile(const std::string& file);
 };
 

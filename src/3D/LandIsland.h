@@ -20,14 +20,14 @@
 
 #pragma once
 
+#include <3D/LandBlock.h>
+#include <Graphics/Mesh.h>
+#include <Graphics/Texture2D.h>
+
 #include <array>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <3D/LandBlock.h>
-#include <Graphics/Mesh.h>
-#include <Graphics/Texture2D.h>
 
 namespace openblack
 {
@@ -48,7 +48,7 @@ struct Country
 
 class LandIsland
 {
-  public:
+public:
 	static const float HeightUnit;
 	static const float CellSize;
 
@@ -69,7 +69,7 @@ class LandIsland
 	void DumpTextures();
 	void DumpMaps();
 
-  private:
+private:
 	std::vector<LandBlock> _landBlocks;
 	std::vector<Country> _countries;
 
@@ -79,7 +79,7 @@ class LandIsland
 	std::array<uint8_t, 1024> _blockIndexLookup;
 
 	// Renderer
-  public:
+public:
 	void Draw(graphics::RenderPass viewId, const graphics::ShaderProgram& program, bool cullBack) const;
 
 	const std::vector<LandBlock>& GetBlocks() const { return _landBlocks; }
@@ -88,7 +88,7 @@ class LandIsland
 	uint8_t GetNoise(int x, int y);
 	graphics::Texture2D* GetSmallBumpMap() { return _textureSmallBump.get(); }
 
-  private:
+private:
 	void convertRGB5ToRGB8(uint16_t* rgba5, uint32_t* rgba8, size_t pixels);
 
 	std::unique_ptr<graphics::Texture2D> _materialArray;

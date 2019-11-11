@@ -19,21 +19,16 @@
  */
 
 #include <Graphics/FrameBuffer.h>
-
-#include <cassert>
 #include <array>
+#include <cassert>
 
 using namespace openblack::graphics;
 
-FrameBuffer::FrameBuffer(std::string name, uint16_t width, uint16_t height, Format colorFormat, std::optional<Format> depthStencilFormat)
-	: _name(std::move(name))
-	, _handle(BGFX_INVALID_HANDLE)
-	, _width(width)
-	, _height(height)
-	, _colorFormat(colorFormat)
-	, _depthStencilFormat(depthStencilFormat)
-	, _colorAttachment(_name + "_color")
-	, _depthStencilAttachment(_name + "_depthStencil")
+FrameBuffer::FrameBuffer(std::string name, uint16_t width, uint16_t height, Format colorFormat,
+                         std::optional<Format> depthStencilFormat)
+    : _name(std::move(name)), _handle(BGFX_INVALID_HANDLE), _width(width), _height(height), _colorFormat(colorFormat),
+      _depthStencilFormat(depthStencilFormat), _colorAttachment(_name + "_color"),
+      _depthStencilAttachment(_name + "_depthStencil")
 {
 	_colorAttachment._handle = BGFX_INVALID_HANDLE;
 	_colorAttachment._info.width = width;
@@ -48,8 +43,8 @@ FrameBuffer::FrameBuffer(std::string name, uint16_t width, uint16_t height, Form
 	if (depthStencilFormat)
 	{
 		std::array<bgfx::TextureHandle, 2> textures = {
-			bgfx::createTexture2D(width, height, false, 1, getBgfxTextureFormat(colorFormat), BGFX_TEXTURE_RT),
-			bgfx::createTexture2D(width, height, false, 1, getBgfxTextureFormat(depthStencilFormat.value()), BGFX_TEXTURE_RT),
+		    bgfx::createTexture2D(width, height, false, 1, getBgfxTextureFormat(colorFormat), BGFX_TEXTURE_RT),
+		    bgfx::createTexture2D(width, height, false, 1, getBgfxTextureFormat(depthStencilFormat.value()), BGFX_TEXTURE_RT),
 		};
 		_handle = bgfx::createFrameBuffer(textures.size(), textures.data());
 		_colorAttachment._handle = bgfx::getTexture(_handle, 0);

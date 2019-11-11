@@ -23,12 +23,12 @@
 #include <LHScriptX/CommandSignature.h>
 #include <array>
 
-namespace openblack::LHScriptX
+namespace openblack::lhscriptx
 {
 
 class MapScriptCommands
 {
-  public:
+public:
 	static const std::array<const ScriptCommandSignature, 20> Signatures;
 
 	static void SetNoPlayers(const ScriptCommandContext& ctx);
@@ -53,4 +53,4 @@ class MapScriptCommands
 	static void LoadLanguage(const ScriptCommandContext& ctx);
 };
 
-} // namespace openblack::LHScriptX
+} // namespace openblack::lhscriptx

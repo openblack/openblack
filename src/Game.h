@@ -20,15 +20,13 @@
 
 #pragma once
 
+#include <GameWindow.h>
+#include <LHVM/LHVM.h>
+#include <bgfx/bgfx.h>
+#include <glm/glm.hpp>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <bgfx/bgfx.h>
-#include <glm/glm.hpp>
-
-#include <LHVM/LHVM.h>
-#include "GameWindow.h"
 
 namespace openblack
 {
@@ -44,12 +42,12 @@ class L3DMesh;
 class Sky;
 class Water;
 
-namespace LHScriptX
+namespace lhscriptx
 {
 class Script;
 }
 
-namespace Entities
+namespace entities
 {
 class Registry;
 }
@@ -68,23 +66,13 @@ struct Arguments
 
 class Game
 {
-  public:
+public:
 	struct Config
 	{
 		Config()
-			: wireframe(false)
-			, waterDebug(false)
-			, showProfiler(false)
-			, drawSky(true)
-			, drawWater(true)
-			, drawIsland(true)
-			, drawEntities(true)
-			, drawDebugCross(true)
-			, drawBoundingBoxes(false)
-			, timeOfDay(1.0f)
-			, bumpMapStrength(1.0f)
-			, smallBumpMapStrength(1.0f)
-			, bgfxDebug(false)
+		    : wireframe(false), waterDebug(false), showProfiler(false), drawSky(true), drawWater(true), drawIsland(true),
+		      drawEntities(true), drawDebugCross(true), drawBoundingBoxes(false), drawStreams(false), timeOfDay(1.0f),
+		      bumpMapStrength(1.0f), smallBumpMapStrength(1.0f), bgfxDebug(false)
 		{
 		}
 
@@ -119,7 +107,7 @@ class Game
 
 	void LoadVariables();
 
-	void SetGamePath(const std::string &gamePath);
+	void SetGamePath(const std::string& gamePath);
 	const std::string& GetGamePath();
 
 	GameWindow& GetWindow() { return *_window; }
@@ -136,19 +124,16 @@ class Game
 	MeshPack& GetMeshPack() { return *_meshPack; }
 	[[nodiscard]] const LHVM::LHVM* GetLhvm() { return _lhvm.get(); }
 	FileSystem& GetFileSystem() { return *_fileSystem; }
-	Entities::Registry& GetEntityRegistry() { return *_entityRegistry; }
-	[[nodiscard]] Entities::Registry& GetEntityRegistry() const { return *_entityRegistry; }
+	entities::Registry& GetEntityRegistry() { return *_entityRegistry; }
+	[[nodiscard]] entities::Registry& GetEntityRegistry() const { return *_entityRegistry; }
 	[[nodiscard]] glm::mat4 GetModelMatrix() const;
 	Config& GetConfig() { return _config; }
 	[[nodiscard]] const Config& GetConfig() const { return _config; }
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
 
-  static Game* instance()
-	{
-		return sInstance;
-	}
+	static Game* instance() { return sInstance; }
 
-  private:
+private:
 	static Game* sInstance;
 
 	std::string sGamePath; // path to Lionhead Studios Ltd/Black & White folder
@@ -166,9 +151,9 @@ class Game
 	std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<Sky> _sky;
 	std::unique_ptr<Water> _water;
-	std::unique_ptr<LHScriptX::Script> _scriptx;
+	std::unique_ptr<lhscriptx::Script> _scriptx;
 	std::unique_ptr<LHVM::LHVM> _lhvm;
-	std::unique_ptr<Entities::Registry> _entityRegistry;
+	std::unique_ptr<entities::Registry> _entityRegistry;
 
 	Config _config;
 

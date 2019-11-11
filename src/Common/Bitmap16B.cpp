@@ -19,12 +19,14 @@
  */
 
 #include <Common/Bitmap16B.h>
+
 #include <Common/FileSystem.h>
 #include <Game.h>
+
 #include <cassert>
+#include <cstring> // memset, memcpy
 #include <sstream>
 #include <stdexcept>
-#include <cstring> // memset, memcpy
 
 using namespace openblack;
 
@@ -32,7 +34,7 @@ Bitmap16B::Bitmap16B(const void* fileData, size_t size)
 {
 	auto cast = reinterpret_cast<const uint32_t*>(fileData);
 
-	_width  = *((uint32_t*)fileData + 1);
+	_width = *((uint32_t*)fileData + 1);
 	_height = *((uint32_t*)fileData + 2);
 	_size = _width * _height * 2;
 

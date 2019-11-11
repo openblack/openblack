@@ -24,30 +24,29 @@
 #include <LHScriptX/Lexer.h>
 #include <vector>
 
-namespace openblack::LHScriptX
+namespace openblack::lhscriptx
 {
 
 class NotImplemented: public std::logic_error
 {
-  public:
-	NotImplemented():
-	    std::logic_error("Function not yet implemented") {};
+public:
+	NotImplemented(): std::logic_error("Function not yet implemented") {};
 };
 
 class Script
 {
-  public:
-	Script(Game* game):
-	    _game(game),
-	    token_(Token::MakeInvalidToken()) {}
+public:
+	Script(Game* game): _game(game), token_(Token::MakeInvalidToken()) {}
 
 	void Load(const std::string&);
 
-	//void SetCommands(std::unique_ptr<ScriptCommands> &commands) { _commands = std::move(commands); }
-	//ScriptCommands &GetCommands() const { return *_commands; }
-  private:
-	//std::unique_ptr<ScriptCommands> _commands;
-	//void processCommand(const std::string& command, std::vector<std::string> parameters);
+	// void SetCommands(std::unique_ptr<ScriptCommands> &commands) { _commands =
+	// std::move(commands); } ScriptCommands &GetCommands() const { return
+	// *_commands; }
+private:
+	// std::unique_ptr<ScriptCommands> _commands;
+	// void processCommand(const std::string& command, std::vector<std::string>
+	// parameters);
 
 	bool isCommand(const std::string& identifier) const;
 	void runCommand(const std::string& identifier, const std::vector<Token>& args);
@@ -61,4 +60,4 @@ class Script
 	Token token_;
 };
 
-} // namespace openblack::LHScriptX
+} // namespace openblack::lhscriptx

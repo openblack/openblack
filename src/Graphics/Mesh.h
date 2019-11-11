@@ -20,11 +20,9 @@
 
 #pragma once
 
-#include <cstdint>
-
-#include <memory>
-
 #include <Graphics/RenderPass.h>
+#include <cstdint>
+#include <memory>
 
 namespace bgfx
 {
@@ -40,7 +38,7 @@ class VertexBuffer;
 
 class Mesh
 {
-  public:
+public:
 	enum class Topology
 	{
 		PointList,
@@ -60,17 +58,17 @@ class Mesh
 
 	enum SkipState : uint8_t
 	{
-		SkipNone           = 0b00000000,
-		SkipRenderState    = 0b00000001,
-		SkipVertexBuffer   = 0b00000010,
-		SkipIndexBuffer    = 0b00000100,
+		SkipNone = 0b00000000,
+		SkipRenderState = 0b00000001,
+		SkipVertexBuffer = 0b00000010,
+		SkipIndexBuffer = 0b00000100,
 		SkipInstanceBuffer = 0b00001000,
 	};
 
 	struct DrawDesc
 	{
 		graphics::RenderPass viewId;
-		const openblack::graphics::ShaderProgram &program;
+		const openblack::graphics::ShaderProgram& program;
 		uint32_t count;
 		uint32_t offset;
 		const bgfx::DynamicVertexBufferHandle* instanceBuffer;
@@ -84,12 +82,12 @@ class Mesh
 
 	void Draw(const DrawDesc& desc) const;
 
-  protected:
+protected:
 	std::unique_ptr<graphics::VertexBuffer> _vertexBuffer;
 	std::unique_ptr<graphics::IndexBuffer> _indexBuffer;
 
-  private:
+private:
 	Topology _topology;
 };
 
-} // namespace openblack
+} // namespace openblack::graphics

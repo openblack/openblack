@@ -23,20 +23,21 @@
 #include <3D/L3DMesh.h>
 #include <Graphics/Mesh.h>
 #include <Graphics/Texture2D.h>
+
 #include <memory>
 
 namespace openblack
 {
 class Hand
 {
-  public:
+public:
 	Hand();
 	~Hand();
 
 	void Init();
 	void Draw();
 
-  private:
+private:
 	std::unique_ptr<L3DMesh> m_HandModel;
 };
 } // namespace openblack

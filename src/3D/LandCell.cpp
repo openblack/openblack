@@ -18,4 +18,4 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "LandCell.h"
+#include <3D/LandCell.h>

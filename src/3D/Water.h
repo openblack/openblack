@@ -20,9 +20,11 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
-
 #include <Graphics/RenderPass.h>
+
+#include <glm/vec4.hpp>
+
+#include <memory>
 
 namespace openblack
 {
@@ -32,11 +34,11 @@ namespace graphics
 class FrameBuffer;
 class Mesh;
 class ShaderProgram;
-}
+} // namespace graphics
 
 class Water
 {
-  public:
+public:
 	Water();
 	~Water() = default;
 
@@ -46,7 +48,7 @@ class Water
 	[[nodiscard]] graphics::FrameBuffer& GetFrameBuffer() const;
 	void DebugGUI();
 
-  private:
+private:
 	void createMesh();
 
 	std::unique_ptr<graphics::Mesh> _mesh;

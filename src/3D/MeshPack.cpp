@@ -20,15 +20,16 @@
 
 #include <3D/MeshPack.h>
 
-#include <algorithm>
-#include <stdexcept>
-
-#include <AllMeshes.h>
-#include <spdlog/spdlog.h>
 #include <3D/L3DMesh.h>
+#include <AllMeshes.h>
 #include <Common/IStream.h>
 #include <Common/MemoryStream.h>
 #include <Graphics/Texture2D.h>
+
+#include <spdlog/spdlog.h>
+
+#include <algorithm>
+#include <stdexcept>
 
 namespace openblack
 {
@@ -84,30 +85,23 @@ void createCompressedDDS(graphics::Texture2D* texture, uint8_t* buffer)
 	// - all are compressed
 
 	graphics::Format internalFormat;
-	int32_t width  = header->dwWidth;
+	int32_t width = header->dwWidth;
 	int32_t height = header->dwHeight;
 	int bytesPerBlock;
 
 	switch (header->ddspf.dwFourCC)
 	{
-	case ('D' | ('X' << 8) | ('T' << 16) | ('1' << 24)):
-		internalFormat = graphics::Format::BlockCompression1;
-		break;
-	case ('D' | ('X' << 8) | ('T' << 16) | ('3' << 24)):
-		internalFormat = graphics::Format::BlockCompression2;
-		break;
-	default:
-		throw std::runtime_error("Unsupported compressed texture format");
-		break;
+	case ('D' | ('X' << 8) | ('T' << 16) | ('1' << 24)): internalFormat = graphics::Format::BlockCompression1; break;
+	case ('D' | ('X' << 8) | ('T' << 16) | ('3' << 24)): internalFormat = graphics::Format::BlockCompression2; break;
+	default: throw std::runtime_error("Unsupported compressed texture format"); break;
 	}
 
 	// DXT1 = 8bpp or DXT3 = 16bpp
 	int bpp = internalFormat == graphics::Format::BlockCompression2 ? 16 : 8;
-	size_t size = std::max(1, ((int) width + 3) >> 2) * std::max(1, ((int) height + 3) >> 2) * bpp;
+	size_t size = std::max(1, ((int)width + 3) >> 2) * std::max(1, ((int)height + 3) >> 2) * bpp;
 
 	texture->Create(width, height, 1, internalFormat, graphics::Wrapping::ClampEdge, buffer + header->dwSize, size);
 }
-
 
 void MeshPack::Load(IStream& stream)
 {
@@ -149,7 +143,8 @@ void MeshPack::loadTextures(IStream& stream)
 	uint32_t totalTextures = stream.ReadValue<uint32_t>();
 
 	// todo: CI/mod support
-	if (totalTextures != 110) {
+	if (totalTextures != 110)
+	{
 		spdlog::warn("MeshPack contains {} textures, expected 110", totalTextures);
 	}
 
@@ -218,8 +213,10 @@ void MeshPack::loadMeshes(IStream& stream)
 	{
 		stream.Seek(block->second.position + meshOffsets[i], SeekMode::Begin);
 
-		// slightly hacky, but lets read the header, get the size, and return a MemoryStream
-		struct {
+		// slightly hacky, but lets read the header, get the size, and return a
+		// MemoryStream
+		struct
+		{
 			uint32_t magic;
 			uint32_t flags;
 			uint32_t size;
@@ -232,7 +229,7 @@ void MeshPack::loadMeshes(IStream& stream)
 
 		MemoryStream modelStream(data.data(), data.size());
 
-		//spdlog::debug("L3DMesh {}", i);
+		// spdlog::debug("L3DMesh {}", i);
 		std::unique_ptr<L3DMesh> mesh = std::make_unique<L3DMesh>(MeshNames[i].data());
 		mesh->Load(modelStream);
 

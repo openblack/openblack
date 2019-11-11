@@ -20,12 +20,11 @@
 
 #pragma once
 
+#include <bgfx/bgfx.h>
 #include <cstdint>
+#include <glm/glm.hpp>
 #include <map>
 #include <string>
-
-#include <glm/glm.hpp>
-#include <bgfx/bgfx.h>
 
 namespace openblack::graphics
 {
@@ -33,7 +32,7 @@ class Texture2D;
 
 class ShaderProgram
 {
-  public:
+public:
 	enum class Type
 	{
 		Vertex,
@@ -50,7 +49,7 @@ class ShaderProgram
 
 	[[nodiscard]] bgfx::ProgramHandle GetRawHandle() const { return _program; }
 
-  private:
+private:
 	bgfx::ProgramHandle _program;
 	std::map<std::string, bgfx::UniformHandle> _uniforms;
 };

@@ -31,8 +31,8 @@
 
 using namespace openblack;
 
-GameWindow::GameWindow(const std::string& title, const SDL_DisplayMode& display, DisplayMode displaymode):
-    GameWindow::GameWindow(title, display.w, display.h, displaymode)
+GameWindow::GameWindow(const std::string& title, const SDL_DisplayMode& display, DisplayMode displaymode)
+    : GameWindow::GameWindow(title, display.w, display.h, displaymode)
 {
 }
 
@@ -72,9 +72,7 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 	const int x = SDL_WINDOWPOS_UNDEFINED;
 	const int y = SDL_WINDOWPOS_UNDEFINED;
 
-	auto window = std::unique_ptr<SDL_Window, SDLDestroyer>(SDL_CreateWindow(
-	    title.c_str(), x, y,
-	    width, height, flags));
+	auto window = std::unique_ptr<SDL_Window, SDLDestroyer>(SDL_CreateWindow(title.c_str(), x, y, width, height, flags));
 
 	if (window == nullptr)
 	{
@@ -116,7 +114,7 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 			win_impl = wl_egl_window_create(surface, width, height);
 			SDL_SetWindowData(_window.get(), "wl_egl_window", win_impl);
 		}
-		native_window  = reinterpret_cast<void*>(win_impl);
+		native_window = reinterpret_cast<void*>(win_impl);
 		native_display = wmi.info.wl.display;
 	}
 	else
@@ -124,7 +122,7 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 #if defined(SDL_VIDEO_DRIVER_X11)
 	    if (wmi.subsystem == SDL_SYSWM_X11)
 	{
-		native_window  = reinterpret_cast<void*>(wmi.info.x11.window);
+		native_window = reinterpret_cast<void*>(wmi.info.x11.window);
 		native_display = wmi.info.x11.display;
 	}
 	else
@@ -133,7 +131,7 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 #if defined(SDL_VIDEO_DRIVER_COCOA)
 	    if (wmi.subsystem == SDL_SYSWM_COCOA)
 	{
-		native_window  = wmi.info.cocoa.window;
+		native_window = wmi.info.cocoa.window;
 		native_display = nullptr;
 	}
 	else
@@ -142,7 +140,7 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 #if defined(SDL_VIDEO_DRIVER_WINDOWS)
 	    if (wmi.subsystem == SDL_SYSWM_WINDOWS)
 	{
-		native_window  = wmi.info.win.window;
+		native_window = wmi.info.win.window;
 		native_display = nullptr;
 	}
 	else
@@ -151,7 +149,7 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 #if defined(SDL_VIDEO_DRIVER_VIVANTE)
 	    if (wmi.subsystem == SDL_SYSWM_VIVANTE)
 	{
-		native_window  = wmi.info.vivante.window;
+		native_window = wmi.info.vivante.window;
 		native_display = wmi.info.vivante.display;
 	}
 	else

@@ -20,12 +20,11 @@
 
 #pragma once
 
-#include <map>
-#include <string>
+#include "RenderPass.h"
 
 #include <Graphics/ShaderProgram.h>
-
-#include "RenderPass.h"
+#include <map>
+#include <string>
 
 namespace openblack
 {
@@ -37,16 +36,17 @@ namespace graphics
 
 class ShaderManager
 {
-  public:
+public:
 	ShaderManager() = default;
 	~ShaderManager();
 
-	const ShaderProgram* LoadShader(const std::string& name, const std::string& vertexShaderName, const std::string& fragmentShaderName);
+	const ShaderProgram* LoadShader(const std::string& name, const std::string& vertexShaderName,
+	                                const std::string& fragmentShaderName);
 	[[nodiscard]] const ShaderProgram* GetShader(const std::string& name) const;
 
-	void SetCamera(RenderPass viewId, const Camera &camera);
+	void SetCamera(RenderPass viewId, const Camera& camera);
 
-  private:
+private:
 	typedef std::map<std::string, const ShaderProgram*> ShaderMap;
 
 	ShaderMap _shaderPrograms;

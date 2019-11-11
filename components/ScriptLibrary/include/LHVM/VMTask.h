@@ -20,12 +20,14 @@
 
 #pragma once
 
-namespace openblack {
-namespace LHVM {
+namespace openblack
+{
+namespace LHVM
+{
 
-class VMTask {
-
+class VMTask
+{
 };
 
-}
-}
+} // namespace LHVM
+} // namespace openblack

@@ -20,18 +20,21 @@
 
 #pragma once
 
+#include <LHVM/VMInstruction.h>
+#include <LHVM/VMScript.h>
 #include <string>
 #include <vector>
 
-#include <LHVM/VMInstruction.h>
-#include <LHVM/VMScript.h>
+namespace openblack
+{
+namespace LHVM
+{
 
-namespace openblack {
-namespace LHVM {
-
-class LHVM {
+class LHVM
+{
 public:
-	enum class Version : uint32_t {
+	enum class Version : uint32_t
+	{
 		BlackAndWhite = 7,
 		CreatureIsle = 8,
 		BlackAndWhite2 = 12
@@ -40,16 +43,17 @@ public:
 	LHVM() = default;
 	~LHVM() = default;
 
-	void LoadBinary(const std::string &filename);
+	void LoadBinary(const std::string& filename);
 
-	const std::vector<std::string> &GetVariables() const { return _variables; }
-	const std::vector<VMInstruction> &GetInstructions() const { return _instructions; }
-	const std::vector<VMScript> &GetScripts() const { return _scripts; }
-	const std::vector<uint8_t> &GetData() const { return _data; }
+	const std::vector<std::string>& GetVariables() const { return _variables; }
+	const std::vector<VMInstruction>& GetInstructions() const { return _instructions; }
+	const std::vector<VMScript>& GetScripts() const { return _scripts; }
+	const std::vector<uint8_t>& GetData() const { return _data; }
 
 	Version GetVersion() const { return _version; }
+
 private:
-	void loadVariables(std::FILE* file, std::vector<std::string> &variables);
+	void loadVariables(std::FILE* file, std::vector<std::string>& variables);
 	void loadCode(std::FILE* file);
 	void loadAuto(std::FILE* file);
 	void loadScripts(std::FILE* file);
@@ -63,5 +67,5 @@ private:
 	std::vector<uint8_t> _data;
 };
 
-}
-}
+} // namespace LHVM
+} // namespace openblack
