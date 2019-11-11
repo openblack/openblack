@@ -20,8 +20,9 @@
 
 #pragma once
 
-#include <Game.h>
-#include <LHScriptX/Lexer.h>
+#include "Game.h"
+#include "Lexer.h"
+
 #include <vector>
 
 namespace openblack::lhscriptx
@@ -48,7 +49,7 @@ private:
 	// void processCommand(const std::string& command, std::vector<std::string>
 	// parameters);
 
-	bool isCommand(const std::string& identifier) const;
+	[[nodiscard]] bool isCommand(const std::string& identifier) const;
 	void runCommand(const std::string& identifier, const std::vector<Token>& args);
 
 	const Token* peekToken(Lexer&);

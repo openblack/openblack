@@ -18,11 +18,13 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <AllMeshes.h>
-#include <Graphics/DebugLines.h>
+#include "AllMeshes.h"
+#include "Graphics/DebugLines.h"
+
 #include <bgfx/bgfx.h>
 #include <entt/entity/fwd.hpp>
 #include <glm/fwd.hpp>
+
 #include <map>
 #include <memory>
 #include <unordered_map>
@@ -32,7 +34,7 @@ namespace openblack::entities
 {
 struct RenderContext
 {
-	RenderContext(): instanceUniformBuffer(BGFX_INVALID_HANDLE), dirty(true), hasBoundingBoxes(false) {};
+	RenderContext(): instanceUniformBuffer(BGFX_INVALID_HANDLE) {};
 	~RenderContext()
 	{
 		if (bgfx::isValid(instanceUniformBuffer))
@@ -67,8 +69,8 @@ struct RenderContext
 	/// the instances of entities and their bounding boxes.
 	bgfx::DynamicVertexBufferHandle instanceUniformBuffer;
 
-	bool dirty;
-	bool hasBoundingBoxes;
+	bool dirty {true};
+	bool hasBoundingBoxes {false};
 };
 
 using TownId = int;

@@ -20,9 +20,9 @@
 
 #pragma once
 
-#include <3D/LandBlock.h>
-#include <Graphics/Mesh.h>
-#include <Graphics/Texture2D.h>
+#include "Graphics/Mesh.h"
+#include "Graphics/Texture2D.h"
+#include "LandBlock.h"
 
 #include <array>
 #include <memory>
@@ -61,9 +61,9 @@ public:
 
 	// const uint8_t GetAltitudeAt(glm::ivec2) const;
 
-	float GetHeightAt(glm::vec2) const;
-	const LandBlock* GetBlock(int8_t x, int8_t y) const;
-	const LandCell& GetCell(int x, int y) const;
+	[[nodiscard]] float GetHeightAt(glm::vec2) const;
+	[[nodiscard]] const LandBlock* GetBlock(int8_t x, int8_t y) const;
+	[[nodiscard]] const LandCell& GetCell(int x, int y) const;
 
 	// Debug
 	void DumpTextures();
@@ -73,8 +73,8 @@ private:
 	std::vector<LandBlock> _landBlocks;
 	std::vector<Country> _countries;
 
-	unsigned int _materialCount;
-	unsigned int _lowresCount;
+	unsigned int _materialCount{0};
+	unsigned int _lowresCount{0};
 
 	std::array<uint8_t, 1024> _blockIndexLookup;
 
@@ -82,8 +82,8 @@ private:
 public:
 	void Draw(graphics::RenderPass viewId, const graphics::ShaderProgram& program, bool cullBack) const;
 
-	const std::vector<LandBlock>& GetBlocks() const { return _landBlocks; }
-	const std::vector<Country>& GetCountries() const { return _countries; }
+	[[nodiscard]] const std::vector<LandBlock>& GetBlocks() const { return _landBlocks; }
+	[[nodiscard]] const std::vector<Country>& GetCountries() const { return _countries; }
 
 	uint8_t GetNoise(int x, int y);
 	graphics::Texture2D* GetSmallBumpMap() { return _textureSmallBump.get(); }

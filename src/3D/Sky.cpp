@@ -18,12 +18,12 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/Sky.h>
+#include "Sky.h"
 
-#include <3D/L3DMesh.h>
-#include <Common/Bitmap16B.h>
-#include <Graphics/ShaderProgram.h>
-#include <Graphics/Texture2D.h>
+#include "3D/L3DMesh.h"
+#include "Common/Bitmap16B.h"
+#include "Graphics/ShaderProgram.h"
+#include "Graphics/Texture2D.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>

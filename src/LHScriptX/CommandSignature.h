@@ -20,7 +20,8 @@
 
 #pragma once
 
-#include <Common/Types.h>
+#include "Common/Types.h"
+
 #include <functional>
 #include <vector>
 
@@ -54,11 +55,11 @@ public:
 	ScriptCommandParameter(int32_t value): _type(ParameterType::Number) { SetNumber(value); }
 	ScriptCommandParameter(float x, float y, float z) { SetVector(x, y, z); }
 
-	ParameterType GetType() const { return _type; };
+	[[nodiscard]] ParameterType GetType() const { return _type; };
 
-	std::string& GetString() const { return *_value._string; }
-	float GetFloat() const { return _value._float; }
-	int32_t GetNumber() const { return _value._number; }
+	[[nodiscard]] std::string& GetString() const { return *_value._string; }
+	[[nodiscard]] float GetFloat() const { return _value._float; }
+	[[nodiscard]] int32_t GetNumber() const { return _value._number; }
 	void GetVector(float& x, float& y, float& z) const;
 
 	void SetString(const std::string& value) { *_value._string = value; }
@@ -90,9 +91,9 @@ class ScriptCommandContext
 public:
 	ScriptCommandContext(Game* game, const ScriptCommandParameters* parameters): _game(game), _parameters(parameters) {}
 
-	Game& GetGame() const { return *_game; }
+	[[nodiscard]] Game& GetGame() const { return *_game; }
 
-	const ScriptCommandParameters& GetParameters() const { return *_parameters; }
+	[[nodiscard]] const ScriptCommandParameters& GetParameters() const { return *_parameters; }
 
 	const ScriptCommandParameter& operator[](unsigned int arg) const { return _parameters->at(arg); }
 

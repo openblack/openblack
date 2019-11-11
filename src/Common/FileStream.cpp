@@ -18,7 +18,7 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Common/FileStream.h>
+#include "FileStream.h"
 
 #include <spdlog/fmt/fmt.h>
 

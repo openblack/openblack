@@ -21,8 +21,9 @@
 #pragma once
 
 #include <LHVM/LHVM.h>
-#include <cstdint>
 #include <imgui.h>
+
+#include <cstdint>
 
 namespace openblack
 {

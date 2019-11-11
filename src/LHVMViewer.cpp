@@ -18,10 +18,12 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <LHVMViewer.h>
-#include <array>
+#include "LHVMViewer.h"
+
 #include <imgui.h>
 #include <imgui_memory_editor.h>
+
+#include <array>
 
 using openblack::LHVMViewer;
 

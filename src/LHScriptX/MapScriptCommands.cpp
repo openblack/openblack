@@ -18,7 +18,7 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <LHScriptX/MapScriptCommands.h>
+#include "MapScriptCommands.h"
 
 using namespace openblack::lhscriptx;
 

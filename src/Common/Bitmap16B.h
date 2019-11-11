@@ -33,10 +33,10 @@ public:
 	Bitmap16B(const void* data, size_t size);
 	~Bitmap16B();
 
-	unsigned int Width() const { return _width; }
-	unsigned int Height() const { return _height; }
+	[[nodiscard]] unsigned int Width() const { return _width; }
+	[[nodiscard]] unsigned int Height() const { return _height; }
 	uint16_t* Data() { return _data; }
-	size_t Size() const { return _size; };
+	[[nodiscard]] size_t Size() const { return _size; };
 
 private:
 	unsigned int _width;

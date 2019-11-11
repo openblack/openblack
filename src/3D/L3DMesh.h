@@ -20,10 +20,10 @@
 
 #pragma once
 
-#include <3D/L3DSubMesh.h>
-#include <Graphics/Mesh.h>
-#include <Graphics/ShaderProgram.h>
-#include <Graphics/Texture2D.h>
+#include "Graphics/Mesh.h"
+#include "Graphics/ShaderProgram.h"
+#include "Graphics/Texture2D.h"
+#include "L3DSubMesh.h"
 
 #include <glm/gtc/quaternion.hpp>
 #include <unordered_map>
@@ -127,8 +127,8 @@ public:
 	            uint32_t instanceCount, const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0) const;
 
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return _subMeshes.size(); }
-	const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }
-	const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& GetSkins() const { return _skins; }
+	[[nodiscard]] const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }
+	[[nodiscard]] const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& GetSkins() const { return _skins; }
 
 private:
 	L3DMeshFlags _flags;
@@ -138,20 +138,23 @@ private:
 	std::vector<std::unique_ptr<L3DSubMesh>> _subMeshes;
 
 public:
-	const std::string& GetDebugName() const { return _debugName; }
+	[[nodiscard]] const std::string& GetDebugName() const { return _debugName; }
 
-	uint32_t GetFlags() const { return static_cast<uint32_t>(_flags); }
+	[[nodiscard]] uint32_t GetFlags() const { return static_cast<uint32_t>(_flags); }
 
-	bool IsBoned() const { return static_cast<bool>(_flags & L3DMeshFlags::HasBones); }
-	bool IsPacked() const { return static_cast<bool>(_flags & L3DMeshFlags::Packed); }
-	bool IsNoDraw() const { return static_cast<bool>(_flags & L3DMeshFlags::NoDraw); }
-	bool IsContainsLandscapeFeature() const { return static_cast<bool>(_flags & L3DMeshFlags::ContainsLandscapeFeature); }
-	bool IsContainsUV2() const { return static_cast<bool>(_flags & L3DMeshFlags::ContainsUV2); }
-	bool IsContainsNameData() const { return static_cast<bool>(_flags & L3DMeshFlags::ContainsNameData); }
-	bool IsContainsExtraMetrics() const { return static_cast<bool>(_flags & L3DMeshFlags::ContainsExtraMetrics); }
-	bool IsContainsEBone() const { return static_cast<bool>(_flags & L3DMeshFlags::ContainsEBone); }
-	bool IsContainsTnLData() const { return static_cast<bool>(_flags & L3DMeshFlags::ContainsTnLData); }
-	bool IsContainsNewEP() const { return static_cast<bool>(_flags & L3DMeshFlags::ContainsNewEP); }
+	[[nodiscard]] bool IsBoned() const { return static_cast<bool>(_flags & L3DMeshFlags::HasBones); }
+	[[nodiscard]] bool IsPacked() const { return static_cast<bool>(_flags & L3DMeshFlags::Packed); }
+	[[nodiscard]] bool IsNoDraw() const { return static_cast<bool>(_flags & L3DMeshFlags::NoDraw); }
+	[[nodiscard]] bool IsContainsLandscapeFeature() const
+	{
+		return static_cast<bool>(_flags & L3DMeshFlags::ContainsLandscapeFeature);
+	}
+	[[nodiscard]] bool IsContainsUV2() const { return static_cast<bool>(_flags & L3DMeshFlags::ContainsUV2); }
+	[[nodiscard]] bool IsContainsNameData() const { return static_cast<bool>(_flags & L3DMeshFlags::ContainsNameData); }
+	[[nodiscard]] bool IsContainsExtraMetrics() const { return static_cast<bool>(_flags & L3DMeshFlags::ContainsExtraMetrics); }
+	[[nodiscard]] bool IsContainsEBone() const { return static_cast<bool>(_flags & L3DMeshFlags::ContainsEBone); }
+	[[nodiscard]] bool IsContainsTnLData() const { return static_cast<bool>(_flags & L3DMeshFlags::ContainsTnLData); }
+	[[nodiscard]] bool IsContainsNewEP() const { return static_cast<bool>(_flags & L3DMeshFlags::ContainsNewEP); }
 	// const bool IsContainsNewData() const { return _flags & 0xFC8000; } // ???
 };
 } // namespace openblack

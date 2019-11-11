@@ -20,6 +20,24 @@
 
 #include "Gui.h"
 
+#include "3D/Camera.h"
+#include "3D/LandIsland.h"
+#include "3D/MeshPack.h"
+#include "3D/Sky.h"
+#include "3D/Water.h"
+#include "Entities/Components/Transform.h"
+#include "Entities/Components/Tree.h"
+#include "Entities/Registry.h"
+#include "Game.h"
+#include "GameWindow.h"
+#include "Graphics/Shaders/imgui/fs_imgui_image.bin.h"
+#include "Graphics/Shaders/imgui/fs_ocornut_imgui.bin.h"
+#include "Graphics/Shaders/imgui/vs_imgui_image.bin.h"
+#include "Graphics/Shaders/imgui/vs_ocornut_imgui.bin.h"
+#include "LHVMViewer.h"
+#include "MeshViewer.h"
+#include "Profiler.h"
+
 #include <bgfx/bgfx.h>
 #include <bgfx/embedded_shader.h>
 #include <bx/math.h>
@@ -29,25 +47,6 @@
 #ifdef _WIN32
 #include <SDL2/SDL_syswm.h>
 #endif
-
-#include "Entities/Registry.h"
-#include "Graphics/Shaders/imgui/fs_imgui_image.bin.h"
-#include "Graphics/Shaders/imgui/fs_ocornut_imgui.bin.h"
-#include "Graphics/Shaders/imgui/vs_imgui_image.bin.h"
-#include "Graphics/Shaders/imgui/vs_ocornut_imgui.bin.h"
-#include "Profiler.h"
-
-#include <3D/Camera.h>
-#include <3D/LandIsland.h>
-#include <3D/MeshPack.h>
-#include <3D/Sky.h>
-#include <3D/Water.h>
-#include <Entities/Components/Transform.h>
-#include <Entities/Components/Tree.h>
-#include <Game.h>
-#include <GameWindow.h>
-#include <LHVMViewer.h>
-#include <MeshViewer.h>
 
 using namespace openblack;
 

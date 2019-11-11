@@ -1,18 +1,19 @@
-#include <Entities/Registry.h>
+#include "Registry.h"
 
-#include <3D/Camera.h>
-#include <3D/L3DMesh.h>
-#include <3D/MeshLookup.h>
-#include <3D/MeshPack.h>
-#include <AllMeshes.h>
-#include <Entities/Components/Abode.h>
-#include <Entities/Components/AnimatedStatic.h>
-#include <Entities/Components/Stream.h>
-#include <Entities/Components/Transform.h>
-#include <Entities/Components/Tree.h>
-#include <Game.h>
-#include <Graphics/DebugLines.h>
-#include <Graphics/ShaderManager.h>
+#include "3D/Camera.h"
+#include "3D/L3DMesh.h"
+#include "3D/MeshLookup.h"
+#include "3D/MeshPack.h"
+#include "AllMeshes.h"
+#include "Entities/Components/Abode.h"
+#include "Entities/Components/AnimatedStatic.h"
+#include "Entities/Components/Stream.h"
+#include "Entities/Components/Transform.h"
+#include "Entities/Components/Tree.h"
+#include "Game.h"
+#include "Graphics/DebugLines.h"
+#include "Graphics/ShaderManager.h"
+
 #include <algorithm>
 
 namespace openblack::entities

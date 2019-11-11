@@ -20,9 +20,11 @@
 
 #pragma once
 
-#include <Graphics/RenderPass.h>
+#include "RenderPass.h"
+
 #include <bgfx/bgfx.h>
 #include <glm/glm.hpp>
+
 #include <memory>
 
 namespace openblack::graphics

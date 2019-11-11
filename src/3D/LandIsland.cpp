@@ -18,13 +18,13 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/LandIsland.h>
+#include "LandIsland.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <Common/FileSystem.h>
-#include <Common/IStream.h>
-#include <Common/stb_image_write.h>
-#include <Game.h>
+#include "Common/FileSystem.h"
+#include "Common/IStream.h"
+#include "Common/stb_image_write.h"
+#include "Game.h"
 
 #include <spdlog/spdlog.h>
 
@@ -36,10 +36,10 @@ using namespace openblack::graphics;
 const float LandIsland::HeightUnit = 0.67f;
 const float LandIsland::CellSize = 10.0f;
 
-LandIsland::LandIsland(): _materialCount(0), _lowresCount(0), _blockIndexLookup {0}
+LandIsland::LandIsland():  _blockIndexLookup {0}
 {
 	auto file = Game::instance()->GetFileSystem().Open("Data/Textures/smallbumpa.raw", FileMode::Read);
-	uint8_t* smallbumpa = new uint8_t[file->Size()];
+	auto* smallbumpa = new uint8_t[file->Size()];
 	file->Read(smallbumpa, file->Size());
 
 	_textureSmallBump = std::make_unique<Texture2D>("LandIslandSmallBump");
@@ -84,7 +84,7 @@ void LandIsland::LoadFromFile(IStream& stream)
 	_landBlocks.reserve(blockCount);
 	for (uint32_t i = 0; i < blockCount; i++)
 	{
-		uint8_t* blockData = new uint8_t[blockSize];
+		auto* blockData = new uint8_t[blockSize];
 		stream.Read(blockData, blockSize);
 
 		_landBlocks.push_back(LandBlock());
@@ -230,7 +230,7 @@ void LandIsland::DumpMaps()
 	// 32x32 block grid with 16x16 cells
 	// 512 x 512 pixels
 	// lets go with 3 channels for a laugh
-	uint8_t* data = new uint8_t[32 * 32 * cellsize * cellsize];
+	auto* data = new uint8_t[32 * 32 * cellsize * cellsize];
 
 	memset(data, 0x00, 32 * 32 * cellsize * cellsize);
 

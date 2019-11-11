@@ -18,8 +18,9 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Entities/RegistryContext.h>
-#include <Graphics/RenderPass.h>
+#include "Entities/RegistryContext.h"
+#include "Graphics/RenderPass.h"
+
 #include <entt/entt.hpp>
 
 namespace openblack
@@ -49,7 +50,7 @@ public:
 		return _registry.assign<Component>(entity, std::forward<Args>(args)...);
 	}
 	RegistryContext& Context();
-	const RegistryContext& Context() const;
+	[[nodiscard]] const RegistryContext& Context() const;
 	;
 	void Reset()
 	{

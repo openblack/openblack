@@ -18,7 +18,7 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Common/MemoryStream.h>
+#include "MemoryStream.h"
 
 #include <algorithm>
 #include <cstddef>

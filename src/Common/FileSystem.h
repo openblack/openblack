@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <Common/FileStream.h>
+#include "FileStream.h"
 
 #include <cstddef>
 #include <list>
@@ -43,7 +43,7 @@ public:
 	bool Exists(const fs::path& path);
 
 	void SetGamePath(const fs::path& path) { _gamePath = path; }
-	const fs::path& GetGamePath() const { return _gamePath; }
+	[[nodiscard]] const fs::path& GetGamePath() const { return _gamePath; }
 
 	std::vector<fs::path> EnumFiles(const fs::path& directory);
 

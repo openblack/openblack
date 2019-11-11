@@ -18,16 +18,18 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/L3DMesh.h>
-#include <3D/MeshPack.h>
-#include <Game.h>
-#include <Graphics/IndexBuffer.h>
-#include <Graphics/ShaderManager.h>
-#include <Graphics/Texture2D.h>
-#include <Graphics/VertexBuffer.h>
-#include <Gui.h>
-#include <MeshViewer.h>
-#include <Renderer.h>
+#include "MeshViewer.h"
+
+#include "3D/L3DMesh.h"
+#include "3D/MeshPack.h"
+#include "Game.h"
+#include "Graphics/IndexBuffer.h"
+#include "Graphics/ShaderManager.h"
+#include "Graphics/Texture2D.h"
+#include "Graphics/VertexBuffer.h"
+#include "Gui.h"
+#include "Renderer.h"
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui.h>
 #include <imgui_bitfield.h>
@@ -35,8 +37,7 @@
 using namespace openblack;
 
 MeshViewer::MeshViewer()
-    : _open(false), _selectedMesh(MeshId::Dummy), _selectedSubMesh(0), _meshFlagFilter(-1), _cameraPosition(5.0f, 3.0f, 5.0f),
-      _viewBoundingBox(false), _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f))),
+    : _cameraPosition(5.0f, 3.0f, 5.0f), _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f))),
       _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", 512, 512, graphics::Format::RGBA8,
                                                            graphics::Format::Depth24Stencil8))
 {

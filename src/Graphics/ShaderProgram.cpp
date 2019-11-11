@@ -18,11 +18,11 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Common/FileSystem.h>
-#include <Game.h>
-#include <Graphics/ShaderProgram.h>
-#include <Graphics/Texture2D.h>
-#include <glm/gtc/type_ptr.hpp>
+#include "ShaderProgram.h"
+
+#include "Common/FileSystem.h"
+#include "Game.h"
+#include "Texture2D.h"
 
 namespace openblack::graphics
 {

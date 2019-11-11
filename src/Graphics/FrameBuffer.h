@@ -34,7 +34,7 @@ class FrameBuffer
 {
 public:
 	FrameBuffer() = delete;
-	FrameBuffer(std::string name, uint16_t width, uint16_t height, Format colorFormat,
+	FrameBuffer(const std::string& name, uint16_t width, uint16_t height, Format colorFormat,
 	            std::optional<Format> depthStencilFormat = {});
 	~FrameBuffer();
 

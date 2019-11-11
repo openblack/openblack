@@ -18,13 +18,13 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/MeshPack.h>
+#include "MeshPack.h"
 
-#include <3D/L3DMesh.h>
-#include <AllMeshes.h>
-#include <Common/IStream.h>
-#include <Common/MemoryStream.h>
-#include <Graphics/Texture2D.h>
+#include "3D/L3DMesh.h"
+#include "AllMeshes.h"
+#include "Common/IStream.h"
+#include "Common/MemoryStream.h"
+#include "Graphics/Texture2D.h"
 
 #include <spdlog/spdlog.h>
 
@@ -76,7 +76,7 @@ void createCompressedDDS(graphics::Texture2D* texture, uint8_t* buffer)
 		int32_t size;
 	};
 
-	dds_header* header = reinterpret_cast<dds_header*>(buffer);
+	auto* header = reinterpret_cast<dds_header*>(buffer);
 
 	// some assumptions:
 	// - no mipmaps

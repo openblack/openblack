@@ -20,9 +20,9 @@
 
 #pragma once
 
-#include <3D/LandCell.h>
-#include <Graphics/Mesh.h>
-#include <Graphics/ShaderProgram.h>
+#include "3D/LandCell.h"
+#include "Graphics/Mesh.h"
+#include "Graphics/ShaderProgram.h"
 
 #include <glm/glm.hpp>
 
@@ -59,7 +59,7 @@ class LandIsland;
 class LandBlock
 {
 public:
-	LandBlock(): _index(0), _cells(), _blockPosition(0, 0), _mapPosition(0, 0, 0, 0) {}
+	LandBlock(): _cells(), _blockPosition(0, 0), _mapPosition(0, 0, 0, 0) {}
 
 	void Load(void* block, size_t block_size);
 	void Draw(graphics::RenderPass viewId, const graphics::ShaderProgram& program, bool cullBack) const;
@@ -70,8 +70,8 @@ public:
 	[[nodiscard]] const glm::vec4& GetMapPosition() const { return _mapPosition; }
 
 private:
-	uint32_t _index; // the blocks index in the block array (do we need to know
-	                 // this?)
+	uint32_t _index {0}; // the blocks index in the block array (do we need to know
+	                     // this?)
 	std::array<LandCell, 289> _cells;
 	glm::ivec2 _blockPosition; // position in the 32x32 block map
 	glm::vec4 _mapPosition;    // absolute position in the world

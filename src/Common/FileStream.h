@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <Common/IStream.h>
+#include "IStream.h"
 
 #ifdef HAS_FILESYSTEM
 #include <filesystem>
@@ -46,8 +46,8 @@ public:
 	FileStream(const fs::path& filename, FileMode mode);
 	virtual ~FileStream();
 
-	std::size_t Position() const override;
-	std::size_t Size() const override;
+	[[nodiscard]] std::size_t Position() const override;
+	[[nodiscard]] std::size_t Size() const override;
 	void Seek(std::size_t position, SeekMode seek) override;
 
 	void Read(void* buffer, std::size_t length) override;

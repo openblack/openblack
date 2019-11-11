@@ -20,10 +20,12 @@
 
 #pragma once
 
-#include <GameWindow.h>
+#include "GameWindow.h"
+
 #include <LHVM/LHVM.h>
 #include <bgfx/bgfx.h>
 #include <glm/glm.hpp>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -69,30 +71,25 @@ class Game
 public:
 	struct Config
 	{
-		Config()
-		    : wireframe(false), waterDebug(false), showProfiler(false), drawSky(true), drawWater(true), drawIsland(true),
-		      drawEntities(true), drawDebugCross(true), drawBoundingBoxes(false), drawStreams(false), timeOfDay(1.0f),
-		      bumpMapStrength(1.0f), smallBumpMapStrength(1.0f), bgfxDebug(false)
-		{
-		}
+		Config() {}
 
-		bool wireframe;
-		bool waterDebug;
-		bool showProfiler;
+		bool wireframe {false};
+		bool waterDebug {false};
+		bool showProfiler {false};
 
-		bool drawSky;
-		bool drawWater;
-		bool drawIsland;
-		bool drawEntities;
-		bool drawDebugCross;
-		bool drawBoundingBoxes;
-		bool drawStreams;
+		bool drawSky {true};
+		bool drawWater {true};
+		bool drawIsland {true};
+		bool drawEntities {true};
+		bool drawDebugCross {true};
+		bool drawBoundingBoxes {false};
+		bool drawStreams {false};
 
-		float timeOfDay;
-		float bumpMapStrength;
-		float smallBumpMapStrength;
+		float timeOfDay {1.0f};
+		float bumpMapStrength {1.0f};
+		float smallBumpMapStrength {1.0f};
 
-		bool bgfxDebug;
+		bool bgfxDebug {false};
 	};
 
 	Game(Arguments&& args);

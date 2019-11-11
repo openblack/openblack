@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <Common/IStream.h>
+#include "IStream.h"
 
 namespace openblack
 {
@@ -30,8 +30,8 @@ class MemoryStream: public IStream
 public:
 	MemoryStream(void* data, std::size_t size);
 
-	std::size_t Position() const override;
-	std::size_t Size() const override;
+	[[nodiscard]] std::size_t Position() const override;
+	[[nodiscard]] std::size_t Size() const override;
 	void Seek(std::size_t position, SeekMode seek) override;
 
 	void Read(void* buffer, std::size_t length) override;

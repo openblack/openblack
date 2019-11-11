@@ -18,7 +18,7 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/Camera.h>
+#include "Camera.h"
 
 using namespace openblack;
 

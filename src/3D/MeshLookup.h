@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <AllMeshes.h>
-#include <Entities/Components/AnimatedStatic.h>
+#include "AllMeshes.h"
+#include "Entities/Components/AnimatedStatic.h"
 
 #include <spdlog/spdlog.h>
 

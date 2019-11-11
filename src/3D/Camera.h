@@ -72,7 +72,7 @@ public:
 	void handleKeyboardInput(const SDL_Event&);
 	void handleMouseInput(const SDL_Event&);
 
-	glm::mat4 getRotationMatrix() const;
+	[[nodiscard]] glm::mat4 getRotationMatrix() const;
 
 protected:
 	glm::vec3 _position;

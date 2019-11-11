@@ -18,7 +18,8 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Game.h>
+#include "Game.h"
+
 #include <cxxopts.hpp>
 #include <iostream>
 #include <map>

@@ -21,6 +21,7 @@
 #pragma once
 
 #include <SDL.h>
+
 #include <cstdint>
 #include <memory>
 #include <string>

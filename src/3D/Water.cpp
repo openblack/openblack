@@ -18,16 +18,17 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/Water.h>
+#include "Water.h"
 
-#include <Graphics/FrameBuffer.h>
-#include <Graphics/IndexBuffer.h>
-#include <Graphics/Mesh.h>
-#include <Graphics/ShaderProgram.h>
-#include <Graphics/Texture2D.h>
-#include <Graphics/VertexBuffer.h>
-#include <Gui.h>
+#include "Graphics/FrameBuffer.h"
+#include "Graphics/IndexBuffer.h"
+#include "Graphics/Mesh.h"
+#include "Graphics/ShaderProgram.h"
+#include "Graphics/Texture2D.h"
+#include "Graphics/VertexBuffer.h"
+#include "Gui.h"
 
+#include <glm/vec2.hpp>
 #include <imgui.h>
 
 using namespace openblack;

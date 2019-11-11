@@ -20,9 +20,11 @@
 
 #pragma once
 
-#include <Enums.h>
-#include <algorithm>
+#include "Enums.h"
+
 #include <glm/glm.hpp>
+
+#include <algorithm>
 #include <string>
 #include <vector>
 
