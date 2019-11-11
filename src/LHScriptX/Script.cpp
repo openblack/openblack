@@ -18,11 +18,14 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <LHScriptX/FeatureScriptCommands.h>
-#include <LHScriptX/Lexer.h>
-#include <LHScriptX/Script.h>
-#include <iostream>
+#include "Script.h"
+
+#include "FeatureScriptCommands.h"
+#include "Lexer.h"
+
 #include <spdlog/spdlog.h>
+
+#include <iostream>
 
 using namespace openblack;
 using namespace openblack::lhscriptx;

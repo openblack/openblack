@@ -21,8 +21,8 @@
 #pragma once
 
 #include "RenderPass.h"
+#include "ShaderProgram.h"
 
-#include <Graphics/ShaderProgram.h>
 #include <map>
 #include <string>
 

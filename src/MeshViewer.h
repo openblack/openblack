@@ -20,9 +20,10 @@
 
 #pragma once
 
-#include <AllMeshes.h>
-#include <Graphics/DebugLines.h>
-#include <Graphics/FrameBuffer.h>
+#include "AllMeshes.h"
+#include "Graphics/DebugLines.h"
+#include "Graphics/FrameBuffer.h"
+
 #include <memory>
 
 namespace openblack

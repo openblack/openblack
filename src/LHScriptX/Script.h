@@ -20,8 +20,9 @@
 
 #pragma once
 
-#include <Game.h>
-#include <LHScriptX/Lexer.h>
+#include "Game.h"
+#include "Lexer.h"
+
 #include <vector>
 
 namespace openblack::lhscriptx

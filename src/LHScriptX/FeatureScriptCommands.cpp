@@ -18,23 +18,25 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "3D/Camera.h"
+#include "FeatureScriptCommands.h"
 
-#include <3D/LandIsland.h>
-#include <AllMeshes.h>
-#include <Entities/Components/Abode.h>
-#include <Entities/Components/AnimatedStatic.h>
-#include <Entities/Components/Stream.h>
-#include <Entities/Components/Transform.h>
-#include <Entities/Components/Tree.h>
-#include <Entities/Registry.h>
-#include <Enums.h>
-#include <Game.h>
-#include <LHScriptX/FeatureScriptCommands.h>
+#include "3D/Camera.h"
+#include "3D/LandIsland.h"
+#include "AllMeshes.h"
+#include "Entities/Components/Abode.h"
+#include "Entities/Components/AnimatedStatic.h"
+#include "Entities/Components/Stream.h"
+#include "Entities/Components/Transform.h"
+#include "Entities/Components/Tree.h"
+#include "Entities/Registry.h"
+#include "Enums.h"
+#include "Game.h"
+
+#include <spdlog/spdlog.h>
+
 #include <cmath>
 #include <iostream>
 #include <random>
-#include <spdlog/spdlog.h>
 #include <tuple>
 
 using namespace openblack::lhscriptx;

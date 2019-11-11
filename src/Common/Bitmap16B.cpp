@@ -18,10 +18,10 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Common/Bitmap16B.h>
+#include "Bitmap16B.h"
 
-#include <Common/FileSystem.h>
-#include <Game.h>
+#include "FileSystem.h"
+#include "Game.h"
 
 #include <cassert>
 #include <cstring> // memset, memcpy

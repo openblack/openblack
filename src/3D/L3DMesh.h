@@ -20,10 +20,10 @@
 
 #pragma once
 
-#include "3D/L3DSubMesh.h"
-#include <Graphics/Mesh.h>
-#include <Graphics/ShaderProgram.h>
-#include <Graphics/Texture2D.h>
+#include "Graphics/Mesh.h"
+#include "Graphics/ShaderProgram.h"
+#include "Graphics/Texture2D.h"
+#include "L3DSubMesh.h"
 
 #include <glm/gtc/quaternion.hpp>
 #include <unordered_map>

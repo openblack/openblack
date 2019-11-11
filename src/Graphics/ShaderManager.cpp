@@ -18,21 +18,23 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cstdint>
+#include "ShaderManager.h"
 
-#include <Graphics/Shaders/fs_line.bin.h>
-#include <Graphics/Shaders/fs_object.bin.h>
-#include <Graphics/Shaders/fs_terrain.bin.h>
-#include <Graphics/Shaders/fs_water.bin.h>
-#include <Graphics/Shaders/vs_line.bin.h>
-#include <Graphics/Shaders/vs_line_instanced.bin.h>
-#include <Graphics/Shaders/vs_object.bin.h>
-#include <Graphics/Shaders/vs_object_instanced.bin.h>
-#include <Graphics/Shaders/vs_terrain.bin.h>
-#include <Graphics/Shaders/vs_water.bin.h>
+#include <cstdint> // Shaders below need uint8_t
 
-#include <3D/Camera.h>
-#include <Graphics/ShaderManager.h>
+#include "Shaders/fs_line.bin.h"
+#include "Shaders/fs_object.bin.h"
+#include "Shaders/fs_terrain.bin.h"
+#include "Shaders/fs_water.bin.h"
+#include "Shaders/vs_line.bin.h"
+#include "Shaders/vs_line_instanced.bin.h"
+#include "Shaders/vs_object.bin.h"
+#include "Shaders/vs_object_instanced.bin.h"
+#include "Shaders/vs_terrain.bin.h"
+#include "Shaders/vs_water.bin.h"
+
+#include "3D/Camera.h"
+
 #include <bgfx/embedded_shader.h>
 
 namespace openblack::graphics

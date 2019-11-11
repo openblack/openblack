@@ -18,12 +18,15 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Common/stb_image_write.h>
-#include <Graphics/Texture2D.h>
+#include "Texture2D.h"
+
+#include "Common/stb_image_write.h"
+
+#include <spdlog/spdlog.h>
+
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <spdlog/spdlog.h>
 
 namespace openblack::graphics
 {

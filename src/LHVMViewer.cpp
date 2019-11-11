@@ -19,9 +19,11 @@
  */
 
 #include "LHVMViewer.h"
-#include <array>
+
 #include <imgui.h>
 #include <imgui_memory_editor.h>
+
+#include <array>
 
 using openblack::LHVMViewer;
 

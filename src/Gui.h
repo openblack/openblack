@@ -21,9 +21,11 @@
 #pragma once
 
 #include "Graphics/RenderPass.h"
-#include <array>
+
 #include <bgfx/bgfx.h>
 #include <imgui.h>
+
+#include <array>
 #include <memory>
 
 typedef struct SDL_Window SDL_Window;

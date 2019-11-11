@@ -20,7 +20,8 @@
 
 #pragma once
 
-#include <Graphics/RenderPass.h>
+#include "RenderPass.h"
+
 #include <cstdint>
 #include <memory>
 

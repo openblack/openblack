@@ -21,9 +21,11 @@
 #pragma once
 
 #include "GameWindow.h"
+
 #include <LHVM/LHVM.h>
 #include <bgfx/bgfx.h>
 #include <glm/glm.hpp>
+
 #include <memory>
 #include <string>
 #include <vector>

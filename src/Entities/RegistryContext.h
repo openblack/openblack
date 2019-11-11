@@ -18,11 +18,13 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <AllMeshes.h>
-#include <Graphics/DebugLines.h>
+#include "AllMeshes.h"
+#include "Graphics/DebugLines.h"
+
 #include <bgfx/bgfx.h>
 #include <entt/entity/fwd.hpp>
 #include <glm/fwd.hpp>
+
 #include <map>
 #include <memory>
 #include <unordered_map>

@@ -18,7 +18,8 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Graphics/FrameBuffer.h>
+#include "FrameBuffer.h"
+
 #include <array>
 #include <cassert>
 

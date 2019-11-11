@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <Common/IStream.h>
+#include "IStream.h"
 
 namespace openblack
 {

@@ -18,7 +18,8 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <LHScriptX/Lexer.h>
+#include "Lexer.h"
+
 #include <cctype>
 
 using namespace openblack::lhscriptx;

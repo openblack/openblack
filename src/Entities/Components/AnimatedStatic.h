@@ -20,7 +20,8 @@
 
 #pragma once
 
-#include <Enums.h>
+#include "Enums.h"
+
 #include <string>
 #include <unordered_map>
 

@@ -21,12 +21,14 @@
 #pragma once
 
 #include "Graphics/RenderPass.h"
+
 #include <SDL.h>
-#include <array>
 #include <bgfx/bgfx.h>
+#include <glm/fwd.hpp>
+
+#include <array>
 #include <chrono>
 #include <cstdint>
-#include <glm/fwd.hpp>
 #include <memory>
 #include <string_view>
 #include <vector>

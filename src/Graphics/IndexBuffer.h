@@ -21,6 +21,7 @@
 #pragma once
 
 #include <bgfx/bgfx.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <string>

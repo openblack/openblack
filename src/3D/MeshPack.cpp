@@ -18,13 +18,13 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/MeshPack.h>
+#include "MeshPack.h"
 
-#include <3D/L3DMesh.h>
-#include <AllMeshes.h>
-#include <Common/IStream.h>
-#include <Common/MemoryStream.h>
-#include <Graphics/Texture2D.h>
+#include "3D/L3DMesh.h"
+#include "AllMeshes.h"
+#include "Common/IStream.h"
+#include "Common/MemoryStream.h"
+#include "Graphics/Texture2D.h"
 
 #include <spdlog/spdlog.h>
 

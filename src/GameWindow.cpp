@@ -20,14 +20,15 @@
 
 #include "GameWindow.h"
 
+#include "Renderer.h"
+
 #include <SDL_syswm.h>
-#include <iostream>
 #include <spdlog/spdlog.h>
 #if defined(SDL_VIDEO_DRIVER_WAYLAND)
 #include <wayland-egl.h>
 #endif // defined(SDL_VIDEO_DRIVER_WAYLAND)
 
-#include "Renderer.h"
+#include <iostream>
 
 using namespace openblack;
 

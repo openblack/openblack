@@ -18,12 +18,12 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/L3DMesh.h>
+#include "L3DMesh.h"
 
-#include <3D/MeshPack.h>
-#include <Common/FileSystem.h>
-#include <Common/IStream.h>
-#include <Game.h>
+#include "3D/MeshPack.h"
+#include "Common/FileSystem.h"
+#include "Common/IStream.h"
+#include "Game.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>

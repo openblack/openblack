@@ -18,12 +18,15 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Graphics/DebugLines.h>
-#include <Graphics/Mesh.h>
-#include <Graphics/VertexBuffer.h>
-#include <array>
+#include "DebugLines.h"
+
+#include "Mesh.h"
+#include "VertexBuffer.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
+
+#include <array>
 
 namespace openblack::graphics
 {

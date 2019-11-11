@@ -20,9 +20,9 @@
 
 #pragma once
 
-#include <3D/LandCell.h>
-#include <Graphics/Mesh.h>
-#include <Graphics/ShaderProgram.h>
+#include "3D/LandCell.h"
+#include "Graphics/Mesh.h"
+#include "Graphics/ShaderProgram.h"
 
 #include <glm/glm.hpp>
 

@@ -1,4 +1,4 @@
-#include <3D/MeshLookup.h>
+#include "MeshLookup.h"
 
 using namespace openblack;
 

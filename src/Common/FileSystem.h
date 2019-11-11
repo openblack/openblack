@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <Common/FileStream.h>
+#include "FileStream.h"
 
 #include <cstddef>
 #include <list>

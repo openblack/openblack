@@ -18,16 +18,18 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "MeshViewer.h"
+
 #include "3D/L3DMesh.h"
-#include <3D/MeshPack.h>
-#include <Game.h>
-#include <Graphics/IndexBuffer.h>
-#include <Graphics/ShaderManager.h>
-#include <Graphics/Texture2D.h>
-#include <Graphics/VertexBuffer.h>
-#include <Gui.h>
-#include <MeshViewer.h>
-#include <Renderer.h>
+#include "3D/MeshPack.h"
+#include "Game.h"
+#include "Graphics/IndexBuffer.h"
+#include "Graphics/ShaderManager.h"
+#include "Graphics/Texture2D.h"
+#include "Graphics/VertexBuffer.h"
+#include "Gui.h"
+#include "Renderer.h"
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui.h>
 #include <imgui_bitfield.h>

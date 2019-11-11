@@ -20,8 +20,7 @@
 
 #pragma once
 
-#include <Enums.h>
-#include <string>
+#include "Enums.h"
 
 namespace openblack
 {

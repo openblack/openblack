@@ -18,13 +18,13 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/LandIsland.h>
+#include "LandIsland.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <Common/FileSystem.h>
-#include <Common/IStream.h>
-#include <Common/stb_image_write.h>
-#include <Game.h>
+#include "Common/FileSystem.h"
+#include "Common/IStream.h"
+#include "Common/stb_image_write.h"
+#include "Game.h"
 
 #include <spdlog/spdlog.h>
 

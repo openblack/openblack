@@ -18,27 +18,31 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "Game.h"
+
 #include "3D/Camera.h"
-#include <3D/L3DMesh.h>
-#include <3D/LandIsland.h>
-#include <3D/MeshPack.h>
-#include <3D/Sky.h>
-#include <3D/Water.h>
-#include <Common/FileSystem.h>
-#include <Entities/Registry.h>
-#include <Game.h>
-#include <GameWindow.h>
-#include <GitSHA1.h>
-#include <Gui.h>
-#include <LHScriptX/Script.h>
-#include <MeshViewer.h>
-#include <Profiler.h>
-#include <Renderer.h>
+#include "3D/L3DMesh.h"
+#include "3D/LandIsland.h"
+#include "3D/MeshPack.h"
+#include "3D/Sky.h"
+#include "3D/Water.h"
+#include "Common/FileSystem.h"
+#include "Entities/Registry.h"
+#include "GameWindow.h"
+#include "GitSHA1.h"
+#include "Gui.h"
+#include "LHScriptX/Script.h"
+#include "MeshViewer.h"
+#include "Profiler.h"
+#include "Renderer.h"
+
 #include <SDL.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/intersect.hpp>
 #include <spdlog/spdlog.h>
+
+#include <cstdint>
 #include <string>
 
 #ifdef WIN32

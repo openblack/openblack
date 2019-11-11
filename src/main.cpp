@@ -19,6 +19,7 @@
  */
 
 #include "Game.h"
+
 #include <cxxopts.hpp>
 #include <iostream>
 #include <map>

@@ -20,7 +20,8 @@
 
 #pragma once
 
-#include <LHScriptX/CommandSignature.h>
+#include "CommandSignature.h"
+
 #include <array>
 
 namespace openblack::lhscriptx
