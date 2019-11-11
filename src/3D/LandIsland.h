@@ -73,8 +73,8 @@ private:
 	std::vector<LandBlock> _landBlocks;
 	std::vector<Country> _countries;
 
-	unsigned int _materialCount;
-	unsigned int _lowresCount;
+	unsigned int _materialCount{0};
+	unsigned int _lowresCount{0};
 
 	std::array<uint8_t, 1024> _blockIndexLookup;
 

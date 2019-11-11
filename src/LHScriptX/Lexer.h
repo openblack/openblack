@@ -137,7 +137,7 @@ private:
 class Lexer
 {
 public:
-	Lexer(const std::string& source);
+	Lexer(std::string  source);
 
 	Token GetToken();
 
