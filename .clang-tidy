@@ -1,0 +1,7 @@
+---
+Checks: >-
+  -*,
+  modernize-*,
+  -modernize-use-equals-default,
+  -modernize-use-trailing-return-type,
+  -modernize-use-using,
