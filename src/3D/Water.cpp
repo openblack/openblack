@@ -28,6 +28,7 @@
 #include "Graphics/VertexBuffer.h"
 #include "Gui.h"
 
+#include <glm/vec2.hpp>
 #include <imgui.h>
 
 using namespace openblack;

@@ -24,6 +24,8 @@
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
 
+#include <imgui.h>
+
 #include <memory>
 
 namespace openblack
