@@ -58,11 +58,11 @@ public:
 	using MeshesVec = std::vector<std::unique_ptr<L3DMesh>>;
 	using TexturesVec = std::vector<std::unique_ptr<graphics::Texture2D>>;
 
-	const MeshesVec& GetMeshes() const { return _meshes; }
-	const TexturesVec& GetTextures() const { return _textures; }
+	[[nodiscard]] const MeshesVec& GetMeshes() const { return _meshes; }
+	[[nodiscard]] const TexturesVec& GetTextures() const { return _textures; }
 
-	const L3DMesh& GetMesh(int id) const { return *_meshes.at(id); }
-	const graphics::Texture2D& GetTexture(int id) const { return *_textures.at(id); }
+	[[nodiscard]] const L3DMesh& GetMesh(int id) const { return *_meshes.at(id); }
+	[[nodiscard]] const graphics::Texture2D& GetTexture(int id) const { return *_textures.at(id); }
 
 private:
 	void loadTextures(IStream&);

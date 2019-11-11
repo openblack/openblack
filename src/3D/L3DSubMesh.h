@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <3D/AxisAlignedBoundingBox.h>
+#include "3D/AxisAlignedBoundingBox.h"
 #include <Graphics/RenderPass.h>
 
 #include <bgfx/bgfx.h>

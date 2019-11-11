@@ -18,7 +18,7 @@
  * along with openblack. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <3D/Camera.h>
+#include "3D/Camera.h"
 #include <3D/L3DMesh.h>
 #include <3D/LandIsland.h>
 #include <3D/MeshPack.h>

@@ -48,7 +48,7 @@ private:
 	// void processCommand(const std::string& command, std::vector<std::string>
 	// parameters);
 
-	bool isCommand(const std::string& identifier) const;
+	[[nodiscard]] bool isCommand(const std::string& identifier) const;
 	void runCommand(const std::string& identifier, const std::vector<Token>& args);
 
 	const Token* peekToken(Lexer&);

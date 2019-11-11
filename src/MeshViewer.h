@@ -42,14 +42,14 @@ public:
 	void DrawScene();
 
 private:
-	bool _open;
+	bool _open {false};
 	static constexpr graphics::RenderPass _viewId = graphics::RenderPass::MeshViewer;
-	MeshId _selectedMesh;
-	int _selectedSubMesh;
+	MeshId _selectedMesh {MeshId::Dummy};
+	int _selectedSubMesh {0};
 	ImGuiTextFilter _filter;
-	uint32_t _meshFlagFilter;
+	uint32_t _meshFlagFilter {-1};
 	glm::vec3 _cameraPosition;
-	bool _viewBoundingBox;
+	bool _viewBoundingBox {false};
 	std::unique_ptr<graphics::DebugLines> _boundingBox;
 	std::unique_ptr<graphics::FrameBuffer> _frameBuffer;
 };

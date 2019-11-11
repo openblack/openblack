@@ -32,7 +32,7 @@ namespace openblack::entities
 {
 struct RenderContext
 {
-	RenderContext(): instanceUniformBuffer(BGFX_INVALID_HANDLE), dirty(true), hasBoundingBoxes(false) {};
+	RenderContext(): instanceUniformBuffer(BGFX_INVALID_HANDLE) {};
 	~RenderContext()
 	{
 		if (bgfx::isValid(instanceUniformBuffer))
@@ -67,8 +67,8 @@ struct RenderContext
 	/// the instances of entities and their bounding boxes.
 	bgfx::DynamicVertexBufferHandle instanceUniformBuffer;
 
-	bool dirty;
-	bool hasBoundingBoxes;
+	bool dirty {true};
+	bool hasBoundingBoxes {false};
 };
 
 using TownId = int;

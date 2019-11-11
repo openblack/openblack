@@ -28,10 +28,10 @@ namespace openblack
 class LandCell
 {
 public:
-	LandCell(): altitude(0), properties(0x40) {}
+	LandCell() {}
 
 	inline uint8_t Light() { return color.a; }
-	inline uint8_t Altitude() const { return altitude; }
+	[[nodiscard]] inline uint8_t Altitude() const { return altitude; }
 	inline bool Split() { return properties & 0x80; }
 	inline bool HasWater() { return properties & 0x10; }
 	inline bool Coastline() { return properties & 0x20; }
@@ -52,10 +52,10 @@ public:
 private:
 	rgba_t color;
 
-	uint8_t altitude;
+	uint8_t altitude {0};
 	uint8_t savecolor;
 
-	uint8_t properties;
+	uint8_t properties {0x40};
 	// Sound properties: coastal sound, land sound, sea sound, freshwater sound
 	uint8_t flags2;
 };

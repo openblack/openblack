@@ -76,7 +76,7 @@ void createCompressedDDS(graphics::Texture2D* texture, uint8_t* buffer)
 		int32_t size;
 	};
 
-	dds_header* header = reinterpret_cast<dds_header*>(buffer);
+	auto* header = reinterpret_cast<dds_header*>(buffer);
 
 	// some assumptions:
 	// - no mipmaps

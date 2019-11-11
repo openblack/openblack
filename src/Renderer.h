@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <Graphics/RenderPass.h>
+#include "Graphics/RenderPass.h"
 #include <SDL.h>
 #include <array>
 #include <bgfx/bgfx.h>

@@ -25,9 +25,7 @@
 #include <cstring>
 #include <stdexcept>
 
-namespace openblack
-{
-namespace LHVM
+namespace openblack::LHVM
 {
 
 void LHVM::LoadBinary(const std::string& filename)
@@ -181,5 +179,4 @@ std::string VMInstruction::Disassemble() const
 	return opcode_name;
 }
 
-} // namespace LHVM
-} // namespace openblack
+} // namespace openblack::LHVM

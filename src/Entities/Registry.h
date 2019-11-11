@@ -49,7 +49,7 @@ public:
 		return _registry.assign<Component>(entity, std::forward<Args>(args)...);
 	}
 	RegistryContext& Context();
-	const RegistryContext& Context() const;
+	[[nodiscard]] const RegistryContext& Context() const;
 	;
 	void Reset()
 	{
