@@ -165,11 +165,10 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 			auto brMat = countries[br.Country()].MapMaterials[br.Altitude() + island.GetNoise(bx + x + 1, bz + z + 1)];
 
 			// use a lambda so we're not repeating ourselves
-			auto make_vert = [](glm::vec3 height, glm::vec3 weight, MapMaterial m1, MapMaterial m2, MapMaterial m3,
-			                    LandCell cell) -> LandVertex {
-				return LandVertex(height, weight, m1.FirstMaterialIndex, m2.FirstMaterialIndex, m3.FirstMaterialIndex,
-				                  m1.SecondMaterialIndex, m2.SecondMaterialIndex, m3.SecondMaterialIndex, m1.Coeficient,
-				                  m2.Coeficient, m3.Coeficient, cell.Light(), cell.Alpha());
+			auto make_vert = [](glm::vec3 height, glm::vec3 weight, MapMaterial m[3], LandCell cell) -> LandVertex {
+				return LandVertex(height, weight, m[0].FirstMaterialIndex, m[1].FirstMaterialIndex, m[2].FirstMaterialIndex,
+				                  m[0].SecondMaterialIndex, m[1].SecondMaterialIndex, m[2].SecondMaterialIndex, m[0].Coeficient,
+				                  m[1].Coeficient, m[2].Coeficient, cell.Light(), cell.Alpha());
 			};
 
 			// cell splitting
@@ -178,29 +177,33 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 			{
 				// TR/BR/TL  # #
 				//             #
-				vertices[i++] = make_vert(pTR, glm::vec3(0, 1, 0), tlMat, trMat, brMat, tr);
-				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), tlMat, trMat, brMat, br);
-				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), tlMat, trMat, brMat, tl);
+				MapMaterial trbrtl[3] = {tlMat, trMat, brMat};
+				vertices[i++] = make_vert(pTR, glm::vec3(0, 1, 0), trbrtl, tr);
+				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), trbrtl, br);
+				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), trbrtl, tl);
 
 				// BR/BL/TL  #
 				//           # #
-				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), tlMat, blMat, brMat, br);
-				vertices[i++] = make_vert(pBL, glm::vec3(0, 1, 0), tlMat, blMat, brMat, bl);
-				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), tlMat, blMat, brMat, tl);
+				MapMaterial brbltl[3] = {tlMat, blMat, brMat};
+				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), brbltl, br);
+				vertices[i++] = make_vert(pBL, glm::vec3(0, 1, 0), brbltl, bl);
+				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), brbltl, tl);
 			}
 			else
 			{
 				// BL/TL/TR  # #
 				//           #
-				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), blMat, tlMat, trMat, bl);
-				vertices[i++] = make_vert(pTL, glm::vec3(0, 1, 0), blMat, tlMat, trMat, tl);
-				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), blMat, tlMat, trMat, tr);
+				MapMaterial bltltr[3] = {blMat, tlMat, trMat};
+				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), bltltr, bl);
+				vertices[i++] = make_vert(pTL, glm::vec3(0, 1, 0), bltltr, tl);
+				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), bltltr, tr);
 
 				// TR/BR/BL    #
 				//           # #
-				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), blMat, brMat, trMat, tr);
-				vertices[i++] = make_vert(pBR, glm::vec3(0, 1, 0), blMat, brMat, trMat, br);
-				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), blMat, brMat, trMat, bl);
+				MapMaterial trbrbl[3] = {blMat, brMat, trMat};
+				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), trbrbl, tr);
+				vertices[i++] = make_vert(pBR, glm::vec3(0, 1, 0), trbrbl, br);
+				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), trbrbl, bl);
 			}
 		}
 	}
