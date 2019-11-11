@@ -47,7 +47,7 @@ private:
 	MeshId _selectedMesh {MeshId::Dummy};
 	int _selectedSubMesh {0};
 	ImGuiTextFilter _filter;
-	uint32_t _meshFlagFilter {-1};
+	uint32_t _meshFlagFilter {0xFFFFFFFF};
 	glm::vec3 _cameraPosition;
 	bool _viewBoundingBox {false};
 	std::unique_ptr<graphics::DebugLines> _boundingBox;
