@@ -98,9 +98,9 @@ public:
 	{
 		struct RGBA4
 		{
-			uint16_t R : 4;
-			uint16_t G : 4;
 			uint16_t B : 4;
+			uint16_t G : 4;
+			uint16_t R : 4;
 			uint16_t A : 4;
 		};
 		static_assert(sizeof(RGBA4) == sizeof(uint16_t));
