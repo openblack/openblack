@@ -191,6 +191,9 @@ protected:
 	/// Read file from the input source
 	virtual void ReadFile(std::istream& stream);
 
+	/// Write file to the input source
+	virtual void WriteFile(std::ostream& stream) const;
+
 public:
 	LNDFile();
 
@@ -198,6 +201,9 @@ public:
 
 	/// Read l3d file from the filesystem
 	void Open(const std::string& file);
+
+	/// Write l3d file to path on the filesystem
+	void Write(const std::string& file);
 
 	[[nodiscard]] const std::string& GetFilename() const { return _filename; }
 	[[nodiscard]] const auto& GetHeader() const { return _header; }

@@ -320,6 +320,16 @@ int PrintUnaccounted(openblack::lnd::LNDFile& lnd)
 	return EXIT_SUCCESS;
 }
 
+int WriteFile(const std::string outFilename)
+{
+	openblack::lnd::LNDFile lnd {};
+
+	// TODO(bwrsandman): expand on this to create files with contents
+	lnd.Write(outFilename);
+
+	return EXIT_SUCCESS;
+}
+
 struct Arguments
 {
 	enum class Mode
@@ -331,6 +341,7 @@ struct Arguments
 		Materials,
 		Extra,
 		Unaccounted,
+		Write,
 	};
 	std::vector<std::string> filenames;
 	Mode mode;
@@ -350,6 +361,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		("m,material", "Print Material Contents.", cxxopts::value<std::vector<std::string>>())
 		("x,extra", "Print Extra Content.", cxxopts::value<std::vector<std::string>>())
 		("u,unaccounted", "Print Unaccounted bytes Content.", cxxopts::value<std::vector<std::string>>())
+		("w,write", "Create LND file.", cxxopts::value<std::string>())
 	;
 
 	try
@@ -404,6 +416,12 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			args.filenames = result["unaccounted"].as<std::vector<std::string>>();
 			return true;
 		}
+		if (result["write"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Write;
+			args.outFilename = result["write"].as<std::string>();
+			return true;
+		}
 	}
 	catch (cxxopts::OptionParseException& err)
 	{
@@ -422,6 +440,11 @@ int main(int argc, char* argv[])
 	if (!parseOptions(argc, argv, args, return_code))
 	{
 		return return_code;
+	}
+
+	if (args.mode == Arguments::Mode::Write)
+	{
+		return WriteFile(args.outFilename);
 	}
 
 	for (auto& filename : args.filenames)

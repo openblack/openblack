@@ -177,6 +177,8 @@ void L3DFile::Fail(const std::string& msg)
 	throw std::runtime_error("L3D Error: " + msg + "\nFilename: " + _filename);
 }
 
+L3DFile::L3DFile() : _isLoaded(false) {}
+
 void L3DFile::ReadFile(std::istream& stream)
 {
 	assert(!_isLoaded);
@@ -477,8 +479,6 @@ void L3DFile::ReadFile(std::istream& stream)
 
 	_isLoaded = true;
 }
-
-L3DFile::L3DFile() : _isLoaded(false) {}
 
 void L3DFile::WriteFile(std::ostream& stream) const
 {

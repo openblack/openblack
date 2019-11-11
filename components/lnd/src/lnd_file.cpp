@@ -159,6 +159,7 @@ void LNDFile::ReadFile(std::istream& stream)
 		Fail("File has non standard country size got " + std::to_string(_header.countrySize) + " expected " + std::to_string(sizeof(LNDCountry)));
 	}
 
+	// Read low resolution textures
 	_lowResolutionTextures.resize(_header.lowResolutionCount);
 	for (auto& texture : _lowResolutionTextures)
 	{
@@ -212,6 +213,35 @@ void LNDFile::ReadFile(std::istream& stream)
 	}
 }
 
+void LNDFile::WriteFile(std::ostream& stream) const
+{
+	// First 1052 bytes
+	stream.write(reinterpret_cast<const char*>(&_header), sizeof(LNDHeader));
+
+	// Write low resolution textures
+	for (auto& texture : _lowResolutionTextures)
+	{
+		stream.write(reinterpret_cast<const char*>(&texture.header), sizeof(texture.header));
+		stream.write(reinterpret_cast<const char*>(texture.texels.data()), texture.texels.size() * sizeof(texture.texels[0]));
+	}
+
+	// Write Blocks
+	stream.write(reinterpret_cast<const char*>(_blocks.data()), _blocks.size() * sizeof(_blocks[0]));
+
+	// Read Countries
+	stream.write(reinterpret_cast<const char*>(_countries.data()), _countries.size() * sizeof(_countries[0]));
+
+	// Read Materials
+	stream.write(reinterpret_cast<const char*>(_materials.data()), _materials.size() * sizeof(_materials[0]));
+
+	// Read Extra textures (noise and bump map)
+	stream.write(reinterpret_cast<const char*>(&_extra), sizeof(_extra));
+
+	// TODO(bwrsandman): Figure out what the unaccounted bytes are for and write
+	//                   them to the file
+	stream.write(reinterpret_cast<const char*>(_unaccounted.data()), _unaccounted.size() * sizeof(_unaccounted[0]));
+}
+
 void LNDFile::Open(const std::string& file)
 {
 	assert(!_isLoaded);
@@ -226,4 +256,29 @@ void LNDFile::Open(const std::string& file)
 	}
 
 	ReadFile(stream);
+}
+
+void LNDFile::Write(const std::string& file)
+{
+	assert(!_isLoaded);
+
+	_filename = file;
+
+	std::ofstream stream(_filename, std::ios::binary);
+
+	if (!stream.is_open())
+	{
+		Fail("Could not open file.");
+	}
+
+	// Prepare header
+	_header.blockCount = static_cast<uint32_t>(_blocks.size() + 1);
+	_header.materialCount = static_cast<uint32_t>(_materials.size());
+	_header.countryCount = static_cast<uint32_t>(_countries.size());
+	_header.blockSize = static_cast<uint32_t>(sizeof(LNDBlock));
+	_header.materialSize = static_cast<uint32_t>(sizeof(LNDMaterial));
+	_header.countrySize = static_cast<uint32_t>(sizeof(LNDCountry));
+	_header.lowResolutionCount = static_cast<uint32_t>(_lowResolutionTextures.size());
+
+	WriteFile(stream);
 }
