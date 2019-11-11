@@ -143,7 +143,7 @@ void openblack::LandIsland::Update(float timeOfDay, float bumpMapStrength, float
 
 float LandIsland::GetHeightAt(glm::vec2 vec) const
 {
-	return GetCell(vec.x * 0.1f, vec.y * 0.1f).Altitude() * LandIsland::HeightUnit;
+	return GetCell(vec * 0.1f).Altitude() * LandIsland::HeightUnit;
 }
 
 uint8_t LandIsland::GetNoise(int x, int y)
@@ -151,13 +151,13 @@ uint8_t LandIsland::GetNoise(int x, int y)
 	return _noiseMap[(y & 0xFF) + 256 * (x & 0xFF)];
 }
 
-const LandBlock* LandIsland::GetBlock(int8_t x, int8_t z) const
+const LandBlock* LandIsland::GetBlock(const glm::u8vec2& coordinates) const
 {
 	// our blocks can only be between [0-31, 0-31]
-	if (x < 0 || x > 32 || z < 0 || z > 32)
+	if (coordinates.x > 32 || coordinates.y > 32)
 		return nullptr;
 
-	const uint8_t blockIndex = _blockIndexLookup[x * 32 + z];
+	const uint8_t blockIndex = _blockIndexLookup[coordinates.x * 32 + coordinates.y];
 	if (blockIndex == 0)
 		return nullptr;
 
@@ -166,17 +166,24 @@ const LandBlock* LandIsland::GetBlock(int8_t x, int8_t z) const
 
 const LandCell EmptyCell;
 
-const LandCell& LandIsland::GetCell(int x, int z) const
+const LandCell& LandIsland::GetCell(const glm::u16vec2& coordinates) const
 {
-	if (x < 0 || x > 511 || z < 0 || z > 511)
-		return EmptyCell; // return empty water cell
+	if (coordinates.x > 511 || coordinates.y > 511)
+	{
+		return EmptyCell;
+	}
 
-	const uint8_t blockIndex = _blockIndexLookup[32 * (x >> 4) + (z >> 4)];
+	const uint16_t lookupIndex = ((coordinates.x & ~0xFU) << 1U) | (coordinates.y >> 4U);
+	const uint16_t cellIndex = (coordinates.x & 0xFU) * 0x11u + (coordinates.y & 0xFU);
+
+	const uint8_t blockIndex = _blockIndexLookup[lookupIndex];
 
 	if (blockIndex == 0)
-		return EmptyCell; // return empty water cell
+	{
+		return EmptyCell;
+	}
 
-	return _landBlocks[blockIndex - 1].GetCells()[(z & 0xF) + 17 * (x & 0xF)];
+	return _landBlocks[blockIndex - 1].GetCells()[cellIndex];
 }
 
 void LandIsland::Draw(graphics::RenderPass viewId, const ShaderProgram& program, bool cullBack) const

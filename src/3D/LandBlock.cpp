@@ -130,8 +130,8 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 
 	auto countries = island.GetCountries();
 
-	auto neighbourBlockR = island.GetBlock(_blockPosition.x + 1, _blockPosition.y);
-	auto neighbourBlockUp = island.GetBlock(_blockPosition.x, _blockPosition.y + 1);
+	auto neighbourBlockR = island.GetBlock(glm::u8vec2(_blockPosition) + glm::u8vec2(1, 0));
+	auto neighbourBlockUp = island.GetBlock(glm::u8vec2(_blockPosition) + glm::u8vec2(0, 1));
 
 	// we'll loop through each cell, 16x16
 	// (the array is 17x17 but the 17th block is questionable data)
@@ -144,10 +144,10 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 	{
 		for (int z = 0; z < 16; z++)
 		{
-			LandCell tl = island.GetCell(bx + x + 0, bz + z + 0);
-			LandCell tr = island.GetCell(bx + x + 1, bz + z + 0);
-			LandCell bl = island.GetCell(bx + x + 0, bz + z + 1);
-			LandCell br = island.GetCell(bx + x + 1, bz + z + 1);
+			LandCell tl = island.GetCell(glm::u16vec2(bx + x + 0, bz + z + 0));
+			LandCell tr = island.GetCell(glm::u16vec2(bx + x + 1, bz + z + 0));
+			LandCell bl = island.GetCell(glm::u16vec2(bx + x + 0, bz + z + 1));
+			LandCell br = island.GetCell(glm::u16vec2(bx + x + 1, bz + z + 1));
 
 			// construct positions from cell altitudes
 			glm::vec3 pTL((x + 0) * LandIsland::CellSize, tl.Altitude() * LandIsland::HeightUnit,

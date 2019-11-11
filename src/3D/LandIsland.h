@@ -62,8 +62,8 @@ public:
 	// const uint8_t GetAltitudeAt(glm::ivec2) const;
 
 	[[nodiscard]] float GetHeightAt(glm::vec2) const;
-	[[nodiscard]] const LandBlock* GetBlock(int8_t x, int8_t y) const;
-	[[nodiscard]] const LandCell& GetCell(int x, int y) const;
+	[[nodiscard]] const LandBlock* GetBlock(const glm::u8vec2& coordinates) const;
+	[[nodiscard]] const LandCell& GetCell(const glm::u16vec2& coordinates) const;
 
 	// Debug
 	void DumpTextures();
