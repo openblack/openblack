@@ -31,20 +31,11 @@
 
 namespace openblack
 {
-class IStream;
 
-struct MapMaterial
+namespace lnd
 {
-	uint32_t FirstMaterialIndex;
-	uint32_t SecondMaterialIndex;
-	uint32_t Coeficient;
-};
-
-struct Country
-{
-	uint32_t TerrainType;
-	MapMaterial MapMaterials[256]; // altitude 0-255
-};
+struct LNDCountry;
+}
 
 class LandIsland
 {
@@ -55,7 +46,7 @@ public:
 	LandIsland();
 	~LandIsland();
 
-	void LoadFromFile(IStream& file);
+	void LoadFromFile(const std::string& filename);
 
 	void Update(float timeOfDay, float bumpMapStrength, float smallBumpMapStrength);
 
@@ -63,27 +54,23 @@ public:
 
 	[[nodiscard]] float GetHeightAt(glm::vec2) const;
 	[[nodiscard]] const LandBlock* GetBlock(const glm::u8vec2& coordinates) const;
-	[[nodiscard]] const LandCell& GetCell(const glm::u16vec2& coordinates) const;
+	[[nodiscard]] const lnd::LNDCell& GetCell(const glm::u16vec2& coordinates) const;
 
 	// Debug
 	void DumpTextures();
 	void DumpMaps();
 
 private:
-	std::vector<LandBlock> _landBlocks;
-	std::vector<Country> _countries;
-
-	unsigned int _materialCount{0};
-	unsigned int _lowresCount{0};
-
 	std::array<uint8_t, 1024> _blockIndexLookup;
+	std::vector<LandBlock> _landBlocks;
+	std::vector<lnd::LNDCountry> _countries;
 
 	// Renderer
 public:
 	void Draw(graphics::RenderPass viewId, const graphics::ShaderProgram& program, bool cullBack) const;
 
 	[[nodiscard]] const std::vector<LandBlock>& GetBlocks() const { return _landBlocks; }
-	[[nodiscard]] const std::vector<Country>& GetCountries() const { return _countries; }
+	[[nodiscard]] const std::vector<lnd::LNDCountry>& GetCountries() const { return _countries; }
 
 	uint8_t GetNoise(int x, int y);
 	graphics::Texture2D* GetSmallBumpMap() { return _textureSmallBump.get(); }

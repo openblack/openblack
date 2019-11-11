@@ -322,15 +322,13 @@ void Game::LoadLandscape(const std::string& name)
 	if (_landIsland)
 		_landIsland.reset();
 
-	auto fixedName = FileSystem::FixPath(name);
+	auto fixedName = Game::instance()->GetFileSystem().FindPath(FileSystem::FixPath(name));
 
 	if (!_fileSystem->Exists(fixedName))
 		throw std::runtime_error("Could not find landscape " + name);
 
-	auto file = _fileSystem->Open(fixedName, FileMode::Read);
-
 	_landIsland = std::make_unique<LandIsland>();
-	_landIsland->LoadFromFile(*file);
+	_landIsland->LoadFromFile(fixedName.u8string());
 }
 
 void Game::LoadVariables()

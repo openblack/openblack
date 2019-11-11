@@ -44,6 +44,7 @@
 #include <bx/timer.h>
 #include <imgui.h>
 #include <imgui_widget_flamegraph.h>
+#include <lnd_file.h>
 #ifdef _WIN32
 #include <SDL2/SDL_syswm.h>
 #endif

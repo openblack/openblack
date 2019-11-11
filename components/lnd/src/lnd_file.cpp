@@ -45,7 +45,12 @@
  *                 1 byte luminosity value
  *                 1 byte altitude value
  *                 1 byte save color boolean
- *                 1 byte flag for properties
+ *                 1 byte flag for properties where:
+ *                         The upper 4 bits represent the country code
+ *                         1 bit represents if there is water
+ *                         1 bit represents if it is a coast line
+ *                         1 bit represents if it is fully water TODO: Deep Water?
+ *                         1 bit represents if there is a split
  *                 1 byte flag for sound effects
  *         index
  *         map X

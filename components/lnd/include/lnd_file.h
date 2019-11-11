@@ -55,19 +55,26 @@ struct LNDLowResolutionTexture
 
 struct LNDCell
 {
+	struct Properties
+	{
+		uint8_t country : 4;
+		uint8_t hasWater : 1;
+		uint8_t coastLine : 1;
+		uint8_t fullWater : 1; // TODO: could mean deep water
+		uint8_t split : 1;
+	};
+
 	uint8_t r;
 	uint8_t g;
 	uint8_t b;
 	uint8_t luminosity;
-
 	uint8_t altitude;
 	uint8_t saveColor;
-
-	// TODO(bwrsandman): Replace with enum
-	uint8_t properties;
+	Properties properties;
 	/// Sound properties: coastal sound, land sound, sea sound, freshwater sound
 	uint8_t flags;
 };
+static_assert(sizeof(LNDCell::Properties) == 1);
 static_assert(sizeof(LNDCell) == 8);
 
 /// TODO(bwrsandman): determine if some of these uints are bools

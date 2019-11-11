@@ -108,10 +108,46 @@ int PrintBlocks(openblack::lnd::LNDFile& lnd)
 		std::printf("block #%u:\n", i++);
 		std::printf("cells:\n");
 		uint32_t j = 0;
+		auto flagToStr = [] (const openblack::lnd::LNDCell::Properties& properties) {
+			std::string ret;
+			if (properties.hasWater)
+			{
+				if (!ret.empty())
+				{
+					ret += "|";
+				}
+				ret += "hasWater";
+			}
+			if (properties.coastLine)
+			{
+				if (!ret.empty())
+				{
+					ret += "|";
+				}
+				ret += "coastLine";
+			}
+			if (properties.fullWater)
+			{
+				if (!ret.empty())
+				{
+					ret += "|";
+				}
+				ret += "fullWater";
+			}
+			if (properties.split)
+			{
+				if (!ret.empty())
+				{
+					ret += "|";
+				}
+				ret += "split";
+			}
+			return ret;
+		};
 		for (auto& cell : block.cells)
 		{
-			std::printf("    %u: r %u, g %u, b %u, l %u, altitude %u, saveColor %u, flags 0x%02X 0x%02X\n",
-			            j++, cell.r, cell.g, cell.b, cell.l, cell.altitude, cell.saveColor, cell.flags[0], cell.flags[1]);
+			std::printf("    %u: r %u, g %u, b %u, luminosity %u, altitude %u, saveColor %u, country %u properties %s flags 0x%02X\n",
+			            j++, cell.r, cell.g, cell.b, cell.luminosity, cell.altitude, cell.saveColor, cell.properties.country, flagToStr(cell.properties).c_str(), cell.flags);
 		}
 		std::printf("index: %u\n", block.index);
 		std::printf("mapX: %f\n", block.mapX);
@@ -139,7 +175,7 @@ int PrintBlocks(openblack::lnd::LNDFile& lnd)
 			std::printf("     [%6.3f %6.3f %6.3f]\n", block.transformUVBefore[j][0], block.transformUVBefore[j][1], block.transformUVBefore[j][2]);
 		}
 		std::printf("transformUVAfter:\n");
-		for (uint8_t j = 0; j < 4; ++j)
+		for (j = 0; j < 4; ++j)
 		{
 			std::printf("     [%6.3f %6.3f %6.3f]\n", block.transformUVAfter[j][0], block.transformUVAfter[j][1], block.transformUVAfter[j][2]);
 		}
@@ -192,9 +228,9 @@ int PrintMaterials(openblack::lnd::LNDFile& lnd)
 		std::printf("data:\n");
 		constexpr uint16_t subsample = 8;
 		constexpr uint16_t magnitude = (subsample * subsample) / 8;
-		for (uint16_t y = 0; y < openblack::lnd::LNDFile::LNDMaterial::height / subsample; ++y)
+		for (uint16_t y = 0; y < openblack::lnd::LNDMaterial::height / subsample; ++y)
 		{
-			for (uint16_t x = 0; x < openblack::lnd::LNDFile::LNDMaterial::width / subsample; ++x)
+			for (uint16_t x = 0; x < openblack::lnd::LNDMaterial::width / subsample; ++x)
 			{
 				uint32_t red = 0;
 				uint32_t green = 0;
@@ -203,7 +239,7 @@ int PrintMaterials(openblack::lnd::LNDFile& lnd)
 				{
 					for (uint16_t i = 0; i < subsample; ++i)
 					{
-						auto& color = material.texels[x * subsample + i + (y * subsample + j) * openblack::lnd::LNDFile::LNDMaterial::width];
+						auto& color = material.texels[x * subsample + i + (y * subsample + j) * openblack::lnd::LNDMaterial::width];
 						red += color.R;
 						green += color.G;
 						blue += color.B;
@@ -231,16 +267,16 @@ int PrintExtra(openblack::lnd::LNDFile& lnd)
 	constexpr uint16_t subsample = 8;
 	constexpr uint16_t magnitude = (subsample * subsample);
 	std::printf("noise:\n");
-	for (uint16_t y = 0; y < openblack::lnd::LNDFile::LNDBumpMap::height / subsample; ++y)
+	for (uint16_t y = 0; y < openblack::lnd::LNDBumpMap::height / subsample; ++y)
 	{
-		for (uint16_t x = 0; x < openblack::lnd::LNDFile::LNDBumpMap::width / subsample; ++x)
+		for (uint16_t x = 0; x < openblack::lnd::LNDBumpMap::width / subsample; ++x)
 		{
 			uint32_t color = 0;
 			for (uint16_t j = 0; j < subsample; ++j)
 			{
 				for (uint16_t i = 0; i < subsample; ++i)
 				{
-					color += extra.noise.textureData[x * subsample + i + (y * subsample + j) * openblack::lnd::LNDFile::LNDBumpMap::width];
+					color += extra.noise.textureData[x * subsample + i + (y * subsample + j) * openblack::lnd::LNDBumpMap::width];
 				}
 			}
 			color /= magnitude;
@@ -250,16 +286,16 @@ int PrintExtra(openblack::lnd::LNDFile& lnd)
 		std::printf("\n");
 	}
 	std::printf("bump:\n");
-	for (uint16_t y = 0; y < openblack::lnd::LNDFile::LNDBumpMap::height / subsample; ++y)
+	for (uint16_t y = 0; y < openblack::lnd::LNDBumpMap::height / subsample; ++y)
 	{
-		for (uint16_t x = 0; x < openblack::lnd::LNDFile::LNDBumpMap::width / subsample; ++x)
+		for (uint16_t x = 0; x < openblack::lnd::LNDBumpMap::width / subsample; ++x)
 		{
 			uint32_t color = 0;
 			for (uint16_t j = 0; j < subsample; ++j)
 			{
 				for (uint16_t i = 0; i < subsample; ++i)
 				{
-					color += extra.bump.textureData[x * subsample + i + (y * subsample + j) * openblack::lnd::LNDFile::LNDBumpMap::width];
+					color += extra.bump.textureData[x * subsample + i + (y * subsample + j) * openblack::lnd::LNDBumpMap::width];
 				}
 			}
 			color /= magnitude;

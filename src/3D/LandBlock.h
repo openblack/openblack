@@ -20,19 +20,21 @@
 
 #pragma once
 
-#include "3D/LandCell.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/ShaderProgram.h"
 
-#include <glm/glm.hpp>
+#include <glm/fwd.hpp>
 
-#include <array>
 #include <cstdint>
-#include <stdexcept>
-#include <vector>
 
 namespace openblack
 {
+
+namespace lnd
+{
+struct LNDBlock;
+struct LNDCell;
+}
 
 struct LandVertex
 {
@@ -45,13 +47,7 @@ struct LandVertex
 	uint8_t lightLevel[4];               // aligned to 4 bytes
 	float waterAlpha;
 
-	LandVertex(glm::vec3 _position, glm::vec3 _weight, uint8_t mat1, uint8_t mat2, uint8_t mat3, uint8_t mat4, uint8_t mat5,
-	           uint8_t mat6, uint8_t blend1, uint8_t blend2, uint8_t blend3, uint8_t _lightLevel, float _alpha)
-	    : position {_position.x, _position.y, _position.z}, weight {_weight.x, _weight.y, _weight.z},
-	      firstMaterialID {mat1, mat2, mat3}, secondMaterialID {mat4, mat5, mat6},
-	      materialBlendCoefficient {blend1, blend2, blend3}, lightLevel {_lightLevel}, waterAlpha {_alpha}
-	{
-	}
+	LandVertex(const glm::vec3& _position, const glm::vec3& _weight, uint32_t mat[6], uint32_t blend[3], uint8_t _lightLevel, float _alpha);
 };
 
 class LandIsland;
@@ -59,24 +55,19 @@ class LandIsland;
 class LandBlock
 {
 public:
-	LandBlock(): _cells(), _blockPosition(0, 0), _mapPosition(0, 0, 0, 0) {}
-
-	void Load(void* block, size_t block_size);
+	LandBlock() = default;
 	void Draw(graphics::RenderPass viewId, const graphics::ShaderProgram& program, bool cullBack) const;
 	void BuildMesh(LandIsland& island);
 
-	[[nodiscard]] const LandCell* GetCells() const { return _cells.data(); };
-	[[nodiscard]] const glm::ivec2& GetBlockPosition() const { return _blockPosition; }
-	[[nodiscard]] const glm::vec4& GetMapPosition() const { return _mapPosition; }
+	[[nodiscard]] const lnd::LNDCell* GetCells() const;
+	[[nodiscard]] glm::ivec2 GetBlockPosition() const;
 
 private:
-	uint32_t _index {0}; // the blocks index in the block array (do we need to know
-	                     // this?)
-	std::array<LandCell, 289> _cells;
-	glm::ivec2 _blockPosition; // position in the 32x32 block map
-	glm::vec4 _mapPosition;    // absolute position in the world
+	std::unique_ptr<lnd::LNDBlock> _block;
 	std::unique_ptr<graphics::Mesh> _mesh;
 
 	const bgfx::Memory* buildVertexList(LandIsland& island);
+
+	friend LandIsland;
 };
 } // namespace openblack
