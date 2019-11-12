@@ -26,6 +26,7 @@
 #include "3D/MeshPack.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
+#include "Balance.h"
 #include "Common/FileSystem.h"
 #include "Entities/Registry.h"
 #include "GameWindow.h"
@@ -333,78 +334,7 @@ void Game::LoadLandscape(const std::string& name)
 
 void Game::LoadVariables()
 {
-	return;
-
-	auto file = _fileSystem->Open("Scripts/info.dat", FileMode::Read);
-
-	// check magic header
-	constexpr char kLionheadMagic[] = "LiOnHeAd";
-
-	struct
-	{
-		char blockName[32];
-		uint32_t blockSize;
-		uint32_t position;
-	} header;
-
-	char magic[8];
-	file->Read(magic, 8);
-	if (!std::equal(kLionheadMagic, kLionheadMagic + 8, magic))
-		throw std::runtime_error("invalid Lionhead file magic");
-
-	char blockName[32];
-	file->Read(blockName, 32);
-	uint32_t size = file->ReadValue<uint32_t>();
-
-	spdlog::debug("info.dat: block name = {} = {} bytes", blockName, size);
-
-	struct MagicInfo
-	{
-		uint32_t typeEnum;          // ENUM_MAGIC_TYPE
-		uint32_t immersionTypeEnum; // ENUM_IMMERSION_EFFECT_TYPE
-		uint32_t stopImmersion;
-		float perceivedPower;
-		uint32_t particleTypeEnum;   // ENUM_PARTICLE_TYPE
-		uint32_t impressiveTypeEnum; // ENUM_IMPRESSIVE_TYPE
-		uint32_t spellSeedTypeEnum;  // ENUM_SPELL_SEED_TYPE
-		uint32_t gestureType;        // ENUM_GESTURE_TYPE
-		uint32_t powerupType;        // ENUM_POWER_UP_TYPE
-		uint32_t castRuleType;       // ENUM_CAST_RULE_TYPE
-		uint32_t IsSpellSeedDrawnInHand;
-		uint32_t IsSpellRecharged;
-		uint32_t IsCreatureCastFromAbove;
-		uint32_t OneOffSpellIsPlayful;
-		uint32_t OneOffSpellIsAggressive;
-		uint32_t OneOffSpellIsCompassionate;
-		uint32_t OneOffSpellIsToRestoreHealth;
-	};
-
-	for (auto i = 0; i < 10; i++)
-	{
-		MagicInfo info;
-		file->Read(&info, 0x48);
-
-		spdlog::debug("MAGIC_TYPE {}, PerceivedPower={}", info.typeEnum, info.perceivedPower);
-	}
-
-	// GMagicInfo: 0x48 bytes // DETAIL_MAGIC_GENERAL_INFO
-	// 10
-
-	// GMagicHealInfo: 0x48, 0x8 bytes // DETAIL_MAGIC_HEAL_INFO
-	// GMagicTeleportInfo: 0x48, 0x8 bytes // DETAIL_MAGIC_TELEPORT_INFO
-
-	// DETAIL_MAGIC_GENERAL_INFO
-	// DETAIL_MAGIC_HEAL_INFO
-	// DETAIL_MAGIC_TELEPORT_INFO
-	// DETAIL_MAGIC_FOREST_INFO
-	// DETAIL_MAGIC_FOOD_INFO
-	// DETAIL_MAGIC_STORM_AND_TORNADO_INFO
-	// DETAIL_MAGIC_SHIELD_ONE_INFO
-	// DETAIL_MAGIC_WOOD_INFO
-	// DETAIL_MAGIC_WATER_INFO
-	// DETAIL_MAGIC_FLOCK_FLYING_INFO
-	// DETAIL_MAGIC_FLOCK_GROUND_INFO
-	// DETAIL_MAGIC_CREATURE_SPELL_INFO
+	load_variables(GetFileSystem());
 }
 
 void Game::SetGamePath(const std::string& gamePath)
