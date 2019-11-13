@@ -151,7 +151,7 @@ struct LNDBumpMap
 	static constexpr uint32_t width = 256;
 	static constexpr uint32_t height = 256;
 
-	uint8_t textureData[width * height];  ///< R8
+	uint8_t texels[width * height];  ///< R8
 };
 static_assert(sizeof(LNDBumpMap) == 65536);
 
@@ -213,6 +213,10 @@ public:
 	[[nodiscard]] const auto& GetMaterials() const { return _materials; }
 	[[nodiscard]] const auto& GetExtra() const { return _extra; }
 	[[nodiscard]] const auto& GetUnaccounted() const { return _unaccounted; }
+
+	void AddMaterial(const LNDMaterial& material);
+	void AddNoiseMap(const LNDBumpMap& noiseMap);
+	void AddBumpMap(const LNDBumpMap& bumpMap);
 };
 
 } // namespace openblack::l3d

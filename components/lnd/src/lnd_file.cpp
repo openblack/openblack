@@ -282,3 +282,18 @@ void LNDFile::Write(const std::string& file)
 
 	WriteFile(stream);
 }
+
+void LNDFile::AddMaterial(const LNDMaterial& material)
+{
+	_materials.push_back(material);
+}
+
+void LNDFile::AddNoiseMap(const LNDBumpMap& noiseMap)
+{
+	_extra.noise = noiseMap;
+}
+
+void LNDFile::AddBumpMap(const LNDBumpMap& bumpMap)
+{
+	_extra.bump = bumpMap;
+}
