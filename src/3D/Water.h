@@ -34,6 +34,7 @@ namespace graphics
 class FrameBuffer;
 class Mesh;
 class ShaderProgram;
+class Texture2D;
 } // namespace graphics
 
 class Water
@@ -53,6 +54,7 @@ private:
 
 	std::unique_ptr<graphics::Mesh> _mesh;
 	std::unique_ptr<graphics::FrameBuffer> _reflectionFrameBuffer;
+	std::unique_ptr<graphics::Texture2D> _texture;
 };
 
 } // namespace openblack

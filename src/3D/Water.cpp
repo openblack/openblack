@@ -20,6 +20,8 @@
 
 #include "Water.h"
 
+#include "Common/FileSystem.h"
+#include "Game.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/Mesh.h"
@@ -38,6 +40,13 @@ Water::Water()
 {
 	_reflectionFrameBuffer =
 	    std::make_unique<FrameBuffer>("Reflection", 1024, 1024, graphics::Format::RGBA8, graphics::Format::Depth24Stencil8);
+
+	// water texture
+	auto const& waterTextureData = Game::instance()->GetFileSystem().ReadAll("Data/Textures/Sky.raw");
+
+	_texture = std::make_unique<Texture2D>("Water");
+	_texture->Create(256, 256, 1, Format::RGB8, Wrapping::ClampEdge, waterTextureData.data(), waterTextureData.size());
+
 	createMesh();
 }
 
@@ -64,7 +73,8 @@ void Water::createMesh()
 
 void Water::Draw(graphics::RenderPass viewId, const ShaderProgram& program) const
 {
-	program.SetTextureSampler("s_reflection", 0, _reflectionFrameBuffer->GetColorAttachment());
+	program.SetTextureSampler("s_diffuse", 0, *_texture);
+	program.SetTextureSampler("s_reflection", 1, _reflectionFrameBuffer->GetColorAttachment());
 
 	Mesh::DrawDesc desc = {
 	    /*viewId =*/viewId,
@@ -86,6 +96,7 @@ void Water::DebugGUI()
 {
 	ImGui::Begin("Water Debug");
 	ImGui::Image(_reflectionFrameBuffer->GetColorAttachment().GetNativeHandle(), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Image(_texture->GetNativeHandle(), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::End();
 }
 
