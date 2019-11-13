@@ -276,7 +276,7 @@ int PrintExtra(openblack::lnd::LNDFile& lnd)
 			{
 				for (uint16_t i = 0; i < subsample; ++i)
 				{
-					color += extra.noise.textureData[x * subsample + i + (y * subsample + j) * openblack::lnd::LNDBumpMap::width];
+					color += extra.noise.texels[x * subsample + i + (y * subsample + j) * openblack::lnd::LNDBumpMap::width];
 				}
 			}
 			color /= magnitude;
@@ -295,7 +295,7 @@ int PrintExtra(openblack::lnd::LNDFile& lnd)
 			{
 				for (uint16_t i = 0; i < subsample; ++i)
 				{
-					color += extra.bump.textureData[x * subsample + i + (y * subsample + j) * openblack::lnd::LNDBumpMap::width];
+					color += extra.bump.texels[x * subsample + i + (y * subsample + j) * openblack::lnd::LNDBumpMap::width];
 				}
 			}
 			color /= magnitude;
@@ -320,16 +320,6 @@ int PrintUnaccounted(openblack::lnd::LNDFile& lnd)
 	return EXIT_SUCCESS;
 }
 
-int WriteFile(const std::string outFilename)
-{
-	openblack::lnd::LNDFile lnd {};
-
-	// TODO(bwrsandman): expand on this to create files with contents
-	lnd.Write(outFilename);
-
-	return EXIT_SUCCESS;
-}
-
 struct Arguments
 {
 	enum class Mode
@@ -343,10 +333,116 @@ struct Arguments
 		Unaccounted,
 		Write,
 	};
-	std::vector<std::string> filenames;
 	Mode mode;
-	std::string outFilename;
+	struct Read
+	{
+		std::vector<std::string> filenames;
+	} read;
+	struct Write
+	{
+		std::string outFilename;
+		uint16_t terrainType;
+		std::string noiseMapFile;
+		std::string bumpMapFile;
+		std::vector<std::string> materialArray;
+	} write;
 };
+
+int WriteFile(const Arguments::Write& args)
+{
+	openblack::lnd::LNDFile lnd {};
+
+	openblack::lnd::LNDMaterial material;
+	material.type = args.terrainType;
+	for (auto& filename : args.materialArray)
+	{
+		std::ifstream stream(filename, std::ios::binary);
+		if (!stream.is_open())
+		{
+			std::cerr << "Could not open " << filename << std::endl;
+			return EXIT_FAILURE;
+		}
+		// Total file size
+		size_t fsize = 0;
+		if (stream.seekg(0, std::ios_base::end))
+		{
+			fsize = static_cast<size_t>(stream.tellg());
+			stream.seekg(0);
+		}
+		if (fsize != sizeof(openblack::lnd::LNDMaterial::texels))
+		{
+			std::cerr << "File " << filename
+			          << " is not the right size to be a "
+			          << openblack::lnd::LNDMaterial::width << "x"
+			          << openblack::lnd::LNDMaterial::height
+			          << " RGB5A1 texture: size should be "
+			          << fsize << std::endl;
+			return EXIT_FAILURE;
+		}
+		stream.read(reinterpret_cast<char *>(material.texels), fsize);
+		lnd.AddMaterial(material);
+	}
+
+	openblack::lnd::LNDBumpMap map;
+	{
+		std::ifstream stream(args.noiseMapFile, std::ios::binary);
+		if (!stream.is_open())
+		{
+			std::cerr << "Could not open " << args.noiseMapFile << std::endl;
+			return EXIT_FAILURE;
+		}
+		// Total file size
+		size_t fsize = 0;
+		if (stream.seekg(0, std::ios_base::end))
+		{
+			fsize = static_cast<size_t>(stream.tellg());
+			stream.seekg(0);
+		}
+		if (fsize != sizeof(openblack::lnd::LNDBumpMap::texels))
+		{
+			std::cerr << "File " << args.noiseMapFile
+			          << " is not the right size to be a "
+			          << openblack::lnd::LNDBumpMap::width << "x"
+			          << openblack::lnd::LNDBumpMap::height
+			          << " R8 texture: size should be "
+			          << fsize << std::endl;
+			return EXIT_FAILURE;
+		}
+		stream.read(reinterpret_cast<char *>(map.texels), fsize);
+		lnd.AddNoiseMap(map);
+	}
+	{
+		std::ifstream stream(args.bumpMapFile, std::ios::binary);
+		if (!stream.is_open())
+		{
+			std::cerr << "Could not open " << args.bumpMapFile << std::endl;
+			return EXIT_FAILURE;
+		}
+		// Total file size
+		size_t fsize = 0;
+		if (stream.seekg(0, std::ios_base::end))
+		{
+			fsize = static_cast<size_t>(stream.tellg());
+			stream.seekg(0);
+		}
+		if (fsize != sizeof(openblack::lnd::LNDBumpMap::texels))
+		{
+			std::cerr << "File " << args.bumpMapFile
+			          << " is not the right size to be a "
+			          << openblack::lnd::LNDBumpMap::width << "x"
+			          << openblack::lnd::LNDBumpMap::height
+			          << " R8 texture: size should be "
+			          << fsize << std::endl;
+			return EXIT_FAILURE;
+		}
+		stream.read(reinterpret_cast<char *>(map.texels), fsize);
+		lnd.AddBumpMap(map);
+	}
+
+	lnd.Write(args.outFilename);
+
+	return EXIT_SUCCESS;
+}
 
 bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 {
@@ -354,6 +450,10 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 
 	options.add_options()
 		("h,help", "Display this help message.")
+		("subcommand", "Subcommand.", cxxopts::value<std::string>())
+	;
+	options.positional_help("[read|write] [OPTION...]");
+	options.add_options("read")
 		("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::string>>())
 		("l,low-resolution-textures", "Print Low Resolution Texture Contents.", cxxopts::value<std::vector<std::string>>())
 		("b,blocks", "Print Block Contents.", cxxopts::value<std::vector<std::string>>())
@@ -361,66 +461,93 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		("m,material", "Print Material Contents.", cxxopts::value<std::vector<std::string>>())
 		("x,extra", "Print Extra Content.", cxxopts::value<std::vector<std::string>>())
 		("u,unaccounted", "Print Unaccounted bytes Content.", cxxopts::value<std::vector<std::string>>())
-		("w,write", "Create LND file.", cxxopts::value<std::string>())
 	;
+	options.add_options("write")
+		("o,output", "Output file (required).", cxxopts::value<std::string>())
+		("terrain-type", "Type of terrain (required).", cxxopts::value<uint16_t>())
+		("noise-map", "File with R8 bytes for noise map.", cxxopts::value<std::string>())
+		("bump-map", "File with R8 bytes for bump map.", cxxopts::value<std::string>())
+		("material-array", "Files with RGB5A1 bytes for material array (comma-separated).", cxxopts::value<std::vector<std::string>>())
+	;
+
+	options.parse_positional({"subcommand"});
 
 	try
 	{
 		auto result = options.parse(argc, argv);
-		args.outFilename = "";
 		if (result["help"].as<bool>())
 		{
 			std::cout << options.help() << std::endl;
 			return_code = EXIT_SUCCESS;
 			return false;
 		}
-		if (result["header"].count() > 0)
+		if (result["subcommand"].as<std::string>() == "read")
 		{
-			args.mode = Arguments::Mode::Header;
-			args.filenames = result["header"].as<std::vector<std::string>>();
-			return true;
+			if (result["header"].count() > 0)
+			{
+				args.mode = Arguments::Mode::Header;
+				args.read.filenames = result["header"].as<std::vector<std::string>>();
+				return true;
+			}
+			if (result["low-resolution-textures"].count() > 0)
+			{
+				args.mode = Arguments::Mode::LowResolution;
+				args.read.filenames = result["low-resolution-textures"].as<std::vector<std::string>>();
+				return true;
+			}
+			if (result["blocks"].count() > 0)
+			{
+				args.mode = Arguments::Mode::Blocks;
+				args.read.filenames = result["blocks"].as<std::vector<std::string>>();
+				return true;
+			}
+			if (result["country"].count() > 0)
+			{
+				args.mode = Arguments::Mode::Countries;
+				args.read.filenames = result["country"].as<std::vector<std::string>>();
+				return true;
+			}
+			if (result["material"].count() > 0)
+			{
+				args.mode = Arguments::Mode::Materials;
+				args.read.filenames = result["material"].as<std::vector<std::string>>();
+				return true;
+			}
+			if (result["extra"].count() > 0)
+			{
+				args.mode = Arguments::Mode::Extra;
+				args.read.filenames = result["extra"].as<std::vector<std::string>>();
+				return true;
+			}
+			if (result["unaccounted"].count() > 0)
+			{
+				args.mode = Arguments::Mode::Unaccounted;
+				args.read.filenames = result["unaccounted"].as<std::vector<std::string>>();
+				return true;
+			}
 		}
-		if (result["low-resolution-textures"].count() > 0)
+		else if (result["subcommand"].as<std::string>() == "write")
 		{
-			args.mode = Arguments::Mode::LowResolution;
-			args.filenames = result["low-resolution-textures"].as<std::vector<std::string>>();
-			return true;
-		}
-		if (result["blocks"].count() > 0)
-		{
-			args.mode = Arguments::Mode::Blocks;
-			args.filenames = result["blocks"].as<std::vector<std::string>>();
-			return true;
-		}
-		if (result["country"].count() > 0)
-		{
-			args.mode = Arguments::Mode::Countries;
-			args.filenames = result["country"].as<std::vector<std::string>>();
-			return true;
-		}
-		if (result["material"].count() > 0)
-		{
-			args.mode = Arguments::Mode::Materials;
-			args.filenames = result["material"].as<std::vector<std::string>>();
-			return true;
-		}
-		if (result["extra"].count() > 0)
-		{
-			args.mode = Arguments::Mode::Extra;
-			args.filenames = result["extra"].as<std::vector<std::string>>();
-			return true;
-		}
-		if (result["unaccounted"].count() > 0)
-		{
-			args.mode = Arguments::Mode::Unaccounted;
-			args.filenames = result["unaccounted"].as<std::vector<std::string>>();
-			return true;
-		}
-		if (result["write"].count() > 0)
-		{
-			args.mode = Arguments::Mode::Write;
-			args.outFilename = result["write"].as<std::string>();
-			return true;
+			args.write.outFilename = "";
+			if (result["output"].count() > 0 && result["terrain-type"].count() > 0)
+			{
+				args.mode = Arguments::Mode::Write;
+				args.write.outFilename = result["output"].as<std::string>();
+				args.write.terrainType = result["terrain-type"].as<uint16_t>();
+				if (result["noise-map"].count() > 0)
+				{
+					args.write.noiseMapFile = result["noise-map"].as<std::string>();
+				}
+				if (result["bump-map"].count() > 0)
+				{
+					args.write.bumpMapFile = result["bump-map"].as<std::string>();
+				}
+				if (result["material-array"].count() > 0)
+				{
+					args.write.materialArray = result["material-array"].as<std::vector<std::string>>();
+				}
+				return true;
+			}
 		}
 	}
 	catch (cxxopts::OptionParseException& err)
@@ -444,10 +571,10 @@ int main(int argc, char* argv[])
 
 	if (args.mode == Arguments::Mode::Write)
 	{
-		return WriteFile(args.outFilename);
+		return WriteFile(args.write);
 	}
 
-	for (auto& filename : args.filenames)
+	for (auto& filename : args.read.filenames)
 	{
 		openblack::lnd::LNDFile lnd;
 		try

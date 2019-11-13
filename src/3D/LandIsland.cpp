@@ -94,7 +94,7 @@ void LandIsland::LoadFromFile(const std::string& filename)
 		rgba5TextureData.size() * sizeof(rgba5TextureData[0]));
 
 	// read noise map into Texture2D
-	std::memcpy(_noiseMap.data(), lnd.GetExtra().noise.textureData, _noiseMap.size() * sizeof(_noiseMap[0]));
+	std::memcpy(_noiseMap.data(), lnd.GetExtra().noise.texels, _noiseMap.size() * sizeof(_noiseMap[0]));
 	_textureNoiseMap = std::make_unique<Texture2D>("LandIslandNoiseMap");
 	_textureNoiseMap->Create(lnd::LNDBumpMap::width, lnd::LNDBumpMap::height, 1,
 		Format::R8, Wrapping::ClampEdge, _noiseMap.data(),
@@ -103,8 +103,8 @@ void LandIsland::LoadFromFile(const std::string& filename)
 	// read bump map into Texture2D
 	_textureBumpMap = std::make_unique<Texture2D>("LandIslandBumpMap");
 	_textureBumpMap->Create(lnd::LNDBumpMap::width, lnd::LNDBumpMap::height, 1,
-		Format::R8, Wrapping::ClampEdge, lnd.GetExtra().bump.textureData,
-		sizeof(lnd.GetExtra().bump.textureData));
+		Format::R8, Wrapping::ClampEdge, lnd.GetExtra().bump.texels,
+		sizeof(lnd.GetExtra().bump.texels));
 
 	// build the meshes (we could move this elsewhere)
 	for (auto& block : _landBlocks) block.BuildMesh(*this);
