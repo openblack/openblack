@@ -39,16 +39,13 @@ class FileSystem
 public:
 	static std::string FixPath(const std::string& path);
 
+	[[nodiscard]] fs::path FindPath(const fs::path& path) const;
+
 	std::unique_ptr<FileStream> Open(const fs::path& path, FileMode mode);
 	bool Exists(const fs::path& path);
 
 	void SetGamePath(const fs::path& path) { _gamePath = path; }
 	[[nodiscard]] const fs::path& GetGamePath() const { return _gamePath; }
-
-	std::vector<fs::path> EnumFiles(const fs::path& directory);
-
-	void Delete();
-	void Rename();
 
 	std::vector<std::byte> ReadAll(const fs::path& path);
 

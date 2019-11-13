@@ -237,9 +237,8 @@ void Game::Run()
 	_modelRotation = glm::vec3(180.0f, 111.0f, 0.0f);
 	_modelScale = glm::vec3(0.5f);
 
-	auto file = _fileSystem->Open("Data/AllMeshes.g3d", FileMode::Read);
 	_meshPack = std::make_unique<MeshPack>();
-	_meshPack->Load(*file);
+	_meshPack->LoadFromFile("Data/AllMeshes.g3d");
 
 	_testModel = std::make_unique<L3DMesh>();
 	_testModel->LoadFromFile("Data/CreatureMesh/C_Tortoise_Base.l3d");
@@ -323,15 +322,13 @@ void Game::LoadLandscape(const std::string& name)
 	if (_landIsland)
 		_landIsland.reset();
 
-	auto fixedName = FileSystem::FixPath(name);
+	auto fixedName = Game::instance()->GetFileSystem().FindPath(FileSystem::FixPath(name));
 
 	if (!_fileSystem->Exists(fixedName))
 		throw std::runtime_error("Could not find landscape " + name);
 
-	auto file = _fileSystem->Open(fixedName, FileMode::Read);
-
 	_landIsland = std::make_unique<LandIsland>();
-	_landIsland->LoadFromFile(*file);
+	_landIsland->LoadFromFile(fixedName.u8string());
 }
 
 void Game::LoadVariables()

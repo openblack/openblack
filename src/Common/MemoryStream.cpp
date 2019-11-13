@@ -27,7 +27,7 @@
 namespace openblack
 {
 
-MemoryStream::MemoryStream(void* data, std::size_t size)
+MemoryStream::MemoryStream(const void* data, std::size_t size)
 {
 	_data = data;
 	_size = size;

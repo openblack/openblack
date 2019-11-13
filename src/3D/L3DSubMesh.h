@@ -35,6 +35,11 @@ namespace openblack
 class IStream;
 class L3DMesh;
 
+namespace l3d
+{
+class L3DFile;
+}
+
 namespace graphics
 {
 class Mesh;
@@ -56,6 +61,7 @@ class L3DSubMesh
 	};
 
 public:
+	// TODO(bwrsandman): Move to l3d lib
 #pragma pack(push, 1)
 	struct alignas(4) HeaderFlag
 	{
@@ -72,7 +78,7 @@ public:
 	explicit L3DSubMesh(L3DMesh& mesh);
 	~L3DSubMesh();
 
-	void Load(IStream& stream);
+	void Load(const l3d::L3DFile& l3d, uint32_t meshIndex);
 	void Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program,
 	            uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
 	void Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart,

@@ -24,75 +24,21 @@
 #include "LandIsland.h"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <lnd_file.h>
+
+#include <cassert>
 
 using namespace openblack;
 using namespace openblack::graphics;
 
-struct LH3DLandCell // 8 bytes
+LandVertex::LandVertex(const glm::vec3& _position, const glm::vec3& _weight, uint32_t mat[8], uint32_t blend[3], uint8_t _lightLevel, float _alpha)
+	: position {_position.x, _position.y, _position.z}
+	, weight {_weight.x, _weight.y, _weight.z}
+	, firstMaterialID {static_cast<uint8_t>(mat[0]), static_cast<uint8_t>(mat[1]), static_cast<uint8_t>(mat[2])}
+	, secondMaterialID {static_cast<uint8_t>(mat[3]), static_cast<uint8_t>(mat[4]), static_cast<uint8_t>(mat[5])}
+	, materialBlendCoefficient {static_cast<uint8_t>(blend[0]), static_cast<uint8_t>(blend[1]), static_cast<uint8_t>(blend[2])}
+	, lightLevel {_lightLevel}, waterAlpha {_alpha}
 {
-	uint8_t r;
-	uint8_t g;
-	uint8_t b;
-	uint8_t l;
-
-	uint8_t altitude;
-	uint8_t savecolor;
-
-	uint8_t flags1;
-	uint8_t flags2;
-};
-
-struct LH3DLandBlock
-{
-	LH3DLandCell cells[289];   // 17*17
-	uint32_t index;            // 2312
-	float mapX;                // 2320
-	float mapZ;                // 2316
-	uint32_t blockX;           // 2328
-	uint32_t blockZ;           // 2324
-	uint32_t clipped;          // 2332 0
-	uint32_t frameVisibility;  // 0
-	uint32_t highestAltitude;  // 0
-	uint32_t useSmallBump;     // 0
-	uint32_t forceLowResTex;   // 0
-	uint32_t meshLOD;          // 0
-	uint32_t meshBlending;     // 0
-	uint32_t textureBlend;     // 0
-	uint32_t meshLODType;      // 0
-	uint32_t fog;              // 0
-	uint32_t texPointer;       // 0 if LH3DIsland::g_b_use_always_low_texture, else new Tex
-	uint32_t matPointer;       // 0 if LH3DIsland::g_b_use_always_low_texture, else
-	                           // new Mat(Tex)
-	uint32_t drawSomething;    // 0aaa
-	uint32_t specMatBeforePtr; // 0
-	uint32_t specMatAfterPtr;  // 0
-	float transformUVBefore[3][4];
-	float transformUVAfter[3][4];
-	uint32_t nextSortingPtr;
-	float valueSorting;
-	float lowResTexture;
-	float fu_lrs; // (iu_lrs / 256)
-	float fv_lrs; // (iv_lrs / 256)
-	float iu_lrs; // lowrestex x
-	float iv_lrs; // lowrestex z
-	uint32_t smallTextUpdated;
-};
-
-void LandBlock::Load(void* block, size_t block_size)
-{
-	if (block_size != sizeof(LH3DLandBlock))
-	{
-		throw std::runtime_error("LandBlock size does not match struct size.");
-	}
-
-	auto lhBlock = static_cast<LH3DLandBlock*>(block);
-
-	_index = lhBlock->index;
-	_blockPosition = glm::ivec2(lhBlock->blockX, lhBlock->blockZ);
-	_mapPosition = glm::vec4(lhBlock->mapX, lhBlock->mapZ, 0, 0);
-
-	// this should just work, not graceful lol
-	memcpy(&_cells, lhBlock->cells, 17 * 17 * sizeof(LH3DLandCell));
 }
 
 void LandBlock::BuildMesh(LandIsland& island)
@@ -130,77 +76,93 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 
 	auto countries = island.GetCountries();
 
-	auto neighbourBlockR = island.GetBlock(_blockPosition.x + 1, _blockPosition.y);
-	auto neighbourBlockUp = island.GetBlock(_blockPosition.x, _blockPosition.y + 1);
+	// auto neighbourBlockR = island.GetBlock(glm::u8vec2(_block->blockX + 1, _block->blockZ));
+	// auto neighbourBlockUp = island.GetBlock(glm::u8vec2(_block->blockX, _block->blockZ + 1));
 
 	// we'll loop through each cell, 16x16
 	// (the array is 17x17 but the 17th block is questionable data)
 
-	int bx = _blockPosition.x * 16;
-	int bz = _blockPosition.y * 16;
+	int bx = _block->blockX * 16;
+	int bz = _block->blockZ * 16;
 
 	uint16_t i = 0;
 	for (int x = 0; x < 16; x++)
 	{
 		for (int z = 0; z < 16; z++)
 		{
-			LandCell tl = island.GetCell(bx + x + 0, bz + z + 0);
-			LandCell tr = island.GetCell(bx + x + 1, bz + z + 0);
-			LandCell bl = island.GetCell(bx + x + 0, bz + z + 1);
-			LandCell br = island.GetCell(bx + x + 1, bz + z + 1);
+			// top left
+			auto tl = island.GetCell(glm::u16vec2(bx + x + 0, bz + z + 0));
+			// top right
+			auto tr = island.GetCell(glm::u16vec2(bx + x + 1, bz + z + 0));
+			// bottom left
+			auto bl = island.GetCell(glm::u16vec2(bx + x + 0, bz + z + 1));
+			// bottom right
+			auto br = island.GetCell(glm::u16vec2(bx + x + 1, bz + z + 1));
 
 			// construct positions from cell altitudes
-			glm::vec3 pTL((x + 0) * LandIsland::CellSize, tl.Altitude() * LandIsland::HeightUnit,
+			glm::vec3 pTL((x + 0) * LandIsland::CellSize, tl.altitude * LandIsland::HeightUnit,
 			              ((z + 0) * LandIsland::CellSize));
-			glm::vec3 pTR((x + 1) * LandIsland::CellSize, tr.Altitude() * LandIsland::HeightUnit,
+			glm::vec3 pTR((x + 1) * LandIsland::CellSize, tr.altitude * LandIsland::HeightUnit,
 			              ((z + 0) * LandIsland::CellSize));
-			glm::vec3 pBL((x + 0) * LandIsland::CellSize, bl.Altitude() * LandIsland::HeightUnit,
+			glm::vec3 pBL((x + 0) * LandIsland::CellSize, bl.altitude * LandIsland::HeightUnit,
 			              ((z + 1) * LandIsland::CellSize));
-			glm::vec3 pBR((x + 1) * LandIsland::CellSize, br.Altitude() * LandIsland::HeightUnit,
+			glm::vec3 pBR((x + 1) * LandIsland::CellSize, br.altitude * LandIsland::HeightUnit,
 			              ((z + 1) * LandIsland::CellSize));
 
-			auto tlMat = countries[tl.Country()].MapMaterials[tl.Altitude() + island.GetNoise(bx + x + 0, bz + z + 0)];
-			auto trMat = countries[tr.Country()].MapMaterials[tr.Altitude() + island.GetNoise(bx + x + 1, bz + z + 0)];
-			auto blMat = countries[bl.Country()].MapMaterials[bl.Altitude() + island.GetNoise(bx + x + 0, bz + z + 1)];
-			auto brMat = countries[br.Country()].MapMaterials[br.Altitude() + island.GetNoise(bx + x + 1, bz + z + 1)];
+			auto tlMat = countries[tl.properties.country].materials[tl.altitude + island.GetNoise(bx + x + 0, bz + z + 0)];
+			auto trMat = countries[tr.properties.country].materials[tr.altitude + island.GetNoise(bx + x + 1, bz + z + 0)];
+			auto blMat = countries[bl.properties.country].materials[bl.altitude + island.GetNoise(bx + x + 0, bz + z + 1)];
+			auto brMat = countries[br.properties.country].materials[br.altitude + island.GetNoise(bx + x + 1, bz + z + 1)];
 
+			// TODO: this is temporary way for drawing landscape, should be moved to the renderer
 			// use a lambda so we're not repeating ourselves
-			auto make_vert = [](glm::vec3 height, glm::vec3 weight, MapMaterial m1, MapMaterial m2, MapMaterial m3,
-			                    LandCell cell) -> LandVertex {
-				return LandVertex(height, weight, m1.FirstMaterialIndex, m2.FirstMaterialIndex, m3.FirstMaterialIndex,
-				                  m1.SecondMaterialIndex, m2.SecondMaterialIndex, m3.SecondMaterialIndex, m1.Coeficient,
-				                  m2.Coeficient, m3.Coeficient, cell.Light(), cell.Alpha());
+			auto getAlpha = [](lnd::LNDCell::Properties properties) {
+				if (properties.hasWater || properties.fullWater)
+					return 0.0f;
+				if (properties.coastLine)
+					return 0.5f;
+				return 1.0f;
+			};
+			auto make_vert = [&getAlpha](const glm::vec3& height, const glm::vec3& weight, lnd::LNDMapMaterial m[3],
+			                    const lnd::LNDCell& cell) -> LandVertex {
+				uint32_t mat[6] = {m[0].indices[0], m[1].indices[0], m[2].indices[0], m[0].indices[1], m[1].indices[1], m[2].indices[1]};
+				uint32_t blend[3] = {m[0].coefficient, m[1].coefficient, m[2].coefficient};
+				return LandVertex(height, weight, mat, blend, cell.luminosity, getAlpha(cell.properties));
 			};
 
 			// cell splitting
 			// winding order = clockwise
-			if (!tl.Split())
+			if (!tl.properties.split)
 			{
 				// TR/BR/TL  # #
 				//             #
-				vertices[i++] = make_vert(pTR, glm::vec3(0, 1, 0), tlMat, trMat, brMat, tr);
-				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), tlMat, trMat, brMat, br);
-				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), tlMat, trMat, brMat, tl);
+				lnd::LNDMapMaterial trbrtl[3] =  {tlMat, trMat, brMat};
+				vertices[i++] = make_vert(pTR, glm::vec3(0, 1, 0), trbrtl, tr);
+				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), trbrtl, br);
+				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), trbrtl, tl);
 
 				// BR/BL/TL  #
 				//           # #
-				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), tlMat, blMat, brMat, br);
-				vertices[i++] = make_vert(pBL, glm::vec3(0, 1, 0), tlMat, blMat, brMat, bl);
-				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), tlMat, blMat, brMat, tl);
+				lnd::LNDMapMaterial brbltl[3] =  {tlMat, blMat, brMat};
+				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), brbltl, br);
+				vertices[i++] = make_vert(pBL, glm::vec3(0, 1, 0), brbltl, bl);
+				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), brbltl, tl);
 			}
 			else
 			{
 				// BL/TL/TR  # #
 				//           #
-				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), blMat, tlMat, trMat, bl);
-				vertices[i++] = make_vert(pTL, glm::vec3(0, 1, 0), blMat, tlMat, trMat, tl);
-				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), blMat, tlMat, trMat, tr);
+				lnd::LNDMapMaterial bltltr[3] =  {blMat, tlMat, trMat};
+				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), bltltr, bl);
+				vertices[i++] = make_vert(pTL, glm::vec3(0, 1, 0), bltltr, tl);
+				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), bltltr, tr);
 
 				// TR/BR/BL    #
 				//           # #
-				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), blMat, brMat, trMat, tr);
-				vertices[i++] = make_vert(pBR, glm::vec3(0, 1, 0), blMat, brMat, trMat, br);
-				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), blMat, brMat, trMat, bl);
+				lnd::LNDMapMaterial trbrbl[3] =  {blMat, brMat, trMat};
+				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), trbrbl, tr);
+				vertices[i++] = make_vert(pBR, glm::vec3(0, 1, 0), trbrbl, br);
+				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), trbrbl, bl);
 			}
 		}
 	}
@@ -210,7 +172,10 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 
 void LandBlock::Draw(graphics::RenderPass viewId, const ShaderProgram& program, bool cullBack) const
 {
-	program.SetUniformValue("u_blockPosition", &_mapPosition);
+	glm::vec4 mapPosition = glm::vec4(_block->mapX, _block->mapZ, 0, 0);
+	program.SetUniformValue("u_blockPosition", &mapPosition);
+
+	constexpr auto defaultState = BGFX_STATE_WRITE_MASK | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_BLEND_ALPHA | BGFX_STATE_MSAA;
 
 	Mesh::DrawDesc desc = {
 	    /*viewId =*/viewId,
@@ -220,11 +185,22 @@ void LandBlock::Draw(graphics::RenderPass viewId, const ShaderProgram& program, 
 	    /*instanceBuffer =*/nullptr,
 	    /*instanceStart =*/0,
 	    /*instanceCount =*/1,
-	    /*state =*/0u | BGFX_STATE_WRITE_MASK | BGFX_STATE_DEPTH_TEST_LESS |
-	        (cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW) | BGFX_STATE_BLEND_ALPHA | BGFX_STATE_MSAA,
+	    /*state =*/defaultState | (cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW),
 	    /*rgba =*/0,
 	    /*skip =*/Mesh::SkipState::SkipNone,
 	    /*preserveState =*/false,
 	};
 	_mesh->Draw(desc);
+}
+
+const lnd::LNDCell *LandBlock::GetCells() const
+{
+	assert(_block);
+	return _block ? _block->cells : nullptr;
+}
+
+glm::ivec2 LandBlock::GetBlockPosition() const
+{
+	assert(_block);
+	return {_block ? _block->blockX : -1, _block ? _block->blockZ : -1};
 }
