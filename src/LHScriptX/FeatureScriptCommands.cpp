@@ -28,6 +28,7 @@
 #include "Entities/Components/Stream.h"
 #include "Entities/Components/Transform.h"
 #include "Entities/Components/Tree.h"
+#include "Entities/Components/Villager.h"
 #include "Entities/Registry.h"
 #include "Enums.h"
 #include "Game.h"
@@ -335,7 +336,7 @@ void FeatureScriptCommands::CreateTown(const ScriptCommandContext& ctx)
 	// float notUsed          = params[3].GetNumber();
 	const auto& civilisation = params[4].GetString();
 
-	spdlog::debug("Creating town {} for \"{}\" with civilisation \"{}\".", townId, playerOwner, civilisation);
+	spdlog::debug(R"(Creating town {} for "{}" with civilisation "{}".)", townId, playerOwner, civilisation);
 	registry.Assign<Town>(entity, townId);
 	auto& registryContext = registry.Context();
 	registryContext.towns.insert({townId, entity});
@@ -467,8 +468,25 @@ void FeatureScriptCommands::CreateSpecialTownVillager(const ScriptCommandContext
 
 void FeatureScriptCommands::CreateVillagerPos(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	Game& game = ctx.GetGame();
+	const auto& params = ctx.GetParameters();
+	auto& island = game.GetLandIsland();
+	const auto position = GetHorizontalPosition(params[0].GetString());
+	auto& registry = game.GetEntityRegistry();
+	const auto entity = registry.Create();
+	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
+	const glm::vec3 rot(0.0f, 3.14159, 0.0f);
+	registry.Assign<Transform>(entity, pos, rot, glm::vec3(1.0));
+	uint32_t health = 100;
+	uint32_t age = params[3].GetNumber();
+	uint32_t hunger = 100;
+	auto ethnicityAndRole = Villager::GetVillagerEthnicityAndRole(params[2].GetString());
+	auto ethnicity = std::get<0>(ethnicityAndRole);
+	auto role = std::get<1>(ethnicityAndRole);
+	auto lifeStage = age >= 18 ? VillagerLifeStage::Adult : VillagerLifeStage::Child;
+	auto sex = (role == VillagerRoles::HOUSEWIFE) ? VillagerSex::FEMALE : VillagerSex::MALE;
+	auto task = VillagerTasks::IDLE;
+	registry.Assign<Villager>(entity, health, age, hunger, lifeStage, sex, ethnicity, role, task);
 }
 
 void FeatureScriptCommands::CreateCitadel(const ScriptCommandContext& ctx)

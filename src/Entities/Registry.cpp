@@ -58,6 +58,16 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 		    instanceCount++;
 	    });
 
+	// Villagers
+	_registry.view<const Villager, const Transform>().each(
+	    [&meshIds, &instanceCount](const Villager& villager, const Transform& transform) {
+		    const auto villagerType = villager.GetVillagerType();
+		    const auto meshId = villagerMeshLookup[villagerType];
+		    auto count = meshIds.insert(std::make_pair(meshId, 0));
+		    count.first->second++;
+		    instanceCount++;
+	    });
+
 	// Animated Statics
 	_registry.view<const AnimatedStatic, const Transform>().each(
 	    [&meshIds, &instanceCount](const AnimatedStatic& entity, const Transform& transform) {
@@ -167,7 +177,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 
 	// Set transforms for instanced draw at offsets
 	auto prepareDrawBoundingBox = [&renderCtx, drawBoundingBox](uint32_t idx, const Transform& transform, MeshId meshId,
-	                                                                  int8_t submeshId) {
+	                                                            int8_t submeshId) {
 		if (drawBoundingBox)
 		{
 			const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
@@ -204,6 +214,18 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	_registry.view<const Abode, const Transform>().each(
 	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Abode& entity, const Transform& transform) {
 		    const auto meshId = abodeMeshLookup[entity.abodeInfo];
+		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
+		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
+		    renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+		    prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 0);
+		    offset.first->second++;
+	    });
+
+	// Villagers
+	_registry.view<const Villager, const Transform>().each(
+	    [this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Villager& villager, const Transform& transform) {
+		    const auto villagerType = villager.GetVillagerType();
+		    const auto meshId = villagerMeshLookup[villagerType];
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
 		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
 		    renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);

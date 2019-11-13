@@ -22,6 +22,7 @@
 
 #include "AllMeshes.h"
 #include "Entities/Components/AnimatedStatic.h"
+#include "Entities/Components/Villager.h"
 
 #include <spdlog/spdlog.h>
 
@@ -31,11 +32,12 @@ namespace openblack
 {
 enum class TreeInfo;
 
-template <typename T>
+template <typename T, typename K = std::hash<T>>
 class MeshLookup
 {
 public:
-	MeshLookup(std::initializer_list<typename std::unordered_map<T, MeshId>::value_type> init): lookup(init) {}
+	MeshLookup(std::initializer_list<typename std::unordered_map<T, MeshId, K>::value_type> init): lookup(init) {}
+
 	MeshId operator[](T key)
 	{
 		auto item = lookup.find(key);
@@ -43,7 +45,7 @@ public:
 
 		if (item == lookup.end())
 		{
-			spdlog::error("Missing mesh entry for type, \"{}\" with key \"{}\".", typeid(key).name(), static_cast<int>(key));
+			spdlog::error("Unknown item. Using Dummy mesh.");
 			return meshId;
 		}
 
@@ -51,12 +53,13 @@ public:
 	}
 
 private:
-	std::unordered_map<T, MeshId> lookup;
+	std::unordered_map<T, MeshId, K> lookup;
 };
 
 extern MeshLookup<TreeInfo> treeMeshLookup;
 extern MeshLookup<MobileStaticInfo> mobileStaticMeshLookup;
 extern MeshLookup<MobileObjectInfo> mobileObjectMeshLookup;
 extern MeshLookup<AbodeInfo> abodeMeshLookup;
+extern MeshLookup<VillagerType, VillagerTypeId> villagerMeshLookup;
 extern MeshLookup<FeatureInfo> featureMeshLookup;
 } // namespace openblack
