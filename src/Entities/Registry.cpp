@@ -166,7 +166,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	auto& renderCtx = Context().renderContext;
 
 	// Set transforms for instanced draw at offsets
-	auto prepareDrawBoundingBox = [&renderCtx, drawBoundingBox, this](uint32_t idx, const Transform& transform, MeshId meshId,
+	auto prepareDrawBoundingBox = [&renderCtx, drawBoundingBox](uint32_t idx, const Transform& transform, MeshId meshId,
 	                                                                  int8_t submeshId) {
 		if (drawBoundingBox)
 		{
@@ -191,7 +191,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 
 	// Trees
 	_registry.view<const Tree, const Transform>().each(
-	    [this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Tree& entity, const Transform& transform) {
+	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Tree& entity, const Transform& transform) {
 		    const auto meshId = treeMeshLookup[entity.treeInfo];
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
 		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
@@ -202,7 +202,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 
 	// Abodes
 	_registry.view<const Abode, const Transform>().each(
-	    [this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Abode& entity, const Transform& transform) {
+	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Abode& entity, const Transform& transform) {
 		    const auto meshId = abodeMeshLookup[entity.abodeInfo];
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
 		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
@@ -213,7 +213,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 
 	// Animated Statics
 	_registry.view<const AnimatedStatic, const Transform>().each(
-	    [this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const AnimatedStatic& entity, const Transform& transform) {
+	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const AnimatedStatic& entity, const Transform& transform) {
 		    // temporary-ish:
 		    MeshId meshId = MeshId::Dummy;
 		    if (entity.type == "Norse Gate")
@@ -237,7 +237,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 
 	// Mobile Statics
 	_registry.view<const MobileStatic, const Transform>().each(
-	    [this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const MobileStatic& entity, const Transform& transform) {
+	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const MobileStatic& entity, const Transform& transform) {
 		    const auto meshId = mobileStaticMeshLookup[entity.type];
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
 		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
@@ -248,7 +248,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 
 	// Features
 	_registry.view<const Feature, const Transform>().each(
-	    [this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Feature& entity, const Transform& transform) {
+	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Feature& entity, const Transform& transform) {
 		    const auto meshId = featureMeshLookup[entity.type];
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
 		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
@@ -259,7 +259,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 
 	// Fields
 	_registry.view<const Field, const Transform>().each(
-	    [this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Field& entity, const Transform& transform) {
+	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Field& entity, const Transform& transform) {
 		    const auto meshId = MeshId::TreeWheat;
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
 		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
@@ -270,7 +270,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 
 	// Forests
 	_registry.view<const Forest, const Transform>().each(
-	    [this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Forest& entity, const Transform& transform) {
+	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Forest& entity, const Transform& transform) {
 		    const auto meshId = MeshId::FeatureForest;
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
 		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
@@ -281,7 +281,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 
 	// Mobile Objects
 	_registry.view<const MobileObject, const Transform>().each(
-	    [this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const MobileObject& entity, const Transform& transform) {
+	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const MobileObject& entity, const Transform& transform) {
 		    const auto meshId = mobileObjectMeshLookup[entity.type];
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
 		    auto desc = renderCtx.instancedDrawDescs.find(meshId);

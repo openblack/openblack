@@ -51,7 +51,6 @@ public:
 	}
 	RegistryContext& Context();
 	[[nodiscard]] const RegistryContext& Context() const;
-	;
 	void Reset()
 	{
 		_registry.reset();
