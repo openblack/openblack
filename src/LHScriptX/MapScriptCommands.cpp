@@ -20,6 +20,10 @@
 
 #include "MapScriptCommands.h"
 
+#include <array>
+#include <stdexcept>
+#include <string>
+
 using namespace openblack::lhscriptx;
 
 // alias parameter types for signature list readability
