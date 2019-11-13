@@ -41,11 +41,13 @@ Water::Water()
 	_reflectionFrameBuffer =
 	    std::make_unique<FrameBuffer>("Reflection", 1024, 1024, graphics::Format::RGBA8, graphics::Format::Depth24Stencil8);
 
-	// water texture
+	// water texture (256x256 RAW RGB 24bpp)
 	auto const& waterTextureData = Game::instance()->GetFileSystem().ReadAll("Data/Textures/Sky.raw");
+	const uint16_t textureWidth = 256, textureHeight = 256;
 
 	_texture = std::make_unique<Texture2D>("Water");
-	_texture->Create(256, 256, 1, Format::RGB8, Wrapping::ClampEdge, waterTextureData.data(), waterTextureData.size());
+	_texture->Create(textureWidth, textureHeight, 1, Format::RGB8, Wrapping::ClampEdge, waterTextureData.data(),
+	                 waterTextureData.size());
 
 	createMesh();
 }
@@ -96,7 +98,6 @@ void Water::DebugGUI()
 {
 	ImGui::Begin("Water Debug");
 	ImGui::Image(_reflectionFrameBuffer->GetColorAttachment().GetNativeHandle(), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
-	ImGui::Image(_texture->GetNativeHandle(), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::End();
 }
 
