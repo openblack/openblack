@@ -30,14 +30,16 @@ class LandCell
 public:
 	LandCell() {}
 
-	inline uint8_t Light() { return color.a; }
+	[[nodiscard]] inline uint8_t Light() { return color.a; }
 	[[nodiscard]] inline uint8_t Altitude() const { return altitude; }
-	inline bool Split() { return properties & 0x80; }
-	inline bool HasWater() { return properties & 0x10; }
-	inline bool Coastline() { return properties & 0x20; }
-	inline bool FullWater() { return properties & 0x40; }
-	inline uint8_t Country() { return properties & 0x0F; }
-	inline float Alpha()
+	[[nodiscard]] inline bool Split() { return properties & 0x80; }
+	[[nodiscard]] inline bool IsWater() { return properties & 0x10; }
+	[[nodiscard]] inline bool IsCoastal() { return properties & 0x20; }
+	[[nodiscard]] inline bool FullWater() { return properties & 0x40; } // todo ? unsure (could mean deep water)
+	[[nodiscard]] inline uint8_t Country() { return properties & 0x0F; }
+
+	// todo: this is temporary way for drawing landscape, should be moved to the renderer
+	[[nodiscard]] inline float Alpha()
 	{
 		if (properties & 0x40)
 			return 0.0f;
