@@ -20,6 +20,8 @@
 
 #include "Water.h"
 
+#include "Common/FileSystem.h"
+#include "Game.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/Mesh.h"
@@ -38,6 +40,15 @@ Water::Water()
 {
 	_reflectionFrameBuffer =
 	    std::make_unique<FrameBuffer>("Reflection", 1024, 1024, graphics::Format::RGBA8, graphics::Format::Depth24Stencil8);
+
+	// water texture (256x256 RAW RGB 24bpp)
+	auto const& waterTextureData = Game::instance()->GetFileSystem().ReadAll("Data/Textures/Sky.raw");
+	const uint16_t textureWidth = 256, textureHeight = 256;
+
+	_texture = std::make_unique<Texture2D>("Water");
+	_texture->Create(textureWidth, textureHeight, 1, Format::RGB8, Wrapping::ClampEdge, waterTextureData.data(),
+	                 waterTextureData.size());
+
 	createMesh();
 }
 
@@ -64,7 +75,8 @@ void Water::createMesh()
 
 void Water::Draw(graphics::RenderPass viewId, const ShaderProgram& program) const
 {
-	program.SetTextureSampler("s_reflection", 0, _reflectionFrameBuffer->GetColorAttachment());
+	program.SetTextureSampler("s_diffuse", 0, *_texture);
+	program.SetTextureSampler("s_reflection", 1, _reflectionFrameBuffer->GetColorAttachment());
 
 	Mesh::DrawDesc desc = {
 	    /*viewId =*/viewId,

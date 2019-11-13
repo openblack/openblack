@@ -1,5 +1,5 @@
 $input a_position, a_color0
-$output v_texcoord0
+$output v_texcoord0, v_texcoord1
 
 #include <bgfx_shader.sh>
 
@@ -18,5 +18,6 @@ void main()
 	vec4 position = mul(u_viewProj, vertex);
 	gl_Position = position;
 
-	v_texcoord0 = ScreenSpacePosition(position);
+	v_texcoord0 = vec4(vertex.z / 100.0f, vertex.x / 100.0f, 0.0f, 0.0f);
+	v_texcoord1 = ScreenSpacePosition(position);
 }
