@@ -87,6 +87,7 @@ void LoadMagic(IStream& stream, const std::string& name, std::size_t count, bool
 	{
 		GMagicInfo* magicInfo = new T(); // Derived from Base -> GBaseInfo -> GMagicInfo
 		magicInfo->LoadBinary(stream);
+
 		delete magicInfo;
 	}
 }
@@ -102,13 +103,13 @@ void GMagicInfo::LoadBinary(IStream& stream)
 void GMagicHealInfo::LoadBinary(IStream& stream)
 {
 	GMagicInfo::LoadBinary(stream);
-	stream.Read(&this->heal_info, 0x08);
+	stream.Read(&this->heal_info, sizeof(this->heal_info));
 }
 
 void GMagicTeleportInfo::LoadBinary(IStream& stream)
 {
 	GMagicInfo::LoadBinary(stream);
-	stream.Read(&this->teleport_info, 0x04);
+	stream.Read(&this->teleport_info, sizeof(this->teleport_info));
 }
 
 // LoadMagic<GMagicInfo>(GMagicInfo*, LoaderAnon*, char*, unsigned long, GMagicInfo*, unsigned long, bool, LHFile*)

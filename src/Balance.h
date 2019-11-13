@@ -72,7 +72,7 @@ private:
 		uint32_t oneOffSpellIsCompassionate;
 		uint32_t oneOffSpellIsToRestoreHealth;
 		ParticleType particleType; // ENUM_PARTICLE_TYPE
-	} info;                        // should be 0x48, todo: add static_assert
+	} info;
 	static_assert(sizeof(info) == 0x48, "size is incorrect");
 };
 
