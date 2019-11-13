@@ -1,7 +1,7 @@
 file(GLOB SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp")
 file(GLOB HEADERS "${CMAKE_CURRENT_LIST_DIR}/include/*.h")
 
-set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=-*,readability-*)
+# set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=-*,readability-*)
 add_library(l3d STATIC ${SOURCES} ${HEADERS})
 target_include_directories(l3d
 	PUBLIC

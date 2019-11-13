@@ -4,7 +4,7 @@ set(G3DTOOL
 
 source_group(apps\\g3dtool FILES ${G3DTOOL})
 
-set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=-*,readability-*)
+# set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=-*,readability-*)
 add_executable(g3dtool ${G3DTOOL})
 
 target_link_libraries(g3dtool
