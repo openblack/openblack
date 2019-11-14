@@ -49,11 +49,11 @@ struct L3DModel_Vertex
 	uint32_t bone;
 };
 
-L3DMesh::L3DMesh(const std::string& debugName): _flags(static_cast<L3DMeshFlags>(0)), _debugName(debugName) {}
+L3DMesh::L3DMesh(const std::string& debugName): _flags(static_cast<l3d::L3DMeshFlags>(0)), _debugName(debugName) {}
 
 void L3DMesh::Load(const l3d::L3DFile& l3d)
 {
-	_flags = static_cast<L3DMeshFlags>(l3d.GetHeader().flags);
+	_flags = static_cast<l3d::L3DMeshFlags>(l3d.GetHeader().flags);
 	for (auto& skin : l3d.GetSkins())
 	{
 		_skins[skin.id] = std::make_unique<Texture2D>(_debugName.c_str());

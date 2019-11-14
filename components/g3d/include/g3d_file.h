@@ -93,10 +93,9 @@ struct G3DTexture
  */
 class G3DFile
 {
-public:
+protected:
 	static constexpr const char kMagic[8] = {'L', 'i', 'O', 'n', 'H', 'e', 'A', 'd'};
 
-protected:
 	/// True when a file has been loaded
 	bool _isLoaded;
 

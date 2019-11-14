@@ -37,7 +37,7 @@
  * - 4 bytes * submesh count, each record contains:
  *         offset into submesh buffer (see below)
  *
- * ------------------------ start of skin block --------------------------------
+ * ------------------------ start of skin offset block -------------------------
  *
  * - 4 bytes * skin count, each record contains:
  *         offset into skin buffer (see below)
@@ -234,17 +234,17 @@ void L3DFile::ReadFile(std::istream& stream)
 		stream.read(reinterpret_cast<char*>(skinOffsets.data()), skinOffsets.size() * sizeof(skinOffsets[0]));
 	}
 	_points.resize(_header.pointCount);
-	if (!_points.empty() && _header.pointOffsetsOffset != std::numeric_limits<uint32_t>::max())
+	if (!_points.empty() && _header.pointOffset != std::numeric_limits<uint32_t>::max())
 	{
-		if (_header.pointOffsetsOffset > fsize)
+		if (_header.pointOffset > fsize)
 		{
 			Fail("Point Offset is beyond the size of the file");
 		}
-		if (_header.pointOffsetsOffset + _points.size() * sizeof(_points[0]) > fsize)
+		if (_header.pointOffset + _points.size() * sizeof(_points[0]) > fsize)
 		{
 			Fail("Points are beyond the end of the file");
 		}
-		stream.seekg(_header.pointOffsetsOffset);
+		stream.seekg(_header.pointOffset);
 		stream.read(reinterpret_cast<char*>(_points.data()), _points.size() * sizeof(_points[0]));
 	}
 
@@ -254,6 +254,10 @@ void L3DFile::ReadFile(std::istream& stream)
 	_submeshHeaders.reserve(submeshOffsets.size());
 	for (auto offset : submeshOffsets)
 	{
+		if (offset + sizeof(_submeshHeaders[0]) > fsize)
+		{
+			Fail("Submesh header is beyond the end of the file");
+		}
 		stream.seekg(offset);
 		_submeshHeaders.emplace_back();
 		stream.read(reinterpret_cast<char*>(&_submeshHeaders.back()), sizeof(_submeshHeaders[0]));
@@ -280,9 +284,14 @@ void L3DFile::ReadFile(std::istream& stream)
 		{
 			Fail("More primitives found than declared");
 		}
+
 		if (header.numPrimitives == 0)
 		{
 			continue;
+		}
+		if (primitiveOffsets.size() <= primitiveCounter)
+		{
+			Fail("Less Primitives than expected");
 		}
 		if (primitiveOffsets[primitiveCounter] > fsize)
 		{
@@ -493,9 +502,94 @@ void L3DFile::WriteFile(std::ostream& stream) const
 {
 	assert(!_isLoaded);
 
-	stream.write(reinterpret_cast<const char*>(&_header), sizeof(_header));
+	size_t submeshOffsetsBase = sizeof(L3DHeader);
+	size_t skinOffsetsBase = submeshOffsetsBase + _header.submeshCount * sizeof(uint32_t);
+	size_t pointsBase = skinOffsetsBase + _header.skinCount * sizeof(uint32_t);
+	size_t submeshBase = pointsBase + _header.pointCount * sizeof(_points[0]);
+	size_t skinBase = submeshBase + _header.submeshCount * sizeof(_submeshHeaders[0]);
+	size_t primitiveOffsetBase = skinBase + _header.skinCount * sizeof(_skins[0]);
+	size_t primitiveBase = primitiveOffsetBase + _primitiveHeaders.size() * sizeof(uint32_t);
 
-	// TODO(bwrsandman): expand on this to create files with contents
+	std::vector<uint32_t> submeshOffsets;
+	submeshOffsets.resize(_header.submeshCount);
+	for (uint32_t i = 0; i < _header.submeshCount; ++i)
+	{
+		submeshOffsets[i] = static_cast<uint32_t>(submeshBase);
+		submeshBase += sizeof(_submeshHeaders[0]);
+	}
+	std::vector<uint32_t> skinOffsets;
+	skinOffsets.resize(_header.skinCount);
+	for (uint32_t i = 0; i < _header.skinCount; ++i)
+	{
+		skinOffsets[i] = static_cast<uint32_t>(skinBase);
+		skinOffsetsBase += sizeof(_skins[0]);
+	}
+	uint32_t totalPrimitives = 0;
+	for (auto& header : _submeshHeaders)
+	{
+		totalPrimitives += header.numPrimitives;
+	}
+	std::vector<uint32_t> primitiveOffsets;
+	primitiveOffsets.resize(totalPrimitives);
+	uint32_t currentPrimitive = 0;
+	for (size_t i = 0; i < _submeshHeaders.size(); ++i)
+	{
+		for (size_t j = 0; j < _primitiveSpans[i].size(); ++j)
+		{
+			primitiveOffsets[currentPrimitive] = static_cast<uint32_t>(primitiveBase + currentPrimitive * sizeof(_primitiveHeaders[0]));
+			currentPrimitive++;
+		}
+	}
+
+	stream.write(reinterpret_cast<const char*>(&_header), sizeof(L3DHeader));
+	if (!submeshOffsets.empty())
+	{
+		stream.write(reinterpret_cast<const char *>(submeshOffsets.data()), submeshOffsets.size() * sizeof(submeshOffsets[0]));
+	}
+	if (!skinOffsets.empty())
+	{
+		stream.write(reinterpret_cast<const char *>(skinOffsets.data()), skinOffsets.size() * sizeof(skinOffsets[0]));
+	}
+	if (!_points.empty())
+	{
+		stream.write(reinterpret_cast<const char *>(_points.data()), _points.size() * sizeof(_points[0]));
+	}
+	if (!_submeshHeaders.empty())
+	{
+		stream.write(reinterpret_cast<const char *>(_submeshHeaders.data()), _submeshHeaders.size() * sizeof(_submeshHeaders[0]));
+	}
+	if (!_skins.empty())
+	{
+		stream.write(reinterpret_cast<const char *>(_skins.data()), _skins.size() * sizeof(_skins[0]));
+	}
+	if (!primitiveOffsets.empty())
+	{
+		stream.write(reinterpret_cast<const char *>(primitiveOffsets.data()), primitiveOffsets.size() * sizeof(primitiveOffsets[0]));
+	}
+	if (!_primitiveHeaders.empty())
+	{
+		stream.write(reinterpret_cast<const char *>(_primitiveHeaders.data()), _primitiveHeaders.size() * sizeof(_primitiveHeaders[0]));
+	}
+	if (!_bones.empty())
+	{
+		stream.write(reinterpret_cast<const char *>(_bones.data()), _bones.size() * sizeof(_bones[0]));
+	}
+	if (!_vertices.empty())
+	{
+		stream.write(reinterpret_cast<const char *>(_vertices.data()), _vertices.size() * sizeof(_vertices[0]));
+	}
+	if (!_indices.empty())
+	{
+		stream.write(reinterpret_cast<const char *>(_indices.data()), _indices.size() * sizeof(_indices[0]));
+	}
+	if (!_lookUpTable.empty())
+	{
+		stream.write(reinterpret_cast<const char *>(_lookUpTable.data()), _lookUpTable.size() * sizeof(_lookUpTable[0]));
+	}
+	if (!_blends.empty())
+	{
+		stream.write(reinterpret_cast<const char *>(_blends.data()), _blends.size() * sizeof(_blends[0]));
+	}
 }
 
 void L3DFile::Open(const std::string& file)
@@ -540,6 +634,99 @@ void L3DFile::Write(const std::string& file)
 
 	// Set magic number
 	std::memcpy(_header.magic, kMagic, sizeof(kMagic));
+	_header.submeshCount = static_cast<uint32_t>(_submeshHeaders.size());
+	_header.skinCount = static_cast<uint32_t>(_skins.size());
+	_header.pointCount = static_cast<uint32_t>(_points.size());
+	size_t offset = sizeof(_header);
+	_header.submeshOffsetsOffset = _header.submeshCount > 0 ? static_cast<uint32_t>(offset) : std::numeric_limits<uint32_t>::max();
+	offset += _header.submeshCount * sizeof(uint32_t);
+	_header.anotherOffset = std::numeric_limits<uint32_t>::max();
+	_header.skinOffsetsOffset = _header.skinCount > 0 ? static_cast<uint32_t>(offset) : std::numeric_limits<uint32_t>::max();
+	offset += _header.skinCount * sizeof(uint32_t);
+	_header.pointOffset = _header.pointCount > 0 ? static_cast<uint32_t>(offset) : std::numeric_limits<uint32_t>::max();
+	offset += _header.pointCount * sizeof(_points[0]);
+	_header.extraDataOffset = std::numeric_limits<uint32_t>::max();
+
+	size_t submeshOffsetsBase = sizeof(L3DHeader);
+	size_t skinOffsetsBase = submeshOffsetsBase + _header.submeshCount * sizeof(uint32_t);
+	size_t pointsBase = skinOffsetsBase + _header.skinCount * sizeof(uint32_t);
+	size_t submeshBase = pointsBase + _header.pointCount * sizeof(_points[0]);
+	size_t skinBase = submeshBase + _submeshHeaders.size() * sizeof(_submeshHeaders[0]);
+	size_t primitiveOffsetBase = skinBase + _skins.size() * sizeof(_skins[0]);
+	size_t primitiveBase = primitiveOffsetBase + _primitiveHeaders.size() * sizeof(uint32_t);
+	size_t boneBase = primitiveBase + _primitiveHeaders.size() * sizeof(_primitiveHeaders[0]);
+	size_t vertexBase = boneBase + _bones.size() * sizeof(_bones[0]);
+	size_t triangleBase = vertexBase + _vertices.size() * sizeof(_vertices[0]);
+	size_t lutBase = triangleBase + _indices.size() * sizeof(_indices[0]);
+	size_t blendBase = lutBase + _lookUpTable.size() * sizeof(_lookUpTable[0]);
+	_header.size = static_cast<uint32_t>(blendBase + _blends.size() * sizeof(_blends[0]));
+	if (!_bones.empty())
+	{
+		_header.flags = static_cast<L3DMeshFlags>(static_cast<uint32_t>(_header.flags) |
+		                static_cast<uint32_t>(L3DMeshFlags::HasBones));
+	}
+
+	for (size_t i = 0; i < _primitiveHeaders.size(); ++i)
+	{
+		_primitiveHeaders[i].verticesOffset = _vertexSpans[i].size() > 0 ? static_cast<uint32_t>(vertexBase) : std::numeric_limits<uint32_t>::max();
+		_primitiveHeaders[i].trianglesOffset = _indexSpans[i].size() > 0 ? static_cast<uint32_t>(triangleBase) : std::numeric_limits<uint32_t>::max();
+		_primitiveHeaders[i].boneVertLUTOffset = std::numeric_limits<uint32_t>::max(); // TODO boneVertLUTBase;
+		_primitiveHeaders[i].vertexBlendsOffset = std::numeric_limits<uint32_t>::max(); // TODO vertexBlendsBase;
+		vertexBase += _vertexSpans[i].size() * sizeof(_vertices[0]);
+		triangleBase += 3 * _indexSpans[i].size() * sizeof(_indices[0]);
+		// TODO
+		//  boneVertLUTBase += 3 * _lookupSpans[i].size() * sizeof(_lookUpTable[0]);
+		//  vertexBlendsBase += _blendSpans[i].size() * sizeof(_blends[0]);
+	}
+	for (auto& header : _submeshHeaders)
+	{
+		// TODO Set flags
+		header.primitivesOffset = header.numPrimitives ? static_cast<uint32_t>(primitiveOffsetBase) : std::numeric_limits<uint32_t>::max();
+		header.bonesOffset = header.numBones ? static_cast<uint32_t>(boneBase) : std::numeric_limits<uint32_t>::max();
+		primitiveBase += header.numPrimitives * sizeof(L3DPrimitiveHeader);
+		boneBase += header.numBones * sizeof(L3DBone);
+	}
 
 	WriteFile(stream);
+}
+
+void L3DFile::AddSubmesh(const L3DSubmeshHeader& header)
+{
+	_submeshHeaders.push_back(header);
+}
+
+void L3DFile::AddPrimitives(const std::vector<L3DPrimitiveHeader>& headers)
+{
+	_primitiveSpans.emplace_back(_primitiveHeaders, static_cast<uint32_t>(_primitiveHeaders.size()), static_cast<uint32_t>(headers.size()));
+	for (auto& header : headers)
+	{
+		_primitiveHeaders.push_back(header);
+	}
+}
+
+void L3DFile::AddVertices(const std::vector<L3DVertex>& vertices)
+{
+	_vertexSpans.emplace_back(_vertices, static_cast<uint32_t>(_vertices.size()), static_cast<uint32_t>(vertices.size()));
+	for (auto& vertex : vertices)
+	{
+		_vertices.push_back(vertex);
+	}
+}
+
+void L3DFile::AddIndices(const std::vector<uint16_t>& indices)
+{
+	_indexSpans.emplace_back(_indices, static_cast<uint32_t>(_indices.size()), static_cast<uint32_t>(indices.size()));
+	for (auto& index : indices)
+	{
+		_indices.push_back(index);
+	}
+}
+
+void L3DFile::AddBones(const std::vector<L3DBone>& bones)
+{
+	_boneSpans.emplace_back(_bones, static_cast<uint32_t>(_bones.size()), static_cast<uint32_t>(bones.size()));
+	for (auto& bone : bones)
+	{
+		_bones.push_back(bone);
+	}
 }

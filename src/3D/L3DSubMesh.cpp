@@ -20,7 +20,6 @@
 
 #include "L3DSubMesh.h"
 
-#include "Common/IStream.h"
 #include "Game.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/ShaderProgram.h"
@@ -29,8 +28,6 @@
 #include "MeshPack.h"
 
 #include <glm/gtx/component_wise.hpp>
-#include <glm/gtx/norm.hpp>
-#include <l3d_file.h>
 #include <spdlog/spdlog.h>
 
 using namespace openblack::graphics;
@@ -49,23 +46,6 @@ L3DSubMesh::L3DSubMesh(L3DMesh& mesh): _l3dMesh(mesh) {}
 
 L3DSubMesh::~L3DSubMesh() {}
 
-struct L3DPrimitive
-{
-	uint32_t unknown_1;
-	uint32_t unknown_2;
-	uint32_t skinID;
-	uint32_t unknown_3;
-
-	uint32_t numVerticies;
-	uint32_t verticiesOffset;
-	uint32_t numTriangles;
-	uint32_t trianglesOffset;
-	uint32_t boneVertLUTSize;
-	uint32_t boneVertLUTOffset;
-	uint32_t numVertexBlends;
-	uint32_t vertexBlendsOffset;
-};
-
 void L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 {
 	auto& header = l3d.GetSubmeshHeaders()[meshIndex];
@@ -73,7 +53,7 @@ void L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 	auto& verticesSpan = l3d.GetVertexSpan(meshIndex);
 	auto& indexSpan = l3d.GetIndexSpan(meshIndex);
 
-	_flags = *reinterpret_cast<const HeaderFlag*>(&header.flags);
+	_flags = header.flags;
 
 	// Count vertices and indices
 	uint32_t nVertices = 0;
