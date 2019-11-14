@@ -380,8 +380,13 @@ void L3DFile::ReadFile(std::istream& stream)
 			{
 				Fail("Look-up table data goes beyond file");
 			}
+
 			stream.seekg(header.boneVertLUTOffset);
-			stream.read(reinterpret_cast<char*>(&_lookUpTable[counter]), header.boneVertLUTSize);
+
+			if (!_lookUpTable.empty())
+			{
+				stream.read(reinterpret_cast<char*>(&_lookUpTable[counter]), header.boneVertLUTSize);
+			}
 			counter += header.boneVertLUTSize;
 		}
 		if (counter != totalLookUpTableSize)
@@ -405,7 +410,12 @@ void L3DFile::ReadFile(std::istream& stream)
 				Fail("Blend value data goes beyond file");
 			}
 			stream.seekg(header.vertexBlendsOffset);
-			stream.read(reinterpret_cast<char*>(&_blends[counter]), header.numVertexBlends * sizeof(_blends[0]));
+
+			if (!_blends.empty())
+			{
+				stream.read(reinterpret_cast<char*>(&_blends[counter]), header.numVertexBlends * sizeof(_blends[0]));
+			}
+
 			counter += header.numVertexBlends;
 		}
 		if (counter != totalBlendValues)
