@@ -21,10 +21,11 @@
 #pragma once
 
 #include "AxisAlignedBoundingBox.h"
-#include "Graphics/RenderPass.h"
+#include "../Graphics/RenderPass.h"
 
 #include <bgfx/bgfx.h>
 #include <glm/fwd.hpp>
+#include <l3d_file.h>
 
 #include <cstdint>
 #include <memory>
@@ -32,24 +33,13 @@
 
 namespace openblack
 {
-class IStream;
 class L3DMesh;
-
-namespace l3d
-{
-class L3DFile;
-}
 
 namespace graphics
 {
 class Mesh;
 class ShaderProgram;
 } // namespace graphics
-
-enum class L3DSubMeshFlags : uint32_t
-{
-	Unknown1 = 1 << 0, // 0x1      (31)
-};
 
 class L3DSubMesh
 {
@@ -61,20 +51,6 @@ class L3DSubMesh
 	};
 
 public:
-	// TODO(bwrsandman): Move to l3d lib
-#pragma pack(push, 1)
-	struct alignas(4) HeaderFlag
-	{
-		uint32_t lod : 3;
-		uint32_t status : 6;
-		uint32_t unknown1 : 3; // always 0b0101
-		uint32_t isWindow : 1;
-		uint32_t isPhysics : 1;
-		uint32_t unknown2 : 16; // always 0, probably padding on 32 bits
-	};
-#pragma pack(pop)
-	static_assert(sizeof(HeaderFlag) == 4);
-
 	explicit L3DSubMesh(L3DMesh& mesh);
 	~L3DSubMesh();
 
@@ -85,7 +61,7 @@ public:
 	            uint32_t instanceCount, const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0,
 	            bool preserveState = false) const;
 
-	[[nodiscard]] HeaderFlag GetFlags() const { return _flags; }
+	[[nodiscard]] openblack::l3d::L3DSubmeshHeader::Flags GetFlags() const { return _flags; }
 	[[nodiscard]] graphics::Mesh& GetMesh() const;
 	[[nodiscard]] AxisAlignedBoundingBox GetBoundingBox() const { return _boundingBox; }
 
@@ -96,7 +72,7 @@ private:
 
 	L3DMesh& _l3dMesh;
 
-	HeaderFlag _flags;
+	openblack::l3d::L3DSubmeshHeader::Flags _flags;
 
 	std::unique_ptr<graphics::Mesh> _mesh;
 	std::vector<Primitive> _primitives;

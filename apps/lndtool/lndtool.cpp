@@ -481,6 +481,12 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			return_code = EXIT_SUCCESS;
 			return false;
 		}
+		if (result["subcommand"].count() == 0)
+		{
+			std::cerr << options.help() << std::endl;
+			return_code = EXIT_FAILURE;
+			return false;
+		}
 		if (result["subcommand"].as<std::string>() == "read")
 		{
 			if (result["header"].count() > 0)
