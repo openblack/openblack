@@ -103,13 +103,20 @@ if(NOT bgfx_FOUND)
     "OPENBLACK_BGFX_USE_SYSTEM_DEPS" OFF)
 
   if(OPENBLACK_BGFX_USE_SYSTEM_SPIRV_TOOLS)
-    find_library(SPIRVTOOLSOPT SPIRV-Tools-opt)
     find_package(spirv-tools)
     if(NOT spirv-tools_FOUND)
       message("Searching for spirv-tools in pkgconfig")
       find_package(PkgConfig REQUIRED)
       pkg_check_modules(SPIRV_TOOLS REQUIRED IMPORTED_TARGET GLOBAL SPIRV-Tools)
       add_library(spirv-tools ALIAS PkgConfig::SPIRV_TOOLS)
+    endif()
+    if(TARGET spirv-tools::SPIRV-Tools AND NOT TARGET spirv-tools)
+      set_target_properties(spirv-tools::SPIRV-Tools PROPERTIES IMPORTED_GLOBAL TRUE)
+      add_library(spirv-tools INTERFACE)
+      target_link_libraries(spirv-tools
+        INTERFACE
+          spirv-tools::SPIRV-Tools
+          spirv-tools::SPIRV-Tools-opt)
     endif()
   endif()
   if(OPENBLACK_BGFX_USE_SYSTEM_SPIRV_CROSS)
