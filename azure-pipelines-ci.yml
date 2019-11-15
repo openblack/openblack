@@ -1,0 +1,43 @@
+trigger:
+- master
+pr:
+- master
+
+jobs:
+- job: windows
+  displayName: 'Windows'
+  pool:
+    vmImage: 'windows-2019'
+
+  strategy:
+    matrix:
+      x86:
+        BuildPlatform: 'x86'
+        MSBuildPlatform: 'Win32'
+      x64:
+        BuildPlatform: 'x64'
+        MSBuildPlatform: 'x64'
+
+  steps:
+  - template: azure-pipelines/templates/windows-dependencies.yml
+    parameters:
+      BuildPlatform: $(BuildPlatform)
+  - template: azure-pipelines/templates/windows-build.yml
+    parameters:
+      BuildPlatform: $(BuildPlatform)
+      BuildConfiguration: Debug
+      MSBuildPlatform: $(MSBuildPlatform)
+- job: linux
+  displayName: 'Linux'
+  pool:
+    vmImage: 'ubuntu-16.04'
+
+  strategy:
+    matrix:
+      linux-amd64-gcc:
+        containerImage: 'openblack/compile-farm-ci:linux-amd64-gcc'
+
+  container: $[ variables['containerImage'] ]
+  
+  steps:
+  - template: azure-pipelines/templates/linux-build.yml

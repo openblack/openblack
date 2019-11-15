@@ -1,0 +1,15 @@
+parameters:
+  BuildPlatform: ''
+
+steps:
+- bash: |
+    set -ex
+    curl -L https://github.com/openblack/compile-farm/releases/download/windows-deps/windows-dependencies-${{ parameters.BuildPlatform }}.7z > windows-dependencies.7z
+    7z x windows-dependencies.7z
+    rm -f windows-dependencies.7z
+    mv windows-dependencies/installed /c/vcpkg/
+    rm -rf windows-dependencies
+  displayName: 'Install dependencies'
+  workingDirectory: $(Build.ArtifactStagingDirectory)
+- script: c:\vcpkg\vcpkg.exe integrate install
+  displayName: 'Integrate vcpkg'
