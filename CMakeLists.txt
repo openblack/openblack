@@ -104,8 +104,9 @@ if(NOT bgfx_FOUND)
 
   if(OPENBLACK_BGFX_USE_SYSTEM_SPIRV_TOOLS)
     find_library(SPIRVTOOLSOPT SPIRV-Tools-opt)
-    find_package(spirv-tools QUIET)
+    find_package(spirv-tools)
     if(NOT spirv-tools_FOUND)
+      message("Searching for spirv-tools in pkgconfig")
       find_package(PkgConfig REQUIRED)
       pkg_check_modules(SPIRV_TOOLS REQUIRED IMPORTED_TARGET GLOBAL SPIRV-Tools)
       add_library(spirv-tools ALIAS PkgConfig::SPIRV_TOOLS)
@@ -129,6 +130,14 @@ if(NOT bgfx_FOUND)
   # declare this here so bgfx compiles in a reasonable time
   if(MSVC)
     add_compile_options(/MP)
+  endif()
+
+  if (NOT TARGET spirv-tools)
+      message("No spirv-tools target before including bgfx... This will take extra time to compile.")
+  endif()
+
+  if (NOT TARGET spirv-cross)
+      message("No spirv-cross target before including bgfx... This will take extra time to compile.")
   endif()
 
   FetchContent_MakeAvailable(bgfx)
