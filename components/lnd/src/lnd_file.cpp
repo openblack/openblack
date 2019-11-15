@@ -203,7 +203,7 @@ void LNDFile::ReadFile(std::istream& stream)
 	// Get all bytes that weren't read
 	if (stream.peek() != EOF)
 	{
-		_unaccounted.resize(fsize - stream.tellg());
+		_unaccounted.resize(static_cast<std::size_t>(fsize - stream.tellg()));
 		stream.read(reinterpret_cast<char*>(_unaccounted.data()), _unaccounted.size() * sizeof(_unaccounted[0]));
 	}
 
