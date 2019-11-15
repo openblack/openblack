@@ -1,0 +1,19 @@
+parameters:
+  BuildConfiguration: ''
+  BuildPlatform: ''
+  MSBuildPlatform: ''
+
+steps:
+  - script: mkdir build
+    displayName: Make Build Directory
+  - task: CMake@1
+    inputs:
+      workingDirectory: 'build'
+      cmakeArgs: '-DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=${{ parameters.BuildPlatform }}-windows -A ${{ parameters.MSBuildPlatform }} ..'
+  - task: VSBuild@1
+    displayName: 'Build'
+    inputs:
+      solution: 'build/openblack.sln'
+      platform: ${{ parameters.MSBuildPlatform }}
+      configuration: ${{ parameters.BuildConfiguration }}
+      maximumCpuCount: true
