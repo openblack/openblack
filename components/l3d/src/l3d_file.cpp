@@ -205,7 +205,7 @@ void L3DFile::ReadFile(std::istream& stream)
 
 	// Read the offset info into a temporary buffers
 	std::vector<uint32_t> submeshOffsets(_header.submeshCount);
-	if (_header.submeshOffsetsOffset != std::numeric_limits<uint32_t>::max())
+	if (!submeshOffsets.empty() && _header.submeshOffsetsOffset != std::numeric_limits<uint32_t>::max())
 	{
 		if (_header.submeshOffsetsOffset > fsize)
 		{
@@ -220,7 +220,7 @@ void L3DFile::ReadFile(std::istream& stream)
 	}
 	std::vector<uint32_t> skinOffsets;
 	skinOffsets.resize(_header.skinCount);
-	if (_header.skinOffsetsOffset != std::numeric_limits<uint32_t>::max())
+	if (!skinOffsets.empty() && _header.skinOffsetsOffset != std::numeric_limits<uint32_t>::max())
 	{
 		if (_header.skinOffsetsOffset > fsize)
 		{
@@ -234,7 +234,7 @@ void L3DFile::ReadFile(std::istream& stream)
 		stream.read(reinterpret_cast<char*>(skinOffsets.data()), skinOffsets.size() * sizeof(skinOffsets[0]));
 	}
 	_points.resize(_header.pointCount);
-	if (_header.pointOffsetsOffset != std::numeric_limits<uint32_t>::max())
+	if (!_points.empty() && _header.pointOffsetsOffset != std::numeric_limits<uint32_t>::max())
 	{
 		if (_header.pointOffsetsOffset > fsize)
 		{
@@ -280,6 +280,10 @@ void L3DFile::ReadFile(std::istream& stream)
 		{
 			Fail("More primitives found than declared");
 		}
+		if (header.numPrimitives == 0)
+		{
+			continue;
+		}
 		if (primitiveOffsets[primitiveCounter] > fsize)
 		{
 			Fail("Primitive Offset is beyond the size of the file");
@@ -320,11 +324,12 @@ void L3DFile::ReadFile(std::istream& stream)
 
 	// Reserve space for vertices
 	_vertices.resize(totalVertices);
+	if (!_vertices.empty())
 	{
 		uint32_t counter = 0;
 		for (const auto& header : _primitiveHeaders)
 		{
-			if (header.verticesOffset == std::numeric_limits<uint32_t>::max())
+			if (header.numVertices == 0 || header.verticesOffset == std::numeric_limits<uint32_t>::max())
 			{
 				continue;
 			}
@@ -344,11 +349,12 @@ void L3DFile::ReadFile(std::istream& stream)
 
 	// Reserve space for indices
 	_indices.resize(totalIndices);
+	if (!_indices.empty())
 	{
 		uint32_t counter = 0;
 		for (const auto& header : _primitiveHeaders)
 		{
-			if (header.trianglesOffset == std::numeric_limits<uint32_t>::max())
+			if (header.numTriangles == 0 || header.trianglesOffset == std::numeric_limits<uint32_t>::max())
 			{
 				continue;
 			}
@@ -368,11 +374,12 @@ void L3DFile::ReadFile(std::istream& stream)
 
 	// Reserve space for look-up table data
 	_lookUpTable.resize(totalLookUpTableSize);
+	if (!_lookUpTable.empty())
 	{
 		uint32_t counter = 0;
 		for (const auto& header : _primitiveHeaders)
 		{
-			if (header.boneVertLUTOffset == std::numeric_limits<uint32_t>::max())
+			if (header.boneVertLUTSize == 0 || header.boneVertLUTOffset == std::numeric_limits<uint32_t>::max())
 			{
 				continue;
 			}
@@ -392,11 +399,12 @@ void L3DFile::ReadFile(std::istream& stream)
 
 	// Reserve space for vertex blend data
 	_blends.resize(totalBlendValues);
+	if (!_blends.empty())
 	{
 		uint32_t counter = 0;
 		for (const auto& header : _primitiveHeaders)
 		{
-			if (header.vertexBlendsOffset == std::numeric_limits<uint32_t>::max())
+			if (header.numVertexBlends == 0 || header.vertexBlendsOffset == std::numeric_limits<uint32_t>::max())
 			{
 				continue;
 			}
@@ -416,11 +424,12 @@ void L3DFile::ReadFile(std::istream& stream)
 
 	// Reserve space for bone data
 	_bones.resize(totalBones);
+	if (!_bones.empty())
 	{
 		uint32_t counter = 0;
 		for (const auto& header : _submeshHeaders)
 		{
-			if (header.bonesOffset == std::numeric_limits<uint32_t>::max())
+			if (header.numBones == 0 || header.bonesOffset == std::numeric_limits<uint32_t>::max())
 			{
 				continue;
 			}
