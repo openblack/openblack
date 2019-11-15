@@ -184,10 +184,10 @@ void L3DFile::ReadFile(std::istream& stream)
 	assert(!_isLoaded);
 
 	// Total file size
-	size_t fsize = 0;
+	std::size_t fsize = 0;
 	if (stream.seekg(0, std::ios_base::end))
 	{
-		fsize = stream.tellg();
+		fsize = static_cast<std::size_t>(stream.tellg());
 		stream.seekg(0);
 	}
 

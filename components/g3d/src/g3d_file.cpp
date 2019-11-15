@@ -146,10 +146,10 @@ void G3DFile::ReadBlocks()
 	}
 
 	// Total file size
-	size_t fsize = 0;
+	std::size_t fsize = 0;
 	if (input.seekg(0, std::ios_base::end))
 	{
-		fsize = input.tellg();
+		fsize = static_cast<std::size_t>(input.tellg());
 		input.seekg(0);
 	}
 
@@ -166,7 +166,7 @@ void G3DFile::ReadBlocks()
 		Fail("Unrecognized Mesh Pack header");
 	}
 
-	if (fsize < static_cast<size_t>(input.tellg()) + sizeof(G3DBlockHeader))
+	if (fsize < static_cast<std::size_t>(input.tellg()) + sizeof(G3DBlockHeader))
 	{
 		Fail("File too small to contain any blocks.");
 	}
@@ -281,7 +281,7 @@ void G3DFile::ResolveMeshBlock()
 	stream.read(reinterpret_cast<char*>(meshOffsets.data()), meshOffsets.size() * sizeof(meshOffsets[0]));
 
 	_meshes.resize(meshOffsets.size());
-	for (uint32_t i = 0; i < _meshes.size(); i++)
+	for (std::size_t i = 0; i < _meshes.size(); i++)
 	{
 		auto size = (i == _meshes.size() - 1 ? data.size() : meshOffsets[i + 1]) - meshOffsets[i];
 		_meshes[i].resize(size);

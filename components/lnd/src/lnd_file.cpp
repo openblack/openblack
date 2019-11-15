@@ -131,10 +131,10 @@ void LNDFile::ReadFile(std::istream& stream)
 	assert(!_isLoaded);
 
 	// Total file size
-	size_t fsize = 0;
+	std::size_t fsize = 0;
 	if (stream.seekg(0, std::ios_base::end))
 	{
-		fsize = stream.tellg();
+		fsize = static_cast<std::size_t>(stream.tellg());
 		stream.seekg(0);
 	}
 
@@ -171,7 +171,7 @@ void LNDFile::ReadFile(std::istream& stream)
 	// Read Blocks
 	// take away a block from the count, because it's not in the file?
 	_blocks.resize(_header.blockCount - 1);
-	if (static_cast<size_t>(stream.tellg()) + _blocks.size() * sizeof(_blocks[0]) > fsize)
+	if (static_cast<std::size_t>(stream.tellg()) + _blocks.size() * sizeof(_blocks[0]) > fsize)
 	{
 		Fail("Blocks are beyond the end of the file");
 	}
@@ -179,7 +179,7 @@ void LNDFile::ReadFile(std::istream& stream)
 
 	// Read Countries
 	_countries.resize(_header.countryCount);
-	if (static_cast<size_t>(stream.tellg()) + _countries.size() * sizeof(_countries[0]) > fsize)
+	if (static_cast<std::size_t>(stream.tellg()) + _countries.size() * sizeof(_countries[0]) > fsize)
 	{
 		Fail("Countries are beyond the end of the file");
 	}
@@ -187,14 +187,14 @@ void LNDFile::ReadFile(std::istream& stream)
 
 	// Read Materials
 	_materials.resize(_header.materialCount);
-	if (static_cast<size_t>(stream.tellg()) + _materials.size() * sizeof(_materials[0]) > fsize)
+	if (static_cast<std::size_t>(stream.tellg()) + _materials.size() * sizeof(_materials[0]) > fsize)
 	{
 		Fail("Materials are beyond the end of the file");
 	}
 	stream.read(reinterpret_cast<char*>(_materials.data()), _materials.size() * sizeof(_materials[0]));
 
 	// Read Extra textures (noise and bump map)
-	if (static_cast<size_t>(stream.tellg()) + sizeof(_extra) > fsize)
+	if (static_cast<std::size_t>(stream.tellg()) + sizeof(_extra) > fsize)
 	{
 		Fail("Extra Textures are beyond the end of the file");
 	}
