@@ -446,6 +446,7 @@ struct Arguments
 		LookUpTables,
 		VertexBlendValues,
 		Write,
+		Extract,
 	};
 	Mode mode;
 	struct Read
@@ -457,6 +458,11 @@ struct Arguments
 		std::string outFilename;
 		std::string gltfFile;
 	} write;
+	struct Extract
+	{
+		std::string inFilename;
+		std::string gltfFile;
+	} extract;
 };
 
 namespace details
@@ -738,6 +744,150 @@ int WriteFile(const Arguments::Write& args)
 	return EXIT_SUCCESS;
 }
 
+int ExtractFile(const Arguments::Extract& args)
+{
+	openblack::l3d::L3DFile l3d {};
+
+	if (args.gltfFile.empty() || args.inFilename.empty())
+	{
+		return EXIT_FAILURE;
+	}
+
+	// Open file
+	l3d.Open(args.inFilename);
+
+	tinygltf::Model gltf;
+
+	gltf.asset.version = "2.0";
+	gltf.asset.generator = "l3dtool extract";
+
+	// Data buffer
+	tinygltf::Buffer vertexBuffer; // 0
+	size_t sizeOfVertices = l3d.GetVertices().size() * sizeof(l3d.GetVertices()[0]);
+	vertexBuffer.data.resize(sizeOfVertices);
+	memcpy(vertexBuffer.data.data(), l3d.GetVertices().data(), sizeOfVertices);
+	gltf.buffers.push_back(vertexBuffer);
+
+	tinygltf::Buffer indexBuffer; // 1
+	size_t sizeOfIndices = l3d.GetIndices().size() * sizeof(l3d.GetIndices()[0]);
+	indexBuffer.data.resize(sizeOfIndices);
+	memcpy(indexBuffer.data.data(), l3d.GetIndices().data(), sizeOfIndices);
+	gltf.buffers.push_back(indexBuffer);
+
+	// TODO: joints, weights, skins
+
+	// Buffer views
+	tinygltf::BufferView vertexView; // 0
+	vertexView.name = "vertex position view";
+	vertexView.buffer = 0;
+	vertexView.byteOffset = 0;
+	vertexView.byteLength = sizeOfVertices;
+	vertexView.byteStride = sizeof(openblack::l3d::L3DVertex);
+	vertexView.target = TINYGLTF_TARGET_ARRAY_BUFFER;
+	gltf.bufferViews.push_back(vertexView);
+	tinygltf::BufferView indexView; // 1
+	indexView.name = "index view";
+	indexView.buffer = 1;
+	indexView.byteOffset = 0;
+	indexView.byteLength = sizeOfIndices;
+	indexView.byteStride = 0;
+	indexView.target = TINYGLTF_TARGET_ELEMENT_ARRAY_BUFFER;
+	gltf.bufferViews.push_back(indexView);
+
+	gltf.nodes.emplace_back(); // 0
+	tinygltf::Node& rootNode = gltf.nodes.front();
+	rootNode.name = "root node";
+
+	// Scene
+	tinygltf::Scene scene;
+	scene.name = "l3dtool exported scene from " + args.inFilename;
+	scene.nodes.push_back(0);
+	gltf.scenes.push_back(scene);
+	gltf.defaultScene = 0;
+
+	// Meshes
+	uint32_t vertexOffset = 0;
+	uint32_t indexOffset = 0;
+	gltf.meshes.resize(l3d.GetSubmeshHeaders().size());
+	for (uint32_t i = 0; i < l3d.GetSubmeshHeaders().size(); ++i)
+	{
+		auto& gltfMesh = gltf.meshes[i];
+		gltfMesh.name = "submesh #" + std::to_string(i);
+		gltfMesh.primitives.resize(l3d.GetPrimitiveSpan(i).size());
+		for (uint32_t j = 0; j < l3d.GetPrimitiveSpan(i).size(); ++j)
+		{
+			auto& gltfPrimitive = gltfMesh.primitives[j];
+			auto& l3dPrimitive = l3d.GetPrimitiveSpan(i)[j];
+
+			// Accessors
+			tinygltf::Accessor vertexPositionAccessor;
+			vertexPositionAccessor.bufferView = 0;
+			vertexPositionAccessor.name = "vertex position accessor for primitive #" + std::to_string(j) + " of " + gltfMesh.name;
+			vertexPositionAccessor.byteOffset = vertexOffset * sizeof(openblack::l3d::L3DVertex) + offsetof(openblack::l3d::L3DVertex, position);
+			vertexPositionAccessor.normalized = false;
+			vertexPositionAccessor.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
+			vertexPositionAccessor.count = l3dPrimitive.numVertices;
+			vertexPositionAccessor.type = TINYGLTF_TYPE_VEC3;
+			gltfPrimitive.attributes["POSITION"] = static_cast<int>(gltf.accessors.size());
+			gltf.accessors.push_back(vertexPositionAccessor);
+
+			tinygltf::Accessor vertexTextureCoordinateAccessor;
+			vertexTextureCoordinateAccessor.bufferView = 0;
+			vertexTextureCoordinateAccessor.name = "vertex texture coordinate accessor for primitive #" + std::to_string(j) + " of " + gltfMesh.name;
+			vertexTextureCoordinateAccessor.byteOffset = vertexOffset * sizeof(openblack::l3d::L3DVertex) + offsetof(openblack::l3d::L3DVertex, texCoord);
+			vertexTextureCoordinateAccessor.normalized = false;
+			vertexTextureCoordinateAccessor.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
+			vertexTextureCoordinateAccessor.count = l3dPrimitive.numVertices;
+			vertexTextureCoordinateAccessor.type = TINYGLTF_TYPE_VEC2;
+			gltfPrimitive.attributes["TEXCOORD_0"] = static_cast<int>(gltf.accessors.size());
+			gltf.accessors.push_back(vertexTextureCoordinateAccessor);
+
+			tinygltf::Accessor vertexNormalAccessor;
+			vertexNormalAccessor.bufferView = 0;
+			vertexNormalAccessor.name = "vertex normal accessor for primitive #" + std::to_string(j) + " of " + gltfMesh.name;
+			vertexNormalAccessor.byteOffset = vertexOffset * sizeof(openblack::l3d::L3DVertex) + offsetof(openblack::l3d::L3DVertex, normal);
+			vertexNormalAccessor.normalized = false;
+			vertexNormalAccessor.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
+			vertexNormalAccessor.count = l3dPrimitive.numVertices;
+			vertexNormalAccessor.type = TINYGLTF_TYPE_VEC3;
+			gltfPrimitive.attributes["NORMAL"] = static_cast<int>(gltf.accessors.size());
+			gltf.accessors.push_back(vertexNormalAccessor);
+
+			tinygltf::Accessor indexAccessor;
+			indexAccessor.bufferView = 1;
+			indexAccessor.name = "index accessor for primitive #" + std::to_string(j) + " of " + gltfMesh.name;
+			indexAccessor.byteOffset = indexOffset * sizeof(uint16_t);
+			indexAccessor.normalized = false;
+			indexAccessor.componentType = TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT;
+			indexAccessor.count = l3dPrimitive.numTriangles * 3;
+			indexAccessor.type = TINYGLTF_TYPE_SCALAR;
+			gltfPrimitive.indices = static_cast<int>(gltf.accessors.size());
+			gltf.accessors.push_back(indexAccessor);
+
+			// TODO gltfPrimitive.material;
+			gltfPrimitive.mode = TINYGLTF_MODE_TRIANGLES;
+			// TODO gltfPrimitive.targets
+
+			vertexOffset += l3dPrimitive.numVertices;
+			indexOffset += l3dPrimitive.numTriangles * 3;
+		}
+		// TODO gltfMesh.weights
+		rootNode.children.push_back(static_cast<int>(gltf.nodes.size()));
+		tinygltf::Node node;
+		node.name = gltfMesh.name + " node";
+		node.mesh = static_cast<int>(i);
+		gltf.nodes.push_back(node);
+	}
+	// TODO: Create joints
+	// TODO: Associate mesh and joints to node
+
+	tinygltf::TinyGLTF exporter;
+
+	exporter.WriteGltfSceneToFile(&gltf, args.gltfFile, true, true, true, false);
+
+	return EXIT_SUCCESS;
+}
+
 bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 {
 	cxxopts::Options options("l3dtool", "Inspect and extract files from LionHead L3D files.");
@@ -746,7 +896,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		("h,help", "Display this help message.")
 		("subcommand", "Subcommand.", cxxopts::value<std::string>())
 	;
-	options.positional_help("[read|write] [OPTION...]");
+	options.positional_help("[read|write|extract] [OPTION...]");
 	options.add_options("read")
 		("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::string>>())
 		("m,mesh-header", "Print Mesh Headers.", cxxopts::value<std::vector<std::string>>())
@@ -759,9 +909,9 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		("L,look-up-tables", "Print Look Up Table Data.", cxxopts::value<std::vector<std::string>>())
 		("B,vertex-blend-values", "Print Vertex Blend Values.", cxxopts::value<std::vector<std::string>>())
 	;
-	options.add_options("write")
+	options.add_options("write/extract from and to  glTF format")
 		("o,output", "Output file (required).", cxxopts::value<std::string>())
-		("i,input-mesh", "GLTF file (required).", cxxopts::value<std::string>())
+		("i,input-mesh", "Input file (required).", cxxopts::value<std::string>())
 		;
 
 	options.parse_positional({"subcommand"});
@@ -858,6 +1008,20 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 				return true;
 			}
 		}
+		else if (result["subcommand"].as<std::string>() == "extract")
+		{
+			args.write.outFilename = "";
+			if (result["output"].count() > 0)
+			{
+				args.mode = Arguments::Mode::Extract;
+				args.extract.inFilename = result["input-mesh"].as<std::string>();
+				if (result["input-mesh"].count() > 0)
+				{
+					args.extract.gltfFile = result["output"].as<std::string>();
+				}
+				return true;
+			}
+		}
 	}
 	catch (cxxopts::OptionParseException& err)
 	{
@@ -881,6 +1045,11 @@ int main(int argc, char* argv[])
 	if (args.mode == Arguments::Mode::Write)
 	{
 		return WriteFile(args.write);
+	}
+
+	if (args.mode == Arguments::Mode::Extract)
+	{
+		return ExtractFile(args.extract);
 	}
 
 	for (auto& filename : args.read.filenames)
