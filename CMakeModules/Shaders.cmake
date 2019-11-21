@@ -11,11 +11,9 @@
 
 # find_package(bgfx REQUIRED COMPONENTS shaderc)
 
-# get_target_property(BGFX_INCLUDE_PATH bgfx::bgfx INTERFACE_INCLUDE_DIRECTORIES)
-# set(BGFX_SHADER_INCLUDE_PATH ${BGFX_INCLUDE_PATH}/bgfx)
-
-add_executable(bgfx::shaderc ALIAS shaderc)
-set(BGFX_SHADER_INCLUDE_PATH ${bgfx_SOURCE_DIR}/bgfx/src)
+get_target_property(BGFX_INCLUDE_PATH bgfx::bgfx INTERFACE_INCLUDE_DIRECTORIES)
+list (GET BGFX_INCLUDE_PATH 0 BGFX_INCLUDE_PATH_1) # bgfx::bgfx exports include directory twice?
+set(BGFX_SHADER_INCLUDE_PATH ${BGFX_INCLUDE_PATH_1}/bgfx)
 
 # shaderc_parse(
 #	FILE filename
