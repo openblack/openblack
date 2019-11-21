@@ -69,70 +69,19 @@ else()
   endif()
 endif()
 
-# todo: support find_package(bgfx)
-if(NOT bgfx_FOUND)
-  FetchContent_Declare(
-    bgfx
-    GIT_REPOSITORY https://github.com/openblack/bgfx.cmake.git
-    GIT_TAG materials
-  )
-
-  set(BGFX_BUILD_EXAMPLES
-      OFF
-      CACHE BOOL "Build bgfx examples.")
-  set(BGFX_INSTALL
-      OFF
-      CACHE BOOL "Create installation target.")
-  set(BGFX_CUSTOM_TARGETS
-      OFF
-      CACHE BOOL "Include convenience custom targets.")
-  set(BGFX_USE_DEBUG_SUFFIX
-      OFF
-      CACHE BOOL "Add 'd' suffix to debug output targets")
-
-  include(CMakeDependentOption)
-  option(OPENBLACK_BGFX_USE_SYSTEM_DEPS
-         "Search for system libraries for all 3rd parties of bgfx" OFF)
-  cmake_dependent_option(
-    OPENBLACK_BGFX_USE_SYSTEM_SPIRV_TOOLS
-    "Search for system spirv tools instead of building it" ON
-    "OPENBLACK_BGFX_USE_SYSTEM_DEPS" OFF)
-  cmake_dependent_option(
-    OPENBLACK_BGFX_USE_SYSTEM_SPIRV_CROSS
-    "Search for system spirv cross instead of building it" ON
-    "OPENBLACK_BGFX_USE_SYSTEM_DEPS" OFF)
-
-  if(OPENBLACK_BGFX_USE_SYSTEM_SPIRV_TOOLS)
-    find_library(SPIRVTOOLSOPT SPIRV-Tools-opt)
-    find_package(spirv-tools QUIET)
-    if(NOT spirv-tools_FOUND)
-      find_package(PkgConfig REQUIRED)
-      pkg_check_modules(SPIRV_TOOLS REQUIRED IMPORTED_TARGET GLOBAL SPIRV-Tools)
-      add_library(spirv-tools ALIAS PkgConfig::SPIRV_TOOLS)
-    endif()
-  endif()
-  if(OPENBLACK_BGFX_USE_SYSTEM_SPIRV_CROSS)
-    find_package(spirv_cross_core REQUIRED)
-    find_package(spirv_cross_glsl REQUIRED)
-    find_package(spirv_cross_msl REQUIRED)
-    find_package(spirv_cross_reflect REQUIRED)
-    add_library(spirv-cross INTERFACE)
-    target_link_libraries(
-      spirv-cross INTERFACE spirv-cross-core spirv-cross-glsl spirv-cross-msl
-                            spirv-cross-reflect)
-    if(WIN32)
-      find_package(spirv_cross_hlsl REQUIRED)
-      target_link_libraries(spirv-cross INTERFACE spirv-cross-hlsl)
-    endif()
+find_package(bgfx CONFIG)
+if(NOT DEFINED bgfx_DIR)
+  # error if we're not building ourselves
+  if(NOT OPENBLACK_BUILD_BGFX)
+message(FATAL_ERROR " \
+Failed to find bgfx, either install from: https://github.com/openblack/bgfx.cmake \
+Or set the variable OPENBLACK_BUILD_BGFX to build it with the project. \
+")
   endif()
 
-  # declare this here so bgfx compiles in a reasonable time
-  if(MSVC)
-    add_compile_options(/MP)
-  endif()
+  # todo: reimplement building of bgfx here
+  # https://github.com/openblack/openblack/blob/2a363d58d213331781ea932c0c0cbb4a6a232994/CMakeLists.txt#L69
 
-  FetchContent_MakeAvailable(bgfx)
-  add_library(bgfx::bgfx ALIAS bgfx)
 endif()
 
 FetchContent_Declare(
