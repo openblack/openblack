@@ -882,9 +882,9 @@ void Gui::ShowProfilerWindow(Game& game)
 
 			for (uint8_t i = 0; i < stats->numViews; ++i)
 			{
-				ImGui::Text("    %s: %0.3f", stats->viewStats[i].name,
-				            1000.0f * stats->viewStats[i].gpuTimeElapsed / (double)stats->gpuTimerFreq);
-				frameDuration -= stats->viewStats[i].gpuTimeElapsed;
+				// ImGui::Text("    %s: %0.3f", stats->viewStats[i].name,
+				//             1000.0f * stats->viewStats[i].gpuTimeElapsed / (double)stats->gpuTimerFreq);
+				// frameDuration -= stats->viewStats[i].gpuTimeElapsed;
 			}
 			ImGui::Text("    Unaccounted: %0.3f", 1000.0f * frameDuration / (double)stats->gpuTimerFreq);
 		}
