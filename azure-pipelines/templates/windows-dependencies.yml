@@ -9,7 +9,15 @@ steps:
     rm -f windows-dependencies.7z
     mv windows-dependencies/installed /c/vcpkg/
     rm -rf windows-dependencies
-  displayName: 'Install dependencies'
+  displayName: 'Install vcpkg dependencies'
   workingDirectory: $(Build.ArtifactStagingDirectory)
 - script: c:\vcpkg\vcpkg.exe integrate install
   displayName: 'Integrate vcpkg'
+- bash: |
+    set -ex
+    curl -L https://github.com/openblack/bgfx.cmake/releases/download/latest/bgfx-windows-${{ parameters.BuildPlatform }}.7z > bgfx-windows.7z
+    7z x bgfx-windows.7z
+    rm -f bgfx-windows.7z
+    mv bgfx-windows /c
+  displayName: 'Download precompiled bgfx'
+  workingDirectory: $(Build.ArtifactStagingDirectory)
