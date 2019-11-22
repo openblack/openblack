@@ -9,7 +9,7 @@ steps:
   - task: CMake@1
     inputs:
       workingDirectory: 'build'
-      cmakeArgs: '-DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=${{ parameters.BuildPlatform }}-windows -A ${{ parameters.MSBuildPlatform }} ..'
+      cmakeArgs: '-DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=${{ parameters.BuildPlatform }}-windows -A ${{ parameters.MSBuildPlatform }} -Dbgfx_DIR=c:/bgfx-windows/lib/cmake/bgfx ..'
   - task: VSBuild@1
     displayName: 'Build'
     inputs:
