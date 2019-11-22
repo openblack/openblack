@@ -69,19 +69,42 @@ else()
   endif()
 endif()
 
-find_package(bgfx CONFIG)
-if(NOT DEFINED bgfx_DIR)
-  # error if we're not building ourselves
-  if(NOT OPENBLACK_BUILD_BGFX)
-message(FATAL_ERROR " \
+option(OPENBLACK_BUILD_BGFX
+"Build bgfx alongside project (not advised)" OFF)
+
+if(NOT OPENBLACK_BUILD_BGFX)
+  find_package(bgfx CONFIG)
+  if(NOT bgfx_DIR)
+    message(FATAL_ERROR " \
 Failed to find bgfx, either install from: https://github.com/openblack/bgfx.cmake \
 Or set the variable OPENBLACK_BUILD_BGFX to build it with the project. \
 ")
   endif()
+else()
+  FetchContent_Declare(
+    bgfx
+    GIT_REPOSITORY https://github.com/openblack/bgfx.cmake.git
+    GIT_TAG master
+  )
 
-  # todo: reimplement building of bgfx here
-  # https://github.com/openblack/openblack/blob/2a363d58d213331781ea932c0c0cbb4a6a232994/CMakeLists.txt#L69
+  # don't build anymore targets then what we need
+  set(BGFX_BUILD_EXAMPLES
+      OFF
+      CACHE BOOL "Build bgfx examples.")
+  set(BGFX_INSTALL
+      OFF
+      CACHE BOOL "Create installation target.")
+  set(BGFX_CUSTOM_TARGETS
+      OFF
+      CACHE BOOL "Include convenience custom targets.")
 
+  # declare this here so bgfx compiles in a reasonable time
+  if(MSVC)
+    add_compile_options(/MP)
+  endif()
+
+  FetchContent_MakeAvailable(bgfx)
+  add_library(bgfx::bgfx ALIAS bgfx)
 endif()
 
 FetchContent_Declare(
