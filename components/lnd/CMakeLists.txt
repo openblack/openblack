@@ -13,3 +13,5 @@ if(MSVC)
 else()
 	target_compile_options(lnd PRIVATE -Wall -Wextra -pedantic -Werror)
 endif()
+
+set_property(TARGET lnd PROPERTY FOLDER "components")

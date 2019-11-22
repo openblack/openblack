@@ -18,3 +18,5 @@ if(MSVC)
 else()
 	target_compile_options(lndtool PRIVATE -Wall -Wextra -pedantic -Werror)
 endif()
+
+set_property(TARGET lndtool PROPERTY FOLDER "tools")
