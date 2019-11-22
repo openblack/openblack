@@ -15,3 +15,5 @@ target_include_directories(ScriptLibrary
 )
 
 source_group(TREE ${CMAKE_CURRENT_LIST_DIR} FILES ${SCRIPTLIBRARY_SOURCES} ${SCRIPTLIBRARY_HEADERS})
+
+set_property(TARGET ScriptLibrary PROPERTY FOLDER "components")

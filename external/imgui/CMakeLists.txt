@@ -22,3 +22,5 @@ add_library(imgui STATIC
 target_include_directories(imgui PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 target_link_libraries(imgui PUBLIC SDL2::SDL2)
+
+set_property(TARGET imgui PROPERTY FOLDER "thirdparty")

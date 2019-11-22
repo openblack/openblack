@@ -13,3 +13,5 @@ if(MSVC)
 else()
 	target_compile_options(g3d PRIVATE -Wall -Wextra -pedantic -Werror)
 endif()
+
+set_property(TARGET g3d PROPERTY FOLDER "components")

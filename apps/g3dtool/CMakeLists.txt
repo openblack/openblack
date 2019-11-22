@@ -18,3 +18,5 @@ if(MSVC)
 else()
 	target_compile_options(g3dtool PRIVATE -Wall -Wextra -pedantic -Werror)
 endif()
+
+set_property(TARGET g3dtool PROPERTY FOLDER "tools")

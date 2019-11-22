@@ -13,3 +13,5 @@ if(MSVC)
 else()
 	target_compile_options(l3d PRIVATE -Wall -Wextra -pedantic -Werror)
 endif()
+
+set_property(TARGET l3d PROPERTY FOLDER "components")
