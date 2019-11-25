@@ -70,17 +70,23 @@ else()
 endif()
 
 option(OPENBLACK_BUILD_BGFX
-"Build bgfx alongside project (not advised)" OFF)
+"Build bgfx alongside project (only use for developing bgfx)" OFF)
 
 if(NOT OPENBLACK_BUILD_BGFX)
   find_package(bgfx CONFIG)
   if(NOT bgfx_DIR)
+  if (WIN32)
+    message(STATUS "Precompiled bgfx binaries can be found here: https://github.com/openblack/bgfx.cmake/releases/tag/latest")
+  endif()
+
     message(FATAL_ERROR " \
 Failed to find bgfx, either install from: https://github.com/openblack/bgfx.cmake \
 Or set the variable OPENBLACK_BUILD_BGFX to build it with the project. \
 ")
   endif()
 else()
+  message(AUTHOR_WARNING "Using OPENBLACK_BUILD_BGFX, if you are not developing use an install target instead.")
+
   FetchContent_Declare(
     bgfx
     GIT_REPOSITORY https://github.com/openblack/bgfx.cmake.git
