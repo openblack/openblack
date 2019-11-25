@@ -36,6 +36,7 @@ package directories.
 
 * Install [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/)
 * Install [CMake](https://cmake.org/download/)
+* Install [bgfx.cmake](https://github.com/openblack/bgfx.cmake/releases/tag/latest)
 
 You can either:
 
@@ -48,6 +49,8 @@ cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpk
 ```
 
 ## Linux
+
+* Install [bgfx.cmake](https://github.com/openblack/bgfx.cmake)
 
 *Note: These instructions are for Ubuntu, but can be easily applied to other distros.*
 
