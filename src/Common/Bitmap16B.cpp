@@ -32,8 +32,6 @@ using namespace openblack;
 
 Bitmap16B::Bitmap16B(const void* fileData)
 {
-	auto cast = reinterpret_cast<const uint32_t*>(fileData);
-
 	_width = *((uint32_t*)fileData + 1);
 	_height = *((uint32_t*)fileData + 2);
 	_size = _width * _height * 2;
