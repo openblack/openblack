@@ -23,7 +23,6 @@
 #include <spdlog/fmt/fmt.h>
 
 #include <cassert>
-#include <sstream>
 #include <stdexcept>
 
 namespace openblack
