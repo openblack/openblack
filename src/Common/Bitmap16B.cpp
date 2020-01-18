@@ -30,7 +30,7 @@
 
 using namespace openblack;
 
-Bitmap16B::Bitmap16B(const void* fileData, size_t size)
+Bitmap16B::Bitmap16B(const void* fileData)
 {
 	auto cast = reinterpret_cast<const uint32_t*>(fileData);
 
@@ -44,14 +44,13 @@ Bitmap16B::Bitmap16B(const void* fileData, size_t size)
 
 Bitmap16B::~Bitmap16B()
 {
-	if (_data != nullptr)
-		delete[] _data;
+    delete[] _data;
 }
 
 Bitmap16B* Bitmap16B::LoadFromFile(const std::string& strFile)
 {
 	auto const& data = Game::instance()->GetFileSystem().ReadAll(strFile);
-	Bitmap16B* bitmap = new Bitmap16B(data.data(), data.size());
+	auto* bitmap = new Bitmap16B(data.data());
 
 	return bitmap;
 }
