@@ -124,7 +124,7 @@ target_link_libraries(
           # SDL2::SDL2-static
           glm
           spdlog::spdlog
-          EnTT
+          EnTT::EnTT
           bgfx::bgfx
           cxxopts::cxxopts)
 if(UNIX)
