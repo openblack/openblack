@@ -28,10 +28,24 @@
 namespace openblack
 {
 
-FileStream::FileStream(const fs::path& path, FileMode mode)
+FileStream::FileStream(const fs::path& path, FileMode mode) : _file(nullptr), _fileSize(0)
 {
+    std::wstring recognisedMode;
+
+	switch (mode)
+	{
+	    case FileMode::Read:
+            recognisedMode = L"rb";
+	        break;
+	    case FileMode::Write:
+	        recognisedMode = L"wb";
+	        break;
+	    case FileMode::Append:
+	        recognisedMode = L"ab";
+	}
+
 #ifdef _WIN32
-	_wfopen_s(&_file, path.wstring().c_str(), L"rb");
+	_wfopen_s(&_file, path.wstring().c_str(), recognisedMode.c_str());
 #else
 	_file = std::fopen(path.c_str(), "rb");
 #endif
