@@ -30,7 +30,7 @@ class Bitmap16B
 public:
 	Bitmap16B() = delete;
 
-	Bitmap16B(const void* data, size_t size);
+	Bitmap16B(const void* data);
 	~Bitmap16B();
 
 	[[nodiscard]] unsigned int Width() const { return _width; }
