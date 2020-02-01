@@ -14,6 +14,9 @@
 get_target_property(BGFX_INCLUDE_PATH bgfx::bgfx INTERFACE_INCLUDE_DIRECTORIES)
 list (GET BGFX_INCLUDE_PATH 0 BGFX_INCLUDE_PATH_1) # bgfx::bgfx exports include directory twice?
 set(BGFX_SHADER_INCLUDE_PATH ${BGFX_INCLUDE_PATH_1}/bgfx)
+if(OPENBLACK_BUILD_BGFX)
+	list(APPEND BGFX_SHADER_INCLUDE_PATH ${BGFX_INCLUDE_PATH_1}/../src) # for fetchcontent builds
+endif()
 
 # shaderc_parse(
 #	FILE filename
@@ -45,16 +48,9 @@ function( shaderc_parse ARG_OUT )
 
 	# -i
 	if( ARG_INCLUDES )
-		list( APPEND CLI "-i" )
-		set( INCLUDES "" )
 		foreach( INCLUDE ${ARG_INCLUDES} )
-			if( NOT "${INCLUDES}" STREQUAL "" )
-				set( INCLUDES "${INCLUDES}\\\\;${INCLUDE}" )
-			else()
-				set( INCLUDES "${INCLUDE}" )
-			endif()
+			list( APPEND CLI "-i" "${INCLUDE}" )
 		endforeach()
-		list( APPEND CLI "${INCLUDES}" )
 	endif()
 
 	# -o
