@@ -110,7 +110,11 @@ else()
   endif()
 
   FetchContent_MakeAvailable(bgfx)
+  set_property(TARGET bx PROPERTY POSITION_INDEPENDENT_CODE ON)
+  set_property(TARGET bimg PROPERTY POSITION_INDEPENDENT_CODE ON)
+  set_property(TARGET astc-codec PROPERTY POSITION_INDEPENDENT_CODE ON)
   add_library(bgfx::bgfx ALIAS bgfx)
+  add_executable(bgfx::shaderc ALIAS shaderc)
 endif()
 
 FetchContent_Declare(
