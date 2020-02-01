@@ -62,7 +62,7 @@ int PrintHeader(openblack::l3d::L3DFile& l3d)
 
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
 	std::printf("magic: %s\n", std::string((char*)&header.magic, sizeof(header.magic)).c_str());
-	std::printf("flags: 0x%08X\n", header.flags);
+	std::printf("flags: 0x%08X\n", static_cast<uint32_t>(header.flags));
 	std::printf("size: %u\n", header.size);
 	std::printf("submesh count: %u\n", header.submeshCount);
 	std::printf("submesh start offset: 0x%08X\n", header.submeshOffsetsOffset);
@@ -76,7 +76,7 @@ int PrintHeader(openblack::l3d::L3DFile& l3d)
 	std::printf("skin count: %u\n", header.skinCount);
 	std::printf("skin start offset: 0x%08X\n", header.skinOffsetsOffset);
 	std::printf("point count: %u\n", header.pointCount);
-	std::printf("point start offset: 0x%08X\n", header.pointOffsetsOffset);
+	std::printf("point start offset: 0x%08X\n", header.pointOffset);
 	std::printf("extra start offset: 0x%08X\n", header.extraDataOffset);
 	std::printf("\n");
 
@@ -92,7 +92,7 @@ int PrintMeshHeaders(openblack::l3d::L3DFile& l3d)
 	for (auto& header : meshHeaders)
 	{
 		std::printf("mesh #%u\n", ++i);
-		std::printf("flags: 0x%08X\n", header.flags);
+		std::printf("flags: 0x%08X\n", *reinterpret_cast<const uint32_t*>(&header.flags));
 		std::printf("primitive count: %u\n", header.numPrimitives);
 		std::printf("primitives start offset: 0x%08X\n", header.primitivesOffset);
 		std::printf("bone count: %u\n", header.numBones);
@@ -114,9 +114,9 @@ int PrintSkins(openblack::l3d::L3DFile& l3d)
 		std::printf("data:\n");
 		constexpr uint16_t subsample = 8;
 		constexpr uint16_t magnitude = (subsample * subsample) / 16;
-		for (uint16_t y = 0; y < openblack::l3d::L3DFile::L3DTexture::height / subsample; ++y)
+		for (uint16_t y = 0; y < skin.height / subsample; ++y)
 		{
-			for (uint16_t x = 0; x < openblack::l3d::L3DFile::L3DTexture::width / subsample; ++x)
+			for (uint16_t x = 0; x < skin.width / subsample; ++x)
 			{
 				uint32_t red = 0;
 				uint32_t green = 0;
@@ -125,7 +125,7 @@ int PrintSkins(openblack::l3d::L3DFile& l3d)
 				{
 					for (uint16_t i = 0; i < subsample; ++i)
 					{
-						auto& color = skin.texels[x * subsample + i + (y * subsample + j) * openblack::l3d::L3DFile::L3DTexture::width];
+						auto& color = skin.texels[x * subsample + i + (y * subsample + j) * skin.width];
 						red += color.R;
 						green += color.G;
 						blue += color.B;
