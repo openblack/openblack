@@ -59,6 +59,10 @@ namespace components
 {
 struct Transform;
 }
+namespace systems
+{
+class DynamicsSystem;
+}
 class Registry;
 } // namespace ecs
 
@@ -190,6 +194,7 @@ private:
 
 	std::unique_ptr<GameWindow> _window;
 	std::unique_ptr<Renderer> _renderer;
+	std::unique_ptr<ecs::systems::DynamicsSystem> _dynamicsSystem;
 	std::unique_ptr<gui::Gui> _gui;
 	std::unique_ptr<Camera> _camera;
 	std::unique_ptr<Profiler> _profiler;

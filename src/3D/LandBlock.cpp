@@ -9,13 +9,16 @@
 
 #include "LandBlock.h"
 
+#include "Dynamics/LandBlockBulletMeshInterface.h"
 #include "Graphics/VertexBuffer.h"
 #include "LandIsland.h"
 
+#include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LNDFile.h>
 #include <glm/gtc/type_ptr.hpp>
 
 #include <cassert>
+#include <utility>
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -57,6 +60,18 @@ void LandBlock::BuildMesh(LandIsland& island)
 
 	auto vertexBuffer = new VertexBuffer("LandBlock", verts, decl);
 	_mesh = std::make_unique<Mesh>(vertexBuffer);
+
+	_dynamicsMeshInterface =
+	    std::make_unique<dynamics::LandBlockBulletMeshInterface>(verts->data, verts->size, vertexBuffer->GetStrideBytes());
+
+	_physicsMesh = std::make_unique<btBvhTriangleMeshShape>(_dynamicsMeshInterface.get(), true);
+	_rigidBody = std::make_unique<btRigidBody>(0.0f, nullptr, _physicsMesh.get());
+	btTransform transform;
+	transform.setIdentity();
+	transform.setOrigin(btVector3(_block->mapX, 0, _block->mapZ));
+	_rigidBody->setWorldTransform(transform);
+	_rigidBody->setContactStiffnessAndDamping(300, 10);
+	_rigidBody->setUserIndex(-1);
 }
 
 const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)

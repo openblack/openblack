@@ -1,0 +1,90 @@
+/*****************************************************************************
+ * Copyright (c) 2018-2022 openblack developers
+ *
+ * For a complete list of all authors, please refer to contributors.md
+ * Interested in contributing? Visit https://github.com/openblack/openblack
+ *
+ * openblack is licensed under the GNU General Public License version 3.
+ *****************************************************************************/
+
+#include "DynamicsSystem.h"
+
+#include <vector>
+
+#include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
+#include <BulletCollision/CollisionDispatch/btCollisionDispatcher.h>
+#include <BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h>
+#include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
+#include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
+#include <glm/vec3.hpp>
+
+#include "3D/LandBlock.h"
+#include "3D/LandIsland.h"
+
+using namespace openblack;
+using namespace openblack::ecs::systems;
+
+DynamicsSystem::DynamicsSystem()
+    : _configuration(std::make_unique<btDefaultCollisionConfiguration>())
+    , _dispatcher(std::make_unique<btCollisionDispatcher>(_configuration.get()))
+    , _broadphase(std::make_unique<btDbvtBroadphase>())
+    , _solver(std::make_unique<btSequentialImpulseConstraintSolver>())
+    , _world(
+          std::make_unique<btDiscreteDynamicsWorld>(_dispatcher.get(), _broadphase.get(), _solver.get(), _configuration.get()))
+{
+	_world->setGravity(btVector3(0, -10, 0));
+}
+
+void DynamicsSystem::Reset()
+{
+	std::vector<btRigidBody*> to_remove;
+	for (int i = 0; i < _world->getNumCollisionObjects(); ++i)
+	{
+		auto obj = _world->getCollisionObjectArray()[i];
+		btRigidBody* body = btRigidBody::upcast(obj);
+		if (body)
+		{
+			to_remove.push_back(body);
+		}
+	}
+	for (auto& obj : to_remove)
+	{
+		_world->removeRigidBody(obj);
+	}
+}
+
+DynamicsSystem::~DynamicsSystem() = default;
+
+void DynamicsSystem::Update(std::chrono::microseconds& dt)
+{
+	std::chrono::duration<float> seconds = dt;
+	_world->stepSimulation(seconds.count());
+}
+
+void DynamicsSystem::AddRigidBody(btRigidBody* object)
+{
+	_world->addRigidBody(object);
+}
+
+void DynamicsSystem::RegisterIslandRigidBodies(LandIsland& island)
+{
+	for (auto& block : island.GetBlocks())
+	{
+		AddRigidBody(block.GetRigidBody().get());
+	}
+}
+
+std::optional<glm::vec3> DynamicsSystem::RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float t_max)
+{
+	auto from = btVector3(origin.x, origin.y, origin.z);
+	auto to = from + t_max * btVector3(direction.x, direction.y, direction.z);
+
+	btCollisionWorld::ClosestRayResultCallback callback(from, to);
+
+	_world->rayTest(from, to, callback);
+
+	if (!callback.hasHit())
+		return std::nullopt;
+
+	return glm::vec3(callback.m_hitPointWorld.x(), callback.m_hitPointWorld.y(), callback.m_hitPointWorld.z());
+}

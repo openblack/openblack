@@ -22,6 +22,7 @@
 #include "ECS/Archetypes/HandArchetype.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/DynamicsSystem.h"
 #include "ECS/Systems/RenderingSystem.h"
 #include "GameWindow.h"
 #include "GitSHA1.h"
@@ -95,6 +96,7 @@ Game::Game(Arguments&& args)
 		                                       args.displayMode);
 	}
 	_renderer = std::make_unique<Renderer>(_window.get(), args.rendererType, args.vsync);
+	_dynamicsSystem = std::make_unique<ecs::systems::DynamicsSystem>();
 	_fileSystem->SetGamePath(GetGamePath());
 	_handModel = std::make_unique<L3DMesh>();
 	_handModel->LoadFromFile(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d");
@@ -120,6 +122,7 @@ Game::~Game()
 	_handModel.reset();
 	_animationPack.reset();
 	_meshPack.reset();
+	_dynamicsSystem.reset();
 	_landIsland.reset();
 	_entityRegistry.reset();
 	_gui.reset();
@@ -215,6 +218,9 @@ bool Game::Update()
 	    std::chrono::duration_cast<std::chrono::microseconds>(_profiler->_entries[_profiler->GetEntryIndex(0)]._frameStart -
 	                                                          _profiler->_entries[_profiler->GetEntryIndex(-1)]._frameStart);
 
+	// Physics
+	_dynamicsSystem->Update(deltaTime);
+
 	// Input events
 	{
 		auto sdlInput = _profiler->BeginScoped(Profiler::Stage::SdlInput);
@@ -265,19 +271,26 @@ bool Game::Update()
 				_window->GetSize(screenSize.x, screenSize.y);
 			}
 
-			glm::vec3 rayOrigin, rayDirection;
-			_camera->DeprojectScreenToWorld(_mousePosition, screenSize, rayOrigin, rayDirection);
+			if (screenSize.x > 0 && screenSize.y > 0)
+			{
+				glm::vec3 rayOrigin, rayDirection;
+				_camera->DeprojectScreenToWorld(_mousePosition, screenSize, rayOrigin, rayDirection);
 
-			float intersectDistance = 0.0f;
-			bool intersects = glm::intersectRayPlane(rayOrigin, rayDirection, glm::vec3(0.0f, 0.0f, 0.0f), // plane origin
-			                                         glm::vec3(0.0f, 1.0f, 0.0f),                          // plane normal
-			                                         intersectDistance);
-
-			if (intersects)
-				_intersection = rayOrigin + rayDirection * intersectDistance;
-
-			_intersection.y = _landIsland->GetHeightAt(glm::vec2(_intersection.x, _intersection.z));
-
+				if (auto hit = _dynamicsSystem->RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
+				{
+					_intersection = *hit;
+				}
+				else // For the water
+				{
+					float intersectDistance = 0.0f;
+					const auto plane_origin = glm::vec3(0.0f, 0.0f, 0.0f);
+					const auto plane_normal = glm::vec3(0.0f, 1.0f, 0.0f);
+					if (glm::intersectRayPlane(rayOrigin, rayDirection, plane_origin, plane_normal, intersectDistance))
+					{
+						_intersection = rayOrigin + rayDirection * intersectDistance;
+					}
+				}
+			}
 			_renderer->UpdateDebugCrossUniforms(_intersection, 50.0f);
 		}
 
@@ -453,6 +466,7 @@ void Game::LoadMap(const fs::path& path)
 	auto data = _fileSystem->ReadAll(path);
 	std::string source(reinterpret_cast<const char*>(data.data()), data.size());
 
+	_dynamicsSystem->Reset();
 	// Reset everything. Deletes all entities and their components
 	_entityRegistry->Reset();
 
@@ -498,6 +512,8 @@ void Game::LoadLandscape(const fs::path& path)
 
 	_landIsland = std::make_unique<LandIsland>();
 	_landIsland->LoadFromFile(fixedName.u8string());
+
+	_dynamicsSystem->RegisterIslandRigidBodies(*_landIsland);
 }
 
 bool Game::LoadVariables()

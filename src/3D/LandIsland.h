@@ -21,6 +21,11 @@
 namespace openblack
 {
 
+namespace ecs::systems
+{
+class DynamicsSystem;
+}
+
 namespace lnd
 {
 struct LNDCountry;
@@ -50,8 +55,9 @@ private:
 	std::vector<LandBlock> _landBlocks;
 	std::vector<lnd::LNDCountry> _countries;
 
-	// Renderer
+	// Renderer, Dynamics
 public:
+	[[nodiscard]] std::vector<LandBlock>& GetBlocks() { return _landBlocks; }
 	[[nodiscard]] const std::vector<LandBlock>& GetBlocks() const { return _landBlocks; }
 	[[nodiscard]] const std::vector<lnd::LNDCountry>& GetCountries() const { return _countries; }
 	[[nodiscard]] const graphics::Texture2D& GetAlbedoArray() const { return *_materialArray; }
