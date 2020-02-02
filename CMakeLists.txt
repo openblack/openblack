@@ -57,6 +57,7 @@ if (TARGET bgfx::bgfx AND TARGET bgfx::bx)
   target_link_libraries(bgfx::bgfx INTERFACE bgfx::bx)
 endif()
 
+find_package(Bullet REQUIRED)
 find_package(spdlog 1.3.0 REQUIRED)
 find_package(EnTT 3.7.0 CONFIG REQUIRED) # only available as a config
 find_package(cxxopts REQUIRED)
