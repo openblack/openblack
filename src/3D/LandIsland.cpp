@@ -166,7 +166,7 @@ const lnd::LNDCell& LandIsland::GetCell(const glm::u16vec2& coordinates) const
 	{
 		return s_EmptyCell;
 	}
-
+	assert(_landBlocks.size() >= blockIndex);
 	return _landBlocks[blockIndex - 1].GetCells()[cellIndex];
 }
 
