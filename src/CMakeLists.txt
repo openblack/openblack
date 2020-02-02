@@ -72,7 +72,10 @@ set_target_properties(openblack PROPERTIES LINKER_LANGUAGE CXX)
 
 target_include_directories(
   openblack PRIVATE ${CMAKE_CURRENT_LIST_DIR}
+                    ${BULLET_INCLUDE_DIR}
+                    ${BULLET_ROOT_DIR}/${BULLET_INCLUDE_DIR}
                     ${CMAKE_CURRENT_BINARY_DIR}/../include)
+target_link_directories(openblack PRIVATE ${BULLET_ROOT_DIR}/${BULLET_LIBRARY_DIRS})
 target_link_libraries(
   openblack
   PRIVATE
@@ -91,7 +94,12 @@ target_link_libraries(
           spdlog::spdlog
           EnTT::EnTT
           bgfx::bgfx
-          cxxopts::cxxopts)
+          cxxopts::cxxopts
+          Bullet3Common
+          BulletDynamics
+          BulletCollision
+          BulletSoftBody
+          LinearMath)
 if(UNIX)
   find_library(WAYLAND wayland-egl)
   if(WAYLAND)
