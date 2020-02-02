@@ -146,7 +146,7 @@ constexpr lnd::LNDCell EmptyCell() noexcept
 	lnd::LNDCell cell{};
 	cell.properties.fullWater = true;
 	return cell;
-};
+}
 
 constexpr lnd::LNDCell s_EmptyCell = EmptyCell();
 
