@@ -16,12 +16,15 @@
 #include <BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h>
 #include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
 #include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
-#include <glm/vec3.hpp>
+#include <glm/gtx/rotate_vector.hpp>
+
+#include "ECS/Components/Transform.h"
 
 #include "3D/LandBlock.h"
 #include "3D/LandIsland.h"
 
 using namespace openblack;
+using namespace openblack::ecs::components;
 using namespace openblack::ecs::systems;
 
 DynamicsSystem::DynamicsSystem()
@@ -74,7 +77,7 @@ void DynamicsSystem::RegisterIslandRigidBodies(LandIsland& island)
 	}
 }
 
-std::optional<glm::vec3> DynamicsSystem::RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float t_max)
+std::optional<Transform> DynamicsSystem::RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float t_max)
 {
 	auto from = btVector3(origin.x, origin.y, origin.z);
 	auto to = from + t_max * btVector3(direction.x, direction.y, direction.z);
@@ -86,5 +89,10 @@ std::optional<glm::vec3> DynamicsSystem::RayCastClosestHit(const glm::vec3& orig
 	if (!callback.hasHit())
 		return std::nullopt;
 
-	return glm::vec3(callback.m_hitPointWorld.x(), callback.m_hitPointWorld.y(), callback.m_hitPointWorld.z());
+	auto translation = glm::vec3(callback.m_hitPointWorld.x(), callback.m_hitPointWorld.y(), callback.m_hitPointWorld.z());
+	auto normal = glm::vec3(callback.m_hitNormalWorld.x(), callback.m_hitNormalWorld.y(), callback.m_hitNormalWorld.z());
+	const auto up = glm::vec3(0, 1, 0);
+	auto rotation = glm::orientation(normal, up);
+
+	return std::make_optional(Transform {translation, rotation, glm::vec3(1.0f)});
 }
