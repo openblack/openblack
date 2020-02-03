@@ -25,7 +25,7 @@ Clone the code using: `git clone --recursive https://github.com/openblack/openbl
 The simplest way to obtain all the required dependencies is through [vcpkg](https://github.com/Microsoft/vcpkg).
 
 ```bash
-PS> .\vcpkg install sdl2 spdlog glm entt
+PS> .\vcpkg install --triplet x64-windows sdl2 spdlog glm entt
 Linux:~/$ ./vcpkg install sdl2 spdlog glm entt
 ```
 
