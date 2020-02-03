@@ -120,7 +120,7 @@ target_link_libraries(
           imgui
           imgui-flame-graph
           ScriptLibrary
-          SDL2::SDL2main
+          SDL2::SDL2
           # SDL2::SDL2-static
           glm
           spdlog::spdlog

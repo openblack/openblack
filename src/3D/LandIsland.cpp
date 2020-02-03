@@ -146,7 +146,7 @@ constexpr lnd::LNDCell EmptyCell() noexcept
 	lnd::LNDCell cell{};
 	cell.properties.fullWater = true;
 	return cell;
-};
+}
 
 constexpr lnd::LNDCell s_EmptyCell = EmptyCell();
 
@@ -166,7 +166,7 @@ const lnd::LNDCell& LandIsland::GetCell(const glm::u16vec2& coordinates) const
 	{
 		return s_EmptyCell;
 	}
-
+	assert(_landBlocks.size() >= blockIndex);
 	return _landBlocks[blockIndex - 1].GetCells()[cellIndex];
 }
 
