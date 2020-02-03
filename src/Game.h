@@ -225,7 +225,7 @@ private:
 	uint16_t _turnCount;
 
 	glm::ivec2 _mousePosition;
-	glm::vec3 _intersection;
+	glm::mat4 _handPose;
 
 	entt::entity _handEntity;
 	bool _handGripping;

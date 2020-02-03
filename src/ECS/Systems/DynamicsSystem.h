@@ -25,7 +25,11 @@ class btSequentialImpulseConstraintSolver;
 namespace openblack
 {
 class LandIsland;
+namespace ecs::components
+{
+struct Transform;
 }
+} // namespace openblack
 
 namespace openblack::ecs::systems
 {
@@ -39,7 +43,8 @@ public:
 	void Update(std::chrono::microseconds& dt);
 	void AddRigidBody(btRigidBody* object);
 	void RegisterIslandRigidBodies(LandIsland& island);
-	std::optional<glm::vec3> RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float t_max);
+	std::optional<ecs::components::Transform> RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction,
+	                                                            float t_max);
 
 private:
 	/// collision configuration contains default setup for memory, collision setup

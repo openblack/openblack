@@ -133,7 +133,7 @@ public:
 	void LoadShaders();
 	[[nodiscard]] graphics::ShaderManager& GetShaderManager() const;
 
-	void UpdateDebugCrossUniforms(const glm::vec3& position, float scale);
+	void UpdateDebugCrossUniforms(const glm::mat4& pose);
 
 	void ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height) const;
 
@@ -150,6 +150,6 @@ private:
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
 
 	std::unique_ptr<graphics::DebugLines> _debugCross;
-	glm::mat4 _debugCrossPosition;
+	glm::mat4 _debugCrossPose;
 };
 } // namespace openblack

@@ -178,9 +178,9 @@ graphics::ShaderManager& Renderer::GetShaderManager() const
 	return *_shaderManager;
 }
 
-void Renderer::UpdateDebugCrossUniforms(const glm::vec3& position, float scale)
+void Renderer::UpdateDebugCrossUniforms(const glm::mat4& pose)
 {
-	_debugCrossPosition = glm::translate(position) * glm::scale(glm::vec3(1, 1, 1) * scale);
+	_debugCrossPose = pose;
 }
 
 const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& skins,
@@ -538,7 +538,7 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 		                                                                    : Profiler::Stage::MainPassDrawDebugCross);
 		if (desc.drawDebugCross)
 		{
-			bgfx::setTransform(glm::value_ptr(_debugCrossPosition));
+			bgfx::setTransform(glm::value_ptr(_debugCrossPose));
 			_debugCross->GetMesh().GetVertexBuffer().Bind();
 			bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
 			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
