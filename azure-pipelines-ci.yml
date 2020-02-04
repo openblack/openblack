@@ -4,6 +4,33 @@ pr:
 - master
 
 jobs:
+- job: format
+  displayName: 'Format'
+  pool:
+    vmImage: 'ubuntu-16.04'
+  container: 'openblack/compile-farm-ci:linux-amd64-gcc'
+
+  steps:
+    - task: CMake@1
+      displayName: 'CMake'
+      inputs:
+        cmakeArgs: '-DCMAKE_TOOLCHAIN_FILE=/tools/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux -Dbgfx_DIR=/bgfx-install/lib/cmake/bgfx ..'
+
+    - script: |
+        set -eo pipefail
+        cmake --build . --target clang-format
+        git diff -p --stat --color
+        git diff > format.patch
+        git diff --quiet $(Build.SourceVersion)
+      workingDirectory: build
+      failOnStderr: true
+      displayName: 'Clang-Format'
+
+    - publish: $(System.DefaultWorkingDirectory)/build/format.patch
+      artifact: clang-format-patch-$(Build.SourceVersion)
+      displayName: 'Clang-Format Publish Diff File'
+      condition: failed()
+
 - job: windows
   displayName: 'Windows'
   pool:
