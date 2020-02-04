@@ -182,7 +182,7 @@ if(UNIX)
   install(TARGETS openblack RUNTIME DESTINATION bin)
   install(FILES ${OPENBLACK_SHADERS} DESTINATION bin/shaders)
   install(
-    FILES ../external/imgui/imgui/LICENSE.txt
+    FILES ../external/imgui/LICENSE.txt
     DESTINATION "share/licenses/openblack"
     RENAME "IMGUI_LICENSE.txt")
   install(FILES "${CMAKE_SOURCE_DIR}/assets/resource/shortcut/openblack.desktop"
