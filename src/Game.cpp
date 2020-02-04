@@ -64,7 +64,7 @@ Game::Game(Arguments&& args)
 	spdlog::set_level(spdlog::level::debug);
 	sInstance = this;
 
-	std::string binaryPath = fs::path {args.executablePath}.parent_path().generic_string();
+	std::string binaryPath = std::filesystem::path {args.executablePath}.parent_path().generic_string();
 	_config.numFramesToSimulate = args.numFramesToSimulate;
 	spdlog::info("current binary path: {}", binaryPath);
 	SetGamePath(args.gamePath);
@@ -346,10 +346,10 @@ void Game::LoadVariables()
 {
 	return;
 
-	auto file = _fileSystem->Open("Scripts/info.dat", FileMode::Read);
+	auto file = _fileSystem->Open("Scripts/info.dat", File::Mode::Read);
 
 	// check magic header
-	constexpr char kLionheadMagic[] = "LiOnHeAd";
+	/*constexpr char kLionheadMagic[] = "LiOnHeAd";
 
 	struct
 	{
@@ -415,7 +415,7 @@ void Game::LoadVariables()
 	// DETAIL_MAGIC_WATER_INFO
 	// DETAIL_MAGIC_FLOCK_FLYING_INFO
 	// DETAIL_MAGIC_FLOCK_GROUND_INFO
-	// DETAIL_MAGIC_CREATURE_SPELL_INFO
+	// DETAIL_MAGIC_CREATURE_SPELL_INFO*/
 }
 
 void Game::SetGamePath(const std::string& gamePath)
@@ -424,7 +424,7 @@ void Game::SetGamePath(const std::string& gamePath)
 	{
 		return;
 	}
-	if (!fs::exists(gamePath))
+	if (!std::filesystem::exists(gamePath))
 	{
 		spdlog::error("GamePath does not exist: '{}'", gamePath);
 		return;

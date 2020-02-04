@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "FileStream.h"
+#include "File.h"
 
 #include <cstddef>
 #include <list>
@@ -39,18 +39,19 @@ class FileSystem
 public:
 	static std::string FixPath(const std::string& path);
 
-	[[nodiscard]] fs::path FindPath(const fs::path& path) const;
+	[[nodiscard]] std::filesystem::path FindPath(const std::filesystem::path& path) const;
 
-	std::unique_ptr<FileStream> Open(const fs::path& path, FileMode mode);
-	bool Exists(const fs::path& path);
+	//std::unique_ptr<FileStream> Open(const fs::path& path, FileMode mode);
+	std::unique_ptr<File> Open(const std::filesystem::path& path, File::Mode mode);
+	bool Exists(const std::filesystem::path& path);
 
-	void SetGamePath(const fs::path& path) { _gamePath = path; }
-	[[nodiscard]] const fs::path& GetGamePath() const { return _gamePath; }
+	void SetGamePath(const std::filesystem::path& path) { _gamePath = path; }
+	[[nodiscard]] const std::filesystem::path& GetGamePath() const { return _gamePath; }
 
-	std::vector<std::byte> ReadAll(const fs::path& path);
+	std::vector<std::byte> ReadAll(const std::filesystem::path& path);
 
 private:
-	fs::path _gamePath;
+	std::filesystem::path _gamePath;
 };
 
 } // namespace openblack

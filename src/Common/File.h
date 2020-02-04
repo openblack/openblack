@@ -20,41 +20,40 @@
 
 #pragma once
 
-#include "IStream.h"
+#include "Common/IFile.h"
 
-#ifdef HAS_FILESYSTEM
 #include <filesystem>
-namespace fs = std::filesystem;
-#else
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif // HAS_FILESYSTEM
+#include <string>
 
 namespace openblack
 {
 
-enum class FileMode
-{
-	Read,
-	Write,
-	Append
-};
-
-class FileStream: public IStream
+/**
+ * Basic physical file
+ */
+class File : public IFile
 {
 public:
-	FileStream(const fs::path& filename, FileMode mode);
-	virtual ~FileStream();
+	enum class Mode { Read, Write };
 
-	[[nodiscard]] std::size_t Position() const override;
-	[[nodiscard]] std::size_t Size() const override;
-	void Seek(std::size_t position, SeekMode seek) override;
+public:
+	File(const std::filesystem::path& path, Mode mode);
+	~File() override;
 
-	void Read(void* buffer, std::size_t length) override;
+public:
+	// IFile overrides
+	bool Read(std::uint8_t* dest, std::size_t bytesToRead) override;
+	bool Write(std::uint8_t* source, std::size_t bytesToWrite) override;
+	bool Flush() override;
+	bool Seek(std::size_t position, SeekOrigin origin) override;
+	[[nodiscard]] std::size_t GetPosition() override;
+
+public:
+	const std::string& GetFileName() const { return _fileName; }
 
 protected:
 	FILE* _file;
-	std::size_t _fileSize;
+	std::string _fileName;
 };
 
 } // namespace openblack

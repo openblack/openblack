@@ -53,32 +53,32 @@ std::string FileSystem::FixPath(const std::string& path)
 
 // todo: exceptions need to be replaced with real exceptions
 
-fs::path FileSystem::FindPath(const fs::path& path) const
+std::filesystem::path FileSystem::FindPath(const std::filesystem::path& path) const
 {
 	if (path.empty())
 		throw std::invalid_argument("empty path");
 
 	// try absolute first
-	if (path.is_absolute() && fs::exists(path))
+	if (path.is_absolute() && std::filesystem::exists(path))
 		return path;
 
 	// try relative to current directory
-	if (path.is_relative() && fs::exists(path))
+	if (path.is_relative() && std::filesystem::exists(path))
 		return path;
 
 	// try relative to game directory
-	if (path.is_relative() && fs::exists(_gamePath / path))
+	if (path.is_relative() && std::filesystem::exists(_gamePath / path))
 		return _gamePath / path;
 
 	throw std::runtime_error("File " + path.string() + " not found");
 }
 
-std::unique_ptr<FileStream> FileSystem::Open(const fs::path& path, FileMode mode)
+std::unique_ptr<File> FileSystem::Open(const std::filesystem::path& path, File::Mode mode)
 {
-	return std::make_unique<FileStream>(FindPath(path), mode);
+	return std::make_unique<File>(FindPath(path), mode);
 }
 
-bool FileSystem::Exists(const fs::path& path)
+bool FileSystem::Exists(const std::filesystem::path& path)
 {
 	try
 	{
@@ -91,13 +91,13 @@ bool FileSystem::Exists(const fs::path& path)
 	}
 }
 
-std::vector<std::byte> FileSystem::ReadAll(const fs::path& path)
+std::vector<std::byte> FileSystem::ReadAll(const std::filesystem::path& path)
 {
-	auto file = Open(path, FileMode::Read);
-	std::size_t size = file->Size();
+	auto file = Open(path, File::Mode::Read);
+	std::size_t size = file->GetSize();
 
 	std::vector<std::byte> data(size);
-	file->Read(data.data(), size);
+	file->Read(reinterpret_cast<uint8_t*>(data.data()), size);
 
 	return data;
 }
