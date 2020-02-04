@@ -74,4 +74,4 @@ if you are unsure of anything.
 
 ## License
 openblack is released as open source software under the [GPL v3](https://opensource.org/licenses/gpl-3.0.html)
-license, see the [LICENSE.md](./LICENSE.md) file in the project root for the full license text.
+license, see the [license](./license) file in the project root for the full license text.
