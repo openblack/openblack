@@ -178,13 +178,13 @@ foreach(SHADER ${OPENBLACK_SHADERS})
 endforeach()
 
 # Installation configuration
+install(TARGETS openblack RUNTIME DESTINATION bin)
+install(FILES ${OPENBLACK_SHADERS} DESTINATION bin/shaders)
+install(
+  FILES ../external/imgui/LICENSE.txt
+  DESTINATION "share/licenses/openblack"
+  RENAME "IMGUI_LICENSE.txt")
 if(UNIX)
-  install(TARGETS openblack RUNTIME DESTINATION bin)
-  install(FILES ${OPENBLACK_SHADERS} DESTINATION bin/shaders)
-  install(
-    FILES ../external/imgui/LICENSE.txt
-    DESTINATION "share/licenses/openblack"
-    RENAME "IMGUI_LICENSE.txt")
   install(FILES "${CMAKE_SOURCE_DIR}/assets/resource/shortcut/openblack.desktop"
           DESTINATION "share/applications")
   foreach(RES 64 128 256)
