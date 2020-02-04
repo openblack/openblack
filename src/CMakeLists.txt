@@ -179,7 +179,6 @@ endforeach()
 
 # Installation configuration
 install(TARGETS openblack RUNTIME DESTINATION bin)
-install(FILES ${OPENBLACK_SHADERS} DESTINATION bin/shaders)
 install(
   FILES ../external/imgui/LICENSE.txt
   DESTINATION "share/licenses/openblack"
