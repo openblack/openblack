@@ -11,12 +11,22 @@ jobs:
 
   strategy:
     matrix:
-      x86:
+      x86-Debug:
         BuildPlatform: 'x86'
         MSBuildPlatform: 'Win32'
-      x64:
+        BuildConfiguration: Debug
+      x86-Release:
+        BuildPlatform: 'x86'
+        MSBuildPlatform: 'Win32'
+        BuildConfiguration: Release
+      x64-Debug:
         BuildPlatform: 'x64'
         MSBuildPlatform: 'x64'
+        BuildConfiguration: Debug
+      x64-Release:
+        BuildPlatform: 'x64'
+        MSBuildPlatform: 'x64'
+        BuildConfiguration: Release
 
   steps:
   - template: azure-pipelines/templates/windows-dependencies.yml
@@ -26,15 +36,15 @@ jobs:
   - template: azure-pipelines/templates/windows-build.yml
     parameters:
       BuildPlatform: $(BuildPlatform)
-      BuildConfiguration: Debug
+      BuildConfiguration: $(BuildConfiguration)
       MSBuildPlatform: $(MSBuildPlatform)
   - template: azure-pipelines/templates/publish.yml
     parameters:
-      BuildConfiguration: Debug
+      BuildConfiguration: $(BuildConfiguration)
       InstallPlatform: Windows-$(BuildPlatform)
   - template: azure-pipelines/templates/test-null-renderer.yml
     parameters:
-      BuildConfiguration: Debug
+      BuildConfiguration: $(BuildConfiguration)
 
 - job: linux
   displayName: 'Linux'
@@ -43,15 +53,21 @@ jobs:
 
   strategy:
     matrix:
-      linux-amd64-gcc:
+      linux-amd64-gcc-Debug:
         containerImage: 'openblack/compile-farm-ci:linux-amd64-gcc'
+        BuildConfiguration: Debug
+      linux-amd64-gcc-Release:
+        containerImage: 'openblack/compile-farm-ci:linux-amd64-gcc'
+        BuildConfiguration: Release
 
   container: $[ variables['containerImage'] ]
 
   steps:
   - template: azure-pipelines/templates/linux-build.yml
+    parameters:
+      BuildConfiguration: $(BuildConfiguration)
   - template: azure-pipelines/templates/publish.yml
     parameters:
-      BuildConfiguration: Debug
+      BuildConfiguration: $(BuildConfiguration)
       InstallPlatform: Linux-x64
   - template: azure-pipelines/templates/test-null-renderer.yml
