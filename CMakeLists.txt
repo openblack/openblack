@@ -31,25 +31,26 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 include(CheckIncludeFileCXX)
 check_include_file_cxx(filesystem HAS_FILESYSTEM)
 
+# Special case for SDL2 dependency, goal is to find a config that exports SDL2::SDL2 target
+# libsdl2-dev has a `sdl2-config.cmake` that doesn't export this, but vcpkg does..
+find_package(SDL2 CONFIG QUIET)
+if(NOT TARGET SDL2::SDL2)
+  find_package(SDL2 MODULE REQUIRED)
+endif()
+
 # Dependencies: we search for config first, then module this helps package managers.
 if(CMAKE_VERSION VERSION_GREATER 3.15 OR CMAKE_VERSION VERSION_EQUAL 3.15)
   set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
   
-  find_package(SDL2 REQUIRED)
   find_package(spdlog 1.3.0 REQUIRED)
   find_package(glm REQUIRED)
   find_package(EnTT 3.1.0 CONFIG REQUIRED) # only available as a config
   find_package(cxxopts REQUIRED)
 else()
-  find_package(SDL2 CONFIG QUIET)
   find_package(spdlog 1.3.0 CONFIG QUIET)
   find_package(glm CONFIG QUIET)
   find_package(EnTT 3.1.0 CONFIG REQUIRED) # only available as a config
   find_package(cxxopts CONFIG REQUIRED)
-
-  if(NOT SDL2_FOUND)
-    find_package(SDL2 MODULE REQUIRED)
-  endif()
 
   if(NOT DEFINED spdlog_DIR)
     find_package(spdlog 1.3.0 MODULE REQUIRED)
