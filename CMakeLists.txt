@@ -36,9 +36,9 @@ if(CMAKE_VERSION VERSION_GREATER 3.15 OR CMAKE_VERSION VERSION_EQUAL 3.15)
   set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
 
   # hacky because sdl2 cmake-config is terrible
-  find_package(SDL2 MODULE QUIET)
+  find_package(SDL2 CONFIG QUIET)
   if(NOT SDL2_FOUND)
-    find_package(SDL2 CONFIG REQUIRED)
+    find_package(SDL2 MODULE REQUIRED)
   endif()
 
   find_package(spdlog 1.3.0 REQUIRED)
@@ -46,14 +46,14 @@ if(CMAKE_VERSION VERSION_GREATER 3.15 OR CMAKE_VERSION VERSION_EQUAL 3.15)
   find_package(EnTT 3.1.0 CONFIG REQUIRED) # only available as a config
   find_package(cxxopts REQUIRED)
 else()
-  find_package(SDL2 MODULE QUIET)
+  find_package(SDL2 CONFIG QUIET)
   find_package(spdlog 1.3.0 CONFIG QUIET)
   find_package(glm CONFIG QUIET)
   find_package(EnTT 3.1.0 CONFIG REQUIRED) # only available as a config
   find_package(cxxopts CONFIG REQUIRED)
 
   if(NOT SDL2_FOUND)
-    find_package(SDL2 CONFIG REQUIRED)
+    find_package(SDL2 MODULE REQUIRED)
   endif()
 
   if(NOT DEFINED spdlog_DIR)
