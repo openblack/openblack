@@ -25,8 +25,8 @@ Clone the code using: `git clone --recursive https://github.com/openblack/openbl
 The simplest way to obtain all the required dependencies is through [vcpkg](https://github.com/Microsoft/vcpkg).
 
 ```bash
-PS> .\vcpkg install --triplet x64-windows sdl2 spdlog glm entt
-Linux:~/$ ./vcpkg install sdl2 spdlog glm entt
+PS> .\vcpkg install --triplet x64-windows sdl2 spdlog glm entt cxxopts
+Linux:~/$ ./vcpkg install sdl2 spdlog glm entt cxxopts
 ```
 
 If you don't want to use vcpkg; CMake will fallback on installed system dependencies, or manually specified
@@ -35,7 +35,7 @@ package directories.
 ## Windows
 
 * Install [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/)
-* Install [CMake](https://cmake.org/download/)
+* Install [CMake](https://cmake.org/download/) (3.15+ for Windows)
 * Install [bgfx.cmake](https://github.com/openblack/bgfx.cmake/releases/tag/latest)
 
 You can either:
@@ -45,8 +45,10 @@ You can either:
 
 ```bash
 cd openblack
-cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:/Users/Matt/Development/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows -Dbgfx_DIR=C:/Users/Matt/Development/bgfx-windows-x64/lib/cmake/bgfx
 ```
+
+_Replace `C:/Users/Matt/Development/vcpkg` with your vcpkg root and `C:/Users/Matt/Development/bgfx-windows-x64` with the folder you extracted bgfx to._
 
 ## Linux
 
