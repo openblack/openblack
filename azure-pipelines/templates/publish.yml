@@ -3,4 +3,4 @@ steps:
      cmake --install build -v --prefix install --config ${{ parameters.BuildConfiguration }}
    displayName: 'Install'
  - publish: $(System.DefaultWorkingDirectory)/install
-   artifact: openblack-${{ parameters.InstallPlatform }}-${{ parameters.BuildConfiguration }}
+   artifact: openblack-${{ parameters.InstallPlatform }}-${{ parameters.BuildConfiguration }}-$(Build.SourceVersion)
