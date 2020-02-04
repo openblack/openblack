@@ -4,7 +4,6 @@ steps:
   displayName: 'Generate mock game data'
 - bash: |
     cp $PWD/bin/${{ parameters.BuildConfiguration }}/fmtd.dll .
-    cp /c/vcpkg/installed/${{ parameters.BuildPlatform }}-windows/bin/SDL2.dll .
     bin/${{ parameters.BuildConfiguration }}/openblack --game-path ci/mock --num-frames-to-simulate 1000 --backend-type Noop
   workingDirectory: build
   displayName: 'Test Null Renderer'
