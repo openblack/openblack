@@ -1,5 +1,6 @@
 steps:
 - bash: |
+    cmake --version
     cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=/tools/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Debug -DVCPKG_TARGET_TRIPLET=x64-linux -Dbgfx_DIR=/bgfx-install/lib/cmake/bgfx -G Ninja
   displayName: 'CMake'
 - bash: |
