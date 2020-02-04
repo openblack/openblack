@@ -34,7 +34,6 @@ jobs:
       InstallPlatform: Windows-$(BuildPlatform)
   - template: azure-pipelines/templates/test-null-renderer.yml
     parameters:
-      BuildPlatform: $(BuildPlatform)
       BuildConfiguration: Debug
 
 - job: linux
@@ -48,13 +47,11 @@ jobs:
         containerImage: 'openblack/compile-farm-ci:linux-amd64-gcc'
 
   container: $[ variables['containerImage'] ]
-  
+
   steps:
   - template: azure-pipelines/templates/linux-build.yml
   - template: azure-pipelines/templates/publish.yml
     parameters:
       BuildConfiguration: Debug
-      InstallPlatform: Linux-$(BuildPlatform)
+      InstallPlatform: Linux-x64
   - template: azure-pipelines/templates/test-null-renderer.yml
-    parameters:
-      InstallPlatform: $(BuildPlatform)
