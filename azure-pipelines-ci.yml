@@ -28,10 +28,15 @@ jobs:
       BuildPlatform: $(BuildPlatform)
       BuildConfiguration: Debug
       MSBuildPlatform: $(MSBuildPlatform)
+  - template: azure-pipelines/templates/publish.yml
+    parameters:
+      BuildConfiguration: Debug
+      InstallPlatform: Windows-$(BuildPlatform)
   - template: azure-pipelines/templates/test-null-renderer.yml
     parameters:
       BuildPlatform: $(BuildPlatform)
       BuildConfiguration: Debug
+
 - job: linux
   displayName: 'Linux'
   pool:
@@ -46,4 +51,10 @@ jobs:
   
   steps:
   - template: azure-pipelines/templates/linux-build.yml
+  - template: azure-pipelines/templates/publish.yml
+    parameters:
+      BuildConfiguration: Debug
+      InstallPlatform: Linux-$(BuildPlatform)
   - template: azure-pipelines/templates/test-null-renderer.yml
+    parameters:
+      InstallPlatform: $(BuildPlatform)
