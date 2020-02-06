@@ -655,7 +655,7 @@ void LHVMViewer::DrawScriptsTab(const openblack::LHVM::LHVM* lhvm)
 
 void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM* lhvm, openblack::LHVM::VMScript& script)
 {
-	ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, Disassembly_ColorBG);
+	ImGui::PushStyleColor(ImGuiCol_ChildBg, Disassembly_ColorBG);
 	ImGui::PushStyleColor(ImGuiCol_Text, Disassembly_ColorFG);
 	ImGui::PushStyleColor(ImGuiCol_ScrollbarBg, Disassembly_ColorBG);
 	ImGui::PushStyleColor(ImGuiCol_ScrollbarGrab, Disassembly_ColorComment);
