@@ -26,15 +26,15 @@ if (CLANG_FORMAT)
       COMMENT ${CCOMMENT})
   elseif(MINGW)
     add_custom_target(clang-format
-      COMMAND find `cygpath -u ${SRCS}` -iname *.h -o -iname *.cpp | xargs `cygpath -u ${CLANG_FORMAT}` -i
-      COMMAND find `cygpath -u ${COMPS}` -iname *.h -o -iname *.cpp | xargs `cygpath -u ${CLANG_FORMAT}` -i
-      COMMAND find `cygpath -u ${APPS}` -iname *.h -o -iname *.cpp | xargs `cygpath -u ${CLANG_FORMAT}` -i
+      COMMAND find `cygpath -u ${SRCS}`  -iname *.h -o -iname *.cpp | grep -vFf ${CMAKE_SOURCE_DIR}/.clang-format-ignore | xargs `cygpath -u ${CLANG_FORMAT}` -i
+      COMMAND find `cygpath -u ${COMPS}` -iname *.h -o -iname *.cpp | grep -vFf ${CMAKE_SOURCE_DIR}/.clang-format-ignore | xargs `cygpath -u ${CLANG_FORMAT}` -i
+      COMMAND find `cygpath -u ${APPS}`  -iname *.h -o -iname *.cpp | grep -vFf ${CMAKE_SOURCE_DIR}/.clang-format-ignore | xargs `cygpath -u ${CLANG_FORMAT}` -i
       COMMENT ${CCOMMENT})
   else()
     add_custom_target(clang-format
-      COMMAND find ${SRCS} -iname *.h -o -iname *.cpp | xargs ${CLANG_FORMAT} -i
-      COMMAND find ${COMPS} -iname *.h -o -iname *.cpp | xargs ${CLANG_FORMAT} -i
-      COMMAND find ${APPS} -iname *.h -o -iname *.cpp | xargs ${CLANG_FORMAT} -i
+      COMMAND find ${SRCS}  -iname *.h -o -iname *.cpp | grep -vFf ${CMAKE_SOURCE_DIR}/.clang-format-ignore | xargs ${CLANG_FORMAT} -i
+      COMMAND find ${COMPS} -iname *.h -o -iname *.cpp | grep -vFf ${CMAKE_SOURCE_DIR}/.clang-format-ignore | xargs ${CLANG_FORMAT} -i
+      COMMAND find ${APPS}  -iname *.h -o -iname *.cpp | grep -vFf ${CMAKE_SOURCE_DIR}/.clang-format-ignore | xargs ${CLANG_FORMAT} -i
       COMMENT ${CCOMMENT})
   endif()
   unset(SRCS)
