@@ -1,4 +1,4 @@
-$input v_texcoord0, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha
+$input v_texcoord0, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera
 
 #include <bgfx_shader.sh>
 
@@ -36,13 +36,21 @@ void main()
 	float bump = mix(1.0f, texture2D(s_bump, v_texcoord0.xy).r * 2, u_bumpmapStrength.r);
 	col = col * bump;
 
-	float smallbump = 1 - mix(0.0f, texture2D(s_smallBump, v_texcoord0.xy * 10).r, u_smallBumpmapStrength.r);
-	col = col * smallbump;
+	// don't apply smallbump unless we're close
+	if (v_distToCamera < 200.0f) {
+		float smallStrength = (1.0f - (v_distToCamera / 200.0f)) * u_smallBumpmapStrength.r;
+
+		float smallbump = 1 - mix(0.0f, texture2D(s_smallBump, v_texcoord0.xy * 10).r, smallStrength);
+		col = col * smallbump;		
+	}
 
 	// apply light map
 	col = col * mix(.25f, clamp(v_lightLevel * 2, 0.5, 1), u_timeOfDay.r);
 
 	gl_FragColor = vec4(col.rgb, v_waterAlpha);
+
+
+	//gl_FragColor.r = v_distToCamera / 200.0f;
 
 	if (v_waterAlpha == 0.0) {
 		discard;

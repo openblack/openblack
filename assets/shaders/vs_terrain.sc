@@ -1,5 +1,5 @@
 $input a_position, a_texcoord1, a_color1, a_color2, a_texcoord2, a_color0, a_color3
-$output v_texcoord0, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha
+$output v_texcoord0, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera
 
 #include <bgfx_shader.sh>
 
@@ -22,5 +22,8 @@ void main()
 	v_waterAlpha = a_color3;
 
 	vec3 transformedPosition = vec3(a_position.x + u_blockPosition.x, a_position.y, a_position.z + u_blockPosition.y);
-	gl_Position = mul(u_viewProj, vec4(transformedPosition, 1.0f));
+
+	vec4 cs_position = mul(u_view, vec4(transformedPosition, 1.0f));
+	v_distToCamera = cs_position.z;
+	gl_Position = mul(u_proj, cs_position);
 }
