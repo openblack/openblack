@@ -52,9 +52,11 @@ _Replace `C:/Users/Matt/Development/vcpkg` with your vcpkg root and `C:/Users/Ma
 
 ## Linux
 
-* Install [bgfx.cmake](https://github.com/openblack/bgfx.cmake)
+*Note: The instructions are for Ubuntu can be easily applied to other distros. Alternatively, the commands of the Arch Linux PKGBUILD can be used as a reference.*
 
-*Note: These instructions are for Ubuntu, but can be easily applied to other distros.*
+### Ubuntu
+
+* Install [bgfx.cmake](https://github.com/openblack/bgfx.cmake)
 
 Ensure you have dependencies first
 ```bash
@@ -63,6 +65,10 @@ cd openblack
 cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux
 cmake --build build -j 5
 ```
+
+### Arch Linux
+
+Install [openblack-git](https://aur.archlinux.org/packages/openblack-git/) from the AUR which builds and installs directly for all Arch Linux derived distros such as Manjaro.
 
 ## Contributing
 Contributions are always welcome, whether it's modifying source code to add new
