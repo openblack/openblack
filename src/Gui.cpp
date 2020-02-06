@@ -483,10 +483,16 @@ bool Gui::Loop(Game& game)
 			};
 
 			ImGui::MenuItem("Story Islands", NULL, false, false);
-			for (auto& [label, path] : RegularIslands) { menu_item(label, path); }
+			for (auto& [label, path] : RegularIslands)
+			{
+				menu_item(label, path);
+			}
 			ImGui::Separator();
 			ImGui::MenuItem("Playground Islands", NULL, false, false);
-			for (auto& [label, path] : PlaygroundIslands) { menu_item(label, path); }
+			for (auto& [label, path] : PlaygroundIslands)
+			{
+				menu_item(label, path);
+			}
 
 			ImGui::EndMenu();
 		}

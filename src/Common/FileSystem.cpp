@@ -35,7 +35,10 @@ std::string FileSystem::FixPath(const std::string& path)
 		}
 	}
 
-	for (auto pos = result.find('\\'); pos != std::string::npos; pos = result.find('\\', pos + 1)) { result[pos] = '/'; }
+	for (auto pos = result.find('\\'); pos != std::string::npos; pos = result.find('\\', pos + 1))
+	{
+		result[pos] = '/';
+	}
 
 	return result;
 }

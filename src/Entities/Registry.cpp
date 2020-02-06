@@ -349,7 +349,10 @@ void Registry::PrepareDraw(bool drawBoundingBox, bool drawBoundingStreams)
 		{
 			uint32_t streamEdgeCount = 0;
 			_registry.view<const Stream>().each([&streamEdgeCount](const Stream& com) {
-				for (const auto& from : com.streamNodes) { streamEdgeCount += from.edges.size(); }
+				for (const auto& from : com.streamNodes)
+				{
+					streamEdgeCount += from.edges.size();
+				}
 			});
 			std::vector<graphics::DebugLines::Vertex> streamEdges;
 			streamEdges.reserve(streamEdgeCount * 2);

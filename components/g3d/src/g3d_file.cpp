@@ -338,7 +338,9 @@ void G3DFile::CreateMeshBlock()
 		}
 		contents.resize(offset);
 		for (size_t i = 0; i < _meshes.size(); ++i)
-		{ std::memcpy(&contents[meshOffsets[i]], _meshes[i].data(), _meshes[i].size() * sizeof(_meshes[i][0])); }
+		{
+			std::memcpy(&contents[meshOffsets[i]], _meshes[i].data(), _meshes[i].size() * sizeof(_meshes[i][0]));
+		}
 	}
 
 	_blocks["MESHES"] = std::move(contents);

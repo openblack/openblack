@@ -298,7 +298,10 @@ int PrintPoints(openblack::l3d::L3DFile& l3d)
 	auto& points = l3d.GetPoints();
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
 
-	for (auto& point : points) { std::printf("(%.3f, %.3f, %.3f)\n", point.x, point.y, point.z); }
+	for (auto& point : points)
+	{
+		std::printf("(%.3f, %.3f, %.3f)\n", point.x, point.y, point.z);
+	}
 
 	return EXIT_SUCCESS;
 }
