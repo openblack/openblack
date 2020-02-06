@@ -14,7 +14,7 @@ vec4 ScreenSpacePosition(vec4 position)
 
 void main()
 {
-	vec4 vertex = vec4(vec3(a_position.x * 10000, 0.0, a_position.y * 10000), 1.0);
+	vec4 vertex = vec4(vec3(a_position.x, 0.0, a_position.y), 1.0);
 	vec4 position = mul(u_viewProj, vertex);
 	gl_Position = position;
 

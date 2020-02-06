@@ -48,10 +48,10 @@ void Water::createMesh()
 	decl.emplace_back(VertexAttrib::Attribute::Position, 2, VertexAttrib::Type::Float);
 
 	static const glm::vec2 points[] = {
-	    glm::vec2(-1.0f, 1.0f),
-	    glm::vec2(1.0f, 1.0f),
-	    glm::vec2(1.0f, -1.0f),
-	    glm::vec2(-1.0f, -1.0f),
+	    glm::vec2(-70000.0f, 70000.0f),
+	    glm::vec2(70000.0f, 70000.0f),
+	    glm::vec2(70000.0f, -70000.0f),
+	    glm::vec2(-70000.0f, -70000.0f),
 	};
 
 	static const uint16_t indices[6] = {2, 1, 0, 0, 3, 2};
