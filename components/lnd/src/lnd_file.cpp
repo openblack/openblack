@@ -110,7 +110,11 @@
 
 using namespace openblack::lnd;
 
-LNDFile::LNDFile(): _isLoaded(false), _header{} {}
+LNDFile::LNDFile()
+    : _isLoaded(false)
+    , _header {}
+{
+}
 
 /// Error handling
 void LNDFile::Fail(const std::string& msg)

@@ -33,8 +33,12 @@ constexpr std::array<bgfx::Attrib::Enum, 18> attributes {
 } // namespace
 
 VertexBuffer::VertexBuffer(std::string name, const void* vertices, uint32_t vertexCount, VertexDecl decl)
-    : _name(std::move(name)), _vertexCount(vertexCount), _vertexDecl(std::move(decl)), _strideBytes(0),
-      _handle(BGFX_INVALID_HANDLE), _layoutHandle(BGFX_INVALID_HANDLE)
+    : _name(std::move(name))
+    , _vertexCount(vertexCount)
+    , _vertexDecl(std::move(decl))
+    , _strideBytes(0)
+    , _handle(BGFX_INVALID_HANDLE)
+    , _layoutHandle(BGFX_INVALID_HANDLE)
 {
 	// assert(vertices != nullptr);
 	assert(vertexCount > 0);
@@ -67,8 +71,12 @@ VertexBuffer::VertexBuffer(std::string name, const void* vertices, uint32_t vert
 }
 
 VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl decl)
-    : _name(std::move(name)), _vertexCount(0), _vertexDecl(std::move(decl)), _strideBytes(0), _handle(BGFX_INVALID_HANDLE),
-      _layoutHandle(BGFX_INVALID_HANDLE)
+    : _name(std::move(name))
+    , _vertexCount(0)
+    , _vertexDecl(std::move(decl))
+    , _strideBytes(0)
+    , _handle(BGFX_INVALID_HANDLE)
+    , _layoutHandle(BGFX_INVALID_HANDLE)
 {
 	// assert(vertices != nullptr);
 	assert(!_vertexDecl.empty());

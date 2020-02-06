@@ -86,7 +86,8 @@ struct BgfxCallback: public bgfx::CallbackI
 } // namespace openblack
 
 Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererType, bool vsync)
-    : _shaderManager(std::make_unique<ShaderManager>()), _bgfxCallback(std::make_unique<BgfxCallback>())
+    : _shaderManager(std::make_unique<ShaderManager>())
+    , _bgfxCallback(std::make_unique<BgfxCallback>())
 {
 	bgfx::Init init {};
 	init.type = rendererType;

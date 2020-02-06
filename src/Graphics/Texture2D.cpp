@@ -77,7 +77,11 @@ bgfx::TextureFormat::Enum getBgfxTextureFormat(Format format)
 	return textureFormatsBgfx[static_cast<size_t>(format)];
 }
 
-Texture2D::Texture2D(std::string name): _name(std::move(name)), _handle(BGFX_INVALID_HANDLE) {}
+Texture2D::Texture2D(std::string name)
+    : _name(std::move(name))
+    , _handle(BGFX_INVALID_HANDLE)
+{
+}
 
 Texture2D::~Texture2D()
 {

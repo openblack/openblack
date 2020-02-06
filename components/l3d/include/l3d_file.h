@@ -26,9 +26,9 @@ class Span
 
 public:
 	Span(std::vector<N>& original, uint32_t start, uint32_t length)
-		: original(original)
-		, start(start)
-		, length(length)
+	    : original(original)
+	    , start(start)
+	    , length(length)
 	{
 	}
 

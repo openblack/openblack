@@ -38,7 +38,11 @@ struct L3DModel_Vertex
 	uint32_t bone;
 };
 
-L3DMesh::L3DMesh(const std::string& debugName): _flags(static_cast<l3d::L3DMeshFlags>(0)), _debugName(debugName) {}
+L3DMesh::L3DMesh(const std::string& debugName)
+    : _flags(static_cast<l3d::L3DMeshFlags>(0))
+    , _debugName(debugName)
+{
+}
 
 void L3DMesh::Load(const l3d::L3DFile& l3d)
 {

@@ -16,7 +16,10 @@
 using namespace openblack::graphics;
 
 IndexBuffer::IndexBuffer(std::string name, const void* indices, size_t indicesCount, Type type)
-    : _name(std::move(name)), _count(indicesCount), _type(type), _handle(BGFX_INVALID_HANDLE)
+    : _name(std::move(name))
+    , _count(indicesCount)
+    , _type(type)
+    , _handle(BGFX_INVALID_HANDLE)
 {
 	assert(indices != nullptr);
 	assert(indicesCount > 0);
@@ -27,7 +30,9 @@ IndexBuffer::IndexBuffer(std::string name, const void* indices, size_t indicesCo
 }
 
 IndexBuffer::IndexBuffer(std::string name, const bgfx::Memory* mem, Type type)
-    : _name(std::move(name)), _type(type), _handle(BGFX_INVALID_HANDLE)
+    : _name(std::move(name))
+    , _type(type)
+    , _handle(BGFX_INVALID_HANDLE)
 {
 	_count = mem->size / sizeof(uint16_t);
 

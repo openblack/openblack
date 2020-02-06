@@ -26,8 +26,9 @@
 using namespace openblack;
 
 MeshViewer::MeshViewer()
-    : _cameraPosition(5.0f, 3.0f, 5.0f), _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f))),
-      _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", 512, 512, graphics::Format::RGBA8,
+    : _cameraPosition(5.0f, 3.0f, 5.0f)
+    , _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f)))
+    , _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", 512, 512, graphics::Format::RGBA8,
                                                            graphics::Format::Depth24Stencil8))
 {
 }

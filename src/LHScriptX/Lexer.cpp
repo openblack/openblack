@@ -12,10 +12,11 @@
 #include <cctype>
 #include <utility>
 
-
 using namespace openblack::lhscriptx;
 
-Lexer::Lexer(std::string  source): source_(std::move(source)), currentLine_(1)
+Lexer::Lexer(std::string source)
+    : source_(std::move(source))
+    , currentLine_(1)
 {
 	current_ = source_.begin();
 	end_ = source_.end();

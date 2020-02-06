@@ -60,7 +60,11 @@ struct VertexAttrib
 
 	VertexAttrib() {}
 	VertexAttrib(Attribute attribute, uint8_t num, Type type, bool normalized = false, bool asInt = false)
-	    : _attribute(attribute), _num(num), _type(type), _normalized(normalized), _asInt(asInt)
+	    : _attribute(attribute)
+	    , _num(num)
+	    , _type(type)
+	    , _normalized(normalized)
+	    , _asInt(asInt)
 	{
 	}
 };

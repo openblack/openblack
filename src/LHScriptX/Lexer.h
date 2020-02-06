@@ -22,7 +22,10 @@ namespace openblack::lhscriptx
 class LexerException: public std::runtime_error
 {
 public:
-	LexerException(const std::string& msg): std::runtime_error(msg.c_str()) {}
+	LexerException(const std::string& msg)
+	    : std::runtime_error(msg.c_str())
+	{
+	}
 };
 
 enum class Operator
@@ -110,7 +113,10 @@ public:
 	void Print(FILE* file) const;
 
 private:
-	Token(Type type): type_(type) {}
+	Token(Type type)
+	    : type_(type)
+	{
+	}
 
 	Type type_;
 	union

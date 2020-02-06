@@ -25,7 +25,10 @@ template <typename T, typename K = std::hash<T>>
 class MeshLookup
 {
 public:
-	MeshLookup(std::initializer_list<typename std::unordered_map<T, MeshId, K>::value_type> init): lookup(init) {}
+	MeshLookup(std::initializer_list<typename std::unordered_map<T, MeshId, K>::value_type> init)
+	    : lookup(init)
+	{
+	}
 
 	MeshId operator[](T key)
 	{

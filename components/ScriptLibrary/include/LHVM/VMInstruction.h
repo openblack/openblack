@@ -73,7 +73,11 @@ public:
 
 	VMInstruction() = delete;
 	VMInstruction(Opcode code, Access access, DataType type, uint32_t data, uint32_t line)
-	    : _code(code), _access(access), _type(type), _data(data), _line(line)
+	    : _code(code)
+	    , _access(access)
+	    , _type(type)
+	    , _data(data)
+	    , _line(line)
 	{
 	}
 	~VMInstruction() = default;
