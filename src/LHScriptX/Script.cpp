@@ -88,15 +88,24 @@ ScriptCommandParameter GetParameter(Token& argument)
 
 	switch (type)
 	{
-	case Token::Type::Invalid: throw std::runtime_error("Invalid token. Unable to proceed");
-	case Token::Type::EndOfFile: throw std::runtime_error("Unexpected EOF in script");
-	case Token::Type::EndOfLine: throw std::runtime_error("Unexpected EOL in script");
-	case Token::Type::Identifier: return ScriptCommandParameter(argument.Identifier());
-	case Token::Type::String: return ScriptCommandParameter(argument.StringValue());
-	case Token::Type::Integer: return ScriptCommandParameter(*argument.IntegerValue());
-	case Token::Type::Float: return ScriptCommandParameter(*argument.FloatValue());
-	case Token::Type::Operator: throw std::runtime_error("Operator token as an argument is currently not supported");
-	default: throw std::runtime_error("Missing switch case for script token argument");
+	case Token::Type::Invalid:
+		throw std::runtime_error("Invalid token. Unable to proceed");
+	case Token::Type::EndOfFile:
+		throw std::runtime_error("Unexpected EOF in script");
+	case Token::Type::EndOfLine:
+		throw std::runtime_error("Unexpected EOL in script");
+	case Token::Type::Identifier:
+		return ScriptCommandParameter(argument.Identifier());
+	case Token::Type::String:
+		return ScriptCommandParameter(argument.StringValue());
+	case Token::Type::Integer:
+		return ScriptCommandParameter(*argument.IntegerValue());
+	case Token::Type::Float:
+		return ScriptCommandParameter(*argument.FloatValue());
+	case Token::Type::Operator:
+		throw std::runtime_error("Operator token as an argument is currently not supported");
+	default:
+		throw std::runtime_error("Missing switch case for script token argument");
 	}
 }
 

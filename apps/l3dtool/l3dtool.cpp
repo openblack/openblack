@@ -477,32 +477,32 @@ void copyBufferView(desT* dst, const uint8_t* src, size_t count, uint32_t compon
 {
 	switch (componentType)
 	{
-		case TINYGLTF_COMPONENT_TYPE_BYTE:
-			details::copyBufferView<desT, int8_t>(dst, src, count);
-			break;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
-			details::copyBufferView<desT, uint8_t>(dst, src, count);
-			break;
-		case TINYGLTF_COMPONENT_TYPE_SHORT:
-			details::copyBufferView<desT, int16_t>(dst, src, count);
-			break;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
-			details::copyBufferView<desT, uint16_t>(dst, src, count);
-			break;
-		case TINYGLTF_COMPONENT_TYPE_INT:
-			details::copyBufferView<desT, int32_t>(dst, src, count);
-			break;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
-			details::copyBufferView<desT, uint32_t>(dst, src, count);
-			break;
-		case TINYGLTF_COMPONENT_TYPE_FLOAT:
-			details::copyBufferView<desT, float>(dst, src, count);
-			break;
-		case TINYGLTF_COMPONENT_TYPE_DOUBLE:
-			details::copyBufferView<desT, double>(dst, src, count);
-			break;
-		default:
-			throw std::runtime_error("Unsupported component type");
+	case TINYGLTF_COMPONENT_TYPE_BYTE:
+		details::copyBufferView<desT, int8_t>(dst, src, count);
+		break;
+	case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
+		details::copyBufferView<desT, uint8_t>(dst, src, count);
+		break;
+	case TINYGLTF_COMPONENT_TYPE_SHORT:
+		details::copyBufferView<desT, int16_t>(dst, src, count);
+		break;
+	case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+		details::copyBufferView<desT, uint16_t>(dst, src, count);
+		break;
+	case TINYGLTF_COMPONENT_TYPE_INT:
+		details::copyBufferView<desT, int32_t>(dst, src, count);
+		break;
+	case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
+		details::copyBufferView<desT, uint32_t>(dst, src, count);
+		break;
+	case TINYGLTF_COMPONENT_TYPE_FLOAT:
+		details::copyBufferView<desT, float>(dst, src, count);
+		break;
+	case TINYGLTF_COMPONENT_TYPE_DOUBLE:
+		details::copyBufferView<desT, double>(dst, src, count);
+		break;
+	default:
+		throw std::runtime_error("Unsupported component type");
 	}
 }
 

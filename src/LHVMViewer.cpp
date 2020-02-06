@@ -735,7 +735,9 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM* lhvm, openbl
 			ImGui::SameLine();
 			ImGui::TextColored(Disassembly_ColorConstant, "0x%04x", instruction.GetData());
 			break;
-		default: ImGui::TextColored(Disassembly_ColorKeyword, "%s", instruction.Disassemble().c_str()); break;
+		default:
+			ImGui::TextColored(Disassembly_ColorKeyword, "%s", instruction.Disassemble().c_str());
+			break;
 		}
 
 		if (instruction.GetOpcode() == LHVM::VMInstruction::Opcode::END)
@@ -766,11 +768,15 @@ std::string openblack::LHVMViewer::DataToString(uint32_t data, openblack::LHVM::
 {
 	switch (type)
 	{
-	case LHVM::VMInstruction::DataType::INT: return std::to_string(data);
+	case LHVM::VMInstruction::DataType::INT:
+		return std::to_string(data);
 	case LHVM::VMInstruction::DataType::FLOAT:
-	case LHVM::VMInstruction::DataType::VECTOR: return std::to_string(*reinterpret_cast<float*>(&data)) + "f";
-	case LHVM::VMInstruction::DataType::BOOLEAN: return data ? "true" : "false";
-	default: return std::to_string(data) + " (unk type)";
+	case LHVM::VMInstruction::DataType::VECTOR:
+		return std::to_string(*reinterpret_cast<float*>(&data)) + "f";
+	case LHVM::VMInstruction::DataType::BOOLEAN:
+		return data ? "true" : "false";
+	default:
+		return std::to_string(data) + " (unk type)";
 	}
 }
 

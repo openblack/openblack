@@ -23,14 +23,14 @@ FileStream::FileStream(const fs::path& path, FileMode mode) : _file(nullptr), _f
 
 	switch (mode)
 	{
-	    case FileMode::Read:
-            recognisedMode = L"rb";
-	        break;
-	    case FileMode::Write:
-	        recognisedMode = L"wb";
-	        break;
-	    case FileMode::Append:
-	        recognisedMode = L"ab";
+	case FileMode::Read:
+		recognisedMode = L"rb";
+		break;
+	case FileMode::Write:
+		recognisedMode = L"wb";
+		break;
+	case FileMode::Append:
+		recognisedMode = L"ab";
 	}
 
 #ifdef _WIN32
@@ -67,9 +67,15 @@ void FileStream::Seek(std::size_t position, SeekMode seek)
 {
 	switch (seek)
 	{
-	case SeekMode::Begin: std::fseek(_file, static_cast<long>(position), SEEK_SET); break;
-	case SeekMode::Current: std::fseek(_file, static_cast<long>(position), SEEK_CUR); break;
-	case SeekMode::End: std::fseek(_file, static_cast<long>(position), SEEK_END); break;
+	case SeekMode::Begin:
+		std::fseek(_file, static_cast<long>(position), SEEK_SET);
+		break;
+	case SeekMode::Current:
+		std::fseek(_file, static_cast<long>(position), SEEK_CUR);
+		break;
+	case SeekMode::End:
+		std::fseek(_file, static_cast<long>(position), SEEK_END);
+		break;
 	}
 }
 

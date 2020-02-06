@@ -72,8 +72,10 @@ bool Villager::IsImportantRole(VillagerRoles role)
 	case VillagerRoles::Healer:
 	case VillagerRoles::Sculptor:
 	case VillagerRoles::Crusader:
-	case VillagerRoles::SailorAccordian: return true;
-	default: return false;
+	case VillagerRoles::SailorAccordian:
+		return true;
+	default:
+		return false;
 	}
 }
 

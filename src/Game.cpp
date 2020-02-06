@@ -102,7 +102,8 @@ bool Game::ProcessEvents()
 	{
 		switch (e.type)
 		{
-		case SDL_QUIT: return true;
+		case SDL_QUIT:
+			return true;
 		case SDL_WINDOWEVENT:
 			if (e.window.event == SDL_WINDOWEVENT_CLOSE && e.window.windowID == _window->GetID())
 			{
@@ -112,12 +113,19 @@ bool Game::ProcessEvents()
 		case SDL_KEYDOWN:
 			switch (e.key.keysym.sym)
 			{
-			case SDLK_ESCAPE: return true;
-			case SDLK_f: _window->SetFullscreen(true); break;
-			case SDLK_F1: _config.bgfxDebug = !_config.bgfxDebug; break;
+			case SDLK_ESCAPE:
+				return true;
+			case SDLK_f:
+				_window->SetFullscreen(true);
+				break;
+			case SDLK_F1:
+				_config.bgfxDebug = !_config.bgfxDebug;
+				break;
 			}
 			break;
-		case SDL_MOUSEMOTION: SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y); break;
+		case SDL_MOUSEMOTION:
+			SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y);
+			break;
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
 			switch (e.button.button)
