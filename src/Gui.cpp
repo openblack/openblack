@@ -58,10 +58,7 @@ std::unique_ptr<Gui> Gui::create(const GameWindow* window, graphics::RenderPass 
 	auto imgui = ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 
-	ImGui::StyleColorsLight();
-
 	ImGuiStyle& style = ImGui::GetStyle();
-	style.FrameBorderSize = 1.0f;
 	style.ScaleAllSizes(scale);
 	io.FontGlobalScale = scale;
 
