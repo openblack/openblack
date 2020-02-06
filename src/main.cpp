@@ -22,6 +22,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 {
 	cxxopts::Options options("openblack", "Open source reimplementation of the game Black & White (2001).");
 
+	// clang-format off
 	options.add_options()
 		("h,help", "Display this help message.")
 		("g,game-path", "Path to the Data/ and Scripts/ directories of the original Black & White game. (Required)", cxxopts::value<std::string>())
@@ -33,6 +34,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		("b,backend-type", "Which backend to use for rendering.", cxxopts::value<std::string>()->default_value("OpenGL"))
 		("n,num-frames-to-simulate", "Number of frames to simulate before quitting.", cxxopts::value<uint32_t>()->default_value("0"))
 	;
+	// clang-format on
 
 	try
 	{

@@ -903,6 +903,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 {
 	cxxopts::Options options("l3dtool", "Inspect and extract files from LionHead L3D files.");
 
+	// clang-format off
 	options.add_options()
 		("h,help", "Display this help message.")
 		("subcommand", "Subcommand.", cxxopts::value<std::string>())
@@ -924,6 +925,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		("o,output", "Output file (required).", cxxopts::value<std::string>())
 		("i,input-mesh", "Input file (required).", cxxopts::value<std::string>())
 		;
+	// clang-format on
 
 	options.parse_positional({"subcommand"});
 
