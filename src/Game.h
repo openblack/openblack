@@ -66,6 +66,7 @@ public:
 		bool wireframe {false};
 		bool waterDebug {false};
 		bool showProfiler {false};
+		bool showLandIsland {false};
 
 		bool drawSky {true};
 		bool drawWater {true};

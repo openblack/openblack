@@ -300,7 +300,7 @@ void Gui::UpdateMousePosAndButtons()
 	io.MouseDown[2] = _mousePressed[2] || (mouse_buttons & SDL_BUTTON(SDL_BUTTON_MIDDLE)) != 0;
 	_mousePressed[0] = _mousePressed[1] = _mousePressed[2] = false;
 
-#if SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__) &&                                   \
+#if SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__) && \
     !(defined(__APPLE__) && TARGET_OS_IOS)
 	SDL_Window* focused_window = SDL_GetKeyboardFocus();
 	if (_window == focused_window)
@@ -364,17 +364,17 @@ void Gui::UpdateGamepads()
 	}
 
 	// Update gamepad inputs
-#define MAP_BUTTON(NAV_NO, BUTTON_NO)                                                                                          \
-	{                                                                                                                          \
-		io.NavInputs[NAV_NO] = (SDL_GameControllerGetButton(game_controller, BUTTON_NO) != 0) ? 1.0f : 0.0f;                   \
+#define MAP_BUTTON(NAV_NO, BUTTON_NO)                                                                        \
+	{                                                                                                        \
+		io.NavInputs[NAV_NO] = (SDL_GameControllerGetButton(game_controller, BUTTON_NO) != 0) ? 1.0f : 0.0f; \
 	}
-#define MAP_ANALOG(NAV_NO, AXIS_NO, V0, V1)                                                                                    \
-	{                                                                                                                          \
-		float vn = (float)(SDL_GameControllerGetAxis(game_controller, AXIS_NO) - V0) / (float)(V1 - V0);                       \
-		if (vn > 1.0f)                                                                                                         \
-			vn = 1.0f;                                                                                                         \
-		if (vn > 0.0f && io.NavInputs[NAV_NO] < vn)                                                                            \
-			io.NavInputs[NAV_NO] = vn;                                                                                         \
+#define MAP_ANALOG(NAV_NO, AXIS_NO, V0, V1)                                                              \
+	{                                                                                                    \
+		float vn = (float)(SDL_GameControllerGetAxis(game_controller, AXIS_NO) - V0) / (float)(V1 - V0); \
+		if (vn > 1.0f)                                                                                   \
+			vn = 1.0f;                                                                                   \
+		if (vn > 0.0f && io.NavInputs[NAV_NO] < vn)                                                      \
+			io.NavInputs[NAV_NO] = vn;                                                                   \
 	}
 	const int thumb_dead_zone = 8000;                            // SDL_gamecontroller.h suggests using this value.
 	MAP_BUTTON(ImGuiNavInput_Activate, SDL_CONTROLLER_BUTTON_A); // Cross / A
@@ -420,9 +420,9 @@ void Gui::NewFrameSdl2(SDL_Window* window)
 		int display_w, display_h;
 		SDL_GetWindowSize(window, &w, &h);
 		SDL_GL_GetDrawableSize(window, &display_w, &display_h);
-		io.DisplaySize = ImVec2((float) w, (float) h);
+		io.DisplaySize = ImVec2((float)w, (float)h);
 		if (w > 0 && h > 0)
-			io.DisplayFramebufferScale = ImVec2((float) display_w/w, (float) display_h/h);
+			io.DisplayFramebufferScale = ImVec2((float)display_w / w, (float)display_h / h);
 	}
 	else
 	{
@@ -462,40 +462,75 @@ bool Gui::Loop(Game& game)
 
 	if (ImGui::BeginMainMenuBar())
 	{
-		if (ImGui::BeginMenu("File"))
+		if (ImGui::BeginMenu("Load Island"))
 		{
-			if (ImGui::MenuItem("Quit", "Esc"))
-			{
-				return true;
-			}
+			constexpr std::array<std::pair<std::string_view, std::string_view>, 6> RegularIslands = {
+			    std::pair {"Land 1", "./Scripts/Land1.txt"}, std::pair {"Land 2", "./Scripts/Land2.txt"},
+			    std::pair {"Land 3", "./Scripts/Land3.txt"}, std::pair {"Land 4", "./Scripts/Land4.txt"},
+			    std::pair {"Land 5", "./Scripts/Land5.txt"}, std::pair {"God's Playground", "./Scripts/LandT.txt"},
+			};
+			constexpr std::array<std::pair<std::string_view, std::string_view>, 3> PlaygroundIslands = {
+			    std::pair {"Two Gods", "./Scripts/Playgrounds/TwoGods.txt"},
+			    std::pair {"Three Gods", "./Scripts/Playgrounds/ThreeGods.txt"},
+			    std::pair {"Four Gods", "./Scripts/Playgrounds/FourGods.txt"},
+			};
+
+			auto menu_item = [&game](auto label, auto path) {
+				if (ImGui::MenuItem(label.data()))
+					game.LoadMap(path.data());
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("%s", path.data());
+			};
+
+			ImGui::MenuItem("Story Islands", NULL, false, false);
+			for (auto& [label, path] : RegularIslands) { menu_item(label, path); }
+			ImGui::Separator();
+			ImGui::MenuItem("Playground Islands", NULL, false, false);
+			for (auto& [label, path] : PlaygroundIslands) { menu_item(label, path); }
+
 			ImGui::EndMenu();
 		}
 
-		if (ImGui::BeginMenu("View"))
-		{
-			ImGui::Checkbox("Wireframe", &config.wireframe);
-			ImGui::Checkbox("Water Debug", &config.waterDebug);
-			ImGui::Checkbox("Bounding Boxes", &config.drawBoundingBoxes);
-			ImGui::Checkbox("Streams", &config.drawStreams);
-			ImGui::Checkbox("Profiler", &config.showProfiler);
+		if (ImGui::BeginMenu("World")) {
+			if (ImGui::SliderFloat("Time of Day", &config.timeOfDay, 0.0f, 1.0f, "%.3f"))
+				Game::instance()->GetSky().SetTime(config.timeOfDay);
+
 			ImGui::EndMenu();
 		}
 
-		if (ImGui::BeginMenu("Tools"))
+		if (ImGui::BeginMenu("Debug"))
 		{
-			if (ImGui::MenuItem("Dump Land Textures"))
+			if (ImGui::MenuItem("Open Profiler"))
 			{
-				game.GetLandIsland().DumpTextures();
+				config.showProfiler = true;
 			}
+
 			if (ImGui::MenuItem("Mesh Viewer"))
 			{
 				_meshViewer->Open();
 			}
+
+			if (ImGui::MenuItem("Land Island"))
+			{
+				config.showLandIsland = true;
+			}
+
+			if (ImGui::BeginMenu("View"))
+			{
+				ImGui::Checkbox("Wireframe", &config.wireframe);
+				ImGui::Checkbox("Bounding Boxes", &config.drawBoundingBoxes);
+				ImGui::Checkbox("Streams", &config.drawStreams);
+
+				ImGui::EndMenu();
+			}
+
 			ImGui::EndMenu();
 		}
 
-		const auto& mousePosition = game.GetMousePosition();
-		ImGui::Text("%d, %d", mousePosition.x, mousePosition.y);
+		if (ImGui::MenuItem("Quit", "Esc"))
+		{
+			return true;
+		}
 
 		ImGui::SameLine(ImGui::GetWindowWidth() - 154.0f);
 		ImGui::Text("%.2f FPS (%.2f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
@@ -529,63 +564,8 @@ bool Gui::Loop(Game& game)
 	if (game.GetLhvm() != nullptr)
 		LHVMViewer::Draw(game.GetLhvm());
 
-	if (ImGui::Begin("Land Island"))
+	if (config.showLandIsland && ImGui::Begin("Land Island", &config.showLandIsland))
 	{
-		ImGui::Text("Load Land Island:");
-
-		{
-			ImGui::BeginGroup();
-			// TODO(bwrsandman): Recursively scan ./Scripts for levels and
-			// populate automatically
-			constexpr std::array<std::pair<std::string_view, std::string_view>, 6> RegularIslands = {
-			    std::pair {"1", "./Scripts/Land1.txt"}, std::pair {"2", "./Scripts/Land2.txt"},
-			    std::pair {"3", "./Scripts/Land3.txt"}, std::pair {"4", "./Scripts/Land4.txt"},
-			    std::pair {"5", "./Scripts/Land5.txt"}, std::pair {"T", "./Scripts/LandT.txt"},
-			};
-			constexpr std::array<std::pair<std::string_view, std::string_view>, 3> PlaygroundIslands = {
-			    std::pair {"2P", "./Scripts/Playgrounds/TwoGods.txt"},
-			    std::pair {"3P", "./Scripts/Playgrounds/ThreeGods.txt"},
-			    std::pair {"4P", "./Scripts/Playgrounds/FourGods.txt"},
-			};
-			bool sameLine = false;
-			for (auto& [label, path] : RegularIslands)
-			{
-				if (sameLine)
-				{
-					ImGui::SameLine();
-				}
-				sameLine = true;
-				if (ImGui::Button(label.data()))
-				{
-					game.LoadMap(path.data());
-				}
-				if (ImGui::IsItemHovered())
-				{
-					ImGui::SetTooltip("%s", path.data());
-				}
-			}
-			sameLine = false;
-			for (auto& [label, path] : PlaygroundIslands)
-			{
-				if (sameLine)
-				{
-					ImGui::SameLine();
-				}
-				sameLine = true;
-				if (ImGui::Button(label.data()))
-				{
-					game.LoadMap(path.data());
-				}
-				if (ImGui::IsItemHovered())
-				{
-					ImGui::SetTooltip("%s", path.data());
-				}
-			}
-			ImGui::EndGroup();
-		}
-
-		if (ImGui::SliderFloat("Day", &config.timeOfDay, 0.0f, 1.0f, "%.3f"))
-			Game::instance()->GetSky().SetTime(config.timeOfDay);
 		ImGui::SliderFloat("Bump", &config.bumpMapStrength, 0.0f, 1.0f, "%.3f");
 		ImGui::SliderFloat("Small Bump", &config.smallBumpMapStrength, 0.0f, 1.0f, "%.3f");
 
@@ -601,8 +581,9 @@ bool Gui::Loop(Game& game)
 
 		if (ImGui::Button("Dump Heightmap"))
 			game.GetLandIsland().DumpMaps();
+
+		ImGui::End();
 	}
-	ImGui::End();
 
 	if (config.showProfiler)
 		ShowProfilerWindow(game);
@@ -743,7 +724,7 @@ void Gui::Draw()
 
 void Gui::ShowProfilerWindow(Game& game)
 {
-	if (ImGui::Begin("Profiler"))
+	if (ImGui::Begin("Profiler", &game.GetConfig().showProfiler))
 	{
 		const bgfx::Stats* stats = bgfx::getStats();
 		const double toMsCpu = 1000.0 / stats->cpuTimerFreq;
