@@ -174,8 +174,8 @@ struct L3DPrimitiveHeader
 	uint32_t verticesOffset;
 	uint32_t numTriangles;
 	uint32_t trianglesOffset;
-	uint32_t boneVertLUTSize;
-	uint32_t boneVertLUTOffset;
+	uint32_t numGroups;
+	uint32_t groupsOffset;
 	uint32_t numVertexBlends;
 	uint32_t vertexBlendsOffset;
 };
@@ -188,6 +188,13 @@ struct L3DVertex
 	L3DPoint normal;
 };
 static_assert(sizeof(L3DVertex) == 32);
+
+struct L3DVertexGroup
+{
+	uint16_t vertexCount;
+	uint16_t boneIndex;
+};
+static_assert(sizeof(L3DVertexGroup) == 4);
 
 struct L3DBlend
 {
@@ -216,7 +223,7 @@ protected:
 	std::vector<L3DPrimitiveHeader> _primitiveHeaders;
 	std::vector<L3DVertex> _vertices;
 	std::vector<uint16_t> _indices;
-	std::vector<uint8_t> _lookUpTable;
+	std::vector<L3DVertexGroup> _vertexGroups;
 	std::vector<L3DBlend> _blends;
 	std::vector<L3DBone> _bones;
 	std::vector<Span<L3DPrimitiveHeader>> _primitiveSpans;
@@ -255,7 +262,7 @@ public:
 	[[nodiscard]] const std::vector<L3DPrimitiveHeader>& GetPrimitiveHeaders() const { return _primitiveHeaders; }
 	[[nodiscard]] const std::vector<L3DVertex>& GetVertices() const { return _vertices; }
 	[[nodiscard]] const std::vector<uint16_t>& GetIndices() const { return _indices; }
-	[[nodiscard]] const std::vector<uint8_t>& GetLookUpTableData() const { return _lookUpTable; }
+	[[nodiscard]] const std::vector<L3DVertexGroup>& GetLookUpTableData() const { return _vertexGroups; }
 	[[nodiscard]] const std::vector<L3DBlend>& GetBlends() const { return _blends; }
 	[[nodiscard]] const std::vector<L3DBone>& GetBones() const { return _bones; }
 	[[nodiscard]] const Span<L3DPrimitiveHeader>& GetPrimitiveSpan(uint32_t submeshIndex) const

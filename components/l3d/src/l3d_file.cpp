@@ -82,10 +82,9 @@
  *         triangle count: count of the triangles in triangle block
  *                         (see below)
  *         triangle start offset: offset in triangle block (see below)
- *         look-up table size: size of the bone-vertex look-up table
- *                             (see below)
- *         look-up table start offset: offset in look-up table block
- *                                     (see below)
+ *         vertex groups count: count of the bone-vertex association groups
+ *                              (see below)
+ *         vertex groups start offset: offset in look-up table block (see below)
  *         blend count: count of the vertex blend values in vertex blend
  *                      block (see below)
  *         blend offset: count of the vertex blend values in vertex blend
@@ -111,9 +110,12 @@
  *
  * - 6 bytes * total triangles, each record containing three vertex indices
  *
- * ------------------------ start of look-up table block -----------------------
+ * ------------------------ start of vertex group block ------------------------
  *
- * - ? bytes * total look-up table size, TODO: contents unknown
+ * - 4 bytes * total vertex groups, each record containing two 16 bit ints
+ *         vertex count: number of vertices in the group starting after the last
+ *                       group ended.
+ *         bone index: the index of the bone the group is attached to.
  *
  * ------------------------ start of blend block -------------------------------
  *
@@ -323,7 +325,7 @@ void L3DFile::ReadFile(std::istream& stream)
 	_primitiveHeaders.reserve(primitiveOffsets.size());
 	uint32_t totalVertices = 0;
 	uint32_t totalIndices = 0;
-	uint32_t totalLookUpTableSize = 0;
+	uint32_t totalGroups = 0;
 	uint32_t totalBlendValues = 0;
 	for (auto offset : primitiveOffsets)
 	{
@@ -336,7 +338,7 @@ void L3DFile::ReadFile(std::istream& stream)
 		stream.read(reinterpret_cast<char*>(&_primitiveHeaders.back()), sizeof(_primitiveHeaders[0]));
 		totalVertices += _primitiveHeaders.back().numVertices;
 		totalIndices += _primitiveHeaders.back().numTriangles * 3;
-		totalLookUpTableSize += _primitiveHeaders.back().boneVertLUTSize;
+		totalGroups += _primitiveHeaders.back().numGroups;
 		totalBlendValues += _primitiveHeaders.back().numVertexBlends;
 	}
 
@@ -391,27 +393,27 @@ void L3DFile::ReadFile(std::istream& stream)
 	}
 
 	// Reserve space for look-up table data
-	_lookUpTable.resize(totalLookUpTableSize);
-	if (!_lookUpTable.empty())
+	_vertexGroups.resize(totalGroups);
+	if (!_vertexGroups.empty())
 	{
 		uint32_t counter = 0;
 		for (const auto& header : _primitiveHeaders)
 		{
-			if (header.boneVertLUTSize == 0 || header.boneVertLUTOffset == std::numeric_limits<uint32_t>::max())
+			if (header.numGroups == 0 || header.groupsOffset == std::numeric_limits<uint32_t>::max())
 			{
 				continue;
 			}
-			if (header.boneVertLUTOffset + header.boneVertLUTSize > fsize)
+			if (header.groupsOffset + header.numGroups * sizeof(_vertexGroups[0]) > fsize)
 			{
-				Fail("Look-up table data goes beyond file");
+				Fail("Vertex groups go beyond end of file");
 			}
-			stream.seekg(header.boneVertLUTOffset);
-			stream.read(reinterpret_cast<char*>(&_lookUpTable[counter]), header.boneVertLUTSize);
-			counter += header.boneVertLUTSize;
+			stream.seekg(header.groupsOffset);
+			stream.read(reinterpret_cast<char*>(&_vertexGroups[counter]), header.numGroups * sizeof(_vertexGroups[0]));
+			counter += header.numGroups;
 		}
-		if (counter != totalLookUpTableSize)
+		if (counter != totalGroups)
 		{
-			Fail("Could not account for look-up table data");
+			Fail("Could not account for vertex group data");
 		}
 	}
 
@@ -596,9 +598,9 @@ void L3DFile::WriteFile(std::ostream& stream) const
 	{
 		stream.write(reinterpret_cast<const char*>(_indices.data()), _indices.size() * sizeof(_indices[0]));
 	}
-	if (!_lookUpTable.empty())
+	if (!_vertexGroups.empty())
 	{
-		stream.write(reinterpret_cast<const char*>(_lookUpTable.data()), _lookUpTable.size() * sizeof(_lookUpTable[0]));
+		stream.write(reinterpret_cast<const char*>(_vertexGroups.data()), _vertexGroups.size() * sizeof(_vertexGroups[0]));
 	}
 	if (!_blends.empty())
 	{
@@ -673,7 +675,7 @@ void L3DFile::Write(const std::string& file)
 	size_t vertexBase = boneBase + _bones.size() * sizeof(_bones[0]);
 	size_t triangleBase = vertexBase + _vertices.size() * sizeof(_vertices[0]);
 	size_t lutBase = triangleBase + _indices.size() * sizeof(_indices[0]);
-	size_t blendBase = lutBase + _lookUpTable.size() * sizeof(_lookUpTable[0]);
+	size_t blendBase = lutBase + _vertexGroups.size() * sizeof(_vertexGroups[0]);
 	_header.size = static_cast<uint32_t>(blendBase + _blends.size() * sizeof(_blends[0]));
 	if (!_bones.empty())
 	{
@@ -687,7 +689,7 @@ void L3DFile::Write(const std::string& file)
 		    _vertexSpans[i].size() > 0 ? static_cast<uint32_t>(vertexBase) : std::numeric_limits<uint32_t>::max();
 		_primitiveHeaders[i].trianglesOffset =
 		    _indexSpans[i].size() > 0 ? static_cast<uint32_t>(triangleBase) : std::numeric_limits<uint32_t>::max();
-		_primitiveHeaders[i].boneVertLUTOffset = std::numeric_limits<uint32_t>::max();  // TODO boneVertLUTBase;
+		_primitiveHeaders[i].groupsOffset = std::numeric_limits<uint32_t>::max();       // TODO boneVertLUTBase;
 		_primitiveHeaders[i].vertexBlendsOffset = std::numeric_limits<uint32_t>::max(); // TODO vertexBlendsBase;
 		vertexBase += _vertexSpans[i].size() * sizeof(_vertices[0]);
 		triangleBase += 3 * _indexSpans[i].size() * sizeof(_indices[0]);
