@@ -132,7 +132,7 @@ const LandBlock* LandIsland::GetBlock(const glm::u8vec2& coordinates) const
 
 constexpr lnd::LNDCell EmptyCell() noexcept
 {
-	lnd::LNDCell cell{};
+	lnd::LNDCell cell {};
 	cell.properties.fullWater = true;
 	return cell;
 }
