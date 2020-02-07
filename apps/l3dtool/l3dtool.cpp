@@ -10,6 +10,7 @@
 #include <l3d_file.h>
 
 #include <cstdlib>
+#include <stack>
 #include <string>
 
 #include <cxxopts.hpp>
@@ -780,7 +781,7 @@ int ExtractFile(const Arguments::Extract& args)
 	memcpy(indexBuffer.data.data(), l3d.GetIndices().data(), sizeOfIndices);
 	gltf.buffers.push_back(indexBuffer);
 
-	// TODO: joints, weights, skins
+	// TODO: weights, skins
 
 	// Buffer views
 	tinygltf::BufferView vertexView; // 0
@@ -800,9 +801,8 @@ int ExtractFile(const Arguments::Extract& args)
 	indexView.target = TINYGLTF_TARGET_ELEMENT_ARRAY_BUFFER;
 	gltf.bufferViews.push_back(indexView);
 
-	gltf.nodes.emplace_back(); // 0
-	tinygltf::Node& rootNode = gltf.nodes.front();
-	rootNode.name = "root node";
+	auto rootNodeIndex = static_cast<uint32_t>(gltf.nodes.size());
+	gltf.nodes.emplace_back().name = "root node"; // 0
 
 	// Scene
 	tinygltf::Scene scene;
@@ -883,17 +883,130 @@ int ExtractFile(const Arguments::Extract& args)
 			indexOffset += l3dPrimitive.numTriangles * 3;
 		}
 		// TODO gltfMesh.weights
-		rootNode.children.push_back(static_cast<int>(gltf.nodes.size()));
+		gltf.nodes[rootNodeIndex].children.push_back(static_cast<int>(gltf.nodes.size()));
 		tinygltf::Node node;
 		node.name = gltfMesh.name + " node";
 		node.mesh = static_cast<int>(i);
 		gltf.nodes.push_back(node);
 	}
-	// TODO: Create joints
+
+	auto& bones = l3d.GetBones();
+	std::vector<uint32_t> roots;
+	for (uint32_t i = 0; i < bones.size(); ++i)
+	{
+		if (bones[i].parent == std::numeric_limits<uint32_t>::max())
+		{
+			roots.push_back(i);
+		}
+	}
+
+	for (uint32_t i : roots)
+	{
+		auto bone_to_node = [](tinygltf::Node& node, const openblack::l3d::L3DBone& bone) {
+			node.translation.clear();
+			node.translation.push_back(bone.position.x);
+			node.translation.push_back(bone.position.y);
+			node.translation.push_back(bone.position.z);
+
+			node.rotation.clear();
+			auto& w = node.rotation.emplace_back(1);
+			auto& x = node.rotation.emplace_back(0);
+			auto& y = node.rotation.emplace_back(0);
+			auto& z = node.rotation.emplace_back(0);
+
+			// From glm quat_cast
+			float fourXSquaredMinus1 = bone.orientation[0] - bone.orientation[4] - bone.orientation[8];
+			float fourYSquaredMinus1 = bone.orientation[4] - bone.orientation[0] - bone.orientation[8];
+			float fourZSquaredMinus1 = bone.orientation[8] - bone.orientation[0] - bone.orientation[4];
+			float fourWSquaredMinus1 = bone.orientation[0] + bone.orientation[4] + bone.orientation[8];
+
+			int biggestIndex = 0;
+			float fourBiggestSquaredMinus1 = fourWSquaredMinus1;
+			if (fourXSquaredMinus1 > fourBiggestSquaredMinus1)
+			{
+				fourBiggestSquaredMinus1 = fourXSquaredMinus1;
+				biggestIndex = 1;
+			}
+			if (fourYSquaredMinus1 > fourBiggestSquaredMinus1)
+			{
+				fourBiggestSquaredMinus1 = fourYSquaredMinus1;
+				biggestIndex = 2;
+			}
+			if (fourZSquaredMinus1 > fourBiggestSquaredMinus1)
+			{
+				fourBiggestSquaredMinus1 = fourZSquaredMinus1;
+				biggestIndex = 3;
+			}
+
+			float biggestVal = -std::sqrt(fourBiggestSquaredMinus1 + 1.0f) * 0.5f;
+			float mult = 0.25f / biggestVal;
+
+			switch (biggestIndex)
+			{
+			case 0:
+				w = biggestVal;
+				x = (bone.orientation[5] - bone.orientation[7]) * mult;
+				y = (bone.orientation[6] - bone.orientation[2]) * mult;
+				z = (bone.orientation[1] - bone.orientation[3]) * mult;
+				break;
+			case 1:
+				w = (bone.orientation[5] - bone.orientation[7]) * mult;
+				x = biggestVal;
+				y = (bone.orientation[1] - bone.orientation[3]) * mult;
+				z = (bone.orientation[6] - bone.orientation[2]) * mult;
+				break;
+			case 2:
+				w = (bone.orientation[6] - bone.orientation[2]) * mult;
+				x = (bone.orientation[1] - bone.orientation[3]) * mult;
+				y = biggestVal;
+				z = (bone.orientation[5] - bone.orientation[7]) * mult;
+				break;
+			case 3:
+				w = (bone.orientation[1] - bone.orientation[3]) * mult;
+				x = (bone.orientation[6] - bone.orientation[2]) * mult;
+				y = (bone.orientation[5] - bone.orientation[7]) * mult;
+				z = biggestVal;
+				break;
+			}
+		};
+
+		// l3d index of current node + gltf index of parent node
+		std::stack<std::pair<uint32_t, uint32_t>> traversal_stack;
+		traversal_stack.emplace(i, rootNodeIndex);
+		tinygltf::Node node;
+		uint32_t index, parent_index;
+		while (!traversal_stack.empty())
+		{
+			std::tie(index, parent_index) = traversal_stack.top();
+			traversal_stack.pop();
+			if (parent_index == rootNodeIndex)
+			{
+				node.name = "Bones root node #" + std::to_string(i);
+			}
+			else
+			{
+				node.name = "Bone Child #" + std::to_string(index) + " of #" + std::to_string(i);
+			}
+
+			gltf.nodes[parent_index].children.push_back(static_cast<int>(gltf.nodes.size()));
+			auto& l3d_node = bones[index];
+			bone_to_node(node, l3d_node);
+			gltf.nodes.emplace_back(node);
+
+			if (l3d_node.rightSibling != std::numeric_limits<uint32_t>::max())
+			{
+				traversal_stack.emplace(l3d_node.rightSibling, parent_index);
+			}
+
+			if (l3d_node.firstChild != std::numeric_limits<uint32_t>::max())
+			{
+				traversal_stack.emplace(l3d_node.firstChild, static_cast<uint32_t>(gltf.nodes.size() - 1));
+			}
+		}
+	}
 	// TODO: Associate mesh and joints to node
 
 	tinygltf::TinyGLTF exporter;
-
 	exporter.WriteGltfSceneToFile(&gltf, args.gltfFile, true, true, true, false);
 
 	return EXIT_SUCCESS;
