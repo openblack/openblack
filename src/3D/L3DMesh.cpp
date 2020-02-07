@@ -15,28 +15,14 @@
 #include "Game.h"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/matrix.hpp>
 #include <l3d_file.h>
 #include <spdlog/spdlog.h>
 
-#include <array>
 #include <stdexcept>
 
 using namespace openblack;
 using namespace openblack::graphics;
-
-struct LH3D_BoneVert
-{
-	uint16_t nVertices;
-	uint16_t boneIndex;
-};
-
-struct L3DModel_Vertex
-{
-	glm::vec3 pos;
-	glm::vec2 uv;
-	glm::vec3 norm;
-	uint32_t bone;
-};
 
 L3DMesh::L3DMesh(const std::string& debugName)
     : _flags(static_cast<l3d::L3DMeshFlags>(0))
@@ -52,6 +38,25 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 		_skins[skin.id] = std::make_unique<Texture2D>(_debugName.c_str());
 		_skins[skin.id]->Create(skin.width, skin.height, 1, Format::RGBA4, Wrapping::ClampEdge, skin.texels.data(),
 		                        skin.texels.size() * sizeof(skin.texels[0]));
+	}
+
+	std::map<uint32_t, glm::mat4> matrices;
+	auto& bones = l3d.GetBones();
+	for (uint32_t i = 0; i < bones.size(); ++i)
+	{
+		auto& bone = bones[i];
+		// clang-format off
+		auto matrix = glm::mat4(bone.orientation[0], bone.orientation[1], bone.orientation[2], 0.0f,
+		                        bone.orientation[3], bone.orientation[4], bone.orientation[5], 0.0f,
+		                        bone.orientation[6], bone.orientation[7], bone.orientation[8], 0.0f,
+		                        bone.position.x, bone.position.y, bone.position.z, 1.0f);
+		// clang-format on
+		if (bone.parent != std::numeric_limits<uint32_t>::max())
+		{
+			matrix = matrices[bone.parent] * matrix;
+		}
+		_bonesDefaultMatrices.emplace_back(matrix);
+		matrices.emplace(i, matrix);
 	}
 
 	_subMeshes.resize(l3d.GetSubmeshHeaders().size());
@@ -99,8 +104,8 @@ void L3DMesh::LoadFromBuffer(const std::vector<uint8_t>& data)
 	Load(l3d);
 }
 
-void L3DMesh::Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint32_t mesh,
-                   uint64_t state, uint32_t rgba) const
+void L3DMesh::Submit(graphics::RenderPass viewId, const glm::mat4* modelMatrices, uint8_t matrixCount,
+                     const ShaderProgram& program, uint32_t mesh, uint64_t state, uint32_t rgba) const
 {
 	if (_subMeshes.empty())
 	{
@@ -112,16 +117,16 @@ void L3DMesh::Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, co
 		spdlog::warn("tried to draw submesh out of range ({}/{})", mesh, _subMeshes.size());
 	}
 
-	_subMeshes[mesh]->Submit(viewId, modelMatrix, program, state, rgba, false);
+	_subMeshes[mesh]->Submit(viewId, modelMatrices, matrixCount, program, state, rgba, false);
 }
 
-void L3DMesh::Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state,
-                     uint32_t rgba) const
+void L3DMesh::Submit(graphics::RenderPass viewId, const glm::mat4* modelMatrices, uint8_t matrixCount,
+                     const ShaderProgram& program, uint64_t state, uint32_t rgba) const
 {
 	for (auto it = _subMeshes.begin(); it != _subMeshes.end(); ++it)
 	{
 		const L3DSubMesh& submesh = *it->get();
-		submesh.Submit(viewId, modelMatrix, program, state, rgba, std::next(it) != _subMeshes.end());
+		submesh.Submit(viewId, modelMatrices, matrixCount, program, state, rgba, std::next(it) != _subMeshes.end());
 	}
 }
 

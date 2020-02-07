@@ -240,6 +240,21 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		{
 			desc.entities.DrawModels(desc.viewId, *_shaderManager);
 		}
+
+		if (desc.drawTestModel)
+		{
+			auto shader = _shaderManager->GetShader("Object");
+			// clang-format off
+			uint64_t state = 0u
+			    | BGFX_STATE_WRITE_MASK
+			    | BGFX_STATE_DEPTH_TEST_LESS
+			    | BGFX_STATE_CULL_CCW
+			    | BGFX_STATE_MSAA
+			;
+			// clang-format on
+			desc.testModel.Submit(desc.viewId, desc.testModel.GetBoneMatrices().data(), desc.testModel.GetBoneMatrices().size(),
+			                      *shader, 0, state);
+		}
 	}
 
 	{

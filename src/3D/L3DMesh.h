@@ -77,16 +77,17 @@ public:
 	void Load(const l3d::L3DFile& l3d);
 	void LoadFromFile(const std::string& fileName);
 	void LoadFromBuffer(const std::vector<uint8_t>& data);
-	void Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program, uint32_t mesh,
-	          uint64_t state, uint32_t rgba = 0) const;
-	void Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program,
-	            uint64_t state, uint32_t rgba = 0) const;
+	void Submit(graphics::RenderPass viewId, const glm::mat4* modelMatrices, uint8_t matrixCount,
+	            const graphics::ShaderProgram& program, uint32_t mesh, uint64_t state, uint32_t rgba = 0) const;
+	void Submit(graphics::RenderPass viewId, const glm::mat4* modelMatrices, uint8_t matrixCount,
+	            const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0) const;
 	void Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart,
 	            uint32_t instanceCount, const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0) const;
 
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return _subMeshes.size(); }
 	[[nodiscard]] const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }
 	[[nodiscard]] const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& GetSkins() const { return _skins; }
+	[[nodiscard]] const std::vector<glm::mat4>& GetBoneMatrices() const { return _bonesDefaultMatrices; }
 
 private:
 	l3d::L3DMeshFlags _flags;
@@ -94,6 +95,7 @@ private:
 
 	std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>> _skins;
 	std::vector<std::unique_ptr<L3DSubMesh>> _subMeshes;
+	std::vector<glm::mat4> _bonesDefaultMatrices;
 
 public:
 	[[nodiscard]] const std::string& GetDebugName() const { return _debugName; }

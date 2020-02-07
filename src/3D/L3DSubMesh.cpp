@@ -24,11 +24,12 @@ using namespace openblack::graphics;
 namespace openblack
 {
 
-struct L3DVertex
+struct EnhancedL3DVertex
 {
 	glm::vec3 pos;
 	glm::vec2 uv;
 	glm::vec3 norm;
+	glm::i16vec2 index;
 };
 
 L3DSubMesh::L3DSubMesh(L3DMesh& mesh)
@@ -44,6 +45,7 @@ void L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 	auto primitiveSpan = l3d.GetPrimitiveSpan(meshIndex);
 	auto& verticesSpan = l3d.GetVertexSpan(meshIndex);
 	auto& indexSpan = l3d.GetIndexSpan(meshIndex);
+	auto& vertexGroupSpans = l3d.GetVertexGroupSpan(meshIndex);
 
 	_flags = header.flags;
 
@@ -70,13 +72,37 @@ void L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 	}
 
 	// Get vertices
-	// TODO: make ref for vertices
-	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(L3DVertex) * nVertices);
-	std::memcpy(verticesMem->data, verticesSpan.data(), verticesMem->size);
+	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(EnhancedL3DVertex) * nVertices);
+	auto* verticesMemAccess = reinterpret_cast<EnhancedL3DVertex*>(verticesMem->data);
+	for (uint32_t i = 0; i < nVertices; ++i)
+	{
+		verticesMemAccess[i].pos.x = verticesSpan[i].position.x;
+		verticesMemAccess[i].pos.y = verticesSpan[i].position.y;
+		verticesMemAccess[i].pos.z = verticesSpan[i].position.z;
+		verticesMemAccess[i].uv.x = verticesSpan[i].texCoord.x;
+		verticesMemAccess[i].uv.y = verticesSpan[i].texCoord.y;
+		verticesMemAccess[i].norm.x = verticesSpan[i].normal.x;
+		verticesMemAccess[i].norm.y = verticesSpan[i].normal.y;
+		verticesMemAccess[i].norm.z = verticesSpan[i].normal.z;
+		verticesMemAccess[i].index.x = -1;
+		verticesMemAccess[i].index.y = -1;
+	}
 
 	// Get Indices
 	const bgfx::Memory* indicesMem = bgfx::alloc(sizeof(uint16_t) * nIndices);
 	auto indices = (uint16_t*)indicesMem->data;
+
+	// Fill bone index
+	uint32_t vertexIndex = 0;
+	for (auto& vertexGroupSpan : vertexGroupSpans)
+	{
+		for (uint32_t i = 0; i < vertexGroupSpan.vertexCount; ++i)
+		{
+			verticesMemAccess[vertexIndex].index[0] = vertexGroupSpan.boneIndex;
+			verticesMemAccess[vertexIndex].index[1] = -1;
+			vertexIndex++;
+		}
+	}
 
 	uint32_t startIndex = 0;
 	uint32_t startVertex = 0;
@@ -93,10 +119,11 @@ void L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 	}
 
 	VertexDecl decl;
-	decl.reserve(3);
+	decl.reserve(4);
 	decl.emplace_back(VertexAttrib::Attribute::Position, 3, VertexAttrib::Type::Float);
 	decl.emplace_back(VertexAttrib::Attribute::TexCoord0, 2, VertexAttrib::Type::Float);
 	decl.emplace_back(VertexAttrib::Attribute::Normal, 3, VertexAttrib::Type::Float);
+	decl.emplace_back(VertexAttrib::Attribute::Indices, 2, VertexAttrib::Type::Int16);
 
 	// build our buffers
 	auto vertexBuffer = new VertexBuffer(_l3dMesh.GetDebugName(), verticesMem, decl);
@@ -106,20 +133,20 @@ void L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 	spdlog::debug("{} submesh {} with {} verts and {} indices", _l3dMesh.GetDebugName(), meshIndex, nVertices, nIndices);
 }
 
-void L3DSubMesh::Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const ShaderProgram& program, uint64_t state,
-                        uint32_t rgba, bool preserveState) const
+void L3DSubMesh::Submit(graphics::RenderPass viewId, const glm::mat4* modelMatrices, uint8_t matrixCount,
+                        const ShaderProgram& program, uint64_t state, uint32_t rgba, bool preserveState) const
 {
-	Submit_(viewId, &modelMatrix, nullptr, 0, 1, program, state, rgba, preserveState);
+	Submit_(viewId, modelMatrices, matrixCount, nullptr, 0, 1, program, state, rgba, preserveState);
 }
 
 void L3DSubMesh::Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer,
                         uint32_t instanceStart, uint32_t instanceCount, const graphics::ShaderProgram& program, uint64_t state,
                         uint32_t rgba, bool preserveState) const
 {
-	Submit_(viewId, nullptr, &instanceBuffer, instanceStart, instanceCount, program, state, rgba, preserveState);
+	Submit_(viewId, nullptr, 0, &instanceBuffer, instanceStart, instanceCount, program, state, rgba, preserveState);
 }
 
-void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatrix,
+void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatrices, uint8_t matrixCount,
                          const bgfx::DynamicVertexBufferHandle* instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
                          const ShaderProgram& program, uint64_t state, uint32_t rgba, bool preserveState) const
 {
@@ -172,9 +199,9 @@ void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatr
 		desc.skip = Mesh::SkipState::SkipNone;
 		if (!lastPreserveState)
 		{
-			if (modelMatrix)
+			if (modelMatrices && matrixCount > 0)
 			{
-				bgfx::setTransform(modelMatrix);
+				bgfx::setTransform(modelMatrices, matrixCount);
 			}
 			if (texture)
 			{

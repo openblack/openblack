@@ -28,6 +28,7 @@ struct BgfxCallback;
 class Camera;
 class GameWindow;
 class Game;
+class L3DMesh;
 class LandIsland;
 class Profiler;
 class Sky;
@@ -91,6 +92,8 @@ public:
 		const LandIsland& island;
 		bool drawEntities;
 		const entities::Registry& entities;
+		bool drawTestModel;
+		const L3DMesh& testModel;
 		bool drawDebugCross;
 		bool drawBoundingBoxes;
 		bool cullBack;

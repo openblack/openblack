@@ -76,7 +76,7 @@ Game::~Game()
 {
 	_water.reset();
 	_sky.reset();
-	// _testModel.reset();
+	_testModel.reset();
 	_meshPack.reset();
 	_landIsland.reset();
 	_entityRegistry.reset();
@@ -248,8 +248,8 @@ void Game::Run()
 	_meshPack = std::make_unique<MeshPack>();
 	_meshPack->LoadFromFile("Data/AllMeshes.g3d");
 
-	// _testModel = std::make_unique<L3DMesh>();
-	// _testModel->LoadFromFile("Data/CreatureMesh/C_Tortoise_Base.l3d");
+	_testModel = std::make_unique<L3DMesh>();
+	_testModel->LoadFromFile("Data/CreatureMesh/C_Tortoise_Base.l3d");
 
 	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
@@ -291,6 +291,8 @@ void Game::Run()
 			    /*island =*/*_landIsland,
 			    /*drawEntities =*/_config.drawEntities,
 			    /*entities =*/*_entityRegistry,
+			    /*drawTestModel =*/_config.drawEntities,
+			    /*testModel =*/*_testModel,
 			    /*drawDebugCross =*/_config.drawDebugCross,
 			    /*drawBoundingBoxes =*/_config.drawBoundingBoxes,
 			    /*cullBack =*/false,

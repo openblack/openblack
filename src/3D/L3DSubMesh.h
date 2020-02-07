@@ -44,8 +44,8 @@ public:
 	~L3DSubMesh();
 
 	void Load(const l3d::L3DFile& l3d, uint32_t meshIndex);
-	void Submit(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program,
-	            uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
+	void Submit(graphics::RenderPass viewId, const glm::mat4* modelMatrices, uint8_t matrixCount,
+	            const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
 	void Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart,
 	            uint32_t instanceCount, const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0,
 	            bool preserveState = false) const;
@@ -55,7 +55,7 @@ public:
 	[[nodiscard]] AxisAlignedBoundingBox GetBoundingBox() const { return _boundingBox; }
 
 private:
-	void Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatrix,
+	void Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatrices, uint8_t matrixCount,
 	             const bgfx::DynamicVertexBufferHandle* instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
 	             const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
 
