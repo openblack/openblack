@@ -229,6 +229,7 @@ protected:
 	std::vector<Span<L3DPrimitiveHeader>> _primitiveSpans;
 	std::vector<Span<L3DVertex>> _vertexSpans;
 	std::vector<Span<uint16_t>> _indexSpans;
+	std::vector<Span<L3DVertexGroup>> _vertexGroupSpans;
 	std::vector<Span<L3DBone>> _boneSpans;
 
 	/// Error handling
@@ -272,6 +273,10 @@ public:
 	[[nodiscard]] const Span<L3DBone>& GetBoneSpan(uint32_t submeshIndex) const { return _boneSpans[submeshIndex]; }
 	[[nodiscard]] const Span<L3DVertex>& GetVertexSpan(uint32_t submeshIndex) const { return _vertexSpans[submeshIndex]; }
 	[[nodiscard]] const Span<uint16_t>& GetIndexSpan(uint32_t submeshIndex) const { return _indexSpans[submeshIndex]; }
+	[[nodiscard]] const Span<L3DVertexGroup>& GetVertexGroupSpan(uint32_t submeshIndex) const
+	{
+		return _vertexGroupSpans[submeshIndex];
+	}
 
 	void AddSubmesh(const L3DSubmeshHeader& header);
 	void AddPrimitives(const std::vector<L3DPrimitiveHeader>& headers);

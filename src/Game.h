@@ -72,6 +72,7 @@ public:
 		bool drawWater {true};
 		bool drawIsland {true};
 		bool drawEntities {true};
+		bool drawTestModel {true};
 		bool drawDebugCross {true};
 		bool drawBoundingBoxes {false};
 		bool drawStreams {false};
@@ -110,7 +111,7 @@ public:
 	[[nodiscard]] Water& GetWater() const { return *_water; }
 	LandIsland& GetLandIsland() { return *_landIsland; }
 	[[nodiscard]] LandIsland& GetLandIsland() const { return *_landIsland; }
-	// [[nodiscard]] L3DMesh& GetTestModel() const { return *_testModel; }
+	[[nodiscard]] L3DMesh& GetTestModel() const { return *_testModel; }
 	MeshPack& GetMeshPack() { return *_meshPack; }
 	[[nodiscard]] const LHVM::LHVM* GetLhvm() { return _lhvm.get(); }
 	FileSystem& GetFileSystem() { return *_fileSystem; }
@@ -138,7 +139,7 @@ private:
 	std::unique_ptr<LandIsland> _landIsland;
 	std::unique_ptr<MeshPack> _meshPack;
 
-	// std::unique_ptr<L3DMesh> _testModel;
+	std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<Sky> _sky;
 	std::unique_ptr<Water> _water;
 	std::unique_ptr<lhscriptx::Script> _scriptx;

@@ -1,5 +1,6 @@
 vec4 a_position          : POSITION;
 vec3 a_normal            : NORMAL;
+vec4 a_indices           : BLENDINDICES;
 vec4 a_color0            : COLOR0;     // time of day
 vec3 a_color1            : COLOR1;     // firstMaterialID
 vec3 a_color2            : COLOR2;     // secondMaterialID

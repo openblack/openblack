@@ -767,6 +767,8 @@ void Gui::ShowProfilerWindow(Game& game)
 		ImGui::NextColumn();
 		ImGui::Checkbox("Entities", &game.GetConfig().drawEntities);
 		ImGui::NextColumn();
+		ImGui::Checkbox("TestModel", &game.GetConfig().drawTestModel);
+		ImGui::NextColumn();
 		ImGui::Checkbox("Debug Cross", &game.GetConfig().drawDebugCross);
 		ImGui::Columns(1);
 

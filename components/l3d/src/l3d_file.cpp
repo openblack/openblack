@@ -486,24 +486,30 @@ void L3DFile::ReadFile(std::istream& stream)
 	// Create Primitive spans per submesh
 	_vertexSpans.reserve(_submeshHeaders.size());
 	_indexSpans.reserve(_submeshHeaders.size());
+	_vertexGroupSpans.reserve(_submeshHeaders.size());
 	{
 		uint32_t vertexStart = 0;
 		uint32_t indexStart = 0;
+		uint32_t vertexGroupStart = 0;
 		for (uint32_t i = 0; i < _submeshHeaders.size(); ++i)
 		{
 			uint32_t vertexLength = 0;
 			uint32_t indexLength = 0;
+			uint32_t vertexGroupLength = 0;
 			for (auto& primitive : GetPrimitiveSpan(i))
 			{
 				vertexLength += primitive.numVertices;
 				indexLength += primitive.numTriangles * 3;
+				vertexGroupLength += primitive.numGroups;
 			}
 
 			_vertexSpans.emplace_back(_vertices, vertexStart, vertexLength);
 			_indexSpans.emplace_back(_indices, indexStart, indexLength);
+			_vertexGroupSpans.emplace_back(_vertexGroups, vertexGroupStart, vertexGroupLength);
 
 			vertexStart += vertexLength;
 			indexStart += indexLength;
+			vertexGroupStart += vertexGroupLength;
 		}
 	}
 
