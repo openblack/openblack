@@ -324,8 +324,8 @@ int PrintPrimitiveHeaders(openblack::l3d::L3DFile& l3d)
 		std::printf("vertex start offset: 0x%08X\n", header.verticesOffset);
 		std::printf("triangle count: %u\n", header.numTriangles);
 		std::printf("triangle start offset: 0x%08X\n", header.trianglesOffset);
-		std::printf("bone vertex look-up table size: %u\n", header.boneVertLUTSize);
-		std::printf("bone vertex look-up table start offset: 0x%08X\n", header.boneVertLUTOffset);
+		std::printf("vertex group count: %u\n", header.numGroups);
+		std::printf("vertex group start offset: 0x%08X\n", header.groupsOffset);
 		std::printf("vertex blend count: %u\n", header.numVertexBlends);
 		std::printf("vertex blend start offset: 0x%08X\n", header.vertexBlendsOffset);
 		std::printf("\n");
@@ -658,11 +658,11 @@ int WriteFile(const Arguments::Write& args)
 			primitive.numVertices = 0;
 			primitive.verticesOffset = static_cast<uint32_t>(l3d.GetVertices().size()); // FIXME: This is wrong
 			primitive.numTriangles = 0;
-			primitive.trianglesOffset = static_cast<uint32_t>(l3d.GetIndices().size() / 3);       // FIXME: This is wrong
-			primitive.boneVertLUTSize = 0;                                                        // TODO: Figure this out
-			primitive.boneVertLUTOffset = static_cast<uint32_t>(l3d.GetLookUpTableData().size()); // FIXME: This is wrong
-			primitive.numVertexBlends = 0;                                                        // TODO: Figure this out
-			primitive.vertexBlendsOffset = static_cast<uint32_t>(l3d.GetBlends().size());         // FIXME: This is wrong
+			primitive.trianglesOffset = static_cast<uint32_t>(l3d.GetIndices().size() / 3);  // FIXME: This is wrong
+			primitive.numGroups = 0;                                                         // TODO: Figure this out
+			primitive.groupsOffset = static_cast<uint32_t>(l3d.GetLookUpTableData().size()); // FIXME: This is wrong
+			primitive.numVertexBlends = 0;                                                   // TODO: Figure this out
+			primitive.vertexBlendsOffset = static_cast<uint32_t>(l3d.GetBlends().size());    // FIXME: This is wrong
 
 			struct attribute_t
 			{
