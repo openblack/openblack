@@ -117,7 +117,9 @@
  *
  * ------------------------ start of blend block -------------------------------
  *
- * - ? bytes * total vertex blendcount, TODO: contents unknown
+ * - 8 bytes * total vertex blend count, each record containing:
+ *         indices: 2 16 bit ints representing an index TODO: unknown of what
+ *         weight: float representing a normalized weight between 0 and 1
  *
  */
 
@@ -415,6 +417,7 @@ void L3DFile::ReadFile(std::istream& stream)
 
 	// Reserve space for vertex blend data
 	_blends.resize(totalBlendValues);
+
 	if (!_blends.empty())
 	{
 		uint32_t counter = 0;
