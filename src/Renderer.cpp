@@ -97,8 +97,8 @@ Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererTy
 	if (rendererType != bgfx::RendererType::Noop)
 	{
 		window->GetSize(drawable_width, drawable_height);
-		init.resolution.width = (uint32_t) drawable_width;
-		init.resolution.height = (uint32_t) drawable_height;
+		init.resolution.width = static_cast<uint32_t>(drawable_width);
+		init.resolution.height = static_cast<uint32_t>(drawable_height);
 
 		// Get Native Handles from SDL window
 		window->GetNativeHandles(init.platformData.nwh, init.platformData.ndt);
