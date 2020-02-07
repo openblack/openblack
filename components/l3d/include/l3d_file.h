@@ -189,6 +189,13 @@ struct L3DVertex
 };
 static_assert(sizeof(L3DVertex) == 32);
 
+struct L3DBlend
+{
+	uint16_t indices[2];
+	float weight;
+};
+static_assert(sizeof(L3DBlend) == 8);
+
 /**
   This class is used to read L3Ds.
  */
@@ -210,7 +217,7 @@ protected:
 	std::vector<L3DVertex> _vertices;
 	std::vector<uint16_t> _indices;
 	std::vector<uint8_t> _lookUpTable;
-	std::vector<uint8_t> _blends;
+	std::vector<L3DBlend> _blends;
 	std::vector<L3DBone> _bones;
 	std::vector<Span<L3DPrimitiveHeader>> _primitiveSpans;
 	std::vector<Span<L3DVertex>> _vertexSpans;
@@ -249,7 +256,7 @@ public:
 	[[nodiscard]] const std::vector<L3DVertex>& GetVertices() const { return _vertices; }
 	[[nodiscard]] const std::vector<uint16_t>& GetIndices() const { return _indices; }
 	[[nodiscard]] const std::vector<uint8_t>& GetLookUpTableData() const { return _lookUpTable; }
-	[[nodiscard]] const std::vector<uint8_t>& GetBlends() const { return _blends; }
+	[[nodiscard]] const std::vector<L3DBlend>& GetBlends() const { return _blends; }
 	[[nodiscard]] const std::vector<L3DBone>& GetBones() const { return _bones; }
 	[[nodiscard]] const Span<L3DPrimitiveHeader>& GetPrimitiveSpan(uint32_t submeshIndex) const
 	{
