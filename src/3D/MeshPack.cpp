@@ -65,6 +65,19 @@ const L3DMesh& MeshPack::GetMesh(MeshId id) const
 	}
 }
 
+L3DMesh& MeshPack::GetMesh(MeshId id)
+{
+	// TODO(raffclar): Handle non-mesh pack IDs via a new mechanism
+	if (static_cast<int>(id) == ecs::components::Hand::meshId)
+	{
+		return Game::instance()->GetHandModel();
+	}
+	else
+	{
+		return *_meshes.at(static_cast<size_t>(id));
+	}
+}
+
 void MeshPack::loadTextures(const std::map<std::string, pack::G3DTexture>& textures)
 {
 	// textures start at 1 - 0 would be an error texture

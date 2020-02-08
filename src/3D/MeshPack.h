@@ -58,6 +58,7 @@ public:
 	[[nodiscard]] const TexturesVec& GetTextures() const { return _textures; }
 
 	[[nodiscard]] const L3DMesh& GetMesh(MeshId id) const;
+	[[nodiscard]] L3DMesh& GetMesh(MeshId id);
 	[[nodiscard]] const graphics::Texture2D& GetTexture(int id) const { return *_textures.at(id); }
 
 private:

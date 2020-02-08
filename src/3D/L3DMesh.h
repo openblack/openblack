@@ -26,6 +26,8 @@ namespace fs = std::experimental::filesystem;
 #include "Graphics/Texture2D.h"
 #include "L3DSubMesh.h"
 
+class btConvexShape;
+
 namespace openblack
 {
 namespace l3d
@@ -81,7 +83,7 @@ class L3DMesh
 {
 public:
 	L3DMesh(const std::string& debugName = "");
-	~L3DMesh() = default;
+	virtual ~L3DMesh();
 
 	void Load(const l3d::L3DFile& l3d);
 	bool LoadFromFile(const fs::path& path);
@@ -93,6 +95,10 @@ public:
 	[[nodiscard]] const std::vector<uint32_t>& GetBoneParents() const { return _bonesParents; }
 	[[nodiscard]] const std::vector<glm::mat4>& GetBoneMatrices() const { return _bonesDefaultMatrices; }
 	[[nodiscard]] const std::optional<glm::vec3>& GetDoorPos() const { return _doorPos; }
+	[[nodiscard]] bool HasPhysicsMesh() const { return _physicsMesh != nullptr; }
+	[[nodiscard]] btConvexShape& GetPhysicsMesh() { return *_physicsMesh; }
+	[[nodiscard]] const btConvexShape& GetPhysicsMesh() const { return *_physicsMesh; }
+	[[nodiscard]] float GetMass() const { return _physicsMass; }
 
 private:
 	l3d::L3DMeshFlags _flags;
@@ -103,6 +109,9 @@ private:
 	std::vector<uint32_t> _bonesParents;
 	std::vector<glm::mat4> _bonesDefaultMatrices;
 	std::optional<glm::vec3> _doorPos;
+	/// Bounding box if no physics mesh was found
+	std::unique_ptr<btConvexShape> _physicsMesh;
+	float _physicsMass;
 
 public:
 	[[nodiscard]] const std::string& GetDebugName() const { return _debugName; }

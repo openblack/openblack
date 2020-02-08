@@ -42,7 +42,9 @@ public:
 	void Reset();
 	void Update(std::chrono::microseconds& dt);
 	void AddRigidBody(btRigidBody* object);
+	void RegisterRigidBodies();
 	void RegisterIslandRigidBodies(LandIsland& island);
+	void UpdatePhysicsTransforms();
 	std::optional<ecs::components::Transform> RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction,
 	                                                            float t_max);
 
