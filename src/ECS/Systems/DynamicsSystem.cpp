@@ -16,9 +16,13 @@
 #include <BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h>
 #include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
 #include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
+#include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
+#include "ECS/Components/RigidBody.h"
 #include "ECS/Components/Transform.h"
+#include "ECS/Registry.h"
+#include "Game.h"
 
 #include "3D/LandBlock.h"
 #include "3D/LandIsland.h"
@@ -69,12 +73,38 @@ void DynamicsSystem::AddRigidBody(btRigidBody* object)
 	_world->addRigidBody(object);
 }
 
+void DynamicsSystem::RegisterRigidBodies()
+{
+	auto& registry = Game::instance()->GetEntityRegistry();
+	registry.Each<RigidBody>([this](RigidBody& body) { AddRigidBody(&body.handle); });
+}
+
 void DynamicsSystem::RegisterIslandRigidBodies(LandIsland& island)
 {
 	for (auto& block : island.GetBlocks())
 	{
 		AddRigidBody(block.GetRigidBody().get());
 	}
+}
+
+void DynamicsSystem::UpdatePhysicsTransforms()
+{
+	auto& registry = Game::instance()->GetEntityRegistry();
+	registry.Each<Transform, const RigidBody>([&registry](Transform& transform, const RigidBody& body) {
+		btTransform trans;
+		body.motionState->getWorldTransform(trans);
+
+		transform.position.x = trans.getOrigin().getX();
+		transform.position.y = trans.getOrigin().getY();
+		transform.position.z = trans.getOrigin().getZ();
+
+		glm::quat quaternion(trans.getRotation().getW(), trans.getRotation().getX(), trans.getRotation().getY(),
+		                     trans.getRotation().getZ());
+
+		transform.rotation = glm::mat3_cast(quaternion);
+
+		registry.SetDirty();
+	});
 }
 
 std::optional<Transform> DynamicsSystem::RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float t_max)

@@ -14,6 +14,7 @@
 #include "Common/IStream.h"
 #include "Game.h"
 
+#include <BulletCollision/CollisionShapes/btConvexHullShape.h>
 #include <L3DFile.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/matrix.hpp>
@@ -27,8 +28,11 @@ using namespace openblack::graphics;
 L3DMesh::L3DMesh(const std::string& debugName)
     : _flags(static_cast<l3d::L3DMeshFlags>(0))
     , _debugName(debugName)
+    , _physicsMass(1.0f) // TODO(bwrsandman): Find somewhere in file a value
 {
 }
+
+L3DMesh::~L3DMesh() = default;
 
 void L3DMesh::Load(const l3d::L3DFile& l3d)
 {
@@ -77,8 +81,20 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open L3DSubMesh from file: {}", fileName);
 			continue;
 		}
+		if (subMesh->GetFlags().isPhysics)
+		{
+			auto& verticesSpan = l3d.GetVertexSpan(i);
+			auto physicsMesh =
+			    new btConvexHullShape(reinterpret_cast<const btScalar*>(verticesSpan.data()),
+			                          static_cast<int>(verticesSpan.size()), static_cast<int>(sizeof(verticesSpan[0])));
+			physicsMesh->optimizeConvexHull();
+			_physicsMesh.reset(physicsMesh);
+			// FIXME(bwrsandman): Some meshes have multiple physics meshes
+		}
 		_subMeshes.emplace_back(std::move(subMesh));
 	}
+	// TODO(bwrsandman): if no physics mesh was found, make physics mesh the bounding box
+
 	// TODO(bwrsandman): store vertex and index buffers at mesh level
 	bgfx::frame();
 }

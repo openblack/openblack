@@ -219,8 +219,12 @@ bool Game::Update()
 	    std::chrono::duration_cast<std::chrono::microseconds>(_profiler->_entries[_profiler->GetEntryIndex(0)]._frameStart -
 	                                                          _profiler->_entries[_profiler->GetEntryIndex(-1)]._frameStart);
 
-	// Physics
-	_dynamicsSystem->Update(deltaTime);
+	if (_frameCount > 0)
+	{
+		// Physics
+		_dynamicsSystem->Update(deltaTime);
+		_dynamicsSystem->UpdatePhysicsTransforms();
+	}
 
 	// Input events
 	{
@@ -382,6 +386,7 @@ bool Game::Run()
 		return false;
 	}
 	LoadMap(_fileSystem->ScriptsPath() / "Land1.txt");
+	_dynamicsSystem->RegisterRigidBodies();
 
 	auto challengePath = _fileSystem->QuestsPath() / "challenge.chl";
 	if (_fileSystem->Exists(challengePath))
