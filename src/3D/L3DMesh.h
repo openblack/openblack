@@ -68,6 +68,19 @@ inline l3d::L3DMeshFlags operator&(l3d::L3DMeshFlags a, l3d::L3DMeshFlags b)
 	                                      static_cast<std::underlying_type<l3d::L3DMeshFlags>::type>(b));
 }
 
+struct L3DMeshSubmitDesc
+{
+	graphics::RenderPass viewId;
+	const graphics::ShaderProgram* program;
+	uint64_t state;
+	uint32_t rgba;
+	const glm::mat4* modelMatrices;
+	uint8_t matrixCount;
+	const bgfx::DynamicVertexBufferHandle* instanceBuffer;
+	uint32_t instanceStart;
+	uint32_t instanceCount;
+};
+
 class L3DMesh
 {
 public:
@@ -77,12 +90,7 @@ public:
 	void Load(const l3d::L3DFile& l3d);
 	void LoadFromFile(const std::string& fileName);
 	void LoadFromBuffer(const std::vector<uint8_t>& data);
-	void Submit(graphics::RenderPass viewId, const glm::mat4* modelMatrices, uint8_t matrixCount,
-	            const graphics::ShaderProgram& program, uint32_t mesh, uint64_t state, uint32_t rgba = 0) const;
-	void Submit(graphics::RenderPass viewId, const glm::mat4* modelMatrices, uint8_t matrixCount,
-	            const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0) const;
-	void Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart,
-	            uint32_t instanceCount, const glm::mat4* modelMatrices, uint8_t matrixCount, const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0) const;
+	void Submit(const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex = std::numeric_limits<uint8_t>::max()) const;
 
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return _subMeshes.size(); }
 	[[nodiscard]] const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }
