@@ -9,24 +9,28 @@
 
 #pragma once
 
+#include "3D/L3DMesh.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/Texture2D.h"
-#include "L3DMesh.h"
 
 #include <memory>
 
 namespace openblack
 {
+enum class HandRenderType
+{
+	Model,
+	Symbol
+};
+
 class Hand
 {
 public:
-	Hand();
-	~Hand();
-
 	void Init();
 	void Draw();
 
 private:
+	HandRenderType handType;
 	std::unique_ptr<L3DMesh> m_HandModel;
 };
 } // namespace openblack
