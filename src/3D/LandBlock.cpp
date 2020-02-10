@@ -127,14 +127,14 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 			{
 				// TR/BR/TL  # #
 				//             #
-				lnd::LNDMapMaterial trbrtl[3] =  {tlMat, trMat, brMat};
+				lnd::LNDMapMaterial trbrtl[3] = {tlMat, trMat, brMat};
 				vertices[i++] = make_vert(pTR, glm::vec3(0, 1, 0), trbrtl, tr);
 				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), trbrtl, br);
 				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), trbrtl, tl);
 
 				// BR/BL/TL  #
 				//           # #
-				lnd::LNDMapMaterial brbltl[3] =  {tlMat, blMat, brMat};
+				lnd::LNDMapMaterial brbltl[3] = {tlMat, blMat, brMat};
 				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), brbltl, br);
 				vertices[i++] = make_vert(pBL, glm::vec3(0, 1, 0), brbltl, bl);
 				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), brbltl, tl);
@@ -143,14 +143,14 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 			{
 				// BL/TL/TR  # #
 				//           #
-				lnd::LNDMapMaterial bltltr[3] =  {blMat, tlMat, trMat};
+				lnd::LNDMapMaterial bltltr[3] = {blMat, tlMat, trMat};
 				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), bltltr, bl);
 				vertices[i++] = make_vert(pTL, glm::vec3(0, 1, 0), bltltr, tl);
 				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), bltltr, tr);
 
 				// TR/BR/BL    #
 				//           # #
-				lnd::LNDMapMaterial trbrbl[3] =  {blMat, brMat, trMat};
+				lnd::LNDMapMaterial trbrbl[3] = {blMat, brMat, trMat};
 				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), trbrbl, tr);
 				vertices[i++] = make_vert(pBR, glm::vec3(0, 1, 0), trbrbl, br);
 				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), trbrbl, bl);
@@ -184,7 +184,7 @@ void LandBlock::Draw(graphics::RenderPass viewId, const ShaderProgram& program, 
 	_mesh->Draw(desc);
 }
 
-const lnd::LNDCell *LandBlock::GetCells() const
+const lnd::LNDCell* LandBlock::GetCells() const
 {
 	assert(_block);
 	return _block ? _block->cells : nullptr;

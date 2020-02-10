@@ -97,7 +97,7 @@ int PrintBlocks(openblack::lnd::LNDFile& lnd)
 		std::printf("block #%u:\n", i++);
 		std::printf("cells:\n");
 		uint32_t j = 0;
-		auto flagToStr = [] (const openblack::lnd::LNDCell::Properties& properties) {
+		auto flagToStr = [](const openblack::lnd::LNDCell::Properties& properties) {
 			std::string ret;
 			if (properties.hasWater)
 			{
@@ -368,7 +368,7 @@ int WriteFile(const Arguments::Write& args)
 			          << fsize << std::endl;
 			return EXIT_FAILURE;
 		}
-		stream.read(reinterpret_cast<char *>(material.texels), fsize);
+		stream.read(reinterpret_cast<char*>(material.texels), fsize);
 		lnd.AddMaterial(material);
 	}
 
@@ -397,7 +397,7 @@ int WriteFile(const Arguments::Write& args)
 			          << fsize << std::endl;
 			return EXIT_FAILURE;
 		}
-		stream.read(reinterpret_cast<char *>(map.texels), fsize);
+		stream.read(reinterpret_cast<char*>(map.texels), fsize);
 		lnd.AddNoiseMap(map);
 	}
 	{
@@ -424,7 +424,7 @@ int WriteFile(const Arguments::Write& args)
 			          << fsize << std::endl;
 			return EXIT_FAILURE;
 		}
-		stream.read(reinterpret_cast<char *>(map.texels), fsize);
+		stream.read(reinterpret_cast<char*>(map.texels), fsize);
 		lnd.AddBumpMap(map);
 	}
 

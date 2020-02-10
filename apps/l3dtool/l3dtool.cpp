@@ -220,7 +220,7 @@ int PrintMeshHeaders(openblack::l3d::L3DFile& l3d)
 
 	uint32_t i = 0;
 	using Flags = openblack::l3d::L3DSubmeshHeader::Flags;
-	auto flagToString = [] (Flags flags) {
+	auto flagToString = [](Flags flags) {
 		std::string result;
 		result += "LOD" + std::to_string(flags.lod);
 		result += "|status=" + std::to_string(flags.status);
@@ -459,8 +459,8 @@ struct Arguments
 
 namespace details
 {
-template<typename dstT, typename srcT, typename = std::enable_if<std::is_same<dstT, srcT>::type>>
-void copyBufferView(dstT *dst, const uint8_t *src, size_t count)
+template <typename dstT, typename srcT, typename = std::enable_if<std::is_same<dstT, srcT>::type>>
+void copyBufferView(dstT* dst, const uint8_t* src, size_t count)
 {
 	for (size_t j = 0; j < count; ++j)
 	{
@@ -468,8 +468,8 @@ void copyBufferView(dstT *dst, const uint8_t *src, size_t count)
 	}
 }
 
-template<typename dstT, typename srcT>
-void copyBufferView(dstT *dst, const uint8_t *src, size_t count)
+template <typename dstT, typename srcT>
+void copyBufferView(dstT* dst, const uint8_t* src, size_t count)
 {
 	memcpy(dst, src, count * sizeof(dstT));
 }
@@ -590,7 +590,7 @@ int WriteFile(const Arguments::Write& args)
 				std::vector<openblack::l3d::L3DBone> bones;
 				std::function<void(const std::vector<int>&, uint32_t parent)> buildJoints;
 				buildJoints = [&gltf, &bones, &buildJoints](const std::vector<int>& children, uint32_t parentId) {
-					openblack::l3d::L3DBone *leftSibbling = nullptr;
+					openblack::l3d::L3DBone* leftSibbling = nullptr;
 					for (uint32_t i = 0; i < children.size(); ++i)
 					{
 						auto& gltfJoint = gltf.nodes[children[i]];
@@ -657,24 +657,24 @@ int WriteFile(const Arguments::Write& args)
 				uint8_t type;
 			};
 			attribute_t attributes[3] = {
-				{"POSITION", {}, 0},
-				{"TEXCOORD_0", {}, 0},
-				{"NORMAL", {}, 0},
+			    {"POSITION", {}, 0},
+			    {"TEXCOORD_0", {}, 0},
+			    {"NORMAL", {}, 0},
 			};
 			uint32_t count = 0;
 			for (auto& attribute : attributes)
 			{
 				auto iter = gltfPrimitive.attributes.find(attribute.name);
-				if (iter!=gltfPrimitive.attributes.end())
+				if (iter != gltfPrimitive.attributes.end())
 				{
 					auto& accessor = gltf.accessors[iter->second];
 					auto& view = gltf.bufferViews[accessor.bufferView];
 					auto& buffer = gltf.buffers[view.buffer];
 					auto offset = view.byteOffset + accessor.byteOffset;
-					attribute.values.resize(accessor.count*accessor.type);
+					attribute.values.resize(accessor.count * accessor.type);
 					copyBufferView(attribute.values.data(), buffer.data.data() + offset, attribute.values.size(), accessor.componentType);
 					attribute.type = static_cast<uint8_t>(accessor.type);
-					if (count!=0 && count!=accessor.count)
+					if (count != 0 && count != accessor.count)
 					{
 						throw std::runtime_error("Attributes do not match in length.");
 					}
@@ -682,7 +682,7 @@ int WriteFile(const Arguments::Write& args)
 				}
 			}
 
-			if (count==0)
+			if (count == 0)
 			{
 				throw std::runtime_error("No vertex attributes found.");
 			}
@@ -694,20 +694,20 @@ int WriteFile(const Arguments::Write& args)
 				auto& vertex = vertices[j];
 				if (attributes[0].type)
 				{
-					vertex.position.x = attributes[0].values[j*attributes[0].type + 0];
-					vertex.position.y = attributes[0].values[j*attributes[0].type + 1];
-					vertex.position.z = attributes[0].values[j*attributes[0].type + 2];
+					vertex.position.x = attributes[0].values[j * attributes[0].type + 0];
+					vertex.position.y = attributes[0].values[j * attributes[0].type + 1];
+					vertex.position.z = attributes[0].values[j * attributes[0].type + 2];
 				}
 				if (attributes[1].type)
 				{
-					vertex.texCoord.x = attributes[1].values[j*attributes[1].type + 0];
-					vertex.texCoord.y = attributes[1].values[j*attributes[1].type + 1];
+					vertex.texCoord.x = attributes[1].values[j * attributes[1].type + 0];
+					vertex.texCoord.y = attributes[1].values[j * attributes[1].type + 1];
 				}
 				if (attributes[2].type)
 				{
-					vertex.normal.x = attributes[2].values[j*attributes[2].type + 0];
-					vertex.normal.y = attributes[2].values[j*attributes[2].type + 1];
-					vertex.normal.z = attributes[2].values[j*attributes[2].type + 2];
+					vertex.normal.x = attributes[2].values[j * attributes[2].type + 0];
+					vertex.normal.y = attributes[2].values[j * attributes[2].type + 1];
+					vertex.normal.z = attributes[2].values[j * attributes[2].type + 2];
 				}
 			}
 			l3d.AddVertices(vertices);
@@ -722,7 +722,7 @@ int WriteFile(const Arguments::Write& args)
 				indices.resize(accessor.count);
 				copyBufferView(indices.data(), buffer.data.data() + offset, indices.size(), accessor.componentType);
 				l3d.AddIndices(indices);
-				primitive.numTriangles += static_cast<uint32_t>(indices.size()/3);
+				primitive.numTriangles += static_cast<uint32_t>(indices.size() / 3);
 			}
 		}
 		l3d.AddPrimitives(primitives);

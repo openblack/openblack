@@ -30,7 +30,7 @@ static_assert(sizeof(LNDHeader) == 1052);
 
 struct LNDLowResolutionTextureHeader
 {
-	uint8_t unknown[16];  // TODO: decode what these are
+	uint8_t unknown[16]; // TODO: decode what these are
 	uint32_t size;
 };
 static_assert(sizeof(LNDLowResolutionTextureHeader) == 20);
@@ -139,7 +139,7 @@ struct LNDBumpMap
 	static constexpr uint32_t width = 256;
 	static constexpr uint32_t height = 256;
 
-	uint8_t texels[width * height];  ///< R8
+	uint8_t texels[width * height]; ///< R8
 };
 static_assert(sizeof(LNDBumpMap) == 65536);
 

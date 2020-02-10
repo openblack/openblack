@@ -547,51 +547,51 @@ void L3DFile::WriteFile(std::ostream& stream) const
 	stream.write(reinterpret_cast<const char*>(&_header), sizeof(L3DHeader));
 	if (!submeshOffsets.empty())
 	{
-		stream.write(reinterpret_cast<const char *>(submeshOffsets.data()), submeshOffsets.size() * sizeof(submeshOffsets[0]));
+		stream.write(reinterpret_cast<const char*>(submeshOffsets.data()), submeshOffsets.size() * sizeof(submeshOffsets[0]));
 	}
 	if (!skinOffsets.empty())
 	{
-		stream.write(reinterpret_cast<const char *>(skinOffsets.data()), skinOffsets.size() * sizeof(skinOffsets[0]));
+		stream.write(reinterpret_cast<const char*>(skinOffsets.data()), skinOffsets.size() * sizeof(skinOffsets[0]));
 	}
 	if (!_points.empty())
 	{
-		stream.write(reinterpret_cast<const char *>(_points.data()), _points.size() * sizeof(_points[0]));
+		stream.write(reinterpret_cast<const char*>(_points.data()), _points.size() * sizeof(_points[0]));
 	}
 	if (!_submeshHeaders.empty())
 	{
-		stream.write(reinterpret_cast<const char *>(_submeshHeaders.data()), _submeshHeaders.size() * sizeof(_submeshHeaders[0]));
+		stream.write(reinterpret_cast<const char*>(_submeshHeaders.data()), _submeshHeaders.size() * sizeof(_submeshHeaders[0]));
 	}
 	if (!_skins.empty())
 	{
-		stream.write(reinterpret_cast<const char *>(_skins.data()), _skins.size() * sizeof(_skins[0]));
+		stream.write(reinterpret_cast<const char*>(_skins.data()), _skins.size() * sizeof(_skins[0]));
 	}
 	if (!primitiveOffsets.empty())
 	{
-		stream.write(reinterpret_cast<const char *>(primitiveOffsets.data()), primitiveOffsets.size() * sizeof(primitiveOffsets[0]));
+		stream.write(reinterpret_cast<const char*>(primitiveOffsets.data()), primitiveOffsets.size() * sizeof(primitiveOffsets[0]));
 	}
 	if (!_primitiveHeaders.empty())
 	{
-		stream.write(reinterpret_cast<const char *>(_primitiveHeaders.data()), _primitiveHeaders.size() * sizeof(_primitiveHeaders[0]));
+		stream.write(reinterpret_cast<const char*>(_primitiveHeaders.data()), _primitiveHeaders.size() * sizeof(_primitiveHeaders[0]));
 	}
 	if (!_bones.empty())
 	{
-		stream.write(reinterpret_cast<const char *>(_bones.data()), _bones.size() * sizeof(_bones[0]));
+		stream.write(reinterpret_cast<const char*>(_bones.data()), _bones.size() * sizeof(_bones[0]));
 	}
 	if (!_vertices.empty())
 	{
-		stream.write(reinterpret_cast<const char *>(_vertices.data()), _vertices.size() * sizeof(_vertices[0]));
+		stream.write(reinterpret_cast<const char*>(_vertices.data()), _vertices.size() * sizeof(_vertices[0]));
 	}
 	if (!_indices.empty())
 	{
-		stream.write(reinterpret_cast<const char *>(_indices.data()), _indices.size() * sizeof(_indices[0]));
+		stream.write(reinterpret_cast<const char*>(_indices.data()), _indices.size() * sizeof(_indices[0]));
 	}
 	if (!_lookUpTable.empty())
 	{
-		stream.write(reinterpret_cast<const char *>(_lookUpTable.data()), _lookUpTable.size() * sizeof(_lookUpTable[0]));
+		stream.write(reinterpret_cast<const char*>(_lookUpTable.data()), _lookUpTable.size() * sizeof(_lookUpTable[0]));
 	}
 	if (!_blends.empty())
 	{
-		stream.write(reinterpret_cast<const char *>(_blends.data()), _blends.size() * sizeof(_blends[0]));
+		stream.write(reinterpret_cast<const char*>(_blends.data()), _blends.size() * sizeof(_blends[0]));
 	}
 }
 

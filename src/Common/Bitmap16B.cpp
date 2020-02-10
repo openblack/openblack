@@ -31,7 +31,7 @@ Bitmap16B::Bitmap16B(const void* fileData)
 
 Bitmap16B::~Bitmap16B()
 {
-    delete[] _data;
+	delete[] _data;
 }
 
 Bitmap16B* Bitmap16B::LoadFromFile(const std::string& strFile)
