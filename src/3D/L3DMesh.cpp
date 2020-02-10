@@ -131,12 +131,13 @@ void L3DMesh::Submit(graphics::RenderPass viewId, const glm::mat4* modelMatrices
 }
 
 void L3DMesh::Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart,
-                     uint32_t instanceCount, const ShaderProgram& program, uint64_t state, uint32_t rgba) const
+                     uint32_t instanceCount, const glm::mat4* modelMatrices, uint8_t matrixCount,
+                     const ShaderProgram& program, uint64_t state, uint32_t rgba) const
 {
 	for (auto it = _subMeshes.begin(); it != _subMeshes.end(); ++it)
 	{
 		const L3DSubMesh& submesh = *it->get();
-		submesh.Submit(viewId, instanceBuffer, instanceStart, instanceCount, program, state, rgba,
+		submesh.Submit(viewId, instanceBuffer, instanceStart, instanceCount, modelMatrices, matrixCount, program, state, rgba,
 		               std::next(it) != _subMeshes.end());
 	}
 }

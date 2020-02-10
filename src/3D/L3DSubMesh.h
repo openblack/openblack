@@ -47,7 +47,8 @@ public:
 	void Submit(graphics::RenderPass viewId, const glm::mat4* modelMatrices, uint8_t matrixCount,
 	            const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
 	void Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart,
-	            uint32_t instanceCount, const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0,
+	            uint32_t instanceCount, const glm::mat4* modelMatrices, uint8_t matrixCount,
+	            const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba = 0,
 	            bool preserveState = false) const;
 
 	[[nodiscard]] openblack::l3d::L3DSubmeshHeader::Flags GetFlags() const { return _flags; }
