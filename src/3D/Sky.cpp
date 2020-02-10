@@ -118,9 +118,23 @@ void Sky::Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const 
 {
 	program.SetTextureSampler("s_diffuse", 0, *_texture);
 
-	uint64_t state = 0u | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS |
-	                 (cullBack ? BGFX_STATE_CULL_CW : BGFX_STATE_CULL_CCW) | BGFX_STATE_MSAA;
-	_model->Submit(viewId, &modelMatrix, 1, program, 0, state);
+	L3DMeshSubmitDesc desc = {};
+	desc.viewId = viewId;
+	desc.program = &program;
+	// clang-format off
+	desc.state = 0u
+		| BGFX_STATE_WRITE_RGB
+		| BGFX_STATE_WRITE_A
+		| BGFX_STATE_WRITE_Z
+		| BGFX_STATE_DEPTH_TEST_LESS
+		| (cullBack ? BGFX_STATE_CULL_CW : BGFX_STATE_CULL_CCW)
+		| BGFX_STATE_MSAA
+	;
+	// clang-format on
+	desc.modelMatrices = &modelMatrix;
+	desc.matrixCount = 1;
+
+	_model->Submit(desc, 0);
 }
 
 } // namespace openblack

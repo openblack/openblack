@@ -386,20 +386,34 @@ void Registry::DrawModels(graphics::RenderPass viewId, const graphics::ShaderMan
 	auto objectShaderInstanced = shaderManager.GetShader("ObjectInstanced");
 	auto& renderCtx = Context().renderContext;
 
-	uint64_t state = 0u | BGFX_STATE_WRITE_MASK | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_MSAA;
-
+	L3DMeshSubmitDesc desc = {};
+	desc.viewId = viewId;
+	desc.program = objectShaderInstanced;
+	// clang-format off
+	desc.state = 0u
+		| BGFX_STATE_WRITE_MASK
+		| BGFX_STATE_DEPTH_TEST_LESS
+		| BGFX_STATE_MSAA
+	;
+	// clang-format on
 	for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
 	{
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
+		desc.instanceBuffer = &renderCtx.instanceUniformBuffer;
+		desc.instanceStart = placers.offset;
+		desc.instanceCount = placers.count;
 		if (mesh.IsBoned())
 		{
-			mesh.Submit(viewId, renderCtx.instanceUniformBuffer, placers.offset, placers.count, mesh.GetBoneMatrices().data(), mesh.GetBoneMatrices().size(), *objectShaderInstanced, state);
+			desc.modelMatrices = mesh.GetBoneMatrices().data();
+			desc.matrixCount = mesh.GetBoneMatrices().size();
 		}
 		else
 		{
 			const auto identity = glm::mat4(1.0f);
-			mesh.Submit(viewId, renderCtx.instanceUniformBuffer, placers.offset, placers.count, &identity, 1, *objectShaderInstanced, state);
+			desc.modelMatrices = &identity;
+			desc.matrixCount = 1;
 		}
+		mesh.Submit(desc);
 	}
 
 	if (viewId == graphics::RenderPass::Main)

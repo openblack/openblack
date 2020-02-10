@@ -104,40 +104,25 @@ void L3DMesh::LoadFromBuffer(const std::vector<uint8_t>& data)
 	Load(l3d);
 }
 
-void L3DMesh::Submit(graphics::RenderPass viewId, const glm::mat4* modelMatrices, uint8_t matrixCount,
-                     const ShaderProgram& program, uint32_t mesh, uint64_t state, uint32_t rgba) const
+void L3DMesh::Submit(const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const
 {
 	if (_subMeshes.empty())
 	{
 		spdlog::warn("Mesh {} has no submeshes to draw", _debugName);
 		return;
 	}
-	if (mesh >= _subMeshes.size())
+	if (subMeshIndex != std::numeric_limits<uint8_t>::max())
 	{
-		spdlog::warn("tried to draw submesh out of range ({}/{})", mesh, _subMeshes.size());
+		if (subMeshIndex >= _subMeshes.size())
+		{
+			spdlog::warn("tried to draw submesh out of range ({}/{})", subMeshIndex, _subMeshes.size());
+		}
+
+		_subMeshes[subMeshIndex]->Submit(desc, desc.viewId, *desc.program, desc.state, desc.rgba, false);
 	}
-
-	_subMeshes[mesh]->Submit(viewId, modelMatrices, matrixCount, program, state, rgba, false);
-}
-
-void L3DMesh::Submit(graphics::RenderPass viewId, const glm::mat4* modelMatrices, uint8_t matrixCount,
-                     const ShaderProgram& program, uint64_t state, uint32_t rgba) const
-{
 	for (auto it = _subMeshes.begin(); it != _subMeshes.end(); ++it)
 	{
 		const L3DSubMesh& submesh = *it->get();
-		submesh.Submit(viewId, modelMatrices, matrixCount, program, state, rgba, std::next(it) != _subMeshes.end());
-	}
-}
-
-void L3DMesh::Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart,
-                     uint32_t instanceCount, const glm::mat4* modelMatrices, uint8_t matrixCount,
-                     const ShaderProgram& program, uint64_t state, uint32_t rgba) const
-{
-	for (auto it = _subMeshes.begin(); it != _subMeshes.end(); ++it)
-	{
-		const L3DSubMesh& submesh = *it->get();
-		submesh.Submit(viewId, instanceBuffer, instanceStart, instanceCount, modelMatrices, matrixCount, program, state, rgba,
-		               std::next(it) != _subMeshes.end());
+		submesh.Submit(desc, desc.viewId, *desc.program, desc.state, desc.rgba, std::next(it) != _subMeshes.end());
 	}
 }

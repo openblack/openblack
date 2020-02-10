@@ -133,23 +133,8 @@ void L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 	spdlog::debug("{} submesh {} with {} verts and {} indices", _l3dMesh.GetDebugName(), meshIndex, nVertices, nIndices);
 }
 
-void L3DSubMesh::Submit(graphics::RenderPass viewId, const glm::mat4* modelMatrices, uint8_t matrixCount,
-                        const ShaderProgram& program, uint64_t state, uint32_t rgba, bool preserveState) const
-{
-	Submit_(viewId, modelMatrices, matrixCount, nullptr, 0, 1, program, state, rgba, preserveState);
-}
-
-void L3DSubMesh::Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer,
-                        uint32_t instanceStart, uint32_t instanceCount, const glm::mat4* modelMatrices, uint8_t matrixCount,
-                        const graphics::ShaderProgram& program, uint64_t state,
-                        uint32_t rgba, bool preserveState) const
-{
-	Submit_(viewId, modelMatrices, matrixCount, &instanceBuffer, instanceStart, instanceCount, program, state, rgba, preserveState);
-}
-
-void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatrices, uint8_t matrixCount,
-                         const bgfx::DynamicVertexBufferHandle* instanceBuffer, uint32_t instanceStart, uint32_t instanceCount,
-                         const ShaderProgram& program, uint64_t state, uint32_t rgba, bool preserveState) const
+void L3DSubMesh::Submit(const L3DMeshSubmitDesc& desc, graphics::RenderPass viewId, const ShaderProgram& program,
+                        uint64_t state, uint32_t rgba, bool preserveState) const
 {
 	if (!_mesh)
 		return;
@@ -171,14 +156,14 @@ void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatr
 		return nullptr;
 	};
 
-	Mesh::DrawDesc desc = {
+	Mesh::DrawDesc drawDesc = {
 	    /*viewId =*/viewId,
 	    /*program =*/program,
 	    /*count =*/0,
 	    /*offset =*/0,
-	    /*instanceBuffer =*/instanceBuffer,
-	    /*instanceStart =*/instanceStart,
-	    /*instanceCount =*/instanceCount,
+	    /*instanceBuffer =*/desc.instanceBuffer,
+	    /*instanceStart =*/desc.instanceStart,
+	    /*instanceCount =*/desc.instanceCount,
 	    /*state =*/state,
 	    /*rgba =*/rgba,
 	    /*skip =*/Mesh::SkipState::SkipNone,
@@ -197,12 +182,12 @@ void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatr
 
 		bool primitivePreserveState = texture == nextTexture && (preserveState || hasNext);
 
-		desc.skip = Mesh::SkipState::SkipNone;
+		drawDesc.skip = Mesh::SkipState::SkipNone;
 		if (!lastPreserveState)
 		{
-			if (modelMatrices && matrixCount > 0)
+			if (desc.modelMatrices && desc.matrixCount > 0)
 			{
-				bgfx::setTransform(modelMatrices, matrixCount);
+				bgfx::setTransform(desc.modelMatrices, desc.matrixCount);
 			}
 			if (texture)
 			{
@@ -211,15 +196,15 @@ void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatr
 		}
 		else
 		{
-			desc.skip |= Mesh::SkipState::SkipRenderState;
-			desc.skip |= Mesh::SkipState::SkipVertexBuffer;
+			drawDesc.skip |= Mesh::SkipState::SkipRenderState;
+			drawDesc.skip |= Mesh::SkipState::SkipVertexBuffer;
 		}
 
-		desc.count = prim.indicesCount;
-		desc.offset = prim.indicesOffset;
-		desc.preserveState = primitivePreserveState;
+		drawDesc.count = prim.indicesCount;
+		drawDesc.offset = prim.indicesOffset;
+		drawDesc.preserveState = primitivePreserveState;
 
-		_mesh->Draw(desc);
+		_mesh->Draw(drawDesc);
 		lastPreserveState = primitivePreserveState;
 	}
 }
