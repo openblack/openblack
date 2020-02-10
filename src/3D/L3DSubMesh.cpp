@@ -140,10 +140,11 @@ void L3DSubMesh::Submit(graphics::RenderPass viewId, const glm::mat4* modelMatri
 }
 
 void L3DSubMesh::Submit(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer,
-                        uint32_t instanceStart, uint32_t instanceCount, const graphics::ShaderProgram& program, uint64_t state,
+                        uint32_t instanceStart, uint32_t instanceCount, const glm::mat4* modelMatrices, uint8_t matrixCount,
+                        const graphics::ShaderProgram& program, uint64_t state,
                         uint32_t rgba, bool preserveState) const
 {
-	Submit_(viewId, nullptr, 0, &instanceBuffer, instanceStart, instanceCount, program, state, rgba, preserveState);
+	Submit_(viewId, modelMatrices, matrixCount, &instanceBuffer, instanceStart, instanceCount, program, state, rgba, preserveState);
 }
 
 void L3DSubMesh::Submit_(graphics::RenderPass viewId, const glm::mat4* modelMatrices, uint8_t matrixCount,

@@ -391,7 +391,15 @@ void Registry::DrawModels(graphics::RenderPass viewId, const graphics::ShaderMan
 	for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
 	{
 		const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
-		mesh.Submit(viewId, renderCtx.instanceUniformBuffer, placers.offset, placers.count, *objectShaderInstanced, state);
+		if (mesh.IsBoned())
+		{
+			mesh.Submit(viewId, renderCtx.instanceUniformBuffer, placers.offset, placers.count, mesh.GetBoneMatrices().data(), mesh.GetBoneMatrices().size(), *objectShaderInstanced, state);
+		}
+		else
+		{
+			const auto identity = glm::mat4(1.0f);
+			mesh.Submit(viewId, renderCtx.instanceUniformBuffer, placers.offset, placers.count, &identity, 1, *objectShaderInstanced, state);
+		}
 	}
 
 	if (viewId == graphics::RenderPass::Main)
