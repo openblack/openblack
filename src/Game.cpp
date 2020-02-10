@@ -117,23 +117,8 @@ Game::~Game()
 	SDL_Quit(); // todo: move to GameWindow
 }
 
-glm::mat4 Game::GetModelMatrix() const
-{
-	glm::mat4 modelMatrix = glm::mat4(1.0f);
-	modelMatrix = glm::translate(modelMatrix, _modelPosition);
-
-	modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-	modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-	modelMatrix = glm::rotate(modelMatrix, glm::radians(_modelRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-	return glm::scale(modelMatrix, _modelScale);
-}
-
 bool Game::ProcessEvents()
 {
-	static bool mouseButtonLeftHoldDown = false;
-	static bool mouseButtonRightHoldDown = false;
-
 	SDL_Event e;
 	while (SDL_PollEvent(&e))
 	{
@@ -165,19 +150,8 @@ bool Game::ProcessEvents()
 		case SDL_MOUSEMOTION:
 		{
 			SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y);
-
-			if (!mouseButtonLeftHoldDown)
-			{
-			}
 			break;
 		}
-		case SDL_MOUSEBUTTONDOWN:
-			switch (e.button.button)
-			{
-			case SDL_BUTTON_LEFT: mouseButtonLeftHoldDown = true; break;
-			case SDL_BUTTON_RIGHT: mouseButtonRightHoldDown = true; break;
-			}
-			break;
 		case SDL_MOUSEBUTTONUP:
 			switch (e.button.button)
 			{
@@ -227,7 +201,6 @@ bool Game::Update()
 	// Update Camera
 	{
 		_camera->Update(deltaTime);
-		_modelRotation.y = fmod(_modelRotation.y + float(deltaTime.count()) * .0001f, 360.f);
 	}
 
 	// Update Uniforms
@@ -283,10 +256,6 @@ void Game::Run()
 
 	_camera->SetPosition(glm::vec3(1441.56f, 24.764f, 2081.76f));
 	_camera->SetRotation(glm::vec3(0.0f, -45.0f, 0.0f));
-
-	_modelPosition = glm::vec3(2485.0f, 50.0f, 1907.0f);
-	_modelRotation = glm::vec3(180.0f, 111.0f, 0.0f);
-	_modelScale = glm::vec3(0.5f);
 
 	_meshPack = std::make_unique<MeshPack>();
 	_meshPack->LoadFromFile("Data/AllMeshes.g3d");
