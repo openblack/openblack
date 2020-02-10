@@ -15,6 +15,7 @@
 #include "3D/MeshPack.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
+#include "Common/EventManager.h"
 #include "Common/FileSystem.h"
 #include "Entities/Registry.h"
 #include "GameWindow.h"
@@ -24,6 +25,8 @@
 #include "MeshViewer.h"
 #include "Profiler.h"
 #include "Renderer.h"
+#include <Entities/Components/Hand.h>
+#include <Entities/Components/Transform.h>
 
 #include <SDL.h>
 #include <glm/glm.hpp>
@@ -53,6 +56,7 @@ Game::Game(Arguments&& args)
     , _config()
     , _frameCount(0)
     , _intersection()
+    , _eventManager(std::make_unique<EventManager>())
 {
 	if (!args.logFile.empty() && args.logFile != "stdout")
 	{
@@ -76,6 +80,26 @@ Game::Game(Arguments&& args)
 	spdlog::debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
 
 	_gui = Gui::create(_window.get(), graphics::RenderPass::ImGui, args.scale);
+
+	std::function callback = [this](SDL_Event event) {
+		static bool leftMouseButton = false;
+
+		if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_LEFT)
+			leftMouseButton = !leftMouseButton;
+
+		if (!leftMouseButton)
+		{
+			auto& handTransform = _entityRegistry->Get<Transform>(_handEntity);
+			handTransform.position = _intersection;
+			auto cameraRotation = _camera->GetRotation();
+			auto handHeight = GetLandIsland().GetHeightAt(glm::vec2(handTransform.position.x, handTransform.position.z)) + 1.2f;
+			handTransform.rotation =
+			    glm::vec3(cameraRotation.x * 3.14159 / 180, cameraRotation.y * 3.14159 / 180, cameraRotation.z * 3.14159 / 180);
+			handTransform.position = glm::vec3(handTransform.position.x, handHeight, handTransform.position.z);
+			_entityRegistry->Context().renderContext.dirty = true;
+		}
+	};
+	_eventManager->AddHandler(callback);
 }
 
 Game::~Game()
@@ -89,6 +113,7 @@ Game::~Game()
 	_gui.reset();
 	_renderer.reset();
 	_window.reset();
+	_eventManager.reset();
 	SDL_Quit(); // todo: move to GameWindow
 }
 
@@ -106,9 +131,14 @@ glm::mat4 Game::GetModelMatrix() const
 
 bool Game::ProcessEvents()
 {
+	static bool mouseButtonLeftHoldDown = false;
+	static bool mouseButtonRightHoldDown = false;
+
 	SDL_Event e;
 	while (SDL_PollEvent(&e))
 	{
+		_eventManager->Create<SDL_Event>(e);
+
 		switch (e.type)
 		{
 		case SDL_QUIT:
@@ -133,9 +163,21 @@ bool Game::ProcessEvents()
 			}
 			break;
 		case SDL_MOUSEMOTION:
+		{
 			SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y);
+
+			if (!mouseButtonLeftHoldDown)
+			{
+			}
 			break;
+		}
 		case SDL_MOUSEBUTTONDOWN:
+			switch (e.button.button)
+			{
+			case SDL_BUTTON_LEFT: mouseButtonLeftHoldDown = true; break;
+			case SDL_BUTTON_RIGHT: mouseButtonRightHoldDown = true; break;
+			}
+			break;
 		case SDL_MOUSEBUTTONUP:
 			switch (e.button.button)
 			{
@@ -249,8 +291,10 @@ void Game::Run()
 	_meshPack = std::make_unique<MeshPack>();
 	_meshPack->LoadFromFile("Data/AllMeshes.g3d");
 
-	_testModel = std::make_unique<L3DMesh>();
-	_testModel->LoadFromFile("Data/CreatureMesh/C_Tortoise_Base.l3d");
+	 _testModel = std::make_unique<L3DMesh>();
+	 _testModel->LoadFromFile("Data/CreatureMesh/C_Tortoise_Base.l3d");
+	_handModel = std::make_unique<L3DMesh>();
+	_handModel->LoadFromFile("Data/CreatureMesh/Hand_Boned_Base2.l3d");
 
 	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
@@ -329,7 +373,14 @@ void Game::LoadMap(const std::string& name)
 	auto data = _fileSystem->ReadAll(name);
 	std::string source(reinterpret_cast<const char*>(data.data()), data.size());
 
+	// Reset everything. Deletes all entities and their components
 	_entityRegistry->Reset();
+
+	// We need a hand for the player
+	_handEntity = _entityRegistry->Create();
+	_entityRegistry->Assign<Hand>(_handEntity);
+	_entityRegistry->Assign<Transform>(_handEntity, glm::vec3(0), glm::vec3(0), glm::vec3(1.0));
+
 	Script script(this);
 	script.Load(source);
 }

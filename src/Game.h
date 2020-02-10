@@ -18,6 +18,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <entt/entity/fwd.hpp>
 
 namespace openblack
 {
@@ -25,6 +26,7 @@ class Camera;
 class FileSystem;
 class GameWindow;
 class Gui;
+class EventManager;
 class MeshPack;
 class LandIsland;
 class Profiler;
@@ -113,7 +115,10 @@ public:
 	[[nodiscard]] Water& GetWater() const { return *_water; }
 	LandIsland& GetLandIsland() { return *_landIsland; }
 	[[nodiscard]] LandIsland& GetLandIsland() const { return *_landIsland; }
+	// [[nodiscard]] L3DMesh& GetTestModel() const { return *_testModel; }
 	[[nodiscard]] L3DMesh& GetTestModel() const { return *_testModel; }
+	[[nodiscard]] L3DMesh& GetHandModel() const { return *_handModel; }
+	[[nodiscard]] const entt::entity& GetHandEntity() const { return _handEntity; }
 	MeshPack& GetMeshPack() { return *_meshPack; }
 	[[nodiscard]] const LHVM::LHVM* GetLhvm() { return _lhvm.get(); }
 	FileSystem& GetFileSystem() { return *_fileSystem; }
@@ -136,12 +141,15 @@ private:
 	std::unique_ptr<Gui> _gui;
 	std::unique_ptr<Camera> _camera;
 	std::unique_ptr<Profiler> _profiler;
+	std::unique_ptr<EventManager> _eventManager;
 
 	std::unique_ptr<FileSystem> _fileSystem;
 	std::unique_ptr<LandIsland> _landIsland;
 	std::unique_ptr<MeshPack> _meshPack;
 
+	// std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<L3DMesh> _testModel;
+	std::unique_ptr<L3DMesh> _handModel;
 	std::unique_ptr<Sky> _sky;
 	std::unique_ptr<Water> _water;
 	std::unique_ptr<lhscriptx::Script> _scriptx;
@@ -158,5 +166,10 @@ private:
 	glm::vec3 _modelPosition;
 	glm::vec3 _modelRotation;
 	glm::vec3 _modelScale;
+	entt::entity _handEntity;
+	glm::vec3 _handPosition;
+	glm::vec3 _handScale;
+
+	bool _running;
 };
 } // namespace openblack
