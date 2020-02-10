@@ -23,6 +23,7 @@
 #include "Graphics/DebugLines.h"
 #include "Graphics/ShaderManager.h"
 
+#include <Entities/Components/Hand.h>
 #include <algorithm>
 
 namespace openblack::entities
@@ -143,6 +144,15 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 		    count.first->second++;
 		    instanceCount++;
 	    });
+
+	// Hands
+	_registry.view<const Hand, const Transform>().each(
+		[&meshIds, &instanceCount](const Hand& entity, const Transform& transform) {
+		  const auto meshId = treeMeshLookup[TreeInfo::Oak];;
+		  auto count = meshIds.insert(std::make_pair(meshId, 0));
+		  count.first->second++;
+		  instanceCount++;
+		});
 
 	if (drawBoundingBox)
 	{
@@ -320,6 +330,18 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 		    prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 1);
 		    offset.first->second++;
 	    });
+
+	// Hands
+	_registry.view<const Hand, const Transform>().each(
+		[&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Hand& entity, const Transform& transform) {
+		  const auto meshId = treeMeshLookup[TreeInfo::Oak];;
+		  auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
+		  auto desc = renderCtx.instancedDrawDescs.find(meshId);
+//		  modelMatrix           = glm::rotate(modelMatrix, -transform.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+		  renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+		  prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 1);
+		  offset.first->second++;
+		});
 
 	if (!renderCtx.instanceUniforms.empty())
 	{
