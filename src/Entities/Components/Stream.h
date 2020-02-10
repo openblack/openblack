@@ -26,7 +26,8 @@ public:
 	glm::vec3 position;
 	std::vector<StreamNode> edges;
 
-	StreamNode(const glm::vec3 position, const std::vector<StreamNode>& streamNodes): position(position)
+	StreamNode(const glm::vec3 position, const std::vector<StreamNode>& streamNodes)
+	    : position(position)
 	{
 		if (streamNodes.empty())
 		{

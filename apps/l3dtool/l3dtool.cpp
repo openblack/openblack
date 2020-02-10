@@ -298,7 +298,10 @@ int PrintPoints(openblack::l3d::L3DFile& l3d)
 	auto& points = l3d.GetPoints();
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
 
-	for (auto& point : points) { std::printf("(%.3f, %.3f, %.3f)\n", point.x, point.y, point.z); }
+	for (auto& point : points)
+	{
+		std::printf("(%.3f, %.3f, %.3f)\n", point.x, point.y, point.z);
+	}
 
 	return EXIT_SUCCESS;
 }
@@ -477,32 +480,32 @@ void copyBufferView(desT* dst, const uint8_t* src, size_t count, uint32_t compon
 {
 	switch (componentType)
 	{
-		case TINYGLTF_COMPONENT_TYPE_BYTE:
-			details::copyBufferView<desT, int8_t>(dst, src, count);
-			break;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
-			details::copyBufferView<desT, uint8_t>(dst, src, count);
-			break;
-		case TINYGLTF_COMPONENT_TYPE_SHORT:
-			details::copyBufferView<desT, int16_t>(dst, src, count);
-			break;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
-			details::copyBufferView<desT, uint16_t>(dst, src, count);
-			break;
-		case TINYGLTF_COMPONENT_TYPE_INT:
-			details::copyBufferView<desT, int32_t>(dst, src, count);
-			break;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
-			details::copyBufferView<desT, uint32_t>(dst, src, count);
-			break;
-		case TINYGLTF_COMPONENT_TYPE_FLOAT:
-			details::copyBufferView<desT, float>(dst, src, count);
-			break;
-		case TINYGLTF_COMPONENT_TYPE_DOUBLE:
-			details::copyBufferView<desT, double>(dst, src, count);
-			break;
-		default:
-			throw std::runtime_error("Unsupported component type");
+	case TINYGLTF_COMPONENT_TYPE_BYTE:
+		details::copyBufferView<desT, int8_t>(dst, src, count);
+		break;
+	case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
+		details::copyBufferView<desT, uint8_t>(dst, src, count);
+		break;
+	case TINYGLTF_COMPONENT_TYPE_SHORT:
+		details::copyBufferView<desT, int16_t>(dst, src, count);
+		break;
+	case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+		details::copyBufferView<desT, uint16_t>(dst, src, count);
+		break;
+	case TINYGLTF_COMPONENT_TYPE_INT:
+		details::copyBufferView<desT, int32_t>(dst, src, count);
+		break;
+	case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
+		details::copyBufferView<desT, uint32_t>(dst, src, count);
+		break;
+	case TINYGLTF_COMPONENT_TYPE_FLOAT:
+		details::copyBufferView<desT, float>(dst, src, count);
+		break;
+	case TINYGLTF_COMPONENT_TYPE_DOUBLE:
+		details::copyBufferView<desT, double>(dst, src, count);
+		break;
+	default:
+		throw std::runtime_error("Unsupported component type");
 	}
 }
 

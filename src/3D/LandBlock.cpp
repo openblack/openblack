@@ -20,13 +20,15 @@
 using namespace openblack;
 using namespace openblack::graphics;
 
-LandVertex::LandVertex(const glm::vec3& _position, const glm::vec3& _weight, uint32_t mat[8], uint32_t blend[3], uint8_t _lightLevel, float _alpha)
-	: position {_position.x, _position.y, _position.z}
-	, weight {_weight.x, _weight.y, _weight.z}
-	, firstMaterialID {static_cast<uint8_t>(mat[0]), static_cast<uint8_t>(mat[1]), static_cast<uint8_t>(mat[2])}
-	, secondMaterialID {static_cast<uint8_t>(mat[3]), static_cast<uint8_t>(mat[4]), static_cast<uint8_t>(mat[5])}
-	, materialBlendCoefficient {static_cast<uint8_t>(blend[0]), static_cast<uint8_t>(blend[1]), static_cast<uint8_t>(blend[2])}
-	, lightLevel {_lightLevel}, waterAlpha {_alpha}
+LandVertex::LandVertex(const glm::vec3& _position, const glm::vec3& _weight, uint32_t mat[8], uint32_t blend[3],
+                       uint8_t _lightLevel, float _alpha)
+    : position {_position.x, _position.y, _position.z}
+    , weight {_weight.x, _weight.y, _weight.z}
+    , firstMaterialID {static_cast<uint8_t>(mat[0]), static_cast<uint8_t>(mat[1]), static_cast<uint8_t>(mat[2])}
+    , secondMaterialID {static_cast<uint8_t>(mat[3]), static_cast<uint8_t>(mat[4]), static_cast<uint8_t>(mat[5])}
+    , materialBlendCoefficient {static_cast<uint8_t>(blend[0]), static_cast<uint8_t>(blend[1]), static_cast<uint8_t>(blend[2])}
+    , lightLevel {_lightLevel}
+    , waterAlpha {_alpha}
 {
 }
 

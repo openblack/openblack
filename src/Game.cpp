@@ -47,8 +47,11 @@ const std::string kWindowTitle = "openblack";
 Game* Game::sInstance = nullptr;
 
 Game::Game(Arguments&& args)
-    : _fileSystem(std::make_unique<FileSystem>()), _entityRegistry(std::make_unique<entities::Registry>()), _config(),
-      _frameCount(0), _intersection()
+    : _fileSystem(std::make_unique<FileSystem>())
+    , _entityRegistry(std::make_unique<entities::Registry>())
+    , _config()
+    , _frameCount(0)
+    , _intersection()
 {
 	spdlog::set_level(spdlog::level::debug);
 	sInstance = this;
@@ -102,7 +105,8 @@ bool Game::ProcessEvents()
 	{
 		switch (e.type)
 		{
-		case SDL_QUIT: return true;
+		case SDL_QUIT:
+			return true;
 		case SDL_WINDOWEVENT:
 			if (e.window.event == SDL_WINDOWEVENT_CLOSE && e.window.windowID == _window->GetID())
 			{
@@ -112,12 +116,19 @@ bool Game::ProcessEvents()
 		case SDL_KEYDOWN:
 			switch (e.key.keysym.sym)
 			{
-			case SDLK_ESCAPE: return true;
-			case SDLK_f: _window->SetFullscreen(true); break;
-			case SDLK_F1: _config.bgfxDebug = !_config.bgfxDebug; break;
+			case SDLK_ESCAPE:
+				return true;
+			case SDLK_f:
+				_window->SetFullscreen(true);
+				break;
+			case SDLK_F1:
+				_config.bgfxDebug = !_config.bgfxDebug;
+				break;
 			}
 			break;
-		case SDL_MOUSEMOTION: SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y); break;
+		case SDL_MOUSEMOTION:
+			SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y);
+			break;
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
 			switch (e.button.button)

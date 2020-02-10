@@ -31,7 +31,10 @@ struct L3DVertex
 	glm::vec3 norm;
 };
 
-L3DSubMesh::L3DSubMesh(L3DMesh& mesh): _l3dMesh(mesh) {}
+L3DSubMesh::L3DSubMesh(L3DMesh& mesh)
+    : _l3dMesh(mesh)
+{
+}
 
 L3DSubMesh::~L3DSubMesh() {}
 

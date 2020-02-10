@@ -23,8 +23,14 @@ public:
 	VMScript() = delete;
 	VMScript(const std::string& name, const std::string& filename, uint32_t type, uint32_t var_offset,
 	         std::vector<std::string> variables, uint32_t instruction_address, uint32_t parameter_count, uint32_t script_id)
-	    : _name(name), _filename(filename), _type(type), _variables(std::move(variables)), _variables_offset(var_offset),
-	      _instruction_address(instruction_address), _parameter_count(parameter_count), _script_id(script_id)
+	    : _name(name)
+	    , _filename(filename)
+	    , _type(type)
+	    , _variables(std::move(variables))
+	    , _variables_offset(var_offset)
+	    , _instruction_address(instruction_address)
+	    , _parameter_count(parameter_count)
+	    , _script_id(script_id)
 	{
 	}
 	~VMScript() = default;

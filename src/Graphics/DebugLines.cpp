@@ -125,7 +125,11 @@ void DebugLines::Draw(RenderPass viewId, const bgfx::DynamicVertexBufferHandle& 
 	_mesh->Draw(desc);
 }
 
-DebugLines::DebugLines(std::unique_ptr<Mesh>&& mesh): _mesh(std::move(mesh)), _model(1.0f) {}
+DebugLines::DebugLines(std::unique_ptr<Mesh>&& mesh)
+    : _mesh(std::move(mesh))
+    , _model(1.0f)
+{
+}
 
 DebugLines::~DebugLines() = default;
 

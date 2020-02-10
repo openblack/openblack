@@ -31,15 +31,27 @@ enum class ParameterType
 class ScriptCommandParameter
 {
 public:
-	ScriptCommandParameter(ParameterType type = ParameterType::None): _type(type) {}
-	ScriptCommandParameter(const std::string value): _type(ParameterType::String)
+	ScriptCommandParameter(ParameterType type = ParameterType::None)
+	    : _type(type)
+	{
+	}
+	ScriptCommandParameter(const std::string value)
+	    : _type(ParameterType::String)
 	{
 		// TODO: Hacky, avoid new
 		_value._string = new std::string();
 		*_value._string = value;
 	}
-	ScriptCommandParameter(float value): _type(ParameterType::Float) { SetFloat(value); }
-	ScriptCommandParameter(int32_t value): _type(ParameterType::Number) { SetNumber(value); }
+	ScriptCommandParameter(float value)
+	    : _type(ParameterType::Float)
+	{
+		SetFloat(value);
+	}
+	ScriptCommandParameter(int32_t value)
+	    : _type(ParameterType::Number)
+	{
+		SetNumber(value);
+	}
 	ScriptCommandParameter(float x, float y, float z) { SetVector(x, y, z); }
 
 	[[nodiscard]] ParameterType GetType() const { return _type; };
@@ -76,7 +88,11 @@ typedef std::vector<ScriptCommandParameter> ScriptCommandParameters;
 class ScriptCommandContext
 {
 public:
-	ScriptCommandContext(Game* game, const ScriptCommandParameters* parameters): _game(game), _parameters(parameters) {}
+	ScriptCommandContext(Game* game, const ScriptCommandParameters* parameters)
+	    : _game(game)
+	    , _parameters(parameters)
+	{
+	}
 
 	[[nodiscard]] Game& GetGame() const { return *_game; }
 

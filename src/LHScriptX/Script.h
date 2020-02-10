@@ -20,13 +20,18 @@ namespace openblack::lhscriptx
 class NotImplemented: public std::logic_error
 {
 public:
-	NotImplemented(): std::logic_error("Function not yet implemented") {};
+	NotImplemented()
+	    : std::logic_error("Function not yet implemented") {};
 };
 
 class Script
 {
 public:
-	Script(Game* game): _game(game), token_(Token::MakeInvalidToken()) {}
+	Script(Game* game)
+	    : _game(game)
+	    , token_(Token::MakeInvalidToken())
+	{
+	}
 
 	void Load(const std::string&);
 

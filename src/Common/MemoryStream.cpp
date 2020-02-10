@@ -37,9 +37,15 @@ void MemoryStream::Seek(std::size_t position, SeekMode seek)
 {
 	switch (seek)
 	{
-	case SeekMode::Begin: _position = position; break;
-	case SeekMode::Current: _position += position; break;
-	case SeekMode::End: _position = _size + position; break;
+	case SeekMode::Begin:
+		_position = position;
+		break;
+	case SeekMode::Current:
+		_position += position;
+		break;
+	case SeekMode::End:
+		_position = _size + position;
+		break;
 	}
 }
 

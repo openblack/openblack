@@ -86,7 +86,8 @@ struct BgfxCallback: public bgfx::CallbackI
 } // namespace openblack
 
 Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererType, bool vsync)
-    : _shaderManager(std::make_unique<ShaderManager>()), _bgfxCallback(std::make_unique<BgfxCallback>())
+    : _shaderManager(std::make_unique<ShaderManager>())
+    , _bgfxCallback(std::make_unique<BgfxCallback>())
 {
 	bgfx::Init init {};
 	init.type = rendererType;
@@ -123,7 +124,9 @@ Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererTy
 
 	// give debug names to views
 	for (bgfx::ViewId i = 0; i < static_cast<bgfx::ViewId>(graphics::RenderPass::_count); ++i)
-	{ bgfx::setViewName(i, RenderPassNames[i].data()); }
+	{
+		bgfx::setViewName(i, RenderPassNames[i].data());
+	}
 }
 
 Renderer::~Renderer()
@@ -136,7 +139,9 @@ Renderer::~Renderer()
 void Renderer::LoadShaders()
 {
 	for (const auto& shader : Shaders)
-	{ _shaderManager->LoadShader(shader.name.data(), shader.vertexShaderName.data(), shader.fragmentShaderName.data()); }
+	{
+		_shaderManager->LoadShader(shader.name.data(), shader.vertexShaderName.data(), shader.fragmentShaderName.data());
+	}
 }
 
 void Renderer::ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height) const

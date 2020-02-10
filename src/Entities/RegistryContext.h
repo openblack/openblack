@@ -23,7 +23,8 @@ namespace openblack::entities
 {
 struct RenderContext
 {
-	RenderContext(): instanceUniformBuffer(BGFX_INVALID_HANDLE) {};
+	RenderContext()
+	    : instanceUniformBuffer(BGFX_INVALID_HANDLE) {};
 	~RenderContext()
 	{
 		if (bgfx::isValid(instanceUniformBuffer))
@@ -36,7 +37,11 @@ struct RenderContext
 
 	struct InstancedDrawDesc
 	{
-		InstancedDrawDesc(uint32_t offset, uint32_t count): offset(offset), count(count) {}
+		InstancedDrawDesc(uint32_t offset, uint32_t count)
+		    : offset(offset)
+		    , count(count)
+		{
+		}
 		uint32_t offset;
 		uint32_t count;
 	};

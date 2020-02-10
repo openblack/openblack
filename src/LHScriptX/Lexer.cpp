@@ -12,10 +12,11 @@
 #include <cctype>
 #include <utility>
 
-
 using namespace openblack::lhscriptx;
 
-Lexer::Lexer(std::string  source): source_(std::move(source)), currentLine_(1)
+Lexer::Lexer(std::string source)
+    : source_(std::move(source))
+    , currentLine_(1)
 {
 	current_ = source_.begin();
 	end_ = source_.end();
@@ -112,7 +113,8 @@ Token Lexer::GetToken()
 		case 'x':
 		case 'y':
 		case 'z':
-		case '_': return gatherIdentifer();
+		case '_':
+			return gatherIdentifer();
 
 		/* gather numbers */
 		case '0':
@@ -125,15 +127,25 @@ Token Lexer::GetToken()
 		case '7':
 		case '8':
 		case '9':
-		case '-': return gatherNumber();
+		case '-':
+			return gatherNumber();
 
 		/* gather strings */
-		case '"': return gatherString();
+		case '"':
+			return gatherString();
 
-		case '=': current_++; return Token::MakeOperatorToken(Operator::Equal);
-		case ',': current_++; return Token::MakeOperatorToken(Operator::Comma);
-		case '(': current_++; return Token::MakeOperatorToken(Operator::LeftParentheses);
-		case ')': current_++; return Token::MakeOperatorToken(Operator::RightParentheses);
+		case '=':
+			current_++;
+			return Token::MakeOperatorToken(Operator::Equal);
+		case ',':
+			current_++;
+			return Token::MakeOperatorToken(Operator::Comma);
+		case '(':
+			current_++;
+			return Token::MakeOperatorToken(Operator::LeftParentheses);
+		case ')':
+			current_++;
+			return Token::MakeOperatorToken(Operator::RightParentheses);
 		default:
 			// todo: ignore BOM
 
@@ -226,25 +238,51 @@ void Token::Print(FILE* file) const
 {
 	switch (this->type_)
 	{
-	case Type::Invalid: fprintf(file, "invalid"); break;
-	case Type::EndOfFile: fprintf(file, "EOF"); break;
-	case Type::EndOfLine: fprintf(file, "\n"); break;
-	case Type::Identifier: fprintf(file, "identifier \"%s\"", this->u_.identifierValue->c_str()); break;
-	case Type::String: fprintf(file, "quoted string \"%s\"", this->u_.stringValue->c_str()); break;
-	case Type::Integer: fprintf(file, "integer %d", this->u_.integerValue); break;
-	case Type::Float: fprintf(file, "float %f", this->u_.floatValue); break;
+	case Type::Invalid:
+		fprintf(file, "invalid");
+		break;
+	case Type::EndOfFile:
+		fprintf(file, "EOF");
+		break;
+	case Type::EndOfLine:
+		fprintf(file, "\n");
+		break;
+	case Type::Identifier:
+		fprintf(file, "identifier \"%s\"", this->u_.identifierValue->c_str());
+		break;
+	case Type::String:
+		fprintf(file, "quoted string \"%s\"", this->u_.stringValue->c_str());
+		break;
+	case Type::Integer:
+		fprintf(file, "integer %d", this->u_.integerValue);
+		break;
+	case Type::Float:
+		fprintf(file, "float %f", this->u_.floatValue);
+		break;
 	case Type::Operator:
 		fprintf(file, "operator ");
 		switch (this->u_.op)
 		{
-		case Operator::Invalid: fprintf(file, "invalid"); break;
-		case Operator::Equal: fprintf(file, "="); break;
-		case Operator::Comma: fprintf(file, ","); break;
-		case Operator::LeftParentheses: fprintf(file, "("); break;
-		case Operator::RightParentheses: fprintf(file, ")"); break;
-		default: __builtin_unreachable();
+		case Operator::Invalid:
+			fprintf(file, "invalid");
+			break;
+		case Operator::Equal:
+			fprintf(file, "=");
+			break;
+		case Operator::Comma:
+			fprintf(file, ",");
+			break;
+		case Operator::LeftParentheses:
+			fprintf(file, "(");
+			break;
+		case Operator::RightParentheses:
+			fprintf(file, ")");
+			break;
+		default:
+			__builtin_unreachable();
 		}
 		break;
-	default: __builtin_unreachable();
+	default:
+		__builtin_unreachable();
 	}
 }

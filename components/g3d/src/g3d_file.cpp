@@ -107,7 +107,11 @@ struct membuf: std::streambuf
 };
 struct imemstream: virtual membuf, public std::istream
 {
-	imemstream(char const* base, size_t size): membuf(base, size), std::istream(dynamic_cast<std::streambuf*>(this)) {}
+	imemstream(char const* base, size_t size)
+	    : membuf(base, size)
+	    , std::istream(dynamic_cast<std::streambuf*>(this))
+	{
+	}
 };
 
 struct G3DBlockHeader
@@ -338,7 +342,9 @@ void G3DFile::CreateMeshBlock()
 		}
 		contents.resize(offset);
 		for (size_t i = 0; i < _meshes.size(); ++i)
-		{ std::memcpy(&contents[meshOffsets[i]], _meshes[i].data(), _meshes[i].size() * sizeof(_meshes[i][0])); }
+		{
+			std::memcpy(&contents[meshOffsets[i]], _meshes[i].data(), _meshes[i].size() * sizeof(_meshes[i][0]));
+		}
 	}
 
 	_blocks["MESHES"] = std::move(contents);
@@ -365,7 +371,10 @@ void G3DFile::CreateInfoBlock()
 	_blocks["INFO"] = std::move(contents);
 }
 
-G3DFile::G3DFile() : _isLoaded(false) {}
+G3DFile::G3DFile()
+    : _isLoaded(false)
+{
+}
 
 void G3DFile::Open(const std::string& file)
 {

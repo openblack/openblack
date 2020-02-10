@@ -49,7 +49,9 @@ public:
 private:
 	struct ScopedSection
 	{
-		inline explicit ScopedSection(Profiler* profiler, Stage stage): _profiler(profiler), _stage(stage)
+		inline explicit ScopedSection(Profiler* profiler, Stage stage)
+		    : _profiler(profiler)
+		    , _stage(stage)
 		{
 			_profiler->Begin(_stage);
 		}

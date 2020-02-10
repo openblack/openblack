@@ -79,12 +79,22 @@ std::unique_ptr<Gui> Gui::create(const GameWindow* window, graphics::RenderPass 
 }
 
 Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer>&& meshViewer)
-    : _imgui(imgui), _time(0), _vertexBuffer(BGFX_INVALID_HANDLE), _indexBuffer(BGFX_INVALID_HANDLE),
-      _program(BGFX_INVALID_HANDLE), _imageProgram(BGFX_INVALID_HANDLE), _texture(BGFX_INVALID_HANDLE),
-      _s_tex(BGFX_INVALID_HANDLE),
-      _u_imageLodEnabled(BGFX_INVALID_HANDLE), _mousePressed {false, false, false}, _mouseCursors {0},
-      _clipboardTextData(nullptr), _last(bx::getHPCounter()), _lastScroll(0), _viewId(viewId),
-      _meshViewer(std::move(meshViewer))
+    : _imgui(imgui)
+    , _time(0)
+    , _vertexBuffer(BGFX_INVALID_HANDLE)
+    , _indexBuffer(BGFX_INVALID_HANDLE)
+    , _program(BGFX_INVALID_HANDLE)
+    , _imageProgram(BGFX_INVALID_HANDLE)
+    , _texture(BGFX_INVALID_HANDLE)
+    , _s_tex(BGFX_INVALID_HANDLE)
+    , _u_imageLodEnabled(BGFX_INVALID_HANDLE)
+    , _mousePressed {false, false, false}
+    , _mouseCursors {0}
+    , _clipboardTextData(nullptr)
+    , _last(bx::getHPCounter())
+    , _lastScroll(0)
+    , _viewId(viewId)
+    , _meshViewer(std::move(meshViewer))
 {
 	CreateDeviceObjectsBgfx();
 }
@@ -483,10 +493,16 @@ bool Gui::Loop(Game& game)
 			};
 
 			ImGui::MenuItem("Story Islands", NULL, false, false);
-			for (auto& [label, path] : RegularIslands) { menu_item(label, path); }
+			for (auto& [label, path] : RegularIslands)
+			{
+				menu_item(label, path);
+			}
 			ImGui::Separator();
 			ImGui::MenuItem("Playground Islands", NULL, false, false);
-			for (auto& [label, path] : PlaygroundIslands) { menu_item(label, path); }
+			for (auto& [label, path] : PlaygroundIslands)
+			{
+				menu_item(label, path);
+			}
 
 			ImGui::EndMenu();
 		}
