@@ -163,13 +163,6 @@ private:
 	glm::ivec2 _mousePosition;
 	glm::vec3 _intersection;
 
-	glm::vec3 _modelPosition;
-	glm::vec3 _modelRotation;
-	glm::vec3 _modelScale;
 	entt::entity _handEntity;
-	glm::vec3 _handPosition;
-	glm::vec3 _handScale;
-
-	bool _running;
 };
 } // namespace openblack
