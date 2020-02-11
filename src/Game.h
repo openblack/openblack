@@ -14,6 +14,7 @@
 #include <LHVM/LHVM.h>
 #include <bgfx/bgfx.h>
 #include <glm/glm.hpp>
+#include <SDL.h>
 
 #include <memory>
 #include <string>
@@ -86,6 +87,7 @@ public:
 		float smallBumpMapStrength {1.0f};
 
 		bool bgfxDebug {false};
+		bool running {false};
 
 		uint32_t numFramesToSimulate {0};
 	};
@@ -93,7 +95,7 @@ public:
 	Game(Arguments&& args);
 	virtual ~Game();
 
-	bool ProcessEvents();
+	bool ProcessEvents(const SDL_Event &event);
 	bool Update();
 	void Run();
 

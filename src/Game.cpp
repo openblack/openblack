@@ -28,7 +28,6 @@
 #include <Entities/Components/Hand.h>
 #include <Entities/Components/Transform.h>
 
-#include <SDL.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/intersect.hpp>
@@ -81,25 +80,11 @@ Game::Game(Arguments&& args)
 
 	_gui = Gui::create(_window.get(), graphics::RenderPass::ImGui, args.scale);
 
-	std::function callback = [this](SDL_Event event) {
-		static bool leftMouseButton = false;
-
-		if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_LEFT)
-			leftMouseButton = !leftMouseButton;
-
-		if (!leftMouseButton)
-		{
-			auto& handTransform = _entityRegistry->Get<Transform>(_handEntity);
-			handTransform.position = _intersection;
-			auto cameraRotation = _camera->GetRotation();
-			auto handHeight = GetLandIsland().GetHeightAt(glm::vec2(handTransform.position.x, handTransform.position.z)) + 1.2f;
-			handTransform.rotation =
-			    glm::vec3(cameraRotation.x * 3.14159 / 180, cameraRotation.y * 3.14159 / 180, cameraRotation.z * 3.14159 / 180);
-			handTransform.position = glm::vec3(handTransform.position.x, handHeight, handTransform.position.z);
-			_entityRegistry->Context().renderContext.dirty = true;
-		}
-	};
-	_eventManager->AddHandler(callback);
+	_eventManager->AddHandler(std::function([this](const SDL_Event& event) {
+		this->_camera->ProcessSDLEvent(event);
+		this->_gui->ProcessEventSdl2(event);
+		this->_config.running = this->ProcessEvents(event);
+	}));
 }
 
 Game::~Game()
@@ -117,60 +102,68 @@ Game::~Game()
 	SDL_Quit(); // todo: move to GameWindow
 }
 
-bool Game::ProcessEvents()
+bool Game::ProcessEvents(const SDL_Event &event)
 {
-	SDL_Event e;
-	while (SDL_PollEvent(&e))
+	static bool leftMouseButton = false;
+
+	if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_LEFT)
+		leftMouseButton = !leftMouseButton;
+
+	if (!leftMouseButton)
 	{
-		_eventManager->Create<SDL_Event>(e);
-
-		switch (e.type)
-		{
-		case SDL_QUIT:
-			return true;
-		case SDL_WINDOWEVENT:
-			if (e.window.event == SDL_WINDOWEVENT_CLOSE && e.window.windowID == _window->GetID())
-			{
-				return true;
-			}
-			break;
-		case SDL_KEYDOWN:
-			switch (e.key.keysym.sym)
-			{
-			case SDLK_ESCAPE:
-				return true;
-			case SDLK_f:
-				_window->SetFullscreen(true);
-				break;
-			case SDLK_F1:
-				_config.bgfxDebug = !_config.bgfxDebug;
-				break;
-			}
-			break;
-		case SDL_MOUSEMOTION:
-		{
-			SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y);
-			break;
-		}
-		case SDL_MOUSEBUTTONUP:
-			switch (e.button.button)
-			{
-			case SDL_BUTTON_MIDDLE:
-			{
-				glm::ivec2 screenSize;
-				_window->GetSize(screenSize.x, screenSize.y);
-				SDL_SetRelativeMouseMode((e.type == SDL_MOUSEBUTTONDOWN) ? SDL_TRUE : SDL_FALSE);
-				SDL_WarpMouseInWindow(_window->GetHandle(), screenSize.x / 2, screenSize.y / 2);
-			}
-			break;
-			}
-			break;
-		}
-
-		_camera->ProcessSDLEvent(e);
-		_gui->ProcessEventSdl2(e);
+		auto& handTransform = _entityRegistry->Get<Transform>(_handEntity);
+		handTransform.position = _intersection;
+		auto cameraRotation = _camera->GetRotation();
+		auto handHeight = GetLandIsland().GetHeightAt(glm::vec2(handTransform.position.x, handTransform.position.z)) + 1.2f;
+		handTransform.rotation = glm::vec3(glm::radians(cameraRotation.x), glm::radians(cameraRotation.y), glm::radians(cameraRotation.z));
+		handTransform.position = glm::vec3(handTransform.position.x, handHeight, handTransform.position.z);
+		_entityRegistry->Context().renderContext.dirty = true;
 	}
-	return false;
+
+	switch (event.type)
+	{
+	case SDL_QUIT:
+		return false;
+	case SDL_WINDOWEVENT:
+		if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == _window->GetID())
+		{
+			return false;
+		}
+		break;
+	case SDL_KEYDOWN:
+		switch (event.key.keysym.sym)
+		{
+		case SDLK_ESCAPE:
+			return false;
+		case SDLK_f:
+			_window->SetFullscreen(true);
+			break;
+		case SDLK_F1:
+			_config.bgfxDebug = !_config.bgfxDebug;
+			break;
+		}
+		break;
+	case SDL_MOUSEMOTION:
+	{
+		SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y);
+		break;
+	}
+	case SDL_MOUSEBUTTONUP:
+		switch (event.button.button)
+		{
+		case SDL_BUTTON_MIDDLE:
+		{
+			glm::ivec2 screenSize;
+			_window->GetSize(screenSize.x, screenSize.y);
+			SDL_SetRelativeMouseMode((event.type == SDL_MOUSEBUTTONDOWN) ? SDL_TRUE : SDL_FALSE);
+			SDL_WarpMouseInWindow(_window->GetHandle(), screenSize.x / 2, screenSize.y / 2);
+		}
+		break;
+		}
+		break;
+	}
+
+	return true;
 }
 
 bool Game::Update()
@@ -183,10 +176,16 @@ bool Game::Update()
 	// Input events
 	{
 		auto sdlInput = _profiler->BeginScoped(Profiler::Stage::SdlInput);
-		if (ProcessEvents())
+		SDL_Event e;
+		while (SDL_PollEvent(&e))
 		{
-			return false; // Quit event
+			_eventManager->Create<SDL_Event>(e);
 		}
+	}
+
+	if (!this->_config.running)
+	{
+		return false;
 	}
 
 	// ImGui events + prepare
