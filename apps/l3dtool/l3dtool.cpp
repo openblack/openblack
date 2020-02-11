@@ -369,7 +369,8 @@ int PrintBones(openblack::l3d::L3DFile& l3d)
 		std::printf("rotation:\n");
 		for (uint8_t j = 0; j < 3; ++j)
 		{
-			std::printf("     [%6.3f %6.3f %6.3f]\n", bone.orientation[j * 3], bone.orientation[j * 3 + 1], bone.orientation[j * 3 + 2]);
+			std::printf("     [%6.3f %6.3f %6.3f]\n", bone.orientation[j * 3], bone.orientation[j * 3 + 1],
+			            bone.orientation[j * 3 + 2]);
 		}
 		std::printf("position: (%5.1f %5.1f %5.1f)\n", bone.position.x, bone.position.y, bone.position.z);
 		std::printf("\n");
@@ -473,7 +474,7 @@ void copyBufferView(dstT* dst, const uint8_t* src, size_t count)
 {
 	memcpy(dst, src, count * sizeof(dstT));
 }
-} // details
+} // namespace details
 
 template <typename desT>
 void copyBufferView(desT* dst, const uint8_t* src, size_t count, uint32_t componentType)
@@ -509,7 +510,8 @@ void copyBufferView(desT* dst, const uint8_t* src, size_t count, uint32_t compon
 	}
 }
 
-bool NoopLoadImageDataFunction(tinygltf::Image*, const int, std::string*, std::string*, int, int, const unsigned char *, int, void *)
+bool NoopLoadImageDataFunction(tinygltf::Image*, const int, std::string*, std::string*, int, int, const unsigned char*, int,
+                               void*)
 {
 	std::cerr << "Warn: GLTF Image Data function called but not implemented." << std::endl;
 	return true;
@@ -530,7 +532,9 @@ int WriteFile(const Arguments::Write& args)
 	std::string warn;
 
 	loader.SetImageLoader(NoopLoadImageDataFunction, nullptr);
-	bool ret = loader.LoadASCIIFromFile(&gltf, &err, &warn, args.gltfFile, tinygltf::REQUIRE_VERSION | tinygltf::REQUIRE_ACCESSORS | tinygltf::REQUIRE_BUFFERS | tinygltf::REQUIRE_BUFFER_VIEWS);
+	bool ret = loader.LoadASCIIFromFile(&gltf, &err, &warn, args.gltfFile,
+	                                    tinygltf::REQUIRE_VERSION | tinygltf::REQUIRE_ACCESSORS | tinygltf::REQUIRE_BUFFERS |
+	                                        tinygltf::REQUIRE_BUFFER_VIEWS);
 
 	if (!warn.empty())
 	{
@@ -602,15 +606,24 @@ int WriteFile(const Arguments::Write& args)
 						bone.firstChild = std::numeric_limits<uint32_t>::max();
 						bone.rightSibling = std::numeric_limits<uint32_t>::max();
 						// Convert Quaternion to matrix
-						bone.orientation[0] = static_cast<float>(1.0f - 2.0f * gltfJoint.rotation[1]*gltfJoint.rotation[1] - 2.0f * gltfJoint.rotation[2] * gltfJoint.rotation[2]);
-						bone.orientation[1] = static_cast<float>(2.0f * gltfJoint.rotation[0] * gltfJoint.rotation[1] - 2.0f * gltfJoint.rotation[2]*gltfJoint.rotation[3]);
-						bone.orientation[2] = static_cast<float>(2.0f * gltfJoint.rotation[0] * gltfJoint.rotation[2] + 2.0f * gltfJoint.rotation[1]*gltfJoint.rotation[3]);
-						bone.orientation[3] = static_cast<float>(2.0f * gltfJoint.rotation[0] * gltfJoint.rotation[1] + 2.0f * gltfJoint.rotation[2]*gltfJoint.rotation[3]);
-						bone.orientation[4] = static_cast<float>(1.0f - 2.0f * gltfJoint.rotation[0] * gltfJoint.rotation[0] - 2.0f * gltfJoint.rotation[2] * gltfJoint.rotation[2]);
-						bone.orientation[5] = static_cast<float>(2.0f * gltfJoint.rotation[1] * gltfJoint.rotation[2] - 2.0f * gltfJoint.rotation[0] * gltfJoint.rotation[3]);
-						bone.orientation[6] = static_cast<float>(2.0f * gltfJoint.rotation[0] * gltfJoint.rotation[2] - 2.0f * gltfJoint.rotation[1] * gltfJoint.rotation[3]);
-						bone.orientation[7] = static_cast<float>(2.0f * gltfJoint.rotation[1] * gltfJoint.rotation[2] + 2.0f * gltfJoint.rotation[0] * gltfJoint.rotation[3]);
-						bone.orientation[8] = static_cast<float>(1.0f - 2.0f * gltfJoint.rotation[0] * gltfJoint.rotation[0] - 2.0f * gltfJoint.rotation[1] * gltfJoint.rotation[1]);
+						bone.orientation[0] = static_cast<float>(1.0f - 2.0f * gltfJoint.rotation[1] * gltfJoint.rotation[1] -
+						                                         2.0f * gltfJoint.rotation[2] * gltfJoint.rotation[2]);
+						bone.orientation[1] = static_cast<float>(2.0f * gltfJoint.rotation[0] * gltfJoint.rotation[1] -
+						                                         2.0f * gltfJoint.rotation[2] * gltfJoint.rotation[3]);
+						bone.orientation[2] = static_cast<float>(2.0f * gltfJoint.rotation[0] * gltfJoint.rotation[2] +
+						                                         2.0f * gltfJoint.rotation[1] * gltfJoint.rotation[3]);
+						bone.orientation[3] = static_cast<float>(2.0f * gltfJoint.rotation[0] * gltfJoint.rotation[1] +
+						                                         2.0f * gltfJoint.rotation[2] * gltfJoint.rotation[3]);
+						bone.orientation[4] = static_cast<float>(1.0f - 2.0f * gltfJoint.rotation[0] * gltfJoint.rotation[0] -
+						                                         2.0f * gltfJoint.rotation[2] * gltfJoint.rotation[2]);
+						bone.orientation[5] = static_cast<float>(2.0f * gltfJoint.rotation[1] * gltfJoint.rotation[2] -
+						                                         2.0f * gltfJoint.rotation[0] * gltfJoint.rotation[3]);
+						bone.orientation[6] = static_cast<float>(2.0f * gltfJoint.rotation[0] * gltfJoint.rotation[2] -
+						                                         2.0f * gltfJoint.rotation[1] * gltfJoint.rotation[3]);
+						bone.orientation[7] = static_cast<float>(2.0f * gltfJoint.rotation[1] * gltfJoint.rotation[2] +
+						                                         2.0f * gltfJoint.rotation[0] * gltfJoint.rotation[3]);
+						bone.orientation[8] = static_cast<float>(1.0f - 2.0f * gltfJoint.rotation[0] * gltfJoint.rotation[0] -
+						                                         2.0f * gltfJoint.rotation[1] * gltfJoint.rotation[1]);
 						bone.position.x = static_cast<float>(gltfJoint.translation[0]);
 						bone.position.y = static_cast<float>(gltfJoint.translation[1]);
 						bone.position.z = static_cast<float>(gltfJoint.translation[2]);
@@ -644,11 +657,11 @@ int WriteFile(const Arguments::Write& args)
 			primitive.numVertices = 0;
 			primitive.verticesOffset = static_cast<uint32_t>(l3d.GetVertices().size()); // FIXME: This is wrong
 			primitive.numTriangles = 0;
-			primitive.trianglesOffset = static_cast<uint32_t>(l3d.GetIndices().size()/3);  // FIXME: This is wrong
-			primitive.boneVertLUTSize = 0; // TODO: Figure this out
-			primitive.boneVertLUTOffset = static_cast<uint32_t>(l3d.GetLookUpTableData().size());   // FIXME: This is wrong
-			primitive.numVertexBlends = 0; // TODO: Figure this out
-			primitive.vertexBlendsOffset = static_cast<uint32_t>(l3d.GetBlends().size());   // FIXME: This is wrong
+			primitive.trianglesOffset = static_cast<uint32_t>(l3d.GetIndices().size() / 3);       // FIXME: This is wrong
+			primitive.boneVertLUTSize = 0;                                                        // TODO: Figure this out
+			primitive.boneVertLUTOffset = static_cast<uint32_t>(l3d.GetLookUpTableData().size()); // FIXME: This is wrong
+			primitive.numVertexBlends = 0;                                                        // TODO: Figure this out
+			primitive.vertexBlendsOffset = static_cast<uint32_t>(l3d.GetBlends().size());         // FIXME: This is wrong
 
 			struct attribute_t
 			{
@@ -672,7 +685,8 @@ int WriteFile(const Arguments::Write& args)
 					auto& buffer = gltf.buffers[view.buffer];
 					auto offset = view.byteOffset + accessor.byteOffset;
 					attribute.values.resize(accessor.count * accessor.type);
-					copyBufferView(attribute.values.data(), buffer.data.data() + offset, attribute.values.size(), accessor.componentType);
+					copyBufferView(attribute.values.data(), buffer.data.data() + offset, attribute.values.size(),
+					               accessor.componentType);
 					attribute.type = static_cast<uint8_t>(accessor.type);
 					if (count != 0 && count != accessor.count)
 					{
@@ -814,8 +828,10 @@ int ExtractFile(const Arguments::Extract& args)
 			// Accessors
 			tinygltf::Accessor vertexPositionAccessor;
 			vertexPositionAccessor.bufferView = 0;
-			vertexPositionAccessor.name = "vertex position accessor for primitive #" + std::to_string(j) + " of " + gltfMesh.name;
-			vertexPositionAccessor.byteOffset = vertexOffset * sizeof(openblack::l3d::L3DVertex) + offsetof(openblack::l3d::L3DVertex, position);
+			vertexPositionAccessor.name =
+			    "vertex position accessor for primitive #" + std::to_string(j) + " of " + gltfMesh.name;
+			vertexPositionAccessor.byteOffset =
+			    vertexOffset * sizeof(openblack::l3d::L3DVertex) + offsetof(openblack::l3d::L3DVertex, position);
 			vertexPositionAccessor.normalized = false;
 			vertexPositionAccessor.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
 			vertexPositionAccessor.count = l3dPrimitive.numVertices;
@@ -825,8 +841,10 @@ int ExtractFile(const Arguments::Extract& args)
 
 			tinygltf::Accessor vertexTextureCoordinateAccessor;
 			vertexTextureCoordinateAccessor.bufferView = 0;
-			vertexTextureCoordinateAccessor.name = "vertex texture coordinate accessor for primitive #" + std::to_string(j) + " of " + gltfMesh.name;
-			vertexTextureCoordinateAccessor.byteOffset = vertexOffset * sizeof(openblack::l3d::L3DVertex) + offsetof(openblack::l3d::L3DVertex, texCoord);
+			vertexTextureCoordinateAccessor.name =
+			    "vertex texture coordinate accessor for primitive #" + std::to_string(j) + " of " + gltfMesh.name;
+			vertexTextureCoordinateAccessor.byteOffset =
+			    vertexOffset * sizeof(openblack::l3d::L3DVertex) + offsetof(openblack::l3d::L3DVertex, texCoord);
 			vertexTextureCoordinateAccessor.normalized = false;
 			vertexTextureCoordinateAccessor.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
 			vertexTextureCoordinateAccessor.count = l3dPrimitive.numVertices;
@@ -837,7 +855,8 @@ int ExtractFile(const Arguments::Extract& args)
 			tinygltf::Accessor vertexNormalAccessor;
 			vertexNormalAccessor.bufferView = 0;
 			vertexNormalAccessor.name = "vertex normal accessor for primitive #" + std::to_string(j) + " of " + gltfMesh.name;
-			vertexNormalAccessor.byteOffset = vertexOffset * sizeof(openblack::l3d::L3DVertex) + offsetof(openblack::l3d::L3DVertex, normal);
+			vertexNormalAccessor.byteOffset =
+			    vertexOffset * sizeof(openblack::l3d::L3DVertex) + offsetof(openblack::l3d::L3DVertex, normal);
 			vertexNormalAccessor.normalized = false;
 			vertexNormalAccessor.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
 			vertexNormalAccessor.count = l3dPrimitive.numVertices;

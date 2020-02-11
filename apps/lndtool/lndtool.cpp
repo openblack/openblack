@@ -10,9 +10,9 @@
 #include <lnd_file.h>
 
 #include <cstdlib>
-#include <string>
 #include <cxxopts.hpp>
 #include <fstream>
+#include <string>
 
 int PrintRawBytes(const void* data, std::size_t size)
 {
@@ -135,8 +135,10 @@ int PrintBlocks(openblack::lnd::LNDFile& lnd)
 		};
 		for (auto& cell : block.cells)
 		{
-			std::printf("    %u: r %u, g %u, b %u, luminosity %u, altitude %u, saveColor %u, country %u properties %s flags 0x%02X\n",
-			            j++, cell.r, cell.g, cell.b, cell.luminosity, cell.altitude, cell.saveColor, cell.properties.country, flagToStr(cell.properties).c_str(), cell.flags);
+			std::printf(
+			    "    %u: r %u, g %u, b %u, luminosity %u, altitude %u, saveColor %u, country %u properties %s flags 0x%02X\n",
+			    j++, cell.r, cell.g, cell.b, cell.luminosity, cell.altitude, cell.saveColor, cell.properties.country,
+			    flagToStr(cell.properties).c_str(), cell.flags);
 		}
 		std::printf("index: %u\n", block.index);
 		std::printf("mapX: %f\n", block.mapX);
@@ -161,12 +163,14 @@ int PrintBlocks(openblack::lnd::LNDFile& lnd)
 		std::printf("transformUVBefore:\n");
 		for (j = 0; j < 4; ++j)
 		{
-			std::printf("     [%6.3f %6.3f %6.3f]\n", block.transformUVBefore[j][0], block.transformUVBefore[j][1], block.transformUVBefore[j][2]);
+			std::printf("     [%6.3f %6.3f %6.3f]\n", block.transformUVBefore[j][0], block.transformUVBefore[j][1],
+			            block.transformUVBefore[j][2]);
 		}
 		std::printf("transformUVAfter:\n");
 		for (j = 0; j < 4; ++j)
 		{
-			std::printf("     [%6.3f %6.3f %6.3f]\n", block.transformUVAfter[j][0], block.transformUVAfter[j][1], block.transformUVAfter[j][2]);
+			std::printf("     [%6.3f %6.3f %6.3f]\n", block.transformUVAfter[j][0], block.transformUVAfter[j][1],
+			            block.transformUVAfter[j][2]);
 		}
 		std::printf("nextSortingPtr: 0x%X\n", block.nextSortingPtr);
 		std::printf("valueSorting: %f\n", block.valueSorting);
@@ -195,8 +199,8 @@ int PrintCountries(openblack::lnd::LNDFile& lnd)
 		uint32_t j = 0;
 		for (auto& material : country.materials)
 		{
-			std::printf("    %3u: indices %3u %3u coefficient 0x%02X\n",
-			            j++, material.indices[0], material.indices[1], material.coefficient);
+			std::printf("    %3u: indices %3u %3u coefficient 0x%02X\n", j++, material.indices[0], material.indices[1],
+			            material.coefficient);
 		}
 	}
 	std::printf("\n");
@@ -228,7 +232,8 @@ int PrintMaterials(openblack::lnd::LNDFile& lnd)
 				{
 					for (uint16_t i = 0; i < subsample; ++i)
 					{
-						auto& color = material.texels[x * subsample + i + (y * subsample + j) * openblack::lnd::LNDMaterial::width];
+						auto& color =
+						    material.texels[x * subsample + i + (y * subsample + j) * openblack::lnd::LNDMaterial::width];
 						red += color.R;
 						green += color.G;
 						blue += color.B;

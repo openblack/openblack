@@ -507,7 +507,8 @@ bool Gui::Loop(Game& game)
 			ImGui::EndMenu();
 		}
 
-		if (ImGui::BeginMenu("World")) {
+		if (ImGui::BeginMenu("World"))
+		{
 			if (ImGui::SliderFloat("Time of Day", &config.timeOfDay, 0.0f, 1.0f, "%.3f"))
 				Game::instance()->GetSky().SetTime(config.timeOfDay);
 

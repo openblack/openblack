@@ -167,7 +167,11 @@ struct membuf: std::streambuf
 };
 struct imemstream: virtual membuf, std::istream
 {
-	imemstream(char const* base, size_t size): membuf(base, size), std::istream(dynamic_cast<std::streambuf*>(this)) {}
+	imemstream(char const* base, size_t size)
+	    : membuf(base, size)
+	    , std::istream(dynamic_cast<std::streambuf*>(this))
+	{
+	}
 };
 } // namespace
 
@@ -539,7 +543,8 @@ void L3DFile::WriteFile(std::ostream& stream) const
 	{
 		for (size_t j = 0; j < _primitiveSpans[i].size(); ++j)
 		{
-			primitiveOffsets[currentPrimitive] = static_cast<uint32_t>(primitiveBase + currentPrimitive * sizeof(_primitiveHeaders[0]));
+			primitiveOffsets[currentPrimitive] =
+			    static_cast<uint32_t>(primitiveBase + currentPrimitive * sizeof(_primitiveHeaders[0]));
 			currentPrimitive++;
 		}
 	}
@@ -559,7 +564,8 @@ void L3DFile::WriteFile(std::ostream& stream) const
 	}
 	if (!_submeshHeaders.empty())
 	{
-		stream.write(reinterpret_cast<const char*>(_submeshHeaders.data()), _submeshHeaders.size() * sizeof(_submeshHeaders[0]));
+		stream.write(reinterpret_cast<const char*>(_submeshHeaders.data()),
+		             _submeshHeaders.size() * sizeof(_submeshHeaders[0]));
 	}
 	if (!_skins.empty())
 	{
@@ -567,11 +573,13 @@ void L3DFile::WriteFile(std::ostream& stream) const
 	}
 	if (!primitiveOffsets.empty())
 	{
-		stream.write(reinterpret_cast<const char*>(primitiveOffsets.data()), primitiveOffsets.size() * sizeof(primitiveOffsets[0]));
+		stream.write(reinterpret_cast<const char*>(primitiveOffsets.data()),
+		             primitiveOffsets.size() * sizeof(primitiveOffsets[0]));
 	}
 	if (!_primitiveHeaders.empty())
 	{
-		stream.write(reinterpret_cast<const char*>(_primitiveHeaders.data()), _primitiveHeaders.size() * sizeof(_primitiveHeaders[0]));
+		stream.write(reinterpret_cast<const char*>(_primitiveHeaders.data()),
+		             _primitiveHeaders.size() * sizeof(_primitiveHeaders[0]));
 	}
 	if (!_bones.empty())
 	{
@@ -641,7 +649,8 @@ void L3DFile::Write(const std::string& file)
 	_header.skinCount = static_cast<uint32_t>(_skins.size());
 	_header.pointCount = static_cast<uint32_t>(_points.size());
 	size_t offset = sizeof(_header);
-	_header.submeshOffsetsOffset = _header.submeshCount > 0 ? static_cast<uint32_t>(offset) : std::numeric_limits<uint32_t>::max();
+	_header.submeshOffsetsOffset =
+	    _header.submeshCount > 0 ? static_cast<uint32_t>(offset) : std::numeric_limits<uint32_t>::max();
 	offset += _header.submeshCount * sizeof(uint32_t);
 	_header.anotherOffset = std::numeric_limits<uint32_t>::max();
 	_header.skinOffsetsOffset = _header.skinCount > 0 ? static_cast<uint32_t>(offset) : std::numeric_limits<uint32_t>::max();
@@ -665,15 +674,17 @@ void L3DFile::Write(const std::string& file)
 	_header.size = static_cast<uint32_t>(blendBase + _blends.size() * sizeof(_blends[0]));
 	if (!_bones.empty())
 	{
-		_header.flags = static_cast<L3DMeshFlags>(static_cast<uint32_t>(_header.flags) |
-		                static_cast<uint32_t>(L3DMeshFlags::HasBones));
+		_header.flags =
+		    static_cast<L3DMeshFlags>(static_cast<uint32_t>(_header.flags) | static_cast<uint32_t>(L3DMeshFlags::HasBones));
 	}
 
 	for (size_t i = 0; i < _primitiveHeaders.size(); ++i)
 	{
-		_primitiveHeaders[i].verticesOffset = _vertexSpans[i].size() > 0 ? static_cast<uint32_t>(vertexBase) : std::numeric_limits<uint32_t>::max();
-		_primitiveHeaders[i].trianglesOffset = _indexSpans[i].size() > 0 ? static_cast<uint32_t>(triangleBase) : std::numeric_limits<uint32_t>::max();
-		_primitiveHeaders[i].boneVertLUTOffset = std::numeric_limits<uint32_t>::max(); // TODO boneVertLUTBase;
+		_primitiveHeaders[i].verticesOffset =
+		    _vertexSpans[i].size() > 0 ? static_cast<uint32_t>(vertexBase) : std::numeric_limits<uint32_t>::max();
+		_primitiveHeaders[i].trianglesOffset =
+		    _indexSpans[i].size() > 0 ? static_cast<uint32_t>(triangleBase) : std::numeric_limits<uint32_t>::max();
+		_primitiveHeaders[i].boneVertLUTOffset = std::numeric_limits<uint32_t>::max();  // TODO boneVertLUTBase;
 		_primitiveHeaders[i].vertexBlendsOffset = std::numeric_limits<uint32_t>::max(); // TODO vertexBlendsBase;
 		vertexBase += _vertexSpans[i].size() * sizeof(_vertices[0]);
 		triangleBase += 3 * _indexSpans[i].size() * sizeof(_indices[0]);
@@ -684,7 +695,8 @@ void L3DFile::Write(const std::string& file)
 	for (auto& header : _submeshHeaders)
 	{
 		// TODO Set flags
-		header.primitivesOffset = header.numPrimitives ? static_cast<uint32_t>(primitiveOffsetBase) : std::numeric_limits<uint32_t>::max();
+		header.primitivesOffset =
+		    header.numPrimitives ? static_cast<uint32_t>(primitiveOffsetBase) : std::numeric_limits<uint32_t>::max();
 		header.bonesOffset = header.numBones ? static_cast<uint32_t>(boneBase) : std::numeric_limits<uint32_t>::max();
 		primitiveBase += header.numPrimitives * sizeof(L3DPrimitiveHeader);
 		boneBase += header.numBones * sizeof(L3DBone);
@@ -700,7 +712,8 @@ void L3DFile::AddSubmesh(const L3DSubmeshHeader& header)
 
 void L3DFile::AddPrimitives(const std::vector<L3DPrimitiveHeader>& headers)
 {
-	_primitiveSpans.emplace_back(_primitiveHeaders, static_cast<uint32_t>(_primitiveHeaders.size()), static_cast<uint32_t>(headers.size()));
+	_primitiveSpans.emplace_back(_primitiveHeaders, static_cast<uint32_t>(_primitiveHeaders.size()),
+	                             static_cast<uint32_t>(headers.size()));
 	for (auto& header : headers)
 	{
 		_primitiveHeaders.push_back(header);
