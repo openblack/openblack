@@ -116,15 +116,12 @@ public:
 	LandIsland& GetLandIsland() { return *_landIsland; }
 	[[nodiscard]] LandIsland& GetLandIsland() const { return *_landIsland; }
 	// [[nodiscard]] L3DMesh& GetTestModel() const { return *_testModel; }
-	[[nodiscard]] L3DMesh& GetTestModel() const { return *_testModel; }
 	[[nodiscard]] L3DMesh& GetHandModel() const { return *_handModel; }
-	[[nodiscard]] const entt::entity& GetHandEntity() const { return _handEntity; }
 	MeshPack& GetMeshPack() { return *_meshPack; }
 	[[nodiscard]] const LHVM::LHVM* GetLhvm() { return _lhvm.get(); }
 	FileSystem& GetFileSystem() { return *_fileSystem; }
 	entities::Registry& GetEntityRegistry() { return *_entityRegistry; }
 	[[nodiscard]] entities::Registry& GetEntityRegistry() const { return *_entityRegistry; }
-	[[nodiscard]] glm::mat4 GetModelMatrix() const;
 	Config& GetConfig() { return _config; }
 	[[nodiscard]] const Config& GetConfig() const { return _config; }
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
