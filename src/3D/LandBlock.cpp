@@ -115,8 +115,9 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 				return 1.0f;
 			};
 			auto make_vert = [&getAlpha](const glm::vec3& height, const glm::vec3& weight, lnd::LNDMapMaterial m[3],
-			                    const lnd::LNDCell& cell) -> LandVertex {
-				uint32_t mat[6] = {m[0].indices[0], m[1].indices[0], m[2].indices[0], m[0].indices[1], m[1].indices[1], m[2].indices[1]};
+			                             const lnd::LNDCell& cell) -> LandVertex {
+				uint32_t mat[6] = {m[0].indices[0], m[1].indices[0], m[2].indices[0],
+				                   m[0].indices[1], m[1].indices[1], m[2].indices[1]};
 				uint32_t blend[3] = {m[0].coefficient, m[1].coefficient, m[2].coefficient};
 				return LandVertex(height, weight, mat, blend, cell.luminosity, getAlpha(cell.properties));
 			};

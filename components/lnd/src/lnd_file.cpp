@@ -144,15 +144,18 @@ void LNDFile::ReadFile(std::istream& stream)
 
 	if (_header.blockSize != sizeof(LNDBlock))
 	{
-		Fail("File has non standard block size got " + std::to_string(_header.blockSize) + " expected " + std::to_string(sizeof(LNDBlock)));
+		Fail("File has non standard block size got " + std::to_string(_header.blockSize) + " expected " +
+		     std::to_string(sizeof(LNDBlock)));
 	}
 	if (_header.materialSize != sizeof(LNDMaterial))
 	{
-		Fail("File has non standard material size got " + std::to_string(_header.materialSize) + " expected " + std::to_string(sizeof(LNDMaterial)));
+		Fail("File has non standard material size got " + std::to_string(_header.materialSize) + " expected " +
+		     std::to_string(sizeof(LNDMaterial)));
 	}
 	if (_header.countrySize != sizeof(LNDCountry))
 	{
-		Fail("File has non standard country size got " + std::to_string(_header.countrySize) + " expected " + std::to_string(sizeof(LNDCountry)));
+		Fail("File has non standard country size got " + std::to_string(_header.countrySize) + " expected " +
+		     std::to_string(sizeof(LNDCountry)));
 	}
 
 	// Read low resolution textures

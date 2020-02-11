@@ -109,7 +109,10 @@ public:
 	}
 	[[nodiscard]] bool IsContainsUV2() const { return static_cast<bool>(_flags & l3d::L3DMeshFlags::ContainsUV2); }
 	[[nodiscard]] bool IsContainsNameData() const { return static_cast<bool>(_flags & l3d::L3DMeshFlags::ContainsNameData); }
-	[[nodiscard]] bool IsContainsExtraMetrics() const { return static_cast<bool>(_flags & l3d::L3DMeshFlags::ContainsExtraMetrics); }
+	[[nodiscard]] bool IsContainsExtraMetrics() const
+	{
+		return static_cast<bool>(_flags & l3d::L3DMeshFlags::ContainsExtraMetrics);
+	}
 	[[nodiscard]] bool IsContainsEBone() const { return static_cast<bool>(_flags & l3d::L3DMeshFlags::ContainsEBone); }
 	[[nodiscard]] bool IsContainsTnLData() const { return static_cast<bool>(_flags & l3d::L3DMeshFlags::ContainsTnLData); }
 	[[nodiscard]] bool IsContainsNewEP() const { return static_cast<bool>(_flags & l3d::L3DMeshFlags::ContainsNewEP); }

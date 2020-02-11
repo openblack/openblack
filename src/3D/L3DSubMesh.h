@@ -9,8 +9,8 @@
 
 #pragma once
 
-#include "AxisAlignedBoundingBox.h"
 #include "../Graphics/RenderPass.h"
+#include "AxisAlignedBoundingBox.h"
 
 #include <bgfx/bgfx.h>
 #include <glm/fwd.hpp>

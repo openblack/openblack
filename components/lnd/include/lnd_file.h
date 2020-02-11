@@ -111,7 +111,7 @@ static_assert(sizeof(LNDMapMaterial) == 3 * sizeof(uint32_t));
 
 struct LNDCountry
 {
-	uint32_t type; ///< Type of terrain
+	uint32_t type;                 ///< Type of terrain
 	LNDMapMaterial materials[256]; ///< altitude 0-255
 };
 static_assert(sizeof(LNDCountry) == 3076);
@@ -207,4 +207,4 @@ public:
 	void AddBumpMap(const LNDBumpMap& bumpMap);
 };
 
-} // namespace openblack::l3d
+} // namespace openblack::lnd

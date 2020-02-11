@@ -23,7 +23,7 @@ namespace lnd
 {
 struct LNDBlock;
 struct LNDCell;
-}
+} // namespace lnd
 
 struct LandVertex
 {
@@ -36,7 +36,8 @@ struct LandVertex
 	uint8_t lightLevel[4];               // aligned to 4 bytes
 	float waterAlpha;
 
-	LandVertex(const glm::vec3& _position, const glm::vec3& _weight, uint32_t mat[6], uint32_t blend[3], uint8_t _lightLevel, float _alpha);
+	LandVertex(const glm::vec3& _position, const glm::vec3& _weight, uint32_t mat[6], uint32_t blend[3], uint8_t _lightLevel,
+	           float _alpha);
 };
 
 class LandIsland;

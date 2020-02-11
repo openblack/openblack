@@ -17,8 +17,8 @@
 
 #include <spdlog/spdlog.h>
 
-#include <stdexcept>
 #include <lnd_file.h>
+#include <stdexcept>
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -74,27 +74,23 @@ void LandIsland::LoadFromFile(const std::string& filename)
 	rgba5TextureData.resize(lnd::LNDMaterial::width * lnd::LNDMaterial::height * lnd.GetMaterials().size());
 	for (size_t i = 0; i < lnd.GetMaterials().size(); i++)
 	{
-		std::memcpy(&rgba5TextureData[lnd::LNDMaterial::width * lnd::LNDMaterial::height * i],
-			lnd.GetMaterials()[i].texels,
-			sizeof(lnd.GetMaterials()[i].texels));
+		std::memcpy(&rgba5TextureData[lnd::LNDMaterial::width * lnd::LNDMaterial::height * i], lnd.GetMaterials()[i].texels,
+		            sizeof(lnd.GetMaterials()[i].texels));
 	}
 	_materialArray = std::make_unique<Texture2D>("LandIslandMaterialArray");
-	_materialArray->Create(lnd::LNDMaterial::width, lnd::LNDMaterial::height, materialCount,
-		Format::RGB5A1, Wrapping::ClampEdge, rgba5TextureData.data(),
-		rgba5TextureData.size() * sizeof(rgba5TextureData[0]));
+	_materialArray->Create(lnd::LNDMaterial::width, lnd::LNDMaterial::height, materialCount, Format::RGB5A1,
+	                       Wrapping::ClampEdge, rgba5TextureData.data(), rgba5TextureData.size() * sizeof(rgba5TextureData[0]));
 
 	// read noise map into Texture2D
 	std::memcpy(_noiseMap.data(), lnd.GetExtra().noise.texels, _noiseMap.size() * sizeof(_noiseMap[0]));
 	_textureNoiseMap = std::make_unique<Texture2D>("LandIslandNoiseMap");
-	_textureNoiseMap->Create(lnd::LNDBumpMap::width, lnd::LNDBumpMap::height, 1,
-		Format::R8, Wrapping::ClampEdge, _noiseMap.data(),
-		_noiseMap.size() * sizeof(_noiseMap[0]));
+	_textureNoiseMap->Create(lnd::LNDBumpMap::width, lnd::LNDBumpMap::height, 1, Format::R8, Wrapping::ClampEdge,
+	                         _noiseMap.data(), _noiseMap.size() * sizeof(_noiseMap[0]));
 
 	// read bump map into Texture2D
 	_textureBumpMap = std::make_unique<Texture2D>("LandIslandBumpMap");
-	_textureBumpMap->Create(lnd::LNDBumpMap::width, lnd::LNDBumpMap::height, 1,
-		Format::R8, Wrapping::ClampEdge, lnd.GetExtra().bump.texels,
-		sizeof(lnd.GetExtra().bump.texels));
+	_textureBumpMap->Create(lnd::LNDBumpMap::width, lnd::LNDBumpMap::height, 1, Format::R8, Wrapping::ClampEdge,
+	                        lnd.GetExtra().bump.texels, sizeof(lnd.GetExtra().bump.texels));
 
 	// build the meshes (we could move this elsewhere)
 	for (auto& block : _landBlocks) block.BuildMesh(*this);
