@@ -119,8 +119,8 @@ int WriteFile(const Arguments::Write& args)
 	std::string warn;
 
 	// TODO (bwrsandman): Extract animation from gltf
-	char name[] = "TODO";
-	memcpy(anm.GetHeader().name, name, sizeof(name));
+	const std::string name = "TODO";
+	memcpy(anm.GetHeader().name, name.c_str(), std::min(sizeof(anm.GetHeader().name), name.length()));
 	anm.GetHeader().frame_count = 0;
 	anm.GetHeader().animation_duration = 0;
 	anm.Write(args.outFilename);

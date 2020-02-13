@@ -4,7 +4,6 @@ set(LNDTOOL
 
 source_group(apps\\lndtool FILES ${LNDTOOL})
 
-# set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=-*,readability-*)
 add_executable(lndtool ${LNDTOOL})
 
 target_link_libraries(lndtool
@@ -12,6 +11,11 @@ target_link_libraries(lndtool
 		cxxopts::cxxopts
 		lnd
 )
+
+# FIXME(bwrsandman) MSVC is throwing false errors about exceptions being disabled
+if (NOT MSVC AND CLANG_TIDY)
+	set_target_properties(lndtool PROPERTIES CXX_CLANG_TIDY ${CLANG_TIDY})
+endif()
 
 if(MSVC)
 	target_compile_options(lndtool PRIVATE /W4 /WX)

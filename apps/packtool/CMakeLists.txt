@@ -4,7 +4,6 @@ set(PACKTOOL
 
 source_group(apps\\packtool FILES ${PACKTOOL})
 
-# set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=-*,readability-*)
 add_executable(packtool ${PACKTOOL})
 
 target_link_libraries(packtool
@@ -12,6 +11,11 @@ target_link_libraries(packtool
 		cxxopts::cxxopts
 		pack
 )
+
+# FIXME(bwrsandman) MSVC is throwing false errors about exceptions being disabled
+if (NOT MSVC AND CLANG_TIDY)
+	set_target_properties(packtool PROPERTIES CXX_CLANG_TIDY ${CLANG_TIDY})
+endif()
 
 if(MSVC)
 	target_compile_options(packtool PRIVATE /W4 /WX)
