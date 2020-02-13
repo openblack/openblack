@@ -135,10 +135,10 @@ int PrintBlocks(openblack::lnd::LNDFile& lnd)
 		};
 		for (auto& cell : block.cells)
 		{
-			std::printf(
-			    "    %u: r %u, g %u, b %u, luminosity %u, altitude %u, saveColor %u, country %u properties %s flags 0x%02X\n",
-			    j++, cell.r, cell.g, cell.b, cell.luminosity, cell.altitude, cell.saveColor, cell.properties.country,
-			    flagToStr(cell.properties).c_str(), cell.flags);
+			std::printf("    %u: r %u, g %u, b %u, luminosity %u, altitude %u, saveColor %u, country %u properties %s "
+			            "flags 0x%02X\n",
+			            j++, cell.r, cell.g, cell.b, cell.luminosity, cell.altitude, cell.saveColor, cell.properties.country,
+			            flagToStr(cell.properties).c_str(), cell.flags);
 		}
 		std::printf("index: %u\n", block.index);
 		std::printf("mapX: %f\n", block.mapX);
