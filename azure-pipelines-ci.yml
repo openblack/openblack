@@ -56,6 +56,7 @@ jobs:
         BuildConfiguration: Release
 
   steps:
+  - template: azure-pipelines/templates/git-rebase.yml
   - template: azure-pipelines/templates/windows-dependencies.yml
     parameters:
       BuildPlatform: $(BuildPlatform)
@@ -90,6 +91,7 @@ jobs:
   container: $[ variables['containerImage'] ]
 
   steps:
+  - template: azure-pipelines/templates/git-rebase.yml
   - template: azure-pipelines/templates/linux-build.yml
     parameters:
       BuildConfiguration: $(BuildConfiguration)

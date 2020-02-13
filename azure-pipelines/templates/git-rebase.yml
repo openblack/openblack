@@ -1,0 +1,9 @@
+steps:
+# Rebase to target branch SYSTEM_PULLREQUEST_TARGETBRANCH for each PR.
+# Then as long as the PR applies cleanly we can validate it won't break master.
+- bash: |
+    git config user.email 'ci@openblack.dev'
+    git config user.name 'openblack'
+    git rebase origin/${SYSTEM_PULLREQUEST_TARGETBRANCH}
+  displayName: 'Rebase to target branch'
+  condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
