@@ -1,6 +1,7 @@
 ---
 Checks: >-
   -*,
+  clang-analyzer-*,
   modernize-*,
   -modernize-use-equals-default,
   -modernize-use-trailing-return-type,
