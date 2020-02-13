@@ -134,13 +134,13 @@ struct imemstream: virtual membuf, public std::istream
 
 struct PackBlockHeader
 {
-	static constexpr uint32_t blockNameSize = 32;
-	char blockName[blockNameSize];
+	static constexpr uint32_t blockNameSize = 0x20;
+	std::array<char, blockNameSize> blockName;
 	uint32_t blockSize;
 };
 
 /// Magic Key Jean-Claude Cottier
-constexpr const char kBlockMagic[4] = {'M', 'K', 'J', 'C'};
+constexpr const std::array<char, 4> kBlockMagic = {'M', 'K', 'J', 'C'};
 } // namespace
 
 /// Error handling
@@ -168,15 +168,15 @@ void PackFile::ReadBlocks()
 		input.seekg(0);
 	}
 
-	char magic[sizeof(kMagic)];
-	if (fsize < sizeof(magic) + sizeof(PackBlockHeader))
+	std::array<char, kMagic.size()> magic;
+	if (fsize < magic.size() + sizeof(PackBlockHeader))
 	{
 		Fail("File too small to be a valid Pack file.");
 	}
 
 	// First 8 bytes
-	input.read(reinterpret_cast<char*>(&magic), sizeof(magic));
-	if (std::memcmp(&magic, kMagic, sizeof(magic)) != 0)
+	input.read(magic.data(), magic.size());
+	if (std::memcmp(magic.data(), kMagic.data(), magic.size()) != 0)
 	{
 		Fail("Unrecognized Pack header");
 	}
@@ -191,13 +191,13 @@ void PackFile::ReadBlocks()
 	{
 		input.read(reinterpret_cast<char*>(&header), sizeof(PackBlockHeader));
 
-		if (_blocks.count(header.blockName) > 0)
+		if (_blocks.count(header.blockName.data()) > 0)
 		{
-			Fail(std::string("Duplicate block name: ") + header.blockName);
+			Fail(std::string("Duplicate block name: ") + header.blockName.data());
 		}
 
-		_blocks[std::string(header.blockName)] = std::vector<uint8_t>(header.blockSize);
-		input.read(reinterpret_cast<char*>(_blocks[header.blockName].data()), header.blockSize);
+		_blocks[std::string(header.blockName.data())] = std::vector<uint8_t>(header.blockSize);
+		input.read(reinterpret_cast<char*>(_blocks[header.blockName.data()].data()), header.blockSize);
 	}
 
 	if (fsize < static_cast<std::size_t>(input.tellg()))
@@ -235,9 +235,9 @@ void PackFile::ResolveBodyBlock()
 	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
 
 	// Greetings Jean-Claude Cottier
-	char magic[sizeof(kBlockMagic)];
-	stream.read(magic, sizeof(magic));
-	if (std::memcmp(&magic, kBlockMagic, sizeof(magic)) != 0)
+	std::array<char, kBlockMagic.size()> magic;
+	stream.read(magic.data(), magic.size());
+	if (std::memcmp(magic.data(), kBlockMagic.data(), magic.size()) != 0)
 	{
 		Fail("Unrecognized Body Block header");
 	}
@@ -254,18 +254,18 @@ void PackFile::ExtractTexturesFromBlock()
 {
 	G3DTextureHeader header;
 	constexpr uint32_t blockNameSize = 0x20;
-	char blockName[blockNameSize];
+	std::array<char, blockNameSize> blockName;
 	for (const auto& item : _infoBlockLookup)
 	{
 		// Convert int id to string representation as hexadecimal key
-		std::snprintf(blockName, sizeof(blockName), "%x", item.blockId);
+		std::snprintf(blockName.data(), blockName.size(), "%x", item.blockId);
 
-		if (!HasBlock(blockName))
+		if (!HasBlock(blockName.data()))
 		{
-			Fail(std::string("Required texture block \"") + blockName + "\" missing.");
+			Fail(std::string("Required texture block \"") + blockName.data() + "\" missing.");
 		}
 
-		auto stream = GetBlockAsStream(blockName);
+		auto stream = GetBlockAsStream(blockName.data());
 
 		stream->read(reinterpret_cast<char*>(&header), sizeof(header));
 		std::vector<uint8_t> dds(header.size);
@@ -276,7 +276,7 @@ void PackFile::ExtractTexturesFromBlock()
 			Fail("Texture block id is not the same as block id");
 		}
 
-		if (_textures.count(blockName) > 0)
+		if (_textures.count(blockName.data()) > 0)
 		{
 			Fail("Duplicate texture extracted");
 		}
@@ -315,7 +315,7 @@ void PackFile::ExtractTexturesFromBlock()
 		std::vector<uint8_t> dssTexels(ddsHeader.pitchOrLinearSize);
 		ddsStream.read(reinterpret_cast<char*>(dssTexels.data()), dssTexels.size());
 
-		_textures[blockName] = {header, ddsHeader, dssTexels};
+		_textures[blockName.data()] = {header, ddsHeader, dssTexels};
 	}
 }
 
@@ -328,17 +328,17 @@ void PackFile::ExtractAnimationsFromBlock()
 	constexpr uint32_t blockNameSize = 0x20;
 	constexpr uint32_t animationHeaderSize = 0x54;
 
-	char blockName[blockNameSize];
+	std::array<char, blockNameSize> blockName;
 	_animations.resize(_bodyBlockLookup.size());
 	for (uint32_t i = 0; i < _bodyBlockLookup.size(); ++i)
 	{
-		snprintf(blockName, blockNameSize, "Julien%d", i);
-		if (!HasBlock(blockName))
+		snprintf(blockName.data(), blockNameSize, "Julien%d", i);
+		if (!HasBlock(blockName.data()))
 		{
-			Fail(std::string("Required texture block \"") + blockName + "\" missing.");
+			Fail(std::string("Required texture block \"") + blockName.data() + "\" missing.");
 		}
 
-		auto animationData = GetBlock(blockName);
+		auto animationData = GetBlock(blockName.data());
 		_animations[i].resize(animationHeaderSize + animationData.size());
 
 		stream.seekg(_bodyBlockLookup[i].offset);
@@ -357,9 +357,9 @@ void PackFile::ResolveMeshBlock()
 
 	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
 	// Greetings Jean-Claude Cottier
-	char magic[sizeof(kBlockMagic)];
-	stream.read(magic, sizeof(magic));
-	if (std::memcmp(&magic, kBlockMagic, sizeof(magic)) != 0)
+	std::array<char, kBlockMagic.size()> magic;
+	stream.read(magic.data(), magic.size());
+	if (std::memcmp(magic.data(), kBlockMagic.data(), magic.size()) != 0)
 	{
 		Fail("Unrecognized Mesh Block header");
 	}
@@ -383,13 +383,13 @@ void PackFile::WriteBlocks(std::ostream& stream) const
 	assert(!_isLoaded);
 
 	// Magic number
-	stream.write(kMagic, sizeof(kMagic));
+	stream.write(kMagic.data(), kMagic.size());
 
 	PackBlockHeader header;
 
 	for (auto& [name, contents] : _blocks)
 	{
-		std::snprintf(header.blockName, sizeof(header.blockName), "%s", name.c_str());
+		std::snprintf(header.blockName.data(), header.blockName.size(), "%s", name.c_str());
 		header.blockSize = static_cast<uint32_t>(contents.size() * sizeof(contents[0]));
 
 		stream.write(reinterpret_cast<const char*>(&header), sizeof(header));
@@ -426,10 +426,10 @@ void PackFile::CreateMeshBlock()
 	std::vector<uint8_t> contents;
 
 	auto meshCount = static_cast<uint32_t>(_meshes.size());
-	contents.resize(sizeof(kBlockMagic) + sizeof(meshCount));
+	contents.resize(kBlockMagic.size() + sizeof(meshCount));
 
-	std::memcpy(contents.data() + offset, kBlockMagic, sizeof(kBlockMagic));
-	offset += sizeof(kBlockMagic);
+	std::memcpy(contents.data() + offset, kBlockMagic.data(), kBlockMagic.size());
+	offset += kBlockMagic.size();
 	std::memcpy(contents.data() + offset, &meshCount, sizeof(meshCount));
 	offset += sizeof(meshCount);
 

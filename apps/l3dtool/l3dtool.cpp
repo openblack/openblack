@@ -636,9 +636,9 @@ int WriteFile(const Arguments::Write& args)
 				std::function<void(const std::vector<int>&, uint32_t parent)> buildJoints;
 				buildJoints = [&gltf, &bones, &buildJoints](const std::vector<int>& children, uint32_t parentId) {
 					openblack::l3d::L3DBone* leftSibbling = nullptr;
-					for (uint32_t i = 0; i < children.size(); ++i)
+					for (const auto& child : children)
 					{
-						auto& gltfJoint = gltf.nodes[children[i]];
+						auto& gltfJoint = gltf.nodes[child];
 
 						auto id = static_cast<uint32_t>(bones.size());
 						bones.emplace_back();
@@ -710,11 +710,11 @@ int WriteFile(const Arguments::Write& args)
 				std::vector<float> values;
 				uint8_t type;
 			};
-			attribute_t attributes[3] = {
+			std::array<attribute_t, 3> attributes = {{
 			    {"POSITION", {}, 0},
 			    {"TEXCOORD_0", {}, 0},
 			    {"NORMAL", {}, 0},
-			};
+			}};
 			uint32_t count = 0;
 			for (auto& attribute : attributes)
 			{

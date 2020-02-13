@@ -6,7 +6,6 @@ set(ANMTOOL
 
 source_group(apps\\anmtool FILES ${ANMTOOL})
 
-# set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=-*,readability-*)
 add_executable(anmtool ${ANMTOOL})
 
 target_link_libraries(anmtool
@@ -14,6 +13,11 @@ target_link_libraries(anmtool
 		cxxopts::cxxopts
 		anm
 )
+
+# FIXME(bwrsandman) MSVC is throwing false errors about exceptions being disabled
+if (NOT MSVC AND CLANG_TIDY)
+	set_target_properties(anmtool PROPERTIES CXX_CLANG_TIDY ${CLANG_TIDY})
+endif()
 
 if(MSVC)
 	target_compile_options(anmtool PRIVATE /W4 /WX)
