@@ -29,6 +29,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/intersect.hpp>
+#include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/spdlog.h>
 
 #include <cstdint>
@@ -53,7 +54,12 @@ Game::Game(Arguments&& args)
     , _frameCount(0)
     , _intersection()
 {
-	spdlog::set_level(spdlog::level::debug);
+	if (!args.logFile.empty() && args.logFile != "stdout")
+	{
+		auto logger = spdlog::basic_logger_mt("default_logger", args.logFile);
+		spdlog::set_default_logger(logger);
+	}
+	spdlog::set_level(static_cast<spdlog::level::level_enum>(spdlog::level::debug + args.logLevel));
 	sInstance = this;
 
 	std::string binaryPath = fs::path {args.executablePath}.parent_path().generic_string();
