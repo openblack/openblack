@@ -54,6 +54,8 @@ struct Arguments
 	std::string gamePath;
 	float scale;
 	uint32_t numFramesToSimulate;
+	std::string logFile;
+	uint32_t logLevel;
 };
 
 class Game
