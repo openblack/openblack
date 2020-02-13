@@ -228,6 +228,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 {
 	cxxopts::Options options("g3dtool", "Inspect and extract files from LionHead G3D files.");
 
+	// clang-format off
 	options.add_options()
 		("h,help", "Display this help message.")
 		("l,list-blocks", "List block statistics.")
@@ -241,7 +242,8 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		("w,write", "Create Mesh Pack.", cxxopts::value<std::string>())
 		("mesh-pack-files", "G3D Mesh Pack Files.", cxxopts::value<std::vector<std::string>>())
 	;
-	options.parse_positional({ "mesh-pack-files" });
+	// clang-format on
+	options.parse_positional({"mesh-pack-files"});
 	options.positional_help("mesh-pack-files...");
 
 	try

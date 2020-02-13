@@ -50,7 +50,6 @@ SpaceBeforeRangeBasedForLoopColon: true
 SpacesBeforeTrailingComments: 1
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
-Standard: c++17
 TabWidth: 4
 UseTab: ForIndentation
 ...

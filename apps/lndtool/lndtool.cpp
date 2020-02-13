@@ -365,12 +365,14 @@ int WriteFile(const Arguments::Write& args)
 		}
 		if (fsize != sizeof(openblack::lnd::LNDMaterial::texels))
 		{
+			// clang-format off
 			std::cerr << "File " << filename
 			          << " is not the right size to be a "
 			          << openblack::lnd::LNDMaterial::width << "x"
 			          << openblack::lnd::LNDMaterial::height
 			          << " RGB5A1 texture: size should be "
 			          << fsize << std::endl;
+			// clang-format on
 			return EXIT_FAILURE;
 		}
 		stream.read(reinterpret_cast<char*>(material.texels), fsize);
@@ -394,12 +396,14 @@ int WriteFile(const Arguments::Write& args)
 		}
 		if (fsize != sizeof(openblack::lnd::LNDBumpMap::texels))
 		{
+			// clang-format off
 			std::cerr << "File " << args.noiseMapFile
 			          << " is not the right size to be a "
 			          << openblack::lnd::LNDBumpMap::width << "x"
 			          << openblack::lnd::LNDBumpMap::height
 			          << " R8 texture: size should be "
 			          << fsize << std::endl;
+			// clang-format on
 			return EXIT_FAILURE;
 		}
 		stream.read(reinterpret_cast<char*>(map.texels), fsize);
@@ -421,12 +425,14 @@ int WriteFile(const Arguments::Write& args)
 		}
 		if (fsize != sizeof(openblack::lnd::LNDBumpMap::texels))
 		{
+			// clang-format off
 			std::cerr << "File " << args.bumpMapFile
 			          << " is not the right size to be a "
 			          << openblack::lnd::LNDBumpMap::width << "x"
 			          << openblack::lnd::LNDBumpMap::height
 			          << " R8 texture: size should be "
 			          << fsize << std::endl;
+			// clang-format on
 			return EXIT_FAILURE;
 		}
 		stream.read(reinterpret_cast<char*>(map.texels), fsize);
@@ -442,6 +448,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 {
 	cxxopts::Options options("lndtool", "Inspect and extract files from LionHead LND files.");
 
+	// clang-format off
 	options.add_options()
 		("h,help", "Display this help message.")
 		("subcommand", "Subcommand.", cxxopts::value<std::string>())
@@ -463,6 +470,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		("bump-map", "File with R8 bytes for bump map.", cxxopts::value<std::string>())
 		("material-array", "Files with RGB5A1 bytes for material array (comma-separated).", cxxopts::value<std::vector<std::string>>())
 	;
+	// clang-format on
 
 	options.parse_positional({"subcommand"});
 
