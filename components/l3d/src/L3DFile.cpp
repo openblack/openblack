@@ -125,7 +125,7 @@
  *
  */
 
-#include <l3d_file.h>
+#include <L3DFile.h>
 
 #include <cassert>
 #include <cstring>
