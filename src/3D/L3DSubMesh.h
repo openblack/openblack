@@ -12,9 +12,9 @@
 #include "../Graphics/RenderPass.h"
 #include "AxisAlignedBoundingBox.h"
 
+#include <L3DFile.h>
 #include <bgfx/bgfx.h>
 #include <glm/fwd.hpp>
-#include <l3d_file.h>
 
 #include <cstdint>
 #include <memory>
