@@ -54,6 +54,7 @@ int ListBlocks(openblack::g3d::G3DFile& g3d)
 	std::printf("%u blocks\n", static_cast<uint32_t>(blocks.size()));
 	std::printf("%u textures\n", static_cast<uint32_t>(g3d.GetTextures().size()));
 	std::printf("%u meshes\n", static_cast<uint32_t>(g3d.GetMeshes().size()));
+	std::printf("%u animations\n", static_cast<uint32_t>(g3d.GetAnimations().size()));
 	uint32_t i = 0;
 	for (auto& [name, data] : blocks)
 	{
@@ -91,6 +92,20 @@ int ViewInfo(openblack::g3d::G3DFile& g3d)
 	return EXIT_SUCCESS;
 }
 
+int ViewBody(openblack::g3d::G3DFile& g3d)
+{
+	const auto& lookup = g3d.GetBodyBlockLookup();
+
+	std::printf("file: %s\n", g3d.GetFilename().c_str());
+
+	for (uint32_t i = 0; i < lookup.size(); ++i)
+	{
+		std::printf("block: Julien%-3u offset: %4x unknown: %u\n", i, lookup[i].offset, lookup[i].unknown);
+	}
+
+	return EXIT_SUCCESS;
+}
+
 int ViewTextures(openblack::g3d::G3DFile& g3d)
 {
 	auto& textures = g3d.GetTextures();
@@ -115,6 +130,21 @@ int ViewMeshes(openblack::g3d::G3DFile& g3d)
 	for (auto& mesh : meshes)
 	{
 		std::printf("mesh #%-5d size %u\n", i++, static_cast<uint32_t>(mesh.size()));
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int ViewAnimations(openblack::g3d::G3DFile& g3d)
+{
+	auto& animations = g3d.GetAnimations();
+
+	std::printf("file: %s\n", g3d.GetFilename().c_str());
+
+	uint32_t i = 0;
+	for (auto& animation : animations)
+	{
+		std::printf("animation #%-5d %-32s size %u\n", i++, animation.data(), static_cast<uint32_t>(animation.size()));
 	}
 
 	return EXIT_SUCCESS;
@@ -193,6 +223,29 @@ int ViewMesh(openblack::g3d::G3DFile& g3d, uint32_t index, const std::string& ou
 	return EXIT_SUCCESS;
 }
 
+int ViewAnimation(openblack::g3d::G3DFile& g3d, uint32_t index, const std::string& outFilename)
+{
+	if (index > g3d.GetAnimations().size())
+	{
+		return EXIT_FAILURE;
+	}
+
+	const auto& animation = g3d.GetAnimation(index);
+
+	std::printf("file: %s\n", g3d.GetFilename().c_str());
+	std::printf("animation: %-32s %u bytes\n", animation.data(), static_cast<uint32_t>(animation.size()));
+
+	if (!outFilename.empty())
+	{
+		std::ofstream output(outFilename, std::ios::binary);
+		output.write(reinterpret_cast<const char*>(animation.data()), animation.size() * sizeof(animation[0]));
+
+		std::printf("\nANM file writen to %s\n", outFilename.c_str());
+	}
+
+	return EXIT_SUCCESS;
+}
+
 int WriteFile(const std::string& outFilename)
 {
 	openblack::g3d::G3DFile g3d;
@@ -213,14 +266,17 @@ struct Arguments
 		Info,
 		Textures,
 		Meshes,
+		Animations,
 		Texture,
 		Mesh,
+		Animation,
+		Body,
 		Write,
 	};
 	std::vector<std::string> filenames;
 	Mode mode;
 	std::string block;
-	uint32_t meshId;
+	uint32_t blockId;
 	std::string outFilename;
 };
 
@@ -234,17 +290,20 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		("l,list-blocks", "List block statistics.")
 		("b,view-bytes", "View raw byte content of block.", cxxopts::value<std::string>())
 		("i,info-block", "List INFO block statistics.")
+		("B,body-block", "List Body block statistics.")
 		("M,meshes-block", "List MESHES block statistics.")
 		("m,mesh", "List mesh statistics.", cxxopts::value<uint32_t>())
 		("T,texture-block", "View texture block statistics.")
 		("t,texture", "View texture statistics.", cxxopts::value<std::string>())
-		("e,extract", "Extract contents of a block (texture) to filename.", cxxopts::value<std::string>())
+		("A,animation-block", "List animation block statistics.")
+		("a,animation", "List animation statistics.", cxxopts::value<uint32_t>())
+		("e,extract", "Extract contents of a block to filename.", cxxopts::value<std::string>())
 		("w,write", "Create Mesh Pack.", cxxopts::value<std::string>())
-		("mesh-pack-files", "G3D Mesh Pack Files.", cxxopts::value<std::vector<std::string>>())
+		("pack-files", "G3D Mesh Pack Files.", cxxopts::value<std::vector<std::string>>())
 	;
 	// clang-format on
-	options.parse_positional({"mesh-pack-files"});
-	options.positional_help("mesh-pack-files...");
+	options.parse_positional({"pack-files"});
+	options.positional_help("pack-files...");
 
 	try
 	{
@@ -263,39 +322,62 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			return true;
 		}
 		// Following this, all args require positional arguments
-		if (result["mesh-pack-files"].count() == 0)
+		if (result["pack-files"].count() == 0)
 		{
-			throw cxxopts::missing_argument_exception("mesh-pack-files");
+			throw cxxopts::missing_argument_exception("pack-files");
 		}
 		if (result["list-blocks"].count() > 0)
 		{
 			args.mode = Arguments::Mode::List;
-			args.filenames = result["mesh-pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::string>>();
 			return true;
 		}
 		if (result["view-bytes"].count() > 0)
 		{
 			args.mode = Arguments::Mode::Bytes;
-			args.filenames = result["mesh-pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::string>>();
 			args.block = result["view-bytes"].as<std::string>();
 			return true;
 		}
 		if (result["info-block"].count() > 0)
 		{
 			args.mode = Arguments::Mode::Info;
-			args.filenames = result["mesh-pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			return true;
+		}
+		if (result["body-block"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Body;
+			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			return true;
+		}
+		if (result["animation-block"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Animations;
+			args.filenames = result["pack-files"].as<std::vector<std::string>>();
 			return true;
 		}
 		if (result["meshes-block"].count() > 0)
 		{
 			args.mode = Arguments::Mode::Meshes;
-			args.filenames = result["mesh-pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::string>>();
 			return true;
 		}
 		if (result["texture-block"].count() > 0)
 		{
 			args.mode = Arguments::Mode::Textures;
-			args.filenames = result["mesh-pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			return true;
+		}
+		if (result["animation"].count() > 0)
+		{
+			if (result["extract"].count() > 0)
+			{
+				args.outFilename = result["extract"].as<std::string>();
+			}
+			args.mode = Arguments::Mode::Animation;
+			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			args.blockId = result["animation"].as<uint32_t>();
 			return true;
 		}
 		if (result["mesh"].count() > 0)
@@ -305,8 +387,8 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 				args.outFilename = result["extract"].as<std::string>();
 			}
 			args.mode = Arguments::Mode::Mesh;
-			args.filenames = result["mesh-pack-files"].as<std::vector<std::string>>();
-			args.meshId = result["mesh"].as<uint32_t>();
+			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			args.blockId = result["mesh"].as<uint32_t>();
 			return true;
 		}
 		if (result["texture"].count() > 0)
@@ -316,7 +398,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 				args.outFilename = result["extract"].as<std::string>();
 			}
 			args.mode = Arguments::Mode::Texture;
-			args.filenames = result["mesh-pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::string>>();
 			args.block = result["texture"].as<std::string>();
 			return true;
 		}
@@ -364,17 +446,26 @@ int main(int argc, char* argv[])
 			case Arguments::Mode::Info:
 				return_code |= ViewInfo(g3d);
 				break;
+			case Arguments::Mode::Body:
+				return_code |= ViewBody(g3d);
+				break;
 			case Arguments::Mode::Textures:
 				return_code |= ViewTextures(g3d);
 				break;
 			case Arguments::Mode::Meshes:
 				return_code |= ViewMeshes(g3d);
 				break;
+			case Arguments::Mode::Animations:
+				return_code |= ViewAnimations(g3d);
+				break;
 			case Arguments::Mode::Texture:
 				return_code |= ViewTexture(g3d, args.block, args.outFilename);
 				break;
 			case Arguments::Mode::Mesh:
-				return_code |= ViewMesh(g3d, args.meshId, args.outFilename);
+				return_code |= ViewMesh(g3d, args.blockId, args.outFilename);
+				break;
+			case Arguments::Mode::Animation:
+				return_code |= ViewAnimation(g3d, args.blockId, args.outFilename);
 				break;
 			default:
 				return_code = EXIT_FAILURE;

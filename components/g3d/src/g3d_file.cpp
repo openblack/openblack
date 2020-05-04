@@ -6,6 +6,7 @@
  *
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
+// TODO(bwrsandman): rename to packfile?
 
 /*
  *
@@ -121,7 +122,8 @@ struct G3DBlockHeader
 	uint32_t blockSize;
 };
 
-constexpr const char kMeshMagic[4] = {'M', 'K', 'J', 'C'};
+/// Magic Key Jean-Claude Cottier
+constexpr const char kBlockMagic[4] = {'M', 'K', 'J', 'C'};
 } // namespace
 
 /// Error handling
@@ -205,10 +207,36 @@ void G3DFile::ResolveInfoBlock()
 	stream.read(reinterpret_cast<char*>(_infoBlockLookup.data()), _infoBlockLookup.size() * sizeof(_infoBlockLookup[0]));
 }
 
-void G3DFile::ExtractTextureFromBlock()
+void G3DFile::ResolveBodyBlock()
+{
+	if (!HasBlock("Body"))
+	{
+		Fail("no Body block in anim pack");
+	}
+
+	auto data = GetBlock("Body");
+	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
+
+	// Greetings Jean-Claude Cottier
+	char magic[sizeof(kBlockMagic)];
+	stream.read(magic, sizeof(magic));
+	if (std::memcmp(&magic, kBlockMagic, sizeof(magic)) != 0)
+	{
+		Fail("Unrecognized Body Block header");
+	}
+
+	uint32_t totalAnimations;
+	stream.read(reinterpret_cast<char*>(&totalAnimations), sizeof(uint32_t));
+
+	// Read lookup offsets
+	_bodyBlockLookup.resize(totalAnimations);
+	stream.read(reinterpret_cast<char*>(_bodyBlockLookup.data()), _bodyBlockLookup.size() * sizeof(_bodyBlockLookup[0]));
+}
+
+void G3DFile::ExtractTexturesFromBlock()
 {
 	G3DTextureHeader header;
-	constexpr uint32_t blockNameSize = 32;
+	constexpr uint32_t blockNameSize = 0x20;
 	char blockName[blockNameSize];
 	for (const auto& item : _infoBlockLookup)
 	{
@@ -254,6 +282,34 @@ void G3DFile::ExtractTextureFromBlock()
 	}
 }
 
+void G3DFile::ExtractAnimationsFromBlock()
+{
+	auto data = GetBlock("Body");
+	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
+
+	// Read lookup
+	constexpr uint32_t blockNameSize = 0x20;
+	constexpr uint32_t animationHeaderSize = 0x54;
+
+	char blockName[blockNameSize];
+	_animations.resize(_bodyBlockLookup.size());
+	for (uint32_t i = 0; i < _bodyBlockLookup.size(); ++i)
+	{
+		snprintf(blockName, blockNameSize, "Julien%d", i);
+		if (!HasBlock(blockName))
+		{
+			Fail(std::string("Required texture block \"") + blockName + "\" missing.");
+		}
+
+		auto animationData = GetBlock(blockName);
+		_animations[i].resize(animationHeaderSize + animationData.size());
+
+		stream.seekg(_bodyBlockLookup[i].offset);
+		stream.read(reinterpret_cast<char*>(_animations[i].data()), animationHeaderSize);
+		memcpy(_animations[i].data() + animationHeaderSize, animationData.data(), animationData.size());
+	}
+}
+
 void G3DFile::ResolveMeshBlock()
 {
 	if (!HasBlock("MESHES"))
@@ -264,9 +320,9 @@ void G3DFile::ResolveMeshBlock()
 
 	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
 	// Greetings Jean-Claude Cottier
-	char magic[sizeof(kMeshMagic)];
+	char magic[sizeof(kBlockMagic)];
 	stream.read(magic, sizeof(magic));
-	if (std::memcmp(&magic, kMeshMagic, sizeof(magic)) != 0)
+	if (std::memcmp(&magic, kBlockMagic, sizeof(magic)) != 0)
 	{
 		Fail("Unrecognized Mesh Block header");
 	}
@@ -323,10 +379,10 @@ void G3DFile::CreateMeshBlock()
 	std::vector<uint8_t> contents;
 
 	auto meshCount = static_cast<uint32_t>(_meshes.size());
-	contents.resize(sizeof(kMeshMagic) + sizeof(meshCount));
+	contents.resize(sizeof(kBlockMagic) + sizeof(meshCount));
 
-	std::memcpy(contents.data() + offset, kMeshMagic, sizeof(kMeshMagic));
-	offset += sizeof(kMeshMagic);
+	std::memcpy(contents.data() + offset, kBlockMagic, sizeof(kBlockMagic));
+	offset += sizeof(kBlockMagic);
 	std::memcpy(contents.data() + offset, &meshCount, sizeof(meshCount));
 	offset += sizeof(meshCount);
 
@@ -380,9 +436,19 @@ void G3DFile::Open(const std::string& file)
 {
 	_filename = file;
 	ReadBlocks();
-	ResolveInfoBlock();
-	ExtractTextureFromBlock();
-	ResolveMeshBlock();
+	// Mesh pack
+	if (HasBlock("INFO"))
+	{
+		ResolveInfoBlock();
+		ExtractTexturesFromBlock();
+		ResolveMeshBlock();
+	}
+	// Anim pack
+	if (HasBlock("Body"))
+	{
+		ResolveBodyBlock();
+		ExtractAnimationsFromBlock();
+	}
 	_isLoaded = true;
 }
 
