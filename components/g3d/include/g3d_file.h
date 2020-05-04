@@ -6,6 +6,7 @@
  *
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
+// TODO(bwrsandman): rename to packtool?
 
 #pragma once
 
@@ -25,6 +26,13 @@ struct G3DInfoBlockLookup
 	uint32_t unknown;
 };
 static_assert(sizeof(G3DInfoBlockLookup) == 8);
+
+struct G3DBodyBlockLookup
+{
+	uint32_t offset;
+	uint32_t unknown; // TODO
+};
+static_assert(sizeof(G3DBodyBlockLookup) == 8);
 
 struct G3DTextureHeader
 {
@@ -78,7 +86,7 @@ struct G3DTexture
 };
 
 /**
-  This class is used to read LionHead Mesh Packs or G3Ds.
+  This class is used to read LionHead Packs files
  */
 class G3DFile
 {
@@ -92,10 +100,13 @@ protected:
 
 	std::map<std::string, std::vector<uint8_t>> _blocks;
 	std::vector<G3DInfoBlockLookup> _infoBlockLookup;
+	std::vector<G3DBodyBlockLookup> _bodyBlockLookup;
 	/// Metadata and DDS formatted texture data
 	std::map<std::string, G3DTexture> _textures;
 	/// Bytes of l3d meshes
 	std::vector<std::vector<uint8_t>> _meshes;
+	/// Bytes of anm meshes
+	std::vector<std::vector<uint8_t>> _animations;
 
 	/// Error handling
 	void Fail(const std::string& msg);
@@ -115,11 +126,17 @@ protected:
 	/// Write blocks to file
 	virtual void WriteBlocks(std::ostream& stream) const;
 
-	/// Parse Info Block
+	/// Parse Info Block for mesh pack
 	virtual void ResolveInfoBlock();
 
-	/// Extract Textures from all Blocks
-	virtual void ExtractTextureFromBlock();
+	/// Parse Body Block for anim pack
+	virtual void ResolveBodyBlock();
+
+	/// Extract Textures from all Blocks named in INFO Block
+	virtual void ExtractTexturesFromBlock();
+
+	/// Extract Animations from all Blocks named in Body Block
+	virtual void ExtractAnimationsFromBlock();
 
 	/// Parse Info Block
 	virtual void ResolveMeshBlock();
@@ -141,10 +158,13 @@ public:
 	[[nodiscard]] const std::vector<uint8_t>& GetBlock(const std::string& name) const { return _blocks.at(name); }
 	[[nodiscard]] std::unique_ptr<std::istream> GetBlockAsStream(const std::string& name) const;
 	[[nodiscard]] const std::vector<G3DInfoBlockLookup>& GetInfoBlockLookup() const { return _infoBlockLookup; }
+	[[nodiscard]] const std::vector<G3DBodyBlockLookup>& GetBodyBlockLookup() const { return _bodyBlockLookup; }
 	[[nodiscard]] const std::map<std::string, G3DTexture>& GetTextures() const { return _textures; }
 	[[nodiscard]] const G3DTexture& GetTexture(const std::string& name) const { return _textures.at(name); }
 	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetMeshes() const { return _meshes; }
 	[[nodiscard]] const std::vector<uint8_t>& GetMesh(uint32_t index) const { return _meshes[index]; }
+	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetAnimations() const { return _animations; }
+	[[nodiscard]] const std::vector<uint8_t>& GetAnimation(uint32_t index) const { return _animations[index]; }
 };
 
 } // namespace openblack::g3d
