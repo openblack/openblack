@@ -17,7 +17,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include <lnd_file.h>
+#include <LNDFile.h>
 #include <stdexcept>
 
 using namespace openblack;
