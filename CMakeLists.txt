@@ -41,7 +41,7 @@ endif()
 # Dependencies: we search for config first, then module this helps package managers.
 if(CMAKE_VERSION VERSION_GREATER 3.15 OR CMAKE_VERSION VERSION_EQUAL 3.15)
   set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
-  
+
   find_package(spdlog 1.3.0 REQUIRED)
   find_package(glm REQUIRED)
   find_package(EnTT 3.3.0 CONFIG REQUIRED) # only available as a config
@@ -136,11 +136,13 @@ include(CMakeModules/Shaders.cmake)
 add_subdirectory(components/l3d)
 add_subdirectory(components/g3d)
 add_subdirectory(components/lnd)
+add_subdirectory(components/anm)
 add_subdirectory(components/ScriptLibrary)
 add_subdirectory(src)
 add_subdirectory(apps/l3dtool)
 add_subdirectory(apps/g3dtool)
 add_subdirectory(apps/lndtool)
+add_subdirectory(apps/anmtool)
 add_subdirectory(ci/mock)
 
 # Set openblack project as default startup project in Visual Studio
