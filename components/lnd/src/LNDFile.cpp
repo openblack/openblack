@@ -102,7 +102,7 @@
  * ------------------------ end of file ----------------------------------------
  */
 
-#include <lnd_file.h>
+#include <LNDFile.h>
 
 #include <cassert>
 #include <fstream>

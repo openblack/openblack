@@ -12,8 +12,8 @@
 #include "Graphics/VertexBuffer.h"
 #include "LandIsland.h"
 
+#include <LNDFile.h>
 #include <glm/gtc/type_ptr.hpp>
-#include <lnd_file.h>
 
 #include <cassert>
 
