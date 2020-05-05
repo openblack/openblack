@@ -7,7 +7,7 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#include <g3d_file.h>
+#include <G3DFile.h>
 
 #include <cstdlib>
 #include <cxxopts.hpp>
