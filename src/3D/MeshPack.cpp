@@ -16,7 +16,7 @@
 #include "Game.h"
 #include "Graphics/Texture2D.h"
 
-#include <g3d_file.h>
+#include <G3DFile.h>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>

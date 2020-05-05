@@ -63,7 +63,7 @@
  *
  */
 
-#include <g3d_file.h>
+#include <G3DFile.h>
 
 #include <cassert>
 #include <cstring>
