@@ -7,7 +7,7 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#include <G3DFile.h>
+#include <PackFile.h>
 
 #include <cstdlib>
 #include <cxxopts.hpp>
@@ -46,15 +46,15 @@ int PrintRawBytes(const void* data, std::size_t size)
 	return EXIT_SUCCESS;
 }
 
-int ListBlocks(openblack::g3d::G3DFile& g3d)
+int ListBlocks(openblack::pack::PackFile& pack)
 {
-	auto& blocks = g3d.GetBlocks();
+	auto& blocks = pack.GetBlocks();
 
-	std::printf("file: %s\n", g3d.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 	std::printf("%u blocks\n", static_cast<uint32_t>(blocks.size()));
-	std::printf("%u textures\n", static_cast<uint32_t>(g3d.GetTextures().size()));
-	std::printf("%u meshes\n", static_cast<uint32_t>(g3d.GetMeshes().size()));
-	std::printf("%u animations\n", static_cast<uint32_t>(g3d.GetAnimations().size()));
+	std::printf("%u textures\n", static_cast<uint32_t>(pack.GetTextures().size()));
+	std::printf("%u meshes\n", static_cast<uint32_t>(pack.GetMeshes().size()));
+	std::printf("%u animations\n", static_cast<uint32_t>(pack.GetAnimations().size()));
 	uint32_t i = 0;
 	for (auto& [name, data] : blocks)
 	{
@@ -65,24 +65,24 @@ int ListBlocks(openblack::g3d::G3DFile& g3d)
 	return EXIT_SUCCESS;
 }
 
-int ViewBytes(openblack::g3d::G3DFile& g3d, const std::string& name)
+int ViewBytes(openblack::pack::PackFile& pack, const std::string& name)
 {
-	auto& block = g3d.GetBlock(name);
+	auto& block = pack.GetBlock(name);
 
-	std::printf("file: %s, block %s\n", g3d.GetFilename().c_str(), name.c_str());
+	std::printf("file: %s, block %s\n", pack.GetFilename().c_str(), name.c_str());
 
 	PrintRawBytes(block.data(), block.size() * sizeof(block[0]));
 
 	return EXIT_SUCCESS;
 }
 
-int ViewInfo(openblack::g3d::G3DFile& g3d)
+int ViewInfo(openblack::pack::PackFile& pack)
 {
-	using Lookup = openblack::g3d::G3DInfoBlockLookup;
-	auto lookup = g3d.GetInfoBlockLookup();
+	using Lookup = openblack::pack::InfoBlockLookup;
+	auto lookup = pack.GetInfoBlockLookup();
 	std::sort(lookup.begin(), lookup.end(), [](const Lookup& a, Lookup& b) { return a.blockId < b.blockId; });
 
-	std::printf("file: %s\n", g3d.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	for (auto& item : lookup)
 	{
@@ -92,11 +92,11 @@ int ViewInfo(openblack::g3d::G3DFile& g3d)
 	return EXIT_SUCCESS;
 }
 
-int ViewBody(openblack::g3d::G3DFile& g3d)
+int ViewBody(openblack::pack::PackFile& pack)
 {
-	const auto& lookup = g3d.GetBodyBlockLookup();
+	const auto& lookup = pack.GetBodyBlockLookup();
 
-	std::printf("file: %s\n", g3d.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	for (uint32_t i = 0; i < lookup.size(); ++i)
 	{
@@ -106,11 +106,11 @@ int ViewBody(openblack::g3d::G3DFile& g3d)
 	return EXIT_SUCCESS;
 }
 
-int ViewTextures(openblack::g3d::G3DFile& g3d)
+int ViewTextures(openblack::pack::PackFile& pack)
 {
-	auto& textures = g3d.GetTextures();
+	auto& textures = pack.GetTextures();
 
-	std::printf("file: %s\n", g3d.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	for (auto& [name, texture] : textures)
 	{
@@ -120,11 +120,11 @@ int ViewTextures(openblack::g3d::G3DFile& g3d)
 	return EXIT_SUCCESS;
 }
 
-int ViewMeshes(openblack::g3d::G3DFile& g3d)
+int ViewMeshes(openblack::pack::PackFile& pack)
 {
-	auto& meshes = g3d.GetMeshes();
+	auto& meshes = pack.GetMeshes();
 
-	std::printf("file: %s\n", g3d.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	uint32_t i = 0;
 	for (auto& mesh : meshes)
@@ -135,11 +135,11 @@ int ViewMeshes(openblack::g3d::G3DFile& g3d)
 	return EXIT_SUCCESS;
 }
 
-int ViewAnimations(openblack::g3d::G3DFile& g3d)
+int ViewAnimations(openblack::pack::PackFile& pack)
 {
-	auto& animations = g3d.GetAnimations();
+	auto& animations = pack.GetAnimations();
 
-	std::printf("file: %s\n", g3d.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	uint32_t i = 0;
 	for (auto& animation : animations)
@@ -150,11 +150,11 @@ int ViewAnimations(openblack::g3d::G3DFile& g3d)
 	return EXIT_SUCCESS;
 }
 
-int ViewTexture(openblack::g3d::G3DFile& g3d, const std::string& name, const std::string& outFilename)
+int ViewTexture(openblack::pack::PackFile& pack, const std::string& name, const std::string& outFilename)
 {
-	auto& texture = g3d.GetTexture(name);
+	auto& texture = pack.GetTexture(name);
 
-	std::printf("file: %s\n", g3d.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	std::printf("size: %u\n", static_cast<uint32_t>(texture.header.size));
 	std::printf("id: %u\n", static_cast<uint32_t>(texture.header.id));
@@ -200,16 +200,16 @@ int ViewTexture(openblack::g3d::G3DFile& g3d, const std::string& name, const std
 	return EXIT_SUCCESS;
 }
 
-int ViewMesh(openblack::g3d::G3DFile& g3d, uint32_t index, const std::string& outFilename)
+int ViewMesh(openblack::pack::PackFile& pack, uint32_t index, const std::string& outFilename)
 {
-	if (index > g3d.GetMeshes().size())
+	if (index > pack.GetMeshes().size())
 	{
 		return EXIT_FAILURE;
 	}
 
-	auto& mesh = g3d.GetMesh(index);
+	auto& mesh = pack.GetMesh(index);
 
-	std::printf("file: %s\n", g3d.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 	std::printf("mesh: %u bytes\n", static_cast<uint32_t>(mesh.size()));
 
 	if (!outFilename.empty())
@@ -223,16 +223,16 @@ int ViewMesh(openblack::g3d::G3DFile& g3d, uint32_t index, const std::string& ou
 	return EXIT_SUCCESS;
 }
 
-int ViewAnimation(openblack::g3d::G3DFile& g3d, uint32_t index, const std::string& outFilename)
+int ViewAnimation(openblack::pack::PackFile& pack, uint32_t index, const std::string& outFilename)
 {
-	if (index > g3d.GetAnimations().size())
+	if (index > pack.GetAnimations().size())
 	{
 		return EXIT_FAILURE;
 	}
 
-	const auto& animation = g3d.GetAnimation(index);
+	const auto& animation = pack.GetAnimation(index);
 
-	std::printf("file: %s\n", g3d.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 	std::printf("animation: %-32s %u bytes\n", animation.data(), static_cast<uint32_t>(animation.size()));
 
 	if (!outFilename.empty())
@@ -246,13 +246,26 @@ int ViewAnimation(openblack::g3d::G3DFile& g3d, uint32_t index, const std::strin
 	return EXIT_SUCCESS;
 }
 
-int WriteFile(const std::string& outFilename)
+int WriteMeshFile(const std::string& outFilename)
 {
-	openblack::g3d::G3DFile g3d;
+	openblack::pack::PackFile pack;
 
 	// TODO(bwrsandman): expand on this to create files with contents
+	// CreateTextureBlocks();  // TODO(bwrsandman): Implement CreateTextureBlocks
+	pack.CreateMeshBlock();
+	pack.CreateInfoBlock();
+	pack.Write(outFilename);
 
-	g3d.Write(outFilename);
+	return EXIT_SUCCESS;
+}
+
+int WriteAnimationFile(const std::string& outFilename)
+{
+	openblack::pack::PackFile pack;
+
+	// TODO(bwrsandman): expand on this to create files with contents
+	pack.CreateBodyBlock();
+	pack.Write(outFilename);
 
 	return EXIT_SUCCESS;
 }
@@ -271,7 +284,8 @@ struct Arguments
 		Mesh,
 		Animation,
 		Body,
-		Write,
+		WriteMeshPack,
+		WriteAnimationPack,
 	};
 	std::vector<std::string> filenames;
 	Mode mode;
@@ -282,7 +296,7 @@ struct Arguments
 
 bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 {
-	cxxopts::Options options("g3dtool", "Inspect and extract files from LionHead G3D files.");
+	cxxopts::Options options("packtool", "Inspect and extract files from LionHead pack files.");
 
 	// clang-format off
 	options.add_options()
@@ -298,8 +312,9 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		("A,animation-block", "List animation block statistics.")
 		("a,animation", "List animation statistics.", cxxopts::value<uint32_t>())
 		("e,extract", "Extract contents of a block to filename.", cxxopts::value<std::string>())
-		("w,write", "Create Mesh Pack.", cxxopts::value<std::string>())
-		("pack-files", "G3D Mesh Pack Files.", cxxopts::value<std::vector<std::string>>())
+		("write-mesh", "Create Mesh Pack.", cxxopts::value<std::string>())
+		("write-animation", "Create Mesh Pack.", cxxopts::value<std::string>())
+		("pack-files", "Pack Files.", cxxopts::value<std::vector<std::string>>())
 	;
 	// clang-format on
 	options.parse_positional({"pack-files"});
@@ -315,10 +330,16 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			return_code = EXIT_SUCCESS;
 			return false;
 		}
-		if (result["write"].count() > 0)
+		if (result["write-mesh"].count() > 0)
 		{
-			args.mode = Arguments::Mode::Write;
-			args.outFilename = result["write"].as<std::string>();
+			args.mode = Arguments::Mode::WriteMeshPack;
+			args.outFilename = result["write-mesh"].as<std::string>();
+			return true;
+		}
+		if (result["write-animation"].count() > 0)
+		{
+			args.mode = Arguments::Mode::WriteAnimationPack;
+			args.outFilename = result["write-animation"].as<std::string>();
 			return true;
 		}
 		// Following this, all args require positional arguments
@@ -422,50 +443,55 @@ int main(int argc, char* argv[])
 		return return_code;
 	}
 
-	if (args.mode == Arguments::Mode::Write)
+	if (args.mode == Arguments::Mode::WriteMeshPack)
 	{
-		return WriteFile(args.outFilename);
+		return WriteMeshFile(args.outFilename);
+	}
+
+	if (args.mode == Arguments::Mode::WriteAnimationPack)
+	{
+		return WriteAnimationFile(args.outFilename);
 	}
 
 	for (auto& filename : args.filenames)
 	{
-		openblack::g3d::G3DFile g3d;
+		openblack::pack::PackFile pack;
 		try
 		{
 			// Open file
-			g3d.Open(filename);
+			pack.Open(filename);
 
 			switch (args.mode)
 			{
 			case Arguments::Mode::List:
-				return_code |= ListBlocks(g3d);
+				return_code |= ListBlocks(pack);
 				break;
 			case Arguments::Mode::Bytes:
-				return_code |= ViewBytes(g3d, args.block);
+				return_code |= ViewBytes(pack, args.block);
 				break;
 			case Arguments::Mode::Info:
-				return_code |= ViewInfo(g3d);
+				return_code |= ViewInfo(pack);
 				break;
 			case Arguments::Mode::Body:
-				return_code |= ViewBody(g3d);
+				return_code |= ViewBody(pack);
 				break;
 			case Arguments::Mode::Textures:
-				return_code |= ViewTextures(g3d);
+				return_code |= ViewTextures(pack);
 				break;
 			case Arguments::Mode::Meshes:
-				return_code |= ViewMeshes(g3d);
+				return_code |= ViewMeshes(pack);
 				break;
 			case Arguments::Mode::Animations:
-				return_code |= ViewAnimations(g3d);
+				return_code |= ViewAnimations(pack);
 				break;
 			case Arguments::Mode::Texture:
-				return_code |= ViewTexture(g3d, args.block, args.outFilename);
+				return_code |= ViewTexture(pack, args.block, args.outFilename);
 				break;
 			case Arguments::Mode::Mesh:
-				return_code |= ViewMesh(g3d, args.blockId, args.outFilename);
+				return_code |= ViewMesh(pack, args.blockId, args.outFilename);
 				break;
 			case Arguments::Mode::Animation:
-				return_code |= ViewAnimation(g3d, args.blockId, args.outFilename);
+				return_code |= ViewAnimation(pack, args.blockId, args.outFilename);
 				break;
 			default:
 				return_code = EXIT_FAILURE;

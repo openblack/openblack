@@ -6,7 +6,6 @@
  *
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
-// TODO(bwrsandman): rename to packtool?
 
 #pragma once
 
@@ -17,22 +16,22 @@
 #include <string>
 #include <vector>
 
-namespace openblack::g3d
+namespace openblack::pack
 {
 
-struct G3DInfoBlockLookup
+struct InfoBlockLookup
 {
 	uint32_t blockId;
 	uint32_t unknown;
 };
-static_assert(sizeof(G3DInfoBlockLookup) == 8);
+static_assert(sizeof(InfoBlockLookup) == 8);
 
-struct G3DBodyBlockLookup
+struct BodyBlockLookup
 {
 	uint32_t offset;
 	uint32_t unknown; // TODO
 };
-static_assert(sizeof(G3DBodyBlockLookup) == 8);
+static_assert(sizeof(BodyBlockLookup) == 8);
 
 struct G3DTextureHeader
 {
@@ -88,7 +87,7 @@ struct G3DTexture
 /**
   This class is used to read LionHead Packs files
  */
-class G3DFile
+class PackFile
 {
 protected:
 	static constexpr const char kMagic[8] = {'L', 'i', 'O', 'n', 'H', 'e', 'A', 'd'};
@@ -99,8 +98,8 @@ protected:
 	std::string _filename;
 
 	std::map<std::string, std::vector<uint8_t>> _blocks;
-	std::vector<G3DInfoBlockLookup> _infoBlockLookup;
-	std::vector<G3DBodyBlockLookup> _bodyBlockLookup;
+	std::vector<InfoBlockLookup> _infoBlockLookup;
+	std::vector<BodyBlockLookup> _bodyBlockLookup;
 	/// Metadata and DDS formatted texture data
 	std::map<std::string, G3DTexture> _textures;
 	/// Bytes of l3d meshes
@@ -113,15 +112,6 @@ protected:
 
 	/// Read blocks from pack
 	virtual void ReadBlocks();
-
-	/// Create Texture Blocks from textures
-	void CreateTextureBlocks();
-
-	/// Create Mesh Block from meshes
-	void CreateMeshBlock();
-
-	/// Create Info block from look-up table
-	void CreateInfoBlock();
 
 	/// Write blocks to file
 	virtual void WriteBlocks(std::ostream& stream) const;
@@ -142,23 +132,35 @@ protected:
 	virtual void ResolveMeshBlock();
 
 public:
-	G3DFile();
+	PackFile();
 
-	virtual ~G3DFile() = default;
+	virtual ~PackFile() = default;
 
 	/// Read l3d file from the filesystem
 	void Open(const std::string& file);
 
-	/// Write g3d file to path on the filesystem
+	/// Write pack file to path on the filesystem
 	void Write(const std::string& file);
+
+	/// Create Texture Blocks from textures
+	void CreateTextureBlocks();
+
+	/// Create Mesh Block from meshes
+	void CreateMeshBlock();
+
+	/// Create Info block from look-up table
+	void CreateInfoBlock();
+
+	/// Create Body block from look-up table
+	void CreateBodyBlock();
 
 	[[nodiscard]] const std::string& GetFilename() const { return _filename; }
 	[[nodiscard]] const std::map<std::string, std::vector<uint8_t>>& GetBlocks() const { return _blocks; }
 	[[nodiscard]] bool HasBlock(const std::string& name) const { return _blocks.count(name); }
 	[[nodiscard]] const std::vector<uint8_t>& GetBlock(const std::string& name) const { return _blocks.at(name); }
 	[[nodiscard]] std::unique_ptr<std::istream> GetBlockAsStream(const std::string& name) const;
-	[[nodiscard]] const std::vector<G3DInfoBlockLookup>& GetInfoBlockLookup() const { return _infoBlockLookup; }
-	[[nodiscard]] const std::vector<G3DBodyBlockLookup>& GetBodyBlockLookup() const { return _bodyBlockLookup; }
+	[[nodiscard]] const std::vector<InfoBlockLookup>& GetInfoBlockLookup() const { return _infoBlockLookup; }
+	[[nodiscard]] const std::vector<BodyBlockLookup>& GetBodyBlockLookup() const { return _bodyBlockLookup; }
 	[[nodiscard]] const std::map<std::string, G3DTexture>& GetTextures() const { return _textures; }
 	[[nodiscard]] const G3DTexture& GetTexture(const std::string& name) const { return _textures.at(name); }
 	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetMeshes() const { return _meshes; }
@@ -167,4 +169,4 @@ public:
 	[[nodiscard]] const std::vector<uint8_t>& GetAnimation(uint32_t index) const { return _animations[index]; }
 };
 
-} // namespace openblack::g3d
+} // namespace openblack::pack

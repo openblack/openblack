@@ -4,6 +4,7 @@ set(TEXTURES_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/Textures)
 
 set(ALL_MESHES_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data)
 set(ALL_MESHES_OUTPUT ${ALL_MESHES_BINARY_DIR}/AllMeshes.g3d)
+set(ALL_MESHES_OUTPUT ${ALL_MESHES_BINARY_DIR}/AllAnims.anm)
 
 set(SKY_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/WeatherSystem)
 set(SKY_OUTPUT ${SKY_BINARY_DIR}/sky.l3d)
@@ -31,7 +32,9 @@ add_custom_target(generate-mock-game-data
   # Generate Mock Textures
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Data/Textures/gen_textures.py --output-dir ${TEXTURES_BINARY_DIR}
   # Data/AllMeshes.g3d
-  COMMAND g3dtool -w ${ALL_MESHES_OUTPUT}
+  COMMAND packtool --write-mesh ${ALL_MESHES_OUTPUT}
+  # Data/AllAnims.anm
+  COMMAND packtool --write-animation ${ALL_ANIMATIONS_OUTPUT}
   # Data/Landscape/Land1.lnd
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Data/Landscape/gen_land_textures.py --output-dir ${TERRAIN_BINARY_DIR}
   COMMAND lndtool write -o ${TERRAIN_OUTPUT} --terrain-type ${TERRAIN_TYPE} --noise-map ${TERRAIN_NOISE_MAP} --bump-map ${TERRAIN_BUMP_MAP} --material-array=${TERRAIN_MATERIAL_LIST}

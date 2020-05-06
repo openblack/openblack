@@ -12,7 +12,7 @@
 #include "Game.h"
 #include "L3DAnim.h"
 
-#include <G3DFile.h>
+#include <PackFile.h>
 #include <spdlog/spdlog.h>
 
 namespace openblack
@@ -25,11 +25,11 @@ AnimationPack::~AnimationPack() = default;
 void AnimationPack::LoadFromFile(const std::string& filename)
 {
 	spdlog::debug("Loading Mesh Pack from file: {}", filename);
-	g3d::G3DFile g3d;
+	pack::PackFile pack;
 
 	try
 	{
-		g3d.Open(Game::instance()->GetFileSystem().FindPath(filename).u8string());
+		pack.Open(Game::instance()->GetFileSystem().FindPath(filename).u8string());
 	}
 	catch (std::runtime_error& err)
 	{
@@ -37,8 +37,8 @@ void AnimationPack::LoadFromFile(const std::string& filename)
 		return;
 	}
 
-	const auto& animation = g3d.GetAnimations();
-	_animations.resize(g3d.GetAnimations().size());
+	const auto& animation = pack.GetAnimations();
+	_animations.resize(pack.GetAnimations().size());
 	for (uint32_t i = 0; i < _animations.size(); i++)
 	{
 		_animations[i] = std::make_unique<L3DAnim>();
