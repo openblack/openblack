@@ -85,6 +85,7 @@ public:
 
 	[[nodiscard]] const std::string& GetFilename() const { return _filename; }
 	[[nodiscard]] const ANMHeader& GetHeader() const { return _header; }
+	[[nodiscard]] ANMHeader& GetHeader() { return _header; }
 	[[nodiscard]] const std::vector<ANMFrame>& GetKeyframes() const { return _keyframes; }
 	[[nodiscard]] const ANMFrame& GetKeyframe(uint32_t index) const { return _keyframes[index]; }
 };

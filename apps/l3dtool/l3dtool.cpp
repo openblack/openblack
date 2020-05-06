@@ -1034,10 +1034,10 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		("L,look-up-tables", "Print Look Up Table Data.", cxxopts::value<std::vector<std::string>>())
 		("B,vertex-blend-values", "Print Vertex Blend Values.", cxxopts::value<std::vector<std::string>>())
 	;
-	options.add_options("write/extract from and to  glTF format")
+	options.add_options("write/extract from and to glTF format")
 		("o,output", "Output file (required).", cxxopts::value<std::string>())
 		("i,input-mesh", "Input file (required).", cxxopts::value<std::string>())
-		;
+	;
 	// clang-format on
 
 	options.parse_positional({"subcommand"});

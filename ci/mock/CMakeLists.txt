@@ -4,11 +4,16 @@ set(TEXTURES_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/Textures)
 
 set(ALL_MESHES_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data)
 set(ALL_MESHES_OUTPUT ${ALL_MESHES_BINARY_DIR}/AllMeshes.g3d)
-set(ALL_MESHES_OUTPUT ${ALL_MESHES_BINARY_DIR}/AllAnims.anm)
+set(ALL_ANIMATIONS_OUTPUT ${ALL_MESHES_BINARY_DIR}/AllAnims.anm)
 
 set(SKY_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/WeatherSystem)
 set(SKY_OUTPUT ${SKY_BINARY_DIR}/sky.l3d)
 set(SKY_MESH_FILE ${SKY_BINARY_DIR}/sky.gltf)
+
+set(COFFRE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/Misc)
+set(COFFRE_MESH_OUTPUT ${COFFRE_BINARY_DIR}/coffre.l3d)
+set(COFFRE_ANIM_OUTPUT ${COFFRE_BINARY_DIR}/coffre.anm)
+set(COFFRE_INPUT ${COFFRE_BINARY_DIR}/coffre.gltf)
 
 set(TERRAIN_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/Landscape)
 set(TERRAIN_TYPE 0)
@@ -27,6 +32,7 @@ add_custom_target(generate-mock-game-data
   COMMAND ${CMAKE_COMMAND} -E make_directory ${ALL_MESHES_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${SKY_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TERRAIN_BINARY_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${COFFRE_BINARY_DIR}
   # Copy the Scripts Directory
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Scripts ${CMAKE_CURRENT_BINARY_DIR}/Scripts
   # Generate Mock Textures
@@ -41,6 +47,10 @@ add_custom_target(generate-mock-game-data
   # Data/WeatherSystem/sky.l3d
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Data/WeatherSystem/gen_sky.py --output-dir ${SKY_BINARY_DIR}
   COMMAND l3dtool write -o ${SKY_OUTPUT} -i ${SKY_MESH_FILE}
+  # Data/Misc/coffre.{l3d,anm}
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Data/Misc/gen_coffre.py --output-dir ${COFFRE_BINARY_DIR}
+  COMMAND l3dtool write -o ${COFFRE_MESH_OUTPUT} -i ${COFFRE_INPUT}
+  COMMAND anmtool write -o ${COFFRE_ANIM_OUTPUT} -i ${COFFRE_INPUT}
 
   COMMENT "Generating mock game data in ${CMAKE_CURRENT_BINARY_DIR}"
 

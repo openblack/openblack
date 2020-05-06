@@ -90,6 +90,14 @@ void L3DAnim::LoadFromBuffer(const std::vector<uint8_t>& data)
 
 const std::vector<glm::mat4> L3DAnim::GetBoneMatrices(uint32_t time) const
 {
+	if (_frames.empty())
+	{
+		return {};
+	}
+	if (_duration == 0)
+	{
+		return _frames[0].bones;
+	}
 	uint32_t animation_time = time % _duration;
 	uint32_t index = 0;
 	uint32_t previous_time = 0;

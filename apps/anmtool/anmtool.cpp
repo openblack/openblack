@@ -14,6 +14,12 @@
 
 #include <cxxopts.hpp>
 
+#define TINYGLTF_IMPLEMENTATION
+#define TINYGLTF_USE_CPP14
+#define TINYGLTF_NO_STB_IMAGE
+#define TINYGLTF_NO_STB_IMAGE_WRITE
+#include "tiny_gltf.h"
+
 int PrintHeader(openblack::anm::ANMFile& anm)
 {
 	auto& header = anm.GetHeader();
@@ -54,51 +60,23 @@ int ListKeyframes(openblack::anm::ANMFile& anm)
 	return EXIT_SUCCESS;
 }
 
-int ViewKeyframe(openblack::anm::ANMFile& anm, uint32_t index)
+int ViewKeyframe(openblack::anm::ANMFile& anm)
 {
-	if (index > anm.GetKeyframes().size())
+	for (uint32_t index = 0; index < anm.GetKeyframes().size(); ++index)
 	{
-		return EXIT_FAILURE;
-	}
+		const auto& keyframe = anm.GetKeyframe(index);
 
-	const auto& keyframe = anm.GetKeyframe(index);
+		std::printf("file: %s, frame: %u, time: %u\n", anm.GetFilename().c_str(), index, keyframe.time);
+		std::printf("bones:\n");
 
-	std::printf("file: %s, frame: %u, time: %u\n", anm.GetFilename().c_str(), index, keyframe.time);
-	std::printf("bones:\n");
-
-	for (uint32_t i = 0; i < keyframe.bones.size(); ++i)
-	{
-		const auto& matrix = keyframe.bones[i].matrix;
-		std::printf("%3u:\n", i);
-		std::printf("\t[%8.5f %8.5f %8.5f %8.5f]\n", matrix[0], matrix[3], matrix[6], matrix[9]);
-		std::printf("\t[%8.5f %8.5f %8.5f %8.5f]\n", matrix[1], matrix[4], matrix[7], matrix[10]);
-		std::printf("\t[%8.5f %8.5f %8.5f %8.5f]\n", matrix[2], matrix[5], matrix[8], matrix[11]);
-	}
-
-	return EXIT_SUCCESS;
-}
-
-int ViewBone(openblack::anm::ANMFile& anm, uint32_t index)
-{
-	for (const auto& keyframe : anm.GetKeyframes())
-	{
-		if (index > keyframe.bones.size())
+		for (uint32_t i = 0; i < keyframe.bones.size(); ++i)
 		{
-			return EXIT_FAILURE;
+			const auto& matrix = keyframe.bones[i].matrix;
+			std::printf("%3u:\n", i);
+			std::printf("\t[%8.5f %8.5f %8.5f %8.5f]\n", matrix[0], matrix[3], matrix[6], matrix[9]);
+			std::printf("\t[%8.5f %8.5f %8.5f %8.5f]\n", matrix[1], matrix[4], matrix[7], matrix[10]);
+			std::printf("\t[%8.5f %8.5f %8.5f %8.5f]\n", matrix[2], matrix[5], matrix[8], matrix[11]);
 		}
-	}
-
-	std::printf("file: %s, bone: %u\n", anm.GetFilename().c_str(), index);
-	std::printf("bones:\n");
-
-	for (uint32_t i = 0; i < anm.GetKeyframes().size(); ++i)
-	{
-		std::printf("%3u:\n", i);
-		const auto& matrix = anm.GetKeyframes()[i].bones[index].matrix;
-
-		std::printf("\t[%8.5f %8.5f %8.5f %8.5f]\n", matrix[0], matrix[3], matrix[6], matrix[9]);
-		std::printf("\t[%8.5f %8.5f %8.5f %8.5f]\n", matrix[1], matrix[4], matrix[7], matrix[10]);
-		std::printf("\t[%8.5f %8.5f %8.5f %8.5f]\n", matrix[2], matrix[5], matrix[8], matrix[11]);
 	}
 
 	return EXIT_SUCCESS;
@@ -111,15 +89,44 @@ struct Arguments
 		Header,
 		ListKeyframes,
 		Keyframe,
-		Bone,
+		Write,
 	};
 	Mode mode;
 	struct Read
 	{
-		uint32_t id;
 		std::vector<std::string> filenames;
 	} read;
+	struct Write
+	{
+		std::string outFilename;
+		std::string gltfFile;
+	} write;
 };
+
+int WriteFile(const Arguments::Write& args)
+{
+	openblack::anm::ANMFile anm {};
+
+	if (args.gltfFile.empty())
+	{
+		return EXIT_FAILURE;
+	}
+
+	tinygltf::TinyGLTF loader;
+	tinygltf::Model gltf;
+
+	std::string err;
+	std::string warn;
+
+	// TODO (bwrsandman): Extract animation from gltf
+	char name[] = "TODO";
+	memcpy(anm.GetHeader().name, name, sizeof(name));
+	anm.GetHeader().frame_count = 0;
+	anm.GetHeader().animation_duration = 0;
+	anm.Write(args.outFilename);
+
+	return EXIT_SUCCESS;
+}
 
 bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 {
@@ -128,15 +135,21 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 	// clang-format off
 	options.add_options()
 		("h,help", "Display this help message.")
-		("H,header", "Print Header Contents.")
-		("l,list-keyframes", "List Keyframes.")
-		("k,keyframe", "View Keyframe Contents", cxxopts::value<uint32_t>())
-		("b,bone", "View Bone Animation", cxxopts::value<uint32_t>())
-		("anm-files", "ANM Files.", cxxopts::value<std::vector<std::string>>())
+		("subcommand", "Subcommand.", cxxopts::value<std::string>())
+	;
+	options.positional_help("[read|write] [OPTION...]");
+	options.add_options()
+		("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::string>>())
+		("l,list-keyframes", "List Keyframes.", cxxopts::value<std::vector<std::string>>())
+		("k,keyframe-content", "View Keyframe Contents", cxxopts::value<std::vector<std::string>>())
+	;
+	options.add_options("write from and to glTF format")
+		("o,output", "Output file (required).", cxxopts::value<std::string>())
+		("i,input-mesh", "Input file (required).", cxxopts::value<std::string>())
 	;
 	// clang-format on
-	options.parse_positional({"anm-files"});
-	options.positional_help("anm-files...");
+
+	options.parse_positional({"subcommand"});
 
 	try
 	{
@@ -147,36 +160,46 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			return_code = EXIT_SUCCESS;
 			return false;
 		}
-		// Following this, all args require positional arguments
-		if (result["anm-files"].count() == 0)
+		if (result["subcommand"].count() == 0)
 		{
-			throw cxxopts::missing_argument_exception("anm-files");
+			std::cerr << options.help() << std::endl;
+			return_code = EXIT_FAILURE;
+			return false;
 		}
-		if (result["header"].count() > 0)
+		if (result["subcommand"].as<std::string>() == "read")
 		{
-			args.mode = Arguments::Mode::Header;
-			args.read.filenames = result["anm-files"].as<std::vector<std::string>>();
-			return true;
+			if (result["header"].count() > 0)
+			{
+				args.mode = Arguments::Mode::Header;
+				args.read.filenames = result["header"].as<std::vector<std::string>>();
+				return true;
+			}
+			if (result["list-keyframes"].count() > 0)
+			{
+				args.mode = Arguments::Mode::ListKeyframes;
+				args.read.filenames = result["list-keyframes"].as<std::vector<std::string>>();
+				return true;
+			}
+			if (result["keyframe-content"].count() > 0)
+			{
+				args.mode = Arguments::Mode::Keyframe;
+				args.read.filenames = result["keyframe-content"].as<std::vector<std::string>>();
+				return true;
+			}
 		}
-		if (result["list-keyframes"].count() > 0)
+		else if (result["subcommand"].as<std::string>() == "write")
 		{
-			args.mode = Arguments::Mode::ListKeyframes;
-			args.read.filenames = result["anm-files"].as<std::vector<std::string>>();
-			return true;
-		}
-		if (result["keyframe"].count() > 0)
-		{
-			args.mode = Arguments::Mode::Keyframe;
-			args.read.id = result["keyframe"].as<uint32_t>();
-			args.read.filenames = result["anm-files"].as<std::vector<std::string>>();
-			return true;
-		}
-		if (result["bone"].count() > 0)
-		{
-			args.mode = Arguments::Mode::Bone;
-			args.read.id = result["bone"].as<uint32_t>();
-			args.read.filenames = result["anm-files"].as<std::vector<std::string>>();
-			return true;
+			args.write.outFilename = "";
+			if (result["output"].count() > 0)
+			{
+				args.mode = Arguments::Mode::Write;
+				args.write.outFilename = result["output"].as<std::string>();
+				if (result["input-mesh"].count() > 0)
+				{
+					args.write.gltfFile = result["input-mesh"].as<std::string>();
+				}
+				return true;
+			}
 		}
 	}
 	catch (cxxopts::OptionParseException& err)
@@ -198,6 +221,11 @@ int main(int argc, char* argv[])
 		return return_code;
 	}
 
+	if (args.mode == Arguments::Mode::Write)
+	{
+		return WriteFile(args.write);
+	}
+
 	for (auto& filename : args.read.filenames)
 	{
 		openblack::anm::ANMFile anm;
@@ -215,10 +243,7 @@ int main(int argc, char* argv[])
 				return_code |= ListKeyframes(anm);
 				break;
 			case Arguments::Mode::Keyframe:
-				return_code |= ViewKeyframe(anm, args.read.id);
-				break;
-			case Arguments::Mode::Bone:
-				return_code |= ViewBone(anm, args.read.id);
+				return_code |= ViewKeyframe(anm);
 				break;
 			default:
 				return_code = EXIT_FAILURE;

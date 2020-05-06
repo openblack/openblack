@@ -1,5 +1,6 @@
 set(L3DTOOL
 	l3dtool.cpp
+	json.hpp
 	tiny_gltf.h
 )
 
