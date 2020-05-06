@@ -6,11 +6,10 @@
  *
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
-// TODO(bwrsandman): rename to packfile?
 
 /*
  *
- * The layout of a G3D File is as follows:
+ * The layout of a Pack File is as follows:
  *
  * - 8 byte magic header, containing the chars "LiOnHeAd"
  * - A number of blocks, one having the name MESHES, INFO and the rest
@@ -20,7 +19,7 @@
  * ------------------------- start of block ------------------------------------
  *
  * - 36 byte header containing:
- *         32 char name which can be "MESHES", "INFO" or a hexadecimal number
+ *         32 char name
  *         4 byte size of the block
  * - arbitrary size body based on size in head
  *
@@ -32,12 +31,26 @@
  * - 4 byte int, containing the number of L3D meshes contained. The meshes are
  *   concatenated one after the other within the block (see below).
  *
- * ------------------------- start of meshes -----------------------------------
+ * -----------------------------------------------------------------------------
+ *
+ * The layout of a Body block is as follows:
+ *
+ * - 4 byte magic header, containing the chars "MKJC"
+ * - 4 byte int, containing the number of ANM animations contained. The
+ *   animation matadata are concatenated one after the other within the block
+ *   (see below).
+ *
+ * ------------------------- start of animation metadata -----------------------
+ *
+ * - 4 bytes offset into the block
+ * - 4 bytes of unknown data
+ *
+ * ------------------------- end of Body block ---------------------------------
  *
  * - 4 bytes offset into the block
  * - arbitrary size of body based on the size of an L3DMesh
  *
- * ------------------------- end of MESHES block--------------------------------
+ * ------------------------- end of MESHES block -------------------------------
  *
  * The layout of a INFO block is as follows:
  *
@@ -47,7 +60,7 @@
  *                    the file.
  *         unknown - TODO: Maybe type? Maybe layers?
  *
- * ------------------------- end of INFO block----------------------------------
+ * ------------------------- end of INFO block ---------------------------------
  *
  * The layout of a texture block is as follows:
  *
@@ -59,17 +72,17 @@
  *         dds file size - size of the dds file minus magic number
  * - variable size dds file without the first 4 byte magic number
  *
- * ------------------------- end of texture block-------------------------------
+ * ------------------------- end of texture block ------------------------------
  *
  */
 
-#include <G3DFile.h>
+#include <PackFile.h>
 
 #include <cassert>
 #include <cstring>
 #include <fstream>
 
-using namespace openblack::g3d;
+using namespace openblack::pack;
 
 namespace
 {
@@ -115,7 +128,7 @@ struct imemstream: virtual membuf, public std::istream
 	}
 };
 
-struct G3DBlockHeader
+struct PackBlockHeader
 {
 	static constexpr uint32_t blockNameSize = 32;
 	char blockName[blockNameSize];
@@ -127,12 +140,12 @@ constexpr const char kBlockMagic[4] = {'M', 'K', 'J', 'C'};
 } // namespace
 
 /// Error handling
-void G3DFile::Fail(const std::string& msg)
+void PackFile::Fail(const std::string& msg)
 {
-	throw std::runtime_error("G3D Error: " + msg + "\nFilename: " + _filename);
+	throw std::runtime_error("Pack Error: " + msg + "\nFilename: " + _filename);
 }
 
-void G3DFile::ReadBlocks()
+void PackFile::ReadBlocks()
 {
 	assert(!_isLoaded);
 
@@ -152,27 +165,27 @@ void G3DFile::ReadBlocks()
 	}
 
 	char magic[sizeof(kMagic)];
-	if (fsize < sizeof(magic) + sizeof(G3DBlockHeader))
+	if (fsize < sizeof(magic) + sizeof(PackBlockHeader))
 	{
-		Fail("File too small to be a valid Mesh Pack file.");
+		Fail("File too small to be a valid Pack file.");
 	}
 
 	// First 8 bytes
 	input.read(reinterpret_cast<char*>(&magic), sizeof(magic));
 	if (std::memcmp(&magic, kMagic, sizeof(magic)) != 0)
 	{
-		Fail("Unrecognized Mesh Pack header");
+		Fail("Unrecognized Pack header");
 	}
 
-	if (fsize < static_cast<std::size_t>(input.tellg()) + sizeof(G3DBlockHeader))
+	if (fsize < static_cast<std::size_t>(input.tellg()) + sizeof(PackBlockHeader))
 	{
 		Fail("File too small to contain any blocks.");
 	}
 
-	G3DBlockHeader header;
-	while (fsize - sizeof(G3DBlockHeader) > static_cast<std::size_t>(input.tellg()))
+	PackBlockHeader header;
+	while (fsize - sizeof(PackBlockHeader) > static_cast<std::size_t>(input.tellg()))
 	{
-		input.read(reinterpret_cast<char*>(&header), sizeof(G3DBlockHeader));
+		input.read(reinterpret_cast<char*>(&header), sizeof(PackBlockHeader));
 
 		if (_blocks.count(header.blockName) > 0)
 		{
@@ -189,7 +202,7 @@ void G3DFile::ReadBlocks()
 	}
 }
 
-void G3DFile::ResolveInfoBlock()
+void PackFile::ResolveInfoBlock()
 {
 	if (!HasBlock("INFO"))
 	{
@@ -207,7 +220,7 @@ void G3DFile::ResolveInfoBlock()
 	stream.read(reinterpret_cast<char*>(_infoBlockLookup.data()), _infoBlockLookup.size() * sizeof(_infoBlockLookup[0]));
 }
 
-void G3DFile::ResolveBodyBlock()
+void PackFile::ResolveBodyBlock()
 {
 	if (!HasBlock("Body"))
 	{
@@ -233,7 +246,7 @@ void G3DFile::ResolveBodyBlock()
 	stream.read(reinterpret_cast<char*>(_bodyBlockLookup.data()), _bodyBlockLookup.size() * sizeof(_bodyBlockLookup[0]));
 }
 
-void G3DFile::ExtractTexturesFromBlock()
+void PackFile::ExtractTexturesFromBlock()
 {
 	G3DTextureHeader header;
 	constexpr uint32_t blockNameSize = 0x20;
@@ -282,7 +295,7 @@ void G3DFile::ExtractTexturesFromBlock()
 	}
 }
 
-void G3DFile::ExtractAnimationsFromBlock()
+void PackFile::ExtractAnimationsFromBlock()
 {
 	auto data = GetBlock("Body");
 	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
@@ -310,7 +323,7 @@ void G3DFile::ExtractAnimationsFromBlock()
 	}
 }
 
-void G3DFile::ResolveMeshBlock()
+void PackFile::ResolveMeshBlock()
 {
 	if (!HasBlock("MESHES"))
 	{
@@ -341,14 +354,14 @@ void G3DFile::ResolveMeshBlock()
 	}
 }
 
-void G3DFile::WriteBlocks(std::ostream& stream) const
+void PackFile::WriteBlocks(std::ostream& stream) const
 {
 	assert(!_isLoaded);
 
 	// Magic number
 	stream.write(kMagic, sizeof(kMagic));
 
-	G3DBlockHeader header;
+	PackBlockHeader header;
 
 	for (auto& [name, contents] : _blocks)
 	{
@@ -360,7 +373,7 @@ void G3DFile::WriteBlocks(std::ostream& stream) const
 	}
 }
 
-void G3DFile::CreateTextureBlocks()
+void PackFile::CreateTextureBlocks()
 {
 	// TODO(bwrsandman): Loop through every texture and create a block with
 	//                   their id. Then fill in the look-up table.
@@ -368,7 +381,7 @@ void G3DFile::CreateTextureBlocks()
 	assert(false);
 }
 
-void G3DFile::CreateMeshBlock()
+void PackFile::CreateMeshBlock()
 {
 	if (HasBlock("MESHES"))
 	{
@@ -406,7 +419,7 @@ void G3DFile::CreateMeshBlock()
 	_blocks["MESHES"] = std::move(contents);
 }
 
-void G3DFile::CreateInfoBlock()
+void PackFile::CreateInfoBlock()
 {
 	if (HasBlock("INFO"))
 	{
@@ -427,12 +440,24 @@ void G3DFile::CreateInfoBlock()
 	_blocks["INFO"] = std::move(contents);
 }
 
-G3DFile::G3DFile()
+void PackFile::CreateBodyBlock()
+{
+	if (HasBlock("Body"))
+	{
+		Fail("Pack already has an Body block");
+	}
+
+	std::vector<uint8_t> contents;
+
+	_blocks["Body"] = std::move(contents);
+}
+
+PackFile::PackFile()
     : _isLoaded(false)
 {
 }
 
-void G3DFile::Open(const std::string& file)
+void PackFile::Open(const std::string& file)
 {
 	_filename = file;
 	ReadBlocks();
@@ -452,7 +477,7 @@ void G3DFile::Open(const std::string& file)
 	_isLoaded = true;
 }
 
-void G3DFile::Write(const std::string& file)
+void PackFile::Write(const std::string& file)
 {
 	assert(!_isLoaded);
 
@@ -465,13 +490,10 @@ void G3DFile::Write(const std::string& file)
 		Fail("Could not open file.");
 	}
 
-	// CreateTextureBlocks();  // TODO(bwrsandman): Implement CreateTextureBlocks
-	CreateMeshBlock();
-	CreateInfoBlock();
 	WriteBlocks(stream);
 }
 
-std::unique_ptr<std::istream> G3DFile::GetBlockAsStream(const std::string& name) const
+std::unique_ptr<std::istream> PackFile::GetBlockAsStream(const std::string& name) const
 {
 	auto& data = GetBlock(name);
 	return std::make_unique<imemstream>(reinterpret_cast<const char*>(data.data()), data.size());

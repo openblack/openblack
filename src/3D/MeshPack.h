@@ -20,7 +20,7 @@ namespace openblack
 class IStream;
 class L3DMesh;
 
-namespace g3d
+namespace pack
 {
 struct G3DTexture;
 }
@@ -53,7 +53,7 @@ public:
 	[[nodiscard]] const graphics::Texture2D& GetTexture(int id) const { return *_textures.at(id); }
 
 private:
-	void loadTextures(const std::map<std::string, g3d::G3DTexture>& textures);
+	void loadTextures(const std::map<std::string, pack::G3DTexture>& textures);
 	void loadMeshes(const std::vector<std::vector<uint8_t>>& meshes);
 
 	MeshesVec _meshes;

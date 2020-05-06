@@ -16,7 +16,7 @@
 #include "Game.h"
 #include "Graphics/Texture2D.h"
 
-#include <G3DFile.h>
+#include <PackFile.h>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -28,11 +28,11 @@ namespace openblack
 void MeshPack::LoadFromFile(const std::string& filename)
 {
 	spdlog::debug("Loading Mesh Pack from file: {}", filename);
-	g3d::G3DFile g3d;
+	pack::PackFile pack;
 
 	try
 	{
-		g3d.Open(Game::instance()->GetFileSystem().FindPath(filename).u8string());
+		pack.Open(Game::instance()->GetFileSystem().FindPath(filename).u8string());
 	}
 	catch (std::runtime_error& err)
 	{
@@ -40,11 +40,11 @@ void MeshPack::LoadFromFile(const std::string& filename)
 		return;
 	}
 
-	loadTextures(g3d.GetTextures());
-	loadMeshes(g3d.GetMeshes());
+	loadTextures(pack.GetTextures());
+	loadMeshes(pack.GetMeshes());
 }
 
-void MeshPack::loadTextures(const std::map<std::string, g3d::G3DTexture>& textures)
+void MeshPack::loadTextures(const std::map<std::string, pack::G3DTexture>& textures)
 {
 	// textures start at 1 - 0 would be an error texture
 	_textures.resize(static_cast<std::size_t>(textures.size() + 1));

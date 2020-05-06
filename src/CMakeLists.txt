@@ -115,7 +115,7 @@ target_include_directories(
 target_link_libraries(
   openblack
   PRIVATE l3d
-          g3d
+          pack
           lnd
           anm
           imgui
