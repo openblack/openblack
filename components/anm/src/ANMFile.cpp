@@ -175,6 +175,7 @@ void ANMFile::ReadFile(std::istream& stream)
 void ANMFile::WriteFile([[maybe_unused]] std::ostream& stream) const
 {
 	assert(!_isLoaded);
+	stream.write(reinterpret_cast<const char*>(&_header), sizeof(_header));
 }
 
 void ANMFile::Open(const std::string& file)

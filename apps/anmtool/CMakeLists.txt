@@ -1,5 +1,7 @@
 set(ANMTOOL
 	anmtool.cpp
+	json.hpp
+	tiny_gltf.h
 )
 
 source_group(apps\\anmtool FILES ${ANMTOOL})
@@ -21,7 +23,9 @@ else()
 			-Wall
 			-Wextra
 			-pedantic
-			-Werror)
+			-Werror
+			# Disabled due to tiny-gltf
+			-Wno-ignored-qualifiers)
 endif()
 
 set_property(TARGET anmtool PROPERTY FOLDER "tools")
