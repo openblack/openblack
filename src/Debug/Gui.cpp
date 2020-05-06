@@ -56,6 +56,7 @@
 #include "Audio.h"
 #include "Console.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
+#include "FontViewer.h"
 #include "LHVMViewer.h"
 #include "LandIsland.h"
 #include "MeshViewer.h"
@@ -119,6 +120,7 @@ std::unique_ptr<Gui> Gui::Create(graphics::RenderPass viewId, float scale)
 	debugWindows.emplace_back(new PathFinding);
 	debugWindows.emplace_back(new Audio);
 	debugWindows.emplace_back(new TempleInterior);
+	debugWindows.emplace_back(new FontViewer);
 
 	auto gui = std::unique_ptr<Gui>(
 	    new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows), !Locator::windowing::has_value()));

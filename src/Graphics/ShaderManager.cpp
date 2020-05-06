@@ -81,6 +81,11 @@
 #include "ShaderIncluder.h"
 #define SHADER_NAME fs_footprint
 #include "ShaderIncluder.h"
+
+#define SHADER_NAME vs_text
+#include "ShaderIncluder.h"
+#define SHADER_NAME fs_text
+#include "ShaderIncluder.h"
 // clang-format on
 
 namespace openblack::graphics
@@ -93,9 +98,10 @@ struct ShaderDefinition
 	const std::string_view fragmentShaderName;
 };
 
-const std::array<bgfx::EmbeddedShader, 17> k_EmbeddedShaders = {{
+const std::array<bgfx::EmbeddedShader, 19> k_EmbeddedShaders = {{
     BGFX_EMBEDDED_SHADER(vs_line), BGFX_EMBEDDED_SHADER(vs_line_instanced),                                                   //
     BGFX_EMBEDDED_SHADER(fs_line),                                                                                            //
+    BGFX_EMBEDDED_SHADER(vs_text), BGFX_EMBEDDED_SHADER(fs_text),                                                             //
     BGFX_EMBEDDED_SHADER(vs_object), BGFX_EMBEDDED_SHADER(vs_object_instanced), BGFX_EMBEDDED_SHADER(vs_object_hm_instanced), //
     BGFX_EMBEDDED_SHADER(fs_object), BGFX_EMBEDDED_SHADER(fs_sky),                                                            //
     BGFX_EMBEDDED_SHADER(vs_terrain), BGFX_EMBEDDED_SHADER(fs_terrain),                                                       //
@@ -113,6 +119,7 @@ constexpr std::array k_Shaders {
     ShaderDefinition {"ObjectInstanced", "vs_object_instanced", "fs_object"},
     ShaderDefinition {"ObjectHeightMapInstanced", "vs_object_hm_instanced", "fs_object"},
     ShaderDefinition {"Sky", "vs_object", "fs_sky"},
+    ShaderDefinition {"Text", "vs_text", "fs_text"},
     ShaderDefinition {"Water", "vs_water", "fs_water"},
     ShaderDefinition {"Sprite", "vs_sprite", "fs_sprite"},
     ShaderDefinition {"FootprintInstanced", "vs_footprint_instanced", "fs_footprint"},

@@ -481,6 +481,13 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const
 		auto section = drawDesc.profiler.BeginScoped(Profiler::Stage::MainPass);
 		DrawPass(drawDesc);
 	}
+
+	// Draw some text
+	{
+
+		// auto textShader = _shaderManager->GetShader("Text");
+		// textShader->SetTextureSampler()
+	}
 }
 
 void Renderer::DrawPass(const DrawSceneDesc& desc) const

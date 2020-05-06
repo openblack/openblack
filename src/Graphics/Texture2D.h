@@ -112,6 +112,8 @@ public:
 	            Wrapping wrapping = Wrapping::ClampEdge, Filter filter = Filter::Linear, const void* data = nullptr,
 	            uint32_t size = 0);
 
+	void Update(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t layer, const void* data, size_t size);
+
 	[[nodiscard]] const std::string& GetName() const { return _name; }
 	[[nodiscard]] const bgfx::TextureHandle& GetNativeHandle() const { return _handle; }
 	[[nodiscard]] uint16_t GetWidth() const { return _info.width; }
