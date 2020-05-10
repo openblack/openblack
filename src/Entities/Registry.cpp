@@ -122,7 +122,7 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 	_registry.view<const Field, const Transform>().each(
 	    [&meshIds, &instanceCount](const Field& entity, const Transform& transform) {
 		    const auto meshId = MeshPackId::TreeWheat;
-		    auto count = meshIds.insert(std::make_pair(static_cast<MeshId>(meshId), 0));
+			auto count = meshIds.insert(std::make_pair(static_cast<MeshId>(meshId), 0));
 		    count.first->second++;
 		    instanceCount++;
 	    });
@@ -131,7 +131,7 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 	_registry.view<const Forest, const Transform>().each(
 	    [&meshIds, &instanceCount](const Forest& entity, const Transform& transform) {
 		    const auto meshId = MeshPackId::FeatureForest;
-		    auto count = meshIds.insert(std::make_pair(static_cast<MeshId>(meshId), 0));
+			auto count = meshIds.insert(std::make_pair(static_cast<MeshId>(meshId), 0));
 		    count.first->second++;
 		    instanceCount++;
 	    });
@@ -334,14 +334,14 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 
 	// Hands
 	_registry.view<const Hand, const Transform>().each(
-	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Hand& entity, const Transform& transform) {
-		    MeshId meshId = 999;
-		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
-		    renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
-		    prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 1);
-		    offset.first->second++;
-	    });
+		[&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Hand& entity, const Transform& transform) {
+			MeshId meshId = 999;
+			auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
+			auto desc = renderCtx.instancedDrawDescs.find(meshId);
+			renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+			prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 1);
+			offset.first->second++;
+		});
 
 	if (!renderCtx.instanceUniforms.empty())
 	{

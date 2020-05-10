@@ -19,33 +19,46 @@
 
 namespace openblack
 {
+
 enum class TreeInfo;
+
+class MeshId
+{
+public:
+	using IdType = int;
+	MeshId(MeshPackId id) : _id(static_cast<IdType>(id)) {};
+	MeshId(IdType id) : _id(static_cast<IdType>(id)) {};
+	operator int() const { return _id; }
+	bool operator ==(const int& other) const { return _id == other; }
+private:
+	IdType _id;
+};
 
 template <typename T, typename K = std::hash<T>>
 class MeshLookup
 {
 public:
-	MeshLookup(std::initializer_list<typename std::unordered_map<T, MeshId, K>::value_type> init)
-	    : lookup(init)
+	MeshLookup(std::initializer_list<typename std::unordered_map<T, MeshPackId, K>::value_type> init)
+		: lookup(init)
 	{
 	}
 
 	MeshId operator[](T key)
 	{
 		auto item = lookup.find(key);
-		auto meshId = MeshId::Dummy;
+		auto meshId = MeshPackId::Dummy;
 
 		if (item == lookup.end())
 		{
 			spdlog::error("Unknown item. Using Dummy mesh.");
-			return meshId;
+			return static_cast<MeshId>(meshId);
 		}
 
-		return item->second;
+		return static_cast<MeshId>(item->second);
 	}
 
 private:
-	std::unordered_map<T, MeshId, K> lookup;
+	std::unordered_map<T, MeshPackId, K> lookup;
 };
 
 extern MeshLookup<TreeInfo> treeMeshLookup;

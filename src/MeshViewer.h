@@ -37,7 +37,7 @@ public:
 private:
 	bool _open {false};
 	static constexpr graphics::RenderPass _viewId = graphics::RenderPass::MeshViewer;
-	MeshId _selectedMesh {MeshId::Dummy};
+	MeshPackId _selectedMesh {MeshPackId::Dummy};
 	int _selectedSubMesh {0};
 	ImGuiTextFilter _filter;
 	uint32_t _meshFlagFilter {0xFFFFFFFF};
