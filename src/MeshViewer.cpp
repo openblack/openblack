@@ -91,11 +91,11 @@ void MeshViewer::DrawWindow()
 	{
 		if (_filter.PassFilter(MeshNames[i].data()) && meshes[i]->GetFlags() & _meshFlagFilter)
 		{
-			const auto meshEnum = static_cast<MeshId>(i);
+			const auto meshEnum = static_cast<MeshPackId>(i);
 			const auto& enumName = std::string(MeshNames[i]);
 			displayedMeshes++;
 
-			if (ImGui::Selectable(enumName.c_str(), static_cast<MeshId>(meshEnum) == _selectedMesh))
+			if (ImGui::Selectable(enumName.c_str(), static_cast<MeshPackId>(meshEnum) == _selectedMesh))
 				_selectedMesh = meshEnum;
 		}
 	}
