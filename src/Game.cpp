@@ -95,6 +95,7 @@ Game::~Game()
 	_water.reset();
 	_sky.reset();
 	_testModel.reset();
+	_handModel.reset();
 	_meshPack.reset();
 	_landIsland.reset();
 	_entityRegistry.reset();
