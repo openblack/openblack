@@ -150,6 +150,8 @@ else()
   endif()
 endif()
 
+target_compile_definitions(openblack PRIVATE "$<$<CONFIG:DEBUG>:OPENBLACK_DEBUG>")
+
 if(MSVC)
   # Debug builds create a debug console
   set_target_properties(openblack PROPERTIES LINK_FLAGS_DEBUG
