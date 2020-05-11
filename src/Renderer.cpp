@@ -275,20 +275,23 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const
 {
 	// Reflection Pass
 	{
-		DrawSceneDesc drawPassDesc = drawDesc;
 		auto section = drawDesc.profiler.BeginScoped(Profiler::Stage::ReflectionPass);
+		if (drawDesc.drawWater)
+		{
+			DrawSceneDesc drawPassDesc = drawDesc;
 
-		auto& frameBuffer = drawDesc.water.GetFrameBuffer();
-		auto reflectionCamera = drawDesc.camera->Reflect(drawDesc.water.GetReflectionPlane());
+			auto& frameBuffer = drawDesc.water.GetFrameBuffer();
+			auto reflectionCamera = drawDesc.camera->Reflect(drawDesc.water.GetReflectionPlane());
 
-		drawPassDesc.viewId = graphics::RenderPass::Reflection;
-		drawPassDesc.camera = reflectionCamera.get();
-		drawPassDesc.frameBuffer = &frameBuffer;
-		drawPassDesc.drawWater = false;
-		drawPassDesc.drawDebugCross = false;
-		drawPassDesc.drawBoundingBoxes = false;
-		drawPassDesc.cullBack = true;
-		DrawPass(drawPassDesc);
+			drawPassDesc.viewId = graphics::RenderPass::Reflection;
+			drawPassDesc.camera = reflectionCamera.get();
+			drawPassDesc.frameBuffer = &frameBuffer;
+			drawPassDesc.drawWater = false;
+			drawPassDesc.drawDebugCross = false;
+			drawPassDesc.drawBoundingBoxes = false;
+			drawPassDesc.cullBack = true;
+			DrawPass(drawPassDesc);
+		}
 	}
 
 	// Main Draw Pass
