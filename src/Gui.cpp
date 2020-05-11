@@ -534,6 +534,12 @@ bool Gui::Loop(Game& game)
 
 			if (ImGui::BeginMenu("View"))
 			{
+				ImGui::Checkbox("Sky", &game.GetConfig().drawSky);
+				ImGui::Checkbox("Water", &game.GetConfig().drawWater);
+				ImGui::Checkbox("Island", &game.GetConfig().drawIsland);
+				ImGui::Checkbox("Entities", &game.GetConfig().drawEntities);
+				ImGui::Checkbox("TestModel", &game.GetConfig().drawTestModel);
+				ImGui::Checkbox("Debug Cross", &game.GetConfig().drawDebugCross);
 				ImGui::Checkbox("Wireframe", &config.wireframe);
 				ImGui::Checkbox("Bounding Boxes", &config.drawBoundingBoxes);
 				ImGui::Checkbox("Streams", &config.drawStreams);
