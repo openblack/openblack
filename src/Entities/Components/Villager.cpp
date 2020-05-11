@@ -7,8 +7,6 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#pragma once
-
 #include "Villager.h"
 
 #include "AllMeshes.h"
