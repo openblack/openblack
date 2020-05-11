@@ -19,6 +19,7 @@
 
 namespace openblack
 {
+class Renderer;
 
 namespace graphics
 {
@@ -31,7 +32,7 @@ public:
 	explicit MeshViewer();
 	void Open();
 	void DrawWindow();
-	void DrawScene();
+	void DrawScene(const Renderer& renderer);
 
 private:
 	bool _open {false};

@@ -103,26 +103,3 @@ void L3DMesh::LoadFromBuffer(const std::vector<uint8_t>& data)
 
 	Load(l3d);
 }
-
-void L3DMesh::Submit(const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const
-{
-	if (_subMeshes.empty())
-	{
-		spdlog::warn("Mesh {} has no submeshes to draw", _debugName);
-		return;
-	}
-	if (subMeshIndex != std::numeric_limits<uint8_t>::max())
-	{
-		if (subMeshIndex >= _subMeshes.size())
-		{
-			spdlog::warn("tried to draw submesh out of range ({}/{})", subMeshIndex, _subMeshes.size());
-		}
-
-		_subMeshes[subMeshIndex]->Submit(desc, desc.viewId, *desc.program, desc.state, desc.rgba, false);
-	}
-	for (auto it = _subMeshes.begin(); it != _subMeshes.end(); ++it)
-	{
-		const L3DSubMesh& submesh = *it->get();
-		submesh.Submit(desc, desc.viewId, *desc.program, desc.state, desc.rgba, std::next(it) != _subMeshes.end());
-	}
-}

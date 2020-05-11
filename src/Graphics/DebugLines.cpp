@@ -12,9 +12,6 @@
 #include "Mesh.h"
 #include "VertexBuffer.h"
 
-#include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
-
 #include <array>
 
 namespace openblack::graphics
@@ -81,34 +78,8 @@ std::unique_ptr<DebugLines> DebugLines::CreateLine(const glm::vec4& from, const 
 	return CreateDebugLines(line.data(), line.size());
 }
 
-void DebugLines::SetPose(const glm::vec3& center, const glm::vec3& size)
-{
-	_model = glm::translate(center) * glm::scale(size);
-}
-
-void DebugLines::Draw(RenderPass viewId, const ShaderProgram& program) const
-{
-	bgfx::setTransform(&_model);
-
-	Mesh::DrawDesc desc = {
-	    /*viewId =*/viewId,
-	    /*program =*/program,
-	    /*start =*/_mesh->GetVertexBuffer().GetCount(),
-	    /*offset =*/0,
-	    /*instanceBuffer =*/nullptr,
-	    /*instanceStart =*/0,
-	    /*instanceCount =*/1,
-	    /*state =*/0u | BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES,
-	    /*rgba =*/0,
-	    /*skip =*/Mesh::SkipState::SkipNone,
-	    /*preserveState =*/false,
-	};
-	_mesh->Draw(desc);
-}
-
 DebugLines::DebugLines(std::unique_ptr<Mesh>&& mesh)
     : _mesh(std::move(mesh))
-    , _model(1.0f)
 {
 }
 

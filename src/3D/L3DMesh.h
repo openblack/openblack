@@ -90,7 +90,6 @@ public:
 	void Load(const l3d::L3DFile& l3d);
 	void LoadFromFile(const std::string& fileName);
 	void LoadFromBuffer(const std::vector<uint8_t>& data);
-	void Submit(const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex = std::numeric_limits<uint8_t>::max()) const;
 
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return _subMeshes.size(); }
 	[[nodiscard]] const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }

@@ -63,6 +63,7 @@ namespace openblack
 class Game;
 class GameWindow;
 class MeshViewer;
+class Renderer;
 
 class Gui
 {
@@ -73,7 +74,7 @@ public:
 
 	bool ProcessEventSdl2(const SDL_Event& event);
 	void NewFrame(GameWindow* window);
-	bool Loop(Game& game);
+	bool Loop(Game& game, const Renderer& renderer);
 	void Draw();
 
 private:

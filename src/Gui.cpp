@@ -462,9 +462,9 @@ void Gui::NewFrame(GameWindow* window)
 	ImGui::NewFrame();
 }
 
-bool Gui::Loop(Game& game)
+bool Gui::Loop(Game& game, const Renderer& renderer)
 {
-	_meshViewer->DrawScene();
+	_meshViewer->DrawScene(renderer);
 
 	NewFrame(game.GetWindow());
 

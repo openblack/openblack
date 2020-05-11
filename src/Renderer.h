@@ -14,6 +14,7 @@
 #include <SDL.h>
 #include <bgfx/bgfx.h>
 #include <glm/fwd.hpp>
+#include <glm/mat4x4.hpp>
 
 #include <array>
 #include <chrono>
@@ -120,17 +121,18 @@ public:
 	void ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height) const;
 
 	void DrawScene(const DrawSceneDesc& desc) const;
+	void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const;
 	void Frame();
 
 private:
 	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, graphics::RenderPass viewId,
 	                 const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba, bool preserveState) const;
-	void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const;
 	void DrawPass(const DrawSceneDesc& desc) const;
 
 	std::unique_ptr<graphics::ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
 
 	std::unique_ptr<graphics::DebugLines> _debugCross;
+	glm::mat4 _debugCrossPosition;
 };
 } // namespace openblack

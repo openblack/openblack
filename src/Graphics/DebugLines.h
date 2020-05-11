@@ -37,17 +37,12 @@ public:
 
 	virtual ~DebugLines();
 
-	void Draw(graphics::RenderPass viewId, const ShaderProgram& program) const;
-
-	void SetPose(const glm::vec3& center, const glm::vec3& size);
 	const Mesh& GetMesh() const { return *_mesh; }
-	const glm::mat4& GetModel() const { return _model; }
 
 protected:
 	explicit DebugLines(std::unique_ptr<Mesh>&& mesh);
 
 	std::unique_ptr<Mesh> _mesh;
-	glm::mat4 _model;
 };
 
 } // namespace openblack::graphics

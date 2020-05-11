@@ -27,6 +27,8 @@
 
 #include <SDL_video.h>
 #include <bgfx/platform.h>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/transform.hpp>
 #include <spdlog/spdlog.h>
 
 using namespace openblack;
@@ -163,7 +165,7 @@ graphics::ShaderManager& Renderer::GetShaderManager() const
 
 void Renderer::UpdateDebugCrossUniforms(const glm::vec3& position, float scale)
 {
-	_debugCross->SetPose(position, glm::vec3(scale, scale, scale));
+	_debugCrossPosition = glm::translate(position) * glm::scale(glm::vec3(1, 1, 1) * scale);
 }
 
 void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc,
@@ -450,7 +452,6 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				}
 				if (renderCtx.streams)
 				{
-					bgfx::setTransform(&renderCtx.streams->GetModel());
 					renderCtx.streams->GetMesh().GetVertexBuffer().Bind();
 					bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
 					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
@@ -473,7 +474,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			// clang-format on
 			submitDesc.modelMatrices = desc.testModel.GetBoneMatrices().data();
 			submitDesc.matrixCount = static_cast<uint8_t>(desc.testModel.GetBoneMatrices().size());
-			desc.testModel.Submit(submitDesc, 0);
+			DrawMesh(desc.testModel, submitDesc, 0);
 		}
 	}
 
@@ -483,7 +484,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		                                                                    : Profiler::Stage::MainPassDrawDebugCross);
 		if (desc.drawDebugCross)
 		{
-			bgfx::setTransform(&_debugCross->GetModel());
+			bgfx::setTransform(glm::value_ptr(_debugCrossPosition));
 			_debugCross->GetMesh().GetVertexBuffer().Bind();
 			bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
 			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
