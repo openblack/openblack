@@ -68,19 +68,6 @@ inline l3d::L3DMeshFlags operator&(l3d::L3DMeshFlags a, l3d::L3DMeshFlags b)
 	                                      static_cast<std::underlying_type<l3d::L3DMeshFlags>::type>(b));
 }
 
-struct L3DMeshSubmitDesc  // TODO Remove me
-{
-	graphics::RenderPass viewId;
-	const graphics::ShaderProgram* program;
-	uint64_t state;
-	uint32_t rgba;
-	const glm::mat4* modelMatrices;
-	uint8_t matrixCount;
-	const bgfx::DynamicVertexBufferHandle* instanceBuffer;
-	uint32_t instanceStart;
-	uint32_t instanceCount;
-};
-
 class L3DMesh
 {
 public:

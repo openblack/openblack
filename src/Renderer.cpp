@@ -16,7 +16,6 @@
 #include "3D/Sky.h"
 #include "3D/Water.h"
 #include "Entities/Registry.h"
-#include "Game.h" // TODO: remove use of this global
 #include "GameWindow.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
@@ -168,22 +167,22 @@ void Renderer::UpdateDebugCrossUniforms(const glm::vec3& position, float scale)
 	_debugCrossPosition = glm::translate(position) * glm::scale(glm::vec3(1, 1, 1) * scale);
 }
 
-void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc,
-                           graphics::RenderPass viewId, const ShaderProgram& program, uint64_t state, uint32_t rgba,
-                           bool preserveState) const
+void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const MeshPack& meshPack,
+                           const L3DMeshSubmitDesc& desc, graphics::RenderPass viewId, const ShaderProgram& program,
+                           uint64_t state, uint32_t rgba, bool preserveState) const
 {
 	assert(&subMesh.GetMesh());
 	assert(!subMesh.isPhysics());
 
 	auto const& skins = mesh.GetSkins();
 
-	auto getTexture = [&skins](uint32_t skinID) -> const Texture2D* {
+	auto getTexture = [&skins, &meshPack](uint32_t skinID) -> const Texture2D* {
 		if (skinID != 0xFFFFFFFF)
 		{
 			if (skins.find(skinID) != skins.end())
 				return skins.at(skinID).get();
 			else
-				return &Game::instance()->GetMeshPack().GetTexture(skinID);
+				return &meshPack.GetTexture(skinID);
 		}
 		return nullptr;
 	};
@@ -244,9 +243,9 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 	}
 }
 
-void Renderer::DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const
+void Renderer::DrawMesh(const L3DMesh& mesh, const MeshPack& meshPack, const L3DMeshSubmitDesc& desc,
+                        uint8_t subMeshIndex) const
 {
-
 	if (mesh.GetNumSubMeshes() == 0)
 	{
 		spdlog::warn("Mesh {} has no submeshes to draw", mesh.GetDebugName());
@@ -262,7 +261,7 @@ void Renderer::DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint
 			spdlog::warn("tried to draw submesh out of range ({}/{})", subMeshIndex, mesh.GetNumSubMeshes());
 		}
 
-		DrawSubMesh(mesh, *subMeshes[subMeshIndex], desc, desc.viewId, *desc.program, desc.state, desc.rgba, false);
+		DrawSubMesh(mesh, *subMeshes[subMeshIndex], meshPack, desc, desc.viewId, *desc.program, desc.state, desc.rgba, false);
 		return;
 	}
 
@@ -271,13 +270,13 @@ void Renderer::DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint
 		const L3DSubMesh& subMesh = *it->get();
 		if (!subMesh.isPhysics())
 		{
-			DrawSubMesh(mesh, subMesh, desc, desc.viewId, *desc.program, desc.state, desc.rgba,
+			DrawSubMesh(mesh, subMesh, meshPack, desc, desc.viewId, *desc.program, desc.state, desc.rgba,
 			            std::next(it) != subMeshes.end());
 		}
 	}
 }
 
-void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const
+void Renderer::DrawScene(const MeshPack& meshPack, const DrawSceneDesc& drawDesc) const
 {
 	// Reflection Pass
 	{
@@ -296,18 +295,18 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const
 			drawPassDesc.drawDebugCross = false;
 			drawPassDesc.drawBoundingBoxes = false;
 			drawPassDesc.cullBack = true;
-			DrawPass(drawPassDesc);
+			DrawPass(meshPack, drawPassDesc);
 		}
 	}
 
 	// Main Draw Pass
 	{
 		auto section = drawDesc.profiler.BeginScoped(Profiler::Stage::MainPass);
-		DrawPass(drawDesc);
+		DrawPass(meshPack, drawDesc);
 	}
 }
 
-void Renderer::DrawPass(const DrawSceneDesc& desc) const
+void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) const
 {
 	if (desc.frameBuffer)
 	{
@@ -347,7 +346,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			submit_desc.modelMatrices = &modelMatrix;
 			submit_desc.matrixCount = 1;
 
-			DrawMesh(*desc.sky._model, submit_desc, 0);
+			DrawMesh(*desc.sky._model, meshPack, submit_desc, 0);
 		}
 	}
 
@@ -418,7 +417,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			// Instance meshes
 			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
 			{
-				const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
+				const L3DMesh& mesh = meshPack.GetMesh(static_cast<uint32_t>(meshId));
 				submitDesc.instanceBuffer = &renderCtx.instanceUniformBuffer;
 				submitDesc.instanceStart = placers.offset;
 				submitDesc.instanceCount = placers.count;
@@ -435,7 +434,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					submitDesc.matrixCount = 1;
 				}
 				// TODO(bwrsandman): choose the correct LOD
-				DrawMesh(mesh, submitDesc, std::numeric_limits<uint8_t>::max());
+				DrawMesh(mesh, meshPack, submitDesc, std::numeric_limits<uint8_t>::max());
 			}
 
 			// Debug
@@ -474,7 +473,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			// clang-format on
 			submitDesc.modelMatrices = desc.testModel.GetBoneMatrices().data();
 			submitDesc.matrixCount = static_cast<uint8_t>(desc.testModel.GetBoneMatrices().size());
-			DrawMesh(desc.testModel, submitDesc, 0);
+			DrawMesh(desc.testModel, meshPack, submitDesc, 0);
 		}
 	}
 

@@ -299,7 +299,7 @@ void Game::Run()
 			    /*smallBumpMapStrength =*/_config.smallBumpMapStrength,
 			};
 
-			_renderer->DrawScene(drawDesc);
+			_renderer->DrawScene(*_meshPack, drawDesc);
 		}
 
 		{
