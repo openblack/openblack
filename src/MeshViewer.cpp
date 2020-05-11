@@ -20,6 +20,8 @@
 #include "Renderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/transform.hpp>
 #include <imgui.h>
 #include <imgui_bitfield.h>
 
@@ -149,7 +151,7 @@ void MeshViewer::DrawWindow()
 	ImGui::End();
 }
 
-void MeshViewer::DrawScene()
+void MeshViewer::DrawScene(const Renderer& renderer)
 {
 	if (!_open)
 		return;
@@ -174,10 +176,14 @@ void MeshViewer::DrawScene()
 	_frameBuffer->GetSize(width, height);
 	bgfx::setViewRect(static_cast<bgfx::ViewId>(_viewId), 0, 0, width, height);
 
-	uint64_t state = 0u | BGFX_STATE_WRITE_MASK | BGFX_STATE_DEPTH_TEST_LESS |
-	                 BGFX_STATE_CULL_CCW // TODO(bwrsandman): Some meshes wind one way and
-	                                     // some others (i.e. rocks, gate)
-	                 | BGFX_STATE_MSAA;
+	// clang-format off
+	uint64_t state = 0u
+		| BGFX_STATE_WRITE_MASK
+		| BGFX_STATE_DEPTH_TEST_LESS
+		| BGFX_STATE_CULL_CCW // TODO(bwrsandman): Some meshes wind one way and
+		                      //                   some others (i.e. rocks, gate)
+		| BGFX_STATE_MSAA;
+	// clang-format on
 
 	const auto& mesh = meshes[static_cast<int>(_selectedMesh)];
 	if (_selectedSubMesh >= 0 && static_cast<uint32_t>(_selectedSubMesh) < mesh->GetSubMeshes().size())
@@ -194,12 +200,15 @@ void MeshViewer::DrawScene()
 			desc.modelMatrices = mesh->GetBoneMatrices().data();
 			desc.matrixCount = mesh->GetBoneMatrices().size();
 		}
-		mesh->Submit(desc, _selectedSubMesh);
+		renderer.DrawMesh(*mesh, desc, _selectedSubMesh);
 		if (_viewBoundingBox)
 		{
 			auto box = mesh->GetSubMeshes()[_selectedSubMesh]->GetBoundingBox();
-			_boundingBox->SetPose(box.center(), box.size());
-			_boundingBox->Draw(_viewId, *debugShader);
+			auto model = glm::translate(box.center()) * glm::scale(box.size());
+			bgfx::setTransform(glm::value_ptr(model));
+			_boundingBox->GetMesh().GetVertexBuffer().Bind();
+			bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES, 0);
+			bgfx::submit(static_cast<bgfx::ViewId>(_viewId), debugShader->GetRawHandle());
 		}
 	}
 }

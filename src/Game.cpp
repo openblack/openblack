@@ -170,7 +170,7 @@ bool Game::Update()
 	// ImGui events + prepare
 	{
 		auto guiLoop = _profiler->BeginScoped(Profiler::Stage::GuiLoop);
-		if (_gui->Loop(*this))
+		if (_gui->Loop(*this, *_renderer))
 		{
 			return false; // Quit event
 		}

@@ -45,8 +45,6 @@ public:
 	~L3DSubMesh();
 
 	void Load(const l3d::L3DFile& l3d, uint32_t meshIndex);
-	void Submit(const L3DMeshSubmitDesc& desc, graphics::RenderPass viewId, const graphics::ShaderProgram& program,
-	            uint64_t state, uint32_t rgba = 0, bool preserveState = false) const;
 
 	[[nodiscard]] openblack::l3d::L3DSubmeshHeader::Flags GetFlags() const { return _flags; }
 	[[nodiscard]] bool isPhysics() const { return _flags.isPhysics; }
