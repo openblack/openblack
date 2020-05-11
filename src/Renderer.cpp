@@ -345,7 +345,13 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		                                                                               : Profiler::Stage::MainPassDrawWater);
 		if (desc.drawWater)
 		{
-			desc.water.Draw(desc.viewId, *waterShader);
+			const auto& mesh = desc.water._mesh;
+			mesh->GetIndexBuffer().Bind(mesh->GetIndexBuffer().GetCount(), 0);
+			mesh->GetVertexBuffer().Bind();
+			bgfx::setState(BGFX_STATE_DEFAULT);
+			waterShader->SetTextureSampler("s_diffuse", 0, *desc.water._texture);
+			waterShader->SetTextureSampler("s_reflection", 1, desc.water.GetFrameBuffer().GetColorAttachment());
+			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), waterShader->GetRawHandle());
 		}
 	}
 
