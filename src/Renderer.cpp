@@ -267,7 +267,11 @@ void Renderer::DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint
 	for (auto it = subMeshes.begin(); it != subMeshes.end(); ++it)
 	{
 		const L3DSubMesh& subMesh = *it->get();
-		DrawSubMesh(mesh, subMesh, desc, desc.viewId, *desc.program, desc.state, desc.rgba, std::next(it) != subMeshes.end());
+		if (!subMesh.isPhysics())
+		{
+			DrawSubMesh(mesh, subMesh, desc, desc.viewId, *desc.program, desc.state, desc.rgba,
+			            std::next(it) != subMeshes.end());
+		}
 	}
 }
 
@@ -317,6 +321,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	auto waterShader = _shaderManager->GetShader("Water");
 	auto terrainShader = _shaderManager->GetShader("Terrain");
 	auto debugShader = _shaderManager->GetShader("DebugLine");
+	auto debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
+	auto objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
 
 	{
 		auto section = desc.profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSky
@@ -372,7 +378,60 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		                                                                               : Profiler::Stage::MainPassDrawModels);
 		if (desc.drawEntities)
 		{
-			desc.entities.DrawModels(desc.viewId, *_shaderManager);
+			L3DMeshSubmitDesc submitDesc = {};
+			submitDesc.program = objectShaderInstanced;
+			// clang-format off
+			submitDesc.state = 0u
+				| BGFX_STATE_WRITE_MASK
+				| BGFX_STATE_DEPTH_TEST_LESS
+				| BGFX_STATE_MSAA
+			;
+			// clang-format on
+			auto& renderCtx = desc.entities.Context().renderContext;
+
+			// Instance meshes
+			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
+			{
+				const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(static_cast<uint32_t>(meshId));
+				submitDesc.instanceBuffer = &renderCtx.instanceUniformBuffer;
+				submitDesc.instanceStart = placers.offset;
+				submitDesc.instanceCount = placers.count;
+				if (mesh.IsBoned())
+				{
+					submitDesc.modelMatrices = mesh.GetBoneMatrices().data();
+					submitDesc.matrixCount = mesh.GetBoneMatrices().size();
+					// TODO(bwrsandman): Get animation frame instead of default
+				}
+				else
+				{
+					const auto identity = glm::mat4(1.0f);
+					submitDesc.modelMatrices = &identity;
+					submitDesc.matrixCount = 1;
+				}
+				// TODO(bwrsandman): choose the correct LOD
+				DrawMesh(mesh, submitDesc, std::numeric_limits<uint8_t>::max());
+			}
+
+			// Debug
+			if (desc.viewId == graphics::RenderPass::Main)
+			{
+				if (renderCtx.boundingBox)
+				{
+					auto boundBoxOffset = renderCtx.instanceUniforms.size() / 2;
+					auto boundBoxCount = renderCtx.instanceUniforms.size() / 2;
+					renderCtx.boundingBox->GetMesh().GetVertexBuffer().Bind();
+					bgfx::setInstanceDataBuffer(renderCtx.instanceUniformBuffer, boundBoxOffset, boundBoxCount);
+					bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
+					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShaderInstanced->GetRawHandle());
+				}
+				if (renderCtx.streams)
+				{
+					bgfx::setTransform(&renderCtx.streams->GetModel());
+					renderCtx.streams->GetMesh().GetVertexBuffer().Bind();
+					bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
+					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
+				}
+			}
 		}
 
 		if (desc.drawTestModel)
