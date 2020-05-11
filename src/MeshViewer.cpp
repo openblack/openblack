@@ -189,7 +189,7 @@ void MeshViewer::DrawScene(const Renderer& renderer)
 	if (_selectedSubMesh >= 0 && static_cast<uint32_t>(_selectedSubMesh) < mesh->GetSubMeshes().size())
 	{
 		const auto identity = glm::mat4(1.0f);
-		L3DMeshSubmitDesc desc = {};
+		Renderer::L3DMeshSubmitDesc desc = {};
 		desc.viewId = _viewId;
 		desc.program = objectShader;
 		desc.state = state;
@@ -200,7 +200,7 @@ void MeshViewer::DrawScene(const Renderer& renderer)
 			desc.modelMatrices = mesh->GetBoneMatrices().data();
 			desc.matrixCount = mesh->GetBoneMatrices().size();
 		}
-		renderer.DrawMesh(*mesh, desc, _selectedSubMesh);
+		renderer.DrawMesh(*mesh, meshPack, desc, _selectedSubMesh);
 		if (_viewBoundingBox)
 		{
 			auto box = mesh->GetSubMeshes()[_selectedSubMesh]->GetBoundingBox();

@@ -31,8 +31,8 @@ class GameWindow;
 class Game;
 class L3DMesh;
 class L3DSubMesh;
-struct L3DMeshSubmitDesc; // TODO Remove me
 class LandIsland;
+class MeshPack;
 class Profiler;
 class Sky;
 class Water;
@@ -108,6 +108,19 @@ public:
 		float smallBumpMapStrength;
 	};
 
+	struct L3DMeshSubmitDesc
+	{
+		graphics::RenderPass viewId;
+		const graphics::ShaderProgram* program;
+		uint64_t state;
+		uint32_t rgba;
+		const glm::mat4* modelMatrices;
+		uint8_t matrixCount;
+		const bgfx::DynamicVertexBufferHandle* instanceBuffer;
+		uint32_t instanceStart;
+		uint32_t instanceCount;
+	};
+
 	Renderer() = delete;
 	explicit Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererType, bool vsync);
 
@@ -120,14 +133,15 @@ public:
 
 	void ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height) const;
 
-	void DrawScene(const DrawSceneDesc& desc) const;
-	void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const;
+	void DrawScene(const MeshPack& meshPack, const DrawSceneDesc& desc) const;
+	void DrawMesh(const L3DMesh& mesh, const MeshPack& meshPack, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const;
 	void Frame();
 
 private:
-	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, graphics::RenderPass viewId,
-	                 const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba, bool preserveState) const;
-	void DrawPass(const DrawSceneDesc& desc) const;
+	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const MeshPack& meshPack, const L3DMeshSubmitDesc& desc,
+	                 graphics::RenderPass viewId, const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba,
+	                 bool preserveState) const;
+	void DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) const;
 
 	std::unique_ptr<graphics::ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
