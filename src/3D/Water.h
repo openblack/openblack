@@ -33,12 +33,12 @@ public:
 	~Water() = default;
 
 	[[nodiscard]] glm::vec4 GetReflectionPlane() const { return glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); };
-
-	void Draw(graphics::RenderPass viewId, const graphics::ShaderProgram& program) const;
 	[[nodiscard]] graphics::FrameBuffer& GetFrameBuffer() const;
 	void DebugGUI();
 
 private:
+	friend class Renderer;
+
 	void createMesh();
 
 	std::unique_ptr<graphics::Mesh> _mesh;

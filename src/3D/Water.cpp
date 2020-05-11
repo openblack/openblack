@@ -62,27 +62,6 @@ void Water::createMesh()
 	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, graphics::Mesh::Topology::TriangleList);
 }
 
-void Water::Draw(graphics::RenderPass viewId, const ShaderProgram& program) const
-{
-	program.SetTextureSampler("s_diffuse", 0, *_texture);
-	program.SetTextureSampler("s_reflection", 1, _reflectionFrameBuffer->GetColorAttachment());
-
-	Mesh::DrawDesc desc = {
-	    /*viewId =*/viewId,
-	    /*program =*/program,
-	    /*count =*/_mesh->GetIndexBuffer().GetCount(),
-	    /*offset =*/0,
-	    /*instanceBuffer =*/nullptr,
-	    /*instanceStart =*/0,
-	    /*instanceCount =*/1,
-	    /*state =*/BGFX_STATE_DEFAULT,
-	    /*rgba =*/0,
-	    /*skip =*/Mesh::SkipState::SkipNone,
-	    /*preserveState =*/false,
-	};
-	_mesh->Draw(desc);
-}
-
 void Water::DebugGUI()
 {
 	ImGui::Begin("Water Debug");
