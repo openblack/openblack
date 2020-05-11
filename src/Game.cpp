@@ -29,9 +29,9 @@
 #include <Entities/Components/Transform.h>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/intersect.hpp>
-#include <glm/gtc/constants.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/spdlog.h>
 
@@ -106,7 +106,7 @@ Game::~Game()
 	SDL_Quit(); // todo: move to GameWindow
 }
 
-bool Game::ProcessEvents(const SDL_Event &event)
+bool Game::ProcessEvents(const SDL_Event& event)
 {
 	static bool leftMouseButton = false;
 
@@ -263,8 +263,8 @@ void Game::Run()
 	_meshPack = std::make_unique<MeshPack>();
 	_meshPack->LoadFromFile("Data/AllMeshes.g3d");
 
-	 _testModel = std::make_unique<L3DMesh>();
-	 _testModel->LoadFromFile("Data/CreatureMesh/C_Tortoise_Base.l3d");
+	_testModel = std::make_unique<L3DMesh>();
+	_testModel->LoadFromFile("Data/CreatureMesh/C_Tortoise_Base.l3d");
 	_handModel = std::make_unique<L3DMesh>();
 	_handModel->LoadFromFile("Data/CreatureMesh/Hand_Boned_Base2.l3d");
 

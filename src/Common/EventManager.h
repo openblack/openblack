@@ -40,6 +40,7 @@ private:
 	{
 	private:
 		inline static std::atomic<int> identifier = 0;
+
 	public:
 		template <typename... T>
 		inline static const int Type = identifier++;
@@ -49,7 +50,7 @@ private:
 	EventQueue<Event>* Insist()
 	{
 		const auto eventType = EventManager::_EventFamily::Type<Event>;
-		std::unique_ptr<IEventQueue> &p = queues[eventType];
+		std::unique_ptr<IEventQueue>& p = queues[eventType];
 
 		if (!p)
 			p.reset(new EventQueue<Event>());

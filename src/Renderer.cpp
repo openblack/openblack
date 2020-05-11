@@ -9,7 +9,6 @@
 
 #include "Renderer.h"
 
-#include "Game.h"
 #include "3D/Camera.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIsland.h"
@@ -17,6 +16,7 @@
 #include "3D/Sky.h"
 #include "3D/Water.h"
 #include "Entities/Registry.h"
+#include "Game.h"
 #include "GameWindow.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
@@ -424,7 +424,8 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 				if (meshId == 999)
 				{
 					mesh = &Game::instance()->GetHandModel();
-				} else
+				}
+				else
 				{
 					mesh = &meshPack.GetMesh(static_cast<uint32_t>(meshId));
 				}
