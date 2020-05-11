@@ -37,10 +37,6 @@ public:
 
 	void LoadFromFile(const std::string& filename);
 
-	void Update(float timeOfDay, float bumpMapStrength, float smallBumpMapStrength);
-
-	// const uint8_t GetAltitudeAt(glm::ivec2) const;
-
 	[[nodiscard]] float GetHeightAt(glm::vec2) const;
 	[[nodiscard]] const LandBlock* GetBlock(const glm::u8vec2& coordinates) const;
 	[[nodiscard]] const lnd::LNDCell& GetCell(const glm::u16vec2& coordinates) const;
@@ -56,10 +52,11 @@ private:
 
 	// Renderer
 public:
-	void Draw(graphics::RenderPass viewId, const graphics::ShaderProgram& program, bool cullBack) const;
-
 	[[nodiscard]] const std::vector<LandBlock>& GetBlocks() const { return _landBlocks; }
 	[[nodiscard]] const std::vector<lnd::LNDCountry>& GetCountries() const { return _countries; }
+	[[nodiscard]] const graphics::Texture2D& GetAlbedoArray() const { return *_materialArray; }
+	[[nodiscard]] const graphics::Texture2D& GetBump() const { return *_textureBumpMap; }
+	[[nodiscard]] const graphics::Texture2D& GetSmallBump() const { return *_textureSmallBump; }
 
 	uint8_t GetNoise(int x, int y);
 	graphics::Texture2D* GetSmallBumpMap() { return _textureSmallBump.get(); }
@@ -73,10 +70,6 @@ private:
 	std::unique_ptr<graphics::Texture2D> _textureSmallBump;
 
 	std::array<uint8_t, 256 * 256> _noiseMap;
-
-	float _timeOfDay;
-	float _bumpMapStrength;
-	float _smallBumpMapStrength;
 };
 } // namespace openblack
 

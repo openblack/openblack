@@ -369,7 +369,31 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		                                                                               : Profiler::Stage::MainPassDrawIsland);
 		if (desc.drawIsland)
 		{
-			desc.island.Draw(desc.viewId, *terrainShader, desc.cullBack);
+			for (auto& block : desc.island.GetBlocks())
+			{
+				terrainShader->SetTextureSampler("s0_materials", 0, desc.island.GetAlbedoArray());
+				terrainShader->SetTextureSampler("s1_bump", 1, desc.island.GetBump());
+				terrainShader->SetTextureSampler("s2_smallBump", 2, desc.island.GetSmallBump());
+				terrainShader->SetUniformValue("u_timeOfDay", &desc.timeOfDay);
+				terrainShader->SetUniformValue("u_bumpmapStrength", &desc.bumpMapStrength);
+				terrainShader->SetUniformValue("u_smallBumpmapStrength", &desc.smallBumpMapStrength);
+
+				glm::vec4 mapPosition = block.GetMapPosition();
+				terrainShader->SetUniformValue("u_blockPosition", &mapPosition);
+
+				// clang-format off
+				constexpr auto defaultState = 0u
+					| BGFX_STATE_WRITE_MASK
+					| BGFX_STATE_DEPTH_TEST_LESS
+					| BGFX_STATE_BLEND_ALPHA
+					| BGFX_STATE_MSAA
+				;
+				// clang-format on
+
+				block.GetMesh().GetVertexBuffer().Bind();
+				bgfx::setState(defaultState | (desc.cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW), 0);
+				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), terrainShader->GetRawHandle());
+			}
 		}
 	}
 
