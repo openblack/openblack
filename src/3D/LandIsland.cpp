@@ -97,13 +97,6 @@ void LandIsland::LoadFromFile(const std::string& filename)
 	bgfx::frame();
 }
 
-void openblack::LandIsland::Update(float timeOfDay, float bumpMapStrength, float smallBumpMapStrength)
-{
-	_timeOfDay = timeOfDay;
-	_bumpMapStrength = bumpMapStrength;
-	_smallBumpMapStrength = smallBumpMapStrength;
-}
-
 float LandIsland::GetHeightAt(glm::vec2 vec) const
 {
 	return GetCell(vec * 0.1f).altitude * LandIsland::HeightUnit;
@@ -154,20 +147,6 @@ const lnd::LNDCell& LandIsland::GetCell(const glm::u16vec2& coordinates) const
 	}
 	assert(_landBlocks.size() >= blockIndex);
 	return _landBlocks[blockIndex - 1].GetCells()[cellIndex];
-}
-
-void LandIsland::Draw(graphics::RenderPass viewId, const ShaderProgram& program, bool cullBack) const
-{
-	for (auto& block : _landBlocks)
-	{
-		program.SetTextureSampler("s_materials", 0, *_materialArray);
-		program.SetTextureSampler("s_bump", 1, *_textureBumpMap);
-		program.SetTextureSampler("s_smallBump", 2, *_textureSmallBump);
-		program.SetUniformValue("u_timeOfDay", &_timeOfDay);
-		program.SetUniformValue("u_bumpmapStrength", &_bumpMapStrength);
-		program.SetUniformValue("u_smallBumpmapStrength", &_smallBumpMapStrength);
-		block.Draw(viewId, program, cullBack);
-	}
 }
 
 void LandIsland::DumpTextures()

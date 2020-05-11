@@ -196,3 +196,9 @@ glm::ivec2 LandBlock::GetBlockPosition() const
 	assert(_block);
 	return {_block ? _block->blockX : -1, _block ? _block->blockZ : -1};
 }
+
+glm::vec4 LandBlock::GetMapPosition() const
+{
+	assert(_block);
+	return glm::vec4(_block->mapX, _block->mapZ, 0, 0);
+}

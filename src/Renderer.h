@@ -102,6 +102,9 @@ public:
 		bool bgfxDebug;
 		bool wireframe;
 		bool profile;
+		float timeOfDay;
+		float bumpMapStrength;
+		float smallBumpMapStrength;
 	};
 
 	Renderer() = delete;

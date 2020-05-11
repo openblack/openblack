@@ -49,8 +49,10 @@ public:
 	void Draw(graphics::RenderPass viewId, const graphics::ShaderProgram& program, bool cullBack) const;
 	void BuildMesh(LandIsland& island);
 
+	[[nodiscard]] const graphics::Mesh& GetMesh() const { return *_mesh; }
 	[[nodiscard]] const lnd::LNDCell* GetCells() const;
 	[[nodiscard]] glm::ivec2 GetBlockPosition() const;
+	[[nodiscard]] glm::vec4 GetMapPosition() const;
 
 private:
 	std::unique_ptr<lnd::LNDBlock> _block;

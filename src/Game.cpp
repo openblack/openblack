@@ -182,11 +182,6 @@ bool Game::Update()
 		_modelRotation.y = fmod(_modelRotation.y + float(deltaTime.count()) * .0001f, 360.f);
 	}
 
-	// Update Terrain
-	{
-		_landIsland->Update(_config.timeOfDay, _config.bumpMapStrength, _config.smallBumpMapStrength);
-	}
-
 	// Update Uniforms
 	{
 		auto profilerScopedUpdateUniforms = _profiler->BeginScoped(Profiler::Stage::UpdateUniforms);
@@ -299,6 +294,9 @@ void Game::Run()
 			    /*bgfxDebug =*/_config.bgfxDebug,
 			    /*wireframe =*/_config.wireframe,
 			    /*profile =*/_config.showProfiler,
+			    /*timeOfDay =*/_config.timeOfDay,
+			    /*bumpMapStrength =*/_config.bumpMapStrength,
+			    /*smallBumpMapStrength =*/_config.smallBumpMapStrength,
 			};
 
 			_renderer->DrawScene(drawDesc);
