@@ -12,14 +12,14 @@
 #include "GameWindow.h"
 
 #include <LHVM/LHVM.h>
+#include <SDL.h>
 #include <bgfx/bgfx.h>
 #include <glm/glm.hpp>
-#include <SDL.h>
 
+#include <entt/entity/fwd.hpp>
 #include <memory>
 #include <string>
 #include <vector>
-#include <entt/entity/fwd.hpp>
 
 namespace openblack
 {
@@ -95,7 +95,7 @@ public:
 	Game(Arguments&& args);
 	virtual ~Game();
 
-	bool ProcessEvents(const SDL_Event &event);
+	bool ProcessEvents(const SDL_Event& event);
 	bool Update();
 	void Run();
 

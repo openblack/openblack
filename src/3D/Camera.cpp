@@ -146,14 +146,14 @@ void Camera::handleMouseInput(const SDL_Event& e)
 	}
 	else if (e.type == SDL_MOUSEMOTION && e.motion.state & SDL_BUTTON(SDL_BUTTON_LEFT))
 	{
-		const auto& land      = Game::instance()->GetLandIsland();
-		auto momentum         = _position.y / 300;
-		auto forward          = GetForward() * -static_cast<float>(e.motion.yrel * momentum);
-		auto right            = GetRight() * -static_cast<float>(e.motion.xrel * momentum);
-		auto futurePosition   = _position + forward + right;
-		auto height           = land.GetHeightAt(glm::vec2(futurePosition.x + 5, futurePosition.z + 5)) + 13.0f;
-		futurePosition.y      = std::max(height, _position.y);
-		_position             = futurePosition;
+		const auto& land = Game::instance()->GetLandIsland();
+		auto momentum = _position.y / 300;
+		auto forward = GetForward() * -static_cast<float>(e.motion.yrel * momentum);
+		auto right = GetRight() * -static_cast<float>(e.motion.xrel * momentum);
+		auto futurePosition = _position + forward + right;
+		auto height = land.GetHeightAt(glm::vec2(futurePosition.x + 5, futurePosition.z + 5)) + 13.0f;
+		futurePosition.y = std::max(height, _position.y);
+		_position = futurePosition;
 	}
 }
 

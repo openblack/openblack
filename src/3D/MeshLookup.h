@@ -26,10 +26,13 @@ class MeshId
 {
 public:
 	using IdType = int;
-	MeshId(MeshPackId id) : _id(static_cast<IdType>(id)) {};
-	MeshId(IdType id) : _id(static_cast<IdType>(id)) {};
+	MeshId(MeshPackId id)
+	    : _id(static_cast<IdType>(id)) {};
+	MeshId(IdType id)
+	    : _id(static_cast<IdType>(id)) {};
 	operator int() const { return _id; }
-	bool operator ==(const int& other) const { return _id == other; }
+	bool operator==(const int& other) const { return _id == other; }
+
 private:
 	IdType _id;
 };
@@ -39,7 +42,7 @@ class MeshLookup
 {
 public:
 	MeshLookup(std::initializer_list<typename std::unordered_map<T, MeshPackId, K>::value_type> init)
-		: lookup(init)
+	    : lookup(init)
 	{
 	}
 

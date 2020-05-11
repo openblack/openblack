@@ -14,6 +14,7 @@
 #include <entt/entity/fwd.hpp>
 #include <glm/fwd.hpp>
 
+#include <3D/MeshLookup.h>
 #include <map>
 #include <memory>
 #include <unordered_map>
