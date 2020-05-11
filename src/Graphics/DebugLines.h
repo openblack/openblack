@@ -42,6 +42,8 @@ public:
 	          uint32_t instanceCount, const ShaderProgram& program) const;
 
 	void SetPose(const glm::vec3& center, const glm::vec3& size);
+	const Mesh& GetMesh() const { return *_mesh; }
+	const glm::mat4& GetModel() const { return _model; }
 
 protected:
 	explicit DebugLines(std::unique_ptr<Mesh>&& mesh);

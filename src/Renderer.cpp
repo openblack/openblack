@@ -400,7 +400,10 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		                                                                    : Profiler::Stage::MainPassDrawDebugCross);
 		if (desc.drawDebugCross)
 		{
-			_debugCross->Draw(desc.viewId, *debugShader);
+			bgfx::setTransform(&_debugCross->GetModel());
+			_debugCross->GetMesh().GetVertexBuffer().Bind();
+			bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
+			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
 		}
 	}
 
