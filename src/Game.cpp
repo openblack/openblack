@@ -31,6 +31,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/intersect.hpp>
+#include <glm/gtc/constants.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/spdlog.h>
 
@@ -116,8 +117,8 @@ bool Game::ProcessEvents(const SDL_Event &event)
 		auto& handTransform = _entityRegistry->Get<Transform>(_handEntity);
 		handTransform.position = _intersection;
 		auto cameraRotation = _camera->GetRotation();
-		auto handHeight = GetLandIsland().GetHeightAt(glm::vec2(handTransform.position.x, handTransform.position.z)) + 1.2f;
-		handTransform.rotation = glm::vec3(glm::radians(cameraRotation.x), glm::radians(cameraRotation.y), glm::radians(cameraRotation.z));
+		auto handHeight = GetLandIsland().GetHeightAt(glm::vec2(handTransform.position.x, handTransform.position.z)) + 4.0f;
+		handTransform.rotation = glm::vec3(handTransform.rotation.x, handTransform.rotation.y, glm::radians(cameraRotation.y));
 		handTransform.position = glm::vec3(handTransform.position.x, handHeight, handTransform.position.z);
 		_entityRegistry->Context().renderContext.dirty = true;
 	}
@@ -349,7 +350,8 @@ void Game::LoadMap(const std::string& name)
 	// We need a hand for the player
 	_handEntity = _entityRegistry->Create();
 	_entityRegistry->Assign<Hand>(_handEntity);
-	_entityRegistry->Assign<Transform>(_handEntity, glm::vec3(0), glm::vec3(0), glm::vec3(1.0));
+	auto pi = glm::pi<float>();
+	_entityRegistry->Assign<Transform>(_handEntity, glm::vec3(0), glm::vec3(pi / 2, 0, pi / 2), glm::vec3(0.02));
 
 	Script script(this);
 	script.Load(source);
