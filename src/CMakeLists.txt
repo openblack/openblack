@@ -117,6 +117,7 @@ target_link_libraries(
   PRIVATE l3d
           g3d
           lnd
+          anm
           imgui
           imgui-flame-graph
           ScriptLibrary

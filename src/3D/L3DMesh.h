@@ -81,6 +81,7 @@ public:
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return _subMeshes.size(); }
 	[[nodiscard]] const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }
 	[[nodiscard]] const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& GetSkins() const { return _skins; }
+	[[nodiscard]] const std::vector<uint32_t>& GetBoneParents() const { return _bonesParents; }
 	[[nodiscard]] const std::vector<glm::mat4>& GetBoneMatrices() const { return _bonesDefaultMatrices; }
 
 private:
@@ -89,6 +90,7 @@ private:
 
 	std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>> _skins;
 	std::vector<std::unique_ptr<L3DSubMesh>> _subMeshes;
+	std::vector<uint32_t> _bonesParents;
 	std::vector<glm::mat4> _bonesDefaultMatrices;
 
 public:

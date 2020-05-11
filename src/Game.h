@@ -23,6 +23,7 @@
 
 namespace openblack
 {
+class AnimationPack;
 class Camera;
 class FileSystem;
 class GameWindow;
@@ -32,6 +33,7 @@ class MeshPack;
 class LandIsland;
 class Profiler;
 class Renderer;
+class L3DAnim;
 class L3DMesh;
 class Sky;
 class Water;
@@ -118,10 +120,11 @@ public:
 	[[nodiscard]] Water& GetWater() const { return *_water; }
 	LandIsland& GetLandIsland() { return *_landIsland; }
 	[[nodiscard]] LandIsland& GetLandIsland() const { return *_landIsland; }
-	// [[nodiscard]] L3DMesh& GetTestModel() const { return *_testModel; }
+	[[nodiscard]] L3DMesh& GetTestModel() const { return *_testModel; }
 	[[nodiscard]] L3DMesh& GetHandModel() const { return *_handModel; }
 	const Transform& GetHandTransform() const;
 	Transform& GetHandTransform();
+	AnimationPack& GetAnimationPack() { return *_animationPack; }
 	MeshPack& GetMeshPack() { return *_meshPack; }
 	[[nodiscard]] const LHVM::LHVM* GetLhvm() { return _lhvm.get(); }
 	FileSystem& GetFileSystem() { return *_fileSystem; }
@@ -148,9 +151,11 @@ private:
 	std::unique_ptr<FileSystem> _fileSystem;
 	std::unique_ptr<LandIsland> _landIsland;
 	std::unique_ptr<MeshPack> _meshPack;
+	std::unique_ptr<AnimationPack> _animationPack;
 
 	// std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<L3DMesh> _testModel;
+	std::unique_ptr<L3DAnim> _testAnimation;
 	std::unique_ptr<L3DMesh> _handModel;
 	std::unique_ptr<Sky> _sky;
 	std::unique_ptr<Water> _water;
