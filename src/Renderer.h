@@ -29,6 +29,8 @@ class Camera;
 class GameWindow;
 class Game;
 class L3DMesh;
+class L3DSubMesh;
+struct L3DMeshSubmitDesc; // TODO Remove me
 class LandIsland;
 class Profiler;
 class Sky;
@@ -118,6 +120,9 @@ public:
 	void Frame();
 
 private:
+	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, graphics::RenderPass viewId,
+	                 const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba, bool preserveState) const;
+	void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const;
 	void DrawPass(const DrawSceneDesc& desc) const;
 
 	std::unique_ptr<graphics::ShaderManager> _shaderManager;

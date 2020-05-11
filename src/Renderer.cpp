@@ -12,13 +12,17 @@
 #include "3D/Camera.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIsland.h"
+#include "3D/MeshPack.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
 #include "Entities/Registry.h"
+#include "Game.h" // TODO: remove use of this global
 #include "GameWindow.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
+#include "Graphics/IndexBuffer.h"
 #include "Graphics/ShaderManager.h"
+#include "Graphics/VertexBuffer.h"
 #include "Profiler.h"
 
 #include <SDL_video.h>
@@ -162,6 +166,111 @@ void Renderer::UpdateDebugCrossUniforms(const glm::vec3& position, float scale)
 	_debugCross->SetPose(position, glm::vec3(scale, scale, scale));
 }
 
+void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc,
+                           graphics::RenderPass viewId, const ShaderProgram& program, uint64_t state, uint32_t rgba,
+                           bool preserveState) const
+{
+	assert(&subMesh.GetMesh());
+	assert(!subMesh.isPhysics());
+
+	auto const& skins = mesh.GetSkins();
+
+	auto getTexture = [&skins](uint32_t skinID) -> const Texture2D* {
+		if (skinID != 0xFFFFFFFF)
+		{
+			if (skins.find(skinID) != skins.end())
+				return skins.at(skinID).get();
+			else
+				return &Game::instance()->GetMeshPack().GetTexture(skinID);
+		}
+		return nullptr;
+	};
+
+	bool lastPreserveState = false;
+	const auto& primitives = subMesh.GetPrimitives();
+	for (auto it = primitives.begin(); it != primitives.end(); ++it)
+	{
+		const auto& prim = *it;
+
+		const bool hasNext = std::next(it) != primitives.end();
+
+		const Texture2D* texture = getTexture(prim.skinID);
+		const Texture2D* nextTexture = !hasNext ? nullptr : getTexture(std::next(it)->skinID);
+
+		bool primitivePreserveState = texture == nextTexture && (preserveState || hasNext);
+
+		uint32_t skip = Mesh::SkipState::SkipNone;
+		if (!lastPreserveState)
+		{
+			if (desc.modelMatrices && desc.matrixCount > 0)
+			{
+				bgfx::setTransform(desc.modelMatrices, desc.matrixCount);
+			}
+			if (texture)
+			{
+				program.SetTextureSampler("s_diffuse", 0, *texture);
+			}
+		}
+		else
+		{
+			skip |= Mesh::SkipState::SkipRenderState;
+			skip |= Mesh::SkipState::SkipVertexBuffer;
+		}
+
+		{
+			if (desc.instanceBuffer && (skip & Mesh::SkipState::SkipInstanceBuffer) == 0)
+			{
+				bgfx::setInstanceDataBuffer(*desc.instanceBuffer, desc.instanceStart, desc.instanceCount);
+			}
+			if (subMesh.GetMesh().isIndexed() && (skip & Mesh::SkipState::SkipIndexBuffer) == 0)
+			{
+				subMesh.GetMesh().GetIndexBuffer().Bind(prim.indicesCount, prim.indicesOffset);
+			}
+			if ((skip & Mesh::SkipState::SkipVertexBuffer) == 0)
+			{
+				subMesh.GetMesh().GetVertexBuffer().Bind();
+			}
+			if ((skip & Mesh::SkipState::SkipRenderState) == 0)
+			{
+				bgfx::setState(desc.state, desc.rgba);
+			}
+
+			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), desc.program->GetRawHandle(), 0,
+			             primitivePreserveState ? BGFX_DISCARD_NONE : BGFX_DISCARD_ALL);
+		}
+		lastPreserveState = primitivePreserveState;
+	}
+}
+
+void Renderer::DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const
+{
+
+	if (mesh.GetNumSubMeshes() == 0)
+	{
+		spdlog::warn("Mesh {} has no submeshes to draw", mesh.GetDebugName());
+		return;
+	}
+
+	const auto& subMeshes = mesh.GetSubMeshes();
+
+	if (subMeshIndex != std::numeric_limits<uint8_t>::max())
+	{
+		if (subMeshIndex >= mesh.GetNumSubMeshes())
+		{
+			spdlog::warn("tried to draw submesh out of range ({}/{})", subMeshIndex, mesh.GetNumSubMeshes());
+		}
+
+		DrawSubMesh(mesh, *subMeshes[subMeshIndex], desc, desc.viewId, *desc.program, desc.state, desc.rgba, false);
+		return;
+	}
+
+	for (auto it = subMeshes.begin(); it != subMeshes.end(); ++it)
+	{
+		const L3DSubMesh& subMesh = *it->get();
+		DrawSubMesh(mesh, subMesh, desc, desc.viewId, *desc.program, desc.state, desc.rgba, std::next(it) != subMeshes.end());
+	}
+}
+
 void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const
 {
 	// Reflection Pass
@@ -211,7 +320,23 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		                                                                               : Profiler::Stage::MainPassDrawSky);
 		if (desc.drawSky)
 		{
-			desc.sky.Draw(desc.viewId, glm::mat4(1.0f), *objectShader, desc.cullBack);
+			auto modelMatrix = glm::mat4(1.0f);
+
+			objectShader->SetTextureSampler("s_diffuse", 0, *desc.sky._texture);
+
+			L3DMeshSubmitDesc submit_desc = {};
+			submit_desc.viewId = desc.viewId;
+			submit_desc.program = objectShader;
+			submit_desc.state = BGFX_STATE_DEFAULT;
+			if (!desc.cullBack)
+			{
+				submit_desc.state &= ~BGFX_STATE_CULL_MASK;
+				submit_desc.state |= BGFX_STATE_CULL_CCW;
+			}
+			submit_desc.modelMatrices = &modelMatrix;
+			submit_desc.matrixCount = 1;
+
+			DrawMesh(*desc.sky._model, submit_desc, 0);
 		}
 	}
 

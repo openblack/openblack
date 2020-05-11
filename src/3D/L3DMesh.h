@@ -68,7 +68,7 @@ inline l3d::L3DMeshFlags operator&(l3d::L3DMeshFlags a, l3d::L3DMeshFlags b)
 	                                      static_cast<std::underlying_type<l3d::L3DMeshFlags>::type>(b));
 }
 
-struct L3DMeshSubmitDesc
+struct L3DMeshSubmitDesc  // TODO Remove me
 {
 	graphics::RenderPass viewId;
 	const graphics::ShaderProgram* program;

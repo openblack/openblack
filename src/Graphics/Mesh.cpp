@@ -34,6 +34,11 @@ const IndexBuffer& Mesh::GetIndexBuffer() const
 	return *_indexBuffer;
 }
 
+bool Mesh::isIndexed() const
+{
+	return _indexBuffer != nullptr && _indexBuffer->GetCount() > 0;
+}
+
 Mesh::Topology Mesh::GetTopology() const noexcept
 {
 	return _topology;
