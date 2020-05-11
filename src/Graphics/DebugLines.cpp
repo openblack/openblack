@@ -106,25 +106,6 @@ void DebugLines::Draw(RenderPass viewId, const ShaderProgram& program) const
 	_mesh->Draw(desc);
 }
 
-void DebugLines::Draw(RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart,
-                      uint32_t instanceCount, const ShaderProgram& program) const
-{
-	Mesh::DrawDesc desc = {
-	    /*viewId =*/viewId,
-	    /*program =*/program,
-	    /*count =*/_mesh->GetVertexBuffer().GetCount(),
-	    /*offset =*/0,
-	    /*instanceBuffer =*/&instanceBuffer,
-	    /*instanceStart =*/instanceStart,
-	    /*instanceCount =*/instanceCount,
-	    /*state =*/0u | BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES,
-	    /*rgba =*/0,
-	    /*skip =*/Mesh::SkipState::SkipNone,
-	    /*preserveState =*/false,
-	};
-	_mesh->Draw(desc);
-}
-
 DebugLines::DebugLines(std::unique_ptr<Mesh>&& mesh)
     : _mesh(std::move(mesh))
     , _model(1.0f)

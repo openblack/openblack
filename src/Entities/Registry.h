@@ -31,7 +31,6 @@ public:
 	Registry();
 
 	void PrepareDraw(bool drawBoundingBox, bool drawStreams);
-	void DrawModels(graphics::RenderPass viewId, const graphics::ShaderManager& shaderManager) const;
 	decltype(auto) Create() { return _registry.create(); }
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args)

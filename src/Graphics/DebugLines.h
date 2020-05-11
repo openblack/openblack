@@ -38,8 +38,6 @@ public:
 	virtual ~DebugLines();
 
 	void Draw(graphics::RenderPass viewId, const ShaderProgram& program) const;
-	void Draw(graphics::RenderPass viewId, const bgfx::DynamicVertexBufferHandle& instanceBuffer, uint32_t instanceStart,
-	          uint32_t instanceCount, const ShaderProgram& program) const;
 
 	void SetPose(const glm::vec3& center, const glm::vec3& size);
 	const Mesh& GetMesh() const { return *_mesh; }
