@@ -38,15 +38,14 @@ public:
 	void Interpolate555Texture(uint16_t* bitmap, uint16_t*, uint16_t*, float);
 
 	void CalculateTextures();
-	void Draw(graphics::RenderPass viewId, const glm::mat4& modelMatrix, const graphics::ShaderProgram& program,
-	          bool cullBack) const;
 	void SetTime(float time);
 
 	float TimeOfDay;
 
 private:
+	friend class Renderer;
 	std::unique_ptr<L3DMesh> _model;
-	std::unique_ptr<graphics::Texture2D> _texture;
+	std::unique_ptr<graphics::Texture2D> _texture; // TODO(bwrsandman): put in a resource manager and store look-up
 
 	std::array<std::array<uint16_t, 256 * 256>, 9> _bitmaps;
 
