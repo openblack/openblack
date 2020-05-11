@@ -76,6 +76,8 @@ Game::Game(Arguments&& args)
 	}
 	_renderer = std::make_unique<Renderer>(_window.get(), args.rendererType, args.vsync);
 	_fileSystem->SetGamePath(GetGamePath());
+	_handModel = std::make_unique<L3DMesh>();
+	_handModel->LoadFromFile("Data/CreatureMesh/Hand_Boned_Base2.l3d");
 	spdlog::debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
 
 	_gui = Gui::create(_window.get(), graphics::RenderPass::ImGui, args.scale);
