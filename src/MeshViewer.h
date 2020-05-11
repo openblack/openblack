@@ -9,13 +9,14 @@
 
 #pragma once
 
+#include <memory>
+#include <optional>
+
 #include "AllMeshes.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
 
 #include <imgui.h>
-
-#include <memory>
 
 namespace openblack
 {
@@ -35,14 +36,17 @@ public:
 	void DrawScene(const Renderer& renderer);
 
 private:
-	bool _open {false};
+	bool _open;
 	static constexpr graphics::RenderPass _viewId = graphics::RenderPass::MeshViewer;
-	MeshPackId _selectedMesh {MeshPackId::Dummy};
-	int _selectedSubMesh {0};
+	MeshPackId _selectedMesh;
+	int _selectedSubMesh;
+	std::optional<uint32_t> _selectedAnimation;
+	int _selectedFrame;
 	ImGuiTextFilter _filter;
-	uint32_t _meshFlagFilter {0xFFFFFFFF};
+	uint32_t _meshFlagFilter;
+	bool _matchBones;
 	glm::vec3 _cameraPosition;
-	bool _viewBoundingBox {false};
+	bool _viewBoundingBox;
 	std::unique_ptr<graphics::DebugLines> _boundingBox;
 	std::unique_ptr<graphics::FrameBuffer> _frameBuffer;
 };

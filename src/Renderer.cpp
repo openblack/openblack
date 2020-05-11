@@ -10,6 +10,7 @@
 #include "Renderer.h"
 
 #include "3D/Camera.h"
+#include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIsland.h"
 #include "3D/MeshPack.h"
@@ -483,8 +484,17 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 				| BGFX_STATE_MSAA
 			;
 			// clang-format on
-			submitDesc.modelMatrices = desc.testModel.GetBoneMatrices().data();
-			submitDesc.matrixCount = static_cast<uint8_t>(desc.testModel.GetBoneMatrices().size());
+			const std::vector<uint32_t>& boneParents = desc.testModel.GetBoneParents();
+			auto bones = desc.testAnimation.GetBoneMatrices(desc.time);
+			for (uint32_t i = 0; i < bones.size(); ++i)
+			{
+				if (boneParents[i] != std::numeric_limits<uint32_t>::max())
+				{
+					bones[i] = bones[boneParents[i]] * bones[i];
+				}
+			}
+			submitDesc.modelMatrices = bones.data();
+			submitDesc.matrixCount = static_cast<uint8_t>(bones.size());
 			DrawMesh(desc.testModel, meshPack, submitDesc, 0);
 		}
 	}

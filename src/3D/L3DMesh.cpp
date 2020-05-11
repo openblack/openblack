@@ -42,6 +42,7 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 
 	std::map<uint32_t, glm::mat4> matrices;
 	auto& bones = l3d.GetBones();
+	_bonesParents.resize(bones.size());
 	for (uint32_t i = 0; i < bones.size(); ++i)
 	{
 		auto& bone = bones[i];
@@ -51,6 +52,7 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 		                        bone.orientation[6], bone.orientation[7], bone.orientation[8], 0.0f,
 		                        bone.position.x, bone.position.y, bone.position.z, 1.0f);
 		// clang-format on
+		_bonesParents[i] = bone.parent;
 		if (bone.parent != std::numeric_limits<uint32_t>::max())
 		{
 			matrix = matrices[bone.parent] * matrix;

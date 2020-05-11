@@ -9,6 +9,8 @@
 
 #include "MeshViewer.h"
 
+#include "3D/AnimationPack.h"
+#include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "3D/MeshPack.h"
 #include "Game.h"
@@ -28,7 +30,15 @@
 using namespace openblack;
 
 MeshViewer::MeshViewer()
-    : _cameraPosition(5.0f, 3.0f, 5.0f)
+    : _open(false)
+    , _selectedMesh(MeshPackId::Dummy)
+    , _selectedSubMesh(0)
+    , _selectedAnimation(std::nullopt)
+    , _selectedFrame(0)
+    , _meshFlagFilter(0xFFFFFFFF)
+    , _matchBones(true)
+    , _cameraPosition(5.0f, 3.0f, 5.0f)
+    , _viewBoundingBox(false)
     , _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f)))
     , _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", 512, 512, graphics::Format::RGBA8,
                                                            graphics::Format::Depth24Stencil8))
@@ -45,11 +55,11 @@ void MeshViewer::DrawWindow()
 	if (!_open)
 		return;
 
-	const ImGuiStyle& style = ImGui::GetStyle();
 	float fontSize = ImGui::GetFontSize();
 	auto const& meshPack = Game::instance()->GetMeshPack();
+	auto const& animationPack = Game::instance()->GetAnimationPack();
 	auto const& meshes = meshPack.GetMeshes();
-	const float meshListWidth = fontSize * 15.0f;
+	auto const& animations = animationPack.GetAnimations();
 
 	ImGui::SetNextWindowSize(ImVec2(720.0f, 612.0f), ImGuiCond_FirstUseEver);
 	ImGui::Begin("MeshPack Viewer", &_open);
@@ -58,30 +68,9 @@ void MeshViewer::DrawWindow()
 	ImGui::InputScalar("Mesh flag filter", ImGuiDataType_U32, &_meshFlagFilter, nullptr, nullptr, "%08X",
 	                   ImGuiInputTextFlags_CharsHexadecimal);
 	uint32_t hoverIndex;
-	static char bitfieldTitle[0x400];
-	{
-		int32_t offset = 0;
-		int32_t newLines = 1;
-		for (uint8_t i = 0; i < 32; ++i)
-		{
-			if (_meshFlagFilter & (1u << i))
-			{
-				auto writen = std::sprintf(bitfieldTitle + offset, "%s%s%s", offset ? "|" : "",
-				                           offset > newLines * 100 ? "\n" : "", L3DMeshFlagNames[i].data());
-				while (offset > newLines * 100) newLines++;
-				offset += writen;
-			}
-		}
-		if (offset == 0)
-		{
-			bitfieldTitle[0] = '\0';
-		}
-	}
 	ImGuiBitField::BitField("Mesh flag bit-field filter", &_meshFlagFilter, &hoverIndex);
 	if (ImGui::IsItemHovered() && hoverIndex < L3DMeshFlagNames.size())
 		ImGui::SetTooltip("%s", L3DMeshFlagNames[hoverIndex].data());
-	if (bitfieldTitle[0])
-		ImGui::Text("%s", bitfieldTitle);
 
 	ImGui::BeginChild("meshes", ImVec2(fontSize * 15.0f, 0));
 	auto meshSize = ImGui::GetItemRectSize();
@@ -96,7 +85,13 @@ void MeshViewer::DrawWindow()
 			displayedMeshes++;
 
 			if (ImGui::Selectable(enumName.c_str(), static_cast<MeshPackId>(meshEnum) == _selectedMesh))
+			{
 				_selectedMesh = meshEnum;
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("%s", enumName.c_str());
+			}
 		}
 	}
 	ImGui::EndChild();
@@ -105,14 +100,13 @@ void MeshViewer::DrawWindow()
 
 	ImGui::SameLine();
 
+	ImGui::BeginChild("viewer", ImVec2(fontSize * -15.0f, 0));
+
+	ImGui::Columns(2, nullptr, false);
+
 	auto const& mesh = meshes[static_cast<int>(_selectedMesh)];
-	ImGui::BeginChild("viewer");
 
-	ImGui::Text("%zu submeshes", mesh->GetSubMeshes().size());
-	ImGui::SliderInt("submesh", &_selectedSubMesh, 0, mesh->GetSubMeshes().size() - 1);
-	ImGui::DragFloat3("position", &_cameraPosition[0], 0.5f);
-	ImGui::Checkbox("View bounding box", &_viewBoundingBox);
-
+	static char bitfieldTitle[0x400];
 	{
 		int32_t offset = 0;
 		int32_t newLines = 1;
@@ -127,6 +121,7 @@ void MeshViewer::DrawWindow()
 			}
 		}
 	}
+
 	char meshFlagStr[0x20];
 	std::sprintf(meshFlagStr, "Mesh flag=0x%X", mesh->GetFlags());
 	if (ImGui::TreeNodeEx(meshFlagStr))
@@ -134,6 +129,13 @@ void MeshViewer::DrawWindow()
 		ImGui::Text("%s", bitfieldTitle);
 		ImGui::TreePop();
 	}
+
+	ImGui::Text("Bones %zu", mesh->GetBoneMatrices().size());
+
+	ImGui::Text("%zu submeshes", mesh->GetSubMeshes().size());
+	ImGui::SliderInt("submesh", &_selectedSubMesh, 0, mesh->GetSubMeshes().size() - 1);
+	ImGui::DragFloat3("position", &_cameraPosition[0], 0.5f);
+	ImGui::Checkbox("View bounding box", &_viewBoundingBox);
 
 	auto const& submesh = mesh->GetSubMeshes()[_selectedSubMesh];
 
@@ -144,8 +146,60 @@ void MeshViewer::DrawWindow()
 	auto const& graphicsMesh = submesh->GetMesh();
 	ImGui::Text("Vertices %u, Indices %u", graphicsMesh.GetVertexBuffer().GetCount(), graphicsMesh.GetIndexBuffer().GetCount());
 
+	ImGui::NextColumn();
+
+	ImGui::Checkbox("Show matching armature", &_matchBones);
+	if (_selectedAnimation)
+	{
+		auto const& animation = animations[*_selectedAnimation];
+		ImGui::Text("%zu frames", animation->GetFrames().size());
+		ImGui::Text("Duration %u frames", animation->GetDuration());
+		ImGui::SliderInt("frame", &_selectedFrame, 0, animation->GetFrames().size() - 1);
+		if (_selectedFrame > static_cast<int>(animation->GetFrames().size()))
+		{
+			_selectedFrame = animation->GetFrames().size() - 1;
+		}
+		ImGui::Text("Time %u, Bones %zu", animation->GetFrames()[_selectedFrame].time,
+		            animation->GetFrames()[_selectedFrame].bones.size());
+		ImGui::Text("unknown at 0x20 = 0x%08X", animation->_unknown_0x20);
+		ImGui::Text("unknowns 0x24-0x34 =\n%.4f %.4f %.4f %.4f %.4f", animation->_unknown_0x24, animation->_unknown_0x28,
+		            animation->_unknown_0x2C, animation->_unknown_0x30, animation->_unknown_0x34);
+	}
+	ImGui::Columns(1);
+
 	ImGui::Image(_frameBuffer->GetColorAttachment().GetNativeHandle(), ImVec2(512, 512), ImVec2(0, 1), ImVec2(1, 0));
 
+	ImGui::EndChild();
+
+	ImGui::SameLine();
+
+	ImGui::BeginChild("animations", ImVec2(fontSize * 15.0f, 0));
+	auto animationSize = ImGui::GetItemRectSize();
+	ImGui::BeginChild("animationSelect", ImVec2(animationSize.x - 5, animationSize.y - ImGui::GetTextLineHeight() - 5), true);
+	uint32_t displayedAnimations = 0;
+	if (_matchBones && _selectedAnimation.has_value() &&
+	    animations[*_selectedAnimation]->GetBoneMatrices(0).size() != mesh->GetBoneMatrices().size())
+	{
+		_selectedAnimation.reset();
+	}
+	for (size_t i = 0; i < animations.size(); i++)
+	{
+		if (_filter.PassFilter(animations[i]->GetName().c_str()) &&
+		    (!_matchBones || (animations[i]->GetBoneMatrices(0).size() == mesh->GetBoneMatrices().size())))
+		{
+			displayedAnimations++;
+			if (ImGui::Selectable(animations[i]->GetName().c_str(), _selectedAnimation == i))
+			{
+				_selectedAnimation = i;
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("%s", animations[i]->GetName().c_str());
+			}
+		}
+	}
+	ImGui::EndChild();
+	ImGui::Text("%u animations", displayedAnimations);
 	ImGui::EndChild();
 
 	ImGui::End();
@@ -158,6 +212,8 @@ void MeshViewer::DrawScene(const Renderer& renderer)
 
 	auto const& meshPack = Game::instance()->GetMeshPack();
 	auto const& meshes = meshPack.GetMeshes();
+	auto const& animationPack = Game::instance()->GetAnimationPack();
+	auto const& animations = animationPack.GetAnimations();
 	auto& shaderManager = Game::instance()->GetRenderer().GetShaderManager();
 	auto objectShader = shaderManager.GetShader("Object");
 	auto debugShader = shaderManager.GetShader("DebugLine");
@@ -197,8 +253,26 @@ void MeshViewer::DrawScene(const Renderer& renderer)
 		desc.matrixCount = 1;
 		if (mesh->IsBoned())
 		{
-			desc.modelMatrices = mesh->GetBoneMatrices().data();
-			desc.matrixCount = mesh->GetBoneMatrices().size();
+			std::vector<glm::mat4> bones = mesh->GetBoneMatrices();
+			const std::vector<uint32_t>& boneParents = mesh->GetBoneParents();
+			if (_selectedAnimation.value_or(std::numeric_limits<uint32_t>::max()) > static_cast<uint32_t>(animations.size()))
+			{
+				_selectedAnimation.reset();
+			}
+			if (_selectedAnimation.has_value() && _matchBones)
+			{
+				const auto& frames = animations[*_selectedAnimation]->GetFrames();
+				for (uint32_t i = 0; i < frames[_selectedFrame].bones.size(); ++i)
+				{
+					bones[i] = frames[_selectedFrame].bones[i];
+					if (boneParents[i] != std::numeric_limits<uint32_t>::max())
+					{
+						bones[i] = bones[boneParents[i]] * bones[i];
+					}
+				}
+			}
+			desc.modelMatrices = bones.data();
+			desc.matrixCount = bones.size();
 		}
 		renderer.DrawMesh(*mesh, meshPack, desc, _selectedSubMesh);
 		if (_viewBoundingBox)

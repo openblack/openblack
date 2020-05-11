@@ -29,6 +29,7 @@ struct BgfxCallback;
 class Camera;
 class GameWindow;
 class Game;
+class L3DAnim;
 class L3DMesh;
 class L3DSubMesh;
 class LandIsland;
@@ -83,6 +84,7 @@ public:
 	};
 	struct DrawSceneDesc
 	{
+		uint32_t time;
 		graphics::RenderPass viewId;
 		Profiler& profiler;
 		const Camera* camera;
@@ -97,6 +99,7 @@ public:
 		const entities::Registry& entities;
 		bool drawTestModel;
 		const L3DMesh& testModel;
+		const L3DAnim& testAnimation;
 		bool drawDebugCross;
 		bool drawBoundingBoxes;
 		bool cullBack;

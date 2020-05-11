@@ -9,7 +9,9 @@
 
 #include "Game.h"
 
+#include "3D/AnimationPack.h"
 #include "3D/Camera.h"
+#include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIsland.h"
 #include "3D/MeshPack.h"
@@ -100,6 +102,7 @@ Game::~Game()
 	_sky.reset();
 	_testModel.reset();
 	_handModel.reset();
+	_animationPack.reset();
 	_meshPack.reset();
 	_landIsland.reset();
 	_entityRegistry.reset();
@@ -283,8 +286,15 @@ void Game::Run()
 	_meshPack = std::make_unique<MeshPack>();
 	_meshPack->LoadFromFile("Data/AllMeshes.g3d");
 
+	_animationPack = std::make_unique<AnimationPack>();
+	_animationPack->LoadFromFile("Data/AllAnims.anm");
+
 	_testModel = std::make_unique<L3DMesh>();
-	_testModel->LoadFromFile("Data/CreatureMesh/C_Tortoise_Base.l3d");
+	_testModel->LoadFromFile("Data/Misc/coffre.l3d");
+
+	_testAnimation = std::make_unique<L3DAnim>();
+	_testAnimation->LoadFromFile("Data/Misc/coffre.anm");
+
 	_handModel = std::make_unique<L3DMesh>();
 	_handModel->LoadFromFile("Data/CreatureMesh/Hand_Boned_Base2.l3d");
 
@@ -310,12 +320,16 @@ void Game::Run()
 	}
 
 	_frameCount = 0;
+	auto last_time = std::chrono::high_resolution_clock::now();
 	while (Update())
 	{
+		auto duration = std::chrono::high_resolution_clock::now() - last_time;
+		auto milliseconds = std::chrono::duration_cast<std::chrono::duration<uint32_t, std::milli>>(duration);
 		{
 			auto section = _profiler->BeginScoped(Profiler::Stage::SceneDraw);
 
 			Renderer::DrawSceneDesc drawDesc {
+			    /*time =*/milliseconds.count(), // TODO get actual time
 			    /*viewId =*/graphics::RenderPass::Main,
 			    /*profiler =*/*_profiler,
 			    /*camera =*/_camera.get(),
@@ -330,6 +344,7 @@ void Game::Run()
 			    /*entities =*/*_entityRegistry,
 			    /*drawTestModel =*/_config.drawEntities,
 			    /*testModel =*/*_testModel,
+			    /*testAnimation =*/*_testAnimation,
 			    /*drawDebugCross =*/_config.drawDebugCross,
 			    /*drawBoundingBoxes =*/_config.drawBoundingBoxes,
 			    /*cullBack =*/false,
