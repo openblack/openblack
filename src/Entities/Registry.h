@@ -41,7 +41,7 @@ public:
 	[[nodiscard]] const RegistryContext& Context() const;
 	void Reset()
 	{
-		_registry.reset();
+		_registry.clear();
 		_registry.set<RegistryContext>();
 	};
 	template <typename Component>

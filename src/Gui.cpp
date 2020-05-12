@@ -786,8 +786,8 @@ void Gui::ShowProfilerWindow(Game& game)
 		            "Line Strips %u, Points %u",
 		            stats->numPrims[0], stats->numPrims[1], stats->numPrims[2], stats->numPrims[3], stats->numPrims[4]);
 		ImGui::Columns(2);
-		ImGui::Text("Num Entities %u, Trees %u", static_cast<uint32_t>(game.GetEntityRegistry().Size<const Transform>()),
-		            static_cast<uint32_t>(game.GetEntityRegistry().Size<const Tree>()));
+		ImGui::Text("Num Entities %u, Trees %u", static_cast<uint32_t>(game.GetEntityRegistry().Size<Transform>()),
+		            static_cast<uint32_t>(game.GetEntityRegistry().Size<Tree>()));
 		ImGui::Text("Num Draw %u, Num Compute %u, Num Blit %u", stats->numDraw, stats->numCompute, stats->numBlit);
 		ImGui::Text("Num Buffers Index %u, Vertex %u", stats->numIndexBuffers, stats->numVertexBuffers);
 		ImGui::Text("Num Dynamic Buffers Index %u, Vertex %u", stats->numDynamicIndexBuffers, stats->numDynamicVertexBuffers);
