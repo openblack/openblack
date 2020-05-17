@@ -136,7 +136,7 @@ bool Gui::ProcessEventSdl2(const SDL_Event& event)
 			io.MouseWheel += 1;
 		if (event.wheel.y < 0)
 			io.MouseWheel -= 1;
-		return true;
+		return io.WantCaptureMouse;
 	}
 	case SDL_MOUSEBUTTONDOWN:
 	{
@@ -146,12 +146,12 @@ bool Gui::ProcessEventSdl2(const SDL_Event& event)
 			_mousePressed[1] = true;
 		if (event.button.button == SDL_BUTTON_MIDDLE)
 			_mousePressed[2] = true;
-		return true;
+		return io.WantCaptureMouse;
 	}
 	case SDL_TEXTINPUT:
 	{
 		io.AddInputCharactersUTF8(event.text.text);
-		return true;
+		return io.WantTextInput;
 	}
 	case SDL_KEYDOWN:
 	case SDL_KEYUP:
@@ -163,10 +163,10 @@ bool Gui::ProcessEventSdl2(const SDL_Event& event)
 		io.KeyCtrl = ((SDL_GetModState() & KMOD_CTRL) != 0);
 		io.KeyAlt = ((SDL_GetModState() & KMOD_ALT) != 0);
 		io.KeySuper = ((SDL_GetModState() & KMOD_GUI) != 0);
-		return true;
+		return io.WantCaptureKeyboard;
 	}
 	}
-	return false;
+	return io.WantCaptureMouse;
 }
 
 const char* Gui::GetClipboardText()
