@@ -126,6 +126,8 @@ bool Gui::ProcessEventSdl2(const SDL_Event& event)
 	ImGuiIO& io = ImGui::GetIO();
 	switch (event.type)
 	{
+	case SDL_QUIT:
+		return false;
 	case SDL_MOUSEWHEEL:
 	{
 		if (event.wheel.x > 0)
