@@ -84,9 +84,12 @@ Game::Game(Arguments&& args)
 	_gui = Gui::create(_window.get(), graphics::RenderPass::ImGui, args.scale);
 
 	_eventManager->AddHandler(std::function([this](const SDL_Event& event) {
-		this->_camera->ProcessSDLEvent(event);
-		this->_gui->ProcessEventSdl2(event);
-		this->_config.running = this->ProcessEvents(event);
+		// If gui captures this input, do not propagate
+		if (!this->_gui->ProcessEventSdl2(event))
+		{
+			this->_camera->ProcessSDLEvent(event);
+			this->_config.running = this->ProcessEvents(event);
+		}
 	}));
 }
 
