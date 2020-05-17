@@ -51,12 +51,12 @@ const std::string kWindowTitle = "openblack";
 Game* Game::sInstance = nullptr;
 
 Game::Game(Arguments&& args)
-    : _fileSystem(std::make_unique<FileSystem>())
+    : _eventManager(std::make_unique<EventManager>())
+    , _fileSystem(std::make_unique<FileSystem>())
     , _entityRegistry(std::make_unique<entities::Registry>())
     , _config()
     , _frameCount(0)
     , _intersection()
-    , _eventManager(std::make_unique<EventManager>())
 {
 	if (!args.logFile.empty() && args.logFile != "stdout")
 	{
