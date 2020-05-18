@@ -34,7 +34,7 @@ IndexBuffer::IndexBuffer(std::string name, const bgfx::Memory* mem, Type type)
     , _type(type)
     , _handle(BGFX_INVALID_HANDLE)
 {
-	_count = mem->size / sizeof(uint16_t);
+	_count = mem->size / (type == Type::Uint32 ? sizeof(uint32_t) : sizeof(uint16_t));
 
 	_handle = bgfx::createIndexBuffer(mem, type == Type::Uint32 ? BGFX_BUFFER_INDEX32 : 0);
 	bgfx::setName(_handle, _name.c_str());
