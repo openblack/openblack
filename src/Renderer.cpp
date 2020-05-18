@@ -393,7 +393,7 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 				// clang-format on
 
 				block.GetMesh().GetVertexBuffer().Bind();
-				bgfx::setState(defaultState | (desc.cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW), 0);
+				bgfx::setState(defaultState | (desc.cullBack ? BGFX_STATE_CULL_CW : BGFX_STATE_CULL_CCW), 0);
 				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), terrainShader->GetRawHandle());
 			}
 		}

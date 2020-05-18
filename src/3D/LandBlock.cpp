@@ -126,35 +126,35 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 			// winding order = clockwise
 			if (!tl.properties.split)
 			{
-				// TR/BR/TL  # #
+				// TR/TL/BR  # #
 				//             #
 				lnd::LNDMapMaterial trbrtl[3] = {tlMat, trMat, brMat};
 				vertices[i++] = make_vert(pTR, glm::vec3(0, 1, 0), trbrtl, tr);
-				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), trbrtl, br);
 				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), trbrtl, tl);
+				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), trbrtl, br);
 
-				// BR/BL/TL  #
+				// BR/TL/BL  #
 				//           # #
 				lnd::LNDMapMaterial brbltl[3] = {tlMat, blMat, brMat};
 				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), brbltl, br);
-				vertices[i++] = make_vert(pBL, glm::vec3(0, 1, 0), brbltl, bl);
 				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), brbltl, tl);
+				vertices[i++] = make_vert(pBL, glm::vec3(0, 1, 0), brbltl, bl);
 			}
 			else
 			{
-				// BL/TL/TR  # #
+				// BL/TR/TL  # #
 				//           #
 				lnd::LNDMapMaterial bltltr[3] = {blMat, tlMat, trMat};
 				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), bltltr, bl);
-				vertices[i++] = make_vert(pTL, glm::vec3(0, 1, 0), bltltr, tl);
 				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), bltltr, tr);
+				vertices[i++] = make_vert(pTL, glm::vec3(0, 1, 0), bltltr, tl);
 
-				// TR/BR/BL    #
+				// TR/BL/BR    #
 				//           # #
 				lnd::LNDMapMaterial trbrbl[3] = {blMat, brMat, trMat};
 				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), trbrbl, tr);
-				vertices[i++] = make_vert(pBR, glm::vec3(0, 1, 0), trbrbl, br);
 				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), trbrbl, bl);
+				vertices[i++] = make_vert(pBR, glm::vec3(0, 1, 0), trbrbl, br);
 			}
 		}
 	}
