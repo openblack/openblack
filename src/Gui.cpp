@@ -583,6 +583,9 @@ bool Gui::Loop(Game& game, const Renderer& renderer)
 			ImGui::Text("Mouse Position: (%.1f,%.1f)", io.MousePos.x, io.MousePos.y);
 		else
 			ImGui::Text("Mouse Position: <invalid>");
+
+		ImGui::Text("Hand Position: (%.1f,%.1f,%.1f)", game.GetHandTransform().position.x, game.GetHandTransform().position.y,
+		            game.GetHandTransform().position.z);
 	}
 	ImGui::End();
 
