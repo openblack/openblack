@@ -112,12 +112,12 @@ Game::~Game()
 
 const Transform& Game::GetHandTransform() const
 {
-    return _entityRegistry->Get<Transform>(_handEntity);
+	return _entityRegistry->Get<Transform>(_handEntity);
 }
 
 Transform& Game::GetHandTransform()
 {
-    return _entityRegistry->Get<Transform>(_handEntity);
+	return _entityRegistry->Get<Transform>(_handEntity);
 }
 
 bool Game::ProcessEvents(const SDL_Event& event)

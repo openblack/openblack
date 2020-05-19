@@ -1,0 +1,433 @@
+/*****************************************************************************
+ * Copyright (c) 2018-2020 openblack developers
+ *
+ * For a complete list of all authors, please refer to contributors.md
+ * Interested in contributing? Visit https://github.com/openblack/openblack
+ *
+ * openblack is licensed under the GNU General Public License version 3.
+ *****************************************************************************/
+
+#include "Console.h"
+
+#include <algorithm>
+
+#include <imgui.h>
+
+#include "Entities/Components/Transform.h"
+#include "LHScriptX/FeatureScriptCommands.h"
+#include "LHScriptX/Script.h"
+
+using namespace openblack;
+
+Console::Console()
+    : _open(false)
+    , _insert_hand_position(false)
+    , _input_cursor_position(0)
+    , _input_buffer {0}
+    , _items {} // Welcome message goes here
+    , _commands {
+          "help",
+          "history",
+          "clear",
+      }
+{
+	// TODO: Add custom spdlog sink here
+	for (const auto& signature : lhscriptx::FeatureScriptCommands::Signatures)
+	{
+		std::string command = signature.name;
+		command += "(";
+		for (uint32_t i = 0; i < signature.parameters.size(); ++i)
+		{
+			if (i > 0)
+			{
+				command += ", ";
+			}
+			switch (signature.parameters[i])
+			{
+			case lhscriptx::ParameterType::None:
+				command += "none";
+				break;
+			case lhscriptx::ParameterType::String:
+				command += "string";
+				break;
+			case lhscriptx::ParameterType::Float:
+				command += "float";
+				break;
+			case lhscriptx::ParameterType::Number:
+				command += "number";
+				break;
+			case lhscriptx::ParameterType::Vector:
+				command += "vector";
+				break;
+			}
+		}
+		command += ")";
+		_commands.emplace_back(command);
+	}
+}
+
+void Console::Open()
+{
+	_open = true;
+}
+
+void Console::Toggle()
+{
+	_open = !_open;
+}
+
+Console::~Console() = default;
+
+int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
+{
+	switch (data->EventFlag)
+	{
+	case ImGuiInputTextFlags_CallbackCompletion:
+	{
+		// Example of TEXT COMPLETION
+
+		// Locate beginning of current word
+		const char* word_end = data->Buf + data->CursorPos;
+		const char* word_start = word_end;
+		while (word_start > data->Buf)
+		{
+			const char c = word_start[-1];
+			if (c == ' ' || c == '\t' || c == ',' || c == ';')
+				break;
+			word_start--;
+		}
+
+		// Build a list of candidates
+		ImVector<std::string> candidates;
+		for (auto& Command : _commands)
+		{
+			if (word_end == word_start || strncmp(Command.c_str(), word_start, (int)(word_end - word_start)) == 0)
+			{
+				printf("%s", Command.c_str());
+				candidates.push_back(Command);
+			}
+		}
+
+		if (candidates.Size == 0)
+		{
+			// No match
+			AddLog("No match for \"%.*s\"!\n", (int)(word_end - word_start), word_start);
+		}
+		else if (candidates.Size == 1)
+		{
+			// Single match. Delete the beginning of the word and replace it entirely so we've got nice casing
+			data->DeleteChars((int)(word_start - data->Buf), (int)(word_end - word_start));
+			data->InsertChars(data->CursorPos, candidates[0].c_str());
+			data->InsertChars(data->CursorPos, " ");
+		}
+		else
+		{
+			// Multiple matches. Complete as much as we can, so inputing "C" will complete to "CL" and display
+			// "CLEAR" and "CLASSIFY"
+			int match_len = (int)(word_end - word_start);
+			for (;;)
+			{
+				int c = 0;
+				bool all_candidates_matches = true;
+				for (int i = 0; i < candidates.Size && all_candidates_matches; i++)
+					if (i == 0)
+						c = toupper(candidates[i][match_len]);
+					else if (c == 0 || c != toupper(candidates[i][match_len]))
+						all_candidates_matches = false;
+				if (!all_candidates_matches)
+					break;
+				match_len++;
+			}
+
+			if (match_len > 0)
+			{
+				data->DeleteChars((int)(word_start - data->Buf), (int)(word_end - word_start));
+				data->InsertChars(data->CursorPos, candidates[0].c_str(), candidates[0].c_str() + match_len);
+			}
+
+			// List matches
+			AddLog("Possible matches:\n");
+			for (int i = 0; i < candidates.Size; i++)
+			{
+				AddLog("- %s\n", candidates[i].c_str());
+			}
+		}
+
+		break;
+	}
+	case ImGuiInputTextFlags_CallbackHistory:
+	{
+		// Example of HISTORY
+		const auto prev_history_pos = _history_pos;
+		if (data->EventKey == ImGuiKey_UpArrow)
+		{
+			if (!_history_pos.has_value())
+			{
+				if (!_history.empty())
+				{
+					_history_pos = _history.size() - 1;
+				}
+				_partial = _input_buffer.data();
+			}
+			else if (_history_pos.value() > 0)
+			{
+				_history_pos.value()--;
+			}
+		}
+		else if (data->EventKey == ImGuiKey_DownArrow)
+		{
+			if (_history_pos.has_value())
+			{
+				if (++_history_pos.value() >= _history.size())
+				{
+					_history_pos.reset();
+				}
+			}
+			else
+			{
+				_partial = _input_buffer.data();
+			}
+		}
+
+		// A better implementation would preserve the data on the current input line along with cursor position.
+		if (prev_history_pos != _history_pos)
+		{
+			auto history_str = _history_pos.has_value() ? _history[*_history_pos] : _partial;
+			data->DeleteChars(0, data->BufTextLen);
+			data->InsertChars(0, history_str.c_str());
+		}
+		break;
+	}
+	case ImGuiInputTextFlags_CallbackAlways:
+	{
+		_input_cursor_position = data->CursorPos;
+		break;
+	}
+	}
+	return 0;
+}
+
+void Console::DrawWindow(Game& game)
+{
+	if (!_open)
+	{
+		return;
+	}
+
+	ImGui::SetNextWindowSize(ImVec2(520, 600), ImGuiCond_FirstUseEver);
+	if (!ImGui::Begin("Console", &_open))
+	{
+		ImGui::End();
+		return;
+	}
+
+	// As a specific feature guaranteed by the library, after calling Begin() the last Item represent the title bar. So e.g.
+	// IsItemHovered() will return true when hovering the title bar. Here we create a context menu only available from the
+	// title bar.
+	if (ImGui::BeginPopupContextItem())
+	{
+		if (ImGui::MenuItem("Close Console"))
+			_open = false;
+		ImGui::EndPopup();
+	}
+
+	ImGui::TextWrapped("Enter 'help' for help, press TAB to use text completion.");
+
+	if (ImGui::SmallButton("Clear"))
+	{
+		_items.clear();
+	}
+	ImGui::SameLine();
+	bool copy_to_clipboard = ImGui::SmallButton("Copy");
+
+	ImGui::Separator();
+
+	const float footer_height_to_reserve =
+	    ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing(); // 1 separator, 1 input text
+	ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), false,
+	                  ImGuiWindowFlags_HorizontalScrollbar); // Leave room for 1 separator + 1 InputText
+	if (ImGui::BeginPopupContextWindow())
+	{
+		if (ImGui::Selectable("Clear"))
+		{
+			_items.clear();
+		}
+		ImGui::EndPopup();
+	}
+
+	// Display every line as a separate entry so we can change their color or add custom widgets. If you only want raw text
+	// you can use ImGui::TextUnformatted(log.begin(), log.end()); NB- if you have thousands of entries this approach may be
+	// too inefficient and may require user-side clipping to only process visible items. You can seek and display only the
+	// lines that are visible using the ImGuiListClipper helper, if your elements are evenly spaced and you have cheap
+	// random access to the elements. To use the clipper we could replace the 'for (int i = 0; i < Items.Size; i++)' loop
+	// with:
+	//     ImGuiListClipper clipper(Items.Size);
+	//     while (clipper.Step())
+	//         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+	// However, note that you can not use this code as is if a filter is active because it breaks the 'cheap random-access'
+	// property. We would need random-access on the post-filtered list. A typical application wanting coarse clipping and
+	// filtering may want to pre-compute an array of indices that passed the filtering test, recomputing this array when
+	// user changes the filter, and appending newly elements as they are inserted. This is left as a task to the user until
+	// we can manage to improve this example code! If your items are of variable size you may want to implement code similar
+	// to what ImGuiListClipper does. Or split your data into fixed height items to allow random-seeking into your list.
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
+	if (copy_to_clipboard)
+		ImGui::LogToClipboard();
+	for (auto item : _items)
+	{
+		// Normally you would store more information in your item (e.g. make Items[] an array of structure, store color/type
+		// etc.)
+		bool pop_color = false;
+		if (strstr(item.c_str(), "[error]"))
+		{
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
+			pop_color = true;
+		}
+		else if (strncmp(item.c_str(), "# ", 2) == 0)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.8f, 0.6f, 1.0f));
+			pop_color = true;
+		}
+		ImGui::TextUnformatted(item.c_str());
+		if (pop_color)
+			ImGui::PopStyleColor();
+	}
+	if (copy_to_clipboard)
+		ImGui::LogFinish();
+
+	if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+	{
+		ImGui::SetScrollHereY(1.0f);
+	}
+
+	ImGui::PopStyleVar();
+	ImGui::EndChild();
+	ImGui::Separator();
+
+	// Command-line
+	bool reclaim_focus = false;
+	if (ImGui::InputText(
+	        "Input", _input_buffer.data(), _input_buffer.size(),
+	        ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion |
+	            ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackAlways,
+	        [](ImGuiInputTextCallbackData* data) -> int {
+		        return reinterpret_cast<Console*>(data->UserData)->InputTextCallback(data);
+	        },
+	        (void*)this))
+	{
+		std::string s = _input_buffer.data();
+
+		// trim string
+		s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
+		s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !std::isspace(ch); }).base(), s.end());
+
+		if (s[0])
+			ExecCommand(s, game);
+
+		strcpy(_input_buffer.data(), "");
+
+		reclaim_focus = true;
+	}
+
+	if (_insert_hand_position)
+	{
+		if (_input_cursor_position >= 0)
+		{
+			std::string pre(_input_buffer.data(), _input_buffer.data() + _input_cursor_position);
+			std::string post(_input_buffer.data() + _input_cursor_position);
+
+			snprintf(_input_buffer.data(), _input_buffer.size(), "%s%.2f,%.2f%s", pre.c_str(),
+			         game.GetHandTransform().position.x, game.GetHandTransform().position.z, post.c_str());
+		}
+	}
+	_insert_hand_position = false;
+
+	// Auto-focus on window apparition
+	ImGui::SetItemDefaultFocus();
+	if (reclaim_focus)
+		ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
+
+	ImGui::End();
+}
+
+void Console::AddLog(const char* fmt, ...)
+{
+	// FIXME-OPT
+	std::array<char, 1024> buf;
+	va_list args;
+	va_start(args, fmt);
+	vsnprintf(buf.data(), buf.size(), fmt, args);
+	buf[buf.size() - 1] = 0;
+	va_end(args);
+	_items.emplace_back(buf.data());
+}
+
+void Console::ExecCommand(const std::string& command_line, Game& game)
+{
+	AddLog("# %s\n", command_line.c_str());
+
+	// Insert into history. First find match and delete it so it can be pushed to the back. This isn't trying to be smart or
+	// optimal.
+	_history_pos.reset();
+	for (int i = _history.size() - 1; i >= 0; i--)
+		if (_history[i] == command_line)
+		{
+			_history.erase(_history.begin() + i);
+			break;
+		}
+	_history.emplace_back(command_line);
+
+	// Process command
+	if (command_line == "clear")
+	{
+		_items.clear();
+	}
+	else if (command_line == "help")
+	{
+		AddLog("Commands:");
+		for (auto& Command : _commands)
+		{
+			AddLog("- %s", Command.c_str());
+		}
+	}
+	else if (command_line == "history")
+	{
+		int first = _history.size() - 10;
+		for (size_t i = first > 0 ? first : 0; i < _history.size(); i++)
+		{
+			AddLog("%3zu: %s\n", i, _history[i].c_str());
+		}
+	}
+	else
+	{
+		try
+		{
+			lhscriptx::Script script(&game);
+			script.Load(command_line);
+		}
+		catch (std::runtime_error& error)
+		{
+			AddLog("[error]: %s", error.what());
+		}
+	}
+}
+
+void Console::ProcessEventSdl2(const SDL_Event& event)
+{
+	if (!_open)
+	{
+		return;
+	}
+	ImGuiIO& io = ImGui::GetIO();
+	switch (event.type)
+	{
+	case SDL_MOUSEBUTTONDOWN:
+	{
+		if (event.button.clicks == 2 && !io.WantCaptureMouse)
+		{
+			_insert_hand_position = true;
+		}
+	}
+	break;
+	}
+}

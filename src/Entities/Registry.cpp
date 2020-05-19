@@ -400,4 +400,10 @@ void Registry::PrepareDraw(bool drawBoundingBox, bool drawBoundingStreams)
 		renderCtx.hasBoundingBoxes = drawBoundingBox;
 	}
 }
+
+void Registry::SetDirty()
+{
+	auto& renderCtx = Context().renderContext;
+	renderCtx.dirty = false;
+}
 } // namespace openblack::entities

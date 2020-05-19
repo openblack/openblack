@@ -60,6 +60,7 @@ inline void Image(bgfx::TextureHandle _handle, const ImVec2& _size, const ImVec2
 
 namespace openblack
 {
+class Console;
 class Game;
 class GameWindow;
 class MeshViewer;
@@ -78,7 +79,8 @@ public:
 	void Draw();
 
 private:
-	Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer>&& meshViewer);
+	Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer>&& meshViewer,
+	    std::unique_ptr<Console>&& terminal);
 	bool InitSdl2(SDL_Window* window);
 	void NewFrameSdl2(SDL_Window* window);
 	bool CreateFontsTextureBgfx();
@@ -133,5 +135,6 @@ private:
 	int32_t _lastScroll;
 	const bgfx::ViewId _viewId;
 	std::unique_ptr<MeshViewer> _meshViewer;
+	std::unique_ptr<Console> _console;
 };
 } // namespace openblack
