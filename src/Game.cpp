@@ -110,6 +110,16 @@ Game::~Game()
 	SDL_Quit(); // todo: move to GameWindow
 }
 
+const Transform& Game::GetHandTransform() const
+{
+    return _entityRegistry->Get<Transform>(_handEntity);
+}
+
+Transform& Game::GetHandTransform()
+{
+    return _entityRegistry->Get<Transform>(_handEntity);
+}
+
 bool Game::ProcessEvents(const SDL_Event& event)
 {
 	static bool leftMouseButton = false;
@@ -119,7 +129,7 @@ bool Game::ProcessEvents(const SDL_Event& event)
 
 	if (!leftMouseButton)
 	{
-		auto& handTransform = _entityRegistry->Get<Transform>(_handEntity);
+		auto& handTransform = GetHandTransform();
 		handTransform.position = _intersection;
 		auto cameraRotation = _camera->GetRotation();
 		auto handHeight = GetLandIsland().GetHeightAt(glm::vec2(handTransform.position.x, handTransform.position.z)) + 4.0f;
