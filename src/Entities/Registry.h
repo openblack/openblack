@@ -35,12 +35,15 @@ public:
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args)
 	{
+		SetDirty();
 		return _registry.assign<Component>(entity, std::forward<Args>(args)...);
 	}
+	void SetDirty();
 	RegistryContext& Context();
 	[[nodiscard]] const RegistryContext& Context() const;
 	void Reset()
 	{
+		SetDirty();
 		_registry.clear();
 		_registry.set<RegistryContext>();
 	};

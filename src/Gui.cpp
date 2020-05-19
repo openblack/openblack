@@ -14,6 +14,7 @@
 #include "3D/MeshPack.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
+#include "Console.h"
 #include "Entities/Components/Transform.h"
 #include "Entities/Components/Tree.h"
 #include "Entities/Registry.h"
@@ -64,8 +65,10 @@ std::unique_ptr<Gui> Gui::create(const GameWindow* window, graphics::RenderPass 
 
 	io.BackendRendererName = "imgui_impl_bgfx";
 	auto meshViewer = std::make_unique<MeshViewer>();
+	auto terminal = std::make_unique<Console>();
 
-	auto gui = std::unique_ptr<Gui>(new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(meshViewer)));
+	auto gui =
+	    std::unique_ptr<Gui>(new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(meshViewer), std::move(terminal)));
 
 	if (window)
 	{
@@ -78,7 +81,8 @@ std::unique_ptr<Gui> Gui::create(const GameWindow* window, graphics::RenderPass 
 	return gui;
 }
 
-Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer>&& meshViewer)
+Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer>&& meshViewer,
+         std::unique_ptr<Console>&& terminal)
     : _imgui(imgui)
     , _time(0)
     , _vertexBuffer(BGFX_INVALID_HANDLE)
@@ -95,6 +99,7 @@ Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer>&&
     , _lastScroll(0)
     , _viewId(viewId)
     , _meshViewer(std::move(meshViewer))
+    , _console(std::move(terminal))
 {
 	CreateDeviceObjectsBgfx();
 }
@@ -122,6 +127,8 @@ Gui::~Gui()
 bool Gui::ProcessEventSdl2(const SDL_Event& event)
 {
 	ImGui::SetCurrentContext(_imgui);
+
+	_console->ProcessEventSdl2(event);
 
 	ImGuiIO& io = ImGui::GetIO();
 	switch (event.type)
@@ -156,6 +163,10 @@ bool Gui::ProcessEventSdl2(const SDL_Event& event)
 		return io.WantTextInput;
 	}
 	case SDL_KEYDOWN:
+		if (event.key.keysym.sym == SDLK_BACKQUOTE)
+		{
+			_console->Toggle();
+		}
 	case SDL_KEYUP:
 	{
 		int key = event.key.keysym.scancode;
@@ -524,6 +535,11 @@ bool Gui::Loop(Game& game, const Renderer& renderer)
 				config.showProfiler = true;
 			}
 
+			if (ImGui::MenuItem("Console"))
+			{
+				_console->Open();
+			}
+
 			if (ImGui::MenuItem("Mesh Viewer"))
 			{
 				_meshViewer->Open();
@@ -564,6 +580,7 @@ bool Gui::Loop(Game& game, const Renderer& renderer)
 	}
 
 	_meshViewer->DrawWindow();
+	_console->DrawWindow(game);
 
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 8.0f, io.DisplaySize.y - 8.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
