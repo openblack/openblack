@@ -26,54 +26,58 @@ Console::Console()
     , _input_buffer {0}
     , _items {} // Welcome message goes here
     , _commands {
-          "help",
-          "history",
-          "clear",
+          {"help", "    - Display list of possible commands."},
+          {"history", " - Display previously executed commands."},
+          {"clear", "   - Clear the output log."},
       }
 {
 	// TODO: Add custom spdlog sink here
 	for (const auto& signature : lhscriptx::FeatureScriptCommands::Signatures)
 	{
-		std::string command = signature.name;
-		command += "(";
+		std::string details = "";
 		for (uint32_t i = 0; i < signature.parameters.size(); ++i)
 		{
 			if (i > 0)
 			{
-				command += ", ";
+				details += ", ";
 			}
 			switch (signature.parameters[i])
 			{
 			case lhscriptx::ParameterType::None:
-				command += "none";
+				details += "none";
 				break;
 			case lhscriptx::ParameterType::String:
-				command += "string";
+				details += "string";
 				break;
 			case lhscriptx::ParameterType::Float:
-				command += "float";
+				details += "float";
 				break;
 			case lhscriptx::ParameterType::Number:
-				command += "number";
+				details += "number";
 				break;
 			case lhscriptx::ParameterType::Vector:
-				command += "vector";
+				details += "vector";
 				break;
 			}
 		}
-		command += ")";
-		_commands.emplace_back(command);
+		details += ")";
+		_commands.emplace_back(std::string(signature.name) + "(", details);
 	}
 }
 
 void Console::Open()
 {
 	_open = true;
+	_reclaim_focus = true;
 }
 
 void Console::Toggle()
 {
 	_open = !_open;
+	if (_open)
+	{
+		_reclaim_focus = true;
+	}
 }
 
 Console::~Console() = default;
@@ -98,27 +102,26 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 		}
 
 		// Build a list of candidates
-		ImVector<std::string> candidates;
+		std::vector<std::string> candidates;
 		for (auto& Command : _commands)
 		{
-			if (word_end == word_start || strncmp(Command.c_str(), word_start, (int)(word_end - word_start)) == 0)
+			if (word_end == word_start || strncmp(Command.first.c_str(), word_start, (int)(word_end - word_start)) == 0)
 			{
-				printf("%s", Command.c_str());
-				candidates.push_back(Command);
+				printf("%s", Command.first.c_str());
+				candidates.push_back(Command.first);
 			}
 		}
 
-		if (candidates.Size == 0)
+		if (candidates.empty())
 		{
 			// No match
 			AddLog("No match for \"%.*s\"!\n", (int)(word_end - word_start), word_start);
 		}
-		else if (candidates.Size == 1)
+		else if (candidates.size() == 1)
 		{
 			// Single match. Delete the beginning of the word and replace it entirely so we've got nice casing
 			data->DeleteChars((int)(word_start - data->Buf), (int)(word_end - word_start));
 			data->InsertChars(data->CursorPos, candidates[0].c_str());
-			data->InsertChars(data->CursorPos, " ");
 		}
 		else
 		{
@@ -129,13 +132,19 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 			{
 				int c = 0;
 				bool all_candidates_matches = true;
-				for (int i = 0; i < candidates.Size && all_candidates_matches; i++)
+				for (size_t i = 0; i < candidates.size() && all_candidates_matches; i++)
 					if (i == 0)
-						c = toupper(candidates[i][match_len]);
-					else if (c == 0 || c != toupper(candidates[i][match_len]))
+					{
+						c = candidates[i][match_len];
+					}
+					else if (c == 0 || c != candidates[i][match_len])
+					{
 						all_candidates_matches = false;
+					}
 				if (!all_candidates_matches)
+				{
 					break;
+				}
 				match_len++;
 			}
 
@@ -147,9 +156,9 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 
 			// List matches
 			AddLog("Possible matches:\n");
-			for (int i = 0; i < candidates.Size; i++)
+			for (auto& candidate : candidates)
 			{
-				AddLog("- %s\n", candidates[i].c_str());
+				AddLog("- %s\n", candidate.c_str());
 			}
 		}
 
@@ -387,7 +396,7 @@ void Console::ExecCommand(const std::string& command_line, Game& game)
 		AddLog("Commands:");
 		for (auto& Command : _commands)
 		{
-			AddLog("- %s", Command.c_str());
+			AddLog("- %s%s", Command.first.c_str(), Command.second.c_str());
 		}
 	}
 	else if (command_line == "history")
