@@ -48,6 +48,7 @@ private:
 	int InputTextCallback(ImGuiInputTextCallbackData* data);
 
 	bool _open;
+	bool _reclaim_focus;
 	bool _insert_hand_position;
 	int _input_cursor_position;
 	std::array<char, 256> _input_buffer;
