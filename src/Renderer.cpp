@@ -322,6 +322,7 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 	auto objectShader = _shaderManager->GetShader("Object");
 	auto waterShader = _shaderManager->GetShader("Water");
 	auto terrainShader = _shaderManager->GetShader("Terrain");
+	auto navMeshShader = _shaderManager->GetShader("NavigationMesh");
 	auto debugShader = _shaderManager->GetShader("DebugLine");
 	auto debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
 	auto objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
@@ -396,6 +397,22 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 				bgfx::setState(defaultState | (desc.cullBack ? BGFX_STATE_CULL_CW : BGFX_STATE_CULL_CCW), 0);
 				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), terrainShader->GetRawHandle());
 			}
+		}
+		if (desc.island.GetNavMesh())
+		{
+			// clang-format off
+			constexpr auto defaultState = 0u
+				| BGFX_STATE_WRITE_MASK
+				| BGFX_STATE_DEPTH_TEST_LESS
+				| BGFX_STATE_BLEND_ALPHA
+				| BGFX_STATE_MSAA
+			;
+			// clang-format on
+
+			desc.island.GetNavMesh()->GetVertexBuffer().Bind();
+			desc.island.GetNavMesh()->GetIndexBuffer().Bind(desc.island.GetNavMesh()->GetIndexBuffer().GetCount());
+			bgfx::setState(defaultState | (desc.cullBack ? BGFX_STATE_CULL_CW : BGFX_STATE_CULL_CCW), 0);
+			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), navMeshShader->GetRawHandle());
 		}
 	}
 

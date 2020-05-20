@@ -15,6 +15,7 @@
 #include <glm/fwd.hpp>
 
 #include <cstdint>
+#include <vector>
 
 namespace openblack
 {
@@ -50,15 +51,20 @@ public:
 	void BuildMesh(LandIsland& island);
 
 	[[nodiscard]] const graphics::Mesh& GetMesh() const { return *_mesh; }
+	[[nodiscard]] const std::vector<LandVertex>& GetVertices() const { return _vertices; }
 	[[nodiscard]] const lnd::LNDCell* GetCells() const;
 	[[nodiscard]] glm::ivec2 GetBlockPosition() const;
 	[[nodiscard]] glm::vec4 GetMapPosition() const;
 
 private:
+	static constexpr uint8_t _width = 16;
+	static constexpr uint8_t _height = 16;
+
 	std::unique_ptr<lnd::LNDBlock> _block;
+	std::vector<LandVertex> _vertices;
 	std::unique_ptr<graphics::Mesh> _mesh;
 
-	const bgfx::Memory* buildVertexList(LandIsland& island);
+	const std::vector<LandVertex> buildVertexList(LandIsland& island) const;
 
 	friend LandIsland;
 };

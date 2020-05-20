@@ -12,11 +12,13 @@
 #include <cstdint> // Shaders below need uint8_t
 
 #include "Shaders/fs_line.bin.h"
+#include "Shaders/fs_navigation_mesh.bin.h"
 #include "Shaders/fs_object.bin.h"
 #include "Shaders/fs_terrain.bin.h"
 #include "Shaders/fs_water.bin.h"
 #include "Shaders/vs_line.bin.h"
 #include "Shaders/vs_line_instanced.bin.h"
+#include "Shaders/vs_navigation_mesh.bin.h"
 #include "Shaders/vs_object.bin.h"
 #include "Shaders/vs_object_instanced.bin.h"
 #include "Shaders/vs_terrain.bin.h"
@@ -29,17 +31,27 @@
 namespace openblack::graphics
 {
 
-const bgfx::EmbeddedShader s_embeddedShaders[] = {BGFX_EMBEDDED_SHADER(vs_line),    BGFX_EMBEDDED_SHADER(vs_line_instanced),
-                                                  BGFX_EMBEDDED_SHADER(fs_line),
-
-                                                  BGFX_EMBEDDED_SHADER(vs_object),  BGFX_EMBEDDED_SHADER(vs_object_instanced),
-                                                  BGFX_EMBEDDED_SHADER(fs_object),
-
-                                                  BGFX_EMBEDDED_SHADER(vs_terrain), BGFX_EMBEDDED_SHADER(fs_terrain),
-
-                                                  BGFX_EMBEDDED_SHADER(vs_water),   BGFX_EMBEDDED_SHADER(fs_water),
-
-                                                  BGFX_EMBEDDED_SHADER_END()};
+const bgfx::EmbeddedShader s_embeddedShaders[] = {
+    // Line
+    BGFX_EMBEDDED_SHADER(vs_line),
+    BGFX_EMBEDDED_SHADER(vs_line_instanced),
+    BGFX_EMBEDDED_SHADER(fs_line),
+    // Navigation Mesh Debug
+    BGFX_EMBEDDED_SHADER(vs_navigation_mesh),
+    BGFX_EMBEDDED_SHADER(fs_navigation_mesh),
+    // Object
+    BGFX_EMBEDDED_SHADER(vs_object),
+    BGFX_EMBEDDED_SHADER(vs_object_instanced),
+    BGFX_EMBEDDED_SHADER(fs_object),
+    // Terrain
+    BGFX_EMBEDDED_SHADER(vs_terrain),
+    BGFX_EMBEDDED_SHADER(fs_terrain),
+    // Water
+    BGFX_EMBEDDED_SHADER(vs_water),
+    BGFX_EMBEDDED_SHADER(fs_water),
+    // Sentinel
+    BGFX_EMBEDDED_SHADER_END(),
+};
 
 ShaderManager::~ShaderManager()
 {

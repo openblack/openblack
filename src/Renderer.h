@@ -60,6 +60,7 @@ struct ShaderDefinition
 constexpr std::array Shaders {
     ShaderDefinition {"DebugLine", "vs_line", "fs_line"},
     ShaderDefinition {"DebugLineInstanced", "vs_line_instanced", "fs_line"},
+    ShaderDefinition {"NavigationMesh", "vs_navigation_mesh", "fs_navigation_mesh"},
     ShaderDefinition {"Terrain", "vs_terrain", "fs_terrain"},
     ShaderDefinition {"Object", "vs_object", "fs_object"},
     ShaderDefinition {"ObjectInstanced", "vs_object_instanced", "fs_object"},

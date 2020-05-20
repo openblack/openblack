@@ -40,10 +40,14 @@ public:
 	[[nodiscard]] float GetHeightAt(glm::vec2) const;
 	[[nodiscard]] const LandBlock* GetBlock(const glm::u8vec2& coordinates) const;
 	[[nodiscard]] const lnd::LNDCell& GetCell(const glm::u16vec2& coordinates) const;
+	[[nodiscard]] const graphics::Mesh* GetNavMesh() const { return _navMesh.get(); }
 
 	// Debug
 	void DumpTextures();
 	void DumpMaps();
+
+	// TODO: cellSize=1 cellHeight=1
+	void BuildNavMesh(float cellSize, float cellHeight);
 
 private:
 	std::array<uint8_t, 1024> _blockIndexLookup;
@@ -68,6 +72,8 @@ private:
 	std::unique_ptr<graphics::Texture2D> _textureNoiseMap;
 	std::unique_ptr<graphics::Texture2D> _textureBumpMap;
 	std::unique_ptr<graphics::Texture2D> _textureSmallBump;
+
+	std::unique_ptr<graphics::Mesh> _navMesh;
 
 	std::array<uint8_t, 256 * 256> _noiseMap;
 };

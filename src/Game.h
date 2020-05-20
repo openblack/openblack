@@ -73,6 +73,7 @@ public:
 		bool waterDebug {false};
 		bool showProfiler {false};
 		bool showLandIsland {false};
+		bool showNavigationMesh {false};
 
 		bool drawSky {true};
 		bool drawWater {true};
@@ -86,6 +87,9 @@ public:
 		float timeOfDay {1.0f};
 		float bumpMapStrength {1.0f};
 		float smallBumpMapStrength {1.0f};
+
+		float navMeshCellSize {4.0f};
+		float navMeshCellHeight {1.0f};
 
 		bool bgfxDebug {false};
 		bool running {false};

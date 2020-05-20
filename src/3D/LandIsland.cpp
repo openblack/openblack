@@ -11,10 +11,13 @@
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "Common/FileSystem.h"
-#include "Common/IStream.h"
 #include "Common/stb_image_write.h"
 #include "Game.h"
+#include "Graphics/IndexBuffer.h"
+#include "Graphics/VertexBuffer.h"
 
+#include <DetourNavMeshBuilder.h>
+#include <Recast.h>
 #include <spdlog/spdlog.h>
 
 #include <lnd_file.h>
@@ -192,4 +195,233 @@ void LandIsland::DumpMaps()
 	fclose(fptr);
 
 	delete[] data;
+}
+
+void LandIsland::BuildNavMesh(float cellSize, float cellHeight)
+{
+	if (_landBlocks.empty() || _landBlocks[0].GetVertices().empty())
+	{
+		spdlog::error("No land blocks: Can't build navigation mesh without terrain");
+		return;
+	}
+	// Step 1. Initialize build config.
+
+	bool filterLowHangingObstacles = true;
+	bool filterLedgeSpans = true;
+	bool filterWalkableLowHeightSpans = true;
+	float agentMaxSlope = 60;
+	float agentHeight = 2.0f / 1000; // TODO: get living height, then creature height
+	float agentMaxClimb = 6;
+	float agentRadius = 0.6f; // TODO: get living height, then creature height
+	float edgeMaxLen = 12;
+	float regionMinSize = 8;
+	float regionMergeSize = 20;
+	float detailSampleDist = 6;
+	float detailSampleMaxError = 1;
+	int maxVertsPerPoly = 6;
+
+	// create nav mesh,  TODO: Try tiles
+	rcConfig config = {};
+	config.cs = cellSize;
+	config.ch = cellHeight;
+
+	// Get bounds
+	config.bmin[0] = std::numeric_limits<float>::max();
+	config.bmin[1] = std::numeric_limits<float>::max();
+	config.bmin[1] = std::numeric_limits<float>::max();
+	config.bmax[0] = std::numeric_limits<float>::min();
+	config.bmax[1] = std::numeric_limits<float>::min();
+	config.bmax[1] = std::numeric_limits<float>::min();
+
+	std::vector<glm::vec3> vertices;
+	std::vector<int> indices;
+	for (const auto& block : _landBlocks)
+	{
+		auto mapPosition = block.GetMapPosition();
+		vertices.reserve(vertices.size() + block.GetVertices().size());
+		indices.reserve(indices.size() + block.GetVertices().size());
+		for (const auto& verts : block.GetVertices())
+		{
+			config.bmin[0] = std::min(verts.position[0] + mapPosition.x, config.bmin[0]);
+			config.bmin[1] = std::min(verts.position[1], config.bmin[1]);
+			config.bmin[2] = std::min(verts.position[2] + mapPosition.y, config.bmin[2]);
+			config.bmax[0] = std::max(verts.position[0] + mapPosition.x, config.bmax[0]);
+			config.bmax[1] = std::max(verts.position[1], config.bmax[1]);
+			config.bmax[2] = std::max(verts.position[2] + mapPosition.y, config.bmax[2]);
+			vertices.emplace_back(verts.position[0] + mapPosition.x, verts.position[1], verts.position[2] + mapPosition.y);
+			indices.push_back(indices.size());
+		}
+	}
+	// Get width and height
+	rcCalcGridSize(config.bmin, config.bmax, config.cs, &config.width, &config.height);
+
+	config.walkableSlopeAngle = agentMaxSlope;
+	config.walkableHeight = (int)ceilf(agentHeight / config.ch);
+	config.walkableClimb = (int)floorf(agentMaxClimb / config.ch);
+	config.walkableRadius = (int)ceilf(agentRadius / config.cs);
+	config.maxEdgeLen = (int)(edgeMaxLen / config.cs);
+	config.maxSimplificationError = 1.3f;                 // TODO
+	config.minRegionArea = (int)rcSqr(regionMinSize);     // Note: area = size*size
+	config.mergeRegionArea = (int)rcSqr(regionMergeSize); // Note: area = size*size
+	config.maxVertsPerPoly = 6;                           // TODO
+	config.detailSampleDist = detailSampleDist < 0.9f ? 0 : config.cs * detailSampleDist;
+	config.detailSampleMaxError = config.ch * detailSampleMaxError;
+
+	// Step 2. Rasterize input polygon soup.
+
+	// Allocate voxel heightfield where we rasterize our input data to.
+	auto solid = rcAllocHeightfield();
+	assert(solid);
+
+	rcContext context(false);
+	if (!rcCreateHeightfield(&context, *solid, config.width, config.height, config.bmin, config.bmax, config.cs, config.ch))
+	{
+		assert(false);
+	}
+
+	// Allocate array that can hold triangle area types.
+	// If you have multiple meshes you need to process, allocate
+	// and array which can hold the max number of triangles you need to process.
+	auto triAreas = std::vector<unsigned char>(indices.size() / 3, 0);
+
+	// Find triangles which are walkable based on their slope and rasterize them.
+	// If your input data is multiple meshes, you can transform them here, calculate
+	// the are type for each of the meshes and rasterize them.
+	rcMarkWalkableTriangles(&context, config.walkableSlopeAngle, reinterpret_cast<const float*>(vertices.data()),
+	                        vertices.size(), indices.data(), indices.size() / 3, triAreas.data());
+	if (!rcRasterizeTriangles(&context, reinterpret_cast<const float*>(vertices.data()), vertices.size(), indices.data(),
+	                          triAreas.data(), indices.size() / 3, *solid, config.walkableClimb))
+	{
+		assert(false);
+	}
+
+	// Step 3. Filter walkables surfaces.
+	if (filterLowHangingObstacles)
+		rcFilterLowHangingWalkableObstacles(&context, config.walkableClimb, *solid);
+	if (filterLedgeSpans)
+		rcFilterLedgeSpans(&context, config.walkableHeight, config.walkableClimb, *solid);
+	if (filterWalkableLowHeightSpans)
+		rcFilterWalkableLowHeightSpans(&context, config.walkableHeight, *solid);
+
+	// Step 4. Partition walkable surface to simple regions.
+	auto chf = rcAllocCompactHeightfield();
+	assert(chf);
+	if (!rcBuildCompactHeightfield(&context, config.walkableHeight, config.walkableClimb, *solid, *chf))
+	{
+		assert(false);
+	}
+	// Erode the walkable area by agent radius.
+	if (!rcErodeWalkableArea(&context, config.walkableRadius, *chf))
+	{
+		assert(false);
+	}
+	// Prepare for region partitioning, by calculating distance field along the walkable surface.
+	if (!rcBuildDistanceField(&context, *chf))
+	{
+		assert(false);
+	}
+
+	// Partition the walkable surface into simple regions without holes.
+	if (!rcBuildRegions(&context, *chf, 0, config.minRegionArea, config.mergeRegionArea))
+	{
+		assert(false);
+	}
+
+	// Step 5. Trace and simplify region contours.
+
+	// Create contours.
+	auto cset = rcAllocContourSet();
+	if (!cset)
+	{
+		assert(false);
+	}
+	if (!rcBuildContours(&context, *chf, config.maxSimplificationError, config.maxEdgeLen, *cset))
+	{
+		assert(false);
+	}
+
+	// Step 6. Build polygons mesh from contours.
+
+	// Build polygon navmesh from the contours.
+	auto p_mesh = rcAllocPolyMesh();
+	if (!p_mesh)
+	{
+		assert(false);
+	}
+	if (!rcBuildPolyMesh(&context, *cset, maxVertsPerPoly, *p_mesh))
+	{
+		assert(false);
+	}
+
+	// Step 7. Create detail mesh which allows to access approximate height on each polygon.
+	//
+
+	auto d_mesh = rcAllocPolyMeshDetail();
+	if (!d_mesh)
+	{
+		assert(false);
+	}
+
+	if (!rcBuildPolyMeshDetail(&context, *p_mesh, *chf, config.detailSampleDist, config.detailSampleMaxError, *d_mesh))
+	{
+		assert(false);
+	}
+
+	if (d_mesh->nverts == 0)
+	{
+		assert(false);
+	}
+
+	const bgfx::Memory* navMeshVerticesMem = bgfx::alloc(sizeof(float) * 3 * d_mesh->nverts);
+	const bgfx::Memory* navMeshIndicesMem = bgfx::alloc(sizeof(uint32_t) * 3 * d_mesh->ntris);
+	auto navMeshVertices = (float*)navMeshVerticesMem->data;
+	auto navMeshIndices = (uint32_t*)navMeshIndicesMem->data;
+	uint32_t current_vertex = 0;
+	uint32_t current_tri = 0;
+
+	for (int j = 0; j < d_mesh->nmeshes; ++j)
+	{
+		const unsigned int* m = &d_mesh->meshes[j * 4];
+		const unsigned int bverts = m[0];
+		const int nverts = (int)m[1];
+		const unsigned int btris = m[2];
+		const int ntris = (int)m[3];
+		const float* verts = &d_mesh->verts[bverts * 3];
+		const unsigned char* tris = &d_mesh->tris[btris * 4];
+
+		for (int i = 0; i < nverts; ++i)
+		{
+			navMeshVertices[(current_vertex + i) * 3] = verts[i * 3];
+			navMeshVertices[(current_vertex + i) * 3 + 1] = verts[i * 3 + 1];
+			navMeshVertices[(current_vertex + i) * 3 + 2] = verts[i * 3 + 2];
+		}
+
+		for (int i = 0; i < ntris; ++i)
+		{
+			navMeshIndices[(current_tri + i) * 3] = current_vertex + tris[i * 4];
+			navMeshIndices[(current_tri + i) * 3 + 1] = current_vertex + tris[i * 4 + 1];
+			navMeshIndices[(current_tri + i) * 3 + 2] = current_vertex + tris[i * 4 + 2];
+		}
+
+		current_vertex += nverts;
+		current_tri += ntris;
+	}
+
+	spdlog::info("{} nverts {} tris {} indices", current_vertex, current_tri, current_tri * 3);
+	assert(d_mesh->nverts == current_vertex);
+	assert(d_mesh->ntris == current_tri);
+
+	VertexDecl navMeshDecl;
+	navMeshDecl.reserve(1);
+	navMeshDecl.emplace_back(VertexAttrib::Attribute::Position, 3, VertexAttrib::Type::Float);
+
+	auto navMeshVertexBuffer = new VertexBuffer("Navigation Mesh Vertices", navMeshVerticesMem, navMeshDecl);
+	auto navMeshIndexBuffer = new IndexBuffer("Navigation Mesh Indices", navMeshIndicesMem, IndexBuffer::Type::Uint32);
+	_navMesh = std::make_unique<Mesh>(navMeshVertexBuffer, navMeshIndexBuffer);
+
+	rcFreeHeightField(solid);
+	rcFreeCompactHeightfield(chf);
+	rcFreeContourSet(cset);
+	rcFreePolyMeshDetail(d_mesh);
+	rcFreePolyMesh(p_mesh);
 }

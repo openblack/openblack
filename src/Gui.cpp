@@ -550,6 +550,11 @@ bool Gui::Loop(Game& game, const Renderer& renderer)
 				config.showLandIsland = true;
 			}
 
+			if (ImGui::MenuItem("Navigation Mesh"))
+			{
+				config.showNavigationMesh = true;
+			}
+
 			if (ImGui::BeginMenu("View"))
 			{
 				ImGui::Checkbox("Sky", &game.GetConfig().drawSky);
@@ -627,6 +632,23 @@ bool Gui::Loop(Game& game, const Renderer& renderer)
 		if (ImGui::Button("Dump Heightmap"))
 			game.GetLandIsland().DumpMaps();
 
+		ImGui::End();
+	}
+
+	if (config.showNavigationMesh && ImGui::Begin("Navigation Mesh", &config.showNavigationMesh))
+	{
+		ImGui::InputFloat("Cell Size", &config.navMeshCellSize);
+		ImGui::InputFloat("Cell Height", &config.navMeshCellHeight);
+		static float duration = 0.0f;
+		if (ImGui::Button("Generate Navigation Mesh")) {
+			auto start = std::chrono::high_resolution_clock::now();
+			game.GetLandIsland().BuildNavMesh(config.navMeshCellSize, config.navMeshCellHeight);
+			auto d = std::chrono::high_resolution_clock::now() - start;
+			duration = std::chrono::duration_cast<std::chrono::duration<float>>(d).count();
+		}
+		if (duration > 0) {
+			ImGui::Text("Navigation Mesh generated in %.2f seconds", duration);
+		}
 		ImGui::End();
 	}
 

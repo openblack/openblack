@@ -16,6 +16,7 @@
 #include <lnd_file.h>
 
 #include <cassert>
+#include <spdlog/spdlog.h>
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -53,17 +54,20 @@ void LandBlock::BuildMesh(LandIsland& island)
 	// water alpha
 	decl.emplace_back(VertexAttrib::Attribute::Color3, 1, VertexAttrib::Type::Float, true);
 
-	auto verts = buildVertexList(island);
+	_vertices = buildVertexList(island);
+
+	const bgfx::Memory* verts = bgfx::alloc(_vertices.size() * sizeof(_vertices[0]));
+	std::memcpy(verts->data, _vertices.data(), verts->size);
 
 	auto vertexBuffer = new VertexBuffer("LandBlock", verts, decl);
 	_mesh = std::make_unique<Mesh>(vertexBuffer);
 }
 
-const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
+const std::vector<LandVertex> LandBlock::buildVertexList(LandIsland& island) const
 {
 	// reserve 16*16 quads of 2 tris with 3 verts = 1536
-	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(LandVertex) * 1536);
-	auto vertices = (LandVertex*)verticesMem->data;
+	std::vector<LandVertex> vertices;
+	vertices.reserve(_width * _height * 6);
 
 	auto countries = island.GetCountries();
 
@@ -73,13 +77,12 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 	// we'll loop through each cell, 16x16
 	// (the array is 17x17 but the 17th block is questionable data)
 
-	int bx = _block->blockX * 16;
-	int bz = _block->blockZ * 16;
+	int bx = _block->blockX * _width;
+	int bz = _block->blockZ * _height;
 
-	uint16_t i = 0;
-	for (int x = 0; x < 16; x++)
+	for (int x = 0; x < _width; x++)
 	{
-		for (int z = 0; z < 16; z++)
+		for (int z = 0; z < _height; z++)
 		{
 			// top left
 			auto tl = island.GetCell(glm::u16vec2(bx + x + 0, bz + z + 0));
@@ -129,37 +132,37 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 				// TR/TL/BR  # #
 				//             #
 				lnd::LNDMapMaterial trbrtl[3] = {tlMat, trMat, brMat};
-				vertices[i++] = make_vert(pTR, glm::vec3(0, 1, 0), trbrtl, tr);
-				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), trbrtl, tl);
-				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), trbrtl, br);
+				vertices.emplace_back(make_vert(pTR, glm::vec3(0, 1, 0), trbrtl, tr));
+				vertices.emplace_back(make_vert(pTL, glm::vec3(1, 0, 0), trbrtl, tl));
+				vertices.emplace_back(make_vert(pBR, glm::vec3(0, 0, 1), trbrtl, br));
 
 				// BR/TL/BL  #
 				//           # #
 				lnd::LNDMapMaterial brbltl[3] = {tlMat, blMat, brMat};
-				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), brbltl, br);
-				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), brbltl, tl);
-				vertices[i++] = make_vert(pBL, glm::vec3(0, 1, 0), brbltl, bl);
+				vertices.emplace_back(make_vert(pBR, glm::vec3(0, 0, 1), brbltl, br));
+				vertices.emplace_back(make_vert(pTL, glm::vec3(1, 0, 0), brbltl, tl));
+				vertices.emplace_back(make_vert(pBL, glm::vec3(0, 1, 0), brbltl, bl));
 			}
 			else
 			{
 				// BL/TR/TL  # #
 				//           #
 				lnd::LNDMapMaterial bltltr[3] = {blMat, tlMat, trMat};
-				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), bltltr, bl);
-				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), bltltr, tr);
-				vertices[i++] = make_vert(pTL, glm::vec3(0, 1, 0), bltltr, tl);
+				vertices.emplace_back(make_vert(pBL, glm::vec3(1, 0, 0), bltltr, bl));
+				vertices.emplace_back(make_vert(pTR, glm::vec3(0, 0, 1), bltltr, tr));
+				vertices.emplace_back(make_vert(pTL, glm::vec3(0, 1, 0), bltltr, tl));
 
 				// TR/BL/BR    #
 				//           # #
 				lnd::LNDMapMaterial trbrbl[3] = {blMat, brMat, trMat};
-				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), trbrbl, tr);
-				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), trbrbl, bl);
-				vertices[i++] = make_vert(pBR, glm::vec3(0, 1, 0), trbrbl, br);
+				vertices.emplace_back(make_vert(pTR, glm::vec3(0, 0, 1), trbrbl, tr));
+				vertices.emplace_back(make_vert(pBL, glm::vec3(1, 0, 0), trbrbl, bl));
+				vertices.emplace_back(make_vert(pBR, glm::vec3(0, 1, 0), trbrbl, br));
 			}
 		}
 	}
 
-	return verticesMem;
+	return vertices;
 }
 
 void LandBlock::Draw(graphics::RenderPass viewId, const ShaderProgram& program, bool cullBack) const

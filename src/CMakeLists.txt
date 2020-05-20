@@ -123,6 +123,8 @@ target_link_libraries(
           SDL2::SDL2
           # SDL2::SDL2-static
           glm
+          #Recast
+          /home/sandy/code/recastnavigation/Recast/libRecast.a
           spdlog::spdlog
           EnTT::EnTT
           bgfx::bgfx
