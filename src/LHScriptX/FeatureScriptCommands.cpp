@@ -22,11 +22,10 @@
 #include "Enums.h"
 #include "Game.h"
 
+#include <glm/gtx/euler_angles.hpp>
 #include <spdlog/spdlog.h>
 
-#include <cmath>
 #include <iostream>
-#include <random>
 #include <tuple>
 
 using namespace openblack::lhscriptx;
@@ -372,7 +371,7 @@ void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
 	const uint32_t townId = params[0].GetNumber();
 	const auto position = GetHorizontalPosition(params[1].GetString());
 	const auto& abodeType = params[2].GetString();
-	float rotation = params[3].GetNumber();
+	float rotation = GetRadians(params[3].GetNumber());
 	float size = params[4].GetNumber();
 	const uint32_t foodAmount = params[5].GetNumber();
 	const uint32_t woodAmount = params[6].GetNumber();
@@ -380,7 +379,7 @@ void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
 	size = GetSize(size);
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::vec3 rot(0.0f, GetRadians(rotation), 0.0f);
+	const glm::mat3 rot = glm::eulerAngleY(rotation);
 
 	registry.Assign<Transform>(entity, pos, rot, glm::vec3(size));
 	registry.Assign<Abode>(entity, abodeInfo, townId, foodAmount, woodAmount);
@@ -401,7 +400,7 @@ void FeatureScriptCommands::CreateTownCentre(const ScriptCommandContext& ctx)
 	uint32_t associatedTownId = params[0].GetNumber();
 	const auto position = GetHorizontalPosition(params[1].GetString());
 	const auto& centreType = params[2].GetString();
-	float rotation = params[3].GetNumber();
+	float rotation = GetRadians(params[3].GetNumber());
 	float size = params[4].GetNumber();
 	// const auto unknown          = params[5].GetNumber();
 	auto abodeId = GetAbodeInfo(centreType);
@@ -409,7 +408,7 @@ void FeatureScriptCommands::CreateTownCentre(const ScriptCommandContext& ctx)
 	auto submeshIds = std::vector {3};
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::vec3 rot(0.0f, GetRadians(rotation), 0.0f);
+	const glm::mat3 rot = glm::eulerAngleY(rotation);
 
 	registry.Assign<Transform>(entity, pos, rot, glm::vec3(size));
 	registry.Assign<Abode>(entity, abodeId, associatedTownId, static_cast<uint32_t>(0), static_cast<uint32_t>(0));
@@ -464,7 +463,7 @@ void FeatureScriptCommands::CreateVillagerPos(const ScriptCommandContext& ctx)
 	auto& registry = game.GetEntityRegistry();
 	const auto entity = registry.Create();
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::vec3 rot(0.0f, 3.14159, 0.0f);
+	const glm::mat3 rot = glm::eulerAngleY(glm::radians(180.0f));
 	registry.Assign<Transform>(entity, pos, rot, glm::vec3(1.0));
 	uint32_t health = 100;
 	uint32_t age = params[3].GetNumber();
@@ -548,7 +547,7 @@ void FeatureScriptCommands::CreateNewTree(const ScriptCommandContext& ctx)
 	// float finalSize = params[6].GetNumber(); // Max growth size of the tree
 	auto treeInfo = TreeInfo(treeType);
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::vec3 rot(0.0f, rotation, 0.0f);
+	const glm::mat3 rot = glm::eulerAngleY(rotation);
 
 	registry.Assign<Transform>(entity, pos, rot, glm::vec3(size));
 	registry.Assign<Tree>(entity, treeInfo);
@@ -630,7 +629,7 @@ void FeatureScriptCommands::CreateMobileobject(const ScriptCommandContext& ctx)
 	auto mobileObjectInfo = static_cast<MobileObjectInfo>(objectType);
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::vec3 rot(0, rotation, 0);
+	const glm::mat3 rot = glm::eulerAngleY(rotation);
 	const glm::vec3 scale(size);
 
 	registry.Assign<MobileObject>(entity, mobileObjectInfo);
@@ -660,7 +659,7 @@ void FeatureScriptCommands::CreateMobileUStatic(const ScriptCommandContext& ctx)
 	auto mobileStaticInfo = MobileStaticInfo(type);
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position) + verticalOffset, position.y);
-	const glm::vec3 rot(pitch, rotation, lean);
+	const glm::mat3 rot = glm::eulerAngleXYZ(pitch, rotation, lean);
 	const glm::vec3 scale(size);
 
 	registry.Assign<MobileStatic>(entity, mobileStaticInfo);
@@ -768,7 +767,7 @@ void FeatureScriptCommands::CreateNewBigForest(const ScriptCommandContext& ctx)
 	float size = params[4].GetFloat();
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::vec3 rot(0, rotation, 0);
+	const glm::mat3 rot = glm::eulerAngleY(rotation);
 	const glm::vec3 scale(size);
 
 	registry.Assign<Forest>(entity);
@@ -888,7 +887,7 @@ void FeatureScriptCommands::CreateBonfire(const ScriptCommandContext& ctx)
 	float size = params[3].GetFloat() * 1;
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::vec3 rot(0, rotation, 0);
+	const glm::mat3 rot = glm::eulerAngleY(rotation);
 	const glm::vec3 scale(size);
 
 	registry.Assign<MobileStatic>(entity, MobileStaticInfo::Bonfire);
@@ -914,7 +913,7 @@ void FeatureScriptCommands::CreateNewFeature(const ScriptCommandContext& ctx)
 	float size = GetSize(params[3].GetNumber());
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::vec3 rot(0, rotation, 0);
+	const glm::mat3 rot = glm::eulerAngleY(rotation);
 	const glm::vec3 scale(size);
 
 	registry.Assign<Feature>(entity, type);
@@ -996,11 +995,11 @@ void FeatureScriptCommands::CreateAnimatedStatic(const ScriptCommandContext& ctx
 	const auto entity = registry.Create();
 	const auto position = GetHorizontalPosition(params[0].GetString());
 	const auto objectType = params[1].GetString();
-	const auto rotation = -params[2].GetFloat() + 3.14159;
+	const auto rotation = -params[2].GetFloat() + glm::radians(180.0f);
 	auto size = GetSize(params[3].GetNumber());
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::vec3 rot(0.0f, rotation, 0.0f);
+	const glm::mat3 rot = glm::eulerAngleY(rotation);
 
 	registry.Assign<AnimatedStatic>(entity, objectType);
 	registry.Assign<Transform>(entity, pos, rot, glm::vec3(size));
@@ -1022,10 +1021,10 @@ void FeatureScriptCommands::CreateNewTownField(const ScriptCommandContext& ctx)
 	auto townId = params[0].GetNumber();
 	const auto position = GetHorizontalPosition(params[1].GetString());
 	// auto unknown = params[2].GetNumber();
-	const auto rotation = -params[3].GetFloat() + 3.14159;
+	const auto rotation = -params[3].GetFloat() + glm::radians(180.0f);
 
 	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::vec3 rot(0.0f, rotation, 0.0f);
+	const glm::mat3 rot = glm::eulerAngleY(rotation);
 
 	registry.Assign<Field>(entity, townId);
 	registry.Assign<Transform>(entity, pos, rot, glm::vec3(1.0));
