@@ -130,6 +130,7 @@
 #include <cassert>
 #include <cstring>
 #include <fstream>
+#include <limits>
 #include <vector>
 
 using namespace openblack::l3d;
