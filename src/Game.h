@@ -166,5 +166,6 @@ private:
 	glm::vec3 _intersection;
 
 	entt::entity _handEntity;
+	bool _handGripping;
 };
 } // namespace openblack
