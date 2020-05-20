@@ -21,6 +21,7 @@ using namespace openblack;
 
 Console::Console()
     : _open(false)
+    , _reclaim_focus(false)
     , _insert_hand_position(false)
     , _input_cursor_position(0)
     , _input_buffer {0}
@@ -314,9 +315,9 @@ void Console::DrawWindow(Game& game)
 	ImGui::Separator();
 
 	// Command-line
-	bool reclaim_focus = false;
+	ImGui::PushItemWidth(-1);
 	if (ImGui::InputText(
-	        "Input", _input_buffer.data(), _input_buffer.size(),
+	        "##Input", _input_buffer.data(), _input_buffer.size(),
 	        ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion |
 	            ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackAlways,
 	        [](ImGuiInputTextCallbackData* data) -> int {
@@ -335,8 +336,9 @@ void Console::DrawWindow(Game& game)
 
 		strcpy(_input_buffer.data(), "");
 
-		reclaim_focus = true;
+		_reclaim_focus = true;
 	}
+	ImGui::PopItemWidth();
 
 	if (_insert_hand_position)
 	{
@@ -353,8 +355,11 @@ void Console::DrawWindow(Game& game)
 
 	// Auto-focus on window apparition
 	ImGui::SetItemDefaultFocus();
-	if (reclaim_focus)
+	if (_reclaim_focus)
+	{
 		ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
+		_reclaim_focus = false;
+	}
 
 	ImGui::End();
 }
