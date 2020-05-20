@@ -15,6 +15,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <tuple>
 #include <vector>
 
 struct ImGuiInputTextCallbackData;
@@ -51,7 +52,7 @@ private:
 	int _input_cursor_position;
 	std::array<char, 256> _input_buffer;
 	std::vector<std::string> _items;
-	std::vector<std::string> _commands;
+	std::vector<std::pair<std::string, std::string>> _commands;
 	std::vector<std::string> _history;
 	std::string _partial;
 	std::optional<size_t> _history_pos;
