@@ -251,9 +251,10 @@ void MeshViewer::DrawScene(const Renderer& renderer)
 		desc.state = state;
 		desc.modelMatrices = &identity;
 		desc.matrixCount = 1;
+		std::vector<glm::mat4> bones; // In this scope to prevent free before draw
 		if (mesh->IsBoned())
 		{
-			std::vector<glm::mat4> bones = mesh->GetBoneMatrices();
+			bones = mesh->GetBoneMatrices();
 			const std::vector<uint32_t>& boneParents = mesh->GetBoneParents();
 			if (_selectedAnimation.value_or(std::numeric_limits<uint32_t>::max()) > static_cast<uint32_t>(animations.size()))
 			{
