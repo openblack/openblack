@@ -127,16 +127,7 @@ bool Game::ProcessEvents(const SDL_Event& event)
 	if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_LEFT)
 		leftMouseButton = !leftMouseButton;
 
-	if (!leftMouseButton)
-	{
-		auto& handTransform = GetHandTransform();
-		handTransform.position = _intersection;
-		auto cameraRotation = _camera->GetRotation();
-		auto handHeight = GetLandIsland().GetHeightAt(glm::vec2(handTransform.position.x, handTransform.position.z)) + 4.0f;
-		handTransform.rotation = glm::mat3(glm::eulerAngleXZ(glm::half_pi<float>(), glm::radians(cameraRotation.y)));
-		handTransform.position = glm::vec3(handTransform.position.x, handHeight, handTransform.position.z);
-		_entityRegistry->Context().renderContext.dirty = true;
-	}
+	_handGripping = leftMouseButton;
 
 	switch (event.type)
 	{
@@ -246,6 +237,21 @@ bool Game::Update()
 			_intersection.y = _landIsland->GetHeightAt(glm::vec2(_intersection.x, _intersection.z));
 
 			_renderer->UpdateDebugCrossUniforms(_intersection, 50.0f);
+		}
+
+		// Update Hand
+		if (!_handGripping)
+		{
+			const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
+			auto& handTransform = _entityRegistry->Get<Transform>(_handEntity);
+			handTransform.position = _intersection;
+			auto cameraRotation = _camera->GetRotation();
+
+			auto handHeight = GetLandIsland().GetHeightAt(glm::vec2(handTransform.position.x, handTransform.position.z)) + 4.0f;
+
+			handTransform.rotation = glm::eulerAngleY(glm::radians(-cameraRotation.y)) * modelRotationCorrection;
+			handTransform.position = glm::vec3(handTransform.position.x, handHeight, handTransform.position.z);
+			_entityRegistry->Context().renderContext.dirty = true;
 		}
 
 		// Update Entities
