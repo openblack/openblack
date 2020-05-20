@@ -13,8 +13,10 @@
 
 #include <imgui.h>
 
+#include "3D/Camera.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems//DynamicsSystem.h"
 #include "LHScriptX/FeatureScriptCommands.h"
 #include "LHScriptX/Script.h"
 
@@ -209,6 +211,44 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 
 void Console::Draw(Game& game)
 {
+	ImGuiIO& io = ImGui::GetIO();
+
+	glm::ivec2 screenSize {};
+	if (game.GetWindow())
+	{
+		game.GetWindow()->GetSize(screenSize.x, screenSize.y);
+	}
+	glm::ivec2 mousePosition {};
+	SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
+	if (!io.WantCaptureMouse && screenSize.x > 0 && screenSize.y > 0)
+	{
+		glm::vec3 rayOrigin, rayDirection;
+		game.GetCamera().DeprojectScreenToWorld(mousePosition, screenSize, rayOrigin, rayDirection);
+		if (auto hit = game.GetDynamicsSystem().RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
+		{
+			if (hit->second.userData)
+			{
+				switch (hit->second.type)
+				{
+				case ecs::systems::RigidBodyType::Terrain:
+				{
+					// auto landIsland = reinterpret_cast<const LandIsland*>(hit->second.userData);
+					auto blockIndex = hit->second.id;
+					ImGui::SetTooltip("Block Index: %d", blockIndex);
+				}
+				break;
+				case ecs::systems::RigidBodyType::Entity:
+				{
+					// auto registry = reinterpret_cast<const openblack::ecs::Registry*>(hit->second.userData);
+					auto entity = hit->second.id;
+					ImGui::SetTooltip("Entity %d", entity);
+				}
+				break;
+				}
+			}
+		}
+	}
+
 	// As a specific feature guaranteed by the library, after calling Begin() the last Item represent the title bar. So e.g.
 	// IsItemHovered() will return true when hovering the title bar. Here we create a context menu only available from the
 	// title bar.
@@ -411,13 +451,11 @@ void Console::ProcessEventOpen(const SDL_Event& event)
 	switch (event.type)
 	{
 	case SDL_MOUSEBUTTONDOWN:
-	{
 		if (event.button.clicks == 2 && !io.WantCaptureMouse)
 		{
 			_insert_hand_position = true;
 		}
-	}
-	break;
+		break;
 	}
 }
 

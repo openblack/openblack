@@ -12,6 +12,7 @@
 #include <chrono>
 #include <memory>
 #include <optional>
+#include <tuple>
 
 #include <glm/fwd.hpp>
 
@@ -33,6 +34,19 @@ struct Transform;
 
 namespace openblack::ecs::systems
 {
+enum class RigidBodyType
+{
+	Terrain,
+	Entity,
+};
+
+struct RigidBodyDetails
+{
+	RigidBodyType type;
+	int id;
+	const void* userData;
+};
+
 class DynamicsSystem
 {
 public:
@@ -45,8 +59,8 @@ public:
 	void RegisterRigidBodies();
 	void RegisterIslandRigidBodies(LandIsland& island);
 	void UpdatePhysicsTransforms();
-	std::optional<ecs::components::Transform> RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction,
-	                                                            float t_max);
+	const std::optional<std::pair<ecs::components::Transform, RigidBodyDetails>>
+	RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float t_max) const;
 
 private:
 	/// collision configuration contains default setup for memory, collision setup

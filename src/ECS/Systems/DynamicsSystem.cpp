@@ -13,6 +13,7 @@
 
 #include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
 #include <BulletCollision/CollisionDispatch/btCollisionDispatcher.h>
+#include <BulletCollision/CollisionDispatch/btCollisionObject.h>
 #include <BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h>
 #include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
 #include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
@@ -76,14 +77,24 @@ void DynamicsSystem::AddRigidBody(btRigidBody* object)
 void DynamicsSystem::RegisterRigidBodies()
 {
 	auto& registry = Game::instance()->GetEntityRegistry();
-	registry.Each<RigidBody>([this](RigidBody& body) { AddRigidBody(&body.handle); });
+	registry.Each<RigidBody>([this](RigidBody& body) {
+		body.handle.setUserIndex(static_cast<int>(ecs::systems::RigidBodyType::Entity));
+		body.handle.setUserIndex2(0); // TODO
+		body.handle.setUserPointer(this);
+		AddRigidBody(&body.handle);
+	});
 }
 
 void DynamicsSystem::RegisterIslandRigidBodies(LandIsland& island)
 {
-	for (auto& block : island.GetBlocks())
+	auto& landBlocks = island.GetBlocks();
+	for (uint32_t i = 0; i < landBlocks.size(); ++i)
 	{
-		AddRigidBody(block.GetRigidBody().get());
+		auto& rigidBody = landBlocks[i].GetRigidBody();
+		rigidBody->setUserIndex(static_cast<int>(ecs::systems::RigidBodyType::Terrain));
+		rigidBody->setUserIndex2(i);
+		rigidBody->setUserPointer(reinterpret_cast<void*>(this));
+		AddRigidBody(rigidBody.get());
 	}
 }
 
@@ -107,7 +118,8 @@ void DynamicsSystem::UpdatePhysicsTransforms()
 	});
 }
 
-std::optional<Transform> DynamicsSystem::RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float t_max)
+const std::optional<std::pair<Transform, RigidBodyDetails>>
+DynamicsSystem::RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float t_max) const
 {
 	auto from = btVector3(origin.x, origin.y, origin.z);
 	auto to = from + t_max * btVector3(direction.x, direction.y, direction.z);
@@ -124,5 +136,8 @@ std::optional<Transform> DynamicsSystem::RayCastClosestHit(const glm::vec3& orig
 	const auto up = glm::vec3(0, 1, 0);
 	auto rotation = glm::orientation(normal, up);
 
-	return std::make_optional(Transform {translation, rotation, glm::vec3(1.0f)});
+	return std::make_optional(std::make_pair(
+	    Transform {translation, rotation, glm::vec3(1.0f)},
+	    RigidBodyDetails {static_cast<RigidBodyType>(callback.m_collisionObject->getUserIndex()),
+	                      callback.m_collisionObject->getUserIndex2(), callback.m_collisionObject->getUserPointer()}));
 }
