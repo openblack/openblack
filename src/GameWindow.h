@@ -9,11 +9,11 @@
 
 #pragma once
 
-#include <SDL.h>
-
 #include <cstdint>
 #include <memory>
 #include <string>
+
+struct SDL_Window;
 
 namespace openblack
 {
@@ -28,12 +28,11 @@ class GameWindow
 {
 	struct SDLDestroyer
 	{
-		void operator()(SDL_Window* window) const { SDL_DestroyWindow(window); }
+		void operator()(SDL_Window* window) const;
 	};
 
 public:
-	GameWindow(const std::string& title, const SDL_DisplayMode& display, DisplayMode displaymode);
-	GameWindow(const std::string& title, int width, int height, DisplayMode displaymode);
+	GameWindow(const std::string& title, int width, int height, DisplayMode displayMode);
 
 	[[nodiscard]] SDL_Window* GetHandle() const;
 	void GetNativeHandles(void*& native_window, void*& native_display) const;
