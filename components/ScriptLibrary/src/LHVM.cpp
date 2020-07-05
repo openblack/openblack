@@ -67,11 +67,7 @@ void LHVM::loadVariables(std::FILE* file, std::vector<std::string>& variables)
 	{
 		// reset cur pointer to 0
 		char* cur = &buffer[0];
-
-		while (*(cur - 1) != '\0')
-		{
-			std::fread(cur++, 1, 1, file);
-		}
+		do { std::fread(cur++, 1, 1, file); } while (*(cur - 1) != '\0');
 
 		// throw it into the std::string vector
 		variables.emplace_back(buffer);
@@ -129,16 +125,10 @@ void LHVM::loadScripts(std::FILE* file)
 	for (int32_t i = 0; i < count; i++)
 	{
 		char* cur = &script_name[0];
-		while (*(cur - 1) != '\0')
-		{
-			std::fread(cur++, 1, 1, file);
-		}
+		do { std::fread(cur++, 1, 1, file); } while (*(cur - 1) != '\0');
 
 		cur = &file_name[0];
-		while (*(cur - 1) != '\0')
-		{
-			std::fread(cur++, 1, 1, file);
-		}
+		do { std::fread(cur++, 1, 1, file); } while (*(cur - 1) != '\0');
 
 		uint32_t script_type, shit;
 		std::fread(&script_type, 4, 1, file);
