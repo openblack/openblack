@@ -65,6 +65,32 @@ int ListBlocks(openblack::pack::PackFile& pack)
 	return EXIT_SUCCESS;
 }
 
+int ListBlock(openblack::pack::PackFile& pack, const std::string& name, const std::string& outFilename)
+{
+	auto& blocks = pack.GetBlocks();
+
+	auto block = blocks.find(name);
+	if (block == blocks.end())
+	{
+		std::fprintf(stderr, "no \"%s\" block in file: %s\n", name.c_str(), pack.GetFilename().c_str());
+		return EXIT_FAILURE;
+	}
+
+	std::printf("file: %s\n", pack.GetFilename().c_str());
+	std::printf("name \"%s\", size %u\n", name.c_str(), static_cast<uint32_t>(block->second.size()));
+	std::printf("\n");
+
+	if (!outFilename.empty())
+	{
+		std::ofstream output(outFilename, std::ios::binary);
+		output.write(reinterpret_cast<const char*>(block->second.data()), block->second.size());
+
+		std::printf("\nBlock writen to %s\n", outFilename.c_str());
+	}
+
+	return EXIT_SUCCESS;
+}
+
 int ViewBytes(openblack::pack::PackFile& pack, const std::string& name)
 {
 	auto& block = pack.GetBlock(name);
@@ -275,6 +301,7 @@ struct Arguments
 	enum class Mode
 	{
 		List,
+		Block,
 		Bytes,
 		Info,
 		Textures,
@@ -301,8 +328,9 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 	// clang-format off
 	options.add_options()
 		("h,help", "Display this help message.")
-		("l,list-blocks", "List block statistics.")
-		("b,view-bytes", "View raw byte content of block.", cxxopts::value<std::string>())
+		("l,list-blocks", "List all blocks statistics.")
+		("b,view-bytes", "View raw byte content of block.")
+		("s,block", "List statistics of block.", cxxopts::value<std::string>())
 		("i,info-block", "List INFO block statistics.")
 		("B,body-block", "List Body block statistics.")
 		("M,meshes-block", "List MESHES block statistics.")
@@ -390,6 +418,17 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			args.filenames = result["pack-files"].as<std::vector<std::string>>();
 			return true;
 		}
+		if (result["block"].count() > 0)
+		{
+			if (result["extract"].count() > 0)
+			{
+				args.outFilename = result["extract"].as<std::string>();
+			}
+			args.mode = Arguments::Mode::Block;
+			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			args.block = result["block"].as<std::string>();
+			return true;
+		}
 		if (result["animation"].count() > 0)
 		{
 			if (result["extract"].count() > 0)
@@ -465,6 +504,9 @@ int main(int argc, char* argv[])
 			{
 			case Arguments::Mode::List:
 				return_code |= ListBlocks(pack);
+				break;
+			case Arguments::Mode::Block:
+				return_code |= ListBlock(pack, args.block, args.outFilename);
 				break;
 			case Arguments::Mode::Bytes:
 				return_code |= ViewBytes(pack, args.block);
