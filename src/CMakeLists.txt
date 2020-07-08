@@ -118,6 +118,7 @@ target_link_libraries(
           pack
           lnd
           anm
+          morph
           imgui
           imgui-flame-graph
           ScriptLibrary
