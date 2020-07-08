@@ -67,6 +67,12 @@ int ListBlocks(openblack::pack::PackFile& pack)
 
 int ListBlock(openblack::pack::PackFile& pack, const std::string& name, const std::string& outFilename)
 {
+	auto output_log_stream = stdout;
+	if (outFilename == "stdout")
+	{
+		output_log_stream = stderr;
+	}
+
 	auto& blocks = pack.GetBlocks();
 
 	auto block = blocks.find(name);
@@ -76,16 +82,23 @@ int ListBlock(openblack::pack::PackFile& pack, const std::string& name, const st
 		return EXIT_FAILURE;
 	}
 
-	std::printf("file: %s\n", pack.GetFilename().c_str());
-	std::printf("name \"%s\", size %u\n", name.c_str(), static_cast<uint32_t>(block->second.size()));
-	std::printf("\n");
+	std::fprintf(output_log_stream, "file: %s\n", pack.GetFilename().c_str());
+	std::fprintf(output_log_stream, "name \"%s\", size %u\n", name.c_str(), static_cast<uint32_t>(block->second.size()));
+	std::fprintf(output_log_stream, "\n");
 
 	if (!outFilename.empty())
 	{
-		std::ofstream output(outFilename, std::ios::binary);
-		output.write(reinterpret_cast<const char*>(block->second.data()), block->second.size());
+		if (outFilename == "stdout")
+		{
+			std::cout.write(reinterpret_cast<const char*>(block->second.data()), block->second.size());
+		}
+		else
+		{
+			std::ofstream output(outFilename, std::ios::binary);
+			output.write(reinterpret_cast<const char*>(block->second.data()), block->second.size());
+		}
 
-		std::printf("\nBlock writen to %s\n", outFilename.c_str());
+		std::fprintf(output_log_stream, "\nBlock writen to %s\n", outFilename.c_str());
 	}
 
 	return EXIT_SUCCESS;
@@ -339,7 +352,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		("t,texture", "View texture statistics.", cxxopts::value<std::string>())
 		("A,animation-block", "List animation block statistics.")
 		("a,animation", "List animation statistics.", cxxopts::value<uint32_t>())
-		("e,extract", "Extract contents of a block to filename.", cxxopts::value<std::string>())
+		("e,extract", "Extract contents of a block to filename (use \"stdout\" for piping to other tool).", cxxopts::value<std::string>())
 		("write-mesh", "Create Mesh Pack.", cxxopts::value<std::string>())
 		("write-animation", "Create Mesh Pack.", cxxopts::value<std::string>())
 		("pack-files", "Pack Files.", cxxopts::value<std::vector<std::string>>())
