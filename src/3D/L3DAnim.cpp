@@ -53,18 +53,18 @@ void L3DAnim::Load(const anm::ANMFile& anm)
 	}
 }
 
-void L3DAnim::LoadFromFile(const std::string& fileName)
+void L3DAnim::LoadFromFile(const fs::path& path)
 {
-	spdlog::debug("Loading L3DAnim from file: {}", fileName);
+	spdlog::debug("Loading L3DAnim from file: {}", path.generic_string());
 	anm::ANMFile anm;
 
 	try
 	{
-		anm.Open(Game::instance()->GetFileSystem().FindPath(fileName).u8string());
+		anm.Open(Game::instance()->GetFileSystem().FindPath(path).u8string());
 	}
 	catch (std::runtime_error& err)
 	{
-		spdlog::error("Failed to open l3d mesh from filesystem {}: {}", fileName, err.what());
+		spdlog::error("Failed to open l3d mesh from filesystem {}: {}", path.generic_string(), err.what());
 		return;
 	}
 

@@ -71,18 +71,18 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 	bgfx::frame();
 }
 
-void L3DMesh::LoadFromFile(const std::string& fileName)
+void L3DMesh::LoadFromFile(const fs::path& path)
 {
-	spdlog::debug("Loading L3DMesh from file: {}", fileName);
+	spdlog::debug("Loading L3DMesh from file: {}", path.generic_string());
 	l3d::L3DFile l3d;
 
 	try
 	{
-		l3d.Open(Game::instance()->GetFileSystem().FindPath(fileName).u8string());
+		l3d.Open(Game::instance()->GetFileSystem().FindPath(path).u8string());
 	}
 	catch (std::runtime_error& err)
 	{
-		spdlog::error("Failed to open l3d mesh from filesystem {}: {}", fileName, err.what());
+		spdlog::error("Failed to open l3d mesh from filesystem {}: {}", path.generic_string(), err.what());
 		return;
 	}
 
