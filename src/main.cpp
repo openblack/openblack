@@ -144,13 +144,13 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 
 int main(int argc, char** argv)
 {
-	std::cout << "============================================================="
-	             "=================\n"
-	             "   openblack - A modern reimplementation of Lionhead's Black "
-	             "& White (2001)   \n"
-	             "============================================================="
-	             "=================\n"
-	             "\n";
+	// clang-format off
+	std::cout <<
+	    "==============================================================================\n"
+	    "   openblack - A modern reimplementation of Lionhead's Black & White (2001)   \n"
+	    "==============================================================================\n"
+	    "\n";
+	// clang-format on
 
 #ifdef NDEBUG
 	try
