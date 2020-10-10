@@ -81,7 +81,7 @@ Game::Game(Arguments&& args)
 	_renderer = std::make_unique<Renderer>(_window.get(), args.rendererType, args.vsync);
 	_fileSystem->SetGamePath(GetGamePath());
 	_handModel = std::make_unique<L3DMesh>();
-	_handModel->LoadFromFile("Data/CreatureMesh/Hand_Boned_Base2.l3d");
+	_handModel->LoadFromFile(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d");
 	spdlog::debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
 
 	_gui = Gui::create(_window.get(), graphics::RenderPass::ImGui, args.scale);
@@ -284,28 +284,28 @@ void Game::Run()
 	_camera->SetRotation(glm::vec3(0.0f, -45.0f, 0.0f));
 
 	_meshPack = std::make_unique<MeshPack>();
-	_meshPack->LoadFromFile("Data/AllMeshes.g3d");
+	_meshPack->LoadFromFile(_fileSystem->DataPath() / "AllMeshes.g3d");
 
 	_animationPack = std::make_unique<AnimationPack>();
-	_animationPack->LoadFromFile("Data/AllAnims.anm");
+	_animationPack->LoadFromFile(_fileSystem->DataPath() / "AllAnims.anm");
 
 	_testModel = std::make_unique<L3DMesh>();
-	_testModel->LoadFromFile("Data/Misc/coffre.l3d");
+	_testModel->LoadFromFile(_fileSystem->MiscPath() / "coffre.l3d");
 
 	_testAnimation = std::make_unique<L3DAnim>();
-	_testAnimation->LoadFromFile("Data/Misc/coffre.anm");
+	_testAnimation->LoadFromFile(_fileSystem->MiscPath() / "coffre.anm");
 
 	_handModel = std::make_unique<L3DMesh>();
-	_handModel->LoadFromFile("Data/CreatureMesh/Hand_Boned_Base2.l3d");
+	_handModel->LoadFromFile(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d");
 
 	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
 
 	LoadVariables();
-	LoadMap("./Scripts/Land1.txt");
+	LoadMap(_fileSystem->ScriptsPath() / "Land1.txt");
 
 	// _lhvm = std::make_unique<LHVM::LHVM>();
-	// _lhvm->LoadBinary(GetGamePath() + "/Scripts/Quests/challenge.chl");
+	// _lhvm->LoadBinary(GetGamePath() + fileSystem->QuestsPath() / "challenge.chl");
 
 	if (_window)
 	{
@@ -411,7 +411,7 @@ void Game::LoadVariables()
 {
 	return;
 
-	auto file = _fileSystem->Open("Scripts/info.dat", FileMode::Read);
+	auto file = _fileSystem->Open(_fileSystem->ScriptsPath() / "info.dat", FileMode::Read);
 
 	// check magic header
 	constexpr char kLionheadMagic[] = "LiOnHeAd";

@@ -29,7 +29,8 @@ const float LandIsland::CellSize = 10.0f;
 LandIsland::LandIsland()
     : _blockIndexLookup {0}
 {
-	auto file = Game::instance()->GetFileSystem().Open("Data/Textures/smallbumpa.raw", FileMode::Read);
+	auto& filesystem = Game::instance()->GetFileSystem();
+	auto file = filesystem.Open(filesystem.TexturePath() / "smallbumpa.raw", FileMode::Read);
 	auto* smallbumpa = new uint8_t[file->Size()];
 	file->Read(smallbumpa, file->Size());
 

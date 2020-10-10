@@ -9,15 +9,14 @@
 
 #include "Sky.h"
 
-#include "3D/L3DMesh.h"
-#include "Common/Bitmap16B.h"
-#include "Graphics/ShaderProgram.h"
-#include "Graphics/Texture2D.h"
-
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
+
+#include "3D/L3DMesh.h"
+#include "Common/Bitmap16B.h"
+#include "Common/FileSystem.h"
+#include "Game.h"
+#include "Graphics/Texture2D.h"
 
 constexpr std::array<std::string_view, 3> alignments = {"Ntrl", "good", "evil"};
 constexpr std::array<std::string_view, 3> times = {"day", "dusk", "night"};
@@ -32,8 +31,9 @@ Sky::Sky()
 	SetDayNightTimes(4.5, 7.0, 7.5, 8.25);
 
 	// load in the mesh
+	auto& filesystem = Game::instance()->GetFileSystem();
 	_model = std::make_unique<L3DMesh>("Sky");
-	_model->LoadFromFile("./Data/WeatherSystem/sky.l3d");
+	_model->LoadFromFile(filesystem.WeatherSystemPath() / "sky.l3d");
 
 	for (uint32_t i = 0; i < alignments.size(); i++)
 	{
@@ -49,8 +49,8 @@ Sky::Sky()
 			{
 				filename[0] = std::toupper(filename[0]);
 			}
-			std::string path = fmt::format("./Data/WeatherSystem/{}", filename);
-			spdlog::debug("Loading sky texture: {}", path);
+			auto path = filesystem.WeatherSystemPath() / filename;
+			spdlog::debug("Loading sky texture: {}", path.generic_string());
 
 			Bitmap16B* bitmap = Bitmap16B::LoadFromFile(path);
 			memcpy(_bitmaps[i * 3 + j].data(), bitmap->Data(), bitmap->Size());
