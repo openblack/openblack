@@ -36,7 +36,7 @@ public:
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args)
 	{
 		SetDirty();
-		return _registry.assign<Component>(entity, std::forward<Args>(args)...);
+		return _registry.emplace<Component>(entity, std::forward<Args>(args)...);
 	}
 	void SetDirty();
 	RegistryContext& Context();
