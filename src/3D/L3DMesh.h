@@ -9,13 +9,21 @@
 
 #pragma once
 
+#ifdef HAS_FILESYSTEM
+#include <filesystem>
+namespace fs = std::filesystem;
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif // HAS_FILESYSTEM
+#include <unordered_map>
+
+#include <glm/gtc/quaternion.hpp>
+
 #include "Graphics/Mesh.h"
 #include "Graphics/ShaderProgram.h"
 #include "Graphics/Texture2D.h"
 #include "L3DSubMesh.h"
-
-#include <glm/gtc/quaternion.hpp>
-#include <unordered_map>
 
 namespace openblack
 {
@@ -75,7 +83,7 @@ public:
 	~L3DMesh() = default;
 
 	void Load(const l3d::L3DFile& l3d);
-	void LoadFromFile(const std::string& fileName);
+	void LoadFromFile(const fs::path& path);
 	void LoadFromBuffer(const std::vector<uint8_t>& data);
 
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return _subMeshes.size(); }

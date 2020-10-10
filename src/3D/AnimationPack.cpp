@@ -22,18 +22,18 @@ AnimationPack::AnimationPack() = default;
 
 AnimationPack::~AnimationPack() = default;
 
-void AnimationPack::LoadFromFile(const std::string& filename)
+void AnimationPack::LoadFromFile(const fs::path& path)
 {
-	spdlog::debug("Loading Mesh Pack from file: {}", filename);
+	spdlog::debug("Loading Mesh Pack from file: {}", path.generic_string());
 	pack::PackFile pack;
 
 	try
 	{
-		pack.Open(Game::instance()->GetFileSystem().FindPath(filename).u8string());
+		pack.Open(Game::instance()->GetFileSystem().FindPath(path).u8string());
 	}
 	catch (std::runtime_error& err)
 	{
-		spdlog::error("Failed to open {}: {}", filename, err.what());
+		spdlog::error("Failed to open {}: {}", path.generic_string(), err.what());
 		return;
 	}
 

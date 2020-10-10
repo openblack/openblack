@@ -14,7 +14,6 @@
 #include <cstddef>
 #include <list>
 #include <memory>
-#include <string>
 #include <vector>
 
 namespace openblack
@@ -26,7 +25,7 @@ FileSystem
 class FileSystem
 {
 public:
-	static std::string FixPath(const std::string& path);
+	static fs::path FixPath(const fs::path& path);
 
 	[[nodiscard]] fs::path FindPath(const fs::path& path) const;
 

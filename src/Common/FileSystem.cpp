@@ -11,14 +11,15 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cstddef>
 
 namespace openblack
 {
 
-std::string FileSystem::FixPath(const std::string& path)
+fs::path FileSystem::FixPath(const fs::path& path)
 {
-	std::string result = path;
+	std::string result = path.generic_string();
 
 	constexpr std::array<std::string_view, 3> caseFixTable = {
 	    "\\Data\\",

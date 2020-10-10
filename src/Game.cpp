@@ -372,12 +372,12 @@ void Game::Run()
 	}
 }
 
-void Game::LoadMap(const std::string& name)
+void Game::LoadMap(const fs::path& path)
 {
-	if (!_fileSystem->Exists(name))
-		throw std::runtime_error("Could not find script " + name);
+	if (!_fileSystem->Exists(path))
+		throw std::runtime_error("Could not find script " + path.generic_string());
 
-	auto data = _fileSystem->ReadAll(name);
+	auto data = _fileSystem->ReadAll(path);
 	std::string source(reinterpret_cast<const char*>(data.data()), data.size());
 
 	// Reset everything. Deletes all entities and their components
@@ -393,15 +393,15 @@ void Game::LoadMap(const std::string& name)
 	script.Load(source);
 }
 
-void Game::LoadLandscape(const std::string& name)
+void Game::LoadLandscape(const fs::path& path)
 {
 	if (_landIsland)
 		_landIsland.reset();
 
-	auto fixedName = Game::instance()->GetFileSystem().FindPath(FileSystem::FixPath(name));
+	auto fixedName = Game::instance()->GetFileSystem().FindPath(FileSystem::FixPath(path));
 
 	if (!_fileSystem->Exists(fixedName))
-		throw std::runtime_error("Could not find landscape " + name);
+		throw std::runtime_error("Could not find landscape " + path.generic_string());
 
 	_landIsland = std::make_unique<LandIsland>();
 	_landIsland->LoadFromFile(fixedName.u8string());
@@ -483,7 +483,7 @@ void Game::LoadVariables()
 	// DETAIL_MAGIC_CREATURE_SPELL_INFO
 }
 
-void Game::SetGamePath(const std::string& gamePath)
+void Game::SetGamePath(const fs::path& gamePath)
 {
 	if (gamePath.empty())
 	{
@@ -491,15 +491,15 @@ void Game::SetGamePath(const std::string& gamePath)
 	}
 	if (!fs::exists(gamePath))
 	{
-		spdlog::error("GamePath does not exist: '{}'", gamePath);
+		spdlog::error("GamePath does not exist: '{}'", gamePath.generic_string());
 		return;
 	}
-	sGamePath = gamePath;
+	_gamePath = gamePath;
 }
 
-const std::string& Game::GetGamePath()
+const fs::path& Game::GetGamePath()
 {
-	if (sGamePath.empty())
+	if (_gamePath.empty())
 	{
 #ifdef _WIN32
 		DWORD dataLen = 0;
@@ -507,12 +507,12 @@ const std::string& Game::GetGamePath()
 		                             RRF_RT_REG_SZ, nullptr, nullptr, &dataLen);
 		if (status == ERROR_SUCCESS)
 		{
-			char* path = new char[dataLen];
+			std::vector<char> path(dataLen);
 			status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ,
-			                     nullptr, path, &dataLen);
+			                     nullptr, path.data(), &dataLen);
 
-			sGamePath = std::string(path);
-			return sGamePath;
+			_gamePath = fs::path(path.data());
+			return _gamePath;
 		}
 
 		spdlog::error("Failed to find the GameDir registry value, game not installed.");
@@ -527,5 +527,5 @@ const std::string& Game::GetGamePath()
 		exit(1);
 	}
 
-	return sGamePath;
+	return _gamePath;
 }

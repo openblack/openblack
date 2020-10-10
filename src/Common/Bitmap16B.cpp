@@ -9,13 +9,10 @@
 
 #include "Bitmap16B.h"
 
+#include <cstring> // memcpy
+
 #include "FileSystem.h"
 #include "Game.h"
-
-#include <cassert>
-#include <cstring> // memset, memcpy
-#include <sstream>
-#include <stdexcept>
 
 using namespace openblack;
 
@@ -34,9 +31,9 @@ Bitmap16B::~Bitmap16B()
 	delete[] _data;
 }
 
-Bitmap16B* Bitmap16B::LoadFromFile(const std::string& strFile)
+Bitmap16B* Bitmap16B::LoadFromFile(const fs::path& path)
 {
-	auto const& data = Game::instance()->GetFileSystem().ReadAll(strFile);
+	auto const& data = Game::instance()->GetFileSystem().ReadAll(path);
 	auto* bitmap = new Bitmap16B(data.data());
 
 	return bitmap;

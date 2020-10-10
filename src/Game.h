@@ -9,17 +9,25 @@
 
 #pragma once
 
-#include "GameWindow.h"
-
-#include <LHVM/LHVM.h>
-#include <SDL.h>
-#include <bgfx/bgfx.h>
-#include <glm/glm.hpp>
-
-#include <entt/entity/fwd.hpp>
+#ifdef HAS_FILESYSTEM
+#include <filesystem>
+namespace fs = std::filesystem;
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif // HAS_FILESYSTEM
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <SDL.h>
+#include <bgfx/bgfx.h>
+#include <entt/entity/fwd.hpp>
+#include <glm/glm.hpp>
+
+#include <LHVM/LHVM.h>
+
+#include "GameWindow.h"
 
 namespace openblack
 {
@@ -102,13 +110,13 @@ public:
 	bool Update();
 	void Run();
 
-	void LoadMap(const std::string& name);
-	void LoadLandscape(const std::string& name);
+	void LoadMap(const fs::path& path);
+	void LoadLandscape(const fs::path& path);
 
 	void LoadVariables();
 
-	void SetGamePath(const std::string& gamePath);
-	const std::string& GetGamePath();
+	void SetGamePath(const fs::path& path);
+	const fs::path& GetGamePath();
 
 	GameWindow* GetWindow() { return _window.get(); }
 	[[nodiscard]] const GameWindow& GetWindow() const { return *_window; }
@@ -139,7 +147,8 @@ public:
 private:
 	static Game* sInstance;
 
-	std::string sGamePath; // path to Lionhead Studios Ltd/Black & White folder
+	/// path to Lionhead Studios Ltd/Black & White folder
+	fs::path _gamePath;
 
 	std::unique_ptr<GameWindow> _window;
 	std::unique_ptr<Renderer> _renderer;
