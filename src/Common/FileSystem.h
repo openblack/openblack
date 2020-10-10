@@ -25,6 +25,22 @@ FileSystem
 class FileSystem
 {
 public:
+	static inline fs::path ScriptsPath() { return "Scripts"; }
+
+	static inline fs::path PlaygroundPath() { return ScriptsPath() / "Playgrounds"; }
+
+	static inline fs::path QuestsPath() { return ScriptsPath() / "Quests"; }
+
+	static inline fs::path DataPath() { return "Data"; }
+
+	static inline fs::path MiscPath() { return DataPath() / "Misc"; }
+
+	static inline fs::path TexturePath() { return DataPath() / "Textures"; }
+
+	static inline fs::path WeatherSystemPath() { return DataPath() / "WeatherSystem"; }
+
+	static inline fs::path CreatureMeshPath() { return DataPath() / "CreatureMesh"; }
+
 	static fs::path FixPath(const fs::path& path);
 
 	[[nodiscard]] fs::path FindPath(const fs::path& path) const;

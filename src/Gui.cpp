@@ -9,11 +9,24 @@
 
 #include "Gui.h"
 
+#include <bgfx/bgfx.h>
+#include <bgfx/embedded_shader.h>
+#include <bx/math.h>
+#include <bx/timer.h>
+#include <imgui.h>
+#include <imgui_widget_flamegraph.h>
+#ifdef _WIN32
+#include <SDL2/SDL_syswm.h>
+#endif
+
+#include <LNDFile.h>
+
 #include "3D/Camera.h"
 #include "3D/LandIsland.h"
 #include "3D/MeshPack.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
+#include "Common/FileSystem.h"
 #include "Console.h"
 #include "Entities/Components/Transform.h"
 #include "Entities/Components/Tree.h"
@@ -27,17 +40,6 @@
 #include "LHVMViewer.h"
 #include "MeshViewer.h"
 #include "Profiler.h"
-
-#include <LNDFile.h>
-#include <bgfx/bgfx.h>
-#include <bgfx/embedded_shader.h>
-#include <bx/math.h>
-#include <bx/timer.h>
-#include <imgui.h>
-#include <imgui_widget_flamegraph.h>
-#ifdef _WIN32
-#include <SDL2/SDL_syswm.h>
-#endif
 
 using namespace openblack;
 
@@ -488,33 +490,35 @@ bool Gui::Loop(Game& game, const Renderer& renderer)
 		if (ImGui::BeginMenu("Load Island"))
 		{
 			constexpr std::array<std::pair<std::string_view, std::string_view>, 6> RegularIslands = {
-			    std::pair {"Land 1", "./Scripts/Land1.txt"}, std::pair {"Land 2", "./Scripts/Land2.txt"},
-			    std::pair {"Land 3", "./Scripts/Land3.txt"}, std::pair {"Land 4", "./Scripts/Land4.txt"},
-			    std::pair {"Land 5", "./Scripts/Land5.txt"}, std::pair {"God's Playground", "./Scripts/LandT.txt"},
+			    std::pair {"Land 1", "Land1.txt"}, std::pair {"Land 2", "Land2.txt"},
+			    std::pair {"Land 3", "Land3.txt"}, std::pair {"Land 4", "Land4.txt"},
+			    std::pair {"Land 5", "Land5.txt"}, std::pair {"God's Playground", "LandT.txt"},
 			};
 			constexpr std::array<std::pair<std::string_view, std::string_view>, 3> PlaygroundIslands = {
-			    std::pair {"Two Gods", "./Scripts/Playgrounds/TwoGods.txt"},
-			    std::pair {"Three Gods", "./Scripts/Playgrounds/ThreeGods.txt"},
-			    std::pair {"Four Gods", "./Scripts/Playgrounds/FourGods.txt"},
+			    std::pair {"Two Gods", "TwoGods.txt"},
+			    std::pair {"Three Gods", "ThreeGods.txt"},
+			    std::pair {"Four Gods", "FourGods.txt"},
 			};
 
-			auto menu_item = [&game](auto label, auto path) {
+			auto menu_item = [&game](const auto& label, const fs::path& path) {
 				if (ImGui::MenuItem(label.data()))
-					game.LoadMap(path.data());
+					game.LoadMap(path);
 				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("%s", path.data());
+					ImGui::SetTooltip("%s", path.generic_string().c_str());
 			};
 
-			ImGui::MenuItem("Story Islands", NULL, false, false);
+			auto& filesystem = Game::instance()->GetFileSystem();
+
+			ImGui::MenuItem("Story Islands", nullptr, false, false);
 			for (auto& [label, path] : RegularIslands)
 			{
-				menu_item(label, path);
+				menu_item(label, filesystem.ScriptsPath() / path);
 			}
 			ImGui::Separator();
-			ImGui::MenuItem("Playground Islands", NULL, false, false);
+			ImGui::MenuItem("Playground Islands", nullptr, false, false);
 			for (auto& [label, path] : PlaygroundIslands)
 			{
-				menu_item(label, path);
+				menu_item(label, filesystem.PlaygroundPath() / path);
 			}
 
 			ImGui::EndMenu();

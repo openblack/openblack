@@ -31,7 +31,8 @@ Water::Water()
 	    std::make_unique<FrameBuffer>("Reflection", 1024, 1024, graphics::Format::RGBA8, graphics::Format::Depth24Stencil8);
 
 	// water texture (256x256 RAW RGB 24bpp)
-	auto const& waterTextureData = Game::instance()->GetFileSystem().ReadAll("Data/Textures/Sky.raw");
+	auto& filesystem = Game::instance()->GetFileSystem();
+	auto const& waterTextureData = filesystem.ReadAll(filesystem.TexturePath() / "Sky.raw");
 	const uint16_t textureWidth = 256, textureHeight = 256;
 
 	_texture = std::make_unique<Texture2D>("Water");
