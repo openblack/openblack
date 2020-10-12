@@ -26,15 +26,15 @@ public:
 	glm::vec3 position;
 	std::vector<StreamNode> edges;
 
-	StreamNode(const glm::vec3 position, const std::vector<StreamNode>& streamNodes)
+	StreamNode(const glm::vec3 position, const std::vector<StreamNode>& nodes)
 	    : position(position)
 	{
-		if (streamNodes.empty())
+		if (nodes.empty())
 		{
 			return;
 		}
 
-		auto element = std::min_element(std::cbegin(streamNodes), std::cend(streamNodes),
+		auto element = std::min_element(std::cbegin(nodes), std::cend(nodes),
 		                                [&position](const auto& first, const auto& second) {
 			                                auto firstDistance = glm::distance(position, first.position);
 			                                auto secondDistance = glm::distance(position, second.position);
@@ -54,7 +54,7 @@ private:
 struct Stream
 {
 	int streamId;
-	std::vector<StreamNode> streamNodes;
+	std::vector<StreamNode> nodes;
 };
 
 } // namespace openblack

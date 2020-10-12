@@ -14,6 +14,7 @@
 #include "AllMeshes.h"
 #include "Entities/Components/Abode.h"
 #include "Entities/Components/AnimatedStatic.h"
+#include "Entities/Components/Footpath.h"
 #include "Entities/Components/Stream.h"
 #include "Entities/Components/Transform.h"
 #include "Entities/Components/Tree.h"
@@ -298,17 +299,17 @@ inline float GetSize(const float size)
 void FeatureScriptCommands::Version(const ScriptCommandContext& ctx)
 {
 	float version = ctx.GetParameters()[0].GetFloat();
-	spdlog::debug("Land version set to: {}", version);
+	spdlog::debug("LHScriptX: Land version set to: {}", version);
 }
 
 void FeatureScriptCommands::CreateMist(const ScriptCommandContext& ctx)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
 void FeatureScriptCommands::CreatePath(const ScriptCommandContext& ctx)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
 void FeatureScriptCommands::CreateTown(const ScriptCommandContext& ctx)
@@ -324,7 +325,7 @@ void FeatureScriptCommands::CreateTown(const ScriptCommandContext& ctx)
 	// float notUsed          = params[3].GetNumber();
 	const auto& civilisation = params[4].GetString();
 
-	spdlog::debug(R"(Creating town {} for "{}" with civilisation "{}".)", townId, playerOwner, civilisation);
+	spdlog::debug(R"(LHScriptX: Creating town {} for "{}" with civilisation "{}".)", townId, playerOwner, civilisation);
 	registry.Assign<Town>(entity, townId);
 	auto& registryContext = registry.Context();
 	registryContext.towns.insert({townId, entity});
@@ -348,17 +349,17 @@ void FeatureScriptCommands::SetTownBelief(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::SetTownBeliefCap(const ScriptCommandContext& ctx)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
 void FeatureScriptCommands::SetTownUninhabitable(const ScriptCommandContext& ctx)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
 void FeatureScriptCommands::SetTownCongregationPos(const ScriptCommandContext& ctx)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
 void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
@@ -387,7 +388,7 @@ void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreatePlannedAbode(const ScriptCommandContext& ctx)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
 void FeatureScriptCommands::CreateTownCentre(const ScriptCommandContext& ctx)
@@ -416,42 +417,42 @@ void FeatureScriptCommands::CreateTownCentre(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateTownSpell(const ScriptCommandContext& ctx)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
 void FeatureScriptCommands::CreateNewTownSpell(const ScriptCommandContext& ctx)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
 void FeatureScriptCommands::CreateTownCentreSpellIcon(const ScriptCommandContext& ctx)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
 void FeatureScriptCommands::CreateSpellIcon(const ScriptCommandContext& ctx)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
 void FeatureScriptCommands::CreatePlannedSpellIcon(const ScriptCommandContext& ctx)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
 void FeatureScriptCommands::CreateVillager(const ScriptCommandContext& ctx)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
 void FeatureScriptCommands::CreateTownVillager(const ScriptCommandContext& ctx)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
 void FeatureScriptCommands::CreateSpecialTownVillager(const ScriptCommandContext& ctx)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
 void FeatureScriptCommands::CreateVillagerPos(const ScriptCommandContext& ctx)
@@ -840,8 +841,8 @@ void FeatureScriptCommands::CreateStreamPoint(const ScriptCommandContext& ctx)
 	auto& registryContext = registry.Context();
 
 	Stream& stream = registry.Get<Stream>(registryContext.streams.at(streamId));
-	const StreamNode newNode(position, stream.streamNodes);
-	stream.streamNodes.push_back(newNode);
+	const StreamNode newNode(position, stream.nodes);
+	stream.nodes.push_back(newNode);
 }
 
 void FeatureScriptCommands::CreateWaterfall(const ScriptCommandContext& ctx)
@@ -858,20 +859,38 @@ void FeatureScriptCommands::CreateArena(const ScriptCommandContext& ctx)
 
 void FeatureScriptCommands::CreateFootpath(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	auto& game = ctx.GetGame();
+	const auto& params = ctx.GetParameters();
+	auto& registry = game.GetEntityRegistry();
+	const auto entity = registry.Create();
+	const auto footpathId = params[0].GetNumber();
+	registry.Assign<Footpath>(entity, footpathId);
+	auto& registryContext = registry.Context();
+	registryContext.footpaths.insert({footpathId, entity});
 }
 
 void FeatureScriptCommands::CreateFootpathNode(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	auto& game = ctx.GetGame();
+	const auto& params = ctx.GetParameters();
+	auto& island = game.GetLandIsland();
+	auto& registry = game.GetEntityRegistry();
+	const auto footpathId = params[0].GetNumber();
+	const auto pos = GetHorizontalPosition(params[1].GetString());
+	const glm::vec3 position(pos.x, island.GetHeightAt(pos), pos.y);
+	auto& registryContext = registry.Context();
+
+	auto& footpath = registry.Get<Footpath>(registryContext.footpaths.at(footpathId));
+	footpath.nodes.push_back(FootpathNode {position});
 }
 
 void FeatureScriptCommands::LinkFootpath(const ScriptCommandContext& ctx)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	const auto& params = ctx.GetParameters();
+	const auto footpathId = params[0].GetNumber();
+	// TODO: The last MultiMapFixed created in this script is an implicit param
+	//       This Command adds the footpath to a list in a FootpathLink on the MultiMapFixed
+	spdlog::error("LHScriptX: {}:{}: Function {}({}) not implemented.", __FILE__, __LINE__, __func__, footpathId);
 }
 
 void FeatureScriptCommands::CreateBonfire(const ScriptCommandContext& ctx)
@@ -959,7 +978,7 @@ void FeatureScriptCommands::CreateStreetLight(const ScriptCommandContext& ctx)
 void FeatureScriptCommands::SetLandNumber(const ScriptCommandContext& ctx)
 {
 	int landNumber = ctx.GetParameters()[0].GetNumber();
-	spdlog::debug("Land number set to: {}", landNumber);
+	spdlog::debug("LHScriptX: Land number set to: {}", landNumber);
 }
 
 void FeatureScriptCommands::CreateOneShotSpell(const ScriptCommandContext& ctx)

@@ -33,8 +33,9 @@ struct RenderContext
 			bgfx::destroy(instanceUniformBuffer);
 		}
 	}
-	std::unique_ptr<graphics::DebugLines> streams;
 	std::unique_ptr<graphics::DebugLines> boundingBox;
+	std::unique_ptr<graphics::DebugLines> streams;
+	std::unique_ptr<graphics::DebugLines> footpaths;
 
 	struct InstancedDrawDesc
 	{
@@ -68,12 +69,14 @@ struct RenderContext
 	bool hasBoundingBoxes {false};
 };
 
+using FootpathId = int;
 using TownId = int;
 using StreamId = int;
 
 struct RegistryContext
 {
 	RenderContext renderContext;
+	std::unordered_map<FootpathId, entt::entity> footpaths;
 	std::unordered_map<StreamId, entt::entity> streams;
 	std::unordered_map<TownId, entt::entity> towns;
 };

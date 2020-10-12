@@ -9,6 +9,8 @@
 
 #include "Registry.h"
 
+#include <algorithm>
+
 #include "3D/Camera.h"
 #include "3D/L3DMesh.h"
 #include "3D/MeshLookup.h"
@@ -23,8 +25,8 @@
 #include "Graphics/DebugLines.h"
 #include "Graphics/ShaderManager.h"
 
+#include <Entities/Components/Footpath.h>
 #include <Entities/Components/Hand.h>
-#include <algorithm>
 
 namespace openblack::entities
 {
@@ -350,12 +352,12 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	}
 }
 
-void Registry::PrepareDraw(bool drawBoundingBox, bool drawBoundingStreams)
+void Registry::PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawStreams)
 {
 	auto& renderCtx = Context().renderContext;
 
-	if (renderCtx.dirty || renderCtx.hasBoundingBoxes != drawBoundingBox ||
-	    (renderCtx.streams != nullptr) != drawBoundingStreams)
+	if (renderCtx.dirty || renderCtx.hasBoundingBoxes != drawBoundingBox || (renderCtx.footpaths != nullptr) != drawFootpaths ||
+	    (renderCtx.streams != nullptr) != drawStreams)
 	{
 		PrepareDrawDescs(drawBoundingBox);
 		PrepareDrawUploadUniforms(drawBoundingBox);
@@ -366,33 +368,57 @@ void Registry::PrepareDraw(bool drawBoundingBox, bool drawBoundingStreams)
 			renderCtx.boundingBox = graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f));
 		}
 
-		renderCtx.streams.reset();
-		if (drawBoundingStreams)
+		renderCtx.footpaths.reset();
+		if (drawFootpaths)
 		{
-			uint32_t streamEdgeCount = 0;
-			_registry.view<const Stream>().each([&streamEdgeCount](const Stream& com) {
-				for (const auto& from : com.streamNodes)
+			uint32_t nodeCount = 0;
+			_registry.view<const Footpath>().each(
+			    [&nodeCount](const Footpath& ent) { nodeCount += 2 * std::max(static_cast<int>(ent.nodes.size()) - 1, 0); });
+
+			std::vector<graphics::DebugLines::Vertex> edges;
+			edges.reserve(nodeCount);
+			_registry.view<const Footpath>().each([&edges](const Footpath& ent) {
+				const auto color = glm::vec4(0, 1, 0, 1);
+				const auto offset = glm::vec3(0, 1, 0);
+				for (int i = 0; i < static_cast<int>(ent.nodes.size()) - 1; ++i)
 				{
-					streamEdgeCount += from.edges.size();
+					edges.push_back({glm::vec4(ent.nodes[i].position + offset, 1.0f), color});
+					edges.push_back({glm::vec4(ent.nodes[i + 1].position + offset, 1.0f), color});
 				}
 			});
-			std::vector<graphics::DebugLines::Vertex> streamEdges;
-			streamEdges.reserve(streamEdgeCount * 2);
-			_registry.view<const Stream>().each([&streamEdges](const Stream& com) {
+			if (!edges.empty())
+			{
+				renderCtx.footpaths = graphics::DebugLines::CreateDebugLines(edges.data(), edges.size());
+			}
+		}
+
+		renderCtx.streams.reset();
+		if (drawStreams)
+		{
+			uint32_t edgeCount = 0;
+			_registry.view<const Stream>().each([&edgeCount](const Stream& ent) {
+				for (const auto& from : ent.nodes)
+				{
+					edgeCount += from.edges.size();
+				}
+			});
+			std::vector<graphics::DebugLines::Vertex> edges;
+			edges.reserve(edgeCount * 2);
+			_registry.view<const Stream>().each([&edges](const Stream& ent) {
 				const auto color = glm::vec4(1, 0, 0, 1);
-				for (const auto& from : com.streamNodes)
+				for (const auto& from : ent.nodes)
 				{
 					for (const auto& to : from.edges)
 					{
-						streamEdges.push_back({glm::vec4(from.position, 1.0f), color});
-						streamEdges.push_back({glm::vec4(to.position, 1.0f), color});
+						edges.push_back({glm::vec4(from.position, 1.0f), color});
+						edges.push_back({glm::vec4(to.position, 1.0f), color});
 					}
 				}
 			});
 
-			if (!streamEdges.empty())
+			if (!edges.empty())
 			{
-				renderCtx.streams = graphics::DebugLines::CreateDebugLines(streamEdges.data(), streamEdges.size());
+				renderCtx.streams = graphics::DebugLines::CreateDebugLines(edges.data(), edges.size());
 			}
 		}
 

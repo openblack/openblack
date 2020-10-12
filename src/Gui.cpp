@@ -564,6 +564,7 @@ bool Gui::Loop(Game& game, const Renderer& renderer)
 				ImGui::Checkbox("Debug Cross", &game.GetConfig().drawDebugCross);
 				ImGui::Checkbox("Wireframe", &config.wireframe);
 				ImGui::Checkbox("Bounding Boxes", &config.drawBoundingBoxes);
+				ImGui::Checkbox("Footpaths", &config.drawFootpaths);
 				ImGui::Checkbox("Streams", &config.drawStreams);
 
 				ImGui::EndMenu();
