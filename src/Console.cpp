@@ -108,7 +108,6 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 		{
 			if (word_end == word_start || strncmp(Command.first.c_str(), word_start, (int)(word_end - word_start)) == 0)
 			{
-				printf("%s", Command.first.c_str());
 				candidates.push_back(Command.first);
 			}
 		}
