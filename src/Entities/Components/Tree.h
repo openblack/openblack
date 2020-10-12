@@ -11,7 +11,12 @@
 
 #include "Enums.h"
 
+namespace openblack
+{
+
 struct Tree
 {
 	openblack::TreeInfo treeInfo;
 };
+
+} // namespace openblack

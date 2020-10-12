@@ -9,9 +9,14 @@
 
 #pragma once
 
+namespace openblack
+{
+
 struct Velocity
 {
 	float dX;
 	float dY;
 	float dZ;
 };
+
+} // namespace openblack

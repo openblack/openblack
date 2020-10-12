@@ -11,6 +11,9 @@
 
 #include "Enums.h"
 
+namespace openblack
+{
+
 struct Abode
 {
 	openblack::AbodeInfo abodeInfo;
@@ -20,3 +23,5 @@ struct Abode
 	uint32_t foodAmount;
 	uint32_t woodAmount;
 };
+
+} // namespace openblack
