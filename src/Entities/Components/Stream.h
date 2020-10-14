@@ -34,12 +34,12 @@ public:
 			return;
 		}
 
-		auto element = std::min_element(std::cbegin(nodes), std::cend(nodes),
-		                                [&position](const auto& first, const auto& second) {
-			                                auto firstDistance = glm::distance(position, first.position);
-			                                auto secondDistance = glm::distance(position, second.position);
-			                                return firstDistance < secondDistance;
-		                                });
+		auto element =
+		    std::min_element(std::cbegin(nodes), std::cend(nodes), [&position](const auto& first, const auto& second) {
+			    auto firstDistance = glm::distance(position, first.position);
+			    auto secondDistance = glm::distance(position, second.position);
+			    return firstDistance < secondDistance;
+		    });
 
 		if (glm::distance(position, element->position) < maxNodeDistance)
 		{

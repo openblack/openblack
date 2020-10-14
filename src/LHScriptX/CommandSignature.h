@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <array>
 #include <functional>
 #include <string>
 #include <vector>
@@ -99,10 +100,7 @@ public:
 
 	[[nodiscard]] const ScriptCommandParameters& GetParameters() const { return *_parameters; }
 
-	const ScriptCommandParameter& operator[](unsigned int arg) const { return _parameters->at(arg); }
-
-	template <class T>
-	T GetParameter(unsigned int arg) const;
+	const ScriptCommandParameter& operator[](uint32_t arg) const { return _parameters->at(arg); }
 
 private:
 	Game* _game;
@@ -114,7 +112,7 @@ typedef std::function<void(const ScriptCommandContext&)> ScriptCommand;
 struct ScriptCommandSignature
 {
 	const char name[128];
-	ScriptCommand command;
-	std::vector<ParameterType> parameters;
+	const ScriptCommand command;
+	const std::array<ParameterType, 9> parameters;
 };
 } // namespace openblack::lhscriptx
