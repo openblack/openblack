@@ -18,6 +18,7 @@ jobs:
 
     - script: |
         set -eo pipefail
+        clang-format --version
         cmake --build . --target clang-format
         git diff -p --stat --color
         git diff > format.patch
