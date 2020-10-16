@@ -45,7 +45,7 @@ public:
 	static void CreateSpellIcon(glm::vec3 position, const std::string&, int32_t, int32_t, int32_t);
 	static void CreatePlannedSpellIcon(int32_t, glm::vec3 position, const std::string&, int32_t, int32_t, int32_t);
 	static void CreateVillager(glm::vec3, glm::vec3, const std::string&);
-	static void CreateTownVillager(int32_t, glm::vec3, glm::vec3, int32_t);
+	static void CreateTownVillager(int32_t townId, glm::vec3 position, const std::string& villagerType, int32_t age);
 	static void CreateSpecialTownVillager(int32_t, glm::vec3, int32_t, int32_t);
 	static void CreateVillagerPos(glm::vec3, glm::vec3, const std::string&, int32_t);
 	static void CreateCitadel(glm::vec3 position, int32_t, const std::string&, int32_t, int32_t);
@@ -79,7 +79,8 @@ public:
 	static void CountryChange(glm::vec3 position, int32_t);
 	static void HeightChange(glm::vec3 position, int32_t);
 	static void CreateCreature(glm::vec3 position, int32_t, int32_t);
-	static void CreateCreatureFromFile(const std::string&, int32_t, glm::vec3, glm::vec3);
+	static void CreateCreatureFromFile(const std::string& playerName, int32_t creatureType, const std::string& creatureMind,
+	                                   glm::vec3 position);
 	static void CreateFlock(int32_t, glm::vec3, glm::vec3, int32_t, int32_t, int32_t);
 	static void LoadLandscape(const std::string& path);
 	static void Version(float version);
@@ -130,8 +131,8 @@ public:
 	static void SetTownInfluenceMultiplier(float multiplier);
 	static void SetPlayerInfluenceMultiplier(float multiplier);
 	static void SetTownBalanceBeliefScale(int32_t townId, float scale);
-	static void StartGameMessage(glm::vec3, int32_t);
-	static void AddGameMessageLine(glm::vec3, int32_t);
+	static void StartGameMessage(const std::string& message, int32_t landNumber);
+	static void AddGameMessageLine(const std::string& message, int32_t landNumber);
 	static void EditLevel();
 	static void SetNighttime(float, float, float);
 	static void MakeLastObjectArtifact(int32_t, const std::string&, float);

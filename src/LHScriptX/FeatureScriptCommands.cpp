@@ -398,7 +398,7 @@ void FeatureScriptCommands::CreateVillager(glm::vec3, glm::vec3, const std::stri
 	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateTownVillager(int32_t, glm::vec3, glm::vec3, int32_t)
+void FeatureScriptCommands::CreateTownVillager(int32_t townId, glm::vec3 position, const std::string& villagerType, int32_t age)
 {
 	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
@@ -587,7 +587,8 @@ void FeatureScriptCommands::CreateCreature(glm::vec3 position, int32_t, int32_t)
 	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateCreatureFromFile(const std::string&, int32_t, glm::vec3, glm::vec3)
+void FeatureScriptCommands::CreateCreatureFromFile(const std::string& playerName, int32_t creatureType,
+                                                   const std::string& creatureMind, glm::vec3 position)
 {
 	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
@@ -886,12 +887,12 @@ void FeatureScriptCommands::SetTownBalanceBeliefScale(int32_t townId, float scal
 	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::StartGameMessage(glm::vec3, int32_t)
+void FeatureScriptCommands::StartGameMessage(const std::string& message, int32_t landNumber)
 {
 	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::AddGameMessageLine(glm::vec3, int32_t)
+void FeatureScriptCommands::AddGameMessageLine(const std::string& message, int32_t landNumber)
 {
 	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
