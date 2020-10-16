@@ -91,6 +91,7 @@ public:
 		bool drawTestModel {true};
 		bool drawDebugCross {true};
 		bool drawBoundingBoxes {false};
+		bool drawFootpaths {false};
 		bool drawStreams {false};
 
 		float timeOfDay {1.0f};

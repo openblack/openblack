@@ -135,7 +135,16 @@ void Script::runCommand(const std::string& identifier, const std::vector<Token>&
 	}
 
 	const auto expected_parameters = command_signature->parameters;
-	const auto expected_size = expected_parameters.size();
+	uint32_t expected_size;
+	for (expected_size = 0; expected_size < expected_parameters.size(); ++expected_size)
+	{
+		// Looping until None because parameters is a fixed sized array.
+		// Last Argument is the one before the first None or the 9th
+		if (command_signature->parameters[expected_size] == ParameterType::None)
+		{
+			break;
+		}
+	}
 
 	// Validate the number of given arguments against what is expected
 	if (parameters.size() != expected_size)

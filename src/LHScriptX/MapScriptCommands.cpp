@@ -13,6 +13,8 @@
 #include <stdexcept>
 #include <string>
 
+#include "ScriptingBindingUtils.h"
+
 using namespace openblack::lhscriptx;
 
 // alias parameter types for signature list readability
@@ -21,146 +23,144 @@ const constexpr ParameterType TNumber = ParameterType::Number;
 const constexpr ParameterType TFloat = ParameterType::Float;
 const constexpr ParameterType TVector = ParameterType::Vector;
 
-// clang-format off
-const std::array<const ScriptCommandSignature, 20> MapScriptCommands::Signatures = { {
-	{ "SET_NO_PLAYERS",       &MapScriptCommands::SetNoPlayers,      { TNumber }                            },
-	{ "LOAD_TRIBE_DANCE",     &MapScriptCommands::LoadTribeDance,    { TVector, TNumber }                   },
-	{ "SET_DATE",             &MapScriptCommands::SetDate,           { TNumber, TNumber, TNumber }          },
-	{ "SET_TIME",             &MapScriptCommands::SetTime,           { TNumber, TNumber, TNumber }          },
-	{ "SET_TURNS_PER_YEAR",   &MapScriptCommands::SetTurnsPerYear,   { TNumber }                            },
-	{ "SET_GAME_TICK_TIME",   &MapScriptCommands::SetGameTickTime,   { TNumber }                            },
-	{ "LOAD_FEATURE_SCRIPT",  &MapScriptCommands::LoadFeatureScript, { TVector }                            },
-	{ "PAUSE_GAME",           &MapScriptCommands::PauseGame,         { }                                    },
-	{ "CREATE_CREATURE",      &MapScriptCommands::CreateCreature,    { TNumber, TNumber, TNumber, TNumber } },
-	{ "OUTPUT_VILLAGERS",     &MapScriptCommands::OutputVillagers,   { }                                    },
-	{ "OUTPUT_TOWN",          &MapScriptCommands::OutputTown,        { }                                    },
-	{ "OUTPUT_CREATURES",     &MapScriptCommands::OutputCreatures,   { }                                    },
-	{ "OUTPUT_COLLIDE",       &MapScriptCommands::OutputCollide,     { }                                    },
-	{ "OUTPUT_ALLOC",         &MapScriptCommands::OutputAlloc,       { }                                    },
-	{ "SAVE_FOR_NET_DEBUG",   &MapScriptCommands::SaveForNetDebug,   { TNumber, TNumber }                   },
-	{ "LOAD_FOR_NET_DEBUG",   &MapScriptCommands::LoadForNetDebug,   { TNumber }                            },
-	{ "LOAD_LANDSCAPE",       &MapScriptCommands::LoadLandscape,     { TVector }                            },
-	{ "LOAD_GAME_SCRIPT",     &MapScriptCommands::LoadGameScript,    { TVector }                            },
-	{ "LOAD_RAW_GAME_SCRIPT", &MapScriptCommands::LoadRawGameScript, { TVector }                            },
-	{ "LOAD_LANGUAGE",        &MapScriptCommands::LoadLanguage,      { }                                    },
+const std::array<const ScriptCommandSignature, 20> MapScriptCommands::Signatures = {{
+    CREATE_COMMAND_BINDING("SET_NO_PLAYERS", MapScriptCommands::SetNoPlayers),
+    CREATE_COMMAND_BINDING("LOAD_TRIBE_DANCE", MapScriptCommands::LoadTribeDance),
+    CREATE_COMMAND_BINDING("SET_DATE", MapScriptCommands::SetDate),
+    CREATE_COMMAND_BINDING("SET_TIME", MapScriptCommands::SetTime),
+    CREATE_COMMAND_BINDING("SET_TURNS_PER_YEAR", MapScriptCommands::SetTurnsPerYear),
+    CREATE_COMMAND_BINDING("SET_GAME_TICK_TIME", MapScriptCommands::SetGameTickTime),
+    CREATE_COMMAND_BINDING("LOAD_FEATURE_SCRIPT", MapScriptCommands::LoadFeatureScript),
+    CREATE_COMMAND_BINDING("PAUSE_GAME", MapScriptCommands::PauseGame),
+    CREATE_COMMAND_BINDING("CREATE_CREATURE", MapScriptCommands::CreateCreature),
+    CREATE_COMMAND_BINDING("OUTPUT_VILLAGERS", MapScriptCommands::OutputVillagers),
+    CREATE_COMMAND_BINDING("OUTPUT_TOWN", MapScriptCommands::OutputTown),
+    CREATE_COMMAND_BINDING("OUTPUT_CREATURES", MapScriptCommands::OutputCreatures),
+    CREATE_COMMAND_BINDING("OUTPUT_COLLIDE", MapScriptCommands::OutputCollide),
+    CREATE_COMMAND_BINDING("OUTPUT_ALLOC", MapScriptCommands::OutputAlloc),
+    CREATE_COMMAND_BINDING("SAVE_FOR_NET_DEBUG", MapScriptCommands::SaveForNetDebug),
+    CREATE_COMMAND_BINDING("LOAD_FOR_NET_DEBUG", MapScriptCommands::LoadForNetDebug),
+    CREATE_COMMAND_BINDING("LOAD_LANDSCAPE", MapScriptCommands::LoadLandscape),
+    CREATE_COMMAND_BINDING("LOAD_GAME_SCRIPT", MapScriptCommands::LoadGameScript),
+    CREATE_COMMAND_BINDING("LOAD_RAW_GAME_SCRIPT", MapScriptCommands::LoadRawGameScript),
+    CREATE_COMMAND_BINDING("LOAD_LANGUAGE", MapScriptCommands::LoadLanguage),
 }};
-// clang-format on
 
-void MapScriptCommands::SetNoPlayers(const ScriptCommandContext& ctx)
+void MapScriptCommands::SetNoPlayers(int32_t number)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::LoadTribeDance(const ScriptCommandContext& ctx)
+void MapScriptCommands::LoadTribeDance(glm::vec3 position, int32_t)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::SetDate(const ScriptCommandContext& ctx)
+void MapScriptCommands::SetDate(int32_t, int32_t, int32_t)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::SetTime(const ScriptCommandContext& ctx)
+void MapScriptCommands::SetTime(int32_t, int32_t, int32_t)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::SetTurnsPerYear(const ScriptCommandContext& ctx)
+void MapScriptCommands::SetTurnsPerYear(int32_t turns_per_year)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::SetGameTickTime(const ScriptCommandContext& ctx)
+void MapScriptCommands::SetGameTickTime(int32_t game_tick_time)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::LoadFeatureScript(const ScriptCommandContext& ctx)
+void MapScriptCommands::LoadFeatureScript(glm::vec3)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::PauseGame(const ScriptCommandContext& ctx)
+void MapScriptCommands::PauseGame()
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::CreateCreature(const ScriptCommandContext& ctx)
+void MapScriptCommands::CreateCreature(int32_t, int32_t, int32_t, int32_t)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::OutputVillagers(const ScriptCommandContext& ctx)
+void MapScriptCommands::OutputVillagers()
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::OutputTown(const ScriptCommandContext& ctx)
+void MapScriptCommands::OutputTown()
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::OutputCreatures(const ScriptCommandContext& ctx)
+void MapScriptCommands::OutputCreatures()
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::OutputCollide(const ScriptCommandContext& ctx)
+void MapScriptCommands::OutputCollide()
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::OutputAlloc(const ScriptCommandContext& ctx)
+void MapScriptCommands::OutputAlloc()
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::SaveForNetDebug(const ScriptCommandContext& ctx)
+void MapScriptCommands::SaveForNetDebug(int32_t, int32_t)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::LoadForNetDebug(const ScriptCommandContext& ctx)
+void MapScriptCommands::LoadForNetDebug(int32_t, int32_t)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::LoadLandscape(const ScriptCommandContext& ctx)
+void MapScriptCommands::LoadLandscape(glm::vec3)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::LoadGameScript(const ScriptCommandContext& ctx)
+void MapScriptCommands::LoadGameScript(glm::vec3)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::LoadRawGameScript(const ScriptCommandContext& ctx)
+void MapScriptCommands::LoadRawGameScript(glm::vec3)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::LoadLanguage(const ScriptCommandContext& ctx)
+void MapScriptCommands::LoadLanguage(glm::vec3)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));

@@ -13,6 +13,8 @@
 
 #include <array>
 
+#include <glm/vec3.hpp>
+
 namespace openblack::lhscriptx
 {
 
@@ -21,26 +23,26 @@ class MapScriptCommands
 public:
 	static const std::array<const ScriptCommandSignature, 20> Signatures;
 
-	static void SetNoPlayers(const ScriptCommandContext& ctx);
-	static void LoadTribeDance(const ScriptCommandContext& ctx);
-	static void SetDate(const ScriptCommandContext& ctx);
-	static void SetTime(const ScriptCommandContext& ctx);
-	static void SetTurnsPerYear(const ScriptCommandContext& ctx);
-	static void SetGameTickTime(const ScriptCommandContext& ctx);
-	static void LoadFeatureScript(const ScriptCommandContext& ctx);
-	static void PauseGame(const ScriptCommandContext& ctx);
-	static void CreateCreature(const ScriptCommandContext& ctx);
-	static void OutputVillagers(const ScriptCommandContext& ctx);
-	static void OutputTown(const ScriptCommandContext& ctx);
-	static void OutputCreatures(const ScriptCommandContext& ctx);
-	static void OutputCollide(const ScriptCommandContext& ctx);
-	static void OutputAlloc(const ScriptCommandContext& ctx);
-	static void SaveForNetDebug(const ScriptCommandContext& ctx);
-	static void LoadForNetDebug(const ScriptCommandContext& ctx);
-	static void LoadLandscape(const ScriptCommandContext& ctx);
-	static void LoadGameScript(const ScriptCommandContext& ctx);
-	static void LoadRawGameScript(const ScriptCommandContext& ctx);
-	static void LoadLanguage(const ScriptCommandContext& ctx);
+	static void SetNoPlayers(int32_t number);
+	static void LoadTribeDance(glm::vec3 position, int32_t);
+	static void SetDate(int32_t, int32_t, int32_t);
+	static void SetTime(int32_t, int32_t, int32_t);
+	static void SetTurnsPerYear(int32_t turns_per_year);
+	static void SetGameTickTime(int32_t game_tick_time);
+	static void LoadFeatureScript(glm::vec3);
+	static void PauseGame();
+	static void CreateCreature(int32_t, int32_t, int32_t, int32_t);
+	static void OutputVillagers();
+	static void OutputTown();
+	static void OutputCreatures();
+	static void OutputCollide();
+	static void OutputAlloc();
+	static void SaveForNetDebug(int32_t, int32_t);
+	static void LoadForNetDebug(int32_t, int32_t);
+	static void LoadLandscape(glm::vec3);
+	static void LoadGameScript(glm::vec3);
+	static void LoadRawGameScript(glm::vec3);
+	static void LoadLanguage(glm::vec3);
 };
 
 } // namespace openblack::lhscriptx

@@ -9,11 +9,18 @@
 
 #include "FeatureScriptCommands.h"
 
+#include <tuple>
+
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include <spdlog/spdlog.h>
+
 #include "3D/Camera.h"
 #include "3D/LandIsland.h"
 #include "AllMeshes.h"
 #include "Entities/Components/Abode.h"
 #include "Entities/Components/AnimatedStatic.h"
+#include "Entities/Components/Footpath.h"
 #include "Entities/Components/Stream.h"
 #include "Entities/Components/Transform.h"
 #include "Entities/Components/Tree.h"
@@ -21,12 +28,7 @@
 #include "Entities/Registry.h"
 #include "Enums.h"
 #include "Game.h"
-
-#include <glm/gtx/euler_angles.hpp>
-#include <spdlog/spdlog.h>
-
-#include <iostream>
-#include <tuple>
+#include "ScriptingBindingUtils.h"
 
 using namespace openblack::lhscriptx;
 
@@ -132,132 +134,124 @@ std::unordered_map<std::string, AbodeInfo> abodeIdLookup {
     {"GREEK_WONDER", AbodeInfo::GreekWonder},
 };
 
-std::unordered_map<std::string, FeatureInfo> featureInfoLookup {{"Fat Pilar Lime", FeatureInfo::FatPilarLime},
-                                                                {"Pilar3 Lime", FeatureInfo::Pilar3Lime},
-                                                                {"Aztec Statue Feature", FeatureInfo::AztcStatue},
-                                                                {"Spikey Pilar Lime", FeatureInfo::SpikeyPilarLime},
-                                                                {"Pilar2 Lime", FeatureInfo::Pilar2Lime},
-                                                                {"Crater", FeatureInfo::Crater},
-                                                                {"Pier", FeatureInfo::Pier}};
+std::unordered_map<std::string, FeatureInfo> featureInfoLookup {
+    {"Fat Pilar Lime", FeatureInfo::FatPilarLime},
+    {"Pilar3 Lime", FeatureInfo::Pilar3Lime},
+    {"Aztec Statue Feature", FeatureInfo::AztcStatue},
+    {"Spikey Pilar Lime", FeatureInfo::SpikeyPilarLime},
+    {"Pilar2 Lime", FeatureInfo::Pilar2Lime},
+    {"Crater", FeatureInfo::Crater},
+    {"Pier", FeatureInfo::Pier},
+};
 } // namespace openblack
 
-// clang-format off
-const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signatures = { {
-	{ "CREATE_MIST",                       &FeatureScriptCommands::CreateMist,                    { TVector, TFloat, TNumber, TFloat, TFloat }                                      },
-	{ "CREATE_PATH",                       &FeatureScriptCommands::CreatePath,                    { TNumber, TNumber, TNumber, TNumber }                                            },
-	{ "CREATE_TOWN",                       &FeatureScriptCommands::CreateTown,                    { TNumber, TVector, TString, TNumber, TString }                                   },
-	{ "SET_TOWN_BELIEF",                   &FeatureScriptCommands::SetTownBelief,                 { TNumber, TString, TFloat }                                                      },
-	{ "SET_TOWN_BELIEF_CAP",               &FeatureScriptCommands::SetTownBeliefCap,              { TNumber, TString, TFloat }                                                      },
-	{ "SET_TOWN_UNINHABITABLE",            &FeatureScriptCommands::SetTownUninhabitable,          { TNumber }                                                                       },
-	{ "SET_TOWN_CONGREGATION_POS",         &FeatureScriptCommands::SetTownCongregationPos,        { TNumber, TVector }                                                              },
-	{ "CREATE_ABODE",                      &FeatureScriptCommands::CreateAbode,                   { TNumber, TVector, TString, TNumber, TNumber, TNumber, TNumber }                 },
-	{ "CREATE_PLANNED_ABODE",              &FeatureScriptCommands::CreatePlannedAbode,            { TNumber, TVector, TString, TNumber, TNumber, TNumber, TNumber }                 },
-	{ "CREATE_TOWN_CENTRE",                &FeatureScriptCommands::CreateTownCentre,              { TNumber, TVector, TString, TNumber, TNumber, TNumber }                          },
-	{ "CREATE_TOWN_SPELL",                 &FeatureScriptCommands::CreateTownSpell,               { TNumber, TString }                                                              },
-	{ "CREATE_NEW_TOWN_SPELL",             &FeatureScriptCommands::CreateNewTownSpell,            { TNumber, TString }                                                              },
-	{ "CREATE_TOWN_CENTRE_SPELL_ICON",     &FeatureScriptCommands::CreateTownCentreSpellIcon,     { TNumber, TString }                                                              },
-	{ "CREATE_SPELL_ICON",                 &FeatureScriptCommands::CreateSpellIcon,               { TVector, TString, TNumber, TNumber, TNumber }                                   },
-	{ "CREATE_PLANNED_SPELL_ICON",         &FeatureScriptCommands::CreatePlannedSpellIcon,        { TNumber, TVector, TString, TNumber, TNumber, TNumber }                          },
-	{ "CREATE_VILLAGER",                   &FeatureScriptCommands::CreateVillager,                { TVector, TVector, TString }                                                     },
-	{ "CREATE_TOWN_VILLAGER",              &FeatureScriptCommands::CreateTownVillager,            { TNumber, TVector, TVector, TNumber }                                            },
-	{ "CREATE_SPECIAL_TOWN_VILLAGER",      &FeatureScriptCommands::CreateSpecialTownVillager,     { TNumber, TVector, TNumber, TNumber }                                            },
-	{ "CREATE_VILLAGER_POS",               &FeatureScriptCommands::CreateVillagerPos,             { TVector, TVector, TString, TNumber }                                            },
-	{ "CREATE_CITADEL",                    &FeatureScriptCommands::CreateCitadel,                 { TVector, TNumber, TString, TNumber, TNumber }                                   },
-	{ "CREATE_PLANNED_CITADEL",            &FeatureScriptCommands::CreatePlannedCitadel,          { TNumber, TVector, TNumber, TString, TNumber, TNumber }                          },
-	{ "CREATE_CREATURE_PEN",               &FeatureScriptCommands::CreateCreaturePen,             { TVector, TNumber, TNumber, TNumber, TNumber, TNumber }                          },
-	{ "CREATE_WORSHIP_SITE",               &FeatureScriptCommands::CreateWorshipSite,             { TVector, TNumber, TString, TString, TNumber, TNumber }                          },
-	{ "CREATE_PLANNED_WORSHIP_SITE",       &FeatureScriptCommands::CreatePlannedWorshipSite,      { TVector, TNumber, TString, TString, TNumber, TNumber }                          },
-	{ "CREATE_ANIMAL",                     &FeatureScriptCommands::CreateAnimal,                  { TVector, TNumber, TNumber, TNumber },                                           },
-	{ "CREATE_NEW_ANIMAL",                 &FeatureScriptCommands::CreateNewAnimal,               { TVector, TNumber, TNumber, TNumber, TNumber },                                  },
-	{ "CREATE_FOREST",                     &FeatureScriptCommands::CreateForest,                  { TNumber, TVector },                                                             },
-	{ "CREATE_TREE",                       &FeatureScriptCommands::CreateTree,                    { TNumber, TVector, TNumber, TNumber, TNumber },                                  },
-	{ "CREATE_NEW_TREE",                   &FeatureScriptCommands::CreateNewTree,                 { TNumber, TVector, TNumber, TNumber, TFloat, TFloat, TFloat },                   },
-	{ "CREATE_FIELD",                      &FeatureScriptCommands::CreateField,                   { TVector, TNumber },                                                             },
-	{ "CREATE_TOWN_FIELD",                 &FeatureScriptCommands::CreateTownField,               { TNumber, TVector, TNumber },                                                    },
-	{ "CREATE_FISH_FARM",                  &FeatureScriptCommands::CreateFishFarm,                { TVector, TNumber },                                                             },
-	{ "CREATE_TOWN_FISH_FARM",             &FeatureScriptCommands::CreateTownFishFarm,            { TNumber, TVector, TNumber },                                                    },
-	{ "CREATE_FEATURE",                    &FeatureScriptCommands::CreateFeature,                 { TVector, TNumber, TNumber, TNumber, TNumber },                                  },
-	{ "CREATE_FLOWERS",                    &FeatureScriptCommands::CreateFlowers,                 { TVector, TNumber, TFloat, TFloat },                                             },
-	{ "CREATE_WALL_SECTION",               &FeatureScriptCommands::CreateWallSection,             { TVector, TNumber, TNumber, TNumber, TNumber },                                  },
-	{ "CREATE_PLANNED_WALL_SECTION",       &FeatureScriptCommands::CreatePlannedWallSection,      { TVector, TNumber, TNumber, TNumber, TNumber },                                  },
-	{ "CREATE_PITCH",                      &FeatureScriptCommands::CreatePitch,                   { TVector, TNumber, TNumber, TNumber, TNumber, TNumber },                         },
-	{ "CREATE_POT",                        &FeatureScriptCommands::CreatePot,                     { TVector, TNumber, TNumber, TNumber },                                           },
-	{ "CREATE_TOWN_TEMPORARY_POTS",        &FeatureScriptCommands::CreateTownTemporaryPots,       { TNumber, TNumber, TNumber },                                                    },
-	{ "CREATE_MOBILEOBJECT",               &FeatureScriptCommands::CreateMobileobject,            { TVector, TNumber, TNumber, TNumber },                                           },
-	{ "CREATE_MOBILESTATIC",               &FeatureScriptCommands::CreateMobileStatic,            { TVector, TNumber, TFloat, TFloat },                                             },
-	{ "CREATE_MOBILE_STATIC",              &FeatureScriptCommands::CreateMobileUStatic,           { TVector, TNumber, TFloat, TFloat, TFloat, TFloat, TFloat },                     },
-	{ "CREATE_DEAD_TREE",                  &FeatureScriptCommands::CreateDeadTree,                { TVector, TString, TNumber, TFloat, TFloat, TFloat, TFloat },                    },
-	{ "CREATE_SCAFFOLD",                   &FeatureScriptCommands::CreateScaffold,                { TNumber, TVector, TNumber, TNumber, TNumber },                                  },
-	{ "COUNTRY_CHANGE",                    &FeatureScriptCommands::CountryChange,                 { TVector, TNumber },                                                             },
-	{ "HEIGHT_CHANGE",                     &FeatureScriptCommands::HeightChange,                  { TVector, TNumber },                                                             },
-	{ "CREATE_CREATURE",                   &FeatureScriptCommands::CreateCreature,                { TVector, TNumber, TNumber },                                                    },
-	{ "CREATE_CREATURE_FROM_FILE",         &FeatureScriptCommands::CreateCreatureFromFile,        { TString, TNumber, TVector, TVector },                                           },
-	{ "CREATE_FLOCK",                      &FeatureScriptCommands::CreateFlock,                   { TNumber, TVector, TVector, TNumber, TNumber, TNumber },                         },
-	{ "LOAD_LANDSCAPE",                    &FeatureScriptCommands::LoadLandscape,                 { TString },                                                                      },
-	{ "VERSION",                           &FeatureScriptCommands::Version,                       { TFloat },                                                                       },
-	{ "CREATE_AREA",                       &FeatureScriptCommands::CreateArea,                    { TVector, TFloat },                                                              },
-	{ "START_CAMERA_POS",                  &FeatureScriptCommands::StartCameraPos,                { TVector },                                                                      },
-	{ "FLY_BY_FILE",                       &FeatureScriptCommands::FlyByFile,                     { TString },                                                                      },
-	{ "TOWN_NEEDS_POS",                    &FeatureScriptCommands::TownNeedsPos,                  { TNumber, TVector },                                                             },
-	{ "CREATE_FURNITURE",                  &FeatureScriptCommands::CreateFurniture,               { TVector, TNumber, TFloat },                                                     },
-	{ "CREATE_BIG_FOREST",                 &FeatureScriptCommands::CreateBigForest,               { TVector, TNumber, TFloat, TFloat },                                             },
-	{ "CREATE_NEW_BIG_FOREST",             &FeatureScriptCommands::CreateNewBigForest,            { TVector, TNumber, TNumber, TFloat, TFloat },                                    },
-	{ "CREATE_INFLUENCE_RING",             &FeatureScriptCommands::CreateInfluenceRing,           { TVector, TNumber, TFloat, TNumber },                                            },
-	{ "CREATE_WEATHER_CLIMATE",            &FeatureScriptCommands::CreateWeatherClimate,          { TNumber, TNumber, TVector, TFloat, TFloat },                                    },
-	{ "CREATE_WEATHER_CLIMATE_RAIN",       &FeatureScriptCommands::CreateWeatherClimateRain,      { TNumber, TFloat, TNumber, TNumber, TNumber },                                   },
-	{ "CREATE_WEATHER_CLIMATE_TEMP",       &FeatureScriptCommands::CreateWeatherClimateTemp,      { TNumber, TFloat, TFloat },                                                      },
-	{ "CREATE_WEATHER_CLIMATE_WIND",       &FeatureScriptCommands::CreateWeatherClimateWind,      { TNumber, TFloat, TFloat, TFloat },                                              },
-	{ "CREATE_WEATHER_STORM",              &FeatureScriptCommands::CreateWeatherStorm,            { TNumber, TVector, TFloat, TNumber, TVector, TVector, TVector, TFloat, TVector } },
-	{ "BRUSH_SIZE",                        &FeatureScriptCommands::BrushSize,                     { TFloat, TFloat },                                                               },
-	{ "CREATE_STREAM",                     &FeatureScriptCommands::CreateStream,                  { TNumber },                                                                      },
-	{ "CREATE_STREAM_POINT",               &FeatureScriptCommands::CreateStreamPoint,             { TNumber, TVector },                                                             },
-	{ "CREATE_WATERFALL",                  &FeatureScriptCommands::CreateWaterfall,               { TVector },                                                                      },
-	{ "CREATE_ARENA",                      &FeatureScriptCommands::CreateArena,                   { TVector, TFloat },                                                              },
-	{ "CREATE_FOOTPATH",                   &FeatureScriptCommands::CreateFootpath,                { TNumber },                                                                      },
-	{ "CREATE_FOOTPATH_NODE",              &FeatureScriptCommands::CreateFootpathNode,            { TNumber, TVector },                                                             },
-	{ "LINK_FOOTPATH",                     &FeatureScriptCommands::LinkFootpath,                  { TNumber },                                                                      },
-	{ "CREATE_BONFIRE",                    &FeatureScriptCommands::CreateBonfire,                 { TVector, TFloat, TFloat, TFloat },                                              },
-	{ "CREATE_BASE",                       &FeatureScriptCommands::CreateBase,                    { TVector, TNumber },                                                             },
-	{ "CREATE_NEW_FEATURE",                &FeatureScriptCommands::CreateNewFeature,              { TVector, TString, TNumber, TNumber, TNumber },                                  },
-	{ "SET_INTERACT_DESIRE",               &FeatureScriptCommands::SetInteractDesire,             { TFloat },                                                                       },
-	{ "TOGGLE_COMPUTER_PLAYER",            &FeatureScriptCommands::ToggleComputerPlayer,          { TString, TNumber },                                                             },
-	{ "SET_COMPUTER_PLAYER_CREATURE_LIKE", &FeatureScriptCommands::SetComputerPlayerCreatureLike, { TString, TString },                                                             },
-	{ "MULTIPLAYER_DEBUG",                 &FeatureScriptCommands::MultiplayerDebug,              { TNumber, TNumber },                                                             },
-	{ "CREATE_STREET_LANTERN",             &FeatureScriptCommands::CreateStreetLantern,           { TVector, TNumber },                                                             },
-	{ "CREATE_STREET_LIGHT",               &FeatureScriptCommands::CreateStreetLight,             { TVector },                                                                      },
-	{ "SET_LAND_NUMBER",                   &FeatureScriptCommands::SetLandNumber,                 { TNumber },                                                                      },
-	{ "CREATE_ONE_SHOT_SPELL",             &FeatureScriptCommands::CreateOneShotSpell,            { TVector, TString },                                                             },
-	{ "CREATE_ONE_SHOT_SPELL_PU",          &FeatureScriptCommands::CreateOneShotSpellPu,          { TVector, TString },                                                             },
-	{ "CREATE_FIRE_FLY",                   &FeatureScriptCommands::CreateFireFly,                 { TVector },                                                                      },
-	{ "TOWN_DESIRE_BOOST",                 &FeatureScriptCommands::TownDesireBoost,               { TNumber, TString, TFloat },                                                     },
-	{ "CREATE_ANIMATED_STATIC",            &FeatureScriptCommands::CreateAnimatedStatic,          { TVector, TString, TNumber, TNumber },                                           },
-	{ "FIRE_FLY_SPELL_REWARD_PROB",        &FeatureScriptCommands::FireFlySpellRewardProb,        { TVector, TFloat },                                                              },
-	{ "CREATE_NEW_TOWN_FIELD",             &FeatureScriptCommands::CreateNewTownField,            { TNumber, TVector, TNumber, TFloat },                                            },
-	{ "CREATE_SPELL_DISPENSER",            &FeatureScriptCommands::CreateSpellDispenser,          { TNumber, TVector, TString, TString, TFloat, TFloat, TFloat },                   },
-	{ "LOAD_COMPUTER_PLAYER_PERSONALLTY",  &FeatureScriptCommands::LoadComputerPlayerPersonallty, { TNumber, TVector },                                                             },
-	{ "SET_COMPUTER_PLAYER_PERSONALLTY",   &FeatureScriptCommands::SetComputerPlayerPersonallty,  { TString, TVector, TFloat },                                                     },
-	{ "SET_GLOBAL_LAND_BALANCE",           &FeatureScriptCommands::SetGlobalLandBalance,          { TNumber, TFloat },                                                              },
-	{ "SET_LAND_BALANCE",                  &FeatureScriptCommands::SetLandBalance,                { TString, TNumber, TFloat },                                                     },
-	{ "CREATE_DRINK_WAYPOINT",             &FeatureScriptCommands::CreateDrinkWaypoint,           { TVector },                                                                      },
-	{ "SET_TOWN_INFLUENCE_MULTIPLIER",     &FeatureScriptCommands::SetTownInfluenceMultiplier,    { TFloat },                                                                       },
-	{ "SET_PLAYER_INFLUENCE_MULTIPLIER",   &FeatureScriptCommands::SetPlayerInfluenceMultiplier,  { TFloat },                                                                       },
-	{ "SET_TOWN_BALANCE_BELIEF_SCALE",     &FeatureScriptCommands::SetTownBalanceBeliefScale,     { TNumber, TFloat },                                                              },
-	{ "START_GAME_MESSAGE",                &FeatureScriptCommands::StartGameMessage,              { TVector, TNumber },                                                             },
-	{ "ADD_GAME_MESSAGE_LINE",             &FeatureScriptCommands::AddGameMessageLine,            { TVector, TNumber },                                                             },
-	{ "EDIT_LEVEL",                        &FeatureScriptCommands::EditLevel,                     { },                                                                              },
-	{ "SET_NIGHTTIME",                     &FeatureScriptCommands::SetNighttime,                  { TFloat, TFloat, TFloat },                                                       },
-	{ "MAKE_LAST_OBJECT_ARTIFACT",         &FeatureScriptCommands::MakeLastObjectArtifact,        { TNumber, TString, TFloat },                                                     },
-	{ "SET_LOST_TOWN_SCALE",               &FeatureScriptCommands::SetLostTownScale,              { TFloat },                                                                       },
-} };
-// clang-format on
-
-glm::vec2 GetHorizontalPosition(const std::string& str)
-{
-	const auto pos = str.find_first_of(',');
-	const auto y = std::stof(str.substr(pos + 1));
-	const auto x = std::stof(str.substr(0, pos));
-	return glm::vec2(x, y);
-}
+const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signatures = {{
+    CREATE_COMMAND_BINDING("CREATE_MIST", CreateMist),
+    CREATE_COMMAND_BINDING("CREATE_PATH", CreatePath),
+    CREATE_COMMAND_BINDING("CREATE_TOWN", CreateTown),
+    CREATE_COMMAND_BINDING("SET_TOWN_BELIEF", SetTownBelief),
+    CREATE_COMMAND_BINDING("SET_TOWN_BELIEF_CAP", SetTownBeliefCap),
+    CREATE_COMMAND_BINDING("SET_TOWN_UNINHABITABLE", SetTownUninhabitable),
+    CREATE_COMMAND_BINDING("SET_TOWN_CONGREGATION_POS", SetTownCongregationPos),
+    CREATE_COMMAND_BINDING("CREATE_ABODE", CreateAbode),
+    CREATE_COMMAND_BINDING("CREATE_PLANNED_ABODE", CreatePlannedAbode),
+    CREATE_COMMAND_BINDING("CREATE_TOWN_CENTRE", CreateTownCentre),
+    CREATE_COMMAND_BINDING("CREATE_TOWN_SPELL", CreateTownSpell),
+    CREATE_COMMAND_BINDING("CREATE_NEW_TOWN_SPELL", CreateNewTownSpell),
+    CREATE_COMMAND_BINDING("CREATE_TOWN_CENTRE_SPELL_ICON", CreateTownCentreSpellIcon),
+    CREATE_COMMAND_BINDING("CREATE_SPELL_ICON", CreateSpellIcon),
+    CREATE_COMMAND_BINDING("CREATE_PLANNED_SPELL_ICON", CreatePlannedSpellIcon),
+    CREATE_COMMAND_BINDING("CREATE_VILLAGER", CreateVillager),
+    CREATE_COMMAND_BINDING("CREATE_TOWN_VILLAGER", CreateTownVillager),
+    CREATE_COMMAND_BINDING("CREATE_SPECIAL_TOWN_VILLAGER", CreateSpecialTownVillager),
+    CREATE_COMMAND_BINDING("CREATE_VILLAGER_POS", CreateVillagerPos),
+    CREATE_COMMAND_BINDING("CREATE_CITADEL", CreateCitadel),
+    CREATE_COMMAND_BINDING("CREATE_PLANNED_CITADEL", CreatePlannedCitadel),
+    CREATE_COMMAND_BINDING("CREATE_CREATURE_PEN", CreateCreaturePen),
+    CREATE_COMMAND_BINDING("CREATE_WORSHIP_SITE", CreateWorshipSite),
+    CREATE_COMMAND_BINDING("CREATE_PLANNED_WORSHIP_SITE", CreatePlannedWorshipSite),
+    CREATE_COMMAND_BINDING("CREATE_ANIMAL", CreateAnimal),
+    CREATE_COMMAND_BINDING("CREATE_NEW_ANIMAL", CreateNewAnimal),
+    CREATE_COMMAND_BINDING("CREATE_FOREST", CreateForest),
+    CREATE_COMMAND_BINDING("CREATE_TREE", CreateTree),
+    CREATE_COMMAND_BINDING("CREATE_NEW_TREE", CreateNewTree),
+    CREATE_COMMAND_BINDING("CREATE_FIELD", CreateField),
+    CREATE_COMMAND_BINDING("CREATE_TOWN_FIELD", CreateTownField),
+    CREATE_COMMAND_BINDING("CREATE_FISH_FARM", CreateFishFarm),
+    CREATE_COMMAND_BINDING("CREATE_TOWN_FISH_FARM", CreateTownFishFarm),
+    CREATE_COMMAND_BINDING("CREATE_FEATURE", CreateFeature),
+    CREATE_COMMAND_BINDING("CREATE_FLOWERS", CreateFlowers),
+    CREATE_COMMAND_BINDING("CREATE_WALL_SECTION", CreateWallSection),
+    CREATE_COMMAND_BINDING("CREATE_PLANNED_WALL_SECTION", CreatePlannedWallSection),
+    CREATE_COMMAND_BINDING("CREATE_PITCH", CreatePitch),
+    CREATE_COMMAND_BINDING("CREATE_POT", CreatePot),
+    CREATE_COMMAND_BINDING("CREATE_TOWN_TEMPORARY_POTS", CreateTownTemporaryPots),
+    CREATE_COMMAND_BINDING("CREATE_MOBILEOBJECT", CreateMobileObject),
+    CREATE_COMMAND_BINDING("CREATE_MOBILESTATIC", CreateMobileStatic),
+    CREATE_COMMAND_BINDING("CREATE_MOBILE_STATIC", CreateMobileUStatic),
+    CREATE_COMMAND_BINDING("CREATE_DEAD_TREE", CreateDeadTree),
+    CREATE_COMMAND_BINDING("CREATE_SCAFFOLD", CreateScaffold),
+    CREATE_COMMAND_BINDING("COUNTRY_CHANGE", CountryChange),
+    CREATE_COMMAND_BINDING("HEIGHT_CHANGE", HeightChange),
+    CREATE_COMMAND_BINDING("CREATE_CREATURE", CreateCreature),
+    CREATE_COMMAND_BINDING("CREATE_CREATURE_FROM_FILE", CreateCreatureFromFile),
+    CREATE_COMMAND_BINDING("CREATE_FLOCK", CreateFlock),
+    CREATE_COMMAND_BINDING("LOAD_LANDSCAPE", LoadLandscape),
+    CREATE_COMMAND_BINDING("VERSION", Version),
+    CREATE_COMMAND_BINDING("CREATE_AREA", CreateArea),
+    CREATE_COMMAND_BINDING("START_CAMERA_POS", StartCameraPos),
+    CREATE_COMMAND_BINDING("FLY_BY_FILE", FlyByFile),
+    CREATE_COMMAND_BINDING("TOWN_NEEDS_POS", TownNeedsPos),
+    CREATE_COMMAND_BINDING("CREATE_FURNITURE", CreateFurniture),
+    CREATE_COMMAND_BINDING("CREATE_BIG_FOREST", CreateBigForest),
+    CREATE_COMMAND_BINDING("CREATE_NEW_BIG_FOREST", CreateNewBigForest),
+    CREATE_COMMAND_BINDING("CREATE_INFLUENCE_RING", CreateInfluenceRing),
+    CREATE_COMMAND_BINDING("CREATE_WEATHER_CLIMATE", CreateWeatherClimate),
+    CREATE_COMMAND_BINDING("CREATE_WEATHER_CLIMATE_RAIN", CreateWeatherClimateRain),
+    CREATE_COMMAND_BINDING("CREATE_WEATHER_CLIMATE_TEMP", CreateWeatherClimateTemp),
+    CREATE_COMMAND_BINDING("CREATE_WEATHER_CLIMATE_WIND", CreateWeatherClimateWind),
+    CREATE_COMMAND_BINDING("CREATE_WEATHER_STORM", CreateWeatherStorm),
+    CREATE_COMMAND_BINDING("BRUSH_SIZE", BrushSize),
+    CREATE_COMMAND_BINDING("CREATE_STREAM", CreateStream),
+    CREATE_COMMAND_BINDING("CREATE_STREAM_POINT", CreateStreamPoint),
+    CREATE_COMMAND_BINDING("CREATE_WATERFALL", CreateWaterfall),
+    CREATE_COMMAND_BINDING("CREATE_ARENA", CreateArena),
+    CREATE_COMMAND_BINDING("CREATE_FOOTPATH", CreateFootpath),
+    CREATE_COMMAND_BINDING("CREATE_FOOTPATH_NODE", CreateFootpathNode),
+    CREATE_COMMAND_BINDING("LINK_FOOTPATH", LinkFootpath),
+    CREATE_COMMAND_BINDING("CREATE_BONFIRE", CreateBonfire),
+    CREATE_COMMAND_BINDING("CREATE_BASE", CreateBase),
+    CREATE_COMMAND_BINDING("CREATE_NEW_FEATURE", CreateNewFeature),
+    CREATE_COMMAND_BINDING("SET_INTERACT_DESIRE", SetInteractDesire),
+    CREATE_COMMAND_BINDING("TOGGLE_COMPUTER_PLAYER", ToggleComputerPlayer),
+    CREATE_COMMAND_BINDING("SET_COMPUTER_PLAYER_CREATURE_LIKE", SetComputerPlayerCreatureLike),
+    CREATE_COMMAND_BINDING("MULTIPLAYER_DEBUG", MultiplayerDebug),
+    CREATE_COMMAND_BINDING("CREATE_STREET_LANTERN", CreateStreetLantern),
+    CREATE_COMMAND_BINDING("CREATE_STREET_LIGHT", CreateStreetLight),
+    CREATE_COMMAND_BINDING("SET_LAND_NUMBER", SetLandNumber),
+    CREATE_COMMAND_BINDING("CREATE_ONE_SHOT_SPELL", CreateOneShotSpell),
+    CREATE_COMMAND_BINDING("CREATE_ONE_SHOT_SPELL_PU", CreateOneShotSpellPu),
+    CREATE_COMMAND_BINDING("CREATE_FIRE_FLY", CreateFireFly),
+    CREATE_COMMAND_BINDING("TOWN_DESIRE_BOOST", TownDesireBoost),
+    CREATE_COMMAND_BINDING("CREATE_ANIMATED_STATIC", CreateAnimatedStatic),
+    CREATE_COMMAND_BINDING("FIRE_FLY_SPELL_REWARD_PROB", FireFlySpellRewardProb),
+    CREATE_COMMAND_BINDING("CREATE_NEW_TOWN_FIELD", CreateNewTownField),
+    CREATE_COMMAND_BINDING("CREATE_SPELL_DISPENSER", CreateSpellDispenser),
+    CREATE_COMMAND_BINDING("LOAD_COMPUTER_PLAYER_PERSONALLTY", LoadComputerPlayerPersonality),
+    CREATE_COMMAND_BINDING("SET_COMPUTER_PLAYER_PERSONALLTY", SetComputerPlayerPersonality),
+    CREATE_COMMAND_BINDING("SET_GLOBAL_LAND_BALANCE", SetGlobalLandBalance),
+    CREATE_COMMAND_BINDING("SET_LAND_BALANCE", SetLandBalance),
+    CREATE_COMMAND_BINDING("CREATE_DRINK_WAYPOINT", CreateDrinkWaypoint),
+    CREATE_COMMAND_BINDING("SET_TOWN_INFLUENCE_MULTIPLIER", SetTownInfluenceMultiplier),
+    CREATE_COMMAND_BINDING("SET_PLAYER_INFLUENCE_MULTIPLIER", SetPlayerInfluenceMultiplier),
+    CREATE_COMMAND_BINDING("SET_TOWN_BALANCE_BELIEF_SCALE", SetTownBalanceBeliefScale),
+    CREATE_COMMAND_BINDING("START_GAME_MESSAGE", StartGameMessage),
+    CREATE_COMMAND_BINDING("ADD_GAME_MESSAGE_LINE", AddGameMessageLine),
+    CREATE_COMMAND_BINDING("EDIT_LEVEL", EditLevel),
+    CREATE_COMMAND_BINDING("SET_NIGHTTIME", SetNighttime),
+    CREATE_COMMAND_BINDING("MAKE_LAST_OBJECT_ARTIFACT", MakeLastObjectArtifact),
+    CREATE_COMMAND_BINDING("SET_LOST_TOWN_SCALE", SetLostTownScale),
+}};
 
 openblack::AbodeInfo GetAbodeInfo(const std::string& abodeType)
 {
@@ -295,827 +289,630 @@ inline float GetSize(const float size)
 	return size * 0.001;
 }
 
-void FeatureScriptCommands::Version(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateMist(glm::vec3 position, float param_2, int32_t param_3, float param_4, float param_5)
 {
-	float version = ctx.GetParameters()[0].GetFloat();
-	spdlog::debug("Land version set to: {}", version);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateMist(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreatePath(int32_t param_1, int32_t param_2, int32_t param_3, int32_t param_4)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreatePath(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateTown(int32_t townId, glm::vec3 position, const std::string& playerOwner,
+                                       [[maybe_unused]] int32_t, const std::string& civilisation)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
-}
+	spdlog::debug(R"(LHScriptX: Creating town {} for "{}" with civilisation "{}".)", townId, playerOwner, civilisation);
 
-void FeatureScriptCommands::CreateTown(const ScriptCommandContext& ctx)
-{
-	Game& game = ctx.GetGame();
-	const auto& params = ctx.GetParameters();
-	auto& island = game.GetLandIsland();
-	auto& registry = game.GetEntityRegistry();
+	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
-	int townId = params[0].GetNumber();
-	const auto position = GetHorizontalPosition(params[1].GetString());
-	const auto& playerOwner = params[2].GetString();
-	// float notUsed          = params[3].GetNumber();
-	const auto& civilisation = params[4].GetString();
 
-	spdlog::debug(R"(Creating town {} for "{}" with civilisation "{}".)", townId, playerOwner, civilisation);
 	registry.Assign<Town>(entity, townId);
 	auto& registryContext = registry.Context();
 	registryContext.towns.insert({townId, entity});
 }
 
-void FeatureScriptCommands::SetTownBelief(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::SetTownBelief(int32_t townId, const std::string& playerOwner, float belief)
 {
-	Game& game = ctx.GetGame();
-	const auto& params = ctx.GetParameters();
-	auto& island = game.GetLandIsland();
-	auto& registry = game.GetEntityRegistry();
-	const auto entity = registry.Create();
+	auto& registry = Game::instance()->GetEntityRegistry();
 	auto& registryContext = registry.Context();
-	int townId = params[0].GetNumber();
-	const auto& playerOwner = params[1].GetString();
-	const auto& belief = params[2].GetFloat();
 
 	Town& town = registry.Get<Town>(registryContext.towns.at(townId));
 	town.beliefs.insert({playerOwner, belief});
 }
 
-void FeatureScriptCommands::SetTownBeliefCap(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::SetTownBeliefCap(int32_t townId, const std::string& playerOwner, float belief)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::SetTownUninhabitable(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::SetTownUninhabitable(int32_t townId)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::SetTownCongregationPos(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::SetTownCongregationPos(int32_t townId, glm::vec3 position)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateAbode(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateAbode(int32_t townId, glm::vec3 position, const std::string& abodeInfo, int32_t rotation,
+                                        int32_t size, int32_t foodAmount, int32_t woodAmount)
 {
-	Game& game = ctx.GetGame();
-	const auto& params = ctx.GetParameters();
-	auto& island = game.GetLandIsland();
-	auto& registry = game.GetEntityRegistry();
+	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
-	const uint32_t townId = params[0].GetNumber();
-	const auto position = GetHorizontalPosition(params[1].GetString());
-	const auto& abodeType = params[2].GetString();
-	float rotation = GetRadians(params[3].GetNumber());
-	float size = params[4].GetNumber();
-	const uint32_t foodAmount = params[5].GetNumber();
-	const uint32_t woodAmount = params[6].GetNumber();
-	auto abodeInfo = GetAbodeInfo(abodeType);
-	size = GetSize(size);
 
-	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::mat3 rot = glm::eulerAngleY(rotation);
-
-	registry.Assign<Transform>(entity, pos, rot, glm::vec3(size));
-	registry.Assign<Abode>(entity, abodeInfo, townId, foodAmount, woodAmount);
+	registry.Assign<Transform>(entity, position, glm::eulerAngleY(static_cast<float>(rotation)), glm::vec3(GetSize(size)));
+	registry.Assign<Abode>(entity, GetAbodeInfo(abodeInfo), static_cast<uint32_t>(townId), static_cast<uint32_t>(foodAmount),
+	                       static_cast<uint32_t>(woodAmount));
 }
 
-void FeatureScriptCommands::CreatePlannedAbode(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreatePlannedAbode(int32_t townId, glm::vec3 position, const std::string& abodeInfo,
+                                               int32_t rotation, int32_t size, int32_t foodAmount, int32_t woodAmount)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateTownCentre(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateTownCentre(int32_t townId, glm::vec3 position, const std::string& abodeInfo, int32_t rotation,
+                                             int32_t size, int32_t)
 {
-	Game& game = ctx.GetGame();
-	const auto& params = ctx.GetParameters();
-	auto& island = game.GetLandIsland();
-	auto& registry = game.GetEntityRegistry();
+	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
-	uint32_t associatedTownId = params[0].GetNumber();
-	const auto position = GetHorizontalPosition(params[1].GetString());
-	const auto& centreType = params[2].GetString();
-	float rotation = GetRadians(params[3].GetNumber());
-	float size = params[4].GetNumber();
-	// const auto unknown          = params[5].GetNumber();
-	auto abodeId = GetAbodeInfo(centreType);
-	size = GetSize(size);
 	auto submeshIds = std::vector {3};
 
-	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::mat3 rot = glm::eulerAngleY(rotation);
-
-	registry.Assign<Transform>(entity, pos, rot, glm::vec3(size));
-	registry.Assign<Abode>(entity, abodeId, associatedTownId, static_cast<uint32_t>(0), static_cast<uint32_t>(0));
+	registry.Assign<Transform>(entity, position, glm::eulerAngleY(static_cast<float>(GetRadians(rotation))),
+	                           glm::vec3(GetSize(size)));
+	registry.Assign<Abode>(entity, GetAbodeInfo(abodeInfo), static_cast<uint32_t>(townId), static_cast<uint32_t>(0),
+	                       static_cast<uint32_t>(0));
 }
 
-void FeatureScriptCommands::CreateTownSpell(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateTownSpell(int32_t townId, const std::string& spellName)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateNewTownSpell(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateNewTownSpell(int32_t townId, const std::string& spellName)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateTownCentreSpellIcon(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateTownCentreSpellIcon(int32_t param_1, const std::string& param_2)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateSpellIcon(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateSpellIcon(glm::vec3 position, const std::string& param_2, int32_t param_3, int32_t param_4,
+                                            int32_t param_5)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreatePlannedSpellIcon(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreatePlannedSpellIcon(int32_t param_1, glm::vec3 position, const std::string& param_3,
+                                                   int32_t param_4, int32_t param_5, int32_t param_6)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateVillager(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateVillager(glm::vec3, glm::vec3, const std::string&)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateTownVillager(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateTownVillager(int32_t townId, glm::vec3 position, const std::string& villagerType, int32_t age)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateSpecialTownVillager(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateSpecialTownVillager(int32_t, glm::vec3, int32_t, int32_t)
 {
-	spdlog::error("Function {} not implemented. {}: {}", __func__, __FILE__, __LINE__);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateVillagerPos(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateVillagerPos(glm::vec3 position, [[maybe_unused]] glm::vec3 param_2,
+                                              const std::string& ethnicityAndRole, int32_t age)
 {
-	Game& game = ctx.GetGame();
-	const auto& params = ctx.GetParameters();
-	auto& island = game.GetLandIsland();
-	const auto position = GetHorizontalPosition(params[0].GetString());
-	auto& registry = game.GetEntityRegistry();
+	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
-	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::mat3 rot = glm::eulerAngleY(glm::radians(180.0f));
-	registry.Assign<Transform>(entity, pos, rot, glm::vec3(1.0));
+
+	registry.Assign<Transform>(entity, position, glm::eulerAngleY(glm::radians(180.0f)), glm::vec3(1.0));
 	uint32_t health = 100;
-	uint32_t age = params[3].GetNumber();
 	uint32_t hunger = 100;
-	auto ethnicityAndRole = Villager::GetVillagerEthnicityAndRole(params[2].GetString());
-	auto ethnicity = std::get<0>(ethnicityAndRole);
-	auto role = std::get<1>(ethnicityAndRole);
+	auto [ethnicity, role] = Villager::GetVillagerEthnicityAndRole(ethnicityAndRole);
 	auto lifeStage = age >= 18 ? VillagerLifeStage::Adult : VillagerLifeStage::Child;
 	auto sex = (role == VillagerRoles::HOUSEWIFE) ? VillagerSex::FEMALE : VillagerSex::MALE;
 	auto task = VillagerTasks::IDLE;
-	registry.Assign<Villager>(entity, health, age, hunger, lifeStage, sex, ethnicity, role, task);
+	registry.Assign<Villager>(entity, health, static_cast<uint32_t>(age), hunger, lifeStage, sex, ethnicity, role, task);
 }
 
-void FeatureScriptCommands::CreateCitadel(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateCitadel(glm::vec3 position, int32_t, const std::string&, int32_t, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreatePlannedCitadel(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreatePlannedCitadel(int32_t, glm::vec3 position, int32_t, const std::string&, int32_t, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateCreaturePen(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateCreaturePen(glm::vec3 position, int32_t, int32_t, int32_t, int32_t, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateWorshipSite(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateWorshipSite(glm::vec3 position, int32_t, const std::string&, const std::string&, int32_t,
+                                              int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreatePlannedWorshipSite(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreatePlannedWorshipSite(glm::vec3 position, int32_t, const std::string&, const std::string&,
+                                                     int32_t, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateAnimal(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateAnimal(glm::vec3 position, int32_t, int32_t, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateNewAnimal(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateNewAnimal(glm::vec3 position, int32_t, int32_t, int32_t, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateForest(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateForest(int32_t forestId, glm::vec3 position)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateTree(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateTree(int32_t forestId, glm::vec3 position, int32_t, int32_t, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateNewTree(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateNewTree(int32_t forestId, glm::vec3 position, int32_t treeType, int32_t isNonScenic,
+                                          float rotation, float currentSize, float maxSize)
 {
-	Game& game = ctx.GetGame();
-	const auto& params = ctx.GetParameters();
-	auto& island = game.GetLandIsland();
-	auto& registry = game.GetEntityRegistry();
+	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
-	// const auto associatedForest = params[0].GetNumber();
-	const auto position = GetHorizontalPosition(params[1].GetString());
-	const auto& treeType = params[2].GetNumber();
-	// const bool isScenic = params[3].GetNumber() >= 1;
-	float rotation = -params[4].GetFloat();
-	float size = params[5].GetFloat();
-	// float finalSize = params[6].GetNumber(); // Max growth size of the tree
-	auto treeInfo = TreeInfo(treeType);
-	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::mat3 rot = glm::eulerAngleY(rotation);
 
-	registry.Assign<Transform>(entity, pos, rot, glm::vec3(size));
-	registry.Assign<Tree>(entity, treeInfo);
+	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-rotation), glm::vec3(currentSize));
+	registry.Assign<Tree>(entity, TreeInfo(treeType));
 }
 
-void FeatureScriptCommands::CreateField(const ScriptCommandContext& ctx) {}
-
-void FeatureScriptCommands::CreateTownField(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateField(glm::vec3 position, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateFishFarm(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateTownField(int32_t townId, glm::vec3 position, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateTownFishFarm(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateFishFarm(glm::vec3 position, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateFeature(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateTownFishFarm(int32_t townId, glm::vec3 position, int32_t)
 {
-	std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__)
-	          << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateFlowers(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateFeature(glm::vec3 position, int32_t, int32_t, int32_t, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateWallSection(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateFlowers(glm::vec3 position, int32_t, float, float)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreatePlannedWallSection(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateWallSection(glm::vec3 position, int32_t, int32_t, int32_t, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreatePitch(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreatePlannedWallSection(glm::vec3 position, int32_t, int32_t, int32_t, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreatePot(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreatePitch(glm::vec3 position, int32_t, int32_t, int32_t, int32_t, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateTownTemporaryPots(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreatePot(glm::vec3 position, int32_t, int32_t, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateMobileobject(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateTownTemporaryPots(int32_t, int32_t, int32_t)
 {
-	Game& game = ctx.GetGame();
-	const auto& params = ctx.GetParameters();
-	auto& island = game.GetLandIsland();
-	auto& registry = game.GetEntityRegistry();
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
+}
+
+void FeatureScriptCommands::CreateMobileObject(glm::vec3 position, int32_t type, int32_t rotation, int32_t scale)
+{
+	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
-	const auto position = GetHorizontalPosition(params[0].GetString());
-	const auto objectType = params[1].GetNumber();
-	const auto rotation = GetRadians(params[2].GetNumber());
-	float size = GetSize(params[3].GetNumber());
-	auto mobileObjectInfo = static_cast<MobileObjectInfo>(objectType);
 
-	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::mat3 rot = glm::eulerAngleY(rotation);
-	const glm::vec3 scale(size);
-
-	registry.Assign<MobileObject>(entity, mobileObjectInfo);
-	registry.Assign<Transform>(entity, pos, rot, scale);
+	registry.Assign<MobileObject>(entity, static_cast<MobileObjectInfo>(type));
+	registry.Assign<Transform>(entity, position, glm::eulerAngleY(GetRadians(rotation)), glm::vec3(GetSize(scale)));
 }
 
-void FeatureScriptCommands::CreateMobileStatic(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateMobileStatic(glm::vec3 position, int32_t, float, float)
 {
-	std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__)
-	          << std::endl;
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateMobileUStatic(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateMobileUStatic(glm::vec3 position, int32_t type, float verticalOffset, float pitch,
+                                                float rotation, float lean, float scale)
 {
-	auto& game = ctx.GetGame();
-	const auto& params = ctx.GetParameters();
-	auto& island = game.GetLandIsland();
-	auto& registry = game.GetEntityRegistry();
+	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
-	const auto position = GetHorizontalPosition(params[0].GetString());
-	const auto type = params[1].GetNumber();
-	const auto verticalOffset = params[2].GetFloat();
-	float pitch = -params[3].GetFloat();
-	float rotation = -params[4].GetFloat();
-	float lean = -params[5].GetFloat();
-	float size = params[6].GetFloat();
-	auto mobileStaticInfo = MobileStaticInfo(type);
 
-	const glm::vec3 pos(position.x, island.GetHeightAt(position) + verticalOffset, position.y);
-	const glm::mat3 rot = glm::eulerAngleXYZ(pitch, rotation, lean);
-	const glm::vec3 scale(size);
+	glm::vec3 offset(0.0f, verticalOffset, 0.0f);
 
-	registry.Assign<MobileStatic>(entity, mobileStaticInfo);
-	registry.Assign<Transform>(entity, pos, rot, scale);
+	registry.Assign<MobileStatic>(entity, MobileStaticInfo(type));
+	registry.Assign<Transform>(entity, position + offset, glm::eulerAngleXYZ(-pitch, -rotation, -lean), glm::vec3(scale));
 }
 
-void FeatureScriptCommands::CreateDeadTree(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateDeadTree(glm::vec3 position, const std::string&, int32_t, float, float, float, float)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateScaffold(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateScaffold(int32_t, glm::vec3 position, int32_t, int32_t, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CountryChange(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CountryChange(glm::vec3 position, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::HeightChange(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::HeightChange(glm::vec3 position, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateCreature(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateCreature(glm::vec3 position, int32_t, int32_t)
 {
-	std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__)
-	          << std::endl;
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateCreatureFromFile(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateCreatureFromFile(const std::string& playerName, int32_t creatureType,
+                                                   const std::string& creatureMind, glm::vec3 position)
 {
-	std::cout << std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" + std::to_string(__LINE__)
-	          << std::endl;
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateFlock(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateFlock(int32_t, glm::vec3, glm::vec3, int32_t, int32_t, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::LoadLandscape(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::LoadLandscape(const std::string& path)
 {
-	auto params = ctx.GetParameters();
-	ctx.GetGame().LoadLandscape(params[0].GetString());
+	Game::instance()->LoadLandscape(path);
 }
 
-void FeatureScriptCommands::CreateArea(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::Version(float version)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	spdlog::debug("LHScriptX: Land version set to: {}", version);
 }
 
-void FeatureScriptCommands::StartCameraPos(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateArea(glm::vec3 position, float)
 {
-	auto params = ctx.GetParameters();
-	auto pos = GetHorizontalPosition(params[0].GetString());
-	auto& camera = ctx.GetGame().GetCamera();
-	auto height = ctx.GetGame().GetLandIsland().GetHeightAt(pos) + 10.0f;
-	camera.SetPosition(glm::vec3(pos[0], height, pos[1]));
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::FlyByFile(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::StartCameraPos(glm::vec3 position)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	auto& camera = Game::instance()->GetCamera();
+	const glm::vec3 offset(0.0f, 10.0f, 0.0f);
+	camera.SetPosition(position + offset);
 }
 
-void FeatureScriptCommands::TownNeedsPos(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::FlyByFile(const std::string& path)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateFurniture(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::TownNeedsPos(int32_t townId, glm::vec3 position)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateBigForest(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateFurniture(glm::vec3 position, int32_t, float)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateNewBigForest(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateBigForest(glm::vec3 position, int32_t, float, float)
 {
-	auto& game = ctx.GetGame();
-	const auto& params = ctx.GetParameters();
-	auto& island = game.GetLandIsland();
-	auto& registry = game.GetEntityRegistry();
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
+}
+
+void FeatureScriptCommands::CreateNewBigForest(glm::vec3 position, int32_t type, int32_t param_3, float rotation, float scale)
+{
+	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
-	const auto position = GetHorizontalPosition(params[0].GetString());
-	// const auto type = params[1].GetNumber(); // Circular == 0, Oval == 1
-	// auto unknown = params[2].GetFloat();
-	float rotation = -params[3].GetFloat();
-	float size = params[4].GetFloat();
-
-	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::mat3 rot = glm::eulerAngleY(rotation);
-	const glm::vec3 scale(size);
 
 	registry.Assign<Forest>(entity);
-	registry.Assign<Transform>(entity, pos, rot, scale);
+	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-rotation), glm::vec3(scale));
 }
 
-void FeatureScriptCommands::CreateInfluenceRing(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateInfluenceRing(glm::vec3 position, int32_t, float, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateWeatherClimate(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateWeatherClimate(int32_t, int32_t, glm::vec3, float, float)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateWeatherClimateRain(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateWeatherClimateRain(int32_t, float, int32_t, int32_t, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateWeatherClimateTemp(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateWeatherClimateTemp(int32_t, float, float)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateWeatherClimateWind(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateWeatherClimateWind(int32_t, float, float, float)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateWeatherStorm(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateWeatherStorm(int32_t, glm::vec3, float, int32_t, glm::vec3, glm::vec3, glm::vec3, float,
+                                               glm::vec3)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::BrushSize(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::BrushSize(float, float)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateStream(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateStream(int32_t streamId)
 {
-	auto& game = ctx.GetGame();
-	const auto& params = ctx.GetParameters();
-	auto& registry = game.GetEntityRegistry();
-	const auto entity = registry.Create();
-	const auto streamId = params[0].GetNumber();
-	registry.Assign<Stream>(entity, streamId);
+	auto& registry = Game::instance()->GetEntityRegistry();
 	auto& registryContext = registry.Context();
+	const auto entity = registry.Create();
+
+	registry.Assign<Stream>(entity, streamId);
 	registryContext.streams.insert({streamId, entity});
 }
 
-void FeatureScriptCommands::CreateStreamPoint(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateStreamPoint(int32_t streamId, glm::vec3 position)
 {
-	auto& game = ctx.GetGame();
-	const auto& params = ctx.GetParameters();
-	auto& island = game.GetLandIsland();
-	auto& registry = game.GetEntityRegistry();
-	const auto streamId = params[0].GetNumber();
-	const auto pos = GetHorizontalPosition(params[1].GetString());
-	const glm::vec3 position(pos.x, island.GetHeightAt(pos), pos.y);
+	auto& registry = Game::instance()->GetEntityRegistry();
 	auto& registryContext = registry.Context();
 
 	Stream& stream = registry.Get<Stream>(registryContext.streams.at(streamId));
-	const StreamNode newNode(position, stream.streamNodes);
-	stream.streamNodes.push_back(newNode);
+	const StreamNode newNode(position, stream.nodes);
+	stream.nodes.push_back(newNode);
 }
 
-void FeatureScriptCommands::CreateWaterfall(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateWaterfall(glm::vec3 position)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateArena(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateArena(glm::vec3 position, float)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateFootpath(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateFootpath(int32_t footpathId)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
-}
-
-void FeatureScriptCommands::CreateFootpathNode(const ScriptCommandContext& ctx)
-{
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
-}
-
-void FeatureScriptCommands::LinkFootpath(const ScriptCommandContext& ctx)
-{
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
-}
-
-void FeatureScriptCommands::CreateBonfire(const ScriptCommandContext& ctx)
-{
-	auto& game = ctx.GetGame();
-	const auto& params = ctx.GetParameters();
-	auto& island = game.GetLandIsland();
-	auto& registry = game.GetEntityRegistry();
+	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
-	const auto position = GetHorizontalPosition(params[0].GetString());
-	float rotation = -params[1].GetFloat();
-	// auto unknown        = params[1].GetFloat();
-	float size = params[3].GetFloat() * 1;
+	registry.Assign<Footpath>(entity, footpathId);
+	auto& registryContext = registry.Context();
+	registryContext.footpaths.insert({footpathId, entity});
+}
 
-	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::mat3 rot = glm::eulerAngleY(rotation);
-	const glm::vec3 scale(size);
+void FeatureScriptCommands::CreateFootpathNode(int footpathId, glm::vec3 position)
+{
+	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registryContext = registry.Context();
+	auto& footpath = registry.Get<Footpath>(registryContext.footpaths.at(footpathId));
+	footpath.nodes.push_back(FootpathNode {position});
+}
+
+void FeatureScriptCommands::LinkFootpath(int32_t footpathId)
+{
+	// TODO: The last MultiMapFixed created in this script is an implicit param
+	//       This Command adds the footpath to a list in a FootpathLink on the MultiMapFixed
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
+}
+
+void FeatureScriptCommands::CreateBonfire(glm::vec3 position, float rotation, float param_3, float scale)
+{
+	auto& registry = Game::instance()->GetEntityRegistry();
+	const auto entity = registry.Create();
 
 	registry.Assign<MobileStatic>(entity, MobileStaticInfo::Bonfire);
-	registry.Assign<Transform>(entity, pos, rot, scale);
+	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-rotation), glm::vec3(scale));
 }
 
-void FeatureScriptCommands::CreateBase(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateBase(glm::vec3 position, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateNewFeature(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateNewFeature(glm::vec3 position, const std::string& type, int32_t rotation, int32_t scale,
+                                             int32_t param_5)
 {
-	auto& game = ctx.GetGame();
-	const auto& params = ctx.GetParameters();
-	auto& island = game.GetLandIsland();
-	auto& registry = game.GetEntityRegistry();
+	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
-	const auto position = GetHorizontalPosition(params[0].GetString());
-	auto type = GetFeatureInfo(params[1].GetString());
-	float rotation = GetRadians(params[2].GetNumber());
-	float size = GetSize(params[3].GetNumber());
 
-	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::mat3 rot = glm::eulerAngleY(rotation);
-	const glm::vec3 scale(size);
-
-	registry.Assign<Feature>(entity, type);
-	registry.Assign<Transform>(entity, pos, rot, scale);
+	registry.Assign<Feature>(entity, GetFeatureInfo(type));
+	registry.Assign<Transform>(entity, position, glm::eulerAngleY(GetRadians(rotation)), glm::vec3(GetSize(scale)));
 }
 
-void FeatureScriptCommands::SetInteractDesire(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::SetInteractDesire(float)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::ToggleComputerPlayer(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::ToggleComputerPlayer(const std::string&, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::SetComputerPlayerCreatureLike(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::SetComputerPlayerCreatureLike(const std::string&, const std::string&)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::MultiplayerDebug(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::MultiplayerDebug(int32_t, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateStreetLantern(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateStreetLantern(glm::vec3 position, int32_t)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateStreetLight(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateStreetLight(glm::vec3 position)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::SetLandNumber(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::SetLandNumber(int32_t number)
 {
-	int landNumber = ctx.GetParameters()[0].GetNumber();
-	spdlog::debug("Land number set to: {}", landNumber);
+	spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateOneShotSpell(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateOneShotSpell(glm::vec3 position, const std::string&)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateOneShotSpellPu(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateOneShotSpellPu(glm::vec3 position, const std::string&)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateFireFly(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateFireFly(glm::vec3 position)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::TownDesireBoost(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::TownDesireBoost(int32_t townId, const std::string&, float)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateAnimatedStatic(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateAnimatedStatic(glm::vec3 position, const std::string& type, int32_t rotation, int32_t scale)
 {
-	auto& game = ctx.GetGame();
-	const auto& params = ctx.GetParameters();
-	auto& island = game.GetLandIsland();
-	auto& registry = game.GetEntityRegistry();
+	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
-	const auto position = GetHorizontalPosition(params[0].GetString());
-	const auto objectType = params[1].GetString();
-	const auto rotation = -params[2].GetFloat() + glm::radians(180.0f);
-	auto size = GetSize(params[3].GetNumber());
 
-	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::mat3 rot = glm::eulerAngleY(rotation);
-
-	registry.Assign<AnimatedStatic>(entity, objectType);
-	registry.Assign<Transform>(entity, pos, rot, glm::vec3(size));
+	registry.Assign<AnimatedStatic>(entity, type);
+	registry.Assign<Transform>(entity, position, glm::eulerAngleY(glm::radians(180.0f) - rotation), glm::vec3(GetSize(scale)));
 }
 
-void FeatureScriptCommands::FireFlySpellRewardProb(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::FireFlySpellRewardProb(const std::string& spell, float probability)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateNewTownField(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateNewTownField(int32_t townId, glm::vec3 position, int32_t param_3, float rotation)
 {
-	auto& game = ctx.GetGame();
-	const auto& params = ctx.GetParameters();
-	auto& island = game.GetLandIsland();
-	auto& registry = game.GetEntityRegistry();
+	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
-	auto townId = params[0].GetNumber();
-	const auto position = GetHorizontalPosition(params[1].GetString());
-	// auto unknown = params[2].GetNumber();
-	const auto rotation = -params[3].GetFloat() + glm::radians(180.0f);
-
-	const glm::vec3 pos(position.x, island.GetHeightAt(position), position.y);
-	const glm::mat3 rot = glm::eulerAngleY(rotation);
 
 	registry.Assign<Field>(entity, townId);
-	registry.Assign<Transform>(entity, pos, rot, glm::vec3(1.0));
+	registry.Assign<Transform>(entity, position, glm::eulerAngleY(glm::radians(180.0f) - rotation), glm::vec3(1.0));
 }
 
-void FeatureScriptCommands::CreateSpellDispenser(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateSpellDispenser(int32_t, glm::vec3 position, const std::string&, const std::string&, float,
+                                                 float, float)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::LoadComputerPlayerPersonallty(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::LoadComputerPlayerPersonality(int32_t, glm::vec3)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::SetComputerPlayerPersonallty(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::SetComputerPlayerPersonality(const std::string&, glm::vec3, float)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::SetGlobalLandBalance(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::SetGlobalLandBalance(int32_t, float)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::SetLandBalance(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::SetLandBalance(const std::string&, int32_t, float)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::CreateDrinkWaypoint(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::CreateDrinkWaypoint(glm::vec3 position)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::SetTownInfluenceMultiplier(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::SetTownInfluenceMultiplier(float multiplier)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::SetPlayerInfluenceMultiplier(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::SetPlayerInfluenceMultiplier(float multiplier)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::SetTownBalanceBeliefScale(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::SetTownBalanceBeliefScale(int32_t townId, float scale)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::StartGameMessage(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::StartGameMessage(const std::string& message, int32_t landNumber)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::AddGameMessageLine(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::AddGameMessageLine(const std::string& message, int32_t landNumber)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::EditLevel(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::EditLevel()
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::SetNighttime(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::SetNighttime(float, float, float)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::MakeLastObjectArtifact(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::MakeLastObjectArtifact(int32_t, const std::string&, float)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }
 
-void FeatureScriptCommands::SetLostTownScale(const ScriptCommandContext& ctx)
+void FeatureScriptCommands::SetLostTownScale(float scale)
 {
-	// std::cout << std::string {} + "Function " + __func__ + " not implemented.
-	// " + __FILE__ + ":" + std::to_string(__LINE__) << std::endl;
+	// spdlog::error("LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__, __func__);
 }

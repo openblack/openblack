@@ -462,6 +462,12 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 					bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
 					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShaderInstanced->GetRawHandle());
 				}
+				if (renderCtx.footpaths)
+				{
+					renderCtx.footpaths->GetMesh().GetVertexBuffer().Bind();
+					bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
+					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
+				}
 				if (renderCtx.streams)
 				{
 					renderCtx.streams->GetMesh().GetVertexBuffer().Bind();

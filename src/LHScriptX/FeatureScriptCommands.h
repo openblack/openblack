@@ -13,6 +13,10 @@
 
 #include <array>
 
+#include <glm/vec3.hpp>
+
+#include "Enums.h"
+
 namespace openblack::lhscriptx
 {
 
@@ -21,111 +25,118 @@ class FeatureScriptCommands
 public:
 	static const std::array<const ScriptCommandSignature, 105> Signatures;
 
-	static void CreateMist(const ScriptCommandContext& ctx);
-	static void CreatePath(const ScriptCommandContext& ctx);
-	static void CreateTown(const ScriptCommandContext& ctx);
-	static void SetTownBelief(const ScriptCommandContext& ctx);
-	static void SetTownBeliefCap(const ScriptCommandContext& ctx);
-	static void SetTownUninhabitable(const ScriptCommandContext& ctx);
-	static void SetTownCongregationPos(const ScriptCommandContext& ctx);
-	static void CreateAbode(const ScriptCommandContext& ctx);
-	static void CreatePlannedAbode(const ScriptCommandContext& ctx);
-	static void CreateTownCentre(const ScriptCommandContext& ctx);
-	static void CreateTownSpell(const ScriptCommandContext& ctx);
-	static void CreateNewTownSpell(const ScriptCommandContext& ctx);
-	static void CreateTownCentreSpellIcon(const ScriptCommandContext& ctx);
-	static void CreateSpellIcon(const ScriptCommandContext& ctx);
-	static void CreatePlannedSpellIcon(const ScriptCommandContext& ctx);
-	static void CreateVillager(const ScriptCommandContext& ctx);
-	static void CreateTownVillager(const ScriptCommandContext& ctx);
-	static void CreateSpecialTownVillager(const ScriptCommandContext& ctx);
-	static void CreateVillagerPos(const ScriptCommandContext& ctx);
-	static void CreateCitadel(const ScriptCommandContext& ctx);
-	static void CreatePlannedCitadel(const ScriptCommandContext& ctx);
-	static void CreateCreaturePen(const ScriptCommandContext& ctx);
-	static void CreateWorshipSite(const ScriptCommandContext& ctx);
-	static void CreatePlannedWorshipSite(const ScriptCommandContext& ctx);
-	static void CreateAnimal(const ScriptCommandContext& ctx);
-	static void CreateNewAnimal(const ScriptCommandContext& ctx);
-	static void CreateForest(const ScriptCommandContext& ctx);
-	static void CreateTree(const ScriptCommandContext& ctx);
-	static void CreateNewTree(const ScriptCommandContext& ctx);
-	static void CreateField(const ScriptCommandContext& ctx);
-	static void CreateTownField(const ScriptCommandContext& ctx);
-	static void CreateFishFarm(const ScriptCommandContext& ctx);
-	static void CreateTownFishFarm(const ScriptCommandContext& ctx);
-	static void CreateFeature(const ScriptCommandContext& ctx);
-	static void CreateFlowers(const ScriptCommandContext& ctx);
-	static void CreateWallSection(const ScriptCommandContext& ctx);
-	static void CreatePlannedWallSection(const ScriptCommandContext& ctx);
-	static void CreatePitch(const ScriptCommandContext& ctx);
-	static void CreatePot(const ScriptCommandContext& ctx);
-	static void CreateTownTemporaryPots(const ScriptCommandContext& ctx);
-	static void CreateMobileobject(const ScriptCommandContext& ctx);
-	static void CreateMobileStatic(const ScriptCommandContext& ctx);
-	static void CreateMobileUStatic(const ScriptCommandContext& ctx);
-	static void CreateDeadTree(const ScriptCommandContext& ctx);
-	static void CreateScaffold(const ScriptCommandContext& ctx);
-	static void CountryChange(const ScriptCommandContext& ctx);
-	static void HeightChange(const ScriptCommandContext& ctx);
-	static void CreateCreature(const ScriptCommandContext& ctx);
-	static void CreateCreatureFromFile(const ScriptCommandContext& ctx);
-	static void CreateFlock(const ScriptCommandContext& ctx);
-	static void LoadLandscape(const ScriptCommandContext& ctx);
-	static void Version(const ScriptCommandContext& ctx);
-	static void CreateArea(const ScriptCommandContext& ctx);
-	static void StartCameraPos(const ScriptCommandContext& ctx);
-	static void FlyByFile(const ScriptCommandContext& ctx);
-	static void TownNeedsPos(const ScriptCommandContext& ctx);
-	static void CreateFurniture(const ScriptCommandContext& ctx);
-	static void CreateBigForest(const ScriptCommandContext& ctx);
-	static void CreateNewBigForest(const ScriptCommandContext& ctx);
-	static void CreateInfluenceRing(const ScriptCommandContext& ctx);
-	static void CreateWeatherClimate(const ScriptCommandContext& ctx);
-	static void CreateWeatherClimateRain(const ScriptCommandContext& ctx);
-	static void CreateWeatherClimateTemp(const ScriptCommandContext& ctx);
-	static void CreateWeatherClimateWind(const ScriptCommandContext& ctx);
-	static void CreateWeatherStorm(const ScriptCommandContext& ctx);
-	static void BrushSize(const ScriptCommandContext& ctx);
-	static void CreateStream(const ScriptCommandContext& ctx);
-	static void CreateStreamPoint(const ScriptCommandContext& ctx);
-	static void CreateWaterfall(const ScriptCommandContext& ctx);
-	static void CreateArena(const ScriptCommandContext& ctx);
-	static void CreateFootpath(const ScriptCommandContext& ctx);
-	static void CreateFootpathNode(const ScriptCommandContext& ctx);
-	static void LinkFootpath(const ScriptCommandContext& ctx);
-	static void CreateBonfire(const ScriptCommandContext& ctx);
-	static void CreateBase(const ScriptCommandContext& ctx);
-	static void CreateNewFeature(const ScriptCommandContext& ctx);
-	static void SetInteractDesire(const ScriptCommandContext& ctx);
-	static void ToggleComputerPlayer(const ScriptCommandContext& ctx);
-	static void SetComputerPlayerCreatureLike(const ScriptCommandContext& ctx);
-	static void MultiplayerDebug(const ScriptCommandContext& ctx);
-	static void CreateStreetLantern(const ScriptCommandContext& ctx);
-	static void CreateStreetLight(const ScriptCommandContext& ctx);
-	static void SetLandNumber(const ScriptCommandContext& ctx);
-	static void CreateOneShotSpell(const ScriptCommandContext& ctx);
-	static void CreateOneShotSpellPu(const ScriptCommandContext& ctx);
-	static void CreateFireFly(const ScriptCommandContext& ctx);
-	static void TownDesireBoost(const ScriptCommandContext& ctx);
-	static void CreateAnimatedStatic(const ScriptCommandContext& ctx);
-	static void FireFlySpellRewardProb(const ScriptCommandContext& ctx);
-	static void CreateNewTownField(const ScriptCommandContext& ctx);
-	static void CreateSpellDispenser(const ScriptCommandContext& ctx);
-	static void LoadComputerPlayerPersonallty(const ScriptCommandContext& ctx);
-	static void SetComputerPlayerPersonallty(const ScriptCommandContext& ctx);
-	static void SetGlobalLandBalance(const ScriptCommandContext& ctx);
-	static void SetLandBalance(const ScriptCommandContext& ctx);
-	static void CreateDrinkWaypoint(const ScriptCommandContext& ctx);
-	static void SetTownInfluenceMultiplier(const ScriptCommandContext& ctx);
-	static void SetPlayerInfluenceMultiplier(const ScriptCommandContext& ctx);
-	static void SetTownBalanceBeliefScale(const ScriptCommandContext& ctx);
-	static void StartGameMessage(const ScriptCommandContext& ctx);
-	static void AddGameMessageLine(const ScriptCommandContext& ctx);
-	static void EditLevel(const ScriptCommandContext& ctx);
-	static void SetNighttime(const ScriptCommandContext& ctx);
-	static void MakeLastObjectArtifact(const ScriptCommandContext& ctx);
-	static void SetLostTownScale(const ScriptCommandContext& ctx);
+	static void CreateMist(glm::vec3 position, float param_2, int32_t param_3, float param_4, float param_5);
+	static void CreatePath(int32_t param_1, int32_t param_2, int32_t param_3, int32_t param_4);
+	static void CreateTown(int32_t townId, glm::vec3 position, const std::string& playerOwner, int32_t notUsed,
+	                       const std::string& civilisation);
+	static void SetTownBelief(int32_t townId, const std::string& playerOwner, float belief);
+	static void SetTownBeliefCap(int32_t townId, const std::string& playerOwner, float belief);
+	static void SetTownUninhabitable(int32_t townId);
+	static void SetTownCongregationPos(int32_t townId, glm::vec3 position);
+	static void CreateAbode(int32_t townId, glm::vec3 position, const std::string& abodeInfo, int32_t rotation, int32_t size,
+	                        int32_t foodAmount, int32_t woodAmount);
+	static void CreatePlannedAbode(int32_t townId, glm::vec3 position, const std::string& abodeInfo, int32_t rotation,
+	                               int32_t size, int32_t foodAmount, int32_t woodAmount);
+	static void CreateTownCentre(int32_t townId, glm::vec3 position, const std::string& abodeInfo, int32_t rotation,
+	                             int32_t size, int32_t);
+	static void CreateTownSpell(int32_t townId, const std::string& spellName);
+	static void CreateNewTownSpell(int32_t townId, const std::string& spellName);
+	static void CreateTownCentreSpellIcon(int32_t, const std::string&);
+	static void CreateSpellIcon(glm::vec3 position, const std::string&, int32_t, int32_t, int32_t);
+	static void CreatePlannedSpellIcon(int32_t, glm::vec3 position, const std::string&, int32_t, int32_t, int32_t);
+	static void CreateVillager(glm::vec3, glm::vec3, const std::string&);
+	static void CreateTownVillager(int32_t townId, glm::vec3 position, const std::string& villagerType, int32_t age);
+	static void CreateSpecialTownVillager(int32_t, glm::vec3, int32_t, int32_t);
+	static void CreateVillagerPos(glm::vec3, glm::vec3, const std::string&, int32_t);
+	static void CreateCitadel(glm::vec3 position, int32_t, const std::string&, int32_t, int32_t);
+	static void CreatePlannedCitadel(int32_t, glm::vec3 position, int32_t, const std::string&, int32_t, int32_t);
+	static void CreateCreaturePen(glm::vec3 position, int32_t, int32_t, int32_t, int32_t, int32_t);
+	static void CreateWorshipSite(glm::vec3 position, int32_t, const std::string&, const std::string&, int32_t, int32_t);
+	static void CreatePlannedWorshipSite(glm::vec3 position, int32_t, const std::string&, const std::string&, int32_t, int32_t);
+	static void CreateAnimal(glm::vec3 position, int32_t, int32_t, int32_t);
+	static void CreateNewAnimal(glm::vec3 position, int32_t, int32_t, int32_t, int32_t);
+	static void CreateForest(int32_t forestId, glm::vec3 position);
+	static void CreateTree(int32_t forestId, glm::vec3 position, int32_t, int32_t, int32_t);
+	static void CreateNewTree(int32_t forestId, glm::vec3 position, int32_t treeType, int32_t isNonScenic, float rotation,
+	                          float currentSize, float maxSize);
+	static void CreateField(glm::vec3 position, int32_t);
+	static void CreateTownField(int32_t townId, glm::vec3 position, int32_t);
+	static void CreateFishFarm(glm::vec3 position, int32_t);
+	static void CreateTownFishFarm(int32_t townId, glm::vec3 position, int32_t);
+	static void CreateFeature(glm::vec3 position, int32_t, int32_t, int32_t, int32_t);
+	static void CreateFlowers(glm::vec3 position, int32_t, float, float);
+	static void CreateWallSection(glm::vec3 position, int32_t, int32_t, int32_t, int32_t);
+	static void CreatePlannedWallSection(glm::vec3 position, int32_t, int32_t, int32_t, int32_t);
+	static void CreatePitch(glm::vec3 position, int32_t, int32_t, int32_t, int32_t, int32_t);
+	static void CreatePot(glm::vec3 position, int32_t, int32_t, int32_t);
+	static void CreateTownTemporaryPots(int32_t townId, int32_t, int32_t);
+	static void CreateMobileObject(glm::vec3 position, int32_t type, int32_t rotation, int32_t);
+	static void CreateMobileStatic(glm::vec3 position, int32_t type, float, float);
+	static void CreateMobileUStatic(glm::vec3 position, int32_t type, float verticalOffset, float pitch, float rotation,
+	                                float lean, float scale);
+	static void CreateDeadTree(glm::vec3 position, const std::string&, int32_t, float, float, float, float);
+	static void CreateScaffold(int32_t, glm::vec3, int32_t, int32_t, int32_t);
+	static void CountryChange(glm::vec3 position, int32_t);
+	static void HeightChange(glm::vec3 position, int32_t);
+	static void CreateCreature(glm::vec3 position, int32_t, int32_t);
+	static void CreateCreatureFromFile(const std::string& playerName, int32_t creatureType, const std::string& creatureMind,
+	                                   glm::vec3 position);
+	static void CreateFlock(int32_t, glm::vec3, glm::vec3, int32_t, int32_t, int32_t);
+	static void LoadLandscape(const std::string& path);
+	static void Version(float version);
+	static void CreateArea(glm::vec3 position, float);
+	static void StartCameraPos(glm::vec3 position);
+	static void FlyByFile(const std::string& path);
+	static void TownNeedsPos(int32_t townId, glm::vec3 position);
+	static void CreateFurniture(glm::vec3 position, int32_t, float);
+	static void CreateBigForest(glm::vec3 position, int32_t, float, float);
+	static void CreateNewBigForest(glm::vec3 position, int32_t type, int32_t param_3, float rotation, float scale);
+	static void CreateInfluenceRing(glm::vec3 position, int32_t, float, int32_t);
+	static void CreateWeatherClimate(int32_t, int32_t, glm::vec3, float, float);
+	static void CreateWeatherClimateRain(int32_t, float, int32_t, int32_t, int32_t);
+	static void CreateWeatherClimateTemp(int32_t, float, float);
+	static void CreateWeatherClimateWind(int32_t, float, float, float);
+	static void CreateWeatherStorm(int32_t, glm::vec3, float, int32_t, glm::vec3, glm::vec3, glm::vec3, float, glm::vec3);
+	static void BrushSize(float, float);
+	static void CreateStream(int32_t streamId);
+	static void CreateStreamPoint(int32_t streamId, glm::vec3 position);
+	static void CreateWaterfall(glm::vec3 position);
+	static void CreateArena(glm::vec3 position, float);
+	static void CreateFootpath(int32_t footpathId);
+	static void CreateFootpathNode(int footpathId, glm::vec3 position);
+	static void LinkFootpath(int32_t footpathId);
+	static void CreateBonfire(glm::vec3 position, float rotation, float param_3, float scale);
+	static void CreateBase(glm::vec3 position, int32_t);
+	static void CreateNewFeature(glm::vec3 position, const std::string& type, int32_t rotation, int32_t scale, int32_t param_5);
+	static void SetInteractDesire(float);
+	static void ToggleComputerPlayer(const std::string&, int32_t);
+	static void SetComputerPlayerCreatureLike(const std::string&, const std::string&);
+	static void MultiplayerDebug(int32_t, int32_t);
+	static void CreateStreetLantern(glm::vec3 position, int32_t);
+	static void CreateStreetLight(glm::vec3 position);
+	static void SetLandNumber(int32_t number);
+	static void CreateOneShotSpell(glm::vec3 position, const std::string&);
+	static void CreateOneShotSpellPu(glm::vec3 position, const std::string&);
+	static void CreateFireFly(glm::vec3 position);
+	static void TownDesireBoost(int32_t townId, const std::string&, float);
+	static void CreateAnimatedStatic(glm::vec3 position, const std::string& type, int32_t rotation, int32_t scale);
+	static void FireFlySpellRewardProb(const std::string& spell, float probability);
+	static void CreateNewTownField(int32_t townId, glm::vec3 position, int32_t param_3, float rotation);
+	static void CreateSpellDispenser(int32_t, glm::vec3 position, const std::string&, const std::string&, float, float, float);
+	static void LoadComputerPlayerPersonality(int32_t, glm::vec3);
+	static void SetComputerPlayerPersonality(const std::string&, glm::vec3, float);
+	static void SetGlobalLandBalance(int32_t, float);
+	static void SetLandBalance(const std::string&, int32_t, float);
+	static void CreateDrinkWaypoint(glm::vec3 position);
+	static void SetTownInfluenceMultiplier(float multiplier);
+	static void SetPlayerInfluenceMultiplier(float multiplier);
+	static void SetTownBalanceBeliefScale(int32_t townId, float scale);
+	static void StartGameMessage(const std::string& message, int32_t landNumber);
+	static void AddGameMessageLine(const std::string& message, int32_t landNumber);
+	static void EditLevel();
+	static void SetNighttime(float, float, float);
+	static void MakeLastObjectArtifact(int32_t, const std::string&, float);
+	static void SetLostTownScale(float scale);
 };
 
 } // namespace openblack::lhscriptx
