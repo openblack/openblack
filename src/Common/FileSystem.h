@@ -35,6 +35,8 @@ public:
 
 	static inline fs::path MiscPath() { return DataPath() / "Misc"; }
 
+	static inline fs::path LandscapePath() { return DataPath() / "Landscape"; }
+
 	static inline fs::path TexturePath() { return DataPath() / "Textures"; }
 
 	static inline fs::path WeatherSystemPath() { return DataPath() / "WeatherSystem"; }

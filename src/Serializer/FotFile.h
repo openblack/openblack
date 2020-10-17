@@ -9,20 +9,29 @@
 
 #pragma once
 
-#include <glm/vec3.hpp>
-#include <vector>
+#include <cstdint>
+#ifdef HAS_FILESYSTEM
+#include <filesystem>
+namespace fs = std::filesystem;
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif // HAS_FILESYSTEM
 
 namespace openblack
 {
 
-struct FootpathNode
-{
-	glm::vec3 position;
-};
+class Game;
 
-struct Footpath
+class FotFile
 {
-	std::vector<FootpathNode> nodes;
+public:
+	explicit FotFile(Game& game);
+
+	void Load(const fs::path& path);
+
+private:
+	Game& _game;
 };
 
 } // namespace openblack

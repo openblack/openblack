@@ -9,20 +9,18 @@
 
 #pragma once
 
-#include <glm/vec3.hpp>
-#include <vector>
+#include <cstdint>
 
-namespace openblack
+namespace openblack::serializer
 {
 
-struct FootpathNode
+#pragma pack(push, 1)
+struct MapCoords
 {
-	glm::vec3 position;
+	uint32_t x;
+	uint32_t z;
+	float altitude;
 };
+#pragma pack(pop)
 
-struct Footpath
-{
-	std::vector<FootpathNode> nodes;
-};
-
-} // namespace openblack
+} // namespace openblack::serializer

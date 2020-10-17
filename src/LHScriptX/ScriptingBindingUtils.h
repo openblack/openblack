@@ -17,19 +17,19 @@ namespace openblack::lhscriptx
 {
 
 template <typename T>
-ParameterType ParameterTypeStaticLookUp;
+static ParameterType ParameterTypeStaticLookUp;
 
 template <>
-constexpr ParameterType ParameterTypeStaticLookUp<glm::vec3> = ParameterType::Vector;
+inline ParameterType ParameterTypeStaticLookUp<glm::vec3> = ParameterType::Vector;
 
 template <>
-constexpr ParameterType ParameterTypeStaticLookUp<const std::string&> = ParameterType::String;
+inline ParameterType ParameterTypeStaticLookUp<const std::string&> = ParameterType::String;
 
 template <>
-constexpr ParameterType ParameterTypeStaticLookUp<float> = ParameterType::Float;
+inline ParameterType ParameterTypeStaticLookUp<float> = ParameterType::Float;
 
 template <>
-constexpr ParameterType ParameterTypeStaticLookUp<int32_t> = ParameterType::Number;
+inline ParameterType ParameterTypeStaticLookUp<int32_t> = ParameterType::Number;
 
 template <typename T>
 T GetParamValue(const ScriptCommandContext& ctx, int index);
