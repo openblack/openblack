@@ -82,12 +82,26 @@ jobs:
 
   strategy:
     matrix:
+      linux-amd64-clang-Debug:
+        containerImage: 'openblack/compile-farm-ci:linux-amd64-gcc'
+        BuildConfiguration: Debug
+        CCompiler: /usr/bin/clang
+        CxxCompiler: /usr/bin/clang++
+      linux-amd64-clang-Release:
+        containerImage: 'openblack/compile-farm-ci:linux-amd64-gcc'
+        BuildConfiguration: Release
+        CCompiler: /usr/bin/clang
+        CxxCompiler: /usr/bin/clang++
       linux-amd64-gcc-Debug:
         containerImage: 'openblack/compile-farm-ci:linux-amd64-gcc'
         BuildConfiguration: Debug
+        CCompiler: /usr/bin/gcc
+        CxxCompiler: /usr/bin/g++
       linux-amd64-gcc-Release:
         containerImage: 'openblack/compile-farm-ci:linux-amd64-gcc'
         BuildConfiguration: Release
+        CCompiler: /usr/bin/gcc
+        CxxCompiler: /usr/bin/g++
 
   container: $[ variables['containerImage'] ]
 
@@ -96,8 +110,12 @@ jobs:
   - template: azure-pipelines/templates/linux-build.yml
     parameters:
       BuildConfiguration: $(BuildConfiguration)
+      CCompiler: $(CCompiler)
+      CxxCompiler: $(CxxCompiler)
   - template: azure-pipelines/templates/publish.yml
     parameters:
       BuildConfiguration: $(BuildConfiguration)
+      CCompiler: $(CCompiler)
+      CxxCompiler: $(CxxCompiler)
       InstallPlatform: Linux-x64
   - template: azure-pipelines/templates/test-null-renderer.yml
