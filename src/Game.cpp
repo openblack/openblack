@@ -38,6 +38,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/spdlog.h>
 
+#include <Serializer/FotFile.h>
 #include <cstdint>
 #include <string>
 
@@ -391,6 +392,22 @@ void Game::LoadMap(const fs::path& path)
 
 	Script script(this);
 	script.Load(source);
+
+	// Each released map comes with an optional .fot file which contains the footpath information for the map
+	auto stem = path.stem().generic_string();
+	std::transform(stem.begin(), stem.end(), stem.begin(), [](auto c) { return std::tolower(c); });
+	auto fot_path = _fileSystem->LandscapePath() / fmt::format("{}.fot", stem);
+
+	if (_fileSystem->Exists(fot_path))
+	{
+		FotFile fotFile(*this);
+		fotFile.Load(fot_path);
+	}
+	else
+	{
+		spdlog::warn("The map at {} does not come with a footpath file. Expected {}", path.generic_string(),
+		             fot_path.generic_string());
+	}
 }
 
 void Game::LoadLandscape(const fs::path& path)

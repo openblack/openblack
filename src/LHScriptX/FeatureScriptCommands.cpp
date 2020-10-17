@@ -719,7 +719,7 @@ void FeatureScriptCommands::CreateFootpath(int32_t footpathId)
 {
 	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
-	registry.Assign<Footpath>(entity, footpathId);
+	registry.Assign<Footpath>(entity);
 	auto& registryContext = registry.Context();
 	registryContext.footpaths.insert({footpathId, entity});
 }
