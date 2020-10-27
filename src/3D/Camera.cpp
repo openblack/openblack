@@ -129,7 +129,6 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 	else if (e.key.keysym.scancode == SDL_SCANCODE_SPACE)
 		_dv.y += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
 
-
 	glm::mat3 rotation = glm::transpose(GetViewMatrix());
 	_velocity = rotation * _dv;
 }
