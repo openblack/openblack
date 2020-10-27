@@ -116,22 +116,22 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 	if (e.key.repeat > 0)
 		return;
 
-	glm::vec3 dv(0, 0, 0);
 	if (e.key.keysym.scancode == SDL_SCANCODE_W)
-		dv.z = (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
+		_dv.z += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
 	else if (e.key.keysym.scancode == SDL_SCANCODE_S)
-		dv.z = (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
+		_dv.z += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
 	else if (e.key.keysym.scancode == SDL_SCANCODE_A)
-		dv.x = (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
+		_dv.x += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
 	else if (e.key.keysym.scancode == SDL_SCANCODE_D)
-		dv.x = (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
+		_dv.x += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
 	else if (e.key.keysym.scancode == SDL_SCANCODE_LCTRL)
-		dv.y = (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
+		_dv.y += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
 	else if (e.key.keysym.scancode == SDL_SCANCODE_SPACE)
-		dv.y = (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
+		_dv.y += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
+
 
 	glm::mat3 rotation = glm::transpose(GetViewMatrix());
-	_velocity += rotation * dv;
+	_velocity = rotation * _dv;
 }
 
 void Camera::handleMouseInput(const SDL_Event& e)
