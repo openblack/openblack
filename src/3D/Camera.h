@@ -30,6 +30,7 @@ public:
 	    , _projectionMatrix(1.0f)
 	    , _velocity(0.0f, 0.0f, 0.0f)
 	    , _movementSpeed(0.0005f)
+	    , _dv(0.0f, 0.0f, 0.0f)
 	    , _freeLookSensitivity(1.0f)
 	{
 	}
@@ -73,6 +74,7 @@ public:
 protected:
 	glm::vec3 _position;
 	glm::vec3 _rotation;
+	glm::vec3 _dv;
 
 	glm::mat4 _projectionMatrix;
 
