@@ -145,6 +145,8 @@ void Camera::handleMouseInput(const SDL_Event& e)
 		rot.x -= e.motion.yrel * _freeLookSensitivity * 0.1f;
 
 		SetRotation(rot);
+		glm::mat3 viewRotation = glm::transpose(GetViewMatrix());
+		_velocity = viewRotation * _dv;
 	}
 	else if (e.type == SDL_MOUSEMOTION && e.motion.state & SDL_BUTTON(SDL_BUTTON_LEFT))
 	{
