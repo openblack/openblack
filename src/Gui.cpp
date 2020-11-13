@@ -495,10 +495,7 @@ bool Gui::Loop(Game& game, const Renderer& renderer)
 		LHVMViewer::Draw(game.GetLhvm());
 	}
 	ShowLandIslandWindow(game);
-	if (config.showProfiler)
-	{
-		ShowProfilerWindow(game);
-	}
+	ShowProfilerWindow(game);
 	if (config.waterDebug)
 	{
 		game.GetWater().DebugGUI();
@@ -747,7 +744,14 @@ bool Gui::ShowMenu(Game& game)
 
 void Gui::ShowProfilerWindow(Game& game)
 {
-	if (ImGui::Begin("Profiler", &game.GetConfig().showProfiler))
+	auto& config = game.GetConfig();
+
+	if (!config.showProfiler)
+	{
+		return;
+	}
+
+	if (ImGui::Begin("Profiler", &config.showProfiler))
 	{
 		const bgfx::Stats* stats = bgfx::getStats();
 		const double toMsCpu = 1000.0 / stats->cpuTimerFreq;
@@ -765,17 +769,17 @@ void Gui::ShowProfilerWindow(Game& game)
 		ImGui::Text("Wait Submit %0.3f, Wait Render %0.3f", stats->waitSubmit * toMsCpu, stats->waitRender * toMsCpu);
 
 		ImGui::Columns(5);
-		ImGui::Checkbox("Sky", &game.GetConfig().drawSky);
+		ImGui::Checkbox("Sky", &config.drawSky);
 		ImGui::NextColumn();
-		ImGui::Checkbox("Water", &game.GetConfig().drawWater);
+		ImGui::Checkbox("Water", &config.drawWater);
 		ImGui::NextColumn();
-		ImGui::Checkbox("Island", &game.GetConfig().drawIsland);
+		ImGui::Checkbox("Island", &config.drawIsland);
 		ImGui::NextColumn();
-		ImGui::Checkbox("Entities", &game.GetConfig().drawEntities);
+		ImGui::Checkbox("Entities", &config.drawEntities);
 		ImGui::NextColumn();
-		ImGui::Checkbox("TestModel", &game.GetConfig().drawTestModel);
+		ImGui::Checkbox("TestModel", &config.drawTestModel);
 		ImGui::NextColumn();
-		ImGui::Checkbox("Debug Cross", &game.GetConfig().drawDebugCross);
+		ImGui::Checkbox("Debug Cross", &config.drawDebugCross);
 		ImGui::Columns(1);
 
 		auto width = ImGui::GetColumnWidth() - ImGui::CalcTextSize("Frame").x;
