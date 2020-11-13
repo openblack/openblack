@@ -89,6 +89,7 @@ private:
 
 	bool ShowMenu(Game& game);
 	void ShowProfilerWindow(Game& game);
+	void ShowLandIslandWindow(Game& game);
 	void ShowCameraPositionOverlay(const Game& game);
 
 	static const char* StaticGetClipboardText(void* ud) { return reinterpret_cast<Gui*>(ud)->GetClipboardText(); }
