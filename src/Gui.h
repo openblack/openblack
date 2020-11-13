@@ -89,6 +89,7 @@ private:
 
 	bool ShowMenu(Game& game);
 	void ShowProfilerWindow(Game& game);
+	void ShowWaterFramebuffer(const Game& game);
 	void ShowLandIslandWindow(Game& game);
 	void ShowCameraPositionOverlay(const Game& game);
 

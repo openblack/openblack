@@ -17,10 +17,8 @@
 #include "Graphics/ShaderProgram.h"
 #include "Graphics/Texture2D.h"
 #include "Graphics/VertexBuffer.h"
-#include "Gui.h"
 
 #include <glm/vec2.hpp>
-#include <imgui.h>
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -61,13 +59,6 @@ void Water::createMesh()
 	auto indexBuffer = new IndexBuffer("Water", indices, 6, IndexBuffer::Type::Uint16);
 
 	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, graphics::Mesh::Topology::TriangleList);
-}
-
-void Water::DebugGUI()
-{
-	ImGui::Begin("Water Debug");
-	ImGui::Image(_reflectionFrameBuffer->GetColorAttachment().GetNativeHandle(), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
-	ImGui::End();
 }
 
 graphics::FrameBuffer& Water::GetFrameBuffer() const

@@ -34,7 +34,6 @@ public:
 
 	[[nodiscard]] glm::vec4 GetReflectionPlane() const { return glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); };
 	[[nodiscard]] graphics::FrameBuffer& GetFrameBuffer() const;
-	void DebugGUI();
 
 private:
 	friend class Renderer;

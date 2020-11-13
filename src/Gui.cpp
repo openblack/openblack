@@ -496,10 +496,7 @@ bool Gui::Loop(Game& game, const Renderer& renderer)
 	}
 	ShowLandIslandWindow(game);
 	ShowProfilerWindow(game);
-	if (config.waterDebug)
-	{
-		game.GetWater().DebugGUI();
-	}
+	ShowWaterFramebuffer(game);
 
 	ImGui::Render();
 
@@ -899,6 +896,22 @@ void Gui::ShowProfilerWindow(Game& game)
 		}
 		ImGui::Columns(1);
 	}
+	ImGui::End();
+}
+
+void Gui::ShowWaterFramebuffer(const Game& game)
+{
+	auto& config = game.GetConfig();
+
+	if (!config.waterDebug)
+	{
+		return;
+	}
+
+	const auto& water = game.GetWater();
+
+	ImGui::Begin("Water Debug");
+	ImGui::Image(water.GetFrameBuffer().GetColorAttachment().GetNativeHandle(), ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::End();
 }
 
