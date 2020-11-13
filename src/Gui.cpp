@@ -490,10 +490,7 @@ bool Gui::Loop(Game& game, const Renderer& renderer)
 	_meshViewer->DrawWindow();
 	_console->DrawWindow(game);
 	ShowCameraPositionOverlay(game);
-	if (game.GetLhvm() != nullptr)
-	{
-		LHVMViewer::Draw(game.GetLhvm());
-	}
+	LHVMViewer::Draw(game.GetLhvm());
 	ShowLandIslandWindow(game);
 	ShowProfilerWindow(game);
 	ShowWaterFramebuffer(game);

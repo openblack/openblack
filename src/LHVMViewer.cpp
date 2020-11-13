@@ -524,6 +524,10 @@ inline bool TextButtonColored(ImVec4 color, const char* name_)
 
 void LHVMViewer::Draw(const openblack::LHVM::LHVM* lhvm)
 {
+	if (lhvm == nullptr)
+	{
+		return;
+	}
 	ImGui::SetNextWindowSize(ImVec2(720.0f, 612.0f), ImGuiCond_FirstUseEver);
 	ImGui::Begin("LHVM");
 
