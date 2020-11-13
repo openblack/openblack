@@ -480,116 +480,19 @@ void Gui::NewFrame(GameWindow* window)
 bool Gui::Loop(Game& game, const Renderer& renderer)
 {
 	_meshViewer->DrawScene(renderer);
-
 	NewFrame(game.GetWindow());
-
-	auto& config = game.GetConfig();
-
-	if (ImGui::BeginMainMenuBar())
+	if (ShowMenu(game))
 	{
-		if (ImGui::BeginMenu("Load Island"))
-		{
-			constexpr std::array<std::pair<std::string_view, std::string_view>, 6> RegularIslands = {
-			    std::pair {"Land 1", "Land1.txt"}, std::pair {"Land 2", "Land2.txt"},
-			    std::pair {"Land 3", "Land3.txt"}, std::pair {"Land 4", "Land4.txt"},
-			    std::pair {"Land 5", "Land5.txt"}, std::pair {"God's Playground", "LandT.txt"},
-			};
-			constexpr std::array<std::pair<std::string_view, std::string_view>, 3> PlaygroundIslands = {
-			    std::pair {"Two Gods", "TwoGods.txt"},
-			    std::pair {"Three Gods", "ThreeGods.txt"},
-			    std::pair {"Four Gods", "FourGods.txt"},
-			};
-
-			auto menu_item = [&game](const auto& label, const fs::path& path) {
-				if (ImGui::MenuItem(label.data()))
-					game.LoadMap(path);
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("%s", path.generic_string().c_str());
-			};
-
-			auto& filesystem = Game::instance()->GetFileSystem();
-
-			ImGui::MenuItem("Story Islands", nullptr, false, false);
-			for (auto& [label, path] : RegularIslands)
-			{
-				menu_item(label, filesystem.ScriptsPath() / path);
-			}
-			ImGui::Separator();
-			ImGui::MenuItem("Playground Islands", nullptr, false, false);
-			for (auto& [label, path] : PlaygroundIslands)
-			{
-				menu_item(label, filesystem.PlaygroundPath() / path);
-			}
-
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginMenu("World"))
-		{
-			if (ImGui::SliderFloat("Time of Day", &config.timeOfDay, 0.0f, 1.0f, "%.3f"))
-				Game::instance()->GetSky().SetTime(config.timeOfDay);
-
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginMenu("Debug"))
-		{
-			if (ImGui::MenuItem("Open Profiler"))
-			{
-				config.showProfiler = true;
-			}
-
-			if (ImGui::MenuItem("Console"))
-			{
-				_console->Open();
-			}
-
-			if (ImGui::MenuItem("Mesh Viewer"))
-			{
-				_meshViewer->Open();
-			}
-
-			if (ImGui::MenuItem("Land Island"))
-			{
-				config.showLandIsland = true;
-			}
-
-			if (ImGui::BeginMenu("View"))
-			{
-				ImGui::Checkbox("Sky", &game.GetConfig().drawSky);
-				ImGui::Checkbox("Water", &game.GetConfig().drawWater);
-				ImGui::Checkbox("Island", &game.GetConfig().drawIsland);
-				ImGui::Checkbox("Entities", &game.GetConfig().drawEntities);
-				ImGui::Checkbox("TestModel", &game.GetConfig().drawTestModel);
-				ImGui::Checkbox("Debug Cross", &game.GetConfig().drawDebugCross);
-				ImGui::Checkbox("Wireframe", &config.wireframe);
-				ImGui::Checkbox("Bounding Boxes", &config.drawBoundingBoxes);
-				ImGui::Checkbox("Footpaths", &config.drawFootpaths);
-				ImGui::Checkbox("Streams", &config.drawStreams);
-
-				ImGui::EndMenu();
-			}
-
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::MenuItem("Quit", "Esc"))
-		{
-			return true;
-		}
-
-		ImGui::SameLine(ImGui::GetWindowWidth() - 154.0f);
-		ImGui::Text("%.2f FPS (%.2f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
-
-		ImGui::EndMainMenuBar();
+		// Exit option selected
+		return true;
 	}
-
 	_meshViewer->DrawWindow();
 	_console->DrawWindow(game);
 	ShowCameraPositionOverlay(game);
 	if (game.GetLhvm() != nullptr)
 		LHVMViewer::Draw(game.GetLhvm());
 
+	auto& config = game.GetConfig();
 	if (config.showLandIsland && ImGui::Begin("Land Island", &config.showLandIsland))
 	{
 		ImGui::SliderFloat("Bump", &config.bumpMapStrength, 0.0f, 1.0f, "%.3f");
@@ -746,6 +649,116 @@ void Gui::Draw()
 	ImGui::SetCurrentContext(_imgui);
 
 	RenderDrawDataBgfx(ImGui::GetDrawData());
+}
+
+bool Gui::ShowMenu(Game& game)
+{
+	if (ImGui::BeginMainMenuBar())
+	{
+		if (ImGui::BeginMenu("Load Island"))
+		{
+			constexpr std::array<std::pair<std::string_view, std::string_view>, 6> RegularIslands = {
+			    // clang-format off
+			    std::pair {"Land 1", "Land1.txt"},
+			    std::pair {"Land 2", "Land2.txt"},
+			    std::pair {"Land 3", "Land3.txt"},
+			    std::pair {"Land 4", "Land4.txt"},
+			    std::pair {"Land 5", "Land5.txt"},
+			    std::pair {"God's Playground", "LandT.txt"},
+			    // clang-format on
+			};
+			constexpr std::array<std::pair<std::string_view, std::string_view>, 3> PlaygroundIslands = {
+			    std::pair {"Two Gods", "TwoGods.txt"},
+			    std::pair {"Three Gods", "ThreeGods.txt"},
+			    std::pair {"Four Gods", "FourGods.txt"},
+			};
+
+			auto menu_item = [&game](const auto& label, const fs::path& path) {
+				if (ImGui::MenuItem(label.data()))
+					game.LoadMap(path);
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("%s", path.generic_string().c_str());
+			};
+
+			auto& filesystem = Game::instance()->GetFileSystem();
+
+			ImGui::MenuItem("Story Islands", nullptr, false, false);
+			for (auto& [label, path] : RegularIslands)
+			{
+				menu_item(label, filesystem.ScriptsPath() / path);
+			}
+			ImGui::Separator();
+			ImGui::MenuItem("Playground Islands", nullptr, false, false);
+			for (auto& [label, path] : PlaygroundIslands)
+			{
+				menu_item(label, filesystem.PlaygroundPath() / path);
+			}
+
+			ImGui::EndMenu();
+		}
+
+		auto& config = game.GetConfig();
+
+		if (ImGui::BeginMenu("World"))
+		{
+			if (ImGui::SliderFloat("Time of Day", &config.timeOfDay, 0.0f, 1.0f, "%.3f"))
+				Game::instance()->GetSky().SetTime(config.timeOfDay);
+
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Debug"))
+		{
+			if (ImGui::MenuItem("Open Profiler"))
+			{
+				config.showProfiler = true;
+			}
+
+			if (ImGui::MenuItem("Console"))
+			{
+				_console->Open();
+			}
+
+			if (ImGui::MenuItem("Mesh Viewer"))
+			{
+				_meshViewer->Open();
+			}
+
+			if (ImGui::MenuItem("Land Island"))
+			{
+				config.showLandIsland = true;
+			}
+
+			if (ImGui::BeginMenu("View"))
+			{
+				ImGui::Checkbox("Sky", &config.drawSky);
+				ImGui::Checkbox("Water", &config.drawWater);
+				ImGui::Checkbox("Island", &config.drawIsland);
+				ImGui::Checkbox("Entities", &config.drawEntities);
+				ImGui::Checkbox("TestModel", &config.drawTestModel);
+				ImGui::Checkbox("Debug Cross", &config.drawDebugCross);
+				ImGui::Checkbox("Wireframe", &config.wireframe);
+				ImGui::Checkbox("Bounding Boxes", &config.drawBoundingBoxes);
+				ImGui::Checkbox("Footpaths", &config.drawFootpaths);
+				ImGui::Checkbox("Streams", &config.drawStreams);
+
+				ImGui::EndMenu();
+			}
+
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::MenuItem("Quit", "Esc"))
+		{
+			return true;
+		}
+
+		ImGui::SameLine(ImGui::GetWindowWidth() - 154.0f);
+		ImGui::Text("%.2f FPS (%.2f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
+
+		ImGui::EndMainMenuBar();
+	}
+	return false;
 }
 
 void Gui::ShowProfilerWindow(Game& game)

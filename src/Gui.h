@@ -87,6 +87,7 @@ private:
 	bool CreateDeviceObjectsBgfx();
 	void RenderDrawDataBgfx(ImDrawData* drawData);
 
+	bool ShowMenu(Game& game);
 	void ShowProfilerWindow(Game& game);
 	void ShowCameraPositionOverlay(const Game& game);
 
