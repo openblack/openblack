@@ -110,7 +110,7 @@ public:
 	[[nodiscard]] uint16_t GetHeight() const { return _info.height; }
 	[[nodiscard]] uint16_t GetLayerCount() const { return _info.numLayers; }
 
-	void DumpTexture();
+	void DumpTexture() const;
 
 protected:
 	std::string _name;

@@ -479,6 +479,7 @@ void Gui::NewFrame(GameWindow* window)
 
 bool Gui::Loop(Game& game, const Renderer& renderer)
 {
+	auto& config = game.GetConfig();
 	_meshViewer->DrawScene(renderer);
 	NewFrame(game.GetWindow());
 	if (ShowMenu(game))
@@ -490,35 +491,18 @@ bool Gui::Loop(Game& game, const Renderer& renderer)
 	_console->DrawWindow(game);
 	ShowCameraPositionOverlay(game);
 	if (game.GetLhvm() != nullptr)
-		LHVMViewer::Draw(game.GetLhvm());
-
-	auto& config = game.GetConfig();
-	if (config.showLandIsland && ImGui::Begin("Land Island", &config.showLandIsland))
 	{
-		ImGui::SliderFloat("Bump", &config.bumpMapStrength, 0.0f, 1.0f, "%.3f");
-		ImGui::SliderFloat("Small Bump", &config.smallBumpMapStrength, 0.0f, 1.0f, "%.3f");
-
-		ImGui::Separator();
-
-		ImGui::Text("Block Count: %zu", game.GetLandIsland().GetBlocks().size());
-		ImGui::Text("Country Count: %zu", game.GetLandIsland().GetCountries().size());
-
-		ImGui::Separator();
-
-		if (ImGui::Button("Dump Textures"))
-			game.GetLandIsland().DumpTextures();
-
-		if (ImGui::Button("Dump Heightmap"))
-			game.GetLandIsland().DumpMaps();
-
-		ImGui::End();
+		LHVMViewer::Draw(game.GetLhvm());
 	}
-
+	ShowLandIslandWindow(game);
 	if (config.showProfiler)
+	{
 		ShowProfilerWindow(game);
-
+	}
 	if (config.waterDebug)
+	{
 		game.GetWater().DebugGUI();
+	}
 
 	ImGui::Render();
 
@@ -912,6 +896,43 @@ void Gui::ShowProfilerWindow(Game& game)
 		ImGui::Columns(1);
 	}
 	ImGui::End();
+}
+
+void Gui::ShowLandIslandWindow(Game& game)
+{
+	auto& config = game.GetConfig();
+
+	if (!config.showLandIsland)
+	{
+		return;
+	}
+
+	if (ImGui::Begin("Land Island", &config.showLandIsland))
+	{
+		const auto& landIsland = game.GetLandIsland();
+
+		ImGui::SliderFloat("Bump", &config.bumpMapStrength, 0.0f, 1.0f, "%.3f");
+		ImGui::SliderFloat("Small Bump", &config.smallBumpMapStrength, 0.0f, 1.0f, "%.3f");
+
+		ImGui::Separator();
+
+		ImGui::Text("Block Count: %zu", landIsland.GetBlocks().size());
+		ImGui::Text("Country Count: %zu", landIsland.GetCountries().size());
+
+		ImGui::Separator();
+
+		if (ImGui::Button("Dump Textures"))
+		{
+			landIsland.DumpTextures();
+		}
+
+		if (ImGui::Button("Dump Heightmap"))
+		{
+			landIsland.DumpMaps();
+		}
+
+		ImGui::End();
+	}
 }
 
 void Gui::ShowCameraPositionOverlay(const Game& game)

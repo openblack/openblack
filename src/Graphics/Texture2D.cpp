@@ -104,7 +104,7 @@ void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format 
 	bgfx::frame();
 }
 
-void Texture2D::DumpTexture()
+void Texture2D::DumpTexture() const
 {
 	assert(!_name.empty());
 	std::vector<uint8_t> pixels;

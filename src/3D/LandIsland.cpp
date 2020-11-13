@@ -150,12 +150,12 @@ const lnd::LNDCell& LandIsland::GetCell(const glm::u16vec2& coordinates) const
 	return _landBlocks[blockIndex - 1].GetCells()[cellIndex];
 }
 
-void LandIsland::DumpTextures()
+void LandIsland::DumpTextures() const
 {
 	_materialArray->DumpTexture();
 }
 
-void LandIsland::DumpMaps()
+void LandIsland::DumpMaps() const
 {
 	const int cellsize = 16;
 
@@ -168,7 +168,7 @@ void LandIsland::DumpMaps()
 
 	for (unsigned int b = 0; b < _landBlocks.size(); b++)
 	{
-		LandBlock& block = _landBlocks[b];
+		const LandBlock& block = _landBlocks[b];
 
 		int mapx = block.GetBlockPosition().x;
 		int mapz = block.GetBlockPosition().y;

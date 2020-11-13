@@ -42,8 +42,8 @@ public:
 	[[nodiscard]] const lnd::LNDCell& GetCell(const glm::u16vec2& coordinates) const;
 
 	// Debug
-	void DumpTextures();
-	void DumpMaps();
+	void DumpTextures() const;
+	void DumpMaps() const;
 
 private:
 	std::array<uint8_t, 1024> _blockIndexLookup;
