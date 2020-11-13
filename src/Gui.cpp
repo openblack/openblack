@@ -586,31 +586,7 @@ bool Gui::Loop(Game& game, const Renderer& renderer)
 
 	_meshViewer->DrawWindow();
 	_console->DrawWindow(game);
-
-	ImGuiIO& io = ImGui::GetIO();
-	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 8.0f, io.DisplaySize.y - 8.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
-	ImGui::SetNextWindowBgAlpha(0.35f);
-
-	static const auto cameraPositionOverlayFlags = 0u | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration |
-	                                               ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings |
-	                                               ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
-	if (ImGui::Begin("Camera position overlay", nullptr, cameraPositionOverlayFlags))
-	{
-		auto camPos = game.GetCamera().GetPosition();
-		auto camRot = game.GetCamera().GetRotation();
-		ImGui::Text("Camera Position: (%.1f,%.1f, %.1f)", camPos.x, camPos.y, camPos.z);
-		ImGui::Text("Camera Rotation: (%.1f,%.1f, %.1f)", camRot.x, camRot.y, camRot.z);
-
-		if (ImGui::IsMousePosValid())
-			ImGui::Text("Mouse Position: (%.1f,%.1f)", io.MousePos.x, io.MousePos.y);
-		else
-			ImGui::Text("Mouse Position: <invalid>");
-
-		ImGui::Text("Hand Position: (%.1f,%.1f,%.1f)", game.GetHandTransform().position.x, game.GetHandTransform().position.y,
-		            game.GetHandTransform().position.z);
-	}
-	ImGui::End();
-
+	ShowCameraPositionOverlay(game);
 	if (game.GetLhvm() != nullptr)
 		LHVMViewer::Draw(game.GetLhvm());
 
@@ -921,6 +897,47 @@ void Gui::ShowProfilerWindow(Game& game)
 			ImGui::Text("    Unaccounted: %0.3f", 1000.0f * frameDuration / (double)stats->gpuTimerFreq);
 		}
 		ImGui::Columns(1);
+	}
+	ImGui::End();
+}
+
+void Gui::ShowCameraPositionOverlay(const Game& game)
+{
+	// clang-format off
+	static const auto cameraPositionOverlayFlags =
+		0u
+		| ImGuiWindowFlags_NoMove
+		| ImGuiWindowFlags_NoDecoration
+		| ImGuiWindowFlags_AlwaysAutoResize
+		| ImGuiWindowFlags_NoSavedSettings
+		| ImGuiWindowFlags_NoFocusOnAppearing
+		| ImGuiWindowFlags_NoNav
+		;
+	// clang-format on
+
+	const auto& displaySize = ImGui::GetIO().DisplaySize;
+	ImGui::SetNextWindowPos(ImVec2(displaySize.x - 8.0f, displaySize.y - 8.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
+	ImGui::SetNextWindowBgAlpha(0.35f);
+
+	if (ImGui::Begin("Camera position overlay", nullptr, cameraPositionOverlayFlags))
+	{
+		const auto camPos = game.GetCamera().GetPosition();
+		const auto camRot = game.GetCamera().GetRotation();
+		ImGui::Text("Camera Position: (%.1f,%.1f, %.1f)", camPos.x, camPos.y, camPos.z);
+		ImGui::Text("Camera Rotation: (%.1f,%.1f, %.1f)", camRot.x, camRot.y, camRot.z);
+
+		if (ImGui::IsMousePosValid())
+		{
+			const auto& mousePos = ImGui::GetIO().MousePos;
+			ImGui::Text("Mouse Position: (%.1f,%.1f)", mousePos.x, mousePos.y);
+		}
+		else
+		{
+			ImGui::Text("Mouse Position: <invalid>");
+		}
+
+		const auto& handPosition = game.GetHandTransform().position;
+		ImGui::Text("Hand Position: (%.1f,%.1f,%.1f)", handPosition.x, handPosition.y, handPosition.z);
 	}
 	ImGui::End();
 }
