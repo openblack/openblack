@@ -14,6 +14,7 @@
 #include <bx/math.h>
 #include <bx/timer.h>
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <imgui_widget_flamegraph.h>
 #ifdef _WIN32
 #include <SDL2/SDL_syswm.h>
@@ -489,6 +490,7 @@ bool Gui::Loop(Game& game, const Renderer& renderer)
 	}
 	_meshViewer->DrawWindow();
 	_console->DrawWindow(game);
+	ShowVillagerNames(game);
 	ShowCameraPositionOverlay(game);
 	LHVMViewer::Draw(game.GetLhvm());
 	ShowLandIslandWindow(game);
@@ -734,6 +736,109 @@ bool Gui::ShowMenu(Game& game)
 		ImGui::EndMainMenuBar();
 	}
 	return false;
+}
+
+void Gui::RenderArrow(const std::string& name, const ImVec2& pos, const ImVec2& size) const
+{
+	// clang-format off
+	static const auto boxOverlayFlags =
+		0u
+		| ImGuiWindowFlags_NoMove
+		| ImGuiWindowFlags_AlwaysAutoResize
+		| ImGuiWindowFlags_NoSavedSettings
+		| ImGuiWindowFlags_NoFocusOnAppearing
+		| ImGuiWindowFlags_NoDecoration
+		| ImGuiWindowFlags_NoInputs
+	;
+	// clang-format on
+	ImGui::SetNextWindowPos(ImVec2(pos.x + size.x / 2, pos.y + size.y), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+	ImGui::SetNextWindowBgAlpha(0.0f);
+	ImGui::SetNextWindowSize(size);
+	if (ImGui::Begin((name + " Frame").c_str(), nullptr, boxOverlayFlags))
+	{
+		std::string str_id = name + " Arrow";
+		ImGuiWindow* window = ImGui::GetCurrentWindow();
+		if (!window->SkipItems)
+		{
+			const ImGuiID id = window->GetID(str_id.c_str());
+			const ImRect bb(window->DC.CursorPos, ImVec2(window->DC.CursorPos.x + size.x, window->DC.CursorPos.y + size.y));
+			if (ImGui::ItemAdd(bb, id))
+			{
+				// Render
+				const ImU32 color = ImGui::GetColorU32(ImGuiCol_WindowBg, 0.35f);
+				const ImVec2 tipDimensions(size.x / 2.0f, size.x / 3.0f * 2.0f);
+				const float shaftCenterX = window->DC.CursorPos.x + size.x / 2.0f;
+				const ImVec2 shaftSize(size.x / 5.0f, bb.Max.y - bb.Min.y - tipDimensions.y);
+				const ImRect shaft(shaftCenterX - shaftSize.x, bb.Min.y, shaftCenterX + shaftSize.x, bb.Min.y + shaftSize.y);
+				ImGui::RenderRectFilledRangeH(window->DrawList, shaft, color, 0.0f, 1.0f, 0.0f);
+				ImGui::RenderArrowPointingAt(window->DrawList, ImVec2(bb.Max.x - size.x / 2.0f, bb.Max.y), tipDimensions,
+				                             ImGuiDir_Down, color);
+			}
+		}
+	}
+	ImGui::End();
+	ImGui::PopStyleVar(); // ImGuiStyleVar_WindowBorderSize
+	ImGui::PopStyleVar(); // ImGuiStyleVar_WindowRounding
+	ImGui::PopStyleVar(); // ImGuiStyleVar_WindowPadding
+}
+
+void Gui::RenderVillagerName(const std::string& name, const std::string& text, const ImVec2& pos, float arrow_length) const
+{
+	// clang-format off
+	static const auto boxOverlayFlags =
+		0u
+		| ImGuiWindowFlags_NoMove
+		| ImGuiWindowFlags_AlwaysAutoResize
+		| ImGuiWindowFlags_NoSavedSettings
+		| ImGuiWindowFlags_NoFocusOnAppearing
+		| ImGuiWindowFlags_NoDecoration
+		| ImGuiWindowFlags_NoInputs
+	;
+	// clang-format on
+
+	const std::string fullText = name + "\n" + text;
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+	const auto boxWidth = ImGui::CalcTextSize(fullText.c_str()).x + 2 * ImGui::GetStyle().WindowPadding.x;
+	ImGui::SetNextWindowPos(ImVec2(pos.x + boxWidth / 2.0f, pos.y - arrow_length), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
+	ImGui::SetNextWindowBgAlpha(0.35f);
+
+	if (ImGui::Begin(("Villager overlay #" + name).c_str(), nullptr, boxOverlayFlags))
+	{
+		ImGui::Text("%s", fullText.c_str());
+	}
+	ImGui::End();
+	ImGui::PopStyleVar();
+
+	RenderArrow(("Villager overlay arrow #" + name).c_str(), ImVec2(pos.x, pos.y - arrow_length), ImVec2(15, arrow_length));
+}
+
+void Gui::ShowVillagerNames(const Game& game)
+{
+	const auto& displaySize = ImGui::GetIO().DisplaySize;
+
+	uint32_t i = 0;
+	const auto& camera = game.GetCamera();
+	const glm::vec4 viewport = glm::vec4(0, 0, displaySize.x, displaySize.y);
+	game.GetEntityRegistry().Each<const Villager, const Transform>(
+	    [this, &i, camera, viewport](const Villager& entity, const Transform& transform) {
+		    ++i;
+		    const float height = 2.0f * transform.scale.y; // TODO(bwrsandman): get from bounding box max y
+		    glm::vec3 screenPoint;
+		    if (!camera.ProjectWorldToScreen(transform.position + glm::vec3(0.0f, height, 0.0f), viewport, screenPoint))
+		    {
+			    return;
+		    }
+
+		    RenderVillagerName("Villager #" + std::to_string(i),
+		                       fmt::format("TODO: STATE HELP TEXT"
+		                                   "\nA:{} L:{}%, H:{}%",
+		                                   entity.age, entity.health, entity.hunger),
+		                       ImVec2(screenPoint.x, viewport.w - screenPoint.y), 100.0f);
+	    });
 }
 
 void Gui::ShowProfilerWindow(Game& game)

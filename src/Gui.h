@@ -87,7 +87,10 @@ private:
 	bool CreateDeviceObjectsBgfx();
 	void RenderDrawDataBgfx(ImDrawData* drawData);
 
+	void RenderArrow(const std::string& name, const ImVec2& pos, const ImVec2& size) const;
+	void RenderVillagerName(const std::string& name, const std::string& text, const ImVec2& pos, float arrow_length) const;
 	bool ShowMenu(Game& game);
+	void ShowVillagerNames(const Game& game);
 	void ShowProfilerWindow(Game& game);
 	void ShowWaterFramebuffer(const Game& game);
 	void ShowLandIslandWindow(Game& game);
