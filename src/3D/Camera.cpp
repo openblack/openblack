@@ -102,6 +102,29 @@ void Camera::DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::
 	out_worldDirection = rayDirWorldSpace;
 }
 
+bool Camera::ProjectWorldToScreen(const glm::vec3 worldPosition, const glm::vec4 viewport, glm::vec3& out_screenPosition) const
+{
+	out_screenPosition = glm::project(worldPosition, GetViewMatrix(), GetProjectionMatrix(), viewport);
+	if (out_screenPosition.x < viewport.x || out_screenPosition.y < viewport.y || out_screenPosition.x > viewport.z ||
+	    out_screenPosition.y > viewport.w)
+	{
+		return false;
+	}
+	if (out_screenPosition.z > 1.0f)
+	{
+		// Behind Camera
+		return false;
+	}
+
+	if (out_screenPosition.z < 0.0f)
+	{
+		// Clipped
+		return false;
+	}
+
+	return true;
+}
+
 void Camera::ProcessSDLEvent(const SDL_Event& e)
 {
 	if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP)
