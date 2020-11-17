@@ -12,6 +12,7 @@
 #include "Graphics/RenderPass.h"
 
 #include <bgfx/bgfx.h>
+#include <glm/fwd.hpp>
 #include <imgui.h>
 
 #include <array>
@@ -88,7 +89,8 @@ private:
 	void RenderDrawDataBgfx(ImDrawData* drawData);
 
 	void RenderArrow(const std::string& name, const ImVec2& pos, const ImVec2& size) const;
-	void RenderVillagerName(const std::string& name, const std::string& text, const ImVec2& pos, float arrow_length) const;
+	void RenderVillagerName(const std::string& name, const std::string& text, const glm::vec4& color, const ImVec2& pos,
+	                        float arrow_length) const;
 	bool ShowMenu(Game& game);
 	void ShowVillagerNames(const Game& game);
 	void ShowProfilerWindow(Game& game);
