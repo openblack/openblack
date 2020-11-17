@@ -816,7 +816,9 @@ void Gui::RenderVillagerName(const std::string& name, const std::string& text, c
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 	const auto boxWidth = ImGui::CalcTextSize(fullText.c_str()).x + 2 * ImGui::GetStyle().WindowPadding.x;
-	ImGui::SetNextWindowPos(ImVec2(pos.x + boxWidth / 2.0f, pos.y - arrow_length), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
+	ImVec2 windowPos(std::clamp(pos.x, boxWidth / 2.0f, ImGui::GetIO().DisplaySize.x - boxWidth / 2.0f) + boxWidth / 2.0f,
+	                 pos.y - arrow_length);
+	ImGui::SetNextWindowPos(windowPos, ImGuiCond_Always, ImVec2(1.0f, 1.0f));
 	ImGui::SetNextWindowBgAlpha(0.35f);
 
 	if (ImGui::Begin(("Villager overlay #" + name).c_str(), nullptr, boxOverlayFlags))
@@ -835,7 +837,8 @@ void Gui::ShowVillagerNames(const Game& game)
 
 	uint32_t i = 0;
 	const auto& camera = game.GetCamera();
-	const glm::vec4 viewport = glm::vec4(0, 0, displaySize.x, displaySize.y);
+	const glm::vec4 viewport =
+	    glm::vec4(ImGui::GetStyle().WindowPadding.x, 0, displaySize.x - ImGui::GetStyle().WindowPadding.x, displaySize.y);
 	game.GetEntityRegistry().Each<const Villager, const Transform>(
 	    [this, &i, camera, viewport](const Villager& entity, const Transform& transform) {
 		    ++i;
