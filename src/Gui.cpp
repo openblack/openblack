@@ -849,6 +849,14 @@ void Gui::ShowVillagerNames(const Game& game)
 			    return;
 		    }
 
+		    // 3.5 was measured in vanilla but it is possible that it is configurable
+		    float max_distance = 3.5f;
+		    const glm::vec3 relativePosition = (camera.GetPosition() - transform.position) / 100.0f;
+		    if (glm::dot(relativePosition, relativePosition) > max_distance * max_distance)
+		    {
+			    return;
+		    }
+
 		    // TODO(bwrsandman): Get owner player and associated color
 		    glm::vec4 color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 		    // Female villagers have a lighter colour
