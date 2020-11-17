@@ -13,6 +13,7 @@
 #include <bgfx/embedded_shader.h>
 #include <bx/math.h>
 #include <bx/timer.h>
+#include <glm/gtx/compatibility.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui_widget_flamegraph.h>
@@ -785,7 +786,8 @@ void Gui::RenderArrow(const std::string& name, const ImVec2& pos, const ImVec2& 
 	ImGui::PopStyleVar(); // ImGuiStyleVar_WindowPadding
 }
 
-void Gui::RenderVillagerName(const std::string& name, const std::string& text, const ImVec2& pos, float arrow_length) const
+void Gui::RenderVillagerName(const std::string& name, const std::string& text, const glm::vec4& color, const ImVec2& pos,
+                             float arrow_length) const
 {
 	// clang-format off
 	static const auto boxOverlayFlags =
@@ -799,6 +801,17 @@ void Gui::RenderVillagerName(const std::string& name, const std::string& text, c
 	;
 	// clang-format on
 
+	ImVec4 textColor;
+	{
+		glm::vec4 adjustedColor = color;
+		if (adjustedColor.r < 0.04f && adjustedColor.g < 0.04f && adjustedColor.b < 0.04f)
+		{
+			adjustedColor = glm::vec4(1.0f, 1.0f, 1.0f, adjustedColor.a);
+		}
+		adjustedColor = glm::vec4((glm::vec3(adjustedColor) + glm::vec3(1.0f)) / 2.0f, 1.0f);
+		textColor = ImVec4(adjustedColor.r, adjustedColor.g, adjustedColor.b, adjustedColor.a);
+	}
+
 	const std::string fullText = name + "\n" + text;
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -808,7 +821,7 @@ void Gui::RenderVillagerName(const std::string& name, const std::string& text, c
 
 	if (ImGui::Begin(("Villager overlay #" + name).c_str(), nullptr, boxOverlayFlags))
 	{
-		ImGui::Text("%s", fullText.c_str());
+		ImGui::TextColored(textColor, "%s", fullText.c_str());
 	}
 	ImGui::End();
 	ImGui::PopStyleVar();
@@ -833,11 +846,20 @@ void Gui::ShowVillagerNames(const Game& game)
 			    return;
 		    }
 
+		    // TODO(bwrsandman): Get owner player and associated color
+		    glm::vec4 color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		    // Female villagers have a lighter colour
+		    if (entity.sex == VillagerSex::FEMALE)
+		    {
+			    color += glm::vec4((glm::vec3(1.0f) - glm::vec3(color)) * glm::vec3(144.0f / 255.0f), color.a);
+			    color = glm::saturate(color);
+		    }
+
 		    RenderVillagerName("Villager #" + std::to_string(i),
 		                       fmt::format("TODO: STATE HELP TEXT"
 		                                   "\nA:{} L:{}%, H:{}%",
 		                                   entity.age, entity.health, entity.hunger),
-		                       ImVec2(screenPoint.x, viewport.w - screenPoint.y), 100.0f);
+		                       color, ImVec2(screenPoint.x, viewport.w - screenPoint.y), 100.0f);
 	    });
 }
 
