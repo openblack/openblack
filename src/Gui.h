@@ -16,6 +16,7 @@
 #include <imgui.h>
 
 #include <array>
+#include <functional>
 #include <memory>
 #include <optional>
 
@@ -92,7 +93,7 @@ private:
 	void RenderArrow(const std::string& name, const ImVec2& pos, const ImVec2& size) const;
 	std::optional<glm::uvec4> RenderVillagerName(const std::vector<glm::vec4>& coveredAreas, const std::string& name,
 	                                             const std::string& text, const glm::vec4& color, const ImVec2& pos,
-	                                             float arrowLength) const;
+	                                             float arrowLength, std::function<void(void)> debugCallback) const;
 	bool ShowMenu(Game& game);
 	void ShowVillagerNames(const Game& game);
 	void ShowProfilerWindow(Game& game);

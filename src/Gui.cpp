@@ -481,7 +481,6 @@ void Gui::NewFrame(GameWindow* window)
 
 bool Gui::Loop(Game& game, const Renderer& renderer)
 {
-	auto& config = game.GetConfig();
 	_meshViewer->DrawScene(renderer);
 	NewFrame(game.GetWindow());
 	if (ShowMenu(game))
@@ -707,6 +706,14 @@ bool Gui::ShowMenu(Game& game)
 				config.showLandIsland = true;
 			}
 
+			if (ImGui::BeginMenu("Villager Names"))
+			{
+				ImGui::Checkbox("Show", &config.showVillagerNames);
+				ImGui::Checkbox("Debug", &config.debugVillagerNames);
+
+				ImGui::EndMenu();
+			}
+
 			if (ImGui::BeginMenu("View"))
 			{
 				ImGui::Checkbox("Sky", &config.drawSky);
@@ -827,17 +834,20 @@ bool fitBox(float minY, const std::vector<glm::vec4>& coveredAreas, glm::vec4& b
 
 std::optional<glm::uvec4> Gui::RenderVillagerName(const std::vector<glm::vec4>& coveredAreas, const std::string& name,
                                                   const std::string& text, const glm::vec4& color, const ImVec2& pos,
-                                                  float arrowLength) const
+                                                  float arrowLength, std::function<void(void)> debugCallback) const
 {
 	// clang-format off
-	static const auto boxOverlayFlags =
+	const auto boxOverlayFlags =
 		0u
 		| ImGuiWindowFlags_NoMove
 		| ImGuiWindowFlags_AlwaysAutoResize
 		| ImGuiWindowFlags_NoSavedSettings
 		| ImGuiWindowFlags_NoFocusOnAppearing
-		| ImGuiWindowFlags_NoDecoration
-		| ImGuiWindowFlags_NoInputs
+		| ImGuiWindowFlags_NoTitleBar
+		| ImGuiWindowFlags_NoResize
+		| (debugCallback ? ImGuiWindowFlags_AlwaysVerticalScrollbar : ImGuiWindowFlags_NoScrollbar)
+		| ImGuiWindowFlags_NoCollapse
+		| (debugCallback ? 0 : ImGuiWindowFlags_NoInputs)
 	;
 	// clang-format on
 
@@ -860,7 +870,12 @@ std::optional<glm::uvec4> Gui::RenderVillagerName(const std::vector<glm::vec4>& 
 	glm::vec4 boxExtent;
 	{
 		const auto textSize = ImGui::CalcTextSize(fullText.c_str());
-		const ImVec2 boxSize(textSize.x + 2 * style.WindowPadding.x, textSize.y + 2 * style.WindowPadding.y);
+		ImVec2 boxSize(textSize.x + 2 * style.WindowPadding.x, textSize.y + 2 * style.WindowPadding.y);
+		if (debugCallback)
+		{
+			boxSize.x += style.ScrollbarSize;
+			boxSize.y += ImGui::CalcTextSize("Debug").y + 2 * style.FramePadding.y + style.ItemSpacing.y;
+		}
 		const float halfWidth = boxSize.x / 2.0f;
 		const ImVec2 boxPos(std::clamp(pos.x, halfWidth, ImGui::GetIO().DisplaySize.x - halfWidth) + halfWidth,
 		                    pos.y - arrowLength);
@@ -874,12 +889,22 @@ std::optional<glm::uvec4> Gui::RenderVillagerName(const std::vector<glm::vec4>& 
 	if (fits)
 	{
 		ImGui::SetNextWindowPos(ImVec2(boxExtent.x, boxExtent.y), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
-		ImGui::SetNextWindowSize(ImVec2(boxExtent.z, boxExtent.w));
+		if (!debugCallback)
+		{
+			ImGui::SetNextWindowSize(ImVec2(boxExtent.z, boxExtent.w));
+		}
 		ImGui::SetNextWindowBgAlpha(0.35f);
 
 		if (ImGui::Begin(("Villager overlay #" + name).c_str(), nullptr, boxOverlayFlags))
 		{
 			ImGui::TextColored(textColor, "%s", fullText.c_str());
+			if (debugCallback)
+			{
+				if (ImGui::CollapsingHeader("Debug"))
+				{
+					debugCallback();
+				}
+			}
 		}
 		ImGui::End();
 	}
@@ -900,6 +925,12 @@ std::optional<glm::uvec4> Gui::RenderVillagerName(const std::vector<glm::vec4>& 
 
 void Gui::ShowVillagerNames(const Game& game)
 {
+	const auto& config = game.GetConfig();
+	if (!config.showVillagerNames)
+	{
+		return;
+	}
+
 	const auto& displaySize = ImGui::GetIO().DisplaySize;
 
 	uint32_t i = 0;
@@ -908,43 +939,58 @@ void Gui::ShowVillagerNames(const Game& game)
 	    glm::vec4(ImGui::GetStyle().WindowPadding.x, 0, displaySize.x - ImGui::GetStyle().WindowPadding.x, displaySize.y);
 	std::vector<glm::vec4> coveredAreas;
 	coveredAreas.reserve(game.GetEntityRegistry().Size<Villager>());
-	game.GetEntityRegistry().Each<const Villager, const Transform>(
-	    [this, &i, &coveredAreas, camera, viewport](const Villager& entity, const Transform& transform) {
-		    ++i;
-		    const float height = 2.0f * transform.scale.y; // TODO(bwrsandman): get from bounding box max y
-		    glm::vec3 screenPoint;
-		    if (!camera.ProjectWorldToScreen(transform.position + glm::vec3(0.0f, height, 0.0f), viewport, screenPoint))
-		    {
-			    return;
-		    }
+	game.GetEntityRegistry().Each<Villager, const Transform>([this, &i, &coveredAreas, camera, config,
+	                                                          viewport](Villager& entity, const Transform& transform) {
+		++i;
+		const float height = 2.0f * transform.scale.y; // TODO(bwrsandman): get from bounding box max y
+		glm::vec3 screenPoint;
+		if (!camera.ProjectWorldToScreen(transform.position + glm::vec3(0.0f, height, 0.0f), viewport, screenPoint))
+		{
+			return;
+		}
 
-		    // 3.5 was measured in vanilla but it is possible that it is configurable
-		    float max_distance = 3.5f;
-		    const glm::vec3 relativePosition = (camera.GetPosition() - transform.position) / 100.0f;
-		    if (glm::dot(relativePosition, relativePosition) > max_distance * max_distance)
-		    {
-			    return;
-		    }
+		// 3.5 was measured in vanilla but it is possible that it is configurable
+		float max_distance = 3.5f;
+		const glm::vec3 relativePosition = (camera.GetPosition() - transform.position) / 100.0f;
+		if (glm::dot(relativePosition, relativePosition) > max_distance * max_distance)
+		{
+			return;
+		}
 
-		    // TODO(bwrsandman): Get owner player and associated color
-		    glm::vec4 color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-		    // Female villagers have a lighter colour
-		    if (entity.sex == VillagerSex::FEMALE)
-		    {
-			    color += glm::vec4((glm::vec3(1.0f) - glm::vec3(color)) * glm::vec3(144.0f / 255.0f), color.a);
-			    color = glm::saturate(color);
-		    }
+		// TODO(bwrsandman): Get owner player and associated color
+		glm::vec4 color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		// Female villagers have a lighter colour
+		if (entity.sex == VillagerSex::FEMALE)
+		{
+			color += glm::vec4((glm::vec3(1.0f) - glm::vec3(color)) * glm::vec3(144.0f / 255.0f), color.a);
+			color = glm::saturate(color);
+		}
 
-		    const auto area = RenderVillagerName(coveredAreas, "Villager #" + std::to_string(i),
-		                                         fmt::format("TODO: STATE HELP TEXT"
-		                                                     "\nA:{} L:{}%, H:{}%",
-		                                                     entity.age, entity.health, entity.hunger),
-		                                         color, ImVec2(screenPoint.x, viewport.w - screenPoint.y), 100.0f);
-		    if (area.has_value())
-		    {
-			    coveredAreas.emplace_back(area.value());
-		    }
-	    });
+		std::function<void(void)> debugCallback;
+		if (config.debugVillagerNames)
+		{
+			debugCallback = [&entity] {
+				ImGui::InputInt("Health", reinterpret_cast<int*>(&entity.health));
+				ImGui::InputInt("Age", reinterpret_cast<int*>(&entity.age));
+				ImGui::InputInt("Hunger", reinterpret_cast<int*>(&entity.hunger));
+				ImGui::InputInt("Life Stage", reinterpret_cast<int*>(&entity.lifeStage));
+				ImGui::InputInt("Sex", reinterpret_cast<int*>(&entity.sex));
+				ImGui::InputInt("Ethnicity", reinterpret_cast<int*>(&entity.ethnicity));
+				ImGui::InputInt("Role", reinterpret_cast<int*>(&entity.role));
+				ImGui::InputInt("Task", reinterpret_cast<int*>(&entity.task));
+			};
+		}
+
+		const auto area = RenderVillagerName(coveredAreas, "Villager #" + std::to_string(i),
+		                                     fmt::format("TODO: STATE HELP TEXT"
+		                                                 "\nA:{} L:{}%, H:{}%",
+		                                                 entity.age, entity.health, entity.hunger),
+		                                     color, ImVec2(screenPoint.x, viewport.w - screenPoint.y), 100.0f, debugCallback);
+		if (area.has_value())
+		{
+			coveredAreas.emplace_back(area.value());
+		}
+	});
 }
 
 void Gui::ShowProfilerWindow(Game& game)
