@@ -734,6 +734,8 @@ bool Gui::ShowMenu(Game& game)
 		ImGui::SameLine(ImGui::GetWindowWidth() - 154.0f);
 		ImGui::Text("%.2f FPS (%.2f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
 
+		_menuBarSize = ImGui::GetWindowSize();
+
 		ImGui::EndMainMenuBar();
 	}
 	return false;
@@ -786,8 +788,46 @@ void Gui::RenderArrow(const std::string& name, const ImVec2& pos, const ImVec2& 
 	ImGui::PopStyleVar(); // ImGuiStyleVar_WindowPadding
 }
 
-void Gui::RenderVillagerName(const std::string& name, const std::string& text, const glm::vec4& color, const ImVec2& pos,
-                             float arrow_length) const
+bool boxIntersect(const glm::vec4& box_1, const glm::vec4& box_2)
+{
+	// where z is width and y is height
+	return box_1.x - box_2.x < box_2.z && //
+	       box_2.x - box_1.x < box_1.z && //
+	       box_1.y - box_2.y < box_2.w && //
+	       box_2.y - box_1.y < box_1.w;
+}
+
+bool fitBox(float minY, const std::vector<glm::vec4>& coveredAreas, glm::vec4& box)
+{
+	// Where z is width and y is height
+	bool restart = true;
+	while (restart)
+	{
+		restart = false;
+		for (const auto area : coveredAreas)
+		{
+			// If there is an overlap, try moving it up
+			while (boxIntersect(area, box))
+			{
+				restart = true; // Restart because we now might intersect with earlier boxes
+				box.y = area.y - 1.0f - box.w;
+				if (box.y - box.w < minY)
+				{
+					return false;
+				}
+			}
+			if (restart)
+			{
+				break;
+			}
+		}
+	}
+	return true;
+}
+
+std::optional<glm::uvec4> Gui::RenderVillagerName(const std::vector<glm::vec4>& coveredAreas, const std::string& name,
+                                                  const std::string& text, const glm::vec4& color, const ImVec2& pos,
+                                                  float arrowLength) const
 {
 	// clang-format off
 	static const auto boxOverlayFlags =
@@ -800,6 +840,8 @@ void Gui::RenderVillagerName(const std::string& name, const std::string& text, c
 		| ImGuiWindowFlags_NoInputs
 	;
 	// clang-format on
+
+	const auto& style = ImGui::GetStyle();
 
 	ImVec4 textColor;
 	{
@@ -815,20 +857,45 @@ void Gui::RenderVillagerName(const std::string& name, const std::string& text, c
 	const std::string fullText = name + "\n" + text;
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-	const auto boxWidth = ImGui::CalcTextSize(fullText.c_str()).x + 2 * ImGui::GetStyle().WindowPadding.x;
-	ImVec2 windowPos(std::clamp(pos.x, boxWidth / 2.0f, ImGui::GetIO().DisplaySize.x - boxWidth / 2.0f) + boxWidth / 2.0f,
-	                 pos.y - arrow_length);
-	ImGui::SetNextWindowPos(windowPos, ImGuiCond_Always, ImVec2(1.0f, 1.0f));
-	ImGui::SetNextWindowBgAlpha(0.35f);
-
-	if (ImGui::Begin(("Villager overlay #" + name).c_str(), nullptr, boxOverlayFlags))
+	glm::vec4 boxExtent;
 	{
-		ImGui::TextColored(textColor, "%s", fullText.c_str());
+		const auto textSize = ImGui::CalcTextSize(fullText.c_str());
+		const ImVec2 boxSize(textSize.x + 2 * style.WindowPadding.x, textSize.y + 2 * style.WindowPadding.y);
+		const float halfWidth = boxSize.x / 2.0f;
+		const ImVec2 boxPos(std::clamp(pos.x, halfWidth, ImGui::GetIO().DisplaySize.x - halfWidth) + halfWidth,
+		                    pos.y - arrowLength);
+
+		boxExtent = glm::uvec4(boxPos.x, boxPos.y, boxSize.x, boxSize.y);
 	}
-	ImGui::End();
+
+	float originalY = boxExtent.y;
+	bool fits = fitBox(_menuBarSize.y, coveredAreas, boxExtent);
+
+	if (fits)
+	{
+		ImGui::SetNextWindowPos(ImVec2(boxExtent.x, boxExtent.y), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
+		ImGui::SetNextWindowSize(ImVec2(boxExtent.z, boxExtent.w));
+		ImGui::SetNextWindowBgAlpha(0.35f);
+
+		if (ImGui::Begin(("Villager overlay #" + name).c_str(), nullptr, boxOverlayFlags))
+		{
+			ImGui::TextColored(textColor, "%s", fullText.c_str());
+		}
+		ImGui::End();
+	}
 	ImGui::PopStyleVar();
 
-	RenderArrow(("Villager overlay arrow #" + name).c_str(), ImVec2(pos.x, pos.y - arrow_length), ImVec2(15, arrow_length));
+	if (!fits)
+	{
+		return std::nullopt;
+	}
+
+	if (originalY == boxExtent.y)
+	{
+		RenderArrow(("Villager overlay arrow #" + name).c_str(), ImVec2(pos.x, pos.y - arrowLength), ImVec2(15, arrowLength));
+	}
+
+	return std::make_optional<glm::uvec4>(boxExtent);
 }
 
 void Gui::ShowVillagerNames(const Game& game)
@@ -839,8 +906,10 @@ void Gui::ShowVillagerNames(const Game& game)
 	const auto& camera = game.GetCamera();
 	const glm::vec4 viewport =
 	    glm::vec4(ImGui::GetStyle().WindowPadding.x, 0, displaySize.x - ImGui::GetStyle().WindowPadding.x, displaySize.y);
+	std::vector<glm::vec4> coveredAreas;
+	coveredAreas.reserve(game.GetEntityRegistry().Size<Villager>());
 	game.GetEntityRegistry().Each<const Villager, const Transform>(
-	    [this, &i, camera, viewport](const Villager& entity, const Transform& transform) {
+	    [this, &i, &coveredAreas, camera, viewport](const Villager& entity, const Transform& transform) {
 		    ++i;
 		    const float height = 2.0f * transform.scale.y; // TODO(bwrsandman): get from bounding box max y
 		    glm::vec3 screenPoint;
@@ -866,11 +935,15 @@ void Gui::ShowVillagerNames(const Game& game)
 			    color = glm::saturate(color);
 		    }
 
-		    RenderVillagerName("Villager #" + std::to_string(i),
-		                       fmt::format("TODO: STATE HELP TEXT"
-		                                   "\nA:{} L:{}%, H:{}%",
-		                                   entity.age, entity.health, entity.hunger),
-		                       color, ImVec2(screenPoint.x, viewport.w - screenPoint.y), 100.0f);
+		    const auto area = RenderVillagerName(coveredAreas, "Villager #" + std::to_string(i),
+		                                         fmt::format("TODO: STATE HELP TEXT"
+		                                                     "\nA:{} L:{}%, H:{}%",
+		                                                     entity.age, entity.health, entity.hunger),
+		                                         color, ImVec2(screenPoint.x, viewport.w - screenPoint.y), 100.0f);
+		    if (area.has_value())
+		    {
+			    coveredAreas.emplace_back(area.value());
+		    }
 	    });
 }
 

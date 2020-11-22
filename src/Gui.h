@@ -17,6 +17,7 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 
 typedef struct SDL_Window SDL_Window;
 typedef struct SDL_Cursor SDL_Cursor;
@@ -89,8 +90,9 @@ private:
 	void RenderDrawDataBgfx(ImDrawData* drawData);
 
 	void RenderArrow(const std::string& name, const ImVec2& pos, const ImVec2& size) const;
-	void RenderVillagerName(const std::string& name, const std::string& text, const glm::vec4& color, const ImVec2& pos,
-	                        float arrow_length) const;
+	std::optional<glm::uvec4> RenderVillagerName(const std::vector<glm::vec4>& coveredAreas, const std::string& name,
+	                                             const std::string& text, const glm::vec4& color, const ImVec2& pos,
+	                                             float arrowLength) const;
 	bool ShowMenu(Game& game);
 	void ShowVillagerNames(const Game& game);
 	void ShowProfilerWindow(Game& game);
@@ -123,6 +125,7 @@ private:
 	};
 
 	ImGuiContext* _imgui;
+	ImVec2 _menuBarSize;
 	uint64_t _time;
 	CircularBuffer<float, 100> _times;
 	CircularBuffer<float, 100> _fps;
