@@ -24,6 +24,7 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/CameraBookmarkSystem.h"
 #include "ECS/Systems/DynamicsSystem.h"
+#include "ECS/Systems/LivingActionSystem.h"
 #include "ECS/Systems/PathfindingSystem.h"
 #include "ECS/Systems/RenderingSystem.h"
 #include "GameWindow.h"
@@ -277,6 +278,10 @@ bool Game::GameLogicLoop()
 	{
 		auto pathfinding = _profiler->BeginScoped(Profiler::Stage::PathfindingUpdate);
 		PathfindingSystem::instance().Update();
+	}
+	{
+		auto actions = _profiler->BeginScoped(Profiler::Stage::LivingActionUpdate);
+		LivingActionSystem::instance().Update();
 	}
 
 	_lastGameLoopTime = currentTime;

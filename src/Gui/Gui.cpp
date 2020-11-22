@@ -35,8 +35,11 @@
 #include <3D/Camera.h>
 #include <3D/Sky.h>
 #include <Common/FileSystem.h>
+#include <ECS/Components/LivingAction.h>
+#include <ECS/Components/Transform.h>
 #include <ECS/Components/Villager.h>
 #include <ECS/Registry.h>
+#include <ECS/Systems/LivingActionSystem.h>
 #include <Game.h>
 #include <GameWindow.h>
 #include <Locator.h>
@@ -738,6 +741,7 @@ bool Gui::ShowMenu(Game& game)
 			if (ImGui::BeginMenu("Villager Names"))
 			{
 				ImGui::Checkbox("Show", &config.showVillagerNames);
+				ImGui::Checkbox("Show States", &config.debugVillagerStates);
 				ImGui::Checkbox("Debug", &config.debugVillagerNames);
 
 				ImGui::EndMenu();
@@ -981,6 +985,7 @@ std::optional<glm::uvec4> Gui::RenderVillagerName(const std::vector<glm::vec4>& 
 void Gui::ShowVillagerNames(const Game& game)
 {
 	using namespace ecs::components;
+	using namespace ecs::systems;
 
 	const auto& config = game.GetConfig();
 	if (!config.showVillagerNames)
@@ -996,8 +1001,9 @@ void Gui::ShowVillagerNames(const Game& game)
 	    glm::vec4(ImGui::GetStyle().WindowPadding.x, 0, displaySize.x - ImGui::GetStyle().WindowPadding.x, displaySize.y);
 	std::vector<glm::vec4> coveredAreas;
 	coveredAreas.reserve(game.GetEntityRegistry().Size<Villager>());
-	game.GetEntityRegistry().Each<Villager, const Transform>([this, &i, &coveredAreas, &camera, config,
-	                                                          viewport](Villager& entity, const Transform& transform) {
+	game.GetEntityRegistry().Each<const Transform, Villager, LivingAction>([this, &i, &coveredAreas, &camera, config, viewport](
+	                                                                           const Transform& transform, Villager& villager,
+	                                                                           LivingAction& action) {
 		++i;
 		const float height = 2.0f * transform.scale.y; // TODO(bwrsandman): get from bounding box max y
 		glm::vec3 screenPoint;
@@ -1017,36 +1023,79 @@ void Gui::ShowVillagerNames(const Game& game)
 		// TODO(bwrsandman): Get owner player and associated color
 		glm::vec4 color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 		// Female villagers have a lighter colour
-		if (entity.sex == Villager::Sex::FEMALE)
+		if (villager.sex == Villager::Sex::FEMALE)
 		{
 			color += glm::vec4((glm::vec3(1.0f) - glm::vec3(color)) * glm::vec3(144.0f / 255.0f), color.a);
 			color = glm::saturate(color);
 		}
 
+		const std::string name = "Villager #" + std::to_string(i);
+		const std::string stateHelpText = "TODO: STATE HELP TEXT";
+		std::string details =
+		    fmt::format("{}\nA:{} L:{}%, H:{}%", stateHelpText, villager.age, villager.health, villager.hunger);
+		const auto& actionSystem = LivingActionSystem::instance();
+		if (config.debugVillagerStates)
+		{
+			details += fmt::format(
+			    "\n"
+			    "Top State:      {}\n"
+			    "Final State:    {}\n"
+			    "Previous State: {}\n"
+			    "Turns since last state change: {}",
+			    VillagerStateStrings[static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Top))],
+			    VillagerStateStrings[static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Final))],
+			    VillagerStateStrings[static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Previous))],
+			    action.turnsSinceStateChange);
+		}
+
 		std::function<void(void)> debugCallback;
 		if (config.debugVillagerNames)
 		{
-			debugCallback = [&entity] {
-				if (entity.abode == entt::null)
+			debugCallback = [&villager, &action, &actionSystem] {
+				if (villager.abode == entt::null)
 				{
 					ImGui::Text("Homeless");
 				}
-				ImGui::InputInt("Health", reinterpret_cast<int*>(&entity.health));
-				ImGui::InputInt("Age", reinterpret_cast<int*>(&entity.age));
-				ImGui::InputInt("Hunger", reinterpret_cast<int*>(&entity.hunger));
-				ImGui::Combo("Life Stage", &entity.lifeStage, Villager::LifeStageStrs);
-				ImGui::Combo("Sex", &entity.sex, Villager::SexStrs);
-				ImGui::Combo("Tribe", &entity.tribe, TribeStrs);
-				ImGui::Combo("Villager Number", &entity.number, VillagerRoleStrs);
-				ImGui::Combo("Task", &entity.task, Villager::TaskStrs);
+				ImGui::InputInt("Health", reinterpret_cast<int*>(&villager.health));
+				ImGui::InputInt("Age", reinterpret_cast<int*>(&villager.age));
+				ImGui::InputInt("Hunger", reinterpret_cast<int*>(&villager.hunger));
+				ImGui::Combo("Life Stage", &villager.lifeStage, Villager::LifeStageStrs);
+				ImGui::Combo("Sex", &villager.sex, Villager::SexStrs);
+				ImGui::Combo("Tribe", &villager.tribe, TribeStrs);
+				ImGui::Combo("Villager Number", &villager.number, VillagerRoleStrs);
+				ImGui::Combo("Task", &villager.task, Villager::TaskStrs);
+
+				for (size_t index = 0; index < static_cast<size_t>(LivingAction::Index::_Count); ++index)
+				{
+					if (ImGui::BeginCombo(LivingAction::IndexStrings[index].data(),
+					                      VillagerStateStrings[static_cast<size_t>(actionSystem.VillagerGetState(
+					                                               action, static_cast<LivingAction::Index>(index)))]
+					                          .data()))
+					{
+						for (size_t n = 0; n < VillagerStateStrings.size(); n++)
+						{
+							const bool is_selected = (static_cast<size_t>(actionSystem.VillagerGetState(
+							                              action, static_cast<LivingAction::Index>(index))) == n);
+							if (ImGui::Selectable(VillagerStateStrings[n].data(), is_selected))
+							{
+								actionSystem.VillagerSetState(action, static_cast<LivingAction::Index>(index),
+								                              static_cast<VillagerStates>(n));
+							}
+
+							// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+							if (is_selected)
+							{
+								ImGui::SetItemDefaultFocus();
+							}
+						}
+						ImGui::EndCombo();
+					}
+				}
 			};
 		}
 
-		const auto area = RenderVillagerName(coveredAreas, "Villager #" + std::to_string(i),
-		                                     fmt::format("TODO: STATE HELP TEXT"
-		                                                 "\nA:{} L:{}%, H:{}%",
-		                                                 entity.age, entity.health, entity.hunger),
-		                                     color, ImVec2(screenPoint.x, viewport.w - screenPoint.y), 100.0f, debugCallback);
+		const auto area = RenderVillagerName(coveredAreas, name, details, color,
+		                                     ImVec2(screenPoint.x, viewport.w - screenPoint.y), 100.0f, debugCallback);
 		if (area.has_value())
 		{
 			coveredAreas.emplace_back(area.value());
