@@ -75,6 +75,11 @@ struct Arguments
 class Game
 {
 public:
+	static constexpr auto kTurnDuration = std::chrono::milliseconds(100);
+	static constexpr float kTurnDurationMultiplierSlow = 2.0f;
+	static constexpr float kTurnDurationMultiplierNormal = 1.0f;
+	static constexpr float kTurnDurationMultiplierFast = 0.5f;
+
 	struct Config
 	{
 		Config() {}
@@ -110,6 +115,7 @@ public:
 	virtual ~Game();
 
 	bool ProcessEvents(const SDL_Event& event);
+	bool GameLogicLoop();
 	bool Update();
 	void Run();
 
@@ -120,6 +126,8 @@ public:
 
 	void SetGamePath(const fs::path& path);
 	const fs::path& GetGamePath();
+	void SetGameSpeed(float multiplier) { _gameSpeedMultiplier = multiplier; }
+	float GetGameSpeed() const { return _gameSpeedMultiplier; }
 
 	GameWindow* GetWindow() { return _window.get(); }
 	[[nodiscard]] const GameWindow& GetWindow() const { return *_window; }
@@ -143,6 +151,8 @@ public:
 	[[nodiscard]] entities::Registry& GetEntityRegistry() const { return *_entityRegistry; }
 	Config& GetConfig() { return _config; }
 	[[nodiscard]] const Config& GetConfig() const { return _config; }
+	[[nodiscard]] uint16_t GetTurn() const { return _turnCount; }
+	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const { return _turnDeltaTime; }
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
 
 	static Game* instance() { return sInstance; }
@@ -177,7 +187,11 @@ private:
 
 	Config _config;
 
+	std::chrono::steady_clock::time_point _lastGameLoopTime;
+	std::chrono::steady_clock::duration _turnDeltaTime;
+	float _gameSpeedMultiplier;
 	uint32_t _frameCount;
+	uint16_t _turnCount;
 
 	glm::ivec2 _mousePosition;
 	glm::vec3 _intersection;

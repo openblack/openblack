@@ -27,6 +27,7 @@ public:
 		UpdateUniforms,
 		UpdateEntities,
 		GuiLoop,
+		GameLogic,
 		SceneDraw,
 		ReflectionPass,
 		ReflectionDrawSky,
@@ -71,10 +72,26 @@ public:
 	};
 
 	static constexpr std::array<std::string_view, static_cast<uint8_t>(Stage::_count)> stageNames = {
-	    "SDL Input",        "Update Uniforms",  "Entities",        "GUI Loop",       "Encode Draw Scene",
-	    "Reflection Pass",  "Draw Sky",         "Draw Water",      "Draw Island",    "Draw Models",
-	    "Draw Debug Cross", "Main Pass",        "Draw Sky",        "Draw Water",     "Draw Island",
-	    "Draw Models",      "Draw Debug Cross", "Encode GUI Draw", "Renderer Frame",
+	    "SDL Input",         //
+	    "Update Uniforms",   //
+	    "Entities",          //
+	    "GUI Loop",          //
+	    "Game Logic",        //
+	    "Encode Draw Scene", //
+	    "Reflection Pass",   //
+	    "Draw Sky",          //
+	    "Draw Water",        //
+	    "Draw Island",       //
+	    "Draw Models",       //
+	    "Draw Debug Cross",  //
+	    "Main Pass",         //
+	    "Draw Sky",          //
+	    "Draw Water",        //
+	    "Draw Island",       //
+	    "Draw Models",       //
+	    "Draw Debug Cross",  //
+	    "Encode GUI Draw",   //
+	    "Renderer Frame",    //
 	};
 
 	struct Entry

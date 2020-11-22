@@ -48,6 +48,7 @@
 
 using namespace openblack;
 using namespace openblack::lhscriptx;
+using namespace std::chrono_literals;
 
 const std::string kBuildStr(kGitSHA1Hash, 8);
 const std::string kWindowTitle = "openblack";
@@ -59,7 +60,9 @@ Game::Game(Arguments&& args)
     , _fileSystem(std::make_unique<FileSystem>())
     , _entityRegistry(std::make_unique<entities::Registry>())
     , _config()
+    , _gameSpeedMultiplier(1.0f)
     , _frameCount(0)
+    , _turnCount(0)
     , _intersection()
 {
 	if (!args.logFile.empty() && args.logFile != "stdout")
@@ -179,6 +182,25 @@ bool Game::ProcessEvents(const SDL_Event& event)
 	return true;
 }
 
+bool Game::GameLogicLoop()
+{
+	const auto currentTime = std::chrono::steady_clock::now();
+	const auto delta = currentTime - _lastGameLoopTime;
+	if (delta < kTurnDuration * _gameSpeedMultiplier)
+	{
+		return false;
+	}
+
+	const auto& registry = GetEntityRegistry();
+	// TODO: update entities
+
+	_lastGameLoopTime = currentTime;
+	_turnDeltaTime = delta;
+	++_turnCount;
+
+	return false;
+}
+
 bool Game::Update()
 {
 	_profiler->Frame();
@@ -213,6 +235,15 @@ bool Game::Update()
 	// Update Camera
 	{
 		_camera->Update(deltaTime);
+	}
+
+	// Update Game Logic in Registry
+	{
+		auto gameLogic = _profiler->BeginScoped(Profiler::Stage::GameLogic);
+		if (GameLogicLoop())
+		{
+			return false; // Quit event
+		}
 	}
 
 	// Update Uniforms
@@ -408,6 +439,11 @@ void Game::LoadMap(const fs::path& path)
 		spdlog::warn("The map at {} does not come with a footpath file. Expected {}", path.generic_string(),
 		             fot_path.generic_string());
 	}
+
+	_lastGameLoopTime = std::chrono::steady_clock::now();
+	_turnDeltaTime = 0ns;
+	SetGameSpeed(Game::kTurnDurationMultiplierNormal);
+	_turnCount = 0;
 }
 
 void Game::LoadLandscape(const fs::path& path)
