@@ -9,6 +9,7 @@
 
 #include "TownArchetype.h"
 
+#include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Game.h"
@@ -25,6 +26,7 @@ entt::entity TownArchetype::Create(int id, const glm::vec3& position, [[maybe_un
 	// const auto& info = Game::instance()->GetInfoConstants().town;
 
 	registry.Assign<Town>(entity, id);
+	registry.Assign<Transform>(entity, position);
 	registry.Assign<Tribe>(entity, tribe);
 	registry.Assign<Transform>(entity, position, glm::mat3(1.0f), glm::vec3(1.0f));
 	auto& registryContext = registry.Context();
