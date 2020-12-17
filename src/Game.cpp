@@ -19,16 +19,17 @@
 #include "3D/Water.h"
 #include "Common/EventManager.h"
 #include "Common/FileSystem.h"
+#include "Entities/Components/Hand.h"
+#include "Entities/Components/Transform.h"
 #include "Entities/Registry.h"
 #include "GameWindow.h"
 #include "GitSHA1.h"
 #include "Gui.h"
 #include "LHScriptX/Script.h"
 #include "MeshViewer.h"
+#include "Parsers/InfoFile.h"
 #include "Profiler.h"
 #include "Renderer.h"
-#include <Entities/Components/Hand.h>
-#include <Entities/Components/Transform.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
@@ -348,7 +349,10 @@ bool Game::Run()
 	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
 
-	LoadVariables();
+	if (!LoadVariables())
+	{
+		return false;
+	}
 	LoadMap(_fileSystem->ScriptsPath() / "Land1.txt");
 
 	// _lhvm = std::make_unique<LHVM::LHVM>();
@@ -477,60 +481,18 @@ void Game::LoadLandscape(const fs::path& path)
 	_landIsland->LoadFromFile(fixedName.u8string());
 }
 
-void Game::LoadVariables()
+bool Game::LoadVariables()
 {
-	return;
+	InfoFile infoFile;
 
-	auto file = _fileSystem->Open(_fileSystem->ScriptsPath() / "info.dat", FileMode::Read);
-
-	// check magic header
-	constexpr char kLionheadMagic[] = "LiOnHeAd";
-
-	struct
+	if (!infoFile.LoadFromFile(_fileSystem->ScriptsPath() / "info.dat", _infoConstants))
 	{
-		char blockName[32];
-		uint32_t blockSize;
-		uint32_t position;
-	} header;
+		return false;
+	}
 
-	char magic[8];
-	file->Read(magic, 8);
-	if (!std::equal(kLionheadMagic, kLionheadMagic + 8, magic))
-		throw std::runtime_error("invalid Lionhead file magic");
-
-	char blockName[32];
-	file->Read(blockName, 32);
-	uint32_t size = file->ReadValue<uint32_t>();
-
-	spdlog::debug("info.dat: block name = {} = {} bytes", blockName, size);
-
-	struct MagicInfo
+	for (const auto& m : _infoConstants.magic)
 	{
-		uint32_t typeEnum;          // ENUM_MAGIC_TYPE
-		uint32_t immersionTypeEnum; // ENUM_IMMERSION_EFFECT_TYPE
-		uint32_t stopImmersion;
-		float perceivedPower;
-		uint32_t particleTypeEnum;   // ENUM_PARTICLE_TYPE
-		uint32_t impressiveTypeEnum; // ENUM_IMPRESSIVE_TYPE
-		uint32_t spellSeedTypeEnum;  // ENUM_SPELL_SEED_TYPE
-		uint32_t gestureType;        // ENUM_GESTURE_TYPE
-		uint32_t powerupType;        // ENUM_POWER_UP_TYPE
-		uint32_t castRuleType;       // ENUM_CAST_RULE_TYPE
-		uint32_t IsSpellSeedDrawnInHand;
-		uint32_t IsSpellRecharged;
-		uint32_t IsCreatureCastFromAbove;
-		uint32_t OneOffSpellIsPlayful;
-		uint32_t OneOffSpellIsAggressive;
-		uint32_t OneOffSpellIsCompassionate;
-		uint32_t OneOffSpellIsToRestoreHealth;
-	};
-
-	for (auto i = 0; i < 10; i++)
-	{
-		MagicInfo info;
-		file->Read(&info, 0x48);
-
-		spdlog::debug("MAGIC_TYPE {}, PerceivedPower={}", info.typeEnum, info.perceivedPower);
+		spdlog::debug("MAGIC_TYPE {}, PerceivedPower={}", m.typeEnum, m.perceivedPower);
 	}
 
 	// GMagicInfo: 0x48 bytes // DETAIL_MAGIC_GENERAL_INFO
@@ -551,6 +513,8 @@ void Game::LoadVariables()
 	// DETAIL_MAGIC_FLOCK_FLYING_INFO
 	// DETAIL_MAGIC_FLOCK_GROUND_INFO
 	// DETAIL_MAGIC_CREATURE_SPELL_INFO
+
+	return true;
 }
 
 void Game::SetGamePath(const fs::path& gamePath)

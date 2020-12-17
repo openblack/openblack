@@ -29,6 +29,10 @@ list(APPEND TERRAIN_MATERIAL_ARRAY ${TERRAIN_BINARY_DIR}/material_data2.rgb5a1.r
 list(APPEND TERRAIN_MATERIAL_ARRAY ${TERRAIN_BINARY_DIR}/material_data3.rgb5a1.raw)
 string(REPLACE ";" "," TERRAIN_MATERIAL_LIST "${TERRAIN_MATERIAL_ARRAY}")
 
+set(SCRIPTS_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Scripts)
+set(INFO_UNPACKED_OUTPUT ${SCRIPTS_BINARY_DIR}/Info)
+set(INFO_DAT_OUTPUT ${SCRIPTS_BINARY_DIR}/info.dat)
+
 # TODO: Combine all texture generating scripts into a single one
 
 add_custom_target(generate-mock-game-data
@@ -59,6 +63,9 @@ add_custom_target(generate-mock-game-data
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Data/Misc/gen_coffre.py --output-dir ${COFFRE_BINARY_DIR}
   COMMAND l3dtool write -o ${COFFRE_MESH_OUTPUT} -i ${COFFRE_INPUT}
   COMMAND anmtool write -o ${COFFRE_ANIM_OUTPUT} -i ${COFFRE_INPUT}
+  # Scripts/info.dat
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py --output-file ${INFO_UNPACKED_OUTPUT} --size 0x8E186
+  COMMAND packtool --write-raw ${INFO_DAT_OUTPUT} ${INFO_UNPACKED_OUTPUT}
 
   COMMENT "Generating mock game data in ${CMAKE_CURRENT_BINARY_DIR}"
 
@@ -71,6 +78,7 @@ add_custom_target(generate-mock-game-data
 
   SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
+    ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py
     ${CMAKE_CURRENT_SOURCE_DIR}/Data/Textures/gen_textures.py
     ${CMAKE_CURRENT_SOURCE_DIR}/Data/Landscape/gen_land_textures.py
     ${CMAKE_CURRENT_SOURCE_DIR}/Data/WeatherSystem/gen_sky.py

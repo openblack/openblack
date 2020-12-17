@@ -28,6 +28,7 @@ namespace fs = std::experimental::filesystem;
 #include <LHVM/LHVM.h>
 
 #include "GameWindow.h"
+#include "InfoConstants.h"
 
 namespace openblack
 {
@@ -122,7 +123,7 @@ public:
 	void LoadMap(const fs::path& path);
 	void LoadLandscape(const fs::path& path);
 
-	void LoadVariables();
+	bool LoadVariables();
 
 	void SetGamePath(const fs::path& path);
 	const fs::path& GetGamePath();
@@ -149,6 +150,7 @@ public:
 	FileSystem& GetFileSystem() { return *_fileSystem; }
 	entities::Registry& GetEntityRegistry() { return *_entityRegistry; }
 	[[nodiscard]] entities::Registry& GetEntityRegistry() const { return *_entityRegistry; }
+	const InfoConstants& GetInfoConstants() { return _infoConstants; } ///< Access should be only read-only
 	Config& GetConfig() { return _config; }
 	[[nodiscard]] const Config& GetConfig() const { return _config; }
 	[[nodiscard]] uint16_t GetTurn() const { return _turnCount; }
@@ -185,6 +187,7 @@ private:
 	std::unique_ptr<LHVM::LHVM> _lhvm;
 	std::unique_ptr<entities::Registry> _entityRegistry;
 
+	InfoConstants _infoConstants;
 	Config _config;
 
 	std::chrono::steady_clock::time_point _lastGameLoopTime;
