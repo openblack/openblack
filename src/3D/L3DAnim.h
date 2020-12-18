@@ -42,7 +42,7 @@ public:
 	virtual ~L3DAnim() = default;
 
 	void Load(const anm::ANMFile& anm);
-	void LoadFromFile(const fs::path& path);
+	bool LoadFromFile(const fs::path& path);
 	void LoadFromBuffer(const std::vector<uint8_t>& data);
 
 	[[nodiscard]] const std::string& GetName() const { return _name; }

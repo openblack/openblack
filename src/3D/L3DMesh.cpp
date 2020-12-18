@@ -77,7 +77,7 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 	bgfx::frame();
 }
 
-void L3DMesh::LoadFromFile(const fs::path& path)
+bool L3DMesh::LoadFromFile(const fs::path& path)
 {
 	spdlog::debug("Loading L3DMesh from file: {}", path.generic_string());
 	l3d::L3DFile l3d;
@@ -89,10 +89,12 @@ void L3DMesh::LoadFromFile(const fs::path& path)
 	catch (std::runtime_error& err)
 	{
 		spdlog::error("Failed to open l3d mesh from filesystem {}: {}", path.generic_string(), err.what());
-		return;
+		return false;
 	}
 
 	Load(l3d);
+
+	return true;
 }
 
 void L3DMesh::LoadFromBuffer(const std::vector<uint8_t>& data)
