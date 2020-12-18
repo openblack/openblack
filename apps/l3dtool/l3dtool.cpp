@@ -104,9 +104,9 @@ int PrintHeader(openblack::l3d::L3DFile& l3d)
 		{
 			result += "Unknown11|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown12))
+		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::HasDoorPosition))
 		{
-			result += "Unknown12|";
+			result += "HasDoorPosition|";
 		}
 		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Packed))
 		{
@@ -197,18 +197,16 @@ int PrintHeader(openblack::l3d::L3DFile& l3d)
 	std::printf("size: %u\n", header.size);
 	std::printf("submesh count: %u\n", header.submeshCount);
 	std::printf("submesh start offset: 0x%08X\n", header.submeshOffsetsOffset);
-	std::printf("unknown 32 bytes: ");
-	for (std::size_t i = 0; i < sizeof(header.padding); i += 4)
-	{
-		std::printf("%08X", *(uint32_t*)&header.padding[i]);
-	}
-	std::printf("\n");
+	std::printf("unknown int: 0x%08X\n", header.unknown);
+	std::printf("unknown point: {%f, %f, %f}\n", header.point_1.x, header.point_1.y, header.point_1.z);
+	std::printf("unknown point: {%f, %f, %f}\n", header.point_2.x, header.point_2.y, header.point_2.z);
+	std::printf("unknown distance: %f\n", header.distance);
 	std::printf("unknown offset: 0x%08X\n", header.anotherOffset);
 	std::printf("skin count: %u\n", header.skinCount);
 	std::printf("skin start offset: 0x%08X\n", header.skinOffsetsOffset);
-	std::printf("point count: %u\n", header.pointCount);
-	std::printf("point start offset: 0x%08X\n", header.pointOffset);
-	std::printf("extra start offset: 0x%08X\n", header.extraDataOffset);
+	std::printf("extra data count: %u\n", header.extraDataCount);
+	std::printf("extra data offset: 0x%08X\n", header.extraDataOffset);
+	std::printf("footprint data offset: 0x%08X\n", header.footprintDataOffset);
 	std::printf("\n");
 
 	return EXIT_SUCCESS;
@@ -294,9 +292,9 @@ int PrintSkins(openblack::l3d::L3DFile& l3d)
 	return EXIT_SUCCESS;
 }
 
-int PrintPoints(openblack::l3d::L3DFile& l3d)
+int PrintExtraPoints(openblack::l3d::L3DFile& l3d)
 {
-	auto& points = l3d.GetPoints();
+	auto& points = l3d.GetExtraPoints();
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
 
 	for (auto& point : points)
@@ -432,7 +430,7 @@ struct Arguments
 		Header,
 		MeshHeader,
 		Skin,
-		Point,
+		ExtraPoint,
 		PrimitiveHeader,
 		Bones,
 		Vertices,
@@ -1026,7 +1024,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::string>>())
 		("m,mesh-header", "Print Mesh Headers.", cxxopts::value<std::vector<std::string>>())
 		("s,skins", "Print Skins.", cxxopts::value<std::vector<std::string>>())
-		("p,points", "Print Points.", cxxopts::value<std::vector<std::string>>())
+		("p,extra-points", "Print Extra Points.", cxxopts::value<std::vector<std::string>>())
 		("P,primitive-header", "Print Primitive Headers.", cxxopts::value<std::vector<std::string>>())
 		("b,bones", "Print Bones.", cxxopts::value<std::vector<std::string>>())
 		("V,vertices", "Print Vertices.", cxxopts::value<std::vector<std::string>>())
@@ -1077,10 +1075,10 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 				args.read.filenames = result["skins"].as<std::vector<std::string>>();
 				return true;
 			}
-			if (result["points"].count() > 0)
+			if (result["extra-points"].count() > 0)
 			{
-				args.mode = Arguments::Mode::Point;
-				args.read.filenames = result["points"].as<std::vector<std::string>>();
+				args.mode = Arguments::Mode::ExtraPoint;
+				args.read.filenames = result["extra-points"].as<std::vector<std::string>>();
 				return true;
 			}
 			if (result["primitive-header"].count() > 0)
@@ -1197,8 +1195,8 @@ int main(int argc, char* argv[])
 			case Arguments::Mode::Skin:
 				return_code |= PrintSkins(l3d);
 				break;
-			case Arguments::Mode::Point:
-				return_code |= PrintPoints(l3d);
+			case Arguments::Mode::ExtraPoint:
+				return_code |= PrintExtraPoints(l3d);
 				break;
 			case Arguments::Mode::PrimitiveHeader:
 				return_code |= PrintPrimitiveHeaders(l3d);
