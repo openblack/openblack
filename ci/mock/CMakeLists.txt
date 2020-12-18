@@ -6,6 +6,10 @@ set(ALL_MESHES_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data)
 set(ALL_MESHES_OUTPUT ${ALL_MESHES_BINARY_DIR}/AllMeshes.g3d)
 set(ALL_ANIMATIONS_OUTPUT ${ALL_MESHES_BINARY_DIR}/AllAnims.anm)
 
+set(CREATURE_MESH_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/CreatureMesh)
+set(HAND_BASE_OUTPUT ${CREATURE_MESH_BINARY_DIR}/Hand_Boned_Base2.l3d)
+set(HAND_BASE_MESH_FILE ${CREATURE_MESH_BINARY_DIR}/Hand_Boned_Base2.gltf)
+
 set(SKY_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/WeatherSystem)
 set(SKY_OUTPUT ${SKY_BINARY_DIR}/sky.l3d)
 set(SKY_MESH_FILE ${SKY_BINARY_DIR}/sky.gltf)
@@ -30,6 +34,7 @@ string(REPLACE ";" "," TERRAIN_MATERIAL_LIST "${TERRAIN_MATERIAL_ARRAY}")
 add_custom_target(generate-mock-game-data
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TEXTURES_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${ALL_MESHES_BINARY_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${CREATURE_MESH_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${SKY_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TERRAIN_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${COFFRE_BINARY_DIR}
@@ -41,6 +46,9 @@ add_custom_target(generate-mock-game-data
   COMMAND packtool --write-mesh ${ALL_MESHES_OUTPUT}
   # Data/AllAnims.anm
   COMMAND packtool --write-animation ${ALL_ANIMATIONS_OUTPUT}
+  # Data/CreatureMesh/Hand_Boned_Base2.l3d
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py --output-file ${HAND_BASE_MESH_FILE}
+  COMMAND l3dtool write -o ${HAND_BASE_OUTPUT} -i ${HAND_BASE_MESH_FILE}
   # Data/Landscape/Land1.lnd
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Data/Landscape/gen_land_textures.py --output-dir ${TERRAIN_BINARY_DIR}
   COMMAND lndtool write -o ${TERRAIN_OUTPUT} --terrain-type ${TERRAIN_TYPE} --noise-map ${TERRAIN_NOISE_MAP} --bump-map ${TERRAIN_BUMP_MAP} --material-array=${TERRAIN_MATERIAL_LIST}
@@ -55,12 +63,14 @@ add_custom_target(generate-mock-game-data
   COMMENT "Generating mock game data in ${CMAKE_CURRENT_BINARY_DIR}"
 
   BYPRODUCTS
+    ${HAND_BASE_MESH_FILE}
     ${SKY_MESH_FILE}
     ${TERRAIN_NOISE_MAP}
     ${TERRAIN_BUMP_MAP}
     ${TERRAIN_MATERIAL_ARRAY}
 
   SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
     ${CMAKE_CURRENT_SOURCE_DIR}/Data/Textures/gen_textures.py
     ${CMAKE_CURRENT_SOURCE_DIR}/Data/Landscape/gen_land_textures.py
     ${CMAKE_CURRENT_SOURCE_DIR}/Data/WeatherSystem/gen_sky.py
