@@ -381,6 +381,16 @@ void PackFile::CreateTextureBlocks()
 	assert(false);
 }
 
+void PackFile::CreateRawBlock(const std::string& name, std::vector<uint8_t>&& data)
+{
+	if (HasBlock(name))
+	{
+		Fail("Pack file already has a " + name + " block");
+	}
+
+	_blocks[name] = std::move(data);
+}
+
 void PackFile::CreateMeshBlock()
 {
 	if (HasBlock("MESHES"))

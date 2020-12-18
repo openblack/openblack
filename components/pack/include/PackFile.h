@@ -145,6 +145,9 @@ public:
 	/// Create Texture Blocks from textures
 	void CreateTextureBlocks();
 
+	/// Create Data Block from Raw Data
+	void CreateRawBlock(const std::string& name, std::vector<uint8_t>&& data);
+
 	/// Create Mesh Block from meshes
 	void CreateMeshBlock();
 
