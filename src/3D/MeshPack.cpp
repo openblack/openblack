@@ -25,7 +25,7 @@
 namespace openblack
 {
 
-void MeshPack::LoadFromFile(const fs::path& path)
+bool MeshPack::LoadFromFile(const fs::path& path)
 {
 	spdlog::debug("Loading Mesh Pack from file: {}", path.generic_string());
 	pack::PackFile pack;
@@ -37,11 +37,13 @@ void MeshPack::LoadFromFile(const fs::path& path)
 	catch (std::runtime_error& err)
 	{
 		spdlog::error("Failed to open {}: {}", path.generic_string(), err.what());
-		return;
+		return false;
 	}
 
 	loadTextures(pack.GetTextures());
 	loadMeshes(pack.GetMeshes());
+
+	return true;
 }
 
 void MeshPack::loadTextures(const std::map<std::string, pack::G3DTexture>& textures)

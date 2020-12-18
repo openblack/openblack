@@ -270,7 +270,7 @@ bool Game::Update()
 	return _config.numFramesToSimulate == 0 || _frameCount < _config.numFramesToSimulate;
 }
 
-void Game::Run()
+bool Game::Run()
 {
 	// Create profiler
 	_profiler = std::make_unique<Profiler>();
@@ -284,19 +284,34 @@ void Game::Run()
 	_camera->SetRotation(glm::vec3(0.0f, -45.0f, 0.0f));
 
 	_meshPack = std::make_unique<MeshPack>();
-	_meshPack->LoadFromFile(_fileSystem->DataPath() / "AllMeshes.g3d");
+	if (!_meshPack->LoadFromFile(_fileSystem->DataPath() / "AllMeshes.g3d"))
+	{
+		return false;
+	}
 
 	_animationPack = std::make_unique<AnimationPack>();
-	_animationPack->LoadFromFile(_fileSystem->DataPath() / "AllAnims.anm");
+	if (!_animationPack->LoadFromFile(_fileSystem->DataPath() / "AllAnims.anm"))
+	{
+		return false;
+	}
 
 	_testModel = std::make_unique<L3DMesh>();
-	_testModel->LoadFromFile(_fileSystem->MiscPath() / "coffre.l3d");
+	if (!_testModel->LoadFromFile(_fileSystem->MiscPath() / "coffre.l3d"))
+	{
+		return false;
+	}
 
 	_testAnimation = std::make_unique<L3DAnim>();
-	_testAnimation->LoadFromFile(_fileSystem->MiscPath() / "coffre.anm");
+	if (!_testAnimation->LoadFromFile(_fileSystem->MiscPath() / "coffre.anm"))
+	{
+		return false;
+	}
 
 	_handModel = std::make_unique<L3DMesh>();
-	_handModel->LoadFromFile(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d");
+	if (!_handModel->LoadFromFile(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d"))
+	{
+		return false;
+	}
 
 	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
@@ -370,6 +385,8 @@ void Game::Run()
 		}
 		_frameCount++;
 	}
+
+	return true;
 }
 
 void Game::LoadMap(const fs::path& path)

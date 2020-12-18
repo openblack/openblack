@@ -83,7 +83,7 @@ public:
 	~L3DMesh() = default;
 
 	void Load(const l3d::L3DFile& l3d);
-	void LoadFromFile(const fs::path& path);
+	bool LoadFromFile(const fs::path& path);
 	void LoadFromBuffer(const std::vector<uint8_t>& data);
 
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return _subMeshes.size(); }

@@ -22,7 +22,7 @@ AnimationPack::AnimationPack() = default;
 
 AnimationPack::~AnimationPack() = default;
 
-void AnimationPack::LoadFromFile(const fs::path& path)
+bool AnimationPack::LoadFromFile(const fs::path& path)
 {
 	spdlog::debug("Loading Mesh Pack from file: {}", path.generic_string());
 	pack::PackFile pack;
@@ -34,7 +34,7 @@ void AnimationPack::LoadFromFile(const fs::path& path)
 	catch (std::runtime_error& err)
 	{
 		spdlog::error("Failed to open {}: {}", path.generic_string(), err.what());
-		return;
+		return false;
 	}
 
 	const auto& animation = pack.GetAnimations();
@@ -48,6 +48,8 @@ void AnimationPack::LoadFromFile(const fs::path& path)
 	}
 
 	spdlog::debug("AnimationPack loaded {0} animations", _animations.size());
+
+	return true;
 }
 
 } // namespace openblack

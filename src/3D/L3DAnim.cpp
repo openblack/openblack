@@ -53,7 +53,7 @@ void L3DAnim::Load(const anm::ANMFile& anm)
 	}
 }
 
-void L3DAnim::LoadFromFile(const fs::path& path)
+bool L3DAnim::LoadFromFile(const fs::path& path)
 {
 	spdlog::debug("Loading L3DAnim from file: {}", path.generic_string());
 	anm::ANMFile anm;
@@ -65,10 +65,12 @@ void L3DAnim::LoadFromFile(const fs::path& path)
 	catch (std::runtime_error& err)
 	{
 		spdlog::error("Failed to open l3d mesh from filesystem {}: {}", path.generic_string(), err.what());
-		return;
+		return false;
 	}
 
 	Load(anm);
+
+	return true;
 }
 
 void L3DAnim::LoadFromBuffer(const std::vector<uint8_t>& data)

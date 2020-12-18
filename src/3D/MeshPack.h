@@ -47,7 +47,7 @@ class MeshPack
 public:
 	MeshPack() = default;
 
-	void LoadFromFile(const fs::path& path);
+	bool LoadFromFile(const fs::path& path);
 
 	using MeshesVec = std::vector<std::unique_ptr<L3DMesh>>;
 	using TexturesVec = std::vector<std::unique_ptr<graphics::Texture2D>>;

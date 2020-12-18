@@ -109,7 +109,7 @@ public:
 
 	bool ProcessEvents(const SDL_Event& event);
 	bool Update();
-	void Run();
+	bool Run();
 
 	void LoadMap(const fs::path& path);
 	void LoadLandscape(const fs::path& path);

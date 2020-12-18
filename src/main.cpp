@@ -163,7 +163,10 @@ int main(int argc, char** argv)
 			return return_code;
 		}
 		auto game = std::make_unique<openblack::Game>(std::move(args));
-		game->Run();
+		if (!game->Run())
+		{
+			return EXIT_FAILURE;
+		}
 #ifdef NDEBUG
 	}
 	catch (std::runtime_error& e)

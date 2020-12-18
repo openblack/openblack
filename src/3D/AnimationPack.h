@@ -32,7 +32,7 @@ public:
 	AnimationPack();
 	virtual ~AnimationPack();
 
-	void LoadFromFile(const fs::path& path);
+	bool LoadFromFile(const fs::path& path);
 
 	using AnimationVec = std::vector<std::unique_ptr<L3DAnim>>;
 	[[nodiscard]] const AnimationVec& GetAnimations() const { return _animations; }
