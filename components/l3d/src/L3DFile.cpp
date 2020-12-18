@@ -24,13 +24,15 @@
  *         flags
  *         submesh count - count of the meshes in submesh block (see below)
  *         submesh start offset - offset of the submesh block (see below)
- *         unknown 8 empty int - all zeros
+ *         an unknown int - all zeros
+ *         two unknown points - all zeros
+ *         a float indicating magnitude of second point - all zeros
  *         unknown offset
  *         skin count - count of the skins in skin block (see below)
  *         skin start offset - offset of the skin block (see below)
- *         point count - count of the points in point block (see below)
- *         point start offset - offset of the point block (see below)
- *         extra data offset - offset of the extra data block (see below)
+ *         extra data count - count of the points in point block (see below)
+ *         extra data offset - offset of the point block (see below)
+ *         footprint data offset - offset of the footprint block (see below)
  *
  * ------------------------ start of submesh offset block ----------------------
  *
@@ -42,10 +44,14 @@
  * - 4 bytes * skin count, each record contains:
  *         offset into skin buffer (see below)
  *
- * ------------------------ start of point block -------------------------------
+ * ------------------------ start of extra block -------------------------------
  *
- *  TODO: Validate me
- * - 12 bytes * total points, each containing point data as floats for x, y, z
+ *  Depending on the flags set, these include data blocks that can be:
+ * - With HasDoorPosition: 12 bytes, containing point data as floats for x, y, z
+ *
+ * ------------------------ start of footprint block ----------------------------
+ *
+ *  TODO: Investigate
  *
  * ------------------------ start of submesh block -----------------------------
  *
@@ -245,19 +251,19 @@ void L3DFile::ReadFile(std::istream& stream)
 		stream.seekg(_header.skinOffsetsOffset);
 		stream.read(reinterpret_cast<char*>(skinOffsets.data()), skinOffsets.size() * sizeof(skinOffsets[0]));
 	}
-	_points.resize(_header.pointCount);
-	if (!_points.empty() && _header.pointOffset != std::numeric_limits<uint32_t>::max())
+	_extraPoints.resize(_header.extraDataCount);
+	if (!_extraPoints.empty() && _header.extraDataOffset != std::numeric_limits<uint32_t>::max())
 	{
-		if (_header.pointOffset > fsize)
+		if (_header.extraDataOffset > fsize)
 		{
 			Fail("Point Offset is beyond the size of the file");
 		}
-		if (_header.pointOffset + _points.size() * sizeof(_points[0]) > fsize)
+		if (_header.extraDataOffset + _extraPoints.size() * sizeof(_extraPoints[0]) > fsize)
 		{
 			Fail("Points are beyond the end of the file");
 		}
-		stream.seekg(_header.pointOffset);
-		stream.read(reinterpret_cast<char*>(_points.data()), _points.size() * sizeof(_points[0]));
+		stream.seekg(_header.extraDataOffset);
+		stream.read(reinterpret_cast<char*>(_extraPoints.data()), _extraPoints.size() * sizeof(_extraPoints[0]));
 	}
 
 	// Reserve space and read submeshes
@@ -524,7 +530,7 @@ void L3DFile::WriteFile(std::ostream& stream) const
 	size_t submeshOffsetsBase = sizeof(L3DHeader);
 	size_t skinOffsetsBase = submeshOffsetsBase + _header.submeshCount * sizeof(uint32_t);
 	size_t pointsBase = skinOffsetsBase + _header.skinCount * sizeof(uint32_t);
-	size_t submeshBase = pointsBase + _header.pointCount * sizeof(_points[0]);
+	size_t submeshBase = pointsBase + _header.extraDataCount * sizeof(_extraPoints[0]);
 	size_t skinBase = submeshBase + _header.submeshCount * sizeof(_submeshHeaders[0]);
 	size_t primitiveOffsetBase = skinBase + _header.skinCount * sizeof(_skins[0]);
 	size_t primitiveBase = primitiveOffsetBase + _primitiveHeaders.size() * sizeof(uint32_t);
@@ -570,9 +576,9 @@ void L3DFile::WriteFile(std::ostream& stream) const
 	{
 		stream.write(reinterpret_cast<const char*>(skinOffsets.data()), skinOffsets.size() * sizeof(skinOffsets[0]));
 	}
-	if (!_points.empty())
+	if (!_extraPoints.empty())
 	{
-		stream.write(reinterpret_cast<const char*>(_points.data()), _points.size() * sizeof(_points[0]));
+		stream.write(reinterpret_cast<const char*>(_extraPoints.data()), _extraPoints.size() * sizeof(_extraPoints[0]));
 	}
 	if (!_submeshHeaders.empty())
 	{
@@ -656,10 +662,10 @@ void L3DFile::Write(const std::string& file)
 	}
 
 	// Set magic number
-	std::memcpy(_header.magic, kMagic, sizeof(kMagic));
+	std::memcpy(_header.magic.data(), kMagic, sizeof(kMagic));
 	_header.submeshCount = static_cast<uint32_t>(_submeshHeaders.size());
 	_header.skinCount = static_cast<uint32_t>(_skins.size());
-	_header.pointCount = static_cast<uint32_t>(_points.size());
+	_header.extraDataCount = static_cast<uint32_t>(_extraPoints.size());
 	size_t offset = sizeof(_header);
 	_header.submeshOffsetsOffset =
 	    _header.submeshCount > 0 ? static_cast<uint32_t>(offset) : std::numeric_limits<uint32_t>::max();
@@ -667,14 +673,14 @@ void L3DFile::Write(const std::string& file)
 	_header.anotherOffset = std::numeric_limits<uint32_t>::max();
 	_header.skinOffsetsOffset = _header.skinCount > 0 ? static_cast<uint32_t>(offset) : std::numeric_limits<uint32_t>::max();
 	offset += _header.skinCount * sizeof(uint32_t);
-	_header.pointOffset = _header.pointCount > 0 ? static_cast<uint32_t>(offset) : std::numeric_limits<uint32_t>::max();
-	offset += _header.pointCount * sizeof(_points[0]);
-	_header.extraDataOffset = std::numeric_limits<uint32_t>::max();
+	_header.extraDataOffset = _header.extraDataCount > 0 ? static_cast<uint32_t>(offset) : std::numeric_limits<uint32_t>::max();
+	offset += _header.extraDataCount * sizeof(_extraPoints[0]);
+	_header.footprintDataOffset = std::numeric_limits<uint32_t>::max();
 
 	size_t submeshOffsetsBase = sizeof(L3DHeader);
 	size_t skinOffsetsBase = submeshOffsetsBase + _header.submeshCount * sizeof(uint32_t);
 	size_t pointsBase = skinOffsetsBase + _header.skinCount * sizeof(uint32_t);
-	size_t submeshBase = pointsBase + _header.pointCount * sizeof(_points[0]);
+	size_t submeshBase = pointsBase + _header.extraDataCount * sizeof(_extraPoints[0]);
 	size_t skinBase = submeshBase + _submeshHeaders.size() * sizeof(_submeshHeaders[0]);
 	size_t primitiveOffsetBase = skinBase + _skins.size() * sizeof(_skins[0]);
 	size_t primitiveBase = primitiveOffsetBase + _primitiveHeaders.size() * sizeof(uint32_t);

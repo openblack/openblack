@@ -61,7 +61,7 @@ enum class L3DMeshFlags : uint32_t
 	HasBones = 1U << 8U,                  // 0x100    (23)
 	Unknown10 = 1U << 9U,                 // 0x200    (22)
 	Unknown11 = 1U << 10U,                // 0x400    (21)
-	Unknown12 = 1U << 11U,                // 0x800    (20)
+	HasDoorPosition = 1U << 11U,          // 0x800    (20)
 	Packed = 1U << 12U,                   // 0x1000   (19)
 	NoDraw = 1U << 13U,                   // 0x2000   (18)
 	Unknown15 = 1U << 14U,                // 0x4000   (17)
@@ -84,20 +84,34 @@ enum class L3DMeshFlags : uint32_t
 	Unknown32 = 1U << 30U,                // 0x80000000 (0)
 };
 
+struct L3DPoint
+{
+	float x, y, z;
+};
+static_assert(sizeof(L3DPoint) == 12);
+struct L3DPoint2D
+{
+	float x, y;
+};
+static_assert(sizeof(L3DPoint2D) == 8);
+
 struct L3DHeader
 {
-	char magic[4];
+	std::array<char, 4> magic;
 	L3DMeshFlags flags;
 	uint32_t size;
 	uint32_t submeshCount;
 	uint32_t submeshOffsetsOffset;
-	uint8_t padding[32]; // always zero
+	uint32_t unknown; // always zero
+	L3DPoint point_1; // always zero
+	L3DPoint point_2; // always zero
+	float distance;   // always zero
 	uint32_t anotherOffset;
 	uint32_t skinCount;
 	uint32_t skinOffsetsOffset;
-	uint32_t pointCount;
-	uint32_t pointOffset;
+	uint32_t extraDataCount;
 	uint32_t extraDataOffset;
+	uint32_t footprintDataOffset;
 };
 static_assert(sizeof(L3DHeader) == 19 * sizeof(uint32_t));
 
@@ -142,17 +156,6 @@ struct L3DTexture
 	static_assert(sizeof(texels) == width * height * sizeof(uint16_t));
 };
 static_assert(sizeof(L3DTexture) == sizeof(uint32_t) + 256 * 256 * sizeof(uint16_t));
-
-struct L3DPoint
-{
-	float x, y, z;
-};
-static_assert(sizeof(L3DPoint) == 12);
-struct L3DPoint2D
-{
-	float x, y;
-};
-static_assert(sizeof(L3DPoint2D) == 8);
 
 struct L3DBone
 {
@@ -219,7 +222,8 @@ protected:
 	L3DHeader _header;
 	std::vector<L3DSubmeshHeader> _submeshHeaders;
 	std::vector<L3DTexture> _skins;
-	std::vector<L3DPoint> _points;
+	/// If the flag HasDoorPosition is on the first extra point is the door
+	std::vector<L3DPoint> _extraPoints;
 	std::vector<L3DPrimitiveHeader> _primitiveHeaders;
 	std::vector<L3DVertex> _vertices;
 	std::vector<uint16_t> _indices;
@@ -259,7 +263,7 @@ public:
 	[[nodiscard]] const L3DHeader& GetHeader() const { return _header; }
 	[[nodiscard]] const std::vector<L3DSubmeshHeader>& GetSubmeshHeaders() const { return _submeshHeaders; }
 	[[nodiscard]] const std::vector<L3DTexture>& GetSkins() const { return _skins; }
-	[[nodiscard]] const std::vector<L3DPoint>& GetPoints() const { return _points; }
+	[[nodiscard]] const std::vector<L3DPoint>& GetExtraPoints() const { return _extraPoints; }
 	[[nodiscard]] const std::vector<L3DPrimitiveHeader>& GetPrimitiveHeaders() const { return _primitiveHeaders; }
 	[[nodiscard]] const std::vector<L3DVertex>& GetVertices() const { return _vertices; }
 	[[nodiscard]] const std::vector<uint16_t>& GetIndices() const { return _indices; }

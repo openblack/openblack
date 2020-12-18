@@ -46,7 +46,7 @@ constexpr std::array<std::string_view, 32> L3DMeshFlagNames {
     "HasBones",
     "Unknown10",
     "Unknown11",
-    "Unknown12",
+    "HasDoorPosition",
     "Packed",
     "NoDraw",
     "Unknown15",
