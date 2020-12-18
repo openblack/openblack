@@ -285,6 +285,48 @@ int ViewAnimation(openblack::pack::PackFile& pack, uint32_t index, const std::st
 	return EXIT_SUCCESS;
 }
 
+int WriteRaw(const std::string& outFilename, const std::vector<std::string>& inFilenames)
+{
+	openblack::pack::PackFile pack;
+
+	for (const auto& filename : inFilenames)
+	{
+		std::ifstream file(filename, std::ios::binary);
+		if (!file.is_open())
+		{
+			std::fprintf(stderr, "Could not open source file \"%s\"\n", filename.c_str());
+			return EXIT_FAILURE;
+		}
+		file.seekg(0, std::ios_base::end);
+		const auto size = file.tellg();
+		file.seekg(0, std::ios_base::beg);
+		std::vector<uint8_t> data(static_cast<size_t>(size));
+		try
+		{
+			file.read(reinterpret_cast<char*>(data.data()), data.size());
+			file.close();
+		}
+		catch (const std::ios_base::failure& e)
+		{
+			std::fprintf(stderr, "I/O error while reading \"%s\": %s\n", filename.c_str(), e.what());
+			return EXIT_FAILURE;
+		}
+
+		const char* blockName = filename.c_str();
+		const char* slash = std::max(std::strrchr(filename.c_str(), '/'), std::strrchr(filename.c_str(), '\\'));
+		if (slash)
+		{
+			blockName = slash + 1;
+		}
+
+		pack.CreateRawBlock(blockName, std::move(data));
+	}
+
+	pack.Write(outFilename);
+
+	return EXIT_SUCCESS;
+}
+
 int WriteMeshFile(const std::string& outFilename)
 {
 	openblack::pack::PackFile pack;
@@ -324,6 +366,7 @@ struct Arguments
 		Mesh,
 		Animation,
 		Body,
+		WriteRaw,
 		WriteMeshPack,
 		WriteAnimationPack,
 	};
@@ -353,6 +396,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		("A,animation-block", "List animation block statistics.")
 		("a,animation", "List animation statistics.", cxxopts::value<uint32_t>())
 		("e,extract", "Extract contents of a block to filename (use \"stdout\" for piping to other tool).", cxxopts::value<std::string>())
+		("w,write-raw", "Create Raw Data Pack.", cxxopts::value<std::string>())
 		("write-mesh", "Create Mesh Pack.", cxxopts::value<std::string>())
 		("write-animation", "Create Mesh Pack.", cxxopts::value<std::string>())
 		("pack-files", "Pack Files.", cxxopts::value<std::vector<std::string>>())
@@ -442,6 +486,13 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			args.block = result["block"].as<std::string>();
 			return true;
 		}
+		if (result["write-raw"].count() > 0)
+		{
+			args.outFilename = result["write-raw"].as<std::string>();
+			args.mode = Arguments::Mode::WriteRaw;
+			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			return true;
+		}
 		if (result["animation"].count() > 0)
 		{
 			if (result["extract"].count() > 0)
@@ -493,6 +544,11 @@ int main(int argc, char* argv[])
 	if (!parseOptions(argc, argv, args, return_code))
 	{
 		return return_code;
+	}
+
+	if (args.mode == Arguments::Mode::WriteRaw)
+	{
+		return WriteRaw(args.outFilename, args.filenames);
 	}
 
 	if (args.mode == Arguments::Mode::WriteMeshPack)
