@@ -53,7 +53,7 @@ std::unordered_map<std::string, AbodeInfo> abodeIdLookup {
     {"NORSE_ABODE_D", AbodeInfo::NorseTent},
     {"NORSE_ABODE_E", AbodeInfo::NorseTempleX},
     {"NORSE_ABODE_F", AbodeInfo::NorseTempleY},
-    {"NORSE_WONDER", AbodeInfo::NorseWonder},
+    {"NORSE_ABODE_WONDER", AbodeInfo::NorseWonder},
     // Celtic
     {"CELTIC_ABODE_TOWN_CENTRE", AbodeInfo::CelticTownCentre},
     {"CELTIC_ABODE_STORAGE_PIT", AbodeInfo::CelticStoragePit},
@@ -66,7 +66,7 @@ std::unordered_map<std::string, AbodeInfo> abodeIdLookup {
     {"CELTIC_ABODE_D", AbodeInfo::CelticTent},
     {"CELTIC_ABODE_E", AbodeInfo::CelticTempleX},
     {"CELTIC_ABODE_F", AbodeInfo::CelticTempleY},
-    {"CELTIC_WONDER", AbodeInfo::CelticWonder},
+    {"CELTIC_ABODE_WONDER", AbodeInfo::CelticWonder},
     // Japanese
     {"JAPANESE_ABODE_TOWN_CENTRE", AbodeInfo::JapaneseTownCentre},
     {"JAPANESE_ABODE_STORAGE_PIT", AbodeInfo::JapaneseStoragePit},
@@ -79,7 +79,7 @@ std::unordered_map<std::string, AbodeInfo> abodeIdLookup {
     {"JAPANESE_ABODE_D", AbodeInfo::JapaneseTent},
     {"JAPANESE_ABODE_E", AbodeInfo::JapaneseTempleX},
     {"JAPANESE_ABODE_F", AbodeInfo::JapaneseTempleY},
-    {"JAPANESE_WONDER", AbodeInfo::JapaneseWonder},
+    {"JAPANESE_ABODE_WONDER", AbodeInfo::JapaneseWonder},
     // Aztec
     {"AZTEC_ABODE_TOWN_CENTRE", AbodeInfo::AztecTownCentre},
     {"AZTEC_ABODE_STORAGE_PIT", AbodeInfo::AztecStoragePit},
@@ -92,7 +92,7 @@ std::unordered_map<std::string, AbodeInfo> abodeIdLookup {
     {"AZTEC_ABODE_D", AbodeInfo::AztecTent},
     {"AZTEC_ABODE_E", AbodeInfo::AztecTempleX},
     {"AZTEC_ABODE_F", AbodeInfo::AztecTempleY},
-    {"AZTEC_WONDER", AbodeInfo::AztecWonder},
+    {"AZTEC_ABODE_WONDER", AbodeInfo::AztecWonder},
     // Tibetan
     {"TIBETAN_ABODE_TOWN_CENTRE", AbodeInfo::TibetanTownCentre},
     {"TIBETAN_ABODE_STORAGE_PIT", AbodeInfo::TibetanStoragePit},
@@ -105,7 +105,7 @@ std::unordered_map<std::string, AbodeInfo> abodeIdLookup {
     {"TIBETAN_ABODE_D", AbodeInfo::TibetanTent},
     {"TIBETAN_ABODE_E", AbodeInfo::TibetanTempleX},
     {"TIBETAN_ABODE_F", AbodeInfo::TibetanTempleY},
-    {"TIBETAN_WONDER", AbodeInfo::TibetanWonder},
+    {"TIBETAN_ABODE_WONDER", AbodeInfo::TibetanWonder},
     // American Indian
     {"INDIAN_ABODE_TOWN_CENTRE", AbodeInfo::IndianTownCentre},
     {"INDIAN_ABODE_STORAGE_PIT", AbodeInfo::IndianStoragePit},
@@ -118,7 +118,7 @@ std::unordered_map<std::string, AbodeInfo> abodeIdLookup {
     {"INDIAN_ABODE_D", AbodeInfo::IndianTent},
     {"INDIAN_ABODE_E", AbodeInfo::IndianTempleX},
     {"INDIAN_ABODE_F", AbodeInfo::IndianTempleY},
-    {"INDIAN_WONDER", AbodeInfo::IndianWonder},
+    {"INDIAN_ABODE_WONDER", AbodeInfo::IndianWonder},
     // Greek
     {"GREEK_ABODE_TOWN_CENTRE", AbodeInfo::GreekTownCentre},
     {"GREEK_ABODE_STORAGE_PIT", AbodeInfo::GreekStoragePit},
@@ -131,7 +131,7 @@ std::unordered_map<std::string, AbodeInfo> abodeIdLookup {
     {"GREEK_ABODE_D", AbodeInfo::GreekTent},
     {"GREEK_ABODE_E", AbodeInfo::GreekTempleX},
     {"GREEK_ABODE_F", AbodeInfo::GreekTempleY},
-    {"GREEK_WONDER", AbodeInfo::GreekWonder},
+    {"GREEK_ABODE_WONDER", AbodeInfo::GreekWonder},
 };
 
 std::unordered_map<std::string, FeatureInfo> featureInfoLookup {
