@@ -279,14 +279,14 @@ openblack::FeatureInfo GetFeatureInfo(const std::string& featureType)
 	return item->second;
 }
 
-inline float GetRadians(const float rotation)
+inline glm::mat4 GetRotation(int rotation)
 {
-	return -(rotation * 0.001f);
+	return glm::eulerAngleY(static_cast<float>(rotation) * -0.001f);
 }
 
-inline float GetSize(const float size)
+inline glm::vec3 GetSize(int size)
 {
-	return size * 0.001;
+	return glm::vec3(size, size, size) * 0.001f;
 }
 
 void FeatureScriptCommands::CreateMist(glm::vec3 position, float param_2, int32_t param_3, float param_4, float param_5)
@@ -342,7 +342,7 @@ void FeatureScriptCommands::CreateAbode(int32_t townId, glm::vec3 position, cons
 	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
-	registry.Assign<Transform>(entity, position, glm::eulerAngleY(static_cast<float>(rotation)), glm::vec3(GetSize(size)));
+	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(size));
 	registry.Assign<Abode>(entity, GetAbodeInfo(abodeInfo), static_cast<uint32_t>(townId), static_cast<uint32_t>(foodAmount),
 	                       static_cast<uint32_t>(woodAmount));
 }
@@ -360,8 +360,7 @@ void FeatureScriptCommands::CreateTownCentre(int32_t townId, glm::vec3 position,
 	const auto entity = registry.Create();
 	auto submeshIds = std::vector {3};
 
-	registry.Assign<Transform>(entity, position, glm::eulerAngleY(static_cast<float>(GetRadians(rotation))),
-	                           glm::vec3(GetSize(size)));
+	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(size));
 	registry.Assign<Abode>(entity, GetAbodeInfo(abodeInfo), static_cast<uint32_t>(townId), static_cast<uint32_t>(0),
 	                       static_cast<uint32_t>(0));
 }
@@ -542,7 +541,7 @@ void FeatureScriptCommands::CreateMobileObject(glm::vec3 position, int32_t type,
 	const auto entity = registry.Create();
 
 	registry.Assign<MobileObject>(entity, static_cast<MobileObjectInfo>(type));
-	registry.Assign<Transform>(entity, position, glm::eulerAngleY(GetRadians(rotation)), glm::vec3(GetSize(scale)));
+	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(scale));
 }
 
 void FeatureScriptCommands::CreateMobileStatic(glm::vec3 position, int32_t, float, float)
@@ -760,7 +759,7 @@ void FeatureScriptCommands::CreateNewFeature(glm::vec3 position, const std::stri
 	const auto entity = registry.Create();
 
 	registry.Assign<Feature>(entity, GetFeatureInfo(type));
-	registry.Assign<Transform>(entity, position, glm::eulerAngleY(GetRadians(rotation)), glm::vec3(GetSize(scale)));
+	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(scale));
 }
 
 void FeatureScriptCommands::SetInteractDesire(float)
@@ -824,7 +823,7 @@ void FeatureScriptCommands::CreateAnimatedStatic(glm::vec3 position, const std::
 	const auto entity = registry.Create();
 
 	registry.Assign<AnimatedStatic>(entity, type);
-	registry.Assign<Transform>(entity, position, glm::eulerAngleY(glm::radians(180.0f) - rotation), glm::vec3(GetSize(scale)));
+	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(scale));
 }
 
 void FeatureScriptCommands::FireFlySpellRewardProb(const std::string& spell, float probability)
@@ -838,7 +837,7 @@ void FeatureScriptCommands::CreateNewTownField(int32_t townId, glm::vec3 positio
 	const auto entity = registry.Create();
 
 	registry.Assign<Field>(entity, townId);
-	registry.Assign<Transform>(entity, position, glm::eulerAngleY(glm::radians(180.0f) - rotation), glm::vec3(1.0));
+	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(1000));
 }
 
 void FeatureScriptCommands::CreateSpellDispenser(int32_t, glm::vec3 position, const std::string&, const std::string&, float,
