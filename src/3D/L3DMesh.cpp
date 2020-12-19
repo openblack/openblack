@@ -40,6 +40,12 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 		                        skin.texels.size() * sizeof(skin.texels[0]));
 	}
 
+	if (static_cast<uint32_t>(_flags) & static_cast<uint32_t>(l3d::L3DMeshFlags::HasDoorPosition) &&
+	    l3d.GetExtraPoints().size() > 0)
+	{
+		_doorPos = glm::vec3(l3d.GetExtraPoints()[0].x, l3d.GetExtraPoints()[0].y, l3d.GetExtraPoints()[0].z);
+	}
+
 	std::map<uint32_t, glm::mat4> matrices;
 	auto& bones = l3d.GetBones();
 	_bonesParents.resize(bones.size());

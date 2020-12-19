@@ -16,6 +16,7 @@ namespace fs = std::filesystem;
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 #endif // HAS_FILESYSTEM
+#include <optional>
 #include <unordered_map>
 
 #include <glm/gtc/quaternion.hpp>
@@ -91,6 +92,7 @@ public:
 	[[nodiscard]] const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& GetSkins() const { return _skins; }
 	[[nodiscard]] const std::vector<uint32_t>& GetBoneParents() const { return _bonesParents; }
 	[[nodiscard]] const std::vector<glm::mat4>& GetBoneMatrices() const { return _bonesDefaultMatrices; }
+	[[nodiscard]] const std::optional<glm::vec3>& GetDoorPos() const { return _doorPos; }
 
 private:
 	l3d::L3DMeshFlags _flags;
@@ -100,6 +102,7 @@ private:
 	std::vector<std::unique_ptr<L3DSubMesh>> _subMeshes;
 	std::vector<uint32_t> _bonesParents;
 	std::vector<glm::mat4> _bonesDefaultMatrices;
+	std::optional<glm::vec3> _doorPos;
 
 public:
 	[[nodiscard]] const std::string& GetDebugName() const { return _debugName; }
