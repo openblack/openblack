@@ -21,6 +21,6 @@ struct RegistryContext
 {
 	std::unordered_map<components::Footpath::Id, entt::entity> footpaths;
 	std::unordered_map<components::Stream::Id, entt::entity> streams;
-	std::unordered_map<components::Town::Id, entt::entity> towns;
+	std::unordered_map<uint32_t, entt::entity> towns;
 };
 } // namespace openblack::ecs

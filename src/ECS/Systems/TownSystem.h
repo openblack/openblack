@@ -20,7 +20,9 @@ class TownSystem
 public:
 	static TownSystem& instance();
 
+	entt::entity FindAbodeWithSpace(entt::entity townEntity) const;
 	entt::entity FindClosestTown(const glm::vec3& point) const;
+	void AddHomelessVillagerToTown(entt::entity townEntity, entt::entity villagerEntity);
 
 private:
 	TownSystem();
