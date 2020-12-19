@@ -15,6 +15,8 @@
 #include <string_view>
 #include <tuple>
 
+#include <entt/fwd.hpp>
+
 #include "Enums.h"
 
 namespace openblack::ecs::components
@@ -69,5 +71,7 @@ struct Villager
 	Tribe tribe;
 	VillagerNumber number;
 	Task task;
+	entt::entity town;
+	entt::entity abode;
 };
 } // namespace openblack::ecs::components

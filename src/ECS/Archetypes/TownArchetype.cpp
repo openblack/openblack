@@ -25,7 +25,7 @@ entt::entity TownArchetype::Create(int id, const glm::vec3& position, [[maybe_un
 
 	// const auto& info = Game::instance()->GetInfoConstants().town;
 
-	registry.Assign<Town>(entity, id);
+	registry.Assign<Town>(entity, static_cast<uint32_t>(id));
 	registry.Assign<Transform>(entity, position);
 	registry.Assign<Tribe>(entity, tribe);
 	registry.Assign<Transform>(entity, position, glm::mat3(1.0f), glm::vec3(1.0f));

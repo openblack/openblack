@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <set>
+
 #include "Enums.h"
 
 namespace openblack::ecs::components
@@ -22,6 +24,8 @@ struct Abode
 	// by the villagers
 	uint32_t foodAmount;
 	uint32_t woodAmount;
+	/// Villager
+	std::set<entt::entity> inhabitants;
 };
 
 } // namespace openblack::ecs::components
