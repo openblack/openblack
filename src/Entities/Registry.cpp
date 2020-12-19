@@ -53,35 +53,32 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 	std::map<MeshId, uint32_t> meshIds;
 
 	// Trees
-	_registry.view<const Tree, const Transform>().each(
-	    [&meshIds, &instanceCount](const Tree& entity, const Transform& transform) {
-		    const auto meshId = treeMeshLookup[entity.treeInfo];
-		    auto count = meshIds.insert(std::make_pair(meshId, 0));
-		    count.first->second++;
-		    instanceCount++;
-	    });
+	Each<const Tree, const Transform>([&meshIds, &instanceCount](const Tree& entity, const Transform& transform) {
+		const auto meshId = treeMeshLookup[entity.treeInfo];
+		auto count = meshIds.insert(std::make_pair(meshId, 0));
+		count.first->second++;
+		instanceCount++;
+	});
 
 	// Abodes
-	_registry.view<const Abode, const Transform>().each(
-	    [&meshIds, &instanceCount](const Abode& entity, const Transform& transform) {
-		    const auto meshId = abodeMeshLookup[entity.abodeInfo];
-		    auto count = meshIds.insert(std::make_pair(meshId, 0));
-		    count.first->second++;
-		    instanceCount++;
-	    });
+	Each<const Abode, const Transform>([&meshIds, &instanceCount](const Abode& entity, const Transform& transform) {
+		const auto meshId = abodeMeshLookup[entity.abodeInfo];
+		auto count = meshIds.insert(std::make_pair(meshId, 0));
+		count.first->second++;
+		instanceCount++;
+	});
 
 	// Villagers
-	_registry.view<const Villager, const Transform>().each(
-	    [&meshIds, &instanceCount](const Villager& villager, const Transform& transform) {
-		    const auto villagerType = villager.GetVillagerType();
-		    const auto meshId = villagerMeshLookup[villagerType];
-		    auto count = meshIds.insert(std::make_pair(meshId, 0));
-		    count.first->second++;
-		    instanceCount++;
-	    });
+	Each<const Villager, const Transform>([&meshIds, &instanceCount](const Villager& villager, const Transform& transform) {
+		const auto villagerType = villager.GetVillagerType();
+		const auto meshId = villagerMeshLookup[villagerType];
+		auto count = meshIds.insert(std::make_pair(meshId, 0));
+		count.first->second++;
+		instanceCount++;
+	});
 
 	// Animated Statics
-	_registry.view<const AnimatedStatic, const Transform>().each(
+	Each<const AnimatedStatic, const Transform>(
 	    [&meshIds, &instanceCount](const AnimatedStatic& entity, const Transform& transform) {
 		    // temporary-ish:
 		    MeshPackId meshId = MeshPackId::Dummy;
@@ -103,7 +100,7 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 	    });
 
 	// Mobile Statics
-	_registry.view<const MobileStatic, const Transform>().each(
+	Each<const MobileStatic, const Transform>(
 	    [&meshIds, &instanceCount](const MobileStatic& entity, const Transform& transform) {
 		    const auto meshId = mobileStaticMeshLookup[entity.type];
 		    auto count = meshIds.insert(std::make_pair(meshId, 0));
@@ -112,34 +109,31 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 	    });
 
 	// Features
-	_registry.view<const Feature, const Transform>().each(
-	    [&meshIds, &instanceCount](const Feature& entity, const Transform& transform) {
-		    const auto meshId = featureMeshLookup[entity.type];
-		    auto count = meshIds.insert(std::make_pair(meshId, 0));
-		    count.first->second++;
-		    instanceCount++;
-	    });
+	Each<const Feature, const Transform>([&meshIds, &instanceCount](const Feature& entity, const Transform& transform) {
+		const auto meshId = featureMeshLookup[entity.type];
+		auto count = meshIds.insert(std::make_pair(meshId, 0));
+		count.first->second++;
+		instanceCount++;
+	});
 
 	// Fields
-	_registry.view<const Field, const Transform>().each(
-	    [&meshIds, &instanceCount](const Field& entity, const Transform& transform) {
-		    const auto meshId = MeshPackId::TreeWheat;
-		    auto count = meshIds.insert(std::make_pair(static_cast<MeshId>(meshId), 0));
-		    count.first->second++;
-		    instanceCount++;
-	    });
+	Each<const Field, const Transform>([&meshIds, &instanceCount](const Field& entity, const Transform& transform) {
+		const auto meshId = MeshPackId::TreeWheat;
+		auto count = meshIds.insert(std::make_pair(static_cast<MeshId>(meshId), 0));
+		count.first->second++;
+		instanceCount++;
+	});
 
 	// Forests
-	_registry.view<const Forest, const Transform>().each(
-	    [&meshIds, &instanceCount](const Forest& entity, const Transform& transform) {
-		    const auto meshId = MeshPackId::FeatureForest;
-		    auto count = meshIds.insert(std::make_pair(static_cast<MeshId>(meshId), 0));
-		    count.first->second++;
-		    instanceCount++;
-	    });
+	Each<const Forest, const Transform>([&meshIds, &instanceCount](const Forest& entity, const Transform& transform) {
+		const auto meshId = MeshPackId::FeatureForest;
+		auto count = meshIds.insert(std::make_pair(static_cast<MeshId>(meshId), 0));
+		count.first->second++;
+		instanceCount++;
+	});
 
 	// Mobile Objects
-	_registry.view<const MobileObject, const Transform>().each(
+	Each<const MobileObject, const Transform>(
 	    [&meshIds, &instanceCount](const MobileObject& entity, const Transform& transform) {
 		    const auto meshId = mobileObjectMeshLookup[entity.type];
 		    auto count = meshIds.insert(std::make_pair(meshId, 0));
@@ -148,13 +142,12 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 	    });
 
 	// Hands
-	_registry.view<const Hand, const Transform>().each(
-	    [&meshIds, &instanceCount](const Hand& entity, const Transform& transform) {
-		    const auto meshId = MeshId(999);
-		    auto count = meshIds.insert(std::make_pair(meshId, 0));
-		    count.first->second++;
-		    instanceCount++;
-	    });
+	Each<const Hand, const Transform>([&meshIds, &instanceCount](const Hand& entity, const Transform& transform) {
+		const auto meshId = MeshId(999);
+		auto count = meshIds.insert(std::make_pair(meshId, 0));
+		count.first->second++;
+		instanceCount++;
+	});
 
 	if (drawBoundingBox)
 	{
@@ -221,7 +214,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	std::map<MeshId, uint32_t> uniformOffsets;
 
 	// Trees
-	_registry.view<const Tree, const Transform>().each(
+	Each<const Tree, const Transform>(
 	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Tree& entity, const Transform& transform) {
 		    const auto meshId = treeMeshLookup[entity.treeInfo];
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
@@ -232,7 +225,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	    });
 
 	// Abodes
-	_registry.view<const Abode, const Transform>().each(
+	Each<const Abode, const Transform>(
 	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Abode& entity, const Transform& transform) {
 		    const auto meshId = abodeMeshLookup[entity.abodeInfo];
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
@@ -243,7 +236,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	    });
 
 	// Villagers
-	_registry.view<const Villager, const Transform>().each(
+	Each<const Villager, const Transform>(
 	    [this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Villager& villager, const Transform& transform) {
 		    const auto villagerType = villager.GetVillagerType();
 		    const auto meshId = villagerMeshLookup[villagerType];
@@ -255,7 +248,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	    });
 
 	// Animated Statics
-	_registry.view<const AnimatedStatic, const Transform>().each(
+	Each<const AnimatedStatic, const Transform>(
 	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const AnimatedStatic& entity, const Transform& transform) {
 		    // temporary-ish:
 		    MeshPackId meshPackId = MeshPackId::Dummy;
@@ -280,7 +273,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	    });
 
 	// Mobile Statics
-	_registry.view<const MobileStatic, const Transform>().each(
+	Each<const MobileStatic, const Transform>(
 	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const MobileStatic& entity, const Transform& transform) {
 		    const auto meshId = mobileStaticMeshLookup[entity.type];
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
@@ -291,7 +284,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	    });
 
 	// Features
-	_registry.view<const Feature, const Transform>().each(
+	Each<const Feature, const Transform>(
 	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Feature& entity, const Transform& transform) {
 		    const auto meshId = featureMeshLookup[entity.type];
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
@@ -302,7 +295,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	    });
 
 	// Fields
-	_registry.view<const Field, const Transform>().each(
+	Each<const Field, const Transform>(
 	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Field& entity, const Transform& transform) {
 		    const MeshId meshId = static_cast<MeshId>(MeshPackId::TreeWheat);
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
@@ -313,7 +306,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	    });
 
 	// Forests
-	_registry.view<const Forest, const Transform>().each(
+	Each<const Forest, const Transform>(
 	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Forest& entity, const Transform& transform) {
 		    const MeshId meshId = static_cast<MeshId>(MeshPackId::FeatureForest);
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
@@ -324,7 +317,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	    });
 
 	// Mobile Objects
-	_registry.view<const MobileObject, const Transform>().each(
+	Each<const MobileObject, const Transform>(
 	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const MobileObject& entity, const Transform& transform) {
 		    const auto meshId = mobileObjectMeshLookup[entity.type];
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
@@ -335,7 +328,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	    });
 
 	// Hands
-	_registry.view<const Hand, const Transform>().each(
+	Each<const Hand, const Transform>(
 	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Hand& entity, const Transform& transform) {
 		    MeshId meshId = 999;
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
@@ -372,12 +365,12 @@ void Registry::PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawSt
 		if (drawFootpaths)
 		{
 			uint32_t nodeCount = 0;
-			_registry.view<const Footpath>().each(
+			Each<const Footpath>(
 			    [&nodeCount](const Footpath& ent) { nodeCount += 2 * std::max(static_cast<int>(ent.nodes.size()) - 1, 0); });
 
 			std::vector<graphics::DebugLines::Vertex> edges;
 			edges.reserve(nodeCount);
-			_registry.view<const Footpath>().each([&edges](const Footpath& ent) {
+			Each<const Footpath>([&edges](const Footpath& ent) {
 				const auto color = glm::vec4(0, 1, 0, 1);
 				const auto offset = glm::vec3(0, 1, 0);
 				for (int i = 0; i < static_cast<int>(ent.nodes.size()) - 1; ++i)
@@ -396,7 +389,7 @@ void Registry::PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawSt
 		if (drawStreams)
 		{
 			uint32_t edgeCount = 0;
-			_registry.view<const Stream>().each([&edgeCount](const Stream& ent) {
+			Each<const Stream>([&edgeCount](const Stream& ent) {
 				for (const auto& from : ent.nodes)
 				{
 					edgeCount += from.edges.size();
@@ -404,7 +397,7 @@ void Registry::PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawSt
 			});
 			std::vector<graphics::DebugLines::Vertex> edges;
 			edges.reserve(edgeCount * 2);
-			_registry.view<const Stream>().each([&edges](const Stream& ent) {
+			Each<const Stream>([&edges](const Stream& ent) {
 				const auto color = glm::vec4(1, 0, 0, 1);
 				for (const auto& from : ent.nodes)
 				{

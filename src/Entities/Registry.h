@@ -57,6 +57,16 @@ public:
 	{
 		return _registry.get<Component>(entity);
 	}
+	template <typename... Components, typename Func>
+	decltype(auto) Each(Func func)
+	{
+		return _registry.view<Components...>().each(func);
+	}
+	template <typename... Components, typename Func>
+	decltype(auto) Each(Func func) const
+	{
+		return _registry.view<const Components...>().each(func);
+	}
 
 private:
 	void PrepareDrawDescs(bool drawBoundingBox);
