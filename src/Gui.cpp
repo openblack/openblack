@@ -730,6 +730,31 @@ bool Gui::ShowMenu(Game& game)
 				ImGui::EndMenu();
 			}
 
+			if (ImGui::BeginMenu("Game Speed"))
+			{
+				float multiplier = game.GetGameSpeed();
+				ImGui::Text("Scaled game duration: %.3fms (%.3f Hz)", multiplier * Game::kTurnDuration.count(),
+				            1000.0f / (multiplier * Game::kTurnDuration.count()));
+				if (ImGui::MenuItem("Slow"))
+				{
+					game.SetGameSpeed(Game::kTurnDurationMultiplierSlow);
+				}
+				if (ImGui::MenuItem("Normal"))
+				{
+					game.SetGameSpeed(Game::kTurnDurationMultiplierNormal);
+				}
+				if (ImGui::MenuItem("Fast"))
+				{
+					game.SetGameSpeed(Game::kTurnDurationMultiplierFast);
+				}
+				if (ImGui::SliderFloat("Multiplier", &multiplier, 1.0f / 10.0f, 10.0f, "%.3f", 2.0f))
+				{
+					game.SetGameSpeed(multiplier);
+				}
+
+				ImGui::EndMenu();
+			}
+
 			ImGui::EndMenu();
 		}
 
@@ -1243,6 +1268,8 @@ void Gui::ShowCameraPositionOverlay(const Game& game)
 
 		const auto& handPosition = game.GetHandTransform().position;
 		ImGui::Text("Hand Position: (%.1f,%.1f,%.1f)", handPosition.x, handPosition.y, handPosition.z);
+
+		ImGui::Text("Game Turn: %u (%.3f ms)", game.GetTurn(), game.GetDeltaTime().count());
 	}
 	ImGui::End();
 }
