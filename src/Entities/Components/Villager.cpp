@@ -10,33 +10,28 @@
 #include "Villager.h"
 
 #include <stdexcept>
-#include <unordered_map>
+#include <string_view>
+
+#include "Common/MeshLookup.h"
 
 namespace openblack
 {
-const std::unordered_map<std::string, VillageEthnicities> villageEthnicitiesLookup {
-    {"AZTEC", VillageEthnicities::AZTEC}, {"CELTIC", VillageEthnicities::CELTIC},   {"EGYPTIAN", VillageEthnicities::EGYPTIAN},
-    {"GREEK", VillageEthnicities::GREEK}, {"INDIAN", VillageEthnicities::INDIAN},   {"JAPANESE", VillageEthnicities::JAPANESE},
-    {"NORSE", VillageEthnicities::NORSE}, {"TIBETAN", VillageEthnicities::TIBETAN}, {"AFRICAN", VillageEthnicities::AFRICAN}};
 
-const std::unordered_map<std::string, VillagerRoles> villagerTypesLookup {
-    {"HOUSEWIFE", VillagerRoles::HOUSEWIFE}, // This is how the game decides male or female villagers lol
-    {"FARMER", VillagerRoles::FARMER},       {"FISHERMAN", VillagerRoles::FISHERMAN}, {"FORESTER", VillagerRoles::FORESTER},
-    {"BREEDER", VillagerRoles::BREEDER},     {"SHEPHERD", VillagerRoles::SHEPHERD},   {"MISSIONARY", VillagerRoles::MISSIONARY},
-    {"LEADER", VillagerRoles::LEADER},       {"TRADER", VillagerRoles::TRADER}};
+const auto villagerEthnicityLookup = makeLookup<Villager::Ethnicity>(Villager::EthnicityStrs);
+const auto villagerRoleLookup = makeLookup<Villager::Role>(Villager::RoleStrs);
 
-std::tuple<VillageEthnicities, VillagerRoles>
+std::tuple<Villager::Ethnicity, Villager::Role>
 Villager::GetVillagerEthnicityAndRole(const std::string& villagerEthnicityWithType)
 {
 	const auto pos = villagerEthnicityWithType.find_first_of('_');
 	const auto ethnicityStr = villagerEthnicityWithType.substr(0, pos);
-	const auto typeStr = villagerEthnicityWithType.substr(pos + 1);
+	const auto roleStr = villagerEthnicityWithType.substr(pos + 1);
 
 	try
 	{
-		const auto ethnicity = villageEthnicitiesLookup.at(ethnicityStr);
-		const auto type = villagerTypesLookup.at(typeStr);
-		return std::make_tuple(ethnicity, type);
+		const auto ethnicity = villagerEthnicityLookup.at(ethnicityStr);
+		const auto role = villagerRoleLookup.at(roleStr);
+		return std::make_tuple(ethnicity, role);
 	}
 	catch (...)
 	{
@@ -44,47 +39,47 @@ Villager::GetVillagerEthnicityAndRole(const std::string& villagerEthnicityWithTy
 	}
 }
 
-bool Villager::IsImportantRole(VillagerRoles role)
+bool Villager::IsImportantRole(Villager::Role role)
 {
 	switch (role)
 	{
-	case VillagerRoles::PiedPiper:
-	case VillagerRoles::Shaolin:
-	case VillagerRoles::IdolBuilder:
-	case VillagerRoles::Hermit:
-	case VillagerRoles::Hippy:
-	case VillagerRoles::Priest:
-	case VillagerRoles::Priestess:
-	case VillagerRoles::Marauder:
-	case VillagerRoles::Footballer_1:
-	case VillagerRoles::Footballer_2:
-	case VillagerRoles::Engineer:
-	case VillagerRoles::Shepered:
-	case VillagerRoles::Nomade:
-	case VillagerRoles::AztecLeader:
-	case VillagerRoles::CreatureTrainer:
-	case VillagerRoles::NorseSailor:
-	case VillagerRoles::Breeder:
-	case VillagerRoles::Healer:
-	case VillagerRoles::Sculptor:
-	case VillagerRoles::Crusader:
-	case VillagerRoles::SailorAccordian:
+	case Role::PiedPiper:
+	case Role::Shaolin:
+	case Role::IdolBuilder:
+	case Role::Hermit:
+	case Role::Hippy:
+	case Role::Priest:
+	case Role::Priestess:
+	case Role::Marauder:
+	case Role::Footballer_1:
+	case Role::Footballer_2:
+	case Role::Engineer:
+	case Role::Shepered:
+	case Role::Nomade:
+	case Role::AztecLeader:
+	case Role::CreatureTrainer:
+	case Role::NorseSailor:
+	case Role::Breeder:
+	case Role::Healer:
+	case Role::Sculptor:
+	case Role::Crusader:
+	case Role::SailorAccordian:
 		return true;
 	default:
 		return false;
 	}
 }
 
-VillagerType Villager::GetVillagerType() const
+Villager::Type Villager::GetVillagerType() const
 {
 	auto importantRole = role;
 
 	if (!Villager::IsImportantRole(role))
 	{
-		importantRole = VillagerRoles::NONE;
+		importantRole = Role::NONE;
 	}
 
-	VillagerType villagerType = {ethnicity, lifeStage, sex, importantRole};
+	Villager::Type villagerType = {ethnicity, lifeStage, sex, importantRole};
 
 	return villagerType;
 }

@@ -20,41 +20,43 @@
 namespace openblack
 {
 
-class StreamNode
-{
-public:
-	glm::vec3 position;
-	std::vector<StreamNode> edges;
-
-	StreamNode(const glm::vec3 position, const std::vector<StreamNode>& nodes)
-	    : position(position)
-	{
-		if (nodes.empty())
-		{
-			return;
-		}
-
-		auto element =
-		    std::min_element(std::cbegin(nodes), std::cend(nodes), [&position](const auto& first, const auto& second) {
-			    auto firstDistance = glm::distance(position, first.position);
-			    auto secondDistance = glm::distance(position, second.position);
-			    return firstDistance < secondDistance;
-		    });
-
-		if (glm::distance(position, element->position) < maxNodeDistance)
-		{
-			edges.push_back(*element);
-		}
-	}
-
-private:
-	const static auto maxNodeDistance = 100;
-};
-
 struct Stream
 {
-	int streamId;
-	std::vector<StreamNode> nodes;
+	using Id = int;
+
+	class Node
+	{
+	public:
+		glm::vec3 position;
+		std::vector<Node> edges;
+
+		Node(const glm::vec3 position, const std::vector<Node>& nodes)
+		    : position(position)
+		{
+			if (nodes.empty())
+			{
+				return;
+			}
+
+			auto element =
+			    std::min_element(std::cbegin(nodes), std::cend(nodes), [&position](const auto& first, const auto& second) {
+				    auto firstDistance = glm::distance(position, first.position);
+				    auto secondDistance = glm::distance(position, second.position);
+				    return firstDistance < secondDistance;
+			    });
+
+			if (glm::distance(position, element->position) < maxNodeDistance)
+			{
+				edges.push_back(*element);
+			}
+		}
+
+	private:
+		const static auto maxNodeDistance = 100;
+	};
+
+	Stream::Id id;
+	std::vector<Node> nodes;
 };
 
 } // namespace openblack

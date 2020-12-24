@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Copyright (c) 2018-2020 openblack developers
+ * Copyright (c) 2018-2021 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -9,18 +9,20 @@
 
 #pragma once
 
-#include "AllMeshes.h"
-#include "Entities/Components/AnimatedStatic.h"
-#include "Entities/Components/Villager.h"
+#include <unordered_map>
 
 #include <spdlog/spdlog.h>
 
-#include <unordered_map>
+#include "AllMeshes.h"
+#include "Entities/Components/Abode.h"
+#include "Entities/Components/AnimatedStatic.h"
+#include "Entities/Components/Feature.h"
+#include "Entities/Components/Mobile.h"
+#include "Entities/Components/Tree.h"
+#include "Entities/Components/Villager.h"
 
 namespace openblack
 {
-
-enum class TreeInfo;
 
 class MeshId
 {
@@ -64,10 +66,22 @@ private:
 	std::unordered_map<T, MeshPackId, K> lookup;
 };
 
-extern MeshLookup<TreeInfo> treeMeshLookup;
-extern MeshLookup<MobileStaticInfo> mobileStaticMeshLookup;
-extern MeshLookup<MobileObjectInfo> mobileObjectMeshLookup;
-extern MeshLookup<AbodeInfo> abodeMeshLookup;
-extern MeshLookup<VillagerType, VillagerTypeId> villagerMeshLookup;
-extern MeshLookup<FeatureInfo> featureMeshLookup;
+// TODO(bwrsandman): would be nice to have this as a constexpr but that is not available for strings and maps
+template <class C, size_t size>
+std::unordered_map<std::string_view, C> makeLookup(std::array<std::string_view, size> strings)
+{
+	std::unordered_map<std::string_view, C> table;
+	for (size_t i = 0; i < size; ++i)
+	{
+		table.insert(std::make_pair(strings[i], static_cast<C>(i)));
+	}
+	return table;
+}
+
+extern MeshLookup<Tree::Info> treeMeshLookup;
+extern MeshLookup<MobileStatic::Info> mobileStaticMeshLookup;
+extern MeshLookup<MobileObject::Info> mobileObjectMeshLookup;
+extern MeshLookup<Abode::Info> abodeMeshLookup;
+extern MeshLookup<Villager::Type, Villager::TypeId> villagerMeshLookup;
+extern MeshLookup<Feature::Info> featureMeshLookup;
 } // namespace openblack

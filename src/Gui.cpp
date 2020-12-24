@@ -989,7 +989,7 @@ void Gui::ShowVillagerNames(const Game& game)
 		// TODO(bwrsandman): Get owner player and associated color
 		glm::vec4 color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 		// Female villagers have a lighter colour
-		if (entity.sex == VillagerSex::FEMALE)
+		if (entity.sex == Villager::Sex::FEMALE)
 		{
 			color += glm::vec4((glm::vec3(1.0f) - glm::vec3(color)) * glm::vec3(144.0f / 255.0f), color.a);
 			color = glm::saturate(color);

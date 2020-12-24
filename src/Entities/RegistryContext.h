@@ -7,18 +7,21 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#include "AllMeshes.h"
-#include "Graphics/DebugLines.h"
+#include <map>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
 #include <bgfx/bgfx.h>
 #include <entt/entity/fwd.hpp>
 #include <glm/fwd.hpp>
 
-#include <3D/MeshLookup.h>
-#include <map>
-#include <memory>
-#include <unordered_map>
-#include <vector>
+#include "AllMeshes.h"
+#include "Common/MeshLookup.h"
+#include "Components/Footpath.h"
+#include "Components/Stream.h"
+#include "Components/Town.h"
+#include "Graphics/DebugLines.h"
 
 namespace openblack::entities
 {
@@ -69,15 +72,11 @@ struct RenderContext
 	bool hasBoundingBoxes {false};
 };
 
-using FootpathId = int;
-using TownId = int;
-using StreamId = int;
-
 struct RegistryContext
 {
 	RenderContext renderContext;
-	std::unordered_map<FootpathId, entt::entity> footpaths;
-	std::unordered_map<StreamId, entt::entity> streams;
-	std::unordered_map<TownId, entt::entity> towns;
+	std::unordered_map<Footpath::Id, entt::entity> footpaths;
+	std::unordered_map<Stream::Id, entt::entity> streams;
+	std::unordered_map<Town::Id, entt::entity> towns;
 };
 } // namespace openblack::entities
