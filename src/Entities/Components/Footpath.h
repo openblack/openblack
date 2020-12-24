@@ -15,14 +15,16 @@
 namespace openblack
 {
 
-struct FootpathNode
-{
-	glm::vec3 position;
-};
-
 struct Footpath
 {
-	std::vector<FootpathNode> nodes;
+	using Id = int;
+
+	struct Node
+	{
+		glm::vec3 position;
+	};
+
+	std::vector<Node> nodes;
 };
 
 } // namespace openblack

@@ -9,13 +9,12 @@
 
 #pragma once
 
-#include "Enums.h"
-
 namespace openblack
 {
 
 struct Field
 {
+	int town;
 };
 
 } // namespace openblack

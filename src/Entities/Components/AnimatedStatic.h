@@ -9,10 +9,7 @@
 
 #pragma once
 
-#include "Enums.h"
-
 #include <string>
-#include <unordered_map>
 
 namespace openblack
 {
@@ -20,38 +17,6 @@ namespace openblack
 struct AnimatedStatic
 {
 	std::string type;
-};
-
-struct MobileStatic
-{
-	MobileStaticInfo type;
-};
-
-struct MobileObject
-{
-	MobileObjectInfo type;
-};
-
-struct Feature
-{
-	FeatureInfo type;
-};
-
-struct Field
-{
-	int town;
-};
-
-struct Forest
-{
-	int type;
-};
-
-struct Town
-{
-	int id;
-	std::unordered_map<std::string, float> beliefs;
-	bool uninhabitable = false;
 };
 
 } // namespace openblack
