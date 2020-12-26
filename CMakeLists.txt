@@ -57,6 +57,23 @@ if (TARGET bgfx::bgfx AND TARGET bgfx::bx)
   target_link_libraries(bgfx::bgfx INTERFACE bgfx::bx)
 endif()
 
+# If cross compiling, we need a host-compatible version of shaderc to compile shaders
+if(CMAKE_CROSSCOMPILING OR NOT TARGET bgfx::shaderc)
+  find_program(shaderc_EXECUTABLE REQUIRED
+    NAMES
+      bgfx-shaderc
+      shaderc
+    PATHS
+      /usr/bin
+      ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/packages/bgfx_x64-linux/tools/bgfx
+      ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/packages/bgfx_x64-windows/tools/bgfx
+  )
+  add_executable(bgfx::shaderc IMPORTED)
+  set_target_properties(bgfx::shaderc PROPERTIES
+    IMPORTED_LOCATION "${shaderc_EXECUTABLE}"
+  )
+endif()
+
 find_package(Bullet REQUIRED)
 find_package(spdlog 1.3.0 REQUIRED)
 find_package(EnTT 3.7.0 CONFIG REQUIRED) # only available as a config
@@ -90,7 +107,9 @@ add_subdirectory(apps/packtool)
 add_subdirectory(apps/lndtool)
 add_subdirectory(apps/anmtool)
 add_subdirectory(apps/morphtool)
-add_subdirectory(ci/mock)
+if(NOT CMAKE_CROSSCOMPILING)  # Requires python and running compiled apps
+  add_subdirectory(ci/mock)
+endif()
 
 # Set openblack project as default startup project in Visual Studio
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT
