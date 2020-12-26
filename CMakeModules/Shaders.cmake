@@ -11,6 +11,10 @@
 
 # find_package(bgfx REQUIRED COMPONENTS shaderc)
 
+if (NOT TARGET bgfx::shaderc)
+	message(FATAL_ERROR "Cannot compile shaders without the proper shaderc target")
+endif()
+
 get_target_property(BGFX_INCLUDE_PATH bgfx::bgfx INTERFACE_INCLUDE_DIRECTORIES)
 list (GET BGFX_INCLUDE_PATH 0 BGFX_INCLUDE_PATH_1) # bgfx::bgfx exports include directory twice?
 set(BGFX_SHADER_INCLUDE_PATH ${BGFX_INCLUDE_PATH_1}/bgfx)
