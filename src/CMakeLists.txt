@@ -114,7 +114,10 @@ target_link_libraries(
   PUBLIC
     spdlog::spdlog
 )
-if(UNIX)
+
+if(ANDROID)
+  target_link_libraries(openblack_lib PRIVATE EGL)
+elseif (UNIX)
   find_library(WAYLAND wayland-egl)
   if(WAYLAND)
     target_link_libraries(openblack_lib PRIVATE ${WAYLAND})
@@ -209,8 +212,11 @@ foreach(SHADER ${OPENBLACK_SHADERS})
   source_group("Shaders" FILES "${SHADER}")
 endforeach()
 
-add_executable(openblack main.cpp)
-target_link_libraries(openblack PRIVATE openblack_lib)
+if (ANDROID)
+  add_library(openblack ALIAS openblack_lib)
+else()
+  add_executable(openblack main.cpp)
+  target_link_libraries(openblack PRIVATE openblack_lib)
 
 # Installation configuration
 install(TARGETS openblack RUNTIME DESTINATION bin)
@@ -224,4 +230,6 @@ if(UNIX)
       DESTINATION "share/icons/hicolor/${RES}x${RES}/apps"
       RENAME "openblack.png")
   endforeach()
+endif()
+
 endif()

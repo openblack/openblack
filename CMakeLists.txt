@@ -1,6 +1,13 @@
-cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
+
+# VCPKG has an imperfect android implementation.
+# NDK must be in env and vcpkg_android.cmake selects architecture.
+if (VCPKG_TARGET_ANDROID)
+  set(ENV{ANDROID_NDK_HOME} ${ANDROID_NDK_HOME})
+  include(vcpkg_android)
+endif()
 
 # On Visual Studio generators default to using vcpkg as the most newbie friendly option
 if (CMAKE_GENERATOR MATCHES "^Visual Studio")
@@ -12,12 +19,8 @@ endif()
 
 # If using vcpkg and not manually specified the toolchain then set it for them
 if (OPENBLACK_USE_VCPKG AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-  if (VCPKG_TARGET_ANDROID)
-    include("${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/vcpkg_android.cmake")
-  else()
-    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake
+  set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake
       CACHE STRING "Default to vcpkg toolchain file")
-  endif()
 endif()
 
 project(openblack)
