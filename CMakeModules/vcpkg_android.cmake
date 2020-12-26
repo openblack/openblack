@@ -1,5 +1,5 @@
 #
-# vcpkg_android.cmake 
+# vcpkg_android.cmake
 #
 # Helper script when using vcpkg with cmake. It should be triggered via the variable VCPKG_TARGET_ANDROID
 #
@@ -7,14 +7,14 @@
 # if (VCPKG_TARGET_ANDROID)
 #     include("cmake/vcpkg_android.cmake")
 # endif()
-# 
+#
 # This script will:
 # 1 & 2. check the presence of needed env variables: ANDROID_NDK_HOME and VCPKG_ROOT
 # 3. set VCPKG_TARGET_TRIPLET according to ANDROID_ABI
-# 4. Combine vcpkg and Android toolchains by setting CMAKE_TOOLCHAIN_FILE 
+# 4. Combine vcpkg and Android toolchains by setting CMAKE_TOOLCHAIN_FILE
 #    and VCPKG_CHAINLOAD_TOOLCHAIN_FILE
 
-# Note: VCPKG_TARGET_ANDROID is not an official Vcpkg variable. 
+# Note: VCPKG_TARGET_ANDROID is not an official Vcpkg variable.
 # it is introduced for the need of this script
 
 if (VCPKG_TARGET_ANDROID)
@@ -34,8 +34,8 @@ if (VCPKG_TARGET_ANDROID)
 
     #
     # 3. Set VCPKG_TARGET_TRIPLET according to ANDROID_ABI
-    # 
-    # There are four different Android ABI, each of which maps to 
+    #
+    # There are four different Android ABI, each of which maps to
     # a vcpkg triplet. The following table outlines the mapping from vcpkg architectures to android architectures
     #
     # |VCPKG_TARGET_TRIPLET       | ANDROID_ABI          |
@@ -45,7 +45,7 @@ if (VCPKG_TARGET_ANDROID)
     # |x64-android                | x86_64               |
     # |x86-android                | x86                  |
     #
-    # The variable must be stored in the cache in order to successfully the two toolchains. 
+    # The variable must be stored in the cache in order to successfully the two toolchains.
     #
     if (ANDROID_ABI MATCHES "arm64-v8a")
         set(VCPKG_TARGET_TRIPLET "arm64-android" CACHE STRING "" FORCE)
@@ -76,8 +76,8 @@ if (VCPKG_TARGET_ANDROID)
     # vcpkg_toolchain_file=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
     # android_toolchain_file=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake
     #
-    # When using vcpkg, the vcpkg toolchain shall be specified first. 
-    # However, vcpkg provides a way to preload and additional toolchain, 
+    # When using vcpkg, the vcpkg toolchain shall be specified first.
+    # However, vcpkg provides a way to preload and additional toolchain,
     # with the VCPKG_CHAINLOAD_TOOLCHAIN_FILE option.
     set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE $ENV{ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake)
     set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake)
