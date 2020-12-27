@@ -13,6 +13,7 @@
 #include <glm/gtx/euler_angles.hpp>
 
 #include "ECS/Components/AnimatedStatic.h"
+#include "ECS/Components/Fixed.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
@@ -32,6 +33,7 @@ entt::entity AnimatedStaticArchetype::Create(const glm::vec3& position, Animated
 
 	// The exact same as Feature but info is different and type is a different enum
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));
+	registry.Assign<Fixed>(entity);
 	// const auto& feature = registry.Assign<Feature>(entity, type);
 	registry.Assign<Mesh>(entity, info.meshId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 
