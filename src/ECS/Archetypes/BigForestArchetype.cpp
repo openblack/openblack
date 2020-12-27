@@ -11,6 +11,7 @@
 
 #include <glm/gtx/euler_angles.hpp>
 
+#include "ECS/Components/Fixed.h"
 #include "ECS/Components/Forest.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
@@ -30,6 +31,7 @@ entt::entity BigForestArchetype::Create(const glm::vec3& position, BigForestInfo
 	const auto& info = Game::instance()->GetInfoConstants().bigForest[static_cast<size_t>(type)];
 
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));
+	registry.Assign<Fixed>(entity);
 	registry.Assign<Forest>(entity);
 	registry.Assign<BigForest>(entity);
 	registry.Assign<Mesh>(entity, info.meshId, static_cast<int8_t>(0), static_cast<int8_t>(1));

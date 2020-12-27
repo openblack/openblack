@@ -9,24 +9,12 @@
 
 #pragma once
 
-#include "Enums.h"
-
 namespace openblack::ecs::components
 {
 
-struct Mobile
+struct Fixed
 {
 	char dummy;
-};
-
-struct MobileStatic
-{
-	MobileStaticInfo type; ///< This is 32 bits but could be 8 bits if stored in uint8_t
-};
-
-struct MobileObject
-{
-	MobileObjectInfo type; ///< This is 32 bits but could be 8 bits if stored in uint8_t
 };
 
 } // namespace openblack::ecs::components
