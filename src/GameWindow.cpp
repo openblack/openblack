@@ -80,7 +80,7 @@ SDL_Window* GameWindow::GetHandle() const
 	return _window.get();
 }
 
-void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) const
+void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) const
 {
 	SDL_SysWMinfo wmi;
 	SDL_VERSION(&wmi.version);
@@ -106,16 +106,16 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 			win_impl = wl_egl_window_create(surface, width, height);
 			SDL_SetWindowData(_window.get(), "wl_egl_window", win_impl);
 		}
-		native_window = reinterpret_cast<void*>(win_impl);
-		native_display = wmi.info.wl.display;
+		nativeWindow = reinterpret_cast<void*>(win_impl);
+		nativeDisplay = wmi.info.wl.display;
 	}
 	else
 #endif // defined(SDL_VIDEO_DRIVER_WAYLAND)
 #if defined(SDL_VIDEO_DRIVER_X11)
 	    if (wmi.subsystem == SDL_SYSWM_X11)
 	{
-		native_window = reinterpret_cast<void*>(wmi.info.x11.window);
-		native_display = wmi.info.x11.display;
+		nativeWindow = reinterpret_cast<void*>(wmi.info.x11.window);
+		nativeDisplay = wmi.info.x11.display;
 	}
 	else
 #endif // defined(SDL_VIDEO_DRIVER_X11)
@@ -124,8 +124,8 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 #if defined(SDL_VIDEO_DRIVER_COCOA)
 	    if (wmi.subsystem == SDL_SYSWM_COCOA)
 	{
-		native_window = wmi.info.cocoa.window;
-		native_display = nullptr;
+		nativeWindow = wmi.info.cocoa.window;
+		nativeDisplay = nullptr;
 	}
 	else
 #endif // defined(SDL_VIDEO_DRIVER_COCOA)
@@ -134,8 +134,8 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 #if defined(SDL_VIDEO_DRIVER_WINDOWS)
 	    if (wmi.subsystem == SDL_SYSWM_WINDOWS)
 	{
-		native_window = wmi.info.win.window;
-		native_display = nullptr;
+		nativeWindow = wmi.info.win.window;
+		nativeDisplay = nullptr;
 	}
 	else
 #endif // defined(SDL_VIDEO_DRIVER_WINDOWS)
@@ -144,8 +144,8 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 #if defined(SDL_VIDEO_DRIVER_VIVANTE)
 	    if (wmi.subsystem == SDL_SYSWM_VIVANTE)
 	{
-		native_window = wmi.info.vivante.window;
-		native_display = wmi.info.vivante.display;
+		nativeWindow = wmi.info.vivante.window;
+		nativeDisplay = wmi.info.vivante.display;
 	}
 	else
 #endif // defined(SDL_VIDEO_DRIVER_VIVANTE)
