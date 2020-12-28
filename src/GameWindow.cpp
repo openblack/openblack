@@ -116,8 +116,9 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 		native_display = wmi.info.x11.display;
 	}
 	else
-#endif // defined(SDL_VIDEO_DRIVER_X11) \
-       // Mac
+#endif // defined(SDL_VIDEO_DRIVER_X11)
+
+	// Mac
 #if defined(SDL_VIDEO_DRIVER_COCOA)
 	    if (wmi.subsystem == SDL_SYSWM_COCOA)
 	{
@@ -125,8 +126,9 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 		native_display = nullptr;
 	}
 	else
-#endif // defined(SDL_VIDEO_DRIVER_COCOA) \
-       // Windows
+#endif // defined(SDL_VIDEO_DRIVER_COCOA)
+
+	// Windows
 #if defined(SDL_VIDEO_DRIVER_WINDOWS)
 	    if (wmi.subsystem == SDL_SYSWM_WINDOWS)
 	{
@@ -134,8 +136,9 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 		native_display = nullptr;
 	}
 	else
-#endif // defined(SDL_VIDEO_DRIVER_WINDOWS) \
-       // Steam Link
+#endif // defined(SDL_VIDEO_DRIVER_WINDOWS)
+
+	// Steam Link
 #if defined(SDL_VIDEO_DRIVER_VIVANTE)
 	    if (wmi.subsystem == SDL_SYSWM_VIVANTE)
 	{
