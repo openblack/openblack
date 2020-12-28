@@ -66,37 +66,6 @@ list(APPEND OPENBLACK_SHADERS ${OPENBLACK_VERTEX_SHADERS})
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_FRAGMENT_SHADERS})
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_VARYING_DEF_FILE})
 
-if(MSVC)
-  set(CMAKE_CONFIGURATION_TYPES
-      Debug Release
-      CACHE STRING "" FORCE)
-
-  # Suppress WinMain(), provided by SDL
-  add_definitions(-DSDL_MAIN_HANDLED)
-  # Get rid of useless crud from windows.h
-  add_definitions(-DNOMINMAX -DWIN32_LEAN_AND_MEAN)
-  # disable CRT warnings on windows cause they're annoying as shit and we use C
-  # functions everywhere
-  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-
-  # /W4                 - Level 4 warnings /MP                 - Multi-threaded
-  # compilation /permissive-        - Enables stricter C++ standards conformance
-  # checks
-  add_compile_options(/W4 /MP /permissive-)
-
-  set(CMAKE_EXE_LINKER_FLAGS_DEBUG
-      "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /SAFESEH:NO")
-  set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL
-      "${CMAKE_EXE_LINKER_FLAGS_MINSIZEREL} /SAFESEH:NO")
-  set(CMAKE_EXE_LINKER_FLAGS_RELEASE
-      "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /SAFESEH:NO")
-  set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO
-      "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} /SAFESEH:NO")
-else(MSVC)
-  add_compile_options(-Wall -Wextra -pedantic -Wno-unused-private-field
-                      -Wno-unused-variable -Wno-unused-parameter)
-endif(MSVC)
-
 add_executable(
   openblack
   ${OPENBLACK_SOURCES}
@@ -114,7 +83,9 @@ target_include_directories(
                     ${CMAKE_CURRENT_BINARY_DIR}/../include)
 target_link_libraries(
   openblack
-  PRIVATE l3d
+  PRIVATE
+          "$<$<CXX_COMPILER_ID:MSVC>:-SAFESEH:NO>"
+          l3d
           pack
           lnd
           anm
@@ -155,6 +126,31 @@ endif()
 target_compile_definitions(openblack PRIVATE "$<$<CONFIG:DEBUG>:OPENBLACK_DEBUG>")
 
 if(MSVC)
+  set(CMAKE_CONFIGURATION_TYPES
+    Debug Release
+    CACHE STRING "" FORCE)
+
+  target_compile_definitions(openblack
+    PRIVATE
+    # Suppress WinMain(), provided by SDL
+    SDL_MAIN_HANDLED
+    # Get rid of useless crud from windows.h
+    NOMINMAX
+    WIN32_LEAN_AND_MEAN
+    # disable CRT warnings on windows cause they're annoying as shit and we use C
+    # functions everywhere
+    _CRT_SECURE_NO_WARNINGS
+    )
+
+  target_compile_options(openblack PRIVATE
+    # Level 4 warnings
+    /W4
+    # Multi-threaded
+    /MP
+    # Enables stricter C++ standards conformance checks
+    /permissive-
+    )
+
   # Debug builds create a debug console
   set_target_properties(openblack PROPERTIES LINK_FLAGS_DEBUG
                                              "/SUBSYSTEM:CONSOLE")
@@ -170,6 +166,21 @@ if(MSVC)
                                              "CONSOLE")
   set_target_properties(openblack PROPERTIES LINK_FLAGS_MINSIZEREL
                                              "/SUBSYSTEM:CONSOLE")
+
+  if (OPENBLACK_WARNINGS_AS_ERRORS)
+    target_compile_options(openblack PRIVATE /WX)
+  endif()
+else()
+  target_compile_options(openblack PRIVATE
+    -Wall
+    -Wextra
+    -pedantic
+    -Wno-unused-private-field
+    -Wno-unused-variable
+    -Wno-unused-parameter)
+  if (OPENBLACK_WARNINGS_AS_ERRORS)
+    target_compile_options(openblack PRIVATE -Werror)
+  endif()
 endif()
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT

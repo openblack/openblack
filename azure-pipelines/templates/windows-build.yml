@@ -10,7 +10,13 @@ steps:
     displayName: 'CMake'
     inputs:
       workingDirectory: 'build'
-      cmakeArgs: '-DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=${{ parameters.BuildPlatform }}-windows -A ${{ parameters.MSBuildPlatform }} -Dbgfx_DIR=c:/bgfx/lib/cmake/bgfx ..'
+      # TODO: Add -DOPENBLACK_WARNINGS_AS_ERRORS=ON
+      cmakeArgs: >-
+        -DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake
+        -DVCPKG_TARGET_TRIPLET=${{ parameters.BuildPlatform }}-windows
+        -A ${{ parameters.MSBuildPlatform }}
+        -Dbgfx_DIR=c:/bgfx/lib/cmake/bgfx
+        ..
   - task: VSBuild@1
     displayName: 'Build'
     inputs:
