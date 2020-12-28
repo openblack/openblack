@@ -92,11 +92,6 @@ public:
 	std::vector<T> DeserializeList();
 
 private:
-	Footpath* DeserializeFootpath();
-	FootpathLink* DeserializeFootpathLink();
-	FootpathNode* DeserializeFootpathNode();
-	FootpathLinkSave* DeserializeFootpathLinkSave();
-
 	FileStream& _stream;
 	uint32_t _checkSum;
 	std::vector<std::shared_ptr<GameThing>> _cache;
