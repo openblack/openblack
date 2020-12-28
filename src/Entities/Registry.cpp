@@ -237,7 +237,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 
 	// Villagers
 	Each<const Villager, const Transform>(
-	    [this, &renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Villager& villager, const Transform& transform) {
+	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Villager& villager, const Transform& transform) {
 		    const auto villagerType = villager.GetVillagerType();
 		    const auto meshId = villagerMeshLookup[villagerType];
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
