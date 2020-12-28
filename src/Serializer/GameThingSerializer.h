@@ -44,10 +44,12 @@ public:
 		uint32_t _unknown1;
 		uint8_t _unknown2;
 
+		virtual ~GameThing() = default;
+
 		virtual bool Deserialize(GameThingSerializer& deserializer);
 	};
 
-	struct FootpathNode: GameThing
+	struct FootpathNode final: GameThing
 	{
 		MapCoords _coords;
 		uint8_t _unknown;
@@ -55,7 +57,7 @@ public:
 		bool Deserialize(GameThingSerializer& deserializer) override;
 	};
 
-	struct Footpath: GameThing
+	struct Footpath final: GameThing
 	{
 		std::vector<FootpathNode> _nodes;
 		uint32_t _unknown;
@@ -63,14 +65,14 @@ public:
 		bool Deserialize(GameThingSerializer& deserializer) override;
 	};
 
-	struct FootpathLink: GameThing
+	struct FootpathLink final: GameThing
 	{
 		std::vector<Footpath> _footpaths;
 
 		bool Deserialize(GameThingSerializer& deserializer) override;
 	};
 
-	struct FootpathLinkSave: GameThing
+	struct FootpathLinkSave final: GameThing
 	{
 		MapCoords _coords;
 		FootpathLink _link;
