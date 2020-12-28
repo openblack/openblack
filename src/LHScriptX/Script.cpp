@@ -111,7 +111,7 @@ ScriptCommandParameter GetParameter(Token& argument)
 
 void Script::runCommand(const std::string& identifier, const std::vector<Token>& args)
 {
-	const ScriptCommandSignature* command_signature;
+	const ScriptCommandSignature* command_signature = nullptr;
 
 	for (const auto& signature : FeatureScriptCommands::Signatures)
 	{
