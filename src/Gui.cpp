@@ -171,6 +171,7 @@ bool Gui::ProcessEventSdl2(const SDL_Event& event)
 		{
 			_console->Toggle();
 		}
+		[[fallthrough]];
 	case SDL_KEYUP:
 	{
 		int key = event.key.keysym.scancode;
