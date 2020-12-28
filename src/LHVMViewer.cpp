@@ -766,7 +766,15 @@ std::string openblack::LHVMViewer::DataToString(uint32_t data, openblack::LHVM::
 		return std::to_string(data);
 	case LHVM::VMInstruction::DataType::FLOAT:
 	case LHVM::VMInstruction::DataType::VECTOR:
-		return std::to_string(*reinterpret_cast<float*>(&data)) + "f";
+	{
+		// Strict Aliasing using the union trick
+		union
+		{
+			uint32_t u;
+			float f;
+		} f2u = {data};
+		return std::to_string(f2u.f) + "f";
+	}
 	case LHVM::VMInstruction::DataType::BOOLEAN:
 		return data ? "true" : "false";
 	default:
