@@ -582,16 +582,6 @@ void LHVMViewer::Draw(const openblack::LHVM::LHVM* lhvm)
 
 void LHVMViewer::DrawScriptsTab(const openblack::LHVM::LHVM* lhvm)
 {
-	static auto scripts_vector_getter = [](void* vec, int idx, const char** out_text) {
-		auto& vector = *static_cast<std::vector<openblack::LHVM::VMScript>*>(vec);
-		if (idx < 0 || idx >= static_cast<int>(vector.size()))
-		{
-			return false;
-		}
-		*out_text = vector.at(idx).GetName().c_str();
-		return true;
-	};
-
 	static auto vector_getter = [](void* vec, int idx, const char** out_text) {
 		auto& vector = *static_cast<std::vector<std::string>*>(vec);
 		if (idx < 0 || idx >= static_cast<int>(vector.size()))
