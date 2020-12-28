@@ -27,10 +27,10 @@ public:
 	Camera(glm::vec3 position, glm::vec3 rotation)
 	    : _position(position)
 	    , _rotation(glm::radians(rotation))
+	    , _dv(0.0f, 0.0f, 0.0f)
 	    , _projectionMatrix(1.0f)
 	    , _velocity(0.0f, 0.0f, 0.0f)
 	    , _movementSpeed(0.0005f)
-	    , _dv(0.0f, 0.0f, 0.0f)
 	    , _freeLookSensitivity(1.0f)
 	{
 	}
