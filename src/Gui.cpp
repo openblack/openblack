@@ -11,7 +11,10 @@
 
 #include <bgfx/bgfx.h>
 #include <bgfx/embedded_shader.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #include <bx/math.h>
+#pragma GCC diagnostic pop
 #include <bx/timer.h>
 #include <glm/gtx/compatibility.hpp>
 #include <imgui.h>
