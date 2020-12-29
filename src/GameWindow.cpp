@@ -54,6 +54,7 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 	}
 
 	SDL_ShowCursor(SDL_DISABLE);
+	SDL_SetHint(SDL_HINT_VIDEO_EXTERNAL_CONTEXT, "1");
 
 	uint32_t flags = SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | extraFlags;
 	if (displayMode == DisplayMode::Fullscreen)
@@ -150,6 +151,16 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 	}
 	else
 #endif // defined(SDL_VIDEO_DRIVER_VIVANTE)
+
+	// Android
+#if defined(SDL_VIDEO_DRIVER_ANDROID)
+	    if (wmi.subsystem == SDL_SYSWM_ANDROID)
+	{
+		nativeWindow = wmi.info.android.window;
+		nativeDisplay = nullptr; // wmi.info.android.surface;
+	}
+	else
+#endif // defined(SDL_VIDEO_DRIVER_ANDROID)
 	{
 		throw std::runtime_error("Unsupported platform or window manager: " + std::to_string(wmi.subsystem));
 	}
