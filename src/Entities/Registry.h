@@ -57,6 +57,11 @@ public:
 	{
 		return _registry.get<Component>(entity);
 	}
+	template <typename Component>
+	decltype(auto) Get(entt::entity entity) const
+	{
+		return _registry.get<Component>(entity);
+	}
 	template <typename... Components, typename Func>
 	decltype(auto) Each(Func func)
 	{
@@ -66,6 +71,21 @@ public:
 	decltype(auto) Each(Func func) const
 	{
 		return _registry.view<Components...>().each(func);
+	}
+	template <typename Component>
+	decltype(auto) ToEntity(const Component& component) const
+	{
+		return entt::to_entity(_registry, component);
+	}
+	template <typename Dst, typename Src>
+	decltype(auto) As(Src& component)
+	{
+		return Get<Dst>(ToEntity(component));
+	}
+	template <typename Dst, typename Src>
+	decltype(auto) As(const Src& component) const
+	{
+		return Get<Dst>(ToEntity(component));
 	}
 
 private:
