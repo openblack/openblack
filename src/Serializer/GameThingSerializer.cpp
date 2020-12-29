@@ -11,7 +11,7 @@
 
 #include <cassert>
 
-#include <fmt/format.h>
+#include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
 
 #include "Common/FileStream.h"
