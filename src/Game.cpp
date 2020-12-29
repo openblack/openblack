@@ -20,7 +20,10 @@
 #include "Common/EventManager.h"
 #include "Common/FileSystem.h"
 #include "ECS/Archetypes/HandArchetype.h"
+#include "ECS/Components/Fixed.h"
+#include "ECS/Components/Mobile.h"
 #include "ECS/Components/Transform.h"
+#include "ECS/Map.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/DynamicsSystem.h"
 #include "ECS/Systems/RenderingSystem.h"
@@ -64,6 +67,7 @@ Game::Game(Arguments&& args)
     : _eventManager(std::make_unique<EventManager>())
     , _fileSystem(std::make_unique<FileSystem>())
     , _entityRegistry(std::make_unique<ecs::Registry>())
+    , _entityMap(std::make_unique<ecs::Map>())
     , _config()
     , _gameSpeedMultiplier(1.0f)
     , _frameCount(0)
@@ -197,6 +201,8 @@ bool Game::ProcessEvents(const SDL_Event& event)
 
 bool Game::GameLogicLoop()
 {
+	using namespace ecs::components;
+
 	const auto currentTime = std::chrono::steady_clock::now();
 	const auto delta = currentTime - _lastGameLoopTime;
 	if (delta < kTurnDuration * _gameSpeedMultiplier)
@@ -204,8 +210,8 @@ bool Game::GameLogicLoop()
 		return false;
 	}
 
-	// TODO: update entities
-	// const auto& registry = GetEntityRegistry();
+	// Build Map Grid Acceleration Structure
+	_entityMap->Rebuild();
 
 	_lastGameLoopTime = currentTime;
 	_turnDeltaTime = delta;
@@ -406,6 +412,9 @@ bool Game::Run()
 		                    (_fileSystem->GetGamePath() / challengePath).generic_string());
 		return false;
 	}
+
+	// Initialize the Acceleration Structure
+	_entityMap->Rebuild();
 
 	if (_window)
 	{
