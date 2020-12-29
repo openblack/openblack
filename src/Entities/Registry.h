@@ -65,7 +65,7 @@ public:
 	template <typename... Components, typename Func>
 	decltype(auto) Each(Func func) const
 	{
-		return _registry.view<const Components...>().each(func);
+		return _registry.view<Components...>().each(func);
 	}
 
 private:
