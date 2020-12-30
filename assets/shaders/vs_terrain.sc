@@ -1,5 +1,5 @@
 $input a_position, a_texcoord1, a_color1, a_color2, a_texcoord2, a_color0, a_color3
-$output v_texcoord0, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera
+$output v_texcoord0, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera, v_fogDensity
 
 #include <bgfx_shader.sh>
 
@@ -10,6 +10,7 @@ $output v_texcoord0, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_
 #endif
 
 uniform vec4 u_blockPosition;
+uniform vec4 u_fogDistance;
 
 void main()
 {
@@ -26,4 +27,8 @@ void main()
 	vec4 cs_position = mul(u_view, vec4(transformedPosition, 1.0f));
 	v_distToCamera = cs_position.z;
 	gl_Position = mul(u_proj, cs_position);
+
+	float distance = length(cs_position.xyz) / u_fogDistance.r;
+	distance = clamp(distance, 0.0, 1.0);
+	v_fogDensity = distance;
 }

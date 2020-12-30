@@ -13,6 +13,8 @@
 #include "Graphics/Texture2D.h"
 #include "LandBlock.h"
 
+#include <LNDFile.h>
+
 #include <array>
 #include <memory>
 #include <string>
@@ -20,11 +22,6 @@
 
 namespace openblack
 {
-
-namespace lnd
-{
-struct LNDCountry;
-}
 
 class LandIsland
 {
@@ -68,8 +65,12 @@ private:
 	std::unique_ptr<graphics::Texture2D> _textureNoiseMap;
 	std::unique_ptr<graphics::Texture2D> _textureBumpMap;
 	std::unique_ptr<graphics::Texture2D> _textureSmallBump;
+	std::unique_ptr<graphics::Texture2D> _textureCountryMap;
+	std::unique_ptr<graphics::Texture2D> _textureCountryTest;
 
 	std::array<uint8_t, 256 * 256> _noiseMap;
+
+	friend class GUILandIsland;
 };
 } // namespace openblack
 

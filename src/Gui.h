@@ -59,6 +59,9 @@ inline void Image(bgfx::TextureHandle _handle, const ImVec2& _size, const ImVec2
 	Image(_handle, IMGUI_FLAGS_ALPHA_BLEND, 0, _size, _uv0, _uv1, _tintCol, _borderCol);
 }
 
+void BeginGroupPanel(const char* name, const ImVec2& size = ImVec2(0.0f, 0.0f));
+void EndGroupPanel();
+
 } // namespace ImGui
 
 namespace openblack

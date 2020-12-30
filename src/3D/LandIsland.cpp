@@ -14,6 +14,8 @@
 #include "Common/IStream.h"
 #include "Common/stb_image_write.h"
 #include "Game.h"
+#include "Graphics/ShaderManager.h"
+#include "Renderer.h"
 
 #include <spdlog/spdlog.h>
 
@@ -22,6 +24,50 @@
 
 using namespace openblack;
 using namespace openblack::graphics;
+
+struct PosTexCoord0Vertex
+{
+	float m_x;
+	float m_y;
+	float m_z;
+	float m_u;
+	float m_v;
+
+	static void init()
+	{
+		ms_layout
+			.begin()
+			.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+			.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+			.end();
+	}
+
+	static bgfx::VertexLayout ms_layout;
+};
+
+bgfx::VertexLayout PosTexCoord0Vertex::ms_layout;
+
+void screenSpaceQuad()
+{
+	bgfx::TransientVertexBuffer vb;
+	bgfx::TransientIndexBuffer ib;
+
+	bgfx::allocTransientVertexBuffer(&vb, 4, PosTexCoord0Vertex::ms_layout);
+	bgfx::allocTransientIndexBuffer(&ib, 6);
+
+	PosTexCoord0Vertex* vertex = (PosTexCoord0Vertex*)vb.data;
+	vertex[0] = { -1.0f, -1.0f, 0.0f, 0.0f, 0.0f }; // TL
+	vertex[1] = { 1.0f, -1.0f, 0.0f, 1.0f, 0.0f }; // TR
+	vertex[2] = { 1.0f, 1.0f, 0.0f, 1.0f, 1.0f }; // BR
+	vertex[3] = { -1.0f, 1.0f, 0.0f, 0.0f, 1.0f }; // BL
+
+	uint16_t* data = (uint16_t*)ib.data;
+	data[0] = 0; data[1] = 1; data[2] = 2;
+	data[3] = 0; data[4] = 3; data[5] = 2;
+
+	bgfx::setVertexBuffer(0, &vb);
+	bgfx::setIndexBuffer(&ib);
+}
 
 const float LandIsland::HeightUnit = 0.67f;
 const float LandIsland::CellSize = 10.0f;
@@ -92,6 +138,68 @@ void LandIsland::LoadFromFile(const std::string& filename)
 	_textureBumpMap = std::make_unique<Texture2D>("LandIslandBumpMap");
 	_textureBumpMap->Create(lnd::LNDBumpMap::width, lnd::LNDBumpMap::height, 1, Format::R8, Wrapping::ClampEdge,
 	                        lnd.GetExtra().bump.texels, sizeof(lnd.GetExtra().bump.texels));
+
+	// generate a country lookup texture
+	// [country_id, altitude] = [tex 1, tex 2, blend]
+
+	auto* countryMap = new uint8_t[256 * 256 * 3];
+	for (int i = 0; i < 256 * 256 * 3; i++) {
+		countryMap[i] = 0x00;
+	}
+
+	for (int x = 0; x < _countries.size(); x++) {
+		auto const& country = _countries[x];
+		for (int y = 0; y < 256; y++) {
+			auto const& material = country.materials[y];
+
+			countryMap[(y * 256 * 3) + (x * 3) + 0] = material.indices[0];
+			countryMap[(y * 256 * 3) + (x * 3) + 1] = material.indices[1];
+			countryMap[(y * 256 * 3) + (x * 3) + 2] = material.coefficient;
+		}
+	}
+
+	auto* blankMemory = new uint8_t[256 * 256 * 3];
+	for (int i = 0; i < 256 * 256 * 3; i++) {
+		blankMemory[i] = 0x00;
+	}
+
+	_textureCountryMap = std::make_unique<Texture2D>("LandIslandCountryMap");
+	_textureCountryMap->Create(256, 256, 1, Format::RGB8UI, Wrapping::Repeat, countryMap, 256*256*3);
+	// _textureCountryMap->DumpTexture();
+
+	_textureCountryTest = std::make_unique<Texture2D>("LandIslandCountryTest");
+	_textureCountryTest->Create(256, 256, 1, Format::RGB8, Wrapping::ClampEdge, blankMemory, 256*256*3);
+
+	auto fb = bgfx::createFrameBuffer(1, &_textureCountryTest->GetNativeHandle());
+
+	// RENDER COUNTRIES
+	bgfx::ViewId viewTexture = 9;
+	bgfx::setViewName(viewTexture, "Render Texture");
+	bgfx::setViewClear(viewTexture, BGFX_CLEAR_COLOR, 0x300000ff, 1.0f, 0);
+	bgfx::setViewRect(viewTexture, 0, 0, 256, 256);
+	bgfx::setViewFrameBuffer(viewTexture, fb);
+
+	bgfx::touch(viewTexture);
+
+	auto& shaderManager = Game::instance()->GetRenderer().GetShaderManager();
+	auto objectShader = shaderManager.GetShader("DebugCountry2D");
+	objectShader->SetTextureSampler("s0_materials", 0, *_materialArray);
+	objectShader->SetTextureSampler("s1_countryMap", 1, *_textureCountryMap);
+	//terrainShader->SetUniformValue("u_timeOfDay", &desc.timeOfDay);
+
+	PosTexCoord0Vertex::init();
+	screenSpaceQuad();
+
+	// Set render states.
+	bgfx::setState(0
+		| BGFX_STATE_DEFAULT
+		| BGFX_STATE_PT_TRISTRIP
+	);
+	bgfx::submit(viewTexture, objectShader->GetRawHandle());
+
+	bgfx::frame();
+
+	// _textureCountryTest->DumpTexture();
 
 	// build the meshes (we could move this elsewhere)
 	for (auto& block : _landBlocks) block.BuildMesh(*this);

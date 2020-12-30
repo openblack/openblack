@@ -25,3 +25,4 @@ vec3 v_materialBlend     : COLOR2;
 float v_lightLevel       : COLOR3;
 float v_waterAlpha       : COLOR4;
 float v_distToCamera     : DEPTH0;
+float v_fogDensity       : FOG = 0.0;

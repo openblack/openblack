@@ -384,6 +384,12 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 				glm::vec4 mapPosition = block.GetMapPosition();
 				terrainShader->SetUniformValue("u_blockPosition", &mapPosition);
 
+				glm::vec4 fogColour = glm::vec4(0.25, 0.25, 0.25, 1.0);
+				glm::vec4 fogDistance = glm::vec4(500.0f, 0.0f, 0.0f, 0.0f);
+
+				terrainShader->SetUniformValue("u_fogColour", &fogColour);
+				terrainShader->SetUniformValue("u_fogDistance", &fogDistance);
+
 				// clang-format off
 				constexpr auto defaultState = 0u
 					| BGFX_STATE_WRITE_MASK

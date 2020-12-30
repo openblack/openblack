@@ -96,7 +96,8 @@ void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format 
                        size_t size)
 {
 	auto memory = bgfx::makeRef(data, size);
-	_handle = bgfx::createTexture2D(width, height, false, layers, getBgfxTextureFormat(format), BGFX_TEXTURE_NONE, memory);
+	//_handle = bgfx::createTexture2D(width, height, false, layers, getBgfxTextureFormat(format), BGFX_TEXTURE_NONE, memory);
+	_handle = bgfx::createTexture2D(width, height, false, layers, getBgfxTextureFormat(format), BGFX_SAMPLER_POINT, memory);
 	bgfx::setName(_handle, _name.c_str());
 	bgfx::frame();
 

@@ -1,4 +1,4 @@
-$input v_texcoord0, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera
+$input v_texcoord0, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera, v_fogDensity
 
 #include <bgfx_shader.sh>
 
@@ -9,6 +9,7 @@ SAMPLER2D(s2_smallBump, 2);
 uniform vec4 u_timeOfDay;
 uniform vec4 u_bumpmapStrength;
 uniform vec4 u_smallBumpmapStrength;
+uniform vec4 u_fogColour;
 
 void main()
 {
@@ -47,8 +48,9 @@ void main()
 	// apply light map
 	col = col * mix(.25f, clamp(v_lightLevel * 2, 0.5, 1), u_timeOfDay.r);
 
-	gl_FragColor = vec4(col.rgb, v_waterAlpha);
+	col = vec4(mix(col.rgb, u_fogColour.rgb, v_fogDensity), 1.0f);
 
+	gl_FragColor = vec4(col.rgb, v_waterAlpha);
 
 	//gl_FragColor.r = v_distToCamera / 200.0f;
 

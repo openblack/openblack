@@ -11,10 +11,12 @@
 
 #include <cstdint> // Shaders below need uint8_t
 
+#include "Shaders/fs_country_2d.bin.h"
 #include "Shaders/fs_line.bin.h"
 #include "Shaders/fs_object.bin.h"
 #include "Shaders/fs_terrain.bin.h"
 #include "Shaders/fs_water.bin.h"
+#include "Shaders/vs_country_2d.bin.h"
 #include "Shaders/vs_line.bin.h"
 #include "Shaders/vs_line_instanced.bin.h"
 #include "Shaders/vs_object.bin.h"
@@ -38,6 +40,9 @@ const bgfx::EmbeddedShader s_embeddedShaders[] = {BGFX_EMBEDDED_SHADER(vs_line),
                                                   BGFX_EMBEDDED_SHADER(vs_terrain), BGFX_EMBEDDED_SHADER(fs_terrain),
 
                                                   BGFX_EMBEDDED_SHADER(vs_water),   BGFX_EMBEDDED_SHADER(fs_water),
+
+												  BGFX_EMBEDDED_SHADER(vs_country_2d), BGFX_EMBEDDED_SHADER(fs_country_2d),
+
 
                                                   BGFX_EMBEDDED_SHADER_END()};
 
