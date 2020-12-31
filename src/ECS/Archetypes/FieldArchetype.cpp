@@ -32,7 +32,7 @@ entt::entity FieldArchetype::Create(int townId, const glm::vec3& position, Field
 	auto abodeInfo = GAbodeInfo::Find(townTribe, AbodeNumber::Field);
 
 	auto entity = AbodeArchetype::Create(townId, position, abodeInfo, yAngleRadians, 1.0f, 0, 0);
-	registry.Assign<Field>(entity, townId);
+	registry.Assign<Field>(entity);
 
 	return entity;
 }
