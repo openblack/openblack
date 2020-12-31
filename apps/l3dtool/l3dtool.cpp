@@ -197,10 +197,12 @@ int PrintHeader(openblack::l3d::L3DFile& l3d)
 	std::printf("size: %u\n", header.size);
 	std::printf("submesh count: %u\n", header.submeshCount);
 	std::printf("submesh start offset: 0x%08X\n", header.submeshOffsetsOffset);
-	std::printf("unknown int: 0x%08X\n", header.unknown);
-	std::printf("unknown point: {%f, %f, %f}\n", header.point_1.x, header.point_1.y, header.point_1.z);
-	std::printf("unknown point: {%f, %f, %f}\n", header.point_2.x, header.point_2.y, header.point_2.z);
-	std::printf("unknown distance: %f\n", header.distance);
+	std::printf("bounding box:\n");
+	std::printf("\tunknown 32 bits: 0x%08X\n", header.boundingBox.unknown);
+	std::printf("\tcentre: {%f, %f, %f}\n", header.boundingBox.centre.x, header.boundingBox.centre.y,
+	            header.boundingBox.centre.z);
+	std::printf("\tsize: {%f, %f, %f}\n", header.boundingBox.size.x, header.boundingBox.size.y, header.boundingBox.size.z);
+	std::printf("\tdiagonal length: %f\n", header.boundingBox.diagonalLength);
 	std::printf("unknown offset: 0x%08X\n", header.anotherOffset);
 	std::printf("skin count: %u\n", header.skinCount);
 	std::printf("skin start offset: 0x%08X\n", header.skinOffsetsOffset);

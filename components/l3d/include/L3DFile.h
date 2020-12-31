@@ -95,6 +95,15 @@ struct L3DPoint2D
 };
 static_assert(sizeof(L3DPoint2D) == 8);
 
+struct L3DBoundingBox
+{
+	uint32_t unknown;
+	L3DPoint centre;
+	L3DPoint size;
+	float diagonalLength;
+};
+static_assert(sizeof(L3DBoundingBox) == 0x20);
+
 struct L3DHeader
 {
 	std::array<char, 4> magic;
@@ -102,10 +111,7 @@ struct L3DHeader
 	uint32_t size;
 	uint32_t submeshCount;
 	uint32_t submeshOffsetsOffset;
-	uint32_t unknown; // always zero
-	L3DPoint point_1; // always zero
-	L3DPoint point_2; // always zero
-	float distance;   // always zero
+	L3DBoundingBox boundingBox; // always zero
 	uint32_t anotherOffset;
 	uint32_t skinCount;
 	uint32_t skinOffsetsOffset;
