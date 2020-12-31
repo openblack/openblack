@@ -58,7 +58,7 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 
 	// Trees
 	Each<const Tree, const Transform>([&meshIds, &instanceCount](const Tree& entity, const Transform& transform) {
-		const auto meshId = treeMeshLookup[entity.treeInfo];
+		const auto meshId = treeMeshLookup[entity.type];
 		auto count = meshIds.insert(std::make_pair(meshId, 0));
 		count.first->second++;
 		instanceCount++;
@@ -220,7 +220,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	// Trees
 	Each<const Tree, const Transform>(
 	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Tree& entity, const Transform& transform) {
-		    const auto meshId = treeMeshLookup[entity.treeInfo];
+		    const auto meshId = treeMeshLookup[entity.type];
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
 		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
 		    renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
