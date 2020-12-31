@@ -27,10 +27,8 @@ class Hand
 {
 public:
 	void Init();
-	void Draw();
 
 private:
 	HandRenderType handType;
-	std::unique_ptr<L3DMesh> m_HandModel;
 };
 } // namespace openblack::entities::components
