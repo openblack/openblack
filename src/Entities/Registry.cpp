@@ -20,6 +20,7 @@
 #include "Entities/Components/AnimatedStatic.h"
 #include "Entities/Components/Field.h"
 #include "Entities/Components/Forest.h"
+#include "Entities/Components/Mesh.h"
 #include "Entities/Components/Stream.h"
 #include "Entities/Components/Transform.h"
 #include "Entities/Components/Tree.h"
@@ -56,99 +57,8 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 	uint32_t instanceCount = 0;
 	std::map<MeshId, uint32_t> meshIds;
 
-	// Trees
-	Each<const Tree, const Transform>([&meshIds, &instanceCount](const Tree& entity, const Transform& transform) {
-		const auto meshId = treeMeshLookup[entity.type];
-		auto count = meshIds.insert(std::make_pair(meshId, 0));
-		count.first->second++;
-		instanceCount++;
-	});
-
-	// Abodes
-	Each<const Abode, const Transform>([&meshIds, &instanceCount](const Abode& entity, const Transform& transform) {
-		const auto meshId = abodeMeshLookup[entity.type];
-		auto count = meshIds.insert(std::make_pair(meshId, 0));
-		count.first->second++;
-		instanceCount++;
-	});
-
-	// Villagers
-	Each<const Villager, const Transform>([&meshIds, &instanceCount](const Villager& villager, const Transform& transform) {
-		const auto villagerType = villager.GetVillagerType();
-		const auto meshId = villagerMeshLookup[villagerType];
-		auto count = meshIds.insert(std::make_pair(meshId, 0));
-		count.first->second++;
-		instanceCount++;
-	});
-
-	// Animated Statics
-	Each<const AnimatedStatic, const Transform>(
-	    [&meshIds, &instanceCount](const AnimatedStatic& entity, const Transform& transform) {
-		    // temporary-ish:
-		    MeshPackId meshId = MeshPackId::Dummy;
-		    if (entity.type == "Norse Gate")
-		    {
-			    meshId = MeshPackId::BuildingNorseGate;
-		    }
-		    else if (entity.type == "Gate Stone Plinth")
-		    {
-			    meshId = MeshPackId::ObjectGateTotemPlinthe;
-		    }
-		    else if (entity.type == "Piper Cave Entrance")
-		    {
-			    meshId = MeshPackId::BuildingMineEntrance;
-		    }
-		    auto count = meshIds.insert(std::make_pair(static_cast<MeshId>(meshId), 0));
-		    count.first->second++;
-		    instanceCount++;
-	    });
-
-	// Mobile Statics
-	Each<const MobileStatic, const Transform>(
-	    [&meshIds, &instanceCount](const MobileStatic& entity, const Transform& transform) {
-		    const auto meshId = mobileStaticMeshLookup[entity.type];
-		    auto count = meshIds.insert(std::make_pair(meshId, 0));
-		    count.first->second++;
-		    instanceCount++;
-	    });
-
-	// Features
-	Each<const Feature, const Transform>([&meshIds, &instanceCount](const Feature& entity, const Transform& transform) {
-		const auto meshId = featureMeshLookup[entity.type];
-		auto count = meshIds.insert(std::make_pair(meshId, 0));
-		count.first->second++;
-		instanceCount++;
-	});
-
-	// Fields
-	Each<const Field, const Transform>([&meshIds, &instanceCount](const Field& entity, const Transform& transform) {
-		const auto meshId = MeshPackId::TreeWheat;
-		auto count = meshIds.insert(std::make_pair(static_cast<MeshId>(meshId), 0));
-		count.first->second++;
-		instanceCount++;
-	});
-
-	// Forests
-	Each<const Forest, const Transform>([&meshIds, &instanceCount](const Forest& entity, const Transform& transform) {
-		const auto meshId = MeshPackId::FeatureForest;
-		auto count = meshIds.insert(std::make_pair(static_cast<MeshId>(meshId), 0));
-		count.first->second++;
-		instanceCount++;
-	});
-
-	// Mobile Objects
-	Each<const MobileObject, const Transform>(
-	    [&meshIds, &instanceCount](const MobileObject& entity, const Transform& transform) {
-		    const auto meshId = mobileObjectMeshLookup[entity.type];
-		    auto count = meshIds.insert(std::make_pair(meshId, 0));
-		    count.first->second++;
-		    instanceCount++;
-	    });
-
-	// Hands
-	Each<const Hand, const Transform>([&meshIds, &instanceCount](const Hand& entity, const Transform& transform) {
-		const auto meshId = Hand::meshId;
-		auto count = meshIds.insert(std::make_pair(meshId, 0));
+	Each<const Mesh, const Transform>([&meshIds, &instanceCount](const Mesh& mesh, const Transform&) {
+		auto count = meshIds.insert(std::make_pair(mesh.id, mesh.submeshId));
 		count.first->second++;
 		instanceCount++;
 	});
@@ -193,152 +103,24 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 {
 	auto& renderCtx = Context().renderContext;
 
-	// Set transforms for instanced draw at offsets
-	auto prepareDrawBoundingBox = [&renderCtx, drawBoundingBox](uint32_t idx, const Transform& transform, MeshId meshId,
-	                                                            int8_t submeshId) {
-		if (drawBoundingBox)
-		{
-			const L3DMesh& mesh = Game::instance()->GetMeshPack().GetMesh(meshId);
-			auto box = mesh.GetSubMeshes()[(mesh.GetNumSubMeshes() + submeshId) % mesh.GetNumSubMeshes()]->GetBoundingBox();
-
-			glm::mat4 boxMatrix = glm::mat4(1.0f);
-			boxMatrix = glm::translate(boxMatrix, transform.position + box.center());
-			//			boxMatrix           = glm::rotate(boxMatrix,
-			// transform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f)); 			boxMatrix
-			// = glm::rotate(boxMatrix, transform.rotation.y,
-			// glm::vec3(0.0f, 1.0f, 0.0f)); 			boxMatrix           =
-			// glm::rotate(boxMatrix, transform.rotation.z, glm::vec3(0.0f,
-			// 0.0f, 1.0f));
-			boxMatrix = glm::scale(boxMatrix, transform.scale * box.size());
-
-			renderCtx.instanceUniforms[idx + renderCtx.instanceUniforms.size() / 2] = boxMatrix;
-		}
-	};
 	// Store offsets of uniforms for descs
 	std::map<MeshId, uint32_t> uniformOffsets;
 
-	// Trees
-	Each<const Tree, const Transform>(
-	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Tree& entity, const Transform& transform) {
-		    const auto meshId = treeMeshLookup[entity.type];
-		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
+	// Set transforms for instanced draw at offsets
+	Each<const Mesh, const Transform>(
+	    [&renderCtx, &uniformOffsets, drawBoundingBox](const Mesh& mesh, const Transform& transform) {
+		    auto offset = uniformOffsets.insert(std::make_pair(mesh.id, 0));
+		    auto desc = renderCtx.instancedDrawDescs.find(mesh.id);
 		    renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
-		    prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, -1);
-		    offset.first->second++;
-	    });
-
-	// Abodes
-	Each<const Abode, const Transform>(
-	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Abode& entity, const Transform& transform) {
-		    const auto meshId = abodeMeshLookup[entity.type];
-		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
-		    renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
-		    prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 0);
-		    offset.first->second++;
-	    });
-
-	// Villagers
-	Each<const Villager, const Transform>(
-	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Villager& villager, const Transform& transform) {
-		    const auto villagerType = villager.GetVillagerType();
-		    const auto meshId = villagerMeshLookup[villagerType];
-		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
-		    renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
-		    prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 0);
-		    offset.first->second++;
-	    });
-
-	// Animated Statics
-	Each<const AnimatedStatic, const Transform>(
-	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const AnimatedStatic& entity, const Transform& transform) {
-		    // temporary-ish:
-		    MeshPackId meshPackId = MeshPackId::Dummy;
-		    if (entity.type == "Norse Gate")
+		    uint32_t idx = desc->second.offset + offset.first->second;
+		    if (drawBoundingBox)
 		    {
-			    meshPackId = MeshPackId::BuildingNorseGate;
+			    const L3DMesh& l3dMesh = Game::instance()->GetMeshPack().GetMesh(mesh.id);
+			    auto submeshId = (l3dMesh.GetNumSubMeshes() + mesh.bbSubmeshId) % l3dMesh.GetNumSubMeshes();
+			    auto box = l3dMesh.GetSubMeshes()[submeshId]->GetBoundingBox();
+			    auto boxMatrix = static_cast<glm::mat4>(transform) * glm::translate(box.center()) * glm::scale(box.size());
+			    renderCtx.instanceUniforms[idx + renderCtx.instanceUniforms.size() / 2] = boxMatrix;
 		    }
-		    else if (entity.type == "Gate Stone Plinth")
-		    {
-			    meshPackId = MeshPackId::ObjectGateTotemPlinthe;
-		    }
-		    else if (entity.type == "Piper Cave Entrance")
-		    {
-			    meshPackId = MeshPackId::BuildingMineEntrance;
-		    }
-		    auto meshId = static_cast<MeshId>(meshPackId);
-		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
-		    renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
-		    prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 0);
-		    offset.first->second++;
-	    });
-
-	// Mobile Statics
-	Each<const MobileStatic, const Transform>(
-	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const MobileStatic& entity, const Transform& transform) {
-		    const auto meshId = mobileStaticMeshLookup[entity.type];
-		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
-		    renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
-		    prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 1);
-		    offset.first->second++;
-	    });
-
-	// Features
-	Each<const Feature, const Transform>(
-	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Feature& entity, const Transform& transform) {
-		    const auto meshId = featureMeshLookup[entity.type];
-		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
-		    renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
-		    prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 1);
-		    offset.first->second++;
-	    });
-
-	// Fields
-	Each<const Field, const Transform>(
-	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Field& entity, const Transform& transform) {
-		    const MeshId meshId = static_cast<MeshId>(MeshPackId::TreeWheat);
-		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
-		    renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
-		    prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 0);
-		    offset.first->second++;
-	    });
-
-	// Forests
-	Each<const Forest, const Transform>(
-	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Forest& entity, const Transform& transform) {
-		    const MeshId meshId = static_cast<MeshId>(MeshPackId::FeatureForest);
-		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
-		    renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
-		    prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 0);
-		    offset.first->second++;
-	    });
-
-	// Mobile Objects
-	Each<const MobileObject, const Transform>(
-	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const MobileObject& entity, const Transform& transform) {
-		    const auto meshId = mobileObjectMeshLookup[entity.type];
-		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
-		    renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
-		    prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 1);
-		    offset.first->second++;
-	    });
-
-	// Hands
-	Each<const Hand, const Transform>(
-	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Hand& entity, const Transform& transform) {
-		    MeshId meshId = Hand::meshId;
-		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
-		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
-		    renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
-		    prepareDrawBoundingBox(desc->second.offset + offset.first->second, transform, meshId, 1);
 		    offset.first->second++;
 	    });
 

@@ -23,6 +23,7 @@
 #include "Entities/Components/Field.h"
 #include "Entities/Components/Footpath.h"
 #include "Entities/Components/Forest.h"
+#include "Entities/Components/Mesh.h"
 #include "Entities/Components/Stream.h"
 #include "Entities/Components/Town.h"
 #include "Entities/Components/Transform.h"
@@ -370,8 +371,9 @@ void FeatureScriptCommands::CreateAbode(int32_t townId, glm::vec3 position, cons
 	const auto entity = registry.Create();
 
 	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(size));
-	registry.Assign<Abode>(entity, GetAbodeInfo(abodeInfo), static_cast<uint32_t>(townId), static_cast<uint32_t>(foodAmount),
-	                       static_cast<uint32_t>(woodAmount));
+	const auto& abode = registry.Assign<Abode>(entity, GetAbodeInfo(abodeInfo), static_cast<uint32_t>(townId),
+	                                           static_cast<uint32_t>(foodAmount), static_cast<uint32_t>(woodAmount));
+	registry.Assign<Mesh>(entity, abodeMeshLookup[abode.type], static_cast<int8_t>(0), static_cast<int8_t>(0));
 }
 
 void FeatureScriptCommands::CreatePlannedAbode(int32_t townId, glm::vec3 position, const std::string& abodeInfo,
@@ -388,8 +390,9 @@ void FeatureScriptCommands::CreateTownCentre(int32_t townId, glm::vec3 position,
 	auto submeshIds = std::vector {3};
 
 	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(size));
-	registry.Assign<Abode>(entity, GetAbodeInfo(abodeInfo), static_cast<uint32_t>(townId), static_cast<uint32_t>(0),
-	                       static_cast<uint32_t>(0));
+	const auto& abode = registry.Assign<Abode>(entity, GetAbodeInfo(abodeInfo), static_cast<uint32_t>(townId),
+	                                           static_cast<uint32_t>(0), static_cast<uint32_t>(0));
+	registry.Assign<Mesh>(entity, abodeMeshLookup[abode.type], static_cast<int8_t>(0), static_cast<int8_t>(0));
 }
 
 void FeatureScriptCommands::CreateTownSpell(int32_t townId, const std::string& spellName)
@@ -447,7 +450,10 @@ void FeatureScriptCommands::CreateVillagerPos(glm::vec3 position, [[maybe_unused
 	auto lifeStage = age >= 18 ? Villager::LifeStage::Adult : Villager::LifeStage::Child;
 	auto sex = (role == Villager::Role::HOUSEWIFE) ? Villager::Sex::FEMALE : Villager::Sex::MALE;
 	auto task = Villager::Task::IDLE;
-	registry.Assign<Villager>(entity, health, static_cast<uint32_t>(age), hunger, lifeStage, sex, tribe, role, task);
+	const auto& villager =
+	    registry.Assign<Villager>(entity, health, static_cast<uint32_t>(age), hunger, lifeStage, sex, tribe, role, task);
+	registry.Assign<Mesh>(entity, villagerMeshLookup[villager.GetVillagerType()], static_cast<int8_t>(0),
+	                      static_cast<int8_t>(0));
 }
 
 void FeatureScriptCommands::CreateCitadel(glm::vec3 position, int32_t, const std::string&, int32_t, int32_t)
@@ -504,7 +510,8 @@ void FeatureScriptCommands::CreateNewTree(int32_t forestId, glm::vec3 position, 
 	const auto entity = registry.Create();
 
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-rotation), glm::vec3(currentSize));
-	registry.Assign<Tree>(entity, Tree::Info(treeType));
+	const auto& tree = registry.Assign<Tree>(entity, Tree::Info(treeType));
+	registry.Assign<Mesh>(entity, treeMeshLookup[tree.type], static_cast<int8_t>(0), static_cast<int8_t>(-1));
 }
 
 void FeatureScriptCommands::CreateField(glm::vec3 position, int32_t)
@@ -567,8 +574,9 @@ void FeatureScriptCommands::CreateMobileObject(glm::vec3 position, int32_t type,
 	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
-	registry.Assign<MobileObject>(entity, static_cast<MobileObject::Info>(type));
 	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(scale));
+	const auto& object = registry.Assign<MobileObject>(entity, static_cast<MobileObject::Info>(type));
+	registry.Assign<Mesh>(entity, mobileObjectMeshLookup[object.type], static_cast<int8_t>(0), static_cast<int8_t>(1));
 }
 
 void FeatureScriptCommands::CreateMobileStatic(glm::vec3 position, int32_t, float, float)
@@ -584,8 +592,9 @@ void FeatureScriptCommands::CreateMobileUStatic(glm::vec3 position, int32_t type
 
 	glm::vec3 offset(0.0f, verticalOffset, 0.0f);
 
-	registry.Assign<MobileStatic>(entity, MobileStatic::Info(type));
 	registry.Assign<Transform>(entity, position + offset, glm::eulerAngleXYZ(-pitch, -rotation, -lean), glm::vec3(scale));
+	const auto& mobile = registry.Assign<MobileStatic>(entity, MobileStatic::Info(type));
+	registry.Assign<Mesh>(entity, mobileStaticMeshLookup[mobile.type], static_cast<int8_t>(0), static_cast<int8_t>(1));
 }
 
 void FeatureScriptCommands::CreateDeadTree(glm::vec3 position, const std::string&, int32_t, float, float, float, float)
@@ -671,8 +680,9 @@ void FeatureScriptCommands::CreateNewBigForest(glm::vec3 position, int32_t type,
 	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
-	registry.Assign<Forest>(entity);
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-rotation), glm::vec3(scale));
+	registry.Assign<Forest>(entity);
+	registry.Assign<Mesh>(entity, MeshPackId::FeatureForest, static_cast<int8_t>(0), static_cast<int8_t>(1));
 }
 
 void FeatureScriptCommands::CreateInfluenceRing(glm::vec3 position, int32_t, float, int32_t)
@@ -769,8 +779,9 @@ void FeatureScriptCommands::CreateBonfire(glm::vec3 position, float rotation, fl
 	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
-	registry.Assign<MobileStatic>(entity, MobileStatic::Info::Bonfire);
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-rotation), glm::vec3(scale));
+	const auto& mobile = registry.Assign<MobileStatic>(entity, MobileStatic::Info::Bonfire);
+	registry.Assign<Mesh>(entity, mobileStaticMeshLookup[mobile.type], static_cast<int8_t>(0), static_cast<int8_t>(1));
 }
 
 void FeatureScriptCommands::CreateBase(glm::vec3 position, int32_t)
@@ -784,8 +795,9 @@ void FeatureScriptCommands::CreateNewFeature(glm::vec3 position, const std::stri
 	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
-	registry.Assign<Feature>(entity, GetFeatureInfo(type));
 	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(scale));
+	const auto& feature = registry.Assign<Feature>(entity, GetFeatureInfo(type));
+	registry.Assign<Mesh>(entity, featureMeshLookup[feature.type], static_cast<int8_t>(0), static_cast<int8_t>(1));
 }
 
 void FeatureScriptCommands::SetInteractDesire(float)
@@ -848,8 +860,22 @@ void FeatureScriptCommands::CreateAnimatedStatic(glm::vec3 position, const std::
 	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
-	registry.Assign<AnimatedStatic>(entity, type);
 	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(scale));
+	const auto& animated = registry.Assign<AnimatedStatic>(entity, type);
+	MeshPackId meshPackId = MeshPackId::Dummy;
+	if (animated.type == "Norse Gate")
+	{
+		meshPackId = MeshPackId::BuildingNorseGate;
+	}
+	else if (animated.type == "Gate Stone Plinth")
+	{
+		meshPackId = MeshPackId::ObjectGateTotemPlinthe;
+	}
+	else if (animated.type == "Piper Cave Entrance")
+	{
+		meshPackId = MeshPackId::BuildingMineEntrance;
+	}
+	registry.Assign<Mesh>(entity, static_cast<MeshId>(meshPackId), static_cast<int8_t>(0), static_cast<int8_t>(0));
 }
 
 void FeatureScriptCommands::FireFlySpellRewardProb(const std::string& spell, float probability)
@@ -862,8 +888,9 @@ void FeatureScriptCommands::CreateNewTownField(int32_t townId, glm::vec3 positio
 	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
-	registry.Assign<Field>(entity, townId);
 	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(1000));
+	registry.Assign<Field>(entity, townId);
+	registry.Assign<Mesh>(entity, MeshPackId::TreeWheat, static_cast<int8_t>(0), static_cast<int8_t>(0));
 }
 
 void FeatureScriptCommands::CreateSpellDispenser(int32_t, glm::vec3 position, const std::string&, const std::string&, float,

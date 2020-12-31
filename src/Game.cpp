@@ -20,6 +20,7 @@
 #include "Common/EventManager.h"
 #include "Common/FileSystem.h"
 #include "Entities/Components/Hand.h"
+#include "Entities/Components/Mesh.h"
 #include "Entities/Components/Transform.h"
 #include "Entities/Registry.h"
 #include "GameWindow.h"
@@ -441,6 +442,8 @@ void Game::LoadMap(const fs::path& path)
 	_entityRegistry->Assign<entities::components::Hand>(_handEntity);
 	const auto rotation = glm::mat3(glm::eulerAngleXZ(glm::half_pi<float>(), glm::half_pi<float>()));
 	_entityRegistry->Assign<entities::components::Transform>(_handEntity, glm::vec3(0), rotation, glm::vec3(0.02));
+	_entityRegistry->Assign<entities::components::Mesh>(_handEntity, entities::components::Hand::meshId, static_cast<int8_t>(0),
+	                                                    static_cast<int8_t>(0));
 
 	Script script(this);
 	script.Load(source);
