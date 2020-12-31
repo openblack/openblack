@@ -7,10 +7,12 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#include "Entities/RegistryContext.h"
-#include "Graphics/RenderPass.h"
+#pragma once
 
 #include <entt/entt.hpp>
+
+#include "Entities/RegistryContext.h"
+#include "Graphics/RenderPass.h"
 
 namespace openblack
 {
@@ -52,15 +54,15 @@ public:
 	{
 		return _registry.size<Component>();
 	}
-	template <typename Component>
+	template <typename... Components>
 	decltype(auto) Get(entt::entity entity)
 	{
-		return _registry.get<Component>(entity);
+		return _registry.get<Components...>(entity);
 	}
-	template <typename Component>
+	template <typename... Components>
 	decltype(auto) Get(entt::entity entity) const
 	{
-		return _registry.get<Component>(entity);
+		return _registry.get<Components...>(entity);
 	}
 	template <typename... Components, typename Func>
 	decltype(auto) Each(Func func)
