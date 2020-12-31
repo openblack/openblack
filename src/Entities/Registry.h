@@ -55,6 +55,11 @@ public:
 		return _registry.size<Component>();
 	}
 	template <typename... Components>
+	decltype(auto) Has(entt::entity entity) const
+	{
+		return _registry.has<Components...>(entity);
+	}
+	template <typename... Components>
 	decltype(auto) Get(entt::entity entity)
 	{
 		return _registry.get<Components...>(entity);
