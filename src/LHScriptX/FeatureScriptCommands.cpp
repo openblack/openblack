@@ -33,6 +33,7 @@
 #include "Game.h"
 #include "ScriptingBindingUtils.h"
 
+using namespace openblack;
 using namespace openblack::lhscriptx;
 using namespace openblack::entities::components;
 
@@ -147,6 +148,28 @@ std::unordered_map<std::string, Feature::Info> featureInfoLookup {
     {"Crater", Feature::Info::Crater},
     {"Pier", Feature::Info::Pier},
 };
+
+const auto tribeLookup = makeLookup<Tribe>(TribeStrs);
+const auto villagerRoleLookup = makeLookup<Villager::Role>(Villager::RoleStrs);
+
+std::tuple<Tribe, Villager::Role> GetVillagerTribeAndRole(const std::string& villagerTribeWithType)
+{
+	const auto pos = villagerTribeWithType.find_first_of('_');
+	const auto tribeStr = villagerTribeWithType.substr(0, pos);
+	const auto roleStr = villagerTribeWithType.substr(pos + 1);
+
+	try
+	{
+		const auto tribe = tribeLookup.at(tribeStr);
+		const auto role = villagerRoleLookup.at(roleStr);
+		return std::make_tuple(tribe, role);
+	}
+	catch (...)
+	{
+		std::throw_with_nested(std::runtime_error("Could not recognize either villager tribe or role"));
+	}
+}
+
 } // namespace
 
 const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signatures = {{
@@ -412,7 +435,7 @@ void FeatureScriptCommands::CreateSpecialTownVillager(int32_t, glm::vec3, int32_
 }
 
 void FeatureScriptCommands::CreateVillagerPos(glm::vec3 position, [[maybe_unused]] glm::vec3 param_2,
-                                              const std::string& ethnicityAndRole, int32_t age)
+                                              const std::string& tribeAndRole, int32_t age)
 {
 	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
@@ -420,11 +443,11 @@ void FeatureScriptCommands::CreateVillagerPos(glm::vec3 position, [[maybe_unused
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(glm::radians(180.0f)), glm::vec3(1.0));
 	uint32_t health = 100;
 	uint32_t hunger = 100;
-	auto [ethnicity, role] = Villager::GetVillagerEthnicityAndRole(ethnicityAndRole);
+	auto [tribe, role] = GetVillagerTribeAndRole(tribeAndRole);
 	auto lifeStage = age >= 18 ? Villager::LifeStage::Adult : Villager::LifeStage::Child;
 	auto sex = (role == Villager::Role::HOUSEWIFE) ? Villager::Sex::FEMALE : Villager::Sex::MALE;
 	auto task = Villager::Task::IDLE;
-	registry.Assign<Villager>(entity, health, static_cast<uint32_t>(age), hunger, lifeStage, sex, ethnicity, role, task);
+	registry.Assign<Villager>(entity, health, static_cast<uint32_t>(age), hunger, lifeStage, sex, tribe, role, task);
 }
 
 void FeatureScriptCommands::CreateCitadel(glm::vec3 position, int32_t, const std::string&, int32_t, int32_t)

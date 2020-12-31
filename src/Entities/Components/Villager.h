@@ -15,41 +15,13 @@
 #include <string_view>
 #include <tuple>
 
+#include "Enums.h"
+
 namespace openblack::entities::components
 {
 
 struct Villager
 {
-
-	/// Originally VillageEthnicities
-	enum class Ethnicity : uint8_t
-	{
-		NONE,
-		AZTEC,
-		CELTIC,
-		EGYPTIAN,
-		GREEK,
-		INDIAN,
-		JAPANESE,
-		NORSE,
-		TIBETAN,
-		AFRICAN,
-
-		_COUNT
-	};
-	static constexpr std::array<std::string_view, static_cast<uint8_t>(Ethnicity::_COUNT)> EthnicityStrs = {
-	    "NONE",     //
-	    "AZTEC",    //
-	    "CELTIC",   //
-	    "EGYPTIAN", //
-	    "GREEK",    //
-	    "INDIAN",   //
-	    "JAPANESE", //
-	    "NORSE",    //
-	    "TIBETAN",  //
-	    "AFRICAN",  //
-	};
-
 	/// Originally VillagerRoles
 	enum class Role : uint8_t
 	{
@@ -158,17 +130,17 @@ struct Villager
 	    "Adult", //
 	};
 
-	using Type = std::tuple<Villager::Ethnicity, Villager::LifeStage, Villager::Sex, Villager::Role>;
+	using Type = std::tuple<Tribe, Villager::LifeStage, Villager::Sex, Villager::Role>;
 
 	struct TypeId
 	{
 		std::size_t operator()(const Villager::Type& type) const
 		{
-			auto ethnicity = std::get<Ethnicity>(type);
+			auto tribe = std::get<Tribe>(type);
 			auto villagerSex = std::get<Sex>(type);
 			auto lifeStage = std::get<LifeStage>(type);
 			auto role = std::get<Role>(type);
-			auto h1 = std::hash<decltype(ethnicity)>()(ethnicity);
+			auto h1 = std::hash<decltype(tribe)>()(tribe);
 			auto h2 = std::hash<decltype(villagerSex)>()(villagerSex);
 			auto h3 = std::hash<decltype(lifeStage)>()(lifeStage);
 
@@ -187,12 +159,11 @@ struct Villager
 	uint32_t hunger;
 	LifeStage lifeStage;
 	Sex sex;
-	Ethnicity ethnicity;
+	Tribe tribe;
 	Role role;
 	Task task;
 
 	static bool IsImportantRole(Role role);
-	static std::tuple<Ethnicity, Role> GetVillagerEthnicityAndRole(const std::string& villagerEthnicityWithType);
 	Type GetVillagerType() const;
 };
 } // namespace openblack::entities::components

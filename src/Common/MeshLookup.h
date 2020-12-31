@@ -20,6 +20,7 @@
 #include "Entities/Components/Mobile.h"
 #include "Entities/Components/Tree.h"
 #include "Entities/Components/Villager.h"
+#include "Enums.h"
 
 namespace openblack
 {
