@@ -20,6 +20,8 @@ namespace fs = std::experimental::filesystem;
 #include <memory>
 #include <vector>
 
+#include "Common/MeshLookup.h"
+
 namespace openblack
 {
 
@@ -55,7 +57,7 @@ public:
 	[[nodiscard]] const MeshesVec& GetMeshes() const { return _meshes; }
 	[[nodiscard]] const TexturesVec& GetTextures() const { return _textures; }
 
-	[[nodiscard]] const L3DMesh& GetMesh(int id) const { return *_meshes.at(id); }
+	[[nodiscard]] const L3DMesh& GetMesh(MeshId id) const;
 	[[nodiscard]] const graphics::Texture2D& GetTexture(int id) const { return *_textures.at(id); }
 
 private:
