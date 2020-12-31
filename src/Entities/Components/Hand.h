@@ -10,6 +10,7 @@
 #pragma once
 
 #include "3D/L3DMesh.h"
+#include "Common/MeshLookup.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/Texture2D.h"
 
@@ -17,18 +18,19 @@
 
 namespace openblack::entities::components
 {
-enum class HandRenderType
-{
-	Model,
-	Symbol
-};
 
-class Hand
+struct Hand
 {
-public:
+	enum class RenderType
+	{
+		Model,
+		Symbol
+	};
+
+	static constexpr MeshId meshId = 999;
+
 	void Init();
 
-private:
-	HandRenderType handType;
+	RenderType renderType;
 };
 } // namespace openblack::entities::components

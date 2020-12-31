@@ -28,12 +28,12 @@ class MeshId
 {
 public:
 	using IdType = int;
-	MeshId(MeshPackId id)
+	constexpr MeshId(MeshPackId id)
 	    : _id(static_cast<IdType>(id)) {};
-	MeshId(IdType id)
+	constexpr MeshId(IdType id)
 	    : _id(static_cast<IdType>(id)) {};
-	operator int() const { return _id; }
-	bool operator==(const int& other) const { return _id == other; }
+	constexpr operator int() const { return _id; }
+	constexpr bool operator==(const int& other) const { return _id == other; }
 
 private:
 	IdType _id;
