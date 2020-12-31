@@ -28,13 +28,13 @@ namespace openblack
 class MeshId
 {
 public:
-	using IdType = int;
+	using IdType = int16_t;
 	constexpr MeshId(MeshPackId id)
 	    : _id(static_cast<IdType>(id)) {};
 	constexpr MeshId(IdType id)
 	    : _id(static_cast<IdType>(id)) {};
-	constexpr operator int() const { return _id; }
-	constexpr bool operator==(const int& other) const { return _id == other; }
+	constexpr operator IdType() const { return _id; }
+	constexpr bool operator==(const IdType& other) const { return _id == other; }
 
 private:
 	IdType _id;
