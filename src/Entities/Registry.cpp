@@ -147,7 +147,7 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 
 	// Hands
 	Each<const Hand, const Transform>([&meshIds, &instanceCount](const Hand& entity, const Transform& transform) {
-		const auto meshId = MeshId(999);
+		const auto meshId = Hand::meshId;
 		auto count = meshIds.insert(std::make_pair(meshId, 0));
 		count.first->second++;
 		instanceCount++;
@@ -334,7 +334,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	// Hands
 	Each<const Hand, const Transform>(
 	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Hand& entity, const Transform& transform) {
-		    MeshId meshId = 999;
+		    MeshId meshId = Hand::meshId;
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
 		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
 		    renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);

@@ -16,6 +16,7 @@
 #include "3D/MeshPack.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
+#include "Entities/Components/Hand.h"
 #include "Entities/Registry.h"
 #include "Game.h"
 #include "GameWindow.h"
@@ -422,7 +423,7 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 				const L3DMesh* mesh = nullptr;
 
 				// TODO(raffclar): Handle non-mesh pack IDs via a new mechanism
-				if (meshId == 999)
+				if (meshId == entities::components::Hand::meshId)
 				{
 					mesh = &Game::instance()->GetHandModel();
 				}
