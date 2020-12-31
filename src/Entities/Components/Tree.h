@@ -46,7 +46,7 @@ struct Tree
 		Burnt = 22,
 	};
 
-	Info treeInfo;
+	Info type;
 };
 
 } // namespace openblack::entities::components
