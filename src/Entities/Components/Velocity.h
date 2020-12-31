@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace openblack
+namespace openblack::entities::components
 {
 
 struct Velocity
@@ -19,4 +19,4 @@ struct Velocity
 	float dZ;
 };
 
-} // namespace openblack
+} // namespace openblack::entities::components

@@ -46,7 +46,10 @@ class L3DAnim;
 class L3DMesh;
 class Sky;
 class Water;
+namespace entities::components
+{
 struct Transform;
+}
 
 namespace lhscriptx
 {
@@ -142,8 +145,8 @@ public:
 	[[nodiscard]] LandIsland& GetLandIsland() const { return *_landIsland; }
 	[[nodiscard]] L3DMesh& GetTestModel() const { return *_testModel; }
 	[[nodiscard]] L3DMesh& GetHandModel() const { return *_handModel; }
-	const Transform& GetHandTransform() const;
-	Transform& GetHandTransform();
+	const entities::components::Transform& GetHandTransform() const;
+	entities::components::Transform& GetHandTransform();
 	AnimationPack& GetAnimationPack() { return *_animationPack; }
 	MeshPack& GetMeshPack() { return *_meshPack; }
 	[[nodiscard]] const LHVM::LHVM* GetLhvm() { return _lhvm.get(); }

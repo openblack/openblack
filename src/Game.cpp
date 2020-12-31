@@ -118,14 +118,14 @@ Game::~Game()
 	SDL_Quit(); // todo: move to GameWindow
 }
 
-const Transform& Game::GetHandTransform() const
+const entities::components::Transform& Game::GetHandTransform() const
 {
-	return _entityRegistry->Get<Transform>(_handEntity);
+	return _entityRegistry->Get<entities::components::Transform>(_handEntity);
 }
 
-Transform& Game::GetHandTransform()
+entities::components::Transform& Game::GetHandTransform()
 {
-	return _entityRegistry->Get<Transform>(_handEntity);
+	return _entityRegistry->Get<entities::components::Transform>(_handEntity);
 }
 
 bool Game::ProcessEvents(const SDL_Event& event)
@@ -279,7 +279,7 @@ bool Game::Update()
 		if (!_handGripping)
 		{
 			const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
-			auto& handTransform = _entityRegistry->Get<Transform>(_handEntity);
+			auto& handTransform = _entityRegistry->Get<entities::components::Transform>(_handEntity);
 			handTransform.position = _intersection;
 			auto cameraRotation = _camera->GetRotation();
 
@@ -438,9 +438,9 @@ void Game::LoadMap(const fs::path& path)
 
 	// We need a hand for the player
 	_handEntity = _entityRegistry->Create();
-	_entityRegistry->Assign<Hand>(_handEntity);
+	_entityRegistry->Assign<entities::components::Hand>(_handEntity);
 	const auto rotation = glm::mat3(glm::eulerAngleXZ(glm::half_pi<float>(), glm::half_pi<float>()));
-	_entityRegistry->Assign<Transform>(_handEntity, glm::vec3(0), rotation, glm::vec3(0.02));
+	_entityRegistry->Assign<entities::components::Transform>(_handEntity, glm::vec3(0), rotation, glm::vec3(0.02));
 
 	Script script(this);
 	script.Load(source);

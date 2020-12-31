@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace openblack
+namespace openblack::entities::components
 {
 
 struct Field
@@ -17,4 +17,4 @@ struct Field
 	int town;
 };
 
-} // namespace openblack
+} // namespace openblack::entities::components

@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace openblack
+namespace openblack::entities::components
 {
 
 enum class MagicTreeType
@@ -49,4 +49,4 @@ struct Tree
 	Info treeInfo;
 };
 
-} // namespace openblack
+} // namespace openblack::entities::components

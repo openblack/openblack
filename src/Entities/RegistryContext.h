@@ -75,8 +75,8 @@ struct RenderContext
 struct RegistryContext
 {
 	RenderContext renderContext;
-	std::unordered_map<Footpath::Id, entt::entity> footpaths;
-	std::unordered_map<Stream::Id, entt::entity> streams;
-	std::unordered_map<Town::Id, entt::entity> towns;
+	std::unordered_map<components::Footpath::Id, entt::entity> footpaths;
+	std::unordered_map<components::Stream::Id, entt::entity> streams;
+	std::unordered_map<components::Town::Id, entt::entity> towns;
 };
 } // namespace openblack::entities

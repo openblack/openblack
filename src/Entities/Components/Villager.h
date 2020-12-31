@@ -15,7 +15,7 @@
 #include <string_view>
 #include <tuple>
 
-namespace openblack
+namespace openblack::entities::components
 {
 
 struct Villager
@@ -195,4 +195,4 @@ struct Villager
 	static std::tuple<Ethnicity, Role> GetVillagerEthnicityAndRole(const std::string& villagerEthnicityWithType);
 	Type GetVillagerType() const;
 };
-} // namespace openblack
+} // namespace openblack::entities::components

@@ -27,7 +27,7 @@ void FotFile::Load(const fs::path& path)
 	for (const auto& footpath : footpaths)
 	{
 		const auto entity = registry.Create();
-		auto& footpath_entt = registry.Assign<Footpath>(entity);
+		auto& footpath_entt = registry.Assign<entities::components::Footpath>(entity);
 		footpath_entt.nodes.reserve(footpath._nodes.size());
 		for (const auto& node : footpath._nodes)
 		{

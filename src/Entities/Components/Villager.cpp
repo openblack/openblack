@@ -14,11 +14,14 @@
 
 #include "Common/MeshLookup.h"
 
-namespace openblack
-{
+using namespace openblack;
+using openblack::entities::components::Villager;
 
+namespace
+{
 const auto villagerEthnicityLookup = makeLookup<Villager::Ethnicity>(Villager::EthnicityStrs);
 const auto villagerRoleLookup = makeLookup<Villager::Role>(Villager::RoleStrs);
+} // namespace
 
 std::tuple<Villager::Ethnicity, Villager::Role>
 Villager::GetVillagerEthnicityAndRole(const std::string& villagerEthnicityWithType)
@@ -83,4 +86,3 @@ Villager::Type Villager::GetVillagerType() const
 
 	return villagerType;
 }
-} // namespace openblack

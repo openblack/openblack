@@ -33,6 +33,8 @@
 namespace openblack::entities
 {
 
+using namespace components;
+
 Registry::Registry()
 {
 	_registry.set<RegistryContext>();

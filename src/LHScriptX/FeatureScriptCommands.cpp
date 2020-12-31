@@ -34,6 +34,7 @@
 #include "ScriptingBindingUtils.h"
 
 using namespace openblack::lhscriptx;
+using namespace openblack::entities::components;
 
 // alias parameter types for signature list readability
 const constexpr ParameterType TString = ParameterType::String;
@@ -41,7 +42,7 @@ const constexpr ParameterType TNumber = ParameterType::Number;
 const constexpr ParameterType TFloat = ParameterType::Float;
 const constexpr ParameterType TVector = ParameterType::Vector;
 
-namespace openblack
+namespace
 {
 std::unordered_map<std::string, Abode::Info> abodeIdLookup {
     // Norse
@@ -146,7 +147,7 @@ std::unordered_map<std::string, Feature::Info> featureInfoLookup {
     {"Crater", Feature::Info::Crater},
     {"Pier", Feature::Info::Pier},
 };
-} // namespace openblack
+} // namespace
 
 const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signatures = {{
     CREATE_COMMAND_BINDING("CREATE_MIST", CreateMist),
@@ -256,27 +257,27 @@ const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signa
     CREATE_COMMAND_BINDING("SET_LOST_TOWN_SCALE", SetLostTownScale),
 }};
 
-openblack::Abode::Info GetAbodeInfo(const std::string& abodeType)
+Abode::Info GetAbodeInfo(const std::string& abodeType)
 {
-	auto item = openblack::abodeIdLookup.find(abodeType);
+	auto item = abodeIdLookup.find(abodeType);
 
-	if (item == openblack::abodeIdLookup.end())
+	if (item == abodeIdLookup.end())
 	{
 		spdlog::error("Missing abode mesh lookup for \"{}\".", abodeType);
-		return openblack::Abode::Info::TibetanWonder;
+		return Abode::Info::TibetanWonder;
 	}
 
 	return item->second;
 }
 
-openblack::Feature::Info GetFeatureInfo(const std::string& featureType)
+Feature::Info GetFeatureInfo(const std::string& featureType)
 {
-	auto item = openblack::featureInfoLookup.find(featureType);
+	auto item = featureInfoLookup.find(featureType);
 
-	if (item == openblack::featureInfoLookup.end())
+	if (item == featureInfoLookup.end())
 	{
 		spdlog::error("Missing abode mesh lookup for \"{}\".", featureType);
-		return openblack::Feature::Info::Ark;
+		return Feature::Info::Ark;
 	}
 
 	return item->second;

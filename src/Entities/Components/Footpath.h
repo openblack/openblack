@@ -12,7 +12,7 @@
 #include <glm/vec3.hpp>
 #include <vector>
 
-namespace openblack
+namespace openblack::entities::components
 {
 
 struct Footpath
@@ -27,4 +27,4 @@ struct Footpath
 	std::vector<Node> nodes;
 };
 
-} // namespace openblack
+} // namespace openblack::entities::components
