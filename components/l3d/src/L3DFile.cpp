@@ -24,9 +24,7 @@
  *         flags
  *         submesh count - count of the meshes in submesh block (see below)
  *         submesh start offset - offset of the submesh block (see below)
- *         an unknown int - all zeros
- *         two unknown points - all zeros
- *         a float indicating magnitude of second point - all zeros
+ *         the bounding box - initialized to zeros
  *         unknown offset
  *         skin count - count of the skins in skin block (see below)
  *         skin start offset - offset of the skin block (see below)
