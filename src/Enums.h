@@ -9,6 +9,9 @@
 
 #pragma once
 
+#include <array>
+#include <string_view>
+
 // Enums translated over from ones found in the Creature Isle modding tools.
 // Creature Isle specific enums will be commented out with: CREATUREISLE
 // Enum version: Last Saved,#2001-11-15 15:39:30#,"Jonty Barnes"
@@ -192,18 +195,33 @@ enum class AnimalInfo
 	PuzzlePig = 30,
 };
 
-enum class TribeType
+/// Originally TribeType and VillageEthnicities
+enum class Tribe : int8_t
 {
-	None = -1,
-	Celtic = 0,
-	African = 1,
-	Aztec = 2,
-	Japanese = 3,
-	Indian = 4,
-	Egyptian = 5,
-	Greek = 6,
-	Norse = 7,
-	Tibetan = 8,
+	NONE = -1,
+	CELTIC = 0,
+	AFRICAN = 1,
+	AZTEC = 2,
+	JAPANESE = 3,
+	INDIAN = 4,
+	EGYPTIAN = 5,
+	GREEK = 6,
+	NORSE = 7,
+	TIBETAN = 8,
+
+	_COUNT
+};
+static constexpr std::array<std::string_view, static_cast<uint8_t>(Tribe::_COUNT)> TribeStrs = {
+    // "NONE",
+    "CELTIC",   //
+    "AFRICAN",  //
+    "AZTEC",    //
+    "JAPANESE", //
+    "INDIAN",   //
+    "EGYPTIAN", //
+    "GREEK",    //
+    "NORSE",    //
+    "TIBETAN",  //
 };
 
 enum class AbodeNumber

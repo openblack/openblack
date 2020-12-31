@@ -1006,7 +1006,7 @@ void Gui::ShowVillagerNames(const Game& game)
 				ImGui::InputInt("Hunger", reinterpret_cast<int*>(&entity.hunger));
 				ImGui::InputInt("Life Stage", reinterpret_cast<int*>(&entity.lifeStage));
 				ImGui::InputInt("Sex", reinterpret_cast<int*>(&entity.sex));
-				ImGui::InputInt("Ethnicity", reinterpret_cast<int*>(&entity.ethnicity));
+				ImGui::InputInt("Tribe", reinterpret_cast<int*>(&entity.tribe));
 				ImGui::InputInt("Role", reinterpret_cast<int*>(&entity.role));
 				ImGui::InputInt("Task", reinterpret_cast<int*>(&entity.task));
 			};

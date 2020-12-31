@@ -17,31 +17,6 @@
 using namespace openblack;
 using openblack::entities::components::Villager;
 
-namespace
-{
-const auto villagerEthnicityLookup = makeLookup<Villager::Ethnicity>(Villager::EthnicityStrs);
-const auto villagerRoleLookup = makeLookup<Villager::Role>(Villager::RoleStrs);
-} // namespace
-
-std::tuple<Villager::Ethnicity, Villager::Role>
-Villager::GetVillagerEthnicityAndRole(const std::string& villagerEthnicityWithType)
-{
-	const auto pos = villagerEthnicityWithType.find_first_of('_');
-	const auto ethnicityStr = villagerEthnicityWithType.substr(0, pos);
-	const auto roleStr = villagerEthnicityWithType.substr(pos + 1);
-
-	try
-	{
-		const auto ethnicity = villagerEthnicityLookup.at(ethnicityStr);
-		const auto role = villagerRoleLookup.at(roleStr);
-		return std::make_tuple(ethnicity, role);
-	}
-	catch (...)
-	{
-		std::throw_with_nested(std::runtime_error("Could not recognize either villager ethnicity or type"));
-	}
-}
-
 bool Villager::IsImportantRole(Villager::Role role)
 {
 	switch (role)
@@ -82,7 +57,7 @@ Villager::Type Villager::GetVillagerType() const
 		importantRole = Role::NONE;
 	}
 
-	Villager::Type villagerType = {ethnicity, lifeStage, sex, importantRole};
+	Villager::Type villagerType = {tribe, lifeStage, sex, importantRole};
 
 	return villagerType;
 }
