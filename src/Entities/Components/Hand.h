@@ -15,7 +15,7 @@
 
 #include <memory>
 
-namespace openblack
+namespace openblack::entities::components
 {
 enum class HandRenderType
 {
@@ -33,4 +33,4 @@ private:
 	HandRenderType handType;
 	std::unique_ptr<L3DMesh> m_HandModel;
 };
-} // namespace openblack
+} // namespace openblack::entities::components

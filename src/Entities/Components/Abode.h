@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace openblack
+namespace openblack::entities::components
 {
 
 struct Abode
@@ -177,4 +177,4 @@ struct Abode
 	uint32_t woodAmount;
 };
 
-} // namespace openblack
+} // namespace openblack::entities::components

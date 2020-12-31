@@ -11,7 +11,7 @@
 
 #include <string>
 
-namespace openblack
+namespace openblack::entities::components
 {
 
 struct AnimatedStatic
@@ -19,4 +19,4 @@ struct AnimatedStatic
 	std::string type;
 };
 
-} // namespace openblack
+} // namespace openblack::entities::components

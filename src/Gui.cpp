@@ -954,6 +954,8 @@ std::optional<glm::uvec4> Gui::RenderVillagerName(const std::vector<glm::vec4>& 
 
 void Gui::ShowVillagerNames(const Game& game)
 {
+	using namespace entities::components;
+
 	const auto& config = game.GetConfig();
 	if (!config.showVillagerNames)
 	{
@@ -1033,6 +1035,8 @@ void Gui::ShowProfilerWindow(Game& game)
 
 	if (ImGui::Begin("Profiler", &config.showProfiler))
 	{
+		using namespace entities::components;
+
 		const bgfx::Stats* stats = bgfx::getStats();
 		const double toMsCpu = 1000.0 / stats->cpuTimerFreq;
 		const double toMsGpu = 1000.0 / stats->gpuTimerFreq;

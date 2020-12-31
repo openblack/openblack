@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace openblack
+namespace openblack::entities::components
 {
 
 struct MobileStatic
@@ -164,4 +164,4 @@ struct MobileObject
 	Info type;
 };
 
-} // namespace openblack
+} // namespace openblack::entities::components

@@ -12,7 +12,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace openblack
+namespace openblack::entities::components
 {
 
 struct Town
@@ -24,4 +24,4 @@ struct Town
 	bool uninhabitable = false;
 };
 
-} // namespace openblack
+} // namespace openblack::entities::components

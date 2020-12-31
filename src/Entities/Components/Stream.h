@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-namespace openblack
+namespace openblack::entities::components
 {
 
 struct Stream
@@ -30,7 +30,7 @@ struct Stream
 		glm::vec3 position;
 		std::vector<Node> edges;
 
-		Node(const glm::vec3 position, const std::vector<Node>& nodes)
+		Node(const glm::vec3& position, const std::vector<Node>& nodes)
 		    : position(position)
 		{
 			if (nodes.empty())
@@ -59,4 +59,4 @@ struct Stream
 	std::vector<Node> nodes;
 };
 
-} // namespace openblack
+} // namespace openblack::entities::components

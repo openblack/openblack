@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace openblack
+namespace openblack::entities::components
 {
 
 struct Forest
@@ -17,4 +17,4 @@ struct Forest
 	int type;
 };
 
-} // namespace openblack
+} // namespace openblack::entities::components

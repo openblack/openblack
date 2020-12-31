@@ -78,10 +78,10 @@ std::unordered_map<std::string_view, C> makeLookup(std::array<std::string_view, 
 	return table;
 }
 
-extern MeshLookup<Tree::Info> treeMeshLookup;
-extern MeshLookup<MobileStatic::Info> mobileStaticMeshLookup;
-extern MeshLookup<MobileObject::Info> mobileObjectMeshLookup;
-extern MeshLookup<Abode::Info> abodeMeshLookup;
-extern MeshLookup<Villager::Type, Villager::TypeId> villagerMeshLookup;
-extern MeshLookup<Feature::Info> featureMeshLookup;
+extern MeshLookup<entities::components::Tree::Info> treeMeshLookup;
+extern MeshLookup<entities::components::MobileStatic::Info> mobileStaticMeshLookup;
+extern MeshLookup<entities::components::MobileObject::Info> mobileObjectMeshLookup;
+extern MeshLookup<entities::components::Abode::Info> abodeMeshLookup;
+extern MeshLookup<entities::components::Villager::Type, entities::components::Villager::TypeId> villagerMeshLookup;
+extern MeshLookup<entities::components::Feature::Info> featureMeshLookup;
 } // namespace openblack

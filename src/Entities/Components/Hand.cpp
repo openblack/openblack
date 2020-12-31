@@ -9,7 +9,7 @@
 
 #include "Hand.h"
 
-using namespace openblack;
+using openblack::entities::components::Hand;
 
 void Hand::Init()
 {
