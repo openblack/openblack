@@ -16,7 +16,6 @@
 #include "3D/MeshPack.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
-#include "Entities/Components/Hand.h"
 #include "Entities/Registry.h"
 #include "Game.h"
 #include "GameWindow.h"
@@ -420,25 +419,15 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 			// Instance meshes
 			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
 			{
-				const L3DMesh* mesh = nullptr;
-
-				// TODO(raffclar): Handle non-mesh pack IDs via a new mechanism
-				if (meshId == entities::components::Hand::meshId)
-				{
-					mesh = &Game::instance()->GetHandModel();
-				}
-				else
-				{
-					mesh = &meshPack.GetMesh(static_cast<uint32_t>(meshId));
-				}
+				const auto& mesh = meshPack.GetMesh(meshId);
 
 				submitDesc.instanceBuffer = &renderCtx.instanceUniformBuffer;
 				submitDesc.instanceStart = placers.offset;
 				submitDesc.instanceCount = placers.count;
-				if (mesh->IsBoned())
+				if (mesh.IsBoned())
 				{
-					submitDesc.modelMatrices = mesh->GetBoneMatrices().data();
-					submitDesc.matrixCount = mesh->GetBoneMatrices().size();
+					submitDesc.modelMatrices = mesh.GetBoneMatrices().data();
+					submitDesc.matrixCount = mesh.GetBoneMatrices().size();
 					// TODO(bwrsandman): Get animation frame instead of default
 				}
 				else
@@ -448,7 +437,7 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 					submitDesc.matrixCount = 1;
 				}
 				// TODO(bwrsandman): choose the correct LOD
-				DrawMesh(*mesh, meshPack, submitDesc, std::numeric_limits<uint8_t>::max());
+				DrawMesh(mesh, meshPack, submitDesc, std::numeric_limits<uint8_t>::max());
 			}
 
 			// Debug

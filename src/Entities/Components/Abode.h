@@ -15,7 +15,7 @@ namespace openblack::entities::components
 struct Abode
 {
 	/// Originally AbodeInfo
-	enum class Info : int
+	enum class Info : int16_t
 	{
 		None = -1,
 		CelticHut = 0,
@@ -169,7 +169,7 @@ struct Abode
 		_COUNT
 	};
 
-	Info abodeInfo;
+	Info type;
 	uint32_t townId;
 	// If a village does not have a ABODE_STORAGE_PIT then other abodes are used
 	// by the villagers

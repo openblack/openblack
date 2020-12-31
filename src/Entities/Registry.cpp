@@ -66,7 +66,7 @@ void Registry::PrepareDrawDescs(bool drawBoundingBox)
 
 	// Abodes
 	Each<const Abode, const Transform>([&meshIds, &instanceCount](const Abode& entity, const Transform& transform) {
-		const auto meshId = abodeMeshLookup[entity.abodeInfo];
+		const auto meshId = abodeMeshLookup[entity.type];
 		auto count = meshIds.insert(std::make_pair(meshId, 0));
 		count.first->second++;
 		instanceCount++;
@@ -231,7 +231,7 @@ void Registry::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	// Abodes
 	Each<const Abode, const Transform>(
 	    [&renderCtx, &uniformOffsets, prepareDrawBoundingBox](const Abode& entity, const Transform& transform) {
-		    const auto meshId = abodeMeshLookup[entity.abodeInfo];
+		    const auto meshId = abodeMeshLookup[entity.type];
 		    auto offset = uniformOffsets.insert(std::make_pair(meshId, 0));
 		    auto desc = renderCtx.instancedDrawDescs.find(meshId);
 		    renderCtx.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
