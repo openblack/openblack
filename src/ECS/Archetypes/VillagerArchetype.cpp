@@ -9,9 +9,12 @@
 
 #include "VillagerArchetype.h"
 
+#include <random>
+
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/vec3.hpp>
 
+#include "Common/RNGManager.h"
 #include "ECS/Components/LivingAction.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Mobile.h"
@@ -58,7 +61,8 @@ entt::entity VillagerArchetype::Create([[maybe_unused]] const glm::vec3& abodePo
 	registry.Assign<WallHug>(entity, glm::vec2(), glm::vec2(), GetSpeedStateSpeed(info.speedGroup.speedDefault));
 	const auto resourceId = resources::MeshIdToResourceId(info.highDetail);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(0));
-	registry.Assign<LivingAction>(entity, VillagerStates::Created);
+	auto turnsSinceStateChange = RNGManager::instance().NextValue<uint16_t>(1, 500);
+	registry.Assign<LivingAction>(entity, VillagerStates::Created, turnsSinceStateChange);
 
 	return entity;
 }
