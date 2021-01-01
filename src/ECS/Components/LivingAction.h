@@ -32,23 +32,26 @@ struct LivingAction
 	    "Previous",
 	};
 
-	explicit LivingAction(VillagerStates topState)
+	LivingAction(VillagerStates topState, uint16_t turnsUntilStateChange)
 	    : states {static_cast<uint8_t>(topState), static_cast<uint8_t>(VillagerStates::InvalidState),
 	              static_cast<uint8_t>(VillagerStates::InvalidState)}
+	    , turnsUntilStateChange(turnsUntilStateChange)
 	    , turnsSinceStateChange(0)
 	{
 	}
 
 	// Likely for animals
-	explicit LivingAction(LivingStates topState)
+	LivingAction(LivingStates topState, uint16_t turnsUntilStateChange)
 	    : states {static_cast<uint8_t>(topState), static_cast<uint8_t>(LivingStates::LivingInvalid),
 	              static_cast<uint8_t>(LivingStates::LivingInvalid)}
+	    , turnsUntilStateChange(turnsUntilStateChange)
 	    , turnsSinceStateChange(0)
 	{
 	}
 
 	// LivingState or VillagerState
 	std::array<uint8_t, static_cast<size_t>(Index::_Count)> states;
+	uint16_t turnsUntilStateChange;
 	uint16_t turnsSinceStateChange;
 };
 } // namespace openblack::ecs::components
