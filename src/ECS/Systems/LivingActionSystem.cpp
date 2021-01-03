@@ -29,6 +29,20 @@ uint32_t VillagerInvalidState(LivingAction& action)
 	return 0;
 }
 
+uint32_t VillagerCreated(LivingAction& action)
+{
+	if (action.turnsUntilStateChange > 0)
+	{
+		--action.turnsUntilStateChange;
+	}
+	else
+	{
+		LivingActionSystem::instance().VillagerSetState(action, LivingAction::Index::Top, VillagerStates::DecideWhatToDo,
+		                                                false);
+	}
+	return 0;
+}
+
 struct VillagerStateTableEntry
 {
 	std::function<uint32_t(LivingAction&)> state = nullptr;
@@ -193,7 +207,11 @@ std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerStates::_COUNT)>
     /* FOOTBALL_MATCH_PAUSED */ TodoEntry,
     /* FOOTBALL_WATCH_MATCH */ TodoEntry,
     /* FOOTBALL_MEXICAN_WAVE */ TodoEntry,
-    /* CREATED */ TodoEntry,
+    /* CREATED */
+    VillagerStateTableEntry {
+        .state = &VillagerCreated,
+        .field_0x50 = TodoEntry.field_0x50,
+    },
     /* ARRIVES_IN_ABODE_TO_TRADE */ TodoEntry,
     /* ARRIVES_IN_ABODE_TO_PICK_UP_EXCESS */ TodoEntry,
     /* MAKE_SCARED_STIFF */ TodoEntry,
