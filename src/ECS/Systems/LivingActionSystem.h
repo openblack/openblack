@@ -20,7 +20,14 @@ public:
 	void Update();
 
 	VillagerStates VillagerGetState(const components::LivingAction& action, components::LivingAction::Index index) const;
-	void VillagerSetState(components::LivingAction& action, components::LivingAction::Index index, VillagerStates state) const;
+	void VillagerSetState(components::LivingAction& action, components::LivingAction::Index index, VillagerStates state,
+	                      bool skipTransition) const;
+	uint32_t VillagerCallState(components::LivingAction& action, components::LivingAction::Index index) const;
+	bool VillagerCallEntryState(components::LivingAction& action, components::LivingAction::Index index, VillagerStates src,
+	                            VillagerStates dst) const;
+	bool VillagerCallExitState(components::LivingAction& action, components::LivingAction::Index index) const;
+	int VillagerCallOutOfAnimation(components::LivingAction& action, components::LivingAction::Index index) const;
+	bool VillagerCallValidate(components::LivingAction& action, components::LivingAction::Index index) const;
 
 private:
 	LivingActionSystem();
