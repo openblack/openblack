@@ -21,6 +21,14 @@ using namespace openblack;
 using namespace openblack::ecs::components;
 using namespace openblack::ecs::systems;
 
+uint32_t VillagerInvalidState(LivingAction& action)
+{
+	SPDLOG_LOGGER_ERROR(spdlog::get("ai"), "Villager #{}: Stuck in an invalid state",
+	                    static_cast<uint32_t>(Game::instance()->GetEntityRegistry().ToEntity(action)));
+	assert(false);
+	return 0;
+}
+
 struct VillagerStateTableEntry
 {
 	std::function<uint32_t(LivingAction&)> state = nullptr;
@@ -98,7 +106,9 @@ static VillagerStateTableEntry TodoEntry = {
 };
 
 std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerStates::_COUNT)> VillagerStateTable = {
-    /* INVALID_STATE */ TodoEntry,
+    /* INVALID_STATE */ VillagerStateTableEntry {
+        .state = &VillagerInvalidState,
+    },
     /* MOVE_TO_POS */ TodoEntry,
     /* MOVE_TO_OBJECT */ TodoEntry,
     /* MOVE_ON_STRUCTURE */ TodoEntry,
