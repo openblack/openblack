@@ -1079,7 +1079,7 @@ void Gui::ShowVillagerNames(const Game& game)
 							if (ImGui::Selectable(VillagerStateStrings[n].data(), is_selected))
 							{
 								actionSystem.VillagerSetState(action, static_cast<LivingAction::Index>(index),
-								                              static_cast<VillagerStates>(n));
+								                              static_cast<VillagerStates>(n), true);
 							}
 
 							// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
