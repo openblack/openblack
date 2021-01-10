@@ -18,6 +18,9 @@ add_library(imgui STATIC
 	# imgui_bitfield
 	imgui_bitfield.h
 	imgui_bitfield.cpp
+	# imgui_user
+	imgui_user.h
+	imgui_user.cpp
 	)
 target_include_directories(imgui PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 

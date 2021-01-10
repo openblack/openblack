@@ -1004,11 +1004,11 @@ void Gui::ShowVillagerNames(const Game& game)
 				ImGui::InputInt("Health", reinterpret_cast<int*>(&entity.health));
 				ImGui::InputInt("Age", reinterpret_cast<int*>(&entity.age));
 				ImGui::InputInt("Hunger", reinterpret_cast<int*>(&entity.hunger));
-				ImGui::InputInt("Life Stage", reinterpret_cast<int*>(&entity.lifeStage));
-				ImGui::InputInt("Sex", reinterpret_cast<int*>(&entity.sex));
-				ImGui::InputInt("Tribe", reinterpret_cast<int*>(&entity.tribe));
-				ImGui::InputInt("Role", reinterpret_cast<int*>(&entity.role));
-				ImGui::InputInt("Task", reinterpret_cast<int*>(&entity.task));
+				ImGui::Combo("Life Stage", &entity.lifeStage, Villager::LifeStageStrs);
+				ImGui::Combo("Sex", &entity.sex, Villager::SexStrs);
+				ImGui::Combo("Tribe", &entity.tribe, TribeStrs);
+				ImGui::Combo("Role", &entity.role, Villager::RoleStrs);
+				ImGui::Combo("Task", &entity.task, Villager::TaskStrs);
 			};
 		}
 
