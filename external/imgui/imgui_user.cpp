@@ -17,6 +17,22 @@ static auto vector_getter = [](void* vec, int idx, const char** out_text) {
 	return true;
 };
 
+struct string_view_array_getter_user_data_t
+{
+	const std::string_view* data;
+	int count;
+};
+
+static auto string_view_array_getter = [](void* userData, int idx, const char** out_text) {
+	auto arr = static_cast<string_view_array_getter_user_data_t*>(userData);
+	if (idx < 0 || idx >= arr->count)
+	{
+		return false;
+	}
+	*out_text = arr->data[idx].data();
+	return true;
+};
+
 bool Combo(const char* label, int* currIndex, std::vector<std::string>& values)
 {
 	if (values.empty())
@@ -26,6 +42,19 @@ bool Combo(const char* label, int* currIndex, std::vector<std::string>& values)
 	return Combo(label, currIndex, vector_getter, static_cast<void*>(&values), values.size());
 }
 
+bool Combo(const char* label, int* currIndex, const std::string_view* values, int valueCount)
+{
+	if (valueCount <= 0)
+	{
+		return false;
+	}
+	string_view_array_getter_user_data_t userData = {
+	    values,
+	    valueCount,
+	};
+	return Combo(label, currIndex, string_view_array_getter, static_cast<void*>(&userData), valueCount);
+}
+
 bool ListBox(const char* label, int* currIndex, std::vector<std::string>& values)
 {
 	if (values.empty())
@@ -33,6 +62,19 @@ bool ListBox(const char* label, int* currIndex, std::vector<std::string>& values
 		return false;
 	}
 	return ListBox(label, currIndex, vector_getter, static_cast<void*>(&values), values.size());
+}
+
+bool ListBox(const char* label, int* currIndex, const std::string_view* values, int valueCount)
+{
+	if (valueCount <= 0)
+	{
+		return false;
+	}
+	string_view_array_getter_user_data_t userData = {
+	    values,
+	    valueCount,
+	};
+	return ListBox(label, currIndex, string_view_array_getter, static_cast<void*>(&userData), valueCount);
 }
 
 } // namespace ImGui
