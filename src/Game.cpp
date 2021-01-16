@@ -72,7 +72,7 @@ Game::Game(Arguments&& args)
 		auto logger = spdlog::basic_logger_mt("default_logger", args.logFile);
 		spdlog::set_default_logger(logger);
 	}
-	spdlog::set_level(static_cast<spdlog::level::level_enum>(spdlog::level::debug + args.logLevel));
+	spdlog::set_level(args.logLevel);
 	sInstance = this;
 
 	std::string binaryPath = fs::path {args.executablePath}.parent_path().generic_string();

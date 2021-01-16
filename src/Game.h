@@ -24,6 +24,7 @@ namespace fs = std::experimental::filesystem;
 #include <bgfx/bgfx.h>
 #include <entt/entity/fwd.hpp>
 #include <glm/glm.hpp>
+#include <spdlog/common.h>
 
 #include <LHVM/LHVM.h>
 
@@ -73,7 +74,7 @@ struct Arguments
 	float scale;
 	uint32_t numFramesToSimulate;
 	std::string logFile;
-	uint32_t logLevel;
+	spdlog::level::level_enum logLevel;
 };
 
 class Game
