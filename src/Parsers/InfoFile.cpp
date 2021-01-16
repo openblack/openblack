@@ -21,7 +21,7 @@ namespace openblack
 
 bool InfoFile::LoadFromFile(const fs::path& path, InfoConstants& infos)
 {
-	spdlog::get("game")->debug("Loading Info Pack from file: {}", path.generic_string());
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Info Pack from file: {}", path.generic_string());
 
 	std::vector<uint8_t> data;
 	try
@@ -38,7 +38,7 @@ bool InfoFile::LoadFromFile(const fs::path& path, InfoConstants& infos)
 	}
 	catch (std::runtime_error& err)
 	{
-		spdlog::get("game")->error("Failed to open {}: {}", path.generic_string(), err.what());
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open {}: {}", path.generic_string(), err.what());
 		return false;
 	}
 

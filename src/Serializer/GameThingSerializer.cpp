@@ -50,8 +50,8 @@ void GameThingSerializer::ReadChecksum()
 	auto readSum = ReadValue<uint32_t>();
 	if (expectedSum != readSum)
 	{
-		spdlog::get("game")->error("Failed checksum (expected={:08X}, read={:08X}) at {:08X}", expectedSum, readSum,
-		                           _stream.Position());
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed checksum (expected={:08X}, read={:08X}) at {:08X}", expectedSum,
+		                    readSum, _stream.Position());
 		assert(false);
 	}
 }
@@ -59,9 +59,9 @@ void GameThingSerializer::ReadChecksum()
 std::shared_ptr<GameThingSerializer::GameThing> GameThingSerializer::DeserializeOne(std::optional<GameThingType> required_type)
 {
 	auto offset = _stream.Position();
-	spdlog::get("game")->debug("offset={}", offset);
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "offset={}", offset);
 	auto index = ReadValue<uint32_t>();
-	spdlog::get("game")->debug("index={}, len={}", index, _cache.size());
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "index={}, len={}", index, _cache.size());
 
 	if (index == 0)
 	{
@@ -132,7 +132,7 @@ std::vector<T> GameThingSerializer::DeserializeList()
 	list.reserve(count);
 	for (uint32_t i = 0; i < count; ++i)
 	{
-		spdlog::get("game")->debug("i={}", i);
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "i={}", i);
 		auto ptr = std::dynamic_pointer_cast<T>(DeserializeOne(GameThingTypeEnum<T>));
 		if (ptr)
 		{
