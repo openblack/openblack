@@ -77,12 +77,11 @@ Game::Game(Arguments&& args)
 	{
 		CreateLogger = [](const std::string& name) { return spdlog::stdout_color_mt(name); };
 	}
-	auto gameLogger = CreateLogger("game");
-	auto graphicsLogger = CreateLogger("graphics");
-	auto scriptingLogger = CreateLogger("scripting");
-	gameLogger->set_level(args.logLevel);
-	graphicsLogger->set_level(args.logLevel);
-	scriptingLogger->set_level(args.logLevel);
+	for (size_t i = 0; i < LoggingSubsystemStrs.size(); ++i)
+	{
+		auto logger = CreateLogger(LoggingSubsystemStrs[i].data());
+		logger->set_level(args.logLevels[i]);
+	}
 	sInstance = this;
 
 	std::string binaryPath = fs::path {args.executablePath}.parent_path().generic_string();

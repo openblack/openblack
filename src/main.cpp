@@ -29,6 +29,12 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 	    "openblack.log";
 #endif
 
+	std::string loggingSubsystems = "all";
+	for (const auto& system : openblack::LoggingSubsystemStrs)
+	{
+		loggingSubsystems += std::string(", ") + system.data();
+	}
+
 	// clang-format off
 	options.add_options()
 		("h,help", "Display this help message.")
@@ -41,7 +47,8 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		("b,backend-type", "Which backend to use for rendering.", cxxopts::value<std::string>()->default_value("OpenGL"))
 		("n,num-frames-to-simulate", "Number of frames to simulate before quitting.", cxxopts::value<uint32_t>()->default_value("0"))
 		("l,log-file", "Output file for logs, 'stdout' for terminal output.", cxxopts::value<std::string>()->default_value(defaultLogFile))
-		("L,log-level", "Level (trace, debug, info, warning, error, critical, off) of logging.", cxxopts::value<std::string>()->default_value("debug"))
+		("L,log-level", "Level (trace, debug, info, warning, error, critical, off) of logging per subsystem (" + loggingSubsystems + ").",
+		    cxxopts::value<std::vector<std::string>>()->default_value("all=debug"))
 	;
 	// clang-format on
 
@@ -94,7 +101,32 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 			throw cxxopts::option_not_exists_exception(result["window-mode"].as<std::string>());
 		}
 
-		spdlog::level::level_enum logLevel = spdlog::level::from_str(result["log-level"].as<std::string>());
+		std::array<spdlog::level::level_enum, openblack::LoggingSubsystemStrs.size()> logLevels;
+		{
+			std::map<std::string, spdlog::level::level_enum> logLevelMap;
+			logLevelMap.insert_or_assign("all", spdlog::level::debug);
+			for (const auto& levelStr : result["log-level"].as<std::vector<std::string>>())
+			{
+				const auto delim = levelStr.find_first_of('=');
+				const auto key = delim == std::string::npos ? "all" : levelStr.substr(0, delim);
+				const auto value = spdlog::level::from_str(delim == std::string::npos ? levelStr : levelStr.substr(delim + 1));
+				logLevelMap.insert_or_assign(key, value);
+			}
+
+			const auto all = logLevelMap["all"];
+			for (auto& level : logLevels)
+			{
+				level = all;
+			}
+			for (size_t i = 0; i < logLevels.size(); ++i)
+			{
+				const auto iter = logLevelMap.find(openblack::LoggingSubsystemStrs[i].data());
+				if (iter != logLevelMap.cend())
+				{
+					logLevels[i] = iter->second;
+				}
+			}
+		}
 
 		args.executablePath = argv[0];
 		if (result.count("game-path") == 0)
@@ -130,7 +162,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		args.rendererType = rendererType;
 		args.numFramesToSimulate = result["num-frames-to-simulate"].as<uint32_t>();
 		args.logFile = result["log-file"].as<std::string>();
-		args.logLevel = logLevel;
+		args.logLevels = logLevels;
 	}
 	catch (cxxopts::OptionParseException& err)
 	{
