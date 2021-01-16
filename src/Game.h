@@ -16,6 +16,7 @@ namespace fs = std::filesystem;
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 #endif // HAS_FILESYSTEM
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -62,6 +63,21 @@ namespace entities
 class Registry;
 }
 
+enum class LoggingSubsystem : uint8_t
+{
+	game,
+	graphics,
+	scripting,
+
+	_count
+};
+
+static std::array<std::string_view, static_cast<size_t>(LoggingSubsystem::_count)> LoggingSubsystemStrs {
+    "game",
+    "graphics",
+    "scripting",
+};
+
 struct Arguments
 {
 	std::string executablePath;
@@ -74,7 +90,7 @@ struct Arguments
 	float scale;
 	uint32_t numFramesToSimulate;
 	std::string logFile;
-	spdlog::level::level_enum logLevel;
+	std::array<spdlog::level::level_enum, LoggingSubsystemStrs.size()> logLevels;
 };
 
 class Game
