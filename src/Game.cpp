@@ -77,14 +77,17 @@ Game::Game(Arguments&& args)
 	{
 		CreateLogger = [](const std::string& name) { return spdlog::stdout_color_mt(name); };
 	}
-	auto logger = CreateLogger("default_logger");
-	logger->set_level(args.logLevel);
-	spdlog::set_default_logger(logger);
+	auto gameLogger = CreateLogger("game");
+	auto graphicsLogger = CreateLogger("graphics");
+	auto scriptingLogger = CreateLogger("scripting");
+	gameLogger->set_level(args.logLevel);
+	graphicsLogger->set_level(args.logLevel);
+	scriptingLogger->set_level(args.logLevel);
 	sInstance = this;
 
 	std::string binaryPath = fs::path {args.executablePath}.parent_path().generic_string();
 	_config.numFramesToSimulate = args.numFramesToSimulate;
-	spdlog::info("current binary path: {}", binaryPath);
+	spdlog::get("game")->info("current binary path: {}", binaryPath);
 	SetGamePath(args.gamePath);
 	if (args.rendererType != bgfx::RendererType::Noop)
 	{
@@ -95,7 +98,7 @@ Game::Game(Arguments&& args)
 	_fileSystem->SetGamePath(GetGamePath());
 	_handModel = std::make_unique<L3DMesh>();
 	_handModel->LoadFromFile(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d");
-	spdlog::debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
+	spdlog::get("game")->debug("The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
 
 	_gui = Gui::create(_window.get(), graphics::RenderPass::ImGui, args.scale);
 
@@ -468,8 +471,8 @@ void Game::LoadMap(const fs::path& path)
 	}
 	else
 	{
-		spdlog::warn("The map at {} does not come with a footpath file. Expected {}", path.generic_string(),
-		             fot_path.generic_string());
+		spdlog::get("game")->warn("The map at {} does not come with a footpath file. Expected {}", path.generic_string(),
+		                          fot_path.generic_string());
 	}
 
 	_lastGameLoopTime = std::chrono::steady_clock::now();
@@ -503,7 +506,7 @@ bool Game::LoadVariables()
 
 	for (const auto& m : _infoConstants.magic)
 	{
-		spdlog::debug("MAGIC_TYPE {}, PerceivedPower={}", m.typeEnum, m.perceivedPower);
+		spdlog::get("game")->debug("MAGIC_TYPE {}, PerceivedPower={}", m.typeEnum, m.perceivedPower);
 	}
 
 	// GMagicInfo: 0x48 bytes // DETAIL_MAGIC_GENERAL_INFO
@@ -536,7 +539,7 @@ void Game::SetGamePath(const fs::path& gamePath)
 	}
 	if (!fs::exists(gamePath))
 	{
-		spdlog::error("GamePath does not exist: '{}'", gamePath.generic_string());
+		spdlog::get("game")->error("GamePath does not exist: '{}'", gamePath.generic_string());
 		return;
 	}
 	_gamePath = gamePath;
@@ -560,7 +563,7 @@ const fs::path& Game::GetGamePath()
 			return _gamePath;
 		}
 
-		spdlog::error("Failed to find the GameDir registry value, game not installed.");
+		spdlog::get("game")->error("Failed to find the GameDir registry value, game not installed.");
 #endif // _WIN32
 
 		// no key, don't guess, let the user know to set the command param
@@ -568,7 +571,7 @@ const fs::path& Game::GetGamePath()
 		                         "Game path was not supplied, use the -g "
 		                         "command parameter to set it.",
 		                         nullptr);
-		spdlog::error("Failed to find the GameDir.");
+		spdlog::get("game")->error("Failed to find the GameDir.");
 		exit(1);
 	}
 

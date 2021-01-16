@@ -46,7 +46,7 @@ struct BgfxCallback: public bgfx::CallbackI
 		const static std::array CodeLookup = {
 		    "DebugCheck", "InvalidShader", "UnableToInitialize", "UnableToCreateTexture", "DeviceLost",
 		};
-		spdlog::critical("bgfx: {}:{}: FATAL ({}): {}", filePath, line, CodeLookup[code], str);
+		spdlog::get("graphics")->critical("bgfx: {}:{}: FATAL ({}): {}", filePath, line, CodeLookup[code], str);
 
 		// Must terminate, continuing will cause crash anyway.
 		throw std::runtime_error(std::string("bgfx: ") + filePath + ":" + std::to_string(line) + ": FATAL (" +
@@ -68,7 +68,7 @@ struct BgfxCallback: public bgfx::CallbackI
 		{
 			out[len - 1] = '\0';
 		}
-		spdlog::debug("bgfx: {}:{}: {}", filePath, line, out);
+		spdlog::get("graphics")->debug("bgfx: {}:{}: {}", filePath, line, out);
 	}
 	void profilerBegin(const char* name, uint32_t abgr, const char* filePath, uint16_t line) override {}
 	void profilerBeginLiteral(const char* name, uint32_t abgr, const char* filePath, uint16_t line) override {}
@@ -250,7 +250,7 @@ void Renderer::DrawMesh(const L3DMesh& mesh, const MeshPack& meshPack, const L3D
 {
 	if (mesh.GetNumSubMeshes() == 0)
 	{
-		spdlog::warn("Mesh {} has no submeshes to draw", mesh.GetDebugName());
+		spdlog::get("graphics")->warn("Mesh {} has no submeshes to draw", mesh.GetDebugName());
 		return;
 	}
 
@@ -260,7 +260,7 @@ void Renderer::DrawMesh(const L3DMesh& mesh, const MeshPack& meshPack, const L3D
 	{
 		if (subMeshIndex >= mesh.GetNumSubMeshes())
 		{
-			spdlog::warn("tried to draw submesh out of range ({}/{})", subMeshIndex, mesh.GetNumSubMeshes());
+			spdlog::get("graphics")->warn("tried to draw submesh out of range ({}/{})", subMeshIndex, mesh.GetNumSubMeshes());
 		}
 
 		DrawSubMesh(mesh, *subMeshes[subMeshIndex], meshPack, desc, desc.viewId, *desc.program, desc.state, desc.rgba, false);
