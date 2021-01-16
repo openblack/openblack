@@ -41,7 +41,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		("b,backend-type", "Which backend to use for rendering.", cxxopts::value<std::string>()->default_value("OpenGL"))
 		("n,num-frames-to-simulate", "Number of frames to simulate before quitting.", cxxopts::value<uint32_t>()->default_value("0"))
 		("l,log-file", "Output file for logs, 'stdout' for terminal output.", cxxopts::value<std::string>()->default_value(defaultLogFile))
-		("L,log-level", "Level of logging.", cxxopts::value<uint32_t>()->default_value("0"))
+		("L,log-level", "Level (trace, debug, info, warning, error, critical, off) of logging.", cxxopts::value<std::string>()->default_value("debug"))
 	;
 	// clang-format on
 
@@ -94,6 +94,8 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 			throw cxxopts::option_not_exists_exception(result["window-mode"].as<std::string>());
 		}
 
+		spdlog::level::level_enum logLevel = spdlog::level::from_str(result["log-level"].as<std::string>());
+
 		args.executablePath = argv[0];
 		if (result.count("game-path") == 0)
 		{
@@ -128,7 +130,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		args.rendererType = rendererType;
 		args.numFramesToSimulate = result["num-frames-to-simulate"].as<uint32_t>();
 		args.logFile = result["log-file"].as<std::string>();
-		args.logLevel = result["log-level"].as<uint32_t>();
+		args.logLevel = logLevel;
 	}
 	catch (cxxopts::OptionParseException& err)
 	{
