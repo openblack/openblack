@@ -38,6 +38,7 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/intersect.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
 #include <Serializer/FotFile.h>
@@ -67,12 +68,18 @@ Game::Game(Arguments&& args)
     , _turnCount(0)
     , _intersection()
 {
+	std::function<std::shared_ptr<spdlog::logger>(const std::string&)> CreateLogger;
 	if (!args.logFile.empty() && args.logFile != "stdout")
 	{
-		auto logger = spdlog::basic_logger_mt("default_logger", args.logFile);
-		spdlog::set_default_logger(logger);
+		CreateLogger = [&args](const std::string& name) { return spdlog::basic_logger_mt(name, args.logFile); };
 	}
-	spdlog::set_level(args.logLevel);
+	else
+	{
+		CreateLogger = [](const std::string& name) { return spdlog::stdout_color_mt(name); };
+	}
+	auto logger = CreateLogger("default_logger");
+	logger->set_level(args.logLevel);
+	spdlog::set_default_logger(logger);
 	sInstance = this;
 
 	std::string binaryPath = fs::path {args.executablePath}.parent_path().generic_string();
