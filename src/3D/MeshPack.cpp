@@ -28,7 +28,7 @@ namespace openblack
 
 bool MeshPack::LoadFromFile(const fs::path& path)
 {
-	spdlog::debug("Loading Mesh Pack from file: {}", path.generic_string());
+	spdlog::get("game")->debug("Loading Mesh Pack from file: {}", path.generic_string());
 	pack::PackFile pack;
 
 	try
@@ -37,7 +37,7 @@ bool MeshPack::LoadFromFile(const fs::path& path)
 	}
 	catch (std::runtime_error& err)
 	{
-		spdlog::error("Failed to open {}: {}", path.generic_string(), err.what());
+		spdlog::get("game")->error("Failed to open {}: {}", path.generic_string(), err.what());
 		return false;
 	}
 
@@ -88,7 +88,7 @@ void MeshPack::loadTextures(const std::map<std::string, pack::G3DTexture>& textu
 		                                        g3dTexture.ddsData.size());
 	}
 
-	spdlog::debug("MeshPack loaded {0} textures", textures.size());
+	spdlog::get("game")->debug("MeshPack loaded {0} textures", textures.size());
 }
 
 void MeshPack::loadMeshes(const std::vector<std::vector<uint8_t>>& meshes)
@@ -96,12 +96,12 @@ void MeshPack::loadMeshes(const std::vector<std::vector<uint8_t>>& meshes)
 	_meshes.resize(meshes.size());
 	for (uint32_t i = 0; i < _meshes.size(); i++)
 	{
-		// spdlog::debug("L3DMesh {} {}", i, MeshNames[i].data());
+		// spdlog::get("game")->debug("L3DMesh {} {}", i, MeshNames[i].data());
 		_meshes[i] = std::make_unique<L3DMesh>(MeshNames[i].data());
 		_meshes[i]->LoadFromBuffer(meshes[i]);
 	}
 
-	spdlog::debug("MeshPack loaded {0} meshes", meshes.size());
+	spdlog::get("game")->debug("MeshPack loaded {0} meshes", meshes.size());
 }
 
 } // namespace openblack

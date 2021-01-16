@@ -24,7 +24,7 @@ AnimationPack::~AnimationPack() = default;
 
 bool AnimationPack::LoadFromFile(const fs::path& path)
 {
-	spdlog::debug("Loading Mesh Pack from file: {}", path.generic_string());
+	spdlog::get("game")->debug("Loading Mesh Pack from file: {}", path.generic_string());
 	pack::PackFile pack;
 
 	try
@@ -33,7 +33,7 @@ bool AnimationPack::LoadFromFile(const fs::path& path)
 	}
 	catch (std::runtime_error& err)
 	{
-		spdlog::error("Failed to open {}: {}", path.generic_string(), err.what());
+		spdlog::get("game")->error("Failed to open {}: {}", path.generic_string(), err.what());
 		return false;
 	}
 
@@ -43,11 +43,11 @@ bool AnimationPack::LoadFromFile(const fs::path& path)
 	{
 		_animations[i] = std::make_unique<L3DAnim>();
 		_animations[i]->LoadFromBuffer(animation[i]);
-		spdlog::debug("{} animation with {} frames with duration {}", _animations[i]->GetName(),
-		              _animations[i]->GetFrames().size(), _animations[i]->GetDuration());
+		spdlog::get("game")->debug("{} animation with {} frames with duration {}", _animations[i]->GetName(),
+		                           _animations[i]->GetFrames().size(), _animations[i]->GetDuration());
 	}
 
-	spdlog::debug("AnimationPack loaded {0} animations", _animations.size());
+	spdlog::get("game")->debug("AnimationPack loaded {0} animations", _animations.size());
 
 	return true;
 }

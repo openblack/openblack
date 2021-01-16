@@ -117,12 +117,12 @@ void Texture2D::DumpTexture() const
 	for (uint16_t i = 0; i < _info.numLayers; ++i)
 	{
 		auto filename = "dump/" + _name + "_" + std::to_string(i) + ".png";
-		spdlog::info("Writing texture layer {} to {}.", i, filename.c_str());
+		spdlog::get("graphics")->info("Writing texture layer {} to {}.", i, filename.c_str());
 		auto current_pixels = &pixels[i * stride * _info.height];
 		auto writeResult = stbi_write_png(filename.c_str(), _info.width, _info.height, numComponents, current_pixels, stride);
 		if (writeResult == 0)
 		{
-			spdlog::error("Writing texture to {} failed!", filename.c_str());
+			spdlog::get("graphics")->error("Writing texture to {} failed!", filename.c_str());
 			break;
 		}
 	}

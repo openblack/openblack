@@ -62,7 +62,7 @@ void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint
 	}
 	else
 	{
-		spdlog::warn("Could not find texture sampler {}", samplerName);
+		spdlog::get("graphics")->warn("Could not find texture sampler {}", samplerName);
 	}
 }
 
@@ -75,7 +75,7 @@ void ShaderProgram::SetUniformValue(const char* uniformName, const void* value) 
 	}
 	else
 	{
-		spdlog::warn("Could not find uniform {}", uniformName);
+		spdlog::get("graphics")->warn("Could not find uniform {}", uniformName);
 	}
 }
 
