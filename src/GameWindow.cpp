@@ -32,10 +32,11 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 	SDL_VERSION(&compiledVersion);
 	SDL_GetVersion(&linkedVersion);
 
-	spdlog::get("graphics")->info("Initializing SDL...");
-	spdlog::get("graphics")
-	    ->info("SDL Version/Compiled {}.{}.{}", compiledVersion.major, compiledVersion.minor, compiledVersion.patch);
-	spdlog::get("graphics")->info("SDL Version/Linked {}.{}.{}", linkedVersion.major, linkedVersion.minor, linkedVersion.patch);
+	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "Initializing SDL...");
+	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "SDL Version/Compiled {}.{}.{}", //
+	                   compiledVersion.major, compiledVersion.minor, compiledVersion.patch);
+	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "SDL Version/Linked {}.{}.{}", //
+	                   linkedVersion.major, linkedVersion.minor, linkedVersion.patch);
 
 	// Initialize SDL
 	if (SDL_WasInit(0) == 0)
@@ -67,7 +68,7 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 
 	if (window == nullptr)
 	{
-		spdlog::get("graphics")->error("Failed to create SDL2 window: '{}'", SDL_GetError());
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to create SDL2 window: '{}'", SDL_GetError());
 		throw std::runtime_error("Failed creating SDL2 window: " + std::string(SDL_GetError()));
 	}
 

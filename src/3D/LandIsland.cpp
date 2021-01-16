@@ -43,7 +43,7 @@ LandIsland::~LandIsland() = default;
 
 void LandIsland::LoadFromFile(const std::string& filename)
 {
-	spdlog::get("game")->debug("Loading Land from file: {}", filename);
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Land from file: {}", filename);
 	lnd::LNDFile lnd;
 
 	try
@@ -52,25 +52,25 @@ void LandIsland::LoadFromFile(const std::string& filename)
 	}
 	catch (std::runtime_error& err)
 	{
-		spdlog::get("game")->error("Failed to open lnd file from filesystem {}: {}", filename, err.what());
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open lnd file from filesystem {}: {}", filename, err.what());
 		return;
 	}
 
 	std::memcpy(_blockIndexLookup.data(), lnd.GetHeader().lookUpTable, _blockIndexLookup.size() * sizeof(_blockIndexLookup[0]));
 
 	auto& lndBlocks = lnd.GetBlocks();
-	spdlog::get("game")->debug("[LandIsland] loading {} blocks", lndBlocks.size());
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} blocks", lndBlocks.size());
 	_landBlocks.resize(lndBlocks.size());
 	for (size_t i = 0; i < _landBlocks.size(); i++)
 	{
 		_landBlocks[i]._block = std::make_unique<lnd::LNDBlock>(lndBlocks[i]);
 	}
 
-	spdlog::get("game")->debug("[LandIsland] loading {} countries", lnd.GetCountries().size());
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} countries", lnd.GetCountries().size());
 	_countries = lnd.GetCountries();
 
 	auto materialCount = lnd.GetMaterials().size();
-	spdlog::get("game")->debug("[LandIsland] loading {} textures", materialCount);
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} textures", materialCount);
 	std::vector<uint16_t> rgba5TextureData;
 	rgba5TextureData.resize(lnd::LNDMaterial::width * lnd::LNDMaterial::height * lnd.GetMaterials().size());
 	for (size_t i = 0; i < lnd.GetMaterials().size(); i++)
