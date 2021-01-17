@@ -98,7 +98,9 @@ void OpenAlPlayer::SetupEmitter(AudioEmitter& emitter, Sound& sound)
 	alCheckCall(alSourcef(emitter.audioSourceId, AL_PITCH, pitch));
 
 	if (!emitter.world)
+	{
 		alCheckCall(alSourcei(emitter.audioSourceId, AL_SOURCE_RELATIVE, true));
+	}
 }
 
 void OpenAlPlayer::PlayEmitter(AudioEmitter& emitter) const
@@ -155,7 +157,9 @@ void OpenAlPlayer::Stop(AudioSourceId sourceId) const
 	ALint status;
 	alCheckCall(alGetSourcei(sourceId, AL_SOURCE_STATE, &status));
 	if (status != AL_STOPPED)
+	{
 		alCheckCall(alSourceStop(sourceId));
+	}
 }
 
 void OpenAlPlayer::Destroy(AudioSourceId sourceId, AudioBufferId bufferId) const
@@ -163,7 +167,9 @@ void OpenAlPlayer::Destroy(AudioSourceId sourceId, AudioBufferId bufferId) const
 	ALint status;
 	alCheckCall(alGetSourcei(sourceId, AL_SOURCE_STATE, &status));
 	if (status != AL_STOPPED)
+	{
 		alCheckCall(alSourceStop(sourceId));
+	}
 	alCheckCall(alDeleteSources(1, &sourceId));
 	alCheckCall(alDeleteBuffers(1, &bufferId));
 }
