@@ -9,6 +9,8 @@
 
 #include "Game.h"
 
+#include "Sound/SoundHandler.h"
+#include "Sound/SoundPack.h"
 #include "3D/AnimationPack.h"
 #include "3D/Camera.h"
 #include "3D/L3DAnim.h"
@@ -60,6 +62,7 @@ Game::Game(Arguments&& args)
     : _eventManager(std::make_unique<EventManager>())
     , _fileSystem(std::make_unique<FileSystem>())
     , _entityRegistry(std::make_unique<entities::Registry>())
+    , _soundHandler(audio::CreateSoundHandler())
     , _config()
     , _gameSpeedMultiplier(1.0f)
     , _frameCount(0)

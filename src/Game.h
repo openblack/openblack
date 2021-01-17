@@ -51,6 +51,12 @@ namespace entities::components
 struct Transform;
 }
 
+namespace audio
+{
+class SoundPack;
+class SoundHandler;
+}
+
 namespace lhscriptx
 {
 class Script;
@@ -149,6 +155,7 @@ public:
 	entities::components::Transform& GetHandTransform();
 	AnimationPack& GetAnimationPack() { return *_animationPack; }
 	MeshPack& GetMeshPack() { return *_meshPack; }
+	audio::SoundHandler& GetSoundHandler() const { return *_soundHandler; }
 	[[nodiscard]] const LHVM::LHVM* GetLhvm() { return _lhvm.get(); }
 	FileSystem& GetFileSystem() { return *_fileSystem; }
 	entities::Registry& GetEntityRegistry() { return *_entityRegistry; }
@@ -179,6 +186,7 @@ private:
 	std::unique_ptr<LandIsland> _landIsland;
 	std::unique_ptr<MeshPack> _meshPack;
 	std::unique_ptr<AnimationPack> _animationPack;
+	std::unique_ptr<audio::SoundHandler> _soundHandler;
 
 	// std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<L3DMesh> _testModel;
