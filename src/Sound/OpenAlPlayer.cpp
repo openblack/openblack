@@ -10,6 +10,8 @@
 #include "OpenAlPlayer.h"
 #include "Math.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <random>
 #include <string>
 
@@ -54,7 +56,8 @@ OpenAlPlayer::OpenAlPlayer()
     , _context(alcCreateContext(_device.get(), nullptr), DeleteAlContext)
     , _rand(std::random_device {}())
 {
-	UpdateListenerState(glm::vec3(1), glm::vec3(0), glm::vec3(0), glm::vec3(0));
+	auto emptyVec = glm::zero<glm::vec3>();
+	UpdateListenerState(glm::one<glm::vec3>(), emptyVec, emptyVec, emptyVec);
 	SetVolume(.5f);
 }
 
