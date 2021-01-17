@@ -52,9 +52,9 @@ private:
 	void Destroy(AudioSourceId sourceId, AudioBufferId bufferId) const;
 	static void DeleteAlDevice(ALCdevice* device);
 	static void DeleteAlContext(ALCcontext* context);
-	std::mt19937 _rand;
 	std::unique_ptr<ALCdevice, decltype(&DeleteAlDevice)> _device;
 	std::unique_ptr<ALCcontext, decltype(&DeleteAlContext)> _context;
+	std::mt19937 _rand;
 	float _volume;
 };
 } // namespace openblack::audio
