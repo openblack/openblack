@@ -8,9 +8,11 @@
  *****************************************************************************/
 
 #include "SoundHandler.h"
-
 #include "3D/Camera.h"
-#include <Game.h>
+#include "Game.h"
+
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <fstream>
 #include <vector>
 
@@ -22,6 +24,9 @@ SoundHandler::SoundHandler(std::unique_ptr<AudioDecoder>&& decoder, std::unique_
     , _audioPlayer(std::move(player))
 {
 	_emitterId = 0;
+	auto emptyVec = glm::zero<glm::vec3>();
+	_audioPlayer->UpdateListenerState(glm::one<glm::vec3>(), emptyVec, emptyVec, emptyVec);
+	_audioPlayer->SetVolume(.5f);
 }
 
 void SoundHandler::RegisterSoundPack(std::unique_ptr<SoundPack>& soundPack)
