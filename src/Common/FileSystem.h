@@ -43,6 +43,8 @@ public:
 
 	static inline fs::path CreatureMeshPath() { return DataPath() / "CreatureMesh"; }
 
+	static inline fs::path WorkingDirectory() { return fs::current_path(); }
+
 	static fs::path FixPath(const fs::path& path);
 
 	[[nodiscard]] fs::path FindPath(const fs::path& path) const;
