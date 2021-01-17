@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <list>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace openblack
@@ -54,6 +55,8 @@ public:
 
 	void SetGamePath(const fs::path& path) { _gamePath = path; }
 	[[nodiscard]] const fs::path& GetGamePath() const { return _gamePath; }
+
+	std::vector<std::string> GetAllFilePaths(const std::string& path, const std::string& ext);
 
 	std::vector<std::byte> ReadAll(const fs::path& path);
 
