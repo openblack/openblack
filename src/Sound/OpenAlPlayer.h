@@ -28,6 +28,7 @@ class OpenAlPlayer final: public AudioPlayer
 {
 public:
 	OpenAlPlayer();
+	~OpenAlPlayer() override = default;
 	void Activate() override;
 	void CleanUpResources(std::map<AudioEmitterId, AudioEmitter>& emitters) override;
 	std::string GetName() const override { return "OpenAL Player"; };

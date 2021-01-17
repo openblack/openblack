@@ -154,7 +154,7 @@ void AudioDebug::AudioSettings(Game& game)
 	ImGui::BeginChild("Audio Player Settings", ImGui::GetContentRegionAvail(), true);
 	ImGui::Text("Audio Player settings");
 	if (ImGui::Button(("Re-initialize Audio Player (" + handler.GetAudioPlayerName() + ")").c_str()))
-		handler.ReplaceAudioPlayer(std::make_unique<OpenAlPlayer>(OpenAlPlayer()));
+		handler.ReplaceAudioPlayer(std::make_unique<OpenAlPlayer>());
 	ImGui::Separator();
 	float volume = handler.GetGlobalVolume();
 	ImGui::SliderFloat("Global Volume", &volume, 0.0f, 1.0f, "%.3f");

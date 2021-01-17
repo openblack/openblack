@@ -26,6 +26,7 @@ enum class AudioStatus
 class AudioPlayer
 {
 public:
+	virtual ~AudioPlayer() = default;
 	virtual void Activate() = 0;
 	// Global audio control
 	virtual void CleanUpResources(std::map<AudioEmitterId, AudioEmitter>& emitters) = 0;
