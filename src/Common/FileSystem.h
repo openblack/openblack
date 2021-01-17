@@ -44,6 +44,8 @@ public:
 
 	static inline fs::path CreatureMeshPath() { return DataPath() / "CreatureMesh"; }
 
+	static inline fs::path AudioPath() { return "Audio"; }
+
 	static inline fs::path WorkingDirectory() { return fs::current_path(); }
 
 	static fs::path FixPath(const fs::path& path);

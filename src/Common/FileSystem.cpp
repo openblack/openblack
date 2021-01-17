@@ -98,7 +98,7 @@ std::vector<std::string> FileSystem::GetAllFilePaths(const std::string& path, co
 {
 	std::vector<std::string> paths;
 
-	for (auto& entry : fs::recursive_directory_iterator(FindPath("Audio")))
+	for (auto& entry : fs::recursive_directory_iterator(FindPath(AudioPath())))
 	{
 		if (entry.is_directory())
 			continue;
