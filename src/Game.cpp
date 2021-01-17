@@ -316,6 +316,12 @@ bool Game::Update()
 		}
 	} // Update Uniforms
 
+	// Update Audio
+	{
+		auto updateAudio = _profiler->BeginScoped(Profiler::Stage::AudioSystem);
+		_soundHandler->Tick(*this);
+	} // Update Audio
+
 	return _config.numFramesToSimulate == 0 || _frameCount < _config.numFramesToSimulate;
 }
 

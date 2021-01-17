@@ -43,6 +43,7 @@ public:
 		MainPassDrawDebugCross,
 		GuiDraw,
 		RendererFrame,
+		AudioSystem,
 
 		_count,
 	};
