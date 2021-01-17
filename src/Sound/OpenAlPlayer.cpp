@@ -107,7 +107,6 @@ void OpenAlPlayer::SetupEmitter(AudioEmitter& emitter, Sound& sound)
 void OpenAlPlayer::PlayEmitter(AudioEmitter& emitter) const
 {
 	auto soundSource = emitter.audioSourceId;
-	auto soundBuffer = emitter.audioBufferId;
 	UpdateEmitterState(emitter);
 	alCheckCall(alSourcef(soundSource, AL_PITCH, 1.f));
 	alCheckCall(alSourcei(soundSource, AL_LOOPING, AL_FALSE));
