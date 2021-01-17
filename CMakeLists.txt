@@ -88,8 +88,7 @@ Or set the variable OPENBLACK_BUILD_BGFX to build it with the project. \
   endif()
 else()
   message(AUTHOR_WARNING "Using OPENBLACK_BUILD_BGFX, if you are not developing use an install target instead.")
-
-  FetchContent_Declare(
+FetchContent_Declare(
     bgfx
     GIT_REPOSITORY https://github.com/openblack/bgfx.cmake.git
     GIT_TAG master
@@ -141,6 +140,7 @@ include(CMakeModules/Shaders.cmake)
 
 add_subdirectory(components/l3d)
 add_subdirectory(components/pack)
+add_subdirectory(components/sad)
 add_subdirectory(components/lnd)
 add_subdirectory(components/anm)
 add_subdirectory(components/morph)
@@ -148,6 +148,7 @@ add_subdirectory(components/ScriptLibrary)
 add_subdirectory(src)
 add_subdirectory(apps/l3dtool)
 add_subdirectory(apps/packtool)
+add_subdirectory(apps/sadtool)
 add_subdirectory(apps/lndtool)
 add_subdirectory(apps/anmtool)
 add_subdirectory(apps/morphtool)
