@@ -56,7 +56,5 @@ private:
 	std::unique_ptr<ALCdevice, decltype(&DeleteAlDevice)> _device;
 	std::unique_ptr<ALCcontext, decltype(&DeleteAlContext)> _context;
 	float _volume;
-	std::vector<ALuint> _sources;
-	std::vector<ALuint> _buffers;
 };
 } // namespace openblack::audio
