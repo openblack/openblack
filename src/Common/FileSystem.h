@@ -62,6 +62,7 @@ public:
 
 	std::vector<std::byte> ReadAll(const fs::path& path);
 
+	static constexpr char Separator = '/';
 private:
 	fs::path _gamePath;
 };
