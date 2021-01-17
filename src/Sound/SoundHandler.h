@@ -65,5 +65,5 @@ private:
 	std::map<AudioEmitterId, AudioEmitter> _emitters;
 };
 
-std::unique_ptr<SoundHandler> CreateSoundHandler();
+std::unique_ptr<SoundHandler> CreateSoundHandler() noexcept;
 } // namespace openblack::audio

@@ -181,7 +181,7 @@ void SoundHandler::ReplaceAudioPlayer(std::unique_ptr<AudioPlayer> audioPlayer)
 	_audioPlayer->Activate();
 }
 
-std::unique_ptr<SoundHandler> CreateSoundHandler()
+std::unique_ptr<SoundHandler> CreateSoundHandler() noexcept
 {
 	// TODO: Temporary function for building the handler
 	auto converter = std::make_unique<FfmpegDecoder>();
