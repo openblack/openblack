@@ -9,11 +9,14 @@
 
 #pragma once
 
+#include <queue>
+
 #include <PackFile.h>
 #include <entt/entt.hpp>
 
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
+#include "Audio/Sound.h"
 #include "Creature/CreatureMind.h"
 #include "Level.h"
 
@@ -65,5 +68,11 @@ struct LevelLoader final: BaseLoader<Level>
 struct CreatureMindLoader final: BaseLoader<creature::CreatureMind>
 {
 	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& creatureMindPath) const;
+};
+
+struct SoundLoader final: BaseLoader<audio::Sound>
+{
+	[[nodiscard]] result_type operator()(FromBufferTag, const pack::AudioBankSampleHeader& header,
+	                                     const std::vector<std::vector<uint8_t>>& buffer) const;
 };
 } // namespace openblack::resources

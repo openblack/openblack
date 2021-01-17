@@ -22,6 +22,7 @@ namespace openblack::filesystem
 {
 enum class Path
 {
+	Audio,
 	Scripts,
 	Data,
 	Playgrounds,
@@ -47,7 +48,11 @@ public:
 	[[nodiscard]] std::filesystem::path GetPath(bool withGamePath = false) const
 	{
 		std::filesystem::path result;
-		if constexpr (pathType == Path::Scripts)
+		if constexpr (pathType == Path::Audio)
+		{
+			result = "Audio";
+		}
+		else if constexpr (pathType == Path::Scripts)
 		{
 			result = "Scripts";
 		}

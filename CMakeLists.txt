@@ -103,6 +103,13 @@ if (TARGET bgfx::bgfx AND TARGET bgfx::bx)
   target_link_libraries(bgfx::bgfx INTERFACE bgfx::bx)
 endif ()
 
+find_path(
+  DRLIBS_INCLUDE_DIRS REQUIRED
+  NAMES dr_flac.h dr_mp3.h dr_wav.h
+  PATHS /usr/include/dr_libs
+)
+
+find_package(OpenAL REQUIRED)
 find_package(imgui REQUIRED)
 find_package(Bullet REQUIRED)
 find_package(spdlog 1.3.0 REQUIRED)

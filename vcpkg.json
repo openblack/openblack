@@ -18,6 +18,8 @@
         "stb",
         "entt",
         "cxxopts",
+        "openal-soft",
+        "drlibs",
         {
             "name": "bgfx",
             "default-features": false,

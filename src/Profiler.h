@@ -30,6 +30,7 @@ public:
 		SdlInput,
 		UpdateUniforms,
 		UpdateEntities,
+		UpdateAudio,
 		GuiLoop,
 		GameLogic,
 		SceneDraw,
@@ -61,6 +62,7 @@ public:
 	    "SDL Input",            //
 	    "Update Uniforms",      //
 	    "Entities",             //
+	    "Audio",                //
 	    "GUI Loop",             //
 	    "Game Logic",           //
 	    "Encode Draw Scene",    //

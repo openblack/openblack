@@ -18,6 +18,11 @@ namespace openblack
 class RandomNumberManagerInterface;
 class LandIslandInterface;
 
+namespace audio
+{
+class AudioManagerInterface;
+}
+
 namespace filesystem
 {
 class FileSystemInterface;
@@ -53,6 +58,7 @@ struct Locator
 	using resources = entt::locator<resources::ResourcesInterface>;
 	using rng = entt::locator<RandomNumberManagerInterface>;
 	using terrainSystem = entt::locator<LandIslandInterface>;
+	using audio = entt::locator<audio::AudioManagerInterface>;
 	using rendereringSystem = entt::locator<ecs::systems::RenderingSystemInterface>;
 	using dynamicsSystem = entt::locator<ecs::systems::DynamicsSystemInterface>;
 	using cameraBookmarkSystem = entt::locator<ecs::systems::CameraBookmarkSystemInterface>;

@@ -81,8 +81,10 @@ target_sources(
 set_target_properties(openblack_lib PROPERTIES LINKER_LANGUAGE CXX)
 
 target_include_directories(
-  openblack_lib PUBLIC ${CMAKE_CURRENT_LIST_DIR} ${BULLET_INCLUDE_DIR}
-                       ${Stb_INCLUDE_DIR} ${CMAKE_BINARY_DIR}/include
+  openblack_lib
+  PUBLIC ${CMAKE_CURRENT_LIST_DIR}
+         ${CMAKE_BINARY_DIR}/include # For shaders and other bin2c
+         ${BULLET_INCLUDE_DIR} ${Stb_INCLUDE_DIR} ${DRLIBS_INCLUDE_DIRS}
 )
 if (NOT VCPKG_TARGET_ANDROID)
   target_include_directories(
@@ -107,6 +109,7 @@ target_link_libraries(
           glm::glm
           EnTT::EnTT
           bgfx::bgfx
+          OpenAL::OpenAL
           cxxopts::cxxopts
           Bullet3Common
           BulletDynamics

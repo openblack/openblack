@@ -13,6 +13,7 @@
 
 #include "3D/LandIsland.h"
 #include "3D/UnloadedIsland.h"
+#include "Audio/AudioManager.h"
 #include "Common/RandomNumberManagerProduction.h"
 #include "ECS/MapProduction.h"
 #include "ECS/Registry.h"
@@ -30,6 +31,7 @@
 #include "Resources/Resources.h"
 
 using namespace openblack::filesystem;
+using openblack::audio::AudioManager;
 using openblack::ecs::MapProduction;
 using openblack::ecs::Registry;
 using openblack::ecs::systems::CameraBookmarkSystem;
@@ -52,6 +54,7 @@ void InitializeGame()
 	Locator::terrainSystem::emplace<UnloadedIsland>();
 	Locator::resources::emplace<Resources>();
 	Locator::rng::emplace<RandomNumberManagerProduction>();
+	Locator::audio::emplace<AudioManager>();
 	Locator::rendereringSystem::emplace<RenderingSystem>();
 	Locator::entitiesRegistry::emplace<Registry>();
 }

@@ -31,6 +31,7 @@
 #include "3D/LandIslandInterface.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
+#include "Audio/AudioManagerInterface.h"
 #include "Common/EventManager.h"
 #include "Common/RandomNumberManager.h"
 #include "Common/StringUtils.h"
@@ -138,6 +139,12 @@ Game::Game(Arguments&& args)
 
 Game::~Game()
 {
+	// Stop all sounds
+	if (Locator::audio::has_value())
+	{
+		Locator::audio::value().Stop();
+	}
+
 	// Manually delete the assets here before BGFX renderer clears its buffers resulting in invalid handles in our assets
 	if (Locator::resources::has_value())
 	{
@@ -145,6 +152,13 @@ Game::~Game()
 		resources.GetMeshes().Clear();
 		resources.GetTextures().Clear();
 		resources.GetAnimations().Clear();
+		resources.GetSounds().Clear();
+	}
+
+	// The audio resources have been cleared and all sounds have been stopped. It is now safe to reset audio
+	if (Locator::audio::has_value())
+	{
+		Locator::audio::reset();
 	}
 
 	Locator::rendereringSystem::reset();
@@ -436,6 +450,12 @@ bool Game::Update()
 		}
 	} // Update Uniforms
 
+	// Update Audio
+	{
+		auto updateAudio = _profiler->BeginScoped(Profiler::Stage::UpdateAudio);
+		Locator::audio::value().Update(*this);
+	} // Update Audio
+
 	return _config.numFramesToSimulate == 0 || _frameCount < _config.numFramesToSimulate;
 }
 
@@ -449,6 +469,7 @@ bool Game::Initialize()
 	auto& textureManager = resources.GetTextures();
 	auto& animationManager = resources.GetAnimations();
 	auto& levelManager = resources.GetLevels();
+	auto& soundManager = resources.GetSounds();
 
 	fileSystem.SetGamePath(_gamePath);
 
@@ -623,6 +644,55 @@ bool Game::Initialize()
 
 	// Create profiler
 	_profiler = std::make_unique<Profiler>();
+
+	// Load all sound packs in the Audio directory
+	auto& audioManager = Locator::audio::value();
+	fileSystem.Iterate(fileSystem.GetPath<Path::Audio>(), true, [&audioManager, &soundManager](const std::filesystem::path& f) {
+		if (f.extension() != ".sad")
+		{
+			return;
+		}
+
+		pack::PackFile soundPack;
+		soundPack.Open(f);
+		const auto& audioHeaders = soundPack.GetAudioSampleHeaders();
+		const auto& audioData = soundPack.GetAudioSamplesData();
+		auto soundName = std::filesystem::path(audioHeaders[0].name.data());
+
+		if (audioHeaders.empty())
+		{
+			SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound pack found for {}. Skipping", f.filename().string());
+			return;
+		}
+
+		auto groupName = f.filename().string();
+
+		// A hacky way of detecting if the sound is music as all music sounds end with "mpg"
+		if (soundName.extension() == ".mpg")
+		{
+			auto buffers = std::queue<std::vector<uint8_t>>();
+			auto packName = f.string();
+			audioManager.AddMusicEntry(packName);
+		}
+		else
+		{
+			audioManager.CreateSoundGroup(groupName);
+			for (size_t i = 0; i < audioHeaders.size(); i++)
+			{
+				soundName = std::filesystem::path(audioHeaders[i].name.data());
+				if (audioData[i].empty())
+				{
+					SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound buffer found for {}. Skipping", soundName.string());
+					return;
+				}
+
+				const entt::id_type id = entt::hashed_string(fmt::format("{}/{}", groupName, i).c_str());
+				const std::vector<std::vector<uint8_t>> buffer = {audioData[i]};
+				soundManager.Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[i], buffer);
+				audioManager.AddToSoundGroup(groupName, id);
+			}
+		}
+	});
 
 	// create our camera
 	_camera = std::make_unique<Camera>();
