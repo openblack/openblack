@@ -10,8 +10,7 @@
 #include "SoundHandler.h"
 #include "3D/Camera.h"
 #include "Game.h"
-
-#include <glm/gtc/matrix_transform.hpp>
+#include "Math.h"
 
 #include <fstream>
 #include <vector>
@@ -106,7 +105,7 @@ AudioEmitterId SoundHandler::CreateEmitters(const std::vector<SoundId> ids, glm:
                                             PlayType playType)
 {
 	std::vector<SoundId> out;
-	std::sample(ids.begin(), ids.end(), std::back_inserter(out), 1, std::mt19937 {std::random_device {}()});
+	std::sample(ids.begin(), ids.end(), std::back_inserter(out), 1, Math::GetRandom());
 	return CreateEmitter(out[0], position, velocity, direction, radius, volume, world, playType);
 }
 

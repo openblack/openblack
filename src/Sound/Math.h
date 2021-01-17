@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <random>
+
 namespace openblack::audio
 {
 
@@ -16,5 +18,9 @@ class Math
 {
 public:
 	static float MapTo(float val, float curMin, float curMax, float tarMin, float tarMax);
+	static std::mt19937 GetRandom() { return _random; }
+
+private:
+	static std::mt19937 _random;
 };
 } // namespace openblack::audio

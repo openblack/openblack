@@ -15,3 +15,5 @@ float Math::MapTo(float val, float curMin, float curMax, float tarMin, float tar
 {
 	return (val - curMin) / (curMax - curMin) * (tarMax - tarMin) + tarMin;
 }
+
+std::mt19937 Math::_random(std::random_device {}());
