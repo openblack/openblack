@@ -21,7 +21,7 @@ namespace openblack::audio
 class SoundPack
 {
 public:
-	void LoadFromFile(const std::string& filename);
+	void LoadFromFile(const std::string& filePath);
 
 	[[nodiscard]] const SoundMap& GetSounds() const { return _sounds; }
 	std::unique_ptr<Sound>& GetSound(SoundId id) { return _sounds[id]; }

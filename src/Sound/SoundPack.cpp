@@ -16,24 +16,24 @@
 namespace openblack::audio
 {
 
-void SoundPack::LoadFromFile(const std::string& filename)
+void SoundPack::LoadFromFile(const std::string& filePath)
 {
-	spdlog::debug("Loading Sound Pack from file: {}", filename);
+	spdlog::debug("Loading Sound Pack from file: {}", filePath);
 
 	try
 	{
-		_sadFile.Open(Game::instance()->GetFileSystem().FindPath(filename).u8string());
+		_sadFile.Open(Game::instance()->GetFileSystem().FindPath(filePath).u8string());
 	}
 	catch (std::runtime_error& err)
 	{
-		spdlog::error("Failed to open {}: {}", filename, err.what());
+		spdlog::error("Failed to open {}: {}", filePath, err.what());
 		return;
 	}
 
 	if (!_sadFile.GetName().empty())
 		_name = _sadFile.GetName();
 	else
-		_name = (filename);
+		_name = (filePath);
 
 	// TODO: Discover sector flag
 	bool isSector;
@@ -46,13 +46,14 @@ void SoundPack::LoadFromFile(const std::string& filename)
 		auto ext = path.extension().string();
 		isSector = ext == ".mpg";
 		auto volume = sample.volume > 0 ? ((float)sample.volume) / 127.f : 1.f;
+		auto fileName = fs::path(filePath).filename().string();
 
 		// We'll use the file name for the sound ID instead as each sector has different name
 		if (isSector)
 		{
-			if (combinedData.find(filename) == combinedData.end())
-				combinedData[filename] = {/*id=*/filename,
-				                          /*name*/ filename,
+			if (combinedData.find(fileName) == combinedData.end())
+				combinedData[fileName] = {/*id=*/fileName,
+				                          /*name*/fileName,
 				                          /*priority=*/sample.priority,
 				                          /*sampleRate=*/static_cast<int>(sample.sampleRate),
 				                          /*bitRate=*/0,
@@ -68,7 +69,7 @@ void SoundPack::LoadFromFile(const std::string& filename)
 				                          /*lengthInSeconds=*/-1};
 			else
 			{
-				auto& sound = combinedData[filename];
+				auto& sound = combinedData[fileName];
 				sound.sectorCount++;
 				sound.bytes.insert(sound.bytes.end(), soundData.begin(), soundData.end());
 			}
