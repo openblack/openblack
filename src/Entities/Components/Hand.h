@@ -13,6 +13,7 @@
 #include "Common/MeshLookup.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/Texture2D.h"
+#include "Sound/Sound.h"
 
 #include <memory>
 
@@ -28,9 +29,12 @@ struct Hand
 	};
 
 	static constexpr MeshId meshId = 999;
+	static const std::vector<audio::SoundId>& GrabLandSoundIds() { return Hand::_grabLandSounds; };
 
 	void Init();
 
 	RenderType renderType;
+private:
+	static const std::vector<audio::SoundId> _grabLandSounds;
 };
 } // namespace openblack::entities::components

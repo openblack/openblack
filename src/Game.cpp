@@ -10,7 +10,6 @@
 #include "Game.h"
 
 #include "Sound/SoundHandler.h"
-#include "Sound/SoundPack.h"
 #include "3D/AnimationPack.h"
 #include "3D/Camera.h"
 #include "3D/L3DAnim.h"
@@ -136,7 +135,21 @@ bool Game::ProcessEvents(const SDL_Event& event)
 	static bool leftMouseButton = false;
 
 	if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_LEFT)
+	{
+		// Hand is still considered up
+		if (event.type == SDL_MOUSEBUTTONDOWN && !leftMouseButton)
+		{
+			auto& handTransform = _entityRegistry->Get<openblack::entities::components::Transform>(_handEntity);
+			auto& hand = _entityRegistry->Get<openblack::entities::components::Hand>(_handEntity);
+			auto velocity = glm::vec3(.0f);
+			auto direction = glm::vec3(0);
+			auto radius = glm::vec2(1.f);
+			auto emitterId = _soundHandler->CreateEmitters(hand.GrabLandSoundIds(), handTransform.position, velocity, direction, radius, 1.f, false, audio::PlayType::Once);
+			_soundHandler->PlayEmitter(emitterId);
+		}
+
 		leftMouseButton = !leftMouseButton;
+	}
 
 	_handGripping = leftMouseButton;
 
