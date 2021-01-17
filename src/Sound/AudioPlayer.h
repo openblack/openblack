@@ -66,6 +66,7 @@ public:
 	void PauseEmitter(AudioEmitter& emitter) const override {}
 	void StopEmitter(AudioEmitter& emitter) const override {}
 	void UpdateEmitterState(AudioEmitter& emitter) const override {}
+	void CleanUpResource(AudioEmitter& emitter) const override {};
 	AudioStatus GetAudioStatus(AudioSourceId id) const override { return AudioStatus::Paused; }
 	float GetAudioProgress(AudioEmitter&) const override { return 0; }
 
