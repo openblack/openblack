@@ -43,16 +43,16 @@ void alErrorCheck(std::string message, std::string file, uint64_t line)
 	spdlog::error(R"(OpenAL error: {} with call "{}" at file "{}" on line {})", errorMessage, message, file, line);
 }
 
-#define alCheckCall(FUNCTION_CALL)\
-	FUNCTION_CALL;\
+#define alCheckCall(FUNCTION_CALL) \
+	FUNCTION_CALL;                 \
 	alErrorCheck(#FUNCTION_CALL, __FILE__, __LINE__)
 
 using namespace openblack::audio;
 
 OpenAlPlayer::OpenAlPlayer()
-	: _device(alcOpenDevice(nullptr), DeleteAlDevice)
-	, _context(alcCreateContext(_device.get(), nullptr), DeleteAlContext)
-	, _rand(std::random_device{}())
+    : _device(alcOpenDevice(nullptr), DeleteAlDevice)
+    , _context(alcCreateContext(_device.get(), nullptr), DeleteAlContext)
+    , _rand(std::random_device {}())
 {
 	UpdateListenerState(glm::vec3(1), glm::vec3(0), glm::vec3(0), glm::vec3(0));
 	SetVolume(.5f);
@@ -63,11 +63,13 @@ void OpenAlPlayer::Activate()
 	alCheckCall(alcMakeContextCurrent(_context.get()));
 }
 
-void OpenAlPlayer::SetVolume(float volume) {
+void OpenAlPlayer::SetVolume(float volume)
+{
 	_volume = volume;
 }
 
-void OpenAlPlayer::SetVolume(AudioSourceId id, float volume) {
+void OpenAlPlayer::SetVolume(AudioSourceId id, float volume)
+{
 	alCheckCall(alSourcef(id, AL_GAIN, volume));
 }
 
@@ -120,7 +122,7 @@ void OpenAlPlayer::UpdateEmitterState(AudioEmitter& emitter) const
 		glm::vec3& vel = emitter.velocity;
 		alCheckCall(alSource3f(emitter.audioSourceId, AL_POSITION, pos.z, pos.y, pos.x));
 		alCheckCall(alSource3f(emitter.audioSourceId, AL_VELOCITY, vel.z, vel.y, vel.x));
-		alCheckCall(alSource3f(emitter.audioSourceId, AL_DIRECTION, 0,0,0));
+		alCheckCall(alSource3f(emitter.audioSourceId, AL_DIRECTION, 0, 0, 0));
 	}
 
 	alCheckCall(alSourcef(emitter.audioSourceId, AL_GAIN, emitter.volume * _volume));
@@ -156,14 +158,16 @@ void OpenAlPlayer::Stop(AudioSourceId sourceId) const
 {
 	ALint status;
 	alCheckCall(alGetSourcei(sourceId, AL_SOURCE_STATE, &status));
-	if (status != AL_STOPPED) alCheckCall(alSourceStop(sourceId));
+	if (status != AL_STOPPED)
+		alCheckCall(alSourceStop(sourceId));
 }
 
 void OpenAlPlayer::Destroy(AudioSourceId sourceId, AudioBufferId bufferId) const
 {
 	ALint status;
 	alCheckCall(alGetSourcei(sourceId, AL_SOURCE_STATE, &status));
-	if (status != AL_STOPPED) alCheckCall(alSourceStop(sourceId));
+	if (status != AL_STOPPED)
+		alCheckCall(alSourceStop(sourceId));
 	alCheckCall(alDeleteSources(1, &sourceId));
 	alCheckCall(alDeleteBuffers(1, &bufferId));
 }
@@ -173,7 +177,8 @@ void OpenAlPlayer::DeleteAlDevice(ALCdevice* device)
 	alCheckCall(alcCloseDevice(device));
 }
 
-void OpenAlPlayer::DeleteAlContext(ALCcontext* context) {
+void OpenAlPlayer::DeleteAlContext(ALCcontext* context)
+{
 	alCheckCall(alcDestroyContext(context));
 }
 

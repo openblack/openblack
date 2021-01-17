@@ -76,7 +76,7 @@ void AudioDebug::AudioPlayer(Game& game, const std::vector<std::shared_ptr<Sound
 
 		for (auto& [soundId, sound] : sounds)
 		{
-			if(ImGui::Selectable(sound->name.c_str(), false, ImGuiSelectableFlags_SpanAllColumns))
+			if (ImGui::Selectable(sound->name.c_str(), false, ImGuiSelectableFlags_SpanAllColumns))
 				handler.PlaySound(soundId);
 
 			ImGui::NextColumn();
@@ -95,7 +95,8 @@ void AudioDebug::AudioPlayer(Game& game, const std::vector<std::shared_ptr<Sound
 	ImGui::PopStyleVar();
 }
 
-void AudioDebug::AudioSettings(Game& game) {
+void AudioDebug::AudioSettings(Game& game)
+{
 	auto& handler = game.GetSoundHandler();
 	const auto& emitters = handler.GetEmitters();
 
@@ -122,7 +123,8 @@ void AudioDebug::AudioSettings(Game& game) {
 	ImGui::Separator();
 	for (auto& [emitterId, emitter] : emitters)
 	{
-		if (ImGui::Selectable(("##" + std::to_string(emitterId)).c_str(), _selectedEmitter == emitterId, ImGuiSelectableFlags_SpanAllColumns))
+		if (ImGui::Selectable(("##" + std::to_string(emitterId)).c_str(), _selectedEmitter == emitterId,
+		                      ImGuiSelectableFlags_SpanAllColumns))
 			_selectedEmitter = emitterId;
 		ImGui::SameLine();
 		ImGui::Text("%llu", emitterId);
@@ -151,7 +153,7 @@ void AudioDebug::AudioSettings(Game& game) {
 	ImGui::SameLine();
 	ImGui::BeginChild("Audio Player Settings", ImGui::GetContentRegionAvail(), true);
 	ImGui::Text("Audio Player settings");
-	if(ImGui::Button(("Re-initialize Audio Player (" + handler.GetAudioPlayerName() + ")").c_str()))
+	if (ImGui::Button(("Re-initialize Audio Player (" + handler.GetAudioPlayerName() + ")").c_str()))
 		handler.ReplaceAudioPlayer(std::make_unique<OpenAlPlayer>(OpenAlPlayer()));
 	ImGui::Separator();
 	float volume = handler.GetGlobalVolume();
@@ -163,16 +165,16 @@ void AudioDebug::AudioSettings(Game& game) {
 		handler.SetGlobalVolume(volume);
 	ImGui::Text("Active Sounds");
 	ImGui::SameLine();
-	if(ImGui::Button("Play") && _selectedEmitter != InitialAudioEmitterId)
+	if (ImGui::Button("Play") && _selectedEmitter != InitialAudioEmitterId)
 		handler.PlayEmitter(_selectedEmitter);
 	ImGui::SameLine();
-	if(ImGui::Button("Pause") && _selectedEmitter != InitialAudioEmitterId)
+	if (ImGui::Button("Pause") && _selectedEmitter != InitialAudioEmitterId)
 		handler.PauseEmitter(_selectedEmitter);
 	ImGui::SameLine();
-	if(ImGui::Button("Stop") && _selectedEmitter != InitialAudioEmitterId)
+	if (ImGui::Button("Stop") && _selectedEmitter != InitialAudioEmitterId)
 		handler.StopEmitter(_selectedEmitter);
 	ImGui::SameLine();
-	if(ImGui::Button("Export to .wav") && _selectedEmitter != InitialAudioEmitterId)
+	if (ImGui::Button("Export to .wav") && _selectedEmitter != InitialAudioEmitterId)
 		AudioDecoder::DebugEmitWavFile(*handler.GetSound(handler.GetEmitters().at(_selectedEmitter).soundId));
 	ImGui::Separator();
 	ImGui::Columns(6, "PlayingSounds", true);
@@ -191,7 +193,8 @@ void AudioDebug::AudioSettings(Game& game) {
 	ImGui::Separator();
 	for (auto [emitterId, emitter] : emitters)
 	{
-		if (ImGui::Selectable(("##" + std::to_string(emitterId)).c_str(), _selectedEmitter ==  emitterId, ImGuiSelectableFlags_SpanAllColumns))
+		if (ImGui::Selectable(("##" + std::to_string(emitterId)).c_str(), _selectedEmitter == emitterId,
+		                      ImGuiSelectableFlags_SpanAllColumns))
 			_selectedEmitter = emitterId;
 		ImGui::SameLine();
 		ImGui::Text("%u", emitter.audioSourceId);
@@ -202,7 +205,7 @@ void AudioDebug::AudioSettings(Game& game) {
 		ImGui::NextColumn();
 		ImGui::Text("%llu", handler.GetSound(emitter.soundId)->bytes.size());
 		ImGui::NextColumn();
-		switch(handler.GetPlayer()->GetAudioStatus(emitter.audioSourceId))
+		switch (handler.GetPlayer()->GetAudioStatus(emitter.audioSourceId))
 		{
 		case AudioStatus::Initial:
 			ImGui::TextColored(redColor, "Initial");

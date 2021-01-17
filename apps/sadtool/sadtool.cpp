@@ -77,15 +77,15 @@ int ViewBytes(openblack::sad::SadFile& pack, const std::string& name)
 int ViewInfo(openblack::sad::SadFile& sad)
 {
 	using Lookup = openblack::sad::SadBlockHeader;
-//	auto lookup = sad.GetInfoBlockLookup();
-//	std::sort(lookup.begin(), lookup.end(), [](const Lookup& a, Lookup& b) { return a.blockId < b.blockId; });
+	//	auto lookup = sad.GetInfoBlockLookup();
+	//	std::sort(lookup.begin(), lookup.end(), [](const Lookup& a, Lookup& b) { return a.blockId < b.blockId; });
 
 	std::printf("file: %s\n", sad.GetFilename().c_str());
 
-//	for (auto& item : lookup)
-//	{
-//		std::printf("block: %4x, unknown: %u\n", item.blockId, item.unknown);
-//	}
+	//	for (auto& item : lookup)
+	//	{
+	//		std::printf("block: %4x, unknown: %u\n", item.blockId, item.unknown);
+	//	}
 
 	return EXIT_SUCCESS;
 }
@@ -94,14 +94,14 @@ int ViewSounds(openblack::sad::SadFile& sad)
 {
 	using Lookup = openblack::sad::SadBlockHeader;
 	auto lookup = sad.GetSounds();
-//	std::sort(lookup.begin(), lookup.end(), [](const Lookup& a, Lookup& b) { return a.blockId < b.blockId; });
+	//	std::sort(lookup.begin(), lookup.end(), [](const Lookup& a, Lookup& b) { return a.blockId < b.blockId; });
 
 	std::printf("file: %s\n", sad.GetFilename().c_str());
 
-//	for (auto& item : lookup)
-//	{
-//		std::printf("block: %4x, unknown: %u\n", item.blockId, item.unknown);
-//	}
+	//	for (auto& item : lookup)
+	//	{
+	//		std::printf("block: %4x, unknown: %u\n", item.blockId, item.unknown);
+	//	}
 
 	return EXIT_SUCCESS;
 }

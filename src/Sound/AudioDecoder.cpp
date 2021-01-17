@@ -43,7 +43,7 @@ void AudioDecoder::DebugEmitWavFile(Sound& sound)
 	file.WriteValue(1, 2);
 	file.WriteValue(channels, 2);
 	file.WriteValue(sound.sampleRate, 4);
-	file.WriteValue((sound.sampleRate * sound.bitRate * channels) /  8 , 4);
+	file.WriteValue((sound.sampleRate * sound.bitRate * channels) / 8, 4);
 	file.WriteValue(4, 2);
 	file.WriteValue(16, 2);
 

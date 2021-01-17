@@ -55,7 +55,7 @@ namespace audio
 {
 class SoundPack;
 class SoundHandler;
-}
+} // namespace audio
 
 namespace lhscriptx
 {

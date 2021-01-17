@@ -17,9 +17,9 @@ extern "C" {
 #include <spdlog/spdlog.h>
 
 #include "AudioPlayer.h"
+#include <random>
 #include <string>
 #include <vector>
-#include <random>
 
 namespace openblack::audio
 {
@@ -30,7 +30,7 @@ public:
 	OpenAlPlayer();
 	void Activate() override;
 	void CleanUpResources(std::map<AudioEmitterId, AudioEmitter>& emitters) override;
-	std::string GetName() const override  { return "OpenAL Player"; };
+	std::string GetName() const override { return "OpenAL Player"; };
 	float GetVolume() const override { return _volume; };
 	void SetVolume(float volume) override;
 	void UpdateListenerState(glm::vec3 pos, glm::vec3 vel, glm::vec3 front, glm::vec3 up) const override;
@@ -46,6 +46,7 @@ public:
 	void SetVolume(AudioSourceId id, float volume) override;
 	float GetVolume(AudioSourceId id) const override;
 	const AudioStatus GetAudioStatus(AudioSourceId id) const override;
+
 private:
 	void Stop(AudioSourceId sourceId) const;
 	void Destroy(AudioSourceId sourceId, AudioBufferId bufferId) const;

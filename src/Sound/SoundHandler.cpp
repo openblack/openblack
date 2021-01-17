@@ -17,7 +17,9 @@
 namespace openblack::audio
 {
 
-SoundHandler::SoundHandler(std::unique_ptr<AudioDecoder>&& decoder, std::unique_ptr<AudioPlayer>&& player) : _audioDecoder(std::move(decoder)), _audioPlayer(std::move(player))
+SoundHandler::SoundHandler(std::unique_ptr<AudioDecoder>&& decoder, std::unique_ptr<AudioPlayer>&& player)
+    : _audioDecoder(std::move(decoder))
+    , _audioPlayer(std::move(player))
 {
 	_emitterId = 0;
 }
@@ -55,10 +57,10 @@ void SoundHandler::Tick(Game& game)
 	// Release hardware resources
 	// Update emitters with hardware resources
 	// Assign hardware resources
-//	for (auto& [id, emitter] : _emitters)
-//	{
-//		_audioPlayer->CleanUpResource(emitter);
-//	}
+	//	for (auto& [id, emitter] : _emitters)
+	//	{
+	//		_audioPlayer->CleanUpResource(emitter);
+	//	}
 
 	// Cull stopped emitters
 	for (auto iterator = _emitters.begin(); iterator != _emitters.end();)
@@ -94,19 +96,22 @@ const std::map<AudioEmitterId, AudioEmitter>& SoundHandler::GetEmitters() const
 	return _emitters;
 }
 
-AudioEmitterId SoundHandler::CreateEmitters(const std::vector<SoundId> ids, glm::vec3& position, glm::vec3& velocity, glm::vec3& direction, glm::vec2& radius, float volume, bool world, PlayType playType)
+AudioEmitterId SoundHandler::CreateEmitters(const std::vector<SoundId> ids, glm::vec3& position, glm::vec3& velocity,
+                                            glm::vec3& direction, glm::vec2& radius, float volume, bool world,
+                                            PlayType playType)
 {
 	std::vector<SoundId> out;
-	std::sample(ids.begin(), ids.end(), std::back_inserter(out), 1, std::mt19937{std::random_device{}()});
+	std::sample(ids.begin(), ids.end(), std::back_inserter(out), 1, std::mt19937 {std::random_device {}()});
 	return CreateEmitter(out[0], position, velocity, direction, radius, volume, world, playType);
 }
 
-AudioEmitterId SoundHandler::CreateEmitter(SoundId id, glm::vec3& position, glm::vec3& velocity, glm::vec3& direction, glm::vec2& radius, float volume, bool world, PlayType playType)
+AudioEmitterId SoundHandler::CreateEmitter(SoundId id, glm::vec3& position, glm::vec3& velocity, glm::vec3& direction,
+                                           glm::vec2& radius, float volume, bool world, PlayType playType)
 {
 	auto& sound = GetSound(id);
 	AudioEmitterId emitterId = _emitterId++;
 	volume = sound->volume * volume;
-	AudioEmitter emitter = { 0, 0, id, 0, position, velocity, direction, radius, volume, playType, world};
+	AudioEmitter emitter = {0, 0, id, 0, position, velocity, direction, radius, volume, playType, world};
 	_audioPlayer->SetupEmitter(emitter, *sound);
 	_emitters[emitterId] = emitter;
 	return emitterId;
@@ -148,7 +153,6 @@ void SoundHandler::DestroyEmitters()
 		_audioPlayer->CleanUpResource(emitter);
 		iterator = _emitters.erase(iterator);
 	}
-
 }
 
 void SoundHandler::DestroyEmitter(AudioEmitterId id)
@@ -157,7 +161,8 @@ void SoundHandler::DestroyEmitter(AudioEmitterId id)
 	_emitters.erase(id);
 }
 
-void SoundHandler::SetGlobalVolume(float volume) {
+void SoundHandler::SetGlobalVolume(float volume)
+{
 	_audioPlayer->SetVolume(volume);
 }
 

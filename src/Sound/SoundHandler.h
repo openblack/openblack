@@ -37,8 +37,10 @@ public:
 	void PauseEmitter(AudioEmitterId id);
 	void StopEmitter(AudioEmitterId id);
 	void PlaySound(SoundId id);
-	AudioEmitterId CreateEmitters(const std::vector<SoundId> ids, glm::vec3& position, glm::vec3& velocity, glm::vec3& direction, glm::vec2& radius, float volume, bool world, PlayType playType);
-	AudioEmitterId CreateEmitter(SoundId id, glm::vec3& position, glm::vec3& velocity, glm::vec3& direction, glm::vec2& radius, float volume, bool world, PlayType playType);
+	AudioEmitterId CreateEmitters(const std::vector<SoundId> ids, glm::vec3& position, glm::vec3& velocity,
+	                              glm::vec3& direction, glm::vec2& radius, float volume, bool world, PlayType playType);
+	AudioEmitterId CreateEmitter(SoundId id, glm::vec3& position, glm::vec3& velocity, glm::vec3& direction, glm::vec2& radius,
+	                             float volume, bool world, PlayType playType);
 	void DestroyEmitters();
 	void DestroyEmitter(AudioEmitterId id);
 	[[nodiscard]] bool EmitterExists(AudioEmitterId id);
@@ -53,6 +55,7 @@ public:
 	const std::unique_ptr<AudioPlayer>& GetPlayer() const { return _audioPlayer; }
 	void SetGlobalVolume(float volume);
 	void Tick(Game& game);
+
 private:
 	size_t _emitterId;
 	std::unique_ptr<AudioPlayer> _audioPlayer;
@@ -63,4 +66,4 @@ private:
 };
 
 std::unique_ptr<SoundHandler> CreateSoundHandler();
-}
+} // namespace openblack::audio

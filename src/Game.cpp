@@ -9,7 +9,6 @@
 
 #include "Game.h"
 
-#include "Sound/SoundHandler.h"
 #include "3D/AnimationPack.h"
 #include "3D/Camera.h"
 #include "3D/L3DAnim.h"
@@ -31,6 +30,7 @@
 #include "Parsers/InfoFile.h"
 #include "Profiler.h"
 #include "Renderer.h"
+#include "Sound/SoundHandler.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
@@ -144,7 +144,8 @@ bool Game::ProcessEvents(const SDL_Event& event)
 			auto velocity = glm::vec3(.0f);
 			auto direction = glm::vec3(0);
 			auto radius = glm::vec2(1.f);
-			auto emitterId = _soundHandler->CreateEmitters(hand.GrabLandSoundIds(), handTransform.position, velocity, direction, radius, 1.f, false, audio::PlayType::Once);
+			auto emitterId = _soundHandler->CreateEmitters(hand.GrabLandSoundIds(), handTransform.position, velocity, direction,
+			                                               radius, 1.f, false, audio::PlayType::Once);
 			_soundHandler->PlayEmitter(emitterId);
 		}
 

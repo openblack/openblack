@@ -13,7 +13,6 @@
 #include <Game.h>
 #include <spdlog/spdlog.h>
 
-
 namespace openblack::audio
 {
 
@@ -52,23 +51,21 @@ void SoundPack::LoadFromFile(const std::string& filename)
 		if (isSector)
 		{
 			if (combinedData.find(filename) == combinedData.end())
-				combinedData[filename] = {
-					/*id=*/filename,
-					/*name*/filename,
-					/*priority=*/sample.priority,
-					/*sampleRate=*/static_cast<int>(sample.sampleRate),
-				    /*bitRate=*/0,
-					/*volume=*/volume,
-					/*pitch=*/sample.pitch,
-					/*pitchDeviation=*/sample.pitchDeviation,
-					/*bytes=*/soundData,
-				    /*channelLayout=*/ChannelLayout::Stereo,
-					/*loopType=*/static_cast<PlayType>(sample.loopType),
-					/*loaded=*/false,
-					/*sectorMerged=*/true,
-				    /*sectorCount=*/1,
-					/*lengthInSeconds=*/-1
-				};
+				combinedData[filename] = {/*id=*/filename,
+				                          /*name*/ filename,
+				                          /*priority=*/sample.priority,
+				                          /*sampleRate=*/static_cast<int>(sample.sampleRate),
+				                          /*bitRate=*/0,
+				                          /*volume=*/volume,
+				                          /*pitch=*/sample.pitch,
+				                          /*pitchDeviation=*/sample.pitchDeviation,
+				                          /*bytes=*/soundData,
+				                          /*channelLayout=*/ChannelLayout::Stereo,
+				                          /*loopType=*/static_cast<PlayType>(sample.loopType),
+				                          /*loaded=*/false,
+				                          /*sectorMerged=*/true,
+				                          /*sectorCount=*/1,
+				                          /*lengthInSeconds=*/-1};
 			else
 			{
 				auto& sound = combinedData[filename];
@@ -78,23 +75,21 @@ void SoundPack::LoadFromFile(const std::string& filename)
 		}
 		else
 		{
-			Sound sound = {
-				/*id=*/soundName,
-			    /*name*/soundName,
-				/*priority=*/sample.priority,
-				/*sampleRate=*/static_cast<int>(sample.sampleRate),
-			    /*bitRate=*/0,
-				/*volume=*/volume,
-				/*pitch=*/sample.pitch,
-				/*pitchDeviation=*/sample.pitchDeviation,
-				/*bytes=*/soundData,
-				/*format=*/ChannelLayout::Mono,
-				/*loopType=*/static_cast<PlayType>(sample.loopType),
-				/*loaded=*/false,
-				/*sectorMerged=*/false,
-				/*sectorCount=*/0,
-				/*lengthInSeconds=*/-1
-			};
+			Sound sound = {/*id=*/soundName,
+			               /*name*/ soundName,
+			               /*priority=*/sample.priority,
+			               /*sampleRate=*/static_cast<int>(sample.sampleRate),
+			               /*bitRate=*/0,
+			               /*volume=*/volume,
+			               /*pitch=*/sample.pitch,
+			               /*pitchDeviation=*/sample.pitchDeviation,
+			               /*bytes=*/soundData,
+			               /*format=*/ChannelLayout::Mono,
+			               /*loopType=*/static_cast<PlayType>(sample.loopType),
+			               /*loaded=*/false,
+			               /*sectorMerged=*/false,
+			               /*sectorCount=*/0,
+			               /*lengthInSeconds=*/-1};
 			_sounds[sound.id] = std::make_unique<Sound>(sound);
 		}
 	}
@@ -102,11 +97,10 @@ void SoundPack::LoadFromFile(const std::string& filename)
 	// TODO: Rely on SadFile isMusic
 	_isMusic = combinedData.size() > 0;
 
-	for (auto& [soundName, sound] : combinedData)
-		_sounds[soundName] = std::make_unique<Sound>(sound);
+	for (auto& [soundName, sound] : combinedData) _sounds[soundName] = std::make_unique<Sound>(sound);
 
 	if (_sounds.empty())
 		spdlog::warn("Soundpack {} has no sounds", _name);
 }
 
-} // namespace openblack
+} // namespace openblack::audio

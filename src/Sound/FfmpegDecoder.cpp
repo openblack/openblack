@@ -36,28 +36,23 @@ void FfmpegDecoder::ToPCM16(Sound& sound)
 
 	// In normal FFempeg usage, the sound file path is given to the API where its opened and read
 	// We cannot do that as the file does not exist
-	auto avFormatCtx = std::unique_ptr<AVFormatContext, decltype(&AvDeleteFormatContext)>(
-		avformat_alloc_context(),
-		AvDeleteFormatContext
-	);
+	auto avFormatCtx =
+	    std::unique_ptr<AVFormatContext, decltype(&AvDeleteFormatContext)>(avformat_alloc_context(), AvDeleteFormatContext);
 
 	auto avBufferFree = [&](uint8_t* buffer) { av_free(buffer); };
-	auto avBuffer = std::unique_ptr<uint8_t, decltype(avBufferFree)>(
-		static_cast<uint8_t*>(av_malloc(BUFFER_SIZE)),
-		avBufferFree
-	);
+	auto avBuffer =
+	    std::unique_ptr<uint8_t, decltype(avBufferFree)>(static_cast<uint8_t*>(av_malloc(BUFFER_SIZE)), avBufferFree);
 
 	auto memoryStream = MemoryStream(soundBytes.data(), soundBytes.size());
 	auto avioCtx = std::unique_ptr<AVIOContext, decltype(&AvDeleteAvioContext)>(
-		avio_alloc_context(avBuffer.get(), BUFFER_SIZE, 0, &memoryStream, readSoundBytes, nullptr, nullptr),
-		AvDeleteAvioContext
-	);
+	    avio_alloc_context(avBuffer.get(), BUFFER_SIZE, 0, &memoryStream, readSoundBytes, nullptr, nullptr),
+	    AvDeleteAvioContext);
 
 	// AVIO context holds a reference to the buffer. We can now discard this one
 	avBuffer.release();
 	avFormatCtx->pb = avioCtx.get();
 	avFormatCtx->max_analyze_duration = 0;
-	AVFormatContext *rawAvFormatCtx = avFormatCtx.get();
+	AVFormatContext* rawAvFormatCtx = avFormatCtx.get();
 
 	// This call will free the context on failure
 	auto error = avformat_open_input(&rawAvFormatCtx, sound.name.c_str(), nullptr, nullptr);
@@ -88,14 +83,13 @@ void FfmpegDecoder::ToPCM16(Sound& sound)
 	auto outSampleRate = codecContext->sample_rate;
 
 	auto swr = std::unique_ptr<SwrContext, decltype(&SwrDeleteContext)>(
-		swr_alloc_set_opts(nullptr, outChannels, outFormat, outSampleRate, inChannels, inFormat, inSampleRate, 0, nullptr),
-		SwrDeleteContext
-	);
+	    swr_alloc_set_opts(nullptr, outChannels, outFormat, outSampleRate, inChannels, inFormat, inSampleRate, 0, nullptr),
+	    SwrDeleteContext);
 	swr_init(swr.get());
 
-	auto packetDeleter = [](AVPacket *packet){ av_packet_free(&packet); };
+	auto packetDeleter = [](AVPacket* packet) { av_packet_free(&packet); };
 	auto packet = std::unique_ptr<AVPacket, decltype(packetDeleter)>(av_packet_alloc(), packetDeleter);
-	auto frameDeleter = [](AVFrame *frame){ av_frame_free(&frame); };
+	auto frameDeleter = [](AVFrame* frame) { av_frame_free(&frame); };
 	auto frame = std::unique_ptr<AVFrame, decltype(frameDeleter)>(av_frame_alloc(), frameDeleter);
 	auto loaded = std::vector<uint8_t>();
 	double timeBase = av_q2d(stream->time_base);
@@ -114,7 +108,7 @@ void FfmpegDecoder::ToPCM16(Sound& sound)
 		auto outBuffer = std::vector<uint8_t>(outBufferSize);
 		auto rawOutBuffer = outBuffer.data();
 		memset(rawOutBuffer, 0, outBufferSize);
-		swr_convert(swr.get(), &rawOutBuffer, outSamplesCount, (uint8_t const **) frame->data, frame->nb_samples);
+		swr_convert(swr.get(), &rawOutBuffer, outSamplesCount, (uint8_t const**)frame->data, frame->nb_samples);
 		duration += frame->pkt_duration;
 
 		if (frame->data[0] == nullptr)
@@ -130,14 +124,14 @@ void FfmpegDecoder::ToPCM16(Sound& sound)
 
 	switch (outChannels)
 	{
-		case AV_CH_LAYOUT_MONO:
-			sound.channelLayout = ChannelLayout::Mono;
-		    break;
-	    case AV_CH_LAYOUT_STEREO:
-			sound.channelLayout = ChannelLayout::Stereo;
-			break;
-	    default:
-			throw std::runtime_error("Unsupported channel layout for sound \"" + sound.name + "\"");
+	case AV_CH_LAYOUT_MONO:
+		sound.channelLayout = ChannelLayout::Mono;
+		break;
+	case AV_CH_LAYOUT_STEREO:
+		sound.channelLayout = ChannelLayout::Stereo;
+		break;
+	default:
+		throw std::runtime_error("Unsupported channel layout for sound \"" + sound.name + "\"");
 	}
 }
 
@@ -152,7 +146,7 @@ void FfmpegDecoder::AvDeleteAvioContext(AVIOContext* context)
 	avio_context_free(&context);
 }
 
-void FfmpegDecoder::SwrDeleteContext(SwrContext *context)
+void FfmpegDecoder::SwrDeleteContext(SwrContext* context)
 {
 	swr_free(&context);
 }

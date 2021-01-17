@@ -24,6 +24,7 @@ public:
 	void Seek(std::size_t position, SeekMode seek) override;
 	void Read(void* buffer, std::size_t length) override;
 	void Write(const void* buffer, std::size_t length) override;
+
 protected:
 	void* _data;
 	std::size_t _size;

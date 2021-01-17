@@ -28,6 +28,7 @@ public:
 	[[nodiscard]] const std::string& GetName() const { return _name; }
 	[[nodiscard]] const std::string& GetFileName() const { return _sadFile.GetFilename(); }
 	[[nodiscard]] bool IsMusic() { return _isMusic; }
+
 private:
 	bool _isMusic;
 	SoundMap _sounds;

@@ -34,6 +34,7 @@ struct Hand
 	void Init();
 
 	RenderType renderType;
+
 private:
 	static const std::vector<audio::SoundId> _grabLandSounds;
 };

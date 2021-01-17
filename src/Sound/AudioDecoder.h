@@ -22,7 +22,7 @@ public:
 	static void DebugEmitWavFile(Sound& sound);
 };
 
-class MockAudioLoader : public AudioDecoder
+class MockAudioLoader: public AudioDecoder
 {
 public:
 	std::string GetName() const { return "Mock Player"; };

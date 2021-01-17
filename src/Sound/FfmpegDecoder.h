@@ -9,8 +9,7 @@
 
 #pragma once
 
-extern "C"
-{
+extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/channel_layout.h>
@@ -28,9 +27,10 @@ class FfmpegDecoder: public AudioDecoder
 public:
 	std::string GetName() const override { return "FFmpeg Loader"; };
 	void ToPCM16(Sound& sound) override;
+
 private:
 	static void AvDeleteFormatContext(AVFormatContext* context);
 	static void AvDeleteAvioContext(AVIOContext* context);
-	static void SwrDeleteContext(SwrContext *context);
+	static void SwrDeleteContext(SwrContext* context);
 };
 } // namespace openblack::audio

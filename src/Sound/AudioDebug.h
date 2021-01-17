@@ -18,10 +18,11 @@ class AudioDebug
 {
 public:
 	static void ShowDebugGui(Game& game);
+
 private:
 	static void AudioPlayer(Game& game, const std::vector<std::shared_ptr<SoundPack>>& soundPacks);
 	static void AudioSettings(Game& game);
 	static std::string _selectedPack;
 	static AudioEmitterId _selectedEmitter;
 };
-}
+} // namespace openblack::audio

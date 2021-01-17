@@ -17,5 +17,4 @@ class Math
 public:
 	static float MapTo(float val, float curMin, float curMax, float tarMin, float tarMax);
 };
-}
-
+} // namespace openblack::audio

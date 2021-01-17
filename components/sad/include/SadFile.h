@@ -30,7 +30,6 @@ struct SadAudioBankSampleTable
 {
 	uint16_t numOfEntries;
 	uint16_t numOfEntries2;
-
 };
 
 struct SadBlockHeader
@@ -66,6 +65,7 @@ protected:
 
 	void ResolveFileSegmentDataBlock();
 	void ResolveAudioWaveDataBlock();
+
 public:
 	SadFile();
 
@@ -84,4 +84,4 @@ public:
 	[[nodiscard]] const std::vector<uint8_t>& GetBlock(const std::string& name) const { return _blocks.at(name); }
 	[[nodiscard]] const Sounds GetSounds() const { return _sounds; }
 };
-}
+} // namespace openblack::sad
