@@ -47,7 +47,7 @@ public:
 	// Lower level sound control. Used for music and GUI
 	virtual void SetVolume(AudioSourceId id, float volume) = 0;
 	[[nodiscard]] virtual float GetVolume(AudioSourceId id) const = 0;
-	[[nodiscard]] virtual const AudioStatus GetAudioStatus(AudioSourceId id) const = 0;
+	[[nodiscard]] virtual AudioStatus GetAudioStatus(AudioSourceId id) const = 0;
 };
 
 class MockAudioPlayer: public AudioPlayer
@@ -67,7 +67,7 @@ public:
 	void PauseEmitter(AudioEmitter& emitter) const override {}
 	void StopEmitter(AudioEmitter& emitter) const override {}
 	void UpdateEmitterState(AudioEmitter& emitter) const override {}
-	const AudioStatus GetAudioStatus(AudioSourceId id) const override { return AudioStatus::Paused; }
+	AudioStatus GetAudioStatus(AudioSourceId id) const override { return AudioStatus::Paused; }
 	float GetAudioProgress(AudioEmitter&) const override { return 0; }
 
 private:

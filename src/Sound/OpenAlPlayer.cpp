@@ -182,7 +182,7 @@ void OpenAlPlayer::DeleteAlContext(ALCcontext* context)
 	alCheckCall(alcDestroyContext(context));
 }
 
-const AudioStatus OpenAlPlayer::GetAudioStatus(AudioSourceId id) const
+AudioStatus OpenAlPlayer::GetAudioStatus(AudioSourceId id) const
 {
 	ALint status;
 	alCheckCall(alGetSourcei(id, AL_SOURCE_STATE, &status));

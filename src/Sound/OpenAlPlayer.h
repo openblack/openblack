@@ -45,7 +45,7 @@ public:
 
 	void SetVolume(AudioSourceId id, float volume) override;
 	float GetVolume(AudioSourceId id) const override;
-	const AudioStatus GetAudioStatus(AudioSourceId id) const override;
+	AudioStatus GetAudioStatus(AudioSourceId id) const override;
 
 private:
 	void Stop(AudioSourceId sourceId) const;
