@@ -107,6 +107,7 @@ target_link_libraries(
           glm::glm
           EnTT::EnTT
           bgfx::bgfx
+          OpenAL::OpenAL
           cxxopts::cxxopts
           Bullet3Common
           BulletDynamics

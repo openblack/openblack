@@ -91,6 +91,7 @@ if (TARGET bgfx::bgfx AND TARGET bgfx::bx)
   target_link_libraries(bgfx::bgfx INTERFACE bgfx::bx)
 endif ()
 
+find_package(OpenAL REQUIRED)
 find_package(imgui REQUIRED)
 find_package(Bullet REQUIRED)
 find_package(spdlog 1.3.0 REQUIRED)

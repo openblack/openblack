@@ -11,6 +11,7 @@
 
 #define LOCATOR_IMPLEMENTATIONS
 
+#include "Audio/AudioManager.h"
 #include "Common/RandomNumberManagerProduction.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
@@ -20,6 +21,7 @@
 #include "ECS/Systems/Implementations/TownSystem.h"
 #include "Resources/Resources.h"
 
+using openblack::audio::AudioManager;
 using openblack::ecs::systems::CameraBookmarkSystem;
 using openblack::ecs::systems::DynamicsSystem;
 using openblack::ecs::systems::LivingActionSystem;
@@ -34,6 +36,7 @@ void InitializeGame()
 {
 	Locator::resources::emplace<Resources>();
 	Locator::rng::emplace<RandomNumberManagerProduction>();
+	Locator::audio::emplace<AudioManager>();
 	Locator::rendereringSystem::emplace<RenderingSystem>();
 }
 

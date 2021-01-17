@@ -68,6 +68,11 @@ class Map;
 class Registry;
 } // namespace ecs
 
+namespace audio
+{
+class AudioManager;
+} // namespace audio
+
 namespace lhscriptx
 {
 class Script;
@@ -78,6 +83,7 @@ enum class LoggingSubsystem : uint8_t
 	game,
 	graphics,
 	scripting,
+	audio,
 	pathfinding,
 	ai,
 
@@ -88,6 +94,7 @@ constexpr static std::array<std::string_view, static_cast<size_t>(LoggingSubsyst
     "game",        //
     "graphics",    //
     "scripting",   //
+    "audio",       //
     "pathfinding", //
     "ai",          //
 };

@@ -11,11 +11,14 @@
 
 #include <fstream>
 #include <iostream>
+#include <queue>
 
+#include "Audio/AudioManagerInterface.h"
 #include "Common/FileSystem.h"
 #include "Common/StringUtils.h"
 #include "Common/Zip.h"
 #include "Game.h"
+#include "Locator.h"
 
 using namespace openblack;
 using namespace openblack::resources;
@@ -164,4 +167,22 @@ LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::filesys
 CreatureMindLoader::result_type CreatureMindLoader::operator()(FromDiskTag, const std::filesystem::path& /*unused*/) const
 {
 	return std::make_shared<creature::CreatureMind>();
+}
+
+SoundLoader::result_type SoundLoader::operator()(BaseLoader<audio::Sound>::FromBufferTag,
+                                                 const pack::AudioBankSampleHeader& header,
+                                                 const std::vector<std::vector<uint8_t>>& buffer) const
+{
+	auto sound = std::make_shared<audio::Sound>();
+	// Let's clean up the names as they're very difficult to read from the debug GUI
+	sound->name = std::filesystem::path(header.name.data()).filename().string();
+	sound->priority = header.priority;
+	sound->sampleRate = static_cast<int>(header.sampleRate);
+	sound->bitRate = 0;
+	sound->volume = 1.f;
+	sound->pitch = header.pitch;
+	sound->pitchDeviation = header.pitchDeviation;
+	sound->playType = static_cast<audio::PlayType>(header.loopType);
+	sound->buffer = buffer;
+	return sound;
 }

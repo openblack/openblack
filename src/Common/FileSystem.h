@@ -48,6 +48,8 @@ public:
 
 	static inline std::filesystem::path CitadelPath() { return DataPath() / "Citadel"; }
 
+	static inline std::filesystem::path AudioPath() { return "Audio"; }
+
 	static std::filesystem::path FixPath(const std::filesystem::path& path);
 
 	[[nodiscard]] std::filesystem::path FindPath(const std::filesystem::path& path) const;
