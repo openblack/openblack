@@ -324,6 +324,17 @@ bool Game::Run()
 	// Create profiler
 	_profiler = std::make_unique<Profiler>();
 
+	// Load all sound packs in the Audio directory
+	auto soundPackPaths = _fileSystem->GetAllFilePaths("Audio", ".sad");
+
+	for (auto path : soundPackPaths)
+	{
+		auto soundPack = std::make_unique<audio::SoundPack>();
+		soundPack->LoadFromFile(path);
+		// Takes ownership of the pack
+		_soundHandler->RegisterSoundPack(soundPack);
+	}
+
 	// create our camera
 	_camera = std::make_unique<Camera>();
 	auto aspect = _window ? _window->GetAspectRatio() : 1.0f;
