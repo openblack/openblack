@@ -45,6 +45,7 @@ public:
 	[[nodiscard]] const glm::mat4& GetProjectionMatrix() const { return _projectionMatrix; }
 	[[nodiscard]] virtual glm::mat4 GetViewProjectionMatrix() const;
 
+	[[nodiscard]] glm::vec3 GetVelocity() const { return _velocity; }
 	[[nodiscard]] glm::vec3 GetPosition() const { return _position; }
 	[[nodiscard]] glm::vec3 GetRotation() const { return glm::degrees(_rotation); }
 
