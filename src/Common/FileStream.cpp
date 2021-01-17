@@ -21,25 +21,21 @@ FileStream::FileStream(const fs::path& path, FileMode mode)
     : _file(nullptr)
     , _fileSize(0)
 {
-	std::wstring recognisedMode;
+	std::string recognisedMode;
 
 	switch (mode)
 	{
 	case FileMode::Read:
-		recognisedMode = L"rb";
+		recognisedMode = "rb";
 		break;
 	case FileMode::Write:
-		recognisedMode = L"wb";
+		recognisedMode = "wb";
 		break;
 	case FileMode::Append:
-		recognisedMode = L"ab";
+		recognisedMode = "ab";
 	}
 
-#ifdef _WIN32
-	_wfopen_s(&_file, path.wstring().c_str(), recognisedMode.c_str());
-#else
-	_file = std::fopen(path.c_str(), "rb");
-#endif
+	_file = std::fopen(path.string().c_str(), recognisedMode.c_str());
 
 	if (_file == nullptr)
 		throw std::runtime_error(fmt::format("Failed to open file '{}'", path.string()));
