@@ -53,6 +53,7 @@
 #include <Locator.h>
 #include <Resources/Resources.h>
 
+#include "Audio.h"
 #include "Console.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "LHVMViewer.h"
@@ -115,6 +116,7 @@ std::unique_ptr<Gui> Gui::Create(const GameWindow* window, graphics::RenderPass 
 	debugWindows.emplace_back(new LandIsland);
 	debugWindows.emplace_back(new LHVMViewer);
 	debugWindows.emplace_back(new PathFinding);
+	debugWindows.emplace_back(new Audio);
 
 	auto gui =
 	    std::unique_ptr<Gui>(new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows), window == nullptr));

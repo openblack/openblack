@@ -104,9 +104,11 @@ target_link_libraries(
           imgui::imgui
           imgui_user
           ScriptLibrary
+          Audio
           glm::glm
           EnTT::EnTT
           bgfx::bgfx
+          OpenAL::OpenAL
           cxxopts::cxxopts
           Bullet3Common
           BulletDynamics
@@ -116,7 +118,6 @@ target_link_libraries(
           minizip::minizip
   PUBLIC spdlog::spdlog
 )
-
 if (OPENBLACK_CLANG_TIDY_CHECKS)
   # FIXME(bwrsandman) MSVC is throwing false errors about exceptions being disabled
   if (NOT MSVC AND CLANG_TIDY)

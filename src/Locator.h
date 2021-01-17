@@ -16,6 +16,11 @@ namespace openblack
 
 class RandomNumberManagerInterface;
 
+namespace audio
+{
+class AudioManagerInterface;
+}
+
 namespace resources
 {
 class ResourcesInterface;
@@ -38,6 +43,7 @@ struct Locator
 {
 	using resources = entt::locator<resources::ResourcesInterface>;
 	using rng = entt::locator<RandomNumberManagerInterface>;
+	using audio = entt::locator<audio::AudioManagerInterface>;
 	using rendereringSystem = entt::locator<ecs::systems::RenderingSystemInterface>;
 	using dynamicsSystem = entt::locator<ecs::systems::DynamicsSystemInterface>;
 	using cameraBookmarkSystem = entt::locator<ecs::systems::CameraBookmarkSystemInterface>;

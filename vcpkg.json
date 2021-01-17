@@ -1,36 +1,45 @@
 {
-    "name": "openblack",
-    "version-string": "0.0.1-dev",
-    "dependencies": [
-        {
-            "name": "sdl2",
-            "features": ["x11"],
-            "platform": "linux&!android",
-            "$reason": "https://github.com/microsoft/vcpkg/issues/21750"
-        },
-        {
-            "name": "sdl2",
-            "platform": "!(linux&!android)"
-        },
-        "imgui",
-        "spdlog",
-        "glm",
-        "entt",
-        "cxxopts",
-        {
-            "name": "bgfx",
-            "default-features": false,
-            "features": [ "tools", "multithreaded" ],
-            "host": true,
-            "$reason": "Don't want to build shaderc on non-native platforms so they are built on the host config."
-        },
-        {
-            "name": "bgfx",
-            "default-features": false,
-            "features": [ "multithreaded" ]
-        },
-        "bullet3",
-        "minizip",
-        "gtest"
-    ]
+  "name": "openblack",
+  "version-string": "0.0.1-dev",
+  "dependencies": [
+    {
+      "name": "sdl2",
+      "features": [
+        "x11"
+      ],
+      "platform": "linux&!android",
+      "$reason": "https://github.com/microsoft/vcpkg/issues/21750"
+    },
+    {
+      "name": "sdl2",
+      "platform": "!(linux&!android)"
+    },
+    "imgui",
+    "spdlog",
+    "glm",
+    "entt",
+    "cxxopts",
+    "openal-soft",
+    "drlibs",
+    {
+      "name": "bgfx",
+      "default-features": false,
+      "features": [
+        "tools",
+        "multithreaded"
+      ],
+      "host": true,
+      "$reason": "Don't want to build shaderc on non-native platforms so they are built on the host config."
+    },
+    {
+      "name": "bgfx",
+      "default-features": false,
+      "features": [
+        "multithreaded"
+      ]
+    },
+    "bullet3",
+    "minizip",
+    "gtest"
+  ]
 }

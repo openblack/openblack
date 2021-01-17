@@ -248,6 +248,68 @@ void PackFile::ResolveBodyBlock()
 	stream.read(reinterpret_cast<char*>(_bodyBlockLookup.data()), _bodyBlockLookup.size() * sizeof(_bodyBlockLookup[0]));
 }
 
+void PackFile::ResolveAudioBankSampleBlock()
+{
+	if (!HasBlock("LHAudioBankSampleTable"))
+	{
+		Fail("no LHAudioBankSampleTable block in sad pack");
+	}
+
+	auto data = GetBlock("LHAudioBankSampleTable");
+	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
+	std::size_t fsize = 0;
+	if (stream.seekg(0, std::ios_base::end))
+	{
+		fsize = static_cast<std::size_t>(stream.tellg());
+		stream.seekg(0);
+	}
+
+	if (fsize < sizeof(uint32_t))
+	{
+		Fail("Audio bank block cannot fit sample count: " + std::to_string(fsize) + " < " + std::to_string(sizeof(uint8_t)));
+	}
+
+	std::pair<uint16_t, uint16_t> sampleCount;
+	stream.read(reinterpret_cast<char*>(&sampleCount), sizeof(sampleCount));
+
+	if (sampleCount.first == 0)
+	{
+		Fail("There are no sound entries");
+	}
+
+	_audioSamples.resize(sampleCount.first);
+
+	if (fsize != sizeof(uint32_t) + _audioSamples.size() * sizeof(_audioSamples[0]))
+	{
+		Fail("Cannot fit all " + std::to_string(sampleCount.first) + " samples");
+	}
+
+	stream.read(reinterpret_cast<char*>(_audioSamples.data()), _audioSamples.size() * sizeof(_audioSamples[0]));
+}
+
+void PackFile::ResolveFileSegmentBankBlock()
+{
+	if (!HasBlock("LHFileSegmentBankInfo"))
+	{
+		Fail("no LHFileSegmentBankInfo block in sad pack");
+	}
+
+	auto data = GetBlock("LHFileSegmentBankInfo");
+	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
+	std::size_t fsize = 0;
+	if (stream.seekg(0, std::ios_base::end))
+	{
+		fsize = static_cast<std::size_t>(stream.tellg());
+		stream.seekg(0);
+	}
+
+	if (fsize != sizeof(_audioInfo))
+	{
+		Fail("Info block size does not match: " + std::to_string(fsize) + " != " + std::to_string(sizeof(_audioInfo)));
+	}
+	stream.read(reinterpret_cast<char*>(&_audioInfo), sizeof(_audioInfo));
+}
+
 void PackFile::ExtractTexturesFromBlock()
 {
 	G3DTextureHeader header;
@@ -342,6 +404,36 @@ void PackFile::ExtractAnimationsFromBlock()
 		stream.seekg(_bodyBlockLookup[i].offset);
 		stream.read(reinterpret_cast<char*>(_animations[i].data()), animationHeaderSize);
 		memcpy(_animations[i].data() + animationHeaderSize, animationData.data(), animationData.size());
+	}
+}
+
+void PackFile::ExtractSoundsFromBlock()
+{
+	if (!HasBlock("LHAudioWaveData"))
+	{
+		Fail("No LHAudioWaveData block in sad pack");
+	}
+
+	auto data = GetBlock("LHAudioWaveData");
+	//	auto isSector = false;
+	//	auto isPrevSector = false;
+
+	for (auto& sample : _audioSamples)
+	{
+		if (sample.offset > data.size())
+		{
+			Fail("Sound sample offset points to beyond file");
+		}
+		if (sample.offset + sample.size > data.size())
+		{
+			Fail("Sound sample size exceeds LHAudioWaveData size");
+		}
+
+		auto soundData = std::vector<uint8_t>(data.begin() + sample.offset, data.begin() + sample.offset + sample.size);
+		auto audioSampleName = std::filesystem::path(sample.name.data()).make_preferred();
+		auto audioSampleFileName = audioSampleName.filename();
+		auto ext = audioSampleFileName.extension().string();
+		_sounds.emplace_back(Sound({sample, {soundData}}));
 	}
 }
 
@@ -514,6 +606,14 @@ void PackFile::Open(const std::filesystem::path& file)
 		ResolveBodyBlock();
 		ExtractAnimationsFromBlock();
 	}
+
+	if (HasBlock("LHAudioBankSampleTable"))
+	{
+		ResolveAudioBankSampleBlock();
+		ResolveFileSegmentBankBlock();
+		ExtractSoundsFromBlock();
+	}
+
 	_isLoaded = true;
 }
 

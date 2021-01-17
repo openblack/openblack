@@ -21,6 +21,37 @@
 namespace openblack::pack
 {
 
+template <typename N>
+class Span
+{
+	const std::vector<N>& original;
+	const size_t start;
+	const size_t length;
+
+public:
+	Span(std::vector<N>& original, size_t start, size_t length)
+	    : original(original)
+	    , start(start)
+	    , length(length)
+	{
+	}
+
+	const N* data() const noexcept { return original.data() + start; }
+
+	typename std::vector<N>::const_reference operator[](typename std::vector<N>::size_type index) const noexcept
+	{
+		return original[index + start];
+	}
+
+	constexpr typename std::vector<N>::size_type size() const noexcept { return length; }
+
+	// First element.
+	constexpr typename std::vector<N>::const_iterator begin() const noexcept { return original.begin() + start; }
+
+	// One past the last element.
+	constexpr typename std::vector<N>::const_iterator end() const noexcept { return begin() + size(); }
+};
+
 struct InfoBlockLookup
 {
 	uint32_t blockId;
@@ -86,6 +117,88 @@ struct G3DTexture
 	std::vector<uint8_t> ddsData;
 };
 
+enum class AudioBankLoop : uint16_t
+{
+	None,
+	Restart,
+	Once,
+	Overlap,
+};
+
+enum class ChannelLayout
+{
+	Mono,
+	Stereo
+};
+
+// TODO(raffclar): Look for channel count (e.g 2)
+// TODO(raffclar): Look for word length (e.g 16);
+struct AudioBankSample
+{
+	std::array<char, 0x100> name;
+	int32_t unknown0;
+	int32_t id;
+	int32_t isBank;
+	uint32_t size;
+	uint32_t offset;
+	int32_t isClone;
+	int16_t group;
+	int16_t atmosGroup;
+	int32_t unknown4;
+	int32_t unknown5;
+	int16_t unknown6a;
+	int16_t unknown6b;
+	uint32_t sampleRate;
+	int16_t unknownOthera;
+	int16_t unknownOtherb;
+	int16_t unknown7a;
+	int16_t unknown7b;
+	int32_t unknown8;
+	int32_t lStart;
+	int32_t lEnd;
+	std::array<char, 0x100> description;
+	uint16_t priority;        ///< 0-9999
+	uint16_t unknown9;        ///<
+	uint16_t unknown10;       ///<
+	uint16_t unknown11;       ///<
+	int16_t loop;             ///<
+	uint16_t start;           ///<
+	uint8_t pan;              ///<
+	uint16_t unknown12;       ///<
+	std::array<float, 3> pos; ///< -9999 to 9999
+	uint8_t volume;           ///<
+	uint16_t userParam;       ///<
+	uint16_t pitch;           ///<
+	uint16_t unknown18;       ///<
+	uint16_t pitchDeviation;  ///<
+	uint16_t unknown20;       ///<
+	float minDist;            ///<
+	float maxDist;            ///<
+	float scale;              ///< 0-50 (multiply by 10)
+	AudioBankLoop loopType;   ///<
+	uint16_t unknown21;       ///<
+	uint16_t unknown22;       ///<
+	uint16_t unknown23;       ///<
+	uint16_t atmos;           ///<
+};
+
+static_assert(sizeof(AudioBankSample) == 0x280, "Audio sample header has incorrect size");
+
+struct SadBankInfo
+{
+	uint32_t unknown_0x0;
+	uint32_t unknown_0x4;
+	uint32_t musicBank;
+	std::array<char, 0x104> description;
+	std::array<char, 0x104> backwardsComment;
+};
+
+struct Sound
+{
+	AudioBankSample sample;
+	std::vector<uint8_t> buffer;
+};
+
 /**
   This class is used to read LionHead Packs files
  */
@@ -108,6 +221,12 @@ protected:
 	std::vector<std::vector<uint8_t>> _meshes;
 	/// Bytes of anm meshes
 	std::vector<std::vector<uint8_t>> _animations;
+	/// Audio file segment info
+	SadBankInfo _audioInfo;
+	/// Bytes of audio bank samples
+	std::vector<AudioBankSample> _audioSamples;
+	/// Bytes of sounds
+	std::vector<Sound> _sounds;
 
 	/// Error handling
 	void Fail(const std::string& msg);
@@ -124,11 +243,20 @@ protected:
 	/// Parse Body Block for anim pack
 	virtual void ResolveBodyBlock();
 
+	/// Parse Audio Block for sound pack
+	virtual void ResolveAudioBankSampleBlock();
+
+	/// Parse the Audio file segement bank block
+	virtual void ResolveFileSegmentBankBlock();
+
 	/// Extract Textures from all Blocks named in INFO Block
 	virtual void ExtractTexturesFromBlock();
 
 	/// Extract Animations from all Blocks named in Body Block
 	virtual void ExtractAnimationsFromBlock();
+
+	/// Extract Sounds from all Blocks named in LHAudioBankSampleTable Block
+	virtual void ExtractSoundsFromBlock();
 
 	/// Parse Info Block
 	virtual void ResolveMeshBlock();
@@ -173,6 +301,7 @@ public:
 	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetMeshes() const { return _meshes; }
 	[[nodiscard]] const std::vector<uint8_t>& GetMesh(uint32_t index) const { return _meshes[index]; }
 	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetAnimations() const { return _animations; }
+	[[nodiscard]] const std::vector<Sound>& GetSounds() const { return _sounds; }
 	[[nodiscard]] const std::vector<uint8_t>& GetAnimation(uint32_t index) const { return _animations[index]; }
 };
 

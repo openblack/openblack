@@ -193,6 +193,21 @@ int ViewAnimations(openblack::pack::PackFile& pack)
 	return EXIT_SUCCESS;
 }
 
+int ViewSounds(openblack::pack::PackFile& pack)
+{
+	const auto& sounds = pack.GetSounds();
+	std::printf("file: %s\n", pack.GetFilename().c_str());
+
+	uint32_t i = 0;
+	for (const auto& sound : sounds)
+	{
+		auto name = std::string(sound.sample.name.begin(), sound.sample.name.end());
+		std::printf("sound #%-5d %s\n", i++, name.c_str());
+	}
+
+	return EXIT_SUCCESS;
+}
+
 int ViewTexture(openblack::pack::PackFile& pack, const std::string& name, const std::filesystem::path& outFilename)
 {
 	const auto& texture = pack.GetTexture(name);
@@ -284,6 +299,23 @@ int ViewAnimation(openblack::pack::PackFile& pack, uint32_t index, const std::fi
 		output.write(reinterpret_cast<const char*>(animation.data()), animation.size() * sizeof(animation[0]));
 
 		std::printf("\nANM file writen to %s\n", outFilename.string().c_str());
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int ViewSound(openblack::pack::PackFile& pack, uint32_t index, const std::filesystem::path& outFilename)
+{
+	const auto& sound = pack.GetSounds()[index];
+	auto name = std::string(sound.sample.name.begin(), sound.sample.name.end());
+	std::printf("sound #%-5d %s\n", index, name.c_str());
+
+	if (!outFilename.empty())
+	{
+		std::ofstream output(outFilename, std::ios::binary);
+		output.write(reinterpret_cast<const char*>(sound.buffer.data()), sound.buffer.size() * sizeof(sound.buffer[0]));
+
+		std::printf("\nSAD file writen to %s\n", outFilename.string().c_str());
 	}
 
 	return EXIT_SUCCESS;
@@ -382,6 +414,15 @@ int WriteAnimationFile(const std::filesystem::path& outFilename) noexcept
 	return EXIT_SUCCESS;
 }
 
+int WriteSoundFile(const std::filesystem::path& outFilename) noexcept
+{
+	openblack::pack::PackFile pack;
+	pack.CreateBodyBlock();
+	pack.Write(outFilename);
+
+	return EXIT_SUCCESS;
+}
+
 struct Arguments
 {
 	enum class Mode
@@ -393,9 +434,11 @@ struct Arguments
 		Textures,
 		Meshes,
 		Animations,
+		Sounds,
 		Texture,
 		Mesh,
 		Animation,
+		Sound,
 		Body,
 		WriteRaw,
 		WriteMeshPack,
@@ -472,7 +515,9 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 		    ("T,texture-block", "View texture block statistics.")                                               //
 		    ("t,texture", "View texture statistics.", cxxopts::value<std::string>())                            //
 		    ("A,animation-block", "List animation block statistics.")                                           //
+		    ("S,sound-block", "List sound block statistics.")                                                   //
 		    ("a,animation", "List animation statistics.", cxxopts::value<uint32_t>())                           //
+		    ("d,sound", "List sound statistics.", cxxopts::value<uint32_t>())                                   //
 		    ("e,extract", "Extract contents of a block to filename (use \"stdout\" for piping to other tool).", //
 		     cxxopts::value<std::filesystem::path>())                                                           //
 		    ("w,write-raw", "Create Raw Data Pack.", cxxopts::value<std::filesystem::path>())                   //
@@ -576,6 +621,12 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
 			return true;
 		}
+		if (result["sound-block"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Sounds;
+			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
+			return true;
+		}
 		if (result["meshes-block"].count() > 0)
 		{
 			args.mode = Arguments::Mode::Meshes;
@@ -637,6 +688,17 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 			args.mode = Arguments::Mode::Texture;
 			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
 			args.block = result["texture"].as<std::string>();
+			return true;
+		}
+		if (result["sound"].count() > 0)
+		{
+			if (result["extract"].count() > 0)
+			{
+				args.outFilename = result["extract"].as<std::filesystem::path>();
+			}
+			args.mode = Arguments::Mode::Sound;
+			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
+			args.blockId = result["sound"].as<uint32_t>();
 			return true;
 		}
 	}
@@ -708,6 +770,9 @@ int main(int argc, char* argv[]) noexcept
 			case Arguments::Mode::Animations:
 				returnCode |= ViewAnimations(pack);
 				break;
+			case Arguments::Mode::Sounds:
+				returnCode |= ViewSounds(pack);
+				break;
 			case Arguments::Mode::Texture:
 				returnCode |= ViewTexture(pack, args.block, args.outFilename);
 				break;
@@ -716,6 +781,9 @@ int main(int argc, char* argv[]) noexcept
 				break;
 			case Arguments::Mode::Animation:
 				returnCode |= ViewAnimation(pack, args.blockId, args.outFilename);
+				break;
+			case Arguments::Mode::Sound:
+				returnCode |= ViewSound(pack, args.blockId, args.outFilename);
 				break;
 			default:
 				returnCode = EXIT_FAILURE;

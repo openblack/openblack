@@ -19,6 +19,7 @@ using TextureManager = ResourceManager<Texture2DLoader>;
 using AnimationManager = ResourceManager<L3DAnimLoader>;
 using LevelManager = ResourceManager<LevelLoader>;
 using CreatureMindManager = ResourceManager<CreatureMindLoader>;
+using SoundManager = ResourceManager<SoundLoader>;
 
 class ResourcesInterface
 {
@@ -28,6 +29,7 @@ public:
 	virtual AnimationManager& GetAnimations() = 0;
 	virtual LevelManager& GetLevels() = 0;
 	virtual CreatureMindManager& GetCreatureMinds() = 0;
+	virtual SoundManager& GetSounds() = 0;
 };
 
 class Resources final: public ResourcesInterface
@@ -38,6 +40,7 @@ public:
 	AnimationManager& GetAnimations() override { return _animations; }
 	LevelManager& GetLevels() override { return _levels; }
 	CreatureMindManager& GetCreatureMinds() override { return _creatureMinds; }
+	SoundManager& GetSounds() override { return _sounds; }
 
 private:
 	MeshManager _meshes;
@@ -45,5 +48,6 @@ private:
 	AnimationManager _animations;
 	LevelManager _levels;
 	CreatureMindManager _creatureMinds;
+	SoundManager _sounds;
 };
 } // namespace openblack::resources
