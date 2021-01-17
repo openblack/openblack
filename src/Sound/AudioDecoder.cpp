@@ -33,7 +33,6 @@ void AudioDecoder::DebugEmitWavFile(Sound& sound)
 	auto fileName = FileSystem::WorkingDirectory() / fs::path(sound.name);
 	fileName = fileName.filename().replace_extension("wav");
 	auto channels = sound.channelLayout == ChannelLayout::Mono ? 1 : 2;
-	// TODO: Add working directory
 	auto file = FileStream(fileName, FileMode::Write);
 
 	// Write the file headers
