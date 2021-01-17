@@ -41,9 +41,8 @@ void SoundPack::LoadFromFile(const std::string& filePath)
 
 	for (auto& [sample, soundData] : _sadFile.GetSounds())
 	{
-		auto path = fs::path(sample.audioSampleName).filename();
-		auto soundName = path.string();
-		auto ext = path.extension().string();
+		auto audioSampleFileName = fs::path(sample.audioSampleName).make_preferred().filename();
+		auto ext = audioSampleFileName.extension().string();
 		isSector = ext == ".mpg";
 		auto volume = sample.volume > 0 ? ((float)sample.volume) / 127.f : 1.f;
 		auto fileName = fs::path(filePath).filename().string();
@@ -79,8 +78,9 @@ void SoundPack::LoadFromFile(const std::string& filePath)
 		}
 		else
 		{
-			Sound sound = {/*id=*/soundName,
-			               /*name*/ soundName,
+			auto name = audioSampleFileName.string();
+			Sound sound = {/*id=*/name,
+			               /*name*/name,
 			               /*priority=*/sample.priority,
 			               /*sampleRate=*/static_cast<int>(sample.sampleRate),
 			               /*bitRate=*/0,
