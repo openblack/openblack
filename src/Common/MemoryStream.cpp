@@ -16,7 +16,7 @@
 namespace openblack
 {
 
-MemoryStream::MemoryStream(const void* data, std::size_t size)
+MemoryStream::MemoryStream(void* data, std::size_t size)
 {
 	_data = data;
 	_size = size;
@@ -51,8 +51,17 @@ void MemoryStream::Seek(std::size_t position, SeekMode seek)
 
 void MemoryStream::Read(void* buffer, std::size_t length)
 {
-	std::copy_n(reinterpret_cast<const uint8_t*>(_data) + _position, length, reinterpret_cast<uint8_t*>(buffer));
+	// Ensure it doesn't read beyond buffer length
+	if (length > _size - (_position + 1))
+		length = (_size - (_position + 1));
+
+	std::copy_n(reinterpret_cast<uint8_t*>(_data) + _position, length, reinterpret_cast<uint8_t*>(buffer));
 	_position += length;
+}
+
+void MemoryStream::Write(const void* buffer, std::size_t length)
+{
+	std::copy_n(reinterpret_cast<const uint8_t*>(buffer), length, reinterpret_cast<uint8_t*>(_data));
 }
 
 } // namespace openblack

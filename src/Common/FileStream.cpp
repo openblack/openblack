@@ -89,5 +89,8 @@ void FileStream::Read(void* buffer, std::size_t length)
 		throw std::runtime_error(fmt::format("Error while reading file"));
 	}
 }
-
+void FileStream::Write(const void* buffer, std::size_t length)
+{
+	std::fwrite(buffer, 1, length, _file);
+}
 } // namespace openblack

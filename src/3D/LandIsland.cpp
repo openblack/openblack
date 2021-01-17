@@ -11,7 +11,7 @@
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "Common/FileSystem.h"
-#include "Common/IStream.h"
+#include "Common/IOStream.h"
 #include "Common/stb_image_write.h"
 #include "Game.h"
 

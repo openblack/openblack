@@ -21,7 +21,7 @@ enum class SeekMode
 	End
 };
 
-class IStream
+class IOStream
 {
 public:
 	// virtual ~IStream() {}
@@ -31,7 +31,7 @@ public:
 	virtual void Seek(std::size_t position, SeekMode seek) = 0;
 
 	virtual void Read(void* buffer, std::size_t length) = 0;
-	// virtual void Write(const void* buffer, std::size_t length) = 0;
+	virtual void Write(const void* buffer, std::size_t length) = 0;
 
 	template <typename T>
 	void Read(T* value)
@@ -39,15 +39,22 @@ public:
 		Read(value, sizeof(T));
 	}
 
-	// template <typename T>
-	// void Write(const T* value) { Read(value, sizeof(T)); }
-
 	template <typename T>
 	T ReadValue()
 	{
 		T value;
 		Read(&value);
 		return value;
+	}
+
+	template <typename T>
+	void WriteValue(T value, unsigned size = sizeof(T))
+	{
+		for (; size; --size, value >>= 8)
+		{
+			auto val = static_cast<char>(value & 0xFF);
+			Write(&val, 1);
+		}
 	}
 };
 

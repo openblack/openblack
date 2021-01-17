@@ -25,7 +25,7 @@ namespace fs = std::experimental::filesystem;
 namespace openblack
 {
 
-class IStream;
+class IOStream;
 class L3DMesh;
 
 namespace pack

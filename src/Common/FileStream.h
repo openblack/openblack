@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "IStream.h"
+#include "IOStream.h"
 
 #ifdef HAS_FILESYSTEM
 #include <filesystem>
@@ -29,7 +29,7 @@ enum class FileMode
 	Append
 };
 
-class FileStream: public IStream
+class FileStream: public IOStream
 {
 public:
 	FileStream(const fs::path& filename, FileMode mode);
@@ -40,7 +40,7 @@ public:
 	void Seek(std::size_t position, SeekMode seek) override;
 
 	void Read(void* buffer, std::size_t length) override;
-
+	void Write(const void* buffer, std::size_t length) override;
 protected:
 	FILE* _file;
 	std::size_t _fileSize;

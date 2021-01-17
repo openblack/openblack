@@ -11,7 +11,7 @@
 
 #include "3D/MeshPack.h"
 #include "Common/FileSystem.h"
-#include "Common/IStream.h"
+#include "Common/IOStream.h"
 #include "Game.h"
 
 #include <L3DFile.h>
