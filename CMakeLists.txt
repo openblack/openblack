@@ -88,11 +88,12 @@ Or set the variable OPENBLACK_BUILD_BGFX to build it with the project. \
   endif()
 else()
   message(AUTHOR_WARNING "Using OPENBLACK_BUILD_BGFX, if you are not developing use an install target instead.")
-FetchContent_Declare(
-    bgfx
-    GIT_REPOSITORY https://github.com/openblack/bgfx.cmake.git
-    GIT_TAG master
-  )
+
+  FetchContent_Declare(
+      bgfx
+      GIT_REPOSITORY https://github.com/openblack/bgfx.cmake.git
+      GIT_TAG master
+    )
 
   # don't build anymore targets then what we need
   set(BGFX_BUILD_EXAMPLES
