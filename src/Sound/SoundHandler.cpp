@@ -84,6 +84,11 @@ void SoundHandler::Tick(Game& game)
 
 std::unique_ptr<Sound>& SoundHandler::GetSound(SoundId id)
 {
+	auto result = _soundIdLookup.find(id);
+
+	if (result == _soundIdLookup.end())
+		throw SoundNotFoundError(id);
+
 	auto& sound = _soundIdLookup[id]->GetSound(id);
 
 	if (!sound->loaded)

@@ -65,5 +65,11 @@ private:
 	std::map<AudioEmitterId, AudioEmitter> _emitters;
 };
 
+class SoundNotFoundError : public std::runtime_error
+{
+public:
+	SoundNotFoundError(SoundId id) : runtime_error("No sound found for ID " + id) {}
+};
+
 std::unique_ptr<SoundHandler> CreateSoundHandler() noexcept;
 } // namespace openblack::audio
