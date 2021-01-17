@@ -100,7 +100,10 @@ target_link_libraries(
           spdlog::spdlog
           EnTT::EnTT
           bgfx::bgfx
-          cxxopts::cxxopts)
+          OpenAL::OpenAL
+          cxxopts::cxxopts
+          ${FFmpeg_LIBRARIES}
+)
 if(UNIX)
   find_library(WAYLAND wayland-egl)
   if(WAYLAND)
