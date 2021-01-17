@@ -51,25 +51,28 @@ void SoundPack::LoadFromFile(const std::string& filePath)
 		// We'll use the file name for the sound ID instead as each sector has different name
 		if (isSector)
 		{
-			if (combinedData.find(fileName) == combinedData.end())
-				combinedData[fileName] = {/*id=*/fileName,
-				                          /*name*/fileName,
-				                          /*priority=*/sample.priority,
-				                          /*sampleRate=*/static_cast<int>(sample.sampleRate),
-				                          /*bitRate=*/0,
-				                          /*volume=*/volume,
-				                          /*pitch=*/sample.pitch,
-				                          /*pitchDeviation=*/sample.pitchDeviation,
-				                          /*bytes=*/soundData,
-				                          /*channelLayout=*/ChannelLayout::Stereo,
-				                          /*loopType=*/static_cast<PlayType>(sample.loopType),
-				                          /*loaded=*/false,
-				                          /*sectorMerged=*/true,
-				                          /*sectorCount=*/1,
-				                          /*lengthInSeconds=*/-1};
-			else
+			auto emplacement = combinedData.emplace(fileName, Sound{});
+			auto& sound = emplacement.first->second;
+			if (emplacement.second) // Sound was not in the map
 			{
-				auto& sound = combinedData[fileName];
+				sound.id = fileName;
+				sound.name = fileName;
+				sound.priority = sample.priority;
+				sound.sampleRate = static_cast<int>(sample.sampleRate);
+				sound.bitRate = 0;
+				sound.volume = volume;
+				sound.pitch = sample.pitch;
+				sound.pitchDeviation = sample.pitchDeviation;
+				sound.bytes = soundData;
+				sound.channelLayout = ChannelLayout::Stereo;
+				sound.playType = static_cast<PlayType>(sample.loopType);
+				sound.loaded = false;
+				sound.sectorMerged = true;
+				sound.sectorCount = 1;
+				sound.lengthInSeconds = -1;
+			}
+			else // Sound was already in the map
+			{
 				sound.sectorCount++;
 				sound.bytes.insert(sound.bytes.end(), soundData.begin(), soundData.end());
 			}
