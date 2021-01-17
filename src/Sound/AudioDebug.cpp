@@ -48,7 +48,7 @@ void AudioDebug::AudioPlayer(Game& game, const std::vector<std::shared_ptr<Sound
 		ImGui::NextColumn();
 		ImGui::Text("%s", soundPack->GetName().c_str());
 		ImGui::NextColumn();
-		ImGui::Text("%llu", soundPack->GetSounds().size());
+		ImGui::Text("%zu", soundPack->GetSounds().size());
 		ImGui::NextColumn();
 	}
 	ImGui::EndChild();
@@ -87,7 +87,7 @@ void AudioDebug::AudioPlayer(Game& game, const std::vector<std::shared_ptr<Sound
 			ImGui::NextColumn();
 			ImGui::Text("%d", sound->sectorCount);
 			ImGui::NextColumn();
-			ImGui::Text("%llu", sound->bytes.size());
+			ImGui::Text("%zu", sound->bytes.size());
 			ImGui::NextColumn();
 		}
 	}
