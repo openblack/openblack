@@ -44,11 +44,15 @@ endif()
 if(CMAKE_VERSION VERSION_GREATER 3.15 OR CMAKE_VERSION VERSION_EQUAL 3.15)
   set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
 
+  find_package(OpenAL REQUIRED)
+  find_package(FFmpeg REQUIRED COMPONENTS AVCODEC AVFORMAT AVUTIL SWRESAMPLE)
   find_package(spdlog 1.3.0 REQUIRED)
   find_package(glm REQUIRED)
   find_package(EnTT 3.5.0 CONFIG REQUIRED) # only available as a config
   find_package(cxxopts REQUIRED)
 else()
+  find_package(OpenAL CONFIG REQUIRED)
+  find_package(FFmpeg CONFIG REQUIRED COMPONENTS AVCODEC AVFORMAT AVUTIL SWRESAMPLE)
   find_package(spdlog 1.3.0 CONFIG QUIET)
   find_package(glm CONFIG QUIET)
   find_package(EnTT 3.5.0 CONFIG REQUIRED) # only available as a config
