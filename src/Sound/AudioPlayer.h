@@ -50,7 +50,7 @@ public:
 	[[nodiscard]] virtual AudioStatus GetAudioStatus(AudioSourceId id) const = 0;
 };
 
-class MockAudioPlayer: public AudioPlayer
+class MockAudioPlayer final : public AudioPlayer
 {
 public:
 	MockAudioPlayer() { _volume = 0; }

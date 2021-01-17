@@ -22,7 +22,7 @@ extern "C" {
 
 namespace openblack::audio
 {
-class FfmpegDecoder: public AudioDecoder
+class FfmpegDecoder final: public AudioDecoder
 {
 public:
 	std::string GetName() const override { return "FFmpeg Loader"; };

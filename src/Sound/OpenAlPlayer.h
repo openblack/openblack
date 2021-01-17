@@ -24,7 +24,7 @@ extern "C" {
 namespace openblack::audio
 {
 
-class OpenAlPlayer: public AudioPlayer
+class OpenAlPlayer final: public AudioPlayer
 {
 public:
 	OpenAlPlayer();
