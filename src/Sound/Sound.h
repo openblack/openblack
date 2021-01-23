@@ -17,7 +17,9 @@
 namespace openblack::audio
 {
 
-using SoundId = std::string;
+using SoundId = size_t;
+
+SoundId CreateId();
 
 enum class PlayType
 {
@@ -53,4 +55,5 @@ struct Sound
 };
 
 using SoundMap = std::map<SoundId, std::unique_ptr<Sound>>;
+using SoundIdMap = std::map<std::string, SoundId>;
 } // namespace openblack::audio

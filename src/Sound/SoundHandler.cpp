@@ -30,13 +30,21 @@ SoundHandler::SoundHandler(std::unique_ptr<AudioDecoder>&& decoder, std::unique_
 
 void SoundHandler::RegisterSoundPack(std::unique_ptr<SoundPack>& soundPack)
 {
-	spdlog::debug("Registering SoundPack {}", soundPack->GetFileName());
-	_soundPacks.push_back(std::move(soundPack));
-	auto last = _soundPacks.back();
-	for (auto& [id, sound] : last->GetSounds())
+	auto& name = soundPack->GetFileName();
+	spdlog::debug("Registering SoundPack {}", name);
+
+	if (_soundPackLookup.find(name) != _soundPackLookup.end())
+	{
+		throw std::runtime_error("SoundPack " + name + " already registered");
+	}
+
+	_soundPackLookup[name] = std::move(soundPack);
+	auto& sounds = _soundPackLookup[name]->GetSounds();
+
+	for (auto& [id, sound] : sounds)
 	{
 		if (_soundIdLookup.find(id) == _soundIdLookup.end())
-			_soundIdLookup[id] = last;
+			_soundIdLookup[id] = _soundPackLookup[name];
 		else
 			spdlog::warn("Duplicate sound ID (\"{}\"). Unable to add sound", id);
 	}
@@ -80,6 +88,11 @@ void SoundHandler::Tick(Game& game)
 		else
 			iterator++;
 	}
+}
+
+std::unique_ptr<Sound>& SoundHandler::GetSound(std::string soundPackName, std::string soundName)
+{
+	return _soundPackLookup[soundPackName]->GetSoundId(soundName);
 }
 
 std::unique_ptr<Sound>& SoundHandler::GetSound(SoundId id)

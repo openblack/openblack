@@ -76,9 +76,10 @@ void AudioDebug::AudioPlayer(Game& game, const std::vector<std::shared_ptr<Sound
 
 		for (auto& [soundId, sound] : sounds)
 		{
-			if (ImGui::Selectable(sound->name.c_str(), false, ImGuiSelectableFlags_SpanAllColumns))
-				handler.PlaySound(soundId);
-
+			if (ImGui::Selectable(("##" + std::to_string(sound->id)).c_str(), _selectedSound == soundId, ImGuiSelectableFlags_SpanAllColumns))
+				_selectedSound = sound->id;
+			ImGui::SameLine();
+			ImGui::Text("%s", sound->name.c_str());
 			ImGui::NextColumn();
 			ImGui::TextColored(sound->loaded ? greenColor : redColor, sound->loaded ? "Yes" : "No");
 			ImGui::NextColumn();
@@ -129,7 +130,7 @@ void AudioDebug::AudioSettings(Game& game)
 		ImGui::SameLine();
 		ImGui::Text("%llu", emitterId);
 		ImGui::NextColumn();
-		ImGui::Text("%s", handler.GetSound(emitter.soundId.c_str())->name.c_str());
+		ImGui::Text("%s", handler.GetSound(emitter.soundId)->name.c_str());
 		ImGui::NextColumn();
 		ImGui::Text("%d", emitter.audioSourceId);
 		ImGui::NextColumn();
@@ -238,10 +239,10 @@ void AudioDebug::ShowDebugGui(Game& game)
 		ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_None;
 		if (ImGui::BeginTabBar("Tabs", tabBarFlags))
 		{
-			auto musicPacks = decltype(soundPacks) {};
-			auto generalPacks = decltype(soundPacks) {};
+			auto musicPacks = std::vector<std::shared_ptr<SoundPack>>();
+			auto generalPacks = std::vector<std::shared_ptr<SoundPack>>();
 
-			for (auto& soundPack : soundPacks)
+			for (auto& [soundPackName, soundPack] : soundPacks)
 			{
 				if (soundPack->IsMusic())
 					musicPacks.push_back(soundPack);

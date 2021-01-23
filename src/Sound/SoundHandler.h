@@ -44,8 +44,9 @@ public:
 	void DestroyEmitters();
 	void DestroyEmitter(AudioEmitterId id);
 	[[nodiscard]] bool EmitterExists(AudioEmitterId id);
-	[[nodiscard]] const std::vector<std::shared_ptr<SoundPack>>& GetSoundPacks() const { return _soundPacks; }
+	[[nodiscard]] const std::map<std::string, std::shared_ptr<SoundPack>>& GetSoundPacks() const { return _soundPackLookup; }
 	[[nodiscard]] std::unique_ptr<Sound>& GetSound(SoundId id);
+	[[nodiscard]] std::unique_ptr<Sound>& GetSound(std::string soundPackName, std::string soundName);
 	[[nodiscard]] float GetGlobalVolume() const { return _audioPlayer->GetVolume(); };
 	[[nodiscard]] std::string GetAudioDecoderName() const { return _audioDecoder->GetName(); }
 	[[nodiscard]] std::string GetAudioPlayerName() const { return _audioPlayer->GetName(); }
@@ -60,15 +61,18 @@ private:
 	size_t _emitterId;
 	std::unique_ptr<AudioPlayer> _audioPlayer;
 	std::unique_ptr<AudioDecoder> _audioDecoder;
+	/**
+	 * Sound ID -> sound pack that houses the sound
+	 */
 	std::map<SoundId, std::shared_ptr<SoundPack>> _soundIdLookup;
-	std::vector<std::shared_ptr<SoundPack>> _soundPacks;
+	std::map<std::string, std::shared_ptr<SoundPack>> _soundPackLookup;
 	std::map<AudioEmitterId, AudioEmitter> _emitters;
 };
 
 class SoundNotFoundError : public std::runtime_error
 {
 public:
-	SoundNotFoundError(SoundId id) : runtime_error("No sound found for ID " + id) {}
+	SoundNotFoundError(SoundId id) : runtime_error("No sound found for ID " + std::to_string(id)) {}
 };
 
 std::unique_ptr<SoundHandler> CreateSoundHandler() noexcept;

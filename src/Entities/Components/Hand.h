@@ -29,13 +29,13 @@ struct Hand
 	};
 
 	static constexpr MeshId meshId = 999;
-	static const std::vector<audio::SoundId>& GrabLandSoundIds() { return Hand::_grabLandSounds; };
+	static const std::vector<std::string>& GrabLandSoundIds() { return Hand::_grabLandSounds; };
 
 	void Init();
 
 	RenderType renderType;
 
 private:
-	static const std::vector<audio::SoundId> _grabLandSounds;
+	static const std::vector<std::string> _grabLandSounds;
 };
 } // namespace openblack::entities::components

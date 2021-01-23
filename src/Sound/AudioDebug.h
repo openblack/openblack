@@ -22,6 +22,8 @@ public:
 private:
 	static void AudioPlayer(Game& game, const std::vector<std::shared_ptr<SoundPack>>& soundPacks);
 	static void AudioSettings(Game& game);
+	static PlayType _playType;
+	static SoundId _selectedSound;
 	static std::string _selectedPack;
 	static AudioEmitterId _selectedEmitter;
 };

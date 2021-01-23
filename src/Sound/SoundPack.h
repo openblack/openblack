@@ -25,14 +25,16 @@ public:
 	void LoadFromFile(const std::string& filePath);
 
 	[[nodiscard]] const SoundMap& GetSounds() const { return _sounds; }
+	std::unique_ptr<Sound>& GetSoundId(std::string name) { return _sounds[_soundIdLookup[name]]; }
 	std::unique_ptr<Sound>& GetSound(SoundId id) { return _sounds[id]; }
 	[[nodiscard]] const std::string& GetName() const { return _name; }
-	[[nodiscard]] const std::string& GetFileName() const { return _sadFile.GetFilename(); }
+	[[nodiscard]] const std::string& GetFileName() const { return _packFile.GetFilename(); }
 	[[nodiscard]] bool IsMusic() { return _isMusic; }
 
 private:
 	bool _isMusic;
 	SoundMap _sounds;
+	SoundIdMap _soundIdLookup;
 	std::string _name;
 	pack::PackFile _packFile;
 };

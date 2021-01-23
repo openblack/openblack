@@ -20,7 +20,7 @@ void Hand::Init()
 	// load data\\hand.raw into a memory
 }
 
-const std::vector<audio::SoundId> Hand::_grabLandSounds = {
+const std::vector<std::string> Hand::_grabLandSounds = {
     "G_HandGrabLand_01.wav", "G_HandGrabLand_02.wav", "G_HandGrabLand_03.wav",
     "G_HandGrabLand_04.wav", "G_HandGrabLand_05.wav", "G_HandGrabLand_06.wav",
 };

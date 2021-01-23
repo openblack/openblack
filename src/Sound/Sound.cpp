@@ -8,3 +8,9 @@
  *****************************************************************************/
 
 #include "Sound.h"
+
+openblack::audio::SoundId openblack::audio::CreateId()
+{
+	static size_t counter = 0;
+	return counter++;
+}
