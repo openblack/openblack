@@ -23,7 +23,6 @@ SoundId CreateId();
 
 enum class PlayType
 {
-	None,
 	Repeat,
 	Once,
 	Overlap

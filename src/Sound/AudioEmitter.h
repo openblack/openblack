@@ -34,7 +34,7 @@ struct AudioEmitter
 	glm::vec3 direction;
 	glm::vec2 radius;
 	float volume = 0;
-	PlayType loop = PlayType::None;
+	PlayType loop = PlayType::Once;
 	bool world = false;
 };
 } // namespace openblack::audio

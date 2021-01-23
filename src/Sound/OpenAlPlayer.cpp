@@ -96,6 +96,7 @@ void OpenAlPlayer::SetupEmitter(AudioEmitter& emitter, Sound& sound)
 	std::uniform_int_distribution<> dist(-sound.pitchDeviation, sound.pitchDeviation);
 	auto pitch = Math::MapTo((float)(sound.pitch + dist(_rand)) * 0.001, .0f, 1.0, .5f, 2.f);
 	alCheckCall(alSourcef(emitter.audioSourceId, AL_PITCH, pitch));
+	alCheckCall(alSourcef(emitter.audioSourceId, AL_LOOPING, emitter.loop == PlayType::Repeat));
 
 	if (!emitter.world)
 	{
@@ -124,6 +125,7 @@ void OpenAlPlayer::UpdateEmitterState(AudioEmitter& emitter) const
 	}
 
 	alCheckCall(alSourcef(emitter.audioSourceId, AL_GAIN, emitter.volume * _volume));
+	alCheckCall(alSourcef(emitter.audioSourceId, AL_LOOPING, emitter.loop == PlayType::Repeat));
 }
 
 void OpenAlPlayer::CleanUpResources(std::map<AudioEmitterId, AudioEmitter>& emitters)

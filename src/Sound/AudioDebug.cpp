@@ -14,6 +14,8 @@
 using namespace openblack;
 using namespace openblack::audio;
 
+PlayType AudioDebug::_playType = PlayType::Once;
+SoundId AudioDebug::_selectedSound = -1;
 std::string AudioDebug::_selectedPack = "";
 AudioEmitterId AudioDebug::_selectedEmitter = InitialAudioEmitterId;
 const ImVec4 redColor = ImVec4(1.f, .0f, .0f, 1.f);
@@ -22,14 +24,20 @@ const ImVec4 greenColor = ImVec4(0.f, 1.f, .0f, 1.f);
 void AudioDebug::AudioPlayer(Game& game, const std::vector<std::shared_ptr<SoundPack>>& soundPacks)
 {
 	auto& handler = game.GetSoundHandler();
+	if (ImGui::Button("Play") && _selectedSound != -1)
+		handler.PlaySound(_selectedSound, _playType);
 	ImGui::SameLine();
+	const char* items[] = { "Repeat", "Once", "Overlap" };
+	auto currentCombo = static_cast<int>(_playType);
+	ImGui::Combo("PlayType", &currentCombo, items, IM_ARRAYSIZE(items));
+	_playType = static_cast<PlayType>(currentCombo);
+	ImGui::Separator();
 	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
 	ImGui::BeginChild("SoundPacks", ImVec2(ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y), true);
 	ImGui::Button("Sort by sound count");
 	ImGui::SameLine();
 	ImGui::Button("Sort by bytes");
 	ImGui::SameLine();
-	ImGui::Button("Re-initialize sound pack");
 	ImGui::Columns(3, "SoundPackColumns", true);
 	ImGui::Separator();
 	ImGui::Text("File");
@@ -54,8 +62,8 @@ void AudioDebug::AudioPlayer(Game& game, const std::vector<std::shared_ptr<Sound
 	ImGui::EndChild();
 	ImGui::SameLine();
 	ImGui::BeginChild("Sounds", ImVec2(ImGui::GetContentRegionAvail().x - 50, ImGui::GetContentRegionAvail().y), true);
-	ImGui::Columns(5, "SoundColumns", true);
 	ImGui::Separator();
+	ImGui::Columns(5, "SoundColumns", true);
 	ImGui::Text("Name / Play");
 	ImGui::NextColumn();
 	ImGui::Text("Loaded");

@@ -144,11 +144,11 @@ bool SoundHandler::EmitterExists(AudioEmitterId id)
 	return _emitters.find(id) != _emitters.end();
 }
 
-void SoundHandler::PlaySound(SoundId id)
+void SoundHandler::PlaySound(SoundId id, PlayType playType)
 {
 	auto unusedPosVel = glm::vec3(1);
 	auto unusedRadius = glm::vec2(1);
-	auto emitterId = CreateEmitter(id, unusedPosVel, unusedPosVel, unusedPosVel, unusedRadius, 1.0, false, PlayType::Once);
+	auto emitterId = CreateEmitter(id, unusedPosVel, unusedPosVel, unusedPosVel, unusedRadius, 1.0, false, playType);
 	_audioPlayer->PlayEmitter(_emitters[emitterId]);
 }
 

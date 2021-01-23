@@ -8,6 +8,7 @@
  *****************************************************************************/
 
 #include "SoundPack.h"
+#include "Math.h"
 
 #include <Common/FileSystem.h>
 #include <Game.h>

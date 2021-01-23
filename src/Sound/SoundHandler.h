@@ -36,7 +36,7 @@ public:
 	void PlayEmitter(AudioEmitterId id);
 	void PauseEmitter(AudioEmitterId id);
 	void StopEmitter(AudioEmitterId id);
-	void PlaySound(SoundId id);
+	void PlaySound(SoundId id, PlayType playType);
 	AudioEmitterId CreateEmitters(const std::vector<SoundId> ids, glm::vec3& position, glm::vec3& velocity,
 	                              glm::vec3& direction, glm::vec2& radius, float volume, bool world, PlayType playType);
 	AudioEmitterId CreateEmitter(SoundId id, glm::vec3& position, glm::vec3& velocity, glm::vec3& direction, glm::vec2& radius,
