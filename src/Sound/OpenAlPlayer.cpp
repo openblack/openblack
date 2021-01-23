@@ -178,12 +178,13 @@ void OpenAlPlayer::Destroy(AudioSourceId sourceId, AudioBufferId bufferId) const
 
 void OpenAlPlayer::DeleteAlDevice(ALCdevice* device)
 {
-	alCheckCall(alcCloseDevice(device));
+	alcCloseDevice(device);
 }
 
 void OpenAlPlayer::DeleteAlContext(ALCcontext* context)
 {
-	alCheckCall(alcDestroyContext(context));
+	alcMakeContextCurrent(nullptr);
+	alcDestroyContext(context);
 }
 
 AudioStatus OpenAlPlayer::GetAudioStatus(AudioSourceId id) const
