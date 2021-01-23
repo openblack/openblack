@@ -8,6 +8,23 @@ target_include_directories(pack
 		$<INSTALL_INTERFACE:include>
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
+
+if(HAS_FILESYSTEM)
+	message(STATUS "Got <filesystem>: add compiler definition HAS_FILESYSTEM")
+	target_compile_definitions(pack PRIVATE HAS_FILESYSTEM)
+else()
+	if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+		message(
+				STATUS
+				"No <filesystem>: linking stdc++fs on unknown compiler id: ${CMAKE_CXX_COMPILER_ID}"
+		)
+		target_link_libraries(pack PRIVATE stdc++fs)
+	else()
+		message(
+				STATUS "No <filesystem> on unknown compiler id: ${CMAKE_CXX_COMPILER_ID}")
+	endif()
+endif()
+
 if(MSVC)
 	target_compile_options(pack PRIVATE /W4 /WX)
 else()

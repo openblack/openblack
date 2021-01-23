@@ -82,6 +82,14 @@
 #include <cstring>
 #include <fstream>
 
+#ifdef HAS_FILESYSTEM
+#include <filesystem>
+namespace fs = std::filesystem;
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif // HAS_FILESYSTEM
+
 using namespace openblack::pack;
 
 namespace
@@ -354,6 +362,89 @@ void PackFile::ResolveMeshBlock()
 	}
 }
 
+void PackFile::ResolveFileSegmentBankInfoBlock()
+{
+	if (!HasBlock("LHFileSegmentBankInfo"))
+	{
+		Fail("no LHAudioBankSampleTable block in sad file");
+	}
+
+	auto tableData = GetBlock("LHFileSegmentBankInfo");
+	imemstream stream(reinterpret_cast<const char*>(tableData.data()), tableData.size());
+	stream.seekoff(12, std::ios_base::cur, std::ios_base::out);
+	char description[255];
+	stream.read(description, 255);
+	_description = description;
+}
+
+void PackFile::ResolveAudioBankSampleTableBlock()
+{
+	if (!HasBlock("LHAudioBankSampleTable"))
+	{
+		Fail("no LHAudioBankSampleTable block in sad file");
+	}
+
+	SadAudioBankSampleTable table;
+	auto tableData = GetBlock("LHAudioBankSampleTable");
+	imemstream tableStream(reinterpret_cast<const char*>(tableData.data()), tableData.size());
+	tableStream.read(reinterpret_cast<char*>(&table), sizeof(table));
+
+	if (table.numOfEntries == 0)
+	{
+		Fail("Audio bank has no sound entries");
+	}
+
+	for (uint32_t i = 0; i < table.numOfEntries; i++)
+	{
+		AudioBankSample sample;
+
+		tableStream.read(reinterpret_cast<char*>(&sample), sizeof(sample));
+		std::string fileName = sample.audioSampleName;
+
+		if (sample.size == 0)
+		{
+			continue;
+		}
+
+		_sounds.emplace_back(sample, SoundData());
+	}
+
+}
+
+void PackFile::ResolveAndExtractAudioWaveDataBlock()
+{
+	if (!HasBlock("LHAudioWaveData"))
+	{
+		Fail("No LHAudioBankSampleTable block in sad file");
+	}
+
+	auto entryData = GetBlock("LHAudioWaveData");
+	imemstream entryStream(reinterpret_cast<const char*>(entryData.data()), entryData.size());
+
+	for (auto& [sample, sound] : _sounds)
+	{
+		std::string filePath = sample.audioSampleName;
+		// Remove drive letter and make path relative
+		filePath.erase(0, 2);
+
+		entryStream.seekpos(sample.relativeOffset);
+		std::string fileName = fs::path(filePath).filename().string();
+
+		if (fileName.empty())
+		{
+			Fail("Empty file name for sound entry");
+		}
+
+		if ((entryData.size() - entryStream.tellg()) < sample.size)
+		{
+			Fail("Sound sample size exceeds LHAudioWaveData size");
+		}
+
+		sound.resize(sample.size);
+		entryStream.read(reinterpret_cast<char*>(sound.data()), sound.size());
+	}
+}
+
 void PackFile::WriteBlocks(std::ostream& stream) const
 {
 	assert(!_isLoaded);
@@ -484,6 +575,15 @@ void PackFile::Open(const std::string& file)
 		ResolveBodyBlock();
 		ExtractAnimationsFromBlock();
 	}
+
+	// Audio pack
+	if (HasBlock("LHFileSegmentBankInfo"))
+	{
+		ResolveFileSegmentBankInfoBlock();
+		ResolveAudioBankSampleTableBlock();
+		ResolveAndExtractAudioWaveDataBlock();
+	}
+
 	_isLoaded = true;
 }
 

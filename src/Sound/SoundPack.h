@@ -9,9 +9,10 @@
 
 #pragma once
 
-#include <SadFile.h>
+#include <PackFile.h>
 
 #include "Sound.h"
+
 #include <string>
 #include <vector>
 
@@ -33,7 +34,7 @@ private:
 	bool _isMusic;
 	SoundMap _sounds;
 	std::string _name;
-	sad::SadFile _sadFile;
+	pack::PackFile _packFile;
 };
 
 } // namespace openblack::audio

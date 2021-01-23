@@ -22,7 +22,7 @@ void SoundPack::LoadFromFile(const std::string& filePath)
 
 	try
 	{
-		_sadFile.Open(Game::instance()->GetFileSystem().FindPath(filePath).u8string());
+		_packFile.Open(Game::instance()->GetFileSystem().FindPath(filePath).u8string());
 	}
 	catch (std::runtime_error& err)
 	{
