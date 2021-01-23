@@ -83,16 +83,17 @@ public:
 	    "Draw Sky",          //
 	    "Draw Water",        //
 	    "Draw Island",       //
-	    "Draw Models",       //
-	    "Draw Debug Cross",  //
-	    "Main Pass",         //
-	    "Draw Sky",          //
-	    "Draw Water",        //
-	    "Draw Island",       //
-	    "Draw Models",       //
-	    "Draw Debug Cross",  //
-	    "Encode GUI Draw",   //
-	    "Renderer Frame",    //
+	    "Draw Models",      //
+	    "Draw Debug Cross", //
+	    "Main Pass",        //
+	    "Draw Sky",         //
+	    "Draw Water",       //
+	    "Draw Island",      //
+	    "Draw Models",      //
+	    "Draw Debug Cross", //
+	    "Encode GUI Draw",  //
+	    "Renderer Frame",   //
+	    "Audio",            //
 	};
 
 	struct Entry
