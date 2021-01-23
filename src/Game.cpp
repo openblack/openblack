@@ -140,14 +140,14 @@ bool Game::ProcessEvents(const SDL_Event& event)
 		// Hand is still considered up
 		if (event.type == SDL_MOUSEBUTTONDOWN && !leftMouseButton)
 		{
-			auto& handTransform = _entityRegistry->Get<openblack::entities::components::Transform>(_handEntity);
-			auto& hand = _entityRegistry->Get<openblack::entities::components::Hand>(_handEntity);
-			auto velocity = glm::vec3(.0f);
-			auto direction = glm::vec3(0);
-			auto radius = glm::vec2(1.f);
-			auto emitterId = _soundHandler->CreateEmitters(hand.GrabLandSoundIds(), handTransform.position, velocity, direction,
-			                                               radius, 1.f, false, audio::PlayType::Once);
-			_soundHandler->PlayEmitter(emitterId);
+//			auto& handTransform = _entityRegistry->Get<openblack::entities::components::Transform>(_handEntity);
+//			auto& hand = _entityRegistry->Get<openblack::entities::components::Hand>(_handEntity);
+//			auto velocity = glm::vec3(.0f);
+//			auto direction = glm::vec3(0);
+//			auto radius = glm::vec2(1.f);
+//			auto emitterId = _soundHandler->CreateEmitters(hand.GrabLandSoundIds(), handTransform.position, velocity, direction,
+//			                                               radius, 1.f, false, audio::PlayType::Once);
+//			_soundHandler->PlayEmitter(emitterId);
 		}
 
 		leftMouseButton = !leftMouseButton;
