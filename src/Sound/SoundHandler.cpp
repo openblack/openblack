@@ -194,6 +194,7 @@ void SoundHandler::ReplaceAudioPlayer(std::unique_ptr<AudioPlayer> audioPlayer)
 	DestroyEmitters();
 	// Replace the old player with the new one
 	_audioPlayer.reset(audioPlayer.release());
+	_audioPlayer->SetVolume(.5f);
 	// Activate the new player now that the old is destroyed
 	_audioPlayer->Activate();
 }
