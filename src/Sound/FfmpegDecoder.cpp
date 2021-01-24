@@ -48,6 +48,7 @@ int ReadSoundBytes(void* opaque, uint8_t* buffer, int bufferSize)
 void FfmpegDecoder::ToPCM16(Sound& sound)
 {
 	auto& soundBytes = sound.bytes;
+	int result;
 
 	// In normal FFempeg usage, the sound file path is given to the API where its opened and read
 	// We cannot do that as the file does not exist
@@ -85,9 +86,9 @@ void FfmpegDecoder::ToPCM16(Sound& sound)
 	auto codecContext = avcodec_alloc_context3(nullptr);
 	avcodec_parameters_to_context(codecContext, stream->codecpar);
 	auto decoder = avcodec_find_decoder(codecContext->codec_id);
-	if (avcodec_open2(codecContext, decoder, nullptr) < 0)
+	if ((result = avcodec_open2(codecContext, decoder, nullptr)) < 0)
 	{
-		throw std::runtime_error("FFMPEG error");
+		throw std::runtime_error(GetErrorCode(result));
 	}
 
 	// This is our input
@@ -115,8 +116,6 @@ void FfmpegDecoder::ToPCM16(Sound& sound)
 
 	while (av_read_frame(avFormatCtx.get(), packet.get()) >= 0)
 	{
-		int result;
-
 		if ((result = avcodec_send_packet(codecContext, packet.get())) < 0)
 		{
 			if (result == AVERROR_INVALIDDATA)
