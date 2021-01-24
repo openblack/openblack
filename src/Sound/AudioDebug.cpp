@@ -24,7 +24,7 @@ const ImVec4 greenColor = ImVec4(0.f, 1.f, .0f, 1.f);
 void AudioDebug::AudioPlayer(Game& game, const std::vector<std::shared_ptr<SoundPack>>& soundPacks)
 {
 	auto& handler = game.GetSoundHandler();
-	if (ImGui::Button("Play") && _selectedSound != -1)
+	if (ImGui::Button("Play") && _selectedSound != -1L)
 		handler.PlaySound(_selectedSound, _playType);
 	ImGui::SameLine();
 	const char* items[] = { "Repeat", "Once", "Overlap" };
