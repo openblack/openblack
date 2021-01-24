@@ -106,8 +106,14 @@ std::unique_ptr<Sound>& SoundHandler::GetSound(SoundId id)
 
 	if (!sound->loaded)
 	{
-		_audioDecoder->ToPCM16(*sound);
-		sound->loaded = true;
+		try
+		{
+			_audioDecoder->ToPCM16(*sound);
+			sound->loaded = true;
+		} catch (std::runtime_error& err)
+		{
+			spdlog::error("Failed to decode sound: {}", err.what());
+		}
 	}
 
 	return sound;

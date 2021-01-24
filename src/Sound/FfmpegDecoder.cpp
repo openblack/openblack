@@ -116,25 +116,25 @@ void FfmpegDecoder::ToPCM16(Sound& sound)
 	{
 		if ((result = avcodec_send_packet(codecContext, packet.get())) < 0)
 		{
+			// This can happen with MP3 files; they have junk data at the start of the buffer. Skip for now
 			if (result == AVERROR_INVALIDDATA)
 			{
 				spdlog::warn("Invalid data found for " + sound.name);
 				continue;
 			}
 
-			auto i = GetErrorCode(result);
-			throw std::runtime_error("FFMPEG error: " + i);
+			throw std::runtime_error(GetErrorCode(result));
 		}
 
-		while((result = avcodec_receive_frame(codecContext, frame.get())) == 0 || result == -11)
+		while((result = avcodec_receive_frame(codecContext, frame.get())) != AVERROR_EOF)
 		{
-			if (result < 0 && result != AVERROR(EAGAIN) && result != AVERROR_EOF)
+			// FFmpeg is telling us to feed it more packets
+			if (result == AVERROR(EAGAIN))
 			{
-				throw std::runtime_error("FFMPEG error: " + GetErrorCode(result));
+				break;
 			} else if (result < 0)
 			{
-				// FFmpeg is telling us to feed it more packets
-				break;
+				throw std::runtime_error(GetErrorCode(result));
 			}
 
 			if (frame->channels <= 0 || frame->channels > 2 || frame->sample_rate <= 0)
@@ -147,7 +147,7 @@ void FfmpegDecoder::ToPCM16(Sound& sound)
 
 			if ((result = swr_convert(swr.get(), &out, outBuffer.size() / (2 * frame->channels), (const uint8_t**)frame->extended_data, frame->nb_samples)) < 0)
 			{
-				throw std::runtime_error("FFMPEG error: " + GetErrorCode(result));
+				throw std::runtime_error(GetErrorCode(result));
 			}
 
 			if (frame->data[0] == nullptr)
@@ -160,7 +160,7 @@ void FfmpegDecoder::ToPCM16(Sound& sound)
 
 		if (result < 0 && result != AVERROR(EAGAIN))
 		{
-			throw std::runtime_error("FFMPEG error: " + GetErrorCode(result));
+			throw std::runtime_error(GetErrorCode(result));
 		}
 	}
 
