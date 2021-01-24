@@ -59,8 +59,8 @@ public:
 
 private:
 	size_t _emitterId;
-	std::unique_ptr<AudioPlayer> _audioPlayer;
 	std::unique_ptr<AudioDecoder> _audioDecoder;
+	std::unique_ptr<AudioPlayer> _audioPlayer;
 	/**
 	 * Sound ID -> sound pack that houses the sound
 	 */
