@@ -85,7 +85,15 @@ void AudioDebug::AudioPlayer(Game& game, const std::vector<std::shared_ptr<Sound
 		for (auto& [soundId, sound] : sounds)
 		{
 			if (ImGui::Selectable(("##" + std::to_string(sound->id)).c_str(), _selectedSound == soundId, ImGuiSelectableFlags_SpanAllColumns))
+			{
+				// Play the sound if already selected
+				if (_selectedSound == soundId)
+				{
+					handler.PlaySound(_selectedSound, _playType);
+				}
+
 				_selectedSound = sound->id;
+			}
 			ImGui::SameLine();
 			ImGui::Text("%s", sound->name.c_str());
 			ImGui::NextColumn();
