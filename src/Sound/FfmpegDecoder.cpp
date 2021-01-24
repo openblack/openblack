@@ -111,8 +111,6 @@ void FfmpegDecoder::ToPCM16(Sound& sound)
 	auto frameDeleter = [](AVFrame* frame) { av_frame_free(&frame); };
 	auto frame = std::unique_ptr<AVFrame, decltype(frameDeleter)>(av_frame_alloc(), frameDeleter);
 	auto loaded = std::vector<uint8_t>();
-	double timeBase = av_q2d(stream->time_base);
-	double duration = 0;
 
 	while (av_read_frame(avFormatCtx.get(), packet.get()) >= 0)
 	{
@@ -157,19 +155,17 @@ void FfmpegDecoder::ToPCM16(Sound& sound)
 				throw std::runtime_error("No data in audio frame");
 			}
 
-			std::copy(outBuffer.begin(), outBuffer.begin() + (result * 2 * frame->channels), std::back_inserter(loaded));
+			std::copy(outBuffer.begin(), outBuffer.begin() + (result * 2 * codecContext->channels), std::back_inserter(loaded));
 		}
 
 		if (result < 0 && result != AVERROR(EAGAIN))
 		{
 			throw std::runtime_error("FFMPEG error: " + GetErrorCode(result));
 		}
-
-		duration += frame->pkt_duration;
 	}
 
 	sound.bytes = loaded;
-	sound.lengthInSeconds = duration * timeBase;
+	sound.lengthInSeconds = ((double)loaded.size() / 2 / codecContext->channels) / outSampleRate;
 
 	switch (outChannels)
 	{
