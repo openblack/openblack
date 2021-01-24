@@ -144,7 +144,7 @@ void AudioDebug::AudioSettings(Game& game)
 		                      ImGuiSelectableFlags_SpanAllColumns))
 			_selectedEmitter = emitterId;
 		ImGui::SameLine();
-		ImGui::Text("%llu", emitterId);
+		ImGui::Text("%zu", emitterId);
 		ImGui::NextColumn();
 		ImGui::Text("%s", handler.GetSound(emitter.soundId)->name.c_str());
 		ImGui::NextColumn();
@@ -220,7 +220,7 @@ void AudioDebug::AudioSettings(Game& game)
 		ImGui::NextColumn();
 		ImGui::Text("%s", handler.GetSound(emitter.soundId)->name.c_str());
 		ImGui::NextColumn();
-		ImGui::Text("%llu", handler.GetSound(emitter.soundId)->bytes.size());
+		ImGui::Text("%zu", handler.GetSound(emitter.soundId)->bytes.size());
 		ImGui::NextColumn();
 		switch (handler.GetPlayer()->GetAudioStatus(emitter.audioSourceId))
 		{
