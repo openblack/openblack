@@ -23,14 +23,13 @@ namespace openblack::audio
 std::string GetErrorCode(int errorCode)
 {
 	std::array<char, 1024> buffer;
-	std::memset(buffer.data(), 0, 1024);
 
 	if (av_strerror(errorCode, buffer.data(), buffer.size()) < 0)
 	{
 		return std::string("Unknown error code: ") + std::to_string(errorCode);
 	}
 
-	return std::string(buffer.data());
+	return std::string(buffer.begin(), buffer.end());
 }
 
 
