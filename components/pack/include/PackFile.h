@@ -43,91 +43,6 @@ struct G3DTextureHeader
 
 static_assert(sizeof(G3DTextureHeader) == 4 * sizeof(uint32_t));
 
-struct SadAudioMetaDataHeader
-{
-	char unknown[27];
-	uint32_t entries;
-};
-
-struct SadAudioBankSampleTable
-{
-	uint16_t numOfEntries;
-	uint16_t numOfEntries2;
-};
-
-struct SadBlockHeader
-{
-	char name[31];
-	uint32_t size;
-};
-
-enum class AudioBankLoop : uint16_t
-{
-	None,
-	Restart,
-	Once,
-	Overlap,
-};
-
-// TODO: Look for channel count (e.g 2)
-// TODO: Look for word length (e.g 16);
-struct AudioBankSample
-{
-	char audioSampleName[255];
-	int32_t unknown0;
-	int32_t id;
-	int32_t isBank;
-	uint32_t size;
-	uint32_t relativeOffset;
-	int32_t clone;
-	int16_t group;
-	int16_t atmosGroup;
-	int32_t unknown4;
-	int32_t unknown5;
-	int16_t unknown6a;
-	int16_t unknown6b;
-	uint32_t sampleRate;
-	int16_t unknownOthera;
-	int16_t unknownOtherb;
-	int16_t unknown7a;
-	int16_t unknown7b;
-	int32_t unknown8;
-	int32_t lStart;
-	int32_t lEnd;
-	char sampleDescription[255];
-	uint16_t priority;       // 0-9999
-	uint16_t unknown9;       //
-	uint16_t unknown10;      //
-	uint16_t unknown11;      //
-	int16_t loop;            //
-	uint16_t start;          //
-	uint8_t pan;             //
-	uint16_t unknown12;      //
-	float xPos;              // -9999 to 9999
-	float yPos;              // -9999 to 9999
-	float zPos;              // -9999 to 9999
-	uint8_t volume;          //
-	uint16_t userParam;      //
-	uint16_t pitch;          //
-	uint16_t unknown18;      //
-	uint16_t pitchDeviation; //
-	uint16_t unknown20;      //
-	float minDist;           //
-	float maxDist;           //
-	float scale;             // 0-50 (multiply by 10)
-	AudioBankLoop loopType;  //
-	uint16_t unknown21;      //
-	uint16_t unknown22;      //
-	uint16_t unknown23;      //
-	uint16_t atmos;          //
-};
-
-static_assert(sizeof(AudioBankSample) == 640, "Audio sample header has incorrect size");
-
-using SoundData = std::vector<uint8_t>;
-using SoundEntry = std::tuple<AudioBankSample, std::vector<uint8_t>>;
-using Sounds = std::vector<SoundEntry>;
-
 struct DdsPixelFormat
 {
 	uint32_t size;
@@ -181,7 +96,6 @@ protected:
 	bool _isLoaded;
 
 	std::string _filename;
-	std::string _description;
 
 	std::map<std::string, std::vector<uint8_t>> _blocks;
 	std::vector<InfoBlockLookup> _infoBlockLookup;
@@ -192,7 +106,6 @@ protected:
 	std::vector<std::vector<uint8_t>> _meshes;
 	/// Bytes of anm meshes
 	std::vector<std::vector<uint8_t>> _animations;
-	std::vector<SoundEntry> _sounds;
 
 	/// Error handling
 	void Fail(const std::string& msg);
@@ -218,14 +131,6 @@ protected:
 	/// Parse Info Block
 	virtual void ResolveMeshBlock();
 
-	/// Parse LHFileSegmentBankInfo
-	void ResolveFileSegmentBankInfoBlock();
-
-	/// Parse LHAudioBankSampleTable Block
-	void ResolveAudioBankSampleTableBlock();
-
-	/// Parse LHAudioWaveData Block
-	void ResolveAndExtractAudioWaveDataBlock();
 public:
 	PackFile();
 
@@ -253,7 +158,6 @@ public:
 	void CreateBodyBlock();
 
 	[[nodiscard]] const std::string& GetFilename() const { return _filename; }
-	[[nodiscard]] const std::string& GetDescription() const { return _description; }
 	[[nodiscard]] const std::map<std::string, std::vector<uint8_t>>& GetBlocks() const { return _blocks; }
 	[[nodiscard]] bool HasBlock(const std::string& name) const { return _blocks.count(name); }
 	[[nodiscard]] const std::vector<uint8_t>& GetBlock(const std::string& name) const { return _blocks.at(name); }
@@ -266,7 +170,6 @@ public:
 	[[nodiscard]] const std::vector<uint8_t>& GetMesh(uint32_t index) const { return _meshes[index]; }
 	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetAnimations() const { return _animations; }
 	[[nodiscard]] const std::vector<uint8_t>& GetAnimation(uint32_t index) const { return _animations[index]; }
-	[[nodiscard]] const Sounds& GetSounds() const { return _sounds; }
 };
 
 } // namespace openblack::pack

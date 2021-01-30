@@ -8,64 +8,82 @@
  *****************************************************************************/
 
 #include "SoundPack.h"
-#include "Math.h"
+
+#include <SADFile.h>
+#include <spdlog/spdlog.h>
 
 #include <Common/FileSystem.h>
 #include <Game.h>
-#include <spdlog/spdlog.h>
+
+#include "Math.h"
 
 namespace openblack::audio
 {
 
-void SoundPack::LoadFromFile(const std::string& filePath)
+bool SoundPack::LoadFromFile(const fs::path& path)
 {
-	spdlog::debug("Loading Sound Pack from file: {}", filePath);
+	spdlog::debug("Loading Sound Pack from file: {}", path.generic_string());
 
+	_filename = Game::instance()->GetFileSystem().FindPath(path).u8string();
+
+	sad::SADFile sad;
 	try
 	{
-		_packFile.Open(Game::instance()->GetFileSystem().FindPath(filePath).u8string());
+		pack::PackFile pack;
+		pack.Open(_filename);
+
+		const std::vector<uint8_t>& infoBuffer = pack.GetBlock("LHFileSegmentBankInfo");
+		const std::vector<uint8_t>& tableBuffer = pack.GetBlock("LHAudioBankSampleTable");
+		const std::vector<uint8_t>& dataBuffer = pack.GetBlock("LHAudioWaveData");
+
+		sad.Open(infoBuffer, tableBuffer, dataBuffer);
 	}
 	catch (std::runtime_error& err)
 	{
-		spdlog::error("Failed to open {}: {}", filePath, err.what());
-		return;
+		spdlog::error("Failed to open {}: {}", path.generic_string(), err.what());
+		return false;
 	}
 
-	if (!_packFile.GetDescription().empty())
-		_name = _packFile.GetDescription();
+	if (sad.GetInfo().description[0] != '\0')
+	{
+		_name = sad.GetInfo().description.data();
+	}
 	else
-		_name = (filePath);
+	{
+		spdlog::warn("File has no description {}", path.generic_string());
+		_name = path;
+	}
 
 	// TODO: Discover sector flag
 	bool isSector;
 	bool isPrevSector = false;
 	SoundId sectorSoundId;
 	auto combinedData = std::map<SoundId, Sound>();
-	auto& samples = _packFile.GetSounds();
 
-	for (auto& [sample, soundData] : samples)
+	const auto& table = sad.GetTable();
+	for (size_t i = 0; i < table.size(); ++i)
 	{
-		auto audioSampleName = std::string(sample.audioSampleName);
-		std::replace(audioSampleName.begin(), audioSampleName.end(), '\\',  FileSystem::Separator);
+		const auto& sample = table[i];
+		const auto& soundData = sad.GetSoundData(i);
+		auto audioSampleName = std::string(sample.name.data());
+		std::replace(audioSampleName.begin(), audioSampleName.end(), '\\', FileSystem::Separator);
 		auto audioSampleFileName = fs::path(audioSampleName).filename();
 		auto ext = audioSampleFileName.extension().string();
 		isSector = ext == ".mpg";
-		auto fileName = fs::path(filePath).filename().string();
+		auto fileName = path.generic_string();
 
 		auto pitch = Math::MapTo(sample.pitch, 0.0f, 127.0f, 0, 100);
 		auto volume = Math::MapTo(sample.volume == 0 ? 1 : sample.volume, 0.0f, 127.0f, 0, 100);
 
-		// It's either all sectors (music) or individual sounds (dialogue, fx). Files do not contain a mix of the two
+		// It's either all sectors (music) or individual sounds (dialogue, fx). Files do not contain a mix
 		if (isSector)
 		{
 			if (!isPrevSector)
 				sectorSoundId = CreateId();
-
-			auto emplacement = combinedData.emplace(sectorSoundId, Sound{});
+			auto emplacement = combinedData.emplace(sectorSoundId, Sound {});
 			auto& sound = emplacement.first->second;
 			if (emplacement.second) // Sound was not in the map
 			{
-
 				sound.id = sectorSoundId;
 				sound.name = fileName;
 				sound.priority = sample.priority;
@@ -74,7 +92,7 @@ void SoundPack::LoadFromFile(const std::string& filePath)
 				sound.volume = volume;
 				sound.pitch = pitch;
 				sound.pitchDeviation = sample.pitchDeviation;
-				sound.bytes = soundData;
+				sound.bytes = std::vector<uint8_t>(soundData.begin(), soundData.end());
 				sound.channelLayout = ChannelLayout::Stereo;
 				sound.playType = static_cast<PlayType>(sample.loopType);
 				sound.loaded = false;
@@ -101,7 +119,7 @@ void SoundPack::LoadFromFile(const std::string& filePath)
 			sound.volume = volume;
 			sound.pitch = pitch;
 			sound.pitchDeviation = sample.pitchDeviation;
-			sound.bytes = soundData;
+			sound.bytes = std::vector<uint8_t>(soundData.begin(), soundData.end());
 			sound.channelLayout = ChannelLayout::Stereo;
 			sound.playType = static_cast<PlayType>(sample.loopType);
 			sound.loaded = false;
@@ -111,18 +129,20 @@ void SoundPack::LoadFromFile(const std::string& filePath)
 			_sounds[sound.id] = std::make_unique<Sound>(sound);
 			isPrevSector = isSector;
 		}
+
+		// TODO: Rely on SadFile isMusic
+		_isMusic = combinedData.size() > 0;
+		for (auto& [id, sound] : combinedData)
+		{
+			_sounds[id] = std::make_unique<Sound>(sound);
+		}
+		if (_sounds.empty())
+		{
+			spdlog::warn("Soundpack {} has no sounds", _name);
+		}
 	}
 
-	// TODO: Rely on SadFile isMusic
-	_isMusic = combinedData.size() > 0;
-
-	for (auto& [id, sound] : combinedData)
-	{
-		_sounds[id] = std::make_unique<Sound>(sound);
-	}
-
-	if (_sounds.empty())
-		spdlog::warn("Soundpack {} has no sounds", _name);
+	return true;
 }
 
 } // namespace openblack::audio
