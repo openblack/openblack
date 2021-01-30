@@ -1,0 +1,12 @@
+{
+    "name": "openblack",
+    "version-string": "0.0.1-dev",
+    "dependencies": [
+        "sdl2",
+        "spdlog",
+        "glm",
+        "entt",
+        "cxxopts",
+        "openal-soft"
+    ]
+}
