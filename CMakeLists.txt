@@ -144,6 +144,13 @@ else()
   set(BGFX_CUSTOM_TARGETS
       OFF
       CACHE BOOL "Include convenience custom targets.")
+  set(BGFX_CONFIG_DEBUG
+      ON
+      CACHE BOOL "Enables debug configuration on all builds")
+
+  set(BGFX_OPENGLES_VERSION
+      "3"
+      CACHE STRING "Specify minimum OpenGL ES version" )
 
   # declare this here so bgfx compiles in a reasonable time
   if(MSVC)
