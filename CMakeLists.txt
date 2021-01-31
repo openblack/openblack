@@ -87,8 +87,8 @@ else()
 
   FetchContent_Declare(
     bgfx
-    GIT_REPOSITORY https://github.com/openblack/bgfx.cmake.git
-    GIT_TAG master
+    GIT_REPOSITORY https://github.com/openblack/bgfx.cmake
+    GIT_TAG emscripten-fix
   )
 
   # don't build anymore targets then what we need
