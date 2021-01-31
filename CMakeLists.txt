@@ -135,6 +135,9 @@ else()
   )
 
   # don't build anymore targets then what we need
+  set(BGFX_BUILD_TOOLS
+      OFF
+      CACHE BOOL "Build bgfx tools.")
   set(BGFX_BUILD_EXAMPLES
       OFF
       CACHE BOOL "Build bgfx examples.")
