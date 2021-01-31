@@ -111,7 +111,7 @@ else()
 endif()
 
 option(OPENBLACK_BUILD_BGFX
-"Build bgfx alongside project (only use for developing bgfx)" OFF)
+"Build bgfx alongside project (only use for developing bgfx)" ON)
 
 if(NOT OPENBLACK_BUILD_BGFX)
   find_package(bgfx CONFIG)
