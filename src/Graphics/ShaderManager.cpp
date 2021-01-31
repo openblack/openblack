@@ -25,6 +25,7 @@
 #include "3D/Camera.h"
 
 #include <bgfx/embedded_shader.h>
+#include <spdlog/spdlog.h>
 
 namespace openblack::graphics
 {
@@ -51,17 +52,20 @@ ShaderManager::~ShaderManager()
 }
 
 const ShaderProgram* ShaderManager::LoadShader(const std::string& name, const std::string& vertexShaderName,
-                                               const std::string& fragmentShaderName)
+											   const std::string& fragmentShaderName)
 {
+	spdlog::debug("Creating ShaderProgram: \"{}\" with \"{}\", \"{}\"", name, vertexShaderName, fragmentShaderName);
 	bgfx::RendererType::Enum type = bgfx::getRendererType();
 
 	ShaderMap::iterator i = _shaderPrograms.find(name);
 	if (i != _shaderPrograms.end())
 		return i->second;
 
-	ShaderProgram* program =
-	    new ShaderProgram(name, bgfx::createEmbeddedShader(s_embeddedShaders, type, vertexShaderName.c_str()),
-	                      bgfx::createEmbeddedShader(s_embeddedShaders, type, fragmentShaderName.c_str()));
+	spdlog::debug("Creating vertex shader {}", vertexShaderName);
+	auto vertexShader = bgfx::createEmbeddedShader(s_embeddedShaders, type, vertexShaderName.c_str());
+	spdlog::debug("Creating fragment shader {}", fragmentShaderName);
+	auto fragmentShader = bgfx::createEmbeddedShader(s_embeddedShaders, type, fragmentShaderName.c_str());
+	ShaderProgram* program = new ShaderProgram(name, std::forward<bgfx::ShaderHandle>(vertexShader), std::forward<bgfx::ShaderHandle>(fragmentShader));
 	_shaderPrograms[name] = program;
 	return program;
 }
