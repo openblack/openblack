@@ -21,6 +21,9 @@
 
 using namespace openblack;
 
+// HTML canvas ID
+const char *emscriptenWindowHandle = "canvas";
+
 void GameWindow::SDLDestroyer::operator()(SDL_Window* window) const
 {
 	SDL_DestroyWindow(window);
@@ -80,6 +83,15 @@ SDL_Window* GameWindow::GetHandle() const
 
 void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) const
 {
+#if defined(SDL_VIDEO_DRIVER_EMSCRIPTEN)
+	// TODO: Fetch canvas ID from javascript module
+	{
+		native_window = reinterpret_cast<void*>(GameWindow::emscriptenCanvas);
+		native_display = nullptr;
+		return;
+	}
+#endif // defined(SDL_VIDEO_DRIVER_EMSCRIPTEN)
+
 	SDL_SysWMinfo wmi;
 	SDL_VERSION(&wmi.version);
 	if (!SDL_GetWindowWMInfo(_window.get(), &wmi))
