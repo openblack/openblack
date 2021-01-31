@@ -122,7 +122,7 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 	else
 #endif // defined(SDL_VIDEO_DRIVER_WAYLAND)
 #if defined(SDL_VIDEO_DRIVER_X11)
-	    if (wmi.subsystem == SDL_SYSWM_X11)
+	if (wmi.subsystem == SDL_SYSWM_X11)
 	{
 		native_window = reinterpret_cast<void*>(wmi.info.x11.window);
 		native_display = wmi.info.x11.display;
@@ -132,7 +132,7 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 
 	// Mac
 #if defined(SDL_VIDEO_DRIVER_COCOA)
-	    if (wmi.subsystem == SDL_SYSWM_COCOA)
+	if (wmi.subsystem == SDL_SYSWM_COCOA)
 	{
 		native_window = wmi.info.cocoa.window;
 		native_display = nullptr;
@@ -142,7 +142,7 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 
 	// Windows
 #if defined(SDL_VIDEO_DRIVER_WINDOWS)
-	    if (wmi.subsystem == SDL_SYSWM_WINDOWS)
+	if (wmi.subsystem == SDL_SYSWM_WINDOWS)
 	{
 		native_window = wmi.info.win.window;
 		native_display = nullptr;
@@ -152,7 +152,7 @@ void GameWindow::GetNativeHandles(void*& native_window, void*& native_display) c
 
 	// Steam Link
 #if defined(SDL_VIDEO_DRIVER_VIVANTE)
-	    if (wmi.subsystem == SDL_SYSWM_VIVANTE)
+	if (wmi.subsystem == SDL_SYSWM_VIVANTE)
 	{
 		native_window = wmi.info.vivante.window;
 		native_display = wmi.info.vivante.display;
