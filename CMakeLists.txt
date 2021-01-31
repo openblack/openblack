@@ -1,5 +1,48 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
+if (EMSCRIPTEN)
+  # Force vcpkg triplet to our required target
+  set(VCPKG_TARGET_TRIPLET wasm32-emscripten CACHE STRING "VCPKG Target Triplet to use")
+  # All libraries must be static at the moment
+  set(VCPKG_LIBRARY_LINKAGE static CACHE STRING "VCPKG Target linkage to use")
+  # --bind: Compiles the source code using the Embind bindings to connect C/C++ and JavaScript.
+  #         Embind is used to bind C++ functions and classes to JavaScript.
+  # -s MAXIMUM_MEMORY
+  #         TODO: https://github.com/emscripten-core/emscripten/issues/12462
+  #         Use "-1" when it's fixed.
+  # -s mbulk-memory
+  #         Needed with pthreads
+  # -s matomics
+  #         Needed with pthreads
+  # -s FULL_ES3=1
+  #         Needed for graphics
+  # -s USE_WEBGL2=1
+  #         Needed for webgl support
+  # -s USE_PTHREADS=1
+  #         Multi-threading support
+  # -s WASM=1
+  #         Compile to WASM
+  # -s
+  # DEBUGGING FIELDS
+  # -s DEMANGLE_SUPPORT=1
+  #         Debugging C++ names
+  # -s DISABLE_EXCEPTION_CATCHING=0
+  #         Needed for C++ code that uses exceptions throws
+  #         This has a massive performance impact
+  # -s GL_ASSERTIONS=1
+  #         Needed for debugging graphics
+  # -g4
+  #        Maximum debugging information. Builds source maps for browser debuggers
+  # --source-map-base
+  #        This sets the url path to the source maps
+  #        path + SOURCE_MAP
+  set(EMSCRIPTEN_FLAGS "--bind -s MAXIMUM_MEMORY=1999MB -mbulk-memory -matomics -s DEMANGLE_SUPPORT=1 -s DISABLE_EXCEPTION_CATCHING=0")
+  set(EMSCRIPTEN_FLAGS "${EMSCRIPTEN_FLAGS} -s FULL_ES3=1 -s GL_ASSERTIONS=1 -s USE_WEBGL2=1 -s USE_PTHREADS=1 -g4 --source-map-base /")
+  set(EMSCRIPTEN_FLAGS "${EMSCRIPTEN_FLAGS} -s BINARYEN_ASYNC_COMPILATION=1 -s WASM=1")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EMSCRIPTEN_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EMSCRIPTEN_FLAGS}")
+endif()
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 if(${CMAKE_VERSION} VERSION_LESS 3.14)
   include(${CMAKE_SOURCE_DIR}/CMakeModules/backport/FetchContent.cmake)
