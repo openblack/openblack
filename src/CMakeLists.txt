@@ -14,24 +14,24 @@ file(GLOB OPENBLACK_IMGUI_VS_SHADERS
      "${CMAKE_SOURCE_DIR}/assets/shaders/imgui/vs_*.sc")
 file(GLOB OPENBLACK_IMGUI_FS_SHADERS
      "${CMAKE_SOURCE_DIR}/assets/shaders/imgui/fs_*.sc")
-mark_shaders_for_compilation(
-  TYPE
-  VERTEX
-  SHADERS
-  ${OPENBLACK_IMGUI_VS_SHADERS}
-  VARYING_DEF
-  ${CMAKE_SOURCE_DIR}/assets/shaders/imgui/varying.def.sc
-  OUTPUT_DIR
-  ${CMAKE_BINARY_DIR}/include/generated/shaders/imgui)
-mark_shaders_for_compilation(
-  TYPE
-  FRAGMENT
-  SHADERS
-  ${OPENBLACK_IMGUI_FS_SHADERS}
-  VARYING_DEF
-  ${CMAKE_SOURCE_DIR}/assets/shaders/imgui/varying.def.sc
-  OUTPUT_DIR
-  ${CMAKE_BINARY_DIR}/include/generated/shaders/imgui)
+#mark_shaders_for_compilation(
+#  TYPE
+#  VERTEX
+#  SHADERS
+#  ${OPENBLACK_IMGUI_VS_SHADERS}
+#  VARYING_DEF
+#  ${CMAKE_SOURCE_DIR}/assets/shaders/imgui/varying.def.sc
+#  OUTPUT_DIR
+#  ${CMAKE_BINARY_DIR}/include/generated/shaders/imgui)
+#mark_shaders_for_compilation(
+#  TYPE
+#  FRAGMENT
+#  SHADERS
+#  ${OPENBLACK_IMGUI_FS_SHADERS}
+#  VARYING_DEF
+#  ${CMAKE_SOURCE_DIR}/assets/shaders/imgui/varying.def.sc
+#  OUTPUT_DIR
+#  ${CMAKE_BINARY_DIR}/include/generated/shaders/imgui)
 
 file(GLOB OPENBLACK_VERTEX_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/vs_*.sc")
 file(GLOB OPENBLACK_FRAGMENT_SHADERS
@@ -39,24 +39,24 @@ file(GLOB OPENBLACK_FRAGMENT_SHADERS
 file(GLOB OPENBLACK_VARYING_DEF_FILE
      "${CMAKE_SOURCE_DIR}/assets/shaders/varying.def.sc")
 
-mark_shaders_for_compilation(
-  TYPE
-  VERTEX
-  SHADERS
-  ${OPENBLACK_VERTEX_SHADERS}
-  VARYING_DEF
-  ${OPENBLACK_VARYING_DEF_FILE}
-  OUTPUT_DIR
-  ${CMAKE_BINARY_DIR}/include/generated/shaders)
-mark_shaders_for_compilation(
-  TYPE
-  FRAGMENT
-  SHADERS
-  ${OPENBLACK_FRAGMENT_SHADERS}
-  VARYING_DEF
-  ${OPENBLACK_VARYING_DEF_FILE}
-  OUTPUT_DIR
-  ${CMAKE_BINARY_DIR}/include/generated/shaders)
+#mark_shaders_for_compilation(
+#  TYPE
+#  VERTEX
+#  SHADERS
+#  ${OPENBLACK_VERTEX_SHADERS}
+#  VARYING_DEF
+#  ${OPENBLACK_VARYING_DEF_FILE}
+#  OUTPUT_DIR
+#  ${CMAKE_BINARY_DIR}/include/generated/shaders)
+#mark_shaders_for_compilation(
+#  TYPE
+#  FRAGMENT
+#  SHADERS
+#  ${OPENBLACK_FRAGMENT_SHADERS}
+#  VARYING_DEF
+#  ${OPENBLACK_VARYING_DEF_FILE}
+#  OUTPUT_DIR
+#  ${CMAKE_BINARY_DIR}/include/generated/shaders)
 
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_IMGUI_VS_SHADERS})
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_IMGUI_FS_SHADERS})
