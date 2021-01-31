@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Openblack</title>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+    <canvas id="canvas" oncontextmenu="preventDefault()"></canvas>
+    <script type='text/javascript'>
+        var gameDir = ''
+        var Module = {
+            canvas: (function() { return document.getElementById('canvas'); })(),
+            arguments: ['--game-path', gameDir, '--log-file', 'stdout']
+        };
+    </script>
+    <script src="openblack" type="text/javascript"></script>
+</body>
+</html>
