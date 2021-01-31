@@ -178,6 +178,11 @@ else()
     -Wno-unused-private-field
     -Wno-unused-variable
     -Wno-unused-parameter)
+
+  if (EMSCRIPTEN)
+      target_link_options(openblack PRIVATE --preload-file "${EMSCRIPTEN_BLACK_AND_WHITE_DIR}")
+  endif()
+
   if (OPENBLACK_WARNINGS_AS_ERRORS)
     target_compile_options(openblack PRIVATE -Werror)
   endif()

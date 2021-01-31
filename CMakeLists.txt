@@ -60,6 +60,10 @@ endif()
 
 project(openblack)
 
+if (EMSCRIPTEN)
+  set(EMSCRIPTEN_BLACK_AND_WHITE_DIR "${PROJECT_SOURCE_DIR}/BLACK_AND_WHITE_RETAIL")
+endif()
+
 # Configure C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
