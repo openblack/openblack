@@ -31,8 +31,9 @@ bool InfoFile::LoadFromFile(const fs::path& path, InfoConstants& infos)
 		data = pack.GetBlock("Info");
 		if (data.size() != sizeof(InfoConstants))
 		{
-			throw std::runtime_error(
-			    fmt::format("Info block size does not match that of GInfo: {} != {}", data.size(), sizeof(InfoConstants)));
+			// TODO(bwrsandman): Rename current InfoConstants to InfoConstantsV12 and add support to different versions
+			throw std::runtime_error(fmt::format("Info block size does not match that of GInfo of version 1.2: {} != {}",
+			                                     data.size(), sizeof(InfoConstants)));
 		}
 	}
 	catch (std::runtime_error& err)
