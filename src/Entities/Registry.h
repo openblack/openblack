@@ -94,6 +94,11 @@ public:
 	{
 		return Get<Dst>(ToEntity(component));
 	}
+	template <typename... Components>
+	decltype(auto) Size() const
+	{
+		return _registry.view<Components...>().size();
+	}
 
 private:
 	void PrepareDrawDescs(bool drawBoundingBox);
