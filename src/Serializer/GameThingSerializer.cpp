@@ -148,12 +148,33 @@ bool GameThingSerializer::GameThing::Deserialize(GameThingSerializer& deserializ
 	return true;
 }
 
+bool GameThingSerializer::GameThing::operator==(const GameThingSerializer::GameThing& rhs) const
+{
+	return _unknown1 == rhs._unknown1 && _unknown2 == rhs._unknown2;
+}
+
+bool GameThingSerializer::GameThing::operator!=(const GameThingSerializer::GameThing& rhs) const
+{
+	return !(*this == rhs);
+}
+
 bool GameThingSerializer::Footpath::Deserialize(GameThingSerializer& deserializer)
 {
 	GameThing::Deserialize(deserializer);
 	_nodes = deserializer.DeserializeList<FootpathNode>();
 	_unknown = deserializer.ReadValue<uint32_t>();
 	return true;
+}
+
+bool GameThingSerializer::Footpath::operator==(const GameThingSerializer::Footpath& rhs) const
+{
+	return static_cast<const GameThing&>(*this) == static_cast<const GameThing&>(rhs) && _nodes == rhs._nodes &&
+	       _unknown == rhs._unknown;
+}
+
+bool GameThingSerializer::Footpath::operator!=(const GameThingSerializer::Footpath& rhs) const
+{
+	return !(*this == rhs);
 }
 
 bool GameThingSerializer::FootpathLink::Deserialize(GameThingSerializer& deserializer)
@@ -169,6 +190,17 @@ bool GameThingSerializer::FootpathNode::Deserialize(GameThingSerializer& deseria
 	_coords = deserializer.ReadValue<MapCoords>();
 	_unknown = deserializer.ReadValue<uint8_t>();
 	return true;
+}
+
+bool GameThingSerializer::FootpathNode::operator==(const GameThingSerializer::FootpathNode& rhs) const
+{
+	return static_cast<const GameThing&>(*this) == static_cast<const GameThing&>(rhs) && _coords == rhs._coords &&
+	       _unknown == rhs._unknown;
+}
+
+bool GameThingSerializer::FootpathNode::operator!=(const GameThingSerializer::FootpathNode& rhs) const
+{
+	return !(*this == rhs);
 }
 
 bool GameThingSerializer::FootpathLinkSave::Deserialize(GameThingSerializer& deserializer)

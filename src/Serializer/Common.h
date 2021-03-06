@@ -20,6 +20,9 @@ struct MapCoords
 	uint32_t x;
 	uint32_t z;
 	float altitude;
+
+	bool operator==(const MapCoords& rhs) const { return x == rhs.x && z == rhs.z && altitude == rhs.altitude; }
+	bool operator!=(const MapCoords& rhs) const { return !(*this == rhs); }
 };
 #pragma pack(pop)
 

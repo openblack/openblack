@@ -9,12 +9,14 @@
 
 #pragma once
 
-#include <glm/vec3.hpp>
 #include <vector>
+
+#include <glm/vec3.hpp>
 
 namespace openblack::entities::components
 {
 
+/// A list-like structure of positions a Living can travel on to get from the first node to the last, and vice-versa
 struct Footpath
 {
 	using Id = int;
@@ -25,6 +27,17 @@ struct Footpath
 	};
 
 	std::vector<Node> nodes;
+};
+
+/// Links a [Planned]MultiMapFixed entity to a list of footpaths
+/// The position is used to look-up matches. If the MMF is close enough to the link, they are connected.
+/// The relationship of MMF to FPL is one2one and MMF to Footpath is one2many
+struct FootpathLink
+{
+	using Id = int;
+
+	glm::vec3 position;
+	std::vector<Footpath::Id> footpaths;
 };
 
 } // namespace openblack::entities::components
