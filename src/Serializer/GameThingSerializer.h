@@ -47,6 +47,8 @@ public:
 		virtual ~GameThing() = default;
 
 		virtual bool Deserialize(GameThingSerializer& deserializer);
+		bool operator==(const GameThing& rhs) const;
+		bool operator!=(const GameThing& rhs) const;
 	};
 
 	struct FootpathNode final: GameThing
@@ -55,6 +57,8 @@ public:
 		uint8_t _unknown;
 
 		bool Deserialize(GameThingSerializer& deserializer) override;
+		bool operator==(const FootpathNode& rhs) const;
+		bool operator!=(const FootpathNode& rhs) const;
 	};
 
 	struct Footpath final: GameThing
@@ -63,6 +67,8 @@ public:
 		uint32_t _unknown;
 
 		bool Deserialize(GameThingSerializer& deserializer) override;
+		bool operator==(const Footpath& rhs) const;
+		bool operator!=(const Footpath& rhs) const;
 	};
 
 	struct FootpathLink final: GameThing
