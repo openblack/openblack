@@ -78,6 +78,7 @@ Game::Game(Arguments&& args)
     , _gameSpeedMultiplier(1.0f)
     , _frameCount(0)
     , _turnCount(0)
+    , _paused(true)
     , _handPose()
 {
 	std::function<std::shared_ptr<spdlog::logger>(const std::string&)> CreateLogger;
@@ -186,6 +187,9 @@ bool Game::ProcessEvents(const SDL_Event& event)
 		case SDLK_f:
 			_window->SetFullscreen(true);
 			break;
+		case SDLK_p:
+			_paused = !_paused;
+			break;
 		case SDLK_F1:
 			_config.bgfxDebug = !_config.bgfxDebug;
 			break;
@@ -238,7 +242,7 @@ bool Game::GameLogicLoop()
 
 	const auto currentTime = std::chrono::steady_clock::now();
 	const auto delta = currentTime - _lastGameLoopTime;
-	if (delta < kTurnDuration * _gameSpeedMultiplier)
+	if (_paused || delta < kTurnDuration * _gameSpeedMultiplier)
 	{
 		return false;
 	}
@@ -588,6 +592,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 	_turnDeltaTime = 0ns;
 	SetGameSpeed(Game::kTurnDurationMultiplierNormal);
 	_turnCount = 0;
+	_paused = true;
 }
 
 void Game::LoadLandscape(const std::filesystem::path& path)
