@@ -33,21 +33,22 @@
 
 #include <LNDFile.h>
 
-#include "3D/Camera.h"
-#include "3D/LandIsland.h"
-#include "3D/MeshPack.h"
-#include "3D/Sky.h"
-#include "3D/Water.h"
-#include "Common/FileSystem.h"
+#include <3D/Camera.h>
+#include <3D/LandIsland.h>
+#include <3D/MeshPack.h>
+#include <3D/Sky.h>
+#include <3D/Water.h>
+#include <Common/FileSystem.h>
+#include <Entities/Components/Transform.h>
+#include <Entities/Components/Tree.h>
+#include <Entities/Registry.h>
+#include <Game.h>
+#include <GameWindow.h>
+#include <LHVMViewer.h>
+#include <Profiler.h>
+
 #include "Console.h"
-#include "Entities/Components/Transform.h"
-#include "Entities/Components/Tree.h"
-#include "Entities/Registry.h"
-#include "Game.h"
-#include "GameWindow.h"
-#include "LHVMViewer.h"
 #include "MeshViewer.h"
-#include "Profiler.h"
 
 // Turn off formatting because it adds spaces which break the stringifying
 // clang-format off
@@ -68,6 +69,7 @@
 #include "Graphics/ShaderIncluder.h"
 
 using namespace openblack;
+using namespace openblack::gui;
 
 #define IMGUI_FLAGS_NONE UINT8_C(0x00)
 #define IMGUI_FLAGS_ALPHA_BLEND UINT8_C(0x01)
@@ -90,13 +92,13 @@ std::unique_ptr<Gui> Gui::create(const GameWindow* window, graphics::RenderPass 
 	ImGuiStyle& style = ImGui::GetStyle();
 	style.ScaleAllSizes(scale);
 	io.FontGlobalScale = scale;
-
 	io.BackendRendererName = "imgui_impl_bgfx";
-	auto meshViewer = std::make_unique<MeshViewer>();
-	auto terminal = std::make_unique<Console>();
 
-	auto gui =
-	    std::unique_ptr<Gui>(new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(meshViewer), std::move(terminal)));
+	std::vector<std::unique_ptr<DebugWindow>> debugWindows;
+	debugWindows.emplace_back(new MeshViewer);
+	debugWindows.emplace_back(new Console);
+
+	auto gui = std::unique_ptr<Gui>(new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows)));
 
 	if (window)
 	{
@@ -109,8 +111,7 @@ std::unique_ptr<Gui> Gui::create(const GameWindow* window, graphics::RenderPass 
 	return gui;
 }
 
-Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer>&& meshViewer,
-         std::unique_ptr<Console>&& terminal)
+Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<DebugWindow>>&& debugWindows)
     : _imgui(imgui)
     , _time(0)
     , _vertexBuffer(BGFX_INVALID_HANDLE)
@@ -126,8 +127,7 @@ Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer>&&
     , _last(bx::getHPCounter())
     , _lastScroll(0)
     , _viewId(viewId)
-    , _meshViewer(std::move(meshViewer))
-    , _console(std::move(terminal))
+    , _debugWindows(std::move(debugWindows))
 {
 	CreateDeviceObjectsBgfx();
 }
@@ -156,7 +156,10 @@ bool Gui::ProcessEventSdl2(const SDL_Event& event)
 {
 	ImGui::SetCurrentContext(_imgui);
 
-	_console->ProcessEventSdl2(event);
+	for (auto& window : _debugWindows)
+	{
+		window->WindowProcessEvent(event);
+	}
 
 	ImGuiIO& io = ImGui::GetIO();
 	switch (event.type)
@@ -191,11 +194,6 @@ bool Gui::ProcessEventSdl2(const SDL_Event& event)
 		return io.WantTextInput;
 	}
 	case SDL_KEYDOWN:
-		if (event.key.keysym.sym == SDLK_BACKQUOTE)
-		{
-			_console->Toggle();
-		}
-		[[fallthrough]];
 	case SDL_KEYUP:
 	{
 		int key = event.key.keysym.scancode;
@@ -506,15 +504,20 @@ void Gui::NewFrame(GameWindow* window)
 
 bool Gui::Loop(Game& game, const Renderer& renderer)
 {
-	_meshViewer->DrawScene(renderer);
+	for (auto& window : _debugWindows)
+	{
+		window->WindowUpdate(game, renderer);
+	}
 	NewFrame(game.GetWindow());
 	if (ShowMenu(game))
 	{
 		// Exit option selected
 		return true;
 	}
-	_meshViewer->DrawWindow();
-	_console->DrawWindow(game);
+	for (auto& window : _debugWindows)
+	{
+		window->WindowDraw(game);
+	}
 	ShowVillagerNames(game);
 	ShowCameraPositionOverlay(game);
 	LHVMViewer::Draw(game.GetLhvm());
@@ -716,14 +719,12 @@ bool Gui::ShowMenu(Game& game)
 				config.showProfiler = true;
 			}
 
-			if (ImGui::MenuItem("Console"))
+			for (auto& window : _debugWindows)
 			{
-				_console->Open();
-			}
-
-			if (ImGui::MenuItem("Mesh Viewer"))
-			{
-				_meshViewer->Open();
+				if (ImGui::MenuItem(("Open " + window->GetName()).c_str()))
+				{
+					window->Open();
+				}
 			}
 
 			if (ImGui::MenuItem("Land Island"))

@@ -25,9 +25,9 @@
 #include "Entities/Registry.h"
 #include "GameWindow.h"
 #include "GitSHA1.h"
-#include "Gui.h"
+#include "Graphics/FrameBuffer.h"
+#include "Gui/Gui.h"
 #include "LHScriptX/Script.h"
-#include "MeshViewer.h"
 #include "Parsers/InfoFile.h"
 #include "Profiler.h"
 #include "Renderer.h"
@@ -99,7 +99,7 @@ Game::Game(Arguments&& args)
 	_handModel->LoadFromFile(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d");
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
 
-	_gui = Gui::create(_window.get(), graphics::RenderPass::ImGui, args.scale);
+	_gui = gui::Gui::create(_window.get(), graphics::RenderPass::ImGui, args.scale);
 
 	_eventManager->AddHandler(std::function([this](const SDL_Event& event) {
 		// If gui captures this input, do not propagate

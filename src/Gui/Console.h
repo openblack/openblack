@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "DebugWindow.h"
+
 #include <imgui.h>
 
 #include <array>
@@ -19,35 +21,34 @@
 #include <vector>
 
 struct ImGuiInputTextCallbackData;
-union SDL_Event;
 
 namespace openblack
 {
-
-class Game;
-
 namespace lhscriptx
 {
 class Script;
 }
 
-class Console
+namespace gui
+{
+
+class Console: public DebugWindow
 {
 public:
 	Console();
-	virtual ~Console();
-	void Open();
-	void Toggle();
-	void DrawWindow(Game& game);
+	void Open() override;
 
-	void ProcessEventSdl2(const SDL_Event& event);
+protected:
+	void Draw(Game& game) override;
+	void Update(Game& game, const Renderer& renderer) override;
+	void ProcessEventOpen(const SDL_Event& event) override;
+	void ProcessEventAlways(const SDL_Event& event) override;
 
 private:
 	void AddLog(const char* fmt, ...);
 	void ExecCommand(const std::string& command_line, Game& game);
 	int InputTextCallback(ImGuiInputTextCallbackData* data);
 
-	bool _open;
 	bool _reclaim_focus;
 	bool _insert_hand_position;
 	int _input_cursor_position;
@@ -58,4 +59,7 @@ private:
 	std::string _partial;
 	std::optional<size_t> _history_pos;
 };
+
+} // namespace gui
+
 } // namespace openblack

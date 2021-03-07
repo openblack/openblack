@@ -29,6 +29,11 @@ namespace anm
 class ANMFile;
 } // namespace anm
 
+namespace gui
+{
+class MeshViewer;
+}
+
 class L3DAnim
 {
 public:
@@ -66,7 +71,7 @@ private:
 
 	std::vector<Frame> _frames;
 
-	friend class MeshViewer; // TODO: Remove me once the unknowns are known and replace with getters
+	friend gui::MeshViewer; // TODO: Remove me once the unknowns are known and replace with getters
 };
 
 } // namespace openblack

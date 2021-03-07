@@ -18,9 +18,10 @@
 #include "LHScriptX/Script.h"
 
 using namespace openblack;
+using namespace openblack::gui;
 
 Console::Console()
-    : _open(false)
+    : DebugWindow("Console", ImVec2(520, 600))
     , _reclaim_focus(false)
     , _insert_hand_position(false)
     , _input_cursor_position(0)
@@ -68,20 +69,9 @@ Console::Console()
 
 void Console::Open()
 {
-	_open = true;
+	DebugWindow::Open();
 	_reclaim_focus = true;
 }
-
-void Console::Toggle()
-{
-	_open = !_open;
-	if (_open)
-	{
-		_reclaim_focus = true;
-	}
-}
-
-Console::~Console() = default;
 
 int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 {
@@ -216,27 +206,15 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 	return 0;
 }
 
-void Console::DrawWindow(Game& game)
+void Console::Draw(Game& game)
 {
-	if (!_open)
-	{
-		return;
-	}
-
-	ImGui::SetNextWindowSize(ImVec2(520, 600), ImGuiCond_FirstUseEver);
-	if (!ImGui::Begin("Console", &_open))
-	{
-		ImGui::End();
-		return;
-	}
-
 	// As a specific feature guaranteed by the library, after calling Begin() the last Item represent the title bar. So e.g.
 	// IsItemHovered() will return true when hovering the title bar. Here we create a context menu only available from the
 	// title bar.
 	if (ImGui::BeginPopupContextItem())
 	{
 		if (ImGui::MenuItem("Close Console"))
-			_open = false;
+			Close();
 		ImGui::EndPopup();
 	}
 
@@ -359,9 +337,9 @@ void Console::DrawWindow(Game& game)
 		ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
 		_reclaim_focus = false;
 	}
-
-	ImGui::End();
 }
+
+void Console::Update(Game& game, const Renderer& renderer) {}
 
 void Console::AddLog(const char* fmt, ...)
 {
@@ -425,12 +403,8 @@ void Console::ExecCommand(const std::string& command_line, Game& game)
 	}
 }
 
-void Console::ProcessEventSdl2(const SDL_Event& event)
+void Console::ProcessEventOpen(const SDL_Event& event)
 {
-	if (!_open)
-	{
-		return;
-	}
 	ImGuiIO& io = ImGui::GetIO();
 	switch (event.type)
 	{
@@ -442,5 +416,20 @@ void Console::ProcessEventSdl2(const SDL_Event& event)
 		}
 	}
 	break;
+	}
+}
+
+void Console::ProcessEventAlways(const SDL_Event& event)
+{
+	ImGuiIO& io = ImGui::GetIO();
+
+	switch (event.type)
+	{
+	case SDL_KEYDOWN:
+		if (event.key.keysym.sym == SDLK_BACKQUOTE)
+		{
+			Toggle();
+		}
+		break;
 	}
 }

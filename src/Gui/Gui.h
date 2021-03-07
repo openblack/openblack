@@ -9,8 +9,6 @@
 
 #pragma once
 
-#include "Graphics/RenderPass.h"
-
 #include <bgfx/bgfx.h>
 #include <glm/fwd.hpp>
 #include <imgui.h>
@@ -19,6 +17,9 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <vector>
+
+#include <Graphics/RenderPass.h>
 
 typedef struct SDL_Window SDL_Window;
 typedef struct SDL_Cursor SDL_Cursor;
@@ -63,11 +64,14 @@ inline void Image(bgfx::TextureHandle _handle, const ImVec2& _size, const ImVec2
 
 namespace openblack
 {
-class Console;
 class Game;
 class GameWindow;
-class MeshViewer;
 class Renderer;
+} // namespace openblack
+
+namespace openblack::gui
+{
+class DebugWindow;
 
 class Gui
 {
@@ -82,8 +86,7 @@ public:
 	void Draw();
 
 private:
-	Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::unique_ptr<MeshViewer>&& meshViewer,
-	    std::unique_ptr<Console>&& terminal);
+	Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<DebugWindow>>&& debugWindows);
 	bool InitSdl2(SDL_Window* window);
 	void NewFrameSdl2(SDL_Window* window);
 	bool CreateFontsTextureBgfx();
@@ -147,7 +150,6 @@ private:
 	int64_t _last;
 	int32_t _lastScroll;
 	const bgfx::ViewId _viewId;
-	std::unique_ptr<MeshViewer> _meshViewer;
-	std::unique_ptr<Console> _console;
+	std::vector<std::unique_ptr<DebugWindow>> _debugWindows;
 };
-} // namespace openblack
+} // namespace openblack::gui

@@ -38,7 +38,6 @@ class AnimationPack;
 class Camera;
 class FileSystem;
 class GameWindow;
-class Gui;
 class EventManager;
 class MeshPack;
 class LandIsland;
@@ -48,6 +47,12 @@ class L3DAnim;
 class L3DMesh;
 class Sky;
 class Water;
+
+namespace gui
+{
+class Gui;
+}
+
 namespace entities::components
 {
 struct Transform;
@@ -187,7 +192,7 @@ private:
 
 	std::unique_ptr<GameWindow> _window;
 	std::unique_ptr<Renderer> _renderer;
-	std::unique_ptr<Gui> _gui;
+	std::unique_ptr<gui::Gui> _gui;
 	std::unique_ptr<Camera> _camera;
 	std::unique_ptr<Profiler> _profiler;
 	std::unique_ptr<EventManager> _eventManager;
