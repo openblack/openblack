@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "DebugWindow.h"
+
 #include <memory>
 #include <optional>
 
@@ -20,23 +22,26 @@
 
 namespace openblack
 {
-class Renderer;
 
 namespace graphics
 {
 class DebugLines;
 }
 
-class MeshViewer
+namespace gui
+{
+class MeshViewer: public DebugWindow
 {
 public:
-	explicit MeshViewer();
-	void Open();
-	void DrawWindow();
-	void DrawScene(const Renderer& renderer);
+	MeshViewer();
+
+protected:
+	void Draw(Game& game) override;
+	void Update(Game& game, const Renderer& renderer) override;
+	void ProcessEventOpen(const SDL_Event& event) override;
+	void ProcessEventAlways(const SDL_Event& event) override;
 
 private:
-	bool _open;
 	static constexpr graphics::RenderPass _viewId = graphics::RenderPass::MeshViewer;
 	MeshPackId _selectedMesh;
 	int _selectedSubMesh;
@@ -50,4 +55,7 @@ private:
 	std::unique_ptr<graphics::DebugLines> _boundingBox;
 	std::unique_ptr<graphics::FrameBuffer> _frameBuffer;
 };
+
+} // namespace gui
+
 } // namespace openblack

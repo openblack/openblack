@@ -18,7 +18,7 @@
 #include "Graphics/ShaderManager.h"
 #include "Graphics/Texture2D.h"
 #include "Graphics/VertexBuffer.h"
-#include "Gui.h"
+#include "Gui/Gui.h"
 #include "Renderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -28,9 +28,10 @@
 #include <imgui_bitfield.h>
 
 using namespace openblack;
+using namespace openblack::gui;
 
 MeshViewer::MeshViewer()
-    : _open(false)
+    : DebugWindow("MeshPack Viewer", ImVec2(720.0f, 612.0f))
     , _selectedMesh(MeshPackId::Dummy)
     , _selectedSubMesh(0)
     , _selectedAnimation(std::nullopt)
@@ -45,24 +46,14 @@ MeshViewer::MeshViewer()
 {
 }
 
-void MeshViewer::Open()
+void MeshViewer::Draw(Game& game)
 {
-	_open = true;
-}
-
-void MeshViewer::DrawWindow()
-{
-	if (!_open)
-		return;
 
 	float fontSize = ImGui::GetFontSize();
-	auto const& meshPack = Game::instance()->GetMeshPack();
-	auto const& animationPack = Game::instance()->GetAnimationPack();
+	auto const& meshPack = game.GetMeshPack();
+	auto const& animationPack = game.GetAnimationPack();
 	auto const& meshes = meshPack.GetMeshes();
 	auto const& animations = animationPack.GetAnimations();
-
-	ImGui::SetNextWindowSize(ImVec2(720.0f, 612.0f), ImGuiCond_FirstUseEver);
-	ImGui::Begin("MeshPack Viewer", &_open);
 
 	_filter.Draw();
 	ImGui::InputScalar("Mesh flag filter", ImGuiDataType_U32, &_meshFlagFilter, nullptr, nullptr, "%08X",
@@ -201,20 +192,15 @@ void MeshViewer::DrawWindow()
 	ImGui::EndChild();
 	ImGui::Text("%u animations", displayedAnimations);
 	ImGui::EndChild();
-
-	ImGui::End();
 }
 
-void MeshViewer::DrawScene(const Renderer& renderer)
+void MeshViewer::Update(Game& game, const Renderer& renderer)
 {
-	if (!_open)
-		return;
-
-	auto const& meshPack = Game::instance()->GetMeshPack();
+	auto const& meshPack = game.GetMeshPack();
 	auto const& meshes = meshPack.GetMeshes();
-	auto const& animationPack = Game::instance()->GetAnimationPack();
+	auto const& animationPack = game.GetAnimationPack();
 	auto const& animations = animationPack.GetAnimations();
-	auto& shaderManager = Game::instance()->GetRenderer().GetShaderManager();
+	auto& shaderManager = game.GetRenderer().GetShaderManager();
 	auto objectShader = shaderManager.GetShader("Object");
 	auto debugShader = shaderManager.GetShader("DebugLine");
 
@@ -287,3 +273,7 @@ void MeshViewer::DrawScene(const Renderer& renderer)
 		}
 	}
 }
+
+void MeshViewer::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
+
+void MeshViewer::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) {}
