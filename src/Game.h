@@ -185,6 +185,7 @@ public:
 	Config& GetConfig() { return _config; }
 	[[nodiscard]] const Config& GetConfig() const { return _config; }
 	[[nodiscard]] uint16_t GetTurn() const { return _turnCount; }
+	[[nodiscard]] bool IsPaused() const { return _paused; }
 	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const { return _turnDeltaTime; }
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
 
@@ -228,6 +229,7 @@ private:
 	float _gameSpeedMultiplier;
 	uint32_t _frameCount;
 	uint16_t _turnCount;
+	bool _paused;
 
 	glm::ivec2 _mousePosition;
 	glm::mat4 _handPose;
