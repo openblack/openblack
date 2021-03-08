@@ -529,7 +529,7 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 	{
 		debugMode |= BGFX_DEBUG_WIREFRAME;
 	}
-	if (desc.profile)
+	if (desc.bgfxProfile)
 	{
 		debugMode |= BGFX_DEBUG_PROFILER;
 	}

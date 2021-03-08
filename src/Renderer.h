@@ -104,8 +104,8 @@ public:
 		bool drawBoundingBoxes;
 		bool cullBack;
 		bool bgfxDebug;
+		bool bgfxProfile;
 		bool wireframe;
-		bool profile;
 		float timeOfDay;
 		float bumpMapStrength;
 		float smallBumpMapStrength;
