@@ -99,7 +99,6 @@ private:
 	                                             float arrowLength, std::function<void(void)> debugCallback) const;
 	bool ShowMenu(Game& game);
 	void ShowVillagerNames(const Game& game);
-	void ShowProfilerWindow(Game& game);
 	void ShowWaterFramebuffer(const Game& game);
 	void ShowLandIslandWindow(Game& game);
 	void ShowCameraPositionOverlay(const Game& game);
@@ -113,26 +112,9 @@ private:
 	void UpdateMouseCursor();
 	void UpdateGamepads();
 
-	template <typename T, uint8_t N>
-	struct CircularBuffer
-	{
-		static constexpr uint8_t _bufferSize = N;
-		T _values[_bufferSize] = {};
-		uint8_t _offset = 0;
-
-		[[nodiscard]] T back() const { return _values[_offset]; }
-		void pushBack(T value)
-		{
-			_values[_offset] = value;
-			_offset = (_offset + 1u) % _bufferSize;
-		}
-	};
-
 	ImGuiContext* _imgui;
 	ImVec2 _menuBarSize;
 	uint64_t _time;
-	CircularBuffer<float, 100> _times;
-	CircularBuffer<float, 100> _fps;
 	bgfx::DynamicVertexBufferHandle _vertexBuffer;
 	bgfx::DynamicIndexBufferHandle _indexBuffer;
 	uint32_t _vertexCount;
