@@ -71,8 +71,8 @@ void openblack::gui::Profiler::Draw(Game& game)
 	ImGui::Columns(1);
 
 	auto width = ImGui::GetColumnWidth() - ImGui::CalcTextSize("Frame").x;
-	ImGui::PlotHistogram("Frame", _times._values, decltype(_times)::_bufferSize, _times._offset, frameTextOverlay.data(), 0.0f,
-	                     FLT_MAX, ImVec2(width, 45.0f));
+	ImGui::PlotHistogram("Frame", _times._values.data(), decltype(_times)::_bufferSize, _times._offset, frameTextOverlay.data(),
+	                     0.0f, FLT_MAX, ImVec2(width, 45.0f));
 
 	ImGui::Text("Primitives Triangles %u, Triangle Strips %u, Lines %u "
 	            "Line Strips %u, Points %u",

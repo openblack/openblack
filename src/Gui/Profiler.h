@@ -11,6 +11,8 @@
 
 #include "DebugWindow.h"
 
+#include <array>
+
 namespace openblack::gui
 {
 
@@ -18,8 +20,8 @@ class Profiler: public DebugWindow
 {
 public:
 	Profiler();
-	virtual void Open() override;
-	virtual void Close() override;
+	void Open() override;
+	void Close() override;
 
 protected:
 	void Draw(Game& game) override;
@@ -32,14 +34,14 @@ private:
 	struct CircularBuffer
 	{
 		static constexpr uint8_t _bufferSize = N;
-		T _values[_bufferSize] = {};
+		std::array<T, N> _values;
 		uint8_t _offset = 0;
 
 		[[nodiscard]] T back() const { return _values[_offset]; }
 		void pushBack(T value)
 		{
 			_values[_offset] = value;
-			_offset = (_offset + 1u) % _bufferSize;
+			_offset = (_offset + 1u) % _values.size();
 		}
 	};
 	CircularBuffer<float, 100> _times;

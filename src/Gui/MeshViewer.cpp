@@ -31,7 +31,7 @@ using namespace openblack;
 using namespace openblack::gui;
 
 MeshViewer::MeshViewer()
-    : DebugWindow("MeshPack Viewer", ImVec2(720.0f, 612.0f))
+    : DebugWindow("MeshPack Viewer", ImVec2(950.0f, 780.0f))
     , _selectedMesh(MeshPackId::Dummy)
     , _selectedSubMesh(0)
     , _selectedAnimation(std::nullopt)
