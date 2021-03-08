@@ -30,8 +30,6 @@
 #include <SDL2/SDL_syswm.h>
 #endif
 
-#include <LNDFile.h>
-
 #include <3D/Camera.h>
 #include <3D/LandIsland.h>
 #include <3D/MeshPack.h>
@@ -45,6 +43,7 @@
 #include <LHVMViewer.h>
 
 #include "Console.h"
+#include "LandIsland.h"
 #include "MeshViewer.h"
 #include "Profiler.h"
 
@@ -96,6 +95,7 @@ std::unique_ptr<Gui> Gui::create(const GameWindow* window, graphics::RenderPass 
 	debugWindows.emplace_back(new Profiler);
 	debugWindows.emplace_back(new MeshViewer);
 	debugWindows.emplace_back(new Console);
+	debugWindows.emplace_back(new LandIsland);
 
 	auto gui = std::unique_ptr<Gui>(new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows)));
 
@@ -520,7 +520,6 @@ bool Gui::Loop(Game& game, const Renderer& renderer)
 	ShowVillagerNames(game);
 	ShowCameraPositionOverlay(game);
 	LHVMViewer::Draw(game.GetLhvm());
-	ShowLandIslandWindow(game);
 	ShowWaterFramebuffer(game);
 
 	ImGui::Render();
@@ -718,11 +717,6 @@ bool Gui::ShowMenu(Game& game)
 				{
 					window->Open();
 				}
-			}
-
-			if (ImGui::MenuItem("Land Island"))
-			{
-				config.showLandIsland = true;
 			}
 
 			if (ImGui::BeginMenu("Villager Names"))
@@ -1054,43 +1048,6 @@ void Gui::ShowWaterFramebuffer(const Game& game)
 	ImGui::Image(water.GetFrameBuffer().GetColorAttachment().GetNativeHandle(), ImGui::GetContentRegionAvail(), ImVec2(0, 1),
 	             ImVec2(1, 0));
 	ImGui::End();
-}
-
-void Gui::ShowLandIslandWindow(Game& game)
-{
-	auto& config = game.GetConfig();
-
-	if (!config.showLandIsland)
-	{
-		return;
-	}
-
-	if (ImGui::Begin("Land Island", &config.showLandIsland))
-	{
-		const auto& landIsland = game.GetLandIsland();
-
-		ImGui::SliderFloat("Bump", &config.bumpMapStrength, 0.0f, 1.0f, "%.3f");
-		ImGui::SliderFloat("Small Bump", &config.smallBumpMapStrength, 0.0f, 1.0f, "%.3f");
-
-		ImGui::Separator();
-
-		ImGui::Text("Block Count: %zu", landIsland.GetBlocks().size());
-		ImGui::Text("Country Count: %zu", landIsland.GetCountries().size());
-
-		ImGui::Separator();
-
-		if (ImGui::Button("Dump Textures"))
-		{
-			landIsland.DumpTextures();
-		}
-
-		if (ImGui::Button("Dump Heightmap"))
-		{
-			landIsland.DumpMaps();
-		}
-
-		ImGui::End();
-	}
 }
 
 void Gui::ShowCameraPositionOverlay(const Game& game)

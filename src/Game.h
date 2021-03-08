@@ -112,7 +112,6 @@ public:
 
 		bool wireframe {false};
 		bool waterDebug {false};
-		bool showLandIsland {false};
 		bool showVillagerNames {false};
 		bool debugVillagerNames {false};
 
