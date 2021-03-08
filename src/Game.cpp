@@ -586,3 +586,8 @@ const fs::path& Game::GetGamePath()
 
 	return _gamePath;
 }
+
+void Game::SetTime(float time)
+{
+	GetSky().SetTime(time);
+}
