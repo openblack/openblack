@@ -29,5 +29,7 @@ inline bool ListBox(const char* label, Index_t* currIndex, const std::array<std:
 	}
 	return false;
 }
+void AddUnderLine(ImColor col_);
+bool TextButtonColored(ImVec4 color, const char* name_);
 
 } // namespace ImGui

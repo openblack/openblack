@@ -365,8 +365,18 @@ bool Game::Run()
 	}
 	LoadMap(_fileSystem->ScriptsPath() / "Land1.txt");
 
-	// _lhvm = std::make_unique<LHVM::LHVM>();
-	// _lhvm->LoadBinary(GetGamePath() + fileSystem->QuestsPath() / "challenge.chl");
+	auto challengePath = _fileSystem->QuestsPath() / "challenge.chl";
+	if (_fileSystem->Exists(challengePath))
+	{
+		_lhvm = std::make_unique<LHVM::LHVM>();
+		_lhvm->LoadBinary((_fileSystem->GetGamePath() / challengePath).generic_string());
+	}
+	else
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Challenge file not found at {}",
+		                    (_fileSystem->GetGamePath() / challengePath).generic_string());
+		return false;
+	}
 
 	if (_window)
 	{

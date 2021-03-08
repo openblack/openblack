@@ -170,7 +170,7 @@ public:
 	entities::components::Transform& GetHandTransform();
 	AnimationPack& GetAnimationPack() { return *_animationPack; }
 	MeshPack& GetMeshPack() { return *_meshPack; }
-	[[nodiscard]] const LHVM::LHVM* GetLhvm() { return _lhvm.get(); }
+	[[nodiscard]] const LHVM::LHVM& GetLhvm() { return *_lhvm; }
 	FileSystem& GetFileSystem() { return *_fileSystem; }
 	entities::Registry& GetEntityRegistry() { return *_entityRegistry; }
 	[[nodiscard]] entities::Registry& GetEntityRegistry() const { return *_entityRegistry; }
