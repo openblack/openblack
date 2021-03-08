@@ -30,8 +30,10 @@ list(APPEND TERRAIN_MATERIAL_ARRAY ${TERRAIN_BINARY_DIR}/material_data3.rgb5a1.r
 string(REPLACE ";" "," TERRAIN_MATERIAL_LIST "${TERRAIN_MATERIAL_ARRAY}")
 
 set(SCRIPTS_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Scripts)
+set(QUESTS_BINARY_DIR ${SCRIPTS_BINARY_DIR}/Quests)
 set(INFO_UNPACKED_OUTPUT ${SCRIPTS_BINARY_DIR}/Info)
 set(INFO_DAT_OUTPUT ${SCRIPTS_BINARY_DIR}/info.dat)
+set(QUEST_CHALLENGE_OUTPUT ${QUESTS_BINARY_DIR}/challenge.chl)
 
 # TODO: Combine all texture generating scripts into a single one
 
@@ -42,6 +44,8 @@ add_custom_target(generate-mock-game-data
   COMMAND ${CMAKE_COMMAND} -E make_directory ${SKY_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TERRAIN_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${COFFRE_BINARY_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${SCRIPTS_BINARY_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${QUESTS_BINARY_DIR}
   # Copy the Scripts Directory
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Scripts ${CMAKE_CURRENT_BINARY_DIR}/Scripts
   # Generate Mock Textures
@@ -66,6 +70,8 @@ add_custom_target(generate-mock-game-data
   # Scripts/info.dat
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py --output-file ${INFO_UNPACKED_OUTPUT} --size 0x8E186
   COMMAND packtool --write-raw ${INFO_DAT_OUTPUT} ${INFO_UNPACKED_OUTPUT}
+  # Scripts/Quests/challenge.chl
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/Quests/gen_challenge.py --output-file ${QUEST_CHALLENGE_OUTPUT}
 
   COMMENT "Generating mock game data in ${CMAKE_CURRENT_BINARY_DIR}"
 
