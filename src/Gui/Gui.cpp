@@ -22,6 +22,7 @@
 #pragma GCC diagnostic pop
 #endif
 #include <bx/timer.h>
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/compatibility.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -31,10 +32,6 @@
 #endif
 
 #include <3D/Camera.h>
-#include <3D/LandIsland.h>
-#include <3D/MeshPack.h>
-#include <3D/Sky.h>
-#include <3D/Water.h>
 #include <Common/FileSystem.h>
 #include <Entities/Components/Transform.h>
 #include <Entities/Registry.h>
@@ -73,11 +70,14 @@ using namespace openblack::gui;
 
 namespace
 {
-const bgfx::EmbeddedShader s_embeddedShaders[] = {BGFX_EMBEDDED_SHADER(vs_ocornut_imgui),
-                                                  BGFX_EMBEDDED_SHADER(fs_ocornut_imgui), BGFX_EMBEDDED_SHADER(vs_imgui_image),
-                                                  BGFX_EMBEDDED_SHADER(fs_imgui_image),
+const bgfx::EmbeddedShader s_embeddedShaders[] = {
+    BGFX_EMBEDDED_SHADER(vs_ocornut_imgui),
+    BGFX_EMBEDDED_SHADER(fs_ocornut_imgui),
+    BGFX_EMBEDDED_SHADER(vs_imgui_image),
+    BGFX_EMBEDDED_SHADER(fs_imgui_image),
 
-                                                  BGFX_EMBEDDED_SHADER_END()};
+    BGFX_EMBEDDED_SHADER_END(),
+};
 } // namespace
 
 std::unique_ptr<Gui> Gui::create(const GameWindow* window, graphics::RenderPass viewId, float scale)
@@ -520,7 +520,6 @@ bool Gui::Loop(Game& game, const Renderer& renderer)
 	}
 	ShowVillagerNames(game);
 	ShowCameraPositionOverlay(game);
-	ShowWaterFramebuffer(game);
 
 	ImGui::Render();
 
@@ -537,9 +536,9 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData)
 
 	const bgfx::Caps* caps = bgfx::getCaps();
 	{
-		float ortho[16];
-		bx::mtxOrtho(ortho, 0.0f, width, height, 0.0f, 0.0f, 1000.0f, 0.0f, caps->homogeneousDepth);
-		bgfx::setViewTransform(_viewId, NULL, ortho);
+		glm::mat4 ortho;
+		bx::mtxOrtho(glm::value_ptr(ortho), 0.0f, width, height, 0.0f, 0.0f, 1000.0f, 0.0f, caps->homogeneousDepth);
+		bgfx::setViewTransform(_viewId, nullptr, glm::value_ptr(ortho));
 		bgfx::setViewRect(_viewId, 0, 0, uint16_t(width), uint16_t(height));
 	}
 
@@ -577,8 +576,8 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData)
 	for (int32_t ii = 0, num = drawData->CmdListsCount; ii < num; ++ii)
 	{
 		const ImDrawList* drawList = drawData->CmdLists[ii];
-		uint32_t numVertices = (uint32_t)drawList->VtxBuffer.size();
-		uint32_t numIndices = (uint32_t)drawList->IdxBuffer.size();
+		auto numVertices = static_cast<uint32_t>(drawList->VtxBuffer.size());
+		auto numIndices = static_cast<uint32_t>(drawList->IdxBuffer.size());
 
 		bgfx::update(_vertexBuffer, vertexBufferOffset,
 		             bgfx::makeRef(drawList->VtxBuffer.begin(), numVertices * sizeof(ImDrawVert)));
@@ -617,8 +616,8 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData)
 					th = texture.s.handle;
 					if (0 != texture.s.mip)
 					{
-						const float lodEnabled[4] = {float(texture.s.mip), 1.0f, 0.0f, 0.0f};
-						bgfx::setUniform(_u_imageLodEnabled, lodEnabled);
+						const glm::vec4 lodEnabled = {static_cast<float>(texture.s.mip), 1.0f, 0.0f, 0.0f};
+						bgfx::setUniform(_u_imageLodEnabled, glm::value_ptr(lodEnabled));
 						program = _imageProgram;
 					}
 				}
@@ -704,19 +703,23 @@ bool Gui::ShowMenu(Game& game)
 		if (ImGui::BeginMenu("World"))
 		{
 			if (ImGui::SliderFloat("Time of Day", &config.timeOfDay, 0.0f, 1.0f, "%.3f"))
-				Game::instance()->GetSky().SetTime(config.timeOfDay);
+				Game::instance()->SetTime(config.timeOfDay);
 
 			ImGui::EndMenu();
 		}
 
 		if (ImGui::BeginMenu("Debug"))
 		{
-			for (auto& window : _debugWindows)
+			if (ImGui::BeginMenu("Windows"))
 			{
-				if (ImGui::MenuItem(("Open " + window->GetName()).c_str()))
+				for (auto& window : _debugWindows)
 				{
-					window->Open();
+					if (ImGui::MenuItem(window->GetName().c_str()))
+					{
+						window->Open();
+					}
 				}
+				ImGui::EndMenu();
 			}
 
 			if (ImGui::BeginMenu("Villager Names"))
@@ -979,7 +982,7 @@ void Gui::ShowVillagerNames(const Game& game)
 	    glm::vec4(ImGui::GetStyle().WindowPadding.x, 0, displaySize.x - ImGui::GetStyle().WindowPadding.x, displaySize.y);
 	std::vector<glm::vec4> coveredAreas;
 	coveredAreas.reserve(game.GetEntityRegistry().Size<Villager>());
-	game.GetEntityRegistry().Each<Villager, const Transform>([this, &i, &coveredAreas, camera, config,
+	game.GetEntityRegistry().Each<Villager, const Transform>([this, &i, &coveredAreas, &camera, config,
 	                                                          viewport](Villager& entity, const Transform& transform) {
 		++i;
 		const float height = 2.0f * transform.scale.y; // TODO(bwrsandman): get from bounding box max y
@@ -1031,23 +1034,6 @@ void Gui::ShowVillagerNames(const Game& game)
 			coveredAreas.emplace_back(area.value());
 		}
 	});
-}
-
-void Gui::ShowWaterFramebuffer(const Game& game)
-{
-	auto& config = game.GetConfig();
-
-	if (!config.waterDebug)
-	{
-		return;
-	}
-
-	const auto& water = game.GetWater();
-
-	ImGui::Begin("Water Debug");
-	ImGui::Image(water.GetFrameBuffer().GetColorAttachment().GetNativeHandle(), ImGui::GetContentRegionAvail(), ImVec2(0, 1),
-	             ImVec2(1, 0));
-	ImGui::End();
 }
 
 void Gui::ShowCameraPositionOverlay(const Game& game)

@@ -99,7 +99,6 @@ private:
 	                                             float arrowLength, std::function<void(void)> debugCallback) const;
 	bool ShowMenu(Game& game);
 	void ShowVillagerNames(const Game& game);
-	void ShowWaterFramebuffer(const Game& game);
 	void ShowCameraPositionOverlay(const Game& game);
 
 	static const char* StaticGetClipboardText(void* ud) { return reinterpret_cast<Gui*>(ud)->GetClipboardText(); }

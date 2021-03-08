@@ -111,7 +111,6 @@ public:
 		Config() {}
 
 		bool wireframe {false};
-		bool waterDebug {false};
 		bool showVillagerNames {false};
 		bool debugVillagerNames {false};
 
@@ -151,6 +150,7 @@ public:
 
 	void SetGamePath(const fs::path& path);
 	const fs::path& GetGamePath();
+	void SetTime(float time);
 	void SetGameSpeed(float multiplier) { _gameSpeedMultiplier = multiplier; }
 	float GetGameSpeed() const { return _gameSpeedMultiplier; }
 
