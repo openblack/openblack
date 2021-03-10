@@ -34,7 +34,7 @@ private:
 	enum class HandTo
 	{
 		None,
-		Villager,
+		Entity,
 		Destination,
 	};
 
@@ -42,6 +42,7 @@ private:
 	glm::vec3 _handPosition;
 	glm::vec3 _destination;
 	std::optional<entt::entity> _selectedVillager;
+	std::optional<entt::entity> _selectedFootpath;
 };
 
 } // namespace openblack::gui
