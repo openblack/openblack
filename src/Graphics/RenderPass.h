@@ -18,8 +18,8 @@ namespace openblack::graphics
 
 enum class RenderPass : uint8_t
 {
-	Main,
 	Reflection,
+	Main,
 	ImGui,
 	MeshViewer,
 
@@ -27,10 +27,10 @@ enum class RenderPass : uint8_t
 };
 
 static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_count)> RenderPassNames {
-    "Main Pass",
-    "Reflection Pass",
-    "ImGui Pass",
-    "Mesh Viewer Pass",
+	"Reflection Pass",
+	"Main Pass",
+	"ImGui Pass",
+	"Mesh Viewer Pass",
 };
 
 } // namespace openblack::graphics
