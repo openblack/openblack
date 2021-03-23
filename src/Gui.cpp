@@ -1198,7 +1198,8 @@ void Gui::ShowWaterFramebuffer(const Game& game)
 	const auto& water = game.GetWater();
 
 	ImGui::Begin("Water Debug");
-	ImGui::Image(water.GetFrameBuffer().GetColorAttachment().GetNativeHandle(), ImGui::GetContentRegionAvail(), ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Image(water.GetFrameBuffer().GetColorAttachment().GetNativeHandle(), ImGui::GetContentRegionAvail(), ImVec2(0, 1),
+	             ImVec2(1, 0));
 	ImGui::End();
 }
 
