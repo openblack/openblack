@@ -365,10 +365,11 @@ bool Game::Run()
 		_window->GetSize(width, height);
 		_renderer->ConfigureView(graphics::RenderPass::Main, width, height);
 	}
+
 	{
-		uint16_t width, height;
-		_water->GetFrameBuffer().GetSize(width, height);
-		_renderer->ConfigureView(graphics::RenderPass::Reflection, width, height);
+		uint16_t waterWidth, waterHeight;
+		_water->GetFrameBuffer().GetSize(waterWidth, waterHeight);
+		_renderer->ConfigureView(graphics::RenderPass::Reflection, waterWidth, waterHeight);
 	}
 
 	_frameCount = 0;
