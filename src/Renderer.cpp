@@ -406,6 +406,7 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 		if (desc.drawEntities)
 		{
 			L3DMeshSubmitDesc submitDesc = {};
+			submitDesc.viewId = desc.viewId;
 			submitDesc.program = objectShaderInstanced;
 			// clang-format off
 			submitDesc.state = 0u
