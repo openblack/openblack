@@ -7,6 +7,11 @@
         "glm",
         "entt",
         "cxxopts",
-        "openal-soft"
+        "openal-soft",
+        {
+            "name": "ffmpeg",
+            "default-features": false,
+            "features": [ "avcodev", "avformat", "libavutil", "swresample" ]
+        }
     ]
 }
