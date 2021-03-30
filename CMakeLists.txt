@@ -7,16 +7,18 @@ else()
   include(FetchContent)
 endif()
 
-# automatically use vcpkg if VCPKG_ROOT is defined
-if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-  message(STATUS "Using VCPKG_ROOT $ENV{VCPKG_ROOT}")
-  set(CMAKE_TOOLCHAIN_FILE
-      "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-      CACHE STRING "")
+# On Visual Studio generators default to using vcpkg as the most newbie friendly option
+if (CMAKE_GENERATOR MATCHES "^Visual Studio")
+  message(STATUS "Defaulting to using vcpkg in a Windows build environment. You can disable with OPENBLACK_USE_VCPKG")
+  option(OPENBLACK_USE_VCPKG "Resolve dependencies using the vcpkg submodule toolchain" ON)
 else()
-  # set default toolchain to vcpkg submodule
+  option(OPENBLACK_USE_VCPKG "Resolve dependencies using the vcpkg submodule toolchain" OFF)
+endif()
+
+# If using vcpkg and not manually specified the toolchain then set it for them
+if (OPENBLACK_USE_VCPKG AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake
-    CACHE STRING "Vcpkg toolchain file")
+    CACHE STRING "Default to vcpkg toolchain file")
 endif()
 
 project(openblack)
