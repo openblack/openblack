@@ -5,9 +5,9 @@
 [![Discord chat](https://img.shields.io/discord/608729286513262622?logo=discord&logoColor=white)](https://discord.gg/5QTexBU)
 [![License](https://img.shields.io/github/license/openblack/openblack)](LICENSE.md)
 
-openblack is an open source reimplementation of [Black & White (2001)](https://en.wikipedia.org/wiki/Black_&_White_(video_game)) written in modern C++ and modern OpenGL.
+openblack is an open source reimplementation of [Black & White (2001)](https://en.wikipedia.org/wiki/Black_&_White_(video_game)) written in modern C++ and modern rendering engines (OpenGL, Vulkan).
 
-You still need to have the original game assets in order to use this.
+You still need to have the original game assets in order to use this, don't ask where to get these.
 
 ---
 
@@ -45,10 +45,10 @@ You can either:
 
 ```bash
 cd openblack
-cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:/Users/Matt/Development/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows -Dbgfx_DIR=C:/Users/Matt/Development/bgfx-windows-x64/lib/cmake/bgfx
+cmake -S . -B build -Dbgfx_DIR=C:/Users/Matt/Development/bgfx-windows-x64/lib/cmake/bgfx
 ```
 
-_Replace `C:/Users/Matt/Development/vcpkg` with your vcpkg root and `C:/Users/Matt/Development/bgfx-windows-x64` with the folder you extracted bgfx to._
+_Replace `C:/Users/Matt/Development/bgfx-windows-x64` with the folder you extracted bgfx to._
 
 ## Linux
 
@@ -62,7 +62,7 @@ Ensure you have dependencies first
 ```bash
 sudo apt install cmake
 cd openblack
-cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux
+cmake -S . -B build -DOPENBLACK_USE_VCPKG=true -DVCPKG_TARGET_TRIPLET=x64-linux
 cmake --build build -j 5
 ```
 
