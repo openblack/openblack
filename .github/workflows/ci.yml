@@ -1,0 +1,44 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [win32, x64]
+    env:
+      CONFIGURATION: Release
+      PLATFORM: ${{ matrix.platform }}
+      buildDir: '${{ github.workspace }}/build'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Get latest CMake and ninja
+        uses: lukka/get-cmake@latest
+      - name: Run vcpkg
+        uses: lukka/run-vcpkg@v6
+        with:
+          # Just install vcpkg for now, do not install any ports in this step yet.
+          setupOnly: true
+          # Location of the vcpkg as submodule of the repository.
+          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          # Since the cache must be invalidated when content of the vcpkg.json file changes, let's
+          # compute its hash and append this to the computed cache's key.
+          appendedCacheKey: ${{ hashFiles( '**/vcpkg.json' ) }}
+          vcpkgTriplet: ${{ matrix.triplet }}
+          # Ensure the vcpkg artifacts are cached, they are generated in the 'CMAKE_BINARY_DIR/vcpkg_installed'.
+          additionalCachedPaths: ${{ env.buildDir }}/vcpkg_installed
+      - name: 'Run CMake with Ninja, install dependencies with vcpkg, build with CMake'
+        uses: lukka/run-cmake@v3
+        with:
+          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
+          cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
+          useVcpkgToolchainFile: true
+          cmakeAppendedArgs: '-GNinja -DOPENBLACK_USE_VCPKG=true -DOPENBLACK_BUILD_BGFX=true'
+          buildDirectory: ${{ env.buildDir }}
+          # Or build multiple configurations out of a CMakeSettings.json file created with Visual Studio.
+          # cmakeListsOrSettingsJson: CMakeSettingsJson
+          # cmakeSettingsJsonPath: '${{ github.workspace }}/cmakesettings.json/CMakeSettings.json'
+          # configurationRegexFilter: '${{ matrix.configuration }}'
