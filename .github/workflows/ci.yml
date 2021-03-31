@@ -1,13 +1,69 @@
 name: CI
 on: [push, pull_request]
 jobs:
+  ubuntu:
+    name: ubuntu-${{ matrix.cc }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - cc: gcc
+            cxx: g++
+          - cc: clang
+            cxx: clang++
+    env:
+      buildDir: '${{ github.workspace }}/build'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Get latest CMake and ninja
+        uses: lukka/get-cmake@latest
+      - name: Set Environment vars
+        run: |
+          echo "CXX=${{ matrix.cxx }}" >> $GITHUB_ENV
+          echo "CC=${{ matrix.cc }}" >> $GITHUB_ENV
+      - name: Install vcpkg, install dependencies with vcpkg
+        uses: lukka/run-vcpkg@v6
+        with:
+          # Install ports now so they're cached incase of any build errors afterwards
+          setupOnly: false
+          # Location of the vcpkg as submodule of the repository.
+          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          # Since the cache must be invalidated when content of the vcpkg.json file changes, let's
+          # compute its hash and append this to the computed cache's key.
+          appendedCacheKey: ${{ hashFiles( '**/vcpkg.json' ) }}
+          vcpkgTriplet: x64-linux
+          # Ensure the vcpkg artifacts are cached, they are generated in the 'CMAKE_BINARY_DIR/vcpkg_installed'.
+          additionalCachedPaths: ${{ env.buildDir }}/vcpkg_installed
+      - name: 'Run CMake with Ninja, build with CMake'
+        uses: lukka/run-cmake@v3
+        with:
+          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
+          cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
+          useVcpkgToolchainFile: true
+          cmakeBuildType: Release
+          cmakeAppendedArgs: '-GNinja -DOPENBLACK_USE_VCPKG=true -DOPENBLACK_BUILD_BGFX=true'
+          buildDirectory: ${{ env.buildDir }}
+
   windows:
     name: Windows
     runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        platform: [Win32, x64]
+        include:
+          - platform: Win32
+            triplet: x86-windows
+            arch: x86
+          - platform: x64
+            arch: x64
+            triplet: x64-windows
+          # - platform: arm64
+          #   arch: arm64
+          #   triplet: arm64-winddws
     env:
       CONFIGURATION: Release
       PLATFORM: ${{ matrix.platform }}
@@ -19,11 +75,11 @@ jobs:
           submodules: true
       - name: Get latest CMake and ninja
         uses: lukka/get-cmake@latest
-      - name: Run vcpkg
+      - name: Install vcpkg, install dependencies with vcpkg
         uses: lukka/run-vcpkg@v6
         with:
-          # Just install vcpkg for now, do not install any ports in this step yet.
-          setupOnly: true
+          # Install ports now so they're cached incase of any build errors afterwards
+          setupOnly: false
           # Location of the vcpkg as submodule of the repository.
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
           # Since the cache must be invalidated when content of the vcpkg.json file changes, let's
@@ -32,7 +88,7 @@ jobs:
           vcpkgTriplet: ${{ matrix.triplet }}
           # Ensure the vcpkg artifacts are cached, they are generated in the 'CMAKE_BINARY_DIR/vcpkg_installed'.
           additionalCachedPaths: ${{ env.buildDir }}/vcpkg_installed
-      - name: Install BGFX
+      - name: Download and install precompiled BGFX
         shell: bash
         run: |
           echo "::group::Download BGFX"
@@ -42,11 +98,11 @@ jobs:
           7z x bgfx-windows.7z -oc:/bgfx
           echo "::endgroup::"
           rm -f bgfx-windows.7z
-      - name: Configure developer command prompt for ${{ matrix.platform }}
+      - name: Configure developer command prompt for ${{ matrix.arch }}
         uses: ilammy/msvc-dev-cmd@v1
         with:
-          arch: ${{ matrix.platform }}
-      - name: 'Run CMake with Ninja, install dependencies with vcpkg, build with CMake'
+          arch: ${{ matrix.arch }}
+      - name: 'Run CMake with Ninja, build with CMake'
         uses: lukka/run-cmake@v3
         with:
           cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
@@ -54,7 +110,3 @@ jobs:
           useVcpkgToolchainFile: true
           cmakeAppendedArgs: '-GNinja -DOPENBLACK_USE_VCPKG=true -Dbgfx_DIR=c:/bgfx/lib/cmake/bgfx'
           buildDirectory: ${{ env.buildDir }}
-          # Or build multiple configurations out of a CMakeSettings.json file created with Visual Studio.
-          # cmakeListsOrSettingsJson: CMakeSettingsJson
-          # cmakeSettingsJsonPath: '${{ github.workspace }}/cmakesettings.json/CMakeSettings.json'
-          # configurationRegexFilter: '${{ matrix.configuration }}'
