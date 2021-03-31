@@ -42,10 +42,10 @@ jobs:
           7z x bgfx-windows.7z -oc:/bgfx
           echo "::endgroup::"
           rm -f bgfx-windows.7z
-      - name: Configure developer command prompt for ${{ matrix.arch }}
+      - name: Configure developer command prompt for ${{ matrix.platform }}
         uses: ilammy/msvc-dev-cmd@v1
         with:
-          arch: ${{ matrix.arch }}
+          arch: ${{ matrix.platform }}
       - name: 'Run CMake with Ninja, install dependencies with vcpkg, build with CMake'
         uses: lukka/run-cmake@v3
         with:
