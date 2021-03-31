@@ -95,7 +95,7 @@ target_link_libraries(
           ScriptLibrary
           SDL2::SDL2
           # SDL2::SDL2-static
-          glm
+          glm::glm
           spdlog::spdlog
           EnTT::EnTT
           bgfx::bgfx
