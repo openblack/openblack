@@ -29,7 +29,7 @@ jobs:
         uses: lukka/run-vcpkg@v6
         with:
           # Install ports now so they're cached incase of any build errors afterwards
-          setupOnly: false
+          setupOnly: true
           # Location of the vcpkg as submodule of the repository.
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
           # Since the cache must be invalidated when content of the vcpkg.json file changes, let's
@@ -79,7 +79,7 @@ jobs:
         uses: lukka/run-vcpkg@v6
         with:
           # Install ports now so they're cached incase of any build errors afterwards
-          setupOnly: false
+          setupOnly: true
           # Location of the vcpkg as submodule of the repository.
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
           # Since the cache must be invalidated when content of the vcpkg.json file changes, let's
