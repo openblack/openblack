@@ -21,6 +21,7 @@ jobs:
           submodules: true
       - name: Get latest CMake and ninja
         uses: lukka/get-cmake@latest
+      - uses: ilammy/setup-nasm@v1
       - name: Set Environment vars
         run: |
           echo "CXX=${{ matrix.cxx }}" >> $GITHUB_ENV
