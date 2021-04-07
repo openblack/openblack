@@ -1,6 +1,6 @@
 # openblack
 
-[![Build Status](https://dev.azure.com/openblack/openblack/_apis/build/status/openblack%20CI?branchName=master)](https://dev.azure.com/openblack/openblack/_build/latest?definitionId=3&branchName=master)
+[![CI](https://github.com/openblack/openblack/actions/workflows/ci.yml/badge.svg)](https://github.com/openblack/openblack/actions/workflows/ci.yml)
 [![GitHub Stars](https://img.shields.io/github/stars/openblack/openblack?logo=github)](https://github.com/openblack/openblack/stargazers)
 [![Discord chat](https://img.shields.io/discord/608729286513262622?logo=discord&logoColor=white)](https://discord.gg/5QTexBU)
 [![License](https://img.shields.io/github/license/openblack/openblack)](LICENSE.md)
