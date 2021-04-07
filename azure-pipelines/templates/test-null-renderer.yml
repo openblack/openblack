@@ -1,9 +1,0 @@
-steps:
-- bash: |
-    cmake --build build --target generate-mock-game-data
-  displayName: 'Generate mock game data'
-- bash: |
-    cp $PWD/bin/${{ parameters.BuildConfiguration }}/fmtd.dll .
-    bin/${{ parameters.BuildConfiguration }}/openblack --game-path ci/mock --num-frames-to-simulate 1000 --backend-type Noop --log-file stdout
-  workingDirectory: build
-  displayName: 'Test Null Renderer'
