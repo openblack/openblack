@@ -70,11 +70,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: |
-            ${{ env.CMAKE_BUILD_DIR }}/_deps/bgfx-build/
-            ${{ env.CMAKE_BUILD_DIR }}/_deps/bgfx-src/
-            ${{ env.CMAKE_BUILD_DIR }}/_deps/bgfx-subbuild/
+            ${{ env.CMAKE_BUILD_DIR }}/externals/bgfx.cmake/
           key: |
-            bgfx-${{ matrix.triplet }}-invalidate
+            bgfx-${{ matrix.triplet }}-invalidate2
 
       - name: Show content of workspace after cache has been restored
         run: find $RUNNER_WORKSPACE
