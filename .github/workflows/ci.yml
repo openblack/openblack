@@ -65,6 +65,17 @@ jobs:
           # Note: given a key, the cache content is immutable. If a cache entry has been created improperly, in order the recreate the right content the key must be changed as well, and it must be brand new (i.e. not existing already).
           key: |
             ${{ hashFiles( 'vcpkg_manifest/vcpkg.json' ) }}-${{ hashFiles( '.git/modules/vcpkg/HEAD' )}}-${{ matrix.triplet }}-invalidate
+      # Restore bgfx artifacts from the GitHub cache service.
+      - name: Restore bgfx.cmake artifacts
+        uses: actions/cache@v2
+        with:
+          path: |
+            ${{ env.CMAKE_BUILD_DIR }}/_deps/bgfx/bgfx-build/
+            ${{ env.CMAKE_BUILD_DIR }}/_deps/bgfx/bgfx-src/
+            ${{ env.CMAKE_BUILD_DIR }}/_deps/bgfx/bgfx-subbuild/
+          key: |
+            bgfx-${{ matrix.triplet }}
+
       - name: Show content of workspace after cache has been restored
         run: find $RUNNER_WORKSPACE
         shell: bash
@@ -75,7 +86,7 @@ jobs:
       # Run CMake to generate Ninja project files, using the vcpkg's toolchain file to resolve and install the dependencies as specified in vcpkg.json.
       - name: Install dependencies and generate project files
         run: |
-          cmake -B "${{ env.CMAKE_BUILD_DIR }}" -GNinja -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+          cmake -B "${{ env.CMAKE_BUILD_DIR }}" -GNinja -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" -DOPENBLACK_BUILD_BGFX=true
 
       # Build the whole project with Ninja (which is spawn by CMake).
       - name: Build
