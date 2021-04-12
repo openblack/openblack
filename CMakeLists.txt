@@ -73,30 +73,10 @@ else()
   endif()
 endif()
 
-option(OPENBLACK_BUILD_BGFX
-"Build bgfx alongside project (only use for developing bgfx)" OFF)
+option(OPENBLACK_USE_BUNDLED_BGFX
+  "Build and use the bundled bgfx.cmake submodule" ON)
 
-if(NOT OPENBLACK_BUILD_BGFX)
-  find_package(bgfx CONFIG)
-  if(NOT bgfx_DIR)
-  if (WIN32)
-    message(STATUS "Precompiled bgfx binaries can be found here: https://github.com/openblack/bgfx.cmake/releases/tag/latest")
-  endif()
-
-    message(FATAL_ERROR " \
-Failed to find bgfx, either install from: https://github.com/openblack/bgfx.cmake \
-Or set the variable OPENBLACK_BUILD_BGFX to build it with the project. \
-")
-  endif()
-else()
-  message(AUTHOR_WARNING "Using OPENBLACK_BUILD_BGFX, if you are not developing use an install target instead.")
-
-  FetchContent_Declare(
-    bgfx
-    GIT_REPOSITORY https://github.com/openblack/bgfx.cmake.git
-    GIT_TAG master
-  )
-
+if (OPENBLACK_USE_BUNDLED_BGFX)
   # don't build anymore targets then what we need
   set(BGFX_BUILD_EXAMPLES
       OFF
@@ -113,12 +93,16 @@ else()
     add_compile_options(/MP)
   endif()
 
-  FetchContent_MakeAvailable(bgfx)
+  add_subdirectory(externals/bgfx.cmake)
+
   set_property(TARGET bx PROPERTY POSITION_INDEPENDENT_CODE ON)
   set_property(TARGET bimg PROPERTY POSITION_INDEPENDENT_CODE ON)
   set_property(TARGET astc-codec PROPERTY POSITION_INDEPENDENT_CODE ON)
   add_library(bgfx::bgfx ALIAS bgfx)
   add_executable(bgfx::shaderc ALIAS shaderc)
+else()
+  # allow user to use an install target
+  find_package(bgfx CONFIG REQUIRED)
 endif()
 
 FetchContent_Declare(
@@ -137,7 +121,8 @@ include(CMakeModules/GetGitRevisionDescription.cmake)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 message(STATUS "Building ${CMAKE_PROJECT_NAME} GIT SHA1: ${GIT_SHA1}")
 
-add_subdirectory(external/imgui)
+# gets bundled dependencies (imgui, bgfx.cmake)
+add_subdirectory(externals)
 
 include(CMakeModules/Shaders.cmake)
 
