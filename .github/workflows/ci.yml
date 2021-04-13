@@ -10,18 +10,18 @@ jobs:
         include:
           - os: windows-latest
             triplet: x64-windows
-          # - os: windows-latest
-          #   triplet: x86-windows
+          - os: windows-latest
+            triplet: x86-windows
           # - os: windows-latest
           #   triplet: arm64-windows
           - os: ubuntu-latest
             triplet: x64-linux
-          #   cc: gcc
-          #   cxx: g++
-          # - os: ubuntu-latest
-          #   triplet: x64-linux
-          #   cc: clang
-          #   cxx: clang++
+            cc: gcc
+            cxx: g++
+          - os: ubuntu-latest
+            triplet: x64-linux
+            cc: clang
+            cxx: clang++
           # - os: macos-latest
           #   triplet: x64-osx
 
