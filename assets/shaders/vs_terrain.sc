@@ -3,8 +3,8 @@ $output v_texcoord0, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_
 
 #include <bgfx_shader.sh>
 
-#if BGFX_SHADER_LANGUAGE_HLSL > 3
-#   define materialIdFix(x) (floatBitsToInt(x))
+#if BGFX_SHADER_LANGUAGE_HLSL > 300
+#   define materialIdFix(x) (asint(x))
 #else
 #   define materialIdFix(x) (ivec3(x))
 #endif

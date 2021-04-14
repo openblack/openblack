@@ -12,8 +12,8 @@ $output v_position, v_texcoord0, v_normal
 void main()
 {
 
-#if BGFX_SHADER_LANGUAGE_HLSL > 3 || BGFX_SHADER_LANGUAGE_PSSL || BGFX_SHADER_LANGUAGE_SPIRV || BGFX_SHADER_LANGUAGE_METAL
-	uint modelIndex = uint(max(0, floatBitsToInt(a_indices.x)));
+#if BGFX_SHADER_LANGUAGE_HLSL > 300 || BGFX_SHADER_LANGUAGE_PSSL || BGFX_SHADER_LANGUAGE_SPIRV || BGFX_SHADER_LANGUAGE_METAL
+	uint modelIndex = uint(max(0, asint(a_indices.x)));
 #else
 	uint modelIndex = uint(max(0, a_indices.x));
 #endif
