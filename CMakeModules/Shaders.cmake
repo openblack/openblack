@@ -14,8 +14,8 @@
 get_target_property(BGFX_INCLUDE_PATH bgfx::bgfx INTERFACE_INCLUDE_DIRECTORIES)
 list (GET BGFX_INCLUDE_PATH 0 BGFX_INCLUDE_PATH_1) # bgfx::bgfx exports include directory twice?
 set(BGFX_SHADER_INCLUDE_PATH ${BGFX_INCLUDE_PATH_1}/bgfx)
-if(OPENBLACK_BUILD_BGFX)
-	list(APPEND BGFX_SHADER_INCLUDE_PATH ${BGFX_INCLUDE_PATH_1}/../src) # for fetchcontent builds
+if(OPENBLACK_USE_BUNDLED_BGFX)
+	list(APPEND BGFX_SHADER_INCLUDE_PATH ${BGFX_INCLUDE_PATH_1}/../src) # non install target builds
 endif()
 
 # shaderc_parse(
