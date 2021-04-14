@@ -48,7 +48,7 @@ RegistryContext& Registry::Context()
 
 const RegistryContext& Registry::Context() const
 {
-	return _registry.ctx<RegistryContext>();
+	return _registry.ctx<const RegistryContext>();
 }
 
 void Registry::PrepareDrawDescs(bool drawBoundingBox)
