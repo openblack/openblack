@@ -57,7 +57,7 @@ public:
 	template <typename... Components>
 	decltype(auto) Has(entt::entity entity) const
 	{
-		return _registry.has<Components...>(entity);
+		return _registry.all_of<Components...>(entity);
 	}
 	template <typename... Components>
 	decltype(auto) Get(entt::entity entity)
