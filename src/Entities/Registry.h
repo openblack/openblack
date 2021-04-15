@@ -55,7 +55,7 @@ public:
 		return _registry.size<Component>();
 	}
 	template <typename... Components>
-	decltype(auto) Has(entt::entity entity) const
+	decltype(auto) AllOf(entt::entity entity) const
 	{
 		return _registry.all_of<Components...>(entity);
 	}
