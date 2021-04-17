@@ -4,26 +4,31 @@ jobs:
   job:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: windows-latest
+          - name: Windows (x64)
+            os: windows-latest
             triplet: x64-windows
-          - os: windows-latest
+          - name: Windows (x86)
+            os: windows-latest
             triplet: x86-windows
-          # - os: windows-latest
-          #   triplet: arm64-windows
-          - os: ubuntu-latest
+          - name: Ubuntu (GCC)
+            os: ubuntu-latest
             triplet: x64-linux
             cc: gcc
             cxx: g++
-          - os: ubuntu-latest
+          - name: Ubuntu (Clang)
+            os: ubuntu-latest
             triplet: x64-linux
             cc: clang
             cxx: clang++
-          # - os: macos-latest
-          #   triplet: x64-osx
+          - name: Mac
+            os: macos-latest
+            triplet: x64-osx
+            experimental: true
 
     env:
       # Indicates the CMake build directory where project files and binaries are being produced.
