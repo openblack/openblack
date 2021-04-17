@@ -81,7 +81,7 @@ jobs:
           path: |
             ${{ env.CMAKE_BUILD_DIR }}/externals/bgfx.cmake/
           key: |
-            bgfx-${{ matrix.triplet }}-invalidate2
+            bgfx-${{ hashFiles( '.git/modules/externals/bgfx.cmake/HEAD' )}}-${{ matrix.triplet }}
 
       - name: Show content of workspace after cache has been restored
         run: find $RUNNER_WORKSPACE
