@@ -12,19 +12,23 @@ jobs:
           - name: Windows (x64)
             os: windows-latest
             triplet: x64-windows
+            experimental: false
           - name: Windows (x86)
             os: windows-latest
             triplet: x86-windows
+            experimental: false
           - name: Ubuntu (GCC)
             os: ubuntu-latest
             triplet: x64-linux
             cc: gcc
             cxx: g++
+            experimental: false
           - name: Ubuntu (Clang)
             os: ubuntu-latest
             triplet: x64-linux
             cc: clang
             cxx: clang++
+            experimental: false
           - name: Mac
             os: macos-latest
             triplet: x64-osx
