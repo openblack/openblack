@@ -102,5 +102,3 @@ jobs:
       - name: Show content of workspace at its completion
         run: find $RUNNER_WORKSPACE
         shell: bash
-
-      - run: echo hi
