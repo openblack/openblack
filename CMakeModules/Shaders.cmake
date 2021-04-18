@@ -212,7 +212,7 @@ function(mark_shaders_for_compilation)
 			"${ARGN}")
 
 	set (PROFILES 120 spirv) # essl pssl
-	if (UNIX)
+	if (UNIX AND NOT APPLE)
 		set (PLATFORM LINUX)
 	elseif (EMSCRIPTEN)
 		set (PLATFORM ASM_JS)
