@@ -22,49 +22,43 @@ You still need to have the original game assets in order to use this, don't ask 
 
 Clone the code using: `git clone --recursive https://github.com/openblack/openblack.git`
 
-The simplest way to obtain all the required dependencies is through [vcpkg](https://github.com/Microsoft/vcpkg).
+The simplest way to obtain all the required dependencies is through [vcpkg](https://github.com/Microsoft/vcpkg) which is included with a [manifest file](https://github.com/microsoft/vcpkg/blob/master/docs/users/manifests.md).
 
-```bash
-PS> .\vcpkg install --triplet x64-windows sdl2 spdlog glm entt cxxopts
-Linux:~/$ ./vcpkg install sdl2 spdlog glm entt cxxopts
-```
-
-If you don't want to use vcpkg; CMake will fallback on installed system dependencies, or manually specified
-package directories.
+If you don't want to use vcpkg; CMake will use system dependencies, or manually specified package directories.
 
 ## Windows
 
 * Install [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/)
 * Install [CMake](https://cmake.org/download/) (3.15+ for Windows)
-* Install [bgfx.cmake](https://github.com/openblack/bgfx.cmake/releases/tag/latest)
 
-You can either:
+The easiest way to get started on Windows is to allow CMake and vcpkg to handle all dependencies
+for you, this is the default on Windows.
 
-1. [Open the `openblack` folder directly in Visual Studio](https://docs.microsoft.com/en-us/cpp/build/cmake-projects-in-visual-studio?view=vs-2019).
-2. Generate project files with the following:
+You can simply [open the `openblack` folder directly in Visual Studio](https://docs.microsoft.com/en-us/cpp/build/cmake-projects-in-visual-studio?view=vs-2019).
+
+Alternatively you can generate your project files using CMake GUI or with CMake directly:
 
 ```bash
 cd openblack
-cmake -S . -B build -Dbgfx_DIR=C:/Users/Matt/Development/bgfx-windows-x64/lib/cmake/bgfx
+cmake -S . -B build
 ```
-
-_Replace `C:/Users/Matt/Development/bgfx-windows-x64` with the folder you extracted bgfx to._
 
 ## Linux
 
-*Note: The instructions are for Ubuntu can be easily applied to other distros. Alternatively, the commands of the Arch Linux PKGBUILD can be used as a reference.*
+Using vcpkg for dependency management you can apply these build instructions to other distros,
+these are just tested on Ubuntu for simplicity though:
 
-### Ubuntu
-
-* Install [bgfx.cmake](https://github.com/openblack/bgfx.cmake)
-
-Ensure you have dependencies first
 ```bash
-sudo apt install cmake
+sudo apt install build-essential cmake # Ubuntu / Debian
 cd openblack
-cmake -S . -B build -DOPENBLACK_USE_VCPKG=true -DVCPKG_TARGET_TRIPLET=x64-linux
+cmake -S . -B build -DOPENBLACK_USE_VCPKG=true -DVCPKG_TARGET_TRIPLET=x64-linux -DOPENBLACK_USE_BUNDLED_BGFX=true
 cmake --build build -j 5
 ```
+
+### System Dependencies
+
+Alternative to vcpkg you can use system dependencies by setting `OPENBLACK_USE_VCPKG=false` (default: false)
+CMake will find them as long as they provide a [proper config file](https://cmake.org/cmake/help/latest/guide/using-dependencies/index.html#libraries-providing-config-file-packages).
 
 ### Arch Linux
 
