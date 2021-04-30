@@ -1,9 +1,6 @@
 [submodule "vcpkg"]
 	path = vcpkg
 	url = https://github.com/Microsoft/vcpkg.git
-[submodule "externals/imgui"]
-	path = externals/imgui
-	url = https://github.com/ocornut/imgui.git
 [submodule "externals/bgfx.cmake"]
 	path = externals/bgfx.cmake
 	url = https://github.com/openblack/bgfx.cmake.git
