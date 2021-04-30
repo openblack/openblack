@@ -121,8 +121,7 @@ include(CMakeModules/GetGitRevisionDescription.cmake)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 message(STATUS "Building ${CMAKE_PROJECT_NAME} GIT SHA1: ${GIT_SHA1}")
 
-# gets bundled dependencies (imgui, bgfx.cmake)
-add_subdirectory(externals)
+add_subdirectory(external/imgui)
 
 include(CMakeModules/Shaders.cmake)
 
