@@ -31,6 +31,7 @@
 #include "Parsers/InfoFile.h"
 #include "Profiler.h"
 #include "Renderer.h"
+#include "System/InputSystem.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
@@ -101,14 +102,19 @@ Game::Game(Arguments&& args)
 
 	_gui = Gui::create(_window.get(), graphics::RenderPass::ImGui, args.scale);
 
+	_inputSystem = std::make_unique<InputSystem>();
+	if (!args.keymapPath.empty())
+		_inputSystem->LoadKeyMap(args.keymapPath);
+
 	_eventManager->AddHandler(std::function([this](const SDL_Event& event) {
 		// If gui captures this input, do not propagate
 		if (!this->_gui->ProcessEventSdl2(event))
 		{
-			this->_camera->ProcessSDLEvent(event);
+			this->_inputSystem->ProcessSDLEvent(event);
 			this->_config.running = this->ProcessEvents(event);
 		}
 	}));
+	
 }
 
 Game::~Game()
@@ -125,6 +131,7 @@ Game::~Game()
 	_renderer.reset();
 	_window.reset();
 	_eventManager.reset();
+	_inputSystem.reset();
 	SDL_Quit(); // todo: move to GameWindow
 }
 
@@ -140,13 +147,6 @@ entities::components::Transform& Game::GetHandTransform()
 
 bool Game::ProcessEvents(const SDL_Event& event)
 {
-	static bool leftMouseButton = false;
-
-	if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_LEFT)
-		leftMouseButton = !leftMouseButton;
-
-	_handGripping = leftMouseButton;
-
 	switch (event.type)
 	{
 	case SDL_QUIT:
@@ -224,7 +224,7 @@ bool Game::Update()
 		auto sdlInput = _profiler->BeginScoped(Profiler::Stage::SdlInput);
 		SDL_Event e;
 		while (SDL_PollEvent(&e))
-		{
+		{	
 			_eventManager->Create<SDL_Event>(e);
 		}
 	}
@@ -245,7 +245,7 @@ bool Game::Update()
 
 	// Update Camera
 	{
-		_camera->Update(deltaTime);
+		_camera->Update(deltaTime, _inputSystem.get());
 	}
 
 	// Update Game Logic in Registry
@@ -286,7 +286,7 @@ bool Game::Update()
 		}
 
 		// Update Hand
-		if (!_handGripping)
+		if (!_inputSystem->IsInputDown(InputType::CameraGrab))
 		{
 			const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
 			auto& handTransform = _entityRegistry->Get<entities::components::Transform>(_handEntity);
@@ -307,6 +307,11 @@ bool Game::Update()
 			{
 				_entityRegistry->PrepareDraw(_config.drawBoundingBoxes, _config.drawFootpaths, _config.drawStreams);
 			}
+		}
+
+		//Clear InputSystem state at the end of the frame
+		{
+			_inputSystem->ClearState();
 		}
 	} // Update Uniforms
 

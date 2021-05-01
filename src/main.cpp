@@ -39,6 +39,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 	options.add_options()
 		("h,help", "Display this help message.")
 		("g,game-path", "Path to the Data/ and Scripts/ directories of the original Black & White game. (Required)", cxxopts::value<std::string>())
+		("k,key-map", "Path to the key map file", cxxopts::value<std::string>()->default_value(""))
 		("W,width", "Window resolution in the x axis.", cxxopts::value<uint16_t>()->default_value("1280"))
 		("H,height", "Window resolution in the y axis.", cxxopts::value<uint16_t>()->default_value("1024"))
 		("s,gui-scale", "Scaling of the GUI", cxxopts::value<float>()->default_value("1.0"))
@@ -154,6 +155,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		{
 			args.gamePath = result["game-path"].as<std::string>();
 		}
+		args.keymapPath = result["key-map"].as<std::string>();
 		args.windowWidth = result["width"].as<uint16_t>();
 		args.windowHeight = result["height"].as<uint16_t>();
 		args.scale = result["gui-scale"].as<float>();
@@ -163,6 +165,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		args.numFramesToSimulate = result["num-frames-to-simulate"].as<uint32_t>();
 		args.logFile = result["log-file"].as<std::string>();
 		args.logLevels = logLevels;
+		
 	}
 	catch (cxxopts::OptionParseException& err)
 	{

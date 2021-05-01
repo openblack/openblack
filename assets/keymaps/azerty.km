@@ -1,0 +1,6 @@
+CameraForward=z
+CameraBackward=s
+CameraLeft=q
+CameraRight=d
+CameraDown=Left Ctrl
+CameraUp=Space

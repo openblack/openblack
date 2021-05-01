@@ -35,6 +35,7 @@ namespace fs = std::experimental::filesystem;
 namespace openblack
 {
 class AnimationPack;
+class InputSystem;
 class Camera;
 class FileSystem;
 class GameWindow;
@@ -81,6 +82,7 @@ static std::array<std::string_view, static_cast<size_t>(LoggingSubsystem::_count
 struct Arguments
 {
 	std::string executablePath;
+	std::string keymapPath;
 	int windowWidth;
 	int windowHeight;
 	bool vsync;
@@ -188,6 +190,7 @@ private:
 	std::unique_ptr<GameWindow> _window;
 	std::unique_ptr<Renderer> _renderer;
 	std::unique_ptr<Gui> _gui;
+	std::unique_ptr<InputSystem> _inputSystem;
 	std::unique_ptr<Camera> _camera;
 	std::unique_ptr<Profiler> _profiler;
 	std::unique_ptr<EventManager> _eventManager;
@@ -220,6 +223,5 @@ private:
 	glm::vec3 _intersection;
 
 	entt::entity _handEntity;
-	bool _handGripping;
 };
 } // namespace openblack

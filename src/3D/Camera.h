@@ -13,6 +13,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <System/InputSystem.h>
 
 #include <chrono>
 #include <memory>
@@ -64,11 +65,7 @@ public:
 	                            glm::vec3& out_worldDirection);
 	bool ProjectWorldToScreen(const glm::vec3 worldPosition, const glm::vec4 viewport, glm::vec3& out_screenPosition) const;
 
-	void Update(std::chrono::microseconds dt);
-	void ProcessSDLEvent(const SDL_Event&);
-
-	void handleKeyboardInput(const SDL_Event&);
-	void handleMouseInput(const SDL_Event&);
+	void Update(std::chrono::microseconds dt, const InputSystem* inputSystem);
 
 	[[nodiscard]] glm::mat4 getRotationMatrix() const;
 
@@ -82,6 +79,10 @@ protected:
 	glm::vec3 _velocity;
 	float _movementSpeed;
 	float _freeLookSensitivity;
+
+private:
+	void HandleKeyboardInput(const InputSystem* inputSystem);
+	void HandleMouseInput(const InputSystem* inputSystem);
 };
 
 class ReflectionCamera: public Camera

@@ -125,57 +125,44 @@ bool Camera::ProjectWorldToScreen(const glm::vec3 worldPosition, const glm::vec4
 	return true;
 }
 
-void Camera::ProcessSDLEvent(const SDL_Event& e)
+void Camera::HandleKeyboardInput(const InputSystem* inputSystem)
 {
-	if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP)
-		handleKeyboardInput(e);
-	else if (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP)
-		handleMouseInput(e);
-}
+	_dv.z = inputSystem->IsInputDown(InputType::CameraForward);
+	_dv.z -= inputSystem->IsInputDown(InputType::CameraBackward);
 
-void Camera::handleKeyboardInput(const SDL_Event& e)
-{
-	// ignore all repeated keys
-	if (e.key.repeat > 0)
-		return;
+	_dv.x = inputSystem->IsInputDown(InputType::CameraRight);
+	_dv.x -= inputSystem->IsInputDown(InputType::CameraLeft);
 
-	if (e.key.keysym.scancode == SDL_SCANCODE_W)
-		_dv.z += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
-	else if (e.key.keysym.scancode == SDL_SCANCODE_S)
-		_dv.z += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
-	else if (e.key.keysym.scancode == SDL_SCANCODE_A)
-		_dv.x += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
-	else if (e.key.keysym.scancode == SDL_SCANCODE_D)
-		_dv.x += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
-	else if (e.key.keysym.scancode == SDL_SCANCODE_LCTRL)
-		_dv.y += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
-	else if (e.key.keysym.scancode == SDL_SCANCODE_SPACE)
-		_dv.y += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
+	_dv.y = inputSystem->IsInputDown(InputType::CameraUp);
+	_dv.y -= inputSystem->IsInputDown(InputType::CameraDown);	
 
 	glm::mat3 rotation = glm::transpose(GetViewMatrix());
 	_velocity = rotation * _dv;
 }
 
-void Camera::handleMouseInput(const SDL_Event& e)
+
+void Camera::HandleMouseInput(const InputSystem* inputSystem)
 {
 	// Holding down the middle mouse button enables free look.
-	if (e.type == SDL_MOUSEMOTION && e.motion.state & SDL_BUTTON(SDL_BUTTON_MIDDLE))
+	if (inputSystem->IsInputDown(InputType::CameraFreeLook))
 	{
-		glm::vec3 rot = GetRotation();
+		glm::vec2 mouseDelta = inputSystem->GetMouseMouvements();
 
-		rot.y -= e.motion.xrel * _freeLookSensitivity * 0.1f;
-		rot.x -= e.motion.yrel * _freeLookSensitivity * 0.1f;
+		glm::vec3 rot = GetRotation();
+		rot.y -= mouseDelta.x * _freeLookSensitivity * 0.1f;
+		rot.x -= mouseDelta.y * _freeLookSensitivity * 0.1f;
 
 		SetRotation(rot);
 		glm::mat3 viewRotation = glm::transpose(GetViewMatrix());
 		_velocity = viewRotation * _dv;
 	}
-	else if (e.type == SDL_MOUSEMOTION && e.motion.state & SDL_BUTTON(SDL_BUTTON_LEFT))
+	else if (inputSystem->IsInputDown(InputType::CameraGrab))
 	{
+		glm::vec2 mouseDelta = inputSystem->GetMouseMouvements();
 		const auto& land = Game::instance()->GetLandIsland();
 		auto momentum = _position.y / 300;
-		auto forward = GetForward() * static_cast<float>(e.motion.yrel * momentum);
-		auto right = GetRight() * -static_cast<float>(e.motion.xrel * momentum);
+		auto forward = GetForward() * static_cast<float>(mouseDelta.y * momentum);
+		auto right = GetRight() * -static_cast<float>(mouseDelta.x * momentum);
 		auto futurePosition = _position + forward + right;
 		auto height = land.GetHeightAt(glm::vec2(futurePosition.x + 5, futurePosition.z + 5)) + 13.0f;
 		futurePosition.y = std::max(height, _position.y);
@@ -183,8 +170,10 @@ void Camera::handleMouseInput(const SDL_Event& e)
 	}
 }
 
-void Camera::Update(std::chrono::microseconds dt)
+void Camera::Update(std::chrono::microseconds dt, const InputSystem* inputSystem)
 {
+	HandleKeyboardInput(inputSystem);
+	HandleMouseInput(inputSystem);
 	_position += _velocity * (_movementSpeed * dt.count());
 }
 
