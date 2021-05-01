@@ -1,4 +1,4 @@
-name: CI
+name: VCPKG CI
 on: [pull_request]
 jobs:
   job:
