@@ -76,6 +76,11 @@ endif()
 option(OPENBLACK_USE_BUNDLED_BGFX
   "Build and use the bundled bgfx.cmake submodule" ON)
 
+if (NOT EXISTS externals/bgfx.cmake/CMakeLists.txt)
+    message(WARNING "externals/bgfx.cmake submodule not checked out. Disabling bundled bgfx.")
+    set(OPENBLACK_USE_BUNDLED_BGFX OFF)
+endif()
+
 if (OPENBLACK_USE_BUNDLED_BGFX)
   # don't build anymore targets then what we need
   set(BGFX_BUILD_EXAMPLES
