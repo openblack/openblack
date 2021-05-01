@@ -1,0 +1,43 @@
+name: System Deps CI
+on: [pull_request]
+
+jobs:
+  arch-packaging-system-deps:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+      options: --privileged
+      volumes:
+        - /sys/fs/cgroup:/sys/fs/cgroup
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies and configure system
+        run: |
+          pacman -Syu --noconfirm --noprogressbar --needed git cmake mesa libx11 fmt spdlog sdl2 glm
+          sed -i "s|MAKEFLAGS=.*|MAKEFLAGS=-j$(nproc)|" /etc/makepkg.conf
+          useradd builduser -p ""
+          printf 'builduser ALL=(ALL) ALL\n' >> /etc/sudoers
+      - name: Build and install entt from the AUR
+        run: |
+          sudo -u builduser git clone https://aur.archlinux.org/entt.git /tmp/entt
+          cd /tmp/entt
+          sudo -u builduser makepkg
+          pacman -U --noconfirm --noprogressbar entt*.pkg.tar.*
+      - name: Build and install cxxopts from the AUR
+        run: |
+          sudo -u builduser git clone https://aur.archlinux.org/cxxopts.git /tmp/cxxopts
+          cd /tmp/cxxopts
+          sudo -u builduser makepkg
+          pacman -U --noconfirm --noprogressbar cxxopts*.pkg.tar.*
+      - name: Build and install bgfx.cmake from the AUR
+        run: |
+          sudo -u builduser git clone https://aur.archlinux.org/bgfx-cmake-git.git /tmp/bgfx-cmake-git
+          cd /tmp/bgfx-cmake-git
+          sudo -u builduser makepkg
+          pacman -U --noconfirm --noprogressbar bgfx-cmake-git*.pkg.tar.*
+      - name: Building and Packaging openblack from the AUR
+        run: |
+          sudo -u builduser git clone https://aur.archlinux.org/openblack-git.git /tmp/openblack-git
+          cd /tmp/openblack-git
+          sed "s,source=.*,source=('git://github.com/$GITHUB_REPOSITORY.git#commit=$GITHUB_SHA')," -i PKGBUILD
+          sudo -u builduser makepkg
