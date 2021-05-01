@@ -73,6 +73,11 @@ else()
   endif()
 endif()
 
+# patch until next glm release
+if (TARGET glm AND NOT TARGET glm::glm)
+  add_library(glm::glm ALIAS glm)
+endif()
+
 option(OPENBLACK_USE_BUNDLED_BGFX
   "Build and use the bundled bgfx.cmake submodule" ON)
 
