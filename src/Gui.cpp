@@ -496,6 +496,7 @@ bool Gui::Loop(Game& game, const Renderer& renderer)
 	LHVMViewer::Draw(game.GetLhvm());
 	ShowLandIslandWindow(game);
 	ShowProfilerWindow(game);
+	ShowTempleInteriorWindow(game);
 	ShowWaterFramebuffer(game);
 
 	ImGui::Render();
@@ -690,6 +691,11 @@ bool Gui::ShowMenu(Game& game)
 			if (ImGui::MenuItem("Open Profiler"))
 			{
 				config.showProfiler = true;
+			}
+
+			if (ImGui::MenuItem("Open Temple Debug"))
+			{
+				config.showTempleDebug = true;
 			}
 
 			if (ImGui::MenuItem("Console"))
@@ -1278,4 +1284,88 @@ void Gui::ShowCameraPositionOverlay(const Game& game)
 		ImGui::Text("Game Turn: %u (%.3f ms)", game.GetTurn(), game.GetDeltaTime().count());
 	}
 	ImGui::End();
+}
+
+void Gui::ShowTempleInteriorWindow(Game& game)
+{
+	auto& config = game.GetConfig();
+
+	if (!config.showTempleDebug)
+	{
+		return;
+	}
+
+	if (ImGui::Begin("Temple Debug", &config.showTempleDebug))
+	{
+		auto& temple = game.GetTempleStructure();
+		auto outsideTemple = !temple.IsInsideTemple();
+
+		if (ImGui::Button(outsideTemple ? "Enter Temple" : "Exit Temple"))
+		{
+			if (outsideTemple)
+			{
+				game.EnterTemple();
+			} else
+			{
+				game.ExitTemple();
+			}
+		}
+
+		ImGui::Separator();
+
+		if (temple.IsInsideTemple())
+		{
+			auto roomCount = temple.GetNumberOfRooms();
+
+			if (temple.ActiveRoom() == TempleStructure::TempleRoom::Main)
+			{
+				for (auto i = 0; i < roomCount; i++)
+				{
+					auto room = TempleStructure::TempleRoom(i);
+					auto label = "Enter " + TempleStructure::GetRoomName(room);
+
+					if (ImGui::Button(label.c_str()))
+					{
+						temple.MoveToRoom(room, false);
+					}
+				}
+			}
+			else
+			{
+				if (ImGui::Button("Go back"))
+				{
+					temple.MoveToRoom(TempleStructure::TempleRoom::Main, false);
+				}
+			}
+		}
+
+		ImGui::Separator();
+		ImGui::Text("Information");
+		auto templePos = temple.GetTemplePosition();
+		ImGui::Text("Temple Position: (%.1f,%.1f, %.1f)", templePos.x, templePos.y, templePos.z);
+		auto activeRoom = temple.ActiveRoom();
+
+		if (activeRoom != TempleStructure::TempleRoom::Unknown)
+		{
+			ImGui::Text("Active Room: ");
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(.0f, 1.0f, .0f, 1.0), "%s", TempleStructure::GetRoomName(temple.ActiveRoom()).c_str());
+		}
+		else
+		{
+			ImGui::TextColored(ImVec4(1.0f, .0f, .0f, 1.0), "No active room.");
+		}
+
+		ImGui::Separator();
+		ImGui::Text("Settings");
+
+		bool freeMove = temple.IsFreeMovementEnabled();
+		bool teleport = temple.IsTeleportEnabled();
+		ImGui::Checkbox("Enable free camera movement", &freeMove);
+		ImGui::Checkbox("Instant room teleport", &teleport);
+		temple.SetFreeMovementEnabled(freeMove);
+		temple.SetTeleportEnabled(teleport);
+
+		ImGui::End();
+	}
 }
