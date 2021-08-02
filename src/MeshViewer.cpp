@@ -9,10 +9,14 @@
 
 #include "MeshViewer.h"
 
+#include "Entities/Registry.h"
+#include "Entities/Components/Transform.h"
+#include "Entities/Components/Mesh.h"
 #include "3D/AnimationPack.h"
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "3D/MeshPack.h"
+#include "3D/Camera.h"
 #include "Game.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/ShaderManager.h"
@@ -21,6 +25,7 @@
 #include "Renderer.h"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/euler_angles.hpp>
 #include <imgui.h>
 #include <imgui_bitfield.h>
 
@@ -133,6 +138,20 @@ void MeshViewer::DrawWindow()
 	ImGui::SliderInt("submesh", &_selectedSubMesh, 0, mesh->GetSubMeshes().size() - 1);
 	ImGui::DragFloat3("position", &_cameraPosition[0], 0.5f);
 	ImGui::Checkbox("View bounding box", &_viewBoundingBox);
+	ImGui::SameLine();
+
+	if (ImGui::Button("Spawn", ImVec2(100, 100)) && _selectedSubMesh >= 0)
+	{
+		auto& registry = Game::instance()->GetEntityRegistry();
+		auto& camera = Game::instance()->GetCamera();
+		auto entity = registry.Create();
+		auto pos = camera.GetPosition();
+		auto rot = glm::eulerAngleY(camera.GetRotation().y);
+		auto scale = glm::vec3(1.0f, 1.0f, 1.0f);
+		registry.Assign<entities::components::Transform>(entity, pos, rot, scale);
+		registry.Assign<entities::components::Mesh>(entity, _selectedMesh, static_cast<int8_t>(0),
+							  static_cast<int8_t>(0));
+	}
 
 	auto const& submesh = mesh->GetSubMeshes()[_selectedSubMesh];
 
