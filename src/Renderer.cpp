@@ -169,6 +169,22 @@ void Renderer::UpdateDebugCrossUniforms(const glm::vec3& position, float scale)
 	_debugCrossPosition = glm::translate(position) * glm::scale(glm::vec3(1, 1, 1) * scale);
 }
 
+const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& skins, const MeshPack& meshPack)
+{
+	if (skinID != 0xFFFFFFFF)
+	{
+		if (skins.find(skinID) != skins.end())
+			return skins.at(skinID).get();
+		else if (skinID < meshPack.GetTextures().size())
+			return &meshPack.GetTexture(skinID);
+		else
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Could not find the texture");
+		}
+	}
+	return nullptr;
+}
+
 void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const MeshPack& meshPack,
                            const L3DMeshSubmitDesc& desc, graphics::RenderPass viewId, const ShaderProgram& program,
                            uint64_t state, uint32_t rgba, bool preserveState) const
@@ -177,18 +193,6 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 	assert(!subMesh.isPhysics());
 
 	auto const& skins = mesh.GetSkins();
-
-	auto getTexture = [&skins, &meshPack](uint32_t skinID) -> const Texture2D* {
-		if (skinID != 0xFFFFFFFF)
-		{
-			if (skins.find(skinID) != skins.end())
-				return skins.at(skinID).get();
-			else
-				return &meshPack.GetTexture(skinID);
-		}
-		return nullptr;
-	};
-
 	bool lastPreserveState = false;
 	const auto& primitives = subMesh.GetPrimitives();
 	for (auto it = primitives.begin(); it != primitives.end(); ++it)
@@ -197,8 +201,8 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 
 		const bool hasNext = std::next(it) != primitives.end();
 
-		const Texture2D* texture = getTexture(prim.skinID);
-		const Texture2D* nextTexture = !hasNext ? nullptr : getTexture(std::next(it)->skinID);
+		const Texture2D* texture = GetTexture(prim.skinID, skins, meshPack);
+		const Texture2D* nextTexture = !hasNext ? nullptr : GetTexture(std::next(it)->skinID, skins, meshPack);
 
 		bool primitivePreserveState = texture == nextTexture && (preserveState || hasNext);
 
