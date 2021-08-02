@@ -69,10 +69,11 @@ void MeshViewer::DrawWindow()
 	_filter.Draw();
 	ImGui::InputScalar("Mesh flag filter", ImGuiDataType_U32, &_meshFlagFilter, nullptr, nullptr, "%08X",
 	                   ImGuiInputTextFlags_CharsHexadecimal);
-	uint32_t hoverIndex;
-	ImGuiBitField::BitField("Mesh flag bit-field filter", &_meshFlagFilter, &hoverIndex);
-	if (ImGui::IsItemHovered() && hoverIndex < L3DMeshFlagNames.size())
-		ImGui::SetTooltip("%s", L3DMeshFlagNames[hoverIndex].data());
+	uint32_t meshHoverIndex;
+	ImGuiBitField::BitField("Mesh flag bit-field filter", &_meshFlagFilter, &meshHoverIndex);
+	ImGuiBitField::BitField("Mesh Actuals", &_meshFlags, &meshHoverIndex);
+	if (ImGui::IsItemHovered() && meshHoverIndex < L3DMeshFlagNames.size())
+		ImGui::SetTooltip("%s", L3DMeshFlagNames[meshHoverIndex].data());
 
 	ImGui::BeginChild("meshes", ImVec2(fontSize * 15.0f, 0));
 	auto meshSize = ImGui::GetItemRectSize();
@@ -107,6 +108,7 @@ void MeshViewer::DrawWindow()
 	ImGui::Columns(2, nullptr, false);
 
 	auto const& mesh = meshes[static_cast<int>(_selectedMesh)];
+	_meshFlags = mesh->GetFlags();
 
 	static char bitfieldTitle[0x400];
 	{

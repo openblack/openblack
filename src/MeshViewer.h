@@ -44,6 +44,7 @@ private:
 	int _selectedFrame;
 	ImGuiTextFilter _filter;
 	uint32_t _meshFlagFilter;
+	uint32_t _meshFlags;
 	bool _matchBones;
 	glm::vec3 _cameraPosition;
 	bool _viewBoundingBox;
