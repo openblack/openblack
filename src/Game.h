@@ -53,6 +53,11 @@ namespace entities::components
 struct Transform;
 }
 
+namespace entities::systems
+{
+class SystemsController;
+}
+
 namespace lhscriptx
 {
 class Script;
@@ -206,6 +211,7 @@ private:
 	std::unique_ptr<lhscriptx::Script> _scriptx;
 	std::unique_ptr<LHVM::LHVM> _lhvm;
 	std::unique_ptr<entities::Registry> _entityRegistry;
+	std::unique_ptr<entities::systems::SystemsController> _systemsController;
 
 	InfoConstants _infoConstants;
 	Config _config;

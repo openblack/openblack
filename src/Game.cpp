@@ -23,6 +23,7 @@
 #include "Entities/Components/Mesh.h"
 #include "Entities/Components/Transform.h"
 #include "Entities/Registry.h"
+#include "Entities/Systems/SystemsController.h"
 #include "GameWindow.h"
 #include "GitSHA1.h"
 #include "Gui.h"
@@ -62,6 +63,7 @@ Game::Game(Arguments&& args)
     : _eventManager(std::make_unique<EventManager>())
     , _fileSystem(std::make_unique<FileSystem>())
     , _entityRegistry(std::make_unique<entities::Registry>())
+    , _systemsController(std::make_unique<entities::systems::SystemsController>())
     , _config()
     , _gameSpeedMultiplier(1.0f)
     , _frameCount(0)
@@ -256,6 +258,8 @@ bool Game::Update()
 			return false; // Quit event
 		}
 	}
+
+	_systemsController->Update(GetDeltaTime());
 
 	// Update Uniforms
 	{
