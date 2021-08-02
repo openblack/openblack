@@ -418,8 +418,9 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 			submitDesc.program = objectShaderInstanced;
 			// clang-format off
 			submitDesc.state = 0u
-				| BGFX_STATE_WRITE_MASK
-				| BGFX_STATE_DEPTH_TEST_LESS
+				| BGFX_STATE_WRITE_RGB
+				| BGFX_STATE_WRITE_Z
+				| BGFX_STATE_DEPTH_TEST_LEQUAL
 				| BGFX_STATE_MSAA
 			;
 			// clang-format on
