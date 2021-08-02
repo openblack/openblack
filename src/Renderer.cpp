@@ -190,7 +190,10 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
                            uint64_t state, uint32_t rgba, bool preserveState) const
 {
 	assert(&subMesh.GetMesh());
-	assert(!subMesh.isPhysics());
+	if (subMesh.isPhysics())
+	{
+		return;
+	}
 
 	auto const& skins = mesh.GetSkins();
 	bool lastPreserveState = false;
