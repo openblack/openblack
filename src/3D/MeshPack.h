@@ -49,7 +49,7 @@ class MeshPack
 public:
 	MeshPack(bool enableUnknownMeshes);
 
-	bool LoadFromFile(const fs::path& path);
+	MeshId LoadFromFile(const fs::path& path);
 
 	using MeshesVec = std::vector<std::unique_ptr<L3DMesh>>;
 	using TexturesVec = std::vector<std::unique_ptr<graphics::Texture2D>>;
