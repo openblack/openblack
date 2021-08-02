@@ -117,9 +117,24 @@ struct L3DHeader
 	uint32_t skinOffsetsOffset;
 	uint32_t extraDataCount;
 	uint32_t extraDataOffset;
+	uint32_t footprintDataCount; // 0x48
 	uint32_t footprintDataOffset;
+	uint32_t uk1;
+	uint32_t uk2;
+	uint32_t uk3;
+	uint32_t uk4;
+	uint32_t uk5;
+	uint32_t uk6;
+	uint32_t uk7;
+	uint32_t uk8;
+	uint32_t uk9;
+	uint32_t uk10;
+	uint32_t uk11;
+	uint32_t uk12;
+	uint32_t uk13;
+	uint32_t uk14;
 };
-static_assert(sizeof(L3DHeader) == 19 * sizeof(uint32_t));
+static_assert(sizeof(L3DHeader) == 34 * sizeof(uint32_t));
 
 struct L3DSubmeshHeader
 {
