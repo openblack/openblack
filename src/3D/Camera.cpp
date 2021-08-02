@@ -198,7 +198,12 @@ void Camera::handleMouseInput(const SDL_Event& e)
 
 void Camera::Update(std::chrono::microseconds dt)
 {
-	_position += _velocity * (_movementSpeed * dt.count());
+	auto accelFactor = 0.001f;
+	auto airResistance = .9f;
+	glm::mat3 rotation = glm::transpose(GetViewMatrix());
+	_movementSpeed += (((_dv * _maxMovementSpeed) - _movementSpeed) * accelFactor);
+	_position += rotation * _movementSpeed * float(dt.count());
+	_movementSpeed *= airResistance;
 }
 
 glm::mat4 ReflectionCamera::GetViewMatrix() const
