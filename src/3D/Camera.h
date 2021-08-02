@@ -30,7 +30,6 @@ public:
 	    , _dv(0.0f, 0.0f, 0.0f)
 	    , _projectionMatrix(1.0f)
 	    , _velocity(0.0f, 0.0f, 0.0f)
-	    , _movementSpeed(0.0000f)
 	    , _maxMovementSpeed(0.005f)
 	    , _freeLookSensitivity(1.0f)
 	{
@@ -48,7 +47,7 @@ public:
 
 	[[nodiscard]] glm::vec3 GetPosition() const { return _position; }
 	[[nodiscard]] glm::vec3 GetRotation() const { return glm::degrees(_rotation); }
-	[[nodiscard]] glm::vec3 GetMovementSpeed() const { return _movementSpeed; }
+	[[nodiscard]] glm::vec3 GetVelocity() const { return _velocity; }
 	[[nodiscard]] float GetMaxSpeed() const { return _maxMovementSpeed; }
 
 	void SetPosition(const glm::vec3& position) { _position = position; }
@@ -83,7 +82,6 @@ protected:
 	glm::mat4 _projectionMatrix;
 
 	glm::vec3 _velocity;
-	glm::vec3 _movementSpeed;
 	float _maxMovementSpeed;
 	float _freeLookSensitivity;
 };

@@ -164,9 +164,6 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 	{
 		_dv.y += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
 	}
-
-	glm::mat3 rotation = glm::transpose(GetViewMatrix());
-	_velocity = rotation * _dv;
 }
 
 void Camera::handleMouseInput(const SDL_Event& e)
@@ -180,8 +177,6 @@ void Camera::handleMouseInput(const SDL_Event& e)
 		rot.x -= e.motion.yrel * _freeLookSensitivity * 0.1f;
 
 		SetRotation(rot);
-		glm::mat3 viewRotation = glm::transpose(GetViewMatrix());
-		_velocity = viewRotation * _dv;
 	}
 	else if (e.type == SDL_MOUSEMOTION && e.motion.state & SDL_BUTTON(SDL_BUTTON_LEFT))
 	{
@@ -201,9 +196,9 @@ void Camera::Update(std::chrono::microseconds dt)
 	auto accelFactor = 0.001f;
 	auto airResistance = .9f;
 	glm::mat3 rotation = glm::transpose(GetViewMatrix());
-	_movementSpeed += (((_dv * _maxMovementSpeed) - _movementSpeed) * accelFactor);
-	_position += rotation * _movementSpeed * float(dt.count());
-	_movementSpeed *= airResistance;
+	_velocity += (((_dv * _maxMovementSpeed) - _velocity) * accelFactor);
+	_position += rotation * _velocity * float(dt.count());
+	_velocity *= airResistance;
 }
 
 glm::mat4 ReflectionCamera::GetViewMatrix() const
