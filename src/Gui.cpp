@@ -636,21 +636,8 @@ bool Gui::ShowMenu(Game& game)
 	{
 		if (ImGui::BeginMenu("Load Island"))
 		{
-			constexpr std::array<std::pair<std::string_view, std::string_view>, 6> RegularIslands = {
-			    // clang-format off
-			    std::pair {"Land 1", "Land1.txt"},
-			    std::pair {"Land 2", "Land2.txt"},
-			    std::pair {"Land 3", "Land3.txt"},
-			    std::pair {"Land 4", "Land4.txt"},
-			    std::pair {"Land 5", "Land5.txt"},
-			    std::pair {"God's Playground", "LandT.txt"},
-			    // clang-format on
-			};
-			constexpr std::array<std::pair<std::string_view, std::string_view>, 3> PlaygroundIslands = {
-			    std::pair {"Two Gods", "TwoGods.txt"},
-			    std::pair {"Three Gods", "ThreeGods.txt"},
-			    std::pair {"Four Gods", "FourGods.txt"},
-			};
+			auto campaignLevels = Game::instance()->GetLevelLocator().GetCampaigns();
+			auto playgroundLevels = Game::instance()->GetLevelLocator().GetPlaygrounds();
 
 			auto menu_item = [&game](const auto& label, const fs::path& path) {
 				if (ImGui::MenuItem(label.data()))
@@ -662,15 +649,15 @@ bool Gui::ShowMenu(Game& game)
 			auto& filesystem = Game::instance()->GetFileSystem();
 
 			ImGui::MenuItem("Story Islands", nullptr, false, false);
-			for (auto& [label, path] : RegularIslands)
+			for (auto& level : campaignLevels)
 			{
-				menu_item(label, filesystem.ScriptsPath() / path);
+				menu_item(level.GetName(), level.GetScriptPath());
 			}
 			ImGui::Separator();
 			ImGui::MenuItem("Playground Islands", nullptr, false, false);
-			for (auto& [label, path] : PlaygroundIslands)
+			for (auto& level : playgroundLevels)
 			{
-				menu_item(label, filesystem.PlaygroundPath() / path);
+				menu_item(level.GetName(), level.GetScriptPath());
 			}
 
 			ImGui::EndMenu();
