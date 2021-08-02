@@ -282,9 +282,15 @@ void PackFile::ExtractTexturesFromBlock()
 		DdsHeader ddsHeader;
 		ddsStream.read(reinterpret_cast<char*>(&ddsHeader), sizeof(DdsHeader));
 
-		// TODO(bwrsandman) the extra sizeof(uint32_t) is unaccounted for
-		if (header.ddsSize - sizeof(ddsHeader) - sizeof(uint32_t) != ddsHeader.pitchOrLinearSize)
+		// Workaround for non-conforming DXT5 textures in Creature Isle
+		if (ddsHeader.pitchOrLinearSize == 0 && ddsHeader.format.fourCC == std::string("DXT5"))
 		{
+			auto blockSize = 16;
+			ddsHeader.pitchOrLinearSize = ((ddsHeader.width + 3) / 4) * ((ddsHeader.height + 3) / 4) * blockSize;
+		}
+		else if (header.ddsSize - sizeof(ddsHeader) - sizeof(uint32_t) != ddsHeader.pitchOrLinearSize)
+		{
+			// TODO(bwrsandman) the extra sizeof(uint32_t) is unaccounted for
 			Fail("Size in header does not match according to DDS signature");
 		}
 
