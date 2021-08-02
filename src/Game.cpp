@@ -23,6 +23,7 @@
 #include "Entities/Components/Mesh.h"
 #include "Entities/Components/Transform.h"
 #include "Entities/Registry.h"
+#include "Entities/Systems/CameraSceneSystem.h"
 #include "Entities/Systems/SystemsController.h"
 #include "GameWindow.h"
 #include "GitSHA1.h"
@@ -367,6 +368,10 @@ bool Game::Run()
 	{
 		return false;
 	}
+
+	// Assign the entity systems
+	_systemsController->Assign<entities::systems::CameraSceneSystem>(true);
+
 	LoadMap(_fileSystem->ScriptsPath() / "Land1.txt");
 
 	// _lhvm = std::make_unique<LHVM::LHVM>();
