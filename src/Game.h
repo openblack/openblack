@@ -29,6 +29,7 @@ namespace fs = std::experimental::filesystem;
 
 #include <LHVM/LHVM.h>
 
+#include "CreatureBody.h"
 #include "TempleStructure.h"
 #include "GameWindow.h"
 #include "InfoConstants.h"
@@ -181,6 +182,7 @@ public:
 	entities::Registry& GetEntityRegistry() { return *_entityRegistry; }
 	[[nodiscard]] entities::Registry& GetEntityRegistry() const { return *_entityRegistry; }
 	[[nodiscard]] MeshLocator& GetMeshLocator() const { return *_meshLocator; }
+	[[nodiscard]] CreatureBody& GetCreatureBody() const { return *_creatureBody; }
 	[[nodiscard]] TempleStructure& GetTempleStructure() const { return *_templeStructure; }
 	[[nodiscard]] EventManager& GetEventManager() const { return *_eventManager; }
 	const InfoConstants& GetInfoConstants() { return _infoConstants; } ///< Access should be only read-only
@@ -212,6 +214,7 @@ private:
 	std::unique_ptr<MeshPack> _meshPack;
 	std::unique_ptr<AnimationPack> _animationPack;
 	std::unique_ptr<LevelLocator> _levelLocator;
+	std::unique_ptr<CreatureBody> _creatureBody;
 	std::unique_ptr<TempleStructure> _templeStructure;
 
 	// std::unique_ptr<L3DMesh> _testModel;

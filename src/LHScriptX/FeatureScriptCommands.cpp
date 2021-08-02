@@ -18,9 +18,11 @@
 
 #include "3D/Camera.h"
 #include "3D/LandIsland.h"
+#include "3D/MeshPack.h"
 #include "AllMeshes.h"
 #include "Entities/Components/Abode.h"
 #include "Entities/Components/AnimatedStatic.h"
+#include "Entities/Components/Creature.h"
 #include "Entities/Components/Field.h"
 #include "Entities/Components/Footpath.h"
 #include "Entities/Components/Forest.h"
@@ -708,8 +710,12 @@ void FeatureScriptCommands::CreateCreature(glm::vec3 position, int32_t, int32_t)
 void FeatureScriptCommands::CreateCreatureFromFile(const std::string& playerName, int32_t creatureType,
                                                    const std::string& creatureMind, glm::vec3 position)
 {
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	                    __func__);
+	auto& registry = Game::instance()->GetEntityRegistry();
+	const auto entity = registry.Create();
+	auto& creature = registry.Assign<Creature>(entity, playerName, CreatureBody::Species(creatureType), creatureMind);
+	auto meshId = Game::instance()->GetCreatureBody().GetMeshId(creature);
+	registry.Assign<entities::components::Mesh>(entity, meshId);
+	registry.Assign<Transform>(entity, position, glm::eulerAngleY(glm::radians(180.0f)), glm::vec3(1.0f));
 }
 
 void FeatureScriptCommands::CreateFlock(int32_t, glm::vec3, glm::vec3, int32_t, int32_t, int32_t)

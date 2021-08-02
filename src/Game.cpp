@@ -65,6 +65,7 @@ Game::Game(Arguments&& args)
     : _eventManager(std::make_unique<EventManager>())
     , _fileSystem(std::make_unique<FileSystem>())
     , _levelLocator(std::make_unique<LevelLocator>())
+    , _creatureBody(std::make_unique<CreatureBody>())
     , _templeStructure(std::make_unique<TempleStructure>())
     , _entityRegistry(std::make_unique<entities::Registry>())
     , _systemsController(std::make_unique<entities::systems::SystemsController>())
@@ -351,6 +352,7 @@ bool Game::Run()
 	}
 
 	_meshLocator = std::make_unique<MeshLocator>();
+	_creatureBody->LoadCreatureMeshes();
 	_templeStructure->LoadOutsideTempleMeshes();
 	_templeStructure->LoadInteriorTempleAssets();
 
