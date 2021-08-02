@@ -53,7 +53,7 @@ public:
 	void SetGamePath(const fs::path& path) { _gamePath = path; }
 	[[nodiscard]] const fs::path& GetGamePath() const { return _gamePath; }
 
-	std::vector<std::byte> ReadAll(const fs::path& path);
+	std::vector<uint8_t> ReadAll(const fs::path& path);
 
 private:
 	fs::path _gamePath;

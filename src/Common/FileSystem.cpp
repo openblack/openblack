@@ -84,12 +84,12 @@ bool FileSystem::Exists(const fs::path& path) const
 	}
 }
 
-std::vector<std::byte> FileSystem::ReadAll(const fs::path& path)
+std::vector<uint8_t> FileSystem::ReadAll(const fs::path& path)
 {
 	auto file = Open(path, FileMode::Read);
 	std::size_t size = file->Size();
 
-	std::vector<std::byte> data(size);
+	std::vector<uint8_t> data(size);
 	file->Read(data.data(), size);
 
 	return data;
