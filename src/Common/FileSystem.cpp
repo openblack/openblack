@@ -71,7 +71,7 @@ std::unique_ptr<FileStream> FileSystem::Open(const fs::path& path, FileMode mode
 	return std::make_unique<FileStream>(FindPath(path), mode);
 }
 
-bool FileSystem::Exists(const fs::path& path)
+bool FileSystem::Exists(const fs::path& path) const
 {
 	try
 	{

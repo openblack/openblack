@@ -48,7 +48,7 @@ public:
 	[[nodiscard]] fs::path FindPath(const fs::path& path) const;
 
 	std::unique_ptr<FileStream> Open(const fs::path& path, FileMode mode);
-	bool Exists(const fs::path& path);
+	bool Exists(const fs::path& path) const;
 
 	void SetGamePath(const fs::path& path) { _gamePath = path; }
 	[[nodiscard]] const fs::path& GetGamePath() const { return _gamePath; }
