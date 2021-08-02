@@ -16,14 +16,11 @@
 #include "Game.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/ShaderManager.h"
-#include "Graphics/Texture2D.h"
 #include "Graphics/VertexBuffer.h"
 #include "Gui.h"
 #include "Renderer.h"
 
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/transform.hpp>
 #include <imgui.h>
 #include <imgui_bitfield.h>
 
