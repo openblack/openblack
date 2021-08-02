@@ -687,10 +687,15 @@ void FeatureScriptCommands::CreateMobileUStatic(glm::vec3 position, int32_t type
 	registry.Assign<Mesh>(entity, mobileStaticMeshLookup[mobile.type], static_cast<int8_t>(0), static_cast<int8_t>(1));
 }
 
-void FeatureScriptCommands::CreateDeadTree(glm::vec3 position, const std::string&, int32_t, float, float, float, float)
+void FeatureScriptCommands::CreateDeadTree(glm::vec3 position, const std::string& affiliation, int32_t treeType, float _, float roll, float rotation, float pitch)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	auto& registry = Game::instance()->GetEntityRegistry();
+	const auto entity = registry.Create();
+
+	auto treeSize = glm::vec3(1);
+	registry.Assign<Transform>(entity, position, glm::eulerAngleXYZ(roll, -rotation, pitch), treeSize);
+	const auto& tree = registry.Assign<Tree>(entity, Tree::Info(treeType));
+	registry.Assign<Mesh>(entity, treeMeshLookup[tree.type], static_cast<int8_t>(0), static_cast<int8_t>(-1));
 }
 
 void FeatureScriptCommands::CreateScaffold(int32_t, glm::vec3 position, int32_t, int32_t, int32_t)
