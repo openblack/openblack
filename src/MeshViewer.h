@@ -12,6 +12,7 @@
 #include <memory>
 #include <optional>
 
+#include "Common/MeshLookup.h"
 #include "AllMeshes.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
@@ -38,7 +39,7 @@ public:
 private:
 	bool _open;
 	static constexpr graphics::RenderPass _viewId = graphics::RenderPass::MeshViewer;
-	MeshPackId _selectedMesh;
+	MeshId _selectedMesh;
 	int _selectedSubMesh;
 	std::optional<uint32_t> _selectedAnimation;
 	int _selectedFrame;
