@@ -942,10 +942,17 @@ void FeatureScriptCommands::MultiplayerDebug(int32_t, int32_t)
 	// __func__);
 }
 
-void FeatureScriptCommands::CreateStreetLantern(glm::vec3 position, int32_t)
+void FeatureScriptCommands::CreateStreetLantern(glm::vec3 position, int32_t type)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	auto& registry = Game::instance()->GetEntityRegistry();
+	const auto entity = registry.Create();
+	registry.Assign<Transform>(entity, position, glm::eulerAngleY(glm::radians(180.0f)), glm::vec3(1.0f));
+
+	// Any value other than 7 creates a bonfire. Weird but ok
+	auto lanternOrBonfire = type == 7 ? MobileStatic::Info::StreetLantern : MobileStatic::Info::Bonfire;
+
+	const auto& mobile = registry.Assign<MobileStatic>(entity, lanternOrBonfire);
+	registry.Assign<Mesh>(entity, mobileStaticMeshLookup[mobile.type], static_cast<int8_t>(0), static_cast<int8_t>(1));
 }
 
 void FeatureScriptCommands::CreateStreetLight(glm::vec3 position)
