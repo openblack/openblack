@@ -1265,8 +1265,10 @@ void Gui::ShowCameraPositionOverlay(const Game& game)
 	{
 		const auto camPos = game.GetCamera().GetPosition();
 		const auto camRot = game.GetCamera().GetRotation();
+		const auto camSpd = game.GetCamera().GetMovementSpeed() * 1000.0f;
 		ImGui::Text("Camera Position: (%.1f,%.1f, %.1f)", camPos.x, camPos.y, camPos.z);
 		ImGui::Text("Camera Rotation: (%.1f,%.1f, %.1f)", camRot.x, camRot.y, camRot.z);
+		ImGui::Text("Camera Speed:  (%.1f,%.1f, %.1f)", camSpd.x, camSpd.y, camSpd.z);
 
 		if (ImGui::IsMousePosValid())
 		{
