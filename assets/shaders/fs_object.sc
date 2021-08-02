@@ -10,7 +10,7 @@ void main()
 	const vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
 	const vec4 lightPos = vec4(-4000.0f, 1300.0f, -1435.0f, 1.0f);
 	const float ambientStrength = 0.5f;
-	const float alphaThreshold = 1.0f / 255.0f;
+	const float alphaThreshold = .4f;
 	// ambient
 	vec3 ambient = ambientStrength * lightColor;
 
