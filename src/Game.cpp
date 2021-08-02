@@ -65,6 +65,7 @@ Game::Game(Arguments&& args)
     : _eventManager(std::make_unique<EventManager>())
     , _fileSystem(std::make_unique<FileSystem>())
     , _levelLocator(std::make_unique<LevelLocator>())
+    , _templeStructure(std::make_unique<TempleStructure>())
     , _entityRegistry(std::make_unique<entities::Registry>())
     , _systemsController(std::make_unique<entities::systems::SystemsController>())
     , _config()
@@ -111,8 +112,16 @@ Game::Game(Arguments&& args)
 		// If gui captures this input, do not propagate
 		if (!this->_gui->ProcessEventSdl2(event))
 		{
-			this->_camera->ProcessSDLEvent(event);
+			if (!this->_templeStructure->IsInsideTemple() || this->_templeStructure->IsFreeMovementEnabled())
+			{
+				this->_camera->ProcessSDLEvent(event);
+			} else
+			{
+				this->_templeStructure->ProcessSDLEvent(event);
+			}
+
 			this->_config.running = this->ProcessEvents(event);
+
 		}
 	}));
 }
@@ -342,6 +351,8 @@ bool Game::Run()
 	}
 
 	_meshLocator = std::make_unique<MeshLocator>();
+	_templeStructure->LoadOutsideTempleMeshes();
+	_templeStructure->LoadInteriorTempleAssets();
 
 	_animationPack = std::make_unique<AnimationPack>();
 	if (!_animationPack->LoadFromFile(_fileSystem->DataPath() / "AllAnims.anm"))
@@ -590,4 +601,13 @@ const fs::path& Game::GetGamePath()
 	}
 
 	return _gamePath;
+}
+
+void Game::EnterTemple()
+{
+	_templeStructure->EnterTemple();
+}
+void Game::ExitTemple()
+{
+	_templeStructure->ExitTemple();
 }

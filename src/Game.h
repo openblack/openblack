@@ -29,6 +29,7 @@ namespace fs = std::experimental::filesystem;
 
 #include <LHVM/LHVM.h>
 
+#include "TempleStructure.h"
 #include "GameWindow.h"
 #include "InfoConstants.h"
 
@@ -115,6 +116,7 @@ public:
 		bool waterDebug {false};
 		bool showProfiler {false};
 		bool showLandIsland {false};
+		bool showTempleDebug {false};
 		bool showVillagerNames {false};
 		bool debugVillagerNames {false};
 
@@ -176,12 +178,15 @@ public:
 	FileSystem& GetFileSystem() { return *_fileSystem; }
 	entities::Registry& GetEntityRegistry() { return *_entityRegistry; }
 	[[nodiscard]] entities::Registry& GetEntityRegistry() const { return *_entityRegistry; }
+	[[nodiscard]] TempleStructure& GetTempleStructure() const { return *_templeStructure; }
 	const InfoConstants& GetInfoConstants() { return _infoConstants; } ///< Access should be only read-only
 	Config& GetConfig() { return _config; }
 	[[nodiscard]] const Config& GetConfig() const { return _config; }
 	[[nodiscard]] uint16_t GetTurn() const { return _turnCount; }
 	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const { return _turnDeltaTime; }
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
+	void EnterTemple();
+	void ExitTemple();
 
 	static Game* instance() { return sInstance; }
 
@@ -202,6 +207,7 @@ private:
 	std::unique_ptr<LandIsland> _landIsland;
 	std::unique_ptr<MeshPack> _meshPack;
 	std::unique_ptr<AnimationPack> _animationPack;
+	std::unique_ptr<TempleStructure> _templeStructure;
 
 	// std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<L3DMesh> _testModel;
