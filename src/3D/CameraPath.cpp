@@ -24,7 +24,7 @@ bool CameraPath::LoadFromFile(const fs::path& path)
 	{
 		auto& node = _points.emplace_back();
 		node.start = _points.size() == 1;
-		node.position = glm::vec3(filePoint.x, filePoint.y, filePoint.z);
+		node.position = filePoint.position;
 		node.rotation = glm::normalize(node.position + glm::vec3(filePoint.pitch, filePoint.yaw, filePoint.roll));
 	}
 

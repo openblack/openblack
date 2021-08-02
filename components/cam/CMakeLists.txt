@@ -8,6 +8,10 @@ target_include_directories(cam
 		$<INSTALL_INTERFACE:include>
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
+target_link_libraries(cam
+  PRIVATE
+          glm::glm
+)
 if(MSVC)
 	target_compile_options(cam PRIVATE /W4 /WX)
 else()

@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <glm/glm.hpp>
+
 #include <array>
 #include <string>
 #include <vector>
@@ -25,9 +27,7 @@ struct CamHeader
 
 struct CamPoint
 {
-	float x;
-	float y;
-	float z;
+	glm::vec3 position;
 	float pitch;
 	float roll;
 	float yaw;
