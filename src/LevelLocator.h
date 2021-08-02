@@ -22,10 +22,12 @@ public:
 	bool LoadLevels(const FileSystem& fs);
 	const std::vector<Level>& GetCampaigns() const { return _campaigns; };
 	const std::vector<Level>& GetPlaygrounds() const { return _playgrounds; };
+	const std::vector<Level>& GetTests() const { return _tests; };
 
 private:
 	std::vector<Level> _campaigns;
 	std::vector<Level> _playgrounds;
+	std::vector<Level> _tests;
 	const std::string _levelExt = ".txt";
 };
 } // namespace openblack

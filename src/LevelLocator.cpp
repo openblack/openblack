@@ -42,5 +42,19 @@ bool LevelLocator::LoadLevels(const FileSystem& fs)
 		_playgrounds.emplace_back(Level(std::move(path)));
 	}
 
+	auto testsPath = fs.GetCustomPath() / fs.ScriptsPath() / "Playgrounds";
+
+	if (!fs.Exists(testsPath))
+	{
+		return false;
+	}
+
+	auto customDataPaths = fs.GetAllFilePaths(testsPath.string(), _levelExt, false);
+
+	for (auto path : customDataPaths)
+	{
+		_tests.emplace_back(Level(std::move(path)));
+	}
+
 	return true;
 }

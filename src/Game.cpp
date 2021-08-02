@@ -513,13 +513,18 @@ void Game::LoadLandscape(const fs::path& path)
 	if (_landIsland)
 		_landIsland.reset();
 
-	auto fixedName = Game::instance()->GetFileSystem().FindPath(FileSystem::FixPath(path));
+	auto landscapePath = _fileSystem->FindPath(FileSystem::FixPath(path));
 
-	if (!_fileSystem->Exists(fixedName))
+	// Check if the landscape file exists in our custom game path
+	if (!_fileSystem->Exists(landscapePath)) {
+		landscapePath = _fileSystem->FindPath("./assets/game" / FileSystem::FixPath(path));
+	}
+
+	if (!_fileSystem->Exists(landscapePath))
 		throw std::runtime_error("Could not find landscape " + path.generic_string());
 
 	_landIsland = std::make_unique<LandIsland>();
-	_landIsland->LoadFromFile(fixedName.u8string());
+	_landIsland->LoadFromFile(landscapePath.u8string());
 }
 
 bool Game::LoadVariables()

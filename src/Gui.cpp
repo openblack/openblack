@@ -636,8 +636,9 @@ bool Gui::ShowMenu(Game& game)
 	{
 		if (ImGui::BeginMenu("Load Island"))
 		{
-			auto campaignLevels = Game::instance()->GetLevelLocator().GetCampaigns();
-			auto playgroundLevels = Game::instance()->GetLevelLocator().GetPlaygrounds();
+			auto& campaignLevels = Game::instance()->GetLevelLocator().GetCampaigns();
+			auto& playgroundLevels = Game::instance()->GetLevelLocator().GetPlaygrounds();
+			auto& testLevels = Game::instance()->GetLevelLocator().GetTests();
 
 			auto menu_item = [&game](const auto& label, const fs::path& path) {
 				if (ImGui::MenuItem(label.data()))
@@ -656,6 +657,12 @@ bool Gui::ShowMenu(Game& game)
 			ImGui::Separator();
 			ImGui::MenuItem("Playground Islands", nullptr, false, false);
 			for (auto& level : playgroundLevels)
+			{
+				menu_item(level.GetName(), level.GetScriptPath());
+			}
+			ImGui::Separator();
+			ImGui::MenuItem("Test Islands", nullptr, false, false);
+			for (auto& level : testLevels)
 			{
 				menu_item(level.GetName(), level.GetScriptPath());
 			}

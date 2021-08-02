@@ -54,6 +54,8 @@ public:
 	void SetGamePath(const fs::path& path) { _gamePath = path; }
 	[[nodiscard]] const fs::path& GetGamePath() const { return _gamePath; }
 
+	static inline fs::path GetCustomPath() { return "./assets/game"; };
+
 	std::vector<std::filesystem::path> GetAllFilePaths(const std::string& path, const std::string& ext, bool recursive) const
 	{
 		auto foundPath = FindPath(path);
