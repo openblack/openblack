@@ -33,6 +33,7 @@ L3DMesh::L3DMesh(const std::string& debugName)
 void L3DMesh::Load(const l3d::L3DFile& l3d)
 {
 	_flags = static_cast<l3d::L3DMeshFlags>(l3d.GetHeader().flags);
+	_nameData = l3d.GetNameData();
 	for (auto& skin : l3d.GetSkins())
 	{
 		_skins[skin.id] = std::make_unique<Texture2D>(_debugName.c_str());

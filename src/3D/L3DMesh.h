@@ -103,9 +103,11 @@ private:
 	std::vector<uint32_t> _bonesParents;
 	std::vector<glm::mat4> _bonesDefaultMatrices;
 	std::optional<glm::vec3> _doorPos;
+	std::string _nameData;
 
 public:
 	[[nodiscard]] const std::string& GetDebugName() const { return _debugName; }
+	[[nodiscard]] const std::string& GetNameData() const { return _nameData; }
 
 	[[nodiscard]] uint32_t GetFlags() const { return static_cast<uint32_t>(_flags); }
 
