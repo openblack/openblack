@@ -473,6 +473,48 @@ void L3DFile::ReadFile(std::istream& stream)
 		}
 	}
 
+	// Get additional data. Strictly in this order
+	// Footprint data
+	uint32_t additionalDataOffset = 0;
+	uint32_t footprintDataSize = 0;
+	if (static_cast<uint32_t>(_header.flags) & static_cast<uint32_t>(L3DMeshFlags::ContainsLandscapeFeature))
+	{
+		// TODO(raffclar): Research footprint data. Currently unknown struct
+		stream.seekg(0x48, stream.beg);
+		stream.read(reinterpret_cast<char*>(&additionalDataOffset), sizeof(additionalDataOffset));
+		stream.seekg(additionalDataOffset + 8, stream.beg);
+		stream.read(reinterpret_cast<char*>(&footprintDataSize), sizeof(footprintDataSize));
+		auto footprintData = std::vector<short>(footprintDataSize / sizeof(short));
+		stream.read(reinterpret_cast<char*>(footprintData.data()), footprintDataSize);
+	}
+
+	// UV2 data
+	uint32_t uv2DataSize = 0;
+	if (static_cast<uint32_t>(_header.flags) & static_cast<uint32_t>(L3DMeshFlags::ContainsUV2))
+	{
+		// TODO(raffclar): Research UV2 data. Currently unknown struct
+		stream.seekg(0x48, stream.beg);
+		stream.read(reinterpret_cast<char*>(&additionalDataOffset), sizeof(additionalDataOffset));
+		stream.seekg(additionalDataOffset + footprintDataSize, stream.beg);
+		stream.read(reinterpret_cast<char*>(&uv2DataSize), sizeof(uv2DataSize));
+		stream.seekg(8, stream.cur);
+		auto uv2Data = std::vector<float>(uv2DataSize / sizeof(float));
+		stream.read(reinterpret_cast<char*>(uv2Data.data()), uv2DataSize);
+	}
+
+	// Name data
+	uint32_t nameDataSize = 0;
+	if (static_cast<uint32_t>(_header.flags) & static_cast<uint32_t>(L3DMeshFlags::ContainsNameData))
+	{
+		stream.seekg(0x48, stream.beg);
+		stream.read(reinterpret_cast<char*>(&additionalDataOffset), sizeof(additionalDataOffset));
+		stream.seekg(additionalDataOffset + footprintDataSize + uv2DataSize, stream.beg);
+		stream.read(reinterpret_cast<char*>(&nameDataSize), sizeof(nameDataSize));
+		stream.seekg(8, stream.cur);
+		_nameData.resize(nameDataSize);
+		stream.read(_nameData.data(), _nameData.size());
+	}
+
 	// Create spans per submesh
 	_primitiveSpans.reserve(_submeshHeaders.size());
 	_boneSpans.reserve(_submeshHeaders.size());
