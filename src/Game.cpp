@@ -14,6 +14,7 @@
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIsland.h"
+#include "3D/MeshLocator.h"
 #include "3D/MeshPack.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
@@ -336,6 +337,8 @@ bool Game::Run()
 	{
 		return false;
 	}
+
+	_meshLocator = std::make_unique<MeshLocator>();
 
 	_animationPack = std::make_unique<AnimationPack>();
 	if (!_animationPack->LoadFromFile(_fileSystem->DataPath() / "AllAnims.anm"))

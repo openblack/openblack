@@ -41,6 +41,7 @@ class GameWindow;
 class Gui;
 class EventManager;
 class MeshPack;
+class MeshLocator;
 class LandIsland;
 class Profiler;
 class Renderer;
@@ -212,6 +213,7 @@ private:
 	std::unique_ptr<LHVM::LHVM> _lhvm;
 	std::unique_ptr<entities::Registry> _entityRegistry;
 	std::unique_ptr<entities::systems::SystemsController> _systemsController;
+	std::unique_ptr<MeshLocator> _meshLocator;
 
 	InfoConstants _infoConstants;
 	Config _config;
