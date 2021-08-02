@@ -517,10 +517,14 @@ void FeatureScriptCommands::CreateCitadel(glm::vec3 position, int32_t, const std
 						  static_cast<int8_t>(0));
 }
 
-void FeatureScriptCommands::CreatePlannedCitadel(int32_t, glm::vec3 position, int32_t, const std::string&, int32_t, int32_t)
+void FeatureScriptCommands::CreatePlannedCitadel(int32_t townId, glm::vec3 position, int32_t _, const std::string& affiliation, int32_t rotation, int32_t size)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	auto& registry = Game::instance()->GetEntityRegistry();
+	const auto entity = registry.Create();
+	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(size));
+	auto& temple = registry.Assign<Temple>(entity, affiliation);
+	registry.Assign<Mesh>(entity, Game::instance()->GetTempleStructure().GetTempleMeshId(), static_cast<int8_t>(0),
+						  static_cast<int8_t>(0));
 }
 
 void FeatureScriptCommands::CreateCreaturePen(glm::vec3 position, int32_t, int32_t, int32_t, int32_t, int32_t)
