@@ -533,11 +533,15 @@ void FeatureScriptCommands::CreateCreaturePen(glm::vec3 position, int32_t, int32
 	// __func__);
 }
 
-void FeatureScriptCommands::CreateWorshipSite(glm::vec3 position, int32_t, const std::string&, const std::string&, int32_t,
-                                              int32_t)
+void FeatureScriptCommands::CreateWorshipSite(glm::vec3 position, int32_t civilisation, const std::string& affiliation, const std::string& civilisationWorshippers, int32_t rotation,
+                                              int32_t size)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	auto& registry = Game::instance()->GetEntityRegistry();
+	const auto entity = registry.Create();
+	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(size));
+	auto& site = registry.Assign<TempleWorshipSite>(entity, affiliation);
+	registry.Assign<Mesh>(entity, Game::instance()->GetTempleStructure().GetTempleWorshipSiteMeshId(), static_cast<int8_t>(0),
+						  static_cast<int8_t>(0));
 }
 
 void FeatureScriptCommands::CreatePlannedWorshipSite(glm::vec3 position, int32_t, const std::string&, const std::string&,
