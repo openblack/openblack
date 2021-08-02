@@ -181,6 +181,7 @@ public:
 	entities::Registry& GetEntityRegistry() { return *_entityRegistry; }
 	[[nodiscard]] entities::Registry& GetEntityRegistry() const { return *_entityRegistry; }
 	[[nodiscard]] TempleStructure& GetTempleStructure() const { return *_templeStructure; }
+	[[nodiscard]] EventManager& GetEventManager() const { return *_eventManager; }
 	const InfoConstants& GetInfoConstants() { return _infoConstants; } ///< Access should be only read-only
 	Config& GetConfig() { return _config; }
 	[[nodiscard]] const Config& GetConfig() const { return _config; }
