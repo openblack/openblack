@@ -68,11 +68,17 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 		matrices.emplace(i, matrix);
 	}
 
-	_subMeshes.resize(l3d.GetSubmeshHeaders().size());
-	for (size_t i = 0; i < _subMeshes.size(); ++i)
+	// Create and then add the sub-meshes if they contain data
+	for (size_t i = 0; i < l3d.GetSubmeshHeaders().size(); ++i)
 	{
-		_subMeshes[i] = std::make_unique<L3DSubMesh>(*this);
-		_subMeshes[i]->Load(l3d, i);
+		auto subMesh = std::make_unique<L3DSubMesh>(*this);
+
+		if (!subMesh->Load(l3d, i))
+		{
+			continue;
+		}
+
+		_subMeshes.emplace_back(std::move(subMesh));
 	}
 	// TODO(bwrsandman): store vertex and index buffers at mesh level
 	bgfx::frame();
