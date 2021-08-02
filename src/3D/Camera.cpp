@@ -8,8 +8,9 @@
  *****************************************************************************/
 
 #include "Camera.h"
-#include <3D/LandIsland.h>
-#include <Game.h>
+#include "Game.h"
+#include "3D/LandIsland.h"
+#include "Entities/Registry.h"
 
 #include <glm/gtx/euler_angles.hpp>
 
