@@ -120,6 +120,8 @@ void MeshPack::loadTextures(const std::map<std::string, pack::G3DTexture>& textu
 			internalFormat = graphics::Format::BlockCompression1;
 		else if (g3dTexture.ddsHeader.format.fourCC == std::string("DXT3"))
 			internalFormat = graphics::Format::BlockCompression2;
+		else if (g3dTexture.ddsHeader.format.fourCC == std::string("DXT5"))
+			internalFormat = graphics::Format::BlockCompression3;
 		else
 			throw std::runtime_error("Unsupported compressed texture format");
 
