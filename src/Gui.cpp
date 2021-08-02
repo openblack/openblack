@@ -9,7 +9,6 @@
 
 #include "Gui.h"
 
-#include <bgfx/bgfx.h>
 #include <bgfx/embedded_shader.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -32,13 +31,10 @@
 #include "3D/MeshPack.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
-#include "Common/FileSystem.h"
 #include "Console.h"
 #include "Entities/Components/Transform.h"
-#include "Entities/Components/Tree.h"
 #include "Entities/Registry.h"
 #include "Game.h"
-#include "GameWindow.h"
 #include "Graphics/Shaders/imgui/fs_imgui_image.bin.h"
 #include "Graphics/Shaders/imgui/fs_ocornut_imgui.bin.h"
 #include "Graphics/Shaders/imgui/vs_imgui_image.bin.h"
