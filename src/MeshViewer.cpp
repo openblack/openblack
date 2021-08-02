@@ -155,6 +155,16 @@ void MeshViewer::DrawWindow()
 							  static_cast<int8_t>(0));
 	}
 
+	auto const& subMeshes = mesh->GetSubMeshes();
+
+	if (_selectedSubMesh >= subMeshes.size())
+	{
+		_selectedSubMesh = subMeshes.size() - 1;
+		SPDLOG_LOGGER_WARN(spdlog::get("game"), "Selected submesh ({}) is out of bounds for the given mesh ({})",
+						   _selectedSubMesh,
+						   mesh->GetDebugName());
+	}
+
 	auto const& submesh = mesh->GetSubMeshes()[_selectedSubMesh];
 
 	auto flags = submesh->GetFlags();
