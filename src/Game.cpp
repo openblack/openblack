@@ -332,7 +332,8 @@ bool Game::Run()
 	_camera->SetPosition(glm::vec3(1441.56f, 24.764f, 2081.76f));
 	_camera->SetRotation(glm::vec3(0.0f, -45.0f, 0.0f));
 
-	_meshPack = std::make_unique<MeshPack>();
+	auto enableUnknownMeshes = false;
+	_meshPack = std::make_unique<MeshPack>(enableUnknownMeshes);
 	if (!_meshPack->LoadFromFile(_fileSystem->DataPath() / "AllMeshes.g3d"))
 	{
 		return false;
