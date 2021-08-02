@@ -34,11 +34,31 @@ public:
 
 	void PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawStreams);
 	decltype(auto) Create() { return _registry.create(); }
+	template<typename It>
+	void Create(It first, It last) { _registry.create(first, last); }
+	decltype(auto) Destroy(entt::entity entity) { return _registry.destroy(entity); }
+	template <typename Component>
+	decltype(auto) Remove(entt::entity entity) { return _registry.remove<Component>(entity); }
+	template <typename Component>
+	decltype(auto) DestroyAll()
+	{
+		auto entities = _registry.view<Component>();
+		return _registry.destroy(entities.begin(), entities.end());
+	}
+	template <typename It>
+	decltype(auto) DestroyAll(It first, It last)
+	{
+		return _registry.destroy(first, last);
+	}
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args)
 	{
 		SetDirty();
 		return _registry.emplace<Component>(entity, std::forward<Args>(args)...);
+	}
+	decltype(auto) Valid(entt::entity entity)
+	{
+		return _registry.valid(entity);
 	}
 	void SetDirty();
 	RegistryContext& Context();
@@ -98,6 +118,21 @@ public:
 	decltype(auto) Size() const
 	{
 		return _registry.view<Components...>().size();
+	}
+	template <typename Component>
+	decltype(auto) OnConstruct()
+	{
+		return _registry.on_construct<Component>();
+	}
+	template <typename Component>
+	decltype(auto) OnUpdate()
+	{
+		return _registry.on_update<Component>();
+	}
+	template <typename Component>
+	decltype(auto) OnDestroy()
+	{
+		return _registry.on_destroy<Component>();
 	}
 
 private:
