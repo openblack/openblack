@@ -405,7 +405,7 @@ bool Game::Update()
 	return _config.numFramesToSimulate == 0 || _frameCount < _config.numFramesToSimulate;
 }
 
-bool Game::Run()
+bool Game::Initialize()
 {
 	Locator::resources::set<resources::Resources>();
 	auto& resources = Locator::resources::ref();
@@ -469,6 +469,10 @@ bool Game::Run()
 
 	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
+	if (!LoadVariables())
+	{
+		return false;
+	}
 
 	for (const auto& f : std::filesystem::directory_iterator {_fileSystem->FindPath(_fileSystem->TexturePath())})
 	{
@@ -487,10 +491,11 @@ bool Game::Run()
 	}
 	CameraBookmarkSystem::instance().Initialize();
 
-	if (!LoadVariables())
-	{
-		return false;
-	}
+	return true;
+}
+
+bool Game::Run()
+{
 	LoadMap(_fileSystem->ScriptsPath() / "Land1.txt");
 	_dynamicsSystem->RegisterRigidBodies();
 

@@ -155,6 +155,7 @@ public:
 	bool ProcessEvents(const SDL_Event& event);
 	bool GameLogicLoop();
 	bool Update();
+	bool Initialize();
 	bool Run();
 
 	void LoadMap(const std::filesystem::path& path);
