@@ -3,6 +3,10 @@
 # bgfx.cmake
 # add_subdirectory(bgfx.cmake)
 
+if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/imgui/imgui.h)
+	message(FATAL_ERROR "imgui submodule not checked out. Run:\n    git submodule update --init externals/imgui")
+endif()
+
 add_library(imgui STATIC
     # config (we can probably just use defines for this)
 	imgui_user/imconfig.h
