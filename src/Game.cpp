@@ -43,6 +43,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#include <LHVM/LHVM.h>
 #include <Serializer/FotFile.h>
 #include <cstdint>
 #include <string>

@@ -26,8 +26,6 @@ namespace fs = std::experimental::filesystem;
 #include <glm/glm.hpp>
 #include <spdlog/common.h>
 
-#include <LHVM/LHVM.h>
-
 #include "GameWindow.h"
 #include "InfoConstants.h"
 
@@ -52,6 +50,11 @@ class Water;
 namespace gui
 {
 class Gui;
+}
+
+namespace LHVM
+{
+class LHVM;
 }
 
 namespace ecs
