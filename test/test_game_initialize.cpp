@@ -11,6 +11,21 @@
 
 #include <Game.h>
 
+TEST(GameInitialize, initialize_only)
+{
+	static const auto mock_game_path = std::filesystem::path(TEST_BINARY_DIR) / "mock";
+	auto args = openblack::Arguments {
+	    .rendererType = bgfx::RendererType::Enum::Noop,
+	    .gamePath = mock_game_path.string(),
+	    .numFramesToSimulate = 0,
+	    .logFile = "stdout",
+	};
+	std::fill_n(args.logLevels.begin(), args.logLevels.size(), spdlog::level::debug);
+	auto game = std::make_unique<openblack::Game>(std::move(args));
+	ASSERT_TRUE(game->Initialize());
+	game.reset();
+}
+
 TEST(GameInitialize, run_0_frames)
 {
 	static const auto mock_game_path = std::filesystem::path(TEST_BINARY_DIR) / "mock";
@@ -22,6 +37,7 @@ TEST(GameInitialize, run_0_frames)
 	};
 	std::fill_n(args.logLevels.begin(), args.logLevels.size(), spdlog::level::debug);
 	auto game = std::make_unique<openblack::Game>(std::move(args));
+	ASSERT_TRUE(game->Initialize());
 	ASSERT_TRUE(game->Run());
 	game.reset();
 }

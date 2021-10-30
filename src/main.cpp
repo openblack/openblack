@@ -210,6 +210,10 @@ int main(int argc, char* argv[])
 			return return_code;
 		}
 		auto game = std::make_unique<openblack::Game>(std::move(args));
+		if (!game->Initialize())
+		{
+			return EXIT_FAILURE;
+		}
 		if (!game->Run())
 		{
 			return EXIT_FAILURE;
