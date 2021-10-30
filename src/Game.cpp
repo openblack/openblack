@@ -131,6 +131,7 @@ Game::~Game()
 	_window.reset();
 	_eventManager.reset();
 	SDL_Quit(); // todo: move to GameWindow
+	spdlog::shutdown();
 }
 
 entt::entity Game::GetHand() const
