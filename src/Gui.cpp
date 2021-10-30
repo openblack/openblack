@@ -39,13 +39,27 @@
 #include "Entities/Registry.h"
 #include "Game.h"
 #include "GameWindow.h"
-#include "Graphics/Shaders/imgui/fs_imgui_image.bin.h"
-#include "Graphics/Shaders/imgui/fs_ocornut_imgui.bin.h"
-#include "Graphics/Shaders/imgui/vs_imgui_image.bin.h"
-#include "Graphics/Shaders/imgui/vs_ocornut_imgui.bin.h"
 #include "LHVMViewer.h"
 #include "MeshViewer.h"
 #include "Profiler.h"
+
+// Turn off formatting because it adds spaces which break the stringifying
+// clang-format off
+#define IMGUI_SHADER_DIR imgui/
+// clang-format on
+#define SHADER_NAME vs_imgui_image
+#define SHADER_DIR IMGUI_SHADER_DIR
+#include "Graphics/Shaders/generate_includer.h"
+#define SHADER_DIR IMGUI_SHADER_DIR
+#define SHADER_NAME fs_imgui_image
+#include "Graphics/Shaders/generate_includer.h"
+
+#define SHADER_NAME vs_ocornut_imgui
+#define SHADER_DIR IMGUI_SHADER_DIR
+#include "Graphics/Shaders/generate_includer.h"
+#define SHADER_NAME fs_ocornut_imgui
+#define SHADER_DIR IMGUI_SHADER_DIR
+#include "Graphics/Shaders/generate_includer.h"
 
 using namespace openblack;
 
