@@ -9,13 +9,14 @@
 
 #pragma once
 
-#include <SDL_events.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 #include <chrono>
 #include <memory>
+
+typedef union SDL_Event SDL_Event;
 
 namespace openblack
 {

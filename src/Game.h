@@ -21,7 +21,6 @@ namespace fs = std::experimental::filesystem;
 #include <string>
 #include <vector>
 
-#include <SDL.h>
 #include <bgfx/bgfx.h>
 #include <entt/entity/fwd.hpp>
 #include <glm/glm.hpp>
@@ -31,6 +30,8 @@ namespace fs = std::experimental::filesystem;
 
 #include "GameWindow.h"
 #include "InfoConstants.h"
+
+typedef union SDL_Event SDL_Event;
 
 namespace openblack
 {

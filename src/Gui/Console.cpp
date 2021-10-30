@@ -11,6 +11,7 @@
 
 #include <algorithm>
 
+#include <SDL.h>
 #include <imgui.h>
 
 #include "3D/Camera.h"
