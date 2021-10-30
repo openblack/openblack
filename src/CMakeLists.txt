@@ -1,4 +1,5 @@
 file(GLOB_RECURSE OPENBLACK_SOURCES "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
+list(REMOVE_ITEM OPENBLACK_SOURCES main.cpp)
 file(GLOB_RECURSE OPENBLACK_HEADERS "${CMAKE_CURRENT_LIST_DIR}/*.h")
 
 set(OPENBLACK_RC ${CMAKE_SOURCE_DIR}/assets/resource/icon/openblack.rc)
@@ -59,71 +60,73 @@ list(APPEND OPENBLACK_SHADERS ${OPENBLACK_VERTEX_SHADERS})
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_FRAGMENT_SHADERS})
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_VARYING_DEF_FILE})
 
-add_executable(
-  openblack
-  ${OPENBLACK_SOURCES}
-  ${OPENBLACK_HEADERS}
-  ${OPENBLACK_RC}
-  ${OPENBLACK_SHADERS}
-  ${OPENBLACK_VERTEX_SHADERS}
-  ${OPENBLACK_FRAGMENT_SHADERS}
-  ${OPENBLACK_VARYING_DEF_FILE})
-set_target_properties(openblack PROPERTIES LINKER_LANGUAGE CXX)
+add_library(openblack_lib STATIC)
+target_sources(openblack_lib
+  PRIVATE
+      ${OPENBLACK_SOURCES}
+      ${OPENBLACK_HEADERS}
+      ${OPENBLACK_RC}
+      ${OPENBLACK_SHADERS}
+      ${OPENBLACK_VERTEX_SHADERS}
+      ${OPENBLACK_FRAGMENT_SHADERS}
+      ${OPENBLACK_VARYING_DEF_FILE})
+set_target_properties(openblack_lib PROPERTIES LINKER_LANGUAGE CXX)
 
 target_include_directories(
-  openblack PRIVATE ${CMAKE_CURRENT_LIST_DIR}
-                    ${BULLET_INCLUDE_DIR}
-                    ${BULLET_ROOT_DIR}/${BULLET_INCLUDE_DIR}
-                    ${CMAKE_CURRENT_BINARY_DIR}/../include)
-target_link_directories(openblack PRIVATE ${BULLET_ROOT_DIR}/${BULLET_LIBRARY_DIRS})
+  openblack_lib PUBLIC ${CMAKE_CURRENT_LIST_DIR}
+                       ${BULLET_INCLUDE_DIR}
+                       ${BULLET_ROOT_DIR}/${BULLET_INCLUDE_DIR}
+                       ${CMAKE_CURRENT_BINARY_DIR}/../include)
+target_link_directories(openblack_lib PRIVATE ${BULLET_ROOT_DIR}/${BULLET_LIBRARY_DIRS})
 target_link_libraries(
-  openblack
+  openblack_lib
   PRIVATE
-          "$<$<CXX_COMPILER_ID:MSVC>:-SAFESEH:NO>"
-          l3d
-          pack
-          lnd
-          anm
-          morph
-          imgui
-          imgui-flame-graph
-          ScriptLibrary
-          SDL2::SDL2
-          # SDL2::SDL2-static
-          glm::glm
-          spdlog::spdlog
-          EnTT::EnTT
-          bgfx::bgfx
-          cxxopts::cxxopts
-          Bullet3Common
-          BulletDynamics
-          BulletCollision
-          BulletSoftBody
-          LinearMath)
+    "$<$<CXX_COMPILER_ID:MSVC>:-SAFESEH:NO>"
+    l3d
+    pack
+    lnd
+    anm
+    morph
+    imgui
+    imgui-flame-graph
+    ScriptLibrary
+    glm::glm
+    EnTT::EnTT
+    bgfx::bgfx
+    cxxopts::cxxopts
+    Bullet3Common
+    BulletDynamics
+    BulletCollision
+    BulletSoftBody
+    LinearMath
+  PUBLIC
+    SDL2::SDL2
+    spdlog::spdlog
+)
 if(UNIX)
   find_library(WAYLAND wayland-egl)
   if(WAYLAND)
-    target_link_libraries(openblack PRIVATE ${WAYLAND})
+    target_link_libraries(openblack_lib PRIVATE ${WAYLAND})
   endif()
 endif()
 
 if(HAS_FILESYSTEM)
   message(STATUS "Got <filesystem>: add compiler definition HAS_FILESYSTEM")
-  target_compile_definitions(openblack PRIVATE HAS_FILESYSTEM)
+  target_compile_definitions(openblack_lib PUBLIC HAS_FILESYSTEM)
 else()
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     message(
       STATUS
         "No <filesystem>: linking stdc++fs on unknown compiler id: ${CMAKE_CXX_COMPILER_ID}"
     )
-    target_link_libraries(openblack PRIVATE stdc++fs)
+    target_link_libraries(openblack_lib PUBLIC stdc++fs)
   else()
     message(
       STATUS "No <filesystem> on unknown compiler id: ${CMAKE_CXX_COMPILER_ID}")
   endif()
 endif()
 
-target_compile_definitions(openblack
+target_compile_definitions(openblack_lib
   PRIVATE
   "GLM_FORCE_LEFT_HANDED"
   "GLM_FORCE_RADIANS"
@@ -134,7 +137,7 @@ target_compile_definitions(openblack
 )
 
 if(MSVC)
-  target_compile_definitions(openblack
+  target_compile_definitions(openblack_lib
     PRIVATE
     # Suppress WinMain(), provided by SDL
     SDL_MAIN_HANDLED
@@ -146,7 +149,7 @@ if(MSVC)
     _CRT_SECURE_NO_WARNINGS
     )
 
-  target_compile_options(openblack PRIVATE
+  target_compile_options(openblack_lib PRIVATE
     # Level 4 warnings
     /W4
     # Disable nonstandard extension used: nameless struct/union from glm
@@ -158,26 +161,26 @@ if(MSVC)
     )
 
   # Debug builds create a debug console
-  set_target_properties(openblack PROPERTIES LINK_FLAGS_DEBUG
+  set_target_properties(openblack_lib PROPERTIES LINK_FLAGS_DEBUG
                                              "/SUBSYSTEM:CONSOLE")
-  set_target_properties(openblack PROPERTIES LINK_FLAGS_RELWITHDEBINFO
+  set_target_properties(openblack_lib PROPERTIES LINK_FLAGS_RELWITHDEBINFO
                                              "/SUBSYSTEM:CONSOLE")
-  set_target_properties(openblack PROPERTIES COMPILE_DEFINITIONS_DEBUG
+  set_target_properties(openblack_lib PROPERTIES COMPILE_DEFINITIONS_DEBUG
                                              "_CONSOLE")
 
   # Release builds also have a console, for now..
-  set_target_properties(openblack PROPERTIES LINK_FLAGS_RELEASE
+  set_target_properties(openblack_lib PROPERTIES LINK_FLAGS_RELEASE
                                              "/SUBSYSTEM:CONSOLE")
-  set_target_properties(openblack PROPERTIES COMPILE_DEFINITIONS_RELEASE
+  set_target_properties(openblack_lib PROPERTIES COMPILE_DEFINITIONS_RELEASE
                                              "CONSOLE")
-  set_target_properties(openblack PROPERTIES LINK_FLAGS_MINSIZEREL
+  set_target_properties(openblack_lib PROPERTIES LINK_FLAGS_MINSIZEREL
                                              "/SUBSYSTEM:CONSOLE")
 
   if (OPENBLACK_WARNINGS_AS_ERRORS)
-    target_compile_options(openblack PRIVATE /WX)
+    target_compile_options(openblack_lib PRIVATE /WX)
   endif()
 else()
-  target_compile_options(openblack PRIVATE
+  target_compile_options(openblack_lib PRIVATE
     -Wall
     -Wextra
     -pedantic
@@ -185,7 +188,7 @@ else()
     -Wno-unused-variable
     -Wno-unused-parameter)
   if (OPENBLACK_WARNINGS_AS_ERRORS)
-    target_compile_options(openblack PRIVATE -Werror)
+    target_compile_options(openblack_lib PRIVATE -Werror)
   endif()
 endif()
 
@@ -197,6 +200,9 @@ source_group(TREE ${CMAKE_CURRENT_LIST_DIR} FILES ${OPENBLACK_SOURCES}
 foreach(SHADER ${OPENBLACK_SHADERS})
   source_group("Shaders" FILES "${SHADER}")
 endforeach()
+
+add_executable(openblack main.cpp)
+target_link_libraries(openblack PRIVATE openblack_lib)
 
 # Installation configuration
 install(TARGETS openblack RUNTIME DESTINATION bin)
