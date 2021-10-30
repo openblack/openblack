@@ -22,6 +22,7 @@
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
+#include <SDL.h>
 #include <bx/timer.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/compatibility.hpp>

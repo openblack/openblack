@@ -9,6 +9,7 @@
 
 #include "Game.h"
 
+#include <SDL_messagebox.h>
 #include <cxxopts.hpp>
 #include <iostream>
 #include <map>

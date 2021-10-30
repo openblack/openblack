@@ -8,11 +8,13 @@
  *****************************************************************************/
 
 #include "Camera.h"
+
+#include <SDL_events.h>
+#include <glm/gtx/euler_angles.hpp>
+
 #include "3D/LandIsland.h"
 #include "ECS/Registry.h"
 #include "Game.h"
-
-#include <glm/gtx/euler_angles.hpp>
 
 using namespace openblack;
 
