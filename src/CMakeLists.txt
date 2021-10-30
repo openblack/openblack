@@ -200,7 +200,7 @@ endforeach()
 # Installation configuration
 install(TARGETS openblack RUNTIME DESTINATION bin)
 install(
-  FILES ../external/imgui/LICENSE.txt
+  FILES ../externals/imgui/LICENSE.txt
   DESTINATION "share/licenses/openblack"
   RENAME "IMGUI_LICENSE.txt")
 if(UNIX)
