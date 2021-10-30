@@ -9,10 +9,14 @@
 
 #pragma once
 
-#include "Game.h"
 #include "Lexer.h"
 
 #include <vector>
+
+namespace openblack
+{
+class Game;
+}
 
 namespace openblack::lhscriptx
 {
