@@ -18,6 +18,7 @@
 #include "3D/Camera.h"
 #include "3D/LandIsland.h"
 #include "AllMeshes.h"
+#include "ECS/Archetypes/TownArchetype.h"
 #include "ECS/Archetypes/VillagerArchetype.h"
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/AnimatedStatic.h"
@@ -26,7 +27,6 @@
 #include "ECS/Components/Forest.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Stream.h"
-#include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Registry.h"
@@ -151,6 +151,7 @@ std::unordered_map<std::string, Feature::Info> featureInfoLookup {
     {"Pier", Feature::Info::Pier},
 };
 
+const auto playerLookup = makeLookup<PlayerNames>(PlayerNamesStrs);
 const auto tribeLookup = makeLookup<Tribe>(TribeStrs);
 const auto villagerNumberLookup = makeLookup<VillagerNumber>(VillagerNumberStrs);
 
@@ -331,17 +332,32 @@ void FeatureScriptCommands::CreatePath(int32_t param_1, int32_t param_2, int32_t
 }
 
 void FeatureScriptCommands::CreateTown(int32_t townId, glm::vec3 position, const std::string& playerOwner,
-                                       [[maybe_unused]] int32_t param_4, const std::string& civilisation)
+                                       [[maybe_unused]] int32_t, const std::string& tribeType)
 {
 	spdlog::get("scripting")
-	    ->debug(R"(LHScriptX: Creating town {} for "{}" with civilisation "{}".)", townId, playerOwner, civilisation);
+	    ->debug(R"(LHScriptX: Creating town {} for "{}" with tribe type "{}".)", townId, playerOwner, tribeType);
 
-	auto& registry = Game::instance()->GetEntityRegistry();
-	const auto entity = registry.Create();
+	PlayerNames player;
+	try
+	{
+		player = playerLookup.at(playerOwner);
+	}
+	catch (...)
+	{
+		std::throw_with_nested(std::runtime_error("Could not recognize village owner"));
+	}
 
-	registry.Assign<Town>(entity, townId);
-	auto& registryContext = registry.Context();
-	registryContext.towns.insert({townId, entity});
+	Tribe tribe;
+	try
+	{
+		tribe = tribeLookup.at(tribeType);
+	}
+	catch (...)
+	{
+		std::throw_with_nested(std::runtime_error("Could not recognize village tribe"));
+	}
+
+	TownArchetype::Create(townId, position, player, tribe);
 }
 
 void FeatureScriptCommands::SetTownBelief(int32_t townId, const std::string& playerOwner, float belief)
