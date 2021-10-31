@@ -15,7 +15,7 @@
 #include "Common/MeshLookup.h"
 
 using namespace openblack;
-using openblack::entities::components::Villager;
+using openblack::ecs::components::Villager;
 
 bool Villager::IsImportantRole(Villager::Role role)
 {

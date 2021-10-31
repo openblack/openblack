@@ -9,12 +9,14 @@
 
 #pragma once
 
-namespace openblack::entities::components
+#include <string>
+
+namespace openblack::ecs::components
 {
 
-struct Field
+struct AnimatedStatic
 {
-	int town;
+	std::string type;
 };
 
-} // namespace openblack::entities::components
+} // namespace openblack::ecs::components

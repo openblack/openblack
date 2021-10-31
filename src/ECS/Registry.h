@@ -11,7 +11,7 @@
 
 #include <entt/entt.hpp>
 
-#include "Entities/RegistryContext.h"
+#include "ECS/RegistryContext.h"
 #include "Graphics/RenderPass.h"
 
 namespace openblack
@@ -25,7 +25,7 @@ class DebugLines;
 class ShaderManager;
 } // namespace openblack::graphics
 
-namespace openblack::entities
+namespace openblack::ecs
 {
 class Registry
 {
@@ -107,4 +107,4 @@ private:
 	entt::registry _registry;
 };
 
-} // namespace openblack::entities
+} // namespace openblack::ecs

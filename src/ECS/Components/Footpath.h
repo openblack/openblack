@@ -13,7 +13,7 @@
 
 #include <glm/vec3.hpp>
 
-namespace openblack::entities::components
+namespace openblack::ecs::components
 {
 
 /// A list-like structure of positions a Living can travel on to get from the first node to the last, and vice-versa
@@ -40,4 +40,4 @@ struct FootpathLink
 	std::vector<Footpath::Id> footpaths;
 };
 
-} // namespace openblack::entities::components
+} // namespace openblack::ecs::components

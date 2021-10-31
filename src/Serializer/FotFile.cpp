@@ -1,10 +1,11 @@
 #include "FotFile.h"
-#include <Entities/Components/Footpath.h>
+
 #include <spdlog/spdlog.h>
 
 #include "3D/LandIsland.h"
 #include "Common/FileSystem.h"
-#include "Entities/Registry.h"
+#include "ECS/Components/Footpath.h"
+#include "ECS/Registry.h"
 #include "Game.h"
 #include "GameThingSerializer.h"
 
@@ -25,12 +26,12 @@ void FotFile::Load(const fs::path& path)
 	const auto& island = _game.GetLandIsland();
 
 	// Keep track of footpath entities in order to associate them to the footpath link saves later
-	std::vector<entities::components::Footpath::Id> footpathEntities;
+	std::vector<ecs::components::Footpath::Id> footpathEntities;
 
 	for (const auto& footpath : footpaths)
 	{
 		const auto entity = registry.Create();
-		auto& footpathEntt = registry.Assign<entities::components::Footpath>(entity);
+		auto& footpathEntt = registry.Assign<ecs::components::Footpath>(entity);
 		footpathEntt.nodes.reserve(footpath._nodes.size());
 		for (const auto& node : footpath._nodes)
 		{
@@ -46,12 +47,12 @@ void FotFile::Load(const fs::path& path)
 
 			footpathEntt.nodes.push_back({position});
 		}
-		footpathEntities.push_back(static_cast<entities::components::Footpath::Id>(entity));
+		footpathEntities.push_back(static_cast<ecs::components::Footpath::Id>(entity));
 	}
 
 	for (const auto& save : footpathLinkSaves)
 	{
-		std::vector<entities::components::Footpath::Id> linkFootpathEntities;
+		std::vector<ecs::components::Footpath::Id> linkFootpathEntities;
 		for (const auto& footpath : save._link._footpaths)
 		{
 			// Save links have duplicates to entries in footpaths
@@ -66,6 +67,6 @@ void FotFile::Load(const fs::path& path)
 		    10.0f * save._coords.z / static_cast<float>(0xFFFF),
 		};
 		const auto entity = registry.Create();
-		registry.Assign<entities::components::FootpathLink>(entity, position, std::move(linkFootpathEntities));
+		registry.Assign<ecs::components::FootpathLink>(entity, position, std::move(linkFootpathEntities));
 	}
 }

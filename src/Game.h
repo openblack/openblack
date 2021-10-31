@@ -53,19 +53,18 @@ namespace gui
 class Gui;
 }
 
-namespace entities::components
+namespace ecs
+{
+namespace components
 {
 struct Transform;
 }
+class Registry;
+} // namespace ecs
 
 namespace lhscriptx
 {
 class Script;
-}
-
-namespace entities
-{
-class Registry;
 }
 
 enum class LoggingSubsystem : uint8_t
@@ -166,14 +165,14 @@ public:
 	[[nodiscard]] LandIsland& GetLandIsland() const { return *_landIsland; }
 	[[nodiscard]] L3DMesh& GetTestModel() const { return *_testModel; }
 	[[nodiscard]] L3DMesh& GetHandModel() const { return *_handModel; }
-	const entities::components::Transform& GetHandTransform() const;
-	entities::components::Transform& GetHandTransform();
+	const ecs::components::Transform& GetHandTransform() const;
+	ecs::components::Transform& GetHandTransform();
 	AnimationPack& GetAnimationPack() { return *_animationPack; }
 	MeshPack& GetMeshPack() { return *_meshPack; }
 	[[nodiscard]] const LHVM::LHVM& GetLhvm() { return *_lhvm; }
 	FileSystem& GetFileSystem() { return *_fileSystem; }
-	entities::Registry& GetEntityRegistry() { return *_entityRegistry; }
-	[[nodiscard]] entities::Registry& GetEntityRegistry() const { return *_entityRegistry; }
+	ecs::Registry& GetEntityRegistry() { return *_entityRegistry; }
+	[[nodiscard]] ecs::Registry& GetEntityRegistry() const { return *_entityRegistry; }
 	const InfoConstants& GetInfoConstants() { return _infoConstants; } ///< Access should be only read-only
 	Config& GetConfig() { return _config; }
 	[[nodiscard]] const Config& GetConfig() const { return _config; }
@@ -209,7 +208,7 @@ private:
 	std::unique_ptr<Water> _water;
 	std::unique_ptr<lhscriptx::Script> _scriptx;
 	std::unique_ptr<LHVM::LHVM> _lhvm;
-	std::unique_ptr<entities::Registry> _entityRegistry;
+	std::unique_ptr<ecs::Registry> _entityRegistry;
 
 	InfoConstants _infoConstants;
 	Config _config;

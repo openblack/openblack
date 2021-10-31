@@ -13,7 +13,7 @@
 #include "AllMeshes.h"
 #include "Common/FileSystem.h"
 #include "Common/MemoryStream.h"
-#include "Entities/Components/Hand.h"
+#include "ECS/Components/Hand.h"
 #include "Game.h"
 #include "Graphics/Texture2D.h"
 
@@ -50,7 +50,7 @@ bool MeshPack::LoadFromFile(const fs::path& path)
 const L3DMesh& MeshPack::GetMesh(MeshId id) const
 {
 	// TODO(raffclar): Handle non-mesh pack IDs via a new mechanism
-	if (id == entities::components::Hand::meshId)
+	if (id == ecs::components::Hand::meshId)
 	{
 		return Game::instance()->GetHandModel();
 	}

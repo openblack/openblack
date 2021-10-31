@@ -23,7 +23,7 @@
 #include "Components/Town.h"
 #include "Graphics/DebugLines.h"
 
-namespace openblack::entities
+namespace openblack::ecs
 {
 struct RenderContext
 {
@@ -79,4 +79,4 @@ struct RegistryContext
 	std::unordered_map<components::Stream::Id, entt::entity> streams;
 	std::unordered_map<components::Town::Id, entt::entity> towns;
 };
-} // namespace openblack::entities
+} // namespace openblack::ecs

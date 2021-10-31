@@ -9,19 +9,28 @@
 
 #pragma once
 
-#include <string>
-#include <unordered_map>
+#include "3D/L3DMesh.h"
+#include "Common/MeshLookup.h"
+#include "Graphics/Mesh.h"
+#include "Graphics/Texture2D.h"
 
-namespace openblack::entities::components
+#include <memory>
+
+namespace openblack::ecs::components
 {
 
-struct Town
+struct Hand
 {
-	using Id = int;
+	enum class RenderType
+	{
+		Model,
+		Symbol
+	};
 
-	Id id;
-	std::unordered_map<std::string, float> beliefs;
-	bool uninhabitable = false;
+	static constexpr MeshId meshId = 999;
+
+	void Init();
+
+	RenderType renderType;
 };
-
-} // namespace openblack::entities::components
+} // namespace openblack::ecs::components

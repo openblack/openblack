@@ -9,16 +9,19 @@
 
 #pragma once
 
-#include "Common/MeshLookup.h"
+#include <string>
+#include <unordered_map>
 
-namespace openblack::entities::components
+namespace openblack::ecs::components
 {
 
-struct Mesh
+struct Town
 {
-	MeshId id;
-	int8_t submeshId;
-	int8_t bbSubmeshId;
+	using Id = int;
+
+	Id id;
+	std::unordered_map<std::string, float> beliefs;
+	bool uninhabitable = false;
 };
 
-} // namespace openblack::entities::components
+} // namespace openblack::ecs::components

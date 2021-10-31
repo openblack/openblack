@@ -10,7 +10,7 @@
 #include "MeshLookup.h"
 
 using namespace openblack;
-using namespace openblack::entities::components;
+using namespace openblack::ecs::components;
 
 MeshLookup<Tree::Info> openblack::treeMeshLookup {
     {Tree::Info::Beech, MeshPackId::TreeBeech},       //

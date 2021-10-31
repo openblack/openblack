@@ -16,22 +16,21 @@
 #include "3D/MeshPack.h"
 #include "AllMeshes.h"
 #include "Common/MeshLookup.h"
-#include "Entities/Components/Abode.h"
-#include "Entities/Components/AnimatedStatic.h"
-#include "Entities/Components/Field.h"
-#include "Entities/Components/Forest.h"
-#include "Entities/Components/Mesh.h"
-#include "Entities/Components/Stream.h"
-#include "Entities/Components/Transform.h"
-#include "Entities/Components/Tree.h"
+#include "ECS/Components/Abode.h"
+#include "ECS/Components/AnimatedStatic.h"
+#include "ECS/Components/Field.h"
+#include "ECS/Components/Footpath.h"
+#include "ECS/Components/Forest.h"
+#include "ECS/Components/Hand.h"
+#include "ECS/Components/Mesh.h"
+#include "ECS/Components/Stream.h"
+#include "ECS/Components/Transform.h"
+#include "ECS/Components/Tree.h"
 #include "Game.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/ShaderManager.h"
 
-#include <Entities/Components/Footpath.h>
-#include <Entities/Components/Hand.h>
-
-namespace openblack::entities
+namespace openblack::ecs
 {
 
 using namespace components;
@@ -211,4 +210,4 @@ void Registry::SetDirty()
 	auto& renderCtx = Context().renderContext;
 	renderCtx.dirty = false;
 }
-} // namespace openblack::entities
+} // namespace openblack::ecs

@@ -18,25 +18,25 @@
 #include "3D/Camera.h"
 #include "3D/LandIsland.h"
 #include "AllMeshes.h"
-#include "Entities/Components/Abode.h"
-#include "Entities/Components/AnimatedStatic.h"
-#include "Entities/Components/Field.h"
-#include "Entities/Components/Footpath.h"
-#include "Entities/Components/Forest.h"
-#include "Entities/Components/Mesh.h"
-#include "Entities/Components/Stream.h"
-#include "Entities/Components/Town.h"
-#include "Entities/Components/Transform.h"
-#include "Entities/Components/Tree.h"
-#include "Entities/Components/Villager.h"
-#include "Entities/Registry.h"
+#include "ECS/Components/Abode.h"
+#include "ECS/Components/AnimatedStatic.h"
+#include "ECS/Components/Field.h"
+#include "ECS/Components/Footpath.h"
+#include "ECS/Components/Forest.h"
+#include "ECS/Components/Mesh.h"
+#include "ECS/Components/Stream.h"
+#include "ECS/Components/Town.h"
+#include "ECS/Components/Transform.h"
+#include "ECS/Components/Tree.h"
+#include "ECS/Components/Villager.h"
+#include "ECS/Registry.h"
 #include "Enums.h"
 #include "Game.h"
 #include "ScriptingBindingUtils.h"
 
 using namespace openblack;
 using namespace openblack::lhscriptx;
-using namespace openblack::entities::components;
+using namespace openblack::ecs::components;
 
 // alias parameter types for signature list readability
 const constexpr ParameterType TString = ParameterType::String;
