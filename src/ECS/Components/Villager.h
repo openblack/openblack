@@ -22,77 +22,6 @@ namespace openblack::ecs::components
 
 struct Villager
 {
-	/// Originally VillagerRoles
-	enum class Role : uint8_t
-	{
-		NONE,
-		HOUSEWIFE,
-		FARMER,
-		FISHERMAN,
-		FORESTER,
-		BREEDER,
-		SHEPHERD,
-		MISSIONARY,
-		LEADER, // No idea what a leader is but they are spawned in land 2 and so on
-		TRADER, // Exists on one of the MP land scripts
-		PiedPiper,
-		Shaolin,
-		IdolBuilder,
-		Hermit,
-		Hippy,
-		Priest,
-		Priestess,
-		Marauder,
-		Footballer_1,
-		Footballer_2,
-		Engineer,
-		Shepered,
-		Nomade,
-		AztecLeader,
-		CreatureTrainer,
-		NorseSailor,
-		Breeder,
-		Healer,
-		Sculptor,
-		Crusader,
-		SailorAccordian,
-
-		_COUNT
-	};
-	static constexpr std::array<std::string_view, static_cast<uint8_t>(Role::_COUNT)> RoleStrs = {
-	    "NONE",            //
-	    "HOUSEWIFE",       //
-	    "FARMER",          //
-	    "FISHERMAN",       //
-	    "FORESTER",        //
-	    "BREEDER",         //
-	    "SHEPHERD",        //
-	    "MISSIONARY",      //
-	    "LEADER",          //
-	    "TRADER",          //
-	    "PiedPiper",       //
-	    "Shaolin",         //
-	    "IdolBuilder",     //
-	    "Hermit",          //
-	    "Hippy",           //
-	    "Priest",          //
-	    "Priestess",       //
-	    "Marauder",        //
-	    "Footballer_1",    //
-	    "Footballer_2",    //
-	    "Engineer",        //
-	    "Shepered",        //
-	    "Nomade",          //
-	    "AztecLeader",     //
-	    "CreatureTrainer", //
-	    "NorseSailor",     //
-	    "Breeder",         //
-	    "Healer",          //
-	    "Sculptor",        //
-	    "Crusader",        //
-	    "SailorAccordian"  //
-	};
-
 	/// Originally VillagerTasks
 	enum class Task : uint8_t
 	{
@@ -130,26 +59,26 @@ struct Villager
 	    "Adult", //
 	};
 
-	using Type = std::tuple<Tribe, Villager::LifeStage, Villager::Sex, Villager::Role>;
+	using Type = std::tuple<Tribe, Villager::LifeStage, Villager::Sex, VillagerRoles>;
 
 	struct TypeId
 	{
 		std::size_t operator()(const Villager::Type& type) const
 		{
-			auto villagerTribe = std::get<Tribe>(type);
-			auto villagerSex = std::get<Sex>(type);
-			auto villagerLifeStage = std::get<LifeStage>(type);
-			auto villagerRole = std::get<Role>(type);
-			auto h1 = std::hash<decltype(villagerTribe)>()(villagerTribe);
-			auto h2 = std::hash<decltype(villagerSex)>()(villagerSex);
-			auto h3 = std::hash<decltype(villagerLifeStage)>()(villagerLifeStage);
-
+			const auto villagerTribe = std::get<Tribe>(type);
+			const auto villagerSex = std::get<Sex>(type);
+			const auto villagerLifeStage = std::get<LifeStage>(type);
+			auto villagerRole = std::get<VillagerRoles>(type);
 			if (!Villager::IsImportantRole(villagerRole))
 			{
-				villagerRole = Role::NONE;
+				villagerRole = VillagerRoles::NONE;
 			}
 
-			auto h4 = std::hash<decltype(villagerRole)>()(villagerRole);
+			const auto h1 = std::hash<decltype(villagerTribe)>()(villagerTribe);
+			const auto h2 = std::hash<decltype(villagerSex)>()(villagerSex);
+			const auto h3 = std::hash<decltype(villagerLifeStage)>()(villagerLifeStage);
+			const auto h4 = std::hash<decltype(villagerRole)>()(villagerRole);
+
 			return h1 ^ h2 ^ h3 ^ h4;
 		}
 	};
@@ -160,10 +89,10 @@ struct Villager
 	LifeStage lifeStage;
 	Sex sex;
 	Tribe tribe;
-	Role role;
+	VillagerRoles role;
 	Task task;
 
-	static bool IsImportantRole(Role role);
+	static bool IsImportantRole(VillagerRoles role);
 	Type GetVillagerType() const;
 };
 } // namespace openblack::ecs::components

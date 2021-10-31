@@ -2101,4 +2101,75 @@ enum class GuidanceAlignment
 	Evil = 2,
 };
 
+enum class VillagerRoles : uint8_t
+{
+	NONE,
+	HOUSEWIFE,
+	FARMER,
+	FISHERMAN,
+	FORESTER,
+	BREEDER,
+	SHEPHERD,
+	MISSIONARY,
+	LEADER, // No idea what a leader is but they are spawned in land 2 and so on
+	TRADER, // Exists on one of the MP land scripts
+	PiedPiper,
+	Shaolin,
+	IdolBuilder,
+	Hermit,
+	Hippy,
+	Priest,
+	Priestess,
+	Marauder,
+	Footballer_1,
+	Footballer_2,
+	Engineer,
+	Shepered,
+	Nomade,
+	AztecLeader,
+	CreatureTrainer,
+	NorseSailor,
+	Breeder,
+	Healer,
+	Sculptor,
+	Crusader,
+	SailorAccordian,
+
+	_COUNT
+};
+
+static constexpr std::array<std::string_view, static_cast<uint8_t>(VillagerRoles::_COUNT)> VillagerRoleStrs = {
+    "NONE",            //
+    "HOUSEWIFE",       //
+    "FARMER",          //
+    "FISHERMAN",       //
+    "FORESTER",        //
+    "BREEDER",         //
+    "SHEPHERD",        //
+    "MISSIONARY",      //
+    "LEADER",          //
+    "TRADER",          //
+    "PiedPiper",       //
+    "Shaolin",         //
+    "IdolBuilder",     //
+    "Hermit",          //
+    "Hippy",           //
+    "Priest",          //
+    "Priestess",       //
+    "Marauder",        //
+    "Footballer_1",    //
+    "Footballer_2",    //
+    "Engineer",        //
+    "Shepered",        //
+    "Nomade",          //
+    "AztecLeader",     //
+    "CreatureTrainer", //
+    "NorseSailor",     //
+    "Breeder",         //
+    "Healer",          //
+    "Sculptor",        //
+    "Crusader",        //
+    "SailorAccordian"  //
+};
+
 } // namespace openblack

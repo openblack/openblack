@@ -17,31 +17,31 @@
 using namespace openblack;
 using openblack::ecs::components::Villager;
 
-bool Villager::IsImportantRole(Villager::Role role)
+bool Villager::IsImportantRole(VillagerRoles role)
 {
 	switch (role)
 	{
-	case Role::PiedPiper:
-	case Role::Shaolin:
-	case Role::IdolBuilder:
-	case Role::Hermit:
-	case Role::Hippy:
-	case Role::Priest:
-	case Role::Priestess:
-	case Role::Marauder:
-	case Role::Footballer_1:
-	case Role::Footballer_2:
-	case Role::Engineer:
-	case Role::Shepered:
-	case Role::Nomade:
-	case Role::AztecLeader:
-	case Role::CreatureTrainer:
-	case Role::NorseSailor:
-	case Role::Breeder:
-	case Role::Healer:
-	case Role::Sculptor:
-	case Role::Crusader:
-	case Role::SailorAccordian:
+	case VillagerRoles::PiedPiper:
+	case VillagerRoles::Shaolin:
+	case VillagerRoles::IdolBuilder:
+	case VillagerRoles::Hermit:
+	case VillagerRoles::Hippy:
+	case VillagerRoles::Priest:
+	case VillagerRoles::Priestess:
+	case VillagerRoles::Marauder:
+	case VillagerRoles::Footballer_1:
+	case VillagerRoles::Footballer_2:
+	case VillagerRoles::Engineer:
+	case VillagerRoles::Shepered:
+	case VillagerRoles::Nomade:
+	case VillagerRoles::AztecLeader:
+	case VillagerRoles::CreatureTrainer:
+	case VillagerRoles::NorseSailor:
+	case VillagerRoles::Breeder:
+	case VillagerRoles::Healer:
+	case VillagerRoles::Sculptor:
+	case VillagerRoles::Crusader:
+	case VillagerRoles::SailorAccordian:
 		return true;
 	default:
 		return false;
@@ -54,7 +54,7 @@ Villager::Type Villager::GetVillagerType() const
 
 	if (!Villager::IsImportantRole(role))
 	{
-		importantRole = Role::NONE;
+		importantRole = VillagerRoles::NONE;
 	}
 
 	Villager::Type villagerType = {tribe, lifeStage, sex, importantRole};

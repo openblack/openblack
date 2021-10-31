@@ -1020,7 +1020,7 @@ void Gui::ShowVillagerNames(const Game& game)
 				ImGui::Combo("Life Stage", &entity.lifeStage, Villager::LifeStageStrs);
 				ImGui::Combo("Sex", &entity.sex, Villager::SexStrs);
 				ImGui::Combo("Tribe", &entity.tribe, TribeStrs);
-				ImGui::Combo("Role", &entity.role, Villager::RoleStrs);
+				ImGui::Combo("Role", &entity.role, VillagerRoleStrs);
 				ImGui::Combo("Task", &entity.task, Villager::TaskStrs);
 			};
 		}
