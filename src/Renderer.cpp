@@ -17,6 +17,7 @@
 #include "3D/Sky.h"
 #include "3D/Water.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/RenderingSystem.h"
 #include "Game.h"
 #include "GameWindow.h"
 #include "Graphics/DebugLines.h"
@@ -34,6 +35,7 @@
 
 using namespace openblack;
 using namespace openblack::graphics;
+using namespace openblack::ecs::systems;
 
 namespace openblack
 {
@@ -425,7 +427,7 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 				| BGFX_STATE_MSAA
 			;
 			// clang-format on
-			auto& renderCtx = desc.entities.Context().renderContext;
+			const auto& renderCtx = RenderingSystem::instance().GetContext();
 
 			// Instance meshes
 			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)

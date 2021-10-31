@@ -12,7 +12,6 @@
 #include <entt/entt.hpp>
 
 #include "ECS/RegistryContext.h"
-#include "Graphics/RenderPass.h"
 
 namespace openblack
 {
@@ -32,7 +31,6 @@ class Registry
 public:
 	Registry();
 
-	void PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawStreams);
 	decltype(auto) Create() { return _registry.create(); }
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args)
@@ -101,9 +99,6 @@ public:
 	}
 
 private:
-	void PrepareDrawDescs(bool drawBoundingBox);
-	void PrepareDrawUploadUniforms(bool drawBoundingBox);
-
 	entt::registry _registry;
 };
 
