@@ -18,8 +18,8 @@
 #include <bx/timer.h>
 #include <glm/gtx/compatibility.hpp>
 #include <imgui.h>
-#include <imgui_user.h>
 #include <imgui_internal.h>
+#include <imgui_user.h>
 #include <imgui_widget_flamegraph.h>
 #ifdef _WIN32
 #include <SDL2/SDL_syswm.h>
