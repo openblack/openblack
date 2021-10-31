@@ -33,8 +33,9 @@
 
 #include <3D/Camera.h>
 #include <Common/FileSystem.h>
-#include <Entities/Components/Transform.h>
-#include <Entities/Registry.h>
+#include <ECS/Components/Transform.h>
+#include <ECS/Components/Villager.h>
+#include <ECS/Registry.h>
 #include <Game.h>
 #include <GameWindow.h>
 
@@ -966,7 +967,7 @@ std::optional<glm::uvec4> Gui::RenderVillagerName(const std::vector<glm::vec4>& 
 
 void Gui::ShowVillagerNames(const Game& game)
 {
-	using namespace entities::components;
+	using namespace ecs::components;
 
 	const auto& config = game.GetConfig();
 	if (!config.showVillagerNames)

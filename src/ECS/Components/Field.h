@@ -9,28 +9,12 @@
 
 #pragma once
 
-#include "3D/L3DMesh.h"
-#include "Common/MeshLookup.h"
-#include "Graphics/Mesh.h"
-#include "Graphics/Texture2D.h"
-
-#include <memory>
-
-namespace openblack::entities::components
+namespace openblack::ecs::components
 {
 
-struct Hand
+struct Field
 {
-	enum class RenderType
-	{
-		Model,
-		Symbol
-	};
-
-	static constexpr MeshId meshId = 999;
-
-	void Init();
-
-	RenderType renderType;
+	int town;
 };
-} // namespace openblack::entities::components
+
+} // namespace openblack::ecs::components

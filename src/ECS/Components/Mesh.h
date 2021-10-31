@@ -9,14 +9,16 @@
 
 #pragma once
 
-namespace openblack::entities::components
+#include "Common/MeshLookup.h"
+
+namespace openblack::ecs::components
 {
 
-struct Velocity
+struct Mesh
 {
-	float dX;
-	float dY;
-	float dZ;
+	MeshId id;
+	int8_t submeshId;
+	int8_t bbSubmeshId;
 };
 
-} // namespace openblack::entities::components
+} // namespace openblack::ecs::components

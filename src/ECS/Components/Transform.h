@@ -12,7 +12,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 
-namespace openblack::entities::components
+namespace openblack::ecs::components
 {
 
 struct Transform
@@ -31,4 +31,4 @@ struct Transform
 	}
 };
 
-} // namespace openblack::entities::components
+} // namespace openblack::ecs::components

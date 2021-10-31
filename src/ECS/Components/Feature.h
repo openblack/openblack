@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace openblack::entities::components
+namespace openblack::ecs::components
 {
 
 struct Feature
@@ -119,4 +119,4 @@ struct Feature
 	Info type;
 };
 
-} // namespace openblack::entities::components
+} // namespace openblack::ecs::components

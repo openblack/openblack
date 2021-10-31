@@ -14,8 +14,9 @@
 #include <bgfx/bgfx.h>
 #include <imgui_widget_flamegraph.h>
 
-#include <Entities/Components/Transform.h>
-#include <Entities/Registry.h>
+#include <ECS/Components/Transform.h>
+#include <ECS/Components/Tree.h>
+#include <ECS/Registry.h>
 #include <Game.h>
 #include <Profiler.h>
 
@@ -40,7 +41,7 @@ void openblack::gui::Profiler::Draw(Game& game)
 {
 	auto& config = game.GetConfig();
 
-	using namespace entities::components;
+	using namespace ecs::components;
 
 	const bgfx::Stats* stats = bgfx::getStats();
 	const double toMsCpu = 1000.0 / stats->cpuTimerFreq;

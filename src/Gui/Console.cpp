@@ -13,7 +13,7 @@
 
 #include <imgui.h>
 
-#include "Entities/Components/Transform.h"
+#include "ECS/Components/Transform.h"
 #include "LHScriptX/FeatureScriptCommands.h"
 #include "LHScriptX/Script.h"
 

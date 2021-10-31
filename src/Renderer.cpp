@@ -16,7 +16,7 @@
 #include "3D/MeshPack.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
-#include "Entities/Registry.h"
+#include "ECS/Registry.h"
 #include "Game.h"
 #include "GameWindow.h"
 #include "Graphics/DebugLines.h"

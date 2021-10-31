@@ -17,7 +17,7 @@
 
 #include "Enums.h"
 
-namespace openblack::entities::components
+namespace openblack::ecs::components
 {
 
 struct Villager
@@ -166,4 +166,4 @@ struct Villager
 	static bool IsImportantRole(Role role);
 	Type GetVillagerType() const;
 };
-} // namespace openblack::entities::components
+} // namespace openblack::ecs::components

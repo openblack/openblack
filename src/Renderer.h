@@ -38,7 +38,7 @@ class Profiler;
 class Sky;
 class Water;
 
-namespace entities
+namespace ecs
 {
 class Registry;
 }
@@ -96,7 +96,7 @@ public:
 		bool drawIsland;
 		const LandIsland& island;
 		bool drawEntities;
-		const entities::Registry& entities;
+		const ecs::Registry& entities;
 		bool drawTestModel;
 		const L3DMesh& testModel;
 		const L3DAnim& testAnimation;

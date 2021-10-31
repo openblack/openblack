@@ -19,10 +19,10 @@
 #include "3D/Water.h"
 #include "Common/EventManager.h"
 #include "Common/FileSystem.h"
-#include "Entities/Components/Hand.h"
-#include "Entities/Components/Mesh.h"
-#include "Entities/Components/Transform.h"
-#include "Entities/Registry.h"
+#include "ECS/Components/Hand.h"
+#include "ECS/Components/Mesh.h"
+#include "ECS/Components/Transform.h"
+#include "ECS/Registry.h"
 #include "GameWindow.h"
 #include "GitSHA1.h"
 #include "Graphics/FrameBuffer.h"
@@ -61,7 +61,7 @@ Game* Game::sInstance = nullptr;
 Game::Game(Arguments&& args)
     : _eventManager(std::make_unique<EventManager>())
     , _fileSystem(std::make_unique<FileSystem>())
-    , _entityRegistry(std::make_unique<entities::Registry>())
+    , _entityRegistry(std::make_unique<ecs::Registry>())
     , _config()
     , _gameSpeedMultiplier(1.0f)
     , _frameCount(0)
@@ -128,14 +128,14 @@ Game::~Game()
 	SDL_Quit(); // todo: move to GameWindow
 }
 
-const entities::components::Transform& Game::GetHandTransform() const
+const ecs::components::Transform& Game::GetHandTransform() const
 {
-	return _entityRegistry->Get<entities::components::Transform>(_handEntity);
+	return _entityRegistry->Get<ecs::components::Transform>(_handEntity);
 }
 
-entities::components::Transform& Game::GetHandTransform()
+ecs::components::Transform& Game::GetHandTransform()
 {
-	return _entityRegistry->Get<entities::components::Transform>(_handEntity);
+	return _entityRegistry->Get<ecs::components::Transform>(_handEntity);
 }
 
 bool Game::ProcessEvents(const SDL_Event& event)
@@ -289,7 +289,7 @@ bool Game::Update()
 		if (!_handGripping)
 		{
 			const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
-			auto& handTransform = _entityRegistry->Get<entities::components::Transform>(_handEntity);
+			auto& handTransform = _entityRegistry->Get<ecs::components::Transform>(_handEntity);
 			handTransform.position = _intersection;
 			auto cameraRotation = _camera->GetRotation();
 
@@ -459,11 +459,11 @@ void Game::LoadMap(const fs::path& path)
 
 	// We need a hand for the player
 	_handEntity = _entityRegistry->Create();
-	_entityRegistry->Assign<entities::components::Hand>(_handEntity);
+	_entityRegistry->Assign<ecs::components::Hand>(_handEntity);
 	const auto rotation = glm::mat3(glm::eulerAngleXZ(glm::half_pi<float>(), glm::half_pi<float>()));
-	_entityRegistry->Assign<entities::components::Transform>(_handEntity, glm::vec3(0.0f), rotation, glm::vec3(0.02f));
-	_entityRegistry->Assign<entities::components::Mesh>(_handEntity, entities::components::Hand::meshId, static_cast<int8_t>(0),
-	                                                    static_cast<int8_t>(0));
+	_entityRegistry->Assign<ecs::components::Transform>(_handEntity, glm::vec3(0.0f), rotation, glm::vec3(0.02f));
+	_entityRegistry->Assign<ecs::components::Mesh>(_handEntity, ecs::components::Hand::meshId, static_cast<int8_t>(0),
+	                                               static_cast<int8_t>(0));
 
 	Script script(this);
 	script.Load(source);

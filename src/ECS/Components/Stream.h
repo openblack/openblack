@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-namespace openblack::entities::components
+namespace openblack::ecs::components
 {
 
 struct Stream
@@ -59,4 +59,4 @@ struct Stream
 	std::vector<Node> nodes;
 };
 
-} // namespace openblack::entities::components
+} // namespace openblack::ecs::components

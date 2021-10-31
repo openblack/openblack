@@ -7,15 +7,16 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#include "Hand.h"
+#pragma once
 
-using openblack::entities::components::Hand;
-
-void Hand::Init()
+namespace openblack::ecs::components
 {
-	// Data/CreatureMesh/Hand_Boned_Base2.l3d
-	// Data/CreatureMesh/Hand_Boned_Good2.l3d
-	// Data/CreatureMesh/Hand_Boned_Evil2.l3d
 
-	// load data\\hand.raw into a memory
-}
+struct Velocity
+{
+	float dX;
+	float dY;
+	float dZ;
+};
+
+} // namespace openblack::ecs::components
