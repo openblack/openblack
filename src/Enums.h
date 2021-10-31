@@ -2185,4 +2185,29 @@ static constexpr std::array<std::string_view, static_cast<uint8_t>(VillagerRoles
     "SailorAccordian"  //
 };
 
+enum class PlayerNames : uint8_t
+{
+	PLAYER_ONE = 0,
+	PLAYER_TWO = 1,
+	PLAYER_THREE = 2,
+	PLAYER_FOUR = 3,
+	PLAYER_FIVE = 4,
+	PLAYER_SIX = 5,
+	PLAYER_SEVEN = 6,
+	NEUTRAL = 7,
+
+	_COUNT
+};
+
+static constexpr std::array<std::string_view, static_cast<uint8_t>(PlayerNames::_COUNT)> PlayerNamesStrs = {
+    "PLAYER_ONE",   //
+    "PLAYER_TWO",   //
+    "PLAYER_THREE", //
+    "PLAYER_FOUR",  //
+    "PLAYER_FIVE",  //
+    "PLAYER_SIX",   //
+    "PLAYER_SEVEN", //
+    "NEUTRAL",      //
+};
+
 } // namespace openblack

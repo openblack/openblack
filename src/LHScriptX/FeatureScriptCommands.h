@@ -28,7 +28,7 @@ public:
 	static void CreateMist(glm::vec3 position, float param_2, int32_t param_3, float param_4, float param_5);
 	static void CreatePath(int32_t param_1, int32_t param_2, int32_t param_3, int32_t param_4);
 	static void CreateTown(int32_t townId, glm::vec3 position, const std::string& playerOwner, int32_t notUsed,
-	                       const std::string& civilisation);
+	                       const std::string& tribeType);
 	static void SetTownBelief(int32_t townId, const std::string& playerOwner, float belief);
 	static void SetTownBeliefCap(int32_t townId, const std::string& playerOwner, float belief);
 	static void SetTownUninhabitable(int32_t townId);
