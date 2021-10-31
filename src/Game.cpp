@@ -23,6 +23,7 @@
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/RenderingSystem.h"
 #include "GameWindow.h"
 #include "GitSHA1.h"
 #include "Graphics/FrameBuffer.h"
@@ -52,6 +53,7 @@
 using namespace openblack;
 using namespace openblack::lhscriptx;
 using namespace std::chrono_literals;
+using openblack::ecs::systems::RenderingSystem;
 
 const std::string kBuildStr(kGitSHA1Hash, 8);
 const std::string kWindowTitle = "openblack";
@@ -297,7 +299,7 @@ bool Game::Update()
 
 			handTransform.rotation = glm::eulerAngleY(glm::radians(-cameraRotation.y)) * modelRotationCorrection;
 			handTransform.position = glm::vec3(handTransform.position.x, handHeight, handTransform.position.z);
-			_entityRegistry->Context().renderContext.dirty = true;
+			RenderingSystem::instance().SetDirty();
 		}
 
 		// Update Entities
@@ -305,7 +307,7 @@ bool Game::Update()
 			auto updateEntities = _profiler->BeginScoped(Profiler::Stage::UpdateEntities);
 			if (_config.drawEntities)
 			{
-				_entityRegistry->PrepareDraw(_config.drawBoundingBoxes, _config.drawFootpaths, _config.drawStreams);
+				RenderingSystem::instance().PrepareDraw(_config.drawBoundingBoxes, _config.drawFootpaths, _config.drawStreams);
 			}
 		}
 	} // Update Uniforms
