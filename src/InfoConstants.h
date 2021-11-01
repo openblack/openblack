@@ -14,6 +14,8 @@
 #include <cstdint>
 #include <glm/vec3.hpp>
 
+#include "Enums.h"
+
 namespace openblack
 {
 #pragma pack(push, 1)
@@ -433,14 +435,14 @@ struct GWorshipSiteInfo: GCitadelPartInfo
 struct GAbodeInfo: GMultiMapFixedInfo
 {
 	int field_0x110;
-	int field_0x114;
+	AbodeNumber abodeNumber;
 	std::array<char, 0x20> name;
 	uint32_t field_0x138;
 	uint32_t field_0x13c;
 	uint32_t field_0x140;
 	uint32_t field_0x144;
-	uint32_t tribeType;
-	uint32_t field_0x14c;
+	Tribe tribeType;
+	uint32_t meshId;
 	uint32_t field_0x150;
 	float field_0x154;
 	uint32_t field_0x158;
@@ -467,6 +469,8 @@ struct GAbodeInfo: GMultiMapFixedInfo
 	uint32_t field_0x1ac;
 	uint32_t field_0x1b0;
 	uint32_t field_0x1b4;
+
+	static AbodeInfo Find(const std::string& name);
 };
 
 struct GSingleMapFixedInfo: GObjectInfo
@@ -1822,7 +1826,7 @@ struct InfoConstants
 	std::array<GCreaturePenInfo, 5> creaturePen;
 	std::array<GWorshipSiteInfo, 9> worshipSite;
 	std::array<GSpellIconInfo, 2> spellIcon;
-	std::array<GAbodeInfo, 147> abode;
+	std::array<GAbodeInfo, static_cast<size_t>(AbodeInfo::_COUNT)> abode;
 	std::array<GVillagerInfo, static_cast<size_t>(VillagerInfo::_COUNT)> villager;
 	std::array<GSpecialVillagerInfo, 0x30> specialVillager;
 	std::array<GTreeInfo, 23> tree;

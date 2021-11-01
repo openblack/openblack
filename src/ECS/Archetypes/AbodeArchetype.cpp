@@ -21,15 +21,17 @@ using namespace openblack;
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
 
-entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, openblack::AbodeInfo type, float yAngleRadians,
+entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, AbodeInfo type, float yAngleRadians,
                                     float scale, uint32_t foodAmount, uint32_t woodAmount)
 {
 	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
+	const auto& info = Game::instance()->GetInfoConstants().abode[static_cast<size_t>(type)];
+
 	registry.Assign<Transform>(entity, position, glm::mat3(glm::eulerAngleY(-yAngleRadians)), glm::vec3(scale));
-	const auto& abode = registry.Assign<Abode>(entity, type, townId, foodAmount, woodAmount);
-	registry.Assign<Mesh>(entity, abodeMeshLookup[abode.type], static_cast<int8_t>(0), static_cast<int8_t>(0));
+	const auto& abode = registry.Assign<Abode>(entity, info.abodeNumber, townId, foodAmount, woodAmount);
+	registry.Assign<Mesh>(entity, info.meshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
 
 	return entity;
 }

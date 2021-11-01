@@ -47,100 +47,6 @@ const constexpr ParameterType TVector = ParameterType::Vector;
 
 namespace
 {
-std::unordered_map<std::string, AbodeInfo> abodeIdLookup {
-    // Norse
-    {"NORSE_ABODE_TOWN_CENTRE", AbodeInfo::NorseTownCentre},
-    {"NORSE_ABODE_STORAGE_PIT", AbodeInfo::NorseStoragePit},
-    {"NORSE_ABODE_GRAVEYARD", AbodeInfo::NorseGraveyard},
-    {"NORSE_ABODE_WORKSHOP", AbodeInfo::NorseWorkshop},
-    {"NORSE_ABODE_CRECHE", AbodeInfo::NorseCreche},
-    {"NORSE_ABODE_A", AbodeInfo::NorseHut},
-    {"NORSE_ABODE_B", AbodeInfo::NorseShackX},
-    {"NORSE_ABODE_C", AbodeInfo::NorseShackY},
-    {"NORSE_ABODE_D", AbodeInfo::NorseTent},
-    {"NORSE_ABODE_E", AbodeInfo::NorseTempleX},
-    {"NORSE_ABODE_F", AbodeInfo::NorseTempleY},
-    {"NORSE_ABODE_WONDER", AbodeInfo::NorseWonder},
-    // Celtic
-    {"CELTIC_ABODE_TOWN_CENTRE", AbodeInfo::CelticTownCentre},
-    {"CELTIC_ABODE_STORAGE_PIT", AbodeInfo::CelticStoragePit},
-    {"CELTIC_ABODE_GRAVEYARD", AbodeInfo::CelticGraveyard},
-    {"CELTIC_ABODE_WORKSHOP", AbodeInfo::CelticGraveyard},
-    {"CELTIC_ABODE_CRECHE", AbodeInfo::CelticCreche},
-    {"CELTIC_ABODE_A", AbodeInfo::CelticHut},
-    {"CELTIC_ABODE_B", AbodeInfo::CelticShackX},
-    {"CELTIC_ABODE_C", AbodeInfo::CelticShackY},
-    {"CELTIC_ABODE_D", AbodeInfo::CelticTent},
-    {"CELTIC_ABODE_E", AbodeInfo::CelticTempleX},
-    {"CELTIC_ABODE_F", AbodeInfo::CelticTempleY},
-    {"CELTIC_ABODE_WONDER", AbodeInfo::CelticWonder},
-    // Japanese
-    {"JAPANESE_ABODE_TOWN_CENTRE", AbodeInfo::JapaneseTownCentre},
-    {"JAPANESE_ABODE_STORAGE_PIT", AbodeInfo::JapaneseStoragePit},
-    {"JAPANESE_ABODE_GRAVEYARD", AbodeInfo::JapaneseGraveyard},
-    {"JAPANESE_ABODE_WORKSHOP", AbodeInfo::JapaneseWorkshop},
-    {"JAPANESE_ABODE_CRECHE", AbodeInfo::JapaneseCreche},
-    {"JAPANESE_ABODE_A", AbodeInfo::JapaneseHut},
-    {"JAPANESE_ABODE_B", AbodeInfo::JapaneseShackX},
-    {"JAPANESE_ABODE_C", AbodeInfo::JapaneseShackY},
-    {"JAPANESE_ABODE_D", AbodeInfo::JapaneseTent},
-    {"JAPANESE_ABODE_E", AbodeInfo::JapaneseTempleX},
-    {"JAPANESE_ABODE_F", AbodeInfo::JapaneseTempleY},
-    {"JAPANESE_ABODE_WONDER", AbodeInfo::JapaneseWonder},
-    // Aztec
-    {"AZTEC_ABODE_TOWN_CENTRE", AbodeInfo::AztecTownCentre},
-    {"AZTEC_ABODE_STORAGE_PIT", AbodeInfo::AztecStoragePit},
-    {"AZTEC_ABODE_GRAVEYARD", AbodeInfo::AztecGraveyard},
-    {"AZTEC_ABODE_WORKSHOP", AbodeInfo::AztecGraveyard},
-    {"AZTEC_ABODE_CRECHE", AbodeInfo::AztecCreche},
-    {"AZTEC_ABODE_A", AbodeInfo::AztecHut},
-    {"AZTEC_ABODE_B", AbodeInfo::AztecShackX},
-    {"AZTEC_ABODE_C", AbodeInfo::AztecShackY},
-    {"AZTEC_ABODE_D", AbodeInfo::AztecTent},
-    {"AZTEC_ABODE_E", AbodeInfo::AztecTempleX},
-    {"AZTEC_ABODE_F", AbodeInfo::AztecTempleY},
-    {"AZTEC_ABODE_WONDER", AbodeInfo::AztecWonder},
-    // Tibetan
-    {"TIBETAN_ABODE_TOWN_CENTRE", AbodeInfo::TibetanTownCentre},
-    {"TIBETAN_ABODE_STORAGE_PIT", AbodeInfo::TibetanStoragePit},
-    {"TIBETAN_ABODE_GRAVEYARD", AbodeInfo::TibetanGraveyard},
-    {"TIBETAN_ABODE_WORKSHOP", AbodeInfo::TibetanWorkshop},
-    {"TIBETAN_ABODE_CRECHE", AbodeInfo::TibetanCreche},
-    {"TIBETAN_ABODE_A", AbodeInfo::TibetanHut},
-    {"TIBETAN_ABODE_B", AbodeInfo::TibetanShackX},
-    {"TIBETAN_ABODE_C", AbodeInfo::TibetanShackY},
-    {"TIBETAN_ABODE_D", AbodeInfo::TibetanTent},
-    {"TIBETAN_ABODE_E", AbodeInfo::TibetanTempleX},
-    {"TIBETAN_ABODE_F", AbodeInfo::TibetanTempleY},
-    {"TIBETAN_ABODE_WONDER", AbodeInfo::TibetanWonder},
-    // American Indian
-    {"INDIAN_ABODE_TOWN_CENTRE", AbodeInfo::IndianTownCentre},
-    {"INDIAN_ABODE_STORAGE_PIT", AbodeInfo::IndianStoragePit},
-    {"INDIAN_ABODE_GRAVEYARD", AbodeInfo::IndianGraveyard},
-    {"INDIAN_ABODE_WORKSHOP", AbodeInfo::IndianWorkshop},
-    {"INDIAN_ABODE_CRECHE", AbodeInfo::IndianCreche},
-    {"INDIAN_ABODE_A", AbodeInfo::IndianHut},
-    {"INDIAN_ABODE_B", AbodeInfo::IndianShackX},
-    {"INDIAN_ABODE_C", AbodeInfo::IndianShackY},
-    {"INDIAN_ABODE_D", AbodeInfo::IndianTent},
-    {"INDIAN_ABODE_E", AbodeInfo::IndianTempleX},
-    {"INDIAN_ABODE_F", AbodeInfo::IndianTempleY},
-    {"INDIAN_ABODE_WONDER", AbodeInfo::IndianWonder},
-    // Greek
-    {"GREEK_ABODE_TOWN_CENTRE", AbodeInfo::GreekTownCentre},
-    {"GREEK_ABODE_STORAGE_PIT", AbodeInfo::GreekStoragePit},
-    {"GREEK_ABODE_GRAVEYARD", AbodeInfo::GreekGraveyard},
-    {"GREEK_ABODE_WORKSHOP", AbodeInfo::GreekWorkshop},
-    {"GREEK_ABODE_CRECHE", AbodeInfo::GreekCreche},
-    {"GREEK_ABODE_A", AbodeInfo::GreekHut},
-    {"GREEK_ABODE_B", AbodeInfo::GreekShackX},
-    {"GREEK_ABODE_C", AbodeInfo::GreekShackY},
-    {"GREEK_ABODE_D", AbodeInfo::GreekTent},
-    {"GREEK_ABODE_E", AbodeInfo::GreekTempleX},
-    {"GREEK_ABODE_F", AbodeInfo::GreekTempleY},
-    {"GREEK_ABODE_WONDER", AbodeInfo::GreekWonder},
-};
-
 std::unordered_map<std::string, Feature::Info> featureInfoLookup {
     {"Fat Pilar Lime", Feature::Info::FatPilarLime},
     {"Pilar3 Lime", Feature::Info::Pilar3Lime},
@@ -283,19 +189,6 @@ const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signa
     CREATE_COMMAND_BINDING("SET_LOST_TOWN_SCALE", SetLostTownScale),
 }};
 
-AbodeInfo GetAbodeInfo(const std::string& abodeType)
-{
-	auto item = abodeIdLookup.find(abodeType);
-
-	if (item == abodeIdLookup.end())
-	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "Missing abode mesh lookup for \"{}\".", abodeType);
-		return AbodeInfo::TibetanWonder;
-	}
-
-	return item->second;
-}
-
 Feature::Info GetFeatureInfo(const std::string& featureType)
 {
 	auto item = featureInfoLookup.find(featureType);
@@ -391,7 +284,7 @@ void FeatureScriptCommands::CreateAbode(int32_t townId, glm::vec3 position, cons
                                         int32_t size, int32_t foodAmount, int32_t woodAmount)
 {
 	// Does not use 3d angle to game angle
-	AbodeArchetype::Create(townId, position, GetAbodeInfo(abodeInfo), rotation * 0.001f, size * 0.001f,
+	AbodeArchetype::Create(townId, position, GAbodeInfo::Find(abodeInfo), rotation * 0.001f, size * 0.001f,
 	                       static_cast<uint32_t>(foodAmount), static_cast<uint32_t>(woodAmount));
 }
 
@@ -406,7 +299,7 @@ void FeatureScriptCommands::CreatePlannedAbode(int32_t townId, glm::vec3 positio
 void FeatureScriptCommands::CreateTownCentre(int32_t townId, glm::vec3 position, const std::string& abodeInfo, int32_t rotation,
                                              int32_t size, [[maybe_unused]] int32_t worshipPercentage)
 {
-	AbodeArchetype::Create(townId, position, GetAbodeInfo(abodeInfo), rotation * 0.001f, size * 0.001f,
+	AbodeArchetype::Create(townId, position, GAbodeInfo::Find(abodeInfo), rotation * 0.001f, size * 0.001f,
 	                       static_cast<uint32_t>(0), static_cast<uint32_t>(0));
 }
 
