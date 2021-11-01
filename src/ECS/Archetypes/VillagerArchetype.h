@@ -14,19 +14,14 @@
 #include <entt/fwd.hpp>
 #include <glm/fwd.hpp>
 
-namespace openblack
-{
-enum class Tribe : int8_t;
-enum class VillagerRoles : uint8_t;
-} // namespace openblack
+#include "Enums.h"
 
 namespace openblack::ecs::archetypes
 {
 class VillagerArchetype
 {
 public:
-	static entt::entity Create(const glm::vec3& abodePosition, const glm::vec3& position, Tribe tribe, VillagerRoles role,
-	                           uint32_t age);
+	static entt::entity Create(const glm::vec3& abodePosition, const glm::vec3& position, VillagerInfo type, uint32_t age);
 	VillagerArchetype() = delete;
 };
 } // namespace openblack::ecs::archetypes

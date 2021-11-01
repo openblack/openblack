@@ -59,29 +59,7 @@ struct Villager
 	    "Adult", //
 	};
 
-	using Type = std::tuple<Tribe, Villager::LifeStage, Villager::Sex, VillagerRoles>;
-
-	struct TypeId
-	{
-		std::size_t operator()(const Villager::Type& type) const
-		{
-			const auto villagerTribe = std::get<Tribe>(type);
-			const auto villagerSex = std::get<Sex>(type);
-			const auto villagerLifeStage = std::get<LifeStage>(type);
-			auto villagerRole = std::get<VillagerRoles>(type);
-			if (!Villager::IsImportantRole(villagerRole))
-			{
-				villagerRole = VillagerRoles::NONE;
-			}
-
-			const auto h1 = std::hash<decltype(villagerTribe)>()(villagerTribe);
-			const auto h2 = std::hash<decltype(villagerSex)>()(villagerSex);
-			const auto h3 = std::hash<decltype(villagerLifeStage)>()(villagerLifeStage);
-			const auto h4 = std::hash<decltype(villagerRole)>()(villagerRole);
-
-			return h1 ^ h2 ^ h3 ^ h4;
-		}
-	};
+	using Type = std::tuple<Tribe, Villager::LifeStage, Villager::Sex, VillagerNumber>;
 
 	uint32_t health;
 	uint32_t age;
@@ -89,10 +67,7 @@ struct Villager
 	LifeStage lifeStage;
 	Sex sex;
 	Tribe tribe;
-	VillagerRoles role;
+	VillagerNumber number;
 	Task task;
-
-	static bool IsImportantRole(VillagerRoles role);
-	Type GetVillagerType() const;
 };
 } // namespace openblack::ecs::components

@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "Enums.h"
 #include <array>
 #include <cstdint>
 #include <glm/vec3.hpp>
@@ -1015,10 +1016,10 @@ struct GVillagerStateTableInfo
 
 struct GVillagerInfo: GLivingInfo
 {
-	uint32_t field_0x1e4;
+	Tribe tribeType;
 	uint32_t field_0x1e8;
-	int villager_number;
-	uint32_t field_0x1f0;
+	VillagerNumber villagerNumber;
+	uint32_t meshId;
 	uint32_t field_0x1f4;
 	uint32_t field_0x1f8;
 	int field_0x1fc;
@@ -1127,6 +1128,8 @@ struct GVillagerInfo: GLivingInfo
 	uint16_t field_0x38e;
 	uint16_t field_0x390;
 	uint16_t field_0x392;
+
+	static VillagerInfo Find(Tribe tribe, VillagerNumber villagerNumber);
 };
 
 struct CreatureDesireActionEntry
@@ -1820,7 +1823,7 @@ struct InfoConstants
 	std::array<GWorshipSiteInfo, 9> worshipSite;
 	std::array<GSpellIconInfo, 2> spellIcon;
 	std::array<GAbodeInfo, 147> abode;
-	std::array<GVillagerInfo, 84> villager;
+	std::array<GVillagerInfo, static_cast<size_t>(VillagerInfo::_COUNT)> villager;
 	std::array<GSpecialVillagerInfo, 0x30> specialVillager;
 	std::array<GTreeInfo, 23> tree;
 	std::array<GSingleMapFixedInfo, 4> singleMapFixed;
