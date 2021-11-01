@@ -20,6 +20,7 @@
 #include "AllMeshes.h"
 #include "ECS/Archetypes/AbodeArchetype.h"
 #include "ECS/Archetypes/BigForestArchetype.h"
+#include "ECS/Archetypes/FeatureArchetype.h"
 #include "ECS/Archetypes/FieldArchetype.h"
 #include "ECS/Archetypes/TownArchetype.h"
 #include "ECS/Archetypes/TreeArchetype.h"
@@ -47,16 +48,6 @@ const constexpr ParameterType TVector = ParameterType::Vector;
 
 namespace
 {
-std::unordered_map<std::string, Feature::Info> featureInfoLookup {
-    {"Fat Pilar Lime", Feature::Info::FatPilarLime},
-    {"Pilar3 Lime", Feature::Info::Pilar3Lime},
-    {"Aztec Statue Feature", Feature::Info::AztcStatue},
-    {"Spikey Pilar Lime", Feature::Info::SpikeyPilarLime},
-    {"Pilar2 Lime", Feature::Info::Pilar2Lime},
-    {"Crater", Feature::Info::Crater},
-    {"Pier", Feature::Info::Pier},
-};
-
 const auto playerLookup = makeLookup<PlayerNames>(PlayerNamesStrs);
 const auto tribeLookup = makeLookup<Tribe>(TribeStrs);
 const auto villagerNumberLookup = makeLookup<VillagerNumber>(VillagerNumberStrs);
@@ -188,19 +179,6 @@ const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signa
     CREATE_COMMAND_BINDING("MAKE_LAST_OBJECT_ARTIFACT", MakeLastObjectArtifact),
     CREATE_COMMAND_BINDING("SET_LOST_TOWN_SCALE", SetLostTownScale),
 }};
-
-Feature::Info GetFeatureInfo(const std::string& featureType)
-{
-	auto item = featureInfoLookup.find(featureType);
-
-	if (item == featureInfoLookup.end())
-	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "Missing abode mesh lookup for \"{}\".", featureType);
-		return Feature::Info::Ark;
-	}
-
-	return item->second;
-}
 
 inline glm::mat4 GetRotation(int rotation)
 {
@@ -444,11 +422,9 @@ void FeatureScriptCommands::CreateTownFishFarm([[maybe_unused]] int32_t townId, 
 	// __func__);
 }
 
-void FeatureScriptCommands::CreateFeature(glm::vec3 position, int32_t param_2, int32_t param_3, int32_t param_4,
-                                          int32_t param_5)
+void FeatureScriptCommands::CreateFeature(glm::vec3 position, FeatureInfo type, int32_t rotation, int32_t scale, int32_t)
 {
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {}({}, {}, {}, {}, {}) not implemented.",
-	                    __FILE__, __LINE__, __func__, glm::to_string(position), param_2, param_3, param_4, param_5);
+	FeatureArchetype::Create(position, type, rotation * 0.001f, scale * 0.001f);
 }
 
 void FeatureScriptCommands::CreateFlowers([[maybe_unused]] glm::vec3 position, int32_t, float, float)
@@ -730,12 +706,7 @@ void FeatureScriptCommands::CreateBase([[maybe_unused]] glm::vec3 position, int3
 void FeatureScriptCommands::CreateNewFeature(glm::vec3 position, const std::string& type, int32_t rotation, int32_t scale,
                                              [[maybe_unused]] int32_t param_5)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
-	const auto entity = registry.Create();
-
-	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(scale));
-	const auto& feature = registry.Assign<Feature>(entity, GetFeatureInfo(type));
-	registry.Assign<Mesh>(entity, featureMeshLookup[feature.type], static_cast<int8_t>(0), static_cast<int8_t>(1));
+	FeatureArchetype::Create(position, GFeatureInfo::Find(type), rotation * 0.001f, scale * 0.001f);
 }
 
 void FeatureScriptCommands::SetInteractDesire(float)

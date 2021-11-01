@@ -883,7 +883,9 @@ struct GHelpSpritesGuidance
 
 struct GFeatureInfo: GMultiMapFixedInfo
 {
-	uint32_t field_0x110;
+	uint32_t meshId;
+
+	static FeatureInfo Find(const std::string& name);
 };
 
 struct GAnimatedStaticInfo: GFeatureInfo
@@ -1837,7 +1839,7 @@ struct InfoConstants
 	GBallInfo ball;
 	GTownInfo town;
 	std::array<GJobInfo, 0x10> job;
-	std::array<GFeatureInfo, 76> feature;
+	std::array<GFeatureInfo, static_cast<size_t>(FeatureInfo::_COUNT)> feature;
 	std::array<GFlowersInfo, 2> flowers;
 	std::array<GAnimatedStaticInfo, 0x10> animatedStatic;
 	std::array<GMobileObjectInfo, 0x20> mobileObject;

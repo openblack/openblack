@@ -81,5 +81,4 @@ std::unordered_map<std::string_view, C> makeLookup(std::array<std::string_view, 
 
 extern MeshLookup<ecs::components::MobileStatic::Info> mobileStaticMeshLookup;
 extern MeshLookup<ecs::components::MobileObject::Info> mobileObjectMeshLookup;
-extern MeshLookup<ecs::components::Feature::Info> featureMeshLookup;
 } // namespace openblack
