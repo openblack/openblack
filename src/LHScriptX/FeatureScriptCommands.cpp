@@ -22,6 +22,7 @@
 #include "ECS/Archetypes/BigForestArchetype.h"
 #include "ECS/Archetypes/FeatureArchetype.h"
 #include "ECS/Archetypes/FieldArchetype.h"
+#include "ECS/Archetypes/MobileStaticArchetype.h"
 #include "ECS/Archetypes/TownArchetype.h"
 #include "ECS/Archetypes/TreeArchetype.h"
 #include "ECS/Archetypes/VillagerArchetype.h"
@@ -473,23 +474,15 @@ void FeatureScriptCommands::CreateMobileObject(glm::vec3 position, int32_t type,
 	registry.Assign<Mesh>(entity, mobileObjectMeshLookup[object.type], static_cast<int8_t>(0), static_cast<int8_t>(1));
 }
 
-void FeatureScriptCommands::CreateMobileStatic(glm::vec3 position, int32_t param_2, float param_3, float param_4)
+void FeatureScriptCommands::CreateMobileStatic(glm::vec3 position, MobileStaticInfo type, float yRotation, float scale)
 {
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {}({}, {}, {}, {}) not implemented.", __FILE__,
-	                    __LINE__, __func__, glm::to_string(position), param_2, param_3, param_4);
+	CreateMobileUStatic(position, type, 0.0f, 0.0f, yRotation, 0.0f, scale);
 }
 
-void FeatureScriptCommands::CreateMobileUStatic(glm::vec3 position, int32_t type, float verticalOffset, float pitch,
-                                                float rotation, float lean, float scale)
+void FeatureScriptCommands::CreateMobileUStatic(glm::vec3 position, MobileStaticInfo type, float verticalOffset,
+                                                float xRotation, float yRotation, float zRotation, float scale)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
-	const auto entity = registry.Create();
-
-	glm::vec3 offset(0.0f, verticalOffset, 0.0f);
-
-	registry.Assign<Transform>(entity, position + offset, glm::eulerAngleXYZ(-pitch, -rotation, -lean), glm::vec3(scale));
-	const auto& mobile = registry.Assign<MobileStatic>(entity, MobileStatic::Info(type));
-	registry.Assign<Mesh>(entity, mobileStaticMeshLookup[mobile.type], static_cast<int8_t>(0), static_cast<int8_t>(1));
+	MobileStaticArchetype::Create(position, type, verticalOffset, xRotation, yRotation, zRotation, scale);
 }
 
 void FeatureScriptCommands::CreateDeadTree([[maybe_unused]] glm::vec3 position, const std::string&, int32_t, float, float,
@@ -689,12 +682,7 @@ void FeatureScriptCommands::LinkFootpath(int32_t footpathId)
 
 void FeatureScriptCommands::CreateBonfire(glm::vec3 position, float rotation, [[maybe_unused]] float param_3, float scale)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
-	const auto entity = registry.Create();
-
-	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-rotation), glm::vec3(scale));
-	const auto& mobile = registry.Assign<MobileStatic>(entity, MobileStatic::Info::Bonfire);
-	registry.Assign<Mesh>(entity, mobileStaticMeshLookup[mobile.type], static_cast<int8_t>(0), static_cast<int8_t>(1));
+	CreateMobileStatic(position, MobileStaticInfo::Bonfire, rotation, scale);
 }
 
 void FeatureScriptCommands::CreateBase([[maybe_unused]] glm::vec3 position, int32_t)
