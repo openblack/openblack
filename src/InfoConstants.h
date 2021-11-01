@@ -893,6 +893,8 @@ struct GAnimatedStaticInfo: GFeatureInfo
 {
 	uint32_t field_0x114;
 	uint32_t field_0x118;
+
+	static AnimatedStaticInfo Find(const std::string& name);
 };
 
 struct GWorshipSiteUpgradeInfo: GFeatureInfo
@@ -1842,7 +1844,7 @@ struct InfoConstants
 	std::array<GJobInfo, 0x10> job;
 	std::array<GFeatureInfo, static_cast<size_t>(FeatureInfo::_COUNT)> feature;
 	std::array<GFlowersInfo, 2> flowers;
-	std::array<GAnimatedStaticInfo, 0x10> animatedStatic;
+	std::array<GAnimatedStaticInfo, static_cast<size_t>(AnimatedStaticInfo::_COUNT)> animatedStatic;
 	std::array<GMobileObjectInfo, static_cast<size_t>(MobileObjectInfo::_COUNT)> mobileObject;
 	GScaffoldInfo scaffold;
 	std::array<GMobileStaticInfo, static_cast<size_t>(MobileStaticInfo::_COUNT)> mobileStatic;
