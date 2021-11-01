@@ -32,7 +32,7 @@ using namespace openblack::gui;
 
 MeshViewer::MeshViewer()
     : DebugWindow("MeshPack Viewer", ImVec2(950.0f, 780.0f))
-    , _selectedMesh(MeshPackId::Dummy)
+    , _selectedMesh(MeshId::Dummy)
     , _selectedSubMesh(0)
     , _selectedAnimation(std::nullopt)
     , _selectedFrame(0)
@@ -71,11 +71,11 @@ void MeshViewer::Draw(Game& game)
 	{
 		if (_filter.PassFilter(MeshNames[i].data()) && meshes[i]->GetFlags() & _meshFlagFilter)
 		{
-			const auto meshEnum = static_cast<MeshPackId>(i);
+			const auto meshEnum = static_cast<MeshId>(i);
 			const auto& enumName = std::string(MeshNames[i]);
 			displayedMeshes++;
 
-			if (ImGui::Selectable(enumName.c_str(), static_cast<MeshPackId>(meshEnum) == _selectedMesh))
+			if (ImGui::Selectable(enumName.c_str(), static_cast<MeshId>(meshEnum) == _selectedMesh))
 			{
 				_selectedMesh = meshEnum;
 			}

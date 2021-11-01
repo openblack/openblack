@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <glm/vec3.hpp>
 
+#include "AllMeshes.h"
 #include "Enums.h"
 
 namespace openblack
@@ -217,7 +218,7 @@ struct GAnimalInfo: GLivingInfo
 struct GMobileObjectInfo: GMobileInfo
 {
 	int field_0xf4;
-	uint32_t field_0xf8;
+	MeshId meshId;
 	float field_0xfc;
 	float field_0x100;
 };
@@ -442,7 +443,7 @@ struct GAbodeInfo: GMultiMapFixedInfo
 	uint32_t field_0x140;
 	uint32_t field_0x144;
 	Tribe tribeType;
-	uint32_t meshId;
+	MeshId meshId;
 	uint32_t field_0x150;
 	float field_0x154;
 	uint32_t field_0x158;
@@ -759,7 +760,7 @@ struct GScriptOpposingCreature
 
 struct GBigForestInfo: GMultiMapFixedInfo
 {
-	uint32_t meshId;
+	MeshId meshId;
 	uint32_t field_0x114;
 };
 
@@ -883,7 +884,7 @@ struct GHelpSpritesGuidance
 
 struct GFeatureInfo: GMultiMapFixedInfo
 {
-	uint32_t meshId;
+	MeshId meshId;
 
 	static FeatureInfo Find(const std::string& name);
 };
@@ -1026,7 +1027,7 @@ struct GVillagerInfo: GLivingInfo
 	Tribe tribeType;
 	uint32_t field_0x1e8;
 	VillagerNumber villagerNumber;
-	uint32_t meshId;
+	MeshId meshId;
 	uint32_t field_0x1f4;
 	uint32_t field_0x1f8;
 	int field_0x1fc;
@@ -1303,7 +1304,7 @@ struct GMagicWaterInfo: GMagicInfo
 
 struct GMobileStaticInfo: GMultiMapFixedInfo
 {
-	uint32_t field_0x110;
+	MeshId meshId;
 	float field_0x114;
 	uint32_t field_0x118;
 };
@@ -1343,7 +1344,7 @@ struct GInfluenceInfo
 
 struct GTreeInfo: GSingleMapFixedInfo
 {
-	uint32_t meshId;
+	MeshId meshId;
 	uint32_t meshId_2;
 	uint32_t field_0xfc;
 	float field_0x100;
@@ -1842,7 +1843,7 @@ struct InfoConstants
 	std::array<GFeatureInfo, static_cast<size_t>(FeatureInfo::_COUNT)> feature;
 	std::array<GFlowersInfo, 2> flowers;
 	std::array<GAnimatedStaticInfo, 0x10> animatedStatic;
-	std::array<GMobileObjectInfo, 0x20> mobileObject;
+	std::array<GMobileObjectInfo, static_cast<size_t>(MobileObjectInfo::_COUNT)> mobileObject;
 	GScaffoldInfo scaffold;
 	std::array<GMobileStaticInfo, static_cast<size_t>(MobileStaticInfo::_COUNT)> mobileStatic;
 	std::array<GPotInfo, 19> pot;

@@ -20,7 +20,7 @@
 namespace openblack
 {
 
-enum class MeshPackId
+enum class MeshId
 {
 	Dummy = 0,
 	AnimalBat1 = 1,
@@ -653,7 +653,7 @@ enum class MeshPackId
 };
 
 // just generated, mainly for debug
-constexpr std::array<std::string_view, static_cast<uint16_t>(MeshPackId::_count)> MeshNames {
+constexpr std::array<std::string_view, static_cast<uint16_t>(MeshId::_count)> MeshNames {
     "Dummy",
     "AnimalBat1",
     "AnimalBat2",

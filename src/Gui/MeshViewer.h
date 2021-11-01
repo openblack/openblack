@@ -43,7 +43,7 @@ protected:
 
 private:
 	static constexpr graphics::RenderPass _viewId = graphics::RenderPass::MeshViewer;
-	MeshPackId _selectedMesh;
+	MeshId _selectedMesh;
 	int _selectedSubMesh;
 	std::optional<uint32_t> _selectedAnimation;
 	int _selectedFrame;

@@ -50,13 +50,13 @@ bool MeshPack::LoadFromFile(const fs::path& path)
 const L3DMesh& MeshPack::GetMesh(MeshId id) const
 {
 	// TODO(raffclar): Handle non-mesh pack IDs via a new mechanism
-	if (id == ecs::components::Hand::meshId)
+	if (static_cast<int>(id) == ecs::components::Hand::meshId)
 	{
 		return Game::instance()->GetHandModel();
 	}
 	else
 	{
-		return *_meshes.at(id);
+		return *_meshes.at(static_cast<size_t>(id));
 	}
 }
 

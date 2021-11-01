@@ -22,6 +22,7 @@
 #include "ECS/Archetypes/BigForestArchetype.h"
 #include "ECS/Archetypes/FeatureArchetype.h"
 #include "ECS/Archetypes/FieldArchetype.h"
+#include "ECS/Archetypes/MobileObjectArchetype.h"
 #include "ECS/Archetypes/MobileStaticArchetype.h"
 #include "ECS/Archetypes/TownArchetype.h"
 #include "ECS/Archetypes/TreeArchetype.h"
@@ -49,6 +50,17 @@ const constexpr ParameterType TVector = ParameterType::Vector;
 
 namespace
 {
+template <class C, size_t size>
+std::unordered_map<std::string_view, C> makeLookup(std::array<std::string_view, size> strings)
+{
+	std::unordered_map<std::string_view, C> table;
+	for (size_t i = 0; i < size; ++i)
+	{
+		table.insert(std::make_pair(strings[i], static_cast<C>(i)));
+	}
+	return table;
+}
+
 const auto playerLookup = makeLookup<PlayerNames>(PlayerNamesStrs);
 const auto tribeLookup = makeLookup<Tribe>(TribeStrs);
 const auto villagerNumberLookup = makeLookup<VillagerNumber>(VillagerNumberStrs);
@@ -464,14 +476,9 @@ void FeatureScriptCommands::CreateTownTemporaryPots(int32_t, int32_t, int32_t)
 	// __func__);
 }
 
-void FeatureScriptCommands::CreateMobileObject(glm::vec3 position, int32_t type, int32_t rotation, int32_t scale)
+void FeatureScriptCommands::CreateMobileObject(glm::vec3 position, MobileObjectInfo type, int32_t rotation, int32_t scale)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
-	const auto entity = registry.Create();
-
-	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(scale));
-	const auto& object = registry.Assign<MobileObject>(entity, static_cast<MobileObject::Info>(type));
-	registry.Assign<Mesh>(entity, mobileObjectMeshLookup[object.type], static_cast<int8_t>(0), static_cast<int8_t>(1));
+	MobileObjectArchetype::Create(position, type, rotation * 0.001f, scale * 0.001f);
 }
 
 void FeatureScriptCommands::CreateMobileStatic(glm::vec3 position, MobileStaticInfo type, float yRotation, float scale)
@@ -770,20 +777,20 @@ void FeatureScriptCommands::CreateAnimatedStatic(glm::vec3 position, const std::
 
 	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(scale));
 	const auto& animated = registry.Assign<AnimatedStatic>(entity, type);
-	MeshPackId meshPackId = MeshPackId::Dummy;
+	MeshId meshId = MeshId::Dummy;
 	if (animated.type == "Norse Gate")
 	{
-		meshPackId = MeshPackId::BuildingNorseGate;
+		meshId = MeshId::BuildingNorseGate;
 	}
 	else if (animated.type == "Gate Stone Plinth")
 	{
-		meshPackId = MeshPackId::ObjectGateTotemPlinthe;
+		meshId = MeshId::ObjectGateTotemPlinthe;
 	}
 	else if (animated.type == "Piper Cave Entrance")
 	{
-		meshPackId = MeshPackId::BuildingMineEntrance;
+		meshId = MeshId::BuildingMineEntrance;
 	}
-	registry.Assign<Mesh>(entity, static_cast<MeshId>(meshPackId), static_cast<int8_t>(0), static_cast<int8_t>(0));
+	registry.Assign<Mesh>(entity, static_cast<MeshId>(meshId), static_cast<int8_t>(0), static_cast<int8_t>(0));
 }
 
 void FeatureScriptCommands::FireFlySpellRewardProb([[maybe_unused]] const std::string& spell,
