@@ -19,10 +19,10 @@
 #include "3D/LandIsland.h"
 #include "AllMeshes.h"
 #include "ECS/Archetypes/AbodeArchetype.h"
+#include "ECS/Archetypes/FieldArchetype.h"
 #include "ECS/Archetypes/TownArchetype.h"
 #include "ECS/Archetypes/VillagerArchetype.h"
 #include "ECS/Components/AnimatedStatic.h"
-#include "ECS/Components/Field.h"
 #include "ECS/Components/Footpath.h"
 #include "ECS/Components/Forest.h"
 #include "ECS/Components/Mesh.h"
@@ -430,16 +430,14 @@ void FeatureScriptCommands::CreateNewTree([[maybe_unused]] int32_t forestId, glm
 	registry.Assign<Mesh>(entity, treeMeshLookup[tree.type], static_cast<int8_t>(0), static_cast<int8_t>(-1));
 }
 
-void FeatureScriptCommands::CreateField([[maybe_unused]] glm::vec3 position, int32_t)
+void FeatureScriptCommands::CreateField(glm::vec3 position, FieldTypeInfo type)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	CreateTownField(-1, position, type);
 }
 
-void FeatureScriptCommands::CreateTownField([[maybe_unused]] int32_t townId, [[maybe_unused]] glm::vec3 position, int32_t)
+void FeatureScriptCommands::CreateTownField(int32_t townId, glm::vec3 position, FieldTypeInfo type)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	CreateNewTownField(townId, position, type, 0.0f);
 }
 
 void FeatureScriptCommands::CreateFishFarm([[maybe_unused]] glm::vec3 position, int32_t)
@@ -850,15 +848,10 @@ void FeatureScriptCommands::FireFlySpellRewardProb([[maybe_unused]] const std::s
 	// __func__);
 }
 
-void FeatureScriptCommands::CreateNewTownField(int32_t townId, glm::vec3 position, [[maybe_unused]] int32_t param_3,
-                                               float rotation)
+void FeatureScriptCommands::CreateNewTownField(int32_t townId, glm::vec3 position, FieldTypeInfo townFieldType, float rotation)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
-	const auto entity = registry.Create();
-
-	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(1000));
-	registry.Assign<Field>(entity, townId);
-	registry.Assign<Mesh>(entity, MeshPackId::TreeWheat, static_cast<int8_t>(0), static_cast<int8_t>(0));
+	// Rotation is in radians and not scaled
+	FieldArchetype::Create(townId, position, townFieldType, rotation);
 }
 
 void FeatureScriptCommands::CreateSpellDispenser(int32_t, [[maybe_unused]] glm::vec3 position, const std::string&,

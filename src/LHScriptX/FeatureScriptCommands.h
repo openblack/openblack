@@ -59,8 +59,8 @@ public:
 	static void CreateTree(int32_t forestId, glm::vec3 position, int32_t, int32_t, int32_t);
 	static void CreateNewTree(int32_t forestId, glm::vec3 position, int32_t treeType, int32_t isNonScenic, float rotation,
 	                          float currentSize, float maxSize);
-	static void CreateField(glm::vec3 position, int32_t);
-	static void CreateTownField(int32_t townId, glm::vec3 position, int32_t);
+	static void CreateField(glm::vec3 position, FieldTypeInfo type);
+	static void CreateTownField(int32_t townId, glm::vec3 position, FieldTypeInfo type);
 	static void CreateFishFarm(glm::vec3 position, int32_t);
 	static void CreateTownFishFarm(int32_t townId, glm::vec3 position, int32_t);
 	static void CreateFeature(glm::vec3 position, int32_t, int32_t, int32_t, int32_t);
@@ -121,7 +121,7 @@ public:
 	static void TownDesireBoost(int32_t townId, const std::string&, float);
 	static void CreateAnimatedStatic(glm::vec3 position, const std::string& type, int32_t rotation, int32_t scale);
 	static void FireFlySpellRewardProb(const std::string& spell, float probability);
-	static void CreateNewTownField(int32_t townId, glm::vec3 position, int32_t param_3, float rotation);
+	static void CreateNewTownField(int32_t townId, glm::vec3 position, FieldTypeInfo type, float rotation);
 	static void CreateSpellDispenser(int32_t, glm::vec3 position, const std::string&, const std::string&, float, float, float);
 	static void LoadComputerPlayerPersonality(int32_t, glm::vec3);
 	static void SetComputerPlayerPersonality(const std::string&, glm::vec3, float);
