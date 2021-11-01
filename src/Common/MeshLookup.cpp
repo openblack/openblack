@@ -12,32 +12,6 @@
 using namespace openblack;
 using namespace openblack::ecs::components;
 
-MeshLookup<Tree::Info> openblack::treeMeshLookup {
-    {Tree::Info::Beech, MeshPackId::TreeBeech},       //
-    {Tree::Info::Birch, MeshPackId::TreeBirch},       //
-    {Tree::Info::Cedar, MeshPackId::TreeCedar},       //
-    {Tree::Info::Conifer, MeshPackId::TreeConifer},   //
-    {Tree::Info::ConiferA, MeshPackId::TreeConiferA}, //
-    {Tree::Info::Oak, MeshPackId::TreeOak},           //
-    {Tree::Info::OakA, MeshPackId::TreeOakA},         //
-    {Tree::Info::Olive, MeshPackId::TreeOlive},       //
-    {Tree::Info::Palm, MeshPackId::TreePalm},         //
-    {Tree::Info::PalmA, MeshPackId::TreePalmA},       //
-    {Tree::Info::PalmB, MeshPackId::TreePalmB},       //
-    {Tree::Info::PalmC, MeshPackId::TreePalmC},       //
-    {Tree::Info::Pine, MeshPackId::TreePine},         //
-    {Tree::Info::Bush, MeshPackId::TreeBush},         //
-    {Tree::Info::BushA, MeshPackId::TreeBushA},       //
-    {Tree::Info::BushB, MeshPackId::TreeBushB},       //
-    {Tree::Info::Cypress, MeshPackId::TreeCypress},   //
-    {Tree::Info::CypressA, MeshPackId::TreeCypressA}, //
-    {Tree::Info::Copse, MeshPackId::TreeCopse},       //
-    {Tree::Info::CopseA, MeshPackId::TreeCopseA},     //
-    {Tree::Info::Hedge, MeshPackId::TreeHedge},       //
-    {Tree::Info::HedgeA, MeshPackId::TreeHedgeA},     //
-    {Tree::Info::Burnt, MeshPackId::ObjectBurntTree}, //
-};
-
 MeshLookup<MobileStatic::Info> openblack::mobileStaticMeshLookup {
     {MobileStatic::Info::Rock, MeshPackId::ObjectFlatRockChalk},
     {MobileStatic::Info::Bonfire, MeshPackId::BuildingCampfire},

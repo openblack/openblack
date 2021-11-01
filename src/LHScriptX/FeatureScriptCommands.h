@@ -56,8 +56,8 @@ public:
 	static void CreateAnimal(glm::vec3 position, int32_t, int32_t, int32_t);
 	static void CreateNewAnimal(glm::vec3 position, int32_t, int32_t, int32_t, int32_t);
 	static void CreateForest(int32_t forestId, glm::vec3 position);
-	static void CreateTree(int32_t forestId, glm::vec3 position, int32_t, int32_t, int32_t);
-	static void CreateNewTree(int32_t forestId, glm::vec3 position, int32_t treeType, int32_t isNonScenic, float rotation,
+	static void CreateTree(int32_t forestId, glm::vec3 position, TreeInfo treeType, int32_t rotation, int32_t scale);
+	static void CreateNewTree(int32_t forestId, glm::vec3 position, TreeInfo treeType, int32_t isNonScenic, float rotation,
 	                          float currentSize, float maxSize);
 	static void CreateField(glm::vec3 position, FieldTypeInfo type);
 	static void CreateTownField(int32_t townId, glm::vec3 position, FieldTypeInfo type);

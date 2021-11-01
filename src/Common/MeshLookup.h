@@ -79,7 +79,6 @@ std::unordered_map<std::string_view, C> makeLookup(std::array<std::string_view, 
 	return table;
 }
 
-extern MeshLookup<ecs::components::Tree::Info> treeMeshLookup;
 extern MeshLookup<ecs::components::MobileStatic::Info> mobileStaticMeshLookup;
 extern MeshLookup<ecs::components::MobileObject::Info> mobileObjectMeshLookup;
 extern MeshLookup<ecs::components::Feature::Info> featureMeshLookup;

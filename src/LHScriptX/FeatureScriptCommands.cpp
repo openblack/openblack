@@ -21,6 +21,7 @@
 #include "ECS/Archetypes/AbodeArchetype.h"
 #include "ECS/Archetypes/FieldArchetype.h"
 #include "ECS/Archetypes/TownArchetype.h"
+#include "ECS/Archetypes/TreeArchetype.h"
 #include "ECS/Archetypes/VillagerArchetype.h"
 #include "ECS/Components/AnimatedStatic.h"
 #include "ECS/Components/Footpath.h"
@@ -28,7 +29,6 @@
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Stream.h"
 #include "ECS/Components/Transform.h"
-#include "ECS/Components/Tree.h"
 #include "ECS/Registry.h"
 #include "Enums.h"
 #include "Game.h"
@@ -411,23 +411,15 @@ void FeatureScriptCommands::CreateForest([[maybe_unused]] int32_t forestId, [[ma
 	// __func__);
 }
 
-void FeatureScriptCommands::CreateTree([[maybe_unused]] int32_t forestId, [[maybe_unused]] glm::vec3 position, int32_t, int32_t,
-                                       int32_t)
+void FeatureScriptCommands::CreateTree(int32_t forestId, glm::vec3 position, TreeInfo treeType, int32_t rotation, int32_t scale)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	CreateNewTree(forestId, position, treeType, 1, rotation * 0.001f, scale * 0.001f, scale * 0.001f);
 }
 
-void FeatureScriptCommands::CreateNewTree([[maybe_unused]] int32_t forestId, glm::vec3 position, int32_t treeType,
-                                          [[maybe_unused]] int32_t isNonScenic, float rotation, float currentSize,
-                                          [[maybe_unused]] float maxSize)
+void FeatureScriptCommands::CreateNewTree(int32_t forestId, glm::vec3 position, TreeInfo treeType, int32_t isNonScenic,
+                                          float rotation, float currentSize, float maxSize)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
-	const auto entity = registry.Create();
-
-	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-rotation), glm::vec3(currentSize));
-	const auto& tree = registry.Assign<Tree>(entity, Tree::Info(treeType));
-	registry.Assign<Mesh>(entity, treeMeshLookup[tree.type], static_cast<int8_t>(0), static_cast<int8_t>(-1));
+	TreeArchetype::Create(forestId, position, treeType, isNonScenic != 0, rotation, maxSize, currentSize);
 }
 
 void FeatureScriptCommands::CreateField(glm::vec3 position, FieldTypeInfo type)

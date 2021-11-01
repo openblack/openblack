@@ -9,19 +9,18 @@
 
 #pragma once
 
+#include <entt/fwd.hpp>
+#include <glm/fwd.hpp>
+
 #include "Enums.h"
 
-namespace openblack::ecs::components
+namespace openblack::ecs::archetypes
 {
-
-enum class MagicTreeType
+class TreeArchetype
 {
+public:
+	static entt::entity Create(uint32_t forestId, const glm::vec3& position, TreeInfo type, bool isNonScenic,
+	                           float yAngleRadians, float maxSize, float scale);
+	TreeArchetype() = delete;
 };
-
-struct Tree
-{
-	TreeInfo type;
-	float maxSize;
-};
-
-} // namespace openblack::ecs::components
+} // namespace openblack::ecs::archetypes
