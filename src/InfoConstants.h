@@ -1341,8 +1341,8 @@ struct GInfluenceInfo
 
 struct GTreeInfo: GSingleMapFixedInfo
 {
-	uint32_t field_0xf4;
-	uint32_t field_0xf8;
+	uint32_t meshId;
+	uint32_t meshId_2;
 	uint32_t field_0xfc;
 	float field_0x100;
 	float field_0x104;
@@ -1830,7 +1830,7 @@ struct InfoConstants
 	std::array<GAbodeInfo, static_cast<size_t>(AbodeInfo::_COUNT)> abode;
 	std::array<GVillagerInfo, static_cast<size_t>(VillagerInfo::_COUNT)> villager;
 	std::array<GSpecialVillagerInfo, 0x30> specialVillager;
-	std::array<GTreeInfo, 23> tree;
+	std::array<GTreeInfo, static_cast<size_t>(TreeInfo::_COUNT)> tree;
 	std::array<GSingleMapFixedInfo, 4> singleMapFixed;
 	std::array<GScriptHighlightInfo, 4> scriptHighlight;
 	std::array<GMapShieldInfo, 2> mapShield;

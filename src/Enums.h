@@ -939,6 +939,35 @@ enum class MapShieldInfo
 	Physical = 1,
 };
 
+enum class TreeInfo
+{
+	Beech = 0,
+	Birch = 1,
+	Cedar = 2,
+	Conifer = 3,
+	ConiferA = 4,
+	Oak = 5,
+	OakA = 6,
+	Olive = 7,
+	Palm = 8,
+	PalmA = 9,
+	PalmB = 10,
+	PalmC = 11,
+	Pine = 12,
+	Bush = 13,
+	BushA = 14,
+	BushB = 15,
+	Cypress = 16,
+	CypressA = 17,
+	Copse = 18,
+	CopseA = 19,
+	Hedge = 20,
+	HedgeA = 21,
+	Burnt = 22,
+
+	_COUNT
+};
+
 enum class ResourceType
 {
 	Any = -2,
