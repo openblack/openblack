@@ -9,16 +9,17 @@
 
 #pragma once
 
-#include <string>
+#include <entt/fwd.hpp>
+#include <glm/fwd.hpp>
 
 #include "Enums.h"
 
-namespace openblack::ecs::components
+namespace openblack::ecs::archetypes
 {
-
-struct AnimatedStatic
+class AnimatedStaticArchetype
 {
-	AnimatedStaticInfo type;
+public:
+	static entt::entity Create(const glm::vec3& position, AnimatedStaticInfo type, float yAngleRadians, float scale);
+	AnimatedStaticArchetype() = delete;
 };
-
-} // namespace openblack::ecs::components
+} // namespace openblack::ecs::archetypes

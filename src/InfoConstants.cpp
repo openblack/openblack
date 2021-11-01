@@ -86,3 +86,16 @@ FeatureInfo GFeatureInfo::Find(const std::string& name)
 	}
 	throw std::runtime_error("Could not find info for " + name);
 }
+
+AnimatedStaticInfo GAnimatedStaticInfo::Find(const std::string& name)
+{
+	auto& constants = Game::instance()->GetInfoConstants();
+	for (size_t i = 0; i < constants.animatedStatic.size(); ++i)
+	{
+		if (name == constants.animatedStatic[i].description.data())
+		{
+			return static_cast<AnimatedStaticInfo>(i);
+		}
+	}
+	throw std::runtime_error("Could not find info for " + name);
+}

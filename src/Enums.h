@@ -759,7 +759,7 @@ enum class FlowersInfo
 	// Sun      = 2, // CREATUREISLE
 };
 
-enum class AnimatedStaticInfo
+enum class AnimatedStaticInfo : int32_t
 {
 	None = -1,
 	NorseGate = 0,
@@ -778,6 +778,8 @@ enum class AnimatedStaticInfo
 	ChessKingTeamA = 13,
 	ChessKingTeamB = 14,
 	PhoneBox = 15,
+
+	_COUNT
 	// Balista           = 16, // CREATUREISLE
 };
 

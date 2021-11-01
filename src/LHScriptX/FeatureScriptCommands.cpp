@@ -17,8 +17,8 @@
 
 #include "3D/Camera.h"
 #include "3D/LandIsland.h"
-#include "AllMeshes.h"
 #include "ECS/Archetypes/AbodeArchetype.h"
+#include "ECS/Archetypes/AnimatedStaticArchetype.h"
 #include "ECS/Archetypes/BigForestArchetype.h"
 #include "ECS/Archetypes/FeatureArchetype.h"
 #include "ECS/Archetypes/FieldArchetype.h"
@@ -27,9 +27,7 @@
 #include "ECS/Archetypes/TownArchetype.h"
 #include "ECS/Archetypes/TreeArchetype.h"
 #include "ECS/Archetypes/VillagerArchetype.h"
-#include "ECS/Components/AnimatedStatic.h"
 #include "ECS/Components/Footpath.h"
-#include "ECS/Components/Mesh.h"
 #include "ECS/Components/Stream.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
@@ -772,25 +770,8 @@ void FeatureScriptCommands::TownDesireBoost([[maybe_unused]] int32_t townId, con
 
 void FeatureScriptCommands::CreateAnimatedStatic(glm::vec3 position, const std::string& type, int32_t rotation, int32_t scale)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
-	const auto entity = registry.Create();
-
-	registry.Assign<Transform>(entity, position, GetRotation(rotation), GetSize(scale));
-	const auto& animated = registry.Assign<AnimatedStatic>(entity, type);
-	MeshId meshId = MeshId::Dummy;
-	if (animated.type == "Norse Gate")
-	{
-		meshId = MeshId::BuildingNorseGate;
-	}
-	else if (animated.type == "Gate Stone Plinth")
-	{
-		meshId = MeshId::ObjectGateTotemPlinthe;
-	}
-	else if (animated.type == "Piper Cave Entrance")
-	{
-		meshId = MeshId::BuildingMineEntrance;
-	}
-	registry.Assign<Mesh>(entity, static_cast<MeshId>(meshId), static_cast<int8_t>(0), static_cast<int8_t>(0));
+	auto animatedStaticType = GAnimatedStaticInfo::Find(type);
+	AnimatedStaticArchetype::Create(position, animatedStaticType, rotation * 0.001f, scale * 0.001f);
 }
 
 void FeatureScriptCommands::FireFlySpellRewardProb([[maybe_unused]] const std::string& spell,
