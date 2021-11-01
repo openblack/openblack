@@ -9,14 +9,17 @@
 
 #pragma once
 
+#include <entt/fwd.hpp>
+#include <glm/fwd.hpp>
+
 #include "Enums.h"
 
-namespace openblack::ecs::components
+namespace openblack::ecs::archetypes
 {
-
-struct Feature
+class FeatureArchetype
 {
-	FeatureInfo type;
+public:
+	static entt::entity Create(const glm::vec3& position, FeatureInfo type, float yAngleRadians, float scale);
+	FeatureArchetype() = delete;
 };
-
-} // namespace openblack::ecs::components
+} // namespace openblack::ecs::archetypes

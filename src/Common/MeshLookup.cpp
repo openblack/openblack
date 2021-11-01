@@ -87,28 +87,3 @@ MeshLookup<MobileObject::Info> openblack::mobileObjectMeshLookup {
     {MobileObject::Info::HanoiPuzzlePart3, MeshPackId::Puzzle3},
     {MobileObject::Info::HanoiPuzzlePart4, MeshPackId::Puzzle4},
 };
-
-MeshLookup<Feature::Info> openblack::featureMeshLookup {
-    {Feature::Info::FatPilarSand, MeshPackId::FatPilarSand},
-    {Feature::Info::Pilar2Sand, MeshPackId::Pilar2Sand},
-    {Feature::Info::Pilar3Sand, MeshPackId::Pilar3Sand},
-    {Feature::Info::FatPilarChalk, MeshPackId::FatPilarChalk},
-    {Feature::Info::Pilar2Chalk, MeshPackId::Pilar2Chalk},
-    {Feature::Info::Pilar3Chalk, MeshPackId::Pilar3Chalk},
-    {Feature::Info::FatPilarLime, MeshPackId::FatPilarLime},
-    {Feature::Info::Pilar2Lime, MeshPackId::Pilar2Lime},
-    {Feature::Info::Pilar3Lime, MeshPackId::Pilar3Lime},
-    {Feature::Info::PilarVolcanic, MeshPackId::PilarVolcanic},
-    {Feature::Info::Pilar2Volcanic, MeshPackId::Pilar2Volcanic},
-    {Feature::Info::Pilar3Volcanic, MeshPackId::Pilar3Volcanic},
-    {Feature::Info::Ark, MeshPackId::ObjectArk},
-    {Feature::Info::ArkWreck, MeshPackId::ObjectArkWreck},
-    {Feature::Info::ArkDryDock, MeshPackId::ObjectArkDryDock},
-    {Feature::Info::MagicMushroom, MeshPackId::ObjectMagicMushroom},
-    {Feature::Info::Toadstool, MeshPackId::ObjectToadstool},
-    {Feature::Info::AztcStatue, MeshPackId::BuildingAztecStatue},
-    {Feature::Info::SpikeyPilarLime, MeshPackId::SpikeyPilarLime},
-    {Feature::Info::SpikeyPilarChalk, MeshPackId::SpikeyPilarChalk},
-    {Feature::Info::SpikeyPilarSand, MeshPackId::SpikeyPilarSand},
-    {Feature::Info::SpikeyPilarVolcanic, MeshPackId::SpikeyPilarVolcanic},
-};
