@@ -34,3 +34,19 @@ VillagerInfo GVillagerInfo::Find(Tribe tribe, VillagerNumber villagerNumber)
 	throw std::runtime_error(std::string("Could not find info for ") + TribeStrs[static_cast<size_t>(tribe)].data() + " + " +
 	                         VillagerNumberStrs[static_cast<size_t>(villagerNumber)].data());
 }
+
+AbodeInfo GAbodeInfo::Find(const std::string& name)
+{
+	const auto& constants = Game::instance()->GetInfoConstants();
+	for (size_t i = 0; i < constants.abode.size(); ++i)
+	{
+		auto tribeName = TribeStrs[static_cast<uint8_t>(constants.abode[i].tribeType)];
+		auto abodeName = std::string(constants.abode[i].name.data());
+		if (std::string(tribeName.data()) + "_" + abodeName == name)
+		{
+			return static_cast<AbodeInfo>(i);
+		}
+	}
+
+	throw std::runtime_error("Could not find info for " + name);
+}

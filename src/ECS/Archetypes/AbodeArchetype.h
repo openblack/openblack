@@ -12,10 +12,7 @@
 #include <entt/fwd.hpp>
 #include <glm/fwd.hpp>
 
-namespace openblack
-{
-enum class AbodeInfo : uint8_t;
-}
+#include "Enums.h"
 
 namespace openblack::ecs::archetypes
 {
