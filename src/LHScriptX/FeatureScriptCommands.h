@@ -71,9 +71,9 @@ public:
 	static void CreatePot(glm::vec3 position, int32_t, int32_t, int32_t);
 	static void CreateTownTemporaryPots(int32_t townId, int32_t, int32_t);
 	static void CreateMobileObject(glm::vec3 position, int32_t type, int32_t rotation, int32_t);
-	static void CreateMobileStatic(glm::vec3 position, int32_t type, float, float);
-	static void CreateMobileUStatic(glm::vec3 position, int32_t type, float verticalOffset, float pitch, float rotation,
-	                                float lean, float scale);
+	static void CreateMobileStatic(glm::vec3 position, MobileStaticInfo type, float, float);
+	static void CreateMobileUStatic(glm::vec3 position, MobileStaticInfo type, float verticalOffset, float xRotation,
+	                                float yRotation, float zRotation, float scale);
 	static void CreateDeadTree(glm::vec3 position, const std::string&, int32_t, float, float, float, float);
 	static void CreateScaffold(int32_t, glm::vec3, int32_t, int32_t, int32_t);
 	static void CountryChange(glm::vec3 position, int32_t);

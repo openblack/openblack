@@ -1844,7 +1844,7 @@ struct InfoConstants
 	std::array<GAnimatedStaticInfo, 0x10> animatedStatic;
 	std::array<GMobileObjectInfo, 0x20> mobileObject;
 	GScaffoldInfo scaffold;
-	std::array<GMobileStaticInfo, 61> mobileStatic;
+	std::array<GMobileStaticInfo, static_cast<size_t>(MobileStaticInfo::_COUNT)> mobileStatic;
 	std::array<GPotInfo, 19> pot;
 	GPrayerIconInfo prayerIcon;
 	GPrayerSiteInfo prayerSite;
