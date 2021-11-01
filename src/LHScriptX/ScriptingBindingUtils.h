@@ -16,44 +16,65 @@
 namespace openblack::lhscriptx
 {
 
+template <class T>
+static ParameterType ParameterTypeStaticLookUpRegular;
+
+template <>
+inline ParameterType ParameterTypeStaticLookUpRegular<glm::vec3> = ParameterType::Vector;
+
+template <>
+inline ParameterType ParameterTypeStaticLookUpRegular<const std::string&> = ParameterType::String;
+
+template <>
+inline ParameterType ParameterTypeStaticLookUpRegular<float> = ParameterType::Float;
+
+template <>
+inline ParameterType ParameterTypeStaticLookUpRegular<int32_t> = ParameterType::Number;
+
 template <typename T>
-static ParameterType ParameterTypeStaticLookUp;
-
-template <>
-inline ParameterType ParameterTypeStaticLookUp<glm::vec3> = ParameterType::Vector;
-
-template <>
-inline ParameterType ParameterTypeStaticLookUp<const std::string&> = ParameterType::String;
-
-template <>
-inline ParameterType ParameterTypeStaticLookUp<float> = ParameterType::Float;
-
-template <>
-inline ParameterType ParameterTypeStaticLookUp<int32_t> = ParameterType::Number;
+inline typename std::enable_if_t<!std::is_enum<T>::value, ParameterType> GetParamType()
+{
+	return ParameterTypeStaticLookUpRegular<T>;
+}
 
 template <typename T>
-T GetParamValue(const ScriptCommandContext& ctx, int index);
+inline typename std::enable_if_t<std::is_enum<T>::value, ParameterType> GetParamType()
+{
+	return ParameterTypeStaticLookUpRegular<std::underlying_type_t<T>>;
+}
+
+template <class T>
+T GetParamValueRegular(const ScriptCommandContext& ctx, int index);
 
 template <>
-inline const std::string& GetParamValue(const ScriptCommandContext& ctx, int index)
+inline const std::string& GetParamValueRegular(const ScriptCommandContext& ctx, int index)
 {
 	return ctx[index].GetString();
 }
 
 template <>
-inline float GetParamValue(const ScriptCommandContext& ctx, int index)
+inline float GetParamValueRegular(const ScriptCommandContext& ctx, int index)
 {
 	return ctx[index].GetFloat();
 }
 
 template <>
-inline int32_t GetParamValue(const ScriptCommandContext& ctx, int index)
+inline int32_t GetParamValueRegular(const ScriptCommandContext& ctx, int index)
 {
 	return ctx[index].GetNumber();
 }
 
-template <>
-glm::vec3 GetParamValue(const ScriptCommandContext& ctx, int index);
+template <typename T>
+inline typename std::enable_if_t<!std::is_enum<T>::value, T> GetParamValue(const ScriptCommandContext& ctx, int index)
+{
+	return GetParamValueRegular<T>(ctx, index);
+}
+
+template <typename T>
+inline typename std::enable_if_t<std::is_enum<T>::value, T> GetParamValue(const ScriptCommandContext& ctx, int index)
+{
+	return static_cast<T>(GetParamValueRegular<std::underlying_type_t<T>>(ctx, index));
+}
 
 /// Base case which is triggered when RemainingTypes is void (see remaining non-parsed params case)
 template <typename... ParsedParamTypes, typename... ArgTypes>
@@ -118,7 +139,7 @@ constexpr void GetScriptCommandParameters(std::array<ParameterType, 9>& paramete
                                           void (*)(PoppedArgType, RemainingTypes...))
 {
 	void (*remainingTypesFunction)(RemainingTypes...) = nullptr;
-	parameters[index] = ParameterTypeStaticLookUp<PoppedArgType>;
+	parameters[index] = GetParamType<PoppedArgType>();
 	GetScriptCommandParameters(parameters, index + 1, remainingTypesFunction);
 }
 
