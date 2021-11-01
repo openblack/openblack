@@ -20,7 +20,7 @@ namespace fs = std::experimental::filesystem;
 #include <memory>
 #include <vector>
 
-#include "Common/MeshLookup.h"
+#include "AllMeshes.h"
 
 namespace openblack
 {

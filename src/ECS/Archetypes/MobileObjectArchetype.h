@@ -9,16 +9,17 @@
 
 #pragma once
 
-#include "AllMeshes.h"
+#include <entt/fwd.hpp>
+#include <glm/fwd.hpp>
 
-namespace openblack::ecs::components
-{
+#include "Enums.h"
 
-struct Mesh
+namespace openblack::ecs::archetypes
 {
-	MeshId id;
-	int8_t submeshId;
-	int8_t bbSubmeshId;
+class MobileObjectArchetype
+{
+public:
+	static entt::entity Create(const glm::vec3& position, MobileObjectInfo type, float yAngleRadians, float scale);
+	MobileObjectArchetype() = delete;
 };
-
-} // namespace openblack::ecs::components
+} // namespace openblack::ecs::archetypes

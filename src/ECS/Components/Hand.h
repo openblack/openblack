@@ -10,7 +10,6 @@
 #pragma once
 
 #include "3D/L3DMesh.h"
-#include "Common/MeshLookup.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/Texture2D.h"
 
@@ -27,7 +26,7 @@ struct Hand
 		Symbol
 	};
 
-	static constexpr MeshId meshId = 999;
+	static constexpr int meshId = 999;
 
 	void Init();
 

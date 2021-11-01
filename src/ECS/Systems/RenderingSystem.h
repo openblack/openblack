@@ -14,7 +14,7 @@
 
 #include <bgfx/bgfx.h>
 
-#include "Common/MeshLookup.h"
+#include "AllMeshes.h"
 #include "Graphics/DebugLines.h"
 
 namespace openblack::ecs::systems

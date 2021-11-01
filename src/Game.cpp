@@ -464,8 +464,8 @@ void Game::LoadMap(const fs::path& path)
 	_entityRegistry->Assign<ecs::components::Hand>(_handEntity);
 	const auto rotation = glm::mat3(glm::eulerAngleXZ(glm::half_pi<float>(), glm::half_pi<float>()));
 	_entityRegistry->Assign<ecs::components::Transform>(_handEntity, glm::vec3(0.0f), rotation, glm::vec3(0.02f));
-	_entityRegistry->Assign<ecs::components::Mesh>(_handEntity, ecs::components::Hand::meshId, static_cast<int8_t>(0),
-	                                               static_cast<int8_t>(0));
+	_entityRegistry->Assign<ecs::components::Mesh>(_handEntity, static_cast<MeshId>(ecs::components::Hand::meshId),
+	                                               static_cast<int8_t>(0), static_cast<int8_t>(0));
 
 	Script script(this);
 	script.Load(source);
