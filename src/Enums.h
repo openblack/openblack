@@ -196,7 +196,7 @@ enum class AnimalInfo
 };
 
 /// Originally TribeType and VillageEthnicities
-enum class Tribe : int8_t
+enum class Tribe : int32_t
 {
 	NONE = -1,
 	CELTIC = 0,
@@ -1203,6 +1203,8 @@ enum class VillagerInfo
 	Sculptor = 81,
 	Crusader = 82,
 	SailorAccordian = 83,
+
+	_COUNT
 	// MuleHead                = 84, // CREATUREISLE
 	// EgyptianBigEyes         = 85, // CREATUREISLE
 	// Giant                   = 86, // CREATUREISLE
@@ -1288,7 +1290,7 @@ enum class CastRuleType
 	OnLandInInfluence = 3,
 };
 
-enum class VillagerNumber
+enum class VillagerNumber : uint32_t
 {
 	Housewife = 0,
 	Forester = 1,
@@ -1297,6 +1299,17 @@ enum class VillagerNumber
 	Shepherd = 4,
 	Leader = 5,
 	Trader = 6,
+
+	_COUNT
+};
+static constexpr std::array<std::string_view, static_cast<uint32_t>(VillagerNumber::_COUNT)> VillagerNumberStrs = {
+    "HOUSEWIFE", //
+    "FORESTER",  //
+    "FISHERMAN", //
+    "FARMER",    //
+    "SHEPHERD",  //
+    "LEADER",    //
+    "TRADER",    //
 };
 
 enum class CarriedObject

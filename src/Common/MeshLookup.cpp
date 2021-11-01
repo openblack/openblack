@@ -127,34 +127,6 @@ MeshLookup<Abode::Info> openblack::abodeMeshLookup {
     {Abode::Info::GreekWonder, MeshPackId::BuildingGreekWonder},
 };
 
-using V = Villager;
-MeshLookup<Villager::Type, Villager::TypeId> openblack::villagerMeshLookup {
-    {{Tribe::AZTEC, V::LifeStage::Adult, V::Sex::MALE, VillagerRoles::NONE}, MeshPackId::PersonAztecMaleA1},
-    {{Tribe::AZTEC, V::LifeStage::Adult, V::Sex::FEMALE, VillagerRoles::NONE}, MeshPackId::PersonAztecFemaleA1},
-    {{Tribe::AZTEC, V::LifeStage::Child, V::Sex::MALE, VillagerRoles::NONE}, MeshPackId::PersonBoyTan1},
-    {{Tribe::AZTEC, V::LifeStage::Child, V::Sex::FEMALE, VillagerRoles::NONE}, MeshPackId::PersonGirlTan1},
-    {{Tribe::CELTIC, V::LifeStage::Adult, V::Sex::MALE, VillagerRoles::NONE}, MeshPackId::PersonCelticMaleA1},
-    {{Tribe::CELTIC, V::LifeStage::Adult, V::Sex::FEMALE, VillagerRoles::NONE}, MeshPackId::PersonCelticFemaleA1},
-    {{Tribe::CELTIC, V::LifeStage::Child, V::Sex::MALE, VillagerRoles::NONE}, MeshPackId::PersonBoyWhite},
-    {{Tribe::CELTIC, V::LifeStage::Child, V::Sex::FEMALE, VillagerRoles::NONE}, MeshPackId::PersonGirlWhite},
-    {{Tribe::EGYPTIAN, V::LifeStage::Adult, V::Sex::MALE, VillagerRoles::NONE}, MeshPackId::PersonEgyptianMaleA1},
-    {{Tribe::EGYPTIAN, V::LifeStage::Adult, V::Sex::FEMALE, VillagerRoles::NONE}, MeshPackId::PersonEgyptianFemaleA1},
-    {{Tribe::GREEK, V::LifeStage::Adult, V::Sex::MALE, VillagerRoles::NONE}, MeshPackId::PersonGreekMaleA1},
-    {{Tribe::GREEK, V::LifeStage::Adult, V::Sex::FEMALE, VillagerRoles::NONE}, MeshPackId::PersonGreekFemaleA1},
-    {{Tribe::INDIAN, V::LifeStage::Adult, V::Sex::MALE, VillagerRoles::NONE}, MeshPackId::PersonAmericanMaleA1},
-    {{Tribe::INDIAN, V::LifeStage::Adult, V::Sex::FEMALE, VillagerRoles::NONE}, MeshPackId::PersonAmericanFemaleA1},
-    {{Tribe::JAPANESE, V::LifeStage::Adult, V::Sex::MALE, VillagerRoles::NONE}, MeshPackId::PersonJapaneseMaleA1},
-    {{Tribe::JAPANESE, V::LifeStage::Adult, V::Sex::FEMALE, VillagerRoles::NONE}, MeshPackId::PersonJapaneseFemaleA2},
-    {{Tribe::NORSE, V::LifeStage::Adult, V::Sex::MALE, VillagerRoles::NONE}, MeshPackId::PersonNorseMaleA1},
-    {{Tribe::NORSE, V::LifeStage::Adult, V::Sex::FEMALE, VillagerRoles::NONE}, MeshPackId::PersonNorseFemaleA1},
-    {{Tribe::NORSE, V::LifeStage::Child, V::Sex::MALE, VillagerRoles::NONE}, MeshPackId::PersonBoyWhite},
-    {{Tribe::NORSE, V::LifeStage::Child, V::Sex::FEMALE, VillagerRoles::NONE}, MeshPackId::PersonGirlWhite},
-    {{Tribe::TIBETAN, V::LifeStage::Adult, V::Sex::MALE, VillagerRoles::NONE}, MeshPackId::PersonTibetanMaleA1},
-    {{Tribe::TIBETAN, V::LifeStage::Adult, V::Sex::FEMALE, VillagerRoles::NONE}, MeshPackId::PersonTibetanFemaleA2},
-    {{Tribe::AFRICAN, V::LifeStage::Adult, V::Sex::MALE, VillagerRoles::NONE}, MeshPackId::PersonEgyptianMaleA1},
-    {{Tribe::AFRICAN, V::LifeStage::Adult, V::Sex::FEMALE, VillagerRoles::NONE}, MeshPackId::PersonEgyptianFemaleA1},
-};
-
 MeshLookup<MobileStatic::Info> openblack::mobileStaticMeshLookup {
     {MobileStatic::Info::Rock, MeshPackId::ObjectFlatRockChalk},
     {MobileStatic::Info::Bonfire, MeshPackId::BuildingCampfire},

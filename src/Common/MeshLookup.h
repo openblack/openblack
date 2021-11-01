@@ -83,6 +83,5 @@ extern MeshLookup<ecs::components::Tree::Info> treeMeshLookup;
 extern MeshLookup<ecs::components::MobileStatic::Info> mobileStaticMeshLookup;
 extern MeshLookup<ecs::components::MobileObject::Info> mobileObjectMeshLookup;
 extern MeshLookup<ecs::components::Abode::Info> abodeMeshLookup;
-extern MeshLookup<ecs::components::Villager::Type, ecs::components::Villager::TypeId> villagerMeshLookup;
 extern MeshLookup<ecs::components::Feature::Info> featureMeshLookup;
 } // namespace openblack

@@ -152,9 +152,9 @@ std::unordered_map<std::string, Feature::Info> featureInfoLookup {
 };
 
 const auto tribeLookup = makeLookup<Tribe>(TribeStrs);
-const auto villagerRoleLookup = makeLookup<VillagerRoles>(VillagerRoleStrs);
+const auto villagerNumberLookup = makeLookup<VillagerNumber>(VillagerNumberStrs);
 
-std::tuple<Tribe, VillagerRoles> GetVillagerTribeAndRole(const std::string& villagerTribeWithType)
+std::tuple<Tribe, VillagerNumber> GetVillagerTribeAndNumber(const std::string& villagerTribeWithType)
 {
 	const auto pos = villagerTribeWithType.find_first_of('_');
 	const auto tribeStr = villagerTribeWithType.substr(0, pos);
@@ -163,7 +163,7 @@ std::tuple<Tribe, VillagerRoles> GetVillagerTribeAndRole(const std::string& vill
 	try
 	{
 		const auto tribe = tribeLookup.at(tribeStr);
-		const auto role = villagerRoleLookup.at(roleStr);
+		const auto role = villagerNumberLookup.at(roleStr);
 		return std::make_tuple(tribe, role);
 	}
 	catch (...)
@@ -454,11 +454,11 @@ void FeatureScriptCommands::CreateSpecialTownVillager(int32_t param_1, glm::vec3
 	                    __LINE__, __func__, param_1, glm::to_string(position), param_3, param_4);
 }
 
-void FeatureScriptCommands::CreateVillagerPos(glm::vec3 abodePosition, glm::vec3 position, const std::string& tribeAndRole,
+void FeatureScriptCommands::CreateVillagerPos(glm::vec3 abodePosition, glm::vec3 position, const std::string& tribeAndNumber,
                                               int32_t age)
 {
-	auto [tribe, role] = GetVillagerTribeAndRole(tribeAndRole);
-	VillagerArchetype::Create(abodePosition, position, tribe, role, age);
+	auto [tribe, number] = GetVillagerTribeAndNumber(tribeAndNumber);
+	VillagerArchetype::Create(abodePosition, position, GVillagerInfo::Find(tribe, number), age);
 }
 
 void FeatureScriptCommands::CreateCitadel([[maybe_unused]] glm::vec3 position, int32_t, const std::string&, int32_t, int32_t)
