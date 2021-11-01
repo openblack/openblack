@@ -15,7 +15,7 @@ glm::vec2 GetHorizontalPosition(const std::string& str)
 }
 
 template <>
-glm::vec3 GetParamValue(const ScriptCommandContext& ctx, int index)
+glm::vec3 GetParamValueRegular(const ScriptCommandContext& ctx, int index)
 {
 	const auto& param = ctx[index];
 	const auto& island = ctx.GetGame().GetLandIsland();
