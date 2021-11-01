@@ -471,6 +471,7 @@ struct GAbodeInfo: GMultiMapFixedInfo
 	uint32_t field_0x1b4;
 
 	static AbodeInfo Find(const std::string& name);
+	static AbodeInfo Find(Tribe tribe, AbodeNumber abodeNumber);
 };
 
 struct GSingleMapFixedInfo: GObjectInfo
@@ -1853,7 +1854,7 @@ struct InfoConstants
 	std::array<GSpotVisualInfo, 50> spotVisual;
 	std::array<GEffectInfo, 12> effect;
 	std::array<GFieldInfo, 2> field;
-	std::array<GFieldTypeInfo, 6> filedType;
+	std::array<GFieldTypeInfo, static_cast<size_t>(FieldTypeInfo::_COUNT)> fieldType;
 	GFishFarmInfo fishFarm;
 	std::array<GFootballPositionInfo, 10> footballPosition;
 	std::array<GPlaytimeInfo, 5> playtime;

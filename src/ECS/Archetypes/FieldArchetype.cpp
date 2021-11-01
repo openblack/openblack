@@ -7,26 +7,31 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#include "TownArchetype.h"
+#include "FieldArchetype.h"
 
+#include "AbodeArchetype.h"
+#include "ECS/Components/Abode.h"
+#include "ECS/Components/Field.h"
+#include "ECS/Components/Town.h"
 #include "ECS/Registry.h"
 #include "Game.h"
+#include "InfoConstants.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
 
-entt::entity TownArchetype::Create(int id, const glm::vec3& position, PlayerNames playerOwner, Tribe tribe)
+entt::entity FieldArchetype::Create(int townId, const glm::vec3& position, FieldTypeInfo type, float yAngleRadians)
 {
 	auto& registry = Game::instance()->GetEntityRegistry();
-	const auto entity = registry.Create();
 
-	const auto& info = Game::instance()->GetInfoConstants().town;
+	const auto& info = Game::instance()->GetInfoConstants().fieldType[static_cast<size_t>(type)];
 
-	registry.Assign<Town>(entity, id);
-	registry.Assign<Tribe>(entity, tribe);
-	auto& registryContext = registry.Context();
-	registryContext.towns.insert({id, entity});
+	auto townTribe = registry.Get<Tribe>(registry.Context().towns[townId]);
+	auto abodeInfo = GAbodeInfo::Find(townTribe, AbodeNumber::Field);
+
+	auto entity = AbodeArchetype::Create(townId, position, abodeInfo, yAngleRadians, 1.0f, 0, 0);
+	registry.Assign<Field>(entity, townId);
 
 	return entity;
 }

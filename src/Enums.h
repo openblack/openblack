@@ -244,6 +244,27 @@ enum class AbodeNumber : int32_t
 	FootballPitch = 13,
 	SpellDispenser = 14,
 	Field = 15,
+
+	_COUNT
+};
+
+static constexpr std::array<std::string_view, static_cast<uint32_t>(AbodeNumber::_COUNT)> AbodeNumberStrs = {
+    "Invalid",        //
+    "A",              //
+    "B",              //
+    "C",              //
+    "D",              //
+    "E",              //
+    "F",              //
+    "Totem",          //
+    "StoragePit",     //
+    "Creche",         //
+    "Workshop",       //
+    "Wonder",         //
+    "Graveyard",      //
+    "TownCentre",     //
+    "FootballPitch",  //
+    "SpellDispenser", //
 };
 
 enum class SpellSeedType
@@ -319,7 +340,10 @@ enum class FieldTypeInfo
 	CornWithFence = 3,
 	Cereal = 4,
 	CerealWithFence = 5,
-	SpecialCrop = 6,
+
+	_COUNT
+
+	// SpecialCrop = 6,
 };
 
 enum class MagicFireballType

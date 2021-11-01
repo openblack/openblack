@@ -50,3 +50,26 @@ AbodeInfo GAbodeInfo::Find(const std::string& name)
 
 	throw std::runtime_error("Could not find info for " + name);
 }
+
+AbodeInfo GAbodeInfo::Find(Tribe tribe, AbodeNumber abodeNumber)
+{
+	auto& constants = Game::instance()->GetInfoConstants();
+	bool found = false;
+	AbodeInfo result;
+	for (size_t i = 0; i < constants.abode.size(); ++i)
+	{
+		if ((constants.abode[i].tribeType == tribe || constants.abode[i].tribeType == Tribe::NONE) &&
+		    constants.abode[i].abodeNumber == abodeNumber)
+		{
+			result = static_cast<AbodeInfo>(i);
+			found = true;
+		}
+	}
+	if (found)
+	{
+		return result;
+	}
+
+	throw std::runtime_error(std::string("Could not find info for ") + TribeStrs[static_cast<size_t>(tribe)].data() + " + " +
+	                         AbodeNumberStrs[static_cast<size_t>(abodeNumber)].data());
+}
