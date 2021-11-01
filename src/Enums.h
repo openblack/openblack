@@ -1657,13 +1657,15 @@ enum class PowerUpType
 	Three = 2,
 };
 
-enum class BigForestInfo
+enum class BigForestInfo : int32_t
 {
 	None = -1,
 	Info1 = 0,
 	Info2 = 1,
 	Info3 = 2,
 	Info4 = 3,
+
+	_COUNT
 };
 
 enum class FurnitureInfo

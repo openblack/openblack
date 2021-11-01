@@ -89,8 +89,8 @@ public:
 	static void FlyByFile(const std::string& path);
 	static void TownNeedsPos(int32_t townId, glm::vec3 position);
 	static void CreateFurniture(glm::vec3 position, int32_t, float);
-	static void CreateBigForest(glm::vec3 position, int32_t, float, float);
-	static void CreateNewBigForest(glm::vec3 position, int32_t type, int32_t param_3, float rotation, float scale);
+	static void CreateBigForest(glm::vec3 position, BigForestInfo type, float rotation, float scale);
+	static void CreateNewBigForest(glm::vec3 position, BigForestInfo type, int32_t param_3, float rotation, float scale);
 	static void CreateInfluenceRing(glm::vec3 position, int32_t, float, int32_t);
 	static void CreateWeatherClimate(int32_t, int32_t, glm::vec3, float, float);
 	static void CreateWeatherClimateRain(int32_t, float, int32_t, int32_t, int32_t);

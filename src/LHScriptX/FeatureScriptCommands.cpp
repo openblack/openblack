@@ -19,13 +19,13 @@
 #include "3D/LandIsland.h"
 #include "AllMeshes.h"
 #include "ECS/Archetypes/AbodeArchetype.h"
+#include "ECS/Archetypes/BigForestArchetype.h"
 #include "ECS/Archetypes/FieldArchetype.h"
 #include "ECS/Archetypes/TownArchetype.h"
 #include "ECS/Archetypes/TreeArchetype.h"
 #include "ECS/Archetypes/VillagerArchetype.h"
 #include "ECS/Components/AnimatedStatic.h"
 #include "ECS/Components/Footpath.h"
-#include "ECS/Components/Forest.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Stream.h"
 #include "ECS/Components/Transform.h"
@@ -601,21 +601,15 @@ void FeatureScriptCommands::CreateFurniture([[maybe_unused]] glm::vec3 position,
 	// __func__);
 }
 
-void FeatureScriptCommands::CreateBigForest([[maybe_unused]] glm::vec3 position, int32_t, float, float)
+void FeatureScriptCommands::CreateBigForest(glm::vec3 position, BigForestInfo type, float rotation, float scale)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	CreateNewBigForest(position, type, 0, rotation, scale);
 }
 
-void FeatureScriptCommands::CreateNewBigForest(glm::vec3 position, [[maybe_unused]] int32_t type,
-                                               [[maybe_unused]] int32_t param_3, float rotation, float scale)
+void FeatureScriptCommands::CreateNewBigForest(glm::vec3 position, BigForestInfo type, int32_t unknown, float rotation,
+                                               float scale)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
-	const auto entity = registry.Create();
-
-	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-rotation), glm::vec3(scale));
-	registry.Assign<Forest>(entity);
-	registry.Assign<Mesh>(entity, MeshPackId::FeatureForest, static_cast<int8_t>(0), static_cast<int8_t>(1));
+	BigForestArchetype::Create(position, type, unknown, rotation, scale);
 }
 
 void FeatureScriptCommands::CreateInfluenceRing([[maybe_unused]] glm::vec3 position, int32_t, float, int32_t)

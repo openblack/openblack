@@ -759,7 +759,7 @@ struct GScriptOpposingCreature
 
 struct GBigForestInfo: GMultiMapFixedInfo
 {
-	uint32_t field_0x110;
+	uint32_t meshId;
 	uint32_t field_0x114;
 };
 
@@ -1890,7 +1890,7 @@ struct InfoConstants
 	std::array<GVillagerStateTableInfo, 0xFF> villagerStateTable;
 	std::array<GAnimalStateTableInfo, 53> animalStateTable;
 	std::array<GTotemStatueInfo, 9> totemStatue;
-	std::array<GBigForestInfo, 4> bigForest;
+	std::array<GBigForestInfo, static_cast<size_t>(BigForestInfo::_COUNT)> bigForest;
 	std::array<GFurnitureInfo, 31> furniture;
 	std::array<GWeatherInfo, 7> weather;
 	std::array<GClimateInfo, 7> climate;

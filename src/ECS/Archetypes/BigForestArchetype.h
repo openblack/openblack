@@ -9,17 +9,18 @@
 
 #pragma once
 
-namespace openblack::ecs::components
-{
+#include <entt/fwd.hpp>
+#include <glm/fwd.hpp>
 
-struct BigForest
+#include "Enums.h"
+
+namespace openblack::ecs::archetypes
 {
-	int type;
+class BigForestArchetype
+{
+public:
+	static entt::entity Create(const glm::vec3& position, BigForestInfo type, uint32_t unknown, float yAngleRadians,
+	                           float scale);
+	BigForestArchetype() = delete;
 };
-
-struct Forest
-{
-	int type;
-};
-
-} // namespace openblack::ecs::components
+} // namespace openblack::ecs::archetypes
