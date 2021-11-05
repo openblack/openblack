@@ -28,8 +28,7 @@ struct Hand
 
 	static constexpr int meshId = 999;
 
-	void Init();
-
+	bool rightHanded;
 	RenderType renderType;
 };
 } // namespace openblack::ecs::components

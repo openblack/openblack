@@ -7,15 +7,20 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#include "Hand.h"
+#pragma once
 
-using openblack::ecs::components::Hand;
+#include <entt/fwd.hpp>
+#include <glm/fwd.hpp>
 
-void Hand::Init()
+namespace openblack::ecs::archetypes
 {
-	// Data/CreatureMesh/Hand_Boned_Base2.l3d
-	// Data/CreatureMesh/Hand_Boned_Good2.l3d
-	// Data/CreatureMesh/Hand_Boned_Evil2.l3d
 
-	// load data\\hand.raw into a memory
-}
+class HandArchetype
+{
+public:
+	static entt::entity Create(const glm::vec3& position, float xAngleRadians, float yAngleRadians, float zAngleRadians,
+	                           float scale, bool rightHanded);
+	HandArchetype() = delete;
+};
+
+} // namespace openblack::ecs::archetypes
