@@ -129,14 +129,9 @@ Game::~Game()
 	SDL_Quit(); // todo: move to GameWindow
 }
 
-const ecs::components::Transform& Game::GetHandTransform() const
+entt::entity Game::GetHand() const
 {
-	return _entityRegistry->Get<ecs::components::Transform>(_handEntity);
-}
-
-ecs::components::Transform& Game::GetHandTransform()
-{
-	return _entityRegistry->Get<ecs::components::Transform>(_handEntity);
+	return _handEntity;
 }
 
 bool Game::ProcessEvents(const SDL_Event& event)

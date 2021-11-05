@@ -1072,7 +1072,7 @@ void Gui::ShowCameraPositionOverlay(const Game& game)
 			ImGui::Text("Mouse Position: <invalid>");
 		}
 
-		const auto& handPosition = game.GetHandTransform().position;
+		const auto& handPosition = game.GetEntityRegistry().Get<ecs::components::Transform>(game.GetHand()).position;
 		ImGui::Text("Hand Position: (%.1f,%.1f,%.1f)", handPosition.x, handPosition.y, handPosition.z);
 
 		ImGui::Text("Game Turn: %u (%.3f ms)", game.GetTurn(), game.GetDeltaTime().count());

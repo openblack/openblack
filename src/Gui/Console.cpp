@@ -14,6 +14,7 @@
 #include <imgui.h>
 
 #include "ECS/Components/Transform.h"
+#include "ECS/Registry.h"
 #include "LHScriptX/FeatureScriptCommands.h"
 #include "LHScriptX/Script.h"
 
@@ -324,8 +325,9 @@ void Console::Draw(Game& game)
 			std::string pre(_input_buffer.data(), _input_buffer.data() + _input_cursor_position);
 			std::string post(_input_buffer.data() + _input_cursor_position);
 
-			snprintf(_input_buffer.data(), _input_buffer.size(), "%s%.2f,%.2f%s", pre.c_str(),
-			         game.GetHandTransform().position.x, game.GetHandTransform().position.z, post.c_str());
+			const auto& position = game.GetEntityRegistry().Get<ecs::components::Transform>(game.GetHand()).position;
+			snprintf(_input_buffer.data(), _input_buffer.size(), "%s%.2f,%.2f%s", pre.c_str(), position.x, position.z,
+			         post.c_str());
 		}
 	}
 	_insert_hand_position = false;
