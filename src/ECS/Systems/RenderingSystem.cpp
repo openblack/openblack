@@ -9,6 +9,8 @@
 
 #include "RenderingSystem.h"
 
+#include <glm/gtx/transform.hpp>
+
 #include "3D/L3DMesh.h"
 #include "3D/MeshPack.h"
 #include "ECS/Components/Mesh.h"
@@ -90,14 +92,20 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	    [this, &uniformOffsets, drawBoundingBox](const Mesh& mesh, const Transform& transform) {
 		    auto offset = uniformOffsets.insert(std::make_pair(mesh.id, 0));
 		    auto desc = _renderContext.instancedDrawDescs.find(mesh.id);
-		    _renderContext.instanceUniforms[desc->second.offset + offset.first->second] = static_cast<glm::mat4>(transform);
+
+		    glm::mat4 modelMatrix = glm::mat4(1.0f);
+		    modelMatrix = glm::translate(modelMatrix, transform.position);
+		    modelMatrix *= glm::mat4(transform.rotation);
+		    modelMatrix = glm::scale(modelMatrix, transform.scale);
+
 		    uint32_t idx = desc->second.offset + offset.first->second;
+		    _renderContext.instanceUniforms[idx] = modelMatrix;
 		    if (drawBoundingBox)
 		    {
 			    const L3DMesh& l3dMesh = Game::instance()->GetMeshPack().GetMesh(mesh.id);
 			    auto submeshId = (l3dMesh.GetNumSubMeshes() + mesh.bbSubmeshId) % l3dMesh.GetNumSubMeshes();
 			    auto box = l3dMesh.GetSubMeshes()[submeshId]->GetBoundingBox();
-			    auto boxMatrix = static_cast<glm::mat4>(transform) * glm::translate(box.center()) * glm::scale(box.size());
+			    auto boxMatrix = modelMatrix * glm::translate(box.center()) * glm::scale(box.size());
 			    _renderContext.instanceUniforms[idx + _renderContext.instanceUniforms.size() / 2] = boxMatrix;
 		    }
 		    offset.first->second++;
