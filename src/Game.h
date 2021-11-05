@@ -165,8 +165,7 @@ public:
 	[[nodiscard]] LandIsland& GetLandIsland() const { return *_landIsland; }
 	[[nodiscard]] L3DMesh& GetTestModel() const { return *_testModel; }
 	[[nodiscard]] L3DMesh& GetHandModel() const { return *_handModel; }
-	const ecs::components::Transform& GetHandTransform() const;
-	ecs::components::Transform& GetHandTransform();
+	entt::entity GetHand() const;
 	AnimationPack& GetAnimationPack() { return *_animationPack; }
 	MeshPack& GetMeshPack() { return *_meshPack; }
 	[[nodiscard]] const LHVM::LHVM& GetLhvm() { return *_lhvm; }
