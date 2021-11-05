@@ -19,8 +19,7 @@
 #include "3D/Water.h"
 #include "Common/EventManager.h"
 #include "Common/FileSystem.h"
-#include "ECS/Components/Hand.h"
-#include "ECS/Components/Mesh.h"
+#include "ECS/Archetypes/HandArchetype.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/RenderingSystem.h"
@@ -460,12 +459,8 @@ void Game::LoadMap(const fs::path& path)
 	_entityRegistry->Reset();
 
 	// We need a hand for the player
-	_handEntity = _entityRegistry->Create();
-	_entityRegistry->Assign<ecs::components::Hand>(_handEntity);
-	const auto rotation = glm::mat3(glm::eulerAngleXZ(glm::half_pi<float>(), glm::half_pi<float>()));
-	_entityRegistry->Assign<ecs::components::Transform>(_handEntity, glm::vec3(0.0f), rotation, glm::vec3(0.02f));
-	_entityRegistry->Assign<ecs::components::Mesh>(_handEntity, static_cast<MeshId>(ecs::components::Hand::meshId),
-	                                               static_cast<int8_t>(0), static_cast<int8_t>(0));
+	_handEntity = ecs::archetypes::HandArchetype::Create(glm::vec3(0.0f), glm::half_pi<float>(), 0.0f, glm::half_pi<float>(),
+	                                                     0.02f, false);
 
 	Script script(this);
 	script.Load(source);
