@@ -1,0 +1,48 @@
+VERSION(2.300000)
+SET_LAND_NUMBER(0)
+LOAD_LANDSCAPE(".\DATA\LANDSCAPE\MULTI_PLAYER\MPM_2P_1.lnd")
+START_CAMERA_POS("2197.83,2372.96")
+
+SET_TOWN_INFLUENCE_MULTIPLIER(0.40000)
+SET_PLAYER_INFLUENCE_MULTIPLIER(10.000000)
+SET_NIGHTTIME(1700.000000, 0.083000, 0.070000)
+
+START_GAME_MESSAGE("Mobile Wall Hug Sandbox", 0)
+ADD_GAME_MESSAGE_LINE("Sandbox to test pathfinding", 0)
+
+rem *********************** PLAYER_ONE ***********************
+CREATE_CITADEL("1989.46,2356.52", 0, "PLAYER_ONE", 2552, 1000)
+CREATE_WORSHIP_SITE("2029.73,2340.36", 0, "PLAYER_ONE", "CELTIC", 7039, 1000)
+
+rem ---------------- Town: 0 ----------------
+CREATE_TOWN(0, "2185.72,2315.78", "PLAYER_ONE", 0, "CELTIC")
+
+CREATE_NEW_TOWN_SPELL(0, "HEAL")
+CREATE_NEW_TOWN_SPELL(0, "TELEPORT")
+CREATE_NEW_TOWN_SPELL(0, "WATER")
+CREATE_NEW_TOWN_SPELL(0, "WATER_PU1")
+CREATE_NEW_TOWN_SPELL(0, "BEAM_EXPLOSION")
+SET_TOWN_BELIEF(0, "PLAYER_ONE", 10.000000)
+
+CREATE_ABODE(0, "2224.63,2372.52", "CELTIC_ABODE_F", 11100, 1095, 0, 0)
+
+CREATE_ABODE(0, "2203.00,2358.00", "CELTIC_ABODE_F", 10262, 1095, 0, 0)
+CREATE_ABODE(0, "2207.00,2345.00", "CELTIC_ABODE_F", 10262, 1095, 0, 0)
+
+CREATE_TOWN_CENTRE(0, "2188.23,2317.47", "CELTIC_ABODE_TOWN_CENTRE", 2932, 1000, 0)
+
+CREATE_VILLAGER_POS("2219.71,2371.99", "2197.00,2333.00", "CELTIC_HOUSEWIFE", 37)
+
+rem *********************** PLAYER_TWO ***********************
+
+rem *********************** PLAYER_THREE ***********************
+
+rem *********************** PLAYER_FOUR ***********************
+
+rem *********************** PLAYER_FIVE ***********************
+
+rem *********************** PLAYER_SIX ***********************
+
+rem *********************** PLAYER_SEVEN ***********************
+
+rem *********************** NEUTRAL ***********************
