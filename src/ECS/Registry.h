@@ -61,6 +61,13 @@ public:
 		SetDirty();
 		return _registry.remove<Component, Other...>(entity);
 	}
+	template <typename After, typename Before, typename... Args>
+	decltype(auto) SwapComponents(entt::entity entity, [[maybe_unused]] Before previousComponent,
+	                              [[maybe_unused]] Args&&... args)
+	{
+		Remove<Before>(entity);
+		return Assign<After>(entity, std::forward<Args>(args)...);
+	}
 	void SetDirty();
 	RegistryContext& Context();
 	[[nodiscard]] const RegistryContext& Context() const;
