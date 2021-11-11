@@ -42,8 +42,10 @@ set(COFFRE_ANIM_OUTPUT ${COFFRE_BINARY_DIR}/coffre.anm)
 set(COFFRE_INPUT ${COFFRE_BINARY_DIR}/coffre.gltf)
 
 set(TERRAIN_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/Landscape)
+set(TERRAIN_MULTIPLAYER_BINARY_DIR ${TERRAIN_BINARY_DIR}/Multi_Player)
 set(TERRAIN_TYPE 0)
-set(TERRAIN_OUTPUT ${TERRAIN_BINARY_DIR}/Land1.lnd)
+set(TERRAIN_LAND_1_OUTPUT ${TERRAIN_BINARY_DIR}/Land1.lnd)
+set(TERRAIN_LAND_MPM_2P_1_OUTPUT ${TERRAIN_MULTIPLAYER_BINARY_DIR}/MPM_2P_1.lnd)
 set(TERRAIN_NOISE_MAP ${TERRAIN_BINARY_DIR}/noise_map.r8.raw)
 set(TERRAIN_BUMP_MAP ${TERRAIN_BINARY_DIR}/bump_map.r8.raw)
 list(APPEND TERRAIN_MATERIAL_ARRAY ${TERRAIN_BINARY_DIR}/material_data1.rgb5a1.raw)
@@ -67,6 +69,7 @@ add_custom_target(generate-mock-game-data
   COMMAND ${CMAKE_COMMAND} -E make_directory ${CREATURE_MESH_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${SKY_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TERRAIN_BINARY_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${TERRAIN_MULTIPLAYER_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${COFFRE_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${SCRIPTS_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${QUESTS_BINARY_DIR}
@@ -95,7 +98,8 @@ add_custom_target(generate-mock-game-data
   COMMAND l3dtool write -o ${HAND_BASE_OUTPUT} -i ${HAND_BASE_MESH_FILE}
   # Data/Landscape/Land1.lnd
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Data/Landscape/gen_land_textures.py --output-dir ${TERRAIN_BINARY_DIR}
-  COMMAND lndtool write -o ${TERRAIN_OUTPUT} --terrain-type ${TERRAIN_TYPE} --noise-map ${TERRAIN_NOISE_MAP} --bump-map ${TERRAIN_BUMP_MAP} --material-array=${TERRAIN_MATERIAL_LIST}
+  COMMAND lndtool write -o ${TERRAIN_LAND_1_OUTPUT} --terrain-type ${TERRAIN_TYPE} --noise-map ${TERRAIN_NOISE_MAP} --bump-map ${TERRAIN_BUMP_MAP} --material-array=${TERRAIN_MATERIAL_LIST}
+  COMMAND lndtool write -o ${TERRAIN_LAND_MPM_2P_1_OUTPUT} --terrain-type ${TERRAIN_TYPE} --noise-map ${TERRAIN_NOISE_MAP} --bump-map ${TERRAIN_BUMP_MAP} --material-array=${TERRAIN_MATERIAL_LIST}
   # Data/WeatherSystem/sky.l3d
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Data/WeatherSystem/gen_sky.py --output-dir ${SKY_BINARY_DIR}
   COMMAND l3dtool write -o ${SKY_OUTPUT} -i ${SKY_MESH_FILE}

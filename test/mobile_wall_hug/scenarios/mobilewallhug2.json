@@ -1,1159 +1,2198 @@
 {
   "start_turn": 69,
-  "last_turn": 132,
+  "last_turn": 133,
   "map_file": "mobilewallhug2.txt",
   "villager_states": [
     {
       "turn": 69,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbb333", "0x00e94ccd" ],
+      "id": 0,
+      "pos": [
+        2197.0,
+        2333.0
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 64.160161,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.1198060512542725,
       "move_state": "LINEAR",
-      "step": [2510, 5184],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0000" },
-      "field_0x78": "0x00",
+      "step": [
+        0.38299560546875,
+        0.791015625
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0000"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 43.207291,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 43.197750091552734,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 70,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbbd01", "0x00e9610d" ],
+      "id": 0,
+      "pos": [
+        2197.383056640625,
+        2333.791015625
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 64.160161,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.1198060512542725,
       "move_state": "LINEAR",
-      "step": [2510, 5184],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0000" },
-      "field_0x78": "0x00",
+      "step": [
+        0.38299560546875,
+        0.791015625
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0000"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 42.336460,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 42.31886672973633,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 71,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbc6cf", "0x00e9754d" ],
+      "id": 0,
+      "pos": [
+        2197.76611328125,
+        2334.58203125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 64.160161,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.1198060512542725,
       "move_state": "LINEAR",
-      "step": [2510, 5184],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0000" },
-      "field_0x78": "0x00",
+      "step": [
+        0.38299560546875,
+        0.791015625
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0000"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 41.437096,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 41.43998336791992,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 72,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbd09d", "0x00e9898d" ],
+      "id": 0,
+      "pos": [
+        2198.149169921875,
+        2335.373046875
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 64.160161,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.1198060512542725,
       "move_state": "LINEAR",
-      "step": [2510, 5184],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0000" },
-      "field_0x78": "0x00",
+      "step": [
+        0.38299560546875,
+        0.791015625
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0000"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 40.554970,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 40.561100006103516,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 73,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbda6b", "0x00e99dcd" ],
+      "id": 0,
+      "pos": [
+        2198.5322265625,
+        2336.1640625
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 64.160161,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.1198060512542725,
       "move_state": "LINEAR",
-      "step": [2510, 5184],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0000" },
-      "field_0x78": "0x00",
+      "step": [
+        0.38299560546875,
+        0.791015625
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0000"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 39.690395,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 39.68221664428711,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 74,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbe439", "0x00e9b20d" ],
+      "id": 0,
+      "pos": [
+        2198.915283203125,
+        2336.955078125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 64.160161,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.1198060512542725,
       "move_state": "LINEAR",
-      "step": [2510, 5184],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0000" },
-      "field_0x78": "0x00",
+      "step": [
+        0.38299560546875,
+        0.791015625
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0000"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 38.825207,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 38.80332946777344,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 75,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbee07", "0x00e9c64d" ],
+      "id": 0,
+      "pos": [
+        2199.29833984375,
+        2337.74609375
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 64.160161,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.1198060512542725,
       "move_state": "LINEAR",
-      "step": [2510, 5184],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0000" },
-      "field_0x78": "0x00",
+      "step": [
+        0.38299560546875,
+        0.791015625
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0000"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 37.926453,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 37.9244499206543,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 76,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbf7d5", "0x00e9da8d" ],
+      "id": 0,
+      "pos": [
+        2199.681396484375,
+        2338.537109375
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 64.160161,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.1198060512542725,
       "move_state": "LINEAR",
-      "step": [2510, 5184],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0000" },
-      "field_0x78": "0x00",
+      "step": [
+        0.38299560546875,
+        0.791015625
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0000"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 37.068436,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 37.04556655883789,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 77,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc01a3", "0x00e9eecd" ],
+      "id": 0,
+      "pos": [
+        2200.064453125,
+        2339.328125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 64.160161,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.1182483434677124,
       "move_state": "LINEAR",
-      "step": [2510, 5184],
-      "circle_hug_info": {"obj_index": 2, "turns_to_obj": "0x02", "field_0x5": "0x00", "field_0x6": "0x0000" },
-      "field_0x78": "0x00",
+      "step": [
+        0.38484296202659607,
+        0.7915297746658325
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x02",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0000",
+        "obj_index": 2
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 36.184177,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 36.16667938232422,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 78,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc0b71", "0x00ea030d" ],
+      "id": 0,
+      "pos": [
+        2200.44921875,
+        2340.11962890625
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 64.160161,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.1182100772857666,
       "move_state": "LINEAR",
-      "step": [2510, 5184],
-      "circle_hug_info": {"obj_index": 2, "turns_to_obj": "0x01", "field_0x5": "0x00", "field_0x6": "0x0000" },
-      "field_0x78": "0x00",
+      "step": [
+        0.3848732113838196,
+        0.791515052318573
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x01",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0000",
+        "obj_index": 2
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 35.280384,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 35.2866096496582,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 79,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc153f", "0x00ea174d" ],
+      "id": 0,
+      "pos": [
+        2200.833984375,
+        2340.9111328125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 64.160161,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.1182100772857666,
       "move_state": "LINEAR",
-      "step": [2510, 5184],
-      "circle_hug_info": {"obj_index": 2, "turns_to_obj": "0x00", "field_0x5": "0x00", "field_0x6": "0x0000" },
-      "field_0x78": "0x00",
+      "step": [
+        0.3848732113838196,
+        0.791515052318573
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x00",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0000",
+        "obj_index": 2
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 34.420692,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 34.40653991699219,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 80,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc1f0d", "0x00ea2b8d" ],
+      "id": 0,
+      "pos": [
+        2201.21875,
+        2341.70263671875
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 119.882811,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 2.094167947769165,
       "move_state": "ORBIT_CW",
-      "step": [-2870, 4994],
-      "circle_hug_info": {"obj_index": 2, "turns_to_obj": "0x08", "field_0x5": "0x00", "field_0x6": "0x1133" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.4398903250694275,
+        0.7623122334480286
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x08",
+        "field_0x5": "0x00",
+        "field_0x6": "0x1133",
+        "obj_index": 2
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 33.519188,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 33.52647018432617,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 81,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc1670", "0x00ea4056" ],
+      "id": 0,
+      "pos": [
+        2200.87890625,
+        2342.514404296875
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 112.500005,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.9671932458877563,
       "move_state": "ORBIT_CW",
-      "step": [-2205, 5321],
-      "circle_hug_info": {"obj_index": 2, "turns_to_obj": "0x07", "field_0x5": "0x00", "field_0x6": "0x1133" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.33981451392173767,
+        0.8118802309036255
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x07",
+        "field_0x5": "0x00",
+        "field_0x6": "0x1133",
+        "obj_index": 2
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 32.979477,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 32.9516716003418,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 82,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc1091", "0x00ea560e" ],
+      "id": 0,
+      "pos": [
+        2200.64453125,
+        2343.36279296875
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 105.117192,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.8402185440063477,
       "move_state": "ORBIT_CW",
-      "step": [-1503, 5560],
-      "circle_hug_info": {"obj_index": 2, "turns_to_obj": "0x06", "field_0x5": "0x00", "field_0x6": "0x1133" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.23426739871501923,
+        0.8483762145042419
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x06",
+        "field_0x5": "0x00",
+        "field_0x6": "0x1133",
+        "obj_index": 2
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 32.328678,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 32.308467864990234,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 83,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc0d89", "0x00ea6c59" ],
+      "id": 0,
+      "pos": [
+        2200.51953125,
+        2344.23388671875
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 97.734379,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.713243842124939,
       "move_state": "ORBIT_CW",
-      "step": [-776, 5707],
-      "circle_hug_info": {"obj_index": 2, "turns_to_obj": "0x05", "field_0x5": "0x00", "field_0x6": "0x1133" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.12494833767414093,
+        0.8712126016616821
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x05",
+        "field_0x5": "0x00",
+        "field_0x6": "0x1133",
+        "obj_index": 2
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 31.605400,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 31.603548049926758,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 84,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc0d65", "0x00ea82d8" ],
+      "id": 0,
+      "pos": [
+        2200.505859375,
+        2345.114013671875
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 90.351566,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.5862691402435303,
       "move_state": "ORBIT_CW",
-      "step": [-36, 5759],
-      "circle_hug_info": {"obj_index": 2, "turns_to_obj": "0x04", "field_0x5": "0x00", "field_0x6": "0x1133" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.013617496937513351,
+        0.8800216317176819
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x04",
+        "field_0x5": "0x00",
+        "field_0x6": "0x1133",
+        "obj_index": 2
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 30.843822,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 30.84415054321289,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 85,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc1026", "0x00ea992c" ],
+      "id": 0,
+      "pos": [
+        2200.603759765625,
+        2345.98876953125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 82.968753,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.4592944383621216,
       "move_state": "ORBIT_CW",
-      "step": [705, 5716],
-      "circle_hug_info": {"obj_index": 2, "turns_to_obj": "0x03", "field_0x5": "0x00", "field_0x6": "0x1133" },
-      "field_0x78": "0x00",
+      "step": [
+        0.0979325920343399,
+        0.8746614456176758
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x03",
+        "field_0x5": "0x00",
+        "field_0x6": "0x1133",
+        "obj_index": 2
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 30.029755,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 30.039058685302734,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 86,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc15bf", "0x00eaaef6" ],
+      "id": 0,
+      "pos": [
+        2200.811767578125,
+        2346.843994140625
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 75.585940,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.332319736480713,
       "move_state": "ORBIT_CW",
-      "step": [1433, 5578],
-      "circle_hug_info": {"obj_index": 2, "turns_to_obj": "0x02", "field_0x5": "0x00", "field_0x6": "0x1133" },
-      "field_0x78": "0x00",
+      "step": [
+        0.20790588855743408,
+        0.8552184104919434
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x02",
+        "field_0x5": "0x00",
+        "field_0x6": "0x1133",
+        "obj_index": 2
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 29.194935,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 29.198017120361328,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 87,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc1e19", "0x00eac3da" ],
+      "id": 0,
+      "pos": [
+        2201.126220703125,
+        2347.666015625
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 68.203127,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.2053450345993042,
       "move_state": "ORBIT_CW",
-      "step": [2138, 5348],
-      "circle_hug_info": {"obj_index": 2, "turns_to_obj": "0x01", "field_0x5": "0x00", "field_0x6": "0x1133" },
-      "field_0x78": "0x00",
+      "step": [
+        0.31453168392181396,
+        0.8220056295394897
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x01",
+        "field_0x5": "0x00",
+        "field_0x6": "0x1133",
+        "obj_index": 2
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 28.326847,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 28.332061767578125,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 88,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc2911", "0x00ead77f" ],
+      "id": 0,
+      "pos": [
+        2201.542236328125,
+        2348.441650390625
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 60.820314,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.0783703327178955,
       "move_state": "ORBIT_CW",
-      "step": [2808, 5029],
-      "circle_hug_info": {"obj_index": 2, "turns_to_obj": "0x00", "field_0x5": "0x00", "field_0x6": "0x1133" },
-      "field_0x78": "0x00",
+      "step": [
+        0.41609323024749756,
+        0.7755577564239502
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x00",
+        "field_0x5": "0x00",
+        "field_0x6": "0x1133",
+        "obj_index": 2
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 27.435112,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 27.453296661376953,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 89,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc3678", "0x00eae991" ],
+      "id": 0,
+      "pos": [
+        2202.05322265625,
+        2349.158203125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 139.042967,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 2.4270074367523193,
       "move_state": "EXIT_CIRCLE_CW",
-      "step": [-4350, 3775],
-      "circle_hug_info": {"obj_index": 2, "turns_to_obj": "0x00", "field_0x5": "0x00", "field_0x6": "0x1133" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.664817214012146,
+        0.5767508149147034
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x00",
+        "field_0x5": "0x00",
+        "field_0x6": "0x1133",
+        "obj_index": 2
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 26.563210,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 26.5754337310791,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 90,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc257a", "0x00eaf850" ],
+      "id": 0,
+      "pos": [
+        2201.388427734375,
+        2349.73486328125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 57.128908,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.9907959699630737,
       "move_state": "LINEAR_CW",
-      "step": [3126, 4837],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0x01", "field_0x5": "0x00", "field_0x6": "0x1133" },
-      "field_0x78": "0x00",
+      "step": [
+        0.48233088850975037,
+        0.7361931204795837
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x01",
+        "field_0x5": "0x00",
+        "field_0x6": "0x1133",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 26.443121,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 26.443090438842773,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 91,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc31b0", "0x00eb0b35" ],
+      "id": 0,
+      "pos": [
+        2201.870849609375,
+        2350.470947265625
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 57.128908,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.9907959699630737,
       "move_state": "LINEAR_CW",
-      "step": [3126, 4837],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0x00", "field_0x5": "0x00", "field_0x6": "0x1133" },
-      "field_0x78": "0x00",
+      "step": [
+        0.48233088850975037,
+        0.7361931204795837
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x00",
+        "field_0x5": "0x00",
+        "field_0x6": "0x1133",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 25.552454,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 25.563005447387695,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 92,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc3de6", "0x00eb1e1a" ],
+      "id": 0,
+      "pos": [
+        2202.353271484375,
+        2351.20703125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 169.453127,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 2.943289279937744,
       "move_state": "ORBIT_CW",
-      "step": [-5663, 1054],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0x1d", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.8628784418106079,
+        0.17339050769805908
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x1d",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 24.675060,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 24.682920455932617,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 93,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc287d", "0x00eb2507" ],
+      "id": 0,
+      "pos": [
+        2201.519287109375,
+        2351.48828125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 162.070321,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 2.816314458847046,
       "move_state": "ORBIT_CW",
-      "step": [-5481, 1773],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0x1c", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.8339747190475464,
+        0.2812643051147461
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x1c",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 24.915083,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 24.919260025024414,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 94,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc1426", "0x00eb2ea5" ],
+      "id": 0,
+      "pos": [
+        2200.7275390625,
+        2351.872802734375
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 154.687502,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 2.6893396377563477,
       "move_state": "ORBIT_CW",
-      "step": [-5207, 2462],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0x1b", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.7916432619094849,
+        0.3846094608306885
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x1b",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 25.082933,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 25.076332092285156,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 95,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc0136", "0x00eb3acc" ],
+      "id": 0,
+      "pos": [
+        2199.990966796875,
+        2352.3544921875
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 147.304695,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 2.7582168579101562,
       "move_state": "ORBIT_CW",
-      "step": [-4848, 3111],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0x1a", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.8162360787391663,
+        0.3292144238948822
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 25.159990,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 25.152923583984375,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 96,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbeffe", "0x00eb4948" ],
+      "id": 0,
+      "pos": [
+        2199.222900390625,
+        2352.784423828125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 151.171880,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 2.631242036819458,
       "move_state": "ORBIT_CW",
-      "step": [-5047, 2777],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.7679752707481384,
+        0.429927259683609
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 25.159990,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 25.31966209411621,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 97,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbddd6", "0x00eb5692" ],
+      "id": 0,
+      "pos": [
+        2198.515625,
+        2353.30810546875
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 143.789060,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 2.5042672157287598,
       "move_state": "ORBIT_CW",
-      "step": [-4648, 3402],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.7073493599891663,
+        0.5237178206443787
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 25.253071,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 25.405702590942383,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 98,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbcd8a", "0x00eb6615" ],
+      "id": 0,
+      "pos": [
+        2197.88037109375,
+        2353.917236328125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 136.406254,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 2.3772923946380615,
       "move_state": "ORBIT_CW",
-      "step": [-4172, 3971],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.6353344321250916,
+        0.6090760231018066
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 25.253071,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 25.410480499267578,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 99,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbbf5f", "0x00eb778f" ],
+      "id": 0,
+      "pos": [
+        2197.327392578125,
+        2354.601806640625
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 129.023435,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 2.2503175735473633,
       "move_state": "ORBIT_CW",
-      "step": [-3627, 4474],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.55308997631073,
+        0.6846275925636292
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 25.175402,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 25.334095001220703,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 100,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbb391", "0x00eb8ab6" ],
+      "id": 0,
+      "pos": [
+        2196.865478515625,
+        2355.35107421875
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 121.640628,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 2.123342752456665,
       "move_state": "ORBIT_CW",
-      "step": [-3022, 4903],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.46194031834602356,
+        0.7491559386253357
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 25.021744,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 25.176937103271484,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 101,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbaa52", "0x00eb9f39" ],
+      "id": 0,
+      "pos": [
+        2196.502197265625,
+        2356.152587890625
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 114.257815,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.9963680505752563,
       "move_state": "ORBIT_CW",
-      "step": [-2367, 5251],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.36335301399230957,
+        0.8016221523284912
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 24.794538,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 24.940204620361328,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 102,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dba3c9", "0x00ebb4c0" ],
+      "id": 0,
+      "pos": [
+        2196.2431640625,
+        2356.99365234375
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 106.875003,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.8693933486938477,
       "move_state": "ORBIT_CW",
-      "step": [-1673, 5511],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.25891539454460144,
+        0.8411814570426941
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 24.453957,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 24.625520706176758,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 103,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dba013", "0x00ebcaf1" ],
+      "id": 0,
+      "pos": [
+        2196.0927734375,
+        2357.86083984375
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 99.492190,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.742418646812439,
       "move_state": "ORBIT_CW",
-      "step": [-950, 5681],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.1503090113401413,
+        0.8671970367431641
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 24.066071,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 24.234783172607422,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 104,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00db9f3f", "0x00ebe16d" ],
+      "id": 0,
+      "pos": [
+        2196.053466796875,
+        2358.739990234375
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 92.109377,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.6154439449310303,
       "move_state": "ORBIT_CW",
-      "step": [-212, 5756],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        -0.03928251564502716,
+        0.8792498707771301
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 23.594721,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 23.770809173583984,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 105,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dba150", "0x00ebf7d4" ],
+      "id": 0,
+      "pos": [
+        2196.125732421875,
+        2359.6171875
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 84.726564,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.4884692430496216,
       "move_state": "ORBIT_CW",
-      "step": [529, 5735],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.07237645983695984,
+        0.8771460056304932
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 23.050432,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 23.236915588378906,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 106,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dba63e", "0x00ec0dc7" ],
+      "id": 0,
+      "pos": [
+        2196.30859375,
+        2360.47802734375
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 73.300784,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.2869664430618286,
       "move_state": "ORBIT_CW",
-      "step": [1655, 5517],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.2464657574892044,
+        0.8449130654335022
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 22.431831,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 22.637073516845703,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 107,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbaf6c", "0x00ec2251" ],
+      "id": 0,
+      "pos": [
+        2196.66015625,
+        2361.284912109375
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 65.917971,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.15999174118042,
       "move_state": "ORBIT_CW",
-      "step": [2350, 5258],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.35147613286972046,
+        0.8069002032279968
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 21.729763,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 21.933837890625,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 108,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbbb2a", "0x00ec3581" ],
+      "id": 0,
+      "pos": [
+        2197.111083984375,
+        2362.040771484375
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 58.535158,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.0330170392990112,
       "move_state": "ORBIT_CW",
-      "step": [3006, 4912],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.450827419757843,
+        0.7558955550193787
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 20.973068,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 21.179182052612305,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 109,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbc946", "0x00ec4706" ],
+      "id": 0,
+      "pos": [
+        2197.654052734375,
+        2362.7333984375
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 51.152345,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.9060423374176025,
       "move_state": "ORBIT_CW",
-      "step": [3612, 4485],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.5429199934005737,
+        0.6927202343940735
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 20.177614,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 20.380319595336914,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 110,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbd985", "0x00ec5696" ],
+      "id": 0,
+      "pos": [
+        2198.2802734375,
+        2363.351806640625
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 43.769532,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.7790676355361938,
       "move_state": "ORBIT_CW",
-      "step": [4159, 3984],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.6262710094451904,
+        0.6183915138244629
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 19.339285,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 19.545467376708984,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 111,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbeba1", "0x00ec63ef" ],
+      "id": 0,
+      "pos": [
+        2198.979736328125,
+        2363.885986328125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 36.386719,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.6520929336547852,
       "move_state": "ORBIT_CW",
-      "step": [4636, 3417],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.6995384693145752,
+        0.5341061353683472
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 18.467232,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 18.684123992919922,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 112,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dbff4e", "0x00ec6ed7" ],
+      "id": 0,
+      "pos": [
+        2199.7412109375,
+        2364.3271484375
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 29.003907,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.5251182317733765,
       "move_state": "ORBIT_CW",
-      "step": [5037, 2792],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.7615427374839783,
+        0.44122111797332764
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 17.594721,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 17.807384490966797,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 113,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc1438", "0x00ec7721" ],
+      "id": 0,
+      "pos": [
+        2200.552490234375,
+        2364.66845703125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 108.281250,
-      "move_state": "EXIT_CIRCLE_CW",
-      "step": [-1807, 5469],
-      "circle_hug_info": {"obj_index": 1, "turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.44189655780792236,
+      "move_state": "ORBIT_CW",
+      "step": [
+        0.7955839037895203,
+        0.37639036774635315
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 16.718548,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 16.927907943725586,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 114,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc0d29", "0x00ec8c7e" ],
+      "id": 0,
+      "pos": [
+        2201.389404296875,
+        2364.941162109375
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.324219,
-      "move_state": "LINEAR_CW",
-      "step": [5328, 2187],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 1.8040533065795898,
+      "move_state": "EXIT_CIRCLE_CW",
+      "step": [
+        -0.20343917608261108,
+        0.8562919497489929
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 1
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 16.637064,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 16.054737091064453,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 115,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc21f9", "0x00ec9509" ],
+      "id": 0,
+      "pos": [
+        2201.18603515625,
+        2365.79736328125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.324219,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.3909412622451782,
       "move_state": "LINEAR_CW",
-      "step": [5328, 2187],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.8137220740318298,
+        0.3353801667690277
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 15.754025,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 15.892959594726562,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 116,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc36c9", "0x00ec9d94" ],
+      "id": 0,
+      "pos": [
+        2201.999755859375,
+        2366.1328125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.324219,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.3909412622451782,
       "move_state": "LINEAR_CW",
-      "step": [5328, 2187],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.8137220740318298,
+        0.3353801667690277
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 14.873121,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 15.01280689239502,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 117,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc4b99", "0x00eca61f" ],
+      "id": 0,
+      "pos": [
+        2202.8134765625,
+        2366.46826171875
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.324219,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.3909412622451782,
       "move_state": "LINEAR_CW",
-      "step": [5328, 2187],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.8137220740318298,
+        0.3353801667690277
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 13.998779,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 14.132655143737793,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 118,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc6069", "0x00ecaeaa" ],
+      "id": 0,
+      "pos": [
+        2203.627197265625,
+        2366.8037109375
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.324219,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.3909412622451782,
       "move_state": "LINEAR_CW",
-      "step": [5328, 2187],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.8137220740318298,
+        0.3353801667690277
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 13.111467,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 13.25250244140625,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 119,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc7539", "0x00ecb735" ],
+      "id": 0,
+      "pos": [
+        2204.44091796875,
+        2367.13916015625
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.324219,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.3909412622451782,
       "move_state": "LINEAR_CW",
-      "step": [5328, 2187],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.8137220740318298,
+        0.3353801667690277
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 12.234226,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 12.372350692749023,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 120,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc8a09", "0x00ecbfc0" ],
+      "id": 0,
+      "pos": [
+        2205.254638671875,
+        2367.474609375
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.324219,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.3909412622451782,
       "move_state": "LINEAR_CW",
-      "step": [5328, 2187],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.8137220740318298,
+        0.3353801667690277
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 11.358968,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 11.492198944091797,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 121,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dc9ed9", "0x00ecc84b" ],
+      "id": 0,
+      "pos": [
+        2206.068359375,
+        2367.81005859375
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.324219,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.3909412622451782,
       "move_state": "LINEAR_CW",
-      "step": [5328, 2187],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.8137220740318298,
+        0.3353801667690277
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 10.481117,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 10.61204719543457,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 122,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dcb3a9", "0x00ecd0d6" ],
+      "id": 0,
+      "pos": [
+        2206.882080078125,
+        2368.1455078125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.324219,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.3909412622451782,
       "move_state": "LINEAR_CW",
-      "step": [5328, 2187],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.8137220740318298,
+        0.3353801667690277
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 9.606012,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 9.731894493103027,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 123,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dcc879", "0x00ecd961" ],
+      "id": 0,
+      "pos": [
+        2207.69580078125,
+        2368.48095703125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.324219,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.3909412622451782,
       "move_state": "LINEAR_CW",
-      "step": [5328, 2187],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.8137220740318298,
+        0.3353801667690277
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 8.722362,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 8.8517427444458,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 124,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dcdd49", "0x00ece1ec" ],
+      "id": 0,
+      "pos": [
+        2208.509521484375,
+        2368.81640625
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.324219,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.3909412622451782,
       "move_state": "LINEAR_CW",
-      "step": [5328, 2187],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.8137220740318298,
+        0.3353801667690277
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 7.846799,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 7.971590995788574,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 125,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dcf219", "0x00ecea77" ],
+      "id": 0,
+      "pos": [
+        2209.3232421875,
+        2369.15185546875
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.324219,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.3909412622451782,
       "move_state": "LINEAR_CW",
-      "step": [5328, 2187],
-      "circle_hug_info": {"turns_to_obj": "0xff", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.8137220740318298,
+        0.3353801667690277
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0xff",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7"
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 6.966048,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 7.0914387702941895,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 126,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dd06e9", "0x00ecf302" ],
+      "id": 0,
+      "pos": [
+        2210.136962890625,
+        2369.4873046875
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.675782,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.3908504843711853,
       "move_state": "LINEAR_CW",
-      "step": [5314, 2220],
-      "circle_hug_info": {"obj_index": 0, "turns_to_obj": "0x09", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.8137525320053101,
+        0.3353062570095062
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x09",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 0
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 6.084383,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 6.211286544799805,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 127,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dd1bab", "0x00ecfbae" ],
+      "id": 0,
+      "pos": [
+        2210.95068359375,
+        2369.822509765625
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.675782,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.3908504843711853,
       "move_state": "LINEAR_CW",
-      "step": [5314, 2220],
-      "circle_hug_info": {"obj_index": 0, "turns_to_obj": "0x08", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.8137525320053101,
+        0.3353062570095062
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x08",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 0
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 5.205920,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 5.331227779388428,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 128,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dd306d", "0x00ed045a" ],
+      "id": 0,
+      "pos": [
+        2211.764404296875,
+        2370.15771484375
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.675782,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.39083871245384216,
       "move_state": "LINEAR_CW",
-      "step": [5314, 2220],
-      "circle_hug_info": {"obj_index": 0, "turns_to_obj": "0x07", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.8137564659118652,
+        0.3352966904640198
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x07",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 0
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 4.327917,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 4.451169013977051,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 129,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dd452f", "0x00ed0d06" ],
+      "id": 0,
+      "pos": [
+        2212.578125,
+        2370.492919921875
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.675782,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.39083871245384216,
       "move_state": "LINEAR_CW",
-      "step": [5314, 2220],
-      "circle_hug_info": {"obj_index": 0, "turns_to_obj": "0x06", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.8137564659118652,
+        0.3352966904640198
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x06",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 0
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 3.450065,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 3.5711097717285156,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 130,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dd59f1", "0x00ed15b2" ],
+      "id": 0,
+      "pos": [
+        2213.391845703125,
+        2370.828125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.675782,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.39083871245384216,
       "move_state": "LINEAR_CW",
-      "step": [5314, 2220],
-      "circle_hug_info": {"obj_index": 0, "turns_to_obj": "0x05", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.8137564659118652,
+        0.3352966904640198
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x05",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 0
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 2.570230,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 2.6910507678985596,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 131,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dd6eb3", "0x00ed1e5e" ],
+      "id": 0,
+      "pos": [
+        2214.20556640625,
+        2371.163330078125
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.675782,
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.39083871245384216,
       "move_state": "LINEAR_CW",
-      "step": [5314, 2220],
-      "circle_hug_info": {"obj_index": 0, "turns_to_obj": "0x04", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "step": [
+        0.8137564659118652,
+        0.3352966904640198
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x04",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 0
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 1.691920,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 1.810991883277893,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     },
     {
       "turn": 132,
-      "id": "0x2293D91C",
-      "map_coords": [ "0x00dd8375", "0x00ed270a" ],
+      "id": 0,
+      "pos": [
+        2215.019287109375,
+        2371.49853515625
+      ],
       "field_0x24": "0x0101",
       "field_0x26": "0x00",
-      "turns_until_next_state_change": "0x0",
-      "speed": "0x1688",
-      "game_angle": 22.675782,
-      "move_state": "FINAL_STEP",
-      "step": [-4881, -2153],
-      "circle_hug_info": {"obj_index": 0, "turns_to_obj": "0x03", "field_0x5": "0x00", "field_0x6": "0x0cc5" },
-      "field_0x78": "0x00",
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.39083871245384216,
+      "move_state": "LINEAR_CW",
+      "step": [
+        0.8137564659118652,
+        0.3352966904640198
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x03",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 0
+      },
       "status": "0x00000000",
-      "goal": [ "0x00dd9686", "0x00ed2f73" ],
-      "distance": 0.814221,
-      "state_map": [ "MOVE_TO_POS", "GO_AND_CHILLOUT_OUTSIDE_HOME" ]
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 0.9309329390525818,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
+    },
+    {
+      "turn": 133,
+      "id": 0,
+      "pos": [
+        2215.8330078125,
+        2371.833740234375
+      ],
+      "field_0x24": "0x0101",
+      "field_0x26": "0x00",
+      "turns_until_next_state_change": 0,
+      "speed": 0.880126953125,
+      "y_angle": 0.39083871245384216,
+      "move_state": "FINAL_STEP",
+      "step": [
+        -0.046875,
+        -0.019775390625
+      ],
+      "circle_hug_info": {
+        "turns_to_obj": "0x02",
+        "field_0x5": "0x00",
+        "field_0x6": "0x0cc7",
+        "obj_index": 0
+      },
+      "status": "0x00000000",
+      "goal": [
+        2215.8798828125,
+        2371.853515625
+      ],
+      "distance": 0.050875648856163025,
+      "state_map": [
+        "MOVE_TO_POS",
+        "GO_AND_CHILLOUT_OUTSIDE_HOME"
+      ]
     }
   ]
 }
