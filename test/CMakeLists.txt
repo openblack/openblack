@@ -12,3 +12,9 @@ endmacro()
 OPENBLACK_SETUP_AND_ADD_TEST(test_game_initialize test_game_initialize.cpp)
 OPENBLACK_SETUP_AND_ADD_TEST(test_load_scene test_load_scene.cpp)
 OPENBLACK_SETUP_AND_ADD_TEST(test_fixed test_fixed.cpp)
+
+add_custom_target(test_mobile_wall_hug_scenarios
+COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/mobile_wall_hug/scenarios ${CMAKE_CURRENT_BINARY_DIR}/mobile_wall_hug/scenarios
+)
+OPENBLACK_SETUP_AND_ADD_TEST(test_mobile_wall_hug mobile_wall_hug/test_mobile_wall_hug.cpp)
+add_dependencies(test_mobile_wall_hug test_mobile_wall_hug_scenarios)
