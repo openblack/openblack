@@ -1,2 +1,5 @@
-tiny_gltf.h
-stb_image_write.h
+apps/anmtool/tiny_gltf.h
+apps/anmtool/json.hpp
+apps/l3dtool/tiny_gltf.h
+apps/l3dtool/json.hpp
+src/Common/stb_image_write.h
