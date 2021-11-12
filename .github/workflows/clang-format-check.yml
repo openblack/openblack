@@ -1,0 +1,12 @@
+name: Formatting Check
+on: [push, pull_request]
+jobs:
+  formatting-check:
+    name: clang-format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: DoozyX/clang-format-lint-action@v0.13
+        with:
+          source: 'src apps components'
+          clangFormatVersion: 12
