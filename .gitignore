@@ -6,6 +6,7 @@ cmake-build-*/
 CMakeFiles
 */CMakeFiles
 CMakeCache.txt
+CMakeUserPresets.json
 cmake_install.cmake
 Makefile
 makefile
@@ -16,6 +17,7 @@ GameData
 
 ## windows build process
 .vs
+.vscode
 /deps
 /MSVC*
 
