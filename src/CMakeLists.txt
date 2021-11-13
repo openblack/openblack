@@ -3,13 +3,6 @@ file(GLOB_RECURSE OPENBLACK_HEADERS "${CMAKE_CURRENT_LIST_DIR}/*.h")
 
 set(OPENBLACK_RC ${CMAKE_SOURCE_DIR}/assets/resource/icon/openblack.rc)
 
-# force glm left handedness
-add_definitions(-DGLM_FORCE_LEFT_HANDED -DGLM_FORCE_RADIANS
-                -DGLM_ENABLE_EXPERIMENTAL)
-
-configure_file("${CMAKE_CURRENT_LIST_DIR}/GitSHA1.cpp.in"
-               "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" @ONLY)
-
 file(GLOB OPENBLACK_IMGUI_VS_SHADERS
      "${CMAKE_SOURCE_DIR}/assets/shaders/imgui/vs_*.sc")
 file(GLOB OPENBLACK_IMGUI_FS_SHADERS
@@ -70,7 +63,6 @@ add_executable(
   openblack
   ${OPENBLACK_SOURCES}
   ${OPENBLACK_HEADERS}
-  "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp"
   ${OPENBLACK_RC}
   ${OPENBLACK_SHADERS}
   ${OPENBLACK_VERTEX_SHADERS}
@@ -125,6 +117,10 @@ endif()
 
 target_compile_definitions(openblack
   PRIVATE
+  "GIT_SHA1=\"${GIT_SHA1}\""
+  "GLM_FORCE_LEFT_HANDED"
+  "GLM_FORCE_RADIANS"
+  "GLM_ENABLE_EXPERIMENTAL"
   "$<$<CONFIG:DEBUG>:OPENBLACK_DEBUG>"
   # Compile-time optimize out log messages (debug level if debug, else info)
   "SPDLOG_ACTIVE_LEVEL=$<IF:$<CONFIG:DEBUG>,SPDLOG_LEVEL_DEBUG,SPDLOG_LEVEL_INFO>"
