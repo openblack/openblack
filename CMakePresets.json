@@ -1,0 +1,132 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "template-vcpkg",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/cmake-build-presets/${presetName}",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        },
+        "OPENBLACK_USE_VCPKG": true,
+        "OPENBLACK_USE_BUNDLED_BGFX": true
+      }
+    },
+    {
+      "name": "template-system-deps",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/cmake-build-presets/${presetName}",
+      "cacheVariables": {
+        "OPENBLACK_USE_VCPKG": false,
+        "OPENBLACK_USE_BUNDLED_BGFX": false
+      }
+    },
+    {
+      "name": "ninja-multi-vcpkg",
+      "displayName": "Ninja Multi-Config (vcpkg, 64 bits)",
+      "description": "Configure with vcpkg toolchain and generate Ninja project files for all configurations",
+      "generator": "Ninja Multi-Config",
+      "inherits": "template-vcpkg"
+    },
+    {
+      "name": "msvc-16-vcpkg",
+      "displayName": "Visual Studio 2019 (vcpkg, 64 bits)",
+      "description": "Configure with vcpkg toolchain and generate Visual Studio 2019 project files for all configurations",
+      "generator": "Visual Studio 16 2019",
+      "inherits": "template-vcpkg"
+    },
+    {
+      "name": "unix-makefile-vcpkg",
+      "displayName": "Makefile (vcpkg)",
+      "description": "Configure with vcpkg toolchain and generate Makefile project files for all configurations",
+      "generator": "Unix Makefiles",
+      "inherits": "template-vcpkg"
+    },
+    {
+      "name": "linux-system-deps",
+      "displayName": "Linux (System Deps)",
+      "description": "Configure with Makefiles to use system-installed dependencies",
+      "generator": "Unix Makefiles",
+      "inherits": "template-system-deps"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "ninja-multi-vcpkg-debug",
+      "configurePreset": "ninja-multi-vcpkg",
+      "displayName": "Build ninja-multi-vcpkg-debug",
+      "description": "Build ninja-multi-vcpkg Debug configuration",
+      "configuration": "Debug"
+    },
+    {
+      "name": "ninja-multi-vcpkg-release",
+      "configurePreset": "ninja-multi-vcpkg",
+      "displayName": "Build ninja-multi-vcpkg-release",
+      "description": "Build ninja-multi-vcpkg Release configuration",
+      "configuration": "Release"
+    },
+    {
+      "name": "msvc-16-vcpkg-debug",
+      "configurePreset": "msvc-16-vcpkg",
+      "displayName": "Build msvc-16-vcpkg-debug",
+      "description": "Build msvc-16-vcpkg Debug configuration",
+      "configuration": "Debug"
+    },
+    {
+      "name": "msvc-16-vcpkg-release",
+      "configurePreset": "msvc-16-vcpkg",
+      "displayName": "Build msvc-16-vcpkg-release",
+      "description": "Build msvc-16-vcpkg Release configuration",
+      "configuration": "Release"
+    },
+    {
+      "name": "unix-makefile-vcpkg-debug",
+      "configurePreset": "unix-makefile-vcpkg",
+      "displayName": "Build unix-makefile-vcpkg-debug",
+      "description": "Build unix-makefile-vcpkg Debug configuration",
+      "configuration": "Debug"
+    },
+    {
+      "name": "unix-makefile-vcpkg-release",
+      "configurePreset": "unix-makefile-vcpkg",
+      "displayName": "Build unix-makefile-vcpkg-release",
+      "description": "Build unix-makefile-vcpkg Release configuration",
+      "configuration": "Release"
+    },
+    {
+      "name": "linux-system-deps-debug",
+      "configurePreset": "linux-system-deps",
+      "displayName": "Build linux-system-deps-debug",
+      "description": "Build linux-system-deps Debug configuration",
+      "configuration": "Debug"
+    },
+    {
+      "name": "linux-system-deps-relwithdebinfo",
+      "configurePreset": "linux-system-deps",
+      "displayName": "Build linux-system-deps-relwithdebinfo",
+      "description": "Build linux-system-deps RelWithDebInfo configuration",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "linux-system-deps-min-size-rel",
+      "configurePreset": "linux-system-deps",
+      "displayName": "Build linux-system-deps-min-size-rel",
+      "description": "Build linux-system-deps MinSizeRel configuration",
+      "configuration": "MinSizeRel"
+    },
+    {
+      "name": "linux-system-deps-release",
+      "configurePreset": "linux-system-deps",
+      "displayName": "Build linux-system-deps-release",
+      "description": "Build linux-system-deps Release configuration",
+      "configuration": "Release"
+    }
+  ]
+}
