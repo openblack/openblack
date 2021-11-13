@@ -8,4 +8,10 @@
  *****************************************************************************/
 
 #pragma once
-extern const char* kGitSHA1Hash;
+
+#ifndef GIT_SHA1
+#define GIT_SHA1 "UNDEFINED_GIT_SHA1"
+#warning "Git sha-1 undefined. Make sure to set it properly"
+#endif
+
+static const char* kGitSHA1Hash = GIT_SHA1;
