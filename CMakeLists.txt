@@ -1,11 +1,7 @@
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
-if(${CMAKE_VERSION} VERSION_LESS 3.14)
-  include(${CMAKE_SOURCE_DIR}/CMakeModules/backport/FetchContent.cmake)
-else()
-  include(FetchContent)
-endif()
+include(FetchContent)
 
 # On Visual Studio generators default to using vcpkg as the most newbie friendly option
 if (CMAKE_GENERATOR MATCHES "^Visual Studio")
@@ -30,6 +26,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # don't allow in source builds
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
+# do find_package with CONFIG before MODULE
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
+
 # Output binaries to bin/
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
@@ -46,74 +45,21 @@ if(NOT TARGET SDL2::SDL2)
   find_package(SDL2 MODULE REQUIRED)
 endif()
 
-# Dependencies: we search for config first, then module this helps package managers.
-if(CMAKE_VERSION VERSION_GREATER 3.15 OR CMAKE_VERSION VERSION_EQUAL 3.15)
-  set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
-
-  find_package(spdlog 1.3.0 REQUIRED)
-  find_package(glm REQUIRED)
-  find_package(EnTT 3.7.0 CONFIG REQUIRED) # only available as a config
-  find_package(cxxopts REQUIRED)
-else()
-  find_package(spdlog 1.3.0 CONFIG QUIET)
-  find_package(glm CONFIG QUIET)
-  find_package(EnTT 3.7.0 CONFIG REQUIRED) # only available as a config
-  find_package(cxxopts CONFIG REQUIRED)
-
-  if(NOT DEFINED spdlog_DIR)
-    find_package(spdlog 1.3.0 MODULE REQUIRED)
-  endif()
-
-  if(NOT DEFINED glm_DIR)
-    find_package(glm MODULE REQUIRED)
-  endif()
-
-  if(NOT DEFINED cxxopts_DIR)
-    find_package(cxxopts MODULE REQUIRED)
-  endif()
-endif()
-
 # patch until next glm release
+find_package(glm REQUIRED)
 if (TARGET glm AND NOT TARGET glm::glm)
   add_library(glm::glm ALIAS glm)
 endif()
 
-option(OPENBLACK_USE_BUNDLED_BGFX
-  "Build and use the bundled bgfx.cmake submodule" ON)
-
-if (NOT EXISTS externals/bgfx.cmake/CMakeLists.txt)
-    message(WARNING "externals/bgfx.cmake submodule not checked out. Disabling bundled bgfx.")
-    set(OPENBLACK_USE_BUNDLED_BGFX OFF)
+# vcpkg loses the dependency of bx on windows which fails to pull in all headers
+find_package(bgfx REQUIRED)
+if (TARGET bgfx::bgfx AND TARGET bgfx::bx)
+  target_link_libraries(bgfx::bgfx INTERFACE bgfx::bx)
 endif()
 
-if (OPENBLACK_USE_BUNDLED_BGFX)
-  # don't build anymore targets then what we need
-  set(BGFX_BUILD_EXAMPLES
-      OFF
-      CACHE BOOL "Build bgfx examples.")
-  set(BGFX_INSTALL
-      OFF
-      CACHE BOOL "Create installation target.")
-  set(BGFX_CUSTOM_TARGETS
-      OFF
-      CACHE BOOL "Include convenience custom targets.")
-
-  # declare this here so bgfx compiles in a reasonable time
-  if(MSVC)
-    add_compile_options(/MP)
-  endif()
-
-  add_subdirectory(externals/bgfx.cmake)
-
-  set_property(TARGET bx PROPERTY POSITION_INDEPENDENT_CODE ON)
-  set_property(TARGET bimg PROPERTY POSITION_INDEPENDENT_CODE ON)
-  set_property(TARGET astc-codec PROPERTY POSITION_INDEPENDENT_CODE ON)
-  add_library(bgfx::bgfx ALIAS bgfx)
-  add_executable(bgfx::shaderc ALIAS shaderc)
-else()
-  # allow user to use an install target
-  find_package(bgfx CONFIG REQUIRED)
-endif()
+find_package(spdlog 1.3.0 REQUIRED)
+find_package(EnTT 3.7.0 CONFIG REQUIRED) # only available as a config
+find_package(cxxopts REQUIRED)
 
 FetchContent_Declare(
   imgui-flame-graph
