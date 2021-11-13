@@ -6,6 +6,11 @@
         "spdlog",
         "glm",
         "entt",
-        "cxxopts"
+        "cxxopts",
+        {
+            "name": "bgfx",
+            "default-features": false,
+            "features": ["tools"]
+        }
     ]
 }

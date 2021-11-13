@@ -1,0 +1,21 @@
+{
+  "name": "bgfx",
+  "version-date": "2021-10-30",
+  "description": "Cross-platform, graphics API agnostic, Bring Your Own Engine/Framework style rendering library.",
+  "homepage": "https://github.com/bkaradzic/bgfx",
+  "dependencies": [
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ],
+  "features": {
+    "tools": {
+      "description": "Shader, Texture and Geometry compilers for bgfx"
+    }
+  }
+}

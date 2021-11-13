@@ -1,0 +1,11 @@
+{
+  "registries": [
+    {
+      "kind": "filesystem",
+      "path": ".vcpkg",
+      "packages": [
+        "bgfx"
+      ]
+    }
+  ]
+}

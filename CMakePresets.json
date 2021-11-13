@@ -15,8 +15,7 @@
           "type": "FILEPATH",
           "value": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
         },
-        "OPENBLACK_USE_VCPKG": true,
-        "OPENBLACK_USE_BUNDLED_BGFX": true
+        "OPENBLACK_USE_VCPKG": true
       }
     },
     {
@@ -24,8 +23,7 @@
       "hidden": true,
       "binaryDir": "${sourceDir}/cmake-build-presets/${presetName}",
       "cacheVariables": {
-        "OPENBLACK_USE_VCPKG": false,
-        "OPENBLACK_USE_BUNDLED_BGFX": false
+        "OPENBLACK_USE_VCPKG": false
       }
     },
     {
