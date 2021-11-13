@@ -6,12 +6,6 @@
         "spdlog",
         "glm",
         "entt",
-        "cxxopts",
-        "openal-soft",
-        {
-            "name": "ffmpeg",
-            "default-features": false,
-            "features": [ "avcodev", "avformat", "libavutil", "swresample" ]
-        }
+        "cxxopts"
     ]
 }
