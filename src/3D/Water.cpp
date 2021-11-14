@@ -34,7 +34,7 @@ Water::Water()
 	const uint16_t textureWidth = 256, textureHeight = 256;
 
 	_texture = std::make_unique<Texture2D>("Water");
-	_texture->Create(textureWidth, textureHeight, 1, Format::RGB8, Wrapping::ClampEdge, waterTextureData.data(),
+	_texture->Create(textureWidth, textureHeight, 1, Format::RGB8, Wrapping::Repeat, waterTextureData.data(),
 	                 waterTextureData.size());
 
 	createMesh();
