@@ -101,7 +101,7 @@ VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl
 	layout.end();
 	assert(layout.m_stride == _strideBytes);
 
-	_vertexCount = mem->size / _strideBytes;
+	_vertexCount = mem->size / static_cast<uint32_t>(_strideBytes);
 
 	_handle = bgfx::createVertexBuffer(mem, layout);
 	_layoutHandle = bgfx::createVertexLayout(layout);
