@@ -13,10 +13,14 @@
 
 #include <bgfx/bgfx.h>
 #include <bgfx/embedded_shader.h>
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#endif
 #include <bx/math.h>
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 #include <bx/timer.h>
 #include <glm/gtx/compatibility.hpp>
 #include <imgui.h>
