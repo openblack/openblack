@@ -47,8 +47,8 @@ void Script::Load(const std::string& source)
 			{
 				while (true)
 				{
-					const Token* token = this->peekToken(lexer);
-					args.push_back(*token);
+					const Token* peekToken = this->peekToken(lexer);
+					args.push_back(*peekToken);
 
 					// consume the ,
 					token = this->advanceToken(lexer);
