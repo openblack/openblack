@@ -57,13 +57,13 @@ glm::vec3 GetParamValue(const ScriptCommandContext& ctx, int index);
 
 /// Base case which is triggered when RemainingTypes is void (see remaining non-parsed params case)
 template <typename... ParsedParamTypes, typename... ArgTypes>
-void InvokeCallableFromContext(const ScriptCommandContext& ctx, [[maybe_unused]] int paramIndex,
+void InvokeCallableFromContext([[maybe_unused]] const ScriptCommandContext& ctx, [[maybe_unused]] int paramIndex,
                                /// This case is why the original function is passed along
-                               std::function<void(ArgTypes...)> originalFunction,
+                               [[maybe_unused]] std::function<void(ArgTypes...)> originalFunction,
                                /// Empty working function type which means all the parameter types have been extracted
                                const std::function<void()>&,
                                /// All the parameter types extracted at compile time with all the parameter values at runtime
-                               ParsedParamTypes... params)
+                               [[maybe_unused]] ParsedParamTypes... params)
 {
 	originalFunction(std::forward<ParsedParamTypes>(params)...);
 }
