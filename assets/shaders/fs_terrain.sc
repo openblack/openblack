@@ -2,6 +2,8 @@ $input v_texcoord0, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_l
 
 #include <bgfx_shader.sh>
 
+#define M_PI 3.1415926535897932384626433832795
+
 SAMPLER2DARRAY(s0_materials, 0);
 SAMPLER2D(s1_bump, 1);
 SAMPLER2D(s2_smallBump, 2);
@@ -45,7 +47,8 @@ void main()
 	}
 
 	// apply light map
-	col = col * mix(.25f, clamp(v_lightLevel * 2, 0.5, 1), u_timeOfDay.r);
+	float dayBrightness = cos(u_timeOfDay.r * 2.0f * M_PI) * 0.5f + 0.5f;
+	col = col * mix(.25f, clamp(v_lightLevel * 2, 0.5, 1), dayBrightness);
 
 	gl_FragColor = vec4(col.rgb, v_waterAlpha);
 
