@@ -142,7 +142,6 @@ public:
 
 private:
 	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const MeshPack& meshPack, const L3DMeshSubmitDesc& desc,
-	                 graphics::RenderPass viewId, const graphics::ShaderProgram& program, uint64_t state, uint32_t rgba,
 	                 bool preserveState) const;
 	void DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) const;
 
