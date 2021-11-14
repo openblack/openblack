@@ -7,12 +7,14 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#include <LHVM/LHVM.h>
-#include <LHVM/OpcodeNames.h>
-#include <LHVM/VMInstruction.h>
+#include <array>
 #include <cstdio>
 #include <cstring>
 #include <stdexcept>
+
+#include <LHVM/LHVM.h>
+#include <LHVM/OpcodeNames.h>
+#include <LHVM/VMInstruction.h>
 
 namespace openblack::LHVM
 {
@@ -23,16 +25,17 @@ void LHVM::LoadBinary(const std::string& filename)
 	if (file == nullptr)
 		throw std::runtime_error("no such file");
 
-	char lhvm[4];
-	std::fread(&lhvm, 1, 4, file);
+	size_t count;
+	std::array<char, 4> lhvm;
+	count = std::fread(&lhvm, sizeof(lhvm[0]), lhvm.size(), file);
 
-	if (std::strncmp(lhvm, "LHVM", 4) != 0)
+	if (count != lhvm.size() || std::strncmp(lhvm.data(), "LHVM", lhvm.size()) != 0)
 		throw std::runtime_error("invalid LHVM header");
 
-	std::fread(&_version, 1, 4, file);
+	count = std::fread(&_version, sizeof(_version), 1, file);
 
 	/* only support bw1 at the moment */
-	if (_version != Version::BlackAndWhite)
+	if (count != 1 || _version != Version::BlackAndWhite)
 		throw std::runtime_error("unsupported LHVM version");
 
 	loadVariables(file, _variables);
@@ -54,7 +57,9 @@ void LHVM::LoadBinary(const std::string& filename)
 void LHVM::loadVariables(std::FILE* file, std::vector<std::string>& variables)
 {
 	int32_t count;
-	std::fread(&count, 4, 1, file);
+
+	if (std::fread(&count, sizeof(count), 1, file) != 1)
+		throw std::runtime_error("error reading variable count");
 
 	// if there are no variables, return
 	if (count <= 0)
@@ -69,7 +74,8 @@ void LHVM::loadVariables(std::FILE* file, std::vector<std::string>& variables)
 		char* cur = &buffer[0];
 		do
 		{
-			std::fread(cur++, 1, 1, file);
+			if (std::fread(cur++, sizeof(*cur), 1, file) != 1)
+				throw std::runtime_error("error reading variable");
 		} while (*(cur - 1) != '\0');
 
 		// throw it into the std::string vector
@@ -80,7 +86,8 @@ void LHVM::loadVariables(std::FILE* file, std::vector<std::string>& variables)
 void LHVM::loadCode(std::FILE* file)
 {
 	int32_t count;
-	std::fread(&count, 4, 1, file);
+	if (std::fread(&count, sizeof(count), 1, file) != 1)
+		throw std::runtime_error("error reading code count");
 
 	// if there are no variables, return
 	if (count <= 0)
@@ -88,8 +95,9 @@ void LHVM::loadCode(std::FILE* file)
 
 	for (int32_t i = 0; i < count; i++)
 	{
-		uint32_t instruction[5]; // quick way to minimize code
-		std::fread(&instruction, 4, 5, file);
+		std::array<uint32_t, 5> instruction; // quick way to minimize code
+		if (std::fread(&instruction, sizeof(instruction[0]), instruction.size(), file) != instruction.size())
+			throw std::runtime_error("error reading instructions");
 
 		_instructions.emplace_back(static_cast<VMInstruction::Opcode>(instruction[0]),
 		                           static_cast<VMInstruction::Access>(instruction[1]),
@@ -100,23 +108,24 @@ void LHVM::loadCode(std::FILE* file)
 void LHVM::loadAuto(std::FILE* file)
 {
 	int32_t count;
-	std::fread(&count, 4, 1, file);
+	if (std::fread(&count, sizeof(count), 1, file) != 1)
+		throw std::runtime_error("error reading id count");
 
 	// if there are no variables, return
 	if (count <= 0)
 		return;
 
-	for (int32_t i = 0; i < count; i++)
-	{
-		uint32_t id;
-		std::fread(&id, 4, 1, file);
-	}
+	std::vector<uint32_t> ids(count);
+
+	if (std::fread(&count, sizeof(ids[0]), ids.size(), file) != ids.size())
+		throw std::runtime_error("error reading ids");
 }
 
 void LHVM::loadScripts(std::FILE* file)
 {
 	int32_t count;
-	std::fread(&count, 4, 1, file);
+	if (std::fread(&count, sizeof(count), 1, file) != 1)
+		throw std::runtime_error("error reading script count");
 
 	// if there are no variables, return
 	if (count <= 0)
@@ -130,39 +139,48 @@ void LHVM::loadScripts(std::FILE* file)
 		char* cur = &script_name[0];
 		do
 		{
-			std::fread(cur++, 1, 1, file);
+			if (std::fread(cur++, sizeof(*cur), 1, file) != 1)
+				throw std::runtime_error("error reading script name");
 		} while (*(cur - 1) != '\0');
 
 		cur = &file_name[0];
 		do
 		{
-			std::fread(cur++, 1, 1, file);
+			if (std::fread(cur++, sizeof(*cur), 1, file) != 1)
+				throw std::runtime_error("error reading script filename");
 		} while (*(cur - 1) != '\0');
 
-		uint32_t script_type, shit;
-		std::fread(&script_type, 4, 1, file);
-		std::fread(&shit, 4, 1, file);
+		uint32_t script_type, var_offset;
+		if (std::fread(&script_type, sizeof(script_type), 1, file) != 1)
+			throw std::runtime_error("error reading script type");
+		if (std::fread(&var_offset, sizeof(var_offset), 1, file) != 1)
+			throw std::runtime_error("error reading script variables offset");
 
 		std::vector<std::string> variables;
 		loadVariables(file, variables);
 
 		uint32_t instruction_address, parameter_count, script_id;
-		std::fread(&instruction_address, 4, 1, file);
-		std::fread(&parameter_count, 4, 1, file);
-		std::fread(&script_id, 4, 1, file);
+		if (std::fread(&instruction_address, sizeof(instruction_address), 1, file) != 1)
+			throw std::runtime_error("error reading instruction_address");
+		if (std::fread(&parameter_count, sizeof(parameter_count), 1, file) != 1)
+			throw std::runtime_error("error reading parameter_count");
+		if (std::fread(&script_id, sizeof(script_id), 1, file) != 1)
+			throw std::runtime_error("error reading script_id");
 
-		_scripts.emplace_back(std::string(script_name), std::string(file_name), script_type, shit, variables,
+		_scripts.emplace_back(std::string(script_name), std::string(file_name), script_type, var_offset, variables,
 		                      instruction_address, parameter_count, script_id);
 	}
 }
 
 void LHVM::loadData(std::FILE* file)
 {
-	uint32_t size;
-	std::fread(&size, 4, 1, file);
+	int32_t size;
+	if (std::fread(&size, sizeof(size), 1, file) != 1)
+		throw std::runtime_error("error reading data size");
 
 	_data.resize(size);
-	std::fread(_data.data(), 1, size, file);
+	if (std::fread(_data.data(), sizeof(_data[0]), _data.size(), file) != _data.size())
+		throw std::runtime_error("error reading data");
 }
 
 /*
