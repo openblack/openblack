@@ -126,29 +126,29 @@ struct LNDMaterial
 		uint16_t A : 1;
 	};
 	static_assert(sizeof(R5G5B5A1) == sizeof(uint16_t));
-	static constexpr uint32_t width = 256;
-	static constexpr uint32_t height = 256;
+	static constexpr uint16_t width = 256;
+	static constexpr uint16_t height = 256;
 
 	uint16_t type; ///< Terrain Type
 	R5G5B5A1 texels[width * height];
 };
-static_assert(sizeof(LNDMaterial) == 131074);
+static_assert(sizeof(LNDMaterial) == 0x20002);
 
 struct LNDBumpMap
 {
-	static constexpr uint32_t width = 256;
-	static constexpr uint32_t height = 256;
+	static constexpr uint16_t width = 256;
+	static constexpr uint16_t height = 256;
 
 	uint8_t texels[width * height]; ///< R8
 };
-static_assert(sizeof(LNDBumpMap) == 65536);
+static_assert(sizeof(LNDBumpMap) == 0x10000);
 
 struct LNDExtraTextures
 {
 	LNDBumpMap noise;
 	LNDBumpMap bump;
 };
-static_assert(sizeof(LNDExtraTextures) == 2 * 65536);
+static_assert(sizeof(LNDExtraTextures) == 0x20000);
 
 /**
   This class is used to read LNDs.

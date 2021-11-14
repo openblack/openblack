@@ -69,7 +69,7 @@ void LandIsland::LoadFromFile(const std::string& filename)
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} countries", lnd.GetCountries().size());
 	_countries = lnd.GetCountries();
 
-	auto materialCount = lnd.GetMaterials().size();
+	auto materialCount = static_cast<uint16_t>(lnd.GetMaterials().size());
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} textures", materialCount);
 	std::vector<uint16_t> rgba5TextureData;
 	rgba5TextureData.resize(lnd::LNDMaterial::width * lnd::LNDMaterial::height * lnd.GetMaterials().size());
