@@ -9,7 +9,7 @@ find_program(CLANG_FORMAT
     NAMES clang-format${CLANG_FORMAT_POSTFIX}
           clang-format
     PATHS ${PROJECT_BINARY_DIR}/externals
-          /usr/local/opt/llvm/bin/clang) # macos
+          /usr/local/opt/llvm/bin) # macos
 # if find_program doesn't find it, try to download from externals
 if (NOT CLANG_FORMAT)
     if (WIN32 AND NOT CMAKE_CROSSCOMPILING)
