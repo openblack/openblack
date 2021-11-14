@@ -55,17 +55,17 @@
 // clang-format on
 #define SHADER_NAME vs_imgui_image
 #define SHADER_DIR IMGUI_SHADER_DIR
-#include "Graphics/Shaders/generate_includer.h"
+#include "Graphics/ShaderIncluder.h"
 #define SHADER_DIR IMGUI_SHADER_DIR
 #define SHADER_NAME fs_imgui_image
-#include "Graphics/Shaders/generate_includer.h"
+#include "Graphics/ShaderIncluder.h"
 
 #define SHADER_NAME vs_ocornut_imgui
 #define SHADER_DIR IMGUI_SHADER_DIR
-#include "Graphics/Shaders/generate_includer.h"
+#include "Graphics/ShaderIncluder.h"
 #define SHADER_NAME fs_ocornut_imgui
 #define SHADER_DIR IMGUI_SHADER_DIR
-#include "Graphics/Shaders/generate_includer.h"
+#include "Graphics/ShaderIncluder.h"
 
 using namespace openblack;
 
