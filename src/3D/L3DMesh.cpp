@@ -68,7 +68,7 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 	}
 
 	_subMeshes.resize(l3d.GetSubmeshHeaders().size());
-	for (size_t i = 0; i < _subMeshes.size(); ++i)
+	for (uint32_t i = 0; i < _subMeshes.size(); ++i)
 	{
 		_subMeshes[i] = std::make_unique<L3DSubMesh>(*this);
 		_subMeshes[i]->Load(l3d, i);

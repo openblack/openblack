@@ -104,8 +104,8 @@ void L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 		}
 	}
 
-	uint32_t startIndex = 0;
-	uint32_t startVertex = 0;
+	uint16_t startIndex = 0;
+	uint16_t startVertex = 0;
 	for (auto& primitive : primitiveSpan)
 	{
 		// Fix indices for merged vertex buffer
@@ -114,8 +114,8 @@ void L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 
 		_primitives.emplace_back(Primitive {primitive.skinID, startIndex, primitive.numTriangles * 3});
 
-		startVertex += primitive.numVertices;
-		startIndex += primitive.numTriangles * 3;
+		startVertex += static_cast<uint16_t>(primitive.numVertices);
+		startIndex += static_cast<uint16_t>(primitive.numTriangles * 3);
 	}
 
 	VertexDecl decl;
