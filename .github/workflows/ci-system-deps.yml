@@ -3,6 +3,7 @@ on: [pull_request]
 
 jobs:
   arch-packaging-system-deps:
+    name: Arch Linux AUR Packaging
     runs-on: ubuntu-latest
     container:
       image: archlinux:base-devel
@@ -11,14 +12,14 @@ jobs:
         - /sys/fs/cgroup:/sys/fs/cgroup
 
     steps:
-      - uses: actions/checkout@v2
-
       - name: Install dependencies and configure system
         run: |
           pacman -Syu --noconfirm --noprogressbar --needed git cmake mesa libx11 fmt spdlog sdl2 glm
           sed -i "s|MAKEFLAGS=.*|MAKEFLAGS=-j$(nproc)|" /etc/makepkg.conf
           useradd builduser -p ""
           printf 'builduser ALL=(ALL) ALL\n' >> /etc/sudoers
+
+      - uses: actions/checkout@v2
 
       - name: Cache AUR Packages
         id: cache-packages
@@ -58,5 +59,5 @@ jobs:
         run: |
           sudo -u builduser git clone https://aur.archlinux.org/openblack-git.git /tmp/openblack-git
           cd /tmp/openblack-git
-          sed "s,source=.*,source=('git://github.com/$GITHUB_REPOSITORY.git#commit=$GITHUB_SHA')," -i PKGBUILD
+          sed "s,source=.*,source=('openblack::git+file://${GITHUB_WORKSPACE}')," -i PKGBUILD
           sudo -u builduser makepkg
