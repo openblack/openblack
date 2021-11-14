@@ -12,28 +12,28 @@
 #include <cstdint> // Shaders below need uint8_t
 
 #define SHADER_NAME vs_line
-#include "Shaders/generate_includer.h"
+#include "ShaderIncluder.h"
 #define SHADER_NAME vs_line_instanced
-#include "Shaders/generate_includer.h"
+#include "ShaderIncluder.h"
 #define SHADER_NAME fs_line
-#include "Shaders/generate_includer.h"
+#include "ShaderIncluder.h"
 
 #define SHADER_NAME vs_object
-#include "Shaders/generate_includer.h"
+#include "ShaderIncluder.h"
 #define SHADER_NAME vs_object_instanced
-#include "Shaders/generate_includer.h"
+#include "ShaderIncluder.h"
 #define SHADER_NAME fs_object
-#include "Shaders/generate_includer.h"
+#include "ShaderIncluder.h"
 
 #define SHADER_NAME vs_terrain
-#include "Shaders/generate_includer.h"
+#include "ShaderIncluder.h"
 #define SHADER_NAME fs_terrain
-#include "Shaders/generate_includer.h"
+#include "ShaderIncluder.h"
 
 #define SHADER_NAME vs_water
-#include "Shaders/generate_includer.h"
+#include "ShaderIncluder.h"
 #define SHADER_NAME fs_water
-#include "Shaders/generate_includer.h"
+#include "ShaderIncluder.h"
 
 #include "3D/Camera.h"
 
