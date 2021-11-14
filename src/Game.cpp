@@ -202,8 +202,8 @@ bool Game::GameLogicLoop()
 		return false;
 	}
 
-	const auto& registry = GetEntityRegistry();
 	// TODO: update entities
+	// const auto& registry = GetEntityRegistry();
 
 	_lastGameLoopTime = currentTime;
 	_turnDeltaTime = delta;
@@ -372,7 +372,7 @@ bool Game::Run()
 	{
 		int width, height;
 		_window->GetSize(width, height);
-		_renderer->ConfigureView(graphics::RenderPass::Main, width, height);
+		_renderer->ConfigureView(graphics::RenderPass::Main, static_cast<uint16_t>(width), static_cast<uint16_t>(height));
 	}
 
 	{
@@ -451,7 +451,7 @@ void Game::LoadMap(const fs::path& path)
 	_handEntity = _entityRegistry->Create();
 	_entityRegistry->Assign<entities::components::Hand>(_handEntity);
 	const auto rotation = glm::mat3(glm::eulerAngleXZ(glm::half_pi<float>(), glm::half_pi<float>()));
-	_entityRegistry->Assign<entities::components::Transform>(_handEntity, glm::vec3(0), rotation, glm::vec3(0.02));
+	_entityRegistry->Assign<entities::components::Transform>(_handEntity, glm::vec3(0.0f), rotation, glm::vec3(0.02f));
 	_entityRegistry->Assign<entities::components::Mesh>(_handEntity, entities::components::Hand::meshId, static_cast<int8_t>(0),
 	                                                    static_cast<int8_t>(0));
 
