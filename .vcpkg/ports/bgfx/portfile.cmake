@@ -7,6 +7,8 @@ vcpkg_from_github(OUT_SOURCE_PATH SOURCE_PATH
     HEAD_REF master
     REF a01e8e043fe213a55b0bea9623f45fad80d067bc
     SHA512 9967046cea4ad9c00126cd112089ac8aa099ea2db08dc1691f6bcf2aa95e8e5c6e52c6b98a9542b5c4232d712041aca211b6fc8f98c97e69b308de8fa8a3237b
+    PATCHES
+        0001-Use-string-compare-for-library-type.patch
 )
 
 vcpkg_from_github(OUT_SOURCE_PATH SOURCE_PATH_BX

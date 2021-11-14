@@ -1,0 +1,23 @@
+commit 6c7bd11e9d94ca3b66ed74ec20e9267b986f5854
+Author: Sandy Carter <bwrsandman@gmail.com>
+Date:   Sat Nov 13 19:18:59 2021 -0500
+
+    Use string compare for library type
+
+diff --git a/cmake/bgfx.cmake b/cmake/bgfx.cmake
+index c2757ad..cd28ef4 100755
+--- a/cmake/bgfx.cmake
++++ b/cmake/bgfx.cmake
+@@ -40,7 +40,11 @@ else()
+ endif()
+ 
+ # Create the bgfx target
+-add_library( bgfx ${BGFX_LIBRARY_TYPE} ${BGFX_SOURCES} )
++if(BGFX_LIBRARY_TYPE STREQUAL STATIC)
++    add_library( bgfx STATIC ${BGFX_SOURCES} )
++else()
++    add_library( bgfx SHARED ${BGFX_SOURCES} )
++endif()
+ 
+ if(BGFX_CONFIG_RENDERER_WEBGPU)
+     include(cmake/3rdparty/webgpu.cmake)
