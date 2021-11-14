@@ -273,9 +273,9 @@ void MeshViewer::DrawScene(const Renderer& renderer)
 				}
 			}
 			desc.modelMatrices = bones.data();
-			desc.matrixCount = bones.size();
+			desc.matrixCount = static_cast<uint8_t>(bones.size());
 		}
-		renderer.DrawMesh(*mesh, meshPack, desc, _selectedSubMesh);
+		renderer.DrawMesh(*mesh, meshPack, desc, static_cast<uint8_t>(_selectedSubMesh));
 		if (_viewBoundingBox)
 		{
 			auto box = mesh->GetSubMeshes()[_selectedSubMesh]->GetBoundingBox();
