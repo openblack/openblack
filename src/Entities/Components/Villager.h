@@ -136,20 +136,20 @@ struct Villager
 	{
 		std::size_t operator()(const Villager::Type& type) const
 		{
-			auto tribe = std::get<Tribe>(type);
+			auto villagerTribe = std::get<Tribe>(type);
 			auto villagerSex = std::get<Sex>(type);
-			auto lifeStage = std::get<LifeStage>(type);
-			auto role = std::get<Role>(type);
-			auto h1 = std::hash<decltype(tribe)>()(tribe);
+			auto villagerLifeStage = std::get<LifeStage>(type);
+			auto villagerRole = std::get<Role>(type);
+			auto h1 = std::hash<decltype(villagerTribe)>()(villagerTribe);
 			auto h2 = std::hash<decltype(villagerSex)>()(villagerSex);
-			auto h3 = std::hash<decltype(lifeStage)>()(lifeStage);
+			auto h3 = std::hash<decltype(villagerLifeStage)>()(villagerLifeStage);
 
-			if (!Villager::IsImportantRole(role))
+			if (!Villager::IsImportantRole(villagerRole))
 			{
-				role = Role::NONE;
+				villagerRole = Role::NONE;
 			}
 
-			auto h4 = std::hash<decltype(role)>()(role);
+			auto h4 = std::hash<decltype(villagerRole)>()(villagerRole);
 			return h1 ^ h2 ^ h3 ^ h4;
 		}
 	};
