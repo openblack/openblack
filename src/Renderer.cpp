@@ -70,24 +70,35 @@ struct BgfxCallback: public bgfx::CallbackI
 		}
 		SPDLOG_LOGGER_DEBUG(spdlog::get("graphics"), "bgfx: {}:{}: {}", filePath, line, out);
 	}
-	void profilerBegin(const char* name, uint32_t abgr, const char* filePath, uint16_t line) override {}
-	void profilerBeginLiteral(const char* name, uint32_t abgr, const char* filePath, uint16_t line) override {}
+	void profilerBegin([[maybe_unused]] const char* name, [[maybe_unused]] uint32_t abgr, [[maybe_unused]] const char* filePath,
+	                   [[maybe_unused]] uint16_t line) override
+	{
+	}
+	void profilerBeginLiteral([[maybe_unused]] const char* name, [[maybe_unused]] uint32_t abgr,
+	                          [[maybe_unused]] const char* filePath, [[maybe_unused]] uint16_t line) override
+	{
+	}
 	void profilerEnd() override {}
 	// Reading and writing to shader cache
-	uint32_t cacheReadSize(uint64_t id) override { return 0; }
-	bool cacheRead(uint64_t id, void* data, uint32_t size) override { return false; }
-	void cacheWrite(uint64_t id, const void* data, uint32_t size) override {}
+	uint32_t cacheReadSize([[maybe_unused]] uint64_t id) override { return 0; }
+	bool cacheRead([[maybe_unused]] uint64_t id, [[maybe_unused]] void* data, [[maybe_unused]] uint32_t size) override
+	{
+		return false;
+	}
+	void cacheWrite([[maybe_unused]] uint64_t id, [[maybe_unused]] const void* data, [[maybe_unused]] uint32_t size) override {}
 	// Saving a screen shot
-	void screenShot(const char* filePath, uint32_t width, uint32_t height, uint32_t pitch, const void* data, uint32_t size,
-	                bool yflip) override
+	void screenShot([[maybe_unused]] const char* filePath, [[maybe_unused]] uint32_t width, [[maybe_unused]] uint32_t height,
+	                [[maybe_unused]] uint32_t pitch, [[maybe_unused]] const void* data, [[maybe_unused]] uint32_t size,
+	                [[maybe_unused]] bool yflip) override
 	{
 	}
 	// Saving a video
-	void captureBegin(uint32_t width, uint32_t height, uint32_t pitch, bgfx::TextureFormat::Enum _format, bool yflip) override
+	void captureBegin([[maybe_unused]] uint32_t width, [[maybe_unused]] uint32_t height, [[maybe_unused]] uint32_t pitch,
+	                  [[maybe_unused]] bgfx::TextureFormat::Enum _format, [[maybe_unused]] bool yflip) override
 	{
 	}
 	void captureEnd() override {}
-	void captureFrame(const void* data, uint32_t size) override {}
+	void captureFrame([[maybe_unused]] const void* data, [[maybe_unused]] uint32_t size) override {}
 };
 
 } // namespace openblack
@@ -170,8 +181,7 @@ void Renderer::UpdateDebugCrossUniforms(const glm::vec3& position, float scale)
 }
 
 void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const MeshPack& meshPack,
-                           const L3DMeshSubmitDesc& desc, graphics::RenderPass viewId, const ShaderProgram& program,
-                           uint64_t state, uint32_t rgba, bool preserveState) const
+                           const L3DMeshSubmitDesc& desc, bool preserveState) const
 {
 	assert(&subMesh.GetMesh());
 	assert(!subMesh.isPhysics());
@@ -211,7 +221,7 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 			}
 			if (texture)
 			{
-				program.SetTextureSampler("s_diffuse", 0, *texture);
+				desc.program->SetTextureSampler("s_diffuse", 0, *texture);
 			}
 		}
 		else
@@ -264,7 +274,7 @@ void Renderer::DrawMesh(const L3DMesh& mesh, const MeshPack& meshPack, const L3D
 			                   mesh.GetNumSubMeshes());
 		}
 
-		DrawSubMesh(mesh, *subMeshes[subMeshIndex], meshPack, desc, desc.viewId, *desc.program, desc.state, desc.rgba, false);
+		DrawSubMesh(mesh, *subMeshes[subMeshIndex], meshPack, desc, false);
 		return;
 	}
 
@@ -273,8 +283,7 @@ void Renderer::DrawMesh(const L3DMesh& mesh, const MeshPack& meshPack, const L3D
 		const L3DSubMesh& subMesh = *it->get();
 		if (!subMesh.isPhysics())
 		{
-			DrawSubMesh(mesh, subMesh, meshPack, desc, desc.viewId, *desc.program, desc.state, desc.rgba,
-			            std::next(it) != subMeshes.end());
+			DrawSubMesh(mesh, subMesh, meshPack, desc, std::next(it) != subMeshes.end());
 		}
 	}
 }
