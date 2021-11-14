@@ -1,44 +1,28 @@
 name: VCPKG CI
 on: [pull_request]
 jobs:
-  job:
-    name: ${{ matrix.name }}
+  build:
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
+        # This is the matrix. They form permutations.
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        config: [debug, release]
+        triplet: [""]
+        cc: [""]
+        cxx: [""]
+        # These are additional individual jobs. There are no permutations of these.
         include:
-          - name: Windows (x64)
-            os: windows-latest
-            triplet: x64-windows
-            experimental: false
-          - name: Windows (x86)
-            os: windows-latest
+          # Testing 32 bit
+          - os: windows-latest
+            config: debug
             triplet: x86-windows
-            experimental: false
-          - name: Ubuntu (GCC)
-            os: ubuntu-latest
-            triplet: x64-linux
-            cc: gcc
-            cxx: g++
-            experimental: false
-          - name: Ubuntu (Clang)
-            os: ubuntu-latest
-            triplet: x64-linux
+          # Testing clang
+          - os: ubuntu-latest
+            config: debug
             cc: clang
             cxx: clang++
-            experimental: false
-          - name: Mac
-            os: macos-latest
-            triplet: x64-osx
-            experimental: true
-
-    env:
-      # Indicates the CMake build directory where project files and binaries are being produced.
-      CMAKE_BUILD_DIR: ${{ github.workspace }}/build/
-      # Indicates the location of the vcpkg as a Git submodule of the project repository.
-      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
 
     steps:
       - uses: actions/checkout@v2
@@ -56,49 +40,21 @@ jobs:
       # Setup the build machine with the most recent versions of CMake and Ninja. Both are cached if not already: on subsequent runs both will be quickly restored from GitHub cache service.
       - uses: lukka/get-cmake@latest
 
-      # Restore both vcpkg and its artifacts from the GitHub cache service.
-      - name: Restore vcpkg and its artifacts.
-        uses: actions/cache@v2
+      - name: Restore artifacts, or setup vcpkg for building artifacts
+        uses: lukka/run-vcpkg@v10
+        id: runvcpkg
         with:
-          # The first path is where vcpkg generates artifacts while consuming the vcpkg.json manifest file.
-          # The second path is the location of vcpkg (it contains the vcpkg executable and data files).
-          # The other paths starting with '!' are exclusions: they contain termporary files generated during the build of the installed packages.
-          path: |
-            ${{ env.CMAKE_BUILD_DIR }}/vcpkg_installed/
-            ${{ env.VCPKG_ROOT }}
-            !${{ env.VCPKG_ROOT }}/buildtrees
-            !${{ env.VCPKG_ROOT }}/packages
-            !${{ env.VCPKG_ROOT }}/downloads
-          # The key is composed in a way that it gets properly invalidated: this must happen whenever vcpkg's Git commit id changes, or the list of packages changes. In this case a cache miss must happen and a new entry with a new key with be pushed to GitHub the cache service.
-          # The key includes: hash of the vcpkg.json file, the hash of the vcpkg Git commit id, and the used vcpkg's triplet. The vcpkg's commit id would suffice, but computing an hash out it does not harm.
-          # Note: given a key, the cache content is immutable. If a cache entry has been created improperly, in order the recreate the right content the key must be changed as well, and it must be brand new (i.e. not existing already).
-          key: |
-            ${{ hashFiles( 'vcpkg_manifest/vcpkg.json' ) }}-${{ hashFiles( '.git/modules/vcpkg/HEAD' )}}-${{ matrix.triplet }}-invalidate
-      # Restore bgfx artifacts from the GitHub cache service.
-      - name: Restore bgfx.cmake artifacts
-        uses: actions/cache@v2
+          vcpkgJsonGlob: 'vcpkg.json'
+
+      - name: Run CMake+vcpkg+Ninja+CTest to generate/build/test.
+        uses: lukka/run-cmake@v10
+        id: runcmake
         with:
-          path: |
-            ${{ env.CMAKE_BUILD_DIR }}/externals/bgfx.cmake/
-          key: |
-            bgfx-${{ hashFiles( '.git/modules/externals/bgfx.cmake/HEAD' )}}-${{ matrix.triplet }}
+          configurePreset: 'ninja-multi-vcpkg'
+          buildPreset: 'ninja-multi-vcpkg-${{ matrix.config }}'
+          # testPreset: 'ninja-multi-vcpkg-${{ matrix.config }}'
 
-      - name: Show content of workspace after cache has been restored
-        run: find $RUNNER_WORKSPACE
-        shell: bash
-
-      # On Windows runners, let's ensure to have the Developer Command Prompt environment setup correctly. As used here the Developer Command Prompt created is targeting x64 and using the default the Windows SDK.
-      - uses: ilammy/msvc-dev-cmd@v1
-
-      # Run CMake to generate Ninja project files, using the vcpkg's toolchain file to resolve and install the dependencies as specified in vcpkg.json.
-      - name: Install dependencies and generate project files
-        run: |
-          cmake -B "${{ env.CMAKE_BUILD_DIR }}" -GNinja -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" -DOPENBLACK_BUILD_BGFX=true
-
-      # Build the whole project with Ninja (which is spawn by CMake).
-      - name: Build
-        run: |
-          cmake --build "${{ env.CMAKE_BUILD_DIR }}"
-      - name: Show content of workspace at its completion
-        run: find $RUNNER_WORKSPACE
-        shell: bash
+    env:
+      VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
