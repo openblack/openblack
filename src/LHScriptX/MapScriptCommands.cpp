@@ -46,13 +46,13 @@ const std::array<const ScriptCommandSignature, 20> MapScriptCommands::Signatures
     CREATE_COMMAND_BINDING("LOAD_LANGUAGE", MapScriptCommands::LoadLanguage),
 }};
 
-void MapScriptCommands::SetNoPlayers(int32_t number)
+void MapScriptCommands::SetNoPlayers([[maybe_unused]] int32_t number)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::LoadTribeDance(glm::vec3 position, int32_t)
+void MapScriptCommands::LoadTribeDance([[maybe_unused]] glm::vec3 position, int32_t)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
@@ -70,13 +70,13 @@ void MapScriptCommands::SetTime(int32_t, int32_t, int32_t)
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::SetTurnsPerYear(int32_t turns_per_year)
+void MapScriptCommands::SetTurnsPerYear([[maybe_unused]] int32_t turns_per_year)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::SetGameTickTime(int32_t game_tick_time)
+void MapScriptCommands::SetGameTickTime([[maybe_unused]] int32_t game_tick_time)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
