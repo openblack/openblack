@@ -66,6 +66,6 @@ void FotFile::Load(const fs::path& path)
 		    10.0f * save._coords.z / static_cast<float>(0xFFFF),
 		};
 		const auto entity = registry.Create();
-		auto& linkEntt = registry.Assign<entities::components::FootpathLink>(entity, position, std::move(linkFootpathEntities));
+		registry.Assign<entities::components::FootpathLink>(entity, position, std::move(linkFootpathEntities));
 	}
 }
