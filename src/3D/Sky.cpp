@@ -9,6 +9,7 @@
 
 #include "Sky.h"
 
+#include <glm/vec3.hpp>
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
 
@@ -81,19 +82,10 @@ void Sky::Interpolate555Texture(uint16_t* bitmap, uint16_t* bitmap1, uint16_t* b
 {
 	for (int i = 0; i < 256 * 256; i++)
 	{
-		uint16_t r1 = (bitmap1[i] & 0x7C00) >> 10;
-		uint16_t g1 = (bitmap1[i] & 0x3E0) >> 5;
-		uint16_t b1 = (bitmap1[i] & 0x1F);
-
-		uint16_t r2 = (bitmap2[i] & 0x7C00) >> 10;
-		uint16_t g2 = (bitmap2[i] & 0x3E0) >> 5;
-		uint16_t b2 = (bitmap2[i] & 0x1F);
-
-		uint16_t r = (r1 * interpolate) + (r2 * (1.0f - interpolate));
-		uint16_t g = (g1 * interpolate) + (g2 * (1.0f - interpolate));
-		uint16_t b = (b1 * interpolate) + (b2 * (1.0f - interpolate));
-
-		bitmap[i] = (r << 10) | (g << 5) | b;
+		const auto color1 = glm::u16vec3((bitmap1[i] & 0x7C00) >> 10, (bitmap1[i] & 0x3E0) >> 5, (bitmap1[i] & 0x1F));
+		const auto color2 = glm::u16vec3((bitmap2[i] & 0x7C00) >> 10, (bitmap2[i] & 0x3E0) >> 5, (bitmap2[i] & 0x1F));
+		const auto color = glm::mix(color1, color2, interpolate);
+		bitmap[i] = (color.r << 10) | (color.g << 5) | color.b;
 	}
 }
 
@@ -105,7 +97,19 @@ void Sky::CalculateTextures()
 	uint16_t* dusk = _bitmaps[1].data();
 	uint16_t* night = _bitmaps[2].data();
 
-	Interpolate555Texture(bitmap.data(), day, dusk, _timeOfDay);
+	// 0.00: day
+	// 0.25: dusk
+	// 0.50: night
+	// 0.75: dusk
+	// 1.00: day
+	if (_timeOfDay < 0.25f)
+		Interpolate555Texture(bitmap.data(), day, dusk, _timeOfDay * 4.0f);
+	else if (_timeOfDay < 0.5f)
+		Interpolate555Texture(bitmap.data(), dusk, night, (_timeOfDay - 0.25f) * 4.0f);
+	else if (_timeOfDay < 0.75f)
+		Interpolate555Texture(bitmap.data(), night, dusk, (_timeOfDay - 0.5f) * 4.0f);
+	else
+		Interpolate555Texture(bitmap.data(), dusk, day, (_timeOfDay - 0.75f) * 4.0f);
 
 	// set alpha=1
 	for (unsigned int i = 0; i < 256 * 256; i++) bitmap[i] = bitmap[i] | 0x8000;
