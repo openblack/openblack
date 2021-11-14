@@ -9,6 +9,8 @@
 
 #include "Gui.h"
 
+#include <cinttypes>
+
 #include <bgfx/bgfx.h>
 #include <bgfx/embedded_shader.h>
 #pragma GCC diagnostic push
@@ -1098,7 +1100,7 @@ void Gui::ShowProfilerWindow(Game& game)
 		ImGui::NextColumn();
 		ImGui::Text("Num Vertex Layouts %u", stats->numVertexLayouts);
 		ImGui::Text("Num Textures %u, FrameBuffers %u", stats->numTextures, stats->numFrameBuffers);
-		ImGui::Text("Memory Texture %ld, RenderTarget %ld", stats->textureMemoryUsed, stats->rtMemoryUsed);
+		ImGui::Text("Memory Texture %" PRId64 ", RenderTarget %" PRId64, stats->textureMemoryUsed, stats->rtMemoryUsed);
 		ImGui::Text("Num Programs %u, Num Shaders %u, Uniforms %u", stats->numPrograms, stats->numShaders, stats->numUniforms);
 		ImGui::Text("Num Occlusion Queries %u", stats->numOcclusionQueries);
 
