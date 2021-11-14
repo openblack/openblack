@@ -1059,11 +1059,11 @@ void Gui::ShowProfilerWindow(Game& game)
 		using namespace entities::components;
 
 		const bgfx::Stats* stats = bgfx::getStats();
-		const double toMsCpu = 1000.0 / stats->cpuTimerFreq;
-		const double toMsGpu = 1000.0 / stats->gpuTimerFreq;
-		const double frameMs = double(stats->cpuTimeFrame) * toMsCpu;
-		_times.pushBack(frameMs);
-		_fps.pushBack(1000.0f / frameMs);
+		const auto toMsCpu = 1000.0 / stats->cpuTimerFreq;
+		const auto toMsGpu = 1000.0 / stats->gpuTimerFreq;
+		const auto frameMs = static_cast<double>(stats->cpuTimeFrame) * toMsCpu;
+		_times.pushBack(static_cast<float>(frameMs));
+		_fps.pushBack(static_cast<float>(1000.0 / frameMs));
 
 		char frameTextOverlay[256];
 		std::snprintf(frameTextOverlay, sizeof(frameTextOverlay), "%.3fms, %.1f FPS", _times.back(), _fps.back());
@@ -1148,13 +1148,13 @@ void Gui::ShowProfilerWindow(Game& game)
 			    auto stats = reinterpret_cast<const bgfx::Stats*>(data);
 			    if (startTimestamp)
 			    {
-				    *startTimestamp =
-				        1000.0f * (stats->viewStats[idx].gpuTimeBegin - stats->gpuTimeBegin) / (double)stats->gpuTimerFreq;
+				    *startTimestamp = static_cast<float>(1000.0 * (stats->viewStats[idx].gpuTimeBegin - stats->gpuTimeBegin) /
+				                                         (double)stats->gpuTimerFreq);
 			    }
 			    if (endTimestamp)
 			    {
-				    *endTimestamp =
-				        1000.0f * (stats->viewStats[idx].gpuTimeEnd - stats->gpuTimeBegin) / (double)stats->gpuTimerFreq;
+				    *endTimestamp = static_cast<float>(1000.0 * (stats->viewStats[idx].gpuTimeEnd - stats->gpuTimeBegin) /
+				                                       (double)stats->gpuTimerFreq);
 			    }
 			    if (level)
 			    {
@@ -1166,7 +1166,9 @@ void Gui::ShowProfilerWindow(Game& game)
 			    }
 		    },
 		    stats, stats->numViews, 0, "GPU Frame", 0,
-		    1000.0f * (stats->gpuTimeEnd - stats->gpuTimeBegin) / (double)stats->gpuTimerFreq, ImVec2(width, 0));
+		    static_cast<float>(1000.0 * static_cast<double>(stats->gpuTimeEnd - stats->gpuTimeBegin) /
+		                       static_cast<double>(stats->gpuTimerFreq)),
+		    ImVec2(width, 0));
 
 		ImGui::Columns(2);
 		if (ImGui::CollapsingHeader("Details (CPU)", ImGuiTreeNodeFlags_DefaultOpen))
