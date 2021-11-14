@@ -217,7 +217,8 @@ int main(int argc, char** argv)
 }
 
 #if defined(_WIN32) && !defined(_CONSOLE)
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
+int WINAPI WinMain([[maybe_unused]] HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstance,
+                   [[maybe_unused]] LPSTR lpCmdLine, [[maybe_unused]] int nShowCmd)
 {
 	return main(__argc, __argv);
 }
