@@ -27,7 +27,7 @@ ShaderProgram::ShaderProgram(const std::string& name, bgfx::ShaderHandle&& verte
 
 	numShaderUniforms = bgfx::getShaderUniforms(vertexShader);
 	uniforms.resize(numShaderUniforms);
-	bgfx::getShaderUniforms(vertexShader, uniforms.data(), uniforms.size());
+	bgfx::getShaderUniforms(vertexShader, uniforms.data(), numShaderUniforms);
 	for (uint16_t i = 0; i < numShaderUniforms; ++i)
 	{
 		bgfx::getUniformInfo(uniforms[i], info);
@@ -36,7 +36,7 @@ ShaderProgram::ShaderProgram(const std::string& name, bgfx::ShaderHandle&& verte
 
 	numShaderUniforms = bgfx::getShaderUniforms(fragmentShader);
 	uniforms.resize(numShaderUniforms);
-	bgfx::getShaderUniforms(fragmentShader, uniforms.data(), uniforms.size());
+	bgfx::getShaderUniforms(fragmentShader, uniforms.data(), numShaderUniforms);
 	for (uint16_t i = 0; i < numShaderUniforms; ++i)
 	{
 		bgfx::getUniformInfo(uniforms[i], info);
