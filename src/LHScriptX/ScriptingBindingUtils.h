@@ -110,7 +110,7 @@ void InvokeCallableFromContext(const ScriptCommandContext& ctx, std::function<vo
 }
 
 /// Base case
-constexpr void GetScriptCommandParameters(std::array<ParameterType, 9>& parameters, int, void (*)()) {}
+constexpr void GetScriptCommandParameters([[maybe_unused]] std::array<ParameterType, 9>& parameters, int, void (*)()) {}
 
 /// Non-base case, fetch ParameterType
 template <typename PoppedArgType, typename... RemainingTypes>
