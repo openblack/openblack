@@ -36,7 +36,7 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 	for (auto& skin : l3d.GetSkins())
 	{
 		_skins[skin.id] = std::make_unique<Texture2D>(_debugName.c_str());
-		_skins[skin.id]->Create(skin.width, skin.height, 1, Format::RGBA4, Wrapping::ClampEdge, skin.texels.data(),
+		_skins[skin.id]->Create(skin.width, skin.height, 1, Format::RGBA4, Wrapping::Repeat, skin.texels.data(),
 		                        skin.texels.size() * sizeof(skin.texels[0]));
 	}
 

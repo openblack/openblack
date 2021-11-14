@@ -90,7 +90,7 @@ void LandIsland::LoadFromFile(const std::string& filename)
 
 	// read bump map into Texture2D
 	_textureBumpMap = std::make_unique<Texture2D>("LandIslandBumpMap");
-	_textureBumpMap->Create(lnd::LNDBumpMap::width, lnd::LNDBumpMap::height, 1, Format::R8, Wrapping::ClampEdge,
+	_textureBumpMap->Create(lnd::LNDBumpMap::width, lnd::LNDBumpMap::height, 1, Format::R8, Wrapping::Repeat,
 	                        lnd.GetExtra().bump.texels, sizeof(lnd.GetExtra().bump.texels));
 
 	// build the meshes (we could move this elsewhere)

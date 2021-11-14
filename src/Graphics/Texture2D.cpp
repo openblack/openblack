@@ -91,12 +91,26 @@ Texture2D::~Texture2D()
 	}
 }
 
-// TODO(bwrsandman): Do something with wrapping... get to sampler?
 void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format format, Wrapping wrapping, const void* data,
                        size_t size)
 {
+	uint64_t flags = BGFX_TEXTURE_NONE;
+	switch (wrapping)
+	{
+	case Wrapping::ClampEdge:
+		flags |= BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
+		break;
+	case Wrapping::ClampBorder:
+		flags |= BGFX_SAMPLER_U_BORDER | BGFX_SAMPLER_V_BORDER;
+		break;
+	case Wrapping::Repeat:
+		break;
+	case Wrapping::MirroredRepeat:
+		flags |= BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR;
+		break;
+	}
 	auto memory = bgfx::makeRef(data, size);
-	_handle = bgfx::createTexture2D(width, height, false, layers, getBgfxTextureFormat(format), BGFX_TEXTURE_NONE, memory);
+	_handle = bgfx::createTexture2D(width, height, false, layers, getBgfxTextureFormat(format), flags, memory);
 	bgfx::setName(_handle, _name.c_str());
 	bgfx::frame();
 
