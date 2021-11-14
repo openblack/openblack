@@ -42,12 +42,12 @@ Sky::Sky()
 			auto time = std::string(times[j]);
 			if (i == 0)
 			{
-				time[0] = std::toupper(time[0]);
+				time[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(time[0])));
 			}
 			std::string filename = fmt::format("sky_{}_{}.555", alignments[i], time);
 			if (i == 0)
 			{
-				filename[0] = std::toupper(filename[0]);
+				filename[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(filename[0])));
 			}
 			auto path = filesystem.WeatherSystemPath() / filename;
 			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading sky texture: {}", path.generic_string());
