@@ -44,6 +44,8 @@ ShaderProgram::ShaderProgram(const std::string& name, bgfx::ShaderHandle&& verte
 	}
 
 	_program = bgfx::createProgram(vertexShader, fragmentShader, true);
+	bgfx::setName(vertexShader, (name + "_vs").c_str());
+	bgfx::setName(fragmentShader, (name + "_fs").c_str());
 	bgfx::frame();
 }
 
