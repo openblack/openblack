@@ -763,7 +763,7 @@ bool Gui::ShowMenu(Game& game)
 				{
 					game.SetGameSpeed(Game::kTurnDurationMultiplierFast);
 				}
-				if (ImGui::SliderFloat("Multiplier", &multiplier, 1.0f / 10.0f, 10.0f, "%.3f", 2.0f))
+				if (ImGui::SliderFloat("Multiplier", &multiplier, 1.0f / 10.0f, 10.0f, "%.3f", ImGuiSliderFlags_Logarithmic))
 				{
 					game.SetGameSpeed(multiplier);
 				}
