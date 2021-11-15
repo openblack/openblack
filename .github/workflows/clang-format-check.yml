@@ -28,3 +28,10 @@ jobs:
       - uses: reviewdog/action-suggester@v1
         with:
           tool_name: clang-format
+
+      - run: |
+          git diff > format.patch
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: format.patch
