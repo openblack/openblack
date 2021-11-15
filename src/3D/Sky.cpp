@@ -114,7 +114,8 @@ void Sky::CalculateTextures()
 	// set alpha=1
 	for (unsigned int i = 0; i < 256 * 256; i++) bitmap[i] = bitmap[i] | 0x8000;
 
-	_texture->Create(256, 256, 1, Format::RGB5A1, Wrapping::ClampEdge, bitmap.data(), bitmap.size() * sizeof(bitmap[0]));
+	_texture->Create(256, 256, 1, Format::RGB5A1, Wrapping::ClampEdge, bitmap.data(),
+	                 static_cast<uint32_t>(bitmap.size() * sizeof(bitmap[0])));
 }
 
 } // namespace openblack

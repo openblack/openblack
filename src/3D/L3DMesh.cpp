@@ -37,7 +37,7 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 	{
 		_skins[skin.id] = std::make_unique<Texture2D>(_debugName.c_str());
 		_skins[skin.id]->Create(skin.width, skin.height, 1, Format::RGBA4, Wrapping::Repeat, skin.texels.data(),
-		                        skin.texels.size() * sizeof(skin.texels[0]));
+		                        static_cast<uint32_t>(skin.texels.size() * sizeof(skin.texels[0])));
 	}
 
 	if (static_cast<uint32_t>(_flags) & static_cast<uint32_t>(l3d::L3DMeshFlags::HasDoorPosition) &&

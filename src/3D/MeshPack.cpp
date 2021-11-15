@@ -83,9 +83,10 @@ void MeshPack::loadTextures(const std::map<std::string, pack::G3DTexture>& textu
 			throw std::runtime_error("Unsupported compressed texture format");
 
 		_textures[g3dTexture.header.id] = std::make_unique<graphics::Texture2D>(name);
-		_textures[g3dTexture.header.id]->Create(
-		    static_cast<uint16_t>(g3dTexture.ddsHeader.width), static_cast<uint16_t>(g3dTexture.ddsHeader.height), 1,
-		    internalFormat, graphics::Wrapping::Repeat, g3dTexture.ddsData.data(), g3dTexture.ddsData.size());
+		_textures[g3dTexture.header.id]->Create(static_cast<uint16_t>(g3dTexture.ddsHeader.width),
+		                                        static_cast<uint16_t>(g3dTexture.ddsHeader.height), 1, internalFormat,
+		                                        graphics::Wrapping::Repeat, g3dTexture.ddsData.data(),
+		                                        static_cast<uint32_t>(g3dTexture.ddsData.size()));
 	}
 
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "MeshPack loaded {0} textures", textures.size());
