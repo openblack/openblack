@@ -41,7 +41,7 @@ FrameBuffer::FrameBuffer(const std::string& name, uint16_t width, uint16_t heigh
 		    bgfx::createTexture2D(width, height, false, 1, getBgfxTextureFormat(colorFormat), BGFX_TEXTURE_RT),
 		    bgfx::createTexture2D(width, height, false, 1, getBgfxTextureFormat(depthStencilFormat.value()), BGFX_TEXTURE_RT),
 		};
-		_handle = bgfx::createFrameBuffer(textures.size(), textures.data());
+		_handle = bgfx::createFrameBuffer(static_cast<uint8_t>(textures.size()), textures.data());
 		_colorAttachment._handle = bgfx::getTexture(_handle, 0);
 		_depthStencilAttachment._handle = bgfx::getTexture(_handle, 1);
 	}
