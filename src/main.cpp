@@ -165,7 +165,6 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		args.numFramesToSimulate = result["num-frames-to-simulate"].as<uint32_t>();
 		args.logFile = result["log-file"].as<std::string>();
 		args.logLevels = logLevels;
-		
 	}
 	catch (cxxopts::OptionParseException& err)
 	{
