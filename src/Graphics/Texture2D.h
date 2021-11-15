@@ -103,7 +103,7 @@ public:
 	Texture2D& operator=(const Texture2D&) = delete;
 
 	void Create(uint16_t width, uint16_t height, uint16_t layers, Format format = Format::RGBA8,
-	            Wrapping wrapping = Wrapping::ClampEdge, const void* data = nullptr, size_t size = 0);
+	            Wrapping wrapping = Wrapping::ClampEdge, const void* data = nullptr, uint32_t size = 0);
 
 	[[nodiscard]] const bgfx::TextureHandle& GetNativeHandle() const { return _handle; }
 	[[nodiscard]] uint16_t GetWidth() const { return _info.width; }
