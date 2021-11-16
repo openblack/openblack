@@ -21,8 +21,8 @@ using namespace openblack;
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
 
-entt::entity BigForestArchetype::Create(const glm::vec3& position, BigForestInfo type, uint32_t unknown, float yAngleRadians,
-                                        float scale)
+entt::entity BigForestArchetype::Create(const glm::vec3& position, BigForestInfo type, [[maybe_unused]] uint32_t unknown,
+                                        float yAngleRadians, float scale)
 {
 	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();

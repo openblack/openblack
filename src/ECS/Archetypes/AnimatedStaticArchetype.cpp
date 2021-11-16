@@ -35,7 +35,7 @@ entt::entity AnimatedStaticArchetype::Create(const glm::vec3& position, Animated
 	// const auto& feature = registry.Assign<Feature>(entity, type);
 	registry.Assign<Mesh>(entity, info.meshId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 
-	const auto& animated = registry.Assign<AnimatedStatic>(entity, type);
+	registry.Assign<AnimatedStatic>(entity, type);
 
 	return entity;
 }

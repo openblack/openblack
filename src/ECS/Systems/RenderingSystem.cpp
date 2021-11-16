@@ -190,7 +190,8 @@ void RenderingSystem::PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool
 
 			if (!edges.empty())
 			{
-				_renderContext.streams = graphics::DebugLines::CreateDebugLines(edges.data(), edges.size());
+				_renderContext.streams =
+				    graphics::DebugLines::CreateDebugLines(edges.data(), static_cast<uint32_t>(edges.size()));
 			}
 		}
 

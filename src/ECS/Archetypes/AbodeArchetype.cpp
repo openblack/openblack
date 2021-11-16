@@ -30,7 +30,7 @@ entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, 
 	const auto& info = Game::instance()->GetInfoConstants().abode[static_cast<size_t>(type)];
 
 	registry.Assign<Transform>(entity, position, glm::mat3(glm::eulerAngleY(-yAngleRadians)), glm::vec3(scale));
-	const auto& abode = registry.Assign<Abode>(entity, info.abodeNumber, townId, foodAmount, woodAmount);
+	registry.Assign<Abode>(entity, info.abodeNumber, townId, foodAmount, woodAmount);
 	registry.Assign<Mesh>(entity, info.meshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
 
 	return entity;

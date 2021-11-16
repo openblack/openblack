@@ -35,7 +35,7 @@ entt::entity MobileStaticArchetype::Create(const glm::vec3& position, MobileStat
 
 	registry.Assign<Transform>(entity, position + offset, glm::eulerAngleXYZ(-xAngleRadians, -yAngleRadians, -zAngleRadians),
 	                           glm::vec3(scale));
-	const auto& mobile = registry.Assign<MobileStatic>(entity, type);
+	registry.Assign<MobileStatic>(entity, type);
 	registry.Assign<Mesh>(entity, info.meshId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 
 	return entity;
