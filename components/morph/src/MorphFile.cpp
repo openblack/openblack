@@ -1,25 +1,11 @@
-/* openblack - A reimplementation of Lionhead's Black & White.
+/*******************************************************************************
+ * Copyright (c) 2018-2021 openblack developers
  *
- * openblack is the legal property of its developers, whose names
- * can be found in the AUTHORS.md file distributed with this source
- * distribution.
+ * For a complete list of all authors, please refer to contributors.md
+ * Interested in contributing? Visit https://github.com/openblack/openblack
  *
- * openblack is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 3
- * of the License, or (at your option) any later version.
- *
- * openblack is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with openblack. If not, see <http://www.gnu.org/licenses/>.
- *
- * Note that if it the buffer starts with LiOnHeAd magic string, it's a pack
- * file and the block with the name "Hand" or "Creature" must be extracted
- * using the pack utility or packtool and used as input for this utility.
+ * openblack is licensed under the GNU General Public License version 3.
+ *******************************************************************************
  *
  * The layout of a Morph Spec Text File is as follows:
  *
