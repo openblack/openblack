@@ -22,47 +22,46 @@ You still need to have the original game assets in order to use this, don't ask 
 
 Clone the code using: `git clone --recursive https://github.com/openblack/openblack.git`
 
+## Configuration for using vcpkg (Recommended for new users)
+
 The simplest way to obtain all the required dependencies is through [vcpkg](https://github.com/Microsoft/vcpkg) which is included with a [manifest file](https://github.com/microsoft/vcpkg/blob/master/docs/users/manifests.md).
 
-If you don't want to use vcpkg; CMake will use system dependencies, or manually specified package directories.
+The easiest way to get started on any platform is to allow CMake and vcpkg to handle all dependencies and configuration
+for you. To do so, you will be selecting the `"ninja-multi-vcpkg"   - Ninja Multi-Config (vcpkg)` preset. Other presets are available for more advanced users.
 
-## Windows
+* Install [CMake version 3.20+](https://cmake.org/download/)
 
+### Visual Studio Code
+ * Install [Visual Studio Code](https://code.visualstudio.com/Download)
+ * Install [C++ Extension](https://code.visualstudio.com/docs/languages/cpp)
+ * Install the [CMake Tools Extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools)
+ * You can simply [open the `openblack` folder directly in Visual Studio Code and select a preset](https://devblogs.microsoft.com/cppblog/cmake-presets-integration-in-visual-studio-and-visual-studio-code/).
+
+### Visual Studio 2019
 * Install [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/)
-* Install [CMake](https://cmake.org/download/) (3.15+ for Windows)
+* You can simply [open the `openblack` folder directly in Visual Studio and select a preset](https://devblogs.microsoft.com/cppblog/cmake-presets-integration-in-visual-studio-and-visual-studio-code/).
 
-The easiest way to get started on Windows is to allow CMake and vcpkg to handle all dependencies
-for you, this is the default on Windows.
+### Clion
+* Install [Clion](https://www.jetbrains.com/clion/download/)
+* You can simply [open the `openblack` folder directly in CLion and select a preset](https://www.jetbrains.com/help/clion/cmake-presets.html).
 
-You can simply [open the `openblack` folder directly in Visual Studio](https://docs.microsoft.com/en-us/cpp/build/cmake-projects-in-visual-studio?view=vs-2019).
+### Commandline
+* Your usual build tool-chain.
+    * Ubuntu / Debian: `# apt install build-essential cmake`
+    * Arch Linux / Manjaro: `# pacman -S base-devel cmake`
+* You can generate the cmake build preset using `cmake --preset` and you can list the presets using `cmake --list-presets`
 
-Alternatively you can generate your project files using CMake GUI or with CMake directly:
+## Configuration for using System Dependencies (Recommended for packagers)
 
-```bash
-cd openblack
-cmake -S . -B build
-```
+If you don't want to use vcpkg; CMake will use system libraries, or manually specified package directories.
 
-## Linux
-
-Using vcpkg for dependency management you can apply these build instructions to other distros,
-these are just tested on Ubuntu for simplicity though:
-
-```bash
-sudo apt install build-essential cmake # Ubuntu / Debian
-cd openblack
-cmake -S . -B build -DOPENBLACK_USE_VCPKG=true -DVCPKG_TARGET_TRIPLET=x64-linux -DOPENBLACK_USE_BUNDLED_BGFX=true
-cmake --build build -j 5
-```
-
-### System Dependencies
-
-Alternative to vcpkg you can use system dependencies by setting `OPENBLACK_USE_VCPKG=false` (default: false)
-CMake will find them as long as they provide a [proper config file](https://cmake.org/cmake/help/latest/guide/using-dependencies/index.html#libraries-providing-config-file-packages).
+CMake will find the required libraries as long as they provide a [proper config file](https://cmake.org/cmake/help/latest/guide/using-dependencies/index.html#libraries-providing-config-file-packages).
 
 ### Arch Linux
 
-Install [openblack-git](https://aur.archlinux.org/packages/openblack-git/) from the AUR which builds and installs directly for all Arch Linux derived distros such as Manjaro.
+Install [openblack-git](https://aur.archlinux.org/packages/openblack-git/) from the AUR which builds and installs directly for all Arch Linux derived distros such as Manjaro. This will require pacman to install all required dependencies.
+
+The prefix to use is `"linux-system-deps"   - Linux (System Deps)`
 
 ## Contributing
 Contributions are always welcome, whether it's modifying source code to add new
