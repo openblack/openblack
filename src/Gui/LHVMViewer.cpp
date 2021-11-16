@@ -552,11 +552,11 @@ void LHVMViewer::Draw(Game& game)
 	}
 }
 
-void LHVMViewer::Update(openblack::Game& game, const openblack::Renderer& renderer) {}
+void LHVMViewer::Update([[maybe_unused]] openblack::Game& game, [[maybe_unused]] const openblack::Renderer& renderer) {}
 
-void LHVMViewer::ProcessEventOpen(const SDL_Event& event) {}
+void LHVMViewer::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
 
-void LHVMViewer::ProcessEventAlways(const SDL_Event& event) {}
+void LHVMViewer::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) {}
 
 void LHVMViewer::DrawScriptsTab(const openblack::LHVM::LHVM& lhvm)
 {
