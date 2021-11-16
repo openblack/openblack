@@ -29,7 +29,7 @@ entt::entity FeatureArchetype::Create(const glm::vec3& position, FeatureInfo typ
 	const auto& info = Game::instance()->GetInfoConstants().feature[static_cast<size_t>(type)];
 
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));
-	const auto& feature = registry.Assign<Feature>(entity, type);
+	registry.Assign<Feature>(entity, type);
 	registry.Assign<Mesh>(entity, info.meshId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 
 	return entity;

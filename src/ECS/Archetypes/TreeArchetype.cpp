@@ -21,8 +21,8 @@ using namespace openblack;
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
 
-entt::entity TreeArchetype::Create(uint32_t forestId, const glm::vec3& position, TreeInfo type, bool isNonScenic,
-                                   float yAngleRadians, float maxSize, float scale)
+entt::entity TreeArchetype::Create([[maybe_unused]] uint32_t forestId, const glm::vec3& position, TreeInfo type,
+                                   [[maybe_unused]] bool isNonScenic, float yAngleRadians, float maxSize, float scale)
 {
 	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
@@ -30,7 +30,7 @@ entt::entity TreeArchetype::Create(uint32_t forestId, const glm::vec3& position,
 	const auto& info = Game::instance()->GetInfoConstants().tree[static_cast<size_t>(type)];
 
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));
-	const auto& tree = registry.Assign<Tree>(entity, type, maxSize);
+	registry.Assign<Tree>(entity, type, maxSize);
 	registry.Assign<Mesh>(entity, info.meshId, static_cast<int8_t>(0), static_cast<int8_t>(-1));
 
 	return entity;

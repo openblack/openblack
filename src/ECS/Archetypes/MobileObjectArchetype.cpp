@@ -31,7 +31,7 @@ entt::entity MobileObjectArchetype::Create(const glm::vec3& position, MobileObje
 	const auto& info = Game::instance()->GetInfoConstants().mobileObject[static_cast<size_t>(type)];
 
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));
-	const auto& object = registry.Assign<MobileObject>(entity, type);
+	registry.Assign<MobileObject>(entity, type);
 	registry.Assign<Mesh>(entity, info.meshId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 
 	return entity;
