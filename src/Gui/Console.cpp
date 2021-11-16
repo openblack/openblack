@@ -339,7 +339,7 @@ void Console::Draw(Game& game)
 	}
 }
 
-void Console::Update(Game& game, const Renderer& renderer) {}
+void Console::Update([[maybe_unused]] Game& game, [[maybe_unused]] const Renderer& renderer) {}
 
 void Console::AddLog(const char* fmt, ...)
 {
@@ -360,7 +360,7 @@ void Console::ExecCommand(const std::string& command_line, Game& game)
 	// Insert into history. First find match and delete it so it can be pushed to the back. This isn't trying to be smart or
 	// optimal.
 	_history_pos.reset();
-	for (int i = _history.size() - 1; i >= 0; i--)
+	for (int i = static_cast<int>(_history.size()) - 1; i >= 0; i--)
 		if (_history[i] == command_line)
 		{
 			_history.erase(_history.begin() + i);
@@ -383,7 +383,7 @@ void Console::ExecCommand(const std::string& command_line, Game& game)
 	}
 	else if (command_line == "history")
 	{
-		int first = _history.size() - 10;
+		size_t first = _history.size() - 10;
 		for (size_t i = first > 0 ? first : 0; i < _history.size(); i++)
 		{
 			AddLog("%3zu: %s\n", i, _history[i].c_str());
