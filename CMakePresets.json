@@ -41,6 +41,13 @@
       "inherits": "template-vcpkg"
     },
     {
+      "name": "msvc-17-vcpkg",
+      "displayName": "Visual Studio 2022 (vcpkg)",
+      "description": "Configure with vcpkg toolchain and generate Visual Studio 2022 project files for all configurations",
+      "generator": "Visual Studio 17 2022",
+      "inherits": "template-vcpkg"
+    },
+    {
       "name": "unix-makefile-vcpkg",
       "displayName": "Makefile (vcpkg)",
       "description": "Configure with vcpkg toolchain and generate Makefile project files for all configurations",
@@ -82,6 +89,20 @@
       "configurePreset": "msvc-16-vcpkg",
       "displayName": "Build msvc-16-vcpkg-release",
       "description": "Build msvc-16-vcpkg Release configuration",
+      "configuration": "Release"
+    },
+    {
+      "name": "msvc-17-vcpkg-debug",
+      "configurePreset": "msvc-17-vcpkg",
+      "displayName": "Build msvc-17-vcpkg-debug",
+      "description": "Build msvc-17-vcpkg Debug configuration",
+      "configuration": "Debug"
+    },
+    {
+      "name": "msvc-17-vcpkg-release",
+      "configurePreset": "msvc-17-vcpkg",
+      "displayName": "Build msvc-17-vcpkg-release",
+      "description": "Build msvc-17-vcpkg Release configuration",
       "configuration": "Release"
     },
     {
