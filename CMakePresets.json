@@ -28,14 +28,14 @@
     },
     {
       "name": "ninja-multi-vcpkg",
-      "displayName": "Ninja Multi-Config (vcpkg, 64 bits)",
+      "displayName": "Ninja Multi-Config (vcpkg)",
       "description": "Configure with vcpkg toolchain and generate Ninja project files for all configurations",
       "generator": "Ninja Multi-Config",
       "inherits": "template-vcpkg"
     },
     {
       "name": "msvc-16-vcpkg",
-      "displayName": "Visual Studio 2019 (vcpkg, 64 bits)",
+      "displayName": "Visual Studio 2019 (vcpkg)",
       "description": "Configure with vcpkg toolchain and generate Visual Studio 2019 project files for all configurations",
       "generator": "Visual Studio 16 2019",
       "inherits": "template-vcpkg"
