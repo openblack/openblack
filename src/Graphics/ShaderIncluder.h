@@ -2,6 +2,13 @@
 
 // Turn off formatting because it adds spaces which break the stringifying
 // clang-format off
+
+#ifdef _MSC_VER
+// Disable warning about not enough arguments for macro evocation EXPAND when SHADER_DIR is undefined
+#pragma warning( push )
+#pragma warning( disable : 4003 )
+#endif
+
 #define GENERATED_SHADERS_DIR generated/shaders/
 
 #ifndef SHADER_DIR
@@ -28,4 +35,9 @@
 
 #undef SHADER_DIR
 #undef SHADER_NAME
+
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+
 // clang-format on
