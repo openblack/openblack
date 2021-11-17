@@ -21,8 +21,8 @@ std::unique_ptr<DebugLines> DebugLines::CreateDebugLines(const Vertex* data, uin
 {
 	VertexDecl decl;
 	decl.reserve(2);
-	decl.emplace_back(VertexAttrib::Attribute::Position, 4, VertexAttrib::Type::Float);
-	decl.emplace_back(VertexAttrib::Attribute::Color0, 4, VertexAttrib::Type::Float);
+	decl.emplace_back(VertexAttrib::Attribute::Position, static_cast<uint8_t>(4), VertexAttrib::Type::Float);
+	decl.emplace_back(VertexAttrib::Attribute::Color0, static_cast<uint8_t>(4), VertexAttrib::Type::Float);
 
 	auto vertexBuffer = new VertexBuffer("DebugLines", data, vertexCount, decl);
 	bgfx::frame();

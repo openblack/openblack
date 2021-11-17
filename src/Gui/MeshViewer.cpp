@@ -41,8 +41,8 @@ MeshViewer::MeshViewer()
     , _cameraPosition(5.0f, 3.0f, 5.0f)
     , _viewBoundingBox(false)
     , _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f)))
-    , _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", 512, 512, graphics::Format::RGBA8,
-                                                           graphics::Format::Depth24Stencil8))
+    , _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", static_cast<uint16_t>(512), static_cast<uint16_t>(512),
+                                                           graphics::Format::RGBA8, graphics::Format::Depth24Stencil8))
 {
 }
 
@@ -173,7 +173,7 @@ void MeshViewer::Draw(Game& game)
 	{
 		_selectedAnimation.reset();
 	}
-	for (size_t i = 0; i < animations.size(); i++)
+	for (uint32_t i = 0; i < animations.size(); i++)
 	{
 		if (_filter.PassFilter(animations[i]->GetName().c_str()) &&
 		    (!_matchBones || (animations[i]->GetBoneMatrices(0).size() == mesh->GetBoneMatrices().size())))

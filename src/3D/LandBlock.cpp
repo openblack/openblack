@@ -39,19 +39,19 @@ void LandBlock::BuildMesh(LandIsland& island)
 
 	VertexDecl decl;
 	decl.reserve(7);
-	decl.emplace_back(VertexAttrib::Attribute::Position, 3, VertexAttrib::Type::Float);
+	decl.emplace_back(VertexAttrib::Attribute::Position, static_cast<uint8_t>(3), VertexAttrib::Type::Float);
 	// weight
-	decl.emplace_back(VertexAttrib::Attribute::TexCoord1, 3, VertexAttrib::Type::Float);
+	decl.emplace_back(VertexAttrib::Attribute::TexCoord1, static_cast<uint8_t>(3), VertexAttrib::Type::Float);
 	// first material id
-	decl.emplace_back(VertexAttrib::Attribute::Color1, 3, VertexAttrib::Type::Uint8);
+	decl.emplace_back(VertexAttrib::Attribute::Color1, static_cast<uint8_t>(3), VertexAttrib::Type::Uint8);
 	// second material id
-	decl.emplace_back(VertexAttrib::Attribute::Color2, 3, VertexAttrib::Type::Uint8);
+	decl.emplace_back(VertexAttrib::Attribute::Color2, static_cast<uint8_t>(3), VertexAttrib::Type::Uint8);
 	// material blend coefficient
-	decl.emplace_back(VertexAttrib::Attribute::TexCoord2, 3, VertexAttrib::Type::Uint8, true);
+	decl.emplace_back(VertexAttrib::Attribute::TexCoord2, static_cast<uint8_t>(3), VertexAttrib::Type::Uint8, true);
 	// light level, align to 4 bytes
-	decl.emplace_back(VertexAttrib::Attribute::Color0, 4, VertexAttrib::Type::Uint8, true);
+	decl.emplace_back(VertexAttrib::Attribute::Color0, static_cast<uint8_t>(4), VertexAttrib::Type::Uint8, true);
 	// water alpha
-	decl.emplace_back(VertexAttrib::Attribute::Color3, 1, VertexAttrib::Type::Float, true);
+	decl.emplace_back(VertexAttrib::Attribute::Color3, static_cast<uint8_t>(1), VertexAttrib::Type::Float, true);
 
 	auto verts = buildVertexList(island);
 

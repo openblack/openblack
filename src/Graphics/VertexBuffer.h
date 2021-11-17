@@ -58,7 +58,6 @@ struct VertexAttrib
 	bool _asInt;          /// < Should not be altered. Unpacking will have to be done in
 	                      /// vertex shader.
 
-	VertexAttrib() {}
 	VertexAttrib(Attribute attribute, uint8_t num, Type type, bool normalized = false, bool asInt = false)
 	    : _attribute(attribute)
 	    , _num(num)
