@@ -124,7 +124,7 @@ void MeshViewer::Draw(Game& game)
 	ImGui::Text("Bones %zu", mesh->GetBoneMatrices().size());
 
 	ImGui::Text("%zu submeshes", mesh->GetSubMeshes().size());
-	ImGui::SliderInt("submesh", &_selectedSubMesh, 0, mesh->GetSubMeshes().size() - 1);
+	ImGui::SliderInt("submesh", &_selectedSubMesh, 0, static_cast<int>(mesh->GetSubMeshes().size()) - 1);
 	ImGui::DragFloat3("position", &_cameraPosition[0], 0.5f);
 	ImGui::Checkbox("View bounding box", &_viewBoundingBox);
 
@@ -145,10 +145,10 @@ void MeshViewer::Draw(Game& game)
 		auto const& animation = animations[*_selectedAnimation];
 		ImGui::Text("%zu frames", animation->GetFrames().size());
 		ImGui::Text("Duration %u frames", animation->GetDuration());
-		ImGui::SliderInt("frame", &_selectedFrame, 0, animation->GetFrames().size() - 1);
+		ImGui::SliderInt("frame", &_selectedFrame, 0, static_cast<int>(animation->GetFrames().size() - 1));
 		if (_selectedFrame > static_cast<int>(animation->GetFrames().size()))
 		{
-			_selectedFrame = animation->GetFrames().size() - 1;
+			_selectedFrame = static_cast<int>(animation->GetFrames().size()) - 1;
 		}
 		ImGui::Text("Time %u, Bones %zu", animation->GetFrames()[_selectedFrame].time,
 		            animation->GetFrames()[_selectedFrame].bones.size());

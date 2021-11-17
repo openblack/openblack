@@ -423,7 +423,7 @@ void Console::ProcessEventOpen(const SDL_Event& event)
 
 void Console::ProcessEventAlways(const SDL_Event& event)
 {
-	ImGuiIO& io = ImGui::GetIO();
+	// ImGuiIO& io = ImGui::GetIO();
 
 	switch (event.type)
 	{
