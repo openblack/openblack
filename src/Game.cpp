@@ -506,7 +506,7 @@ bool Game::LoadVariables()
 		return false;
 	}
 
-	for (const auto& m : _infoConstants.magic)
+	for ([[maybe_unused]] const auto& m : _infoConstants.magic)
 	{
 		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "MAGIC_TYPE {}, PerceivedPower={}", m.typeEnum, m.perceivedPower);
 	}
