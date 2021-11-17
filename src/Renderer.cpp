@@ -55,7 +55,8 @@ struct BgfxCallback: public bgfx::CallbackI
 		                         CodeLookup[code] + "): " + str);
 	}
 
-	void traceVargs(const char* filePath, uint16_t line, const char* format, va_list argList) override
+	void traceVargs([[maybe_unused]] const char* filePath, [[maybe_unused]] uint16_t line, const char* format,
+	                va_list argList) override
 	{
 		char temp[0x2000];
 		char* out = temp;
