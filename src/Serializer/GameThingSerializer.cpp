@@ -58,7 +58,7 @@ void GameThingSerializer::ReadChecksum()
 
 std::shared_ptr<GameThingSerializer::GameThing> GameThingSerializer::DeserializeOne(std::optional<GameThingType> required_type)
 {
-	auto offset = _stream.Position();
+	[[maybe_unused]] const auto offset = _stream.Position();
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "offset={}", offset);
 	auto index = ReadValue<uint32_t>();
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "index={}, len={}", index, _cache.size());
