@@ -26,7 +26,8 @@ using namespace openblack::graphics;
 Water::Water()
 {
 	_reflectionFrameBuffer =
-	    std::make_unique<FrameBuffer>("Reflection", 1024, 1024, graphics::Format::RGBA8, graphics::Format::Depth24Stencil8);
+	    std::make_unique<FrameBuffer>("Reflection", static_cast<uint16_t>(1024), static_cast<uint16_t>(1024),
+	                                  graphics::Format::RGBA8, graphics::Format::Depth24Stencil8);
 
 	// water texture (256x256 RAW RGB 24bpp)
 	auto& filesystem = Game::instance()->GetFileSystem();
@@ -44,7 +45,7 @@ void Water::createMesh()
 {
 	VertexDecl decl;
 	decl.reserve(1);
-	decl.emplace_back(VertexAttrib::Attribute::Position, 2, VertexAttrib::Type::Float);
+	decl.emplace_back(VertexAttrib::Attribute::Position, static_cast<uint8_t>(2), VertexAttrib::Type::Float);
 
 	static const glm::vec2 points[] = {
 	    glm::vec2(-70000.0f, 70000.0f),

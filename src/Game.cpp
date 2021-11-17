@@ -462,7 +462,8 @@ void Game::LoadMap(const fs::path& path)
 
 	// Each released map comes with an optional .fot file which contains the footpath information for the map
 	auto stem = path.stem().generic_string();
-	std::transform(stem.begin(), stem.end(), stem.begin(), [](auto c) { return std::tolower(c); });
+	std::transform(stem.begin(), stem.end(), stem.begin(),
+	               [](auto c) { return static_cast<char>(std::tolower(static_cast<int>(c))); });
 	auto fot_path = _fileSystem->LandscapePath() / fmt::format("{}.fot", stem);
 
 	if (_fileSystem->Exists(fot_path))
