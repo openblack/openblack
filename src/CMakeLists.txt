@@ -142,6 +142,8 @@ if(MSVC)
   target_compile_options(openblack PRIVATE
     # Level 4 warnings
     /W4
+    # Disable nonstandard extension used: nameless struct/union from glm
+    /wd4201
     # Multi-threaded
     /MP
     # Enables stricter C++ standards conformance checks
