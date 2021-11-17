@@ -43,7 +43,7 @@ std::unique_ptr<DebugLines> DebugLines::CreateCross()
 	    Vertex {glm::vec4(0.0f, 0.0f, -0.5f, 1.0f), glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)},
 	};
 
-	return CreateDebugLines(cross.data(), cross.size());
+	return CreateDebugLines(cross.data(), static_cast<uint32_t>(cross.size()));
 }
 
 std::unique_ptr<DebugLines> DebugLines::CreateBox(const glm::vec4& color)
@@ -65,7 +65,7 @@ std::unique_ptr<DebugLines> DebugLines::CreateBox(const glm::vec4& color)
 	    Vertex {glm::vec4(0.5f, 0.5f, 0.5f, 1.0f), color},    Vertex {glm::vec4(0.5f, -0.5f, 0.5f, 1.0f), color},
 	};
 
-	return CreateDebugLines(box.data(), box.size());
+	return CreateDebugLines(box.data(), static_cast<uint32_t>(box.size()));
 }
 
 std::unique_ptr<DebugLines> DebugLines::CreateLine(const glm::vec4& from, const glm::vec4& to, const glm::vec4& color)
@@ -75,7 +75,7 @@ std::unique_ptr<DebugLines> DebugLines::CreateLine(const glm::vec4& from, const 
 	    Vertex {to, color},
 	};
 
-	return CreateDebugLines(line.data(), line.size());
+	return CreateDebugLines(line.data(), static_cast<uint32_t>(line.size()));
 }
 
 DebugLines::DebugLines(std::unique_ptr<Mesh>&& mesh)
