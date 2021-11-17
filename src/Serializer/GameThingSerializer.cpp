@@ -77,7 +77,7 @@ std::shared_ptr<GameThingSerializer::GameThing> GameThingSerializer::Deserialize
 			throw std::runtime_error(fmt::format("Type mismatch while parsing GameThing: got {} but expected {} at 0x{:08x}",
 			                                     type, *required_type, _stream.Position() - sizeof(GameThingType)));
 		}
-		auto player_id = ReadValue<uint32_t>();
+		[[maybe_unused]] const auto playerId = ReadValue<uint32_t>();
 		ReadChecksum();
 		// TODO: validate checksum by adding up first byte of every read
 
