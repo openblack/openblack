@@ -440,7 +440,7 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 				if (mesh.IsBoned())
 				{
 					submitDesc.modelMatrices = mesh.GetBoneMatrices().data();
-					submitDesc.matrixCount = mesh.GetBoneMatrices().size();
+					submitDesc.matrixCount = static_cast<uint8_t>(mesh.GetBoneMatrices().size());
 					// TODO(bwrsandman): Get animation frame instead of default
 				}
 				else
@@ -458,8 +458,8 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 			{
 				if (renderCtx.boundingBox)
 				{
-					auto boundBoxOffset = renderCtx.instanceUniforms.size() / 2;
-					auto boundBoxCount = renderCtx.instanceUniforms.size() / 2;
+					const auto boundBoxOffset = static_cast<uint32_t>(renderCtx.instanceUniforms.size() / 2);
+					const auto boundBoxCount = static_cast<uint32_t>(renderCtx.instanceUniforms.size() / 2);
 					renderCtx.boundingBox->GetMesh().GetVertexBuffer().Bind();
 					bgfx::setInstanceDataBuffer(renderCtx.instanceUniformBuffer, boundBoxOffset, boundBoxCount);
 					bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
