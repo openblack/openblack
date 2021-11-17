@@ -47,8 +47,8 @@ void openblack::gui::Profiler::Draw(Game& game)
 	const double toMsCpu = 1000.0 / stats->cpuTimerFreq;
 	const double toMsGpu = 1000.0 / stats->gpuTimerFreq;
 	const double frameMs = double(stats->cpuTimeFrame) * toMsCpu;
-	_times.pushBack(frameMs);
-	_fps.pushBack(1000.0f / frameMs);
+	_times.pushBack(static_cast<float>(frameMs));
+	_fps.pushBack(static_cast<float>(1000.0 / frameMs));
 
 	std::array<char, 256> frameTextOverlay;
 	std::snprintf(frameTextOverlay.data(), frameTextOverlay.size(), "%.3fms, %.1f FPS", _times.back(), _fps.back());
@@ -130,13 +130,13 @@ void openblack::gui::Profiler::Draw(Game& game)
 		    auto stats = reinterpret_cast<const bgfx::Stats*>(data);
 		    if (startTimestamp)
 		    {
-			    *startTimestamp =
-			        1000.0f * (stats->viewStats[idx].gpuTimeBegin - stats->gpuTimeBegin) / (double)stats->gpuTimerFreq;
+			    *startTimestamp = static_cast<float>(1000.0 * (stats->viewStats[idx].gpuTimeBegin - stats->gpuTimeBegin) /
+			                                         (double)stats->gpuTimerFreq);
 		    }
 		    if (endTimestamp)
 		    {
-			    *endTimestamp =
-			        1000.0f * (stats->viewStats[idx].gpuTimeEnd - stats->gpuTimeBegin) / (double)stats->gpuTimerFreq;
+			    *endTimestamp = static_cast<float>(1000.0 * (stats->viewStats[idx].gpuTimeEnd - stats->gpuTimeBegin) /
+			                                       (double)stats->gpuTimerFreq);
 		    }
 		    if (level)
 		    {
@@ -148,7 +148,7 @@ void openblack::gui::Profiler::Draw(Game& game)
 		    }
 	    },
 	    stats, stats->numViews, 0, "GPU Frame", 0,
-	    1000.0f * (stats->gpuTimeEnd - stats->gpuTimeBegin) / (double)stats->gpuTimerFreq, ImVec2(width, 0));
+	    static_cast<float>(1000.0 * (stats->gpuTimeEnd - stats->gpuTimeBegin) / (double)stats->gpuTimerFreq), ImVec2(width, 0));
 
 	ImGui::Columns(2);
 	if (ImGui::CollapsingHeader("Details (CPU)", ImGuiTreeNodeFlags_DefaultOpen))
@@ -187,8 +187,8 @@ void openblack::gui::Profiler::Draw(Game& game)
 	ImGui::Columns(1);
 }
 
-void openblack::gui::Profiler::Update(Game& game, const Renderer& renderer) {}
+void openblack::gui::Profiler::Update([[maybe_unused]] Game& game, [[maybe_unused]] const Renderer& renderer) {}
 
-void openblack::gui::Profiler::ProcessEventOpen(const SDL_Event& event) {}
+void openblack::gui::Profiler::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
 
-void openblack::gui::Profiler::ProcessEventAlways(const SDL_Event& event) {}
+void openblack::gui::Profiler::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) {}
