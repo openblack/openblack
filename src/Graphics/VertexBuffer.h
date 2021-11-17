@@ -79,8 +79,8 @@ public:
 	~VertexBuffer();
 
 	[[nodiscard]] uint32_t GetCount() const noexcept;
-	[[nodiscard]] size_t GetStrideBytes() const noexcept;
-	[[nodiscard]] size_t GetSizeInBytes() const noexcept;
+	[[nodiscard]] uint32_t GetStrideBytes() const noexcept;
+	[[nodiscard]] uint32_t GetSizeInBytes() const noexcept;
 
 	void Bind() const;
 
@@ -88,8 +88,8 @@ private:
 	std::string _name;
 	uint32_t _vertexCount;
 	const VertexDecl _vertexDecl;
-	size_t _strideBytes;
-	std::vector<const void*> _vertexDeclOffsets;
+	uint32_t _strideBytes;
+	std::vector<uint32_t> _vertexDeclOffsets;
 	bgfx::VertexBufferHandle _handle;
 	bgfx::VertexLayoutHandle _layoutHandle;
 };
