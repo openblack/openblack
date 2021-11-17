@@ -17,7 +17,7 @@ VillagerInfo GVillagerInfo::Find(Tribe tribe, VillagerNumber villagerNumber)
 {
 	const auto& constants = Game::instance()->GetInfoConstants();
 	bool found = false;
-	VillagerInfo result;
+	auto result = VillagerInfo::None;
 	for (size_t i = 0; i < constants.villager.size(); ++i)
 	{
 		if (constants.villager[i].tribeType == tribe && constants.villager[i].villagerNumber == villagerNumber)
@@ -55,7 +55,7 @@ AbodeInfo GAbodeInfo::Find(Tribe tribe, AbodeNumber abodeNumber)
 {
 	auto& constants = Game::instance()->GetInfoConstants();
 	bool found = false;
-	AbodeInfo result;
+	auto result = AbodeInfo::None;
 	for (size_t i = 0; i < constants.abode.size(); ++i)
 	{
 		if ((constants.abode[i].tribeType == tribe || constants.abode[i].tribeType == Tribe::NONE) &&

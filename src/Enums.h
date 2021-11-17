@@ -1530,6 +1530,7 @@ enum class WorshipSiteUpgradeInfo
 
 enum class VillagerInfo
 {
+	None = -1,
 	CelticHousewifeFemale = 0,
 	CelticForesterMale = 1,
 	CelticFishermanMale = 2,
