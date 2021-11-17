@@ -574,7 +574,7 @@ void LHVMViewer::DrawScriptsTab(const openblack::LHVM::LHVM& lhvm)
 
 	ImGui::PushItemWidth(200);
 
-	ImGui::ListBoxHeader("##scripts", scripts.size(), 32);
+	ImGui::ListBoxHeader("##scripts", static_cast<int>(scripts.size()), 32);
 
 	for (auto const& script : scripts)
 	{
@@ -616,7 +616,8 @@ void LHVMViewer::DrawScriptsTab(const openblack::LHVM::LHVM& lhvm)
 
 			static int selected_var = 0;
 			ImGui::PushItemWidth(-1);
-			ImGui::ListBox("", &selected_var, vector_getter, static_cast<void*>(&script_vars), script_vars.size(), 21);
+			ImGui::ListBox("", &selected_var, vector_getter, static_cast<void*>(&script_vars),
+			               static_cast<int>(script_vars.size()), 21);
 			ImGui::EndTabItem();
 		}
 
