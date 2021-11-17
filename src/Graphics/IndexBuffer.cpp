@@ -15,16 +15,16 @@
 
 using namespace openblack::graphics;
 
-IndexBuffer::IndexBuffer(std::string name, const void* indices, size_t indicesCount, Type type)
+IndexBuffer::IndexBuffer(std::string name, const void* indices, uint32_t indexCount, Type type)
     : _name(std::move(name))
-    , _count(indicesCount)
+    , _count(indexCount)
     , _type(type)
     , _handle(BGFX_INVALID_HANDLE)
 {
 	assert(indices != nullptr);
-	assert(indicesCount > 0);
+	assert(indexCount > 0);
 
-	auto mem = bgfx::makeRef(indices, indicesCount * GetTypeSize(_type));
+	auto mem = bgfx::makeRef(indices, indexCount * GetTypeSize(_type));
 	_handle = bgfx::createIndexBuffer(mem, type == Type::Uint32 ? BGFX_BUFFER_INDEX32 : 0);
 	bgfx::setName(_handle, _name.c_str());
 }
@@ -51,12 +51,12 @@ uint32_t IndexBuffer::GetCount() const
 	return _count;
 }
 
-std::size_t IndexBuffer::GetSize() const
+uint32_t IndexBuffer::GetSize() const
 {
 	return _count * GetStride();
 }
 
-std::size_t IndexBuffer::GetStride() const
+uint32_t IndexBuffer::GetStride() const
 {
 	return GetTypeSize(_type);
 }
@@ -66,9 +66,9 @@ IndexBuffer::Type IndexBuffer::GetType() const
 	return _type;
 }
 
-std::size_t IndexBuffer::GetTypeSize(Type type)
+uint32_t IndexBuffer::GetTypeSize(Type type)
 {
-	return type == Type::Uint16 ? sizeof(uint16_t) : sizeof(uint32_t);
+	return static_cast<uint32_t>(type == Type::Uint16 ? sizeof(uint16_t) : sizeof(uint32_t));
 }
 
 void IndexBuffer::Bind(uint32_t count, uint32_t startIndex) const

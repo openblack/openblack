@@ -46,17 +46,17 @@ VertexBuffer::VertexBuffer(std::string name, const void* vertices, uint32_t vert
 
 	// Extract gl types from decl
 	_vertexDeclOffsets.reserve(_vertexDecl.size());
-	static const std::array<std::array<size_t, 4>, 3> strides = {
-	    std::array<size_t, 4> {4, 4, 4, 4},   // Uint8
-	    std::array<size_t, 4> {4, 4, 8, 8},   // Int16
-	    std::array<size_t, 4> {4, 8, 12, 16}, // Float
+	static const std::array<std::array<uint32_t, 4>, 3> strides = {
+	    std::array<uint32_t, 4> {4, 4, 4, 4},   // Uint8
+	    std::array<uint32_t, 4> {4, 4, 8, 8},   // Int16
+	    std::array<uint32_t, 4> {4, 8, 12, 16}, // Float
 	};
 
 	bgfx::VertexLayout layout;
 	layout.begin();
 	for (auto& d : _vertexDecl)
 	{
-		_vertexDeclOffsets.push_back(reinterpret_cast<const void*>(_strideBytes));
+		_vertexDeclOffsets.push_back(_strideBytes);
 		_strideBytes += strides[static_cast<size_t>(d._type)][d._num - 1];
 		layout.add(attributes[static_cast<size_t>(d._attribute)], d._num, types[static_cast<size_t>(d._type)], d._normalized,
 		           d._asInt);
@@ -83,17 +83,17 @@ VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl
 
 	// Extract gl types from decl
 	_vertexDeclOffsets.reserve(_vertexDecl.size());
-	static const std::array<std::array<size_t, 4>, 3> strides = {
-	    std::array<size_t, 4> {4, 4, 4, 4},   // Uint8
-	    std::array<size_t, 4> {4, 4, 8, 8},   // Int16
-	    std::array<size_t, 4> {4, 8, 12, 16}, // Float
+	static const std::array<std::array<uint32_t, 4>, 3> strides = {
+	    std::array<uint32_t, 4> {4, 4, 4, 4},   // Uint8
+	    std::array<uint32_t, 4> {4, 4, 8, 8},   // Int16
+	    std::array<uint32_t, 4> {4, 8, 12, 16}, // Float
 	};
 
 	bgfx::VertexLayout layout;
 	layout.begin();
 	for (auto& d : _vertexDecl)
 	{
-		_vertexDeclOffsets.push_back(reinterpret_cast<const void*>(_strideBytes));
+		_vertexDeclOffsets.push_back(_strideBytes);
 		_strideBytes += strides[static_cast<size_t>(d._type)][d._num - 1];
 		layout.add(attributes[static_cast<size_t>(d._attribute)], d._num, types[static_cast<size_t>(d._type)], d._normalized,
 		           d._asInt);
@@ -121,12 +121,12 @@ uint32_t VertexBuffer::GetCount() const noexcept
 	return _vertexCount;
 }
 
-size_t VertexBuffer::GetStrideBytes() const noexcept
+uint32_t VertexBuffer::GetStrideBytes() const noexcept
 {
 	return _strideBytes;
 }
 
-size_t VertexBuffer::GetSizeInBytes() const noexcept
+uint32_t VertexBuffer::GetSizeInBytes() const noexcept
 {
 	return _vertexCount * _strideBytes;
 }

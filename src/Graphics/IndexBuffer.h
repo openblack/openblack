@@ -25,20 +25,20 @@ public:
 		Uint16,
 		Uint32,
 	};
-	static std::size_t GetTypeSize(Type type);
+	static uint32_t GetTypeSize(Type type);
 
 	IndexBuffer() = delete;
 	IndexBuffer(const IndexBuffer& other) = delete;
 	IndexBuffer(IndexBuffer&&) = default;
 
-	IndexBuffer(std::string name, const void* indices, size_t indicesCount, Type type);
+	IndexBuffer(std::string name, const void* indices, uint32_t indexCount, Type type);
 	IndexBuffer(std::string name, const bgfx::Memory* memory, Type type);
 
 	~IndexBuffer();
 
 	[[nodiscard]] uint32_t GetCount() const;
-	[[nodiscard]] std::size_t GetSize() const;
-	[[nodiscard]] std::size_t GetStride() const;
+	[[nodiscard]] uint32_t GetSize() const;
+	[[nodiscard]] uint32_t GetStride() const;
 	[[nodiscard]] Type GetType() const;
 
 	void Bind(uint32_t count, uint32_t startIndex = 0) const;
