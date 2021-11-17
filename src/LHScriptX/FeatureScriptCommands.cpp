@@ -539,7 +539,7 @@ void FeatureScriptCommands::LoadLandscape(const std::string& path)
 	Game::instance()->LoadLandscape(path);
 }
 
-void FeatureScriptCommands::Version(float version)
+void FeatureScriptCommands::Version([[maybe_unused]] float version)
 {
 	SPDLOG_LOGGER_DEBUG(spdlog::get("scripting"), "LHScriptX: Land version set to: {}", version);
 }
