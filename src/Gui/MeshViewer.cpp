@@ -206,7 +206,14 @@ void MeshViewer::Update(Game& game, const Renderer& renderer)
 
 	// TODO(bwrsandman): use camera class
 	glm::mat4 perspective = glm::perspective(glm::radians(70.0f), 1.0f, 1.0f, 1024.0f);
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4305)
+#endif
 	glm::mat4 view = glm::lookAt(_cameraPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 	bgfx::setViewTransform(static_cast<bgfx::ViewId>(_viewId), &view, &perspective);
 
 	_frameBuffer->Bind(_viewId);
