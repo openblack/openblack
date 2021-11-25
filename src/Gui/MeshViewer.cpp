@@ -131,8 +131,8 @@ void MeshViewer::Draw(Game& game)
 	auto const& submesh = mesh->GetSubMeshes()[_selectedSubMesh];
 
 	auto flags = submesh->GetFlags();
-	ImGui::Text("SubMesh LOD=%u Status=%u%s%s", flags.lod, flags.status, flags.isPhysics ? " [Physics]" : "",
-	            flags.isWindow ? " [Window]" : "");
+	ImGui::Text("SubMesh LOD=%u Status=%u%s%s%s", flags.lod, flags.status, flags.hasBones ? " [Bones]" : "",
+	            flags.isPhysics ? " [Physics]" : "", flags.isWindow ? " [Window]" : "");
 
 	auto const& graphicsMesh = submesh->GetMesh();
 	ImGui::Text("Vertices %u, Indices %u", graphicsMesh.GetVertexBuffer().GetCount(), graphicsMesh.GetIndexBuffer().GetCount());
@@ -271,7 +271,7 @@ void MeshViewer::Update(Game& game, const Renderer& renderer)
 		renderer.DrawMesh(*mesh, meshPack, desc, static_cast<uint8_t>(_selectedSubMesh));
 		if (_viewBoundingBox)
 		{
-			auto box = mesh->GetSubMeshes()[_selectedSubMesh]->GetBoundingBox();
+			auto box = mesh->GetBoundingBox();
 			auto model = glm::translate(box.Center()) * glm::scale(box.Size());
 			bgfx::setTransform(glm::value_ptr(model));
 			_boundingBox->GetMesh().GetVertexBuffer().Bind();

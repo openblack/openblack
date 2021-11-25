@@ -127,7 +127,8 @@ struct L3DSubmeshHeader
 #pragma pack(push, 1)
 	struct alignas(4) Flags
 	{
-		uint32_t lod : 3;
+		uint32_t hasBones : 1;
+		uint32_t lod : 2;
 		uint32_t status : 6;
 		uint32_t unknown1 : 3; // always 0b0101
 		uint32_t isWindow : 1;

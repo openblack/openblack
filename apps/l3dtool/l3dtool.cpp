@@ -223,7 +223,11 @@ int PrintMeshHeaders(openblack::l3d::L3DFile& l3d)
 	using Flags = openblack::l3d::L3DSubmeshHeader::Flags;
 	auto flagToString = [](Flags flags) {
 		std::string result;
-		result += "LOD" + std::to_string(flags.lod);
+		if (flags.hasBones)
+		{
+			result += "hasBones";
+		}
+		result += "|LOD" + std::to_string(flags.lod);
 		result += "|status=" + std::to_string(flags.status);
 		if (flags.unknown1)
 		{
@@ -600,6 +604,7 @@ int WriteFile(const Arguments::Write& args)
 		auto& gltfMesh = gltf.meshes[gltfNode.mesh];
 		using L3DSubmeshHeader = openblack::l3d::L3DSubmeshHeader;
 		L3DSubmeshHeader submesh;
+		submesh.flags.hasBones = false;
 		submesh.flags.lod = 0;
 		submesh.flags.status = 0;
 		submesh.flags.unknown1 = 0b0101;
@@ -625,6 +630,7 @@ int WriteFile(const Arguments::Write& args)
 			}
 			if (skelton >= 0)
 			{
+				submesh.flags.hasBones = true;
 				std::vector<openblack::l3d::L3DBone> bones;
 				std::function<void(const std::vector<int>&, uint32_t parent)> buildJoints;
 				buildJoints = [&gltf, &bones, &buildJoints](const std::vector<int>& children, uint32_t parentId) {

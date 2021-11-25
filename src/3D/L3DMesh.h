@@ -99,6 +99,7 @@ public:
 	[[nodiscard]] btConvexShape& GetPhysicsMesh() { return *_physicsMesh; }
 	[[nodiscard]] const btConvexShape& GetPhysicsMesh() const { return *_physicsMesh; }
 	[[nodiscard]] float GetMass() const { return _physicsMass; }
+	[[nodiscard]] AxisAlignedBoundingBox GetBoundingBox() const { return _boundingBox; }
 
 private:
 	l3d::L3DMeshFlags _flags;
@@ -112,6 +113,7 @@ private:
 	/// Bounding box if no physics mesh was found
 	std::unique_ptr<btConvexShape> _physicsMesh;
 	float _physicsMass;
+	AxisAlignedBoundingBox _boundingBox;
 
 public:
 	[[nodiscard]] const std::string& GetDebugName() const { return _debugName; }
