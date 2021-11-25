@@ -16,7 +16,10 @@
 #include "L3DMesh.h"
 #include "MeshPack.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/component_wise.hpp>
+#include <glm/gtx/vec_swizzle.hpp>
 #include <spdlog/spdlog.h>
 
 using namespace openblack::graphics;
@@ -46,6 +49,7 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 	auto& verticesSpan = l3d.GetVertexSpan(meshIndex);
 	auto& indexSpan = l3d.GetIndexSpan(meshIndex);
 	auto& vertexGroupSpans = l3d.GetVertexGroupSpan(meshIndex);
+	auto& boneSpans = l3d.GetBoneSpan(meshIndex);
 
 	_flags = header.flags;
 
@@ -61,14 +65,43 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 	// Construct bounding box
 	_boundingBox.maxima = glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 	_boundingBox.minima = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
-	for (uint32_t j = 0; j < nVertices; j++)
+	if (_flags.hasBones)
 	{
-		_boundingBox.maxima.x = glm::max(_boundingBox.maxima.x, verticesSpan[j].position.x);
-		_boundingBox.maxima.y = glm::max(_boundingBox.maxima.y, verticesSpan[j].position.y);
-		_boundingBox.maxima.z = glm::max(_boundingBox.maxima.z, verticesSpan[j].position.z);
-		_boundingBox.minima.x = glm::min(_boundingBox.minima.x, verticesSpan[j].position.x);
-		_boundingBox.minima.y = glm::min(_boundingBox.minima.y, verticesSpan[j].position.y);
-		_boundingBox.minima.z = glm::min(_boundingBox.minima.z, verticesSpan[j].position.z);
+		for (auto& primitive : primitiveSpan)
+		{
+			uint32_t vertexOffset = 0;
+			for (uint32_t i = 0; i < primitive.numGroups; ++i)
+			{
+				for (uint32_t j = 0; j < vertexGroupSpans[i].vertexCount; ++j)
+				{
+					auto matrix = glm::identity<glm::mat4>();
+					for (uint32_t parent = vertexGroupSpans[i].boneIndex; parent != std::numeric_limits<uint32_t>::max();
+					     parent = boneSpans[parent].parent)
+					{
+						const auto& bone = boneSpans[parent];
+						const auto orientation = glm::make_mat3(bone.orientation);
+						const auto translation = glm::make_vec3(&bone.position.x);
+						const auto local = glm::translate(glm::identity<glm::mat4>(), translation) * glm::mat4(orientation);
+						matrix = local * matrix;
+					}
+
+					const auto& vertex = verticesSpan[vertexOffset + j];
+					const auto position = glm::xyz(matrix * glm::vec4(glm::make_vec3(&vertex.position.x), 1.0f));
+					_boundingBox.maxima = glm::max(_boundingBox.maxima, position);
+					_boundingBox.minima = glm::min(_boundingBox.minima, position);
+				}
+				vertexOffset += vertexGroupSpans[i].vertexCount;
+			}
+		}
+	}
+	else
+	{
+		for (uint32_t i = 0; i < nVertices; i++)
+		{
+			const auto position = glm::make_vec3(&verticesSpan[i].position.x);
+			_boundingBox.maxima = glm::max(_boundingBox.maxima, position);
+			_boundingBox.minima = glm::min(_boundingBox.minima, position);
+		}
 	}
 
 	if (nVertices == 0)
@@ -81,14 +114,10 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 	auto* verticesMemAccess = reinterpret_cast<EnhancedL3DVertex*>(verticesMem->data);
 	for (uint32_t i = 0; i < nVertices; ++i)
 	{
-		verticesMemAccess[i].pos.x = verticesSpan[i].position.x;
-		verticesMemAccess[i].pos.y = verticesSpan[i].position.y;
-		verticesMemAccess[i].pos.z = verticesSpan[i].position.z;
-		verticesMemAccess[i].uv.x = verticesSpan[i].texCoord.x;
-		verticesMemAccess[i].uv.y = verticesSpan[i].texCoord.y;
-		verticesMemAccess[i].norm.x = verticesSpan[i].normal.x;
-		verticesMemAccess[i].norm.y = verticesSpan[i].normal.y;
-		verticesMemAccess[i].norm.z = verticesSpan[i].normal.z;
+		verticesMemAccess[i].pos = glm::make_vec3(&verticesSpan[i].position.x);
+		verticesMemAccess[i].uv = glm::make_vec2(&verticesSpan[i].texCoord.x);
+		// TODO(bwrsandman): build normals from mesh
+		verticesMemAccess[i].norm = glm::make_vec3(&verticesSpan[i].normal.x);
 		verticesMemAccess[i].index.x = -1;
 		verticesMemAccess[i].index.y = -1;
 	}

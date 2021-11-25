@@ -29,6 +29,7 @@ L3DMesh::L3DMesh(const std::string& debugName)
     : _flags(static_cast<l3d::L3DMeshFlags>(0))
     , _debugName(debugName)
     , _physicsMass(1.0f) // TODO(bwrsandman): Find somewhere in file a value
+    , _boundingBox {glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX), glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX)}
 {
 }
 
@@ -91,6 +92,10 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 			_physicsMesh.reset(physicsMesh);
 			// FIXME(bwrsandman): Some meshes have multiple physics meshes
 		}
+		const auto& bb = subMesh->GetBoundingBox();
+		_boundingBox.minima = glm::min(_boundingBox.minima, bb.minima);
+		_boundingBox.maxima = glm::max(_boundingBox.maxima, bb.maxima);
+
 		_subMeshes.emplace_back(std::move(subMesh));
 	}
 	// TODO(bwrsandman): if no physics mesh was found, make physics mesh the bounding box

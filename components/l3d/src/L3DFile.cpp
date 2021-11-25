@@ -267,10 +267,10 @@ void L3DFile::ReadFile(std::istream& stream)
 			Fail("Submesh header is beyond the end of the file");
 		}
 		stream.seekg(offset);
-		_submeshHeaders.emplace_back();
-		stream.read(reinterpret_cast<char*>(&_submeshHeaders.back()), sizeof(_submeshHeaders[0]));
-		totalPrimitives += _submeshHeaders.back().numPrimitives;
-		totalBones += _submeshHeaders.back().numBones;
+		auto& header = _submeshHeaders.emplace_back();
+		stream.read(reinterpret_cast<char*>(&header), sizeof(header));
+		totalPrimitives += header.numPrimitives;
+		totalBones += header.numBones;
 	}
 
 	// Reserve space and read skins
@@ -278,8 +278,8 @@ void L3DFile::ReadFile(std::istream& stream)
 	for (auto offset : skinOffsets)
 	{
 		stream.seekg(offset);
-		_skins.emplace_back();
-		stream.read(reinterpret_cast<char*>(&_skins.back()), sizeof(_skins[0]));
+		auto& skin = _skins.emplace_back();
+		stream.read(reinterpret_cast<char*>(&skin), sizeof(skin));
 	}
 
 	// Reserve space for primitive offsets
