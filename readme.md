@@ -34,8 +34,8 @@ for you. To do so, you will be selecting the `"ninja-multi-vcpkg"   - Ninja Mult
 
 ### Visual Studio Code
  * Install [Visual Studio Code](https://code.visualstudio.com/Download)
- * Install [C++ Extension](https://code.visualstudio.com/docs/languages/cpp)
- * Install the [CMake Tools Extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools)
+ * Install the [C++ Extension](vscode:extension/ms-vscode.cpptools)
+ * Install the [CMake Tools Extension](vscode:extension/ms-vscode.cmake-tools)
  * You can simply [open the `openblack` folder directly in Visual Studio Code and select a preset](https://devblogs.microsoft.com/cppblog/cmake-presets-integration-in-visual-studio-and-visual-studio-code/).
 
 ### Visual Studio 2019 / 2022
