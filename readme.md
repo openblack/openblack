@@ -30,16 +30,23 @@ The simplest way to obtain all the required dependencies is through [vcpkg](http
 The easiest way to get started on any platform is to allow CMake and vcpkg to handle all dependencies and configuration
 for you. To do so, you will be selecting the `"ninja-multi-vcpkg"   - Ninja Multi-Config (vcpkg)` preset. Other presets are available for more advanced users.
 
-* Install [CMake version 3.20+](https://cmake.org/download/)
-
 ### Visual Studio Code
  * Install [Visual Studio Code](https://code.visualstudio.com/Download)
  * Install the [C++ Extension](vscode:extension/ms-vscode.cpptools)
+    * The extension might not be required on Linux
+    * Install a compiler depending on your platform
+        * GNU or Clang compilers on Linux
+        * Visual Studio's MSVC on Windows (See Visual Studio)
+        * Clang compiler on Mac
  * Install the [CMake Tools Extension](vscode:extension/ms-vscode.cmake-tools)
+     * Install [CMake version 3.20+](https://cmake.org/download/)
  * You can simply [open the `openblack` folder directly in Visual Studio Code and select a preset](https://devblogs.microsoft.com/cppblog/cmake-presets-integration-in-visual-studio-and-visual-studio-code/).
 
 ### Visual Studio 2019 / 2022
 * Install [Visual Studio](https://visualstudio.microsoft.com/downloads/)
+    * Select an appropriate MSVC C++ Component for your version
+    * Select an appropriate Windows SDK Component for your version
+    * Select the C++ CMake tools for Windows Component
 * You can simply [open the `openblack` folder directly in Visual Studio and select a preset](https://devblogs.microsoft.com/cppblog/cmake-presets-integration-in-visual-studio-and-visual-studio-code/).
 
 ### Clion
