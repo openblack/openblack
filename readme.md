@@ -48,8 +48,8 @@ for you. To do so, you will be selecting the `"ninja-multi-vcpkg"   - Ninja Mult
 
 ### Commandline
 * Your usual build tool-chain.
-    * Ubuntu / Debian: `# apt install build-essential cmake`
-    * Arch Linux / Manjaro: `# pacman -S base-devel cmake`
+    * Ubuntu / Debian: `# apt install build-essential cmake ninja-build`
+    * Arch Linux / Manjaro: `# pacman -S base-devel cmake ninja`
 * You can generate the cmake build preset using `cmake --preset` and you can list the presets using `cmake --list-presets`
 
 ## Configuration for using System Dependencies (Recommended for packagers)
