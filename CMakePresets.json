@@ -48,6 +48,13 @@
       "inherits": "template-vcpkg"
     },
     {
+      "name": "xcode-vcpkg",
+      "displayName": "XCode (vcpkg)",
+      "description": "Configure with vcpkg toolchain and XCode project files for all configurations",
+      "generator": "Xcode",
+      "inherits": "template-vcpkg"
+    },
+    {
       "name": "unix-makefile-vcpkg",
       "displayName": "Makefile (vcpkg)",
       "description": "Configure with vcpkg toolchain and generate Makefile project files for all configurations",
@@ -103,6 +110,20 @@
       "configurePreset": "msvc-17-vcpkg",
       "displayName": "Build msvc-17-vcpkg-release",
       "description": "Build msvc-17-vcpkg Release configuration",
+      "configuration": "Release"
+    },
+    {
+      "name": "xcode-vcpkg-debug",
+      "configurePreset": "xcode-vcpkg",
+      "displayName": "Build xcode-vcpkg-debug",
+      "description": "Build xcode-vcpkg Debug configuration",
+      "configuration": "Debug"
+    },
+    {
+      "name": "xcode-vcpkg-release",
+      "configurePreset": "xcode-vcpkg",
+      "displayName": "Build xcode-vcpkg-release",
+      "description": "Build xcode-vcpkg Release configuration",
       "configuration": "Release"
     },
     {
