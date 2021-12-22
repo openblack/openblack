@@ -53,7 +53,13 @@ for you. To do so, you will be selecting the `"ninja-multi-vcpkg"   - Ninja Mult
 * Install [Clion](https://www.jetbrains.com/clion/download/)
 * You can simply [open the `openblack` folder directly in CLion and select a preset](https://www.jetbrains.com/help/clion/cmake-presets.html).
 
-### Commandline
+### XCode
+* Install [XCode](https://apps.apple.com/ca/app/xcode)
+* Install the homebrew depenedencies using [homebrew](https://brew.sh/):  `brew install cmake ninja pkg-config`
+* Run `sudo xcode-select --reset` after installing cmake
+* You need to configure using the cmake preset `xcode-vcpkg` using cmake in either the GUI or using the command line argument `--preset xcode-vcpkg`
+
+### Command Line
 * Your usual build tool-chain.
     * Ubuntu / Debian: `# apt install build-essential cmake ninja-build`
     * Arch Linux / Manjaro: `# pacman -S base-devel cmake ninja`
