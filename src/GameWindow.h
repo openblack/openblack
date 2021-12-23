@@ -32,7 +32,7 @@ class GameWindow
 	};
 
 public:
-	GameWindow(const std::string& title, int width, int height, DisplayMode displayMode);
+	GameWindow(const std::string& title, int width, int height, DisplayMode displayMode, uint32_t extraFlags);
 
 	[[nodiscard]] SDL_Window* GetHandle() const;
 	void GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) const;
