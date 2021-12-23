@@ -547,12 +547,20 @@ bool Game::LoadVariables()
 	return true;
 }
 
-void Game::SetGamePath(const fs::path& gamePath)
+void Game::SetGamePath(fs::path gamePath)
 {
 	if (gamePath.empty())
 	{
 		return;
 	}
+
+#ifdef __APPLE__
+	if (gamePath.string().c_str()[0] == '~' && gamePath.string().c_str()[1] == '/')
+	{
+		gamePath = getenv("HOME") + gamePath.string().substr(1);
+	}
+#endif
+
 	if (!fs::exists(gamePath))
 	{
 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "GamePath does not exist: '{}'", gamePath.generic_string());

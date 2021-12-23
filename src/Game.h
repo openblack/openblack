@@ -156,7 +156,7 @@ public:
 
 	bool LoadVariables();
 
-	void SetGamePath(const fs::path& path);
+	void SetGamePath(fs::path gamePath);
 	const fs::path& GetGamePath();
 	void SetTime(float time);
 	void SetGameSpeed(float multiplier) { _gameSpeedMultiplier = multiplier; }
