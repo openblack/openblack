@@ -26,7 +26,7 @@ void GameWindow::SDLDestroyer::operator()(SDL_Window* window) const
 	SDL_DestroyWindow(window);
 }
 
-GameWindow::GameWindow(const std::string& title, int width, int height, DisplayMode displayMode)
+GameWindow::GameWindow(const std::string& title, int width, int height, DisplayMode displayMode, uint32_t extraFlags)
 {
 	SDL_version compiledVersion, linkedVersion;
 	SDL_VERSION(&compiledVersion);
@@ -54,7 +54,7 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 
 	SDL_ShowCursor(SDL_DISABLE);
 
-	uint32_t flags = SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+	uint32_t flags = SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | extraFlags;
 	if (displayMode == DisplayMode::Fullscreen)
 		flags |= SDL_WINDOW_FULLSCREEN;
 	else if (displayMode == DisplayMode::Borderless)

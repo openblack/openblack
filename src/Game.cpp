@@ -92,7 +92,12 @@ Game::Game(Arguments&& args)
 	SetGamePath(args.gamePath);
 	if (args.rendererType != bgfx::RendererType::Noop)
 	{
-		_window = std::make_unique<GameWindow>(kWindowTitle, args.windowWidth, args.windowHeight, args.displayMode);
+		uint32_t extraFlags = 0;
+		if (args.rendererType == bgfx::RendererType::Enum::Metal)
+		{
+			extraFlags |= SDL_WINDOW_METAL;
+		}
+		_window = std::make_unique<GameWindow>(kWindowTitle, args.windowWidth, args.windowHeight, args.displayMode, extraFlags);
 	}
 	_renderer = std::make_unique<Renderer>(_window.get(), args.rendererType, args.vsync);
 	_dynamicsSystem = std::make_unique<ecs::systems::DynamicsSystem>();
