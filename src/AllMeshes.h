@@ -20,7 +20,7 @@
 namespace openblack
 {
 
-enum class MeshId
+enum class MeshId : uint32_t
 {
 	Dummy = 0,
 	AnimalBat1 = 1,

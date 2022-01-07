@@ -79,7 +79,7 @@ FeatureInfo GFeatureInfo::Find(const std::string& name)
 	auto& constants = Game::instance()->GetInfoConstants();
 	for (size_t i = 0; i < constants.feature.size(); ++i)
 	{
-		if (name == constants.feature[i].description.data())
+		if (name == constants.feature[i].debugString.data())
 		{
 			return static_cast<FeatureInfo>(i);
 		}
@@ -92,7 +92,7 @@ AnimatedStaticInfo GAnimatedStaticInfo::Find(const std::string& name)
 	auto& constants = Game::instance()->GetInfoConstants();
 	for (size_t i = 0; i < constants.animatedStatic.size(); ++i)
 	{
-		if (name == constants.animatedStatic[i].description.data())
+		if (name == constants.animatedStatic[i].debugString.data())
 		{
 			return static_cast<AnimatedStaticInfo>(i);
 		}

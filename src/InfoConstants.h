@@ -9,9 +9,10 @@
 
 #pragma once
 
-#include "Enums.h"
 #include <array>
 #include <cstdint>
+
+#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
 #include "AllMeshes.h"
@@ -29,59 +30,55 @@ struct GTribeInfo
 
 struct GObjectInfo
 {
-	int type;
-	int alignmentType;
-	std::array<char, 0x20> description;
-	float field_0x28;
-	float field_0x2c;
-	float field_0x30;
-	float field_0x34;
-	uint32_t collideSoundType;
-	uint32_t immersionTexture;
-	uint32_t queryFirstEnumText;
-	uint32_t queryLastEnumText;
-	uint32_t fovHelpMessageSet;
-	uint32_t fovHelpCondition;
-	uint32_t handHelpMessageSet;
-	uint32_t handHelpCondition;
+	ObjectType type;
+	AlignmentType alignmentType;
+	std::array<char, 0x30> debugString;
+	SoundCollisionType collideSound;
+	ImmersionEffectType immersion;
+	HelpText helpStartEnum;
+	HelpText helpendEnum;
+	HelpSystemMessageSet helpMessage;
+	HelpSystemCondition helpCondition;
+	HelpSystemMessageSet helpInHand;
+	HelpSystemCondition handCondition;
 	float foodValue;
-	uint32_t woodValueMultiplier;
-	uint32_t foodType;
-	float field_0x64;
-	float field_0x68;
-	float field_0x6c;
-	float field_0x70;
-	float field_0x74;
-	uint32_t field_0x78;
-	uint32_t field_0x7c;
-	float field_0x80;
-	float field_0x84;
-	float field_0x88;
-	float field_0x8c;
-	float field_0x90;
-	float field_0x94;
-	float field_0x98;
+	uint32_t woodValue;
+	FoodType foodType;
+	float defenceEffectBurn;
+	float defenceEffectCrush;
+	float defenceEffectHit;
+	float defenceEffectHeal;
+	float defenceEffectFlyAway;
+	float defenceEffectAlignmentModification;
+	float defenceEffectBeliefModification;
+	float defenceMultiplierBurn;
+	float defenceMultiplierCrush;
+	float defenceMultiplierHit;
+	float defenceMultiplierHeal;
+	float defenceMultiplierFlyAway;
+	float defenceMultiplierAlignmentModification;
+	float defenceMultiplierBeliefModification;
 	float weight;
 	float heatCapacity;
-	float field_0xa4;
-	float field_0xa8;
-	uint32_t isBuildingMaterial;
-	uint32_t suitableForCreatureAction;
-	uint32_t field_0xb4;
-	uint32_t field_0xb8;
-	uint32_t canBeInspectedByCreature;
-	uint32_t field_0xc0;
-	int field_0xc4;
-	uint32_t field_0xc8;
-	float field_0xcc;
-	float field_0xd0;
-	float field_0xd4;
-	float field_0xd8;
-	float aggressorDamageMultiplier;
-	float field_0xe0;
-	float field_0xe4;
+	float combustionTemperature;
+	float burningPriority;
+	uint32_t canCreatureUseForBuilding;
+	uint32_t canCreatureInteractWithMe;
+	uint32_t canCreatureAttackMe;
+	uint32_t canCreaturePlayWithMe;
+	uint32_t canCreatureInspectMe;
+	uint32_t canCreatureGiveMeToLiving;
+	uint32_t canCreatureBringMeBackToTheCitadel;
+	VillagerStates villagerInteractState;
+	VillagerStates villagerInteractStateForBuilding;
+	float villagerInteractDesire;
+	float sacrificeValue;
+	float impressiveValue;
+	float aggressorValue;
+	float villagerImpressiveValue;
+	float artifactMultiplier;
 	float drawImportance;
-	float field_0xec;
+	float computerAttackDesire;
 };
 
 struct GMobileInfo: GObjectInfo
@@ -399,23 +396,23 @@ struct CreatureDesireAttributeEntry
 
 struct GMultiMapFixedInfo: GObjectInfo
 {
-	int field_0xf0;
-	uint32_t field_0xf4;
-	uint32_t field_0xf8;
-	uint32_t field_0xfc;
-	uint32_t field_0x100;
-	float field_0x104;
-	float field_0x108;
-	float field_0x10c;
+	GroundInfo groundInfo;
+	uint32_t woodRequiredPerBuild;
+	uint32_t timeToBuild;
+	uint32_t scaffoldsRequired;
+	uint32_t maxVillagerNeededToBuild;
+	float desireToBeBuilt;
+	float desireToBeRepaired;
+	float influence;
 };
 
 struct GCitadelPartInfo: GMultiMapFixedInfo
 {
-	uint32_t field_0x110;
-	uint32_t field_0x114;
-	float field_0x118;
-	uint32_t field_0x11c;
-	float field_0x120;
+	CitadelTypes citadelType;
+	MeshId meshType;
+	float startLife;
+	uint32_t startStrength;
+	float startDefence;
 };
 
 struct GWorshipSiteInfo: GCitadelPartInfo
@@ -498,27 +495,25 @@ struct GRewardInfo: GMobileObjectInfo
 
 struct GContainerInfo
 {
-	uint32_t field_0x0;
+	ContainerInfoType containerType;
 };
 
 struct GCitadelInfo: GContainerInfo
 {
-	uint32_t field_0x4;
-	uint32_t field_0x8;
-	uint32_t field_0xc;
-	uint32_t field_0x10;
-	uint32_t field_0x14;
-	uint32_t field_0x18;
-	uint32_t field_0x1c;
-	uint32_t field_0x20;
-	uint32_t field_0x24;
-	uint32_t field_0x28;
-	uint32_t field_0x2c;
-	uint32_t field_0x30;
-	float field_0x34;
-	float field_0x38;
-	uint32_t field_0x3c;
-	float field_0x40;
+	CitadelHeartInfoType heartInfo;
+	glm::ivec2 pensStart;
+	uint32_t pensMaxSpiral;
+	glm::ivec2 worshipSiteStart;
+	uint32_t maxNo;
+	uint32_t maxDistanceOfTownFromCitadelOfPygmyTown;
+	uint32_t pygmyTownMaxSpiral;
+	uint32_t housesInPygmyTown;
+	uint32_t importanceOfBeingFarAwayFromOtherTowns;
+	int prayerSiteAngle;
+	float prayerSiteDistance;
+	float virtualInfluenceMaxDistance;
+	uint32_t virtualInfluenceMaxGameTicks;
+	float virtualInfluenceChantsToDouble;
 };
 
 struct CreatureDevelopmentDurationEntry
@@ -1554,15 +1549,11 @@ struct GSpellSeedInfo: GObjectInfo
 
 struct GCitadelHeartInfo: GCitadelPartInfo
 {
-	uint32_t field_0x124;
-	uint32_t field_0x128;
-	uint32_t field_0x12c;
-	float field_0x130;
-	float field_0x134;
-	float field_0x138;
-	float field_0x13c;
-	float field_0x140;
-	float field_0x144;
+	int startGoodness;
+	uint32_t startFollowers;
+	uint32_t maxFlockCount;
+	float storyInfluence[5];
+	float transferedDamageMultiplier;
 };
 
 struct GMagicCreatureSpellInfo: GMagicInfo
