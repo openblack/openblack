@@ -37,8 +37,7 @@ Token Lexer::GetToken()
 			if (*(current_ + 1) == '/')
 			{
 				// Skip line
-				while (*current_ != '\n' && current_ != end_)
-					current_++;
+				while (*current_ != '\n' && current_ != end_) current_++;
 			}
 			break;
 		case ' ':
