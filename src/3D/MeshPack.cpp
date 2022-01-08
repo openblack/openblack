@@ -84,6 +84,8 @@ void MeshPack::loadTextures(const std::map<std::string, pack::G3DTexture>& textu
 			internalFormat = graphics::Format::BlockCompression1;
 		else if (g3dTexture.ddsHeader.format.fourCC == std::string("DXT3"))
 			internalFormat = graphics::Format::BlockCompression2;
+		else if (g3dTexture.ddsHeader.format.fourCC == std::string("DXT5"))
+			internalFormat = graphics::Format::BlockCompression3;
 		else
 			throw std::runtime_error("Unsupported compressed texture format");
 
@@ -135,6 +137,5 @@ void MeshPack::loadMeshes(const std::vector<std::vector<uint8_t>>& meshes)
 
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "MeshPack loaded {0} meshes", meshes.size());
 }
-
 
 } // namespace openblack
