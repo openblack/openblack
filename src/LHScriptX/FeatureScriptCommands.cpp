@@ -24,6 +24,8 @@
 #include "ECS/Archetypes/FieldArchetype.h"
 #include "ECS/Archetypes/MobileObjectArchetype.h"
 #include "ECS/Archetypes/MobileStaticArchetype.h"
+#include "ECS/Archetypes/StreetLanternArchetype.h"
+#include "ECS/Archetypes/BonfireArchetype.h"
 #include "ECS/Archetypes/TownArchetype.h"
 #include "ECS/Archetypes/TreeArchetype.h"
 #include "ECS/Archetypes/VillagerArchetype.h"
@@ -726,16 +728,22 @@ void FeatureScriptCommands::MultiplayerDebug(int32_t, int32_t)
 	// __func__);
 }
 
-void FeatureScriptCommands::CreateStreetLantern([[maybe_unused]] glm::vec3 position, int32_t)
+void FeatureScriptCommands::CreateStreetLantern([[maybe_unused]] glm::vec3 position, int32_t type)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	// In the retail game, any value other than 7 creates a bonfire
+	if (type == 7)
+	{
+		StreetLanternArchetype::Create(position);
+	}
+	else
+	{
+		BonfireArchetype::Create(position);
+	}
 }
 
 void FeatureScriptCommands::CreateStreetLight([[maybe_unused]] glm::vec3 position)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	StreetLanternArchetype::Create(position);
 }
 
 void FeatureScriptCommands::SetLandNumber(int32_t number)
