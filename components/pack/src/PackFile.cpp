@@ -72,6 +72,9 @@
  *         dds file size - size of the dds file minus magic number
  * - variable size dds file without the first 4 byte magic number
  *
+ * The base game uses DXT1 and DXT3 textures
+ * The Creature Isle also uses DXT5 textures
+ *
  * ------------------------- end of texture block ------------------------------
  *
  */
@@ -282,10 +285,30 @@ void PackFile::ExtractTexturesFromBlock()
 		DdsHeader ddsHeader;
 		ddsStream.read(reinterpret_cast<char*>(&ddsHeader), sizeof(DdsHeader));
 
-		// TODO(bwrsandman) the extra sizeof(uint32_t) is unaccounted for
-		if (header.ddsSize - sizeof(ddsHeader) - sizeof(uint32_t) != ddsHeader.pitchOrLinearSize)
+		// Verify the header to validate the DDS file
+		if (ddsHeader.size != sizeof(DdsHeader) || ddsHeader.format.size != sizeof(DdsPixelFormat))
 		{
-			Fail("Size in header does not match according to DDS signature");
+			Fail("Invalid DDS header sizes");
+		}
+
+		// Handle cases where this field is not provided
+		// https://docs.microsoft.com/en-us/windows/win32/direct3ddds/dx-graphics-dds-pguide
+		// Some Creature Isle DXT5 textures lack this field
+		if (ddsHeader.pitchOrLinearSize == 0)
+		{
+			// The block-size is 8 bytes for DXT1, BC1, and BC4 formats, and 16 bytes for other block-compressed formats
+			int blockSize;
+			auto format = std::string(ddsHeader.format.fourCC);
+			if (format == "DXT1" || format == "BC1" || format == "BC4")
+			{
+				blockSize = 8;
+			}
+			else
+			{
+				blockSize = 16;
+			}
+
+			ddsHeader.pitchOrLinearSize = ((ddsHeader.width + 3) / 4) * ((ddsHeader.height + 3) / 4) * blockSize;
 		}
 
 		std::vector<uint8_t> dssTexels(ddsHeader.pitchOrLinearSize);
