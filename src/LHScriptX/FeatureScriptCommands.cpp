@@ -85,7 +85,8 @@ std::tuple<Tribe, VillagerNumber> GetVillagerTribeAndNumber(const std::string& v
 
 } // namespace
 
-const std::array<const ScriptCommandSignature, 105> FeatureScriptCommands::Signatures = {{
+const std::array<const ScriptCommandSignature, 106> FeatureScriptCommands::Signatures = {{
+    CREATE_COMMAND_BINDING("SET_A_TOWNS_INFLUENCE_MULTIPLIER", SetATownInfluenceMultiplier),
     CREATE_COMMAND_BINDING("CREATE_MIST", CreateMist),
     CREATE_COMMAND_BINDING("CREATE_PATH", CreatePath),
     CREATE_COMMAND_BINDING("CREATE_TOWN", CreateTown),
@@ -201,6 +202,12 @@ inline glm::mat4 GetRotation(int rotation)
 inline glm::vec3 GetSize(int size)
 {
 	return glm::vec3(size, size, size) * 0.001f;
+}
+
+void FeatureScriptCommands::SetATownInfluenceMultiplier(int32_t townId, float multiplier)
+{
+	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX Function {}(townId={}, multiplier={}) not implemented.", __func__,
+	                    townId, multiplier);
 }
 
 void FeatureScriptCommands::CreateMist(glm::vec3 position, float param_2, int32_t param_3, float param_4, float param_5)
