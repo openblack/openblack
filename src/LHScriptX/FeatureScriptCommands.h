@@ -23,8 +23,9 @@ namespace openblack::lhscriptx
 class FeatureScriptCommands
 {
 public:
-	static const std::array<const ScriptCommandSignature, 105> Signatures;
+	static const std::array<const ScriptCommandSignature, 106> Signatures;
 
+	static void SetATownInfluenceMultiplier(int32_t townId, float mult);
 	static void CreateMist(glm::vec3 position, float param_2, int32_t param_3, float param_4, float param_5);
 	static void CreatePath(int32_t param_1, int32_t param_2, int32_t param_3, int32_t param_4);
 	static void CreateTown(int32_t townId, glm::vec3 position, const std::string& playerOwner, int32_t notUsed,
