@@ -4,7 +4,7 @@ $output v_position, v_texcoord0, v_normal
 #if BGFX_SHADER_LANGUAGE_HLSL == 3
 #define BGFX_CONFIG_MAX_BONES 48
 #else
-#define BGFX_CONFIG_MAX_BONES 64
+#define BGFX_CONFIG_MAX_BONES 128
 #endif
 
 #include <bgfx_shader.sh>
