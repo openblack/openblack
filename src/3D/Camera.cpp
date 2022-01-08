@@ -8,8 +8,9 @@
  *****************************************************************************/
 
 #include "Camera.h"
-#include <3D/LandIsland.h>
-#include <Game.h>
+#include "3D/LandIsland.h"
+#include "ECS/Registry.h"
+#include "Game.h"
 
 #include <glm/gtx/euler_angles.hpp>
 
@@ -140,20 +141,29 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 		return;
 
 	if (e.key.keysym.scancode == SDL_SCANCODE_W)
+	{
 		_dv.z += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
+	}
 	else if (e.key.keysym.scancode == SDL_SCANCODE_S)
+	{
 		_dv.z += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
+	}
 	else if (e.key.keysym.scancode == SDL_SCANCODE_A)
+	{
 		_dv.x += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
+	}
 	else if (e.key.keysym.scancode == SDL_SCANCODE_D)
+	{
 		_dv.x += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
+	}
 	else if (e.key.keysym.scancode == SDL_SCANCODE_LCTRL)
+	{
 		_dv.y += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
+	}
 	else if (e.key.keysym.scancode == SDL_SCANCODE_SPACE)
+	{
 		_dv.y += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
-
-	glm::mat3 rotation = glm::transpose(GetViewMatrix());
-	_velocity = rotation * _dv;
+	}
 }
 
 void Camera::handleMouseInput(const SDL_Event& e)
@@ -167,8 +177,6 @@ void Camera::handleMouseInput(const SDL_Event& e)
 		rot.x -= e.motion.yrel * _freeLookSensitivity * 0.1f;
 
 		SetRotation(rot);
-		glm::mat3 viewRotation = glm::transpose(GetViewMatrix());
-		_velocity = viewRotation * _dv;
 	}
 	else if (e.type == SDL_MOUSEMOTION && e.motion.state & SDL_BUTTON(SDL_BUTTON_LEFT))
 	{
@@ -185,7 +193,12 @@ void Camera::handleMouseInput(const SDL_Event& e)
 
 void Camera::Update(std::chrono::microseconds dt)
 {
-	_position += _velocity * (_movementSpeed * dt.count());
+	auto accelFactor = 0.001f;
+	auto airResistance = .9f;
+	glm::mat3 rotation = glm::transpose(GetViewMatrix());
+	_velocity += (((_dv * _maxMovementSpeed) - _velocity) * accelFactor);
+	_position += rotation * _velocity * float(dt.count());
+	_velocity *= airResistance;
 }
 
 glm::mat4 ReflectionCamera::GetViewMatrix() const
