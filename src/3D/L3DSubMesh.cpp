@@ -39,7 +39,7 @@ L3DSubMesh::L3DSubMesh(L3DMesh& mesh)
 
 L3DSubMesh::~L3DSubMesh() {}
 
-void L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
+bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 {
 	auto& header = l3d.GetSubmeshHeaders()[meshIndex];
 	auto primitiveSpan = l3d.GetPrimitiveSpan(meshIndex);
@@ -71,6 +71,11 @@ void L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 		_boundingBox.minima.z = glm::min(_boundingBox.minima.z, verticesSpan[j].position.z);
 	}
 
+	if (nVertices == 0)
+	{
+		return false;
+	}
+
 	// Get vertices
 	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(EnhancedL3DVertex) * nVertices);
 	auto* verticesMemAccess = reinterpret_cast<EnhancedL3DVertex*>(verticesMem->data);
@@ -86,6 +91,11 @@ void L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 		verticesMemAccess[i].norm.z = verticesSpan[i].normal.z;
 		verticesMemAccess[i].index.x = -1;
 		verticesMemAccess[i].index.y = -1;
+	}
+
+	if (nIndices == 0)
+	{
+		return false;
 	}
 
 	// Get Indices
@@ -132,6 +142,7 @@ void L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "{} submesh {} with {} verts and {} indices", _l3dMesh.GetDebugName(), meshIndex,
 	                    nVertices, nIndices);
+	return true;
 }
 
 Mesh& L3DSubMesh::GetMesh() const
