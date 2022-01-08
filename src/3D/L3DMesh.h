@@ -112,9 +112,11 @@ private:
 	    {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()},
 	    {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest()},
 	};
+	std::string _nameData;
 
 public:
 	[[nodiscard]] const std::string& GetDebugName() const { return _debugName; }
+	[[nodiscard]] const std::string& GetNameData() const { return _nameData; }
 
 	[[nodiscard]] uint32_t GetFlags() const { return static_cast<uint32_t>(_flags); }
 
