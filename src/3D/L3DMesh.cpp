@@ -73,6 +73,8 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 		auto subMesh = std::make_unique<L3DSubMesh>(*this);
 		if (!subMesh->Load(l3d, i))
 		{
+			auto& fileName = l3d.GetFilename();
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open L3DSubMesh from file: {}", fileName);
 			continue;
 		}
 		_subMeshes.emplace_back(std::move(subMesh));
