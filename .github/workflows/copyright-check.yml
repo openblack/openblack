@@ -1,0 +1,17 @@
+name: Copyright Check
+on: [ push, pull_request ]
+jobs:
+  copyright-check:
+    name: copyright-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: VinnyBabuManjaly/copyright-action@v1.0.0
+        with:
+          CopyrightString: '/*****************************************************************************\n * Copyright (c) 2018-2022 openblack developers\n *\n * For a complete list of all authors, please refer to contributors.md\n * Interested in contributing? Visit https://github.com/openblack/openblack\n *\n * openblack is licensed under the GNU General Public License version 3.\n *****************************************************************************/\n'
+          FileType: '.cpp, .h'
+  
+#  - name: Create Pull Request
+#    uses: peter-evans/create-pull-request@v2
+#    with:
+#      token: ${{ secrets.GITHUB_TOKEN }}
