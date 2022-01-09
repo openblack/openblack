@@ -1,0 +1,14 @@
+name: Copyright Check
+on: [ push, pull_request ]
+jobs:
+  copyright-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Check License Lines
+      uses: kt3k/license_checker@v1.0.6
+  
+#  - name: Create Pull Request
+#    uses: peter-evans/create-pull-request@v2
+#    with:
+#      token: ${{ secrets.GITHUB_TOKEN }}
