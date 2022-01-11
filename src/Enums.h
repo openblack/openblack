@@ -160,7 +160,7 @@ enum class LivingType : int
 	Villager = 21,
 };
 
-enum class AnimalInfo
+enum class AnimalInfo : int
 {
 	None = -1,
 	Lion = 0,
@@ -1729,7 +1729,7 @@ enum class EffectInfo
 	WeatherLightning = 11,
 };
 
-enum class SexType
+enum class SexType : int
 {
 	None = -1,
 	Male = 0,
@@ -3010,6 +3010,30 @@ enum class SpeedState : uint32_t
 	MetresSec_9 = MakeSpeedState(9.0f),
 	MetresSec_10 = MakeSpeedState(10.0f),
 	MetresSec_100 = MakeSpeedState(100.0f),
+};
+
+constexpr uint32_t MakeTurnAngleState(float degrees)
+{
+	constexpr uint32_t a360 = 0x800;
+	constexpr float a1 = static_cast<float>(a360) / 360.0f;
+	float scaled = degrees * a1;
+	// Speed needs to be positive. Round cast to int won't work in negative.
+	return static_cast<uint32_t>(scaled + 0.5f);
+}
+
+enum class TurnangleStates : int
+{
+	Degrees_360 = MakeTurnAngleState(360.0f / 1.0f),
+	Degrees_180 = MakeTurnAngleState(360.0f / 2.0f),
+	Degrees_90 = MakeTurnAngleState(360.0f / 4.0f),
+	Degrees_45 = MakeTurnAngleState(360.0f / 8.0f),
+	Degrees_22_5 = MakeTurnAngleState(360.0f / 16.0f),
+	Degrees_11_25 = MakeTurnAngleState(360.0f / 32.0f),
+	Degrees_5_625 = MakeTurnAngleState(360.0f / 64.0f),
+	Degrees_2_8125 = MakeTurnAngleState(360.0f / 128.0f),
+	Degrees_1_40625 = MakeTurnAngleState(360.0f / 256.0f),
+	Degrees_6 = MakeTurnAngleState(6.0f),
+	Degrees_3 = MakeTurnAngleState(3.0f),
 };
 
 enum class CollideType : uint32_t
