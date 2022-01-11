@@ -1358,7 +1358,7 @@ enum class PotInfo
 	Fish = 18,
 };
 
-enum class PotType
+enum class PotType : uint32_t
 {
 	Pot = 0,
 	PileFood = 1,
@@ -1431,7 +1431,7 @@ enum class TreeInfo
 	_COUNT
 };
 
-enum class ResourceType
+enum class ResourceType : int
 {
 	Any = -2,
 	None = -1,

@@ -210,26 +210,26 @@ struct GAnimalInfo: GLivingInfo
 
 struct GMobileObjectInfo: GMobileInfo
 {
-	int field_0xf4;
+	MobileObjectInfo mobileType;
 	MeshId meshId;
-	float field_0xfc;
-	float field_0x100;
+	float startScale;
+	float finalScale;
 };
 
 struct GPotInfo: GMobileObjectInfo
 {
-	uint32_t field_0x104;
-	uint32_t field_0x108;
-	uint32_t field_0x10c;
-	uint32_t field_0x110;
-	uint32_t field_0x114;
-	uint32_t field_0x118;
-	uint32_t field_0x11c;
-	uint32_t field_0x120;
-	uint32_t field_0x124;
-	uint32_t field_0x128;
-	uint32_t field_0x12c;
-	float field_0x130;
+	PotType potType;
+	ResourceType resourceType;
+	uint32_t maxAmountInPot;
+	uint32_t scaleEvery;
+	PotInfo nextPotForResource;
+	Reaction associatedReaction;
+	uint32_t canBecomeAPhysicsObject;
+	uint32_t amountPickedUpInitially;
+	uint32_t amountPickedUpPerTurn;
+	uint32_t amountPickedUpPerTurnEnd;
+	uint32_t maxAmountCanBePickedUp;
+	float multiPickUpRampTime;
 };
 
 struct GFootballPositionInfo
