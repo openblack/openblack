@@ -257,21 +257,21 @@ struct GBallInfo: GMobileObjectInfo
 
 struct GSoundInfo
 {
-	float field_0x0;
-	float field_0x4;
-	float field_0x8;
-	float field_0xc;
-	float field_0x10;
-	float field_0x14;
-	float field_0x18;
-	float field_0x1c;
-	float field_0x20;
-	float field_0x24;
-	float field_0x28;
-	float field_0x2c;
-	float field_0x30;
-	float field_0x34;
-	float field_0x38;
+	float weatherPercentageForMaxFade;
+	float weatherPercentageForMaxWeatherVolume;
+	float radiusForMaxAtmosVolume;
+	float radiusForMinAtmosVolume;
+	float fadeOutStart;
+	float normalAtmosFadeStartHeight;
+	float normalAtmosFadeEndHeight;
+	float atmosphereHeight;
+	float atmosphereMaxVolHeight;
+	float spaceHeight; // AtmosphereNoVolHeight
+	float atmosVolumeStep;
+	float townTriggerDistance;
+	float townTriggerOffDistance;
+	float noBlocksForFullAtmos;
+	float distanceFromNearestAtmosForFadeStart;
 };
 
 struct GMagicFireBallInfo: GObjectInfo
