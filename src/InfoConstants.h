@@ -276,21 +276,22 @@ struct GSoundInfo
 
 struct GMagicFireBallInfo: GObjectInfo
 {
-	glm::vec3 field_0xf0;
+	float initialTemperature;
+	float deletionTemperature;
+	float catchIncreaseFactor;
 };
 
 struct GDanceInfo
 {
-	uint32_t field_0x0;
-	uint32_t field_0x4;
-	std::array<char, 0x40> field_0x8;
-	std::array<char, 0x40> field_0x48;
-	uint32_t field_0x88;
-	float field_0x8c;
-	float field_0x90;
-	uint32_t field_0x94;
-	uint32_t field_0x98;
-	float field_0x9c;
+	uint32_t duration;
+	uint32_t totalNumBeats;
+	std::array<char, 0x40> debugText;
+	std::array<char, 0x40> fileName;
+	uint32_t startsAutomatically;
+	glm::vec2 areaRequired;
+	uint32_t minimumDancers;
+	uint32_t maximumDancers;
+	float impressiveness;
 };
 
 struct GSpecialVillagerInfo
