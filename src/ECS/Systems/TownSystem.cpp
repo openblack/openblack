@@ -40,7 +40,7 @@ entt::entity TownSystem::FindAbodeWithSpace(entt::entity townEntity) const
 			return;
 		}
 		const auto& info = infoConstants.abode[static_cast<size_t>(component.type)];
-		if (static_cast<int>(component.inhabitants.size()) < info.maxCapacity)
+		if (static_cast<uint32_t>(component.inhabitants.size()) < info.maxVillagersInAbode)
 		{
 			result = entity;
 		}
