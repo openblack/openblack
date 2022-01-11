@@ -234,26 +234,25 @@ struct GPotInfo: GMobileObjectInfo
 
 struct GFootballPositionInfo
 {
-	float field_0x0;
-	float field_0x4;
-	uint32_t field_0x8;
-	uint32_t field_0xc;
-	uint32_t field_0x10;
+	glm::vec2 offset;
+	VillagerStates startState;
+	VillagerStates state;
+	uint32_t side;
 };
 
 struct GBallInfo: GMobileObjectInfo
 {
-	uint32_t field_0x104;
-	uint32_t field_0x108;
-	uint32_t field_0x10c;
-	float field_0x110;
-	float field_0x114;
-	float field_0x118;
-	float field_0x11c;
-	float field_0x120;
-	float field_0x124;
-	float field_0x128;
-	float field_0x12c;
+	uint32_t defaultSpeed;
+	CollideType collideType;
+	uint32_t strength;
+	float defence;
+	float kickXZVelocity;
+	float kickYVelocity;
+	float shootXZVelocity;
+	float shootYVelocity;
+	float dribbleXZVelocity;
+	float dribbleYVelocity;
+	float minDistanceToFindPlayer;
 };
 
 struct GSoundInfo
