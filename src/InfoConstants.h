@@ -297,13 +297,13 @@ struct GDanceInfo
 struct GSpecialVillagerInfo
 {
 	std::array<char, 0x30> name;
-	uint32_t field_0x30;
-	uint32_t field_0x34;
-	uint32_t field_0x38;
-	uint32_t field_0x3c;
-	uint32_t field_0x40;
-	int field_0x44;
-	uint32_t field_0x48;
+	uint32_t age;
+	SexType sex;
+	VillagerJob job;
+	uint32_t married;
+	Tribe tribe;
+	AnimalInfo pet;
+	uint32_t faceNumber;
 };
 
 struct CreatureDevelopmentPhaseEntry
@@ -413,56 +413,52 @@ struct GCitadelPartInfo: GMultiMapFixedInfo
 
 struct GWorshipSiteInfo: GCitadelPartInfo
 {
-	float field_0x124;
-	uint32_t field_0x128;
-	uint32_t field_0x12c;
-	uint32_t field_0x130;
-	float field_0x134;
-	float field_0x138;
-	uint32_t field_0x13c;
-	float field_0x140;
-	float field_0x144;
-	uint32_t field_0x148;
-	float field_0x14c;
+	float radiusFromCitadel;
+	MeshId baseMesh;
+	PotInfo potForResourceFood;
+	PotInfo potForResourceWood;
+	float chantsPerVillager;
+	float prayerSiteDistance;
+	uint32_t maxDancersVisible;
+	float chantsToFillBattery;
+	float eachVillagerAddToFillBattery;
+	uint32_t chantsToReserveForMaintaining;
+	float artifactPowerupMultiplier;
 };
 
 struct GAbodeInfo: GMultiMapFixedInfo
 {
 	int field_0x110;
 	AbodeNumber abodeNumber;
-	std::array<char, 0x20> name;
-	uint32_t field_0x138;
-	uint32_t field_0x13c;
-	uint32_t field_0x140;
-	uint32_t field_0x144;
+	std::array<char, 0x30> debugString;
 	Tribe tribeType;
 	MeshId meshId;
-	uint32_t field_0x150;
-	float field_0x154;
-	uint32_t field_0x158;
-	float field_0x15c;
-	uint32_t field_0x160;
-	int maxCapacity;
-	int field_0x168;
-	uint32_t field_0x16c;
-	uint32_t field_0x170;
-	uint32_t field_0x174;
-	uint32_t field_0x178;
-	uint32_t field_0x17c;
-	uint32_t field_0x180;
-	uint32_t field_0x184;
-	uint32_t field_0x188;
-	uint32_t field_0x18c;
-	float field_0x190;
-	int field_0x194;
-	float field_0x198;
-	float field_0x19c;
-	float field_0x1a0;
-	int field_0x1a4;
-	float field_0x1a8;
-	uint32_t field_0x1ac;
-	uint32_t field_0x1b0;
-	uint32_t field_0x1b4;
+	uint32_t canBePhysicallyDamaged;
+	float startLife;
+	uint32_t startStrength;
+	float startDefence;
+	uint32_t startInfluence;
+	uint32_t maxVillagersInAbode;
+	uint32_t maxChildrenInAbode;
+	uint32_t startVillagersInAbode;
+	uint32_t startChildrenInAbode;
+	uint32_t startFood;
+	uint32_t startFoodRAnd;
+	uint32_t startWood;
+	uint32_t startWoodRAnd;
+	uint32_t howLongRuinLastsFor;
+	PotInfo potForResourceFood;
+	PotInfo potForResourceWood;
+	float percentTooCrowded;
+	MobileObjectInfo producesMobileObject;
+	float maxNumMobileObjectsToProduce;
+	float timeEachMobileObjectTakesToProduce;
+	float emptyAbodeLifeReducer;
+	int populationWhenNeeded;
+	float thresholdForStopBeingFunctional;
+	HelpText toolTipsForBuild;
+	HelpText didYouKnow;
+	DykCategory dykCategory;
 
 	static AbodeInfo Find(const std::string& name);
 	static AbodeInfo Find(Tribe tribe, AbodeNumber abodeNumber);

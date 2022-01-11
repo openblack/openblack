@@ -913,7 +913,7 @@ enum class SoundSurfaceType
 	LooseFoliage = 8,
 };
 
-enum class Reaction
+enum class Reaction : int
 {
 	None = -1,
 	FleeFromObject = 0,
@@ -2751,7 +2751,7 @@ enum class HelpSpritesGuidance
 	DestroyBuilding = 21,
 };
 
-enum class DykCategory
+enum class DykCategory : uint32_t
 {
 	Navigation = 0,
 	Creature = 1,
