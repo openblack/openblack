@@ -23,9 +23,9 @@ namespace openblack
 #pragma pack(push, 1)
 struct GTribeInfo
 {
-	uint32_t field_0x0;
-	uint32_t field_0x4;
-	float field_0x8;
+	Tribe tribeType;
+	WorshipSiteInfo worshipSiteInfo;
+	float percentFemaleInTown;
 };
 
 struct GObjectInfo
