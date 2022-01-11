@@ -133,7 +133,7 @@ enum class AbodeType
 	Any = 32767,
 };
 
-enum class LivingType
+enum class LivingType : int
 {
 	Any = -1,
 	Lion = 0,
@@ -1003,7 +1003,7 @@ enum class EffectType
 	BeliefModification = 6,
 };
 
-enum class LivingStates
+enum class LivingStates : uint32_t
 {
 	LivingInvalid = 0,
 	LivingMoveToPos = 1,
@@ -2974,6 +2974,61 @@ enum class HelpSystemMessageSet : uint32_t
 
 enum class HelpSystemCondition : uint32_t
 {
+};
+
+constexpr uint32_t MakeSpeedState(float ms)
+{
+	constexpr uint32_t ms100 = 0x10000;
+	constexpr float ms1 = static_cast<float>(ms100) * 0.01f;
+	float scaled = ms * ms1;
+	// Speed needs to be positive. Round cast to int won't work in negative.
+	return static_cast<uint32_t>(scaled + 0.5f);
+}
+
+enum class SpeedState : uint32_t
+{
+	MetresSec_0 = MakeSpeedState(0.0f),
+	MetresSec_0_1 = MakeSpeedState(0.1f),
+	MetresSec_0_25 = MakeSpeedState(0.25f),
+	MetresSec_0_5 = MakeSpeedState(0.5f),
+	MetresSec_0_75 = MakeSpeedState(0.75f),
+	MetresSec_1 = MakeSpeedState(1.0f),
+	MetresSec_1_25 = MakeSpeedState(1.25f),
+	MetresSec_1_5 = MakeSpeedState(1.5f),
+	MetresSec_1_75 = MakeSpeedState(1.75f),
+	MetresSec_2 = MakeSpeedState(2.0f),
+	MetresSec_2_25 = MakeSpeedState(2.25f),
+	MetresSec_2_5 = MakeSpeedState(2.5f),
+	MetresSec_2_75 = MakeSpeedState(2.75f),
+	MetresSec_3 = MakeSpeedState(3.0f),
+	MetresSec_4 = MakeSpeedState(4.0f),
+	MetresSec_5 = MakeSpeedState(5.0f),
+	MetresSec_6 = MakeSpeedState(6.0f),
+	MetresSec_6_5 = MakeSpeedState(6.5f),
+	MetresSec_7 = MakeSpeedState(7.0f),
+	MetresSec_8 = MakeSpeedState(8.0f),
+	MetresSec_9 = MakeSpeedState(9.0f),
+	MetresSec_10 = MakeSpeedState(10.0f),
+	MetresSec_100 = MakeSpeedState(100.0f),
+};
+
+enum class CollideType : uint32_t
+{
+	Clear = 0,
+	Water = 1 << 0,
+	Land = 1 << 1,
+	Field = 1 << 2,
+	Fixed = 1 << 3,
+	Edge = 1 << 4,
+	Tree = 1 << 5,
+	Wall = 1 << 6,
+
+	// Collision and Water have same values as Villager and Animal
+	Villager = 1,
+	Airbourne = 0,
+	Animal = 1,
+	Creature = 9,
+	Ball = 8,
 };
 
 } // namespace openblack

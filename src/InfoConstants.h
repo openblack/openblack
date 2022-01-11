@@ -83,75 +83,85 @@ struct GObjectInfo
 
 struct GMobileInfo: GObjectInfo
 {
-	uint32_t field_0xf0;
+	uint32_t dummy;
+};
+
+struct SpeedGroup
+{
+	SpeedState speedDefault;
+	SpeedState speedFleeing;
+	SpeedState speed2;
+	SpeedState speed3;
+	SpeedState speed4;
+	SpeedState speed5;
 };
 
 struct GMobileWallHugInfo: GMobileInfo
 {
-	uint32_t field_0xf4;
-	uint32_t field_0xf8;
-	uint32_t field_0xfc;
-	uint32_t field_0x100;
-	uint32_t field_0x104;
-	uint32_t field_0x108;
-	uint32_t field_0x10c;
+	SpeedGroup speedGroup;
+	CollideType collideType;
+};
+
+struct IsReacting
+{
+	uint32_t isFleeingFromObject;
+	uint32_t isLookingAtObject;
+	uint32_t isFollowingObject;
+	uint32_t isFleeingFromSpell;
+	uint32_t isLookingAtSpell;
+	uint32_t isFollowingSpell;
+	uint32_t isReactingToCreature;
+	uint32_t isReactingToFood;
+	uint32_t isReactingToMagicTree;
+	uint32_t isReactingToFlyingObject;
+	uint32_t isReactingToAbodeBurning;
+	uint32_t isReactingToBall;
+	uint32_t isReactingToWood;
+	uint32_t isReactingToMagicShield;
+	uint32_t isReactingToGift;
+	uint32_t isReactingToNewBuilding;
+	uint32_t isReactingToHandPickUp;
+	uint32_t isReactingToHandUsingTotem;
+	uint32_t isReactingToObjectCrushed;
+	uint32_t isReactingToFight;
+	uint32_t isReactingToTeleport;
+	uint32_t isReactingToNiceSpell;
+	uint32_t isReactingToHandPuttingStuffInStoragePit;
+	uint32_t isReactingToDeath;
+	uint32_t isReactingToDroppedByHand;
+	uint32_t isReactingToFainting;
+	uint32_t isReactingToConfused;
+	uint32_t isReactingToFallingTree;
+	uint32_t isFleeingFromPredator;
+	uint32_t isReactingInCrowd;
+	uint32_t isReactingToBreeder;
+	uint32_t isReactingToTownCelebration;
+	uint32_t isReactingToVillagerInHand;
+	uint32_t isReactingToBurningThingInHand;
+	uint32_t isReactingToMagicWaterPuttingOutFire;
+	uint32_t isReactingToMagicShieldStruck;
+	uint32_t isReactingToMagicShieldDestroyed;
+	uint32_t isReactingToImpressiveSpell;
+	uint32_t isReactingToScaffold;
+	uint32_t isReactingToMissionary;
+	uint32_t isReactingToFightWon;
 };
 
 struct GLivingInfo: GMobileWallHugInfo
 {
-	uint32_t field_0x110;
-	uint32_t field_0x114;
+	LivingType creatureType;
+	LivingStates moveState;
 	float life;
-	float field_0x11c;
-	float field_0x120;
-	int field_0x124;
-	uint32_t field_0x128;
-	uint32_t field_0x12c;
-	uint32_t field_0x130;
-	uint32_t field_0x134;
-	uint32_t field_0x138;
-	uint32_t field_0x13c;
-	uint32_t field_0x140;
-	uint32_t field_0x144;
-	uint32_t field_0x148;
-	uint32_t field_0x14c;
-	uint32_t field_0x150;
-	uint32_t field_0x154;
-	uint32_t field_0x158;
-	uint32_t field_0x15c;
-	uint32_t field_0x160;
-	uint32_t field_0x164;
-	uint32_t field_0x168;
-	uint32_t field_0x16c;
-	uint32_t field_0x170;
-	uint32_t field_0x174;
-	uint32_t field_0x178;
-	uint32_t field_0x17c;
-	uint32_t field_0x180;
-	uint32_t field_0x184;
-	uint32_t field_0x188;
-	uint32_t field_0x18c;
-	uint32_t field_0x190;
-	uint32_t field_0x194;
-	uint32_t field_0x198;
-	uint32_t field_0x19c;
-	uint32_t field_0x1a0;
-	uint32_t field_0x1a4;
-	uint32_t field_0x1a8;
-	uint32_t field_0x1ac;
-	uint32_t field_0x1b0;
-	uint32_t field_0x1b4;
-	uint32_t field_0x1b8;
-	uint32_t field_0x1bc;
-	uint32_t field_0x1c0;
-	uint32_t field_0x1c4;
-	uint32_t field_0x1c8;
-	uint32_t field_0x1cc;
-	uint32_t field_0x1d0;
-	uint32_t field_0x1d4;
-	uint32_t field_0x1d8;
-	uint32_t field_0x1dc;
-	uint32_t field_0x1e0;
+	float strength;
+	float defence;
+	uint32_t startAge;
+	uint32_t grownUpAge;
+	uint32_t oldAge;
+	uint32_t retirementAge;
+	IsReacting isReacting;
+	uint32_t isShepherdable;
+	uint32_t minFlockingValue;
+	uint32_t maxFlockingValue;
 };
 
 struct GAnimalInfo: GLivingInfo
