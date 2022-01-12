@@ -1535,7 +1535,7 @@ struct GFurnitureInfo: GObjectInfo
 
 struct GSpookyVoiceInfo
 {
-	uint32_t field_0x0;
+	uint32_t soundNumber;
 	std::array<char, 30> name;
 };
 
