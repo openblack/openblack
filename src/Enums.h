@@ -379,7 +379,7 @@ enum class VortexType
 	Volcano = 2,
 };
 
-enum class ParticleType
+enum class ParticleType : uint32_t
 {
 	None = 0,
 	Tornado = 1,
@@ -785,7 +785,7 @@ enum class AnimatedStaticInfo : int32_t
 	// Balista           = 16, // CREATUREISLE
 };
 
-enum class MagicType
+enum class MagicType : uint32_t
 {
 	None = 0,
 	Fireball = 1,
@@ -833,7 +833,7 @@ enum class MagicType
 	// CreatureSpellFast       = 43, // CREATUREISLE
 };
 
-enum class CreatureReceiveSpellType
+enum class CreatureReceiveSpellType : uint32_t
 {
 	CreatureReceiveSpellFreeze = 0,
 	CreatureReceiveSpellSmall = 1,
@@ -1763,7 +1763,7 @@ enum class TownHappinessConsideration
 	NumberOfPeople = 3,
 };
 
-enum class TownDesireInfo
+enum class TownDesireInfo : int
 {
 	None = -1,
 	ForFood = 0,
@@ -2420,7 +2420,7 @@ enum class PlayerInfo
 	Normal = 0,
 };
 
-enum class CreatureDesires
+enum class CreatureDesires : uint32_t
 {
 	ToImpress = 0,
 	Compassion = 1,

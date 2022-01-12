@@ -541,30 +541,6 @@ bool Game::LoadVariables()
 		return false;
 	}
 
-	for ([[maybe_unused]] const auto& m : _infoConstants.magic)
-	{
-		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "MAGIC_TYPE {}, PerceivedPower={}", m.typeEnum, m.perceivedPower);
-	}
-
-	// GMagicInfo: 0x48 bytes // DETAIL_MAGIC_GENERAL_INFO
-	// 10
-
-	// GMagicHealInfo: 0x48, 0x8 bytes // DETAIL_MAGIC_HEAL_INFO
-	// GMagicTeleportInfo: 0x48, 0x8 bytes // DETAIL_MAGIC_TELEPORT_INFO
-
-	// DETAIL_MAGIC_GENERAL_INFO
-	// DETAIL_MAGIC_HEAL_INFO
-	// DETAIL_MAGIC_TELEPORT_INFO
-	// DETAIL_MAGIC_FOREST_INFO
-	// DETAIL_MAGIC_FOOD_INFO
-	// DETAIL_MAGIC_STORM_AND_TORNADO_INFO
-	// DETAIL_MAGIC_SHIELD_ONE_INFO
-	// DETAIL_MAGIC_WOOD_INFO
-	// DETAIL_MAGIC_WATER_INFO
-	// DETAIL_MAGIC_FLOCK_FLYING_INFO
-	// DETAIL_MAGIC_FLOCK_GROUND_INFO
-	// DETAIL_MAGIC_CREATURE_SPELL_INFO
-
 	return true;
 }
 
