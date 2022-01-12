@@ -53,7 +53,7 @@ public:
 	void SetPosition(const glm::vec3& position) { _position = position; }
 	void SetRotation(const glm::vec3& eulerDegrees) { _rotation = glm::radians(eulerDegrees); }
 
-	void SetProjectionMatrixPerspective(float fov, float aspect, float nearclip, float farclip);
+	void SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip);
 	void SetProjectionMatrix(const glm::mat4x4& projection) { _projectionMatrix = projection; }
 
 	[[nodiscard]] glm::vec3 GetForward() const;
