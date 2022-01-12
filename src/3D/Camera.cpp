@@ -31,9 +31,9 @@ glm::mat4 Camera::GetViewProjectionMatrix() const
 	return GetProjectionMatrix() * GetViewMatrix();
 }
 
-void Camera::SetProjectionMatrixPerspective(float fov, float aspect, float nearclip, float farclip)
+void Camera::SetProjectionMatrixPerspective(float xfov, float aspect, float nearClip, float farClip)
 {
-	_projectionMatrix = glm::perspective(glm::radians(fov), aspect, nearclip, farclip);
+	_projectionMatrix = glm::perspective(glm::radians(fov), aspect, nearClip, farClip);
 }
 
 glm::vec3 Camera::GetForward() const
