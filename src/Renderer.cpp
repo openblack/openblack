@@ -436,8 +436,10 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 			// clang-format off
 			submitDesc.state = 0u
 				| BGFX_STATE_WRITE_MASK
-				| BGFX_STATE_DEPTH_TEST_LESS
-				| BGFX_STATE_MSAA
+				| BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
+				| BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_ADD)
+				| BGFX_STATE_DEPTH_TEST_LEQUAL
+				| BGFX_STATE_WRITE_MASK
 			;
 			// clang-format on
 			const auto& renderCtx = RenderingSystem::instance().GetContext();
