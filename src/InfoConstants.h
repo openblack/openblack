@@ -1402,38 +1402,28 @@ struct GMagicEffectInfo: GEffectInfo
 
 struct GTownDesireInfo
 {
-	int field_0x0;
-	float field_0x4;
-	float field_0x8;
-	float field_0xc;
-	int field_0x10;
-	int field_0x14;
-	int field_0x18;
-	uint32_t field_0x1c;
-	int field_0x20;
-	float field_0x24;
-	float field_0x28;
-	float field_0x2c;
-	float field_0x30;
-	float field_0x34;
-	float field_0x38;
-	float field_0x3c;
-	float field_0x40;
-	uint32_t field_0x44;
-	float field_0x48;
-	float field_0x4c;
-	float field_0x50;
-	float field_0x54;
-	float field_0x58;
-	float field_0x5c;
-	float field_0x60;
-	float field_0x64;
-	float field_0x68;
-	uint32_t field_0x6c;
-	uint32_t field_0x70;
-	uint32_t field_0x74;
-	uint32_t field_0x78;
-	uint32_t field_0x7c;
+	PrayerIconInfo associatedPrayerSite;
+	float showsAfterPercent;
+	float desireTriggersVillagerAction;
+	float desireTriggersVillagerEmergencyAction;
+	VillagerBasicInfo associatedVillagerBirth[3];
+	MeshId worshipSiteMesh;
+	int worshipSiteSlot;
+	float worshipSiteScale;
+	float desireToBeliefScale;
+	float desireAffectsBeliefAfter;
+	float desireBuildWonderReducer;
+	float desireValueGreaterCausesDecayInBelief;
+	float desireToBeliefThresholdDecay;
+	float desireAffectsAlignmentAfter;
+	float howImportantDesireIsToAlignment;
+	uint32_t maxTimeForAlignmentChange;
+	float tribeMultiplier[static_cast<int>(Tribe::_COUNT)];
+	HelpText helpStartEnum;
+	HelpText helpEndEnum;
+	HelpText helpStatEnum;
+	HelpSystemMessageSet helpMessage;
+	HelpSystemCondition helpCondition;
 };
 
 struct GMagicFlockFlyingInfo: GMagicInfo
