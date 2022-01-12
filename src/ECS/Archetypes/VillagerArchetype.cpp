@@ -50,7 +50,7 @@ entt::entity VillagerArchetype::Create([[maybe_unused]] const glm::vec3& abodePo
 
 	registry.Assign<Villager>(entity, health, static_cast<uint32_t>(age), hunger, lifeStage, sex, info.tribeType,
 	                          info.villagerNumber, task, town, abode);
-	registry.Assign<Mesh>(entity, info.meshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
+	registry.Assign<Mesh>(entity, info.highDetail, static_cast<int8_t>(0), static_cast<int8_t>(0));
 
 	return entity;
 }
