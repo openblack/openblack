@@ -610,24 +610,24 @@ struct GTownInfo: GContainerInfo
 
 struct GJobInfo
 {
-	uint32_t field_0x0;
-	uint32_t field_0x4;
-	uint32_t field_0x8;
-	uint32_t field_0xc;
-	uint32_t field_0x10;
-	float field_0x14;
-	uint32_t field_0x18;
-	uint32_t field_0x1c;
-	uint32_t field_0x20;
-	uint32_t field_0x24;
-	uint32_t field_0x28;
-	uint32_t field_0x2c;
-	uint32_t field_0x30;
-	float field_0x34;
-	uint32_t field_0x38;
-	int field_0x3c;
-	int field_0x40;
-	int field_0x44;
+	VillagerJob job;
+	uint32_t restAtHomeAfterWork;
+	uint32_t subVisitsAtWhileWork;
+	uint32_t timeAtEachSubVisit;
+	uint32_t maxGameTurnsToSpendAtJob;
+	float minResourceToGet;
+	JobActivity spring;
+	JobActivity summer;
+	JobActivity autumn;
+	JobActivity winter;
+	uint32_t bestResourceCollectedPerSubVisit;
+	uint32_t inJobSpiralArea;
+	uint32_t nutureValue;
+	float lookForJobLocationMaxDistance;
+	uint32_t maxNoLookForsPerTurn;
+	EffectInfo nurtureEffect;
+	EffectInfo harvestEffect;
+	TownDesireInfo satisfyWhichTownDesire;
 };
 
 struct GMagicInfo
