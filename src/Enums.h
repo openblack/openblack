@@ -1660,7 +1660,7 @@ enum class CountryList
 	Country8 = 8,
 };
 
-enum class PrayerIconInfo
+enum class PrayerIconInfo : int
 {
 	None = -1,
 	Normal = 0,
@@ -1884,7 +1884,7 @@ enum class VillagerInfo
 	// Giant                   = 86, // CREATUREISLE
 };
 
-enum class VillagerBasicInfo
+enum class VillagerBasicInfo : int
 {
 	None = -1,
 	HousewifeFemale = 0,
