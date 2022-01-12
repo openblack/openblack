@@ -1266,16 +1266,15 @@ struct GToolTipsInfo
 
 struct GWeatherInfo
 {
-	std::array<char, 0x30> field_0x0;
-	float field_0x30;
-	float field_0x34;
-	float field_0x38;
-	int field_0x3c;
-	int field_0x40;
-	int field_0x44;
-	uint32_t field_0x48;
-	int field_0x4c;
-	int field_0x50;
+	std::array<char, 0x30> debugString;
+	float fadeInOutTime;
+	float lastsFor;
+	float strength;
+	int temperature;
+	int wetness;
+	int snowFall;
+	uint32_t overCast;
+	glm::ivec2 wind;
 };
 
 struct GPrayerIconInfo: GSingleMapFixedInfo
