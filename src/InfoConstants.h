@@ -476,13 +476,13 @@ struct GMapShieldInfo: GSingleMapFixedInfo
 
 struct GRewardInfo: GMobileObjectInfo
 {
-	int field_0x104;
-	uint32_t field_0x108;
-	uint32_t field_0x10c;
-	uint32_t field_0x110;
-	float field_0x114;
-	int field_0x118;
-	uint32_t field_0x11c;
+	SpellSeedType seed;
+	GestureType gestureType;
+	MagicType powerUp;
+	HelpText helpTextEnum;
+	float beliefValue;
+	MobileStaticInfo mobileStatic;
+	uint32_t scaffold;
 };
 
 struct GContainerInfo
