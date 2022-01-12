@@ -471,7 +471,7 @@ struct GSingleMapFixedInfo: GObjectInfo
 
 struct GMapShieldInfo: GSingleMapFixedInfo
 {
-	uint32_t field_0xf4;
+	float dummy;
 };
 
 struct GRewardInfo: GMobileObjectInfo
