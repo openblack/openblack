@@ -1685,7 +1685,7 @@ enum class SpellCastType
 	SpellCastHandPosition = 2,
 };
 
-enum class JobActivity
+enum class JobActivity : uint32_t
 {
 	None = 0,
 	Nurture = 1,
@@ -1714,7 +1714,7 @@ enum class JobInfo
 	NormalNoJob = 15,
 };
 
-enum class EffectInfo
+enum class EffectInfo : int
 {
 	None = -1,
 	Hit = 0,
