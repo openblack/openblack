@@ -111,6 +111,8 @@ enum class VillagerJob
 	Leader = 5,
 	Housewife = 6,
 	Trader = 7,
+
+	_count
 };
 
 enum class AbodeType
@@ -3053,6 +3055,28 @@ enum class CollideType : uint32_t
 	Animal = 1,
 	Creature = 9,
 	Ball = 8,
+};
+
+enum class TownInfo : uint32_t
+{
+	RoundVillageSmall = 0,
+	RoundVillageMedium = 1,
+	RoundVillageLarge = 2,
+	SquareVillageSmall = 3,
+	SquareVillageMedium = 4,
+	SquareVillageLarge = 5,
+	MazeVillageSmall = 6,
+	MazeVillageMedium = 7,
+	MazeVillageLarge = 8,
+	CornerVillageSmall = 9,
+	CornerVillageMedium = 10,
+	CornerVillageLarge = 11,
+	OctagonVillageSmall = 12,
+	OctagonVillageMedium = 13,
+	OctagonVillageLarge = 14,
+	SquaresVillageSmall = 15,
+	SquaresVillageMedium = 16,
+	SquaresVillageLarge = 17,
 };
 
 } // namespace openblack
