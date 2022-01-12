@@ -269,7 +269,7 @@ static constexpr std::array<std::string_view, static_cast<uint32_t>(AbodeNumber:
     "SpellDispenser", //
 };
 
-enum class SpellSeedType
+enum class SpellSeedType : int
 {
 	None = -1,
 	Storm = 0,
@@ -306,7 +306,7 @@ enum class SpellSeedType
 	// CreatureSpellFast       = 31, // CREATUREISLE
 };
 
-enum class GestureType
+enum class GestureType : uint32_t
 {
 	None = 0,
 	Spiral = 1,
