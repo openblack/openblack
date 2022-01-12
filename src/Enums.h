@@ -2685,7 +2685,7 @@ enum class TooltipsType
 	Type170 = 169,
 };
 
-enum class CarriedTreeType
+enum class CarriedTreeType : uint32_t
 {
 	None = 0,
 	Evergreen = 1,

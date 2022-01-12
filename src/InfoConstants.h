@@ -466,7 +466,7 @@ struct GAbodeInfo: GMultiMapFixedInfo
 
 struct GSingleMapFixedInfo: GObjectInfo
 {
-	uint32_t field_0xf0;
+	MeshId normal;
 };
 
 struct GMapShieldInfo: GSingleMapFixedInfo
@@ -1292,21 +1292,21 @@ struct GInfluenceInfo
 
 struct GTreeInfo: GSingleMapFixedInfo
 {
-	MeshId meshId;
-	uint32_t meshId_2;
-	uint32_t field_0xfc;
-	float field_0x100;
-	float field_0x104;
-	uint32_t field_0x108;
-	float field_0x10c;
-	uint32_t field_0x110;
-	uint32_t field_0x114;
-	float field_0x118;
-	float field_0x11c;
-	float field_0x120;
-	float field_0x124;
-	uint32_t field_0x128;
-	uint16_t field_0x12c;
+	MeshId growing;
+	MeshId burning;
+	uint32_t strength;
+	float defence;
+	float startLife;
+	uint32_t growsAfterNumGameTurns;
+	float growthAmount;
+	uint32_t burnCheckAroundEvery;
+	uint32_t randomBurnChance;
+	float minSize;
+	float maxSize;
+	float rainingAcceleratorMultiplier;
+	float waterSpellAcceleratorMultiplier;
+	CarriedTreeType carriedType;
+	uint16_t maxNumTreesCanProduce;
 };
 
 struct DifferentCreatureInfo
