@@ -632,16 +632,16 @@ struct GJobInfo
 
 struct GMagicInfo
 {
-	int typeEnum;
-	uint32_t immersionTypeEnum;
+	MagicType magicType;
+	ImmersionEffectType immersion;
 	uint32_t stopImmersion;
 	float perceivedPower;
-	uint32_t particleTypeEnum;
-	uint32_t impressiveTypeEnum;
-	uint32_t spellSeedTypeEnum;
-	uint32_t gestureType;
-	uint32_t powerupType;
-	uint32_t castRuleType;
+	ParticleType particleType;
+	ImpressiveType impressiveType;
+	SpellSeedType spellSeedType;
+	GestureType gestureType;
+	PowerUpType powerupType;
+	CastRuleType castRuleType;
 	uint32_t isSpellSeedDrawnInHand;
 	uint32_t isSpellRecharged;
 	uint32_t isCreatureCastFromAbove;
@@ -649,16 +649,20 @@ struct GMagicInfo
 	uint32_t oneOffSpellIsAggressive;
 	uint32_t oneOffSpellIsCompassionate;
 	uint32_t oneOffSpellIsToRestoreHealth;
-	uint32_t field_0x44;
+	ParticleType particleTypeInHand;
+};
+
+struct GMagicGeneralInfo: GMagicInfo
+{
 };
 
 struct GMagicResourceInfo: GMagicInfo
 {
-	uint32_t field_0x48;
-	uint32_t field_0x4c;
-	uint32_t field_0x50;
-	uint32_t field_0x54;
-	uint32_t field_0x58;
+	ResourceType resourceType;
+	uint32_t resourceAmountFirstEvent;
+	uint32_t resourceAmountPerEvent;
+	uint32_t costPerUnit;
+	uint32_t poisoned;
 };
 
 struct GPBallInfo: GMobileObjectInfo
@@ -763,18 +767,18 @@ struct CreatureDesireForType
 
 struct GVortexInfo
 {
-	uint32_t field_0x0;
-	uint32_t field_0x4;
-	uint32_t field_0x8;
-	uint32_t field_0xc;
-	uint32_t field_0x10;
-	uint32_t field_0x14;
-	float field_0x18;
-	int field_0x1c;
-	int field_0x20;
-	int field_0x24;
-	int field_0x28;
-	int field_0x2c;
+	ParticleType particleTypePreLandscape;
+	ParticleType particleTypePostLandscape;
+	ParticleType particleTypeObjectMover;
+	ParticleType particleTypeLightMap;
+	VortexStateType initialState;
+	uint32_t fadeWhenDeleted;
+	float baseScale;
+	VortexStatType maxToCreateTotalObjects;
+	VortexStatType maxToCreateResourceFood;
+	VortexStatType maxToCreateResourceWood;
+	VortexStatType maxToCreateVillager;
+	VortexStatType maxToCreateOneShot;
 };
 
 struct GScaffoldInfo: GMobileObjectInfo
@@ -806,13 +810,15 @@ struct GCreatureInfo: GLivingInfo
 
 struct GMagicRadiusSpellInfo: GMagicInfo
 {
-	glm::vec3 field_0x48;
+	float minRadius;
+	float maxRadius;
+	float radiusForNormalCost;
 };
 
 struct GMagicStormAndTornadoInfo: GMagicRadiusSpellInfo
 {
-	float field_0x54;
-	float field_0x58;
+	float maxWindSpeed;
+	float rainAmount;
 };
 
 struct GHelpSpritesGuidance
@@ -950,11 +956,11 @@ struct HelpSystemInfo
 
 struct GMagicForestInfo: GMagicInfo
 {
-	uint32_t field_0x48;
-	float field_0x4c;
-	float field_0x50;
-	float field_0x54;
-	float field_0x58;
+	uint32_t finalNoTrees;
+	float startLife;
+	float growSpeed;
+	float decaySpeed;
+	float woodValueMultiplier;
 };
 
 struct GVillagerStateTableInfo
@@ -1124,7 +1130,7 @@ struct CreatureDesireActionEntry
 
 struct GMagicTeleportInfo: GMagicInfo
 {
-	float field_0x48;
+	float costPerKilometer;
 };
 
 struct GPlaytimeInfo
@@ -1193,16 +1199,16 @@ struct ReactionInfo
 
 struct GMagicHealInfo: GMagicInfo
 {
-	float field_0x48;
-	uint32_t field_0x4c;
+	float dummyVar;
+	uint32_t maxToHeal;
 };
 
 struct GMagicFlockGroundInfo: GMagicInfo
 {
-	uint32_t field_0x48;
-	float field_0x4c;
-	float field_0x50;
-	float field_0x54;
+	uint32_t numberToCreate;
+	float alignmentSwitch;
+	float distanceToTravel;
+	float huntingRadius;
 };
 
 struct GAnimalStateTableInfo
@@ -1247,6 +1253,14 @@ struct CreatureInitialSourceInfo
 };
 
 struct GMagicWaterInfo: GMagicInfo
+{
+};
+
+struct GMagicFoodInfo: GMagicResourceInfo
+{
+};
+
+struct GMagicWoodInfo: GMagicResourceInfo
 {
 };
 
@@ -1350,53 +1364,44 @@ struct GEffectInfo
 
 struct GMagicEffectInfo: GEffectInfo
 {
-	std::array<char, 0x30> name;
-	uint32_t field_0x54;
-	uint32_t field_0x58;
-	uint32_t field_0x5c;
-	uint32_t field_0x60;
-	float field_0x64;
-	float field_0x68;
-	float field_0x6c;
-	float field_0x70;
-	float field_0x74;
-	uint32_t field_0x78;
-	uint32_t field_0x7c;
-	uint32_t field_0x80;
-	int field_0x84;
-	uint32_t field_0x88;
-	uint32_t field_0x8c;
-	int field_0x90;
-	uint32_t field_0x94;
-	float field_0x98;
-	float field_0x9c;
-	float field_0xa0;
-	float field_0xa4;
-	float field_0xa8;
-	float field_0xac;
-	float field_0xb0;
-	float field_0xb4;
-	float field_0xb8;
-	uint32_t field_0xbc;
-	uint32_t field_0xc0;
-	uint32_t field_0xc4;
-	uint32_t field_0xc8;
-	uint32_t field_0xcc;
-	uint32_t field_0xd0;
-	uint32_t field_0xd4;
-	uint32_t field_0xd8;
-	uint32_t field_0xdc;
-	uint32_t field_0xe0;
-	uint32_t field_0xe4;
-	uint32_t field_0xe8;
-	uint32_t field_0xec;
-	uint32_t field_0xf0;
-	uint32_t field_0xf4;
-	uint32_t field_0xf8;
-	uint32_t field_0xfc;
-	uint32_t field_0x100;
-	float field_0x104;
-	float field_0x108;
+	std::array<char, 0x30> debugString;
+	uint32_t timerWhenOneShot;
+	uint32_t timerWhenPlayerCasting;
+	uint32_t timerWhenCreatureCasting;
+	uint32_t timerWhenComputerPlayerCasting;
+	float initialChants;
+	float costToCreate;
+	float costPerEvent;
+	float costPerGameTurn;
+	float costPerShieldCollide;
+	uint32_t divideCostsByTribalPower;
+	uint32_t createReactionOnCast;
+	uint32_t createReactionOnEvent;
+	Reaction reactionType;
+	CreatureDesires perceivedPlayerDesire[2];
+	TownDesireInfo townDesireBeingHelped;
+	float agressiveRangeMin;
+	float agressiveRangeMax;
+	float calculatedCostForOneTurn;
+	float costForOneAppliedEffect;
+	float costInGameTurnsToCreateForOneVillager;
+	float tempNoVillagers;
+	float costForTempVillagers;
+	float costInRealTimeToCreate;
+	float impressiveValue;
+	float cpImpressiveBalance;
+	uint32_t useTribalPowerMultiplier[static_cast<int>(Tribe::_COUNT)];
+	uint32_t isAggressiveSpellWhichIsUsedInCreatureFightArena;
+	uint32_t isDefensiveSpellWhichIsUsedInCreatureFightArena;
+	HelpText helpStartEnum;
+	HelpText helpEndEnum;
+	HelpText creatureNearlyLearntEnum;
+	HelpText creatureLearntEnum;
+	HelpSystemMessageSet helpMessage;
+	HelpSystemCondition helpCondition;
+	HelpText toolTipsEnum;
+	float aggressiveAttackValue;
+	float computerCastDuration;
 };
 
 struct GTownDesireInfo
@@ -1427,19 +1432,19 @@ struct GTownDesireInfo
 
 struct GMagicFlockFlyingInfo: GMagicInfo
 {
-	uint32_t field_0x48;
-	float field_0x4c;
-	float field_0x50;
+	uint32_t numberToCreate;
+	float alignmentSwitch;
+	float distanceToTravel;
 };
 
 struct GSpotVisualInfo
 {
-	std::array<char, 0x30> name;
-	uint32_t field_0x30;
-	uint32_t field_0x34;
-	uint32_t field_0x38;
-	uint32_t field_0x3c;
-	uint32_t field_0x40;
+	std::array<char, 0x30> debugString;
+	ParticleType particleType;
+	uint32_t life;
+	Reaction reactionType;
+	uint32_t singleZSort;
+	uint32_t targetOwnerObject;
 };
 
 struct GPFootballInfo: GMultiMapFixedInfo
@@ -1498,23 +1503,26 @@ struct GCitadelHeartInfo: GCitadelPartInfo
 
 struct GMagicCreatureSpellInfo: GMagicInfo
 {
-	uint32_t field_0x48;
-	std::array<char, 0x30> name;
-	float field_0x7c;
-	float field_0x80;
-	float field_0x84;
-	float field_0x88;
+	CreatureReceiveSpellType creatureReceiveSpellType;
+	std::array<char, 0x30> text;
+	float startTransitionDuration;
+	float finishTransitionDuration;
+	float totalDuration;
+	float maxDirnChangeWhenCtrCasting;
 };
 
 struct GRewardProgress
 {
-	uint32_t field_0x0;
-	uint32_t field_0x4;
-	uint32_t field_0x8;
-	uint32_t field_0xc;
-	uint32_t field_0x10;
-	uint32_t field_0x14;
-	uint32_t field_0x18;
+	MagicType magicType;
+	uint32_t onLand[6];
+};
+
+struct GRewardProgressGood: GRewardProgress
+{
+};
+
+struct GRewardProgressEvil: GRewardProgress
+{
 };
 
 struct GFurnitureInfo: GObjectInfo
@@ -1608,21 +1616,18 @@ struct CreatureActionInfo
 
 struct GSpellSystemInfo
 {
-	uint32_t field_0x0;
-	uint32_t field_0x4;
-	uint32_t field_0x8;
-	float field_0xc;
-	float field_0x10;
-	float field_0x14;
-	uint32_t field_0x18;
-	float field_0x1c;
-	uint32_t field_0x20;
-	uint32_t field_0x24;
-	uint32_t field_0x28;
-	uint32_t field_0x2c;
-	uint32_t field_0x30;
-	uint32_t field_0x34;
-	uint32_t field_0x38;
+	GestureType selectionSystemGestureR;
+	GestureType selectionSystemGestureNonCreature;
+	GestureType selectionSystemGestureCreature;
+	float selectionSystemTimeOut;
+	float selectionSystemRepeatTimeOut;
+	float delayBeforeSeedActive;
+	GestureType creatureSpecialMoveGesture;
+	float leashSelectionSystemTimeOut;
+	GestureType leashSelectionStart;
+	GestureType leashSelectionGestures[4];
+	GestureType creatureZoomTo;
+	GestureType creatureEndGive;
 };
 
 struct GFishFarmInfo: GMultiMapFixedInfo
@@ -1725,30 +1730,32 @@ struct CreatureDesireSourceTable
 
 struct GSpellIconInfo: GMultiMapFixedInfo
 {
-	glm::vec3 field_0x110;
+	MeshId meshId;
+	float radiusFromCitadel;
+	float gatheringChantAddPerGameTurn;
 };
 
 struct GMagicShieldInfo: GMagicRadiusSpellInfo
 {
-	float field_0x54;
-	uint32_t field_0x58;
-	float field_0x5c;
-	float field_0x60;
+	float chantCostPerImpactMomentum;
+	float shieldHeight;
+	float raiseWithScale;
+	float bobMagnitude;
 };
 
 struct InfoConstants
 {
-	std::array<GMagicInfo, 10> magic;
+	std::array<GMagicGeneralInfo, 10> magicGeneral;
 	std::array<GMagicHealInfo, 2> magicHeal;
-	GMagicTeleportInfo magicTeleport;
-	GMagicForestInfo magicForest;
-	std::array<GMagicResourceInfo, 2> magicResource_1;
+	std::array<GMagicTeleportInfo, 1> magicTeleport;
+	std::array<GMagicForestInfo, 1> magicForest;
+	std::array<GMagicFoodInfo, 2> magicFood;
 	std::array<GMagicStormAndTornadoInfo, 3> magicStormAndTornado;
 	std::array<GMagicShieldInfo, 2> magicShield;
-	GMagicResourceInfo magicResource_2;
+	std::array<GMagicWoodInfo, 1> magicWood;
 	std::array<GMagicWaterInfo, 2> magicWater;
-	GMagicFlockFlyingInfo magicFlockFlying;
-	GMagicFlockGroundInfo magicFlockGround;
+	std::array<GMagicFlockFlyingInfo, 1> magicFlockFlying;
+	std::array<GMagicFlockGroundInfo, 1> magicFlockGround;
 	std::array<GMagicCreatureSpellInfo, 0x10> magicCreatureSpell;
 	std::array<GMagicEffectInfo, 42> magicEffect;
 	std::array<GSpellSeedInfo, 30> spellSeed;
@@ -1835,8 +1842,8 @@ struct InfoConstants
 	std::array<GMagicFireBallInfo, 3> magicFireBall;
 	std::array<GRewardInfo, 61> reward;
 	GLeashSelectorInfo leashSelector;
-	std::array<GRewardProgress, 30> rewardProgressGood;
-	std::array<GRewardProgress, 30> rewardProgressEvil;
+	std::array<GRewardProgressGood, 30> rewardProgressGood;
+	std::array<GRewardProgressEvil, 30> rewardProgressEvil;
 	std::array<GSpookyVoiceInfo, 5> spookyVoice;
 	std::array<GScriptOpposingCreature, 17> scriptOpposingCreature;
 	std::array<GToolTipsInfo, 170> toolTips;
