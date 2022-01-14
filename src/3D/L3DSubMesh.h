@@ -36,6 +36,7 @@ class L3DSubMesh
 	struct Primitive
 	{
 		uint32_t skinID;
+		float alphaCutoutThreshold;
 		uint32_t indicesOffset;
 		uint32_t indicesCount;
 	};
