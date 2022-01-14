@@ -11,7 +11,7 @@ void main()
 	const vec4 lightPos = vec4(-4000.0f, 1300.0f, -1435.0f, 1.0f);
 	const float ambientStrength = 0.5f;
 	// TODO(raffclar): The alpha threshold is different for each mesh
-	const float alphaThreshold = 0.768627f;
+	const float alphaThreshold = 196.0f / 255.0f;
 	// ambient
 	vec3 ambient = ambientStrength * lightColor;
 
