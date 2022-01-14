@@ -316,10 +316,14 @@ int PrintPrimitiveHeaders(openblack::l3d::L3DFile& l3d)
 	for (auto& header : primitiveHeaders)
 	{
 		std::printf("primitive #%u\n", ++i);
-		std::printf("unknown_1: 0x%08X\n", header.unknown_1);
-		std::printf("unknown_2: 0x%08X\n", header.unknown_2);
-		std::printf("skinID: 0x%08X\n", header.skinID);
-		std::printf("unknown_2: 0x%08X\n", header.unknown_3);
+		std::printf("material's type: 0x%08X\n", header.material.type);
+		std::printf("material's alpha cut out threshold: 0x%02X (%f)\n", header.material.alphaCutoutThreshold,
+		            header.material.alphaCutoutThreshold / 255.0f);
+		std::printf("material's cull mode: 0x%02X\n", header.material.cullMode);
+		std::printf("material's skinID: 0x%08X\n", header.material.skinID);
+		std::printf("material's color: 0x%08X (%f, %f, %f, %f)\n", header.material.color.raw,
+		            header.material.color.bgra.b / 255.0f, header.material.color.bgra.g / 255.0f,
+		            header.material.color.bgra.r / 255.0f, header.material.color.bgra.a / 255.0f);
 		std::printf("vertex count: %u\n", header.numVertices);
 		std::printf("vertex start offset: 0x%08X\n", header.verticesOffset);
 		std::printf("triangle count: %u\n", header.numTriangles);
@@ -651,10 +655,10 @@ int WriteFile(const Arguments::Write& args)
 		{
 			auto& gltfPrimitive = gltfMesh.primitives[i];
 			auto& primitive = primitives[i];
-			primitive.unknown_1 = 0;
-			primitive.unknown_2 = 0;
-			primitive.skinID = std::numeric_limits<uint32_t>::max(); // TODO: mesh->mMaterialIndex;
-			primitive.unknown_3 = 0;
+			primitive.material.type = 0;
+			primitive.material.alphaCutoutThreshold = 0;
+			primitive.material.skinID = std::numeric_limits<uint32_t>::max(); // TODO: mesh->mMaterialIndex;
+			primitive.material.color.raw = 0x00000000;
 			primitive.numVertices = 0;
 			primitive.verticesOffset = static_cast<uint32_t>(l3d.GetVertices().size()); // FIXME: This is wrong
 			primitive.numTriangles = 0;

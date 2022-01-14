@@ -173,12 +173,30 @@ struct L3DBone
 };
 static_assert(sizeof(L3DBone) == 3 * sizeof(uint32_t) + 9 * sizeof(float) + sizeof(L3DPoint));
 
+struct L3DMaterial
+{
+	struct BGRA8
+	{
+		uint8_t b;
+		uint8_t g;
+		uint8_t r;
+		uint8_t a;
+	};
+	uint32_t type;
+	uint8_t alphaCutoutThreshold;
+	uint8_t cullMode;
+	uint32_t skinID;
+	union
+	{
+		BGRA8 bgra;
+		uint32_t raw;
+	} color;
+};
+static_assert(sizeof(L3DMaterial) == 4 * sizeof(uint32_t));
+
 struct L3DPrimitiveHeader
 {
-	uint32_t unknown_1;
-	uint32_t unknown_2;
-	uint32_t skinID;
-	uint32_t unknown_3;
+	L3DMaterial material;
 	uint32_t numVertices;
 	uint32_t verticesOffset;
 	uint32_t numTriangles;

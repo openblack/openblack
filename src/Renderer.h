@@ -123,6 +123,8 @@ public:
 		const bgfx::DynamicVertexBufferHandle* instanceBuffer;
 		uint32_t instanceStart;
 		uint32_t instanceCount;
+		bool isSky;
+		float skyType;
 	};
 
 	Renderer() = delete;

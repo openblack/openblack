@@ -122,7 +122,13 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 		for (uint32_t j = 0; j < primitive.numTriangles * 3; j++)
 			indices[startIndex + j] = indexSpan[startIndex + j] + startVertex;
 
-		_primitives.emplace_back(Primitive {primitive.skinID, startIndex, primitive.numTriangles * 3});
+		// TODO(bwrsandman): Interpret cull mode, color byte ordering and render mode, then store in primitive
+		_primitives.emplace_back(Primitive {
+		    primitive.material.skinID,
+		    primitive.material.alphaCutoutThreshold / 255.0f,
+		    startIndex,
+		    primitive.numTriangles * 3,
+		});
 
 		startVertex += static_cast<uint16_t>(primitive.numVertices);
 		startIndex += static_cast<uint16_t>(primitive.numTriangles * 3);

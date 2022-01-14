@@ -238,6 +238,16 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 			{
 				desc.program->SetTextureSampler("s_diffuse", 0, *texture);
 			}
+			if (!desc.isSky)
+			{
+				const glm::vec4 u_skyAlphaThreshold = {
+				    desc.skyType,
+				    prim.alphaCutoutThreshold,
+				    0.0f,
+				    0.0f,
+				};
+				desc.program->SetUniformValue("u_skyAlphaThreshold", &u_skyAlphaThreshold);
+			}
 		}
 		else
 		{
@@ -365,19 +375,20 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 			skyShader->SetTextureSampler("s_diffuse", 0, *desc.sky._texture);
 			skyShader->SetUniformValue("u_typeAlignment", &u_typeAlignment);
 
-			L3DMeshSubmitDesc submit_desc = {};
-			submit_desc.viewId = desc.viewId;
-			submit_desc.program = skyShader;
-			submit_desc.state = BGFX_STATE_DEFAULT;
+			L3DMeshSubmitDesc submitDesc = {};
+			submitDesc.viewId = desc.viewId;
+			submitDesc.program = skyShader;
+			submitDesc.state = BGFX_STATE_DEFAULT;
 			if (!desc.cullBack)
 			{
-				submit_desc.state &= ~BGFX_STATE_CULL_MASK;
-				submit_desc.state |= BGFX_STATE_CULL_CCW;
+				submitDesc.state &= ~BGFX_STATE_CULL_MASK;
+				submitDesc.state |= BGFX_STATE_CULL_CCW;
 			}
-			submit_desc.modelMatrices = &modelMatrix;
-			submit_desc.matrixCount = 1;
+			submitDesc.modelMatrices = &modelMatrix;
+			submitDesc.matrixCount = 1;
+			submitDesc.isSky = true;
 
-			DrawMesh(*desc.sky._model, meshPack, submit_desc, 0);
+			DrawMesh(*desc.sky._model, meshPack, submitDesc, 0);
 		}
 	}
 
@@ -469,9 +480,8 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 					submitDesc.modelMatrices = &identity;
 					submitDesc.matrixCount = 1;
 				}
-
-				const glm::vec4 u_sky = {desc.sky.GetCurrentSkyType(), 0.0f, 0.0f, 0.0f};
-				objectShaderInstanced->SetUniformValue("u_sky", &u_sky); // fs
+				submitDesc.isSky = false;
+				submitDesc.skyType = desc.sky.GetCurrentSkyType();
 
 				// TODO(bwrsandman): choose the correct LOD
 				DrawMesh(mesh, meshPack, submitDesc, std::numeric_limits<uint8_t>::max());
@@ -528,6 +538,8 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 			}
 			submitDesc.modelMatrices = bones.data();
 			submitDesc.matrixCount = static_cast<uint8_t>(bones.size());
+			submitDesc.isSky = false;
+			submitDesc.skyType = desc.sky.GetCurrentSkyType();
 			DrawMesh(desc.testModel, meshPack, submitDesc, 0);
 		}
 	}
