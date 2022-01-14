@@ -489,6 +489,8 @@ void L3DFile::ReadFile(std::istream& stream)
 		stream.read(reinterpret_cast<char*>(&footprintDataSize), sizeof(footprintDataSize));
 		auto footprintData = std::vector<short>(footprintDataSize / sizeof(short));
 		stream.read(reinterpret_cast<char*>(footprintData.data()), footprintDataSize);
+		_footprintData.resize(footprintDataSize);
+		stream.read(reinterpret_cast<char*>(_footprintData.data()), _footprintData.size());
 	}
 
 	// UV2 data
@@ -501,8 +503,8 @@ void L3DFile::ReadFile(std::istream& stream)
 		stream.seekg(additionalDataOffset + footprintDataSize, stream.beg);
 		stream.read(reinterpret_cast<char*>(&uv2DataSize), sizeof(uv2DataSize));
 		stream.seekg(8, stream.cur);
-		auto uv2Data = std::vector<float>(uv2DataSize / sizeof(float));
-		stream.read(reinterpret_cast<char*>(uv2Data.data()), uv2DataSize);
+		_uv2Data.resize(uv2DataSize);
+		stream.read(reinterpret_cast<char*>(_uv2Data.data()), _uv2Data.size());
 	}
 
 	// Name data
