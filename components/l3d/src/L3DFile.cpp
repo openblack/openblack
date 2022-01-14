@@ -22,6 +22,14 @@
  *         extra data offset - offset of the point block (see below)
  *         footprint data offset - offset of the footprint block (see below)
  *
+ * There are a few optional blocks. Their presence can be check for using the flags field
+ * The footprint block is present when ContainsLandscapeFeature is set
+ * The UV2 block is present when ContainsUV2 is set
+ * The name block is present when ContainsNameData is set
+ *
+ * Add the footprint block offset and size to get to the UV2 block offset
+ * Add the UV2 offset and size to get the name block offset
+ *
  * ------------------------ start of submesh offset block ----------------------
  *
  * - 4 bytes * submesh count, each record contains:
@@ -40,6 +48,15 @@
  * ------------------------ start of footprint block ----------------------------
  *
  *  TODO: Investigate
+ *
+ * ------------------------ start of uv2 block ---------------------------------
+ *
+ *  TODO: Investigate
+ *
+ * ------------------------ start of name block --------------------------------
+ * - 4 bytes + total bytes used for the name.
+ *         name size - total length of name (see below). This can be 0
+ *         name - The name itself. Null terminated
  *
  * ------------------------ start of submesh block -----------------------------
  *
