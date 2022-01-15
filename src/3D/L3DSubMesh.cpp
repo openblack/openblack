@@ -122,12 +122,52 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 		for (uint32_t j = 0; j < primitive.numTriangles * 3; j++)
 			indices[startIndex + j] = indexSpan[startIndex + j] + startVertex;
 
+		struct MaterialTypeLutEntry
+		{
+			bool depthWrite;
+			bool alphaTest;
+			L3DSubMesh::Primitive::BlendMode blend;
+			bool modulateAlpha;  ///< Multiply ouput alpha by a uniform
+			bool thresholdAlpha; ///< Dismiss fragments below a certain threshold
+		};
+		static const std::array<MaterialTypeLutEntry, static_cast<uint32_t>(l3d::L3DMaterial::Type::_Count)> materialTypeLut = {
+		    {
+		        {true, false, L3DSubMesh::Primitive::BlendMode::Disabled, false, false},  // Smooth
+		        {true, false, L3DSubMesh::Primitive::BlendMode::Standard, false, false},  // SmoothAlpha
+		        {true, false, L3DSubMesh::Primitive::BlendMode::Disabled, false, false},  // Textured
+		        {true, false, L3DSubMesh::Primitive::BlendMode::Standard, true, false},   // TexturedAlpha
+		        {true, false, L3DSubMesh::Primitive::BlendMode::Standard, false, false},  // AlphaTextured
+		        {true, false, L3DSubMesh::Primitive::BlendMode::Standard, true, false},   // AlphaTexturedAlpha
+		        {false, false, L3DSubMesh::Primitive::BlendMode::Standard, true, false},  // AlphaTexturedAlphaNz
+		        {false, false, L3DSubMesh::Primitive::BlendMode::Standard, false, false}, // SmoothAlphaNz
+		        {false, false, L3DSubMesh::Primitive::BlendMode::Standard, true, false},  // TexturedAlphaNz
+		        {true, true, L3DSubMesh::Primitive::BlendMode::Standard, false, true},    // TexturedChroma
+		        {true, true, L3DSubMesh::Primitive::BlendMode::Additive, true, true},     // AlphaTexturedAlphaAdditiveChroma
+		        {false, true, L3DSubMesh::Primitive::BlendMode::Additive, true, true},    // AlphaTexturedAlphaAdditiveChromaNz
+		        {true, false, L3DSubMesh::Primitive::BlendMode::Additive, true, false},   // AlphaTexturedAlphaAdditive
+		        {false, false, L3DSubMesh::Primitive::BlendMode::Additive, true, false},  // AlphaTexturedAlphaAdditiveNz
+		        {0, 0, L3DSubMesh::Primitive::BlendMode::Disabled, 0, 0},                 // 0xe
+		        {true, true, L3DSubMesh::Primitive::BlendMode::Standard, true, true},     // TexturedChromaAlpha
+		        {false, true, L3DSubMesh::Primitive::BlendMode::Standard, true, true},    // TexturedChromaAlphaNz
+		        {0, 0, L3DSubMesh::Primitive::BlendMode::Disabled, 0, 0},                 // 0x11
+		        {true, true, L3DSubMesh::Primitive::BlendMode::Standard, false, true},    // ChromaJustZ
+		    }};
+
+		assert(static_cast<uint32_t>(primitive.material.type) != 0xe);
+		assert(static_cast<uint32_t>(primitive.material.type) != 0x11);
+		const auto& lutEntry = materialTypeLut[static_cast<uint32_t>(primitive.material.type)];
+
 		// TODO(bwrsandman): Interpret cull mode, color byte ordering and render mode, then store in primitive
 		_primitives.emplace_back(Primitive {
 		    primitive.material.skinID,
-		    primitive.material.alphaCutoutThreshold / 255.0f,
 		    startIndex,
 		    primitive.numTriangles * 3,
+		    lutEntry.depthWrite,
+		    lutEntry.alphaTest,
+		    lutEntry.blend,
+		    lutEntry.modulateAlpha,
+		    lutEntry.thresholdAlpha,
+		    primitive.material.alphaCutoutThreshold / 255.0f,
 		});
 
 		startVertex += static_cast<uint16_t>(primitive.numVertices);

@@ -316,7 +316,36 @@ int PrintPrimitiveHeaders(openblack::l3d::L3DFile& l3d)
 	for (auto& header : primitiveHeaders)
 	{
 		std::printf("primitive #%u\n", ++i);
-		std::printf("material's type: 0x%08X\n", header.material.type);
+		static const std::array<const char*, static_cast<uint32_t>(openblack::l3d::L3DMaterial::Type::_Count)> typeMap = {{
+		    "Smooth",
+		    "SmoothAlpha",
+		    "Textured",
+		    "TexturedAlpha",
+		    "AlphaTextured",
+		    "AlphaTexturedAlpha",
+		    "AlphaTexturedAlphaNz",
+		    "SmoothAlphaNz",
+		    "TexturedAlphaNz",
+		    "TexturedChroma",
+		    "AlphaTexturedAlphaAdditiveChroma",
+		    "AlphaTexturedAlphaAdditiveChromaNz",
+		    "AlphaTexturedAlphaAdditive",
+		    "AlphaTexturedAlphaAdditiveNz",
+		    "Unknown",
+		    "TexturedChromaAlpha",
+		    "TexturedChromaAlphaNz",
+		    "Unknown",
+		    "ChromaJustZ",
+		}};
+		if (static_cast<uint32_t>(header.material.type) >= static_cast<uint32_t>(openblack::l3d::L3DMaterial::Type::_Count))
+		{
+			std::printf("material's type: Unknown (0x%08X)\n", static_cast<uint32_t>(header.material.type));
+		}
+		else
+		{
+			std::printf("material's type: %s (0x%08X)\n", typeMap[static_cast<uint32_t>(header.material.type)],
+			            static_cast<uint32_t>(header.material.type));
+		}
 		std::printf("material's alpha cut out threshold: 0x%02X (%f)\n", header.material.alphaCutoutThreshold,
 		            header.material.alphaCutoutThreshold / 255.0f);
 		std::printf("material's cull mode: 0x%02X\n", header.material.cullMode);
@@ -655,7 +684,7 @@ int WriteFile(const Arguments::Write& args)
 		{
 			auto& gltfPrimitive = gltfMesh.primitives[i];
 			auto& primitive = primitives[i];
-			primitive.material.type = 0;
+			primitive.material.type = openblack::l3d::L3DMaterial::Type::Smooth;
 			primitive.material.alphaCutoutThreshold = 0;
 			primitive.material.skinID = std::numeric_limits<uint32_t>::max(); // TODO: mesh->mMaterialIndex;
 			primitive.material.color.raw = 0x00000000;
