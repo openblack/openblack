@@ -219,11 +219,14 @@ bool Game::Update()
 	    std::chrono::duration_cast<std::chrono::microseconds>(_profiler->_entries[_profiler->GetEntryIndex(0)]._frameStart -
 	                                                          _profiler->_entries[_profiler->GetEntryIndex(-1)]._frameStart);
 
-	if (_frameCount > 0)
+	// Physics
 	{
-		// Physics
-		_dynamicsSystem->Update(deltaTime);
-		_dynamicsSystem->UpdatePhysicsTransforms();
+		auto sdlInput = _profiler->BeginScoped(Profiler::Stage::PhysicsUpdate);
+		if (_frameCount > 0)
+		{
+			_dynamicsSystem->Update(deltaTime);
+			_dynamicsSystem->UpdatePhysicsTransforms();
+		}
 	}
 
 	// Input events
