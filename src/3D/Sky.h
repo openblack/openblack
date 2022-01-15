@@ -34,26 +34,27 @@ public:
 	~Sky() = default;
 
 	void SetDayNightTimes(float nightFull, float duskStart, float duskEnd, float dayFull);
-
-	void Interpolate555Texture(uint16_t* bitmap, uint16_t*, uint16_t*, float);
-
-	void CalculateTextures();
+	/// Time between 0 and 24 in hours
 	void SetTime(float time);
-
-	float TimeOfDay;
+	/// Return index in times as a float for interpolation between adjacent times
+	/// Will use _nightFullTime, _duskStartTime, _duskEndTime and _dayFullTime to determine value
+	/// 0 -> Night (min value)
+	/// 1 -> Dawn/Dusk
+	/// 2 -> Day (max value)
+	float GetCurrentSkyType() const;
 
 private:
 	friend class Renderer;
 
 	static constexpr std::array<std::string_view, 3> _alignments = {
+	    "evil",
 	    "Ntrl",
 	    "good",
-	    "evil",
 	};
 	static constexpr std::array<std::string_view, 3> _times = {
-	    "day",
-	    "dusk",
 	    "night",
+	    "dusk",
+	    "day",
 	};
 	static constexpr std::array<uint16_t, 3> _textureResolution = {
 	    256,

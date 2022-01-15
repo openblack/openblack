@@ -8,14 +8,14 @@ SAMPLER2DARRAY(s0_materials, 0);
 SAMPLER2D(s1_bump, 1);
 SAMPLER2D(s2_smallBump, 2);
 
-uniform vec4 u_timeOfDayBump;
+uniform vec4 u_skyAndBump;
 
 void main()
 {
 	// unpack uniforms
-	float timeOfDay = u_timeOfDayBump.x;
-	float bumpMapStrength = u_timeOfDayBump.y;
-	float smallBumpMapStrength = u_timeOfDayBump.z;
+	float skyType = u_skyAndBump.x;
+	float bumpMapStrength = u_skyAndBump.y;
+	float smallBumpMapStrength = u_skyAndBump.z;
 
 	// do each vert with both materials
 	vec4 colOne = mix(
@@ -50,8 +50,8 @@ void main()
 	}
 
 	// apply light map
-	float dayBrightness = cos(timeOfDay* 2.0f * M_PI) * 0.5f + 0.5f;
-	col = col * mix(.25f, clamp(v_lightLevel * 2, 0.5, 1), dayBrightness);
+	float skyBightness = skyType / 2.0f;
+	col = col * mix(.25f, clamp(v_lightLevel * 2, 0.5, 1), skyBightness);
 
 	gl_FragColor = vec4(col.rgb, v_waterAlpha);
 
