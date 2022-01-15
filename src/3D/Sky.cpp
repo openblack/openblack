@@ -38,12 +38,12 @@ Sky::Sky()
 		for (uint32_t j = 0; j < _times.size(); j++)
 		{
 			auto time = std::string(_times[j]);
-			if (i == 0)
+			if (i == 1)
 			{
 				time[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(time[0])));
 			}
 			std::string filename = fmt::format("sky_{}_{}.555", _alignments[i], time);
-			if (i == 0)
+			if (i == 1)
 			{
 				filename[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(filename[0])));
 			}
