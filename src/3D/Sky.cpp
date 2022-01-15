@@ -58,7 +58,9 @@ Sky::Sky()
 
 	_texture = std::make_unique<Texture2D>("Sky");
 	_timeOfDay = 1.0f;
-	CalculateTextures();
+
+	_texture->Create(_textureResolution[0], _textureResolution[1], _textureResolution[2], Format::RGB5A1, Wrapping::ClampEdge,
+	                 _bitmaps.data(), static_cast<uint32_t>(_bitmaps.size() * sizeof(_bitmaps[0])));
 }
 
 void Sky::SetDayNightTimes(float nightFull, float duskStart, float duskEnd, float dayFull)
@@ -71,51 +73,37 @@ void Sky::SetDayNightTimes(float nightFull, float duskStart, float duskEnd, floa
 
 void Sky::SetTime(float time)
 {
+	assert(time <= 24.0f);
 	_timeOfDay = time;
-	CalculateTextures();
 }
 
-void Sky::Interpolate555Texture(uint16_t* bitmap, uint16_t* bitmap1, uint16_t* bitmap2, float interpolate)
+float Sky::GetCurrentSkyType() const
 {
-	for (uint32_t i = 0; i < static_cast<uint32_t>(_textureResolution[0]) * static_cast<uint32_t>(_textureResolution[1]); i++)
+	assert(_timeOfDay <= 24.0f);
+
+	// Reflect time at 12
+	float time = _timeOfDay > 12.0f ? 24.0f - _timeOfDay : _timeOfDay;
+
+	if (time <= _nightFullTime) // In full night
 	{
-		const auto color1 = glm::u16vec3((bitmap1[i] & 0x7C00) >> 10, (bitmap1[i] & 0x3E0) >> 5, (bitmap1[i] & 0x1F));
-		const auto color2 = glm::u16vec3((bitmap2[i] & 0x7C00) >> 10, (bitmap2[i] & 0x3E0) >> 5, (bitmap2[i] & 0x1F));
-		const auto color = glm::mix(color1, color2, interpolate);
-		bitmap[i] = (color.r << 10) | (color.g << 5) | color.b;
+		return 0.0f; // Index for night texture
 	}
-}
-
-void Sky::CalculateTextures()
-{
-	std::array<uint16_t, static_cast<size_t>(_textureResolution[0]) * static_cast<size_t>(_textureResolution[1])> bitmap;
-
-	uint16_t* day = &_bitmaps[0 * _textureResolution[0] * _textureResolution[1]];
-	uint16_t* dusk = &_bitmaps[1 * _textureResolution[0] * _textureResolution[1]];
-	uint16_t* night = &_bitmaps[2 * _textureResolution[0] * _textureResolution[1]];
-
-	// 0.00: day
-	// 0.25: dusk
-	// 0.50: night
-	// 0.75: dusk
-	// 1.00: day
-	if (_timeOfDay < 0.25f)
-		Interpolate555Texture(bitmap.data(), day, dusk, _timeOfDay * 4.0f);
-	else if (_timeOfDay < 0.5f)
-		Interpolate555Texture(bitmap.data(), dusk, night, (_timeOfDay - 0.25f) * 4.0f);
-	else if (_timeOfDay < 0.75f)
-		Interpolate555Texture(bitmap.data(), night, dusk, (_timeOfDay - 0.5f) * 4.0f);
-	else
-		Interpolate555Texture(bitmap.data(), dusk, day, (_timeOfDay - 0.75f) * 4.0f);
-
-	// set alpha=1
-	for (uint32_t i = 0; i < static_cast<uint32_t>(_textureResolution[0]) * static_cast<uint32_t>(_textureResolution[1]); i++)
+	else if (time < _duskStartTime) // Between night and dusk
 	{
-		bitmap[i] = bitmap[i] | 0x8000;
+		return (time - _nightFullTime) / (_duskStartTime - _nightFullTime); // 0 - 1 lerp between night and dusk
 	}
-
-	_texture->Create(_textureResolution[0], _textureResolution[1], 1, Format::RGB5A1, Wrapping::ClampEdge, bitmap.data(),
-	                 static_cast<uint32_t>(bitmap.size() * sizeof(bitmap[0])));
+	else if (time <= _duskEndTime) // In full dusk
+	{
+		return 1.0f; // Index for dusk texture
+	}
+	else if (time < _dayFullTime) // Between dusk and day
+	{
+		return 1.0f + (time - _duskEndTime) / (_dayFullTime - _duskEndTime); // 1 - 2 lerp between dusk and day
+	}
+	else // In full day
+	{
+		return 2.0f; // Index for day texture
+	}
 }
 
 } // namespace openblack

@@ -388,6 +388,8 @@ bool Game::Run()
 		_renderer->ConfigureView(graphics::RenderPass::Reflection, waterWidth, waterHeight);
 	}
 
+	Game::SetTime(_config.timeOfDay);
+
 	_frameCount = 0;
 	auto last_time = std::chrono::high_resolution_clock::now();
 	while (Update())

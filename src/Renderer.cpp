@@ -345,7 +345,7 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 
 	_shaderManager->SetCamera(desc.viewId, *desc.camera);
 
-	auto objectShader = _shaderManager->GetShader("Object");
+	auto skyShader = _shaderManager->GetShader("Sky");
 	auto waterShader = _shaderManager->GetShader("Water");
 	auto terrainShader = _shaderManager->GetShader("Terrain");
 	auto debugShader = _shaderManager->GetShader("DebugLine");
@@ -357,13 +357,16 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 		                                                                               : Profiler::Stage::MainPassDrawSky);
 		if (desc.drawSky)
 		{
-			auto modelMatrix = glm::mat4(1.0f);
+			const auto modelMatrix = glm::mat4(1.0f);
+			const glm::vec4 u_typeAlignment = {desc.sky.GetCurrentSkyType(), Game::instance()->GetConfig().skyAlignment + 1.0f,
+			                                   0.0f, 0.0f};
 
-			objectShader->SetTextureSampler("s_diffuse", 0, *desc.sky._texture);
+			skyShader->SetTextureSampler("s_diffuse", 0, *desc.sky._texture);
+			skyShader->SetUniformValue("u_typeAlignment", &u_typeAlignment);
 
 			L3DMeshSubmitDesc submit_desc = {};
 			submit_desc.viewId = desc.viewId;
-			submit_desc.program = objectShader;
+			submit_desc.program = skyShader;
 			submit_desc.state = BGFX_STATE_DEFAULT;
 			if (!desc.cullBack)
 			{
@@ -406,8 +409,9 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 				// pack uniforms
 				const glm::vec4 mapPosition = block.GetMapPosition();
 				terrainShader->SetUniformValue("u_blockPosition", &mapPosition); // vs
-				const glm::vec4 u_timeOfDayBump = {desc.timeOfDay, desc.bumpMapStrength, desc.smallBumpMapStrength, 0.0f};
-				terrainShader->SetUniformValue("u_timeOfDayBump", &u_timeOfDayBump); // fs
+				const glm::vec4 u_skyAndBump = {desc.sky.GetCurrentSkyType(), desc.bumpMapStrength, desc.smallBumpMapStrength,
+				                                0.0f};
+				terrainShader->SetUniformValue("u_skyAndBump", &u_skyAndBump); // fs
 
 				// clang-format off
 				constexpr auto defaultState = 0u

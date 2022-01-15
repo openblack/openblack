@@ -64,6 +64,7 @@ constexpr std::array Shaders {
     ShaderDefinition {"Terrain", "vs_terrain", "fs_terrain"},
     ShaderDefinition {"Object", "vs_object", "fs_object"},
     ShaderDefinition {"ObjectInstanced", "vs_object_instanced", "fs_object"},
+    ShaderDefinition {"Sky", "vs_object", "fs_sky"},
     ShaderDefinition {"Water", "vs_water", "fs_water"},
 };
 

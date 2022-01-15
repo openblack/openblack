@@ -10,6 +10,7 @@
 #include "Gui.h"
 
 #include <cinttypes>
+#include <cmath>
 
 #include <bgfx/bgfx.h>
 #include <bgfx/embedded_shader.h>
@@ -32,6 +33,7 @@
 #endif
 
 #include <3D/Camera.h>
+#include <3D/Sky.h>
 #include <Common/FileSystem.h>
 #include <ECS/Components/Transform.h>
 #include <ECS/Components/Villager.h>
@@ -703,8 +705,11 @@ bool Gui::ShowMenu(Game& game)
 
 		if (ImGui::BeginMenu("World"))
 		{
-			if (ImGui::SliderFloat("Time of Day", &config.timeOfDay, 0.0f, 1.0f, "%.3f"))
-				Game::instance()->SetTime(config.timeOfDay);
+			if (ImGui::SliderFloat("Time of Day", &config.timeOfDay, 0.0f, 24.0f, "%.3f"))
+				Game::instance()->SetTime(fmodf(config.timeOfDay, 24.0f));
+
+			ImGui::Text("Sky Type Index %f", game.GetSky().GetCurrentSkyType());
+			ImGui::SliderFloat("Sky alignment", &config.skyAlignment, -1.0f, 1.0f, "%.3f");
 
 			ImGui::EndMenu();
 		}
