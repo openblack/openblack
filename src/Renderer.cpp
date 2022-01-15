@@ -242,7 +242,7 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 			{
 				const glm::vec4 u_skyAlphaThreshold = {
 				    desc.skyType,
-				    prim.alphaCutoutThreshold,
+				    prim.thresholdAlpha ? prim.alphaCutoutThreshold : 0.0f,
 				    0.0f,
 				    0.0f,
 				};

@@ -35,10 +35,22 @@ class L3DSubMesh
 {
 	struct Primitive
 	{
+		enum class BlendMode : uint8_t
+		{
+			Disabled,
+			Standard, ///< src_alpha, 1 - src_alpha
+			Additive, ///< src_alpha, 1
+		};
+
 		uint32_t skinID;
-		float alphaCutoutThreshold;
 		uint32_t indicesOffset;
 		uint32_t indicesCount;
+		bool depthWrite;
+		bool alphaTest;
+		BlendMode blend;
+		bool modulateAlpha;  ///< Multiply ouput alpha by a uniform
+		bool thresholdAlpha; ///< Dismiss fragments below a certain threshold
+		float alphaCutoutThreshold;
 	};
 
 public:

@@ -175,6 +175,28 @@ static_assert(sizeof(L3DBone) == 3 * sizeof(uint32_t) + 9 * sizeof(float) + size
 
 struct L3DMaterial
 {
+	enum class Type : uint32_t
+	{
+		Smooth = 0x0,
+		SmoothAlpha = 0x1,
+		Textured = 0x2,
+		TexturedAlpha = 0x3,
+		AlphaTextured = 0x4,
+		AlphaTexturedAlpha = 0x5,
+		AlphaTexturedAlphaNz = 0x6,
+		SmoothAlphaNz = 0x7,
+		TexturedAlphaNz = 0x8,
+		TexturedChroma = 0x9,
+		AlphaTexturedAlphaAdditiveChroma = 0xa,
+		AlphaTexturedAlphaAdditiveChromaNz = 0xb,
+		AlphaTexturedAlphaAdditive = 0xc,
+		AlphaTexturedAlphaAdditiveNz = 0xd,
+		TexturedChromaAlpha = 0xf,
+		TexturedChromaAlphaNz = 0x10,
+		ChromaJustZ = 0x12,
+
+		_Count,
+	};
 	struct BGRA8
 	{
 		uint8_t b;
@@ -182,7 +204,7 @@ struct L3DMaterial
 		uint8_t r;
 		uint8_t a;
 	};
-	uint32_t type;
+	Type type;
 	uint8_t alphaCutoutThreshold;
 	uint8_t cullMode;
 	uint32_t skinID;
