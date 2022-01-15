@@ -402,12 +402,12 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 				terrainShader->SetTextureSampler("s0_materials", 0, desc.island.GetAlbedoArray());
 				terrainShader->SetTextureSampler("s1_bump", 1, desc.island.GetBump());
 				terrainShader->SetTextureSampler("s2_smallBump", 2, desc.island.GetSmallBump());
-				terrainShader->SetUniformValue("u_timeOfDay", &desc.timeOfDay);
-				terrainShader->SetUniformValue("u_bumpmapStrength", &desc.bumpMapStrength);
-				terrainShader->SetUniformValue("u_smallBumpmapStrength", &desc.smallBumpMapStrength);
 
-				glm::vec4 mapPosition = block.GetMapPosition();
-				terrainShader->SetUniformValue("u_blockPosition", &mapPosition);
+				// pack uniforms
+				const glm::vec4 mapPosition = block.GetMapPosition();
+				terrainShader->SetUniformValue("u_blockPosition", &mapPosition); // vs
+				const glm::vec4 u_timeOfDayBump = {desc.timeOfDay, desc.bumpMapStrength, desc.smallBumpMapStrength, 0.0f};
+				terrainShader->SetUniformValue("u_timeOfDayBump", &u_timeOfDayBump); // fs
 
 				// clang-format off
 				constexpr auto defaultState = 0u
