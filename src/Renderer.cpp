@@ -466,6 +466,10 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 					submitDesc.modelMatrices = &identity;
 					submitDesc.matrixCount = 1;
 				}
+
+				const glm::vec4 u_sky = {desc.sky.GetCurrentSkyType(), 0.0f, 0.0f, 0.0f};
+				objectShaderInstanced->SetUniformValue("u_sky", &u_sky); // fs
+
 				// TODO(bwrsandman): choose the correct LOD
 				DrawMesh(mesh, meshPack, submitDesc, std::numeric_limits<uint8_t>::max());
 			}
