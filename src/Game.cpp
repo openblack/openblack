@@ -15,6 +15,7 @@
 #include "3D/Water.h"
 #include "Common/EventManager.h"
 #include "Common/FileSystem.h"
+#include "Common/StringUtils.h"
 #include "ECS/Archetypes/HandArchetype.h"
 #include "ECS/Components/Fixed.h"
 #include "ECS/Components/Mobile.h"
@@ -582,9 +583,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 	script.Load(source);
 
 	// Each released map comes with an optional .fot file which contains the footpath information for the map
-	auto stem = path.stem().generic_string();
-	std::transform(stem.begin(), stem.end(), stem.begin(),
-	               [](auto c) { return static_cast<char>(std::tolower(static_cast<int>(c))); });
+	auto stem = string_utils::LowerCase(path.stem().generic_string());
 	auto fot_path = _fileSystem->LandscapePath() / fmt::format("{}.fot", stem);
 
 	if (_fileSystem->Exists(fot_path))

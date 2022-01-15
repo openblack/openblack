@@ -9,6 +9,7 @@
 
 #include "Sky.h"
 
+#include <Common/StringUtils.h>
 #include <glm/vec3.hpp>
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
@@ -17,7 +18,6 @@
 #include "Common/Bitmap16B.h"
 #include "Common/FileSystem.h"
 #include "Game.h"
-#include "Graphics/Texture2D.h"
 
 using namespace openblack::graphics;
 
@@ -40,12 +40,12 @@ Sky::Sky()
 			auto time = std::string(_times[j]);
 			if (i == 1)
 			{
-				time[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(time[0])));
+				time = string_utils::Capitalise(time);
 			}
 			std::string filename = fmt::format("sky_{}_{}.555", _alignments[i], time);
 			if (i == 1)
 			{
-				filename[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(filename[0])));
+				filename = string_utils::Capitalise(filename);
 			}
 			auto path = filesystem.WeatherSystemPath() / filename;
 			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading sky texture: {}", path.generic_string());
