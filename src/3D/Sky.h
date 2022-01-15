@@ -44,10 +44,27 @@ public:
 
 private:
 	friend class Renderer;
+
+	static constexpr std::array<std::string_view, 3> _alignments = {
+	    "Ntrl",
+	    "good",
+	    "evil",
+	};
+	static constexpr std::array<std::string_view, 3> _times = {
+	    "day",
+	    "dusk",
+	    "night",
+	};
+	static constexpr std::array<uint16_t, 3> _textureResolution = {
+	    256,
+	    256,
+	    static_cast<uint16_t>(_alignments.size() * _times.size()),
+	};
+
 	std::unique_ptr<L3DMesh> _model;
 	std::unique_ptr<graphics::Texture2D> _texture; // TODO(bwrsandman): put in a resource manager and store look-up
 
-	std::array<std::array<uint16_t, 256 * 256>, 9> _bitmaps;
+	std::array<uint16_t, _textureResolution[0] * _textureResolution[1] * _textureResolution[2]> _bitmaps;
 
 	float _timeOfDay;
 	float _nightFullTime;
