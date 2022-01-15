@@ -322,6 +322,7 @@ void Renderer::DrawScene(const MeshPack& meshPack, const DrawSceneDesc& drawDesc
 			drawPassDesc.drawDebugCross = false;
 			drawPassDesc.drawBoundingBoxes = false;
 			drawPassDesc.cullBack = true;
+
 			DrawPass(meshPack, drawPassDesc);
 		}
 	}
@@ -391,6 +392,8 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 			bgfx::setState(BGFX_STATE_DEFAULT);
 			waterShader->SetTextureSampler("s_diffuse", 0, *desc.water._texture);
 			waterShader->SetTextureSampler("s_reflection", 1, desc.water.GetFrameBuffer().GetColorAttachment());
+			const glm::vec4 u_sky = {desc.sky.GetCurrentSkyType(), 0.0f, 0.0f, 0.0f};
+			waterShader->SetUniformValue("u_sky", &u_sky); // fs
 			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), waterShader->GetRawHandle());
 		}
 	}
