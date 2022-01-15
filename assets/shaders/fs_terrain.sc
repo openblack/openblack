@@ -8,12 +8,15 @@ SAMPLER2DARRAY(s0_materials, 0);
 SAMPLER2D(s1_bump, 1);
 SAMPLER2D(s2_smallBump, 2);
 
-uniform vec4 u_timeOfDay;
-uniform vec4 u_bumpmapStrength;
-uniform vec4 u_smallBumpmapStrength;
+uniform vec4 u_timeOfDayBump;
 
 void main()
 {
+	// unpack uniforms
+	float timeOfDay = u_timeOfDayBump.x;
+	float bumpMapStrength = u_timeOfDayBump.y;
+	float smallBumpMapStrength = u_timeOfDayBump.z;
+
 	// do each vert with both materials
 	vec4 colOne = mix(
 		texture2DArray(s0_materials, vec3(v_texcoord0.xy, v_materialID0.r)),
@@ -35,19 +38,19 @@ void main()
 	vec4 col = colOne + colTwo + colThree;
 
 	// apply bump map (2x because it's half bright?)
-	float bump = mix(1.0f, texture2D(s1_bump, v_texcoord0.xy).r * 2, u_bumpmapStrength.r);
+	float bump = mix(1.0f, texture2D(s1_bump, v_texcoord0.xy).r * 2, bumpMapStrength);
 	col = col * bump;
 
 	// don't apply smallbump unless we're close
 	if (v_distToCamera < 200.0f) {
-		float smallStrength = (1.0f - (v_distToCamera / 200.0f)) * u_smallBumpmapStrength.r;
+		float smallStrength = (1.0f - (v_distToCamera / 200.0f)) * smallBumpMapStrength;
 
 		float smallbump = 1 - mix(0.0f, texture2D(s2_smallBump, v_texcoord0.xy * 10).r, smallStrength);
 		col = col * smallbump;
 	}
 
 	// apply light map
-	float dayBrightness = cos(u_timeOfDay.r * 2.0f * M_PI) * 0.5f + 0.5f;
+	float dayBrightness = cos(timeOfDay* 2.0f * M_PI) * 0.5f + 0.5f;
 	col = col * mix(.25f, clamp(v_lightLevel * 2, 0.5, 1), dayBrightness);
 
 	gl_FragColor = vec4(col.rgb, v_waterAlpha);
