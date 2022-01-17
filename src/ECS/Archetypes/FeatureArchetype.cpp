@@ -9,7 +9,6 @@
 
 #include "FeatureArchetype.h"
 
-#include <BulletCollision/CollisionShapes/btConvexShape.h>
 #include <glm/gtx/euler_angles.hpp>
 
 #include "3D/L3DMesh.h"
@@ -46,17 +45,22 @@ entt::entity FeatureArchetype::Create(const glm::vec3& position, FeatureInfo typ
 	auto l3dMesh = Locator::resources::value().GetMeshes().Handle(resourceId);
 	if (l3dMesh->HasPhysicsMesh())
 	{
-		auto& shape = l3dMesh->GetPhysicsMesh();
+		const auto& templateShape = l3dMesh->GetPhysicsMesh();
+		auto shape = std::make_unique<btConvexHullShape>(reinterpret_cast<const btScalar*>(templateShape.getUnscaledPoints()),
+		                                                 templateShape.getNumVertices());
 		btVector3 bodyInertia(0, 0, 0);
-		shape.calculateLocalInertia(l3dMesh->GetMass(), bodyInertia);
+		shape->calculateLocalInertia(l3dMesh->GetMass(), bodyInertia);
+		shape->setLocalScaling(btVector3(scale, scale, scale));
 
 		btTransform startTransform;
 		startTransform.setIdentity();
-		startTransform.setOrigin(btVector3(transform.position.x, transform.position.y, transform.position.z));
+		startTransform.setOrigin(btVector3(position.x, position.y, position.z));
+		const auto quaternion = btQuaternion(btVector3(0.0f, 1.0f, 0.0f), -yAngleRadians);
+		startTransform.setRotation(quaternion);
 
-		btRigidBody::btRigidBodyConstructionInfo rbInfo(l3dMesh->GetMass(), nullptr, &shape, bodyInertia);
+		btRigidBody::btRigidBodyConstructionInfo rbInfo(l3dMesh->GetMass(), nullptr, shape.get(), bodyInertia);
 
-		registry.Assign<RigidBody>(entity, rbInfo, startTransform);
+		registry.Assign<RigidBody>(entity, rbInfo, startTransform, std::move(shape));
 	}
 
 	return entity;
