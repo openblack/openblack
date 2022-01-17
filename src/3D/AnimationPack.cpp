@@ -29,7 +29,7 @@ bool AnimationPack::LoadFromFile(const std::filesystem::path& path)
 
 	try
 	{
-		pack.Open(Game::instance()->GetFileSystem().FindPath(path).u8string());
+		pack.Open(Game::instance()->GetFileSystem().FindPath(path).string());
 	}
 	catch (std::runtime_error& err)
 	{

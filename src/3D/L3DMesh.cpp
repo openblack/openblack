@@ -111,7 +111,7 @@ bool L3DMesh::LoadFromFile(const std::filesystem::path& path)
 
 	try
 	{
-		l3d.Open(Game::instance()->GetFileSystem().FindPath(path).u8string());
+		l3d.Open(Game::instance()->GetFileSystem().FindPath(path).string());
 	}
 	catch (std::runtime_error& err)
 	{
