@@ -60,7 +60,7 @@ bool L3DAnim::LoadFromFile(const std::filesystem::path& path)
 
 	try
 	{
-		anm.Open(Game::instance()->GetFileSystem().FindPath(path).u8string());
+		anm.Open(Game::instance()->GetFileSystem().FindPath(path).string());
 	}
 	catch (std::runtime_error& err)
 	{
