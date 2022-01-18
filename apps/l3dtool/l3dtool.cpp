@@ -8,6 +8,7 @@
  *****************************************************************************/
 
 #include <cstdlib>
+#include <cstring>
 
 #include <filesystem>
 #include <stack>
@@ -464,21 +465,21 @@ int PrintBlendValues(openblack::l3d::L3DFile& l3d)
 
 int PrintFootprintValues(openblack::l3d::L3DFile& l3d)
 {
-	auto& footprintValues = l3d.GetFootprintData();
+	const auto& footprintValues = l3d.GetFootprintData();
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
 	return PrintRawBytes(footprintValues.data(), footprintValues.size() * sizeof(footprintValues[0]));
 }
 
 int PrintUv2Values(openblack::l3d::L3DFile& l3d)
 {
-	auto& uv2Values = l3d.GetUv2Data();
+	const auto& uv2Values = l3d.GetUv2Data();
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
 	return PrintRawBytes(uv2Values.data(), uv2Values.size() * sizeof(uv2Values[0]));
 }
 
 int PrintNameValue(openblack::l3d::L3DFile& l3d)
 {
-	auto& nameValue = l3d.GetNameData();
+	const auto& nameValue = l3d.GetNameData();
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
 	std::printf("name data: %s\n", nameValue.c_str());
 	return EXIT_SUCCESS;
@@ -848,6 +849,15 @@ int WriteFile(const Arguments::Write& args) noexcept
 		l3d.AddSubmesh(submesh);
 	}
 
+	auto decodedFootprint = tinygltf::base64_decode(gltf.extras.Get("footprint").Get<std::string>());
+	auto footprintData = std::vector<uint8_t>(decodedFootprint.begin(), decodedFootprint.end());
+	l3d.SetFootprintData(footprintData);
+	auto decodedUv2 = tinygltf::base64_decode(gltf.extras.Get("uv2").Get<std::string>());
+	auto uv2Data = std::vector<uint8_t>(decodedUv2.begin(), decodedUv2.end());
+	l3d.SetUv2Data(uv2Data);
+	auto decodedName = tinygltf::base64_decode(gltf.extras.Get("name").Get<std::string>());
+	l3d.SetNameData(decodedName);
+
 	try
 	{
 		l3d.Write(args.outFilename);
@@ -896,6 +906,18 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 	indexBuffer.data.resize(sizeOfIndices);
 	memcpy(indexBuffer.data.data(), l3d.GetIndices().data(), sizeOfIndices);
 	gltf.buffers.push_back(indexBuffer);
+
+	// TODO(raffclar): No support for BINARY_TYPE https://github.com/syoyo/tinygltf/issues/360
+	std::map<std::string, tinygltf::Value> extras;
+	extras["footprint"] = tinygltf::Value(
+	    tinygltf::base64_encode(l3d.GetFootprintData().data(), static_cast<uint32_t>(l3d.GetFootprintData().size())));
+	extras["uv2"] =
+	    tinygltf::Value(tinygltf::base64_encode(l3d.GetUv2Data().data(), static_cast<uint32_t>(l3d.GetUv2Data().size())));
+	auto name = l3d.GetNameData();
+	// Resize to the first null terminator as the string can contain a lot of junk data
+	name.resize(std::strlen(name.data()));
+	extras["name"] = tinygltf::Value(name);
+	gltf.extras = tinygltf::Value(extras);
 
 	// TODO(#473): weights, skins
 
@@ -1175,7 +1197,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 		    ("I,indices", "Print Indices.", cxxopts::value<std::vector<std::filesystem::path>>())                         //
 		    ("L,look-up-tables", "Print Look Up Table Data.", cxxopts::value<std::vector<std::filesystem::path>>())       //
 		    ("B,vertex-blend-values", "Print Vertex Blend Values.", cxxopts::value<std::vector<std::filesystem::path>>()) //
-		    ("u,uv2-data", "Print UV2 Data..", cxxopts::value<std::vector<std::string>>())                                //
+		    ("u,uv2-data", "Print UV2 Data.", cxxopts::value<std::vector<std::string>>())                                 //
 		    ("f,footprint-data", "Print Footprint Data.", cxxopts::value<std::vector<std::string>>())                     //
 		    ("n,name-data", "Print Name Data.", cxxopts::value<std::vector<std::string>>())                               //
 		    ;
@@ -1273,19 +1295,19 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 			if (result["footprint-data"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Footprint;
-				args.read.filenames = result["footprint-data"].as<std::vector<std::string>>();
+				args.read.filenames = result["footprint-data"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["uv2-data"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Uv2;
-				args.read.filenames = result["uv2-data"].as<std::vector<std::string>>();
+				args.read.filenames = result["uv2-data"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["name-data"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Name;
-				args.read.filenames = result["name-data"].as<std::vector<std::string>>();
+				args.read.filenames = result["name-data"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 		}

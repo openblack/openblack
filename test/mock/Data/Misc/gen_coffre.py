@@ -138,6 +138,11 @@ def main(dir_name):
         "nodes": [0],
     }
     gltf_coffre["scenes"] = [scene]
+    gltf_coffre["extras"] = {
+        "name": "Mock Mesh",
+        "footprint": "",
+        "uv2": "",
+    }
 
     with open(os.path.join(dir_name, "coffre.gltf"), "w") as f:
         json.dump(gltf_coffre, f, sort_keys=True, indent=4)
