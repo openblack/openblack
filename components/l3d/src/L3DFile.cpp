@@ -47,11 +47,11 @@
  *
  * ------------------------ start of footprint block ----------------------------
  *
- *  TODO: Investigate
+ *  TODO(#484): Investigate optional footprint block
  *
  * ------------------------ start of uv2 block ---------------------------------
  *
- *  TODO: Investigate
+ *  TODO(#483): Investigate optional UV2 block
  *
  * ------------------------ start of name block --------------------------------
  * - 4 bytes + total bytes used for the name.
@@ -497,14 +497,14 @@ void L3DFile::ReadFile(std::istream& stream)
 	// Footprint data
 	uint32_t additionalDataOffset = 0;
 	uint32_t footprintDataSize = 0;
-	if (static_cast<uint32_t>(_header.flags) & static_cast<uint32_t>(L3DMeshFlags::ContainsLandscapeFeature))
+	if ((static_cast<uint32_t>(_header.flags) & static_cast<uint32_t>(L3DMeshFlags::ContainsLandscapeFeature)) != 0u)
 	{
-		// TODO(raffclar): Research footprint data. Currently unknown struct
-		stream.seekg(0x48, stream.beg);
+		// TODO(#484): Investigate optional footprint block
+		stream.seekg(0x48, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&additionalDataOffset), sizeof(additionalDataOffset));
-		stream.seekg(additionalDataOffset + 8, stream.beg);
+		stream.seekg(additionalDataOffset + 8, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&footprintDataSize), sizeof(footprintDataSize));
-		auto footprintData = std::vector<short>(footprintDataSize / sizeof(short));
+		auto footprintData = std::vector<int16_t>(footprintDataSize / sizeof(int16_t));
 		stream.read(reinterpret_cast<char*>(footprintData.data()), footprintDataSize);
 		_footprintData.resize(footprintDataSize);
 		stream.read(reinterpret_cast<char*>(_footprintData.data()), _footprintData.size());
@@ -512,27 +512,27 @@ void L3DFile::ReadFile(std::istream& stream)
 
 	// UV2 data
 	uint32_t uv2DataSize = 0;
-	if (static_cast<uint32_t>(_header.flags) & static_cast<uint32_t>(L3DMeshFlags::ContainsUV2))
+	if ((static_cast<uint32_t>(_header.flags) & static_cast<uint32_t>(L3DMeshFlags::ContainsUV2)) != 0u)
 	{
-		// TODO(raffclar): Research UV2 data. Currently unknown struct
-		stream.seekg(0x48, stream.beg);
+		// TODO(#483): Investigate optional UV2 block
+		stream.seekg(0x48, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&additionalDataOffset), sizeof(additionalDataOffset));
-		stream.seekg(additionalDataOffset + footprintDataSize, stream.beg);
+		stream.seekg(additionalDataOffset + footprintDataSize, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&uv2DataSize), sizeof(uv2DataSize));
-		stream.seekg(8, stream.cur);
+		stream.seekg(8, std::istream::cur);
 		_uv2Data.resize(uv2DataSize);
 		stream.read(reinterpret_cast<char*>(_uv2Data.data()), _uv2Data.size());
 	}
 
 	// Name data
 	uint32_t nameDataSize = 0;
-	if (static_cast<uint32_t>(_header.flags) & static_cast<uint32_t>(L3DMeshFlags::ContainsNameData))
+	if ((static_cast<uint32_t>(_header.flags) & static_cast<uint32_t>(L3DMeshFlags::ContainsNameData)) != 0u)
 	{
-		stream.seekg(0x48, stream.beg);
+		stream.seekg(0x48, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&additionalDataOffset), sizeof(additionalDataOffset));
-		stream.seekg(additionalDataOffset + footprintDataSize + uv2DataSize, stream.beg);
+		stream.seekg(additionalDataOffset + footprintDataSize + uv2DataSize, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&nameDataSize), sizeof(nameDataSize));
-		stream.seekg(8, stream.cur);
+		stream.seekg(8, std::istream::cur);
 		_nameData.resize(nameDataSize);
 		stream.read(_nameData.data(), _nameData.size());
 	}

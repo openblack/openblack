@@ -139,6 +139,11 @@ def main(filename):
     }
     gltf_mesh["scenes"] = [scene]
 
+    gltf_mesh["extras"] = {
+        "name": "Mock Mesh",
+        "footprint": "",
+        "uv2": "",
+    }
 
     with open(filename, "w") as f:
         json.dump(gltf_mesh, f, sort_keys=True, indent=4)

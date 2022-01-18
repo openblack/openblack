@@ -291,6 +291,9 @@ public:
 	[[nodiscard]] const std::vector<L3DBone>& GetBones() const { return _bones; }
 	[[nodiscard]] const std::vector<uint8_t>& GetFootprintData() const { return _footprintData; }
 	[[nodiscard]] const std::vector<uint8_t>& GetUv2Data() const { return _uv2Data; }
+	void SetFootprintData(std::vector<uint8_t>& footprintData) { _footprintData = footprintData; }
+	void SetUv2Data(std::vector<uint8_t>& uv2Data) { _uv2Data = uv2Data; }
+	void SetNameData(std::string& nameData) { _nameData = nameData; }
 	[[nodiscard]] const std::string& GetNameData() const { return _nameData; }
 	[[nodiscard]] const std::span<L3DPrimitiveHeader>& GetPrimitiveSpan(uint32_t submeshIndex) const
 	{
