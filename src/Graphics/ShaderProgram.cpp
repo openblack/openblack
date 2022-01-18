@@ -19,7 +19,8 @@ namespace openblack::graphics
 {
 
 ShaderProgram::ShaderProgram(const std::string& name, bgfx::ShaderHandle&& vertexShader, bgfx::ShaderHandle&& fragmentShader)
-    : _program(BGFX_INVALID_HANDLE)
+    : _name(name)
+    , _program(BGFX_INVALID_HANDLE)
 {
 	uint16_t numShaderUniforms = 0;
 	bgfx::UniformInfo info = {};
@@ -77,7 +78,7 @@ void ShaderProgram::SetUniformValue(const char* uniformName, const void* value) 
 	}
 	else
 	{
-		SPDLOG_LOGGER_WARN(spdlog::get("graphics"), "Could not find uniform {}", uniformName);
+		SPDLOG_LOGGER_WARN(spdlog::get("graphics"), "Could not find uniform {} in {} Shader", uniformName, _name);
 	}
 }
 
