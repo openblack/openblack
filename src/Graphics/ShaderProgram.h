@@ -39,6 +39,7 @@ public:
 	[[nodiscard]] bgfx::ProgramHandle GetRawHandle() const { return _program; }
 
 private:
+	std::string _name;
 	bgfx::ProgramHandle _program;
 	std::map<std::string, bgfx::UniformHandle> _uniforms;
 };
