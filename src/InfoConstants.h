@@ -15,7 +15,7 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
-#include "AllMeshes.h"
+#include "3D/AllMeshes.h"
 #include "Enums.h"
 
 namespace openblack

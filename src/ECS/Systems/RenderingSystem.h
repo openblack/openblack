@@ -15,7 +15,7 @@
 #include <bgfx/bgfx.h>
 #include <glm/mat4x4.hpp>
 
-#include "AllMeshes.h"
+#include "3D/AllMeshes.h"
 #include "Graphics/Mesh.h"
 
 namespace openblack::ecs::systems

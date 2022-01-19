@@ -11,7 +11,7 @@
 
 #include <glm/gtx/euler_angles.hpp>
 
-#include "AllMeshes.h"
+#include "3D/AllMeshes.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"

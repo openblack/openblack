@@ -14,7 +14,7 @@
 #include <memory>
 #include <optional>
 
-#include "AllMeshes.h"
+#include "3D/AllMeshes.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
 

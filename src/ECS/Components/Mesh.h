@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "AllMeshes.h"
+#include "3D/AllMeshes.h"
 
 namespace openblack::ecs::components
 {
