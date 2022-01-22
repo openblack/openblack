@@ -36,7 +36,7 @@ struct GObjectInfo
 	SoundCollisionType collideSound;
 	ImmersionEffectType immersion;
 	HelpText helpStartEnum;
-	HelpText helpendEnum;
+	HelpText helpEndEnum;
 	HelpSystemMessageSet helpMessage;
 	HelpSystemCondition helpCondition;
 	HelpSystemMessageSet helpInHand;
@@ -79,6 +79,11 @@ struct GObjectInfo
 	float artifactMultiplier;
 	float drawImportance;
 	float computerAttackDesire;
+};
+
+struct GMiscInfo: GObjectInfo
+{
+	MeshId normal;
 };
 
 struct GMobileInfo: GObjectInfo
@@ -428,7 +433,7 @@ struct GWorshipSiteInfo: GCitadelPartInfo
 
 struct GAbodeInfo: GMultiMapFixedInfo
 {
-	int field_0x110;
+	AbodeType abodeType;
 	AbodeNumber abodeNumber;
 	std::array<char, 0x30> debugString;
 	Tribe tribeType;
@@ -720,10 +725,10 @@ struct GClimateInfo
 
 struct GCreaturePenInfo: GCitadelPartInfo
 {
-	uint32_t field_0x124;
-	float field_0x128;
-	float field_0x12c;
-	uint32_t field_0x130;
+	PenInfo info;
+	float startPlacementDistance;
+	float endPlacementDistance;
+	uint32_t placementAngle;
 };
 
 struct GScriptOpposingCreature
@@ -731,12 +736,6 @@ struct GScriptOpposingCreature
 	uint32_t field_0x0;
 	uint32_t field_0x4;
 	uint32_t field_0x8;
-};
-
-struct GBigForestInfo: GMultiMapFixedInfo
-{
-	MeshId meshId;
-	uint32_t field_0x114;
 };
 
 struct GTotemStatueInfo: GMultiMapFixedInfo
@@ -783,18 +782,18 @@ struct GVortexInfo
 
 struct GScaffoldInfo: GMobileObjectInfo
 {
-	float field_0x104;
-	uint32_t field_0x108;
-	float field_0x10c;
-	float field_0x110;
-	uint16_t field_0x114;
+	float phantomBuildingRotationPerGameTurn;
+	uint32_t gameTurnsAfterPlacingCanStillPickUp;
+	float maxDistanceForImpressingTowns;
+	float proportionOfTownToImpress;
+	uint16_t maxNumberForCombining;
 };
 
 struct GScriptHighlightInfo: GSingleMapFixedInfo
 {
-	uint32_t field_0xf4;
-	uint32_t field_0xf8;
-	uint32_t field_0xfc;
+	MeshId active;
+	ParticleType particleTypeGlints;
+	ParticleType particleTypeActive;
 };
 
 struct GSpeedThreshold
@@ -866,17 +865,41 @@ struct GFeatureInfo: GMultiMapFixedInfo
 	static FeatureInfo Find(const std::string& name);
 };
 
+struct GBigForestInfo: GFeatureInfo
+{
+	CarriedTreeType carriedType;
+};
+
+struct GForestInfo: GContainerInfo
+{
+	uint32_t defaultNoTrees;
+	HelpText helpStartEnum;
+	SoundCollisionType collideSound;
+	ImmersionEffectType immersion;
+	HelpText helpEndEnum;
+	HelpSystemMessageSet helpMessage;
+	HelpSystemCondition helpCondition;
+};
+
 struct GAnimatedStaticInfo: GFeatureInfo
 {
-	uint32_t field_0x114;
-	uint32_t field_0x118;
+	uint32_t dummy;
+	AnimId defaultAnim;
 
 	static AnimatedStaticInfo Find(const std::string& name);
 };
 
 struct GWorshipSiteUpgradeInfo: GFeatureInfo
 {
-	float field_0x114;
+	float scale;
+};
+
+struct GWallSectionInfo: GFeatureInfo
+{
+	float nearEnoughToImprove;
+	uint32_t gameTurnsBeforeImprove;
+	float heightIncreasePerImprove;
+	float distanceToConsiderSeperateWall;
 };
 
 struct GArrowInfo: GMobileObjectInfo
@@ -892,17 +915,15 @@ struct GArrowInfo: GMobileObjectInfo
 
 struct GFieldInfo: GMultiMapFixedInfo
 {
-	float field_0x110;
-	float field_0x114;
-	uint32_t field_0x118;
-	uint32_t field_0x11c;
-	uint32_t field_0x120;
-	int field_0x124;
-	uint32_t field_0x128;
-	uint32_t field_0x12c;
-	uint32_t field_0x130;
-	uint32_t field_0x134;
-	float field_0x138;
+	glm::vec2 size;
+	uint32_t maxNoFarmersPerField;
+	glm::uvec2 gateNumberMissing;
+	MobileStaticInfo fence;
+	uint32_t deleteIfSame;
+	MobileObjectInfo cropPlanted;
+	uint32_t maxNumFarmers;
+	EffectInfo nurtureEffect;
+	float rainEffectMultiplier;
 };
 
 struct GBeliefInfo
@@ -1228,7 +1249,7 @@ struct GAnimalStateTableInfo
 
 struct GLeashSelectorInfo: GObjectInfo
 {
-	uint32_t field_0xf0;
+	uint32_t dummy;
 };
 
 struct CreatureInitialSourceInfo
@@ -1264,11 +1285,10 @@ struct GMagicWoodInfo: GMagicResourceInfo
 {
 };
 
-struct GMobileStaticInfo: GMultiMapFixedInfo
+struct GMobileStaticInfo: GFeatureInfo
 {
-	MeshId meshId;
-	float field_0x114;
-	uint32_t field_0x118;
+	float maxScale;
+	MobileStaticInfo mobileType;
 };
 
 struct GToolTipsInfo
@@ -1293,7 +1313,7 @@ struct GWeatherInfo
 
 struct GPrayerIconInfo: GSingleMapFixedInfo
 {
-	uint32_t field_0xf4;
+	uint32_t dummy;
 };
 
 struct GInfluenceInfo
@@ -1538,19 +1558,19 @@ struct GSpookyVoiceInfo
 
 struct GFieldTypeInfo: GMultiMapFixedInfo
 {
-	float field_0x110;
-	float field_0x114;
-	float field_0x118;
-	float field_0x11c;
-	float field_0x120;
-	uint32_t field_0x124;
-	float field_0x128;
-	float field_0x12c;
-	float field_0x130;
-	float field_0x134;
-	int field_0x138;
-	float field_0x13c;
-	float field_0x140;
+	float ageGrowth;
+	float ageRecolt;
+	float timesToSow;
+	float foodValueTakenWithHand;
+	float totalFoodInField;
+	uint32_t maxFarmerInFarm;
+	float effectSunWhenGrowing;
+	float effectSunWhenRipening;
+	float effectRainWhenGrowing;
+	float effectRainWhenRipening;
+	MobileStaticInfo fence;
+	float ratioBeforeRipe;
+	float effectOfWaterSpell;
 };
 
 struct CreatureActionInfo
@@ -1632,8 +1652,8 @@ struct GSpellSystemInfo
 
 struct GFishFarmInfo: GMultiMapFixedInfo
 {
-	uint32_t field_0x110;
-	uint32_t field_0x114;
+	uint32_t maxNoFishermanPerFishFarm;
+	uint32_t numGameTurnsAfterWhichFoodIsIncreased;
 };
 
 struct CreatureDesireDependency
@@ -1706,10 +1726,9 @@ struct CreatureMimicInfo
 	uint32_t field_0xac;
 };
 
-struct GPrayerSiteInfo: GMultiMapFixedInfo
+struct GPrayerSiteInfo: GFeatureInfo
 {
-	uint32_t field_0x110;
-	float field_0x114;
+	float radius;
 };
 
 struct HelpSpiritInfo: GLivingInfo

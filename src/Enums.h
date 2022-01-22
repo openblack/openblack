@@ -115,24 +115,25 @@ enum class VillagerJob
 	_count
 };
 
-enum class AbodeType
+enum class AbodeType : uint32_t
 {
-	General = 1,
-	LivingQuarters = 2,
-	Civic = 4,
-	Windmill = 10,
-	Totem = 20,
-	StoragePit = 36,
-	Creche = 68,
-	Workshop = 132,
-	Wonder = 256,
-	Graveyard = 516,
-	TownCentre = 1028,
-	Citadel = 2052,
-	FootballPitch = 4100,
-	SpellDispenser = 8196,
-	Field = 16388,
-	Any = 32767,
+	General = 1 << 0,
+	LivingQuarters = 1 << 1,
+	Civic = 1 << 2,
+	Windmill = 1 << 3 | LivingQuarters,
+	Totem = 1 << 4 | Civic,
+	StoragePit = 1 << 5 | Civic,
+	Creche = 1 << 6 | Civic,
+	Workshop = 1 << 7 | Civic,
+	Wonder = 1 << 8,
+	Graveyard = 1 << 9,
+	TownCentre = 1 << 10 | Civic,
+	Citadel = 1 << 11 | Civic,
+	FootballPitch = 1 << 12 | Civic,
+	SpellDispenser = 1 << 13 | Civic,
+	Field = 1 << 14 | Civic,
+	Any = 0x7FFF,
+	Last = 0x8000,
 };
 
 enum class LivingType : int
@@ -3077,6 +3078,16 @@ enum class TownInfo : uint32_t
 	SquaresVillageSmall = 15,
 	SquaresVillageMedium = 16,
 	SquaresVillageLarge = 17,
+};
+
+enum class PenInfo : uint32_t
+{
+	Feed = 0,
+	Train = 1,
+	Sleep = 2,
+	Discipline = 3,
+	Pleasure = 4,
+	Walkway = 5,
 };
 
 } // namespace openblack
