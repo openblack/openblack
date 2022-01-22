@@ -183,7 +183,7 @@ bool LinearScanForObstacle(entt::entity entity, const glm::vec2& pos, const glm:
 }
 
 /// If we have a number of turns to an obstacle but no obstacle saved: search in an arc to find one
-bool OrbitScanForObstacle(entt::entity entity, const MoveStateOrbitTag state, Transform& transform, WallHug& wallHug)
+bool OrbitScanForObstacle(entt::entity entity, bool clockwise, Transform& transform, WallHug& wallHug)
 {
 	auto& registry = Game::Instance()->GetEntityRegistry();
 	const auto& map = Game::Instance()->GetEntityMap();
@@ -259,11 +259,11 @@ bool OrbitScanForObstacle(entt::entity entity, const MoveStateOrbitTag state, Tr
 				auto angle0 = glm::acos(dp0);
 				auto angle1 = glm::acos(dp1);
 
-				if ((cp0 > 0.0f) ^ (state.clockwise == MoveStateClockwise::Clockwise))
+				if ((cp0 > 0.0f) ^ clockwise)
 				{
 					angle0 = 2.0f * glm::pi<float>() - angle0;
 				}
-				if ((cp1 > 0.0f) ^ (state.clockwise == MoveStateClockwise::Clockwise))
+				if ((cp1 > 0.0f) ^ clockwise)
 				{
 					angle1 = 2.0f * glm::pi<float>() - angle1;
 				}
@@ -288,8 +288,7 @@ bool OrbitScanForObstacle(entt::entity entity, const MoveStateOrbitTag state, Tr
 		}
 	}
 
-	InitializeStepAroundObstacle(transform, wallHug, obstacleFixed, numCirclesAway,
-	                             state.clockwise == MoveStateClockwise::Clockwise);
+	InitializeStepAroundObstacle(transform, wallHug, obstacleFixed, numCirclesAway, clockwise);
 
 	return true;
 }
@@ -319,7 +318,7 @@ template <>
 bool CellTransition(entt::entity entity, const MoveStateTagComponent<MoveState::Orbit>& state, Transform& transform,
                     WallHug& wallHug)
 {
-	return OrbitScanForObstacle(entity, state, transform, wallHug);
+	return OrbitScanForObstacle(entity, state.clockwise == MoveStateClockwise::Clockwise, transform, wallHug);
 }
 
 /// Transition from one grid cell to another requires another check for obstacle in the line
@@ -512,7 +511,7 @@ void PathfindingSystem::Update()
 			    // registry.Remove<MoveStateLinearTag>(entity); // TODO(#500): Maybe do this later
 
 			    // TODO(bwrsandman): perhaps move this to another Each call
-			    OrbitScanForObstacle(entity, newState, transform, wallHug);
+			    OrbitScanForObstacle(entity, newState.clockwise == MoveStateClockwise::Clockwise, transform, wallHug);
 		    }
 		    else
 		    {
