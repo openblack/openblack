@@ -672,57 +672,108 @@ struct GMagicResourceInfo: GMagicInfo
 
 struct GPBallInfo: GMobileObjectInfo
 {
-	float field_0x104;
-	float field_0x108;
+	float kickXZVelocity;
+	float kickYVelocity;
+};
+
+struct GShotInfo: GMobileObjectInfo
+{
+	AttackInfo hitEffect;
+	int strength;
+	int acceleration; // (no longer used)
+	int heightAcceleration;
+	int velocity; // no longer used
+	int finalHeightVelocity;
+	SpeedState speed;
 };
 
 struct GAlignmentInfo
 {
-	float field_0x0;
-	float field_0x4;
-	float field_0x8;
-	float field_0xc;
-	float field_0x10;
-	float field_0x14;
-	float field_0x18;
-	float field_0x1c;
-	float field_0x20;
-	float field_0x24;
-	float field_0x28;
-	float field_0x2c;
-	float field_0x30;
-	uint32_t field_0x34;
+	float animalNice;
+	float animalNasty;
+	float creature;
+	float priest;
+	float skeleton;
+	float villager;
+	float building;
+	float plant;
+	float field;
+	float feature;
+	float mobileObject;
+	float land;
+	float script;
+	float unimportant;
 };
 
 struct GClimateInfo
 {
-	std::array<char, 0x30> field_0x0;
-	float field_0x30;
-	float field_0x34;
-	float field_0x38;
-	float field_0x3c;
-	float field_0x40;
-	float field_0x44;
-	float field_0x48;
-	float field_0x4c;
-	float field_0x50;
-	float field_0x54;
-	float field_0x58;
-	float field_0x5c;
-	float field_0x60;
-	float field_0x64;
-	float field_0x68;
-	float field_0x6c;
-	float field_0x70;
-	float field_0x74;
-	float field_0x78;
-	float field_0x7c;
-	float field_0x80;
-	float field_0x84;
-	float field_0x88;
-	float field_0x8c;
+	std::array<char, 0x30> debugString;
+	float rainMinSpring;
+	float rainMinSummer;
+	float rainMinAutumn;
+	float rainMinWinter;
+	float rainMaxSpring;
+	float rainMaxSummer;
+	float rainMaxAutumn;
+	float rainMaxWinter;
+	float tempMinSpring;
+	float tempMinSummer;
+	float tempMinAutumn;
+	float tempMinWinter;
+	float tempMaxSpring;
+	float tempMaxSummer;
+	float tempMaxAutumn;
+	float tempMaxWinter;
+	float windMinSpring;
+	float windMinSummer;
+	float windMinAutumn;
+	float windMinWinter;
+	float windMaxSpring;
+	float windMaxSummer;
+	float windMaxAutumn;
+	float windMaxWinter;
 };
 
+struct GClimateRainInfo
+{
+	float january;
+	float february;
+	float march;
+	float april;
+	float may;
+	float june;
+	float july;
+	float august;
+	float september;
+	float october;
+	float november;
+	float december;
+	float midnight;
+	float one_O_Clock;
+	float two_O_Clock;
+	float three_O_Clock;
+	float four_O_Clock;
+	float five_O_Clock;
+	float six_O_Clock;
+	float seven_O_Clock;
+	float height_O_Clock;
+	float nine_O_Clock;
+	float ten_O_Clock;
+	float eleven_O_Clock;
+	float midday;
+	float thirdten_O_Clock;
+	float fourten_O_Clock;
+	float fiveten_O_Clock;
+	float sixten_O_Clock;
+	float seventen_O_Clock;
+	float heightten_O_Clock;
+	float nineten_O_Clock;
+	float twenty_O_Clock;
+	float twentyone_O_Clock;
+	float twentytwo_O_Clock;
+	float twentitree_O_Clock;
+	float natureRainDesire;
+};
 struct GCreaturePenInfo: GCitadelPartInfo
 {
 	PenInfo info;
@@ -740,7 +791,7 @@ struct GScriptOpposingCreature
 
 struct GTotemStatueInfo: GMultiMapFixedInfo
 {
-	float field_0x110;
+	MeshId plinth;
 };
 
 struct CreatureDesireForType
@@ -798,8 +849,8 @@ struct GScriptHighlightInfo: GSingleMapFixedInfo
 
 struct GSpeedThreshold
 {
-	uint32_t field_0x0;
-	uint32_t field_0x4;
+	SpeedState speedMaxWalk;
+	SpeedState speedMaxRun;
 };
 
 struct GCreatureInfo: GLivingInfo
@@ -928,43 +979,38 @@ struct GFieldInfo: GMultiMapFixedInfo
 
 struct GBeliefInfo
 {
-	float field_0x0;
-	float field_0x4;
-	float field_0x8;
-	float field_0xc;
-	float field_0x10;
-	float field_0x14;
+	float townDesireBeliefThresholds;
+	float claimedTownBeliefMultiplier;
+	float lostATownBeliefInPlayerMultiplier;
+	float minimumThreshold;
+	float defaultBoredomOfMe;
+	float beliefLeftWhenHelpSpritesWarn;
 };
 
 struct GShowNeedsInfo: GObjectInfo
 {
-	uint32_t field_0xf0;
-	int field_0xf4;
-	float field_0xf8;
-	float field_0xfc;
-	float field_0x100;
+	MeshId mesh;
+	AnimId animId;
+	float maxNeedValue;
+	float showNeedGreater;
+	float maxHieght;
 };
 
 struct GTerrainMaterialInfo
 {
-	uint32_t field_0x0;
-	int field_0x4;
-	float field_0x8;
-	std::array<char, 0x30> name;
-	uint32_t field_0x3c;
-	uint32_t field_0x40;
-	uint32_t field_0x44;
-	uint32_t field_0x48;
-	uint32_t field_0x4c;
-	uint32_t field_0x50;
-	uint32_t field_0x54;
-	uint32_t field_0x58;
-	uint32_t field_0x5c;
+	SoundSurfaceType SurfaceSound;
+	int immersion;
+	float surfaceFriction;
+	std::array<char, 0x30> debugString;
+	HelpText HelpStartEnum;
+	HelpText HelpEndEnum;
+	glm::uvec3 tornadoDustColorRGB;
+	TreeInfo magicTreeTypes[4];
 };
 
 struct GFlowersInfo: GFeatureInfo
 {
-	float field_0x114;
+	float growthSpeed;
 };
 
 struct HelpSystemInfo
@@ -1156,11 +1202,11 @@ struct GMagicTeleportInfo: GMagicInfo
 
 struct GPlaytimeInfo
 {
-	int field_0x0;
-	float field_0x4;
-	uint32_t field_0x8;
-	int field_0xc;
-	int field_0x10;
+	ObjectType AssociatedObject;
+	float Priority;
+	AbodeNumber AssociatedStructure;
+	AbodeNumber AssociatedAbodeNumber;
+	DanceInfo AssociatedDance;
 };
 
 struct CreatureMagicActionKnownAboutEntry: CreatureActionKnownAboutEntry
@@ -1176,46 +1222,37 @@ struct CreatureSourceBoundsInfo
 
 struct GPlayerInfo
 {
-	float field_0x0;
-	float field_0x4;
-	float field_0x8;
-	float field_0xc;
-	uint32_t field_0x10;
-	float field_0x14;
-	float field_0x18;
-	float field_0x1c;
-	float field_0x20;
-	float field_0x24;
-	float field_0x28;
-	float field_0x2c;
-	float field_0x30;
-	uint32_t field_0x34;
-	float field_0x38;
-	float field_0x3c;
+	float maxAlignmentChangePerGameTurn;
+	float maxScriptAlignmentChange;
+	float treePullPutAlignmentChange;
+	float applyEffectAlignmentChangeAddition;
+	float dealthReason[static_cast<size_t>(DeathReason::_COUNT)];
+	float computerPlayerBeliefChangeDecay;
+	float averageTownPopulationForCredits;
 };
 
 struct ReactionInfo
 {
-	uint32_t field_0x0;
-	uint32_t field_0x4;
-	uint32_t field_0x8;
-	uint32_t field_0xc;
-	uint32_t field_0x10;
-	uint32_t field_0x14;
-	uint32_t field_0x18;
-	float field_0x1c;
-	float field_0x20;
-	uint32_t field_0x24;
-	float field_0x28;
-	uint32_t field_0x2c;
-	float field_0x30;
-	float field_0x34;
-	float field_0x38;
-	float field_0x3c;
-	int field_0x40;
-	int field_0x44;
-	float field_0x48;
-	uint32_t field_0x4c;
+	uint32_t priority;
+	uint32_t numGameTurnsForNormalThingsToReact;
+	uint32_t numGameTurnsForNormalThingsBeforeReactingAgain;
+	uint32_t numGameTurnsForCreatureToReact;
+	uint32_t numGameTurnsForCreatureBeforeReactingAgain;
+	uint32_t whetherItImpresses;
+	uint32_t whetherReactionFinishesIfInitiatorInHand;
+	float maxReactionDistance;
+	float howImportantIsDistance;
+	uint32_t whetherReactionGrows;
+	float reactionGrowthPerGameTurn;
+	uint32_t stealthRandomChance;
+	float minDistanceToRunAwayFromObject;
+	float maxDistanceToRunAwayFromObject;
+	float defaultReactionImpressiveMultiplier;
+	float additionToTownBoredomMultipliers;
+	TownDesireInfo correspondingTownDesire;
+	TownDesireInfo correspondingTownDesireForAlignment;
+	float alignmentModifier;
+	GuidanceAlignment alignmentForSFX;
 };
 
 struct GMagicHealInfo: GMagicInfo
@@ -1318,9 +1355,9 @@ struct GPrayerIconInfo: GSingleMapFixedInfo
 
 struct GInfluenceInfo
 {
-	float field_0x0;
-	float field_0x4;
-	float field_0x8;
+	float percentageFullInfluence;
+	float percentageDistanceForDecreasingGradient;
+	float valueOfSmall;
 };
 
 struct GTreeInfo: GSingleMapFixedInfo
@@ -1371,15 +1408,15 @@ struct DifferentCreatureInfo
 
 struct GEffectInfo
 {
-	float field_0x0;
-	float field_0x4;
-	float field_0x8;
-	float field_0xc;
-	uint32_t field_0x10;
-	float field_0x14;
-	uint32_t field_0x18;
-	float field_0x1c;
-	uint32_t field_0x20;
+	float effectBurn;
+	float effectCrush;
+	float effectHit;
+	float effectHeal;
+	float effectFlyAway;
+	float effectAlignmentModification;
+	float effectBeliefModification;
+	float radius;
+	MeshId testMesh;
 };
 
 struct GMagicEffectInfo: GEffectInfo
@@ -1469,7 +1506,7 @@ struct GSpotVisualInfo
 
 struct GPFootballInfo: GMultiMapFixedInfo
 {
-	uint32_t field_0x110;
+	MeshId meshId;
 };
 
 struct GSpellSeedInfo: GObjectInfo
@@ -1547,7 +1584,7 @@ struct GRewardProgressEvil: GRewardProgress
 
 struct GFurnitureInfo: GObjectInfo
 {
-	uint32_t field_0xf0;
+	MeshId mesh;
 };
 
 struct GSpookyVoiceInfo
@@ -1700,13 +1737,8 @@ struct CreatureDesireDependency
 	uint32_t field_0x9c;
 };
 
-struct GPFootballPositionInfo
+struct GPFootballPositionInfo: GFootballPositionInfo
 {
-	float field_0x0;
-	float field_0x4;
-	uint32_t field_0x8;
-	uint32_t field_0xc;
-	uint32_t field_0x10;
 };
 
 struct CreatureMimicInfo
@@ -1760,6 +1792,12 @@ struct GMagicShieldInfo: GMagicRadiusSpellInfo
 	float shieldHeight;
 	float raiseWithScale;
 	float bobMagnitude;
+};
+
+struct GGroundInfo: GObjectInfo
+{
+	CountryList country;
+	MeshId editorMesh;
 };
 
 struct InfoConstants
