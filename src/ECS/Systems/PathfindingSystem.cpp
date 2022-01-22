@@ -273,8 +273,11 @@ bool OrbitScanForObstacle(entt::entity entity, bool clockwise, Transform& transf
 				int t = static_cast<int>(glm::round(glm::min(t0, t1)));
 
 				assert(t > 0);
-				assert(t > 1); // Step through
-				if (t < 4)
+				if (t < 1)
+				{
+					assert(false); // TODO: Step through
+				}
+				else if (t < 4)
 				{
 					t = 0;
 				}
