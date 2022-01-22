@@ -50,7 +50,7 @@ public:
 	template <typename Component>
 	size_t Size()
 	{
-		return _registry.size<Component>();
+		return _registry.storage<Component>().size();
 	}
 	template <typename... Components>
 	decltype(auto) AllOf(entt::entity entity) const
