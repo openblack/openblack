@@ -436,7 +436,7 @@ void PathfindingSystem::Update()
 		    }
 		    if (reference.stepsAway == 0)
 		    {
-			    registry.Remove<WallHugObjectReference>(entity);
+			    reference.stepsAway = std::numeric_limits<decltype(reference.stepsAway)>::max();
 		    }
 		    else
 		    {
@@ -453,9 +453,9 @@ void PathfindingSystem::Update()
 	});
 	ApplyStepGoal<MoveState::Orbit>(registry);
 	// Check if it's time to exit circle hug
-	registry.Each<const MoveStateOrbitTag, WallHug, Transform, const WallHugObjectReference>(
+	registry.Each<const MoveStateOrbitTag, WallHug, Transform, WallHugObjectReference>(
 	    [&registry](entt::entity entity, const MoveStateOrbitTag& state, WallHug& wallHug, Transform& transform,
-	                const WallHugObjectReference& reference) {
+	                WallHugObjectReference& reference) {
 		    const auto pos = glm::xz(transform.position);
 		    if (AreWeThere(pos, wallHug.goal, 0.0f))
 		    {
@@ -482,7 +482,8 @@ void PathfindingSystem::Update()
 		    const auto& obstacle = registry.Get<const Fixed>(reference.entity);
 		    const auto normal = pos - obstacle.boundingCenter;
 		    InitializeStep(transform, wallHug, glm::atan(normal.y, normal.x));
-		    registry.SwapComponents<MoveStateExitCircleTag>(entity, state, state.clockwise, state.stepGoal);
+		    // Add exit tag, current tag stay to avoid 6. and is removed after
+		    registry.Assign<MoveStateExitCircleTag>(entity, state.clockwise, state.stepGoal);
 	    });
 
 	// 4d. LINEAR, LINEAR_CW, LINEAR_CCW:
@@ -547,7 +548,7 @@ void PathfindingSystem::Update()
 	registry.Each<const MoveStateExitCircleTag, WallHug, const WallHugObjectReference, Transform>(
 	    [&registry](entt::entity entity, const MoveStateExitCircleTag& state, WallHug& wallHug,
 	                const WallHugObjectReference& object, Transform& transform) {
-		    if (object.entity != entt::null)
+		    if (object.entity != entt::null && !registry.AnyOf<MoveStateOrbitTag>(entity))
 		    {
 			    const auto position = glm::xz(transform.position);
 			    const auto& fixed = registry.Get<const Fixed>(object.entity);
@@ -561,5 +562,11 @@ void PathfindingSystem::Update()
 				    }
 			    }
 		    }
+	    });
+
+	// Remove leftover tag from orbit to exit circle transition
+	registry.Each<const MoveStateExitCircleTag, const MoveStateOrbitTag>(
+	    [&registry](entt::entity entity, const MoveStateExitCircleTag, const MoveStateOrbitTag) {
+		    registry.Remove<MoveStateOrbitTag>(entity);
 	    });
 }
