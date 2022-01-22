@@ -969,10 +969,10 @@ struct GFlowersInfo: GFeatureInfo
 
 struct HelpSystemInfo
 {
-	float field_0x0;
-	float field_0x4;
-	uint32_t field_0x8;
-	uint32_t field_0xc;
+	float maxDistanceForFOVobject;
+	float wideScreenTime;
+	uint32_t readDefaultAdjustGTTime;
+	uint32_t readDefaultWordGTTime;
 };
 
 struct GMagicForestInfo: GMagicInfo
@@ -1291,11 +1291,11 @@ struct GMobileStaticInfo: GFeatureInfo
 	MobileStaticInfo mobileType;
 };
 
-struct GToolTipsInfo
+struct GHelpSystemTooltipsInfo
 {
-	float field_0x0;
-	float field_0x4;
-	float field_0x8;
+	float priority;
+	float displayTime;
+	float displayTimeAfterFocus;
 };
 
 struct GWeatherInfo
@@ -1733,7 +1733,7 @@ struct GPrayerSiteInfo: GFeatureInfo
 
 struct HelpSpiritInfo: GLivingInfo
 {
-	uint32_t field_0x1e4;
+	MeshId meshId;
 };
 
 struct CreatureDesireSourceTable
@@ -1865,7 +1865,7 @@ struct InfoConstants
 	std::array<GRewardProgressEvil, 30> rewardProgressEvil;
 	std::array<GSpookyVoiceInfo, 5> spookyVoice;
 	std::array<GScriptOpposingCreature, 17> scriptOpposingCreature;
-	std::array<GToolTipsInfo, 170> toolTips;
+	std::array<GHelpSystemTooltipsInfo, 170> toolTips;
 };
 #pragma pack(pop)
 static_assert(std::is_trivial<InfoConstants>::value, "GInfo must be trivial to be read properly");
