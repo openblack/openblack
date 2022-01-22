@@ -1648,7 +1648,7 @@ enum class GroundInfo : int
 	Abode = 1,
 };
 
-enum class CountryList
+enum class CountryList : uint32_t
 {
 	None = 0,
 	Country1 = 1,
@@ -2763,7 +2763,7 @@ enum class DykCategory : uint32_t
 	Misc = 4,
 };
 
-enum class DeathReason
+enum class DeathReason : uint32_t
 {
 	None = 0,
 	Starving = 1,
@@ -2775,6 +2775,8 @@ enum class DeathReason
 	Sacrifice = 7,
 	Exhaustion = 8,
 	OldAge = 9,
+
+	_COUNT = 10
 };
 
 enum class ImmersionEffectType : int
@@ -2832,7 +2834,7 @@ enum class ImmersionEffectType : int
 	// CannonFire              = 49, // CREATUREISLE
 };
 
-enum class GuidanceAlignment
+enum class GuidanceAlignment : uint32_t
 {
 	None = 0,
 	Good = 1,
@@ -3088,6 +3090,15 @@ enum class PenInfo : uint32_t
 	Discipline = 3,
 	Pleasure = 4,
 	Walkway = 5,
+};
+
+enum class AttackInfo : int
+{
+	None = -1,
+	HandToHand = 0,
+	Arrow = 1,
+
+	_Last = 2
 };
 
 } // namespace openblack
