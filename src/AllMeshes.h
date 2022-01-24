@@ -649,11 +649,11 @@ enum class MeshId : uint32_t
 	U_WashingLineNorse = 624,
 	U_WashingLineTibetan = 625,
 
-	_count
+	_COUNT
 };
 
 // just generated, mainly for debug
-constexpr std::array<std::string_view, static_cast<uint32_t>(MeshId::_count)> MeshNames {
+constexpr std::array<std::string_view, static_cast<uint32_t>(MeshId::_COUNT)> MeshNames {
     "Dummy",
     "AnimalBat1",
     "AnimalBat2",

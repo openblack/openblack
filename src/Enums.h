@@ -1663,6 +1663,8 @@ enum class CountryList : uint32_t
 	Country6 = 6,
 	Country7 = 7,
 	Country8 = 8,
+
+	_COUNT
 };
 
 enum class PrayerIconInfo : int
@@ -3104,7 +3106,7 @@ enum class AttackInfo : int
 	HandToHand = 0,
 	Arrow = 1,
 
-	_Last = 2
+	_COUNT = 2
 };
 
 } // namespace openblack
