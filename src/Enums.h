@@ -101,7 +101,7 @@ enum class ObjectType : int
 	// CreatureIslesBuilding = 45, // CREATUREISLE
 };
 
-enum class VillagerJob
+enum class VillagerJob : uint32_t
 {
 	None = 0,
 	Fisherman = 1,
@@ -112,7 +112,7 @@ enum class VillagerJob
 	Housewife = 6,
 	Trader = 7,
 
-	_count
+	_COUNT
 };
 
 enum class AbodeType : uint32_t
@@ -197,6 +197,8 @@ enum class AnimalInfo : int
 	PuzzleCow = 28,
 	PuzzleTortoise = 29,
 	PuzzlePig = 30,
+
+	_COUNT = 31
 };
 
 /// Originally TribeType and VillageEthnicities
@@ -1338,7 +1340,7 @@ enum class WorshipSiteInfo
 	Tibetan = 8,
 };
 
-enum class PotInfo
+enum class PotInfo : uint32_t
 {
 	FoodPot = 0,
 	WoodPot = 1,
@@ -1359,6 +1361,8 @@ enum class PotInfo
 	TreeLogsInHand = 16,
 	WheatInHand = 17,
 	Fish = 18,
+
+	_COUNT
 };
 
 enum class PotType : uint32_t
@@ -1695,7 +1699,7 @@ enum class JobActivity : uint32_t
 	Execute = 4,
 };
 
-enum class JobInfo
+enum class JobInfo : uint32_t
 {
 	PoorFisherman = 0,
 	NormalFisherman = 1,
@@ -1713,6 +1717,8 @@ enum class JobInfo
 	NormalHousewife = 13,
 	NormalTrader = 14,
 	NormalNoJob = 15,
+
+	_COUNT
 };
 
 enum class EffectInfo : int
