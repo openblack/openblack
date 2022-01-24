@@ -549,7 +549,7 @@ struct GTownInfo: GContainerInfo
 	uint32_t percentFemale;
 	uint32_t processAbodeEvery;
 	uint32_t newBuildingEvery;
-	uint32_t profession[static_cast<size_t>(VillagerJob::_count)];
+	uint32_t profession[static_cast<size_t>(VillagerJob::_COUNT)];
 	float happyFoodMultiplier;
 	float influence;
 	float numberOfDaysFoodInStoreToBeHappy;
@@ -615,7 +615,7 @@ struct GTownInfo: GContainerInfo
 
 struct GJobInfo
 {
-	VillagerJob job;
+	JobInfo job;
 	uint32_t restAtHomeAfterWork;
 	uint32_t subVisitsAtWhileWork;
 	uint32_t timeAtEachSubVisit;
@@ -1816,7 +1816,7 @@ struct InfoConstants
 	std::array<GMagicCreatureSpellInfo, 0x10> magicCreatureSpell;
 	std::array<GMagicEffectInfo, 42> magicEffect;
 	std::array<GSpellSeedInfo, 30> spellSeed;
-	std::array<GAnimalInfo, 31> animal;
+	std::array<GAnimalInfo, static_cast<size_t>(AnimalInfo::_COUNT)> animal;
 	std::array<GCreatureInfo, 17> creature;
 	std::array<DifferentCreatureInfo, 17> differentCreature;
 	std::array<CreatureDesireForType, 40> creatureDesireForType;
@@ -1836,14 +1836,14 @@ struct InfoConstants
 	std::array<GMapShieldInfo, 2> mapShield;
 	GBallInfo ball;
 	GTownInfo town;
-	std::array<GJobInfo, 0x10> job;
+	std::array<GJobInfo, static_cast<size_t>(JobInfo::_COUNT)> job;
 	std::array<GFeatureInfo, static_cast<size_t>(FeatureInfo::_COUNT)> feature;
 	std::array<GFlowersInfo, 2> flowers;
 	std::array<GAnimatedStaticInfo, static_cast<size_t>(AnimatedStaticInfo::_COUNT)> animatedStatic;
 	std::array<GMobileObjectInfo, static_cast<size_t>(MobileObjectInfo::_COUNT)> mobileObject;
 	GScaffoldInfo scaffold;
 	std::array<GMobileStaticInfo, static_cast<size_t>(MobileStaticInfo::_COUNT)> mobileStatic;
-	std::array<GPotInfo, 19> pot;
+	std::array<GPotInfo, static_cast<size_t>(PotInfo::_COUNT)> pot;
 	GPrayerIconInfo prayerIcon;
 	GPrayerSiteInfo prayerSite;
 	std::array<GShowNeedsInfo, 4> showNeeds;
@@ -1881,7 +1881,7 @@ struct InfoConstants
 	std::array<CreatureMagicActionKnownAboutEntry, 42> creatureMagicActionKnownAboutEntry;
 	std::array<CreatureMimicInfo, 46> creatureMimic;
 	std::array<GTerrainMaterialInfo, 43> terrainMaterial;
-	std::array<GTribeInfo, 9> tribe;
+	std::array<GTribeInfo, static_cast<size_t>(Tribe::_COUNT)> tribe;
 	std::array<GSpeedThreshold, 10> speedThreshold;
 	GPBallInfo pBall;
 	GPFootballInfo pFootball;
