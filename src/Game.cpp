@@ -26,6 +26,7 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/CameraBookmarkSystem.h"
 #include "ECS/Systems/DynamicsSystem.h"
+#include "ECS/Systems/PathfindingSystem.h"
 #include "ECS/Systems/RenderingSystem.h"
 #include "GameWindow.h"
 #include "Graphics/FrameBuffer.h"
@@ -239,6 +240,7 @@ bool Game::ProcessEvents(const SDL_Event& event)
 bool Game::GameLogicLoop()
 {
 	using namespace ecs::components;
+	using namespace ecs::systems;
 
 	const auto currentTime = std::chrono::steady_clock::now();
 	const auto delta = currentTime - _lastGameLoopTime;
@@ -249,6 +251,11 @@ bool Game::GameLogicLoop()
 
 	// Build Map Grid Acceleration Structure
 	_entityMap->Rebuild();
+
+	{
+		auto pathfinding = _profiler->BeginScoped(Profiler::Stage::PathfindingUpdate);
+		PathfindingSystem::instance().Update();
+	}
 
 	_lastGameLoopTime = currentTime;
 	_turnDeltaTime = delta;
@@ -271,7 +278,7 @@ bool Game::Update()
 
 	// Physics
 	{
-		auto sdlInput = _profiler->BeginScoped(Profiler::Stage::PhysicsUpdate);
+		auto physics = _profiler->BeginScoped(Profiler::Stage::PhysicsUpdate);
 		if (_frameCount > 0)
 		{
 			_dynamicsSystem->Update(deltaTime);
