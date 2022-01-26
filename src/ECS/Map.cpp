@@ -9,6 +9,9 @@
 
 #include "Map.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtx/component_wise.hpp>
+#include <glm/gtx/norm.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 #include <glm/vec3.hpp>
 
@@ -21,24 +24,44 @@
 using namespace openblack::ecs;
 using namespace openblack::ecs::components;
 
-glm::u16vec2 Map::GetGridCell(const glm::vec3& pos)
+Map::CellId Map::GetGridCell(const glm::vec2& pos)
 {
-	const glm::u32vec2 coords = glm::xz(pos) * _positionToGridFactor;
-	const glm::u16vec2 result(coords.x >> 0x10, coords.y >> 0x10);
-	assert(glm::all(glm::lessThan(result, _gridSize)));
+	const glm::u32vec2 coords = pos * _positionToGridFactor;
+	const Map::CellId result(coords.x >> 0x10, coords.y >> 0x10);
+	assert(glm::all(glm::lessThan(result, _gridSize))); // If not, clamp to 0, _gridSize
 	return result;
+}
+
+Map::CellId Map::GetGridCell(const glm::vec3& pos)
+{
+	return GetGridCell(glm::xz(pos));
+}
+
+glm::vec2 Map::GetCellCenter(const Map::CellId& cellId)
+{
+	return glm::vec2(cellId.x << 0x10, cellId.y << 0x10) / _positionToGridFactor + 5.0f;
+}
+
+const std::unordered_set<entt::entity>& Map::GetFixedInGridCell(const CellId& cellId) const
+{
+	return _fixedGrid[cellId.x + cellId.y * _gridSize.x];
 }
 
 const std::unordered_set<entt::entity>& Map::GetFixedInGridCell(const glm::vec3& pos) const
 {
 	const auto cellId = GetGridCell(pos);
-	return _fixedGrid[cellId.x + cellId.y * _gridSize.x];
+	return GetFixedInGridCell(cellId);
+}
+
+const std::unordered_set<entt::entity>& Map::GetMobileInGridCell(const CellId& cellId) const
+{
+	return _mobileGrid[cellId.x + cellId.y * _gridSize.x];
 }
 
 const std::unordered_set<entt::entity>& Map::GetMobileInGridCell(const glm::vec3& pos) const
 {
 	const auto cellId = GetGridCell(pos);
-	return _mobileGrid[cellId.x + cellId.y * _gridSize.x];
+	return GetMobileInGridCell(cellId);
 }
 
 void Map::Rebuild()
