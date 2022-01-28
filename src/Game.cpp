@@ -403,7 +403,6 @@ bool Game::Run()
 		meshManager.Load(meshId, MeshNames[i], meshes[i]);
 	}
 
-
 	auto& textures = pack.GetTextures();
 	for (auto const& [name, g3dTexture] : textures)
 	{
