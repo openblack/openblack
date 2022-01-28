@@ -68,6 +68,8 @@ public:
 	[[nodiscard]] entt::resource_cache<ResourceType>& GetCache() const { return _resourceCache; }
 
 	[[nodiscard]] decltype(auto) Size() const { return _resourceCache.size(); }
+
+	void Clear() { _resourceCache.clear(); }
 private:
 	entt::resource_cache<ResourceType> _resourceCache;
 };
