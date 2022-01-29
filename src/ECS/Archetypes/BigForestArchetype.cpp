@@ -17,6 +17,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Game.h"
+#include "Resources/MeshId.h"
 #include "Utils.h"
 
 using namespace openblack;
@@ -36,7 +37,8 @@ entt::entity BigForestArchetype::Create(const glm::vec3& position, BigForestInfo
 	registry.Assign<Fixed>(entity, point, radius);
 	registry.Assign<Forest>(entity);
 	registry.Assign<BigForest>(entity);
-	registry.Assign<Mesh>(entity, info.meshId, static_cast<int8_t>(0), static_cast<int8_t>(1));
+	const auto resourceId = resources::MeshIdToResourceId(info.meshId);
+	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 
 	return entity;
 }

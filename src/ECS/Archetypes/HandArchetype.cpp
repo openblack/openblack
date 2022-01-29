@@ -31,7 +31,7 @@ entt::entity HandArchetype::Create(const glm::vec3& position, float xAngleRadian
 	const auto rotation = glm::mat3(glm::eulerAngleXYZ(xAngleRadians, yAngleRadians, zAngleRadians));
 	registry.Assign<Hand>(entity, rightHanded);
 	registry.Assign<Transform>(entity, position, rotation, glm::vec3(scale));
-	registry.Assign<Mesh>(entity, static_cast<MeshId>(Hand::meshId), static_cast<int8_t>(0), static_cast<int8_t>(0));
+	registry.Assign<Mesh>(entity, Hand::meshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
 
 	// Data/CreatureMesh/Hand_Boned_Base2.l3d
 	// Data/CreatureMesh/Hand_Boned_Good2.l3d
