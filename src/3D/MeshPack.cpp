@@ -54,28 +54,12 @@ bool MeshPack::LoadFromFile(const std::filesystem::path& path)
 
 const L3DMesh& MeshPack::GetMesh(MeshId id) const
 {
-	// TODO(raffclar): Handle non-mesh pack IDs via a new mechanism
-	if (static_cast<int>(id) == ecs::components::Hand::meshId)
-	{
-		return Game::instance()->GetHandModel();
-	}
-	else
-	{
-		return *_meshes.at(static_cast<size_t>(id));
-	}
+	return *_meshes.at(static_cast<size_t>(id));
 }
 
 L3DMesh& MeshPack::GetMesh(MeshId id)
 {
-	// TODO(raffclar): Handle non-mesh pack IDs via a new mechanism
-	if (static_cast<int>(id) == ecs::components::Hand::meshId)
-	{
-		return Game::instance()->GetHandModel();
-	}
-	else
-	{
-		return *_meshes.at(static_cast<size_t>(id));
-	}
+	return *_meshes.at(static_cast<size_t>(id));
 }
 
 void MeshPack::loadTextures(const std::map<std::string, pack::G3DTexture>& textures)
