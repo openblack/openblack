@@ -20,8 +20,8 @@
 #include "Graphics/VertexBuffer.h"
 #include "Gui/Gui.h"
 #include "Renderer.h"
-#include "Resources/Resources.h"
 #include "Resources/MeshId.h"
+#include "Resources/Resources.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -52,9 +52,8 @@ void MeshViewer::Draw(Game& game)
 {
 
 	float fontSize = ImGui::GetFontSize();
-	auto const& meshPack = game.GetMeshPack();
 	auto const& animationPack = game.GetAnimationPack();
-	auto const& meshes = meshPack.GetMeshes();
+	auto const& meshes = Locator::resources::ref().GetMeshes();
 	auto const& animations = animationPack.GetAnimations();
 
 	_filter.Draw();
@@ -69,24 +68,22 @@ void MeshViewer::Draw(Game& game)
 	auto meshSize = ImGui::GetItemRectSize();
 	ImGui::BeginChild("meshesSelect", ImVec2(meshSize.x - 5, meshSize.y - ImGui::GetTextLineHeight() - 5), true);
 	uint32_t displayedMeshes = 0;
-	for (size_t i = 0; i < meshes.size(); i++)
-	{
-		if (_filter.PassFilter(MeshNames[i].data()) && meshes[i]->GetFlags() & _meshFlagFilter)
+
+	meshes.Each([this, &displayedMeshes](const entt::id_type id, entt::resource_handle<L3DMesh> mesh) {
+		if (_filter.PassFilter(mesh->GetDebugName().c_str()) && mesh->GetFlags() & _meshFlagFilter)
 		{
-			const auto meshEnum = static_cast<MeshId>(i);
-			const auto& enumName = std::string(MeshNames[i]);
 			displayedMeshes++;
 
-			if (ImGui::Selectable(enumName.c_str(), static_cast<MeshId>(meshEnum) == _selectedMesh))
+			if (ImGui::Selectable(mesh->GetDebugName().c_str(), id == _selectedMesh))
 			{
-				_selectedMesh = meshEnum;
+				_selectedMesh = id;
 			}
 			if (ImGui::IsItemHovered())
 			{
-				ImGui::SetTooltip("%s", enumName.c_str());
+				ImGui::SetTooltip("%s", mesh->GetDebugName().c_str());
 			}
 		}
-	}
+	});
 	ImGui::EndChild();
 	ImGui::Text("%u meshes", displayedMeshes);
 	ImGui::EndChild();
@@ -97,7 +94,7 @@ void MeshViewer::Draw(Game& game)
 
 	ImGui::Columns(2, nullptr, false);
 
-	auto const& mesh = meshes[static_cast<int>(_selectedMesh)];
+	auto const& mesh = meshes.Handle(_selectedMesh);
 
 	static char bitfieldTitle[0x400];
 	{
@@ -129,6 +126,11 @@ void MeshViewer::Draw(Game& game)
 	ImGui::SliderInt("submesh", &_selectedSubMesh, 0, static_cast<int>(mesh->GetSubMeshes().size()) - 1);
 	ImGui::DragFloat3("position", &_cameraPosition[0], 0.5f);
 	ImGui::Checkbox("View bounding box", &_viewBoundingBox);
+
+	if (_selectedSubMesh >= mesh->GetNumSubMeshes())
+	{
+		_selectedSubMesh = 0;
+	}
 
 	auto const& submesh = mesh->GetSubMeshes()[_selectedSubMesh];
 
@@ -198,8 +200,8 @@ void MeshViewer::Draw(Game& game)
 
 void MeshViewer::Update(Game& game, const Renderer& renderer)
 {
-	auto const& meshPack = game.GetMeshPack();
-	auto const& meshes = meshPack.GetMeshes();
+	auto const& meshes = Locator::resources::ref().GetMeshes();
+	auto const& textures = Locator::resources::ref().GetTextures();
 	auto const& animationPack = game.GetAnimationPack();
 	auto const& animations = animationPack.GetAnimations();
 	auto& shaderManager = game.GetRenderer().GetShaderManager();
@@ -236,7 +238,7 @@ void MeshViewer::Update(Game& game, const Renderer& renderer)
 		| BGFX_STATE_MSAA;
 	// clang-format on
 
-	const auto& mesh = meshes[static_cast<int>(_selectedMesh)];
+	const auto& mesh = meshes.Handle(_selectedMesh);
 	if (_selectedSubMesh >= 0 && static_cast<uint32_t>(_selectedSubMesh) < mesh->GetSubMeshes().size())
 	{
 		const auto identity = glm::mat4(1.0f);
@@ -270,7 +272,7 @@ void MeshViewer::Update(Game& game, const Renderer& renderer)
 			desc.modelMatrices = bones.data();
 			desc.matrixCount = static_cast<uint8_t>(bones.size());
 		}
-		renderer.DrawMesh(*mesh, meshPack, desc, static_cast<uint8_t>(_selectedSubMesh));
+		renderer.DrawMesh(*mesh, textures, desc, static_cast<uint8_t>(_selectedSubMesh));
 		if (_viewBoundingBox)
 		{
 			auto box = mesh->GetBoundingBox();

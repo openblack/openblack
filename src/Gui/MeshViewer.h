@@ -19,6 +19,7 @@
 #include "Graphics/FrameBuffer.h"
 
 #include <imgui.h>
+#include <entt/entt.hpp>
 
 namespace openblack
 {
@@ -43,7 +44,7 @@ protected:
 
 private:
 	static constexpr graphics::RenderPass _viewId = graphics::RenderPass::MeshViewer;
-	MeshId _selectedMesh;
+	entt::id_type _selectedMesh;
 	int _selectedSubMesh;
 	std::optional<uint32_t> _selectedAnimation;
 	int _selectedFrame;
