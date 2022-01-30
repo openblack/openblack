@@ -32,13 +32,13 @@
 #include "Graphics/Texture2D.h"
 #include "Gui/Gui.h"
 #include "LHScriptX/Script.h"
+#include "Locator.h"
+#include "PackFile.h"
 #include "Parsers/InfoFile.h"
 #include "Profiler.h"
 #include "Renderer.h"
 #include "Resources/Loaders.h"
 #include "Resources/ResourceManager.h"
-#include "PackFile.h"
-#include "Locator.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>

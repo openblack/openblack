@@ -18,18 +18,18 @@
 namespace openblack::resources
 {
 
-template<typename ResourceLoader, typename ResourceType = typename ResourceLoader::ResourceType>
+template <typename ResourceLoader, typename ResourceType = typename ResourceLoader::ResourceType>
 class ResourceManager
 {
 public:
-	template<typename ...Args>
-	[[maybe_unused]] decltype(auto) Load(entt::id_type identifier, Args&& ...args)
+	template <typename... Args>
+	[[maybe_unused]] decltype(auto) Load(entt::id_type identifier, Args&&... args)
 	{
 		return _resourceCache.template load<ResourceLoader>(identifier, std::forward<Args>(args)...);
 	}
 
-	template<typename T, typename ...Args>
-	[[maybe_unused]] decltype(auto) Load(T identifier, Args&& ...args)
+	template <typename T, typename... Args>
+	[[maybe_unused]] decltype(auto) Load(T identifier, Args&&... args)
 	{
 		entt::id_type id = entt::hashed_string(fmt::format("{}", identifier).c_str());
 		return Load(id, std::forward<Args>(args)...);
@@ -40,19 +40,16 @@ public:
 		return _resourceCache.handle(identifier);
 	}
 
-	template<typename T>
+	template <typename T>
 	[[nodiscard]] entt::resource_handle<ResourceType> Handle(T identifier) const
 	{
 		entt::id_type id = entt::hashed_string(fmt::format("{}", identifier).c_str());
 		return Handle(id);
 	}
 
-	[[nodiscard]] bool Contains(entt::id_type identifier) const
-	{
-		return _resourceCache.contains(identifier);
-	}
+	[[nodiscard]] bool Contains(entt::id_type identifier) const { return _resourceCache.contains(identifier); }
 
-	template<typename T>
+	template <typename T>
 	[[nodiscard]] bool Contains(T identifier) const
 	{
 		entt::id_type id = entt::hashed_string(fmt::format("{}", identifier).c_str());
@@ -70,6 +67,7 @@ public:
 	[[nodiscard]] decltype(auto) Size() const { return _resourceCache.size(); }
 
 	void Clear() { _resourceCache.clear(); }
+
 private:
 	entt::resource_cache<ResourceType> _resourceCache;
 };

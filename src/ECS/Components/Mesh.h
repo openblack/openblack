@@ -20,13 +20,17 @@ namespace openblack::ecs::components
 struct Mesh
 {
 	Mesh(MeshId id, int8_t submeshId, int8_t bbSubmeshId)
-    : id(entt::hashed_string(fmt::format("{}", id).c_str()))
-    , submeshId(submeshId)
-    , bbSubmeshId(bbSubmeshId) {}
-    Mesh(entt::id_type id, int8_t submeshId, int8_t bbSubmeshId)
-    : id(id)
-    , submeshId(submeshId)
-    , bbSubmeshId(bbSubmeshId) {}
+	    : id(entt::hashed_string(fmt::format("{}", id).c_str()))
+	    , submeshId(submeshId)
+	    , bbSubmeshId(bbSubmeshId)
+	{
+	}
+	Mesh(entt::id_type id, int8_t submeshId, int8_t bbSubmeshId)
+	    : id(id)
+	    , submeshId(submeshId)
+	    , bbSubmeshId(bbSubmeshId)
+	{
+	}
 	entt::id_type id;
 	int8_t submeshId;
 	int8_t bbSubmeshId;

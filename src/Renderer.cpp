@@ -198,7 +198,8 @@ void Renderer::UpdateDebugCrossUniforms(const glm::mat4& pose)
 	_debugCrossPose = pose;
 }
 
-const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& meshSkins, const resources::TextureManager& textures)
+const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& meshSkins,
+                            const resources::TextureManager& textures)
 {
 	Texture2D* texture = nullptr;
 
@@ -330,7 +331,8 @@ void Renderer::DrawMesh(const L3DMesh& mesh, const resources::TextureManager& te
 	}
 }
 
-void Renderer::DrawScene(const resources::MeshManager& meshes, const resources::TextureManager& textures, const DrawSceneDesc& drawDesc) const
+void Renderer::DrawScene(const resources::MeshManager& meshes, const resources::TextureManager& textures,
+                         const DrawSceneDesc& drawDesc) const
 {
 	// Reflection Pass
 	{
@@ -361,7 +363,8 @@ void Renderer::DrawScene(const resources::MeshManager& meshes, const resources::
 	}
 }
 
-void Renderer::DrawPass(const resources::MeshManager& meshes, const resources::TextureManager& textures, const DrawSceneDesc& desc) const
+void Renderer::DrawPass(const resources::MeshManager& meshes, const resources::TextureManager& textures,
+                        const DrawSceneDesc& desc) const
 {
 	if (desc.frameBuffer)
 	{

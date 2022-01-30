@@ -18,8 +18,8 @@
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
 
-#include <imgui.h>
 #include <entt/entt.hpp>
+#include <imgui.h>
 
 namespace openblack
 {

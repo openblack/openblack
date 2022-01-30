@@ -11,7 +11,6 @@
 
 #include <glm/gtx/transform.hpp>
 
-#include "Locator.h"
 #include "3D/L3DMesh.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Stream.h"
@@ -20,6 +19,7 @@
 #include "Game.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/ShaderManager.h"
+#include "Locator.h"
 
 using namespace openblack::ecs::systems;
 using namespace openblack::ecs::components;
