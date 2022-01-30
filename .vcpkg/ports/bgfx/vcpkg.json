@@ -1,6 +1,6 @@
 {
   "name": "bgfx",
-  "version-date": "2021-10-30",
+  "version-date": "2022-01-30",
   "description": "Cross-platform, graphics API agnostic, Bring Your Own Engine/Framework style rendering library.",
   "homepage": "https://github.com/bkaradzic/bgfx",
   "dependencies": [
