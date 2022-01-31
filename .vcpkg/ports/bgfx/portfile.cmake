@@ -7,6 +7,10 @@ vcpkg_from_github(OUT_SOURCE_PATH SOURCE_PATH
     HEAD_REF master
     REF a7ac0aa3ae685505a1760e64b98e6c1ccc0b76a5
     SHA512 f7946c32e0e1caad71199f48a5bcec7e7a9c70f3c3f60fdcd508b2f3d165317a64232dfd591a8bd9e611e1afd817240172eb8bcb78756f093cceaf931d35009c
+    PATCHES
+        # https://github.com/bkaradzic/bgfx.cmake/pull/129
+        0001-bx-Link-with-android-log-library.patch
+        0002-examples-Don-t-build-on-android-by-default.patch
 )
 
 vcpkg_from_github(OUT_SOURCE_PATH SOURCE_PATH_BX
