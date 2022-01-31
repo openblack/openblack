@@ -1,4 +1,4 @@
-name: VCPKG CI
+name: Cross Compile CI
 on:
   pull_request:
   push:
@@ -12,17 +12,19 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ubuntu-latest, macos-latest, windows-latest, windows-2022]
+        os: [ubuntu-latest]
         config: [debug, release]
-        cc: [""]
-        cxx: [""]
+        preset: [""]
+        triplet: [""]
+        exclude:
+          - preset: ""
         # These are additional individual jobs. There are no permutations of these.
         include:
-          # Testing clang
-          - os: ubuntu-latest
+          # Testing x86-windows bit in debug only
+          - os: windows-latest
             config: debug
-            cc: clang
-            cxx: clang++
+            preset: ninja-multi-vcpkg
+            triplet: x86-windows
 
     steps:
       - uses: actions/checkout@v2
@@ -47,14 +49,12 @@ jobs:
         with:
           vcpkgJsonGlob: 'vcpkg.json'
 
-      - name: Run CMake+vcpkg+Ninja+CTest to generate/build/test.
+      - name: Run CMake+vcpkg+Ninja+CTest to generate/build.
         uses: lukka/run-cmake@v10
         id: runcmake
         with:
-          configurePreset: 'ninja-multi-vcpkg'
-          buildPreset: 'ninja-multi-vcpkg-${{ matrix.config }}'
-          # testPreset: 'ninja-multi-vcpkg-${{ matrix.config }}'
+          configurePreset: '${{ matrix.preset }}'
+          buildPreset: '${{ matrix.preset }}-${{ matrix.config }}'
 
     env:
-      CC: ${{ matrix.cc }}
-      CXX: ${{ matrix.cxx }}
+      VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
