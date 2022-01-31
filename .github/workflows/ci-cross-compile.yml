@@ -14,10 +14,8 @@ jobs:
         # This is the matrix. They form permutations.
         os: [ubuntu-latest]
         config: [debug, release]
-        preset: [""]
+        preset: [android-armeabi-v7a-vcpkg, android-arm64-v8a-vcpkg, android-x86-vcpkg, android-x86_64-vcpkg]
         triplet: [""]
-        exclude:
-          - preset: ""
         # These are additional individual jobs. There are no permutations of these.
         include:
           # Testing x86-windows bit in debug only
@@ -60,6 +58,8 @@ jobs:
         with:
           configurePreset: '${{ matrix.preset }}'
           buildPreset: '${{ matrix.preset }}-${{ matrix.config }}'
+        env:
+          ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.1.7779620'
 
       - uses: actions/upload-artifact@v3
         with:
