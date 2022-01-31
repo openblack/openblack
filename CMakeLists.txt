@@ -13,8 +13,12 @@ endif()
 
 # If using vcpkg and not manually specified the toolchain then set it for them
 if (OPENBLACK_USE_VCPKG AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-  set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake
-    CACHE STRING "Default to vcpkg toolchain file")
+  if (VCPKG_TARGET_ANDROID)
+    include("${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/vcpkg_android.cmake")
+  else()
+    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake
+      CACHE STRING "Default to vcpkg toolchain file")
+  endif()
 endif()
 
 project(openblack)

@@ -19,6 +19,28 @@
       }
     },
     {
+      "name": "template-android-vcpkg",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/cmake-build-presets/${presetName}",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        },
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "$env{ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake"
+        },
+        "ANDROID_NDK_HOME": {
+          "type": "FILEPATH",
+          "value": "$env{ANDROID_NDK_HOME}"
+        },
+        "OPENBLACK_USE_VCPKG": true,
+        "VCPKG_TARGET_ANDROID": true,
+        "ANDROID_PLATFORM": "android-21"
+      }
+    },
+    {
       "name": "template-system-deps",
       "hidden": true,
       "binaryDir": "${sourceDir}/cmake-build-presets/${presetName}",
@@ -60,6 +82,42 @@
       "description": "Configure with vcpkg toolchain and generate Makefile project files for all configurations",
       "generator": "Unix Makefiles",
       "inherits": "template-vcpkg"
+    },
+    {
+      "name": "android-armeabi-v7a-vcpkg",
+      "displayName": "Android ARM 7 (vcpkg)",
+      "description": "Configure with vcpkg toolchain and generate Android version 7 with Arm Architecture project files for all configurations",
+      "inherits": "template-android-vcpkg",
+      "cacheVariables": {
+        "ANDROID_ABI": "armeabi-v7a"
+      }
+    },
+    {
+      "name": "android-arm64-v8a-vcpkg",
+      "displayName": "Android ARM64 8 (vcpkg)",
+      "description": "Configure with vcpkg toolchain and generate Android version 6 with Arm64 Architecture project files for all configurations",
+      "inherits": "template-android-vcpkg",
+      "cacheVariables": {
+        "ANDROID_ABI": "arm64-v8a"
+      }
+    },
+    {
+      "name": "android-x86-vcpkg",
+      "displayName": "Android x86 (vcpkg)",
+      "description": "Configure with vcpkg toolchain and generate Android with x86 Architecture project files for all configurations",
+      "inherits": "template-android-vcpkg",
+      "cacheVariables": {
+        "ANDROID_ABI": "x86"
+      }
+    },
+    {
+      "name": "android-x86_64-vcpkg",
+      "displayName": "Android x86_64 (vcpkg)",
+      "description": "Configure with vcpkg toolchain and generate Android with x86_64 Architecture project files for all configurations",
+      "inherits": "template-android-vcpkg",
+      "cacheVariables": {
+        "ANDROID_ABI": "x86_64"
+      }
     },
     {
       "name": "linux-system-deps",
@@ -138,6 +196,62 @@
       "configurePreset": "unix-makefile-vcpkg",
       "displayName": "Build unix-makefile-vcpkg-release",
       "description": "Build unix-makefile-vcpkg Release configuration",
+      "configuration": "Release"
+    },
+    {
+      "name": "android-armeabi-v7a-vcpkg-debug",
+      "configurePreset": "android-armeabi-v7a-vcpkg",
+      "displayName": "Build android-armeabi-v7a-vcpkg-debug",
+      "description": "Build android-armeabi-v7a-vcpkg Debug configuration",
+      "configuration": "Debug"
+    },
+    {
+      "name": "android-armeabi-v7a-vcpkg-release",
+      "configurePreset": "android-armeabi-v7a-vcpkg",
+      "displayName": "Build android-armeabi-v7a-vcpkg-release",
+      "description": "Build android-armeabi-v7a-vcpkg Release configuration",
+      "configuration": "Release"
+    },
+    {
+      "name": "android-arm64-v8a-vcpkg-debug",
+      "configurePreset": "android-arm64-v8a-vcpkg",
+      "displayName": "Build android-arm64-v8a-vcpkg-debug",
+      "description": "Build android-arm64-v8a-vcpkg Debug configuration",
+      "configuration": "Debug"
+    },
+    {
+      "name": "android-arm64-v8a-vcpkg-release",
+      "configurePreset": "android-arm64-v8a-vcpkg",
+      "displayName": "Build android-arm64-v8a-vcpkg-release",
+      "description": "Build android-arm64-v8a-vcpkg Release configuration",
+      "configuration": "Release"
+    },
+    {
+      "name": "android-x86-vcpkg-debug",
+      "configurePreset": "android-x86-vcpkg",
+      "displayName": "Build android-x86-vcpkg-debug",
+      "description": "Build android-x86-vcpkg Debug configuration",
+      "configuration": "Debug"
+    },
+    {
+      "name": "android-x86-vcpkg-release",
+      "configurePreset": "android-x86-vcpkg",
+      "displayName": "Build android-x86-vcpkg-release",
+      "description": "Build android-x86-vcpkg Release configuration",
+      "configuration": "Release"
+    },
+    {
+      "name": "android-x86_64-vcpkg-debug",
+      "configurePreset": "android-x86_64-vcpkg",
+      "displayName": "Build android-x86_64-vcpkg-debug",
+      "description": "Build android-x86_64-vcpkg Debug configuration",
+      "configuration": "Debug"
+    },
+    {
+      "name": "android-x86_64-vcpkg-release",
+      "configurePreset": "android-x86_64-vcpkg",
+      "displayName": "Build android-x86_64-vcpkg-release",
+      "description": "Build android-x86_64-vcpkg Release configuration",
       "configuration": "Release"
     },
     {
