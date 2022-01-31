@@ -19,7 +19,13 @@
         {
             "name": "bgfx",
             "default-features": false,
-            "features": ["tools"]
+            "features": ["tools"],
+            "host": true,
+            "$reason": "Don't want to build shaderc on non-native platforms except for x86 from x64 Windows, Linux, OSX."
+        },
+        {
+            "name": "bgfx",
+            "default-features": false
         },
         "bullet3"
     ]
