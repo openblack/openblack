@@ -13,17 +13,22 @@
 #include "Game.h"
 
 #include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/intersect.hpp>
+#include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/norm.hpp>
+#include <glm/gtx/vector_angle.hpp>
 
 using namespace openblack;
 
-glm::mat4 Camera::getRotationMatrix() const
+glm::mat4 Camera::GetRotationMatrix() const
 {
 	return glm::eulerAngleZXY(_rotation.z, _rotation.x, _rotation.y);
 }
 
 glm::mat4 Camera::GetViewMatrix() const
 {
-	return getRotationMatrix() * glm::translate(glm::mat4(1.0f), -_position);
+	return GetRotationMatrix() * glm::translate(glm::mat4(1.0f), -_position);
 }
 
 glm::mat4 Camera::GetViewProjectionMatrix() const
@@ -40,20 +45,30 @@ void Camera::SetProjectionMatrixPerspective(float xFov, float aspect, float near
 glm::vec3 Camera::GetForward() const
 {
 	// Forward is +1 in openblack but is -1 in OpenGL
-	glm::mat3 mRotation = glm::transpose(getRotationMatrix());
+	glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
 	return mRotation * glm::vec3(0, 0, 1);
 }
 
 glm::vec3 Camera::GetRight() const
 {
-	glm::mat3 mRotation = glm::transpose(getRotationMatrix());
+	glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
 	return mRotation * glm::vec3(1, 0, 0);
 }
 
 glm::vec3 Camera::GetUp() const
 {
-	glm::mat3 mRotation = glm::transpose(getRotationMatrix());
+	glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
 	return mRotation * glm::vec3(0, 1, 0);
+}
+
+float Camera::GetGroundHeight() const
+{
+	float intersectDistance = 0.0f;
+	const auto rayDirection = glm::vec3(0.0f, -1.0f, 0.0f);
+	const auto plane_origin = glm::vec3(0.0f, 0.0f, 0.0f);
+	const auto plane_normal = glm::vec3(0.0f, 1.0f, 0.0f);
+	glm::intersectRayPlane(_position, rayDirection, plane_origin, plane_normal, intersectDistance);
+	return intersectDistance;
 }
 
 std::unique_ptr<Camera> Camera::Reflect(const glm::vec4& relectionPlane) const
@@ -131,7 +146,7 @@ void Camera::ProcessSDLEvent(const SDL_Event& e)
 {
 	if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP)
 		handleKeyboardInput(e);
-	else if (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP)
+	else if (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP || SDL_MOUSEWHEEL)
 		handleMouseInput(e);
 }
 
@@ -141,29 +156,70 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 	if (e.key.repeat > 0)
 		return;
 
+	// increase speed the higher from the ground the camera is (raycast in -y from cam pos) 
+	auto movementSpeed = _movementSpeed * (GetGroundHeight() - _position.y) + 10.0f;
+
 	if (e.key.keysym.scancode == SDL_SCANCODE_W)
 	{
-		_dv.z += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
+		if (e.type == SDL_KEYDOWN)
+		{
+			glm::vec3 temp = GetForward() * glm::vec3(1.f,0.f,1.f);
+			glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
+			_dv = temp * mRotation * movementSpeed;
+			_dwv = _dv;
+		} 
+		else 
+		{
+			_dv -= _dwv;
+			_dwv = glm::vec3(0.0f,0.0f,0.0f);
+		}
 	}
 	else if (e.key.keysym.scancode == SDL_SCANCODE_S)
 	{
-		_dv.z += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
+		if (e.type == SDL_KEYDOWN)
+		{
+			glm::vec3 temp = -GetForward() * glm::vec3(1.f,0.f,1.f);
+			glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
+			_dv = temp * mRotation * movementSpeed;
+			_dwv = _dv;
+		} 
+		else 
+		{
+			_dv -= _dwv;
+			_dwv = glm::vec3(0.0f,0.0f,0.0f);
+		}
 	}
 	else if (e.key.keysym.scancode == SDL_SCANCODE_A)
 	{
-		_dv.x += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
+		_dv.x += (e.type == SDL_KEYDOWN) ? -movementSpeed : -_dv.x;
 	}
 	else if (e.key.keysym.scancode == SDL_SCANCODE_D)
 	{
-		_dv.x += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
+		_dv.x += (e.type == SDL_KEYDOWN) ? movementSpeed : -_dv.x;
 	}
 	else if (e.key.keysym.scancode == SDL_SCANCODE_LCTRL)
 	{
-		_dv.y += (e.type == SDL_KEYDOWN) ? -1.0f : 1.0f;
+		_dv.y += (e.type == SDL_KEYDOWN) ? -movementSpeed : -_dv.y;
 	}
 	else if (e.key.keysym.scancode == SDL_SCANCODE_SPACE)
 	{
-		_dv.y += (e.type == SDL_KEYDOWN) ? 1.0f : -1.0f;
+		_dv.y += (e.type == SDL_KEYDOWN) ? movementSpeed : -_dv.y;
+	}
+	else if (e.key.keysym.scancode == SDL_SCANCODE_Q)
+	{
+		_drv.y += (e.type == SDL_KEYDOWN) ? _movementSpeed : -_drv.y;
+	}
+	else if (e.key.keysym.scancode == SDL_SCANCODE_E)
+	{
+		_drv.y += (e.type == SDL_KEYDOWN) ? -_movementSpeed : -_drv.y;
+	}
+	else if (e.key.keysym.scancode == SDL_SCANCODE_R)
+	{
+		_drv.x += (e.type == SDL_KEYDOWN) ? _movementSpeed : -_drv.x;
+	}
+	else if (e.key.keysym.scancode == SDL_SCANCODE_V)
+	{
+		_drv.x += (e.type == SDL_KEYDOWN) ? -_movementSpeed : -_drv.x;
 	}
 }
 
@@ -172,39 +228,98 @@ void Camera::handleMouseInput(const SDL_Event& e)
 	// Holding down the middle mouse button enables free look.
 	if (e.type == SDL_MOUSEMOTION && e.motion.state & SDL_BUTTON(SDL_BUTTON_MIDDLE))
 	{
-		glm::vec3 rot = GetRotation();
+		int width = 1920;
+		int height = 1080;
+		Game::instance()->GetWindow()->GetSize(width,height);
+		float yaw = e.motion.xrel * ( glm::two_pi<float>() / width);
+		float pitch = e.motion.yrel * ( glm::pi<float>() / height);
 
-		rot.y -= e.motion.xrel * _freeLookSensitivity * 0.1f;
-		rot.x -= e.motion.yrel * _freeLookSensitivity * 0.1f;
+		glm::mat4x4 rotationMatrixX(1.0f);
+		rotationMatrixX = glm::rotate(rotationMatrixX, yaw, glm::vec3(0.0f,1.0f,0.0f));
+		_position = (rotationMatrixX * glm::vec4(_position - _viewCenterLand, 0.0f)) + glm::vec4(_viewCenterLand, 0.0f);
 
-		SetRotation(rot);
+		glm::mat4x4 rotationMatrixY(1.0f);
+		rotationMatrixY = glm::rotate(rotationMatrixY, pitch, GetRight());
+		_position = (rotationMatrixY * glm::vec4(_position - _viewCenterLand, 0.0f)) + glm::vec4(_viewCenterLand, 0.0f);
+
+		_rotation.x -= pitch;
+		_rotation.y -= yaw;
+		
 	}
 	else if (e.type == SDL_MOUSEMOTION && e.motion.state & SDL_BUTTON(SDL_BUTTON_LEFT))
 	{
 		const auto& land = Game::instance()->GetLandIsland();
 		auto momentum = _position.y / 300;
-		auto forward = GetForward() * static_cast<float>(e.motion.yrel * momentum);
+		auto forward = GetForward() * glm::vec3(1.f,0.f,1.f) * static_cast<float>(e.motion.yrel * momentum);
 		auto right = GetRight() * -static_cast<float>(e.motion.xrel * momentum);
 		auto futurePosition = _position + forward + right;
-		auto height = land.GetHeightAt(glm::vec2(futurePosition.x + 5, futurePosition.z + 5)) + 13.0f;
+		auto height = land.GetHeightAt(glm::vec2(futurePosition.x + 5, futurePosition.z + 5)) + _groundHeightStart;
+		auto maxHandVel = std::max(log(height) * 10.0f, 5.0f);
 		futurePosition.y = std::max(height, _position.y);
-		_position = futurePosition;
+		glm::vec3 vecTo = futurePosition - _position;
+		vecTo.y = 0;
+		glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
+		if (glm::length(vecTo) > maxHandVel) {
+			vecTo = glm::normalize(vecTo) * maxHandVel;
+		}
+		_dv += vecTo * mRotation * 0.1f ;
 	}
+	else if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON(SDL_BUTTON_LEFT)){
+		_dv = glm::vec3(0.0f);
+	}
+	else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON(SDL_BUTTON_LEFT)){
+		_groundHeightStart = GetGroundHeight();
+	}
+	else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON(SDL_BUTTON_MIDDLE)){
+		// get the _viewCenterLand by raycasting to the land down the camera ray
+		float intersectDistance = 0.0f;
+		glm::vec3 viewVec = GetForward();
+		if (glm::intersectRayPlane(_position, viewVec, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), intersectDistance)){
+			_viewCenterLand = _position + viewVec * intersectDistance;
+			_viewCenterLand.y = Game::instance()->GetLandIsland().GetHeightAt(glm::vec2(_viewCenterLand.x,_viewCenterLand.z));
+		}
+		else if (_viewCenterLand == glm::vec3(0.0f)) {
+			_viewCenterLand = _position + viewVec * 100.f;
+		}
+		
+	}
+	if(e.type == SDL_MOUSEWHEEL)
+    {
+		auto movementSpeed = _movementSpeed * std::max(log(GetGroundHeight()),0.1f);
+        if(e.wheel.y != 0) // scroll up or down
+        {
+			_velocity.z += (((movementSpeed * e.wheel.y * abs(e.wheel.y) * 5 * _maxMovementSpeed) - _velocity.z) * _accelFactor);
+        }
+		if(e.wheel.x != 0) // mouse wheel left or right
+        {
+			_rotation.z += (((movementSpeed * e.wheel.x * _maxMovementSpeed) - _velocity.z) * _accelFactor);
+        }
+    }
 }
 
 void Camera::Update(std::chrono::microseconds dt)
 {
-	auto accelFactor = 0.001f;
-	auto airResistance = .9f;
+	auto airResistance = .92f; // reduced to make more floaty
+	float fdt = float(dt.count());
+	const auto& land = Game::instance()->GetLandIsland();
 	glm::mat3 rotation = glm::transpose(GetViewMatrix());
-	_velocity += (((_dv * _maxMovementSpeed) - _velocity) * accelFactor);
-	_position += rotation * _velocity * float(dt.count());
+	_velocity += (((_dv * _maxMovementSpeed) - _velocity) * _accelFactor);
+	_position += rotation * _velocity * fdt;
+	auto height = land.GetHeightAt(glm::vec2(_position.x + 5, _position.z + 5));
+	_position.y = (_position.y < height + 13.0f) ? height  + 13.0f: _position.y; // stop the camera from going below ground level.
+	
+	_rotVelocity += (((_drv * _maxRotationSpeed) - _rotVelocity) * _accelFactor);
+	glm::vec3 rot = GetRotation();
+	rot += _rotVelocity * fdt;
+	SetRotation(rot);
+
 	_velocity *= airResistance;
+	_rotVelocity *= airResistance;
 }
 
 glm::mat4 ReflectionCamera::GetViewMatrix() const
 {
-	glm::mat4 mRotation = getRotationMatrix();
+	glm::mat4 mRotation = GetRotationMatrix();
 	glm::mat4 mView = mRotation * glm::translate(glm::mat4(1.0f), -_position);
 
 	// M''camera = Mreflection * Mcamera * Mflip
