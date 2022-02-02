@@ -9,7 +9,6 @@
 
 #include "Camera.h"
 #include "3D/LandIsland.h"
-#include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Game.h"
 
@@ -19,10 +18,6 @@
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/vector_angle.hpp>
-
-// debug logging remove
-#include "glm/gtx/string_cast.hpp"
-#include <spdlog/spdlog.h>
 
 using namespace openblack;
 
@@ -335,7 +330,6 @@ void Camera::handleMouseInput(const SDL_Event& e)
 	else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON(SDL_BUTTON_LEFT))
 	{
 		_groundHeightStart = land.GetHeightAt(glm::vec2(_position.x, _position.z));
-		SPDLOG_LOGGER_INFO(spdlog::get("game"), "test");
 	}
 	else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON(SDL_BUTTON_MIDDLE))
 	{
