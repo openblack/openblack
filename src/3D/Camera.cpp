@@ -161,6 +161,7 @@ void Camera::ProcessSDLEvent(const SDL_Event& e)
 		break;
 	case SDL_MOUSEMOTION:
 	case SDL_MOUSEBUTTONDOWN:
+	case SDL_MOUSEBUTTONUP:
 	case SDL_MOUSEWHEEL:
 		handleMouseInput(e);
 		break;
@@ -174,19 +175,17 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 		return;
 
 	const auto& land = Game::instance()->GetLandIsland();
-	// increase speed the higher from the ground the camera is (raycast in -y from cam pos)
-	auto movementSpeed = _movementSpeed * (land.GetHeightAt(glm::vec2(_position.x, _position.z)) - _position.y) + 10.0f;
+	auto movementSpeed = _movementSpeed * std::max(_position.y * 0.01f, 0.0f) + 1.0f;
 
-	switch (e.key.keysym.scancode)
-	{
-	case SDL_SCANCODE_W:
+	if (e.key.keysym.scancode == SDL_SCANCODE_W)
 	{
 		if (e.type == SDL_KEYDOWN)
 		{
 			glm::vec3 temp = GetForward() * glm::vec3(1.f, 0.f, 1.f);
 			glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
-			_dv = temp * mRotation * movementSpeed;
-			_dwv = _dv;
+			temp = glm::normalize(temp) * mRotation * movementSpeed;
+			_dv += temp;
+			_dwv = temp;
 		}
 		else
 		{
@@ -194,14 +193,15 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 			_dwv = glm::vec3(0.0f, 0.0f, 0.0f);
 		}
 	}
-	case SDL_SCANCODE_S:
+	else if (e.key.keysym.scancode == SDL_SCANCODE_S)
 	{
 		if (e.type == SDL_KEYDOWN)
 		{
 			glm::vec3 temp = -GetForward() * glm::vec3(1.f, 0.f, 1.f);
 			glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
-			_dv = temp * mRotation * movementSpeed;
-			_dwv = _dv;
+			temp = glm::normalize(temp) * mRotation * movementSpeed;
+			_dv += temp;
+			_dwv = temp;
 		}
 		else
 		{
@@ -209,21 +209,36 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 			_dwv = glm::vec3(0.0f, 0.0f, 0.0f);
 		}
 	}
-	case SDL_SCANCODE_A:
+	else if (e.key.keysym.scancode == SDL_SCANCODE_A)
+	{
 		_dv.x += (e.type == SDL_KEYDOWN) ? -movementSpeed : -_dv.x;
-	case SDL_SCANCODE_D:
+	}
+	else if (e.key.keysym.scancode == SDL_SCANCODE_D)
+	{
 		_dv.x += (e.type == SDL_KEYDOWN) ? movementSpeed : -_dv.x;
-	case SDL_SCANCODE_LCTRL:
+	}
+	else if (e.key.keysym.scancode == SDL_SCANCODE_LCTRL)
+	{
 		_dv.y += (e.type == SDL_KEYDOWN) ? -movementSpeed : -_dv.y;
-	case SDL_SCANCODE_SPACE:
+	}
+	else if (e.key.keysym.scancode == SDL_SCANCODE_SPACE)
+	{
 		_dv.y += (e.type == SDL_KEYDOWN) ? movementSpeed : -_dv.y;
-	case SDL_SCANCODE_Q:
+	}
+	else if (e.key.keysym.scancode == SDL_SCANCODE_Q)
+	{
 		_drv.y += (e.type == SDL_KEYDOWN) ? _movementSpeed : -_drv.y;
-	case SDL_SCANCODE_E:
+	}
+	else if (e.key.keysym.scancode == SDL_SCANCODE_E)
+	{
 		_drv.y += (e.type == SDL_KEYDOWN) ? -_movementSpeed : -_drv.y;
-	case SDL_SCANCODE_R:
+	}
+	else if (e.key.keysym.scancode == SDL_SCANCODE_R)
+	{
 		_drv.x += (e.type == SDL_KEYDOWN) ? _movementSpeed : -_drv.x;
-	case SDL_SCANCODE_V:
+	}
+	else if (e.key.keysym.scancode == SDL_SCANCODE_V)
+	{
 		_drv.x += (e.type == SDL_KEYDOWN) ? -_movementSpeed : -_drv.x;
 	}
 }
@@ -258,7 +273,7 @@ void Camera::handleMouseInput(const SDL_Event& e)
 		auto right = GetRight() * -static_cast<float>(e.motion.xrel * momentum);
 		auto futurePosition = _position + forward + right;
 		auto height = land.GetHeightAt(glm::vec2(futurePosition.x + 5, futurePosition.z + 5)) + _groundHeightStart;
-		auto maxHandVel = std::max(log(height) * 10.0f, 5.0f);
+		auto maxHandVel = std::max(log(_position.y) * log(_position.y), 0.0f) + 1.0f;
 		futurePosition.y = std::max(height, _position.y);
 		glm::vec3 vecTo = futurePosition - _position;
 		vecTo.y = 0;
@@ -295,7 +310,7 @@ void Camera::handleMouseInput(const SDL_Event& e)
 	}
 	if (e.type == SDL_MOUSEWHEEL)
 	{
-		auto movementSpeed = _movementSpeed * std::max(log(land.GetHeightAt(glm::vec2(_position.x, _position.z))), 0.1f);
+		auto movementSpeed = _movementSpeed * std::max(log(_position.y), 0.0f) + 1.0f;
 		if (e.wheel.y != 0) // scroll up or down
 		{
 			_velocity.z +=
