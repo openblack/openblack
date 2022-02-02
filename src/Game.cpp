@@ -164,7 +164,6 @@ bool Game::ProcessEvents(const SDL_Event& event)
 		switch (event.key.keysym.sym)
 		{
 		case SDLK_ESCAPE:
-			// TODO: esc un-maximises if fullscreen
 			return false;
 		case SDLK_f:
 			_window->SetFullscreen(true);
