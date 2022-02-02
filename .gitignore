@@ -31,3 +31,6 @@ lib
 
 # vim swp files
 *.swp
+
+#imgui
+**/imgui.ini

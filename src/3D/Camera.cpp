@@ -248,8 +248,6 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 			_dv -= _ddv;
 			_ddv = glm::vec3(0.0f, 0.0f, 0.0f);
 		}
-		/*_dv += (e.type == SDL_KEYDOWN) ? -movementSpeed * glm::vec3(0.0f, 1.0f, 0.0f)
-		                               : movementSpeed * glm::vec3(0.0f, 1.0f, 0.0f);*/
 		break;
 	case SDL_SCANCODE_SPACE:
 		if (e.type == SDL_KEYDOWN)
@@ -265,8 +263,6 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 			_dv -= _duv;
 			_duv = glm::vec3(0.0f, 0.0f, 0.0f);
 		}
-		/*_dv += (e.type == SDL_KEYDOWN) ? movementSpeed * glm::vec3(0.0f, 1.0f, 0.0f)
-		                               : -movementSpeed * glm::vec3(0.0f, 1.0f, 0.0f);*/
 		break;
 	case SDL_SCANCODE_Q:
 		_drv.y += (e.type == SDL_KEYDOWN) ? _movementSpeed : -_drv.y;
