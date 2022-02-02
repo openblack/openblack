@@ -35,6 +35,7 @@ public:
 	[[nodiscard]] virtual glm::mat4 GetViewMatrix() const;
 	[[nodiscard]] const glm::mat4& GetProjectionMatrix() const { return _projectionMatrix; }
 	[[nodiscard]] virtual glm::mat4 GetViewProjectionMatrix() const;
+	[[nodiscard]] glm::vec3& GetViewCenterLand();
 
 	[[nodiscard]] glm::vec3 GetPosition() const { return _position; }
 	[[nodiscard]] glm::vec3 GetRotation() const { return glm::degrees(_rotation); }
@@ -70,6 +71,9 @@ protected:
 	glm::vec3 _rotation;
 	glm::vec3 _dv;
 	glm::vec3 _dwv;
+	glm::vec3 _dsv;
+	glm::vec3 _ddv;
+	glm::vec3 _duv;
 	glm::vec3 _drv;
 	glm::vec3 _viewCenterLand;
 	glm::mat4 _projectionMatrix;
