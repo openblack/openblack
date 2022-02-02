@@ -141,11 +141,14 @@ entt::entity Game::GetHand() const
 bool Game::ProcessEvents(const SDL_Event& event)
 {
 	static bool leftMouseButton = false;
+	static bool middleMouseButton = false;
 
 	if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_LEFT)
 		leftMouseButton = !leftMouseButton;
+	if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_MIDDLE)
+		middleMouseButton = !middleMouseButton;
 
-	_handGripping = leftMouseButton;
+	_handGripping = middleMouseButton || leftMouseButton;
 
 	switch (event.type)
 	{
@@ -161,6 +164,7 @@ bool Game::ProcessEvents(const SDL_Event& event)
 		switch (event.key.keysym.sym)
 		{
 		case SDLK_ESCAPE:
+			// TODO: esc un-maximises if fullscreen
 			return false;
 		case SDLK_f:
 			_window->SetFullscreen(true);
@@ -316,6 +320,7 @@ bool Game::Update()
 			const glm::vec3 handOffset(0, 4.0f, 0);
 			const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
 			auto& handTransform = _entityRegistry->Get<ecs::components::Transform>(_handEntity);
+			// TODO: move using velocity rather than snapping hand to intersectionTransform
 			handTransform.position = intersectionTransform.position;
 			auto cameraRotation = _camera->GetRotation();
 			handTransform.rotation = glm::eulerAngleY(glm::radians(-cameraRotation.y)) * modelRotationCorrection;
