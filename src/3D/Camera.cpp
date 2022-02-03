@@ -9,6 +9,7 @@
 
 #include "Camera.h"
 #include "3D/LandIsland.h"
+#include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Game.h"
 
@@ -16,8 +17,6 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/intersect.hpp>
 #include <glm/gtx/norm.hpp>
-#include <glm/gtx/rotate_vector.hpp>
-#include <glm/gtx/vector_angle.hpp>
 
 using namespace openblack;
 
@@ -30,16 +29,17 @@ Camera::Camera(glm::vec3 position, glm::vec3 rotation)
     , _ddv(0.0f, 0.0f, 0.0f)
     , _duv(0.0f, 0.0f, 0.0f)
     , _drv(0.0f, 0.0f, 0.0f)
-    , _viewCenterLand(_position)
     , _projectionMatrix(1.0f)
     , _velocity(0.0f, 0.0f, 0.0f)
+    , _hVelocity(0.0f, 0.0f, 0.0f)
     , _rotVelocity(0.0f, 0.0f, 0.0f)
-    , _groundHeight(0.0f)
-    , _groundHeightStart(0.0f)
     , _accelFactor(0.001f)
     , _movementSpeed(4.0f)
     , _maxMovementSpeed(0.005f)
     , _maxRotationSpeed(0.005f)
+    , _mouseIsDown(false)
+    , _mouseIsMoving(false)
+    , _shiftHeld(false)
 {
 }
 
@@ -58,21 +58,22 @@ glm::mat4 Camera::GetViewProjectionMatrix() const
 	return GetProjectionMatrix() * GetViewMatrix();
 }
 
-glm::vec3& Camera::GetViewCenterLand()
+glm::vec3 Camera::GetViewCenterLand()
 {
-	// get the _viewCenterLand by raycasting to the land down the camera ray
+	glm::vec3 viewCenterLand;
+	// get the viewCenterLand by raycasting to the land down the camera ray
 	float intersectDistance = 0.0f;
 	glm::vec3 viewVec = GetForward();
 	if (glm::intersectRayPlane(_position, viewVec, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), intersectDistance))
 	{
-		_viewCenterLand = _position + viewVec * intersectDistance;
-		_viewCenterLand.y = Game::instance()->GetLandIsland().GetHeightAt(glm::vec2(_viewCenterLand.x, _viewCenterLand.z));
+		viewCenterLand = _position + viewVec * intersectDistance;
+		viewCenterLand.y = Game::instance()->GetLandIsland().GetHeightAt(glm::vec2(viewCenterLand.x, viewCenterLand.z));
 	}
-	else if (_viewCenterLand == glm::vec3(0.0f))
+	else if (viewCenterLand == glm::vec3(0.0f))
 	{
-		_viewCenterLand = _position + viewVec * 100.f;
+		viewCenterLand = _position + viewVec * 100.f;
 	}
-	return _viewCenterLand;
+	return viewCenterLand;
 }
 
 void Camera::SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip)
@@ -154,20 +155,16 @@ bool Camera::ProjectWorldToScreen(const glm::vec3 worldPosition, const glm::vec4
 	if (out_screenPosition.x < viewport.x || out_screenPosition.y < viewport.y || out_screenPosition.x > viewport.z ||
 	    out_screenPosition.y > viewport.w)
 	{
-		return false;
+		return false; // Outside viewport bounds
 	}
 	if (out_screenPosition.z > 1.0f)
 	{
-		// Behind Camera
-		return false;
+		return false; // Behind Camera
 	}
-
 	if (out_screenPosition.z < 0.0f)
 	{
-		// Clipped
-		return false;
+		return false; // Clipped
 	}
-
 	return true;
 }
 
@@ -190,14 +187,24 @@ void Camera::ProcessSDLEvent(const SDL_Event& e)
 
 void Camera::handleKeyboardInput(const SDL_Event& e)
 {
-	// ignore all repeated keys
-	if (e.key.repeat > 0)
+	if (e.key.repeat > 0) // ignore all repeated keys
 		return;
 
 	auto movementSpeed = _movementSpeed * std::max(_position.y * 0.01f, 0.0f) + 1.0f;
 
 	switch (e.key.keysym.scancode)
 	{
+	case SDL_SCANCODE_LSHIFT:
+	case SDL_SCANCODE_RSHIFT:
+		if (e.type == SDL_KEYDOWN)
+		{
+			_shiftHeld = true;
+		}
+		if (e.type == SDL_KEYUP)
+		{
+			_shiftHeld = false;
+		}
+		break;
 	case SDL_SCANCODE_W:
 		if (e.type == SDL_KEYDOWN)
 		{
@@ -281,55 +288,52 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 void Camera::handleMouseInput(const SDL_Event& e)
 {
 	const auto& land = Game::instance()->GetLandIsland();
-	// Holding down the middle mouse button enables free look.
+
 	if (e.type == SDL_MOUSEMOTION && e.motion.state & SDL_BUTTON(SDL_BUTTON_MIDDLE))
 	{
-		int width, height;
-		Game::instance()->GetWindow()->GetSize(width, height);
-		float yaw = e.motion.xrel * (glm::two_pi<float>() / width);
-		float pitch = e.motion.yrel * (glm::pi<float>() / height);
+		if (_shiftHeld) // Holding down the middle mouse button and shift enables FPV camera rotation.
+		{
+			glm::vec3 rot = GetRotation();
+			rot.y -= e.motion.xrel * 0.1f;
+			rot.x -= e.motion.yrel * 0.1f;
+			SetRotation(rot);
+		}
+		else // Holding down the middle mouse button without shift enables hand orbit camera rotation.
+		{
+			auto& entityReg = Game::instance()->GetEntityRegistry();
+			auto handEntity = Game::instance()->GetHand();
+			auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
+			auto handPos = handTransform.position;
 
-		glm::mat4x4 rotationMatrixX(1.0f);
-		rotationMatrixX = glm::rotate(rotationMatrixX, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
-		_position = (rotationMatrixX * glm::vec4(_position - _viewCenterLand, 0.0f)) + glm::vec4(_viewCenterLand, 0.0f);
+			int width, height;
+			Game::instance()->GetWindow()->GetSize(width, height);
+			float yaw = e.motion.xrel * (glm::two_pi<float>() / width);
+			float pitch = e.motion.yrel * (glm::pi<float>() / height);
 
-		glm::mat4x4 rotationMatrixY(1.0f);
-		rotationMatrixY = glm::rotate(rotationMatrixY, pitch, GetRight());
-		_position = (rotationMatrixY * glm::vec4(_position - _viewCenterLand, 0.0f)) + glm::vec4(_viewCenterLand, 0.0f);
+			glm::mat4x4 rotationMatrixX(1.0f);
+			rotationMatrixX = glm::rotate(rotationMatrixX, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
+			_position = (rotationMatrixX * glm::vec4(_position - handPos, 0.0f)) + glm::vec4(handPos, 0.0f);
 
-		_rotation.x -= pitch;
-		_rotation.y -= yaw;
+			glm::mat4x4 rotationMatrixY(1.0f);
+			rotationMatrixY = glm::rotate(rotationMatrixY, pitch, GetRight());
+			_position = (rotationMatrixY * glm::vec4(_position - handPos, 0.0f)) + glm::vec4(handPos, 0.0f);
+
+			_rotation.x -= pitch;
+			_rotation.y -= yaw;
+		}
 	}
 	else if (e.type == SDL_MOUSEMOTION && e.motion.state & SDL_BUTTON(SDL_BUTTON_LEFT))
 	{
-		auto momentum = _position.y / 300;
-		auto forward = GetForward() * glm::vec3(1.f, 0.f, 1.f) * static_cast<float>(e.motion.yrel * momentum);
-		auto right = GetRight() * -static_cast<float>(e.motion.xrel * momentum);
-		auto futurePosition = _position + forward + right;
-		auto height = land.GetHeightAt(glm::vec2(futurePosition.x + 5, futurePosition.z + 5)) + _groundHeightStart;
-		auto maxHandVel = std::max(log(_position.y) * log(_position.y), 0.0f) + 1.0f;
-		futurePosition.y = std::max(height, _position.y);
-		glm::vec3 vecTo = futurePosition - _position;
-		vecTo.y = 0;
-
-		if (glm::length(vecTo) > maxHandVel)
-		{
-			vecTo = glm::normalize(vecTo) * maxHandVel;
-		}
-		glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
-		_dv += vecTo * mRotation * 0.1f;
+		_mouseIsMoving = true;
 	}
 	else if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON(SDL_BUTTON_LEFT))
 	{
 		_dv = glm::vec3(0.0f);
+		_mouseIsDown = false;
 	}
 	else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON(SDL_BUTTON_LEFT))
 	{
-		_groundHeightStart = land.GetHeightAt(glm::vec2(_position.x, _position.z));
-	}
-	else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON(SDL_BUTTON_MIDDLE))
-	{
-		GetViewCenterLand();
+		_mouseIsDown = true;
 	}
 	if (e.type == SDL_MOUSEWHEEL)
 	{
@@ -350,10 +354,61 @@ void Camera::Update(std::chrono::microseconds dt)
 {
 	auto airResistance = .92f; // reduced to make more floaty
 	float fdt = float(dt.count());
-	const auto& land = Game::instance()->GetLandIsland();
 	glm::mat3 rotation = glm::transpose(GetViewMatrix());
+
+	// deal with hand pulling camera around
+	glm::ivec2 handScreenVec(0);
+	float handDist = 0.0f;
+	int sWidth, sHeight;
+	Game::instance()->GetWindow()->GetSize(sWidth, sHeight);
+	if (_mouseIsDown)
+	{
+		// get hand transform and project to screen coords
+		auto& entityReg = Game::instance()->GetEntityRegistry();
+		auto handEntity = Game::instance()->GetHand();
+		auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
+		auto handPos = handTransform.position;
+		glm::vec3 handToScreen;
+		glm::vec4 viewport = glm::vec4(0, 0, sWidth, sHeight);
+		if (ProjectWorldToScreen(handPos, viewport, handToScreen))
+		{
+			glm::ivec2 mousePosition;
+			SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
+			// calculate distance between hand and mouse in screen cooords
+			glm::ivec2 handScreenCoords = glm::ivec2(handToScreen);
+			handScreenCoords.y = sHeight - handScreenCoords.y;
+			handScreenVec = mousePosition - handScreenCoords;
+			handDist = glm::length(glm::vec2(handScreenVec));
+			handDist /= sHeight;
+		}
+		else // if hand is off screen, culled or behind camera
+		{
+			_hVelocity = glm::vec3(0.f);
+		}
+	}
+	else
+	{
+		_hVelocity = glm::vec3(0.f);
+	}
+
+	if (handDist > 0.0f)
+	{
+		auto momentum = _position.y / 300;
+		auto forward = GetForward() * glm::vec3(1.f, 0.f, 1.f) * static_cast<float>(handScreenVec.y * momentum);
+		auto right = GetRight() * -static_cast<float>(handScreenVec.x * momentum);
+		auto futurePosition = _position + forward + right;
+		auto logPosY = log(_position.y + 1.0f);
+		auto handVelHeightMult = logPosY * logPosY;
+		glm::vec3 vecTo = futurePosition - _position;
+		vecTo = glm::normalize(vecTo) * handVelHeightMult;
+		glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
+		_hVelocity += vecTo * mRotation * 0.0001f;
+	}
+
 	_velocity += (((_dv * _maxMovementSpeed) - _velocity) * _accelFactor);
-	_position += rotation * _velocity * fdt;
+	_hVelocity *= handDist;
+	_position += rotation * (_velocity + _hVelocity) * fdt;
+	const auto& land = Game::instance()->GetLandIsland();
 	auto height = land.GetHeightAt(glm::vec2(_position.x + 5, _position.z + 5));
 	_position.y =
 	    (_position.y < height + 13.0f) ? height + 13.0f : _position.y; // stop the camera from going below ground level.
@@ -365,6 +420,7 @@ void Camera::Update(std::chrono::microseconds dt)
 
 	_velocity *= airResistance;
 	_rotVelocity *= airResistance;
+	_mouseIsMoving = false;
 }
 
 glm::mat4 ReflectionCamera::GetViewMatrix() const

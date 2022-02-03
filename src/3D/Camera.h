@@ -35,7 +35,7 @@ public:
 	[[nodiscard]] virtual glm::mat4 GetViewMatrix() const;
 	[[nodiscard]] const glm::mat4& GetProjectionMatrix() const { return _projectionMatrix; }
 	[[nodiscard]] virtual glm::mat4 GetViewProjectionMatrix() const;
-	[[nodiscard]] glm::vec3& GetViewCenterLand();
+	[[nodiscard]] glm::vec3 GetViewCenterLand();
 
 	[[nodiscard]] glm::vec3 GetPosition() const { return _position; }
 	[[nodiscard]] glm::vec3 GetRotation() const { return glm::degrees(_rotation); }
@@ -75,16 +75,17 @@ protected:
 	glm::vec3 _ddv;
 	glm::vec3 _duv;
 	glm::vec3 _drv;
-	glm::vec3 _viewCenterLand;
 	glm::mat4 _projectionMatrix;
 	glm::vec3 _velocity;
+	glm::vec3 _hVelocity;
 	glm::vec3 _rotVelocity;
-	float _groundHeight;
-	float _groundHeightStart;
 	float _accelFactor;
 	float _movementSpeed;
 	float _maxMovementSpeed;
 	float _maxRotationSpeed;
+	bool _mouseIsDown;
+	bool _mouseIsMoving;
+	bool _shiftHeld;
 };
 
 class ReflectionCamera: public Camera
