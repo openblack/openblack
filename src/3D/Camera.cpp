@@ -13,7 +13,6 @@
 #include "ECS/Registry.h"
 #include "Game.h"
 
-#include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/intersect.hpp>
 #include <glm/gtx/norm.hpp>
