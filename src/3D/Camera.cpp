@@ -17,6 +17,8 @@
 #include <glm/gtx/intersect.hpp>
 #include <glm/gtx/norm.hpp>
 
+#define OUT
+
 using namespace openblack;
 
 Camera::Camera(glm::vec3 position, glm::vec3 rotation)
@@ -57,22 +59,45 @@ glm::mat4 Camera::GetViewProjectionMatrix() const
 	return GetProjectionMatrix() * GetViewMatrix();
 }
 
-glm::vec3 Camera::GetViewCenterLand()
+bool Camera::RaycastCamToLand(OUT glm::vec3* hit)
 {
-	glm::vec3 viewCenterLand;
-	// get the viewCenterLand by raycasting to the land down the camera ray
+	// get the hit by raycasting to the land down the camera ray
 	float intersectDistance = 0.0f;
 	glm::vec3 viewVec = GetForward();
 	if (glm::intersectRayPlane(_position, viewVec, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), intersectDistance))
 	{
-		viewCenterLand = _position + viewVec * intersectDistance;
-		viewCenterLand.y = Game::instance()->GetLandIsland().GetHeightAt(glm::vec2(viewCenterLand.x, viewCenterLand.z));
+		*hit = _position + viewVec * intersectDistance;
+		hit->y = Game::instance()->GetLandIsland().GetHeightAt(glm::vec2(hit->x, hit->z));
+		return true;
 	}
-	else if (viewCenterLand == glm::vec3(0.0f))
+	else
 	{
-		viewCenterLand = _position + viewVec * 100.f;
+		*hit = _position + viewVec * 100.f;
 	}
-	return viewCenterLand;
+	return false;
+}
+
+bool Camera::RaycastMouseToLand(OUT glm::vec3* hit)
+{
+	// get the hit by raycasting to the land down via the mouse
+	float intersectDistance = 0.0f;
+	int sWidth, sHeight;
+	glm::vec4 viewport = glm::vec4(0, 0, sWidth, sHeight);
+	glm::vec3 rayOrigin, rayDirection, mouseVec;
+	DeprojectScreenToWorld(mouseVec, glm::vec2(sWidth, sHeight), rayOrigin, rayDirection);
+
+	if (glm::intersectRayPlane(_position, mouseVec, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
+	                           intersectDistance))
+	{
+		*hit = _position + mouseVec * intersectDistance;
+		hit->y = Game::instance()->GetLandIsland().GetHeightAt(glm::vec2(hit->x, hit->z));
+		return true;
+	}
+	else
+	{
+		*hit = _position + mouseVec * 100.f;
+	}
+	return false;
 }
 
 void Camera::SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip)
@@ -181,6 +206,8 @@ void Camera::ProcessSDLEvent(const SDL_Event& e)
 	case SDL_MOUSEWHEEL:
 		handleMouseInput(e);
 		break;
+	default:
+		break;
 	}
 }
 
@@ -282,12 +309,12 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 	case SDL_SCANCODE_V:
 		_drv.x += (e.type == SDL_KEYDOWN) ? -_movementSpeed : -_drv.x;
 		break;
+	default:
+		break;
 	}
 }
 void Camera::handleMouseInput(const SDL_Event& e)
 {
-	const auto& land = Game::instance()->GetLandIsland();
-
 	if (e.type == SDL_MOUSEMOTION && e.motion.state & SDL_BUTTON(SDL_BUTTON_MIDDLE))
 	{
 		if (_shiftHeld) // Holding down the middle mouse button and shift enables FPV camera rotation.
@@ -357,7 +384,7 @@ void Camera::Update(std::chrono::microseconds dt)
 
 	// deal with hand pulling camera around
 	glm::ivec2 handScreenVec(0);
-	float handDist = 0.0f;
+	float handDist = 0.0f, worldHandDist = 0.0f;
 	int sWidth, sHeight;
 	Game::instance()->GetWindow()->GetSize(sWidth, sHeight);
 	if (_mouseIsDown)
@@ -369,7 +396,8 @@ void Camera::Update(std::chrono::microseconds dt)
 		auto handPos = handTransform.position;
 		glm::vec3 handToScreen;
 		glm::vec4 viewport = glm::vec4(0, 0, sWidth, sHeight);
-		if (ProjectWorldToScreen(handPos, viewport, handToScreen))
+		glm::vec3 hit;
+		if (ProjectWorldToScreen(handPos, viewport, handToScreen) and RaycastMouseToLand(&hit))
 		{
 			glm::ivec2 mousePosition;
 			SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
@@ -378,9 +406,10 @@ void Camera::Update(std::chrono::microseconds dt)
 			handScreenCoords.y = sHeight - handScreenCoords.y;
 			handScreenVec = mousePosition - handScreenCoords;
 			handDist = glm::length(glm::vec2(handScreenVec));
+			worldHandDist = glm::length(hit - handPos);
 			handDist /= sHeight;
 		}
-		else // if hand is off screen, culled or behind camera
+		else // if hand is off screen, culled, behind camera or does not hit land.
 		{
 			_hVelocity = glm::vec3(0.f);
 		}
@@ -399,9 +428,15 @@ void Camera::Update(std::chrono::microseconds dt)
 		auto logPosY = log(_position.y + 1.0f);
 		auto handVelHeightMult = logPosY * logPosY;
 		glm::vec3 vecTo = futurePosition - _position;
-		vecTo = glm::normalize(vecTo) * handVelHeightMult;
+		vecTo = glm::min(glm::normalize(vecTo) * handVelHeightMult, glm::vec3(10.0f));
 		glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
 		_hVelocity += vecTo * mRotation * 0.0001f;
+	}
+
+	if (worldHandDist > 2000.0f)
+	{
+		// speed up movement for really distant hand pulls.
+		handDist = (((handDist * 2 - 1) * (handDist * 2 - 1)) * -1) + 1;
 	}
 
 	_velocity += (((_dv * _maxMovementSpeed) - _velocity) * _accelFactor);

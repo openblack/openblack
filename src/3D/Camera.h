@@ -35,7 +35,8 @@ public:
 	[[nodiscard]] virtual glm::mat4 GetViewMatrix() const;
 	[[nodiscard]] const glm::mat4& GetProjectionMatrix() const { return _projectionMatrix; }
 	[[nodiscard]] virtual glm::mat4 GetViewProjectionMatrix() const;
-	[[nodiscard]] glm::vec3 GetViewCenterLand();
+	[[nodiscard]] bool RaycastCamToLand(glm::vec3*);
+	[[nodiscard]] bool RaycastMouseToLand(glm::vec3*);
 
 	[[nodiscard]] glm::vec3 GetPosition() const { return _position; }
 	[[nodiscard]] glm::vec3 GetRotation() const { return glm::degrees(_rotation); }
