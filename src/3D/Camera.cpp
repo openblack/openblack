@@ -17,8 +17,6 @@
 #include <glm/gtx/intersect.hpp>
 #include <glm/gtx/norm.hpp>
 
-#define OUT
-
 using namespace openblack;
 
 Camera::Camera(glm::vec3 position, glm::vec3 rotation)
@@ -59,25 +57,25 @@ glm::mat4 Camera::GetViewProjectionMatrix() const
 	return GetProjectionMatrix() * GetViewMatrix();
 }
 
-bool Camera::RaycastCamToLand(OUT glm::vec3* hit)
+bool Camera::RaycastCamToLand(glm::vec3& hit)
 {
 	// get the hit by raycasting to the land down the camera ray
 	float intersectDistance = 0.0f;
 	glm::vec3 viewVec = GetForward();
 	if (glm::intersectRayPlane(_position, viewVec, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), intersectDistance))
 	{
-		*hit = _position + viewVec * intersectDistance;
-		hit->y = Game::instance()->GetLandIsland().GetHeightAt(glm::vec2(hit->x, hit->z));
+		hit = _position + viewVec * intersectDistance;
+		hit.y = Game::instance()->GetLandIsland().GetHeightAt(glm::vec2(hit.x, hit.z));
 		return true;
 	}
 	else
 	{
-		*hit = _position + viewVec * 100.f;
+		hit = _position + viewVec * 100.f;
 	}
 	return false;
 }
 
-bool Camera::RaycastMouseToLand(OUT glm::vec3* hit)
+bool Camera::RaycastMouseToLand(glm::vec3& hit)
 {
 	// get the hit by raycasting to the land down via the mouse
 	float intersectDistance = 0.0f;
@@ -90,13 +88,13 @@ bool Camera::RaycastMouseToLand(OUT glm::vec3* hit)
 	if (glm::intersectRayPlane(_position, mouseVec, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
 	                           intersectDistance))
 	{
-		*hit = _position + mouseVec * intersectDistance;
-		hit->y = Game::instance()->GetLandIsland().GetHeightAt(glm::vec2(hit->x, hit->z));
+		hit = _position + mouseVec * intersectDistance;
+		hit.y = Game::instance()->GetLandIsland().GetHeightAt(glm::vec2(hit.x, hit.z));
 		return true;
 	}
 	else
 	{
-		*hit = _position + mouseVec * 100.f;
+		hit = _position + mouseVec * 100.f;
 	}
 	return false;
 }
@@ -398,7 +396,7 @@ void Camera::Update(std::chrono::microseconds dt)
 		glm::vec3 handToScreen;
 		glm::vec4 viewport = glm::vec4(0, 0, sWidth, sHeight);
 		glm::vec3 hit;
-		if (ProjectWorldToScreen(handPos, viewport, handToScreen) and RaycastMouseToLand(&hit))
+		if (ProjectWorldToScreen(handPos, viewport, handToScreen) and RaycastMouseToLand(hit))
 		{
 			glm::ivec2 mousePosition;
 			SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
