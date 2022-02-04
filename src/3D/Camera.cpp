@@ -82,6 +82,7 @@ bool Camera::RaycastMouseToLand(OUT glm::vec3* hit)
 	// get the hit by raycasting to the land down via the mouse
 	float intersectDistance = 0.0f;
 	int sWidth, sHeight;
+	Game::instance()->GetWindow()->GetSize(sWidth, sHeight);
 	glm::vec4 viewport = glm::vec4(0, 0, sWidth, sHeight);
 	glm::vec3 rayOrigin, rayDirection, mouseVec;
 	DeprojectScreenToWorld(mouseVec, glm::vec2(sWidth, sHeight), rayOrigin, rayDirection);
