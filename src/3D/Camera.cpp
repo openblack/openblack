@@ -61,35 +61,7 @@ glm::mat4 Camera::GetViewProjectionMatrix() const
 	return GetProjectionMatrix() * GetViewMatrix();
 }
 
-const std::optional<ecs::components::Transform> Camera::RaycastCamToLand()
-{
-	// get the hit by raycasting to the land down the camera ray
-	ecs::components::Transform intersectionTransform;
-	float intersectDistance = 0.0f;
-	glm::vec3 viewVec = GetForward();
-	auto& dynamicsSystem = Game::instance()->GetDynamicsSystem();
-	if (auto hit = dynamicsSystem.RayCastClosestHit(_position, viewVec, 1e10f))
-	{
-		intersectionTransform = hit->first;
-		return std::make_optional(intersectionTransform);
-	}
-	else if (glm::intersectRayPlane(_position, viewVec, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
-	                                intersectDistance))
-	{
-		intersectionTransform.position = _position + viewVec * intersectDistance;
-		intersectionTransform.rotation = glm::mat3(1.0f);
-		return std::make_optional(intersectionTransform);
-	}
-	// else // point 100 away from camera to rotate around etc. not currently used
-	//{
-	// intersectionTransform.position = _position + viewVec * 100.f;
-	// intersectionTransform.rotation = glm::mat3(1.0f);
-	// return std::make_optional(intersectionTransform);
-	//}
-	return std::nullopt;
-}
-
-const std::optional<ecs::components::Transform> Camera::RaycastMouseToLand()
+std::optional<ecs::components::Transform> Camera::RaycastMouseToLand()
 {
 	// get the hit by raycasting to the land down via the mouse
 	ecs::components::Transform intersectionTransform;
@@ -118,6 +90,7 @@ const std::optional<ecs::components::Transform> Camera::RaycastMouseToLand()
 
 void Camera::FlyInit()
 {
+	// call to initialise a new flight. eventually may be refactored out to a separate file.
 	_flyInProgress = false;
 	_flyDist = 0.0f;
 	_flyProgress = 1.0f;
@@ -133,9 +106,10 @@ void Camera::FlyInit()
 	_flyPrevPos = glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
-glm::vec3 Camera::Fly(glm::vec3& fromPos, glm::vec3& fromTan, glm::vec3& toPos, glm::vec3& toTan, float t)
-{
-	return glm::hermite(fromPos, fromTan, toPos, toTan, t);
+void Camera::StartFlight(){
+	// Call to start the camera "in-flight"
+	_flyInProgress = true;
+	_flyProgress = 0.0f;
 }
 
 void Camera::SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip)
@@ -534,7 +508,7 @@ void Camera::Update(std::chrono::microseconds dt)
 
 	if (_flyInProgress)
 	{
-		_position = Fly(_flyFromPos, _flyFromTan, _flyToPos, _flyToTan, glm::smoothstep(0.0f, 1.0f, _flyProgress));
+		_position = glm::hermite(_flyFromPos, _flyFromTan, _flyToPos, _flyToTan, glm::smoothstep(0.0f, 1.0f, _flyProgress));
 
 		// check if there obstacles in the way, if there are fly over them
 		auto& dynamicsSystem = Game::instance()->GetDynamicsSystem();
