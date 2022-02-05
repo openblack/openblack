@@ -96,7 +96,6 @@ const std::optional<ecs::components::Transform> Camera::RaycastMouseToLand()
 	float intersectDistance = 0.0f;
 	int sWidth, sHeight;
 	Game::instance()->GetWindow()->GetSize(sWidth, sHeight);
-	glm::vec4 viewport = glm::vec4(0, 0, sWidth, sHeight);
 	glm::vec3 rayOrigin, rayDirection;
 	glm::ivec2 mouseVec;
 	SDL_GetMouseState(&mouseVec.x, &mouseVec.y);

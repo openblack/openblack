@@ -39,7 +39,7 @@ public:
 
 	[[nodiscard]] const std::optional<ecs::components::Transform> RaycastCamToLand();
 	[[nodiscard]] const std::optional<ecs::components::Transform> RaycastMouseToLand();
-	[[nodiscard]] void FlyInit();
+	void FlyInit();
 	[[nodiscard]] glm::vec3 Fly(glm::vec3& fromPos, glm::vec3& fromTan, glm::vec3& toPos, glm::vec3& toTan, float t);
 
 	[[nodiscard]] glm::vec3 GetPosition() const { return _position; }
