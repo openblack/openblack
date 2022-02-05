@@ -11,11 +11,14 @@
 #include "3D/LandIsland.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/DynamicsSystem.h"
 #include "Game.h"
 
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/intersect.hpp>
 #include <glm/gtx/norm.hpp>
+#include <glm/gtx/spline.hpp>
+#include <optional>
 
 using namespace openblack;
 
@@ -40,6 +43,7 @@ Camera::Camera(glm::vec3 position, glm::vec3 rotation)
     , _mouseIsMoving(false)
     , _shiftHeld(false)
 {
+	FlyInit();
 }
 
 glm::mat4 Camera::GetRotationMatrix() const
@@ -57,46 +61,82 @@ glm::mat4 Camera::GetViewProjectionMatrix() const
 	return GetProjectionMatrix() * GetViewMatrix();
 }
 
-bool Camera::RaycastCamToLand(glm::vec3& hit)
+const std::optional<ecs::components::Transform> Camera::RaycastCamToLand()
 {
 	// get the hit by raycasting to the land down the camera ray
+	ecs::components::Transform intersectionTransform;
 	float intersectDistance = 0.0f;
 	glm::vec3 viewVec = GetForward();
-	if (glm::intersectRayPlane(_position, viewVec, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), intersectDistance))
+	auto& dynamicsSystem = Game::instance()->GetDynamicsSystem();
+	if (auto hit = dynamicsSystem.RayCastClosestHit(_position, viewVec, 1e10f))
 	{
-		hit = _position + viewVec * intersectDistance;
-		hit.y = Game::instance()->GetLandIsland().GetHeightAt(glm::vec2(hit.x, hit.z));
-		return true;
+		intersectionTransform = hit->first;
+		return std::make_optional(intersectionTransform);
 	}
-	else
+	else if (glm::intersectRayPlane(_position, viewVec, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
+	                                intersectDistance))
 	{
-		hit = _position + viewVec * 100.f;
+		intersectionTransform.position = _position + viewVec * intersectDistance;
+		intersectionTransform.rotation = glm::mat3(1.0f);
+		return std::make_optional(intersectionTransform);
 	}
-	return false;
+	// else // point 100 away from camera to rotate around etc. not currently used
+	//{
+	// intersectionTransform.position = _position + viewVec * 100.f;
+	// intersectionTransform.rotation = glm::mat3(1.0f);
+	// return std::make_optional(intersectionTransform);
+	//}
+	return std::nullopt;
 }
 
-bool Camera::RaycastMouseToLand(glm::vec3& hit)
+const std::optional<ecs::components::Transform> Camera::RaycastMouseToLand()
 {
 	// get the hit by raycasting to the land down via the mouse
+	ecs::components::Transform intersectionTransform;
 	float intersectDistance = 0.0f;
 	int sWidth, sHeight;
 	Game::instance()->GetWindow()->GetSize(sWidth, sHeight);
 	glm::vec4 viewport = glm::vec4(0, 0, sWidth, sHeight);
-	glm::vec3 rayOrigin, rayDirection, mouseVec;
+	glm::vec3 rayOrigin, rayDirection;
+	glm::ivec2 mouseVec;
+	SDL_GetMouseState(&mouseVec.x, &mouseVec.y);
 	DeprojectScreenToWorld(mouseVec, glm::vec2(sWidth, sHeight), rayOrigin, rayDirection);
+	auto& dynamicsSystem = Game::instance()->GetDynamicsSystem();
+	if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
+	{
+		intersectionTransform = hit->first;
+		return std::make_optional(intersectionTransform);
+	}
+	else if (glm::intersectRayPlane(rayOrigin, rayDirection, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
+	                                intersectDistance))
+	{
+		intersectionTransform.position = rayOrigin + rayDirection * intersectDistance;
+		intersectionTransform.rotation = glm::mat3(1.0f);
+		return std::make_optional(intersectionTransform);
+	}
+	return std::nullopt;
+}
 
-	if (glm::intersectRayPlane(_position, mouseVec, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
-	                           intersectDistance))
-	{
-		hit = _position + mouseVec * intersectDistance;
-		hit.y = Game::instance()->GetLandIsland().GetHeightAt(glm::vec2(hit.x, hit.z));
-		return true;
-	}
-	else
-	{
-		hit = _position + mouseVec * 100.f;
-	}
-	return false;
+void Camera::FlyInit()
+{
+	_flyInProgress = false;
+	_flyDist = 0.0f;
+	_flyProgress = 1.0f;
+	_flySpeed = 0.5f;
+	_flyStartAngle = 10.0f;
+	_flyEndAngle = 30.0f;
+	_flyThreshold = 50.0f;
+	_flyFromPos = glm::vec3(0.0f, 0.0f, 0.0f);
+	_flyFromTan = glm::vec3(0.0f, 0.0f, 0.0f);
+	_flyToPos = glm::vec3(0.0f, 0.0f, 0.0f);
+	_flyToNorm = glm::vec3(0.0f, 0.0f, 0.0f);
+	_flyToTan = glm::vec3(0.0f, 0.0f, 0.0f);
+	_flyPrevPos = glm::vec3(0.0f, 0.0f, 0.0f);
+}
+
+glm::vec3 Camera::Fly(glm::vec3& fromPos, glm::vec3& fromTan, glm::vec3& toPos, glm::vec3& toTan, float t)
+{
+	return glm::hermite(fromPos, fromTan, toPos, toTan, t);
 }
 
 void Camera::SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip)
@@ -217,6 +257,25 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 
 	auto movementSpeed = _movementSpeed * std::max(_position.y * 0.01f, 0.0f) + 1.0f;
 
+	switch (e.key.keysym.scancode) // stop Fly if any movement keys are pressed down
+	{
+	case SDL_SCANCODE_W:
+	case SDL_SCANCODE_S:
+	case SDL_SCANCODE_A:
+	case SDL_SCANCODE_D:
+	case SDL_SCANCODE_LCTRL:
+	case SDL_SCANCODE_SPACE:
+	case SDL_SCANCODE_Q:
+	case SDL_SCANCODE_E:
+	case SDL_SCANCODE_R:
+	case SDL_SCANCODE_V:
+		if (e.type == SDL_KEYDOWN)
+			_flyInProgress = false;
+		break;
+	default:
+		break;
+	}
+
 	switch (e.key.keysym.scancode)
 	{
 	case SDL_SCANCODE_LSHIFT:
@@ -312,6 +371,7 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 		break;
 	}
 }
+
 void Camera::handleMouseInput(const SDL_Event& e)
 {
 	if (e.type == SDL_MOUSEMOTION && e.motion.state & SDL_BUTTON(SDL_BUTTON_MIDDLE))
@@ -330,6 +390,10 @@ void Camera::handleMouseInput(const SDL_Event& e)
 			auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
 			auto handPos = handTransform.position;
 
+			if (handPos.x < -536870870.0) // if hand is not on the world
+			{
+				handPos = _position + GetForward() * 1000.0f;
+			}
 			int width, height;
 			Game::instance()->GetWindow()->GetSize(width, height);
 			float yaw = e.motion.xrel * (glm::two_pi<float>() / width);
@@ -373,6 +437,37 @@ void Camera::handleMouseInput(const SDL_Event& e)
 			_rotation.z += (((movementSpeed * e.wheel.x * _maxMovementSpeed) - _velocity.z) * _accelFactor);
 		}
 	}
+	if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON(SDL_BUTTON_LEFT) && e.button.clicks == 2)
+	{
+		// fly to double click location.
+		if (auto hit = RaycastMouseToLand())
+		{
+			// stop all current movements
+			_dv = glm::vec3(0.0f);
+			_dwv = glm::vec3(0.0f);
+			_dsv = glm::vec3(0.0f);
+			_ddv = glm::vec3(0.0f);
+			_duv = glm::vec3(0.0f);
+			_drv = glm::vec3(0.0f);
+
+			_flyToNorm = hit->rotation * glm::vec3(0.0f, 1.0f, 0.0f);
+			auto normXZ = glm::normalize(_flyToNorm * glm::vec3(1.0f, 0.01f, 1.0f));
+			_flyInProgress = true;
+			_flyProgress = 0.0f;
+			_flyFromPos = _position;
+			_flyPrevPos = _flyFromPos;
+			_flyDist = glm::length(hit->position - _flyFromPos);
+			auto vecToCam = glm::normalize(_position - hit->position);
+			_flyToPos = hit->position + (normXZ + vecToCam * 4.0f) / 5.0f * std::max(20.0f, _flyDist * 0.15f);
+			_flyFromTan = glm::normalize(GetForward() * glm::vec3(1.0f, 0.0f, 1.0f)) * _flyDist * 0.4f;
+			_flyToTan = glm::normalize(-(_flyToNorm * 9.0f + vecToCam) / 10.0f * glm::vec3(1.0f, 0.0f, 1.0f)) * _flyDist * 0.4f;
+			if (_position.y < _flyThreshold) // if the camera is low to the ground aim the path up before coming back down
+			{
+				_flyFromTan += glm::vec3(0.0f, 1.0f, 0.0f) * _flyDist * 0.4f;
+				_flyToTan += glm::vec3(0.0f, -1.0f, 0.0f) * _flyDist * 0.4f;
+			}
+		}
+	}
 }
 
 void Camera::Update(std::chrono::microseconds dt)
@@ -395,17 +490,17 @@ void Camera::Update(std::chrono::microseconds dt)
 		auto handPos = handTransform.position;
 		glm::vec3 handToScreen;
 		glm::vec4 viewport = glm::vec4(0, 0, sWidth, sHeight);
-		glm::vec3 hit;
-		if (ProjectWorldToScreen(handPos, viewport, handToScreen) and RaycastMouseToLand(hit))
+		auto hit = RaycastMouseToLand();
+		if (ProjectWorldToScreen(handPos, viewport, handToScreen) && hit)
 		{
+			// calculate distance between hand and mouse in screen cooords
 			glm::ivec2 mousePosition;
 			SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
-			// calculate distance between hand and mouse in screen cooords
 			glm::ivec2 handScreenCoords = glm::ivec2(handToScreen);
 			handScreenCoords.y = sHeight - handScreenCoords.y;
 			handScreenVec = mousePosition - handScreenCoords;
 			handDist = glm::length(glm::vec2(handScreenVec));
-			worldHandDist = glm::length(hit - handPos);
+			worldHandDist = glm::length(hit->position - handPos);
 			handDist /= sHeight;
 		}
 		else // if hand is off screen, culled, behind camera or does not hit land.
@@ -421,7 +516,7 @@ void Camera::Update(std::chrono::microseconds dt)
 	if (handDist > 0.0f)
 	{
 		auto momentum = _position.y / 300;
-		auto forward = GetForward() * glm::vec3(1.f, 0.f, 1.f) * static_cast<float>(handScreenVec.y * momentum);
+		auto forward = glm::normalize(GetForward() * glm::vec3(1.f, 0.f, 1.f)) * static_cast<float>(handScreenVec.y * momentum);
 		auto right = GetRight() * -static_cast<float>(handScreenVec.x * momentum);
 		auto futurePosition = _position + forward + right;
 		auto logPosY = log(_position.y + 1.0f);
@@ -438,14 +533,66 @@ void Camera::Update(std::chrono::microseconds dt)
 		handDist = (((handDist * 2 - 1) * (handDist * 2 - 1)) * -1) + 1;
 	}
 
-	_velocity += (((_dv * _maxMovementSpeed) - _velocity) * _accelFactor);
-	_hVelocity *= handDist;
-	_position += rotation * (_velocity + _hVelocity) * fdt;
+	if (_flyInProgress)
+	{
+		_position = Fly(_flyFromPos, _flyFromTan, _flyToPos, _flyToTan, glm::smoothstep(0.0f, 1.0f, _flyProgress));
+
+		// check if there obstacles in the way, if there are fly over them
+		auto& dynamicsSystem = Game::instance()->GetDynamicsSystem();
+		if (auto obst = dynamicsSystem.RayCastClosestHit(_position - glm::vec3(0.0f, 20.0f, 0.0f),
+		                                                 glm::normalize((_flyToPos - glm::vec3(0.0f, 20.0f, 0.0f)) - _position),
+		                                                 glm::length(_flyToPos - _position) + 10.0f))
+		{
+			auto closest = obst->first;
+			auto dist = glm::length(_flyToPos - closest.position);
+			if (dist > 60.0f)
+			{
+				_flyFromTan += glm::vec3(0.0f, 1.0f, 0.0f) * _flyDist * 0.006f;
+				_flyToTan += glm::vec3(0.0f, -1.0f, 0.0f) * _flyDist * 0.006f;
+			}
+		}
+
+		if (_flyPrevPos != _position && _flyProgress > 0.0f)
+		{
+			auto tangentY = glm::normalize((_position - _flyPrevPos) * glm::vec3(1.0f, 0.0f, 1.0f));
+			auto currDirY = glm::normalize(GetForward() * glm::vec3(1.0f, 0.0f, 1.0f));
+			float rotY =
+			    atan2f(glm::dot(glm::cross(tangentY, currDirY), glm::vec3(0.0f, 1.0f, 1.0f)), glm::dot(currDirY, tangentY));
+			_drv.y = rotY * 5.0f * ((_flyProgress * _flyProgress) * -1.0f + 1.0f);
+		}
+		if (_flyProgress >= 1.0f)
+		{
+			_flyInProgress = false;
+			_drv = glm::vec3(0.0f);
+		}
+		else if (_flyProgress >= 0.5f && glm::dot(_flyToNorm, glm::vec3(0.0f, 1.0f, 0.0f)) > 0.8f) // rotate cam down
+		{
+			float angleDown = -glm::radians(_flyEndAngle) - _rotation.x;
+			_drv.x = angleDown * 2.0f * (((_flyProgress * 2 - 2) * (_flyProgress * 2 - 2)) * -1.0f + 1.0f);
+		}
+		else if (_flyProgress <= 0.5f && _position.y < _flyThreshold) // rotate cam up
+		{
+			float angleUp = glm::radians(_flyStartAngle) - _rotation.x;
+			_drv.x = angleUp * 0.5f * (((_flyProgress * 2 - 1) * (_flyProgress * 2 - 1)) * -1.0f + 1.0f);
+		}
+		_flyPrevPos = _position;
+		_flyProgress += _flySpeed * 0.000001f * fdt; // / _flyDist;
+	}
+	else if (_flyInProgress == false && _flyProgress < 1.0f) // player aborted a Fly early
+	{
+		_flyProgress = 1.0f;
+		_drv = glm::vec3(0.0f);
+	}
+	else
+	{
+		_velocity += (((_dv * _maxMovementSpeed) - _velocity) * _accelFactor);
+		_hVelocity *= handDist;
+		_position += rotation * (_velocity + _hVelocity) * fdt;
+	}
 	const auto& land = Game::instance()->GetLandIsland();
 	auto height = land.GetHeightAt(glm::vec2(_position.x + 5, _position.z + 5));
 	_position.y =
 	    (_position.y < height + 13.0f) ? height + 13.0f : _position.y; // stop the camera from going below ground level.
-
 	_rotVelocity += (((_drv * _maxRotationSpeed) - _rotVelocity) * _accelFactor);
 	glm::vec3 rot = GetRotation();
 	rot += _rotVelocity * fdt;

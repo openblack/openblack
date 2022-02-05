@@ -9,13 +9,14 @@
 
 #pragma once
 
+#include "ECS/Components/Transform.h"
 #include <SDL_events.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/quaternion.hpp>
 
 #include <chrono>
 #include <memory>
+#include <optional>
 
 namespace openblack
 {
@@ -35,8 +36,11 @@ public:
 	[[nodiscard]] virtual glm::mat4 GetViewMatrix() const;
 	[[nodiscard]] const glm::mat4& GetProjectionMatrix() const { return _projectionMatrix; }
 	[[nodiscard]] virtual glm::mat4 GetViewProjectionMatrix() const;
-	[[nodiscard]] bool RaycastCamToLand(glm::vec3&);
-	[[nodiscard]] bool RaycastMouseToLand(glm::vec3&);
+
+	[[nodiscard]] const std::optional<ecs::components::Transform> RaycastCamToLand();
+	[[nodiscard]] const std::optional<ecs::components::Transform> RaycastMouseToLand();
+	[[nodiscard]] void FlyInit();
+	[[nodiscard]] glm::vec3 Fly(glm::vec3& fromPos, glm::vec3& fromTan, glm::vec3& toPos, glm::vec3& toTan, float t);
 
 	[[nodiscard]] glm::vec3 GetPosition() const { return _position; }
 	[[nodiscard]] glm::vec3 GetRotation() const { return glm::degrees(_rotation); }
@@ -87,6 +91,19 @@ protected:
 	bool _mouseIsDown;
 	bool _mouseIsMoving;
 	bool _shiftHeld;
+	bool _flyInProgress;
+	float _flyDist;
+	float _flySpeed;
+	float _flyStartAngle;
+	float _flyEndAngle;
+	float _flyThreshold;
+	float _flyProgress;
+	glm::vec3 _flyFromPos;
+	glm::vec3 _flyToNorm;
+	glm::vec3 _flyFromTan;
+	glm::vec3 _flyToPos;
+	glm::vec3 _flyToTan;
+	glm::vec3 _flyPrevPos;
 };
 
 class ReflectionCamera: public Camera
