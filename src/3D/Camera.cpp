@@ -106,7 +106,8 @@ void Camera::FlyInit()
 	_flyPrevPos = glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
-void Camera::StartFlight(){
+void Camera::StartFlight()
+{
 	// Call to start the camera "in-flight"
 	_flyInProgress = true;
 	_flyProgress = 0.0f;
