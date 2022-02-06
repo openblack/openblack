@@ -45,6 +45,8 @@ Camera::Camera(glm::vec3 position, glm::vec3 rotation)
     , _mouseIsDown(false)
     , _mouseIsMoving(false)
     , _shiftHeld(false)
+	, _handScreenVec(0)
+	,_handDragMult(0.0f)
 {
 	FlyInit();
 }
@@ -454,8 +456,8 @@ void Camera::Update(std::chrono::microseconds dt)
 	glm::mat3 rotation = glm::transpose(GetViewMatrix());
 
 	// deal with hand pulling camera around
-	glm::ivec2 handScreenVec(0);
-	float handDist = 0.0f, worldHandDist = 0.0f;
+	
+	float worldHandDist = 0.0f;
 	int sWidth, sHeight;
 	Game::instance()->GetWindow()->GetSize(sWidth, sHeight);
 	if (_mouseIsDown)
@@ -475,26 +477,31 @@ void Camera::Update(std::chrono::microseconds dt)
 			SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
 			glm::ivec2 handScreenCoords = glm::ivec2(handToScreen);
 			handScreenCoords.y = sHeight - handScreenCoords.y;
-			handScreenVec = mousePosition - handScreenCoords;
-			handDist = glm::length(glm::vec2(handScreenVec));
+			_handScreenVec = mousePosition - handScreenCoords;
+			_handDragMult = glm::length(glm::vec2(_handScreenVec));
 			worldHandDist = glm::length(hit->position - handPos);
-			handDist /= sHeight;
+			_handDragMult /= sHeight;
 		}
-		else // if hand is off screen, culled, behind camera or does not hit land.
+		else if (!hit) { // still on screen but did not hit land
+			//worldHandDist = 3000.f;
+			_handDragMult += 0.001f; // speed up movement
+		}
+		else // if hand is off screen, culled or behind camera.
 		{
 			_hVelocity = glm::vec3(0.f);
 		}
 	}
 	else
 	{
+		_handDragMult = (_handDragMult > 0.0f)? _handDragMult * 0.96f : _handDragMult; // if let go of mouse button slow down hand movement.
 		_hVelocity = glm::vec3(0.f);
 	}
 
-	if (handDist > 0.0f)
+	if (_handDragMult > 0.0f)
 	{
 		auto momentum = _position.y / 300;
-		auto forward = glm::normalize(GetForward() * glm::vec3(1.f, 0.f, 1.f)) * static_cast<float>(handScreenVec.y * momentum);
-		auto right = GetRight() * -static_cast<float>(handScreenVec.x * momentum);
+		auto forward = glm::normalize(GetForward() * glm::vec3(1.f, 0.f, 1.f)) * static_cast<float>(_handScreenVec.y * momentum);
+		auto right = GetRight() * -static_cast<float>(_handScreenVec.x * momentum);
 		auto futurePosition = _position + forward + right;
 		auto logPosY = log(_position.y + 1.0f);
 		auto handVelHeightMult = logPosY * logPosY;
@@ -507,8 +514,16 @@ void Camera::Update(std::chrono::microseconds dt)
 	if (worldHandDist > 2000.0f)
 	{
 		// speed up movement for really distant hand pulls.
-		handDist = (((handDist * 2 - 1) * (handDist * 2 - 1)) * -1) + 1;
+		_handDragMult += 0.001f;
 	}
+	else if (worldHandDist < 2000.0f && worldHandDist > 0.0f && _handDragMult >= 0.1f)
+	{
+		// slow movement for less distant hand pulls.
+		_handDragMult *= 0.98f;
+	} else if (worldHandDist < 0.0f)
+	{
+		_handDragMult = 0.0f;
+	}	
 
 	if (_flyInProgress)
 	{
@@ -563,7 +578,7 @@ void Camera::Update(std::chrono::microseconds dt)
 	else
 	{
 		_velocity += (((_dv * _maxMovementSpeed) - _velocity) * _accelFactor);
-		_hVelocity *= handDist;
+		_hVelocity *= _handDragMult;
 		_position += rotation * (_velocity + _hVelocity) * fdt;
 	}
 	const auto& land = Game::instance()->GetLandIsland();

@@ -12,6 +12,7 @@
 #include <SDL_events.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <ECS/Components/Transform.h>
 
 #include <chrono>
 #include <memory>
@@ -91,6 +92,8 @@ protected:
 	bool _mouseIsDown;
 	bool _mouseIsMoving;
 	bool _shiftHeld;
+	glm::ivec2 _handScreenVec;
+	float _handDragMult;
 	bool _flyInProgress;
 	float _flyDist;
 	float _flySpeed;
