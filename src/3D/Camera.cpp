@@ -405,11 +405,43 @@ void Camera::handleMouseInput(const SDL_Event& e)
 	}
 	if (e.type == SDL_MOUSEWHEEL)
 	{
-		auto movementSpeed = _movementSpeed * std::max(log(_position.y), 0.0f) + 1.0f;
+		auto movementSpeed = _movementSpeed * log(_position.y + 1);
 		if (e.wheel.y != 0) // scroll up or down
 		{
-			_velocity.z +=
-			    (((movementSpeed * e.wheel.y * abs(e.wheel.y) * 5 * _maxMovementSpeed) - _velocity.z) * _accelFactor);
+			float dist = 9999.0f;
+			auto& dynamicsSystem = Game::instance()->GetDynamicsSystem();
+			if (auto hit = dynamicsSystem.RayCastClosestHit(_position, GetForward(), 1e10f))
+			{
+				dist = glm::length(hit->first.position - _position);
+			}
+			if (e.wheel.y > 0.0f) // scrolling in
+			{ 
+				if (dist > 40.0f) // if the cam is far from the ground
+				{ 
+					_velocity.z +=
+						(((movementSpeed * e.wheel.y * abs(e.wheel.y) * 5 * _maxMovementSpeed) - _velocity.z) * _accelFactor);
+				}
+				else // if the cam is just over the ground
+				{ 
+					if (_rotation.x > glm::radians(-60.0f)) // rotation greater than -60 degrees
+					{
+						_rotVelocity.x += (((-e.wheel.y * 4.0f * _maxRotationSpeed) - _rotVelocity.x) * _accelFactor);
+					}
+					
+				}
+			}
+			else // scrolling out
+			{ 
+				if (dist <= 40.0f && _rotation.x < glm::radians(-50.0f))
+				{
+					_rotVelocity.x += (((-e.wheel.y * 4.0f * _maxRotationSpeed) - _rotVelocity.x) * _accelFactor);
+				}
+				else 
+				{
+					_velocity.z +=
+					(((movementSpeed * e.wheel.y * abs(e.wheel.y) * 5 * _maxMovementSpeed) - _velocity.z) * _accelFactor);
+				}
+			}
 		}
 		if (e.wheel.x != 0) // mouse wheel left or right
 		{
