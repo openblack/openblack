@@ -456,7 +456,6 @@ void Camera::Update(std::chrono::microseconds dt)
 	glm::mat3 rotation = glm::transpose(GetViewMatrix());
 
 	// deal with hand pulling camera around
-	
 	float worldHandDist = 0.0f;
 	int sWidth, sHeight;
 	Game::instance()->GetWindow()->GetSize(sWidth, sHeight);
@@ -483,7 +482,6 @@ void Camera::Update(std::chrono::microseconds dt)
 			_handDragMult /= sHeight;
 		}
 		else if (!hit) { // still on screen but did not hit land
-			//worldHandDist = 3000.f;
 			_handDragMult += 0.001f; // speed up movement
 		}
 		else // if hand is off screen, culled or behind camera.
