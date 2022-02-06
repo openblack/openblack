@@ -8,17 +8,20 @@
  *****************************************************************************/
 
 #include "Camera.h"
+
+#include <optional>
+
+#include <SDL_events.h>
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/intersect.hpp>
+#include <glm/gtx/norm.hpp>
+#include <glm/gtx/spline.hpp>
+
 #include "3D/LandIsland.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/DynamicsSystem.h"
 #include "Game.h"
-
-#include <glm/gtx/euler_angles.hpp>
-#include <glm/gtx/intersect.hpp>
-#include <glm/gtx/norm.hpp>
-#include <glm/gtx/spline.hpp>
-#include <optional>
 
 using namespace openblack;
 

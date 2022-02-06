@@ -43,6 +43,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#include <LHVM/LHVM.h>
 #include <Serializer/FotFile.h>
 #include <cstdint>
 #include <string>
@@ -131,6 +132,7 @@ Game::~Game()
 	_window.reset();
 	_eventManager.reset();
 	SDL_Quit(); // todo: move to GameWindow
+	spdlog::shutdown();
 }
 
 entt::entity Game::GetHand() const

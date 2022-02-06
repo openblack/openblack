@@ -9,7 +9,6 @@
 
 #pragma once
 
-#include "ECS/Components/Transform.h"
 #include <SDL_events.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -17,6 +16,8 @@
 #include <chrono>
 #include <memory>
 #include <optional>
+
+typedef union SDL_Event SDL_Event;
 
 namespace openblack
 {
