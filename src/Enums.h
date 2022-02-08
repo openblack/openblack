@@ -3025,6 +3025,14 @@ enum class SpeedState : uint32_t
 	MetresSec_100 = MakeSpeedState(100.0f),
 };
 
+constexpr float GetSpeedStateSpeed(SpeedState state)
+{
+	constexpr uint32_t ms100 = 0x10000;
+	constexpr float ms1 = static_cast<float>(ms100) * 0.01f;
+	float scaled = static_cast<uint32_t>(state) - 0.5f;
+	return scaled / ms1;
+}
+
 constexpr uint32_t MakeTurnAngleState(float degrees)
 {
 	constexpr uint32_t a360 = 0x800;
