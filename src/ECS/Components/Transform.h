@@ -18,6 +18,7 @@ struct Transform
 {
 	glm::vec3 position;
 	glm::mat3 rotation;
+	// TODO(bwrsandman): Change to float. For all intents and purposes, transform scales uniformly.
 	glm::vec3 scale;
 };
 
