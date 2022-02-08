@@ -83,9 +83,14 @@ public:
 		return _registry.storage<Component>().size();
 	}
 	template <typename... Components>
-	[[nodiscard]] decltype(auto) AllOf(entt::entity entity) const
+	[[nodiscard]] bool AllOf(entt::entity entity) const
 	{
 		return _registry.all_of<Components...>(entity);
+	}
+	template <typename... Components>
+	[[nodiscard]] bool AnyOf(entt::entity entity) const
+	{
+		return _registry.any_of<Components...>(entity);
 	}
 	template <typename... Components>
 	decltype(auto) Get(entt::entity entity)
@@ -96,6 +101,11 @@ public:
 	[[nodiscard]] decltype(auto) Get(entt::entity entity) const
 	{
 		return _registry.get<Components...>(entity);
+	}
+	template <typename... Components>
+	[[nodiscard]] decltype(auto) Front() const
+	{
+		return _registry.view<Components...>().front();
 	}
 	template <typename... Components, typename Func>
 	decltype(auto) Each(Func func)
