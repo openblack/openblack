@@ -17,6 +17,7 @@
 #include "ECS/Components/Tree.h"
 #include "ECS/Registry.h"
 #include "Game.h"
+#include "Utils.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
@@ -30,8 +31,9 @@ entt::entity TreeArchetype::Create([[maybe_unused]] uint32_t forestId, const glm
 
 	const auto& info = Game::instance()->GetInfoConstants().tree[static_cast<size_t>(type)];
 
-	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));
-	registry.Assign<Fixed>(entity);
+	const auto& transform = registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));
+	const auto [point, radius] = GetFixedObstacleBoundingCircle(info.normal, transform);
+	registry.Assign<Fixed>(entity, point, radius);
 	registry.Assign<Tree>(entity, type, maxSize);
 	registry.Assign<Mesh>(entity, info.normal, static_cast<int8_t>(0), static_cast<int8_t>(-1));
 

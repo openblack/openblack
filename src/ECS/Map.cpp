@@ -26,6 +26,7 @@ using namespace openblack::ecs::components;
 
 Map::CellId Map::GetGridCell(const glm::vec2& pos)
 {
+	assert(glm::compMin(pos) >= 0);
 	const glm::u32vec2 coords = pos * _positionToGridFactor;
 	const Map::CellId result(coords.x >> 0x10, coords.y >> 0x10);
 	assert(glm::all(glm::lessThan(result, _gridSize))); // If not, clamp to 0, _gridSize
@@ -85,12 +86,25 @@ void Map::Clear()
 void Map::Build()
 {
 	auto& registry = Game::instance()->GetEntityRegistry();
-	registry.Each<const Fixed, const Transform>(
-	    [this](entt::entity entity, [[maybe_unused]] const Fixed& fixed, const Transform& transform) {
-		    const auto cellId = GetGridCell(transform.position);
-		    auto& cell = _fixedGrid[cellId.x + cellId.y * _gridSize.x];
-		    cell.insert(entity);
-	    });
+	registry.Each<const Fixed, const Transform>([this](entt::entity entity, const Fixed& fixed, const Transform& transform) {
+		// TODO(bwrsandman): This is only in the case of a square bb underling the bounding circle (x/z) <= 1.4
+		const float radius = fixed.boundingRadius * glm::compMax(transform.scale) + 1.0f;
+		const auto min = GetGridCell(fixed.boundingCenter - radius);
+		const auto max = GetGridCell(fixed.boundingCenter + radius);
+
+		for (uint16_t x = min.x; x < max.x + 1; ++x)
+		{
+			for (uint16_t y = min.y; y < max.y + 1; ++y)
+			{
+				const auto cellId = Map::CellId(x, y);
+				if (glm::distance2(GetCellCenter(cellId), fixed.boundingCenter) < radius * radius)
+				{
+					auto& cell = _fixedGrid[cellId.x + cellId.y * _gridSize.x];
+					cell.insert(entity);
+				}
+			}
+		}
+	});
 	registry.Each<const Mobile, const Transform>(
 	    [this](entt::entity entity, [[maybe_unused]] const Mobile& mobile, const Transform& transform) {
 		    const auto cellId = GetGridCell(transform.position);
