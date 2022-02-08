@@ -107,15 +107,15 @@ public:
 	{
 		return _registry.view<Components...>().front();
 	}
-	template <typename... Components, typename Func>
-	decltype(auto) Each(Func func)
+	template <typename... Components, typename... Exclude, typename Func>
+	decltype(auto) Each(Func func, Exclude... exclude)
 	{
-		return _registry.view<Components...>().each(func);
+		return _registry.view<Components...>(exclude...).each(func);
 	}
-	template <typename... Components, typename Func>
-	[[nodiscard]] decltype(auto) Each(Func func) const
+	template <typename... Components, typename... Exclude, typename Func>
+	[[nodiscard]] decltype(auto) Each(Func func, Exclude... exclude) const
 	{
-		return _registry.view<Components...>().each(func);
+		return _registry.view<Components...>(exclude...).each(func);
 	}
 	template <typename Component>
 	[[nodiscard]] decltype(auto) ToEntity(const Component& component) const
