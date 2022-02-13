@@ -354,6 +354,15 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 			break;
 		}
 	}
+	else
+	{
+		_dv = glm::vec3(0.0f, 0.0f, 0.0f);
+		_drv = glm::vec3(0.0f, 0.0f, 0.0f);
+		_dwv = glm::vec3(0.0f, 0.0f, 0.0f);
+		_dsv = glm::vec3(0.0f, 0.0f, 0.0f);
+		_ddv = glm::vec3(0.0f, 0.0f, 0.0f);
+		_duv = glm::vec3(0.0f, 0.0f, 0.0f);
+	}
 }
 
 void Camera::handleMouseInput(const SDL_Event& e)
@@ -415,6 +424,12 @@ void Camera::handleMouseInput(const SDL_Event& e)
 	{
 		if (!_mmouseIsDown)
 			_lmouseIsDown = true;
+		_dv = glm::vec3(0.0f, 0.0f, 0.0f);
+		_drv = glm::vec3(0.0f, 0.0f, 0.0f);
+		_dwv = glm::vec3(0.0f, 0.0f, 0.0f);
+		_dsv = glm::vec3(0.0f, 0.0f, 0.0f);
+		_ddv = glm::vec3(0.0f, 0.0f, 0.0f);
+		_duv = glm::vec3(0.0f, 0.0f, 0.0f);
 	}
 	else if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON(SDL_BUTTON_MIDDLE))
 	{
@@ -424,6 +439,12 @@ void Camera::handleMouseInput(const SDL_Event& e)
 	{
 		_mmouseIsDown = true;
 		_lmouseIsDown = false;
+		_dv = glm::vec3(0.0f, 0.0f, 0.0f);
+		_drv = glm::vec3(0.0f, 0.0f, 0.0f);
+		_dwv = glm::vec3(0.0f, 0.0f, 0.0f);
+		_dsv = glm::vec3(0.0f, 0.0f, 0.0f);
+		_ddv = glm::vec3(0.0f, 0.0f, 0.0f);
+		_duv = glm::vec3(0.0f, 0.0f, 0.0f);
 	}
 	if (e.type == SDL_MOUSEWHEEL)
 	{
