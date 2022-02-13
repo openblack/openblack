@@ -9,10 +9,10 @@
 
 #pragma once
 
+#include <ECS/Components/Transform.h>
 #include <SDL_events.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <ECS/Components/Transform.h>
 
 #include <chrono>
 #include <memory>
@@ -89,8 +89,10 @@ protected:
 	float _movementSpeed;
 	float _maxMovementSpeed;
 	float _maxRotationSpeed;
-	bool _mouseIsDown;
+	bool _lmouseIsDown;
+	bool _mmouseIsDown;
 	bool _mouseIsMoving;
+	glm::ivec2 _mouseFirstClick;
 	bool _shiftHeld;
 	glm::ivec2 _handScreenVec;
 	float _handDragMult;

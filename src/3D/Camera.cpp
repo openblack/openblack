@@ -42,8 +42,10 @@ Camera::Camera(glm::vec3 position, glm::vec3 rotation)
     , _movementSpeed(4.0f)
     , _maxMovementSpeed(0.005f)
     , _maxRotationSpeed(0.005f)
-    , _mouseIsDown(false)
+    , _lmouseIsDown(false)
+    , _mmouseIsDown(false)
     , _mouseIsMoving(false)
+    , _mouseFirstClick(0, 0)
     , _shiftHeld(false)
     , _handScreenVec(0)
     , _handDragMult(0.0f)
@@ -255,99 +257,102 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 		break;
 	}
 
-	switch (e.key.keysym.scancode)
+	if (!(_mmouseIsDown || _lmouseIsDown))
 	{
-	case SDL_SCANCODE_LSHIFT:
-	case SDL_SCANCODE_RSHIFT:
-		if (e.type == SDL_KEYDOWN)
+		switch (e.key.keysym.scancode)
 		{
-			_shiftHeld = true;
+		case SDL_SCANCODE_LSHIFT:
+		case SDL_SCANCODE_RSHIFT:
+			if (e.type == SDL_KEYDOWN)
+			{
+				_shiftHeld = true;
+			}
+			if (e.type == SDL_KEYUP)
+			{
+				_shiftHeld = false;
+			}
+			break;
+		case SDL_SCANCODE_W:
+			if (e.type == SDL_KEYDOWN)
+			{
+				glm::vec3 temp = GetForward() * glm::vec3(1.f, 0.f, 1.f);
+				glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
+				temp = glm::normalize(temp) * mRotation * movementSpeed;
+				_dv += temp;
+				_dwv = temp;
+			}
+			else
+			{
+				_dv -= _dwv;
+				_dwv = glm::vec3(0.0f, 0.0f, 0.0f);
+			}
+			break;
+		case SDL_SCANCODE_S:
+			if (e.type == SDL_KEYDOWN)
+			{
+				glm::vec3 temp = -GetForward() * glm::vec3(1.f, 0.f, 1.f);
+				glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
+				temp = glm::normalize(temp) * mRotation * movementSpeed;
+				_dv += temp;
+				_dsv = temp;
+			}
+			else
+			{
+				_dv -= _dsv;
+				_dsv = glm::vec3(0.0f, 0.0f, 0.0f);
+			}
+			break;
+		case SDL_SCANCODE_A:
+			_dv.x += (e.type == SDL_KEYDOWN) ? -movementSpeed : -_dv.x;
+			break;
+		case SDL_SCANCODE_D:
+			_dv.x += (e.type == SDL_KEYDOWN) ? movementSpeed : -_dv.x;
+			break;
+		case SDL_SCANCODE_LCTRL:
+			if (e.type == SDL_KEYDOWN)
+			{
+				glm::vec3 temp = -glm::vec3(0.f, 1.f, 0.f);
+				glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
+				temp = glm::normalize(temp) * mRotation * movementSpeed;
+				_dv += temp;
+				_ddv = temp;
+			}
+			else
+			{
+				_dv -= _ddv;
+				_ddv = glm::vec3(0.0f, 0.0f, 0.0f);
+			}
+			break;
+		case SDL_SCANCODE_SPACE:
+			if (e.type == SDL_KEYDOWN)
+			{
+				glm::vec3 temp = glm::vec3(0.f, 1.f, 0.f);
+				glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
+				temp = glm::normalize(temp) * mRotation * movementSpeed;
+				_dv += temp;
+				_duv = temp;
+			}
+			else
+			{
+				_dv -= _duv;
+				_duv = glm::vec3(0.0f, 0.0f, 0.0f);
+			}
+			break;
+		case SDL_SCANCODE_Q:
+			_drv.y += (e.type == SDL_KEYDOWN) ? _movementSpeed : -_drv.y;
+			break;
+		case SDL_SCANCODE_E:
+			_drv.y += (e.type == SDL_KEYDOWN) ? -_movementSpeed : -_drv.y;
+			break;
+		case SDL_SCANCODE_R:
+			_drv.x += (e.type == SDL_KEYDOWN) ? _movementSpeed : -_drv.x;
+			break;
+		case SDL_SCANCODE_V:
+			_drv.x += (e.type == SDL_KEYDOWN) ? -_movementSpeed : -_drv.x;
+			break;
+		default:
+			break;
 		}
-		if (e.type == SDL_KEYUP)
-		{
-			_shiftHeld = false;
-		}
-		break;
-	case SDL_SCANCODE_W:
-		if (e.type == SDL_KEYDOWN)
-		{
-			glm::vec3 temp = GetForward() * glm::vec3(1.f, 0.f, 1.f);
-			glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
-			temp = glm::normalize(temp) * mRotation * movementSpeed;
-			_dv += temp;
-			_dwv = temp;
-		}
-		else
-		{
-			_dv -= _dwv;
-			_dwv = glm::vec3(0.0f, 0.0f, 0.0f);
-		}
-		break;
-	case SDL_SCANCODE_S:
-		if (e.type == SDL_KEYDOWN)
-		{
-			glm::vec3 temp = -GetForward() * glm::vec3(1.f, 0.f, 1.f);
-			glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
-			temp = glm::normalize(temp) * mRotation * movementSpeed;
-			_dv += temp;
-			_dsv = temp;
-		}
-		else
-		{
-			_dv -= _dsv;
-			_dsv = glm::vec3(0.0f, 0.0f, 0.0f);
-		}
-		break;
-	case SDL_SCANCODE_A:
-		_dv.x += (e.type == SDL_KEYDOWN) ? -movementSpeed : -_dv.x;
-		break;
-	case SDL_SCANCODE_D:
-		_dv.x += (e.type == SDL_KEYDOWN) ? movementSpeed : -_dv.x;
-		break;
-	case SDL_SCANCODE_LCTRL:
-		if (e.type == SDL_KEYDOWN)
-		{
-			glm::vec3 temp = -glm::vec3(0.f, 1.f, 0.f);
-			glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
-			temp = glm::normalize(temp) * mRotation * movementSpeed;
-			_dv += temp;
-			_ddv = temp;
-		}
-		else
-		{
-			_dv -= _ddv;
-			_ddv = glm::vec3(0.0f, 0.0f, 0.0f);
-		}
-		break;
-	case SDL_SCANCODE_SPACE:
-		if (e.type == SDL_KEYDOWN)
-		{
-			glm::vec3 temp = glm::vec3(0.f, 1.f, 0.f);
-			glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
-			temp = glm::normalize(temp) * mRotation * movementSpeed;
-			_dv += temp;
-			_duv = temp;
-		}
-		else
-		{
-			_dv -= _duv;
-			_duv = glm::vec3(0.0f, 0.0f, 0.0f);
-		}
-		break;
-	case SDL_SCANCODE_Q:
-		_drv.y += (e.type == SDL_KEYDOWN) ? _movementSpeed : -_drv.y;
-		break;
-	case SDL_SCANCODE_E:
-		_drv.y += (e.type == SDL_KEYDOWN) ? -_movementSpeed : -_drv.y;
-		break;
-	case SDL_SCANCODE_R:
-		_drv.x += (e.type == SDL_KEYDOWN) ? _movementSpeed : -_drv.x;
-		break;
-	case SDL_SCANCODE_V:
-		_drv.x += (e.type == SDL_KEYDOWN) ? -_movementSpeed : -_drv.x;
-		break;
-	default:
-		break;
 	}
 }
 
@@ -378,6 +383,16 @@ void Camera::handleMouseInput(const SDL_Event& e)
 			float yaw = e.motion.xrel * (glm::two_pi<float>() / width);
 			float pitch = e.motion.yrel * (glm::pi<float>() / height);
 
+			// limit orbit cam by cam rotation in x
+			if (pitch > 0.0f)
+			{
+				auto pitchMult = glm::smoothstep(0.f, 0.1f, _rotation.x + glm::radians(60.0f));
+				pitch *= pitchMult;
+			}
+
+			_rotation.x -= pitch;
+			_rotation.y -= yaw;
+
 			glm::mat4x4 rotationMatrixX(1.0f);
 			rotationMatrixX = glm::rotate(rotationMatrixX, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
 			_position = (rotationMatrixX * glm::vec4(_position - handPos, 0.0f)) + glm::vec4(handPos, 0.0f);
@@ -385,9 +400,7 @@ void Camera::handleMouseInput(const SDL_Event& e)
 			glm::mat4x4 rotationMatrixY(1.0f);
 			rotationMatrixY = glm::rotate(rotationMatrixY, pitch, GetRight());
 			_position = (rotationMatrixY * glm::vec4(_position - handPos, 0.0f)) + glm::vec4(handPos, 0.0f);
-
-			_rotation.x -= pitch;
-			_rotation.y -= yaw;
+			_position.y = (_position.y < 15.0f) ? 15.0f : _position.y;
 		}
 	}
 	else if (e.type == SDL_MOUSEMOTION && e.motion.state & SDL_BUTTON(SDL_BUTTON_LEFT))
@@ -396,15 +409,25 @@ void Camera::handleMouseInput(const SDL_Event& e)
 	}
 	else if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON(SDL_BUTTON_LEFT))
 	{
-		_dv = glm::vec3(0.0f);
-		_mouseIsDown = false;
+		_lmouseIsDown = false;
 	}
 	else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON(SDL_BUTTON_LEFT))
 	{
-		_mouseIsDown = true;
+		if (!_mmouseIsDown)
+			_lmouseIsDown = true;
+	}
+	else if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON(SDL_BUTTON_MIDDLE))
+	{
+		_mmouseIsDown = false;
+	}
+	else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON(SDL_BUTTON_MIDDLE))
+	{
+		_mmouseIsDown = true;
+		_lmouseIsDown = false;
 	}
 	if (e.type == SDL_MOUSEWHEEL)
 	{
+		_flyInProgress = false;
 		auto movementSpeed = _movementSpeed * log(_position.y + 1);
 		if (e.wheel.y != 0) // scroll up or down
 		{
@@ -426,7 +449,7 @@ void Camera::handleMouseInput(const SDL_Event& e)
 					if (_rotation.x > glm::radians(-60.0f)) // rotation greater than -60 degrees
 					{
 						_rotVelocity.x += (((-e.wheel.y * 4.0f * _maxRotationSpeed) - _rotVelocity.x) * _accelFactor);
-					}	
+					}
 				}
 			}
 			else // scrolling out
@@ -447,34 +470,45 @@ void Camera::handleMouseInput(const SDL_Event& e)
 			_rotation.z += (((movementSpeed * e.wheel.x * _maxMovementSpeed) - _velocity.z) * _accelFactor);
 		}
 	}
+	if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON(SDL_BUTTON_LEFT) && e.button.clicks == 1)
+	{
+		SDL_GetMouseState(&_mouseFirstClick.x, &_mouseFirstClick.y);
+	}
 	if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON(SDL_BUTTON_LEFT) && e.button.clicks == 2)
 	{
+		glm::ivec2 mousePosition;
+		SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
+		float dist = glm::distance((glm::vec2)mousePosition, (glm::vec2)_mouseFirstClick);
 		// fly to double click location.
-		if (auto hit = RaycastMouseToLand())
+		if (dist < 10.0f)
 		{
-			// stop all current movements
-			_dv = glm::vec3(0.0f);
-			_dwv = glm::vec3(0.0f);
-			_dsv = glm::vec3(0.0f);
-			_ddv = glm::vec3(0.0f);
-			_duv = glm::vec3(0.0f);
-			_drv = glm::vec3(0.0f);
-
-			_flyToNorm = hit->rotation * glm::vec3(0.0f, 1.0f, 0.0f);
-			auto normXZ = glm::normalize(_flyToNorm * glm::vec3(1.0f, 0.01f, 1.0f));
-			_flyInProgress = true;
-			_flyProgress = 0.0f;
-			_flyFromPos = _position;
-			_flyPrevPos = _flyFromPos;
-			_flyDist = glm::length(hit->position - _flyFromPos);
-			auto vecToCam = glm::normalize(_position - hit->position);
-			_flyToPos = hit->position + (normXZ + vecToCam * 4.0f) / 5.0f * std::max(20.0f, _flyDist * 0.15f);
-			_flyFromTan = glm::normalize(GetForward() * glm::vec3(1.0f, 0.0f, 1.0f)) * _flyDist * 0.4f;
-			_flyToTan = glm::normalize(-(_flyToNorm * 9.0f + vecToCam) / 10.0f * glm::vec3(1.0f, 0.0f, 1.0f)) * _flyDist * 0.4f;
-			if (_position.y < _flyThreshold) // if the camera is low to the ground aim the path up before coming back down
+			if (auto hit = RaycastMouseToLand())
 			{
-				_flyFromTan += glm::vec3(0.0f, 1.0f, 0.0f) * _flyDist * 0.4f;
-				_flyToTan += glm::vec3(0.0f, -1.0f, 0.0f) * _flyDist * 0.4f;
+				// stop all current movements
+				_dv = glm::vec3(0.0f);
+				_dwv = glm::vec3(0.0f);
+				_dsv = glm::vec3(0.0f);
+				_ddv = glm::vec3(0.0f);
+				_duv = glm::vec3(0.0f);
+				_drv = glm::vec3(0.0f);
+
+				_flyToNorm = hit->rotation * glm::vec3(0.0f, 1.0f, 0.0f);
+				auto normXZ = glm::normalize(_flyToNorm * glm::vec3(1.0f, 0.01f, 1.0f));
+				_flyInProgress = true;
+				_flyProgress = 0.0f;
+				_flyFromPos = _position;
+				_flyPrevPos = _flyFromPos;
+				_flyDist = glm::length(hit->position - _flyFromPos);
+				auto vecToCam = glm::normalize(_position - hit->position);
+				_flyToPos = hit->position + (normXZ + vecToCam * 4.0f) / 5.0f * std::max(20.0f, _flyDist * 0.15f);
+				_flyFromTan = glm::normalize(GetForward() * glm::vec3(1.0f, 0.0f, 1.0f)) * _flyDist * 0.4f;
+				_flyToTan =
+				    glm::normalize(-(_flyToNorm * 9.0f + vecToCam) / 10.0f * glm::vec3(1.0f, 0.0f, 1.0f)) * _flyDist * 0.4f;
+				if (_position.y < _flyThreshold) // if the camera is low to the ground aim the path up before coming back down
+				{
+					_flyFromTan += glm::vec3(0.0f, 1.0f, 0.0f) * _flyDist * 0.4f;
+					_flyToTan += glm::vec3(0.0f, -1.0f, 0.0f) * _flyDist * 0.4f;
+				}
 			}
 		}
 	}
@@ -490,20 +524,26 @@ void Camera::Update(std::chrono::microseconds dt)
 	float worldHandDist = 0.0f;
 	int sWidth, sHeight;
 	Game::instance()->GetWindow()->GetSize(sWidth, sHeight);
-	if (_mouseIsDown)
+	if (_lmouseIsDown)
 	{
 		// get hand transform and project to screen coords
 		auto& entityReg = Game::instance()->GetEntityRegistry();
 		auto handEntity = Game::instance()->GetHand();
 		auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
+		const glm::vec3 handOffset(0, 4.0f, 0);
 		auto handPos = handTransform.position;
 		glm::vec3 handToScreen;
 		glm::vec4 viewport = glm::vec4(0, 0, sWidth, sHeight);
 		auto hit = RaycastMouseToLand();
+		if (hit)
+		{
+			handPos -= handOffset * glm::transpose(hit->rotation);
+		}
 		if (ProjectWorldToScreen(handPos, viewport, handToScreen) && hit)
 		{
 			// calculate distance between hand and mouse in screen cooords
 			glm::ivec2 mousePosition;
+
 			SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
 			glm::ivec2 handScreenCoords = glm::ivec2(handToScreen);
 			handScreenCoords.y = sHeight - handScreenCoords.y;
@@ -512,9 +552,9 @@ void Camera::Update(std::chrono::microseconds dt)
 			worldHandDist = glm::length(hit->position - handPos);
 			_handDragMult /= sHeight;
 		}
-		else if (!hit) 
+		else if (!hit)
 		{                            // still on screen but did not hit land
-			_handDragMult += 0.001f; // speed up movement
+			_handDragMult -= 0.002f; // slow down movement
 		}
 		else // if hand is off screen, culled or behind camera.
 		{
@@ -523,14 +563,16 @@ void Camera::Update(std::chrono::microseconds dt)
 	}
 	else
 	{
-		_handDragMult = (_handDragMult > 0.0f)? _handDragMult * 0.96f : _handDragMult; // if let go of mouse button slow down hand movement.
+		_handDragMult = (_handDragMult > 0.0f) ? _handDragMult * 0.96f
+		                                       : _handDragMult; // if let go of mouse button slow down hand movement.
 		_hVelocity = glm::vec3(0.f);
 	}
 
 	if (_handDragMult > 0.0f)
 	{
 		auto momentum = _position.y / 300;
-		auto forward = glm::normalize(GetForward() * glm::vec3(1.f, 0.f, 1.f)) * static_cast<float>(_handScreenVec.y * momentum);
+		auto forward =
+		    glm::normalize(GetForward() * glm::vec3(1.f, 0.f, 1.f)) * static_cast<float>(_handScreenVec.y * momentum);
 		auto right = GetRight() * -static_cast<float>(_handScreenVec.x * momentum);
 		auto futurePosition = _position + forward + right;
 		auto logPosY = log(_position.y + 1.0f);
@@ -539,6 +581,13 @@ void Camera::Update(std::chrono::microseconds dt)
 		vecTo = glm::min(glm::normalize(vecTo) * handVelHeightMult, glm::vec3(10.0f));
 		glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
 		_hVelocity += vecTo * mRotation * 0.0001f;
+		if (GetForward().x > 0.0f) // camera is pointing upwards
+		{
+			if (_handScreenVec.y > 0.0f) // if the move direction is also up
+				_hVelocity.y += 0.0005f; // move cam up a little
+			else
+				_hVelocity.y -= 0.0005f; // move cam down a little
+		}
 	}
 
 	if (worldHandDist > 2000.0f)
@@ -550,10 +599,11 @@ void Camera::Update(std::chrono::microseconds dt)
 	{
 		// slow movement for less distant hand pulls.
 		_handDragMult *= 0.98f;
-	} else if (worldHandDist < 0.0f)
+	}
+	else if (worldHandDist < 0.0f)
 	{
 		_handDragMult = 0.0f;
-	}	
+	}
 
 	if (_flyInProgress)
 	{
@@ -598,7 +648,7 @@ void Camera::Update(std::chrono::microseconds dt)
 			_drv.x = angleUp * 0.5f * (((_flyProgress * 2 - 1) * (_flyProgress * 2 - 1)) * -1.0f + 1.0f);
 		}
 		_flyPrevPos = _position;
-		_flyProgress += _flySpeed * 0.000001f * fdt; // / _flyDist;
+		_flyProgress += _flySpeed * 0.000001f * fdt;
 	}
 	else if (_flyInProgress == false && _flyProgress < 1.0f) // player aborted a Fly early
 	{
@@ -618,6 +668,7 @@ void Camera::Update(std::chrono::microseconds dt)
 	_rotVelocity += (((_drv * _maxRotationSpeed) - _rotVelocity) * _accelFactor);
 	glm::vec3 rot = GetRotation();
 	rot += _rotVelocity * fdt;
+	rot.x = (rot.x < -70) ? -70 : rot.x; // limit cam rotation in x
 	SetRotation(rot);
 
 	_velocity *= airResistance;
