@@ -117,6 +117,16 @@ void Camera::StartFlight()
 	_flyProgress = 0.0f;
 }
 
+void Camera::ResetVelocities()
+{
+	_dv = glm::vec3(0.0f, 0.0f, 0.0f);
+	_drv = glm::vec3(0.0f, 0.0f, 0.0f);
+	_dwv = glm::vec3(0.0f, 0.0f, 0.0f);
+	_dsv = glm::vec3(0.0f, 0.0f, 0.0f);
+	_ddv = glm::vec3(0.0f, 0.0f, 0.0f);
+	_duv = glm::vec3(0.0f, 0.0f, 0.0f);
+}
+
 void Camera::SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip)
 {
 	float yFov = (glm::atan(glm::tan(glm::radians(xFov) / 2.0f)) / aspect) * 2.0f;
@@ -353,12 +363,7 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 	}
 	else
 	{
-		_dv = glm::vec3(0.0f, 0.0f, 0.0f);
-		_drv = glm::vec3(0.0f, 0.0f, 0.0f);
-		_dwv = glm::vec3(0.0f, 0.0f, 0.0f);
-		_dsv = glm::vec3(0.0f, 0.0f, 0.0f);
-		_ddv = glm::vec3(0.0f, 0.0f, 0.0f);
-		_duv = glm::vec3(0.0f, 0.0f, 0.0f);
+		ResetVelocities();
 	}
 }
 
@@ -419,14 +424,12 @@ void Camera::handleMouseInput(const SDL_Event& e)
 	}
 	else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON(SDL_BUTTON_LEFT))
 	{
+		if (!_lmouseIsDown)
+		{
+			ResetVelocities();
+		}
 		if (!_mmouseIsDown)
 			_lmouseIsDown = true;
-		_dv = glm::vec3(0.0f, 0.0f, 0.0f);
-		_drv = glm::vec3(0.0f, 0.0f, 0.0f);
-		_dwv = glm::vec3(0.0f, 0.0f, 0.0f);
-		_dsv = glm::vec3(0.0f, 0.0f, 0.0f);
-		_ddv = glm::vec3(0.0f, 0.0f, 0.0f);
-		_duv = glm::vec3(0.0f, 0.0f, 0.0f);
 	}
 	else if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON(SDL_BUTTON_MIDDLE))
 	{
@@ -436,12 +439,10 @@ void Camera::handleMouseInput(const SDL_Event& e)
 	{
 		_mmouseIsDown = true;
 		_lmouseIsDown = false;
-		_dv = glm::vec3(0.0f, 0.0f, 0.0f);
-		_drv = glm::vec3(0.0f, 0.0f, 0.0f);
-		_dwv = glm::vec3(0.0f, 0.0f, 0.0f);
-		_dsv = glm::vec3(0.0f, 0.0f, 0.0f);
-		_ddv = glm::vec3(0.0f, 0.0f, 0.0f);
-		_duv = glm::vec3(0.0f, 0.0f, 0.0f);
+		if (!_mmouseIsDown)
+		{
+			ResetVelocities();
+		}
 	}
 	if (e.type == SDL_MOUSEWHEEL)
 	{
@@ -503,12 +504,7 @@ void Camera::handleMouseInput(const SDL_Event& e)
 			if (auto hit = RaycastMouseToLand())
 			{
 				// stop all current movements
-				_dv = glm::vec3(0.0f);
-				_dwv = glm::vec3(0.0f);
-				_dsv = glm::vec3(0.0f);
-				_ddv = glm::vec3(0.0f);
-				_duv = glm::vec3(0.0f);
-				_drv = glm::vec3(0.0f);
+				ResetVelocities();
 
 				_flyToNorm = hit->rotation * glm::vec3(0.0f, 1.0f, 0.0f);
 				auto normXZ = glm::normalize(_flyToNorm * glm::vec3(1.0f, 0.01f, 1.0f));
@@ -599,7 +595,7 @@ void Camera::Update(std::chrono::microseconds dt)
 		vecTo = glm::min(glm::normalize(vecTo) * handVelHeightMult, glm::vec3(10.0f));
 		glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
 		_hVelocity += vecTo * mRotation * 0.0001f;
-		if (GetForward().x > 0.0f) // camera is pointing upwards
+		if (GetForward().y > 0.0f) // camera is pointing upwards
 		{
 			if (_handScreenVec.y > 0.0f) // if the move direction is also up
 				_hVelocity.y += 0.0005f; // move cam up a little

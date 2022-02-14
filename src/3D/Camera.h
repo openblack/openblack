@@ -42,6 +42,7 @@ public:
 	[[nodiscard]] std::optional<ecs::components::Transform> RaycastMouseToLand();
 	void FlyInit();
 	void StartFlight();
+	void ResetVelocities();
 
 	[[nodiscard]] glm::vec3 GetPosition() const { return _position; }
 	[[nodiscard]] glm::vec3 GetRotation() const { return glm::degrees(_rotation); }
