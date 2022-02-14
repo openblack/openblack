@@ -318,7 +318,7 @@ bool Game::Update()
 		// Update Hand
 		if (!_handGripping)
 		{
-			const glm::vec3 handOffset(0, 4.0f, 0);
+			const glm::vec3 handOffset(0, 1.5f, 0);
 			const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
 			auto& handTransform = _entityRegistry->Get<ecs::components::Transform>(_handEntity);
 			// TODO: move using velocity rather than snapping hand to intersectionTransform
@@ -494,7 +494,7 @@ void Game::LoadMap(const fs::path& path)
 
 	// We need a hand for the player
 	_handEntity = ecs::archetypes::HandArchetype::Create(glm::vec3(0.0f), glm::half_pi<float>(), 0.0f, glm::half_pi<float>(),
-	                                                     0.02f, false);
+	                                                     0.01f, false);
 
 	Script script(this);
 	script.Load(source);

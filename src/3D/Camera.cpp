@@ -36,7 +36,7 @@ Camera::Camera(glm::vec3 position, glm::vec3 rotation)
     , _hVelocity(0.0f, 0.0f, 0.0f)
     , _rotVelocity(0.0f, 0.0f, 0.0f)
     , _accelFactor(0.001f)
-    , _movementSpeed(4.0f)
+    , _movementSpeed(1.5f)
     , _maxMovementSpeed(0.005f)
     , _maxRotationSpeed(0.005f)
     , _lmouseIsDown(false)
@@ -385,9 +385,10 @@ void Camera::handleMouseInput(const SDL_Event& e)
 			auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
 			auto handPos = handTransform.position;
 
-			if (handPos.x < -536870870.0) // if hand is not on the world
+			auto handDist = glm::length2(handPos - _position);
+			if (handDist > 250000.0f) // if hand is more than 500 away (500^2)
 			{
-				handPos = _position + GetForward() * 1000.0f;
+				handPos = _position + GetForward() * 500.0f; // orbit around a point 500 away from cam
 			}
 			int width, height;
 			Game::instance()->GetWindow()->GetSize(width, height);
@@ -447,7 +448,7 @@ void Camera::handleMouseInput(const SDL_Event& e)
 	if (e.type == SDL_MOUSEWHEEL)
 	{
 		_flyInProgress = false;
-		auto movementSpeed = _movementSpeed * log(_position.y + 1);
+		auto movementSpeed = _movementSpeed * 4 * glm::smoothstep(0.1f, 1.0f, _position.y * 0.01f) * log(_position.y + 1);
 		if (e.wheel.y != 0) // scroll up or down
 		{
 			float dist = 9999.0f;
@@ -456,12 +457,12 @@ void Camera::handleMouseInput(const SDL_Event& e)
 			{
 				dist = glm::length(hit->first.position - _position);
 			}
+			auto amount = (((movementSpeed * e.wheel.y * _maxMovementSpeed) - _velocity.z) * _accelFactor);
 			if (e.wheel.y > 0.0f) // scrolling in
 			{
 				if (dist > 40.0f) // if the cam is far from the ground
 				{
-					_velocity.z +=
-					    (((movementSpeed * e.wheel.y * abs(e.wheel.y) * 5 * _maxMovementSpeed) - _velocity.z) * _accelFactor);
+					_velocity.z += amount;
 				}
 				else // if the cam is just over the ground
 				{
@@ -479,8 +480,7 @@ void Camera::handleMouseInput(const SDL_Event& e)
 				}
 				else
 				{
-					_velocity.z +=
-					    (((movementSpeed * e.wheel.y * abs(e.wheel.y) * 5 * _maxMovementSpeed) - _velocity.z) * _accelFactor);
+					_velocity.z += amount;
 				}
 			}
 		}
@@ -538,13 +538,13 @@ void Camera::Update(std::chrono::microseconds dt)
 	float worldHandDist = 0.0f;
 	int sWidth, sHeight;
 	Game::instance()->GetWindow()->GetSize(sWidth, sHeight);
-	if (_lmouseIsDown)
+	if (_lmouseIsDown) // drag camera using hand
 	{
 		// get hand transform and project to screen coords
 		auto& entityReg = Game::instance()->GetEntityRegistry();
 		auto handEntity = Game::instance()->GetHand();
 		auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
-		const glm::vec3 handOffset(0, 4.0f, 0);
+		const glm::vec3 handOffset(0, 1.5f, 0);
 		auto handPos = handTransform.position;
 		glm::vec3 handToScreen;
 		glm::vec4 viewport = glm::vec4(0, 0, sWidth, sHeight);
@@ -592,9 +592,9 @@ void Camera::Update(std::chrono::microseconds dt)
 		auto logPosY = log(_position.y + 1.0f);
 		auto handVelHeightMult = logPosY * logPosY;
 		glm::vec3 vecTo = futurePosition - _position;
-		vecTo = glm::min(glm::normalize(vecTo) * handVelHeightMult, glm::vec3(10.0f));
+		vecTo = glm::min(glm::normalize(vecTo) * handVelHeightMult, glm::vec3(5.0f));
 		glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
-		_hVelocity += vecTo * mRotation * 0.0001f;
+		_hVelocity += vecTo * mRotation * 0.00005f;
 		if (GetForward().y > 0.0f) // camera is pointing upwards
 		{
 			if (_handScreenVec.y > 0.0f) // if the move direction is also up
