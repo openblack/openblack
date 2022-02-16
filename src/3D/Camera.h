@@ -9,12 +9,14 @@
 
 #pragma once
 
+#include <SDL_events.h>
+#include <chrono>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/quaternion.hpp>
-
-#include <chrono>
 #include <memory>
+#include <optional>
+
+#include "ECS/Components/Transform.h"
 
 typedef union SDL_Event SDL_Event;
 
@@ -25,16 +27,7 @@ class Camera
 {
 
 public:
-	Camera(glm::vec3 position, glm::vec3 rotation)
-	    : _position(position)
-	    , _rotation(glm::radians(rotation))
-	    , _dv(0.0f, 0.0f, 0.0f)
-	    , _projectionMatrix(1.0f)
-	    , _velocity(0.0f, 0.0f, 0.0f)
-	    , _maxMovementSpeed(0.005f)
-	    , _freeLookSensitivity(1.0f)
-	{
-	}
+	Camera(glm::vec3, glm::vec3);
 	Camera()
 	    : Camera(glm::vec3(0.0f), glm::vec3(0.0f))
 	{
@@ -45,6 +38,11 @@ public:
 	[[nodiscard]] virtual glm::mat4 GetViewMatrix() const;
 	[[nodiscard]] const glm::mat4& GetProjectionMatrix() const { return _projectionMatrix; }
 	[[nodiscard]] virtual glm::mat4 GetViewProjectionMatrix() const;
+
+	[[nodiscard]] std::optional<ecs::components::Transform> RaycastMouseToLand();
+	void FlyInit();
+	void StartFlight();
+	void ResetVelocities();
 
 	[[nodiscard]] glm::vec3 GetPosition() const { return _position; }
 	[[nodiscard]] glm::vec3 GetRotation() const { return glm::degrees(_rotation); }
@@ -73,18 +71,45 @@ public:
 	void handleKeyboardInput(const SDL_Event&);
 	void handleMouseInput(const SDL_Event&);
 
-	[[nodiscard]] glm::mat4 getRotationMatrix() const;
+	[[nodiscard]] glm::mat4 GetRotationMatrix() const;
 
 protected:
 	glm::vec3 _position;
 	glm::vec3 _rotation;
 	glm::vec3 _dv;
-
+	glm::vec3 _dwv;
+	glm::vec3 _dsv;
+	glm::vec3 _ddv;
+	glm::vec3 _duv;
+	glm::vec3 _drv;
 	glm::mat4 _projectionMatrix;
-
 	glm::vec3 _velocity;
+	glm::vec3 _hVelocity;
+	glm::vec3 _rotVelocity;
+	float _accelFactor;
+	float _movementSpeed;
 	float _maxMovementSpeed;
-	float _freeLookSensitivity;
+	float _maxRotationSpeed;
+	bool _lmouseIsDown;
+	bool _mmouseIsDown;
+	bool _mouseIsMoving;
+	glm::ivec2 _mouseFirstClick;
+	bool _shiftHeld;
+	glm::ivec2 _handScreenVec;
+	float _handDragMult;
+	bool _flyInProgress;
+	float _flyDist;
+	float _flySpeed;
+	float _flyStartAngle;
+	float _flyEndAngle;
+	float _flyThreshold;
+	float _flyProgress;
+	glm::vec3 _flyFromPos;
+	glm::vec3 _flyToNorm;
+	glm::vec3 _flyFromTan;
+	glm::vec3 _flyToPos;
+	glm::vec3 _flyToTan;
+	glm::vec3 _flyPrevPos;
 };
 
 class ReflectionCamera: public Camera
