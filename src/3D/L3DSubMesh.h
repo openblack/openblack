@@ -62,7 +62,7 @@ public:
 	[[nodiscard]] openblack::l3d::L3DSubmeshHeader::Flags GetFlags() const { return _flags; }
 	[[nodiscard]] bool isPhysics() const { return _flags.isPhysics; }
 	[[nodiscard]] graphics::Mesh& GetMesh() const;
-	[[nodiscard]] AxisAlignedBoundingBox GetBoundingBox() const { return _boundingBox; }
+	[[nodiscard]] const AxisAlignedBoundingBox& GetBoundingBox() const { return _boundingBox; }
 	[[nodiscard]] const std::vector<Primitive>& GetPrimitives() const { return _primitives; }
 
 private:

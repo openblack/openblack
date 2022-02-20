@@ -272,7 +272,7 @@ void MeshViewer::Update(Game& game, const Renderer& renderer)
 		if (_viewBoundingBox)
 		{
 			auto box = mesh->GetSubMeshes()[_selectedSubMesh]->GetBoundingBox();
-			auto model = glm::translate(box.center()) * glm::scale(box.size());
+			auto model = glm::translate(box.Center()) * glm::scale(box.Size());
 			bgfx::setTransform(glm::value_ptr(model));
 			_boundingBox->GetVertexBuffer().Bind();
 			bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES, 0);
