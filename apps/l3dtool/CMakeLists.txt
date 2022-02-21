@@ -25,7 +25,7 @@ else()
 			-pedantic
 			-Werror
 			# Disabled due to tiny-gltf
-			-Wno-ignored-qualifiers)
+			-Wno-switch)
 endif()
 
 set_property(TARGET l3dtool PROPERTY FOLDER "tools")

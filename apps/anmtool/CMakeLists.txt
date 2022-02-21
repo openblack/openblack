@@ -25,7 +25,7 @@ else()
 			-pedantic
 			-Werror
 			# Disabled due to tiny-gltf
-			-Wno-ignored-qualifiers)
+			-Wno-switch)
 endif()
 
 set_property(TARGET anmtool PROPERTY FOLDER "tools")
