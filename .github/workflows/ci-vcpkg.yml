@@ -35,6 +35,11 @@ jobs:
           sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
         if: matrix.os == 'ubuntu-latest'
 
+      - name: Set GCC 10
+        run: |
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10 --slave /usr/bin/gcov gcov /usr/bin/gcov-10
+        if: matrix.os == 'ubuntu-latest' && matrix.cc == ''
+
       # Setup nasm, needed for ffmpeg stuff
       - uses: ilammy/setup-nasm@v1
 
