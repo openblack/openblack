@@ -225,8 +225,8 @@ void FeatureScriptCommands::CreatePath(int32_t param_1, int32_t param_2, int32_t
 void FeatureScriptCommands::CreateTown(int32_t townId, glm::vec3 position, const std::string& playerOwner,
                                        [[maybe_unused]] int32_t, const std::string& tribeType)
 {
-	spdlog::get("scripting")
-	    ->debug(R"(LHScriptX: Creating town {} for "{}" with tribe type "{}".)", townId, playerOwner, tribeType);
+	SPDLOG_LOGGER_DEBUG(spdlog::get("scripting"), R"(LHScriptX: Creating town {} for "{}" with tribe type "{}".)", townId,
+	                    playerOwner, tribeType);
 
 	PlayerNames player;
 	try
