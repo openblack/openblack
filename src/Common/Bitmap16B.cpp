@@ -31,7 +31,7 @@ Bitmap16B::~Bitmap16B()
 	delete[] _data;
 }
 
-Bitmap16B* Bitmap16B::LoadFromFile(const fs::path& path)
+Bitmap16B* Bitmap16B::LoadFromFile(const std::filesystem::path& path)
 {
 	auto const& data = Game::instance()->GetFileSystem().ReadAll(path);
 	auto* bitmap = new Bitmap16B(data.data());

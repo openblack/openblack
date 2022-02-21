@@ -110,22 +110,6 @@ if(UNIX)
   endif()
 endif()
 
-if(HAS_FILESYSTEM)
-  message(STATUS "Got <filesystem>: add compiler definition HAS_FILESYSTEM")
-  target_compile_definitions(openblack_lib PUBLIC HAS_FILESYSTEM)
-else()
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    message(
-      STATUS
-        "No <filesystem>: linking stdc++fs on unknown compiler id: ${CMAKE_CXX_COMPILER_ID}"
-    )
-    target_link_libraries(openblack_lib PUBLIC stdc++fs)
-  else()
-    message(
-      STATUS "No <filesystem> on unknown compiler id: ${CMAKE_CXX_COMPILER_ID}")
-  endif()
-endif()
-
 target_compile_definitions(openblack_lib
   PRIVATE
   "GLM_FORCE_LEFT_HANDED"

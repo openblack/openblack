@@ -678,7 +678,7 @@ bool Gui::ShowMenu(Game& game)
 			    std::pair {"Four Gods", "FourGods.txt"},
 			};
 
-			auto menu_item = [&game](const auto& label, const fs::path& path) {
+			auto menu_item = [&game](const auto& label, const std::filesystem::path& path) {
 				if (ImGui::MenuItem(label.data()))
 					game.LoadMap(path);
 				if (ImGui::IsItemHovered())

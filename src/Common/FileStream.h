@@ -11,13 +11,7 @@
 
 #include "IStream.h"
 
-#ifdef HAS_FILESYSTEM
 #include <filesystem>
-namespace fs = std::filesystem;
-#else
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif // HAS_FILESYSTEM
 
 namespace openblack
 {
@@ -32,7 +26,7 @@ enum class FileMode
 class FileStream: public IStream
 {
 public:
-	FileStream(const fs::path& filename, FileMode mode);
+	FileStream(const std::filesystem::path& filename, FileMode mode);
 	virtual ~FileStream();
 
 	[[nodiscard]] std::size_t Position() const override;

@@ -9,14 +9,8 @@
 
 #pragma once
 
-#ifdef HAS_FILESYSTEM
-#include <filesystem>
-namespace fs = std::filesystem;
-#else
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif // HAS_FILESYSTEM
 #include <array>
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
@@ -158,13 +152,13 @@ public:
 	bool Update();
 	bool Run();
 
-	void LoadMap(const fs::path& path);
-	void LoadLandscape(const fs::path& path);
+	void LoadMap(const std::filesystem::path& path);
+	void LoadLandscape(const std::filesystem::path& path);
 
 	bool LoadVariables();
 
-	void SetGamePath(fs::path gamePath);
-	const fs::path& GetGamePath();
+	void SetGamePath(std::filesystem::path gamePath);
+	const std::filesystem::path& GetGamePath();
 	void SetTime(float time);
 	void SetGameSpeed(float multiplier) { _gameSpeedMultiplier = multiplier; }
 	float GetGameSpeed() const { return _gameSpeedMultiplier; }
@@ -204,7 +198,7 @@ private:
 	static Game* sInstance;
 
 	/// path to Lionhead Studios Ltd/Black & White folder
-	fs::path _gamePath;
+	std::filesystem::path _gamePath;
 
 	std::unique_ptr<GameWindow> _window;
 	std::unique_ptr<Renderer> _renderer;

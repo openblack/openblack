@@ -12,13 +12,7 @@
 #include <cstdint>
 #include <string>
 
-#ifdef HAS_FILESYSTEM
 #include <filesystem>
-namespace fs = std::filesystem;
-#else
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif // HAS_FILESYSTEM
 
 namespace openblack
 {
@@ -42,7 +36,7 @@ private:
 	size_t _size;
 
 public:
-	static Bitmap16B* LoadFromFile(const fs::path& path);
+	static Bitmap16B* LoadFromFile(const std::filesystem::path& path);
 };
 
 } // namespace openblack

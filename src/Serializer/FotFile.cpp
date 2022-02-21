@@ -25,7 +25,7 @@ FotFile::FotFile(Game& game)
 {
 }
 
-void FotFile::Load(const fs::path& path)
+void FotFile::Load(const std::filesystem::path& path)
 {
 	auto stream = _game.GetFileSystem().Open(path, FileMode::Read);
 	serializer::GameThingSerializer serializer(*stream);

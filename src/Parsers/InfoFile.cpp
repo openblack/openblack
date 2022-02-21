@@ -19,7 +19,7 @@
 namespace openblack
 {
 
-bool InfoFile::LoadFromFile(const fs::path& path, InfoConstants& infos)
+bool InfoFile::LoadFromFile(const std::filesystem::path& path, InfoConstants& infos)
 {
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Info Pack from file: {}", path.generic_string());
 

@@ -17,7 +17,7 @@
 namespace openblack
 {
 
-FileStream::FileStream(const fs::path& path, FileMode mode)
+FileStream::FileStream(const std::filesystem::path& path, FileMode mode)
     : _file(nullptr)
     , _fileSize(0)
 {

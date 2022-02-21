@@ -11,13 +11,7 @@
 
 #include <cstdint>
 
-#ifdef HAS_FILESYSTEM
 #include <filesystem>
-namespace fs = std::filesystem;
-#else
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif // HAS_FILESYSTEM
 #include <memory>
 #include <vector>
 
@@ -32,7 +26,7 @@ public:
 	AnimationPack();
 	virtual ~AnimationPack();
 
-	bool LoadFromFile(const fs::path& path);
+	bool LoadFromFile(const std::filesystem::path& path);
 
 	using AnimationVec = std::vector<std::unique_ptr<L3DAnim>>;
 	[[nodiscard]] const AnimationVec& GetAnimations() const { return _animations; }

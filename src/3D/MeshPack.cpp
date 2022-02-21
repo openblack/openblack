@@ -31,7 +31,7 @@ MeshPack::MeshPack(bool enableUnknownMeshes)
 {
 }
 
-bool MeshPack::LoadFromFile(const fs::path& path)
+bool MeshPack::LoadFromFile(const std::filesystem::path& path)
 {
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Mesh Pack from file: {}", path.generic_string());
 	pack::PackFile pack;

@@ -93,7 +93,7 @@ Game::Game(Arguments&& args)
 	}
 	sInstance = this;
 
-	std::string binaryPath = fs::path {args.executablePath}.parent_path().generic_string();
+	std::string binaryPath = std::filesystem::path {args.executablePath}.parent_path().generic_string();
 	_config.numFramesToSimulate = args.numFramesToSimulate;
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), "current binary path: {}", binaryPath);
 	SetGamePath(args.gamePath);
@@ -537,7 +537,7 @@ bool Game::Run()
 	return true;
 }
 
-void Game::LoadMap(const fs::path& path)
+void Game::LoadMap(const std::filesystem::path& path)
 {
 	if (!_fileSystem->Exists(path))
 		throw std::runtime_error("Could not find script " + path.generic_string());
@@ -580,7 +580,7 @@ void Game::LoadMap(const fs::path& path)
 	_turnCount = 0;
 }
 
-void Game::LoadLandscape(const fs::path& path)
+void Game::LoadLandscape(const std::filesystem::path& path)
 {
 	if (_landIsland)
 		_landIsland.reset();
@@ -608,21 +608,21 @@ bool Game::LoadVariables()
 	return true;
 }
 
-void Game::SetGamePath(fs::path gamePath)
+void Game::SetGamePath(std::filesystem::path gamePath)
 {
 	if (gamePath.empty())
 	{
 		return;
 	}
 
-#ifdef __APPLE__
-	if (gamePath.string().c_str()[0] == '~' && gamePath.string().c_str()[1] == '/')
+#if defined(unix) || defined(__unix__) || defined(__unix)
+	if (gamePath.string().size() >= 2 && gamePath.string().c_str()[0] == '~' && gamePath.string().c_str()[1] == '/')
 	{
-		gamePath = getenv("HOME") + gamePath.string().substr(1);
+		gamePath = std::getenv("HOME") + gamePath.string().substr(1);
 	}
 #endif
 
-	if (!fs::exists(gamePath))
+	if (!std::filesystem::exists(gamePath))
 	{
 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "GamePath does not exist: '{}'", gamePath.generic_string());
 		return;
@@ -630,7 +630,7 @@ void Game::SetGamePath(fs::path gamePath)
 	_gamePath = gamePath;
 }
 
-const fs::path& Game::GetGamePath()
+const std::filesystem::path& Game::GetGamePath()
 {
 	if (_gamePath.empty())
 	{
@@ -644,7 +644,7 @@ const fs::path& Game::GetGamePath()
 			status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ,
 			                     nullptr, path.data(), &dataLen);
 
-			_gamePath = fs::path(path.data());
+			_gamePath = std::filesystem::path(path.data());
 			return _gamePath;
 		}
 
