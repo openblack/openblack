@@ -25,7 +25,6 @@
 #include "ECS/Systems/DynamicsSystem.h"
 #include "ECS/Systems/RenderingSystem.h"
 #include "GameWindow.h"
-#include "GitSHA1.h"
 #include "Graphics/FrameBuffer.h"
 #include "Gui/Gui.h"
 #include "LHScriptX/Script.h"
@@ -57,7 +56,6 @@ using namespace openblack::lhscriptx;
 using namespace std::chrono_literals;
 using openblack::ecs::systems::RenderingSystem;
 
-const std::string kBuildStr(kGitSHA1Hash, 8);
 const std::string kWindowTitle = "openblack";
 
 Game* Game::sInstance = nullptr;
@@ -94,8 +92,7 @@ Game::Game(Arguments&& args)
 	SetGamePath(args.gamePath);
 	if (args.rendererType != bgfx::RendererType::Noop)
 	{
-		_window = std::make_unique<GameWindow>(kWindowTitle + " [" + kBuildStr + "]", args.windowWidth, args.windowHeight,
-		                                       args.displayMode);
+		_window = std::make_unique<GameWindow>(kWindowTitle, args.windowWidth, args.windowHeight, args.displayMode);
 	}
 	_renderer = std::make_unique<Renderer>(_window.get(), args.rendererType, args.vsync);
 	_dynamicsSystem = std::make_unique<ecs::systems::DynamicsSystem>();

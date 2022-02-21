@@ -125,7 +125,6 @@ endif()
 
 target_compile_definitions(openblack
   PRIVATE
-  "GIT_SHA1=\"${GIT_SHA1}\""
   "GLM_FORCE_LEFT_HANDED"
   "GLM_FORCE_RADIANS"
   "GLM_ENABLE_EXPERIMENTAL"
