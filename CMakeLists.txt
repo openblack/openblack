@@ -73,11 +73,6 @@ FetchContent_MakeAvailable(imgui-flame-graph)
 
 include(ClangFormat)
 
-# Include git hash in source
-include(CMakeModules/GetGitRevisionDescription.cmake)
-get_git_head_revision(GIT_REFSPEC GIT_SHA1)
-message(STATUS "Building ${CMAKE_PROJECT_NAME} GIT SHA1: ${GIT_SHA1}")
-
 # gets bundled dependencies (imgui, bgfx.cmake)
 add_subdirectory(externals)
 
