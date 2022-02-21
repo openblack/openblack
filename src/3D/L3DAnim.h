@@ -11,13 +11,7 @@
 
 #include <cstdint>
 
-#ifdef HAS_FILESYSTEM
 #include <filesystem>
-namespace fs = std::filesystem;
-#else
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif // HAS_FILESYSTEM
 #include <vector>
 
 #include <glm/fwd.hpp>
@@ -47,7 +41,7 @@ public:
 	virtual ~L3DAnim() = default;
 
 	void Load(const anm::ANMFile& anm);
-	bool LoadFromFile(const fs::path& path);
+	bool LoadFromFile(const std::filesystem::path& path);
 	void LoadFromBuffer(const std::vector<uint8_t>& data);
 
 	[[nodiscard]] const std::string& GetName() const { return _name; }

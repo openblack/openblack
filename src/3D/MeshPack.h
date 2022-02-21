@@ -9,13 +9,7 @@
 
 #pragma once
 
-#ifdef HAS_FILESYSTEM
 #include <filesystem>
-namespace fs = std::filesystem;
-#else
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif // HAS_FILESYSTEM
 #include <map>
 #include <memory>
 #include <vector>
@@ -49,7 +43,7 @@ class MeshPack
 public:
 	MeshPack(bool enableUnknownMeshes);
 
-	bool LoadFromFile(const fs::path& path);
+	bool LoadFromFile(const std::filesystem::path& path);
 
 	using MeshesVec = std::vector<std::unique_ptr<L3DMesh>>;
 	using TexturesVec = std::vector<std::unique_ptr<graphics::Texture2D>>;

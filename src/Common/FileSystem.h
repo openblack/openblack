@@ -25,38 +25,38 @@ FileSystem
 class FileSystem
 {
 public:
-	static inline fs::path ScriptsPath() { return "Scripts"; }
+	static inline std::filesystem::path ScriptsPath() { return "Scripts"; }
 
-	static inline fs::path PlaygroundPath() { return ScriptsPath() / "Playgrounds"; }
+	static inline std::filesystem::path PlaygroundPath() { return ScriptsPath() / "Playgrounds"; }
 
-	static inline fs::path QuestsPath() { return ScriptsPath() / "Quests"; }
+	static inline std::filesystem::path QuestsPath() { return ScriptsPath() / "Quests"; }
 
-	static inline fs::path DataPath() { return "Data"; }
+	static inline std::filesystem::path DataPath() { return "Data"; }
 
-	static inline fs::path MiscPath() { return DataPath() / "Misc"; }
+	static inline std::filesystem::path MiscPath() { return DataPath() / "Misc"; }
 
-	static inline fs::path LandscapePath() { return DataPath() / "Landscape"; }
+	static inline std::filesystem::path LandscapePath() { return DataPath() / "Landscape"; }
 
-	static inline fs::path TexturePath() { return DataPath() / "Textures"; }
+	static inline std::filesystem::path TexturePath() { return DataPath() / "Textures"; }
 
-	static inline fs::path WeatherSystemPath() { return DataPath() / "WeatherSystem"; }
+	static inline std::filesystem::path WeatherSystemPath() { return DataPath() / "WeatherSystem"; }
 
-	static inline fs::path CreatureMeshPath() { return DataPath() / "CreatureMesh"; }
+	static inline std::filesystem::path CreatureMeshPath() { return DataPath() / "CreatureMesh"; }
 
-	static fs::path FixPath(const fs::path& path);
+	static std::filesystem::path FixPath(const std::filesystem::path& path);
 
-	[[nodiscard]] fs::path FindPath(const fs::path& path) const;
+	[[nodiscard]] std::filesystem::path FindPath(const std::filesystem::path& path) const;
 
-	std::unique_ptr<FileStream> Open(const fs::path& path, FileMode mode);
-	bool Exists(const fs::path& path);
+	std::unique_ptr<FileStream> Open(const std::filesystem::path& path, FileMode mode);
+	bool Exists(const std::filesystem::path& path);
 
-	void SetGamePath(const fs::path& path) { _gamePath = path; }
-	[[nodiscard]] const fs::path& GetGamePath() const { return _gamePath; }
+	void SetGamePath(const std::filesystem::path& path) { _gamePath = path; }
+	[[nodiscard]] const std::filesystem::path& GetGamePath() const { return _gamePath; }
 
-	std::vector<std::byte> ReadAll(const fs::path& path);
+	std::vector<std::byte> ReadAll(const std::filesystem::path& path);
 
 private:
-	fs::path _gamePath;
+	std::filesystem::path _gamePath;
 };
 
 } // namespace openblack

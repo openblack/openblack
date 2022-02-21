@@ -9,13 +9,7 @@
 
 #pragma once
 
-#ifdef HAS_FILESYSTEM
 #include <filesystem>
-namespace fs = std::filesystem;
-#else
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif // HAS_FILESYSTEM
 #include <optional>
 #include <unordered_map>
 
@@ -86,7 +80,7 @@ public:
 	virtual ~L3DMesh();
 
 	void Load(const l3d::L3DFile& l3d);
-	bool LoadFromFile(const fs::path& path);
+	bool LoadFromFile(const std::filesystem::path& path);
 	void LoadFromBuffer(const std::vector<uint8_t>& data);
 
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return static_cast<uint8_t>(_subMeshes.size()); }

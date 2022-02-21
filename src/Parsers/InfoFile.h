@@ -9,14 +9,8 @@
 
 #pragma once
 
-#include <optional>
-#ifdef HAS_FILESYSTEM
 #include <filesystem>
-namespace fs = std::filesystem;
-#else
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif // HAS_FILESYSTEM
+#include <optional>
 
 #include <InfoConstants.h>
 
@@ -26,7 +20,7 @@ namespace openblack
 class InfoFile
 {
 public:
-	bool LoadFromFile(const fs::path& path, InfoConstants& infos);
+	bool LoadFromFile(const std::filesystem::path& path, InfoConstants& infos);
 };
 
 } // namespace openblack

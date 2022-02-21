@@ -53,7 +53,7 @@ void L3DAnim::Load(const anm::ANMFile& anm)
 	}
 }
 
-bool L3DAnim::LoadFromFile(const fs::path& path)
+bool L3DAnim::LoadFromFile(const std::filesystem::path& path)
 {
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading L3DAnim from file: {}", path.generic_string());
 	anm::ANMFile anm;

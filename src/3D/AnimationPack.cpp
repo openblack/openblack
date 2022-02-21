@@ -22,7 +22,7 @@ AnimationPack::AnimationPack() = default;
 
 AnimationPack::~AnimationPack() = default;
 
-bool AnimationPack::LoadFromFile(const fs::path& path)
+bool AnimationPack::LoadFromFile(const std::filesystem::path& path)
 {
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Mesh Pack from file: {}", path.generic_string());
 	pack::PackFile pack;

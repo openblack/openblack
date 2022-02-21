@@ -10,13 +10,8 @@
 #pragma once
 
 #include <cstdint>
-#ifdef HAS_FILESYSTEM
+
 #include <filesystem>
-namespace fs = std::filesystem;
-#else
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif // HAS_FILESYSTEM
 
 namespace openblack
 {
@@ -28,7 +23,7 @@ class FotFile
 public:
 	explicit FotFile(Game& game);
 
-	void Load(const fs::path& path);
+	void Load(const std::filesystem::path& path);
 
 private:
 	Game& _game;

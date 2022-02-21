@@ -104,7 +104,7 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 	bgfx::frame();
 }
 
-bool L3DMesh::LoadFromFile(const fs::path& path)
+bool L3DMesh::LoadFromFile(const std::filesystem::path& path)
 {
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading L3DMesh from file: {}", path.generic_string());
 	l3d::L3DFile l3d;
