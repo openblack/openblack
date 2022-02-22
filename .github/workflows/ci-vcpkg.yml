@@ -51,6 +51,7 @@ jobs:
         id: runvcpkg
         with:
           vcpkgJsonGlob: 'vcpkg.json'
+            # doNotCache: true
 
       - name: Run CMake+vcpkg+Ninja+CTest to generate/build/test.
         uses: lukka/run-cmake@v10
