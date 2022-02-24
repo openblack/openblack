@@ -80,15 +80,17 @@ enum class LoggingSubsystem : uint8_t
 	graphics,
 	scripting,
 	pathfinding,
+	ai,
 
 	_count
 };
 
 static std::array<std::string_view, static_cast<size_t>(LoggingSubsystem::_count)> LoggingSubsystemStrs {
-    "game",
-    "graphics",
-    "scripting",
-    "pathfinding",
+    "game",        //
+    "graphics",    //
+    "scripting",   //
+    "pathfinding", //
+    "ai",          //
 };
 
 struct Arguments
