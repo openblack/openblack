@@ -25,6 +25,7 @@ public:
 	{
 		PhysicsUpdate,
 		PathfindingUpdate,
+		LivingActionUpdate,
 		SdlInput,
 		UpdateUniforms,
 		UpdateEntities,
@@ -52,30 +53,31 @@ public:
 	};
 
 	static constexpr std::array<std::string_view, static_cast<uint8_t>(Stage::_count)> stageNames = {
-	    "Physics Update",     //
-	    "Pathfinding Update", //
-	    "SDL Input",          //
-	    "Update Uniforms",    //
-	    "Entities",           //
-	    "GUI Loop",           //
-	    "Game Logic",         //
-	    "Encode Draw Scene",  //
-	    "Reflection Pass",    //
-	    "Draw Sky",           //
-	    "Draw Water",         //
-	    "Draw Island",        //
-	    "Draw Models",        //
-	    "Draw Sprites",       //
-	    "Draw Debug Cross",   //
-	    "Main Pass",          //
-	    "Draw Sky",           //
-	    "Draw Water",         //
-	    "Draw Island",        //
-	    "Draw Models",        //
-	    "Draw Sprites",       //
-	    "Draw Debug Cross",   //
-	    "Encode GUI Draw",    //
-	    "Renderer Frame",     //
+	    "Physics Update",       //
+	    "Pathfinding Update",   //
+	    "Living Action Update", //
+	    "SDL Input",            //
+	    "Update Uniforms",      //
+	    "Entities",             //
+	    "GUI Loop",             //
+	    "Game Logic",           //
+	    "Encode Draw Scene",    //
+	    "Reflection Pass",      //
+	    "Draw Sky",             //
+	    "Draw Water",           //
+	    "Draw Island",          //
+	    "Draw Models",          //
+	    "Draw Sprites",         //
+	    "Draw Debug Cross",     //
+	    "Main Pass",            //
+	    "Draw Sky",             //
+	    "Draw Water",           //
+	    "Draw Island",          //
+	    "Draw Models",          //
+	    "Draw Sprites",         //
+	    "Draw Debug Cross",     //
+	    "Encode GUI Draw",      //
+	    "Renderer Frame",       //
 	};
 
 private:
