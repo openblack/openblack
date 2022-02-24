@@ -32,5 +32,8 @@ lib
 # vim swp files
 *.swp
 
-#imgui
-**/imgui.ini
+# imgui
+imgui.ini
+
+# logging
+openblack.log
