@@ -7,6 +7,27 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
+// How to add a Shader:
+// Shaders in openblack are compiled using bgfx's shaderc compiler. Shaderc
+// will compile different variations for different rendering APIs and
+// platforms. The implementation is in Shaders.cmake.
+// Shader sources are located in assets/shaders. The shader language used is a
+// subset of glsl made specifically for bgfx.
+// Inputs and outputs of shaders (excluding uniforms, textures samplers, etc)
+// are declared in varying.def.sc.
+// Once compiled they go in ${CMAKE_BINARY_DIR}/include/generated/shaders and
+// are included in the openblack binary by way of ShaderManager.cpp.
+// The helper header ShaderIncluder.h used with the SHADER_NAME define will
+// automatically include all the shader variants in the file.
+// Once included, they must be added to the s_embeddedShaders array.
+// Finally, the renderer calls the shader manager to load all shaders
+// named in the Shaders array.
+// tldr:
+// 1. Create shaders in assets/shaders
+// 2. Define SHADER_NAME and include ShaderIncluder.h
+// 3. Add BGFX_EMBEDDED_SHADER entries to s_embeddedShaders
+// 4. Add ShaderDefinition to Shaders array
+
 #include "ShaderManager.h"
 
 #include <cstdint> // Shaders below need uint8_t
@@ -44,6 +65,13 @@
 namespace openblack::graphics
 {
 
+struct ShaderDefinition
+{
+	const std::string_view name;
+	const std::string_view vertexShaderName;
+	const std::string_view fragmentShaderName;
+};
+
 const bgfx::EmbeddedShader s_embeddedShaders[] = {
     BGFX_EMBEDDED_SHADER(vs_line),    BGFX_EMBEDDED_SHADER(vs_line_instanced),   //
     BGFX_EMBEDDED_SHADER(fs_line),                                               //
@@ -52,6 +80,16 @@ const bgfx::EmbeddedShader s_embeddedShaders[] = {
     BGFX_EMBEDDED_SHADER(vs_terrain), BGFX_EMBEDDED_SHADER(fs_terrain),          //
     BGFX_EMBEDDED_SHADER(vs_water),   BGFX_EMBEDDED_SHADER(fs_water),            //
     BGFX_EMBEDDED_SHADER_END()                                                   //
+};
+
+constexpr std::array Shaders {
+    ShaderDefinition {"DebugLine", "vs_line", "fs_line"},
+    ShaderDefinition {"DebugLineInstanced", "vs_line_instanced", "fs_line"},
+    ShaderDefinition {"Terrain", "vs_terrain", "fs_terrain"},
+    ShaderDefinition {"Object", "vs_object", "fs_object"},
+    ShaderDefinition {"ObjectInstanced", "vs_object_instanced", "fs_object"},
+    ShaderDefinition {"Sky", "vs_object", "fs_sky"},
+    ShaderDefinition {"Water", "vs_water", "fs_water"},
 };
 
 ShaderManager::~ShaderManager()
@@ -63,20 +101,17 @@ ShaderManager::~ShaderManager()
 	_shaderPrograms.clear();
 }
 
-const ShaderProgram* ShaderManager::LoadShader(const std::string& name, const std::string& vertexShaderName,
-                                               const std::string& fragmentShaderName)
+void ShaderManager::LoadShaders()
 {
-	bgfx::RendererType::Enum type = bgfx::getRendererType();
-
-	ShaderMap::iterator i = _shaderPrograms.find(name);
-	if (i != _shaderPrograms.end())
-		return i->second;
-
-	ShaderProgram* program =
-	    new ShaderProgram(name, bgfx::createEmbeddedShader(s_embeddedShaders, type, vertexShaderName.c_str()),
-	                      bgfx::createEmbeddedShader(s_embeddedShaders, type, fragmentShaderName.c_str()));
-	_shaderPrograms[name] = program;
-	return program;
+	for (const auto& shader : Shaders)
+	{
+		bgfx::RendererType::Enum type = bgfx::getRendererType();
+		auto vs = bgfx::createEmbeddedShader(s_embeddedShaders, type, shader.vertexShaderName.data());
+		assert(bgfx::isValid(vs));
+		auto fs = bgfx::createEmbeddedShader(s_embeddedShaders, type, shader.fragmentShaderName.data());
+		assert(bgfx::isValid(fs));
+		_shaderPrograms[shader.name.data()] = new ShaderProgram(shader.name.data(), std::move(vs), std::move(fs));
+	}
 }
 
 const ShaderProgram* ShaderManager::GetShader(const std::string& name) const
