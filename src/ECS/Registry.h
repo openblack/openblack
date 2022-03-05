@@ -38,6 +38,12 @@ public:
 		SetDirty();
 		return _registry.emplace<Component>(entity, std::forward<Args>(args)...);
 	}
+	template <typename Component, typename... Args>
+	decltype(auto) AssignOrReplace(entt::entity entity, [[maybe_unused]] Args&&... args)
+	{
+		SetDirty();
+		return _registry.emplace_or_replace<Component>(entity, std::forward<Args>(args)...);
+	}
 	template <typename Component, typename... Other>
 	decltype(auto) Remove(entt::entity entity)
 	{
