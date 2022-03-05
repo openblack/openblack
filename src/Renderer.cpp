@@ -144,7 +144,7 @@ Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererTy
 		throw std::runtime_error("Failed to initialize bgfx.");
 	}
 
-	LoadShaders();
+	_shaderManager->LoadShaders();
 
 	// allocate vertex buffers for our debug draw and for primitives
 	_debugCross = DebugLines::CreateCross();
@@ -163,14 +163,6 @@ Renderer::~Renderer()
 	_shaderManager.reset();
 	_debugCross.reset();
 	bgfx::shutdown();
-}
-
-void Renderer::LoadShaders()
-{
-	for (const auto& shader : Shaders)
-	{
-		_shaderManager->LoadShader(shader.name.data(), shader.vertexShaderName.data(), shader.fragmentShaderName.data());
-	}
 }
 
 void Renderer::ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height) const
