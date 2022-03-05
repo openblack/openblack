@@ -52,6 +52,11 @@ namespace gui
 class Gui;
 }
 
+namespace graphics
+{
+class Texture2D;
+}
+
 namespace LHVM
 {
 class LHVM;
@@ -215,6 +220,7 @@ private:
 	std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<L3DAnim> _testAnimation;
 	std::unique_ptr<L3DMesh> _handModel;
+	std::unique_ptr<graphics::Texture2D> _misc0aTexture;
 	std::unique_ptr<Sky> _sky;
 	std::unique_ptr<Water> _water;
 	std::unique_ptr<lhscriptx::Script> _scriptx;
