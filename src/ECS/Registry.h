@@ -32,6 +32,17 @@ public:
 	Registry();
 
 	decltype(auto) Create() { return _registry.create(); }
+	template <typename It>
+	void Create(It first, It last)
+	{
+		_registry.create(first, last);
+	}
+	void Release(entt::entity entity) { _registry.release(entity); }
+	template <typename It>
+	void Release(It first, It last)
+	{
+		_registry.release(first, last);
+	}
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args)
 	{
