@@ -455,6 +455,7 @@ bool Game::Run()
 			    /*island =*/*_landIsland,
 			    /*drawEntities =*/_config.drawEntities,
 			    /*entities =*/*_entityRegistry,
+			    /*drawSprites =*/_config.drawSprites,
 			    /*drawTestModel =*/_config.drawEntities,
 			    /*testModel =*/*_testModel,
 			    /*testAnimation =*/*_testAnimation,

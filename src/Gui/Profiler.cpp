@@ -66,6 +66,8 @@ void openblack::gui::Profiler::Draw(Game& game)
 	ImGui::NextColumn();
 	ImGui::Checkbox("Entities", &config.drawEntities);
 	ImGui::NextColumn();
+	ImGui::Checkbox("Sprites", &config.drawSprites);
+	ImGui::NextColumn();
 	ImGui::Checkbox("TestModel", &config.drawTestModel);
 	ImGui::NextColumn();
 	ImGui::Checkbox("Debug Cross", &config.drawDebugCross);
