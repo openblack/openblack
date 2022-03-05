@@ -38,6 +38,12 @@ public:
 		SetDirty();
 		return _registry.emplace<Component>(entity, std::forward<Args>(args)...);
 	}
+	template <typename Component, typename... Other>
+	decltype(auto) Remove(entt::entity entity)
+	{
+		SetDirty();
+		return _registry.remove<Component, Other...>(entity);
+	}
 	void SetDirty();
 	RegistryContext& Context();
 	[[nodiscard]] const RegistryContext& Context() const;
