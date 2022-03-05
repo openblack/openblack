@@ -125,6 +125,7 @@ public:
 		bool drawWater {true};
 		bool drawIsland {true};
 		bool drawEntities {true};
+		bool drawSprites {true};
 		bool drawTestModel {true};
 		bool drawDebugCross {true};
 		bool drawBoundingBoxes {false};

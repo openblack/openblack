@@ -81,6 +81,7 @@ public:
 		const LandIsland& island;
 		bool drawEntities;
 		const ecs::Registry& entities;
+		bool drawSprites;
 		bool drawTestModel;
 		const L3DMesh& testModel;
 		const L3DAnim& testAnimation;

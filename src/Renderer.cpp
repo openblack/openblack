@@ -22,6 +22,7 @@
 #include "3D/MeshPack.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
+#include "ECS/Components/Sprite.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/RenderingSystem.h"
 #include "Game.h"
@@ -360,6 +361,7 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 	auto waterShader = _shaderManager->GetShader("Water");
 	auto terrainShader = _shaderManager->GetShader("Terrain");
 	auto debugShader = _shaderManager->GetShader("DebugLine");
+	auto spriteShader = _shaderManager->GetShader("Sprite");
 	auto debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
 	auto objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
 
@@ -511,6 +513,39 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 					bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
 					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
 				}
+			}
+		}
+
+		{
+			auto section =
+			    desc.profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSprites
+			                                                                    : Profiler::Stage::MainPassDrawSprites);
+
+			if (desc.drawSprites)
+			{
+				using namespace ecs::components;
+
+				auto& registry = Game::instance()->GetEntityRegistry();
+				registry.Each<const Sprite, const Transform>(
+				    [this, &spriteShader, &desc](const Sprite& sprite, const Transform& transform) {
+					    glm::mat4 modelMatrix = glm::mat4(1.0f);
+					    modelMatrix = glm::translate(modelMatrix, transform.position);
+					    modelMatrix *= glm::mat4(transform.rotation);
+					    modelMatrix = glm::scale(modelMatrix, transform.scale);
+
+					    glm::vec4 u_sampleRect(sprite.uvExtent, sprite.uvMin);
+
+					    bgfx::setTransform(glm::value_ptr(modelMatrix));
+					    spriteShader->SetUniformValue("u_sampleRect", glm::value_ptr(u_sampleRect));
+					    spriteShader->SetUniformValue("u_tint", glm::value_ptr(sprite.tint));
+					    spriteShader->SetTextureSampler("s_diffuse", 0, sprite.texture);
+
+					    _plane->GetVertexBuffer().Bind();
+
+					    bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_BLEND_ALPHA);
+
+					    bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), spriteShader->GetRawHandle());
+				    });
 			}
 		}
 
