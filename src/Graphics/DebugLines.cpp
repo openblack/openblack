@@ -14,10 +14,9 @@
 
 #include <array>
 
-namespace openblack::graphics
-{
+using namespace openblack::graphics;
 
-std::unique_ptr<DebugLines> DebugLines::CreateDebugLines(const Vertex* data, uint32_t vertexCount)
+std::unique_ptr<Mesh> DebugLines::CreateDebugLines(const Vertex* data, uint32_t vertexCount)
 {
 	VertexDecl decl;
 	decl.reserve(2);
@@ -29,10 +28,10 @@ std::unique_ptr<DebugLines> DebugLines::CreateDebugLines(const Vertex* data, uin
 	auto mesh = std::make_unique<Mesh>(vertexBuffer, nullptr, Mesh::Topology::LineList);
 	bgfx::frame();
 
-	return std::unique_ptr<DebugLines>(new DebugLines(std::move(mesh)));
+	return mesh;
 }
 
-std::unique_ptr<DebugLines> DebugLines::CreateCross()
+std::unique_ptr<Mesh> DebugLines::CreateCross()
 {
 	static const std::array<Vertex, 6> cross = {
 	    Vertex {glm::vec4(0.5f, 0.0f, 0.0f, 1.0f), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)},
@@ -46,7 +45,7 @@ std::unique_ptr<DebugLines> DebugLines::CreateCross()
 	return CreateDebugLines(cross.data(), static_cast<uint32_t>(cross.size()));
 }
 
-std::unique_ptr<DebugLines> DebugLines::CreateBox(const glm::vec4& color)
+std::unique_ptr<Mesh> DebugLines::CreateBox(const glm::vec4& color)
 {
 	std::array<Vertex, 24> box = {
 	    Vertex {glm::vec4(-0.5f, 0.5f, -0.5f, 1.0f), color},  Vertex {glm::vec4(0.5f, 0.5f, -0.5f, 1.0f), color},
@@ -68,7 +67,7 @@ std::unique_ptr<DebugLines> DebugLines::CreateBox(const glm::vec4& color)
 	return CreateDebugLines(box.data(), static_cast<uint32_t>(box.size()));
 }
 
-std::unique_ptr<DebugLines> DebugLines::CreateLine(const glm::vec4& from, const glm::vec4& to, const glm::vec4& color)
+std::unique_ptr<Mesh> DebugLines::CreateLine(const glm::vec4& from, const glm::vec4& to, const glm::vec4& color)
 {
 	std::array<Vertex, 2> line = {
 	    Vertex {from, color},
@@ -77,12 +76,3 @@ std::unique_ptr<DebugLines> DebugLines::CreateLine(const glm::vec4& from, const 
 
 	return CreateDebugLines(line.data(), static_cast<uint32_t>(line.size()));
 }
-
-DebugLines::DebugLines(std::unique_ptr<Mesh>&& mesh)
-    : _mesh(std::move(mesh))
-{
-}
-
-DebugLines::~DebugLines() = default;
-
-} // namespace openblack::graphics

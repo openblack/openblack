@@ -45,8 +45,8 @@ class Registry;
 
 namespace graphics
 {
-class DebugLines;
 class FrameBuffer;
+class Mesh;
 class ShaderManager;
 class ShaderProgram;
 } // namespace graphics
@@ -151,7 +151,7 @@ private:
 	std::unique_ptr<graphics::ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
 
-	std::unique_ptr<graphics::DebugLines> _debugCross;
+	std::unique_ptr<graphics::Mesh> _debugCross;
 	glm::mat4 _debugCrossPose;
 };
 } // namespace openblack

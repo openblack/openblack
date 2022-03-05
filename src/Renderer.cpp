@@ -499,20 +499,20 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 				{
 					const auto boundBoxOffset = static_cast<uint32_t>(renderCtx.instanceUniforms.size() / 2);
 					const auto boundBoxCount = static_cast<uint32_t>(renderCtx.instanceUniforms.size() / 2);
-					renderCtx.boundingBox->GetMesh().GetVertexBuffer().Bind();
+					renderCtx.boundingBox->GetVertexBuffer().Bind();
 					bgfx::setInstanceDataBuffer(renderCtx.instanceUniformBuffer, boundBoxOffset, boundBoxCount);
 					bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
 					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShaderInstanced->GetRawHandle());
 				}
 				if (renderCtx.footpaths)
 				{
-					renderCtx.footpaths->GetMesh().GetVertexBuffer().Bind();
+					renderCtx.footpaths->GetVertexBuffer().Bind();
 					bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
 					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
 				}
 				if (renderCtx.streams)
 				{
-					renderCtx.streams->GetMesh().GetVertexBuffer().Bind();
+					renderCtx.streams->GetVertexBuffer().Bind();
 					bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
 					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
 				}
@@ -556,7 +556,7 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 		if (desc.drawDebugCross)
 		{
 			bgfx::setTransform(glm::value_ptr(_debugCrossPose));
-			_debugCross->GetMesh().GetVertexBuffer().Bind();
+			_debugCross->GetVertexBuffer().Bind();
 			bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
 			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
 		}

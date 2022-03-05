@@ -19,7 +19,6 @@
 namespace openblack::graphics
 {
 class Mesh;
-class ShaderProgram;
 
 class DebugLines
 {
@@ -30,19 +29,13 @@ public:
 		glm::vec4 col;
 	};
 
-	static std::unique_ptr<DebugLines> CreateCross();
-	static std::unique_ptr<DebugLines> CreateBox(const glm::vec4& color);
-	static std::unique_ptr<DebugLines> CreateLine(const glm::vec4& from, const glm::vec4& to, const glm::vec4& color);
-	static std::unique_ptr<DebugLines> CreateDebugLines(const Vertex* data, uint32_t vertexCount);
-
-	virtual ~DebugLines();
-
-	const Mesh& GetMesh() const { return *_mesh; }
+	static std::unique_ptr<Mesh> CreateCross();
+	static std::unique_ptr<Mesh> CreateBox(const glm::vec4& color);
+	static std::unique_ptr<Mesh> CreateLine(const glm::vec4& from, const glm::vec4& to, const glm::vec4& color);
+	static std::unique_ptr<Mesh> CreateDebugLines(const Vertex* data, uint32_t vertexCount);
 
 protected:
-	explicit DebugLines(std::unique_ptr<Mesh>&& mesh);
-
-	std::unique_ptr<Mesh> _mesh;
+	DebugLines() = delete;
 };
 
 } // namespace openblack::graphics
