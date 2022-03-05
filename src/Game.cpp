@@ -222,9 +222,14 @@ bool Game::GameLogicLoop()
 bool Game::Update()
 {
 	_profiler->Frame();
-	auto deltaTime =
-	    std::chrono::duration_cast<std::chrono::microseconds>(_profiler->_entries[_profiler->GetEntryIndex(0)]._frameStart -
-	                                                          _profiler->_entries[_profiler->GetEntryIndex(-1)]._frameStart);
+	auto previous = _profiler->_entries[_profiler->GetEntryIndex(-1)]._frameStart;
+	auto current = _profiler->_entries[_profiler->GetEntryIndex(0)]._frameStart;
+	// Prevent spike at first frame
+	if (previous.time_since_epoch().count() == 0)
+	{
+		current = previous;
+	}
+	auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(current - previous);
 
 	// Physics
 	{
