@@ -179,6 +179,24 @@ bool Game::ProcessEvents(const SDL_Event& event)
 		case SDLK_F1:
 			_config.bgfxDebug = !_config.bgfxDebug;
 			break;
+		case SDLK_1:
+		case SDLK_2:
+		case SDLK_3:
+		case SDLK_4:
+		case SDLK_5:
+		case SDLK_6:
+		case SDLK_7:
+		case SDLK_8:
+			if ((event.key.keysym.mod & KMOD_CTRL) != 0)
+			{
+				auto handPosition = _handPose * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+				CameraBookmarkSystem::instance().SetBookmark(event.key.keysym.sym - SDLK_1, handPosition);
+			}
+			else if (event.key.keysym.mod == 0)
+			{
+				// TODO: Fly-to the bookmark
+			}
+			break;
 		}
 		break;
 	case SDL_MOUSEMOTION:
