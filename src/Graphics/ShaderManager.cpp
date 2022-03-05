@@ -58,6 +58,11 @@
 #define SHADER_NAME fs_water
 #include "ShaderIncluder.h"
 
+#define SHADER_NAME vs_sprite
+#include "ShaderIncluder.h"
+#define SHADER_NAME fs_sprite
+#include "ShaderIncluder.h"
+
 #include "3D/Camera.h"
 
 #include <bgfx/embedded_shader.h>
@@ -79,6 +84,7 @@ const bgfx::EmbeddedShader s_embeddedShaders[] = {
     BGFX_EMBEDDED_SHADER(fs_object),  BGFX_EMBEDDED_SHADER(fs_sky),              //
     BGFX_EMBEDDED_SHADER(vs_terrain), BGFX_EMBEDDED_SHADER(fs_terrain),          //
     BGFX_EMBEDDED_SHADER(vs_water),   BGFX_EMBEDDED_SHADER(fs_water),            //
+    BGFX_EMBEDDED_SHADER(vs_sprite),  BGFX_EMBEDDED_SHADER(fs_sprite),           //
     BGFX_EMBEDDED_SHADER_END()                                                   //
 };
 
@@ -90,6 +96,7 @@ constexpr std::array Shaders {
     ShaderDefinition {"ObjectInstanced", "vs_object_instanced", "fs_object"},
     ShaderDefinition {"Sky", "vs_object", "fs_sky"},
     ShaderDefinition {"Water", "vs_water", "fs_water"},
+    ShaderDefinition {"Sprite", "vs_sprite", "fs_sprite"},
 };
 
 ShaderManager::~ShaderManager()
