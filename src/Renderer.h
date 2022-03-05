@@ -152,6 +152,7 @@ private:
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
 
 	std::unique_ptr<graphics::Mesh> _debugCross;
+	std::unique_ptr<graphics::Mesh> _plane;
 	glm::mat4 _debugCrossPose;
 };
 } // namespace openblack

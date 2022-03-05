@@ -9,6 +9,12 @@
 
 #include "Renderer.h"
 
+#include <SDL_video.h>
+#include <bgfx/platform.h>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/transform.hpp>
+#include <spdlog/spdlog.h>
+
 #include "3D/Camera.h"
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
@@ -23,15 +29,10 @@
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/IndexBuffer.h"
+#include "Graphics/Primitive.h"
 #include "Graphics/ShaderManager.h"
 #include "Graphics/VertexBuffer.h"
 #include "Profiler.h"
-
-#include <SDL_video.h>
-#include <bgfx/platform.h>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/transform.hpp>
-#include <spdlog/spdlog.h>
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -145,8 +146,9 @@ Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererTy
 
 	LoadShaders();
 
-	// allocate vertex buffers for our debug draw
+	// allocate vertex buffers for our debug draw and for primitives
 	_debugCross = DebugLines::CreateCross();
+	_plane = Primitive::CreatePlane();
 
 	// give debug names to views
 	for (bgfx::ViewId i = 0; i < static_cast<bgfx::ViewId>(graphics::RenderPass::_count); ++i)
@@ -157,6 +159,7 @@ Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererTy
 
 Renderer::~Renderer()
 {
+	_plane.reset();
 	_shaderManager.reset();
 	_debugCross.reset();
 	bgfx::shutdown();
