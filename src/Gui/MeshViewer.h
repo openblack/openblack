@@ -25,7 +25,7 @@ namespace openblack
 
 namespace graphics
 {
-class DebugLines;
+class Mesh;
 }
 
 namespace gui
@@ -52,7 +52,7 @@ private:
 	bool _matchBones;
 	glm::vec3 _cameraPosition;
 	bool _viewBoundingBox;
-	std::unique_ptr<graphics::DebugLines> _boundingBox;
+	std::unique_ptr<graphics::Mesh> _boundingBox;
 	std::unique_ptr<graphics::FrameBuffer> _frameBuffer;
 };
 
