@@ -75,15 +75,6 @@ bool AreWeThere(const glm::vec2& pos, const glm::vec2& goal, float threshold)
 	return glm::distance2(pos, goal) < threshold * threshold;
 }
 
-/// If we have a number of turns to an obstacle but no obstacle saved: search in a line to find one
-void LinearDetectObstacle(const MoveStateLinearTag state, const WallHugObjectReference& object)
-{
-	if (object.entity == entt::null)
-	{
-		throw std::runtime_error("TODO: LinearSquareSweep");
-	}
-}
-
 /// Get neighbouring cells in this order for traversal
 /// +-----+-----+-----+
 /// | [5] | [4] | [7] |
@@ -309,14 +300,15 @@ bool OrbitScanForObstacle(entt::entity entity, bool clockwise, Transform& transf
 	return true;
 }
 
-template <MoveState S>
-void StepForward(ecs::Registry& registry)
+template <MoveState S, typename... Exclude>
+void StepForward(ecs::Registry& registry, Exclude... exclude)
 {
 	registry.Each<MoveStateTagComponent<S>, const WallHug, Transform>(
 	    [](MoveStateTagComponent<S>& state, const WallHug& wallHug, const Transform& transform) {
 		    const auto goal = glm::xz(transform.position) + wallHug.step;
 		    state.stepGoal = goal;
-	    });
+	    },
+	    exclude...);
 }
 
 template <MoveState S>
@@ -355,15 +347,16 @@ void HandleCellTransition(ecs::Registry& registry)
 
 // TODO(bwrsandman): Vanilla is more complex than this. Update to the map might be needed when transitioning from one block to
 // the other.
-template <MoveState S>
-void ApplyStepGoal(ecs::Registry& registry)
+template <MoveState S, typename... Exclude>
+void ApplyStepGoal(ecs::Registry& registry, Exclude... exclude)
 {
 	// TODO: WallHug might be redundant here
 	registry.Each<const MoveStateTagComponent<S>, const WallHug, Transform>(
 	    [](const MoveStateTagComponent<S>& state, const WallHug& wallHug, Transform& transform) {
 		    const float altitude = Game::Instance()->GetLandIsland().GetHeightAt(state.stepGoal);
 		    transform.position = glm::xzy(glm::vec3(state.stepGoal, altitude));
-	    });
+	    },
+	    exclude...);
 }
 
 } // namespace
@@ -384,7 +377,12 @@ void PathfindingSystem::Update()
 
 	// 2.  LINEAR, LINEAR_CW, LINEAR_CCW
 	//         If we have a number of turns to an obstacle but no obstacle saved: do linear_square_sweep to find one
-	registry.Each<const MoveStateLinearTag, const WallHugObjectReference>(LinearDetectObstacle);
+	registry.Each<const MoveStateLinearTag, Transform, WallHug>(
+	    [](entt::entity entity, const MoveStateLinearTag&, Transform& transform, WallHug& wallHug) {
+		    InitializeStepToGoal(transform, wallHug);
+		    LinearScanForObstacle(entity, glm::xz(transform.position), wallHug.step);
+	    },
+	    entt::exclude<WallHugObjectReference>);
 
 	// 3.  ORBIT_CW, ORBIT_CCW, EXIT_CIRCLE_CW, EXIT_CIRCLE_CCW:
 	//         If there is no recorded obstacle (what we orbit), this is an unimplemented error
@@ -417,12 +415,14 @@ void PathfindingSystem::Update()
 		    }
 	    });
 
-	// 4a. STEP_THROUGH, EXIT_CIRCLE_CW, EXIT_CIRCLE_CCW:
+	// 4a. STEP_THROUGH, EXIT_CIRCLE_CW, EXIT_CIRCLE_CCW, LINEAR without obstacles:
 	//         Do StepForward and ApplyStepGoal for the step distance -> no change to state
 	StepForward<MoveState::StepThrough>(registry);
 	StepForward<MoveState::ExitCircle>(registry);
+	StepForward<MoveState::Linear>(registry, entt::exclude<WallHugObjectReference>);
 	ApplyStepGoal<MoveState::StepThrough>(registry);
 	ApplyStepGoal<MoveState::ExitCircle>(registry);
+	ApplyStepGoal<MoveState::Linear>(registry, entt::exclude<WallHugObjectReference>);
 
 	// 4b. FINAL_STEP, ARRIVED:
 	//         Do ApplyStepGoal for the remaining distance to the goal and return a message to change LIVING STATE
