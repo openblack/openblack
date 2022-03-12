@@ -272,10 +272,13 @@ bool OrbitScanForObstacle(entt::entity entity, bool clockwise, Transform& transf
 				const auto t1 = angle1 * 2.0f / 3.0f * r1 / wallHug.speed;
 				int t = static_cast<int>(glm::round(glm::min(t0, t1)));
 
-				assert(t > 0);
+				assert(t >= 0);
 				if (t < 1)
 				{
-					assert(false); // TODO: Step through
+					// We're too close to second circle. Act like we're on the second circle and continue looking forward by
+					// recursively calling function with new obstacle.
+					reference.entity = *iter;
+					OrbitScanForObstacle(entity, clockwise, transform, wallHug);
 				}
 				else if (t < 4)
 				{
@@ -287,6 +290,16 @@ bool OrbitScanForObstacle(entt::entity entity, bool clockwise, Transform& transf
 				}
 
 				reference.stepsAway = static_cast<uint8_t>(t);
+			}
+			else
+			{
+				// TODO(bwrsandman):
+				// if intersect[0].obj is None:  # True
+				//     self.init_steps_xz()
+				//     # self.field_0x78 = 0x10
+				//     self.circle_hug_info.reset(self)
+				//     self.move_state = MoveState.STEP_THROUGH
+				// assert(false);
 			}
 		}
 	}
