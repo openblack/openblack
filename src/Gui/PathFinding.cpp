@@ -11,14 +11,17 @@
 
 #include <SDL.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/norm.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 #include <imgui_internal.h>
+#include <spdlog/spdlog.h>
 
 #include "3D/L3DMesh.h"
 #include "3D/LandIsland.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
+#include "ECS/Components/WallHug.h"
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
 #include "Game.h"
@@ -67,7 +70,10 @@ void PathFinding::Draw(Game& game)
 		ImGui::Columns(1);
 
 		auto& transform = registry.Get<Transform>(_selectedVillager.value());
+		auto& wallHug = registry.Get<WallHug>(_selectedVillager.value());
 		ImGui::DragFloat3("Position", glm::value_ptr(transform.position));
+		ImGui::DragFloat2("Goal", glm::value_ptr(wallHug.goal));
+		ImGui::DragFloat("Speed", &wallHug.speed);
 	}
 	else
 	{
@@ -98,6 +104,28 @@ void PathFinding::Draw(Game& game)
 
 				ImGui::EndTabItem();
 			}
+
+			if (ImGui::BeginTabItem("Move To Point"))
+			{
+				ImGui::DragFloat3("Destination", glm::value_ptr(_destination));
+
+				ImGui::PushStyleVar(ImGuiStyleVar_Alpha,
+				                    ImGui::GetStyle().Alpha * (_selectedVillager.has_value() ? 1.0f : 0.5f));
+				ImGui::PushItemFlag(ImGuiItemFlags_Disabled, !_selectedVillager.has_value());
+				if (ImGui::Button("Execute"))
+				{
+					auto& wallHug = registry.Get<WallHug>(*_selectedVillager);
+					wallHug.goal = glm::xz(_destination);
+					registry.Remove<MoveStateLinearTag, MoveStateOrbitTag, MoveStateExitCircleTag, MoveStateStepThroughTag,
+					                MoveStateFinalStepTag, MoveStateArrivedTag>(*_selectedVillager);
+					registry.Assign<MoveStateLinearTag>(*_selectedVillager);
+				}
+				ImGui::PopItemFlag();
+				ImGui::PopStyleVar();
+
+				ImGui::EndTabItem();
+			}
+
 			ImGui::EndTabBar();
 		}
 	}
