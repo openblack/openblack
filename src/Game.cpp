@@ -192,9 +192,11 @@ bool Game::ProcessEvents(const SDL_Event& event)
 				auto handPosition = _handPose * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 				CameraBookmarkSystem::instance().SetBookmark(event.key.keysym.sym - SDLK_1, handPosition);
 			}
-			else if (event.key.keysym.mod == 0)
+			else if (event.key.keysym.mod == KMOD_NONE || event.key.keysym.mod == KMOD_NUM || event.key.keysym.mod == KMOD_CAPS)
 			{
-				// TODO: Fly-to the bookmark
+				auto bookmark = CameraBookmarkSystem::instance().GetBookmarks()[event.key.keysym.sym - SDLK_1];
+				auto& bookmarkTransform = _entityRegistry->Get<ecs::components::Transform>(bookmark);
+				_camera->FlyToPos(bookmarkTransform.position, bookmarkTransform.rotation * glm::vec3(0.0f, 1.0f, 0.0f));
 			}
 			break;
 		}

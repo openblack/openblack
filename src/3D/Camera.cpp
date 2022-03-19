@@ -110,6 +110,44 @@ void Camera::FlyInit()
 	_flyPrevPos = glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
+void Camera::FlyToMouse()
+{
+	glm::ivec2 mousePosition;
+	SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
+	float dist = glm::distance((glm::vec2)mousePosition, (glm::vec2)_mouseFirstClick);
+	// fly to double click location.
+	if (dist < 10.0f)
+	{
+		if (auto hit = RaycastMouseToLand())
+		{
+			FlyToPos(hit->position, hit->rotation * glm::vec3(0.0f, 1.0f, 0.0f));
+		}
+	}
+}
+
+void Camera::FlyToPos(glm::vec3 position, glm::vec3 rotation)
+{
+	if (glm::length(position - _position) > 30.0f)
+	{
+		ResetVelocities();
+		_flyToNorm = rotation;
+		auto normXZ = glm::normalize(_flyToNorm * glm::vec3(1.0f, 0.01f, 1.0f));
+		_flyFromPos = _position;
+		_flyPrevPos = _flyFromPos;
+		_flyDist = glm::length(position - _flyFromPos);
+		auto vecToCam = glm::normalize(_position - position);
+		_flyToPos = position + (normXZ + vecToCam * 4.0f) / 5.0f * std::max(20.0f, _flyDist * 0.15f);
+		_flyFromTan = glm::normalize(GetForward() * glm::vec3(1.0f, 0.0f, 1.0f)) * _flyDist * 0.4f;
+		_flyToTan = glm::normalize(-(_flyToNorm * 9.0f + vecToCam) / 10.0f * glm::vec3(1.0f, 0.0f, 1.0f)) * _flyDist * 0.4f;
+		if (_position.y < _flyThreshold) // if the camera is low to the ground aim the path up before coming back down
+		{
+			_flyFromTan += glm::vec3(0.0f, 1.0f, 0.0f) * _flyDist * 0.4f;
+			_flyToTan += glm::vec3(0.0f, -1.0f, 0.0f) * _flyDist * 0.4f;
+		}
+		StartFlight();
+	}
+}
+
 void Camera::StartFlight()
 {
 	// Call to start the camera "in-flight"
@@ -495,36 +533,7 @@ void Camera::handleMouseInput(const SDL_Event& e)
 	}
 	if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON(SDL_BUTTON_LEFT) && e.button.clicks == 2)
 	{
-		glm::ivec2 mousePosition;
-		SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
-		float dist = glm::distance((glm::vec2)mousePosition, (glm::vec2)_mouseFirstClick);
-		// fly to double click location.
-		if (dist < 10.0f)
-		{
-			if (auto hit = RaycastMouseToLand())
-			{
-				// stop all current movements
-				ResetVelocities();
-
-				_flyToNorm = hit->rotation * glm::vec3(0.0f, 1.0f, 0.0f);
-				auto normXZ = glm::normalize(_flyToNorm * glm::vec3(1.0f, 0.01f, 1.0f));
-				_flyInProgress = true;
-				_flyProgress = 0.0f;
-				_flyFromPos = _position;
-				_flyPrevPos = _flyFromPos;
-				_flyDist = glm::length(hit->position - _flyFromPos);
-				auto vecToCam = glm::normalize(_position - hit->position);
-				_flyToPos = hit->position + (normXZ + vecToCam * 4.0f) / 5.0f * std::max(20.0f, _flyDist * 0.15f);
-				_flyFromTan = glm::normalize(GetForward() * glm::vec3(1.0f, 0.0f, 1.0f)) * _flyDist * 0.4f;
-				_flyToTan =
-				    glm::normalize(-(_flyToNorm * 9.0f + vecToCam) / 10.0f * glm::vec3(1.0f, 0.0f, 1.0f)) * _flyDist * 0.4f;
-				if (_position.y < _flyThreshold) // if the camera is low to the ground aim the path up before coming back down
-				{
-					_flyFromTan += glm::vec3(0.0f, 1.0f, 0.0f) * _flyDist * 0.4f;
-					_flyToTan += glm::vec3(0.0f, -1.0f, 0.0f) * _flyDist * 0.4f;
-				}
-			}
-		}
+		FlyToMouse();
 	}
 }
 

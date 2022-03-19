@@ -41,6 +41,8 @@ public:
 
 	[[nodiscard]] std::optional<ecs::components::Transform> RaycastMouseToLand();
 	void FlyInit();
+	void FlyToMouse();
+	void FlyToPos(glm::vec3 position, glm::vec3 rotation);
 	void StartFlight();
 	void ResetVelocities();
 
