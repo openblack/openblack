@@ -45,28 +45,11 @@ class Registry;
 
 namespace graphics
 {
-class DebugLines;
 class FrameBuffer;
+class Mesh;
 class ShaderManager;
 class ShaderProgram;
 } // namespace graphics
-
-struct ShaderDefinition
-{
-	const std::string_view name;
-	const std::string_view vertexShaderName;
-	const std::string_view fragmentShaderName;
-};
-
-constexpr std::array Shaders {
-    ShaderDefinition {"DebugLine", "vs_line", "fs_line"},
-    ShaderDefinition {"DebugLineInstanced", "vs_line_instanced", "fs_line"},
-    ShaderDefinition {"Terrain", "vs_terrain", "fs_terrain"},
-    ShaderDefinition {"Object", "vs_object", "fs_object"},
-    ShaderDefinition {"ObjectInstanced", "vs_object_instanced", "fs_object"},
-    ShaderDefinition {"Sky", "vs_object", "fs_sky"},
-    ShaderDefinition {"Water", "vs_water", "fs_water"},
-};
 
 class Renderer
 {
@@ -98,6 +81,7 @@ public:
 		const LandIsland& island;
 		bool drawEntities;
 		const ecs::Registry& entities;
+		bool drawSprites;
 		bool drawTestModel;
 		const L3DMesh& testModel;
 		const L3DAnim& testAnimation;
@@ -132,7 +116,6 @@ public:
 
 	virtual ~Renderer();
 
-	void LoadShaders();
 	[[nodiscard]] graphics::ShaderManager& GetShaderManager() const;
 
 	void UpdateDebugCrossUniforms(const glm::mat4& pose);
@@ -151,7 +134,8 @@ private:
 	std::unique_ptr<graphics::ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
 
-	std::unique_ptr<graphics::DebugLines> _debugCross;
+	std::unique_ptr<graphics::Mesh> _debugCross;
+	std::unique_ptr<graphics::Mesh> _plane;
 	glm::mat4 _debugCrossPose;
 };
 } // namespace openblack

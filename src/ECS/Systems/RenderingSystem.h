@@ -13,9 +13,10 @@
 #include <vector>
 
 #include <bgfx/bgfx.h>
+#include <glm/mat4x4.hpp>
 
 #include "AllMeshes.h"
-#include "Graphics/DebugLines.h"
+#include "Graphics/Mesh.h"
 
 namespace openblack::ecs::systems
 {
@@ -31,9 +32,9 @@ struct RenderContext
 			bgfx::destroy(instanceUniformBuffer);
 		}
 	}
-	std::unique_ptr<graphics::DebugLines> boundingBox;
-	std::unique_ptr<graphics::DebugLines> streams;
-	std::unique_ptr<graphics::DebugLines> footpaths;
+	std::unique_ptr<graphics::Mesh> boundingBox;
+	std::unique_ptr<graphics::Mesh> streams;
+	std::unique_ptr<graphics::Mesh> footpaths;
 
 	struct InstancedDrawDesc
 	{

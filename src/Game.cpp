@@ -22,10 +22,12 @@
 #include "ECS/Archetypes/HandArchetype.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/CameraBookmarkSystem.h"
 #include "ECS/Systems/DynamicsSystem.h"
 #include "ECS/Systems/RenderingSystem.h"
 #include "GameWindow.h"
 #include "Graphics/FrameBuffer.h"
+#include "Graphics/Texture2D.h"
 #include "Gui/Gui.h"
 #include "LHScriptX/Script.h"
 #include "Parsers/InfoFile.h"
@@ -54,6 +56,7 @@
 using namespace openblack;
 using namespace openblack::lhscriptx;
 using namespace std::chrono_literals;
+using openblack::ecs::systems::CameraBookmarkSystem;
 using openblack::ecs::systems::RenderingSystem;
 
 const std::string kWindowTitle = "openblack";
@@ -120,6 +123,7 @@ Game::Game(Arguments&& args)
 
 Game::~Game()
 {
+	_misc0aTexture.reset();
 	_water.reset();
 	_sky.reset();
 	_testModel.reset();
@@ -175,6 +179,26 @@ bool Game::ProcessEvents(const SDL_Event& event)
 		case SDLK_F1:
 			_config.bgfxDebug = !_config.bgfxDebug;
 			break;
+		case SDLK_1:
+		case SDLK_2:
+		case SDLK_3:
+		case SDLK_4:
+		case SDLK_5:
+		case SDLK_6:
+		case SDLK_7:
+		case SDLK_8:
+			if ((event.key.keysym.mod & KMOD_CTRL) != 0)
+			{
+				auto handPosition = _handPose * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+				CameraBookmarkSystem::instance().SetBookmark(event.key.keysym.sym - SDLK_1, handPosition);
+			}
+			else if (event.key.keysym.mod == KMOD_NONE || event.key.keysym.mod == KMOD_NUM || event.key.keysym.mod == KMOD_CAPS)
+			{
+				auto bookmark = CameraBookmarkSystem::instance().GetBookmarks()[event.key.keysym.sym - SDLK_1];
+				auto& bookmarkTransform = _entityRegistry->Get<ecs::components::Transform>(bookmark);
+				_camera->FlyToPos(bookmarkTransform.position, bookmarkTransform.rotation * glm::vec3(0.0f, 1.0f, 0.0f));
+			}
+			break;
 		}
 		break;
 	case SDL_MOUSEMOTION:
@@ -222,9 +246,14 @@ bool Game::GameLogicLoop()
 bool Game::Update()
 {
 	_profiler->Frame();
-	auto deltaTime =
-	    std::chrono::duration_cast<std::chrono::microseconds>(_profiler->_entries[_profiler->GetEntryIndex(0)]._frameStart -
-	                                                          _profiler->_entries[_profiler->GetEntryIndex(-1)]._frameStart);
+	auto previous = _profiler->_entries[_profiler->GetEntryIndex(-1)]._frameStart;
+	auto current = _profiler->_entries[_profiler->GetEntryIndex(0)]._frameStart;
+	// Prevent spike at first frame
+	if (previous.time_since_epoch().count() == 0)
+	{
+		current = previous;
+	}
+	auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(current - previous);
 
 	// Physics
 	{
@@ -260,10 +289,8 @@ bool Game::Update()
 		}
 	}
 
-	// Update Camera
-	{
-		_camera->Update(deltaTime);
-	}
+	_camera->Update(deltaTime);
+	CameraBookmarkSystem::instance().Update(deltaTime);
 
 	// Update Game Logic in Registry
 	{
@@ -389,6 +416,18 @@ bool Game::Run()
 		return false;
 	}
 
+	_misc0aTexture = std::make_unique<graphics::Texture2D>("misc0a.raw");
+	{
+		const uint16_t width = 256;
+		const uint16_t height = 256;
+		const uint16_t bpp = 1;
+		uint32_t size = width * height * bpp;
+		auto data = _fileSystem->ReadAll(_fileSystem->TexturePath() / _misc0aTexture->GetName());
+		assert(data.size() == size);
+		_misc0aTexture->Create(width, height, 1, graphics::Format::R8, graphics::Wrapping::ClampEdge, data.data(), data.size());
+	}
+	CameraBookmarkSystem::instance().Initialize(*_misc0aTexture);
+
 	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
 
@@ -450,6 +489,7 @@ bool Game::Run()
 			    /*island =*/*_landIsland,
 			    /*drawEntities =*/_config.drawEntities,
 			    /*entities =*/*_entityRegistry,
+			    /*drawSprites =*/_config.drawSprites,
 			    /*drawTestModel =*/_config.drawEntities,
 			    /*testModel =*/*_testModel,
 			    /*testAnimation =*/*_testAnimation,
@@ -494,6 +534,7 @@ void Game::LoadMap(const fs::path& path)
 	// Reset everything. Deletes all entities and their components
 	_entityRegistry->Reset();
 
+	CameraBookmarkSystem::instance().Initialize(*_misc0aTexture);
 	// We need a hand for the player
 	_handEntity = ecs::archetypes::HandArchetype::Create(glm::vec3(0.0f), glm::half_pi<float>(), 0.0f, glm::half_pi<float>(),
 	                                                     0.01f, false);

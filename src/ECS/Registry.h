@@ -32,11 +32,34 @@ public:
 	Registry();
 
 	decltype(auto) Create() { return _registry.create(); }
+	template <typename It>
+	void Create(It first, It last)
+	{
+		_registry.create(first, last);
+	}
+	void Release(entt::entity entity) { _registry.release(entity); }
+	template <typename It>
+	void Release(It first, It last)
+	{
+		_registry.release(first, last);
+	}
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args)
 	{
 		SetDirty();
 		return _registry.emplace<Component>(entity, std::forward<Args>(args)...);
+	}
+	template <typename Component, typename... Args>
+	decltype(auto) AssignOrReplace(entt::entity entity, [[maybe_unused]] Args&&... args)
+	{
+		SetDirty();
+		return _registry.emplace_or_replace<Component>(entity, std::forward<Args>(args)...);
+	}
+	template <typename Component, typename... Other>
+	decltype(auto) Remove(entt::entity entity)
+	{
+		SetDirty();
+		return _registry.remove<Component, Other...>(entity);
 	}
 	void SetDirty();
 	RegistryContext& Context();

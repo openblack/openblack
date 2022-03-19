@@ -743,6 +743,7 @@ bool Gui::ShowMenu(Game& game)
 				ImGui::Checkbox("Water", &config.drawWater);
 				ImGui::Checkbox("Island", &config.drawIsland);
 				ImGui::Checkbox("Entities", &config.drawEntities);
+				ImGui::Checkbox("Sprites", &config.drawSprites);
 				ImGui::Checkbox("TestModel", &config.drawTestModel);
 				ImGui::Checkbox("Debug Cross", &config.drawDebugCross);
 				ImGui::Checkbox("Wireframe", &config.wireframe);

@@ -69,6 +69,19 @@ void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint
 	}
 }
 
+void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint, const bgfx::TextureHandle& texture) const
+{
+	auto uniform = _uniforms.find(samplerName);
+	if (uniform != _uniforms.cend())
+	{
+		bgfx::setTexture(bindPoint, uniform->second, texture);
+	}
+	else
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("graphics"), "Could not find texture sampler {}", samplerName);
+	}
+}
+
 void ShaderProgram::SetUniformValue(const char* uniformName, const void* value) const
 {
 	auto uniform = _uniforms.find(uniformName);

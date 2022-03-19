@@ -34,6 +34,7 @@ public:
 	~ShaderProgram();
 
 	void SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture) const;
+	void SetTextureSampler(const char* samplerName, uint8_t bindPoint, const bgfx::TextureHandle& texture) const;
 	void SetUniformValue(const char* uniformName, const void* value) const;
 
 	[[nodiscard]] bgfx::ProgramHandle GetRawHandle() const { return _program; }
