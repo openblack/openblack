@@ -14,7 +14,7 @@ jobs:
       matrix:
         # This is the matrix. They form permutations.
         os: [ubuntu-22.04]
-        preset: [android-armeabi-v7a-vcpkg, android-arm64-v8a-vcpkg, android-x86-vcpkg, android-x86_64-vcpkg]
+        preset: [android-armeabi-v7a-vcpkg, android-arm64-v8a-vcpkg, android-x86-vcpkg, android-x86_64-vcpkg, emscripten-vcpkg]
         triplet: [""]
         # These are additional individual jobs. There are no permutations of these.
         include:
@@ -40,6 +40,14 @@ jobs:
           sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
         if: startsWith(matrix.os, 'ubuntu')
 
+      - name: Install EMSDK
+        run: |
+          git clone https://github.com/emscripten-core/emsdk /tmp/emsdk
+          pushd /tmp/emsdk
+          ./emsdk install latest
+          ./emsdk activate latest
+        if: matrix.preset == 'emscripten-vcpkg'
+
       # Setup the build machine with the most recent versions of CMake and Ninja. Both are cached if not already: on subsequent runs both will be quickly restored from GitHub cache service.
       - uses: lukka/get-cmake@latest
 
@@ -57,6 +65,7 @@ jobs:
           configurePreset: '${{ matrix.preset }}'
           configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
         env:
+          EMSDK: '/tmp/emsdk'
           CXX: ''
           CC: ''
 
@@ -67,6 +76,7 @@ jobs:
           configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
           buildPreset: '${{ matrix.preset }}-debug'
         env:
+          EMSDK: '/tmp/emsdk'
           CXX: ''
           CC: ''
 
@@ -77,6 +87,7 @@ jobs:
           configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
           buildPreset: '${{ matrix.preset }}-release'
         env:
+          EMSDK: '/tmp/emsdk'
           CXX: ''
           CC: ''
 
