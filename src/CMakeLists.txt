@@ -231,6 +231,19 @@ else()
   add_executable(openblack main.cpp)
   target_link_libraries(openblack PRIVATE openblack_lib)
 
+if (EMSCRIPTEN)
+  # Must be run from project root using `emrun --no_browser --serve_after_close --serve_after_exit .`
+  # Browser should point to http://localhost:6931/emscripten-vcpkg/bin/Debug/openblack.html?-g&relative/path/to/game/files
+  set_target_properties(openblack PROPERTIES
+    COMPILE_FLAGS_DEBUG "-g3 -gsource-map"
+    LINK_FLAGS_DEBUG "-g3 -gsource-map"
+    COMPILE_FLAGS "-s USE_SDL=2 -fexceptions"
+    #COMPILE_FLAGS "-s USE_SDL=2 -s USE_PTHREADS=1"
+    LINK_FLAGS "-s USE_SDL=2 -s FULL_ES3=1 -s GL_ASSERTIONS=1 -s USE_WEBGL2=1 -s TOTAL_MEMORY=128MB -fexceptions --emrun"
+    #LINK_FLAGS "-s USE_SDL=2 -s FULL_ES3=1 -s GL_ASSERTIONS=1 -s USE_WEBGL2=1 -s USE_PTHREADS=1 -s TOTAL_MEMORY=128MB --emrun"
+    SUFFIX ".html")
+endif()
+
 # Installation configuration
 install(TARGETS openblack RUNTIME DESTINATION bin)
 if(UNIX)
