@@ -86,6 +86,14 @@ Install [openblack-git](https://aur.archlinux.org/packages/openblack-git/) from 
 
 The prefix to use is `"linux-system-deps"   - Linux (System Deps)`
 
+### Web Assembly
+
+* Get [emsdk](https://github.com/emscripten-core/emsdk)
+* Add the directory of emsdk as the `EMSDK` environment variable.
+* Run `emsdk install latest`
+* Run `emsdk activate latest`
+* Build the `emscripten-vcpkg` preset
+
 ## Contributing
 Contributions are always welcome, whether it's modifying source code to add new
 features or bug fixes, documenting new file formats or simply editing some

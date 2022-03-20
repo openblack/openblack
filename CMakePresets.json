@@ -42,6 +42,24 @@
       }
     },
     {
+      "name": "template-emscripten-vcpkg",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/cmake-build-presets/${presetName}",
+      "generator": "Ninja Multi-Config",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        },
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+        },
+        "OPENBLACK_USE_VCPKG": true,
+        "VCPKG_TARGET_TRIPLET": "wasm32-emscripten"
+      }
+    },
+    {
       "name": "template-system-deps",
       "hidden": true,
       "binaryDir": "${sourceDir}/cmake-build-presets/${presetName}",
@@ -119,6 +137,13 @@
       "cacheVariables": {
         "ANDROID_ABI": "x86_64"
       }
+    },
+    {
+      "name": "emscripten-vcpkg",
+      "displayName": "Web Assembly (vcpkg)",
+      "description": "Configure with vcpkg toolchain and generate Emscripten web assembly project files for all configurations",
+      "generator": "Ninja Multi-Config",
+      "inherits": "template-emscripten-vcpkg"
     },
     {
       "name": "linux-system-deps",
@@ -253,6 +278,20 @@
       "configurePreset": "android-x86_64-vcpkg",
       "displayName": "Build android-x86_64-vcpkg-release",
       "description": "Build android-x86_64-vcpkg Release configuration",
+      "configuration": "Release"
+    },
+    {
+      "name": "emscripten-vcpkg-debug",
+      "configurePreset": "emscripten-vcpkg",
+      "displayName": "Build emscripten-vcpkg-debug",
+      "description": "Build Web Assembly (vcpkg) Debug configuration",
+      "configuration": "Debug"
+    },
+    {
+      "name": "emscripten-vcpkg-release",
+      "configurePreset": "emscripten-vcpkg",
+      "displayName": "Build emscrpten-vcpkg-release",
+      "description": "Build Web Assembly (vcpkg) Release configuration",
       "configuration": "Release"
     },
     {
