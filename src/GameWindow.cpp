@@ -96,6 +96,12 @@ SDL_Window* GameWindow::GetHandle() const
 
 void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) const
 {
+#if defined(__EMSCRIPTEN__)
+	static const char* canvas = "#canvas";
+	nativeWindow = const_cast<void*>(reinterpret_cast<const void*>(canvas));
+	return;
+#endif
+
 	SDL_SysWMinfo wmi;
 	SDL_VERSION(&wmi.version);
 	if (SDL_GetWindowWMInfo(_window.get(), &wmi) == 0u)
