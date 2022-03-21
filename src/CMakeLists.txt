@@ -134,13 +134,13 @@ target_compile_definitions(openblack_lib
   "$<$<CONFIG:DEBUG>:OPENBLACK_DEBUG>"
   # Compile-time optimize out log messages (debug level if debug, else info)
   "SPDLOG_ACTIVE_LEVEL=$<IF:$<CONFIG:DEBUG>,SPDLOG_LEVEL_DEBUG,SPDLOG_LEVEL_INFO>"
+  # Suppress WinMain() and main hijacking, provided by SDL
+  "SDL_MAIN_HANDLED"
 )
 
 if(MSVC)
   target_compile_definitions(openblack_lib
     PRIVATE
-    # Suppress WinMain(), provided by SDL
-    SDL_MAIN_HANDLED
     # Get rid of useless crud from windows.h
     NOMINMAX
     WIN32_LEAN_AND_MEAN
