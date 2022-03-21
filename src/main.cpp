@@ -177,7 +177,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 	return true;
 }
 
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
 	// clang-format off
 	std::cout <<
