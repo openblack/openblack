@@ -64,7 +64,14 @@ list(APPEND OPENBLACK_SHADERS ${OPENBLACK_VERTEX_SHADERS})
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_FRAGMENT_SHADERS})
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_VARYING_DEF_FILE})
 
-add_library(openblack_lib STATIC)
+if(ANDROID)
+  add_library(openblack_lib SHARED)
+  set_target_properties(openblack_lib PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+else()
+  add_library(openblack_lib STATIC)
+endif()
+
 target_sources(openblack_lib
   PRIVATE
       ${OPENBLACK_SOURCES}
