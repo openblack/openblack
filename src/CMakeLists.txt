@@ -100,7 +100,6 @@ target_link_libraries(
     BulletSoftBody
     LinearMath
   PUBLIC
-    SDL2::SDL2
     spdlog::spdlog
 )
 if(UNIX)
@@ -108,6 +107,18 @@ if(UNIX)
   if(WAYLAND)
     target_link_libraries(openblack_lib PRIVATE ${WAYLAND})
   endif()
+endif()
+
+if(VCPKG_TARGET_ANDROID)
+  # openblack_lib need to forward the JNI exports from SDL2 so the Activity can start main
+  target_link_libraries(openblack_lib
+    PUBLIC
+          -Wl,--whole-archive
+          SDL2::SDL2
+          -Wl,--no-whole-archive
+    )
+else()
+  target_link_libraries(openblack_lib PUBLIC SDL2::SDL2)
 endif()
 
 target_compile_definitions(openblack_lib
