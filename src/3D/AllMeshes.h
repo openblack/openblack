@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <fmt/format.h>
+
 #include <array>
 #include <string>
 
