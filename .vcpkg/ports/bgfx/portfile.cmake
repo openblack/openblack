@@ -29,6 +29,9 @@
 #
 # 	See additional helpful variables in /docs/maintainers/vcpkg_common_definitions.md
 
+# Issues with glsl-optimizer force static only builds https://github.com/bkaradzic/bgfx.cmake/pull/130
+vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
+
 vcpkg_from_github(OUT_SOURCE_PATH SOURCE_PATH
     REPO "bkaradzic/bgfx.cmake"
     HEAD_REF master
