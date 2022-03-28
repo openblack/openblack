@@ -55,17 +55,6 @@ class Renderer
 {
 
 public:
-	enum class Api
-	{
-		OpenGl,
-	};
-
-	struct RequiredAttribute
-	{
-		Api api;
-		uint32_t name;
-		int value;
-	};
 	struct DrawSceneDesc
 	{
 		uint32_t time;
