@@ -38,27 +38,27 @@ void main()
 	vec4 col = colOne + colTwo + colThree;
 
 	// apply bump map (2x because it's half bright?)
-	float bump = mix(1.0f, texture2D(s1_bump, v_texcoord0.xy).r * 2, bumpMapStrength);
+	float bump = mix(1.0f, texture2D(s1_bump, v_texcoord0.xy).r * 2.0f, bumpMapStrength);
 	col = col * bump;
 
 	// don't apply smallbump unless we're close
 	if (v_distToCamera < 200.0f) {
 		float smallStrength = (1.0f - (v_distToCamera / 200.0f)) * smallBumpMapStrength;
 
-		float smallbump = 1 - mix(0.0f, texture2D(s2_smallBump, v_texcoord0.xy * 10).r, smallStrength);
+		float smallbump = 1.0f - mix(0.0f, texture2D(s2_smallBump, v_texcoord0.xy * 10.0f).r, smallStrength);
 		col = col * smallbump;
 	}
 
 	// apply light map
 	float skyBightness = skyType / 2.0f;
-	col = col * mix(.25f, clamp(v_lightLevel * 2, 0.5, 1), skyBightness);
+	col = col * mix(0.25f, clamp(v_lightLevel * 2.0f, 0.5f, 1.0f), skyBightness);
 
 	gl_FragColor = vec4(col.rgb, v_waterAlpha);
 
 
 	//gl_FragColor.r = v_distToCamera / 200.0f;
 
-	if (v_waterAlpha == 0.0) {
+	if (v_waterAlpha == 0.0f) {
 		discard;
 	}
 }
