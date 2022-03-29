@@ -35,12 +35,8 @@ vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
 vcpkg_from_github(OUT_SOURCE_PATH SOURCE_PATH
     REPO "bkaradzic/bgfx.cmake"
     HEAD_REF master
-    REF a7ac0aa3ae685505a1760e64b98e6c1ccc0b76a5
-    SHA512 f7946c32e0e1caad71199f48a5bcec7e7a9c70f3c3f60fdcd508b2f3d165317a64232dfd591a8bd9e611e1afd817240172eb8bcb78756f093cceaf931d35009c
-    PATCHES
-        # https://github.com/bkaradzic/bgfx.cmake/pull/129
-        0001-bx-Link-with-android-log-library.patch
-        0002-examples-Don-t-build-on-android-by-default.patch
+    REF dd2017c3326512fb8575f7c80afbda5819d50359
+    SHA512 622523a997009b20cb3ce45133058a2cb777e96daba7b68348217ff0a0684fdcb0a81de2cd551102eb0b0643c0bd14a033f6f492318ee5f7007b30bb1ad69400
 )
 
 vcpkg_from_github(OUT_SOURCE_PATH SOURCE_PATH_BX
@@ -60,8 +56,8 @@ vcpkg_from_github(OUT_SOURCE_PATH SOURCE_PATH_BIMG
 vcpkg_from_github(OUT_SOURCE_PATH SOURCE_PATH_BGFX
     REPO "bkaradzic/bgfx"
     HEAD_REF master
-    REF ae7aeba72c0663d006e99d51015ff6fcb7ba4d1d
-    SHA512 1116d03cbd983f16b7595aa9b22d005f2d2e772d87c247f7915357905af4d794c828387fbc42b8fb1d76f506086b631abd1bd7172509e6fab47c5da7b32ac564
+    REF 251e35ae09a78a80d35bb386dc8d6f5889d79ede
+    SHA512 d30639500cdef436289334a3f800a7d6a0997fb500ba2835277ec27c8c90bb446104a98a82f84f3137c079ce3cfa773e247998a0862fe008234ec1ea37e67529
 )
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
