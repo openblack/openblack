@@ -102,7 +102,15 @@ Game::Game(Arguments&& args)
 		}
 		_window = std::make_unique<GameWindow>(kWindowTitle, args.windowWidth, args.windowHeight, args.displayMode, extraFlags);
 	}
-	_renderer = std::make_unique<Renderer>(_window.get(), args.rendererType, args.vsync);
+	try
+	{
+		_renderer = std::make_unique<Renderer>(_window.get(), args.rendererType, args.vsync);
+	}
+	catch (std::runtime_error& exception)
+	{
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Failed to create renderer", exception.what(), nullptr);
+		throw exception;
+	}
 	_dynamicsSystem = std::make_unique<ecs::systems::DynamicsSystem>();
 	_fileSystem->SetGamePath(GetGamePath());
 	_handModel = std::make_unique<L3DMesh>();
