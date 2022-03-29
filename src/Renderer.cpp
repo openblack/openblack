@@ -145,6 +145,12 @@ Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererTy
 		throw std::runtime_error("Failed to initialize bgfx.");
 	}
 
+	const bgfx::Caps* caps = bgfx::getCaps();
+	if ((caps->supported & BGFX_CAPS_TEXTURE_2D_ARRAY) == 0 || caps->limits.maxTextureLayers < 9)
+	{
+		throw std::runtime_error("Graphics device must support texture layers.");
+	}
+
 	_shaderManager->LoadShaders();
 
 	// allocate vertex buffers for our debug draw and for primitives
