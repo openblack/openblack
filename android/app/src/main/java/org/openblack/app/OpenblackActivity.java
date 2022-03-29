@@ -42,11 +42,9 @@ public class OpenblackActivity extends SDLActivity {
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                     0x13648559);
         }
-        // FIXME(bwrsandman): Currently requires user to upload game assets to /sdcard/bw
+        // FIXME(bwrsandman): Currently requires user to upload game assets to "/data/local/tmp/bw" and `chmod -R a+wrx /data/local/tmp/bw`
         return new String[]{
                 "--game-path", "/data/local/tmp/bw",
-                // "--game-path", Environment.getExternalStorageDirectory().getPath() + "/bw",
-                // "--game-path", c.getFilesDir().getPath() + "/bw",
                 "--backend-type", "Vulkan",
                 "--log-file", "logcat"
         };
