@@ -1,7 +1,8 @@
 {
   "versions": [
     {
-      "version-date": "2022-03-21",
+      "version": "1.115.8108.305",
+      "port-version": 0,
       "path": "$/ports/bgfx"
     }
   ]
