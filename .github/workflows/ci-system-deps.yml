@@ -1,6 +1,10 @@
 name: System Deps CI
-on: [pull_request]
-
+on:
+  pull_request:
+  push:
+    tags:
+    branches:
+      - 'master'
 jobs:
   arch-packaging-system-deps:
     name: Arch Linux AUR Packaging

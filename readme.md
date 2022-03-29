@@ -1,7 +1,7 @@
 # openblack
 
-[![VCPKG CI](https://github.com/openblack/openblack/actions/workflows/ci-vcpkg.yml/badge.svg)](https://github.com/openblack/openblack/actions/workflows/ci-vcpkg.yml)
-[![System Deps CI](https://github.com/openblack/openblack/actions/workflows/ci-system-deps.yml/badge.svg)](https://github.com/openblack/openblack/actions/workflows/ci-system-deps.yml)
+[![VCPKG CI](https://github.com/openblack/openblack/actions/workflows/ci-vcpkg.yml/badge.svg?branch=master&event=push)](https://github.com/openblack/openblack/actions/workflows/ci-vcpkg.yml)
+[![System Deps CI](https://github.com/openblack/openblack/actions/workflows/ci-system-deps.yml/badge.svg?branch=master&event=push)](https://github.com/openblack/openblack/actions/workflows/ci-system-deps.yml)
 [![GitHub Stars](https://img.shields.io/github/stars/openblack/openblack?logo=github)](https://github.com/openblack/openblack/stargazers)
 [![Discord chat](https://img.shields.io/discord/608729286513262622?logo=discord&logoColor=white)](https://discord.gg/5QTexBU)
 [![License](https://img.shields.io/github/license/openblack/openblack)](LICENSE.md)

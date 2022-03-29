@@ -1,5 +1,10 @@
 name: VCPKG CI
-on: [pull_request]
+on:
+  pull_request:
+  push:
+    tags:
+    branches:
+      - 'master'
 jobs:
   build:
     runs-on: ${{ matrix.os }}
