@@ -189,7 +189,7 @@ function( shaderc_parse ARG_OUT )
 endfunction()
 
 function(get_profile_ext PROFILE PROFILE_EXT)
-	string(REPLACE 320_es essl PROFILE ${PROFILE})
+	string(REPLACE 300_es essl PROFILE ${PROFILE})
 	string(REPLACE 120 glsl PROFILE ${PROFILE})
 	string(REPLACE spirv spv PROFILE ${PROFILE})
 	string(REPLACE metal mtl PROFILE ${PROFILE})
@@ -216,7 +216,7 @@ function(mark_shaders_for_compilation)
 			"${multiValueArgs}"
 			"${ARGN}")
 
-	set (PROFILES 120 320_es spirv) # pssl
+	set (PROFILES 120 300_es spirv) # pssl
 	if (UNIX AND NOT APPLE)
 		set (PLATFORM LINUX)
 	elseif (EMSCRIPTEN)
