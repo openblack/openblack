@@ -68,12 +68,19 @@ struct BgfxCallback: public bgfx::CallbackI
 			out = (char*)alloca(len + 1);
 			len = vsnprintf(out, len, format, argList);
 		}
-		out[len] = '\0';
-		if (len > 0 && out[len - 1] == '\n')
+		if (len > 0)
 		{
-			out[len - 1] = '\0';
+			out[len] = '\0';
+			if (len > 0 && out[len - 1] == '\n')
+			{
+				out[len - 1] = '\0';
+			}
+			SPDLOG_LOGGER_DEBUG(spdlog::get("graphics"), "bgfx: {}:{}: {}", filePath, line, out);
 		}
-		SPDLOG_LOGGER_DEBUG(spdlog::get("graphics"), "bgfx: {}:{}: {}", filePath, line, out);
+		else
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "bgfx: failed to format message: {}:{}: {}", filePath, line, format);
+		}
 	}
 	void profilerBegin([[maybe_unused]] const char* name, [[maybe_unused]] uint32_t abgr, [[maybe_unused]] const char* filePath,
 	                   [[maybe_unused]] uint16_t line) override
