@@ -264,7 +264,7 @@ else ()
         COMPILE_FLAGS "-s USE_SDL=2 -fexceptions"
         #COMPILE_FLAGS "-s USE_SDL=2 -s USE_PTHREADS=1"
         LINK_FLAGS
-        "-s USE_SDL=2 -s FULL_ES3=1 -s GL_ASSERTIONS=1 -s USE_WEBGL2=1 -s TOTAL_MEMORY=128MB -fexceptions --emrun"
+        "-s USE_SDL=2 -s FULL_ES3=1 -s GL_ASSERTIONS=1 -s USE_WEBGL2=1 -s TOTAL_MEMORY=512MB -fexceptions --emrun --preload-file bw/"
         #LINK_FLAGS "-s USE_SDL=2 -s FULL_ES3=1 -s GL_ASSERTIONS=1 -s USE_WEBGL2=1 -s USE_PTHREADS=1 -s TOTAL_MEMORY=128MB --emrun"
         SUFFIX ".html"
     )
