@@ -25,7 +25,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 	cxxopts::Options options("openblack", "Open source reimplementation of the game Black & White (2001).");
 
 	const std::string defaultLogFile =
-#ifdef OPENBLACK_DEBUG
+#if defined(OPENBLACK_DEBUG) || defined(__EMSCRIPTEN__)
 	    "stdout";
 #else
 	    "openblack.log";
