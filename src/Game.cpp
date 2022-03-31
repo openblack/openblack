@@ -391,18 +391,8 @@ bool Game::Run()
 	_camera->SetPosition(glm::vec3(1441.56f, 24.764f, 2081.76f));
 	_camera->SetRotation(glm::vec3(0.0f, -45.0f, 0.0f));
 
-	auto enableUnknownMeshes = false;
-	_meshPack = std::make_unique<MeshPack>(enableUnknownMeshes);
-	if (!_meshPack->LoadFromFile(_fileSystem->DataPath() / "AllMeshes.g3d"))
-	{
-		return false;
-	}
-
-	_animationPack = std::make_unique<AnimationPack>();
-	if (!_animationPack->LoadFromFile(_fileSystem->DataPath() / "AllAnims.anm"))
-	{
-		return false;
-	}
+	_sky = std::make_unique<Sky>();
+	_water = std::make_unique<Water>();
 
 	_testModel = std::make_unique<L3DMesh>();
 	if (!_testModel->LoadFromFile(_fileSystem->MiscPath() / "coffre.l3d"))
@@ -434,8 +424,18 @@ bool Game::Run()
 	}
 	CameraBookmarkSystem::instance().Initialize(*_misc0aTexture);
 
-	_sky = std::make_unique<Sky>();
-	_water = std::make_unique<Water>();
+	auto enableUnknownMeshes = false;
+	_meshPack = std::make_unique<MeshPack>(enableUnknownMeshes);
+	if (!_meshPack->LoadFromFile(_fileSystem->DataPath() / "AllMeshes.g3d"))
+	{
+		return false;
+	}
+
+	_animationPack = std::make_unique<AnimationPack>();
+	if (!_animationPack->LoadFromFile(_fileSystem->DataPath() / "AllAnims.anm"))
+	{
+		return false;
+	}
 
 	if (!LoadVariables())
 	{
