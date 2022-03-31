@@ -34,6 +34,7 @@ jobs:
             /tmp/entt/entt*.pkg.tar.*
             /tmp/cxxopts/cxxopts*.pkg.tar.*
             /tmp/bgfx-cmake-git/bgfx-cmake-git*.pkg.tar.*
+            /tmp/imgui/imgui*.pkg.tar.*
           key: ${{ runner.os }}-packages
 
       - name: Build entt from the AUR
@@ -57,8 +58,15 @@ jobs:
           cd /tmp/bgfx-cmake-git
           sudo -u builduser makepkg
 
+      - name: Build imgui from the AUR
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        run: |
+          sudo -u builduser git clone https://aur.archlinux.org/imgui.git /tmp/imgui
+          cd /tmp/imgui
+          sudo -u builduser makepkg
+
       - name: Install AUR dependencies
-        run: pacman -U --noconfirm --noprogressbar /tmp/entt/entt*.pkg.tar.* /tmp/cxxopts/cxxopts*.pkg.tar.* /tmp/bgfx-cmake-git/bgfx-cmake-git*.pkg.tar.*
+        run: pacman -U --noconfirm --noprogressbar /tmp/entt/entt*.pkg.tar.* /tmp/cxxopts/cxxopts*.pkg.tar.* /tmp/bgfx-cmake-git/bgfx-cmake-git*.pkg.tar.* /tmp/imgui/imgui*.pkg.tar.*
 
       - name: Building and Packaging openblack from the AUR
         run: |

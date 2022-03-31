@@ -12,6 +12,7 @@
             "name": "sdl2",
             "platform": "!(linux&!android)"
         },
+        "imgui",
         "spdlog",
         "glm",
         "entt",

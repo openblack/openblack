@@ -87,7 +87,8 @@ target_link_libraries(
     lnd
     anm
     morph
-    imgui
+    imgui::imgui
+    imgui_user
     imgui-flame-graph
     ScriptLibrary
     glm::glm
