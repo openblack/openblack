@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
-include(FetchContent)
 
 # On Visual Studio generators default to using vcpkg as the most newbie friendly option
 if (CMAKE_GENERATOR MATCHES "^Visual Studio")
@@ -83,15 +82,6 @@ find_package(Bullet REQUIRED)
 find_package(spdlog 1.3.0 REQUIRED)
 find_package(EnTT 3.7.0 CONFIG REQUIRED) # only available as a config
 find_package(cxxopts REQUIRED)
-
-FetchContent_Declare(
-  imgui-flame-graph
-  GIT_REPOSITORY https://github.com/bwrsandman/imgui-flame-graph.git
-  GIT_TAG master)
-set(IMGUI_FLAME_GRAPH_BUILD_EXAMPLE
-    OFF
-    CACHE BOOL "imgui-flame bgfx examples.")
-FetchContent_MakeAvailable(imgui-flame-graph)
 
 include(ClangFormat)
 
