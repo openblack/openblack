@@ -89,7 +89,6 @@ target_link_libraries(
     morph
     imgui::imgui
     imgui_user
-    imgui-flame-graph
     ScriptLibrary
     glm::glm
     EnTT::EnTT
