@@ -201,7 +201,7 @@ void Renderer::UpdateDebugCrossUniforms(const glm::mat4& pose)
 const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& meshSkins,
                             const resources::TextureManager& textures)
 {
-	Texture2D* texture = nullptr;
+	const Texture2D* texture = nullptr;
 
 	if (skinID != 0xFFFFFFFF)
 	{
@@ -211,7 +211,7 @@ const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, st
 		}
 		else if (textures.Contains(skinID))
 		{
-			texture = &textures.Handle(skinID).get();
+			texture = &textures.Handle(entt::hashed_string(fmt::format("{}", skinID).c_str())).get();
 		}
 		else
 		{
@@ -581,8 +581,8 @@ void Renderer::DrawPass(const resources::MeshManager& meshes, const resources::T
 				| BGFX_STATE_MSAA
 			;
 			// clang-format on
-			const auto& mesh = meshes.Handle("testModel");
-			const auto& testAnimation = Locator::resources::ref().GetAnimations().Handle("testAnimation");
+			const auto& mesh = meshes.Handle(entt::hashed_string("testModel"));
+			const auto& testAnimation = Locator::resources::ref().GetAnimations().Handle(entt::hashed_string("testAnimation"));
 			const std::vector<uint32_t>& boneParents = mesh->GetBoneParents();
 			auto bones = testAnimation->GetBoneMatrices(desc.time);
 			for (uint32_t i = 0; i < bones.size(); ++i)

@@ -35,16 +35,14 @@ public:
 		return Load(id, std::forward<Args>(args)...);
 	}
 
-	[[nodiscard]] entt::resource_handle<ResourceType> Handle(entt::id_type identifier) const
+	[[nodiscard]] entt::resource_handle<ResourceType> Handle(entt::id_type identifier)
 	{
 		return _resourceCache.handle(identifier);
 	}
 
-	template <typename T>
-	[[nodiscard]] entt::resource_handle<ResourceType> Handle(T identifier) const
+	[[nodiscard]] entt::resource_handle<const ResourceType> Handle(entt::id_type identifier) const
 	{
-		entt::id_type id = entt::hashed_string(fmt::format("{}", identifier).c_str());
-		return Handle(id);
+		return _resourceCache.handle(identifier);
 	}
 
 	[[nodiscard]] bool Contains(entt::id_type identifier) const { return _resourceCache.contains(identifier); }

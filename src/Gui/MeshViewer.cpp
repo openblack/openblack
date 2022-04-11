@@ -68,7 +68,7 @@ void MeshViewer::Draw(Game& game)
 	ImGui::BeginChild("meshesSelect", ImVec2(meshSize.x - 5, meshSize.y - ImGui::GetTextLineHeight() - 5), true);
 	uint32_t displayedMeshes = 0;
 
-	meshes.Each([this, &displayedMeshes](const entt::id_type id, entt::resource_handle<L3DMesh> mesh) {
+	meshes.Each([this, &displayedMeshes](entt::id_type id, entt::resource_handle<const L3DMesh> mesh) {
 		if (_filter.PassFilter(mesh->GetDebugName().c_str()) && mesh->GetFlags() & _meshFlagFilter)
 		{
 			displayedMeshes++;
@@ -93,7 +93,7 @@ void MeshViewer::Draw(Game& game)
 
 	ImGui::Columns(2, nullptr, false);
 
-	auto const& mesh = meshes.Handle(_selectedMesh);
+	auto mesh = meshes.Handle(_selectedMesh);
 
 	static char bitfieldTitle[0x400];
 	{
