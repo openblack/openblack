@@ -211,7 +211,7 @@ const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, st
 		}
 		else if (textures.Contains(skinID))
 		{
-			texture = &textures.Handle(entt::hashed_string(fmt::format("{}", skinID).c_str())).get();
+			texture = &textures.Handle(skinID).get();
 		}
 		else
 		{
