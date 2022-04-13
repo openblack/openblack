@@ -20,6 +20,8 @@
 #include "Graphics/VertexBuffer.h"
 #include "Gui/Gui.h"
 #include "Renderer.h"
+#include "Resources/Resources.h"
+#include "Resources/MeshId.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -32,7 +34,7 @@ using namespace openblack::gui;
 
 MeshViewer::MeshViewer()
     : DebugWindow("MeshPack Viewer", ImVec2(950.0f, 780.0f))
-    , _selectedMesh(MeshId::Dummy)
+    , _selectedMesh(resources::MeshIdToResourceId(MeshId::Dummy))
     , _selectedSubMesh(0)
     , _selectedAnimation(std::nullopt)
     , _selectedFrame(0)
