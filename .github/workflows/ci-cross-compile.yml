@@ -63,8 +63,8 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: openblack-${{ matrix.triplet || matrix.ninja-multi-vcpkg }}-${{github.sha}}
-          path: cmake-build-presets/ninja-multi-vcpkg/bin
+          name: openblack-${{ matrix.triplet || matrix.preset }}-${{github.sha}}
+          path: cmake-build-presets/${{ matrix.preset }}/bin
           if-no-files-found: error
 
     env:
