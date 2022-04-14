@@ -69,6 +69,6 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: openblack-arch-linux-pkg
+          name: openblack-arch-linux-pkg-${{github.sha}}
           path: /tmp/openblack-git/openblack-git*.pkg.tar.*
           if-no-files-found: error

@@ -39,5 +39,5 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: formatting-fix
+          name: formatting-fix-${{github.sha}}
           path: format.patch
