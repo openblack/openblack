@@ -59,6 +59,15 @@ for you. To do so, you will be selecting the `"ninja-multi-vcpkg"   - Ninja Mult
 * Run `sudo xcode-select --reset` after installing cmake
 * You need to configure using the cmake preset `xcode-vcpkg` using cmake in either the GUI or using the command line argument `--preset xcode-vcpkg`
 
+### Android Studio
+* Install [Android Studio](https://developer.android.com/studio)
+* Install a recent SDK and an NDK of at least 23
+* Open openblack from the `android` directory
+* Set the SDK and NDK in the project settings
+* Do gradle configure which will run cmake configuration and compile the vcpkg dependencies
+* Build the project for either a virtual device or a connected device
+* Currently requires user to upload game assets to `/data/local/tmp/bw` and `chmod -R a+wrx /data/local/tmp/bw` with adb
+
 ### Command Line
 * Your usual build tool-chain.
     * Ubuntu / Debian: `# apt install build-essential cmake ninja-build`
