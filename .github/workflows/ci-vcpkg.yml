@@ -55,15 +55,11 @@ jobs:
           buildPreset: 'ninja-multi-vcpkg-${{ matrix.config }}'
           # testPreset: 'ninja-multi-vcpkg-${{ matrix.config }}'
 
-      - id: configstring
-        uses: ASzc/change-string-case-action@v2
-        with:
-          string: ${{ matrix.config }}
-
       - uses: actions/upload-artifact@v3
+        if: matrix.cc == ''
         with:
-          name: openblack-${{ matrix.os }}-${{ matrix.cc || matrix.config }}
-          path: cmake-build-presets/ninja-multi-vcpkg/bin/${{ steps.configstring.outputs.capitalized }}/
+          name: openblack-${{ matrix.os }}
+          path: cmake-build-presets/ninja-multi-vcpkg/bin
           if-no-files-found: error
 
     env:
