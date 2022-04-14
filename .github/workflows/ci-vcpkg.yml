@@ -58,7 +58,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: matrix.cc == ''
         with:
-          name: openblack-${{ matrix.os }}
+          name: openblack-${{ matrix.os }}-${{github.sha}}
           path: cmake-build-presets/ninja-multi-vcpkg/bin
           if-no-files-found: error
 
