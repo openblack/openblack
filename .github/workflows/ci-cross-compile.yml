@@ -56,5 +56,16 @@ jobs:
           configurePreset: '${{ matrix.preset }}'
           buildPreset: '${{ matrix.preset }}-${{ matrix.config }}'
 
+      - id: configstring
+        uses: ASzc/change-string-case-action@v2
+        with:
+          string: ${{ matrix.config }}
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: openblack-${{ matrix.triplet || matrix.ninja-multi-vcpkg }}-${{ matrix.config }}
+          path: cmake-build-presets/ninja-multi-vcpkg/bin/${{ steps.configstring.outputs.capitalized }}/*
+          if-no-files-found: error
+
     env:
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
