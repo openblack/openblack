@@ -66,3 +66,9 @@ jobs:
           cd /tmp/openblack-git
           sed "s,source=.*,source=('openblack::git+file://${GITHUB_WORKSPACE}')," -i PKGBUILD
           sudo -u builduser makepkg
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: openblack-arch-linux-pkg
+          path: /tmp/openblack-git/openblack-git*.pkg.tar.*
+          if-no-files-found: error
