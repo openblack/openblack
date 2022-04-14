@@ -532,7 +532,7 @@ void Camera::handleMouseInput(const SDL_Event& e)
 void Camera::Update(std::chrono::microseconds dt)
 {
 	auto airResistance = .92f; // reduced to make more floaty
-	float fdt = float(dt.count());
+	auto fdt = static_cast<float>(dt.count());
 	glm::mat3 rotation = glm::transpose(GetViewMatrix());
 
 	// deal with hand pulling camera around
@@ -560,7 +560,7 @@ void Camera::Update(std::chrono::microseconds dt)
 			glm::ivec2 mousePosition;
 
 			SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
-			glm::ivec2 handScreenCoords = glm::ivec2(handToScreen);
+			auto handScreenCoords = glm::ivec2(handToScreen);
 			handScreenCoords.y = sHeight - handScreenCoords.y;
 			_handScreenVec = mousePosition - handScreenCoords;
 			_handDragMult = glm::length(glm::vec2(_handScreenVec));

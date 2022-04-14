@@ -119,6 +119,11 @@ target_link_libraries(
     spdlog::spdlog
 )
 
+# FIXME(bwrsandman) MSVC is throwing false errors about exceptions being disabled
+if (NOT MSVC AND CLANG_TIDY)
+	set_target_properties(openblack_lib PROPERTIES CXX_CLANG_TIDY ${CLANG_TIDY})
+endif()
+
 if(ANDROID)
   target_link_libraries(openblack_lib PRIVATE EGL)
 elseif (UNIX)

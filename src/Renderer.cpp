@@ -61,10 +61,10 @@ struct BgfxCallback: public bgfx::CallbackI
 	void traceVargs([[maybe_unused]] const char* filePath, [[maybe_unused]] uint16_t line, const char* format,
 	                va_list argList) override
 	{
-		char temp[0x2000];
-		char* out = temp;
-		int32_t len = vsnprintf(out, sizeof(temp), format, argList);
-		if ((int32_t)sizeof(temp) < len)
+		std::array<char, 0x2000> temp;
+		char* out = temp.data();
+		int32_t len = vsnprintf(out, temp.size(), format, argList);
+		if (static_cast<int32_t>(temp.size()) < len)
 		{
 			out = (char*)alloca(len + 1);
 			len = vsnprintf(out, len, format, argList);

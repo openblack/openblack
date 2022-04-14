@@ -24,8 +24,8 @@
 using namespace openblack;
 using namespace openblack::graphics;
 
-LandVertex::LandVertex(const glm::vec3& _position, const glm::vec3& _weight, uint32_t mat[8], uint32_t blend[3],
-                       uint8_t _lightLevel, float _alpha)
+LandVertex::LandVertex(const glm::vec3& _position, const glm::vec3& _weight, const std::array<uint32_t, 6>& mat,
+                       const std::array<uint32_t, 3>& blend, uint8_t _lightLevel, float _alpha)
     : position {_position.x, _position.y, _position.z}
     , weight {_weight.x, _weight.y, _weight.z}
     , firstMaterialID {static_cast<uint8_t>(mat[0]), static_cast<uint8_t>(mat[1]), static_cast<uint8_t>(mat[2])}
@@ -130,12 +130,12 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 					return 0.5f;
 				return 1.0f;
 			};
-			auto make_vert = [&getAlpha](const glm::vec3& height, const glm::vec3& weight, lnd::LNDMapMaterial m[3],
-			                             const lnd::LNDCell& cell) -> LandVertex {
-				uint32_t mat[6] = {m[0].indices[0], m[1].indices[0], m[2].indices[0],
-				                   m[0].indices[1], m[1].indices[1], m[2].indices[1]};
-				uint32_t blend[3] = {m[0].coefficient, m[1].coefficient, m[2].coefficient};
-				return LandVertex(height, weight, mat, blend, cell.luminosity, getAlpha(cell.properties));
+			auto make_vert = [&getAlpha](const glm::vec3& height, const glm::vec3& weight,
+			                             const std::array<lnd::LNDMapMaterial, 3>& m, const lnd::LNDCell& cell) -> LandVertex {
+				std::array<uint32_t, 6> mat = {m[0].indices[0], m[1].indices[0], m[2].indices[0],
+				                               m[0].indices[1], m[1].indices[1], m[2].indices[1]};
+				std::array<uint32_t, 3> blend = {m[0].coefficient, m[1].coefficient, m[2].coefficient};
+				return {height, weight, mat, blend, cell.luminosity, getAlpha(cell.properties)};
 			};
 
 			// cell splitting
@@ -144,14 +144,14 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 			{
 				// TR/BR/TL  # #
 				//             #
-				lnd::LNDMapMaterial trbrtl[3] = {tlMat, trMat, brMat};
+				std::array<lnd::LNDMapMaterial, 3> trbrtl = {tlMat, trMat, brMat};
 				vertices[i++] = make_vert(pTR, glm::vec3(0, 1, 0), trbrtl, tr);
 				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), trbrtl, br);
 				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), trbrtl, tl);
 
 				// BR/BL/TL  #
 				//           # #
-				lnd::LNDMapMaterial brbltl[3] = {tlMat, blMat, brMat};
+				std::array<lnd::LNDMapMaterial, 3> brbltl = {tlMat, blMat, brMat};
 				vertices[i++] = make_vert(pBR, glm::vec3(0, 0, 1), brbltl, br);
 				vertices[i++] = make_vert(pBL, glm::vec3(0, 1, 0), brbltl, bl);
 				vertices[i++] = make_vert(pTL, glm::vec3(1, 0, 0), brbltl, tl);
@@ -160,14 +160,14 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 			{
 				// BL/TL/TR  # #
 				//           #
-				lnd::LNDMapMaterial bltltr[3] = {blMat, tlMat, trMat};
+				std::array<lnd::LNDMapMaterial, 3> bltltr = {blMat, tlMat, trMat};
 				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), bltltr, bl);
 				vertices[i++] = make_vert(pTL, glm::vec3(0, 1, 0), bltltr, tl);
 				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), bltltr, tr);
 
 				// TR/BR/BL    #
 				//           # #
-				lnd::LNDMapMaterial trbrbl[3] = {blMat, brMat, trMat};
+				std::array<lnd::LNDMapMaterial, 3> trbrbl = {blMat, brMat, trMat};
 				vertices[i++] = make_vert(pTR, glm::vec3(0, 0, 1), trbrbl, tr);
 				vertices[i++] = make_vert(pBR, glm::vec3(0, 1, 0), trbrbl, br);
 				vertices[i++] = make_vert(pBL, glm::vec3(1, 0, 0), trbrbl, bl);
@@ -216,5 +216,5 @@ glm::ivec2 LandBlock::GetBlockPosition() const
 glm::vec4 LandBlock::GetMapPosition() const
 {
 	assert(_block);
-	return glm::vec4(_block->mapX, _block->mapZ, 0, 0);
+	return {_block->mapX, _block->mapZ, 0, 0};
 }

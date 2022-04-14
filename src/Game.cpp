@@ -195,8 +195,8 @@ bool Game::ProcessEvents(const SDL_Event& event)
 		}
 		else if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
 		{
-			uint16_t width = static_cast<uint16_t>(event.window.data1);
-			uint16_t height = static_cast<uint16_t>(event.window.data2);
+			const auto width = static_cast<uint16_t>(event.window.data1);
+			const auto height = static_cast<uint16_t>(event.window.data2);
 			_renderer->Reset(width, height);
 			_renderer->ConfigureView(graphics::RenderPass::Main, width, height);
 

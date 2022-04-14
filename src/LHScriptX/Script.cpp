@@ -95,13 +95,13 @@ ScriptCommandParameter GetParameter(Token& argument)
 	case Token::Type::EndOfLine:
 		throw std::runtime_error("Unexpected EOL in script");
 	case Token::Type::Identifier:
-		return ScriptCommandParameter(argument.Identifier());
+		return {argument.Identifier()};
 	case Token::Type::String:
-		return ScriptCommandParameter(argument.StringValue());
+		return {argument.StringValue()};
 	case Token::Type::Integer:
-		return ScriptCommandParameter(*argument.IntegerValue());
+		return {*argument.IntegerValue()};
 	case Token::Type::Float:
-		return ScriptCommandParameter(*argument.FloatValue());
+		return {*argument.FloatValue()};
 	case Token::Type::Operator:
 		throw std::runtime_error("Operator token as an argument is currently not supported");
 	default:

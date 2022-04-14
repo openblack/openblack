@@ -78,14 +78,14 @@ using namespace openblack::gui;
 
 namespace
 {
-const bgfx::EmbeddedShader s_embeddedShaders[] = {
+const std::array<bgfx::EmbeddedShader, 5> s_embeddedShaders = {{
     BGFX_EMBEDDED_SHADER(vs_ocornut_imgui),
     BGFX_EMBEDDED_SHADER(fs_ocornut_imgui),
     BGFX_EMBEDDED_SHADER(vs_imgui_image),
     BGFX_EMBEDDED_SHADER(fs_imgui_image),
 
     BGFX_EMBEDDED_SHADER_END(),
-};
+}};
 } // namespace
 
 std::unique_ptr<Gui> Gui::create(const GameWindow* window, graphics::RenderPass viewId, float scale)
@@ -324,10 +324,10 @@ bool Gui::CreateDeviceObjectsBgfx()
 {
 	// Create shaders
 	bgfx::RendererType::Enum type = bgfx::getRendererType();
-	_program = bgfx::createProgram(bgfx::createEmbeddedShader(s_embeddedShaders, type, "vs_ocornut_imgui"),
-	                               bgfx::createEmbeddedShader(s_embeddedShaders, type, "fs_ocornut_imgui"), true);
-	_imageProgram = bgfx::createProgram(bgfx::createEmbeddedShader(s_embeddedShaders, type, "vs_imgui_image"),
-	                                    bgfx::createEmbeddedShader(s_embeddedShaders, type, "fs_imgui_image"), true);
+	_program = bgfx::createProgram(bgfx::createEmbeddedShader(s_embeddedShaders.data(), type, "vs_ocornut_imgui"),
+	                               bgfx::createEmbeddedShader(s_embeddedShaders.data(), type, "fs_ocornut_imgui"), true);
+	_imageProgram = bgfx::createProgram(bgfx::createEmbeddedShader(s_embeddedShaders.data(), type, "vs_imgui_image"),
+	                                    bgfx::createEmbeddedShader(s_embeddedShaders.data(), type, "fs_imgui_image"), true);
 
 	// Create buffers
 	_u_imageLodEnabled = bgfx::createUniform("u_imageLodEnabled", bgfx::UniformType::Vec4);

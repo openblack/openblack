@@ -79,16 +79,16 @@ struct ShaderDefinition
 	const std::string_view fragmentShaderName;
 };
 
-const bgfx::EmbeddedShader s_embeddedShaders[] = {
-    BGFX_EMBEDDED_SHADER(vs_line),    BGFX_EMBEDDED_SHADER(vs_line_instanced),   //
-    BGFX_EMBEDDED_SHADER(fs_line),                                               //
-    BGFX_EMBEDDED_SHADER(vs_object),  BGFX_EMBEDDED_SHADER(vs_object_instanced), //
-    BGFX_EMBEDDED_SHADER(fs_object),  BGFX_EMBEDDED_SHADER(fs_sky),              //
-    BGFX_EMBEDDED_SHADER(vs_terrain), BGFX_EMBEDDED_SHADER(fs_terrain),          //
-    BGFX_EMBEDDED_SHADER(vs_water),   BGFX_EMBEDDED_SHADER(fs_water),            //
-    BGFX_EMBEDDED_SHADER(vs_sprite),  BGFX_EMBEDDED_SHADER(fs_sprite),           //
-    BGFX_EMBEDDED_SHADER_END()                                                   //
-};
+const std::array<bgfx::EmbeddedShader, 14> s_embeddedShaders = {{
+    BGFX_EMBEDDED_SHADER(vs_line), BGFX_EMBEDDED_SHADER(vs_line_instanced),     //
+    BGFX_EMBEDDED_SHADER(fs_line),                                              //
+    BGFX_EMBEDDED_SHADER(vs_object), BGFX_EMBEDDED_SHADER(vs_object_instanced), //
+    BGFX_EMBEDDED_SHADER(fs_object), BGFX_EMBEDDED_SHADER(fs_sky),              //
+    BGFX_EMBEDDED_SHADER(vs_terrain), BGFX_EMBEDDED_SHADER(fs_terrain),         //
+    BGFX_EMBEDDED_SHADER(vs_water), BGFX_EMBEDDED_SHADER(fs_water),             //
+    BGFX_EMBEDDED_SHADER(vs_sprite), BGFX_EMBEDDED_SHADER(fs_sprite),           //
+    BGFX_EMBEDDED_SHADER_END()                                                  //
+}};
 
 constexpr std::array Shaders {
     ShaderDefinition {"DebugLine", "vs_line", "fs_line"},
@@ -115,9 +115,9 @@ void ShaderManager::LoadShaders()
 	for (const auto& shader : Shaders)
 	{
 		bgfx::RendererType::Enum type = bgfx::getRendererType();
-		auto vs = bgfx::createEmbeddedShader(s_embeddedShaders, type, shader.vertexShaderName.data());
+		auto vs = bgfx::createEmbeddedShader(s_embeddedShaders.data(), type, shader.vertexShaderName.data());
 		assert(bgfx::isValid(vs));
-		auto fs = bgfx::createEmbeddedShader(s_embeddedShaders, type, shader.fragmentShaderName.data());
+		auto fs = bgfx::createEmbeddedShader(s_embeddedShaders.data(), type, shader.fragmentShaderName.data());
 		assert(bgfx::isValid(fs));
 		_shaderPrograms[shader.name.data()] = new ShaderProgram(shader.name.data(), std::move(vs), std::move(fs));
 	}

@@ -93,7 +93,7 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 
 	auto mesh = meshes.Handle(_selectedMesh);
 
-	static char bitfieldTitle[0x400];
+	static std::array<char, 0x400> bitfieldTitle;
 	{
 		int32_t offset = 0;
 		int32_t newLines = 1;
@@ -101,19 +101,19 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 		{
 			if (mesh->GetFlags() & (1u << i))
 			{
-				auto writen = std::sprintf(bitfieldTitle + offset, "%s%s%s", offset ? "|" : "",
-				                           offset > newLines * 100 ? "\n" : "", L3DMeshFlagNames[i].data());
+				auto writen = std::snprintf(bitfieldTitle.data() + offset, bitfieldTitle.size() - offset, "%s%s%s",
+				                            offset ? "|" : "", offset > newLines * 100 ? "\n" : "", L3DMeshFlagNames[i].data());
 				while (offset > newLines * 100) newLines++;
 				offset += writen;
 			}
 		}
 	}
 
-	char meshFlagStr[0x20];
-	std::sprintf(meshFlagStr, "Mesh flag=0x%X", mesh->GetFlags());
-	if (ImGui::TreeNodeEx(meshFlagStr))
+	std::array<char, 0x20> meshFlagStr;
+	std::snprintf(meshFlagStr.data(), meshFlagStr.size(), "Mesh flag=0x%X", mesh->GetFlags());
+	if (ImGui::TreeNodeEx(meshFlagStr.data()))
 	{
-		ImGui::Text("%s", bitfieldTitle);
+		ImGui::Text("%s", bitfieldTitle.data());
 		ImGui::TreePop();
 	}
 

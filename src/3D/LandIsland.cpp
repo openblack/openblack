@@ -160,10 +160,8 @@ void LandIsland::DumpMaps() const
 
 	memset(data, 0x00, 32 * 32 * cellsize * cellsize);
 
-	for (unsigned int b = 0; b < _landBlocks.size(); b++)
+	for (const auto& block : _landBlocks)
 	{
-		const LandBlock& block = _landBlocks[b];
-
 		int mapx = block.GetBlockPosition().x;
 		int mapz = block.GetBlockPosition().y;
 		int lineStride = 32 * cellsize;
