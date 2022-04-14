@@ -20,7 +20,7 @@ glm::vec2 GetHorizontalPosition(const std::string& str)
 	const auto pos = str.find_first_of(',');
 	const auto y = std::stof(str.substr(pos + 1));
 	const auto x = std::stof(str.substr(0, pos));
-	return glm::vec2(x, y);
+	return {x, y};
 }
 
 template <>

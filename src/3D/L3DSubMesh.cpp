@@ -174,10 +174,10 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 		        {false, true, L3DSubMesh::Primitive::BlendMode::Additive, true, true},    // AlphaTexturedAlphaAdditiveChromaNz
 		        {true, false, L3DSubMesh::Primitive::BlendMode::Additive, true, false},   // AlphaTexturedAlphaAdditive
 		        {false, false, L3DSubMesh::Primitive::BlendMode::Additive, true, false},  // AlphaTexturedAlphaAdditiveNz
-		        {0, 0, L3DSubMesh::Primitive::BlendMode::Disabled, 0, 0},                 // 0xe
+		        {false, false, L3DSubMesh::Primitive::BlendMode::Disabled, false, false}, // 0xe
 		        {true, true, L3DSubMesh::Primitive::BlendMode::Standard, true, true},     // TexturedChromaAlpha
 		        {false, true, L3DSubMesh::Primitive::BlendMode::Standard, true, true},    // TexturedChromaAlphaNz
-		        {0, 0, L3DSubMesh::Primitive::BlendMode::Disabled, 0, 0},                 // 0x11
+		        {false, false, L3DSubMesh::Primitive::BlendMode::Disabled, false, false}, // 0x11
 		        {true, true, L3DSubMesh::Primitive::BlendMode::Standard, false, true},    // ChromaJustZ
 		    }};
 

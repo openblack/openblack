@@ -24,9 +24,9 @@
 using namespace openblack;
 using namespace openblack::graphics;
 
-L3DMesh::L3DMesh(const std::string& debugName)
+L3DMesh::L3DMesh(std::string debugName)
     : _flags(static_cast<l3d::L3DMeshFlags>(0))
-    , _debugName(debugName)
+    , _debugName(std::move(debugName))
     , _physicsMass(1.0f) // TODO(bwrsandman): Find somewhere in file a value
     , _boundingBox {glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX), glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX)}
 {
