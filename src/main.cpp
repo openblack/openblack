@@ -45,7 +45,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		("s,gui-scale", "Scaling of the GUI", cxxopts::value<float>()->default_value("1.0"))
 		("V,vsync", "Enable Vertical Sync.")
 		("m,window-mode", "Which mode to run window.", cxxopts::value<std::string>()->default_value("windowed"))
-		("b,backend-type", "Which backend to use for rendering.", cxxopts::value<std::string>()->default_value("OpenGL"))
+		("b,backend-type", "Which backend to use for rendering.", cxxopts::value<std::string>())
 		("n,num-frames-to-simulate", "Number of frames to simulate before quitting.", cxxopts::value<uint32_t>()->default_value("0"))
 		("l,log-file", "Output file for logs, 'stdout' for terminal output.", cxxopts::value<std::string>()->default_value(defaultLogFile))
 		("L,log-level", "Level (trace, debug, info, warning, error, critical, off) of logging per subsystem (" + loggingSubsystems + ").",
@@ -74,15 +74,27 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		    std::pair {"Nvn", bgfx::RendererType::Nvn},
 		    std::pair {"Noop", bgfx::RendererType::Noop},
 		};
+
+		// pick a sane renderer based on the user os
 		bgfx::RendererType::Enum rendererType;
-		auto rendererIter = rendererLookup.find(result["backend-type"].as<std::string>());
-		if (rendererIter != rendererLookup.cend())
+#ifndef _APPLE_
+		rendererType = bgfx::RendererType::Vulkan;
+#else
+		rendererType = bgfx::RendererType::Metal;
+#endif
+
+		// allow user to specify a renderer
+		if (result.count("backend-type") != 0)
 		{
-			rendererType = rendererIter->second;
-		}
-		else
-		{
-			throw cxxopts::option_not_exists_exception(result["backend-type"].as<std::string>());
+			auto rendererIter = rendererLookup.find(result["backend-type"].as<std::string>());
+			if (rendererIter != rendererLookup.cend())
+			{
+				rendererType = rendererIter->second;
+			}
+			else
+			{
+				throw cxxopts::option_not_exists_exception(result["backend-type"].as<std::string>());
+			}
 		}
 
 		static const std::map<std::string_view, openblack::DisplayMode> displayModeLookup = {
