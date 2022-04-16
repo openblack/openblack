@@ -8,7 +8,7 @@
 
 openblack is an open source reimplementation of [Black & White (2001)](https://en.wikipedia.org/wiki/Black_&_White_(video_game)) written in modern C++ and modern rendering engines (OpenGL, Vulkan).
 
-You still need to have the original game assets in order to use this, don't ask where to get these.
+You still need to have the original game assets in order to use this. See further below for an explanation on how to extract them.
 
 ---
 
@@ -85,6 +85,62 @@ grammar.
 You can also join the [Discord for development discussion]((https://discord.gg/5QTexBU))
 if you are unsure of anything.
 
-## License
+# Extracting asset files from original game
+
+As mentioned before, the original game assets are required in order to run
+openblack. Since these data are copyrighted, **we won't provide them**, so please
+don't ask. Here is a guide for extracting them from the original game.
+
+## Prerequisites
+
+You will need the following:
+
+- The original installer (usually on a CD)
+- Official patch 1.10
+- Official patch 1.2
+- Not needed (but will not compromise the extraction): Unofficial patch 1.42
+
+Patches can be found on fan sites such as
+[Black & White REALM](https://www.bwrealm.com/official-files-patches-1)
+
+## Installation
+
+### On Windows
+
+1. Install the game from the installer, remember the installation directory
+(`C:\\Program Files (x86)\\Lionhead Studios\\Black & White\\` is the default)
+2. Install the official patch 1.10 (in the same directory)
+3. Install the official patch 1.2 (in the same directory)
+
+### On Linux
+
+If you run on Linux, you can install the game with Wine.
+
+1. Install `wine`
+2. Run `wine Setup.exe` from the directory containing the installer, don't
+   change the install path
+3. Run `wine Black_White_Patch_v1.100.exe` from the directory containing the
+   first patch (adapt the command in case the filename isn't exactly that)
+4. Run `wine black_white_patch_v1_20.exe` from the directory containing the
+   second patch (adapt too)
+5. In case you would like to install the unofficial patch, it requires .NET 2.0,
+   that can be installed with `winetricks dotnet20sp2` (you should install
+   `winetricks first`)
+
+All the files should be installed in the following directory:
+`~/.wine/drive_c/Program Files (x86)/Lionhead Studios Ltd/Black & White`
+
+### Getting the assets
+
+The folders you're interested in are the `Data` and `Scripts` folders in the
+installation directory. You can use them from there or make a copy to the
+location of your choice.
+
+
+# License
+
 openblack is released as open source software under the [GPL v3](https://opensource.org/licenses/gpl-3.0.html)
 license, see the [license](./license) file in the project root for the full license text.
+
+Copyright of the original game assets belongs to Lionhead Studios. To use them,
+you are legally required to own a copy of Black & White original game.
