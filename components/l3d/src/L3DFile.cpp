@@ -176,6 +176,20 @@ struct imemstream: virtual membuf, std::istream
 };
 } // namespace
 
+template <typename Item>
+void add_span(std::vector<std::span<Item>>& container, typename std::vector<Item>& items, size_t offset, size_t length)
+{
+	if (length > 0)
+	{
+		container.emplace_back(&items[offset], length);
+	}
+	else
+	{
+		// Add an empty span
+		container.emplace_back();
+	}
+}
+
 /// Error handling
 void L3DFile::Fail(const std::string& msg)
 {
@@ -473,10 +487,9 @@ void L3DFile::ReadFile(std::istream& stream)
 		uint32_t boneStart = 0;
 		for (auto& _submeshHeader : _submeshHeaders)
 		{
-			_primitiveSpans.emplace_back(&_primitiveHeaders[primitiveStart],
-			                             &_primitiveHeaders[primitiveStart + _submeshHeader.numPrimitives]);
+			add_span(_primitiveSpans, _primitiveHeaders, primitiveStart, _submeshHeader.numPrimitives);
+			add_span(_boneSpans, _bones, boneStart, _submeshHeader.numBones);
 			primitiveStart += _submeshHeader.numPrimitives;
-			_boneSpans.emplace_back(&_bones[boneStart], &_bones[boneStart + _submeshHeader.numBones]);
 			boneStart += _submeshHeader.numBones;
 		}
 	}
@@ -501,11 +514,9 @@ void L3DFile::ReadFile(std::istream& stream)
 				vertexGroupLength += primitive.numGroups;
 			}
 
-			_vertexSpans.emplace_back(&_vertices[vertexStart], &_vertices[vertexStart + vertexLength]);
-			_indexSpans.emplace_back(&_indices[indexStart], &_indices[indexStart + indexLength]);
-			_vertexGroupSpans.emplace_back(&_vertexGroups[vertexGroupStart],
-			                               &_vertexGroups[vertexGroupStart + vertexGroupLength]);
-
+			add_span(_vertexSpans, _vertices, vertexStart, vertexLength);
+			add_span(_indexSpans, _indices, indexStart, indexLength);
+			add_span(_vertexGroupSpans, _vertexGroups, vertexGroupStart, vertexGroupLength);
 			vertexStart += vertexLength;
 			indexStart += indexLength;
 			vertexGroupStart += vertexGroupLength;
