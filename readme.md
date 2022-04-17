@@ -155,6 +155,3 @@ and give the path to this location to openblack (using the `-g` flag).
 
 openblack is released as open source software under the [GPL v3](https://opensource.org/licenses/gpl-3.0.html)
 license, see the [license](./license) file in the project root for the full license text.
-
-Copyright of the original game assets belongs to Lionhead Studios. To use them,
-you are legally required to own a copy of Black & White original game.
