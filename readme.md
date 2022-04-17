@@ -114,7 +114,8 @@ Patches can be found on fan sites such as
 
 ### On Linux
 
-If you run on Linux, you can install the game with Wine.
+If you run on Linux, you can install the game with Wine
+([App Page on WineHQ](https://appdb.winehq.org/objectManager.php?sClass=application&iId=156)).
 
 1. Install `wine`
 2. Run `wine Setup.exe` from the directory containing the installer, don't
