@@ -131,12 +131,25 @@ If you run on Linux, you can install the game with Wine
 All the files should be installed in the following directory:
 `~/.wine/drive_c/Program Files (x86)/Lionhead Studios Ltd/Black & White`
 
-### Getting the assets
+## Getting the assets
 
 The folders you're interested in are the `Data` and `Scripts` folders in the
 installation directory. You can use them from there or make a copy to the
 location of your choice.
 
+### Using them in place
+
+If you want to use them from there, remember the installation directory chosen
+in the installation step, unless you changed it, it should be either:
+
+- either`C:\\Program Files (x86)\\Lionhead Studios\\Black & White\\`
+- or `~/.wine/drive_c/Program Files (x86)/Lionhead Studios Ltd/Black & White`
+
+This is the path you will give to openblack (using the `-g` flag).
+
+If you prefer to copy the data (e.g. if you want to uninstall the original
+game), just copy the `Data` and `Scripts` folders to the desired new location,
+and give the path to this location to openblack (using the `-g` flag).
 
 # License
 
