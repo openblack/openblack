@@ -112,9 +112,9 @@ Patches can be found on fan sites such as
 2. Install the official patch 1.10 (in the same directory)
 3. Install the official patch 1.2 (in the same directory)
 
-### On Linux
+### On Linux and macOS
 
-If you run on Linux, you can install the game with Wine
+If you run on Linux or macOS, you can install the game with Wine
 ([App Page on WineHQ](https://appdb.winehq.org/objectManager.php?sClass=application&iId=156)).
 
 1. Install `wine`
