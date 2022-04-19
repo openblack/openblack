@@ -14,14 +14,16 @@
 #include "ECS/Registry.h"
 #include "Game.h"
 #include "Graphics/Texture2D.h"
+#include "Locator.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
 
-std::array<entt::entity, 8> CameraBookmarkArchetype::CreateAll(const graphics::Texture2D& texture)
+std::array<entt::entity, 8> CameraBookmarkArchetype::CreateAll()
 {
 	auto& registry = Game::instance()->GetEntityRegistry();
+	auto texture = Locator::resources::ref().GetTextures().Handle(entt::hashed_string("raw/misc0a"));
 
 	auto result = std::array<entt::entity, 8>();
 
@@ -31,7 +33,7 @@ std::array<entt::entity, 8> CameraBookmarkArchetype::CreateAll(const graphics::T
 	for (size_t i = 0; i < result.size(); ++i)
 	{
 		float u = static_cast<float>(i) / static_cast<float>(result.size());
-		registry.Assign<Sprite>(result[i], texture.GetNativeHandle(), glm::vec2 {u, 3.0f / 8.0f}, extent, tint);
+		registry.Assign<Sprite>(result[i], texture->GetNativeHandle(), glm::vec2 {u, 3.0f / 8.0f}, extent, tint);
 		registry.Assign<CameraBookmark>(result[i], static_cast<uint8_t>(i + 1), 0.0f);
 	}
 

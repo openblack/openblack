@@ -15,7 +15,6 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Game.h"
-#include "Graphics/Texture2D.h"
 
 using namespace openblack::ecs::systems;
 using namespace openblack::ecs::components;
@@ -32,9 +31,9 @@ CameraBookmarkSystem& CameraBookmarkSystem::instance()
 
 CameraBookmarkSystem::CameraBookmarkSystem() = default;
 
-bool CameraBookmarkSystem::Initialize(const graphics::Texture2D& texture)
+bool CameraBookmarkSystem::Initialize()
 {
-	_bookmarks = archetypes::CameraBookmarkArchetype::CreateAll(texture);
+	_bookmarks = archetypes::CameraBookmarkArchetype::CreateAll();
 	return true;
 }
 

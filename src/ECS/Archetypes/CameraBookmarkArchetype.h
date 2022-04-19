@@ -13,18 +13,13 @@
 
 #include <entt/fwd.hpp>
 
-namespace openblack::graphics
-{
-class Texture2D;
-}
-
 namespace openblack::ecs::archetypes
 {
 
 class CameraBookmarkArchetype
 {
 public:
-	static std::array<entt::entity, 8> CreateAll(const graphics::Texture2D& texture);
+	static std::array<entt::entity, 8> CreateAll();
 };
 
 } // namespace openblack::ecs::archetypes
