@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <istream>
 #include <map>
 #include <memory>
@@ -95,7 +96,7 @@ protected:
 	/// True when a file has been loaded
 	bool _isLoaded;
 
-	std::string _filename;
+	std::filesystem::path _filename;
 
 	std::map<std::string, std::vector<uint8_t>> _blocks;
 	std::vector<InfoBlockLookup> _infoBlockLookup;
@@ -137,7 +138,7 @@ public:
 	virtual ~PackFile() = default;
 
 	/// Read l3d file from the filesystem
-	void Open(const std::string& file);
+	void Open(const std::filesystem::path& file);
 
 	/// Write pack file to path on the filesystem
 	void Write(const std::string& file);
@@ -157,7 +158,7 @@ public:
 	/// Create Body block from look-up table
 	void CreateBodyBlock();
 
-	[[nodiscard]] const std::string& GetFilename() const { return _filename; }
+	[[nodiscard]] const std::filesystem::path& GetFilename() const { return _filename; }
 	[[nodiscard]] const std::map<std::string, std::vector<uint8_t>>& GetBlocks() const { return _blocks; }
 	[[nodiscard]] bool HasBlock(const std::string& name) const { return _blocks.count(name); }
 	[[nodiscard]] const std::vector<uint8_t>& GetBlock(const std::string& name) const { return _blocks.at(name); }

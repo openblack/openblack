@@ -145,7 +145,7 @@ constexpr const char kBlockMagic[4] = {'M', 'K', 'J', 'C'};
 /// Error handling
 void PackFile::Fail(const std::string& msg)
 {
-	throw std::runtime_error("Pack Error: " + msg + "\nFilename: " + _filename);
+	throw std::runtime_error("Pack Error: " + msg + "\nFilename: " + _filename.string());
 }
 
 void PackFile::ReadBlocks()
@@ -490,7 +490,7 @@ PackFile::PackFile()
 {
 }
 
-void PackFile::Open(const std::string& file)
+void PackFile::Open(const std::filesystem::path& file)
 {
 	_filename = file;
 	ReadBlocks();
