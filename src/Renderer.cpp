@@ -581,8 +581,8 @@ void Renderer::DrawPass(const resources::MeshManager& meshes, const resources::T
 				| BGFX_STATE_MSAA
 			;
 			// clang-format on
-			const auto& mesh = meshes.Handle(entt::hashed_string("testModel"));
-			const auto& testAnimation = Locator::resources::ref().GetAnimations().Handle(entt::hashed_string("testAnimation"));
+			const auto& mesh = meshes.Handle(entt::hashed_string("coffre"));
+			const auto& testAnimation = Locator::resources::ref().GetAnimations().Handle(entt::hashed_string("coffre"));
 			const std::vector<uint32_t>& boneParents = mesh->GetBoneParents();
 			auto bones = testAnimation->GetBoneMatrices(desc.time);
 			for (uint32_t i = 0; i < bones.size(); ++i)
