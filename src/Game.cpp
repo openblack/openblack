@@ -14,7 +14,6 @@
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIsland.h"
-#include "3D/MeshPack.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
 #include "Common/EventManager.h"

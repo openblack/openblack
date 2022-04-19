@@ -12,7 +12,6 @@
 #include "3D/AnimationPack.h"
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
-#include "3D/MeshPack.h"
 #include "Game.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/ShaderManager.h"

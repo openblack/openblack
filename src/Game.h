@@ -32,7 +32,6 @@ class Camera;
 class FileSystem;
 class GameWindow;
 class EventManager;
-class MeshPack;
 class LandIsland;
 class Profiler;
 class Renderer;

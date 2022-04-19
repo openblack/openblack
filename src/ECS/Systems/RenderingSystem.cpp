@@ -13,7 +13,6 @@
 
 #include "Locator.h"
 #include "3D/L3DMesh.h"
-#include "3D/MeshPack.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Stream.h"
 #include "ECS/Components/Transform.h"

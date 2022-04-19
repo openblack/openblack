@@ -9,7 +9,6 @@
 
 #include "L3DMesh.h"
 
-#include "3D/MeshPack.h"
 #include "Common/FileSystem.h"
 #include "Common/IStream.h"
 #include "Game.h"
@@ -121,7 +120,6 @@ bool L3DMesh::LoadFromFile(const std::filesystem::path& path)
 	}
 
 	Load(l3d);
-
 	return true;
 }
 
@@ -140,6 +138,5 @@ bool L3DMesh::LoadFromBuffer(const std::vector<uint8_t>& data)
 	}
 
 	Load(l3d);
-
 	return true;
 }

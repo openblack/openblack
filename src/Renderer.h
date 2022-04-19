@@ -34,7 +34,6 @@ class L3DAnim;
 class L3DMesh;
 class L3DSubMesh;
 class LandIsland;
-class MeshPack;
 class Profiler;
 class Sky;
 class Water;
