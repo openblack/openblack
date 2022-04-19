@@ -137,6 +137,10 @@ public:
 		float bumpMapStrength {1.0f};
 		float smallBumpMapStrength {1.0f};
 
+		float cameraXFov {70.0f};
+		float cameraNearClip {1.0f};
+		float cameraFarClip {static_cast<float>(0x10000)};
+
 		bool bgfxDebug {false};
 		bool bgfxProfile {false};
 		bool running {false};
