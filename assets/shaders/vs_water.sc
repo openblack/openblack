@@ -5,10 +5,11 @@ $output v_texcoord0, v_texcoord1
 
 vec4 ScreenSpacePosition(vec4 position)
 {
-	vec4 v = (position * 0.5);
-    v.xy = (vec2(v.x, v.y) + v.w);
-    v.zw = position.zw;
-
+    vec4 v = position;
+#if !BGFX_SHADER_LANGUAGE_GLSL
+    v.y *= -1.0f;
+#endif
+    v.xy = (v.xy + v.w) * 0.5f;
     return v;
 }
 
