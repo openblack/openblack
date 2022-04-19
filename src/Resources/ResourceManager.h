@@ -71,4 +71,4 @@ public:
 private:
 	entt::resource_cache<ResourceType> _resourceCache;
 };
-} // openblack::resources
+} // namespace openblack::resources
