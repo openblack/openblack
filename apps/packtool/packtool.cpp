@@ -50,7 +50,7 @@ int ListBlocks(openblack::pack::PackFile& pack)
 {
 	auto& blocks = pack.GetBlocks();
 
-	std::printf("file: %s\n", pack.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().string().c_str());
 	std::printf("%u blocks\n", static_cast<uint32_t>(blocks.size()));
 	std::printf("%u textures\n", static_cast<uint32_t>(pack.GetTextures().size()));
 	std::printf("%u meshes\n", static_cast<uint32_t>(pack.GetMeshes().size()));
@@ -78,11 +78,11 @@ int ListBlock(openblack::pack::PackFile& pack, const std::string& name, const st
 	auto block = blocks.find(name);
 	if (block == blocks.end())
 	{
-		std::fprintf(stderr, "no \"%s\" block in file: %s\n", name.c_str(), pack.GetFilename().c_str());
+		std::fprintf(stderr, "no \"%s\" block in file: %s\n", name.c_str(), pack.GetFilename().string().c_str());
 		return EXIT_FAILURE;
 	}
 
-	std::fprintf(output_log_stream, "file: %s\n", pack.GetFilename().c_str());
+	std::fprintf(output_log_stream, "file: %s\n", pack.GetFilename().string().c_str());
 	std::fprintf(output_log_stream, "name \"%s\", size %u\n", name.c_str(), static_cast<uint32_t>(block->second.size()));
 	std::fprintf(output_log_stream, "\n");
 
@@ -108,7 +108,7 @@ int ViewBytes(openblack::pack::PackFile& pack, const std::string& name)
 {
 	auto& block = pack.GetBlock(name);
 
-	std::printf("file: %s, block %s\n", pack.GetFilename().c_str(), name.c_str());
+	std::printf("file: %s, block %s\n", pack.GetFilename().string().c_str(), name.c_str());
 
 	PrintRawBytes(block.data(), block.size() * sizeof(block[0]));
 
@@ -121,7 +121,7 @@ int ViewInfo(openblack::pack::PackFile& pack)
 	auto lookup = pack.GetInfoBlockLookup();
 	std::sort(lookup.begin(), lookup.end(), [](const Lookup& a, Lookup& b) { return a.blockId < b.blockId; });
 
-	std::printf("file: %s\n", pack.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().string().c_str());
 
 	for (auto& item : lookup)
 	{
@@ -135,7 +135,7 @@ int ViewBody(openblack::pack::PackFile& pack)
 {
 	const auto& lookup = pack.GetBodyBlockLookup();
 
-	std::printf("file: %s\n", pack.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().string().c_str());
 
 	for (uint32_t i = 0; i < lookup.size(); ++i)
 	{
@@ -149,7 +149,7 @@ int ViewTextures(openblack::pack::PackFile& pack)
 {
 	auto& textures = pack.GetTextures();
 
-	std::printf("file: %s\n", pack.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().string().c_str());
 
 	for (auto& [name, texture] : textures)
 	{
@@ -163,7 +163,7 @@ int ViewMeshes(openblack::pack::PackFile& pack)
 {
 	auto& meshes = pack.GetMeshes();
 
-	std::printf("file: %s\n", pack.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().string().c_str());
 
 	uint32_t i = 0;
 	for (auto& mesh : meshes)
@@ -178,7 +178,7 @@ int ViewAnimations(openblack::pack::PackFile& pack)
 {
 	auto& animations = pack.GetAnimations();
 
-	std::printf("file: %s\n", pack.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().string().c_str());
 
 	uint32_t i = 0;
 	for (auto& animation : animations)
@@ -193,7 +193,7 @@ int ViewTexture(openblack::pack::PackFile& pack, const std::string& name, const 
 {
 	auto& texture = pack.GetTexture(name);
 
-	std::printf("file: %s\n", pack.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().string().c_str());
 
 	std::printf("size: %u\n", static_cast<uint32_t>(texture.header.size));
 	std::printf("id: %u\n", static_cast<uint32_t>(texture.header.id));
@@ -248,7 +248,7 @@ int ViewMesh(openblack::pack::PackFile& pack, uint32_t index, const std::string&
 
 	auto& mesh = pack.GetMesh(index);
 
-	std::printf("file: %s\n", pack.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().string().c_str());
 	std::printf("mesh: %u bytes\n", static_cast<uint32_t>(mesh.size()));
 
 	if (!outFilename.empty())
@@ -271,7 +271,7 @@ int ViewAnimation(openblack::pack::PackFile& pack, uint32_t index, const std::st
 
 	const auto& animation = pack.GetAnimation(index);
 
-	std::printf("file: %s\n", pack.GetFilename().c_str());
+	std::printf("file: %s\n", pack.GetFilename().string().c_str());
 	std::printf("animation: %-32s %u bytes\n", animation.data(), static_cast<uint32_t>(animation.size()));
 
 	if (!outFilename.empty())
