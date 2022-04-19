@@ -412,7 +412,8 @@ bool Game::Run()
 	auto& meshManager = resources.GetMeshes();
 	auto& textureManager = resources.GetTextures();
 	auto& animationManager = resources.GetAnimations();
-
+	const auto citadelOutsideMeshesPath = _fileSystem->FindPath(_fileSystem->CitadelPath() / "OutsideMeshes");
+	meshManager.Load("temple", "temple", citadelOutsideMeshesPath / "b_first_temple_l3d.zzz");
 	meshManager.Load("hand", _fileSystem->FindPath(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d"));
 	meshManager.Load("coffre", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.l3d"));
 	pack::PackFile pack;
