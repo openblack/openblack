@@ -26,9 +26,9 @@ entt::resource_handle<L3DMesh> L3DLoader::load(const std::string& debugName, con
 	return mesh;
 }
 
-entt::resource_handle<L3DMesh> L3DLoader::load(const std::string& debugName, const std::filesystem::path& path) const
+entt::resource_handle<L3DMesh> L3DLoader::load(const std::filesystem::path& path) const
 {
-	auto mesh = std::make_shared<L3DMesh>(debugName);
+	auto mesh = std::make_shared<L3DMesh>(path.stem().string());
 	if (!mesh->LoadFromFile(path))
 	{
 		throw std::runtime_error("Unable to load mesh");

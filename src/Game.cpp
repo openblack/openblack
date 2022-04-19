@@ -389,8 +389,8 @@ bool Game::Run()
 	auto& textureManager = resources.GetTextures();
 	auto& animationManager = resources.GetAnimations();
 
-	meshManager.Load("hand", "hand", _fileSystem->FindPath(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d"));
-	meshManager.Load("coffre", "coffre", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.l3d"));
+	meshManager.Load("hand", _fileSystem->FindPath(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d"));
+	meshManager.Load("coffre", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.l3d"));
 	pack::PackFile pack;
 	pack.Open(_fileSystem->FindPath(_fileSystem->DataPath() / "AllMeshes.g3d"));
 	auto& meshes = pack.GetMeshes();
