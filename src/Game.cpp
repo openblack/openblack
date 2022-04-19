@@ -390,12 +390,10 @@ bool Game::Run()
 	auto& textureManager = resources.GetTextures();
 	auto& animationManager = resources.GetAnimations();
 
-	meshManager.Load("hand", "hand",
-	                 _fileSystem->FindPath(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d").u8string());
-	meshManager.Load("testModel", "test_model", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.l3d").u8string());
+	meshManager.Load("hand", "hand", _fileSystem->FindPath(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d"));
+	meshManager.Load("testModel", "test_model", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.l3d"));
 	pack::PackFile pack;
-	auto path = Game::instance()->GetFileSystem().FindPath(_fileSystem->DataPath() / "AllMeshes.g3d").string();
-	pack.Open(path);
+	pack.Open(_fileSystem->FindPath(_fileSystem->DataPath() / "AllMeshes.g3d"));
 	auto& meshes = pack.GetMeshes();
 	for (size_t i = 0; i < meshes.size(); i++)
 	{
@@ -411,7 +409,7 @@ bool Game::Run()
 
 	animationManager.Load("testAnimation", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.anm"));
 	pack::PackFile animationPack;
-	animationPack.Open(Game::instance()->GetFileSystem().FindPath(_fileSystem->DataPath() / "AllAnims.anm").string());
+	animationPack.Open(_fileSystem->FindPath(_fileSystem->DataPath() / "AllAnims.anm"));
 	auto& animations = animationPack.GetAnimations();
 	for (size_t i = 0; i < animations.size(); i++)
 	{
