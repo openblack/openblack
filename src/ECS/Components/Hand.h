@@ -13,6 +13,8 @@
 #include "Graphics/Mesh.h"
 #include "Graphics/Texture2D.h"
 
+#include <entt/entt.hpp>
+
 #include <memory>
 
 namespace openblack::ecs::components
@@ -26,7 +28,7 @@ struct Hand
 		Symbol
 	};
 
-	static constexpr int meshId = 999;
+	static constexpr entt::id_type meshId = entt::hashed_string("hand");
 
 	bool rightHanded;
 	RenderType renderType;

@@ -14,7 +14,6 @@
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIsland.h"
-#include "3D/MeshPack.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
 #include "Common/EventManager.h"
@@ -33,9 +32,13 @@
 #include "Graphics/Texture2D.h"
 #include "Gui/Gui.h"
 #include "LHScriptX/Script.h"
+#include "Locator.h"
+#include "PackFile.h"
 #include "Parsers/InfoFile.h"
 #include "Profiler.h"
 #include "Renderer.h"
+#include "Resources/Loaders.h"
+#include "Resources/ResourceManager.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
@@ -117,8 +120,6 @@ Game::Game(Arguments&& args)
 	}
 	_dynamicsSystem = std::make_unique<ecs::systems::DynamicsSystem>();
 	_fileSystem->SetGamePath(GetGamePath());
-	_handModel = std::make_unique<L3DMesh>();
-	_handModel->LoadFromFile(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d");
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
 
 	_gui = gui::Gui::create(_window.get(), graphics::RenderPass::ImGui, args.scale);
@@ -138,10 +139,7 @@ Game::~Game()
 	_misc0aTexture.reset();
 	_water.reset();
 	_sky.reset();
-	_testModel.reset();
-	_handModel.reset();
 	_animationPack.reset();
-	_meshPack.reset();
 	_dynamicsSystem.reset();
 	_landIsland.reset();
 	_entityRegistry.reset();
@@ -386,6 +384,40 @@ bool Game::Update()
 
 bool Game::Run()
 {
+	Locator::resources::set<resources::Resources>();
+	auto& resources = Locator::resources::ref();
+	auto& meshManager = resources.GetMeshes();
+	auto& textureManager = resources.GetTextures();
+	auto& animationManager = resources.GetAnimations();
+
+	meshManager.Load("hand", "hand",
+	                 _fileSystem->FindPath(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d").u8string());
+	meshManager.Load("testModel", "test_model", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.l3d").u8string());
+	pack::PackFile pack;
+	auto path = Game::instance()->GetFileSystem().FindPath(_fileSystem->DataPath() / "AllMeshes.g3d").string();
+	pack.Open(path);
+	auto& meshes = pack.GetMeshes();
+	for (size_t i = 0; i < meshes.size(); i++)
+	{
+		auto meshId = static_cast<MeshId>(i);
+		meshManager.Load(meshId, MeshNames[i], meshes[i]);
+	}
+
+	auto& textures = pack.GetTextures();
+	for (auto const& [name, g3dTexture] : textures)
+	{
+		textureManager.Load(g3dTexture.header.id, name, g3dTexture);
+	}
+
+	animationManager.Load("testAnimation", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.anm"));
+	pack::PackFile animationPack;
+	animationPack.Open(Game::instance()->GetFileSystem().FindPath(_fileSystem->DataPath() / "AllAnims.anm").string());
+	auto& animations = animationPack.GetAnimations();
+	for (size_t i = 0; i < animations.size(); i++)
+	{
+		animationManager.Load(i, animations[i]);
+	}
+
 	// Create profiler
 	_profiler = std::make_unique<Profiler>();
 
@@ -397,26 +429,14 @@ bool Game::Run()
 	_camera->SetPosition(glm::vec3(1441.56f, 24.764f, 2081.76f));
 	_camera->SetRotation(glm::vec3(0.0f, -45.0f, 0.0f));
 
+	_animationPack = std::make_unique<AnimationPack>();
+	if (!_animationPack->LoadFromFile(_fileSystem->DataPath() / "AllAnims.anm"))
+	{
+		return false;
+	}
+
 	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
-
-	_testModel = std::make_unique<L3DMesh>();
-	if (!_testModel->LoadFromFile(_fileSystem->MiscPath() / "coffre.l3d"))
-	{
-		return false;
-	}
-
-	_testAnimation = std::make_unique<L3DAnim>();
-	if (!_testAnimation->LoadFromFile(_fileSystem->MiscPath() / "coffre.anm"))
-	{
-		return false;
-	}
-
-	_handModel = std::make_unique<L3DMesh>();
-	if (!_handModel->LoadFromFile(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d"))
-	{
-		return false;
-	}
 
 	_misc0aTexture = std::make_unique<graphics::Texture2D>("misc0a.raw");
 	{
@@ -429,19 +449,6 @@ bool Game::Run()
 		_misc0aTexture->Create(width, height, 1, graphics::Format::R8, graphics::Wrapping::ClampEdge, data.data(), data.size());
 	}
 	CameraBookmarkSystem::instance().Initialize(*_misc0aTexture);
-
-	auto enableUnknownMeshes = false;
-	_meshPack = std::make_unique<MeshPack>(enableUnknownMeshes);
-	if (!_meshPack->LoadFromFile(_fileSystem->DataPath() / "AllMeshes.g3d"))
-	{
-		return false;
-	}
-
-	_animationPack = std::make_unique<AnimationPack>();
-	if (!_animationPack->LoadFromFile(_fileSystem->DataPath() / "AllAnims.anm"))
-	{
-		return false;
-	}
 
 	if (!LoadVariables())
 	{
@@ -506,8 +513,6 @@ bool Game::Run()
 			    /*entities =*/*_entityRegistry,
 			    /*drawSprites =*/_config.drawSprites,
 			    /*drawTestModel =*/_config.drawEntities,
-			    /*testModel =*/*_testModel,
-			    /*testAnimation =*/*_testAnimation,
 			    /*drawDebugCross =*/_config.drawDebugCross,
 			    /*drawBoundingBoxes =*/_config.drawBoundingBoxes,
 			    /*cullBack =*/false,
@@ -519,7 +524,7 @@ bool Game::Run()
 			    /*smallBumpMapStrength =*/_config.smallBumpMapStrength,
 			};
 
-			_renderer->DrawScene(*_meshPack, drawDesc);
+			_renderer->DrawScene(meshManager, textureManager, drawDesc);
 		}
 
 		{
@@ -533,6 +538,11 @@ bool Game::Run()
 		}
 		_frameCount++;
 	}
+
+	// Manually delete the assets here before BGFX renderer clears its buffers resulting in invalid handles in our assets
+	meshManager.Clear();
+	textureManager.Clear();
+	animationManager.Clear();
 
 	return true;
 }

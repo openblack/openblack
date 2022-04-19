@@ -14,9 +14,10 @@
 #include <glm/gtx/vec_swizzle.hpp>
 
 #include "3D/L3DMesh.h"
-#include "3D/MeshPack.h"
 #include "ECS/Components/Transform.h"
 #include "Game.h"
+#include "Locator.h"
+#include "Resources/MeshId.h"
 
 using namespace openblack;
 using namespace openblack::ecs::components;
@@ -24,7 +25,9 @@ using namespace openblack::ecs::components;
 std::pair<glm::vec2, float> openblack::ecs::archetypes::GetFixedObstacleBoundingCircle(MeshId meshId,
                                                                                        const Transform& transform)
 {
-	const auto& bb = Game::instance()->GetMeshPack().GetMesh(meshId).GetBoundingBox();
+	auto resourceId = resources::MeshIdToResourceId(meshId);
+	const auto l3dMesh = Locator::resources::ref().GetMeshes().Handle(resourceId);
+	const auto& bb = l3dMesh->GetBoundingBox();
 	const auto bbSize = glm::max(glm::vec2(1.0f, 1.0f), glm::xz(bb.Size() * 0.5f * transform.scale));
 	glm::mat4 modelMatrix = glm::mat4(1.0f);
 	modelMatrix = glm::translate(modelMatrix, transform.position);

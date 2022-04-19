@@ -19,7 +19,6 @@
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIsland.h"
-#include "3D/MeshPack.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
 #include "ECS/Components/Sprite.h"
@@ -33,7 +32,9 @@
 #include "Graphics/Primitive.h"
 #include "Graphics/ShaderManager.h"
 #include "Graphics/VertexBuffer.h"
+#include "Locator.h"
 #include "Profiler.h"
+#include "Resources/ResourceManager.h"
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -197,28 +198,31 @@ void Renderer::UpdateDebugCrossUniforms(const glm::mat4& pose)
 	_debugCrossPose = pose;
 }
 
-const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& skins,
-                            const MeshPack& meshPack)
+const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& meshSkins,
+                            const resources::TextureManager& textures)
 {
+	const Texture2D* texture = nullptr;
+
 	if (skinID != 0xFFFFFFFF)
 	{
-		if (skins.find(skinID) != skins.end())
+		if (meshSkins.find(skinID) != meshSkins.end())
 		{
-			return skins.at(skinID).get();
+			texture = meshSkins.at(skinID).get();
 		}
-		else if (skinID < meshPack.GetTextures().size())
+		else if (textures.Contains(skinID))
 		{
-			return &meshPack.GetTexture(skinID);
+			texture = &textures.Handle(skinID).get();
 		}
 		else
 		{
 			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Could not find the texture");
 		}
 	}
-	return nullptr;
+
+	return texture;
 }
 
-void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const MeshPack& meshPack,
+void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const resources::TextureManager& textures,
                            const L3DMeshSubmitDesc& desc, bool preserveState) const
 {
 	assert(&subMesh.GetMesh());
@@ -236,8 +240,8 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 
 		const bool hasNext = std::next(it) != primitives.end();
 
-		const Texture2D* texture = GetTexture(prim.skinID, skins, meshPack);
-		const Texture2D* nextTexture = !hasNext ? nullptr : GetTexture(std::next(it)->skinID, skins, meshPack);
+		const Texture2D* texture = GetTexture(prim.skinID, skins, textures);
+		const Texture2D* nextTexture = !hasNext ? nullptr : GetTexture(std::next(it)->skinID, skins, textures);
 
 		bool primitivePreserveState = texture == nextTexture && (preserveState || hasNext);
 
@@ -294,7 +298,7 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 	}
 }
 
-void Renderer::DrawMesh(const L3DMesh& mesh, const MeshPack& meshPack, const L3DMeshSubmitDesc& desc,
+void Renderer::DrawMesh(const L3DMesh& mesh, const resources::TextureManager& textures, const L3DMeshSubmitDesc& desc,
                         uint8_t subMeshIndex) const
 {
 	if (mesh.GetNumSubMeshes() == 0)
@@ -313,7 +317,7 @@ void Renderer::DrawMesh(const L3DMesh& mesh, const MeshPack& meshPack, const L3D
 			                   mesh.GetNumSubMeshes());
 		}
 
-		DrawSubMesh(mesh, *subMeshes[subMeshIndex], meshPack, desc, false);
+		DrawSubMesh(mesh, *subMeshes[subMeshIndex], textures, desc, false);
 		return;
 	}
 
@@ -322,12 +326,13 @@ void Renderer::DrawMesh(const L3DMesh& mesh, const MeshPack& meshPack, const L3D
 		const L3DSubMesh& subMesh = *it->get();
 		if (!subMesh.isPhysics())
 		{
-			DrawSubMesh(mesh, subMesh, meshPack, desc, std::next(it) != subMeshes.end());
+			DrawSubMesh(mesh, subMesh, textures, desc, std::next(it) != subMeshes.end());
 		}
 	}
 }
 
-void Renderer::DrawScene(const MeshPack& meshPack, const DrawSceneDesc& drawDesc) const
+void Renderer::DrawScene(const resources::MeshManager& meshes, const resources::TextureManager& textures,
+                         const DrawSceneDesc& drawDesc) const
 {
 	// Reflection Pass
 	{
@@ -347,18 +352,19 @@ void Renderer::DrawScene(const MeshPack& meshPack, const DrawSceneDesc& drawDesc
 			drawPassDesc.drawBoundingBoxes = false;
 			drawPassDesc.cullBack = true;
 
-			DrawPass(meshPack, drawPassDesc);
+			DrawPass(meshes, textures, drawPassDesc);
 		}
 	}
 
 	// Main Draw Pass
 	{
 		auto section = drawDesc.profiler.BeginScoped(Profiler::Stage::MainPass);
-		DrawPass(meshPack, drawDesc);
+		DrawPass(meshes, textures, drawDesc);
 	}
 }
 
-void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) const
+void Renderer::DrawPass(const resources::MeshManager& meshes, const resources::TextureManager& textures,
+                        const DrawSceneDesc& desc) const
 {
 	if (desc.frameBuffer)
 	{
@@ -403,7 +409,7 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 			submitDesc.matrixCount = 1;
 			submitDesc.isSky = true;
 
-			DrawMesh(*desc.sky._model, meshPack, submitDesc, 0);
+			DrawMesh(*desc.sky._model, textures, submitDesc, 0);
 		}
 	}
 
@@ -478,15 +484,15 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 			// Instance meshes
 			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
 			{
-				const auto& mesh = meshPack.GetMesh(meshId);
+				auto mesh = meshes.Handle(meshId);
 
 				submitDesc.instanceBuffer = &renderCtx.instanceUniformBuffer;
 				submitDesc.instanceStart = placers.offset;
 				submitDesc.instanceCount = placers.count;
-				if (mesh.IsBoned())
+				if (mesh->IsBoned())
 				{
-					submitDesc.modelMatrices = mesh.GetBoneMatrices().data();
-					submitDesc.matrixCount = static_cast<uint8_t>(mesh.GetBoneMatrices().size());
+					submitDesc.modelMatrices = mesh->GetBoneMatrices().data();
+					submitDesc.matrixCount = static_cast<uint8_t>(mesh->GetBoneMatrices().size());
 					// TODO(bwrsandman): Get animation frame instead of default
 				}
 				else
@@ -499,7 +505,7 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 				submitDesc.skyType = desc.sky.GetCurrentSkyType();
 
 				// TODO(bwrsandman): choose the correct LOD
-				DrawMesh(mesh, meshPack, submitDesc, std::numeric_limits<uint8_t>::max());
+				DrawMesh(mesh, textures, submitDesc, std::numeric_limits<uint8_t>::max());
 			}
 
 			// Debug
@@ -575,8 +581,10 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 				| BGFX_STATE_MSAA
 			;
 			// clang-format on
-			const std::vector<uint32_t>& boneParents = desc.testModel.GetBoneParents();
-			auto bones = desc.testAnimation.GetBoneMatrices(desc.time);
+			const auto& mesh = meshes.Handle(entt::hashed_string("testModel"));
+			const auto& testAnimation = Locator::resources::ref().GetAnimations().Handle(entt::hashed_string("testAnimation"));
+			const std::vector<uint32_t>& boneParents = mesh->GetBoneParents();
+			auto bones = testAnimation->GetBoneMatrices(desc.time);
 			for (uint32_t i = 0; i < bones.size(); ++i)
 			{
 				if (boneParents[i] != std::numeric_limits<uint32_t>::max())
@@ -588,7 +596,7 @@ void Renderer::DrawPass(const MeshPack& meshPack, const DrawSceneDesc& desc) con
 			submitDesc.matrixCount = static_cast<uint8_t>(bones.size());
 			submitDesc.isSky = false;
 			submitDesc.skyType = desc.sky.GetCurrentSkyType();
-			DrawMesh(desc.testModel, meshPack, submitDesc, 0);
+			DrawMesh(mesh.get(), textures, submitDesc, 0);
 		}
 	}
 

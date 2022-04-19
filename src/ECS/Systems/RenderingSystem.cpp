@@ -12,7 +12,6 @@
 #include <glm/gtx/transform.hpp>
 
 #include "3D/L3DMesh.h"
-#include "3D/MeshPack.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Stream.h"
 #include "ECS/Components/Transform.h"
@@ -20,6 +19,7 @@
 #include "Game.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/ShaderManager.h"
+#include "Locator.h"
 
 using namespace openblack::ecs::systems;
 using namespace openblack::ecs::components;
@@ -38,7 +38,7 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 
 	// Count number of instances
 	uint32_t instanceCount = 0;
-	std::map<MeshId, uint32_t> meshIds;
+	std::map<entt::id_type, uint32_t> meshIds;
 
 	registry.Each<const Mesh, const Transform>([&meshIds, &instanceCount](const Mesh& mesh, const Transform&) {
 		auto count = meshIds.insert(std::make_pair(mesh.id, mesh.submeshId));
@@ -85,7 +85,7 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	auto& registry = Game::instance()->GetEntityRegistry();
 
 	// Store offsets of uniforms for descs
-	std::map<MeshId, uint32_t> uniformOffsets;
+	std::map<entt::id_type, uint32_t> uniformOffsets;
 
 	// Set transforms for instanced draw at offsets
 	registry.Each<const Mesh, const Transform>(
@@ -102,8 +102,8 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 		    _renderContext.instanceUniforms[idx] = modelMatrix;
 		    if (drawBoundingBox)
 		    {
-			    const L3DMesh& l3dMesh = Game::instance()->GetMeshPack().GetMesh(mesh.id);
-			    auto box = l3dMesh.GetBoundingBox();
+			    auto l3dMesh = entt::service_locator<resources::ResourcesInterface>::ref().GetMeshes().Handle(mesh.id);
+			    auto box = l3dMesh->GetBoundingBox();
 			    auto boxMatrix = modelMatrix * glm::translate(box.Center()) * glm::scale(box.Size());
 			    _renderContext.instanceUniforms[idx + _renderContext.instanceUniforms.size() / 2] = boxMatrix;
 		    }

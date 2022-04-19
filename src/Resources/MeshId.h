@@ -9,16 +9,20 @@
 
 #pragma once
 
-#include <entt/fwd.hpp>
+#include "3D/AllMeshes.h"
 
-namespace openblack::ecs::components
+template <>
+struct fmt::formatter<openblack::MeshId>: fmt::formatter<uint32_t>
 {
-
-struct Mesh
-{
-	entt::id_type id;
-	int8_t submeshId;
-	int8_t bbSubmeshId;
+	auto format(openblack::MeshId c, format_context& ctx) { return formatter<uint32_t>::format(static_cast<uint32_t>(c), ctx); }
 };
 
-} // namespace openblack::ecs::components
+namespace openblack::resources
+{
+
+inline entt::id_type MeshIdToResourceId(openblack::MeshId id)
+{
+	return entt::hashed_string(fmt::format("{}", id).c_str());
+}
+
+} // namespace openblack::resources

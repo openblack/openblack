@@ -13,7 +13,6 @@
 #include <spdlog/spdlog.h>
 
 #include "3D/L3DMesh.h"
-#include "3D/MeshPack.h"
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Fixed.h"
 #include "ECS/Components/Mesh.h"
@@ -21,6 +20,7 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/TownSystem.h"
 #include "Game.h"
+#include "Resources/MeshId.h"
 #include "Utils.h"
 
 using namespace openblack;
@@ -57,7 +57,8 @@ entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, 
 	const auto& transform =
 	    registry.Assign<Transform>(entity, position, glm::mat3(glm::eulerAngleY(-yAngleRadians)), glm::vec3(scale));
 	registry.Assign<Abode>(entity, info.abodeNumber, townId, foodAmount, woodAmount);
-	registry.Assign<Mesh>(entity, info.meshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
+	auto resourceId = resources::MeshIdToResourceId(info.meshId);
+	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(0));
 
 	// Create Fixed component with a 2d bounding circle
 	const auto [point, radius] = GetFixedObstacleBoundingCircle(info.meshId, transform);

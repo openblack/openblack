@@ -18,6 +18,7 @@
 #include "ECS/Registry.h"
 #include "Game.h"
 #include "InfoConstants.h"
+#include "Resources/MeshId.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
@@ -33,7 +34,8 @@ entt::entity MobileObjectArchetype::Create(const glm::vec3& position, MobileObje
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));
 	registry.Assign<Mobile>(entity);
 	registry.Assign<MobileObject>(entity, type);
-	registry.Assign<Mesh>(entity, info.meshId, static_cast<int8_t>(0), static_cast<int8_t>(1));
+	const auto resourceId = resources::MeshIdToResourceId(info.meshId);
+	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 
 	return entity;
 }

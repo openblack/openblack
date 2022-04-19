@@ -19,6 +19,7 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/TownSystem.h"
 #include "Game.h"
+#include "Resources/MeshId.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
@@ -52,7 +53,8 @@ entt::entity VillagerArchetype::Create([[maybe_unused]] const glm::vec3& abodePo
 
 	registry.Assign<Villager>(entity, health, static_cast<uint32_t>(age), hunger, lifeStage, sex, info.tribeType,
 	                          info.villagerNumber, task, town, abode);
-	registry.Assign<Mesh>(entity, info.highDetail, static_cast<int8_t>(0), static_cast<int8_t>(0));
+	const auto resourceId = resources::MeshIdToResourceId(info.highDetail);
+	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(0));
 
 	return entity;
 }

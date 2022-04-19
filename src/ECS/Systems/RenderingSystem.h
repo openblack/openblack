@@ -13,9 +13,10 @@
 #include <vector>
 
 #include <bgfx/bgfx.h>
+#include <entt/entt.hpp>
 #include <glm/mat4x4.hpp>
 
-#include "AllMeshes.h"
+#include "3D/AllMeshes.h"
 #include "Graphics/Mesh.h"
 
 namespace openblack::ecs::systems
@@ -54,7 +55,7 @@ struct RenderContext
 	/// bounding boxes in the second half of the list.
 	std::vector<glm::mat4> instanceUniforms;
 	/// Stores information for rendering which is prepared at \ref PrepareDraw.
-	std::map<MeshId, const InstancedDrawDesc> instancedDrawDescs;
+	std::map<entt::id_type, const InstancedDrawDesc> instancedDrawDescs;
 	/// Not an actual vertex buffer, but a dynamic general purpose buffer which
 	/// stores uniform data as a GPU-side copy of \ref _instanceUniforms and
 	/// which is populated in \ref PrepareDraw and consumed in \ref DrawModels.

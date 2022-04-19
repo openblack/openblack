@@ -14,7 +14,6 @@
 #include "Graphics/ShaderProgram.h"
 #include "Graphics/VertexBuffer.h"
 #include "L3DMesh.h"
-#include "MeshPack.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>

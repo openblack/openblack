@@ -9,16 +9,15 @@
 
 #pragma once
 
-#include <entt/fwd.hpp>
+#include "Resources/Resources.h"
 
-namespace openblack::ecs::components
+#include <entt/locator/locator.hpp>
+
+namespace openblack
 {
 
-struct Mesh
+struct Locator
 {
-	entt::id_type id;
-	int8_t submeshId;
-	int8_t bbSubmeshId;
+	using resources = entt::service_locator<resources::ResourcesInterface>;
 };
-
-} // namespace openblack::ecs::components
+} // namespace openblack

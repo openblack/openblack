@@ -14,10 +14,11 @@
 #include <memory>
 #include <optional>
 
-#include "AllMeshes.h"
+#include "3D/AllMeshes.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
 
+#include <entt/entt.hpp>
 #include <imgui.h>
 
 namespace openblack
@@ -43,7 +44,7 @@ protected:
 
 private:
 	static constexpr graphics::RenderPass _viewId = graphics::RenderPass::MeshViewer;
-	MeshId _selectedMesh;
+	entt::id_type _selectedMesh;
 	int _selectedSubMesh;
 	std::optional<uint32_t> _selectedAnimation;
 	int _selectedFrame;

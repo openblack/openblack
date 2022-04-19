@@ -9,7 +9,6 @@
 
 #include "L3DMesh.h"
 
-#include "3D/MeshPack.h"
 #include "Common/FileSystem.h"
 #include "Common/IStream.h"
 #include "Game.h"
@@ -121,11 +120,10 @@ bool L3DMesh::LoadFromFile(const std::filesystem::path& path)
 	}
 
 	Load(l3d);
-
 	return true;
 }
 
-void L3DMesh::LoadFromBuffer(const std::vector<uint8_t>& data)
+bool L3DMesh::LoadFromBuffer(const std::vector<uint8_t>& data)
 {
 	l3d::L3DFile l3d;
 
@@ -136,8 +134,9 @@ void L3DMesh::LoadFromBuffer(const std::vector<uint8_t>& data)
 	catch (std::runtime_error& err)
 	{
 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open l3d mesh from buffer: {}", err.what());
-		return;
+		return false;
 	}
 
 	Load(l3d);
+	return true;
 }

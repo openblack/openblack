@@ -32,7 +32,6 @@ class Camera;
 class FileSystem;
 class GameWindow;
 class EventManager;
-class MeshPack;
 class LandIsland;
 class Profiler;
 class Renderer;
@@ -174,11 +173,8 @@ public:
 	[[nodiscard]] Water& GetWater() const { return *_water; }
 	LandIsland& GetLandIsland() { return *_landIsland; }
 	[[nodiscard]] LandIsland& GetLandIsland() const { return *_landIsland; }
-	[[nodiscard]] L3DMesh& GetTestModel() const { return *_testModel; }
-	[[nodiscard]] L3DMesh& GetHandModel() const { return *_handModel; }
 	entt::entity GetHand() const;
 	AnimationPack& GetAnimationPack() { return *_animationPack; }
-	MeshPack& GetMeshPack() { return *_meshPack; }
 	[[nodiscard]] const LHVM::LHVM& GetLhvm() { return *_lhvm; }
 	FileSystem& GetFileSystem() { return *_fileSystem; }
 	ecs::Registry& GetEntityRegistry() { return *_entityRegistry; }
@@ -210,7 +206,6 @@ private:
 
 	std::unique_ptr<FileSystem> _fileSystem;
 	std::unique_ptr<LandIsland> _landIsland;
-	std::unique_ptr<MeshPack> _meshPack;
 	std::unique_ptr<AnimationPack> _animationPack;
 
 	// std::unique_ptr<L3DMesh> _testModel;
