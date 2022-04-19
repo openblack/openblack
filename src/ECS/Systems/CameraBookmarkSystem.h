@@ -10,17 +10,11 @@
 #pragma once
 
 #include <array>
-
-#include <filesystem>
+#include <chrono>
 #include <memory>
 
 #include "entt/fwd.hpp"
 #include "glm/vec3.hpp"
-
-namespace openblack::graphics
-{
-class Texture2D;
-}
 
 namespace openblack::ecs::systems
 {
@@ -28,7 +22,7 @@ class CameraBookmarkSystem
 {
 public:
 	static CameraBookmarkSystem& instance();
-	bool Initialize(const graphics::Texture2D& texture);
+	bool Initialize();
 	void Update(const std::chrono::microseconds& dt) const;
 
 	const std::array<entt::entity, 8>& GetBookmarks() const { return _bookmarks; }

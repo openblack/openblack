@@ -136,7 +136,6 @@ Game::Game(Arguments&& args)
 
 Game::~Game()
 {
-	_misc0aTexture.reset();
 	_water.reset();
 	_sky.reset();
 	_animationPack.reset();
@@ -436,17 +435,8 @@ bool Game::Run()
 	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
 
-	_misc0aTexture = std::make_unique<graphics::Texture2D>("misc0a.raw");
-	{
-		const uint16_t width = 256;
-		const uint16_t height = 256;
-		const uint16_t bpp = 1;
-		uint32_t size = width * height * bpp;
-		auto data = _fileSystem->ReadAll(_fileSystem->TexturePath() / _misc0aTexture->GetName());
-		assert(data.size() == size);
-		_misc0aTexture->Create(width, height, 1, graphics::Format::R8, graphics::Wrapping::ClampEdge, data.data(), data.size());
-	}
-	CameraBookmarkSystem::instance().Initialize(*_misc0aTexture);
+	textureManager.Load("raw/misc0a", _fileSystem->TexturePath() / "misc0a.raw");
+	CameraBookmarkSystem::instance().Initialize();
 
 	if (!LoadVariables())
 	{
@@ -557,7 +547,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 	// Reset everything. Deletes all entities and their components
 	_entityRegistry->Reset();
 
-	CameraBookmarkSystem::instance().Initialize(*_misc0aTexture);
+	CameraBookmarkSystem::instance().Initialize();
 	// We need a hand for the player
 	_handEntity = ecs::archetypes::HandArchetype::Create(glm::vec3(0.0f), glm::half_pi<float>(), 0.0f, glm::half_pi<float>(),
 	                                                     0.01f, false);
