@@ -9,6 +9,9 @@
 
 #include "Resources/Loaders.h"
 
+#include "Common/FileSystem.h"
+#include "Game.h"
+
 using namespace openblack;
 using namespace openblack::resources;
 
@@ -57,6 +60,48 @@ entt::resource_handle<graphics::Texture2D> Texture2DLoader::load(const std::stri
 	                  internalFormat, graphics::Wrapping::Repeat, g3dTexture.ddsData.data(),
 	                  static_cast<uint32_t>(g3dTexture.ddsData.size()));
 	return texture2D;
+}
+
+entt::resource_handle<graphics::Texture2D> Texture2DLoader::load(const std::filesystem::path& rawTexturePath) const
+{
+
+	bool found = false;
+	const std::array<uint16_t, 6> resolutions = {{256, 40, 32, 14, 12, 6}};
+
+	const auto data = Game::instance()->GetFileSystem().ReadAll(rawTexturePath);
+	graphics::Format format;
+	uint16_t width;
+	uint16_t height;
+	for (auto res : resolutions)
+	{
+		if (found)
+		{
+			break;
+		}
+
+		width = res;
+		height = res;
+
+		if (data.size() == width * height)
+		{
+			format = graphics::Format::R8;
+			found = true;
+		}
+		if (data.size() == 3 * width * height)
+		{
+			format = graphics::Format::RGB8;
+			found = true;
+		}
+	}
+	if (!found)
+	{
+		throw std::runtime_error("Unable to load texture: Ambiguous size and format: " + std::to_string(data.size()));
+	}
+
+	auto texture = std::make_shared<graphics::Texture2D>(("raw" / rawTexturePath.stem()).string());
+	texture->Create(width, height, 1, format, graphics::Wrapping::ClampEdge, data.data(), static_cast<uint32_t>(data.size()));
+
+	return texture;
 }
 
 entt::resource_handle<L3DAnim> L3DAnimLoader::load(const std::vector<uint8_t>& data) const
