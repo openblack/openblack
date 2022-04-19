@@ -390,7 +390,7 @@ bool Game::Run()
 	auto& animationManager = resources.GetAnimations();
 
 	meshManager.Load("hand", "hand", _fileSystem->FindPath(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d"));
-	meshManager.Load("testModel", "test_model", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.l3d"));
+	meshManager.Load("coffre", "coffre", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.l3d"));
 	pack::PackFile pack;
 	pack.Open(_fileSystem->FindPath(_fileSystem->DataPath() / "AllMeshes.g3d"));
 	auto& meshes = pack.GetMeshes();
@@ -406,7 +406,7 @@ bool Game::Run()
 		textureManager.Load(g3dTexture.header.id, name, g3dTexture);
 	}
 
-	animationManager.Load("testAnimation", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.anm"));
+	animationManager.Load("coffre", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.anm"));
 	pack::PackFile animationPack;
 	animationPack.Open(_fileSystem->FindPath(_fileSystem->DataPath() / "AllAnims.anm"));
 	auto& animations = animationPack.GetAnimations();
