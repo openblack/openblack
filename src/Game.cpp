@@ -382,9 +382,6 @@ bool Game::Update()
 	return _config.numFramesToSimulate == 0 || _frameCount < _config.numFramesToSimulate;
 }
 
-
-using namespace entt::literals;
-
 bool Game::Run()
 {
 	Locator::resources::set<resources::Resources>();
