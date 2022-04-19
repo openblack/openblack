@@ -49,7 +49,17 @@ inline void Image(bgfx::TextureHandle _handle, uint8_t _flags, uint8_t _mip, con
 	texture.s.handle = _handle;
 	texture.s.flags = _flags;
 	texture.s.mip = _mip;
-	Image(texture.ptr, _size, _uv0, _uv1, _tintCol, _borderCol);
+
+	// Do y-flip
+	auto uv0 = _uv0;
+	auto uv1 = _uv1;
+	if (bgfx::getRendererType() == bgfx::RendererType::OpenGL || bgfx::getRendererType() == bgfx::RendererType::OpenGLES)
+	{
+		uv0.y = 1.0f - uv0.y;
+		uv1.y = 1.0f - uv1.y;
+	}
+
+	Image(texture.ptr, _size, uv0, uv1, _tintCol, _borderCol);
 }
 
 // Helper function for passing bgfx::TextureHandle to ImGui::Image.

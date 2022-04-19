@@ -161,7 +161,7 @@ void MeshViewer::Draw(Game& game)
 	}
 	ImGui::Columns(1);
 
-	ImGui::Image(_frameBuffer->GetColorAttachment().GetNativeHandle(), ImVec2(512, 512), ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Image(_frameBuffer->GetColorAttachment().GetNativeHandle(), ImVec2(512, 512));
 
 	ImGui::EndChild();
 
