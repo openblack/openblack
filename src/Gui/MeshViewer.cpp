@@ -70,8 +70,8 @@ void MeshViewer::Draw(Game& game)
 		if (_filter.PassFilter(mesh->GetDebugName().c_str()) && mesh->GetFlags() & _meshFlagFilter)
 		{
 			displayedMeshes++;
-
-			if (ImGui::Selectable(mesh->GetDebugName().c_str(), id == _selectedMesh))
+			auto flags = mesh->GetNumSubMeshes() > 0 ? 0 : ImGuiSelectableFlags_Disabled;
+			if (ImGui::Selectable(mesh->GetDebugName().c_str(), id == _selectedMesh, flags))
 			{
 				_selectedMesh = id;
 			}
