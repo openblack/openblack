@@ -135,11 +135,12 @@ Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererTy
 		window->GetNativeHandles(init.platformData.nwh, init.platformData.ndt);
 	}
 
-	init.resolution.reset = BGFX_RESET_NONE;
+	_bgfxReset = BGFX_RESET_NONE;
 	if (vsync)
 	{
-		init.resolution.reset |= BGFX_RESET_VSYNC;
+		_bgfxReset |= BGFX_RESET_VSYNC;
 	}
+	init.resolution.reset = _bgfxReset;
 	init.callback = dynamic_cast<bgfx::CallbackI*>(_bgfxCallback.get());
 
 #ifdef __APPLE__

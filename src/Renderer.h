@@ -122,6 +122,7 @@ private:
 
 	std::unique_ptr<graphics::ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
+	uint32_t _bgfxReset;
 
 	std::unique_ptr<graphics::Mesh> _debugCross;
 	std::unique_ptr<graphics::Mesh> _plane;
