@@ -47,6 +47,7 @@
 #include "LandIsland.h"
 #include "MeshViewer.h"
 #include "Profiler.h"
+#include "TextureViewer.h"
 
 // Turn off formatting because it adds spaces which break the stringifying
 // clang-format off
@@ -98,6 +99,7 @@ std::unique_ptr<Gui> Gui::create(const GameWindow* window, graphics::RenderPass 
 	std::vector<std::unique_ptr<DebugWindow>> debugWindows;
 	debugWindows.emplace_back(new Profiler);
 	debugWindows.emplace_back(new MeshViewer);
+	debugWindows.emplace_back(new TextureViewer);
 	debugWindows.emplace_back(new Console);
 	debugWindows.emplace_back(new LandIsland);
 	debugWindows.emplace_back(new LHVMViewer);

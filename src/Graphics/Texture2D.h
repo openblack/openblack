@@ -110,6 +110,7 @@ public:
 	[[nodiscard]] uint16_t GetWidth() const { return _info.width; }
 	[[nodiscard]] uint16_t GetHeight() const { return _info.height; }
 	[[nodiscard]] uint16_t GetLayerCount() const { return _info.numLayers; }
+	[[nodiscard]] bgfx::TextureFormat::Enum GetFormat() const { return _info.format; }
 
 	void DumpTexture() const;
 
