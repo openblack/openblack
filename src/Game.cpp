@@ -446,7 +446,21 @@ bool Game::Run()
 	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
 
-	textureManager.Load("raw/misc0a", _fileSystem->TexturePath() / "misc0a.raw");
+	for (const auto& f : std::filesystem::directory_iterator {_fileSystem->FindPath(_fileSystem->TexturePath())})
+	{
+		if (f.path().extension() == ".raw")
+		{
+			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading raw texture: {}", f.path().stem().string());
+			try
+			{
+				textureManager.Load(("raw" / f.path().stem()).string(), f);
+			}
+			catch (std::runtime_error& err)
+			{
+				SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+			}
+		}
+	}
 	CameraBookmarkSystem::instance().Initialize();
 
 	if (!LoadVariables())
