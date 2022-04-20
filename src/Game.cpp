@@ -443,7 +443,7 @@ bool Game::Run()
 			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading raw texture: {}", f.path().stem().string());
 			try
 			{
-				textureManager.Load(("raw" / f.path().stem()).string(), f);
+				textureManager.Load(fmt::format("raw/{}", f.path().stem().string()), f);
 			}
 			catch (std::runtime_error& err)
 			{
