@@ -46,7 +46,7 @@ private:
 	static constexpr graphics::RenderPass _viewId = graphics::RenderPass::MeshViewer;
 	entt::id_type _selectedMesh;
 	int _selectedSubMesh;
-	std::optional<uint32_t> _selectedAnimation;
+	std::optional<entt::id_type> _selectedAnimation;
 	int _selectedFrame;
 	ImGuiTextFilter _filter;
 	uint32_t _meshFlagFilter;

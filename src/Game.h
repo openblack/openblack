@@ -176,7 +176,6 @@ public:
 	LandIsland& GetLandIsland() { return *_landIsland; }
 	[[nodiscard]] LandIsland& GetLandIsland() const { return *_landIsland; }
 	entt::entity GetHand() const;
-	AnimationPack& GetAnimationPack() { return *_animationPack; }
 	[[nodiscard]] const LHVM::LHVM& GetLhvm() { return *_lhvm; }
 	FileSystem& GetFileSystem() { return *_fileSystem; }
 	ecs::Registry& GetEntityRegistry() { return *_entityRegistry; }
@@ -209,7 +208,6 @@ private:
 
 	std::unique_ptr<FileSystem> _fileSystem;
 	std::unique_ptr<LandIsland> _landIsland;
-	std::unique_ptr<AnimationPack> _animationPack;
 
 	// std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<L3DMesh> _testModel;

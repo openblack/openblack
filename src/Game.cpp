@@ -9,10 +9,7 @@
 
 #include "Game.h"
 
-#include "3D/AnimationPack.h"
 #include "3D/Camera.h"
-#include "3D/L3DAnim.h"
-#include "3D/L3DMesh.h"
 #include "3D/LandIsland.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
@@ -141,7 +138,6 @@ Game::~Game()
 	_misc0aTexture.reset();
 	_water.reset();
 	_sky.reset();
-	_animationPack.reset();
 	_dynamicsSystem.reset();
 	_landIsland.reset();
 	_entityRegistry.reset();
@@ -437,12 +433,6 @@ bool Game::Run()
 
 	_camera->SetPosition(glm::vec3(1441.56f, 24.764f, 2081.76f));
 	_camera->SetRotation(glm::vec3(0.0f, -45.0f, 0.0f));
-
-	_animationPack = std::make_unique<AnimationPack>();
-	if (!_animationPack->LoadFromFile(_fileSystem->DataPath() / "AllAnims.anm"))
-	{
-		return false;
-	}
 
 	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();

@@ -9,7 +9,6 @@
 
 #include "MeshViewer.h"
 
-#include "3D/AnimationPack.h"
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "Game.h"
@@ -51,9 +50,8 @@ void MeshViewer::Draw(Game& game)
 {
 
 	float fontSize = ImGui::GetFontSize();
-	auto const& animationPack = game.GetAnimationPack();
 	auto const& meshes = Locator::resources::ref().GetMeshes();
-	auto const& animations = animationPack.GetAnimations();
+	auto const& animations = Locator::resources::ref().GetAnimations();
 
 	_filter.Draw();
 	ImGui::InputScalar("Mesh flag filter", ImGuiDataType_U32, &_meshFlagFilter, nullptr, nullptr, "%08X",
@@ -145,7 +143,7 @@ void MeshViewer::Draw(Game& game)
 	ImGui::Checkbox("Show matching armature", &_matchBones);
 	if (_selectedAnimation)
 	{
-		auto const& animation = animations[*_selectedAnimation];
+		auto const& animation = animations.Handle(*_selectedAnimation);
 		ImGui::Text("%zu frames", animation->GetFrames().size());
 		ImGui::Text("Duration %u frames", animation->GetDuration());
 		ImGui::SliderInt("frame", &_selectedFrame, 0, static_cast<int>(animation->GetFrames().size() - 1));
@@ -172,26 +170,25 @@ void MeshViewer::Draw(Game& game)
 	ImGui::BeginChild("animationSelect", ImVec2(animationSize.x - 5, animationSize.y - ImGui::GetTextLineHeight() - 5), true);
 	uint32_t displayedAnimations = 0;
 	if (_matchBones && _selectedAnimation.has_value() &&
-	    animations[*_selectedAnimation]->GetBoneMatrices(0).size() != mesh->GetBoneMatrices().size())
+	    animations.Handle(*_selectedAnimation)->GetBoneMatrices(0).size() != mesh->GetBoneMatrices().size())
 	{
 		_selectedAnimation.reset();
 	}
-	for (uint32_t i = 0; i < animations.size(); i++)
-	{
-		if (_filter.PassFilter(animations[i]->GetName().c_str()) &&
-		    (!_matchBones || (animations[i]->GetBoneMatrices(0).size() == mesh->GetBoneMatrices().size())))
+	animations.Each([this, &mesh, &displayedAnimations](entt::id_type id, entt::resource_handle<const L3DAnim> animation) {
+		if (_filter.PassFilter(animation->GetName().c_str()) &&
+		    (!_matchBones || (animation->GetBoneMatrices(0).size() == mesh->GetBoneMatrices().size())))
 		{
 			displayedAnimations++;
-			if (ImGui::Selectable(animations[i]->GetName().c_str(), _selectedAnimation == i))
+			if (ImGui::Selectable(animation->GetName().c_str(), _selectedAnimation == id))
 			{
-				_selectedAnimation = i;
+				_selectedAnimation = id;
 			}
 			if (ImGui::IsItemHovered())
 			{
-				ImGui::SetTooltip("%s", animations[i]->GetName().c_str());
+				ImGui::SetTooltip("%s", animation->GetName().c_str());
 			}
 		}
-	}
+	});
 	ImGui::EndChild();
 	ImGui::Text("%u animations", displayedAnimations);
 	ImGui::EndChild();
@@ -201,8 +198,7 @@ void MeshViewer::Update(Game& game, const Renderer& renderer)
 {
 	auto const& meshes = Locator::resources::ref().GetMeshes();
 	auto const& textures = Locator::resources::ref().GetTextures();
-	auto const& animationPack = game.GetAnimationPack();
-	auto const& animations = animationPack.GetAnimations();
+	auto const& animations = Locator::resources::ref().GetAnimations();
 	auto& shaderManager = game.GetRenderer().GetShaderManager();
 	auto objectShader = shaderManager.GetShader("Object");
 	auto debugShader = shaderManager.GetShader("DebugLine");
@@ -252,13 +248,9 @@ void MeshViewer::Update(Game& game, const Renderer& renderer)
 		{
 			bones = mesh->GetBoneMatrices();
 			const std::vector<uint32_t>& boneParents = mesh->GetBoneParents();
-			if (_selectedAnimation.value_or(std::numeric_limits<uint32_t>::max()) > static_cast<uint32_t>(animations.size()))
-			{
-				_selectedAnimation.reset();
-			}
 			if (_selectedAnimation.has_value() && _matchBones)
 			{
-				const auto& frames = animations[*_selectedAnimation]->GetFrames();
+				const auto& frames = animations.Handle(*_selectedAnimation)->GetFrames();
 				for (uint32_t i = 0; i < frames[_selectedFrame].bones.size(); ++i)
 				{
 					bones[i] = frames[_selectedFrame].bones[i];
