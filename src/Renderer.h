@@ -109,17 +109,13 @@ public:
 
 	void ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height) const;
 
-	void DrawScene(const resources::MeshManager& meshes, const resources::TextureManager& textures,
-	               const DrawSceneDesc& drawDesc) const;
-	void DrawMesh(const L3DMesh& mesh, const resources::TextureManager& textures, const L3DMeshSubmitDesc& desc,
-	              uint8_t subMeshIndex) const;
+	void DrawScene(const DrawSceneDesc& drawDesc) const;
+	void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const;
 	void Frame();
 
 private:
-	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const resources::TextureManager& textures,
-	                 const L3DMeshSubmitDesc& desc, bool preserveState) const;
-	void DrawPass(const resources::MeshManager& meshes, const resources::TextureManager& textures,
-	              const DrawSceneDesc& desc) const;
+	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, bool preserveState) const;
+	void DrawPass(const DrawSceneDesc& desc) const;
 
 	std::unique_ptr<graphics::ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;

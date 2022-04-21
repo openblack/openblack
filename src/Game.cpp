@@ -533,7 +533,7 @@ bool Game::Run()
 			    /*smallBumpMapStrength =*/_config.smallBumpMapStrength,
 			};
 
-			_renderer->DrawScene(meshManager, textureManager, drawDesc);
+			_renderer->DrawScene(drawDesc);
 		}
 
 		{

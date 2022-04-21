@@ -198,9 +198,10 @@ void Renderer::UpdateDebugCrossUniforms(const glm::mat4& pose)
 	_debugCrossPose = pose;
 }
 
-const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& meshSkins,
-                            const resources::TextureManager& textures)
+const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& meshSkins)
 {
+	const auto& textureManager = Locator::resources::ref().GetTextures();
+
 	const Texture2D* texture = nullptr;
 
 	if (skinID != 0xFFFFFFFF)
@@ -209,9 +210,9 @@ const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, st
 		{
 			texture = meshSkins.at(skinID).get();
 		}
-		else if (textures.Contains(skinID))
+		else if (textureManager.Contains(skinID))
 		{
-			texture = &textures.Handle(skinID).get();
+			texture = &textureManager.Handle(skinID).get();
 		}
 		else
 		{
@@ -222,8 +223,8 @@ const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, st
 	return texture;
 }
 
-void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const resources::TextureManager& textures,
-                           const L3DMeshSubmitDesc& desc, bool preserveState) const
+void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc,
+                           bool preserveState) const
 {
 	assert(&subMesh.GetMesh());
 	if (subMesh.isPhysics())
@@ -240,8 +241,8 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 
 		const bool hasNext = std::next(it) != primitives.end();
 
-		const Texture2D* texture = GetTexture(prim.skinID, skins, textures);
-		const Texture2D* nextTexture = !hasNext ? nullptr : GetTexture(std::next(it)->skinID, skins, textures);
+		const Texture2D* texture = GetTexture(prim.skinID, skins);
+		const Texture2D* nextTexture = !hasNext ? nullptr : GetTexture(std::next(it)->skinID, skins);
 
 		bool primitivePreserveState = texture == nextTexture && (preserveState || hasNext);
 
@@ -298,8 +299,7 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 	}
 }
 
-void Renderer::DrawMesh(const L3DMesh& mesh, const resources::TextureManager& textures, const L3DMeshSubmitDesc& desc,
-                        uint8_t subMeshIndex) const
+void Renderer::DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const
 {
 	if (mesh.GetNumSubMeshes() == 0)
 	{
@@ -317,7 +317,7 @@ void Renderer::DrawMesh(const L3DMesh& mesh, const resources::TextureManager& te
 			                   mesh.GetNumSubMeshes());
 		}
 
-		DrawSubMesh(mesh, *subMeshes[subMeshIndex], textures, desc, false);
+		DrawSubMesh(mesh, *subMeshes[subMeshIndex], desc, false);
 		return;
 	}
 
@@ -326,13 +326,12 @@ void Renderer::DrawMesh(const L3DMesh& mesh, const resources::TextureManager& te
 		const L3DSubMesh& subMesh = *it->get();
 		if (!subMesh.isPhysics())
 		{
-			DrawSubMesh(mesh, subMesh, textures, desc, std::next(it) != subMeshes.end());
+			DrawSubMesh(mesh, subMesh, desc, std::next(it) != subMeshes.end());
 		}
 	}
 }
 
-void Renderer::DrawScene(const resources::MeshManager& meshes, const resources::TextureManager& textures,
-                         const DrawSceneDesc& drawDesc) const
+void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const
 {
 	// Reflection Pass
 	{
@@ -352,20 +351,21 @@ void Renderer::DrawScene(const resources::MeshManager& meshes, const resources::
 			drawPassDesc.drawBoundingBoxes = false;
 			drawPassDesc.cullBack = true;
 
-			DrawPass(meshes, textures, drawPassDesc);
+			DrawPass(drawPassDesc);
 		}
 	}
 
 	// Main Draw Pass
 	{
 		auto section = drawDesc.profiler.BeginScoped(Profiler::Stage::MainPass);
-		DrawPass(meshes, textures, drawDesc);
+		DrawPass(drawDesc);
 	}
 }
 
-void Renderer::DrawPass(const resources::MeshManager& meshes, const resources::TextureManager& textures,
-                        const DrawSceneDesc& desc) const
+void Renderer::DrawPass(const DrawSceneDesc& desc) const
 {
+	const auto& meshManager = Locator::resources::ref().GetMeshes();
+
 	if (desc.frameBuffer)
 	{
 		desc.frameBuffer->Bind(desc.viewId);
@@ -409,7 +409,7 @@ void Renderer::DrawPass(const resources::MeshManager& meshes, const resources::T
 			submitDesc.matrixCount = 1;
 			submitDesc.isSky = true;
 
-			DrawMesh(*desc.sky._model, textures, submitDesc, 0);
+			DrawMesh(*desc.sky._model, submitDesc, 0);
 		}
 	}
 
@@ -484,7 +484,7 @@ void Renderer::DrawPass(const resources::MeshManager& meshes, const resources::T
 			// Instance meshes
 			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
 			{
-				auto mesh = meshes.Handle(meshId);
+				auto mesh = meshManager.Handle(meshId);
 
 				submitDesc.instanceBuffer = &renderCtx.instanceUniformBuffer;
 				submitDesc.instanceStart = placers.offset;
@@ -505,7 +505,7 @@ void Renderer::DrawPass(const resources::MeshManager& meshes, const resources::T
 				submitDesc.skyType = desc.sky.GetCurrentSkyType();
 
 				// TODO(bwrsandman): choose the correct LOD
-				DrawMesh(mesh, textures, submitDesc, std::numeric_limits<uint8_t>::max());
+				DrawMesh(mesh, submitDesc, std::numeric_limits<uint8_t>::max());
 			}
 
 			// Debug
@@ -581,7 +581,7 @@ void Renderer::DrawPass(const resources::MeshManager& meshes, const resources::T
 				| BGFX_STATE_MSAA
 			;
 			// clang-format on
-			const auto& mesh = meshes.Handle(entt::hashed_string("coffre"));
+			const auto& mesh = meshManager.Handle(entt::hashed_string("coffre"));
 			const auto& testAnimation = Locator::resources::ref().GetAnimations().Handle(entt::hashed_string("coffre"));
 			const std::vector<uint32_t>& boneParents = mesh->GetBoneParents();
 			auto bones = testAnimation->GetBoneMatrices(desc.time);
@@ -596,7 +596,7 @@ void Renderer::DrawPass(const resources::MeshManager& meshes, const resources::T
 			submitDesc.matrixCount = static_cast<uint8_t>(bones.size());
 			submitDesc.isSky = false;
 			submitDesc.skyType = desc.sky.GetCurrentSkyType();
-			DrawMesh(mesh.get(), textures, submitDesc, 0);
+			DrawMesh(mesh.get(), submitDesc, 0);
 		}
 	}
 
