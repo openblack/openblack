@@ -9,3 +9,5 @@ macro(OPENBLACK_SETUP_AND_ADD_TEST TEST_NAME TEST_SOURCE)
     set_property(TARGET ${TEST_NAME} PROPERTY FOLDER "tests")
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
 endmacro()
+
+OPENBLACK_SETUP_AND_ADD_TEST(test_game_initialize test_game_initialize.cpp)
