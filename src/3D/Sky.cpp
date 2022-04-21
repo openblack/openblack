@@ -9,7 +9,6 @@
 
 #include "Sky.h"
 
-#include <Common/StringUtils.h>
 #include <glm/vec3.hpp>
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
@@ -17,6 +16,7 @@
 #include "3D/L3DMesh.h"
 #include "Common/Bitmap16B.h"
 #include "Common/FileSystem.h"
+#include "Common/StringUtils.h"
 #include "Game.h"
 
 using namespace openblack::graphics;
