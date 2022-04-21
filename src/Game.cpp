@@ -135,6 +135,12 @@ Game::Game(Arguments&& args)
 
 Game::~Game()
 {
+	// Manually delete the assets here before BGFX renderer clears its buffers resulting in invalid handles in our assets
+	auto& resources = Locator::resources::ref();
+	resources.GetMeshes().Clear();
+	resources.GetTextures().Clear();
+	resources.GetAnimations().Clear();
+
 	_water.reset();
 	_sky.reset();
 	_dynamicsSystem.reset();
@@ -541,11 +547,6 @@ bool Game::Run()
 		}
 		_frameCount++;
 	}
-
-	// Manually delete the assets here before BGFX renderer clears its buffers resulting in invalid handles in our assets
-	meshManager.Clear();
-	textureManager.Clear();
-	animationManager.Clear();
 
 	return true;
 }
