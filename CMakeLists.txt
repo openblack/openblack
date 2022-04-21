@@ -102,11 +102,17 @@ add_subdirectory(apps/packtool)
 add_subdirectory(apps/lndtool)
 add_subdirectory(apps/anmtool)
 add_subdirectory(apps/morphtool)
+
 if(NOT CMAKE_CROSSCOMPILING)  # Requires python and running compiled apps
   add_subdirectory(test/mock)
 endif()
 
+find_package(GTest CONFIG)
+if(GTest_FOUND AND NOT CMAKE_CROSSCOMPILING)
+  enable_testing()
+  add_subdirectory(test)
+endif()
+
 # Set openblack project as default startup project in Visual Studio
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT
-                                                            openblack)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT openblack)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)

@@ -59,7 +59,7 @@ jobs:
         with:
           configurePreset: 'ninja-multi-vcpkg'
           buildPreset: 'ninja-multi-vcpkg-${{ matrix.config }}'
-          # testPreset: 'ninja-multi-vcpkg-${{ matrix.config }}'
+          testPreset: 'ninja-multi-vcpkg-${{ matrix.config }}'
 
       - uses: actions/upload-artifact@v3
         if: matrix.cc == ''

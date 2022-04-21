@@ -29,6 +29,7 @@
             "default-features": false
         },
         "bullet3",
-        "minizip"
+        "minizip",
+        "gtest"
     ]
 }

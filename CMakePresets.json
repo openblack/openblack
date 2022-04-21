@@ -168,5 +168,23 @@
       "description": "Build linux-system-deps Release configuration",
       "configuration": "Release"
     }
+  ],
+  "testPresets": [
+    {
+      "name": "ninja-multi-vcpkg-debug",
+      "configurePreset": "ninja-multi-vcpkg",
+      "configuration": "Debug",
+      "displayName": "Run CTest tests on Ninja Configuration for Debug Build",
+      "output": {"outputOnFailure": true},
+      "execution": {"noTestsAction": "error", "stopOnFailure": true}
+    },
+    {
+      "name": "ninja-multi-vcpkg-release",
+      "configurePreset": "ninja-multi-vcpkg",
+      "configuration": "Release",
+      "displayName": "Run CTest tests on Ninja Configuration for Release Build",
+      "output": {"outputOnFailure": true},
+      "execution": {"noTestsAction": "error", "stopOnFailure": true}
+    }
   ]
 }
