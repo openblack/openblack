@@ -12,13 +12,21 @@
 using namespace openblack;
 using namespace openblack::ressources;
 
-RNGManager& RNGManager::GetInstance() {
+RNGManager& RNGManager::GetInstance()
+{
     static RNGManager rngManager;
     return rngManager;
-};
+}
 
 uint16_t RNGManager::nextInt()
 {
     std::uniform_int_distribution<uint16_t> int_dist(1,500);
+    std::lock_guard<std::mutex> safe_lock(_generator_lock);
     return int_dist(_generator);
+}
+
+void RNGManager::setSeed(unsigned int seed)
+{
+    std::lock_guard<std::mutex> safe_lock(_generator_lock);
+    _generator.seed(seed);
 }
