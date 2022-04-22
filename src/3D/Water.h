@@ -30,6 +30,7 @@ class Water
 public:
 	// Oddly enough the water texture is labeled Sky
 	static constexpr entt::hashed_string DiffuseTextureId = entt::hashed_string("raw/Sky");
+	static constexpr entt::hashed_string AlphaTextureId = entt::hashed_string("raw/Skya");
 
 	Water();
 	~Water() = default;
