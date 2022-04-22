@@ -12,16 +12,8 @@
 using namespace openblack;
 using namespace openblack::ressources;
 
-
-int RNGManager::nextInt()
+uint16_t RNGManager::nextInt()
 {
-    thread_local std::mt19937 _generator(_seed);
     std::uniform_int_distribution<uint16_t> int_dist(1,500);
     return int_dist(_generator);
-}
-
-RNGManager::RNGManager()
-{
-    std::random_device seeder;
-    _seed = seeder();
 }

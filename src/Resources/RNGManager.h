@@ -20,12 +20,12 @@ public:
         static RNGManager rngManager;
         return rngManager;
     };
-    int nextInt();
-    void setSeed(unsigned int seed) { _seed = seed; };
+    uint16_t nextInt();
+    void setSeed(unsigned int seed) { _generator.seed(seed); };
 
 private:
-    static unsigned int _seed;
-    RNGManager();
+    static std::mt19937 _generator;
+    RNGManager() {};
     RNGManager(const RNGManager&) = delete;
     RNGManager& operator=(const RNGManager&) = delete;
 }; 
