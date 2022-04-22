@@ -115,6 +115,8 @@ public:
 	void DrawMesh(const L3DMesh& mesh, const MeshPack& meshPack, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const;
 	void Frame();
 
+	void Reset(uint16_t width, uint16_t height) const;
+
 private:
 	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const MeshPack& meshPack, const L3DMeshSubmitDesc& desc,
 	                 bool preserveState) const;

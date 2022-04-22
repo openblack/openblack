@@ -188,6 +188,11 @@ void Renderer::ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16
 	bgfx::setViewRect(static_cast<bgfx::ViewId>(viewId), 0, 0, width, height);
 }
 
+void Renderer::Reset(uint16_t width, uint16_t height) const
+{
+	bgfx::reset(width, height, _bgfxReset);
+}
+
 graphics::ShaderManager& Renderer::GetShaderManager() const
 {
 	return *_shaderManager;
