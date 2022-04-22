@@ -30,7 +30,7 @@ void Script::Load(const std::string& source)
 
 		if (token->IsIdentifier())
 		{
-			const std::string& identifier = token->Identifier();
+			const std::string identifier = token->Identifier();
 
 			if (!isCommand(identifier))
 				throw std::runtime_error("unknown command: " + identifier);
