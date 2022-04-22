@@ -467,8 +467,6 @@ bool Game::Initialize()
 	_camera->SetPosition(glm::vec3(1441.56f, 24.764f, 2081.76f));
 	_camera->SetRotation(glm::vec3(0.0f, -45.0f, 0.0f));
 
-	_sky = std::make_unique<Sky>();
-	_water = std::make_unique<Water>();
 	if (!LoadVariables())
 	{
 		return false;
@@ -489,6 +487,10 @@ bool Game::Initialize()
 			}
 		}
 	}
+
+	_sky = std::make_unique<Sky>();
+	_water = std::make_unique<Water>();
+
 	CameraBookmarkSystem::instance().Initialize();
 
 	return true;
