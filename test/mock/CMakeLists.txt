@@ -1,10 +1,16 @@
 find_package (Python3 COMPONENTS Interpreter)
 
-set(TEXTURES_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/Textures)
+set(DATA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data)
 
-set(ALL_MESHES_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data)
-set(ALL_MESHES_OUTPUT ${ALL_MESHES_BINARY_DIR}/AllMeshes.g3d)
-set(ALL_ANIMATIONS_OUTPUT ${ALL_MESHES_BINARY_DIR}/AllAnims.anm)
+set(TEXTURES_BINARY_DIR ${DATA_BINARY_DIR}/Textures)
+list(APPEND RAW_TEXTURES_0x10000_ARRAY ${TEXTURES_BINARY_DIR}/misc0a.raw)
+list(APPEND RAW_TEXTURES_0x10000_ARRAY ${TEXTURES_BINARY_DIR}/smallbumpa.raw)
+string(REPLACE ";" "," RAW_TEXTURES_0x10000 "${RAW_TEXTURES_0x10000_ARRAY}")
+list(APPEND RAW_TEXTURES_0x30000_ARRAY ${TEXTURES_BINARY_DIR}/Sky.raw)
+string(REPLACE ";" "," RAW_TEXTURES_0x30000 "${RAW_TEXTURES_0x30000_ARRAY}")
+
+set(ALL_MESHES_OUTPUT ${DATA_BINARY_DIR}/AllMeshes.g3d)
+set(ALL_ANIMATIONS_OUTPUT ${DATA_BINARY_DIR}/AllAnims.anm)
 
 set(CREATURE_MESH_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/CreatureMesh)
 set(HAND_BASE_OUTPUT ${CREATURE_MESH_BINARY_DIR}/Hand_Boned_Base2.l3d)
@@ -38,8 +44,8 @@ set(QUEST_CHALLENGE_OUTPUT ${QUESTS_BINARY_DIR}/challenge.chl)
 # TODO: Combine all texture generating scripts into a single one
 
 add_custom_target(generate-mock-game-data
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${DATA_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TEXTURES_BINARY_DIR}
-  COMMAND ${CMAKE_COMMAND} -E make_directory ${ALL_MESHES_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${CREATURE_MESH_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${SKY_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TERRAIN_BINARY_DIR}
@@ -48,8 +54,9 @@ add_custom_target(generate-mock-game-data
   COMMAND ${CMAKE_COMMAND} -E make_directory ${QUESTS_BINARY_DIR}
   # Copy the Scripts Directory
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Scripts ${CMAKE_CURRENT_BINARY_DIR}/Scripts
-  # Generate Mock Textures
-  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Data/Textures/gen_textures.py --output-dir ${TEXTURES_BINARY_DIR}
+  # Generate Mock Raw Textures
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py --output-files "${RAW_TEXTURES_0x10000}" --size 0x10000
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py --output-files "${RAW_TEXTURES_0x30000}" --size 0x30000
   # Data/AllMeshes.g3d
   COMMAND packtool --write-mesh ${ALL_MESHES_OUTPUT}
   # Data/AllAnims.anm
@@ -68,7 +75,7 @@ add_custom_target(generate-mock-game-data
   COMMAND l3dtool write -o ${COFFRE_MESH_OUTPUT} -i ${COFFRE_INPUT}
   COMMAND anmtool write -o ${COFFRE_ANIM_OUTPUT} -i ${COFFRE_INPUT}
   # Scripts/info.dat
-  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py --output-file ${INFO_UNPACKED_OUTPUT} --size 0x8E186
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py --output-files "${INFO_UNPACKED_OUTPUT}" --size 0x8E186
   COMMAND packtool --write-raw ${INFO_DAT_OUTPUT} ${INFO_UNPACKED_OUTPUT}
   # Scripts/Quests/challenge.chl
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/Quests/gen_challenge.py --output-file ${QUEST_CHALLENGE_OUTPUT}
@@ -81,11 +88,11 @@ add_custom_target(generate-mock-game-data
     ${TERRAIN_NOISE_MAP}
     ${TERRAIN_BUMP_MAP}
     ${TERRAIN_MATERIAL_ARRAY}
+    ${RAW_TEXTURES}
 
   SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
     ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py
-    ${CMAKE_CURRENT_SOURCE_DIR}/Data/Textures/gen_textures.py
     ${CMAKE_CURRENT_SOURCE_DIR}/Data/Landscape/gen_land_textures.py
     ${CMAKE_CURRENT_SOURCE_DIR}/Data/WeatherSystem/gen_sky.py
 )
