@@ -41,6 +41,14 @@ if(NOT TARGET SDL2::SDL2)
   find_package(SDL2 MODULE REQUIRED)
 endif()
 
+find_package(minizip CONFIG QUIET)
+if(NOT TARGET minizip::minizip)
+  find_package(PkgConfig)
+  pkg_check_modules(minizip REQUIRED minizip IMPORTED_TARGET)
+  add_library(minizip::minizip ALIAS PkgConfig::minizip)
+  target_link_libraries(PkgConfig::minizip INTERFACE z ${minizip_LIBRARIES})
+endif()
+
 # patch until next glm release
 find_package(glm REQUIRED)
 if (TARGET glm AND NOT TARGET glm::glm)
@@ -74,7 +82,6 @@ find_package(Bullet REQUIRED)
 find_package(spdlog 1.3.0 REQUIRED)
 find_package(EnTT 3.7.0 CONFIG REQUIRED) # only available as a config
 find_package(cxxopts REQUIRED)
-find_package(minizip REQUIRED)
 
 FetchContent_Declare(
   imgui-flame-graph

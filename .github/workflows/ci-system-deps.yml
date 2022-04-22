@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Install dependencies and configure system
         run: |
-          pacman -Syu --noconfirm --noprogressbar --needed git cmake mesa libx11 fmt spdlog sdl2 glm bullet
+          pacman -Syu --noconfirm --noprogressbar --needed git cmake mesa libx11 fmt spdlog sdl2 glm bullet minizip
           sed -E -i "s|#? ?MAKEFLAGS=.*|MAKEFLAGS=-j$(nproc)|" /etc/makepkg.conf
           useradd builduser -p ""
           printf 'builduser ALL=(ALL) ALL\n' >> /etc/sudoers
