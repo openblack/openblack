@@ -209,6 +209,12 @@ bool Gui::ProcessEventSdl2(const SDL_Event& event)
 		io.KeySuper = ((SDL_GetModState() & KMOD_GUI) != 0);
 		return io.WantCaptureKeyboard;
 	}
+	case SDL_WINDOWEVENT:
+		if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+		{
+			return false;
+		}
+		break;
 	}
 	return io.WantCaptureMouse;
 }
