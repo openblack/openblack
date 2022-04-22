@@ -99,6 +99,7 @@ target_link_libraries(
     BulletCollision
     BulletSoftBody
     LinearMath
+    minizip::minizip
   PUBLIC
     SDL2::SDL2
     spdlog::spdlog

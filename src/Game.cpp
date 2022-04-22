@@ -15,6 +15,7 @@
 #include "3D/Water.h"
 #include "Common/EventManager.h"
 #include "Common/FileSystem.h"
+#include "Common/StringUtils.h"
 #include "ECS/Archetypes/HandArchetype.h"
 #include "ECS/Components/Fixed.h"
 #include "ECS/Components/Mobile.h"
@@ -411,6 +412,23 @@ bool Game::Run()
 	auto& meshManager = resources.GetMeshes();
 	auto& textureManager = resources.GetTextures();
 	auto& animationManager = resources.GetAnimations();
+	const auto citadelOutsideMeshesPath = _fileSystem->FindPath(_fileSystem->CitadelPath() / "OutsideMeshes");
+
+	for (const auto& f : std::filesystem::directory_iterator {citadelOutsideMeshesPath})
+	{
+		if (f.path().extension() == ".zzz")
+		{
+			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading temple mesh: {}", f.path().stem().string());
+			try
+			{
+				meshManager.Load(fmt::format("temple/{}", f.path().stem().string()), f);
+			}
+			catch (std::runtime_error& err)
+			{
+				SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+			}
+		}
+	}
 
 	meshManager.Load("hand", _fileSystem->FindPath(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d"));
 	meshManager.Load("coffre", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.l3d"));
@@ -582,9 +600,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 	script.Load(source);
 
 	// Each released map comes with an optional .fot file which contains the footpath information for the map
-	auto stem = path.stem().generic_string();
-	std::transform(stem.begin(), stem.end(), stem.begin(),
-	               [](auto c) { return static_cast<char>(std::tolower(static_cast<int>(c))); });
+	auto stem = string_utils::LowerCase(path.stem().generic_string());
 	auto fot_path = _fileSystem->LandscapePath() / fmt::format("{}.fot", stem);
 
 	if (_fileSystem->Exists(fot_path))

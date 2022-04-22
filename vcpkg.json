@@ -27,6 +27,7 @@
             "name": "bgfx",
             "default-features": false
         },
-        "bullet3"
+        "bullet3",
+        "minizip"
     ]
 }
