@@ -438,9 +438,11 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		{
 			for (auto& block : desc.island.GetBlocks())
 			{
+				auto texture = Locator::resources::ref().GetTextures().Handle(LandIsland::SmallBumpTextureId);
+
 				terrainShader->SetTextureSampler("s0_materials", 0, desc.island.GetAlbedoArray());
 				terrainShader->SetTextureSampler("s1_bump", 1, desc.island.GetBump());
-				terrainShader->SetTextureSampler("s2_smallBump", 2, desc.island.GetSmallBump());
+				terrainShader->SetTextureSampler("s2_smallBump", 2, *texture);
 
 				// pack uniforms
 				const glm::vec4 mapPosition = block.GetMapPosition();

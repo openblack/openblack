@@ -10,7 +10,6 @@
 #include "LandIsland.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "Common/FileSystem.h"
 #include "Common/IStream.h"
 #include "Common/stb_image_write.h"
 #include "Dynamics/LandBlockBulletMeshInterface.h"
@@ -31,14 +30,6 @@ const float LandIsland::CellSize = 10.0f;
 LandIsland::LandIsland()
     : _blockIndexLookup {0}
 {
-	auto& filesystem = Game::instance()->GetFileSystem();
-	auto file = filesystem.Open(filesystem.TexturePath() / "smallbumpa.raw", FileMode::Read);
-	auto* smallbumpa = new uint8_t[file->Size()];
-	file->Read(smallbumpa, file->Size());
-
-	_textureSmallBump = std::make_unique<Texture2D>("LandIslandSmallBump");
-	_textureSmallBump->Create(256, 256, 1, Format::R8, Wrapping::Repeat, smallbumpa, static_cast<uint32_t>(file->Size()));
-	delete[] smallbumpa;
 }
 
 LandIsland::~LandIsland() = default;

@@ -9,14 +9,16 @@
 
 #pragma once
 
-#include "Graphics/Mesh.h"
-#include "Graphics/Texture2D.h"
-#include "LandBlock.h"
-
 #include <array>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <entt/core/hashed_string.hpp>
+
+#include "Graphics/Mesh.h"
+#include "Graphics/Texture2D.h"
+#include "LandBlock.h"
 
 namespace openblack
 {
@@ -36,6 +38,7 @@ class LandIsland
 public:
 	static const float HeightUnit;
 	static const float CellSize;
+	static constexpr entt::hashed_string SmallBumpTextureId = entt::hashed_string("raw/smallbumpa");
 
 	LandIsland();
 	~LandIsland();
@@ -62,10 +65,8 @@ public:
 	[[nodiscard]] const std::vector<lnd::LNDCountry>& GetCountries() const { return _countries; }
 	[[nodiscard]] const graphics::Texture2D& GetAlbedoArray() const { return *_materialArray; }
 	[[nodiscard]] const graphics::Texture2D& GetBump() const { return *_textureBumpMap; }
-	[[nodiscard]] const graphics::Texture2D& GetSmallBump() const { return *_textureSmallBump; }
 
 	uint8_t GetNoise(int x, int y);
-	graphics::Texture2D* GetSmallBumpMap() { return _textureSmallBump.get(); }
 
 private:
 	std::unique_ptr<graphics::Texture2D> _materialArray;
@@ -73,7 +74,6 @@ private:
 
 	std::unique_ptr<graphics::Texture2D> _textureNoiseMap;
 	std::unique_ptr<graphics::Texture2D> _textureBumpMap;
-	std::unique_ptr<graphics::Texture2D> _textureSmallBump;
 
 	std::array<uint8_t, 256 * 256> _noiseMap;
 };
