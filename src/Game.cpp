@@ -180,6 +180,16 @@ bool Game::ProcessEvents(const SDL_Event& event)
 		{
 			return false;
 		}
+		else if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+		{
+			uint16_t width = static_cast<uint16_t>(event.window.data1);
+			uint16_t height = static_cast<uint16_t>(event.window.data2);
+			_renderer->Reset(width, height);
+			_renderer->ConfigureView(graphics::RenderPass::Main, width, height);
+
+			auto aspect = _window->GetAspectRatio();
+			_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
+		}
 		break;
 	case SDL_KEYDOWN:
 		switch (event.key.keysym.sym)
@@ -434,7 +444,7 @@ bool Game::Run()
 	// create our camera
 	_camera = std::make_unique<Camera>();
 	auto aspect = _window ? _window->GetAspectRatio() : 1.0f;
-	_camera->SetProjectionMatrixPerspective(70.0f, aspect, 1.0f, 65536.0f);
+	_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
 
 	_camera->SetPosition(glm::vec3(1441.56f, 24.764f, 2081.76f));
 	_camera->SetRotation(glm::vec3(0.0f, -45.0f, 0.0f));

@@ -113,12 +113,15 @@ public:
 	void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const;
 	void Frame();
 
+	void Reset(uint16_t width, uint16_t height) const;
+
 private:
 	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, bool preserveState) const;
 	void DrawPass(const DrawSceneDesc& desc) const;
 
 	std::unique_ptr<graphics::ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
+	uint32_t _bgfxReset;
 
 	std::unique_ptr<graphics::Mesh> _debugCross;
 	std::unique_ptr<graphics::Mesh> _plane;

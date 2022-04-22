@@ -136,11 +136,12 @@ Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererTy
 		window->GetNativeHandles(init.platformData.nwh, init.platformData.ndt);
 	}
 
-	init.resolution.reset = BGFX_RESET_NONE;
+	_bgfxReset = BGFX_RESET_NONE;
 	if (vsync)
 	{
-		init.resolution.reset |= BGFX_RESET_VSYNC;
+		_bgfxReset |= BGFX_RESET_VSYNC;
 	}
+	init.resolution.reset = _bgfxReset;
 	init.callback = dynamic_cast<bgfx::CallbackI*>(_bgfxCallback.get());
 
 #ifdef __APPLE__
@@ -186,6 +187,11 @@ void Renderer::ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16
 
 	bgfx::setViewClear(static_cast<bgfx::ViewId>(viewId), BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, clearColor, 1.0f, 0);
 	bgfx::setViewRect(static_cast<bgfx::ViewId>(viewId), 0, 0, width, height);
+}
+
+void Renderer::Reset(uint16_t width, uint16_t height) const
+{
+	bgfx::reset(width, height, _bgfxReset);
 }
 
 graphics::ShaderManager& Renderer::GetShaderManager() const
