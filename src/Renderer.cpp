@@ -423,9 +423,11 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			mesh->GetIndexBuffer().Bind(mesh->GetIndexBuffer().GetCount(), 0);
 			mesh->GetVertexBuffer().Bind();
 			bgfx::setState(BGFX_STATE_DEFAULT);
-			auto texture = Locator::resources::ref().GetTextures().Handle(Water::DiffuseTextureId);
-			waterShader->SetTextureSampler("s_diffuse", 0, *texture);
-			waterShader->SetTextureSampler("s_reflection", 1, desc.water.GetFrameBuffer().GetColorAttachment());
+			auto diffuse = Locator::resources::ref().GetTextures().Handle(Water::DiffuseTextureId);
+			auto alpha = Locator::resources::ref().GetTextures().Handle(Water::AlphaTextureId);
+			waterShader->SetTextureSampler("s_diffuse", 0, *diffuse);
+			waterShader->SetTextureSampler("s_alpha", 1, *alpha);
+			waterShader->SetTextureSampler("s_reflection", 2, desc.water.GetFrameBuffer().GetColorAttachment());
 			const glm::vec4 u_sky = {desc.sky.GetCurrentSkyType(), 0.0f, 0.0f, 0.0f};
 			waterShader->SetUniformValue("u_sky", &u_sky); // fs
 			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), waterShader->GetRawHandle());
