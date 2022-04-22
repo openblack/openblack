@@ -15,6 +15,7 @@
 #include "3D/Water.h"
 #include "Common/EventManager.h"
 #include "Common/FileSystem.h"
+#include "Common/StringUtils.h"
 #include "ECS/Archetypes/HandArchetype.h"
 #include "ECS/Components/Fixed.h"
 #include "ECS/Components/Mobile.h"
@@ -135,6 +136,12 @@ Game::Game(Arguments&& args)
 
 Game::~Game()
 {
+	// Manually delete the assets here before BGFX renderer clears its buffers resulting in invalid handles in our assets
+	auto& resources = Locator::resources::ref();
+	resources.GetMeshes().Clear();
+	resources.GetTextures().Clear();
+	resources.GetAnimations().Clear();
+
 	_water.reset();
 	_sky.reset();
 	_dynamicsSystem.reset();
@@ -173,6 +180,16 @@ bool Game::ProcessEvents(const SDL_Event& event)
 		if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == _window->GetID())
 		{
 			return false;
+		}
+		else if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+		{
+			uint16_t width = static_cast<uint16_t>(event.window.data1);
+			uint16_t height = static_cast<uint16_t>(event.window.data2);
+			_renderer->Reset(width, height);
+			_renderer->ConfigureView(graphics::RenderPass::Main, width, height);
+
+			auto aspect = _window->GetAspectRatio();
+			_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
 		}
 		break;
 	case SDL_KEYDOWN:
@@ -395,6 +412,23 @@ bool Game::Run()
 	auto& meshManager = resources.GetMeshes();
 	auto& textureManager = resources.GetTextures();
 	auto& animationManager = resources.GetAnimations();
+	const auto citadelOutsideMeshesPath = _fileSystem->FindPath(_fileSystem->CitadelPath() / "OutsideMeshes");
+
+	for (const auto& f : std::filesystem::directory_iterator {citadelOutsideMeshesPath})
+	{
+		if (f.path().extension() == ".zzz")
+		{
+			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading temple mesh: {}", f.path().stem().string());
+			try
+			{
+				meshManager.Load(fmt::format("temple/{}", f.path().stem().string()), f);
+			}
+			catch (std::runtime_error& err)
+			{
+				SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+			}
+		}
+	}
 
 	meshManager.Load("hand", _fileSystem->FindPath(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d"));
 	meshManager.Load("coffre", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.l3d"));
@@ -428,7 +462,7 @@ bool Game::Run()
 	// create our camera
 	_camera = std::make_unique<Camera>();
 	auto aspect = _window ? _window->GetAspectRatio() : 1.0f;
-	_camera->SetProjectionMatrixPerspective(70.0f, aspect, 1.0f, 65536.0f);
+	_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
 
 	_camera->SetPosition(glm::vec3(1441.56f, 24.764f, 2081.76f));
 	_camera->SetRotation(glm::vec3(0.0f, -45.0f, 0.0f));
@@ -443,7 +477,7 @@ bool Game::Run()
 			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading raw texture: {}", f.path().stem().string());
 			try
 			{
-				textureManager.Load(("raw" / f.path().stem()).string(), f);
+				textureManager.Load(fmt::format("raw/{}", f.path().stem().string()), f);
 			}
 			catch (std::runtime_error& err)
 			{
@@ -527,7 +561,7 @@ bool Game::Run()
 			    /*smallBumpMapStrength =*/_config.smallBumpMapStrength,
 			};
 
-			_renderer->DrawScene(meshManager, textureManager, drawDesc);
+			_renderer->DrawScene(drawDesc);
 		}
 
 		{
@@ -541,11 +575,6 @@ bool Game::Run()
 		}
 		_frameCount++;
 	}
-
-	// Manually delete the assets here before BGFX renderer clears its buffers resulting in invalid handles in our assets
-	meshManager.Clear();
-	textureManager.Clear();
-	animationManager.Clear();
 
 	return true;
 }
@@ -571,9 +600,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 	script.Load(source);
 
 	// Each released map comes with an optional .fot file which contains the footpath information for the map
-	auto stem = path.stem().generic_string();
-	std::transform(stem.begin(), stem.end(), stem.begin(),
-	               [](auto c) { return static_cast<char>(std::tolower(static_cast<int>(c))); });
+	auto stem = string_utils::LowerCase(path.stem().generic_string());
 	auto fot_path = _fileSystem->LandscapePath() / fmt::format("{}.fot", stem);
 
 	if (_fileSystem->Exists(fot_path))

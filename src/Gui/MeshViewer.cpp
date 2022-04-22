@@ -70,8 +70,8 @@ void MeshViewer::Draw(Game& game)
 		if (_filter.PassFilter(mesh->GetDebugName().c_str()) && mesh->GetFlags() & _meshFlagFilter)
 		{
 			displayedMeshes++;
-
-			if (ImGui::Selectable(mesh->GetDebugName().c_str(), id == _selectedMesh))
+			auto flags = mesh->GetNumSubMeshes() > 0 ? 0 : ImGuiSelectableFlags_Disabled;
+			if (ImGui::Selectable(mesh->GetDebugName().c_str(), id == _selectedMesh, flags))
 			{
 				_selectedMesh = id;
 			}
@@ -197,7 +197,6 @@ void MeshViewer::Draw(Game& game)
 void MeshViewer::Update(Game& game, const Renderer& renderer)
 {
 	auto const& meshes = Locator::resources::ref().GetMeshes();
-	auto const& textures = Locator::resources::ref().GetTextures();
 	auto const& animations = Locator::resources::ref().GetAnimations();
 	auto& shaderManager = game.GetRenderer().GetShaderManager();
 	auto objectShader = shaderManager.GetShader("Object");
@@ -263,7 +262,7 @@ void MeshViewer::Update(Game& game, const Renderer& renderer)
 			desc.modelMatrices = bones.data();
 			desc.matrixCount = static_cast<uint8_t>(bones.size());
 		}
-		renderer.DrawMesh(*mesh, textures, desc, static_cast<uint8_t>(_selectedSubMesh));
+		renderer.DrawMesh(*mesh, desc, static_cast<uint8_t>(_selectedSubMesh));
 		if (_viewBoundingBox)
 		{
 			auto box = mesh->GetBoundingBox();

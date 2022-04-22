@@ -87,8 +87,8 @@ target_link_libraries(
     lnd
     anm
     morph
-    imgui
-    imgui-flame-graph
+    imgui::imgui
+    imgui_user
     ScriptLibrary
     glm::glm
     EnTT::EnTT
@@ -99,6 +99,7 @@ target_link_libraries(
     BulletCollision
     BulletSoftBody
     LinearMath
+    minizip::minizip
   PUBLIC
     SDL2::SDL2
     spdlog::spdlog
@@ -191,10 +192,6 @@ target_link_libraries(openblack PRIVATE openblack_lib)
 
 # Installation configuration
 install(TARGETS openblack RUNTIME DESTINATION bin)
-install(
-  FILES ../externals/imgui/LICENSE.txt
-  DESTINATION "share/licenses/openblack"
-  RENAME "IMGUI_LICENSE.txt")
 if(UNIX)
   install(FILES "${CMAKE_SOURCE_DIR}/assets/resource/shortcut/openblack.desktop"
           DESTINATION "share/applications")
