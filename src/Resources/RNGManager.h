@@ -10,6 +10,7 @@
 #pragma once
 
 #include <random>
+#include <atomic>
 #include <mutex>
 
 namespace openblack::ressources
@@ -25,8 +26,9 @@ public:
 private:
 	static std::mt19937 _generator;
 	static std::mutex _generator_lock;
+	static bool _debug_rng;
 	RNGManager() {};
 	RNGManager(const RNGManager&) = delete;
 	RNGManager& operator=(const RNGManager&) = delete;
-}; 
-} // namespace openblack
+};
+} // namespace openblack::ressources

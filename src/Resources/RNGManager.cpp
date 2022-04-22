@@ -20,20 +20,31 @@ RNGManager& RNGManager::GetInstance()
 
 uint16_t RNGManager::nextInt()
 {
-	std::uniform_int_distribution<uint16_t> int_dist(1,500);
-	std::lock_guard<std::mutex> safe_lock(_generator_lock);
-	return int_dist(_generator);
+	static std::uniform_int_distribution<uint16_t> int_dist(1, 500);
+	if (_debug_rng)
+	{
+		std::lock_guard<std::mutex> safe_lock(_generator_lock);
+		return int_dist(_generator);
+	}
+	thread_local std::mt19937 generator;
+	return int_dist(generator);
 }
 
 float RNGManager::nextFloat()
 {
-	std::uniform_real_distribution<float> float_dist(0.0, 1.0);
-	std::lock_guard<std::mutex> safe_lock(_generator_lock);
-	return float_dist(_generator);
+	static std::uniform_real_distribution<float> float_dist(0.0, 1.0);
+	if (_debug_rng)
+	{
+		std::lock_guard<std::mutex> safe_lock(_generator_lock);
+		return float_dist(_generator);
+	}
+	thread_local std::mt19937 generator;
+	return float_dist(generator);
 }
 
 void RNGManager::setSeed(unsigned int seed)
 {
 	std::lock_guard<std::mutex> safe_lock(_generator_lock);
+	_debug_rng = true;
 	_generator.seed(seed);
 }
