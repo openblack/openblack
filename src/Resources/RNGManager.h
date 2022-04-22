@@ -16,10 +16,7 @@ namespace openblack::ressources
 class RNGManager
 {
 public:
-    static RNGManager& GetInstance() {
-        static RNGManager rngManager;
-        return rngManager;
-    };
+    static RNGManager& GetInstance();
     uint16_t nextInt();
     void setSeed(unsigned int seed) { _generator.seed(seed); };
 
@@ -30,5 +27,3 @@ private:
     RNGManager& operator=(const RNGManager&) = delete;
 }; 
 } // namespace openblack
-
-
