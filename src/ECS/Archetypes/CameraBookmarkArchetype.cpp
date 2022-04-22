@@ -24,6 +24,10 @@ std::array<entt::entity, 8> CameraBookmarkArchetype::CreateAll()
 {
 	auto& registry = Game::instance()->GetEntityRegistry();
 	auto texture = Locator::resources::ref().GetTextures().Handle(entt::hashed_string("raw/misc0a"));
+	if (!texture)
+	{
+		throw std::runtime_error("Failed to get Camera Bookmark sprite: misc0a");
+	}
 
 	auto result = std::array<entt::entity, 8>();
 
