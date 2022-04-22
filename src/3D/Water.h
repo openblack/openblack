@@ -9,11 +9,10 @@
 
 #pragma once
 
-#include "Graphics/RenderPass.h"
-
-#include <glm/vec4.hpp>
-
 #include <memory>
+
+#include <entt/core/hashed_string.hpp>
+#include <glm/vec4.hpp>
 
 namespace openblack
 {
@@ -29,10 +28,13 @@ class Texture2D;
 class Water
 {
 public:
+	// Oddly enough the water texture is labeled Sky
+	static constexpr entt::hashed_string DiffuseTextureId = entt::hashed_string("raw/Sky");
+
 	Water();
 	~Water() = default;
 
-	[[nodiscard]] glm::vec4 GetReflectionPlane() const { return glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); };
+	[[nodiscard]] glm::vec4 GetReflectionPlane() const { return {0.0f, 1.0f, 0.0f, 0.0f}; };
 	[[nodiscard]] graphics::FrameBuffer& GetFrameBuffer() const;
 
 private:
@@ -42,7 +44,6 @@ private:
 
 	std::unique_ptr<graphics::Mesh> _mesh;
 	std::unique_ptr<graphics::FrameBuffer> _reflectionFrameBuffer;
-	std::unique_ptr<graphics::Texture2D> _texture;
 };
 
 } // namespace openblack
