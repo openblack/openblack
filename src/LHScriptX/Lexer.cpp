@@ -256,10 +256,10 @@ void Token::Print(FILE* file) const
 		fprintf(file, "\n");
 		break;
 	case Type::Identifier:
-		fprintf(file, "identifier \"%s\"", this->u_.identifierValue->c_str());
+		fprintf(file, "identifier \"%s\"", this->s_.c_str());
 		break;
 	case Type::String:
-		fprintf(file, "quoted string \"%s\"", this->u_.stringValue->c_str());
+		fprintf(file, "quoted string \"%s\"", this->s_.c_str());
 		break;
 	case Type::Integer:
 		fprintf(file, "integer %d", this->u_.integerValue);

@@ -68,13 +68,13 @@ public:
 	static Token MakeIdentifierToken(const std::string& value)
 	{
 		Token tok(Type::Identifier);
-		tok.u_.identifierValue = new std::string(value);
+		tok.s_ = value;
 		return tok;
 	}
 	static Token MakeStringToken(const std::string& value)
 	{
 		Token tok(Type::String);
-		tok.u_.stringValue = new std::string(value);
+		tok.s_ = value;
 		return tok;
 	}
 	static Token MakeIntegerToken(int value)
@@ -103,8 +103,8 @@ public:
 	[[nodiscard]] bool IsOP(Operator op) const { return this->type_ == Type::Operator && this->u_.op == op; }
 
 	// todo: assert check the type for each of these?
-	[[nodiscard]] const std::string& Identifier() const { return *this->u_.identifierValue; }
-	[[nodiscard]] const std::string& StringValue() const { return *this->u_.stringValue; }
+	[[nodiscard]] const std::string& StringValue() const { return this->s_; }
+	[[nodiscard]] const std::string& Identifier() const { return this->s_; }
 	[[nodiscard]] const int* IntegerValue() const { return &this->u_.integerValue; }
 	[[nodiscard]] const float* FloatValue() const { return &this->u_.floatValue; }
 	[[nodiscard]] Operator Op() const { return this->u_.op; }
@@ -121,12 +121,11 @@ private:
 	Type type_;
 	union
 	{
-		std::string* identifierValue;
-		std::string* stringValue;
 		int integerValue;
 		float floatValue;
 		Operator op;
 	} u_;
+	std::string s_;
 };
 
 class Lexer
