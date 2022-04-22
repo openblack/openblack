@@ -103,7 +103,7 @@ add_subdirectory(apps/lndtool)
 add_subdirectory(apps/anmtool)
 add_subdirectory(apps/morphtool)
 if(NOT CMAKE_CROSSCOMPILING)  # Requires python and running compiled apps
-  add_subdirectory(ci/mock)
+  add_subdirectory(test/mock)
 endif()
 
 # Set openblack project as default startup project in Visual Studio
