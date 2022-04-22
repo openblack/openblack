@@ -125,3 +125,11 @@ jobs:
         if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
       - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack -g ${{steps.download-mock.outputs.download-path}} -b Noop --num-frames-to-simulate 10 --log-file stdout --log-level all=debug
       - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack -g ${{steps.download-mock.outputs.download-path}} -b Noop --num-frames-to-simulate 10 --log-file stdout --log-level all=debug
+      - name: Install valgrind and libc6-dbg
+        run: |
+          sudo apt update -y
+          sudo apt install -y valgrind
+        if: matrix.os == 'ubuntu-latest'
+      - name: Check for memory leaks
+        run: valgrind --tool=memcheck --track-origins=yes --leak-check=full -s --error-exitcode=1 ${{steps.download-binary.outputs.download-path}}/Debug/openblack -g ${{steps.download-mock.outputs.download-path}} -b Noop --num-frames-to-simulate 10  --log-level all=error
+        if: matrix.os == 'ubuntu-latest'
