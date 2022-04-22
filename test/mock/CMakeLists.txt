@@ -9,6 +9,9 @@ string(REPLACE ";" "," RAW_TEXTURES_0x10000 "${RAW_TEXTURES_0x10000_ARRAY}")
 list(APPEND RAW_TEXTURES_0x30000_ARRAY ${TEXTURES_BINARY_DIR}/Sky.raw)
 string(REPLACE ";" "," RAW_TEXTURES_0x30000 "${RAW_TEXTURES_0x30000_ARRAY}")
 
+set(CITADEL_BINARY_DIR ${DATA_BINARY_DIR}/Citadel)
+set(CITADEL_OUTSIDE_BINARY_DIR ${CITADEL_BINARY_DIR}/OutsideMeshes)
+
 set(ALL_MESHES_OUTPUT ${DATA_BINARY_DIR}/AllMeshes.g3d)
 set(ALL_ANIMATIONS_OUTPUT ${DATA_BINARY_DIR}/AllAnims.anm)
 
@@ -46,6 +49,8 @@ set(QUEST_CHALLENGE_OUTPUT ${QUESTS_BINARY_DIR}/challenge.chl)
 add_custom_target(generate-mock-game-data
   COMMAND ${CMAKE_COMMAND} -E make_directory ${DATA_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TEXTURES_BINARY_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${CITADEL_BINARY_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${CITADEL_OUTSIDE_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${CREATURE_MESH_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${SKY_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TERRAIN_BINARY_DIR}
@@ -57,6 +62,8 @@ add_custom_target(generate-mock-game-data
   # Generate Mock Raw Textures
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py --output-files "${RAW_TEXTURES_0x10000}" --size 0x10000
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py --output-files "${RAW_TEXTURES_0x30000}" --size 0x30000
+  # Generate Citadel files
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py --output-files "${CITADEL_OUTSIDE_BINARY_DIR}/Entrance_l3d.zzz" --size 0x616
   # Data/AllMeshes.g3d
   COMMAND packtool --write-mesh ${ALL_MESHES_OUTPUT}
   # Data/AllAnims.anm
