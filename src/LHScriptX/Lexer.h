@@ -11,6 +11,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 #ifdef _MSC_VER
 #define __builtin_unreachable() __assume(0)
@@ -65,13 +66,13 @@ public:
 	static Token MakeInvalidToken() { return Token(Type::Invalid); }
 	static Token MakeEOFToken() { return Token(Type::EndOfFile); }
 	static Token MakeEOLToken() { return Token(Type::EndOfLine); }
-	static Token MakeIdentifierToken(const std::string& value)
+	static Token MakeIdentifierToken(std::string_view value)
 	{
 		Token tok(Type::Identifier);
 		tok.s_ = value;
 		return tok;
 	}
-	static Token MakeStringToken(const std::string& value)
+	static Token MakeStringToken(std::string_view value)
 	{
 		Token tok(Type::String);
 		tok.s_ = value;
@@ -103,8 +104,8 @@ public:
 	[[nodiscard]] bool IsOP(Operator op) const { return this->type_ == Type::Operator && this->u_.op == op; }
 
 	// todo: assert check the type for each of these?
-	[[nodiscard]] const std::string& StringValue() const { return this->s_; }
-	[[nodiscard]] const std::string& Identifier() const { return this->s_; }
+	[[nodiscard]] std::string StringValue() const { return std::string(this->s_); }
+	[[nodiscard]] std::string Identifier() const { return std::string(this->s_); }
 	[[nodiscard]] const int* IntegerValue() const { return &this->u_.integerValue; }
 	[[nodiscard]] const float* FloatValue() const { return &this->u_.floatValue; }
 	[[nodiscard]] Operator Op() const { return this->u_.op; }
@@ -125,7 +126,8 @@ private:
 		float floatValue;
 		Operator op;
 	} u_;
-	std::string s_;
+	// String is owned by Lexer source_ member
+	std::string_view s_;
 };
 
 class Lexer

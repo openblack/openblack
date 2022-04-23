@@ -184,7 +184,7 @@ Token Lexer::gatherIdentifer()
 		current_++;
 	}
 
-	return Token::MakeIdentifierToken(std::string(id_start, current_));
+	return Token::MakeIdentifierToken(std::string_view(id_start, current_));
 }
 
 Token Lexer::gatherNumber()
@@ -239,7 +239,7 @@ Token Lexer::gatherString()
 	// todo: we should check for unterminated strings
 	while (hasMore() && *current_ != '"') current_++;
 
-	return Token::MakeStringToken(std::string(string_start, current_++));
+	return Token::MakeStringToken(std::string_view(string_start, current_++));
 }
 
 void Token::Print(FILE* file) const
@@ -256,10 +256,10 @@ void Token::Print(FILE* file) const
 		fprintf(file, "\n");
 		break;
 	case Type::Identifier:
-		fprintf(file, "identifier \"%s\"", this->s_.c_str());
+		fprintf(file, "identifier \"%s\"", this->s_.data());
 		break;
 	case Type::String:
-		fprintf(file, "quoted string \"%s\"", this->s_.c_str());
+		fprintf(file, "quoted string \"%s\"", this->s_.data());
 		break;
 	case Type::Integer:
 		fprintf(file, "integer %d", this->u_.integerValue);
