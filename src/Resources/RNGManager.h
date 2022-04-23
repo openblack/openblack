@@ -31,4 +31,4 @@ private:
 	RNGManager(const RNGManager&) = delete;
 	RNGManager& operator=(const RNGManager&) = delete;
 };
-} // namespace openblack::ressources
+} // namespace openblack::resources
