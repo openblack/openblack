@@ -37,12 +37,10 @@ public:
 	    : _type(type)
 	{
 	}
-	ScriptCommandParameter(const std::string value)
+	ScriptCommandParameter(const std::string& value)
 	    : _type(ParameterType::String)
 	{
-		// TODO: Hacky, avoid new
-		_value._string = new std::string();
-		*_value._string = value;
+		_string = value;
 	}
 	ScriptCommandParameter(float value)
 	    : _type(ParameterType::Float)
@@ -58,12 +56,12 @@ public:
 
 	[[nodiscard]] ParameterType GetType() const { return _type; };
 
-	[[nodiscard]] std::string& GetString() const { return *_value._string; }
+	[[nodiscard]] const std::string& GetString() const { return _string; }
 	[[nodiscard]] float GetFloat() const { return _value._float; }
 	[[nodiscard]] int32_t GetNumber() const { return _value._number; }
 	void GetVector(float& x, float& y, float& z) const;
 
-	void SetString(const std::string& value) { *_value._string = value; }
+	void SetString(const std::string& value) { _string = value; }
 	void SetFloat(float value) { _value._float = value; };
 	void SetNumber(int32_t value) { _value._number = value; }
 	void SetVector(float x, float y, float z)
@@ -78,11 +76,11 @@ private:
 
 	union
 	{
-		std::string* _string;
 		float _float;
 		int32_t _number;
 		float _vector[3];
 	} _value;
+	std::string _string;
 };
 
 typedef std::vector<ScriptCommandParameter> ScriptCommandParameters;
