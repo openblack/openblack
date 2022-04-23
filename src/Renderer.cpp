@@ -144,11 +144,6 @@ Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererTy
 	init.resolution.reset = _bgfxReset;
 	init.callback = dynamic_cast<bgfx::CallbackI*>(_bgfxCallback.get());
 
-#ifdef __APPLE__
-	// Metal: There's some data structures that are malloc'd and initialised with this call that init relies upon.
-	bgfx::renderFrame();
-#endif
-
 	if (!bgfx::init(init))
 	{
 		throw std::runtime_error("Failed to initialize bgfx.");
