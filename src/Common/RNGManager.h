@@ -9,7 +9,6 @@
 
 #pragma once
 
-#include <atomic>
 #include <mutex>
 #include <random>
 
@@ -19,7 +18,7 @@ class RNGManager
 {
 public:
 	static RNGManager& GetInstance();
-	int NextInt(int min = 1, int max = 500);
+	uint32_t NextInt(uint32_t min, uint32_t max);
 	float NextFloat(float min = 0.0, float max = 1.0);
 	bool SetDebugMode(bool is_debug, int seed);
 
