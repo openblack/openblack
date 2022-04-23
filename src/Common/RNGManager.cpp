@@ -10,7 +10,6 @@
 #include "RNGManager.h"
 
 using namespace openblack;
-using namespace openblack::resources;
 
 RNGManager& RNGManager::GetInstance()
 {
@@ -21,9 +20,9 @@ RNGManager& RNGManager::GetInstance()
 int RNGManager::NextInt(int min, int max)
 {
 	static std::uniform_int_distribution<int> int_dist(min, max);
-	if (_debug_rng)
+	if (_debugRng)
 	{
-		std::lock_guard<std::mutex> safe_lock(_generator_lock);
+		std::lock_guard<std::mutex> safe_lock(_generatorLock);
 		return int_dist(_generator);
 	}
 	thread_local std::mt19937 generator;
@@ -33,19 +32,19 @@ int RNGManager::NextInt(int min, int max)
 float RNGManager::NextFloat(float min, float max)
 {
 	static std::uniform_real_distribution<float> float_dist(min, max);
-	if (_debug_rng)
+	if (_debugRng)
 	{
-		std::lock_guard<std::mutex> safe_lock(_generator_lock);
+		std::lock_guard<std::mutex> safe_lock(_generatorLock);
 		return float_dist(_generator);
 	}
 	thread_local std::mt19937 generator;
 	return float_dist(generator);
 }
 
-bool RNGManager::SetDebugMode(bool is_debug, int seed)
+bool RNGManager::SetDebugMode(bool isDebug, int seed)
 {
-	std::lock_guard<std::mutex> safe_lock(_generator_lock);
-	_debug_rng = true;
+	std::lock_guard<std::mutex> safe_lock(_generatorLock);
+	_debugRng = true;
 	_generator.seed(seed);
-	return _debug_rng == is_debug;
+	return _debugRng == isDebug;
 }

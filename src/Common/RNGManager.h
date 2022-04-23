@@ -13,7 +13,7 @@
 #include <mutex>
 #include <random>
 
-namespace openblack::resources
+namespace openblack
 {
 class RNGManager
 {
@@ -25,10 +25,10 @@ public:
 
 private:
 	std::mt19937 _generator;
-	std::mutex _generator_lock;
-	bool _debug_rng = false;
+	std::mutex _generatorLock;
+	bool _debugRng = false;
 	RNGManager() {};
 	RNGManager(const RNGManager&) = delete;
 	RNGManager& operator=(const RNGManager&) = delete;
 };
-} // namespace openblack::resources
+} // namespace openblack
