@@ -42,9 +42,10 @@ float RNGManager::nextFloat()
 	return float_dist(generator);
 }
 
-void RNGManager::setSeed(unsigned int seed)
+bool RNGManager::SetDebugMode(bool is_debug, int seed)
 {
 	std::lock_guard<std::mutex> safe_lock(_generator_lock);
 	_debug_rng = true;
 	_generator.seed(seed);
+	return _debug_rng == is_debug;
 }

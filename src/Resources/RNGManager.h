@@ -9,9 +9,9 @@
 
 #pragma once
 
-#include <random>
 #include <atomic>
 #include <mutex>
+#include <random>
 
 namespace openblack::ressources
 {
@@ -21,7 +21,7 @@ public:
 	static RNGManager& GetInstance();
 	uint16_t nextInt();
 	float nextFloat();
-	void setSeed(unsigned int seed);
+	bool RNGManager::SetDebugMode(bool is_debug, int seed);
 
 private:
 	static std::mt19937 _generator;
