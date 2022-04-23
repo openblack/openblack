@@ -181,8 +181,22 @@ public:
 	[[nodiscard]] Camera& GetCamera() const { return *_camera; }
 	[[nodiscard]] Sky& GetSky() const { return *_sky; }
 	[[nodiscard]] Water& GetWater() const { return *_water; }
-	LandIsland& GetLandIsland() { return *_landIsland; }
-	[[nodiscard]] LandIsland& GetLandIsland() const { return *_landIsland; }
+	LandIsland& GetLandIsland()
+	{
+		if (_landIsland == nullptr)
+		{
+			throw std::runtime_error("Cannot get landscape before any are loaded");
+		}
+		return *_landIsland;
+	}
+	[[nodiscard]] LandIsland& GetLandIsland() const
+	{
+		if (_landIsland == nullptr)
+		{
+			throw std::runtime_error("Cannot get landscape before any are loaded");
+		}
+		return *_landIsland;
+	}
 	entt::entity GetHand() const;
 	[[nodiscard]] const LHVM::LHVM& GetLhvm() { return *_lhvm; }
 	FileSystem& GetFileSystem() { return *_fileSystem; }

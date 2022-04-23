@@ -35,9 +35,7 @@ protected:
 		game_ = std::make_unique<openblack::Game>(std::move(args));
 		ASSERT_TRUE(game_->Initialize());
 	}
-	void TearDown() override {
-		game_.reset();
-	}
+	void TearDown() override { game_.reset(); }
 	std::unique_ptr<openblack::Game> game_;
 };
 
@@ -58,10 +56,11 @@ LOAD_LANDSCAPE(".\Data\Landscape\Land1.lnd")
 
 TEST_F(LoadScene, load_abode_no_landscape)
 {
-	LoadTestScene(R""""(
+	const char* sceneScript = R""""(
 VERSION(2.300000)
 CREATE_ABODE(0, "2224.63,2372.52", "CELTIC_ABODE_F", 11100, 1095, 0, 0)
-)"""");
+)"""";
+	ASSERT_THROW(LoadTestScene(sceneScript), std::runtime_error);
 }
 
 TEST_F(LoadScene, load_celtic_abode_f)
