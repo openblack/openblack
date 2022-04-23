@@ -19,8 +19,8 @@ class RNGManager
 {
 public:
 	static RNGManager& GetInstance();
-	uint16_t nextInt();
-	float nextFloat();
+	int NextInt(int min = 1, int max = 500);
+	float NextFloat(float min = 0.0, float max = 1.0);
 	bool SetDebugMode(bool is_debug, int seed);
 
 private:
