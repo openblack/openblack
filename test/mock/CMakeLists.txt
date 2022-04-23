@@ -82,7 +82,7 @@ add_custom_target(generate-mock-game-data
   COMMAND l3dtool write -o ${COFFRE_MESH_OUTPUT} -i ${COFFRE_INPUT}
   COMMAND anmtool write -o ${COFFRE_ANIM_OUTPUT} -i ${COFFRE_INPUT}
   # Scripts/info.dat
-  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py --output-files "${INFO_UNPACKED_OUTPUT}" --size 0x8E186
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_info.py --output-file "${INFO_UNPACKED_OUTPUT}"
   COMMAND packtool --write-raw ${INFO_DAT_OUTPUT} ${INFO_UNPACKED_OUTPUT}
   # Scripts/Quests/challenge.chl
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/Quests/gen_challenge.py --output-file ${QUEST_CHALLENGE_OUTPUT}
