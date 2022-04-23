@@ -10,7 +10,7 @@
 #include "RNGManager.h"
 
 using namespace openblack;
-using namespace openblack::ressources;
+using namespace openblack::resources;
 
 RNGManager& RNGManager::GetInstance()
 {

@@ -13,7 +13,7 @@
 #include <mutex>
 #include <random>
 
-namespace openblack::ressources
+namespace openblack::resources
 {
 class RNGManager
 {
@@ -21,12 +21,12 @@ public:
 	static RNGManager& GetInstance();
 	uint16_t nextInt();
 	float nextFloat();
-	bool RNGManager::SetDebugMode(bool is_debug, int seed);
+	bool SetDebugMode(bool is_debug, int seed);
 
 private:
-	static std::mt19937 _generator;
-	static std::mutex _generator_lock;
-	static bool _debug_rng;
+	std::mt19937 _generator;
+	std::mutex _generator_lock;
+	bool _debug_rng = false;
 	RNGManager() {};
 	RNGManager(const RNGManager&) = delete;
 	RNGManager& operator=(const RNGManager&) = delete;
