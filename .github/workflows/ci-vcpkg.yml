@@ -100,6 +100,7 @@ jobs:
         id: download-mock
         with:
           name: openblack-mock-data
+          path: cmake-build-presets/ninja-multi-vcpkg/test/mock
       - name: Enable execute permissions on binary
         run: chmod +x ${{steps.download-binary.outputs.download-path}}/*/*
         if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
@@ -110,6 +111,13 @@ jobs:
           sudo apt update -y
           sudo apt install -y valgrind
         if: matrix.os == 'ubuntu-latest'
-      - name: Check for memory leaks
+      - name: Check unittests for memory leaks
+        run:  |
+          for test in ${{steps.download-binary.outputs.download-path}}/Debug/test* ; do
+              echo Running valgrind on $test
+              valgrind --tool=memcheck --track-origins=yes --leak-check=full -s --error-exitcode=1 "$test"
+          done
+        if: matrix.os == 'ubuntu-latest'
+      - name: Check openblack for memory leaks
         run: valgrind --tool=memcheck --track-origins=yes --leak-check=full -s --error-exitcode=1 ${{steps.download-binary.outputs.download-path}}/Debug/openblack -g ${{steps.download-mock.outputs.download-path}} -b Noop --num-frames-to-simulate 10  --log-level all=error
         if: matrix.os == 'ubuntu-latest'
