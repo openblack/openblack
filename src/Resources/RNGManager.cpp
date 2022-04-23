@@ -30,9 +30,9 @@ int RNGManager::NextInt(int min, int max)
 	return int_dist(generator);
 }
 
-float RNGManager::nextFloat()
+float RNGManager::NextFloat(float min, float max)
 {
-	static std::uniform_real_distribution<float> float_dist(0.0, 1.0);
+	static std::uniform_real_distribution<float> float_dist(min, max);
 	if (_debug_rng)
 	{
 		std::lock_guard<std::mutex> safe_lock(_generator_lock);
