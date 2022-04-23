@@ -184,7 +184,9 @@ Token Lexer::gatherIdentifer()
 		current_++;
 	}
 
-	return Token::MakeIdentifierToken(std::string_view(id_start, current_));
+	// return Token::MakeIdentifierToken(std::string_view(id_start, current_));
+	// Temporary fix for AppleClang 13.0.0.13000029 from XCode 13.2.1
+	return Token::MakeIdentifierToken(std::string_view(&(*id_start), std::distance(id_start, current_)));
 }
 
 Token Lexer::gatherNumber()
@@ -239,7 +241,9 @@ Token Lexer::gatherString()
 	// todo: we should check for unterminated strings
 	while (hasMore() && *current_ != '"') current_++;
 
-	return Token::MakeStringToken(std::string_view(string_start, current_++));
+	// return Token::MakeStringToken(std::string_view(string_start, current_++));
+	// Temporary fix for AppleClang 13.0.0.13000029 from XCode 13.2.1
+	return Token::MakeStringToken(std::string_view(&(*string_start), std::distance(string_start, current_++)));
 }
 
 void Token::Print(FILE* file) const
