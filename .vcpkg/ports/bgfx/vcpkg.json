@@ -3,10 +3,10 @@
   "version": "1.115.8108.305",
   "$format": [
       "       ^ ^^^ ^^^^ ^^^",
-      "       | |   |    +-- bgfx.cmake sha (https://github.com/bkaradzic/bgfx.cmake / git rev-list --count HEAD)",
-      "       | |   +------- Commit number  (https://github.com/bkaradzic/bgfx / git rev-list --count HEAD)",
-      "       | +----------- API version    (from https://github.com/bkaradzic/bgfx/blob/master/scripts/bgfx.idl#L4)",
-      "       +------------- Major revision (always 1)"
+      "       | |   |    +-- bgfx.cmake commit number (https://github.com/bkaradzic/bgfx.cmake / git rev-list --count HEAD)",
+      "       | |   +------- Commit number            (https://github.com/bkaradzic/bgfx / git rev-list --count HEAD)",
+      "       | +----------- API version              (from https://github.com/bkaradzic/bgfx/blob/master/scripts/bgfx.idl#L4)",
+      "       +------------- Major revision           (always 1)"
   ],
   "port-version": 0,
   "description": "Cross-platform, graphics API agnostic, Bring Your Own Engine/Framework style rendering library.",
