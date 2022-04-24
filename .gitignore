@@ -2,6 +2,9 @@
 .idea/
 cmake-build-*/
 
+#Log files
+*.log
+
 ## make
 CMakeFiles
 */CMakeFiles

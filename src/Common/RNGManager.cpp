@@ -17,9 +17,9 @@ RNGManager& RNGManager::GetInstance()
 	return rngManager;
 }
 
-int RNGManager::NextInt(int min, int max)
+uint32_t RNGManager::NextInt(uint32_t min, uint32_t max)
 {
-	static std::uniform_int_distribution<int> int_dist(min, max);
+	static std::uniform_int_distribution<uint32_t> int_dist(min, max);
 	if (_debugRng)
 	{
 		std::lock_guard<std::mutex> safe_lock(_generatorLock);
