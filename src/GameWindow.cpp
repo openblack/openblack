@@ -9,15 +9,16 @@
 
 #include "GameWindow.h"
 
-#include "Renderer.h"
-
 #include <SDL_syswm.h>
 #include <spdlog/spdlog.h>
 #if defined(SDL_VIDEO_DRIVER_WAYLAND)
 #include <wayland-egl.h>
 #endif // defined(SDL_VIDEO_DRIVER_WAYLAND)
+#if defined(SDL_VIDEO_DRIVER_COCOA)
+void* cbSetupMetalLayer(void* wnd);
+#endif
 
-#include <iostream>
+#include "Renderer.h"
 
 using namespace openblack;
 
@@ -124,7 +125,7 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 #if defined(SDL_VIDEO_DRIVER_COCOA)
 	    if (wmi.subsystem == SDL_SYSWM_COCOA)
 	{
-		nativeWindow = wmi.info.cocoa.window;
+		nativeWindow = cbSetupMetalLayer(wmi.info.cocoa.window);
 		nativeDisplay = nullptr;
 	}
 	else
