@@ -11,7 +11,12 @@
 
 using namespace openblack;
 
-RNGManager& RNGManager::GetInstance()
+RNGManager::RNGManager()
+{
+	_debugRng = false;
+}
+
+RNGManager& RNGManager::instance()
 {
 	static RNGManager rngManager;
 	return rngManager;

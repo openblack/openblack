@@ -25,8 +25,8 @@ public:
 private:
 	std::mt19937 _generator;
 	std::mutex _generatorLock;
-	bool _debugRng = false;
-	RNGManager() {};
+	bool _debugRng;
+	RNGManager();
 	RNGManager(const RNGManager&) = delete;
 	RNGManager& operator=(const RNGManager&) = delete;
 };
