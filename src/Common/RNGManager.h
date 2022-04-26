@@ -17,9 +17,9 @@ namespace openblack
 class RNGManager
 {
 public:
-	static RNGManager& GetInstance();
-	uint32_t NextInt(uint32_t min, uint32_t max);
-	float NextFloat(float min = 0.0, float max = 1.0);
+	static RNGManager& instance();
+	uint32_t NextUint32(uint32_t min, uint32_t max);
+	float NextFloat(float min, float max);
 	bool SetDebugMode(bool is_debug, int seed);
 
 private:
