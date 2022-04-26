@@ -141,3 +141,9 @@ entt::resource_handle<L3DAnim> L3DAnimLoader::load(const std::filesystem::path& 
 
 	return animation;
 }
+
+entt::resource_handle<Level> LevelLoader::load(const std::string& name, const std::filesystem::path& path,
+                                               bool isCampaign) const
+{
+	return std::make_shared<Level>(name, path, isCampaign);
+}

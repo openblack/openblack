@@ -11,6 +11,7 @@
 
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
+#include "Level.h"
 
 #include <PackFile.h>
 #include <entt/entt.hpp>
@@ -46,5 +47,11 @@ struct L3DAnimLoader final: BaseLoader<L3DAnimLoader, L3DAnim>
 	[[nodiscard]] entt::resource_handle<L3DAnim> load(const std::vector<uint8_t>& data) const;
 
 	[[nodiscard]] entt::resource_handle<L3DAnim> load(const std::filesystem::path& path) const;
+};
+
+struct LevelLoader final: BaseLoader<LevelLoader, Level>
+{
+	[[nodiscard]] entt::resource_handle<Level> load(const std::string& name, const std::filesystem::path& path,
+	                                                bool isCampaign) const;
 };
 } // namespace openblack::resources
