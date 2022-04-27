@@ -182,3 +182,17 @@ jobs:
       - uses: reviewdog/action-suggester@v1
         with:
           tool_name: license_checker
+
+  gradle-lint:
+    name: gradle lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+      - uses: gradle/gradle-build-action@v2
+        with:
+          arguments: lint
+          build-root-directory: android
