@@ -50,7 +50,7 @@ int ListBlocks(openblack::pack::PackFile& pack)
 {
 	auto& blocks = pack.GetBlocks();
 
-	std::printf("file: %s\n", pack.GetFilename().string().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 	std::printf("%u blocks\n", static_cast<uint32_t>(blocks.size()));
 	std::printf("%u textures\n", static_cast<uint32_t>(pack.GetTextures().size()));
 	std::printf("%u meshes\n", static_cast<uint32_t>(pack.GetMeshes().size()));
@@ -65,10 +65,10 @@ int ListBlocks(openblack::pack::PackFile& pack)
 	return EXIT_SUCCESS;
 }
 
-int ListBlock(openblack::pack::PackFile& pack, const std::string& name, const std::string& outFilename)
+int ListBlock(openblack::pack::PackFile& pack, const std::string& name, const std::filesystem::path& outFilename)
 {
 	auto output_log_stream = stdout;
-	if (outFilename == "stdout")
+	if (outFilename == std::filesystem::path("stdout"))
 	{
 		output_log_stream = stderr;
 	}
@@ -78,17 +78,17 @@ int ListBlock(openblack::pack::PackFile& pack, const std::string& name, const st
 	auto block = blocks.find(name);
 	if (block == blocks.end())
 	{
-		std::fprintf(stderr, "no \"%s\" block in file: %s\n", name.c_str(), pack.GetFilename().string().c_str());
+		std::fprintf(stderr, "no \"%s\" block in file: %s\n", name.c_str(), pack.GetFilename().c_str());
 		return EXIT_FAILURE;
 	}
 
-	std::fprintf(output_log_stream, "file: %s\n", pack.GetFilename().string().c_str());
+	std::fprintf(output_log_stream, "file: %s\n", pack.GetFilename().c_str());
 	std::fprintf(output_log_stream, "name \"%s\", size %u\n", name.c_str(), static_cast<uint32_t>(block->second.size()));
 	std::fprintf(output_log_stream, "\n");
 
 	if (!outFilename.empty())
 	{
-		if (outFilename == "stdout")
+		if (outFilename == std::filesystem::path("stdout"))
 		{
 			std::cout.write(reinterpret_cast<const char*>(block->second.data()), block->second.size());
 		}
@@ -98,7 +98,7 @@ int ListBlock(openblack::pack::PackFile& pack, const std::string& name, const st
 			output.write(reinterpret_cast<const char*>(block->second.data()), block->second.size());
 		}
 
-		std::fprintf(output_log_stream, "\nBlock writen to %s\n", outFilename.c_str());
+		std::fprintf(output_log_stream, "\nBlock writen to %s\n", outFilename.string().c_str());
 	}
 
 	return EXIT_SUCCESS;
@@ -108,7 +108,7 @@ int ViewBytes(openblack::pack::PackFile& pack, const std::string& name)
 {
 	auto& block = pack.GetBlock(name);
 
-	std::printf("file: %s, block %s\n", pack.GetFilename().string().c_str(), name.c_str());
+	std::printf("file: %s, block %s\n", pack.GetFilename().c_str(), name.c_str());
 
 	PrintRawBytes(block.data(), block.size() * sizeof(block[0]));
 
@@ -121,7 +121,7 @@ int ViewInfo(openblack::pack::PackFile& pack)
 	auto lookup = pack.GetInfoBlockLookup();
 	std::sort(lookup.begin(), lookup.end(), [](const Lookup& a, Lookup& b) { return a.blockId < b.blockId; });
 
-	std::printf("file: %s\n", pack.GetFilename().string().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	for (auto& item : lookup)
 	{
@@ -135,7 +135,7 @@ int ViewBody(openblack::pack::PackFile& pack)
 {
 	const auto& lookup = pack.GetBodyBlockLookup();
 
-	std::printf("file: %s\n", pack.GetFilename().string().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	for (uint32_t i = 0; i < lookup.size(); ++i)
 	{
@@ -149,7 +149,7 @@ int ViewTextures(openblack::pack::PackFile& pack)
 {
 	auto& textures = pack.GetTextures();
 
-	std::printf("file: %s\n", pack.GetFilename().string().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	for (auto& [name, texture] : textures)
 	{
@@ -163,7 +163,7 @@ int ViewMeshes(openblack::pack::PackFile& pack)
 {
 	auto& meshes = pack.GetMeshes();
 
-	std::printf("file: %s\n", pack.GetFilename().string().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	uint32_t i = 0;
 	for (auto& mesh : meshes)
@@ -178,7 +178,7 @@ int ViewAnimations(openblack::pack::PackFile& pack)
 {
 	auto& animations = pack.GetAnimations();
 
-	std::printf("file: %s\n", pack.GetFilename().string().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	uint32_t i = 0;
 	for (auto& animation : animations)
@@ -189,11 +189,11 @@ int ViewAnimations(openblack::pack::PackFile& pack)
 	return EXIT_SUCCESS;
 }
 
-int ViewTexture(openblack::pack::PackFile& pack, const std::string& name, const std::string& outFilename)
+int ViewTexture(openblack::pack::PackFile& pack, const std::string& name, const std::filesystem::path& outFilename)
 {
 	auto& texture = pack.GetTexture(name);
 
-	std::printf("file: %s\n", pack.GetFilename().string().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	std::printf("size: %u\n", static_cast<uint32_t>(texture.header.size));
 	std::printf("id: %u\n", static_cast<uint32_t>(texture.header.id));
@@ -233,13 +233,13 @@ int ViewTexture(openblack::pack::PackFile& pack, const std::string& name, const 
 		output.write(reinterpret_cast<const char*>(&texture.ddsHeader), sizeof(texture.ddsHeader));
 		output.write(reinterpret_cast<const char*>(texture.ddsData.data()), texture.ddsData.size());
 
-		std::printf("\nTexture writen to %s\n", outFilename.c_str());
+		std::printf("\nTexture writen to %s\n", outFilename.string().c_str());
 	}
 
 	return EXIT_SUCCESS;
 }
 
-int ViewMesh(openblack::pack::PackFile& pack, uint32_t index, const std::string& outFilename)
+int ViewMesh(openblack::pack::PackFile& pack, uint32_t index, const std::filesystem::path& outFilename)
 {
 	if (index > pack.GetMeshes().size())
 	{
@@ -248,7 +248,7 @@ int ViewMesh(openblack::pack::PackFile& pack, uint32_t index, const std::string&
 
 	auto& mesh = pack.GetMesh(index);
 
-	std::printf("file: %s\n", pack.GetFilename().string().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 	std::printf("mesh: %u bytes\n", static_cast<uint32_t>(mesh.size()));
 
 	if (!outFilename.empty())
@@ -256,13 +256,13 @@ int ViewMesh(openblack::pack::PackFile& pack, uint32_t index, const std::string&
 		std::ofstream output(outFilename, std::ios::binary);
 		output.write(reinterpret_cast<const char*>(mesh.data()), mesh.size() * sizeof(mesh[0]));
 
-		std::printf("\nL3D Mesh writen to %s\n", outFilename.c_str());
+		std::printf("\nL3D Mesh writen to %s\n", outFilename.string().c_str());
 	}
 
 	return EXIT_SUCCESS;
 }
 
-int ViewAnimation(openblack::pack::PackFile& pack, uint32_t index, const std::string& outFilename)
+int ViewAnimation(openblack::pack::PackFile& pack, uint32_t index, const std::filesystem::path& outFilename)
 {
 	if (index > pack.GetAnimations().size())
 	{
@@ -271,7 +271,7 @@ int ViewAnimation(openblack::pack::PackFile& pack, uint32_t index, const std::st
 
 	const auto& animation = pack.GetAnimation(index);
 
-	std::printf("file: %s\n", pack.GetFilename().string().c_str());
+	std::printf("file: %s\n", pack.GetFilename().c_str());
 	std::printf("animation: %-32s %u bytes\n", animation.data(), static_cast<uint32_t>(animation.size()));
 
 	if (!outFilename.empty())
@@ -279,13 +279,13 @@ int ViewAnimation(openblack::pack::PackFile& pack, uint32_t index, const std::st
 		std::ofstream output(outFilename, std::ios::binary);
 		output.write(reinterpret_cast<const char*>(animation.data()), animation.size() * sizeof(animation[0]));
 
-		std::printf("\nANM file writen to %s\n", outFilename.c_str());
+		std::printf("\nANM file writen to %s\n", outFilename.string().c_str());
 	}
 
 	return EXIT_SUCCESS;
 }
 
-int WriteRaw(const std::string& outFilename, const std::vector<std::string>& inFilenames)
+int WriteRaw(const std::filesystem::path& outFilename, const std::vector<std::filesystem::path>& inFilenames)
 {
 	openblack::pack::PackFile pack;
 
@@ -294,7 +294,7 @@ int WriteRaw(const std::string& outFilename, const std::vector<std::string>& inF
 		std::ifstream file(filename, std::ios::binary);
 		if (!file.is_open())
 		{
-			std::fprintf(stderr, "Could not open source file \"%s\"\n", filename.c_str());
+			std::fprintf(stderr, "Could not open source file \"%s\"\n", filename.string().c_str());
 			return EXIT_FAILURE;
 		}
 		file.seekg(0, std::ios_base::end);
@@ -308,18 +308,11 @@ int WriteRaw(const std::string& outFilename, const std::vector<std::string>& inF
 		}
 		catch (const std::ios_base::failure& e)
 		{
-			std::fprintf(stderr, "I/O error while reading \"%s\": %s\n", filename.c_str(), e.what());
+			std::fprintf(stderr, "I/O error while reading \"%s\": %s\n", filename.string().c_str(), e.what());
 			return EXIT_FAILURE;
 		}
 
-		const char* blockName = filename.c_str();
-		const char* slash = std::max(std::strrchr(filename.c_str(), '/'), std::strrchr(filename.c_str(), '\\'));
-		if (slash)
-		{
-			blockName = slash + 1;
-		}
-
-		pack.CreateRawBlock(blockName, std::move(data));
+		pack.CreateRawBlock(filename.filename().string(), std::move(data));
 	}
 
 	pack.Write(outFilename);
@@ -327,7 +320,7 @@ int WriteRaw(const std::string& outFilename, const std::vector<std::string>& inF
 	return EXIT_SUCCESS;
 }
 
-int WriteMeshFile(const std::string& outFilename)
+int WriteMeshFile(const std::filesystem::path& outFilename)
 {
 	openblack::pack::PackFile pack;
 
@@ -340,7 +333,7 @@ int WriteMeshFile(const std::string& outFilename)
 	return EXIT_SUCCESS;
 }
 
-int WriteAnimationFile(const std::string& outFilename)
+int WriteAnimationFile(const std::filesystem::path& outFilename)
 {
 	openblack::pack::PackFile pack;
 
@@ -370,11 +363,11 @@ struct Arguments
 		WriteMeshPack,
 		WriteAnimationPack,
 	};
-	std::vector<std::string> filenames;
+	std::vector<std::filesystem::path> filenames;
 	Mode mode;
 	std::string block;
 	uint32_t blockId;
-	std::string outFilename;
+	std::filesystem::path outFilename;
 };
 
 bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
@@ -395,11 +388,11 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		("t,texture", "View texture statistics.", cxxopts::value<std::string>())
 		("A,animation-block", "List animation block statistics.")
 		("a,animation", "List animation statistics.", cxxopts::value<uint32_t>())
-		("e,extract", "Extract contents of a block to filename (use \"stdout\" for piping to other tool).", cxxopts::value<std::string>())
-		("w,write-raw", "Create Raw Data Pack.", cxxopts::value<std::string>())
-		("write-mesh", "Create Mesh Pack.", cxxopts::value<std::string>())
-		("write-animation", "Create Mesh Pack.", cxxopts::value<std::string>())
-		("pack-files", "Pack Files.", cxxopts::value<std::vector<std::string>>())
+		("e,extract", "Extract contents of a block to filename (use \"stdout\" for piping to other tool).", cxxopts::value<std::filesystem::path>())
+		("w,write-raw", "Create Raw Data Pack.", cxxopts::value<std::filesystem::path>())
+		("write-mesh", "Create Mesh Pack.", cxxopts::value<std::filesystem::path>())
+		("write-animation", "Create Mesh Pack.", cxxopts::value<std::filesystem::path>())
+		("pack-files", "Pack Files.", cxxopts::value<std::vector<std::filesystem::path>>())
 	;
 	// clang-format on
 	options.parse_positional({"pack-files"});
@@ -418,13 +411,13 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		if (result["write-mesh"].count() > 0)
 		{
 			args.mode = Arguments::Mode::WriteMeshPack;
-			args.outFilename = result["write-mesh"].as<std::string>();
+			args.outFilename = result["write-mesh"].as<std::filesystem::path>();
 			return true;
 		}
 		if (result["write-animation"].count() > 0)
 		{
 			args.mode = Arguments::Mode::WriteAnimationPack;
-			args.outFilename = result["write-animation"].as<std::string>();
+			args.outFilename = result["write-animation"].as<std::filesystem::path>();
 			return true;
 		}
 		// Following this, all args require positional arguments
@@ -435,72 +428,72 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		if (result["list-blocks"].count() > 0)
 		{
 			args.mode = Arguments::Mode::List;
-			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
 			return true;
 		}
 		if (result["view-bytes"].count() > 0)
 		{
 			args.mode = Arguments::Mode::Bytes;
-			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
 			args.block = result["view-bytes"].as<std::string>();
 			return true;
 		}
 		if (result["info-block"].count() > 0)
 		{
 			args.mode = Arguments::Mode::Info;
-			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
 			return true;
 		}
 		if (result["body-block"].count() > 0)
 		{
 			args.mode = Arguments::Mode::Body;
-			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
 			return true;
 		}
 		if (result["animation-block"].count() > 0)
 		{
 			args.mode = Arguments::Mode::Animations;
-			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
 			return true;
 		}
 		if (result["meshes-block"].count() > 0)
 		{
 			args.mode = Arguments::Mode::Meshes;
-			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
 			return true;
 		}
 		if (result["texture-block"].count() > 0)
 		{
 			args.mode = Arguments::Mode::Textures;
-			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
 			return true;
 		}
 		if (result["block"].count() > 0)
 		{
 			if (result["extract"].count() > 0)
 			{
-				args.outFilename = result["extract"].as<std::string>();
+				args.outFilename = result["extract"].as<std::filesystem::path>();
 			}
 			args.mode = Arguments::Mode::Block;
-			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
 			args.block = result["block"].as<std::string>();
 			return true;
 		}
 		if (result["write-raw"].count() > 0)
 		{
-			args.outFilename = result["write-raw"].as<std::string>();
+			args.outFilename = result["write-raw"].as<std::filesystem::path>();
 			args.mode = Arguments::Mode::WriteRaw;
-			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
 			return true;
 		}
 		if (result["animation"].count() > 0)
 		{
 			if (result["extract"].count() > 0)
 			{
-				args.outFilename = result["extract"].as<std::string>();
+				args.outFilename = result["extract"].as<std::filesystem::path>();
 			}
 			args.mode = Arguments::Mode::Animation;
-			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
 			args.blockId = result["animation"].as<uint32_t>();
 			return true;
 		}
@@ -508,10 +501,10 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		{
 			if (result["extract"].count() > 0)
 			{
-				args.outFilename = result["extract"].as<std::string>();
+				args.outFilename = result["extract"].as<std::filesystem::path>();
 			}
 			args.mode = Arguments::Mode::Mesh;
-			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
 			args.blockId = result["mesh"].as<uint32_t>();
 			return true;
 		}
@@ -519,10 +512,10 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		{
 			if (result["extract"].count() > 0)
 			{
-				args.outFilename = result["extract"].as<std::string>();
+				args.outFilename = result["extract"].as<std::filesystem::path>();
 			}
 			args.mode = Arguments::Mode::Texture;
-			args.filenames = result["pack-files"].as<std::vector<std::string>>();
+			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
 			args.block = result["texture"].as<std::string>();
 			return true;
 		}
