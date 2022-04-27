@@ -18,11 +18,11 @@ class RNGManager
 {
 public:
 	static RNGManager& instance();
-	template <typename T = std::enable_if<std::is_arithmetic_v<T>>::type>
+	template <typename T, typename E = typename std::enable_if<std::is_arithmetic_v<T>>::type>
 	T NextValue(T min, T max)
 	{
 		using dist_t =
-			std::conditional_t<std::is_integral_v<T>, std::uniform_int_distribution<T>, std::uniform_real_distribution<T>>;
+		    std::conditional_t<std::is_integral_v<T>, std::uniform_int_distribution<T>, std::uniform_real_distribution<T>>;
 		dist_t dist(min, max);
 		if (_debugRng)
 		{
@@ -43,4 +43,3 @@ private:
 	RNGManager();
 };
 } // namespace openblack
-
