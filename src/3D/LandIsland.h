@@ -10,6 +10,7 @@
 #pragma once
 
 #include <array>
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
@@ -43,7 +44,7 @@ public:
 	LandIsland();
 	~LandIsland();
 
-	void LoadFromFile(const std::string& filename);
+	void LoadFromFile(const std::filesystem::path& filename);
 
 	[[nodiscard]] float GetHeightAt(glm::vec2) const;
 	[[nodiscard]] const LandBlock* GetBlock(const glm::u8vec2& coordinates) const;

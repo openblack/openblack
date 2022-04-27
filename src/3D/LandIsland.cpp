@@ -34,18 +34,18 @@ LandIsland::LandIsland()
 
 LandIsland::~LandIsland() = default;
 
-void LandIsland::LoadFromFile(const std::string& filename)
+void LandIsland::LoadFromFile(const std::filesystem::path& path)
 {
-	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Land from file: {}", filename);
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Land from file: {}", path.string());
 	lnd::LNDFile lnd;
 
 	try
 	{
-		lnd.Open(filename);
+		lnd.Open(path);
 	}
 	catch (std::runtime_error& err)
 	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open lnd file from filesystem {}: {}", filename, err.what());
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open lnd file from filesystem {}: {}", path.string(), err.what());
 		return;
 	}
 

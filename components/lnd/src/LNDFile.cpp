@@ -119,7 +119,7 @@ LNDFile::LNDFile()
 /// Error handling
 void LNDFile::Fail(const std::string& msg)
 {
-	throw std::runtime_error("LND Error: " + msg + "\nFilename: " + _filename);
+	throw std::runtime_error("LND Error: " + msg + "\nFilename: " + _filename.string());
 }
 
 void LNDFile::ReadFile(std::istream& stream)
@@ -241,11 +241,11 @@ void LNDFile::WriteFile(std::ostream& stream) const
 	stream.write(reinterpret_cast<const char*>(_unaccounted.data()), _unaccounted.size() * sizeof(_unaccounted[0]));
 }
 
-void LNDFile::Open(const std::string& file)
+void LNDFile::Open(const std::filesystem::path& filepath)
 {
 	assert(!_isLoaded);
 
-	_filename = file;
+	_filename = filepath;
 
 	std::ifstream stream(_filename, std::ios::binary);
 
@@ -257,11 +257,11 @@ void LNDFile::Open(const std::string& file)
 	ReadFile(stream);
 }
 
-void LNDFile::Write(const std::string& file)
+void LNDFile::Write(const std::filesystem::path& filepath)
 {
 	assert(!_isLoaded);
 
-	_filename = file;
+	_filename = filepath;
 
 	std::ofstream stream(_filename, std::ios::binary);
 
