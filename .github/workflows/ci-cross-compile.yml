@@ -88,3 +88,50 @@ jobs:
 
     env:
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
+
+  assemble-android-apk:
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # This is the matrix. They form permutations.
+        os: [ ubuntu-latest, windows-latest ]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Install Linux dependencies
+        run: |
+          sudo apt update -y
+          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
+        if: startsWith(matrix.os, 'ubuntu')
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+      - name: Run Gradle Configure CMake (Debug)
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: configureCMakeDebug
+          build-root-directory: android
+      - name: Run Gradle Configure CMake (Release)
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: configureCMakeRelWithDebInfo
+          build-root-directory: android
+      - name: Run Gradle Assemble (Debug)
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: assembleDebug
+          build-root-directory: android
+      - name: Run Gradle Assemble (Release)
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: assembleRelease
+          build-root-directory: android
+      - uses: actions/upload-artifact@v3
+        with:
+          name: openblack-android-apk-${{github.sha}}
+          path: android/app/build/outputs/apk
+          if-no-files-found: error
