@@ -141,7 +141,7 @@ public:
 	void Open(const std::filesystem::path& file);
 
 	/// Write pack file to path on the filesystem
-	void Write(const std::string& file);
+	void Write(const std::filesystem::path& file);
 
 	/// Create Texture Blocks from textures
 	void CreateTextureBlocks();
@@ -158,7 +158,7 @@ public:
 	/// Create Body block from look-up table
 	void CreateBodyBlock();
 
-	[[nodiscard]] const std::filesystem::path& GetFilename() const { return _filename; }
+	[[nodiscard]] std::string GetFilename() const { return _filename.string(); }
 	[[nodiscard]] const std::map<std::string, std::vector<uint8_t>>& GetBlocks() const { return _blocks; }
 	[[nodiscard]] bool HasBlock(const std::string& name) const { return _blocks.count(name); }
 	[[nodiscard]] const std::vector<uint8_t>& GetBlock(const std::string& name) const { return _blocks.at(name); }

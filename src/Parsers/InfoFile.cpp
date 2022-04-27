@@ -27,7 +27,7 @@ bool InfoFile::LoadFromFile(const std::filesystem::path& path, InfoConstants& in
 	try
 	{
 		pack::PackFile pack;
-		pack.Open(Game::instance()->GetFileSystem().FindPath(path).string());
+		pack.Open(Game::instance()->GetFileSystem().FindPath(path));
 		data = pack.GetBlock("Info");
 		if (data.size() != sizeof(InfoConstants))
 		{
