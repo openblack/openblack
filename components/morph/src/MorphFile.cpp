@@ -171,7 +171,7 @@ std::istream& safe_getline(std::istream& is, std::string& t)
 /// Error handling
 void MorphFile::Fail(const std::string& msg)
 {
-	throw std::runtime_error("MorphFile Error: " + msg + "\nFilename: " + _filename);
+	throw std::runtime_error("MorphFile Error: " + msg + "\nFilename: " + _filename.string());
 }
 
 MorphFile::MorphFile()
@@ -181,7 +181,7 @@ MorphFile::MorphFile()
 
 MorphFile::~MorphFile() = default;
 
-void MorphFile::ReadSpecFile(const std::string& spec_file_path)
+void MorphFile::ReadSpecFile(const std::filesystem::path& spec_file_path)
 {
 	assert(!_isLoaded);
 
@@ -190,13 +190,13 @@ void MorphFile::ReadSpecFile(const std::string& spec_file_path)
 	std::ifstream spec(_animation_specs.path);
 	if (!spec.good())
 	{
-		Fail("Failed to read spec file: " + _animation_specs.path);
+		Fail("Failed to read spec file: " + _animation_specs.path.string());
 	}
 	std::string line;
 	spec >> _animation_specs.version >> std::ws;
 	if (_header.spec_file_version != _animation_specs.version)
 	{
-		Fail("Spec file version mismatch: " + _animation_specs.path);
+		Fail("Spec file version mismatch: " + _animation_specs.path.string());
 	}
 
 	[[maybe_unused]] bool reached_end = false;
@@ -219,7 +219,7 @@ void MorphFile::ReadSpecFile(const std::string& spec_file_path)
 		{
 			if (_animation_specs.animation_sets.empty())
 			{
-				Fail("Spec file has animations before categories: " + _animation_specs.path);
+				Fail("Spec file has animations before categories: " + _animation_specs.path.string());
 			}
 			_animation_specs.animation_sets.back().animations.emplace_back(
 			    AnimationDesc {line, static_cast<AnimationType>(type)});
@@ -281,7 +281,7 @@ HairGroup MorphFile::ReadHairGroup(std::istream& stream)
 	return hair_group;
 }
 
-void MorphFile::ReadFile(std::istream& stream, const std::string& specs_directory)
+void MorphFile::ReadFile(std::istream& stream, const std::filesystem::path& specs_directory)
 {
 	assert(!_isLoaded);
 
@@ -315,7 +315,7 @@ void MorphFile::ReadFile(std::istream& stream, const std::string& specs_director
 	{
 		spec_name = "hndspec" + std::to_string(_header.spec_file_version) + ".txt";
 	}
-	ReadSpecFile(specs_directory + "/" + spec_name);
+	ReadSpecFile(specs_directory / spec_name);
 	size_t num_animations = 0;
 	for (auto& anim_set : _animation_specs.animation_sets)
 	{
@@ -379,11 +379,11 @@ void MorphFile::ReadFile(std::istream& stream, const std::string& specs_director
 	_isLoaded = true;
 }
 
-void MorphFile::Open(const std::string& file, const std::string& specs_directory)
+void MorphFile::Open(const std::filesystem::path& filepath, const std::filesystem::path& specs_directory)
 {
 	assert(!_isLoaded);
 
-	_filename = file;
+	_filename = filepath;
 
 	std::ifstream stream(_filename, std::ios::binary);
 
@@ -395,7 +395,7 @@ void MorphFile::Open(const std::string& file, const std::string& specs_directory
 	ReadFile(stream, specs_directory);
 }
 
-void MorphFile::Open(const std::vector<uint8_t>& buffer, const std::string& specs_directory)
+void MorphFile::Open(const std::vector<uint8_t>& buffer, const std::filesystem::path& specs_directory)
 {
 	assert(!_isLoaded);
 
