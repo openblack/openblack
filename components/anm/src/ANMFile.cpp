@@ -102,7 +102,7 @@ struct imemstream: virtual membuf, std::istream
 /// Error handling
 void ANMFile::Fail(const std::string& msg)
 {
-	throw std::runtime_error("ANM Error: " + msg + "\nFilename: " + _filename);
+	throw std::runtime_error("ANM Error: " + msg + "\nFilename: " + _filename.string());
 }
 
 ANMFile::ANMFile()
@@ -168,11 +168,11 @@ void ANMFile::WriteFile([[maybe_unused]] std::ostream& stream) const
 	stream.write(reinterpret_cast<const char*>(&_header), sizeof(_header));
 }
 
-void ANMFile::Open(const std::string& file)
+void ANMFile::Open(const std::filesystem::path& filepath)
 {
 	assert(!_isLoaded);
 
-	_filename = file;
+	_filename = filepath;
 
 	std::ifstream stream(_filename, std::ios::binary);
 
@@ -190,16 +190,18 @@ void ANMFile::Open(const std::vector<uint8_t>& buffer)
 
 	imemstream stream(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
 
-	_filename = "buffer";
+	// File name set to "buffer" when file is load from a buffer
+	// Impact code using ANMFile::GetFilename method
+	_filename = std::filesystem::path("buffer");
 
 	ReadFile(stream);
 }
 
-void ANMFile::Write(const std::string& file)
+void ANMFile::Write(const std::filesystem::path& filepath)
 {
 	assert(!_isLoaded);
 
-	_filename = file;
+	_filename = filepath;
 
 	std::ofstream stream(_filename, std::ios::binary);
 

@@ -10,6 +10,7 @@
 #pragma once
 
 #include <array>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -55,7 +56,7 @@ protected:
 	/// True when a file has been loaded
 	bool _isLoaded;
 
-	std::string _filename;
+	std::filesystem::path _filename;
 
 	ANMHeader _header;
 	std::vector<ANMFrame> _keyframes;
@@ -75,15 +76,15 @@ public:
 	virtual ~ANMFile() = default;
 
 	/// Read anm file from the filesystem
-	void Open(const std::string& file);
+	void Open(const std::filesystem::path& filepath);
 
 	/// Read anm file from a buffer
 	void Open(const std::vector<uint8_t>& buffer);
 
 	/// Write anm file to path on the filesystem
-	void Write(const std::string& file);
+	void Write(const std::filesystem::path& filepath);
 
-	[[nodiscard]] const std::string& GetFilename() const { return _filename; }
+	[[nodiscard]] std::string GetFilename() const { return _filename.string(); }
 	[[nodiscard]] const ANMHeader& GetHeader() const { return _header; }
 	[[nodiscard]] ANMHeader& GetHeader() { return _header; }
 	[[nodiscard]] const std::vector<ANMFrame>& GetKeyframes() const { return _keyframes; }
