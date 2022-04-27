@@ -1,0 +1,3 @@
+REM This is only a Mock Land
+
+LOAD_LANDSCAPE(".\Data\Landscape\Land1.lnd")
