@@ -51,3 +51,11 @@ jobs:
       - name: Linelint
         uses: fernandrone/linelint@master
         id: linelint
+
+  copyright-check:
+    name: Copyright Check
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Check License Lines
+      uses: kt3k/license_checker@v1.0.6
