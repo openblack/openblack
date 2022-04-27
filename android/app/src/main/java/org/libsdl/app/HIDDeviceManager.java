@@ -422,20 +422,24 @@ public class HIDDeviceManager {
         ArrayList<BluetoothDevice> disconnected = new ArrayList<BluetoothDevice>();
         ArrayList<BluetoothDevice> connected = new ArrayList<BluetoothDevice>();
 
-        List<BluetoothDevice> currentConnected = mBluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
+        try {
+            List<BluetoothDevice> currentConnected = mBluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
 
-        for (BluetoothDevice bluetoothDevice : currentConnected) {
-            if (!mLastBluetoothDevices.contains(bluetoothDevice)) {
-                connected.add(bluetoothDevice);
+            for (BluetoothDevice bluetoothDevice : currentConnected) {
+                if (!mLastBluetoothDevices.contains(bluetoothDevice)) {
+                    connected.add(bluetoothDevice);
+                }
             }
-        }
-        for (BluetoothDevice bluetoothDevice : mLastBluetoothDevices) {
-            if (!currentConnected.contains(bluetoothDevice)) {
-                disconnected.add(bluetoothDevice);
+            for (BluetoothDevice bluetoothDevice : mLastBluetoothDevices) {
+                if (!currentConnected.contains(bluetoothDevice)) {
+                    disconnected.add(bluetoothDevice);
+                }
             }
-        }
 
-        mLastBluetoothDevices = currentConnected;
+            mLastBluetoothDevices = currentConnected;
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException: " + e.toString());
+        }
 
         for (BluetoothDevice bluetoothDevice : disconnected) {
             disconnectBluetoothDevice(bluetoothDevice);
@@ -494,12 +498,16 @@ public class HIDDeviceManager {
             return false;
         }
 
-        // If the device has no local name, we really don't want to try an equality check against it.
-        if (bluetoothDevice.getName() == null) {
+        try {
+            // If the device has no local name, we really don't want to try an equality check against it.
+            if (bluetoothDevice.getName() == null) {
+                return false;
+            }
+            return bluetoothDevice.getName().equals("SteamController") && ((bluetoothDevice.getType() & BluetoothDevice.DEVICE_TYPE_LE) != 0);
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException: " + e.toString());
             return false;
         }
-
-        return bluetoothDevice.getName().equals("SteamController") && ((bluetoothDevice.getType() & BluetoothDevice.DEVICE_TYPE_LE) != 0);
     }
 
     private void close() {
