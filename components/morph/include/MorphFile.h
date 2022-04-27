@@ -10,6 +10,7 @@
 #pragma once
 
 #include <array>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -124,7 +125,7 @@ struct AnimationSetDesc
 
 struct AnimationSpecs
 {
-	std::string path;
+	std::filesystem::path path;
 	uint32_t version;
 	std::vector<AnimationSetDesc> animation_sets;
 };
@@ -158,7 +159,7 @@ protected:
 	/// True when a file has been loaded
 	bool _isLoaded;
 
-	std::string _filename;
+	std::filesystem::path _filename;
 
 	MorphHeader _header;
 	AnimationSpecs _animation_specs;
@@ -172,8 +173,8 @@ protected:
 	void Fail(const std::string& msg);
 
 	/// Read file from the input source
-	virtual void ReadFile(std::istream& stream, const std::string& specs_directory);
-	void ReadSpecFile(const std::string& spec_file_path);
+	virtual void ReadFile(std::istream& stream, const std::filesystem::path& specs_directory);
+	void ReadSpecFile(const std::filesystem::path& spec_file_path);
 	std::vector<Animation> ReadAnimations(std::istream& stream, const std::vector<uint32_t>& offsets);
 	HairGroup ReadHairGroup(std::istream& stream);
 
@@ -183,12 +184,12 @@ public:
 	virtual ~MorphFile();
 
 	/// Read morph file from the filesystem
-	void Open(const std::string& file, const std::string& specs_directory);
+	void Open(const std::filesystem::path& filepath, const std::filesystem::path& specs_directory);
 
 	/// Read morph file from a buffer
-	void Open(const std::vector<uint8_t>& buffer, const std::string& specs_directory);
+	void Open(const std::vector<uint8_t>& buffer, const std::filesystem::path& specs_directory);
 
-	[[nodiscard]] const std::string& GetFilename() const { return _filename; }
+	[[nodiscard]] std::string GetFilename() const { return _filename.string(); }
 	[[nodiscard]] const MorphHeader& GetHeader() const { return _header; }
 	[[nodiscard]] const AnimationSpecs& GetAnimationSpecs() const { return _animation_specs; }
 	[[nodiscard]] const std::vector<Animation>& GetBaseAnimationSet() const { return _base_animation; }
