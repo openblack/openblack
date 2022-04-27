@@ -17,7 +17,7 @@ namespace openblack
 class RNGManager
 {
 public:
-	static RNGManager& instance();
+	RNGManager();
 	template <typename T, typename E = typename std::enable_if<std::is_arithmetic_v<T>>::type>
 	T NextValue(T min, T max)
 	{
@@ -40,6 +40,5 @@ private:
 	std::mt19937 _generator;
 	std::mutex _generatorLock;
 	bool _debugRng;
-	RNGManager();
 };
 } // namespace openblack

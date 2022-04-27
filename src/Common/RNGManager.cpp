@@ -16,12 +16,6 @@ RNGManager::RNGManager()
 	_debugRng = false;
 }
 
-RNGManager& RNGManager::instance()
-{
-	static RNGManager rngManager;
-	return rngManager;
-}
-
 bool RNGManager::SetDebugMode(bool isDebug, int seed)
 {
 	std::lock_guard<std::mutex> safe_lock(_generatorLock);

@@ -425,6 +425,7 @@ bool Game::Update()
 bool Game::Initialize()
 {
 	Locator::resources::set<resources::Resources>();
+	Locator::rng::set<RNGManager>();
 	auto& resources = Locator::resources::ref();
 	auto& meshManager = resources.GetMeshes();
 	auto& textureManager = resources.GetTextures();
