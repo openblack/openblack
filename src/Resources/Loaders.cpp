@@ -119,7 +119,7 @@ entt::resource_handle<graphics::Texture2D> Texture2DLoader::load(const std::file
 	}
 
 	auto texture = std::make_shared<graphics::Texture2D>(("raw" / rawTexturePath.stem()).string());
-	texture->Create(width, height, 1, format, graphics::Wrapping::ClampEdge, data.data(), static_cast<uint32_t>(data.size()));
+	texture->Create(width, height, 1, format, graphics::Wrapping::Repeat, data.data(), static_cast<uint32_t>(data.size()));
 
 	return texture;
 }
