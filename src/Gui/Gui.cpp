@@ -693,8 +693,6 @@ bool Gui::ShowMenu(Game& game)
 					ImGui::SetTooltip("%s", path.generic_string().c_str());
 			};
 
-			auto& filesystem = Game::instance()->GetFileSystem();
-
 			ImGui::MenuItem("Story Islands", nullptr, false, false);
 			for (auto& level : campaigns)
 			{
