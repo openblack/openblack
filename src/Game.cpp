@@ -467,6 +467,7 @@ bool Game::Initialize()
 		animationManager.Load(i, animations[i]);
 	}
 
+	// TODO(raffclar): #400: Parse level files within the resource loader
 	// Load the campaign levels
 	const auto scriptsPath = _fileSystem->FindPath(_fileSystem->ScriptsPath());
 	levelManager.Load("campaign/Land1", "Land 1", scriptsPath / "Land1.txt", true);
