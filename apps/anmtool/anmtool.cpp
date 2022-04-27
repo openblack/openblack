@@ -94,12 +94,12 @@ struct Arguments
 	Mode mode;
 	struct Read
 	{
-		std::vector<std::string> filenames;
+		std::vector<std::filesystem::path> filenames;
 	} read;
 	struct Write
 	{
-		std::string outFilename;
-		std::string gltfFile;
+		std::filesystem::path outFilename;
+		std::filesystem::path gltfFile;
 	} write;
 };
 
@@ -133,20 +133,20 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 	cxxopts::Options options("anmtool", "Inspect and extract files from LionHead ANM files.");
 
 	// clang-format off
-	options.add_options()
-		("h,help", "Display this help message.")
-		("subcommand", "Subcommand.", cxxopts::value<std::string>())
-	;
-	options.positional_help("[read|write] [OPTION...]");
-	options.add_options()
-		("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::string>>())
-		("l,list-keyframes", "List Keyframes.", cxxopts::value<std::vector<std::string>>())
-		("k,keyframe-content", "View Keyframe Contents", cxxopts::value<std::vector<std::string>>())
-	;
-	options.add_options("write from and to glTF format")
-		("o,output", "Output file (required).", cxxopts::value<std::string>())
-		("i,input-mesh", "Input file (required).", cxxopts::value<std::string>())
-	;
+  options.add_options()
+    ("h,help", "Display this help message.")
+    ("subcommand", "Subcommand.", cxxopts::value<std::string>())
+    ;
+  options.positional_help("[read|write] [OPTION...]");
+  options.add_options()
+    ("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())
+    ("l,list-keyframes", "List Keyframes.", cxxopts::value<std::vector<std::filesystem::path>>())
+    ("k,keyframe-content", "View Keyframe Contents", cxxopts::value<std::vector<std::filesystem::path>>())
+    ;
+  options.add_options("write from and to glTF format")
+    ("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())
+    ("i,input-mesh", "Input file (required).", cxxopts::value<std::filesystem::path>())
+    ;
 	// clang-format on
 
 	options.parse_positional({"subcommand"});
@@ -171,19 +171,19 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			if (result["header"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Header;
-				args.read.filenames = result["header"].as<std::vector<std::string>>();
+				args.read.filenames = result["header"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["list-keyframes"].count() > 0)
 			{
 				args.mode = Arguments::Mode::ListKeyframes;
-				args.read.filenames = result["list-keyframes"].as<std::vector<std::string>>();
+				args.read.filenames = result["list-keyframes"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["keyframe-content"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Keyframe;
-				args.read.filenames = result["keyframe-content"].as<std::vector<std::string>>();
+				args.read.filenames = result["keyframe-content"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 		}
@@ -193,10 +193,10 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			if (result["output"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Write;
-				args.write.outFilename = result["output"].as<std::string>();
+				args.write.outFilename = result["output"].as<std::filesystem::path>();
 				if (result["input-mesh"].count() > 0)
 				{
-					args.write.gltfFile = result["input-mesh"].as<std::string>();
+					args.write.gltfFile = result["input-mesh"].as<std::filesystem::path>();
 				}
 				return true;
 			}
