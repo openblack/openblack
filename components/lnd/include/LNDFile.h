@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -159,7 +160,7 @@ protected:
 	/// True when a file has been loaded
 	bool _isLoaded;
 
-	std::string _filename;
+	std::filesystem::path _filename;
 
 	LNDHeader _header;
 	std::vector<LNDLowResolutionTexture> _lowResolutionTextures;
@@ -188,12 +189,12 @@ public:
 	virtual ~LNDFile() = default;
 
 	/// Read l3d file from the filesystem
-	void Open(const std::string& file);
+	void Open(const std::filesystem::path& filepath);
 
 	/// Write l3d file to path on the filesystem
-	void Write(const std::string& file);
+	void Write(const std::filesystem::path& filepath);
 
-	[[nodiscard]] const std::string& GetFilename() const { return _filename; }
+	[[nodiscard]] std::string GetFilename() const { return _filename.string(); }
 	[[nodiscard]] const auto& GetHeader() const { return _header; }
 	[[nodiscard]] const auto& GetLowResolutionTextures() const { return _lowResolutionTextures; }
 	[[nodiscard]] const auto& GetBlocks() const { return _blocks; }

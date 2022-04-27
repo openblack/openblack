@@ -649,7 +649,7 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 		throw std::runtime_error("Could not find landscape " + path.generic_string());
 
 	_landIsland = std::make_unique<LandIsland>();
-	_landIsland->LoadFromFile(fixedName.string());
+	_landIsland->LoadFromFile(fixedName);
 
 	_dynamicsSystem->RegisterIslandRigidBodies(*_landIsland);
 }
