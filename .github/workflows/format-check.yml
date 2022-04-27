@@ -55,7 +55,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: |
-          printf 'autofix: true\nrules:\n  end-of-file:\n    enable: true\n    single-new-line: true\n' > .linelint.yml
+          printf 'autofix: true\nrules:\n  end-of-file:\n    enable: true\n' > .linelint.yml
       - uses: fernandrone/linelint@master
       - run: |
           git diff > linelint.patch
