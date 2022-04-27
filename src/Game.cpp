@@ -470,13 +470,24 @@ bool Game::Initialize()
 	// TODO(raffclar): #400: Parse level files within the resource loader
 	// Load the campaign levels
 	const auto scriptsPath = _fileSystem->FindPath(_fileSystem->ScriptsPath());
-	levelManager.Load("campaign/Land1", "Land 1", scriptsPath / "Land1.txt", true);
-	levelManager.Load("campaign/Land2", "Land 2", scriptsPath / "Land2.txt", true);
-	levelManager.Load("campaign/Land3", "Land 3", scriptsPath / "Land3.txt", true);
-	levelManager.Load("campaign/Land4", "Land 4", scriptsPath / "Land4.txt", true);
-	levelManager.Load("campaign/Land5", "Land 5", scriptsPath / "Land5.txt", true);
+	for (const auto& f : std::filesystem::directory_iterator {scriptsPath})
+	{
+		const auto& name = f.path().stem().string();
+		if (f.path().extension() != ".txt" || name.rfind("InfoScript", 0) != std::string::npos)
+		{
+			continue;
+		}
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading campaign level: {}", f.path().stem().string());
+		try
+		{
+			levelManager.Load(fmt::format("campaign/{}", name), name, f, true);
+		}
+		catch (std::runtime_error& err)
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+		}
+	}
 	// Load Playgrounds
-	levelManager.Load("playgrounds/LandT", "Tutorial Island", scriptsPath / "LandT.txt", false);
 	levelManager.Load("playgrounds/TwoGods", "Two Gods", scriptsPath / "Playgrounds" / "TwoGods.txt", false);
 	levelManager.Load("playgrounds/ThreeGods", "Three Gods", scriptsPath / "Playgrounds" / "ThreeGods.txt", false);
 	levelManager.Load("playgrounds/FourGods", "Four Gods", scriptsPath / "Playgrounds" / "FourGods.txt", false);
@@ -485,22 +496,23 @@ bool Game::Initialize()
 	{
 		if (f.path().extension() == ".txt")
 		{
-			const auto& name = f.path().stem().string();
-			if (levelManager.Contains(fmt::format("playgrounds/{}", name)))
-			{
-				// Already added
-				continue;
-			}
+			continue;
+		}
+		const auto& name = f.path().stem().string();
+		if (levelManager.Contains(fmt::format("playgrounds/{}", name)))
+		{
+			// Already added
+			continue;
+		}
 
-			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading custom level: {}", f.path().stem().string());
-			try
-			{
-				levelManager.Load(fmt::format("playgrounds/{}", name), name, f, false);
-			}
-			catch (std::runtime_error& err)
-			{
-				SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
-			}
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading custom level: {}", f.path().stem().string());
+		try
+		{
+			levelManager.Load(fmt::format("playgrounds/{}", name), name, f, false);
+		}
+		catch (std::runtime_error& err)
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
 		}
 	}
 
