@@ -76,10 +76,11 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
         }
 
         public void run() {
-            // This is executed in main thread
-            BluetoothGattCharacteristic chr;
+            try {
+                // This is executed in main thread
+                BluetoothGattCharacteristic chr;
 
-            switch (mOp) {
+                switch (mOp) {
                 case CHR_READ:
                     chr = getCharacteristic(mUuid);
                     //Log.v(TAG, "Reading characteristic " + chr.getUuid());
@@ -129,6 +130,11 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
                             mResult = true;
                         }
                     }
+                }
+            }
+            catch (SecurityException e)
+            {
+                Log.e(TAG, "SecurityException: " + e.toString());
             }
         }
 
@@ -186,14 +192,19 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
     // Because on Chromebooks we show up as a dual-mode device, it will attempt to connect TRANSPORT_AUTO, which will use TRANSPORT_BREDR instead
     // of TRANSPORT_LE.  Let's force ourselves to connect low energy.
     private BluetoothGatt connectGatt(boolean managed) {
-        if (Build.VERSION.SDK_INT >= 23) {
-            try {
-                return mDevice.connectGatt(mManager.getContext(), managed, this, TRANSPORT_LE);
-            } catch (Exception e) {
+        try {
+            if (Build.VERSION.SDK_INT >= 23) {
+                try {
+                    return mDevice.connectGatt(mManager.getContext(), managed, this, TRANSPORT_LE);
+                } catch (Exception e) {
+                    return mDevice.connectGatt(mManager.getContext(), managed, this);
+                }
+            } else {
                 return mDevice.connectGatt(mManager.getContext(), managed, this);
             }
-        } else {
-            return mDevice.connectGatt(mManager.getContext(), managed, this);
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException: " + e.toString());
+            return null;
         }
     }
 
@@ -216,16 +227,23 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
             return BluetoothProfile.STATE_DISCONNECTED;
         }
 
-        return btManager.getConnectionState(mDevice, BluetoothProfile.GATT);
+        try {
+            return btManager.getConnectionState(mDevice, BluetoothProfile.GATT);
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException: " + e.toString());
+            return BluetoothProfile.STATE_DISCONNECTED;
+        }
     }
 
     public void reconnect() {
-
-        if (getConnectionState() != BluetoothProfile.STATE_CONNECTED) {
-            mGatt.disconnect();
-            mGatt = connectGatt();
+        try {
+            if (getConnectionState() != BluetoothProfile.STATE_CONNECTED) {
+                mGatt.disconnect();
+                mGatt = connectGatt();
+            }
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException: " + e.toString());
         }
-
     }
 
     protected void checkConnectionForChromebookIssue() {
@@ -235,58 +253,63 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
             return;
         }
 
-        int connectionState = getConnectionState();
+        try {
+            int connectionState = getConnectionState();
 
-        switch (connectionState) {
-            case BluetoothProfile.STATE_CONNECTED:
-                if (!mIsConnected) {
-                    // We are in the Bad Chromebook Place.  We can force a disconnect
-                    // to try to recover.
-                    Log.v(TAG, "Chromebook: We are in a very bad state; the controller shows as connected in the underlying Bluetooth layer, but we never received a callback.  Forcing a reconnect.");
-                    mIsReconnecting = true;
-                    mGatt.disconnect();
-                    mGatt = connectGatt(false);
-                    break;
-                }
-                else if (!isRegistered()) {
-                    if (mGatt.getServices().size() > 0) {
-                        Log.v(TAG, "Chromebook: We are connected to a controller, but never got our registration.  Trying to recover.");
-                        probeService(this);
-                    }
-                    else {
-                        Log.v(TAG, "Chromebook: We are connected to a controller, but never discovered services.  Trying to recover.");
+            switch (connectionState) {
+                case BluetoothProfile.STATE_CONNECTED:
+                    if (!mIsConnected) {
+                        // We are in the Bad Chromebook Place.  We can force a disconnect
+                        // to try to recover.
+                        Log.v(TAG, "Chromebook: We are in a very bad state; the controller shows as connected in the underlying Bluetooth layer, but we never received a callback.  Forcing a reconnect.");
                         mIsReconnecting = true;
                         mGatt.disconnect();
                         mGatt = connectGatt(false);
                         break;
                     }
-                }
-                else {
-                    Log.v(TAG, "Chromebook: We are connected, and registered.  Everything's good!");
-                    return;
-                }
-                break;
+                    else if (!isRegistered()) {
+                        if (mGatt.getServices().size() > 0) {
+                            Log.v(TAG, "Chromebook: We are connected to a controller, but never got our registration.  Trying to recover.");
+                            probeService(this);
+                        }
+                        else {
+                            Log.v(TAG, "Chromebook: We are connected to a controller, but never discovered services.  Trying to recover.");
+                            mIsReconnecting = true;
+                            mGatt.disconnect();
+                            mGatt = connectGatt(false);
+                            break;
+                        }
+                    }
+                    else {
+                        Log.v(TAG, "Chromebook: We are connected, and registered.  Everything's good!");
+                        return;
+                    }
+                    break;
 
-            case BluetoothProfile.STATE_DISCONNECTED:
-                Log.v(TAG, "Chromebook: We have either been disconnected, or the Chromebook BtGatt.ContextMap bug has bitten us.  Attempting a disconnect/reconnect, but we may not be able to recover.");
+                case BluetoothProfile.STATE_DISCONNECTED:
+                    Log.v(TAG, "Chromebook: We have either been disconnected, or the Chromebook BtGatt.ContextMap bug has bitten us.  Attempting a disconnect/reconnect, but we may not be able to recover.");
 
-                mIsReconnecting = true;
-                mGatt.disconnect();
-                mGatt = connectGatt(false);
-                break;
+                    mIsReconnecting = true;
+                    mGatt.disconnect();
+                    mGatt = connectGatt(false);
+                    break;
 
-            case BluetoothProfile.STATE_CONNECTING:
-                Log.v(TAG, "Chromebook: We're still trying to connect.  Waiting a bit longer.");
-                break;
-        }
-
-        final HIDDeviceBLESteamController finalThis = this;
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                finalThis.checkConnectionForChromebookIssue();
+                case BluetoothProfile.STATE_CONNECTING:
+                    Log.v(TAG, "Chromebook: We're still trying to connect.  Waiting a bit longer.");
+                    break;
             }
-        }, CHROMEBOOK_CONNECTION_CHECK_INTERVAL);
+
+            final HIDDeviceBLESteamController finalThis = this;
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    finalThis.checkConnectionForChromebookIssue();
+                }
+            }, CHROMEBOOK_CONNECTION_CHECK_INTERVAL);
+
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException: " + e.toString());
+        }
     }
 
     private boolean isRegistered() {
@@ -327,12 +350,16 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
             }
         }
 
-        if ((mGatt.getServices().size() == 0) && mIsChromebook && !mIsReconnecting) {
-            Log.e(TAG, "Chromebook: Discovered services were empty; this almost certainly means the BtGatt.ContextMap bug has bitten us.");
-            mIsConnected = false;
-            mIsReconnecting = true;
-            mGatt.disconnect();
-            mGatt = connectGatt(false);
+        try {
+            if ((mGatt.getServices().size() == 0) && mIsChromebook && !mIsReconnecting) {
+                Log.e(TAG, "Chromebook: Discovered services were empty; this almost certainly means the BtGatt.ContextMap bug has bitten us.");
+                mIsConnected = false;
+                mIsReconnecting = true;
+                mGatt.disconnect();
+                mGatt = connectGatt(false);
+            }
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException: " + e.toString());
         }
 
         return false;
@@ -425,7 +452,11 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        mGatt.discoverServices();
+                        try {
+                            mGatt.discoverServices();
+                        } catch (SecurityException e) {
+                            Log.e(TAG, "SecurityException: " + e.toString());
+                        }
                     }
                 });
             }
@@ -438,18 +469,23 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
     }
 
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-        //Log.v(TAG, "onServicesDiscovered status=" + status);
-        if (status == 0) {
-            if (gatt.getServices().size() == 0) {
-                Log.v(TAG, "onServicesDiscovered returned zero services; something has gone horribly wrong down in Android's Bluetooth stack.");
-                mIsReconnecting = true;
-                mIsConnected = false;
-                gatt.disconnect();
-                mGatt = connectGatt(false);
+        try {
+            // Log.v(TAG, "onServicesDiscovered status=" + status);
+            if (status == 0) {
+                if (gatt.getServices().size() == 0) {
+                    Log.v(TAG, "onServicesDiscovered returned zero services; something has gone horribly wrong down in Android's Bluetooth stack.");
+                    mIsReconnecting = true;
+                    mIsConnected = false;
+                    gatt.disconnect();
+                    mGatt = connectGatt(false);
+                }
+                else {
+                    probeService(this);
+                }
             }
-            else {
-                probeService(this);
-            }
+
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException: " + e.toString());
         }
     }
 
@@ -492,20 +528,25 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
     }
 
     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-        BluetoothGattCharacteristic chr = descriptor.getCharacteristic();
-        //Log.v(TAG, "onDescriptorWrite status=" + status + " uuid=" + chr.getUuid() + " descriptor=" + descriptor.getUuid());
+        try {
+            BluetoothGattCharacteristic chr = descriptor.getCharacteristic();
+            //Log.v(TAG, "onDescriptorWrite status=" + status + " uuid=" + chr.getUuid() + " descriptor=" + descriptor.getUuid());
 
-        if (chr.getUuid().equals(inputCharacteristic)) {
-            boolean hasWrittenInputDescriptor = true;
-            BluetoothGattCharacteristic reportChr = chr.getService().getCharacteristic(reportCharacteristic);
-            if (reportChr != null) {
-                Log.v(TAG, "Writing report characteristic to enter valve mode");
-                reportChr.setValue(enterValveMode);
-                gatt.writeCharacteristic(reportChr);
+            if (chr.getUuid().equals(inputCharacteristic)) {
+                boolean hasWrittenInputDescriptor = true;
+                BluetoothGattCharacteristic reportChr = chr.getService().getCharacteristic(reportCharacteristic);
+                if (reportChr != null) {
+                    Log.v(TAG, "Writing report characteristic to enter valve mode");
+                    reportChr.setValue(enterValveMode);
+                    gatt.writeCharacteristic(reportChr);
+                }
             }
-        }
 
-        finishCurrentGattOperation();
+            finishCurrentGattOperation();
+
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException: " + e.toString());
+        }
     }
 
     public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
@@ -633,12 +674,15 @@ class HIDDeviceBLESteamController extends BluetoothGattCallback implements HIDDe
     @Override
     public void shutdown() {
         close();
-
-        BluetoothGatt g = mGatt;
-        if (g != null) {
-            g.disconnect();
-            g.close();
-            mGatt = null;
+        try {
+            BluetoothGatt g = mGatt;
+            if (g != null) {
+                g.disconnect();
+                g.close();
+                mGatt = null;
+            }
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException: " + e.toString());
         }
         mManager = null;
         mIsRegistered = false;
