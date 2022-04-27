@@ -22,30 +22,6 @@ RNGManager& RNGManager::instance()
 	return rngManager;
 }
 
-uint32_t RNGManager::NextUint32(uint32_t min, uint32_t max)
-{
-	std::uniform_int_distribution<uint32_t> int_dist(min, max);
-	if (_debugRng)
-	{
-		std::lock_guard<std::mutex> safe_lock(_generatorLock);
-		return int_dist(_generator);
-	}
-	thread_local std::mt19937 generator;
-	return int_dist(generator);
-}
-
-float RNGManager::NextFloat(float min, float max)
-{
-	std::uniform_real_distribution<float> float_dist(min, max);
-	if (_debugRng)
-	{
-		std::lock_guard<std::mutex> safe_lock(_generatorLock);
-		return float_dist(_generator);
-	}
-	thread_local std::mt19937 generator;
-	return float_dist(generator);
-}
-
 bool RNGManager::SetDebugMode(bool isDebug, int seed)
 {
 	std::lock_guard<std::mutex> safe_lock(_generatorLock);

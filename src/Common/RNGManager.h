@@ -18,8 +18,20 @@ class RNGManager
 {
 public:
 	static RNGManager& instance();
-	uint32_t NextUint32(uint32_t min, uint32_t max);
-	float NextFloat(float min, float max);
+	template <typename T = std::enable_if<std::is_arithmetic_v<T>>::type>
+	T NextValue(T min, T max)
+	{
+		using dist_t =
+			std::conditional_t<std::is_integral_v<T>, std::uniform_int_distribution<T>, std::uniform_real_distribution<T>>;
+		dist_t dist(min, max);
+		if (_debugRng)
+		{
+			std::lock_guard<std::mutex> safe_lock(_generatorLock);
+			return dist(_generator);
+		}
+		thread_local std::mt19937 generator;
+		return dist(generator);
+	};
 	bool SetDebugMode(bool is_debug, int seed);
 	RNGManager(const RNGManager&) = delete;
 	RNGManager& operator=(const RNGManager&) = delete;
