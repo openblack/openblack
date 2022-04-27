@@ -29,3 +29,4 @@ bool RNGManager::SetDebugMode(bool isDebug, int seed)
 	_generator.seed(seed);
 	return _debugRng == isDebug;
 }
+

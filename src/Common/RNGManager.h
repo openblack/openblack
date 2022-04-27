@@ -43,3 +43,4 @@ private:
 	RNGManager();
 };
 } // namespace openblack
+
