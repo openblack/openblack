@@ -41,3 +41,13 @@ jobs:
         with:
           name: formatting-fix-${{github.sha}}
           path: format.patch
+
+  linelint:
+    runs-on: ubuntu-latest
+    name: Check if all files end in newline
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Linelint
+        uses: fernandrone/linelint@master
+        id: linelint
