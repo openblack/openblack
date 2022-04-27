@@ -12,7 +12,6 @@
 #include <cinttypes>
 #include <cmath>
 
-#include <bgfx/bgfx.h>
 #include <bgfx/embedded_shader.h>
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -36,7 +35,6 @@
 #include <3D/Camera.h>
 #include <3D/Sky.h>
 #include <Common/FileSystem.h>
-#include <ECS/Components/Transform.h>
 #include <ECS/Components/Villager.h>
 #include <ECS/Registry.h>
 #include <Game.h>
