@@ -468,6 +468,7 @@ bool Game::Initialize()
 	}
 
 	// TODO(raffclar): #400: Parse level files within the resource loader
+	// TODO(raffclar): #405: Determine campaign levels from the challenge script file
 	// Load the campaign levels
 	const auto scriptsPath = _fileSystem->FindPath(_fileSystem->ScriptsPath());
 	for (const auto& f : std::filesystem::directory_iterator {scriptsPath})
