@@ -35,7 +35,7 @@ public:
 	bool SetDebugMode(bool is_debug, int seed);
 	RNGManager(const RNGManager&) = delete;
 	RNGManager& operator=(const RNGManager&) = delete;
-	
+
 private:
 	std::mt19937 _generator;
 	std::mutex _generatorLock;
