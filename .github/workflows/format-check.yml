@@ -20,9 +20,9 @@ jobs:
   # Run only if a PR and clang-format has failed
   formatting-action-suggester:
     name: clang-format fix suggester
+    runs-on: ubuntu-latest
     needs: formatting-check
     if: always() && github.event_name == 'pull_request' && needs.formatting-check.result == 'failure'
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: DoozyX/clang-format-lint-action@v0.13
@@ -30,27 +30,42 @@ jobs:
           source: 'src apps components'
           clangFormatVersion: 12
           inplace: True
+      - run: |
+          git diff > clang-format.patch
+      - uses: actions/upload-artifact@v2
+        with:
+          name: formatting-fix-${{github.sha}}
+          path: clang-format.patch
       - uses: reviewdog/action-suggester@v1
         with:
           tool_name: clang-format
 
-      - run: |
-          git diff > format.patch
+  linelint:
+    name: linelint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: fernandrone/linelint@master
 
+  linelint-action-suggester:
+    name: linelint fix suggester
+    runs-on: ubuntu-latest
+    needs: linelint
+    if: always() && github.event_name == 'pull_request' && needs.linelint.result == 'failure'
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          printf 'autofix: true\nrules:\n  end-of-file:\n    enable: true\n    single-new-line: true\n' > .linelint.yml
+      - uses: fernandrone/linelint@master
+      - run: |
+          git diff > linelint.patch
       - uses: actions/upload-artifact@v2
         with:
           name: formatting-fix-${{github.sha}}
-          path: format.patch
-
-  linelint:
-    runs-on: ubuntu-latest
-    name: Check if all files end in newline
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Linelint
-        uses: fernandrone/linelint@master
-        id: linelint
+          path: linelint.patch
+      - uses: reviewdog/action-suggester@v1
+        with:
+          tool_name: linelint
 
   copyright-check:
     name: Copyright Check
