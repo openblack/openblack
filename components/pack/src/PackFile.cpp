@@ -510,7 +510,7 @@ void PackFile::Open(const std::filesystem::path& file)
 	_isLoaded = true;
 }
 
-void PackFile::Write(const std::string& file)
+void PackFile::Write(const std::filesystem::path& file)
 {
 	assert(!_isLoaded);
 
