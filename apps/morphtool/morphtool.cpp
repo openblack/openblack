@@ -96,7 +96,7 @@ int PrintSpecs(openblack::morph::MorphFile& morph)
 
 	std::printf("file: %s\n", morph.GetFilename().c_str());
 
-	std::printf("specs path: %s\n", specs.path.c_str());
+	std::printf("specs path: %s\n", specs.path.string().c_str());
 	std::printf("specs version: %u\n", specs.version);
 
 	size_t j = 0;
@@ -335,10 +335,10 @@ struct Arguments
 		ShowExtraData,
 	};
 	Mode mode;
-	std::string spec_directory;
+	std::filesystem::path spec_directory;
 	struct Read
 	{
-		std::vector<std::string> filenames;
+		std::vector<std::filesystem::path> filenames;
 	} read;
 };
 
@@ -354,14 +354,14 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 	;
 	options.positional_help("[read|write] [OPTION...]");
 	options.add_options()
-		("l,list-details", "Print Content Details.", cxxopts::value<std::vector<std::string>>())
-		("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::string>>())
-		("d,spec-files-directory", "Directory of spec files (required).", cxxopts::value<std::string>())
-		("s,list-animation-set", "List content of spec file.", cxxopts::value<std::vector<std::string>>())
-		("b,show-base-animation-set", "Display animation data for the base animation.", cxxopts::value<std::vector<std::string>>())
-		("V,show-variant-animation-sets", "Display animation data for the variant animations.", cxxopts::value<std::vector<std::string>>())
-		("g,show-hair-groups", "Display hair group data.", cxxopts::value<std::vector<std::string>>())
-		("e,show-extra-data", "Display extra data.", cxxopts::value<std::vector<std::string>>())
+		("l,list-details", "Print Content Details.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("d,spec-files-directory", "Directory of spec files (required).", cxxopts::value<std::filesystem::path>())
+		("s,list-animation-set", "List content of spec file.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("b,show-base-animation-set", "Display animation data for the base animation.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("V,show-variant-animation-sets", "Display animation data for the variant animations.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("g,show-hair-groups", "Display hair group data.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("e,show-extra-data", "Display extra data.", cxxopts::value<std::vector<std::filesystem::path>>())
 	;
 	// clang-format on
 
@@ -390,50 +390,50 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		}
 		else
 		{
-			args.spec_directory = result["spec-files-directory"].as<std::string>();
+			args.spec_directory = result["spec-files-directory"].as<std::filesystem::path>();
 		}
 		if (result["subcommand"].as<std::string>() == "read")
 		{
 			if (result["list-details"].count() > 0)
 			{
 				args.mode = Arguments::Mode::List;
-				args.read.filenames = result["list-details"].as<std::vector<std::string>>();
+				args.read.filenames = result["list-details"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["header"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Header;
-				args.read.filenames = result["header"].as<std::vector<std::string>>();
+				args.read.filenames = result["header"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["list-animation-set"].count() > 0)
 			{
 				args.mode = Arguments::Mode::ListAnimationSet;
-				args.read.filenames = result["list-animation-set"].as<std::vector<std::string>>();
+				args.read.filenames = result["list-animation-set"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["show-base-animation-set"].count() > 0)
 			{
 				args.mode = Arguments::Mode::ShowBaseAnimationSet;
-				args.read.filenames = result["show-base-animation-set"].as<std::vector<std::string>>();
+				args.read.filenames = result["show-base-animation-set"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["show-variant-animation-sets"].count() > 0)
 			{
 				args.mode = Arguments::Mode::ShowVariantAnimationSets;
-				args.read.filenames = result["show-variant-animation-sets"].as<std::vector<std::string>>();
+				args.read.filenames = result["show-variant-animation-sets"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["show-hair-groups"].count() > 0)
 			{
 				args.mode = Arguments::Mode::ShowHairGroups;
-				args.read.filenames = result["show-hair-groups"].as<std::vector<std::string>>();
+				args.read.filenames = result["show-hair-groups"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["show-extra-data"].count() > 0)
 			{
 				args.mode = Arguments::Mode::ShowExtraData;
-				args.read.filenames = result["show-extra-data"].as<std::vector<std::string>>();
+				args.read.filenames = result["show-extra-data"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 		}
