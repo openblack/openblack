@@ -10,6 +10,7 @@
 #include <L3DFile.h>
 
 #include <cstdlib>
+#include <filesystem>
 #include <stack>
 #include <string>
 
@@ -482,17 +483,17 @@ struct Arguments
 	Mode mode;
 	struct Read
 	{
-		std::vector<std::string> filenames;
+		std::vector<std::filesystem::path> filenames;
 	} read;
 	struct Write
 	{
-		std::string outFilename;
-		std::string gltfFile;
+		std::filesystem::path outFilename;
+		std::filesystem::path gltfFile;
 	} write;
 	struct Extract
 	{
-		std::string inFilename;
-		std::string gltfFile;
+		std::filesystem::path inFilename;
+		std::filesystem::path gltfFile;
 	} extract;
 };
 
@@ -570,7 +571,7 @@ int WriteFile(const Arguments::Write& args)
 	std::string warn;
 
 	loader.SetImageLoader(NoopLoadImageDataFunction, nullptr);
-	bool ret = loader.LoadASCIIFromFile(&gltf, &err, &warn, args.gltfFile,
+	bool ret = loader.LoadASCIIFromFile(&gltf, &err, &warn, args.gltfFile.string(),
 	                                    tinygltf::REQUIRE_VERSION | tinygltf::REQUIRE_ACCESSORS | tinygltf::REQUIRE_BUFFERS |
 	                                        tinygltf::REQUIRE_BUFFER_VIEWS);
 
@@ -845,7 +846,7 @@ int ExtractFile(const Arguments::Extract& args)
 
 	// Scene
 	tinygltf::Scene scene;
-	scene.name = "l3dtool exported scene from " + args.inFilename;
+	scene.name = "l3dtool exported scene from " + args.inFilename.string();
 	scene.nodes.push_back(0);
 	gltf.scenes.push_back(scene);
 	gltf.defaultScene = 0;
@@ -1046,7 +1047,7 @@ int ExtractFile(const Arguments::Extract& args)
 	// TODO: Associate mesh and joints to node
 
 	tinygltf::TinyGLTF exporter;
-	exporter.WriteGltfSceneToFile(&gltf, args.gltfFile, true, true, true, false);
+	exporter.WriteGltfSceneToFile(&gltf, args.gltfFile.string(), true, true, true, false);
 
 	return EXIT_SUCCESS;
 }
@@ -1062,20 +1063,20 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 	;
 	options.positional_help("[read|write|extract] [OPTION...]");
 	options.add_options("read")
-		("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::string>>())
-		("m,mesh-header", "Print Mesh Headers.", cxxopts::value<std::vector<std::string>>())
-		("s,skins", "Print Skins.", cxxopts::value<std::vector<std::string>>())
-		("p,extra-points", "Print Extra Points.", cxxopts::value<std::vector<std::string>>())
-		("P,primitive-header", "Print Primitive Headers.", cxxopts::value<std::vector<std::string>>())
-		("b,bones", "Print Bones.", cxxopts::value<std::vector<std::string>>())
-		("V,vertices", "Print Vertices.", cxxopts::value<std::vector<std::string>>())
-		("I,indices", "Print Indices.", cxxopts::value<std::vector<std::string>>())
-		("L,look-up-tables", "Print Look Up Table Data.", cxxopts::value<std::vector<std::string>>())
-		("B,vertex-blend-values", "Print Vertex Blend Values.", cxxopts::value<std::vector<std::string>>())
+		("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("m,mesh-header", "Print Mesh Headers.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("s,skins", "Print Skins.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("p,extra-points", "Print Extra Points.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("P,primitive-header", "Print Primitive Headers.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("b,bones", "Print Bones.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("V,vertices", "Print Vertices.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("I,indices", "Print Indices.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("L,look-up-tables", "Print Look Up Table Data.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("B,vertex-blend-values", "Print Vertex Blend Values.", cxxopts::value<std::vector<std::filesystem::path>>())
 	;
 	options.add_options("write/extract from and to glTF format")
-		("o,output", "Output file (required).", cxxopts::value<std::string>())
-		("i,input-mesh", "Input file (required).", cxxopts::value<std::string>())
+		("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())
+		("i,input-mesh", "Input file (required).", cxxopts::value<std::filesystem::path>())
 	;
 	// clang-format on
 
@@ -1101,61 +1102,61 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			if (result["header"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Header;
-				args.read.filenames = result["header"].as<std::vector<std::string>>();
+				args.read.filenames = result["header"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["mesh-header"].count() > 0)
 			{
 				args.mode = Arguments::Mode::MeshHeader;
-				args.read.filenames = result["mesh-header"].as<std::vector<std::string>>();
+				args.read.filenames = result["mesh-header"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["skins"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Skin;
-				args.read.filenames = result["skins"].as<std::vector<std::string>>();
+				args.read.filenames = result["skins"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["extra-points"].count() > 0)
 			{
 				args.mode = Arguments::Mode::ExtraPoint;
-				args.read.filenames = result["extra-points"].as<std::vector<std::string>>();
+				args.read.filenames = result["extra-points"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["primitive-header"].count() > 0)
 			{
 				args.mode = Arguments::Mode::PrimitiveHeader;
-				args.read.filenames = result["primitive-header"].as<std::vector<std::string>>();
+				args.read.filenames = result["primitive-header"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["bones"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Bones;
-				args.read.filenames = result["bones"].as<std::vector<std::string>>();
+				args.read.filenames = result["bones"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["vertices"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Vertices;
-				args.read.filenames = result["vertices"].as<std::vector<std::string>>();
+				args.read.filenames = result["vertices"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["indices"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Indices;
-				args.read.filenames = result["indices"].as<std::vector<std::string>>();
+				args.read.filenames = result["indices"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["look-up-tables"].count() > 0)
 			{
 				args.mode = Arguments::Mode::LookUpTables;
-				args.read.filenames = result["look-up-tables"].as<std::vector<std::string>>();
+				args.read.filenames = result["look-up-tables"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["vertex-blend-values"].count() > 0)
 			{
 				args.mode = Arguments::Mode::VertexBlendValues;
-				args.read.filenames = result["vertex-blend-values"].as<std::vector<std::string>>();
+				args.read.filenames = result["vertex-blend-values"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 		}
@@ -1165,10 +1166,10 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			if (result["output"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Write;
-				args.write.outFilename = result["output"].as<std::string>();
+				args.write.outFilename = result["output"].as<std::filesystem::path>();
 				if (result["input-mesh"].count() > 0)
 				{
-					args.write.gltfFile = result["input-mesh"].as<std::string>();
+					args.write.gltfFile = result["input-mesh"].as<std::filesystem::path>();
 				}
 				return true;
 			}
@@ -1179,10 +1180,10 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			if (result["output"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Extract;
-				args.extract.inFilename = result["input-mesh"].as<std::string>();
+				args.extract.inFilename = result["input-mesh"].as<std::filesystem::path>();
 				if (result["input-mesh"].count() > 0)
 				{
-					args.extract.gltfFile = result["output"].as<std::string>();
+					args.extract.gltfFile = result["output"].as<std::filesystem::path>();
 				}
 				return true;
 			}
