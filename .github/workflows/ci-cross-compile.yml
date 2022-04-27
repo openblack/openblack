@@ -38,6 +38,11 @@ jobs:
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10 --slave /usr/bin/gcov gcov /usr/bin/gcov-10
         if: matrix.os == 'ubuntu-latest' && matrix.cc == ''      
 
+      - name: Set NDK 23
+        run: |
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV
+          echo "ANDROID_NDK_ROOT=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV
+
       # Setup nasm, needed for ffmpeg stuff
       - uses: ilammy/setup-nasm@v1
 
@@ -57,7 +62,6 @@ jobs:
         with:
           configurePreset: '${{ matrix.preset }}'
         env:
-          ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.1.7779620'
           CXX: ''
           CC: ''
 
@@ -67,7 +71,6 @@ jobs:
           configurePreset: '${{ matrix.preset }}'
           buildPreset: '${{ matrix.preset }}-debug'
         env:
-          ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.1.7779620'
           CXX: ''
           CC: ''
 
@@ -77,7 +80,6 @@ jobs:
           configurePreset: '${{ matrix.preset }}'
           buildPreset: '${{ matrix.preset }}-release'
         env:
-          ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.1.7779620'
           CXX: ''
           CC: ''
 
@@ -89,3 +91,58 @@ jobs:
 
     env:
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
+
+  assemble-android-apk:
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # This is the matrix. They form permutations.
+        os: [ ubuntu-latest, windows-latest ]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Install Linux dependencies
+        run: |
+          sudo apt update -y
+          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
+        if: matrix.os == 'ubuntu-latest'
+      - name: Set GCC 10
+        run: |
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10 --slave /usr/bin/gcov gcov /usr/bin/gcov-10
+        if: matrix.os == 'ubuntu-latest' && matrix.cc == ''
+      - name: Set NDK 23
+        run: |
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV
+          echo "ANDROID_NDK_ROOT=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+      - name: Run Gradle Configure CMake (Debug)
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: configureCMakeDebug
+          build-root-directory: android
+      - name: Run Gradle Configure CMake (Release)
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: configureCMakeRelWithDebInfo
+          build-root-directory: android
+      - name: Run Gradle Assemble (Debug)
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: assembleDebug
+          build-root-directory: android
+      - name: Run Gradle Assemble (Release)
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: assembleRelease
+          build-root-directory: android
+      - uses: actions/upload-artifact@v3
+        with:
+          name: openblack-android-apk-${{github.sha}}
+          path: android/app/build/outputs/apk
+          if-no-files-found: error
