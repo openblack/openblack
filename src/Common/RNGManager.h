@@ -31,7 +31,7 @@ public:
 		}
 		thread_local std::mt19937 generator;
 		return dist(generator);
-	};
+	}
 	bool SetDebugMode(bool is_debug, int seed);
 	RNGManager(const RNGManager&) = delete;
 	RNGManager& operator=(const RNGManager&) = delete;
