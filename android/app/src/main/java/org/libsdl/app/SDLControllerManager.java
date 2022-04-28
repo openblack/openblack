@@ -424,14 +424,15 @@ class SDLHapticHandler_API26 extends SDLHapticHandler {
                 stop(device_id);
                 return;
             }
-            try {
-                haptic.vib.vibrate(VibrationEffect.createOneShot(length, vibeValue));
-            }
-            catch (Exception e) {
-                // Fall back to the generic method, which uses DEFAULT_AMPLITUDE, but works even if
-                // something went horribly wrong with the Android 8.0 APIs.
-                haptic.vib.vibrate(length);
-            }
+            // FIXME(bwrsandman): Requires API level 26
+            //try {
+            //    haptic.vib.vibrate(VibrationEffect.createOneShot(length, vibeValue));
+            //}
+            //catch (Exception e) {
+            //    // Fall back to the generic method, which uses DEFAULT_AMPLITUDE, but works even if
+            //    // something went horribly wrong with the Android 8.0 APIs.
+            //    haptic.vib.vibrate(length);
+            //}
         }
     }
 }
@@ -753,6 +754,8 @@ class SDLGenericMotionListener_API26 extends SDLGenericMotionListener_API24 {
 
     @Override
     public boolean setRelativeMouseEnabled(boolean enabled) {
+        // FIXME(bwrsandman): Requires API 26
+        /*
         if (!SDLActivity.isDeXMode() || (Build.VERSION.SDK_INT >= 27)) {
             if (enabled) {
                 SDLActivity.getContentView().requestPointerCapture();
@@ -763,15 +766,17 @@ class SDLGenericMotionListener_API26 extends SDLGenericMotionListener_API24 {
             return true;
         } else {
             return false;
-        }
+        }*/
+        return false;
     }
 
     @Override
     public void reclaimRelativeMouseModeIfNeeded()
     {
-        if (mRelativeModeEnabled && !SDLActivity.isDeXMode()) {
+        // FIXME(bwrsandman): Requires API 26
+        /*if (mRelativeModeEnabled && !SDLActivity.isDeXMode()) {
             SDLActivity.getContentView().requestPointerCapture();
-        }
+        }*/
     }
 
     @Override
