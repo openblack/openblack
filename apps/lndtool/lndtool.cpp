@@ -330,15 +330,15 @@ struct Arguments
 	Mode mode;
 	struct Read
 	{
-		std::vector<std::string> filenames;
+		std::vector<std::filesystem::path> filenames;
 	} read;
 	struct Write
 	{
-		std::string outFilename;
+		std::filesystem::path outFilename;
 		uint16_t terrainType;
-		std::string noiseMapFile;
-		std::string bumpMapFile;
-		std::vector<std::string> materialArray;
+		std::filesystem::path noiseMapFile;
+		std::filesystem::path bumpMapFile;
+		std::vector<std::filesystem::path> materialArray;
 	} write;
 };
 
@@ -455,20 +455,20 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 	;
 	options.positional_help("[read|write] [OPTION...]");
 	options.add_options("read")
-		("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::string>>())
-		("l,low-resolution-textures", "Print Low Resolution Texture Contents.", cxxopts::value<std::vector<std::string>>())
-		("b,blocks", "Print Block Contents.", cxxopts::value<std::vector<std::string>>())
-		("c,country", "Print Country Contents.", cxxopts::value<std::vector<std::string>>())
-		("m,material", "Print Material Contents.", cxxopts::value<std::vector<std::string>>())
-		("x,extra", "Print Extra Content.", cxxopts::value<std::vector<std::string>>())
-		("u,unaccounted", "Print Unaccounted bytes Content.", cxxopts::value<std::vector<std::string>>())
+		("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("l,low-resolution-textures", "Print Low Resolution Texture Contents.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("b,blocks", "Print Block Contents.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("c,country", "Print Country Contents.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("m,material", "Print Material Contents.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("x,extra", "Print Extra Content.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("u,unaccounted", "Print Unaccounted bytes Content.", cxxopts::value<std::vector<std::filesystem::path>>())
 	;
 	options.add_options("write")
-		("o,output", "Output file (required).", cxxopts::value<std::string>())
+		("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())
 		("terrain-type", "Type of terrain (required).", cxxopts::value<uint16_t>())
-		("noise-map", "File with R8 bytes for noise map.", cxxopts::value<std::string>())
-		("bump-map", "File with R8 bytes for bump map.", cxxopts::value<std::string>())
-		("material-array", "Files with RGB5A1 bytes for material array (comma-separated).", cxxopts::value<std::vector<std::string>>())
+		("noise-map", "File with R8 bytes for noise map.", cxxopts::value<std::filesystem::path>())
+		("bump-map", "File with R8 bytes for bump map.", cxxopts::value<std::filesystem::path>())
+		("material-array", "Files with RGB5A1 bytes for material array (comma-separated).", cxxopts::value<std::vector<std::filesystem::path>>())
 	;
 	// clang-format on
 
@@ -494,43 +494,43 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			if (result["header"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Header;
-				args.read.filenames = result["header"].as<std::vector<std::string>>();
+				args.read.filenames = result["header"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["low-resolution-textures"].count() > 0)
 			{
 				args.mode = Arguments::Mode::LowResolution;
-				args.read.filenames = result["low-resolution-textures"].as<std::vector<std::string>>();
+				args.read.filenames = result["low-resolution-textures"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["blocks"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Blocks;
-				args.read.filenames = result["blocks"].as<std::vector<std::string>>();
+				args.read.filenames = result["blocks"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["country"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Countries;
-				args.read.filenames = result["country"].as<std::vector<std::string>>();
+				args.read.filenames = result["country"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["material"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Materials;
-				args.read.filenames = result["material"].as<std::vector<std::string>>();
+				args.read.filenames = result["material"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["extra"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Extra;
-				args.read.filenames = result["extra"].as<std::vector<std::string>>();
+				args.read.filenames = result["extra"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 			if (result["unaccounted"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Unaccounted;
-				args.read.filenames = result["unaccounted"].as<std::vector<std::string>>();
+				args.read.filenames = result["unaccounted"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
 		}
@@ -540,19 +540,19 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			if (result["output"].count() > 0 && result["terrain-type"].count() > 0)
 			{
 				args.mode = Arguments::Mode::Write;
-				args.write.outFilename = result["output"].as<std::string>();
+				args.write.outFilename = result["output"].as<std::filesystem::path>();
 				args.write.terrainType = result["terrain-type"].as<uint16_t>();
 				if (result["noise-map"].count() > 0)
 				{
-					args.write.noiseMapFile = result["noise-map"].as<std::string>();
+					args.write.noiseMapFile = result["noise-map"].as<std::filesystem::path>();
 				}
 				if (result["bump-map"].count() > 0)
 				{
-					args.write.bumpMapFile = result["bump-map"].as<std::string>();
+					args.write.bumpMapFile = result["bump-map"].as<std::filesystem::path>();
 				}
 				if (result["material-array"].count() > 0)
 				{
-					args.write.materialArray = result["material-array"].as<std::vector<std::string>>();
+					args.write.materialArray = result["material-array"].as<std::vector<std::filesystem::path>>();
 				}
 				return true;
 			}
