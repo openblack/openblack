@@ -20,7 +20,8 @@ android {
                 arguments '-DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake',
                           '-DANDROID_NDK_HOME='+android.ndkDirectory,
                           '-DVCPKG_TARGET_ANDROID=ON',
-                          '-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE='+android.ndkDirectory+'/build/cmake/android.toolchain.cmake'
+                          '-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE='+android.ndkDirectory+'/build/cmake/android.toolchain.cmake',
+                          '-DANDROID_PLATFORM=android-'+minSdk
             }
         }
     }
