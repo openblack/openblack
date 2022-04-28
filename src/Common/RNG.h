@@ -31,6 +31,8 @@ public:
 		}
 		return dist(generator());
 	}
+	virtual ~RNGInterface() {}
+
 protected:
 	virtual std::mt19937& generator() = 0;
 	virtual std::mutex& lockAll() = 0;
