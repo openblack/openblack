@@ -32,6 +32,7 @@
 #include "3D/Water.h"
 #include "Common/EventManager.h"
 #include "Common/FileSystem.h"
+#include "Common/RNGManager.h"
 #include "Common/StringUtils.h"
 #include "ECS/Archetypes/HandArchetype.h"
 #include "ECS/Components/Fixed.h"
@@ -425,7 +426,7 @@ bool Game::Update()
 bool Game::Initialize()
 {
 	Locator::resources::set<resources::Resources>();
-	Locator::rng::set<RNG>();
+	Locator::rng::set<RNGManager>();
 	auto& resources = Locator::resources::ref();
 	auto& meshManager = resources.GetMeshes();
 	auto& textureManager = resources.GetTextures();

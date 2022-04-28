@@ -8,6 +8,7 @@
  *****************************************************************************/
 
 #include "RNGManager.h"
+#include <ctime>
 
 using namespace openblack;
 
@@ -22,4 +23,24 @@ bool RNGManager::SetDebugMode(bool isDebug, int seed)
 	_debugRng = true;
 	_generator.seed(seed);
 	return _debugRng == isDebug;
+}
+
+std::mt19937& RNGManager::generator()
+{
+	if (isDebug())
+	{
+		return _generator;
+	}
+	thread_local std::mt19937 tgenerator(time(nullptr));
+	return tgenerator;
+}
+
+std::mutex& RNGManager::lockAll()
+{
+	return _generatorLock;
+}
+
+bool RNGManager::isDebug()
+{
+	return _debugRng;
 }
