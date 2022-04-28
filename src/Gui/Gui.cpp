@@ -919,9 +919,8 @@ std::optional<glm::uvec4> Gui::RenderVillagerName(const std::vector<glm::vec4>& 
 			boxSize.y += ImGui::CalcTextSize("Debug").y + 2 * style.FramePadding.y + style.ItemSpacing.y;
 		}
 		const float halfWidth = boxSize.x / 2.0f;
-		const ImVec2 boxPos(std::clamp(pos.x, halfWidth, ImGui::GetIO().DisplaySize.x - halfWidth) + halfWidth,
-		                    pos.y - arrowLength);
-
+		const auto clampedX = std::clamp(pos.x, halfWidth, ImGui::GetIO().DisplaySize.x - halfWidth);
+		const ImVec2 boxPos(clampedX + halfWidth, std::max(pos.y - arrowLength, .0f));
 		boxExtent = glm::uvec4(boxPos.x, boxPos.y, boxSize.x, boxSize.y);
 	}
 
