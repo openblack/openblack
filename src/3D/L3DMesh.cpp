@@ -77,8 +77,7 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 		auto subMesh = std::make_unique<L3DSubMesh>(*this);
 		if (!subMesh->Load(l3d, i))
 		{
-			auto& fileName = l3d.GetFilename();
-			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open L3DSubMesh from file: {}", fileName);
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open L3DSubMesh from file: {}", l3d.GetFilename());
 			continue;
 		}
 		if (subMesh->GetFlags().isPhysics)
@@ -110,7 +109,7 @@ bool L3DMesh::LoadFromFile(const std::filesystem::path& path)
 
 	try
 	{
-		l3d.Open(Game::instance()->GetFileSystem().FindPath(path).string());
+		l3d.Open(Game::instance()->GetFileSystem().FindPath(path));
 	}
 	catch (std::runtime_error& err)
 	{

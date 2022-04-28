@@ -193,7 +193,7 @@ void add_span(std::vector<std::span<Item>>& container, typename std::vector<Item
 /// Error handling
 void L3DFile::Fail(const std::string& msg)
 {
-	throw std::runtime_error("L3D Error: " + msg + "\nFilename: " + _filename);
+	throw std::runtime_error("L3D Error: " + msg + "\nFilename: " + _filename.string());
 }
 
 L3DFile::L3DFile()
@@ -624,11 +624,11 @@ void L3DFile::WriteFile(std::ostream& stream) const
 	}
 }
 
-void L3DFile::Open(const std::string& file)
+void L3DFile::Open(const std::filesystem::path& filepath)
 {
 	assert(!_isLoaded);
 
-	_filename = file;
+	_filename = filepath;
 
 	std::ifstream stream(_filename, std::ios::binary);
 
@@ -646,16 +646,18 @@ void L3DFile::Open(const std::vector<uint8_t>& buffer)
 
 	imemstream stream(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
 
-	_filename = "buffer";
+	// File name set to "buffer" when file is load from a buffer
+	// Impact code using L3DFile::GetFilename method
+	_filename = std::filesystem::path("buffer");
 
 	ReadFile(stream);
 }
 
-void L3DFile::Write(const std::string& file)
+void L3DFile::Write(const std::filesystem::path& filepath)
 {
 	assert(!_isLoaded);
 
-	_filename = file;
+	_filename = filepath;
 
 	std::ofstream stream(_filename, std::ios::binary);
 

@@ -10,6 +10,7 @@
 #pragma once
 
 #include <array>
+#include <filesystem>
 #include <span>
 #include <string>
 #include <vector>
@@ -233,7 +234,7 @@ protected:
 	/// True when a file has been loaded
 	bool _isLoaded;
 
-	std::string _filename;
+	std::filesystem::path _filename;
 
 	L3DHeader _header;
 	std::vector<L3DSubmeshHeader> _submeshHeaders;
@@ -267,15 +268,15 @@ public:
 	virtual ~L3DFile() = default;
 
 	/// Read l3d file from the filesystem
-	void Open(const std::string& file);
+	void Open(const std::filesystem::path& filepath);
 
 	/// Read l3d file from a buffer
 	void Open(const std::vector<uint8_t>& buffer);
 
 	/// Write l3d file to path on the filesystem
-	void Write(const std::string& file);
+	void Write(const std::filesystem::path& filepath);
 
-	[[nodiscard]] const std::string& GetFilename() const { return _filename; }
+	[[nodiscard]] std::string GetFilename() const { return _filename.string(); }
 	[[nodiscard]] const L3DHeader& GetHeader() const { return _header; }
 	[[nodiscard]] const std::vector<L3DSubmeshHeader>& GetSubmeshHeaders() const { return _submeshHeaders; }
 	[[nodiscard]] const std::vector<L3DTexture>& GetSkins() const { return _skins; }
