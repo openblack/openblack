@@ -14,15 +14,16 @@ namespace openblack
 class RNGInterface
 {
 public:
-    virtual RNGManager& getRNG() = 0;
+	virtual RNGManager& getRNG() = 0;
 };
 
 class RNG final: public RNGInterface
 {
 public:
-    RNGManager& getRNG() override { return _rngManager; }
+	RNGManager& getRNG() override { return _rngManager; }
+
 private:
-    RNGManager _rngManager;
+	RNGManager _rngManager;
 };
 
 } // namespace openblack
