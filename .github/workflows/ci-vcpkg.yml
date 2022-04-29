@@ -13,14 +13,12 @@ jobs:
       matrix:
         # This is the matrix. They form permutations.
         os: [ubuntu-latest, macos-latest, windows-latest, windows-2019]
-        config: [debug, release]
         cc: [""]
         cxx: [""]
         # These are additional individual jobs. There are no permutations of these.
         include:
           # Testing clang
           - os: ubuntu-latest
-            config: debug
             cc: clang
             cxx: clang++
 
@@ -53,13 +51,24 @@ jobs:
           vcpkgJsonGlob: 'vcpkg.json'
             # doNotCache: true
 
-      - name: Run CMake+vcpkg+Ninja+CTest to generate/build/test.
+      - name: Run CMake+vcpkg+Ninja to generate (Config).
         uses: lukka/run-cmake@v10
-        id: runcmake
         with:
           configurePreset: 'ninja-multi-vcpkg'
-          buildPreset: 'ninja-multi-vcpkg-${{ matrix.config }}'
-          testPreset: 'ninja-multi-vcpkg-${{ matrix.config }}'
+
+      - name: Run CMake+vcpkg+Ninja+CTest to build/test (Debug).
+        uses: lukka/run-cmake@v10
+        with:
+          configurePreset: 'ninja-multi-vcpkg'
+          buildPreset: 'ninja-multi-vcpkg-debug'
+          testPreset: 'ninja-multi-vcpkg-debug'
+
+      - name: Run CMake+vcpkg+Ninja+CTest to build/test (Release).
+        uses: lukka/run-cmake@v10
+        with:
+          configurePreset: 'ninja-multi-vcpkg'
+          buildPreset: 'ninja-multi-vcpkg-release'
+          testPreset: 'ninja-multi-vcpkg-release'
 
       - name: Upload compiled openblack and tools
         uses: actions/upload-artifact@v3
