@@ -17,7 +17,7 @@ namespace openblack
 class RNGInterface
 {
 public:
-	virtual bool SetDebugMode(bool is_debug, int seed) = 0;
+	virtual bool SetDebugMode(bool isDebug, int seed) = 0;
 	template <typename T, typename E = typename std::enable_if<std::is_arithmetic_v<T>>::type>
 	T NextValue(T min, T max)
 	{

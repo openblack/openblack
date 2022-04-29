@@ -22,7 +22,7 @@ public:
 	RNGManager();
 	RNGManager(const RNGManager&) = delete;
 	RNGManager& operator=(const RNGManager&) = delete;
-	bool SetDebugMode(bool is_debug, int seed);
+	bool SetDebugMode(bool isDebug, int seed);
 
 private:
 	std::mt19937& generator();
