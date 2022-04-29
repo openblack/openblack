@@ -51,10 +51,13 @@ jobs:
           vcpkgJsonGlob: 'vcpkg.json'
             # doNotCache: true
 
-      - name: Run CMake+vcpkg+Ninja to generate (Config).
+      - name: Configure CMake+vcpkg+Ninja to generate.
         uses: lukka/run-cmake@v10
         with:
           configurePreset: 'ninja-multi-vcpkg'
+        env:
+          CC: ${{matrix.cc}}
+          CXX: ${{matrix.cxx}}
 
       - name: Run CMake+vcpkg+Ninja+CTest to build/test (Debug).
         uses: lukka/run-cmake@v10
@@ -62,6 +65,9 @@ jobs:
           configurePreset: 'ninja-multi-vcpkg'
           buildPreset: 'ninja-multi-vcpkg-debug'
           testPreset: 'ninja-multi-vcpkg-debug'
+        env:
+          CC: ${{matrix.cc}}
+          CXX: ${{matrix.cxx}}
 
       - name: Run CMake+vcpkg+Ninja+CTest to build/test (Release).
         uses: lukka/run-cmake@v10
@@ -69,6 +75,9 @@ jobs:
           configurePreset: 'ninja-multi-vcpkg'
           buildPreset: 'ninja-multi-vcpkg-release'
           testPreset: 'ninja-multi-vcpkg-release'
+        env:
+          CC: ${{matrix.cc}}
+          CXX: ${{matrix.cxx}}
 
       - name: Upload compiled openblack and tools
         uses: actions/upload-artifact@v3

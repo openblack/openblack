@@ -50,12 +50,14 @@ jobs:
         with:
           vcpkgJsonGlob: 'vcpkg.json'
 
-      - name: Run CMake+vcpkg to generate (Config).
+      - name: Configure CMake+vcpkg.
         uses: lukka/run-cmake@v10
         with:
           configurePreset: '${{ matrix.preset }}'
         env:
           ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.1.7779620'
+          CXX: ''
+          CC: ''
 
       - name: Run CMake+vcpkg to build (Debug).
         uses: lukka/run-cmake@v10
@@ -64,6 +66,8 @@ jobs:
           buildPreset: '${{ matrix.preset }}-debug'
         env:
           ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.1.7779620'
+          CXX: ''
+          CC: ''
 
       - name: Run CMake+vcpkg to build (Release).
         uses: lukka/run-cmake@v10
@@ -72,6 +76,8 @@ jobs:
           buildPreset: '${{ matrix.preset }}-release'
         env:
           ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.1.7779620'
+          CXX: ''
+          CC: ''
 
       - uses: actions/upload-artifact@v3
         with:
