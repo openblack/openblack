@@ -22,6 +22,7 @@
       "name": "template-android-vcpkg",
       "hidden": true,
       "binaryDir": "${sourceDir}/cmake-build-presets/${presetName}",
+      "generator": "Ninja Multi-Config",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": {
           "type": "FILEPATH",
