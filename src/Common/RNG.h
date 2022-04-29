@@ -31,7 +31,7 @@ public:
 		}
 		return dist(generator());
 	}
-	virtual ~RNGInterface() {}
+	virtual ~RNGInterface() = default;
 
 protected:
 	virtual std::mt19937& generator() = 0;
