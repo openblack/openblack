@@ -9,12 +9,13 @@ android {
         applicationId "org.openblack.app"
         minSdk 21
         targetSdk 32
+        ndkVersion "23.1.7779620"
         versionCode 1
         versionName "0.1.0"
 
         externalNativeBuild {
             cmake {
-                cppFlags "-std=c++17"
+                cppFlags "-std=c++20"
                 targets "openblack_lib"
                 arguments '-DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake',
                           '-DANDROID_NDK_HOME='+android.ndkDirectory,
