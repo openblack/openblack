@@ -12,32 +12,46 @@
 
 using namespace openblack;
 
-RNGManager::RNGManager()
+bool RNGManager::SetSeed(int seed)
 {
-	_debugRng = false;
-}
-
-bool RNGManager::SetDebugMode(bool isDebug, int seed)
-{
-	std::lock_guard<std::mutex> safe_lock(_generatorLock);
-	_debugRng = true;
-	_generator.seed(seed);
-	return _debugRng == isDebug;
+	return false;
 }
 
 std::mt19937& RNGManager::generator()
 {
 	thread_local std::mt19937 tGenerator(static_cast<unsigned int>(time(nullptr)));
-	std::mt19937& rGenerator = (isDebug()) ? _generator : tGenerator;
-	return rGenerator;
+	return tGenerator;
 }
 
 std::mutex& RNGManager::lockAll()
 {
+	std::mutex rMutex;
+	return rMutex;
+}
+
+bool RNGManager::lockCheck()
+{
+	return false;
+}
+
+bool RNGManagerDebug::SetSeed(int seed)
+{
+	std::lock_guard<std::mutex> safe_lock(_generatorLock);
+	_generator.seed(seed);
+	return true;
+}
+
+std::mt19937& RNGManagerDebug::generator()
+{
+	return _generator;
+}
+
+std::mutex& RNGManagerDebug::lockAll()
+{
 	return _generatorLock;
 }
 
-bool RNGManager::isDebug()
+bool RNGManagerDebug::lockCheck()
 {
-	return _debugRng;
+	return true;
 }
