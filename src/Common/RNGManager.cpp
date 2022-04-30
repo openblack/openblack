@@ -27,8 +27,8 @@ bool RNGManager::SetDebugMode(bool isDebug, int seed)
 
 std::mt19937& RNGManager::generator()
 {
-	thread_local std::mt19937 tGenerator(time(nullptr));
-	std::mt19937& rGenerator = (isDebug()) ? _generator:tGenerator;
+	thread_local std::mt19937 tGenerator(static_cast<unsigned int>(time(nullptr)));
+	std::mt19937& rGenerator = (isDebug()) ? _generator : tGenerator;
 	return rGenerator;
 }
 
