@@ -1,5 +1,9 @@
 find_package (Python3 COMPONENTS Interpreter)
 
+add_executable(gen_info gen_info.cpp)
+target_include_directories(gen_info PRIVATE ../../src)
+target_link_libraries(gen_info PRIVATE glm::glm cxxopts::cxxopts)
+
 set(DATA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data)
 
 set(TEXTURES_BINARY_DIR ${DATA_BINARY_DIR}/Textures)
@@ -82,7 +86,7 @@ add_custom_target(generate-mock-game-data
   COMMAND l3dtool write -o ${COFFRE_MESH_OUTPUT} -i ${COFFRE_INPUT}
   COMMAND anmtool write -o ${COFFRE_ANIM_OUTPUT} -i ${COFFRE_INPUT}
   # Scripts/info.dat
-  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_info.py --output-file "${INFO_UNPACKED_OUTPUT}"
+  COMMAND gen_info --output-file "${INFO_UNPACKED_OUTPUT}"
   COMMAND packtool --write-raw ${INFO_DAT_OUTPUT} ${INFO_UNPACKED_OUTPUT}
   # Scripts/Quests/challenge.chl
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/Quests/gen_challenge.py --output-file ${QUEST_CHALLENGE_OUTPUT}
