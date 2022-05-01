@@ -72,9 +72,19 @@ int main(int argc, char* argv[])
 	openblack::InfoConstants constants;
 	std::memset(&constants, 0, sizeof(constants));
 
-	// Add abode name used in scene test
-	const std::string abodeDebugName = "ABODE_F";
-	std::memcpy(constants.abode[0].debugString.data(), abodeDebugName.c_str(), abodeDebugName.length());
+	// Add celtic abode name and mesh ids used in scene test
+	for (uint8_t i = 0; i < 6; ++i)
+	{
+		auto& abode = constants.abode[i];
+		auto abodeDebugName = std::string("ABODE_") + openblack::AbodeNumberStrs[i].data();
+		abode.abodeNumber = static_cast<openblack::AbodeNumber>(i);
+		std::memcpy(abode.debugString.data(), abodeDebugName.c_str(), abodeDebugName.length());
+		abode.meshId = static_cast<openblack::MeshId>(static_cast<uint32_t>(openblack::MeshId::BuildingCeltic1) + i);
+	}
+	std::string townCentreDebugName = "ABODE_TOWN_CENTRE";
+	constants.abode[12].abodeNumber = openblack::AbodeNumber::TownCentre;
+	std::memcpy(constants.abode[12].debugString.data(), townCentreDebugName.c_str(), townCentreDebugName.length());
+	constants.abode[12].meshId = openblack::MeshId::BuildingCelticVillageCentre;
 
 	std::ofstream output(args.outFilename, std::ios::binary);
 	output.write(reinterpret_cast<const char*>(&constants), sizeof(constants));

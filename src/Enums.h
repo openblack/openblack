@@ -255,22 +255,22 @@ enum class AbodeNumber : int32_t
 };
 
 static constexpr std::array<std::string_view, static_cast<uint32_t>(AbodeNumber::_COUNT)> AbodeNumberStrs = {
-    "Invalid",        //
-    "A",              //
-    "B",              //
-    "C",              //
-    "D",              //
-    "E",              //
-    "F",              //
-    "Totem",          //
-    "StoragePit",     //
-    "Creche",         //
-    "Workshop",       //
-    "Wonder",         //
-    "Graveyard",      //
-    "TownCentre",     //
-    "FootballPitch",  //
-    "SpellDispenser", //
+    "A",               //
+    "B",               //
+    "C",               //
+    "D",               //
+    "E",               //
+    "F",               //
+    "TOTEM",           //
+    "STORAGE_PIT",     //
+    "CRECHE",          //
+    "WORKSHOP",        //
+    "WONDER",          //
+    "GRAVEYARD",       //
+    "TOWN_CENTRE",     //
+    "FOOTBALL_PITCH",  //
+    "SPELL_DISPENSER", //
+    "FIELD",           //
 };
 
 enum class SpellSeedType : int
