@@ -23,6 +23,10 @@ set(INTERMEDIATE_DATA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Intermediate)
 set(INTERMEDIATE_MESH_BINARY_DIR ${INTERMEDIATE_DATA_BINARY_DIR}/Meshes)
 set(DUMMY_MESH_FILE ${INTERMEDIATE_MESH_BINARY_DIR}/Dummy.gltf)
 set(DUMMY_MESH_OUTPUT ${INTERMEDIATE_MESH_BINARY_DIR}/Dummy.l3d)
+set(ABODE_MESH_FILE ${INTERMEDIATE_MESH_BINARY_DIR}/BuildingCeltic5A.gltf)
+set(ABODE_MESH_OUTPUT ${INTERMEDIATE_MESH_BINARY_DIR}/BuildingCeltic5A.l3d)
+set(VILLAGE_CENTRE_MESH_FILE ${INTERMEDIATE_MESH_BINARY_DIR}/BuildingCelticVillageCentre.gltf)
+set(VILLAGE_CENTRE_MESH_OUTPUT ${INTERMEDIATE_MESH_BINARY_DIR}/BuildingCelticVillageCentre.l3d)
 
 set(CREATURE_MESH_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/CreatureMesh)
 set(HAND_BASE_OUTPUT ${CREATURE_MESH_BINARY_DIR}/Hand_Boned_Base2.l3d)
@@ -79,7 +83,11 @@ add_custom_target(generate-mock-game-data
   # Dummy mesh for 626 meshes
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py --output-file ${DUMMY_MESH_FILE}
   COMMAND l3dtool write -o ${DUMMY_MESH_OUTPUT} -i ${DUMMY_MESH_FILE}
-  COMMAND packtool --write-mesh ${ALL_MESHES_OUTPUT} ${DUMMY_MESH_OUTPUT}:626
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py --output-file ${ABODE_MESH_FILE} --translate-positions 0.0883901119,0.0,0.188308239 --scale-positions 6.33014917,1.0,6.33014917
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py --output-file ${VILLAGE_CENTRE_MESH_FILE} --translate-positions 0.00188350677,0.0,0.22130537 --scale-positions 12.9809408,1.0,12.9809408
+  COMMAND l3dtool write -o ${ABODE_MESH_OUTPUT} -i ${ABODE_MESH_FILE}
+  COMMAND l3dtool write -o ${VILLAGE_CENTRE_MESH_OUTPUT} -i ${VILLAGE_CENTRE_MESH_FILE}
+  COMMAND packtool --write-mesh ${ALL_MESHES_OUTPUT} ${DUMMY_MESH_OUTPUT}:626 ${ABODE_MESH_OUTPUT}:79:1 ${VILLAGE_CENTRE_MESH_OUTPUT}:166:1
   # Data/AllAnims.anm
   COMMAND packtool --write-animation ${ALL_ANIMATIONS_OUTPUT}
   # Data/CreatureMesh/Hand_Boned_Base2.l3d
@@ -108,6 +116,10 @@ add_custom_target(generate-mock-game-data
     ${SKY_MESH_FILE}
     ${DUMMY_MESH_FILE}
     ${DUMMY_MESH_OUTPUT}
+    ${ABODE_MESH_FILE}
+    ${ABODE_MESH_OUTPUT}
+    ${VILLAGE_CENTRE_MESH_FILE}
+    ${VILLAGE_CENTRE_MESH_OUTPUT}
     ${TERRAIN_NOISE_MAP}
     ${TERRAIN_BUMP_MAP}
     ${TERRAIN_MATERIAL_ARRAY}
