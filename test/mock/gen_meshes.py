@@ -7,10 +7,10 @@ import struct
 import base64
 
 positions = [
-    -1.0, 1.0, 0.0,
-    1.0, 1.0, 0.0,
-    1.0, -1.0, 0.0,
-    -1.0, -1.0, 0.0,
+    -1.0, 1.0, -1.0,
+    1.0, 1.0, 1.0,
+    1.0, -1.0, 1.0,
+    -1.0, -1.0, -1.0,
 ]
 
 uvs = [
@@ -32,7 +32,18 @@ indices = [
     2, 3, 0,
 ]
 
-def main(filename):
+def float3(s):
+    try:
+        x, y, z = map(float, s.split(','))
+        return x, y, z
+    except:
+        raise argparse.ArgumentTypeError("Float3 must be x,y,z")
+
+def main(output_file, translate_positions=None, scale_positions=None):
+    if translate_positions is None:
+        translate_positions = (0.0, 0.0, 0.0)
+    if scale_positions is None:
+        scale_positions = (1.0, 1.0, 1.0)
 
     # Create glTF mesh
     gltf_mesh = {}
@@ -42,7 +53,13 @@ def main(filename):
     }
     gltf_mesh["asset"] = asset
 
-    packed_position = struct.pack('<{}f'.format(len(positions)), *positions)
+    scaled_positions = positions
+    for i in range(len(scaled_positions) // 3):
+        scaled_positions[3 * i] = scaled_positions[3 * i] * scale_positions[0] + translate_positions[0]
+        scaled_positions[3 * i + 1] = scaled_positions[3 * i + 1] * scale_positions[1] + translate_positions[1]
+        scaled_positions[3 * i + 2] = scaled_positions[3 * i + 2] * scale_positions[2] + translate_positions[2]
+
+    packed_position = struct.pack('<{}f'.format(len(scaled_positions)), *scaled_positions)
     packed_uvs = struct.pack('<{}f'.format(len(uvs)), *uvs)
     packed_normals = struct.pack('<{}f'.format(len(normals)), *normals)
     packed_indices = struct.pack('<{}H'.format(len(indices)), *indices)
@@ -145,12 +162,13 @@ def main(filename):
         "uv2": "",
     }
 
-    with open(filename, "w") as f:
-        json.dump(gltf_mesh, f, sort_keys=True, indent=4)
+    json.dump(gltf_mesh, output_file, sort_keys=True, indent=4)
 
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Generate Dummy Mesh.')
-    parser.add_argument('--output-file', required=True, help='Where to generate mesh.')
+    parser.add_argument('--translate-positions', type=float3, default=(0.0, 0.0, 0.0), help='Offset positions (for bounding box).')
+    parser.add_argument('--scale-positions', type=float3, default=(1.0, 1.0, 1.0), help='Scale positions (for bounding box).')
+    parser.add_argument('--output-file', type=argparse.FileType('w'), required=True, help='Where to generate mesh.')
     args = parser.parse_args()
-    main(args.output_file)
+    main(args.output_file, args.translate_positions, args.scale_positions)

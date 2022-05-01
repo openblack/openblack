@@ -34,7 +34,8 @@ def import_gen_meshes():
 def main(dir_name):
     gen_meshes = import_gen_meshes()
 
-    gen_meshes.main(os.path.join(dir_name, "sky.gltf"))
+    with open(os.path.join(dir_name, "sky.gltf"), "w") as f:
+        gen_meshes.main(f)
 
     for t in textures:
         with open(os.path.join(dir_name, t), "wb") as f:
