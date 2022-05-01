@@ -377,12 +377,14 @@ void PathfindingSystem::Update()
 
 	// 2.  LINEAR, LINEAR_CW, LINEAR_CCW
 	//         If we have a number of turns to an obstacle but no obstacle saved: do linear_square_sweep to find one
-	registry.Each<const MoveStateLinearTag, Transform, WallHug>(
-	    [](entt::entity entity, const MoveStateLinearTag&, Transform& transform, WallHug& wallHug) {
+	registry.Each<const MoveStateLinearTag, Transform, WallHug, WallHugObjectReference>(
+	    [](entt::entity entity, const MoveStateLinearTag&, Transform& transform, WallHug& wallHug,
+	       WallHugObjectReference& reference) {
+		    if (reference.entity != entt::null)
+			    return;
 		    InitializeStepToGoal(transform, wallHug);
 		    LinearScanForObstacle(entity, glm::xz(transform.position), wallHug.step);
-	    },
-	    entt::exclude<WallHugObjectReference>);
+	    });
 
 	// 3.  ORBIT_CW, ORBIT_CCW, EXIT_CIRCLE_CW, EXIT_CIRCLE_CCW:
 	//         If there is no recorded obstacle (what we orbit), this is an unimplemented error
@@ -419,10 +421,8 @@ void PathfindingSystem::Update()
 	//         Do StepForward and ApplyStepGoal for the step distance -> no change to state
 	StepForward<MoveState::StepThrough>(registry);
 	StepForward<MoveState::ExitCircle>(registry);
-	StepForward<MoveState::Linear>(registry, entt::exclude<WallHugObjectReference>);
 	ApplyStepGoal<MoveState::StepThrough>(registry);
 	ApplyStepGoal<MoveState::ExitCircle>(registry);
-	ApplyStepGoal<MoveState::Linear>(registry, entt::exclude<WallHugObjectReference>);
 
 	// 4b. FINAL_STEP, ARRIVED:
 	//         Do ApplyStepGoal for the remaining distance to the goal and return a message to change LIVING STATE
@@ -442,7 +442,7 @@ void PathfindingSystem::Update()
 	// Decrement turns to object, remove reference once at 0, 0xFF means there is obstacle
 	// TODO(#500): split WallHugObjectReference into FutureObstacle and HuggedObstacle
 	registry.Each<const MoveStateOrbitTag, WallHugObjectReference>(
-	    [&registry](entt::entity entity, const MoveStateOrbitTag&, WallHugObjectReference& reference) {
+	    [](const MoveStateOrbitTag&, WallHugObjectReference& reference) {
 		    if (reference.stepsAway == std::numeric_limits<decltype(reference.stepsAway)>::max())
 		    {
 			    return;
