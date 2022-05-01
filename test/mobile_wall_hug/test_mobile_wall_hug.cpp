@@ -344,12 +344,14 @@ TEST_F(MobileWallHugWalks, mobilewallhug2)
 	MobileWallHugScenarioAssert();
 }
 
+// TODO(bwrsandman): Remove DISABLED_ prefix once walking on footpath is implemented
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
 TEST_F(MobileWallHugWalks, DISABLED_footpath1)
 {
 	MobileWallHugScenarioAssert();
 }
 
+// TODO(bwrsandman): Remove DISABLED_ prefix once walking on footpath is implemented
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
 TEST_F(MobileWallHugWalks, DISABLED_footpath2)
 {
