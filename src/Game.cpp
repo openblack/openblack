@@ -500,7 +500,7 @@ bool Game::Initialize()
 	// Attempt to load additional levels as playgrounds
 	for (const auto& f : std::filesystem::directory_iterator {scriptsPath / "Playgrounds"})
 	{
-		if (f.path().extension() == ".txt")
+		if (f.path().extension() != ".txt")
 		{
 			continue;
 		}
