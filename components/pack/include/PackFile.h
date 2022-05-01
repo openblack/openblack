@@ -152,6 +152,9 @@ public:
 	/// Create Mesh Block from meshes
 	void CreateMeshBlock();
 
+	/// Insert Mesh Data for the Mesh Block
+	void InsertMesh(std::vector<uint8_t> data);
+
 	/// Create Info block from look-up table
 	void CreateInfoBlock();
 

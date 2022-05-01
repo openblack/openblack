@@ -19,6 +19,11 @@ set(CITADEL_OUTSIDE_BINARY_DIR ${CITADEL_BINARY_DIR}/OutsideMeshes)
 set(ALL_MESHES_OUTPUT ${DATA_BINARY_DIR}/AllMeshes.g3d)
 set(ALL_ANIMATIONS_OUTPUT ${DATA_BINARY_DIR}/AllAnims.anm)
 
+set(INTERMEDIATE_DATA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Intermediate)
+set(INTERMEDIATE_MESH_BINARY_DIR ${INTERMEDIATE_DATA_BINARY_DIR}/Meshes)
+set(DUMMY_MESH_FILE ${INTERMEDIATE_MESH_BINARY_DIR}/Dummy.gltf)
+set(DUMMY_MESH_OUTPUT ${INTERMEDIATE_MESH_BINARY_DIR}/Dummy.l3d)
+
 set(CREATURE_MESH_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/CreatureMesh)
 set(HAND_BASE_OUTPUT ${CREATURE_MESH_BINARY_DIR}/Hand_Boned_Base2.l3d)
 set(HAND_BASE_MESH_FILE ${CREATURE_MESH_BINARY_DIR}/Hand_Boned_Base2.gltf)
@@ -61,6 +66,8 @@ add_custom_target(generate-mock-game-data
   COMMAND ${CMAKE_COMMAND} -E make_directory ${COFFRE_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${SCRIPTS_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${QUESTS_BINARY_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${INTERMEDIATE_DATA_BINARY_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${INTERMEDIATE_MESH_BINARY_DIR}
   # Copy the Scripts Directory
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Scripts ${CMAKE_CURRENT_BINARY_DIR}/Scripts
   # Generate Mock Raw Textures
@@ -69,7 +76,10 @@ add_custom_target(generate-mock-game-data
   # Generate Citadel files
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py --output-files "${CITADEL_OUTSIDE_BINARY_DIR}/Entrance_l3d.zzz" --size 0x616
   # Data/AllMeshes.g3d
-  COMMAND packtool --write-mesh ${ALL_MESHES_OUTPUT}
+  # Dummy mesh for 626 meshes
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py --output-file ${DUMMY_MESH_FILE}
+  COMMAND l3dtool write -o ${DUMMY_MESH_OUTPUT} -i ${DUMMY_MESH_FILE}
+  COMMAND packtool --write-mesh ${ALL_MESHES_OUTPUT} ${DUMMY_MESH_OUTPUT}:626
   # Data/AllAnims.anm
   COMMAND packtool --write-animation ${ALL_ANIMATIONS_OUTPUT}
   # Data/CreatureMesh/Hand_Boned_Base2.l3d
@@ -96,6 +106,8 @@ add_custom_target(generate-mock-game-data
   BYPRODUCTS
     ${HAND_BASE_MESH_FILE}
     ${SKY_MESH_FILE}
+    ${DUMMY_MESH_FILE}
+    ${DUMMY_MESH_OUTPUT}
     ${TERRAIN_NOISE_MAP}
     ${TERRAIN_BUMP_MAP}
     ${TERRAIN_MATERIAL_ARRAY}

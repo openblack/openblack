@@ -434,21 +434,31 @@ void PackFile::CreateMeshBlock()
 	contents.resize(offset + sizeof(uint32_t) * meshCount);
 	if (meshCount > 0)
 	{
-		auto* meshOffsets = reinterpret_cast<uint32_t*>(&contents[offset]);
+		const auto previousOffset = offset;
 		offset += sizeof(uint32_t) * meshCount;
 		for (size_t i = 0; i < _meshes.size(); ++i)
 		{
+			auto* meshOffsets = reinterpret_cast<uint32_t*>(&contents[previousOffset]);
 			meshOffsets[i] = static_cast<uint32_t>(offset);
 			offset += _meshes[i].size();
 		}
 		contents.resize(offset);
 		for (size_t i = 0; i < _meshes.size(); ++i)
 		{
-			std::memcpy(&contents[meshOffsets[i]], _meshes[i].data(), _meshes[i].size() * sizeof(_meshes[i][0]));
+			if (!_meshes[i].empty())
+			{
+				auto meshOffset = reinterpret_cast<uint32_t*>(&contents[previousOffset])[i];
+				std::memcpy(&contents[meshOffset], _meshes[i].data(), _meshes[i].size() * sizeof(_meshes[i][0]));
+			}
 		}
 	}
 
 	_blocks["MESHES"] = std::move(contents);
+}
+
+void PackFile::InsertMesh(std::vector<uint8_t> data)
+{
+	_meshes.emplace_back(std::move(data));
 }
 
 void PackFile::CreateInfoBlock()
