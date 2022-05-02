@@ -20,7 +20,7 @@ std::mt19937& RandomNumberManagerProduction::generator()
 
 std::mutex& RandomNumberManagerProduction::lockAll()
 {
-	std::mutex rMutex;
+	thread_local std::mutex rMutex;
 	return rMutex;
 }
 
