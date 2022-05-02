@@ -22,7 +22,6 @@ public:
 	RandomNumberManagerProduction() = default;
 	RandomNumberManagerProduction(const RandomNumberManagerProduction&) = delete;
 	RandomNumberManagerProduction& operator=(const RandomNumberManagerProduction&) = delete;
-	bool SetSeed(int seed);
 
 private:
 	std::mt19937& generator();

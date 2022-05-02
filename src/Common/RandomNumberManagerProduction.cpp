@@ -12,12 +12,6 @@
 
 using namespace openblack;
 
-bool RandomNumberManagerProduction::SetSeed(int seed)
-{
-	generator().seed(seed);
-	return true;
-}
-
 std::mt19937& RandomNumberManagerProduction::generator()
 {
 	thread_local std::mt19937 tGenerator(static_cast<unsigned int>(time(nullptr)));

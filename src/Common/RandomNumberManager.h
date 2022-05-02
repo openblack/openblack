@@ -17,7 +17,6 @@ namespace openblack
 class RandomNumberManagerInterface
 {
 public:
-	virtual bool SetSeed(int seed) = 0;
 	template <typename T, typename E = typename std::enable_if<std::is_arithmetic_v<T>>::type>
 	T NextValue(T min, T max)
 	{
