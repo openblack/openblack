@@ -19,6 +19,6 @@ namespace openblack
 struct Locator
 {
 	using resources = entt::service_locator<resources::ResourcesInterface>;
-	using rng = entt::service_locator<RNGInterface>;
+	using rng = entt::service_locator<RandomNumberManagerInterface>;
 };
 } // namespace openblack

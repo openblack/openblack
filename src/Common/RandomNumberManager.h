@@ -14,7 +14,7 @@
 
 namespace openblack
 {
-class RNGInterface
+class RandomNumberManagerInterface
 {
 public:
 	virtual bool SetSeed(int seed) = 0;
@@ -31,7 +31,7 @@ public:
 		}
 		return dist(generator());
 	}
-	virtual ~RNGInterface() = default;
+	virtual ~RandomNumberManagerInterface() = default;
 
 protected:
 	virtual std::mt19937& generator() = 0;

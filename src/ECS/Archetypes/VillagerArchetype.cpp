@@ -12,7 +12,6 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/vec3.hpp>
 
-#include "Common/RNGManager.h"
 #include "ECS/Components/LivingAction.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Mobile.h"

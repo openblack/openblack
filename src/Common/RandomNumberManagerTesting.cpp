@@ -7,51 +7,29 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#include "RNGManager.h"
+#include "RandomNumberManagerTesting.h"
 #include <ctime>
 
 using namespace openblack;
 
-bool RNGManager::SetSeed(int seed)
-{
-	return false;
-}
-
-std::mt19937& RNGManager::generator()
-{
-	thread_local std::mt19937 tGenerator(static_cast<unsigned int>(time(nullptr)));
-	return tGenerator;
-}
-
-std::mutex& RNGManager::lockAll()
-{
-	std::mutex rMutex;
-	return rMutex;
-}
-
-bool RNGManager::lockCheck()
-{
-	return false;
-}
-
-bool RNGManagerDebug::SetSeed(int seed)
+bool RandomNumberManagerTesting::SetSeed(int seed)
 {
 	std::lock_guard<std::mutex> safe_lock(_generatorLock);
 	_generator.seed(seed);
 	return true;
 }
 
-std::mt19937& RNGManagerDebug::generator()
+std::mt19937& RandomNumberManagerTesting::generator()
 {
 	return _generator;
 }
 
-std::mutex& RNGManagerDebug::lockAll()
+std::mutex& RandomNumberManagerTesting::lockAll()
 {
 	return _generatorLock;
 }
 
-bool RNGManagerDebug::lockCheck()
+bool RandomNumberManagerTesting::lockCheck()
 {
 	return true;
 }
