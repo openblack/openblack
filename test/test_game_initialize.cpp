@@ -10,12 +10,13 @@
 #include <Game.h>
 #include <gtest/gtest.h>
 
-TEST(GameInitialize, initialize_only)
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
+TEST(GameInitialize, initializeOnly)
 {
-	static const auto mock_game_path = std::filesystem::path(TEST_BINARY_DIR) / "mock";
+	static const auto mockGamePath = std::filesystem::path(TEST_BINARY_DIR) / "mock";
 	auto args = openblack::Arguments {
 	    .rendererType = bgfx::RendererType::Enum::Noop,
-	    .gamePath = mock_game_path.string(),
+	    .gamePath = mockGamePath.string(),
 	    .numFramesToSimulate = 0,
 	    .logFile = "stdout",
 	};
@@ -25,12 +26,13 @@ TEST(GameInitialize, initialize_only)
 	game.reset();
 }
 
-TEST(GameInitialize, run_0_frames)
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
+TEST(GameInitialize, run0Frames)
 {
-	static const auto mock_game_path = std::filesystem::path(TEST_BINARY_DIR) / "mock";
+	static const auto mockGamePath = std::filesystem::path(TEST_BINARY_DIR) / "mock";
 	auto args = openblack::Arguments {
 	    .rendererType = bgfx::RendererType::Enum::Noop,
-	    .gamePath = mock_game_path.string(),
+	    .gamePath = mockGamePath.string(),
 	    .numFramesToSimulate = 0,
 	    .logFile = "stdout",
 	};

@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <glm/vec2.hpp>
+
 namespace openblack::ecs::components
 {
 
