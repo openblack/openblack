@@ -11,3 +11,4 @@ endmacro()
 
 OPENBLACK_SETUP_AND_ADD_TEST(test_game_initialize test_game_initialize.cpp)
 OPENBLACK_SETUP_AND_ADD_TEST(test_load_scene test_load_scene.cpp)
+OPENBLACK_SETUP_AND_ADD_TEST(test_fixed test_fixed.cpp)
