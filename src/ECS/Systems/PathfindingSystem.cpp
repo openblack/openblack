@@ -378,15 +378,16 @@ void PathfindingSystem::Update()
 	    });
 
 	// 2.  LINEAR, LINEAR_CW, LINEAR_CCW
-	//         If we have a number of turns to an obstacle but no obstacle saved: do linear_square_sweep to find one
-	registry.Each<const MoveStateLinearTag, Transform, WallHug, WallHugObjectReference>(
-	    [](entt::entity entity, const MoveStateLinearTag&, Transform& transform, WallHug& wallHug,
-	       WallHugObjectReference& reference) {
-		    if (reference.entity != entt::null)
-			    return;
-		    InitializeStepToGoal(transform, wallHug);
-		    LinearScanForObstacle(entity, glm::xz(transform.position), wallHug.step);
-	    });
+	//         If this is the first turn and there is step size defined
+	registry.Each<const MoveStateLinearTag, Transform, WallHug>(
+	    [](entt::entity entity, const MoveStateLinearTag&, Transform& transform, WallHug& wallHug) {
+		    if (wallHug.step == glm::vec2(0.0f, 0.0))
+		    {
+			    InitializeStepToGoal(transform, wallHug);
+			    LinearScanForObstacle(entity, glm::xz(transform.position), wallHug.step);
+		    }
+	    },
+	    entt::exclude<WallHugObjectReference>);
 
 	// 3.  ORBIT_CW, ORBIT_CCW, EXIT_CIRCLE_CW, EXIT_CIRCLE_CCW:
 	//         If there is no recorded obstacle (what we orbit), this is an unimplemented error
