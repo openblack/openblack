@@ -22,7 +22,7 @@
             "default-features": false,
             "features": ["tools"],
             "host": true,
-            "$reason": "Don't want to build shaderc on non-native platforms except for x86 from x64 Windows, Linux, OSX."
+            "$reason": "Don't want to build shaderc on non-native platforms so they are built on the host config."
         },
         {
             "name": "bgfx",
