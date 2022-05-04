@@ -49,6 +49,8 @@ jobs:
         id: runvcpkg
         with:
           vcpkgJsonGlob: 'vcpkg.json'
+          # Prevent all ubuntu-latest and windows-latest builds from having the same key
+          appendedCacheKey: ${{matrix.preset}}${{matrix.triplet}}
 
       - name: Configure CMake+vcpkg.
         uses: lukka/run-cmake@v10
