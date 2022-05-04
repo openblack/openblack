@@ -542,7 +542,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		}
 
 		{
-			auto section =
+			auto subSection =
 			    desc.profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSprites
 			                                                                    : Profiler::Stage::MainPassDrawSprites);
 
