@@ -89,9 +89,9 @@ entt::resource_handle<graphics::Texture2D> Texture2DLoader::load(const std::file
 	const std::array<uint16_t, 6> resolutions = {{256, 40, 32, 14, 12, 6}};
 
 	const auto data = Game::instance()->GetFileSystem().ReadAll(rawTexturePath);
-	graphics::Format format;
-	uint16_t width;
-	uint16_t height;
+	graphics::Format format = graphics::Format::R8;
+	uint16_t width = 0;
+	uint16_t height = 0;
 	for (auto res : resolutions)
 	{
 		if (found)
@@ -102,12 +102,14 @@ entt::resource_handle<graphics::Texture2D> Texture2DLoader::load(const std::file
 		width = res;
 		height = res;
 
-		if (data.size() == width * height)
+		const typename decltype(data)::size_type pixelCount = width * height;
+
+		if (data.size() == pixelCount)
 		{
 			format = graphics::Format::R8;
 			found = true;
 		}
-		if (data.size() == 3 * width * height)
+		if (data.size() == 3 * pixelCount)
 		{
 			format = graphics::Format::RGB8;
 			found = true;

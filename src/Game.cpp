@@ -228,7 +228,8 @@ bool Game::ProcessEvents(const SDL_Event& event)
 			if ((event.key.keysym.mod & KMOD_CTRL) != 0)
 			{
 				auto handPosition = _handPose * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-				CameraBookmarkSystem::instance().SetBookmark(event.key.keysym.sym - SDLK_1, handPosition);
+				const auto index = static_cast<uint8_t>(event.key.keysym.sym - SDLK_1);
+				CameraBookmarkSystem::instance().SetBookmark(index, handPosition);
 			}
 			else if (event.key.keysym.mod == 0)
 			{

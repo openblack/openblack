@@ -21,7 +21,7 @@ TextureViewer::TextureViewer()
 {
 }
 
-void TextureViewer::Draw(Game& game)
+void TextureViewer::Draw([[maybe_unused]] Game& game)
 {
 	float fontSize = ImGui::GetFontSize();
 	auto const& textures = Locator::resources::ref().GetTextures();
@@ -76,7 +76,7 @@ void TextureViewer::Draw(Game& game)
 	ImGui::EndChild();
 }
 
-void TextureViewer::Update(Game& game, const Renderer& renderer) {}
+void TextureViewer::Update([[maybe_unused]] Game& game, [[maybe_unused]] const Renderer& renderer) {}
 
 void TextureViewer::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
 

@@ -46,7 +46,7 @@ MeshViewer::MeshViewer()
 {
 }
 
-void MeshViewer::Draw(Game& game)
+void MeshViewer::Draw([[maybe_unused]] Game& game)
 {
 
 	float fontSize = ImGui::GetFontSize();
@@ -194,11 +194,11 @@ void MeshViewer::Draw(Game& game)
 	ImGui::EndChild();
 }
 
-void MeshViewer::Update(Game& game, const Renderer& renderer)
+void MeshViewer::Update([[maybe_unused]] Game& game, const Renderer& renderer)
 {
 	auto const& meshes = Locator::resources::ref().GetMeshes();
 	auto const& animations = Locator::resources::ref().GetAnimations();
-	auto& shaderManager = game.GetRenderer().GetShaderManager();
+	auto& shaderManager = renderer.GetShaderManager();
 	auto objectShader = shaderManager.GetShader("Object");
 	auto debugShader = shaderManager.GetShader("DebugLine");
 
