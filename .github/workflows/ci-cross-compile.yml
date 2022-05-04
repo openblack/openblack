@@ -124,12 +124,12 @@ jobs:
       - name: Run Gradle Configure CMake (Debug)
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: configureCMakeDebug
+          arguments: --configuration-cache configureCMakeDebug
           build-root-directory: android
       - name: Run Gradle Configure CMake (Release)
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: configureCMakeRelWithDebInfo
+          arguments: --configuration-cache configureCMakeRelWithDebInfo
           build-root-directory: android
       - name: Run Gradle Assemble (Debug)
         uses: gradle/gradle-build-action@v2
