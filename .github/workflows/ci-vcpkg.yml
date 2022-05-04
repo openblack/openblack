@@ -49,6 +49,8 @@ jobs:
         id: runvcpkg
         with:
           vcpkgJsonGlob: 'vcpkg.json'
+          # Prevent ubuntu-latest and ubuntu-latest (clang) from having the same key
+          appendedCacheKey: ${{matrix.cc}}
             # doNotCache: true
 
       - name: Configure CMake+vcpkg+Ninja to generate.
