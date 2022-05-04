@@ -21,7 +21,6 @@
 #include <LHScriptX/Script.h>
 #include <Locator.h>
 #include <glm/gtx/string_cast.hpp>
-#include <glm/gtx/vec_swizzle.hpp>
 #include <gtest/gtest.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
@@ -304,13 +303,15 @@ protected:
 				ASSERT_TRUE(registry.AllOf<ecs::components::MoveStateStepThroughTag>(_villagerEntt)) << msg;
 				break;
 			}
-			ASSERT_EQ(glm::xz(villagerTransform.position), state.pos) << msg;
+			ASSERT_FLOAT_EQ(villagerTransform.position.x, state.pos.x) << msg;
+			ASSERT_FLOAT_EQ(villagerTransform.position.z, state.pos.y) << msg;
 			if (state.move_state != MOVE_STATE_FINAL_STEP) // Set in the next turn
 			{
 				ASSERT_FLOAT_EQ(villagerWallhug.step.x, state.step.x) << msg;
 				ASSERT_FLOAT_EQ(villagerWallhug.step.y, state.step.y) << msg;
 			}
-			ASSERT_EQ(villagerWallhug.goal, state.goal) << msg;
+			ASSERT_FLOAT_EQ(villagerWallhug.goal.x, state.goal.x) << msg;
+			ASSERT_FLOAT_EQ(villagerWallhug.goal.y, state.goal.y) << msg;
 			ASSERT_EQ(villagerHasObstacle, state.circle_hug_info.obj_index.has_value()) << msg;
 			if (state.circle_hug_info.turns_to_obstacle != 0xFF || state.circle_hug_info.obj_index.has_value())
 			{
