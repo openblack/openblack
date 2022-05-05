@@ -9,6 +9,7 @@
 
 #include "RandomNumberManagerTesting.h"
 #include <ctime>
+#include <functional>
 
 using namespace openblack;
 
