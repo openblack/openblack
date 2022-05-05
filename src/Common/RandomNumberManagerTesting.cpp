@@ -26,7 +26,7 @@ std::mt19937& RandomNumberManagerTesting::generator()
 
 std::optional<std::reference_wrapper<std::mutex>> RandomNumberManagerTesting::lockAccess()
 {
-	return _generatorLock;
+	return std::ref(_generatorLock);
 }
 
 bool RandomNumberManagerTesting::lockCheck()
