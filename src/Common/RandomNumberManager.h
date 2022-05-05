@@ -10,6 +10,7 @@
 #pragma once
 
 #include <mutex>
+#include <optional>
 #include <random>
 
 namespace openblack
@@ -23,9 +24,10 @@ public:
 		using dist_t =
 		    std::conditional_t<std::is_integral_v<T>, std::uniform_int_distribution<T>, std::uniform_real_distribution<T>>;
 		dist_t dist(min, max);
-		if (lockCheck())
+		std::optional<std::reference_wrapper<std::mutex>> lock(lockAccess());
+		if (lock)
 		{
-			std::lock_guard<std::mutex> safe_lock(lockAll());
+			std::lock_guard<std::mutex> contextLock(*lock);
 			return dist(generator());
 		}
 		return dist(generator());
@@ -34,7 +36,7 @@ public:
 
 protected:
 	virtual std::mt19937& generator() = 0;
-	virtual std::mutex& lockAll() = 0;
+	virtual std::optional<std::reference_wrapper<std::mutex>> lockAccess() = 0;
 	virtual bool lockCheck() = 0;
 };
 } // namespace openblack

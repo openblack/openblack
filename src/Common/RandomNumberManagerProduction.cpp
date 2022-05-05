@@ -18,10 +18,9 @@ std::mt19937& RandomNumberManagerProduction::generator()
 	return tGenerator;
 }
 
-std::mutex& RandomNumberManagerProduction::lockAll()
+std::optional<std::reference_wrapper<std::mutex>> RandomNumberManagerProduction::lockAccess()
 {
-	thread_local std::mutex rMutex;
-	return rMutex;
+	return std::nullopt;
 }
 
 bool RandomNumberManagerProduction::lockCheck()

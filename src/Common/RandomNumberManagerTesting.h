@@ -26,7 +26,7 @@ public:
 
 private:
 	std::mt19937& generator();
-	std::mutex& lockAll();
+	std::optional<std::reference_wrapper<std::mutex>> lockAccess();
 	bool lockCheck();
 	std::mt19937 _generator;
 	std::mutex _generatorLock;
