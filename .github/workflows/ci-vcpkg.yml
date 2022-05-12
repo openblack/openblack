@@ -194,3 +194,38 @@ jobs:
       - name: Check openblack for memory leaks
         run: valgrind --tool=memcheck --track-origins=yes --leak-check=full -s --error-exitcode=1 ${{steps.download-binary.outputs.download-path}}/Debug/openblack -g ${{steps.download-test.outputs.download-path}}/mock -b Noop --num-frames-to-simulate 10  --log-level all=error
         if: startsWith(matrix.os, 'ubuntu')
+
+  screenshot:
+    needs: run
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # This is the matrix. They form permutations.
+        os: [ windows-latest ] # ubuntu-latest, macos-latest
+    env:
+      ARGS: -g ${{steps.download-test.outputs.download-path}}/mock --num-frames-to-simulate 10 --screenshot-frame 5 --log-file stdout --log-level all=debug -W 800 -H 600
+      BACKEND: Direct3D11
+    steps:
+      - name: Download compiled openblack and tools
+        uses: actions/download-artifact@v3
+        id: download-binary
+        with:
+          name: openblack-${{ matrix.os }}-${{github.sha}}
+      - name: Download generated mock data
+        uses: actions/download-artifact@v3
+        id: download-test
+        with:
+          name: openblack-test-data
+      - name: Enable execute permissions on binary
+        run: chmod +x ${{steps.download-binary.outputs.download-path}}/*/*
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+      - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-1.png"
+      - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{ matrix.os }}-${{github.sha}}-release-land-1.png"
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: openblack-screenshots
+          path: screenshot-${{ matrix.os }}-${{github.sha}}-*.png
+          if-no-files-found: error
