@@ -23,8 +23,8 @@ using EventHandler = std::function<void(const Event&)>;
 class IEventQueue
 {
 public:
-	IEventQueue() {};
-	virtual ~IEventQueue() {};
+	IEventQueue() = default;
+	virtual ~IEventQueue() = default;
 };
 
 template <class T>

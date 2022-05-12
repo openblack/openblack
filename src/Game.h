@@ -118,8 +118,6 @@ public:
 
 	struct Config
 	{
-		Config() {}
-
 		bool wireframe {false};
 		bool showVillagerNames {false};
 		bool debugVillagerNames {false};

@@ -3,7 +3,6 @@ Checks: >-
   -*,
   clang-analyzer-*,
   modernize-*,
-  -modernize-use-equals-default,
   -modernize-use-trailing-return-type,
   -modernize-use-using,
   cppcoreguidelines-pro-bounds-constant-array-index,
