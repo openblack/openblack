@@ -39,6 +39,8 @@ void main()
 
 	vec4 colorAlignA = mix(colorAA, colorBA, alignT);
 	vec4 colorAlignB = mix(colorAB, colorBB, alignT);
+	colorAlignA.a = 1.0f;
+	colorAlignB.a = 1.0f;
 
 	gl_FragColor = mix(colorAlignA, colorAlignB, typeT);
 
