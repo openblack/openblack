@@ -40,3 +40,6 @@ openblack.log
 
 # osx
 .DS_Store
+
+# executable generated files
+screenshot.png
