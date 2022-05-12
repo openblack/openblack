@@ -9,12 +9,12 @@
 
 #include "Zip.h"
 
-#include <fmt/format.h>
-#include <zlib.h>
-
 #include <cassert>
 #include <limits>
 #include <stdexcept>
+
+#include <fmt/format.h>
+#include <zlib.h>
 
 constexpr auto MAX_BUFFER_SIZE = std::numeric_limits<decltype(z_stream::avail_out)>::max();
 
