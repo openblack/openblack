@@ -21,7 +21,11 @@ using namespace openblack::ecs::systems;
 
 TownSystem& TownSystem::Instance()
 {
-	static auto* instance = new TownSystem();
+	static std::unique_ptr<TownSystem> instance;
+	if (instance == nullptr)
+	{
+		instance.reset(new TownSystem());
+	}
 	return *instance;
 }
 

@@ -26,7 +26,11 @@ using namespace openblack::ecs::components;
 
 RenderingSystem& RenderingSystem::Instance()
 {
-	static auto* instance = new RenderingSystem();
+	static std::unique_ptr<RenderingSystem> instance;
+	if (instance == nullptr)
+	{
+		instance.reset(new RenderingSystem());
+	}
 	return *instance;
 }
 

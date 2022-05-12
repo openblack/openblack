@@ -6,6 +6,7 @@ Checks: >-
   -modernize-use-trailing-return-type,
   -modernize-use-using,
   cppcoreguidelines-pro-bounds-constant-array-index,
+  cppcoreguidelines-avoid-non-const-global-variables,
   performance-*,
   -performance-unnecessary-value-param,
   misc-*,

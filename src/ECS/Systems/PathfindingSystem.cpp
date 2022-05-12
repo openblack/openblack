@@ -22,7 +22,11 @@ using namespace openblack::ecs::systems;
 
 PathfindingSystem& PathfindingSystem::Instance()
 {
-	static auto* instance = new PathfindingSystem();
+	static std::unique_ptr<PathfindingSystem> instance;
+	if (instance == nullptr)
+	{
+		instance.reset(new PathfindingSystem());
+	}
 	return *instance;
 }
 

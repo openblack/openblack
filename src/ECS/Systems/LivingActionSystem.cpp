@@ -386,10 +386,10 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
 
 LivingActionSystem& LivingActionSystem::Instance()
 {
-	static LivingActionSystem* instance = nullptr;
+	static std::unique_ptr<LivingActionSystem> instance = nullptr;
 	if (instance == nullptr)
 	{
-		instance = new LivingActionSystem();
+		instance.reset(new LivingActionSystem());
 	}
 	return *instance;
 }
