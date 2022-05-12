@@ -83,6 +83,7 @@ Game::Game(Arguments&& args)
     , _turnCount(0)
     , _paused(true)
     , _handPose()
+    , _requestScreenshot(args.requestScreenshot)
 {
 	std::function<std::shared_ptr<spdlog::logger>(const std::string&)> CreateLogger;
 #ifdef __ANDROID__
@@ -652,6 +653,20 @@ bool Game::Run()
 			auto section = _profiler->BeginScoped(Profiler::Stage::RendererFrame);
 			_renderer->Frame();
 		}
+
+		if (_requestScreenshot.has_value())
+		{
+			if (_requestScreenshot->first == _frameCount)
+			{
+				SPDLOG_LOGGER_INFO(spdlog::get("game"), "Requesting a screenshot at frame {}...", _frameCount);
+				_renderer->RequestScreenshot(_requestScreenshot->second);
+			}
+			if (_requestScreenshot->first <= _frameCount)
+			{
+				_requestScreenshot = std::nullopt;
+			}
+		}
+
 		_frameCount++;
 	}
 
@@ -786,4 +801,9 @@ const std::filesystem::path& Game::GetGamePath()
 void Game::SetTime(float time)
 {
 	GetSky().SetTime(time);
+}
+
+void Game::RequestScreenshot(const std::filesystem::path& path)
+{
+	_requestScreenshot = std::make_pair(_frameCount, path);
 }

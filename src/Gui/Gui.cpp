@@ -27,6 +27,7 @@
 #include <glm/gtx/compatibility.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <imgui_stdlib.h>
 #include <imgui_user.h>
 #ifdef _WIN32
 #include <SDL2/SDL_syswm.h>
@@ -790,6 +791,17 @@ bool Gui::ShowMenu(Game& game)
 				ImGui::EndMenu();
 			}
 
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Capture"))
+		{
+			if (ImGui::Button("Capture"))
+			{
+				game.RequestScreenshot(screenshotFilename);
+			}
+			ImGui::SameLine();
+			ImGui::InputText("Screenshot", &screenshotFilename);
 			ImGui::EndMenu();
 		}
 
