@@ -39,7 +39,7 @@ L3DSubMesh::L3DSubMesh(L3DMesh& mesh)
 {
 }
 
-L3DSubMesh::~L3DSubMesh() {}
+L3DSubMesh::~L3DSubMesh() = default;
 
 bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 {
