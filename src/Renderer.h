@@ -9,20 +9,21 @@
 
 #pragma once
 
-#include "Graphics/RenderPass.h"
-#include "Locator.h"
+#include <cstdint>
+
+#include <array>
+#include <chrono>
+#include <memory>
+#include <string_view>
+#include <vector>
 
 #include <SDL.h>
 #include <bgfx/bgfx.h>
 #include <glm/fwd.hpp>
 #include <glm/mat4x4.hpp>
 
-#include <array>
-#include <chrono>
-#include <cstdint>
-#include <memory>
-#include <string_view>
-#include <vector>
+#include "Graphics/RenderPass.h"
+#include "Locator.h"
 
 namespace openblack
 {

@@ -9,9 +9,9 @@
 
 #pragma once
 
-#include "Resources/Resources.h"
-
 #include <entt/locator/locator.hpp>
+
+#include "Resources/Resources.h"
 
 namespace openblack
 {

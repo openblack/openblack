@@ -9,10 +9,11 @@
 
 #pragma once
 
-#include <LHVM/VMInstruction.h>
-#include <LHVM/VMScript.h>
 #include <string>
 #include <vector>
+
+#include <LHVM/VMInstruction.h>
+#include <LHVM/VMScript.h>
 
 namespace openblack
 {

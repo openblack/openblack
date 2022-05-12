@@ -9,12 +9,12 @@
 
 #include "Script.h"
 
-#include "FeatureScriptCommands.h"
-#include "Lexer.h"
+#include <iostream>
 
 #include <spdlog/spdlog.h>
 
-#include <iostream>
+#include "FeatureScriptCommands.h"
+#include "Lexer.h"
 
 using namespace openblack;
 using namespace openblack::lhscriptx;

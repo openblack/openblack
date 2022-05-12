@@ -9,9 +9,9 @@
 
 #pragma once
 
-#include "IStream.h"
-
 #include <filesystem>
+
+#include "IStream.h"
 
 namespace openblack
 {

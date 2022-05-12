@@ -9,16 +9,17 @@
 
 #include "LandBlock.h"
 
-#include "Dynamics/LandBlockBulletMeshInterface.h"
-#include "Graphics/VertexBuffer.h"
-#include "LandIsland.h"
+#include <cassert>
+
+#include <utility>
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LNDFile.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <cassert>
-#include <utility>
+#include "Dynamics/LandBlockBulletMeshInterface.h"
+#include "Graphics/VertexBuffer.h"
+#include "LandIsland.h"
 
 using namespace openblack;
 using namespace openblack::graphics;

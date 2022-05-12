@@ -9,12 +9,13 @@
 
 #pragma once
 
-#include "RenderPass.h"
-#include "Texture2D.h"
-
 #include <cstdint>
+
 #include <memory>
 #include <optional>
+
+#include "RenderPass.h"
+#include "Texture2D.h"
 
 namespace openblack::graphics
 {

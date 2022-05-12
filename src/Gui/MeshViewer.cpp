@@ -9,6 +9,12 @@
 
 #include "MeshViewer.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/transform.hpp>
+#include <imgui.h>
+#include <imgui_bitfield.h>
+
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "Game.h"
@@ -20,12 +26,6 @@
 #include "Renderer.h"
 #include "Resources/MeshId.h"
 #include "Resources/Resources.h"
-
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/transform.hpp>
-#include <imgui.h>
-#include <imgui_bitfield.h>
 
 using namespace openblack;
 using namespace openblack::gui;

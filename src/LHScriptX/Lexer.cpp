@@ -10,6 +10,7 @@
 #include "Lexer.h"
 
 #include <cctype>
+
 #include <utility>
 
 using namespace openblack::lhscriptx;

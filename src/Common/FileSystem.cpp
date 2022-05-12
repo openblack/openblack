@@ -9,10 +9,11 @@
 
 #include "FileSystem.h"
 
-#include <algorithm>
-#include <array>
 #include <cctype>
 #include <cstddef>
+
+#include <algorithm>
+#include <array>
 
 namespace openblack
 {

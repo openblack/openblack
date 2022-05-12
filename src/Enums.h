@@ -9,8 +9,9 @@
 
 #pragma once
 
-#include <array>
 #include <cstdint>
+
+#include <array>
 #include <string_view>
 
 // Enums translated over from ones found in the Creature Isle modding tools.

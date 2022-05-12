@@ -9,10 +9,10 @@
 
 #include "DebugLines.h"
 
+#include <array>
+
 #include "Mesh.h"
 #include "VertexBuffer.h"
-
-#include <array>
 
 using namespace openblack::graphics;
 

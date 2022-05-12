@@ -9,8 +9,9 @@
 
 #pragma once
 
-#include <array>
 #include <cstdint>
+
+#include <array>
 #include <unordered_set>
 
 #include <entt/fwd.hpp>

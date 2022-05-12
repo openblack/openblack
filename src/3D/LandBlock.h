@@ -9,12 +9,12 @@
 
 #pragma once
 
-#include "Graphics/Mesh.h"
-#include "Graphics/ShaderProgram.h"
+#include <cstdint>
 
 #include <glm/fwd.hpp>
 
-#include <cstdint>
+#include "Graphics/Mesh.h"
+#include "Graphics/ShaderProgram.h"
 
 class btBvhTriangleMeshShape;
 class btRigidBody;

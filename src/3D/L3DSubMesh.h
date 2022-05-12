@@ -9,16 +9,18 @@
 
 #pragma once
 
-#include "../Graphics/RenderPass.h"
-#include "AxisAlignedBoundingBox.h"
+#include <cstdint>
+
+#include <memory>
+#include <vector>
 
 #include <L3DFile.h>
 #include <bgfx/bgfx.h>
 #include <glm/fwd.hpp>
 
-#include <cstdint>
-#include <memory>
-#include <vector>
+#include "AxisAlignedBoundingBox.h"
+
+#include "../Graphics/RenderPass.h"
 
 namespace openblack
 {

@@ -9,9 +9,8 @@
 
 #include "InfoFile.h"
 
-#include <spdlog/spdlog.h>
-
 #include <PackFile.h>
+#include <spdlog/spdlog.h>
 
 #include "Common/FileSystem.h"
 #include "Game.h"

@@ -7,14 +7,16 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#include <array>
+#include "LHVM/LHVM.h"
+
 #include <cstdio>
 #include <cstring>
+
+#include <array>
 #include <stdexcept>
 
-#include <LHVM/LHVM.h>
-#include <LHVM/OpcodeNames.h>
-#include <LHVM/VMInstruction.h>
+#include "LHVM/OpcodeNames.h"
+#include "LHVM/VMInstruction.h"
 
 namespace openblack::LHVM
 {

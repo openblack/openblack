@@ -9,9 +9,7 @@
 
 #include "L3DMesh.h"
 
-#include "Common/FileSystem.h"
-#include "Common/IStream.h"
-#include "Game.h"
+#include <stdexcept>
 
 #include <BulletCollision/CollisionShapes/btConvexHullShape.h>
 #include <L3DFile.h>
@@ -19,7 +17,9 @@
 #include <glm/matrix.hpp>
 #include <spdlog/spdlog.h>
 
-#include <stdexcept>
+#include "Common/FileSystem.h"
+#include "Common/IStream.h"
+#include "Game.h"
 
 using namespace openblack;
 using namespace openblack::graphics;

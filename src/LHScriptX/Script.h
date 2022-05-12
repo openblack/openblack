@@ -9,9 +9,9 @@
 
 #pragma once
 
-#include "Lexer.h"
-
 #include <vector>
+
+#include "Lexer.h"
 
 namespace openblack
 {

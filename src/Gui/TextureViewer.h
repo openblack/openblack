@@ -9,9 +9,9 @@
 
 #pragma once
 
-#include "DebugWindow.h"
-
 #include <entt/fwd.hpp>
+
+#include "DebugWindow.h"
 
 namespace openblack
 {

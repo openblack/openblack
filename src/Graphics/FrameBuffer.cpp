@@ -9,8 +9,9 @@
 
 #include "FrameBuffer.h"
 
-#include <array>
 #include <cassert>
+
+#include <array>
 
 using namespace openblack::graphics;
 

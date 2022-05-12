@@ -9,13 +9,14 @@
 
 #include "Texture2D.h"
 
-#include "Common/stb_image_write.h"
-
-#include <spdlog/spdlog.h>
+#include <cassert>
 
 #include <algorithm>
 #include <array>
-#include <cassert>
+
+#include <spdlog/spdlog.h>
+
+#include "Common/stb_image_write.h"
 
 namespace openblack::graphics
 {

@@ -9,12 +9,13 @@
 
 #pragma once
 
-#include "FileStream.h"
-
 #include <cstddef>
+
 #include <list>
 #include <memory>
 #include <vector>
+
+#include "FileStream.h"
 
 namespace openblack
 {

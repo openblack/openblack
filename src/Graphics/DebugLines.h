@@ -9,12 +9,11 @@
 
 #pragma once
 
-#include "RenderPass.h"
-
-#include <bgfx/bgfx.h>
-#include <glm/glm.hpp>
-
 #include <memory>
+
+#include <glm/vec4.hpp>
+
+#include "RenderPass.h"
 
 namespace openblack::graphics
 {

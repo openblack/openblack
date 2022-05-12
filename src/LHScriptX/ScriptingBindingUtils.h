@@ -9,9 +9,10 @@
 
 #pragma once
 
-#include "CommandSignature.h"
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+
+#include "CommandSignature.h"
 
 namespace openblack::lhscriptx
 {

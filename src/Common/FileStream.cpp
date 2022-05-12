@@ -9,10 +9,11 @@
 
 #include "FileStream.h"
 
-#include <spdlog/fmt/fmt.h>
-
 #include <cassert>
+
 #include <stdexcept>
+
+#include <spdlog/fmt/fmt.h>
 
 namespace openblack
 {

@@ -9,8 +9,9 @@
 
 #pragma once
 
-#include <array>
 #include <cstdint>
+
+#include <array>
 #include <string_view>
 
 namespace openblack::graphics

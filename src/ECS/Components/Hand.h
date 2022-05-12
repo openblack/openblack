@@ -9,13 +9,13 @@
 
 #pragma once
 
-#include "3D/L3DMesh.h"
-#include "Graphics/Mesh.h"
-#include "Graphics/Texture2D.h"
+#include <memory>
 
 #include <entt/entt.hpp>
 
-#include <memory>
+#include "3D/L3DMesh.h"
+#include "Graphics/Mesh.h"
+#include "Graphics/Texture2D.h"
 
 namespace openblack::ecs::components
 {

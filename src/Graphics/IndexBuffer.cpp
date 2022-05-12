@@ -10,6 +10,7 @@
 #include "IndexBuffer.h"
 
 #include <cassert>
+
 #include <string>
 #include <utility>
 

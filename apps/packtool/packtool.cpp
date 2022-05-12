@@ -7,12 +7,13 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#include <PackFile.h>
-
 #include <cstdlib>
-#include <cxxopts.hpp>
+
 #include <fstream>
 #include <string>
+
+#include <PackFile.h>
+#include <cxxopts.hpp>
 
 int PrintRawBytes(const void* data, std::size_t size)
 {

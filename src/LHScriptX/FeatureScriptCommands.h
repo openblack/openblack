@@ -9,12 +9,11 @@
 
 #pragma once
 
-#include "CommandSignature.h"
-
 #include <array>
 
 #include <glm/vec3.hpp>
 
+#include "CommandSignature.h"
 #include "Enums.h"
 
 namespace openblack::lhscriptx

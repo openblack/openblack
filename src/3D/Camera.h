@@ -9,12 +9,13 @@
 
 #pragma once
 
-#include <SDL_events.h>
 #include <chrono>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <memory>
 #include <optional>
+
+#include <SDL_events.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "ECS/Components/Transform.h"
 

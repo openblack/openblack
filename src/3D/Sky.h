@@ -9,12 +9,12 @@
 
 #pragma once
 
-#include "Graphics/RenderPass.h"
+#include <array>
+#include <memory>
 
 #include <glm/fwd.hpp>
 
-#include <array>
-#include <memory>
+#include "Graphics/RenderPass.h"
 
 namespace openblack
 {

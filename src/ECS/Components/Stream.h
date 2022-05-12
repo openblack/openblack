@@ -9,13 +9,14 @@
 
 #pragma once
 
-#include "Enums.h"
-
-#include <glm/glm.hpp>
-
 #include <algorithm>
 #include <string>
 #include <vector>
+
+#include <glm/geometric.hpp>
+#include <glm/vec3.hpp>
+
+#include "Enums.h"
 
 namespace openblack::ecs::components
 {
