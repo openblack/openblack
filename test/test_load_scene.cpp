@@ -7,10 +7,9 @@
  * openblack is licensed under the GNU General Public License version 3.
  ******************************************************************************/
 
-#include <gtest/gtest.h>
-
 #include <Game.h>
 #include <LHScriptX/Script.h>
+#include <gtest/gtest.h>
 
 class LoadScene: public ::testing::Test
 {
