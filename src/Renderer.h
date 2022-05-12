@@ -113,6 +113,7 @@ public:
 	void DrawScene(const DrawSceneDesc& drawDesc) const;
 	void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const;
 	void Frame();
+	void RequestScreenshot(const std::filesystem::path& filepath);
 
 	void Reset(uint16_t width, uint16_t height) const;
 

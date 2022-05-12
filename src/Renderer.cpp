@@ -11,6 +11,8 @@
 
 #include <SDL_video.h>
 #include <bgfx/platform.h>
+#include <bimg/bimg.h>
+#include <bx/file.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/transform.hpp>
 #include <spdlog/spdlog.h>
@@ -119,18 +121,45 @@ struct BgfxCallback: public bgfx::CallbackI
 	}
 	void cacheWrite([[maybe_unused]] uint64_t id, [[maybe_unused]] const void* data, [[maybe_unused]] uint32_t size) override {}
 	// Saving a screen shot
-	void screenShot([[maybe_unused]] const char* filePath, [[maybe_unused]] uint32_t width, [[maybe_unused]] uint32_t height,
-	                [[maybe_unused]] uint32_t pitch, [[maybe_unused]] const void* data, [[maybe_unused]] uint32_t size,
-	                [[maybe_unused]] bool yflip) override
+	void screenShot(const char* filePath, uint32_t width, uint32_t height, uint32_t pitch, const void* data,
+	                [[maybe_unused]] uint32_t size, bool yflip) override
 	{
+		SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "Taking a screenshot...");
+
+		const auto ext = std::filesystem::path(filePath).extension();
+		if (std::filesystem::path(filePath).extension() == ".png")
+		{
+			bx::FileWriter writer;
+			bx::Error err;
+			if (bx::open(&writer, filePath, false, &err))
+			{
+				bimg::imageWritePng(&writer, width, height, pitch, data, bimg::TextureFormat::BGRA8, yflip, &err);
+				bx::close(&writer);
+				SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "Screenshot ({}x{}) saved at {}", width, height, filePath);
+			}
+			else
+			{
+				SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to save Screenshot ({}x{}) at {}: {}", width, height,
+				                    filePath, std::string(err.getMessage().getPtr(), err.getMessage().getLength()));
+			}
+		}
+		else
+		{
+			SPDLOG_LOGGER_WARN(spdlog::get("graphics"), "Not Implemented: {} screenshot ({}x{}) requested at {}", ext.string(),
+			                   width, height, filePath);
+		}
 	}
 	// Saving a video
-	void captureBegin([[maybe_unused]] uint32_t width, [[maybe_unused]] uint32_t height, [[maybe_unused]] uint32_t pitch,
+	void captureBegin(uint32_t width, uint32_t height, [[maybe_unused]] uint32_t pitch,
 	                  [[maybe_unused]] bgfx::TextureFormat::Enum format, [[maybe_unused]] bool yflip) override
 	{
+		SPDLOG_LOGGER_WARN(spdlog::get("graphics"), "Not Implemented: Video Capture Begin ({}x{}) requested", width, height);
 	}
-	void captureEnd() override {}
-	void captureFrame([[maybe_unused]] const void* data, [[maybe_unused]] uint32_t size) override {}
+	void captureEnd() override { SPDLOG_LOGGER_WARN(spdlog::get("graphics"), "Not Implemented: Video Capture End requested"); }
+	void captureFrame([[maybe_unused]] const void* data, [[maybe_unused]] uint32_t size) override
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("graphics"), "Not Implemented: Video Capture Frame requested");
+	}
 };
 
 } // namespace openblack
@@ -237,7 +266,7 @@ const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, st
 		}
 		else
 		{
-			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Could not find the texture");
+			SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Could not find the texture");
 		}
 	}
 
@@ -660,4 +689,10 @@ void Renderer::Frame()
 {
 	// Advance to next frame. Process submitted rendering primitives.
 	bgfx::frame();
+}
+
+void Renderer::RequestScreenshot(const std::filesystem::path& filepath)
+{
+	bgfx::FrameBufferHandle mainBackbuffer = BGFX_INVALID_HANDLE;
+	bgfx::requestScreenShot(mainBackbuffer, filepath.string().c_str());
 }

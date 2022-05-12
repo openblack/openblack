@@ -12,6 +12,7 @@
 #include <array>
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -102,6 +103,7 @@ struct Arguments
 	uint32_t numFramesToSimulate;
 	std::string logFile;
 	std::array<spdlog::level::level_enum, k_LoggingSubsystemStrs.size()> logLevels;
+	std::optional<std::pair</* frame number */ uint32_t, /* output */ std::filesystem::path>> requestScreenshot;
 };
 
 class Game
@@ -207,6 +209,8 @@ public:
 	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const { return _turnDeltaTime; }
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
 
+	void RequestScreenshot(const std::filesystem::path& path);
+
 	static Game* Instance() { return sInstance; }
 
 private:
@@ -252,5 +256,7 @@ private:
 
 	entt::entity _handEntity;
 	bool _handGripping;
+
+	std::optional<std::pair</* frame number */ uint32_t, /* output */ std::filesystem::path>> _requestScreenshot;
 };
 } // namespace openblack
