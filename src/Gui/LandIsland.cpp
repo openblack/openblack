@@ -11,8 +11,8 @@
 
 #include <LNDFile.h>
 
-#include <3D/LandIsland.h>
-#include <Game.h>
+#include "3D/LandIsland.h"
+#include "Game.h"
 
 openblack::gui::LandIsland::LandIsland()
     : DebugWindow("Land Island", ImVec2(250.0f, 165.0f))

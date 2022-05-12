@@ -10,16 +10,16 @@
 #include "LandIsland.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stdexcept>
+
+#include <BulletDynamics/Dynamics/btRigidBody.h>
+#include <LNDFile.h>
+#include <spdlog/spdlog.h>
+
 #include "Common/IStream.h"
 #include "Common/stb_image_write.h"
 #include "Dynamics/LandBlockBulletMeshInterface.h"
 #include "Game.h"
-
-#include <BulletDynamics/Dynamics/btRigidBody.h>
-#include <spdlog/spdlog.h>
-
-#include <LNDFile.h>
-#include <stdexcept>
 
 using namespace openblack;
 using namespace openblack::graphics;

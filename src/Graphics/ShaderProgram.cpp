@@ -9,11 +9,11 @@
 
 #include "ShaderProgram.h"
 
+#include <spdlog/spdlog.h>
+
 #include "Common/FileSystem.h"
 #include "Game.h"
 #include "Texture2D.h"
-
-#include <spdlog/spdlog.h>
 
 namespace openblack::graphics
 {

@@ -7,11 +7,11 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#include <ANMFile.h>
-
 #include <cstdlib>
+
 #include <string>
 
+#include <ANMFile.h>
 #include <cxxopts.hpp>
 
 #define TINYGLTF_IMPLEMENTATION

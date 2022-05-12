@@ -9,6 +9,8 @@
 
 #include "Water.h"
 
+#include <glm/vec2.hpp>
+
 #include "Common/FileSystem.h"
 #include "Game.h"
 #include "Graphics/FrameBuffer.h"
@@ -17,8 +19,6 @@
 #include "Graphics/ShaderProgram.h"
 #include "Graphics/Texture2D.h"
 #include "Graphics/VertexBuffer.h"
-
-#include <glm/vec2.hpp>
 
 using namespace openblack;
 using namespace openblack::graphics;

@@ -7,13 +7,13 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#include <MorphFile.h>
-
 #include <cstdlib>
+
+#include <fstream>
 #include <string>
 
+#include <MorphFile.h>
 #include <cxxopts.hpp>
-#include <fstream>
 
 int ListDetails(openblack::morph::MorphFile& morph)
 {

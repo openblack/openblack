@@ -14,11 +14,12 @@
 #include <bgfx/bgfx.h>
 #include <imgui_widget_flamegraph.h>
 
-#include <ECS/Components/Transform.h>
-#include <ECS/Components/Tree.h>
-#include <ECS/Registry.h>
-#include <Game.h>
-#include <Profiler.h>
+#include "ECS/Components/Transform.h"
+#include "ECS/Components/Tree.h"
+#include "ECS/Registry.h"
+#include "Game.h"
+
+#include "../Profiler.h"
 
 openblack::gui::Profiler::Profiler()
     : DebugWindow("Profiler", ImVec2(650.0f, 800.0f))

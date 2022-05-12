@@ -9,11 +9,12 @@
 
 #pragma once
 
-#include <bgfx/bgfx.h>
-
 #include <cstdint>
+
 #include <map>
 #include <string>
+
+#include <bgfx/bgfx.h>
 
 namespace openblack::graphics
 {

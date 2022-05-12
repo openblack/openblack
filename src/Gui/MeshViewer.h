@@ -9,17 +9,17 @@
 
 #pragma once
 
-#include "DebugWindow.h"
-
 #include <memory>
 #include <optional>
 
+#include <entt/entt.hpp>
+#include <glm/vec3.hpp>
+#include <imgui.h>
+
 #include "3D/AllMeshes.h"
+#include "DebugWindow.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
-
-#include <entt/entt.hpp>
-#include <imgui.h>
 
 namespace openblack
 {

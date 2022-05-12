@@ -9,16 +9,16 @@
 
 #pragma once
 
-#include "DebugWindow.h"
-
-#include <imgui.h>
-
 #include <array>
 #include <memory>
 #include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
+
+#include <imgui.h>
+
+#include "DebugWindow.h"
 
 struct ImGuiInputTextCallbackData;
 

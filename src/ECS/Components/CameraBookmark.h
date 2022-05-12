@@ -9,8 +9,9 @@
 
 #pragma once
 
-#include <chrono>
 #include <cstdint>
+
+#include <chrono>
 
 namespace openblack::ecs::components
 {

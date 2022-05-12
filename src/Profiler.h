@@ -9,9 +9,10 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include <array>
 #include <chrono>
-#include <cstdint>
 #include <map>
 #include <string_view>
 

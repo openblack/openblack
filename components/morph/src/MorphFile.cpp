@@ -77,11 +77,12 @@
  *
  */
 
-#include <MorphFile.h>
+#include "MorphFile.h"
 
-#include <algorithm>
 #include <cassert>
 #include <cstring>
+
+#include <algorithm>
 #include <fstream>
 #include <vector>
 

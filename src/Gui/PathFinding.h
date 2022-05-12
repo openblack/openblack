@@ -9,12 +9,12 @@
 
 #pragma once
 
-#include "DebugWindow.h"
-
 #include <optional>
 
 #include <entt/fwd.hpp>
 #include <glm/vec3.hpp>
+
+#include "DebugWindow.h"
 
 namespace openblack::gui
 {

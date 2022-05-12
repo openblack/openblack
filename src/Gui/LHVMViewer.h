@@ -9,9 +9,9 @@
 
 #pragma once
 
-#include "DebugWindow.h"
-
 #include <LHVM/LHVM.h>
+
+#include "DebugWindow.h"
 
 namespace openblack::gui
 {

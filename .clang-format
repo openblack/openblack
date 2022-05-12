@@ -41,7 +41,27 @@ ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 4
 Cpp11BracedListStyle: true
 FixNamespaceComments: true
-IncludeBlocks: Preserve
+IncludeBlocks: Regroup
+# https://google.github.io/styleguide/cppguide.html#Names_and_Order_of_Includes
+IncludeCategories:
+  # cpp standard libs starting with c
+  - Regex:           '^<chrono>'
+    Priority:        2
+  # c standard libs
+  - Regex:           '^<c[^\.]*>'
+    Priority:        1
+  # c++ standard libs
+  - Regex:           '^<[^\.]*>'
+    Priority:        2
+  # external libs
+  - Regex:           '^<.*>'
+    Priority:        3
+  # non-relative includes
+  - Regex:           '"[^\.].*"'
+    Priority:        4
+  # everything else
+  - Regex:           '.*'
+    Priority:        5
 IndentCaseLabels: false
 IndentWidth: 4
 IndentWrappedFunctionNames: false

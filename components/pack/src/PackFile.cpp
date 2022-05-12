@@ -79,10 +79,11 @@
  *
  */
 
-#include <PackFile.h>
+#include "PackFile.h"
 
 #include <cassert>
 #include <cstring>
+
 #include <fstream>
 
 using namespace openblack::pack;

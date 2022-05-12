@@ -9,10 +9,11 @@
 
 #pragma once
 
-#include "RenderPass.h"
-
 #include <cstdint>
+
 #include <memory>
+
+#include "RenderPass.h"
 
 namespace bgfx
 {

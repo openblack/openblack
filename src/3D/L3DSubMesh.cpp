@@ -9,17 +9,17 @@
 
 #include "L3DSubMesh.h"
 
-#include "Game.h"
-#include "Graphics/IndexBuffer.h"
-#include "Graphics/ShaderProgram.h"
-#include "Graphics/VertexBuffer.h"
-#include "L3DMesh.h"
-
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/component_wise.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 #include <spdlog/spdlog.h>
+
+#include "Game.h"
+#include "Graphics/IndexBuffer.h"
+#include "Graphics/ShaderProgram.h"
+#include "Graphics/VertexBuffer.h"
+#include "L3DMesh.h"
 
 using namespace openblack::graphics;
 

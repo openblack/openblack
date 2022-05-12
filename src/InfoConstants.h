@@ -9,8 +9,9 @@
 
 #pragma once
 
-#include <array>
 #include <cstdint>
+
+#include <array>
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>

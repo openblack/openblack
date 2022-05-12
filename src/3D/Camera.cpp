@@ -9,11 +9,12 @@
 
 #include "Camera.h"
 
+#include <optional>
+
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/intersect.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/spline.hpp>
-#include <optional>
 
 #include "3D/LandIsland.h"
 #include "ECS/Registry.h"

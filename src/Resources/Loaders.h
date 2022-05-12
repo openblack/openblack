@@ -9,12 +9,12 @@
 
 #pragma once
 
+#include <PackFile.h>
+#include <entt/entt.hpp>
+
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "Level.h"
-
-#include <PackFile.h>
-#include <entt/entt.hpp>
 
 namespace openblack::resources
 {

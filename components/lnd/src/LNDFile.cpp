@@ -102,9 +102,10 @@
  * ------------------------ end of file ----------------------------------------
  */
 
-#include <LNDFile.h>
+#include "LNDFile.h"
 
 #include <cassert>
+
 #include <fstream>
 #include <stdexcept>
 

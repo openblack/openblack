@@ -32,6 +32,11 @@
 
 #include <cstdint> // Shaders below need uint8_t
 
+#include <bgfx/embedded_shader.h>
+
+#include "3D/Camera.h"
+
+// clang-format off
 #define SHADER_NAME vs_line
 #include "ShaderIncluder.h"
 #define SHADER_NAME vs_line_instanced
@@ -62,10 +67,7 @@
 #include "ShaderIncluder.h"
 #define SHADER_NAME fs_sprite
 #include "ShaderIncluder.h"
-
-#include "3D/Camera.h"
-
-#include <bgfx/embedded_shader.h>
+// clang-format on
 
 namespace openblack::graphics
 {

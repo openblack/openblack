@@ -7,17 +7,18 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#include "Game.h"
-
-#include <SDL_messagebox.h>
-#include <cxxopts.hpp>
 #include <iostream>
 #include <map>
 #include <memory>
 
+#include <SDL_messagebox.h>
+#include <cxxopts.hpp>
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
+
+#include "Game.h"
 
 bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return_code)
 {

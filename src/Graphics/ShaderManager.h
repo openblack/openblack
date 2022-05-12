@@ -9,11 +9,11 @@
 
 #pragma once
 
-#include "RenderPass.h"
-#include "ShaderProgram.h"
-
 #include <map>
 #include <string>
+
+#include "RenderPass.h"
+#include "ShaderProgram.h"
 
 namespace openblack
 {
