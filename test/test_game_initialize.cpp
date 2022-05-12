@@ -7,9 +7,8 @@
  * openblack is licensed under the GNU General Public License version 3.
  ******************************************************************************/
 
-#include <gtest/gtest.h>
-
 #include <Game.h>
+#include <gtest/gtest.h>
 
 TEST(GameInitialize, initialize_only)
 {
