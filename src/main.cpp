@@ -52,6 +52,8 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		("l,log-file", "Output file for logs, 'stdout'/'logcat' for terminal output.", cxxopts::value<std::string>()->default_value(defaultLogFile))
 		("L,log-level", "Level (trace, debug, info, warning, error, critical, off) of logging per subsystem (" + loggingSubsystems + ").",
 		    cxxopts::value<std::vector<std::string>>()->default_value("all=debug"))
+		("screenshot-frame", "Request a screenshot of the backbuffer at a certain frame number.", cxxopts::value<uint32_t>())
+		("screenshot-path", "Path of the request a screenshot of the backbuffer.", cxxopts::value<std::filesystem::path>()->default_value("screenshot.png"))
 	;
 	// clang-format on
 
@@ -170,6 +172,13 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		{
 			args.gamePath = result["game-path"].as<std::string>();
 		}
+
+		if (result.count("screenshot-frame") != 0)
+		{
+			args.requestScreenshot = std::make_pair(result["screenshot-frame"].as<uint32_t>(),
+			                                        result["screenshot-path"].as<std::filesystem::path>());
+		}
+
 		args.windowWidth = result["width"].as<uint16_t>();
 		args.windowHeight = result["height"].as<uint16_t>();
 		args.scale = result["ui-scale"].as<float>();

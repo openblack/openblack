@@ -13,6 +13,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 #include <bgfx/bgfx.h>
@@ -141,5 +142,6 @@ private:
 	int32_t _lastScroll {0};
 	const bgfx::ViewId _viewId;
 	std::vector<std::unique_ptr<Window>> _debugWindows;
+	std::string _screenshotFilename = "screenshot.png";
 };
 } // namespace openblack::debug::gui
