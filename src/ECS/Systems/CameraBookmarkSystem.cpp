@@ -21,10 +21,10 @@ using namespace openblack::ecs::components;
 
 CameraBookmarkSystem& CameraBookmarkSystem::Instance()
 {
-	static CameraBookmarkSystem* instance = nullptr;
+	static std::unique_ptr<CameraBookmarkSystem> instance = nullptr;
 	if (instance == nullptr)
 	{
-		instance = new CameraBookmarkSystem();
+		instance.reset(new CameraBookmarkSystem());
 	}
 	return *instance;
 }
