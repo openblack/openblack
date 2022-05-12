@@ -102,10 +102,11 @@ Game::Game(Arguments&& args)
 			CreateLogger = [](const std::string& name) { return spdlog::stdout_color_mt(name); };
 		}
 	}
-	for (size_t i = 0; i < LoggingSubsystemStrs.size(); ++i)
+	for (size_t i = 0; const auto& subsystem : LoggingSubsystemStrs)
 	{
-		auto logger = CreateLogger(LoggingSubsystemStrs[i].data());
-		logger->set_level(args.logLevels[i]);
+		auto logger = CreateLogger(subsystem.data());
+		logger->set_level(args.logLevels.at(i));
+		++i;
 	}
 	sInstance = this;
 
@@ -297,8 +298,8 @@ bool Game::GameLogicLoop()
 bool Game::Update()
 {
 	_profiler->Frame();
-	auto previous = _profiler->_entries[_profiler->GetEntryIndex(-1)]._frameStart;
-	auto current = _profiler->_entries[_profiler->GetEntryIndex(0)]._frameStart;
+	auto previous = _profiler->_entries.at(_profiler->GetEntryIndex(-1))._frameStart;
+	auto current = _profiler->_entries.at(_profiler->GetEntryIndex(0))._frameStart;
 	// Prevent spike at first frame
 	if (previous.time_since_epoch().count() == 0)
 	{
@@ -455,10 +456,11 @@ bool Game::Initialize()
 	pack::PackFile pack;
 	pack.Open(_fileSystem->FindPath(_fileSystem->DataPath() / "AllMeshes.g3d"));
 	auto& meshes = pack.GetMeshes();
-	for (size_t i = 0; i < meshes.size(); i++)
+	for (size_t i = 0; const auto& mesh : meshes)
 	{
-		auto meshId = static_cast<MeshId>(i);
-		meshManager.Load(meshId, MeshNames[i], meshes[i]);
+		const auto meshId = static_cast<MeshId>(i);
+		meshManager.Load(meshId, MeshNames.at(i), mesh);
+		++i;
 	}
 
 	auto& textures = pack.GetTextures();

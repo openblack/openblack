@@ -48,14 +48,19 @@ struct BgfxCallback: public bgfx::CallbackI
 
 	void fatal(const char* filePath, uint16_t line, bgfx::Fatal::Enum code, const char* str) override
 	{
-		const static std::array CodeLookup = {
-		    "DebugCheck", "InvalidShader", "UnableToInitialize", "UnableToCreateTexture", "DeviceLost",
+		const static std::array<std::string, bgfx::Fatal::Count> CodeLookup = {
+		    "DebugCheck",            //
+		    "InvalidShader",         //
+		    "UnableToInitialize",    //
+		    "UnableToCreateTexture", //
+		    "DeviceLost",            //
 		};
-		SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "bgfx: {}:{}: FATAL ({}): {}", filePath, line, CodeLookup[code], str);
+		const auto& codeStr = CodeLookup.at(code);
+		SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "bgfx: {}:{}: FATAL ({}): {}", filePath, line, codeStr, str);
 
 		// Must terminate, continuing will cause crash anyway.
-		throw std::runtime_error(std::string("bgfx: ") + filePath + ":" + std::to_string(line) + ": FATAL (" +
-		                         CodeLookup[code] + "): " + str);
+		throw std::runtime_error(std::string("bgfx: ") + filePath + ":" + std::to_string(line) + ": FATAL (" + codeStr +
+		                         "): " + str);
 	}
 
 	void traceVargs([[maybe_unused]] const char* filePath, [[maybe_unused]] uint16_t line, const char* format,
@@ -162,9 +167,10 @@ Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererTy
 	_plane = Primitive::CreatePlane();
 
 	// give debug names to views
-	for (bgfx::ViewId i = 0; i < static_cast<bgfx::ViewId>(graphics::RenderPass::_count); ++i)
+	for (bgfx::ViewId i = 0; const auto& name : RenderPassNames)
 	{
-		bgfx::setViewName(i, RenderPassNames[i].data());
+		bgfx::setViewName(i, name.data());
+		++i;
 	}
 }
 

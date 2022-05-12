@@ -280,7 +280,7 @@ int PrintSkins(openblack::l3d::L3DFile& l3d)
 				{
 					for (uint16_t i = 0; i < subsample; ++i)
 					{
-						auto& color = skin.texels[x * subsample + i + (y * subsample + j) * skin.width];
+						auto& color = skin.texels.at(x * subsample + i + (y * subsample + j) * skin.width);
 						red += color.R;
 						green += color.G;
 						blue += color.B;
@@ -348,7 +348,7 @@ int PrintPrimitiveHeaders(openblack::l3d::L3DFile& l3d)
 		}
 		else
 		{
-			std::printf("material's type: %s (0x%08X)\n", typeMap[static_cast<uint32_t>(header.material.type)],
+			std::printf("material's type: %s (0x%08X)\n", typeMap.at(static_cast<uint32_t>(header.material.type)),
 			            static_cast<uint32_t>(header.material.type));
 		}
 		std::printf("material's alpha cut out threshold: 0x%02X (%f)\n", header.material.alphaCutoutThreshold,
@@ -406,11 +406,9 @@ int PrintBones(openblack::l3d::L3DFile& l3d)
 			std::printf("right sibling: %X\n", bone.rightSibling);
 		}
 		std::printf("rotation:\n");
-		for (uint8_t j = 0; j < 3; ++j)
-		{
-			std::printf("     [%6.3f %6.3f %6.3f]\n", bone.orientation[j * 3], bone.orientation[j * 3 + 1],
-			            bone.orientation[j * 3 + 2]);
-		}
+		std::printf("     [%6.3f %6.3f %6.3f]\n", bone.orientation[0], bone.orientation[1], bone.orientation[2]);
+		std::printf("     [%6.3f %6.3f %6.3f]\n", bone.orientation[3], bone.orientation[4], bone.orientation[5]);
+		std::printf("     [%6.3f %6.3f %6.3f]\n", bone.orientation[6], bone.orientation[7], bone.orientation[8]);
 		std::printf("position: (%5.1f %5.1f %5.1f)\n", bone.position.x, bone.position.y, bone.position.z);
 		std::printf("\n");
 	}

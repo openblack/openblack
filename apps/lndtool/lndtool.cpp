@@ -239,8 +239,8 @@ int PrintMaterials(openblack::lnd::LNDFile& lnd)
 				{
 					for (uint16_t i = 0; i < subsample; ++i)
 					{
-						auto& color =
-						    material.texels[x * subsample + i + (y * subsample + j) * openblack::lnd::LNDMaterial::width];
+						const auto& color =
+						    material.texels.at(x * subsample + i + (y * subsample + j) * openblack::lnd::LNDMaterial::width);
 						red += color.R;
 						green += color.G;
 						blue += color.B;
@@ -277,7 +277,7 @@ int PrintExtra(openblack::lnd::LNDFile& lnd)
 			{
 				for (uint16_t i = 0; i < subsample; ++i)
 				{
-					color += extra.noise.texels[x * subsample + i + (y * subsample + j) * openblack::lnd::LNDBumpMap::width];
+					color += extra.noise.texels.at(x * subsample + i + (y * subsample + j) * openblack::lnd::LNDBumpMap::width);
 				}
 			}
 			color /= magnitude;
@@ -296,7 +296,7 @@ int PrintExtra(openblack::lnd::LNDFile& lnd)
 			{
 				for (uint16_t i = 0; i < subsample; ++i)
 				{
-					color += extra.bump.texels[x * subsample + i + (y * subsample + j) * openblack::lnd::LNDBumpMap::width];
+					color += extra.bump.texels.at(x * subsample + i + (y * subsample + j) * openblack::lnd::LNDBumpMap::width);
 				}
 			}
 			color /= magnitude;
@@ -430,7 +430,7 @@ int WriteFile(const Arguments::Write& args)
 			fsize = static_cast<size_t>(stream.tellg());
 			stream.seekg(0);
 		}
-		if (fsize != sizeof(openblack::lnd::LNDBumpMap::texels))
+		if (fsize != sizeof(map.texels[0]) * map.texels.size())
 		{
 			// clang-format off
 			std::cerr << "File " << args.bumpMapFile

@@ -183,7 +183,7 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 
 		assert(static_cast<uint32_t>(primitive.material.type) != 0xe);
 		assert(static_cast<uint32_t>(primitive.material.type) != 0x11);
-		const auto& lutEntry = materialTypeLut[static_cast<uint32_t>(primitive.material.type)];
+		const auto& lutEntry = materialTypeLut.at(static_cast<uint32_t>(primitive.material.type));
 
 		// TODO(bwrsandman): Interpret cull mode, color byte ordering and render mode, then store in primitive
 		_primitives.emplace_back(Primitive {

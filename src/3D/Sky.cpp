@@ -33,26 +33,25 @@ Sky::Sky()
 	_model = std::make_unique<L3DMesh>("Sky");
 	_model->LoadFromFile(filesystem.WeatherSystemPath() / "sky.l3d");
 
-	for (uint32_t i = 0; i < _alignments.size(); i++)
+	for (uint32_t idx = 0; const auto& alignment : _alignments)
 	{
-		for (uint32_t j = 0; j < _times.size(); j++)
+		for (const auto& timeView : _times)
 		{
-			auto time = std::string(_times[j]);
-			if (i == 1)
+			auto time = std::string(timeView);
+			auto prefix = std::string("sky");
+			if (idx >= _times.size() && idx < 2 * _times.size())
 			{
 				time = string_utils::Capitalise(time);
+				prefix = string_utils::Capitalise(prefix);
 			}
-			std::string filename = fmt::format("sky_{}_{}.555", _alignments[i], time);
-			if (i == 1)
-			{
-				filename = string_utils::Capitalise(filename);
-			}
-			auto path = filesystem.WeatherSystemPath() / filename;
+			const auto filename = fmt::format("{}_{}_{}.555", prefix, alignment, time);
+			const auto path = filesystem.WeatherSystemPath() / filename;
 			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading sky texture: {}", path.generic_string());
 
 			Bitmap16B* bitmap = Bitmap16B::LoadFromFile(path);
-			memcpy(&_bitmaps[(i * 3 + j) * _textureResolution[0] * _textureResolution[1]], bitmap->Data(), bitmap->Size());
+			memcpy(&_bitmaps.at(idx * _textureResolution[0] * _textureResolution[1]), bitmap->Data(), bitmap->Size());
 			delete bitmap;
+			++idx;
 		}
 	}
 

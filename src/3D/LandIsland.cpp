@@ -98,7 +98,7 @@ float LandIsland::GetHeightAt(glm::vec2 vec) const
 
 uint8_t LandIsland::GetNoise(int x, int y)
 {
-	return _noiseMap[(y & 0xFF) + 256 * (x & 0xFF)];
+	return _noiseMap.at((y & 0xFF) + 256 * (x & 0xFF));
 }
 
 const LandBlock* LandIsland::GetBlock(const glm::u8vec2& coordinates) const
@@ -107,7 +107,7 @@ const LandBlock* LandIsland::GetBlock(const glm::u8vec2& coordinates) const
 	if (coordinates.x > 32 || coordinates.y > 32)
 		return nullptr;
 
-	const uint8_t blockIndex = _blockIndexLookup[coordinates.x * 32 + coordinates.y];
+	const uint8_t blockIndex = _blockIndexLookup.at(coordinates.x * 32 + coordinates.y);
 	if (blockIndex == 0)
 		return nullptr;
 
@@ -133,7 +133,7 @@ const lnd::LNDCell& LandIsland::GetCell(const glm::u16vec2& coordinates) const
 	const uint16_t lookupIndex = ((coordinates.x & ~0xFU) << 1U) | (coordinates.y >> 4U);
 	const uint16_t cellIndex = (coordinates.x & 0xFU) * 0x11u + (coordinates.y & 0xFU);
 
-	const uint8_t blockIndex = _blockIndexLookup[lookupIndex];
+	const uint8_t blockIndex = _blockIndexLookup.at(lookupIndex);
 
 	if (blockIndex == 0)
 	{

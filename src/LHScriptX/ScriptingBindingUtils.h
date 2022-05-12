@@ -140,7 +140,7 @@ constexpr void GetScriptCommandParameters(std::array<ParameterType, 9>& paramete
                                           void (*)(PoppedArgType, RemainingTypes...))
 {
 	void (*remainingTypesFunction)(RemainingTypes...) = nullptr;
-	parameters[index] = GetParamType<PoppedArgType>();
+	parameters.at(index) = GetParamType<PoppedArgType>();
 	GetScriptCommandParameters(parameters, index + 1, remainingTypesFunction);
 }
 

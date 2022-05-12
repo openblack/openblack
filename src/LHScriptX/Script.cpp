@@ -140,7 +140,7 @@ void Script::runCommand(const std::string& identifier, const std::vector<Token>&
 	{
 		// Looping until None because parameters is a fixed sized array.
 		// Last Argument is the one before the first None or the 9th
-		if (command_signature->parameters[expected_size] == ParameterType::None)
+		if (command_signature->parameters.at(expected_size) == ParameterType::None)
 		{
 			break;
 		}
@@ -153,12 +153,13 @@ void Script::runCommand(const std::string& identifier, const std::vector<Token>&
 	}
 
 	// Validate the typing of the given arguments against what is expected
-	for (auto i = 0u; i < parameters.size(); i++)
+	for (auto i = 0u; const auto& param : parameters)
 	{
-		if (parameters[i].GetType() != expected_parameters[i])
+		if (param.GetType() != expected_parameters.at(i))
 		{
 			std::runtime_error("Invalid script argument type");
 		}
+		++i;
 	}
 
 	ScriptCommandContext ctx(_game, &parameters);

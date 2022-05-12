@@ -60,14 +60,15 @@ static VillagerStateTableEntry TodoEntry = {
     .state = [](LivingAction& action) -> uint32_t {
 	    SPDLOG_LOGGER_WARN(spdlog::get("ai"), "Villager #{}: TODO: Unimplemented state function: {}",
 	                       static_cast<uint32_t>(Game::instance()->GetEntityRegistry().ToEntity(action)),
-	                       VillagerStateStrings[static_cast<size_t>(
-	                           LivingActionSystem::instance().VillagerGetState(action, LivingAction::Index::Top))]);
+	                       VillagerStateStrings.at(static_cast<size_t>(
+	                           LivingActionSystem::instance().VillagerGetState(action, LivingAction::Index::Top))));
 	    return 0;
     },
     .entryState = [](LivingAction& action, VillagerStates src, VillagerStates dst) -> bool {
 	    SPDLOG_LOGGER_WARN(spdlog::get("ai"), "Villager #{}: TODO: Unimplemented entry state function ({} -> {})",
 	                       static_cast<uint32_t>(Game::instance()->GetEntityRegistry().ToEntity(action)),
-	                       VillagerStateStrings[static_cast<size_t>(src)], VillagerStateStrings[static_cast<size_t>(dst)]);
+	                       VillagerStateStrings.at(static_cast<size_t>(src)),
+	                       VillagerStateStrings.at(static_cast<size_t>(dst)));
 	    return false;
     },
     .exitState = [](LivingAction& action) -> bool {
@@ -78,43 +79,43 @@ static VillagerStateTableEntry TodoEntry = {
     .saveState = [](LivingAction& action) -> bool {
 	    SPDLOG_LOGGER_WARN(spdlog::get("ai"), "Villager #{}: TODO: Unimplemented save state function: {}",
 	                       static_cast<uint32_t>(Game::instance()->GetEntityRegistry().ToEntity(action)),
-	                       VillagerStateStrings[static_cast<size_t>(
-	                           LivingActionSystem::instance().VillagerGetState(action, LivingAction::Index::Top))]);
+	                       VillagerStateStrings.at(static_cast<size_t>(
+	                           LivingActionSystem::instance().VillagerGetState(action, LivingAction::Index::Top))));
 	    return false;
     },
     .loadState = [](LivingAction& action) -> bool {
 	    SPDLOG_LOGGER_WARN(spdlog::get("ai"), "Villager #{}: TODO: Unimplemented load state function: {}",
 	                       static_cast<uint32_t>(Game::instance()->GetEntityRegistry().ToEntity(action)),
-	                       VillagerStateStrings[static_cast<size_t>(
-	                           LivingActionSystem::instance().VillagerGetState(action, LivingAction::Index::Top))]);
+	                       VillagerStateStrings.at(static_cast<size_t>(
+	                           LivingActionSystem::instance().VillagerGetState(action, LivingAction::Index::Top))));
 	    return false;
     },
     .field_0x50 = [](LivingAction& action) -> bool {
 	    SPDLOG_LOGGER_WARN(spdlog::get("ai"), "Villager #{}: TODO: Unimplemented field_0x50 state function: {}",
 	                       static_cast<uint32_t>(Game::instance()->GetEntityRegistry().ToEntity(action)),
-	                       VillagerStateStrings[static_cast<size_t>(
-	                           LivingActionSystem::instance().VillagerGetState(action, LivingAction::Index::Top))]);
+	                       VillagerStateStrings.at(static_cast<size_t>(
+	                           LivingActionSystem::instance().VillagerGetState(action, LivingAction::Index::Top))));
 	    return false;
     },
     .field_0x60 = [](LivingAction& action) -> bool {
 	    SPDLOG_LOGGER_WARN(spdlog::get("ai"), "Villager #{}: TODO: Unimplemented field_0x60 state function: {}",
 	                       static_cast<uint32_t>(Game::instance()->GetEntityRegistry().ToEntity(action)),
-	                       VillagerStateStrings[static_cast<size_t>(
-	                           LivingActionSystem::instance().VillagerGetState(action, LivingAction::Index::Top))]);
+	                       VillagerStateStrings.at(static_cast<size_t>(
+	                           LivingActionSystem::instance().VillagerGetState(action, LivingAction::Index::Top))));
 	    return false;
     },
     .transitionAnimation = [](LivingAction& action) -> int {
 	    SPDLOG_LOGGER_WARN(spdlog::get("ai"), "Villager #{}: TODO: Unimplemented transition animation function: {}",
 	                       static_cast<uint32_t>(Game::instance()->GetEntityRegistry().ToEntity(action)),
-	                       VillagerStateStrings[static_cast<size_t>(
-	                           LivingActionSystem::instance().VillagerGetState(action, LivingAction::Index::Top))]);
+	                       VillagerStateStrings.at(static_cast<size_t>(
+	                           LivingActionSystem::instance().VillagerGetState(action, LivingAction::Index::Top))));
 	    return -1;
     },
     .validate = [](LivingAction& action) -> bool {
 	    SPDLOG_LOGGER_WARN(spdlog::get("ai"), "Villager #{}: TODO: Unimplemented validate function: {}",
 	                       static_cast<uint32_t>(Game::instance()->GetEntityRegistry().ToEntity(action)),
-	                       VillagerStateStrings[static_cast<size_t>(
-	                           LivingActionSystem::instance().VillagerGetState(action, LivingAction::Index::Top))]);
+	                       VillagerStateStrings.at(static_cast<size_t>(
+	                           LivingActionSystem::instance().VillagerGetState(action, LivingAction::Index::Top))));
 	    return false;
     },
 };
@@ -422,23 +423,20 @@ void LivingActionSystem::Update()
 
 VillagerStates LivingActionSystem::VillagerGetState(const LivingAction& action, LivingAction::Index index) const
 {
-	assert(index < LivingAction::Index::_Count);
-	return static_cast<VillagerStates>(action.states[static_cast<size_t>(index)]);
+	return static_cast<VillagerStates>(action.states.at(static_cast<size_t>(index)));
 }
 
 void LivingActionSystem::VillagerSetState(LivingAction& action, LivingAction::Index index, VillagerStates state,
                                           bool skipTransition) const
 {
-	assert(index < LivingAction::Index::_Count);
-	if (static_cast<VillagerStates>(action.states[static_cast<size_t>(index)]) != state)
+	const auto previousState = static_cast<VillagerStates>(action.states.at(static_cast<size_t>(index)));
+	if (previousState != state)
 	{
 		[[maybe_unused]] auto& registry = Game::instance()->GetEntityRegistry();
-		SPDLOG_LOGGER_TRACE(spdlog::get("ai"), "Villager #{}: Setting state {} -> {}",
-		                    static_cast<int>(registry.ToEntity(action)),
-		                    VillagerStateStrings[static_cast<size_t>(action.states[static_cast<size_t>(index)])],
-		                    VillagerStateStrings[static_cast<size_t>(state)]);
+		SPDLOG_LOGGER_TRACE(
+		    spdlog::get("ai"), "Villager #{}: Setting state {} -> {}", static_cast<int>(registry.ToEntity(action)),
+		    VillagerStateStrings.at(static_cast<size_t>(previousState)), VillagerStateStrings.at(static_cast<size_t>(state)));
 
-		const auto previousState = static_cast<VillagerStates>(action.states[static_cast<size_t>(index)]);
 		if (index == LivingAction::Index::Top)
 		{
 			action.turnsSinceStateChange = 0;
@@ -459,8 +457,8 @@ void LivingActionSystem::VillagerSetState(LivingAction& action, LivingAction::In
 
 uint32_t LivingActionSystem::VillagerCallState(LivingAction& action, LivingAction::Index index) const
 {
-	const auto& state = action.states[static_cast<size_t>(index)];
-	const auto& entry = VillagerStateTable[static_cast<size_t>(state)];
+	const auto state = action.states.at(static_cast<size_t>(index));
+	const auto& entry = VillagerStateTable.at(static_cast<size_t>(state));
 	const auto& callback = entry.state;
 	if (!callback)
 	{
@@ -472,8 +470,8 @@ uint32_t LivingActionSystem::VillagerCallState(LivingAction& action, LivingActio
 bool LivingActionSystem::VillagerCallEntryState(LivingAction& action, LivingAction::Index index, VillagerStates src,
                                                 VillagerStates dst) const
 {
-	const auto& state = action.states[static_cast<size_t>(index)];
-	const auto& entry = VillagerStateTable[static_cast<size_t>(state)];
+	const auto state = action.states.at(static_cast<size_t>(index));
+	const auto& entry = VillagerStateTable.at(static_cast<size_t>(state));
 	const auto& callback = entry.entryState;
 	if (!callback)
 	{
@@ -484,8 +482,8 @@ bool LivingActionSystem::VillagerCallEntryState(LivingAction& action, LivingActi
 
 bool LivingActionSystem::VillagerCallExitState(LivingAction& action, LivingAction::Index index) const
 {
-	const auto& state = action.states[static_cast<size_t>(index)];
-	const auto& entry = VillagerStateTable[static_cast<size_t>(state)];
+	const auto& state = action.states.at(static_cast<size_t>(index));
+	const auto& entry = VillagerStateTable.at(static_cast<size_t>(state));
 	const auto& callback = entry.exitState;
 	if (!callback)
 	{
@@ -496,8 +494,8 @@ bool LivingActionSystem::VillagerCallExitState(LivingAction& action, LivingActio
 
 int LivingActionSystem::VillagerCallOutOfAnimation(LivingAction& action, LivingAction::Index index) const
 {
-	const auto& state = action.states[static_cast<size_t>(index)];
-	const auto& entry = VillagerStateTable[static_cast<size_t>(state)];
+	const auto state = action.states.at(static_cast<size_t>(index));
+	const auto& entry = VillagerStateTable.at(static_cast<size_t>(state));
 	const auto& callback = entry.transitionAnimation;
 	if (!callback)
 	{
@@ -508,8 +506,8 @@ int LivingActionSystem::VillagerCallOutOfAnimation(LivingAction& action, LivingA
 
 bool LivingActionSystem::VillagerCallValidate(LivingAction& action, LivingAction::Index index) const
 {
-	const auto& state = action.states[static_cast<size_t>(index)];
-	const auto& entry = VillagerStateTable[static_cast<size_t>(state)];
+	const auto state = action.states.at(static_cast<size_t>(index));
+	const auto& entry = VillagerStateTable.at(static_cast<size_t>(state));
 	const auto& callback = entry.validate;
 	if (!callback)
 	{

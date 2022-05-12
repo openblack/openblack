@@ -53,7 +53,7 @@ int ListDetails(openblack::morph::MorphFile& morph)
 	for (uint8_t i = 0; i < std::min(4u, num_variants); ++i)
 	{
 		auto& animation_set = morph.GetVariantAnimationSet(i);
-		std::printf("%zu animations for \"%s\"\n", animation_set.size(), header.variant_mesh_names[i].data());
+		std::printf("%zu animations for \"%s\"\n", animation_set.size(), header.variant_mesh_names.at(i).data());
 	}
 
 	std::printf("%zu hair groups\n", morph.GetHairGroups().size());
@@ -84,7 +84,7 @@ int PrintHeader(openblack::morph::MorphFile& morph)
 	std::printf("base_mesh_name: %s\n", header.base_mesh_name.data());
 	for (uint8_t i = 0; i < 6; ++i)
 	{
-		std::printf("variant_mesh_names[%u]: %s\n", i, header.variant_mesh_names[i].data());
+		std::printf("variant_mesh_names[%u]: %s\n", i, header.variant_mesh_names.at(i).data());
 	}
 
 	return EXIT_SUCCESS;
@@ -200,7 +200,7 @@ int ShowVariantAnimationSets(openblack::morph::MorphFile& morph)
 	uint8_t num_variants = 0;
 	for (uint8_t i = 0; i < 4; ++i)
 	{
-		if (std::strlen(header.variant_mesh_names[i].data()) > 0 && !morph.GetVariantAnimationSet(i).empty())
+		if (std::strlen(header.variant_mesh_names.at(i).data()) > 0 && !morph.GetVariantAnimationSet(i).empty())
 		{
 			++num_variants;
 		}
@@ -210,7 +210,7 @@ int ShowVariantAnimationSets(openblack::morph::MorphFile& morph)
 	for (uint8_t i = 0; i < num_variants; ++i)
 	{
 		auto& animation_set = morph.GetVariantAnimationSet(i);
-		std::printf("%zu animations for \"%s\"\n", animation_set.size(), header.variant_mesh_names[i].data());
+		std::printf("%zu animations for \"%s\"\n", animation_set.size(), header.variant_mesh_names.at(i).data());
 		uint32_t j = 0;
 		for (const auto& animation : animation_set)
 		{
@@ -241,13 +241,13 @@ int ShowHairGroups(openblack::morph::MorphFile& morph)
 		for (size_t j = 0; j < group.header.unknown_0x10.size(); ++j)
 		{
 			std::printf("\t\tunknown_0x10[%2zu]:\n", j);
-			std::printf("\t\t\tunknown_0x0: 0x%08X\n", group.header.unknown_0x10[j].unknown_0x0);
-			std::printf("\t\t\tunknown_0x4: 0x%08X\n", group.header.unknown_0x10[j].unknown_0x4);
-			std::printf("\t\t\tunknown_0x8: 0x%08X\n", group.header.unknown_0x10[j].unknown_0x8);
-			std::printf("\t\t\tunknown_0xc: %f\n", group.header.unknown_0x10[j].unknown_0xc);
-			std::printf("\t\t\tunknown_0x10: %f\n", group.header.unknown_0x10[j].unknown_0x10);
-			std::printf("\t\t\tunknown_0x14: %f\n", group.header.unknown_0x10[j].unknown_0x14);
-			std::printf("\t\t\tunknown_0x18: %f\n", group.header.unknown_0x10[j].unknown_0x18);
+			std::printf("\t\t\tunknown_0x0: 0x%08X\n", group.header.unknown_0x10.at(j).unknown_0x0);
+			std::printf("\t\t\tunknown_0x4: 0x%08X\n", group.header.unknown_0x10.at(j).unknown_0x4);
+			std::printf("\t\t\tunknown_0x8: 0x%08X\n", group.header.unknown_0x10.at(j).unknown_0x8);
+			std::printf("\t\t\tunknown_0xc: %f\n", group.header.unknown_0x10.at(j).unknown_0xc);
+			std::printf("\t\t\tunknown_0x10: %f\n", group.header.unknown_0x10.at(j).unknown_0x10);
+			std::printf("\t\t\tunknown_0x14: %f\n", group.header.unknown_0x10.at(j).unknown_0x14);
+			std::printf("\t\t\tunknown_0x18: %f\n", group.header.unknown_0x10.at(j).unknown_0x18);
 		}
 		std::printf("\tHairs:\n");
 		for (size_t j = 0; j < group.hairs.size(); ++j)

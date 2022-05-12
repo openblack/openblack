@@ -334,7 +334,7 @@ void MorphFile::ReadFile(std::istream& stream, const std::filesystem::path& spec
 	// Creature files have different animations for the morph meshes (evil, good, thin, fat) weak, strong are skipped
 	for (uint32_t i = 0; i < 4; ++i)
 	{
-		if (std::strlen(_header.variant_mesh_names[i].data()) > 0)
+		if (std::strlen(_header.variant_mesh_names.at(i).data()) > 0)
 		{
 			// Set file to next animation set
 			stream.seekg(extra_offset);
@@ -346,7 +346,7 @@ void MorphFile::ReadFile(std::istream& stream, const std::filesystem::path& spec
 			// Again, the get pointer to the next part
 			stream.read(reinterpret_cast<char*>(&extra_offset), sizeof(extra_offset));
 
-			_variant_animations[i] = ReadAnimations(stream, variant_animation_offsets);
+			_variant_animations.at(i) = ReadAnimations(stream, variant_animation_offsets);
 		}
 	}
 

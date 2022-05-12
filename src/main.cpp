@@ -132,13 +132,14 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 			{
 				level = all;
 			}
-			for (size_t i = 0; i < logLevels.size(); ++i)
+			for (size_t i = 0; const auto& str : openblack::LoggingSubsystemStrs)
 			{
-				const auto iter = logLevelMap.find(openblack::LoggingSubsystemStrs[i].data());
+				const auto iter = logLevelMap.find(str.data());
 				if (iter != logLevelMap.cend())
 				{
-					logLevels[i] = iter->second;
+					logLevels.at(i) = iter->second;
 				}
+				++i;
 			}
 		}
 

@@ -30,7 +30,7 @@ entt::entity BigForestArchetype::Create(const glm::vec3& position, BigForestInfo
 	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
-	const auto& info = Game::instance()->GetInfoConstants().bigForest[static_cast<size_t>(type)];
+	const auto& info = Game::instance()->GetInfoConstants().bigForest.at(static_cast<size_t>(type));
 
 	const auto& transform = registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));
 	const auto [point, radius] = GetFixedObstacleBoundingCircle(info.meshId, transform);
