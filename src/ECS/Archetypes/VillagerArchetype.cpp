@@ -35,7 +35,7 @@ entt::entity VillagerArchetype::Create([[maybe_unused]] const glm::vec3& abodePo
 	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
-	const auto& info = Game::instance()->GetInfoConstants().villager[static_cast<size_t>(type)];
+	const auto& info = Game::instance()->GetInfoConstants().villager.at(static_cast<size_t>(type));
 
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(glm::radians(180.0f)), glm::vec3(1.0));
 	registry.Assign<Mobile>(entity);

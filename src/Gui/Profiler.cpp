@@ -97,13 +97,13 @@ void openblack::gui::Profiler::Draw(Game& game)
 
 	ImGui::Columns(1);
 
-	auto& entry = game.GetProfiler()._entries[game.GetProfiler().GetEntryIndex(-1)];
+	auto& entry = game.GetProfiler()._entries.at(game.GetProfiler().GetEntryIndex(-1));
 
 	ImGuiWidgetFlameGraph::PlotFlame(
 	    "CPU",
 	    [](float* startTimestamp, float* endTimestamp, ImU8* level, const char** caption, const void* data, int idx) -> void {
 		    auto entry = reinterpret_cast<const openblack::Profiler::Entry*>(data);
-		    auto& stage = entry->_stages[idx];
+		    auto& stage = entry->_stages.at(idx);
 		    if (startTimestamp)
 		    {
 			    std::chrono::duration<float, std::milli> fltStart = stage._start - entry->_frameStart;
@@ -122,7 +122,7 @@ void openblack::gui::Profiler::Draw(Game& game)
 		    }
 		    if (caption)
 		    {
-			    *caption = openblack::Profiler::stageNames[idx].data();
+			    *caption = openblack::Profiler::stageNames.at(idx).data();
 		    }
 	    },
 	    &entry, static_cast<uint8_t>(openblack::Profiler::Stage::_count), 0, "Main Thread", 0, FLT_MAX, ImVec2(width, 0));
@@ -161,13 +161,14 @@ void openblack::gui::Profiler::Draw(Game& game)
 		auto cursorX = ImGui::GetCursorPosX();
 		auto indentSize = ImGui::CalcTextSize("    ").x;
 
-		for (uint8_t i = 0; i < static_cast<uint8_t>(openblack::Profiler::Stage::_count); ++i)
+		for (uint8_t i = 0; const auto& stage : entry._stages)
 		{
-			std::chrono::duration<float, std::milli> duration = entry._stages[i]._end - entry._stages[i]._start;
-			ImGui::SetCursorPosX(cursorX + indentSize * entry._stages[i]._level);
-			ImGui::Text("    %s: %0.3f", openblack::Profiler::stageNames[i].data(), duration.count());
-			if (entry._stages[i]._level == 0)
+			std::chrono::duration<float, std::milli> duration = stage._end - stage._start;
+			ImGui::SetCursorPosX(cursorX + indentSize * stage._level);
+			ImGui::Text("    %s: %0.3f", openblack::Profiler::stageNames.at(i).data(), duration.count());
+			if (stage._level == 0)
 				frameDuration -= duration;
+			++i;
 		}
 		ImGui::Text("    Unaccounted: %0.3f", frameDuration.count());
 	}

@@ -31,7 +31,7 @@ entt::entity AnimatedStaticArchetype::Create(const glm::vec3& position, Animated
 	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
-	const auto& info = Game::instance()->GetInfoConstants().animatedStatic[static_cast<size_t>(type)];
+	const auto& info = Game::instance()->GetInfoConstants().animatedStatic.at(static_cast<size_t>(type));
 
 	// The exact same as Feature but info is different and type is a different enum
 	const auto& transform = registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));

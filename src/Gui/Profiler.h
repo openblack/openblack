@@ -37,9 +37,15 @@ private:
 		std::array<T, N> _values;
 		uint8_t _offset = 0;
 
-		[[nodiscard]] T back() const { return _values[_offset]; }
+		[[nodiscard]] T back() const
+		{
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index): perf sensitive
+			return _values[_offset];
+		}
 		void pushBack(T value)
 		{
+
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index): perf sensitive
 			_values[_offset] = value;
 			_offset = (_offset + 1u) % _values.size();
 		}

@@ -45,7 +45,7 @@ glm::vec2 Map::GetCellCenter(const Map::CellId& cellId)
 
 const std::unordered_set<entt::entity>& Map::GetFixedInGridCell(const CellId& cellId) const
 {
-	return _fixedGrid[cellId.x + cellId.y * _gridSize.x];
+	return _fixedGrid.at(cellId.x + cellId.y * _gridSize.x);
 }
 
 const std::unordered_set<entt::entity>& Map::GetFixedInGridCell(const glm::vec3& pos) const
@@ -56,7 +56,7 @@ const std::unordered_set<entt::entity>& Map::GetFixedInGridCell(const glm::vec3&
 
 const std::unordered_set<entt::entity>& Map::GetMobileInGridCell(const CellId& cellId) const
 {
-	return _mobileGrid[cellId.x + cellId.y * _gridSize.x];
+	return _mobileGrid.at(cellId.x + cellId.y * _gridSize.x);
 }
 
 const std::unordered_set<entt::entity>& Map::GetMobileInGridCell(const glm::vec3& pos) const
@@ -99,7 +99,7 @@ void Map::Build()
 				const auto cellId = Map::CellId(x, y);
 				if (glm::distance2(GetCellCenter(cellId), fixed.boundingCenter) < radius * radius)
 				{
-					auto& cell = _fixedGrid[cellId.x + cellId.y * _gridSize.x];
+					auto& cell = _fixedGrid.at(cellId.x + cellId.y * _gridSize.x);
 					cell.insert(entity);
 				}
 			}
@@ -108,7 +108,7 @@ void Map::Build()
 	registry.Each<const Mobile, const Transform>(
 	    [this](entt::entity entity, [[maybe_unused]] const Mobile& mobile, const Transform& transform) {
 		    const auto cellId = GetGridCell(transform.position);
-		    auto& cell = _mobileGrid[cellId.x + cellId.y * _gridSize.x];
+		    auto& cell = _mobileGrid.at(cellId.x + cellId.y * _gridSize.x);
 		    cell.insert(entity);
 	    });
 }

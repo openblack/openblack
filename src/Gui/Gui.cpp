@@ -208,7 +208,7 @@ bool Gui::ProcessEventSdl2(const SDL_Event& event)
 	{
 		int key = event.key.keysym.scancode;
 		IM_ASSERT(key >= 0 && key < IM_ARRAYSIZE(io.KeysDown));
-		io.KeysDown[key] = (event.type == SDL_KEYDOWN);
+		io.AddKeyEvent(key, event.type == SDL_KEYDOWN);
 		io.KeyShift = ((SDL_GetModState() & KMOD_SHIFT) != 0);
 		io.KeyCtrl = ((SDL_GetModState() & KMOD_CTRL) != 0);
 		io.KeyAlt = ((SDL_GetModState() & KMOD_ALT) != 0);
@@ -409,7 +409,8 @@ void Gui::UpdateMouseCursor()
 	else
 	{
 		// Show OS mouse cursor
-		SDL_SetCursor(_mouseCursors[imgui_cursor] ? _mouseCursors[imgui_cursor] : _mouseCursors[ImGuiMouseCursor_Arrow]);
+		const auto cursor = _mouseCursors.at(imgui_cursor);
+		SDL_SetCursor(cursor ? cursor : _mouseCursors[ImGuiMouseCursor_Arrow]);
 		SDL_ShowCursor(SDL_TRUE);
 	}
 }
@@ -1042,9 +1043,10 @@ void Gui::ShowVillagerNames(const Game& game)
 			    "Previous State: {}\n"
 			    "Turns until next state change: {}\n"
 			    "Turns since last state change: {}",
-			    VillagerStateStrings[static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Top))],
-			    VillagerStateStrings[static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Final))],
-			    VillagerStateStrings[static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Previous))],
+			    VillagerStateStrings.at(static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Top))),
+			    VillagerStateStrings.at(static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Final))),
+			    VillagerStateStrings.at(
+			        static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Previous))),
 			    action.turnsUntilStateChange, action.turnsSinceStateChange);
 		}
 
@@ -1065,18 +1067,18 @@ void Gui::ShowVillagerNames(const Game& game)
 				ImGui::Combo("Villager Number", &villager.number, VillagerRoleStrs);
 				ImGui::Combo("Task", &villager.task, Villager::TaskStrs);
 
-				for (size_t index = 0; index < static_cast<size_t>(LivingAction::Index::_Count); ++index)
+				for (size_t index = 0; const auto& str : LivingAction::IndexStrings)
 				{
-					if (ImGui::BeginCombo(LivingAction::IndexStrings[index].data(),
-					                      VillagerStateStrings[static_cast<size_t>(actionSystem.VillagerGetState(
-					                                               action, static_cast<LivingAction::Index>(index)))]
-					                          .data()))
+					if (ImGui::BeginCombo(str.data(), VillagerStateStrings
+					                                      .at(static_cast<size_t>(actionSystem.VillagerGetState(
+					                                          action, static_cast<LivingAction::Index>(index))))
+					                                      .data()))
 					{
-						for (size_t n = 0; n < VillagerStateStrings.size(); n++)
+						for (size_t n = 0; const auto& stateStr : VillagerStateStrings)
 						{
-							const bool is_selected = (static_cast<size_t>(actionSystem.VillagerGetState(
-							                              action, static_cast<LivingAction::Index>(index))) == n);
-							if (ImGui::Selectable(VillagerStateStrings[n].data(), is_selected))
+							const bool is_selected = static_cast<size_t>(actionSystem.VillagerGetState(
+							                             action, static_cast<LivingAction::Index>(index))) == n;
+							if (ImGui::Selectable(stateStr.data(), is_selected))
 							{
 								actionSystem.VillagerSetState(action, static_cast<LivingAction::Index>(index),
 								                              static_cast<VillagerStates>(n), true);
@@ -1087,9 +1089,11 @@ void Gui::ShowVillagerNames(const Game& game)
 							{
 								ImGui::SetItemDefaultFocus();
 							}
+							++n;
 						}
 						ImGui::EndCombo();
 					}
+					++index;
 				}
 			};
 		}

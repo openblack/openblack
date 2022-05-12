@@ -14,7 +14,7 @@
 void openblack::Profiler::Begin(Stage stage)
 {
 	assert(_currentLevel < 255);
-	auto& entry = _entries[_currentEntry]._stages[static_cast<uint8_t>(stage)];
+	auto& entry = _entries.at(_currentEntry)._stages.at(static_cast<uint8_t>(stage));
 	entry._level = _currentLevel;
 	_currentLevel++;
 	entry._start = std::chrono::system_clock::now();
@@ -24,7 +24,7 @@ void openblack::Profiler::Begin(Stage stage)
 void openblack::Profiler::End(Stage stage)
 {
 	assert(_currentLevel > 0);
-	auto& entry = _entries[_currentEntry]._stages[static_cast<uint8_t>(stage)];
+	auto& entry = _entries.at(_currentEntry)._stages.at(static_cast<uint8_t>(stage));
 	assert(!entry._finalized);
 	_currentLevel--;
 	assert(entry._level == _currentLevel);
@@ -34,7 +34,7 @@ void openblack::Profiler::End(Stage stage)
 
 void openblack::Profiler::Frame()
 {
-	auto& prevEntry = _entries[_currentEntry];
+	auto& prevEntry = _entries.at(_currentEntry);
 	_currentEntry = (_currentEntry + 1) % _bufferSize;
-	prevEntry._frameEnd = _entries[_currentEntry]._frameStart = std::chrono::system_clock::now();
+	prevEntry._frameEnd = _entries.at(_currentEntry)._frameStart = std::chrono::system_clock::now();
 }

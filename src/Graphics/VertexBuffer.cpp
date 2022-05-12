@@ -58,9 +58,9 @@ VertexBuffer::VertexBuffer(std::string name, const void* vertices, uint32_t vert
 	for (auto& d : _vertexDecl)
 	{
 		_vertexDeclOffsets.push_back(_strideBytes);
-		_strideBytes += strides[static_cast<size_t>(d._type)][d._num - 1];
-		layout.add(attributes[static_cast<size_t>(d._attribute)], d._num, types[static_cast<size_t>(d._type)], d._normalized,
-		           d._asInt);
+		_strideBytes += strides.at(static_cast<size_t>(d._type)).at(d._num - 1);
+		layout.add(attributes.at(static_cast<size_t>(d._attribute)), d._num, types.at(static_cast<size_t>(d._type)),
+		           d._normalized, d._asInt);
 	}
 	layout.end();
 	assert(layout.m_stride == _strideBytes);
@@ -95,9 +95,9 @@ VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl
 	for (auto& d : _vertexDecl)
 	{
 		_vertexDeclOffsets.push_back(_strideBytes);
-		_strideBytes += strides[static_cast<size_t>(d._type)][d._num - 1];
-		layout.add(attributes[static_cast<size_t>(d._attribute)], d._num, types[static_cast<size_t>(d._type)], d._normalized,
-		           d._asInt);
+		_strideBytes += strides.at(static_cast<size_t>(d._type)).at(d._num - 1);
+		layout.add(attributes.at(static_cast<size_t>(d._attribute)), d._num, types.at(static_cast<size_t>(d._type)),
+		           d._normalized, d._asInt);
 	}
 	layout.end();
 	assert(layout.m_stride == _strideBytes);

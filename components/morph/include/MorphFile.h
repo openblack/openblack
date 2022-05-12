@@ -194,7 +194,7 @@ public:
 	[[nodiscard]] const std::vector<Animation>& GetBaseAnimationSet() const { return _base_animation; }
 	[[nodiscard]] const std::vector<Animation>& GetVariantAnimationSet(uint32_t index) const
 	{
-		return _variant_animations[index];
+		return _variant_animations.at(index);
 	}
 	[[nodiscard]] const std::vector<HairGroup>& GetHairGroups() const { return _hair_groups; }
 	[[nodiscard]] const std::vector<std::vector<ExtraData>>& GetExtraData() const { return _extra_data; }

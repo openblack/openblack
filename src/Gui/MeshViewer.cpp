@@ -52,7 +52,7 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 	uint32_t hoverIndex;
 	ImGuiBitField::BitField("Mesh flag bit-field filter", &_meshFlagFilter, &hoverIndex);
 	if (ImGui::IsItemHovered() && hoverIndex < L3DMeshFlagNames.size())
-		ImGui::SetTooltip("%s", L3DMeshFlagNames[hoverIndex].data());
+		ImGui::SetTooltip("%s", L3DMeshFlagNames.at(hoverIndex).data());
 
 	ImGui::BeginChild("meshes", ImVec2(fontSize * 15.0f, 0));
 	auto meshSize = ImGui::GetItemRectSize();
@@ -90,15 +90,16 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 	{
 		int32_t offset = 0;
 		int32_t newLines = 1;
-		for (uint8_t i = 0; i < 32; ++i)
+		for (uint32_t flag = 1; const auto& name : L3DMeshFlagNames)
 		{
-			if (mesh->GetFlags() & (1u << i))
+			if (mesh->GetFlags() & flag)
 			{
 				auto writen = std::snprintf(bitfieldTitle.data() + offset, bitfieldTitle.size() - offset, "%s%s%s",
-				                            offset ? "|" : "", offset > newLines * 100 ? "\n" : "", L3DMeshFlagNames[i].data());
+				                            offset ? "|" : "", offset > newLines * 100 ? "\n" : "", name.data());
 				while (offset > newLines * 100) newLines++;
 				offset += writen;
 			}
+			flag <<= 1;
 		}
 	}
 

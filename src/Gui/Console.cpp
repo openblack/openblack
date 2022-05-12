@@ -38,13 +38,14 @@ Console::Console()
 	for (const auto& signature : lhscriptx::FeatureScriptCommands::Signatures)
 	{
 		std::string details = "";
-		for (uint32_t i = 0; i < signature.parameters.size(); ++i)
+		for (bool skip = true; const auto param : signature.parameters)
 		{
-			if (i > 0)
+			if (!skip)
 			{
 				details += ", ";
+				skip = false;
 			}
-			switch (signature.parameters[i])
+			switch (param)
 			{
 			case lhscriptx::ParameterType::None:
 				details += "none";

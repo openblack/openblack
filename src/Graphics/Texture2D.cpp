@@ -75,7 +75,7 @@ constexpr std::array<bgfx::TextureFormat::Enum,
 
 bgfx::TextureFormat::Enum getBgfxTextureFormat(Format format)
 {
-	return textureFormatsBgfx[static_cast<size_t>(format)];
+	return textureFormatsBgfx.at(static_cast<size_t>(format));
 }
 
 Texture2D::Texture2D(std::string name)

@@ -52,7 +52,7 @@ entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, 
 
 	const auto entity = registry.Create();
 
-	const auto& info = game->GetInfoConstants().abode[static_cast<size_t>(type)];
+	const auto& info = game->GetInfoConstants().abode.at(static_cast<size_t>(type));
 
 	const auto& transform =
 	    registry.Assign<Transform>(entity, position, glm::mat3(glm::eulerAngleY(-yAngleRadians)), glm::vec3(scale));

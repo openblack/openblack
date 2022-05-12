@@ -30,7 +30,7 @@ entt::entity TreeArchetype::Create([[maybe_unused]] uint32_t forestId, const glm
 	auto& registry = Game::instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
-	const auto& info = Game::instance()->GetInfoConstants().tree[static_cast<size_t>(type)];
+	const auto& info = Game::instance()->GetInfoConstants().tree.at(static_cast<size_t>(type));
 
 	const auto& transform = registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));
 	const auto [point, radius] = GetFixedObstacleBoundingCircle(info.normal, transform);

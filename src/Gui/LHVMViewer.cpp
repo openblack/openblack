@@ -683,7 +683,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 		case LHVM::VMInstruction::Opcode::CALL:
 			ImGui::TextColored(Disassembly_ColorKeyword, "CALL");
 			ImGui::SameLine();
-			ImGui::TextColored(Disassembly_ColorFuncName, "%s", Function_Names[instruction.GetData()].c_str());
+			ImGui::TextColored(Disassembly_ColorFuncName, "%s", Function_Names.at(instruction.GetData()).c_str());
 			break;
 		case LHVM::VMInstruction::Opcode::RUN:
 		{
