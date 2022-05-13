@@ -352,9 +352,8 @@ void HandleCellTransition(ecs::Registry& registry)
 template <MoveState S, typename... Exclude>
 void ApplyStepGoal(ecs::Registry& registry, Exclude... exclude)
 {
-	// TODO: WallHug might be redundant here
-	registry.Each<const MoveStateTagComponent<S>, const WallHug, Transform>(
-	    [](const MoveStateTagComponent<S>& state, const WallHug& wallHug, Transform& transform) {
+	registry.Each<const MoveStateTagComponent<S>, Transform>(
+	    [](const MoveStateTagComponent<S>& state, Transform& transform) {
 		    const float altitude = Game::Instance()->GetLandIsland().GetHeightAt(state.stepGoal);
 		    transform.position = glm::xzy(glm::vec3(state.stepGoal, altitude));
 	    },
