@@ -97,12 +97,15 @@ jobs:
           path: cmake-build-presets/ninja-multi-vcpkg/bin
           if-no-files-found: error
 
-      - name: Upload generated mock data
+      - name: Upload generated test data
         uses: actions/upload-artifact@v3
         if: matrix.cc == ''
         with:
-          name: openblack-mock-data
-          path: cmake-build-presets/ninja-multi-vcpkg/test/mock
+          name: openblack-test-data
+          path: |
+            cmake-build-presets/ninja-multi-vcpkg/test/mobile_wall_hug
+            cmake-build-presets/ninja-multi-vcpkg/test/mock/Scripts
+            cmake-build-presets/ninja-multi-vcpkg/test/mock/Data
           if-no-files-found: error
 
     env:
@@ -125,15 +128,15 @@ jobs:
           name: openblack-${{ matrix.os }}-${{github.sha}}
       - name: Download generated mock data
         uses: actions/download-artifact@v3
-        id: download-mock
+        id: download-test
         with:
-          name: openblack-mock-data
-          path: cmake-build-presets/ninja-multi-vcpkg/test/mock
+          name: openblack-test-data
+          path: cmake-build-presets/ninja-multi-vcpkg/test
       - name: Enable execute permissions on binary
         run: chmod +x ${{steps.download-binary.outputs.download-path}}/*/*
         if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
-      - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack -g ${{steps.download-mock.outputs.download-path}} -b Noop --num-frames-to-simulate 10 --log-file stdout --log-level all=debug
-      - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack -g ${{steps.download-mock.outputs.download-path}} -b Noop --num-frames-to-simulate 10 --log-file stdout --log-level all=debug
+      - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack -g ${{steps.download-test.outputs.download-path}}/mock -b Noop --num-frames-to-simulate 10 --log-file stdout --log-level all=debug
+      - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack -g ${{steps.download-test.outputs.download-path}}/mock -b Noop --num-frames-to-simulate 10 --log-file stdout --log-level all=debug
       - name: Install valgrind and libc6-dbg
         run: |
           sudo apt update -y
@@ -147,5 +150,5 @@ jobs:
           done
         if: startsWith(matrix.os, 'ubuntu')
       - name: Check openblack for memory leaks
-        run: valgrind --tool=memcheck --track-origins=yes --leak-check=full -s --error-exitcode=1 ${{steps.download-binary.outputs.download-path}}/Debug/openblack -g ${{steps.download-mock.outputs.download-path}} -b Noop --num-frames-to-simulate 10  --log-level all=error
+        run: valgrind --tool=memcheck --track-origins=yes --leak-check=full -s --error-exitcode=1 ${{steps.download-binary.outputs.download-path}}/Debug/openblack -g ${{steps.download-test.outputs.download-path}}/mock -b Noop --num-frames-to-simulate 10  --log-level all=error
         if: startsWith(matrix.os, 'ubuntu')
