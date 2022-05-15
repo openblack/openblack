@@ -119,7 +119,7 @@ void ShaderManager::LoadShaders()
 		assert(bgfx::isValid(vs));
 		auto fs = bgfx::createEmbeddedShader(s_embeddedShaders.data(), type, shader.fragmentShaderName.data());
 		assert(bgfx::isValid(fs));
-		_shaderPrograms[shader.name.data()] = new ShaderProgram(shader.name.data(), std::move(vs), std::move(fs));
+		_shaderPrograms[shader.name.data()] = new ShaderProgram(shader.name.data(), vs, fs);
 	}
 }
 

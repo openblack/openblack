@@ -18,7 +18,7 @@
 namespace openblack::graphics
 {
 
-ShaderProgram::ShaderProgram(const std::string& name, bgfx::ShaderHandle&& vertexShader, bgfx::ShaderHandle&& fragmentShader)
+ShaderProgram::ShaderProgram(const std::string& name, bgfx::ShaderHandle vertexShader, bgfx::ShaderHandle fragmentShader)
     : _name(name)
     , _program(BGFX_INVALID_HANDLE)
 {

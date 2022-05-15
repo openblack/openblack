@@ -108,6 +108,7 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 			win_impl = wl_egl_window_create(surface, width, height);
 			SDL_SetWindowData(_window.get(), "wl_egl_window", win_impl);
 		}
+		// NOLINTNEXTLINE(performance-no-int-to-ptr)
 		nativeWindow = reinterpret_cast<void*>(win_impl);
 		nativeDisplay = wmi.info.wl.display;
 	}
@@ -116,6 +117,7 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 #if defined(SDL_VIDEO_DRIVER_X11)
 	    if (wmi.subsystem == SDL_SYSWM_X11)
 	{
+		// NOLINTNEXTLINE(performance-no-int-to-ptr)
 		nativeWindow = reinterpret_cast<void*>(wmi.info.x11.window);
 		nativeDisplay = wmi.info.x11.display;
 	}

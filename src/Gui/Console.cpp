@@ -300,7 +300,7 @@ void Console::Draw(Game& game)
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
 	if (copy_to_clipboard)
 		ImGui::LogToClipboard();
-	for (auto item : _items)
+	for (const auto& item : _items)
 	{
 		// Normally you would store more information in your item (e.g. make Items[] an array of structure, store color/type
 		// etc.)

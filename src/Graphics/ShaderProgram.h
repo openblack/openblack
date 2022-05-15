@@ -31,7 +31,7 @@ public:
 	};
 
 	ShaderProgram() = delete;
-	ShaderProgram(const std::string& name, bgfx::ShaderHandle&& vertexShader, bgfx::ShaderHandle&& fragmentShader);
+	ShaderProgram(const std::string& name, bgfx::ShaderHandle vertexShader, bgfx::ShaderHandle fragmentShader);
 	~ShaderProgram();
 
 	void SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture) const;
