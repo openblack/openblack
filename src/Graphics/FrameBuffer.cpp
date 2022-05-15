@@ -15,7 +15,7 @@
 
 using namespace openblack::graphics;
 
-FrameBuffer::FrameBuffer(const std::string& name, uint16_t width, uint16_t height, Format colorFormat,
+FrameBuffer::FrameBuffer(std::string&& name, uint16_t width, uint16_t height, Format colorFormat,
                          std::optional<Format> depthStencilFormat)
     : _name(std::move(name))
     , _handle(BGFX_INVALID_HANDLE)

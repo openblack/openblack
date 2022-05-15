@@ -41,7 +41,7 @@ public:
 	{
 		_instance.push_back(event);
 
-		for (auto handler : _handlers)
+		for (const auto& handler : _handlers)
 		{
 			handler(_instance.front());
 		}
