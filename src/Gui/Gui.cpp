@@ -1067,14 +1067,16 @@ void Gui::ShowVillagerNames(const Game& game)
 				ImGui::Combo("Villager Number", &villager.number, VillagerRoleStrs);
 				ImGui::Combo("Task", &villager.task, Villager::TaskStrs);
 
-				for (size_t index = 0; const auto& str : LivingAction::IndexStrings)
+				size_t index = 0;
+				for (const auto& str : LivingAction::IndexStrings)
 				{
 					if (ImGui::BeginCombo(str.data(), VillagerStateStrings
 					                                      .at(static_cast<size_t>(actionSystem.VillagerGetState(
 					                                          action, static_cast<LivingAction::Index>(index))))
 					                                      .data()))
 					{
-						for (size_t n = 0; const auto& stateStr : VillagerStateStrings)
+						size_t n = 0;
+						for (const auto& stateStr : VillagerStateStrings)
 						{
 							const bool is_selected = static_cast<size_t>(actionSystem.VillagerGetState(
 							                             action, static_cast<LivingAction::Index>(index))) == n;
