@@ -11,4 +11,10 @@ Checks: >-
   misc-*,
   -misc-non-private-member-variables-in-classes,
   -misc-redundant-expression,
+  bugprone-*,
+  -bugprone-reserved-identifier,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  -bugprone-lambda-function-name,
+  -bugprone-implicit-widening-of-multiplication-result,
 # WarningsAsErrors: '*'

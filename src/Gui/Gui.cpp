@@ -54,6 +54,7 @@
 
 // Turn off formatting because it adds spaces which break the stringifying
 // clang-format off
+// NOLINTNEXTLINE(bugprone-macro-parentheses)
 #define IMGUI_SHADER_DIR imgui/
 // clang-format on
 #define SHADER_NAME vs_imgui_image
@@ -431,17 +432,17 @@ void Gui::UpdateGamepads()
 	}
 
 	// Update gamepad inputs
-#define MAP_BUTTON(NAV_NO, BUTTON_NO)                                                                        \
-	{                                                                                                        \
-		io.NavInputs[NAV_NO] = (SDL_GameControllerGetButton(game_controller, BUTTON_NO) != 0) ? 1.0f : 0.0f; \
+#define MAP_BUTTON(NAV_NO, BUTTON_NO)                                                                            \
+	{                                                                                                            \
+		io.NavInputs[(NAV_NO)] = (SDL_GameControllerGetButton(game_controller, (BUTTON_NO)) != 0) ? 1.0f : 0.0f; \
 	}
-#define MAP_ANALOG(NAV_NO, AXIS_NO, V0, V1)                                                              \
-	{                                                                                                    \
-		float vn = (float)(SDL_GameControllerGetAxis(game_controller, AXIS_NO) - V0) / (float)(V1 - V0); \
-		if (vn > 1.0f)                                                                                   \
-			vn = 1.0f;                                                                                   \
-		if (vn > 0.0f && io.NavInputs[NAV_NO] < vn)                                                      \
-			io.NavInputs[NAV_NO] = vn;                                                                   \
+#define MAP_ANALOG(NAV_NO, AXIS_NO, V0, V1)                                                                      \
+	{                                                                                                            \
+		float vn = (float)(SDL_GameControllerGetAxis(game_controller, (AXIS_NO)) - (V0)) / (float)((V1) - (V0)); \
+		if (vn > 1.0f)                                                                                           \
+			vn = 1.0f;                                                                                           \
+		if (vn > 0.0f && io.NavInputs[(NAV_NO)] < vn)                                                            \
+			io.NavInputs[(NAV_NO)] = vn;                                                                         \
 	}
 	const int thumb_dead_zone = 8000;                            // SDL_gamecontroller.h suggests using this value.
 	MAP_BUTTON(ImGuiNavInput_Activate, SDL_CONTROLLER_BUTTON_A); // Cross / A

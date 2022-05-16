@@ -37,13 +37,14 @@ public:
 	    : _vertices(vertex_count / stride)
 	    , _indices(vertex_count / stride)
 	{
-		for (uint16_t i = 0; i < _vertices.size(); ++i)
+		for (uint16_t i = 0; auto& v : _vertices)
 		{
 			auto vertex_base = reinterpret_cast<const float*>(&vertex_data[i * stride]);
-			_vertices[i][0] = vertex_base[0];
-			_vertices[i][1] = vertex_base[1];
-			_vertices[i][2] = vertex_base[2];
+			v[0] = vertex_base[0];
+			v[1] = vertex_base[1];
+			v[2] = vertex_base[2];
 			_indices[i] = i;
+			++i;
 		}
 	}
 

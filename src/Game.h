@@ -58,10 +58,6 @@ class LHVM;
 namespace ecs
 {
 class Map;
-namespace components
-{
-struct Transform;
-}
 namespace systems
 {
 class DynamicsSystem;

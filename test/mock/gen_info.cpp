@@ -61,7 +61,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 	}
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char* argv[]) noexcept
 {
 	Arguments args;
 	int return_code = EXIT_SUCCESS;

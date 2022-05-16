@@ -342,30 +342,39 @@ struct Arguments
 	} read;
 };
 
-bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
+bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noexcept
 {
 	cxxopts::Options options("morphtool", "Inspect and read data files from LionHead CBN and HBN files internal segment (use "
 	                                      "\"stdin\" if piping from packtool).");
 
-	// clang-format off
-	options.add_options()
-		("h,help", "Display this help message.")
-		("subcommand", "Subcommand.", cxxopts::value<std::string>())
-	;
-	options.positional_help("[read|write] [OPTION...]");
-	options.add_options()
-		("l,list-details", "Print Content Details.", cxxopts::value<std::vector<std::filesystem::path>>())
-		("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())
-		("d,spec-files-directory", "Directory of spec files (required).", cxxopts::value<std::filesystem::path>())
-		("s,list-animation-set", "List content of spec file.", cxxopts::value<std::vector<std::filesystem::path>>())
-		("b,show-base-animation-set", "Display animation data for the base animation.", cxxopts::value<std::vector<std::filesystem::path>>())
-		("V,show-variant-animation-sets", "Display animation data for the variant animations.", cxxopts::value<std::vector<std::filesystem::path>>())
-		("g,show-hair-groups", "Display hair group data.", cxxopts::value<std::vector<std::filesystem::path>>())
-		("e,show-extra-data", "Display extra data.", cxxopts::value<std::vector<std::filesystem::path>>())
-	;
-	// clang-format on
+	try
+	{
+		options.add_options()                                            //
+		    ("h,help", "Display this help message.")                     //
+		    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
+		    ;
+		options.positional_help("[read|write] [OPTION...]");
+		options.add_options()                                                                                            //
+		    ("l,list-details", "Print Content Details.", cxxopts::value<std::vector<std::filesystem::path>>())           //
+		    ("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())                 //
+		    ("d,spec-files-directory", "Directory of spec files (required).", cxxopts::value<std::filesystem::path>())   //
+		    ("s,list-animation-set", "List content of spec file.", cxxopts::value<std::vector<std::filesystem::path>>()) //
+		    ("b,show-base-animation-set", "Display animation data for the base animation.",                              //
+		     cxxopts::value<std::vector<std::filesystem::path>>())                                                       //
+		    ("V,show-variant-animation-sets", "Display animation data for the variant animations.",                      //
+		     cxxopts::value<std::vector<std::filesystem::path>>())                                                       //
+		    ("g,show-hair-groups", "Display hair group data.", cxxopts::value<std::vector<std::filesystem::path>>())     //
+		    ("e,show-extra-data", "Display extra data.", cxxopts::value<std::vector<std::filesystem::path>>())           //
+		    ;
 
-	options.parse_positional({"subcommand"});
+		options.parse_positional({"subcommand"});
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+		return_code = EXIT_FAILURE;
+		return false;
+	}
 
 	try
 	{
@@ -438,7 +447,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			}
 		}
 	}
-	catch (cxxopts::OptionParseException& err)
+	catch (const std::exception& err)
 	{
 		std::cerr << err.what() << std::endl;
 	}
@@ -448,7 +457,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 	return false;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char* argv[]) noexcept
 {
 	Arguments args;
 	int return_code = EXIT_SUCCESS;
@@ -511,7 +520,7 @@ int main(int argc, char* argv[])
 				break;
 			}
 		}
-		catch (std::runtime_error& err)
+		catch (const std::exception& err)
 		{
 			std::cerr << err.what() << std::endl;
 			return_code |= EXIT_FAILURE;

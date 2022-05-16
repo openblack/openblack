@@ -727,12 +727,12 @@ void L3DFile::Write(const std::filesystem::path& filepath)
 	WriteFile(stream);
 }
 
-void L3DFile::AddSubmesh(const L3DSubmeshHeader& header)
+void L3DFile::AddSubmesh(const L3DSubmeshHeader& header) noexcept
 {
 	_submeshHeaders.push_back(header);
 }
 
-void L3DFile::AddPrimitives(const std::vector<L3DPrimitiveHeader>& headers)
+void L3DFile::AddPrimitives(const std::vector<L3DPrimitiveHeader>& headers) noexcept
 {
 	auto size = _primitiveHeaders.size();
 	for (auto& header : headers)
@@ -742,7 +742,7 @@ void L3DFile::AddPrimitives(const std::vector<L3DPrimitiveHeader>& headers)
 	_primitiveSpans.emplace_back(&_primitiveHeaders[size], static_cast<uint32_t>(headers.size()));
 }
 
-void L3DFile::AddVertices(const std::vector<L3DVertex>& vertices)
+void L3DFile::AddVertices(const std::vector<L3DVertex>& vertices) noexcept
 {
 	auto size = _vertices.size();
 	for (auto& vertex : vertices)
@@ -752,7 +752,7 @@ void L3DFile::AddVertices(const std::vector<L3DVertex>& vertices)
 	_vertexSpans.emplace_back(&_vertices[static_cast<uint32_t>(size)], static_cast<uint32_t>(vertices.size()));
 }
 
-void L3DFile::AddIndices(const std::vector<uint16_t>& indices)
+void L3DFile::AddIndices(const std::vector<uint16_t>& indices) noexcept
 {
 	auto size = _indices.size();
 	for (auto& index : indices)
@@ -762,7 +762,7 @@ void L3DFile::AddIndices(const std::vector<uint16_t>& indices)
 	_indexSpans.emplace_back(&_indices[static_cast<uint32_t>(size)], static_cast<uint32_t>(indices.size()));
 }
 
-void L3DFile::AddBones(const std::vector<L3DBone>& bones)
+void L3DFile::AddBones(const std::vector<L3DBone>& bones) noexcept
 {
 	auto size = _boneSpans.size();
 	for (auto& bone : bones)
