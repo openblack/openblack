@@ -286,7 +286,7 @@ int ViewAnimation(openblack::pack::PackFile& pack, uint32_t index, const std::fi
 	return EXIT_SUCCESS;
 }
 
-int WriteRaw(const std::filesystem::path& outFilename, const std::vector<std::filesystem::path>& inFilenames)
+int WriteRaw(const std::filesystem::path& outFilename, const std::vector<std::filesystem::path>& inFilenames) noexcept
 {
 	openblack::pack::PackFile pack;
 
@@ -312,6 +312,11 @@ int WriteRaw(const std::filesystem::path& outFilename, const std::vector<std::fi
 			std::fprintf(stderr, "I/O error while reading \"%s\": %s\n", filename.string().c_str(), e.what());
 			return EXIT_FAILURE;
 		}
+		catch (const std::exception& e)
+		{
+			std::cerr << e.what() << std::endl;
+			return EXIT_FAILURE;
+		}
 
 		pack.CreateRawBlock(filename.filename().string(), std::move(data));
 	}
@@ -321,7 +326,7 @@ int WriteRaw(const std::filesystem::path& outFilename, const std::vector<std::fi
 	return EXIT_SUCCESS;
 }
 
-int WriteMeshFile(const std::filesystem::path& outFilename)
+int WriteMeshFile(const std::filesystem::path& outFilename) noexcept
 {
 	openblack::pack::PackFile pack;
 
@@ -334,7 +339,7 @@ int WriteMeshFile(const std::filesystem::path& outFilename)
 	return EXIT_SUCCESS;
 }
 
-int WriteAnimationFile(const std::filesystem::path& outFilename)
+int WriteAnimationFile(const std::filesystem::path& outFilename) noexcept
 {
 	openblack::pack::PackFile pack;
 
@@ -371,33 +376,42 @@ struct Arguments
 	std::filesystem::path outFilename;
 };
 
-bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
+bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noexcept
 {
 	cxxopts::Options options("packtool", "Inspect and extract files from LionHead pack files.");
 
-	// clang-format off
-	options.add_options()
-		("h,help", "Display this help message.")
-		("l,list-blocks", "List all blocks statistics.")
-		("b,view-bytes", "View raw byte content of block.")
-		("s,block", "List statistics of block.", cxxopts::value<std::string>())
-		("i,info-block", "List INFO block statistics.")
-		("B,body-block", "List Body block statistics.")
-		("M,meshes-block", "List MESHES block statistics.")
-		("m,mesh", "List mesh statistics.", cxxopts::value<uint32_t>())
-		("T,texture-block", "View texture block statistics.")
-		("t,texture", "View texture statistics.", cxxopts::value<std::string>())
-		("A,animation-block", "List animation block statistics.")
-		("a,animation", "List animation statistics.", cxxopts::value<uint32_t>())
-		("e,extract", "Extract contents of a block to filename (use \"stdout\" for piping to other tool).", cxxopts::value<std::filesystem::path>())
-		("w,write-raw", "Create Raw Data Pack.", cxxopts::value<std::filesystem::path>())
-		("write-mesh", "Create Mesh Pack.", cxxopts::value<std::filesystem::path>())
-		("write-animation", "Create Mesh Pack.", cxxopts::value<std::filesystem::path>())
-		("pack-files", "Pack Files.", cxxopts::value<std::vector<std::filesystem::path>>())
-	;
-	// clang-format on
-	options.parse_positional({"pack-files"});
-	options.positional_help("pack-files...");
+	try
+	{
+		options.add_options()                                                                                   //
+		    ("h,help", "Display this help message.")                                                            //
+		    ("l,list-blocks", "List all blocks statistics.")                                                    //
+		    ("b,view-bytes", "View raw byte content of block.")                                                 //
+		    ("s,block", "List statistics of block.", cxxopts::value<std::string>())                             //
+		    ("i,info-block", "List INFO block statistics.")                                                     //
+		    ("B,body-block", "List Body block statistics.")                                                     //
+		    ("M,meshes-block", "List MESHES block statistics.")                                                 //
+		    ("m,mesh", "List mesh statistics.", cxxopts::value<uint32_t>())                                     //
+		    ("T,texture-block", "View texture block statistics.")                                               //
+		    ("t,texture", "View texture statistics.", cxxopts::value<std::string>())                            //
+		    ("A,animation-block", "List animation block statistics.")                                           //
+		    ("a,animation", "List animation statistics.", cxxopts::value<uint32_t>())                           //
+		    ("e,extract", "Extract contents of a block to filename (use \"stdout\" for piping to other tool).", //
+		     cxxopts::value<std::filesystem::path>())                                                           //
+		    ("w,write-raw", "Create Raw Data Pack.", cxxopts::value<std::filesystem::path>())                   //
+		    ("write-mesh", "Create Mesh Pack.", cxxopts::value<std::filesystem::path>())                        //
+		    ("write-animation", "Create Mesh Pack.", cxxopts::value<std::filesystem::path>())                   //
+		    ("pack-files", "Pack Files.", cxxopts::value<std::vector<std::filesystem::path>>())                 //
+		    ;
+
+		options.parse_positional({"pack-files"});
+		options.positional_help("pack-files...");
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+		return_code = EXIT_FAILURE;
+		return false;
+	}
 
 	try
 	{
@@ -521,7 +535,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			return true;
 		}
 	}
-	catch (cxxopts::OptionParseException& err)
+	catch (const std::exception& err)
 	{
 		std::cerr << err.what() << std::endl;
 	}
@@ -531,7 +545,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 	return false;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char* argv[]) noexcept
 {
 	Arguments args;
 	int return_code = EXIT_SUCCESS;
@@ -603,7 +617,7 @@ int main(int argc, char* argv[])
 				break;
 			}
 		}
-		catch (std::runtime_error& err)
+		catch (std::exception& err)
 		{
 			std::cerr << err.what() << std::endl;
 			return_code |= EXIT_FAILURE;

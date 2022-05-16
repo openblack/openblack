@@ -18,6 +18,7 @@
 #pragma warning( disable : 4003 )
 #endif
 
+// NOLINTNEXTLINE(bugprone-macro-parentheses): The / is not an operand and this is not a macro
 #define GENERATED_SHADERS_DIR generated/shaders/
 
 #ifndef SHADER_DIR

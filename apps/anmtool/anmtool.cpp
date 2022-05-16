@@ -103,7 +103,7 @@ struct Arguments
 	} write;
 };
 
-int WriteFile(const Arguments::Write& args)
+int WriteFile(const Arguments::Write& args) noexcept
 {
 	openblack::anm::ANMFile anm {};
 
@@ -129,28 +129,35 @@ int WriteFile(const Arguments::Write& args)
 	return EXIT_SUCCESS;
 }
 
-bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
+bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noexcept
 {
 	cxxopts::Options options("anmtool", "Inspect and extract files from LionHead ANM files.");
 
-	// clang-format off
-  options.add_options()
-    ("h,help", "Display this help message.")
-    ("subcommand", "Subcommand.", cxxopts::value<std::string>())
-    ;
-  options.positional_help("[read|write] [OPTION...]");
-  options.add_options()
-    ("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())
-    ("l,list-keyframes", "List Keyframes.", cxxopts::value<std::vector<std::filesystem::path>>())
-    ("k,keyframe-content", "View Keyframe Contents", cxxopts::value<std::vector<std::filesystem::path>>())
-    ;
-  options.add_options("write from and to glTF format")
-    ("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())
-    ("i,input-mesh", "Input file (required).", cxxopts::value<std::filesystem::path>())
-    ;
-	// clang-format on
+	try
+	{
+		options.add_options()                                            //
+		    ("h,help", "Display this help message.")                     //
+		    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
+		    ;
+		options.positional_help("[read|write] [OPTION...]");
+		options.add_options()                                                                                      //
+		    ("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())           //
+		    ("l,list-keyframes", "List Keyframes.", cxxopts::value<std::vector<std::filesystem::path>>())          //
+		    ("k,keyframe-content", "View Keyframe Contents", cxxopts::value<std::vector<std::filesystem::path>>()) //
+		    ;
+		options.add_options("write from and to glTF format")                                    //
+		    ("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())    //
+		    ("i,input-mesh", "Input file (required).", cxxopts::value<std::filesystem::path>()) //
+		    ;
 
-	options.parse_positional({"subcommand"});
+		options.parse_positional({"subcommand"});
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+		return_code = EXIT_FAILURE;
+		return false;
+	}
 
 	try
 	{
@@ -203,7 +210,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 			}
 		}
 	}
-	catch (cxxopts::OptionParseException& err)
+	catch (const std::exception& err)
 	{
 		std::cerr << err.what() << std::endl;
 	}
@@ -213,7 +220,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 	return false;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char* argv[]) noexcept
 {
 	Arguments args;
 	int return_code = EXIT_SUCCESS;
@@ -251,7 +258,7 @@ int main(int argc, char* argv[])
 				break;
 			}
 		}
-		catch (std::runtime_error& err)
+		catch (std::exception& err)
 		{
 			std::cerr << err.what() << std::endl;
 			return_code |= EXIT_FAILURE;

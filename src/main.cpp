@@ -191,7 +191,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 	return true;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char* argv[]) noexcept
 {
 	// clang-format off
 	std::cout <<
@@ -201,10 +201,8 @@ int main(int argc, char* argv[])
 	    "\n";
 	// clang-format on
 
-#ifdef NDEBUG
 	try
 	{
-#endif
 		openblack::Arguments args;
 		int return_code = EXIT_FAILURE;
 		if (!parseOptions(argc, argv, args, return_code))
@@ -220,17 +218,13 @@ int main(int argc, char* argv[])
 		{
 			return EXIT_FAILURE;
 		}
-#ifdef NDEBUG
 	}
-	catch (std::runtime_error& e)
+	catch (std::exception& e)
 	{
-		// Only catch runtime_error as these should be user issues.
-		// Catching other types would just make debugging them more difficult.
-
+		std::cerr << e.what() << std::endl;
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Fatal error", e.what(), nullptr);
 		return EXIT_FAILURE;
 	}
-#endif
 
 	return EXIT_SUCCESS;
 }
