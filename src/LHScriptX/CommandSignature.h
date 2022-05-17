@@ -52,14 +52,23 @@ public:
 	{
 		SetNumber(value);
 	}
-	ScriptCommandParameter(float x, float y, float z) { SetVector(x, y, z); }
+	ScriptCommandParameter(float x, float y, float z)
+	    : _type(ParameterType::Vector)
+	{
+		SetVector(x, y, z);
+	}
 
 	[[nodiscard]] ParameterType GetType() const { return _type; };
 
 	[[nodiscard]] const std::string& GetString() const { return _string; }
 	[[nodiscard]] float GetFloat() const { return _value._float; }
 	[[nodiscard]] int32_t GetNumber() const { return _value._number; }
-	void GetVector(float& x, float& y, float& z) const;
+	void GetVector(float& x, float& y, float& z) const
+	{
+		x = _value._vector[0];
+		y = _value._vector[1];
+		z = _value._vector[2];
+	}
 
 	void SetString(const std::string& value) { _string = value; }
 	void SetFloat(float value) { _value._float = value; };

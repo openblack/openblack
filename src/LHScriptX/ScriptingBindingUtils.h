@@ -65,6 +65,14 @@ inline int32_t GetParamValueRegular(const ScriptCommandContext& ctx, int index)
 	return ctx[index].GetNumber();
 }
 
+template <>
+inline glm::vec3 GetParamValueRegular(const ScriptCommandContext& ctx, int index)
+{
+	glm::vec3 result;
+	ctx[index].GetVector(result.x, result.y, result.z);
+	return result;
+}
+
 template <typename T>
 inline typename std::enable_if_t<!std::is_enum<T>::value, T> GetParamValue(const ScriptCommandContext& ctx, int index)
 {

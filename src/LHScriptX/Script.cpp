@@ -11,9 +11,12 @@
 
 #include <iostream>
 
+#include <glm/vec2.hpp>
 #include <spdlog/spdlog.h>
 
+#include "3D/LandIsland.h"
 #include "FeatureScriptCommands.h"
+#include "Game.h"
 #include "Lexer.h"
 
 using namespace openblack;
@@ -97,7 +100,26 @@ ScriptCommandParameter GetParameter(Token& argument)
 	case Token::Type::Identifier:
 		return {argument.Identifier()};
 	case Token::Type::String:
-		return {argument.StringValue()};
+	{
+		const auto& str = argument.StringValue();
+		// Check if it's a vector
+		if (std::count_if(str.cbegin(), str.cend(), [](char c) { return c == ','; }) == 1)
+		{
+			const auto delim = str.find(',');
+			char* floatEnd;
+			const auto x = std::strtof(str.c_str(), &floatEnd);
+			if (str.c_str() + delim == floatEnd)
+			{
+				const auto z = std::strtof(floatEnd + 1, &floatEnd);
+				if (floatEnd - str.c_str() == str.length())
+				{
+					const auto& island = Game::instance()->GetLandIsland();
+					return {x, island.GetHeightAt(glm::vec2(x, z)), z};
+				}
+			}
+		}
+		return {str};
+	}
 	case Token::Type::Integer:
 		return {*argument.IntegerValue()};
 	case Token::Type::Float:
@@ -157,7 +179,7 @@ void Script::runCommand(const std::string& identifier, const std::vector<Token>&
 	{
 		if (param.GetType() != expected_parameters.at(i))
 		{
-			std::runtime_error("Invalid script argument type");
+			throw std::runtime_error("Invalid script argument type");
 		}
 		++i;
 	}
