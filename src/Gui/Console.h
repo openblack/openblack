@@ -49,15 +49,15 @@ private:
 	void ExecCommand(const std::string& command_line, Game& game);
 	int InputTextCallback(ImGuiInputTextCallbackData* data);
 
-	bool _reclaim_focus;
-	bool _insert_hand_position;
-	int _input_cursor_position;
-	std::array<char, 256> _input_buffer;
+	bool _reclaimFocus {false};
+	bool _insertHandPosition {false};
+	int _inputCursorPosition {0};
+	std::array<char, 256> _inputBuffer {0};
 	std::vector<std::string> _items;
 	std::vector<std::pair<std::string, std::string>> _commands;
 	std::vector<std::string> _history;
 	std::string _partial;
-	std::optional<size_t> _history_pos;
+	std::optional<size_t> _historyPos;
 };
 
 } // namespace gui

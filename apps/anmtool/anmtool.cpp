@@ -26,7 +26,7 @@ int PrintHeader(openblack::anm::ANMFile& anm)
 
 	std::printf("file: %s\n", anm.GetFilename().c_str());
 
-	std::printf("name: %s\n", header.name);
+	std::printf("name: %s\n", header.name.data());
 	std::printf("unknown_0x20: 0x%X\n", header.unknown_0x20);
 	std::printf("unknown_0x24: %f\n", header.unknown_0x24);
 	std::printf("unknown_0x28: %f\n", header.unknown_0x28);
@@ -120,7 +120,8 @@ int WriteFile(const Arguments::Write& args)
 
 	// TODO (bwrsandman): Extract animation from gltf
 	const std::string name = "TODO";
-	memcpy(anm.GetHeader().name, name.c_str(), std::min(sizeof(anm.GetHeader().name), name.length()));
+	memcpy(anm.GetHeader().name.data(), name.c_str(),
+	       std::min(sizeof(anm.GetHeader().name[0]) * anm.GetHeader().name.size(), name.length()));
 	anm.GetHeader().frame_count = 0;
 	anm.GetHeader().animation_duration = 0;
 	anm.Write(args.outFilename);

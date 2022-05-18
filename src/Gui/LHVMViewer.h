@@ -35,9 +35,9 @@ private:
 	std::string DataToString(uint32_t data, openblack::LHVM::VMInstruction::DataType type);
 	void SelectScript(uint32_t idx);
 
-	uint32_t _selectedScriptID;
-	uint32_t _scrollToSelected;
-	uint32_t _resetScriptDisassemblyScroll;
+	uint32_t _selectedScriptID {1};
+	uint32_t _scrollToSelected {false};
+	uint32_t _resetScriptDisassemblyScroll {false};
 };
 
 } // namespace openblack::gui

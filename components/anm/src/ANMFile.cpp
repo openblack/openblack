@@ -106,10 +106,8 @@ void ANMFile::Fail(const std::string& msg)
 	throw std::runtime_error("ANM Error: " + msg + "\nFilename: " + _filename.string());
 }
 
-ANMFile::ANMFile()
-    : _isLoaded(false)
-{
-}
+ANMFile::ANMFile() = default;
+ANMFile::~ANMFile() = default;
 
 void ANMFile::ReadFile(std::istream& stream)
 {

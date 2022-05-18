@@ -27,11 +27,7 @@ using namespace openblack::gui;
 
 Console::Console()
     : DebugWindow("Console", ImVec2(520, 600))
-    , _reclaim_focus(false)
-    , _insert_hand_position(false)
-    , _input_cursor_position(0)
-    , _input_buffer {0}
-    , _items {} // Welcome message goes here
+    // , _items {"Welcome message goes here"}
     , _commands {
           {"help", "    - Display list of possible commands."},
           {"history", " - Display previously executed commands."},
@@ -68,14 +64,14 @@ Console::Console()
 			}
 		}
 		details += ")";
-		_commands.emplace_back(std::string(signature.name) + "(", details);
+		_commands.emplace_back(std::string(signature.name.data(), signature.name.size()) + "(", details);
 	}
 }
 
 void Console::Open()
 {
 	DebugWindow::Open();
-	_reclaim_focus = true;
+	_reclaimFocus = true;
 }
 
 int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
@@ -162,41 +158,41 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 	case ImGuiInputTextFlags_CallbackHistory:
 	{
 		// Example of HISTORY
-		const auto prev_history_pos = _history_pos;
+		const auto prev_historyPos = _historyPos;
 		if (data->EventKey == ImGuiKey_UpArrow)
 		{
-			if (!_history_pos.has_value())
+			if (!_historyPos.has_value())
 			{
 				if (!_history.empty())
 				{
-					_history_pos = _history.size() - 1;
+					_historyPos = _history.size() - 1;
 				}
-				_partial = _input_buffer.data();
+				_partial = _inputBuffer.data();
 			}
-			else if (_history_pos.value() > 0)
+			else if (_historyPos.value() > 0)
 			{
-				_history_pos.value()--;
+				_historyPos.value()--;
 			}
 		}
 		else if (data->EventKey == ImGuiKey_DownArrow)
 		{
-			if (_history_pos.has_value())
+			if (_historyPos.has_value())
 			{
-				if (++_history_pos.value() >= _history.size())
+				if (++_historyPos.value() >= _history.size())
 				{
-					_history_pos.reset();
+					_historyPos.reset();
 				}
 			}
 			else
 			{
-				_partial = _input_buffer.data();
+				_partial = _inputBuffer.data();
 			}
 		}
 
 		// A better implementation would preserve the data on the current input line along with cursor position.
-		if (prev_history_pos != _history_pos)
+		if (prev_historyPos != _historyPos)
 		{
-			auto history_str = _history_pos.has_value() ? _history[*_history_pos] : _partial;
+			auto history_str = _historyPos.has_value() ? _history[*_historyPos] : _partial;
 			data->DeleteChars(0, data->BufTextLen);
 			data->InsertChars(0, history_str.c_str());
 		}
@@ -204,7 +200,7 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 	}
 	case ImGuiInputTextFlags_CallbackAlways:
 	{
-		_input_cursor_position = data->CursorPos;
+		_inputCursorPosition = data->CursorPos;
 		break;
 	}
 	}
@@ -337,7 +333,7 @@ void Console::Draw(Game& game)
 	// Command-line
 	ImGui::PushItemWidth(-1);
 	if (ImGui::InputText(
-	        "##Input", _input_buffer.data(), _input_buffer.size(),
+	        "##Input", _inputBuffer.data(), _inputBuffer.size(),
 	        ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion |
 	            ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackAlways,
 	        [](ImGuiInputTextCallbackData* data) -> int {
@@ -345,7 +341,7 @@ void Console::Draw(Game& game)
 	        },
 	        (void*)this))
 	{
-		std::string s = _input_buffer.data();
+		std::string s = _inputBuffer.data();
 
 		// trim string
 		s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
@@ -354,32 +350,32 @@ void Console::Draw(Game& game)
 		if (s[0])
 			ExecCommand(s, game);
 
-		_input_buffer[0] = '\0';
+		_inputBuffer[0] = '\0';
 
-		_reclaim_focus = true;
+		_reclaimFocus = true;
 	}
 	ImGui::PopItemWidth();
 
-	if (_insert_hand_position)
+	if (_insertHandPosition)
 	{
-		if (_input_cursor_position >= 0)
+		if (_inputCursorPosition >= 0)
 		{
-			std::string pre(_input_buffer.data(), _input_buffer.data() + _input_cursor_position);
-			std::string post(_input_buffer.data() + _input_cursor_position);
+			std::string pre(_inputBuffer.data(), _inputBuffer.data() + _inputCursorPosition);
+			std::string post(_inputBuffer.data() + _inputCursorPosition);
 
 			const auto& position = game.GetEntityRegistry().Get<ecs::components::Transform>(game.GetHand()).position;
-			snprintf(_input_buffer.data(), _input_buffer.size(), "%s%.2f,%.2f%s", pre.c_str(), position.x, position.z,
+			snprintf(_inputBuffer.data(), _inputBuffer.size(), "%s%.2f,%.2f%s", pre.c_str(), position.x, position.z,
 			         post.c_str());
 		}
 	}
-	_insert_hand_position = false;
+	_insertHandPosition = false;
 
 	// Auto-focus on window apparition
 	ImGui::SetItemDefaultFocus();
-	if (_reclaim_focus)
+	if (_reclaimFocus)
 	{
 		ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
-		_reclaim_focus = false;
+		_reclaimFocus = false;
 	}
 }
 
@@ -403,7 +399,7 @@ void Console::ExecCommand(const std::string& command_line, Game& game)
 
 	// Insert into history. First find match and delete it so it can be pushed to the back. This isn't trying to be smart or
 	// optimal.
-	_history_pos.reset();
+	_historyPos.reset();
 	for (int i = static_cast<int>(_history.size()) - 1; i >= 0; i--)
 		if (_history[i] == command_line)
 		{
@@ -455,7 +451,7 @@ void Console::ProcessEventOpen(const SDL_Event& event)
 	case SDL_MOUSEBUTTONDOWN:
 		if (event.button.clicks == 2 && !io.WantCaptureMouse)
 		{
-			_insert_hand_position = true;
+			_insertHandPosition = true;
 		}
 		break;
 	}

@@ -13,9 +13,7 @@
 
 #include <string>
 
-namespace openblack
-{
-namespace LHVM
+namespace openblack::LHVM
 {
 
 class VMInstruction
@@ -83,13 +81,13 @@ public:
 	}
 	~VMInstruction() = default;
 
-	Opcode GetOpcode() const { return _code; }
-	Access GetAccess() const { return _access; }
-	DataType GetDataType() const { return _type; }
-	uint32_t GetData() const { return _data; }
-	uint32_t GetLineNumber() const { return _line; }
+	[[nodiscard]] Opcode GetOpcode() const { return _code; }
+	[[nodiscard]] Access GetAccess() const { return _access; }
+	[[nodiscard]] DataType GetDataType() const { return _type; }
+	[[nodiscard]] uint32_t GetData() const { return _data; }
+	[[nodiscard]] uint32_t GetLineNumber() const { return _line; }
 
-	std::string Disassemble() const;
+	[[nodiscard]] std::string Disassemble() const;
 
 private:
 	Opcode _code;
@@ -99,5 +97,4 @@ private:
 	uint32_t _line;
 };
 
-} // namespace LHVM
-} // namespace openblack
+} // namespace openblack::LHVM

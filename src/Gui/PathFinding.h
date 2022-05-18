@@ -38,9 +38,9 @@ private:
 		Destination,
 	};
 
-	HandTo _handTo;
-	glm::vec3 _handPosition;
-	glm::vec3 _destination;
+	HandTo _handTo {HandTo::None};
+	glm::vec3 _handPosition {0.0f, 0.0f, 0.0f};
+	glm::vec3 _destination {0.0f, 0.0f, 0.0f};
 	std::optional<entt::entity> _selectedVillager;
 	std::optional<entt::entity> _selectedFootpath;
 };

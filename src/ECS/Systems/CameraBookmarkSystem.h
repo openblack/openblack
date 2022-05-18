@@ -25,7 +25,7 @@ public:
 	bool Initialize();
 	void Update(const std::chrono::microseconds& dt) const;
 
-	const std::array<entt::entity, 8>& GetBookmarks() const { return _bookmarks; }
+	[[nodiscard]] const std::array<entt::entity, 8>& GetBookmarks() const { return _bookmarks; }
 
 	void SetBookmark(uint8_t index, const glm::vec3& position) const;
 	void ClearBookmark(uint8_t index) const;

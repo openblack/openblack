@@ -78,6 +78,7 @@ private:
 	{
 		float _float;
 		int32_t _number;
+		// NOLINTNEXTLINE(modernize-avoid-c-arrays): array won't work in union
 		float _vector[3];
 	} _value;
 	std::string _string;
@@ -109,7 +110,7 @@ typedef std::function<void(const ScriptCommandContext&)> ScriptCommand;
 
 struct ScriptCommandSignature
 {
-	const char name[128];
+	const std::array<char, 0x80> name;
 	const ScriptCommand command;
 	const std::array<ParameterType, 9> parameters;
 };

@@ -18,10 +18,8 @@ class Mesh;
 class Primitive
 {
 public:
-	static std::unique_ptr<Mesh> CreatePlane();
-
-protected:
 	Primitive() = delete;
+	static std::unique_ptr<Mesh> CreatePlane();
 };
 
 } // namespace openblack::graphics

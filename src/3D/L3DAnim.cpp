@@ -20,7 +20,7 @@ using namespace openblack;
 
 void L3DAnim::Load(const anm::ANMFile& anm)
 {
-	_name = anm.GetHeader().name;
+	_name = std::string(anm.GetHeader().name.data(), anm.GetHeader().name.size());
 	_unknown_0x20 = anm.GetHeader().unknown_0x20;
 	_unknown_0x24 = anm.GetHeader().unknown_0x24;
 	_unknown_0x28 = anm.GetHeader().unknown_0x28;

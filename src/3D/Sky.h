@@ -41,7 +41,7 @@ public:
 	/// 0 -> Night (min value)
 	/// 1 -> Dawn/Dusk
 	/// 2 -> Day (max value)
-	float GetCurrentSkyType() const;
+	[[nodiscard]] float GetCurrentSkyType() const;
 
 private:
 	friend class Renderer;

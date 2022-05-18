@@ -55,7 +55,7 @@ public:
 	void DumpMaps() const;
 
 private:
-	std::array<uint8_t, 1024> _blockIndexLookup;
+	std::array<uint8_t, 1024> _blockIndexLookup {0};
 	std::vector<LandBlock> _landBlocks;
 	std::vector<lnd::LNDCountry> _countries;
 

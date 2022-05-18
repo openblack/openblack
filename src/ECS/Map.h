@@ -33,10 +33,10 @@ public:
 	static CellId GetGridCell(const glm::vec3& pos);
 	static glm::vec2 GetCellCenter(const CellId& cellId);
 
-	const std::unordered_set<entt::entity>& GetFixedInGridCell(const CellId& cellId) const;
-	const std::unordered_set<entt::entity>& GetFixedInGridCell(const glm::vec3& pos) const;
-	const std::unordered_set<entt::entity>& GetMobileInGridCell(const CellId& cellId) const;
-	const std::unordered_set<entt::entity>& GetMobileInGridCell(const glm::vec3& pos) const;
+	[[nodiscard]] const std::unordered_set<entt::entity>& GetFixedInGridCell(const CellId& cellId) const;
+	[[nodiscard]] const std::unordered_set<entt::entity>& GetFixedInGridCell(const glm::vec3& pos) const;
+	[[nodiscard]] const std::unordered_set<entt::entity>& GetMobileInGridCell(const CellId& cellId) const;
+	[[nodiscard]] const std::unordered_set<entt::entity>& GetMobileInGridCell(const glm::vec3& pos) const;
 
 	void Rebuild();
 

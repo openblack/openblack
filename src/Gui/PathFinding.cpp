@@ -31,10 +31,6 @@ using namespace openblack::gui;
 
 PathFinding::PathFinding()
     : DebugWindow("Path Finding", ImVec2(400, 400))
-    , _handTo(HandTo::None)
-    , _handPosition(glm::zero<glm::vec3>())
-    , _destination(glm::zero<glm::vec3>())
-    , _selectedVillager()
 {
 }
 

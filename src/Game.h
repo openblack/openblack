@@ -170,14 +170,14 @@ public:
 	const std::filesystem::path& GetGamePath();
 	void SetTime(float time);
 	void SetGameSpeed(float multiplier) { _gameSpeedMultiplier = multiplier; }
-	float GetGameSpeed() const { return _gameSpeedMultiplier; }
+	[[nodiscard]] float GetGameSpeed() const { return _gameSpeedMultiplier; }
 
 	GameWindow* GetWindow() { return _window.get(); }
 	[[nodiscard]] const GameWindow& GetWindow() const { return *_window; }
 	Camera& GetCamera() { return *_camera; }
 	[[nodiscard]] Profiler& GetProfiler() const { return *_profiler; }
 	[[nodiscard]] Renderer& GetRenderer() const { return *_renderer; }
-	const ecs::systems::DynamicsSystem& GetDynamicsSystem() const { return *_dynamicsSystem; }
+	[[nodiscard]] const ecs::systems::DynamicsSystem& GetDynamicsSystem() const { return *_dynamicsSystem; }
 	[[nodiscard]] Camera& GetCamera() const { return *_camera; }
 	[[nodiscard]] Sky& GetSky() const { return *_sky; }
 	[[nodiscard]] Water& GetWater() const { return *_water; }
@@ -197,7 +197,7 @@ public:
 		}
 		return *_landIsland;
 	}
-	entt::entity GetHand() const;
+	[[nodiscard]] entt::entity GetHand() const;
 	[[nodiscard]] const LHVM::LHVM& GetLhvm() { return *_lhvm; }
 	FileSystem& GetFileSystem() { return *_fileSystem; }
 	ecs::Registry& GetEntityRegistry() { return *_entityRegistry; }

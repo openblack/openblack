@@ -610,19 +610,22 @@ bool Game::Run()
 			auto section = _profiler->BeginScoped(Profiler::Stage::SceneDraw);
 
 			Renderer::DrawSceneDesc drawDesc {
-			    /*time =*/milliseconds.count(), // TODO get actual time
-			    /*viewId =*/graphics::RenderPass::Main,
 			    /*profiler =*/*_profiler,
 			    /*camera =*/_camera.get(),
 			    /*frameBuffer =*/nullptr,
-			    /*drawSky =*/_config.drawSky,
 			    /*sky =*/*_sky,
-			    /*drawWater =*/_config.drawWater,
 			    /*water =*/*_water,
-			    /*drawIsland =*/_config.drawIsland,
 			    /*island =*/*_landIsland,
-			    /*drawEntities =*/_config.drawEntities,
 			    /*entities =*/*_entityRegistry,
+			    /*time =*/milliseconds.count(), // TODO get actual time
+			    /*timeOfDay =*/_config.timeOfDay,
+			    /*bumpMapStrength =*/_config.bumpMapStrength,
+			    /*smallBumpMapStrength =*/_config.smallBumpMapStrength,
+			    /*viewId =*/graphics::RenderPass::Main,
+			    /*drawSky =*/_config.drawSky,
+			    /*drawWater =*/_config.drawWater,
+			    /*drawIsland =*/_config.drawIsland,
+			    /*drawEntities =*/_config.drawEntities,
 			    /*drawSprites =*/_config.drawSprites,
 			    /*drawTestModel =*/_config.drawEntities,
 			    /*drawDebugCross =*/_config.drawDebugCross,
@@ -631,9 +634,6 @@ bool Game::Run()
 			    /*bgfxDebug =*/_config.bgfxDebug,
 			    /*bgfxProfile =*/_config.bgfxProfile,
 			    /*wireframe =*/_config.wireframe,
-			    /*timeOfDay =*/_config.timeOfDay,
-			    /*bumpMapStrength =*/_config.bumpMapStrength,
-			    /*smallBumpMapStrength =*/_config.smallBumpMapStrength,
 			};
 
 			_renderer->DrawScene(drawDesc);

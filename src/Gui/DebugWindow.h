@@ -34,8 +34,8 @@ public:
 	void WindowUpdate(Game& game, const Renderer& renderer);
 	void WindowDraw(Game& game);
 	void WindowProcessEvent(const SDL_Event& event);
-	bool IsOpen() const { return _open; }
-	const std::string& GetName() const { return _name; }
+	[[nodiscard]] bool IsOpen() const { return _open; }
+	[[nodiscard]] const std::string& GetName() const { return _name; }
 	virtual void Open();
 	virtual void Close();
 	virtual void Toggle();

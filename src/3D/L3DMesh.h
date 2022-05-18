@@ -10,6 +10,7 @@
 #pragma once
 
 #include <filesystem>
+#include <limits>
 #include <optional>
 #include <unordered_map>
 
@@ -106,8 +107,11 @@ private:
 	std::optional<glm::vec3> _doorPos;
 	/// Bounding box if no physics mesh was found
 	std::unique_ptr<btConvexShape> _physicsMesh;
-	float _physicsMass;
-	AxisAlignedBoundingBox _boundingBox;
+	float _physicsMass {1.0f}; // TODO(bwrsandman): Find somewhere in file a value
+	AxisAlignedBoundingBox _boundingBox {
+	    {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()},
+	    {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest()},
+	};
 
 public:
 	[[nodiscard]] const std::string& GetDebugName() const { return _debugName; }

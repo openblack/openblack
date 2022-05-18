@@ -49,7 +49,7 @@ struct DdsPixelFormat
 {
 	uint32_t size;
 	uint32_t flags;
-	char fourCC[4];
+	std::array<char, 4> fourCC;
 	uint32_t bitCount;
 	uint32_t rBitMask;
 	uint32_t gBitMask;
@@ -59,7 +59,7 @@ struct DdsPixelFormat
 
 struct DdsCapabilities2
 {
-	uint32_t caps[2];
+	std::array<uint32_t, 2> caps;
 	uint32_t ddsx;
 	uint32_t reserved;
 };
@@ -73,7 +73,7 @@ struct DdsHeader
 	uint32_t pitchOrLinearSize;
 	uint32_t depth;
 	uint32_t mipMapCount;
-	uint32_t reserved1[11];
+	std::array<uint32_t, 11> reserved1;
 	DdsPixelFormat format;
 	DdsCapabilities2 capabilities;
 	uint32_t reserved2;
@@ -95,7 +95,7 @@ protected:
 	static constexpr const std::array<char, 8> kMagic = {'L', 'i', 'O', 'n', 'H', 'e', 'A', 'd'};
 
 	/// True when a file has been loaded
-	bool _isLoaded;
+	bool _isLoaded {false};
 
 	std::filesystem::path _filename;
 
@@ -135,8 +135,7 @@ protected:
 
 public:
 	PackFile();
-
-	virtual ~PackFile() = default;
+	virtual ~PackFile();
 
 	/// Read l3d file from the filesystem
 	void Open(const std::filesystem::path& file);

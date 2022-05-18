@@ -84,7 +84,7 @@ public:
 
 	/// getNumSubParts returns the number of separate subparts
 	/// each subpart has a continuous array of vertices and indices
-	int getNumSubParts() const override { return 1; }
+	[[nodiscard]] int getNumSubParts() const override { return 1; }
 
 	void preallocateVertices([[maybe_unused]] int numverts) override { return; }
 

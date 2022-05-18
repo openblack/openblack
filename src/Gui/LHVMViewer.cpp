@@ -496,9 +496,6 @@ static const std::array<std::string, 464> Function_Names = {
 
 LHVMViewer::LHVMViewer()
     : DebugWindow("LHVM Viewer", ImVec2(720.0f, 612.0f))
-    , _selectedScriptID(1)
-    , _scrollToSelected(false)
-    , _resetScriptDisassemblyScroll(false)
 {
 }
 
