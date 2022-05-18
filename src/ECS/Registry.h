@@ -83,7 +83,7 @@ public:
 		return _registry.storage<Component>().size();
 	}
 	template <typename... Components>
-	decltype(auto) AllOf(entt::entity entity) const
+	[[nodiscard]] decltype(auto) AllOf(entt::entity entity) const
 	{
 		return _registry.all_of<Components...>(entity);
 	}
@@ -93,7 +93,7 @@ public:
 		return _registry.get<Components...>(entity);
 	}
 	template <typename... Components>
-	decltype(auto) Get(entt::entity entity) const
+	[[nodiscard]] decltype(auto) Get(entt::entity entity) const
 	{
 		return _registry.get<Components...>(entity);
 	}
@@ -103,12 +103,12 @@ public:
 		return _registry.view<Components...>().each(func);
 	}
 	template <typename... Components, typename Func>
-	decltype(auto) Each(Func func) const
+	[[nodiscard]] decltype(auto) Each(Func func) const
 	{
 		return _registry.view<Components...>().each(func);
 	}
 	template <typename Component>
-	decltype(auto) ToEntity(const Component& component) const
+	[[nodiscard]] decltype(auto) ToEntity(const Component& component) const
 	{
 		return entt::to_entity(_registry, component);
 	}
@@ -123,7 +123,7 @@ public:
 		return Get<Dst>(ToEntity(component));
 	}
 	template <typename... Components>
-	decltype(auto) Size() const
+	[[nodiscard]] decltype(auto) Size() const
 	{
 		return _registry.view<Components...>().size();
 	}

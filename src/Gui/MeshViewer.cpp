@@ -33,13 +33,6 @@ using namespace openblack::gui;
 MeshViewer::MeshViewer()
     : DebugWindow("MeshPack Viewer", ImVec2(950.0f, 780.0f))
     , _selectedMesh(resources::MeshIdToResourceId(MeshId::Dummy))
-    , _selectedSubMesh(0)
-    , _selectedAnimation(std::nullopt)
-    , _selectedFrame(0)
-    , _meshFlagFilter(0xFFFFFFFF)
-    , _matchBones(true)
-    , _cameraPosition(5.0f, 3.0f, 5.0f)
-    , _viewBoundingBox(false)
     , _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f)))
     , _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", static_cast<uint16_t>(512), static_cast<uint16_t>(512),
                                                            graphics::Format::RGBA8, graphics::Format::Depth24Stencil8))

@@ -59,7 +59,7 @@ public:
 	void RegisterRigidBodies();
 	void RegisterIslandRigidBodies(LandIsland& island);
 	void UpdatePhysicsTransforms();
-	const std::optional<std::pair<ecs::components::Transform, RigidBodyDetails>>
+	[[nodiscard]] const std::optional<std::pair<ecs::components::Transform, RigidBodyDetails>>
 	RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float t_max) const;
 
 private:

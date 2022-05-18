@@ -24,15 +24,15 @@
 using namespace openblack;
 using namespace openblack::graphics;
 
-LandVertex::LandVertex(const glm::vec3& _position, const glm::vec3& _weight, const std::array<uint32_t, 6>& mat,
-                       const std::array<uint32_t, 3>& blend, uint8_t _lightLevel, float _alpha)
-    : position {_position.x, _position.y, _position.z}
-    , weight {_weight.x, _weight.y, _weight.z}
-    , firstMaterialID {static_cast<uint8_t>(mat[0]), static_cast<uint8_t>(mat[1]), static_cast<uint8_t>(mat[2])}
-    , secondMaterialID {static_cast<uint8_t>(mat[3]), static_cast<uint8_t>(mat[4]), static_cast<uint8_t>(mat[5])}
-    , materialBlendCoefficient {static_cast<uint8_t>(blend[0]), static_cast<uint8_t>(blend[1]), static_cast<uint8_t>(blend[2])}
-    , lightLevel {_lightLevel}
-    , waterAlpha {_alpha}
+LandVertex::LandVertex(const glm::vec3& position, const glm::vec3& weight, const std::array<uint32_t, 6>& mat,
+                       const glm::uvec3& blend, uint8_t lightLevel, float alpha)
+    : position {position}
+    , weight {weight}
+    , firstMaterialID {static_cast<uint8_t>(mat[0]), static_cast<uint8_t>(mat[1]), static_cast<uint8_t>(mat[2]), 0u}
+    , secondMaterialID {static_cast<uint8_t>(mat[3]), static_cast<uint8_t>(mat[4]), static_cast<uint8_t>(mat[5]), 0u}
+    , materialBlendCoefficient {blend, 0u}
+    , lightLevel {lightLevel}
+    , waterAlpha {alpha}
 {
 }
 
@@ -134,7 +134,7 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 			                             const std::array<lnd::LNDMapMaterial, 3>& m, const lnd::LNDCell& cell) -> LandVertex {
 				std::array<uint32_t, 6> mat = {m[0].indices[0], m[1].indices[0], m[2].indices[0],
 				                               m[0].indices[1], m[1].indices[1], m[2].indices[1]};
-				std::array<uint32_t, 3> blend = {m[0].coefficient, m[1].coefficient, m[2].coefficient};
+				glm::u32vec3 blend = {m[0].coefficient, m[1].coefficient, m[2].coefficient};
 				return {height, weight, mat, blend, cell.luminosity, getAlpha(cell.properties)};
 			};
 
@@ -204,7 +204,7 @@ void LandBlock::Draw(graphics::RenderPass viewId, const ShaderProgram& program, 
 const lnd::LNDCell* LandBlock::GetCells() const
 {
 	assert(_block);
-	return _block ? _block->cells : nullptr;
+	return _block ? _block->cells.data() : nullptr;
 }
 
 glm::ivec2 LandBlock::GetBlockPosition() const

@@ -33,7 +33,8 @@ class EventQueue: public IEventQueue
 public:
 	using Ptr = std::shared_ptr<EventQueue>;
 
-	EventQueue() {}
+	EventQueue() = default;
+
 	void AddHandler(EventHandler<T> handler) { _handlers.push_back(handler); }
 
 	void Produce(T event)
@@ -49,7 +50,7 @@ public:
 	}
 
 private:
-	~EventQueue() {}
+	~EventQueue() override = default;
 
 	using Queue = std::list<T>;
 	Queue _instance;

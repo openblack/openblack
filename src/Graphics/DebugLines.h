@@ -22,6 +22,8 @@ class Mesh;
 class DebugLines
 {
 public:
+	DebugLines() = delete;
+
 	struct Vertex
 	{
 		glm::vec4 pos;
@@ -32,9 +34,6 @@ public:
 	static std::unique_ptr<Mesh> CreateBox(const glm::vec4& color);
 	static std::unique_ptr<Mesh> CreateLine(const glm::vec4& from, const glm::vec4& to, const glm::vec4& color);
 	static std::unique_ptr<Mesh> CreateDebugLines(const Vertex* data, uint32_t vertexCount);
-
-protected:
-	DebugLines() = delete;
 };
 
 } // namespace openblack::graphics

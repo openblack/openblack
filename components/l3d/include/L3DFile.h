@@ -139,7 +139,7 @@ struct L3DBone
 	uint32_t parent;
 	uint32_t firstChild;
 	uint32_t rightSibling;
-	float orientation[9];
+	std::array<float, 9> orientation;
 	L3DPoint position;
 };
 static_assert(sizeof(L3DBone) == 3 * sizeof(uint32_t) + 9 * sizeof(float) + sizeof(L3DPoint));
@@ -218,7 +218,7 @@ static_assert(sizeof(L3DVertexGroup) == 4);
 
 struct L3DBlend
 {
-	uint16_t indices[2];
+	std::array<uint16_t, 2> indices;
 	float weight;
 };
 static_assert(sizeof(L3DBlend) == 8);
@@ -229,10 +229,10 @@ static_assert(sizeof(L3DBlend) == 8);
 class L3DFile
 {
 protected:
-	static constexpr const char kMagic[4] = {'L', '3', 'D', '0'};
+	static constexpr const std::array<char, 4> kMagic = {'L', '3', 'D', '0'};
 
 	/// True when a file has been loaded
-	bool _isLoaded;
+	bool _isLoaded {false};
 
 	std::filesystem::path _filename;
 
@@ -264,8 +264,7 @@ protected:
 
 public:
 	L3DFile();
-
-	virtual ~L3DFile() = default;
+	virtual ~L3DFile();
 
 	/// Read l3d file from the filesystem
 	void Open(const std::filesystem::path& filepath);

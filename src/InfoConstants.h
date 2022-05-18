@@ -172,7 +172,7 @@ struct GLivingInfo: GMobileWallHugInfo
 
 struct AgeToScale
 {
-	float values[20];
+	std::array<float, 20> values;
 };
 
 struct GAnimalInfo: GLivingInfo
@@ -550,7 +550,7 @@ struct GTownInfo: GContainerInfo
 	uint32_t percentFemale;
 	uint32_t processAbodeEvery;
 	uint32_t newBuildingEvery;
-	uint32_t profession[static_cast<size_t>(VillagerJob::_COUNT)];
+	std::array<uint32_t, static_cast<size_t>(VillagerJob::_COUNT)> profession;
 	float happyFoodMultiplier;
 	float influence;
 	float numberOfDaysFoodInStoreToBeHappy;
@@ -570,7 +570,7 @@ struct GTownInfo: GContainerInfo
 	float builtPercentBeforeWhichYouCanAddScaffolds;
 	float beliefInNeutralPlayer;
 	float maxAlignmentChangePerGameTurnForDesires;
-	float storyInfluence[5];
+	std::array<float, 5> storyInfluence;
 	float maxForTimeWillWorkUntil;
 	float bedTimeMod;
 	float foodWantedMultiplier;
@@ -610,7 +610,7 @@ struct GTownInfo: GContainerInfo
 	float maxDistanceForTownForest;
 	uint32_t shuffleVillagersEvery;
 	float beliefSpeedScaleMultiPlayer;
-	float beliefSpeedScaleStory[6];
+	std::array<float, 6> beliefSpeedScaleStory;
 	float fightWonImpressiveValue;
 };
 
@@ -1006,7 +1006,7 @@ struct GTerrainMaterialInfo
 	HelpText HelpStartEnum;
 	HelpText HelpEndEnum;
 	glm::uvec3 tornadoDustColorRGB;
-	TreeInfo magicTreeTypes[4];
+	std::array<TreeInfo, 4> magicTreeTypes;
 };
 
 struct GFlowersInfo: GFeatureInfo
@@ -1133,8 +1133,8 @@ struct GVillagerInfo: GLivingInfo
 	uint32_t havingSexTime;
 	uint32_t dancingSpeed;
 	AgeToScale ageToScale;
-	AnimId lAttractAnim[3];
-	AnimId lNeedAnim[3];
+	std::array<AnimId, 3> lAttractAnim;
+	std::array<AnimId, 3> lNeedAnim;
 	float maxDistCarryFoodPit;
 	float maxDistCarryWoodPit;
 	uint32_t allowFaceSubstitution;
@@ -1227,7 +1227,7 @@ struct GPlayerInfo
 	float maxScriptAlignmentChange;
 	float treePullPutAlignmentChange;
 	float applyEffectAlignmentChangeAddition;
-	float dealthReason[static_cast<size_t>(DeathReason::_COUNT)];
+	std::array<float, static_cast<size_t>(DeathReason::_COUNT)> dealthReason;
 	float computerPlayerBeliefChangeDecay;
 	float averageTownPopulationForCredits;
 };
@@ -1436,7 +1436,7 @@ struct GMagicEffectInfo: GEffectInfo
 	uint32_t createReactionOnCast;
 	uint32_t createReactionOnEvent;
 	Reaction reactionType;
-	CreatureDesires perceivedPlayerDesire[2];
+	std::array<CreatureDesires, 2> perceivedPlayerDesire;
 	TownDesireInfo townDesireBeingHelped;
 	float agressiveRangeMin;
 	float agressiveRangeMax;
@@ -1448,7 +1448,7 @@ struct GMagicEffectInfo: GEffectInfo
 	float costInRealTimeToCreate;
 	float impressiveValue;
 	float cpImpressiveBalance;
-	uint32_t useTribalPowerMultiplier[static_cast<int>(Tribe::_COUNT)];
+	std::array<uint32_t, static_cast<int>(Tribe::_COUNT)> useTribalPowerMultiplier;
 	uint32_t isAggressiveSpellWhichIsUsedInCreatureFightArena;
 	uint32_t isDefensiveSpellWhichIsUsedInCreatureFightArena;
 	HelpText helpStartEnum;
@@ -1468,7 +1468,7 @@ struct GTownDesireInfo
 	float showsAfterPercent;
 	float desireTriggersVillagerAction;
 	float desireTriggersVillagerEmergencyAction;
-	VillagerBasicInfo associatedVillagerBirth[3];
+	std::array<VillagerBasicInfo, 3> associatedVillagerBirth;
 	MeshId worshipSiteMesh;
 	int worshipSiteSlot;
 	float worshipSiteScale;
@@ -1480,7 +1480,7 @@ struct GTownDesireInfo
 	float desireAffectsAlignmentAfter;
 	float howImportantDesireIsToAlignment;
 	uint32_t maxTimeForAlignmentChange;
-	float tribeMultiplier[static_cast<int>(Tribe::_COUNT)];
+	std::array<float, static_cast<int>(Tribe::_COUNT)> tribeMultiplier;
 	HelpText helpStartEnum;
 	HelpText helpEndEnum;
 	HelpText helpStatEnum;
@@ -1555,7 +1555,7 @@ struct GCitadelHeartInfo: GCitadelPartInfo
 	int startGoodness;
 	uint32_t startFollowers;
 	uint32_t maxFlockCount;
-	float storyInfluence[5];
+	std::array<float, 5> storyInfluence;
 	float transferedDamageMultiplier;
 };
 
@@ -1572,7 +1572,7 @@ struct GMagicCreatureSpellInfo: GMagicInfo
 struct GRewardProgress
 {
 	MagicType magicType;
-	uint32_t onLand[6];
+	std::array<uint32_t, 6> onLand;
 };
 
 struct GRewardProgressGood: GRewardProgress
@@ -1683,7 +1683,7 @@ struct GSpellSystemInfo
 	GestureType creatureSpecialMoveGesture;
 	float leashSelectionSystemTimeOut;
 	GestureType leashSelectionStart;
-	GestureType leashSelectionGestures[4];
+	std::array<GestureType, 4> leashSelectionGestures;
 	GestureType creatureZoomTo;
 	GestureType creatureEndGive;
 };

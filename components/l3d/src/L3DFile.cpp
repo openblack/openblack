@@ -197,10 +197,8 @@ void L3DFile::Fail(const std::string& msg)
 	throw std::runtime_error("L3D Error: " + msg + "\nFilename: " + _filename.string());
 }
 
-L3DFile::L3DFile()
-    : _isLoaded(false)
-{
-}
+L3DFile::L3DFile() = default;
+L3DFile::~L3DFile() = default;
 
 void L3DFile::ReadFile(std::istream& stream)
 {
@@ -221,7 +219,7 @@ void L3DFile::ReadFile(std::istream& stream)
 
 	// First 76 bytes
 	stream.read(reinterpret_cast<char*>(&_header), sizeof(L3DHeader));
-	if (std::memcmp(&_header.magic, kMagic, sizeof(_header.magic)) != 0)
+	if (_header.magic != kMagic)
 	{
 		Fail("Unrecognized L3D header");
 	}
@@ -668,7 +666,7 @@ void L3DFile::Write(const std::filesystem::path& filepath)
 	}
 
 	// Set magic number
-	std::memcpy(_header.magic.data(), kMagic, sizeof(kMagic));
+	_header.magic = kMagic;
 	_header.submeshCount = static_cast<uint32_t>(_submeshHeaders.size());
 	_header.skinCount = static_cast<uint32_t>(_skins.size());
 	_header.extraDataCount = static_cast<uint32_t>(_extraPoints.size());

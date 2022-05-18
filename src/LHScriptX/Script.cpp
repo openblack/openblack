@@ -76,7 +76,7 @@ bool Script::isCommand(const std::string& identifier) const
 {
 	// this could be done a lot better
 	for (const auto& signature : FeatureScriptCommands::Signatures)
-		if (signature.name == identifier)
+		if (signature.name.data() == identifier)
 			return true;
 
 	return false;
@@ -115,7 +115,7 @@ void Script::runCommand(const std::string& identifier, const std::vector<Token>&
 
 	for (const auto& signature : FeatureScriptCommands::Signatures)
 	{
-		if (signature.name != identifier)
+		if (signature.name.data() != identifier)
 			continue;
 
 		command_signature = &signature;

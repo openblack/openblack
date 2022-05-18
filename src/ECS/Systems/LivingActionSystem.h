@@ -19,7 +19,8 @@ public:
 	static LivingActionSystem& instance();
 	void Update();
 
-	VillagerStates VillagerGetState(const components::LivingAction& action, components::LivingAction::Index index) const;
+	[[nodiscard]] VillagerStates VillagerGetState(const components::LivingAction& action,
+	                                              components::LivingAction::Index index) const;
 	void VillagerSetState(components::LivingAction& action, components::LivingAction::Index index, VillagerStates state,
 	                      bool skipTransition) const;
 	uint32_t VillagerCallState(components::LivingAction& action, components::LivingAction::Index index) const;

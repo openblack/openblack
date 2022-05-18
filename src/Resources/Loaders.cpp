@@ -67,11 +67,11 @@ entt::resource_handle<graphics::Texture2D> Texture2DLoader::load(const std::stri
 	// - all are compressed
 	auto texture2D = std::make_shared<graphics::Texture2D>(name);
 	graphics::Format internalFormat;
-	if (g3dTexture.ddsHeader.format.fourCC == std::string("DXT1"))
+	if (g3dTexture.ddsHeader.format.fourCC.data() == std::string("DXT1"))
 		internalFormat = graphics::Format::BlockCompression1;
-	else if (g3dTexture.ddsHeader.format.fourCC == std::string("DXT3"))
+	else if (g3dTexture.ddsHeader.format.fourCC.data() == std::string("DXT3"))
 		internalFormat = graphics::Format::BlockCompression2;
-	else if (g3dTexture.ddsHeader.format.fourCC == std::string("DXT5"))
+	else if (g3dTexture.ddsHeader.format.fourCC.data() == std::string("DXT5"))
 		internalFormat = graphics::Format::BlockCompression3;
 	else
 		throw std::runtime_error("Unsupported compressed texture format");

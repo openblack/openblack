@@ -19,7 +19,7 @@ namespace openblack::anm
 
 struct ANMHeader
 {
-	char name[32];
+	std::array<char, 0x20> name;
 	uint32_t unknown_0x20; // Seems to be a uint16_t padded
 	float unknown_0x24;
 	float unknown_0x28;
@@ -38,7 +38,7 @@ static_assert(sizeof(ANMHeader) == 0x54);
 
 struct ANMBone
 {
-	float matrix[12];
+	std::array<float, 12> matrix;
 };
 
 struct ANMFrame
@@ -54,7 +54,7 @@ class ANMFile
 {
 protected:
 	/// True when a file has been loaded
-	bool _isLoaded;
+	bool _isLoaded {false};
 
 	std::filesystem::path _filename;
 
@@ -72,8 +72,7 @@ protected:
 
 public:
 	ANMFile();
-
-	virtual ~ANMFile() = default;
+	virtual ~ANMFile();
 
 	/// Read anm file from the filesystem
 	void Open(const std::filesystem::path& filepath);

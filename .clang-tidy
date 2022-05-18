@@ -1,4 +1,4 @@
----
+HeaderFilterRegex: '^[^_]*\.h$'
 Checks: >-
   -*,
   clang-analyzer-*,
@@ -6,3 +6,4 @@ Checks: >-
   -modernize-use-equals-default,
   -modernize-use-trailing-return-type,
   -modernize-use-using,
+# WarningsAsErrors: '*'

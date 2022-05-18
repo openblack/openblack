@@ -78,7 +78,7 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 					     parent = boneSpans[parent].parent)
 					{
 						const auto& bone = boneSpans[parent];
-						const auto orientation = glm::make_mat3(bone.orientation);
+						const auto orientation = glm::make_mat3(bone.orientation.data());
 						const auto translation = glm::make_vec3(&bone.position.x);
 						const auto local = glm::translate(glm::identity<glm::mat4>(), translation) * glm::mat4(orientation);
 						matrix = local * matrix;

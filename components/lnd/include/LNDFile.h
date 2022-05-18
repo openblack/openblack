@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <array>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -19,7 +20,7 @@ namespace openblack::lnd
 struct LNDHeader
 {
 	uint32_t blockCount;
-	uint8_t lookUpTable[1024];
+	std::array<uint8_t, 0x400> lookUpTable;
 	uint32_t materialCount;
 	uint32_t countryCount;
 	uint32_t blockSize;
@@ -31,7 +32,7 @@ static_assert(sizeof(LNDHeader) == 1052);
 
 struct LNDLowResolutionTextureHeader
 {
-	uint8_t unknown[16]; // TODO: decode what these are
+	std::array<uint8_t, 0x10> unknown; // TODO: decode what these are
 	uint32_t size;
 };
 static_assert(sizeof(LNDLowResolutionTextureHeader) == 20);
@@ -69,7 +70,7 @@ static_assert(sizeof(LNDCell) == 8);
 /// TODO(bwrsandman): determine if some of these uints are bools
 struct LNDBlock
 {
-	LNDCell cells[17 * 17];
+	std::array<LNDCell, 17 * 17> cells;
 	uint32_t index;            ///< 2312
 	float mapX;                ///< 2320
 	float mapZ;                ///< 2316
@@ -90,8 +91,8 @@ struct LNDBlock
 	uint32_t drawSomething;    ///< 0aaa
 	uint32_t specMatBeforePtr; ///< 0
 	uint32_t specMatAfterPtr;  ///< 0
-	float transformUVBefore[3][4];
-	float transformUVAfter[3][4];
+	std::array<std::array<float, 3>, 4> transformUVBefore;
+	std::array<std::array<float, 3>, 4> transformUVAfter;
 	uint32_t nextSortingPtr;
 	float valueSorting;
 	float lowResTexture;
@@ -105,15 +106,15 @@ static_assert(sizeof(LNDBlock) == 2520);
 
 struct LNDMapMaterial
 {
-	uint32_t indices[2]; ///< Indices of both Materials
+	std::array<uint32_t, 2> indices; ///< Indices of both Materials
 	uint32_t coefficient;
 };
 static_assert(sizeof(LNDMapMaterial) == 3 * sizeof(uint32_t));
 
 struct LNDCountry
 {
-	uint32_t type;                 ///< Type of terrain
-	LNDMapMaterial materials[256]; ///< altitude 0-255
+	uint32_t type;                               ///< Type of terrain
+	std::array<LNDMapMaterial, 0x100> materials; ///< altitude 0-255
 };
 static_assert(sizeof(LNDCountry) == 3076);
 
@@ -131,7 +132,7 @@ struct LNDMaterial
 	static constexpr uint16_t height = 256;
 
 	uint16_t type; ///< Terrain Type
-	R5G5B5A1 texels[width * height];
+	std::array<R5G5B5A1, width * height> texels;
 };
 static_assert(sizeof(LNDMaterial) == 0x20002);
 
@@ -140,7 +141,7 @@ struct LNDBumpMap
 	static constexpr uint16_t width = 256;
 	static constexpr uint16_t height = 256;
 
-	uint8_t texels[width * height]; ///< R8
+	std::array<uint8_t, width * height> texels; ///< R8
 };
 static_assert(sizeof(LNDBumpMap) == 0x10000);
 
@@ -158,11 +159,11 @@ class LNDFile
 {
 protected:
 	/// True when a file has been loaded
-	bool _isLoaded;
+	bool _isLoaded {false};
 
 	std::filesystem::path _filename;
 
-	LNDHeader _header;
+	LNDHeader _header {};
 	std::vector<LNDLowResolutionTexture> _lowResolutionTextures;
 	std::vector<LNDBlock> _blocks;
 	std::vector<LNDCountry> _countries;
@@ -185,8 +186,7 @@ protected:
 
 public:
 	LNDFile();
-
-	virtual ~LNDFile() = default;
+	virtual ~LNDFile();
 
 	/// Read l3d file from the filesystem
 	void Open(const std::filesystem::path& filepath);

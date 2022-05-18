@@ -299,7 +299,7 @@ void PackFile::ExtractTexturesFromBlock()
 		{
 			// The block-size is 8 bytes for DXT1, BC1, and BC4 formats, and 16 bytes for other block-compressed formats
 			int blockSize;
-			auto format = std::string(ddsHeader.format.fourCC);
+			auto format = std::string(ddsHeader.format.fourCC.data(), ddsHeader.format.fourCC.size());
 			if (format == "DXT1" || format == "BC1" || format == "BC4")
 			{
 				blockSize = 8;
@@ -486,10 +486,8 @@ void PackFile::CreateBodyBlock()
 	_blocks["Body"] = std::move(contents);
 }
 
-PackFile::PackFile()
-    : _isLoaded(false)
-{
-}
+PackFile::PackFile() = default;
+PackFile::~PackFile() = default;
 
 void PackFile::Open(const std::filesystem::path& file)
 {

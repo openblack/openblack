@@ -175,10 +175,7 @@ void MorphFile::Fail(const std::string& msg)
 	throw std::runtime_error("MorphFile Error: " + msg + "\nFilename: " + _filename.string());
 }
 
-MorphFile::MorphFile()
-    : _isLoaded(false)
-{
-}
+MorphFile::MorphFile() = default;
 
 MorphFile::~MorphFile() = default;
 

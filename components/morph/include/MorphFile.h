@@ -157,7 +157,7 @@ class MorphFile
 {
 protected:
 	/// True when a file has been loaded
-	bool _isLoaded;
+	bool _isLoaded {false};
 
 	std::filesystem::path _filename;
 
@@ -180,7 +180,6 @@ protected:
 
 public:
 	MorphFile();
-
 	virtual ~MorphFile();
 
 	/// Read morph file from the filesystem

@@ -58,19 +58,22 @@ class Renderer
 public:
 	struct DrawSceneDesc
 	{
-		uint32_t time;
-		graphics::RenderPass viewId;
 		Profiler& profiler;
 		const Camera* camera;
 		const graphics::FrameBuffer* frameBuffer;
-		bool drawSky;
 		const Sky& sky;
-		bool drawWater;
 		const Water& water;
-		bool drawIsland;
 		const LandIsland& island;
-		bool drawEntities;
 		const ecs::Registry& entities;
+		uint32_t time;
+		float timeOfDay;
+		float bumpMapStrength;
+		float smallBumpMapStrength;
+		graphics::RenderPass viewId;
+		bool drawSky;
+		bool drawWater;
+		bool drawIsland;
+		bool drawEntities;
 		bool drawSprites;
 		bool drawTestModel;
 		bool drawDebugCross;
@@ -79,9 +82,6 @@ public:
 		bool bgfxDebug;
 		bool bgfxProfile;
 		bool wireframe;
-		float timeOfDay;
-		float bumpMapStrength;
-		float smallBumpMapStrength;
 	};
 
 	struct L3DMeshSubmitDesc

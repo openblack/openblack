@@ -212,8 +212,8 @@ int ViewTexture(openblack::pack::PackFile& pack, const std::string& name, const 
 	std::printf("    format:\n");
 	std::printf("        size: %u\n", texture.ddsHeader.format.size);
 	std::printf("        flags: 0x%X\n", texture.ddsHeader.format.flags);
-	std::printf("        fourCC: %s\n",
-	            std::string(texture.ddsHeader.format.fourCC, sizeof(texture.ddsHeader.format.fourCC)).c_str());
+	std::printf("        fourCC: %c%c%c%c\n", texture.ddsHeader.format.fourCC[0], texture.ddsHeader.format.fourCC[1],
+	            texture.ddsHeader.format.fourCC[2], texture.ddsHeader.format.fourCC[3]);
 	std::printf("        bitCount: %u\n", texture.ddsHeader.format.bitCount);
 	std::printf("        r-bit mask: 0x%X\n", texture.ddsHeader.format.rBitMask);
 	std::printf("        g-bit mask: 0x%X\n", texture.ddsHeader.format.gBitMask);

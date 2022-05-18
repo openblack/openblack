@@ -45,14 +45,14 @@ protected:
 private:
 	static constexpr graphics::RenderPass _viewId = graphics::RenderPass::MeshViewer;
 	entt::id_type _selectedMesh;
-	int _selectedSubMesh;
+	int _selectedSubMesh {0};
 	std::optional<entt::id_type> _selectedAnimation;
-	int _selectedFrame;
+	int _selectedFrame {0};
 	ImGuiTextFilter _filter;
-	uint32_t _meshFlagFilter;
-	bool _matchBones;
-	glm::vec3 _cameraPosition;
-	bool _viewBoundingBox;
+	uint32_t _meshFlagFilter {0xFFFFFFFF};
+	bool _matchBones {true};
+	glm::vec3 _cameraPosition {5.0f, 3.0f, 5.0f};
+	bool _viewBoundingBox {false};
 	std::unique_ptr<graphics::Mesh> _boundingBox;
 	std::unique_ptr<graphics::FrameBuffer> _frameBuffer;
 };

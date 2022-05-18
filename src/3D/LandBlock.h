@@ -13,7 +13,9 @@
 
 #include <array>
 
-#include <glm/fwd.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 
 #include "Graphics/Mesh.h"
 #include "Graphics/ShaderProgram.h"
@@ -32,17 +34,16 @@ struct LNDCell;
 
 struct LandVertex
 {
-	float position[3];
-	float weight[3];                     // interpolated
-	uint8_t firstMaterialID[4];          // force alignment 4 bytes to prevent packing
-	uint8_t secondMaterialID[4];         // force alignment 4 bytes to prevent packing
-	uint8_t materialBlendCoefficient[4]; // force alignment 4 bytes to prevent
-	                                     // packing
-	uint8_t lightLevel[4];               // aligned to 4 bytes
+	glm::vec3 position;
+	glm::vec3 weight;                     // interpolated
+	glm::u8vec4 firstMaterialID;          // force alignment 4 bytes to prevent packing
+	glm::u8vec4 secondMaterialID;         // force alignment 4 bytes to prevent packing
+	glm::u8vec4 materialBlendCoefficient; // force alignment 4 bytes to prevent packing
+	glm::u8vec4 lightLevel;               // aligned to 4 bytes
 	float waterAlpha;
 
-	LandVertex(const glm::vec3& _position, const glm::vec3& _weight, const std::array<uint32_t, 6>& mat,
-	           const std::array<uint32_t, 3>& blend, uint8_t _lightLevel, float _alpha);
+	LandVertex(const glm::vec3& position, const glm::vec3& weight, const std::array<uint32_t, 6>& mat, const glm::uvec3& blend,
+	           uint8_t lightLevel, float alpha);
 };
 
 class LandIsland;

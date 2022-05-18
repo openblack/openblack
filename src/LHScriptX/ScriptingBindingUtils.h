@@ -153,10 +153,10 @@ constexpr std::array<ParameterType, 9> GetScriptCommandParameters(void (&fn)(Arg
 	return parameters;
 }
 
-#define CREATE_COMMAND_BINDING(NAME, FUNCTION)                                                                  \
-	{                                                                                                           \
-		NAME, [](const ScriptCommandContext& ctx) { InvokeCallableFromContext(ctx, std::function(FUNCTION)); }, \
-		    GetScriptCommandParameters(FUNCTION)                                                                \
+#define CREATE_COMMAND_BINDING(NAME, FUNCTION)                                                                    \
+	{                                                                                                             \
+		{NAME}, [](const ScriptCommandContext& ctx) { InvokeCallableFromContext(ctx, std::function(FUNCTION)); }, \
+		    GetScriptCommandParameters(FUNCTION)                                                                  \
 	}
 
 } // namespace openblack::lhscriptx

@@ -62,9 +62,9 @@ public:
 
 	[[nodiscard]] Type GetType() const { return this->type_; }
 
-	static Token MakeInvalidToken() { return Token(Type::Invalid); }
-	static Token MakeEOFToken() { return Token(Type::EndOfFile); }
-	static Token MakeEOLToken() { return Token(Type::EndOfLine); }
+	static Token MakeInvalidToken() { return {Type::Invalid}; }
+	static Token MakeEOFToken() { return {Type::EndOfFile}; }
+	static Token MakeEOLToken() { return {Type::EndOfLine}; }
 	static Token MakeIdentifierToken(const std::string& value)
 	{
 		Token tok(Type::Identifier);

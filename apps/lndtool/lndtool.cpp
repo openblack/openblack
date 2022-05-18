@@ -54,7 +54,7 @@ int PrintHeader(openblack::lnd::LNDFile& lnd)
 	std::printf("file: %s\n", lnd.GetFilename().c_str());
 	std::printf("block count: %u\n", header.blockCount);
 	std::printf("block index look-up table:\n");
-	PrintRawBytes(header.lookUpTable, sizeof(header.lookUpTable));
+	PrintRawBytes(header.lookUpTable.data(), sizeof(header.lookUpTable[0]) * header.lookUpTable.size());
 	std::printf("material count: %u\n", header.materialCount);
 	std::printf("country count: %u\n", header.countryCount);
 	std::printf("block size: %u\n", header.blockSize);
@@ -79,7 +79,7 @@ int PrintLowRes(openblack::lnd::LNDFile& lnd)
 	{
 		std::printf("texture #%u:\n", i++);
 		std::printf("unknown header:\n");
-		PrintRawBytes(texture.header.unknown, sizeof(texture.header.unknown));
+		PrintRawBytes(texture.header.unknown.data(), sizeof(texture.header.unknown[0]) * texture.header.unknown.size());
 		std::printf("texel data size: %u\n", texture.header.size);
 	}
 	std::printf("\n");
@@ -162,17 +162,23 @@ int PrintBlocks(openblack::lnd::LNDFile& lnd)
 		std::printf("specMatBeforePtr: 0x%X\n", block.specMatBeforePtr);
 		std::printf("specMatAfterPtr: 0x%X\n", block.specMatAfterPtr);
 		std::printf("transformUVBefore:\n");
-		for (j = 0; j < 4; ++j)
-		{
-			std::printf("     [%6.3f %6.3f %6.3f]\n", block.transformUVBefore[j][0], block.transformUVBefore[j][1],
-			            block.transformUVBefore[j][2]);
-		}
+		std::printf("     [%6.3f %6.3f %6.3f]\n", block.transformUVBefore[0][0], block.transformUVBefore[0][1],
+		            block.transformUVBefore[0][2]);
+		std::printf("     [%6.3f %6.3f %6.3f]\n", block.transformUVBefore[1][0], block.transformUVBefore[1][1],
+		            block.transformUVBefore[1][2]);
+		std::printf("     [%6.3f %6.3f %6.3f]\n", block.transformUVBefore[2][0], block.transformUVBefore[2][1],
+		            block.transformUVBefore[2][2]);
+		std::printf("     [%6.3f %6.3f %6.3f]\n", block.transformUVBefore[3][0], block.transformUVBefore[3][1],
+		            block.transformUVBefore[3][2]);
 		std::printf("transformUVAfter:\n");
-		for (j = 0; j < 4; ++j)
-		{
-			std::printf("     [%6.3f %6.3f %6.3f]\n", block.transformUVAfter[j][0], block.transformUVAfter[j][1],
-			            block.transformUVAfter[j][2]);
-		}
+		std::printf("     [%6.3f %6.3f %6.3f]\n", block.transformUVAfter[0][0], block.transformUVAfter[0][1],
+		            block.transformUVAfter[0][2]);
+		std::printf("     [%6.3f %6.3f %6.3f]\n", block.transformUVAfter[1][0], block.transformUVAfter[1][1],
+		            block.transformUVAfter[1][2]);
+		std::printf("     [%6.3f %6.3f %6.3f]\n", block.transformUVAfter[2][0], block.transformUVAfter[2][1],
+		            block.transformUVAfter[2][2]);
+		std::printf("     [%6.3f %6.3f %6.3f]\n", block.transformUVAfter[3][0], block.transformUVAfter[3][1],
+		            block.transformUVAfter[3][2]);
 		std::printf("nextSortingPtr: 0x%X\n", block.nextSortingPtr);
 		std::printf("valueSorting: %f\n", block.valueSorting);
 		std::printf("lowResTexture: %f\n", block.lowResTexture);
@@ -364,7 +370,7 @@ int WriteFile(const Arguments::Write& args)
 			fsize = static_cast<size_t>(stream.tellg());
 			stream.seekg(0);
 		}
-		if (fsize != sizeof(openblack::lnd::LNDMaterial::texels))
+		if (fsize != sizeof(material.texels[0]) * material.texels.size())
 		{
 			// clang-format off
 			std::cerr << "File " << filename
@@ -376,7 +382,7 @@ int WriteFile(const Arguments::Write& args)
 			// clang-format on
 			return EXIT_FAILURE;
 		}
-		stream.read(reinterpret_cast<char*>(material.texels), fsize);
+		stream.read(reinterpret_cast<char*>(material.texels.data()), fsize);
 		lnd.AddMaterial(material);
 	}
 
@@ -395,7 +401,7 @@ int WriteFile(const Arguments::Write& args)
 			fsize = static_cast<size_t>(stream.tellg());
 			stream.seekg(0);
 		}
-		if (fsize != sizeof(openblack::lnd::LNDBumpMap::texels))
+		if (fsize != sizeof(map.texels[0]) * map.texels.size())
 		{
 			// clang-format off
 			std::cerr << "File " << args.noiseMapFile
@@ -407,7 +413,7 @@ int WriteFile(const Arguments::Write& args)
 			// clang-format on
 			return EXIT_FAILURE;
 		}
-		stream.read(reinterpret_cast<char*>(map.texels), fsize);
+		stream.read(reinterpret_cast<char*>(map.texels.data()), fsize);
 		lnd.AddNoiseMap(map);
 	}
 	{
@@ -436,7 +442,7 @@ int WriteFile(const Arguments::Write& args)
 			// clang-format on
 			return EXIT_FAILURE;
 		}
-		stream.read(reinterpret_cast<char*>(map.texels), fsize);
+		stream.read(reinterpret_cast<char*>(map.texels.data()), fsize);
 		lnd.AddBumpMap(map);
 	}
 

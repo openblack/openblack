@@ -15,9 +15,7 @@
 #include <LHVM/VMInstruction.h>
 #include <LHVM/VMScript.h>
 
-namespace openblack
-{
-namespace LHVM
+namespace openblack::LHVM
 {
 
 class LHVM
@@ -35,12 +33,12 @@ public:
 
 	void LoadBinary(const std::string& filename);
 
-	const std::vector<std::string>& GetVariables() const { return _variables; }
-	const std::vector<VMInstruction>& GetInstructions() const { return _instructions; }
-	const std::vector<VMScript>& GetScripts() const { return _scripts; }
-	const std::vector<uint8_t>& GetData() const { return _data; }
+	[[nodiscard]] const std::vector<std::string>& GetVariables() const { return _variables; }
+	[[nodiscard]] const std::vector<VMInstruction>& GetInstructions() const { return _instructions; }
+	[[nodiscard]] const std::vector<VMScript>& GetScripts() const { return _scripts; }
+	[[nodiscard]] const std::vector<uint8_t>& GetData() const { return _data; }
 
-	Version GetVersion() const { return _version; }
+	[[nodiscard]] Version GetVersion() const { return _version; }
 
 private:
 	void loadVariables(std::FILE* file, std::vector<std::string>& variables);
@@ -57,5 +55,4 @@ private:
 	std::vector<uint8_t> _data;
 };
 
-} // namespace LHVM
-} // namespace openblack
+} // namespace openblack::LHVM
