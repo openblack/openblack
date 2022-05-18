@@ -9,6 +9,7 @@
 
 #include "Script.h"
 
+#include <algorithm>
 #include <iostream>
 
 #include <glm/vec2.hpp>
@@ -36,11 +37,15 @@ void Script::Load(const std::string& source)
 			const std::string identifier = token->Identifier();
 
 			if (!isCommand(identifier))
+			{
 				throw std::runtime_error("unknown command: " + identifier);
+			}
 
 			token = this->advanceToken(lexer);
 			if (!token->IsOP(Operator::LeftParentheses))
+			{
 				throw std::runtime_error("expected ( after identifier " + identifier);
+			}
 
 			std::vector<Token> args;
 
@@ -56,14 +61,18 @@ void Script::Load(const std::string& source)
 					// consume the ,
 					token = this->advanceToken(lexer);
 					if (!token->IsOP(Operator::Comma))
+					{
 						break;
+					}
 
 					this->advanceToken(lexer);
 				}
 			}
 
 			if (!token->IsOP(Operator::RightParentheses))
+			{
 				throw std::runtime_error("missing )");
+			}
 
 			// move token to whatever is after ')'
 			this->advanceToken(lexer);
@@ -77,12 +86,9 @@ void Script::Load(const std::string& source)
 
 bool Script::isCommand(const std::string& identifier) const
 {
-	// this could be done a lot better
-	for (const auto& signature : FeatureScriptCommands::Signatures)
-		if (signature.name.data() == identifier)
-			return true;
-
-	return false;
+	// TODO(handsomematt): this could be done a lot better
+	return std::any_of(FeatureScriptCommands::Signatures.cbegin(), FeatureScriptCommands::Signatures.cend(),
+	                   [&identifier](const auto& s) { return s.name.data() == identifier; });
 }
 
 ScriptCommandParameter GetParameter(Token& argument)
@@ -138,14 +144,18 @@ void Script::runCommand(const std::string& identifier, const std::vector<Token>&
 	for (const auto& signature : FeatureScriptCommands::Signatures)
 	{
 		if (signature.name.data() != identifier)
+		{
 			continue;
+		}
 
 		command_signature = &signature;
 		break;
 	}
 
 	if (command_signature == nullptr)
+	{
 		throw std::runtime_error("Missing script command signature");
+	}
 
 	// Turn tokens into parameters
 	auto parameters = ScriptCommandParameters();
@@ -191,7 +201,9 @@ void Script::runCommand(const std::string& identifier, const std::vector<Token>&
 const Token* Script::peekToken(Lexer& lexer)
 {
 	if (token_.IsInvalid())
+	{
 		token_ = lexer.GetToken();
+	}
 	return &token_;
 }
 

@@ -385,7 +385,7 @@ void PackFile::WriteBlocks(std::ostream& stream) const
 
 	PackBlockHeader header;
 
-	for (auto& [name, contents] : _blocks)
+	for (const auto& [name, contents] : _blocks)
 	{
 		std::snprintf(header.blockName.data(), header.blockName.size(), "%s", name.c_str());
 		header.blockSize = static_cast<uint32_t>(contents.size() * sizeof(contents[0]));
@@ -434,7 +434,7 @@ void PackFile::CreateMeshBlock()
 	contents.resize(offset + sizeof(uint32_t) * meshCount);
 	if (meshCount > 0)
 	{
-		auto meshOffsets = reinterpret_cast<uint32_t*>(&contents[offset]);
+		auto* meshOffsets = reinterpret_cast<uint32_t*>(&contents[offset]);
 		offset += sizeof(uint32_t) * meshCount;
 		for (size_t i = 0; i < _meshes.size(); ++i)
 		{
@@ -525,6 +525,6 @@ void PackFile::Write(const std::filesystem::path& file)
 
 std::unique_ptr<std::istream> PackFile::GetBlockAsStream(const std::string& name) const
 {
-	auto& data = GetBlock(name);
+	const auto& data = GetBlock(name);
 	return std::make_unique<imemstream>(reinterpret_cast<const char*>(data.data()), data.size());
 }

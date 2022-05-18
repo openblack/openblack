@@ -71,20 +71,22 @@ std::optional<ecs::components::Transform> Camera::RaycastMouseToLand()
 	// get the hit by raycasting to the land down via the mouse
 	ecs::components::Transform intersectionTransform;
 	float intersectDistance = 0.0f;
-	int sWidth, sHeight;
+	int sWidth;
+	int sHeight;
 	Game::instance()->GetWindow()->GetSize(sWidth, sHeight);
-	glm::vec3 rayOrigin, rayDirection;
+	glm::vec3 rayOrigin;
+	glm::vec3 rayDirection;
 	glm::ivec2 mouseVec;
 	SDL_GetMouseState(&mouseVec.x, &mouseVec.y);
 	DeprojectScreenToWorld(mouseVec, glm::vec2(sWidth, sHeight), rayOrigin, rayDirection);
-	auto& dynamicsSystem = Game::instance()->GetDynamicsSystem();
+	const auto& dynamicsSystem = Game::instance()->GetDynamicsSystem();
 	if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
 	{
 		intersectionTransform = hit->first;
 		return std::make_optional(intersectionTransform);
 	}
-	else if (glm::intersectRayPlane(rayOrigin, rayDirection, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
-	                                intersectDistance))
+	if (glm::intersectRayPlane(rayOrigin, rayDirection, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
+	                           intersectDistance))
 	{
 		intersectionTransform.position = rayOrigin + rayDirection * intersectDistance;
 		intersectionTransform.rotation = glm::mat3(1.0f);
@@ -161,7 +163,7 @@ std::unique_ptr<Camera> Camera::Reflect(const glm::vec4& relectionPlane) const
 	return reflectionCamera;
 }
 
-void Camera::DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::ivec2 screenSize, glm::vec3& out_worldOrigin,
+void Camera::DeprojectScreenToWorld(glm::ivec2 screenPosition, glm::ivec2 screenSize, glm::vec3& out_worldOrigin,
                                     glm::vec3& out_worldDirection)
 {
 	const float normalizedX = static_cast<float>(screenPosition.x) / static_cast<float>(screenSize.x);
@@ -189,10 +191,14 @@ void Camera::DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::
 
 	// divide vectors by W to undo any projection and get the 3-space coord
 	if (hgRayStartWorldSpace.w != 0.0f)
+	{
 		rayStartWorldSpace /= hgRayStartWorldSpace.w;
+	}
 
 	if (hgRayEndWorldSpace.w != 0.0f)
+	{
 		rayEndWorldSpace /= hgRayEndWorldSpace.w;
+	}
 
 	const glm::vec3 rayDirWorldSpace = glm::normalize(rayEndWorldSpace - rayStartWorldSpace);
 
@@ -201,7 +207,7 @@ void Camera::DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::
 	out_worldDirection = rayDirWorldSpace;
 }
 
-bool Camera::ProjectWorldToScreen(const glm::vec3 worldPosition, const glm::vec4 viewport, glm::vec3& out_screenPosition) const
+bool Camera::ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& out_screenPosition) const
 {
 	out_screenPosition = glm::project(worldPosition, GetViewMatrix(), GetProjectionMatrix(), viewport);
 	if (out_screenPosition.x < viewport.x || out_screenPosition.y < viewport.y || out_screenPosition.x > viewport.z ||
@@ -242,7 +248,9 @@ void Camera::ProcessSDLEvent(const SDL_Event& e)
 void Camera::handleKeyboardInput(const SDL_Event& e)
 {
 	if (e.key.repeat > 0) // ignore all repeated keys
+	{
 		return;
+	}
 
 	auto movementSpeed = _movementSpeed * std::max(_position.y * 0.01f, 0.0f) + 1.0f;
 
@@ -259,7 +267,9 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 	case SDL_SCANCODE_R:
 	case SDL_SCANCODE_V:
 		if (e.type == SDL_KEYDOWN)
+		{
 			_flyInProgress = false;
+		}
 		break;
 	default:
 		break;
@@ -370,7 +380,7 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 
 void Camera::handleMouseInput(const SDL_Event& e)
 {
-	if (e.type == SDL_MOUSEMOTION && e.motion.state & SDL_BUTTON(SDL_BUTTON_MIDDLE))
+	if (e.type == SDL_MOUSEMOTION && (e.motion.state & SDL_BUTTON(SDL_BUTTON_MIDDLE)) != 0u)
 	{
 		if (_shiftHeld) // Holding down the middle mouse button and shift enables FPV camera rotation.
 		{
@@ -391,7 +401,8 @@ void Camera::handleMouseInput(const SDL_Event& e)
 			{
 				handPos = _position + GetForward() * 500.0f; // orbit around a point 500 away from cam
 			}
-			int width, height;
+			int width;
+			int height;
 			Game::instance()->GetWindow()->GetSize(width, height);
 			float yaw = e.motion.xrel * (glm::two_pi<float>() / width);
 			float pitch = e.motion.yrel * (glm::pi<float>() / height);
@@ -416,7 +427,7 @@ void Camera::handleMouseInput(const SDL_Event& e)
 			_position.y = (_position.y < 15.0f) ? 15.0f : _position.y;
 		}
 	}
-	else if (e.type == SDL_MOUSEMOTION && e.motion.state & SDL_BUTTON(SDL_BUTTON_LEFT))
+	else if (e.type == SDL_MOUSEMOTION && (e.motion.state & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0)
 	{
 		_mouseIsMoving = true;
 	}
@@ -431,7 +442,9 @@ void Camera::handleMouseInput(const SDL_Event& e)
 			ResetVelocities();
 		}
 		if (!_mmouseIsDown)
+		{
 			_lmouseIsDown = true;
+		}
 	}
 	else if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON(SDL_BUTTON_MIDDLE))
 	{
@@ -453,7 +466,7 @@ void Camera::handleMouseInput(const SDL_Event& e)
 		if (e.wheel.y != 0) // scroll up or down
 		{
 			float dist = 9999.0f;
-			auto& dynamicsSystem = Game::instance()->GetDynamicsSystem();
+			const auto& dynamicsSystem = Game::instance()->GetDynamicsSystem();
 			if (auto hit = dynamicsSystem.RayCastClosestHit(_position, GetForward(), 1e10f))
 			{
 				dist = glm::length(hit->first.position - _position);
@@ -537,7 +550,8 @@ void Camera::Update(std::chrono::microseconds dt)
 
 	// deal with hand pulling camera around
 	float worldHandDist = 0.0f;
-	int sWidth, sHeight;
+	int sWidth;
+	int sHeight;
 	Game::instance()->GetWindow()->GetSize(sWidth, sHeight);
 	if (_lmouseIsDown) // drag camera using hand
 	{
@@ -599,9 +613,13 @@ void Camera::Update(std::chrono::microseconds dt)
 		if (GetForward().y > 0.0f) // camera is pointing upwards
 		{
 			if (_handScreenVec.y > 0.0f) // if the move direction is also up
+			{
 				_hVelocity.y += 0.0005f; // move cam up a little
+			}
 			else
+			{
 				_hVelocity.y -= 0.0005f; // move cam down a little
+			}
 		}
 	}
 
@@ -625,7 +643,7 @@ void Camera::Update(std::chrono::microseconds dt)
 		_position = glm::hermite(_flyFromPos, _flyFromTan, _flyToPos, _flyToTan, glm::smoothstep(0.0f, 1.0f, _flyProgress));
 
 		// check if there obstacles in the way, if there are fly over them
-		auto& dynamicsSystem = Game::instance()->GetDynamicsSystem();
+		const auto& dynamicsSystem = Game::instance()->GetDynamicsSystem();
 		if (auto obst = dynamicsSystem.RayCastClosestHit(_position - glm::vec3(0.0f, 20.0f, 0.0f),
 		                                                 glm::normalize((_flyToPos - glm::vec3(0.0f, 20.0f, 0.0f)) - _position),
 		                                                 glm::length(_flyToPos - _position) + 10.0f))
@@ -665,7 +683,7 @@ void Camera::Update(std::chrono::microseconds dt)
 		_flyPrevPos = _position;
 		_flyProgress += _flySpeed * 0.000001f * fdt;
 	}
-	else if (_flyInProgress == false && _flyProgress < 1.0f) // player aborted a Fly early
+	else if (!_flyInProgress && _flyProgress < 1.0f) // player aborted a Fly early
 	{
 		_flyProgress = 1.0f;
 		_drv = glm::vec3(0.0f);

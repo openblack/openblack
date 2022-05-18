@@ -160,7 +160,7 @@ public:
 
 	[[nodiscard]] std::string GetFilename() const { return _filename.string(); }
 	[[nodiscard]] const std::map<std::string, std::vector<uint8_t>>& GetBlocks() const { return _blocks; }
-	[[nodiscard]] bool HasBlock(const std::string& name) const { return _blocks.count(name); }
+	[[nodiscard]] bool HasBlock(const std::string& name) const { return _blocks.count(name) != 0u; }
 	[[nodiscard]] const std::vector<uint8_t>& GetBlock(const std::string& name) const { return _blocks.at(name); }
 	[[nodiscard]] std::unique_ptr<std::istream> GetBlockAsStream(const std::string& name) const;
 	[[nodiscard]] const std::vector<InfoBlockLookup>& GetInfoBlockLookup() const { return _infoBlockLookup; }

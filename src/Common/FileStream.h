@@ -26,7 +26,7 @@ enum class FileMode
 class FileStream final: public IStream
 {
 public:
-	FileStream(const std::filesystem::path& filename, FileMode mode);
+	FileStream(const std::filesystem::path& path, FileMode mode);
 	virtual ~FileStream();
 
 	[[nodiscard]] std::size_t Position() const override;

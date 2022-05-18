@@ -105,7 +105,10 @@ ShaderManager::~ShaderManager()
 {
 	// delete all mapped shaders
 	ShaderMap::iterator iter;
-	for (iter = _shaderPrograms.begin(); iter != _shaderPrograms.end(); ++iter) delete iter->second;
+	for (iter = _shaderPrograms.begin(); iter != _shaderPrograms.end(); ++iter)
+	{
+		delete iter->second;
+	}
 
 	_shaderPrograms.clear();
 }

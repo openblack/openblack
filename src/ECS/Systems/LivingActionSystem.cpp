@@ -499,7 +499,7 @@ int LivingActionSystem::VillagerCallOutOfAnimation(LivingAction& action, LivingA
 	const auto& callback = entry.transitionAnimation;
 	if (!callback)
 	{
-		return false;
+		return -1;
 	}
 	return callback(action);
 }

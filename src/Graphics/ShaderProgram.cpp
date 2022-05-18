@@ -53,7 +53,9 @@ ShaderProgram::ShaderProgram(const std::string& name, bgfx::ShaderHandle vertexS
 ShaderProgram::~ShaderProgram()
 {
 	if (bgfx::isValid(_program))
+	{
 		bgfx::destroy(_program);
+	}
 }
 
 void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture) const

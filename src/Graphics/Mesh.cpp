@@ -46,7 +46,7 @@ Mesh::Topology Mesh::GetTopology() const noexcept
 
 void Mesh::Draw(const DrawDesc& desc) const
 {
-	if (desc.instanceBuffer && (desc.skip & SkipState::SkipInstanceBuffer) == 0)
+	if (desc.instanceBuffer != nullptr && (desc.skip & SkipState::SkipInstanceBuffer) == 0)
 	{
 		bgfx::setInstanceDataBuffer(*desc.instanceBuffer, desc.instanceStart, desc.instanceCount);
 	}

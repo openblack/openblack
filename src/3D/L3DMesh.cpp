@@ -35,25 +35,25 @@ L3DMesh::~L3DMesh() = default;
 void L3DMesh::Load(const l3d::L3DFile& l3d)
 {
 	_flags = static_cast<l3d::L3DMeshFlags>(l3d.GetHeader().flags);
-	for (auto& skin : l3d.GetSkins())
+	for (const auto& skin : l3d.GetSkins())
 	{
 		_skins[skin.id] = std::make_unique<Texture2D>(_debugName.c_str());
-		_skins[skin.id]->Create(skin.width, skin.height, 1, Format::RGBA4, Wrapping::Repeat, skin.texels.data(),
-		                        static_cast<uint32_t>(skin.texels.size() * sizeof(skin.texels[0])));
+		_skins[skin.id]->Create(l3d::L3DTexture::width, l3d::L3DTexture::height, 1, Format::RGBA4, Wrapping::Repeat,
+		                        skin.texels.data(), static_cast<uint32_t>(skin.texels.size() * sizeof(skin.texels[0])));
 	}
 
-	if (static_cast<uint32_t>(_flags) & static_cast<uint32_t>(l3d::L3DMeshFlags::HasDoorPosition) &&
-	    l3d.GetExtraPoints().size() > 0)
+	if ((static_cast<uint32_t>(_flags) & static_cast<uint32_t>(l3d::L3DMeshFlags::HasDoorPosition)) != 0u &&
+	    !l3d.GetExtraPoints().empty())
 	{
 		_doorPos = glm::vec3(l3d.GetExtraPoints()[0].x, l3d.GetExtraPoints()[0].y, l3d.GetExtraPoints()[0].z);
 	}
 
 	std::map<uint32_t, glm::mat4> matrices;
-	auto& bones = l3d.GetBones();
+	const auto& bones = l3d.GetBones();
 	_bonesParents.resize(bones.size());
 	for (uint32_t i = 0; i < bones.size(); ++i)
 	{
-		auto& bone = bones[i];
+		const auto& bone = bones[i];
 		// clang-format off
 		auto matrix = glm::mat4(bone.orientation[0], bone.orientation[1], bone.orientation[2], 0.0f,
 		                        bone.orientation[3], bone.orientation[4], bone.orientation[5], 0.0f,
@@ -80,8 +80,8 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 		}
 		if (subMesh->GetFlags().isPhysics)
 		{
-			auto& verticesSpan = l3d.GetVertexSpan(i);
-			auto physicsMesh =
+			const auto& verticesSpan = l3d.GetVertexSpan(i);
+			auto* physicsMesh =
 			    new btConvexHullShape(reinterpret_cast<const btScalar*>(verticesSpan.data()),
 			                          static_cast<int>(verticesSpan.size()), static_cast<int>(sizeof(verticesSpan[0])));
 			physicsMesh->optimizeConvexHull();

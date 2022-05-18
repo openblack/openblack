@@ -56,136 +56,136 @@ int PrintRawBytes(const void* data, std::size_t size)
 
 int PrintHeader(openblack::l3d::L3DFile& l3d)
 {
-	auto& header = l3d.GetHeader();
+	const auto& header = l3d.GetHeader();
 
 	using L3DMeshFlags = openblack::l3d::L3DMeshFlags;
 	auto flagToString = [](L3DMeshFlags flag) {
 		std::string result;
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown1))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown1)) != 0)
 		{
 			result += "Unknown1|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown2))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown2)) != 0)
 		{
 			result += "Unknown2|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown3))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown3)) != 0)
 		{
 			result += "Unknown3|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown4))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown4)) != 0)
 		{
 			result += "Unknown4|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown5))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown5)) != 0)
 		{
 			result += "Unknown5|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown6))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown6)) != 0)
 		{
 			result += "Unknown6|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown7))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown7)) != 0)
 		{
 			result += "Unknown7|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown8))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown8)) != 0)
 		{
 			result += "Unknown8|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::HasBones))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::HasBones)) != 0)
 		{
 			result += "HasBones|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown10))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown10)) != 0)
 		{
 			result += "Unknown10|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown11))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown11)) != 0)
 		{
 			result += "Unknown11|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::HasDoorPosition))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::HasDoorPosition)) != 0)
 		{
 			result += "HasDoorPosition|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Packed))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Packed)) != 0)
 		{
 			result += "Packed|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::NoDraw))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::NoDraw)) != 0)
 		{
 			result += "NoDraw|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown15))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown15)) != 0)
 		{
 			result += "Unknown15|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::ContainsLandscapeFeature))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::ContainsLandscapeFeature)) != 0)
 		{
 			result += "ContainsLandscapeFeature|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown17))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown17)) != 0)
 		{
 			result += "Unknown17|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown18))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown18)) != 0)
 		{
 			result += "Unknown18|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::ContainsUV2))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::ContainsUV2)) != 0)
 		{
 			result += "ContainsUV2|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::ContainsNameData))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::ContainsNameData)) != 0)
 		{
 			result += "ContainsNameData|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::ContainsExtraMetrics))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::ContainsExtraMetrics)) != 0)
 		{
 			result += "ContainsExtraMetrics|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::ContainsEBone))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::ContainsEBone)) != 0)
 		{
 			result += "ContainsEBone|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::ContainsTnLData))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::ContainsTnLData)) != 0)
 		{
 			result += "ContainsTnLData|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::ContainsNewEP))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::ContainsNewEP)) != 0)
 		{
 			result += "ContainsNewEP|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown25))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown25)) != 0)
 		{
 			result += "Unknown25|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown26))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown26)) != 0)
 		{
 			result += "Unknown26|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown27))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown27)) != 0)
 		{
 			result += "Unknown27|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown28))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown28)) != 0)
 		{
 			result += "Unknown28|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown29))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown29)) != 0)
 		{
 			result += "Unknown29|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown30))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown30)) != 0)
 		{
 			result += "Unknown30|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown31))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown31)) != 0)
 		{
 			result += "Unknown31|";
 		}
-		if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown32))
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown32)) != 0)
 		{
 			result += "Unknown32|";
 		}
@@ -217,7 +217,7 @@ int PrintHeader(openblack::l3d::L3DFile& l3d)
 
 int PrintMeshHeaders(openblack::l3d::L3DFile& l3d)
 {
-	auto& meshHeaders = l3d.GetSubmeshHeaders();
+	const auto& meshHeaders = l3d.GetSubmeshHeaders();
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
 
 	uint32_t i = 0;
@@ -230,7 +230,7 @@ int PrintMeshHeaders(openblack::l3d::L3DFile& l3d)
 		}
 		result += "|LOD" + std::to_string(flags.lod);
 		result += "|status=" + std::to_string(flags.status);
-		if (flags.unknown1)
+		if (flags.unknown1 != 0u)
 		{
 			result += "|unknown1";
 		}
@@ -244,7 +244,7 @@ int PrintMeshHeaders(openblack::l3d::L3DFile& l3d)
 		}
 		return result;
 	};
-	for (auto& header : meshHeaders)
+	for (const auto& header : meshHeaders)
 	{
 		std::printf("mesh #%u\n", ++i);
 		std::printf("flags: %s\n", flagToString(header.flags).c_str());
@@ -260,18 +260,18 @@ int PrintMeshHeaders(openblack::l3d::L3DFile& l3d)
 
 int PrintSkins(openblack::l3d::L3DFile& l3d)
 {
-	auto& skins = l3d.GetSkins();
+	const auto& skins = l3d.GetSkins();
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
 
-	for (auto& skin : skins)
+	for (const auto& skin : skins)
 	{
 		std::printf("skin id: 0x%X\n", skin.id);
 		std::printf("data:\n");
 		constexpr uint16_t subsample = 8;
 		constexpr uint16_t magnitude = (subsample * subsample) / 16;
-		for (uint16_t y = 0; y < skin.height / subsample; ++y)
+		for (uint16_t y = 0; y < openblack::l3d::L3DTexture::height / subsample; ++y)
 		{
-			for (uint16_t x = 0; x < skin.width / subsample; ++x)
+			for (uint16_t x = 0; x < openblack::l3d::L3DTexture::width / subsample; ++x)
 			{
 				uint32_t red = 0;
 				uint32_t green = 0;
@@ -280,7 +280,8 @@ int PrintSkins(openblack::l3d::L3DFile& l3d)
 				{
 					for (uint16_t i = 0; i < subsample; ++i)
 					{
-						auto& color = skin.texels.at(x * subsample + i + (y * subsample + j) * skin.width);
+						const auto& color =
+						    skin.texels.at(x * subsample + i + (y * subsample + j) * openblack::l3d::L3DTexture::width);
 						red += color.R;
 						green += color.G;
 						blue += color.B;
@@ -301,10 +302,10 @@ int PrintSkins(openblack::l3d::L3DFile& l3d)
 
 int PrintExtraPoints(openblack::l3d::L3DFile& l3d)
 {
-	auto& points = l3d.GetExtraPoints();
+	const auto& points = l3d.GetExtraPoints();
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
 
-	for (auto& point : points)
+	for (const auto& point : points)
 	{
 		std::printf("(%.3f, %.3f, %.3f)\n", point.x, point.y, point.z);
 	}
@@ -314,11 +315,11 @@ int PrintExtraPoints(openblack::l3d::L3DFile& l3d)
 
 int PrintPrimitiveHeaders(openblack::l3d::L3DFile& l3d)
 {
-	auto& primitiveHeaders = l3d.GetPrimitiveHeaders();
+	const auto& primitiveHeaders = l3d.GetPrimitiveHeaders();
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
 
 	uint32_t i = 0;
-	for (auto& header : primitiveHeaders)
+	for (const auto& header : primitiveHeaders)
 	{
 		std::printf("primitive #%u\n", ++i);
 		static const std::array<const char*, static_cast<uint32_t>(openblack::l3d::L3DMaterial::Type::_Count)> typeMap = {{
@@ -374,11 +375,11 @@ int PrintPrimitiveHeaders(openblack::l3d::L3DFile& l3d)
 
 int PrintBones(openblack::l3d::L3DFile& l3d)
 {
-	auto bones = l3d.GetBones();
+	const auto& bones = l3d.GetBones();
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
 
 	uint32_t i = 0;
-	for (auto& bone : bones)
+	for (const auto& bone : bones)
 	{
 		std::printf("bone #%u\n", i++);
 		if (bone.parent == std::numeric_limits<uint32_t>::max())
@@ -418,12 +419,12 @@ int PrintBones(openblack::l3d::L3DFile& l3d)
 
 int PrintVertices(openblack::l3d::L3DFile& l3d)
 {
-	auto& vertices = l3d.GetVertices();
+	const auto& vertices = l3d.GetVertices();
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
 	std::printf("|     position     |   uv coord   |        normal        |\n");
 	std::printf("|------------------|--------------|----------------------|\n");
 
-	for (auto& vertex : vertices)
+	for (const auto& vertex : vertices)
 	{
 		std::printf("|%5.1f %5.1f %5.1f |%6.3f %6.3f | %6.3f %6.3f %6.3f |\n", vertex.position.x, vertex.position.y,
 		            vertex.position.z, vertex.texCoord.x, vertex.texCoord.y, vertex.normal.x, vertex.normal.y, vertex.normal.z);
@@ -435,7 +436,7 @@ int PrintVertices(openblack::l3d::L3DFile& l3d)
 int PrintIndices(openblack::l3d::L3DFile& l3d)
 {
 	constexpr uint8_t indexPerLine = 12;
-	auto& indices = l3d.GetIndices();
+	const auto& indices = l3d.GetIndices();
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
 
 	for (std::size_t i = 0; i < indices.size(); ++i)
@@ -449,14 +450,14 @@ int PrintIndices(openblack::l3d::L3DFile& l3d)
 
 int PrintLookUpTables(openblack::l3d::L3DFile& l3d)
 {
-	auto& lookUpTable = l3d.GetLookUpTableData();
+	const auto& lookUpTable = l3d.GetLookUpTableData();
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
 	return PrintRawBytes(lookUpTable.data(), lookUpTable.size() * sizeof(lookUpTable[0]));
 }
 
 int PrintBlendValues(openblack::l3d::L3DFile& l3d)
 {
-	auto& blendValues = l3d.GetLookUpTableData();
+	const auto& blendValues = l3d.GetLookUpTableData();
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
 	return PrintRawBytes(blendValues.data(), blendValues.size() * sizeof(blendValues[0]));
 }
@@ -547,8 +548,9 @@ void copyBufferView(desT* dst, const uint8_t* src, size_t count, uint32_t compon
 	}
 }
 
-bool NoopLoadImageDataFunction(tinygltf::Image*, const int, std::string*, std::string*, int, int, const unsigned char*, int,
-                               void*)
+bool NoopLoadImageDataFunction(tinygltf::Image* /*unused*/, const int /*unused*/, std::string* /*unused*/,
+                               std::string* /*unused*/, int /*unused*/, int /*unused*/, const unsigned char* /*unused*/,
+                               int /*unused*/, void* /*unused*/)
 {
 	std::cerr << "Warn: GLTF Image Data function called but not implemented." << std::endl;
 	return true;
@@ -678,7 +680,7 @@ int WriteFile(const Arguments::Write& args) noexcept
 						bone.position.y = static_cast<float>(gltfJoint.translation[1]);
 						bone.position.z = static_cast<float>(gltfJoint.translation[2]);
 						buildJoints(gltfJoint.children, id);
-						if (leftSibbling)
+						if (leftSibbling != nullptr)
 						{
 							leftSibbling->rightSibling = id;
 						}
@@ -774,18 +776,18 @@ int WriteFile(const Arguments::Write& args) noexcept
 			for (uint32_t j = 0; j < count; ++j)
 			{
 				auto& vertex = vertices[j];
-				if (attributes[0].type)
+				if (attributes[0].type != 0)
 				{
 					vertex.position.x = attributes[0].values[j * attributes[0].type + 0];
 					vertex.position.y = attributes[0].values[j * attributes[0].type + 1];
 					vertex.position.z = attributes[0].values[j * attributes[0].type + 2];
 				}
-				if (attributes[1].type)
+				if (attributes[1].type != 0)
 				{
 					vertex.texCoord.x = attributes[1].values[j * attributes[1].type + 0];
 					vertex.texCoord.y = attributes[1].values[j * attributes[1].type + 1];
 				}
-				if (attributes[2].type)
+				if (attributes[2].type != 0)
 				{
 					vertex.normal.x = attributes[2].values[j * attributes[2].type + 0];
 					vertex.normal.y = attributes[2].values[j * attributes[2].type + 1];
@@ -979,7 +981,7 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 		gltf.nodes.push_back(node);
 	}
 
-	auto& bones = l3d.GetBones();
+	const auto& bones = l3d.GetBones();
 	std::vector<uint32_t> roots;
 	for (uint32_t i = 0; i < bones.size(); ++i)
 	{
@@ -1066,7 +1068,8 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 			traversal_stack.emplace(i, rootNodeIndex);
 
 			tinygltf::Node node;
-			uint32_t index, parent_index;
+			uint32_t index;
+			uint32_t parent_index;
 			while (!traversal_stack.empty())
 			{
 				std::tie(index, parent_index) = traversal_stack.top();
@@ -1081,7 +1084,7 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 				}
 
 				gltf.nodes[parent_index].children.push_back(static_cast<int>(gltf.nodes.size()));
-				auto& l3d_node = bones[index];
+				const auto& l3d_node = bones[index];
 				bone_to_node(node, l3d_node);
 				gltf.nodes.emplace_back(node);
 

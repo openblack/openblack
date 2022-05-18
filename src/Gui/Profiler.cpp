@@ -102,25 +102,25 @@ void openblack::gui::Profiler::Draw(Game& game)
 	ImGuiWidgetFlameGraph::PlotFlame(
 	    "CPU",
 	    [](float* startTimestamp, float* endTimestamp, ImU8* level, const char** caption, const void* data, int idx) -> void {
-		    auto entry = reinterpret_cast<const openblack::Profiler::Entry*>(data);
-		    auto& stage = entry->_stages.at(idx);
-		    if (startTimestamp)
+		    const auto* entry = reinterpret_cast<const openblack::Profiler::Entry*>(data);
+		    const auto& stage = entry->_stages.at(idx);
+		    if (startTimestamp != nullptr)
 		    {
 			    std::chrono::duration<float, std::milli> fltStart = stage._start - entry->_frameStart;
 			    *startTimestamp = fltStart.count();
 		    }
-		    if (endTimestamp)
+		    if (endTimestamp != nullptr)
 		    {
 			    *endTimestamp = stage._end.time_since_epoch().count() / 1e6f;
 
 			    std::chrono::duration<float, std::milli> fltEnd = stage._end - entry->_frameStart;
 			    *endTimestamp = fltEnd.count();
 		    }
-		    if (level)
+		    if (level != nullptr)
 		    {
 			    *level = stage._level;
 		    }
-		    if (caption)
+		    if (caption != nullptr)
 		    {
 			    *caption = openblack::Profiler::stageNames.at(idx).data();
 		    }
@@ -130,22 +130,22 @@ void openblack::gui::Profiler::Draw(Game& game)
 	ImGuiWidgetFlameGraph::PlotFlame(
 	    "GPU",
 	    [](float* startTimestamp, float* endTimestamp, ImU8* level, const char** caption, const void* data, int idx) -> void {
-		    auto stats = reinterpret_cast<const bgfx::Stats*>(data);
-		    if (startTimestamp)
+		    const auto* stats = reinterpret_cast<const bgfx::Stats*>(data);
+		    if (startTimestamp != nullptr)
 		    {
 			    *startTimestamp = static_cast<float>(1000.0 * (stats->viewStats[idx].gpuTimeBegin - stats->gpuTimeBegin) /
 			                                         static_cast<double>(stats->gpuTimerFreq));
 		    }
-		    if (endTimestamp)
+		    if (endTimestamp != nullptr)
 		    {
 			    *endTimestamp = static_cast<float>(1000.0 * (stats->viewStats[idx].gpuTimeEnd - stats->gpuTimeBegin) /
 			                                       static_cast<double>(stats->gpuTimerFreq));
 		    }
-		    if (level)
+		    if (level != nullptr)
 		    {
 			    *level = 0;
 		    }
-		    if (caption)
+		    if (caption != nullptr)
 		    {
 			    *caption = stats->viewStats[idx].name;
 		    }
@@ -168,7 +168,9 @@ void openblack::gui::Profiler::Draw(Game& game)
 			ImGui::SetCursorPosX(cursorX + indentSize * stage._level);
 			ImGui::Text("    %s: %0.3f", openblack::Profiler::stageNames.at(i).data(), duration.count());
 			if (stage._level == 0)
+			{
 				frameDuration -= duration;
+			}
 			++i;
 		}
 		ImGui::Text("    Unaccounted: %0.3f", frameDuration.count());

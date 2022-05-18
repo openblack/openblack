@@ -42,7 +42,9 @@ FileStream::FileStream(const std::filesystem::path& path, FileMode mode)
 #endif
 
 	if (_file == nullptr)
+	{
 		throw std::runtime_error(fmt::format("Failed to open file '{}'", path.string()));
+	}
 
 	Seek(0, SeekMode::End);
 	_fileSize = Position();
@@ -52,7 +54,9 @@ FileStream::FileStream(const std::filesystem::path& path, FileMode mode)
 FileStream::~FileStream()
 {
 	if (_file != nullptr)
+	{
 		std::fclose(_file);
+	}
 }
 
 std::size_t FileStream::Position() const

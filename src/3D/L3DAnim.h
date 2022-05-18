@@ -47,7 +47,7 @@ public:
 	[[nodiscard]] const std::string& GetName() const { return _name; }
 	[[nodiscard]] uint32_t GetDuration() const { return _duration; }
 	[[nodiscard]] const std::vector<Frame>& GetFrames() const { return _frames; }
-	[[nodiscard]] const std::vector<glm::mat4> GetBoneMatrices(uint32_t time) const;
+	[[nodiscard]] std::vector<glm::mat4> GetBoneMatrices(uint32_t time) const;
 
 private:
 	std::string _name;

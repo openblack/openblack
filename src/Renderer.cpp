@@ -269,11 +269,11 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 		uint32_t skip = Mesh::SkipState::SkipNone;
 		if (!lastPreserveState)
 		{
-			if (desc.modelMatrices && desc.matrixCount > 0)
+			if (desc.modelMatrices != nullptr && desc.matrixCount > 0)
 			{
 				bgfx::setTransform(desc.modelMatrices, desc.matrixCount);
 			}
-			if (texture)
+			if (texture != nullptr)
 			{
 				desc.program->SetTextureSampler("s_diffuse", 0, *texture);
 			}
@@ -295,7 +295,7 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 		}
 
 		{
-			if (desc.instanceBuffer && (skip & Mesh::SkipState::SkipInstanceBuffer) == 0)
+			if (desc.instanceBuffer != nullptr && (skip & Mesh::SkipState::SkipInstanceBuffer) == 0)
 			{
 				bgfx::setInstanceDataBuffer(*desc.instanceBuffer, desc.instanceStart, desc.instanceCount);
 			}
@@ -343,7 +343,7 @@ void Renderer::DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint
 
 	for (auto it = subMeshes.begin(); it != subMeshes.end(); ++it)
 	{
-		const L3DSubMesh& subMesh = *it->get();
+		const L3DSubMesh& subMesh = **it;
 		if (!subMesh.isPhysics())
 		{
 			DrawSubMesh(mesh, subMesh, desc, std::next(it) != subMeshes.end());
@@ -386,7 +386,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 {
 	const auto& meshManager = Locator::resources::ref().GetMeshes();
 
-	if (desc.frameBuffer)
+	if (desc.frameBuffer != nullptr)
 	{
 		desc.frameBuffer->Bind(desc.viewId);
 	}
@@ -396,13 +396,13 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 	_shaderManager->SetCamera(desc.viewId, *desc.camera);
 
-	auto skyShader = _shaderManager->GetShader("Sky");
-	auto waterShader = _shaderManager->GetShader("Water");
-	auto terrainShader = _shaderManager->GetShader("Terrain");
-	auto debugShader = _shaderManager->GetShader("DebugLine");
-	auto spriteShader = _shaderManager->GetShader("Sprite");
-	auto debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
-	auto objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
+	const auto* skyShader = _shaderManager->GetShader("Sky");
+	const auto* waterShader = _shaderManager->GetShader("Water");
+	const auto* terrainShader = _shaderManager->GetShader("Terrain");
+	const auto* debugShader = _shaderManager->GetShader("DebugLine");
+	const auto* spriteShader = _shaderManager->GetShader("Sprite");
+	const auto* debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
+	const auto* objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
 
 	{
 		auto section = desc.profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSky
@@ -458,7 +458,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		                                                                               : Profiler::Stage::MainPassDrawIsland);
 		if (desc.drawIsland)
 		{
-			for (auto& block : desc.island.GetBlocks())
+			for (const auto& block : desc.island.GetBlocks())
 			{
 				auto texture = Locator::resources::ref().GetTextures().Handle(LandIsland::SmallBumpTextureId);
 

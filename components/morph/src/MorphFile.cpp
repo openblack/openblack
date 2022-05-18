@@ -153,12 +153,16 @@ std::istream& safe_getline(std::istream& is, std::string& t)
 			return is;
 		case '\r':
 			if (sb->sgetc() == '\n')
+			{
 				sb->sbumpc();
+			}
 			return is;
 		case std::streambuf::traits_type::eof():
 			// Also handle the case when the last line has no line ending
 			if (t.empty())
+			{
 				is.setstate(std::ios::eofbit);
+			}
 			return is;
 		default:
 			t += static_cast<char>(c);
@@ -303,7 +307,7 @@ void MorphFile::ReadFile(std::istream& stream, const std::filesystem::path& spec
 	std::string spec_name;
 	// this field is a good guess for hand or not, but a better choice might be
 	// getting the segment name from pack
-	if (_header.unknown_0x0)
+	if (_header.unknown_0x0 != 0u)
 	{
 		spec_name = "ctrspec" + std::to_string(_header.spec_file_version) + ".txt";
 	}
@@ -365,7 +369,7 @@ void MorphFile::ReadFile(std::istream& stream, const std::filesystem::path& spec
 			continue;
 		}
 		uint32_t has_data; // TODO: unknown if this serves another function
-		while (stream.read(reinterpret_cast<char*>(&has_data), sizeof(has_data)).good() && has_data)
+		while (stream.read(reinterpret_cast<char*>(&has_data), sizeof(has_data)).good() && has_data != 0u)
 		{
 			auto& data = _extra_data[i].emplace_back();
 			stream.read(reinterpret_cast<char*>(&data), sizeof(data));

@@ -46,7 +46,7 @@ int PrintHeader(openblack::anm::ANMFile& anm)
 
 int ListKeyframes(openblack::anm::ANMFile& anm)
 {
-	auto& keyframes = anm.GetKeyframes();
+	const auto& keyframes = anm.GetKeyframes();
 
 	std::printf("file: %s\n", anm.GetFilename().c_str());
 

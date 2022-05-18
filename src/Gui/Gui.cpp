@@ -92,7 +92,7 @@ const std::array<bgfx::EmbeddedShader, 5> s_embeddedShaders = {{
 std::unique_ptr<Gui> Gui::create(const GameWindow* window, graphics::RenderPass viewId, float scale)
 {
 	IMGUI_CHECKVERSION();
-	auto imgui = ImGui::CreateContext();
+	auto* imgui = ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 
 	ImGuiStyle& style = ImGui::GetStyle();
@@ -111,7 +111,7 @@ std::unique_ptr<Gui> Gui::create(const GameWindow* window, graphics::RenderPass 
 
 	auto gui = std::unique_ptr<Gui>(new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows)));
 
-	if (window)
+	if (window != nullptr)
 	{
 		if (!gui->InitSdl2(window->GetHandle()))
 		{
@@ -145,19 +145,33 @@ Gui::~Gui()
 	ImGui::DestroyContext(_imgui);
 
 	if (bgfx::isValid(_vertexBuffer))
+	{
 		bgfx::destroy(_vertexBuffer);
+	}
 	if (bgfx::isValid(_indexBuffer))
+	{
 		bgfx::destroy(_indexBuffer);
+	}
 	if (bgfx::isValid(_u_imageLodEnabled))
+	{
 		bgfx::destroy(_u_imageLodEnabled);
+	}
 	if (bgfx::isValid(_s_tex))
+	{
 		bgfx::destroy(_s_tex);
+	}
 	if (bgfx::isValid(_texture))
+	{
 		bgfx::destroy(_texture);
+	}
 	if (bgfx::isValid(_imageProgram))
+	{
 		bgfx::destroy(_imageProgram);
+	}
 	if (bgfx::isValid(_program))
+	{
 		bgfx::destroy(_program);
+	}
 }
 
 bool Gui::ProcessEventSdl2(const SDL_Event& event)
@@ -177,23 +191,37 @@ bool Gui::ProcessEventSdl2(const SDL_Event& event)
 	case SDL_MOUSEWHEEL:
 	{
 		if (event.wheel.x > 0)
+		{
 			io.MouseWheelH += 1;
+		}
 		if (event.wheel.x < 0)
+		{
 			io.MouseWheelH -= 1;
+		}
 		if (event.wheel.y > 0)
+		{
 			io.MouseWheel += 1;
+		}
 		if (event.wheel.y < 0)
+		{
 			io.MouseWheel -= 1;
+		}
 		return io.WantCaptureMouse;
 	}
 	case SDL_MOUSEBUTTONDOWN:
 	{
 		if (event.button.button == SDL_BUTTON_LEFT)
+		{
 			_mousePressed[0] = true;
+		}
 		if (event.button.button == SDL_BUTTON_RIGHT)
+		{
 			_mousePressed[1] = true;
+		}
 		if (event.button.button == SDL_BUTTON_MIDDLE)
+		{
 			_mousePressed[2] = true;
+		}
 		return io.WantCaptureMouse;
 	}
 	case SDL_TEXTINPUT:
@@ -225,8 +253,10 @@ bool Gui::ProcessEventSdl2(const SDL_Event& event)
 
 const char* Gui::GetClipboardText()
 {
-	if (_clipboardTextData)
+	if (_clipboardTextData != nullptr)
+	{
 		SDL_free(_clipboardTextData);
+	}
 	_clipboardTextData = SDL_GetClipboardText();
 	return _clipboardTextData;
 }
@@ -303,7 +333,8 @@ bool Gui::CreateFontsTextureBgfx()
 	// Build texture atlas
 	ImGuiIO& io = ImGui::GetIO();
 	unsigned char* pixels;
-	int width, height;
+	int width;
+	int height;
 	io.Fonts->GetTexDataAsRGBA32(&pixels, &width,
 	                             &height); // Load as RGBA 32-bits (75% of the memory is wasted, but
 	                                       // default font is so small) because it is more likely to
@@ -358,7 +389,8 @@ void Gui::UpdateMousePosAndButtons()
 		io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
 	}
 
-	int mx, my;
+	int mx;
+	int my;
 	Uint32 mouse_buttons = SDL_GetMouseState(&mx, &my);
 	io.MouseDown[0] = _mousePressed[0] ||
 	                  (mouse_buttons & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0; // If a mouse press event came, always pass it as
@@ -401,8 +433,10 @@ void Gui::UpdateMousePosAndButtons()
 void Gui::UpdateMouseCursor()
 {
 	ImGuiIO& io = ImGui::GetIO();
-	if (io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)
+	if ((io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange) != 0)
+	{
 		return;
+	}
 
 	ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
 	if (io.MouseDrawCursor || imgui_cursor == ImGuiMouseCursor_None)
@@ -413,8 +447,8 @@ void Gui::UpdateMouseCursor()
 	else
 	{
 		// Show OS mouse cursor
-		const auto cursor = _mouseCursors.at(imgui_cursor);
-		SDL_SetCursor(cursor ? cursor : _mouseCursors[ImGuiMouseCursor_Arrow]);
+		auto* const cursor = _mouseCursors.at(imgui_cursor);
+		SDL_SetCursor(cursor != nullptr ? cursor : _mouseCursors[ImGuiMouseCursor_Arrow]);
 		SDL_ShowCursor(SDL_TRUE);
 	}
 }
@@ -424,11 +458,13 @@ void Gui::UpdateGamepads()
 	ImGuiIO& io = ImGui::GetIO();
 	memset(io.NavInputs, 0, sizeof(io.NavInputs));
 	if ((io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) == 0)
+	{
 		return;
+	}
 
 	// Get gamepad
 	SDL_GameController* game_controller = SDL_GameControllerOpen(0);
-	if (!game_controller)
+	if (game_controller == nullptr)
 	{
 		io.BackendFlags &= ~ImGuiBackendFlags_HasGamepad;
 		return;
@@ -485,10 +521,12 @@ void Gui::NewFrameSdl2(SDL_Window* window)
 	                                 "ImGui_ImplOpenGL3_NewFrame().");
 
 	// Setup display size (every frame to accommodate for window resizing)
-	if (window)
+	if (window != nullptr)
 	{
-		int w, h;
-		int display_w, display_h;
+		int w;
+		int h;
+		int display_w;
+		int display_h;
 		SDL_GetWindowSize(window, &w, &h);
 		SDL_GL_GetDrawableSize(window, &display_w, &display_h);
 		io.DisplaySize = ImVec2(static_cast<float>(w), static_cast<float>(h));
@@ -522,7 +560,7 @@ void Gui::NewFrame(GameWindow* window)
 {
 	ImGui::SetCurrentContext(_imgui);
 
-	NewFrameSdl2(window ? window->GetHandle() : nullptr);
+	NewFrameSdl2(window != nullptr ? window->GetHandle() : nullptr);
 	ImGui::NewFrame();
 }
 
@@ -561,6 +599,7 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData)
 	const bgfx::Caps* caps = bgfx::getCaps();
 	{
 		glm::mat4 ortho;
+		// NOLINTNEXTLINE(readability-suspicious-call-argument): width -> _right, height -> bottom is correct
 		bx::mtxOrtho(glm::value_ptr(ortho), 0.0f, width, height, 0.0f, 0.0f, 1000.0f, 0.0f, caps->homogeneousDepth);
 		bgfx::setViewTransform(_viewId, nullptr, glm::value_ptr(ortho));
 		bgfx::setViewRect(_viewId, 0, 0, uint16_t(width), uint16_t(height));
@@ -611,7 +650,7 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData)
 		uint32_t offset = indexBufferOffset;
 		for (const ImDrawCmd *cmd = drawList->CmdBuffer.begin(), *cmdEnd = drawList->CmdBuffer.end(); cmd != cmdEnd; ++cmd)
 		{
-			if (cmd->UserCallback)
+			if (cmd->UserCallback != nullptr)
 			{
 				cmd->UserCallback(drawList, cmd);
 			}
@@ -699,9 +738,13 @@ bool Gui::ShowMenu(Game& game)
 
 			auto menu_item = [&game](const auto& label, const std::filesystem::path& path) {
 				if (ImGui::MenuItem(label.data()))
+				{
 					game.LoadMap(path);
+				}
 				if (ImGui::IsItemHovered())
+				{
 					ImGui::SetTooltip("%s", path.generic_string().c_str());
+				}
 			};
 
 			ImGui::MenuItem("Story Islands", nullptr, false, false);
@@ -724,7 +767,9 @@ bool Gui::ShowMenu(Game& game)
 		if (ImGui::BeginMenu("World"))
 		{
 			if (ImGui::SliderFloat("Time of Day", &config.timeOfDay, 0.0f, 24.0f, "%.3f"))
+			{
 				Game::instance()->SetTime(fmodf(config.timeOfDay, 24.0f));
+			}
 
 			ImGui::Text("Sky Type Index %f", game.GetSky().GetCurrentSkyType());
 			ImGui::SliderFloat("Sky alignment", &config.skyAlignment, -1.0f, 1.0f, "%.3f");
@@ -983,7 +1028,7 @@ std::optional<glm::uvec4> Gui::RenderVillagerName(const std::vector<glm::vec4>& 
 
 	if (originalY == boxExtent.y)
 	{
-		RenderArrow(("Villager overlay arrow #" + name).c_str(), ImVec2(pos.x, pos.y - arrowLength), ImVec2(15, arrowLength));
+		RenderArrow("Villager overlay arrow #" + name, ImVec2(pos.x, pos.y - arrowLength), ImVec2(15, arrowLength));
 	}
 
 	return std::make_optional<glm::uvec4>(boxExtent);

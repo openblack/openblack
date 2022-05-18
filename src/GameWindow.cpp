@@ -29,8 +29,10 @@ void GameWindow::SDLDestroyer::operator()(SDL_Window* window) const
 
 GameWindow::GameWindow(const std::string& title, int width, int height, DisplayMode displayMode, uint32_t extraFlags)
 {
-	SDL_version compiledVersion, linkedVersion;
+	SDL_version compiledVersion;
 	SDL_VERSION(&compiledVersion);
+
+	SDL_version linkedVersion;
 	SDL_GetVersion(&linkedVersion);
 
 	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "Initializing SDL...");
@@ -96,22 +98,24 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 {
 	SDL_SysWMinfo wmi;
 	SDL_VERSION(&wmi.version);
-	if (!SDL_GetWindowWMInfo(_window.get(), &wmi))
+	if (SDL_GetWindowWMInfo(_window.get(), &wmi) == 0u)
 	{
 		throw std::runtime_error("Failed getting native window handles: " + std::string(SDL_GetError()));
 	}
 
+	// clang-format off
 	// Linux
 #if defined(SDL_VIDEO_DRIVER_WAYLAND)
 	if (wmi.subsystem == SDL_SYSWM_WAYLAND)
 	{
-		auto win_impl = static_cast<wl_egl_window*>(SDL_GetWindowData(_window.get(), "wl_egl_window"));
-		if (!win_impl)
+		auto* win_impl = static_cast<wl_egl_window*>(SDL_GetWindowData(_window.get(), "wl_egl_window"));
+		if (win_impl == nullptr)
 		{
-			int width, height;
+			int width;
+			int height;
 			SDL_GetWindowSize(_window.get(), &width, &height);
 			struct wl_surface* surface = wmi.info.wl.surface;
-			if (!surface)
+			if (surface == nullptr)
 			{
 				throw std::runtime_error("Failed getting native window handles: " + std::string(SDL_GetError()));
 			}
@@ -125,7 +129,7 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 	else
 #endif // defined(SDL_VIDEO_DRIVER_WAYLAND)
 #if defined(SDL_VIDEO_DRIVER_X11)
-	    if (wmi.subsystem == SDL_SYSWM_X11)
+	if (wmi.subsystem == SDL_SYSWM_X11)
 	{
 		// NOLINTNEXTLINE(performance-no-int-to-ptr)
 		nativeWindow = reinterpret_cast<void*>(wmi.info.x11.window);
@@ -136,7 +140,7 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 
 	// Mac
 #if defined(SDL_VIDEO_DRIVER_COCOA)
-	    if (wmi.subsystem == SDL_SYSWM_COCOA)
+	if (wmi.subsystem == SDL_SYSWM_COCOA)
 	{
 		nativeWindow = cbSetupMetalLayer(wmi.info.cocoa.window);
 		nativeDisplay = nullptr;
@@ -146,7 +150,7 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 
 	// Windows
 #if defined(SDL_VIDEO_DRIVER_WINDOWS)
-	    if (wmi.subsystem == SDL_SYSWM_WINDOWS)
+	if (wmi.subsystem == SDL_SYSWM_WINDOWS)
 	{
 		nativeWindow = wmi.info.win.window;
 		nativeDisplay = nullptr;
@@ -156,7 +160,7 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 
 	// Steam Link
 #if defined(SDL_VIDEO_DRIVER_VIVANTE)
-	    if (wmi.subsystem == SDL_SYSWM_VIVANTE)
+	if (wmi.subsystem == SDL_SYSWM_VIVANTE)
 	{
 		nativeWindow = wmi.info.vivante.window;
 		nativeDisplay = wmi.info.vivante.display;
@@ -166,7 +170,7 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 
 	// Android
 #if defined(SDL_VIDEO_DRIVER_ANDROID)
-	    if (wmi.subsystem == SDL_SYSWM_ANDROID)
+	if (wmi.subsystem == SDL_SYSWM_ANDROID)
 	{
 		nativeWindow = wmi.info.android.window;
 		nativeDisplay = nullptr; // wmi.info.android.surface;
@@ -176,6 +180,7 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 	{
 		throw std::runtime_error("Unsupported platform or window manager: " + std::to_string(wmi.subsystem));
 	}
+	// clang-format on
 }
 
 bool GameWindow::IsOpen() const
@@ -190,7 +195,7 @@ float GameWindow::GetBrightness() const
 
 void GameWindow::SetBrightness(float brightness)
 {
-	if (SDL_SetWindowBrightness(_window.get(), brightness))
+	if (SDL_SetWindowBrightness(_window.get(), brightness) != 0)
 	{
 		throw std::runtime_error("SDL_SetWindowBrightness Error: " + std::string(SDL_GetError()));
 	}
@@ -233,7 +238,8 @@ void GameWindow::SetTitle(const std::string& str)
 
 float GameWindow::GetAspectRatio() const
 {
-	int width, height;
+	int width;
+	int height;
 	SDL_GetWindowSize(_window.get(), &width, &height);
 
 	return static_cast<float>(width) / static_cast<float>(height);
@@ -314,10 +320,10 @@ void GameWindow::SetBordered(bool b)
 	SDL_SetWindowBordered(_window.get(), b ? SDL_TRUE : SDL_FALSE);
 }
 
-void GameWindow::SetFullscreen(bool b)
+void GameWindow::SetFullscreen(bool f)
 {
 	// todo: use DisplayMode
-	if (SDL_SetWindowFullscreen(_window.get(), b ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0))
+	if (SDL_SetWindowFullscreen(_window.get(), f ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0) != 0)
 	{
 		throw std::runtime_error("SDL_SetWindowFullscreen Error: " + std::string(SDL_GetError()));
 	}

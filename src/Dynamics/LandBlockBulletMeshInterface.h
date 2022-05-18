@@ -39,7 +39,7 @@ public:
 	{
 		for (uint16_t i = 0; auto& v : _vertices)
 		{
-			auto vertex_base = reinterpret_cast<const float*>(&vertex_data[i * stride]);
+			const auto* vertex_base = reinterpret_cast<const float*>(&vertex_data[i * stride]);
 			v[0] = vertex_base[0];
 			v[1] = vertex_base[1];
 			v[2] = vertex_base[2];
@@ -59,7 +59,6 @@ public:
 	                              [[maybe_unused]] int& numfaces, [[maybe_unused]] PHY_ScalarType& indicestype,
 	                              [[maybe_unused]] int subpart) override
 	{
-		return;
 	}
 
 	void getLockedReadOnlyVertexIndexBase(const unsigned char** vertexbase, int& numverts, PHY_ScalarType& type, int& stride,
@@ -79,16 +78,16 @@ public:
 
 	/// unLockVertexBase finishes the access to a subpart of the triangle mesh
 	/// make a call to unLockVertexBase when the read and write access (using getLockedVertexIndexBase) is finished
-	void unLockVertexBase([[maybe_unused]] int subpart) override { return; }
+	void unLockVertexBase([[maybe_unused]] int subpart) override {}
 
-	void unLockReadOnlyVertexBase([[maybe_unused]] int subpart) const override { return; }
+	void unLockReadOnlyVertexBase([[maybe_unused]] int subpart) const override {}
 
 	/// getNumSubParts returns the number of separate subparts
 	/// each subpart has a continuous array of vertices and indices
 	[[nodiscard]] int getNumSubParts() const override { return 1; }
 
-	void preallocateVertices([[maybe_unused]] int numverts) override { return; }
+	void preallocateVertices([[maybe_unused]] int numverts) override {}
 
-	void preallocateIndices([[maybe_unused]] int numindices) override { return; }
+	void preallocateIndices([[maybe_unused]] int numindices) override {}
 };
 } // namespace openblack::dynamics

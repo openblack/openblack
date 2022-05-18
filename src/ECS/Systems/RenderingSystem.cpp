@@ -26,7 +26,7 @@ using namespace openblack::ecs::components;
 
 RenderingSystem& RenderingSystem::instance()
 {
-	static auto instance = new RenderingSystem();
+	static auto* instance = new RenderingSystem();
 	return *instance;
 }
 
@@ -40,7 +40,7 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 	uint32_t instanceCount = 0;
 	std::map<entt::id_type, uint32_t> meshIds;
 
-	registry.Each<const Mesh, const Transform>([&meshIds, &instanceCount](const Mesh& mesh, const Transform&) {
+	registry.Each<const Mesh, const Transform>([&meshIds, &instanceCount](const Mesh& mesh, const Transform& /*unused*/) {
 		auto count = meshIds.insert(std::make_pair(mesh.id, mesh.submeshId));
 		count.first->second++;
 		instanceCount++;

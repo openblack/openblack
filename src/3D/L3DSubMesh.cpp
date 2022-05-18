@@ -43,12 +43,12 @@ L3DSubMesh::~L3DSubMesh() = default;
 
 bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 {
-	auto& header = l3d.GetSubmeshHeaders()[meshIndex];
-	auto primitiveSpan = l3d.GetPrimitiveSpan(meshIndex);
-	auto& verticesSpan = l3d.GetVertexSpan(meshIndex);
-	auto& indexSpan = l3d.GetIndexSpan(meshIndex);
-	auto& vertexGroupSpans = l3d.GetVertexGroupSpan(meshIndex);
-	auto& boneSpans = l3d.GetBoneSpan(meshIndex);
+	const auto& header = l3d.GetSubmeshHeaders()[meshIndex];
+	const auto primitiveSpan = l3d.GetPrimitiveSpan(meshIndex);
+	const auto& verticesSpan = l3d.GetVertexSpan(meshIndex);
+	const auto& indexSpan = l3d.GetIndexSpan(meshIndex);
+	const auto& vertexGroupSpans = l3d.GetVertexGroupSpan(meshIndex);
+	const auto& boneSpans = l3d.GetBoneSpan(meshIndex);
 
 	_flags = header.flags;
 
@@ -128,7 +128,7 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 
 	// Get Indices
 	const bgfx::Memory* indicesMem = bgfx::alloc(sizeof(uint16_t) * nIndices);
-	auto indices = (uint16_t*)indicesMem->data;
+	auto* indices = reinterpret_cast<uint16_t*>(indicesMem->data);
 
 	// Fill bone index
 	uint32_t vertexIndex = 0;
@@ -148,7 +148,9 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 	{
 		// Fix indices for merged vertex buffer
 		for (uint32_t j = 0; j < primitive.numTriangles * 3; j++)
+		{
 			indices[startIndex + j] = indexSpan[startIndex + j] + startVertex;
+		}
 
 		struct MaterialTypeLutEntry
 		{
@@ -210,8 +212,8 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 	decl.emplace_back(VertexAttrib::Attribute::Indices, static_cast<uint8_t>(2), VertexAttrib::Type::Int16);
 
 	// build our buffers
-	auto vertexBuffer = new VertexBuffer(_l3dMesh.GetDebugName(), verticesMem, decl);
-	auto indexBuffer = new IndexBuffer(_l3dMesh.GetDebugName(), indicesMem, IndexBuffer::Type::Uint16);
+	auto* vertexBuffer = new VertexBuffer(_l3dMesh.GetDebugName(), verticesMem, decl);
+	auto* indexBuffer = new IndexBuffer(_l3dMesh.GetDebugName(), indicesMem, IndexBuffer::Type::Uint16);
 	_mesh = std::make_unique<graphics::Mesh>(vertexBuffer, indexBuffer);
 
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "{} submesh {} with {} verts and {} indices", _l3dMesh.GetDebugName(), meshIndex,

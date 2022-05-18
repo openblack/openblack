@@ -38,7 +38,7 @@ struct L3DLoader final: BaseLoader<L3DLoader, L3DMesh>
 struct Texture2DLoader final: BaseLoader<Texture2DLoader, graphics::Texture2D>
 {
 	[[nodiscard]] entt::resource_handle<graphics::Texture2D> load(const std::string& name,
-	                                                              const pack::G3DTexture g3dTexture) const;
+	                                                              const pack::G3DTexture& g3dTexture) const;
 	[[nodiscard]] entt::resource_handle<graphics::Texture2D> load(const std::filesystem::path& rawTexturePath) const;
 };
 

@@ -521,7 +521,9 @@ void LHVMViewer::Draw(Game& game)
 			for (size_t i = 0; i < variables.size(); i++)
 			{
 				if (ImGui::Selectable(variables[i].c_str(), selected == i))
+				{
 					selected = i;
+				}
 			}
 
 			ImGui::EndChild();
@@ -576,7 +578,9 @@ void LHVMViewer::DrawScriptsTab(const openblack::LHVM::LHVM& lhvm)
 	for (auto const& script : scripts)
 	{
 		if (ImGui::Selectable(script.GetName().c_str(), script.GetScriptID() == _selectedScriptID))
+		{
 			SelectScript(script.GetScriptID());
+		}
 
 		if (_scrollToSelected && _selectedScriptID == script.GetScriptID())
 		{
@@ -654,10 +658,14 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 			ImGui::SameLine();
 
 			if (instruction.GetAccess() == LHVM::VMInstruction::Access::VARIABLE)
+			{
 				DrawVariable(lhvm, script, instruction.GetData());
+			}
 			else if (instruction.GetAccess() == LHVM::VMInstruction::Access::STACK)
+			{
 				ImGui::TextColored(Disassembly_ColorConstant, "%s",
 				                   DataToString(instruction.GetData(), instruction.GetDataType()).c_str());
+			}
 
 			break;
 
@@ -672,13 +680,21 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 			break;
 		case LHVM::VMInstruction::Opcode::ADD:
 			if (instruction.GetDataType() == LHVM::VMInstruction::DataType::INT)
+			{
 				ImGui::TextColored(Disassembly_ColorKeyword, "ADDI");
+			}
 			else if (instruction.GetDataType() == LHVM::VMInstruction::DataType::FLOAT)
+			{
 				ImGui::TextColored(Disassembly_ColorKeyword, "ADDF");
+			}
 			else if (instruction.GetDataType() == LHVM::VMInstruction::DataType::VECTOR)
+			{
 				ImGui::TextColored(Disassembly_ColorKeyword, "ADDV");
+			}
 			else
+			{
 				ImGui::TextColored(Disassembly_ColorKeyword, "ADD");
+			}
 			break;
 		case LHVM::VMInstruction::Opcode::CALL:
 			ImGui::TextColored(Disassembly_ColorKeyword, "CALL");
@@ -692,7 +708,9 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 			ImGui::TextColored(Disassembly_ColorKeyword, "RUN");
 			ImGui::SameLine();
 			if (ImGui::TextButtonColored(Disassembly_ColorFuncName, run_script.GetName().c_str()))
+			{
 				SelectScript(instruction.GetData());
+			}
 
 			ImGui::SameLine();
 			ImGui::TextColored(Disassembly_ColorComment, "// expecting %d parameters", run_script.GetParameterCount());
@@ -711,7 +729,9 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 		}
 
 		if (instruction.GetOpcode() == LHVM::VMInstruction::Opcode::END)
+		{
 			break;
+		}
 	}
 
 	ImGui::EndChild();
@@ -752,7 +772,7 @@ std::string LHVMViewer::DataToString(uint32_t data, openblack::LHVM::VMInstructi
 		return std::to_string(f2u.f) + "f";
 	}
 	case LHVM::VMInstruction::DataType::BOOLEAN:
-		return data ? "true" : "false";
+		return data != 0 ? "true" : "false";
 	default:
 		return std::to_string(data) + " (unk type)";
 	}

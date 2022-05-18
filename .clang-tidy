@@ -21,5 +21,14 @@ Checks: >-
   -google-build-using-namespace,
   -google-runtime-references,
   -google-readability-todo,
-  -google-readability-*,
+  readability-*,
+  -readability-magic-numbers,
+  -readability-uppercase-literal-suffix,
+  -readability-function-cognitive-complexity,
+  -readability-make-member-function-const,
+  -readability-convert-member-functions-to-static,
+  -readability-named-parameter,
+CheckOptions:
+  - key:   readability-function-cognitive-complexity.Threshold
+    value: 35 # TODO: bring that number down to 25
 # WarningsAsErrors: '*'

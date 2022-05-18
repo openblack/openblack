@@ -19,7 +19,7 @@
 
 constexpr auto MAX_BUFFER_SIZE = std::numeric_limits<decltype(z_stream::avail_out)>::max();
 
-const std::string GetZlibError(int statusCode)
+std::string GetZlibError(int statusCode)
 {
 	switch (statusCode)
 	{

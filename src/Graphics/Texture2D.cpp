@@ -110,7 +110,7 @@ void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format 
 		flags |= BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR;
 		break;
 	}
-	auto memory = bgfx::makeRef(data, size);
+	const auto* memory = bgfx::makeRef(data, size);
 	_handle = bgfx::createTexture2D(width, height, false, layers, getBgfxTextureFormat(format), flags, memory);
 	bgfx::setName(_handle, _name.c_str());
 	bgfx::frame();
@@ -133,7 +133,7 @@ void Texture2D::DumpTexture() const
 	{
 		auto filename = "dump/" + _name + "_" + std::to_string(i) + ".png";
 		SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "Writing texture layer {} to {}.", i, filename.c_str());
-		auto current_pixels = &pixels[i * stride * _info.height];
+		auto* current_pixels = &pixels[i * stride * _info.height];
 		auto writeResult = stbi_write_png(filename.c_str(), _info.width, _info.height, numComponents, current_pixels, stride);
 		if (writeResult == 0)
 		{

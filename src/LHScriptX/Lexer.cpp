@@ -27,7 +27,9 @@ Token Lexer::GetToken()
 	while (true)
 	{
 		if (current_ == end_)
+		{
 			return Token::MakeEOFToken();
+		}
 
 		unsigned char cc = *current_;
 		switch (cc)
@@ -37,7 +39,10 @@ Token Lexer::GetToken()
 			if (*(current_ + 1) == '/')
 			{
 				// Skip line
-				while (*current_ != '\n' && current_ != end_) current_++;
+				while (*current_ != '\n' && current_ != end_)
+				{
+					current_++;
+				}
 			}
 			break;
 		case ' ':
@@ -46,7 +51,10 @@ Token Lexer::GetToken()
 			current_++;
 
 			// skip over whitespace quickly
-			while (*current_ == ' ' || *current_ == '\t' || *current_ == '\r') current_++;
+			while (*current_ == ' ' || *current_ == '\t' || *current_ == '\r')
+			{
+				current_++;
+			}
 			break;
 		case '\n':
 			current_++;
@@ -56,7 +64,10 @@ Token Lexer::GetToken()
 		// not sure if it's **** or just *, this can be drastically improved on
 		// though
 		case '*':
-			while (*current_ != '\n') current_++;
+			while (*current_ != '\n')
+			{
+				current_++;
+			}
 			break;
 
 		// handle potential rem/REM
@@ -65,7 +76,10 @@ Token Lexer::GetToken()
 			// todo: potential out of bounds here:
 			if ((current_[1] == 'e' || current_[1] == 'E') && (current_[2] == 'm' || current_[2] == 'M'))
 			{
-				while (*current_ != '\n') current_++;
+				while (*current_ != '\n')
+				{
+					current_++;
+				}
 				break;
 			}
 			return gatherIdentifer();
@@ -176,7 +190,9 @@ Token Lexer::gatherIdentifer()
 		if ((cc < 'A' || cc > 'Z') && (cc < 'a' || cc > 'z') && cc != '_' && (cc < '0' || cc > '9'))
 		{
 			if ((cc >= ' ' && cc < 0x7f) || cc == '\t' || cc == '\r' || cc == '\n')
+			{
 				break;
+			}
 
 			throw LexerException("invalid character " + std::string(1, cc) + "in identifer");
 		}
@@ -203,7 +219,7 @@ Token Lexer::gatherNumber()
 	// consume all digits and .
 	while (hasMore())
 	{
-		if (std::isdigit(*current_))
+		if (std::isdigit(*current_) != 0)
 		{
 			current_++;
 		}
@@ -222,13 +238,17 @@ Token Lexer::gatherNumber()
 	{
 		float value = std::stof(std::string(number_start, current_));
 		if (is_neg)
+		{
 			value = -value;
+		}
 		return Token::MakeFloatToken(value);
 	}
 
 	int value = std::stoi(std::string(number_start, current_));
 	if (is_neg)
+	{
 		value = -value;
+	}
 	return Token::MakeIntegerToken(value);
 }
 
@@ -237,7 +257,10 @@ Token Lexer::gatherString()
 	auto string_start = ++current_;
 
 	// todo: we should check for unterminated strings
-	while (hasMore() && *current_ != '"') current_++;
+	while (hasMore() && *current_ != '"')
+	{
+		current_++;
+	}
 
 	return Token::MakeStringToken(std::string(string_start, current_++));
 }

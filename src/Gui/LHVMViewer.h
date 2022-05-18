@@ -36,8 +36,8 @@ private:
 	void SelectScript(uint32_t idx);
 
 	uint32_t _selectedScriptID {1};
-	uint32_t _scrollToSelected {false};
-	uint32_t _resetScriptDisassemblyScroll {false};
+	bool _scrollToSelected {false};
+	bool _resetScriptDisassemblyScroll {false};
 };
 
 } // namespace openblack::gui

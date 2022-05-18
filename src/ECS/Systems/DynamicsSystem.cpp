@@ -47,9 +47,9 @@ void DynamicsSystem::Reset()
 	std::vector<btRigidBody*> to_remove;
 	for (int i = 0; i < _world->getNumCollisionObjects(); ++i)
 	{
-		auto obj = _world->getCollisionObjectArray()[i];
+		auto* obj = _world->getCollisionObjectArray()[i];
 		btRigidBody* body = btRigidBody::upcast(obj);
-		if (body)
+		if (body != nullptr)
 		{
 			to_remove.push_back(body);
 		}
@@ -117,7 +117,7 @@ void DynamicsSystem::UpdatePhysicsTransforms()
 	});
 }
 
-const std::optional<std::pair<Transform, RigidBodyDetails>>
+std::optional<std::pair<Transform, RigidBodyDetails>>
 DynamicsSystem::RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float t_max) const
 {
 	auto from = btVector3(origin.x, origin.y, origin.z);
