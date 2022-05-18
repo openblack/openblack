@@ -25,6 +25,7 @@ struct Stream
 {
 	using Id = int;
 
+	// NOLINTNEXTLINE(misc-no-recursion): lint error, this isn't a function
 	class Node
 	{
 	public:
