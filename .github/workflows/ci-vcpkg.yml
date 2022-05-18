@@ -81,17 +81,6 @@ jobs:
           CC: ${{matrix.cc}}
           CXX: ${{matrix.cxx}}
 
-      - name: Create compile_commands.json
-        run: cmake . -B cmake-build-tidy --preset=ninja-multi-vcpkg -DCMAKE_EXPORT_COMPILE_COMMANDS=On
-        if: matrix.os == 'ubuntu-latest'
-
-      - name: Run clang-tidy
-        uses: ZedThree/clang-tidy-review@v0.8.3
-        id: review
-        with:
-          build_dir: cmake-build-tidy
-        if: matrix.cc == 'ubuntu-latest'
-
       - name: Upload compiled openblack and tools
         uses: actions/upload-artifact@v3
         if: matrix.cc == ''
