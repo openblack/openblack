@@ -27,7 +27,7 @@ std::filesystem::path FileSystem::FixPath(const std::filesystem::path& path)
 	    "\\Landscape\\",
 	    "\\Multi_Player\\",
 	};
-	for (auto& pattern : caseFixTable)
+	for (const auto& pattern : caseFixTable)
 	{
 		auto foundIter = std::search(result.cbegin(), result.cend(), pattern.cbegin(), pattern.cend(),
 		                             [](char left, char right) { return std::toupper(left) == std::toupper(right); });
@@ -50,19 +50,27 @@ std::filesystem::path FileSystem::FixPath(const std::filesystem::path& path)
 std::filesystem::path FileSystem::FindPath(const std::filesystem::path& path) const
 {
 	if (path.empty())
+	{
 		throw std::invalid_argument("empty path");
+	}
 
 	// try absolute first
 	if (path.is_absolute() && std::filesystem::exists(path))
+	{
 		return path;
+	}
 
 	// try relative to current directory
 	if (path.is_relative() && std::filesystem::exists(path))
+	{
 		return path;
+	}
 
 	// try relative to game directory
 	if (path.is_relative() && std::filesystem::exists(_gamePath / path))
+	{
 		return _gamePath / path;
+	}
 
 	throw std::runtime_error("File " + path.string() + " not found");
 }

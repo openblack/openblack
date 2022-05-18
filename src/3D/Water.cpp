@@ -46,8 +46,8 @@ void Water::createMesh()
 
 	static constexpr std::array<uint16_t, 6> indices = {2, 1, 0, 0, 3, 2};
 
-	auto vertexBuffer = new VertexBuffer("Water", points.data(), static_cast<uint32_t>(points.size()), decl);
-	auto indexBuffer =
+	auto* vertexBuffer = new VertexBuffer("Water", points.data(), static_cast<uint32_t>(points.size()), decl);
+	auto* indexBuffer =
 	    new IndexBuffer("Water", indices.data(), static_cast<uint32_t>(indices.size()), IndexBuffer::Type::Uint16);
 
 	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, graphics::Mesh::Topology::TriangleList);

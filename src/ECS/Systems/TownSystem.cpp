@@ -21,7 +21,7 @@ using namespace openblack::ecs::systems;
 
 TownSystem& TownSystem::instance()
 {
-	static auto instance = new TownSystem();
+	static auto* instance = new TownSystem();
 	return *instance;
 }
 

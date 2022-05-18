@@ -550,7 +550,7 @@ void L3DFile::WriteFile(std::ostream& stream) const
 		skinOffsetsBase += sizeof(_skins[0]);
 	}
 	uint32_t totalPrimitives = 0;
-	for (auto& header : _submeshHeaders)
+	for (const auto& header : _submeshHeaders)
 	{
 		totalPrimitives += header.numPrimitives;
 	}
@@ -701,9 +701,9 @@ void L3DFile::Write(const std::filesystem::path& filepath)
 	for (size_t i = 0; i < _primitiveHeaders.size(); ++i)
 	{
 		_primitiveHeaders[i].verticesOffset =
-		    _vertexSpans[i].size() > 0 ? static_cast<uint32_t>(vertexBase) : std::numeric_limits<uint32_t>::max();
+		    !_vertexSpans[i].empty() ? static_cast<uint32_t>(vertexBase) : std::numeric_limits<uint32_t>::max();
 		_primitiveHeaders[i].trianglesOffset =
-		    _indexSpans[i].size() > 0 ? static_cast<uint32_t>(triangleBase) : std::numeric_limits<uint32_t>::max();
+		    !_indexSpans[i].empty() ? static_cast<uint32_t>(triangleBase) : std::numeric_limits<uint32_t>::max();
 		_primitiveHeaders[i].groupsOffset = std::numeric_limits<uint32_t>::max();       // TODO boneVertLUTBase;
 		_primitiveHeaders[i].vertexBlendsOffset = std::numeric_limits<uint32_t>::max(); // TODO vertexBlendsBase;
 		vertexBase += _vertexSpans[i].size() * sizeof(_vertices[0]);
@@ -716,8 +716,8 @@ void L3DFile::Write(const std::filesystem::path& filepath)
 	{
 		// TODO Set flags
 		header.primitivesOffset =
-		    header.numPrimitives ? static_cast<uint32_t>(primitiveOffsetBase) : std::numeric_limits<uint32_t>::max();
-		header.bonesOffset = header.numBones ? static_cast<uint32_t>(boneBase) : std::numeric_limits<uint32_t>::max();
+		    header.numPrimitives != 0u ? static_cast<uint32_t>(primitiveOffsetBase) : std::numeric_limits<uint32_t>::max();
+		header.bonesOffset = header.numBones != 0u ? static_cast<uint32_t>(boneBase) : std::numeric_limits<uint32_t>::max();
 		primitiveBase += header.numPrimitives * sizeof(L3DPrimitiveHeader);
 		boneBase += header.numBones * sizeof(L3DBone);
 	}
@@ -733,7 +733,7 @@ void L3DFile::AddSubmesh(const L3DSubmeshHeader& header) noexcept
 void L3DFile::AddPrimitives(const std::vector<L3DPrimitiveHeader>& headers) noexcept
 {
 	auto size = _primitiveHeaders.size();
-	for (auto& header : headers)
+	for (const auto& header : headers)
 	{
 		_primitiveHeaders.push_back(header);
 	}
@@ -743,7 +743,7 @@ void L3DFile::AddPrimitives(const std::vector<L3DPrimitiveHeader>& headers) noex
 void L3DFile::AddVertices(const std::vector<L3DVertex>& vertices) noexcept
 {
 	auto size = _vertices.size();
-	for (auto& vertex : vertices)
+	for (const auto& vertex : vertices)
 	{
 		_vertices.push_back(vertex);
 	}
@@ -753,7 +753,7 @@ void L3DFile::AddVertices(const std::vector<L3DVertex>& vertices) noexcept
 void L3DFile::AddIndices(const std::vector<uint16_t>& indices) noexcept
 {
 	auto size = _indices.size();
-	for (auto& index : indices)
+	for (const auto& index : indices)
 	{
 		_indices.push_back(index);
 	}
@@ -763,7 +763,7 @@ void L3DFile::AddIndices(const std::vector<uint16_t>& indices) noexcept
 void L3DFile::AddBones(const std::vector<L3DBone>& bones) noexcept
 {
 	auto size = _boneSpans.size();
-	for (auto& bone : bones)
+	for (const auto& bone : bones)
 	{
 		_bones.push_back(bone);
 	}

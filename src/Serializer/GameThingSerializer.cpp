@@ -112,16 +112,13 @@ std::shared_ptr<GameThingSerializer::GameThing> GameThingSerializer::Deserialize
 
 		return thing;
 	}
-	else if (index > _cache.size())
+	if (index > _cache.size())
 	{
 		assert(false); // weird case
 		return nullptr;
 	}
-	else
-	{
-		// referring to a previously seen entry
-		return _cache[index - 1];
-	}
+	// referring to a previously seen entry
+	return _cache[index - 1];
 }
 
 template <typename T>

@@ -216,7 +216,7 @@ void LNDFile::WriteFile(std::ostream& stream) const
 	stream.write(reinterpret_cast<const char*>(&_header), sizeof(LNDHeader));
 
 	// Write low resolution textures
-	for (auto& texture : _lowResolutionTextures)
+	for (const auto& texture : _lowResolutionTextures)
 	{
 		stream.write(reinterpret_cast<const char*>(&texture.header), sizeof(texture.header));
 		stream.write(reinterpret_cast<const char*>(texture.texels.data()), texture.texels.size() * sizeof(texture.texels[0]));

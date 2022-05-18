@@ -55,7 +55,7 @@ VertexBuffer::VertexBuffer(std::string name, const void* vertices, uint32_t vert
 
 	bgfx::VertexLayout layout;
 	layout.begin();
-	for (auto& d : _vertexDecl)
+	for (const auto& d : _vertexDecl)
 	{
 		_vertexDeclOffsets.push_back(_strideBytes);
 		_strideBytes += strides.at(static_cast<size_t>(d._type)).at(d._num - 1);
@@ -65,7 +65,7 @@ VertexBuffer::VertexBuffer(std::string name, const void* vertices, uint32_t vert
 	layout.end();
 	assert(layout.m_stride == _strideBytes);
 
-	auto mem = bgfx::makeRef(vertices, vertexCount * layout.m_stride);
+	const auto* mem = bgfx::makeRef(vertices, vertexCount * layout.m_stride);
 	_handle = bgfx::createVertexBuffer(mem, layout);
 	_layoutHandle = bgfx::createVertexLayout(layout);
 	bgfx::setName(_handle, _name.c_str());
@@ -92,7 +92,7 @@ VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl
 
 	bgfx::VertexLayout layout;
 	layout.begin();
-	for (auto& d : _vertexDecl)
+	for (const auto& d : _vertexDecl)
 	{
 		_vertexDeclOffsets.push_back(_strideBytes);
 		_strideBytes += strides.at(static_cast<size_t>(d._type)).at(d._num - 1);
@@ -112,9 +112,13 @@ VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl
 VertexBuffer::~VertexBuffer()
 {
 	if (bgfx::isValid(_handle))
+	{
 		bgfx::destroy(_handle);
+	}
 	if (bgfx::isValid(_layoutHandle))
+	{
 		bgfx::destroy(_layoutHandle);
+	}
 }
 
 uint32_t VertexBuffer::GetCount() const noexcept

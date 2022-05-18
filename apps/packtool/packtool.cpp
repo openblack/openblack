@@ -49,7 +49,7 @@ int PrintRawBytes(const void* data, std::size_t size)
 
 int ListBlocks(openblack::pack::PackFile& pack)
 {
-	auto& blocks = pack.GetBlocks();
+	const auto& blocks = pack.GetBlocks();
 
 	std::printf("file: %s\n", pack.GetFilename().c_str());
 	std::printf("%u blocks\n", static_cast<uint32_t>(blocks.size()));
@@ -57,7 +57,7 @@ int ListBlocks(openblack::pack::PackFile& pack)
 	std::printf("%u meshes\n", static_cast<uint32_t>(pack.GetMeshes().size()));
 	std::printf("%u animations\n", static_cast<uint32_t>(pack.GetAnimations().size()));
 	uint32_t i = 0;
-	for (auto& [name, data] : blocks)
+	for (const auto& [name, data] : blocks)
 	{
 		std::printf("%u: name \"%s\", size %u\n", ++i, name.c_str(), static_cast<uint32_t>(data.size()));
 	}
@@ -68,13 +68,13 @@ int ListBlocks(openblack::pack::PackFile& pack)
 
 int ListBlock(openblack::pack::PackFile& pack, const std::string& name, const std::filesystem::path& outFilename)
 {
-	auto output_log_stream = stdout;
+	auto* output_log_stream = stdout;
 	if (outFilename == std::filesystem::path("stdout"))
 	{
 		output_log_stream = stderr;
 	}
 
-	auto& blocks = pack.GetBlocks();
+	const auto& blocks = pack.GetBlocks();
 
 	auto block = blocks.find(name);
 	if (block == blocks.end())
@@ -107,7 +107,7 @@ int ListBlock(openblack::pack::PackFile& pack, const std::string& name, const st
 
 int ViewBytes(openblack::pack::PackFile& pack, const std::string& name)
 {
-	auto& block = pack.GetBlock(name);
+	const auto& block = pack.GetBlock(name);
 
 	std::printf("file: %s, block %s\n", pack.GetFilename().c_str(), name.c_str());
 
@@ -148,11 +148,11 @@ int ViewBody(openblack::pack::PackFile& pack)
 
 int ViewTextures(openblack::pack::PackFile& pack)
 {
-	auto& textures = pack.GetTextures();
+	const auto& textures = pack.GetTextures();
 
 	std::printf("file: %s\n", pack.GetFilename().c_str());
 
-	for (auto& [name, texture] : textures)
+	for (const auto& [name, texture] : textures)
 	{
 		std::printf("%s: type %u, size %u\n", name.c_str(), texture.header.type, texture.header.size);
 	}
@@ -162,12 +162,12 @@ int ViewTextures(openblack::pack::PackFile& pack)
 
 int ViewMeshes(openblack::pack::PackFile& pack)
 {
-	auto& meshes = pack.GetMeshes();
+	const auto& meshes = pack.GetMeshes();
 
 	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	uint32_t i = 0;
-	for (auto& mesh : meshes)
+	for (const auto& mesh : meshes)
 	{
 		std::printf("mesh #%-5d size %u\n", i++, static_cast<uint32_t>(mesh.size()));
 	}
@@ -177,12 +177,12 @@ int ViewMeshes(openblack::pack::PackFile& pack)
 
 int ViewAnimations(openblack::pack::PackFile& pack)
 {
-	auto& animations = pack.GetAnimations();
+	const auto& animations = pack.GetAnimations();
 
 	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	uint32_t i = 0;
-	for (auto& animation : animations)
+	for (const auto& animation : animations)
 	{
 		std::printf("animation #%-5d %-32s size %u\n", i++, animation.data(), static_cast<uint32_t>(animation.size()));
 	}
@@ -192,7 +192,7 @@ int ViewAnimations(openblack::pack::PackFile& pack)
 
 int ViewTexture(openblack::pack::PackFile& pack, const std::string& name, const std::filesystem::path& outFilename)
 {
-	auto& texture = pack.GetTexture(name);
+	const auto& texture = pack.GetTexture(name);
 
 	std::printf("file: %s\n", pack.GetFilename().c_str());
 
@@ -247,7 +247,7 @@ int ViewMesh(openblack::pack::PackFile& pack, uint32_t index, const std::filesys
 		return EXIT_FAILURE;
 	}
 
-	auto& mesh = pack.GetMesh(index);
+	const auto& mesh = pack.GetMesh(index);
 
 	std::printf("file: %s\n", pack.GetFilename().c_str());
 	std::printf("mesh: %u bytes\n", static_cast<uint32_t>(mesh.size()));

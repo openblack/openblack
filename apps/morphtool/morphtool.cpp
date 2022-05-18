@@ -17,7 +17,7 @@
 
 int ListDetails(openblack::morph::MorphFile& morph)
 {
-	auto& header = morph.GetHeader();
+	const auto& header = morph.GetHeader();
 
 	std::printf("file: %s\n", morph.GetFilename().c_str());
 
@@ -41,8 +41,8 @@ int ListDetails(openblack::morph::MorphFile& morph)
 	std::printf("\n");
 
 	size_t num_animation_sets = 0;
-	auto& specs = morph.GetAnimationSpecs();
-	for (auto& anim_set : specs.animation_sets)
+	const auto& specs = morph.GetAnimationSpecs();
+	for (const auto& anim_set : specs.animation_sets)
 	{
 		num_animation_sets += anim_set.animations.size();
 	}
@@ -52,16 +52,16 @@ int ListDetails(openblack::morph::MorphFile& morph)
 	std::printf("%zu base animations\n", morph.GetBaseAnimationSet().size());
 	for (uint8_t i = 0; i < std::min(4u, num_variants); ++i)
 	{
-		auto& animation_set = morph.GetVariantAnimationSet(i);
+		const auto& animation_set = morph.GetVariantAnimationSet(i);
 		std::printf("%zu animations for \"%s\"\n", animation_set.size(), header.variant_mesh_names.at(i).data());
 	}
 
 	std::printf("%zu hair groups\n", morph.GetHairGroups().size());
 
-	auto& extra_data = morph.GetExtraData();
+	const auto& extra_data = morph.GetExtraData();
 
 	size_t extra_data_total = 0;
-	for (auto& data : extra_data)
+	for (const auto& data : extra_data)
 	{
 		extra_data_total += data.size();
 	}
@@ -74,7 +74,7 @@ int ListDetails(openblack::morph::MorphFile& morph)
 
 int PrintHeader(openblack::morph::MorphFile& morph)
 {
-	auto& header = morph.GetHeader();
+	const auto& header = morph.GetHeader();
 
 	std::printf("file: %s\n", morph.GetFilename().c_str());
 
@@ -92,7 +92,7 @@ int PrintHeader(openblack::morph::MorphFile& morph)
 
 int PrintSpecs(openblack::morph::MorphFile& morph)
 {
-	auto& specs = morph.GetAnimationSpecs();
+	const auto& specs = morph.GetAnimationSpecs();
 
 	std::printf("file: %s\n", morph.GetFilename().c_str());
 
@@ -100,7 +100,7 @@ int PrintSpecs(openblack::morph::MorphFile& morph)
 	std::printf("specs version: %u\n", specs.version);
 
 	size_t j = 0;
-	for (auto& anim_set : specs.animation_sets)
+	for (const auto& anim_set : specs.animation_sets)
 	{
 		j += anim_set.animations.size();
 	}
@@ -108,11 +108,11 @@ int PrintSpecs(openblack::morph::MorphFile& morph)
 
 	uint32_t i = 0;
 	j = 0;
-	for (auto& anim_set : specs.animation_sets)
+	for (const auto& anim_set : specs.animation_sets)
 	{
 		std::printf("[%u] category \"%s\" with %zu animations:\n", i, anim_set.name.c_str(), anim_set.animations.size());
 		i++;
-		for (auto& desc : anim_set.animations)
+		for (const auto& desc : anim_set.animations)
 		{
 			std::printf("\t[%3zu] type: %c, \"%s\":\n", j, static_cast<char>(desc.type), desc.name.c_str());
 			j++;
@@ -154,7 +154,7 @@ void PrintAnimation(const openblack::morph::Animation& animation)
 	std::printf("\tKeyframes:\n");
 
 	uint32_t i = 0;
-	for (auto& frame : animation.keyframes)
+	for (const auto& frame : animation.keyframes)
 	{
 		std::printf("\t\t[%2u]\n", i);
 		std::printf("\t\teuler_angles: [");
@@ -175,7 +175,7 @@ void PrintAnimation(const openblack::morph::Animation& animation)
 
 int ShowBaseAnimationSet(openblack::morph::MorphFile& morph)
 {
-	auto& animation_set = morph.GetBaseAnimationSet();
+	const auto& animation_set = morph.GetBaseAnimationSet();
 
 	std::printf("file: %s\n", morph.GetFilename().c_str());
 	std::printf("%zu base animations\n", animation_set.size());
@@ -193,7 +193,7 @@ int ShowBaseAnimationSet(openblack::morph::MorphFile& morph)
 
 int ShowVariantAnimationSets(openblack::morph::MorphFile& morph)
 {
-	auto& header = morph.GetHeader();
+	const auto& header = morph.GetHeader();
 
 	std::printf("file: %s\n", morph.GetFilename().c_str());
 
@@ -209,7 +209,7 @@ int ShowVariantAnimationSets(openblack::morph::MorphFile& morph)
 
 	for (uint8_t i = 0; i < num_variants; ++i)
 	{
-		auto& animation_set = morph.GetVariantAnimationSet(i);
+		const auto& animation_set = morph.GetVariantAnimationSet(i);
 		std::printf("%zu animations for \"%s\"\n", animation_set.size(), header.variant_mesh_names.at(i).data());
 		uint32_t j = 0;
 		for (const auto& animation : animation_set)
@@ -224,7 +224,7 @@ int ShowVariantAnimationSets(openblack::morph::MorphFile& morph)
 
 int ShowHairGroups(openblack::morph::MorphFile& morph)
 {
-	auto& hair_groups = morph.GetHairGroups();
+	const auto& hair_groups = morph.GetHairGroups();
 
 	std::printf("file: %s\n", morph.GetFilename().c_str());
 	std::printf("%zu hair groups\n", hair_groups.size());
@@ -278,11 +278,11 @@ int ShowHairGroups(openblack::morph::MorphFile& morph)
 
 int ShowExtraData(openblack::morph::MorphFile& morph)
 {
-	auto& extra_data = morph.GetExtraData();
-	auto& specs = morph.GetAnimationSpecs();
+	const auto& extra_data = morph.GetExtraData();
+	const auto& specs = morph.GetAnimationSpecs();
 
 	size_t extra_data_total = 0;
-	for (auto& data : extra_data)
+	for (const auto& data : extra_data)
 	{
 		extra_data_total += data.size();
 	}
@@ -294,14 +294,14 @@ int ShowExtraData(openblack::morph::MorphFile& morph)
 	uint32_t i = 0;
 	uint32_t category_index = 0;
 	size_t animation_index = 0;
-	for (auto& list : extra_data)
+	for (const auto& list : extra_data)
 	{
 		uint32_t j = 0;
 		std::printf("[%2u]: %s (%s)\n", i, specs.animation_sets[category_index].animations[animation_index].name.c_str(),
 		            specs.animation_sets[category_index].name.c_str());
 
 		std::printf("\t%zu segments\n", list.size());
-		for (auto& data : list)
+		for (const auto& data : list)
 		{
 			std::printf("\t[%2u]\n", j);
 			std::printf("\t\tunknown_0x0: 0x%08X\n", data.unknown_0x0);
@@ -397,10 +397,8 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 			return_code = EXIT_FAILURE;
 			return false;
 		}
-		else
-		{
-			args.spec_directory = result["spec-files-directory"].as<std::filesystem::path>();
-		}
+
+		args.spec_directory = result["spec-files-directory"].as<std::filesystem::path>();
 		if (result["subcommand"].as<std::string>() == "read")
 		{
 			if (result["list-details"].count() > 0)

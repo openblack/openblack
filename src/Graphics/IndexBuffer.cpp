@@ -25,7 +25,7 @@ IndexBuffer::IndexBuffer(std::string name, const void* indices, uint32_t indexCo
 	assert(indices != nullptr);
 	assert(indexCount > 0);
 
-	auto mem = bgfx::makeRef(indices, indexCount * GetTypeSize(_type));
+	const auto* mem = bgfx::makeRef(indices, indexCount * GetTypeSize(_type));
 	_handle = bgfx::createIndexBuffer(mem, type == Type::Uint32 ? BGFX_BUFFER_INDEX32 : 0);
 	bgfx::setName(_handle, _name.c_str());
 }

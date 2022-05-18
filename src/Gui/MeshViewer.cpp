@@ -52,7 +52,9 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 	uint32_t hoverIndex;
 	ImGuiBitField::BitField("Mesh flag bit-field filter", &_meshFlagFilter, &hoverIndex);
 	if (ImGui::IsItemHovered() && hoverIndex < L3DMeshFlagNames.size())
+	{
 		ImGui::SetTooltip("%s", L3DMeshFlagNames.at(hoverIndex).data());
+	}
 
 	ImGui::BeginChild("meshes", ImVec2(fontSize * 15.0f, 0));
 	auto meshSize = ImGui::GetItemRectSize();
@@ -60,7 +62,7 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 	uint32_t displayedMeshes = 0;
 
 	meshes.Each([this, &displayedMeshes](entt::id_type id, entt::resource_handle<const L3DMesh> mesh) {
-		if (_filter.PassFilter(mesh->GetDebugName().c_str()) && mesh->GetFlags() & _meshFlagFilter)
+		if (_filter.PassFilter(mesh->GetDebugName().c_str()) && (mesh->GetFlags() & _meshFlagFilter) != 0u)
 		{
 			displayedMeshes++;
 			auto flags = mesh->GetNumSubMeshes() > 0 ? 0 : ImGuiSelectableFlags_Disabled;
@@ -92,11 +94,14 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 		int32_t newLines = 1;
 		for (uint32_t flag = 1; const auto& name : L3DMeshFlagNames)
 		{
-			if (mesh->GetFlags() & flag)
+			if ((mesh->GetFlags() & flag) != 0)
 			{
 				auto writen = std::snprintf(bitfieldTitle.data() + offset, bitfieldTitle.size() - offset, "%s%s%s",
-				                            offset ? "|" : "", offset > newLines * 100 ? "\n" : "", name.data());
-				while (offset > newLines * 100) newLines++;
+				                            offset != 0 ? "|" : "", offset > newLines * 100 ? "\n" : "", name.data());
+				while (offset > newLines * 100)
+				{
+					newLines++;
+				}
 				offset += writen;
 			}
 			flag <<= 1;
@@ -193,8 +198,8 @@ void MeshViewer::Update([[maybe_unused]] Game& game, const Renderer& renderer)
 	auto const& meshes = Locator::resources::ref().GetMeshes();
 	auto const& animations = Locator::resources::ref().GetAnimations();
 	auto& shaderManager = renderer.GetShaderManager();
-	auto objectShader = shaderManager.GetShader("Object");
-	auto debugShader = shaderManager.GetShader("DebugLine");
+	const auto* objectShader = shaderManager.GetShader("Object");
+	const auto* debugShader = shaderManager.GetShader("DebugLine");
 
 	// TODO(bwrsandman): use camera class
 	glm::mat4 perspective = glm::perspective(glm::radians(70.0f), 1.0f, 1.0f, 1024.0f);
@@ -213,7 +218,8 @@ void MeshViewer::Update([[maybe_unused]] Game& game, const Renderer& renderer)
 	// done in framebuffer bind
 	static const uint32_t clearColor = 0x274659ff;
 	bgfx::setViewClear(static_cast<bgfx::ViewId>(_viewId), BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, clearColor, 1.0f, 0);
-	uint16_t width, height;
+	uint16_t width;
+	uint16_t height;
 	_frameBuffer->GetSize(width, height);
 	bgfx::setViewRect(static_cast<bgfx::ViewId>(_viewId), 0, 0, width, height);
 

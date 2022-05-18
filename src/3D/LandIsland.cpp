@@ -48,7 +48,7 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 
 	_blockIndexLookup = lnd.GetHeader().lookUpTable;
 
-	auto& lndBlocks = lnd.GetBlocks();
+	const auto& lndBlocks = lnd.GetBlocks();
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} blocks", lndBlocks.size());
 	_landBlocks.resize(lndBlocks.size());
 	for (size_t i = 0; i < _landBlocks.size(); i++)
@@ -87,7 +87,10 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	                        static_cast<uint32_t>(sizeof(lnd.GetExtra().bump.texels[0]) * lnd.GetExtra().bump.texels.size()));
 
 	// build the meshes (we could move this elsewhere)
-	for (auto& block : _landBlocks) block.BuildMesh(*this);
+	for (auto& block : _landBlocks)
+	{
+		block.BuildMesh(*this);
+	}
 	bgfx::frame();
 }
 
@@ -105,11 +108,15 @@ const LandBlock* LandIsland::GetBlock(const glm::u8vec2& coordinates) const
 {
 	// our blocks can only be between [0-31, 0-31]
 	if (coordinates.x > 32 || coordinates.y > 32)
+	{
 		return nullptr;
+	}
 
 	const uint8_t blockIndex = _blockIndexLookup.at(coordinates.x * 32 + coordinates.y);
 	if (blockIndex == 0)
+	{
 		return nullptr;
+	}
 
 	return &_landBlocks[blockIndex - 1];
 }

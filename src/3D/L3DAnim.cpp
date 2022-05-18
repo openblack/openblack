@@ -91,7 +91,7 @@ void L3DAnim::LoadFromBuffer(const std::vector<uint8_t>& data)
 	Load(anm);
 }
 
-const std::vector<glm::mat4> L3DAnim::GetBoneMatrices(uint32_t time) const
+std::vector<glm::mat4> L3DAnim::GetBoneMatrices(uint32_t time) const
 {
 	if (_frames.empty())
 	{
@@ -121,7 +121,7 @@ const std::vector<glm::mat4> L3DAnim::GetBoneMatrices(uint32_t time) const
 	{
 		return _frames[0].bones;
 	}
-	else if (index >= _frames.size())
+	if (index >= _frames.size())
 	{
 		return _frames[_frames.size() - 1].bones;
 	}

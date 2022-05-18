@@ -44,7 +44,7 @@ public:
 	LandIsland();
 	~LandIsland();
 
-	void LoadFromFile(const std::filesystem::path& filename);
+	void LoadFromFile(const std::filesystem::path& path);
 
 	[[nodiscard]] float GetHeightAt(glm::vec2) const;
 	[[nodiscard]] const LandBlock* GetBlock(const glm::u8vec2& coordinates) const;

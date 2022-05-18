@@ -37,7 +37,7 @@ Console::Console()
 	// TODO: Add custom spdlog sink here
 	for (const auto& signature : lhscriptx::FeatureScriptCommands::Signatures)
 	{
-		std::string details = "";
+		std::string details;
 		for (bool skip = true; const auto param : signature.parameters)
 		{
 			if (!skip)
@@ -218,7 +218,7 @@ void Console::Draw(Game& game)
 	ImGuiIO& io = ImGui::GetIO();
 
 	glm::ivec2 screenSize {};
-	if (game.GetWindow())
+	if (game.GetWindow() != nullptr)
 	{
 		game.GetWindow()->GetSize(screenSize.x, screenSize.y);
 	}
@@ -226,11 +226,12 @@ void Console::Draw(Game& game)
 	SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
 	if (!io.WantCaptureMouse && screenSize.x > 0 && screenSize.y > 0)
 	{
-		glm::vec3 rayOrigin, rayDirection;
+		glm::vec3 rayOrigin;
+		glm::vec3 rayDirection;
 		game.GetCamera().DeprojectScreenToWorld(mousePosition, screenSize, rayOrigin, rayDirection);
 		if (auto hit = game.GetDynamicsSystem().RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
 		{
-			if (hit->second.userData)
+			if (hit->second.userData != nullptr)
 			{
 				switch (hit->second.type)
 				{
@@ -314,7 +315,7 @@ void Console::Draw(Game& game)
 		// Normally you would store more information in your item (e.g. make Items[] an array of structure, store color/type
 		// etc.)
 		bool pop_color = false;
-		if (strstr(item.c_str(), "[error]"))
+		if (strstr(item.c_str(), "[error]") != nullptr)
 		{
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
 			pop_color = true;
@@ -331,7 +332,9 @@ void Console::Draw(Game& game)
 		}
 	}
 	if (copy_to_clipboard)
+	{
 		ImGui::LogFinish();
+	}
 
 	if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
 	{
@@ -356,11 +359,13 @@ void Console::Draw(Game& game)
 		std::string s = _inputBuffer.data();
 
 		// trim string
-		s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
-		s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !std::isspace(ch); }).base(), s.end());
+		s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return std::isspace(ch) == 0; }));
+		s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return std::isspace(ch) == 0; }).base(), s.end());
 
-		if (s[0])
+		if (s[0] != 0)
+		{
 			ExecCommand(s, game);
+		}
 
 		_inputBuffer[0] = '\0';
 
@@ -413,11 +418,13 @@ void Console::ExecCommand(const std::string& command_line, Game& game)
 	// optimal.
 	_historyPos.reset();
 	for (int i = static_cast<int>(_history.size()) - 1; i >= 0; i--)
+	{
 		if (_history[i] == command_line)
 		{
 			_history.erase(_history.begin() + i);
 			break;
 		}
+	}
 	_history.emplace_back(command_line);
 
 	// Process command

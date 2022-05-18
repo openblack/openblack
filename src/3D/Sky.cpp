@@ -31,7 +31,7 @@ Sky::Sky()
 	// load in the mesh
 	auto& filesystem = Game::instance()->GetFileSystem();
 	_model = std::make_unique<L3DMesh>("Sky");
-	_model->LoadFromFile(filesystem.WeatherSystemPath() / "sky.l3d");
+	_model->LoadFromFile(FileSystem::WeatherSystemPath() / "sky.l3d");
 
 	for (uint32_t idx = 0; const auto& alignment : _alignments)
 	{
@@ -45,7 +45,7 @@ Sky::Sky()
 				prefix = string_utils::Capitalise(prefix);
 			}
 			const auto filename = fmt::format("{}_{}_{}.555", prefix, alignment, time);
-			const auto path = filesystem.WeatherSystemPath() / filename;
+			const auto path = FileSystem::WeatherSystemPath() / filename;
 			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading sky texture: {}", path.generic_string());
 
 			Bitmap16B* bitmap = Bitmap16B::LoadFromFile(path);
@@ -87,22 +87,20 @@ float Sky::GetCurrentSkyType() const
 	{
 		return 0.0f; // Index for night texture
 	}
-	else if (time < _duskStartTime) // Between night and dusk
+	if (time < _duskStartTime) // Between night and dusk
 	{
 		return (time - _nightFullTime) / (_duskStartTime - _nightFullTime); // 0 - 1 lerp between night and dusk
 	}
-	else if (time <= _duskEndTime) // In full dusk
+	if (time <= _duskEndTime) // In full dusk
 	{
 		return 1.0f; // Index for dusk texture
 	}
-	else if (time < _dayFullTime) // Between dusk and day
+	if (time < _dayFullTime) // Between dusk and day
 	{
 		return 1.0f + (time - _duskEndTime) / (_dayFullTime - _duskEndTime); // 1 - 2 lerp between dusk and day
 	}
-	else // In full day
-	{
-		return 2.0f; // Index for day texture
-	}
+	// In full day
+	return 2.0f; // Index for day texture
 }
 
 } // namespace openblack

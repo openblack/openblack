@@ -328,7 +328,7 @@ bool Game::Update()
 	{
 		auto sdlInput = _profiler->BeginScoped(Profiler::Stage::SdlInput);
 		SDL_Event e;
-		while (SDL_PollEvent(&e))
+		while (SDL_PollEvent(&e) != 0)
 		{
 			_eventManager->Create<SDL_Event>(e);
 		}
@@ -376,7 +376,8 @@ bool Game::Update()
 			const auto scale = glm::vec3(50.0f, 50.0f, 50.0f);
 			if (screenSize.x > 0 && screenSize.y > 0)
 			{
-				glm::vec3 rayOrigin, rayDirection;
+				glm::vec3 rayOrigin;
+				glm::vec3 rayDirection;
 				_camera->DeprojectScreenToWorld(_mousePosition, screenSize, rayOrigin, rayDirection);
 
 				if (auto hit = _dynamicsSystem->RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
@@ -462,7 +463,7 @@ bool Game::Initialize()
 	meshManager.Load("coffre", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.l3d"));
 	pack::PackFile pack;
 	pack.Open(_fileSystem->FindPath(_fileSystem->DataPath() / "AllMeshes.g3d"));
-	auto& meshes = pack.GetMeshes();
+	const auto& meshes = pack.GetMeshes();
 	for (size_t i = 0; const auto& mesh : meshes)
 	{
 		const auto meshId = static_cast<MeshId>(i);
@@ -470,7 +471,7 @@ bool Game::Initialize()
 		++i;
 	}
 
-	auto& textures = pack.GetTextures();
+	const auto& textures = pack.GetTextures();
 	for (auto const& [name, g3dTexture] : textures)
 	{
 		textureManager.Load(g3dTexture.header.id, name, g3dTexture);
@@ -479,7 +480,7 @@ bool Game::Initialize()
 	animationManager.Load("coffre", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.anm"));
 	pack::PackFile animationPack;
 	animationPack.Open(_fileSystem->FindPath(_fileSystem->DataPath() / "AllAnims.anm"));
-	auto& animations = animationPack.GetAnimations();
+	const auto& animations = animationPack.GetAnimations();
 	for (size_t i = 0; i < animations.size(); i++)
 	{
 		animationManager.Load(i, animations[i]);
@@ -598,13 +599,15 @@ bool Game::Run()
 
 	if (_window)
 	{
-		int width, height;
+		int width;
+		int height;
 		_window->GetSize(width, height);
 		_renderer->ConfigureView(graphics::RenderPass::Main, static_cast<uint16_t>(width), static_cast<uint16_t>(height));
 	}
 
 	{
-		uint16_t waterWidth, waterHeight;
+		uint16_t waterWidth;
+		uint16_t waterHeight;
 		_water->GetFrameBuffer().GetSize(waterWidth, waterHeight);
 		_renderer->ConfigureView(graphics::RenderPass::Reflection, waterWidth, waterHeight);
 	}
@@ -732,13 +735,7 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 bool Game::LoadVariables()
 {
 	InfoFile infoFile;
-
-	if (!infoFile.LoadFromFile(_fileSystem->ScriptsPath() / "info.dat", _infoConstants))
-	{
-		return false;
-	}
-
-	return true;
+	return infoFile.LoadFromFile(_fileSystem->ScriptsPath() / "info.dat", _infoConstants);
 }
 
 void Game::SetGamePath(std::filesystem::path gamePath)

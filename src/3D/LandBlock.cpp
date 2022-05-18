@@ -39,7 +39,9 @@ LandVertex::LandVertex(const glm::vec3& position, const glm::vec3& weight, const
 void LandBlock::BuildMesh(LandIsland& island)
 {
 	if (_mesh != nullptr)
+	{
 		_mesh.reset();
+	}
 
 	VertexDecl decl;
 	decl.reserve(7);
@@ -57,9 +59,9 @@ void LandBlock::BuildMesh(LandIsland& island)
 	// water alpha
 	decl.emplace_back(VertexAttrib::Attribute::Color3, static_cast<uint8_t>(1), VertexAttrib::Type::Float, true);
 
-	auto verts = buildVertexList(island);
+	const auto* verts = buildVertexList(island);
 
-	auto vertexBuffer = new VertexBuffer("LandBlock", verts, decl);
+	auto* vertexBuffer = new VertexBuffer("LandBlock", verts, decl);
 	_mesh = std::make_unique<Mesh>(vertexBuffer);
 
 	_dynamicsMeshInterface =
@@ -79,7 +81,7 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 {
 	// reserve 16*16 quads of 2 tris with 3 verts = 1536
 	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(LandVertex) * 1536);
-	auto vertices = (LandVertex*)verticesMem->data;
+	auto* vertices = reinterpret_cast<LandVertex*>(verticesMem->data);
 
 	auto countries = island.GetCountries();
 
@@ -132,9 +134,13 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 			// use a lambda so we're not repeating ourselves
 			auto getAlpha = [](lnd::LNDCell::Properties properties) {
 				if (properties.hasWater || properties.fullWater)
+				{
 					return 0.0f;
+				}
 				if (properties.coastLine)
+				{
 					return 0.5f;
+				}
 				return 1.0f;
 			};
 			auto make_vert = [&getAlpha](const glm::vec3& height, const glm::vec3& weight,

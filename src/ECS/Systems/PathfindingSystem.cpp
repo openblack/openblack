@@ -22,7 +22,7 @@ using namespace openblack::ecs::systems;
 
 PathfindingSystem& PathfindingSystem::instance()
 {
-	static auto instance = new PathfindingSystem();
+	static auto* instance = new PathfindingSystem();
 	return *instance;
 }
 

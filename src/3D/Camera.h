@@ -62,9 +62,9 @@ public:
 
 	[[nodiscard]] std::unique_ptr<Camera> Reflect(const glm::vec4& relectionPlane) const;
 
-	void DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::ivec2 screenSize, glm::vec3& out_worldOrigin,
+	void DeprojectScreenToWorld(glm::ivec2 screenPosition, glm::ivec2 screenSize, glm::vec3& out_worldOrigin,
 	                            glm::vec3& out_worldDirection);
-	bool ProjectWorldToScreen(const glm::vec3 worldPosition, const glm::vec4 viewport, glm::vec3& out_screenPosition) const;
+	bool ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& out_screenPosition) const;
 
 	void Update(std::chrono::microseconds dt);
 	void ProcessSDLEvent(const SDL_Event&);
