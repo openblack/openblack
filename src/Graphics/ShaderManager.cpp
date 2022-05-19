@@ -127,7 +127,9 @@ const ShaderProgram* ShaderManager::GetShader(const std::string& name) const
 {
 	auto i = _shaderPrograms.find(name);
 	if (i != _shaderPrograms.end())
+	{
 		return i->second;
+	}
 
 	// todo: return an empty shader?
 	return nullptr;

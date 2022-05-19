@@ -77,7 +77,7 @@ inline l3d::L3DMeshFlags operator&(l3d::L3DMeshFlags a, l3d::L3DMeshFlags b)
 class L3DMesh
 {
 public:
-	L3DMesh(std::string debugName = "");
+	explicit L3DMesh(std::string debugName = "");
 	virtual ~L3DMesh();
 
 	void Load(const l3d::L3DFile& l3d);

@@ -146,7 +146,7 @@ public:
 		uint32_t numFramesToSimulate {0};
 	};
 
-	Game(Arguments&& args);
+	explicit Game(Arguments&& args);
 	virtual ~Game();
 
 	bool ProcessEvents(const SDL_Event& event);
@@ -192,7 +192,8 @@ public:
 		return *_landIsland;
 	}
 	[[nodiscard]] entt::entity GetHand() const;
-	[[nodiscard]] const LHVM::LHVM& GetLhvm() { return *_lhvm; }
+	[[nodiscard]] const LHVM::LHVM& GetLhvm() const { return *_lhvm; }
+	LHVM::LHVM& GetLhvm() { return *_lhvm; }
 	FileSystem& GetFileSystem() { return *_fileSystem; }
 	ecs::Registry& GetEntityRegistry() { return *_entityRegistry; }
 	[[nodiscard]] ecs::Registry& GetEntityRegistry() const { return *_entityRegistry; }

@@ -33,21 +33,21 @@ enum class ParameterType
 class ScriptCommandParameter
 {
 public:
-	ScriptCommandParameter(ParameterType type = ParameterType::None)
+	explicit ScriptCommandParameter(ParameterType type = ParameterType::None)
 	    : _type(type)
 	{
 	}
-	ScriptCommandParameter(const std::string& value)
+	explicit ScriptCommandParameter(const std::string& value)
 	    : _type(ParameterType::String)
 	{
 		_string = value;
 	}
-	ScriptCommandParameter(float value)
+	explicit ScriptCommandParameter(float value)
 	    : _type(ParameterType::Float)
 	{
 		SetFloat(value);
 	}
-	ScriptCommandParameter(int32_t value)
+	explicit ScriptCommandParameter(int32_t value)
 	    : _type(ParameterType::Number)
 	{
 		SetNumber(value);

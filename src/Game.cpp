@@ -176,9 +176,13 @@ bool Game::ProcessEvents(const SDL_Event& event)
 	static bool middleMouseButton = false;
 
 	if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_LEFT)
+	{
 		leftMouseButton = !leftMouseButton;
+	}
 	if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_MIDDLE)
+	{
 		middleMouseButton = !middleMouseButton;
+	}
 
 	_handGripping = middleMouseButton || leftMouseButton;
 
@@ -664,7 +668,9 @@ bool Game::Run()
 void Game::LoadMap(const std::filesystem::path& path)
 {
 	if (!_fileSystem->Exists(path))
+	{
 		throw std::runtime_error("Could not find script " + path.generic_string());
+	}
 
 	auto data = _fileSystem->ReadAll(path);
 	std::string source(reinterpret_cast<const char*>(data.data()), data.size());
@@ -706,12 +712,16 @@ void Game::LoadMap(const std::filesystem::path& path)
 void Game::LoadLandscape(const std::filesystem::path& path)
 {
 	if (_landIsland)
+	{
 		_landIsland.reset();
+	}
 
 	auto fixedName = Game::instance()->GetFileSystem().FindPath(FileSystem::FixPath(path));
 
 	if (!_fileSystem->Exists(fixedName))
+	{
 		throw std::runtime_error("Could not find landscape " + path.generic_string());
+	}
 
 	_landIsland = std::make_unique<LandIsland>();
 	_landIsland->LoadFromFile(fixedName);

@@ -36,6 +36,7 @@ public:
 	[[nodiscard]] const std::vector<std::string>& GetVariables() const { return _variables; }
 	[[nodiscard]] const std::vector<VMInstruction>& GetInstructions() const { return _instructions; }
 	[[nodiscard]] const std::vector<VMScript>& GetScripts() const { return _scripts; }
+	std::vector<uint8_t>& GetData() { return _data; }
 	[[nodiscard]] const std::vector<uint8_t>& GetData() const { return _data; }
 
 	[[nodiscard]] Version GetVersion() const { return _version; }

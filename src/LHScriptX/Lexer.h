@@ -22,7 +22,7 @@ namespace openblack::lhscriptx
 class LexerException: public std::runtime_error
 {
 public:
-	LexerException(const std::string& msg)
+	explicit LexerException(const std::string& msg)
 	    : std::runtime_error(msg.c_str())
 	{
 	}
@@ -62,9 +62,9 @@ public:
 
 	[[nodiscard]] Type GetType() const { return this->type_; }
 
-	static Token MakeInvalidToken() { return {Type::Invalid}; }
-	static Token MakeEOFToken() { return {Type::EndOfFile}; }
-	static Token MakeEOLToken() { return {Type::EndOfLine}; }
+	static Token MakeInvalidToken() { return Token(Type::Invalid); }
+	static Token MakeEOFToken() { return Token(Type::EndOfFile); }
+	static Token MakeEOLToken() { return Token(Type::EndOfLine); }
 	static Token MakeIdentifierToken(const std::string& value)
 	{
 		Token tok(Type::Identifier);
@@ -113,7 +113,7 @@ public:
 	void Print(FILE* file) const;
 
 private:
-	Token(Type type)
+	explicit Token(Type type)
 	    : type_(type)
 	{
 	}
@@ -131,7 +131,7 @@ private:
 class Lexer
 {
 public:
-	Lexer(std::string source);
+	explicit Lexer(std::string source);
 
 	Token GetToken();
 

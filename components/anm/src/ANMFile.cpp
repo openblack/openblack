@@ -66,8 +66,7 @@ struct membuf: std::streambuf
 		char* p(const_cast<char*>(base));
 		this->setg(p, p, p + size);
 	}
-	std::streampos seekoff(off_type off, std::ios_base::seekdir way,
-	                       [[maybe_unused]] std::ios_base::openmode which = std::ios_base::in | std::ios_base::out) override
+	std::streampos seekoff(off_type off, std::ios_base::seekdir way, [[maybe_unused]] std::ios_base::openmode which) override
 	{
 		if (way == std::ios_base::cur)
 		{
@@ -84,8 +83,7 @@ struct membuf: std::streambuf
 		return gptr() - eback();
 	}
 
-	std::streampos seekpos([[maybe_unused]] pos_type pos,
-	                       [[maybe_unused]] std::ios_base::openmode which = std::ios_base::in | std::ios_base::out) override
+	std::streampos seekpos([[maybe_unused]] pos_type pos, [[maybe_unused]] std::ios_base::openmode which) override
 	{
 		return seekoff(pos - pos_type(off_type(0)), std::ios_base::beg, which);
 	}

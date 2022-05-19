@@ -55,7 +55,9 @@ private:
 		std::unique_ptr<IEventQueue>& p = queues[eventType];
 
 		if (!p)
+		{
 			p.reset(new EventQueue<Event>());
+		}
 
 		return static_cast<EventQueue<Event>*>(p.get());
 	}

@@ -164,8 +164,8 @@ std::unique_ptr<Camera> Camera::Reflect(const glm::vec4& relectionPlane) const
 void Camera::DeprojectScreenToWorld(const glm::ivec2 screenPosition, const glm::ivec2 screenSize, glm::vec3& out_worldOrigin,
                                     glm::vec3& out_worldDirection)
 {
-	const float normalizedX = (float)screenPosition.x / (float)screenSize.x;
-	const float normalizedY = (float)screenPosition.y / (float)screenSize.y;
+	const float normalizedX = static_cast<float>(screenPosition.x) / static_cast<float>(screenSize.x);
+	const float normalizedY = static_cast<float>(screenPosition.y) / static_cast<float>(screenSize.y);
 
 	const float screenSpaceX = (normalizedX - 0.5f) * 2.0f;
 	const float screenSpaceY = ((1.0f - normalizedY) - 0.5f) * 2.0f;
@@ -498,7 +498,7 @@ void Camera::handleMouseInput(const SDL_Event& e)
 	{
 		glm::ivec2 mousePosition;
 		SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
-		float dist = glm::distance((glm::vec2)mousePosition, (glm::vec2)_mouseFirstClick);
+		float dist = glm::distance(glm::vec2(mousePosition), glm::vec2(_mouseFirstClick));
 		// fly to double click location.
 		if (dist < 10.0f)
 		{

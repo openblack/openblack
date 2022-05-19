@@ -57,14 +57,14 @@ public:
 	                              [[maybe_unused]] PHY_ScalarType& type, [[maybe_unused]] int& stride,
 	                              [[maybe_unused]] unsigned char** indexbase, [[maybe_unused]] int& indexstride,
 	                              [[maybe_unused]] int& numfaces, [[maybe_unused]] PHY_ScalarType& indicestype,
-	                              [[maybe_unused]] int subpart = 0) override
+	                              [[maybe_unused]] int subpart) override
 	{
 		return;
 	}
 
 	void getLockedReadOnlyVertexIndexBase(const unsigned char** vertexbase, int& numverts, PHY_ScalarType& type, int& stride,
 	                                      const unsigned char** indexbase, int& indexstride, int& numfaces,
-	                                      PHY_ScalarType& indicestype, [[maybe_unused]] int subpart = 0) const override
+	                                      PHY_ScalarType& indicestype, [[maybe_unused]] int subpart) const override
 	{
 		assert(subpart == 0);
 		*vertexbase = reinterpret_cast<const unsigned char*>(_vertices.data());

@@ -77,7 +77,7 @@ struct BgfxCallback: public bgfx::CallbackI
 		int32_t len = vsnprintf(out, temp.size(), format, argList);
 		if (static_cast<int32_t>(temp.size()) < len)
 		{
-			out = (char*)alloca(len + 1);
+			out = reinterpret_cast<char*>(alloca(len + 1));
 			len = vsnprintf(out, len, format, argList);
 		}
 		if (len > 0)

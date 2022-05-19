@@ -350,9 +350,13 @@ void Gui::UpdateMousePosAndButtons()
 	// Set OS mouse position if requested (rarely used, only when
 	// ImGuiConfigFlags_NavEnableSetMousePos is enabled by user)
 	if (io.WantSetMousePos)
-		SDL_WarpMouseInWindow(_window, (int)io.MousePos.x, (int)io.MousePos.y);
+	{
+		SDL_WarpMouseInWindow(_window, static_cast<int>(io.MousePos.x), static_cast<int>(io.MousePos.y));
+	}
 	else
+	{
 		io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
+	}
 
 	int mx, my;
 	Uint32 mouse_buttons = SDL_GetMouseState(&mx, &my);
@@ -387,8 +391,10 @@ void Gui::UpdateMousePosAndButtons()
 	bool any_mouse_button_down = ImGui::IsAnyMouseDown();
 	SDL_CaptureMouse(any_mouse_button_down ? SDL_TRUE : SDL_FALSE);
 #else
-	if (SDL_GetWindowFlags(_window) & SDL_WINDOW_INPUT_FOCUS)
-		io.MousePos = ImVec2((float)mx, (float)my);
+	if ((SDL_GetWindowFlags(_window) & SDL_WINDOW_INPUT_FOCUS) != 0)
+	{
+		io.MousePos = ImVec2(static_cast<float>(mx), static_cast<float>(my));
+	}
 #endif
 }
 
@@ -485,9 +491,11 @@ void Gui::NewFrameSdl2(SDL_Window* window)
 		int display_w, display_h;
 		SDL_GetWindowSize(window, &w, &h);
 		SDL_GL_GetDrawableSize(window, &display_w, &display_h);
-		io.DisplaySize = ImVec2((float)w, (float)h);
+		io.DisplaySize = ImVec2(static_cast<float>(w), static_cast<float>(h));
 		if (w > 0 && h > 0)
-			io.DisplayFramebufferScale = ImVec2((float)display_w / w, (float)display_h / h);
+		{
+			io.DisplayFramebufferScale = ImVec2(static_cast<float>(display_w) / w, static_cast<float>(display_h) / h);
+		}
 	}
 	else
 	{
@@ -499,7 +507,8 @@ void Gui::NewFrameSdl2(SDL_Window* window)
 	// millisecond resolution)
 	static Uint64 frequency = SDL_GetPerformanceFrequency();
 	Uint64 current_time = SDL_GetPerformanceCounter();
-	io.DeltaTime = _time > 0 ? (float)((double)(current_time - _time) / frequency) : (float)(1.0f / 60.0f);
+	io.DeltaTime = _time > 0 ? static_cast<float>(static_cast<double>(current_time - _time) / frequency)
+	                         : static_cast<float>(1.0f / 60.0f);
 	_time = current_time;
 
 	UpdateMousePosAndButtons();
@@ -563,8 +572,8 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData)
 	for (int32_t ii = 0, num = drawData->CmdListsCount; ii < num; ++ii)
 	{
 		const ImDrawList* drawList = drawData->CmdLists[ii];
-		vertexCount += (uint32_t)drawList->VtxBuffer.size();
-		indexCount += (uint32_t)drawList->IdxBuffer.size();
+		vertexCount += static_cast<uint32_t>(drawList->VtxBuffer.size());
+		indexCount += static_cast<uint32_t>(drawList->IdxBuffer.size());
 	}
 
 	if (!bgfx::isValid(_vertexBuffer) || vertexCount > _vertexCount)

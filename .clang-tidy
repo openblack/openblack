@@ -17,4 +17,9 @@ Checks: >-
   -bugprone-narrowing-conversions,
   -bugprone-lambda-function-name,
   -bugprone-implicit-widening-of-multiplication-result,
+  google-*,
+  -google-build-using-namespace,
+  -google-runtime-references,
+  -google-readability-todo,
+  -google-readability-*,
 # WarningsAsErrors: '*'

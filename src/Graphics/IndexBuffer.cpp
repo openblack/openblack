@@ -44,7 +44,9 @@ IndexBuffer::IndexBuffer(std::string name, const bgfx::Memory* mem, Type type)
 IndexBuffer::~IndexBuffer()
 {
 	if (bgfx::isValid(_handle))
+	{
 		bgfx::destroy(_handle);
+	}
 }
 
 uint32_t IndexBuffer::GetCount() const
