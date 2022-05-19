@@ -29,6 +29,28 @@ Checks: >-
   -readability-convert-member-functions-to-static,
   -readability-named-parameter,
 CheckOptions:
-  - key:   readability-function-cognitive-complexity.Threshold
+  - key: readability-function-cognitive-complexity.Threshold
     value: 35 # TODO: bring that number down to 25
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.GlobalConstantPrefix
+    value: k_
+  - key: readability-identifier-naming.GlobalConstantIgnoredRegexp
+    value: '^Disassembly_[^_]*'
+  - key: readability-identifier-naming.MethodCase
+    value: CamelCase
+  - key: readability-identifier-naming.MethodIgnoredRegexp
+    value: 'Disassembly_[^_]*|load'
+  - key: readability-identifier-naming.VariableCase
+    value: camelBack
+  - key: readability-identifier-naming.VariableIgnoredRegexp
+    value: '^u_[^_]*'
+  - key: readability-identifier-naming.ParameterCase
+    value: camelBack
+  - key: readability-identifier-naming.MemberCase
+    value: camelBack
+  - key: readability-identifier-naming.PrivateMemberPrefix
+    value: _
+  - key: readability-identifier-naming.ProtectedMemberPrefix
+    value: _
 # WarningsAsErrors: '*'

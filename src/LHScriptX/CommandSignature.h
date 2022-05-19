@@ -85,9 +85,11 @@ private:
 
 	union
 	{
+		// NOLINTNEXTLINE(readability-identifier-naming): float is a reserved name
 		float _float;
+		// NOLINTNEXTLINE(readability-identifier-naming)
 		int32_t _number;
-		// NOLINTNEXTLINE(modernize-avoid-c-arrays): array won't work in union
+		// NOLINTNEXTLINE(modernize-avoid-c-arrays, readability-identifier-naming): array won't work in union
 		float _vector[3];
 	} _value;
 	std::string _string;

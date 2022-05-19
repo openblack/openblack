@@ -26,7 +26,7 @@ struct LivingAction
 
 		_Count,
 	};
-	static constexpr std::array<std::string_view, static_cast<size_t>(Index::_Count)> IndexStrings = {
+	static constexpr std::array<std::string_view, static_cast<size_t>(Index::_Count)> k_IndexStrings = {
 	    "Top",
 	    "Final",
 	    "Previous",

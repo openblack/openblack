@@ -18,12 +18,12 @@ using namespace openblack::graphics;
 namespace
 {
 
-constexpr std::array<bgfx::AttribType::Enum, 3> types {
+constexpr std::array<bgfx::AttribType::Enum, 3> k_Types {
     bgfx::AttribType::Uint8,
     bgfx::AttribType::Int16,
     bgfx::AttribType::Float,
 };
-constexpr std::array<bgfx::Attrib::Enum, 18> attributes {
+constexpr std::array<bgfx::Attrib::Enum, 18> k_Attributes {
     bgfx::Attrib::Enum::Position,  bgfx::Attrib::Enum::Normal,    bgfx::Attrib::Enum::Tangent,   bgfx::Attrib::Enum::Bitangent,
     bgfx::Attrib::Enum::Color0,    bgfx::Attrib::Enum::Color1,    bgfx::Attrib::Enum::Color2,    bgfx::Attrib::Enum::Color3,
     bgfx::Attrib::Enum::Indices,   bgfx::Attrib::Enum::Weight,    bgfx::Attrib::Enum::TexCoord0, bgfx::Attrib::Enum::TexCoord1,
@@ -58,9 +58,9 @@ VertexBuffer::VertexBuffer(std::string name, const void* vertices, uint32_t vert
 	for (const auto& d : _vertexDecl)
 	{
 		_vertexDeclOffsets.push_back(_strideBytes);
-		_strideBytes += strides.at(static_cast<size_t>(d._type)).at(d._num - 1);
-		layout.add(attributes.at(static_cast<size_t>(d._attribute)), d._num, types.at(static_cast<size_t>(d._type)),
-		           d._normalized, d._asInt);
+		_strideBytes += strides.at(static_cast<size_t>(d.type)).at(d.num - 1);
+		layout.add(k_Attributes.at(static_cast<size_t>(d.attribute)), d.num, k_Types.at(static_cast<size_t>(d.type)),
+		           d.normalized, d.asInt);
 	}
 	layout.end();
 	assert(layout.m_stride == _strideBytes);
@@ -95,9 +95,9 @@ VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl
 	for (const auto& d : _vertexDecl)
 	{
 		_vertexDeclOffsets.push_back(_strideBytes);
-		_strideBytes += strides.at(static_cast<size_t>(d._type)).at(d._num - 1);
-		layout.add(attributes.at(static_cast<size_t>(d._attribute)), d._num, types.at(static_cast<size_t>(d._type)),
-		           d._normalized, d._asInt);
+		_strideBytes += strides.at(static_cast<size_t>(d.type)).at(d.num - 1);
+		layout.add(k_Attributes.at(static_cast<size_t>(d.attribute)), d.num, k_Types.at(static_cast<size_t>(d.type)),
+		           d.normalized, d.asInt);
 	}
 	layout.end();
 	assert(layout.m_stride == _strideBytes);

@@ -17,7 +17,7 @@ VillagerInfo GVillagerInfo::Find(Tribe tribe, VillagerNumber villagerNumber)
 {
 	bool found = false;
 	auto result = VillagerInfo::None;
-	for (size_t i = 0; const auto& villager : Game::instance()->GetInfoConstants().villager)
+	for (size_t i = 0; const auto& villager : Game::Instance()->GetInfoConstants().villager)
 	{
 		if (villager.tribeType == tribe && villager.villagerNumber == villagerNumber)
 		{
@@ -31,15 +31,15 @@ VillagerInfo GVillagerInfo::Find(Tribe tribe, VillagerNumber villagerNumber)
 		return result;
 	}
 
-	throw std::runtime_error(std::string("Could not find info for ") + TribeStrs.at(static_cast<size_t>(tribe)).data() + " + " +
-	                         VillagerNumberStrs.at(static_cast<size_t>(villagerNumber)).data());
+	throw std::runtime_error(std::string("Could not find info for ") + k_TribeStrs.at(static_cast<size_t>(tribe)).data() +
+	                         " + " + k_VillagerNumberStrs.at(static_cast<size_t>(villagerNumber)).data());
 }
 
 AbodeInfo GAbodeInfo::Find(const std::string& name)
 {
-	for (size_t i = 0; const auto& abode : Game::instance()->GetInfoConstants().abode)
+	for (size_t i = 0; const auto& abode : Game::Instance()->GetInfoConstants().abode)
 	{
-		const auto tribeName = TribeStrs.at(static_cast<uint8_t>(abode.tribeType));
+		const auto tribeName = k_TribeStrs.at(static_cast<uint8_t>(abode.tribeType));
 		const auto abodeName = std::string(abode.debugString.data());
 		if (std::string(tribeName.data()) + "_" + abodeName == name)
 		{
@@ -55,7 +55,7 @@ AbodeInfo GAbodeInfo::Find(Tribe tribe, AbodeNumber abodeNumber)
 {
 	bool found = false;
 	auto result = AbodeInfo::None;
-	for (size_t i = 0; const auto& abode : Game::instance()->GetInfoConstants().abode)
+	for (size_t i = 0; const auto& abode : Game::Instance()->GetInfoConstants().abode)
 	{
 		if ((abode.tribeType == tribe || abode.tribeType == Tribe::NONE) && abode.abodeNumber == abodeNumber)
 		{
@@ -69,13 +69,13 @@ AbodeInfo GAbodeInfo::Find(Tribe tribe, AbodeNumber abodeNumber)
 		return result;
 	}
 
-	throw std::runtime_error(std::string("Could not find info for ") + TribeStrs.at(static_cast<size_t>(tribe)).data() + " + " +
-	                         AbodeNumberStrs.at(static_cast<size_t>(abodeNumber)).data());
+	throw std::runtime_error(std::string("Could not find info for ") + k_TribeStrs.at(static_cast<size_t>(tribe)).data() +
+	                         " + " + k_AbodeNumberStrs.at(static_cast<size_t>(abodeNumber)).data());
 }
 
 FeatureInfo GFeatureInfo::Find(const std::string& name)
 {
-	for (size_t i = 0; const auto& feature : Game::instance()->GetInfoConstants().feature)
+	for (size_t i = 0; const auto& feature : Game::Instance()->GetInfoConstants().feature)
 	{
 		if (name == feature.debugString.data())
 		{
@@ -88,7 +88,7 @@ FeatureInfo GFeatureInfo::Find(const std::string& name)
 
 AnimatedStaticInfo GAnimatedStaticInfo::Find(const std::string& name)
 {
-	for (size_t i = 0; const auto& as : Game::instance()->GetInfoConstants().animatedStatic)
+	for (size_t i = 0; const auto& as : Game::Instance()->GetInfoConstants().animatedStatic)
 	{
 		if (name == as.debugString.data())
 		{

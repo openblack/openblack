@@ -655,7 +655,7 @@ enum class MeshId : uint32_t
 };
 
 // just generated, mainly for debug
-extern std::array<std::string, static_cast<uint32_t>(MeshId::_COUNT)> MeshNames;
+extern const std::array<std::string, static_cast<uint32_t>(MeshId::_COUNT)> k_MeshNames;
 
 enum class AnimId : int
 {

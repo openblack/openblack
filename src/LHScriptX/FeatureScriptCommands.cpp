@@ -42,12 +42,6 @@ using namespace openblack::lhscriptx;
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
 
-// alias parameter types for signature list readability
-const constexpr ParameterType TString = ParameterType::String;
-const constexpr ParameterType TNumber = ParameterType::Number;
-const constexpr ParameterType TFloat = ParameterType::Float;
-const constexpr ParameterType TVector = ParameterType::Vector;
-
 namespace
 {
 template <class C, size_t size>
@@ -62,9 +56,9 @@ std::unordered_map<std::string_view, C> makeLookup(std::array<std::string_view, 
 	return table;
 }
 
-const auto playerLookup = makeLookup<PlayerNames>(PlayerNamesStrs);
-const auto tribeLookup = makeLookup<Tribe>(TribeStrs);
-const auto villagerNumberLookup = makeLookup<VillagerNumber>(VillagerNumberStrs);
+const auto k_PlayerLookup = makeLookup<PlayerNames>(k_PlayerNamesStrs);
+const auto k_TribeLookup = makeLookup<Tribe>(k_TribeStrs);
+const auto k_VillagerNumberLookup = makeLookup<VillagerNumber>(k_VillagerNumberStrs);
 
 std::tuple<Tribe, VillagerNumber> GetVillagerTribeAndNumber(const std::string& villagerTribeWithType)
 {
@@ -74,8 +68,8 @@ std::tuple<Tribe, VillagerNumber> GetVillagerTribeAndNumber(const std::string& v
 
 	try
 	{
-		const auto tribe = tribeLookup.at(tribeStr);
-		const auto role = villagerNumberLookup.at(roleStr);
+		const auto tribe = k_TribeLookup.at(tribeStr);
+		const auto role = k_VillagerNumberLookup.at(roleStr);
 		return std::make_tuple(tribe, role);
 	}
 	catch (...)
@@ -86,7 +80,7 @@ std::tuple<Tribe, VillagerNumber> GetVillagerTribeAndNumber(const std::string& v
 
 } // namespace
 
-const std::array<const ScriptCommandSignature, 106> FeatureScriptCommands::Signatures = {{
+const std::array<const ScriptCommandSignature, 106> FeatureScriptCommands::k_Signatures = {{
     CREATE_COMMAND_BINDING("SET_A_TOWNS_INFLUENCE_MULTIPLIER", SetATownInfluenceMultiplier),
     CREATE_COMMAND_BINDING("CREATE_MIST", CreateMist),
     CREATE_COMMAND_BINDING("CREATE_PATH", CreatePath),
@@ -211,16 +205,16 @@ void FeatureScriptCommands::SetATownInfluenceMultiplier(int32_t townId, float mu
 	                    townId, multiplier);
 }
 
-void FeatureScriptCommands::CreateMist(glm::vec3 position, float param_2, int32_t param_3, float param_4, float param_5)
+void FeatureScriptCommands::CreateMist(glm::vec3 position, float param2, int32_t param3, float param4, float param5)
 {
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {}({}, {}, {}, {}, {}) not implemented.",
-	                    __FILE__, __LINE__, __func__, glm::to_string(position), param_2, param_3, param_4, param_5);
+	                    __FILE__, __LINE__, __func__, glm::to_string(position), param2, param3, param4, param5);
 }
 
-void FeatureScriptCommands::CreatePath(int32_t param_1, int32_t param_2, int32_t param_3, int32_t param_4)
+void FeatureScriptCommands::CreatePath(int32_t param1, int32_t param2, int32_t param3, int32_t param4)
 {
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {}({}, {}, {}, {}) not implemented.", __FILE__,
-	                    __LINE__, __func__, param_1, param_2, param_3, param_4);
+	                    __LINE__, __func__, param1, param2, param3, param4);
 }
 
 void FeatureScriptCommands::CreateTown(int32_t townId, glm::vec3 position, const std::string& playerOwner,
@@ -232,7 +226,7 @@ void FeatureScriptCommands::CreateTown(int32_t townId, glm::vec3 position, const
 	PlayerNames player;
 	try
 	{
-		player = playerLookup.at(playerOwner);
+		player = k_PlayerLookup.at(playerOwner);
 	}
 	catch (...)
 	{
@@ -242,7 +236,7 @@ void FeatureScriptCommands::CreateTown(int32_t townId, glm::vec3 position, const
 	Tribe tribe;
 	try
 	{
-		tribe = tribeLookup.at(tribeType);
+		tribe = k_TribeLookup.at(tribeType);
 	}
 	catch (...)
 	{
@@ -254,7 +248,7 @@ void FeatureScriptCommands::CreateTown(int32_t townId, glm::vec3 position, const
 
 void FeatureScriptCommands::SetTownBelief(int32_t townId, const std::string& playerOwner, float belief)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 	auto& registryContext = registry.Context();
 
 	Town& town = registry.Get<Town>(registryContext.towns.at(townId));
@@ -314,30 +308,30 @@ void FeatureScriptCommands::CreateNewTownSpell(int32_t townId, const std::string
 	                    __func__, townId, spellName);
 }
 
-void FeatureScriptCommands::CreateTownCentreSpellIcon(int32_t param_1, const std::string& param_2)
+void FeatureScriptCommands::CreateTownCentreSpellIcon(int32_t param1, const std::string& param2)
 {
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {}({}, {}) not implemented.", __FILE__, __LINE__,
-	                    __func__, param_1, param_2);
+	                    __func__, param1, param2);
 }
 
-void FeatureScriptCommands::CreateSpellIcon(glm::vec3 position, const std::string& param_2, int32_t param_3, int32_t param_4,
-                                            int32_t param_5)
+void FeatureScriptCommands::CreateSpellIcon(glm::vec3 position, const std::string& param2, int32_t param3, int32_t param4,
+                                            int32_t param5)
 {
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {}({}, {}, {}, {}, {}) not implemented.",
-	                    __FILE__, __LINE__, __func__, glm::to_string(position), param_2, param_3, param_4, param_5);
+	                    __FILE__, __LINE__, __func__, glm::to_string(position), param2, param3, param4, param5);
 }
 
-void FeatureScriptCommands::CreatePlannedSpellIcon(int32_t param_1, glm::vec3 position, const std::string& param_3,
-                                                   int32_t param_4, int32_t param_5, int32_t param_6)
+void FeatureScriptCommands::CreatePlannedSpellIcon(int32_t param1, glm::vec3 position, const std::string& param3,
+                                                   int32_t param4, int32_t param5, int32_t param6)
 {
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {}({}, {}, {}, {}, {}, {}) not implemented.",
-	                    __FILE__, __LINE__, __func__, param_1, glm::to_string(position), param_3, param_4, param_5, param_6);
+	                    __FILE__, __LINE__, __func__, param1, glm::to_string(position), param3, param4, param5, param6);
 }
 
-void FeatureScriptCommands::CreateVillager(glm::vec3 param_1, glm::vec3 param_2, const std::string& param_3)
+void FeatureScriptCommands::CreateVillager(glm::vec3 param1, glm::vec3 param2, const std::string& param3)
 {
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {}({}, {}, {}) not implemented.", __FILE__,
-	                    __LINE__, __func__, glm::to_string(param_1), glm::to_string(param_2), param_3);
+	                    __LINE__, __func__, glm::to_string(param1), glm::to_string(param2), param3);
 }
 
 void FeatureScriptCommands::CreateTownVillager(int32_t townId, glm::vec3 position, const std::string& villagerType, int32_t age)
@@ -346,10 +340,10 @@ void FeatureScriptCommands::CreateTownVillager(int32_t townId, glm::vec3 positio
 	                    __LINE__, __func__, townId, glm::to_string(position), villagerType, age);
 }
 
-void FeatureScriptCommands::CreateSpecialTownVillager(int32_t param_1, glm::vec3 position, int32_t param_3, int32_t param_4)
+void FeatureScriptCommands::CreateSpecialTownVillager(int32_t param1, glm::vec3 position, int32_t param3, int32_t param4)
 {
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {}({}, {}, {}, {}) not implemented.", __FILE__,
-	                    __LINE__, __func__, param_1, glm::to_string(position), param_3, param_4);
+	                    __LINE__, __func__, param1, glm::to_string(position), param3, param4);
 }
 
 void FeatureScriptCommands::CreateVillagerPos(glm::vec3 abodePosition, glm::vec3 position, const std::string& tribeAndNumber,
@@ -525,10 +519,10 @@ void FeatureScriptCommands::HeightChange([[maybe_unused]] glm::vec3 position, in
 	// __func__);
 }
 
-void FeatureScriptCommands::CreateCreature(glm::vec3 position, int32_t param_2, int32_t param_3)
+void FeatureScriptCommands::CreateCreature(glm::vec3 position, int32_t param2, int32_t param3)
 {
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {}({}, {}, {}) not implemented.", __FILE__,
-	                    __LINE__, __func__, glm::to_string(position), param_2, param_3);
+	                    __LINE__, __func__, glm::to_string(position), param2, param3);
 }
 
 void FeatureScriptCommands::CreateCreatureFromFile(const std::string& playerName, int32_t creatureType,
@@ -546,7 +540,7 @@ void FeatureScriptCommands::CreateFlock(int32_t, glm::vec3, glm::vec3, int32_t, 
 
 void FeatureScriptCommands::LoadLandscape(const std::string& path)
 {
-	Game::instance()->LoadLandscape(path);
+	Game::Instance()->LoadLandscape(path);
 }
 
 void FeatureScriptCommands::Version([[maybe_unused]] float version)
@@ -562,7 +556,7 @@ void FeatureScriptCommands::CreateArea([[maybe_unused]] glm::vec3 position, floa
 
 void FeatureScriptCommands::StartCameraPos(glm::vec3 position)
 {
-	auto& camera = Game::instance()->GetCamera();
+	auto& camera = Game::Instance()->GetCamera();
 	const glm::vec3 offset(0.0f, 10.0f, 0.0f);
 	camera.SetPosition(position + offset);
 }
@@ -641,7 +635,7 @@ void FeatureScriptCommands::BrushSize(float, float)
 
 void FeatureScriptCommands::CreateStream(int32_t streamId)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 	auto& registryContext = registry.Context();
 	const auto entity = registry.Create();
 
@@ -651,7 +645,7 @@ void FeatureScriptCommands::CreateStream(int32_t streamId)
 
 void FeatureScriptCommands::CreateStreamPoint(int32_t streamId, glm::vec3 position)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 	auto& registryContext = registry.Context();
 
 	Stream& stream = registry.Get<Stream>(registryContext.streams.at(streamId));
@@ -672,7 +666,7 @@ void FeatureScriptCommands::CreateArena([[maybe_unused]] glm::vec3 position, flo
 
 void FeatureScriptCommands::CreateFootpath(int32_t footpathId)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 	registry.Assign<Footpath>(entity);
 	auto& registryContext = registry.Context();
@@ -681,7 +675,7 @@ void FeatureScriptCommands::CreateFootpath(int32_t footpathId)
 
 void FeatureScriptCommands::CreateFootpathNode(int footpathId, glm::vec3 position)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 	auto& registryContext = registry.Context();
 	auto& footpath = registry.Get<Footpath>(registryContext.footpaths.at(footpathId));
 	footpath.nodes.emplace_back(Footpath::Node {position});
@@ -695,7 +689,7 @@ void FeatureScriptCommands::LinkFootpath(int32_t footpathId)
 	                    __func__, footpathId);
 }
 
-void FeatureScriptCommands::CreateBonfire(glm::vec3 position, float rotation, [[maybe_unused]] float param_3, float scale)
+void FeatureScriptCommands::CreateBonfire(glm::vec3 position, float rotation, [[maybe_unused]] float param3, float scale)
 {
 	CreateMobileStatic(position, MobileStaticInfo::Bonfire, rotation, scale);
 }
@@ -707,7 +701,7 @@ void FeatureScriptCommands::CreateBase([[maybe_unused]] glm::vec3 position, int3
 }
 
 void FeatureScriptCommands::CreateNewFeature(glm::vec3 position, const std::string& type, int32_t rotation, int32_t scale,
-                                             [[maybe_unused]] int32_t param_5)
+                                             [[maybe_unused]] int32_t param5)
 {
 	FeatureArchetype::Create(position, GFeatureInfo::Find(type), rotation * 0.001f, scale * 0.001f);
 }

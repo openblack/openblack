@@ -60,7 +60,7 @@ public:
 		Operator,
 	};
 
-	[[nodiscard]] Type GetType() const { return this->type_; }
+	[[nodiscard]] Type GetType() const { return this->_type; }
 
 	static Token MakeInvalidToken() { return Token(Type::Invalid); }
 	static Token MakeEOFToken() { return Token(Type::EndOfFile); }
@@ -68,64 +68,64 @@ public:
 	static Token MakeIdentifierToken(const std::string& value)
 	{
 		Token tok(Type::Identifier);
-		tok.s_ = value;
+		tok._s = value;
 		return tok;
 	}
 	static Token MakeStringToken(const std::string& value)
 	{
 		Token tok(Type::String);
-		tok.s_ = value;
+		tok._s = value;
 		return tok;
 	}
 	static Token MakeIntegerToken(int value)
 	{
 		Token tok(Type::Integer);
-		tok.u_.integerValue = value;
+		tok._u.integerValue = value;
 		return tok;
 	}
 	static Token MakeFloatToken(float value)
 	{
 		Token tok(Type::Float);
-		tok.u_.floatValue = value;
+		tok._u.floatValue = value;
 		return tok;
 	}
 	static Token MakeOperatorToken(Operator op)
 	{
 		Token tok(Type::Operator);
-		tok.u_.op = op;
+		tok._u.op = op;
 		return tok;
 	}
 
-	[[nodiscard]] bool IsInvalid() const { return this->type_ == Type::Invalid; }
-	[[nodiscard]] bool IsEOF() const { return this->type_ == Type::EndOfFile; }
-	[[nodiscard]] bool IsIdentifier() const { return this->type_ == Type::Identifier; }
-	[[nodiscard]] bool IsString() const { return this->type_ == Type::String; }
-	[[nodiscard]] bool IsOP(Operator op) const { return this->type_ == Type::Operator && this->u_.op == op; }
+	[[nodiscard]] bool IsInvalid() const { return this->_type == Type::Invalid; }
+	[[nodiscard]] bool IsEOF() const { return this->_type == Type::EndOfFile; }
+	[[nodiscard]] bool IsIdentifier() const { return this->_type == Type::Identifier; }
+	[[nodiscard]] bool IsString() const { return this->_type == Type::String; }
+	[[nodiscard]] bool IsOP(Operator op) const { return this->_type == Type::Operator && this->_u.op == op; }
 
 	// todo: assert check the type for each of these?
-	[[nodiscard]] const std::string& StringValue() const { return this->s_; }
-	[[nodiscard]] const std::string& Identifier() const { return this->s_; }
-	[[nodiscard]] const int* IntegerValue() const { return &this->u_.integerValue; }
-	[[nodiscard]] const float* FloatValue() const { return &this->u_.floatValue; }
-	[[nodiscard]] Operator Op() const { return this->u_.op; }
+	[[nodiscard]] const std::string& StringValue() const { return this->_s; }
+	[[nodiscard]] const std::string& Identifier() const { return this->_s; }
+	[[nodiscard]] const int* IntegerValue() const { return &this->_u.integerValue; }
+	[[nodiscard]] const float* FloatValue() const { return &this->_u.floatValue; }
+	[[nodiscard]] Operator Op() const { return this->_u.op; }
 
 	// print the token for debugging
 	void Print(FILE* file) const;
 
 private:
 	explicit Token(Type type)
-	    : type_(type)
+	    : _type(type)
 	{
 	}
 
-	Type type_;
+	Type _type;
 	union
 	{
 		int integerValue;
 		float floatValue;
 		Operator op;
-	} u_;
-	std::string s_;
+	} _u;
+	std::string _s;
 };
 
 class Lexer
@@ -136,19 +136,19 @@ public:
 	Token GetToken();
 
 private:
-	[[nodiscard]] size_t remaining() const noexcept { return static_cast<size_t>(end_ - current_); }
+	[[nodiscard]] size_t Remaining() const noexcept { return static_cast<size_t>(_end - _current); }
 
-	[[nodiscard]] bool hasMore() const noexcept { return current_ != end_; }
+	[[nodiscard]] bool HasMore() const noexcept { return _current != _end; }
 
-	Token gatherIdentifer();
-	Token gatherNumber();
-	Token gatherString();
+	Token GatherIdentifer();
+	Token GatherNumber();
+	Token GatherString();
 
-	std::string source_;
-	std::string::iterator current_;
-	std::string::iterator end_;
+	std::string _source;
+	std::string::iterator _current;
+	std::string::iterator _end;
 
-	int currentLine_ {1};
+	int _currentLine {1};
 };
 
 } // namespace openblack::lhscriptx

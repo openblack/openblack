@@ -21,17 +21,17 @@ int ListDetails(openblack::morph::MorphFile& morph)
 
 	std::printf("file: %s\n", morph.GetFilename().c_str());
 
-	std::printf("base mesh: \"%s\"\n", header.base_mesh_name.data());
-	uint32_t num_variants = 0;
-	for (const auto& meshes : header.variant_mesh_names)
+	std::printf("base mesh: \"%s\"\n", header.baseMeshName.data());
+	uint32_t numVariants = 0;
+	for (const auto& meshes : header.variantMeshNames)
 	{
 		if (std::strlen(meshes.data()) > 0)
 		{
-			++num_variants;
+			++numVariants;
 		}
 	}
-	std::printf("%u variant meshes:", num_variants);
-	for (const auto& meshes : header.variant_mesh_names)
+	std::printf("%u variant meshes:", numVariants);
+	for (const auto& meshes : header.variantMeshNames)
 	{
 		if (std::strlen(meshes.data()) > 0)
 		{
@@ -40,34 +40,34 @@ int ListDetails(openblack::morph::MorphFile& morph)
 	}
 	std::printf("\n");
 
-	size_t num_animation_sets = 0;
+	size_t numAnimationSets = 0;
 	const auto& specs = morph.GetAnimationSpecs();
-	for (const auto& anim_set : specs.animation_sets)
+	for (const auto& animSet : specs.animationSets)
 	{
-		num_animation_sets += anim_set.animations.size();
+		numAnimationSets += animSet.animations.size();
 	}
-	std::printf("%zu animations from %zu categories:\n", num_animation_sets, specs.animation_sets.size());
-	std::printf("%u variant animation sets\n", std::min(4u, num_variants));
+	std::printf("%zu animations from %zu categories:\n", numAnimationSets, specs.animationSets.size());
+	std::printf("%u variant animation sets\n", std::min(4u, numVariants));
 
 	std::printf("%zu base animations\n", morph.GetBaseAnimationSet().size());
-	for (uint8_t i = 0; i < std::min(4u, num_variants); ++i)
+	for (uint8_t i = 0; i < std::min(4u, numVariants); ++i)
 	{
-		const auto& animation_set = morph.GetVariantAnimationSet(i);
-		std::printf("%zu animations for \"%s\"\n", animation_set.size(), header.variant_mesh_names.at(i).data());
+		const auto& animationSet = morph.GetVariantAnimationSet(i);
+		std::printf("%zu animations for \"%s\"\n", animationSet.size(), header.variantMeshNames.at(i).data());
 	}
 
 	std::printf("%zu hair groups\n", morph.GetHairGroups().size());
 
-	const auto& extra_data = morph.GetExtraData();
+	const auto& extraData = morph.GetExtraData();
 
-	size_t extra_data_total = 0;
-	for (const auto& data : extra_data)
+	size_t extraDataTotal = 0;
+	for (const auto& data : extraData)
 	{
-		extra_data_total += data.size();
+		extraDataTotal += data.size();
 	}
 
-	std::printf("%zu total extra data segments\n", extra_data_total);
-	std::printf("%zu extra data groups\n", extra_data.size());
+	std::printf("%zu total extra data segments\n", extraDataTotal);
+	std::printf("%zu extra data groups\n", extraData.size());
 
 	return EXIT_SUCCESS;
 }
@@ -78,13 +78,13 @@ int PrintHeader(openblack::morph::MorphFile& morph)
 
 	std::printf("file: %s\n", morph.GetFilename().c_str());
 
-	std::printf("unknown_0x0: 0x%08X\n", header.unknown_0x0);
-	std::printf("spec_file_version: %u\n", header.spec_file_version);
-	std::printf("binary_version: %u\n", header.binary_version);
-	std::printf("base_mesh_name: %s\n", header.base_mesh_name.data());
+	std::printf("unknown0x0: 0x%08X\n", header.unknown0x0);
+	std::printf("specFileVersion: %u\n", header.specFileVersion);
+	std::printf("binaryVersion: %u\n", header.binaryVersion);
+	std::printf("baseMeshName: %s\n", header.baseMeshName.data());
 	for (uint8_t i = 0; i < 6; ++i)
 	{
-		std::printf("variant_mesh_names[%u]: %s\n", i, header.variant_mesh_names.at(i).data());
+		std::printf("variantMeshNames[%u]: %s\n", i, header.variantMeshNames.at(i).data());
 	}
 
 	return EXIT_SUCCESS;
@@ -100,19 +100,19 @@ int PrintSpecs(openblack::morph::MorphFile& morph)
 	std::printf("specs version: %u\n", specs.version);
 
 	size_t j = 0;
-	for (const auto& anim_set : specs.animation_sets)
+	for (const auto& animSet : specs.animationSets)
 	{
-		j += anim_set.animations.size();
+		j += animSet.animations.size();
 	}
-	std::printf("%zu animations from %zu categories:\n", j, specs.animation_sets.size());
+	std::printf("%zu animations from %zu categories:\n", j, specs.animationSets.size());
 
 	uint32_t i = 0;
 	j = 0;
-	for (const auto& anim_set : specs.animation_sets)
+	for (const auto& animSet : specs.animationSets)
 	{
-		std::printf("[%u] category \"%s\" with %zu animations:\n", i, anim_set.name.c_str(), anim_set.animations.size());
+		std::printf("[%u] category \"%s\" with %zu animations:\n", i, animSet.name.c_str(), animSet.animations.size());
 		i++;
-		for (const auto& desc : anim_set.animations)
+		for (const auto& desc : animSet.animations)
 		{
 			std::printf("\t[%3zu] type: %c, \"%s\":\n", j, static_cast<char>(desc.type), desc.name.c_str());
 			j++;
@@ -125,27 +125,27 @@ int PrintSpecs(openblack::morph::MorphFile& morph)
 void PrintAnimation(const openblack::morph::Animation& animation)
 {
 	std::printf("\tHeader:\n");
-	std::printf("\t\tunknown_0x0: 0x%08X\n", animation.header.unknown_0x0);
-	std::printf("\t\tunknown_0x4: 0x%08X\n", animation.header.unknown_0x4);
-	std::printf("\t\tunknown_0x8: %f\n", animation.header.unknown_0x8);
-	std::printf("\t\tunknown_0xc: %f\n", animation.header.unknown_0xc);
-	std::printf("\t\tunknown_0x10: %f\n", animation.header.unknown_0x10);
-	std::printf("\t\tunknown_0x14: %f\n", animation.header.unknown_0x14);
-	std::printf("\t\tunknown_0x18: %f\n", animation.header.unknown_0x18);
-	std::printf("\t\tframe_count: %u\n", animation.header.frame_count);
-	std::printf("\t\tmesh_bone_count: %u\n", animation.header.mesh_bone_count);
-	std::printf("\t\trotated_joint_count: %u\n", animation.header.rotated_joint_count);
-	std::printf("\t\ttranslated_joint_count: %u\n", animation.header.translated_joint_count);
+	std::printf("\t\tunknown0x0: 0x%08X\n", animation.header.unknown0x0);
+	std::printf("\t\tunknown0x4: 0x%08X\n", animation.header.unknown0x4);
+	std::printf("\t\tunknown0x8: %f\n", animation.header.unknown0x8);
+	std::printf("\t\tunknown0xc: %f\n", animation.header.unknown0xc);
+	std::printf("\t\tunknown0x10: %f\n", animation.header.unknown0x10);
+	std::printf("\t\tunknown0x14: %f\n", animation.header.unknown0x14);
+	std::printf("\t\tunknown0x18: %f\n", animation.header.unknown0x18);
+	std::printf("\t\tframeCount: %u\n", animation.header.frameCount);
+	std::printf("\t\tmeshBoneCount: %u\n", animation.header.meshBoneCount);
+	std::printf("\t\trotatedJointCount: %u\n", animation.header.rotatedJointCount);
+	std::printf("\t\ttranslatedJointCount: %u\n", animation.header.translatedJointCount);
 
-	std::printf("\trotated_joint_indices: [");
-	for (uint32_t index : animation.rotated_joint_indices)
+	std::printf("\trotatedJointIndices: [");
+	for (uint32_t index : animation.rotatedJointIndices)
 	{
 		std::printf("%u, ", index);
 	}
 	std::printf("]\n");
 
-	std::printf("\ttranslated_joint_indices: [");
-	for (uint32_t index : animation.translated_joint_indices)
+	std::printf("\ttranslatedJointIndices: [");
+	for (uint32_t index : animation.translatedJointIndices)
 	{
 		std::printf("%u, ", index);
 	}
@@ -157,8 +157,8 @@ void PrintAnimation(const openblack::morph::Animation& animation)
 	for (const auto& frame : animation.keyframes)
 	{
 		std::printf("\t\t[%2u]\n", i);
-		std::printf("\t\teuler_angles: [");
-		for (auto angles : frame.euler_angles)
+		std::printf("\t\teulerAngles: [");
+		for (auto angles : frame.eulerAngles)
 		{
 			std::printf("(%f, %f, %f), ", angles[0], angles[1], angles[2]);
 		}
@@ -175,13 +175,13 @@ void PrintAnimation(const openblack::morph::Animation& animation)
 
 int ShowBaseAnimationSet(openblack::morph::MorphFile& morph)
 {
-	const auto& animation_set = morph.GetBaseAnimationSet();
+	const auto& animationSet = morph.GetBaseAnimationSet();
 
 	std::printf("file: %s\n", morph.GetFilename().c_str());
-	std::printf("%zu base animations\n", animation_set.size());
+	std::printf("%zu base animations\n", animationSet.size());
 
 	uint32_t i = 0;
-	for (const auto& animation : animation_set)
+	for (const auto& animation : animationSet)
 	{
 		std::printf("\t[%2u]\n", i);
 		PrintAnimation(animation);
@@ -197,22 +197,22 @@ int ShowVariantAnimationSets(openblack::morph::MorphFile& morph)
 
 	std::printf("file: %s\n", morph.GetFilename().c_str());
 
-	uint8_t num_variants = 0;
+	uint8_t numVariants = 0;
 	for (uint8_t i = 0; i < 4; ++i)
 	{
-		if (std::strlen(header.variant_mesh_names.at(i).data()) > 0 && !morph.GetVariantAnimationSet(i).empty())
+		if (std::strlen(header.variantMeshNames.at(i).data()) > 0 && !morph.GetVariantAnimationSet(i).empty())
 		{
-			++num_variants;
+			++numVariants;
 		}
 	}
-	std::printf("%u animation set variants\n", num_variants);
+	std::printf("%u animation set variants\n", numVariants);
 
-	for (uint8_t i = 0; i < num_variants; ++i)
+	for (uint8_t i = 0; i < numVariants; ++i)
 	{
-		const auto& animation_set = morph.GetVariantAnimationSet(i);
-		std::printf("%zu animations for \"%s\"\n", animation_set.size(), header.variant_mesh_names.at(i).data());
+		const auto& animationSet = morph.GetVariantAnimationSet(i);
+		std::printf("%zu animations for \"%s\"\n", animationSet.size(), header.variantMeshNames.at(i).data());
 		uint32_t j = 0;
-		for (const auto& animation : animation_set)
+		for (const auto& animation : animationSet)
 		{
 			std::printf("\t[%2u]\n", j);
 			PrintAnimation(animation);
@@ -224,47 +224,47 @@ int ShowVariantAnimationSets(openblack::morph::MorphFile& morph)
 
 int ShowHairGroups(openblack::morph::MorphFile& morph)
 {
-	const auto& hair_groups = morph.GetHairGroups();
+	const auto& hairGroups = morph.GetHairGroups();
 
 	std::printf("file: %s\n", morph.GetFilename().c_str());
-	std::printf("%zu hair groups\n", hair_groups.size());
+	std::printf("%zu hair groups\n", hairGroups.size());
 
 	uint32_t i = 0;
-	for (const auto& group : hair_groups)
+	for (const auto& group : hairGroups)
 	{
 		std::printf("[%2u]\n", i);
 		std::printf("\tHeader:\n");
-		std::printf("\t\tunknown_0x0: 0x%08X\n", group.header.unknown_0x0);
-		std::printf("\t\thair_count: %d\n", group.header.hair_count);
-		std::printf("\t\tunknown_0x8: 0x%08X\n", group.header.unknown_0x8);
-		std::printf("\t\tunknown_0xc: 0x%08X\n", group.header.unknown_0xc);
-		for (size_t j = 0; j < group.header.unknown_0x10.size(); ++j)
+		std::printf("\t\tunknown0x0: 0x%08X\n", group.header.unknown0x0);
+		std::printf("\t\thairCount: %d\n", group.header.hairCount);
+		std::printf("\t\tunknown0x8: 0x%08X\n", group.header.unknown0x8);
+		std::printf("\t\tunknown0xc: 0x%08X\n", group.header.unknown0xc);
+		for (size_t j = 0; j < group.header.unknown0x10.size(); ++j)
 		{
-			std::printf("\t\tunknown_0x10[%2zu]:\n", j);
-			std::printf("\t\t\tunknown_0x0: 0x%08X\n", group.header.unknown_0x10.at(j).unknown_0x0);
-			std::printf("\t\t\tunknown_0x4: 0x%08X\n", group.header.unknown_0x10.at(j).unknown_0x4);
-			std::printf("\t\t\tunknown_0x8: 0x%08X\n", group.header.unknown_0x10.at(j).unknown_0x8);
-			std::printf("\t\t\tunknown_0xc: %f\n", group.header.unknown_0x10.at(j).unknown_0xc);
-			std::printf("\t\t\tunknown_0x10: %f\n", group.header.unknown_0x10.at(j).unknown_0x10);
-			std::printf("\t\t\tunknown_0x14: %f\n", group.header.unknown_0x10.at(j).unknown_0x14);
-			std::printf("\t\t\tunknown_0x18: %f\n", group.header.unknown_0x10.at(j).unknown_0x18);
+			std::printf("\t\tunknown0x10[%2zu]:\n", j);
+			std::printf("\t\t\tunknown0x0: 0x%08X\n", group.header.unknown0x10.at(j).unknown0x0);
+			std::printf("\t\t\tunknown0x4: 0x%08X\n", group.header.unknown0x10.at(j).unknown0x4);
+			std::printf("\t\t\tunknown0x8: 0x%08X\n", group.header.unknown0x10.at(j).unknown0x8);
+			std::printf("\t\t\tunknown0xc: %f\n", group.header.unknown0x10.at(j).unknown0xc);
+			std::printf("\t\t\tunknown0x10: %f\n", group.header.unknown0x10.at(j).unknown0x10);
+			std::printf("\t\t\tunknown0x14: %f\n", group.header.unknown0x10.at(j).unknown0x14);
+			std::printf("\t\t\tunknown0x18: %f\n", group.header.unknown0x10.at(j).unknown0x18);
 		}
 		std::printf("\tHairs:\n");
 		for (size_t j = 0; j < group.hairs.size(); ++j)
 		{
 			std::printf("\t[%2zu]\n", j);
-			std::printf("\t\tunknown_0x0: 0x%08X\n", group.hairs[j].unknown_0x0);
+			std::printf("\t\tunknown0x0: 0x%08X\n", group.hairs[j].unknown0x0);
 
 			std::printf("\t\tintersection:\n");
-			std::printf("\t\t\tunknown_0x0: 0x%08X\n", group.hairs[j].intersection.unknown_0x0);
-			std::printf("\t\t\tunknown_0x4: 0x%08X\n", group.hairs[j].intersection.unknown_0x4);
-			std::printf("\t\t\tunknown_0x8: 0x%08X\n", group.hairs[j].intersection.unknown_0x8);
-			std::printf("\t\t\tunknown_0xc: 0x%08X\n", group.hairs[j].intersection.unknown_0xc);
-			std::printf("\t\t\tunknown_0x10: 0x%08X\n", group.hairs[j].intersection.unknown_0x10);
-			std::printf("\t\t\tunknown_0x14: 0x%08X\n", group.hairs[j].intersection.unknown_0x14);
-			std::printf("\t\t\tunknown_0x18: 0x%08X\n", group.hairs[j].intersection.unknown_0x18);
-			std::printf("\t\t\tunknown_0x1c: %f\n", group.hairs[j].intersection.unknown_0x1c);
-			std::printf("\t\t\tunknown_0x20: %f\n", group.hairs[j].intersection.unknown_0x20);
+			std::printf("\t\t\tunknown0x0: 0x%08X\n", group.hairs[j].intersection.unknown0x0);
+			std::printf("\t\t\tunknown0x4: 0x%08X\n", group.hairs[j].intersection.unknown0x4);
+			std::printf("\t\t\tunknown0x8: 0x%08X\n", group.hairs[j].intersection.unknown0x8);
+			std::printf("\t\t\tunknown0xc: 0x%08X\n", group.hairs[j].intersection.unknown0xc);
+			std::printf("\t\t\tunknown0x10: 0x%08X\n", group.hairs[j].intersection.unknown0x10);
+			std::printf("\t\t\tunknown0x14: 0x%08X\n", group.hairs[j].intersection.unknown0x14);
+			std::printf("\t\t\tunknown0x18: 0x%08X\n", group.hairs[j].intersection.unknown0x18);
+			std::printf("\t\t\tunknown0x1c: %f\n", group.hairs[j].intersection.unknown0x1c);
+			std::printf("\t\t\tunknown0x20: %f\n", group.hairs[j].intersection.unknown0x20);
 
 			std::printf("\t\txs: [%f, %f, %f]\n", group.hairs[j].xs[0], group.hairs[j].xs[1], group.hairs[j].xs[2]);
 			std::printf("\t\tys: [%f, %f, %f]\n", group.hairs[j].ys[0], group.hairs[j].ys[1], group.hairs[j].ys[2]);
@@ -278,44 +278,44 @@ int ShowHairGroups(openblack::morph::MorphFile& morph)
 
 int ShowExtraData(openblack::morph::MorphFile& morph)
 {
-	const auto& extra_data = morph.GetExtraData();
+	const auto& extraData = morph.GetExtraData();
 	const auto& specs = morph.GetAnimationSpecs();
 
-	size_t extra_data_total = 0;
-	for (const auto& data : extra_data)
+	size_t extraDataTotal = 0;
+	for (const auto& data : extraData)
 	{
-		extra_data_total += data.size();
+		extraDataTotal += data.size();
 	}
 
 	std::printf("file: %s\n", morph.GetFilename().c_str());
-	std::printf("%zu total extra data segments\n", extra_data_total);
-	std::printf("%zu extra data groups (one per animation)\n", extra_data.size());
+	std::printf("%zu total extra data segments\n", extraDataTotal);
+	std::printf("%zu extra data groups (one per animation)\n", extraData.size());
 
 	uint32_t i = 0;
-	uint32_t category_index = 0;
-	size_t animation_index = 0;
-	for (const auto& list : extra_data)
+	uint32_t categoryIndex = 0;
+	size_t animationIndex = 0;
+	for (const auto& list : extraData)
 	{
 		uint32_t j = 0;
-		std::printf("[%2u]: %s (%s)\n", i, specs.animation_sets[category_index].animations[animation_index].name.c_str(),
-		            specs.animation_sets[category_index].name.c_str());
+		std::printf("[%2u]: %s (%s)\n", i, specs.animationSets[categoryIndex].animations[animationIndex].name.c_str(),
+		            specs.animationSets[categoryIndex].name.c_str());
 
 		std::printf("\t%zu segments\n", list.size());
 		for (const auto& data : list)
 		{
 			std::printf("\t[%2u]\n", j);
-			std::printf("\t\tunknown_0x0: 0x%08X\n", data.unknown_0x0);
-			std::printf("\t\tunknown_0x4: 0x%08X\n", data.unknown_0x4);
-			std::printf("\t\tunknown_0x8: 0x%08X\n", data.unknown_0x8);
-			std::printf("\t\tunknown_0xc: 0x%08X\n", data.unknown_0xc);
+			std::printf("\t\tunknown0x0: 0x%08X\n", data.unknown0x0);
+			std::printf("\t\tunknown0x4: 0x%08X\n", data.unknown0x4);
+			std::printf("\t\tunknown0x8: 0x%08X\n", data.unknown0x8);
+			std::printf("\t\tunknown0xc: 0x%08X\n", data.unknown0xc);
 			++j;
 		}
 		++i;
-		++animation_index;
-		if (animation_index >= specs.animation_sets[category_index].animations.size())
+		++animationIndex;
+		if (animationIndex >= specs.animationSets[categoryIndex].animations.size())
 		{
-			animation_index = 0;
-			category_index++;
+			animationIndex = 0;
+			categoryIndex++;
 		}
 	}
 
@@ -335,14 +335,14 @@ struct Arguments
 		ShowExtraData,
 	};
 	Mode mode;
-	std::filesystem::path spec_directory;
+	std::filesystem::path specDirectory;
 	struct Read
 	{
 		std::vector<std::filesystem::path> filenames;
 	} read;
 };
 
-bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noexcept
+bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexcept
 {
 	cxxopts::Options options("morphtool", "Inspect and read data files from LionHead CBN and HBN files internal segment (use "
 	                                      "\"stdin\" if piping from packtool).");
@@ -372,7 +372,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 	catch (const std::exception& e)
 	{
 		std::cerr << e.what() << '\n';
-		return_code = EXIT_FAILURE;
+		returnCode = EXIT_FAILURE;
 		return false;
 	}
 
@@ -382,23 +382,23 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 		if (result["help"].as<bool>())
 		{
 			std::cout << options.help() << std::endl;
-			return_code = EXIT_SUCCESS;
+			returnCode = EXIT_SUCCESS;
 			return false;
 		}
 		if (result["subcommand"].count() == 0)
 		{
 			std::cerr << options.help() << std::endl;
-			return_code = EXIT_FAILURE;
+			returnCode = EXIT_FAILURE;
 			return false;
 		}
 		if (result["spec-files-directory"].count() == 0)
 		{
 			std::cerr << options.help() << std::endl;
-			return_code = EXIT_FAILURE;
+			returnCode = EXIT_FAILURE;
 			return false;
 		}
 
-		args.spec_directory = result["spec-files-directory"].as<std::filesystem::path>();
+		args.specDirectory = result["spec-files-directory"].as<std::filesystem::path>();
 		if (result["subcommand"].as<std::string>() == "read")
 		{
 			if (result["list-details"].count() > 0)
@@ -451,17 +451,17 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 	}
 
 	std::cerr << options.help() << std::endl;
-	return_code = EXIT_FAILURE;
+	returnCode = EXIT_FAILURE;
 	return false;
 }
 
 int main(int argc, char* argv[]) noexcept
 {
 	Arguments args;
-	int return_code = EXIT_SUCCESS;
-	if (!parseOptions(argc, argv, args, return_code))
+	int returnCode = EXIT_SUCCESS;
+	if (!parseOptions(argc, argv, args, returnCode))
 	{
-		return return_code;
+		return returnCode;
 	}
 
 	for (auto& filename : args.read.filenames)
@@ -483,47 +483,47 @@ int main(int argc, char* argv[]) noexcept
 					}
 				}
 				printf("got %zu bytes from stdin\n", buffer.size());
-				morph.Open(buffer, args.spec_directory);
+				morph.Open(buffer, args.specDirectory);
 			}
 			else
 			{
-				morph.Open(filename, args.spec_directory);
+				morph.Open(filename, args.specDirectory);
 			}
 
 			switch (args.mode)
 			{
 			case Arguments::Mode::List:
-				return_code |= ListDetails(morph);
+				returnCode |= ListDetails(morph);
 				break;
 			case Arguments::Mode::Header:
-				return_code |= PrintHeader(morph);
+				returnCode |= PrintHeader(morph);
 				break;
 			case Arguments::Mode::ListAnimationSet:
-				return_code |= PrintSpecs(morph);
+				returnCode |= PrintSpecs(morph);
 				break;
 			case Arguments::Mode::ShowBaseAnimationSet:
-				return_code |= ShowBaseAnimationSet(morph);
+				returnCode |= ShowBaseAnimationSet(morph);
 				break;
 			case Arguments::Mode::ShowVariantAnimationSets:
-				return_code |= ShowVariantAnimationSets(morph);
+				returnCode |= ShowVariantAnimationSets(morph);
 				break;
 			case Arguments::Mode::ShowHairGroups:
-				return_code |= ShowHairGroups(morph);
+				returnCode |= ShowHairGroups(morph);
 				break;
 			case Arguments::Mode::ShowExtraData:
-				return_code |= ShowExtraData(morph);
+				returnCode |= ShowExtraData(morph);
 				break;
 			default:
-				return_code = EXIT_FAILURE;
+				returnCode = EXIT_FAILURE;
 				break;
 			}
 		}
 		catch (const std::exception& err)
 		{
 			std::cerr << err.what() << std::endl;
-			return_code |= EXIT_FAILURE;
+			returnCode |= EXIT_FAILURE;
 		}
 	}
 
-	return return_code;
+	return returnCode;
 }

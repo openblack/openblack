@@ -44,17 +44,17 @@ DynamicsSystem::DynamicsSystem()
 
 void DynamicsSystem::Reset()
 {
-	std::vector<btRigidBody*> to_remove;
+	std::vector<btRigidBody*> toRemove;
 	for (int i = 0; i < _world->getNumCollisionObjects(); ++i)
 	{
 		auto* obj = _world->getCollisionObjectArray()[i];
 		btRigidBody* body = btRigidBody::upcast(obj);
 		if (body != nullptr)
 		{
-			to_remove.push_back(body);
+			toRemove.push_back(body);
 		}
 	}
-	for (auto& obj : to_remove)
+	for (auto& obj : toRemove)
 	{
 		_world->removeRigidBody(obj);
 	}
@@ -75,7 +75,7 @@ void DynamicsSystem::AddRigidBody(btRigidBody* object)
 
 void DynamicsSystem::RegisterRigidBodies()
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 	registry.Each<RigidBody>([this](RigidBody& body) {
 		body.handle.setUserIndex(static_cast<int>(ecs::systems::RigidBodyType::Entity));
 		body.handle.setUserIndex2(0); // TODO
@@ -99,7 +99,7 @@ void DynamicsSystem::RegisterIslandRigidBodies(LandIsland& island)
 
 void DynamicsSystem::UpdatePhysicsTransforms()
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 	registry.Each<Transform, const RigidBody>([&registry](Transform& transform, const RigidBody& body) {
 		btTransform trans;
 		body.motionState->getWorldTransform(trans);
@@ -118,10 +118,10 @@ void DynamicsSystem::UpdatePhysicsTransforms()
 }
 
 std::optional<std::pair<Transform, RigidBodyDetails>>
-DynamicsSystem::RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float t_max) const
+DynamicsSystem::RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float tMax) const
 {
 	auto from = btVector3(origin.x, origin.y, origin.z);
-	auto to = from + t_max * btVector3(direction.x, direction.y, direction.z);
+	auto to = from + tMax * btVector3(direction.x, direction.y, direction.z);
 
 	btCollisionWorld::ClosestRayResultCallback callback(from, to);
 

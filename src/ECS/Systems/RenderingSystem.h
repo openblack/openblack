@@ -72,7 +72,7 @@ struct RenderContext
 class RenderingSystem
 {
 public:
-	static RenderingSystem& instance();
+	static RenderingSystem& Instance();
 
 	void SetDirty();
 	void PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawStreams);

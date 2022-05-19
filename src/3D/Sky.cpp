@@ -17,7 +17,6 @@
 #include "Common/Bitmap16B.h"
 #include "Common/FileSystem.h"
 #include "Common/StringUtils.h"
-#include "Game.h"
 
 using namespace openblack::graphics;
 
@@ -29,17 +28,16 @@ Sky::Sky()
 	SetDayNightTimes(4.5, 7.0, 7.5, 8.25);
 
 	// load in the mesh
-	auto& filesystem = Game::instance()->GetFileSystem();
 	_model = std::make_unique<L3DMesh>("Sky");
 	_model->LoadFromFile(FileSystem::WeatherSystemPath() / "sky.l3d");
 
-	for (uint32_t idx = 0; const auto& alignment : _alignments)
+	for (uint32_t idx = 0; const auto& alignment : k_Alignments)
 	{
-		for (const auto& timeView : _times)
+		for (const auto& timeView : k_Times)
 		{
 			auto time = std::string(timeView);
 			auto prefix = std::string("sky");
-			if (idx >= _times.size() && idx < 2 * _times.size())
+			if (idx >= k_Times.size() && idx < 2 * k_Times.size())
 			{
 				time = string_utils::Capitalise(time);
 				prefix = string_utils::Capitalise(prefix);
@@ -49,7 +47,7 @@ Sky::Sky()
 			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading sky texture: {}", path.generic_string());
 
 			Bitmap16B* bitmap = Bitmap16B::LoadFromFile(path);
-			memcpy(&_bitmaps.at(idx * _textureResolution[0] * _textureResolution[1]), bitmap->Data(), bitmap->Size());
+			memcpy(&_bitmaps.at(idx * k_TextureResolution[0] * k_TextureResolution[1]), bitmap->Data(), bitmap->Size());
 			delete bitmap;
 			++idx;
 		}
@@ -58,8 +56,8 @@ Sky::Sky()
 	_texture = std::make_unique<Texture2D>("Sky");
 	_timeOfDay = 1.0f;
 
-	_texture->Create(_textureResolution[0], _textureResolution[1], _textureResolution[2], Format::RGB5A1, Wrapping::ClampEdge,
-	                 _bitmaps.data(), static_cast<uint32_t>(_bitmaps.size() * sizeof(_bitmaps[0])));
+	_texture->Create(k_TextureResolution[0], k_TextureResolution[1], k_TextureResolution[2], Format::RGB5A1,
+	                 Wrapping::ClampEdge, _bitmaps.data(), static_cast<uint32_t>(_bitmaps.size() * sizeof(_bitmaps[0])));
 }
 
 void Sky::SetDayNightTimes(float nightFull, float duskStart, float duskEnd, float dayFull)

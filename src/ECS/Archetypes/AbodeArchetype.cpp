@@ -31,14 +31,14 @@ using namespace openblack::ecs::systems;
 entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, AbodeInfo type, float yAngleRadians,
                                     float scale, uint32_t foodAmount, uint32_t woodAmount)
 {
-	auto* game = Game::instance();
+	auto* game = Game::Instance();
 	auto& registry = game->GetEntityRegistry();
 
 	// If there is no town, assign to closest
 	if (registry.Context().towns.find(townId) == registry.Context().towns.end())
 	{
 		SPDLOG_LOGGER_WARN(spdlog::get("scripting"), "Function {} has invalid Town ({}).", __func__, townId);
-		const auto town = TownSystem::instance().FindClosestTown(position);
+		const auto town = TownSystem::Instance().FindClosestTown(position);
 		if (town != entt::null)
 		{
 			townId = registry.Get<Town>(town).id;

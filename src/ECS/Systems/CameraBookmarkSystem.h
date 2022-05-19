@@ -21,7 +21,7 @@ namespace openblack::ecs::systems
 class CameraBookmarkSystem
 {
 public:
-	static CameraBookmarkSystem& instance();
+	static CameraBookmarkSystem& Instance();
 	bool Initialize();
 	void Update(const std::chrono::microseconds& dt) const;
 

@@ -22,7 +22,7 @@ using namespace openblack::ecs::components;
 
 std::array<entt::entity, 8> CameraBookmarkArchetype::CreateAll()
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 	auto texture = Locator::resources::ref().GetTextures().Handle(entt::hashed_string("raw/misc0a"));
 	if (!texture)
 	{

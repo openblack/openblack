@@ -27,21 +27,21 @@ void Script::Load(const std::string& source)
 {
 	Lexer lexer(source);
 
-	const Token* token = this->peekToken(lexer);
+	const Token* token = this->PeekToken(lexer);
 	while (!token->IsEOF())
 	{
-		token = this->peekToken(lexer);
+		token = this->PeekToken(lexer);
 
 		if (token->IsIdentifier())
 		{
 			const std::string identifier = token->Identifier();
 
-			if (!isCommand(identifier))
+			if (!IsCommand(identifier))
 			{
 				throw std::runtime_error("unknown command: " + identifier);
 			}
 
-			token = this->advanceToken(lexer);
+			token = this->AdvanceToken(lexer);
 			if (!token->IsOP(Operator::LeftParentheses))
 			{
 				throw std::runtime_error("expected ( after identifier " + identifier);
@@ -50,22 +50,22 @@ void Script::Load(const std::string& source)
 			std::vector<Token> args;
 
 			// if it's an immediate right parentheses there are no args
-			token = this->advanceToken(lexer);
+			token = this->AdvanceToken(lexer);
 			if (!token->IsOP(Operator::RightParentheses))
 			{
 				while (true)
 				{
-					const Token* peekToken = this->peekToken(lexer);
+					const Token* peekToken = this->PeekToken(lexer);
 					args.push_back(*peekToken);
 
 					// consume the ,
-					token = this->advanceToken(lexer);
+					token = this->AdvanceToken(lexer);
 					if (!token->IsOP(Operator::Comma))
 					{
 						break;
 					}
 
-					this->advanceToken(lexer);
+					this->AdvanceToken(lexer);
 				}
 			}
 
@@ -75,19 +75,19 @@ void Script::Load(const std::string& source)
 			}
 
 			// move token to whatever is after ')'
-			this->advanceToken(lexer);
+			this->AdvanceToken(lexer);
 
-			runCommand(identifier, args);
+			RunCommand(identifier, args);
 		}
 
-		this->advanceToken(lexer);
+		this->AdvanceToken(lexer);
 	}
 }
 
-bool Script::isCommand(const std::string& identifier) const
+bool Script::IsCommand(const std::string& identifier) const
 {
 	// TODO(handsomematt): this could be done a lot better
-	return std::any_of(FeatureScriptCommands::Signatures.cbegin(), FeatureScriptCommands::Signatures.cend(),
+	return std::any_of(FeatureScriptCommands::k_Signatures.cbegin(), FeatureScriptCommands::k_Signatures.cend(),
 	                   [&identifier](const auto& s) { return s.name.data() == identifier; });
 }
 
@@ -119,7 +119,7 @@ ScriptCommandParameter GetParameter(Token& argument)
 				const auto z = std::strtof(floatEnd + 1, &floatEnd);
 				if (static_cast<size_t>(floatEnd - str.c_str()) == static_cast<size_t>(str.length()))
 				{
-					const auto& island = Game::instance()->GetLandIsland();
+					const auto& island = Game::Instance()->GetLandIsland();
 					return {x, island.GetHeightAt(glm::vec2(x, z)), z};
 				}
 			}
@@ -137,22 +137,22 @@ ScriptCommandParameter GetParameter(Token& argument)
 	}
 }
 
-void Script::runCommand(const std::string& identifier, const std::vector<Token>& args)
+void Script::RunCommand(const std::string& identifier, const std::vector<Token>& args)
 {
-	const ScriptCommandSignature* command_signature = nullptr;
+	const ScriptCommandSignature* commandSignature = nullptr;
 
-	for (const auto& signature : FeatureScriptCommands::Signatures)
+	for (const auto& signature : FeatureScriptCommands::k_Signatures)
 	{
 		if (signature.name.data() != identifier)
 		{
 			continue;
 		}
 
-		command_signature = &signature;
+		commandSignature = &signature;
 		break;
 	}
 
-	if (command_signature == nullptr)
+	if (commandSignature == nullptr)
 	{
 		throw std::runtime_error("Missing script command signature");
 	}
@@ -166,20 +166,21 @@ void Script::runCommand(const std::string& identifier, const std::vector<Token>&
 		parameters.push_back(param);
 	}
 
-	const auto expected_parameters = command_signature->parameters;
-	uint32_t expected_size;
-	for (expected_size = 0; expected_size < expected_parameters.size(); ++expected_size)
+	const auto expectedParameters = commandSignature->parameters;
+	uint32_t expectedSize;
+	for (expectedSize = 0; const auto& p : commandSignature->parameters)
 	{
 		// Looping until None because parameters is a fixed sized array.
 		// Last Argument is the one before the first None or the 9th
-		if (command_signature->parameters.at(expected_size) == ParameterType::None)
+		if (p == ParameterType::None)
 		{
 			break;
 		}
+		++expectedSize;
 	}
 
 	// Validate the number of given arguments against what is expected
-	if (parameters.size() != expected_size)
+	if (parameters.size() != expectedSize)
 	{
 		throw std::runtime_error("Invalid number of script arguments");
 	}
@@ -187,7 +188,7 @@ void Script::runCommand(const std::string& identifier, const std::vector<Token>&
 	// Validate the typing of the given arguments against what is expected
 	for (auto i = 0u; const auto& param : parameters)
 	{
-		if (param.GetType() != expected_parameters.at(i))
+		if (param.GetType() != expectedParameters.at(i))
 		{
 			throw std::runtime_error("Invalid script argument type");
 		}
@@ -195,20 +196,20 @@ void Script::runCommand(const std::string& identifier, const std::vector<Token>&
 	}
 
 	ScriptCommandContext ctx(_game, &parameters);
-	command_signature->command(ctx);
+	commandSignature->command(ctx);
 }
 
-const Token* Script::peekToken(Lexer& lexer)
+const Token* Script::PeekToken(Lexer& lexer)
 {
-	if (token_.IsInvalid())
+	if (_token.IsInvalid())
 	{
-		token_ = lexer.GetToken();
+		_token = lexer.GetToken();
 	}
-	return &token_;
+	return &_token;
 }
 
-const Token* Script::advanceToken(Lexer& lexer)
+const Token* Script::AdvanceToken(Lexer& lexer)
 {
-	token_ = lexer.GetToken();
-	return &token_;
+	_token = lexer.GetToken();
+	return &_token;
 }

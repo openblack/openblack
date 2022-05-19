@@ -68,7 +68,7 @@ using namespace std::chrono_literals;
 using openblack::ecs::systems::CameraBookmarkSystem;
 using openblack::ecs::systems::RenderingSystem;
 
-const std::string kWindowTitle = "openblack";
+const std::string k_WindowTitle = "openblack";
 
 Game* Game::sInstance = nullptr;
 
@@ -80,27 +80,27 @@ Game::Game(Arguments&& args)
     , _config()
     , _handPose()
 {
-	std::function<std::shared_ptr<spdlog::logger>(const std::string&)> CreateLogger;
+	std::function<std::shared_ptr<spdlog::logger>(const std::string&)> createLogger;
 #ifdef __ANDROID__
 	if (!args.logFile.empty() && args.logFile == "logcat")
 	{
-		CreateLogger = [](const std::string& name) { return spdlog::android_logger_mt(name, "spdlog-android"); };
+		createLogger = [](const std::string& name) { return spdlog::android_logger_mt(name, "spdlog-android"); };
 	}
 	else
 #endif // __ANDROID__
 	{
 		if (!args.logFile.empty() && args.logFile != "stdout")
 		{
-			CreateLogger = [&args](const std::string& name) { return spdlog::basic_logger_mt(name, args.logFile); };
+			createLogger = [&args](const std::string& name) { return spdlog::basic_logger_mt(name, args.logFile); };
 		}
 		else
 		{
-			CreateLogger = [](const std::string& name) { return spdlog::stdout_color_mt(name); };
+			createLogger = [](const std::string& name) { return spdlog::stdout_color_mt(name); };
 		}
 	}
-	for (size_t i = 0; const auto& subsystem : LoggingSubsystemStrs)
+	for (size_t i = 0; const auto& subsystem : k_LoggingSubsystemStrs)
 	{
-		auto logger = CreateLogger(subsystem.data());
+		auto logger = createLogger(subsystem.data());
 		logger->set_level(args.logLevels.at(i));
 		++i;
 	}
@@ -117,7 +117,8 @@ Game::Game(Arguments&& args)
 		{
 			extraFlags |= SDL_WINDOW_METAL;
 		}
-		_window = std::make_unique<GameWindow>(kWindowTitle, args.windowWidth, args.windowHeight, args.displayMode, extraFlags);
+		_window =
+		    std::make_unique<GameWindow>(k_WindowTitle, args.windowWidth, args.windowHeight, args.displayMode, extraFlags);
 	}
 	try
 	{
@@ -132,7 +133,7 @@ Game::Game(Arguments&& args)
 	_fileSystem->SetGamePath(GetGamePath());
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
 
-	_gui = gui::Gui::create(_window.get(), graphics::RenderPass::ImGui, args.scale);
+	_gui = gui::Gui::Create(_window.get(), graphics::RenderPass::ImGui, args.scale);
 
 	_eventManager->AddHandler(std::function([this](const SDL_Event& event) {
 		// If gui captures this input, do not propagate
@@ -232,7 +233,7 @@ bool Game::ProcessEvents(const SDL_Event& event)
 			{
 				auto handPosition = _handPose * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 				const auto index = static_cast<uint8_t>(event.key.keysym.sym - SDLK_1);
-				CameraBookmarkSystem::instance().SetBookmark(index, handPosition);
+				CameraBookmarkSystem::Instance().SetBookmark(index, handPosition);
 			}
 			else if (event.key.keysym.mod == 0)
 			{
@@ -276,7 +277,7 @@ bool Game::GameLogicLoop()
 
 	const auto currentTime = std::chrono::steady_clock::now();
 	const auto delta = currentTime - _lastGameLoopTime;
-	const auto turnDuration = kTurnDuration * _gameSpeedMultiplier;
+	const auto turnDuration = k_TurnDuration * _gameSpeedMultiplier;
 	// NOLINTNEXTLINE(modernize-use-nullptr): clang-tidy bug
 	if (delta < turnDuration)
 	{
@@ -288,11 +289,11 @@ bool Game::GameLogicLoop()
 
 	{
 		auto pathfinding = _profiler->BeginScoped(Profiler::Stage::PathfindingUpdate);
-		PathfindingSystem::instance().Update();
+		PathfindingSystem::Instance().Update();
 	}
 	{
 		auto actions = _profiler->BeginScoped(Profiler::Stage::LivingActionUpdate);
-		LivingActionSystem::instance().Update();
+		LivingActionSystem::Instance().Update();
 	}
 
 	_lastGameLoopTime = currentTime;
@@ -305,8 +306,8 @@ bool Game::GameLogicLoop()
 bool Game::Update()
 {
 	_profiler->Frame();
-	auto previous = _profiler->_entries.at(_profiler->GetEntryIndex(-1))._frameStart;
-	auto current = _profiler->_entries.at(_profiler->GetEntryIndex(0))._frameStart;
+	auto previous = _profiler->GetEntries().at(_profiler->GetEntryIndex(-1)).frameStart;
+	auto current = _profiler->GetEntries().at(_profiler->GetEntryIndex(0)).frameStart;
 	// Prevent spike at first frame
 	if (previous.time_since_epoch().count() == 0)
 	{
@@ -349,7 +350,7 @@ bool Game::Update()
 	}
 
 	_camera->Update(deltaTime);
-	CameraBookmarkSystem::instance().Update(deltaTime);
+	CameraBookmarkSystem::Instance().Update(deltaTime);
 
 	// Update Game Logic in Registry
 	{
@@ -387,9 +388,9 @@ bool Game::Update()
 				else // For the water
 				{
 					float intersectDistance = 0.0f;
-					const auto plane_origin = glm::vec3(0.0f, 0.0f, 0.0f);
-					const auto plane_normal = glm::vec3(0.0f, 1.0f, 0.0f);
-					if (glm::intersectRayPlane(rayOrigin, rayDirection, plane_origin, plane_normal, intersectDistance))
+					const auto planeOrigin = glm::vec3(0.0f, 0.0f, 0.0f);
+					const auto planeNormal = glm::vec3(0.0f, 1.0f, 0.0f);
+					if (glm::intersectRayPlane(rayOrigin, rayDirection, planeOrigin, planeNormal, intersectDistance))
 					{
 						intersectionTransform.position = rayOrigin + rayDirection * intersectDistance;
 						intersectionTransform.rotation = glm::mat3(1.0f);
@@ -424,7 +425,7 @@ bool Game::Update()
 			auto updateEntities = _profiler->BeginScoped(Profiler::Stage::UpdateEntities);
 			if (_config.drawEntities)
 			{
-				RenderingSystem::instance().PrepareDraw(_config.drawBoundingBoxes, _config.drawFootpaths, _config.drawStreams);
+				RenderingSystem::Instance().PrepareDraw(_config.drawBoundingBoxes, _config.drawFootpaths, _config.drawStreams);
 			}
 		}
 	} // Update Uniforms
@@ -467,7 +468,7 @@ bool Game::Initialize()
 	for (size_t i = 0; const auto& mesh : meshes)
 	{
 		const auto meshId = static_cast<MeshId>(i);
-		meshManager.Load(meshId, MeshNames.at(i), mesh);
+		meshManager.Load(meshId, k_MeshNames.at(i), mesh);
 		++i;
 	}
 
@@ -571,7 +572,7 @@ bool Game::Initialize()
 	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
 
-	CameraBookmarkSystem::instance().Initialize();
+	CameraBookmarkSystem::Instance().Initialize();
 
 	return true;
 }
@@ -615,10 +616,10 @@ bool Game::Run()
 	Game::SetTime(_config.timeOfDay);
 
 	_frameCount = 0;
-	auto last_time = std::chrono::high_resolution_clock::now();
+	auto lastTime = std::chrono::high_resolution_clock::now();
 	while (Update())
 	{
-		auto duration = std::chrono::high_resolution_clock::now() - last_time;
+		auto duration = std::chrono::high_resolution_clock::now() - lastTime;
 		auto milliseconds = std::chrono::duration_cast<std::chrono::duration<uint32_t, std::milli>>(duration);
 		{
 			auto section = _profiler->BeginScoped(Profiler::Stage::SceneDraw);
@@ -682,7 +683,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 	// Reset everything. Deletes all entities and their components
 	_entityRegistry->Reset();
 
-	CameraBookmarkSystem::instance().Initialize();
+	CameraBookmarkSystem::Instance().Initialize();
 	// We need a hand for the player
 	_handEntity = ecs::archetypes::HandArchetype::Create(glm::vec3(0.0f), glm::half_pi<float>(), 0.0f, glm::half_pi<float>(),
 	                                                     0.01f, false);
@@ -692,22 +693,22 @@ void Game::LoadMap(const std::filesystem::path& path)
 
 	// Each released map comes with an optional .fot file which contains the footpath information for the map
 	auto stem = string_utils::LowerCase(path.stem().generic_string());
-	auto fot_path = _fileSystem->LandscapePath() / fmt::format("{}.fot", stem);
+	auto fotPath = _fileSystem->LandscapePath() / fmt::format("{}.fot", stem);
 
-	if (_fileSystem->Exists(fot_path))
+	if (_fileSystem->Exists(fotPath))
 	{
 		FotFile fotFile(*this);
-		fotFile.Load(fot_path);
+		fotFile.Load(fotPath);
 	}
 	else
 	{
 		SPDLOG_LOGGER_WARN(spdlog::get("game"), "The map at {} does not come with a footpath file. Expected {}",
-		                   path.generic_string(), fot_path.generic_string());
+		                   path.generic_string(), fotPath.generic_string());
 	}
 
 	_lastGameLoopTime = std::chrono::steady_clock::now();
 	_turnDeltaTime = 0ns;
-	SetGameSpeed(Game::kTurnDurationMultiplierNormal);
+	SetGameSpeed(Game::k_TurnDurationMultiplierNormal);
 	_turnCount = 0;
 	_paused = true;
 }
@@ -719,7 +720,7 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 		_landIsland.reset();
 	}
 
-	auto fixedName = Game::instance()->GetFileSystem().FindPath(FileSystem::FixPath(path));
+	auto fixedName = Game::Instance()->GetFileSystem().FindPath(FileSystem::FixPath(path));
 
 	if (!_fileSystem->Exists(fixedName))
 	{

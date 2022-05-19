@@ -79,7 +79,7 @@ using namespace openblack::gui;
 
 namespace
 {
-const std::array<bgfx::EmbeddedShader, 5> s_embeddedShaders = {{
+const std::array<bgfx::EmbeddedShader, 5> k_EmbeddedShaders = {{
     BGFX_EMBEDDED_SHADER(vs_ocornut_imgui),
     BGFX_EMBEDDED_SHADER(fs_ocornut_imgui),
     BGFX_EMBEDDED_SHADER(vs_imgui_image),
@@ -89,7 +89,7 @@ const std::array<bgfx::EmbeddedShader, 5> s_embeddedShaders = {{
 }};
 } // namespace
 
-std::unique_ptr<Gui> Gui::create(const GameWindow* window, graphics::RenderPass viewId, float scale)
+std::unique_ptr<Gui> Gui::Create(const GameWindow* window, graphics::RenderPass viewId, float scale)
 {
 	IMGUI_CHECKVERSION();
 	auto* imgui = ImGui::CreateContext();
@@ -353,10 +353,10 @@ bool Gui::CreateDeviceObjectsBgfx()
 {
 	// Create shaders
 	bgfx::RendererType::Enum type = bgfx::getRendererType();
-	_program = bgfx::createProgram(bgfx::createEmbeddedShader(s_embeddedShaders.data(), type, "vs_ocornut_imgui"),
-	                               bgfx::createEmbeddedShader(s_embeddedShaders.data(), type, "fs_ocornut_imgui"), true);
-	_imageProgram = bgfx::createProgram(bgfx::createEmbeddedShader(s_embeddedShaders.data(), type, "vs_imgui_image"),
-	                                    bgfx::createEmbeddedShader(s_embeddedShaders.data(), type, "fs_imgui_image"), true);
+	_program = bgfx::createProgram(bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "vs_ocornut_imgui"),
+	                               bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "fs_ocornut_imgui"), true);
+	_imageProgram = bgfx::createProgram(bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "vs_imgui_image"),
+	                                    bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "fs_imgui_image"), true);
 
 	// Create buffers
 	_u_imageLodEnabled = bgfx::createUniform("u_imageLodEnabled", bgfx::UniformType::Vec4);
@@ -391,13 +391,13 @@ void Gui::UpdateMousePosAndButtons()
 
 	int mx;
 	int my;
-	Uint32 mouse_buttons = SDL_GetMouseState(&mx, &my);
+	Uint32 mouseButtons = SDL_GetMouseState(&mx, &my);
 	io.MouseDown[0] = _mousePressed[0] ||
-	                  (mouse_buttons & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0; // If a mouse press event came, always pass it as
-	                                                                      // "mouse held this frame", so we don't miss
-	                                                                      // click-release events that are shorter than 1 frame.
-	io.MouseDown[1] = _mousePressed[1] || (mouse_buttons & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0;
-	io.MouseDown[2] = _mousePressed[2] || (mouse_buttons & SDL_BUTTON(SDL_BUTTON_MIDDLE)) != 0;
+	                  (mouseButtons & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0; // If a mouse press event came, always pass it as
+	                                                                     // "mouse held this frame", so we don't miss
+	                                                                     // click-release events that are shorter than 1 frame.
+	io.MouseDown[1] = _mousePressed[1] || (mouseButtons & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0;
+	io.MouseDown[2] = _mousePressed[2] || (mouseButtons & SDL_BUTTON(SDL_BUTTON_MIDDLE)) != 0;
 	_mousePressed[0] = _mousePressed[1] = _mousePressed[2] = false;
 
 #if SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__) && \
@@ -438,8 +438,8 @@ void Gui::UpdateMouseCursor()
 		return;
 	}
 
-	ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
-	if (io.MouseDrawCursor || imgui_cursor == ImGuiMouseCursor_None)
+	ImGuiMouseCursor imguiCursor = ImGui::GetMouseCursor();
+	if (io.MouseDrawCursor || imguiCursor == ImGuiMouseCursor_None)
 	{
 		// Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
 		SDL_ShowCursor(SDL_FALSE);
@@ -447,7 +447,7 @@ void Gui::UpdateMouseCursor()
 	else
 	{
 		// Show OS mouse cursor
-		auto* const cursor = _mouseCursors.at(imgui_cursor);
+		auto* const cursor = _mouseCursors.at(imguiCursor);
 		SDL_SetCursor(cursor != nullptr ? cursor : _mouseCursors[ImGuiMouseCursor_Arrow]);
 		SDL_ShowCursor(SDL_TRUE);
 	}
@@ -483,7 +483,7 @@ void Gui::UpdateGamepads()
 		if (vn > 0.0f && io.NavInputs[(NAV_NO)] < vn)                                                            \
 			io.NavInputs[(NAV_NO)] = vn;                                                                         \
 	}
-	const int thumb_dead_zone = 8000;                            // SDL_gamecontroller.h suggests using this value.
+	const int thumbDeadZone = 8000;                              // SDL_gamecontroller.h suggests using this value.
 	MAP_BUTTON(ImGuiNavInput_Activate, SDL_CONTROLLER_BUTTON_A); // Cross / A
 	MAP_BUTTON(ImGuiNavInput_Cancel, SDL_CONTROLLER_BUTTON_B);   // Circle / B
 	MAP_BUTTON(ImGuiNavInput_Menu, SDL_CONTROLLER_BUTTON_X);     // Square / X
@@ -503,10 +503,10 @@ void Gui::UpdateGamepads()
 	           SDL_CONTROLLER_BUTTON_LEFTSHOULDER); // L1 / LB
 	MAP_BUTTON(ImGuiNavInput_TweakFast,
 	           SDL_CONTROLLER_BUTTON_RIGHTSHOULDER); // R1 / RB
-	MAP_ANALOG(ImGuiNavInput_LStickLeft, SDL_CONTROLLER_AXIS_LEFTX, -thumb_dead_zone, -32768);
-	MAP_ANALOG(ImGuiNavInput_LStickRight, SDL_CONTROLLER_AXIS_LEFTX, +thumb_dead_zone, +32767);
-	MAP_ANALOG(ImGuiNavInput_LStickUp, SDL_CONTROLLER_AXIS_LEFTY, -thumb_dead_zone, -32767);
-	MAP_ANALOG(ImGuiNavInput_LStickDown, SDL_CONTROLLER_AXIS_LEFTY, +thumb_dead_zone, +32767);
+	MAP_ANALOG(ImGuiNavInput_LStickLeft, SDL_CONTROLLER_AXIS_LEFTX, -thumbDeadZone, -32768);
+	MAP_ANALOG(ImGuiNavInput_LStickRight, SDL_CONTROLLER_AXIS_LEFTX, +thumbDeadZone, +32767);
+	MAP_ANALOG(ImGuiNavInput_LStickUp, SDL_CONTROLLER_AXIS_LEFTY, -thumbDeadZone, -32767);
+	MAP_ANALOG(ImGuiNavInput_LStickDown, SDL_CONTROLLER_AXIS_LEFTY, +thumbDeadZone, +32767);
 
 	io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
 #undef MAP_BUTTON
@@ -525,14 +525,14 @@ void Gui::NewFrameSdl2(SDL_Window* window)
 	{
 		int w;
 		int h;
-		int display_w;
-		int display_h;
+		int displayW;
+		int displayH;
 		SDL_GetWindowSize(window, &w, &h);
-		SDL_GL_GetDrawableSize(window, &display_w, &display_h);
+		SDL_GL_GetDrawableSize(window, &displayW, &displayH);
 		io.DisplaySize = ImVec2(static_cast<float>(w), static_cast<float>(h));
 		if (w > 0 && h > 0)
 		{
-			io.DisplayFramebufferScale = ImVec2(static_cast<float>(display_w) / w, static_cast<float>(display_h) / h);
+			io.DisplayFramebufferScale = ImVec2(static_cast<float>(displayW) / w, static_cast<float>(displayH) / h);
 		}
 	}
 	else
@@ -544,10 +544,10 @@ void Gui::NewFrameSdl2(SDL_Window* window)
 	// Setup time step (we don't use SDL_GetTicks() because it is using
 	// millisecond resolution)
 	static Uint64 frequency = SDL_GetPerformanceFrequency();
-	Uint64 current_time = SDL_GetPerformanceCounter();
-	io.DeltaTime = _time > 0 ? static_cast<float>(static_cast<double>(current_time - _time) / frequency)
-	                         : static_cast<float>(1.0f / 60.0f);
-	_time = current_time;
+	Uint64 currentTime = SDL_GetPerformanceCounter();
+	io.DeltaTime =
+	    _time > 0 ? static_cast<float>(static_cast<double>(currentTime - _time) / frequency) : static_cast<float>(1.0f / 60.0f);
+	_time = currentTime;
 
 	UpdateMousePosAndButtons();
 	UpdateMouseCursor();
@@ -736,7 +736,7 @@ bool Gui::ShowMenu(Game& game)
 				}
 			});
 
-			auto menu_item = [&game](const auto& label, const std::filesystem::path& path) {
+			auto menuItem = [&game](const auto& label, const std::filesystem::path& path) {
 				if (ImGui::MenuItem(label.data()))
 				{
 					game.LoadMap(path);
@@ -750,13 +750,13 @@ bool Gui::ShowMenu(Game& game)
 			ImGui::MenuItem("Story Islands", nullptr, false, false);
 			for (auto& level : campaigns)
 			{
-				menu_item(level->GetName(), level->GetScriptPath());
+				menuItem(level->GetName(), level->GetScriptPath());
 			}
 			ImGui::Separator();
 			ImGui::MenuItem("Playground Islands", nullptr, false, false);
 			for (auto& level : playgrounds)
 			{
-				menu_item(level->GetName(), level->GetScriptPath());
+				menuItem(level->GetName(), level->GetScriptPath());
 			}
 
 			ImGui::EndMenu();
@@ -768,7 +768,7 @@ bool Gui::ShowMenu(Game& game)
 		{
 			if (ImGui::SliderFloat("Time of Day", &config.timeOfDay, 0.0f, 24.0f, "%.3f"))
 			{
-				Game::instance()->SetTime(fmodf(config.timeOfDay, 24.0f));
+				Game::Instance()->SetTime(fmodf(config.timeOfDay, 24.0f));
 			}
 
 			ImGui::Text("Sky Type Index %f", game.GetSky().GetCurrentSkyType());
@@ -820,19 +820,19 @@ bool Gui::ShowMenu(Game& game)
 			if (ImGui::BeginMenu("Game Speed"))
 			{
 				float multiplier = game.GetGameSpeed();
-				ImGui::Text("Scaled game duration: %.3fms (%.3f Hz)", multiplier * Game::kTurnDuration.count(),
-				            1000.0f / (multiplier * Game::kTurnDuration.count()));
+				ImGui::Text("Scaled game duration: %.3fms (%.3f Hz)", multiplier * Game::k_TurnDuration.count(),
+				            1000.0f / (multiplier * Game::k_TurnDuration.count()));
 				if (ImGui::MenuItem("Slow"))
 				{
-					game.SetGameSpeed(Game::kTurnDurationMultiplierSlow);
+					game.SetGameSpeed(Game::k_TurnDurationMultiplierSlow);
 				}
 				if (ImGui::MenuItem("Normal"))
 				{
-					game.SetGameSpeed(Game::kTurnDurationMultiplierNormal);
+					game.SetGameSpeed(Game::k_TurnDurationMultiplierNormal);
 				}
 				if (ImGui::MenuItem("Fast"))
 				{
-					game.SetGameSpeed(Game::kTurnDurationMultiplierFast);
+					game.SetGameSpeed(Game::k_TurnDurationMultiplierFast);
 				}
 				if (ImGui::SliderFloat("Multiplier", &multiplier, 1.0f / 10.0f, 10.0f, "%.3f", ImGuiSliderFlags_Logarithmic))
 				{
@@ -881,11 +881,11 @@ void Gui::RenderArrow(const std::string& name, const ImVec2& pos, const ImVec2& 
 	ImGui::SetNextWindowSize(size);
 	if (ImGui::Begin((name + " Frame").c_str(), nullptr, boxOverlayFlags))
 	{
-		std::string str_id = name + " Arrow";
+		std::string strId = name + " Arrow";
 		ImGuiWindow* window = ImGui::GetCurrentWindow();
 		if (!window->SkipItems)
 		{
-			const ImGuiID id = window->GetID(str_id.c_str());
+			const ImGuiID id = window->GetID(strId.c_str());
 			const ImRect bb(window->DC.CursorPos, ImVec2(window->DC.CursorPos.x + size.x, window->DC.CursorPos.y + size.y));
 			if (ImGui::ItemAdd(bb, id))
 			{
@@ -907,13 +907,13 @@ void Gui::RenderArrow(const std::string& name, const ImVec2& pos, const ImVec2& 
 	ImGui::PopStyleVar(); // ImGuiStyleVar_WindowPadding
 }
 
-bool boxIntersect(const glm::vec4& box_1, const glm::vec4& box_2)
+bool boxIntersect(const glm::vec4& box1, const glm::vec4& box2)
 {
 	// where z is width and y is height
-	return box_1.x - box_2.x < box_2.z && //
-	       box_2.x - box_1.x < box_1.z && //
-	       box_1.y - box_2.y < box_2.w && //
-	       box_2.y - box_1.y < box_1.w;
+	return box1.x - box2.x < box2.z && //
+	       box2.x - box1.x < box1.z && //
+	       box1.y - box2.y < box2.w && //
+	       box2.y - box1.y < box1.w;
 }
 
 bool fitBox(float minY, const std::vector<glm::vec4>& coveredAreas, glm::vec4& box)
@@ -1065,9 +1065,9 @@ void Gui::ShowVillagerNames(const Game& game)
 		}
 
 		// 3.5 was measured in vanilla but it is possible that it is configurable
-		float max_distance = 3.5f;
+		float maxDistance = 3.5f;
 		const glm::vec3 relativePosition = (camera.GetPosition() - transform.position) / 100.0f;
-		if (glm::dot(relativePosition, relativePosition) > max_distance * max_distance)
+		if (glm::dot(relativePosition, relativePosition) > maxDistance * maxDistance)
 		{
 			return;
 		}
@@ -1085,7 +1085,7 @@ void Gui::ShowVillagerNames(const Game& game)
 		const std::string stateHelpText = "TODO: STATE HELP TEXT";
 		std::string details =
 		    fmt::format("{}\nA:{} L:{}%, H:{}%", stateHelpText, villager.age, villager.health, villager.hunger);
-		const auto& actionSystem = LivingActionSystem::instance();
+		const auto& actionSystem = LivingActionSystem::Instance();
 		if (config.debugVillagerStates)
 		{
 			details += fmt::format(
@@ -1095,9 +1095,10 @@ void Gui::ShowVillagerNames(const Game& game)
 			    "Previous State: {}\n"
 			    "Turns until next state change: {}\n"
 			    "Turns since last state change: {}",
-			    VillagerStateStrings.at(static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Top))),
-			    VillagerStateStrings.at(static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Final))),
-			    VillagerStateStrings.at(
+			    k_VillagerStateStrings.at(static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Top))),
+			    k_VillagerStateStrings.at(
+			        static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Final))),
+			    k_VillagerStateStrings.at(
 			        static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Previous))),
 			    action.turnsUntilStateChange, action.turnsSinceStateChange);
 		}
@@ -1113,33 +1114,33 @@ void Gui::ShowVillagerNames(const Game& game)
 				ImGui::InputInt("Health", reinterpret_cast<int*>(&villager.health));
 				ImGui::InputInt("Age", reinterpret_cast<int*>(&villager.age));
 				ImGui::InputInt("Hunger", reinterpret_cast<int*>(&villager.hunger));
-				ImGui::Combo("Life Stage", &villager.lifeStage, Villager::LifeStageStrs);
-				ImGui::Combo("Sex", &villager.sex, Villager::SexStrs);
-				ImGui::Combo("Tribe", &villager.tribe, TribeStrs);
-				ImGui::Combo("Villager Number", &villager.number, VillagerRoleStrs);
-				ImGui::Combo("Task", &villager.task, Villager::TaskStrs);
+				ImGui::Combo("Life Stage", &villager.lifeStage, Villager::k_LifeStageStrs);
+				ImGui::Combo("Sex", &villager.sex, Villager::k_SexStrs);
+				ImGui::Combo("Tribe", &villager.tribe, k_TribeStrs);
+				ImGui::Combo("Villager Number", &villager.number, k_VillagerRoleStrs);
+				ImGui::Combo("Task", &villager.task, Villager::k_TaskStrs);
 
 				size_t index = 0;
-				for (const auto& str : LivingAction::IndexStrings)
+				for (const auto& str : LivingAction::k_IndexStrings)
 				{
-					if (ImGui::BeginCombo(str.data(), VillagerStateStrings
+					if (ImGui::BeginCombo(str.data(), k_VillagerStateStrings
 					                                      .at(static_cast<size_t>(actionSystem.VillagerGetState(
 					                                          action, static_cast<LivingAction::Index>(index))))
 					                                      .data()))
 					{
 						size_t n = 0;
-						for (const auto& stateStr : VillagerStateStrings)
+						for (const auto& stateStr : k_VillagerStateStrings)
 						{
-							const bool is_selected = static_cast<size_t>(actionSystem.VillagerGetState(
-							                             action, static_cast<LivingAction::Index>(index))) == n;
-							if (ImGui::Selectable(stateStr.data(), is_selected))
+							const bool isSelected = static_cast<size_t>(actionSystem.VillagerGetState(
+							                            action, static_cast<LivingAction::Index>(index))) == n;
+							if (ImGui::Selectable(stateStr.data(), isSelected))
 							{
 								actionSystem.VillagerSetState(action, static_cast<LivingAction::Index>(index),
 								                              static_cast<VillagerStates>(n), true);
 							}
 
 							// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-							if (is_selected)
+							if (isSelected)
 							{
 								ImGui::SetItemDefaultFocus();
 							}

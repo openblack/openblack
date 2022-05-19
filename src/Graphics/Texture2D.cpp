@@ -22,7 +22,7 @@ namespace openblack::graphics
 {
 constexpr std::array<bgfx::TextureFormat::Enum,
                      static_cast<size_t>(Format::RGBA4) + 1>
-    textureFormatsBgfx {
+    k_TextureFormatsBgfx {
         bgfx::TextureFormat::BC1,     // BlockCompression1
         bgfx::TextureFormat::BC2,     // BlockCompression2
         bgfx::TextureFormat::BC3,     // BlockCompression3
@@ -75,7 +75,7 @@ constexpr std::array<bgfx::TextureFormat::Enum,
 
 bgfx::TextureFormat::Enum getBgfxTextureFormat(Format format)
 {
-	return textureFormatsBgfx.at(static_cast<size_t>(format));
+	return k_TextureFormatsBgfx.at(static_cast<size_t>(format));
 }
 
 Texture2D::Texture2D(std::string name)
@@ -133,8 +133,8 @@ void Texture2D::DumpTexture() const
 	{
 		auto filename = "dump/" + _name + "_" + std::to_string(i) + ".png";
 		SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "Writing texture layer {} to {}.", i, filename.c_str());
-		auto* current_pixels = &pixels[i * stride * _info.height];
-		auto writeResult = stbi_write_png(filename.c_str(), _info.width, _info.height, numComponents, current_pixels, stride);
+		auto* currentPixels = &pixels[i * stride * _info.height];
+		auto writeResult = stbi_write_png(filename.c_str(), _info.width, _info.height, numComponents, currentPixels, stride);
 		if (writeResult == 0)
 		{
 			SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Writing texture to {} failed!", filename.c_str());

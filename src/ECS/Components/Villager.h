@@ -32,7 +32,7 @@ struct Villager
 
 		_COUNT
 	};
-	static constexpr std::array<std::string_view, static_cast<uint8_t>(Task::_COUNT)> TaskStrs = {
+	static constexpr std::array<std::string_view, static_cast<uint8_t>(Task::_COUNT)> k_TaskStrs = {
 	    "IDLE", //
 	};
 
@@ -44,7 +44,7 @@ struct Villager
 
 		_COUNT
 	};
-	static constexpr std::array<std::string_view, static_cast<uint8_t>(Sex::_COUNT)> SexStrs = {
+	static constexpr std::array<std::string_view, static_cast<uint8_t>(Sex::_COUNT)> k_SexStrs = {
 	    "MALE",   //
 	    "FEMALE", //
 	};
@@ -57,7 +57,7 @@ struct Villager
 
 		_COUNT
 	};
-	static constexpr std::array<std::string_view, static_cast<uint8_t>(LifeStage::_COUNT)> LifeStageStrs = {
+	static constexpr std::array<std::string_view, static_cast<uint8_t>(LifeStage::_COUNT)> k_LifeStageStrs = {
 	    "Child", //
 	    "Adult", //
 	};

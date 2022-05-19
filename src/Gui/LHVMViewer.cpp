@@ -27,7 +27,7 @@ const ImVec4 Disassembly_ColorKeyword = ImVec4(0.976f, 0.149f, 0.447f, 1.0f);
 const ImVec4 Disassembly_ColorVariable = ImVec4(0.972f, 0.972f, 0.949f, 1.0f);
 const ImVec4 Disassembly_ColorConstant = ImVec4(0.682f, 0.505f, 1.0f, 1.0f);
 
-static const std::array<std::string, 464> Function_Names = {
+static const std::array<std::string, 464> k_FunctionNames = {
     "NONE",
     "SET_CAMERA_POSITION",
     "SET_CAMERA_FOCUS",
@@ -540,9 +540,9 @@ void LHVMViewer::Draw(Game& game)
 
 		if (ImGui::BeginTabItem("Data"))
 		{
-			static MemoryEditor lhvm_data_editor;
+			static MemoryEditor lhvmDataEditor;
 			auto& data = lhvm.GetData();
-			lhvm_data_editor.DrawContents(reinterpret_cast<void*>(data.data()), data.size(), 0);
+			lhvmDataEditor.DrawContents(reinterpret_cast<void*>(data.data()), data.size(), 0);
 
 			ImGui::EndTabItem();
 		}
@@ -559,13 +559,13 @@ void LHVMViewer::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) {}
 
 void LHVMViewer::DrawScriptsTab(const openblack::LHVM::LHVM& lhvm)
 {
-	static auto vector_getter = [](void* vec, int idx, const char** out_text) {
+	static auto vectorGetter = [](void* vec, int idx, const char** outText) {
 		auto& vector = *static_cast<std::vector<std::string>*>(vec);
 		if (idx < 0 || idx >= static_cast<int>(vector.size()))
 		{
 			return false;
 		}
-		*out_text = vector.at(idx).c_str();
+		*outText = vector.at(idx).c_str();
 		return true;
 	};
 
@@ -613,12 +613,12 @@ void LHVMViewer::DrawScriptsTab(const openblack::LHVM::LHVM& lhvm)
 
 		if (ImGui::BeginTabItem("Local Variables"))
 		{
-			auto script_vars = script.GetVariables();
+			auto scriptVars = script.GetVariables();
 
-			static int selected_var = 0;
+			static int selectedVar = 0;
 			ImGui::PushItemWidth(-1);
-			ImGui::ListBox("", &selected_var, vector_getter, static_cast<void*>(&script_vars),
-			               static_cast<int>(script_vars.size()), 21);
+			ImGui::ListBox("", &selectedVar, vectorGetter, static_cast<void*>(&scriptVars), static_cast<int>(scriptVars.size()),
+			               21);
 			ImGui::EndTabItem();
 		}
 
@@ -699,21 +699,21 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 		case LHVM::VMInstruction::Opcode::CALL:
 			ImGui::TextColored(Disassembly_ColorKeyword, "CALL");
 			ImGui::SameLine();
-			ImGui::TextColored(Disassembly_ColorFuncName, "%s", Function_Names.at(instruction.GetData()).c_str());
+			ImGui::TextColored(Disassembly_ColorFuncName, "%s", k_FunctionNames.at(instruction.GetData()).c_str());
 			break;
 		case LHVM::VMInstruction::Opcode::RUN:
 		{
-			auto const& run_script = lhvm.GetScripts().at(instruction.GetData() - 1);
+			auto const& runScript = lhvm.GetScripts().at(instruction.GetData() - 1);
 
 			ImGui::TextColored(Disassembly_ColorKeyword, "RUN");
 			ImGui::SameLine();
-			if (ImGui::TextButtonColored(Disassembly_ColorFuncName, run_script.GetName().c_str()))
+			if (ImGui::TextButtonColored(Disassembly_ColorFuncName, runScript.GetName().c_str()))
 			{
 				SelectScript(instruction.GetData());
 			}
 
 			ImGui::SameLine();
-			ImGui::TextColored(Disassembly_ColorComment, "// expecting %d parameters", run_script.GetParameterCount());
+			ImGui::TextColored(Disassembly_ColorComment, "// expecting %d parameters", runScript.GetParameterCount());
 
 			break;
 		}

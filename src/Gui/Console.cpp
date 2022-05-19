@@ -35,7 +35,7 @@ Console::Console()
       }
 {
 	// TODO: Add custom spdlog sink here
-	for (const auto& signature : lhscriptx::FeatureScriptCommands::Signatures)
+	for (const auto& signature : lhscriptx::FeatureScriptCommands::k_Signatures)
 	{
 		std::string details;
 		for (bool skip = true; const auto param : signature.parameters)
@@ -84,71 +84,70 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 		// Example of TEXT COMPLETION
 
 		// Locate beginning of current word
-		const char* word_end = data->Buf + data->CursorPos;
-		const char* word_start = word_end;
-		while (word_start > data->Buf)
+		const char* wordEnd = data->Buf + data->CursorPos;
+		const char* wordStart = wordEnd;
+		while (wordStart > data->Buf)
 		{
-			const char c = word_start[-1];
+			const char c = wordStart[-1];
 			if (c == ' ' || c == '\t' || c == ',' || c == ';')
 			{
 				break;
 			}
-			word_start--;
+			wordStart--;
 		}
 
 		// Build a list of candidates
 		std::vector<std::string> candidates;
-		for (auto& Command : _commands)
+		for (auto& command : _commands)
 		{
-			if (word_end == word_start ||
-			    strncmp(Command.first.c_str(), word_start, static_cast<int>(word_end - word_start)) == 0)
+			if (wordEnd == wordStart || strncmp(command.first.c_str(), wordStart, static_cast<int>(wordEnd - wordStart)) == 0)
 			{
-				candidates.push_back(Command.first);
+				candidates.push_back(command.first);
 			}
 		}
 
 		if (candidates.empty())
 		{
 			// No match
-			AddLog("No match for \"%.*s\"!\n", static_cast<int>(word_end - word_start), word_start);
+			AddLog("No match for \"%.*s\"!\n", static_cast<int>(wordEnd - wordStart), wordStart);
 		}
 		else if (candidates.size() == 1)
 		{
 			// Single match. Delete the beginning of the word and replace it entirely so we've got nice casing
-			data->DeleteChars(static_cast<int>(word_start - data->Buf), static_cast<int>(word_end - word_start));
+			data->DeleteChars(static_cast<int>(wordStart - data->Buf), static_cast<int>(wordEnd - wordStart));
 			data->InsertChars(data->CursorPos, candidates[0].c_str());
 		}
 		else
 		{
 			// Multiple matches. Complete as much as we can, so inputing "C" will complete to "CL" and display
 			// "CLEAR" and "CLASSIFY"
-			int match_len = static_cast<int>(word_end - word_start);
+			int matchLen = static_cast<int>(wordEnd - wordStart);
 			for (;;)
 			{
 				char c = 0;
-				bool all_candidates_matches = true;
-				for (size_t i = 0; i < candidates.size() && all_candidates_matches; i++)
+				bool allCandidatesMatches = true;
+				for (size_t i = 0; i < candidates.size() && allCandidatesMatches; i++)
 				{
 					if (i == 0)
 					{
-						c = candidates[i][match_len];
+						c = candidates[i][matchLen];
 					}
-					else if (c == 0 || c != candidates[i][match_len])
+					else if (c == 0 || c != candidates[i][matchLen])
 					{
-						all_candidates_matches = false;
+						allCandidatesMatches = false;
 					}
 				}
-				if (!all_candidates_matches)
+				if (!allCandidatesMatches)
 				{
 					break;
 				}
-				match_len++;
+				matchLen++;
 			}
 
-			if (match_len > 0)
+			if (matchLen > 0)
 			{
-				data->DeleteChars(static_cast<int>(word_start - data->Buf), static_cast<int>(word_end - word_start));
-				data->InsertChars(data->CursorPos, candidates[0].c_str(), candidates[0].c_str() + match_len);
+				data->DeleteChars(static_cast<int>(wordStart - data->Buf), static_cast<int>(wordEnd - wordStart));
+				data->InsertChars(data->CursorPos, candidates[0].c_str(), candidates[0].c_str() + matchLen);
 			}
 
 			// List matches
@@ -164,7 +163,7 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 	case ImGuiInputTextFlags_CallbackHistory:
 	{
 		// Example of HISTORY
-		const auto prev_historyPos = _historyPos;
+		const auto prevHistoryPos = _historyPos;
 		if (data->EventKey == ImGuiKey_UpArrow)
 		{
 			if (!_historyPos.has_value())
@@ -196,11 +195,11 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 		}
 
 		// A better implementation would preserve the data on the current input line along with cursor position.
-		if (prev_historyPos != _historyPos)
+		if (prevHistoryPos != _historyPos)
 		{
-			auto history_str = _historyPos.has_value() ? _history[*_historyPos] : _partial;
+			auto historyStr = _historyPos.has_value() ? _history[*_historyPos] : _partial;
 			data->DeleteChars(0, data->BufTextLen);
-			data->InsertChars(0, history_str.c_str());
+			data->InsertChars(0, historyStr.c_str());
 		}
 		break;
 	}
@@ -273,13 +272,13 @@ void Console::Draw(Game& game)
 		_items.clear();
 	}
 	ImGui::SameLine();
-	bool copy_to_clipboard = ImGui::SmallButton("Copy");
+	bool copyToClipboard = ImGui::SmallButton("Copy");
 
 	ImGui::Separator();
 
-	const float footer_height_to_reserve =
+	const float footerHeightToReserve =
 	    ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing(); // 1 separator, 1 input text
-	ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), false,
+	ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footerHeightToReserve), false,
 	                  ImGuiWindowFlags_HorizontalScrollbar); // Leave room for 1 separator + 1 InputText
 	if (ImGui::BeginPopupContextWindow())
 	{
@@ -306,7 +305,7 @@ void Console::Draw(Game& game)
 	// we can manage to improve this example code! If your items are of variable size you may want to implement code similar
 	// to what ImGuiListClipper does. Or split your data into fixed height items to allow random-seeking into your list.
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
-	if (copy_to_clipboard)
+	if (copyToClipboard)
 	{
 		ImGui::LogToClipboard();
 	}
@@ -314,24 +313,24 @@ void Console::Draw(Game& game)
 	{
 		// Normally you would store more information in your item (e.g. make Items[] an array of structure, store color/type
 		// etc.)
-		bool pop_color = false;
+		bool popColor = false;
 		if (strstr(item.c_str(), "[error]") != nullptr)
 		{
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
-			pop_color = true;
+			popColor = true;
 		}
 		else if (strncmp(item.c_str(), "# ", 2) == 0)
 		{
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.8f, 0.6f, 1.0f));
-			pop_color = true;
+			popColor = true;
 		}
 		ImGui::TextUnformatted(item.c_str());
-		if (pop_color)
+		if (popColor)
 		{
 			ImGui::PopStyleColor();
 		}
 	}
-	if (copy_to_clipboard)
+	if (copyToClipboard)
 	{
 		ImGui::LogFinish();
 	}
@@ -410,37 +409,37 @@ void Console::AddLog(const char* fmt, ...)
 	_items.emplace_back(buf.data());
 }
 
-void Console::ExecCommand(const std::string& command_line, Game& game)
+void Console::ExecCommand(const std::string& commandLine, Game& game)
 {
-	AddLog("# %s\n", command_line.c_str());
+	AddLog("# %s\n", commandLine.c_str());
 
 	// Insert into history. First find match and delete it so it can be pushed to the back. This isn't trying to be smart or
 	// optimal.
 	_historyPos.reset();
 	for (int i = static_cast<int>(_history.size()) - 1; i >= 0; i--)
 	{
-		if (_history[i] == command_line)
+		if (_history[i] == commandLine)
 		{
 			_history.erase(_history.begin() + i);
 			break;
 		}
 	}
-	_history.emplace_back(command_line);
+	_history.emplace_back(commandLine);
 
 	// Process command
-	if (command_line == "clear")
+	if (commandLine == "clear")
 	{
 		_items.clear();
 	}
-	else if (command_line == "help")
+	else if (commandLine == "help")
 	{
 		AddLog("Commands:");
-		for (auto& Command : _commands)
+		for (auto& command : _commands)
 		{
-			AddLog("- %s%s", Command.first.c_str(), Command.second.c_str());
+			AddLog("- %s%s", command.first.c_str(), command.second.c_str());
 		}
 	}
-	else if (command_line == "history")
+	else if (commandLine == "history")
 	{
 		size_t first = _history.size() - 10;
 		for (size_t i = first > 0 ? first : 0; i < _history.size(); i++)
@@ -453,7 +452,7 @@ void Console::ExecCommand(const std::string& command_line, Game& game)
 		try
 		{
 			lhscriptx::Script script(&game);
-			script.Load(command_line);
+			script.Load(commandLine);
 		}
 		catch (std::runtime_error& error)
 		{

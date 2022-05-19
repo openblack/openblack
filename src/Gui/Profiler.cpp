@@ -29,13 +29,13 @@ openblack::gui::Profiler::Profiler()
 void openblack::gui::Profiler::Open()
 {
 	DebugWindow::Open();
-	Game::instance()->GetConfig().bgfxProfile = true;
+	Game::Instance()->GetConfig().bgfxProfile = true;
 }
 
 void openblack::gui::Profiler::Close()
 {
 	DebugWindow::Close();
-	Game::instance()->GetConfig().bgfxProfile = false;
+	Game::Instance()->GetConfig().bgfxProfile = false;
 }
 
 void openblack::gui::Profiler::Draw(Game& game)
@@ -48,11 +48,11 @@ void openblack::gui::Profiler::Draw(Game& game)
 	const double toMsCpu = 1000.0 / stats->cpuTimerFreq;
 	const double toMsGpu = 1000.0 / stats->gpuTimerFreq;
 	const double frameMs = double(stats->cpuTimeFrame) * toMsCpu;
-	_times.pushBack(static_cast<float>(frameMs));
-	_fps.pushBack(static_cast<float>(1000.0 / frameMs));
+	_times.PushBack(static_cast<float>(frameMs));
+	_fps.PushBack(static_cast<float>(1000.0 / frameMs));
 
 	std::array<char, 256> frameTextOverlay;
-	std::snprintf(frameTextOverlay.data(), frameTextOverlay.size(), "%.3fms, %.1f FPS", _times.back(), _fps.back());
+	std::snprintf(frameTextOverlay.data(), frameTextOverlay.size(), "%.3fms, %.1f FPS", _times.Back(), _fps.Back());
 
 	ImGui::Text("Submit CPU %0.3f, GPU %0.3f (Max GPU Latency: %d)", double(stats->cpuTimeEnd - stats->cpuTimeBegin) * toMsCpu,
 	            double(stats->gpuTimeEnd - stats->gpuTimeBegin) * toMsGpu, stats->maxGpuLatency);
@@ -75,7 +75,7 @@ void openblack::gui::Profiler::Draw(Game& game)
 	ImGui::Columns(1);
 
 	auto width = ImGui::GetColumnWidth() - ImGui::CalcTextSize("Frame").x;
-	ImGui::PlotHistogram("Frame", _times._values.data(), decltype(_times)::_bufferSize, _times._offset, frameTextOverlay.data(),
+	ImGui::PlotHistogram("Frame", _times.values.data(), decltype(_times)::k_BufferSize, _times.offset, frameTextOverlay.data(),
 	                     0.0f, FLT_MAX, ImVec2(width, 45.0f));
 
 	ImGui::Text("Primitives Triangles %u, Triangle Strips %u, Lines %u "
@@ -97,32 +97,32 @@ void openblack::gui::Profiler::Draw(Game& game)
 
 	ImGui::Columns(1);
 
-	auto& entry = game.GetProfiler()._entries.at(game.GetProfiler().GetEntryIndex(-1));
+	auto& entry = game.GetProfiler().GetEntries().at(game.GetProfiler().GetEntryIndex(-1));
 
 	ImGuiWidgetFlameGraph::PlotFlame(
 	    "CPU",
 	    [](float* startTimestamp, float* endTimestamp, ImU8* level, const char** caption, const void* data, int idx) -> void {
 		    const auto* entry = reinterpret_cast<const openblack::Profiler::Entry*>(data);
-		    const auto& stage = entry->_stages.at(idx);
+		    const auto& stage = entry->stages.at(idx);
 		    if (startTimestamp != nullptr)
 		    {
-			    std::chrono::duration<float, std::milli> fltStart = stage._start - entry->_frameStart;
+			    std::chrono::duration<float, std::milli> fltStart = stage.start - entry->frameStart;
 			    *startTimestamp = fltStart.count();
 		    }
 		    if (endTimestamp != nullptr)
 		    {
-			    *endTimestamp = stage._end.time_since_epoch().count() / 1e6f;
+			    *endTimestamp = stage.end.time_since_epoch().count() / 1e6f;
 
-			    std::chrono::duration<float, std::milli> fltEnd = stage._end - entry->_frameStart;
+			    std::chrono::duration<float, std::milli> fltEnd = stage.end - entry->frameStart;
 			    *endTimestamp = fltEnd.count();
 		    }
 		    if (level != nullptr)
 		    {
-			    *level = stage._level;
+			    *level = stage.level;
 		    }
 		    if (caption != nullptr)
 		    {
-			    *caption = openblack::Profiler::stageNames.at(idx).data();
+			    *caption = openblack::Profiler::k_StageNames.at(idx).data();
 		    }
 	    },
 	    &entry, static_cast<uint8_t>(openblack::Profiler::Stage::_count), 0, "Main Thread", 0, FLT_MAX, ImVec2(width, 0));
@@ -157,17 +157,17 @@ void openblack::gui::Profiler::Draw(Game& game)
 	ImGui::Columns(2);
 	if (ImGui::CollapsingHeader("Details (CPU)", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		std::chrono::duration<float, std::milli> frameDuration = entry._frameEnd - entry._frameStart;
+		std::chrono::duration<float, std::milli> frameDuration = entry.frameEnd - entry.frameStart;
 		ImGui::Text("Full Frame: %0.3f", frameDuration.count());
 		auto cursorX = ImGui::GetCursorPosX();
 		auto indentSize = ImGui::CalcTextSize("    ").x;
 
-		for (uint8_t i = 0; const auto& stage : entry._stages)
+		for (uint8_t i = 0; const auto& stage : entry.stages)
 		{
-			std::chrono::duration<float, std::milli> duration = stage._end - stage._start;
-			ImGui::SetCursorPosX(cursorX + indentSize * stage._level);
-			ImGui::Text("    %s: %0.3f", openblack::Profiler::stageNames.at(i).data(), duration.count());
-			if (stage._level == 0)
+			std::chrono::duration<float, std::milli> duration = stage.end - stage.start;
+			ImGui::SetCursorPosX(cursorX + indentSize * stage.level);
+			ImGui::Text("    %s: %0.3f", openblack::Profiler::k_StageNames.at(i).data(), duration.count());
+			if (stage.level == 0)
 			{
 				frameDuration -= duration;
 			}

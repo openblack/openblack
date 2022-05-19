@@ -120,17 +120,17 @@ struct L3DTexture
 {
 	struct RGBA4
 	{
-		uint16_t B : 4;
-		uint16_t G : 4;
-		uint16_t R : 4;
-		uint16_t A : 4;
+		uint16_t b : 4;
+		uint16_t g : 4;
+		uint16_t r : 4;
+		uint16_t a : 4;
 	};
 	static_assert(sizeof(RGBA4) == sizeof(uint16_t));
 	uint32_t id;
-	static constexpr uint16_t width = 256;
-	static constexpr uint16_t height = 256;
-	std::array<RGBA4, width * height> texels;
-	static_assert(sizeof(texels) == width * height * sizeof(uint16_t));
+	static constexpr uint16_t k_Width = 256;
+	static constexpr uint16_t k_Height = 256;
+	std::array<RGBA4, k_Width * k_Height> texels;
+	static_assert(sizeof(texels) == k_Width * k_Height * sizeof(uint16_t));
 };
 static_assert(sizeof(L3DTexture) == sizeof(uint32_t) + 256 * 256 * sizeof(uint16_t));
 
@@ -229,7 +229,7 @@ static_assert(sizeof(L3DBlend) == 8);
 class L3DFile
 {
 protected:
-	static constexpr const std::array<char, 4> kMagic = {'L', '3', 'D', '0'};
+	static constexpr const std::array<char, 4> k_Magic = {'L', '3', 'D', '0'};
 
 	/// True when a file has been loaded
 	bool _isLoaded {false};

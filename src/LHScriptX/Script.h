@@ -33,7 +33,7 @@ class Script
 public:
 	explicit Script(Game* game)
 	    : _game(game)
-	    , token_(Token::MakeInvalidToken())
+	    , _token(Token::MakeInvalidToken())
 	{
 	}
 
@@ -47,16 +47,16 @@ private:
 	// void processCommand(const std::string& command, std::vector<std::string>
 	// parameters);
 
-	[[nodiscard]] bool isCommand(const std::string& identifier) const;
-	void runCommand(const std::string& identifier, const std::vector<Token>& args);
+	[[nodiscard]] bool IsCommand(const std::string& identifier) const;
+	void RunCommand(const std::string& identifier, const std::vector<Token>& args);
 
-	const Token* peekToken(Lexer&);
-	const Token* advanceToken(Lexer&);
+	const Token* PeekToken(Lexer&);
+	const Token* AdvanceToken(Lexer&);
 
 	// Game instance
 	Game* _game;
 	// The current token.
-	Token token_;
+	Token _token;
 };
 
 } // namespace openblack::lhscriptx

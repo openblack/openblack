@@ -28,10 +28,11 @@ Water::Water()
 	_reflectionFrameBuffer =
 	    std::make_unique<FrameBuffer>("Reflection", static_cast<uint16_t>(1024), static_cast<uint16_t>(1024),
 	                                  graphics::Format::RGBA8, graphics::Format::Depth24Stencil8);
-	createMesh();
+	CreateMesh();
 }
+Water::~Water() = default;
 
-void Water::createMesh()
+void Water::CreateMesh()
 {
 	VertexDecl decl;
 	decl.reserve(1);

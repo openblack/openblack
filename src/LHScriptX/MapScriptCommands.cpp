@@ -18,12 +18,12 @@
 using namespace openblack::lhscriptx;
 
 // alias parameter types for signature list readability
-const constexpr ParameterType TString = ParameterType::String;
-const constexpr ParameterType TNumber = ParameterType::Number;
-const constexpr ParameterType TFloat = ParameterType::Float;
-const constexpr ParameterType TVector = ParameterType::Vector;
+const constexpr ParameterType k_TString = ParameterType::String;
+const constexpr ParameterType k_TNumber = ParameterType::Number;
+const constexpr ParameterType k_TFloat = ParameterType::Float;
+const constexpr ParameterType k_TVector = ParameterType::Vector;
 
-const std::array<const ScriptCommandSignature, 20> MapScriptCommands::Signatures = {{
+const std::array<const ScriptCommandSignature, 20> MapScriptCommands::k_Signatures = {{
     CREATE_COMMAND_BINDING("SET_NO_PLAYERS", MapScriptCommands::SetNoPlayers),
     CREATE_COMMAND_BINDING("LOAD_TRIBE_DANCE", MapScriptCommands::LoadTribeDance),
     CREATE_COMMAND_BINDING("SET_DATE", MapScriptCommands::SetDate),
@@ -70,13 +70,13 @@ void MapScriptCommands::SetTime(int32_t, int32_t, int32_t)
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::SetTurnsPerYear([[maybe_unused]] int32_t turns_per_year)
+void MapScriptCommands::SetTurnsPerYear([[maybe_unused]] int32_t turnsPerYear)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));
 }
 
-void MapScriptCommands::SetGameTickTime([[maybe_unused]] int32_t game_tick_time)
+void MapScriptCommands::SetGameTickTime([[maybe_unused]] int32_t gameTickTime)
 {
 	throw std::logic_error(std::string {} + "Function " + __func__ + " not implemented. " + __FILE__ + ":" +
 	                       std::to_string(__LINE__));

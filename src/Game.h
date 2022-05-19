@@ -81,7 +81,7 @@ enum class LoggingSubsystem : uint8_t
 	_count
 };
 
-static std::array<std::string_view, static_cast<size_t>(LoggingSubsystem::_count)> LoggingSubsystemStrs {
+constexpr static std::array<std::string_view, static_cast<size_t>(LoggingSubsystem::_count)> k_LoggingSubsystemStrs {
     "game",        //
     "graphics",    //
     "scripting",   //
@@ -101,16 +101,16 @@ struct Arguments
 	float scale;
 	uint32_t numFramesToSimulate;
 	std::string logFile;
-	std::array<spdlog::level::level_enum, LoggingSubsystemStrs.size()> logLevels;
+	std::array<spdlog::level::level_enum, k_LoggingSubsystemStrs.size()> logLevels;
 };
 
 class Game
 {
 public:
-	static constexpr auto kTurnDuration = std::chrono::milliseconds(100);
-	static constexpr float kTurnDurationMultiplierSlow = 2.0f;
-	static constexpr float kTurnDurationMultiplierNormal = 1.0f;
-	static constexpr float kTurnDurationMultiplierFast = 0.5f;
+	static constexpr auto k_TurnDuration = std::chrono::milliseconds(100);
+	static constexpr float k_TurnDurationMultiplierSlow = 2.0f;
+	static constexpr float k_TurnDurationMultiplierNormal = 1.0f;
+	static constexpr float k_TurnDurationMultiplierFast = 0.5f;
 
 	struct Config
 	{
@@ -207,7 +207,7 @@ public:
 	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const { return _turnDeltaTime; }
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
 
-	static Game* instance() { return sInstance; }
+	static Game* Instance() { return sInstance; }
 
 private:
 	static Game* sInstance;

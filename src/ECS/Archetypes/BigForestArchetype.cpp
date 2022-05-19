@@ -27,10 +27,10 @@ using namespace openblack::ecs::components;
 entt::entity BigForestArchetype::Create(const glm::vec3& position, BigForestInfo type, [[maybe_unused]] uint32_t unknown,
                                         float yAngleRadians, float scale)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
-	const auto& info = Game::instance()->GetInfoConstants().bigForest.at(static_cast<size_t>(type));
+	const auto& info = Game::Instance()->GetInfoConstants().bigForest.at(static_cast<size_t>(type));
 
 	const auto& transform = registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));
 	const auto [point, radius] = GetFixedObstacleBoundingCircle(info.meshId, transform);

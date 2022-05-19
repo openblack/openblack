@@ -33,16 +33,16 @@ class LandBlockBulletMeshInterface: public btStridingMeshInterface
 	std::vector<uint16_t> _indices;
 
 public:
-	explicit LandBlockBulletMeshInterface(const uint8_t* vertex_data, uint32_t vertex_count, size_t stride)
-	    : _vertices(vertex_count / stride)
-	    , _indices(vertex_count / stride)
+	explicit LandBlockBulletMeshInterface(const uint8_t* vertexData, uint32_t vertexCount, size_t stride)
+	    : _vertices(vertexCount / stride)
+	    , _indices(vertexCount / stride)
 	{
 		for (uint16_t i = 0; auto& v : _vertices)
 		{
-			const auto* vertex_base = reinterpret_cast<const float*>(&vertex_data[i * stride]);
-			v[0] = vertex_base[0];
-			v[1] = vertex_base[1];
-			v[2] = vertex_base[2];
+			const auto* vertexBase = reinterpret_cast<const float*>(&vertexData[i * stride]);
+			v[0] = vertexBase[0];
+			v[1] = vertexBase[1];
+			v[2] = vertexBase[2];
 			_indices[i] = i;
 			++i;
 		}

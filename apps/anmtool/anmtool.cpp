@@ -27,19 +27,19 @@ int PrintHeader(openblack::anm::ANMFile& anm)
 	std::printf("file: %s\n", anm.GetFilename().c_str());
 
 	std::printf("name: %s\n", header.name.data());
-	std::printf("unknown_0x20: 0x%X\n", header.unknown_0x20);
-	std::printf("unknown_0x24: %f\n", header.unknown_0x24);
-	std::printf("unknown_0x28: %f\n", header.unknown_0x28);
-	std::printf("unknown_0x2C: %f\n", header.unknown_0x2C);
-	std::printf("unknown_0x30: %f\n", header.unknown_0x30);
-	std::printf("unknown_0x34: %f\n", header.unknown_0x34);
-	std::printf("frame count: %u\n", header.frame_count);
-	std::printf("unknown_0x3C: 0x%X\n", header.unknown_0x3C);
-	std::printf("animation_duration: %u\n", header.animation_duration);
-	std::printf("unknown_0x44: 0x%X\n", header.unknown_0x44);
-	std::printf("unknown_0x48: 0x%X\n", header.unknown_0x48);
-	std::printf("frames base: 0x%X\n", header.frames_base);
-	std::printf("unknown_0x50: 0x%X\n", header.unknown_0x50);
+	std::printf("unknown0x20: 0x%X\n", header.unknown0x20);
+	std::printf("unknown0x24: %f\n", header.unknown0x24);
+	std::printf("unknown0x28: %f\n", header.unknown0x28);
+	std::printf("unknown0x2C: %f\n", header.unknown0x2C);
+	std::printf("unknown0x30: %f\n", header.unknown0x30);
+	std::printf("unknown0x34: %f\n", header.unknown0x34);
+	std::printf("frame count: %u\n", header.frameCount);
+	std::printf("unknown0x3C: 0x%X\n", header.unknown0x3C);
+	std::printf("animation_duration: %u\n", header.animationDuration);
+	std::printf("unknown0x44: 0x%X\n", header.unknown0x44);
+	std::printf("unknown0x48: 0x%X\n", header.unknown0x48);
+	std::printf("frames base: 0x%X\n", header.framesBase);
+	std::printf("unknown0x50: 0x%X\n", header.unknown0x50);
 
 	return EXIT_SUCCESS;
 }
@@ -50,11 +50,11 @@ int ListKeyframes(openblack::anm::ANMFile& anm)
 
 	std::printf("file: %s\n", anm.GetFilename().c_str());
 
-	uint32_t last_time = 0;
+	uint32_t lastTime = 0;
 	for (uint32_t i = 0; i < keyframes.size(); ++i)
 	{
-		std::printf("%u: time %u (+%u)\n", i, keyframes[i].time, keyframes[i].time - last_time);
-		last_time = keyframes[i].time;
+		std::printf("%u: time %u (+%u)\n", i, keyframes[i].time, keyframes[i].time - lastTime);
+		lastTime = keyframes[i].time;
 	}
 
 	return EXIT_SUCCESS;
@@ -122,14 +122,14 @@ int WriteFile(const Arguments::Write& args) noexcept
 	const std::string name = "TODO";
 	memcpy(anm.GetHeader().name.data(), name.c_str(),
 	       std::min(sizeof(anm.GetHeader().name[0]) * anm.GetHeader().name.size(), name.length()));
-	anm.GetHeader().frame_count = 0;
-	anm.GetHeader().animation_duration = 0;
+	anm.GetHeader().frameCount = 0;
+	anm.GetHeader().animationDuration = 0;
 	anm.Write(args.outFilename);
 
 	return EXIT_SUCCESS;
 }
 
-bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noexcept
+bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexcept
 {
 	cxxopts::Options options("anmtool", "Inspect and extract files from LionHead ANM files.");
 
@@ -155,7 +155,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 	catch (const std::exception& e)
 	{
 		std::cerr << e.what() << '\n';
-		return_code = EXIT_FAILURE;
+		returnCode = EXIT_FAILURE;
 		return false;
 	}
 
@@ -165,13 +165,13 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 		if (result["help"].as<bool>())
 		{
 			std::cout << options.help() << std::endl;
-			return_code = EXIT_SUCCESS;
+			returnCode = EXIT_SUCCESS;
 			return false;
 		}
 		if (result["subcommand"].count() == 0)
 		{
 			std::cerr << options.help() << std::endl;
-			return_code = EXIT_FAILURE;
+			returnCode = EXIT_FAILURE;
 			return false;
 		}
 		if (result["subcommand"].as<std::string>() == "read")
@@ -216,17 +216,17 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 	}
 
 	std::cerr << options.help() << std::endl;
-	return_code = EXIT_FAILURE;
+	returnCode = EXIT_FAILURE;
 	return false;
 }
 
 int main(int argc, char* argv[]) noexcept
 {
 	Arguments args;
-	int return_code = EXIT_SUCCESS;
-	if (!parseOptions(argc, argv, args, return_code))
+	int returnCode = EXIT_SUCCESS;
+	if (!parseOptions(argc, argv, args, returnCode))
 	{
-		return return_code;
+		return returnCode;
 	}
 
 	if (args.mode == Arguments::Mode::Write)
@@ -245,25 +245,25 @@ int main(int argc, char* argv[]) noexcept
 			switch (args.mode)
 			{
 			case Arguments::Mode::Header:
-				return_code |= PrintHeader(anm);
+				returnCode |= PrintHeader(anm);
 				break;
 			case Arguments::Mode::ListKeyframes:
-				return_code |= ListKeyframes(anm);
+				returnCode |= ListKeyframes(anm);
 				break;
 			case Arguments::Mode::Keyframe:
-				return_code |= ViewKeyframe(anm);
+				returnCode |= ViewKeyframe(anm);
 				break;
 			default:
-				return_code = EXIT_FAILURE;
+				returnCode = EXIT_FAILURE;
 				break;
 			}
 		}
 		catch (std::exception& err)
 		{
 			std::cerr << err.what() << std::endl;
-			return_code |= EXIT_FAILURE;
+			returnCode |= EXIT_FAILURE;
 		}
 	}
 
-	return return_code;
+	return returnCode;
 }

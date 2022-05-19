@@ -25,13 +25,13 @@ using namespace openblack::ecs::components;
 entt::entity HandArchetype::Create(const glm::vec3& position, float xAngleRadians, float yAngleRadians, float zAngleRadians,
                                    float scale, bool rightHanded)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
 	const auto rotation = glm::mat3(glm::eulerAngleXYZ(xAngleRadians, yAngleRadians, zAngleRadians));
 	registry.Assign<Hand>(entity, rightHanded);
 	registry.Assign<Transform>(entity, position, rotation, glm::vec3(scale));
-	registry.Assign<Mesh>(entity, Hand::meshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
+	registry.Assign<Mesh>(entity, Hand::k_MeshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
 
 	// Data/CreatureMesh/Hand_Boned_Base2.l3d
 	// Data/CreatureMesh/Hand_Boned_Good2.l3d

@@ -43,7 +43,7 @@ protected:
 	void ProcessEventAlways(const SDL_Event& event) override;
 
 private:
-	static constexpr graphics::RenderPass _viewId = graphics::RenderPass::MeshViewer;
+	static constexpr graphics::RenderPass k_ViewId = graphics::RenderPass::MeshViewer;
 	entt::id_type _selectedMesh;
 	int _selectedSubMesh {0};
 	std::optional<entt::id_type> _selectedAnimation;

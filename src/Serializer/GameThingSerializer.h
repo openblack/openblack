@@ -28,6 +28,7 @@ namespace openblack::serializer
 
 enum class GameThingType : uint32_t
 {
+	Invalid = 0x0,
 	Footpath = 0x1,
 	FootpathLink = 0x2,
 	FootpathNode = 0x3,
@@ -35,15 +36,15 @@ enum class GameThingType : uint32_t
 };
 
 template <typename T>
-inline GameThingType GameThingTypeEnum;
+static const GameThingType k_GameThingTypeEnum = GameThingType::Invalid;
 
 class GameThingSerializer
 {
 public:
 	struct GameThing
 	{
-		uint32_t _unknown1;
-		uint8_t _unknown2;
+		uint32_t unknown1;
+		uint8_t unknown2;
 
 		virtual ~GameThing() = default;
 
@@ -54,8 +55,8 @@ public:
 
 	struct FootpathNode final: GameThing
 	{
-		MapCoords _coords;
-		uint8_t _unknown;
+		MapCoords coords;
+		uint8_t unknown;
 
 		bool Deserialize(GameThingSerializer& deserializer) override;
 		bool operator==(const FootpathNode& rhs) const;
@@ -64,8 +65,8 @@ public:
 
 	struct Footpath final: GameThing
 	{
-		std::vector<FootpathNode> _nodes;
-		uint32_t _unknown;
+		std::vector<FootpathNode> nodes;
+		uint32_t unknown;
 
 		bool Deserialize(GameThingSerializer& deserializer) override;
 		bool operator==(const Footpath& rhs) const;
@@ -74,15 +75,15 @@ public:
 
 	struct FootpathLink final: GameThing
 	{
-		std::vector<Footpath> _footpaths;
+		std::vector<Footpath> footpaths;
 
 		bool Deserialize(GameThingSerializer& deserializer) override;
 	};
 
 	struct FootpathLinkSave final: GameThing
 	{
-		MapCoords _coords;
-		FootpathLink _link;
+		MapCoords coords;
+		FootpathLink link;
 
 		bool Deserialize(GameThingSerializer& deserializer) override;
 	};
@@ -94,7 +95,7 @@ public:
 
 	void ReadChecksum();
 
-	std::shared_ptr<GameThing> DeserializeOne(std::optional<GameThingType> required_type = std::nullopt);
+	std::shared_ptr<GameThing> DeserializeOne(std::optional<GameThingType> requiredType = std::nullopt);
 	template <typename T>
 	std::vector<T> DeserializeList();
 

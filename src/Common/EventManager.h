@@ -45,14 +45,14 @@ private:
 
 	public:
 		template <typename... T>
-		inline static const int Type = identifier++;
+		inline static const int k_Type = identifier++;
 	};
-	mutable std::unordered_map<int, std::unique_ptr<IEventQueue>> queues {};
+	mutable std::unordered_map<int, std::unique_ptr<IEventQueue>> _queues {};
 	template <typename Event>
 	EventQueue<Event>* Insist()
 	{
-		const auto eventType = EventManager::_EventFamily::Type<Event>;
-		std::unique_ptr<IEventQueue>& p = queues[eventType];
+		const auto eventType = EventManager::_EventFamily::k_Type<Event>;
+		std::unique_ptr<IEventQueue>& p = _queues[eventType];
 
 		if (!p)
 		{

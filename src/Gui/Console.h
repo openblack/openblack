@@ -46,7 +46,7 @@ protected:
 
 private:
 	void AddLog(const char* fmt, ...);
-	void ExecCommand(const std::string& command_line, Game& game);
+	void ExecCommand(const std::string& commandLine, Game& game);
 	int InputTextCallback(ImGuiInputTextCallbackData* data);
 
 	bool _reclaimFocus {false};

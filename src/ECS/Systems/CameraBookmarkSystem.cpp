@@ -19,7 +19,7 @@
 using namespace openblack::ecs::systems;
 using namespace openblack::ecs::components;
 
-CameraBookmarkSystem& CameraBookmarkSystem::instance()
+CameraBookmarkSystem& CameraBookmarkSystem::Instance()
 {
 	static CameraBookmarkSystem* instance = nullptr;
 	if (instance == nullptr)
@@ -39,7 +39,7 @@ bool CameraBookmarkSystem::Initialize()
 
 void CameraBookmarkSystem::Update(const std::chrono::microseconds& dt) const
 {
-	Game::instance()->GetEntityRegistry().Each<CameraBookmark, Transform>(
+	Game::Instance()->GetEntityRegistry().Each<CameraBookmark, Transform>(
 	    [&dt](CameraBookmark& bookmark, Transform& transform) {
 		    std::chrono::duration<float> seconds = dt;
 		    auto t = bookmark.animationTime * 5.0f;
@@ -52,7 +52,7 @@ void CameraBookmarkSystem::SetBookmark(uint8_t index, const glm::vec3& position)
 {
 	if (index < _bookmarks.size())
 	{
-		auto& registry = Game::instance()->GetEntityRegistry();
+		auto& registry = Game::Instance()->GetEntityRegistry();
 		auto entity = _bookmarks.at(index);
 		registry.AssignOrReplace<Transform>(entity, position + glm::vec3(0.0f, 1.0f, 0.0f), glm::mat3(1.0f), glm::vec3(1.0f));
 		auto& bookmark = registry.Get<CameraBookmark>(entity);
@@ -68,7 +68,7 @@ void CameraBookmarkSystem::ClearBookmark(uint8_t index) const
 {
 	if (index < _bookmarks.size())
 	{
-		Game::instance()->GetEntityRegistry().Remove<Transform>(_bookmarks.at(index));
+		Game::Instance()->GetEntityRegistry().Remove<Transform>(_bookmarks.at(index));
 	}
 	else
 	{

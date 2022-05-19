@@ -41,13 +41,13 @@ void FotFile::Load(const std::filesystem::path& path)
 	{
 		const auto entity = registry.Create();
 		auto& footpathEntt = registry.Assign<ecs::components::Footpath>(entity);
-		footpathEntt.nodes.reserve(footpath._nodes.size());
-		for (const auto& node : footpath._nodes)
+		footpathEntt.nodes.reserve(footpath.nodes.size());
+		for (const auto& node : footpath.nodes)
 		{
 			glm::vec3 position = glm::vec3 {
-			    10.0f * node._coords.x / static_cast<float>(0xFFFF),
-			    node._coords.altitude,
-			    10.0f * node._coords.z / static_cast<float>(0xFFFF),
+			    10.0f * node.coords.x / static_cast<float>(0xFFFF),
+			    node.coords.altitude,
+			    10.0f * node.coords.z / static_cast<float>(0xFFFF),
 			};
 
 			// This bit is mainly for visualization, it could be that using these offsets causes uses for path planning
@@ -62,7 +62,7 @@ void FotFile::Load(const std::filesystem::path& path)
 	for (const auto& save : footpathLinkSaves)
 	{
 		std::vector<ecs::components::Footpath::Id> linkFootpathEntities;
-		for (const auto& footpath : save._link._footpaths)
+		for (const auto& footpath : save.link.footpaths)
 		{
 			// Save links have duplicates to entries in footpaths
 			const auto footpathListItr = std::find(footpaths.cbegin(), footpaths.cend(), footpath);
@@ -71,9 +71,9 @@ void FotFile::Load(const std::filesystem::path& path)
 			linkFootpathEntities.push_back(footpathEntities[footpathIndex]);
 		}
 		glm::vec3 position = glm::vec3 {
-		    10.0f * save._coords.x / static_cast<float>(0xFFFF),
-		    save._coords.altitude,
-		    10.0f * save._coords.z / static_cast<float>(0xFFFF),
+		    10.0f * save.coords.x / static_cast<float>(0xFFFF),
+		    save.coords.altitude,
+		    10.0f * save.coords.z / static_cast<float>(0xFFFF),
 		};
 		const auto entity = registry.Create();
 		registry.Assign<ecs::components::FootpathLink>(entity, position, std::move(linkFootpathEntities));

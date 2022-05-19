@@ -96,10 +96,10 @@ struct LNDBlock
 	uint32_t nextSortingPtr;
 	float valueSorting;
 	float lowResTexture;
-	float fu_lrs; ///< (iu_lrs / 256)
-	float fv_lrs; ///< (iv_lrs / 256)
-	float iu_lrs; ///< lowrestex x
-	float iv_lrs; ///< lowrestex z
+	float fuLrs; ///< (iuLrs / 256)
+	float fvLrs; ///< (ivLrs / 256)
+	float iuLrs; ///< lowrestex x
+	float ivLrs; ///< lowrestex z
 	uint32_t smallTextUpdated;
 };
 static_assert(sizeof(LNDBlock) == 2520);
@@ -122,26 +122,26 @@ struct LNDMaterial
 {
 	struct R5G5B5A1
 	{
-		uint16_t B : 5;
-		uint16_t G : 5;
-		uint16_t R : 5;
-		uint16_t A : 1;
+		uint16_t b : 5;
+		uint16_t g : 5;
+		uint16_t r : 5;
+		uint16_t a : 1;
 	};
 	static_assert(sizeof(R5G5B5A1) == sizeof(uint16_t));
-	static constexpr uint16_t width = 256;
-	static constexpr uint16_t height = 256;
+	static constexpr uint16_t k_Width = 256;
+	static constexpr uint16_t k_Height = 256;
 
 	uint16_t type; ///< Terrain Type
-	std::array<R5G5B5A1, width * height> texels;
+	std::array<R5G5B5A1, k_Width * k_Height> texels;
 };
 static_assert(sizeof(LNDMaterial) == 0x20002);
 
 struct LNDBumpMap
 {
-	static constexpr uint16_t width = 256;
-	static constexpr uint16_t height = 256;
+	static constexpr uint16_t k_Width = 256;
+	static constexpr uint16_t k_Height = 256;
 
-	std::array<uint8_t, width * height> texels; ///< R8
+	std::array<uint8_t, k_Width * k_Height> texels; ///< R8
 };
 static_assert(sizeof(LNDBumpMap) == 0x10000);
 

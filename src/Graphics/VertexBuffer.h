@@ -50,21 +50,21 @@ struct VertexAttrib
 		Float,
 	};
 
-	Attribute _attribute; ///< Type of data represented
-	uint8_t _num;         ///< Number of components per vertex attribute, must be 1, 2,
-	                      ///< 3, 4.
-	Type _type;           ///< Data type of each attribute component in the array.
-	bool _normalized;     /// < When using fixed point values, range will be
-	                      /// normalized to 0.0-1.0 in shader.
-	bool _asInt;          /// < Should not be altered. Unpacking will have to be done in
-	                      /// vertex shader.
+	Attribute attribute; ///< Type of data represented
+	uint8_t num;         ///< Number of components per vertex attribute, must be 1, 2,
+	                     ///< 3, 4.
+	Type type;           ///< Data type of each attribute component in the array.
+	bool normalized;     /// < When using fixed point values, range will be
+	                     /// normalized to 0.0-1.0 in shader.
+	bool asInt;          /// < Should not be altered. Unpacking will have to be done in
+	                     /// vertex shader.
 
 	VertexAttrib(Attribute attribute, uint8_t num, Type type, bool normalized = false, bool asInt = false)
-	    : _attribute(attribute)
-	    , _num(num)
-	    , _type(type)
-	    , _normalized(normalized)
-	    , _asInt(asInt)
+	    : attribute(attribute)
+	    , num(num)
+	    , type(type)
+	    , normalized(normalized)
+	    , asInt(asInt)
 	{
 	}
 };

@@ -18,30 +18,30 @@ namespace openblack::lhscriptx
 {
 
 template <class T>
-static ParameterType ParameterTypeStaticLookUpRegular;
+constexpr static ParameterType k_ParameterTypeStaticLookUpRegular = ParameterType::String;
 
 template <>
-inline ParameterType ParameterTypeStaticLookUpRegular<glm::vec3> = ParameterType::Vector;
+constexpr inline ParameterType k_ParameterTypeStaticLookUpRegular<glm::vec3> = ParameterType::Vector;
 
 template <>
-inline ParameterType ParameterTypeStaticLookUpRegular<const std::string&> = ParameterType::String;
+constexpr inline ParameterType k_ParameterTypeStaticLookUpRegular<const std::string&> = ParameterType::String;
 
 template <>
-inline ParameterType ParameterTypeStaticLookUpRegular<float> = ParameterType::Float;
+constexpr inline ParameterType k_ParameterTypeStaticLookUpRegular<float> = ParameterType::Float;
 
 template <>
-inline ParameterType ParameterTypeStaticLookUpRegular<int32_t> = ParameterType::Number;
+constexpr inline ParameterType k_ParameterTypeStaticLookUpRegular<int32_t> = ParameterType::Number;
 
 template <typename T>
 inline typename std::enable_if_t<!std::is_enum<T>::value, ParameterType> GetParamType()
 {
-	return ParameterTypeStaticLookUpRegular<T>;
+	return k_ParameterTypeStaticLookUpRegular<T>;
 }
 
 template <typename T>
 inline typename std::enable_if_t<std::is_enum<T>::value, ParameterType> GetParamType()
 {
-	return ParameterTypeStaticLookUpRegular<std::underlying_type_t<T>>;
+	return k_ParameterTypeStaticLookUpRegular<std::underlying_type_t<T>>;
 }
 
 template <class T>

@@ -33,21 +33,21 @@ private:
 	template <typename T, uint8_t N>
 	struct CircularBuffer
 	{
-		static constexpr uint8_t _bufferSize = N;
-		std::array<T, N> _values;
-		uint8_t _offset = 0;
+		static constexpr uint8_t k_BufferSize = N;
+		std::array<T, N> values;
+		uint8_t offset = 0;
 
-		[[nodiscard]] T back() const
+		[[nodiscard]] T Back() const
 		{
 			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index): perf sensitive
-			return _values[_offset];
+			return values[offset];
 		}
-		void pushBack(T value)
+		void PushBack(T value)
 		{
 
 			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index): perf sensitive
-			_values[_offset] = value;
-			_offset = (_offset + 1u) % _values.size();
+			values[offset] = value;
+			offset = (offset + 1u) % values.size();
 		}
 	};
 	CircularBuffer<float, 100> _times;

@@ -27,10 +27,10 @@ using namespace openblack::ecs::components;
 entt::entity MobileStaticArchetype::Create(const glm::vec3& position, MobileStaticInfo type, float altitude,
                                            float xAngleRadians, float yAngleRadians, float zAngleRadians, float scale)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
-	const auto& info = Game::instance()->GetInfoConstants().mobileStatic.at(static_cast<size_t>(type));
+	const auto& info = Game::Instance()->GetInfoConstants().mobileStatic.at(static_cast<size_t>(type));
 
 	glm::vec3 offset(0.0f, altitude, 0.0f);
 

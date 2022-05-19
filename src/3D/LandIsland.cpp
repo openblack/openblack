@@ -24,8 +24,8 @@
 using namespace openblack;
 using namespace openblack::graphics;
 
-const float LandIsland::HeightUnit = 0.67f;
-const float LandIsland::CellSize = 10.0f;
+const float LandIsland::k_HeightUnit = 0.67f;
+const float LandIsland::k_CellSize = 10.0f;
 
 LandIsland::LandIsland() = default;
 
@@ -62,27 +62,27 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	auto materialCount = static_cast<uint16_t>(lnd.GetMaterials().size());
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} textures", materialCount);
 	std::vector<uint16_t> rgba5TextureData;
-	rgba5TextureData.resize(lnd::LNDMaterial::width * lnd::LNDMaterial::height * lnd.GetMaterials().size());
+	rgba5TextureData.resize(lnd::LNDMaterial::k_Width * lnd::LNDMaterial::k_Height * lnd.GetMaterials().size());
 	for (size_t i = 0; i < lnd.GetMaterials().size(); i++)
 	{
-		std::memcpy(&rgba5TextureData[lnd::LNDMaterial::width * lnd::LNDMaterial::height * i],
+		std::memcpy(&rgba5TextureData[lnd::LNDMaterial::k_Width * lnd::LNDMaterial::k_Height * i],
 		            lnd.GetMaterials()[i].texels.data(),
 		            sizeof(lnd.GetMaterials()[i].texels[0]) * lnd.GetMaterials()[i].texels.size());
 	}
 	_materialArray = std::make_unique<Texture2D>("LandIslandMaterialArray");
-	_materialArray->Create(lnd::LNDMaterial::width, lnd::LNDMaterial::height, materialCount, Format::RGB5A1,
+	_materialArray->Create(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height, materialCount, Format::RGB5A1,
 	                       Wrapping::ClampEdge, rgba5TextureData.data(),
 	                       static_cast<uint32_t>(rgba5TextureData.size() * sizeof(rgba5TextureData[0])));
 
 	// read noise map into Texture2D
 	_noiseMap = lnd.GetExtra().noise.texels;
 	_textureNoiseMap = std::make_unique<Texture2D>("LandIslandNoiseMap");
-	_textureNoiseMap->Create(lnd::LNDBumpMap::width, lnd::LNDBumpMap::height, 1, Format::R8, Wrapping::ClampEdge,
+	_textureNoiseMap->Create(lnd::LNDBumpMap::k_Width, lnd::LNDBumpMap::k_Height, 1, Format::R8, Wrapping::ClampEdge,
 	                         _noiseMap.data(), static_cast<uint32_t>(_noiseMap.size() * sizeof(_noiseMap[0])));
 
 	// read bump map into Texture2D
 	_textureBumpMap = std::make_unique<Texture2D>("LandIslandBumpMap");
-	_textureBumpMap->Create(lnd::LNDBumpMap::width, lnd::LNDBumpMap::height, 1, Format::R8, Wrapping::Repeat,
+	_textureBumpMap->Create(lnd::LNDBumpMap::k_Width, lnd::LNDBumpMap::k_Height, 1, Format::R8, Wrapping::Repeat,
 	                        lnd.GetExtra().bump.texels.data(),
 	                        static_cast<uint32_t>(sizeof(lnd.GetExtra().bump.texels[0]) * lnd.GetExtra().bump.texels.size()));
 
@@ -96,7 +96,7 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 
 float LandIsland::GetHeightAt(glm::vec2 vec) const
 {
-	return GetCell(vec * 0.1f).altitude * LandIsland::HeightUnit;
+	return GetCell(vec * 0.1f).altitude * LandIsland::k_HeightUnit;
 }
 
 uint8_t LandIsland::GetNoise(int x, int y)
@@ -128,13 +128,13 @@ constexpr lnd::LNDCell EmptyCell() noexcept
 	return cell;
 }
 
-constexpr lnd::LNDCell s_EmptyCell = EmptyCell();
+constexpr lnd::LNDCell k_EmptyCell = EmptyCell();
 
 const lnd::LNDCell& LandIsland::GetCell(const glm::u16vec2& coordinates) const
 {
 	if (coordinates.x > 511 || coordinates.y > 511)
 	{
-		return s_EmptyCell;
+		return k_EmptyCell;
 	}
 
 	const uint16_t lookupIndex = ((coordinates.x & ~0xFU) << 1U) | (coordinates.y >> 4U);
@@ -144,7 +144,7 @@ const lnd::LNDCell& LandIsland::GetCell(const glm::u16vec2& coordinates) const
 
 	if (blockIndex == 0)
 	{
-		return s_EmptyCell;
+		return k_EmptyCell;
 	}
 	assert(_landBlocks.size() >= blockIndex);
 	return _landBlocks[blockIndex - 1].GetCells()[cellIndex];

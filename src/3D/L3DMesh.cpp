@@ -38,7 +38,7 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 	for (const auto& skin : l3d.GetSkins())
 	{
 		_skins[skin.id] = std::make_unique<Texture2D>(_debugName.c_str());
-		_skins[skin.id]->Create(l3d::L3DTexture::width, l3d::L3DTexture::height, 1, Format::RGBA4, Wrapping::Repeat,
+		_skins[skin.id]->Create(l3d::L3DTexture::k_Width, l3d::L3DTexture::k_Height, 1, Format::RGBA4, Wrapping::Repeat,
 		                        skin.texels.data(), static_cast<uint32_t>(skin.texels.size() * sizeof(skin.texels[0])));
 	}
 
@@ -107,7 +107,7 @@ bool L3DMesh::LoadFromFile(const std::filesystem::path& path)
 
 	try
 	{
-		l3d.Open(Game::instance()->GetFileSystem().FindPath(path));
+		l3d.Open(Game::Instance()->GetFileSystem().FindPath(path));
 	}
 	catch (std::runtime_error& err)
 	{

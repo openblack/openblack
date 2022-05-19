@@ -182,10 +182,10 @@ int PrintBlocks(openblack::lnd::LNDFile& lnd)
 		std::printf("nextSortingPtr: 0x%X\n", block.nextSortingPtr);
 		std::printf("valueSorting: %f\n", block.valueSorting);
 		std::printf("lowResTexture: %f\n", block.lowResTexture);
-		std::printf("fu_lrs: %f\n", block.fu_lrs);
-		std::printf("fv_lrs: %f\n", block.fv_lrs);
-		std::printf("iu_lrs: %f\n", block.iu_lrs);
-		std::printf("iv_lrs: %f\n", block.iv_lrs);
+		std::printf("fuLrs: %f\n", block.fuLrs);
+		std::printf("fvLrs: %f\n", block.fvLrs);
+		std::printf("iuLrs: %f\n", block.iuLrs);
+		std::printf("ivLrs: %f\n", block.ivLrs);
 		std::printf("smallTextUpdated: 0x%X\n", block.smallTextUpdated);
 	}
 	std::printf("\n");
@@ -228,9 +228,9 @@ int PrintMaterials(openblack::lnd::LNDFile& lnd)
 		std::printf("data:\n");
 		constexpr uint16_t subsample = 8;
 		constexpr uint16_t magnitude = (subsample * subsample) / 8;
-		for (uint16_t y = 0; y < openblack::lnd::LNDMaterial::height / subsample; ++y)
+		for (uint16_t y = 0; y < openblack::lnd::LNDMaterial::k_Height / subsample; ++y)
 		{
-			for (uint16_t x = 0; x < openblack::lnd::LNDMaterial::width / subsample; ++x)
+			for (uint16_t x = 0; x < openblack::lnd::LNDMaterial::k_Width / subsample; ++x)
 			{
 				uint32_t red = 0;
 				uint32_t green = 0;
@@ -240,10 +240,10 @@ int PrintMaterials(openblack::lnd::LNDFile& lnd)
 					for (uint16_t i = 0; i < subsample; ++i)
 					{
 						const auto& color =
-						    material.texels.at(x * subsample + i + (y * subsample + j) * openblack::lnd::LNDMaterial::width);
-						red += color.R;
-						green += color.G;
-						blue += color.B;
+						    material.texels.at(x * subsample + i + (y * subsample + j) * openblack::lnd::LNDMaterial::k_Width);
+						red += color.r;
+						green += color.g;
+						blue += color.b;
 					}
 				}
 				red /= magnitude;
@@ -268,16 +268,17 @@ int PrintExtra(openblack::lnd::LNDFile& lnd)
 	constexpr uint16_t subsample = 8;
 	constexpr uint16_t magnitude = (subsample * subsample);
 	std::printf("noise:\n");
-	for (uint16_t y = 0; y < openblack::lnd::LNDBumpMap::height / subsample; ++y)
+	for (uint16_t y = 0; y < openblack::lnd::LNDBumpMap::k_Height / subsample; ++y)
 	{
-		for (uint16_t x = 0; x < openblack::lnd::LNDBumpMap::width / subsample; ++x)
+		for (uint16_t x = 0; x < openblack::lnd::LNDBumpMap::k_Width / subsample; ++x)
 		{
 			uint32_t color = 0;
 			for (uint16_t j = 0; j < subsample; ++j)
 			{
 				for (uint16_t i = 0; i < subsample; ++i)
 				{
-					color += extra.noise.texels.at(x * subsample + i + (y * subsample + j) * openblack::lnd::LNDBumpMap::width);
+					color +=
+					    extra.noise.texels.at(x * subsample + i + (y * subsample + j) * openblack::lnd::LNDBumpMap::k_Width);
 				}
 			}
 			color /= magnitude;
@@ -287,16 +288,17 @@ int PrintExtra(openblack::lnd::LNDFile& lnd)
 		std::printf("\n");
 	}
 	std::printf("bump:\n");
-	for (uint16_t y = 0; y < openblack::lnd::LNDBumpMap::height / subsample; ++y)
+	for (uint16_t y = 0; y < openblack::lnd::LNDBumpMap::k_Height / subsample; ++y)
 	{
-		for (uint16_t x = 0; x < openblack::lnd::LNDBumpMap::width / subsample; ++x)
+		for (uint16_t x = 0; x < openblack::lnd::LNDBumpMap::k_Width / subsample; ++x)
 		{
 			uint32_t color = 0;
 			for (uint16_t j = 0; j < subsample; ++j)
 			{
 				for (uint16_t i = 0; i < subsample; ++i)
 				{
-					color += extra.bump.texels.at(x * subsample + i + (y * subsample + j) * openblack::lnd::LNDBumpMap::width);
+					color +=
+					    extra.bump.texels.at(x * subsample + i + (y * subsample + j) * openblack::lnd::LNDBumpMap::k_Width);
 				}
 			}
 			color /= magnitude;
@@ -375,8 +377,8 @@ int WriteFile(const Arguments::Write& args) noexcept
 			// clang-format off
 			std::cerr << "File " << filename
 			          << " is not the right size to be a "
-			          << openblack::lnd::LNDMaterial::width << "x"
-			          << openblack::lnd::LNDMaterial::height
+			          << openblack::lnd::LNDMaterial::k_Width << "x"
+			          << openblack::lnd::LNDMaterial::k_Height
 			          << " RGB5A1 texture: size should be "
 			          << fsize << std::endl;
 			// clang-format on
@@ -406,8 +408,8 @@ int WriteFile(const Arguments::Write& args) noexcept
 			// clang-format off
 			std::cerr << "File " << args.noiseMapFile
 			          << " is not the right size to be a "
-			          << openblack::lnd::LNDBumpMap::width << "x"
-			          << openblack::lnd::LNDBumpMap::height
+			          << openblack::lnd::LNDBumpMap::k_Width << "x"
+			          << openblack::lnd::LNDBumpMap::k_Height
 			          << " R8 texture: size should be "
 			          << fsize << std::endl;
 			// clang-format on
@@ -435,8 +437,8 @@ int WriteFile(const Arguments::Write& args) noexcept
 			// clang-format off
 			std::cerr << "File " << args.bumpMapFile
 			          << " is not the right size to be a "
-			          << openblack::lnd::LNDBumpMap::width << "x"
-			          << openblack::lnd::LNDBumpMap::height
+			          << openblack::lnd::LNDBumpMap::k_Width << "x"
+			          << openblack::lnd::LNDBumpMap::k_Height
 			          << " R8 texture: size should be "
 			          << fsize << std::endl;
 			// clang-format on
@@ -451,7 +453,7 @@ int WriteFile(const Arguments::Write& args) noexcept
 	return EXIT_SUCCESS;
 }
 
-bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noexcept
+bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexcept
 {
 	cxxopts::Options options("lndtool", "Inspect and extract files from LionHead LND files.");
 
@@ -485,7 +487,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 	catch (const std::exception& e)
 	{
 		std::cerr << e.what() << '\n';
-		return_code = EXIT_FAILURE;
+		returnCode = EXIT_FAILURE;
 		return false;
 	}
 
@@ -495,13 +497,13 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 		if (result["help"].as<bool>())
 		{
 			std::cout << options.help() << std::endl;
-			return_code = EXIT_SUCCESS;
+			returnCode = EXIT_SUCCESS;
 			return false;
 		}
 		if (result["subcommand"].count() == 0)
 		{
 			std::cerr << options.help() << std::endl;
-			return_code = EXIT_FAILURE;
+			returnCode = EXIT_FAILURE;
 			return false;
 		}
 		if (result["subcommand"].as<std::string>() == "read")
@@ -579,17 +581,17 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 	}
 
 	std::cerr << options.help() << std::endl;
-	return_code = EXIT_FAILURE;
+	returnCode = EXIT_FAILURE;
 	return false;
 }
 
 int main(int argc, char* argv[]) noexcept
 {
 	Arguments args;
-	int return_code = EXIT_SUCCESS;
-	if (!parseOptions(argc, argv, args, return_code))
+	int returnCode = EXIT_SUCCESS;
+	if (!parseOptions(argc, argv, args, returnCode))
 	{
-		return return_code;
+		return returnCode;
 	}
 
 	if (args.mode == Arguments::Mode::Write)
@@ -608,37 +610,37 @@ int main(int argc, char* argv[]) noexcept
 			switch (args.mode)
 			{
 			case Arguments::Mode::Header:
-				return_code |= PrintHeader(lnd);
+				returnCode |= PrintHeader(lnd);
 				break;
 			case Arguments::Mode::LowResolution:
-				return_code |= PrintLowRes(lnd);
+				returnCode |= PrintLowRes(lnd);
 				break;
 			case Arguments::Mode::Blocks:
-				return_code |= PrintBlocks(lnd);
+				returnCode |= PrintBlocks(lnd);
 				break;
 			case Arguments::Mode::Countries:
-				return_code |= PrintCountries(lnd);
+				returnCode |= PrintCountries(lnd);
 				break;
 			case Arguments::Mode::Materials:
-				return_code |= PrintMaterials(lnd);
+				returnCode |= PrintMaterials(lnd);
 				break;
 			case Arguments::Mode::Extra:
-				return_code |= PrintExtra(lnd);
+				returnCode |= PrintExtra(lnd);
 				break;
 			case Arguments::Mode::Unaccounted:
-				return_code |= PrintUnaccounted(lnd);
+				returnCode |= PrintUnaccounted(lnd);
 				break;
 			default:
-				return_code = EXIT_FAILURE;
+				returnCode = EXIT_FAILURE;
 				break;
 			}
 		}
 		catch (std::exception& err)
 		{
 			std::cerr << err.what() << std::endl;
-			return_code |= EXIT_FAILURE;
+			returnCode |= EXIT_FAILURE;
 		}
 	}
 
-	return return_code;
+	return returnCode;
 }

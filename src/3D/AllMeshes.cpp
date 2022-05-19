@@ -12,7 +12,7 @@
 namespace openblack
 {
 
-std::array<std::string, static_cast<uint16_t>(MeshId::_COUNT)> MeshNames = {
+const std::array<std::string, static_cast<uint16_t>(MeshId::_COUNT)> k_MeshNames = {
     "Dummy",
     "AnimalBat1",
     "AnimalBat2",

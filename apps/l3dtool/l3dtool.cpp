@@ -269,9 +269,9 @@ int PrintSkins(openblack::l3d::L3DFile& l3d)
 		std::printf("data:\n");
 		constexpr uint16_t subsample = 8;
 		constexpr uint16_t magnitude = (subsample * subsample) / 16;
-		for (uint16_t y = 0; y < openblack::l3d::L3DTexture::height / subsample; ++y)
+		for (uint16_t y = 0; y < openblack::l3d::L3DTexture::k_Height / subsample; ++y)
 		{
-			for (uint16_t x = 0; x < openblack::l3d::L3DTexture::width / subsample; ++x)
+			for (uint16_t x = 0; x < openblack::l3d::L3DTexture::k_Width / subsample; ++x)
 			{
 				uint32_t red = 0;
 				uint32_t green = 0;
@@ -281,10 +281,10 @@ int PrintSkins(openblack::l3d::L3DFile& l3d)
 					for (uint16_t i = 0; i < subsample; ++i)
 					{
 						const auto& color =
-						    skin.texels.at(x * subsample + i + (y * subsample + j) * openblack::l3d::L3DTexture::width);
-						red += color.R;
-						green += color.G;
-						blue += color.B;
+						    skin.texels.at(x * subsample + i + (y * subsample + j) * openblack::l3d::L3DTexture::k_Width);
+						red += color.r;
+						green += color.g;
+						blue += color.b;
 					}
 				}
 				red /= magnitude;
@@ -993,7 +993,7 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 
 	for (uint32_t i : roots)
 	{
-		auto bone_to_node = [](tinygltf::Node& node, const openblack::l3d::L3DBone& bone) {
+		auto boneToNode = [](tinygltf::Node& node, const openblack::l3d::L3DBone& bone) {
 			node.translation.clear();
 			node.translation.push_back(bone.position.x);
 			node.translation.push_back(bone.position.y);
@@ -1062,19 +1062,19 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 		};
 
 		// l3d index of current node + gltf index of parent node
-		std::stack<std::pair<uint32_t, uint32_t>> traversal_stack;
+		std::stack<std::pair<uint32_t, uint32_t>> traversalStack;
 		try
 		{
-			traversal_stack.emplace(i, rootNodeIndex);
+			traversalStack.emplace(i, rootNodeIndex);
 
 			tinygltf::Node node;
 			uint32_t index;
-			uint32_t parent_index;
-			while (!traversal_stack.empty())
+			uint32_t parentIndex;
+			while (!traversalStack.empty())
 			{
-				std::tie(index, parent_index) = traversal_stack.top();
-				traversal_stack.pop();
-				if (parent_index == rootNodeIndex)
+				std::tie(index, parentIndex) = traversalStack.top();
+				traversalStack.pop();
+				if (parentIndex == rootNodeIndex)
 				{
 					node.name = "Bones root node #" + std::to_string(i);
 				}
@@ -1083,19 +1083,19 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 					node.name = "Bone Child #" + std::to_string(index) + " of #" + std::to_string(i);
 				}
 
-				gltf.nodes[parent_index].children.push_back(static_cast<int>(gltf.nodes.size()));
-				const auto& l3d_node = bones[index];
-				bone_to_node(node, l3d_node);
+				gltf.nodes[parentIndex].children.push_back(static_cast<int>(gltf.nodes.size()));
+				const auto& l3dNode = bones[index];
+				boneToNode(node, l3dNode);
 				gltf.nodes.emplace_back(node);
 
-				if (l3d_node.rightSibling != std::numeric_limits<uint32_t>::max())
+				if (l3dNode.rightSibling != std::numeric_limits<uint32_t>::max())
 				{
-					traversal_stack.emplace(l3d_node.rightSibling, parent_index);
+					traversalStack.emplace(l3dNode.rightSibling, parentIndex);
 				}
 
-				if (l3d_node.firstChild != std::numeric_limits<uint32_t>::max())
+				if (l3dNode.firstChild != std::numeric_limits<uint32_t>::max())
 				{
-					traversal_stack.emplace(l3d_node.firstChild, static_cast<uint32_t>(gltf.nodes.size() - 1));
+					traversalStack.emplace(l3dNode.firstChild, static_cast<uint32_t>(gltf.nodes.size() - 1));
 				}
 			}
 		}
@@ -1128,7 +1128,7 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 	return EXIT_SUCCESS;
 }
 
-bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noexcept
+bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexcept
 {
 	cxxopts::Options options("l3dtool", "Inspect and extract files from LionHead L3D files.");
 
@@ -1161,7 +1161,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 	catch (const std::exception& e)
 	{
 		std::cerr << e.what() << '\n';
-		return_code = EXIT_FAILURE;
+		returnCode = EXIT_FAILURE;
 		return false;
 	}
 
@@ -1171,13 +1171,13 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 		if (result["help"].as<bool>())
 		{
 			std::cout << options.help() << std::endl;
-			return_code = EXIT_SUCCESS;
+			returnCode = EXIT_SUCCESS;
 			return false;
 		}
 		if (result["subcommand"].count() == 0)
 		{
 			std::cerr << options.help() << std::endl;
-			return_code = EXIT_FAILURE;
+			returnCode = EXIT_FAILURE;
 			return false;
 		}
 		if (result["subcommand"].as<std::string>() == "read")
@@ -1278,17 +1278,17 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 	}
 
 	std::cerr << options.help() << std::endl;
-	return_code = EXIT_FAILURE;
+	returnCode = EXIT_FAILURE;
 	return false;
 }
 
 int main(int argc, char* argv[]) noexcept
 {
 	Arguments args;
-	int return_code = EXIT_SUCCESS;
-	if (!parseOptions(argc, argv, args, return_code))
+	int returnCode = EXIT_SUCCESS;
+	if (!parseOptions(argc, argv, args, returnCode))
 	{
-		return return_code;
+		return returnCode;
 	}
 
 	if (args.mode == Arguments::Mode::Write)
@@ -1312,46 +1312,46 @@ int main(int argc, char* argv[]) noexcept
 			switch (args.mode)
 			{
 			case Arguments::Mode::Header:
-				return_code |= PrintHeader(l3d);
+				returnCode |= PrintHeader(l3d);
 				break;
 			case Arguments::Mode::MeshHeader:
-				return_code |= PrintMeshHeaders(l3d);
+				returnCode |= PrintMeshHeaders(l3d);
 				break;
 			case Arguments::Mode::Skin:
-				return_code |= PrintSkins(l3d);
+				returnCode |= PrintSkins(l3d);
 				break;
 			case Arguments::Mode::ExtraPoint:
-				return_code |= PrintExtraPoints(l3d);
+				returnCode |= PrintExtraPoints(l3d);
 				break;
 			case Arguments::Mode::PrimitiveHeader:
-				return_code |= PrintPrimitiveHeaders(l3d);
+				returnCode |= PrintPrimitiveHeaders(l3d);
 				break;
 			case Arguments::Mode::Bones:
-				return_code |= PrintBones(l3d);
+				returnCode |= PrintBones(l3d);
 				break;
 			case Arguments::Mode::Vertices:
-				return_code |= PrintVertices(l3d);
+				returnCode |= PrintVertices(l3d);
 				break;
 			case Arguments::Mode::Indices:
-				return_code |= PrintIndices(l3d);
+				returnCode |= PrintIndices(l3d);
 				break;
 			case Arguments::Mode::LookUpTables:
-				return_code |= PrintLookUpTables(l3d);
+				returnCode |= PrintLookUpTables(l3d);
 				break;
 			case Arguments::Mode::VertexBlendValues:
-				return_code |= PrintBlendValues(l3d);
+				returnCode |= PrintBlendValues(l3d);
 				break;
 			default:
-				return_code = EXIT_FAILURE;
+				returnCode = EXIT_FAILURE;
 				break;
 			}
 		}
 		catch (std::exception& err)
 		{
 			std::cerr << err.what() << std::endl;
-			return_code |= EXIT_FAILURE;
+			returnCode |= EXIT_FAILURE;
 		}
 	}
 
-	return return_code;
+	return returnCode;
 }

@@ -14,27 +14,27 @@
 void openblack::Profiler::Begin(Stage stage)
 {
 	assert(_currentLevel < 255);
-	auto& entry = _entries.at(_currentEntry)._stages.at(static_cast<uint8_t>(stage));
-	entry._level = _currentLevel;
+	auto& entry = _entries.at(_currentEntry).stages.at(static_cast<uint8_t>(stage));
+	entry.level = _currentLevel;
 	_currentLevel++;
-	entry._start = std::chrono::system_clock::now();
-	entry._finalized = false;
+	entry.start = std::chrono::system_clock::now();
+	entry.finalized = false;
 }
 
 void openblack::Profiler::End(Stage stage)
 {
 	assert(_currentLevel > 0);
-	auto& entry = _entries.at(_currentEntry)._stages.at(static_cast<uint8_t>(stage));
-	assert(!entry._finalized);
+	auto& entry = _entries.at(_currentEntry).stages.at(static_cast<uint8_t>(stage));
+	assert(!entry.finalized);
 	_currentLevel--;
-	assert(entry._level == _currentLevel);
-	entry._end = std::chrono::system_clock::now();
-	entry._finalized = true;
+	assert(entry.level == _currentLevel);
+	entry.end = std::chrono::system_clock::now();
+	entry.finalized = true;
 }
 
 void openblack::Profiler::Frame()
 {
 	auto& prevEntry = _entries.at(_currentEntry);
-	_currentEntry = (_currentEntry + 1) % _bufferSize;
-	prevEntry._frameEnd = _entries.at(_currentEntry)._frameStart = std::chrono::system_clock::now();
+	_currentEntry = (_currentEntry + 1) % k_BufferSize;
+	prevEntry.frameEnd = _entries.at(_currentEntry).frameStart = std::chrono::system_clock::now();
 }

@@ -73,13 +73,13 @@ std::optional<ecs::components::Transform> Camera::RaycastMouseToLand()
 	float intersectDistance = 0.0f;
 	int sWidth;
 	int sHeight;
-	Game::instance()->GetWindow()->GetSize(sWidth, sHeight);
+	Game::Instance()->GetWindow()->GetSize(sWidth, sHeight);
 	glm::vec3 rayOrigin;
 	glm::vec3 rayDirection;
 	glm::ivec2 mouseVec;
 	SDL_GetMouseState(&mouseVec.x, &mouseVec.y);
 	DeprojectScreenToWorld(mouseVec, glm::vec2(sWidth, sHeight), rayOrigin, rayDirection);
-	const auto& dynamicsSystem = Game::instance()->GetDynamicsSystem();
+	const auto& dynamicsSystem = Game::Instance()->GetDynamicsSystem();
 	if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
 	{
 		intersectionTransform = hit->first;
@@ -163,8 +163,8 @@ std::unique_ptr<Camera> Camera::Reflect(const glm::vec4& relectionPlane) const
 	return reflectionCamera;
 }
 
-void Camera::DeprojectScreenToWorld(glm::ivec2 screenPosition, glm::ivec2 screenSize, glm::vec3& out_worldOrigin,
-                                    glm::vec3& out_worldDirection)
+void Camera::DeprojectScreenToWorld(glm::ivec2 screenPosition, glm::ivec2 screenSize, glm::vec3& outWorldOrigin,
+                                    glm::vec3& outWorldDirection)
 {
 	const float normalizedX = static_cast<float>(screenPosition.x) / static_cast<float>(screenSize.x);
 	const float normalizedY = static_cast<float>(screenPosition.y) / static_cast<float>(screenSize.y);
@@ -203,23 +203,23 @@ void Camera::DeprojectScreenToWorld(glm::ivec2 screenPosition, glm::ivec2 screen
 	const glm::vec3 rayDirWorldSpace = glm::normalize(rayEndWorldSpace - rayStartWorldSpace);
 
 	// finally, store the results in the outputs
-	out_worldOrigin = rayStartWorldSpace;
-	out_worldDirection = rayDirWorldSpace;
+	outWorldOrigin = rayStartWorldSpace;
+	outWorldDirection = rayDirWorldSpace;
 }
 
-bool Camera::ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& out_screenPosition) const
+bool Camera::ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& outScreenPosition) const
 {
-	out_screenPosition = glm::project(worldPosition, GetViewMatrix(), GetProjectionMatrix(), viewport);
-	if (out_screenPosition.x < viewport.x || out_screenPosition.y < viewport.y || out_screenPosition.x > viewport.z ||
-	    out_screenPosition.y > viewport.w)
+	outScreenPosition = glm::project(worldPosition, GetViewMatrix(), GetProjectionMatrix(), viewport);
+	if (outScreenPosition.x < viewport.x || outScreenPosition.y < viewport.y || outScreenPosition.x > viewport.z ||
+	    outScreenPosition.y > viewport.w)
 	{
 		return false; // Outside viewport bounds
 	}
-	if (out_screenPosition.z > 1.0f)
+	if (outScreenPosition.z > 1.0f)
 	{
 		return false; // Behind Camera
 	}
-	if (out_screenPosition.z < 0.0f)
+	if (outScreenPosition.z < 0.0f)
 	{
 		return false; // Clipped
 	}
@@ -232,20 +232,20 @@ void Camera::ProcessSDLEvent(const SDL_Event& e)
 	{
 	case SDL_KEYDOWN:
 	case SDL_KEYUP:
-		handleKeyboardInput(e);
+		HandleKeyboardInput(e);
 		break;
 	case SDL_MOUSEMOTION:
 	case SDL_MOUSEBUTTONDOWN:
 	case SDL_MOUSEBUTTONUP:
 	case SDL_MOUSEWHEEL:
-		handleMouseInput(e);
+		HandleMouseInput(e);
 		break;
 	default:
 		break;
 	}
 }
 
-void Camera::handleKeyboardInput(const SDL_Event& e)
+void Camera::HandleKeyboardInput(const SDL_Event& e)
 {
 	if (e.key.repeat > 0) // ignore all repeated keys
 	{
@@ -378,7 +378,7 @@ void Camera::handleKeyboardInput(const SDL_Event& e)
 	}
 }
 
-void Camera::handleMouseInput(const SDL_Event& e)
+void Camera::HandleMouseInput(const SDL_Event& e)
 {
 	if (e.type == SDL_MOUSEMOTION && (e.motion.state & SDL_BUTTON(SDL_BUTTON_MIDDLE)) != 0u)
 	{
@@ -391,8 +391,8 @@ void Camera::handleMouseInput(const SDL_Event& e)
 		}
 		else // Holding down the middle mouse button without shift enables hand orbit camera rotation.
 		{
-			auto& entityReg = Game::instance()->GetEntityRegistry();
-			auto handEntity = Game::instance()->GetHand();
+			auto& entityReg = Game::Instance()->GetEntityRegistry();
+			auto handEntity = Game::Instance()->GetHand();
 			auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
 			auto handPos = handTransform.position;
 
@@ -403,7 +403,7 @@ void Camera::handleMouseInput(const SDL_Event& e)
 			}
 			int width;
 			int height;
-			Game::instance()->GetWindow()->GetSize(width, height);
+			Game::Instance()->GetWindow()->GetSize(width, height);
 			float yaw = e.motion.xrel * (glm::two_pi<float>() / width);
 			float pitch = e.motion.yrel * (glm::pi<float>() / height);
 
@@ -466,7 +466,7 @@ void Camera::handleMouseInput(const SDL_Event& e)
 		if (e.wheel.y != 0) // scroll up or down
 		{
 			float dist = 9999.0f;
-			const auto& dynamicsSystem = Game::instance()->GetDynamicsSystem();
+			const auto& dynamicsSystem = Game::Instance()->GetDynamicsSystem();
 			if (auto hit = dynamicsSystem.RayCastClosestHit(_position, GetForward(), 1e10f))
 			{
 				dist = glm::length(hit->first.position - _position);
@@ -552,12 +552,12 @@ void Camera::Update(std::chrono::microseconds dt)
 	float worldHandDist = 0.0f;
 	int sWidth;
 	int sHeight;
-	Game::instance()->GetWindow()->GetSize(sWidth, sHeight);
+	Game::Instance()->GetWindow()->GetSize(sWidth, sHeight);
 	if (_lmouseIsDown) // drag camera using hand
 	{
 		// get hand transform and project to screen coords
-		auto& entityReg = Game::instance()->GetEntityRegistry();
-		auto handEntity = Game::instance()->GetHand();
+		auto& entityReg = Game::Instance()->GetEntityRegistry();
+		auto handEntity = Game::Instance()->GetHand();
 		auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
 		const glm::vec3 handOffset(0, 1.5f, 0);
 		auto handPos = handTransform.position;
@@ -643,7 +643,7 @@ void Camera::Update(std::chrono::microseconds dt)
 		_position = glm::hermite(_flyFromPos, _flyFromTan, _flyToPos, _flyToTan, glm::smoothstep(0.0f, 1.0f, _flyProgress));
 
 		// check if there obstacles in the way, if there are fly over them
-		const auto& dynamicsSystem = Game::instance()->GetDynamicsSystem();
+		const auto& dynamicsSystem = Game::Instance()->GetDynamicsSystem();
 		if (auto obst = dynamicsSystem.RayCastClosestHit(_position - glm::vec3(0.0f, 20.0f, 0.0f),
 		                                                 glm::normalize((_flyToPos - glm::vec3(0.0f, 20.0f, 0.0f)) - _position),
 		                                                 glm::length(_flyToPos - _position) + 10.0f))
@@ -694,7 +694,7 @@ void Camera::Update(std::chrono::microseconds dt)
 		_hVelocity *= _handDragMult;
 		_position += rotation * (_velocity + _hVelocity) * fdt;
 	}
-	const auto& land = Game::instance()->GetLandIsland();
+	const auto& land = Game::Instance()->GetLandIsland();
 	auto height = land.GetHeightAt(glm::vec2(_position.x + 5, _position.z + 5));
 	_position.y =
 	    (_position.y < height + 13.0f) ? height + 13.0f : _position.y; // stop the camera from going below ground level.
@@ -716,7 +716,7 @@ glm::mat4 ReflectionCamera::GetViewMatrix() const
 
 	// M''camera = Mreflection * Mcamera * Mflip
 	glm::mat4x4 reflectionMatrix;
-	reflectMatrix(reflectionMatrix, _reflectionPlane);
+	ReflectMatrix(reflectionMatrix, _reflectionPlane);
 
 	return mView * reflectionMatrix;
 }
@@ -727,7 +727,7 @@ Mreflection = |  -2NxNy 1-2Ny2   -2NyNz  -2NyD |
               |  -2NxNz  -2NyNz 1-2Nz2   -2NzD |
               |    0       0       0       1   |
 */
-void ReflectionCamera::reflectMatrix(glm::mat4x4& m, const glm::vec4& plane) const
+void ReflectionCamera::ReflectMatrix(glm::mat4x4& m, const glm::vec4& plane) const
 {
 	m[0][0] = (1.0f - 2.0f * plane[0] * plane[0]);
 	m[1][0] = (-2.0f * plane[0] * plane[1]);

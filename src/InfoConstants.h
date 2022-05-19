@@ -315,85 +315,85 @@ struct GSpecialVillagerInfo
 struct CreatureDevelopmentPhaseEntry
 {
 	std::array<char, 0x30> name;
-	float field_0x30;
-	float field_0x34;
-	float field_0x38;
-	uint32_t field_0x3c;
-	uint32_t field_0x40;
-	uint32_t field_0x44;
-	uint32_t field_0x48;
-	uint32_t field_0x4c;
-	uint32_t field_0x50;
-	uint32_t field_0x54;
-	uint32_t field_0x58;
-	uint32_t field_0x5c;
-	uint32_t field_0x60;
-	uint32_t field_0x64;
-	uint32_t field_0x68;
-	uint32_t field_0x6c;
-	uint32_t field_0x70;
+	float field0x30;
+	float field0x34;
+	float field0x38;
+	uint32_t field0x3c;
+	uint32_t field0x40;
+	uint32_t field0x44;
+	uint32_t field0x48;
+	uint32_t field0x4c;
+	uint32_t field0x50;
+	uint32_t field0x54;
+	uint32_t field0x58;
+	uint32_t field0x5c;
+	uint32_t field0x60;
+	uint32_t field0x64;
+	uint32_t field0x68;
+	uint32_t field0x6c;
+	uint32_t field0x70;
 };
 
 struct CreatureInitialDesireInfo
 {
-	uint32_t field_0x0;
-	uint32_t field_0x4;
-	uint32_t field_0x8;
-	uint32_t field_0xc;
-	uint32_t field_0x10;
-	uint32_t field_0x14;
-	uint32_t field_0x18;
-	uint32_t field_0x1c;
-	uint32_t field_0x20;
-	uint32_t field_0x24;
-	uint32_t field_0x28;
-	uint32_t field_0x2c;
-	uint32_t field_0x30;
-	uint32_t field_0x34;
-	uint32_t field_0x38;
-	float field_0x3c;
-	float field_0x40;
-	float field_0x44;
-	float field_0x48;
-	float field_0x4c;
-	float field_0x50;
-	float field_0x54;
-	float field_0x58;
-	uint32_t field_0x5c;
-	float field_0x60;
-	float field_0x64;
-	float field_0x68;
-	uint32_t field_0x6c;
-	std::array<char, 0x40> field_0x70;
-	std::array<char, 0x40> field_0xb0;
-	std::array<char, 0x40> field_0xf0;
-	std::array<char, 0x40> field_0x130;
-	std::array<char, 0x40> field_0x170;
+	uint32_t field0x0;
+	uint32_t field0x4;
+	uint32_t field0x8;
+	uint32_t field0xc;
+	uint32_t field0x10;
+	uint32_t field0x14;
+	uint32_t field0x18;
+	uint32_t field0x1c;
+	uint32_t field0x20;
+	uint32_t field0x24;
+	uint32_t field0x28;
+	uint32_t field0x2c;
+	uint32_t field0x30;
+	uint32_t field0x34;
+	uint32_t field0x38;
+	float field0x3c;
+	float field0x40;
+	float field0x44;
+	float field0x48;
+	float field0x4c;
+	float field0x50;
+	float field0x54;
+	float field0x58;
+	uint32_t field0x5c;
+	float field0x60;
+	float field0x64;
+	float field0x68;
+	uint32_t field0x6c;
+	std::array<char, 0x40> field0x70;
+	std::array<char, 0x40> field0xb0;
+	std::array<char, 0x40> field0xf0;
+	std::array<char, 0x40> field0x130;
+	std::array<char, 0x40> field0x170;
 };
 
 struct CreatureActionKnownAboutEntry
 {
-	std::array<char, 0x40> field_0x0;
-	uint32_t field_0x40;
-	uint32_t field_0x44;
-	float field_0x48;
-	uint32_t field_0x4c;
-	uint32_t field_0x50;
-	uint32_t field_0x54;
+	std::array<char, 0x40> field0x0;
+	uint32_t field0x40;
+	uint32_t field0x44;
+	float field0x48;
+	uint32_t field0x4c;
+	uint32_t field0x50;
+	uint32_t field0x54;
 };
 
 struct CreatureDesireAttributeEntry
 {
-	uint32_t field_0x0;
-	uint32_t field_0x4;
-	uint32_t field_0x8;
-	uint32_t field_0xc;
-	uint32_t field_0x10;
-	uint32_t field_0x14;
-	uint32_t field_0x18;
-	uint32_t field_0x1c;
-	uint32_t field_0x20;
-	uint32_t field_0x24;
+	uint32_t field0x0;
+	uint32_t field0x4;
+	uint32_t field0x8;
+	uint32_t field0xc;
+	uint32_t field0x10;
+	uint32_t field0x14;
+	uint32_t field0x18;
+	uint32_t field0x1c;
+	uint32_t field0x20;
+	uint32_t field0x24;
 };
 
 struct GMultiMapFixedInfo: GObjectInfo
@@ -516,20 +516,20 @@ struct GCitadelInfo: GContainerInfo
 
 struct CreatureDevelopmentDurationEntry
 {
-	int field_0x0;
-	int field_0x4;
-	int field_0x8;
-	int field_0xc;
-	int field_0x10;
-	int field_0x14;
-	int field_0x18;
-	int field_0x1c;
-	int field_0x20;
-	int field_0x24;
-	int field_0x28;
-	int field_0x2c;
-	int field_0x30;
-	int field_0x34;
+	int field0x0;
+	int field0x4;
+	int field0x8;
+	int field0xc;
+	int field0x10;
+	int field0x14;
+	int field0x18;
+	int field0x1c;
+	int field0x20;
+	int field0x24;
+	int field0x28;
+	int field0x2c;
+	int field0x30;
+	int field0x34;
 };
 
 struct GTownInfo: GContainerInfo
@@ -750,29 +750,29 @@ struct GClimateRainInfo
 	float november;
 	float december;
 	float midnight;
-	float one_O_Clock;
-	float two_O_Clock;
-	float three_O_Clock;
-	float four_O_Clock;
-	float five_O_Clock;
-	float six_O_Clock;
-	float seven_O_Clock;
-	float height_O_Clock;
-	float nine_O_Clock;
-	float ten_O_Clock;
-	float eleven_O_Clock;
+	float oneOClock;
+	float twoOClock;
+	float threeOClock;
+	float fourOClock;
+	float fiveOClock;
+	float sixOClock;
+	float sevenOClock;
+	float heightOClock;
+	float nineOClock;
+	float tenOClock;
+	float elevenOClock;
 	float midday;
-	float thirdten_O_Clock;
-	float fourten_O_Clock;
-	float fiveten_O_Clock;
-	float sixten_O_Clock;
-	float seventen_O_Clock;
-	float heightten_O_Clock;
-	float nineten_O_Clock;
-	float twenty_O_Clock;
-	float twentyone_O_Clock;
-	float twentytwo_O_Clock;
-	float twentitree_O_Clock;
+	float thirdtenOClock;
+	float fourtenOClock;
+	float fivetenOClock;
+	float sixtenOClock;
+	float seventenOClock;
+	float heighttenOClock;
+	float ninetenOClock;
+	float twentyOClock;
+	float twentyoneOClock;
+	float twentytwoOClock;
+	float twentitreeOClock;
 	float natureRainDesire;
 };
 struct GCreaturePenInfo: GCitadelPartInfo
@@ -785,9 +785,9 @@ struct GCreaturePenInfo: GCitadelPartInfo
 
 struct GScriptOpposingCreature
 {
-	uint32_t field_0x0;
-	uint32_t field_0x4;
-	uint32_t field_0x8;
+	uint32_t field0x0;
+	uint32_t field0x4;
+	uint32_t field0x8;
 };
 
 struct GTotemStatueInfo: GMultiMapFixedInfo
@@ -797,23 +797,23 @@ struct GTotemStatueInfo: GMultiMapFixedInfo
 
 struct CreatureDesireForType
 {
-	float field_0x0;
-	float field_0x4;
-	float field_0x8;
-	float field_0xc;
-	float field_0x10;
-	float field_0x14;
-	float field_0x18;
-	float field_0x1c;
-	float field_0x20;
-	float field_0x24;
-	float field_0x28;
-	float field_0x2c;
-	float field_0x30;
-	float field_0x34;
-	float field_0x38;
-	float field_0x3c;
-	float field_0x40;
+	float field0x0;
+	float field0x4;
+	float field0x8;
+	float field0xc;
+	float field0x10;
+	float field0x14;
+	float field0x18;
+	float field0x1c;
+	float field0x20;
+	float field0x24;
+	float field0x28;
+	float field0x2c;
+	float field0x30;
+	float field0x34;
+	float field0x38;
+	float field0x3c;
+	float field0x40;
 };
 
 struct GVortexInfo
@@ -856,7 +856,7 @@ struct GSpeedThreshold
 
 struct GCreatureInfo: GLivingInfo
 {
-	std::array<uint8_t, 416> field_0x1e4;
+	std::array<uint8_t, 416> field0x1e4;
 };
 
 struct GMagicRadiusSpellInfo: GMagicInfo
@@ -874,40 +874,40 @@ struct GMagicStormAndTornadoInfo: GMagicRadiusSpellInfo
 
 struct GHelpSpritesGuidance
 {
-	uint32_t field_0x0;
-	uint32_t field_0x4;
-	uint32_t field_0x8;
-	uint32_t field_0xc;
-	uint32_t field_0x10;
-	uint32_t field_0x14;
-	uint32_t field_0x18;
-	uint32_t field_0x1c;
-	uint32_t field_0x20;
-	uint32_t field_0x24;
-	uint32_t field_0x28;
-	uint32_t field_0x2c;
-	uint32_t field_0x30;
-	uint32_t field_0x34;
-	uint32_t field_0x38;
-	uint32_t field_0x3c;
-	uint32_t field_0x40;
-	uint32_t field_0x44;
-	uint32_t field_0x48;
-	uint32_t field_0x4c;
-	uint32_t field_0x50;
-	uint32_t field_0x54;
-	uint32_t field_0x58;
-	uint32_t field_0x5c;
-	uint32_t field_0x60;
-	uint32_t field_0x64;
-	uint32_t field_0x68;
-	uint32_t field_0x6c;
-	uint32_t field_0x70;
-	uint32_t field_0x74;
-	uint32_t field_0x78;
-	uint32_t field_0x7c;
-	uint32_t field_0x80;
-	uint32_t field_0x84;
+	uint32_t field0x0;
+	uint32_t field0x4;
+	uint32_t field0x8;
+	uint32_t field0xc;
+	uint32_t field0x10;
+	uint32_t field0x14;
+	uint32_t field0x18;
+	uint32_t field0x1c;
+	uint32_t field0x20;
+	uint32_t field0x24;
+	uint32_t field0x28;
+	uint32_t field0x2c;
+	uint32_t field0x30;
+	uint32_t field0x34;
+	uint32_t field0x38;
+	uint32_t field0x3c;
+	uint32_t field0x40;
+	uint32_t field0x44;
+	uint32_t field0x48;
+	uint32_t field0x4c;
+	uint32_t field0x50;
+	uint32_t field0x54;
+	uint32_t field0x58;
+	uint32_t field0x5c;
+	uint32_t field0x60;
+	uint32_t field0x64;
+	uint32_t field0x68;
+	uint32_t field0x6c;
+	uint32_t field0x70;
+	uint32_t field0x74;
+	uint32_t field0x78;
+	uint32_t field0x7c;
+	uint32_t field0x80;
+	uint32_t field0x84;
 };
 
 struct GFeatureInfo: GMultiMapFixedInfo
@@ -956,13 +956,13 @@ struct GWallSectionInfo: GFeatureInfo
 
 struct GArrowInfo: GMobileObjectInfo
 {
-	uint32_t field_0x104;
-	uint32_t field_0x108;
-	uint32_t field_0x10c;
-	uint32_t field_0x110;
-	uint32_t field_0x114;
-	uint32_t field_0x118;
-	uint32_t field_0x11c;
+	uint32_t field0x104;
+	uint32_t field0x108;
+	uint32_t field0x10c;
+	uint32_t field0x110;
+	uint32_t field0x114;
+	uint32_t field0x118;
+	uint32_t field0x11c;
 };
 
 struct GFieldInfo: GMultiMapFixedInfo
@@ -999,12 +999,12 @@ struct GShowNeedsInfo: GObjectInfo
 
 struct GTerrainMaterialInfo
 {
-	SoundSurfaceType SurfaceSound;
+	SoundSurfaceType surfaceSound;
 	int immersion;
 	float surfaceFriction;
 	std::array<char, 0x30> debugString;
-	HelpText HelpStartEnum;
-	HelpText HelpEndEnum;
+	HelpText helpStartEnum;
+	HelpText helpEndEnum;
 	glm::uvec3 tornadoDustColorRGB;
 	std::array<TreeInfo, 4> magicTreeTypes;
 };
@@ -1033,40 +1033,40 @@ struct GMagicForestInfo: GMagicInfo
 
 struct GVillagerStateTableInfo
 {
-	uint32_t field_0x0;
-	int field_0x4;
-	float field_0x8;
-	int field_0xc;
-	int field_0x10;
-	uint32_t field_0x14;
-	uint32_t field_0x18;
-	uint32_t field_0x1c;
-	int field_0x20;
-	uint32_t field_0x24;
+	uint32_t field0x0;
+	int field0x4;
+	float field0x8;
+	int field0xc;
+	int field0x10;
+	uint32_t field0x14;
+	uint32_t field0x18;
+	uint32_t field0x1c;
+	int field0x20;
+	uint32_t field0x24;
 	std::array<char, 0x80> name;
-	int field_0xa8;
-	uint32_t field_0xac;
-	uint32_t field_0xb0;
-	uint32_t field_0xb4;
-	int field_0xb8;
-	uint32_t field_0xbc;
-	int field_0xc0;
-	int field_0xc4;
-	float field_0xc8;
-	float field_0xcc;
-	uint32_t field_0xd0;
-	uint32_t field_0xd4;
-	uint32_t field_0xd8;
-	int field_0xdc;
-	uint32_t field_0xe0;
-	uint32_t field_0xe4;
-	uint32_t field_0xe8;
-	uint32_t field_0xec;
-	uint32_t field_0xf0;
-	uint32_t field_0xf4;
-	float field_0xf8;
-	uint32_t field_0xfc;
-	uint32_t field_0x100;
+	int field0xa8;
+	uint32_t field0xac;
+	uint32_t field0xb0;
+	uint32_t field0xb4;
+	int field0xb8;
+	uint32_t field0xbc;
+	int field0xc0;
+	int field0xc4;
+	float field0xc8;
+	float field0xcc;
+	uint32_t field0xd0;
+	uint32_t field0xd4;
+	uint32_t field0xd8;
+	int field0xdc;
+	uint32_t field0xe0;
+	uint32_t field0xe4;
+	uint32_t field0xe8;
+	uint32_t field0xec;
+	uint32_t field0xf0;
+	uint32_t field0xf4;
+	float field0xf8;
+	uint32_t field0xfc;
+	uint32_t field0x100;
 };
 
 struct GVillagerInfo: GLivingInfo
@@ -1164,36 +1164,36 @@ struct GVillagerInfo: GLivingInfo
 
 struct CreatureDesireActionEntry
 {
-	uint32_t field_0x0;
-	uint32_t field_0x4;
-	uint32_t field_0x8;
-	uint32_t field_0xc;
-	uint32_t field_0x10;
-	uint32_t field_0x14;
-	uint32_t field_0x18;
-	uint32_t field_0x1c;
-	uint32_t field_0x20;
-	uint32_t field_0x24;
-	uint32_t field_0x28;
-	uint32_t field_0x2c;
-	uint32_t field_0x30;
-	uint32_t field_0x34;
-	uint32_t field_0x38;
-	uint32_t field_0x3c;
-	uint32_t field_0x40;
-	uint32_t field_0x44;
-	uint32_t field_0x48;
-	uint32_t field_0x4c;
-	uint32_t field_0x50;
-	uint32_t field_0x54;
-	uint32_t field_0x58;
-	uint32_t field_0x5c;
-	uint32_t field_0x60;
-	uint32_t field_0x64;
-	uint32_t field_0x68;
-	uint32_t field_0x6c;
-	uint32_t field_0x70;
-	uint32_t field_0x74;
+	uint32_t field0x0;
+	uint32_t field0x4;
+	uint32_t field0x8;
+	uint32_t field0xc;
+	uint32_t field0x10;
+	uint32_t field0x14;
+	uint32_t field0x18;
+	uint32_t field0x1c;
+	uint32_t field0x20;
+	uint32_t field0x24;
+	uint32_t field0x28;
+	uint32_t field0x2c;
+	uint32_t field0x30;
+	uint32_t field0x34;
+	uint32_t field0x38;
+	uint32_t field0x3c;
+	uint32_t field0x40;
+	uint32_t field0x44;
+	uint32_t field0x48;
+	uint32_t field0x4c;
+	uint32_t field0x50;
+	uint32_t field0x54;
+	uint32_t field0x58;
+	uint32_t field0x5c;
+	uint32_t field0x60;
+	uint32_t field0x64;
+	uint32_t field0x68;
+	uint32_t field0x6c;
+	uint32_t field0x70;
+	uint32_t field0x74;
 };
 
 struct GMagicTeleportInfo: GMagicInfo
@@ -1203,22 +1203,22 @@ struct GMagicTeleportInfo: GMagicInfo
 
 struct GPlaytimeInfo
 {
-	ObjectType AssociatedObject;
-	float Priority;
-	AbodeNumber AssociatedStructure;
-	AbodeNumber AssociatedAbodeNumber;
-	DanceInfo AssociatedDance;
+	ObjectType associatedObject;
+	float priority;
+	AbodeNumber associatedStructure;
+	AbodeNumber associatedAbodeNumber;
+	DanceInfo associatedDance;
 };
 
 struct CreatureMagicActionKnownAboutEntry: CreatureActionKnownAboutEntry
 {
-	uint32_t field_0x58;
-	float field_0x5c;
+	uint32_t field0x58;
+	float field0x5c;
 };
 
 struct CreatureSourceBoundsInfo
 {
-	glm::vec3 field_0x0;
+	glm::vec3 field0x0;
 };
 
 struct GPlayerInfo
@@ -1272,17 +1272,17 @@ struct GMagicFlockGroundInfo: GMagicInfo
 
 struct GAnimalStateTableInfo
 {
-	uint32_t field_0x0;
-	int field_0x4;
-	float field_0x8;
-	uint32_t field_0xc;
-	uint32_t field_0x10;
-	uint32_t field_0x14;
-	uint32_t field_0x18;
-	uint32_t field_0x1c;
-	uint32_t field_0x20;
+	uint32_t field0x0;
+	int field0x4;
+	float field0x8;
+	uint32_t field0xc;
+	uint32_t field0x10;
+	uint32_t field0x14;
+	uint32_t field0x18;
+	uint32_t field0x1c;
+	uint32_t field0x20;
 	std::array<char, 0x80> name;
-	uint32_t field_0xa4;
+	uint32_t field0xa4;
 };
 
 struct GLeashSelectorInfo: GObjectInfo
@@ -1292,23 +1292,23 @@ struct GLeashSelectorInfo: GObjectInfo
 
 struct CreatureInitialSourceInfo
 {
-	float field_0x0;
-	float field_0x4;
-	float field_0x8;
-	float field_0xc;
-	float field_0x10;
-	float field_0x14;
-	float field_0x18;
-	float field_0x1c;
-	float field_0x20;
-	float field_0x24;
-	float field_0x28;
-	float field_0x2c;
-	float field_0x30;
-	float field_0x34;
-	float field_0x38;
-	float field_0x3c;
-	float field_0x40;
+	float field0x0;
+	float field0x4;
+	float field0x8;
+	float field0xc;
+	float field0x10;
+	float field0x14;
+	float field0x18;
+	float field0x1c;
+	float field0x20;
+	float field0x24;
+	float field0x28;
+	float field0x2c;
+	float field0x30;
+	float field0x34;
+	float field0x38;
+	float field0x3c;
+	float field0x40;
 };
 
 struct GMagicWaterInfo: GMagicInfo
@@ -1382,29 +1382,29 @@ struct GTreeInfo: GSingleMapFixedInfo
 
 struct DifferentCreatureInfo
 {
-	float field_0x0;
-	float field_0x4;
-	float field_0x8;
-	float field_0xc;
-	float field_0x10;
-	float field_0x14;
-	float field_0x18;
-	float field_0x1c;
-	float field_0x20;
-	float field_0x24;
-	float field_0x28;
-	float field_0x2c;
-	float field_0x30;
-	float field_0x34;
-	float field_0x38;
-	float field_0x3c;
-	float field_0x40;
-	float field_0x44;
-	float field_0x48;
-	uint32_t field_0x4c;
-	float field_0x50;
-	float field_0x54;
-	float field_0x58;
+	float field0x0;
+	float field0x4;
+	float field0x8;
+	float field0xc;
+	float field0x10;
+	float field0x14;
+	float field0x18;
+	float field0x1c;
+	float field0x20;
+	float field0x24;
+	float field0x28;
+	float field0x2c;
+	float field0x30;
+	float field0x34;
+	float field0x38;
+	float field0x3c;
+	float field0x40;
+	float field0x44;
+	float field0x48;
+	uint32_t field0x4c;
+	float field0x50;
+	float field0x54;
+	float field0x58;
 };
 
 struct GEffectInfo
@@ -1512,42 +1512,42 @@ struct GPFootballInfo: GMultiMapFixedInfo
 
 struct GSpellSeedInfo: GObjectInfo
 {
-	uint32_t field_0xf0;
-	uint32_t field_0xf4;
-	uint32_t field_0xf8;
-	uint32_t field_0xfc;
-	uint32_t field_0x100;
-	uint32_t field_0x104;
-	uint32_t field_0x108;
-	uint32_t field_0x10c;
-	uint32_t field_0x110;
-	uint32_t field_0x114;
-	uint32_t field_0x118;
-	uint32_t field_0x11c;
-	uint32_t field_0x120;
-	uint32_t field_0x124;
-	uint32_t field_0x128;
-	uint32_t field_0x12c;
-	uint32_t field_0x130;
-	float field_0x134;
-	float field_0x138;
-	float field_0x13c;
-	float field_0x140;
-	float field_0x144;
-	uint32_t field_0x148;
-	uint32_t field_0x14c;
-	float field_0x150;
-	float field_0x154;
-	uint32_t field_0x158;
-	float field_0x15c;
-	uint32_t field_0x160;
-	uint32_t field_0x164;
-	uint32_t field_0x168;
-	uint32_t field_0x16c;
-	uint32_t field_0x170;
-	uint32_t field_0x174;
-	uint32_t field_0x178;
-	uint32_t field_0x17c;
+	uint32_t field0xf0;
+	uint32_t field0xf4;
+	uint32_t field0xf8;
+	uint32_t field0xfc;
+	uint32_t field0x100;
+	uint32_t field0x104;
+	uint32_t field0x108;
+	uint32_t field0x10c;
+	uint32_t field0x110;
+	uint32_t field0x114;
+	uint32_t field0x118;
+	uint32_t field0x11c;
+	uint32_t field0x120;
+	uint32_t field0x124;
+	uint32_t field0x128;
+	uint32_t field0x12c;
+	uint32_t field0x130;
+	float field0x134;
+	float field0x138;
+	float field0x13c;
+	float field0x140;
+	float field0x144;
+	uint32_t field0x148;
+	uint32_t field0x14c;
+	float field0x150;
+	float field0x154;
+	uint32_t field0x158;
+	float field0x15c;
+	uint32_t field0x160;
+	uint32_t field0x164;
+	uint32_t field0x168;
+	uint32_t field0x16c;
+	uint32_t field0x170;
+	uint32_t field0x174;
+	uint32_t field0x178;
+	uint32_t field0x17c;
 };
 
 struct GCitadelHeartInfo: GCitadelPartInfo
@@ -1613,63 +1613,63 @@ struct GFieldTypeInfo: GMultiMapFixedInfo
 
 struct CreatureActionInfo
 {
-	float field_0x0;
-	float field_0x4;
-	float field_0x8;
-	uint32_t field_0xc;
-	float field_0x10;
+	float field0x0;
+	float field0x4;
+	float field0x8;
+	uint32_t field0xc;
+	float field0x10;
 	std::array<char, 0x20> name;
-	uint32_t field_0x34;
-	uint32_t field_0x38;
-	uint32_t field_0x3c;
-	uint32_t field_0x40;
-	uint32_t field_0x44;
-	uint32_t field_0x48;
-	uint32_t field_0x4c;
-	uint32_t field_0x50;
-	uint32_t field_0x54;
-	uint32_t field_0x58;
-	uint32_t field_0x5c;
-	uint32_t field_0x60;
-	uint32_t field_0x64;
-	uint32_t field_0x68;
-	uint32_t field_0x6c;
-	uint32_t field_0x70;
-	uint32_t field_0x74;
-	uint32_t field_0x78;
-	uint32_t field_0x7c;
-	uint32_t field_0x80;
-	uint32_t field_0x84;
-	uint32_t field_0x88;
-	uint32_t field_0x8c;
-	uint32_t field_0x90;
-	uint32_t field_0x94;
-	uint32_t field_0x98;
-	uint32_t field_0x9c;
-	uint32_t field_0xa0;
-	uint32_t field_0xa4;
-	uint32_t field_0xa8;
-	uint32_t field_0xac;
-	uint32_t field_0xb0;
-	uint32_t field_0xb4;
-	uint32_t field_0xb8;
-	uint32_t field_0xbc;
-	float field_0xc0;
-	float field_0xc4;
-	uint32_t field_0xc8;
-	float field_0xcc;
-	float field_0xd0;
-	float field_0xd4;
-	uint32_t field_0xd8;
-	uint32_t field_0xdc;
-	uint32_t field_0xe0;
-	uint32_t field_0xe4;
-	float field_0xe8;
-	float field_0xec;
-	uint32_t field_0xf0;
-	uint32_t field_0xf4;
-	uint32_t field_0xf8;
-	uint32_t field_0xfc;
+	uint32_t field0x34;
+	uint32_t field0x38;
+	uint32_t field0x3c;
+	uint32_t field0x40;
+	uint32_t field0x44;
+	uint32_t field0x48;
+	uint32_t field0x4c;
+	uint32_t field0x50;
+	uint32_t field0x54;
+	uint32_t field0x58;
+	uint32_t field0x5c;
+	uint32_t field0x60;
+	uint32_t field0x64;
+	uint32_t field0x68;
+	uint32_t field0x6c;
+	uint32_t field0x70;
+	uint32_t field0x74;
+	uint32_t field0x78;
+	uint32_t field0x7c;
+	uint32_t field0x80;
+	uint32_t field0x84;
+	uint32_t field0x88;
+	uint32_t field0x8c;
+	uint32_t field0x90;
+	uint32_t field0x94;
+	uint32_t field0x98;
+	uint32_t field0x9c;
+	uint32_t field0xa0;
+	uint32_t field0xa4;
+	uint32_t field0xa8;
+	uint32_t field0xac;
+	uint32_t field0xb0;
+	uint32_t field0xb4;
+	uint32_t field0xb8;
+	uint32_t field0xbc;
+	float field0xc0;
+	float field0xc4;
+	uint32_t field0xc8;
+	float field0xcc;
+	float field0xd0;
+	float field0xd4;
+	uint32_t field0xd8;
+	uint32_t field0xdc;
+	uint32_t field0xe0;
+	uint32_t field0xe4;
+	float field0xe8;
+	float field0xec;
+	uint32_t field0xf0;
+	uint32_t field0xf4;
+	uint32_t field0xf8;
+	uint32_t field0xfc;
 };
 
 struct GSpellSystemInfo
@@ -1696,46 +1696,46 @@ struct GFishFarmInfo: GMultiMapFixedInfo
 
 struct CreatureDesireDependency
 {
-	uint32_t field_0x0;
-	float field_0x4;
-	float field_0x8;
-	float field_0xc;
-	uint32_t field_0x10;
-	uint32_t field_0x14;
-	uint32_t field_0x18;
-	uint32_t field_0x1c;
-	uint32_t field_0x20;
-	uint32_t field_0x24;
-	uint32_t field_0x28;
-	uint32_t field_0x2c;
-	uint32_t field_0x30;
-	uint32_t field_0x34;
-	uint32_t field_0x38;
-	uint32_t field_0x3c;
-	float field_0x40;
-	uint32_t field_0x44;
-	uint32_t field_0x48;
-	uint32_t field_0x4c;
-	uint32_t field_0x50;
-	uint32_t field_0x54;
-	uint32_t field_0x58;
-	float field_0x5c;
-	float field_0x60;
-	float field_0x64;
-	float field_0x68;
-	float field_0x6c;
-	float field_0x70;
-	float field_0x74;
-	float field_0x78;
-	float field_0x7c;
-	float field_0x80;
-	float field_0x84;
-	float field_0x88;
-	float field_0x8c;
-	float field_0x90;
-	float field_0x94;
-	uint32_t field_0x98;
-	uint32_t field_0x9c;
+	uint32_t field0x0;
+	float field0x4;
+	float field0x8;
+	float field0xc;
+	uint32_t field0x10;
+	uint32_t field0x14;
+	uint32_t field0x18;
+	uint32_t field0x1c;
+	uint32_t field0x20;
+	uint32_t field0x24;
+	uint32_t field0x28;
+	uint32_t field0x2c;
+	uint32_t field0x30;
+	uint32_t field0x34;
+	uint32_t field0x38;
+	uint32_t field0x3c;
+	float field0x40;
+	uint32_t field0x44;
+	uint32_t field0x48;
+	uint32_t field0x4c;
+	uint32_t field0x50;
+	uint32_t field0x54;
+	uint32_t field0x58;
+	float field0x5c;
+	float field0x60;
+	float field0x64;
+	float field0x68;
+	float field0x6c;
+	float field0x70;
+	float field0x74;
+	float field0x78;
+	float field0x7c;
+	float field0x80;
+	float field0x84;
+	float field0x88;
+	float field0x8c;
+	float field0x90;
+	float field0x94;
+	uint32_t field0x98;
+	uint32_t field0x9c;
 };
 
 struct GPFootballPositionInfo: GFootballPositionInfo
@@ -1745,18 +1745,18 @@ struct GPFootballPositionInfo: GFootballPositionInfo
 struct CreatureMimicInfo
 {
 	std::array<char, 0x80> name;
-	float field_0x80;
-	uint32_t field_0x84;
-	uint32_t field_0x88;
-	uint32_t field_0x8c;
-	uint32_t field_0x90;
-	uint32_t field_0x94;
-	uint32_t field_0x98;
-	uint32_t field_0x9c;
-	uint32_t field_0xa0;
-	uint32_t field_0xa4;
-	uint32_t field_0xa8;
-	uint32_t field_0xac;
+	float field0x80;
+	uint32_t field0x84;
+	uint32_t field0x88;
+	uint32_t field0x8c;
+	uint32_t field0x90;
+	uint32_t field0x94;
+	uint32_t field0x98;
+	uint32_t field0x9c;
+	uint32_t field0xa0;
+	uint32_t field0xa4;
+	uint32_t field0xa8;
+	uint32_t field0xac;
 };
 
 struct GPrayerSiteInfo: GFeatureInfo
@@ -1771,13 +1771,13 @@ struct HelpSpiritInfo: GLivingInfo
 
 struct CreatureDesireSourceTable
 {
-	uint32_t field_0x0;
-	uint32_t field_0x4;
-	float field_0x8;
-	float field_0xc;
-	float field_0x10;
-	std::array<char, 0x40> field_0x14;
-	std::array<char, 0x40> field_0x54;
+	uint32_t field0x0;
+	uint32_t field0x4;
+	float field0x8;
+	float field0xc;
+	float field0x10;
+	std::array<char, 0x40> field0x14;
+	std::array<char, 0x40> field0x54;
 };
 
 struct GSpellIconInfo: GMultiMapFixedInfo
@@ -1868,14 +1868,14 @@ struct InfoConstants
 	std::array<GAlignmentInfo, 7> alignment;
 	std::array<ReactionInfo, 41> reaction;
 	std::array<CreatureActionInfo, 328> creatureAction;
-	std::array<CreatureDesireActionEntry, 40> creatureDesireAction_1;
-	std::array<CreatureDesireActionEntry, 17> creatureDesireAction_2;
-	std::array<CreatureDesireActionEntry, 40> creatureDesireAction_3;
+	std::array<CreatureDesireActionEntry, 40> creatureDesireAction1;
+	std::array<CreatureDesireActionEntry, 17> creatureDesireAction2;
+	std::array<CreatureDesireActionEntry, 40> creatureDesireAction3;
 	std::array<CreatureDesireDependency, 40> creatureDesireDependency;
 	std::array<CreatureInitialDesireInfo, 40> creatureInitialDesire;
 	std::array<CreatureDesireSourceTable, 61> desireSourceTable;
-	std::array<CreatureInitialSourceInfo, 61> creatureInitialSource_1;
-	std::array<CreatureInitialSourceInfo, 61> creatureInitialSource_2;
+	std::array<CreatureInitialSourceInfo, 61> creatureInitialSource1;
+	std::array<CreatureInitialSourceInfo, 61> creatureInitialSource2;
 	std::array<CreatureSourceBoundsInfo, 61> creatureSourceBounds;
 	std::array<CreatureDesireAttributeEntry, 40> creatureDesireAttributeEntry;
 	std::array<CreatureActionKnownAboutEntry, 6> creatireActionKnownAboutEntry;
