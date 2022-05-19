@@ -128,7 +128,9 @@ DynamicsSystem::RayCastClosestHit(const glm::vec3& origin, const glm::vec3& dire
 	_world->rayTest(from, to, callback);
 
 	if (!callback.hasHit())
+	{
 		return std::nullopt;
+	}
 
 	auto translation = glm::vec3(callback.m_hitPointWorld.x(), callback.m_hitPointWorld.y(), callback.m_hitPointWorld.z());
 	auto normal = glm::vec3(callback.m_hitNormalWorld.x(), callback.m_hitNormalWorld.y(), callback.m_hitNormalWorld.z());

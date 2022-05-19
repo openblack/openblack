@@ -90,7 +90,9 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 		{
 			const char c = word_start[-1];
 			if (c == ' ' || c == '\t' || c == ',' || c == ';')
+			{
 				break;
+			}
 			word_start--;
 		}
 
@@ -98,7 +100,8 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 		std::vector<std::string> candidates;
 		for (auto& Command : _commands)
 		{
-			if (word_end == word_start || strncmp(Command.first.c_str(), word_start, (int)(word_end - word_start)) == 0)
+			if (word_end == word_start ||
+			    strncmp(Command.first.c_str(), word_start, static_cast<int>(word_end - word_start)) == 0)
 			{
 				candidates.push_back(Command.first);
 			}
@@ -107,24 +110,25 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 		if (candidates.empty())
 		{
 			// No match
-			AddLog("No match for \"%.*s\"!\n", (int)(word_end - word_start), word_start);
+			AddLog("No match for \"%.*s\"!\n", static_cast<int>(word_end - word_start), word_start);
 		}
 		else if (candidates.size() == 1)
 		{
 			// Single match. Delete the beginning of the word and replace it entirely so we've got nice casing
-			data->DeleteChars((int)(word_start - data->Buf), (int)(word_end - word_start));
+			data->DeleteChars(static_cast<int>(word_start - data->Buf), static_cast<int>(word_end - word_start));
 			data->InsertChars(data->CursorPos, candidates[0].c_str());
 		}
 		else
 		{
 			// Multiple matches. Complete as much as we can, so inputing "C" will complete to "CL" and display
 			// "CLEAR" and "CLASSIFY"
-			int match_len = (int)(word_end - word_start);
+			int match_len = static_cast<int>(word_end - word_start);
 			for (;;)
 			{
 				char c = 0;
 				bool all_candidates_matches = true;
 				for (size_t i = 0; i < candidates.size() && all_candidates_matches; i++)
+				{
 					if (i == 0)
 					{
 						c = candidates[i][match_len];
@@ -133,6 +137,7 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 					{
 						all_candidates_matches = false;
 					}
+				}
 				if (!all_candidates_matches)
 				{
 					break;
@@ -142,7 +147,7 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 
 			if (match_len > 0)
 			{
-				data->DeleteChars((int)(word_start - data->Buf), (int)(word_end - word_start));
+				data->DeleteChars(static_cast<int>(word_start - data->Buf), static_cast<int>(word_end - word_start));
 				data->InsertChars(data->CursorPos, candidates[0].c_str(), candidates[0].c_str() + match_len);
 			}
 
@@ -254,7 +259,9 @@ void Console::Draw(Game& game)
 	if (ImGui::BeginPopupContextItem())
 	{
 		if (ImGui::MenuItem("Close Console"))
+		{
 			Close();
+		}
 		ImGui::EndPopup();
 	}
 
@@ -299,7 +306,9 @@ void Console::Draw(Game& game)
 	// to what ImGuiListClipper does. Or split your data into fixed height items to allow random-seeking into your list.
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
 	if (copy_to_clipboard)
+	{
 		ImGui::LogToClipboard();
+	}
 	for (const auto& item : _items)
 	{
 		// Normally you would store more information in your item (e.g. make Items[] an array of structure, store color/type
@@ -317,7 +326,9 @@ void Console::Draw(Game& game)
 		}
 		ImGui::TextUnformatted(item.c_str());
 		if (pop_color)
+		{
 			ImGui::PopStyleColor();
+		}
 	}
 	if (copy_to_clipboard)
 		ImGui::LogFinish();
@@ -340,7 +351,7 @@ void Console::Draw(Game& game)
 	        [](ImGuiInputTextCallbackData* data) -> int {
 		        return reinterpret_cast<Console*>(data->UserData)->InputTextCallback(data);
 	        },
-	        (void*)this))
+	        this))
 	{
 		std::string s = _inputBuffer.data();
 

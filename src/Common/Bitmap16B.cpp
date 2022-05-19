@@ -18,12 +18,12 @@ using namespace openblack;
 
 Bitmap16B::Bitmap16B(const void* fileData)
 {
-	_width = *((uint32_t*)fileData + 1);
-	_height = *((uint32_t*)fileData + 2);
+	_width = reinterpret_cast<const uint32_t*>(fileData)[1];
+	_height = reinterpret_cast<const uint32_t*>(fileData)[2];
 	_size = _width * _height * 2;
 
 	_data = new uint16_t[_width * _height];
-	memcpy(_data, (uint32_t*)fileData + 4, _size);
+	memcpy(_data, &reinterpret_cast<const uint32_t*>(fileData)[4], _size);
 }
 
 Bitmap16B::~Bitmap16B()

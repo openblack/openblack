@@ -501,7 +501,7 @@ LHVMViewer::LHVMViewer()
 
 void LHVMViewer::Draw(Game& game)
 {
-	auto lhvm = game.GetLhvm();
+	auto& lhvm = game.GetLhvm();
 	if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
 	{
 		if (ImGui::BeginTabItem("Scripts"))
@@ -539,8 +539,8 @@ void LHVMViewer::Draw(Game& game)
 		if (ImGui::BeginTabItem("Data"))
 		{
 			static MemoryEditor lhvm_data_editor;
-			auto const& data = lhvm.GetData();
-			lhvm_data_editor.DrawContents((void*)data.data(), data.size(), 0);
+			auto& data = lhvm.GetData();
+			lhvm_data_editor.DrawContents(reinterpret_cast<void*>(data.data()), data.size(), 0);
 
 			ImGui::EndTabItem();
 		}

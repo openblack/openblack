@@ -44,13 +44,19 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 	{
 		SDL_SetMainReady();
 		if (SDL_Init(0) != 0)
+		{
 			throw std::runtime_error("Could not initialize SDL: " + std::string(SDL_GetError()));
+		}
 
 		if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0)
+		{
 			throw std::runtime_error("Could not initialize SDL Video Subsystem: " + std::string(SDL_GetError()));
+		}
 
 		if (SDL_InitSubSystem(SDL_INIT_TIMER) != 0)
+		{
 			throw std::runtime_error("Could not initialize SDL Timer Subsystem: " + std::string(SDL_GetError()));
+		}
 	}
 
 	SDL_ShowCursor(SDL_DISABLE);
@@ -58,9 +64,13 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 
 	uint32_t flags = SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | extraFlags;
 	if (displayMode == DisplayMode::Fullscreen)
+	{
 		flags |= SDL_WINDOW_FULLSCREEN;
+	}
 	else if (displayMode == DisplayMode::Borderless)
+	{
 		flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+	}
 
 	// Get SDL Window requirements from Renderer
 	const int x = SDL_WINDOWPOS_UNDEFINED;
@@ -226,7 +236,7 @@ float GameWindow::GetAspectRatio() const
 	int width, height;
 	SDL_GetWindowSize(_window.get(), &width, &height);
 
-	return (float)width / (float)height;
+	return static_cast<float>(width) / static_cast<float>(height);
 }
 
 void GameWindow::SetPosition(int x, int y)

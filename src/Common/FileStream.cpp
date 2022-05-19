@@ -70,12 +70,15 @@ void FileStream::Seek(std::size_t position, SeekMode seek)
 	switch (seek)
 	{
 	case SeekMode::Begin:
+		// NOLINTNEXTLINE(google-runtime-int): required type for fseek
 		std::fseek(_file, static_cast<long>(position), SEEK_SET);
 		break;
 	case SeekMode::Current:
+		// NOLINTNEXTLINE(google-runtime-int): required type for fseek
 		std::fseek(_file, static_cast<long>(position), SEEK_CUR);
 		break;
 	case SeekMode::End:
+		// NOLINTNEXTLINE(google-runtime-int): required type for fseek
 		std::fseek(_file, static_cast<long>(position), SEEK_END);
 		break;
 	}

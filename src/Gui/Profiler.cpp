@@ -134,12 +134,12 @@ void openblack::gui::Profiler::Draw(Game& game)
 		    if (startTimestamp)
 		    {
 			    *startTimestamp = static_cast<float>(1000.0 * (stats->viewStats[idx].gpuTimeBegin - stats->gpuTimeBegin) /
-			                                         (double)stats->gpuTimerFreq);
+			                                         static_cast<double>(stats->gpuTimerFreq));
 		    }
 		    if (endTimestamp)
 		    {
 			    *endTimestamp = static_cast<float>(1000.0 * (stats->viewStats[idx].gpuTimeEnd - stats->gpuTimeBegin) /
-			                                       (double)stats->gpuTimerFreq);
+			                                       static_cast<double>(stats->gpuTimerFreq));
 		    }
 		    if (level)
 		    {
@@ -151,7 +151,8 @@ void openblack::gui::Profiler::Draw(Game& game)
 		    }
 	    },
 	    stats, stats->numViews, 0, "GPU Frame", 0,
-	    static_cast<float>(1000.0 * (stats->gpuTimeEnd - stats->gpuTimeBegin) / (double)stats->gpuTimerFreq), ImVec2(width, 0));
+	    static_cast<float>(1000.0 * (stats->gpuTimeEnd - stats->gpuTimeBegin) / static_cast<double>(stats->gpuTimerFreq)),
+	    ImVec2(width, 0));
 
 	ImGui::Columns(2);
 	if (ImGui::CollapsingHeader("Details (CPU)", ImGuiTreeNodeFlags_DefaultOpen))
@@ -176,17 +177,17 @@ void openblack::gui::Profiler::Draw(Game& game)
 	if (ImGui::CollapsingHeader("Details (GPU)", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		auto frameDuration = stats->gpuTimeEnd - stats->gpuTimeBegin;
-		ImGui::Text("Full Frame: %0.3f", 1000.0f * frameDuration / (double)stats->gpuTimerFreq);
+		ImGui::Text("Full Frame: %0.3f", 1000.0f * frameDuration / static_cast<double>(stats->gpuTimerFreq));
 
 		for (uint8_t i = 0; i < stats->numViews; ++i)
 		{
 			auto const& viewStat = stats->viewStats[i];
 			int64_t gpuTimeElapsed = viewStat.gpuTimeEnd - viewStat.gpuTimeBegin;
 
-			ImGui::Text("    %s: %0.3f", viewStat.name, 1000.0f * gpuTimeElapsed / (double)stats->gpuTimerFreq);
+			ImGui::Text("    %s: %0.3f", viewStat.name, 1000.0f * gpuTimeElapsed / static_cast<double>(stats->gpuTimerFreq));
 			frameDuration -= gpuTimeElapsed;
 		}
-		ImGui::Text("    Unaccounted: %0.3f", 1000.0f * frameDuration / (double)stats->gpuTimerFreq);
+		ImGui::Text("    Unaccounted: %0.3f", 1000.0f * frameDuration / static_cast<double>(stats->gpuTimerFreq));
 	}
 	ImGui::Columns(1);
 }

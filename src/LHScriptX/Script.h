@@ -31,7 +31,7 @@ public:
 class Script
 {
 public:
-	Script(Game* game)
+	explicit Script(Game* game)
 	    : _game(game)
 	    , token_(Token::MakeInvalidToken())
 	{
