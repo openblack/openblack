@@ -16,7 +16,7 @@ namespace openblack::ecs::systems
 class LivingActionSystem
 {
 public:
-	static LivingActionSystem& instance();
+	static LivingActionSystem& Instance();
 	void Update();
 
 	[[nodiscard]] VillagerStates VillagerGetState(const components::LivingAction& action,

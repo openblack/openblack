@@ -14,7 +14,7 @@ namespace openblack::ecs::systems
 class PathfindingSystem
 {
 public:
-	static PathfindingSystem& instance();
+	static PathfindingSystem& Instance();
 
 	void Update();
 

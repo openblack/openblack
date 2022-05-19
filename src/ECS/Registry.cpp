@@ -31,6 +31,6 @@ const RegistryContext& Registry::Context() const
 
 void Registry::SetDirty()
 {
-	systems::RenderingSystem::instance().SetDirty();
+	systems::RenderingSystem::Instance().SetDirty();
 }
 } // namespace openblack::ecs

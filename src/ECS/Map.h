@@ -26,8 +26,8 @@ class Map
 public:
 	using CellId = glm::u16vec2;
 
-	static constexpr float _positionToGridFactor = static_cast<float>(0x10000) * 0.1f;
-	static constexpr glm::u16vec2 _gridSize = {0x200, 0x200};
+	static constexpr float k_PositionToGridFactor = static_cast<float>(0x10000) * 0.1f;
+	static constexpr glm::u16vec2 k_GridSize = {0x200, 0x200};
 
 	static CellId GetGridCell(const glm::vec2& pos);
 	static CellId GetGridCell(const glm::vec3& pos);
@@ -44,8 +44,8 @@ private:
 	void Clear();
 	void Build();
 
-	std::array<std::unordered_set<entt::entity>, _gridSize.x * _gridSize.y> _fixedGrid;
-	std::array<std::unordered_set<entt::entity>, _gridSize.x * _gridSize.y> _mobileGrid;
+	std::array<std::unordered_set<entt::entity>, k_GridSize.x * k_GridSize.y> _fixedGrid;
+	std::array<std::unordered_set<entt::entity>, k_GridSize.x * k_GridSize.y> _mobileGrid;
 };
 
 } // namespace openblack::ecs

@@ -20,7 +20,7 @@
 
 #include "Game.h"
 
-bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return_code)
+bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& returnCode)
 {
 	cxxopts::Options options("openblack", "Open source reimplementation of the game Black & White (2001).");
 
@@ -32,7 +32,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 #endif
 
 	std::string loggingSubsystems = "all";
-	for (const auto& system : openblack::LoggingSubsystemStrs)
+	for (const auto& system : openblack::k_LoggingSubsystemStrs)
 	{
 		loggingSubsystems += std::string(", ") + system.data();
 	}
@@ -60,7 +60,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		if (result["help"].as<bool>())
 		{
 			std::cout << options.help() << std::endl;
-			return_code = EXIT_SUCCESS;
+			returnCode = EXIT_SUCCESS;
 			return false;
 		}
 		static const std::map<std::string_view, bgfx::RendererType::Enum> rendererLookup = {
@@ -115,7 +115,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 			throw cxxopts::option_not_exists_exception(result["window-mode"].as<std::string>());
 		}
 
-		std::array<spdlog::level::level_enum, openblack::LoggingSubsystemStrs.size()> logLevels;
+		std::array<spdlog::level::level_enum, openblack::k_LoggingSubsystemStrs.size()> logLevels;
 		{
 			std::map<std::string, spdlog::level::level_enum> logLevelMap;
 			logLevelMap.insert_or_assign("all", spdlog::level::debug);
@@ -132,7 +132,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 			{
 				level = all;
 			}
-			for (size_t i = 0; const auto& str : openblack::LoggingSubsystemStrs)
+			for (size_t i = 0; const auto& str : openblack::k_LoggingSubsystemStrs)
 			{
 				const auto iter = logLevelMap.find(str.data());
 				if (iter != logLevelMap.cend())
@@ -184,7 +184,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		std::cerr << err.what() << std::endl;
 		std::cerr << options.help() << std::endl;
 
-		return_code = EXIT_FAILURE;
+		returnCode = EXIT_FAILURE;
 		return false;
 	}
 
@@ -204,10 +204,10 @@ int main(int argc, char* argv[]) noexcept
 	try
 	{
 		openblack::Arguments args;
-		int return_code = EXIT_FAILURE;
-		if (!parseOptions(argc, argv, args, return_code))
+		int returnCode = EXIT_FAILURE;
+		if (!parseOptions(argc, argv, args, returnCode))
 		{
-			return return_code;
+			return returnCode;
 		}
 		auto game = std::make_unique<openblack::Game>(std::move(args));
 		if (!game->Initialize())

@@ -47,14 +47,14 @@ struct Stream
 				    return firstDistance < secondDistance;
 			    });
 
-			if (glm::distance(position, element->position) < maxNodeDistance)
+			if (glm::distance(position, element->position) < k_MaxNodeDistance)
 			{
 				edges.push_back(*element);
 			}
 		}
 
 	private:
-		const static auto maxNodeDistance = 100;
+		const static auto k_MaxNodeDistance = 100;
 	};
 
 	Stream::Id id;

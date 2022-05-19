@@ -53,7 +53,7 @@ public:
 		_count,
 	};
 
-	static constexpr std::array<std::string_view, static_cast<uint8_t>(Stage::_count)> stageNames = {
+	constexpr static std::array<std::string_view, static_cast<uint8_t>(Stage::_count)> k_StageNames = {
 	    "Physics Update",       //
 	    "Pathfinding Update",   //
 	    "Living Action Update", //
@@ -85,31 +85,31 @@ private:
 	struct ScopedSection
 	{
 		inline explicit ScopedSection(Profiler* profiler, Stage stage)
-		    : _profiler(profiler)
-		    , _stage(stage)
+		    : profiler(profiler)
+		    , stage(stage)
 		{
-			_profiler->Begin(_stage);
+			profiler->Begin(stage);
 		}
-		inline ~ScopedSection() { _profiler->End(_stage); }
+		inline ~ScopedSection() { profiler->End(stage); }
 
-		Profiler* const _profiler;
-		const Stage _stage;
+		Profiler* const profiler;
+		const Stage stage;
 	};
 
 public:
 	struct Scope
 	{
-		uint8_t _level;
-		std::chrono::system_clock::time_point _start;
-		std::chrono::system_clock::time_point _end;
-		bool _finalized = false;
+		uint8_t level;
+		std::chrono::system_clock::time_point start;
+		std::chrono::system_clock::time_point end;
+		bool finalized = false;
 	};
 
 	struct Entry
 	{
-		std::chrono::system_clock::time_point _frameStart;
-		std::chrono::system_clock::time_point _frameEnd;
-		std::array<Scope, static_cast<uint8_t>(Stage::_count)> _stages;
+		std::chrono::system_clock::time_point frameStart;
+		std::chrono::system_clock::time_point frameEnd;
+		std::array<Scope, static_cast<uint8_t>(Stage::_count)> stages;
 	};
 
 	void Frame();
@@ -117,13 +117,15 @@ public:
 	void End(Stage stage);
 	inline ScopedSection BeginScoped(Stage stage) { return ScopedSection(this, stage); }
 
-	[[nodiscard]] uint8_t GetEntryIndex(int8_t offset) const { return (_currentEntry + _bufferSize + offset) % _bufferSize; }
+	[[nodiscard]] uint8_t GetEntryIndex(int8_t offset) const { return (_currentEntry + k_BufferSize + offset) % k_BufferSize; }
 
-	static constexpr uint8_t _bufferSize = 100;
-	std::array<Entry, _bufferSize> _entries;
+	constexpr static uint8_t k_BufferSize = 100;
+	std::array<Entry, k_BufferSize>& GetEntries() { return _entries; }
+	[[nodiscard]] const std::array<Entry, k_BufferSize>& GetEntries() const { return _entries; }
 
 private:
-	uint8_t _currentEntry = _bufferSize - 1;
+	std::array<Entry, k_BufferSize> _entries;
+	uint8_t _currentEntry = k_BufferSize - 1;
 	uint8_t _currentLevel = 0;
 };
 

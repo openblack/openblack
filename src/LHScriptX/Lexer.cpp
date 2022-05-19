@@ -16,57 +16,57 @@
 using namespace openblack::lhscriptx;
 
 Lexer::Lexer(std::string source)
-    : source_(std::move(source))
+    : _source(std::move(source))
 {
-	current_ = source_.begin();
-	end_ = source_.end();
+	_current = _source.begin();
+	_end = _source.end();
 }
 
 Token Lexer::GetToken()
 {
 	while (true)
 	{
-		if (current_ == end_)
+		if (_current == _end)
 		{
 			return Token::MakeEOFToken();
 		}
 
-		unsigned char cc = *current_;
+		unsigned char cc = *_current;
 		switch (cc)
 		{
 		case '/':
 			// Comment syntax. Ignore the rest of the line
-			if (*(current_ + 1) == '/')
+			if (*(_current + 1) == '/')
 			{
 				// Skip line
-				while (*current_ != '\n' && current_ != end_)
+				while (*_current != '\n' && _current != _end)
 				{
-					current_++;
+					_current++;
 				}
 			}
 			break;
 		case ' ':
 		case '\t':
 		case '\r':
-			current_++;
+			_current++;
 
 			// skip over whitespace quickly
-			while (*current_ == ' ' || *current_ == '\t' || *current_ == '\r')
+			while (*_current == ' ' || *_current == '\t' || *_current == '\r')
 			{
-				current_++;
+				_current++;
 			}
 			break;
 		case '\n':
-			current_++;
-			currentLine_++;
+			_current++;
+			_currentLine++;
 			return Token::MakeEOLToken();
 
 		// not sure if it's **** or just *, this can be drastically improved on
 		// though
 		case '*':
-			while (*current_ != '\n')
+			while (*_current != '\n')
 			{
-				current_++;
+				_current++;
 			}
 			break;
 
@@ -74,15 +74,15 @@ Token Lexer::GetToken()
 		case 'R':
 		case 'r':
 			// todo: potential out of bounds here:
-			if ((current_[1] == 'e' || current_[1] == 'E') && (current_[2] == 'm' || current_[2] == 'M'))
+			if ((_current[1] == 'e' || _current[1] == 'E') && (_current[2] == 'm' || _current[2] == 'M'))
 			{
-				while (*current_ != '\n')
+				while (*_current != '\n')
 				{
-					current_++;
+					_current++;
 				}
 				break;
 			}
-			return gatherIdentifer();
+			return GatherIdentifer();
 
 		/* gather identifiers */
 		case 'A':
@@ -136,7 +136,7 @@ Token Lexer::GetToken()
 		case 'y':
 		case 'z':
 		case '_':
-			return gatherIdentifer();
+			return GatherIdentifer();
 
 		/* gather numbers */
 		case '0':
@@ -150,28 +150,28 @@ Token Lexer::GetToken()
 		case '8':
 		case '9':
 		case '-':
-			return gatherNumber();
+			return GatherNumber();
 
 		/* gather strings */
 		case '"':
-			return gatherString();
+			return GatherString();
 
 		case '=':
-			current_++;
+			_current++;
 			return Token::MakeOperatorToken(Operator::Equal);
 		case ',':
-			current_++;
+			_current++;
 			return Token::MakeOperatorToken(Operator::Comma);
 		case '(':
-			current_++;
+			_current++;
 			return Token::MakeOperatorToken(Operator::LeftParentheses);
 		case ')':
-			current_++;
+			_current++;
 			return Token::MakeOperatorToken(Operator::RightParentheses);
 		default:
 			// todo: ignore BOM
 
-			current_++;
+			_current++;
 			throw LexerException("unexpected character: " + std::string(1, cc));
 		}
 	}
@@ -179,12 +179,12 @@ Token Lexer::GetToken()
 	__builtin_unreachable(); // unreachable
 }
 
-Token Lexer::gatherIdentifer()
+Token Lexer::GatherIdentifer()
 {
-	auto id_start = current_;
-	while (hasMore())
+	auto idStart = _current;
+	while (HasMore())
 	{
-		unsigned char cc = *current_;
+		unsigned char cc = *_current;
 
 		/* check for invalid characters */
 		if ((cc < 'A' || cc > 'Z') && (cc < 'a' || cc > 'z') && cc != '_' && (cc < '0' || cc > '9'))
@@ -197,36 +197,36 @@ Token Lexer::gatherIdentifer()
 			throw LexerException("invalid character " + std::string(1, cc) + "in identifer");
 		}
 
-		current_++;
+		_current++;
 	}
 
-	return Token::MakeIdentifierToken(std::string(id_start, current_));
+	return Token::MakeIdentifierToken(std::string(idStart, _current));
 }
 
-Token Lexer::gatherNumber()
+Token Lexer::GatherNumber()
 {
-	bool is_float = false;
-	bool is_neg = false;
+	bool isFloat = false;
+	bool isNeg = false;
 
-	if (*current_ == '-')
+	if (*_current == '-')
 	{
-		current_++;
-		is_neg = true;
+		_current++;
+		isNeg = true;
 	}
 
-	auto number_start = current_;
+	auto numberStart = _current;
 
 	// consume all digits and .
-	while (hasMore())
+	while (HasMore())
 	{
-		if (std::isdigit(*current_) != 0)
+		if (std::isdigit(*_current) != 0)
 		{
-			current_++;
+			_current++;
 		}
-		else if (*current_ == '.')
+		else if (*_current == '.')
 		{
-			current_++;
-			is_float = true;
+			_current++;
+			isFloat = true;
 		}
 		else
 		{
@@ -234,40 +234,40 @@ Token Lexer::gatherNumber()
 		}
 	}
 
-	if (is_float)
+	if (isFloat)
 	{
-		float value = std::stof(std::string(number_start, current_));
-		if (is_neg)
+		float value = std::stof(std::string(numberStart, _current));
+		if (isNeg)
 		{
 			value = -value;
 		}
 		return Token::MakeFloatToken(value);
 	}
 
-	int value = std::stoi(std::string(number_start, current_));
-	if (is_neg)
+	int value = std::stoi(std::string(numberStart, _current));
+	if (isNeg)
 	{
 		value = -value;
 	}
 	return Token::MakeIntegerToken(value);
 }
 
-Token Lexer::gatherString()
+Token Lexer::GatherString()
 {
-	auto string_start = ++current_;
+	auto stringStart = ++_current;
 
 	// todo: we should check for unterminated strings
-	while (hasMore() && *current_ != '"')
+	while (HasMore() && *_current != '"')
 	{
-		current_++;
+		_current++;
 	}
 
-	return Token::MakeStringToken(std::string(string_start, current_++));
+	return Token::MakeStringToken(std::string(stringStart, _current++));
 }
 
 void Token::Print(FILE* file) const
 {
-	switch (this->type_)
+	switch (this->_type)
 	{
 	case Type::Invalid:
 		fprintf(file, "invalid");
@@ -279,20 +279,20 @@ void Token::Print(FILE* file) const
 		fprintf(file, "\n");
 		break;
 	case Type::Identifier:
-		fprintf(file, "identifier \"%s\"", this->s_.c_str());
+		fprintf(file, "identifier \"%s\"", this->_s.c_str());
 		break;
 	case Type::String:
-		fprintf(file, "quoted string \"%s\"", this->s_.c_str());
+		fprintf(file, "quoted string \"%s\"", this->_s.c_str());
 		break;
 	case Type::Integer:
-		fprintf(file, "integer %d", this->u_.integerValue);
+		fprintf(file, "integer %d", this->_u.integerValue);
 		break;
 	case Type::Float:
-		fprintf(file, "float %f", this->u_.floatValue);
+		fprintf(file, "float %f", this->_u.floatValue);
 		break;
 	case Type::Operator:
 		fprintf(file, "operator ");
-		switch (this->u_.op)
+		switch (this->_u.op)
 		{
 		case Operator::Invalid:
 			fprintf(file, "invalid");

@@ -40,11 +40,11 @@ void LHVM::LoadBinary(const std::string& filename)
 	if (count != 1 || _version != Version::BlackAndWhite)
 		throw std::runtime_error("unsupported LHVM version");
 
-	loadVariables(file, _variables);
-	loadCode(file);
-	loadAuto(file);
-	loadScripts(file);
-	loadData(file);
+	LoadVariables(file, _variables);
+	LoadCode(file);
+	LoadAuto(file);
+	LoadScripts(file);
+	LoadData(file);
 
 	// creature isle
 	if (_version == Version::CreatureIsle)
@@ -56,7 +56,7 @@ void LHVM::LoadBinary(const std::string& filename)
 	std::fclose(file);
 }
 
-void LHVM::loadVariables(std::FILE* file, std::vector<std::string>& variables)
+void LHVM::LoadVariables(std::FILE* file, std::vector<std::string>& variables)
 {
 	int32_t count;
 
@@ -85,7 +85,7 @@ void LHVM::loadVariables(std::FILE* file, std::vector<std::string>& variables)
 	}
 }
 
-void LHVM::loadCode(std::FILE* file)
+void LHVM::LoadCode(std::FILE* file)
 {
 	int32_t count;
 	if (std::fread(&count, sizeof(count), 1, file) != 1)
@@ -107,7 +107,7 @@ void LHVM::loadCode(std::FILE* file)
 	}
 }
 
-void LHVM::loadAuto(std::FILE* file)
+void LHVM::LoadAuto(std::FILE* file)
 {
 	int32_t count;
 	if (std::fread(&count, sizeof(count), 1, file) != 1)
@@ -123,7 +123,7 @@ void LHVM::loadAuto(std::FILE* file)
 		throw std::runtime_error("error reading ids");
 }
 
-void LHVM::loadScripts(std::FILE* file)
+void LHVM::LoadScripts(std::FILE* file)
 {
 	int32_t count;
 	if (std::fread(&count, sizeof(count), 1, file) != 1)
@@ -159,7 +159,7 @@ void LHVM::loadScripts(std::FILE* file)
 			throw std::runtime_error("error reading script variables offset");
 
 		std::vector<std::string> variables;
-		loadVariables(file, variables);
+		LoadVariables(file, variables);
 
 		uint32_t instruction_address, parameter_count, script_id;
 		if (std::fread(&instruction_address, sizeof(instruction_address), 1, file) != 1)
@@ -174,7 +174,7 @@ void LHVM::loadScripts(std::FILE* file)
 	}
 }
 
-void LHVM::loadData(std::FILE* file)
+void LHVM::LoadData(std::FILE* file)
 {
 	int32_t size;
 	if (std::fread(&size, sizeof(size), 1, file) != 1)

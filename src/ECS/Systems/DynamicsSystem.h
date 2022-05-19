@@ -60,7 +60,7 @@ public:
 	void RegisterIslandRigidBodies(LandIsland& island);
 	void UpdatePhysicsTransforms();
 	[[nodiscard]] std::optional<std::pair<ecs::components::Transform, RigidBodyDetails>>
-	RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float t_max) const;
+	RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float tMax) const;
 
 private:
 	/// collision configuration contains default setup for memory, collision setup

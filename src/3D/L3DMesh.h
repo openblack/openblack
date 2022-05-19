@@ -32,7 +32,7 @@ class L3DFile;
 
 typedef uint32_t SkinId;
 
-constexpr std::array<std::string_view, 32> L3DMeshFlagNames {
+constexpr std::array<std::string_view, 32> k_L3DMeshFlagNames {
     "Unknown1",
     "Unknown2",
     "Unknown3",

@@ -73,7 +73,7 @@ private:
 	std::unique_ptr<btBvhTriangleMeshShape> _physicsMesh;
 	std::unique_ptr<btRigidBody> _rigidBody;
 
-	const bgfx::Memory* buildVertexList(LandIsland& island);
+	const bgfx::Memory* BuildVertexList(LandIsland& island);
 
 	friend LandIsland;
 };

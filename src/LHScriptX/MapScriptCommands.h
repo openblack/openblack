@@ -21,14 +21,14 @@ namespace openblack::lhscriptx
 class MapScriptCommands
 {
 public:
-	static const std::array<const ScriptCommandSignature, 20> Signatures;
+	static const std::array<const ScriptCommandSignature, 20> k_Signatures;
 
 	static void SetNoPlayers(int32_t number);
 	static void LoadTribeDance(glm::vec3 position, int32_t);
 	static void SetDate(int32_t, int32_t, int32_t);
 	static void SetTime(int32_t, int32_t, int32_t);
-	static void SetTurnsPerYear(int32_t turns_per_year);
-	static void SetGameTickTime(int32_t game_tick_time);
+	static void SetTurnsPerYear(int32_t turnsPerYear);
+	static void SetGameTickTime(int32_t gameTickTime);
 	static void LoadFeatureScript(glm::vec3);
 	static void PauseGame();
 	static void CreateCreature(int32_t, int32_t, int32_t, int32_t);

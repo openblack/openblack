@@ -17,7 +17,7 @@
 #include <fmt/format.h>
 #include <zlib.h>
 
-constexpr auto MAX_BUFFER_SIZE = std::numeric_limits<decltype(z_stream::avail_out)>::max();
+constexpr auto k_MaxBufferSize = std::numeric_limits<decltype(z_stream::avail_out)>::max();
 
 std::string GetZlibError(int statusCode)
 {
@@ -51,7 +51,7 @@ std::vector<uint8_t> openblack::zip::Inflate(const std::vector<uint8_t>& deflate
 	auto inflatedData = std::vector<uint8_t>(inflatedSize);
 	int returnStatus;
 
-	if (deflatedSize > MAX_BUFFER_SIZE || inflatedSize > MAX_BUFFER_SIZE)
+	if (deflatedSize > k_MaxBufferSize || inflatedSize > k_MaxBufferSize)
 	{
 		throw std::runtime_error("Data is too large to inflate");
 	}

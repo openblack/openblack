@@ -42,11 +42,11 @@ public:
 	[[nodiscard]] Version GetVersion() const { return _version; }
 
 private:
-	void loadVariables(std::FILE* file, std::vector<std::string>& variables);
-	void loadCode(std::FILE* file);
-	void loadAuto(std::FILE* file);
-	void loadScripts(std::FILE* file);
-	void loadData(std::FILE* file);
+	void LoadVariables(std::FILE* file, std::vector<std::string>& variables);
+	void LoadCode(std::FILE* file);
+	void LoadAuto(std::FILE* file);
+	void LoadScripts(std::FILE* file);
+	void LoadData(std::FILE* file);
 
 	Version _version;
 

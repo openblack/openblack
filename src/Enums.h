@@ -21,10 +21,10 @@
 namespace openblack
 {
 
-constexpr unsigned int CellSizeMetres = 10;
-constexpr unsigned int GameTicksPerSecond = 10;
-constexpr unsigned int OneMetre = 6554;
-constexpr unsigned int NumberOfStoryLand = 5;
+constexpr unsigned int k_CellSizeMetres = 10;
+constexpr unsigned int k_GameTicksPerSecond = 10;
+constexpr unsigned int k_OneMetre = 6554;
+constexpr unsigned int k_NumberOfStoryLand = 5;
 
 enum class DetailDistance
 {
@@ -218,7 +218,7 @@ enum class Tribe : int32_t
 
 	_COUNT
 };
-static constexpr std::array<std::string_view, static_cast<uint8_t>(Tribe::_COUNT)> TribeStrs = {
+static constexpr std::array<std::string_view, static_cast<uint8_t>(Tribe::_COUNT)> k_TribeStrs = {
     // "NONE",
     "CELTIC",   //
     "AFRICAN",  //
@@ -254,7 +254,7 @@ enum class AbodeNumber : int32_t
 	_COUNT
 };
 
-static constexpr std::array<std::string_view, static_cast<uint32_t>(AbodeNumber::_COUNT)> AbodeNumberStrs = {
+static constexpr std::array<std::string_view, static_cast<uint32_t>(AbodeNumber::_COUNT)> k_AbodeNumberStrs = {
     "A",               //
     "B",               //
     "C",               //
@@ -1306,7 +1306,7 @@ enum class VillagerStates : uint32_t
 	_COUNT = LastState
 };
 
-static constexpr std::array<std::string_view, static_cast<size_t>(VillagerStates::_COUNT)> VillagerStateStrings = {
+static constexpr std::array<std::string_view, static_cast<size_t>(VillagerStates::_COUNT)> k_VillagerStateStrings = {
     "INVALID_STATE",
     "MOVE_TO_POS",
     "MOVE_TO_OBJECT",
@@ -1563,7 +1563,7 @@ static constexpr std::array<std::string_view, static_cast<size_t>(VillagerStates
     "ARRIVES_AT_ABODE_BURNING_REACTION",
     "REPAIRS_ABODE",
 };
-static_assert(VillagerStateStrings.size() == static_cast<size_t>(VillagerStates::_COUNT),
+static_assert(k_VillagerStateStrings.size() == static_cast<size_t>(VillagerStates::_COUNT),
               "The number of state type strings should be the same as the number of state types");
 
 enum class AlignmentType : uint32_t
@@ -2248,7 +2248,7 @@ enum class VillagerNumber : uint32_t
 
 	_COUNT
 };
-static constexpr std::array<std::string_view, static_cast<uint32_t>(VillagerNumber::_COUNT)> VillagerNumberStrs = {
+static constexpr std::array<std::string_view, static_cast<uint32_t>(VillagerNumber::_COUNT)> k_VillagerNumberStrs = {
     "HOUSEWIFE", //
     "FORESTER",  //
     "FISHERMAN", //
@@ -3149,7 +3149,7 @@ enum class VillagerRoles : uint8_t
 	_COUNT
 };
 
-static constexpr std::array<std::string_view, static_cast<uint8_t>(VillagerRoles::_COUNT)> VillagerRoleStrs = {
+static constexpr std::array<std::string_view, static_cast<uint8_t>(VillagerRoles::_COUNT)> k_VillagerRoleStrs = {
     "NONE",            //
     "HOUSEWIFE",       //
     "FARMER",          //
@@ -3197,7 +3197,7 @@ enum class PlayerNames : uint8_t
 	_COUNT
 };
 
-static constexpr std::array<std::string_view, static_cast<uint8_t>(PlayerNames::_COUNT)> PlayerNamesStrs = {
+static constexpr std::array<std::string_view, static_cast<uint8_t>(PlayerNames::_COUNT)> k_PlayerNamesStrs = {
     "PLAYER_ONE",   //
     "PLAYER_TWO",   //
     "PLAYER_THREE", //

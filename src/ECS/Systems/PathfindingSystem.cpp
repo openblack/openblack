@@ -20,7 +20,7 @@ using namespace openblack;
 using namespace openblack::ecs::components;
 using namespace openblack::ecs::systems;
 
-PathfindingSystem& PathfindingSystem::instance()
+PathfindingSystem& PathfindingSystem::Instance()
 {
 	static auto* instance = new PathfindingSystem();
 	return *instance;
@@ -30,7 +30,7 @@ PathfindingSystem::PathfindingSystem() = default;
 
 void PathfindingSystem::Update()
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 
 	// ARRIVED:
 	registry.Each<const MoveStateArrivedTag, const Transform, const WallHug>(

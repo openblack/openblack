@@ -29,11 +29,11 @@ class Water
 {
 public:
 	// Oddly enough the water texture is labeled Sky
-	static constexpr entt::hashed_string DiffuseTextureId = entt::hashed_string("raw/Sky");
-	static constexpr entt::hashed_string AlphaTextureId = entt::hashed_string("raw/Skya");
+	static constexpr entt::hashed_string k_DiffuseTextureId = entt::hashed_string("raw/Sky");
+	static constexpr entt::hashed_string k_AlphaTextureId = entt::hashed_string("raw/Skya");
 
 	Water();
-	~Water() = default;
+	~Water();
 
 	[[nodiscard]] glm::vec4 GetReflectionPlane() const { return {0.0f, 1.0f, 0.0f, 0.0f}; };
 	[[nodiscard]] graphics::FrameBuffer& GetFrameBuffer() const;
@@ -41,7 +41,7 @@ public:
 private:
 	friend class Renderer;
 
-	void createMesh();
+	void CreateMesh();
 
 	std::unique_ptr<graphics::Mesh> _mesh;
 	std::unique_ptr<graphics::FrameBuffer> _reflectionFrameBuffer;

@@ -18,7 +18,7 @@ namespace openblack::ecs::systems
 class TownSystem
 {
 public:
-	static TownSystem& instance();
+	static TownSystem& Instance();
 
 	[[nodiscard]] entt::entity FindAbodeWithSpace(entt::entity townEntity) const;
 	[[nodiscard]] entt::entity FindClosestTown(const glm::vec3& point) const;

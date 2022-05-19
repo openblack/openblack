@@ -22,11 +22,11 @@ namespace openblack::lhscriptx
 class FeatureScriptCommands
 {
 public:
-	static const std::array<const ScriptCommandSignature, 106> Signatures;
+	static const std::array<const ScriptCommandSignature, 106> k_Signatures;
 
 	static void SetATownInfluenceMultiplier(int32_t townId, float mult);
-	static void CreateMist(glm::vec3 position, float param_2, int32_t param_3, float param_4, float param_5);
-	static void CreatePath(int32_t param_1, int32_t param_2, int32_t param_3, int32_t param_4);
+	static void CreateMist(glm::vec3 position, float param2, int32_t param3, float param4, float param5);
+	static void CreatePath(int32_t param1, int32_t param2, int32_t param3, int32_t param4);
 	static void CreateTown(int32_t townId, glm::vec3 position, const std::string& playerOwner, int32_t notUsed,
 	                       const std::string& tribeType);
 	static void SetTownBelief(int32_t townId, const std::string& playerOwner, float belief);
@@ -105,9 +105,9 @@ public:
 	static void CreateFootpath(int32_t footpathId);
 	static void CreateFootpathNode(int footpathId, glm::vec3 position);
 	static void LinkFootpath(int32_t footpathId);
-	static void CreateBonfire(glm::vec3 position, float rotation, float param_3, float scale);
+	static void CreateBonfire(glm::vec3 position, float rotation, float param3, float scale);
 	static void CreateBase(glm::vec3 position, int32_t);
-	static void CreateNewFeature(glm::vec3 position, const std::string& type, int32_t rotation, int32_t scale, int32_t param_5);
+	static void CreateNewFeature(glm::vec3 position, const std::string& type, int32_t rotation, int32_t scale, int32_t param5);
 	static void SetInteractDesire(float);
 	static void ToggleComputerPlayer(const std::string&, int32_t);
 	static void SetComputerPlayerCreatureLike(const std::string&, const std::string&);

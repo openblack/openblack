@@ -181,25 +181,25 @@ MorphFile::MorphFile() = default;
 
 MorphFile::~MorphFile() = default;
 
-void MorphFile::ReadSpecFile(const std::filesystem::path& spec_file_path)
+void MorphFile::ReadSpecFile(const std::filesystem::path& specFilePath)
 {
 	assert(!_isLoaded);
 
-	_animation_specs = {};
-	_animation_specs.path = spec_file_path;
-	std::ifstream spec(_animation_specs.path);
+	_animationSpecs = {};
+	_animationSpecs.path = specFilePath;
+	std::ifstream spec(_animationSpecs.path);
 	if (!spec.good())
 	{
-		Fail("Failed to read spec file: " + _animation_specs.path.string());
+		Fail("Failed to read spec file: " + _animationSpecs.path.string());
 	}
 	std::string line;
-	spec >> _animation_specs.version >> std::ws;
-	if (_header.spec_file_version != _animation_specs.version)
+	spec >> _animationSpecs.version >> std::ws;
+	if (_header.specFileVersion != _animationSpecs.version)
 	{
-		Fail("Spec file version mismatch: " + _animation_specs.path.string());
+		Fail("Spec file version mismatch: " + _animationSpecs.path.string());
 	}
 
-	[[maybe_unused]] bool reached_end = false;
+	[[maybe_unused]] bool reachedEnd = false;
 	while (!spec.eof())
 	{
 		char type;
@@ -207,25 +207,25 @@ void MorphFile::ReadSpecFile(const std::filesystem::path& spec_file_path)
 		// End of file
 		if (type == 'E')
 		{
-			reached_end = true;
+			reachedEnd = true;
 			break;
 		}
 		safe_getline(spec, line);
 		if (type == '=')
 		{
-			_animation_specs.animation_sets.emplace_back().name = line;
+			_animationSpecs.animationSets.emplace_back().name = line;
 		}
 		else
 		{
-			if (_animation_specs.animation_sets.empty())
+			if (_animationSpecs.animationSets.empty())
 			{
-				Fail("Spec file has animations before categories: " + _animation_specs.path.string());
+				Fail("Spec file has animations before categories: " + _animationSpecs.path.string());
 			}
-			_animation_specs.animation_sets.back().animations.emplace_back(
+			_animationSpecs.animationSets.back().animations.emplace_back(
 			    AnimationDesc {line, static_cast<AnimationType>(type)});
 		}
 	}
-	assert(reached_end);
+	assert(reachedEnd);
 }
 
 std::vector<Animation> MorphFile::ReadAnimations(std::istream& stream, const std::vector<uint32_t>& offsets)
@@ -235,9 +235,9 @@ std::vector<Animation> MorphFile::ReadAnimations(std::istream& stream, const std
 	std::vector<Animation> animations;
 
 	uint32_t i = 0;
-	for (auto& anim_set : _animation_specs.animation_sets)
+	for (auto& animSet : _animationSpecs.animationSets)
 	{
-		for ([[maybe_unused]] auto& _ : anim_set.animations)
+		for ([[maybe_unused]] auto& _ : animSet.animations)
 		{
 			if (offsets[i] > 0)
 			{
@@ -245,22 +245,22 @@ std::vector<Animation> MorphFile::ReadAnimations(std::istream& stream, const std
 				auto& animation = animations.emplace_back();
 				stream.read(reinterpret_cast<char*>(&animation.header), sizeof(animation.header));
 
-				animation.rotated_joint_indices.resize(animation.header.rotated_joint_count);
-				stream.read(reinterpret_cast<char*>(animation.rotated_joint_indices.data()),
-				            animation.rotated_joint_indices.size() * sizeof(animation.rotated_joint_indices[0]));
+				animation.rotatedJointIndices.resize(animation.header.rotatedJointCount);
+				stream.read(reinterpret_cast<char*>(animation.rotatedJointIndices.data()),
+				            animation.rotatedJointIndices.size() * sizeof(animation.rotatedJointIndices[0]));
 
-				animation.translated_joint_indices.resize(animation.header.translated_joint_count);
-				stream.read(reinterpret_cast<char*>(animation.translated_joint_indices.data()),
-				            animation.translated_joint_indices.size() * sizeof(animation.translated_joint_indices[0]));
+				animation.translatedJointIndices.resize(animation.header.translatedJointCount);
+				stream.read(reinterpret_cast<char*>(animation.translatedJointIndices.data()),
+				            animation.translatedJointIndices.size() * sizeof(animation.translatedJointIndices[0]));
 
-				animation.keyframes.resize(animation.header.frame_count);
+				animation.keyframes.resize(animation.header.frameCount);
 				for (auto& frame : animation.keyframes)
 				{
-					frame.euler_angles.resize(animation.header.rotated_joint_count);
-					stream.read(reinterpret_cast<char*>(frame.euler_angles.data()),
-					            frame.euler_angles.size() * sizeof(frame.euler_angles[0]));
+					frame.eulerAngles.resize(animation.header.rotatedJointCount);
+					stream.read(reinterpret_cast<char*>(frame.eulerAngles.data()),
+					            frame.eulerAngles.size() * sizeof(frame.eulerAngles[0]));
 
-					frame.translations.resize(animation.header.translated_joint_count);
+					frame.translations.resize(animation.header.translatedJointCount);
 					stream.read(reinterpret_cast<char*>(frame.translations.data()),
 					            frame.translations.size() * sizeof(frame.translations[0]));
 				}
@@ -274,14 +274,14 @@ std::vector<Animation> MorphFile::ReadAnimations(std::istream& stream, const std
 
 HairGroup MorphFile::ReadHairGroup(std::istream& stream)
 {
-	HairGroup hair_group;
-	stream.read(reinterpret_cast<char*>(&hair_group.header), sizeof(hair_group.header));
-	hair_group.hairs.resize(hair_group.header.hair_count);
-	stream.read(reinterpret_cast<char*>(hair_group.hairs.data()), hair_group.hairs.size() * sizeof(hair_group.hairs[0]));
-	return hair_group;
+	HairGroup hairGroup;
+	stream.read(reinterpret_cast<char*>(&hairGroup.header), sizeof(hairGroup.header));
+	hairGroup.hairs.resize(hairGroup.header.hairCount);
+	stream.read(reinterpret_cast<char*>(hairGroup.hairs.data()), hairGroup.hairs.size() * sizeof(hairGroup.hairs[0]));
+	return hairGroup;
 }
 
-void MorphFile::ReadFile(std::istream& stream, const std::filesystem::path& specs_directory)
+void MorphFile::ReadFile(std::istream& stream, const std::filesystem::path& specsDirectory)
 {
 	assert(!_isLoaded);
 
@@ -301,77 +301,77 @@ void MorphFile::ReadFile(std::istream& stream, const std::filesystem::path& spec
 	// First 236 bytes
 	stream.read(reinterpret_cast<char*>(&_header), sizeof(MorphHeader));
 
-	assert(_header.binary_version > 4); // structure is much different below v5
+	assert(_header.binaryVersion > 4); // structure is much different below v5
 
 	// Parse spec file (a separate text file) using the version
-	std::string spec_name;
+	std::string specName;
 	// this field is a good guess for hand or not, but a better choice might be
 	// getting the segment name from pack
-	if (_header.unknown_0x0 != 0u)
+	if (_header.unknown0x0 != 0u)
 	{
-		spec_name = "ctrspec" + std::to_string(_header.spec_file_version) + ".txt";
+		specName = "ctrspec" + std::to_string(_header.specFileVersion) + ".txt";
 	}
 	else
 	{
-		spec_name = "hndspec" + std::to_string(_header.spec_file_version) + ".txt";
+		specName = "hndspec" + std::to_string(_header.specFileVersion) + ".txt";
 	}
-	ReadSpecFile(specs_directory / spec_name);
-	size_t num_animations = 0;
-	for (auto& anim_set : _animation_specs.animation_sets)
+	ReadSpecFile(specsDirectory / specName);
+	size_t numAnimations = 0;
+	for (auto& animSet : _animationSpecs.animationSets)
 	{
-		num_animations += anim_set.animations.size();
+		numAnimations += animSet.animations.size();
 	}
 
 	// After the header is the anim set, a variable length array of offsets relative to the section offset
-	std::vector<uint32_t> animation_offsets(num_animations);
-	stream.read(reinterpret_cast<char*>(animation_offsets.data()), animation_offsets.size() * sizeof(animation_offsets[0]));
+	std::vector<uint32_t> animationOffsets(numAnimations);
+	stream.read(reinterpret_cast<char*>(animationOffsets.data()), animationOffsets.size() * sizeof(animationOffsets[0]));
 
 	// Following the animation offsets are chained offsets which can lead to extra data
-	uint32_t extra_offset = 0;
-	stream.read(reinterpret_cast<char*>(&extra_offset), sizeof(extra_offset));
+	uint32_t extraOffset = 0;
+	stream.read(reinterpret_cast<char*>(&extraOffset), sizeof(extraOffset));
 
 	// Read in the base animations using those offsets
-	_base_animation = ReadAnimations(stream, animation_offsets);
+	_baseAnimation = ReadAnimations(stream, animationOffsets);
 
 	// Creature files have different animations for the morph meshes (evil, good, thin, fat) weak, strong are skipped
 	for (uint32_t i = 0; i < 4; ++i)
 	{
-		if (std::strlen(_header.variant_mesh_names.at(i).data()) > 0)
+		if (std::strlen(_header.variantMeshNames.at(i).data()) > 0)
 		{
 			// Set file to next animation set
-			stream.seekg(extra_offset);
+			stream.seekg(extraOffset);
 
-			std::vector<uint32_t> variant_animation_offsets(num_animations);
-			stream.read(reinterpret_cast<char*>(variant_animation_offsets.data()),
-			            variant_animation_offsets.size() * sizeof(variant_animation_offsets[0]));
+			std::vector<uint32_t> variantAnimationOffsets(numAnimations);
+			stream.read(reinterpret_cast<char*>(variantAnimationOffsets.data()),
+			            variantAnimationOffsets.size() * sizeof(variantAnimationOffsets[0]));
 
 			// Again, the get pointer to the next part
-			stream.read(reinterpret_cast<char*>(&extra_offset), sizeof(extra_offset));
+			stream.read(reinterpret_cast<char*>(&extraOffset), sizeof(extraOffset));
 
-			_variant_animations.at(i) = ReadAnimations(stream, variant_animation_offsets);
+			_variantAnimations.at(i) = ReadAnimations(stream, variantAnimationOffsets);
 		}
 	}
 
 	// Once all the animation sets are loaded, the extra offset points to hair groups data (even if there are none)
-	stream.seekg(extra_offset);
-	stream.read(reinterpret_cast<char*>(&_hair_header), sizeof(_hair_header));
-	for (uint32_t i = 0; i < _hair_header.hair_group_count; ++i)
+	stream.seekg(extraOffset);
+	stream.read(reinterpret_cast<char*>(&_hairHeader), sizeof(_hairHeader));
+	for (uint32_t i = 0; i < _hairHeader.hairGroupCount; ++i)
 	{
-		_hair_groups.emplace_back(ReadHairGroup(stream));
+		_hairGroups.emplace_back(ReadHairGroup(stream));
 	}
 
 	// The extra data segment is in relation to the number of animations in the base animation set
-	_extra_data.resize(num_animations);
-	for (size_t i = 0; i < num_animations; ++i)
+	_extraData.resize(numAnimations);
+	for (size_t i = 0; i < numAnimations; ++i)
 	{
-		if (animation_offsets[i] == 0)
+		if (animationOffsets[i] == 0)
 		{
 			continue;
 		}
-		uint32_t has_data; // TODO: unknown if this serves another function
-		while (stream.read(reinterpret_cast<char*>(&has_data), sizeof(has_data)).good() && has_data != 0u)
+		uint32_t hasData; // TODO: unknown if this serves another function
+		while (stream.read(reinterpret_cast<char*>(&hasData), sizeof(hasData)).good() && hasData != 0u)
 		{
-			auto& data = _extra_data[i].emplace_back();
+			auto& data = _extraData[i].emplace_back();
 			stream.read(reinterpret_cast<char*>(&data), sizeof(data));
 		}
 	}
@@ -379,7 +379,7 @@ void MorphFile::ReadFile(std::istream& stream, const std::filesystem::path& spec
 	_isLoaded = true;
 }
 
-void MorphFile::Open(const std::filesystem::path& filepath, const std::filesystem::path& specs_directory)
+void MorphFile::Open(const std::filesystem::path& filepath, const std::filesystem::path& specsDirectory)
 {
 	assert(!_isLoaded);
 
@@ -392,10 +392,10 @@ void MorphFile::Open(const std::filesystem::path& filepath, const std::filesyste
 		Fail("Could not open file.");
 	}
 
-	ReadFile(stream, specs_directory);
+	ReadFile(stream, specsDirectory);
 }
 
-void MorphFile::Open(const std::vector<uint8_t>& buffer, const std::filesystem::path& specs_directory)
+void MorphFile::Open(const std::vector<uint8_t>& buffer, const std::filesystem::path& specsDirectory)
 {
 	assert(!_isLoaded);
 
@@ -403,5 +403,5 @@ void MorphFile::Open(const std::vector<uint8_t>& buffer, const std::filesystem::
 
 	_filename = "buffer";
 
-	ReadFile(stream, specs_directory);
+	ReadFile(stream, specsDirectory);
 }

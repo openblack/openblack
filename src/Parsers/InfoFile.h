@@ -12,7 +12,8 @@
 #include <filesystem>
 #include <optional>
 
-#include <InfoConstants.h>
+// NOLINTBEGIN(readability-identifier-naming): Naming comes from vanilla, this we maintain the style
+#include "InfoConstants.h"
 
 namespace openblack
 {

@@ -36,7 +36,7 @@ enum class MoveState
 template <MoveState S>
 struct MoveStateTagComponent
 {
-	static constexpr MoveState value = S;
+	static constexpr MoveState k_Value = S;
 	MoveStateClockwise clockwise;
 	glm::vec2 stepGoal;
 };
@@ -58,7 +58,7 @@ struct WallHug
 {
 	glm::vec2 goal;
 	glm::vec2 step;
-	float y_angle; // FIXME(bwrsandman): member is a little redundant with transform or atan on step could keep or not
+	float yAngle; // FIXME(bwrsandman): member is a little redundant with transform or atan on step could keep or not
 	float speed;
 };
 

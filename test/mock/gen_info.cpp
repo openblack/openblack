@@ -20,7 +20,7 @@ struct Arguments
 	std::filesystem::path outFilename;
 };
 
-bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
+bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode)
 {
 	cxxopts::Options options("gen_info", "Generate Mock info.dat file.");
 
@@ -38,7 +38,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		if (result["help"].as<bool>())
 		{
 			std::cout << options.help() << std::endl;
-			return_code = EXIT_SUCCESS;
+			returnCode = EXIT_SUCCESS;
 			return false;
 		}
 		if (result["output-file"].count() > 0)
@@ -49,14 +49,14 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 		else
 		{
 			std::cerr << options.help() << std::endl;
-			return_code = EXIT_FAILURE;
+			returnCode = EXIT_FAILURE;
 			return false;
 		}
 	}
 	catch (cxxopts::OptionParseException& err)
 	{
 		std::cerr << err.what() << std::endl;
-		return_code = EXIT_FAILURE;
+		returnCode = EXIT_FAILURE;
 		return false;
 	}
 }
@@ -64,10 +64,10 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 int main(int argc, char* argv[]) noexcept
 {
 	Arguments args;
-	int return_code = EXIT_SUCCESS;
-	if (!parseOptions(argc, argv, args, return_code))
+	int returnCode = EXIT_SUCCESS;
+	if (!parseOptions(argc, argv, args, returnCode))
 	{
-		return return_code;
+		return returnCode;
 	}
 
 	openblack::InfoConstants constants;
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) noexcept
 	for (uint8_t i = 0; i < 6; ++i)
 	{
 		auto& abode = constants.abode[i];
-		auto abodeDebugName = std::string("ABODE_") + openblack::AbodeNumberStrs[i].data();
+		auto abodeDebugName = std::string("ABODE_") + openblack::k_AbodeNumberStrs[i].data();
 		abode.abodeNumber = static_cast<openblack::AbodeNumber>(i);
 		std::memcpy(abode.debugString.data(), abodeDebugName.c_str(), abodeDebugName.length());
 		abode.meshId = static_cast<openblack::MeshId>(static_cast<uint32_t>(openblack::MeshId::BuildingCeltic1) + i);

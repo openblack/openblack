@@ -31,10 +31,10 @@ namespace ImGui
 #define IMGUI_FLAGS_ALPHA_BLEND UINT8_C(0x01)
 
 // Helper function for passing bgfx::TextureHandle to ImGui::Image.
-inline void Image(bgfx::TextureHandle _handle, uint8_t _flags, uint8_t _mip, const ImVec2& _size,
-                  const ImVec2& _uv0 = ImVec2(0.0f, 0.0f), const ImVec2& _uv1 = ImVec2(1.0f, 1.0f),
-                  const ImVec4& _tintCol = ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
-                  const ImVec4& _borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f))
+inline void Image(bgfx::TextureHandle handle, uint8_t flags, uint8_t mip, const ImVec2& size,
+                  const ImVec2& cuv0 = ImVec2(0.0f, 0.0f), const ImVec2& cuv1 = ImVec2(1.0f, 1.0f),
+                  const ImVec4& tintCol = ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
+                  const ImVec4& borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f))
 {
 	union
 	{
@@ -46,28 +46,28 @@ inline void Image(bgfx::TextureHandle _handle, uint8_t _flags, uint8_t _mip, con
 		} s;
 		ImTextureID ptr;
 	} texture;
-	texture.s.handle = _handle;
-	texture.s.flags = _flags;
-	texture.s.mip = _mip;
+	texture.s.handle = handle;
+	texture.s.flags = flags;
+	texture.s.mip = mip;
 
 	// Do y-flip
-	auto uv0 = _uv0;
-	auto uv1 = _uv1;
+	auto uv0 = cuv0;
+	auto uv1 = cuv1;
 	if (bgfx::getRendererType() == bgfx::RendererType::OpenGL || bgfx::getRendererType() == bgfx::RendererType::OpenGLES)
 	{
 		uv0.y = 1.0f - uv0.y;
 		uv1.y = 1.0f - uv1.y;
 	}
 
-	Image(texture.ptr, _size, uv0, uv1, _tintCol, _borderCol);
+	Image(texture.ptr, size, uv0, uv1, tintCol, borderCol);
 }
 
 // Helper function for passing bgfx::TextureHandle to ImGui::Image.
-inline void Image(bgfx::TextureHandle _handle, const ImVec2& _size, const ImVec2& _uv0 = ImVec2(0.0f, 0.0f),
-                  const ImVec2& _uv1 = ImVec2(1.0f, 1.0f), const ImVec4& _tintCol = ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
-                  const ImVec4& _borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f))
+inline void Image(bgfx::TextureHandle handle, const ImVec2& size, const ImVec2& uv0 = ImVec2(0.0f, 0.0f),
+                  const ImVec2& uv1 = ImVec2(1.0f, 1.0f), const ImVec4& tintCol = ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
+                  const ImVec4& borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f))
 {
-	Image(_handle, IMGUI_FLAGS_ALPHA_BLEND, 0, _size, _uv0, _uv1, _tintCol, _borderCol);
+	Image(handle, IMGUI_FLAGS_ALPHA_BLEND, 0, size, uv0, uv1, tintCol, borderCol);
 }
 
 } // namespace ImGui
@@ -86,7 +86,7 @@ class DebugWindow;
 class Gui
 {
 public:
-	static std::unique_ptr<Gui> create(const GameWindow* window, graphics::RenderPass viewId, float scale);
+	static std::unique_ptr<Gui> Create(const GameWindow* window, graphics::RenderPass viewId, float scale);
 
 	virtual ~Gui();
 

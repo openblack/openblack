@@ -44,18 +44,19 @@ namespace openblack
 {
 struct BgfxCallback: public bgfx::CallbackI
 {
+	constexpr static std::array<std::string_view, bgfx::Fatal::Count> k_CodeLookup = {
+	    "DebugCheck",            //
+	    "InvalidShader",         //
+	    "UnableToInitialize",    //
+	    "UnableToCreateTexture", //
+	    "DeviceLost",            //
+	};
+
 	~BgfxCallback() override = default;
 
 	void fatal(const char* filePath, uint16_t line, bgfx::Fatal::Enum code, const char* str) override
 	{
-		const static std::array<std::string, bgfx::Fatal::Count> CodeLookup = {
-		    "DebugCheck",            //
-		    "InvalidShader",         //
-		    "UnableToInitialize",    //
-		    "UnableToCreateTexture", //
-		    "DeviceLost",            //
-		};
-		const auto& codeStr = CodeLookup.at(code);
+		const auto* codeStr = k_CodeLookup.at(code).data();
 		SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "bgfx: {}:{}: FATAL ({}): {}", filePath, line, codeStr, str);
 
 #if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_CRITICAL
@@ -125,7 +126,7 @@ struct BgfxCallback: public bgfx::CallbackI
 	}
 	// Saving a video
 	void captureBegin([[maybe_unused]] uint32_t width, [[maybe_unused]] uint32_t height, [[maybe_unused]] uint32_t pitch,
-	                  [[maybe_unused]] bgfx::TextureFormat::Enum _format, [[maybe_unused]] bool yflip) override
+	                  [[maybe_unused]] bgfx::TextureFormat::Enum format, [[maybe_unused]] bool yflip) override
 	{
 	}
 	void captureEnd() override {}
@@ -142,13 +143,13 @@ Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererTy
 	init.type = rendererType;
 
 	// Get render area size
-	int drawable_width;
-	int drawable_height;
+	int drawableWidth;
+	int drawableHeight;
 	if (rendererType != bgfx::RendererType::Noop)
 	{
-		window->GetSize(drawable_width, drawable_height);
-		init.resolution.width = static_cast<uint32_t>(drawable_width);
-		init.resolution.height = static_cast<uint32_t>(drawable_height);
+		window->GetSize(drawableWidth, drawableHeight);
+		init.resolution.width = static_cast<uint32_t>(drawableWidth);
+		init.resolution.height = static_cast<uint32_t>(drawableHeight);
 
 		// Get Native Handles from SDL window
 		window->GetNativeHandles(init.platformData.nwh, init.platformData.ndt);
@@ -180,7 +181,7 @@ Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererTy
 	_plane = Primitive::CreatePlane();
 
 	// give debug names to views
-	for (bgfx::ViewId i = 0; const auto& name : RenderPassNames)
+	for (bgfx::ViewId i = 0; const auto& name : k_RenderPassNames)
 	{
 		bgfx::setViewName(i, name.data());
 		++i;
@@ -247,7 +248,7 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
                            bool preserveState) const
 {
 	assert(&subMesh.GetMesh());
-	if (subMesh.isPhysics())
+	if (subMesh.IsPhysics())
 	{
 		return;
 	}
@@ -299,7 +300,7 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 			{
 				bgfx::setInstanceDataBuffer(*desc.instanceBuffer, desc.instanceStart, desc.instanceCount);
 			}
-			if (subMesh.GetMesh().isIndexed() && (skip & Mesh::SkipState::SkipIndexBuffer) == 0)
+			if (subMesh.GetMesh().IsIndexed() && (skip & Mesh::SkipState::SkipIndexBuffer) == 0)
 			{
 				subMesh.GetMesh().GetIndexBuffer().Bind(prim.indicesCount, prim.indicesOffset);
 			}
@@ -344,7 +345,7 @@ void Renderer::DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint
 	for (auto it = subMeshes.begin(); it != subMeshes.end(); ++it)
 	{
 		const L3DSubMesh& subMesh = **it;
-		if (!subMesh.isPhysics())
+		if (!subMesh.IsPhysics())
 		{
 			DrawSubMesh(mesh, subMesh, desc, std::next(it) != subMeshes.end());
 		}
@@ -410,7 +411,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		if (desc.drawSky)
 		{
 			const auto modelMatrix = glm::mat4(1.0f);
-			const glm::vec4 u_typeAlignment = {desc.sky.GetCurrentSkyType(), Game::instance()->GetConfig().skyAlignment + 1.0f,
+			const glm::vec4 u_typeAlignment = {desc.sky.GetCurrentSkyType(), Game::Instance()->GetConfig().skyAlignment + 1.0f,
 			                                   0.0f, 0.0f};
 
 			skyShader->SetTextureSampler("s_diffuse", 0, *desc.sky._texture);
@@ -442,8 +443,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			mesh->GetIndexBuffer().Bind(mesh->GetIndexBuffer().GetCount(), 0);
 			mesh->GetVertexBuffer().Bind();
 			bgfx::setState(BGFX_STATE_DEFAULT);
-			auto diffuse = Locator::resources::ref().GetTextures().Handle(Water::DiffuseTextureId);
-			auto alpha = Locator::resources::ref().GetTextures().Handle(Water::AlphaTextureId);
+			auto diffuse = Locator::resources::ref().GetTextures().Handle(Water::k_DiffuseTextureId);
+			auto alpha = Locator::resources::ref().GetTextures().Handle(Water::k_AlphaTextureId);
 			waterShader->SetTextureSampler("s_diffuse", 0, *diffuse);
 			waterShader->SetTextureSampler("s_alpha", 1, *alpha);
 			waterShader->SetTextureSampler("s_reflection", 2, desc.water.GetFrameBuffer().GetColorAttachment());
@@ -460,7 +461,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		{
 			for (const auto& block : desc.island.GetBlocks())
 			{
-				auto texture = Locator::resources::ref().GetTextures().Handle(LandIsland::SmallBumpTextureId);
+				auto texture = Locator::resources::ref().GetTextures().Handle(LandIsland::k_SmallBumpTextureId);
 
 				terrainShader->SetTextureSampler("s0_materials", 0, desc.island.GetAlbedoArray());
 				terrainShader->SetTextureSampler("s1_bump", 1, desc.island.GetBump());
@@ -504,7 +505,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				| BGFX_STATE_MSAA
 			;
 			// clang-format on
-			const auto& renderCtx = RenderingSystem::instance().GetContext();
+			const auto& renderCtx = RenderingSystem::Instance().GetContext();
 
 			// Instance meshes
 			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
@@ -569,7 +570,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			{
 				using namespace ecs::components;
 
-				auto& registry = Game::instance()->GetEntityRegistry();
+				auto& registry = Game::Instance()->GetEntityRegistry();
 				registry.Each<const Sprite, const Transform>(
 				    [this, &spriteShader, &desc](const Sprite& sprite, const Transform& transform) {
 					    glm::mat4 modelMatrix = glm::mat4(1.0f);

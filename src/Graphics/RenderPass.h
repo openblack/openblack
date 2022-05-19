@@ -27,7 +27,7 @@ enum class RenderPass : uint8_t
 	_count
 };
 
-static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_count)> RenderPassNames {
+static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_count)> k_RenderPassNames {
     "Reflection Pass",
     "Main Pass",
     "ImGui Pass",

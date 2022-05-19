@@ -92,7 +92,7 @@ struct G3DTexture
 class PackFile
 {
 protected:
-	static constexpr const std::array<char, 8> kMagic = {'L', 'i', 'O', 'n', 'H', 'e', 'A', 'd'};
+	static constexpr const std::array<char, 8> k_Magic = {'L', 'i', 'O', 'n', 'H', 'e', 'A', 'd'};
 
 	/// True when a file has been loaded
 	bool _isLoaded {false};

@@ -37,9 +37,9 @@ struct LNDCountry;
 class LandIsland
 {
 public:
-	static const float HeightUnit;
-	static const float CellSize;
-	static constexpr entt::hashed_string SmallBumpTextureId = entt::hashed_string("raw/smallbumpa");
+	static const float k_HeightUnit;
+	static const float k_CellSize;
+	static constexpr entt::hashed_string k_SmallBumpTextureId = entt::hashed_string("raw/smallbumpa");
 
 	LandIsland();
 	~LandIsland();

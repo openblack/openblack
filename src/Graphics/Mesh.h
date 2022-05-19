@@ -44,7 +44,7 @@ public:
 
 	[[nodiscard]] const VertexBuffer& GetVertexBuffer() const;
 	[[nodiscard]] const IndexBuffer& GetIndexBuffer() const;
-	[[nodiscard]] bool isIndexed() const;
+	[[nodiscard]] bool IsIndexed() const;
 
 	[[nodiscard]] Topology GetTopology() const noexcept;
 

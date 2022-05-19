@@ -217,7 +217,7 @@ void L3DFile::ReadFile(std::istream& stream)
 
 	// First 76 bytes
 	stream.read(reinterpret_cast<char*>(&_header), sizeof(L3DHeader));
-	if (_header.magic != kMagic)
+	if (_header.magic != k_Magic)
 	{
 		Fail("Unrecognized L3D header");
 	}
@@ -482,12 +482,12 @@ void L3DFile::ReadFile(std::istream& stream)
 	{
 		uint32_t primitiveStart = 0;
 		uint32_t boneStart = 0;
-		for (auto& _submeshHeader : _submeshHeaders)
+		for (auto& submeshHeader : _submeshHeaders)
 		{
-			add_span(_primitiveSpans, _primitiveHeaders, primitiveStart, _submeshHeader.numPrimitives);
-			add_span(_boneSpans, _bones, boneStart, _submeshHeader.numBones);
-			primitiveStart += _submeshHeader.numPrimitives;
-			boneStart += _submeshHeader.numBones;
+			add_span(_primitiveSpans, _primitiveHeaders, primitiveStart, submeshHeader.numPrimitives);
+			add_span(_boneSpans, _bones, boneStart, submeshHeader.numBones);
+			primitiveStart += submeshHeader.numPrimitives;
+			boneStart += submeshHeader.numBones;
 		}
 	}
 
@@ -664,7 +664,7 @@ void L3DFile::Write(const std::filesystem::path& filepath)
 	}
 
 	// Set magic number
-	_header.magic = kMagic;
+	_header.magic = k_Magic;
 	_header.submeshCount = static_cast<uint32_t>(_submeshHeaders.size());
 	_header.skinCount = static_cast<uint32_t>(_skins.size());
 	_header.extraDataCount = static_cast<uint32_t>(_extraPoints.size());

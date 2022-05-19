@@ -62,15 +62,15 @@ public:
 
 	[[nodiscard]] std::unique_ptr<Camera> Reflect(const glm::vec4& relectionPlane) const;
 
-	void DeprojectScreenToWorld(glm::ivec2 screenPosition, glm::ivec2 screenSize, glm::vec3& out_worldOrigin,
-	                            glm::vec3& out_worldDirection);
-	bool ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& out_screenPosition) const;
+	void DeprojectScreenToWorld(glm::ivec2 screenPosition, glm::ivec2 screenSize, glm::vec3& outWorldOrigin,
+	                            glm::vec3& outWorldDirection);
+	bool ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& outScreenPosition) const;
 
 	void Update(std::chrono::microseconds dt);
 	void ProcessSDLEvent(const SDL_Event&);
 
-	void handleKeyboardInput(const SDL_Event&);
-	void handleMouseInput(const SDL_Event&);
+	void HandleKeyboardInput(const SDL_Event&);
+	void HandleMouseInput(const SDL_Event&);
 
 	[[nodiscard]] glm::mat4 GetRotationMatrix() const;
 
@@ -129,6 +129,6 @@ public:
 
 private:
 	glm::vec4 _reflectionPlane;
-	void reflectMatrix(glm::mat4x4& m, const glm::vec4& plane) const;
+	void ReflectMatrix(glm::mat4x4& m, const glm::vec4& plane) const;
 };
 } // namespace openblack

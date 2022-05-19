@@ -132,13 +132,13 @@ struct imemstream: virtual membuf, public std::istream
 
 struct PackBlockHeader
 {
-	static constexpr uint32_t blockNameSize = 0x20;
-	std::array<char, blockNameSize> blockName;
+	static constexpr uint32_t k_BlockNameSize = 0x20;
+	std::array<char, k_BlockNameSize> blockName;
 	uint32_t blockSize;
 };
 
 /// Magic Key Jean-Claude Cottier
-constexpr const std::array<char, 4> kBlockMagic = {'M', 'K', 'J', 'C'};
+constexpr const std::array<char, 4> k_BlockMagic = {'M', 'K', 'J', 'C'};
 } // namespace
 
 /// Error handling
@@ -166,7 +166,7 @@ void PackFile::ReadBlocks()
 		input.seekg(0);
 	}
 
-	std::array<char, kMagic.size()> magic;
+	std::array<char, k_Magic.size()> magic;
 	if (fsize < magic.size() + sizeof(PackBlockHeader))
 	{
 		Fail("File too small to be a valid Pack file.");
@@ -174,7 +174,7 @@ void PackFile::ReadBlocks()
 
 	// First 8 bytes
 	input.read(magic.data(), magic.size());
-	if (std::memcmp(magic.data(), kMagic.data(), magic.size()) != 0)
+	if (std::memcmp(magic.data(), k_Magic.data(), magic.size()) != 0)
 	{
 		Fail("Unrecognized Pack header");
 	}
@@ -233,9 +233,9 @@ void PackFile::ResolveBodyBlock()
 	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
 
 	// Greetings Jean-Claude Cottier
-	std::array<char, kBlockMagic.size()> magic;
+	std::array<char, k_BlockMagic.size()> magic;
 	stream.read(magic.data(), magic.size());
-	if (std::memcmp(magic.data(), kBlockMagic.data(), magic.size()) != 0)
+	if (std::memcmp(magic.data(), k_BlockMagic.data(), magic.size()) != 0)
 	{
 		Fail("Unrecognized Body Block header");
 	}
@@ -355,9 +355,9 @@ void PackFile::ResolveMeshBlock()
 
 	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
 	// Greetings Jean-Claude Cottier
-	std::array<char, kBlockMagic.size()> magic;
+	std::array<char, k_BlockMagic.size()> magic;
 	stream.read(magic.data(), magic.size());
-	if (std::memcmp(magic.data(), kBlockMagic.data(), magic.size()) != 0)
+	if (std::memcmp(magic.data(), k_BlockMagic.data(), magic.size()) != 0)
 	{
 		Fail("Unrecognized Mesh Block header");
 	}
@@ -381,7 +381,7 @@ void PackFile::WriteBlocks(std::ostream& stream) const
 	assert(!_isLoaded);
 
 	// Magic number
-	stream.write(kMagic.data(), kMagic.size());
+	stream.write(k_Magic.data(), k_Magic.size());
 
 	PackBlockHeader header;
 
@@ -424,10 +424,10 @@ void PackFile::CreateMeshBlock()
 	std::vector<uint8_t> contents;
 
 	auto meshCount = static_cast<uint32_t>(_meshes.size());
-	contents.resize(kBlockMagic.size() + sizeof(meshCount));
+	contents.resize(k_BlockMagic.size() + sizeof(meshCount));
 
-	std::memcpy(contents.data() + offset, kBlockMagic.data(), kBlockMagic.size());
-	offset += kBlockMagic.size();
+	std::memcpy(contents.data() + offset, k_BlockMagic.data(), k_BlockMagic.size());
+	offset += k_BlockMagic.size();
 	std::memcpy(contents.data() + offset, &meshCount, sizeof(meshCount));
 	offset += sizeof(meshCount);
 

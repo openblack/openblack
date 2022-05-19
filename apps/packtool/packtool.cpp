@@ -68,10 +68,10 @@ int ListBlocks(openblack::pack::PackFile& pack)
 
 int ListBlock(openblack::pack::PackFile& pack, const std::string& name, const std::filesystem::path& outFilename)
 {
-	auto* output_log_stream = stdout;
+	auto* outputLogStream = stdout;
 	if (outFilename == std::filesystem::path("stdout"))
 	{
-		output_log_stream = stderr;
+		outputLogStream = stderr;
 	}
 
 	const auto& blocks = pack.GetBlocks();
@@ -83,9 +83,9 @@ int ListBlock(openblack::pack::PackFile& pack, const std::string& name, const st
 		return EXIT_FAILURE;
 	}
 
-	std::fprintf(output_log_stream, "file: %s\n", pack.GetFilename().c_str());
-	std::fprintf(output_log_stream, "name \"%s\", size %u\n", name.c_str(), static_cast<uint32_t>(block->second.size()));
-	std::fprintf(output_log_stream, "\n");
+	std::fprintf(outputLogStream, "file: %s\n", pack.GetFilename().c_str());
+	std::fprintf(outputLogStream, "name \"%s\", size %u\n", name.c_str(), static_cast<uint32_t>(block->second.size()));
+	std::fprintf(outputLogStream, "\n");
 
 	if (!outFilename.empty())
 	{
@@ -99,7 +99,7 @@ int ListBlock(openblack::pack::PackFile& pack, const std::string& name, const st
 			output.write(reinterpret_cast<const char*>(block->second.data()), block->second.size());
 		}
 
-		std::fprintf(output_log_stream, "\nBlock writen to %s\n", outFilename.string().c_str());
+		std::fprintf(outputLogStream, "\nBlock writen to %s\n", outFilename.string().c_str());
 	}
 
 	return EXIT_SUCCESS;
@@ -376,7 +376,7 @@ struct Arguments
 	std::filesystem::path outFilename;
 };
 
-bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noexcept
+bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexcept
 {
 	cxxopts::Options options("packtool", "Inspect and extract files from LionHead pack files.");
 
@@ -409,7 +409,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 	catch (const std::exception& e)
 	{
 		std::cerr << e.what() << '\n';
-		return_code = EXIT_FAILURE;
+		returnCode = EXIT_FAILURE;
 		return false;
 	}
 
@@ -420,7 +420,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 		if (result["help"].as<bool>())
 		{
 			std::cout << options.help() << std::endl;
-			return_code = EXIT_SUCCESS;
+			returnCode = EXIT_SUCCESS;
 			return false;
 		}
 		if (result["write-mesh"].count() > 0)
@@ -541,17 +541,17 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 	}
 
 	std::cerr << options.help() << std::endl;
-	return_code = EXIT_FAILURE;
+	returnCode = EXIT_FAILURE;
 	return false;
 }
 
 int main(int argc, char* argv[]) noexcept
 {
 	Arguments args;
-	int return_code = EXIT_SUCCESS;
-	if (!parseOptions(argc, argv, args, return_code))
+	int returnCode = EXIT_SUCCESS;
+	if (!parseOptions(argc, argv, args, returnCode))
 	{
-		return return_code;
+		return returnCode;
 	}
 
 	if (args.mode == Arguments::Mode::WriteRaw)
@@ -580,49 +580,49 @@ int main(int argc, char* argv[]) noexcept
 			switch (args.mode)
 			{
 			case Arguments::Mode::List:
-				return_code |= ListBlocks(pack);
+				returnCode |= ListBlocks(pack);
 				break;
 			case Arguments::Mode::Block:
-				return_code |= ListBlock(pack, args.block, args.outFilename);
+				returnCode |= ListBlock(pack, args.block, args.outFilename);
 				break;
 			case Arguments::Mode::Bytes:
-				return_code |= ViewBytes(pack, args.block);
+				returnCode |= ViewBytes(pack, args.block);
 				break;
 			case Arguments::Mode::Info:
-				return_code |= ViewInfo(pack);
+				returnCode |= ViewInfo(pack);
 				break;
 			case Arguments::Mode::Body:
-				return_code |= ViewBody(pack);
+				returnCode |= ViewBody(pack);
 				break;
 			case Arguments::Mode::Textures:
-				return_code |= ViewTextures(pack);
+				returnCode |= ViewTextures(pack);
 				break;
 			case Arguments::Mode::Meshes:
-				return_code |= ViewMeshes(pack);
+				returnCode |= ViewMeshes(pack);
 				break;
 			case Arguments::Mode::Animations:
-				return_code |= ViewAnimations(pack);
+				returnCode |= ViewAnimations(pack);
 				break;
 			case Arguments::Mode::Texture:
-				return_code |= ViewTexture(pack, args.block, args.outFilename);
+				returnCode |= ViewTexture(pack, args.block, args.outFilename);
 				break;
 			case Arguments::Mode::Mesh:
-				return_code |= ViewMesh(pack, args.blockId, args.outFilename);
+				returnCode |= ViewMesh(pack, args.blockId, args.outFilename);
 				break;
 			case Arguments::Mode::Animation:
-				return_code |= ViewAnimation(pack, args.blockId, args.outFilename);
+				returnCode |= ViewAnimation(pack, args.blockId, args.outFilename);
 				break;
 			default:
-				return_code = EXIT_FAILURE;
+				returnCode = EXIT_FAILURE;
 				break;
 			}
 		}
 		catch (std::exception& err)
 		{
 			std::cerr << err.what() << std::endl;
-			return_code |= EXIT_FAILURE;
+			returnCode |= EXIT_FAILURE;
 		}
 	}
 
-	return return_code;
+	return returnCode;
 }

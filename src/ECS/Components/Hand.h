@@ -28,7 +28,7 @@ struct Hand
 		Symbol
 	};
 
-	static constexpr entt::id_type meshId = entt::hashed_string("hand");
+	static constexpr entt::id_type k_MeshId = entt::hashed_string("hand");
 
 	bool rightHanded;
 	RenderType renderType;

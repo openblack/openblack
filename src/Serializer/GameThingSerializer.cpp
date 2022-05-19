@@ -19,16 +19,19 @@
 using namespace openblack::serializer;
 
 template <>
-GameThingType openblack::serializer::GameThingTypeEnum<GameThingSerializer::Footpath> = GameThingType::Footpath;
+constexpr GameThingType openblack::serializer::k_GameThingTypeEnum<GameThingSerializer::Footpath> = GameThingType::Footpath;
 
 template <>
-GameThingType openblack::serializer::GameThingTypeEnum<GameThingSerializer::FootpathLink> = GameThingType::FootpathLink;
+constexpr GameThingType openblack::serializer::k_GameThingTypeEnum<GameThingSerializer::FootpathLink> =
+    GameThingType::FootpathLink;
 
 template <>
-GameThingType openblack::serializer::GameThingTypeEnum<GameThingSerializer::FootpathNode> = GameThingType::FootpathNode;
+constexpr GameThingType openblack::serializer::k_GameThingTypeEnum<GameThingSerializer::FootpathNode> =
+    GameThingType::FootpathNode;
 
 template <>
-GameThingType openblack::serializer::GameThingTypeEnum<GameThingSerializer::FootpathLinkSave> = GameThingType::FootpathLinkSave;
+constexpr GameThingType openblack::serializer::k_GameThingTypeEnum<GameThingSerializer::FootpathLinkSave> =
+    GameThingType::FootpathLinkSave;
 
 GameThingSerializer::GameThingSerializer(FileStream& stream)
     : _stream(stream)
@@ -55,7 +58,7 @@ void GameThingSerializer::ReadChecksum()
 	}
 }
 
-std::shared_ptr<GameThingSerializer::GameThing> GameThingSerializer::DeserializeOne(std::optional<GameThingType> required_type)
+std::shared_ptr<GameThingSerializer::GameThing> GameThingSerializer::DeserializeOne(std::optional<GameThingType> requiredType)
 {
 	[[maybe_unused]] const auto offset = _stream.Position();
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "offset={}", offset);
@@ -71,10 +74,10 @@ std::shared_ptr<GameThingSerializer::GameThing> GameThingSerializer::Deserialize
 	if (index == _cache.size() + 1)
 	{
 		auto type = ReadValue<GameThingType>();
-		if (type != required_type.value_or(type))
+		if (type != requiredType.value_or(type))
 		{
 			throw std::runtime_error(fmt::format("Type mismatch while parsing GameThing: got {} but expected {} at 0x{:08x}",
-			                                     static_cast<uint32_t>(type), static_cast<uint32_t>(*required_type),
+			                                     static_cast<uint32_t>(type), static_cast<uint32_t>(*requiredType),
 			                                     _stream.Position() - sizeof(GameThingType)));
 		}
 		[[maybe_unused]] const auto playerId = ReadValue<uint32_t>();
@@ -130,7 +133,7 @@ std::vector<T> GameThingSerializer::DeserializeList()
 	for (uint32_t i = 0; i < count; ++i)
 	{
 		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "i={}", i);
-		auto ptr = std::dynamic_pointer_cast<T>(DeserializeOne(GameThingTypeEnum<T>));
+		auto ptr = std::dynamic_pointer_cast<T>(DeserializeOne(k_GameThingTypeEnum<T>));
 		if (ptr)
 		{
 			list.push_back(*ptr);
@@ -141,14 +144,14 @@ std::vector<T> GameThingSerializer::DeserializeList()
 
 bool GameThingSerializer::GameThing::Deserialize(GameThingSerializer& deserializer)
 {
-	_unknown1 = deserializer.ReadValue<uint32_t>();
-	_unknown2 = deserializer.ReadValue<uint8_t>();
+	unknown1 = deserializer.ReadValue<uint32_t>();
+	unknown2 = deserializer.ReadValue<uint8_t>();
 	return true;
 }
 
 bool GameThingSerializer::GameThing::operator==(const GameThingSerializer::GameThing& rhs) const
 {
-	return _unknown1 == rhs._unknown1 && _unknown2 == rhs._unknown2;
+	return unknown1 == rhs.unknown1 && unknown2 == rhs.unknown2;
 }
 
 bool GameThingSerializer::GameThing::operator!=(const GameThingSerializer::GameThing& rhs) const
@@ -159,15 +162,15 @@ bool GameThingSerializer::GameThing::operator!=(const GameThingSerializer::GameT
 bool GameThingSerializer::Footpath::Deserialize(GameThingSerializer& deserializer)
 {
 	GameThing::Deserialize(deserializer);
-	_nodes = deserializer.DeserializeList<FootpathNode>();
-	_unknown = deserializer.ReadValue<uint32_t>();
+	nodes = deserializer.DeserializeList<FootpathNode>();
+	unknown = deserializer.ReadValue<uint32_t>();
 	return true;
 }
 
 bool GameThingSerializer::Footpath::operator==(const GameThingSerializer::Footpath& rhs) const
 {
-	return static_cast<const GameThing&>(*this) == static_cast<const GameThing&>(rhs) && _nodes == rhs._nodes &&
-	       _unknown == rhs._unknown;
+	return static_cast<const GameThing&>(*this) == static_cast<const GameThing&>(rhs) && nodes == rhs.nodes &&
+	       unknown == rhs.unknown;
 }
 
 bool GameThingSerializer::Footpath::operator!=(const GameThingSerializer::Footpath& rhs) const
@@ -178,22 +181,22 @@ bool GameThingSerializer::Footpath::operator!=(const GameThingSerializer::Footpa
 bool GameThingSerializer::FootpathLink::Deserialize(GameThingSerializer& deserializer)
 {
 	GameThing::Deserialize(deserializer);
-	_footpaths = deserializer.DeserializeList<Footpath>();
+	footpaths = deserializer.DeserializeList<Footpath>();
 	return true;
 }
 
 bool GameThingSerializer::FootpathNode::Deserialize(GameThingSerializer& deserializer)
 {
 	GameThing::Deserialize(deserializer);
-	_coords = deserializer.ReadValue<MapCoords>();
-	_unknown = deserializer.ReadValue<uint8_t>();
+	coords = deserializer.ReadValue<MapCoords>();
+	unknown = deserializer.ReadValue<uint8_t>();
 	return true;
 }
 
 bool GameThingSerializer::FootpathNode::operator==(const GameThingSerializer::FootpathNode& rhs) const
 {
-	return static_cast<const GameThing&>(*this) == static_cast<const GameThing&>(rhs) && _coords == rhs._coords &&
-	       _unknown == rhs._unknown;
+	return static_cast<const GameThing&>(*this) == static_cast<const GameThing&>(rhs) && coords == rhs.coords &&
+	       unknown == rhs.unknown;
 }
 
 bool GameThingSerializer::FootpathNode::operator!=(const GameThingSerializer::FootpathNode& rhs) const
@@ -204,12 +207,12 @@ bool GameThingSerializer::FootpathNode::operator!=(const GameThingSerializer::Fo
 bool GameThingSerializer::FootpathLinkSave::Deserialize(GameThingSerializer& deserializer)
 {
 	GameThing::Deserialize(deserializer);
-	_coords = deserializer.ReadValue<MapCoords>();
+	coords = deserializer.ReadValue<MapCoords>();
 	auto thing = deserializer.DeserializeOne(GameThingType::FootpathLink);
 	if (thing)
 	{
 		assert(dynamic_cast<FootpathLink*>(thing.get()));
-		_link = *dynamic_cast<FootpathLink*>(thing.get());
+		link = *dynamic_cast<FootpathLink*>(thing.get());
 		return true;
 	}
 	return false;

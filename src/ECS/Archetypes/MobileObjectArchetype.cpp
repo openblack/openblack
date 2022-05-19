@@ -26,10 +26,10 @@ using namespace openblack::ecs::components;
 
 entt::entity MobileObjectArchetype::Create(const glm::vec3& position, MobileObjectInfo type, float yAngleRadians, float scale)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
-	const auto& info = Game::instance()->GetInfoConstants().mobileObject.at(static_cast<size_t>(type));
+	const auto& info = Game::Instance()->GetInfoConstants().mobileObject.at(static_cast<size_t>(type));
 
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));
 	registry.Assign<Mobile>(entity);

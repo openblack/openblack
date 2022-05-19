@@ -24,7 +24,7 @@ using namespace openblack::ecs::components;
 
 entt::entity StreetLanternArchetype::Create(const glm::vec3& position)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(glm::radians(180.0f)), glm::vec3(1.0f));
 	const auto resourceId = resources::MeshIdToResourceId(MeshId::ObjectTownLight);

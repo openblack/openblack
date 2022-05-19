@@ -34,7 +34,7 @@ const IndexBuffer& Mesh::GetIndexBuffer() const
 	return *_indexBuffer;
 }
 
-bool Mesh::isIndexed() const
+bool Mesh::IsIndexed() const
 {
 	return _indexBuffer != nullptr && _indexBuffer->GetCount() > 0;
 }

@@ -23,9 +23,9 @@ using namespace openblack::ecs::components;
 
 entt::entity FieldArchetype::Create(int townId, const glm::vec3& position, FieldTypeInfo type, float yAngleRadians)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 
-	[[maybe_unused]] const auto& info = Game::instance()->GetInfoConstants().fieldType.at(static_cast<size_t>(type));
+	[[maybe_unused]] const auto& info = Game::Instance()->GetInfoConstants().fieldType.at(static_cast<size_t>(type));
 
 	auto townTribe = registry.Get<Tribe>(registry.Context().towns[townId]);
 	auto abodeInfo = GAbodeInfo::Find(townTribe, AbodeNumber::Field);

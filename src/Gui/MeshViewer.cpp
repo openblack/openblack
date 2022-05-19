@@ -51,9 +51,9 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 	                   ImGuiInputTextFlags_CharsHexadecimal);
 	uint32_t hoverIndex;
 	ImGuiBitField::BitField("Mesh flag bit-field filter", &_meshFlagFilter, &hoverIndex);
-	if (ImGui::IsItemHovered() && hoverIndex < L3DMeshFlagNames.size())
+	if (ImGui::IsItemHovered() && hoverIndex < k_L3DMeshFlagNames.size())
 	{
-		ImGui::SetTooltip("%s", L3DMeshFlagNames.at(hoverIndex).data());
+		ImGui::SetTooltip("%s", k_L3DMeshFlagNames.at(hoverIndex).data());
 	}
 
 	ImGui::BeginChild("meshes", ImVec2(fontSize * 15.0f, 0));
@@ -92,7 +92,7 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 	{
 		int32_t offset = 0;
 		int32_t newLines = 1;
-		for (uint32_t flag = 1; const auto& name : L3DMeshFlagNames)
+		for (uint32_t flag = 1; const auto& name : k_L3DMeshFlagNames)
 		{
 			if ((mesh->GetFlags() & flag) != 0)
 			{
@@ -211,17 +211,17 @@ void MeshViewer::Update([[maybe_unused]] Game& game, const Renderer& renderer)
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-	bgfx::setViewTransform(static_cast<bgfx::ViewId>(_viewId), &view, &perspective);
+	bgfx::setViewTransform(static_cast<bgfx::ViewId>(k_ViewId), &view, &perspective);
 
-	_frameBuffer->Bind(_viewId);
+	_frameBuffer->Bind(k_ViewId);
 	// TODO(bwrsandman): The setting of viewport and clearing should probably be
 	// done in framebuffer bind
 	static const uint32_t clearColor = 0x274659ff;
-	bgfx::setViewClear(static_cast<bgfx::ViewId>(_viewId), BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, clearColor, 1.0f, 0);
+	bgfx::setViewClear(static_cast<bgfx::ViewId>(k_ViewId), BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, clearColor, 1.0f, 0);
 	uint16_t width;
 	uint16_t height;
 	_frameBuffer->GetSize(width, height);
-	bgfx::setViewRect(static_cast<bgfx::ViewId>(_viewId), 0, 0, width, height);
+	bgfx::setViewRect(static_cast<bgfx::ViewId>(k_ViewId), 0, 0, width, height);
 
 	// clang-format off
 	uint64_t state = 0u
@@ -237,7 +237,7 @@ void MeshViewer::Update([[maybe_unused]] Game& game, const Renderer& renderer)
 	{
 		const auto identity = glm::mat4(1.0f);
 		Renderer::L3DMeshSubmitDesc desc = {};
-		desc.viewId = _viewId;
+		desc.viewId = k_ViewId;
 		desc.program = objectShader;
 		desc.state = state;
 		desc.modelMatrices = &identity;
@@ -270,7 +270,7 @@ void MeshViewer::Update([[maybe_unused]] Game& game, const Renderer& renderer)
 			bgfx::setTransform(glm::value_ptr(model));
 			_boundingBox->GetVertexBuffer().Bind();
 			bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES, 0);
-			bgfx::submit(static_cast<bgfx::ViewId>(_viewId), debugShader->GetRawHandle());
+			bgfx::submit(static_cast<bgfx::ViewId>(k_ViewId), debugShader->GetRawHandle());
 		}
 	}
 }

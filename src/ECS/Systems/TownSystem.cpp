@@ -19,7 +19,7 @@
 using namespace openblack::ecs::components;
 using namespace openblack::ecs::systems;
 
-TownSystem& TownSystem::instance()
+TownSystem& TownSystem::Instance()
 {
 	static auto* instance = new TownSystem();
 	return *instance;
@@ -29,8 +29,8 @@ TownSystem::TownSystem() = default;
 
 entt::entity TownSystem::FindAbodeWithSpace(entt::entity townEntity) const
 {
-	const auto& infoConstants = Game::instance()->GetInfoConstants();
-	auto& registry = Game::instance()->GetEntityRegistry();
+	const auto& infoConstants = Game::Instance()->GetInfoConstants();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 	const auto& town = registry.Get<Town>(townEntity);
 
 	entt::entity result = entt::null;
@@ -51,17 +51,17 @@ entt::entity TownSystem::FindAbodeWithSpace(entt::entity townEntity) const
 
 entt::entity TownSystem::FindClosestTown(const glm::vec3& point) const
 {
-	const auto& registry = Game::instance()->GetEntityRegistry();
+	const auto& registry = Game::Instance()->GetEntityRegistry();
 
 	entt::entity result = entt::null;
 	auto closest = std::numeric_limits<float>::infinity();
 
 	registry.Each<const Town, const Transform>(
 	    [&point, &result, &closest](entt::entity entity, [[maybe_unused]] auto& town, [[maybe_unused]] auto& transform) {
-		    float distance_2 = glm::dot(point, transform.position);
-		    if (distance_2 < closest)
+		    float distance2 = glm::dot(point, transform.position);
+		    if (distance2 < closest)
 		    {
-			    closest = distance_2;
+			    closest = distance2;
 			    result = entity;
 		    }
 	    });
@@ -71,7 +71,7 @@ entt::entity TownSystem::FindClosestTown(const glm::vec3& point) const
 
 void TownSystem::AddHomelessVillagerToTown(entt::entity townEntity, entt::entity villagerEntity)
 {
-	[[maybe_unused]] auto& registry = Game::instance()->GetEntityRegistry();
+	[[maybe_unused]] auto& registry = Game::Instance()->GetEntityRegistry();
 	[[maybe_unused]] auto& registryContext = registry.Context();
 
 	auto& town = registry.Get<Town>(townEntity);

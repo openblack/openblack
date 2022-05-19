@@ -108,8 +108,8 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 #if defined(SDL_VIDEO_DRIVER_WAYLAND)
 	if (wmi.subsystem == SDL_SYSWM_WAYLAND)
 	{
-		auto* win_impl = static_cast<wl_egl_window*>(SDL_GetWindowData(_window.get(), "wl_egl_window"));
-		if (win_impl == nullptr)
+		auto* winImpl = static_cast<wl_egl_window*>(SDL_GetWindowData(_window.get(), "wl_egl_window"));
+		if (winImpl == nullptr)
 		{
 			int width;
 			int height;
@@ -119,11 +119,11 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 			{
 				throw std::runtime_error("Failed getting native window handles: " + std::string(SDL_GetError()));
 			}
-			win_impl = wl_egl_window_create(surface, width, height);
-			SDL_SetWindowData(_window.get(), "wl_egl_window", win_impl);
+			winImpl = wl_egl_window_create(surface, width, height);
+			SDL_SetWindowData(_window.get(), "wl_egl_window", winImpl);
 		}
 		// NOLINTNEXTLINE(performance-no-int-to-ptr)
-		nativeWindow = reinterpret_cast<void*>(win_impl);
+		nativeWindow = reinterpret_cast<void*>(winImpl);
 		nativeDisplay = wmi.info.wl.display;
 	}
 	else

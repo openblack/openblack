@@ -20,10 +20,10 @@ using namespace openblack::ecs::components;
 
 entt::entity TownArchetype::Create(int id, const glm::vec3& position, [[maybe_unused]] PlayerNames playerOwner, Tribe tribe)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
-	// const auto& info = Game::instance()->GetInfoConstants().town;
+	// const auto& info = Game::Instance()->GetInfoConstants().town;
 
 	registry.Assign<Town>(entity, static_cast<uint32_t>(id));
 	registry.Assign<Tribe>(entity, tribe);

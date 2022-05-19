@@ -42,7 +42,7 @@ entt::resource_handle<L3DMesh> L3DLoader::load(const std::filesystem::path& path
 	}
 	else if (pathExt == ".zzz")
 	{
-		auto stream = Game::instance()->GetFileSystem().Open(path, FileMode::Read);
+		auto stream = Game::Instance()->GetFileSystem().Open(path, FileMode::Read);
 		uint32_t decompressedSize = 0;
 		stream->Read(reinterpret_cast<uint32_t*>(&decompressedSize), sizeof(decompressedSize));
 		auto buffer = std::vector<uint8_t>(stream->Size() - sizeof(decompressedSize));
@@ -96,7 +96,7 @@ entt::resource_handle<graphics::Texture2D> Texture2DLoader::load(const std::file
 	bool found = false;
 	const std::array<uint16_t, 6> resolutions = {{256, 40, 32, 14, 12, 6}};
 
-	const auto data = Game::instance()->GetFileSystem().ReadAll(rawTexturePath);
+	const auto data = Game::Instance()->GetFileSystem().ReadAll(rawTexturePath);
 	graphics::Format format = graphics::Format::R8;
 	uint16_t width = 0;
 	uint16_t height = 0;

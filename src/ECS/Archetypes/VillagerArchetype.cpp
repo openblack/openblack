@@ -32,10 +32,10 @@ using namespace openblack::ecs::systems;
 entt::entity VillagerArchetype::Create([[maybe_unused]] const glm::vec3& abodePosition, const glm::vec3& position,
                                        VillagerInfo type, uint32_t age)
 {
-	auto& registry = Game::instance()->GetEntityRegistry();
+	auto& registry = Game::Instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
 
-	const auto& info = Game::instance()->GetInfoConstants().villager.at(static_cast<size_t>(type));
+	const auto& info = Game::Instance()->GetInfoConstants().villager.at(static_cast<size_t>(type));
 
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(glm::radians(180.0f)), glm::vec3(1.0));
 	registry.Assign<Mobile>(entity);
@@ -47,11 +47,11 @@ entt::entity VillagerArchetype::Create([[maybe_unused]] const glm::vec3& abodePo
 	const auto task = Villager::Task::IDLE;
 
 	// TODO(bwrsandman): Might be better to make a FindClosestAbode
-	const entt::entity town = TownSystem::instance().FindClosestTown(abodePosition);
+	const entt::entity town = TownSystem::Instance().FindClosestTown(abodePosition);
 	entt::entity abode = entt::null;
 	if (town != entt::null)
 	{
-		abode = TownSystem::instance().FindAbodeWithSpace(town);
+		abode = TownSystem::Instance().FindAbodeWithSpace(town);
 	}
 
 	registry.Assign<Villager>(entity, health, static_cast<uint32_t>(age), hunger, lifeStage, sex, info.tribeType,

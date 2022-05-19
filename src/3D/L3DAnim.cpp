@@ -21,18 +21,18 @@ using namespace openblack;
 void L3DAnim::Load(const anm::ANMFile& anm)
 {
 	_name = std::string(anm.GetHeader().name.data(), anm.GetHeader().name.size());
-	_unknown_0x20 = anm.GetHeader().unknown_0x20;
-	_unknown_0x24 = anm.GetHeader().unknown_0x24;
-	_unknown_0x28 = anm.GetHeader().unknown_0x28;
-	_unknown_0x2C = anm.GetHeader().unknown_0x2C;
-	_unknown_0x30 = anm.GetHeader().unknown_0x30;
-	_unknown_0x34 = anm.GetHeader().unknown_0x34;
-	assert(anm.GetHeader().frame_count == anm.GetKeyframes().size());
-	_unknown_0x3C = anm.GetHeader().unknown_0x3C;
-	_duration = anm.GetHeader().animation_duration;
-	_unknown_0x44 = anm.GetHeader().unknown_0x44;
-	_unknown_0x48 = anm.GetHeader().unknown_0x48;
-	_unknown_0x50 = anm.GetHeader().unknown_0x50;
+	_unknown_0x20 = anm.GetHeader().unknown0x20;
+	_unknown_0x24 = anm.GetHeader().unknown0x24;
+	_unknown_0x28 = anm.GetHeader().unknown0x28;
+	_unknown_0x2C = anm.GetHeader().unknown0x2C;
+	_unknown_0x30 = anm.GetHeader().unknown0x30;
+	_unknown_0x34 = anm.GetHeader().unknown0x34;
+	assert(anm.GetHeader().frameCount == anm.GetKeyframes().size());
+	_unknown_0x3C = anm.GetHeader().unknown0x3C;
+	_duration = anm.GetHeader().animationDuration;
+	_unknown_0x44 = anm.GetHeader().unknown0x44;
+	_unknown_0x48 = anm.GetHeader().unknown0x48;
+	_unknown_0x50 = anm.GetHeader().unknown0x50;
 
 	_frames.reserve(anm.GetKeyframes().size());
 	for (const auto& keyframe : anm.GetKeyframes())
@@ -60,7 +60,7 @@ bool L3DAnim::LoadFromFile(const std::filesystem::path& path)
 
 	try
 	{
-		anm.Open(Game::instance()->GetFileSystem().FindPath(path));
+		anm.Open(Game::Instance()->GetFileSystem().FindPath(path));
 	}
 	catch (std::runtime_error& err)
 	{
@@ -101,14 +101,14 @@ std::vector<glm::mat4> L3DAnim::GetBoneMatrices(uint32_t time) const
 	{
 		return _frames[0].bones;
 	}
-	uint32_t animation_time = time % _duration;
+	uint32_t animationTime = time % _duration;
 	uint32_t index = 0;
-	uint32_t previous_time = 0;
+	uint32_t previousTime = 0;
 	for (const auto& frame : _frames)
 	{
-		if (frame.time < animation_time)
+		if (frame.time < animationTime)
 		{
-			previous_time = frame.time;
+			previousTime = frame.time;
 			index++;
 		}
 		else
@@ -125,7 +125,7 @@ std::vector<glm::mat4> L3DAnim::GetBoneMatrices(uint32_t time) const
 	{
 		return _frames[_frames.size() - 1].bones;
 	}
-	float t = static_cast<float>(animation_time - previous_time) / (_frames[index].time - previous_time);
+	float t = static_cast<float>(animationTime - previousTime) / (_frames[index].time - previousTime);
 
 	// Interpolate
 	std::vector<glm::mat4> bones;
