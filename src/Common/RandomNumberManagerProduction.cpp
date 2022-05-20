@@ -8,6 +8,7 @@
  *****************************************************************************/
 
 #include "RandomNumberManagerProduction.h"
+
 #include <ctime>
 
 using namespace openblack;

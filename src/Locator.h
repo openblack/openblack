@@ -11,6 +11,7 @@
 
 #include <entt/locator/locator.hpp>
 
+#include "Common/RandomNumberManager.h"
 #include "Resources/Resources.h"
 
 namespace openblack
