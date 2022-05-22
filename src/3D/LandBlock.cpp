@@ -116,10 +116,14 @@ const bgfx::Memory* LandBlock::buildVertexList(LandIsland& island)
 			glm::vec3 pBR((x + 1) * LandIsland::CellSize, br.altitude * LandIsland::HeightUnit,
 			              ((z + 1) * LandIsland::CellSize));
 
-			auto tlMat = countries[tl.properties.country].materials[tl.altitude + island.GetNoise(bx + x + 0, bz + z + 0)];
-			auto trMat = countries[tr.properties.country].materials[tr.altitude + island.GetNoise(bx + x + 1, bz + z + 0)];
-			auto blMat = countries[bl.properties.country].materials[bl.altitude + island.GetNoise(bx + x + 0, bz + z + 1)];
-			auto brMat = countries[br.properties.country].materials[br.altitude + island.GetNoise(bx + x + 1, bz + z + 1)];
+			auto tlMat = countries[tl.properties.country]
+			                 .materials[static_cast<uint8_t>(tl.altitude + island.GetNoise(bx + x + 0, bz + z + 0))];
+			auto trMat = countries[tr.properties.country]
+			                 .materials[static_cast<uint8_t>(tr.altitude + island.GetNoise(bx + x + 1, bz + z + 0))];
+			auto blMat = countries[bl.properties.country]
+			                 .materials[static_cast<uint8_t>(bl.altitude + island.GetNoise(bx + x + 0, bz + z + 1))];
+			auto brMat = countries[br.properties.country]
+			                 .materials[static_cast<uint8_t>(br.altitude + island.GetNoise(bx + x + 1, bz + z + 1))];
 
 			// TODO: this is temporary way for drawing landscape, should be moved to the renderer
 			// use a lambda so we're not repeating ourselves
