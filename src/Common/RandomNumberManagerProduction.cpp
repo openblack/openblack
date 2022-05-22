@@ -7,19 +7,19 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#pragma once
+#include "RandomNumberManagerProduction.h"
 
-#include <entt/locator/locator.hpp>
+#include <ctime>
 
-#include "Common/RandomNumberManager.h"
-#include "Resources/Resources.h"
+using namespace openblack;
 
-namespace openblack
+std::mt19937& RandomNumberManagerProduction::Generator()
 {
+	thread_local std::mt19937 tGenerator(static_cast<unsigned int>(time(nullptr)));
+	return tGenerator;
+}
 
-struct Locator
+std::optional<std::reference_wrapper<std::mutex>> RandomNumberManagerProduction::LockAccess()
 {
-	using resources = entt::service_locator<resources::ResourcesInterface>;
-	using rng = entt::service_locator<RandomNumberManagerInterface>;
-};
-} // namespace openblack
+	return std::nullopt;
+}

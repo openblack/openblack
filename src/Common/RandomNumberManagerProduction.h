@@ -9,17 +9,22 @@
 
 #pragma once
 
-#include <entt/locator/locator.hpp>
+#include <mutex>
+#include <random>
 
-#include "Common/RandomNumberManager.h"
-#include "Resources/Resources.h"
+#include "RandomNumberManager.h"
 
 namespace openblack
 {
-
-struct Locator
+class RandomNumberManagerProduction final: public RandomNumberManagerInterface
 {
-	using resources = entt::service_locator<resources::ResourcesInterface>;
-	using rng = entt::service_locator<RandomNumberManagerInterface>;
+public:
+	RandomNumberManagerProduction() = default;
+	RandomNumberManagerProduction(const RandomNumberManagerProduction&) = delete;
+	RandomNumberManagerProduction& operator=(const RandomNumberManagerProduction&) = delete;
+
+private:
+	std::mt19937& Generator() override;
+	std::optional<std::reference_wrapper<std::mutex>> LockAccess() override;
 };
 } // namespace openblack
