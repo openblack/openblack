@@ -25,19 +25,18 @@ public:
 		using dist_t =
 		    std::conditional_t<std::is_integral_v<T>, std::uniform_int_distribution<T>, std::uniform_real_distribution<T>>;
 		dist_t dist(min, max);
-		std::optional<std::reference_wrapper<std::mutex>> lock(lockAccess());
+		std::optional<std::reference_wrapper<std::mutex>> lock(LockAccess());
 		if (lock)
 		{
 			std::lock_guard<std::mutex> contextLock(*lock);
-			return dist(generator());
+			return dist(Generator());
 		}
-		return dist(generator());
+		return dist(Generator());
 	}
 	virtual ~RandomNumberManagerInterface() = default;
 
 protected:
-	virtual std::mt19937& generator() = 0;
-	virtual std::optional<std::reference_wrapper<std::mutex>> lockAccess() = 0;
-	virtual bool lockCheck() = 0;
+	virtual std::mt19937& Generator() = 0;
+	virtual std::optional<std::reference_wrapper<std::mutex>> LockAccess() = 0;
 };
 } // namespace openblack

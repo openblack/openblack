@@ -13,18 +13,13 @@
 
 using namespace openblack;
 
-std::mt19937& RandomNumberManagerProduction::generator()
+std::mt19937& RandomNumberManagerProduction::Generator()
 {
 	thread_local std::mt19937 tGenerator(static_cast<unsigned int>(time(nullptr)));
 	return tGenerator;
 }
 
-std::optional<std::reference_wrapper<std::mutex>> RandomNumberManagerProduction::lockAccess()
+std::optional<std::reference_wrapper<std::mutex>> RandomNumberManagerProduction::LockAccess()
 {
 	return std::nullopt;
-}
-
-bool RandomNumberManagerProduction::lockCheck()
-{
-	return false;
 }

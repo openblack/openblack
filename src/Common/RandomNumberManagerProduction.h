@@ -24,8 +24,7 @@ public:
 	RandomNumberManagerProduction& operator=(const RandomNumberManagerProduction&) = delete;
 
 private:
-	std::mt19937& generator();
-	std::optional<std::reference_wrapper<std::mutex>> lockAccess();
-	bool lockCheck();
+	std::mt19937& Generator() override;
+	std::optional<std::reference_wrapper<std::mutex>> LockAccess() override;
 };
 } // namespace openblack

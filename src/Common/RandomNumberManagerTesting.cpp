@@ -17,22 +17,17 @@ using namespace openblack;
 
 bool RandomNumberManagerTesting::SetSeed(int seed)
 {
-	std::lock_guard<std::mutex> safe_lock(_generatorLock);
+	std::lock_guard<std::mutex> safeLock(_generatorLock);
 	_generator.seed(seed);
 	return true;
 }
 
-std::mt19937& RandomNumberManagerTesting::generator()
+std::mt19937& RandomNumberManagerTesting::Generator()
 {
 	return _generator;
 }
 
-std::optional<std::reference_wrapper<std::mutex>> RandomNumberManagerTesting::lockAccess()
+std::optional<std::reference_wrapper<std::mutex>> RandomNumberManagerTesting::LockAccess()
 {
 	return std::ref(_generatorLock);
-}
-
-bool RandomNumberManagerTesting::lockCheck()
-{
-	return true;
 }

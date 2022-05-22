@@ -25,9 +25,8 @@ public:
 	bool SetSeed(int seed);
 
 private:
-	std::mt19937& generator();
-	std::optional<std::reference_wrapper<std::mutex>> lockAccess();
-	bool lockCheck();
+	std::mt19937& Generator() override;
+	std::optional<std::reference_wrapper<std::mutex>> LockAccess() override;
 	std::mt19937 _generator;
 	std::mutex _generatorLock;
 };
