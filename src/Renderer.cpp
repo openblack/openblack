@@ -58,6 +58,12 @@ struct BgfxCallback: public bgfx::CallbackI
 		const auto& codeStr = CodeLookup.at(code);
 		SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "bgfx: {}:{}: FATAL ({}): {}", filePath, line, codeStr, str);
 
+#if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_CRITICAL
+		spdlog::get("graphics")
+		    ->log(spdlog::source_loc {filePath, line, SPDLOG_FUNCTION}, spdlog::level::critical, "FATAL ({}): {}", codeStr,
+		          str);
+#endif
+
 		// Must terminate, continuing will cause crash anyway.
 		throw std::runtime_error(std::string("bgfx: ") + filePath + ":" + std::to_string(line) + ": FATAL (" + codeStr +
 		                         "): " + str);
@@ -81,11 +87,18 @@ struct BgfxCallback: public bgfx::CallbackI
 			{
 				out[len - 1] = '\0';
 			}
-			SPDLOG_LOGGER_DEBUG(spdlog::get("graphics"), "bgfx: {}:{}: {}", filePath, line, out);
+// TODO(bwrsandman): change level to trace
+#if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
+			spdlog::get("graphics")->log(spdlog::source_loc {filePath, line, SPDLOG_FUNCTION}, spdlog::level::debug, out);
+#endif
 		}
 		else
 		{
-			SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "bgfx: failed to format message: {}:{}: {}", filePath, line, format);
+#if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_ERROR
+			spdlog::get("graphics")
+			    ->log(spdlog::source_loc {filePath, line, SPDLOG_FUNCTION}, spdlog::level::err,
+			          "bgfx: failed to format message: {}", format);
+#endif
 		}
 	}
 	void profilerBegin([[maybe_unused]] const char* name, [[maybe_unused]] uint32_t abgr, [[maybe_unused]] const char* filePath,
