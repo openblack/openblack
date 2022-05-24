@@ -38,7 +38,7 @@ jobs:
       - name: Set GCC 10
         run: |
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10 --slave /usr/bin/gcov gcov /usr/bin/gcov-10
-        if: matrix.os == 'ubuntu-latest' && matrix.cc == ''      
+        if: matrix.os == 'ubuntu-latest' && matrix.cc == ''
 
       # Setup the build machine with the most recent versions of CMake and Ninja. Both are cached if not already: on subsequent runs both will be quickly restored from GitHub cache service.
       - uses: lukka/get-cmake@latest
