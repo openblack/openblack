@@ -33,7 +33,7 @@ jobs:
         run: |
           sudo apt update -y
           sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
-        if: matrix.os == 'ubuntu-latest'
+        if: startsWith(matrix.os, 'ubuntu')
 
       - name: Set GCC 10
         run: |
