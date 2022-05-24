@@ -522,7 +522,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				}
 				else
 				{
-					const auto identity = glm::mat4(1.0f);
+					const static auto identity = glm::mat4(1.0f);
 					submitDesc.modelMatrices = &identity;
 					submitDesc.matrixCount = 1;
 				}
