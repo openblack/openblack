@@ -12,12 +12,15 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ubuntu-latest, macos-latest, windows-latest, windows-2019]
+        os: [ubuntu-22.04, ubuntu-latest, macos-latest, windows-latest, windows-2019]
         cc: [""]
         cxx: [""]
         # These are additional individual jobs. There are no permutations of these.
         include:
           # Testing clang
+          - os: ubuntu-22.04
+            cc: clang-12
+            cxx: clang++-12
           - os: ubuntu-latest
             cc: clang
             cxx: clang++
@@ -35,6 +38,7 @@ jobs:
           sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev clang-tidy
         if: startsWith(matrix.os, 'ubuntu')
 
+      # TODO(bwrsandman): Remove this step when ubuntu-latest becomes ubuntu-22.04
       - name: Set GCC 10
         run: |
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10 --slave /usr/bin/gcov gcov /usr/bin/gcov-10
