@@ -56,6 +56,7 @@ jobs:
         uses: lukka/run-cmake@v10
         with:
           configurePreset: 'ninja-multi-vcpkg'
+          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_CLANG_TIDY_CHECKS=ON`]"
         env:
           CC: ${{matrix.cc}}
           CXX: ${{matrix.cxx}}
@@ -64,6 +65,7 @@ jobs:
         uses: lukka/run-cmake@v10
         with:
           configurePreset: 'ninja-multi-vcpkg'
+          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_CLANG_TIDY_CHECKS=ON`]"
           buildPreset: 'ninja-multi-vcpkg-debug'
           testPreset: 'ninja-multi-vcpkg-debug'
         env:
@@ -74,6 +76,7 @@ jobs:
         uses: lukka/run-cmake@v10
         with:
           configurePreset: 'ninja-multi-vcpkg'
+          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_CLANG_TIDY_CHECKS=ON`]"
           buildPreset: 'ninja-multi-vcpkg-release'
           testPreset: 'ninja-multi-vcpkg-release'
         env:

@@ -38,6 +38,7 @@ set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
 # Output binaries to bin/
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
+option(OPENBLACK_CLANG_TIDY_CHECKS "Do extra checks with clang-tidy if it's available (takes longer to build, enable for CI)" OFF)
 option(OPENBLACK_WARNINGS_AS_ERRORS "Treat warnings as errors (disable easier prototyping, enable for CI)" OFF)
 
 find_program(CLANG_TIDY NAMES clang-tidy-7 clang-tidy-6.0 clang-tidy-5.0 clang-tidy-4.0 clang-tidy)
