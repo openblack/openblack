@@ -35,6 +35,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           submodules: recursive
+        run: git remote add upstream ${{ github.repositoryUrl }}
 
       - name: Check git config
         run: |
