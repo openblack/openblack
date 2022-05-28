@@ -277,6 +277,7 @@ bool Game::GameLogicLoop()
 	const auto currentTime = std::chrono::steady_clock::now();
 	const auto delta = currentTime - _lastGameLoopTime;
 	const auto turnDuration = kTurnDuration * _gameSpeedMultiplier;
+	// NOLINTNEXTLINE(modernize-use-nullptr): clang-tidy bug
 	if (delta < turnDuration)
 	{
 		return false;
