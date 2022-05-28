@@ -269,9 +269,15 @@ bool Game::GameLogicLoop()
 	using namespace ecs::components;
 	using namespace ecs::systems;
 
+	if (_paused)
+	{
+		return false;
+	}
+
 	const auto currentTime = std::chrono::steady_clock::now();
 	const auto delta = currentTime - _lastGameLoopTime;
-	if (_paused || delta < kTurnDuration * _gameSpeedMultiplier)
+	const auto turnDuration = kTurnDuration * _gameSpeedMultiplier;
+	if (delta < turnDuration)
 	{
 		return false;
 	}
