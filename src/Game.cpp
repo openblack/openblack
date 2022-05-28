@@ -364,7 +364,7 @@ bool Game::Update()
 		auto profilerScopedUpdateUniforms = _profiler->BeginScoped(Profiler::Stage::UpdateUniforms);
 
 		// Update Debug Cross
-		ecs::components::Transform intersectionTransform;
+		ecs::components::Transform intersectionTransform {};
 		{
 			glm::ivec2 screenSize {};
 			if (_window)
