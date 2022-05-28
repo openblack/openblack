@@ -100,7 +100,7 @@ public:
 
 private:
 	FileStream& _stream;
-	uint32_t _checkSum {0};
+	uint32_t _checkSum;
 	std::vector<std::shared_ptr<GameThing>> _cache;
 };
 } // namespace openblack::serializer

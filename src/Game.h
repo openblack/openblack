@@ -241,10 +241,10 @@ private:
 
 	std::chrono::steady_clock::time_point _lastGameLoopTime;
 	std::chrono::steady_clock::duration _turnDeltaTime;
-	float _gameSpeedMultiplier {1.0f};
-	uint32_t _frameCount {0};
-	uint16_t _turnCount {0};
-	bool _paused {true};
+	float _gameSpeedMultiplier;
+	uint32_t _frameCount;
+	uint16_t _turnCount;
+	bool _paused;
 
 	glm::ivec2 _mousePosition;
 	glm::mat4 _handPose;

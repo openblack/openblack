@@ -32,6 +32,7 @@ GameThingType openblack::serializer::GameThingTypeEnum<GameThingSerializer::Foot
 
 GameThingSerializer::GameThingSerializer(FileStream& stream)
     : _stream(stream)
+    , _checkSum(0)
 {
 }
 
