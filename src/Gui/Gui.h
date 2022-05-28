@@ -122,7 +122,7 @@ private:
 
 	ImGuiContext* _imgui;
 	ImVec2 _menuBarSize;
-	uint64_t _time;
+	uint64_t _time {0};
 	bgfx::DynamicVertexBufferHandle _vertexBuffer;
 	bgfx::DynamicIndexBufferHandle _indexBuffer;
 	uint32_t _vertexCount;
@@ -136,9 +136,9 @@ private:
 	SDL_Window* _window;
 	std::array<bool, 3> _mousePressed;
 	std::array<SDL_Cursor*, ImGuiMouseCursor_COUNT> _mouseCursors;
-	char* _clipboardTextData;
+	char* _clipboardTextData {nullptr};
 	int64_t _last;
-	int32_t _lastScroll;
+	int32_t _lastScroll {0};
 	const bgfx::ViewId _viewId;
 	std::vector<std::unique_ptr<DebugWindow>> _debugWindows;
 };

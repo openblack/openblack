@@ -148,7 +148,7 @@ private:
 	std::string::iterator current_;
 	std::string::iterator end_;
 
-	int currentLine_;
+	int currentLine_ {1};
 };
 
 } // namespace openblack::lhscriptx

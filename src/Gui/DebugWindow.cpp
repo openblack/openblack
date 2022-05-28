@@ -16,7 +16,6 @@ using namespace openblack::gui;
 DebugWindow::DebugWindow(std::string name, ImVec2 defaultSize)
     : _name(std::move(name))
     , _defaultSize(defaultSize)
-    , _open(false)
 {
 }
 
