@@ -5,6 +5,7 @@ on:
     tags:
     branches:
       - 'master'
+      - 'test'
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -34,6 +35,12 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           submodules: recursive
+
+      - name: Check git config
+        run: |
+          cat .git/config
+          git remote -v
+        if: startsWith(matrix.os, 'ubuntu')
 
       - name: Install Linux dependencies
         run: |
