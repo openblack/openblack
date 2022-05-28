@@ -1,6 +1,6 @@
 name: Formatting Check
 on:
-  pull_request:
+  pull_request_target:
   push:
     tags:
     branches:
@@ -10,7 +10,10 @@ jobs:
     name: clang-format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
       - uses: DoozyX/clang-format-lint-action@v0.13
         with:
           source: 'src apps components test'
@@ -22,9 +25,12 @@ jobs:
     name: clang-format fix suggester
     runs-on: ubuntu-latest
     needs: formatting-check
-    if: always() && github.event_name == 'pull_request' && needs.formatting-check.result == 'failure'
+    if: always() && startsWith(github.event_name, 'pull_request') && needs.formatting-check.result == 'failure'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
       - uses: DoozyX/clang-format-lint-action@v0.13
         with:
           source: 'src apps components test'
@@ -44,16 +50,22 @@ jobs:
     name: linelint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
       - uses: fernandrone/linelint@master
 
   linelint-action-suggester:
     name: linelint fix suggester
     runs-on: ubuntu-latest
     needs: linelint
-    if: always() && github.event_name == 'pull_request' && needs.linelint.result == 'failure'
+    if: always() && startsWith(github.event_name, 'pull_request') && needs.linelint.result == 'failure'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
       - run: |
           printf 'autofix: true\nrules:\n  end-of-file:\n    enable: true\n' > .linelint.yml
       - uses: fernandrone/linelint@master
@@ -71,6 +83,9 @@ jobs:
     name: Copyright Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
       - name: Check License Lines
         uses: kt3k/license_checker@v1.0.6

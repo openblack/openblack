@@ -1,6 +1,6 @@
 name: VCPKG CI
 on:
-  pull_request:
+  pull_request_target:
   push:
     tags:
     branches:
@@ -23,8 +23,10 @@ jobs:
             cxx: clang++
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
           submodules: recursive
 
       - name: Install Linux dependencies
