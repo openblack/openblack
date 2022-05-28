@@ -182,7 +182,12 @@ void PathFinding::Update(Game& game, [[maybe_unused]] const openblack::Renderer&
 	auto& registry = game.GetEntityRegistry();
 	const auto& handTransform = registry.Get<Transform>(game.GetHand());
 	auto const& meshes = Locator::resources::ref().GetMeshes();
-	if (glm::any(glm::isnan(handTransform.position) || glm::isinf(handTransform.position)))
+	glm::bvec3 invalidValue {};
+	for (glm::length_t l = 0; l < handTransform.position.length(); ++l)
+	{
+		invalidValue[l] = glm::isnan(handTransform.position[l]) || glm::isinf(handTransform.position[l]);
+	}
+	if (glm::any(invalidValue))
 	{
 		return;
 	}
