@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ubuntu-22.04, ubuntu-latest, macos-latest, windows-latest, windows-2019]
+        os: [ubuntu-22.04, macos-latest, windows-latest, windows-2019]
         cc: [""]
         cxx: [""]
         # These are additional individual jobs. There are no permutations of these.
@@ -21,7 +21,10 @@ jobs:
           - os: ubuntu-22.04
             cc: clang-12
             cxx: clang++-12
-          - os: ubuntu-latest
+          - os: ubuntu-20.04
+            cc: gcc-10
+            cxx: g++-10
+          - os: ubuntu-20.04
             cc: clang
             cxx: clang++
 
@@ -37,12 +40,6 @@ jobs:
           sudo apt update -y
           sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev clang-tidy
         if: startsWith(matrix.os, 'ubuntu')
-
-      # TODO(bwrsandman): Remove this step when ubuntu-latest becomes ubuntu-22.04
-      - name: Set GCC 10
-        run: |
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10 --slave /usr/bin/gcov gcov /usr/bin/gcov-10
-        if: matrix.os == 'ubuntu-latest' && matrix.cc == ''
 
       # Setup the build machine with the most recent versions of CMake and Ninja. Both are cached if not already: on subsequent runs both will be quickly restored from GitHub cache service.
       - uses: lukka/get-cmake@latest
@@ -114,7 +111,7 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ ubuntu-latest, macos-latest, windows-latest, windows-2019 ]
+        os: [ ubuntu-22.04, macos-latest, windows-latest, windows-2019 ]
     steps:
       - name: Download compiled openblack and tools
         uses: actions/download-artifact@v3
