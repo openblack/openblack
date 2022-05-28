@@ -49,7 +49,7 @@ protected:
 private:
 	const std::string _name;
 	const ImVec2 _defaultSize;
-	bool _open;
+	bool _open {false};
 };
 
 } // namespace gui

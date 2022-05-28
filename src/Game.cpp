@@ -78,10 +78,6 @@ Game::Game(Arguments&& args)
     , _entityRegistry(std::make_unique<ecs::Registry>())
     , _entityMap(std::make_unique<ecs::Map>())
     , _config()
-    , _gameSpeedMultiplier(1.0f)
-    , _frameCount(0)
-    , _turnCount(0)
-    , _paused(true)
     , _handPose()
 {
 	std::function<std::shared_ptr<spdlog::logger>(const std::string&)> CreateLogger;

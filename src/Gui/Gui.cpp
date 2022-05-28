@@ -123,7 +123,6 @@ std::unique_ptr<Gui> Gui::create(const GameWindow* window, graphics::RenderPass 
 
 Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<DebugWindow>>&& debugWindows)
     : _imgui(imgui)
-    , _time(0)
     , _vertexBuffer(BGFX_INVALID_HANDLE)
     , _indexBuffer(BGFX_INVALID_HANDLE)
     , _program(BGFX_INVALID_HANDLE)
@@ -133,9 +132,7 @@ Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<D
     , _u_imageLodEnabled(BGFX_INVALID_HANDLE)
     , _mousePressed {false, false, false}
     , _mouseCursors {0}
-    , _clipboardTextData(nullptr)
     , _last(bx::getHPCounter())
-    , _lastScroll(0)
     , _viewId(viewId)
     , _debugWindows(std::move(debugWindows))
 {
