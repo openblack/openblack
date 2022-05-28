@@ -61,7 +61,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		{
 			std::cout << options.help() << std::endl;
 			return_code = EXIT_SUCCESS;
-			return false;
+			return         false;
 		}
 		static const std::map<std::string_view, bgfx::RendererType::Enum> rendererLookup = {
 		    std::pair {"OpenGL", bgfx::RendererType::OpenGL},
