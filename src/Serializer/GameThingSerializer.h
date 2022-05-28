@@ -35,7 +35,7 @@ enum class GameThingType : uint32_t
 };
 
 template <typename T>
-GameThingType GameThingTypeEnum;
+inline GameThingType GameThingTypeEnum;
 
 class GameThingSerializer
 {
