@@ -29,6 +29,10 @@ jobs:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           submodules: recursive
 
+      - name: Add base repo to git config
+        run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
+        if: startsWith(github.event_name, 'pull_request')
+
       - name: Install Linux dependencies
         run: |
           sudo apt update -y

@@ -14,6 +14,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
+      - name: Add base repo to git config
+        run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
+        if: startsWith(github.event_name, 'pull_request')
       - uses: DoozyX/clang-format-lint-action@v0.13
         with:
           source: 'src apps components test'
@@ -31,6 +34,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
+      - name: Add base repo to git config
+        run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
+        if: startsWith(github.event_name, 'pull_request')
       - uses: DoozyX/clang-format-lint-action@v0.13
         with:
           source: 'src apps components test'
@@ -54,6 +60,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
+      - name: Add base repo to git config
+        run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
+        if: startsWith(github.event_name, 'pull_request')
       - uses: fernandrone/linelint@master
 
   linelint-action-suggester:
@@ -66,6 +75,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
+      - name: Add base repo to git config
+        run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
+        if: startsWith(github.event_name, 'pull_request')
       - run: |
           printf 'autofix: true\nrules:\n  end-of-file:\n    enable: true\n' > .linelint.yml
       - uses: fernandrone/linelint@master
@@ -87,5 +99,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
+      - name: Add base repo to git config
+        run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
+        if: startsWith(github.event_name, 'pull_request')
       - name: Check License Lines
         uses: kt3k/license_checker@v1.0.6
