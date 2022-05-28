@@ -111,7 +111,7 @@ ScriptCommandParameter GetParameter(Token& argument)
 			if (str.c_str() + delim == floatEnd)
 			{
 				const auto z = std::strtof(floatEnd + 1, &floatEnd);
-				if (floatEnd - str.c_str() == str.length())
+				if (static_cast<size_t>(floatEnd - str.c_str()) == static_cast<size_t>(str.length()))
 				{
 					const auto& island = Game::instance()->GetLandIsland();
 					return {x, island.GetHeightAt(glm::vec2(x, z)), z};
