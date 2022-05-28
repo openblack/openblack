@@ -36,8 +36,8 @@ public:
 	void Read(void* buffer, std::size_t length) override;
 
 protected:
-	FILE* _file {nullptr};
-	std::size_t _fileSize {0};
+	FILE* _file;
+	std::size_t _fileSize;
 };
 
 } // namespace openblack

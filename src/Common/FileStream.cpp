@@ -19,6 +19,8 @@ namespace openblack
 {
 
 FileStream::FileStream(const std::filesystem::path& path, FileMode mode)
+    : _file(nullptr)
+    , _fileSize(0)
 {
 	std::wstring recognisedMode;
 
