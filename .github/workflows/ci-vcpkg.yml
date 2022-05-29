@@ -59,7 +59,7 @@ jobs:
         uses: lukka/run-cmake@v10
         with:
           configurePreset: 'ninja-multi-vcpkg'
-          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_CLANG_TIDY_CHECKS=ON`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
+          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
         env:
           CC: ${{matrix.cc}}
           CXX: ${{matrix.cxx}}
@@ -68,7 +68,7 @@ jobs:
         uses: lukka/run-cmake@v10
         with:
           configurePreset: 'ninja-multi-vcpkg'
-          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_CLANG_TIDY_CHECKS=ON`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
+          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
           buildPreset: 'ninja-multi-vcpkg-debug'
           testPreset: 'ninja-multi-vcpkg-debug'
         env:
@@ -79,12 +79,23 @@ jobs:
         uses: lukka/run-cmake@v10
         with:
           configurePreset: 'ninja-multi-vcpkg'
-          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_CLANG_TIDY_CHECKS=ON`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
+          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
           buildPreset: 'ninja-multi-vcpkg-release'
           testPreset: 'ninja-multi-vcpkg-release'
         env:
           CC: ${{matrix.cc}}
           CXX: ${{matrix.cxx}}
+
+      - name: Upload compile database and system includes
+        uses: actions/upload-artifact@v3
+        if: startsWith(matrix.os, 'ubuntu')
+        with:
+          name: openblack-compile-database
+          path: |
+            cmake-build-presets/ninja-multi-vcpkg/include
+            cmake-build-presets/ninja-multi-vcpkg/vcpkg_installed/x64-linux/include
+            cmake-build-presets/ninja-multi-vcpkg/compile_commands.json
+          if-no-files-found: error
 
       - name: Upload compiled openblack and tools
         uses: actions/upload-artifact@v3
@@ -108,6 +119,36 @@ jobs:
     env:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
+
+  clang-tidy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.event_name, 'pull_request')
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          submodules: recursive
+      - name: Download generated compile database
+        uses: actions/download-artifact@v3
+        with:
+          name: openblack-compile-database
+          path: cmake-build-presets/ninja-multi-vcpkg
+      - name: Add base repo to git config
+        run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
+        if: startsWith(github.event_name, 'pull_request')
+      - uses: ZedThree/clang-tidy-review@v0.8.4
+        id: review
+        with:
+          build_dir: cmake-build-presets/ninja-multi-vcpkg
+          config_file: '.clang-tidy'
+          clang_tidy_version: 12
+          apt_packages: g++-10 # g++-9 doesn't support all of c++20 like spans
+          exclude: "*ShaderIncluder.h"
+          # If there are any comments, fail the check
+          #- if: steps.review.outputs.total_comments > 0
+          #  run: exit 1
 
   run:
     needs: build
