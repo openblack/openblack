@@ -17,7 +17,7 @@ if (OPENBLACK_CLANG_TIDY_CHECKS)
   if (NOT MSVC AND CLANG_TIDY)
 	set_target_properties(packtool PROPERTIES CXX_CLANG_TIDY ${CLANG_TIDY})
   else ()
-    message(WARNING "Clang-tidy checks requested but unavailable")
+    message("Clang-tidy checks requested but unavailable")
   endif()
 endif()
 
