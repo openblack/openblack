@@ -1,0 +1,15 @@
+name: Triage
+on:
+  push:
+    branches:
+      - master
+jobs:
+  merge-conflicts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: mschilde/auto-label-merge-conflicts@master
+        with:
+          CONFLICT_LABEL_NAME: "merge-conflicts"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAX_RETRIES: 5
+          WAIT_MS: 5000
