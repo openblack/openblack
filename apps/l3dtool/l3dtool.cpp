@@ -193,7 +193,7 @@ int PrintHeader(openblack::l3d::L3DFile& l3d)
 	};
 
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
-	std::printf("magic: %s\n", std::string(header.magic.data(), sizeof(header.magic[0]) * header.magic.size()).c_str());
+	std::printf("magic: %s\n", std::string((char*)&header.magic, sizeof(header.magic)).c_str());
 	std::printf("flags: %s\n", flagToString(header.flags).c_str());
 	std::printf("size: %u\n", header.size);
 	std::printf("submesh count: %u\n", header.submeshCount);
@@ -554,7 +554,7 @@ bool NoopLoadImageDataFunction(tinygltf::Image*, const int, std::string*, std::s
 	return true;
 }
 
-int WriteFile(const Arguments::Write& args) noexcept
+int WriteFile(const Arguments::Write& args)
 {
 	openblack::l3d::L3DFile l3d {};
 
@@ -567,20 +567,11 @@ int WriteFile(const Arguments::Write& args) noexcept
 	tinygltf::Model gltf;
 	std::string err;
 	std::string warn;
-	bool ret;
 
 	loader.SetImageLoader(NoopLoadImageDataFunction, nullptr);
-	try
-	{
-		ret = loader.LoadASCIIFromFile(&gltf, &err, &warn, args.gltfFile.string(),
-		                               tinygltf::REQUIRE_VERSION | tinygltf::REQUIRE_ACCESSORS | tinygltf::REQUIRE_BUFFERS |
-		                                   tinygltf::REQUIRE_BUFFER_VIEWS);
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-		ret = false;
-	}
+	bool ret = loader.LoadASCIIFromFile(&gltf, &err, &warn, args.gltfFile.string(),
+	                                    tinygltf::REQUIRE_VERSION | tinygltf::REQUIRE_ACCESSORS | tinygltf::REQUIRE_BUFFERS |
+	                                        tinygltf::REQUIRE_BUFFER_VIEWS);
 
 	if (!warn.empty())
 	{
@@ -594,14 +585,12 @@ int WriteFile(const Arguments::Write& args) noexcept
 
 	if (!ret)
 	{
-		std::cerr << "Err: Failed to parse glTF." << std::endl;
-		return EXIT_FAILURE;
+		throw std::runtime_error("Failed to parse glTF.");
 	}
 
 	if (gltf.meshes.empty())
 	{
-		std::cerr << "Err: There are no meshes in glTF." << std::endl;
-		return EXIT_FAILURE;
+		throw std::runtime_error("There are no meshes in glTF.");
 	}
 
 	for (auto& gltfNode : gltf.nodes)
@@ -686,15 +675,7 @@ int WriteFile(const Arguments::Write& args) noexcept
 					}
 				};
 
-				try
-				{
-					buildJoints({skelton}, std::numeric_limits<uint32_t>::max());
-				}
-				catch (const std::exception& e)
-				{
-					std::cerr << e.what() << '\n';
-					return EXIT_FAILURE;
-				}
+				buildJoints({skelton}, std::numeric_limits<uint32_t>::max());
 
 				l3d.AddBones(bones);
 				submesh.numBones += static_cast<uint32_t>(bones.size());
@@ -743,21 +724,12 @@ int WriteFile(const Arguments::Write& args) noexcept
 					auto& buffer = gltf.buffers[view.buffer];
 					auto offset = view.byteOffset + accessor.byteOffset;
 					attribute.values.resize(accessor.count * accessor.type);
-					try
-					{
-						copyBufferView(attribute.values.data(), buffer.data.data() + offset, attribute.values.size(),
-						               accessor.componentType);
-					}
-					catch (const std::runtime_error& e)
-					{
-						std::cerr << e.what() << std::endl;
-						return EXIT_FAILURE;
-					}
+					copyBufferView(attribute.values.data(), buffer.data.data() + offset, attribute.values.size(),
+					               accessor.componentType);
 					attribute.type = static_cast<uint8_t>(accessor.type);
 					if (count != 0 && count != accessor.count)
 					{
-						std::cerr << "Err: Attributes do not match in length." << std::endl;
-						return EXIT_FAILURE;
+						throw std::runtime_error("Attributes do not match in length.");
 					}
 					count = static_cast<uint32_t>(accessor.count);
 				}
@@ -765,8 +737,7 @@ int WriteFile(const Arguments::Write& args) noexcept
 
 			if (count == 0)
 			{
-				std::cerr << "Err: No vertex attributes found." << std::endl;
-				return EXIT_FAILURE;
+				throw std::runtime_error("No vertex attributes found.");
 			}
 
 			std::vector<openblack::l3d::L3DVertex> vertices;
@@ -802,15 +773,7 @@ int WriteFile(const Arguments::Write& args) noexcept
 				auto offset = view.byteOffset + accessor.byteOffset;
 				std::vector<uint16_t> indices;
 				indices.resize(accessor.count);
-				try
-				{
-					copyBufferView(indices.data(), buffer.data.data() + offset, indices.size(), accessor.componentType);
-				}
-				catch (const std::runtime_error& e)
-				{
-					std::cerr << e.what() << std::endl;
-					return EXIT_FAILURE;
-				}
+				copyBufferView(indices.data(), buffer.data.data() + offset, indices.size(), accessor.componentType);
 				l3d.AddIndices(indices);
 				primitive.numTriangles += static_cast<uint32_t>(indices.size() / 3);
 			}
@@ -821,19 +784,12 @@ int WriteFile(const Arguments::Write& args) noexcept
 		l3d.AddSubmesh(submesh);
 	}
 
-	try
-	{
-		l3d.Write(args.outFilename);
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-	}
+	l3d.Write(args.outFilename);
 
 	return EXIT_SUCCESS;
 }
 
-int ExtractFile(const Arguments::Extract& args) noexcept
+int ExtractFile(const Arguments::Extract& args)
 {
 	openblack::l3d::L3DFile l3d {};
 
@@ -842,15 +798,8 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 		return EXIT_FAILURE;
 	}
 
-	try
-	{
-		// Open file
-		l3d.Open(args.inFilename);
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-	}
+	// Open file
+	l3d.Open(args.inFilename);
 
 	tinygltf::Model gltf;
 
@@ -1061,106 +1010,75 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 
 		// l3d index of current node + gltf index of parent node
 		std::stack<std::pair<uint32_t, uint32_t>> traversal_stack;
-		try
+		traversal_stack.emplace(i, rootNodeIndex);
+		tinygltf::Node node;
+		uint32_t index, parent_index;
+		while (!traversal_stack.empty())
 		{
-			traversal_stack.emplace(i, rootNodeIndex);
-
-			tinygltf::Node node;
-			uint32_t index, parent_index;
-			while (!traversal_stack.empty())
+			std::tie(index, parent_index) = traversal_stack.top();
+			traversal_stack.pop();
+			if (parent_index == rootNodeIndex)
 			{
-				std::tie(index, parent_index) = traversal_stack.top();
-				traversal_stack.pop();
-				if (parent_index == rootNodeIndex)
-				{
-					node.name = "Bones root node #" + std::to_string(i);
-				}
-				else
-				{
-					node.name = "Bone Child #" + std::to_string(index) + " of #" + std::to_string(i);
-				}
-
-				gltf.nodes[parent_index].children.push_back(static_cast<int>(gltf.nodes.size()));
-				auto& l3d_node = bones[index];
-				bone_to_node(node, l3d_node);
-				gltf.nodes.emplace_back(node);
-
-				if (l3d_node.rightSibling != std::numeric_limits<uint32_t>::max())
-				{
-					traversal_stack.emplace(l3d_node.rightSibling, parent_index);
-				}
-
-				if (l3d_node.firstChild != std::numeric_limits<uint32_t>::max())
-				{
-					traversal_stack.emplace(l3d_node.firstChild, static_cast<uint32_t>(gltf.nodes.size() - 1));
-				}
+				node.name = "Bones root node #" + std::to_string(i);
 			}
-		}
-		catch (const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-			return EXIT_FAILURE;
+			else
+			{
+				node.name = "Bone Child #" + std::to_string(index) + " of #" + std::to_string(i);
+			}
+
+			gltf.nodes[parent_index].children.push_back(static_cast<int>(gltf.nodes.size()));
+			auto& l3d_node = bones[index];
+			bone_to_node(node, l3d_node);
+			gltf.nodes.emplace_back(node);
+
+			if (l3d_node.rightSibling != std::numeric_limits<uint32_t>::max())
+			{
+				traversal_stack.emplace(l3d_node.rightSibling, parent_index);
+			}
+
+			if (l3d_node.firstChild != std::numeric_limits<uint32_t>::max())
+			{
+				traversal_stack.emplace(l3d_node.firstChild, static_cast<uint32_t>(gltf.nodes.size() - 1));
+			}
 		}
 	}
 	// TODO: Associate mesh and joints to node
 
 	tinygltf::TinyGLTF exporter;
-	bool ret;
-	try
-	{
-		ret = exporter.WriteGltfSceneToFile(&gltf, args.gltfFile.string(), true, true, true, false);
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-		ret = false;
-	}
-
-	if (!ret)
-	{
-		std::cerr << "Err: Failed to write glTF." << std::endl;
-		return EXIT_FAILURE;
-	}
+	exporter.WriteGltfSceneToFile(&gltf, args.gltfFile.string(), true, true, true, false);
 
 	return EXIT_SUCCESS;
 }
 
-bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noexcept
+bool parseOptions(int argc, char** argv, Arguments& args, int& return_code)
 {
 	cxxopts::Options options("l3dtool", "Inspect and extract files from LionHead L3D files.");
 
-	try
-	{
-		options.add_options()                                            //
-		    ("h,help", "Display this help message.")                     //
-		    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
-		    ;
-		options.positional_help("[read|write|extract] [OPTION...]");
-		options.add_options("read")                                                                                       //
-		    ("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())                  //
-		    ("m,mesh-header", "Print Mesh Headers.", cxxopts::value<std::vector<std::filesystem::path>>())                //
-		    ("s,skins", "Print Skins.", cxxopts::value<std::vector<std::filesystem::path>>())                             //
-		    ("p,extra-points", "Print Extra Points.", cxxopts::value<std::vector<std::filesystem::path>>())               //
-		    ("P,primitive-header", "Print Primitive Headers.", cxxopts::value<std::vector<std::filesystem::path>>())      //
-		    ("b,bones", "Print Bones.", cxxopts::value<std::vector<std::filesystem::path>>())                             //
-		    ("V,vertices", "Print Vertices.", cxxopts::value<std::vector<std::filesystem::path>>())                       //
-		    ("I,indices", "Print Indices.", cxxopts::value<std::vector<std::filesystem::path>>())                         //
-		    ("L,look-up-tables", "Print Look Up Table Data.", cxxopts::value<std::vector<std::filesystem::path>>())       //
-		    ("B,vertex-blend-values", "Print Vertex Blend Values.", cxxopts::value<std::vector<std::filesystem::path>>()) //
-		    ;
-		options.add_options("write/extract from and to glTF format")                            //
-		    ("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())    //
-		    ("i,input-mesh", "Input file (required).", cxxopts::value<std::filesystem::path>()) //
-		    ;
+	// clang-format off
+	options.add_options()
+		("h,help", "Display this help message.")
+		("subcommand", "Subcommand.", cxxopts::value<std::string>())
+	;
+	options.positional_help("[read|write|extract] [OPTION...]");
+	options.add_options("read")
+		("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("m,mesh-header", "Print Mesh Headers.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("s,skins", "Print Skins.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("p,extra-points", "Print Extra Points.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("P,primitive-header", "Print Primitive Headers.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("b,bones", "Print Bones.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("V,vertices", "Print Vertices.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("I,indices", "Print Indices.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("L,look-up-tables", "Print Look Up Table Data.", cxxopts::value<std::vector<std::filesystem::path>>())
+		("B,vertex-blend-values", "Print Vertex Blend Values.", cxxopts::value<std::vector<std::filesystem::path>>())
+	;
+	options.add_options("write/extract from and to glTF format")
+		("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())
+		("i,input-mesh", "Input file (required).", cxxopts::value<std::filesystem::path>())
+	;
+	// clang-format on
 
-		options.parse_positional({"subcommand"});
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-		return_code = EXIT_FAILURE;
-		return false;
-	}
+	options.parse_positional({"subcommand"});
 
 	try
 	{
@@ -1269,7 +1187,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 			}
 		}
 	}
-	catch (const std::exception& err)
+	catch (cxxopts::OptionParseException& err)
 	{
 		std::cerr << err.what() << std::endl;
 	}
@@ -1279,7 +1197,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& return_code) noex
 	return false;
 }
 
-int main(int argc, char* argv[]) noexcept
+int main(int argc, char* argv[])
 {
 	Arguments args;
 	int return_code = EXIT_SUCCESS;
@@ -1343,7 +1261,7 @@ int main(int argc, char* argv[]) noexcept
 				break;
 			}
 		}
-		catch (std::exception& err)
+		catch (std::runtime_error& err)
 		{
 			std::cerr << err.what() << std::endl;
 			return_code |= EXIT_FAILURE;

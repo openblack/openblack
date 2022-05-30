@@ -298,11 +298,11 @@ public:
 		return _vertexGroupSpans[submeshIndex];
 	}
 
-	void AddSubmesh(const L3DSubmeshHeader& header) noexcept;
-	void AddPrimitives(const std::vector<L3DPrimitiveHeader>& headers) noexcept;
-	void AddVertices(const std::vector<L3DVertex>& vertices) noexcept;
-	void AddIndices(const std::vector<uint16_t>& indices) noexcept;
-	void AddBones(const std::vector<L3DBone>& bones) noexcept;
+	void AddSubmesh(const L3DSubmeshHeader& header);
+	void AddPrimitives(const std::vector<L3DPrimitiveHeader>& headers);
+	void AddVertices(const std::vector<L3DVertex>& vertices);
+	void AddIndices(const std::vector<uint16_t>& indices);
+	void AddBones(const std::vector<L3DBone>& bones);
 };
 
 } // namespace openblack::l3d

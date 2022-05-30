@@ -122,7 +122,7 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 			int match_len = (int)(word_end - word_start);
 			for (;;)
 			{
-				char c = 0;
+				int c = 0;
 				bool all_candidates_matches = true;
 				for (size_t i = 0; i < candidates.size() && all_candidates_matches; i++)
 					if (i == 0)
