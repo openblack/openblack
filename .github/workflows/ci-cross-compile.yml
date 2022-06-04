@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ubuntu-latest]
+        os: [ubuntu-22.04]
         preset: [android-armeabi-v7a-vcpkg, android-arm64-v8a-vcpkg, android-x86-vcpkg, android-x86_64-vcpkg]
         triplet: [""]
         # These are additional individual jobs. There are no permutations of these.
@@ -39,12 +39,6 @@ jobs:
           sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
         if: startsWith(matrix.os, 'ubuntu')
 
-      # TODO(bwrsandman): Remove this step when ubuntu-latest becomes ubuntu-22.04
-      - name: Set GCC 10
-        run: |
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10 --slave /usr/bin/gcov gcov /usr/bin/gcov-10
-        if: matrix.os == 'ubuntu-latest' && matrix.cc == ''
-
       # Setup the build machine with the most recent versions of CMake and Ninja. Both are cached if not already: on subsequent runs both will be quickly restored from GitHub cache service.
       - uses: lukka/get-cmake@latest
 
@@ -62,7 +56,6 @@ jobs:
           configurePreset: '${{ matrix.preset }}'
           configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
         env:
-          ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.1.7779620'
           CXX: ''
           CC: ''
 
@@ -73,7 +66,6 @@ jobs:
           configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
           buildPreset: '${{ matrix.preset }}-debug'
         env:
-          ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.1.7779620'
           CXX: ''
           CC: ''
 
@@ -84,7 +76,6 @@ jobs:
           configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
           buildPreset: '${{ matrix.preset }}-release'
         env:
-          ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.1.7779620'
           CXX: ''
           CC: ''
 
