@@ -148,7 +148,7 @@ jobs:
           config_file: '.clang-tidy'
           clang_tidy_version: 12
           apt_packages: g++-10 # g++-9 doesn't support all of c++20 like spans
-          exclude: "*ShaderIncluder.h"
+          exclude: "*ShaderIncluder.h,json.hpp"
       - name: If there are any comments, fail the check
         if: steps.review.outputs.total_comments > 0
         run: exit 1
