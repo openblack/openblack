@@ -18,7 +18,7 @@
 
 #include <imgui.h>
 
-#include "DebugWindow.h"
+#include "Window.h"
 
 struct ImGuiInputTextCallbackData;
 
@@ -32,7 +32,7 @@ class Script;
 namespace gui
 {
 
-class Console: public DebugWindow
+class Console: public Window
 {
 public:
 	Console();

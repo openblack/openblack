@@ -319,7 +319,7 @@ std::unique_ptr<Gui> Gui::Create(const GameWindow* window, graphics::RenderPass 
 	io.FontGlobalScale = scale;
 	io.BackendRendererName = "imgui_impl_bgfx";
 
-	std::vector<std::unique_ptr<DebugWindow>> debugWindows;
+	std::vector<std::unique_ptr<Window>> debugWindows;
 	debugWindows.emplace_back(new Profiler);
 	debugWindows.emplace_back(new MeshViewer);
 	debugWindows.emplace_back(new TextureViewer);
@@ -341,7 +341,7 @@ std::unique_ptr<Gui> Gui::Create(const GameWindow* window, graphics::RenderPass 
 	return gui;
 }
 
-Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<DebugWindow>>&& debugWindows)
+Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<Window>>&& debugWindows)
     : _imgui(imgui)
     , _vertexBuffer(BGFX_INVALID_HANDLE)
     , _indexBuffer(BGFX_INVALID_HANDLE)

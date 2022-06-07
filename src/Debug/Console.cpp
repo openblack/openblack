@@ -26,7 +26,7 @@ using namespace openblack;
 using namespace openblack::gui;
 
 Console::Console()
-    : DebugWindow("Console", ImVec2(520, 600))
+    : Window("Console", ImVec2(520, 600))
     // , _items {"Welcome message goes here"}
     , _commands {
           {"help", "    - Display list of possible commands."},
@@ -71,7 +71,7 @@ Console::Console()
 
 void Console::Open()
 {
-	DebugWindow::Open();
+	Window::Open();
 	_reclaimFocus = true;
 }
 

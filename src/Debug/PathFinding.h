@@ -14,12 +14,12 @@
 #include <entt/fwd.hpp>
 #include <glm/vec3.hpp>
 
-#include "DebugWindow.h"
+#include "Window.h"
 
 namespace openblack::gui
 {
 
-class PathFinding: public DebugWindow
+class PathFinding: public Window
 {
 public:
 	PathFinding();

@@ -15,7 +15,7 @@
 #include "Game.h"
 
 openblack::gui::LandIsland::LandIsland()
-    : DebugWindow("Land Island", ImVec2(250.0f, 165.0f))
+    : Window("Land Island", ImVec2(250.0f, 165.0f))
 {
 }
 

@@ -495,7 +495,7 @@ static const std::array<std::string, 464> k_FunctionNames = {
 };
 
 LHVMViewer::LHVMViewer()
-    : DebugWindow("LHVM Viewer", ImVec2(720.0f, 612.0f))
+    : Window("LHVM Viewer", ImVec2(720.0f, 612.0f))
 {
 }
 
