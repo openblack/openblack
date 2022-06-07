@@ -21,7 +21,7 @@ namespace openblack
 class Game;
 class Renderer;
 
-namespace gui
+namespace debug::gui
 {
 
 class Window
@@ -52,6 +52,6 @@ private:
 	bool _open {false};
 };
 
-} // namespace gui
+} // namespace debug::gui
 
 } // namespace openblack

@@ -13,7 +13,7 @@
 
 #include "Window.h"
 
-namespace openblack::gui
+namespace openblack::debug::gui
 {
 class TextureViewer: public Window
 {
@@ -30,4 +30,4 @@ private:
 	entt::id_type _selectedTexture;
 	ImGuiTextFilter _filter;
 };
-} // namespace openblack::gui
+} // namespace openblack::debug::gui

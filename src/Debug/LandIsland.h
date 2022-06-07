@@ -9,7 +9,7 @@
 
 #include "Window.h"
 
-namespace openblack::gui
+namespace openblack::debug::gui
 {
 
 class LandIsland: public Window
@@ -24,4 +24,4 @@ protected:
 	void ProcessEventAlways(const SDL_Event& event) override;
 };
 
-} // namespace openblack::gui
+} // namespace openblack::debug::gui

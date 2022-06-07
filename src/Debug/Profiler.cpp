@@ -21,24 +21,26 @@
 
 #include "../Profiler.h"
 
-openblack::gui::Profiler::Profiler()
+using namespace openblack::debug::gui;
+
+Profiler::Profiler()
     : Window("Profiler", ImVec2(650.0f, 800.0f))
 {
 }
 
-void openblack::gui::Profiler::Open()
+void Profiler::Open()
 {
 	Window::Open();
 	Game::Instance()->GetConfig().bgfxProfile = true;
 }
 
-void openblack::gui::Profiler::Close()
+void Profiler::Close()
 {
 	Window::Close();
 	Game::Instance()->GetConfig().bgfxProfile = false;
 }
 
-void openblack::gui::Profiler::Draw(Game& game)
+void Profiler::Draw(Game& game)
 {
 	auto& config = game.GetConfig();
 
@@ -194,8 +196,8 @@ void openblack::gui::Profiler::Draw(Game& game)
 	ImGui::Columns(1);
 }
 
-void openblack::gui::Profiler::Update([[maybe_unused]] Game& game, [[maybe_unused]] const Renderer& renderer) {}
+void Profiler::Update([[maybe_unused]] Game& game, [[maybe_unused]] const Renderer& renderer) {}
 
-void openblack::gui::Profiler::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
+void Profiler::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
 
-void openblack::gui::Profiler::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) {}
+void Profiler::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) {}

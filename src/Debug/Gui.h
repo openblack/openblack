@@ -79,7 +79,7 @@ class GameWindow;
 class Renderer;
 } // namespace openblack
 
-namespace openblack::gui
+namespace openblack::debug::gui
 {
 class Window;
 
@@ -142,4 +142,4 @@ private:
 	const bgfx::ViewId _viewId;
 	std::vector<std::unique_ptr<Window>> _debugWindows;
 };
-} // namespace openblack::gui
+}  // namespace openblack::gui

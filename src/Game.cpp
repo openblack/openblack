@@ -133,7 +133,7 @@ Game::Game(Arguments&& args)
 	_fileSystem->SetGamePath(GetGamePath());
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
 
-	_gui = gui::Gui::Create(_window.get(), graphics::RenderPass::ImGui, args.scale);
+	_gui = debug::gui::Gui::Create(_window.get(), graphics::RenderPass::ImGui, args.scale);
 
 	_eventManager->AddHandler(std::function([this](const SDL_Event& event) {
 		// If gui captures this input, do not propagate

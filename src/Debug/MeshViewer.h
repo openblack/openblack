@@ -29,7 +29,7 @@ namespace graphics
 class Mesh;
 }
 
-namespace gui
+namespace debug::gui
 {
 class MeshViewer: public Window
 {
@@ -57,6 +57,6 @@ private:
 	std::unique_ptr<graphics::FrameBuffer> _frameBuffer;
 };
 
-} // namespace gui
+} // namespace debug::gui
 
 } // namespace openblack

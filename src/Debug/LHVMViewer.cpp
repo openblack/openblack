@@ -17,7 +17,7 @@
 
 #include "Game.h"
 
-using namespace openblack::gui;
+using namespace openblack::debug::gui;
 
 const ImVec4 Disassembly_ColorBG = ImVec4(0.152f, 0.156f, 0.133f, 1.0f);
 const ImVec4 Disassembly_ColorFG = ImVec4(0.972f, 0.972f, 0.949f, 1.0f);

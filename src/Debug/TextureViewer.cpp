@@ -14,7 +14,7 @@
 #include "Locator.h"
 
 using namespace openblack;
-using namespace openblack::gui;
+using namespace openblack::debug::gui;
 
 TextureViewer::TextureViewer()
     : Window("Texture Viewer", ImVec2(950.0f, 780.0f))

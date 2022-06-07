@@ -29,7 +29,7 @@ namespace lhscriptx
 class Script;
 }
 
-namespace gui
+namespace debug::gui
 {
 
 class Console: public Window
@@ -60,6 +60,6 @@ private:
 	std::optional<size_t> _historyPos;
 };
 
-} // namespace gui
+} // namespace debug::gui
 
 } // namespace openblack

@@ -23,7 +23,7 @@ namespace anm
 class ANMFile;
 } // namespace anm
 
-namespace gui
+namespace debug::gui
 {
 class MeshViewer;
 }
@@ -65,7 +65,7 @@ private:
 
 	std::vector<Frame> _frames;
 
-	friend gui::MeshViewer; // TODO(#471): Remove me once the unknowns are known and replace with getters
+	friend debug::gui::MeshViewer; // TODO(#471): Remove me once the unknowns are known and replace with getters
 };
 
 } // namespace openblack

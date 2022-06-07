@@ -28,7 +28,7 @@
 #include "Resources/Resources.h"
 
 using namespace openblack;
-using namespace openblack::gui;
+using namespace openblack::debug::gui;
 
 MeshViewer::MeshViewer()
     : Window("MeshPack Viewer", ImVec2(950.0f, 780.0f))
