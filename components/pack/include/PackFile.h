@@ -31,7 +31,7 @@ static_assert(sizeof(InfoBlockLookup) == 8);
 struct BodyBlockLookup
 {
 	uint32_t offset;
-	uint32_t unknown; // TODO
+	uint32_t unknown; // TODO(#457)
 };
 static_assert(sizeof(BodyBlockLookup) == 8);
 

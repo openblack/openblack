@@ -19,7 +19,7 @@ namespace openblack::morph
 
 struct MorphHeader
 {
-	uint32_t unknown0x0; // TODO: is 0 for hands and 21 for creatures
+	uint32_t unknown0x0; // TODO(#458): is 0 for hands and 21 for creatures
 	uint32_t specFileVersion;
 	uint32_t binaryVersion;
 	std::array<char, 0x20> baseMeshName;
@@ -29,13 +29,13 @@ static_assert(sizeof(MorphHeader) == 0xec);
 
 struct AnimationHeader
 {
-	uint32_t unknown0x0; // TODO: possibly duration or offset
-	uint32_t unknown0x4; // TODO: either 0 or 1. Seem to be 1 when type C and 0 when not
-	float unknown0x8;    // TODO:
-	float unknown0xc;    // TODO:
-	float unknown0x10;   // TODO:
-	float unknown0x14;   // TODO:
-	float unknown0x18;   // TODO:
+	uint32_t unknown0x0; // TODO(#459): possibly duration or offset
+	uint32_t unknown0x4; // TODO(#459): either 0 or 1. Seem to be 1 when type C and 0 when not
+	float unknown0x8;    // TODO(#459):
+	float unknown0xc;    // TODO(#459):
+	float unknown0x10;   // TODO(#459):
+	float unknown0x14;   // TODO(#459):
+	float unknown0x18;   // TODO(#459):
 	uint32_t frameCount;
 	uint32_t meshBoneCount;
 	uint32_t rotatedJointCount;
@@ -45,7 +45,7 @@ static_assert(sizeof(AnimationHeader) == 0x2c);
 
 struct HairHeader
 {
-	uint32_t unknown0x0; // TODO:
+	uint32_t unknown0x0; // TODO(#460):
 	uint32_t hairGroupCount;
 };
 static_assert(sizeof(HairHeader) == 0x8);
@@ -53,44 +53,44 @@ static_assert(sizeof(HairHeader) == 0x8);
 /// TODO: Function unknown
 struct HairGroupHeaderMember
 {
-	uint32_t unknown0x0; // TODO
-	uint32_t unknown0x4; // TODO
-	uint32_t unknown0x8; // TODO
-	float unknown0xc;    // TODO
-	float unknown0x10;   // TODO
-	float unknown0x14;   // TODO
-	float unknown0x18;   // TODO
+	uint32_t unknown0x0; // TODO(#461)
+	uint32_t unknown0x4; // TODO(#461)
+	uint32_t unknown0x8; // TODO(#461)
+	float unknown0xc;    // TODO(#461)
+	float unknown0x10;   // TODO(#461)
+	float unknown0x14;   // TODO(#461)
+	float unknown0x18;   // TODO(#461)
 };
 static_assert(sizeof(HairGroupHeaderMember) == 0x1c);
 
 struct HairGroupHeader
 {
-	uint32_t unknown0x0; // TODO
+	uint32_t unknown0x0; // TODO(#462)
 	uint32_t hairCount;
-	uint32_t unknown0x8; // TODO: some count
-	uint32_t unknown0xc; // TODO
+	uint32_t unknown0x8; // TODO(#462): some count
+	uint32_t unknown0xc; // TODO(#462)
 	std::array<HairGroupHeaderMember, 3> unknown0x10;
 };
 static_assert(sizeof(HairGroupHeader) == 0x64);
 
 struct HairIntersection
 {
-	uint32_t unknown0x0;  // TODO
-	uint32_t unknown0x4;  // TODO
-	uint32_t unknown0x8;  // TODO
-	uint32_t unknown0xc;  // TODO
-	uint32_t unknown0x10; // TODO
-	uint32_t unknown0x14; // TODO
-	uint32_t unknown0x18; // TODO
-	float unknown0x1c;    // TODO
-	float unknown0x20;    // TODO
+	uint32_t unknown0x0;  // TODO(#463)
+	uint32_t unknown0x4;  // TODO(#463)
+	uint32_t unknown0x8;  // TODO(#463)
+	uint32_t unknown0xc;  // TODO(#463)
+	uint32_t unknown0x10; // TODO(#463)
+	uint32_t unknown0x14; // TODO(#463)
+	uint32_t unknown0x18; // TODO(#463)
+	float unknown0x1c;    // TODO(#463)
+	float unknown0x20;    // TODO(#463)
 };
 static_assert(sizeof(HairIntersection) == 0x24);
 
 struct Hair
 {
-	uint32_t unknown0x0;           // TODO
-	HairIntersection intersection; // TODO
+	uint32_t unknown0x0; // TODO(#464)
+	HairIntersection intersection;
 	std::array<float, 3> xs;
 	std::array<float, 3> ys;
 	std::array<float, 3> zs;
@@ -99,16 +99,16 @@ static_assert(sizeof(Hair) == 0x4c);
 
 struct ExtraData
 {
-	uint32_t unknown0x0; // TODO
-	uint32_t unknown0x4; // TODO
-	uint32_t unknown0x8; // TODO
-	uint32_t unknown0xc; // TODO
+	uint32_t unknown0x0; // TODO(#465)
+	uint32_t unknown0x4; // TODO(#465)
+	uint32_t unknown0x8; // TODO(#465)
+	uint32_t unknown0xc; // TODO(#465)
 };
 static_assert(sizeof(ExtraData) == 0x10);
 
 enum class AnimationType : char
 {
-	// TODO: figure out types and their functions and convert, remove char underlying type
+	// TODO(#466): figure out types and their functions and convert, remove char underlying type
 };
 
 struct AnimationDesc

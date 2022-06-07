@@ -368,7 +368,7 @@ void MorphFile::ReadFile(std::istream& stream, const std::filesystem::path& spec
 		{
 			continue;
 		}
-		uint32_t hasData; // TODO: unknown if this serves another function
+		uint32_t hasData; // TODO(#467): unknown if this serves another function
 		while (stream.read(reinterpret_cast<char*>(&hasData), sizeof(hasData)).good() && hasData != 0u)
 		{
 			auto& data = _extraData[i].emplace_back();

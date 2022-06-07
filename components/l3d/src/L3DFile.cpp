@@ -704,17 +704,17 @@ void L3DFile::Write(const std::filesystem::path& filepath)
 		    !_vertexSpans[i].empty() ? static_cast<uint32_t>(vertexBase) : std::numeric_limits<uint32_t>::max();
 		_primitiveHeaders[i].trianglesOffset =
 		    !_indexSpans[i].empty() ? static_cast<uint32_t>(triangleBase) : std::numeric_limits<uint32_t>::max();
-		_primitiveHeaders[i].groupsOffset = std::numeric_limits<uint32_t>::max();       // TODO boneVertLUTBase;
-		_primitiveHeaders[i].vertexBlendsOffset = std::numeric_limits<uint32_t>::max(); // TODO vertexBlendsBase;
+		_primitiveHeaders[i].groupsOffset = std::numeric_limits<uint32_t>::max();       // TODO(#468) boneVertLUTBase;
+		_primitiveHeaders[i].vertexBlendsOffset = std::numeric_limits<uint32_t>::max(); // TODO(#468) vertexBlendsBase;
 		vertexBase += _vertexSpans[i].size() * sizeof(_vertices[0]);
 		triangleBase += 3 * _indexSpans[i].size() * sizeof(_indices[0]);
-		// TODO
+		// TODO(#468)
 		//  boneVertLUTBase += 3 * _lookupSpans[i].size() * sizeof(_lookUpTable[0]);
 		//  vertexBlendsBase += _blendSpans[i].size() * sizeof(_blends[0]);
 	}
 	for (auto& header : _submeshHeaders)
 	{
-		// TODO Set flags
+		// TODO(#469): Set flags
 		header.primitivesOffset =
 		    header.numPrimitives != 0u ? static_cast<uint32_t>(primitiveOffsetBase) : std::numeric_limits<uint32_t>::max();
 		header.bonesOffset = header.numBones != 0u ? static_cast<uint32_t>(boneBase) : std::numeric_limits<uint32_t>::max();

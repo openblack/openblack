@@ -32,7 +32,7 @@ static_assert(sizeof(LNDHeader) == 1052);
 
 struct LNDLowResolutionTextureHeader
 {
-	std::array<uint8_t, 0x10> unknown; // TODO: decode what these are
+	std::array<uint8_t, 0x10> unknown; // TODO(#455): decode what these are
 	uint32_t size;
 };
 static_assert(sizeof(LNDLowResolutionTextureHeader) == 20);
@@ -50,7 +50,7 @@ struct LNDCell
 		uint8_t country : 4;
 		uint8_t hasWater : 1;
 		uint8_t coastLine : 1;
-		uint8_t fullWater : 1; // TODO: could mean deep water
+		uint8_t fullWater : 1; // TODO(#456): could mean deep water
 		uint8_t split : 1;
 	};
 
