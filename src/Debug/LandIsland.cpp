@@ -14,12 +14,14 @@
 #include "3D/LandIsland.h"
 #include "Game.h"
 
-openblack::gui::LandIsland::LandIsland()
+using namespace openblack::debug::gui;
+
+LandIsland::LandIsland()
     : Window("Land Island", ImVec2(250.0f, 165.0f))
 {
 }
 
-void openblack::gui::LandIsland::Draw(openblack::Game& game)
+void LandIsland::Draw(openblack::Game& game)
 {
 	auto& config = game.GetConfig();
 
@@ -46,11 +48,11 @@ void openblack::gui::LandIsland::Draw(openblack::Game& game)
 	}
 }
 
-void openblack::gui::LandIsland::Update([[maybe_unused]] openblack::Game& game,
+void LandIsland::Update([[maybe_unused]] openblack::Game& game,
                                         [[maybe_unused]] const openblack::Renderer& renderer)
 {
 }
 
-void openblack::gui::LandIsland::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
+void LandIsland::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
 
-void openblack::gui::LandIsland::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) {}
+void LandIsland::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) {}

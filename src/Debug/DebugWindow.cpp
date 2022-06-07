@@ -11,7 +11,7 @@
 
 #include "Window.h"
 
-using namespace openblack::gui;
+using namespace openblack::debug::gui;
 
 Window::Window(std::string name, ImVec2 defaultSize)
     : _name(std::move(name))

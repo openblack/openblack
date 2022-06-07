@@ -27,7 +27,7 @@
 #include "Game.h"
 #include "Locator.h"
 
-using namespace openblack::gui;
+using namespace openblack::debug::gui;
 
 PathFinding::PathFinding()
     : Window("Path Finding", ImVec2(400, 400))

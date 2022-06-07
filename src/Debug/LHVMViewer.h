@@ -13,7 +13,7 @@
 
 #include "Window.h"
 
-namespace openblack::gui
+namespace openblack::debug::gui
 {
 
 class LHVMViewer: public Window
@@ -40,4 +40,4 @@ private:
 	bool _resetScriptDisassemblyScroll {false};
 };
 
-} // namespace openblack::gui
+} // namespace openblack::debug::gui

@@ -72,7 +72,7 @@
 #include "Graphics/ShaderIncluder.h"
 
 using namespace openblack;
-using namespace openblack::gui;
+using namespace openblack::debug::gui;
 
 #define IMGUI_FLAGS_NONE UINT8_C(0x00)
 #define IMGUI_FLAGS_ALPHA_BLEND UINT8_C(0x01)

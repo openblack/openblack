@@ -16,7 +16,7 @@
 
 #include "Window.h"
 
-namespace openblack::gui
+namespace openblack::debug::gui
 {
 
 class PathFinding: public Window
@@ -45,4 +45,4 @@ private:
 	std::optional<entt::entity> _selectedFootpath;
 };
 
-} // namespace openblack::gui
+} // namespace openblack::debug::gui

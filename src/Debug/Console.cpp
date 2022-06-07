@@ -23,7 +23,7 @@
 #include "LHScriptX/Script.h"
 
 using namespace openblack;
-using namespace openblack::gui;
+using namespace openblack::debug::gui;
 
 Console::Console()
     : Window("Console", ImVec2(520, 600))

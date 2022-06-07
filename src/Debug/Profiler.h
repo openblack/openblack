@@ -13,7 +13,7 @@
 
 #include "Window.h"
 
-namespace openblack::gui
+namespace openblack::debug::gui
 {
 
 class Profiler: public Window
@@ -54,4 +54,4 @@ private:
 	CircularBuffer<float, 100> _fps;
 };
 
-} // namespace openblack::gui
+} // namespace openblack::debug::gui

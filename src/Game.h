@@ -40,7 +40,7 @@ class L3DMesh;
 class Sky;
 class Water;
 
-namespace gui
+namespace debug::gui
 {
 class Gui;
 }
@@ -218,7 +218,7 @@ private:
 	std::unique_ptr<GameWindow> _window;
 	std::unique_ptr<Renderer> _renderer;
 	std::unique_ptr<ecs::systems::DynamicsSystem> _dynamicsSystem;
-	std::unique_ptr<gui::Gui> _gui;
+	std::unique_ptr<debug::gui::Gui> _gui;
 	std::unique_ptr<Camera> _camera;
 	std::unique_ptr<Profiler> _profiler;
 	std::unique_ptr<EventManager> _eventManager;
