@@ -22,7 +22,7 @@
 #include "Graphics/ShaderManager.h"
 #include "Graphics/Texture2D.h"
 #include "Graphics/VertexBuffer.h"
-#include "Gui/Gui.h"
+#include "Debug/Gui.h"
 #include "Renderer.h"
 #include "Resources/MeshId.h"
 #include "Resources/Resources.h"

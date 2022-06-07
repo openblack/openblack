@@ -48,7 +48,7 @@
 #include "GameWindow.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/Texture2D.h"
-#include "Gui/Gui.h"
+#include "Debug/Gui.h"
 #include "LHScriptX/Script.h"
 #include "Locator.h"
 #include "PackFile.h"

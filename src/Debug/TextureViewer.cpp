@@ -10,7 +10,7 @@
 #include "TextureViewer.h"
 
 #include "Graphics/Texture2D.h"
-#include "Gui/Gui.h"
+#include "Debug/Gui.h"
 #include "Locator.h"
 
 using namespace openblack;
