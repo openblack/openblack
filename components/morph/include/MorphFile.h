@@ -50,7 +50,7 @@ struct HairHeader
 };
 static_assert(sizeof(HairHeader) == 0x8);
 
-/// TODO: Function unknown
+// TODO(#461): Function unknown
 struct HairGroupHeaderMember
 {
 	uint32_t unknown0x0; // TODO(#461)

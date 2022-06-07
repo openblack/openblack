@@ -51,21 +51,21 @@ public:
 
 private:
 	std::string _name;
-	uint32_t _unknown_0x20; // Seems to be a uint16_t padded
-	float _unknown_0x24;
-	float _unknown_0x28;
-	float _unknown_0x2C;
-	float _unknown_0x30;
-	float _unknown_0x34;
-	uint32_t _unknown_0x3C; // Always 1 in Body Block, a count
+	uint32_t _unknown_0x20; // TODO(#471): Seems to be a uint16_t padded
+	float _unknown_0x24;    // TODO(#471)
+	float _unknown_0x28;    // TODO(#471)
+	float _unknown_0x2C;    // TODO(#471)
+	float _unknown_0x30;    // TODO(#471)
+	float _unknown_0x34;    // TODO(#471)
+	uint32_t _unknown_0x3C; // TODO(#471): Always 1 in Body Block, a count
 	uint32_t _duration;
-	uint32_t _unknown_0x44; // Always 1 in Body Block
-	uint32_t _unknown_0x48; // Always 0 in Body Block
-	uint32_t _unknown_0x50; // Seems to be a uint16_t padded
+	uint32_t _unknown_0x44; // TODO(#471): Always 1 in Body Block
+	uint32_t _unknown_0x48; // TODO(#471): Always 0 in Body Block
+	uint32_t _unknown_0x50; // TODO(#471): Seems to be a uint16_t padded
 
 	std::vector<Frame> _frames;
 
-	friend gui::MeshViewer; // TODO: Remove me once the unknowns are known and replace with getters
+	friend gui::MeshViewer; // TODO(#471): Remove me once the unknowns are known and replace with getters
 };
 
 } // namespace openblack

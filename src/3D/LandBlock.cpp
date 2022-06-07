@@ -130,8 +130,8 @@ const bgfx::Memory* LandBlock::BuildVertexList(LandIsland& island)
 			const auto blMat = getMat(bl, bx + x + 0, bz + z + 1);
 			const auto brMat = getMat(br, bx + x + 1, bz + z + 1);
 
-			// TODO: this is temporary way for drawing landscape, should be moved to the renderer
-			// use a lambda so we're not repeating ourselves
+			// TODO(470): This is temporary way for drawing landscape, should be moved to a shader in the renderer
+			// Using a lambda so we're not repeating ourselves
 			auto getAlpha = [](lnd::LNDCell::Properties properties) {
 				if (properties.hasWater || properties.fullWater)
 				{

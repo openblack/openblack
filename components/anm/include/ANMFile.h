@@ -20,19 +20,19 @@ namespace openblack::anm
 struct ANMHeader
 {
 	std::array<char, 0x20> name;
-	uint32_t unknown0x20; // Seems to be a uint16_t padded
-	float unknown0x24;
-	float unknown0x28;
-	float unknown0x2C;
-	float unknown0x30;
-	float unknown0x34;
+	uint32_t unknown0x20; // TODO(#471): Seems to be a uint16_t padded
+	float unknown0x24;    // TODO(#471)
+	float unknown0x28;    // TODO(#471)
+	float unknown0x2C;    // TODO(#471)
+	float unknown0x30;    // TODO(#471)
+	float unknown0x34;    // TODO(#471)
 	uint32_t frameCount;
-	uint32_t unknown0x3C; // Always 1 in Body Block, a count
+	uint32_t unknown0x3C; // TODO(#471): Always 1 in Body Block, a count
 	uint32_t animationDuration;
-	uint32_t unknown0x44; // Always 1 in Body Block
-	uint32_t unknown0x48; // Always 0 in Body Block
+	uint32_t unknown0x44; // TODO(#471): Always 1 in Body Block
+	uint32_t unknown0x48; // TODO(#471): Always 0 in Body Block
 	uint32_t framesBase;
-	uint32_t unknown0x50; // Seems to be a uint16_t padded
+	uint32_t unknown0x50; // TODO(#471): Seems to be a uint16_t padded
 };
 static_assert(sizeof(ANMHeader) == 0x54);
 

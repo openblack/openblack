@@ -712,16 +712,16 @@ int WriteFile(const Arguments::Write& args) noexcept
 			auto& primitive = primitives[i];
 			primitive.material.type = openblack::l3d::L3DMaterial::Type::Smooth;
 			primitive.material.alphaCutoutThreshold = 0;
-			primitive.material.skinID = std::numeric_limits<uint32_t>::max(); // TODO: mesh->mMaterialIndex;
+			primitive.material.skinID = std::numeric_limits<uint32_t>::max(); // TODO(#472): mesh->mMaterialIndex;
 			primitive.material.color.raw = 0x00000000;
 			primitive.numVertices = 0;
-			primitive.verticesOffset = static_cast<uint32_t>(l3d.GetVertices().size()); // FIXME: This is wrong
+			primitive.verticesOffset = static_cast<uint32_t>(l3d.GetVertices().size()); // FIXME(#472): This is wrong
 			primitive.numTriangles = 0;
-			primitive.trianglesOffset = static_cast<uint32_t>(l3d.GetIndices().size() / 3);  // FIXME: This is wrong
-			primitive.numGroups = 0;                                                         // TODO: Figure this out
-			primitive.groupsOffset = static_cast<uint32_t>(l3d.GetLookUpTableData().size()); // FIXME: This is wrong
-			primitive.numVertexBlends = 0;                                                   // TODO: Figure this out
-			primitive.vertexBlendsOffset = static_cast<uint32_t>(l3d.GetBlends().size());    // FIXME: This is wrong
+			primitive.trianglesOffset = static_cast<uint32_t>(l3d.GetIndices().size() / 3);  // FIXME(#472): This is wrong
+			primitive.numGroups = 0;                                                         // TODO(#472): Figure this out
+			primitive.groupsOffset = static_cast<uint32_t>(l3d.GetLookUpTableData().size()); // FIXME(#472): This is wrong
+			primitive.numVertexBlends = 0;                                                   // TODO(#472): Figure this out
+			primitive.vertexBlendsOffset = static_cast<uint32_t>(l3d.GetBlends().size());    // FIXME(#472): This is wrong
 
 			struct attribute_t
 			{
@@ -872,7 +872,7 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 	memcpy(indexBuffer.data.data(), l3d.GetIndices().data(), sizeOfIndices);
 	gltf.buffers.push_back(indexBuffer);
 
-	// TODO: weights, skins
+	// TODO(#473): weights, skins
 
 	// Buffer views
 	tinygltf::BufferView vertexView; // 0
@@ -966,14 +966,14 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 			gltfPrimitive.indices = static_cast<int>(gltf.accessors.size());
 			gltf.accessors.push_back(indexAccessor);
 
-			// TODO gltfPrimitive.material;
+			// TODO(#473): gltfPrimitive.material
 			gltfPrimitive.mode = TINYGLTF_MODE_TRIANGLES;
-			// TODO gltfPrimitive.targets
+			// TODO(#473): gltfPrimitive.targets
 
 			vertexOffset += l3dPrimitive.numVertices;
 			indexOffset += l3dPrimitive.numTriangles * 3;
 		}
-		// TODO gltfMesh.weights
+		// TODO(#473): gltfMesh.weights
 		gltf.nodes[rootNodeIndex].children.push_back(static_cast<int>(gltf.nodes.size()));
 		tinygltf::Node node;
 		node.name = gltfMesh.name + " node";
@@ -1105,7 +1105,7 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 			return EXIT_FAILURE;
 		}
 	}
-	// TODO: Associate mesh and joints to node
+	// TODO(474): Associate mesh and joints to node
 
 	tinygltf::TinyGLTF exporter;
 	bool ret;

@@ -402,23 +402,23 @@ void LivingActionSystem::Update()
 
 	registry.Each<LivingAction>([](LivingAction& action) { ++action.turnsSinceStateChange; });
 
-	// TODO: process food speedup
+	// TODO(#475): process food speedup
 
 	registry.Each<const Villager, LivingAction>([this]([[maybe_unused]] const Villager& villager, LivingAction& action) {
 		VillagerCallValidate(action, LivingAction::Index::Top);
 	});
-	// TODO: same call but for other types of living
+	// TODO(#476): same call but for other types of living
 
 	registry.Each<const Villager, LivingAction>([this]([[maybe_unused]] const Villager& villager, LivingAction& action) {
 		VillagerCallValidate(action, LivingAction::Index::Final);
 	});
-	// TODO: same call but for other types of living
+	// TODO(#476): same call but for other types of living
 
 	// TODO(bwrsandman): Store result of this call in vector or with tag component
 	registry.Each<const Villager, LivingAction>([this]([[maybe_unused]] const Villager& villager, LivingAction& action) {
 		VillagerCallState(action, LivingAction::Index::Top);
 	});
-	// TODO: same call but for other types of living
+	// TODO(#476): same call but for other types of living
 }
 
 VillagerStates LivingActionSystem::VillagerGetState(const LivingAction& action, LivingAction::Index index) const
