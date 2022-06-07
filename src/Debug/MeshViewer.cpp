@@ -17,12 +17,12 @@
 
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
+#include "Debug/Gui.h"
 #include "Game.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/ShaderManager.h"
 #include "Graphics/Texture2D.h"
 #include "Graphics/VertexBuffer.h"
-#include "Debug/Gui.h"
 #include "Renderer.h"
 #include "Resources/MeshId.h"
 #include "Resources/Resources.h"

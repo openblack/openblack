@@ -9,8 +9,8 @@
 
 #include "TextureViewer.h"
 
-#include "Graphics/Texture2D.h"
 #include "Debug/Gui.h"
+#include "Graphics/Texture2D.h"
 #include "Locator.h"
 
 using namespace openblack;
