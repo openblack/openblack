@@ -48,10 +48,7 @@ void LandIsland::Draw(openblack::Game& game)
 	}
 }
 
-void LandIsland::Update([[maybe_unused]] openblack::Game& game,
-                                        [[maybe_unused]] const openblack::Renderer& renderer)
-{
-}
+void LandIsland::Update([[maybe_unused]] openblack::Game& game, [[maybe_unused]] const openblack::Renderer& renderer) {}
 
 void LandIsland::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
 
