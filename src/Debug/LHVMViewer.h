@@ -11,12 +11,12 @@
 
 #include <LHVM/LHVM.h>
 
-#include "DebugWindow.h"
+#include "Window.h"
 
 namespace openblack::gui
 {
 
-class LHVMViewer: public DebugWindow
+class LHVMViewer: public Window
 {
 public:
 	LHVMViewer();

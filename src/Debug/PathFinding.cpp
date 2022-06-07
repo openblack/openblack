@@ -30,7 +30,7 @@
 using namespace openblack::gui;
 
 PathFinding::PathFinding()
-    : DebugWindow("Path Finding", ImVec2(400, 400))
+    : Window("Path Finding", ImVec2(400, 400))
 {
 }
 

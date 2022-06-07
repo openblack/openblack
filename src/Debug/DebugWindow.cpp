@@ -7,31 +7,31 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#include "DebugWindow.h"
-
 #include <utility>
+
+#include "Window.h"
 
 using namespace openblack::gui;
 
-DebugWindow::DebugWindow(std::string name, ImVec2 defaultSize)
+Window::Window(std::string name, ImVec2 defaultSize)
     : _name(std::move(name))
     , _defaultSize(defaultSize)
 {
 }
 
-DebugWindow::~DebugWindow() = default;
+Window::~Window() = default;
 
-void DebugWindow::Open()
+void Window::Open()
 {
 	_open = true;
 }
 
-void DebugWindow::Close()
+void Window::Close()
 {
 	_open = false;
 }
 
-void DebugWindow::Toggle()
+void Window::Toggle()
 {
 	if (IsOpen())
 	{
@@ -43,7 +43,7 @@ void DebugWindow::Toggle()
 	}
 }
 
-void DebugWindow::WindowUpdate(openblack::Game& game, const openblack::Renderer& renderer)
+void Window::WindowUpdate(openblack::Game& game, const openblack::Renderer& renderer)
 {
 	if (_open)
 	{
@@ -51,7 +51,7 @@ void DebugWindow::WindowUpdate(openblack::Game& game, const openblack::Renderer&
 	}
 }
 
-void DebugWindow::WindowDraw(Game& game)
+void Window::WindowDraw(Game& game)
 {
 	if (_open)
 	{
@@ -62,7 +62,7 @@ void DebugWindow::WindowDraw(Game& game)
 	}
 }
 
-void DebugWindow::WindowProcessEvent(const SDL_Event& event)
+void Window::WindowProcessEvent(const SDL_Event& event)
 {
 	ProcessEventAlways(event);
 	if (_open)

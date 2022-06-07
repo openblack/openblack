@@ -81,7 +81,7 @@ class Renderer;
 
 namespace openblack::gui
 {
-class DebugWindow;
+class Window;
 
 class Gui
 {
@@ -96,7 +96,7 @@ public:
 	void Draw();
 
 private:
-	Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<DebugWindow>>&& debugWindows);
+	Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<Window>>&& debugWindows);
 	bool InitSdl2(SDL_Window* window);
 	void NewFrameSdl2(SDL_Window* window);
 	bool CreateFontsTextureBgfx();
@@ -140,6 +140,6 @@ private:
 	int64_t _last;
 	int32_t _lastScroll {0};
 	const bgfx::ViewId _viewId;
-	std::vector<std::unique_ptr<DebugWindow>> _debugWindows;
+	std::vector<std::unique_ptr<Window>> _debugWindows;
 };
 } // namespace openblack::gui

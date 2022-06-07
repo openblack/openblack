@@ -17,7 +17,7 @@ using namespace openblack;
 using namespace openblack::gui;
 
 TextureViewer::TextureViewer()
-    : DebugWindow("Texture Viewer", ImVec2(950.0f, 780.0f))
+    : Window("Texture Viewer", ImVec2(950.0f, 780.0f))
 {
 }
 

@@ -7,12 +7,12 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#include "DebugWindow.h"
+#include "Window.h"
 
 namespace openblack::gui
 {
 
-class LandIsland: public DebugWindow
+class LandIsland: public Window
 {
 public:
 	LandIsland();

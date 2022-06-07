@@ -17,9 +17,9 @@
 #include <imgui.h>
 
 #include "3D/AllMeshes.h"
-#include "DebugWindow.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
+#include "Window.h"
 
 namespace openblack
 {
@@ -31,7 +31,7 @@ class Mesh;
 
 namespace gui
 {
-class MeshViewer: public DebugWindow
+class MeshViewer: public Window
 {
 public:
 	MeshViewer();

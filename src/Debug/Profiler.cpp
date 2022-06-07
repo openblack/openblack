@@ -22,19 +22,19 @@
 #include "../Profiler.h"
 
 openblack::gui::Profiler::Profiler()
-    : DebugWindow("Profiler", ImVec2(650.0f, 800.0f))
+    : Window("Profiler", ImVec2(650.0f, 800.0f))
 {
 }
 
 void openblack::gui::Profiler::Open()
 {
-	DebugWindow::Open();
+	Window::Open();
 	Game::Instance()->GetConfig().bgfxProfile = true;
 }
 
 void openblack::gui::Profiler::Close()
 {
-	DebugWindow::Close();
+	Window::Close();
 	Game::Instance()->GetConfig().bgfxProfile = false;
 }
 

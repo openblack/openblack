@@ -11,11 +11,11 @@
 
 #include <entt/fwd.hpp>
 
-#include "DebugWindow.h"
+#include "Window.h"
 
 namespace openblack::gui
 {
-class TextureViewer: public DebugWindow
+class TextureViewer: public Window
 {
 public:
 	TextureViewer();

@@ -11,12 +11,12 @@
 
 #include <array>
 
-#include "DebugWindow.h"
+#include "Window.h"
 
 namespace openblack::gui
 {
 
-class Profiler: public DebugWindow
+class Profiler: public Window
 {
 public:
 	Profiler();

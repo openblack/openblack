@@ -24,12 +24,12 @@ class Renderer;
 namespace gui
 {
 
-class DebugWindow
+class Window
 {
 public:
-	DebugWindow(std::string name, ImVec2 defaultSize);
-	DebugWindow(const DebugWindow&) = delete;
-	virtual ~DebugWindow();
+	Window(std::string name, ImVec2 defaultSize);
+	Window(const Window&) = delete;
+	virtual ~Window();
 
 	void WindowUpdate(Game& game, const Renderer& renderer);
 	void WindowDraw(Game& game);
