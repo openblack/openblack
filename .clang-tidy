@@ -20,7 +20,6 @@ Checks: >-
   google-*,
   -google-build-using-namespace,
   -google-runtime-references,
-  -google-readability-todo,
   readability-*,
   -readability-magic-numbers,
   -readability-uppercase-literal-suffix,

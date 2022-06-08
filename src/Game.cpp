@@ -237,7 +237,7 @@ bool Game::ProcessEvents(const SDL_Event& event)
 			}
 			else if (event.key.keysym.mod == 0)
 			{
-				// TODO: Fly-to the bookmark
+				// TODO(#348): Fly-to the bookmark
 			}
 			break;
 		}
@@ -411,7 +411,7 @@ bool Game::Update()
 			const glm::vec3 handOffset(0, 1.5f, 0);
 			const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
 			auto& handTransform = _entityRegistry->Get<ecs::components::Transform>(_handEntity);
-			// TODO: move using velocity rather than snapping hand to intersectionTransform
+			// TODO(#480): move using velocity rather than snapping hand to intersectionTransform
 			handTransform.position = intersectionTransform.position;
 			auto cameraRotation = _camera->GetRotation();
 			handTransform.rotation = glm::eulerAngleY(glm::radians(-cameraRotation.y)) * modelRotationCorrection;
@@ -632,7 +632,7 @@ bool Game::Run()
 			    /*water =*/*_water,
 			    /*island =*/*_landIsland,
 			    /*entities =*/*_entityRegistry,
-			    /*time =*/milliseconds.count(), // TODO get actual time
+			    /*time =*/milliseconds.count(), // TODO(#481): get actual time
 			    /*timeOfDay =*/_config.timeOfDay,
 			    /*bumpMapStrength =*/_config.bumpMapStrength,
 			    /*smallBumpMapStrength =*/_config.smallBumpMapStrength,

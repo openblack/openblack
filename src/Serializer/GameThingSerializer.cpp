@@ -67,7 +67,7 @@ std::shared_ptr<GameThingSerializer::GameThing> GameThingSerializer::Deserialize
 
 	if (index == 0)
 	{
-		// TODO: not sure why there are these empty entries
+		// TODO(@bwrsandman): not sure why there are these empty entries
 		return nullptr;
 	}
 
@@ -82,7 +82,7 @@ std::shared_ptr<GameThingSerializer::GameThing> GameThingSerializer::Deserialize
 		}
 		[[maybe_unused]] const auto playerId = ReadValue<uint32_t>();
 		ReadChecksum();
-		// TODO: validate checksum by adding up first byte of every read
+		// TODO(#479): validate checksum by adding up first byte of every read
 
 		std::shared_ptr<GameThing> thing;
 
@@ -111,7 +111,7 @@ std::shared_ptr<GameThingSerializer::GameThing> GameThingSerializer::Deserialize
 			return nullptr;
 		}
 
-		// TODO return something?
+		// TODO(@bwrsandman): return something?
 
 		return thing;
 	}

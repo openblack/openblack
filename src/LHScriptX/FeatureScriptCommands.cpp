@@ -683,8 +683,8 @@ void FeatureScriptCommands::CreateFootpathNode(int footpathId, glm::vec3 positio
 
 void FeatureScriptCommands::LinkFootpath(int32_t footpathId)
 {
-	// TODO: The last MultiMapFixed created in this script is an implicit param
-	//       This Command adds the footpath to a list in a FootpathLink on the MultiMapFixed
+	// TODO(#482): The last MultiMapFixed created in this script is an implicit param
+	//             This Command adds the footpath to a list in a FootpathLink on the MultiMapFixed
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {}({}) not implemented.", __FILE__, __LINE__,
 	                    __func__, footpathId);
 }

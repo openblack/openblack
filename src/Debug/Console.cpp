@@ -34,7 +34,7 @@ Console::Console()
           {"clear", "   - Clear the output log."},
       }
 {
-	// TODO: Add custom spdlog sink here
+	// TODO(#478): Add custom spdlog sink here
 	for (const auto& signature : lhscriptx::FeatureScriptCommands::k_Signatures)
 	{
 		std::string details;

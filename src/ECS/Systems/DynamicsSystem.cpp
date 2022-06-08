@@ -78,7 +78,7 @@ void DynamicsSystem::RegisterRigidBodies()
 	auto& registry = Game::Instance()->GetEntityRegistry();
 	registry.Each<RigidBody>([this](RigidBody& body) {
 		body.handle.setUserIndex(static_cast<int>(ecs::systems::RigidBodyType::Entity));
-		body.handle.setUserIndex2(0); // TODO
+		body.handle.setUserIndex2(0);
 		body.handle.setUserPointer(this);
 		AddRigidBody(&body.handle);
 	});
