@@ -19,7 +19,7 @@
 
 #include "ECS/Components/Transform.h"
 
-typedef union SDL_Event SDL_Event;
+union SDL_Event;
 
 namespace openblack
 {

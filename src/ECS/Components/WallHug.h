@@ -41,12 +41,12 @@ struct MoveStateTagComponent
 	glm::vec2 stepGoal;
 };
 
-typedef MoveStateTagComponent<MoveState::Linear> MoveStateLinearTag;
-typedef MoveStateTagComponent<MoveState::Orbit> MoveStateOrbitTag;
-typedef MoveStateTagComponent<MoveState::ExitCircle> MoveStateExitCircleTag;
-typedef MoveStateTagComponent<MoveState::StepThrough> MoveStateStepThroughTag;
-typedef MoveStateTagComponent<MoveState::FinalStep> MoveStateFinalStepTag;
-typedef MoveStateTagComponent<MoveState::Arrived> MoveStateArrivedTag;
+using MoveStateLinearTag = MoveStateTagComponent<MoveState::Linear>;
+using MoveStateOrbitTag = MoveStateTagComponent<MoveState::Orbit>;
+using MoveStateExitCircleTag = MoveStateTagComponent<MoveState::ExitCircle>;
+using MoveStateStepThroughTag = MoveStateTagComponent<MoveState::StepThrough>;
+using MoveStateFinalStepTag = MoveStateTagComponent<MoveState::FinalStep>;
+using MoveStateArrivedTag = MoveStateTagComponent<MoveState::Arrived>;
 
 struct WallHugObjectReference
 {

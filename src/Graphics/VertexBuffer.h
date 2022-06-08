@@ -69,7 +69,7 @@ struct VertexAttrib
 	}
 };
 
-typedef std::vector<VertexAttrib> VertexDecl;
+using VertexDecl = std::vector<VertexAttrib>;
 
 class VertexBuffer
 {
