@@ -68,6 +68,14 @@ for you. To do so, you will be selecting the `"ninja-multi-vcpkg"   - Ninja Mult
 * Build the project for either a virtual device or a connected device
 * Currently requires user to upload game assets to `/data/local/tmp/bw` and `chmod -R a+wrx /data/local/tmp/bw` with adb
 
+### Web Assembly
+
+* Get [emsdk](https://github.com/emscripten-core/emsdk)
+* Add the directory of emsdk as the `EMSDK` environment variable.
+* Run `emsdk install latest`
+* Run `emsdk activate latest`
+* Build the `emscripten-vcpkg` preset
+
 ### Command Line
 * Your usual build tool-chain.
     * Ubuntu / Debian: `# apt install build-essential cmake ninja-build`
@@ -86,13 +94,6 @@ Install [openblack-git](https://aur.archlinux.org/packages/openblack-git/) from 
 
 The prefix to use is `"linux-system-deps"   - Linux (System Deps)`
 
-### Web Assembly
-
-* Get [emsdk](https://github.com/emscripten-core/emsdk)
-* Add the directory of emsdk as the `EMSDK` environment variable.
-* Run `emsdk install latest`
-* Run `emsdk activate latest`
-* Build the `emscripten-vcpkg` preset
 
 ## Contributing
 Contributions are always welcome, whether it's modifying source code to add new
