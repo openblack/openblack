@@ -21,8 +21,8 @@
 
 #include "Graphics/RenderPass.h"
 
-typedef struct SDL_Window SDL_Window;
-typedef struct SDL_Cursor SDL_Cursor;
+struct SDL_Window;
+struct SDL_Cursor;
 union SDL_Event;
 
 namespace ImGui

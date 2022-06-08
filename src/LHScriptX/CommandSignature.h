@@ -95,7 +95,7 @@ private:
 	std::string _string;
 };
 
-typedef std::vector<ScriptCommandParameter> ScriptCommandParameters;
+using ScriptCommandParameters = std::vector<ScriptCommandParameter>;
 
 class ScriptCommandContext
 {
@@ -117,7 +117,7 @@ private:
 	const ScriptCommandParameters* _parameters;
 };
 
-typedef std::function<void(const ScriptCommandContext&)> ScriptCommand;
+using ScriptCommand = std::function<void(const ScriptCommandContext&)>;
 
 struct ScriptCommandSignature
 {

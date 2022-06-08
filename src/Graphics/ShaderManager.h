@@ -35,7 +35,7 @@ public:
 	void SetCamera(RenderPass viewId, const Camera& camera);
 
 private:
-	typedef std::map<std::string, const ShaderProgram*> ShaderMap;
+	using ShaderMap = std::map<std::string, const ShaderProgram*>;
 
 	ShaderMap _shaderPrograms;
 };

@@ -30,7 +30,7 @@ namespace l3d
 class L3DFile;
 }
 
-typedef uint32_t SkinId;
+using SkinId = uint32_t;
 
 constexpr std::array<std::string_view, 32> k_L3DMeshFlagNames {
     "Unknown1",

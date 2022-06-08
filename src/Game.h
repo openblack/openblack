@@ -23,11 +23,10 @@
 #include "GameWindow.h"
 #include "InfoConstants.h"
 
-typedef union SDL_Event SDL_Event;
+union SDL_Event;
 
 namespace openblack
 {
-class AnimationPack;
 class Camera;
 class FileSystem;
 class GameWindow;
