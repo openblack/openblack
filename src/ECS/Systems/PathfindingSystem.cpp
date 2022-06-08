@@ -181,125 +181,137 @@ bool OrbitScanForObstacle(entt::entity entity, bool clockwise, Transform& transf
 	auto& registry = Game::Instance()->GetEntityRegistry();
 	const auto& map = Game::Instance()->GetEntityMap();
 	auto& reference = registry.Get<WallHugObjectReference>(entity);
-	const auto& obstacleFixed = registry.Get<const Fixed>(reference.entity);
-	const auto circleToVillager = glm::xz(transform.position) - obstacleFixed.boundingCenter;
-	const float circleToVillagerLength = glm::length(circleToVillager);
-	const float numCirclesAway = circleToVillagerLength / obstacleFixed.boundingRadius - 0.9f;
-	const auto circleNormal = circleToVillager / circleToVillagerLength;
 
-	const bool closeEnough = glm::distance2(wallHug.goal, obstacleFixed.boundingCenter) <
-	                         obstacleFixed.boundingRadius * obstacleFixed.boundingRadius;
-	if (closeEnough)
+	const uint32_t numAttempts = 5;
+	bool found = false;
+	for (uint32_t attempt = 0; attempt < numAttempts; ++attempt)
 	{
-		throw std::runtime_error("TODO: CircleSquareSweep");
-		// Needs to return out of this scope and not run the external following code
-	}
+		const auto& obstacleFixed = registry.Get<const Fixed>(reference.entity);
+		const auto circleToVillager = glm::xz(transform.position) - obstacleFixed.boundingCenter;
+		const float circleToVillagerLength = glm::length(circleToVillager);
+		const float numCirclesAway = circleToVillagerLength / obstacleFixed.boundingRadius - 0.9f;
+		const auto circleNormal = circleToVillager / circleToVillagerLength;
 
-	for (const auto& c : GetNeighboringCells(glm::xz(transform.position)))
-	{ // TODO(bwrsandman): Skip if out of bounds or in water
-		const auto& e = map.GetFixedInGridCell(c);
-		if (!e.empty())
+		const bool closeEnough = glm::distance2(wallHug.goal, obstacleFixed.boundingCenter) <
+		                         obstacleFixed.boundingRadius * obstacleFixed.boundingRadius;
+		if (closeEnough)
 		{
-			auto iter = std::find_if(e.cbegin(), e.cend(), [&registry, &reference, &obstacleFixed](const auto& f) {
-				if (f == reference.entity)
-				{
-					return false;
-				}
-				if (registry.AnyOf<Field>(f)) // TODO(bwrsandman): || !registry.AllOf<CollideData>();
-				{
-					return false;
-				}
-				const auto& fixed = registry.Get<const Fixed>(f);
-				const auto d2 = glm::distance2(fixed.boundingCenter, obstacleFixed.boundingCenter);
-				const auto r = fixed.boundingRadius + obstacleFixed.boundingRadius;
-				const auto r2 = r * r;
-				return d2 < r2 && d2 > 0.0f;
-			});
-			if (iter != e.cend())
+			throw std::runtime_error("TODO: CircleSquareSweep");
+			// Needs to return out of this scope and not run the external following code
+		}
+
+		for (const auto& c : GetNeighboringCells(glm::xz(transform.position)))
+		{ // TODO(bwrsandman): Skip if out of bounds or in water
+			const auto& e = map.GetFixedInGridCell(c);
+			if (!e.empty())
 			{
-				// https://stackoverflow.com/questions/3349125/circle-circle-intersection-points
-				// http://paulbourke.net/geometry/circlesphere/
-				const auto& fixed = registry.Get<const Fixed>(*iter);
-				const auto d2 = glm::distance2(fixed.boundingCenter, obstacleFixed.boundingCenter);
-				const auto d = glm::sqrt(d2);
-
-				// Vanilla bug: Scaling is already applied to boundingRadius, but they apply scale again
-				const float fixedScale = glm::compMax(registry.Get<const Transform>(*iter).scale);
-				const float obstacleScale = glm::compMax(registry.Get<const Transform>(reference.entity).scale);
-				const auto r0 = fixed.boundingRadius * fixedScale;
-				const auto r1 = obstacleFixed.boundingRadius * obstacleScale;
-
-				const auto r02 = r0 * r0;
-				const auto r12 = r1 * r1;
-				const auto p0 = fixed.boundingCenter;
-				const auto p1 = obstacleFixed.boundingCenter;
-				const auto a = (r02 - r12 + d2) / (2.0f * d); // first circle to intersection midpoint
-				const auto h = glm::sqrt(r02 - a * a);        // half height of intersection area
-				const auto p2 = p0 + a * (p1 - p0) / d;       // midpoint of overlap
-				const auto diff = p1 - p0;
-				const auto difft = glm::vec2(diff.y, -diff.x); // 90 degree rotation
-				const auto p3 = p2 + h * difft / d;
-				const auto p4 = p2 - h * difft / d;
-
-				const auto v0 = p3 - obstacleFixed.boundingCenter;
-				const auto v1 = p4 - obstacleFixed.boundingCenter;
-				const auto n0 = glm::normalize(v0);
-				const auto n1 = glm::normalize(v1);
-				const auto dp0 = glm::dot(n0, circleNormal);
-				const auto dp1 = glm::dot(n1, circleNormal);
-				const auto cp0 = glm::cross(glm::vec3(n0, 0.0f), glm::vec3(circleNormal, 0.0f)).z;
-				const auto cp1 = glm::cross(glm::vec3(n1, 0.0f), glm::vec3(circleNormal, 0.0f)).z;
-				auto angle0 = glm::acos(dp0);
-				auto angle1 = glm::acos(dp1);
-
-				if ((cp0 > 0.0f) ^ clockwise)
+				auto iter = std::find_if(e.cbegin(), e.cend(), [&registry, &reference, &obstacleFixed](const auto& f) {
+					if (f == reference.entity)
+					{
+						return false;
+					}
+					if (registry.AnyOf<Field>(f)) // TODO(bwrsandman): || !registry.AllOf<CollideData>();
+					{
+						return false;
+					}
+					const auto& fixed = registry.Get<const Fixed>(f);
+					const auto d2 = glm::distance2(fixed.boundingCenter, obstacleFixed.boundingCenter);
+					const auto r = fixed.boundingRadius + obstacleFixed.boundingRadius;
+					const auto r2 = r * r;
+					return d2 < r2 && d2 > 0.0f;
+				});
+				if (iter != e.cend())
 				{
-					angle0 = 2.0f * glm::pi<float>() - angle0;
-				}
-				if ((cp1 > 0.0f) ^ clockwise)
-				{
-					angle1 = 2.0f * glm::pi<float>() - angle1;
-				}
+					// https://stackoverflow.com/questions/3349125/circle-circle-intersection-points
+					// http://paulbourke.net/geometry/circlesphere/
+					const auto& fixed = registry.Get<const Fixed>(*iter);
+					const auto d2 = glm::distance2(fixed.boundingCenter, obstacleFixed.boundingCenter);
+					const auto d = glm::sqrt(d2);
 
-				const auto t0 = angle0 * 2.0f / 3.0f * r1 / wallHug.speed;
-				const auto t1 = angle1 * 2.0f / 3.0f * r1 / wallHug.speed;
-				int t = static_cast<int>(glm::round(glm::min(t0, t1)));
+					// Vanilla bug: Scaling is already applied to boundingRadius, but they apply scale again
+					const float fixedScale = glm::compMax(registry.Get<const Transform>(*iter).scale);
+					const float obstacleScale = glm::compMax(registry.Get<const Transform>(reference.entity).scale);
+					const auto r0 = fixed.boundingRadius * fixedScale;
+					const auto r1 = obstacleFixed.boundingRadius * obstacleScale;
 
-				assert(t >= 0);
-				if (t < 1)
-				{
-					// We're too close to second circle. Act like we're on the second circle and continue looking forward by
-					// recursively calling function with new obstacle.
-					reference.entity = *iter;
-					OrbitScanForObstacle(entity, clockwise, transform, wallHug);
-				}
-				else if (t < 4)
-				{
-					t = 0;
+					const auto r02 = r0 * r0;
+					const auto r12 = r1 * r1;
+					const auto p0 = fixed.boundingCenter;
+					const auto p1 = obstacleFixed.boundingCenter;
+					const auto a = (r02 - r12 + d2) / (2.0f * d); // first circle to intersection midpoint
+					const auto h = glm::sqrt(r02 - a * a);        // half height of intersection area
+					const auto p2 = p0 + a * (p1 - p0) / d;       // midpoint of overlap
+					const auto diff = p1 - p0;
+					const auto difft = glm::vec2(diff.y, -diff.x); // 90 degree rotation
+					const auto p3 = p2 + h * difft / d;
+					const auto p4 = p2 - h * difft / d;
+
+					const auto v0 = p3 - obstacleFixed.boundingCenter;
+					const auto v1 = p4 - obstacleFixed.boundingCenter;
+					const auto n0 = glm::normalize(v0);
+					const auto n1 = glm::normalize(v1);
+					const auto dp0 = glm::dot(n0, circleNormal);
+					const auto dp1 = glm::dot(n1, circleNormal);
+					const auto cp0 = glm::cross(glm::vec3(n0, 0.0f), glm::vec3(circleNormal, 0.0f)).z;
+					const auto cp1 = glm::cross(glm::vec3(n1, 0.0f), glm::vec3(circleNormal, 0.0f)).z;
+					auto angle0 = glm::acos(dp0);
+					auto angle1 = glm::acos(dp1);
+
+					if ((cp0 > 0.0f) ^ clockwise)
+					{
+						angle0 = 2.0f * glm::pi<float>() - angle0;
+					}
+					if ((cp1 > 0.0f) ^ clockwise)
+					{
+						angle1 = 2.0f * glm::pi<float>() - angle1;
+					}
+
+					const auto t0 = angle0 * 2.0f / 3.0f * r1 / wallHug.speed;
+					const auto t1 = angle1 * 2.0f / 3.0f * r1 / wallHug.speed;
+					int t = static_cast<int>(glm::round(glm::min(t0, t1)));
+
+					assert(t >= 0);
+					if (t < 1)
+					{
+						// We're too close to second circle. Act like we're on the second circle and continue looking forward by
+						// recursively calling function with new obstacle.
+						reference.entity = *iter;
+						found = false; // will do another loop
+					}
+					else if (t < 4)
+					{
+						t = 0;
+						found = true;
+					}
+					else
+					{
+						t = glm::min(t, 255);
+						found = true;
+					}
+
+					reference.stepsAway = static_cast<uint8_t>(t);
 				}
 				else
 				{
-					t = glm::min(t, 255);
+					// TODO(bwrsandman):
+					// if intersect[0].obj is None:  # True
+					//     self.init_steps_xz()
+					//     # self.field_0x78 = 0x10
+					//     self.circle_hug_info.reset(self)
+					//     self.move_state = MoveState.STEP_THROUGH
+					// assert(false);
+					found = true;
 				}
-
-				reference.stepsAway = static_cast<uint8_t>(t);
 			}
-			else
-			{
-				// TODO(bwrsandman):
-				// if intersect[0].obj is None:  # True
-				//     self.init_steps_xz()
-				//     # self.field_0x78 = 0x10
-				//     self.circle_hug_info.reset(self)
-				//     self.move_state = MoveState.STEP_THROUGH
-				// assert(false);
-			}
+		}
+		if (found)
+		{
+			InitializeStepAroundObstacle(transform, wallHug, obstacleFixed, numCirclesAway, clockwise);
+			break;
 		}
 	}
 
-	InitializeStepAroundObstacle(transform, wallHug, obstacleFixed, numCirclesAway, clockwise);
-
-	return true;
+	return found;
 }
 
 template <MoveState S, typename... Exclude>
