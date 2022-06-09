@@ -204,7 +204,7 @@ jobs:
         # This is the matrix. They form permutations.
         os: [ windows-latest ] # ubuntu-latest, macos-latest
     env:
-      ARGS: -g ${{steps.download-test.outputs.download-path}}/mock --num-frames-to-simulate 10 --screenshot-frame 5 --log-file stdout --log-level all=debug -W 800 -H 600
+      ARGS: -g game-data\bw --num-frames-to-simulate 10 --screenshot-frame 5 --log-file stdout --log-level all=debug -W 800 -H 600
       BACKEND: Direct3D11
     steps:
       - name: Download compiled openblack and tools
@@ -220,8 +220,17 @@ jobs:
       - name: Enable execute permissions on binary
         run: chmod +x ${{steps.download-binary.outputs.download-path}}/*/*
         if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
-      - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-1.png"
-      - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{ matrix.os }}-${{github.sha}}-release-land-1.png"
+      - name: Download Pre-patched and installed Game Data
+        uses: suisei-cn/actions-download-file@v1
+        id: game-data
+        with:
+          url: ${{secrets.BW_DOWNLOAD_URL}}
+          filename: bw.7z
+          target: game-data
+      - name: Extract Game Data
+        run: 7z x -ogame-data\bw "$PWD\game-data\${{steps.game-data.outputs.filename}}"
+      - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-debug-land-1.png"
+      - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-release-land-1.png"
       - name: Upload screenshots
         uses: actions/upload-artifact@v3
         if: always()
