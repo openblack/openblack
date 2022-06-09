@@ -152,6 +152,7 @@ Game::~Game()
 	resources.GetMeshes().Clear();
 	resources.GetTextures().Clear();
 	resources.GetAnimations().Clear();
+	Locator::rendereringSystem::reset();
 
 	_water.reset();
 	_sky.reset();
@@ -425,7 +426,8 @@ bool Game::Update()
 			auto updateEntities = _profiler->BeginScoped(Profiler::Stage::UpdateEntities);
 			if (_config.drawEntities)
 			{
-				RenderingSystem::Instance().PrepareDraw(_config.drawBoundingBoxes, _config.drawFootpaths, _config.drawStreams);
+				Locator::rendereringSystem::ref().PrepareDraw(_config.drawBoundingBoxes, _config.drawFootpaths,
+				                                              _config.drawStreams);
 			}
 		}
 	} // Update Uniforms
@@ -437,6 +439,7 @@ bool Game::Initialize()
 {
 	Locator::resources::set<resources::Resources>();
 	Locator::rng::set<RandomNumberManagerProduction>();
+	Locator::rendereringSystem::set<RenderingSystem>();
 	auto& resources = Locator::resources::ref();
 	auto& meshManager = resources.GetMeshes();
 	auto& textureManager = resources.GetTextures();

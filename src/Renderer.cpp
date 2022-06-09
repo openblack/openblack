@@ -505,7 +505,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				| BGFX_STATE_MSAA
 			;
 			// clang-format on
-			const auto& renderCtx = RenderingSystem::Instance().GetContext();
+			const auto& renderCtx = Locator::rendereringSystem::ref().GetContext();
 
 			// Instance meshes
 			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)

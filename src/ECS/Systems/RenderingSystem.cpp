@@ -24,17 +24,9 @@
 using namespace openblack::ecs::systems;
 using namespace openblack::ecs::components;
 
-RenderingSystem& RenderingSystem::Instance()
-{
-	static std::unique_ptr<RenderingSystem> instance;
-	if (instance == nullptr)
-	{
-		instance.reset(new RenderingSystem());
-	}
-	return *instance;
-}
+RenderingSystemInterface::~RenderingSystemInterface() = default;
 
-RenderingSystem::RenderingSystem() = default;
+RenderingSystem::~RenderingSystem() = default;
 
 void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 {

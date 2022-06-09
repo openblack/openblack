@@ -69,17 +69,24 @@ struct RenderContext
 	bool hasBoundingBoxes {false};
 };
 
-class RenderingSystem
+class RenderingSystemInterface
 {
 public:
-	static RenderingSystem& Instance();
+	virtual void SetDirty() = 0;
+	virtual void PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawStreams) = 0;
+	virtual const RenderContext& GetContext() = 0;
+	virtual ~RenderingSystemInterface();
+};
 
-	void SetDirty();
-	void PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawStreams);
-	const RenderContext& GetContext() { return _renderContext; }
+class RenderingSystem final: public RenderingSystemInterface
+{
+public:
+	~RenderingSystem() override;
+	void SetDirty() override;
+	void PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawStreams) override;
+	const RenderContext& GetContext() override { return _renderContext; }
 
 private:
-	RenderingSystem();
 	void PrepareDrawDescs(bool drawBoundingBox);
 	void PrepareDrawUploadUniforms(bool drawBoundingBox);
 
