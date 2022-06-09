@@ -12,6 +12,7 @@
 #include <entt/locator/locator.hpp>
 
 #include "Common/RandomNumberManager.h"
+#include "ECS/Systems/RenderingSystem.h"
 #include "Resources/Resources.h"
 
 namespace openblack
@@ -21,5 +22,6 @@ struct Locator
 {
 	using resources = entt::service_locator<resources::ResourcesInterface>;
 	using rng = entt::service_locator<RandomNumberManagerInterface>;
+	using rendereringSystem = entt::service_locator<ecs::systems::RenderingSystemInterface>;
 };
 } // namespace openblack

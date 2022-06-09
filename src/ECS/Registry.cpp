@@ -9,6 +9,7 @@
 
 #include "Registry.h"
 
+#include "Locator.h"
 #include "Systems/RenderingSystem.h"
 
 namespace openblack::ecs
@@ -31,6 +32,6 @@ const RegistryContext& Registry::Context() const
 
 void Registry::SetDirty()
 {
-	systems::RenderingSystem::Instance().SetDirty();
+	Locator::rendereringSystem::ref().SetDirty();
 }
 } // namespace openblack::ecs
