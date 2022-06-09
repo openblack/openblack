@@ -495,9 +495,10 @@ void L3DFile::ReadFile(std::istream& stream)
 
 	// Get additional data. Strictly in this order
 	// Footprint data
+	const auto headerFlags = static_cast<uint32_t>(_header.flags);
 	uint32_t additionalDataOffset = 0;
 	uint32_t footprintDataSize = 0;
-	if ((static_cast<uint32_t>(_header.flags) & static_cast<uint32_t>(L3DMeshFlags::ContainsLandscapeFeature)) != 0u)
+	if ((headerFlags & static_cast<uint32_t>(L3DMeshFlags::ContainsLandscapeFeature)) != 0u)
 	{
 		// TODO(#484): Investigate optional footprint block
 		stream.seekg(0x48, std::istream::beg);
@@ -512,7 +513,7 @@ void L3DFile::ReadFile(std::istream& stream)
 
 	// UV2 data
 	uint32_t uv2DataSize = 0;
-	if ((static_cast<uint32_t>(_header.flags) & static_cast<uint32_t>(L3DMeshFlags::ContainsUV2)) != 0u)
+	if ((headerFlags & static_cast<uint32_t>(L3DMeshFlags::ContainsUV2)) != 0u)
 	{
 		// TODO(#483): Investigate optional UV2 block
 		stream.seekg(0x48, std::istream::beg);
@@ -526,7 +527,7 @@ void L3DFile::ReadFile(std::istream& stream)
 
 	// Name data
 	uint32_t nameDataSize = 0;
-	if ((static_cast<uint32_t>(_header.flags) & static_cast<uint32_t>(L3DMeshFlags::ContainsNameData)) != 0u)
+	if ((headerFlags & static_cast<uint32_t>(L3DMeshFlags::ContainsNameData)) != 0u)
 	{
 		stream.seekg(0x48, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&additionalDataOffset), sizeof(additionalDataOffset));
