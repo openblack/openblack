@@ -138,8 +138,10 @@ jobs:
         with:
           name: openblack-compile-database
           path: cmake-build-presets/ninja-multi-vcpkg
-      - name: Add base repo to git config
-        run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
+      - name: Add base repo to git config and username
+        run: |
+          git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
+          git config user.name @${{ github.event.pull_request.user.login }}
         if: startsWith(github.event_name, 'pull_request')
       - uses: ZedThree/clang-tidy-review@v0.8.4
         id: review
