@@ -238,3 +238,39 @@ jobs:
           name: openblack-screenshots
           path: screenshot-${{ matrix.os }}-${{github.sha}}-*.png
           if-no-files-found: error
+      - name: Upload Land 1 Debug screenshot for comments
+        id: upload-imbb-debug-land-1
+        uses: McCzarny/upload-image@v1.0.0
+        if: github.event_name == 'pull_request_target'
+        with:
+          path: screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-1.png
+          uploadMethod: imgbb
+          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+      - name: Upload Land 1 Release screenshot for comments
+        id: upload-imbb-release-land-1
+        uses: McCzarny/upload-image@v1.0.0
+        if: github.event_name == 'pull_request_target'
+        with:
+          path: screenshot-${{ matrix.os }}-${{github.sha}}-release-land-1.png
+          uploadMethod: imgbb
+          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+      - name: Find Image Comment
+        if: github.event_name == 'pull_request_target'
+        uses: peter-evans/find-comment@v2
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Uploaded images
+      - name: Create or update comment with images
+        if: github.event_name == 'pull_request_target'
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            # Uploaded images
+            | Map | Debug | Release | Vanilla |
+            | --- | ----- | ------- | ------- |
+            | Land1.txt | ![Land1 Debug](${{steps.upload-imbb-debug-land-1.outputs.url}}) | ![Land1 Release](${{steps.upload-imbb-release-land-1.outputs.url}}) | ![Land1 Vanilla](https://user-images.githubusercontent.com/1013356/182029148-3f72ab4c-917e-4154-9886-c806969ad9cd.png) |
+          edit-mode: replace
