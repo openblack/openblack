@@ -16,6 +16,7 @@
 #include "ECS/Registry.h"
 #include "Enums.h"
 #include "Game.h"
+#include "Locator.h"
 
 using namespace openblack;
 using namespace openblack::ecs::components;
@@ -37,8 +38,8 @@ uint32_t VillagerCreated(LivingAction& action)
 	}
 	else
 	{
-		LivingActionSystem::Instance().VillagerSetState(action, LivingAction::Index::Top, VillagerStates::DecideWhatToDo,
-		                                                false);
+		Locator::livingActionSystem::ref().VillagerSetState(action, LivingAction::Index::Top, VillagerStates::DecideWhatToDo,
+		                                                    false);
 	}
 	return 0;
 }
@@ -61,7 +62,7 @@ static const VillagerStateTableEntry k_TodoEntry = {
 	    SPDLOG_LOGGER_WARN(spdlog::get("ai"), "Villager #{}: TODO: Unimplemented state function: {}",
 	                       static_cast<uint32_t>(Game::Instance()->GetEntityRegistry().ToEntity(action)),
 	                       k_VillagerStateStrings.at(static_cast<size_t>(
-	                           LivingActionSystem::Instance().VillagerGetState(action, LivingAction::Index::Top))));
+	                           Locator::livingActionSystem::ref().VillagerGetState(action, LivingAction::Index::Top))));
 	    return 0;
     },
     .entryState = [](LivingAction& action, VillagerStates src, VillagerStates dst) -> bool {
@@ -80,42 +81,42 @@ static const VillagerStateTableEntry k_TodoEntry = {
 	    SPDLOG_LOGGER_WARN(spdlog::get("ai"), "Villager #{}: TODO: Unimplemented save state function: {}",
 	                       static_cast<uint32_t>(Game::Instance()->GetEntityRegistry().ToEntity(action)),
 	                       k_VillagerStateStrings.at(static_cast<size_t>(
-	                           LivingActionSystem::Instance().VillagerGetState(action, LivingAction::Index::Top))));
+	                           Locator::livingActionSystem::ref().VillagerGetState(action, LivingAction::Index::Top))));
 	    return false;
     },
     .loadState = [](LivingAction& action) -> bool {
 	    SPDLOG_LOGGER_WARN(spdlog::get("ai"), "Villager #{}: TODO: Unimplemented load state function: {}",
 	                       static_cast<uint32_t>(Game::Instance()->GetEntityRegistry().ToEntity(action)),
 	                       k_VillagerStateStrings.at(static_cast<size_t>(
-	                           LivingActionSystem::Instance().VillagerGetState(action, LivingAction::Index::Top))));
+	                           Locator::livingActionSystem::ref().VillagerGetState(action, LivingAction::Index::Top))));
 	    return false;
     },
     .field0x50 = [](LivingAction& action) -> bool {
 	    SPDLOG_LOGGER_WARN(spdlog::get("ai"), "Villager #{}: TODO: Unimplemented field0x50 state function: {}",
 	                       static_cast<uint32_t>(Game::Instance()->GetEntityRegistry().ToEntity(action)),
 	                       k_VillagerStateStrings.at(static_cast<size_t>(
-	                           LivingActionSystem::Instance().VillagerGetState(action, LivingAction::Index::Top))));
+	                           Locator::livingActionSystem::ref().VillagerGetState(action, LivingAction::Index::Top))));
 	    return false;
     },
     .field0x60 = [](LivingAction& action) -> bool {
 	    SPDLOG_LOGGER_WARN(spdlog::get("ai"), "Villager #{}: TODO: Unimplemented field0x60 state function: {}",
 	                       static_cast<uint32_t>(Game::Instance()->GetEntityRegistry().ToEntity(action)),
 	                       k_VillagerStateStrings.at(static_cast<size_t>(
-	                           LivingActionSystem::Instance().VillagerGetState(action, LivingAction::Index::Top))));
+	                           Locator::livingActionSystem::ref().VillagerGetState(action, LivingAction::Index::Top))));
 	    return false;
     },
     .transitionAnimation = [](LivingAction& action) -> int {
 	    SPDLOG_LOGGER_WARN(spdlog::get("ai"), "Villager #{}: TODO: Unimplemented transition animation function: {}",
 	                       static_cast<uint32_t>(Game::Instance()->GetEntityRegistry().ToEntity(action)),
 	                       k_VillagerStateStrings.at(static_cast<size_t>(
-	                           LivingActionSystem::Instance().VillagerGetState(action, LivingAction::Index::Top))));
+	                           Locator::livingActionSystem::ref().VillagerGetState(action, LivingAction::Index::Top))));
 	    return -1;
     },
     .validate = [](LivingAction& action) -> bool {
 	    SPDLOG_LOGGER_WARN(spdlog::get("ai"), "Villager #{}: TODO: Unimplemented validate function: {}",
 	                       static_cast<uint32_t>(Game::Instance()->GetEntityRegistry().ToEntity(action)),
 	                       k_VillagerStateStrings.at(static_cast<size_t>(
-	                           LivingActionSystem::Instance().VillagerGetState(action, LivingAction::Index::Top))));
+	                           Locator::livingActionSystem::ref().VillagerGetState(action, LivingAction::Index::Top))));
 	    return false;
     },
 };
@@ -383,18 +384,6 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* ARRIVES_AT_BUILDING_SITE_WITH_SCAFFOLD */ k_TodoEntry,
     /* MOVE_SCAFFOLD_TO_BUILDING_SITE */ k_TodoEntry,
 };
-
-LivingActionSystem& LivingActionSystem::Instance()
-{
-	static std::unique_ptr<LivingActionSystem> instance = nullptr;
-	if (instance == nullptr)
-	{
-		instance.reset(new LivingActionSystem());
-	}
-	return *instance;
-}
-
-LivingActionSystem::LivingActionSystem() = default;
 
 void LivingActionSystem::Update()
 {

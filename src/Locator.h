@@ -14,6 +14,7 @@
 #include "Common/RandomNumberManager.h"
 #include "ECS/Systems/CameraBookmarkSystem.h"
 #include "ECS/Systems/DynamicsSystem.h"
+#include "ECS/Systems/LivingActionSystem.h"
 #include "ECS/Systems/RenderingSystem.h"
 #include "Resources/Resources.h"
 
@@ -27,5 +28,6 @@ struct Locator
 	using rendereringSystem = entt::service_locator<ecs::systems::RenderingSystemInterface>;
 	using dynamicsSystem = entt::service_locator<ecs::systems::DynamicsSystemInterface>;
 	using cameraBookmarkSystem = entt::service_locator<ecs::systems::CameraBookmarkSystemInterface>;
+	using livingActionSystem = entt::service_locator<ecs::systems::LivingActionSystemInterface>;
 };
 } // namespace openblack

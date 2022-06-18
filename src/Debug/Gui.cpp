@@ -1279,7 +1279,7 @@ void Gui::ShowVillagerNames(const Game& game)
 		const std::string stateHelpText = "TODO: STATE HELP TEXT";
 		std::string details =
 		    fmt::format("{}\nA:{} L:{}%, H:{}%", stateHelpText, villager.age, villager.health, villager.hunger);
-		const auto& actionSystem = LivingActionSystem::Instance();
+		const auto& actionSystem = Locator::livingActionSystem::ref();
 		if (config.debugVillagerStates)
 		{
 			details += fmt::format(
