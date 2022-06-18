@@ -19,18 +19,6 @@
 using namespace openblack::ecs::systems;
 using namespace openblack::ecs::components;
 
-CameraBookmarkSystem& CameraBookmarkSystem::Instance()
-{
-	static std::unique_ptr<CameraBookmarkSystem> instance = nullptr;
-	if (instance == nullptr)
-	{
-		instance.reset(new CameraBookmarkSystem());
-	}
-	return *instance;
-}
-
-CameraBookmarkSystem::CameraBookmarkSystem() = default;
-
 bool CameraBookmarkSystem::Initialize()
 {
 	_bookmarks = archetypes::CameraBookmarkArchetype::CreateAll();

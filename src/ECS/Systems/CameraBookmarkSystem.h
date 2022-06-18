@@ -18,21 +18,28 @@
 
 namespace openblack::ecs::systems
 {
-class CameraBookmarkSystem
+class CameraBookmarkSystemInterface
 {
 public:
-	static CameraBookmarkSystem& Instance();
-	bool Initialize();
-	void Update(const std::chrono::microseconds& dt) const;
+	virtual bool Initialize() = 0;
+	virtual void Update(const std::chrono::microseconds& dt) const = 0;
+	[[nodiscard]] virtual const std::array<entt::entity, 8>& GetBookmarks() const = 0;
+	virtual void SetBookmark(uint8_t index, const glm::vec3& position) const = 0;
+	virtual void ClearBookmark(uint8_t index) const = 0;
+};
 
-	[[nodiscard]] const std::array<entt::entity, 8>& GetBookmarks() const { return _bookmarks; }
+class CameraBookmarkSystem final: public CameraBookmarkSystemInterface
+{
+public:
+	bool Initialize() override;
+	void Update(const std::chrono::microseconds& dt) const override;
 
-	void SetBookmark(uint8_t index, const glm::vec3& position) const;
-	void ClearBookmark(uint8_t index) const;
+	[[nodiscard]] const std::array<entt::entity, 8>& GetBookmarks() const override { return _bookmarks; }
+
+	void SetBookmark(uint8_t index, const glm::vec3& position) const override;
+	void ClearBookmark(uint8_t index) const override;
 
 private:
-	CameraBookmarkSystem();
-
 	std::array<entt::entity, 8> _bookmarks;
 };
 } // namespace openblack::ecs::systems
