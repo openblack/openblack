@@ -46,6 +46,7 @@
 #include "ECS/Systems/LivingActionSystem.h"
 #include "ECS/Systems/PathfindingSystem.h"
 #include "ECS/Systems/RenderingSystem.h"
+#include "ECS/Systems/TownSystem.h"
 #include "GameWindow.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/Texture2D.h"
@@ -57,6 +58,7 @@
 #include "Renderer.h"
 #include "Resources/Loaders.h"
 #include "Resources/ResourceManager.h"
+#include "Resources/Resources.h"
 
 #ifdef WIN32
 #include <Windows.h>

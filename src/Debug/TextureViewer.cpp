@@ -12,6 +12,7 @@
 #include "Debug/Gui.h"
 #include "Graphics/Texture2D.h"
 #include "Locator.h"
+#include "Resources/Resources.h"
 
 using namespace openblack;
 using namespace openblack::debug::gui;

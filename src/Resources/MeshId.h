@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <entt/core/hashed_string.hpp>
+
 #include "3D/AllMeshes.h"
 
 template <>

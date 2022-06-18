@@ -11,17 +11,25 @@
 
 #include <entt/locator/locator.hpp>
 
-#include "Common/RandomNumberManager.h"
-#include "ECS/Systems/CameraBookmarkSystem.h"
-#include "ECS/Systems/DynamicsSystem.h"
-#include "ECS/Systems/LivingActionSystem.h"
-#include "ECS/Systems/PathfindingSystem.h"
-#include "ECS/Systems/RenderingSystem.h"
-#include "ECS/Systems/TownSystem.h"
-#include "Resources/Resources.h"
-
 namespace openblack
 {
+
+class RandomNumberManagerInterface;
+
+namespace resources
+{
+class ResourcesInterface;
+}
+
+namespace ecs::systems
+{
+class RenderingSystemInterface;
+class DynamicsSystemInterface;
+class CameraBookmarkSystemInterface;
+class LivingActionSystemInterface;
+class TownSystemInterface;
+class PathfindingSystemInterface;
+} // namespace ecs::systems
 
 struct Locator
 {
