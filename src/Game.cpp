@@ -67,6 +67,7 @@ using namespace openblack::lhscriptx;
 using namespace std::chrono_literals;
 using openblack::ecs::systems::CameraBookmarkSystem;
 using openblack::ecs::systems::DynamicsSystem;
+using openblack::ecs::systems::LivingActionSystem;
 using openblack::ecs::systems::RenderingSystem;
 
 const std::string k_WindowTitle = "openblack";
@@ -294,7 +295,7 @@ bool Game::GameLogicLoop()
 	}
 	{
 		auto actions = _profiler->BeginScoped(Profiler::Stage::LivingActionUpdate);
-		LivingActionSystem::Instance().Update();
+		Locator::livingActionSystem::ref().Update();
 	}
 
 	_lastGameLoopTime = currentTime;
@@ -687,6 +688,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 	std::string source(reinterpret_cast<const char*>(data.data()), data.size());
 
 	Locator::dynamicsSystem::set<DynamicsSystem>();
+	Locator::livingActionSystem::set<LivingActionSystem>();
 	// Reset everything. Deletes all entities and their components
 	_entityRegistry->Reset();
 

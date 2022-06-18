@@ -13,24 +13,38 @@
 
 namespace openblack::ecs::systems
 {
-class LivingActionSystem
+
+class LivingActionSystemInterface
 {
 public:
-	static LivingActionSystem& Instance();
-	void Update();
+	virtual void Update() = 0;
+
+	[[nodiscard]] virtual VillagerStates VillagerGetState(const components::LivingAction& action,
+	                                                      components::LivingAction::Index index) const = 0;
+	virtual void VillagerSetState(components::LivingAction& action, components::LivingAction::Index index, VillagerStates state,
+	                              bool skipTransition) const = 0;
+	virtual uint32_t VillagerCallState(components::LivingAction& action, components::LivingAction::Index index) const = 0;
+	virtual bool VillagerCallEntryState(components::LivingAction& action, components::LivingAction::Index index,
+	                                    VillagerStates src, VillagerStates dst) const = 0;
+	virtual bool VillagerCallExitState(components::LivingAction& action, components::LivingAction::Index index) const = 0;
+	virtual int VillagerCallOutOfAnimation(components::LivingAction& action, components::LivingAction::Index index) const = 0;
+	virtual bool VillagerCallValidate(components::LivingAction& action, components::LivingAction::Index index) const = 0;
+};
+
+class LivingActionSystem final: public LivingActionSystemInterface
+{
+public:
+	void Update() override;
 
 	[[nodiscard]] VillagerStates VillagerGetState(const components::LivingAction& action,
-	                                              components::LivingAction::Index index) const;
+	                                              components::LivingAction::Index index) const override;
 	void VillagerSetState(components::LivingAction& action, components::LivingAction::Index index, VillagerStates state,
-	                      bool skipTransition) const;
-	uint32_t VillagerCallState(components::LivingAction& action, components::LivingAction::Index index) const;
+	                      bool skipTransition) const override;
+	uint32_t VillagerCallState(components::LivingAction& action, components::LivingAction::Index index) const override;
 	bool VillagerCallEntryState(components::LivingAction& action, components::LivingAction::Index index, VillagerStates src,
-	                            VillagerStates dst) const;
-	bool VillagerCallExitState(components::LivingAction& action, components::LivingAction::Index index) const;
-	int VillagerCallOutOfAnimation(components::LivingAction& action, components::LivingAction::Index index) const;
-	bool VillagerCallValidate(components::LivingAction& action, components::LivingAction::Index index) const;
-
-private:
-	LivingActionSystem();
+	                            VillagerStates dst) const override;
+	bool VillagerCallExitState(components::LivingAction& action, components::LivingAction::Index index) const override;
+	int VillagerCallOutOfAnimation(components::LivingAction& action, components::LivingAction::Index index) const override;
+	bool VillagerCallValidate(components::LivingAction& action, components::LivingAction::Index index) const override;
 };
 } // namespace openblack::ecs::systems
