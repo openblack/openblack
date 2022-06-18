@@ -15,16 +15,19 @@
 namespace openblack::ecs::systems
 {
 
-class TownSystem
+class TownSystemInterface
 {
 public:
-	static TownSystem& Instance();
+	[[nodiscard]] virtual entt::entity FindAbodeWithSpace(entt::entity townEntity) const = 0;
+	[[nodiscard]] virtual entt::entity FindClosestTown(const glm::vec3& point) const = 0;
+	virtual void AddHomelessVillagerToTown(entt::entity townEntity, entt::entity villagerEntity) = 0;
+};
 
-	[[nodiscard]] entt::entity FindAbodeWithSpace(entt::entity townEntity) const;
-	[[nodiscard]] entt::entity FindClosestTown(const glm::vec3& point) const;
-	void AddHomelessVillagerToTown(entt::entity townEntity, entt::entity villagerEntity);
-
-private:
-	TownSystem();
+class TownSystem final: public TownSystemInterface
+{
+public:
+	[[nodiscard]] entt::entity FindAbodeWithSpace(entt::entity townEntity) const override;
+	[[nodiscard]] entt::entity FindClosestTown(const glm::vec3& point) const override;
+	void AddHomelessVillagerToTown(entt::entity townEntity, entt::entity villagerEntity) override;
 };
 } // namespace openblack::ecs::systems

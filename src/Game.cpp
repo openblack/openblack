@@ -69,6 +69,7 @@ using openblack::ecs::systems::CameraBookmarkSystem;
 using openblack::ecs::systems::DynamicsSystem;
 using openblack::ecs::systems::LivingActionSystem;
 using openblack::ecs::systems::RenderingSystem;
+using openblack::ecs::systems::TownSystem;
 
 const std::string k_WindowTitle = "openblack";
 
@@ -689,6 +690,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 
 	Locator::dynamicsSystem::set<DynamicsSystem>();
 	Locator::livingActionSystem::set<LivingActionSystem>();
+	Locator::townSystem::set<TownSystem>();
 	// Reset everything. Deletes all entities and their components
 	_entityRegistry->Reset();
 

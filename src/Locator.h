@@ -16,6 +16,7 @@
 #include "ECS/Systems/DynamicsSystem.h"
 #include "ECS/Systems/LivingActionSystem.h"
 #include "ECS/Systems/RenderingSystem.h"
+#include "ECS/Systems/TownSystem.h"
 #include "Resources/Resources.h"
 
 namespace openblack
@@ -29,5 +30,6 @@ struct Locator
 	using dynamicsSystem = entt::service_locator<ecs::systems::DynamicsSystemInterface>;
 	using cameraBookmarkSystem = entt::service_locator<ecs::systems::CameraBookmarkSystemInterface>;
 	using livingActionSystem = entt::service_locator<ecs::systems::LivingActionSystemInterface>;
+	using townSystem = entt::service_locator<ecs::systems::TownSystemInterface>;
 };
 } // namespace openblack
