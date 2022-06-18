@@ -23,7 +23,6 @@
 #include <glm/mat4x4.hpp>
 
 #include "Graphics/RenderPass.h"
-#include "Locator.h"
 
 namespace openblack
 {
