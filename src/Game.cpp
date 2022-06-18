@@ -157,6 +157,10 @@ Game::~Game()
 	resources.GetAnimations().Clear();
 	Locator::rendereringSystem::reset();
 	Locator::dynamicsSystem::reset();
+	Locator::cameraBookmarkSystem::reset();
+	Locator::livingActionSystem::reset();
+	Locator::townSystem::reset();
+	Locator::pathfindingSystem::reset();
 
 	_water.reset();
 	_sky.reset();
@@ -445,8 +449,6 @@ bool Game::Initialize()
 	Locator::resources::set<resources::Resources>();
 	Locator::rng::set<RandomNumberManagerProduction>();
 	Locator::rendereringSystem::set<RenderingSystem>();
-	Locator::dynamicsSystem::set<DynamicsSystem>();
-	Locator::cameraBookmarkSystem::set<CameraBookmarkSystem>();
 	auto& resources = Locator::resources::ref();
 	auto& meshManager = resources.GetMeshes();
 	auto& textureManager = resources.GetTextures();
@@ -581,9 +583,6 @@ bool Game::Initialize()
 
 	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
-
-	Locator::cameraBookmarkSystem::ref().Initialize();
-
 	return true;
 }
 
@@ -689,14 +688,9 @@ void Game::LoadMap(const std::filesystem::path& path)
 	auto data = _fileSystem->ReadAll(path);
 	std::string source(reinterpret_cast<const char*>(data.data()), data.size());
 
-	Locator::dynamicsSystem::set<DynamicsSystem>();
-	Locator::livingActionSystem::set<LivingActionSystem>();
-	Locator::townSystem::set<TownSystem>();
-	Locator::pathfindingSystem::set<ecs::systems::PathfindingSystem>();
 	// Reset everything. Deletes all entities and their components
 	_entityRegistry->Reset();
 
-	Locator::cameraBookmarkSystem::ref().Initialize();
 	// We need a hand for the player
 	_handEntity = ecs::archetypes::HandArchetype::Create(glm::vec3(0.0f), glm::half_pi<float>(), 0.0f, glm::half_pi<float>(),
 	                                                     0.01f, false);
@@ -743,6 +737,12 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	_landIsland = std::make_unique<LandIsland>();
 	_landIsland->LoadFromFile(fixedName);
 
+	Locator::livingActionSystem::set<LivingActionSystem>();
+	Locator::townSystem::set<TownSystem>();
+	Locator::pathfindingSystem::set<PathfindingSystem>();
+	Locator::cameraBookmarkSystem::set<CameraBookmarkSystem>();
+	Locator::cameraBookmarkSystem::ref().Initialize();
+	Locator::dynamicsSystem::set<DynamicsSystem>();
 	Locator::dynamicsSystem::ref().RegisterIslandRigidBodies(*_landIsland);
 }
 
