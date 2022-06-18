@@ -234,7 +234,7 @@ bool Game::ProcessEvents(const SDL_Event& event)
 			{
 				auto handPosition = _handPose * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 				const auto index = static_cast<uint8_t>(event.key.keysym.sym - SDLK_1);
-				CameraBookmarkSystem::Instance().SetBookmark(index, handPosition);
+				Locator::cameraBookmarkSystem::ref().SetBookmark(index, handPosition);
 			}
 			else if (event.key.keysym.mod == 0)
 			{
@@ -352,7 +352,7 @@ bool Game::Update()
 	}
 
 	_camera->Update(deltaTime);
-	CameraBookmarkSystem::Instance().Update(deltaTime);
+	Locator::cameraBookmarkSystem::ref().Update(deltaTime);
 
 	// Update Game Logic in Registry
 	{
@@ -443,6 +443,7 @@ bool Game::Initialize()
 	Locator::rng::set<RandomNumberManagerProduction>();
 	Locator::rendereringSystem::set<RenderingSystem>();
 	Locator::dynamicsSystem::set<DynamicsSystem>();
+	Locator::cameraBookmarkSystem::set<CameraBookmarkSystem>();
 	auto& resources = Locator::resources::ref();
 	auto& meshManager = resources.GetMeshes();
 	auto& textureManager = resources.GetTextures();
@@ -578,7 +579,7 @@ bool Game::Initialize()
 	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
 
-	CameraBookmarkSystem::Instance().Initialize();
+	Locator::cameraBookmarkSystem::ref().Initialize();
 
 	return true;
 }
@@ -689,7 +690,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 	// Reset everything. Deletes all entities and their components
 	_entityRegistry->Reset();
 
-	CameraBookmarkSystem::Instance().Initialize();
+	Locator::cameraBookmarkSystem::ref().Initialize();
 	// We need a hand for the player
 	_handEntity = ecs::archetypes::HandArchetype::Create(glm::vec3(0.0f), glm::half_pi<float>(), 0.0f, glm::half_pi<float>(),
 	                                                     0.01f, false);
