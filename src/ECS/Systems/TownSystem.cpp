@@ -19,18 +19,6 @@
 using namespace openblack::ecs::components;
 using namespace openblack::ecs::systems;
 
-TownSystem& TownSystem::Instance()
-{
-	static std::unique_ptr<TownSystem> instance;
-	if (instance == nullptr)
-	{
-		instance.reset(new TownSystem());
-	}
-	return *instance;
-}
-
-TownSystem::TownSystem() = default;
-
 entt::entity TownSystem::FindAbodeWithSpace(entt::entity townEntity) const
 {
 	const auto& infoConstants = Game::Instance()->GetInfoConstants();

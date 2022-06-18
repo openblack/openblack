@@ -47,11 +47,11 @@ entt::entity VillagerArchetype::Create([[maybe_unused]] const glm::vec3& abodePo
 	const auto task = Villager::Task::IDLE;
 
 	// TODO(bwrsandman): Might be better to make a FindClosestAbode
-	const entt::entity town = TownSystem::Instance().FindClosestTown(abodePosition);
+	const entt::entity town = Locator::townSystem::ref().FindClosestTown(abodePosition);
 	entt::entity abode = entt::null;
 	if (town != entt::null)
 	{
-		abode = TownSystem::Instance().FindAbodeWithSpace(town);
+		abode = Locator::townSystem::ref().FindAbodeWithSpace(town);
 	}
 
 	registry.Assign<Villager>(entity, health, static_cast<uint32_t>(age), hunger, lifeStage, sex, info.tribeType,
