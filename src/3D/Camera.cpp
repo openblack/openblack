@@ -20,6 +20,7 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/DynamicsSystem.h"
 #include "Game.h"
+#include "Locator.h"
 
 using namespace openblack;
 
@@ -79,7 +80,7 @@ std::optional<ecs::components::Transform> Camera::RaycastMouseToLand()
 	glm::ivec2 mouseVec;
 	SDL_GetMouseState(&mouseVec.x, &mouseVec.y);
 	DeprojectScreenToWorld(mouseVec, glm::vec2(sWidth, sHeight), rayOrigin, rayDirection);
-	const auto& dynamicsSystem = Game::Instance()->GetDynamicsSystem();
+	const auto& dynamicsSystem = Locator::dynamicsSystem::ref();
 	if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
 	{
 		intersectionTransform = hit->first;
@@ -466,7 +467,7 @@ void Camera::HandleMouseInput(const SDL_Event& e)
 		if (e.wheel.y != 0) // scroll up or down
 		{
 			float dist = 9999.0f;
-			const auto& dynamicsSystem = Game::Instance()->GetDynamicsSystem();
+			const auto& dynamicsSystem = Locator::dynamicsSystem::ref();
 			if (auto hit = dynamicsSystem.RayCastClosestHit(_position, GetForward(), 1e10f))
 			{
 				dist = glm::length(hit->first.position - _position);
@@ -642,8 +643,8 @@ void Camera::Update(std::chrono::microseconds dt)
 	{
 		_position = glm::hermite(_flyFromPos, _flyFromTan, _flyToPos, _flyToTan, glm::smoothstep(0.0f, 1.0f, _flyProgress));
 
-		// check if there obstacles in the way, if there are fly over them
-		const auto& dynamicsSystem = Game::Instance()->GetDynamicsSystem();
+		// Check if there are obstacles in the way, if there are fly over them
+		const auto& dynamicsSystem = Locator::dynamicsSystem::ref();
 		if (auto obst = dynamicsSystem.RayCastClosestHit(_position - glm::vec3(0.0f, 20.0f, 0.0f),
 		                                                 glm::normalize((_flyToPos - glm::vec3(0.0f, 20.0f, 0.0f)) - _position),
 		                                                 glm::length(_flyToPos - _position) + 10.0f))

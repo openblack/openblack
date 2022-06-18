@@ -66,6 +66,7 @@ using namespace openblack;
 using namespace openblack::lhscriptx;
 using namespace std::chrono_literals;
 using openblack::ecs::systems::CameraBookmarkSystem;
+using openblack::ecs::systems::DynamicsSystem;
 using openblack::ecs::systems::RenderingSystem;
 
 const std::string k_WindowTitle = "openblack";
@@ -129,7 +130,6 @@ Game::Game(Arguments&& args)
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Failed to create renderer", exception.what(), nullptr);
 		throw exception;
 	}
-	_dynamicsSystem = std::make_unique<ecs::systems::DynamicsSystem>();
 	_fileSystem->SetGamePath(GetGamePath());
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
 
@@ -153,10 +153,10 @@ Game::~Game()
 	resources.GetTextures().Clear();
 	resources.GetAnimations().Clear();
 	Locator::rendereringSystem::reset();
+	Locator::dynamicsSystem::reset();
 
 	_water.reset();
 	_sky.reset();
-	_dynamicsSystem.reset();
 	_landIsland.reset();
 	_entityRegistry.reset();
 	_gui.reset();
@@ -321,8 +321,9 @@ bool Game::Update()
 		auto physics = _profiler->BeginScoped(Profiler::Stage::PhysicsUpdate);
 		if (_frameCount > 0)
 		{
-			_dynamicsSystem->Update(deltaTime);
-			_dynamicsSystem->UpdatePhysicsTransforms();
+			auto& dynamicsSystem = Locator::dynamicsSystem::ref();
+			dynamicsSystem.Update(deltaTime);
+			dynamicsSystem.UpdatePhysicsTransforms();
 		}
 	}
 
@@ -381,8 +382,9 @@ bool Game::Update()
 				glm::vec3 rayOrigin;
 				glm::vec3 rayDirection;
 				_camera->DeprojectScreenToWorld(_mousePosition, screenSize, rayOrigin, rayDirection);
+				auto& dynamicsSystem = Locator::dynamicsSystem::ref();
 
-				if (auto hit = _dynamicsSystem->RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
+				if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
 				{
 					intersectionTransform = hit->first;
 				}
@@ -440,6 +442,7 @@ bool Game::Initialize()
 	Locator::resources::set<resources::Resources>();
 	Locator::rng::set<RandomNumberManagerProduction>();
 	Locator::rendereringSystem::set<RenderingSystem>();
+	Locator::dynamicsSystem::set<DynamicsSystem>();
 	auto& resources = Locator::resources::ref();
 	auto& meshManager = resources.GetMeshes();
 	auto& textureManager = resources.GetTextures();
@@ -583,7 +586,7 @@ bool Game::Initialize()
 bool Game::Run()
 {
 	LoadMap(_fileSystem->ScriptsPath() / "Land1.txt");
-	_dynamicsSystem->RegisterRigidBodies();
+	Locator::dynamicsSystem::ref().RegisterRigidBodies();
 
 	auto challengePath = _fileSystem->QuestsPath() / "challenge.chl";
 	if (_fileSystem->Exists(challengePath))
@@ -682,7 +685,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 	auto data = _fileSystem->ReadAll(path);
 	std::string source(reinterpret_cast<const char*>(data.data()), data.size());
 
-	_dynamicsSystem->Reset();
+	Locator::dynamicsSystem::set<DynamicsSystem>();
 	// Reset everything. Deletes all entities and their components
 	_entityRegistry->Reset();
 
@@ -733,7 +736,7 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	_landIsland = std::make_unique<LandIsland>();
 	_landIsland->LoadFromFile(fixedName);
 
-	_dynamicsSystem->RegisterIslandRigidBodies(*_landIsland);
+	Locator::dynamicsSystem::ref().RegisterIslandRigidBodies(*_landIsland);
 }
 
 bool Game::LoadVariables()
