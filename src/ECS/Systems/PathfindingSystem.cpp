@@ -20,18 +20,6 @@ using namespace openblack;
 using namespace openblack::ecs::components;
 using namespace openblack::ecs::systems;
 
-PathfindingSystem& PathfindingSystem::Instance()
-{
-	static std::unique_ptr<PathfindingSystem> instance;
-	if (instance == nullptr)
-	{
-		instance.reset(new PathfindingSystem());
-	}
-	return *instance;
-}
-
-PathfindingSystem::PathfindingSystem() = default;
-
 void PathfindingSystem::Update()
 {
 	auto& registry = Game::Instance()->GetEntityRegistry();
