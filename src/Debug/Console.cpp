@@ -21,6 +21,7 @@
 #include "Game.h"
 #include "LHScriptX/FeatureScriptCommands.h"
 #include "LHScriptX/Script.h"
+#include "Locator.h"
 
 using namespace openblack;
 using namespace openblack::debug::gui;
@@ -228,7 +229,8 @@ void Console::Draw(Game& game)
 		glm::vec3 rayOrigin;
 		glm::vec3 rayDirection;
 		game.GetCamera().DeprojectScreenToWorld(mousePosition, screenSize, rayOrigin, rayDirection);
-		if (auto hit = game.GetDynamicsSystem().RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
+		const auto& dynamicsSystem = Locator::dynamicsSystem::ref();
+		if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
 		{
 			if (hit->second.userData != nullptr)
 			{

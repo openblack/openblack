@@ -47,20 +47,33 @@ struct RigidBodyDetails
 	const void* userData;
 };
 
-class DynamicsSystem
+class DynamicsSystemInterface
+{
+public:
+	virtual void Reset() = 0;
+	virtual void Update(std::chrono::microseconds& dt) = 0;
+	virtual void AddRigidBody(btRigidBody* object) = 0;
+	virtual void RegisterRigidBodies() = 0;
+	virtual void RegisterIslandRigidBodies(LandIsland& island) = 0;
+	virtual void UpdatePhysicsTransforms() = 0;
+	[[nodiscard]] virtual std::optional<std::pair<ecs::components::Transform, RigidBodyDetails>>
+	RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float tMax) const = 0;
+};
+
+class DynamicsSystem final: public DynamicsSystemInterface
 {
 public:
 	DynamicsSystem();
 	virtual ~DynamicsSystem();
 
-	void Reset();
-	void Update(std::chrono::microseconds& dt);
-	void AddRigidBody(btRigidBody* object);
-	void RegisterRigidBodies();
-	void RegisterIslandRigidBodies(LandIsland& island);
-	void UpdatePhysicsTransforms();
+	void Reset() override;
+	void Update(std::chrono::microseconds& dt) override;
+	void AddRigidBody(btRigidBody* object) override;
+	void RegisterRigidBodies() override;
+	void RegisterIslandRigidBodies(LandIsland& island) override;
+	void UpdatePhysicsTransforms() override;
 	[[nodiscard]] std::optional<std::pair<ecs::components::Transform, RigidBodyDetails>>
-	RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float tMax) const;
+	RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float tMax) const override;
 
 private:
 	/// collision configuration contains default setup for memory, collision setup

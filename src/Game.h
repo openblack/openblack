@@ -57,10 +57,6 @@ class LHVM;
 namespace ecs
 {
 class Map;
-namespace systems
-{
-class DynamicsSystem;
-}
 class Registry;
 } // namespace ecs
 
@@ -170,7 +166,6 @@ public:
 	Camera& GetCamera() { return *_camera; }
 	[[nodiscard]] Profiler& GetProfiler() const { return *_profiler; }
 	[[nodiscard]] Renderer& GetRenderer() const { return *_renderer; }
-	[[nodiscard]] const ecs::systems::DynamicsSystem& GetDynamicsSystem() const { return *_dynamicsSystem; }
 	[[nodiscard]] Camera& GetCamera() const { return *_camera; }
 	[[nodiscard]] Sky& GetSky() const { return *_sky; }
 	[[nodiscard]] Water& GetWater() const { return *_water; }
@@ -216,7 +211,6 @@ private:
 
 	std::unique_ptr<GameWindow> _window;
 	std::unique_ptr<Renderer> _renderer;
-	std::unique_ptr<ecs::systems::DynamicsSystem> _dynamicsSystem;
 	std::unique_ptr<debug::gui::Gui> _gui;
 	std::unique_ptr<Camera> _camera;
 	std::unique_ptr<Profiler> _profiler;
