@@ -43,6 +43,7 @@
 #include <Game.h>
 #include <GameWindow.h>
 #include <Locator.h>
+#include <Resources/Resources.h>
 
 #include "Console.h"
 #include "LHVMViewer.h"
