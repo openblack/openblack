@@ -68,6 +68,7 @@ using namespace std::chrono_literals;
 using openblack::ecs::systems::CameraBookmarkSystem;
 using openblack::ecs::systems::DynamicsSystem;
 using openblack::ecs::systems::LivingActionSystem;
+using openblack::ecs::systems::PathfindingSystem;
 using openblack::ecs::systems::RenderingSystem;
 using openblack::ecs::systems::TownSystem;
 
@@ -292,7 +293,7 @@ bool Game::GameLogicLoop()
 
 	{
 		auto pathfinding = _profiler->BeginScoped(Profiler::Stage::PathfindingUpdate);
-		PathfindingSystem::Instance().Update();
+		Locator::pathfindingSystem::ref().Update();
 	}
 	{
 		auto actions = _profiler->BeginScoped(Profiler::Stage::LivingActionUpdate);
@@ -691,6 +692,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 	Locator::dynamicsSystem::set<DynamicsSystem>();
 	Locator::livingActionSystem::set<LivingActionSystem>();
 	Locator::townSystem::set<TownSystem>();
+	Locator::pathfindingSystem::set<ecs::systems::PathfindingSystem>();
 	// Reset everything. Deletes all entities and their components
 	_entityRegistry->Reset();
 

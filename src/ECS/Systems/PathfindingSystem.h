@@ -11,14 +11,14 @@
 
 namespace openblack::ecs::systems
 {
-class PathfindingSystem
+class PathfindingSystemInterface
 {
 public:
-	static PathfindingSystem& Instance();
-
-	void Update();
-
-private:
-	PathfindingSystem();
+	virtual void Update() = 0;
+};
+class PathfindingSystem final: public PathfindingSystemInterface
+{
+public:
+	void Update() override;
 };
 } // namespace openblack::ecs::systems

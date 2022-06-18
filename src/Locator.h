@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <ECS/Systems/PathfindingSystem.h>
 #include <entt/locator/locator.hpp>
 
 #include "Common/RandomNumberManager.h"
@@ -31,5 +32,6 @@ struct Locator
 	using cameraBookmarkSystem = entt::service_locator<ecs::systems::CameraBookmarkSystemInterface>;
 	using livingActionSystem = entt::service_locator<ecs::systems::LivingActionSystemInterface>;
 	using townSystem = entt::service_locator<ecs::systems::TownSystemInterface>;
+	using pathfindingSystem = entt::service_locator<ecs::systems::PathfindingSystemInterface>;
 };
 } // namespace openblack
