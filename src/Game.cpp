@@ -722,6 +722,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 
 void Game::LoadLandscape(const std::filesystem::path& path)
 {
+	Locator::dynamicsSystem::set<DynamicsSystem>();
 	if (_landIsland)
 	{
 		_landIsland.reset();
@@ -742,7 +743,6 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	Locator::pathfindingSystem::set<PathfindingSystem>();
 	Locator::cameraBookmarkSystem::set<CameraBookmarkSystem>();
 	Locator::cameraBookmarkSystem::ref().Initialize();
-	Locator::dynamicsSystem::set<DynamicsSystem>();
 	Locator::dynamicsSystem::ref().RegisterIslandRigidBodies(*_landIsland);
 }
 
