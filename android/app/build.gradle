@@ -9,20 +9,36 @@ android {
         applicationId "org.openblack.app"
         minSdk 21
         targetSdk 32
-        ndkVersion "23.1.7779620"
+        ndkVersion "23.2.8568313"
         versionCode 1
         versionName "0.1.0"
         archivesBaseName = "$applicationId-$versionName"
 
-        externalNativeBuild {
-            cmake {
-                cppFlags "-std=c++20"
-                targets "openblack_lib"
-                arguments '-DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake',
-                          '-DANDROID_NDK_HOME='+android.ndkDirectory,
-                          '-DVCPKG_TARGET_ANDROID=ON',
-                          '-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE='+android.ndkDirectory+'/build/cmake/android.toolchain.cmake',
-                          '-DANDROID_PLATFORM=android-'+minSdk
+        // To use this configuration, pre-built native libraries must be placed into the respective directories:
+        // For debug build variant, place libraries in 'src/main/jniLibs/Debug' and call ./gradlew assembleDebug -PusePrebuiltNativeLibs
+        // For release build variant, place libraries in 'src/main/jniLibs/Release' and call ./gradlew assembleRelease -PusePrebuiltNativeLibs
+        // In android studio, add -PusePrebuiltNativeLibs to the "Command-line Options" in "Build, Execution, Deployment" / "Compiler".
+        if (project.hasProperty("usePrebuiltNativeLibs")) {
+            sourceSets {
+                debug {
+                    jniLibs.srcDirs = ['src/main/jniLibs/debug']
+                }
+                release {
+                    jniLibs.srcDirs = ['src/main/jniLibs/release']
+                }
+            }
+        }
+        else {
+            externalNativeBuild {
+                cmake {
+                    cppFlags "-std=c++20"
+                    targets "openblack_lib"
+                    arguments '-DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake',
+                              '-DANDROID_NDK_HOME='+android.ndkDirectory,
+                              '-DVCPKG_TARGET_ANDROID=ON',
+                              '-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE='+android.ndkDirectory+'/build/cmake/android.toolchain.cmake',
+                              '-DANDROID_PLATFORM=android-'+minSdk
+                }
             }
         }
     }
@@ -37,10 +53,12 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    externalNativeBuild {
-        cmake {
-            path file('../../CMakeLists.txt')
-            version '3.18.1'
+    if (!project.hasProperty("usePrebuiltNativeLibs")) {
+        externalNativeBuild {
+            cmake {
+                path file('../../CMakeLists.txt')
+                version '3.18.1'
+            }
         }
     }
     buildFeatures {
