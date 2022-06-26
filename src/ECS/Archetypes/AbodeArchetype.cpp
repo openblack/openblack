@@ -18,7 +18,7 @@
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
-#include "ECS/Systems/TownSystem.h"
+#include "ECS/Systems/Implementations/TownSystem.h"
 #include "Game.h"
 #include "Locator.h"
 #include "Resources/MeshId.h"
