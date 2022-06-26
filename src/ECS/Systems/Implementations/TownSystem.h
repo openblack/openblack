@@ -9,19 +9,10 @@
 
 #pragma once
 
-#include "entt/fwd.hpp"
-#include "glm/fwd.hpp"
+#include "ECS/Systems/Interfaces/TownSystemInterface.h"
 
 namespace openblack::ecs::systems
 {
-
-class TownSystemInterface
-{
-public:
-	[[nodiscard]] virtual entt::entity FindAbodeWithSpace(entt::entity townEntity) const = 0;
-	[[nodiscard]] virtual entt::entity FindClosestTown(const glm::vec3& point) const = 0;
-	virtual void AddHomelessVillagerToTown(entt::entity townEntity, entt::entity villagerEntity) = 0;
-};
 
 class TownSystem final: public TownSystemInterface
 {

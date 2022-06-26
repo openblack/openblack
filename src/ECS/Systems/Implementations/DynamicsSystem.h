@@ -14,13 +14,12 @@
 #include <optional>
 #include <tuple>
 
-#include "glm/fwd.hpp"
+#include "ECS/Systems/Interfaces/DynamicsSystemInterface.h"
 
 class btCollisionDispatcher;
 class btDefaultCollisionConfiguration;
 class btDiscreteDynamicsWorld;
 struct btDbvtBroadphase;
-class btRigidBody;
 class btSequentialImpulseConstraintSolver;
 
 namespace openblack
@@ -34,31 +33,6 @@ struct Transform;
 
 namespace openblack::ecs::systems
 {
-enum class RigidBodyType
-{
-	Terrain,
-	Entity,
-};
-
-struct RigidBodyDetails
-{
-	RigidBodyType type;
-	int id;
-	const void* userData;
-};
-
-class DynamicsSystemInterface
-{
-public:
-	virtual void Reset() = 0;
-	virtual void Update(std::chrono::microseconds& dt) = 0;
-	virtual void AddRigidBody(btRigidBody* object) = 0;
-	virtual void RegisterRigidBodies() = 0;
-	virtual void RegisterIslandRigidBodies(LandIsland& island) = 0;
-	virtual void UpdatePhysicsTransforms() = 0;
-	[[nodiscard]] virtual std::optional<std::pair<ecs::components::Transform, RigidBodyDetails>>
-	RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float tMax) const = 0;
-};
 
 class DynamicsSystem final: public DynamicsSystemInterface
 {

@@ -13,23 +13,20 @@
 #include <chrono>
 #include <memory>
 
-#include "ECS/Systems/Interfaces/CameraBookmarkSystemInterface.h"
+#include "entt/fwd.hpp"
+#include "glm/vec3.hpp"
 
 namespace openblack::ecs::systems
 {
 
-class CameraBookmarkSystem final: public CameraBookmarkSystemInterface
+class CameraBookmarkSystemInterface
 {
 public:
-	bool Initialize() override;
-	void Update(const std::chrono::microseconds& dt) const override;
-
-	[[nodiscard]] const std::array<entt::entity, 8>& GetBookmarks() const override { return _bookmarks; }
-
-	void SetBookmark(uint8_t index, const glm::vec3& position) const override;
-	void ClearBookmark(uint8_t index) const override;
-
-private:
-	std::array<entt::entity, 8> _bookmarks;
+	virtual bool Initialize() = 0;
+	virtual void Update(const std::chrono::microseconds& dt) const = 0;
+	[[nodiscard]] virtual const std::array<entt::entity, 8>& GetBookmarks() const = 0;
+	virtual void SetBookmark(uint8_t index, const glm::vec3& position) const = 0;
+	virtual void ClearBookmark(uint8_t index) const = 0;
 };
+
 } // namespace openblack::ecs::systems
