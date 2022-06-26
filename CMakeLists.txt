@@ -80,6 +80,7 @@ if(CMAKE_CROSSCOMPILING OR NOT TARGET bgfx::shaderc)
       /usr/bin
       ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/packages/bgfx_x64-linux/tools/bgfx
       ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/packages/bgfx_x64-windows/tools/bgfx
+      ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/packages/bgfx_x64-osx/tools/bgfx
   )
   add_executable(bgfx::shaderc IMPORTED)
   set_target_properties(bgfx::shaderc PROPERTIES
