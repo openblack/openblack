@@ -13,10 +13,10 @@
 #include <stdexcept>
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
+#include <IStream.h>
 #include <LNDFile.h>
 #include <spdlog/spdlog.h>
 
-#include "Common/IStream.h"
 #include "Common/stb_image_write.h"
 #include "Dynamics/LandBlockBulletMeshInterface.h"
 #include "Game.h"

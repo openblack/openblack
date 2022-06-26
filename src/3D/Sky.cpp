@@ -15,8 +15,8 @@
 
 #include "3D/L3DMesh.h"
 #include "Common/Bitmap16B.h"
-#include "Common/FileSystem.h"
 #include "Common/StringUtils.h"
+#include "FileSystem.h"
 
 using namespace openblack::graphics;
 

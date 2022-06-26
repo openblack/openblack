@@ -7,13 +7,13 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
-#include "FileStream.h"
-
 #include <cassert>
 
 #include <stdexcept>
 
-#include <spdlog/fmt/fmt.h>
+#include <FileSystem.h>
+
+#include "spdlog/fmt/fmt.h"
 
 namespace openblack
 {

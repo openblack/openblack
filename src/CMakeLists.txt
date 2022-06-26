@@ -102,6 +102,7 @@ target_link_libraries(
     lnd
     anm
     morph
+    file_utils
     imgui::imgui
     imgui_user
     ScriptLibrary

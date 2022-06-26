@@ -12,13 +12,12 @@
 #include <stdexcept>
 
 #include <BulletCollision/CollisionShapes/btConvexHullShape.h>
+#include <FileSystem.h>
 #include <L3DFile.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/matrix.hpp>
 #include <spdlog/spdlog.h>
 
-#include "Common/FileSystem.h"
-#include "Common/IStream.h"
 #include "Game.h"
 
 using namespace openblack;

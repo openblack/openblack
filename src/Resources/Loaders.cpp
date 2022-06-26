@@ -9,9 +9,9 @@
 
 #include "Resources/Loaders.h"
 
-#include "Common/FileSystem.h"
 #include "Common/StringUtils.h"
 #include "Common/Zip.h"
+#include "FileSystem.h"
 #include "Game.h"
 
 using namespace openblack;
