@@ -17,7 +17,7 @@
 #include "3D/Camera.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
-#include "ECS/Systems/DynamicsSystem.h"
+#include "ECS/Systems/Implementations/DynamicsSystem.h"
 #include "Game.h"
 #include "LHScriptX/FeatureScriptCommands.h"
 #include "LHScriptX/Script.h"

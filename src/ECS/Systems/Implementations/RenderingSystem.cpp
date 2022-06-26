@@ -9,8 +9,6 @@
 
 #include "RenderingSystem.h"
 
-#include <glm/gtx/transform.hpp>
-
 #include "3D/L3DMesh.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Stream.h"
@@ -21,6 +19,7 @@
 #include "Graphics/ShaderManager.h"
 #include "Locator.h"
 #include "Resources/Resources.h"
+#include "glm/gtx/transform.hpp"
 
 using namespace openblack::ecs::systems;
 using namespace openblack::ecs::components;

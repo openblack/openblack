@@ -23,7 +23,7 @@
 #include "3D/Water.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Registry.h"
-#include "ECS/Systems/RenderingSystem.h"
+#include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "Game.h"
 #include "GameWindow.h"
 #include "Graphics/DebugLines.h"

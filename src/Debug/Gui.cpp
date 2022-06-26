@@ -39,13 +39,13 @@
 #include <ECS/Components/Transform.h>
 #include <ECS/Components/Villager.h>
 #include <ECS/Registry.h>
-#include <ECS/Systems/LivingActionSystem.h>
 #include <Game.h>
 #include <GameWindow.h>
 #include <Locator.h>
 #include <Resources/Resources.h>
 
 #include "Console.h"
+#include "ECS/Systems/Implementations/LivingActionSystem.h"
 #include "LHVMViewer.h"
 #include "LandIsland.h"
 #include "MeshViewer.h"

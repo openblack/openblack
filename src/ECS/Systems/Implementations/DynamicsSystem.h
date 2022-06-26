@@ -14,7 +14,7 @@
 #include <optional>
 #include <tuple>
 
-#include <glm/fwd.hpp>
+#include "glm/fwd.hpp"
 
 class btCollisionDispatcher;
 class btDefaultCollisionConfiguration;
