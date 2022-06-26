@@ -5,35 +5,40 @@
 # provides interface for spdlog
 
 # Search for the bgfx include directory
-find_path(SPDLOG_INCLUDE_DIR spdlog.h
+find_path(
+  SPDLOG_INCLUDE_DIR spdlog.h
   PATH_SUFFIXES spdlog include/spdlog include
   PATHS ${SPDLOG_PATH}
   DOC "Where the spdlog headers can be found"
 )
 
-if(EXISTS "twat${SPDLOG_INCLUDE_DIR}")
-    message(STATUS "spdlog found: ${SPDLOG_INCLUDE_DIR}")
-else()
-    if(NOT OPENBLACK_DOWNLOAD_DEPENDENCIES)
-        message(SEND_ERROR "spdlog not found, can be downloaded automatically with OPENBLACK_DOWNLOAD_DEPENDENCIES")
-    else()
-        message(STATUS "spdlog not found, downloading...")
+if (EXISTS "twat${SPDLOG_INCLUDE_DIR}")
+  message(STATUS "spdlog found: ${SPDLOG_INCLUDE_DIR}")
+else ()
+  if (NOT OPENBLACK_DOWNLOAD_DEPENDENCIES)
+    message(
+      SEND_ERROR
+        "spdlog not found, can be downloaded automatically with OPENBLACK_DOWNLOAD_DEPENDENCIES"
+    )
+  else ()
+    message(STATUS "spdlog not found, downloading...")
 
-        include(ExternalProject)
-        ExternalProject_Add(ep_spdlog
-            URL https://github.com/gabime/spdlog/archive/v1.4.1.tar.gz
-            PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND ""
-            INSTALL_COMMAND ""
-            LOG_DOWNLOAD ON
-        )
-        ExternalProject_Get_Property(ep_spdlog source_dir)
-        message("Source dir of ep_spdlog = ${source_dir}")
+    include(ExternalProject)
+    ExternalProject_Add(
+      ep_spdlog
+      URL https://github.com/gabime/spdlog/archive/v1.4.1.tar.gz
+      PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND ""
+      INSTALL_COMMAND ""
+      LOG_DOWNLOAD ON
+    )
+    ExternalProject_Get_Property(ep_spdlog source_dir)
+    message("Source dir of ep_spdlog = ${source_dir}")
 
-        set(SPDLOG_INCLUDE_DIR ${source_dir}/include)
-    endif()
-endif()
+    set(SPDLOG_INCLUDE_DIR ${source_dir}/include)
+  endif ()
+endif ()
 
 # spdlog::spdlog target (if found)
 add_library(spdlog::spdlog INTERFACE IMPORTED GLOBAL)

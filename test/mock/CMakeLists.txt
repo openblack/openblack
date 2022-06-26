@@ -1,4 +1,4 @@
-find_package (Python3 COMPONENTS Interpreter)
+find_package(Python3 COMPONENTS Interpreter)
 
 add_executable(gen_info gen_info.cpp)
 target_include_directories(gen_info PRIVATE ../../src)
@@ -25,8 +25,12 @@ set(DUMMY_MESH_FILE ${INTERMEDIATE_MESH_BINARY_DIR}/Dummy.gltf)
 set(DUMMY_MESH_OUTPUT ${INTERMEDIATE_MESH_BINARY_DIR}/Dummy.l3d)
 set(ABODE_MESH_FILE ${INTERMEDIATE_MESH_BINARY_DIR}/BuildingCeltic5A.gltf)
 set(ABODE_MESH_OUTPUT ${INTERMEDIATE_MESH_BINARY_DIR}/BuildingCeltic5A.l3d)
-set(VILLAGE_CENTRE_MESH_FILE ${INTERMEDIATE_MESH_BINARY_DIR}/BuildingCelticVillageCentre.gltf)
-set(VILLAGE_CENTRE_MESH_OUTPUT ${INTERMEDIATE_MESH_BINARY_DIR}/BuildingCelticVillageCentre.l3d)
+set(VILLAGE_CENTRE_MESH_FILE
+    ${INTERMEDIATE_MESH_BINARY_DIR}/BuildingCelticVillageCentre.gltf
+)
+set(VILLAGE_CENTRE_MESH_OUTPUT
+    ${INTERMEDIATE_MESH_BINARY_DIR}/BuildingCelticVillageCentre.l3d
+)
 
 set(CREATURE_MESH_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/CreatureMesh)
 set(HAND_BASE_OUTPUT ${CREATURE_MESH_BINARY_DIR}/Hand_Boned_Base2.l3d)
@@ -48,9 +52,15 @@ set(TERRAIN_LAND_1_OUTPUT ${TERRAIN_BINARY_DIR}/Land1.lnd)
 set(TERRAIN_LAND_MPM_2P_1_OUTPUT ${TERRAIN_MULTIPLAYER_BINARY_DIR}/MPM_2P_1.lnd)
 set(TERRAIN_NOISE_MAP ${TERRAIN_BINARY_DIR}/noise_map.r8.raw)
 set(TERRAIN_BUMP_MAP ${TERRAIN_BINARY_DIR}/bump_map.r8.raw)
-list(APPEND TERRAIN_MATERIAL_ARRAY ${TERRAIN_BINARY_DIR}/material_data1.rgb5a1.raw)
-list(APPEND TERRAIN_MATERIAL_ARRAY ${TERRAIN_BINARY_DIR}/material_data2.rgb5a1.raw)
-list(APPEND TERRAIN_MATERIAL_ARRAY ${TERRAIN_BINARY_DIR}/material_data3.rgb5a1.raw)
+list(APPEND TERRAIN_MATERIAL_ARRAY
+     ${TERRAIN_BINARY_DIR}/material_data1.rgb5a1.raw
+)
+list(APPEND TERRAIN_MATERIAL_ARRAY
+     ${TERRAIN_BINARY_DIR}/material_data2.rgb5a1.raw
+)
+list(APPEND TERRAIN_MATERIAL_ARRAY
+     ${TERRAIN_BINARY_DIR}/material_data3.rgb5a1.raw
+)
 string(REPLACE ";" "," TERRAIN_MATERIAL_LIST "${TERRAIN_MATERIAL_ARRAY}")
 
 set(SCRIPTS_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Scripts)
@@ -61,7 +71,8 @@ set(QUEST_CHALLENGE_OUTPUT ${QUESTS_BINARY_DIR}/challenge.chl)
 
 # TODO: Combine all texture generating scripts into a single one
 
-add_custom_target(generate-mock-game-data
+add_custom_target(
+  generate-mock-game-data
   COMMAND ${CMAKE_COMMAND} -E make_directory ${DATA_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TEXTURES_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${CITADEL_BINARY_DIR}
@@ -76,62 +87,89 @@ add_custom_target(generate-mock-game-data
   COMMAND ${CMAKE_COMMAND} -E make_directory ${INTERMEDIATE_DATA_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${INTERMEDIATE_MESH_BINARY_DIR}
   # Copy the Scripts Directory
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Scripts ${CMAKE_CURRENT_BINARY_DIR}/Scripts
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Scripts
+          ${CMAKE_CURRENT_BINARY_DIR}/Scripts
   # Generate Mock Raw Textures
-  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py --output-files "${RAW_TEXTURES_0x10000}" --size 0x10000
-  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py --output-files "${RAW_TEXTURES_0x30000}" --size 0x30000
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py
+          --output-files "${RAW_TEXTURES_0x10000}" --size 0x10000
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py
+          --output-files "${RAW_TEXTURES_0x30000}" --size 0x30000
   # Generate Citadel files
-  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py --output-files "${CITADEL_OUTSIDE_BINARY_DIR}/Entrance_l3d.zzz" --size 0x616
+  COMMAND
+    Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py
+    --output-files "${CITADEL_OUTSIDE_BINARY_DIR}/Entrance_l3d.zzz" --size 0x616
   # Data/AllMeshes.g3d
   # Dummy mesh for 626 meshes
-  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py --output-file ${DUMMY_MESH_FILE}
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
+          --output-file ${DUMMY_MESH_FILE}
   COMMAND l3dtool write -o ${DUMMY_MESH_OUTPUT} -i ${DUMMY_MESH_FILE}
-  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py --output-file ${ABODE_MESH_FILE} --translate-positions 0.0883901119,0.0,0.188308239 --scale-positions 6.33014917,1.0,6.33014917
-  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py --output-file ${VILLAGE_CENTRE_MESH_FILE} --translate-positions 0.00188350677,0.0,0.22130537 --scale-positions 12.9809408,1.0,12.9809408
+  COMMAND
+    Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py --output-file
+    ${ABODE_MESH_FILE} --translate-positions 0.0883901119,0.0,0.188308239
+    --scale-positions 6.33014917,1.0,6.33014917
+  COMMAND
+    Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py --output-file
+    ${VILLAGE_CENTRE_MESH_FILE} --translate-positions
+    0.00188350677,0.0,0.22130537 --scale-positions 12.9809408,1.0,12.9809408
   COMMAND l3dtool write -o ${ABODE_MESH_OUTPUT} -i ${ABODE_MESH_FILE}
-  COMMAND l3dtool write -o ${VILLAGE_CENTRE_MESH_OUTPUT} -i ${VILLAGE_CENTRE_MESH_FILE}
-  COMMAND packtool --write-mesh ${ALL_MESHES_OUTPUT} ${DUMMY_MESH_OUTPUT}:626 ${ABODE_MESH_OUTPUT}:79:1 ${VILLAGE_CENTRE_MESH_OUTPUT}:166:1
+  COMMAND l3dtool write -o ${VILLAGE_CENTRE_MESH_OUTPUT} -i
+          ${VILLAGE_CENTRE_MESH_FILE}
+  COMMAND packtool --write-mesh ${ALL_MESHES_OUTPUT} ${DUMMY_MESH_OUTPUT}:626
+          ${ABODE_MESH_OUTPUT}:79:1 ${VILLAGE_CENTRE_MESH_OUTPUT}:166:1
   # Data/AllAnims.anm
   COMMAND packtool --write-animation ${ALL_ANIMATIONS_OUTPUT}
   # Data/CreatureMesh/Hand_Boned_Base2.l3d
-  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py --output-file ${HAND_BASE_MESH_FILE}
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
+          --output-file ${HAND_BASE_MESH_FILE}
   COMMAND l3dtool write -o ${HAND_BASE_OUTPUT} -i ${HAND_BASE_MESH_FILE}
   # Data/Landscape/Land1.lnd
-  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Data/Landscape/gen_land_textures.py --output-dir ${TERRAIN_BINARY_DIR}
-  COMMAND lndtool write -o ${TERRAIN_LAND_1_OUTPUT} --terrain-type ${TERRAIN_TYPE} --noise-map ${TERRAIN_NOISE_MAP} --bump-map ${TERRAIN_BUMP_MAP} --material-array=${TERRAIN_MATERIAL_LIST}
-  COMMAND lndtool write -o ${TERRAIN_LAND_MPM_2P_1_OUTPUT} --terrain-type ${TERRAIN_TYPE} --noise-map ${TERRAIN_NOISE_MAP} --bump-map ${TERRAIN_BUMP_MAP} --material-array=${TERRAIN_MATERIAL_LIST}
+  COMMAND
+    Python3::Interpreter
+    ${CMAKE_CURRENT_SOURCE_DIR}/Data/Landscape/gen_land_textures.py --output-dir
+    ${TERRAIN_BINARY_DIR}
+  COMMAND
+    lndtool write -o ${TERRAIN_LAND_1_OUTPUT} --terrain-type ${TERRAIN_TYPE}
+    --noise-map ${TERRAIN_NOISE_MAP} --bump-map ${TERRAIN_BUMP_MAP}
+    --material-array=${TERRAIN_MATERIAL_LIST}
+  COMMAND
+    lndtool write -o ${TERRAIN_LAND_MPM_2P_1_OUTPUT} --terrain-type
+    ${TERRAIN_TYPE} --noise-map ${TERRAIN_NOISE_MAP} --bump-map
+    ${TERRAIN_BUMP_MAP} --material-array=${TERRAIN_MATERIAL_LIST}
   # Data/WeatherSystem/sky.l3d
-  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Data/WeatherSystem/gen_sky.py --output-dir ${SKY_BINARY_DIR}
+  COMMAND
+    Python3::Interpreter
+    ${CMAKE_CURRENT_SOURCE_DIR}/Data/WeatherSystem/gen_sky.py --output-dir
+    ${SKY_BINARY_DIR}
   COMMAND l3dtool write -o ${SKY_OUTPUT} -i ${SKY_MESH_FILE}
   # Data/Misc/coffre.{l3d,anm}
-  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Data/Misc/gen_coffre.py --output-dir ${COFFRE_BINARY_DIR}
+  COMMAND
+    Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Data/Misc/gen_coffre.py
+    --output-dir ${COFFRE_BINARY_DIR}
   COMMAND l3dtool write -o ${COFFRE_MESH_OUTPUT} -i ${COFFRE_INPUT}
   COMMAND anmtool write -o ${COFFRE_ANIM_OUTPUT} -i ${COFFRE_INPUT}
   # Scripts/info.dat
   COMMAND gen_info --output-file "${INFO_UNPACKED_OUTPUT}"
   COMMAND packtool --write-raw ${INFO_DAT_OUTPUT} ${INFO_UNPACKED_OUTPUT}
   # Scripts/Quests/challenge.chl
-  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/Quests/gen_challenge.py --output-file ${QUEST_CHALLENGE_OUTPUT}
-
+  COMMAND
+    Python3::Interpreter
+    ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/Quests/gen_challenge.py --output-file
+    ${QUEST_CHALLENGE_OUTPUT}
   COMMENT "Generating mock game data in ${CMAKE_CURRENT_BINARY_DIR}"
-
-  BYPRODUCTS
-    ${HAND_BASE_MESH_FILE}
-    ${SKY_MESH_FILE}
-    ${DUMMY_MESH_FILE}
-    ${DUMMY_MESH_OUTPUT}
-    ${ABODE_MESH_FILE}
-    ${ABODE_MESH_OUTPUT}
-    ${VILLAGE_CENTRE_MESH_FILE}
-    ${VILLAGE_CENTRE_MESH_OUTPUT}
-    ${TERRAIN_NOISE_MAP}
-    ${TERRAIN_BUMP_MAP}
-    ${TERRAIN_MATERIAL_ARRAY}
-    ${RAW_TEXTURES}
-
-  SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
-    ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py
-    ${CMAKE_CURRENT_SOURCE_DIR}/Data/Landscape/gen_land_textures.py
-    ${CMAKE_CURRENT_SOURCE_DIR}/Data/WeatherSystem/gen_sky.py
+  BYPRODUCTS ${HAND_BASE_MESH_FILE}
+             ${SKY_MESH_FILE}
+             ${DUMMY_MESH_FILE}
+             ${DUMMY_MESH_OUTPUT}
+             ${ABODE_MESH_FILE}
+             ${ABODE_MESH_OUTPUT}
+             ${VILLAGE_CENTRE_MESH_FILE}
+             ${VILLAGE_CENTRE_MESH_OUTPUT}
+             ${TERRAIN_NOISE_MAP}
+             ${TERRAIN_BUMP_MAP}
+             ${TERRAIN_MATERIAL_ARRAY}
+             ${RAW_TEXTURES}
+  SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
+          ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py
+          ${CMAKE_CURRENT_SOURCE_DIR}/Data/Landscape/gen_land_textures.py
+          ${CMAKE_CURRENT_SOURCE_DIR}/Data/WeatherSystem/gen_sky.py
 )
