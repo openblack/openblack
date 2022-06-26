@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "ECS/Systems/Interfaces/PathfindingSystemInterface.h"
+#include "ECS/Systems/PathfindingSystemInterface.h"
 
 namespace openblack::ecs::systems
 {

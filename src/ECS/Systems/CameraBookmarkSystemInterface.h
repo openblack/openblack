@@ -13,8 +13,8 @@
 #include <chrono>
 #include <memory>
 
-#include "entt/fwd.hpp"
-#include "glm/vec3.hpp"
+#include <entt/fwd.hpp>
+#include <glm/vec3.hpp>
 
 namespace openblack::ecs::systems
 {

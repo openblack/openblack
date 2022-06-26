@@ -9,7 +9,7 @@
 
 #include "Registry.h"
 
-#include "ECS/Systems/Implementations/RenderingSystem.h"
+#include "ECS/Systems/RenderingSystemInterface.h"
 #include "Locator.h"
 
 namespace openblack::ecs

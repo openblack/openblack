@@ -9,13 +9,14 @@
 
 #include "LivingActionSystem.h"
 
+#include <spdlog/spdlog.h>
+
 #include "ECS/Components/LivingAction.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
 #include "Enums.h"
 #include "Game.h"
 #include "Locator.h"
-#include "spdlog/spdlog.h"
 
 using namespace openblack;
 using namespace openblack::ecs::components;

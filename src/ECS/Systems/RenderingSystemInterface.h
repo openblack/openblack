@@ -9,10 +9,11 @@
 
 #pragma once
 
+#include <bgfx/bgfx.h>
+#include <entt/entt.hpp>
+#include <glm/mat4x4.hpp>
+
 #include "Graphics/Mesh.h"
-#include "bgfx/bgfx.h"
-#include "entt/entt.hpp"
-#include "glm/mat4x4.hpp"
 
 namespace openblack::ecs::systems
 {

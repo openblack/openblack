@@ -9,8 +9,8 @@
 
 #pragma once
 
-#include "entt/fwd.hpp"
-#include "glm/fwd.hpp"
+#include <entt/fwd.hpp>
+#include <glm/fwd.hpp>
 
 namespace openblack::ecs::systems
 {
