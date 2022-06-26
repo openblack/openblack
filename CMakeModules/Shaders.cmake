@@ -292,7 +292,7 @@ function (mark_shaders_for_compilation)
         set(PLATFORM_I LINUX)
       endif ()
       shaderc_parse(
-        CLI #
+        CLI
         ${ARGS_TYPE} ${PLATFORM_I} WERROR
         "$<$<CONFIG:debug>:DEBUG>$<$<CONFIG:relwithdebinfo>:DEBUG>"
         FILE ${SHADER_FILE_ABSOLUTE}
