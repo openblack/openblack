@@ -19,7 +19,7 @@ jobs:
         if: startsWith(github.event_name, 'pull_request')
       - uses: DoozyX/clang-format-lint-action@v0.13
         with:
-          source: 'src apps components test'
+          source: 'src apps components test CMakeModules'
           extension: 'c,h,C,H,cpp,hpp,cc,hh,c++,h++,cxx,hxx,cmake,CMakeLists.txt'
           clangFormatVersion: 12
           inplace: False
