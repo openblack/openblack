@@ -66,11 +66,14 @@ void PathFinding::Draw(Game& game)
 
 		ImGui::Columns(1);
 
-		auto& transform = registry.Get<Transform>(_selectedVillager.value());
-		auto& wallHug = registry.Get<WallHug>(_selectedVillager.value());
-		ImGui::DragFloat3("Position", glm::value_ptr(transform.position));
-		ImGui::DragFloat2("Goal", glm::value_ptr(wallHug.goal));
-		ImGui::DragFloat("Speed", &wallHug.speed);
+		if (_selectedVillager.has_value())
+		{
+			auto& transform = registry.Get<Transform>(_selectedVillager.value());
+			auto& wallHug = registry.Get<WallHug>(_selectedVillager.value());
+			ImGui::DragFloat3("Position", glm::value_ptr(transform.position));
+			ImGui::DragFloat2("Goal", glm::value_ptr(wallHug.goal));
+			ImGui::DragFloat("Speed", &wallHug.speed);
+		}
 	}
 	else
 	{
