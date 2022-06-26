@@ -94,36 +94,52 @@ jobs:
         os: [ ubuntu-latest, windows-latest ]
     steps:
       - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Install Linux dependencies
-        run: |
-          sudo apt update -y
-          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
-        if: startsWith(matrix.os, 'ubuntu')
       - uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '11'
-      - name: Run Gradle Configure CMake (Debug)
-        uses: gradle/gradle-build-action@v2
+      - uses: actions/download-artifact@v3
+        name: Download pre-compiled android-armeabi-v7a-vcpkg
         with:
-          arguments: --configuration-cache configureCMakeDebug
-          build-root-directory: android
-      - name: Run Gradle Configure CMake (Release)
-        uses: gradle/gradle-build-action@v2
+          name: openblack-android-armeabi-v7a-vcpkg-${{github.sha}}
+          path: android/app/src/main/jniLibs/armeabi-v7a
+      - uses: actions/download-artifact@v3
+        name: Download pre-compiled android-arm64-v8a-vcpkg
         with:
-          arguments: --configuration-cache configureCMakeRelWithDebInfo
-          build-root-directory: android
+          name: openblack-android-arm64-v8a-vcpkg-${{github.sha}}
+          path: android/app/src/main/jniLibs/arm64-v8a
+      - uses: actions/download-artifact@v3
+        name: Download pre-compiled android-x86-vcpkg
+        with:
+          name: openblack-android-x86-vcpkg-${{github.sha}}
+          path: android/app/src/main/jniLibs/x86
+      - uses: actions/download-artifact@v3
+        name: Download pre-compiled android-x86_64-vcpkg
+        with:
+          name: openblack-android-x86_64-vcpkg-${{github.sha}}
+          path: android/app/src/main/jniLibs/x86_64
+      - name: Move downloads around
+        shell: bash
+        run: |
+          mkdir -p android/app/src/main/jniLibs/{debug,release}/{armeabi-v7a,arm64-v8a,x86,x86_64}
+          mv android/app/src/main/jniLibs/armeabi-v7a/Debug/libopenblack_lib.so    android/app/src/main/jniLibs/debug/armeabi-v7a
+          mv android/app/src/main/jniLibs/armeabi-v7a/Release/libopenblack_lib.so  android/app/src/main/jniLibs/release/armeabi-v7a
+          mv android/app/src/main/jniLibs/arm64-v8a/Debug/libopenblack_lib.so      android/app/src/main/jniLibs/debug/arm64-v8a
+          mv android/app/src/main/jniLibs/arm64-v8a/Release/libopenblack_lib.so    android/app/src/main/jniLibs/release/arm64-v8a
+          mv android/app/src/main/jniLibs/x86/Debug/libopenblack_lib.so            android/app/src/main/jniLibs/debug/x86
+          mv android/app/src/main/jniLibs/x86/Release/libopenblack_lib.so          android/app/src/main/jniLibs/release/x86
+          mv android/app/src/main/jniLibs/x86_64/Debug/libopenblack_lib.so         android/app/src/main/jniLibs/debug/x86_64
+          mv android/app/src/main/jniLibs/x86_64/Release/libopenblack_lib.so       android/app/src/main/jniLibs/release/x86_64
+          find android/app/src/main/jniLibs 
       - name: Run Gradle Assemble (Debug)
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: assembleDebug
+          arguments: assembleDebug -PusePrebuiltNativeLibs
           build-root-directory: android
       - name: Run Gradle Assemble (Release)
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: assembleRelease
+          arguments: assembleRelease -PusePrebuiltNativeLibs
           build-root-directory: android
       - uses: actions/upload-artifact@v3
         with:
