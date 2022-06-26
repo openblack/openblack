@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "ECS/Systems/Interfaces/TownSystemInterface.h"
+#include "ECS/Systems/TownSystemInterface.h"
 
 namespace openblack::ecs::systems
 {

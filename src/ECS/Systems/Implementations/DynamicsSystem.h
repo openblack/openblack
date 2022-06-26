@@ -14,7 +14,7 @@
 #include <optional>
 #include <tuple>
 
-#include "ECS/Systems/Interfaces/DynamicsSystemInterface.h"
+#include "ECS/Systems/DynamicsSystemInterface.h"
 
 class btCollisionDispatcher;
 class btDefaultCollisionConfiguration;

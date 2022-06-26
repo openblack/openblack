@@ -13,7 +13,7 @@
 #include <chrono>
 #include <memory>
 
-#include "ECS/Systems/Interfaces/CameraBookmarkSystemInterface.h"
+#include "ECS/Systems/CameraBookmarkSystemInterface.h"
 
 namespace openblack::ecs::systems
 {

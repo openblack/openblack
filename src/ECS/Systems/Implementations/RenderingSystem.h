@@ -12,11 +12,12 @@
 #include <map>
 #include <vector>
 
+#include <bgfx/bgfx.h>
+#include <entt/entt.hpp>
+#include <glm/mat4x4.hpp>
+
 #include "3D/AllMeshes.h"
-#include "ECS/Systems/Interfaces/RenderingSystemInterface.h"
-#include "bgfx/bgfx.h"
-#include "entt/entt.hpp"
-#include "glm/mat4x4.hpp"
+#include "ECS/Systems/RenderingSystemInterface.h"
 
 namespace openblack::ecs::systems
 {

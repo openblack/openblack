@@ -10,7 +10,7 @@
 #pragma once
 
 #include "ECS/Components/LivingAction.h"
-#include "ECS/Systems/Interfaces/LivingActionSystemInterface.h"
+#include "ECS/Systems/LivingActionSystemInterface.h"
 
 namespace openblack::ecs::systems
 {
