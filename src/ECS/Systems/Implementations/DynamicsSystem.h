@@ -9,12 +9,13 @@
 
 #pragma once
 
-#include <chrono>
 #include <memory>
-#include <optional>
-#include <tuple>
 
 #include "ECS/Systems/DynamicsSystemInterface.h"
+
+#if !defined(LOCATOR_IMPLEMENTATIONS)
+#error "ECS System implementations should only be included in Locator.cpp"
+#endif
 
 class btCollisionDispatcher;
 class btDefaultCollisionConfiguration;

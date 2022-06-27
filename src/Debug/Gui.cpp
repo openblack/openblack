@@ -45,7 +45,7 @@
 #include <Resources/Resources.h>
 
 #include "Console.h"
-#include "ECS/Systems/Implementations/LivingActionSystem.h"
+#include "ECS/Systems/LivingActionSystemInterface.h"
 #include "LHVMViewer.h"
 #include "LandIsland.h"
 #include "MeshViewer.h"

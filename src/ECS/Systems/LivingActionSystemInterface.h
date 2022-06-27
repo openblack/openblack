@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "ECS/Components/LivingAction.h"
+
 namespace openblack::ecs::systems
 {
 

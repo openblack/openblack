@@ -20,7 +20,7 @@
 #include "ECS/Components/Villager.h"
 #include "ECS/Components/WallHug.h"
 #include "ECS/Registry.h"
-#include "ECS/Systems/Implementations/TownSystem.h"
+#include "ECS/Systems/TownSystemInterface.h"
 #include "Game.h"
 #include "Locator.h"
 #include "Resources/MeshId.h"

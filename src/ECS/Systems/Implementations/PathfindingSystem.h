@@ -11,6 +11,10 @@
 
 #include "ECS/Systems/PathfindingSystemInterface.h"
 
+#if !defined(LOCATOR_IMPLEMENTATIONS)
+#error "ECS System implementations should only be included in Locator.cpp"
+#endif
+
 namespace openblack::ecs::systems
 {
 class PathfindingSystem final: public PathfindingSystemInterface

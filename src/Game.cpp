@@ -41,12 +41,12 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
-#include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
-#include "ECS/Systems/Implementations/DynamicsSystem.h"
-#include "ECS/Systems/Implementations/LivingActionSystem.h"
-#include "ECS/Systems/Implementations/PathfindingSystem.h"
-#include "ECS/Systems/Implementations/RenderingSystem.h"
-#include "ECS/Systems/Implementations/TownSystem.h"
+#include "ECS/Systems/CameraBookmarkSystemInterface.h"
+#include "ECS/Systems/DynamicsSystemInterface.h"
+#include "ECS/Systems/LivingActionSystemInterface.h"
+#include "ECS/Systems/PathfindingSystemInterface.h"
+#include "ECS/Systems/RenderingSystemInterface.h"
+#include "ECS/Systems/TownSystemInterface.h"
 #include "GameWindow.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/Texture2D.h"
@@ -67,12 +67,6 @@
 using namespace openblack;
 using namespace openblack::lhscriptx;
 using namespace std::chrono_literals;
-using openblack::ecs::systems::CameraBookmarkSystem;
-using openblack::ecs::systems::DynamicsSystem;
-using openblack::ecs::systems::LivingActionSystem;
-using openblack::ecs::systems::PathfindingSystem;
-using openblack::ecs::systems::RenderingSystem;
-using openblack::ecs::systems::TownSystem;
 
 const std::string k_WindowTitle = "openblack";
 
@@ -450,7 +444,7 @@ bool Game::Initialize()
 {
 	Locator::resources::set<resources::Resources>();
 	Locator::rng::set<RandomNumberManagerProduction>();
-	Locator::rendereringSystem::set<RenderingSystem>();
+	ecs::systems::InitializeGame();
 	auto& resources = Locator::resources::ref();
 	auto& meshManager = resources.GetMeshes();
 	auto& textureManager = resources.GetTextures();
@@ -724,7 +718,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 
 void Game::LoadLandscape(const std::filesystem::path& path)
 {
-	Locator::dynamicsSystem::set<DynamicsSystem>();
+	ecs::systems::InitializeLevel();
 	if (_landIsland)
 	{
 		_landIsland.reset();
@@ -740,10 +734,6 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	_landIsland = std::make_unique<LandIsland>();
 	_landIsland->LoadFromFile(fixedName);
 
-	Locator::livingActionSystem::set<LivingActionSystem>();
-	Locator::townSystem::set<TownSystem>();
-	Locator::pathfindingSystem::set<PathfindingSystem>();
-	Locator::cameraBookmarkSystem::set<CameraBookmarkSystem>();
 	Locator::cameraBookmarkSystem::ref().Initialize();
 	Locator::dynamicsSystem::ref().RegisterIslandRigidBodies(*_landIsland);
 }
