@@ -29,6 +29,9 @@ class CameraBookmarkSystemInterface;
 class LivingActionSystemInterface;
 class TownSystemInterface;
 class PathfindingSystemInterface;
+
+void InitializeGame();
+void InitializeLevel();
 } // namespace ecs::systems
 
 struct Locator

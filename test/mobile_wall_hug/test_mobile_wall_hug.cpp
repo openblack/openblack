@@ -16,7 +16,7 @@
 #include <ECS/Components/WallHug.h>
 #include <ECS/Map.h>
 #include <ECS/Registry.h>
-#include <ECS/Systems/PathfindingSystem.h>
+#include <ECS/Systems/PathfindingSystemInterface.h>
 #include <Game.h>
 #include <LHScriptX/Script.h>
 #include <Locator.h>

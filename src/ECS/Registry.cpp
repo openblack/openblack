@@ -9,8 +9,8 @@
 
 #include "Registry.h"
 
-#include "ECS/Systems/RenderingSystemInterface.h"
 #include "Locator.h"
+#include "Systems/RenderingSystemInterface.h"
 
 namespace openblack::ecs
 {

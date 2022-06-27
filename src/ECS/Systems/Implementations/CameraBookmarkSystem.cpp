@@ -7,6 +7,8 @@
  * openblack is licensed under the GNU General Public License version 3.
  ******************************************************************************/
 
+#define LOCATOR_IMPLEMENTATIONS
+
 #include "CameraBookmarkSystem.h"
 
 #include "3D/LandIsland.h"

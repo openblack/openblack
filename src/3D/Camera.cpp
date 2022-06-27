@@ -18,7 +18,7 @@
 
 #include "3D/LandIsland.h"
 #include "ECS/Registry.h"
-#include "ECS/Systems/Implementations/DynamicsSystem.h"
+#include "ECS/Systems/DynamicsSystemInterface.h"
 #include "Game.h"
 #include "Locator.h"
 
