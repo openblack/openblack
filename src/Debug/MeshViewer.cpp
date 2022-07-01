@@ -132,8 +132,18 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 	auto const& submesh = mesh->GetSubMeshes()[_selectedSubMesh];
 
 	auto flags = submesh->GetFlags();
-	ImGui::Text("SubMesh LOD=%u Status=%u%s%s%s", flags.lod, flags.status, flags.hasBones ? " [Bones]" : "",
-	            flags.isPhysics ? " [Physics]" : "", flags.isWindow ? " [Window]" : "");
+	std::array<char, 0x20> subMeshFlagStr;
+	uint32_t flagsRaw;
+	memcpy(&flagsRaw, &flags, sizeof(flagsRaw));
+	std::snprintf(subMeshFlagStr.data(), subMeshFlagStr.size(), "SubMesh flag=0x%X", flagsRaw);
+	if (ImGui::TreeNodeEx(subMeshFlagStr.data()))
+	{
+		ImGui::Text("%s%s%s\nLOD Mask=0%s%s%s\nStatus=%u\nunknown1=0x%x\nunknown2=0x%x\nunknown2=0x%x",
+		            flags.hasBones ? "[Bones] " : "", flags.isPhysics ? "[Physics] " : "", flags.isWindow ? "[Window] " : "",
+		            (flags.lodMask & 0b001) == 0 ? "" : "|1", (flags.lodMask & 0b010) == 0 ? "" : "|2",
+		            (flags.lodMask & 0b100) == 0 ? "" : "|4", flags.status, flags.unknown1, flags.unknown2, flags.unknown3);
+		ImGui::TreePop();
+	}
 
 	auto const& graphicsMesh = submesh->GetMesh();
 	ImGui::Text("Vertices %u, Indices %u", graphicsMesh.GetVertexBuffer().GetCount(), graphicsMesh.GetIndexBuffer().GetCount());
