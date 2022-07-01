@@ -249,7 +249,7 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
                            bool preserveState) const
 {
 	assert(&subMesh.GetMesh());
-	if (subMesh.IsPhysics())
+	if (!desc.drawAll && subMesh.IsPhysics())
 	{
 		return;
 	}
@@ -346,10 +346,7 @@ void Renderer::DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint
 	for (auto it = subMeshes.begin(); it != subMeshes.end(); ++it)
 	{
 		const L3DSubMesh& subMesh = **it;
-		if (!subMesh.IsPhysics())
-		{
-			DrawSubMesh(mesh, subMesh, desc, std::next(it) != subMeshes.end());
-		}
+		DrawSubMesh(mesh, subMesh, desc, std::next(it) != subMeshes.end());
 	}
 }
 

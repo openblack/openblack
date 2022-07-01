@@ -243,6 +243,7 @@ void MeshViewer::Update([[maybe_unused]] Game& game, const Renderer& renderer)
 		desc.state = state;
 		desc.modelMatrices = &identity;
 		desc.matrixCount = 1;
+		desc.drawAll = true;
 		std::vector<glm::mat4> bones; // In this scope to prevent free before draw
 		if (mesh->IsBoned())
 		{

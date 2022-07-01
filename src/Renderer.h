@@ -96,6 +96,7 @@ public:
 		uint32_t instanceCount;
 		bool isSky;
 		float skyType;
+		bool drawAll; ///< For use in the mesh viewer
 	};
 
 	Renderer() = delete;
