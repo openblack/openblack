@@ -93,17 +93,17 @@ static_assert(sizeof(L3DHeader) == 19 * sizeof(uint32_t));
 
 struct L3DSubmeshHeader
 {
-	// TODO(bwrsandman): Move to l3d lib
 #pragma pack(push, 1)
 	struct alignas(4) Flags
 	{
 		uint32_t hasBones : 1;
-		uint32_t lod : 2;
-		uint32_t status : 6;
-		uint32_t unknown1 : 3; // always 0b0101
+		uint32_t unknown1 : 3;
+		uint32_t status : 6;   // Used for scafolds and tomb stones in grave yard
+		uint32_t unknown2 : 2; // always 0b10
 		uint32_t isWindow : 1;
 		uint32_t isPhysics : 1;
-		uint32_t unknown2 : 16; // always 0, probably padding on 32 bits
+		uint32_t unknown3 : 15;
+		uint32_t lodMask : 3;
 	};
 #pragma pack(pop)
 	static_assert(sizeof(Flags) == 4);

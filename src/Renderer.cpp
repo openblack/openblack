@@ -249,7 +249,8 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
                            bool preserveState) const
 {
 	assert(&subMesh.GetMesh());
-	if (!desc.drawAll && subMesh.IsPhysics())
+	// We don't draw physics meshes, we haven't implemented statuses (building and graves) and modern GPUs can handle high lod
+	if (!desc.drawAll && (subMesh.IsPhysics() || subMesh.GetFlags().status != 0 || (subMesh.GetFlags().lodMask & 1) != 1))
 	{
 		return;
 	}

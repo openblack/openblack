@@ -229,7 +229,7 @@ int PrintMeshHeaders(openblack::l3d::L3DFile& l3d)
 		{
 			result += "hasBones";
 		}
-		result += "|LOD" + std::to_string(flags.lod);
+		result += "|lodMask=" + std::to_string(flags.lodMask);
 		result += "|status=" + std::to_string(flags.status);
 		if (flags.unknown1 != 0u)
 		{
@@ -643,7 +643,7 @@ int WriteFile(const Arguments::Write& args) noexcept
 		using L3DSubmeshHeader = openblack::l3d::L3DSubmeshHeader;
 		L3DSubmeshHeader submesh;
 		submesh.flags.hasBones = false;
-		submesh.flags.lod = 0;
+		submesh.flags.lodMask = 0;
 		submesh.flags.status = 0;
 		submesh.flags.unknown1 = 0b0101;
 		submesh.flags.isWindow = false;
