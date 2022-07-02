@@ -229,6 +229,9 @@ jobs:
           target: game-data
       - name: Extract Game Data
         run: 7z x -ogame-data\bw "$PWD\game-data\${{steps.game-data.outputs.filename}}"
+      - name: Set Screenshot Position For Maps
+        run: |
+          'START_CAMERA_POS("1757.7,2625.2")' | Add-Content -Path game-data\bw\Scripts\Land1.txt
       - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-debug-land-1.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-release-land-1.png"
       - name: Upload screenshots
