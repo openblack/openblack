@@ -47,6 +47,7 @@ private:
 	entt::id_type _selectedMesh;
 	int _selectedSubMesh {0};
 	std::optional<entt::id_type> _selectedAnimation;
+	int _selectedFootprint {0};
 	int _selectedFrame {0};
 	ImGuiTextFilter _filter;
 	uint32_t _meshFlagFilter {0xFFFFFFFF};

@@ -14,12 +14,14 @@
 #include <BulletCollision/CollisionShapes/btConvexHullShape.h>
 #include <L3DFile.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/vec_swizzle.hpp>
 #include <glm/matrix.hpp>
 #include <spdlog/spdlog.h>
 
 #include "Common/FileSystem.h"
 #include "Common/IStream.h"
 #include "Game.h"
+#include "Graphics/VertexBuffer.h"
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -43,10 +45,59 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 		                        skin.texels.data(), static_cast<uint32_t>(skin.texels.size() * sizeof(skin.texels[0])));
 	}
 
-	if ((static_cast<uint32_t>(_flags) & static_cast<uint32_t>(l3d::L3DMeshFlags::HasDoorPosition)) != 0u &&
-	    !l3d.GetExtraPoints().empty())
+	if (HasDoorPosition() && !l3d.GetExtraPoints().empty())
 	{
 		_doorPos = glm::vec3(l3d.GetExtraPoints()[0].x, l3d.GetExtraPoints()[0].y, l3d.GetExtraPoints()[0].z);
+	}
+
+	if (ContainsLandscapeFeature() && l3d.GetFootprint().has_value())
+	{
+		struct FootprintVertex
+		{
+			glm::vec2 pos;
+			glm::vec2 texCoord;
+		};
+		VertexDecl decl;
+		decl.reserve(1);
+		decl.emplace_back(VertexAttrib::Attribute::Position, static_cast<uint8_t>(2), VertexAttrib::Type::Float);
+		decl.emplace_back(VertexAttrib::Attribute::TexCoord0, static_cast<uint8_t>(2), VertexAttrib::Type::Float);
+
+		const auto& footprint = l3d.GetFootprint().value();
+		for (uint32_t i = 1; const auto& entry : footprint.entries)
+		{
+			auto texture = std::make_unique<Texture2D>("footprints/texture/" + _debugName + "/" + std::to_string(i));
+			++i;
+			texture->Create(static_cast<uint16_t>(footprint.header.width), static_cast<uint16_t>(footprint.header.height), 1,
+			                graphics::Format::RGBA4, Wrapping::ClampEdge, entry.pixels.data(),
+			                static_cast<uint32_t>(entry.pixels.size() * sizeof(entry.pixels[0])));
+
+			const bgfx::Memory* verticesMem =
+			    bgfx::alloc(static_cast<uint32_t>(sizeof(FootprintVertex) * entry.triangles.size() * 3));
+			auto* vertices = reinterpret_cast<FootprintVertex*>(verticesMem->data);
+			for (uint8_t j = 0; const auto& t : entry.triangles)
+			{
+				for (uint8_t k = 0; k < 3; ++k)
+				{
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index): access is bound to size
+					auto& vertex = vertices[j];
+					++j;
+
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index): access is bound to size
+					const auto& world = t.world[k];
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index): access is bound to size
+					const auto& uv = t.texture[k];
+
+					vertex.pos.x = world.x;
+					vertex.pos.y = world.y;
+					vertex.texCoord.x = uv.x / footprint.header.width;
+					vertex.texCoord.y = uv.y / footprint.header.height;
+				}
+			}
+
+			auto* vertexBuffer = new VertexBuffer("footprints/quad/" + _debugName + "/" + std::to_string(i), verticesMem, decl);
+			auto mesh = std::make_unique<Mesh>(vertexBuffer);
+			_footprints.emplace_back(Footprint {std::move(texture), std::move(mesh)});
+		}
 	}
 
 	std::map<uint32_t, glm::mat4> matrices;

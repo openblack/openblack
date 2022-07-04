@@ -22,7 +22,8 @@
  *         extra data offset - offset of the point block (see below)
  *         footprint data offset - offset of the footprint block (see below)
  *
- * There are a few optional blocks. Their presence can be check for using the flags field
+ * There are a few optional blocks. Their presence can be check for using the
+ * flags field
  * The footprint block is present when ContainsLandscapeFeature is set
  * The UV2 block is present when ContainsUV2 is set
  * The name block is present when ContainsNameData is set
@@ -47,7 +48,25 @@
  *
  * ------------------------ start of footprint block ----------------------------
  *
- *  TODO(#484): Investigate optional footprint block
+ * - 24 byte header containing:
+ *         number of entries - 4 bytes
+ *         block offset - 4 bytes
+ *         block offset - 4 bytes
+ *         texture width - 4 bytes
+ *         texture height - 4 bytes
+ *         zero - 4 bytes
+ * - number of entries * variable size entries containing:
+ *         possible packed color - 4 bytes
+ *         zero - 4 bytes
+ *         triangle count - 4 bytes
+ *         triangle * count * 3 pairs of floats reprensenting world space and
+ * texture space
+ *         texture width * height of 2 byte colors values in [0, 0xARGB]
+ *         zero - 12 bytes
+ * - 12 byte footer containing:
+ *         unknown int - 4 bytes
+ *         unknown float - 4 bytes
+ *         either 0, 0xcccccccc, 0x80000000, 0xb1000000 or 0xb3000000 - 4 bytes
  *
  * ------------------------ start of uv2 block ---------------------------------
  *
@@ -497,18 +516,72 @@ void L3DFile::ReadFile(std::istream& stream)
 	// Footprint data
 	const auto headerFlags = static_cast<uint32_t>(_header.flags);
 	uint32_t additionalDataOffset = 0;
-	uint32_t footprintDataSize = 0;
 	if ((headerFlags & static_cast<uint32_t>(L3DMeshFlags::ContainsLandscapeFeature)) != 0u)
 	{
-		// TODO(#484): Investigate optional footprint block
 		stream.seekg(0x48, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&additionalDataOffset), sizeof(additionalDataOffset));
-		stream.seekg(additionalDataOffset + 8, std::istream::beg);
-		stream.read(reinterpret_cast<char*>(&footprintDataSize), sizeof(footprintDataSize));
-		auto footprintData = std::vector<int16_t>(footprintDataSize / sizeof(int16_t));
-		stream.read(reinterpret_cast<char*>(footprintData.data()), footprintDataSize);
-		_footprintData.resize(footprintDataSize);
-		stream.read(reinterpret_cast<char*>(_footprintData.data()), _footprintData.size());
+		stream.seekg(additionalDataOffset, std::istream::beg);
+		L3DFootprintHeader header;
+		stream.read(reinterpret_cast<char*>(&header), sizeof(header));
+		assert(header.unknown == 0); // Make sure that unknown is always 0
+		std::vector<uint8_t> footprintData;
+		footprintData.resize(header.size);
+		stream.read(reinterpret_cast<char*>(footprintData.data()), header.size - sizeof(L3DFootprintHeader) + 8);
+
+		uint32_t offset = 0;
+		std::vector<L3DFootprintEntry> entries;
+		entries.resize(header.count);
+
+		for (auto& entry : entries)
+		{
+			if (static_cast<int>(footprintData.size()) - offset <
+			    sizeof(entry.unknown1) + sizeof(entry.unknown2) + sizeof(entry.triangleCount))
+			{
+				Fail("Footprint goes beyond footprint data");
+			}
+			memcpy(&entry.unknown1, &footprintData[offset],
+			       sizeof(entry.unknown1) + sizeof(entry.unknown2) + sizeof(entry.triangleCount));
+			offset += sizeof(entry.unknown1) + sizeof(entry.unknown2) + sizeof(entry.triangleCount);
+
+			assert(entry.unknown2 == 0); // Make sure that unknown is always 0
+			assert(entry.unknown3 == 0); // Make sure that unknown is always 0
+			assert(entry.unknown4 == 0); // Make sure that unknown is always 0
+			assert(entry.unknown5 == 0); // Make sure that unknown is always 0
+
+			if (static_cast<int>(footprintData.size()) - offset < entry.triangleCount * sizeof(L3DFootprintTriangle))
+			{
+				Fail("Footprint mesh go beyond footprint data");
+			}
+			entry.triangles.resize(entry.triangleCount);
+			memcpy(entry.triangles.data(), &footprintData[offset], entry.triangleCount * sizeof(L3DFootprintTriangle));
+			offset += entry.triangleCount * sizeof(L3DFootprintTriangle);
+
+			if (static_cast<int>(footprintData.size()) - offset < header.width * header.height * sizeof(uint16_t))
+			{
+				Fail("Footprint texture go beyond footprint data");
+			}
+			entry.pixels.resize(header.width * header.height);
+			memcpy(entry.pixels.data(), &footprintData[offset], header.width * header.height * sizeof(uint16_t));
+			offset += header.width * header.height * sizeof(uint16_t);
+
+			if (static_cast<int>(footprintData.size()) - offset <
+			    sizeof(entry.unknown3) + sizeof(entry.unknown4) + sizeof(entry.unknown5))
+			{
+				Fail("Footprint pixels go beyond footprint data");
+			}
+			memcpy(&entry.unknown3, &footprintData[offset],
+			       sizeof(entry.unknown3) + sizeof(entry.unknown4) + sizeof(entry.unknown5));
+			offset += sizeof(entry.unknown3) + sizeof(entry.unknown4) + sizeof(entry.unknown5);
+		}
+
+		L3DFootprintFooter footer;
+		stream.read(reinterpret_cast<char*>(&footer), sizeof(footer));
+		// NOLINTNEXTLINE(clang-analyzer-deadcode.DeadStores): offset used in assert
+		offset += sizeof(footer);
+
+		assert(footprintData.size() == offset);
+
+		_footprint = std::make_optional(L3DFootprint {header, entries, footer});
 	}
 
 	// UV2 data
@@ -518,7 +591,7 @@ void L3DFile::ReadFile(std::istream& stream)
 		// TODO(#483): Investigate optional UV2 block
 		stream.seekg(0x48, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&additionalDataOffset), sizeof(additionalDataOffset));
-		stream.seekg(additionalDataOffset + footprintDataSize, std::istream::beg);
+		stream.seekg(additionalDataOffset + (_footprint.has_value() ? _footprint->header.size : 0), std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&uv2DataSize), sizeof(uv2DataSize));
 		stream.seekg(8, std::istream::cur);
 		_uv2Data.resize(uv2DataSize);
@@ -531,7 +604,8 @@ void L3DFile::ReadFile(std::istream& stream)
 	{
 		stream.seekg(0x48, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&additionalDataOffset), sizeof(additionalDataOffset));
-		stream.seekg(additionalDataOffset + footprintDataSize + uv2DataSize, std::istream::beg);
+		stream.seekg(additionalDataOffset + (_footprint.has_value() ? _footprint->header.size : 0) + uv2DataSize,
+		             std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&nameDataSize), sizeof(nameDataSize));
 		stream.seekg(8, std::istream::cur);
 		_nameData.resize(nameDataSize);
@@ -727,6 +801,12 @@ void L3DFile::Write(const std::filesystem::path& filepath)
 
 	// Set magic number
 	_header.magic = k_Magic;
+	_header.flags = L3DMeshFlags::None;
+	if (_footprint.has_value())
+	{
+		_header.flags = static_cast<L3DMeshFlags>(static_cast<uint32_t>(_header.flags) |
+		                                          static_cast<uint32_t>(L3DMeshFlags::ContainsLandscapeFeature));
+	}
 	_header.submeshCount = static_cast<uint32_t>(_submeshHeaders.size());
 	_header.skinCount = static_cast<uint32_t>(_skins.size());
 	_header.extraDataCount = static_cast<uint32_t>(_extraPoints.size());
