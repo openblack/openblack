@@ -77,6 +77,11 @@ inline l3d::L3DMeshFlags operator&(l3d::L3DMeshFlags a, l3d::L3DMeshFlags b)
 class L3DMesh
 {
 public:
+	struct Footprint
+	{
+		std::unique_ptr<graphics::Texture2D> texture;
+		std::unique_ptr<graphics::Mesh> mesh;
+	};
 	explicit L3DMesh(std::string debugName = "");
 	virtual ~L3DMesh();
 
@@ -87,6 +92,7 @@ public:
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return static_cast<uint8_t>(_subMeshes.size()); }
 	[[nodiscard]] const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }
 	[[nodiscard]] const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& GetSkins() const { return _skins; }
+	[[nodiscard]] const std::vector<Footprint>& GetFootprints() const { return _footprints; }
 	[[nodiscard]] const std::vector<uint32_t>& GetBoneParents() const { return _bonesParents; }
 	[[nodiscard]] const std::vector<glm::mat4>& GetBoneMatrices() const { return _bonesDefaultMatrices; }
 	[[nodiscard]] const std::optional<glm::vec3>& GetDoorPos() const { return _doorPos; }
@@ -101,6 +107,7 @@ private:
 	std::string _debugName;
 
 	std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>> _skins;
+	std::vector<Footprint> _footprints; ///< If ContainsLandscapeFeature() is true
 	std::vector<std::unique_ptr<L3DSubMesh>> _subMeshes;
 	std::vector<uint32_t> _bonesParents;
 	std::vector<glm::mat4> _bonesDefaultMatrices;
@@ -121,9 +128,10 @@ public:
 	[[nodiscard]] uint32_t GetFlags() const { return static_cast<uint32_t>(_flags); }
 
 	[[nodiscard]] bool IsBoned() const { return static_cast<bool>(_flags & l3d::L3DMeshFlags::HasBones); }
+	[[nodiscard]] bool HasDoorPosition() const { return static_cast<bool>(_flags & l3d::L3DMeshFlags::HasDoorPosition); }
 	[[nodiscard]] bool IsPacked() const { return static_cast<bool>(_flags & l3d::L3DMeshFlags::Packed); }
 	[[nodiscard]] bool IsNoDraw() const { return static_cast<bool>(_flags & l3d::L3DMeshFlags::NoDraw); }
-	[[nodiscard]] bool IsContainsLandscapeFeature() const
+	[[nodiscard]] bool ContainsLandscapeFeature() const
 	{
 		return static_cast<bool>(_flags & l3d::L3DMeshFlags::ContainsLandscapeFeature);
 	}

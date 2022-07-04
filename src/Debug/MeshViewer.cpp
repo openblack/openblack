@@ -123,6 +123,7 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 	ImGui::SliderInt("submesh", &_selectedSubMesh, 0, static_cast<int>(mesh->GetSubMeshes().size()) - 1);
 	ImGui::DragFloat3("position", &_cameraPosition[0], 0.5f);
 	ImGui::Checkbox("View bounding box", &_viewBoundingBox);
+	ImGui::Checkbox("Show matching armature", &_matchBones);
 
 	if (_selectedSubMesh >= mesh->GetNumSubMeshes())
 	{
@@ -150,7 +151,18 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 
 	ImGui::NextColumn();
 
-	ImGui::Checkbox("Show matching armature", &_matchBones);
+	if (mesh->ContainsLandscapeFeature() && ImGui::TreeNodeEx("Footprint", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::SliderInt("index", &_selectedFootprint, 0, static_cast<int>(mesh->GetFootprints().size() - 1));
+		if (_selectedFootprint > static_cast<int>(mesh->GetFootprints().size()))
+		{
+			_selectedFootprint = static_cast<int>(mesh->GetFootprints().size()) - 1;
+		}
+		const auto& footprint = mesh->GetFootprints().at(_selectedFootprint);
+		ImGui::Image(footprint.texture->GetNativeHandle(), ImVec2(128, 128));
+		ImGui::TreePop();
+	}
+
 	if (_selectedAnimation)
 	{
 		auto const& animation = animations.Handle(*_selectedAnimation);

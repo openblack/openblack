@@ -108,7 +108,7 @@ public:
 
 	void UpdateDebugCrossUniforms(const glm::mat4& pose);
 
-	void ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height) const;
+	void ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height, uint32_t clearColor = 0x274659ff) const;
 
 	void DrawScene(const DrawSceneDesc& drawDesc) const;
 	void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const;

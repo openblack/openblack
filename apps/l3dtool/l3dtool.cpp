@@ -465,9 +465,61 @@ int PrintBlendValues(openblack::l3d::L3DFile& l3d)
 
 int PrintFootprintValues(openblack::l3d::L3DFile& l3d)
 {
-	const auto& footprintValues = l3d.GetFootprintData();
+	const auto& footprint = l3d.GetFootprint();
 	std::printf("file: %s\n", l3d.GetFilename().c_str());
-	return PrintRawBytes(footprintValues.data(), footprintValues.size() * sizeof(footprintValues[0]));
+
+	if (!footprint.has_value())
+	{
+		printf("No data");
+		return EXIT_FAILURE;
+	}
+
+	printf("header.count: %d\n", footprint->header.count);
+	printf("header.offset: %d\n", footprint->header.offset);
+	printf("header.size: %d\n", footprint->header.size);
+	printf("header.width: %d\n", footprint->header.width);
+	printf("header.height: %d\n", footprint->header.height);
+	printf("header.unknown: 0x%08x\n", footprint->header.unknown);
+	printf("entries:");
+	for (uint32_t i = 0; const auto& entry : footprint->entries)
+	{
+		printf("[%d]\n", i);
+		++i;
+
+		printf("entry.unknown1: 0x%08x", entry.unknown1);
+		printf("entry.unknown2: 0x%08x", entry.unknown2);
+		printf("entry.triangleCount: 0x%08x", entry.triangleCount);
+		std::printf("|   position   |   uv coord   |\n");
+		std::printf("|--------------|--------------|\n");
+		for (const auto& t : entry.triangles)
+		{
+			std::printf("|%6.3f %6.3f |%6.3f %6.3f |\n", t.world[0].x, t.world[0].y, t.texture[0].x, t.texture[0].y);
+			std::printf("|%6.3f %6.3f |%6.3f %6.3f |\n", t.world[1].x, t.world[1].y, t.texture[1].x, t.texture[1].y);
+			std::printf("|%6.3f %6.3f |%6.3f %6.3f |\n", t.world[2].x, t.world[2].y, t.texture[2].x, t.texture[2].y);
+		}
+
+		for (uint16_t y = 0; y < footprint->header.height; ++y)
+		{
+			for (uint16_t x = 0; x < footprint->header.width; ++x)
+			{
+				const auto val = entry.pixels[x + footprint->header.width * y];
+				const auto red = (val & 0xF);
+				const auto green = (val >> 4) & 0xF;
+				const auto blue = (val >> 8) & 0xF;
+				std::printf("\x1b[48;2;%u;%u;%um  \x1b[0m", static_cast<uint8_t>(red * 0x11),
+				            static_cast<uint8_t>(green * 0x11), static_cast<uint8_t>(blue * 0x11));
+			}
+		}
+
+		printf("entry.unknown3: 0x%08x", entry.unknown3);
+		printf("entry.unknown4: 0x%08x", entry.unknown4);
+		printf("entry.unknown5: 0x%08x", entry.unknown5);
+	}
+
+	printf("footer.unknown1: 0x%08x", footprint->footer.unknown1);
+	printf("footer.unknown2: %f", footprint->footer.unknown2);
+	printf("footer.unknown3: 0x%08x", footprint->footer.unknown3);
+	return EXIT_SUCCESS;
 }
 
 int PrintUv2Values(openblack::l3d::L3DFile& l3d)
@@ -645,7 +697,7 @@ int WriteFile(const Arguments::Write& args) noexcept
 		submesh.flags.hasBones = false;
 		submesh.flags.lodMask = 0;
 		submesh.flags.status = 0;
-		submesh.flags.unknown1 = 0b0101;
+		submesh.flags.unknown1 = 0b101;
 		submesh.flags.isWindow = false;
 		submesh.flags.isPhysics = false;
 		submesh.flags.unknown2 = 0;
@@ -849,9 +901,9 @@ int WriteFile(const Arguments::Write& args) noexcept
 		l3d.AddSubmesh(submesh);
 	}
 
-	auto decodedFootprint = tinygltf::base64_decode(gltf.extras.Get("footprint").Get<std::string>());
-	auto footprintData = std::vector<uint8_t>(decodedFootprint.begin(), decodedFootprint.end());
-	l3d.SetFootprintData(footprintData);
+	// auto decodedFootprint = tinygltf::base64_decode(gltf.extras.Get("footprint").Get<std::string>());
+	// auto footprintData = std::vector<uint8_t>(decodedFootprint.begin(), decodedFootprint.end());
+	// l3d.SetFootprint(footprintData);
 	auto decodedUv2 = tinygltf::base64_decode(gltf.extras.Get("uv2").Get<std::string>());
 	auto uv2Data = std::vector<uint8_t>(decodedUv2.begin(), decodedUv2.end());
 	l3d.SetUv2Data(uv2Data);
@@ -909,8 +961,8 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 
 	// TODO(raffclar): No support for BINARY_TYPE https://github.com/syoyo/tinygltf/issues/360
 	std::map<std::string, tinygltf::Value> extras;
-	extras["footprint"] = tinygltf::Value(
-	    tinygltf::base64_encode(l3d.GetFootprintData().data(), static_cast<uint32_t>(l3d.GetFootprintData().size())));
+	// extras["footprint"] = tinygltf::Value(
+	//     tinygltf::base64_encode(l3d.GetFootprintData().data(), static_cast<uint32_t>(l3d.GetFootprintData().size())));
 	extras["uv2"] =
 	    tinygltf::Value(tinygltf::base64_encode(l3d.GetUv2Data().data(), static_cast<uint32_t>(l3d.GetUv2Data().size())));
 	auto name = l3d.GetNameData();

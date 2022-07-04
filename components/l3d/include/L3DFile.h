@@ -11,6 +11,7 @@
 
 #include <array>
 #include <filesystem>
+#include <optional>
 #include <span>
 #include <string>
 #include <vector>
@@ -20,6 +21,7 @@ namespace openblack::l3d
 
 enum class L3DMeshFlags : uint32_t
 {
+	None,
 	Unknown1 = 1U << 0U,                  // 0x1      (31)
 	Unknown2 = 1U << 1U,                  // 0x2      (30)
 	Unknown3 = 1U << 2U,                  // 0x4      (29)
@@ -144,6 +146,48 @@ struct L3DBone
 };
 static_assert(sizeof(L3DBone) == 3 * sizeof(uint32_t) + 9 * sizeof(float) + sizeof(L3DPoint));
 
+struct L3DFootprintTriangle
+{
+	std::array<L3DPoint2D, 3> world;
+	std::array<L3DPoint2D, 3> texture;
+};
+
+struct L3DFootprintHeader
+{
+	uint32_t count;
+	uint32_t offset;
+	uint32_t size;
+	uint32_t width;
+	uint32_t height;
+	uint32_t unknown;
+};
+
+struct L3DFootprintEntry
+{
+	uint32_t unknown1;
+	uint32_t unknown2;
+	uint32_t triangleCount;
+	std::vector<L3DFootprintTriangle> triangles;
+	std::vector<uint16_t> pixels; //< ARGB
+	uint32_t unknown3;
+	uint32_t unknown4;
+	uint32_t unknown5;
+};
+
+struct L3DFootprintFooter
+{
+	uint32_t unknown1;
+	float unknown2;
+	uint32_t unknown3;
+};
+
+struct L3DFootprint
+{
+	L3DFootprintHeader header;
+	std::vector<L3DFootprintEntry> entries;
+	L3DFootprintFooter footer;
+};
+
 struct L3DMaterial
 {
 	enum class Type : uint32_t
@@ -252,7 +296,7 @@ protected:
 	std::vector<std::span<uint16_t>> _indexSpans;
 	std::vector<std::span<L3DVertexGroup>> _vertexGroupSpans;
 	std::vector<std::span<L3DBone>> _boneSpans;
-	std::vector<uint8_t> _footprintData;
+	std::optional<L3DFootprint> _footprint;
 	std::vector<uint8_t> _uv2Data;
 	std::string _nameData;
 
@@ -289,9 +333,9 @@ public:
 	[[nodiscard]] const std::vector<L3DVertexGroup>& GetLookUpTableData() const { return _vertexGroups; }
 	[[nodiscard]] const std::vector<L3DBlend>& GetBlends() const { return _blends; }
 	[[nodiscard]] const std::vector<L3DBone>& GetBones() const { return _bones; }
-	[[nodiscard]] const std::vector<uint8_t>& GetFootprintData() const { return _footprintData; }
+	[[nodiscard]] const std::optional<L3DFootprint>& GetFootprint() const { return _footprint; }
 	[[nodiscard]] const std::vector<uint8_t>& GetUv2Data() const { return _uv2Data; }
-	void SetFootprintData(std::vector<uint8_t>& footprintData) { _footprintData = footprintData; }
+	void SetFootprint(const L3DFootprint& footprint) { _footprint = footprint; }
 	void SetUv2Data(std::vector<uint8_t>& uv2Data) { _uv2Data = uv2Data; }
 	void SetNameData(std::string& nameData) { _nameData = nameData; }
 	[[nodiscard]] const std::string& GetNameData() const { return _nameData; }
