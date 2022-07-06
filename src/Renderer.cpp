@@ -21,6 +21,7 @@
 #include "3D/LandIsland.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
+#include "ECS/Components/Mesh.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
@@ -401,6 +402,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	const auto* terrainShader = _shaderManager->GetShader("Terrain");
 	const auto* debugShader = _shaderManager->GetShader("DebugLine");
 	const auto* spriteShader = _shaderManager->GetShader("Sprite");
+	const auto* footprintShaderInstanced = _shaderManager->GetShader("FootprintInstanced");
 	const auto* debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
 	const auto* objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
 
@@ -536,6 +538,29 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			// Debug
 			if (desc.viewId == graphics::RenderPass::Main)
 			{
+				for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
+				{
+					auto mesh = meshManager.Handle(meshId);
+					if (!mesh->ContainsLandscapeFeature() || mesh->GetFootprints().empty())
+					{
+						continue;
+					}
+				}
+				for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
+				{
+					auto mesh = meshManager.Handle(meshId);
+					if (!mesh->ContainsLandscapeFeature() || mesh->GetFootprints().empty())
+					{
+						continue;
+					}
+					const auto& footprint = mesh->GetFootprints()[0];
+					footprintShaderInstanced->SetTextureSampler("s_footprint", 0, *footprint.texture);
+					footprint.mesh->GetVertexBuffer().Bind();
+					bgfx::setInstanceDataBuffer(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
+					bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW |
+					               BGFX_STATE_MSAA | BGFX_STATE_BLEND_ALPHA);
+					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), footprintShaderInstanced->GetRawHandle());
+				}
 				if (renderCtx.boundingBox)
 				{
 					const auto boundBoxOffset = static_cast<uint32_t>(renderCtx.instanceUniforms.size() / 2);
