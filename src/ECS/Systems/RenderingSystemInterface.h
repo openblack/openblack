@@ -31,6 +31,7 @@ struct RenderContext
 	std::unique_ptr<graphics::Mesh> boundingBox;
 	std::unique_ptr<graphics::Mesh> streams;
 	std::unique_ptr<graphics::Mesh> footpaths;
+	std::unique_ptr<graphics::Mesh> footprints;
 
 	struct InstancedDrawDesc
 	{
