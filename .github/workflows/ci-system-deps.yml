@@ -22,7 +22,7 @@ jobs:
           sed -E -i "s|#? ?MAKEFLAGS=.*|MAKEFLAGS=-j$(nproc)|" /etc/makepkg.conf
           useradd builduser -p ""
           printf 'builduser ALL=(ALL) ALL\n' >> /etc/sudoers
-          git config --global --add safe.directory /__w/openblack/openblack
+          git config --global --add safe.directory ${{ env.GITHUB_WORKSPACE }}
 
       - uses: actions/checkout@v2
 
@@ -64,7 +64,7 @@ jobs:
         run: |
           sudo -u builduser git clone https://aur.archlinux.org/openblack-git.git /tmp/openblack-git
           cd /tmp/openblack-git
-          sed "s,source=.*,source=('openblack::git+file://${GITHUB_WORKSPACE}')," -i PKGBUILD
+          sed "s,source=.*,source=('openblack::git+file://${{ env.GITHUB_WORKSPACE }}')," -i PKGBUILD
           sudo -u builduser makepkg
 
       - uses: actions/upload-artifact@v3
