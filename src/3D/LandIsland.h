@@ -76,6 +76,11 @@ public:
 		view = _view;
 		proj = _proj;
 	}
+	void GetExtent(glm::vec2& extentMin, glm::vec2& extentMax) const
+	{
+		extentMin = _extentMin;
+		extentMax = _extentMax;
+	}
 
 	uint8_t GetNoise(int x, int y);
 
@@ -89,6 +94,8 @@ private:
 	std::unique_ptr<graphics::FrameBuffer> _footprintFrameBuffer;
 	glm::mat4 _proj;
 	glm::mat4 _view;
+	glm::vec2 _extentMin;
+	glm::vec2 _extentMax;
 
 	std::array<uint8_t, 256 * 256> _noiseMap;
 };
