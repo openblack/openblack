@@ -612,10 +612,18 @@ bool Game::Run()
 	}
 
 	{
-		uint16_t waterWidth;
-		uint16_t waterHeight;
-		_water->GetFrameBuffer().GetSize(waterWidth, waterHeight);
-		_renderer->ConfigureView(graphics::RenderPass::Reflection, waterWidth, waterHeight);
+		uint16_t width;
+		uint16_t height;
+		_water->GetFrameBuffer().GetSize(width, height);
+		_renderer->ConfigureView(graphics::RenderPass::Reflection, width, height);
+	}
+
+	if (_config.drawIsland)
+	{
+		uint16_t width;
+		uint16_t height;
+		_landIsland->GetFootprintFramebuffer().GetSize(width, height);
+		_renderer->ConfigureView(graphics::RenderPass::Footprint, width, height, 0x00000000);
 	}
 
 	Game::SetTime(_config.timeOfDay);

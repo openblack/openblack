@@ -30,7 +30,7 @@ public:
 
 	void Bind(RenderPass viewId) const;
 
-	Texture2D& GetColorAttachment() { return _colorAttachment; }
+	[[nodiscard]] const Texture2D& GetColorAttachment() const { return _colorAttachment; }
 	void GetSize(uint16_t& width, uint16_t& height) const { width = _width, height = _height; }
 
 private:

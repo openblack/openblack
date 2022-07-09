@@ -13,11 +13,13 @@
 
 #include "3D/LandIsland.h"
 #include "Game.h"
+#include "Graphics/FrameBuffer.h"
+#include "Gui.h"
 
 using namespace openblack::debug::gui;
 
 LandIsland::LandIsland()
-    : Window("Land Island", ImVec2(250.0f, 165.0f))
+    : Window("Land Island", ImVec2(600.0f, 600.0f))
 {
 }
 
@@ -34,6 +36,20 @@ void LandIsland::Draw(openblack::Game& game)
 
 	ImGui::Text("Block Count: %zu", landIsland.GetBlocks().size());
 	ImGui::Text("Country Count: %zu", landIsland.GetCountries().size());
+
+	ImGui::Separator();
+
+	if (ImGui::TreeNodeEx("Footprints", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		const auto& frameBuffer = landIsland.GetFootprintFramebuffer();
+		uint16_t width;
+		uint16_t height;
+		frameBuffer.GetSize(width, height);
+		ImGui::Text("Resolution: %ux%u", width, height);
+		float scaling = 512.0f / static_cast<float>(width);
+		ImGui::Image(frameBuffer.GetColorAttachment().GetNativeHandle(), ImVec2(width * scaling, height * scaling));
+		ImGui::TreePop();
+	}
 
 	ImGui::Separator();
 

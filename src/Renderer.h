@@ -117,6 +117,7 @@ public:
 	void Reset(uint16_t width, uint16_t height) const;
 
 private:
+	void DrawFootprintPass(const DrawSceneDesc& drawDesc) const;
 	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, bool preserveState) const;
 	void DrawPass(const DrawSceneDesc& desc) const;
 

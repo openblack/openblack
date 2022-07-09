@@ -14,12 +14,15 @@
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LNDFile.h>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/transform.hpp>
 #include <spdlog/spdlog.h>
 
 #include "Common/IStream.h"
 #include "Common/stb_image_write.h"
 #include "Dynamics/LandBlockBulletMeshInterface.h"
-#include "Game.h"
+#include "Graphics/FrameBuffer.h"
+#include "Graphics/Texture2D.h"
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -55,6 +58,42 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	{
 		_landBlocks[i]._block = std::make_unique<lnd::LNDBlock>(lndBlocks[i]);
 	}
+
+	uint32_t minX = std::numeric_limits<uint32_t>::max();
+	uint32_t minZ = std::numeric_limits<uint32_t>::max();
+	uint32_t maxX = 0;
+	uint32_t maxZ = 0;
+	glm::vec2 mapMin(0.0f, 0.0f);
+	glm::vec2 mapMax(0.0f, 0.0f);
+	for (auto& b : _landBlocks)
+	{
+		if (minX > b._block->blockX)
+		{
+			minX = b._block->blockX;
+			mapMin.x = b.GetMapPosition().x;
+		}
+		if (maxX < b._block->blockX)
+		{
+			maxX = b._block->blockX;
+			mapMax.x = b.GetMapPosition().x;
+		}
+		if (minZ > b._block->blockZ)
+		{
+			minZ = b._block->blockZ;
+			mapMin.y = b.GetMapPosition().y;
+		}
+		if (maxZ < b._block->blockZ)
+		{
+			maxZ = b._block->blockZ;
+			mapMax.y = b.GetMapPosition().y;
+		}
+	}
+	const auto res =
+	    glm::u16vec2(maxX - minX, maxZ - minZ) * glm::u16vec2(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height);
+	_footprintFrameBuffer = std::make_unique<FrameBuffer>("Footprints", res.x, res.y, graphics::Format::RGBA8);
+
+	_proj = glm::ortho(mapMin.x, mapMax.x, mapMin.y, mapMax.y, -400.0f, 400.0f);
+	_view = glm::rotate(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} countries", lnd.GetCountries().size());
 	_countries = lnd.GetCountries();

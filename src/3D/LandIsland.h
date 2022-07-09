@@ -16,9 +16,8 @@
 #include <vector>
 
 #include <entt/core/hashed_string.hpp>
+#include <glm/mat4x4.hpp>
 
-#include "Graphics/Mesh.h"
-#include "Graphics/Texture2D.h"
 #include "LandBlock.h"
 
 namespace openblack
@@ -27,6 +26,11 @@ namespace openblack
 namespace ecs::systems
 {
 class DynamicsSystem;
+}
+
+namespace graphics
+{
+class FrameBuffer;
 }
 
 namespace lnd
@@ -66,6 +70,12 @@ public:
 	[[nodiscard]] const std::vector<lnd::LNDCountry>& GetCountries() const { return _countries; }
 	[[nodiscard]] const graphics::Texture2D& GetAlbedoArray() const { return *_materialArray; }
 	[[nodiscard]] const graphics::Texture2D& GetBump() const { return *_textureBumpMap; }
+	[[nodiscard]] const graphics::FrameBuffer& GetFootprintFramebuffer() const { return *_footprintFrameBuffer; }
+	void GetOrthoViewProj(glm::mat4& view, glm::mat4& proj) const
+	{
+		view = _view;
+		proj = _proj;
+	}
 
 	uint8_t GetNoise(int x, int y);
 
@@ -75,6 +85,10 @@ private:
 
 	std::unique_ptr<graphics::Texture2D> _textureNoiseMap;
 	std::unique_ptr<graphics::Texture2D> _textureBumpMap;
+
+	std::unique_ptr<graphics::FrameBuffer> _footprintFrameBuffer;
+	glm::mat4 _proj;
+	glm::mat4 _view;
 
 	std::array<uint8_t, 256 * 256> _noiseMap;
 };
