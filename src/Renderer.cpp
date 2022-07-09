@@ -198,10 +198,8 @@ Renderer::~Renderer()
 	bgfx::shutdown();
 }
 
-void Renderer::ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height) const
+void Renderer::ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height, uint32_t clearColor) const
 {
-	static const uint32_t clearColor = 0x274659ff;
-
 	bgfx::setViewClear(static_cast<bgfx::ViewId>(viewId), BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, clearColor, 1.0f, 0);
 	bgfx::setViewRect(static_cast<bgfx::ViewId>(viewId), 0, 0, width, height);
 }
@@ -352,8 +350,55 @@ void Renderer::DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint
 	}
 }
 
+void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
+{
+	const auto viewId = graphics::RenderPass::Footprint;
+	auto section = drawDesc.profiler.BeginScoped(Profiler::Stage::FootprintPass);
+	if (drawDesc.drawIsland)
+	{
+		const auto& island = Game::Instance()->GetLandIsland();
+		island.GetFootprintFramebuffer().Bind(viewId);
+
+		// This dummy draw call is here to make sure that view is cleared if no
+		// other draw calls are submitted to view
+		bgfx::touch(static_cast<bgfx::ViewId>(viewId));
+
+		// _shaderManager->SetCamera(viewId, *drawDesc.camera); // TODO
+		glm::mat4 view;
+		glm::mat4 proj;
+		island.GetOrthoViewProj(view, proj);
+		bgfx::setViewTransform(static_cast<bgfx::ViewId>(viewId), &view, &proj);
+
+		const auto& meshManager = Locator::resources::ref().GetMeshes();
+		const auto& renderCtx = Locator::rendereringSystem::ref().GetContext();
+		const auto* footprintShaderInstanced = _shaderManager->GetShader("FootprintInstanced");
+		for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
+		{
+			auto mesh = meshManager.Handle(meshId);
+			if (!mesh->ContainsLandscapeFeature() || mesh->GetFootprints().empty())
+			{
+				continue;
+			}
+			const auto& footprint = mesh->GetFootprints()[0];
+			footprintShaderInstanced->SetTextureSampler("s_footprint", 0, *footprint.texture);
+			footprint.mesh->GetVertexBuffer().Bind();
+			bgfx::setInstanceDataBuffer(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
+			uint64_t state = 0u                       //
+			                 | BGFX_STATE_WRITE_RGB   //
+			                 | BGFX_STATE_WRITE_A     //
+			                 | BGFX_STATE_BLEND_ALPHA //
+			                 | BGFX_STATE_CULL_CW     //
+			                 | BGFX_STATE_MSAA;
+			bgfx::setState(state);
+			bgfx::submit(static_cast<bgfx::ViewId>(viewId), footprintShaderInstanced->GetRawHandle());
+		}
+	}
+}
+
 void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const
 {
+	// TODO(bwrsandman): Footprint framebuffer doesn't need to be updated each frame
+	DrawFootprintPass(drawDesc);
 	// Reflection Pass
 	{
 		auto section = drawDesc.profiler.BeginScoped(Profiler::Stage::ReflectionPass);
@@ -402,7 +447,6 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	const auto* terrainShader = _shaderManager->GetShader("Terrain");
 	const auto* debugShader = _shaderManager->GetShader("DebugLine");
 	const auto* spriteShader = _shaderManager->GetShader("Sprite");
-	const auto* footprintShaderInstanced = _shaderManager->GetShader("FootprintInstanced");
 	const auto* debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
 	const auto* objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
 
@@ -545,21 +589,6 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					{
 						continue;
 					}
-				}
-				for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
-				{
-					auto mesh = meshManager.Handle(meshId);
-					if (!mesh->ContainsLandscapeFeature() || mesh->GetFootprints().empty())
-					{
-						continue;
-					}
-					const auto& footprint = mesh->GetFootprints()[0];
-					footprintShaderInstanced->SetTextureSampler("s_footprint", 0, *footprint.texture);
-					footprint.mesh->GetVertexBuffer().Bind();
-					bgfx::setInstanceDataBuffer(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
-					bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW |
-					               BGFX_STATE_MSAA | BGFX_STATE_BLEND_ALPHA);
-					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), footprintShaderInstanced->GetRawHandle());
 				}
 				if (renderCtx.boundingBox)
 				{

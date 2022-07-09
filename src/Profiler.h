@@ -33,6 +33,7 @@ public:
 		GuiLoop,
 		GameLogic,
 		SceneDraw,
+		FootprintPass,
 		ReflectionPass,
 		ReflectionDrawSky,
 		ReflectionDrawWater,
@@ -63,6 +64,7 @@ public:
 	    "GUI Loop",             //
 	    "Game Logic",           //
 	    "Encode Draw Scene",    //
+	    "Footprint Pass",       //
 	    "Reflection Pass",      //
 	    "Draw Sky",             //
 	    "Draw Water",           //

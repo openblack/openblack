@@ -14,5 +14,4 @@ void main()
 	vec4 position = instMul(model, mul(u_model[0], vec4(a_position.x, 0.0f, a_position.y, 1.0f)));
 	v_texcoord0 = vec4(a_texcoord0, 0.0f, 0.0f);
 	gl_Position = mul(u_modelViewProj, position);
-
 }
