@@ -1,4 +1,4 @@
-$input v_texcoord0, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera
+$input v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera
 
 #include <bgfx_shader.sh>
 
@@ -7,6 +7,7 @@ $input v_texcoord0, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_l
 SAMPLER2DARRAY(s0_materials, 0);
 SAMPLER2D(s1_bump, 1);
 SAMPLER2D(s2_smallBump, 2);
+SAMPLER2D(s3_footprints, 3);
 
 uniform vec4 u_skyAndBump;
 
@@ -49,12 +50,14 @@ void main()
 		col = col * smallbump;
 	}
 
+	vec4 footprints = texture2D(s3_footprints, v_texcoord1.xy);
+	col.rgb = mix(col.rgb, footprints.rgb, footprints.a);
+
 	// apply light map
 	float skyBightness = skyType / 2.0f;
 	col = col * mix(0.25f, clamp(v_lightLevel * 2.0f, 0.5f, 1.0f), skyBightness);
 
 	gl_FragColor = vec4(col.rgb, v_waterAlpha);
-
 
 	//gl_FragColor.r = v_distToCamera / 200.0f;
 

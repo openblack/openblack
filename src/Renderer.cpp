@@ -504,6 +504,10 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		                                                                               : Profiler::Stage::MainPassDrawIsland);
 		if (desc.drawIsland)
 		{
+			glm::vec2 extentMin;
+			glm::vec2 extentMax;
+			desc.island.GetExtent(extentMin, extentMax);
+			auto islandExtent = glm::vec4(extentMin, extentMax);
 			for (const auto& block : desc.island.GetBlocks())
 			{
 				auto texture = Locator::resources::ref().GetTextures().Handle(LandIsland::k_SmallBumpTextureId);
@@ -511,10 +515,13 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				terrainShader->SetTextureSampler("s0_materials", 0, desc.island.GetAlbedoArray());
 				terrainShader->SetTextureSampler("s1_bump", 1, desc.island.GetBump());
 				terrainShader->SetTextureSampler("s2_smallBump", 2, *texture);
+				terrainShader->SetTextureSampler("s3_footprints", 3,
+				                                 desc.island.GetFootprintFramebuffer().GetColorAttachment());
 
 				// pack uniforms
-				const glm::vec4 mapPosition = block.GetMapPosition();
-				terrainShader->SetUniformValue("u_blockPosition", &mapPosition); // vs
+				const glm::vec4 mapPositionAndSize = glm::vec4(block.GetMapPosition(), 160.0f, 160.0f);
+				terrainShader->SetUniformValue("u_blockPositionAndSize", &mapPositionAndSize); // vs
+				terrainShader->SetUniformValue("u_islandExtent", &islandExtent);               // vs
 				const glm::vec4 u_skyAndBump = {desc.sky.GetCurrentSkyType(), desc.bumpMapStrength, desc.smallBumpMapStrength,
 				                                0.0f};
 				terrainShader->SetUniformValue("u_skyAndBump", &u_skyAndBump); // fs

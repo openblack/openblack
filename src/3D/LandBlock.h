@@ -62,7 +62,7 @@ public:
 	[[nodiscard]] const graphics::Mesh& GetMesh() const { return *_mesh; }
 	[[nodiscard]] const lnd::LNDCell* GetCells() const;
 	[[nodiscard]] glm::ivec2 GetBlockPosition() const;
-	[[nodiscard]] glm::vec4 GetMapPosition() const;
+	[[nodiscard]] glm::vec2 GetMapPosition() const;
 	[[nodiscard]] std::unique_ptr<btRigidBody>& GetRigidBody() { return _rigidBody; };
 
 private:
