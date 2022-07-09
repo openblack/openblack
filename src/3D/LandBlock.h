@@ -57,7 +57,6 @@ class LandBlock
 {
 public:
 	LandBlock() = default;
-	void Draw(graphics::RenderPass viewId, const graphics::ShaderProgram& program, bool cullBack) const;
 	void BuildMesh(LandIsland& island);
 
 	[[nodiscard]] const graphics::Mesh& GetMesh() const { return *_mesh; }

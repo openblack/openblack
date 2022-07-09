@@ -11,11 +11,8 @@
 
 #include <cassert>
 
-#include <utility>
-
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LNDFile.h>
-#include <glm/gtc/type_ptr.hpp>
 
 #include "Dynamics/LandBlockBulletMeshInterface.h"
 #include "Graphics/VertexBuffer.h"
@@ -189,29 +186,6 @@ const bgfx::Memory* LandBlock::BuildVertexList(LandIsland& island)
 	}
 
 	return verticesMem;
-}
-
-void LandBlock::Draw(graphics::RenderPass viewId, const ShaderProgram& program, bool cullBack) const
-{
-	glm::vec4 mapPosition = glm::vec4(_block->mapX, _block->mapZ, 0, 0);
-	program.SetUniformValue("u_blockPosition", &mapPosition);
-
-	constexpr auto defaultState = BGFX_STATE_WRITE_MASK | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_BLEND_ALPHA | BGFX_STATE_MSAA;
-
-	Mesh::DrawDesc desc = {
-	    /*viewId =*/viewId,
-	    /*program =*/program,
-	    /*count =*/_mesh->GetVertexBuffer().GetCount(),
-	    /*offset =*/0,
-	    /*instanceBuffer =*/nullptr,
-	    /*instanceStart =*/0,
-	    /*instanceCount =*/1,
-	    /*state =*/defaultState | (cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW),
-	    /*rgba =*/0,
-	    /*skip =*/Mesh::SkipState::SkipNone,
-	    /*preserveState =*/false,
-	};
-	_mesh->Draw(desc);
 }
 
 const lnd::LNDCell* LandBlock::GetCells() const
