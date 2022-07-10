@@ -620,8 +620,8 @@ void FeatureScriptCommands::CreateWeatherClimateWind(int32_t, float, float, floa
 	// __func__);
 }
 
-void FeatureScriptCommands::CreateWeatherStorm(int32_t, glm::vec3, float, int32_t, glm::vec3, glm::vec3, glm::vec3, float,
-                                               glm::vec3)
+void FeatureScriptCommands::CreateWeatherStorm(int32_t, glm::vec3, float, int32_t, const std::string&, const std::string&,
+                                               const std::string&, float, glm::vec3)
 {
 	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
 	// __func__);

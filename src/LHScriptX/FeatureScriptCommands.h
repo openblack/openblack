@@ -96,7 +96,8 @@ public:
 	static void CreateWeatherClimateRain(int32_t, float, int32_t, int32_t, int32_t);
 	static void CreateWeatherClimateTemp(int32_t, float, float);
 	static void CreateWeatherClimateWind(int32_t, float, float, float);
-	static void CreateWeatherStorm(int32_t, glm::vec3, float, int32_t, glm::vec3, glm::vec3, glm::vec3, float, glm::vec3);
+	static void CreateWeatherStorm(int32_t, glm::vec3, float, int32_t, const std::string&, const std::string&,
+	                               const std::string&, float, glm::vec3);
 	static void BrushSize(float, float);
 	static void CreateStream(int32_t streamId);
 	static void CreateStreamPoint(int32_t streamId, glm::vec3 position);
