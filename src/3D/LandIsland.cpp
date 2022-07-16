@@ -27,6 +27,8 @@
 using namespace openblack;
 using namespace openblack::graphics;
 
+const uint8_t LandIsland::k_GridCount = 32;
+const uint8_t LandIsland::k_CellCount = 16;
 const float LandIsland::k_HeightUnit = 0.67f;
 const float LandIsland::k_CellSize = 10.0f;
 
@@ -192,40 +194,39 @@ void LandIsland::DumpTextures() const
 	_materialArray->DumpTexture();
 }
 
-void LandIsland::DumpMaps() const
+std::vector<uint8_t> LandIsland::CreateHeightMap() const
 {
-	const int cellsize = 16;
-
 	// 32x32 block grid with 16x16 cells
 	// 512 x 512 pixels
-	// lets go with 3 channels for a laugh
-	auto* data = new uint8_t[32 * 32 * cellsize * cellsize];
-
-	memset(data, 0x00, 32 * 32 * cellsize * cellsize);
+	std::vector<uint8_t> data;
+	data.resize(k_GridCount * k_GridCount * k_CellCount * k_CellCount, 0);
 
 	for (const auto& block : _landBlocks)
 	{
-		int mapx = block.GetBlockPosition().x;
-		int mapz = block.GetBlockPosition().y;
-		int lineStride = 32 * cellsize;
+		const int mapx = block.GetBlockPosition().x;
+		const int mapz = block.GetBlockPosition().y;
+		const int lineStride = k_GridCount * k_CellCount;
 
-		for (int x = 0; x < cellsize; x++)
+		for (int y = 0; y < k_CellCount; y++)
 		{
-			for (int y = 0; y < cellsize; y++)
+			for (int x = 0; x < k_CellCount; x++)
 			{
-				auto cell = block.GetCells()[y * 17 + x];
+				const auto& cell = block.GetCells()[x * (k_CellCount + 1) + y];
 
-				int cellX = (mapx * cellsize) + x;
-				int cellY = (mapz * cellsize) + y;
+				const int cellX = (mapx * k_CellCount) + x;
+				const int cellY = (mapz * k_CellCount) + y;
 
 				data[(cellY * lineStride) + cellX] = cell.altitude;
 			}
 		}
 	}
+	return data;
+}
 
+void LandIsland::DumpMaps() const
+{
+	auto data = CreateHeightMap();
 	FILE* fptr = fopen("dump.raw", "wb");
-	fwrite(data, 32 * 32 * cellsize * cellsize, 1, fptr);
+	fwrite(data.data(), data.size() * sizeof(data[0]), 1, fptr);
 	fclose(fptr);
-
-	delete[] data;
 }

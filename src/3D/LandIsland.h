@@ -41,6 +41,8 @@ struct LNDCountry;
 class LandIsland
 {
 public:
+	static const uint8_t k_GridCount;
+	static const uint8_t k_CellCount;
 	static const float k_HeightUnit;
 	static const float k_CellSize;
 	static constexpr entt::hashed_string k_SmallBumpTextureId = entt::hashed_string("raw/smallbumpa");
@@ -59,6 +61,8 @@ public:
 	void DumpMaps() const;
 
 private:
+	[[nodiscard]] std::vector<uint8_t> CreateHeightMap() const;
+
 	std::array<uint8_t, 1024> _blockIndexLookup {0};
 	std::vector<LandBlock> _landBlocks;
 	std::vector<lnd::LNDCountry> _countries;
