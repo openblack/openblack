@@ -88,6 +88,12 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 			_extentMax.y = b.GetMapPosition().y;
 		}
 	}
+
+	_heightMap = std::make_unique<Texture2D>("Height Map");
+	auto heightMapData = CreateHeightMap();
+	_heightMap->Create(k_GridCount * k_CellCount, k_GridCount * k_CellCount, 1, graphics::Format::R8, Wrapping::ClampEdge,
+	                   Filter::Linear, heightMapData.data(), static_cast<uint32_t>(heightMapData.size()));
+
 	const auto res =
 	    glm::u16vec2(maxX - minX, maxZ - minZ) * glm::u16vec2(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height);
 	_footprintFrameBuffer = std::make_unique<FrameBuffer>("Footprints", res.x, res.y, graphics::Format::RGBA8);

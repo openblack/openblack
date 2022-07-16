@@ -39,6 +39,15 @@ void LandIsland::Draw(openblack::Game& game)
 
 	ImGui::Separator();
 
+	if (ImGui::TreeNodeEx("Height Map", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		auto dim = openblack::LandIsland::k_CellCount * openblack::LandIsland::k_GridCount;
+		const auto& texture = landIsland.GetHeightMap();
+		ImGui::Text("Resolution: %ux%u", dim, dim);
+		ImGui::Image(texture.GetNativeHandle(), ImVec2(512.0f, 512.0f));
+		ImGui::TreePop();
+	}
+
 	if (ImGui::TreeNodeEx("Footprints", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		const auto& frameBuffer = landIsland.GetFootprintFramebuffer();

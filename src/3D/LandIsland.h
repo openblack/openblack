@@ -74,6 +74,7 @@ public:
 	[[nodiscard]] const std::vector<lnd::LNDCountry>& GetCountries() const { return _countries; }
 	[[nodiscard]] const graphics::Texture2D& GetAlbedoArray() const { return *_materialArray; }
 	[[nodiscard]] const graphics::Texture2D& GetBump() const { return *_textureBumpMap; }
+	[[nodiscard]] const graphics::Texture2D& GetHeightMap() const { return *_heightMap; }
 	[[nodiscard]] const graphics::FrameBuffer& GetFootprintFramebuffer() const { return *_footprintFrameBuffer; }
 	void GetOrthoViewProj(glm::mat4& view, glm::mat4& proj) const
 	{
@@ -92,6 +93,7 @@ private:
 	std::unique_ptr<graphics::Texture2D> _materialArray;
 	std::unique_ptr<graphics::Texture2D> _countryLookup;
 
+	std::unique_ptr<graphics::Texture2D> _heightMap;
 	std::unique_ptr<graphics::Texture2D> _textureNoiseMap;
 	std::unique_ptr<graphics::Texture2D> _textureBumpMap;
 
