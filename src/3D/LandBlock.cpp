@@ -88,44 +88,59 @@ const bgfx::Memory* LandBlock::BuildVertexList(LandIsland& island)
 	// we'll loop through each cell, 16x16
 	// (the array is 17x17 but the 17th block is questionable data)
 
-	int bx = _block->blockX * 16;
-	int bz = _block->blockZ * 16;
+	const auto blockOffset = static_cast<glm::u16vec2>(GetBlockPosition() * 16);
 
-	uint16_t i = 0;
+	uint16_t index = 0;
 	for (int x = 0; x < 16; x++)
 	{
 		for (int z = 0; z < 16; z++)
 		{
-			// top left
-			auto tl = island.GetCell(glm::u16vec2(bx + x + 0, bz + z + 0));
-			// top right
-			auto tr = island.GetCell(glm::u16vec2(bx + x + 1, bz + z + 0));
-			// bottom left
-			auto bl = island.GetCell(glm::u16vec2(bx + x + 0, bz + z + 1));
-			// bottom right
-			auto br = island.GetCell(glm::u16vec2(bx + x + 1, bz + z + 1));
+			enum class Corner
+			{
+				TopLeft,
+				TopRight,
+				BottomLeft,
+				BottomRight,
 
-			// construct positions from cell altitudes
-			glm::vec3 pTL((x + 0) * LandIsland::k_CellSize, tl.altitude * LandIsland::k_HeightUnit,
-			              ((z + 0) * LandIsland::k_CellSize));
-			glm::vec3 pTR((x + 1) * LandIsland::k_CellSize, tr.altitude * LandIsland::k_HeightUnit,
-			              ((z + 0) * LandIsland::k_CellSize));
-			glm::vec3 pBL((x + 0) * LandIsland::k_CellSize, bl.altitude * LandIsland::k_HeightUnit,
-			              ((z + 1) * LandIsland::k_CellSize));
-			glm::vec3 pBR((x + 1) * LandIsland::k_CellSize, br.altitude * LandIsland::k_HeightUnit,
-			              ((z + 1) * LandIsland::k_CellSize));
-
-			auto getMat = [&countries, &island](const lnd::LNDCell& cell, int x, int z) {
-				const auto& country = countries.at(cell.properties.country);
-				const auto noise = island.GetNoise(x, z);
-				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index): access is bound to size
-				return country.materials[(cell.altitude + noise) % country.materials.size()];
+				_COUNT
 			};
 
-			const auto tlMat = getMat(tl, bx + x + 0, bz + z + 0);
-			const auto trMat = getMat(tr, bx + x + 1, bz + z + 0);
-			const auto blMat = getMat(bl, bx + x + 0, bz + z + 1);
-			const auto brMat = getMat(br, bx + x + 1, bz + z + 1);
+			std::array<glm::u16vec2, static_cast<size_t>(Corner::_COUNT)> offset;
+			offset[static_cast<size_t>(Corner::TopLeft)] = glm::u16vec2(x, z);
+			offset[static_cast<size_t>(Corner::TopRight)] = glm::u16vec2(x + 1, z);
+			offset[static_cast<size_t>(Corner::BottomLeft)] = glm::u16vec2(x, z + 1);
+			offset[static_cast<size_t>(Corner::BottomRight)] = glm::u16vec2(x + 1, z + 1);
+
+			std::array<const lnd::LNDCell*, static_cast<size_t>(Corner::_COUNT)> cells;
+			// TODO(#522): Use zip_view in c++23
+			for (size_t i = 0; i < cells.size(); ++i)
+			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+				cells[i] = &island.GetCell(blockOffset + offset[i]);
+			}
+
+			// construct positions from cell altitudes
+			std::array<glm::vec3, static_cast<size_t>(Corner::_COUNT)> pos;
+			// TODO(#522): Use zip_view in c++23
+			for (size_t i = 0; i < pos.size(); ++i)
+			{
+				pos[i] = glm::vec3(                                // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+				    offset[i].x * LandIsland::k_CellSize,          // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+				    cells[i]->altitude * LandIsland::k_HeightUnit, // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+				    offset[i].y * LandIsland::k_CellSize           // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+				);
+			}
+
+			std::array<const lnd::LNDMapMaterial*, static_cast<size_t>(Corner::_COUNT)> materials;
+			for (size_t i = 0; i < pos.size(); ++i)
+			{
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+				const auto& country = countries.at(cells[i]->properties.country);
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+				const auto noise = island.GetNoise(blockOffset + offset[i]);
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+				materials[i] = &country.materials[(cells[i]->altitude + noise) % country.materials.size()];
+			}
 
 			// TODO(470): This is temporary way for drawing landscape, should be moved to a shader in the renderer
 			// Using a lambda so we're not repeating ourselves
@@ -140,47 +155,69 @@ const bgfx::Memory* LandBlock::BuildVertexList(LandIsland& island)
 				}
 				return 1.0f;
 			};
-			auto makeVert = [&getAlpha](const glm::vec3& height, const glm::vec3& weight,
-			                            const std::array<lnd::LNDMapMaterial, 3>& m, const lnd::LNDCell& cell) -> LandVertex {
-				std::array<uint32_t, 6> mat = {m[0].indices[0], m[1].indices[0], m[2].indices[0],
-				                               m[0].indices[1], m[1].indices[1], m[2].indices[1]};
-				glm::u32vec3 blend = {m[0].coefficient, m[1].coefficient, m[2].coefficient};
-				return {height, weight, mat, blend, cell.luminosity, getAlpha(cell.properties)};
+			auto makeVert = [&getAlpha, &pos, &cells, &materials](Corner corner, const glm::vec3& weight,
+			                                                      const std::array<Corner, 3>& m) -> LandVertex {
+				std::array<uint32_t, 6> mat = {
+				    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+				    materials[static_cast<size_t>(m[0])]->indices[0],
+				    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+				    materials[static_cast<size_t>(m[1])]->indices[0],
+				    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+				    materials[static_cast<size_t>(m[2])]->indices[0],
+
+				    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+				    materials[static_cast<size_t>(m[0])]->indices[1],
+				    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+				    materials[static_cast<size_t>(m[1])]->indices[1],
+				    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+				    materials[static_cast<size_t>(m[2])]->indices[1],
+				};
+				const glm::u32vec3 blend = {
+				    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+				    materials[static_cast<size_t>(m[0])]->coefficient,
+				    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+				    materials[static_cast<size_t>(m[1])]->coefficient,
+				    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+				    materials[static_cast<size_t>(m[2])]->coefficient,
+				};
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+				const auto& cell = *cells[static_cast<size_t>(corner)];
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+				return {pos[static_cast<size_t>(corner)], weight, mat, blend, cell.luminosity, getAlpha(cell.properties)};
+			};
+
+			auto makeTriangle = [&makeVert, &vertices, &index](const std::array<Corner, 3>& corners, bool forward) {
+				if (forward)
+				{
+					// NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+					vertices[index++] = makeVert(corners[0], glm::vec3(1, 0, 0), corners);
+					// NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+					vertices[index++] = makeVert(corners[1], glm::vec3(0, 1, 0), corners);
+					// NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+					vertices[index++] = makeVert(corners[2], glm::vec3(0, 0, 1), corners);
+				}
+				else
+				{
+					// NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+					vertices[index++] = makeVert(corners[2], glm::vec3(0, 0, 1), corners);
+					// NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+					vertices[index++] = makeVert(corners[1], glm::vec3(0, 1, 0), corners);
+					// NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+					vertices[index++] = makeVert(corners[0], glm::vec3(1, 0, 0), corners);
+				}
 			};
 
 			// cell splitting
 			// winding order = clockwise
-			if (!tl.properties.split)
+			if (!cells[static_cast<size_t>(Corner::TopLeft)]->properties.split)
 			{
-				// TR/BR/TL  # #
-				//             #
-				std::array<lnd::LNDMapMaterial, 3> trbrtl = {tlMat, trMat, brMat};
-				vertices[i++] = makeVert(pTR, glm::vec3(0, 1, 0), trbrtl, tr);
-				vertices[i++] = makeVert(pBR, glm::vec3(0, 0, 1), trbrtl, br);
-				vertices[i++] = makeVert(pTL, glm::vec3(1, 0, 0), trbrtl, tl);
-
-				// BR/BL/TL  #
-				//           # #
-				std::array<lnd::LNDMapMaterial, 3> brbltl = {tlMat, blMat, brMat};
-				vertices[i++] = makeVert(pBR, glm::vec3(0, 0, 1), brbltl, br);
-				vertices[i++] = makeVert(pBL, glm::vec3(0, 1, 0), brbltl, bl);
-				vertices[i++] = makeVert(pTL, glm::vec3(1, 0, 0), brbltl, tl);
+				makeTriangle({Corner::TopLeft, Corner::TopRight, Corner::BottomRight}, true);    //  ┐
+				makeTriangle({Corner::TopLeft, Corner::BottomLeft, Corner::BottomRight}, false); // └
 			}
 			else
 			{
-				// BL/TL/TR  # #
-				//           #
-				std::array<lnd::LNDMapMaterial, 3> bltltr = {blMat, tlMat, trMat};
-				vertices[i++] = makeVert(pBL, glm::vec3(1, 0, 0), bltltr, bl);
-				vertices[i++] = makeVert(pTL, glm::vec3(0, 1, 0), bltltr, tl);
-				vertices[i++] = makeVert(pTR, glm::vec3(0, 0, 1), bltltr, tr);
-
-				// TR/BR/BL    #
-				//           # #
-				std::array<lnd::LNDMapMaterial, 3> trbrbl = {blMat, brMat, trMat};
-				vertices[i++] = makeVert(pTR, glm::vec3(0, 0, 1), trbrbl, tr);
-				vertices[i++] = makeVert(pBR, glm::vec3(0, 1, 0), trbrbl, br);
-				vertices[i++] = makeVert(pBL, glm::vec3(1, 0, 0), trbrbl, bl);
+				makeTriangle({Corner::BottomLeft, Corner::TopLeft, Corner::TopRight}, true);      // ┌
+				makeTriangle({Corner::BottomLeft, Corner::BottomRight, Corner::TopRight}, false); //  ┘
 			}
 		}
 	}

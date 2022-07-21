@@ -86,7 +86,7 @@ public:
 		extentMax = _extentMax;
 	}
 
-	uint8_t GetNoise(int x, int y);
+	uint8_t GetNoise(glm::u8vec2 pos);
 
 private:
 	std::unique_ptr<graphics::Texture2D> _materialArray;
