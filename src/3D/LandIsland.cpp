@@ -138,9 +138,9 @@ float LandIsland::GetHeightAt(glm::vec2 vec) const
 	return GetCell(vec * 0.1f).altitude * LandIsland::k_HeightUnit;
 }
 
-uint8_t LandIsland::GetNoise(int x, int y)
+uint8_t LandIsland::GetNoise(glm::u8vec2 pos)
 {
-	return _noiseMap.at((y & 0xFF) + 256 * (x & 0xFF));
+	return _noiseMap.at(pos.x * 256 + pos.y);
 }
 
 const LandBlock* LandIsland::GetBlock(const glm::u8vec2& coordinates) const
