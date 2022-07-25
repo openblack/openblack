@@ -12,6 +12,7 @@
 #include <glm/gtx/euler_angles.hpp>
 
 #include "ECS/Components/Mesh.h"
+#include "ECS/Components/MorphWithTerrain.h"
 #include "ECS/Components/Pot.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
@@ -42,6 +43,10 @@ entt::entity PotArchetype::Create(const glm::vec3& position, float yAngleRadians
 	registry.Assign<Pot>(entity, static_cast<uint16_t>(amount), static_cast<uint16_t>(info.maxAmountInPot));
 	const auto resourceId = resources::MeshIdToResourceId(info.meshId);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
+	if (info.potType == PotType::PileFood)
+	{
+		registry.Assign<MorphWithTerrain>(entity);
+	}
 
 	return entity;
 }

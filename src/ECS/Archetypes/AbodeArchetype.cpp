@@ -16,6 +16,7 @@
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Fixed.h"
 #include "ECS/Components/Mesh.h"
+#include "ECS/Components/MorphWithTerrain.h"
 #include "ECS/Components/StoragePit.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
@@ -84,12 +85,33 @@ entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, 
 	const auto entity = registry.Create();
 
 	const auto& info = game->GetInfoConstants().abode.at(static_cast<size_t>(type));
+	bool morphsWithTerrain = false;
+	morphsWithTerrain |= info.abodeType == AbodeType::Graveyard;
+	morphsWithTerrain |= info.abodeType == AbodeType::StoragePit;
+	if (info.abodeType == AbodeType::Wonder)
+	{
+		morphsWithTerrain |= info.tribeType == Tribe::CELTIC;
+		morphsWithTerrain |= info.tribeType == Tribe::JAPANESE;
+		morphsWithTerrain |= info.tribeType == Tribe::INDIAN;
+		morphsWithTerrain |= info.tribeType == Tribe::NORSE;
+		morphsWithTerrain |= info.tribeType == Tribe::TIBETAN;
+	}
+	morphsWithTerrain |= info.abodeType == AbodeType::Workshop;
+	morphsWithTerrain |= info.abodeType == AbodeType::Citadel;
+	morphsWithTerrain |= info.abodeType == AbodeType::Creche;
+	morphsWithTerrain |= info.abodeType == AbodeType::FootballPitch;
+	morphsWithTerrain |= info.abodeType == AbodeType::TownCentre;
+	morphsWithTerrain |= info.abodeType == AbodeType::Field;
 
 	const auto& transform =
 	    registry.Assign<Transform>(entity, position, glm::mat3(glm::eulerAngleY(-yAngleRadians)), glm::vec3(scale));
 	registry.Assign<Abode>(entity, info.abodeNumber, townId, foodAmount, woodAmount);
 	auto resourceId = resources::MeshIdToResourceId(info.meshId);
 	const auto& mesh = registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(0));
+	if (morphsWithTerrain)
+	{
+		registry.Assign<MorphWithTerrain>(entity);
+	}
 
 	// Create Fixed component with a 2d bounding circle
 	const auto [point, radius] = GetFixedObstacleBoundingCircle(info.meshId, transform);
