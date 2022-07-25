@@ -15,6 +15,7 @@
 
 #include "3D/L3DMesh.h"
 #include "ECS/Components/Mesh.h"
+#include "ECS/Components/MorphWithTerrain.h"
 #include "ECS/Components/Stream.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
@@ -51,13 +52,18 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 
 	// Count number of instances
 	uint32_t instanceCount = 0;
-	std::map<entt::id_type, uint32_t> meshIds;
+	std::unordered_map<entt::id_type, std::pair<uint32_t, bool>> meshIds;
 
-	registry.Each<const Mesh, const Transform>([&meshIds, &instanceCount](const Mesh& mesh, const Transform& /*unused*/) {
-		auto count = meshIds.insert(std::make_pair(mesh.id, mesh.submeshId));
-		count.first->second++;
+	auto prep = [&meshIds, &instanceCount](const Mesh& mesh, bool morphWithTerrain) {
+		auto count = meshIds.insert(std::make_pair(mesh.id, std::make_pair(mesh.submeshId, morphWithTerrain)));
+		count.first->second.first++;
 		instanceCount++;
-	});
+	};
+
+	registry.Each<const Mesh, const Transform>([&prep](const Mesh& mesh, const Transform& /*unused*/) { prep(mesh, false); },
+	                                           entt::exclude<MorphWithTerrain>);
+	registry.Each<const Mesh, const Transform, const MorphWithTerrain>(
+	    [&prep](const Mesh& mesh, const Transform& /*unused*/, const MorphWithTerrain& /*unused*/) { prep(mesh, true); });
 
 	if (drawBoundingBox)
 	{
@@ -85,11 +91,11 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 	// Determine uniform buffer offsets and instance count for draw
 	uint32_t offset = 0;
 	_renderContext.instancedDrawDescs.clear();
-	for (const auto& [meshId, count] : meshIds)
+	for (const auto& [meshId, desc] : meshIds)
 	{
 		_renderContext.instancedDrawDescs.emplace(std::piecewise_construct, std::forward_as_tuple(meshId),
-		                                          std::forward_as_tuple(offset, count));
-		offset += count;
+		                                          std::forward_as_tuple(offset, desc.first, desc.second));
+		offset += desc.first;
 	}
 }
 
