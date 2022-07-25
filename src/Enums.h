@@ -127,7 +127,7 @@ enum class AbodeType : uint32_t
 	Creche = 1 << 6 | Civic,
 	Workshop = 1 << 7 | Civic,
 	Wonder = 1 << 8,
-	Graveyard = 1 << 9,
+	Graveyard = 1 << 9 | Civic,
 	TownCentre = 1 << 10 | Civic,
 	Citadel = 1 << 11 | Civic,
 	FootballPitch = 1 << 12 | Civic,
