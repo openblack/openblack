@@ -41,10 +41,15 @@ void LandIsland::Draw(openblack::Game& game)
 
 	if (ImGui::TreeNodeEx("Height Map", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		auto dim = openblack::LandIsland::k_CellCount * openblack::LandIsland::k_GridCount;
+		glm::u16vec2 extentMin;
+		glm::u16vec2 extentMax;
+		landIsland.GetIndexExtent(extentMin, extentMax);
+		const auto extentSize = extentMax - extentMin;
+		const auto dim = static_cast<uint16_t>(openblack::LandIsland::k_CellCount) * extentSize;
 		const auto& texture = landIsland.GetHeightMap();
-		ImGui::Text("Resolution: %ux%u", dim, dim);
-		ImGui::Image(texture.GetNativeHandle(), ImVec2(512.0f, 512.0f));
+		ImGui::Text("Resolution: %ux%u", dim.x, dim.y);
+		float scaling = 512.0f / static_cast<float>(dim.x);
+		ImGui::Image(texture.GetNativeHandle(), ImVec2(dim.x * scaling, dim.y * scaling));
 		ImGui::TreePop();
 	}
 
