@@ -98,6 +98,7 @@ public:
 		bool isSky;
 		float skyType;
 		bool drawAll; ///< For use in the mesh viewer
+		bool morphWithTerrain;
 	};
 
 	Renderer() = delete;
