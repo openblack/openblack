@@ -57,7 +57,8 @@ Sky::Sky()
 	_timeOfDay = 1.0f;
 
 	_texture->Create(k_TextureResolution[0], k_TextureResolution[1], k_TextureResolution[2], Format::RGB5A1,
-	                 Wrapping::ClampEdge, _bitmaps.data(), static_cast<uint32_t>(_bitmaps.size() * sizeof(_bitmaps[0])));
+	                 Wrapping::ClampEdge, Filter::Linear, _bitmaps.data(),
+	                 static_cast<uint32_t>(_bitmaps.size() * sizeof(_bitmaps[0])));
 }
 
 void Sky::SetDayNightTimes(float nightFull, float duskStart, float duskEnd, float dayFull)

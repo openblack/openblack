@@ -92,8 +92,8 @@ Texture2D::~Texture2D()
 	}
 }
 
-void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format format, Wrapping wrapping, const void* data,
-                       uint32_t size)
+void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format format, Wrapping wrapping, Filter filter,
+                       const void* data, uint32_t size)
 {
 	uint64_t flags = BGFX_TEXTURE_NONE;
 	switch (wrapping)
@@ -109,6 +109,16 @@ void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format 
 	case Wrapping::MirroredRepeat:
 		flags |= BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR;
 		break;
+	}
+	switch (filter)
+	{
+	case Filter::Nearest:
+		flags |= BGFX_SAMPLER_POINT;
+		break;
+	case Filter::Linear:
+		break;
+	default:
+		assert(false);
 	}
 	const auto* memory = bgfx::makeRef(data, size);
 	_handle = bgfx::createTexture2D(width, height, false, layers, getBgfxTextureFormat(format), flags, memory);

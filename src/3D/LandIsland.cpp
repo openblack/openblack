@@ -108,19 +108,19 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	}
 	_materialArray = std::make_unique<Texture2D>("LandIslandMaterialArray");
 	_materialArray->Create(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height, materialCount, Format::RGB5A1,
-	                       Wrapping::ClampEdge, rgba5TextureData.data(),
+	                       Wrapping::ClampEdge, Filter::Linear, rgba5TextureData.data(),
 	                       static_cast<uint32_t>(rgba5TextureData.size() * sizeof(rgba5TextureData[0])));
 
 	// read noise map into Texture2D
 	_noiseMap = lnd.GetExtra().noise.texels;
 	_textureNoiseMap = std::make_unique<Texture2D>("LandIslandNoiseMap");
 	_textureNoiseMap->Create(lnd::LNDBumpMap::k_Width, lnd::LNDBumpMap::k_Height, 1, Format::R8, Wrapping::ClampEdge,
-	                         _noiseMap.data(), static_cast<uint32_t>(_noiseMap.size() * sizeof(_noiseMap[0])));
+	                         Filter::Linear, _noiseMap.data(), static_cast<uint32_t>(_noiseMap.size() * sizeof(_noiseMap[0])));
 
 	// read bump map into Texture2D
 	_textureBumpMap = std::make_unique<Texture2D>("LandIslandBumpMap");
 	_textureBumpMap->Create(lnd::LNDBumpMap::k_Width, lnd::LNDBumpMap::k_Height, 1, Format::R8, Wrapping::Repeat,
-	                        lnd.GetExtra().bump.texels.data(),
+	                        Filter::Linear, lnd.GetExtra().bump.texels.data(),
 	                        static_cast<uint32_t>(sizeof(lnd.GetExtra().bump.texels[0]) * lnd.GetExtra().bump.texels.size()));
 
 	// build the meshes (we could move this elsewhere)
