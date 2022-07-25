@@ -28,13 +28,15 @@ struct RenderContext
 
 	struct InstancedDrawDesc
 	{
-		InstancedDrawDesc(uint32_t offset, uint32_t count)
+		InstancedDrawDesc(uint32_t offset, uint32_t count, bool morphWithTerrain)
 		    : offset(offset)
 		    , count(count)
+		    , morphWithTerrain(morphWithTerrain)
 		{
 		}
 		uint32_t offset;
 		uint32_t count;
+		bool morphWithTerrain;
 	};
 
 	/// A list of cpu-side uniforms which is refilled at every \ref PrepareDraw.
