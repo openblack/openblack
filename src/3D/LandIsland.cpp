@@ -16,6 +16,7 @@
 #include <LNDFile.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/vec_swizzle.hpp>
 #include <spdlog/spdlog.h>
 
 #include "Common/IStream.h"
@@ -27,7 +28,6 @@
 using namespace openblack;
 using namespace openblack::graphics;
 
-const uint8_t LandIsland::k_GridCount = 32;
 const uint8_t LandIsland::k_CellCount = 16;
 const float LandIsland::k_HeightUnit = 0.67f;
 const float LandIsland::k_CellSize = 10.0f;
@@ -61,41 +61,43 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 		_landBlocks[i]._block = std::make_unique<lnd::LNDBlock>(lndBlocks[i]);
 	}
 
-	uint32_t minX = std::numeric_limits<uint32_t>::max();
-	uint32_t minZ = std::numeric_limits<uint32_t>::max();
-	uint32_t maxX = 0;
-	uint32_t maxZ = 0;
+	_extentIndexMin.x = std::numeric_limits<uint16_t>::max();
+	_extentIndexMin.y = std::numeric_limits<uint16_t>::max();
+	_extentIndexMax.x = 0;
+	_extentIndexMax.y = 0;
 	for (auto& b : _landBlocks)
 	{
-		if (minX > b._block->blockX)
+		if (_extentIndexMin.x > b._block->blockX)
 		{
-			minX = b._block->blockX;
+			_extentIndexMin.x = static_cast<uint16_t>(b._block->blockX);
 			_extentMin.x = b.GetMapPosition().x;
 		}
-		if (maxX < b._block->blockX)
+		if (_extentIndexMax.x < b._block->blockX)
 		{
-			maxX = b._block->blockX;
+			_extentIndexMax.x = static_cast<uint16_t>(b._block->blockX);
 			_extentMax.x = b.GetMapPosition().x;
 		}
-		if (minZ > b._block->blockZ)
+		if (_extentIndexMin.y > b._block->blockZ)
 		{
-			minZ = b._block->blockZ;
+			_extentIndexMin.y = static_cast<uint16_t>(b._block->blockZ);
 			_extentMin.y = b.GetMapPosition().y;
 		}
-		if (maxZ < b._block->blockZ)
+		if (_extentIndexMax.y < b._block->blockZ)
 		{
-			maxZ = b._block->blockZ;
+			_extentIndexMax.y = static_cast<uint16_t>(b._block->blockZ);
 			_extentMax.y = b.GetMapPosition().y;
 		}
 	}
+	_extentMax += k_CellSize * k_CellCount;
+
+	const auto indexSize = _extentIndexMax - _extentIndexMin + glm::u16vec2(1, 1);
 
 	_heightMap = std::make_unique<Texture2D>("Height Map");
-	auto heightMapData = CreateHeightMap();
-	_heightMap->Create(k_GridCount * k_CellCount, k_GridCount * k_CellCount, 1, graphics::Format::R8, Wrapping::ClampEdge,
-	                   Filter::Linear, heightMapData.data(), static_cast<uint32_t>(heightMapData.size()));
+	const auto heightMapData = CreateHeightMap();
+	_heightMap->Create(indexSize.x * k_CellCount + 1, indexSize.y * k_CellCount + 1, 1, graphics::Format::R8,
+	                   Wrapping::ClampEdge, Filter::Linear, heightMapData.data(), static_cast<uint32_t>(heightMapData.size()));
 
-	const auto res =
-	    glm::u16vec2(maxX - minX, maxZ - minZ) * glm::u16vec2(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height);
+	const auto res = indexSize * glm::u16vec2(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height);
 	_footprintFrameBuffer = std::make_unique<FrameBuffer>("Footprints", res.x, res.y, graphics::Format::RGBA8);
 
 	_proj = glm::ortho(_extentMin.x, _extentMax.x, _extentMin.y, _extentMax.y);
@@ -202,27 +204,30 @@ void LandIsland::DumpTextures() const
 
 std::vector<uint8_t> LandIsland::CreateHeightMap() const
 {
-	// 32x32 block grid with 16x16 cells
-	// 512 x 512 pixels
+	// 16x16 cells but the last is shared
+	// max of 32x32 block grid
+	// max of 512 x 512 pixels
+	// extra pixel at the end of the map
 	std::vector<uint8_t> data;
-	data.resize(k_GridCount * k_GridCount * k_CellCount * k_CellCount, 0);
+	const auto extentSize = _extentIndexMax - _extentIndexMin + glm::u16vec2(1, 1);
+	const auto resolution = extentSize * static_cast<uint16_t>(k_CellCount) + static_cast<uint16_t>(1);
+	data.resize(resolution.x * resolution.y, 0);
 
 	for (const auto& block : _landBlocks)
 	{
-		const int mapx = block.GetBlockPosition().x;
-		const int mapz = block.GetBlockPosition().y;
-		const int lineStride = k_GridCount * k_CellCount;
-
+		const auto blockOffset = static_cast<glm::u16vec2>(block.GetBlockPosition() * 16);
+		const auto mapPos = block.GetBlockPosition() - static_cast<glm::ivec2>(_extentIndexMin);
 		for (int y = 0; y < k_CellCount; y++)
 		{
 			for (int x = 0; x < k_CellCount; x++)
 			{
-				const auto& cell = block.GetCells()[x * (k_CellCount + 1) + y];
-
-				const int cellX = (mapx * k_CellCount) + x;
-				const int cellY = (mapz * k_CellCount) + y;
-
-				data[(cellY * lineStride) + cellX] = cell.altitude;
+				const auto offset = glm::u16vec2(x, y);
+				const auto cellPos = mapPos * static_cast<int>(k_CellCount) + static_cast<glm::ivec2>(offset);
+				const auto& cell = GetCell(blockOffset + offset);
+				if ((cellPos.y * resolution.x) + cellPos.x < static_cast<int>(data.size()))
+				{
+					data.at((cellPos.y * resolution.x) + cellPos.x) = cell.altitude;
+				}
 			}
 		}
 	}

@@ -41,7 +41,6 @@ struct LNDCountry;
 class LandIsland
 {
 public:
-	static const uint8_t k_GridCount;
 	static const uint8_t k_CellCount;
 	static const float k_HeightUnit;
 	static const float k_CellSize;
@@ -81,6 +80,11 @@ public:
 		view = _view;
 		proj = _proj;
 	}
+	void GetIndexExtent(glm::u16vec2& extentMin, glm::u16vec2& extentMax) const
+	{
+		extentMin = _extentIndexMin;
+		extentMax = _extentIndexMax;
+	}
 	void GetExtent(glm::vec2& extentMin, glm::vec2& extentMax) const
 	{
 		extentMin = _extentMin;
@@ -100,6 +104,8 @@ private:
 	std::unique_ptr<graphics::FrameBuffer> _footprintFrameBuffer;
 	glm::mat4 _proj;
 	glm::mat4 _view;
+	glm::u16vec2 _extentIndexMin;
+	glm::u16vec2 _extentIndexMax;
 	glm::vec2 _extentMin;
 	glm::vec2 _extentMax;
 
