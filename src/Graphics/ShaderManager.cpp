@@ -48,6 +48,8 @@
 #include "ShaderIncluder.h"
 #define SHADER_NAME vs_object_instanced
 #include "ShaderIncluder.h"
+#define SHADER_NAME vs_object_hm_instanced
+#include "ShaderIncluder.h"
 #define SHADER_NAME fs_object
 #include "ShaderIncluder.h"
 #define SHADER_NAME fs_sky
@@ -84,16 +86,16 @@ struct ShaderDefinition
 	const std::string_view fragmentShaderName;
 };
 
-const std::array<bgfx::EmbeddedShader, 16> k_EmbeddedShaders = {{
-    BGFX_EMBEDDED_SHADER(vs_line), BGFX_EMBEDDED_SHADER(vs_line_instanced),           //
-    BGFX_EMBEDDED_SHADER(fs_line),                                                    //
-    BGFX_EMBEDDED_SHADER(vs_object), BGFX_EMBEDDED_SHADER(vs_object_instanced),       //
-    BGFX_EMBEDDED_SHADER(fs_object), BGFX_EMBEDDED_SHADER(fs_sky),                    //
-    BGFX_EMBEDDED_SHADER(vs_terrain), BGFX_EMBEDDED_SHADER(fs_terrain),               //
-    BGFX_EMBEDDED_SHADER(vs_water), BGFX_EMBEDDED_SHADER(fs_water),                   //
-    BGFX_EMBEDDED_SHADER(vs_sprite), BGFX_EMBEDDED_SHADER(fs_sprite),                 //
-    BGFX_EMBEDDED_SHADER(vs_footprint_instanced), BGFX_EMBEDDED_SHADER(fs_footprint), //
-    BGFX_EMBEDDED_SHADER_END()                                                        //
+const std::array<bgfx::EmbeddedShader, 17> k_EmbeddedShaders = {{
+    BGFX_EMBEDDED_SHADER(vs_line), BGFX_EMBEDDED_SHADER(vs_line_instanced),                                                   //
+    BGFX_EMBEDDED_SHADER(fs_line),                                                                                            //
+    BGFX_EMBEDDED_SHADER(vs_object), BGFX_EMBEDDED_SHADER(vs_object_instanced), BGFX_EMBEDDED_SHADER(vs_object_hm_instanced), //
+    BGFX_EMBEDDED_SHADER(fs_object), BGFX_EMBEDDED_SHADER(fs_sky),                                                            //
+    BGFX_EMBEDDED_SHADER(vs_terrain), BGFX_EMBEDDED_SHADER(fs_terrain),                                                       //
+    BGFX_EMBEDDED_SHADER(vs_water), BGFX_EMBEDDED_SHADER(fs_water),                                                           //
+    BGFX_EMBEDDED_SHADER(vs_sprite), BGFX_EMBEDDED_SHADER(fs_sprite),                                                         //
+    BGFX_EMBEDDED_SHADER(vs_footprint_instanced), BGFX_EMBEDDED_SHADER(fs_footprint),                                         //
+    BGFX_EMBEDDED_SHADER_END()                                                                                                //
 }};
 
 constexpr std::array k_Shaders {
@@ -102,6 +104,7 @@ constexpr std::array k_Shaders {
     ShaderDefinition {"Terrain", "vs_terrain", "fs_terrain"},
     ShaderDefinition {"Object", "vs_object", "fs_object"},
     ShaderDefinition {"ObjectInstanced", "vs_object_instanced", "fs_object"},
+    ShaderDefinition {"ObjectHeightMapInstanced", "vs_object_hm_instanced", "fs_object"},
     ShaderDefinition {"Sky", "vs_object", "fs_sky"},
     ShaderDefinition {"Water", "vs_water", "fs_water"},
     ShaderDefinition {"Sprite", "vs_sprite", "fs_sprite"},

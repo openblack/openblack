@@ -284,6 +284,14 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 		return;
 	}
 
+	glm::vec2 extentMin;
+	glm::vec2 extentMax;
+
+	const auto& island = Game::Instance()->GetLandIsland();
+	island.GetExtent(extentMin, extentMax);
+	auto islandExtent = glm::vec4(extentMin, extentMax);
+	const auto& heightMap = island.GetHeightMap();
+
 	auto const& skins = mesh.GetSkins();
 	bool lastPreserveState = false;
 	const auto& primitives = subMesh.GetPrimitives();
@@ -308,6 +316,11 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 			if (texture != nullptr)
 			{
 				desc.program->SetTextureSampler("s_diffuse", 0, *texture);
+			}
+			if (desc.morphWithTerrain)
+			{
+				desc.program->SetTextureSampler("s_heightmap", 1, heightMap);   // vs
+				desc.program->SetUniformValue("u_islandExtent", &islandExtent); // vs
 			}
 			if (!desc.isSky)
 			{
@@ -479,6 +492,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	const auto* spriteShader = _shaderManager->GetShader("Sprite");
 	const auto* debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
 	const auto* objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
+	const auto* objectShaderHeightMapInstanced = _shaderManager->GetShader("ObjectHeightMapInstanced");
 
 	{
 		auto section = desc.profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSky
@@ -580,13 +594,11 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			L3DMeshSubmitDesc submitDesc = {};
 			submitDesc.viewId = desc.viewId;
 			submitDesc.program = objectShaderInstanced;
-			// clang-format off
-			submitDesc.state = 0u
-				| BGFX_STATE_WRITE_MASK
-				| BGFX_STATE_DEPTH_TEST_LESS
-				| BGFX_STATE_MSAA
-			;
-			// clang-format on
+			submitDesc.state = 0u                           //
+			                   | BGFX_STATE_WRITE_MASK      //
+			                   | BGFX_STATE_DEPTH_TEST_LESS //
+			                   | BGFX_STATE_MSAA            //
+			    ;
 			const auto& renderCtx = Locator::rendereringSystem::value().GetContext();
 
 			// Instance meshes
@@ -611,6 +623,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				}
 				submitDesc.isSky = false;
 				submitDesc.skyType = desc.sky.GetCurrentSkyType();
+				submitDesc.morphWithTerrain = placers.morphWithTerrain;
+				submitDesc.program = submitDesc.morphWithTerrain ? objectShaderHeightMapInstanced : objectShaderInstanced;
 
 				// TODO(bwrsandman): choose the correct LOD
 				DrawMesh(*mesh, submitDesc, std::numeric_limits<uint8_t>::max());
