@@ -42,8 +42,8 @@ jobs:
 
       - name: Install EMSDK
         run: |
-          git clone https://github.com/emscripten-core/emsdk /tmp/emsdk
-          pushd /tmp/emsdk
+          git clone https://github.com/emscripten-core/emsdk ${EMSDK}
+          pushd ${EMSDK}
           ./emsdk install latest
           ./emsdk activate latest
         if: matrix.preset == 'emscripten-vcpkg'
@@ -64,10 +64,6 @@ jobs:
         with:
           configurePreset: '${{ matrix.preset }}'
           configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
-        env:
-          EMSDK: '/tmp/emsdk'
-          CXX: ''
-          CC: ''
 
       - name: Run CMake+vcpkg to build (Debug).
         uses: lukka/run-cmake@v10
@@ -75,10 +71,6 @@ jobs:
           configurePreset: '${{ matrix.preset }}'
           configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
           buildPreset: '${{ matrix.preset }}-debug'
-        env:
-          EMSDK: '/tmp/emsdk'
-          CXX: ''
-          CC: ''
 
       - name: Run CMake+vcpkg to build (Release).
         uses: lukka/run-cmake@v10
@@ -86,10 +78,6 @@ jobs:
           configurePreset: '${{ matrix.preset }}'
           configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
           buildPreset: '${{ matrix.preset }}-release'
-        env:
-          EMSDK: '/tmp/emsdk'
-          CXX: ''
-          CC: ''
 
       - uses: actions/upload-artifact@v3
         with:
@@ -99,3 +87,7 @@ jobs:
 
     env:
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
+      EMSDK: '/tmp/emsdk'
+      ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.2.8568313'
+      CXX: ''
+      CC: ''
