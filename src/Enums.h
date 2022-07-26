@@ -1603,7 +1603,7 @@ enum class WorshipSiteInfo
 	Tibetan = 8,
 };
 
-enum class PotInfo : uint32_t
+enum class PotInfo : int32_t
 {
 	FoodPot = 0,
 	WoodPot = 1,
