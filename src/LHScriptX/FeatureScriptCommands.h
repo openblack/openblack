@@ -68,7 +68,7 @@ public:
 	static void CreateWallSection(glm::vec3 position, int32_t, int32_t, int32_t, int32_t);
 	static void CreatePlannedWallSection(glm::vec3 position, int32_t, int32_t, int32_t, int32_t);
 	static void CreatePitch(glm::vec3 position, int32_t, int32_t, int32_t, int32_t, int32_t);
-	static void CreatePot(glm::vec3 position, int32_t, int32_t, int32_t);
+	static void CreatePot(glm::vec3 position, PotInfo type, int32_t, int32_t amount);
 	static void CreateTownTemporaryPots(int32_t townId, int32_t, int32_t);
 	static void CreateMobileObject(glm::vec3 position, MobileObjectInfo type, int32_t rotation, int32_t);
 	static void CreateMobileStatic(glm::vec3 position, MobileStaticInfo type, float, float);

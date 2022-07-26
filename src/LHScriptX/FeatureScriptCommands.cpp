@@ -25,6 +25,7 @@
 #include "ECS/Archetypes/FieldArchetype.h"
 #include "ECS/Archetypes/MobileObjectArchetype.h"
 #include "ECS/Archetypes/MobileStaticArchetype.h"
+#include "ECS/Archetypes/PotArchetype.h"
 #include "ECS/Archetypes/StreetLanternArchetype.h"
 #include "ECS/Archetypes/TownArchetype.h"
 #include "ECS/Archetypes/TreeArchetype.h"
@@ -466,10 +467,9 @@ void FeatureScriptCommands::CreatePitch([[maybe_unused]] glm::vec3 position, int
 	// __func__);
 }
 
-void FeatureScriptCommands::CreatePot([[maybe_unused]] glm::vec3 position, int32_t, int32_t, int32_t)
+void FeatureScriptCommands::CreatePot(glm::vec3 position, PotInfo type, int32_t /*unused*/, int32_t amount)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	PotArchetype::Create(position, 0.0f, type, amount);
 }
 
 void FeatureScriptCommands::CreateTownTemporaryPots(int32_t, int32_t, int32_t)
