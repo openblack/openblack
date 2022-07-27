@@ -119,6 +119,32 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 
 	ImGui::Text("Bones %zu", mesh->GetBoneMatrices().size());
 
+	if (mesh->ContainsExtraMetrics())
+	{
+		const auto& metrics = mesh->GetExtraMetrics();
+		if (!metrics.empty() && ImGui::TreeNode("ExtraMetrics", "Extra Metrics %zu", metrics.size()))
+		{
+			std::array<char, 0x20> label;
+			for (int i = 0; auto& m : const_cast<std::vector<glm::mat4>&>(metrics))
+			{
+				if (i != 0)
+				{
+					ImGui::Separator();
+				}
+				snprintf(label.data(), label.size(), "m[%d][0]", i);
+				ImGui::InputFloat4(label.data(), glm::value_ptr(m[0]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+				snprintf(label.data(), label.size(), "m[%d][1]", i);
+				ImGui::InputFloat4(label.data(), glm::value_ptr(m[1]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+				snprintf(label.data(), label.size(), "m[%d][2]", i);
+				ImGui::InputFloat4(label.data(), glm::value_ptr(m[2]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+				snprintf(label.data(), label.size(), "m[%d][3]", i);
+				ImGui::InputFloat4(label.data(), glm::value_ptr(m[3]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+				++i;
+			}
+			ImGui::TreePop();
+		}
+	}
+
 	ImGui::Text("%zu submeshes", mesh->GetSubMeshes().size());
 	ImGui::SliderInt("submesh", &_selectedSubMesh, 0, static_cast<int>(mesh->GetSubMeshes().size()) - 1);
 	ImGui::DragFloat3("position", &_cameraPosition[0], 0.5f);
