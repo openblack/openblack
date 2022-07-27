@@ -16,18 +16,48 @@
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Fixed.h"
 #include "ECS/Components/Mesh.h"
+#include "ECS/Components/StoragePit.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/TownSystemInterface.h"
 #include "Game.h"
 #include "Locator.h"
+#include "PotArchetype.h"
 #include "Resources/MeshId.h"
+#include "Resources/Resources.h"
 #include "Utils.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
 using namespace openblack::ecs::systems;
+
+void AddStoragePitComponents(entt::entity entity, const Mesh& pitMesh, const GAbodeInfo& info, const glm::vec3& position,
+                             float yAngleRadians, uint32_t foodAmount, uint32_t woodAmount)
+{
+	auto* game = Game::Instance();
+	auto& registry = game->GetEntityRegistry();
+	const auto& potInfoConstants = game->GetInfoConstants().pot;
+
+	const auto l3dMesh = entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(pitMesh.id);
+	const auto& extraMetrics = l3dMesh->GetExtraMetrics();
+
+	auto& pit = registry.Assign<StoragePit>(entity);
+
+	size_t i = 0;
+	for (auto type = info.potForResourceWood; type != PotInfo::_COUNT;
+	     type = potInfoConstants.at(static_cast<size_t>(type)).nextPotForResource)
+	{
+		const auto& m = extraMetrics.at(i);
+		auto translation = static_cast<glm::vec3>(glm::eulerAngleY(-yAngleRadians) * m[3]);
+		pit.woodPiles.at(i) = PotArchetype::Create(position + translation, yAngleRadians, type, woodAmount);
+		++i;
+	}
+	assert(i == pit.woodPiles.size());
+	const auto& m = extraMetrics.at(5);
+	auto translation = static_cast<glm::vec3>(glm::eulerAngleY(-yAngleRadians) * m[3]);
+	pit.foodPile = PotArchetype::Create(position + translation, yAngleRadians, info.potForResourceFood, foodAmount);
+}
 
 entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, AbodeInfo type, float yAngleRadians,
                                     float scale, uint32_t foodAmount, uint32_t woodAmount)
@@ -59,11 +89,20 @@ entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, 
 	    registry.Assign<Transform>(entity, position, glm::mat3(glm::eulerAngleY(-yAngleRadians)), glm::vec3(scale));
 	registry.Assign<Abode>(entity, info.abodeNumber, townId, foodAmount, woodAmount);
 	auto resourceId = resources::MeshIdToResourceId(info.meshId);
-	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(0));
+	const auto& mesh = registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(0));
 
 	// Create Fixed component with a 2d bounding circle
 	const auto [point, radius] = GetFixedObstacleBoundingCircle(info.meshId, transform);
 	registry.Assign<Fixed>(entity, point, radius);
+
+	switch (info.abodeType)
+	{
+	case AbodeType::StoragePit:
+		AddStoragePitComponents(entity, mesh, info, position, yAngleRadians, foodAmount, woodAmount);
+		break;
+	default:
+		break;
+	}
 
 	return entity;
 }
