@@ -73,9 +73,16 @@
  *  TODO(#483): Investigate optional UV2 block
  *
  * ------------------------ start of name block --------------------------------
+ *
  * - 4 bytes + total bytes used for the name.
  *         name size - total length of name (see below). This can be 0
  *         name - The name itself. Null terminated
+ *
+ * ------------------------ start of extra metrics block ------------------------
+ *
+ * - 4 bytes + total bytes used for the extra metrics.
+ *         number of matrices - 4 bytes
+ *         Number of matrices of 3 row and 4 column matrix of floats - 48 bytes
  *
  * ------------------------ start of submesh block -----------------------------
  *
@@ -610,6 +617,29 @@ void L3DFile::ReadFile(std::istream& stream)
 		stream.seekg(8, std::istream::cur);
 		_nameData.resize(nameDataSize);
 		stream.read(_nameData.data(), _nameData.size());
+	}
+
+	// Extra Metrics
+	uint32_t extraMetricsSize;
+	if ((headerFlags & static_cast<uint32_t>(L3DMeshFlags::ContainsExtraMetrics)) != 0u)
+	{
+		stream.seekg(0x48, std::istream::beg);
+		stream.read(reinterpret_cast<char*>(&additionalDataOffset), sizeof(additionalDataOffset));
+		if (additionalDataOffset > 0)
+		{
+			auto offset =
+			    additionalDataOffset + (_footprint.has_value() ? _footprint->header.size : 0) + uv2DataSize + nameDataSize;
+			stream.seekg(offset, std::istream::beg);
+			stream.read(reinterpret_cast<char*>(&extraMetricsSize), sizeof(extraMetricsSize));
+			uint32_t numMetrics = 0;
+			stream.read(reinterpret_cast<char*>(&numMetrics), sizeof(numMetrics));
+			uint32_t blockOffset = 0;
+			stream.read(reinterpret_cast<char*>(&blockOffset), sizeof(blockOffset));
+			assert(blockOffset == offset + sizeof(extraMetricsSize) + sizeof(numMetrics) + sizeof(blockOffset));
+			_extraMetrics.resize(numMetrics);
+			assert(extraMetricsSize - 8 == sizeof(blockOffset) + sizeof(_extraMetrics[0]) * _extraMetrics.size());
+			stream.read(reinterpret_cast<char*>(_extraMetrics.data()), sizeof(_extraMetrics[0]) * _extraMetrics.size());
+		}
 	}
 
 	// Create spans per submesh

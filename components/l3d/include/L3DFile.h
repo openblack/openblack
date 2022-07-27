@@ -299,6 +299,7 @@ protected:
 	std::optional<L3DFootprint> _footprint;
 	std::vector<uint8_t> _uv2Data;
 	std::string _nameData;
+	std::vector<std::array<float, 3 * 4>> _extraMetrics;
 
 	/// Error handling
 	void Fail(const std::string& msg);
@@ -334,8 +335,10 @@ public:
 	[[nodiscard]] const std::vector<L3DBlend>& GetBlends() const { return _blends; }
 	[[nodiscard]] const std::vector<L3DBone>& GetBones() const { return _bones; }
 	[[nodiscard]] const std::optional<L3DFootprint>& GetFootprint() const { return _footprint; }
+	[[nodiscard]] const std::vector<std::array<float, 3 * 4>>& GetExtraMetrics() const { return _extraMetrics; }
 	[[nodiscard]] const std::vector<uint8_t>& GetUv2Data() const { return _uv2Data; }
 	void SetFootprint(const L3DFootprint& footprint) { _footprint = footprint; }
+	void SetExtraMetrics(const std::vector<std::array<float, 3 * 4>>& metrics) { _extraMetrics = metrics; }
 	void SetUv2Data(std::vector<uint8_t>& uv2Data) { _uv2Data = uv2Data; }
 	void SetNameData(std::string& nameData) { _nameData = nameData; }
 	[[nodiscard]] const std::string& GetNameData() const { return _nameData; }

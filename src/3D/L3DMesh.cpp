@@ -100,6 +100,16 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 		}
 	}
 
+	if (ContainsExtraMetrics() && !l3d.GetExtraMetrics().empty())
+	{
+		const auto& extraMetrics = l3d.GetExtraMetrics();
+		_extraMetrics.reserve(extraMetrics.size());
+		for (const auto& e : extraMetrics)
+		{
+			_extraMetrics.emplace_back(static_cast<glm::mat4>(glm::make_mat4x3(e.data())));
+		}
+	}
+
 	std::map<uint32_t, glm::mat4> matrices;
 	const auto& bones = l3d.GetBones();
 	_bonesParents.resize(bones.size());

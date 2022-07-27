@@ -537,6 +537,29 @@ int PrintNameValue(openblack::l3d::L3DFile& l3d)
 	return EXIT_SUCCESS;
 }
 
+int PrintExtraMetricsValues(openblack::l3d::L3DFile& l3d)
+{
+	const auto& extraMetrics = l3d.GetExtraMetrics();
+	std::printf("file: %s\n", l3d.GetFilename().c_str());
+
+	if (extraMetrics.empty())
+	{
+		printf("No data");
+		return EXIT_FAILURE;
+	}
+
+	for (uint32_t i = 0; const auto& m : extraMetrics)
+	{
+		printf("[%u]:\n", i);
+		printf("  [ %8.3f %8.3f %8.3f ]\n", m[0], m[1], m[2]);
+		printf("  [ %8.3f %8.3f %8.3f ]\n", m[3], m[4], m[5]);
+		printf("  [ %8.3f %8.3f %8.3f ]\n", m[6], m[7], m[8]);
+		printf("  [ %8.3f %8.3f %8.3f ]\n", m[9], m[10], m[11]);
+		++i;
+	}
+	return EXIT_SUCCESS;
+}
+
 struct Arguments
 {
 	enum class Mode
@@ -554,6 +577,7 @@ struct Arguments
 		Footprint,
 		Uv2,
 		Name,
+		ExtraMetrics,
 		Write,
 		Extract,
 	};
@@ -1252,6 +1276,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 		    ("u,uv2-data", "Print UV2 Data.", cxxopts::value<std::vector<std::string>>())                                 //
 		    ("f,footprint-data", "Print Footprint Data.", cxxopts::value<std::vector<std::string>>())                     //
 		    ("n,name-data", "Print Name Data.", cxxopts::value<std::vector<std::string>>())                               //
+		    ("extra-metrics", "Print Extra Metrics.", cxxopts::value<std::vector<std::string>>())                         //
 		    ;
 		options.add_options("write/extract from and to glTF format")                            //
 		    ("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())    //
@@ -1362,6 +1387,12 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 				args.read.filenames = result["name-data"].as<std::vector<std::filesystem::path>>();
 				return true;
 			}
+			if (result["extra-metrics"].count() > 0)
+			{
+				args.mode = Arguments::Mode::ExtraMetrics;
+				args.read.filenames = result["extra-metrics"].as<std::vector<std::filesystem::path>>();
+				return true;
+			}
 		}
 		else if (result["subcommand"].as<std::string>() == "write")
 		{
@@ -1469,6 +1500,9 @@ int main(int argc, char* argv[]) noexcept
 				break;
 			case Arguments::Mode::Name:
 				returnCode |= PrintNameValue(l3d);
+				break;
+			case Arguments::Mode::ExtraMetrics:
+				returnCode |= PrintExtraMetricsValues(l3d);
 				break;
 			default:
 				returnCode = EXIT_FAILURE;
