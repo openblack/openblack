@@ -17,7 +17,8 @@
 using namespace openblack;
 using namespace openblack::resources;
 
-entt::resource_handle<L3DMesh> L3DLoader::load(const std::string& debugName, const std::vector<uint8_t>& data) const
+L3DLoader::result_type L3DLoader::operator()(FromBufferTag, const std::string& debugName,
+                                             const std::vector<uint8_t>& data) const
 {
 	auto mesh = std::make_shared<L3DMesh>(debugName);
 	if (!mesh->LoadFromBuffer(data))
@@ -28,7 +29,7 @@ entt::resource_handle<L3DMesh> L3DLoader::load(const std::string& debugName, con
 	return mesh;
 }
 
-entt::resource_handle<L3DMesh> L3DLoader::load(const std::filesystem::path& path) const
+L3DLoader::result_type L3DLoader::operator()(FromDiskTag, const std::filesystem::path& path) const
 {
 	auto mesh = std::make_shared<L3DMesh>(path.stem().string());
 	auto pathExt = string_utils::LowerCase(path.extension().string());
@@ -57,8 +58,8 @@ entt::resource_handle<L3DMesh> L3DLoader::load(const std::filesystem::path& path
 	return mesh;
 }
 
-entt::resource_handle<graphics::Texture2D> Texture2DLoader::load(const std::string& name,
-                                                                 const pack::G3DTexture& g3dTexture) const
+Texture2DLoader::result_type Texture2DLoader::operator()(FromPackTag, const std::string& name,
+                                                         const pack::G3DTexture& g3dTexture) const
 {
 	// some assumptions:
 	// - no mipmaps
@@ -90,9 +91,8 @@ entt::resource_handle<graphics::Texture2D> Texture2DLoader::load(const std::stri
 	return texture2D;
 }
 
-entt::resource_handle<graphics::Texture2D> Texture2DLoader::load(const std::filesystem::path& rawTexturePath) const
+Texture2DLoader::result_type Texture2DLoader::operator()(FromDiskTag, const std::filesystem::path& rawTexturePath) const
 {
-
 	bool found = false;
 	const std::array<uint16_t, 6> resolutions = {{256, 40, 32, 14, 12, 6}};
 
@@ -134,14 +134,14 @@ entt::resource_handle<graphics::Texture2D> Texture2DLoader::load(const std::file
 	return texture;
 }
 
-entt::resource_handle<L3DAnim> L3DAnimLoader::load(const std::vector<uint8_t>& data) const
+L3DAnimLoader::result_type L3DAnimLoader::operator()(FromBufferTag, const std::vector<uint8_t>& data) const
 {
 	auto animation = std::make_shared<L3DAnim>();
 	animation->LoadFromBuffer(data);
 	return animation;
 }
 
-entt::resource_handle<L3DAnim> L3DAnimLoader::load(const std::filesystem::path& path) const
+L3DAnimLoader::result_type L3DAnimLoader::operator()(FromDiskTag, const std::filesystem::path& path) const
 {
 	auto animation = std::make_shared<L3DAnim>();
 	if (!animation->LoadFromFile(path))
@@ -152,8 +152,8 @@ entt::resource_handle<L3DAnim> L3DAnimLoader::load(const std::filesystem::path& 
 	return animation;
 }
 
-entt::resource_handle<Level> LevelLoader::load(const std::string& name, const std::filesystem::path& path,
-                                               bool isCampaign) const
+LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string& name, const std::filesystem::path& path,
+                                                 bool isCampaign) const
 {
 	return std::make_shared<Level>(name, path, isCampaign);
 }
