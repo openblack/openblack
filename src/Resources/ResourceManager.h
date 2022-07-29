@@ -35,15 +35,9 @@ public:
 		return Load(id, std::forward<Args>(args)...);
 	}
 
-	[[nodiscard]] entt::resource_handle<ResourceType> Handle(entt::id_type identifier)
-	{
-		return _resourceCache.handle(identifier);
-	}
+	[[nodiscard]] decltype(auto) Handle(entt::id_type identifier) { return _resourceCache.handle(identifier); }
 
-	[[nodiscard]] entt::resource_handle<const ResourceType> Handle(entt::id_type identifier) const
-	{
-		return _resourceCache.handle(identifier);
-	}
+	[[nodiscard]] decltype(auto) Handle(entt::id_type identifier) const { return _resourceCache.handle(identifier); }
 
 	[[nodiscard]] bool Contains(entt::id_type identifier) const { return _resourceCache.contains(identifier); }
 
