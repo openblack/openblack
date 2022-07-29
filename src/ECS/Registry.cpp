@@ -17,21 +17,21 @@ namespace openblack::ecs
 
 Registry::Registry()
 {
-	_registry.set<RegistryContext>();
+	_registry.ctx().emplace<RegistryContext>();
 }
 
 RegistryContext& Registry::Context()
 {
-	return _registry.ctx<RegistryContext>();
+	return _registry.ctx().at<RegistryContext>();
 }
 
 const RegistryContext& Registry::Context() const
 {
-	return _registry.ctx<const RegistryContext>();
+	return _registry.ctx().at<const RegistryContext>();
 }
 
 void Registry::SetDirty()
 {
-	Locator::rendereringSystem::ref().SetDirty();
+	Locator::rendereringSystem::value().SetDirty();
 }
 } // namespace openblack::ecs

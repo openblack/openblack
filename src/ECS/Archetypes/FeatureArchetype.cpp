@@ -43,7 +43,7 @@ entt::entity FeatureArchetype::Create(const glm::vec3& position, FeatureInfo typ
 	const auto resourceId = resources::MeshIdToResourceId(info.meshId);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 
-	auto l3dMesh = Locator::resources::ref().GetMeshes().Handle(resourceId);
+	auto l3dMesh = Locator::resources::value().GetMeshes().Handle(resourceId);
 	if (l3dMesh->HasPhysicsMesh())
 	{
 		auto& shape = l3dMesh->GetPhysicsMesh();

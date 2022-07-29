@@ -24,7 +24,7 @@ using namespace openblack::ecs::components;
 std::array<entt::entity, 8> CameraBookmarkArchetype::CreateAll()
 {
 	auto& registry = Game::Instance()->GetEntityRegistry();
-	auto texture = Locator::resources::ref().GetTextures().Handle(entt::hashed_string("raw/misc0a"));
+	auto texture = Locator::resources::value().GetTextures().Handle(entt::hashed_string("raw/misc0a"));
 	if (!texture)
 	{
 		throw std::runtime_error("Failed to get Camera Bookmark sprite: misc0a");

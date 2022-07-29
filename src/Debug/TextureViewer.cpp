@@ -25,7 +25,7 @@ TextureViewer::TextureViewer()
 void TextureViewer::Draw([[maybe_unused]] Game& game)
 {
 	float fontSize = ImGui::GetFontSize();
-	auto const& textures = Locator::resources::ref().GetTextures();
+	const auto& textures = Locator::resources::value().GetTextures();
 
 	_filter.Draw();
 

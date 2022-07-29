@@ -101,7 +101,7 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 		    _renderContext.instanceUniforms[idx] = modelMatrix;
 		    if (drawBoundingBox)
 		    {
-			    auto l3dMesh = entt::service_locator<resources::ResourcesInterface>::ref().GetMeshes().Handle(mesh.id);
+			    auto l3dMesh = entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(mesh.id);
 			    auto box = l3dMesh->GetBoundingBox();
 			    auto boxMatrix = modelMatrix * glm::translate(box.Center()) * glm::scale(box.Size());
 			    _renderContext.instanceUniforms[idx + _renderContext.instanceUniforms.size() / 2] = boxMatrix;

@@ -913,7 +913,7 @@ bool Gui::ShowMenu(Game& game)
 	{
 		if (ImGui::BeginMenu("Load Island"))
 		{
-			auto& resources = Locator::resources::ref();
+			auto& resources = Locator::resources::value();
 			auto& levelsManager = resources.GetLevels();
 			auto campaigns = std::vector<const Level*>();
 			auto playgrounds = std::vector<const Level*>();
@@ -1277,7 +1277,7 @@ void Gui::ShowVillagerNames(const Game& game)
 		const std::string stateHelpText = "TODO: STATE HELP TEXT";
 		std::string details =
 		    fmt::format("{}\nA:{} L:{}%, H:{}%", stateHelpText, villager.age, villager.health, villager.hunger);
-		const auto& actionSystem = Locator::livingActionSystem::ref();
+		const auto& actionSystem = Locator::livingActionSystem::value();
 		if (config.debugVillagerStates)
 		{
 			details += fmt::format(

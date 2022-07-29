@@ -39,7 +39,7 @@ entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, 
 	if (registry.Context().towns.find(townId) == registry.Context().towns.end())
 	{
 		SPDLOG_LOGGER_WARN(spdlog::get("scripting"), "Function {} has invalid Town ({}).", __func__, townId);
-		const auto town = Locator::townSystem::ref().FindClosestTown(position);
+		const auto town = Locator::townSystem::value().FindClosestTown(position);
 		if (town != entt::null)
 		{
 			townId = registry.Get<Town>(town).id;

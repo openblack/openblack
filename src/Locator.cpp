@@ -29,15 +29,15 @@ namespace openblack::ecs::systems
 {
 void InitializeGame()
 {
-	Locator::rendereringSystem::set<RenderingSystem>();
+	Locator::rendereringSystem::emplace<RenderingSystem>();
 }
 
 void InitializeLevel()
 {
-	Locator::dynamicsSystem::set<DynamicsSystem>();
-	Locator::livingActionSystem::set<LivingActionSystem>();
-	Locator::townSystem::set<TownSystem>();
-	Locator::pathfindingSystem::set<PathfindingSystem>();
-	Locator::cameraBookmarkSystem::set<CameraBookmarkSystem>();
+	Locator::dynamicsSystem::emplace<DynamicsSystem>();
+	Locator::livingActionSystem::emplace<LivingActionSystem>();
+	Locator::townSystem::emplace<TownSystem>();
+	Locator::pathfindingSystem::emplace<PathfindingSystem>();
+	Locator::cameraBookmarkSystem::emplace<CameraBookmarkSystem>();
 }
 } // namespace openblack::ecs::systems
