@@ -22,24 +22,24 @@ using LevelManager = ResourceManager<LevelLoader>;
 class ResourcesInterface
 {
 public:
-	virtual resources::MeshManager& GetMeshes() = 0;
-	virtual resources::TextureManager& GetTextures() = 0;
-	virtual resources::AnimationManager& GetAnimations() = 0;
-	virtual resources::LevelManager& GetLevels() = 0;
+	virtual MeshManager& GetMeshes() = 0;
+	virtual TextureManager& GetTextures() = 0;
+	virtual AnimationManager& GetAnimations() = 0;
+	virtual LevelManager& GetLevels() = 0;
 };
 
 class Resources final: public ResourcesInterface
 {
 public:
-	resources::MeshManager& GetMeshes() override { return _meshes; }
-	resources::TextureManager& GetTextures() override { return _textures; }
-	resources::AnimationManager& GetAnimations() override { return _animations; }
-	resources::LevelManager& GetLevels() override { return _levels; }
+	MeshManager& GetMeshes() override { return _meshes; }
+	TextureManager& GetTextures() override { return _textures; }
+	AnimationManager& GetAnimations() override { return _animations; }
+	LevelManager& GetLevels() override { return _levels; }
 
 private:
-	resources::MeshManager _meshes;
-	resources::TextureManager _textures;
-	resources::AnimationManager _animations;
-	resources::LevelManager _levels;
+	MeshManager _meshes;
+	TextureManager _textures;
+	AnimationManager _animations;
+	LevelManager _levels;
 };
 } // namespace openblack::resources
