@@ -62,18 +62,18 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 	ImGui::BeginChild("meshesSelect", ImVec2(meshSize.x - 5, meshSize.y - ImGui::GetTextLineHeight() - 5), true);
 	uint32_t displayedMeshes = 0;
 
-	meshes.Each([this, &displayedMeshes](entt::id_type id, entt::resource_handle<const L3DMesh> mesh) {
-		if (_filter.PassFilter(mesh->GetDebugName().c_str()) && (mesh->GetFlags() & _meshFlagFilter) != 0u)
+	meshes.Each([this, &displayedMeshes](entt::id_type id, const L3DMesh& mesh) {
+		if (_filter.PassFilter(mesh.GetDebugName().c_str()) && (mesh.GetFlags() & _meshFlagFilter) != 0u)
 		{
 			displayedMeshes++;
-			auto flags = mesh->GetNumSubMeshes() > 0 ? 0 : ImGuiSelectableFlags_Disabled;
-			if (ImGui::Selectable(mesh->GetDebugName().c_str(), id == _selectedMesh, flags))
+			auto flags = mesh.GetNumSubMeshes() > 0 ? 0 : ImGuiSelectableFlags_Disabled;
+			if (ImGui::Selectable(mesh.GetDebugName().c_str(), id == _selectedMesh, flags))
 			{
 				_selectedMesh = id;
 			}
 			if (ImGui::IsItemHovered())
 			{
-				ImGui::SetTooltip("%s", mesh->GetDebugName().c_str());
+				ImGui::SetTooltip("%s", mesh.GetDebugName().c_str());
 			}
 		}
 	});
@@ -196,18 +196,18 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 	{
 		_selectedAnimation.reset();
 	}
-	animations.Each([this, &mesh, &displayedAnimations](entt::id_type id, entt::resource_handle<const L3DAnim> animation) {
-		if (_filter.PassFilter(animation->GetName().c_str()) &&
-		    (!_matchBones || (animation->GetBoneMatrices(0).size() == mesh->GetBoneMatrices().size())))
+	animations.Each([this, &mesh, &displayedAnimations](entt::id_type id, const L3DAnim& animation) {
+		if (_filter.PassFilter(animation.GetName().c_str()) &&
+		    (!_matchBones || (animation.GetBoneMatrices(0).size() == mesh->GetBoneMatrices().size())))
 		{
 			displayedAnimations++;
-			if (ImGui::Selectable(animation->GetName().c_str(), _selectedAnimation == id))
+			if (ImGui::Selectable(animation.GetName().c_str(), _selectedAnimation == id))
 			{
 				_selectedAnimation = id;
 			}
 			if (ImGui::IsItemHovered())
 			{
-				ImGui::SetTooltip("%s", animation->GetName().c_str());
+				ImGui::SetTooltip("%s", animation.GetName().c_str());
 			}
 		}
 	});

@@ -51,7 +51,7 @@ public:
 	template <typename Func>
 	void Each(Func func) const
 	{
-		_resourceCache.each(func);
+		_resourceCache.each([func](entt::id_type id, entt::resource_handle<const ResourceType> res) { func(id, *res); });
 	}
 
 	[[nodiscard]] entt::resource_cache<ResourceType>& GetCache() const { return _resourceCache; }

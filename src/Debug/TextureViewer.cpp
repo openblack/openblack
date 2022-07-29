@@ -34,18 +34,18 @@ void TextureViewer::Draw([[maybe_unused]] Game& game)
 	ImGui::BeginChild("texturesSelect", ImVec2(textureSize.x - 5, textureSize.y - ImGui::GetTextLineHeight() - 5), true);
 	uint32_t displayedTexture = 0;
 
-	textures.Each([this, &displayedTexture](entt::id_type id, entt::resource_handle<const graphics::Texture2D> texture) {
-		if (_filter.PassFilter(texture->GetName().c_str()))
+	textures.Each([this, &displayedTexture](entt::id_type id, const graphics::Texture2D& texture) {
+		if (_filter.PassFilter(texture.GetName().c_str()))
 		{
 			displayedTexture++;
 
-			if (ImGui::Selectable(texture->GetName().c_str(), id == _selectedTexture))
+			if (ImGui::Selectable(texture.GetName().c_str(), id == _selectedTexture))
 			{
 				_selectedTexture = id;
 			}
 			if (ImGui::IsItemHovered())
 			{
-				ImGui::SetTooltip("%s", texture->GetName().c_str());
+				ImGui::SetTooltip("%s", texture.GetName().c_str());
 			}
 		}
 	});

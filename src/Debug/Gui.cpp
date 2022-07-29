@@ -915,16 +915,16 @@ bool Gui::ShowMenu(Game& game)
 		{
 			auto& resources = Locator::resources::ref();
 			auto& levelsManager = resources.GetLevels();
-			auto campaigns = std::vector<entt::resource_handle<const Level>>();
-			auto playgrounds = std::vector<entt::resource_handle<const Level>>();
-			levelsManager.Each([&campaigns, &playgrounds](entt::resource_handle<const Level> level) {
-				if (level->IsCampaign())
+			auto campaigns = std::vector<const Level*>();
+			auto playgrounds = std::vector<const Level*>();
+			levelsManager.Each([&campaigns, &playgrounds](entt::id_type /*id*/, const Level& level) {
+				if (level.IsCampaign())
 				{
-					campaigns.emplace_back(level);
+					campaigns.emplace_back(&level);
 				}
 				else
 				{
-					playgrounds.emplace_back(level);
+					playgrounds.emplace_back(&level);
 				}
 			});
 
