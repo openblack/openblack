@@ -57,9 +57,10 @@ void TextureViewer::Draw([[maybe_unused]] Game& game)
 
 	ImGui::BeginChild("viewer", ImVec2(fontSize * -15.0f, 0));
 
-	auto texture = textures.Handle(_selectedTexture);
-	if (texture)
+	if (textures.Contains(_selectedTexture))
 	{
+		auto texture = textures.Handle(_selectedTexture);
+
 		const auto format = texture->GetFormat();
 		std::string formatStr = std::to_string(format);
 		if (format == bgfx::TextureFormat::R8)
