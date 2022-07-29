@@ -195,6 +195,7 @@ Renderer::~Renderer()
 	_plane.reset();
 	_shaderManager.reset();
 	_debugCross.reset();
+	bgfx::frame();
 	bgfx::shutdown();
 }
 
