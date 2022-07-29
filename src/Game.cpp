@@ -459,7 +459,7 @@ bool Game::Initialize()
 			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading temple mesh: {}", f.path().stem().string());
 			try
 			{
-				meshManager.Load(fmt::format("temple/{}", f.path().stem().string()), f);
+				meshManager.Load(fmt::format("temple/{}", f.path().stem().string()), resources::L3DLoader::FromDiskTag {}, f);
 			}
 			catch (std::runtime_error& err)
 			{
@@ -468,31 +468,34 @@ bool Game::Initialize()
 		}
 	}
 
-	meshManager.Load("hand", _fileSystem->FindPath(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d"));
-	meshManager.Load("coffre", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.l3d"));
+	meshManager.Load("hand", resources::L3DLoader::FromDiskTag {},
+	                 _fileSystem->FindPath(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d"));
+	meshManager.Load("coffre", resources::L3DLoader::FromDiskTag {},
+	                 _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.l3d"));
 	pack::PackFile pack;
 	pack.Open(_fileSystem->FindPath(_fileSystem->DataPath() / "AllMeshes.g3d"));
 	const auto& meshes = pack.GetMeshes();
 	for (size_t i = 0; const auto& mesh : meshes)
 	{
 		const auto meshId = static_cast<MeshId>(i);
-		meshManager.Load(meshId, k_MeshNames.at(i), mesh);
+		meshManager.Load(meshId, resources::L3DLoader::FromBufferTag {}, k_MeshNames.at(i), mesh);
 		++i;
 	}
 
 	const auto& textures = pack.GetTextures();
 	for (auto const& [name, g3dTexture] : textures)
 	{
-		textureManager.Load(g3dTexture.header.id, name, g3dTexture);
+		textureManager.Load(g3dTexture.header.id, resources::Texture2DLoader::FromPackTag {}, name, g3dTexture);
 	}
 
-	animationManager.Load("coffre", _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.anm"));
+	animationManager.Load("coffre", resources::L3DAnimLoader::FromDiskTag {},
+	                      _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.anm"));
 	pack::PackFile animationPack;
 	animationPack.Open(_fileSystem->FindPath(_fileSystem->DataPath() / "AllAnims.anm"));
 	const auto& animations = animationPack.GetAnimations();
 	for (size_t i = 0; i < animations.size(); i++)
 	{
-		animationManager.Load(i, animations[i]);
+		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animations[i]);
 	}
 
 	// TODO(raffclar): #400: Parse level files within the resource loader
@@ -509,7 +512,7 @@ bool Game::Initialize()
 		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading campaign level: {}", f.path().stem().string());
 		try
 		{
-			levelManager.Load(fmt::format("campaign/{}", name), name, f, true);
+			levelManager.Load(fmt::format("campaign/{}", name), resources::LevelLoader::FromDiskTag {}, name, f, true);
 		}
 		catch (std::runtime_error& err)
 		{
@@ -517,9 +520,12 @@ bool Game::Initialize()
 		}
 	}
 	// Load Playgrounds
-	levelManager.Load("playgrounds/TwoGods", "Two Gods", scriptsPath / "Playgrounds" / "TwoGods.txt", false);
-	levelManager.Load("playgrounds/ThreeGods", "Three Gods", scriptsPath / "Playgrounds" / "ThreeGods.txt", false);
-	levelManager.Load("playgrounds/FourGods", "Four Gods", scriptsPath / "Playgrounds" / "FourGods.txt", false);
+	levelManager.Load("playgrounds/TwoGods", resources::LevelLoader::FromDiskTag {}, "Two Gods",
+	                  scriptsPath / "Playgrounds" / "TwoGods.txt", false);
+	levelManager.Load("playgrounds/ThreeGods", resources::LevelLoader::FromDiskTag {}, "Three Gods",
+	                  scriptsPath / "Playgrounds" / "ThreeGods.txt", false);
+	levelManager.Load("playgrounds/FourGods", resources::LevelLoader::FromDiskTag {}, "Four Gods",
+	                  scriptsPath / "Playgrounds" / "FourGods.txt", false);
 	// Attempt to load additional levels as playgrounds
 	for (const auto& f : std::filesystem::directory_iterator {scriptsPath / "Playgrounds"})
 	{
@@ -537,7 +543,7 @@ bool Game::Initialize()
 		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading custom level: {}", f.path().stem().string());
 		try
 		{
-			levelManager.Load(fmt::format("playgrounds/{}", name), name, f, false);
+			levelManager.Load(fmt::format("playgrounds/{}", name), resources::LevelLoader::FromDiskTag {}, name, f, false);
 		}
 		catch (std::runtime_error& err)
 		{
@@ -568,7 +574,8 @@ bool Game::Initialize()
 			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading raw texture: {}", f.path().stem().string());
 			try
 			{
-				textureManager.Load(fmt::format("raw/{}", f.path().stem().string()), f);
+				textureManager.Load(fmt::format("raw/{}", f.path().stem().string()), resources::Texture2DLoader::FromDiskTag {},
+				                    f);
 			}
 			catch (std::runtime_error& err)
 			{
