@@ -17,12 +17,16 @@ jobs:
         triplet: [""]
         preset: [android-armeabi-v7a-vcpkg, android-arm64-v8a-vcpkg, android-x86-vcpkg, android-x86_64-vcpkg]
         os: [ubuntu-latest]
-        # TODO(#519) x86 disabled due to failing to find stdlib headers on workflows
-        # include:
-        #   # Testing x86-windows bit in debug only
-        #   - triplet: x86-windows
-        #     os: windows-latest
-        #     preset: ninja-multi-vcpkg
+        # These are additional individual jobs. There are no permutations of these.
+        include:
+          - triplet: x86-windows
+            os: windows-latest
+            preset: ninja-multi-vcpkg
+
+    env:
+      VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
+      EMSDK: '/tmp/emsdk'
+      ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.2.8568313'
 
     steps:
       - uses: actions/checkout@v3
@@ -58,7 +62,7 @@ jobs:
         uses: lukka/run-cmake@v10
         with:
           configurePreset: '${{ matrix.preset }}'
-          configurePresetAdditionalArgs: "['-DOPENBLACK_WARNINGS_AS_ERRORS=ON']"
+          configurePresetAdditionalArgs: "[`-DOPENBLACK_WARNINGS_AS_ERRORS=ON`${{ matrix.triplet && format(', `-DVCPKG_TARGET_TRIPLET={0}`', matrix.triplet) }}]"
 
       - name: Run CMake+Ninja to build the code (Debug).
         uses: lukka/run-cmake@v10
@@ -75,11 +79,6 @@ jobs:
           name: openblack-${{ matrix.triplet || matrix.preset }}-${{github.sha}}
           path: cmake-build-presets/${{ matrix.preset }}/bin
           if-no-files-found: error
-
-    env:
-      VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
-      EMSDK: '/tmp/emsdk'
-      ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.2.8568313'
 
   assemble-android-apk:
     needs: build
