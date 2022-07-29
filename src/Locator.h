@@ -36,13 +36,13 @@ void InitializeLevel();
 
 struct Locator
 {
-	using resources = entt::service_locator<resources::ResourcesInterface>;
-	using rng = entt::service_locator<RandomNumberManagerInterface>;
-	using rendereringSystem = entt::service_locator<ecs::systems::RenderingSystemInterface>;
-	using dynamicsSystem = entt::service_locator<ecs::systems::DynamicsSystemInterface>;
-	using cameraBookmarkSystem = entt::service_locator<ecs::systems::CameraBookmarkSystemInterface>;
-	using livingActionSystem = entt::service_locator<ecs::systems::LivingActionSystemInterface>;
-	using townSystem = entt::service_locator<ecs::systems::TownSystemInterface>;
-	using pathfindingSystem = entt::service_locator<ecs::systems::PathfindingSystemInterface>;
+	using resources = entt::locator<resources::ResourcesInterface>;
+	using rng = entt::locator<RandomNumberManagerInterface>;
+	using rendereringSystem = entt::locator<ecs::systems::RenderingSystemInterface>;
+	using dynamicsSystem = entt::locator<ecs::systems::DynamicsSystemInterface>;
+	using cameraBookmarkSystem = entt::locator<ecs::systems::CameraBookmarkSystemInterface>;
+	using livingActionSystem = entt::locator<ecs::systems::LivingActionSystemInterface>;
+	using townSystem = entt::locator<ecs::systems::TownSystemInterface>;
+	using pathfindingSystem = entt::locator<ecs::systems::PathfindingSystemInterface>;
 };
 } // namespace openblack

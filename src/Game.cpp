@@ -147,7 +147,7 @@ Game::Game(Arguments&& args)
 Game::~Game()
 {
 	// Manually delete the assets here before BGFX renderer clears its buffers resulting in invalid handles in our assets
-	auto& resources = Locator::resources::ref();
+	auto& resources = Locator::resources::value();
 	resources.GetMeshes().Clear();
 	resources.GetTextures().Clear();
 	resources.GetAnimations().Clear();
@@ -237,7 +237,7 @@ bool Game::ProcessEvents(const SDL_Event& event)
 			{
 				auto handPosition = _handPose * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 				const auto index = static_cast<uint8_t>(event.key.keysym.sym - SDLK_1);
-				Locator::cameraBookmarkSystem::ref().SetBookmark(index, handPosition);
+				Locator::cameraBookmarkSystem::value().SetBookmark(index, handPosition);
 			}
 			else if (event.key.keysym.mod == 0)
 			{
@@ -293,11 +293,11 @@ bool Game::GameLogicLoop()
 
 	{
 		auto pathfinding = _profiler->BeginScoped(Profiler::Stage::PathfindingUpdate);
-		Locator::pathfindingSystem::ref().Update();
+		Locator::pathfindingSystem::value().Update();
 	}
 	{
 		auto actions = _profiler->BeginScoped(Profiler::Stage::LivingActionUpdate);
-		Locator::livingActionSystem::ref().Update();
+		Locator::livingActionSystem::value().Update();
 	}
 
 	_lastGameLoopTime = currentTime;
@@ -324,7 +324,7 @@ bool Game::Update()
 		auto physics = _profiler->BeginScoped(Profiler::Stage::PhysicsUpdate);
 		if (_frameCount > 0)
 		{
-			auto& dynamicsSystem = Locator::dynamicsSystem::ref();
+			auto& dynamicsSystem = Locator::dynamicsSystem::value();
 			dynamicsSystem.Update(deltaTime);
 			dynamicsSystem.UpdatePhysicsTransforms();
 		}
@@ -355,7 +355,7 @@ bool Game::Update()
 	}
 
 	_camera->Update(deltaTime);
-	Locator::cameraBookmarkSystem::ref().Update(deltaTime);
+	Locator::cameraBookmarkSystem::value().Update(deltaTime);
 
 	// Update Game Logic in Registry
 	{
@@ -385,7 +385,7 @@ bool Game::Update()
 				glm::vec3 rayOrigin;
 				glm::vec3 rayDirection;
 				_camera->DeprojectScreenToWorld(_mousePosition, screenSize, rayOrigin, rayDirection);
-				auto& dynamicsSystem = Locator::dynamicsSystem::ref();
+				auto& dynamicsSystem = Locator::dynamicsSystem::value();
 
 				if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
 				{
@@ -431,8 +431,8 @@ bool Game::Update()
 			auto updateEntities = _profiler->BeginScoped(Profiler::Stage::UpdateEntities);
 			if (_config.drawEntities)
 			{
-				Locator::rendereringSystem::ref().PrepareDraw(_config.drawBoundingBoxes, _config.drawFootpaths,
-				                                              _config.drawStreams);
+				Locator::rendereringSystem::value().PrepareDraw(_config.drawBoundingBoxes, _config.drawFootpaths,
+				                                                _config.drawStreams);
 			}
 		}
 	} // Update Uniforms
@@ -442,10 +442,10 @@ bool Game::Update()
 
 bool Game::Initialize()
 {
-	Locator::resources::set<resources::Resources>();
-	Locator::rng::set<RandomNumberManagerProduction>();
+	Locator::resources::emplace<resources::Resources>();
+	Locator::rng::emplace<RandomNumberManagerProduction>();
 	ecs::systems::InitializeGame();
-	auto& resources = Locator::resources::ref();
+	auto& resources = Locator::resources::value();
 	auto& meshManager = resources.GetMeshes();
 	auto& textureManager = resources.GetTextures();
 	auto& animationManager = resources.GetAnimations();
@@ -592,7 +592,7 @@ bool Game::Initialize()
 bool Game::Run()
 {
 	LoadMap(_fileSystem->ScriptsPath() / "Land1.txt");
-	Locator::dynamicsSystem::ref().RegisterRigidBodies();
+	Locator::dynamicsSystem::value().RegisterRigidBodies();
 
 	auto challengePath = _fileSystem->QuestsPath() / "challenge.chl";
 	if (_fileSystem->Exists(challengePath))
@@ -749,8 +749,8 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	_landIsland = std::make_unique<LandIsland>();
 	_landIsland->LoadFromFile(fixedName);
 
-	Locator::cameraBookmarkSystem::ref().Initialize();
-	Locator::dynamicsSystem::ref().RegisterIslandRigidBodies(*_landIsland);
+	Locator::cameraBookmarkSystem::value().Initialize();
+	Locator::dynamicsSystem::value().RegisterIslandRigidBodies(*_landIsland);
 }
 
 bool Game::LoadVariables()

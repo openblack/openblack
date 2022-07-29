@@ -75,7 +75,8 @@ public:
 	{
 		SetDirty();
 		_registry.clear();
-		_registry.set<RegistryContext>();
+		_registry.ctx().erase<RegistryContext>();
+		_registry.ctx().emplace<RegistryContext>();
 	};
 	template <typename Component>
 	size_t Size()

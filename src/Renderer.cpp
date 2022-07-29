@@ -221,7 +221,7 @@ void Renderer::UpdateDebugCrossUniforms(const glm::mat4& pose)
 
 const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& meshSkins)
 {
-	const auto& textureManager = Locator::resources::ref().GetTextures();
+	const auto& textureManager = Locator::resources::value().GetTextures();
 
 	const Texture2D* texture = nullptr;
 
@@ -233,7 +233,7 @@ const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, st
 		}
 		else if (textureManager.Contains(skinID))
 		{
-			texture = &textureManager.Handle(skinID).get();
+			texture = &*textureManager.Handle(skinID);
 		}
 		else
 		{
@@ -369,8 +369,8 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 		island.GetOrthoViewProj(view, proj);
 		bgfx::setViewTransform(static_cast<bgfx::ViewId>(viewId), &view, &proj);
 
-		const auto& meshManager = Locator::resources::ref().GetMeshes();
-		const auto& renderCtx = Locator::rendereringSystem::ref().GetContext();
+		const auto& meshManager = Locator::resources::value().GetMeshes();
+		const auto& renderCtx = Locator::rendereringSystem::value().GetContext();
 		const auto* footprintShaderInstanced = _shaderManager->GetShader("FootprintInstanced");
 		for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
 		{
@@ -430,7 +430,7 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const
 
 void Renderer::DrawPass(const DrawSceneDesc& desc) const
 {
-	const auto& meshManager = Locator::resources::ref().GetMeshes();
+	const auto& meshManager = Locator::resources::value().GetMeshes();
 
 	if (desc.frameBuffer != nullptr)
 	{
@@ -488,8 +488,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			mesh->GetIndexBuffer().Bind(mesh->GetIndexBuffer().GetCount(), 0);
 			mesh->GetVertexBuffer().Bind();
 			bgfx::setState(BGFX_STATE_DEFAULT);
-			auto diffuse = Locator::resources::ref().GetTextures().Handle(Water::k_DiffuseTextureId);
-			auto alpha = Locator::resources::ref().GetTextures().Handle(Water::k_AlphaTextureId);
+			auto diffuse = Locator::resources::value().GetTextures().Handle(Water::k_DiffuseTextureId);
+			auto alpha = Locator::resources::value().GetTextures().Handle(Water::k_AlphaTextureId);
 			waterShader->SetTextureSampler("s_diffuse", 0, *diffuse);
 			waterShader->SetTextureSampler("s_alpha", 1, *alpha);
 			waterShader->SetTextureSampler("s_reflection", 2, desc.water.GetFrameBuffer().GetColorAttachment());
@@ -510,7 +510,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			auto islandExtent = glm::vec4(extentMin, extentMax);
 			for (const auto& block : desc.island.GetBlocks())
 			{
-				auto texture = Locator::resources::ref().GetTextures().Handle(LandIsland::k_SmallBumpTextureId);
+				auto texture = Locator::resources::value().GetTextures().Handle(LandIsland::k_SmallBumpTextureId);
 
 				terrainShader->SetTextureSampler("s0_materials", 0, desc.island.GetAlbedoArray());
 				terrainShader->SetTextureSampler("s1_bump", 1, desc.island.GetBump());
@@ -557,7 +557,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				| BGFX_STATE_MSAA
 			;
 			// clang-format on
-			const auto& renderCtx = Locator::rendereringSystem::ref().GetContext();
+			const auto& renderCtx = Locator::rendereringSystem::value().GetContext();
 
 			// Instance meshes
 			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
@@ -583,7 +583,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				submitDesc.skyType = desc.sky.GetCurrentSkyType();
 
 				// TODO(bwrsandman): choose the correct LOD
-				DrawMesh(mesh, submitDesc, std::numeric_limits<uint8_t>::max());
+				DrawMesh(*mesh, submitDesc, std::numeric_limits<uint8_t>::max());
 			}
 
 			// Debug
@@ -668,7 +668,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			;
 			// clang-format on
 			const auto& mesh = meshManager.Handle(entt::hashed_string("coffre"));
-			const auto& testAnimation = Locator::resources::ref().GetAnimations().Handle(entt::hashed_string("coffre"));
+			const auto& testAnimation = Locator::resources::value().GetAnimations().Handle(entt::hashed_string("coffre"));
 			const std::vector<uint32_t>& boneParents = mesh->GetBoneParents();
 			auto bones = testAnimation->GetBoneMatrices(desc.time);
 			for (uint32_t i = 0; i < bones.size(); ++i)
@@ -682,7 +682,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			submitDesc.matrixCount = static_cast<uint8_t>(bones.size());
 			submitDesc.isSky = false;
 			submitDesc.skyType = desc.sky.GetCurrentSkyType();
-			DrawMesh(mesh.get(), submitDesc, 0);
+			DrawMesh(*mesh, submitDesc, 0);
 		}
 	}
 

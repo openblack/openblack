@@ -48,11 +48,11 @@ entt::entity VillagerArchetype::Create([[maybe_unused]] const glm::vec3& abodePo
 	const auto task = Villager::Task::IDLE;
 
 	// TODO(bwrsandman): Might be better to make a FindClosestAbode
-	const entt::entity town = Locator::townSystem::ref().FindClosestTown(abodePosition);
+	const entt::entity town = Locator::townSystem::value().FindClosestTown(abodePosition);
 	entt::entity abode = entt::null;
 	if (town != entt::null)
 	{
-		abode = Locator::townSystem::ref().FindAbodeWithSpace(town);
+		abode = Locator::townSystem::value().FindAbodeWithSpace(town);
 	}
 
 	registry.Assign<Villager>(entity, health, static_cast<uint32_t>(age), hunger, lifeStage, sex, info.tribeType,
@@ -60,7 +60,7 @@ entt::entity VillagerArchetype::Create([[maybe_unused]] const glm::vec3& abodePo
 	registry.Assign<WallHug>(entity, glm::vec2(), glm::vec2(), GetSpeedStateSpeed(info.speedGroup.speedDefault));
 	const auto resourceId = resources::MeshIdToResourceId(info.highDetail);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(0));
-	auto turnsSinceStateChange = Locator::rng::ref().NextValue<uint16_t>(1, 500);
+	auto turnsSinceStateChange = Locator::rng::value().NextValue<uint16_t>(1, 500);
 	registry.Assign<LivingAction>(entity, VillagerStates::Created, turnsSinceStateChange);
 
 	return entity;

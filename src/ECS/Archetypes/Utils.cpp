@@ -27,7 +27,7 @@ std::pair<glm::vec2, float> openblack::ecs::archetypes::GetFixedObstacleBounding
                                                                                        const Transform& transform)
 {
 	auto resourceId = resources::MeshIdToResourceId(meshId);
-	const auto l3dMesh = Locator::resources::ref().GetMeshes().Handle(resourceId);
+	const auto l3dMesh = Locator::resources::value().GetMeshes().Handle(resourceId);
 	assert(l3dMesh);
 	const auto& bb = l3dMesh->GetBoundingBox();
 	const auto bbSize = glm::max(glm::vec2(1.0f, 1.0f), glm::xz(bb.Size() * 0.5f * transform.scale));

@@ -44,8 +44,8 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 {
 
 	float fontSize = ImGui::GetFontSize();
-	auto const& meshes = Locator::resources::ref().GetMeshes();
-	auto const& animations = Locator::resources::ref().GetAnimations();
+	auto const& meshes = Locator::resources::value().GetMeshes();
+	auto const& animations = Locator::resources::value().GetAnimations();
 
 	_filter.Draw();
 	ImGui::InputScalar("Mesh flag filter", ImGuiDataType_U32, &_meshFlagFilter, nullptr, nullptr, "%08X",
@@ -218,8 +218,8 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 
 void MeshViewer::Update([[maybe_unused]] Game& game, const Renderer& renderer)
 {
-	auto const& meshes = Locator::resources::ref().GetMeshes();
-	auto const& animations = Locator::resources::ref().GetAnimations();
+	auto const& meshes = Locator::resources::value().GetMeshes();
+	auto const& animations = Locator::resources::value().GetAnimations();
 	auto& shaderManager = renderer.GetShaderManager();
 	const auto* objectShader = shaderManager.GetShader("Object");
 	const auto* debugShader = shaderManager.GetShader("DebugLine");

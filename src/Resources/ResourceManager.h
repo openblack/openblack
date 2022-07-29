@@ -18,14 +18,16 @@
 namespace openblack::resources
 {
 
-template <typename ResourceLoader, typename ResourceType = typename ResourceLoader::ResourceType>
+template <typename ResourceLoader>
 class ResourceManager
 {
 public:
+	using ResourceType = typename ResourceLoader::ResourceType;
+
 	template <typename... Args>
 	[[maybe_unused]] decltype(auto) Load(entt::id_type identifier, Args&&... args)
 	{
-		return _resourceCache.template load<ResourceLoader>(identifier, std::forward<Args>(args)...);
+		return _resourceCache.load(identifier, std::forward<Args>(args)...);
 	}
 
 	template <typename T, typename... Args>
@@ -35,9 +37,9 @@ public:
 		return Load(id, std::forward<Args>(args)...);
 	}
 
-	[[nodiscard]] decltype(auto) Handle(entt::id_type identifier) { return _resourceCache.handle(identifier); }
+	[[nodiscard]] decltype(auto) Handle(entt::id_type identifier) { return _resourceCache[identifier]; }
 
-	[[nodiscard]] decltype(auto) Handle(entt::id_type identifier) const { return _resourceCache.handle(identifier); }
+	[[nodiscard]] decltype(auto) Handle(entt::id_type identifier) const { return _resourceCache[identifier]; }
 
 	[[nodiscard]] bool Contains(entt::id_type identifier) const { return _resourceCache.contains(identifier); }
 
@@ -51,7 +53,10 @@ public:
 	template <typename Func>
 	void Each(Func func) const
 	{
-		_resourceCache.each([func](entt::id_type id, entt::resource_handle<const ResourceType> res) { func(id, *res); });
+		for (const auto [i, r] : _resourceCache)
+		{
+			func(i, r);
+		}
 	}
 
 	[[nodiscard]] entt::resource_cache<ResourceType>& GetCache() const { return _resourceCache; }
@@ -61,6 +66,6 @@ public:
 	void Clear() { _resourceCache.clear(); }
 
 private:
-	entt::resource_cache<ResourceType> _resourceCache;
+	entt::resource_cache<ResourceType, ResourceLoader> _resourceCache;
 };
 } // namespace openblack::resources

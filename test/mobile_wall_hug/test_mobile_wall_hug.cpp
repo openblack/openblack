@@ -320,7 +320,7 @@ protected:
 				// ASSERT_EQ(ref.stepsAway, state.circle_hug_info.turns_to_obstacle) << msg;
 			}
 
-			ASSERT_NO_THROW(Locator::pathfindingSystem::ref().Update()) << msg;
+			ASSERT_NO_THROW(Locator::pathfindingSystem::value().Update()) << msg;
 		}
 	}
 
