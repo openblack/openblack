@@ -132,6 +132,28 @@ Game::Game(Arguments&& args)
 	_fileSystem->SetGamePath(GetGamePath());
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
 
+	if (std::filesystem::path(args.startLevel).is_absolute())
+	{
+		_startMap = args.startLevel;
+		if (std::find(_startMap.begin(), _startMap.end(), "Scripts") != _startMap.end())
+		{
+			auto p = _startMap;
+			while (p.filename() != "Scripts" && p != p.parent_path())
+			{
+				p = p.parent_path();
+			}
+			_fileSystem->AddAdditionalPath(p.parent_path());
+		}
+		else
+		{
+			_fileSystem->AddAdditionalPath(_startMap.parent_path());
+		}
+	}
+	else
+	{
+		_startMap = _fileSystem->ScriptsPath() / args.startLevel;
+	}
+
 	_gui = debug::gui::Gui::Create(_window.get(), graphics::RenderPass::ImGui, args.scale);
 
 	_eventManager->AddHandler(std::function([this](const SDL_Event& event) {
@@ -595,7 +617,7 @@ bool Game::Initialize()
 
 bool Game::Run()
 {
-	LoadMap(_fileSystem->ScriptsPath() / "Land1.txt");
+	LoadMap(_startMap);
 	Locator::dynamicsSystem::value().RegisterRigidBodies();
 
 	auto challengePath = _fileSystem->QuestsPath() / "challenge.chl";
