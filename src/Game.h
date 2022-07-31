@@ -97,6 +97,7 @@ struct Arguments
 	uint32_t numFramesToSimulate;
 	std::string logFile;
 	std::array<spdlog::level::level_enum, k_LoggingSubsystemStrs.size()> logLevels;
+	std::string startLevel;
 };
 
 class Game
@@ -232,6 +233,7 @@ private:
 
 	InfoConstants _infoConstants;
 	Config _config;
+	std::filesystem::path _startMap;
 
 	std::chrono::steady_clock::time_point _lastGameLoopTime;
 	std::chrono::steady_clock::duration _turnDeltaTime;

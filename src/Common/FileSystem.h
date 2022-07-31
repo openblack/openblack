@@ -55,11 +55,13 @@ public:
 
 	void SetGamePath(const std::filesystem::path& path) { _gamePath = path; }
 	[[nodiscard]] const std::filesystem::path& GetGamePath() const { return _gamePath; }
+	void AddAdditionalPath(const std::filesystem::path& path) { _additionalPaths.push_back(path); }
 
 	std::vector<std::byte> ReadAll(const std::filesystem::path& path);
 
 private:
 	std::filesystem::path _gamePath;
+	std::vector<std::filesystem::path> _additionalPaths;
 };
 
 } // namespace openblack

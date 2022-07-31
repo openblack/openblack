@@ -19,6 +19,7 @@ TEST(GameInitialize, initializeOnly)
 	    .gamePath = mockGamePath.string(),
 	    .numFramesToSimulate = 0,
 	    .logFile = "stdout",
+	    .startLevel = "Land1.txt",
 	};
 	std::fill_n(args.logLevels.begin(), args.logLevels.size(), spdlog::level::debug);
 	auto game = std::make_unique<openblack::Game>(std::move(args));
@@ -35,6 +36,7 @@ TEST(GameInitialize, run0Frames)
 	    .gamePath = mockGamePath.string(),
 	    .numFramesToSimulate = 0,
 	    .logFile = "stdout",
+	    .startLevel = "Land1.txt",
 	};
 	std::fill_n(args.logLevels.begin(), args.logLevels.size(), spdlog::level::debug);
 	auto game = std::make_unique<openblack::Game>(std::move(args));

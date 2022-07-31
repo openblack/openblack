@@ -43,7 +43,8 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		("g,game-path", "Path to the Data/ and Scripts/ directories of the original Black & White game. (Required)", cxxopts::value<std::string>())
 		("W,width", "Window resolution in the x axis.", cxxopts::value<uint16_t>()->default_value("1280"))
 		("H,height", "Window resolution in the y axis.", cxxopts::value<uint16_t>()->default_value("1024"))
-		("s,gui-scale", "Scaling of the GUI", cxxopts::value<float>()->default_value("1.0"))
+		("u,ui-scale", "Scaling of the GUI", cxxopts::value<float>()->default_value("1.0"))
+		("s,start-level", "Level that is loaded at start-up", cxxopts::value<std::string>()->default_value("Land1.txt"))
 		("V,vsync", "Enable Vertical Sync.")
 		("m,window-mode", "Which mode to run window.", cxxopts::value<std::string>()->default_value("windowed"))
 		("b,backend-type", "Which backend to use for rendering.", cxxopts::value<std::string>())
@@ -171,13 +172,14 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		}
 		args.windowWidth = result["width"].as<uint16_t>();
 		args.windowHeight = result["height"].as<uint16_t>();
-		args.scale = result["gui-scale"].as<float>();
+		args.scale = result["ui-scale"].as<float>();
 		args.vsync = result["vsync"].as<bool>();
 		args.displayMode = displayMode;
 		args.rendererType = rendererType;
 		args.numFramesToSimulate = result["num-frames-to-simulate"].as<uint32_t>();
 		args.logFile = result["log-file"].as<std::string>();
 		args.logLevels = logLevels;
+		args.startLevel = result["start-level"].as<std::string>();
 	}
 	catch (cxxopts::OptionParseException& err)
 	{

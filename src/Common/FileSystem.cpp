@@ -55,21 +55,35 @@ std::filesystem::path FileSystem::FindPath(const std::filesystem::path& path) co
 	}
 
 	// try absolute first
-	if (path.is_absolute() && std::filesystem::exists(path))
+	if (path.is_absolute())
 	{
-		return path;
+		if (std::filesystem::exists(path))
+		{
+			return path;
+		}
 	}
-
-	// try relative to current directory
-	if (path.is_relative() && std::filesystem::exists(path))
+	else
 	{
-		return path;
-	}
+		// try relative to current directory
+		if (std::filesystem::exists(path))
+		{
+			return path;
+		}
 
-	// try relative to game directory
-	if (path.is_relative() && std::filesystem::exists(_gamePath / path))
-	{
-		return _gamePath / path;
+		// try relative to game directory
+		if (std::filesystem::exists(_gamePath / path))
+		{
+			return _gamePath / path;
+		}
+
+		// try relative to additional paths
+		for (const auto& p : _additionalPaths)
+		{
+			if (std::filesystem::exists(p / path))
+			{
+				return p / path;
+			}
+		}
 	}
 
 	throw std::runtime_error("File " + path.string() + " not found");
