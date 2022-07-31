@@ -248,6 +248,8 @@ jobs:
       - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Land5.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-release-land-5.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s LandT.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-debug-land-T.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s LandT.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-release-land-T.png"
+      - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Playgrounds/TwoGods.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-debug-two-gods.png"
+      - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Playgrounds/TwoGods.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-release-two-gods.png"
       - name: Upload screenshots
         uses: actions/upload-artifact@v3
         if: always()
@@ -351,6 +353,22 @@ jobs:
           path: screenshot-${{ matrix.os }}-${{github.sha}}-release-land-T.png
           uploadMethod: imgbb
           apiKey: '${{ secrets.IMGBB_API_KEY }}'
+      - name: Upload Two Gods Debug screenshot for comments
+        id: upload-imbb-debug-two-gods
+        uses: McCzarny/upload-image@v1.0.0
+        if: github.event_name == 'pull_request_target'
+        with:
+          path: screenshot-${{ matrix.os }}-${{github.sha}}-debug-two-gods.png
+          uploadMethod: imgbb
+          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+      - name: Upload Two Gods Release screenshot for comments
+        id: upload-imbb-release-two-gods
+        uses: McCzarny/upload-image@v1.0.0
+        if: github.event_name == 'pull_request_target'
+        with:
+          path: screenshot-${{ matrix.os }}-${{github.sha}}-release-two-gods.png
+          uploadMethod: imgbb
+          apiKey: '${{ secrets.IMGBB_API_KEY }}'
       - name: Find Image Comment
         if: github.event_name == 'pull_request_target'
         uses: peter-evans/find-comment@v2
@@ -375,4 +393,5 @@ jobs:
             | Land4.txt | ![Land4 Debug](${{steps.upload-imbb-debug-land-4.outputs.url}}) | ![Land4 Release](${{steps.upload-imbb-release-land-4.outputs.url}}) | ![Land4 Vanilla](https://user-images.githubusercontent.com/1013356/182029088-36cca165-ef02-4436-85fe-e30f2f619561.png) |
             | Land5.txt | ![Land5 Debug](${{steps.upload-imbb-debug-land-5.outputs.url}}) | ![Land5 Release](${{steps.upload-imbb-release-land-5.outputs.url}}) | ![Land5 Vanilla](https://user-images.githubusercontent.com/1013356/182029092-55277dea-c865-4f48-bef4-9bb31bb6e911.png) |
             | LandT.txt | ![LandT Debug](${{steps.upload-imbb-debug-land-T.outputs.url}}) | ![LandT Release](${{steps.upload-imbb-release-land-T.outputs.url}}) | ![LandT Vanilla](https://user-images.githubusercontent.com/1013356/182029099-6ef8a87d-88ab-4696-9faf-1b7d9e4b9da8.png) |
+            | TwoGods.txt | ![TwoGods Debug](${{steps.upload-imbb-debug-two-gods.outputs.url}}) | ![TwoGods Release](${{steps.upload-imbb-release-two-gods.outputs.url}}) | ![TwoGods Vanilla](https://user-images.githubusercontent.com/1013356/182029110-c177675a-ad11-4ff1-932e-9d8899e1c9de.png) |
           edit-mode: replace
