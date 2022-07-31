@@ -243,6 +243,8 @@ jobs:
       - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Land3.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-release-land-3.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Land4.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-debug-land-4.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Land4.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-release-land-4.png"
+      - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Land5.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-debug-land-5.png"
+      - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Land5.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-release-land-5.png"
       - name: Upload screenshots
         uses: actions/upload-artifact@v3
         if: always()
@@ -314,6 +316,22 @@ jobs:
           path: screenshot-${{ matrix.os }}-${{github.sha}}-release-land-4.png
           uploadMethod: imgbb
           apiKey: '${{ secrets.IMGBB_API_KEY }}'
+      - name: Upload Land 5 Debug screenshot for comments
+        id: upload-imbb-debug-land-5
+        uses: McCzarny/upload-image@v1.0.0
+        if: github.event_name == 'pull_request_target'
+        with:
+          path: screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-5.png
+          uploadMethod: imgbb
+          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+      - name: Upload Land 5 Release screenshot for comments
+        id: upload-imbb-release-land-5
+        uses: McCzarny/upload-image@v1.0.0
+        if: github.event_name == 'pull_request_target'
+        with:
+          path: screenshot-${{ matrix.os }}-${{github.sha}}-release-land-5.png
+          uploadMethod: imgbb
+          apiKey: '${{ secrets.IMGBB_API_KEY }}'
       - name: Find Image Comment
         if: github.event_name == 'pull_request_target'
         uses: peter-evans/find-comment@v2
@@ -336,4 +354,5 @@ jobs:
             | Land2.txt | ![Land2 Debug](${{steps.upload-imbb-debug-land-2.outputs.url}}) | ![Land2 Release](${{steps.upload-imbb-release-land-2.outputs.url}}) | ![Land2 Vanilla](https://user-images.githubusercontent.com/1013356/182029155-ae2991e7-cdd8-4904-a9d7-625c0183c353.png) |
             | Land3.txt | ![Land3 Debug](${{steps.upload-imbb-debug-land-3.outputs.url}}) | ![Land3 Release](${{steps.upload-imbb-release-land-3.outputs.url}}) | ![Land3 Vanilla](https://user-images.githubusercontent.com/1013356/182029087-e823072f-8ae4-492e-b49d-52e0e3e8ad0a.png) |
             | Land4.txt | ![Land4 Debug](${{steps.upload-imbb-debug-land-4.outputs.url}}) | ![Land4 Release](${{steps.upload-imbb-release-land-4.outputs.url}}) | ![Land4 Vanilla](https://user-images.githubusercontent.com/1013356/182029088-36cca165-ef02-4436-85fe-e30f2f619561.png) |
+            | Land5.txt | ![Land5 Debug](${{steps.upload-imbb-debug-land-5.outputs.url}}) | ![Land5 Release](${{steps.upload-imbb-release-land-5.outputs.url}}) | ![Land5 Vanilla](https://user-images.githubusercontent.com/1013356/182029092-55277dea-c865-4f48-bef4-9bb31bb6e911.png) |
           edit-mode: replace
