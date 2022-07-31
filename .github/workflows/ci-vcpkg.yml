@@ -236,6 +236,7 @@ jobs:
           'START_CAMERA_POS("1794.1,2175.7")' | Add-Content -Path game-data\bw\Scripts\Land3.txt
           'START_CAMERA_POS("2647.9,2615.6")' | Add-Content -Path game-data\bw\Scripts\Land4.txt
           'START_CAMERA_POS("2073.7,2252.8")' | Add-Content -Path game-data\bw\Scripts\LandT.txt
+          'START_CAMERA_POS("1807.9,2223.5")' | Add-Content -Path game-data\bw\Scripts\Playgrounds/ThreeGods.txt
       - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-debug-land-1.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-release-land-1.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Land2.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-debug-land-2.png"
@@ -250,6 +251,8 @@ jobs:
       - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s LandT.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-release-land-T.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Playgrounds/TwoGods.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-debug-two-gods.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Playgrounds/TwoGods.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-release-two-gods.png"
+      - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Playgrounds/ThreeGods.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-debug-three-gods.png"
+      - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Playgrounds/ThreeGods.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-release-three-gods.png"
       - name: Upload screenshots
         uses: actions/upload-artifact@v3
         if: always()
@@ -369,6 +372,22 @@ jobs:
           path: screenshot-${{ matrix.os }}-${{github.sha}}-release-two-gods.png
           uploadMethod: imgbb
           apiKey: '${{ secrets.IMGBB_API_KEY }}'
+      - name: Upload Three Gods Debug screenshot for comments
+        id: upload-imbb-debug-three-gods
+        uses: McCzarny/upload-image@v1.0.0
+        if: github.event_name == 'pull_request_target'
+        with:
+          path: screenshot-${{ matrix.os }}-${{github.sha}}-debug-three-gods.png
+          uploadMethod: imgbb
+          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+      - name: Upload Three Gods Release screenshot for comments
+        id: upload-imbb-release-three-gods
+        uses: McCzarny/upload-image@v1.0.0
+        if: github.event_name == 'pull_request_target'
+        with:
+          path: screenshot-${{ matrix.os }}-${{github.sha}}-release-three-gods.png
+          uploadMethod: imgbb
+          apiKey: '${{ secrets.IMGBB_API_KEY }}'
       - name: Find Image Comment
         if: github.event_name == 'pull_request_target'
         uses: peter-evans/find-comment@v2
@@ -394,4 +413,5 @@ jobs:
             | Land5.txt | ![Land5 Debug](${{steps.upload-imbb-debug-land-5.outputs.url}}) | ![Land5 Release](${{steps.upload-imbb-release-land-5.outputs.url}}) | ![Land5 Vanilla](https://user-images.githubusercontent.com/1013356/182029092-55277dea-c865-4f48-bef4-9bb31bb6e911.png) |
             | LandT.txt | ![LandT Debug](${{steps.upload-imbb-debug-land-T.outputs.url}}) | ![LandT Release](${{steps.upload-imbb-release-land-T.outputs.url}}) | ![LandT Vanilla](https://user-images.githubusercontent.com/1013356/182029099-6ef8a87d-88ab-4696-9faf-1b7d9e4b9da8.png) |
             | TwoGods.txt | ![TwoGods Debug](${{steps.upload-imbb-debug-two-gods.outputs.url}}) | ![TwoGods Release](${{steps.upload-imbb-release-two-gods.outputs.url}}) | ![TwoGods Vanilla](https://user-images.githubusercontent.com/1013356/182029110-c177675a-ad11-4ff1-932e-9d8899e1c9de.png) |
+            | ThreeGods.txt | ![ThreeGods Debug](${{steps.upload-imbb-debug-three-gods.outputs.url}}) | ![ThreeGods Release](${{steps.upload-imbb-release-three-gods.outputs.url}}) | ![ThreeGods Vanilla](https://user-images.githubusercontent.com/1013356/182029108-eff6903e-f0fc-4083-8a26-806616359049.png) |
           edit-mode: replace
