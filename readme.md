@@ -42,7 +42,7 @@ for you. To do so, you will be selecting the `"ninja-multi-vcpkg"   - Ninja Mult
      * Install [CMake version 3.20+](https://cmake.org/download/)
  * You can simply [open the `openblack` folder directly in Visual Studio Code and select a preset](https://devblogs.microsoft.com/cppblog/cmake-presets-integration-in-visual-studio-and-visual-studio-code/).
 
-### Visual Studio 2019 / 2022
+### Visual Studio 2022
 * Install [Visual Studio](https://visualstudio.microsoft.com/downloads/)
     * Select an appropriate MSVC C++ Component for your version
     * Select an appropriate Windows SDK Component for your version

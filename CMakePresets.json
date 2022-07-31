@@ -75,13 +75,6 @@
       "inherits": "template-vcpkg"
     },
     {
-      "name": "msvc-16-vcpkg",
-      "displayName": "Visual Studio 2019 (vcpkg)",
-      "description": "Configure with vcpkg toolchain and generate Visual Studio 2019 project files for all configurations",
-      "generator": "Visual Studio 16 2019",
-      "inherits": "template-vcpkg"
-    },
-    {
       "name": "msvc-17-vcpkg",
       "displayName": "Visual Studio 2022 (vcpkg)",
       "description": "Configure with vcpkg toolchain and generate Visual Studio 2022 project files for all configurations",
@@ -166,20 +159,6 @@
       "configurePreset": "ninja-multi-vcpkg",
       "displayName": "Build ninja-multi-vcpkg-release",
       "description": "Build ninja-multi-vcpkg Release configuration",
-      "configuration": "Release"
-    },
-    {
-      "name": "msvc-16-vcpkg-debug",
-      "configurePreset": "msvc-16-vcpkg",
-      "displayName": "Build msvc-16-vcpkg-debug",
-      "description": "Build msvc-16-vcpkg Debug configuration",
-      "configuration": "Debug"
-    },
-    {
-      "name": "msvc-16-vcpkg-release",
-      "configurePreset": "msvc-16-vcpkg",
-      "displayName": "Build msvc-16-vcpkg-release",
-      "description": "Build msvc-16-vcpkg Release configuration",
       "configuration": "Release"
     },
     {

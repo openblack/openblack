@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ubuntu-22.04, macos-latest, windows-latest, windows-2019]
+        os: [ubuntu-22.04, macos-latest, windows-latest]
         cc: [""]
         cxx: [""]
         # These are additional individual jobs. There are no permutations of these.
@@ -161,7 +161,7 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ ubuntu-22.04, macos-latest, windows-latest, windows-2019 ]
+        os: [ ubuntu-22.04, macos-latest, windows-latest ]
     steps:
       - name: Download compiled openblack and tools
         uses: actions/download-artifact@v3
