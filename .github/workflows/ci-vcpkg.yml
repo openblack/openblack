@@ -434,4 +434,5 @@ jobs:
             | TwoGods.txt | ![TwoGods Debug](${{steps.upload-imbb-debug-two-gods.outputs.url}}) | ![TwoGods Release](${{steps.upload-imbb-release-two-gods.outputs.url}}) | ![TwoGods Vanilla](https://user-images.githubusercontent.com/1013356/182029110-c177675a-ad11-4ff1-932e-9d8899e1c9de.png) |
             | ThreeGods.txt | ![ThreeGods Debug](${{steps.upload-imbb-debug-three-gods.outputs.url}}) | ![ThreeGods Release](${{steps.upload-imbb-release-three-gods.outputs.url}}) | ![ThreeGods Vanilla](https://user-images.githubusercontent.com/1013356/182029108-eff6903e-f0fc-4083-8a26-806616359049.png) |
             | FourGods.txt | ![FourGods Debug](${{steps.upload-imbb-debug-four-gods.outputs.url}}) | ![FourGods Release](${{steps.upload-imbb-release-four-gods.outputs.url}}) | ![FourGods Vanilla](https://user-images.githubusercontent.com/1013356/182029105-a5ae3082-9a2e-495a-b843-6891dbefedce.png) |
+            | construct.txt | TODO | TODO | ![construct Vanilla](https://user-images.githubusercontent.com/1013356/182029114-25c31d78-7c21-4375-963d-c52141b17111.png) |
           edit-mode: replace
