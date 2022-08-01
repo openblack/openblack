@@ -196,7 +196,7 @@ int main(int argc, char* argv[]) noexcept
 	// clang-format off
 	std::cout <<
 	    "==============================================================================\n"
-	    "   openblack - A modern reimplementation of Lionhead's Black & White (2001)   \n"
+	    "   openblack - A modern reimplementaion of Lionhead's Black & White (2001)   \n"
 	    "==============================================================================\n"
 	    "\n";
 	// clang-format on
