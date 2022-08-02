@@ -147,10 +147,14 @@ Game::Game(Arguments&& args)
 Game::~Game()
 {
 	// Manually delete the assets here before BGFX renderer clears its buffers resulting in invalid handles in our assets
-	auto& resources = Locator::resources::value();
-	resources.GetMeshes().Clear();
-	resources.GetTextures().Clear();
-	resources.GetAnimations().Clear();
+	if (Locator::resources::has_value())
+	{
+		auto& resources = Locator::resources::value();
+		resources.GetMeshes().Clear();
+		resources.GetTextures().Clear();
+		resources.GetAnimations().Clear();
+	}
+
 	Locator::rendereringSystem::reset();
 	Locator::dynamicsSystem::reset();
 	Locator::cameraBookmarkSystem::reset();
