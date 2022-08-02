@@ -19,15 +19,8 @@ namespace openblack::ecs::systems
 {
 struct RenderContext
 {
-	RenderContext()
-	    : instanceUniformBuffer(BGFX_INVALID_HANDLE) {};
-	~RenderContext()
-	{
-		if (bgfx::isValid(instanceUniformBuffer))
-		{
-			bgfx::destroy(instanceUniformBuffer);
-		}
-	}
+	RenderContext();
+	~RenderContext();
 	std::unique_ptr<graphics::Mesh> boundingBox;
 	std::unique_ptr<graphics::Mesh> streams;
 	std::unique_ptr<graphics::Mesh> footpaths;
