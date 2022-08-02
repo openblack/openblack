@@ -27,6 +27,19 @@
 using namespace openblack::ecs::systems;
 using namespace openblack::ecs::components;
 
+RenderContext::RenderContext()
+    : instanceUniformBuffer(BGFX_INVALID_HANDLE)
+{
+}
+RenderContext::~RenderContext()
+{
+	if (bgfx::isValid(instanceUniformBuffer))
+	{
+		bgfx::destroy(instanceUniformBuffer);
+		bgfx::frame();
+	}
+}
+
 RenderingSystemInterface::~RenderingSystemInterface() = default;
 
 RenderingSystem::~RenderingSystem() = default;
