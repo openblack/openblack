@@ -20,14 +20,14 @@
         {
             "name": "bgfx",
             "default-features": false,
-            "features": [ "tools", "debug" ],
+            "features": [ "tools", "multithreaded", "debug" ],
             "host": true,
             "$reason": "Don't want to build shaderc on non-native platforms so they are built on the host config."
         },
         {
             "name": "bgfx",
             "default-features": false,
-            "$features": [ "multithreaded" ]
+            "features": [ "multithreaded" ]
         },
         "bullet3",
         "minizip",
