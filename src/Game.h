@@ -120,7 +120,7 @@ public:
 		bool drawSky {true};
 		bool drawWater {true};
 		bool drawIsland {true};
-		bool drawEntities {true};
+		bool drawEntities {false};
 		bool drawSprites {true};
 		bool drawTestModel {true};
 		bool drawDebugCross {true};
