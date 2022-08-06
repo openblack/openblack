@@ -230,7 +230,11 @@ Renderer::~Renderer()
 {
 	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "~Renderer Start");
 	_plane.reset();
+        bgfx::frame();
+	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "After frame");
 	_shaderManager.reset();
+        bgfx::frame();
+	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "After frame");
 	_debugCross.reset();
 	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "After resets");
 	bgfx::frame();
