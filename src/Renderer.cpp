@@ -197,7 +197,7 @@ Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererTy
 	static bool firstInit = true;
 	if (firstInit)
 	{
-		bgfx::renderFrame();
+		// bgfx::renderFrame();
 		firstInit = false;
 	}
 
@@ -228,11 +228,15 @@ Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererTy
 
 Renderer::~Renderer()
 {
+	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "~Renderer Start");
 	_plane.reset();
 	_shaderManager.reset();
 	_debugCross.reset();
+	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "After resets");
 	bgfx::frame();
+	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "After frame");
 	bgfx::shutdown();
+	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "After shutdown");
 }
 
 void Renderer::ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height, uint32_t clearColor) const

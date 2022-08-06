@@ -12,6 +12,7 @@
 #include "RenderingSystem.h"
 
 #include <glm/gtx/transform.hpp>
+#include <spdlog/spdlog.h>
 
 #include "3D/L3DMesh.h"
 #include "ECS/Components/Mesh.h"
@@ -33,12 +34,15 @@ RenderContext::RenderContext()
 }
 RenderContext::~RenderContext()
 {
+	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "~RenderContext start");
 	if (bgfx::isValid(instanceUniformBuffer))
 	{
 		bgfx::destroy(instanceUniformBuffer);
+		SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "before frame");
 		bgfx::frame();
 		bgfx::frame();
 	}
+	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "~RenderContext end");
 }
 
 RenderingSystemInterface::~RenderingSystemInterface() = default;
