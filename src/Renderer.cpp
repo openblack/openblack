@@ -294,7 +294,7 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 {
 	assert(&subMesh.GetMesh());
 	// We don't draw physics meshes, we haven't implemented statuses (building and graves) and modern GPUs can handle high lod
-	if (!desc.drawAll && (subMesh.IsPhysics() || subMesh.GetFlags().status != 0 || (subMesh.GetFlags().lodMask & 1) != 1))
+	if ((!desc.drawAll && (subMesh.IsPhysics() || subMesh.GetFlags().status != 0 || (subMesh.GetFlags().lodMask & 1) != 1)) || mesh.IsBoned())
 	{
 		return;
 	}
@@ -492,7 +492,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	const auto* terrainShader = _shaderManager->GetShader("Terrain");
 	const auto* debugShader = _shaderManager->GetShader("DebugLine");
 	const auto* spriteShader = _shaderManager->GetShader("Sprite");
-	const auto* debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
+	// const auto* debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
 	const auto* objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
 
 	{
@@ -632,7 +632,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			}
 
 			// Debug
-			if (desc.viewId == graphics::RenderPass::Main)
+			/*if (desc.viewId == graphics::RenderPass::Main)
 			{
 				for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
 				{
@@ -663,7 +663,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
 					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
 				}
-			}
+			}*/
 		}
 
 		{
