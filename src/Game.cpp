@@ -689,7 +689,7 @@ bool Game::Run()
 			    /*drawIsland =*/_config.drawIsland,
 			    /*drawEntities =*/_config.drawEntities,
 			    /*drawSprites =*/_config.drawSprites,
-			    /*drawTestModel =*/_config.drawEntities,
+			    /*drawTestModel =*/_config.drawTestModel,
 			    /*drawDebugCross =*/_config.drawDebugCross,
 			    /*drawBoundingBoxes =*/_config.drawBoundingBoxes,
 			    /*cullBack =*/false,
