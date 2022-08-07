@@ -493,7 +493,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	const auto* debugShader = _shaderManager->GetShader("DebugLine");
 	const auto* spriteShader = _shaderManager->GetShader("Sprite");
 	// const auto* debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
-	const auto* objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
+	// const auto* objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
 
 	{
 		auto section = desc.profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSky
@@ -594,7 +594,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		{
 			L3DMeshSubmitDesc submitDesc = {};
 			submitDesc.viewId = desc.viewId;
-			submitDesc.program = objectShaderInstanced;
+			submitDesc.program = debugShader;
 			// clang-format off
 			submitDesc.state = 0u
 				| BGFX_STATE_WRITE_MASK
@@ -609,7 +609,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			{
 				auto mesh = meshManager.Handle(meshId);
 
-				submitDesc.instanceBuffer = &renderCtx.instanceUniformBuffer;
+				/*submitDesc.instanceBuffer = &renderCtx.instanceUniformBuffer;
 				submitDesc.instanceStart = placers.offset;
 				submitDesc.instanceCount = placers.count;
 				if (mesh->IsBoned())
@@ -618,7 +618,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					submitDesc.matrixCount = static_cast<uint8_t>(mesh->GetBoneMatrices().size());
 					// TODO(bwrsandman): Get animation frame instead of default
 				}
-				else
+				else*/
 				{
 					const static auto identity = glm::mat4(1.0f);
 					submitDesc.modelMatrices = &identity;
