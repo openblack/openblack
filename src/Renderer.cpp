@@ -290,7 +290,7 @@ const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, st
 }
 
 void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc,
-                           bool preserveState) const
+                           [[maybe_unused]] bool preserveState) const
 {
 	assert(&subMesh.GetMesh());
 	// We don't draw physics meshes, we haven't implemented statuses (building and graves) and modern GPUs can handle high lod
@@ -306,12 +306,12 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 	{
 		const auto& prim = *it;
 
-		const bool hasNext = std::next(it) != primitives.end();
+		// const bool hasNext = std::next(it) != primitives.end();
 
 		const Texture2D* texture = GetTexture(prim.skinID, skins);
-		const Texture2D* nextTexture = !hasNext ? nullptr : GetTexture(std::next(it)->skinID, skins);
+		// const Texture2D* nextTexture = !hasNext ? nullptr : GetTexture(std::next(it)->skinID, skins);
 
-		bool primitivePreserveState = texture == nextTexture && (preserveState || hasNext);
+		bool primitivePreserveState = false; // texture == nextTexture && (preserveState || hasNext);
 
 		uint32_t skip = Mesh::SkipState::SkipNone;
 		if (!lastPreserveState)
