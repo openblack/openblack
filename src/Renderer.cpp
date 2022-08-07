@@ -229,6 +229,8 @@ Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererTy
 Renderer::~Renderer()
 {
 	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "~Renderer Start");
+        bgfx::frame();
+	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "After frame");
 	_plane.reset();
         bgfx::frame();
 	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "After frame");
