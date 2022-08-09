@@ -37,6 +37,7 @@ RenderContext::~RenderContext()
 	{
 		bgfx::destroy(instanceUniformBuffer);
 		bgfx::frame();
+		bgfx::frame();
 	}
 }
 
