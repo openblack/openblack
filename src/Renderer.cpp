@@ -486,8 +486,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	const auto* terrainShader = _shaderManager->GetShader("Terrain");
 	const auto* debugShader = _shaderManager->GetShader("DebugLine");
 	const auto* spriteShader = _shaderManager->GetShader("Sprite");
-	// const auto* debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
-	// const auto* objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
+	const auto* debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
+	const auto* objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
 
 	{
 		auto section = desc.profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSky
@@ -588,7 +588,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		{
 			L3DMeshSubmitDesc submitDesc = {};
 			submitDesc.viewId = desc.viewId;
-			submitDesc.program = debugShader;
+			submitDesc.program = objectShaderInstanced;
 			// clang-format off
 			submitDesc.state = 0u
 				| BGFX_STATE_WRITE_MASK
@@ -603,7 +603,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			{
 				auto mesh = meshManager.Handle(meshId);
 
-				/*submitDesc.instanceBuffer = &renderCtx.instanceUniformBuffer;
+				submitDesc.instanceBuffer = &renderCtx.instanceUniformBuffer;
 				submitDesc.instanceStart = placers.offset;
 				submitDesc.instanceCount = placers.count;
 				if (mesh->IsBoned())
@@ -612,7 +612,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					submitDesc.matrixCount = static_cast<uint8_t>(mesh->GetBoneMatrices().size());
 					// TODO(bwrsandman): Get animation frame instead of default
 				}
-				else*/
+				else
 				{
 					const static auto identity = glm::mat4(1.0f);
 					submitDesc.modelMatrices = &identity;
@@ -626,7 +626,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			}
 
 			// Debug
-			/*if (desc.viewId == graphics::RenderPass::Main)
+			if (desc.viewId == graphics::RenderPass::Main)
 			{
 				for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
 				{
@@ -657,7 +657,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
 					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
 				}
-			}*/
+			}
 		}
 
 		{
