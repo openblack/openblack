@@ -36,7 +36,7 @@ RenderContext::~RenderContext()
 {
 	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "~RenderContext start");
 SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "before frame");
-		bgfx::frame();
+		//bgfx::frame();
 		SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "after frame");
 	if (bgfx::isValid(instanceUniformBuffer))
 	{
