@@ -37,3 +37,6 @@ imgui.ini
 
 # logging
 openblack.log
+
+# osx
+.DS_Store
