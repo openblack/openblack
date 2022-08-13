@@ -68,10 +68,9 @@ vcpkg_from_github(
     207b7fcd10a0d1205984a2ef2360ff410d4aa37b7f87e4bd0562cbedaecd87ef1666746035cb99ad8614cea8abd57e467e0a1ffda9f5b7266351e58a9e2fff5d
 )
 
-vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
-    FEATURES
-        tools         BGFX_BUILD_TOOLS
-        multithreaded BGFX_CONFIG_MULTITHREADED
+vcpkg_check_features(
+  OUT_FEATURE_OPTIONS FEATURE_OPTIONS
+  FEATURES tools BGFX_BUILD_TOOLS multithreaded BGFX_CONFIG_MULTITHREADED
 )
 
 if (VCPKG_LIBRARY_LINKAGE STREQUAL dynamic)
