@@ -14,7 +14,7 @@ jobs:
       matrix:
         # This is the matrix. They form permutations.
         os: [ubuntu-22.04]
-        preset: [android-armeabi-v7a-vcpkg, android-arm64-v8a-vcpkg, android-x86-vcpkg, android-x86_64-vcpkg, emscripten-vcpkg]
+        preset: [android-armeabi-v7a-vcpkg, android-arm64-v8a-vcpkg, android-x86-vcpkg, android-x86_64-vcpkg]
         triplet: [""]
         # TODO(#519) x86 disabled due to failing to find stdlib headers on workflows
         # include:
