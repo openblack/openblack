@@ -342,8 +342,6 @@ std::unique_ptr<Gui> Gui::Create(const GameWindow* window, graphics::RenderPass 
 
 Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<Window>>&& debugWindows)
     : _imgui(imgui)
-    , _vertexBuffer(BGFX_INVALID_HANDLE)
-    , _indexBuffer(BGFX_INVALID_HANDLE)
     , _program(BGFX_INVALID_HANDLE)
     , _imageProgram(BGFX_INVALID_HANDLE)
     , _texture(BGFX_INVALID_HANDLE)
@@ -362,14 +360,6 @@ Gui::~Gui()
 {
 	ImGui::DestroyContext(_imgui);
 
-	if (bgfx::isValid(_vertexBuffer))
-	{
-		bgfx::destroy(_vertexBuffer);
-	}
-	if (bgfx::isValid(_indexBuffer))
-	{
-		bgfx::destroy(_indexBuffer);
-	}
 	if (bgfx::isValid(_u_imageLodEnabled))
 	{
 		bgfx::destroy(_u_imageLodEnabled);
@@ -781,66 +771,74 @@ bool Gui::Loop(Game& game, const Renderer& renderer)
 	return false;
 }
 
+/// Returns true if both internal transient index and vertex buffer have
+/// enough space.
+///
+/// @param[in] numVertices Number of vertices.
+/// @param[in] layout Vertex layout.
+/// @param[in] numIndices Number of indices.
+///
+inline bool checkAvailTransientBuffers(uint32_t numVertices, const bgfx::VertexLayout& layout, uint32_t numIndices)
+{
+	return numVertices == bgfx::getAvailTransientVertexBuffer(numVertices, layout) &&
+	       (0 == numIndices || numIndices == bgfx::getAvailTransientIndexBuffer(numIndices));
+}
+
 void Gui::RenderDrawDataBgfx(ImDrawData* drawData)
 {
-	const ImGuiIO& io = ImGui::GetIO();
-	const float width = io.DisplaySize.x;
-	const float height = io.DisplaySize.y;
+	// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
+	int fbWidth = static_cast<int>(drawData->DisplaySize.x * drawData->FramebufferScale.x);
+	int fbHeight = static_cast<int>(drawData->DisplaySize.y * drawData->FramebufferScale.y);
+	if (fbWidth <= 0 || fbHeight <= 0)
+	{
+		return;
+	}
 
 	bgfx::setViewMode(_viewId, bgfx::ViewMode::Sequential);
 
 	const bgfx::Caps* caps = bgfx::getCaps();
 	{
 		glm::mat4 ortho;
-		// NOLINTNEXTLINE(readability-suspicious-call-argument): width -> _right, height -> bottom is correct
-		bx::mtxOrtho(glm::value_ptr(ortho), 0.0f, width, height, 0.0f, 0.0f, 1000.0f, 0.0f, caps->homogeneousDepth);
+		float x = drawData->DisplayPos.x;
+		float y = drawData->DisplayPos.y;
+		float width = drawData->DisplaySize.x;
+		float height = drawData->DisplaySize.y;
+
+		bx::mtxOrtho(glm::value_ptr(ortho), x, x + width, y + height, y, 0.0f, 1000.0f, 0.0f, caps->homogeneousDepth);
 		bgfx::setViewTransform(_viewId, nullptr, glm::value_ptr(ortho));
-		bgfx::setViewRect(_viewId, 0, 0, uint16_t(width), uint16_t(height));
+		bgfx::setViewRect(_viewId, 0, 0, static_cast<uint16_t>(width), static_cast<uint16_t>(height));
 	}
+
+	const ImVec2 clipPos = drawData->DisplayPos;         // (0,0) unless using multi-viewports
+	const ImVec2 clipScale = drawData->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
 
 	// Render command lists
-	uint32_t vertexCount = 0;
-	uint32_t indexCount = 0;
 	for (int32_t ii = 0, num = drawData->CmdListsCount; ii < num; ++ii)
 	{
+		bgfx::TransientVertexBuffer tvb;
+		bgfx::TransientIndexBuffer tib;
+
 		const ImDrawList* drawList = drawData->CmdLists[ii];
-		vertexCount += static_cast<uint32_t>(drawList->VtxBuffer.size());
-		indexCount += static_cast<uint32_t>(drawList->IdxBuffer.size());
-	}
+		const auto numVertices = static_cast<uint32_t>(drawList->VtxBuffer.size());
+		const auto numIndices = static_cast<uint32_t>(drawList->IdxBuffer.size());
 
-	if (!bgfx::isValid(_vertexBuffer) || vertexCount > _vertexCount)
-	{
-		if (bgfx::isValid(_vertexBuffer))
+		if (!checkAvailTransientBuffers(numVertices, _layout, numIndices))
 		{
-			bgfx::destroy(_vertexBuffer);
+			// not enough space in transient buffer just quit drawing the rest...
+			break;
 		}
-		_vertexBuffer = bgfx::createDynamicVertexBuffer(vertexCount, _layout);
-		_vertexCount = vertexCount;
-	}
-	if (!bgfx::isValid(_indexBuffer) || indexCount > _indexCount)
-	{
-		if (bgfx::isValid(_indexBuffer))
-		{
-			bgfx::destroy(_indexBuffer);
-		}
-		_indexBuffer = bgfx::createDynamicIndexBuffer(indexCount);
-		_indexCount = indexCount;
-	}
 
-	uint32_t vertexBufferOffset = 0;
-	uint32_t indexBufferOffset = 0;
-	for (int32_t ii = 0, num = drawData->CmdListsCount; ii < num; ++ii)
-	{
-		const ImDrawList* drawList = drawData->CmdLists[ii];
-		auto numVertices = static_cast<uint32_t>(drawList->VtxBuffer.size());
-		auto numIndices = static_cast<uint32_t>(drawList->IdxBuffer.size());
+		bgfx::allocTransientVertexBuffer(&tvb, numVertices, _layout);
+		bgfx::allocTransientIndexBuffer(&tib, numIndices, sizeof(ImDrawIdx) == 4);
 
-		bgfx::update(_vertexBuffer, vertexBufferOffset,
-		             bgfx::makeRef(drawList->VtxBuffer.begin(), numVertices * sizeof(ImDrawVert)));
-		bgfx::update(_indexBuffer, indexBufferOffset,
-		             bgfx::makeRef(drawList->IdxBuffer.begin(), numIndices * sizeof(ImDrawIdx)));
+		auto* verts = reinterpret_cast<ImDrawVert*>(tvb.data);
+		bx::memCopy(verts, drawList->VtxBuffer.begin(), numVertices * sizeof(ImDrawVert));
 
-		uint32_t offset = indexBufferOffset;
+		auto* indices = reinterpret_cast<ImDrawIdx*>(tib.data);
+		bx::memCopy(indices, drawList->IdxBuffer.begin(), numIndices * sizeof(ImDrawIdx));
+
+		bgfx::Encoder* encoder = bgfx::begin();
+
 		for (const ImDrawCmd *cmd = drawList->CmdBuffer.begin(), *cmdEnd = drawList->CmdBuffer.end(); cmd != cmdEnd; ++cmd)
 		{
 			if (cmd->UserCallback != nullptr)
@@ -849,7 +847,11 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData)
 			}
 			else if (0 != cmd->ElemCount)
 			{
-				uint64_t state = 0u | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_MSAA;
+				uint64_t state = 0                      //
+				                 | BGFX_STATE_WRITE_RGB //
+				                 | BGFX_STATE_WRITE_A   //
+				                 | BGFX_STATE_MSAA      //
+				    ;
 
 				bgfx::TextureHandle th = _texture;
 				bgfx::ProgramHandle program = _program;
@@ -882,22 +884,30 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData)
 					state |= BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
 				}
 
-				const uint16_t xx = uint16_t(bx::max(cmd->ClipRect.x, 0.0f));
-				const uint16_t yy = uint16_t(bx::max(cmd->ClipRect.y, 0.0f));
-				bgfx::setScissor(xx, yy, uint16_t(bx::min(cmd->ClipRect.z, 65535.0f) - xx),
-				                 uint16_t(bx::min(cmd->ClipRect.w, 65535.0f) - yy));
+				// Project scissor/clipping rectangles into framebuffer space
+				ImVec4 clipRect;
+				clipRect.x = (cmd->ClipRect.x - clipPos.x) * clipScale.x;
+				clipRect.y = (cmd->ClipRect.y - clipPos.y) * clipScale.y;
+				clipRect.z = (cmd->ClipRect.z - clipPos.x) * clipScale.x;
+				clipRect.w = (cmd->ClipRect.w - clipPos.y) * clipScale.y;
 
-				bgfx::setState(state);
-				bgfx::setTexture(0, _s_tex, th);
-				bgfx::setVertexBuffer(0, _vertexBuffer, vertexBufferOffset, numVertices);
-				bgfx::setIndexBuffer(_indexBuffer, offset, cmd->ElemCount);
-				bgfx::submit(_viewId, program);
+				if (clipRect.x < fbWidth && clipRect.y < fbHeight && clipRect.z >= 0.0f && clipRect.w >= 0.0f)
+				{
+					const auto xx = static_cast<uint16_t>(bx::max(clipRect.x, 0.0f));
+					const auto yy = static_cast<uint16_t>(bx::max(clipRect.y, 0.0f));
+					encoder->setScissor(xx, yy, static_cast<uint16_t>(bx::min(clipRect.z, 65535.0f) - xx),
+					                    static_cast<uint16_t>(bx::min(clipRect.w, 65535.0f) - yy));
+
+					encoder->setState(state);
+					encoder->setTexture(0, _s_tex, th);
+					encoder->setVertexBuffer(0, &tvb, cmd->VtxOffset, numVertices);
+					encoder->setIndexBuffer(&tib, cmd->IdxOffset, cmd->ElemCount);
+					encoder->submit(_viewId, program);
+				}
 			}
-
-			offset += cmd->ElemCount;
 		}
-		vertexBufferOffset += numVertices;
-		indexBufferOffset += numIndices;
+
+		bgfx::end(encoder);
 	}
 }
 
