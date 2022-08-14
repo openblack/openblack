@@ -12,11 +12,11 @@ You still need to have the original game assets in order to use this. See furthe
 
 ---
 
-<a href="https://user-images.githubusercontent.com/1388267/67631321-93c85380-f88c-11e9-9103-804807844af2.png">
-    <img src="https://user-images.githubusercontent.com/1388267/67631321-93c85380-f88c-11e9-9103-804807844af2.png" width="45%">
+<a href="https://user-images.githubusercontent.com/32263167/184559293-56cfc6a7-a7da-4876-8fce-434ba8827eae.png">
+    <img src="https://user-images.githubusercontent.com/32263167/184559293-56cfc6a7-a7da-4876-8fce-434ba8827eae.png" width="45%">
 </a>
-<a href="https://user-images.githubusercontent.com/1388267/63901712-bad5e680-c9fd-11e9-8000-9de22ad8054e.png">
-    <img src="https://user-images.githubusercontent.com/1388267/63901712-bad5e680-c9fd-11e9-8000-9de22ad8054e.png" width="45%">
+<a href="https://user-images.githubusercontent.com/32263167/184559291-f37e44b3-c738-4c0f-82eb-28b7c84a3919.png">
+    <img src="https://user-images.githubusercontent.com/32263167/184559291-f37e44b3-c738-4c0f-82eb-28b7c84a3919.png" width="45%">
 </a>
 
 # Building
