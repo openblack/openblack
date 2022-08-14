@@ -103,6 +103,8 @@ public:
 	Texture2D(const Texture2D&) = delete;
 	Texture2D& operator=(const Texture2D&) = delete;
 
+	void Create(uint16_t width, uint16_t height, uint16_t layers, Format format, Wrapping wrapping, Filter filter,
+	            const bgfx::Memory* memory);
 	void Create(uint16_t width, uint16_t height, uint16_t layers, Format format = Format::RGBA8,
 	            Wrapping wrapping = Wrapping::ClampEdge, Filter filter = Filter::Linear, const void* data = nullptr,
 	            uint32_t size = 0);

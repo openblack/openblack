@@ -93,7 +93,7 @@ Texture2D::~Texture2D()
 }
 
 void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format format, Wrapping wrapping, Filter filter,
-                       const void* data, uint32_t size)
+                       const bgfx::Memory* memory)
 {
 	uint64_t flags = BGFX_TEXTURE_NONE;
 	switch (wrapping)
@@ -120,13 +120,19 @@ void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format 
 	default:
 		assert(false);
 	}
-	const auto* memory = bgfx::makeRef(data, size);
 	_handle = bgfx::createTexture2D(width, height, false, layers, getBgfxTextureFormat(format), flags, memory);
 	bgfx::setName(_handle, _name.c_str());
 	bgfx::frame();
 
 	bgfx::calcTextureSize(_info, width, height, 1, false, false, layers, getBgfxTextureFormat(format));
 	bgfx::frame();
+}
+
+void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format format, Wrapping wrapping, Filter filter,
+                       const void* data, uint32_t size)
+{
+
+	Texture2D::Create(width, height, layers, format, wrapping, filter, bgfx::makeRef(data, size));
 }
 
 void Texture2D::DumpTexture() const
