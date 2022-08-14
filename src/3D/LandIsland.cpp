@@ -117,7 +117,7 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 		            sizeof(lnd.GetMaterials()[i].texels[0]) * lnd.GetMaterials()[i].texels.size());
 	}
 	_materialArray = std::make_unique<Texture2D>("LandIslandMaterialArray");
-	_materialArray->Create(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height, materialCount, Format::RGB5A1,
+	_materialArray->Create(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height, materialCount, Format::BGR5A1,
 	                       Wrapping::ClampEdge, Filter::Linear, rgba5TextureData.data(),
 	                       static_cast<uint32_t>(rgba5TextureData.size() * sizeof(rgba5TextureData[0])));
 

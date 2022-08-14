@@ -8,13 +8,13 @@ def main(dir_name):
     noise_map_data = 256 * 256 * (0).to_bytes(1, byteorder='little')
     bump_map_data = 256 * 256 * (0).to_bytes(1, byteorder='little')
 
-    with open(os.path.join(dir_name, "material_data1.rgb5a1.raw"), "wb") as f:
+    with open(os.path.join(dir_name, "material_data1.bgr5a1.raw"), "wb") as f:
         f.write(material_data)
 
-    with open(os.path.join(dir_name, "material_data2.rgb5a1.raw"), "wb") as f:
+    with open(os.path.join(dir_name, "material_data2.bgr5a1.raw"), "wb") as f:
         f.write(material_data)
 
-    with open(os.path.join(dir_name, "material_data3.rgb5a1.raw"), "wb") as f:
+    with open(os.path.join(dir_name, "material_data3.bgr5a1.raw"), "wb") as f:
         f.write(material_data)
 
     with open(os.path.join(dir_name, "noise_map.r8.raw"), "wb") as f:
