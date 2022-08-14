@@ -56,7 +56,7 @@ Sky::Sky()
 	_texture = std::make_unique<Texture2D>("Sky");
 	_timeOfDay = 1.0f;
 
-	_texture->Create(k_TextureResolution[0], k_TextureResolution[1], k_TextureResolution[2], Format::RGB5A1,
+	_texture->Create(k_TextureResolution[0], k_TextureResolution[1], k_TextureResolution[2], Format::BGR5A1,
 	                 Wrapping::ClampEdge, Filter::Linear, _bitmaps.data(),
 	                 static_cast<uint32_t>(_bitmaps.size() * sizeof(_bitmaps[0])));
 }
