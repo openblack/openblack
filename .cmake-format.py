@@ -48,7 +48,7 @@ with section("parse"):
       },
     },
     'get_profile_ext': {'pargs': {'nargs': 2}},
-    'mark_shaders_for_compilation': {
+    'compile_shader_to_header': {
       'kwargs': {
         'OUTPUT_DIR': 1,
         'SHADERS': '+',
