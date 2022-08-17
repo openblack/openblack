@@ -1,6 +1,6 @@
 {
   "name": "bgfx",
-  "version": "1.115.8210.337",
+  "version": "1.115.8264.337",
   "$format": [
     "         ^ ^^^ ^^^^ ^^^",
     "         | |   |    +-- bgfx.cmake commit number (https://github.com/bkaradzic/bgfx.cmake / git rev-list --count HEAD)",

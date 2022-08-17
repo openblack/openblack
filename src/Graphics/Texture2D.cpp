@@ -51,7 +51,9 @@ constexpr std::array<bgfx::TextureFormat::Enum,
         bgfx::TextureFormat::RG8S,    // RG8SNorm
         bgfx::TextureFormat::RG8U,    // RG8UI
         bgfx::TextureFormat::RGB10A2, // RGB10A2
+        bgfx::TextureFormat::B5G6R5,  // B5G6R5
         bgfx::TextureFormat::R5G6B5,  // R5G6B5
+        bgfx::TextureFormat::BGR5A1,  // BGBRA1
         bgfx::TextureFormat::RGB5A1,  // RGB5A1
         bgfx::TextureFormat::RGB8,    // RGB8
         bgfx::TextureFormat::RGB8I,   // RGB8I
@@ -70,6 +72,7 @@ constexpr std::array<bgfx::TextureFormat::Enum,
         bgfx::TextureFormat::RGBA32F, // RGBA32F
         bgfx::TextureFormat::RGBA32I, // RGBA32I
         bgfx::TextureFormat::RGBA32U, // RGBA32UI
+        bgfx::TextureFormat::BGRA4,   // BGRA4
         bgfx::TextureFormat::RGBA4,   // RGBA4
     };
 
