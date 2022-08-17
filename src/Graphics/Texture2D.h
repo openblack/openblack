@@ -49,7 +49,9 @@ enum class Format : uint8_t
 	RG8SNorm,
 	RG8UI,
 	RGB10A2,
+	B5G6R5,
 	R5G6B5,
+	BGR5A1,
 	RGB5A1,
 	RGB8,
 	RGB8I,
@@ -68,6 +70,7 @@ enum class Format : uint8_t
 	RGBA32F,
 	RGBA32I,
 	RGBA32UI,
+	BGRA4,
 	RGBA4,
 };
 
