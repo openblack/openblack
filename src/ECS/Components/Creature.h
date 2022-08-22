@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <string>
+
 #include "3D/CreatureBody.h"
 #include "Creature.h"
 #include "Enums.h"
