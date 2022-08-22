@@ -21,6 +21,8 @@
 #include <glm/glm.hpp>
 #include <spdlog/common.h>
 
+#include "3D/CreatureBody.h"
+#include "3D/TempleInterior.h"
 #include "GameWindow.h"
 #include "InfoConstants.h"
 
