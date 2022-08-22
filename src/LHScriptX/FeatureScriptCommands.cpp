@@ -21,6 +21,7 @@
 #include "ECS/Archetypes/AnimatedStaticArchetype.h"
 #include "ECS/Archetypes/BigForestArchetype.h"
 #include "ECS/Archetypes/BonfireArchetype.h"
+#include "ECS/Archetypes/CitadelArchetype.h"
 #include "ECS/Archetypes/CreatureArchetype.h"
 #include "ECS/Archetypes/FeatureArchetype.h"
 #include "ECS/Archetypes/FieldArchetype.h"
@@ -374,17 +375,18 @@ void FeatureScriptCommands::CreateVillagerPos(glm::vec3 abodePosition, glm::vec3
 	VillagerArchetype::Create(abodePosition, position, GVillagerInfo::Find(tribe, number), age);
 }
 
-void FeatureScriptCommands::CreateCitadel([[maybe_unused]] glm::vec3 position, int32_t, const std::string&, int32_t, int32_t)
+void FeatureScriptCommands::CreateCitadel(glm::vec3 position, int32_t, const std::string& affiliation, int32_t rotation,
+                                          int32_t size)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	auto playerEntity = Locator::playerSystem::value().GetPlayer(GetPlayerName(affiliation));
+	CitadelArchetype::Create(position, playerEntity, GetRotation(rotation), GetSize(size));
 }
 
-void FeatureScriptCommands::CreatePlannedCitadel(int32_t, [[maybe_unused]] glm::vec3 position, int32_t, const std::string&,
-                                                 int32_t, int32_t)
+void FeatureScriptCommands::CreatePlannedCitadel(int32_t townId, glm::vec3 position, int32_t, const std::string& affiliation,
+                                                 int32_t rotation, int32_t size)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	auto playerEntity = Locator::playerSystem::value().GetPlayer(GetPlayerName(affiliation));
+	CitadelArchetype::CreatePlan(townId, position, playerEntity, GetRotation(rotation), GetSize(size));
 }
 
 void FeatureScriptCommands::CreateCreaturePen([[maybe_unused]] glm::vec3 position, int32_t, int32_t, int32_t, int32_t, int32_t)
