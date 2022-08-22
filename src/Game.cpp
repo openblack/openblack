@@ -496,11 +496,6 @@ bool Game::Initialize()
 			}
 		}
 	}
-
-	meshManager.Load("hand", resources::L3DLoader::FromDiskTag {},
-	                 _fileSystem->FindPath(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d"));
-	meshManager.Load("coffre", resources::L3DLoader::FromDiskTag {},
-	                 _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.l3d"));
 	pack::PackFile pack;
 	pack.Open(_fileSystem->FindPath(_fileSystem->DataPath() / "AllMeshes.g3d"));
 	const auto& meshes = pack.GetMeshes();
@@ -517,8 +512,6 @@ bool Game::Initialize()
 		textureManager.Load(g3dTexture.header.id, resources::Texture2DLoader::FromPackTag {}, name, g3dTexture);
 	}
 
-	animationManager.Load("coffre", resources::L3DAnimLoader::FromDiskTag {},
-	                      _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.anm"));
 	pack::PackFile animationPack;
 	animationPack.Open(_fileSystem->FindPath(_fileSystem->DataPath() / "AllAnims.anm"));
 	const auto& animations = animationPack.GetAnimations();
@@ -526,6 +519,23 @@ bool Game::Initialize()
 	{
 		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animations[i]);
 	}
+
+	// Load loose one-off assets
+	animationManager.Load("coffre", resources::L3DAnimLoader::FromDiskTag {},
+	                      _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.anm"));
+	meshManager.Load("hand", resources::L3DLoader::FromDiskTag {},
+	                 _fileSystem->FindPath(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d"));
+	meshManager.Load("coffre", resources::L3DLoader::FromDiskTag {},
+	                 _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.l3d"));
+	meshManager.Load("cone", resources::L3DLoader::FromDiskTag {}, _fileSystem->FindPath(_fileSystem->DataPath() / "cone.l3d"));
+	meshManager.Load("marker", resources::L3DLoader::FromDiskTag {},
+	                 _fileSystem->FindPath(_fileSystem->DataPath() / "marker.l3d"));
+	meshManager.Load("river", resources::L3DLoader::FromDiskTag {},
+	                 _fileSystem->FindPath(_fileSystem->DataPath() / "river.l3d"));
+	meshManager.Load("river2", resources::L3DLoader::FromDiskTag {},
+	                 _fileSystem->FindPath(_fileSystem->DataPath() / "river2.l3d"));
+	meshManager.Load("metre_sphere", resources::L3DLoader::FromDiskTag {},
+	                 _fileSystem->FindPath(_fileSystem->DataPath() / "metre_sphere.l3d"));
 
 	// TODO(raffclar): #400: Parse level files within the resource loader
 	// TODO(raffclar): #405: Determine campaign levels from the challenge script file

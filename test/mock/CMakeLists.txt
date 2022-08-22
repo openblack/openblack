@@ -5,6 +5,16 @@ target_include_directories(gen_info PRIVATE ../../src)
 target_link_libraries(gen_info PRIVATE glm::glm cxxopts::cxxopts)
 
 set(DATA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data)
+set(CONE_MESH_OUTPUT ${DATA_BINARY_DIR}/cone.l3d)
+set(CONE_INPUT ${DATA_BINARY_DIR}/cone.gltf)
+set(MARKER_MESH_OUTPUT ${DATA_BINARY_DIR}/marker.l3d)
+set(MARKER_INPUT ${DATA_BINARY_DIR}/marker.gltf)
+set(RIVER_MESH_OUTPUT ${DATA_BINARY_DIR}/river.l3d)
+set(RIVER_INPUT ${DATA_BINARY_DIR}/river.gltf)
+set(RIVER2_MESH_OUTPUT ${DATA_BINARY_DIR}/river2.l3d)
+set(RIVER2_INPUT ${DATA_BINARY_DIR}/river2.gltf)
+set(SPHERE_MESH_OUTPUT ${DATA_BINARY_DIR}/metre_sphere.l3d)
+set(SPHERE_INPUT ${DATA_BINARY_DIR}/metre_sphere.gltf)
 
 set(TEXTURES_BINARY_DIR ${DATA_BINARY_DIR}/Textures)
 list(APPEND RAW_TEXTURES_0x10000_ARRAY ${TEXTURES_BINARY_DIR}/misc0a.raw)
@@ -16,6 +26,8 @@ string(REPLACE ";" "," RAW_TEXTURES_0x30000 "${RAW_TEXTURES_0x30000_ARRAY}")
 
 set(CITADEL_BINARY_DIR ${DATA_BINARY_DIR}/Citadel)
 set(CITADEL_OUTSIDE_BINARY_DIR ${CITADEL_BINARY_DIR}/OutsideMeshes)
+set(CITADEL_ENGINE_BINARY_DIR ${CITADEL_BINARY_DIR}/engine)
+set(CITADEL_ENGINE_PLACEHOLDER_OUTPUT ${CITADEL_ENGINE_BINARY_DIR}/placeholder)
 
 set(ALL_MESHES_OUTPUT ${DATA_BINARY_DIR}/AllMeshes.g3d)
 set(ALL_ANIMATIONS_OUTPUT ${DATA_BINARY_DIR}/AllAnims.anm)
@@ -32,6 +44,9 @@ set(VILLAGE_CENTRE_MESH_FILE
 set(VILLAGE_CENTRE_MESH_OUTPUT
     ${INTERMEDIATE_MESH_BINARY_DIR}/BuildingCelticVillageCentre.l3d
 )
+
+set(SYMBOLS_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/Symbols)
+set(SYMBOLS_PLACEHODER_OUTPUT ${SYMBOLS_BINARY_DIR}/placeholder)
 
 set(CREATURE_MESH_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/CreatureMesh)
 set(HAND_BASE_OUTPUT ${CREATURE_MESH_BINARY_DIR}/Hand_Boned_Base2.l3d)
@@ -78,6 +93,7 @@ add_custom_target(
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TEXTURES_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${CITADEL_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${CITADEL_OUTSIDE_BINARY_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${CITADEL_ENGINE_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${CREATURE_MESH_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${SKY_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TERRAIN_BINARY_DIR}
@@ -85,8 +101,12 @@ add_custom_target(
   COMMAND ${CMAKE_COMMAND} -E make_directory ${COFFRE_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${SCRIPTS_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${QUESTS_BINARY_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${SYMBOLS_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${INTERMEDIATE_DATA_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${INTERMEDIATE_MESH_BINARY_DIR}
+  # Add placeholders so that the directories get copied
+  COMMAND ${CMAKE_COMMAND} -E touch ${SYMBOLS_PLACEHODER_OUTPUT}
+  COMMAND ${CMAKE_COMMAND} -E touch ${CITADEL_ENGINE_PLACEHOLDER_OUTPUT}
   # Copy the Scripts Directory
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Scripts
           ${CMAKE_CURRENT_BINARY_DIR}/Scripts
@@ -148,6 +168,26 @@ add_custom_target(
     --output-dir ${COFFRE_BINARY_DIR}
   COMMAND l3dtool write -o ${COFFRE_MESH_OUTPUT} -i ${COFFRE_INPUT}
   COMMAND anmtool write -o ${COFFRE_ANIM_OUTPUT} -i ${COFFRE_INPUT}
+  # Data/cone.l3d
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
+          --output-file ${CONE_INPUT}
+  COMMAND l3dtool write -o ${CONE_MESH_OUTPUT} -i ${CONE_INPUT}
+  # Data/marker.l3d
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
+          --output-file ${MARKER_INPUT}
+  COMMAND l3dtool write -o ${MARKER_MESH_OUTPUT} -i ${MARKER_INPUT}
+  # Data/river.l3d
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
+          --output-file ${RIVER_INPUT}
+  COMMAND l3dtool write -o ${RIVER_MESH_OUTPUT} -i ${RIVER_INPUT}
+  # Data/river2.l3d
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
+          --output-file ${RIVER2_INPUT}
+  COMMAND l3dtool write -o ${RIVER2_MESH_OUTPUT} -i ${RIVER2_INPUT}
+  # Data/metre_sphere.l3d
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
+          --output-file ${SPHERE_INPUT}
+  COMMAND l3dtool write -o ${SPHERE_MESH_OUTPUT} -i ${SPHERE_INPUT}
   # Scripts/info.dat
   COMMAND gen_info --output-file "${INFO_UNPACKED_OUTPUT}"
   COMMAND packtool --write-raw ${INFO_DAT_OUTPUT} ${INFO_UNPACKED_OUTPUT}
@@ -169,6 +209,12 @@ add_custom_target(
              ${TERRAIN_BUMP_MAP}
              ${TERRAIN_MATERIAL_ARRAY}
              ${RAW_TEXTURES}
+             ${COFFRE_INPUT}
+             ${CONE_INPUT}
+             ${MARKER_INPUT}
+             ${RIVER_INPUT}
+             ${RIVER2_INPUT}
+             ${SPHERE_INPUT}
   SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
           ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py
           ${CMAKE_CURRENT_SOURCE_DIR}/Data/Landscape/gen_land_textures.py
