@@ -17,8 +17,8 @@ using namespace openblack;
 
 CameraPath::CameraPath(std::string debugName)
     : _debugName(std::move(debugName))
-	, _movementSpeed(0)
-	, _start(entt::null)
+    , _movementSpeed(0)
+    , _start(entt::null)
     , _unk1(0)
 {
 }
@@ -40,31 +40,4 @@ bool CameraPath::LoadFromFile(const std::filesystem::path& path)
 	_movementSpeed = file.GetMovementSpeed();
 	_unk1 = file.GetUnknown1();
 	return true;
-}
-
-void CameraPath::CreatePathEntities(glm::vec3 position)
-{
-	auto& registry = Game::Instance()->GetEntityRegistry();
-	auto points = GetPoints();
-	auto entities = std::vector<entt::entity>(points.size());
-	registry.Create(entities.begin(), entities.end());
-	// Add a null entity for the last point offset
-	entities.emplace_back(entt::null);
-
-	for (size_t i = 0; i < points.size(); i++)
-	{
-		points[i].next = entities[i + 1];
-		points[i].position += position;
-		registry.Assign<CameraPoint>(entities[i], points[i]);
-	}
-}
-
-void CameraPath::CreatePathStartEntity(glm::vec3 position)
-{
-	auto& registry = Game::Instance()->GetEntityRegistry();
-	auto firstPoint = GetPoints().front();
-	firstPoint.position += position;
-
-	auto entity = registry.Create();
-	registry.Assign<CameraPoint>(entity, firstPoint);
 }

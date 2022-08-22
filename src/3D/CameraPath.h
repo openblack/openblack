@@ -31,18 +31,12 @@ struct CameraPoint
 class CameraPath
 {
 public:
-	CameraPath(std::string debugName = "");
+	explicit CameraPath(std::string debugName = "");
 	virtual ~CameraPath() = default;
 	/// Reads a camera path file
 	bool LoadFromFile(const std::filesystem::path& path);
 	[[nodiscard]] const std::vector<CameraPoint>& GetPoints() const { return _points; }
 	[[nodiscard]] uint32_t GetMovementSpeed() const { return _movementSpeed; };
-	/// Creates ECS entities for each camera path node. Assigns a camera-vertex component to each entity
-	void CreatePathEntities(glm::vec3 position);
-	/// Creates an ECS entity for the first camera path node
-	void CreatePathStartEntity(glm::vec3 position);
-	/// The position of the first camera path node. This is not a world position
-	[[nodiscard]] glm::vec3 GetPathStartPosition() const { return _points.front().position; }
 	[[nodiscard]] const std::string& GetDebugName() const { return _debugName; }
 
 private:
