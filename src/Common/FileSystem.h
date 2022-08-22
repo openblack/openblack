@@ -36,6 +36,8 @@ public:
 
 	static inline std::filesystem::path MiscPath() { return DataPath() / "Misc"; }
 
+	static inline std::filesystem::path SymbolsPath() { return DataPath() / "Symbols"; }
+
 	static inline std::filesystem::path LandscapePath() { return DataPath() / "Landscape"; }
 
 	static inline std::filesystem::path TexturePath() { return DataPath() / "Textures"; }
