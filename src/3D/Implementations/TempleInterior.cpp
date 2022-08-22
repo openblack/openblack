@@ -23,7 +23,9 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystemTemple.h"
+#include "ECS/Systems/Implementations/CameraPathSystem.h"
 #include "EngineConfig.h"
+#include "Game.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -136,7 +138,10 @@ void TempleInterior::Activate()
 
 	Locator::rendereringSystem::emplace<ecs::systems::RenderingSystemTemple>();
 	camera.SetOrigin(_templePosition);
-	camera.SetFocus(_templePosition + glm::quat(_templeRotation) * glm::vec3(0.0f, 0.0f, 1.0f));
+	const auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
+	camera.SetProjectionMatrixPerspective(100.f, aspect, config.cameraNearClip, config.cameraFarClip);
+	Locator::cameraPathSystem::value().Start(entt::hashed_string("temple/main"));
+//	camera.SetFocus(_templePosition + glm::quat(_templeRotation) * glm::vec3(0.0f, 0.0f, 1.0f));
 	_active = true;
 }
 
@@ -158,5 +163,11 @@ void TempleInterior::Deactivate()
 	Locator::rendereringSystem::emplace<ecs::systems::RenderingSystem>();
 	camera.SetOrigin(_playerPositionOutside);
 	camera.SetFocus(_playerPositionOutside + glm::quat(_playerRotationOutside) * glm::vec3(0.0f, 0.0f, 1.0f));
+	if (Locator::cameraPathSystem::value().IsPathing())
+	{
+		Locator::cameraPathSystem::value().Stop();
+	}
+	const auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
+	camera.SetProjectionMatrixPerspective(config.cameraXFov, aspect, config.cameraNearClip, config.cameraFarClip);
 	_active = false;
 }

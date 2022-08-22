@@ -21,6 +21,7 @@ using LevelManager = ResourceManager<LevelLoader>;
 using CreatureMindManager = ResourceManager<CreatureMindLoader>;
 using SoundManager = ResourceManager<SoundLoader>;
 using GlowManager = ResourceManager<LightLoader>;
+using CameraPathManager = ResourceManager<CameraPathLoader>;
 
 class ResourcesInterface
 {
@@ -32,6 +33,7 @@ public:
 	virtual CreatureMindManager& GetCreatureMinds() = 0;
 	virtual SoundManager& GetSounds() = 0;
 	virtual GlowManager& GetGlows() = 0;
+	virtual CameraPathManager& GetCameraPaths() = 0;
 };
 
 } // namespace openblack::resources
