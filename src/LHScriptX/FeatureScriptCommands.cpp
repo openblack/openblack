@@ -17,12 +17,12 @@
 
 #include "3D/Camera.h"
 #include "3D/LandIsland.h"
-#include "ECS/Archetypes/CreatureArchetype.h"
 #include "ECS/Archetypes/AbodeArchetype.h"
 #include "ECS/Archetypes/AnimatedStaticArchetype.h"
 #include "ECS/Archetypes/BigForestArchetype.h"
 #include "ECS/Archetypes/BonfireArchetype.h"
 #include "ECS/Archetypes/CitadelArchetype.h"
+#include "ECS/Archetypes/CreatureArchetype.h"
 #include "ECS/Archetypes/FeatureArchetype.h"
 #include "ECS/Archetypes/FieldArchetype.h"
 #include "ECS/Archetypes/MobileObjectArchetype.h"
