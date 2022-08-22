@@ -21,6 +21,7 @@
 #include "ECS/Archetypes/AnimatedStaticArchetype.h"
 #include "ECS/Archetypes/BigForestArchetype.h"
 #include "ECS/Archetypes/BonfireArchetype.h"
+#include "ECS/Archetypes/CreatureArchetype.h"
 #include "ECS/Archetypes/FeatureArchetype.h"
 #include "ECS/Archetypes/FieldArchetype.h"
 #include "ECS/Archetypes/MobileObjectArchetype.h"
@@ -525,11 +526,12 @@ void FeatureScriptCommands::CreateCreature(glm::vec3 position, int32_t param2, i
 	                    __LINE__, __func__, glm::to_string(position), param2, param3);
 }
 
-void FeatureScriptCommands::CreateCreatureFromFile(const std::string& playerName, int32_t creatureType,
+void FeatureScriptCommands::CreateCreatureFromFile(const std::string& playerName, CreatureType creatureType,
                                                    const std::string& creatureMind, glm::vec3 position)
 {
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {}({}, {}, {}, {}) not implemented.", __FILE__,
-	                    __LINE__, __func__, playerName, creatureType, creatureMind, glm::to_string(position));
+	auto playerType =
+	    std::distance(k_PlayerNamesStrs.begin(), std::find(k_PlayerNamesStrs.begin(), k_PlayerNamesStrs.end(), playerName));
+	CreatureArchetype::Create(static_cast<PlayerNames>(playerType), creatureType, creatureMind, position);
 }
 
 void FeatureScriptCommands::CreateFlock(int32_t, glm::vec3, glm::vec3, int32_t, int32_t, int32_t)
