@@ -221,3 +221,14 @@ LightLoader::result_type LightLoader::operator()(BaseLoader<Lights>::FromDiskTag
 	}
 	return lights;
 }
+
+CameraPathLoader::result_type CameraPathLoader::operator()(FromDiskTag, const std::filesystem::path& path) const
+{
+	auto cameraPath = std::make_shared<CameraPath>(path.stem().string());
+	if (!cameraPath->LoadFromFile(path))
+	{
+		throw std::runtime_error("Unable to load camera path");
+	}
+
+	return cameraPath;
+}

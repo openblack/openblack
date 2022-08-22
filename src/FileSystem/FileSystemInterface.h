@@ -37,6 +37,7 @@ enum class Path
 	WeatherSystem,
 	CreatureMesh,
 	Citadel,
+	CitadelEngine,
 };
 
 class FileSystemInterface
@@ -101,6 +102,10 @@ public:
 		else if constexpr (pathType == Path::Citadel)
 		{
 			result = GetPath<Path::Data>() / "Citadel";
+		}
+		else if constexpr (pathType == Path::CitadelEngine)
+		{
+			result = GetPath<Path::Citadel>() / "engine";
 		}
 		else
 		{
