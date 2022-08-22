@@ -407,13 +407,20 @@ void FeatureScriptCommands::CreateForest([[maybe_unused]] int32_t forestId, [[ma
 
 void FeatureScriptCommands::CreateTree(int32_t forestId, glm::vec3 position, TreeInfo treeType, int32_t rotation, int32_t scale)
 {
-	CreateNewTree(forestId, position, treeType, 1, rotation * 0.001f, scale * 0.001f, scale * 0.001f);
+	CreateNewTree(forestId, position, treeType, true, rotation * 0.001f, scale * 0.001f, scale * 0.001f);
+}
+
+void FeatureScriptCommands::CreateDeadTree(glm::vec3 position, [[maybe_unused]] const std::string& player,
+                                           [[maybe_unused]] TreeInfo treeType, float scale, [[maybe_unused]] float roll,
+                                           float yaw, [[maybe_unused]] float pitch)
+{
+	CreateNewTree(-1, position, TreeInfo::Burnt, true, yaw, scale, scale);
 }
 
 void FeatureScriptCommands::CreateNewTree(int32_t forestId, glm::vec3 position, TreeInfo treeType, int32_t isNonScenic,
                                           float rotation, float currentSize, float maxSize)
 {
-	TreeArchetype::Create(forestId, position, treeType, isNonScenic != 0, rotation, maxSize, currentSize);
+	TreeArchetype::Create(forestId, position, treeType, isNonScenic != false, rotation, maxSize, currentSize);
 }
 
 void FeatureScriptCommands::CreateField(glm::vec3 position, FieldTypeInfo type)
@@ -492,13 +499,6 @@ void FeatureScriptCommands::CreateMobileUStatic(glm::vec3 position, MobileStatic
                                                 float xRotation, float yRotation, float zRotation, float scale)
 {
 	MobileStaticArchetype::Create(position, type, verticalOffset, xRotation, yRotation, zRotation, scale);
-}
-
-void FeatureScriptCommands::CreateDeadTree([[maybe_unused]] glm::vec3 position, const std::string&, int32_t, float, float,
-                                           float, float)
-{
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
 }
 
 void FeatureScriptCommands::CreateScaffold(int32_t, [[maybe_unused]] glm::vec3 position, int32_t, int32_t, int32_t)
