@@ -495,11 +495,11 @@ void FeatureScriptCommands::CreateMobileUStatic(glm::vec3 position, MobileStatic
 	MobileStaticArchetype::Create(position, type, verticalOffset, xRotation, yRotation, zRotation, scale);
 }
 
-void FeatureScriptCommands::CreateDeadTree([[maybe_unused]] glm::vec3 position, const std::string&, int32_t, float, float,
-                                           float, float)
+void FeatureScriptCommands::CreateDeadTree([[maybe_unused]] glm::vec3 position, const std::string&, int32_t, float _,
+                                           float roll, float rotation, float pitch)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	auto scale = 1.0f;
+	TreeArchetype::Create(0, position, TreeInfo::Burnt, 1, rotation * 0.001f, scale * 0.001f, scale * 0.001f);
 }
 
 void FeatureScriptCommands::CreateScaffold(int32_t, [[maybe_unused]] glm::vec3 position, int32_t, int32_t, int32_t)
