@@ -488,6 +488,7 @@ bool Game::Initialize()
 	auto& animationManager = resources.GetAnimations();
 	auto& levelManager = resources.GetLevels();
 	auto& soundManager = resources.GetSounds();
+	auto& camPathManager = resources.GetCameraPaths();
 
 	if (!fileSystem.IsPathValid(_gamePath))
 	{
@@ -613,6 +614,42 @@ bool Game::Initialize()
 		}
 	});
 
+	fileSystem.Iterate(fileSystem.GetPath<Path::Symbols>(), false, [&camPathManager](const std::filesystem::path& f) {
+		if (f.extension() != ".cam")
+		{
+			return;
+		}
+		const auto& fileName = f.stem().string();
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading symbol cam: {}", fileName);
+		const auto pathId = fmt::format("symbol/{}", fileName);
+		try
+		{
+			camPathManager.Load(pathId, resources::CameraPathLoader::FromDiskTag {}, f);
+		}
+		catch (std::runtime_error& err)
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+		}
+	});
+
+	fileSystem.Iterate(fileSystem.GetPath<Path::CitadelEngine>(), false, [&camPathManager](const std::filesystem::path& f) {
+		if (f.extension() != ".cam")
+		{
+			return;
+		}
+		const auto& fileName = f.stem().string();
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading interior temple cam: {}", fileName);
+		const auto pathId = fmt::format("temple/{}", fileName);
+		try
+		{
+			camPathManager.Load(pathId, resources::CameraPathLoader::FromDiskTag {}, f);
+		}
+		catch (std::runtime_error& err)
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+		}
+	});
+
 	// Load loose one-off assets
 	{
 		using AFromDiskTag = resources::L3DAnimLoader::FromDiskTag;
@@ -626,6 +663,10 @@ bool Game::Initialize()
 		meshManager.Load("river", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "river.l3d");
 		meshManager.Load("river2", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "river2.l3d");
 		meshManager.Load("metre_sphere", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "metre_sphere.l3d");
+
+		using CFromDiskTag = resources::CameraPathLoader::FromDiskTag;
+		camPathManager.Load("cam", CFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "cam.cam");
+		camPathManager.Load("flying", CFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "flying.cam");
 	}
 
 	// TODO(raffclar): #400: Parse level files within the resource loader
