@@ -368,6 +368,7 @@ bool Game::Update()
 			_eventManager->Create<SDL_Event>(e);
 		}
 	}
+	Locator::cameraPathSystem::value().Update(deltaTime);
 
 	if (!this->_config.running)
 	{
