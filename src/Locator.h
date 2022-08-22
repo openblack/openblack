@@ -26,6 +26,7 @@ namespace ecs::systems
 class RenderingSystemInterface;
 class DynamicsSystemInterface;
 class CameraBookmarkSystemInterface;
+class CameraPathSystemInterface;
 class LivingActionSystemInterface;
 class TownSystemInterface;
 class PathfindingSystemInterface;
@@ -41,6 +42,7 @@ struct Locator
 	using rendereringSystem = entt::locator<ecs::systems::RenderingSystemInterface>;
 	using dynamicsSystem = entt::locator<ecs::systems::DynamicsSystemInterface>;
 	using cameraBookmarkSystem = entt::locator<ecs::systems::CameraBookmarkSystemInterface>;
+	using cameraPathSystem = entt::locator<ecs::systems::CameraPathSystemInterface>;
 	using livingActionSystem = entt::locator<ecs::systems::LivingActionSystemInterface>;
 	using townSystem = entt::locator<ecs::systems::TownSystemInterface>;
 	using pathfindingSystem = entt::locator<ecs::systems::PathfindingSystemInterface>;

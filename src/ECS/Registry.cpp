@@ -34,4 +34,8 @@ void Registry::SetDirty()
 {
 	Locator::rendereringSystem::value().SetDirty();
 }
+void Registry::Destroy(entt::entity entity)
+{
+	_registry.destroy(entity);
+}
 } // namespace openblack::ecs

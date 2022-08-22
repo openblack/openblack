@@ -12,6 +12,7 @@
 #define LOCATOR_IMPLEMENTATIONS
 
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
+#include "ECS/Systems/Implementations/CameraPathSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
 #include "ECS/Systems/Implementations/PathfindingSystem.h"
@@ -19,6 +20,7 @@
 #include "ECS/Systems/Implementations/TownSystem.h"
 
 using openblack::ecs::systems::CameraBookmarkSystem;
+using openblack::ecs::systems::CameraPathSystem;
 using openblack::ecs::systems::DynamicsSystem;
 using openblack::ecs::systems::LivingActionSystem;
 using openblack::ecs::systems::PathfindingSystem;
@@ -39,5 +41,6 @@ void InitializeLevel()
 	Locator::townSystem::emplace<TownSystem>();
 	Locator::pathfindingSystem::emplace<PathfindingSystem>();
 	Locator::cameraBookmarkSystem::emplace<CameraBookmarkSystem>();
+	Locator::cameraPathSystem::emplace<CameraPathSystem>();
 }
 } // namespace openblack::ecs::systems
