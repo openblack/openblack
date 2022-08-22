@@ -70,7 +70,7 @@ public:
 
 private:
 	bool _active;
-	const glm::vec3 _templePosition;
+	glm::vec3 _templePosition;
 	glm::vec3 _playerPositionOutside;
 	glm::vec3 _playerRotationOutside;
 };
