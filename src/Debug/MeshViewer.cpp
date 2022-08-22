@@ -170,8 +170,9 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 	}
 
 	auto const& subMeshes = mesh->GetSubMeshes();
+	auto subMeshSize = static_cast<int>(subMeshes.size());
 
-	if (_selectedSubMesh >= subMeshes.size())
+	if (_selectedSubMesh >= subMeshSize)
 	{
 		_selectedSubMesh = subMeshes.size() - 1;
 		SPDLOG_LOGGER_WARN(spdlog::get("game"), "Selected submesh ({}) is out of bounds for the given mesh ({})",
