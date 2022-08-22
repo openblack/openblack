@@ -3382,4 +3382,28 @@ enum class AttackInfo : int
 	_COUNT = 2
 };
 
+enum class CreatureType : int32_t
+{
+	Unknown = 0,
+	Cow = 1,
+	Tiger = 2,
+	Leopard = 3,
+	Wolf = 4,
+	Lion = 5,
+	Horse = 6,
+	Tortoise = 7,
+	Zebra = 8,
+	BrownBear = 9,
+	PolarBear = 10,
+	Sheep = 11,
+	Chimp = 12,
+	Ogre = 13,
+	Mandrill = 14,
+	Rhino = 15,
+	Gorilla = 16,
+	GiantApe = 17,
+
+	_COUNT = 18
+};
+
 } // namespace openblack
