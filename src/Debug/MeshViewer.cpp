@@ -11,13 +11,20 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/vec_swizzle.hpp>
 #include <imgui.h>
 #include <imgui_bitfield.h>
+#include <spdlog/spdlog.h>
 
+#include "3D/Camera.h"
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
+#include "3D/LandIsland.h"
 #include "Debug/Gui.h"
+#include "ECS/Components/Mesh.h"
+#include "ECS/Registry.h"
 #include "Game.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/ShaderManager.h"
@@ -151,6 +158,16 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 	ImGui::Checkbox("View bounding box", &_viewBoundingBox);
 	ImGui::Checkbox("Show matching armature", &_matchBones);
 
+	auto const& subMeshes = mesh->GetSubMeshes();
+	auto subMeshSize = static_cast<int>(subMeshes.size());
+
+	if (_selectedSubMesh >= subMeshSize)
+	{
+		_selectedSubMesh = static_cast<int>(subMeshes.size() - 1);
+		SPDLOG_LOGGER_WARN(spdlog::get("game"), "Selected submesh ({}) is out of bounds for the given mesh ({})",
+		                   _selectedSubMesh, mesh->GetDebugName());
+	}
+
 	if (_selectedSubMesh >= mesh->GetNumSubMeshes())
 	{
 		_selectedSubMesh = 0;
@@ -174,6 +191,24 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 
 	auto const& graphicsMesh = submesh->GetMesh();
 	ImGui::Text("Vertices %u, Indices %u", graphicsMesh.GetVertexBuffer().GetCount(), graphicsMesh.GetIndexBuffer().GetCount());
+
+	if (_selectedSubMesh >= 0 && ImGui::TreeNodeEx("Spawn"))
+	{
+		ImGui::Text("Right click on map to set location");
+		ImGui::DragFloat3("Location", glm::value_ptr(_spawnLocation));
+		ImGui::SliderFloat("Rotation", &_spawnRotation, -180.0f, 180.0f, "%.2f degrees");
+		ImGui::DragFloat("Scale", &_spawnScale);
+		if (ImGui::Button("Spawn"))
+		{
+			auto& registry = Game::Instance()->GetEntityRegistry();
+			auto entity = registry.Create();
+			auto rot = glm::eulerAngleY(glm::radians(_spawnRotation));
+			auto scale = glm::vec3(_spawnScale, _spawnScale, _spawnScale);
+			registry.Assign<ecs::components::Transform>(entity, _spawnLocation, rot, scale);
+			registry.Assign<ecs::components::Mesh>(entity, _selectedMesh, static_cast<int8_t>(0), static_cast<int8_t>(0));
+		}
+		ImGui::TreePop();
+	}
 
 	ImGui::NextColumn();
 
@@ -242,8 +277,10 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 	ImGui::EndChild();
 }
 
-void MeshViewer::Update([[maybe_unused]] Game& game, const Renderer& renderer)
+void MeshViewer::Update(Game& game, const Renderer& renderer)
 {
+	using namespace ecs::components;
+
 	auto const& meshes = Locator::resources::value().GetMeshes();
 	auto const& animations = Locator::resources::value().GetAnimations();
 	auto& shaderManager = renderer.GetShaderManager();
@@ -323,8 +360,31 @@ void MeshViewer::Update([[maybe_unused]] Game& game, const Renderer& renderer)
 			bgfx::submit(static_cast<bgfx::ViewId>(k_ViewId), debugShader->GetRawHandle());
 		}
 	}
+
+	// Get hand position for spawn location
+	auto& registry = game.GetEntityRegistry();
+	const auto& handTransform = registry.Get<Transform>(game.GetHand());
+	_handPosition = handTransform.position;
+	_handPosition.y = game.GetLandIsland().GetHeightAt(glm::xz(_handPosition));
 }
 
-void MeshViewer::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
+void MeshViewer::ProcessEventOpen([[maybe_unused]] const SDL_Event& event)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	switch (event.type)
+	{
+	case SDL_MOUSEBUTTONDOWN:
+	{
+		if (!io.WantCaptureMouse)
+		{
+			if (event.button.button == SDL_BUTTON_RIGHT)
+			{
+				_spawnLocation = _handPosition;
+			}
+		}
+	}
+	break;
+	}
+}
 
 void MeshViewer::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) {}
