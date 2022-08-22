@@ -523,6 +523,24 @@ bool Game::Initialize()
 			    }
 		    }
 	    });
+
+	fileSystem.Iterate( //
+	    fileSystem.GetPath<filesystem::Path::Citadel>() / "engine", false, [&meshManager](const std::filesystem::path& f) {
+		    if (f.extension() == ".zzz")
+		    {
+			    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading interior temple mesh: {}", f.stem().string());
+			    try
+			    {
+				    meshManager.Load(fmt::format("temple/interior/{}", f.stem().string()), resources::L3DLoader::FromDiskTag {},
+				                     f);
+			    }
+			    catch (std::runtime_error& err)
+			    {
+				    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+			    }
+		    }
+	    });
+
 	pack::PackFile pack;
 #if __ANDROID__
 	//  Android has a complicated permissions API, must call java code to read contents.
