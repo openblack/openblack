@@ -61,6 +61,7 @@
 #include "MeshViewer.h"
 #include "PathFinding.h"
 #include "Profiler.h"
+#include "Temple.h"
 #include "TextureViewer.h"
 
 // Turn off formatting because it adds spaces which break the stringifying
@@ -117,6 +118,7 @@ std::unique_ptr<Gui> Gui::Create(const GameWindow* window, graphics::RenderPass 
 	debugWindows.emplace_back(new LHVMViewer);
 	debugWindows.emplace_back(new PathFinding);
 	debugWindows.emplace_back(new Audio);
+	debugWindows.emplace_back(new TempleInterior);
 
 	auto gui =
 	    std::unique_ptr<Gui>(new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows), window == nullptr));

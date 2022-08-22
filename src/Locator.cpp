@@ -14,6 +14,7 @@
 #include <spdlog/spdlog.h>
 
 #include "3D/LandIsland.h"
+#include "3D/TempleInterior.h"
 #include "3D/UnloadedIsland.h"
 #include "Audio/AudioManager.h"
 #include "Audio/AudioManagerNoOp.h"
@@ -72,6 +73,7 @@ void InitializeGame()
 	Locator::playerSystem::emplace<PlayerSystem>();
 	Locator::rendereringSystem::emplace<RenderingSystem>();
 	Locator::entitiesRegistry::emplace<Registry>();
+	Locator::temple::emplace<TempleInterior>();
 }
 
 void InitializeLevel(const std::filesystem::path& path)
