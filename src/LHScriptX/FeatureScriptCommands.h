@@ -57,6 +57,8 @@ public:
 	static void CreateNewAnimal(glm::vec3 position, int32_t, int32_t, int32_t, int32_t);
 	static void CreateForest(int32_t forestId, glm::vec3 position);
 	static void CreateTree(int32_t forestId, glm::vec3 position, TreeInfo treeType, int32_t rotation, int32_t scale);
+	static void CreateDeadTree(glm::vec3 position, const std::string& player, TreeInfo treeType, float scale, float roll,
+	                           float yaw, float pitch);
 	static void CreateNewTree(int32_t forestId, glm::vec3 position, TreeInfo treeType, int32_t isNonScenic, float rotation,
 	                          float currentSize, float maxSize);
 	static void CreateField(glm::vec3 position, FieldTypeInfo type);
@@ -74,7 +76,6 @@ public:
 	static void CreateMobileStatic(glm::vec3 position, MobileStaticInfo type, float, float);
 	static void CreateMobileUStatic(glm::vec3 position, MobileStaticInfo type, float verticalOffset, float xRotation,
 	                                float yRotation, float zRotation, float scale);
-	static void CreateDeadTree(glm::vec3 position, const std::string&, int32_t, float, float, float, float);
 	static void CreateScaffold(int32_t, glm::vec3, int32_t, int32_t, int32_t);
 	static void CountryChange(glm::vec3 position, int32_t);
 	static void HeightChange(glm::vec3 position, int32_t);
