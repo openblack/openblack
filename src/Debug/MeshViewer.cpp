@@ -11,13 +11,18 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/transform.hpp>
 #include <imgui.h>
 #include <imgui_bitfield.h>
+#include <spdlog/spdlog.h>
 
+#include "3D/Camera.h"
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "Debug/Gui.h"
+#include "ECS/Components/Mesh.h"
+#include "ECS/Registry.h"
 #include "Game.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/ShaderManager.h"
@@ -150,6 +155,28 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 	ImGui::DragFloat3("position", &_cameraPosition[0], 0.5f);
 	ImGui::Checkbox("View bounding box", &_viewBoundingBox);
 	ImGui::Checkbox("Show matching armature", &_matchBones);
+	ImGui::SameLine();
+
+	if (ImGui::Button("Spawn", ImVec2(100, 100)) && _selectedSubMesh >= 0)
+	{
+		auto& registry = Game::Instance()->GetEntityRegistry();
+		auto& camera = Game::Instance()->GetCamera();
+		auto entity = registry.Create();
+		auto pos = camera.GetPosition();
+		auto rot = glm::eulerAngleY(camera.GetRotation().y);
+		auto scale = glm::vec3(1.0f, 1.0f, 1.0f);
+		registry.Assign<ecs::components::Transform>(entity, pos, rot, scale);
+		registry.Assign<ecs::components::Mesh>(entity, _selectedMesh, static_cast<int8_t>(0), static_cast<int8_t>(0));
+	}
+
+	auto const& subMeshes = mesh->GetSubMeshes();
+
+	if (_selectedSubMesh >= subMeshes.size())
+	{
+		_selectedSubMesh = subMeshes.size() - 1;
+		SPDLOG_LOGGER_WARN(spdlog::get("game"), "Selected submesh ({}) is out of bounds for the given mesh ({})",
+		                   _selectedSubMesh, mesh->GetDebugName());
+	}
 
 	if (_selectedSubMesh >= mesh->GetNumSubMeshes())
 	{
