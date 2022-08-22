@@ -53,6 +53,10 @@ private:
 	uint32_t _meshFlagFilter {0xFFFFFFFF};
 	bool _matchBones {true};
 	glm::vec3 _cameraPosition {5.0f, 3.0f, 5.0f};
+	glm::vec3 _handPosition {0.0f, 0.0f, 0.0f};
+	glm::vec3 _spawnLocation {0.0f, 0.0f, 0.0f};
+	float _spawnRotation {0.0f};
+	float _spawnScale {1.0f};
 	bool _viewBoundingBox {false};
 	std::unique_ptr<graphics::Mesh> _boundingBox;
 	std::unique_ptr<graphics::FrameBuffer> _frameBuffer;
