@@ -17,6 +17,7 @@ namespace openblack
 {
 class RandomNumberManagerInterface;
 class LandIslandInterface;
+class TempleInteriorInterface;
 
 namespace audio
 {
@@ -69,5 +70,6 @@ struct Locator
 	using entitiesRegistry = entt::locator<ecs::Registry>;
 	using entitiesMap = entt::locator<ecs::MapInterface>;
 	using playerSystem = entt::locator<ecs::systems::PlayerSystemInterface>;
+	using temple = entt::locator<TempleInteriorInterface>;
 };
 } // namespace openblack
