@@ -16,9 +16,9 @@
 using namespace openblack;
 
 CameraPath::CameraPath(std::string debugName)
-    : _start(entt::null)
-    , _debugName(std::move(debugName))
-    , _movementSpeed(0)
+    : _debugName(std::move(debugName))
+	, _movementSpeed(0)
+	, _start(entt::null)
     , _unk1(0)
 {
 }
