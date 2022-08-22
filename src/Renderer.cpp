@@ -304,7 +304,7 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 		const Texture2D* texture = GetTexture(prim.skinID, skins);
 		const Texture2D* nextTexture = !hasNext ? nullptr : GetTexture(std::next(it)->skinID, skins);
 
-		bool primitivePreserveState = texture == nextTexture && (preserveState || hasNext);
+		bool primitivePreserveState = texture != nullptr && texture == nextTexture && (preserveState || hasNext);
 
 		uint32_t skip = Mesh::SkipState::SkipNone;
 		if (!lastPreserveState)
