@@ -9,7 +9,6 @@
 
 #include "TempleInterior.h"
 
-#include <SDL_syswm.h>
 #include <glm/gtx/euler_angles.hpp>
 
 #include "3D/Camera.h"
