@@ -483,14 +483,15 @@ bool Game::Initialize()
 	auto& levelManager = resources.GetLevels();
 	auto& camManager = resources.GetCameraPaths();
 	const auto citadelExteriors = _fileSystem->FindPath(_fileSystem->CitadelPath() / "OutsideMeshes");
-	for (const auto& f : std::filesystem::directory_iterator {citadelExteriors})
+	for (const auto& file : std::filesystem::directory_iterator {citadelExteriors})
 	{
-		if (f.path().extension() == ".zzz")
+		if (file.path().extension() == ".zzz")
 		{
-			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading exterior temple mesh: {}", f.path().stem().string());
+			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading exterior temple mesh: {}", file.path().stem().string());
 			try
 			{
-				meshManager.Load(fmt::format("temple/{}", f.path().stem().string()), resources::L3DLoader::FromDiskTag {}, f);
+				meshManager.Load(fmt::format("temple/{}", file.path().stem().string()), resources::L3DLoader::FromDiskTag {},
+				                 file);
 			}
 			catch (std::runtime_error& err)
 			{
