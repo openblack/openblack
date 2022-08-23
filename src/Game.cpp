@@ -27,6 +27,7 @@
 #include <spdlog/spdlog.h>
 
 #include "3D/Camera.h"
+#include "3D/CreatureBody.h"
 #include "3D/LandIsland.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
@@ -518,6 +519,27 @@ bool Game::Initialize()
 	for (size_t i = 0; i < animations.size(); i++)
 	{
 		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animations[i]);
+	}
+
+	const auto creatures = _fileSystem->FindPath(_fileSystem->CreatureMeshPath());
+	for (const auto& f : std::filesystem::directory_iterator {creatures})
+	{
+		const auto& fileName = f.path().stem().string();
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading creature mesh: {}", fileName);
+		try
+		{
+			if (string_utils::BeginsWith(fileName, "Hand"))
+			{
+				continue;
+			}
+
+			const auto meshId = creature::GetIdFromMeshName(fileName);
+			meshManager.Load(meshId, resources::L3DLoader::FromDiskTag {}, f);
+		}
+		catch (std::runtime_error& err)
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+		}
 	}
 
 	// Load loose one-off assets
