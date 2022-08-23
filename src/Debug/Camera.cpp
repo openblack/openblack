@@ -74,13 +74,13 @@ void Camera::DrawControls()
 	}
 	auto const& cameraPaths = Locator::resources::value().GetCameraPaths();
 	const auto& cameraPath = cameraPaths.Handle(_selectedCameraPath);
-	const auto& vertexCount = cameraPath->GetPoints().size();
+	const auto vertexCount = cameraPath->GetPoints().size();
 	if (ImGui::BeginMenuBar())
 	{
 		ImGui::TextUnformatted("Selected Camera Path Information");
 		ImGui::EndMenuBar();
 	}
-	ImGui::Text("Vertices: %u", vertexCount);
+	ImGui::Text("Vertices: %lu", static_cast<unsigned long>(vertexCount));
 	ImGui::Text("Movement Speed: %u", cameraPath->GetMovementSpeed());
 	ImGui::Text("unk1: %u", cameraPath->_unk1);
 	ImGui::EndChild();
