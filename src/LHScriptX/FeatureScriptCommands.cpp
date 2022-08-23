@@ -407,20 +407,20 @@ void FeatureScriptCommands::CreateForest([[maybe_unused]] int32_t forestId, [[ma
 
 void FeatureScriptCommands::CreateTree(int32_t forestId, glm::vec3 position, TreeInfo treeType, int32_t rotation, int32_t scale)
 {
-	CreateNewTree(forestId, position, treeType, true, rotation * 0.001f, scale * 0.001f, scale * 0.001f);
+	CreateNewTree(forestId, position, treeType, 1, rotation * 0.001f, scale * 0.001f, scale * 0.001f);
 }
 
 void FeatureScriptCommands::CreateDeadTree(glm::vec3 position, [[maybe_unused]] const std::string& player,
                                            [[maybe_unused]] TreeInfo treeType, float scale, [[maybe_unused]] float roll,
                                            float yaw, [[maybe_unused]] float pitch)
 {
-	CreateNewTree(-1, position, TreeInfo::Burnt, true, yaw, scale, scale);
+	CreateNewTree(-1, position, TreeInfo::Burnt, 1, yaw, scale, scale);
 }
 
 void FeatureScriptCommands::CreateNewTree(int32_t forestId, glm::vec3 position, TreeInfo treeType, int32_t isNonScenic,
                                           float rotation, float currentSize, float maxSize)
 {
-	TreeArchetype::Create(forestId, position, treeType, isNonScenic != false, rotation, maxSize, currentSize);
+	TreeArchetype::Create(forestId, position, treeType, static_cast<bool>(isNonScenic), rotation, maxSize, currentSize);
 }
 
 void FeatureScriptCommands::CreateField(glm::vec3 position, FieldTypeInfo type)
