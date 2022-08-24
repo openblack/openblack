@@ -9,6 +9,9 @@
 
 #include "StringUtils.h"
 
+#include <string_view>
+#include <vector>
+
 bool openblack::string_utils::EndsWith(const std::string& string, const std::string& ending)
 {
 	if (string.length() < ending.length())
@@ -48,4 +51,20 @@ std::string openblack::string_utils::Capitalise(const std::string& string)
 	auto capitalised = string;
 	capitalised[0] = static_cast<unsigned char>(std::toupper(static_cast<unsigned char>(string[0])));
 	return capitalised;
+}
+
+[[nodiscard]] std::vector<std::string> openblack::string_utils::Split(const std::string& string, const std::string& delimiter)
+{
+	auto parts = std::vector<std::string>();
+	size_t start = 0;
+	auto end = string.find(delimiter);
+
+	while (end != std::string::npos)
+	{
+		parts.emplace_back(string.substr(start, end - start));
+		start = end + delimiter.length();
+		end = string.find(delimiter, start);
+	}
+
+	return parts;
 }
