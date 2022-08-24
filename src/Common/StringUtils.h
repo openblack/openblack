@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <string>
+#include <vector>
 
 namespace openblack::string_utils
 {
@@ -24,5 +25,7 @@ namespace openblack::string_utils
 [[nodiscard]] std::string LowerCase(const std::string& str);
 
 [[nodiscard]] std::string Capitalise(const std::string& str);
+
+[[nodiscard]] std::vector<std::string> Split(const std::string& string, const std::string& delimiter);
 
 } // namespace openblack::string_utils
