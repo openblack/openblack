@@ -77,8 +77,7 @@ Game::Game(Arguments&& args)
     , _fileSystem(std::make_unique<FileSystem>())
     , _entityRegistry(std::make_unique<ecs::Registry>())
     , _entityMap(std::make_unique<ecs::Map>())
-    , _config()
-    , _handPose()
+    , _handPose(glm::identity<glm::mat4>())
     , _requestScreenshot(args.requestScreenshot)
 {
 	std::function<std::shared_ptr<spdlog::logger>(const std::string&)> createLogger;
