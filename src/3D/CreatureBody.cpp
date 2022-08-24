@@ -7,12 +7,14 @@
  * openblack is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
+#include <string>
+#include <vector>
+
 #include <spdlog/spdlog.h>
 
 #include "Common/StringUtils.h"
 #include "ECS/Components/Creature.h"
 #include "Enums.h"
-#include "Game.h"
 
 using namespace openblack;
 using namespace openblack::creature;
@@ -30,32 +32,6 @@ const std::map<std::string, CreatureBody::Appearance> k_MeshNameToAppearance = {
     {"boned", A::Base}, {"base", A::Base},     {"good2", A::Good}, {"base2", A::Base}, {"good", A::Good}, {"evil", A::Evil},
     {"evil2", A::Evil}, {"strong", A::Strong}, {"weak", A::Weak},  {"fat", A::Fat},    {"thin", A::Thin}};
 
-CreatureType creature::GetSpeciesFromMeshName(const std::string& name)
-{
-	for (const auto& [creatureTerm, species] : k_MeshNameToSpecies)
-	{
-		if (string_utils::BeginsWith(name, creatureTerm))
-		{
-			return species;
-		}
-	}
-
-	return CreatureType::Unknown;
-}
-
-CreatureBody::Appearance creature::GetAppearanceFromMeshName(const std::string& name)
-{
-	for (const auto& [creatureTerm, appearance] : k_MeshNameToAppearance)
-	{
-		if (string_utils::EndsWith(name, creatureTerm))
-		{
-			return appearance;
-		}
-	}
-
-	return CreatureBody::Appearance::Unknown;
-}
-
 entt::id_type creature::GetIdFromType(CreatureType species)
 {
 	auto defaultBodyType = CreatureBody::Appearance::Base;
@@ -65,18 +41,42 @@ entt::id_type creature::GetIdFromType(CreatureType species)
 
 entt::id_type creature::GetIdFromMeshName(const std::string& name)
 {
-	const std::string lowerCaseName = string_utils::LowerCase(name);
-	auto species = creature::GetSpeciesFromMeshName(lowerCaseName);
-	if (species == CreatureType::Unknown)
+	auto species = S::Unknown;
+	auto appearance = A::Base;
+	auto split = string_utils::Split(string_utils::LowerCase(name), "_");
+	auto suffix = split[split.size() - 1];
+
+	auto appearanceFound = k_MeshNameToAppearance.find(suffix);
+	if (appearanceFound == k_MeshNameToAppearance.end())
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Unknown creature appearance: {}", name);
+	}
+	else
+	{
+		appearance = appearanceFound->second;
+	}
+
+	auto speciesParts = std::vector<std::string>();
+	for (auto& word : split)
+	{
+		if (!k_MeshNameToAppearance.contains(word))
+		{
+			speciesParts.emplace_back(word);
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	auto speciesFound = k_MeshNameToSpecies.find(fmt::format("{}", fmt::join(speciesParts, "_")));
+	if (speciesFound == k_MeshNameToSpecies.end())
 	{
 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Unknown creature species: {}", name);
 	}
-
-	auto appearance = creature::GetAppearanceFromMeshName(lowerCaseName);
-
-	if (appearance == CreatureBody::Appearance::Unknown)
+	else
 	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Unknown creature appearance: {}", name);
+		species = speciesFound->second;
 	}
 
 	return entt::hashed_string(
