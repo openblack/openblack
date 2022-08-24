@@ -118,7 +118,7 @@ struct membuf: std::streambuf
 
 	std::streampos seekpos([[maybe_unused]] pos_type pos, [[maybe_unused]] std::ios_base::openmode which) override
 	{
-		return seekoff(pos - pos_type(off_type(0)), std::ios_base::beg, which);
+		return seekoff(pos - pos_type(static_cast<off_type>(0)), std::ios_base::beg, which);
 	}
 };
 struct imemstream: virtual membuf, public std::istream
@@ -189,7 +189,7 @@ void PackFile::ReadBlocks()
 	{
 		input.read(reinterpret_cast<char*>(&header), sizeof(PackBlockHeader));
 
-		if (_blocks.count(header.blockName.data()) > 0)
+		if (_blocks.contains(header.blockName.data()))
 		{
 			Fail(std::string("Duplicate block name: ") + header.blockName.data());
 		}
@@ -274,7 +274,7 @@ void PackFile::ExtractTexturesFromBlock()
 			Fail("Texture block id is not the same as block id");
 		}
 
-		if (_textures.count(blockName.data()) > 0)
+		if (_textures.contains(blockName.data()))
 		{
 			Fail("Duplicate texture extracted");
 		}
