@@ -68,8 +68,8 @@ jobs:
       - name: Run CMake+vcpkg to build packages.
         uses: lukka/run-cmake@main
         with:
-          configurePreset: 'ninja-multi-vcpkg'
-          configurePresetAdditionalArgs: "['-DOPENBLACK_WARNINGS_AS_ERRORS=ON']"
+          configurePreset: '${{ matrix.preset }}'
+          configurePresetAdditionalArgs: "['-DOPENBLACK_WARNINGS_AS_ERRORS=ON' ${{ matrix.triplet && format(', \"-DVCPKG_TARGET_TRIPLET={0}\"', matrix.triplet) }}]"
 
       - name: Run CMake+Ninja to build the code (Debug).
         uses: lukka/run-cmake@main
