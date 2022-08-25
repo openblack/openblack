@@ -17,12 +17,20 @@ jobs:
         os: [ubuntu-22.04]
         preset: [android-armeabi-v7a-vcpkg, android-arm64-v8a-vcpkg, android-x86-vcpkg, android-x86_64-vcpkg]
         triplet: [""]
-        # TODO(#519) x86 disabled due to failing to find stdlib headers on workflows
-        # include:
-        #   # Testing x86-windows bit in debug only
-        #   - os: windows-latest
-        #     preset: ninja-multi-vcpkg
-        #     triplet: x86-windows
+        include:
+          - os: windows-latest
+            preset: ninja-multi-vcpkg
+            triplet: arm64-windows
+          - os: macos-latest
+            preset: ninja-multi-vcpkg
+            triplet: arm64-osx
+          - os: ubuntu-22.04
+            preset: ninja-multi-vcpkg
+            triplet: arm64-linux
+          # TODO(#519) x86 disabled due to failing to find stdlib headers on workflows
+          # - os: windows-latest
+          #   preset: ninja-multi-vcpkg
+          #   triplet: x86-windows
 
     steps:
       - uses: actions/checkout@v3
@@ -38,7 +46,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt update -y
-          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
+          sudo apt install -y g++-aarch64-linux-gnu
         if: startsWith(matrix.os, 'ubuntu')
 
       - name: Install EMSDK
