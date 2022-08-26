@@ -51,7 +51,9 @@ constexpr std::array<bgfx::TextureFormat::Enum,
         bgfx::TextureFormat::RG8S,    // RG8SNorm
         bgfx::TextureFormat::RG8U,    // RG8UI
         bgfx::TextureFormat::RGB10A2, // RGB10A2
+        bgfx::TextureFormat::B5G6R5,  // B5G6R5
         bgfx::TextureFormat::R5G6B5,  // R5G6B5
+        bgfx::TextureFormat::BGR5A1,  // BGBRA1
         bgfx::TextureFormat::RGB5A1,  // RGB5A1
         bgfx::TextureFormat::RGB8,    // RGB8
         bgfx::TextureFormat::RGB8I,   // RGB8I
@@ -70,6 +72,7 @@ constexpr std::array<bgfx::TextureFormat::Enum,
         bgfx::TextureFormat::RGBA32F, // RGBA32F
         bgfx::TextureFormat::RGBA32I, // RGBA32I
         bgfx::TextureFormat::RGBA32U, // RGBA32UI
+        bgfx::TextureFormat::BGRA4,   // BGRA4
         bgfx::TextureFormat::RGBA4,   // RGBA4
     };
 
@@ -93,7 +96,7 @@ Texture2D::~Texture2D()
 }
 
 void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format format, Wrapping wrapping, Filter filter,
-                       const void* data, uint32_t size)
+                       const bgfx::Memory* memory)
 {
 	uint64_t flags = BGFX_TEXTURE_NONE;
 	switch (wrapping)
@@ -120,13 +123,19 @@ void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format 
 	default:
 		assert(false);
 	}
-	const auto* memory = bgfx::makeRef(data, size);
 	_handle = bgfx::createTexture2D(width, height, false, layers, getBgfxTextureFormat(format), flags, memory);
 	bgfx::setName(_handle, _name.c_str());
 	bgfx::frame();
 
 	bgfx::calcTextureSize(_info, width, height, 1, false, false, layers, getBgfxTextureFormat(format));
 	bgfx::frame();
+}
+
+void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format format, Wrapping wrapping, Filter filter,
+                       const void* data, uint32_t size)
+{
+
+	Texture2D::Create(width, height, layers, format, wrapping, filter, bgfx::makeRef(data, size));
 }
 
 void Texture2D::DumpTexture() const

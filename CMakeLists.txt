@@ -89,22 +89,6 @@ if (TARGET bgfx::bgfx AND TARGET bgfx::bx)
   target_link_libraries(bgfx::bgfx INTERFACE bgfx::bx)
 endif ()
 
-# If cross compiling, we need a host-compatible version of shaderc to compile shaders
-if (CMAKE_CROSSCOMPILING OR NOT TARGET bgfx::shaderc)
-  find_program(
-    shaderc_EXECUTABLE REQUIRED
-    NAMES bgfx-shaderc shaderc
-    PATHS /usr/bin
-          ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/packages/bgfx_x64-linux/tools/bgfx
-          ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/packages/bgfx_x64-windows/tools/bgfx
-          ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/packages/bgfx_x64-osx/tools/bgfx
-  )
-  add_executable(bgfx::shaderc IMPORTED)
-  set_target_properties(
-    bgfx::shaderc PROPERTIES IMPORTED_LOCATION "${shaderc_EXECUTABLE}"
-  )
-endif ()
-
 find_package(imgui REQUIRED)
 find_package(Bullet REQUIRED)
 find_package(spdlog 1.3.0 REQUIRED)
@@ -115,9 +99,6 @@ include(ClangFormat)
 
 # gets bundled dependencies (imgui, bgfx.cmake)
 add_subdirectory(externals)
-
-include(CMakeModules/Shaders.cmake)
-
 add_subdirectory(components/l3d)
 add_subdirectory(components/pack)
 add_subdirectory(components/lnd)

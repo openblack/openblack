@@ -54,13 +54,13 @@ set(TERRAIN_LAND_MPM_2P_1_OUTPUT ${TERRAIN_MULTIPLAYER_BINARY_DIR}/MPM_2P_1.lnd)
 set(TERRAIN_NOISE_MAP ${TERRAIN_BINARY_DIR}/noise_map.r8.raw)
 set(TERRAIN_BUMP_MAP ${TERRAIN_BINARY_DIR}/bump_map.r8.raw)
 list(APPEND TERRAIN_MATERIAL_ARRAY
-     ${TERRAIN_BINARY_DIR}/material_data1.rgb5a1.raw
+     ${TERRAIN_BINARY_DIR}/material_data1.bgr5a1.raw
 )
 list(APPEND TERRAIN_MATERIAL_ARRAY
-     ${TERRAIN_BINARY_DIR}/material_data2.rgb5a1.raw
+     ${TERRAIN_BINARY_DIR}/material_data2.bgr5a1.raw
 )
 list(APPEND TERRAIN_MATERIAL_ARRAY
-     ${TERRAIN_BINARY_DIR}/material_data3.rgb5a1.raw
+     ${TERRAIN_BINARY_DIR}/material_data3.bgr5a1.raw
 )
 string(REPLACE ";" "," TERRAIN_MATERIAL_LIST "${TERRAIN_MATERIAL_ARRAY}")
 

@@ -98,7 +98,7 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	                   Wrapping::ClampEdge, Filter::Linear, heightMapData.data(), static_cast<uint32_t>(heightMapData.size()));
 
 	const auto res = indexSize * glm::u16vec2(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height);
-	_footprintFrameBuffer = std::make_unique<FrameBuffer>("Footprints", res.x, res.y, graphics::Format::RGBA8);
+	_footprintFrameBuffer = std::make_unique<FrameBuffer>("Footprints", res.x, res.y, graphics::Format::BGRA4);
 
 	_proj = glm::ortho(_extentMin.x, _extentMax.x, _extentMin.y, _extentMax.y);
 	_view = glm::rotate(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -117,7 +117,7 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 		            sizeof(lnd.GetMaterials()[i].texels[0]) * lnd.GetMaterials()[i].texels.size());
 	}
 	_materialArray = std::make_unique<Texture2D>("LandIslandMaterialArray");
-	_materialArray->Create(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height, materialCount, Format::RGB5A1,
+	_materialArray->Create(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height, materialCount, Format::BGR5A1,
 	                       Wrapping::ClampEdge, Filter::Linear, rgba5TextureData.data(),
 	                       static_cast<uint32_t>(rgba5TextureData.size() * sizeof(rgba5TextureData[0])));
 

@@ -379,7 +379,7 @@ int WriteFile(const Arguments::Write& args) noexcept
 			          << " is not the right size to be a "
 			          << openblack::lnd::LNDMaterial::k_Width << "x"
 			          << openblack::lnd::LNDMaterial::k_Height
-			          << " RGB5A1 texture: size should be "
+			          << " BGR5A1 texture: size should be "
 			          << fsize << std::endl;
 			// clang-format on
 			return EXIT_FAILURE;
@@ -478,7 +478,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 		    ("terrain-type", "Type of terrain (required).", cxxopts::value<uint16_t>())                 //
 		    ("noise-map", "File with R8 bytes for noise map.", cxxopts::value<std::filesystem::path>()) //
 		    ("bump-map", "File with R8 bytes for bump map.", cxxopts::value<std::filesystem::path>())   //
-		    ("material-array", "Files with RGB5A1 bytes for material array (comma-separated).",         //
+		    ("material-array", "Files with BGBRA1 bytes for material array (comma-separated).",         //
 		     cxxopts::value<std::vector<std::filesystem::path>>())                                      //
 		    ;
 
