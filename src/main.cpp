@@ -70,7 +70,6 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		    std::pair {"OpenGL", bgfx::RendererType::OpenGL},
 		    std::pair {"OpenGLES", bgfx::RendererType::OpenGLES},
 		    std::pair {"Vulkan", bgfx::RendererType::Vulkan},
-		    std::pair {"Direct3D9", bgfx::RendererType::Direct3D9},
 		    std::pair {"Direct3D11", bgfx::RendererType::Direct3D11},
 		    std::pair {"Direct3D12", bgfx::RendererType::Direct3D12},
 		    std::pair {"Metal", bgfx::RendererType::Metal},
