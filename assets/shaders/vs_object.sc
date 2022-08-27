@@ -26,7 +26,7 @@ void main()
 	vec2 extentMax = u_islandExtent.zw;
 #endif // USE_HEIGHT_MAP
 
-#if BGFX_SHADER_LANGUAGE_HLSL > 300 || BGFX_SHADER_LANGUAGE_PSSL || BGFX_SHADER_LANGUAGE_SPIRV || BGFX_SHADER_LANGUAGE_METAL
+#if BGFX_SHADER_LANGUAGE_HLSL > 300 || BGFX_SHADER_LANGUAGE_PSSL || BGFX_SHADER_LANGUAGE_SPIRV
 	uint modelIndex = uint(max(0, asint(a_indices.x)));
 #else
 	uint modelIndex = uint(max(0, a_indices.x));
