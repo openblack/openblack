@@ -708,21 +708,14 @@ void Gui::NewFrameSdl2(SDL_Window* window)
 	{
 		int w;
 		int h;
-		int displayW;
-		int displayH;
 		SDL_GetWindowSize(window, &w, &h);
-		SDL_GL_GetDrawableSize(window, &displayW, &displayH);
 		io.DisplaySize = ImVec2(static_cast<float>(w), static_cast<float>(h));
-		if (w > 0 && h > 0)
-		{
-			io.DisplayFramebufferScale = ImVec2(static_cast<float>(displayW) / w, static_cast<float>(displayH) / h);
-		}
 	}
 	else
 	{
 		io.DisplaySize = ImVec2(1.0f, 1.0f);
-		io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 	}
+	io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 
 	// Setup time step (we don't use SDL_GetTicks() because it is using
 	// millisecond resolution)
