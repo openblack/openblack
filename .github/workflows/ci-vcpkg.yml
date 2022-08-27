@@ -278,149 +278,167 @@ jobs:
           path: screenshot-${{ matrix.os }}-${{github.sha}}-*.png
           if-no-files-found: error
       - name: Upload Land 1 Debug screenshot for comments
-        id: upload-imbb-debug-land-1
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-debug-land-1
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-1.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-1.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-1.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Upload Land 1 Release screenshot for comments
-        id: upload-imbb-release-land-1
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-release-land-1
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-release-land-1.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-release-land-1.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-release-land-1.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Upload Land 2 Debug screenshot for comments
-        id: upload-imbb-debug-land-2
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-debug-land-2
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-2.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-2.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-2.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Upload Land 2 Release screenshot for comments
-        id: upload-imbb-release-land-2
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-release-land-2
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-release-land-2.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-release-land-2.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-release-land-2.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Upload Land 3 Debug screenshot for comments
-        id: upload-imbb-debug-land-3
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-debug-land-3
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-3.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-3.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-3.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Upload Land 3 Release screenshot for comments
-        id: upload-imbb-release-land-3
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-release-land-3
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-release-land-3.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-release-land-3.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-release-land-3.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Upload Land 4 Debug screenshot for comments
-        id: upload-imbb-debug-land-4
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-debug-land-4
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-4.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-4.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-4.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Upload Land 4 Release screenshot for comments
-        id: upload-imbb-release-land-4
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-release-land-4
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-release-land-4.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-release-land-4.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-release-land-4.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Upload Land 5 Debug screenshot for comments
-        id: upload-imbb-debug-land-5
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-debug-land-5
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-5.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-5.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-5.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Upload Land 5 Release screenshot for comments
-        id: upload-imbb-release-land-5
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-release-land-5
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-release-land-5.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-release-land-5.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-release-land-5.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Upload Land T Debug screenshot for comments
-        id: upload-imbb-debug-land-T
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-debug-land-T
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-T.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-T.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-debug-land-T.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Upload Land T Release screenshot for comments
-        id: upload-imbb-release-land-T
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-release-land-T
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-release-land-T.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-release-land-T.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-release-land-T.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Upload Two Gods Debug screenshot for comments
-        id: upload-imbb-debug-two-gods
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-debug-two-gods
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-debug-two-gods.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-debug-two-gods.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-debug-two-gods.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Upload Two Gods Release screenshot for comments
-        id: upload-imbb-release-two-gods
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-release-two-gods
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-release-two-gods.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-release-two-gods.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-release-two-gods.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Upload Three Gods Debug screenshot for comments
-        id: upload-imbb-debug-three-gods
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-debug-three-gods
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-debug-three-gods.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-debug-three-gods.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-debug-three-gods.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Upload Three Gods Release screenshot for comments
-        id: upload-imbb-release-three-gods
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-release-three-gods
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-release-three-gods.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-release-three-gods.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-release-three-gods.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Upload Four Gods Debug screenshot for comments
-        id: upload-imbb-debug-four-gods
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-debug-four-gods
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-debug-four-gods.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-debug-four-gods.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-debug-four-gods.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Upload Four Gods Release screenshot for comments
-        id: upload-imbb-release-four-gods
-        uses: McCzarny/upload-image@v1.0.0
+        id: upload-screenshot-release-four-gods
+        uses: fjogeleit/http-request-action@v1
         if: github.event_name == 'pull_request_target'
         with:
-          path: screenshot-${{ matrix.os }}-${{github.sha}}-release-four-gods.png
-          uploadMethod: imgbb
-          apiKey: '${{ secrets.IMGBB_API_KEY }}'
+          file: screenshot-${{ matrix.os }}-${{github.sha}}-release-four-gods.png
+          url: 'https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{github.sha}}-release-four-gods.png'
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Find Image Comment
         if: github.event_name == 'pull_request_target'
         uses: peter-evans/find-comment@v2
@@ -439,14 +457,14 @@ jobs:
             # Uploaded images
             | Map | Debug | Release | Vanilla |
             | --- | ----- | ------- | ------- |
-            | Land1.txt | ![Land1 Debug](${{steps.upload-imbb-debug-land-1.outputs.url}}) | ![Land1 Release](${{steps.upload-imbb-release-land-1.outputs.url}}) | ![Land1 Vanilla](https://user-images.githubusercontent.com/1013356/182029148-3f72ab4c-917e-4154-9886-c806969ad9cd.png) |
-            | Land2.txt | ![Land2 Debug](${{steps.upload-imbb-debug-land-2.outputs.url}}) | ![Land2 Release](${{steps.upload-imbb-release-land-2.outputs.url}}) | ![Land2 Vanilla](https://user-images.githubusercontent.com/1013356/182029155-ae2991e7-cdd8-4904-a9d7-625c0183c353.png) |
-            | Land3.txt | ![Land3 Debug](${{steps.upload-imbb-debug-land-3.outputs.url}}) | ![Land3 Release](${{steps.upload-imbb-release-land-3.outputs.url}}) | ![Land3 Vanilla](https://user-images.githubusercontent.com/1013356/182029087-e823072f-8ae4-492e-b49d-52e0e3e8ad0a.png) |
-            | Land4.txt | ![Land4 Debug](${{steps.upload-imbb-debug-land-4.outputs.url}}) | ![Land4 Release](${{steps.upload-imbb-release-land-4.outputs.url}}) | ![Land4 Vanilla](https://user-images.githubusercontent.com/1013356/182029088-36cca165-ef02-4436-85fe-e30f2f619561.png) |
-            | Land5.txt | ![Land5 Debug](${{steps.upload-imbb-debug-land-5.outputs.url}}) | ![Land5 Release](${{steps.upload-imbb-release-land-5.outputs.url}}) | ![Land5 Vanilla](https://user-images.githubusercontent.com/1013356/182029092-55277dea-c865-4f48-bef4-9bb31bb6e911.png) |
-            | LandT.txt | ![LandT Debug](${{steps.upload-imbb-debug-land-T.outputs.url}}) | ![LandT Release](${{steps.upload-imbb-release-land-T.outputs.url}}) | ![LandT Vanilla](https://user-images.githubusercontent.com/1013356/182029099-6ef8a87d-88ab-4696-9faf-1b7d9e4b9da8.png) |
-            | TwoGods.txt | ![TwoGods Debug](${{steps.upload-imbb-debug-two-gods.outputs.url}}) | ![TwoGods Release](${{steps.upload-imbb-release-two-gods.outputs.url}}) | ![TwoGods Vanilla](https://user-images.githubusercontent.com/1013356/182029110-c177675a-ad11-4ff1-932e-9d8899e1c9de.png) |
-            | ThreeGods.txt | ![ThreeGods Debug](${{steps.upload-imbb-debug-three-gods.outputs.url}}) | ![ThreeGods Release](${{steps.upload-imbb-release-three-gods.outputs.url}}) | ![ThreeGods Vanilla](https://user-images.githubusercontent.com/1013356/182029108-eff6903e-f0fc-4083-8a26-806616359049.png) |
-            | FourGods.txt | ![FourGods Debug](${{steps.upload-imbb-debug-four-gods.outputs.url}}) | ![FourGods Release](${{steps.upload-imbb-release-four-gods.outputs.url}}) | ![FourGods Vanilla](https://user-images.githubusercontent.com/1013356/182029105-a5ae3082-9a2e-495a-b843-6891dbefedce.png) |
+            | Land1.txt | ![Land1 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-1.png) | ![Land1 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-1.png) | ![Land1 Vanilla](https://user-images.githubusercontent.com/1013356/182029148-3f72ab4c-917e-4154-9886-c806969ad9cd.png) |
+            | Land2.txt | ![Land2 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-2.png) | ![Land2 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-2.png) | ![Land2 Vanilla](https://user-images.githubusercontent.com/1013356/182029155-ae2991e7-cdd8-4904-a9d7-625c0183c353.png) |
+            | Land3.txt | ![Land3 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-3.png) | ![Land3 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-3.png) | ![Land3 Vanilla](https://user-images.githubusercontent.com/1013356/182029087-e823072f-8ae4-492e-b49d-52e0e3e8ad0a.png) |
+            | Land4.txt | ![Land4 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-4.png) | ![Land4 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-4.png) | ![Land4 Vanilla](https://user-images.githubusercontent.com/1013356/182029088-36cca165-ef02-4436-85fe-e30f2f619561.png) |
+            | Land5.txt | ![Land5 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-5.png) | ![Land5 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-5.png) | ![Land5 Vanilla](https://user-images.githubusercontent.com/1013356/182029092-55277dea-c865-4f48-bef4-9bb31bb6e911.png) |
+            | LandT.txt | ![LandT Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-T.png) | ![LandT Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-T.png) | ![LandT Vanilla](https://user-images.githubusercontent.com/1013356/182029099-6ef8a87d-88ab-4696-9faf-1b7d9e4b9da8.png) |
+            | TwoGods.txt | ![TwoGods Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-two-gods.png) | ![TwoGods Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-two-gods.png) | ![TwoGods Vanilla](https://user-images.githubusercontent.com/1013356/182029110-c177675a-ad11-4ff1-932e-9d8899e1c9de.png) |
+            | ThreeGods.txt | ![ThreeGods Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-three-gods.png) | ![ThreeGods Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-three-gods.png) | ![ThreeGods Vanilla](https://user-images.githubusercontent.com/1013356/182029108-eff6903e-f0fc-4083-8a26-806616359049.png) |
+            | FourGods.txt | ![FourGods Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-four-gods.png) | ![FourGods Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-four-gods.png) | ![FourGods Vanilla](https://user-images.githubusercontent.com/1013356/182029105-a5ae3082-9a2e-495a-b843-6891dbefedce.png) |
             | construct.txt | TODO | TODO | ![construct Vanilla](https://user-images.githubusercontent.com/1013356/182029114-25c31d78-7c21-4375-963d-c52141b17111.png) |
           edit-mode: replace
