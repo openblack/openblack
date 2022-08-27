@@ -8,7 +8,7 @@
 
 openblack is an open source reimplementation of [Black & White (2001)](https://en.wikipedia.org/wiki/Black_&_White_(video_game)) written in modern C++ and modern rendering engines (OpenGL, Vulkan).
 
-You still need to have the original game assets in order to use this. See further below for an explanation on how to extract them.
+You sttill need to have the original game assets in order to use this. See further below for an explanation on how to extract them.
 
 ---
 
