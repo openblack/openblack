@@ -13,8 +13,6 @@
 
 #include <array>
 
-#include <bimg/bimg.h>
-
 using namespace openblack::graphics;
 
 FrameBuffer::FrameBuffer(std::string&& name, uint16_t width, uint16_t height, Format colorFormat,
@@ -38,17 +36,10 @@ FrameBuffer::FrameBuffer(std::string&& name, uint16_t width, uint16_t height, Fo
 	_depthStencilAttachment._info.height = height;
 	_depthStencilAttachment._info.numLayers = 1;
 
-	auto bgfxColorFormat = getBgfxTextureFormat(colorFormat);
-	auto colorInfo = bimg::getBlockInfo(static_cast<bimg::TextureFormat::Enum>(bgfxColorFormat));
-	if (!bgfx::isTextureValid(colorInfo.depthBits, false, 1, bgfxColorFormat, BGFX_TEXTURE_RT))
-	{
-		bgfxColorFormat = bgfx::TextureFormat::RGBA8;
-	}
-
 	if (depthStencilFormat)
 	{
 		std::array<bgfx::TextureHandle, 2> textures = {
-		    bgfx::createTexture2D(width, height, false, 1, bgfxColorFormat, BGFX_TEXTURE_RT),
+		    bgfx::createTexture2D(width, height, false, 1, getBgfxTextureFormat(colorFormat), BGFX_TEXTURE_RT),
 		    bgfx::createTexture2D(width, height, false, 1, getBgfxTextureFormat(depthStencilFormat.value()), BGFX_TEXTURE_RT),
 		};
 		_handle = bgfx::createFrameBuffer(static_cast<uint8_t>(textures.size()), textures.data());
@@ -57,7 +48,7 @@ FrameBuffer::FrameBuffer(std::string&& name, uint16_t width, uint16_t height, Fo
 	}
 	else
 	{
-		_handle = bgfx::createFrameBuffer(_width, _height, bgfxColorFormat, BGFX_TEXTURE_RT);
+		_handle = bgfx::createFrameBuffer(_width, _height, getBgfxTextureFormat(colorFormat), BGFX_TEXTURE_RT);
 		_colorAttachment._handle = bgfx::getTexture(_handle, 0);
 	}
 
