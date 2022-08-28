@@ -15,6 +15,34 @@
 #include <LNDFile.h>
 #include <cxxopts.hpp>
 
+struct Arguments
+{
+	enum class Mode
+	{
+		Header,
+		LowResolution,
+		Blocks,
+		Countries,
+		Materials,
+		Extra,
+		Unaccounted,
+		Write,
+	};
+	Mode mode;
+	struct Read
+	{
+		std::vector<std::filesystem::path> filenames;
+	} read;
+	struct Write
+	{
+		std::filesystem::path outFilename;
+		uint16_t terrainType;
+		std::filesystem::path noiseMapFile;
+		std::filesystem::path bumpMapFile;
+		std::vector<std::filesystem::path> materialArray;
+	} write;
+};
+
 int PrintRawBytes(const void* data, std::size_t size)
 {
 	const uint32_t bytesPerLine = 0x10;
@@ -323,34 +351,6 @@ int PrintUnaccounted(openblack::lnd::LNDFile& lnd)
 	return EXIT_SUCCESS;
 }
 
-struct Arguments
-{
-	enum class Mode
-	{
-		Header,
-		LowResolution,
-		Blocks,
-		Countries,
-		Materials,
-		Extra,
-		Unaccounted,
-		Write,
-	};
-	Mode mode;
-	struct Read
-	{
-		std::vector<std::filesystem::path> filenames;
-	} read;
-	struct Write
-	{
-		std::filesystem::path outFilename;
-		uint16_t terrainType;
-		std::filesystem::path noiseMapFile;
-		std::filesystem::path bumpMapFile;
-		std::vector<std::filesystem::path> materialArray;
-	} write;
-};
-
 int WriteFile(const Arguments::Write& args) noexcept
 {
 	openblack::lnd::LNDFile lnd {};
@@ -459,7 +459,8 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 
 	try
 	{
-		options.add_options()("h,help", "Display this help message.")    //
+		options.add_options()                                            //
+		    ("h,help", "Display this help message.")                     //
 		    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
 		    ;
 		options.positional_help("[read|write] [OPTION...]");
