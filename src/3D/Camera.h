@@ -46,12 +46,14 @@ public:
 	void ResetVelocities();
 
 	[[nodiscard]] glm::vec3 GetPosition() const { return _position; }
-	[[nodiscard]] glm::vec3 GetRotation() const { return glm::degrees(_rotation); }
+	/// Get rotation as euler angles in radians
+	[[nodiscard]] glm::vec3 GetRotation() const { return _rotation; }
 	[[nodiscard]] glm::vec3 GetVelocity() const { return _velocity; }
 	[[nodiscard]] float GetMaxSpeed() const { return _maxMovementSpeed; }
 
 	void SetPosition(const glm::vec3& position) { _position = position; }
-	void SetRotation(const glm::vec3& eulerDegrees) { _rotation = glm::radians(eulerDegrees); }
+	/// Set rotation as euler angles in radians
+	void SetRotation(const glm::vec3& eulerRadians) { _rotation = eulerRadians; }
 
 	void SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip);
 	void SetProjectionMatrix(const glm::mat4x4& projection) { _projectionMatrix = projection; }
