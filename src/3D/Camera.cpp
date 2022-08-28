@@ -386,8 +386,8 @@ void Camera::HandleMouseInput(const SDL_Event& e)
 		if (_shiftHeld) // Holding down the middle mouse button and shift enables FPV camera rotation.
 		{
 			glm::vec3 rot = GetRotation();
-			rot.y -= e.motion.xrel * 0.1f;
-			rot.x -= e.motion.yrel * 0.1f;
+			rot.y -= e.motion.xrel * glm::radians(0.1f);
+			rot.x -= e.motion.yrel * glm::radians(0.1f);
 			SetRotation(rot);
 		}
 		else // Holding down the middle mouse button without shift enables hand orbit camera rotation.
@@ -701,8 +701,8 @@ void Camera::Update(std::chrono::microseconds dt)
 	    (_position.y < height + 13.0f) ? height + 13.0f : _position.y; // stop the camera from going below ground level.
 	_rotVelocity += (((_drv * _maxRotationSpeed) - _rotVelocity) * _accelFactor);
 	glm::vec3 rot = GetRotation();
-	rot += _rotVelocity * fdt;
-	rot.x = (rot.x < -70) ? -70 : rot.x; // limit cam rotation in x
+	rot += glm::radians(_rotVelocity * fdt);
+	rot.x = glm::max(rot.x, glm::radians(-70.0f)); // limit cam rotation in x
 	SetRotation(rot);
 
 	_velocity *= airResistance;

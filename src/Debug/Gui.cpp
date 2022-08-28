@@ -903,7 +903,7 @@ void Gui::ShowCameraPositionOverlay(const Game& game)
 	if (ImGui::Begin("Camera position overlay", nullptr, cameraPositionOverlayFlags))
 	{
 		const auto camPos = game.GetCamera().GetPosition();
-		const auto camRot = game.GetCamera().GetRotation();
+		const auto camRot = glm::degrees(game.GetCamera().GetRotation());
 		ImGui::Text("Camera Position: (%.1f,%.1f, %.1f)", camPos.x, camPos.y, camPos.z);
 		ImGui::Text("Camera Rotation: (%.1f,%.1f, %.1f)", camRot.x, camRot.y, camRot.z);
 
