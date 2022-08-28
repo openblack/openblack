@@ -91,17 +91,15 @@ public:
 
 	virtual ~Gui();
 
-	bool ProcessEventSdl2(const SDL_Event& event);
-	void NewFrame(GameWindow* window);
+	bool ProcessEvents(const SDL_Event& event);
 	bool Loop(Game& game, const Renderer& renderer);
 	void Draw();
 
 private:
-	Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<Window>>&& debugWindows);
-	bool InitSdl2(SDL_Window* window);
-	void NewFrameSdl2(SDL_Window* window);
+	Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<Window>>&& debugWindows, bool headless);
 	bool CreateFontsTextureBgfx();
 	bool CreateDeviceObjectsBgfx();
+	void NewFrame();
 	void RenderDrawDataBgfx(ImDrawData* drawData);
 
 	void RenderArrow(const std::string& name, const ImVec2& pos, const ImVec2& size) const;
@@ -112,16 +110,8 @@ private:
 	void ShowVillagerNames(const Game& game);
 	void ShowCameraPositionOverlay(const Game& game);
 
-	static const char* StaticGetClipboardText(void* ud) { return reinterpret_cast<Gui*>(ud)->GetClipboardText(); }
-	static void StaticSetClipboardText(void* ud, const char* text) { reinterpret_cast<Gui*>(ud)->SetClipboardText(text); }
-	const char* GetClipboardText();
-	void SetClipboardText(const char* text);
-
-	void UpdateMousePosAndButtons();
-	void UpdateMouseCursor();
-	void UpdateGamepads();
-
 	ImGuiContext* _imgui;
+	const bool _headless;
 	ImVec2 _menuBarSize;
 	uint64_t _time {0};
 	bgfx::VertexLayout _layout;
@@ -130,12 +120,6 @@ private:
 	bgfx::TextureHandle _texture;
 	bgfx::UniformHandle _s_tex;
 	bgfx::UniformHandle _u_imageLodEnabled;
-	SDL_Window* _window;
-	std::array<bool, 3> _mousePressed;
-	std::array<SDL_Cursor*, ImGuiMouseCursor_COUNT> _mouseCursors;
-	char* _clipboardTextData {nullptr};
-	int64_t _last;
-	int32_t _lastScroll {0};
 	const bgfx::ViewId _viewId;
 	std::vector<std::unique_ptr<Window>> _debugWindows;
 	std::string _screenshotFilename = "screenshot.png";

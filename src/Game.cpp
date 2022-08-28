@@ -158,7 +158,7 @@ Game::Game(Arguments&& args)
 
 	_eventManager->AddHandler(std::function([this](const SDL_Event& event) {
 		// If gui captures this input, do not propagate
-		if (!this->_gui->ProcessEventSdl2(event))
+		if (!this->_gui->ProcessEvents(event))
 		{
 			this->_camera->ProcessSDLEvent(event);
 			this->_config.running = this->ProcessEvents(event);
