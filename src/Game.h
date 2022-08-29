@@ -18,7 +18,14 @@
 
 #include <bgfx/bgfx.h>
 #include <entt/entity/fwd.hpp>
-#include <glm/glm.hpp>
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4701) // func_common.inl glm::any template
+#endif
+#include <glm/mat4x4.hpp>
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 #include <spdlog/common.h>
 
 #include "GameWindow.h"

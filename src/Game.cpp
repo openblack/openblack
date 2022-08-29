@@ -413,28 +413,31 @@ bool Game::Update()
 				_camera->DeprojectScreenToWorld(_mousePosition, screenSize, rayOrigin, rayDirection);
 				auto& dynamicsSystem = Locator::dynamicsSystem::value();
 
-				if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
+				if (!glm::any(glm::isnan(rayOrigin) || glm::isnan(rayDirection)))
 				{
-					intersectionTransform = hit->first;
-				}
-				else // For the water
-				{
-					float intersectDistance = 0.0f;
-					const auto planeOrigin = glm::vec3(0.0f, 0.0f, 0.0f);
-					const auto planeNormal = glm::vec3(0.0f, 1.0f, 0.0f);
-					if (glm::intersectRayPlane(rayOrigin, rayDirection, planeOrigin, planeNormal, intersectDistance))
+					if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
 					{
-						intersectionTransform.position = rayOrigin + rayDirection * intersectDistance;
-						intersectionTransform.rotation = glm::mat3(1.0f);
+						intersectionTransform = hit->first;
+					}
+					else // For the water
+					{
+						float intersectDistance = 0.0f;
+						const auto planeOrigin = glm::vec3(0.0f, 0.0f, 0.0f);
+						const auto planeNormal = glm::vec3(0.0f, 1.0f, 0.0f);
+						if (glm::intersectRayPlane(rayOrigin, rayDirection, planeOrigin, planeNormal, intersectDistance))
+						{
+							intersectionTransform.position = rayOrigin + rayDirection * intersectDistance;
+							intersectionTransform.rotation = glm::mat3(1.0f);
+						}
 					}
 				}
+				intersectionTransform.scale = scale;
+				_handPose = glm::mat4(1.0f);
+				_handPose = glm::translate(_handPose, intersectionTransform.position);
+				_handPose *= glm::mat4(intersectionTransform.rotation);
+				_handPose = glm::scale(_handPose, intersectionTransform.scale);
+				_renderer->UpdateDebugCrossUniforms(_handPose);
 			}
-			intersectionTransform.scale = scale;
-			_handPose = glm::mat4(1.0f);
-			_handPose = glm::translate(_handPose, intersectionTransform.position);
-			_handPose *= glm::mat4(intersectionTransform.rotation);
-			_handPose = glm::scale(_handPose, intersectionTransform.scale);
-			_renderer->UpdateDebugCrossUniforms(_handPose);
 		}
 
 		// Update Hand
