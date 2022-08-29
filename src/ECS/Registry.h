@@ -43,6 +43,12 @@ public:
 	{
 		_registry.release(first, last);
 	}
+	void Destroy(entt::entity entity) { _registry.destroy(entity); }
+	template <typename It>
+	void Destroy(It first, It last)
+	{
+		_registry.destroy(first, last);
+	}
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args)
 	{
