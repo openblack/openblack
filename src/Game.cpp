@@ -599,7 +599,7 @@ bool Game::Initialize()
 	_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
 
 	_camera->SetPosition(glm::vec3(1441.56f, 24.764f, 2081.76f));
-	_camera->SetRotation(glm::radians(glm::vec3(0.0f, -45.0f, 0.0f)));
+	_camera->SetRotation(glm::radians(glm::vec3(0.0f, 25.0f, 0.0f)));
 
 	if (!LoadVariables())
 	{
