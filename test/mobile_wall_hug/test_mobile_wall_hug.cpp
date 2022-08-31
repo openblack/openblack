@@ -17,26 +17,15 @@
 #include <ECS/Map.h>
 #include <ECS/Registry.h>
 #include <ECS/Systems/PathfindingSystemInterface.h>
-#include <Game.h>
-#include <LHScriptX/Script.h>
 #include <Locator.h>
-#include <glm/gtx/string_cast.hpp>
-#include <gtest/gtest.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "json.hpp"
 
+#include "../common/Fixtures.h"
+
 using nlohmann::json;
 using namespace openblack;
-
-namespace glm
-{
-template <length_t L, typename T, qualifier Q>
-std::ostream& operator<<(std::ostream& os, const vec<L, T, Q>& v)
-{
-	return os << glm::to_string(v);
-}
-} // namespace glm
 
 enum MOVE_STATE
 {
@@ -92,7 +81,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM( //
         {VILLAGER_STATE_ARRIVES_HOME, "ARRIVES_HOME"},
     })
 
-class MobileWallHugWalks: public ::testing::Test
+class MobileWallHugWalks: public TestLoadSceneScript
 {
 protected:
 	struct State
@@ -184,7 +173,7 @@ protected:
 
 #undef GET_SAME_TYPE_AS
 #undef GET_SAME_TYPE_AS_HEX
-#undef GET_MAP_COORDS
+#undef GET_VEC2
 
 		ASSERT_TRUE(std::filesystem::exists(testScenePath));
 
@@ -193,26 +182,14 @@ protected:
 			_sceneScript = std::string(std::istreambuf_iterator<char> {ifs}, {});
 		}
 
-		static const auto mockGamePath = std::filesystem::path(TEST_BINARY_DIR) / "mock";
-		auto args = openblack::Arguments {
-		    .rendererType = bgfx::RendererType::Enum::Noop,
-		    .gamePath = mockGamePath.string(),
-		    .logFile = "stdout",
-		};
-		std::fill_n(args.logLevels.begin(), args.logLevels.size(), spdlog::level::warn);
-		args.logLevels[static_cast<uint8_t>(openblack::LoggingSubsystem::pathfinding)] = spdlog::level::debug;
-		_game = std::make_unique<openblack::Game>(std::move(args));
-		ASSERT_TRUE(_game->Initialize());
-		auto script = openblack::lhscriptx::Script(_game.get());
-		script.Load(_sceneScript);
+		TestLoadSceneScript::SetUp();
+		LoadTestScene(_sceneScript.c_str());
 
 		_villagerEntt = _game->GetEntityRegistry().Front<const ecs::components::Villager>();
 		auto& villagerTransform = _game->GetEntityRegistry().Get<ecs::components::Transform>(_villagerEntt);
 
 		villagerTransform.position = glm::vec3(_expectedStates[0].pos.x, 0.0f, _expectedStates[0].pos.y);
 	}
-
-	void TearDown() override { _game.reset(); }
 
 	void MobileWallHugScenarioAssert()
 	{
@@ -329,7 +306,6 @@ protected:
 	uint32_t _startTurn;
 	uint32_t _lastTurn;
 	std::vector<State> _expectedStates;
-	std::unique_ptr<openblack::Game> _game;
 	entt::entity _villagerEntt;
 };
 

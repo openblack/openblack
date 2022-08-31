@@ -1,7 +1,7 @@
 include(CTest)
 
 macro (OPENBLACK_SETUP_AND_ADD_TEST TEST_NAME TEST_SOURCE)
-  add_executable(${TEST_NAME} ${TEST_SOURCE})
+  add_executable(${TEST_NAME} ${TEST_SOURCE} "common/Fixtures.h")
   add_dependencies(${TEST_NAME} generate-mock-game-data)
   target_link_libraries(${TEST_NAME} PRIVATE GTest::gtest_main openblack_lib)
   target_compile_definitions(
