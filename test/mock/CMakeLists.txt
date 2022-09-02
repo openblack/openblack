@@ -116,9 +116,7 @@ add_custom_target(
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py
           --output-files "${RAW_TEXTURES_0x30000}" --size 0x30000
   # Generate Citadel files
-  COMMAND
-    Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py
-    --output-files "${CITADEL_OUTSIDE_BINARY_DIR}/Entrance_l3d.zzz" --size 0x616
+  COMMAND ${CMAKE_COMMAND} -E touch ${CITADEL_OUTSIDE_BINARY_DIR}/placeholder
   # Data/AllMeshes.g3d
   # Dummy mesh for 626 meshes
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
