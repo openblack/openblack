@@ -218,7 +218,7 @@ jobs:
         # This is the matrix. They form permutations.
         os: [ windows-latest ] # ubuntu-latest, macos-latest
     env:
-      ARGS: -g game-data\bw --num-frames-to-simulate 10 --screenshot-frame 5 --log-file stdout --log-level all=debug -W 800 -H 600
+      ARGS: -g game-data\bw --num-frames-to-simulate 10 --screenshot-frame 5 --log-file stdout --log-level all=debug -W 1280 -H 1024
       BACKEND: Direct3D11
     steps:
       - name: Download compiled openblack and tools
@@ -245,13 +245,13 @@ jobs:
         run: 7z x -ogame-data\bw "$PWD\game-data\${{steps.game-data.outputs.filename}}"
       - name: Set Screenshot Position For Maps
         run: |
-          'START_CAMERA_POS("1757.7,2625.2")' | Add-Content -Path game-data\bw\Scripts\Land1.txt
-          'START_CAMERA_POS("1744.8,2898.8")' | Add-Content -Path game-data\bw\Scripts\Land2.txt
-          'START_CAMERA_POS("1794.1,2175.7")' | Add-Content -Path game-data\bw\Scripts\Land3.txt
-          'START_CAMERA_POS("2647.9,2615.6")' | Add-Content -Path game-data\bw\Scripts\Land4.txt
-          'START_CAMERA_POS("2073.7,2252.8")' | Add-Content -Path game-data\bw\Scripts\LandT.txt
-          'START_CAMERA_POS("1807.9,2223.5")' | Add-Content -Path game-data\bw\Scripts\Playgrounds/ThreeGods.txt
-          'START_CAMERA_POS("1751.4,1911.5")' | Add-Content -Path game-data\bw\Scripts\Playgrounds/FourGods.txt
+          'START_CAMERA_POS("1788.40,2710.00")' | Add-Content -Path game-data\bw\Scripts\Land1.txt
+          'START_CAMERA_POS("2847.10,3063.12")' | Add-Content -Path game-data\bw\Scripts\Land2.txt
+          'START_CAMERA_POS("2002.57,2122.02")' | Add-Content -Path game-data\bw\Scripts\Land3.txt
+          'START_CAMERA_POS("2689.87,2609.63")' | Add-Content -Path game-data\bw\Scripts\Land4.txt
+          'START_CAMERA_POS("2654.25,3059.49")' | Add-Content -Path game-data\bw\Scripts\LandT.txt
+          'START_CAMERA_POS("2802.60,2154.76")' | Add-Content -Path game-data\bw\Scripts\Playgrounds/ThreeGods.txt
+          'START_CAMERA_POS("1801.69,2012.08")' | Add-Content -Path game-data\bw\Scripts\Playgrounds/FourGods.txt
       - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-debug-land-1.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-release-land-1.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Land2.txt --screenshot-path "screenshot-${{matrix.os}}-${{github.sha}}-debug-land-2.png"
@@ -457,14 +457,14 @@ jobs:
             # Uploaded images
             | Map | Debug | Release | Vanilla |
             | --- | ----- | ------- | ------- |
-            | Land1.txt | ![Land1 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-1.png) | ![Land1 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-1.png) | ![Land1 Vanilla](https://user-images.githubusercontent.com/1013356/182029148-3f72ab4c-917e-4154-9886-c806969ad9cd.png) |
-            | Land2.txt | ![Land2 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-2.png) | ![Land2 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-2.png) | ![Land2 Vanilla](https://user-images.githubusercontent.com/1013356/182029155-ae2991e7-cdd8-4904-a9d7-625c0183c353.png) |
-            | Land3.txt | ![Land3 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-3.png) | ![Land3 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-3.png) | ![Land3 Vanilla](https://user-images.githubusercontent.com/1013356/182029087-e823072f-8ae4-492e-b49d-52e0e3e8ad0a.png) |
-            | Land4.txt | ![Land4 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-4.png) | ![Land4 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-4.png) | ![Land4 Vanilla](https://user-images.githubusercontent.com/1013356/182029088-36cca165-ef02-4436-85fe-e30f2f619561.png) |
-            | Land5.txt | ![Land5 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-5.png) | ![Land5 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-5.png) | ![Land5 Vanilla](https://user-images.githubusercontent.com/1013356/182029092-55277dea-c865-4f48-bef4-9bb31bb6e911.png) |
-            | LandT.txt | ![LandT Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-T.png) | ![LandT Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-T.png) | ![LandT Vanilla](https://user-images.githubusercontent.com/1013356/182029099-6ef8a87d-88ab-4696-9faf-1b7d9e4b9da8.png) |
-            | TwoGods.txt | ![TwoGods Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-two-gods.png) | ![TwoGods Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-two-gods.png) | ![TwoGods Vanilla](https://user-images.githubusercontent.com/1013356/182029110-c177675a-ad11-4ff1-932e-9d8899e1c9de.png) |
-            | ThreeGods.txt | ![ThreeGods Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-three-gods.png) | ![ThreeGods Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-three-gods.png) | ![ThreeGods Vanilla](https://user-images.githubusercontent.com/1013356/182029108-eff6903e-f0fc-4083-8a26-806616359049.png) |
-            | FourGods.txt | ![FourGods Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-four-gods.png) | ![FourGods Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-four-gods.png) | ![FourGods Vanilla](https://user-images.githubusercontent.com/1013356/182029105-a5ae3082-9a2e-495a-b843-6891dbefedce.png) |
+            | Land1.txt | ![Land1 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-1.png) | ![Land1 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-1.png) | ![Land1 Vanilla](https://user-images.githubusercontent.com/1013356/188042342-a6e84dfd-840d-4b90-a1b8-84128e4aab5d.png) |
+            | Land2.txt | ![Land2 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-2.png) | ![Land2 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-2.png) | ![Land2 Vanilla](https://user-images.githubusercontent.com/1013356/188042340-f844869a-50dd-42e9-9738-1a93e7409d24.png) |
+            | Land3.txt | ![Land3 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-3.png) | ![Land3 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-3.png) | ![Land3 Vanilla](https://user-images.githubusercontent.com/1013356/188042339-4a3941f3-1089-4838-a086-9836c6fe5113.png) |
+            | Land4.txt | ![Land4 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-4.png) | ![Land4 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-4.png) | ![Land4 Vanilla](https://user-images.githubusercontent.com/1013356/188042337-6d139916-5988-4020-a738-1a1fe64a915d.png) |
+            | Land5.txt | ![Land5 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-5.png) | ![Land5 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-5.png) | ![Land5 Vanilla](https://user-images.githubusercontent.com/1013356/188042333-5009397c-087f-48fd-a150-b811284f65ed.png) |
+            | LandT.txt | ![LandT Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-land-T.png) | ![LandT Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-land-T.png) | ![LandT Vanilla](https://user-images.githubusercontent.com/1013356/188042332-f9fd0060-d0e0-478a-bb7f-c8eb0ae0690f.png) |
+            | TwoGods.txt | ![TwoGods Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-two-gods.png) | ![TwoGods Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-two-gods.png) | ![TwoGods Vanilla](https://user-images.githubusercontent.com/1013356/188042326-6cbe726c-6753-4157-86fa-63016804f313.png) |
+            | ThreeGods.txt | ![ThreeGods Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-three-gods.png) | ![ThreeGods Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-three-gods.png) | ![ThreeGods Vanilla](https://user-images.githubusercontent.com/1013356/188042329-51054173-dec5-47b2-8537-ac605ab2be4b.png) |
+            | FourGods.txt | ![FourGods Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-debug-four-gods.png) | ![FourGods Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{github.sha}}-release-four-gods.png) | ![FourGods Vanilla](https://user-images.githubusercontent.com/1013356/188042323-7d428031-cf7e-4e46-b185-a12950bff76a.png) |
             | construct.txt | TODO | TODO | ![construct Vanilla](https://user-images.githubusercontent.com/1013356/182029114-25c31d78-7c21-4375-963d-c52141b17111.png) |
           edit-mode: replace
