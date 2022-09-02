@@ -12,7 +12,9 @@
 #include <tuple>
 
 #include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/norm.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/vec_swizzle.hpp>
 #include <spdlog/spdlog.h>
 
 #include "3D/Camera.h"
@@ -557,7 +559,12 @@ void FeatureScriptCommands::CreateArea([[maybe_unused]] glm::vec3 position, floa
 void FeatureScriptCommands::StartCameraPos(glm::vec3 position)
 {
 	auto& camera = Game::Instance()->GetCamera();
-	const glm::vec3 offset(0.0f, 10.0f, 0.0f);
+	const float yaw = 2.749f; // radians
+	const float pitch = glm::pi<float>() / 14.0f;
+	const float distance = 120.0f;
+	const glm::vec3 rotatedUnit = glm::eulerAngleYX(yaw, -pitch) * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
+
+	const auto offset = distance * rotatedUnit;
 	camera.SetPosition(position + offset);
 }
 
