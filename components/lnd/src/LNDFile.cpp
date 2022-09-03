@@ -332,6 +332,11 @@ void LNDFile::Write(const std::filesystem::path& filepath)
 	_header.materialSize = static_cast<uint32_t>(sizeof(LNDMaterial));
 	_header.countrySize = static_cast<uint32_t>(sizeof(LNDCountry));
 	_header.lowResolutionCount = static_cast<uint32_t>(_lowResolutionTextures.size());
+	for (const auto& block : _blocks)
+	{
+		const auto lookupIndex = block.blockX << 5 | block.blockZ;
+		_header.lookUpTable.at(lookupIndex) = static_cast<uint8_t>(block.index);
+	}
 
 	for (int i = 1; auto& b : _blocks)
 	{
@@ -371,7 +376,7 @@ void LNDFile::AddBumpMap(const LNDBumpMap& bumpMap)
 
 void LNDFile::AddBlock(const LNDBlock& block)
 {
-	_blocks.emplace_back(block);
+	_blocks.emplace_back(block).index = static_cast<uint32_t>(_blocks.size()) + 1;
 }
 
 void LNDFile::AddCountry(const LNDCountry& country)
