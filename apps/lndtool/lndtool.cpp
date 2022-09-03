@@ -41,6 +41,7 @@ struct Arguments
 		std::filesystem::path noiseMapFile;
 		std::filesystem::path bumpMapFile;
 		std::vector<std::filesystem::path> materialArray;
+		std::vector<std::array<float, 3>> pointsToAdd;
 	} write;
 };
 
@@ -391,6 +392,47 @@ int WriteFile(const Arguments::Write& args) noexcept
 		lnd.AddMaterial(material);
 	}
 
+	{
+		openblack::lnd::LNDCountry country;
+		memset(&country, 0, sizeof(country));
+		lnd.AddCountry(country);
+	}
+
+	std::map<uint32_t, openblack::lnd::LNDBlock> blockMap;
+	for (const auto& point : args.pointsToAdd)
+	{
+		const float heightUnit = 0.67f;
+
+		const uint16_t blockX = static_cast<uint16_t>(point[0] / 10.0f) >> 4;
+		const uint16_t blockZ = static_cast<uint16_t>(point[2] / 10.0f) >> 4;
+		const uint16_t key = blockX << 5u | blockZ;
+
+		auto blockIter = blockMap.emplace(key, openblack::lnd::LNDBlock {});
+		auto& block = blockIter.first->second;
+		if (!blockIter.second)
+		{
+			memset(&block, 0, sizeof(block));
+		}
+
+		const uint16_t cellX = static_cast<uint16_t>(point[0] / 10.0f) & 0xF;
+		const uint16_t cellZ = static_cast<uint16_t>(point[2] / 10.0f) & 0xF;
+		const uint16_t cellIndex = cellX * 0x11u + cellZ;
+		block.cells.at(cellIndex).altitude = static_cast<uint8_t>(point[1] / heightUnit);
+
+		block.blockX = blockX;
+		block.blockZ = blockZ;
+		block.mapX = (block.blockX << 4) * 10.0f;
+		block.mapZ = (block.blockZ << 4) * 10.0f;
+		block.index = block.blockX << 5u | block.blockZ;
+
+		blockMap[block.index] = block;
+	}
+
+	for (const auto& block : blockMap)
+	{
+		lnd.AddBlock(block.second);
+	}
+
 	openblack::lnd::LNDBumpMap map;
 	{
 		std::ifstream stream(args.noiseMapFile, std::ios::binary);
@@ -536,6 +578,8 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 		    ("bump-map", "File with R8 bytes for bump map.", cxxopts::value<std::filesystem::path>())   //
 		    ("material-array", "Files with BGBRA1 bytes for material array (comma-separated).",         //
 		     cxxopts::value<std::vector<std::filesystem::path>>())                                      //
+		    ("points", "Points in height map in format \"x1 y1 z1, x2 y2 z2\" (3 floats).",             //
+		     cxxopts::value<std::vector<std::string>>())                                                //
 		    ;
 
 		options.parse_positional({"subcommand"});
@@ -626,6 +670,24 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 				if (result["material-array"].count() > 0)
 				{
 					args.write.materialArray = result["material-array"].as<std::vector<std::filesystem::path>>();
+				}
+				if (result["points"].count() > 0)
+				{
+					const auto regex = std::regex(R"( *(-?\d+\.\d+) ?(-?\d+\.\d+) ?(-?\d+\.\d+))");
+					for (const auto& str : result["points"].as<std::vector<std::string>>())
+					{
+						std::smatch match;
+						std::regex_match(str, match, regex);
+						if (match.size() != 4)
+						{
+							throw cxxopts::exceptions::invalid_option_syntax(
+							    "points must be a 3 floats separated by spaces: 1900.0 20.0 2000.0");
+						}
+						auto& point = args.write.pointsToAdd.emplace_back();
+						point[0] = std::stof(match[1]);
+						point[1] = std::stof(match[2]);
+						point[2] = std::stof(match[3]);
+					}
 				}
 				return true;
 			}
