@@ -269,13 +269,13 @@ void LNDFile::WriteFile(std::ostream& stream) const
 	// Write Blocks
 	stream.write(reinterpret_cast<const char*>(_blocks.data()), _blocks.size() * sizeof(_blocks[0]));
 
-	// Read Countries
+	// Write Countries
 	stream.write(reinterpret_cast<const char*>(_countries.data()), _countries.size() * sizeof(_countries[0]));
 
-	// Read Materials
+	// Write Materials
 	stream.write(reinterpret_cast<const char*>(_materials.data()), _materials.size() * sizeof(_materials[0]));
 
-	// Read Extra textures (noise and bump map)
+	// Write Extra textures (noise and bump map)
 	stream.write(reinterpret_cast<const char*>(&_extra), sizeof(_extra));
 
 	// TODO(bwrsandman): Figure out what the unaccounted bytes are for and write

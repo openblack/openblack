@@ -123,19 +123,19 @@ static_assert(sizeof(LNDCountry) == 3076);
 
 struct LNDMaterial
 {
-	struct R5G5B5A1
+	struct B5G5R5A1
 	{
 		uint16_t b : 5;
 		uint16_t g : 5;
 		uint16_t r : 5;
 		uint16_t a : 1;
 	};
-	static_assert(sizeof(R5G5B5A1) == sizeof(uint16_t));
+	static_assert(sizeof(B5G5R5A1) == sizeof(uint16_t));
 	static constexpr uint16_t k_Width = 256;
 	static constexpr uint16_t k_Height = 256;
 
 	uint16_t type; ///< Terrain Type
-	std::array<R5G5B5A1, k_Width * k_Height> texels;
+	std::array<B5G5R5A1, k_Width * k_Height> texels;
 };
 static_assert(sizeof(LNDMaterial) == 0x20002);
 
