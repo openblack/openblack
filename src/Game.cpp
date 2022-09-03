@@ -786,7 +786,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 	// Reset Camera
 	auto aspect = _window ? _window->GetAspectRatio() : 1.0f;
 	_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
-	_camera->SetRotation(glm::radians(glm::vec3(0.0f, 25.0f, 0.0f)));
+	_camera->SetRotation(glm::vec3(-glm::pi<float>() / 14.0f, glm::pi<float>() - 2.749f, 0.0f));
 	// TODO(#562): Get the player's citadel entity location and place the camera at its position
 	// if (glm::length2(_camera->GetPosition()) == 0.0f)
 	// {
