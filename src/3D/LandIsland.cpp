@@ -184,8 +184,10 @@ const lnd::LNDCell& LandIsland::GetCell(const glm::u16vec2& coordinates) const
 		return k_EmptyCell;
 	}
 
-	const uint16_t lookupIndex = ((coordinates.x & ~0xFU) << 1U) | (coordinates.y >> 4U);
-	const uint16_t cellIndex = (coordinates.x & 0xFU) * 0x11u + (coordinates.y & 0xFU);
+	const auto mapCoordinates = coordinates >> static_cast<uint16_t>(0x4);
+	const auto cellCoordinates = static_cast<glm::u8vec2>(coordinates) & static_cast<uint8_t>(0xF);
+	const auto lookupIndex = mapCoordinates.x << 5u | mapCoordinates.y;
+	const auto cellIndex = cellCoordinates.x * 0x11u + cellCoordinates.y;
 
 	const uint8_t blockIndex = _blockIndexLookup.at(lookupIndex);
 

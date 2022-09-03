@@ -203,6 +203,8 @@ public:
 	[[nodiscard]] const auto& GetExtra() const { return _extra; }
 	[[nodiscard]] const auto& GetUnaccounted() const { return _unaccounted; }
 
+	void AddBlock(const LNDBlock& block);
+	void AddCountry(const LNDCountry& country);
 	void AddMaterial(const LNDMaterial& material);
 	void AddNoiseMap(const LNDBumpMap& noiseMap);
 	void AddBumpMap(const LNDBumpMap& bumpMap);
