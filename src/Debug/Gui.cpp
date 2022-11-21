@@ -13,6 +13,13 @@
 #include <cmath>
 
 #include <bgfx/embedded_shader.h>
+// BGFX has support for WSL to use windows d3d. We disable it here from the BGFX_EMBEDDED_SHADER macro.
+#if BX_PLATFORM_LINUX
+#undef BGFX_EMBEDDED_SHADER_DXBC
+#define BGFX_EMBEDDED_SHADER_DXBC(...)
+#undef BGFX_EMBEDDED_SHADER_DX9BC
+#define BGFX_EMBEDDED_SHADER_DX9BC(...)
+#endif
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
