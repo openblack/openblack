@@ -22,12 +22,12 @@ Registry::Registry()
 
 RegistryContext& Registry::Context()
 {
-	return _registry.ctx().at<RegistryContext>();
+	return _registry.ctx().get<RegistryContext>();
 }
 
 const RegistryContext& Registry::Context() const
 {
-	return _registry.ctx().at<const RegistryContext>();
+	return _registry.ctx().get<const RegistryContext>();
 }
 
 void Registry::SetDirty()
