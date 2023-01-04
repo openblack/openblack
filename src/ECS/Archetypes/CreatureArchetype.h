@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Copyright (c) 2018-2022 openblack developers
+ * Copyright (c) 2018-2023 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -19,8 +19,8 @@ namespace openblack::ecs::archetypes
 class CreatureArchetype
 {
 public:
-	static entt::entity Create(PlayerNames playerName, CreatureType creatureType, const std::string& creatureMind,
-	                           const glm::vec3& position);
+	static entt::entity Create(const glm::vec3& position, PlayerNames playerName, CreatureType creatureType,
+	                           const std::string& creatureMind, float yAngleRadians, float scale);
 	CreatureArchetype() = delete;
 };
 } // namespace openblack::ecs::archetypes

@@ -531,7 +531,9 @@ void FeatureScriptCommands::CreateCreatureFromFile(const std::string& playerName
 {
 	auto playerType =
 	    std::distance(k_PlayerNamesStrs.begin(), std::find(k_PlayerNamesStrs.begin(), k_PlayerNamesStrs.end(), playerName));
-	CreatureArchetype::Create(static_cast<PlayerNames>(playerType), creatureType, creatureMind, position);
+	auto yAngleRadians = glm::radians(180.0f);
+	auto scale = .3f;
+	CreatureArchetype::Create(position, static_cast<PlayerNames>(playerType), creatureType, creatureMind, yAngleRadians, scale);
 }
 
 void FeatureScriptCommands::CreateFlock(int32_t, glm::vec3, glm::vec3, int32_t, int32_t, int32_t)
