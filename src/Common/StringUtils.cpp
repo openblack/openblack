@@ -65,6 +65,7 @@ std::string openblack::string_utils::Capitalise(const std::string& string)
 		start = end + delimiter.length();
 		end = string.find(delimiter, start);
 	}
+	parts.emplace_back(string.substr(start));
 
 	return parts;
 }

@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Copyright (c) 2018-2022 openblack developers
+ * Copyright (c) 2018-2023 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -11,6 +11,7 @@
 
 #include <glm/gtx/euler_angles.hpp>
 
+#include "3D/CreatureBody.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
@@ -21,15 +22,16 @@
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
+using namespace openblack::creature;
 
-entt::entity CreatureArchetype::Create(PlayerNames playerName, CreatureType creatureType, const std::string& creatureMind,
-                                       const glm::vec3& position)
+entt::entity CreatureArchetype::Create(const glm::vec3& position, PlayerNames playerName, CreatureType creatureType,
+                                       const std::string& creatureMind, float yAngleRadians, float scale)
 {
 	auto& registry = Game::Instance()->GetEntityRegistry();
 	const auto entity = registry.Create();
-	auto meshId = creature::GetIdFromType(creatureType);
+	auto meshId = creature::GetIdFromType(creatureType, CreatureBody::Appearance::Base);
 	registry.Assign<Creature>(entity, playerName, creatureType, creatureMind);
 	registry.Assign<Mesh>(entity, meshId);
-	registry.Assign<Transform>(entity, position, glm::eulerAngleY(glm::radians(180.0f)), glm::vec3(.3f));
+	registry.Assign<Transform>(entity, position, glm::eulerAngleY(yAngleRadians), glm::vec3(scale));
 	return entity;
 }
