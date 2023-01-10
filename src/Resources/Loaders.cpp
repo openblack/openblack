@@ -158,3 +158,8 @@ LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string&
 {
 	return std::make_shared<Level>(name, path, isCampaign);
 }
+
+CreatureMindLoader::result_type CreatureMindLoader::operator()(FromDiskTag, const std::filesystem::path& /*unused*/) const
+{
+	return std::make_shared<creature::CreatureMind>();
+}
