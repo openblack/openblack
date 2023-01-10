@@ -20,7 +20,7 @@ class CreatureArchetype
 {
 public:
 	static entt::entity Create(const glm::vec3& position, PlayerNames playerName, CreatureType creatureType,
-	                           const std::string& creatureMind, float yAngleRadians, float scale);
+	                           entt::id_type creatureMindId, float yAngleRadians, float scale);
 	CreatureArchetype() = delete;
 };
 } // namespace openblack::ecs::archetypes

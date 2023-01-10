@@ -9,20 +9,14 @@
 
 #pragma once
 
-#include <string>
+#include <cstdint>
 
-#include <entt/fwd.hpp>
-
-#include "Creature.h"
-#include "Enums.h"
-
-namespace openblack::ecs::components
+namespace openblack::creature
 {
 
-struct Creature
+struct CreatureMind
 {
-	PlayerNames owner;
-	CreatureType species;
-	entt::id_type mind;
+	uint8_t dummy;
 };
-} // namespace openblack::ecs::components
+
+} // namespace openblack::creature
