@@ -37,6 +37,7 @@
 #include "Common/StringUtils.h"
 #include "Debug/Gui.h"
 #include "ECS/Archetypes/HandArchetype.h"
+#include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Components/Fixed.h"
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Transform.h"
@@ -902,6 +903,9 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 		throw std::runtime_error("Could not find landscape " + path.generic_string());
 	}
 	ecs::systems::InitializeLevel(fixedName);
+
+	// There is always at least one player active.
+	ecs::archetypes::PlayerArchetype::Create(PlayerNames::PLAYER_ONE);
 
 	Locator::cameraBookmarkSystem::value().Initialize();
 	Locator::dynamicsSystem::value().RegisterIslandRigidBodies(Locator::terrainSystem::value());

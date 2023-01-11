@@ -18,12 +18,14 @@
 #include "Audio/AudioManager.h"
 #include "Audio/AudioManagerNoOp.h"
 #include "Common/RandomNumberManagerProduction.h"
+#include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/MapProduction.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
 #include "ECS/Systems/Implementations/PathfindingSystem.h"
+#include "ECS/Systems/Implementations/PlayerSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/TownSystem.h"
 #if __ANDROID__
@@ -41,6 +43,7 @@ using openblack::ecs::systems::CameraBookmarkSystem;
 using openblack::ecs::systems::DynamicsSystem;
 using openblack::ecs::systems::LivingActionSystem;
 using openblack::ecs::systems::PathfindingSystem;
+using openblack::ecs::systems::PlayerSystem;
 using openblack::ecs::systems::RenderingSystem;
 using openblack::ecs::systems::TownSystem;
 using openblack::resources::Resources;
@@ -66,6 +69,7 @@ void InitializeGame()
 		SPDLOG_LOGGER_ERROR(spdlog::get("audio"), "Falling back to no-op audio: {}", error.what());
 		Locator::audio::emplace<AudioManagerNoOp>();
 	}
+	Locator::playerSystem::emplace<PlayerSystem>();
 	Locator::rendereringSystem::emplace<RenderingSystem>();
 	Locator::entitiesRegistry::emplace<Registry>();
 }
