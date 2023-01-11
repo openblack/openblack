@@ -26,6 +26,7 @@
 #include "ECS/Archetypes/FieldArchetype.h"
 #include "ECS/Archetypes/MobileObjectArchetype.h"
 #include "ECS/Archetypes/MobileStaticArchetype.h"
+#include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Archetypes/PotArchetype.h"
 #include "ECS/Archetypes/StreetLanternArchetype.h"
 #include "ECS/Archetypes/TownArchetype.h"
@@ -35,6 +36,7 @@
 #include "ECS/Components/Stream.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/PlayerSystemInterface.h"
 #include "Enums.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
@@ -50,7 +52,7 @@ using namespace openblack::ecs::components;
 namespace
 {
 template <class C, size_t size>
-std::unordered_map<std::string_view, C> makeLookup(std::array<std::string_view, size> strings)
+constexpr std::unordered_map<std::string_view, C> makeLookup(std::array<std::string_view, size> strings)
 {
 	std::unordered_map<std::string_view, C> table;
 	for (size_t i = 0; const auto& str : strings)
@@ -81,6 +83,20 @@ std::tuple<Tribe, VillagerNumber> GetVillagerTribeAndNumber(const std::string& v
 	{
 		std::throw_with_nested(std::runtime_error("Could not recognize either villager tribe or role"));
 	}
+}
+
+PlayerNames GetPlayerName(const std::string& name)
+{
+	PlayerNames player;
+	try
+	{
+		player = k_PlayerLookup.at(name);
+	}
+	catch (...)
+	{
+		std::throw_with_nested(std::runtime_error(fmt::format("Could not recognize player name: {}", name)));
+	}
+	return player;
 }
 
 } // namespace
@@ -725,10 +741,9 @@ void FeatureScriptCommands::SetInteractDesire(float)
 	// __func__);
 }
 
-void FeatureScriptCommands::ToggleComputerPlayer(const std::string&, int32_t)
+void FeatureScriptCommands::ToggleComputerPlayer(const std::string& affiliation, int32_t)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	PlayerArchetype::Create(GetPlayerName(affiliation));
 }
 
 void FeatureScriptCommands::SetComputerPlayerCreatureLike(const std::string&, const std::string&)

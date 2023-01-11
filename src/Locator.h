@@ -47,6 +47,7 @@ class CameraBookmarkSystemInterface;
 class LivingActionSystemInterface;
 class TownSystemInterface;
 class PathfindingSystemInterface;
+class PlayerSystemInterface;
 
 void InitializeGame();
 void InitializeLevel(const std::filesystem::path& path);
@@ -67,5 +68,6 @@ struct Locator
 	using pathfindingSystem = entt::locator<ecs::systems::PathfindingSystemInterface>;
 	using entitiesRegistry = entt::locator<ecs::Registry>;
 	using entitiesMap = entt::locator<ecs::MapInterface>;
+	using playerSystem = entt::locator<ecs::systems::PlayerSystemInterface>;
 };
 } // namespace openblack
