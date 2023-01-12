@@ -104,9 +104,9 @@ void CameraPathSystem::Start(entt::id_type id)
 	_paused = false;
 }
 
-void CameraPathSystem::Stop(entt::entity start)
+void CameraPathSystem::Stop([[maybe_unused]] entt::entity start)
 {
-	DeletePath(start);
+	//	DeletePath(start);
 	_start = entt::null;
 	_current = entt::null;
 	_paused = false;
