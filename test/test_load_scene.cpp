@@ -7,35 +7,10 @@
  * openblack is licensed under the GNU General Public License version 3.
  ******************************************************************************/
 
-#include <Game.h>
-#include <LHScriptX/Script.h>
-#include <gtest/gtest.h>
+#include "common/Fixtures.h"
 
-class LoadScene: public ::testing::Test
+class LoadScene: public TestLoadSceneScript
 {
-public:
-	void LoadTestScene(const char* sceneScript)
-	{
-		auto script = openblack::lhscriptx::Script(game_.get());
-		script.Load(sceneScript);
-	}
-
-protected:
-	void SetUp() override
-	{
-		static const auto mock_game_path = std::filesystem::path(TEST_BINARY_DIR) / "mock";
-		auto args = openblack::Arguments {
-		    .rendererType = bgfx::RendererType::Enum::Noop,
-		    .gamePath = mock_game_path.string(),
-		    .numFramesToSimulate = 0,
-		    .logFile = "stdout",
-		};
-		std::fill_n(args.logLevels.begin(), args.logLevels.size(), spdlog::level::debug);
-		game_ = std::make_unique<openblack::Game>(std::move(args));
-		ASSERT_TRUE(game_->Initialize());
-	}
-	void TearDown() override { game_.reset(); }
-	std::unique_ptr<openblack::Game> game_;
 };
 
 TEST_F(LoadScene, minimal)

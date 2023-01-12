@@ -7,8 +7,11 @@
  * openblack is licensed under the GNU General Public License version 3.
  ******************************************************************************/
 
-#include <Game.h>
-#include <gtest/gtest.h>
+#include "common/Fixtures.h"
+
+class GameInitialize: public TestGame
+{
+};
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
 TEST(GameInitialize, initializeOnly)

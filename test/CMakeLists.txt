@@ -1,7 +1,7 @@
 include(CTest)
 
 macro (OPENBLACK_SETUP_AND_ADD_TEST TEST_NAME TEST_SOURCE)
-  add_executable(${TEST_NAME} ${TEST_SOURCE})
+  add_executable(${TEST_NAME} ${TEST_SOURCE} "common/Fixtures.h")
   add_dependencies(${TEST_NAME} generate-mock-game-data)
   target_link_libraries(${TEST_NAME} PRIVATE GTest::gtest_main openblack_lib)
   target_compile_definitions(
@@ -14,6 +14,7 @@ endmacro ()
 openblack_setup_and_add_test(test_game_initialize test_game_initialize.cpp)
 openblack_setup_and_add_test(test_load_scene test_load_scene.cpp)
 openblack_setup_and_add_test(test_fixed test_fixed.cpp)
+openblack_setup_and_add_test(test_set_camera_pos test_set_camera_pos.cpp)
 
 add_custom_target(
   test_mobile_wall_hug_scenarios

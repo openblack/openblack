@@ -20,6 +20,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/intersect.hpp>
+#include <glm/gtx/norm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <spdlog/sinks/android_sink.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -617,11 +618,6 @@ bool Game::Initialize()
 
 	// create our camera
 	_camera = std::make_unique<Camera>();
-	auto aspect = _window ? _window->GetAspectRatio() : 1.0f;
-	_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
-
-	_camera->SetPosition(glm::vec3(1441.56f, 24.764f, 2081.76f));
-	_camera->SetRotation(glm::radians(glm::vec3(0.0f, -45.0f, 0.0f)));
 
 	if (!LoadVariables())
 	{
@@ -653,6 +649,7 @@ bool Game::Initialize()
 bool Game::Run()
 {
 	LoadMap(_startMap);
+
 	Locator::dynamicsSystem::value().RegisterRigidBodies();
 
 	auto challengePath = _fileSystem->QuestsPath() / "challenge.chl";
@@ -771,6 +768,9 @@ void Game::LoadMap(const std::filesystem::path& path)
 		throw std::runtime_error("Could not find script " + path.generic_string());
 	}
 
+	// Reset Camera Position for later
+	_camera->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+
 	auto data = _fileSystem->ReadAll(path);
 	std::string source(reinterpret_cast<const char*>(data.data()), data.size());
 
@@ -804,6 +804,15 @@ void Game::LoadMap(const std::filesystem::path& path)
 	SetGameSpeed(Game::k_TurnDurationMultiplierNormal);
 	_turnCount = 0;
 	_paused = true;
+
+	// Reset Camera
+	auto aspect = _window ? _window->GetAspectRatio() : 1.0f;
+	_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
+	_camera->SetRotation(glm::vec3(-glm::pi<float>() / 14.0f, glm::pi<float>() - 2.749f, 0.0f));
+	// TODO(#562): Get the player's citadel entity location and place the camera at its position
+	// if (glm::length2(_camera->GetPosition()) == 0.0f)
+	// {
+	// }
 }
 
 void Game::LoadLandscape(const std::filesystem::path& path)
