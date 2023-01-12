@@ -23,6 +23,5 @@ entt::entity PlayerArchetype::Create(PlayerNames name)
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 	registry.Assign<Player>(entity, name);
-	Locator::playerSystem::value().AddPlayer(entity);
 	return entity;
 }

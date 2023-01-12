@@ -35,10 +35,8 @@
 #include "ECS/Archetypes/VillagerArchetype.h"
 #include "ECS/Components/Footpath.h"
 #include "ECS/Components/Stream.h"
-#include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
-#include "Enums.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
 #include "Locator.h"
@@ -245,16 +243,6 @@ void FeatureScriptCommands::CreateTown(int32_t townId, glm::vec3 position, const
 	SPDLOG_LOGGER_DEBUG(spdlog::get("scripting"), R"(LHScriptX: Creating town {} for "{}" with tribe type "{}".)", townId,
 	                    playerOwner, tribeType);
 
-	PlayerNames player;
-	try
-	{
-		player = k_PlayerLookup.at(playerOwner);
-	}
-	catch (...)
-	{
-		std::throw_with_nested(std::runtime_error("Could not recognize village owner"));
-	}
-
 	Tribe tribe;
 	try
 	{
@@ -265,7 +253,7 @@ void FeatureScriptCommands::CreateTown(int32_t townId, glm::vec3 position, const
 		std::throw_with_nested(std::runtime_error("Could not recognize village tribe"));
 	}
 
-	TownArchetype::Create(townId, position, player, tribe);
+	TownArchetype::Create(townId, position, GetPlayerName(playerOwner), tribe);
 }
 
 void FeatureScriptCommands::SetTownBelief(int32_t townId, const std::string& playerOwner, float belief)
@@ -375,18 +363,16 @@ void FeatureScriptCommands::CreateVillagerPos(glm::vec3 abodePosition, glm::vec3
 	VillagerArchetype::Create(abodePosition, position, GVillagerInfo::Find(tribe, number), age);
 }
 
-void FeatureScriptCommands::CreateCitadel(glm::vec3 position, int32_t, const std::string& affiliation, int32_t rotation,
+void FeatureScriptCommands::CreateCitadel(glm::vec3 position, int32_t, const std::string& playerOwner, int32_t rotation,
                                           int32_t size)
 {
-	auto playerEntity = Locator::playerSystem::value().GetPlayer(GetPlayerName(affiliation));
-	CitadelArchetype::Create(position, playerEntity, GetRotation(rotation), GetSize(size));
+	CitadelArchetype::Create(position, GetPlayerName(playerOwner), GetRotation(rotation), GetSize(size));
 }
 
-void FeatureScriptCommands::CreatePlannedCitadel(int32_t townId, glm::vec3 position, int32_t, const std::string& affiliation,
+void FeatureScriptCommands::CreatePlannedCitadel(int32_t townId, glm::vec3 position, int32_t, const std::string& playerOwner,
                                                  int32_t rotation, int32_t size)
 {
-	auto playerEntity = Locator::playerSystem::value().GetPlayer(GetPlayerName(affiliation));
-	CitadelArchetype::CreatePlan(townId, position, playerEntity, GetRotation(rotation), GetSize(size));
+	CitadelArchetype::CreatePlan(townId, position, GetPlayerName(playerOwner), GetRotation(rotation), GetSize(size));
 }
 
 void FeatureScriptCommands::CreateCreaturePen([[maybe_unused]] glm::vec3 position, int32_t, int32_t, int32_t, int32_t, int32_t)

@@ -23,6 +23,7 @@ namespace openblack::ecs::systems
 class PlayerSystem final: public PlayerSystemInterface
 {
 public:
+	void RegisterPlayers() override;
 	void AddPlayer(entt::entity playerEntity) override;
 	[[nodiscard]] entt::entity GetPlayer(PlayerNames playerName) const override;
 

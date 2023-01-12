@@ -16,6 +16,14 @@
 #include "Locator.h"
 
 using namespace openblack::ecs::systems;
+using namespace openblack::ecs::components;
+
+void PlayerSystem::RegisterPlayers()
+{
+	const auto& registry = Locator::entitiesRegistry::value();
+	registry.Each<const Player>(
+	    [this](const entt::entity entity, const Player& player) { _players.emplace(player.name, entity); });
+}
 
 void PlayerSystem::AddPlayer(entt::entity playerEntity)
 {

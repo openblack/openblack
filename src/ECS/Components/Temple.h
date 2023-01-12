@@ -22,7 +22,7 @@ enum class TempleRoom
 	SaveGameRoom
 };
 
-struct TempleInteriorStructure
+struct TempleInteriorPart
 {
 	TempleRoom room;
 };
