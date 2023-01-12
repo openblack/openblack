@@ -12,6 +12,7 @@
 #include <entt/fwd.hpp>
 
 #include "ECS/Components/Mesh.h"
+#include "ECS/Components/Temple.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Locator.h"
@@ -26,6 +27,7 @@ entt::entity CitadelArchetype::Create(const glm::vec3& position, PlayerNames pla
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 	registry.Assign<Transform>(entity, position, rotation, size);
+	registry.Assign<Temple>(entity, playerOwner);
 	const auto meshId = entt::hashed_string("temple/b_first_temple_l3d");
 	registry.Assign<Mesh>(entity, meshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
 	return entity;
