@@ -12,15 +12,17 @@
 #include <entt/fwd.hpp>
 #include <glm/fwd.hpp>
 
+#include "Enums.h"
+
 namespace openblack::ecs::archetypes
 {
 class CitadelArchetype
 {
 public:
-	static entt::entity Create(const glm::vec3& position, entt::entity player, const glm::mat4& rotation,
+	static entt::entity Create(const glm::vec3& position, PlayerNames playerOwner, const glm::mat4& rotation,
 	                           const glm::vec3& size);
-	static entt::entity CreatePlan(int32_t townId, const glm::vec3& position, entt::entity player, const glm::mat4& rotation,
-	                               const glm::vec3& size);
+	static entt::entity CreatePlan(int32_t townId, const glm::vec3& position, PlayerNames playerOwner,
+	                               const glm::mat4& rotation, const glm::vec3& size);
 	CitadelArchetype() = delete;
 };
 } // namespace openblack::ecs::archetypes

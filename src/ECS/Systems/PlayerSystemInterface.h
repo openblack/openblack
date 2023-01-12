@@ -18,6 +18,7 @@ namespace openblack::ecs::systems
 class PlayerSystemInterface
 {
 public:
+	virtual void RegisterPlayers() = 0;
 	virtual void AddPlayer(entt::entity playerEntity) = 0;
 	[[nodiscard]] virtual entt::entity GetPlayer(PlayerNames name) const = 0;
 };

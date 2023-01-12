@@ -20,7 +20,7 @@ using namespace openblack;
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
 
-entt::entity CitadelArchetype::Create(const glm::vec3& position, entt::entity player, const glm::mat4& rotation,
+entt::entity CitadelArchetype::Create(const glm::vec3& position, PlayerNames playerOwner, const glm::mat4& rotation,
                                       const glm::vec3& size)
 {
 	auto& registry = Locator::entitiesRegistry::value();
@@ -31,8 +31,8 @@ entt::entity CitadelArchetype::Create(const glm::vec3& position, entt::entity pl
 	return entity;
 }
 
-entt::entity CitadelArchetype::CreatePlan(int32_t /*townId*/, const glm::vec3& position, entt::entity player,
+entt::entity CitadelArchetype::CreatePlan(int32_t /*townId*/, const glm::vec3& position, PlayerNames playerOwner,
                                           const glm::mat4& rotation, const glm::vec3& size)
 {
-	return Create(position, player, rotation, size);
+	return Create(position, playerOwner, rotation, size);
 }

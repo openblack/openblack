@@ -47,6 +47,7 @@
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "ECS/Systems/PathfindingSystemInterface.h"
+#include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/Systems/TownSystemInterface.h"
 #include "FileSystem/FileSystemInterface.h"
@@ -922,11 +923,15 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	}
 	ecs::systems::InitializeLevel(fixedName);
 
+	// There is always a player active
+	Locator::playerSystem::value().AddPlayer(ecs::archetypes::PlayerArchetype::Create(PlayerNames::PLAYER_ONE));
+
 	// There is always at least one player active.
 	ecs::archetypes::PlayerArchetype::Create(PlayerNames::PLAYER_ONE);
 
 	Locator::cameraBookmarkSystem::value().Initialize();
 	Locator::dynamicsSystem::value().RegisterIslandRigidBodies(Locator::terrainSystem::value());
+	Locator::playerSystem::value().RegisterPlayers();
 }
 
 bool Game::LoadVariables()

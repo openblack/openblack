@@ -86,7 +86,7 @@ void TempleInterior::Activate()
 		auto meshId = entt::hashed_string(fmt::format("temple/interior/{}", assetName).c_str());
 		auto entity = registry.Create();
 		auto roomType = ecs::components::TempleRoom::MainRoom;
-		registry.Assign<ecs::components::TempleInteriorStructure>(entity, roomType);
+		registry.Assign<ecs::components::TempleInteriorPart>(entity, roomType);
 		registry.Assign<ecs::components::Transform>(entity, _templePosition, rotation, scale);
 		registry.Assign<ecs::components::Mesh>(entity, meshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
 	}
@@ -108,8 +108,7 @@ void TempleInterior::Deactivate()
 	auto& config = Game::Instance()->GetConfig();
 	config.drawIsland = true;
 	config.drawWater = true;
-	registry.Each<const TempleInteriorStructure>(
-	    [&registry](const entt::entity entity, auto&&...) { registry.Destroy(entity); });
+	registry.Each<const TempleInterior>([&registry](const entt::entity entity, auto&&...) { registry.Destroy(entity); });
 
 	auto& camera = Game::Instance()->GetCamera();
 	camera.SetPosition(_playerPositionOutside);
