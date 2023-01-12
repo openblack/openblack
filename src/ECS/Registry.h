@@ -144,6 +144,7 @@ public:
 	{
 		return _registry.view<Components...>().size();
 	}
+	[[nodiscard]] decltype(auto) Valid(entt::entity entity) const { return _registry.valid(entity); }
 
 private:
 	entt::registry _registry;

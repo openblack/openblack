@@ -14,6 +14,7 @@
 #include <glm/gtx/transform.hpp>
 
 #include "3D/L3DMesh.h"
+#include "ECS/Components/CameraPathNode.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/MorphWithTerrain.h"
 #include "ECS/Components/Stream.h"
@@ -205,6 +206,30 @@ void RenderingSystem::PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool
 					}
 				}
 			});
+
+			if (!edges.empty())
+			{
+				_renderContext.streams =
+				    graphics::DebugLines::CreateDebugLines(edges.data(), static_cast<uint32_t>(edges.size()));
+			}
+		}
+
+		// Camera paths
+		{
+			uint32_t edgeCount = 0;
+			std::vector<graphics::DebugLines::Vertex> edges;
+			edges.reserve(edgeCount * 2);
+			registry.Each<const CameraPathNode, const Transform>(
+			    [&edges, &registry](const CameraPathNode& vertex, const Transform& transform) {
+				    const auto color = glm::vec4(1, 0, 0, 1);
+				    // The last node will point to null
+				    if (vertex.next != entt::null)
+				    {
+					    const auto& destination = registry.Get<Transform>(vertex.next);
+					    edges.push_back({glm::vec4(transform.position, 1.0f), color});
+					    edges.push_back({glm::vec4(destination.position, 1.0f), color});
+				    }
+			    });
 
 			if (!edges.empty())
 			{

@@ -51,6 +51,7 @@ public:
 	[[nodiscard]] glm::vec3 GetVelocity() const { return _velocity; }
 	[[nodiscard]] float GetMaxSpeed() const { return _maxMovementSpeed; }
 
+	void LookAt(const glm::vec3& position);
 	void SetPosition(const glm::vec3& position) { _position = position; }
 	/// Set rotation as euler angles in radians
 	void SetRotation(const glm::vec3& eulerRadians) { _rotation = eulerRadians; }

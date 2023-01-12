@@ -96,6 +96,7 @@ target_link_libraries(
   openblack_lib
   PRIVATE "$<$<CXX_COMPILER_ID:MSVC>:-SAFESEH:NO>"
           l3d
+          cam
           pack
           lnd
           anm

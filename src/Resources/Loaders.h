@@ -12,6 +12,7 @@
 #include <PackFile.h>
 #include <entt/entt.hpp>
 
+#include "3D/CameraPath.h"
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "Level.h"
@@ -60,5 +61,10 @@ struct LevelLoader final: BaseLoader<Level>
 {
 	[[nodiscard]] result_type operator()(FromDiskTag, const std::string& name, const std::filesystem::path& path,
 	                                     bool isCampaign) const;
+};
+
+struct CameraPathLoader final: BaseLoader<CameraPath>
+{
+	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;
 };
 } // namespace openblack::resources

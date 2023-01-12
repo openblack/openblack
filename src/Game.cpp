@@ -42,6 +42,7 @@
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/CameraBookmarkSystemInterface.h"
+#include "ECS/Systems/CameraPathSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "ECS/Systems/PathfindingSystemInterface.h"
@@ -365,6 +366,7 @@ bool Game::Update()
 			_eventManager->Create<SDL_Event>(e);
 		}
 	}
+	Locator::cameraPathSystem::value().Update(deltaTime);
 
 	if (!this->_config.running)
 	{
@@ -479,8 +481,9 @@ bool Game::Initialize()
 	auto& textureManager = resources.GetTextures();
 	auto& animationManager = resources.GetAnimations();
 	auto& levelManager = resources.GetLevels();
-	const auto citadelOutsideMeshesPath = _fileSystem->FindPath(_fileSystem->CitadelPath() / "OutsideMeshes");
+	auto& camManager = resources.GetCameraPaths();
 
+	const auto citadelOutsideMeshesPath = _fileSystem->FindPath(_fileSystem->CitadelPath() / "OutsideMeshes");
 	for (const auto& f : std::filesystem::directory_iterator {citadelOutsideMeshesPath})
 	{
 		if (f.path().extension() == ".zzz")
@@ -520,6 +523,42 @@ bool Game::Initialize()
 		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animations[i]);
 	}
 
+	const auto symbolsCamPaths = _fileSystem->FindPath(_fileSystem->SymbolsPath());
+	for (const auto& f : std::filesystem::directory_iterator {symbolsCamPaths})
+	{
+		if (f.path().extension() == ".cam")
+		{
+			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading symbol cam: {}", f.path().stem().string());
+			try
+			{
+				camManager.Load(fmt::format("symbol/{}", f.path().stem().string()), resources::CameraPathLoader::FromDiskTag {},
+				                f);
+			}
+			catch (std::runtime_error& err)
+			{
+				SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+			}
+		}
+	}
+
+	const auto citadelInteriors = _fileSystem->FindPath(_fileSystem->CitadelPath() / "engine");
+	for (const auto& f : std::filesystem::directory_iterator {citadelInteriors})
+	{
+		if (f.path().extension() == ".cam")
+		{
+			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading interior temple cam: {}", f.path().stem().string());
+			try
+			{
+				camManager.Load(fmt::format("temple/{}", f.path().stem().string()), resources::CameraPathLoader::FromDiskTag {},
+				                f);
+			}
+			catch (std::runtime_error& err)
+			{
+				SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+			}
+		}
+	}
+
 	// Load loose one-off assets
 	animationManager.Load("coffre", resources::L3DAnimLoader::FromDiskTag {},
 	                      _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.anm"));
@@ -536,6 +575,10 @@ bool Game::Initialize()
 	                 _fileSystem->FindPath(_fileSystem->DataPath() / "river2.l3d"));
 	meshManager.Load("metre_sphere", resources::L3DLoader::FromDiskTag {},
 	                 _fileSystem->FindPath(_fileSystem->DataPath() / "metre_sphere.l3d"));
+	camManager.Load("cam", resources::CameraPathLoader::FromDiskTag {},
+	                _fileSystem->FindPath(_fileSystem->DataPath() / "cam.cam"));
+	camManager.Load("flying", resources::CameraPathLoader::FromDiskTag {},
+	                _fileSystem->FindPath(_fileSystem->DataPath() / "flying.cam"));
 
 	// TODO(raffclar): #400: Parse level files within the resource loader
 	// TODO(raffclar): #405: Determine campaign levels from the challenge script file

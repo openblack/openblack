@@ -9,6 +9,8 @@
 
 #include "Camera.h"
 
+#include <cmath>
+
 #include <optional>
 
 #include <glm/gtx/euler_angles.hpp>
@@ -129,6 +131,16 @@ void Camera::ResetVelocities()
 	_dsv = glm::vec3(0.0f, 0.0f, 0.0f);
 	_ddv = glm::vec3(0.0f, 0.0f, 0.0f);
 	_duv = glm::vec3(0.0f, 0.0f, 0.0f);
+}
+
+void Camera::LookAt(const glm::vec3& position)
+{
+	auto vec = position - _position;
+	vec = glm::normalize(vec);
+	float yaw = std::atan2(vec.x, vec.z);
+	float pitch = std::asin(-vec.y);
+	_rotation.x = -pitch;
+	_rotation.y = -yaw;
 }
 
 void Camera::SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip)
