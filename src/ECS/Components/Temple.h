@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "Enums.h"
+
 namespace openblack::ecs::components
 {
 enum class TempleRoom
@@ -25,5 +27,10 @@ enum class TempleRoom
 struct TempleInteriorPart
 {
 	TempleRoom room;
+};
+
+struct Temple
+{
+	PlayerNames owner;
 };
 } // namespace openblack::ecs::components
