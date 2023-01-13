@@ -3,6 +3,7 @@ find_package(Python3 COMPONENTS Interpreter)
 add_executable(gen_info gen_info.cpp)
 target_include_directories(gen_info PRIVATE ../../src)
 target_link_libraries(gen_info PRIVATE glm::glm cxxopts::cxxopts)
+set_property(TARGET gen_info PROPERTY FOLDER "tests")
 
 set(DATA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data)
 set(CONE_MESH_OUTPUT ${DATA_BINARY_DIR}/cone.l3d)
@@ -88,7 +89,7 @@ set(QUEST_CHALLENGE_OUTPUT ${QUESTS_BINARY_DIR}/challenge.chl)
 # TODO: Combine all texture generating scripts into a single one
 
 add_custom_target(
-  generate-mock-game-data
+  generate_mock_game_data
   COMMAND ${CMAKE_COMMAND} -E make_directory ${DATA_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TEXTURES_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${CITADEL_BINARY_DIR}
@@ -220,3 +221,4 @@ add_custom_target(
           ${CMAKE_CURRENT_SOURCE_DIR}/Data/Landscape/gen_land_textures.py
           ${CMAKE_CURRENT_SOURCE_DIR}/Data/WeatherSystem/gen_sky.py
 )
+set_property(TARGET generate_mock_game_data PROPERTY FOLDER "tests")
