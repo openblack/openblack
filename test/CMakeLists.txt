@@ -2,7 +2,7 @@ include(CTest)
 
 macro (OPENBLACK_SETUP_AND_ADD_TEST TEST_NAME TEST_SOURCE)
   add_executable(${TEST_NAME} ${TEST_SOURCE})
-  add_dependencies(${TEST_NAME} generate-mock-game-data)
+  add_dependencies(${TEST_NAME} generate_mock_game_data)
   target_link_libraries(${TEST_NAME} PRIVATE GTest::gtest_main openblack_lib)
   target_compile_definitions(
     ${TEST_NAME} PRIVATE TEST_BINARY_DIR="${CMAKE_CURRENT_BINARY_DIR}"
@@ -22,6 +22,7 @@ add_custom_target(
     ${CMAKE_CURRENT_SOURCE_DIR}/mobile_wall_hug/scenarios
     ${CMAKE_CURRENT_BINARY_DIR}/mobile_wall_hug/scenarios
 )
+set_property(TARGET test_mobile_wall_hug_scenarios PROPERTY FOLDER "tests")
 openblack_setup_and_add_test(
   test_mobile_wall_hug mobile_wall_hug/test_mobile_wall_hug.cpp
 )
