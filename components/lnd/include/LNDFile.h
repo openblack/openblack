@@ -32,7 +32,10 @@ static_assert(sizeof(LNDHeader) == 1052);
 
 struct LNDLowResolutionTextureHeader
 {
-	std::array<uint8_t, 0x10> unknown; // TODO(#455): decode what these are
+	uint32_t texture;
+	uint32_t material;
+	uint32_t unknown; // TODO(#455): decode what these are
+	uint32_t index;
 	uint32_t size;
 };
 static_assert(sizeof(LNDLowResolutionTextureHeader) == 20);
@@ -95,7 +98,7 @@ struct LNDBlock
 	std::array<std::array<float, 3>, 4> transformUVAfter;
 	uint32_t nextSortingPtr;
 	float valueSorting;
-	float lowResTexture;
+	uint32_t lowResTexture;
 	float fuLrs; ///< (iuLrs / 256)
 	float fvLrs; ///< (ivLrs / 256)
 	float iuLrs; ///< lowrestex x

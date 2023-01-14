@@ -106,8 +106,10 @@ int PrintLowRes(openblack::lnd::LNDFile& lnd)
 	for (const auto& texture : textures)
 	{
 		std::printf("texture #%u:\n", i++);
-		std::printf("unknown header:\n");
-		PrintRawBytes(texture.header.unknown.data(), sizeof(texture.header.unknown[0]) * texture.header.unknown.size());
+		std::printf("full resolution texture texture: %u\n", texture.header.texture);
+		std::printf("material: %u\n", texture.header.material);
+		std::printf("unknown member: %u\n", texture.header.unknown);
+		std::printf("index: %u\n", texture.header.index);
 		std::printf("texel data size: %u\n", texture.header.size);
 	}
 	std::printf("\n");
@@ -209,7 +211,7 @@ int PrintBlocks(openblack::lnd::LNDFile& lnd)
 		            block.transformUVAfter[3][2]);
 		std::printf("nextSortingPtr: 0x%X\n", block.nextSortingPtr);
 		std::printf("valueSorting: %f\n", block.valueSorting);
-		std::printf("lowResTexture: %f\n", block.lowResTexture);
+		std::printf("lowResTexture: %u\n", block.lowResTexture);
 		std::printf("fuLrs: %f\n", block.fuLrs);
 		std::printf("fvLrs: %f\n", block.fvLrs);
 		std::printf("iuLrs: %f\n", block.iuLrs);
