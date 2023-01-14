@@ -450,6 +450,58 @@ int WriteFile(const Arguments::Write& args) noexcept
 		lnd.AddBumpMap(map);
 	}
 
+	openblack::lnd::LNDCountry country = {};
+	country.type = 0;
+	for (auto& m : country.materials)
+	{
+		m.indices[0] = 0;
+		m.indices[1] = 0;
+		m.coefficient = 0;
+	}
+	lnd.AddCountry(country);
+
+	openblack::lnd::LNDLowResolutionTexture lowRes = {};
+	lowRes.header.unknown = 16;
+	lowRes.texels.resize(65660, 0xFF);
+	lnd.AddLowResolutionTexture(lowRes);
+
+	openblack::lnd::LNDBlock block = {};
+	for (auto& c : block.cells)
+	{
+		c.r = 0xFF;
+		c.g = 0xFF;
+		c.b = 0xFF;
+		c.luminosity = 0xFF;
+		c.altitude = 0;
+		c.saveColor = 0;
+		c.properties.country = 0;
+		c.properties.hasWater = 0;
+		c.properties.split = 0;
+		c.flags = 0;
+	}
+	block.mapX = 0.0f;
+	block.mapZ = 0.0f;
+	block.blockX = 0;
+	block.blockZ = 0;
+	block.clipped = 0;
+	block.frameVisibility = 0;
+	block.highestAltitude = 0;
+	block.useSmallBump = 0;
+	block.forceLowResTex = 0;
+	block.meshLOD = 0;
+	block.meshBlending = 0;
+	block.textureBlend = 0;
+	block.meshLODType = 0;
+	block.fog = 0;
+	block.texPointer = 0;
+	block.matPointer = 0;
+	block.drawSomething = 0;
+	block.specMatBeforePtr = 0;
+	block.specMatAfterPtr = 0;
+	block.lowResTexture = 0;
+
+	lnd.AddBlock(block);
+
 	lnd.Write(args.outFilename);
 
 	return EXIT_SUCCESS;
