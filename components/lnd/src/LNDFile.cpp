@@ -105,6 +105,7 @@
 #include "LNDFile.h"
 
 #include <cassert>
+#include <cstring>
 
 #include <fstream>
 #include <stdexcept>
@@ -270,12 +271,19 @@ void LNDFile::Write(const std::filesystem::path& filepath)
 
 	// Prepare header
 	_header.blockCount = static_cast<uint32_t>(_blocks.size() + 1);
+	memset(_header.lookUpTable.data(), 1, _header.lookUpTable.size());
 	_header.materialCount = static_cast<uint32_t>(_materials.size());
 	_header.countryCount = static_cast<uint32_t>(_countries.size());
 	_header.blockSize = static_cast<uint32_t>(sizeof(LNDBlock));
 	_header.materialSize = static_cast<uint32_t>(sizeof(LNDMaterial));
 	_header.countrySize = static_cast<uint32_t>(sizeof(LNDCountry));
 	_header.lowResolutionCount = static_cast<uint32_t>(_lowResolutionTextures.size());
+
+	for (int i = 1; auto& b : _blocks)
+	{
+		b.index = i;
+		++i;
+	}
 
 	for (int i = 0; auto& t : _lowResolutionTextures)
 	{
@@ -287,9 +295,14 @@ void LNDFile::Write(const std::filesystem::path& filepath)
 	WriteFile(stream);
 }
 
+void LNDFile::AddLowResolutionTexture(const LNDLowResolutionTexture& texture)
+{
+	_lowResolutionTextures.emplace_back(texture);
+}
+
 void LNDFile::AddMaterial(const LNDMaterial& material)
 {
-	_materials.push_back(material);
+	_materials.emplace_back(material);
 }
 
 void LNDFile::AddNoiseMap(const LNDBumpMap& noiseMap)
@@ -300,4 +313,14 @@ void LNDFile::AddNoiseMap(const LNDBumpMap& noiseMap)
 void LNDFile::AddBumpMap(const LNDBumpMap& bumpMap)
 {
 	_extra.bump = bumpMap;
+}
+
+void LNDFile::AddBlock(const LNDBlock& block)
+{
+	_blocks.emplace_back(block);
+}
+
+void LNDFile::AddCountry(const LNDCountry& country)
+{
+	_countries.emplace_back(country);
 }
