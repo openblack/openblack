@@ -277,6 +277,13 @@ void LNDFile::Write(const std::filesystem::path& filepath)
 	_header.countrySize = static_cast<uint32_t>(sizeof(LNDCountry));
 	_header.lowResolutionCount = static_cast<uint32_t>(_lowResolutionTextures.size());
 
+	for (int i = 0; auto& t : _lowResolutionTextures)
+	{
+		t.header.index = i;
+		t.header.size = static_cast<uint32_t>(t.texels.size()) + 4;
+		++i;
+	}
+
 	WriteFile(stream);
 }
 
