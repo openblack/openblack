@@ -34,7 +34,7 @@ jobs:
             /tmp/entt/entt*.pkg.tar.*
             /tmp/bgfx-cmake-git/bgfx-cmake-git*.pkg.tar.*
             /tmp/imgui/imgui*.pkg.tar.*
-          key: ${{ runner.os }}-packages-bgr
+          key: ${{ runner.os }}-cmake
 
       - name: Build entt from the AUR
         if: steps.cache-packages.outputs.cache-hit != 'true'
