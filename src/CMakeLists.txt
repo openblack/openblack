@@ -207,8 +207,16 @@ if (MSVC)
   endif ()
 else ()
   target_compile_options(
-    openblack_lib PRIVATE -Wall -Wextra -pedantic -Wno-unused-private-field
-                          -Wno-unused-variable -Wno-unused-parameter
+    openblack_lib
+    PRIVATE -Wall
+            -Wextra
+            -pedantic
+            -Wno-unused-private-field
+            -Wno-unused-variable
+            -Wno-unused-parameter
+            # stb_image_write.h
+            -Wno-missing-field-initializers
+            -Wno-deprecated-declarations
   )
   if (OPENBLACK_WARNINGS_AS_ERRORS)
     target_compile_options(openblack_lib PRIVATE -Werror)
