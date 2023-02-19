@@ -54,7 +54,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode)
 			return false;
 		}
 	}
-	catch (cxxopts::OptionParseException& err)
+	catch (cxxopts::exceptions::parsing& err)
 	{
 		std::cerr << err.what() << std::endl;
 		returnCode = EXIT_FAILURE;

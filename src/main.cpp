@@ -96,7 +96,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 			}
 			else
 			{
-				throw cxxopts::option_not_exists_exception(result["backend-type"].as<std::string>());
+				throw cxxopts::exceptions::no_such_option(result["backend-type"].as<std::string>());
 			}
 		}
 
@@ -114,7 +114,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		}
 		else
 		{
-			throw cxxopts::option_not_exists_exception(result["window-mode"].as<std::string>());
+			throw cxxopts::exceptions::no_such_option(result["window-mode"].as<std::string>());
 		}
 
 		std::array<spdlog::level::level_enum, openblack::k_LoggingSubsystemStrs.size()> logLevels;
@@ -164,7 +164,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 			else
 #endif
 			{
-				throw cxxopts::option_required_exception("game-path");
+				throw cxxopts::exceptions::option_has_no_value("game-path");
 			}
 		}
 		else
@@ -189,7 +189,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		args.logLevels = logLevels;
 		args.startLevel = result["start-level"].as<std::string>();
 	}
-	catch (cxxopts::OptionParseException& err)
+	catch (cxxopts::exceptions::parsing& err)
 	{
 		std::cerr << err.what() << std::endl;
 		std::cerr << options.help() << std::endl;

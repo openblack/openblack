@@ -414,7 +414,8 @@ struct Arguments
 	auto colCount = std::count(range.begin(), range.end(), ':');
 	if (colCount > 2)
 	{
-		throw cxxopts::option_syntax_exception("pack-files entry cannot have more than two ':' for file.l3d[[:START]:LENGTH]");
+		throw cxxopts::exceptions::invalid_option_syntax(
+		    "pack-files entry cannot have more than two ':' for file.l3d[[:START]:LENGTH]");
 	}
 	// If there are none, it's like :1
 	if (colCount == 0)
@@ -439,14 +440,14 @@ struct Arguments
 	auto ul = std::strtoul(startStr.c_str(), nullptr, 0);
 	if (ul == std::numeric_limits<decltype(ul)>::max())
 	{
-		throw cxxopts::option_syntax_exception("couldn't parse pack-file's start index as a number: " + startStr);
+		throw cxxopts::exceptions::invalid_option_syntax("couldn't parse pack-file's start index as a number: " + startStr);
 	}
 	start = static_cast<uint32_t>(ul);
 
 	ul = std::strtoul(lengthStr.c_str(), nullptr, 0);
 	if (ul == std::numeric_limits<decltype(ul)>::max())
 	{
-		throw cxxopts::option_syntax_exception("couldn't parse pack-file's length as a number: " + lengthStr);
+		throw cxxopts::exceptions::invalid_option_syntax("couldn't parse pack-file's length as a number: " + lengthStr);
 	}
 	length = static_cast<uint32_t>(ul);
 
@@ -510,7 +511,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 		// Following this, all args require positional arguments
 		if (result["pack-files"].count() == 0)
 		{
-			throw cxxopts::missing_argument_exception("pack-files");
+			throw cxxopts::exceptions::missing_argument("pack-files");
 		}
 		if (result["write-mesh"].count() > 0)
 		{
