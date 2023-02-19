@@ -11,6 +11,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 
 #include <InfoConstants.h>
 #include <cxxopts.hpp>

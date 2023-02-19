@@ -10,6 +10,7 @@
 #include <cstdlib>
 
 #include <fstream>
+#include <iostream>
 #include <string>
 
 #include <MorphFile.h>
