@@ -9,6 +9,7 @@
 
 #include <cstdlib>
 
+#include <iostream>
 #include <string>
 
 #include <ANMFile.h>
