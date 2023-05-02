@@ -20,5 +20,6 @@ target_include_directories(
   imgui_user PUBLIC ${CMAKE_CURRENT_LIST_DIR}/imgui_user
 )
 target_link_libraries(imgui_user PUBLIC imgui::imgui SDL2::SDL2)
+target_compile_definitions(imgui_user PUBLIC IMGUI_DEFINE_MATH_OPERATORS)
 
 set_property(TARGET imgui_user PROPERTY FOLDER "externals")
