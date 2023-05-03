@@ -32,6 +32,11 @@ namespace filesystem
 class FileSystemInterface;
 }
 
+namespace input
+{
+class GameActionInterface;
+}
+
 namespace resources
 {
 class ResourcesInterface;
@@ -72,6 +77,7 @@ struct Locator
 	using rng = entt::locator<RandomNumberManagerInterface>;
 	using terrainSystem = entt::locator<LandIslandInterface>;
 	using audio = entt::locator<audio::AudioManagerInterface>;
+	using gameActionSystem = entt::locator<input::GameActionInterface>;
 	using rendereringSystem = entt::locator<ecs::systems::RenderingSystemInterface>;
 	using dynamicsSystem = entt::locator<ecs::systems::DynamicsSystemInterface>;
 	using cameraBookmarkSystem = entt::locator<ecs::systems::CameraBookmarkSystemInterface>;

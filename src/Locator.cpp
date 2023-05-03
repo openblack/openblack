@@ -29,6 +29,7 @@
 #include "ECS/Systems/Implementations/PlayerSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/TownSystem.h"
+#include "Input/GameActionMap.h"
 #include "Resources/Resources.h"
 #include "Windowing/Sdl2WindowingSystem.h"
 #if __ANDROID__
@@ -52,6 +53,7 @@ using openblack::ecs::systems::PathfindingSystem;
 using openblack::ecs::systems::PlayerSystem;
 using openblack::ecs::systems::RenderingSystem;
 using openblack::ecs::systems::TownSystem;
+using openblack::input::GameActionMap;
 using openblack::resources::Resources;
 using openblack::windowing::DisplayMode;
 using openblack::windowing::Sdl2WindowingSystem;
@@ -81,6 +83,7 @@ void openblack::InitializeGame()
 		Locator::audio::emplace<AudioManagerNoOp>();
 	}
 	Locator::playerSystem::emplace<PlayerSystem>();
+	Locator::gameActionSystem::emplace<GameActionMap>();
 	Locator::rendereringSystem::emplace<RenderingSystem>();
 	Locator::entitiesRegistry::emplace<Registry>();
 	Locator::temple::emplace<TempleInterior>();
