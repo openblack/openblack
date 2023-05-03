@@ -54,6 +54,7 @@
 #include "GameWindow.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/Texture2D.h"
+#include "Input/GameActionMapInterface.h"
 #include "LHScriptX/Script.h"
 #include "Locator.h"
 #include "PackFile.h"
@@ -135,6 +136,7 @@ Game::Game(Arguments&& args)
 		{
 			this->_camera->ProcessSDLEvent(event);
 			this->_config.running = this->ProcessEvents(event);
+			Locator::gameActionSystem::value().ProcessEvent(event);
 		}
 	}));
 }
@@ -171,6 +173,7 @@ Game::~Game()
 	Locator::pathfindingSystem::reset();
 	Locator::terrainSystem::reset();
 	Locator::filesystem::reset();
+	Locator::gameActionSystem::reset();
 
 	_water.reset();
 	_sky.reset();
@@ -345,6 +348,7 @@ bool Game::Update()
 	// Input events
 	{
 		auto sdlInput = _profiler->BeginScoped(Profiler::Stage::SdlInput);
+		Locator::gameActionSystem::value().Frame();
 		SDL_Event e;
 		while (SDL_PollEvent(&e) != 0)
 		{

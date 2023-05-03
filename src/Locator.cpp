@@ -34,6 +34,7 @@
 #else
 #include "FileSystem/DefaultFileSystem.h"
 #endif
+#include "Input/GameActionMap.h"
 #include "Resources/Resources.h"
 
 using namespace openblack::audio;
@@ -47,6 +48,7 @@ using openblack::ecs::systems::PathfindingSystem;
 using openblack::ecs::systems::PlayerSystem;
 using openblack::ecs::systems::RenderingSystem;
 using openblack::ecs::systems::TownSystem;
+using openblack::input::GameActionMap;
 using openblack::resources::Resources;
 
 namespace openblack::ecs::systems
@@ -71,6 +73,7 @@ void InitializeGame()
 		Locator::audio::emplace<AudioManagerNoOp>();
 	}
 	Locator::playerSystem::emplace<PlayerSystem>();
+	Locator::gameActionSystem::emplace<GameActionMap>();
 	Locator::rendereringSystem::emplace<RenderingSystem>();
 	Locator::entitiesRegistry::emplace<Registry>();
 	Locator::temple::emplace<TempleInterior>();
