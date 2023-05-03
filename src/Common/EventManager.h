@@ -19,9 +19,6 @@
 
 namespace openblack
 {
-
-class EventManager;
-
 class EventManager
 {
 public:
