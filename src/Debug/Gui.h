@@ -91,6 +91,7 @@ public:
 
 	virtual ~Gui();
 
+	[[nodiscard]] bool StealsFocus() const;
 	bool ProcessEvents(const SDL_Event& event);
 	bool Loop(Game& game, const Renderer& renderer);
 	void Draw();
@@ -123,5 +124,6 @@ private:
 	const bgfx::ViewId _viewId;
 	std::vector<std::unique_ptr<Window>> _debugWindows;
 	std::string _screenshotFilename = "screenshot.png";
+	bool _stealsFocus = false;
 };
 } // namespace openblack::debug::gui
