@@ -34,12 +34,19 @@ public:
 
 	bool GetBindable(BindableActionMap action) const final;
 	bool GetUnbindable(UnbindableActionMap action) const final;
+	bool GetBindableChanged(BindableActionMap action) const final;
+	bool GetUnbindableChanged(UnbindableActionMap action) const final;
+	bool GetBindableRepeat(BindableActionMap action) const final;
+	bool GetUnbindableRepeat(UnbindableActionMap action) const final;
+
 	void Frame() final;
 	void ProcessEvent(const SDL_Event& event) final;
 
 private:
 	BindableActionMap _bindableMap = BindableActionMap::NONE;
 	UnbindableActionMap _unbindableMap = UnbindableActionMap::NONE;
+	BindableActionMap _bindableMapPrevious = BindableActionMap::NONE;
+	UnbindableActionMap _unbindableMapPrevious = UnbindableActionMap::NONE;
 	std::unordered_map<SDL_Keycode, std::pair<SDL_Keymod, BindableActionMap>> _keyboardModBindings;
 	std::unordered_map<SDL_Keycode, BindableActionMap> _keyboardBindings;
 	std::unordered_map<uint8_t /*mousebutton*/, BindableActionMap> _mouseBindings;
