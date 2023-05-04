@@ -77,6 +77,30 @@ bool GameActionMap::GetUnbindable(UnbindableActionMap action) const
 	return (static_cast<uint8_t>(_unbindableMap) & static_cast<uint8_t>(action)) != 0;
 }
 
+bool GameActionMap::GetBindableChanged(BindableActionMap action) const
+{
+	return ((static_cast<uint64_t>(_bindableMap) ^ static_cast<uint64_t>(_bindableMapPrevious)) &
+	        static_cast<uint64_t>(action)) != 0;
+}
+
+bool GameActionMap::GetUnbindableChanged(UnbindableActionMap action) const
+{
+	return ((static_cast<uint8_t>(_unbindableMap) ^ static_cast<uint8_t>(_unbindableMapPrevious)) &
+	        static_cast<uint8_t>(action)) != 0;
+}
+
+bool GameActionMap::GetBindableRepeat(BindableActionMap action) const
+{
+	return ((static_cast<uint64_t>(_bindableMap) & static_cast<uint64_t>(_bindableMapPrevious)) &
+	        static_cast<uint64_t>(action)) != 0;
+}
+
+bool GameActionMap::GetUnbindableRepeat(UnbindableActionMap action) const
+{
+	return ((static_cast<uint8_t>(_unbindableMap) & static_cast<uint8_t>(_unbindableMapPrevious)) &
+	        static_cast<uint8_t>(action)) != 0;
+}
+
 void GameActionMap::Frame()
 {
 	if (_bindableMap != BindableActionMap::NONE || _unbindableMap != UnbindableActionMap::NONE)
@@ -141,6 +165,7 @@ void GameActionMap::Frame()
 
 #undef get_print
 
+	_bindableMapPrevious = _bindableMap;
 	_bindableMap =
 	    static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) &
 	                                   ~(static_cast<uint64_t>(_mouseWheelBinding[0].value_or(BindableActionMap::NONE)) |
