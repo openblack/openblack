@@ -182,6 +182,11 @@ Gui::~Gui()
 	}
 }
 
+bool Gui::StealsFocus() const
+{
+	return _stealsFocus;
+}
+
 bool Gui::ProcessEvents(const SDL_Event& event)
 {
 	ImGui::SetCurrentContext(_imgui);
@@ -194,23 +199,27 @@ bool Gui::ProcessEvents(const SDL_Event& event)
 	ImGui_ImplSDL2_ProcessEvent(&event);
 
 	ImGuiIO& io = ImGui::GetIO();
+	_stealsFocus = io.WantCaptureMouse;
 	switch (event.type)
 	{
 	case SDL_QUIT:
-		return false;
+		_stealsFocus = false;
+		break;
 	case SDL_TEXTINPUT:
-		return io.WantTextInput;
+		_stealsFocus = io.WantTextInput;
+		break;
 	case SDL_KEYDOWN:
 	case SDL_KEYUP:
-		return io.WantCaptureKeyboard;
+		_stealsFocus = io.WantCaptureKeyboard;
+		break;
 	case SDL_WINDOWEVENT:
 		if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
 		{
-			return false;
+			_stealsFocus = false;
 		}
 		break;
 	}
-	return io.WantCaptureMouse;
+	return _stealsFocus;
 }
 
 bool Gui::CreateFontsTextureBgfx()
