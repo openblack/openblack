@@ -11,6 +11,8 @@
 
 #include <optional>
 
+#include <SDL_events.h>
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/intersect.hpp>
 #include <glm/gtx/norm.hpp>
@@ -419,11 +421,11 @@ void Camera::HandleMouseInput(const SDL_Event& e)
 			_rotation.x -= pitch;
 			_rotation.y -= yaw;
 
-			glm::mat4x4 rotationMatrixX(1.0f);
+			glm::mat4 rotationMatrixX(1.0f);
 			rotationMatrixX = glm::rotate(rotationMatrixX, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
 			_position = (rotationMatrixX * glm::vec4(_position - handPos, 0.0f)) + glm::vec4(handPos, 0.0f);
 
-			glm::mat4x4 rotationMatrixY(1.0f);
+			glm::mat4 rotationMatrixY(1.0f);
 			rotationMatrixY = glm::rotate(rotationMatrixY, pitch, GetRight());
 			_position = (rotationMatrixY * glm::vec4(_position - handPos, 0.0f)) + glm::vec4(handPos, 0.0f);
 			_position.y = (_position.y < 15.0f) ? 15.0f : _position.y;
@@ -719,7 +721,7 @@ glm::mat4 ReflectionCamera::GetViewMatrix() const
 	glm::mat4 mView = mRotation * glm::translate(glm::mat4(1.0f), -_position);
 
 	// M''camera = Mreflection * Mcamera * Mflip
-	glm::mat4x4 reflectionMatrix;
+	glm::mat4 reflectionMatrix;
 	ReflectMatrix(reflectionMatrix, _reflectionPlane);
 
 	return mView * reflectionMatrix;
@@ -731,7 +733,7 @@ Mreflection = |  -2NxNy 1-2Ny2   -2NyNz  -2NyD |
               |  -2NxNz  -2NyNz 1-2Nz2   -2NzD |
               |    0       0       0       1   |
 */
-void ReflectionCamera::ReflectMatrix(glm::mat4x4& m, const glm::vec4& plane) const
+void ReflectionCamera::ReflectMatrix(glm::mat4& m, const glm::vec4& plane) const
 {
 	m[0][0] = (1.0f - 2.0f * plane[0] * plane[0]);
 	m[1][0] = (-2.0f * plane[0] * plane[1]);
