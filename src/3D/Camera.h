@@ -72,7 +72,6 @@ public:
 	void ProcessSDLEvent(const SDL_Event&);
 
 	void HandleActions();
-	void HandleMouseInput(const SDL_Event&);
 
 	[[nodiscard]] glm::mat4 GetRotationMatrix() const;
 
