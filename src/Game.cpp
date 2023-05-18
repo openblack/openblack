@@ -267,8 +267,7 @@ bool Game::ProcessEvents(const SDL_Event& event)
 		{
 		case SDL_BUTTON_MIDDLE:
 		{
-			glm::ivec2 screenSize;
-			_window->GetSize(screenSize.x, screenSize.y);
+			const glm::ivec2 screenSize = _window->GetSize();
 			SDL_SetRelativeMouseMode((event.type == SDL_MOUSEBUTTONDOWN) ? SDL_TRUE : SDL_FALSE);
 			SDL_WarpMouseInWindow(_window->GetHandle(), screenSize.x / 2, screenSize.y / 2);
 		}
@@ -384,12 +383,7 @@ bool Game::Update()
 		// Update Debug Cross
 		ecs::components::Transform intersectionTransform {};
 		{
-			glm::ivec2 screenSize {};
-			if (_window)
-			{
-				_window->GetSize(screenSize.x, screenSize.y);
-			}
-
+			const auto screenSize = _window != nullptr ? _window->GetSize() : glm::zero<glm::ivec2>();
 			const auto scale = glm::vec3(50.0f, 50.0f, 50.0f);
 			if (screenSize.x > 0 && screenSize.y > 0)
 			{
@@ -779,10 +773,8 @@ bool Game::Run()
 
 	if (_window)
 	{
-		int width;
-		int height;
-		_window->GetSize(width, height);
-		_renderer->ConfigureView(graphics::RenderPass::Main, static_cast<uint16_t>(width), static_cast<uint16_t>(height));
+		const auto size = static_cast<glm::u16vec2>(_window->GetSize());
+		_renderer->ConfigureView(graphics::RenderPass::Main, size.x, size.y);
 	}
 
 	{
