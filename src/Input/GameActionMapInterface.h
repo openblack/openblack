@@ -79,6 +79,8 @@ class GameActionInterface
 	}
 
 public:
+	// clang-format is having trouble with requires
+	// clang-format off
 	template <typename... Args>
 	    requires(... && (std::is_same_v<Args, BindableActionMap> || std::is_same_v<Args, UnbindableActionMap>))
 	[[nodiscard]] bool GetAny(Args... actions) const
@@ -126,6 +128,7 @@ public:
 	{
 		return (GetRepeat(actions) && ...);
 	}
+	// clang-format on
 
 	[[nodiscard]] bool Get(ActionMap action) const
 	{
