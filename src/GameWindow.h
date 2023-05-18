@@ -14,6 +14,8 @@
 #include <memory>
 #include <string>
 
+#include <glm/vec2.hpp>
+
 struct SDL_Window;
 
 namespace openblack
@@ -36,41 +38,46 @@ public:
 	GameWindow(const std::string& title, int width, int height, DisplayMode displayMode, uint32_t extraFlags);
 
 	[[nodiscard]] SDL_Window* GetHandle() const;
-	void GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) const;
+	struct NativeHandles
+	{
+		void* nativeWindow;
+		void* nativeDisplay;
+	};
+	[[nodiscard]] NativeHandles GetNativeHandles() const;
 
 	[[nodiscard]] bool IsOpen() const;
 	[[nodiscard]] float GetBrightness() const;
-	void SetBrightness(float bright);
+	GameWindow& SetBrightness(float bright);
 	[[nodiscard]] uint32_t GetID() const;
 	[[nodiscard]] uint32_t GetFlags() const;
-	void GrabInput(bool b = true);
-	void SetMousePosition(int x, int y);
+	GameWindow& GrabInput(bool b = true);
+	GameWindow& SetMousePosition(glm::ivec2 position);
 	[[nodiscard]] bool IsInputGrabbed() const;
 	[[nodiscard]] float GetAspectRatio() const;
 
-	void SetTitle(const std::string& str);
+	GameWindow& SetTitle(const std::string& str);
 	[[nodiscard]] std::string GetTitle() const;
 
-	void Show();
-	void Hide();
+	GameWindow& Show();
+	GameWindow& Hide();
 
-	void SetPosition(int x, int y);
-	void GetPosition(int& x, int& y) const;
-	void SetSize(int width, int height);
-	void GetSize(int& width, int& height) const;
-	void SetMinimumSize(int width, int height);
-	void GetMinimumSize(int& width, int& height) const;
-	void SetMaximumSize(int width, int height);
-	void GetMaximumSize(int& width, int& height) const;
+	GameWindow& SetPosition(glm::ivec2 position);
+	[[nodiscard]] glm::ivec2 GetPosition() const;
+	GameWindow& SetSize(glm::ivec2 size);
+	[[nodiscard]] glm::ivec2 GetSize() const;
+	GameWindow& SetMinimumSize(glm::ivec2 size);
+	[[nodiscard]] glm::ivec2 GetMinimumSize() const;
+	GameWindow& SetMaximumSize(glm::ivec2 size);
+	[[nodiscard]] glm::ivec2 GetMaximumSize() const;
 
-	void Minimise();
-	void Maximise();
-	void Restore();
-	void Raise();
-	void SetBordered(bool b = true);
-	void SetFullscreen(bool f = true);
+	GameWindow& Minimise();
+	GameWindow& Maximise();
+	GameWindow& Restore();
+	GameWindow& Raise();
+	GameWindow& SetBordered(bool b = true);
+	GameWindow& SetFullscreen(bool f = true);
 
-	void Close();
+	GameWindow& Close();
 
 private:
 	std::unique_ptr<SDL_Window, SDLDestroyer> _window;

@@ -185,16 +185,17 @@ Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererTy
 	init.type = rendererType;
 
 	// Get render area size
-	int drawableWidth;
-	int drawableHeight;
+	glm::uvec2 drawableSize;
 	if (rendererType != bgfx::RendererType::Noop)
 	{
-		window->GetSize(drawableWidth, drawableHeight);
-		init.resolution.width = static_cast<uint32_t>(drawableWidth);
-		init.resolution.height = static_cast<uint32_t>(drawableHeight);
+		drawableSize = static_cast<glm::uvec2>(window->GetSize());
+		init.resolution.width = static_cast<uint32_t>(drawableSize.x);
+		init.resolution.height = static_cast<uint32_t>(drawableSize.y);
 
 		// Get Native Handles from SDL window
-		window->GetNativeHandles(init.platformData.nwh, init.platformData.ndt);
+		const auto handles = window->GetNativeHandles();
+		init.platformData.nwh = handles.nativeWindow;
+		init.platformData.ndt = handles.nativeDisplay;
 	}
 
 	_bgfxReset = BGFX_RESET_NONE;
