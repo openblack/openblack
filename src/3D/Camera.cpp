@@ -238,8 +238,64 @@ void Camera::ProcessSDLEvent(const SDL_Event& e)
 	switch (e.type)
 	{
 	case SDL_KEYDOWN:
+		// ignore all repeated keys
+		if (e.key.repeat == 0)
+		{
+			if (_mmouseIsDown || _lmouseIsDown)
+			{
+				ResetVelocities();
+			}
+			else
+			{
+				const auto movementSpeed =
+				    _movementSpeed * 4 * glm::smoothstep(0.1f, 1.0f, _position.y * 0.01f) * glm::log(_position.y + 1);
+				glm::vec3 temp = glm::vec3(0.f, 1.f, 0.f);
+				const glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
+				switch (e.key.keysym.scancode)
+				{
+				case SDL_SCANCODE_LCTRL:
+					temp = glm::normalize(-temp) * mRotation * movementSpeed;
+					_dv += temp;
+					_ddv = temp;
+					_flyInProgress = false;
+					break;
+				case SDL_SCANCODE_SPACE:
+					temp = glm::normalize(temp) * mRotation * movementSpeed;
+					_dv += temp;
+					_duv = temp;
+					_flyInProgress = false;
+					break;
+				default:
+					break;
+				}
+			}
+		}
+		break;
 	case SDL_KEYUP:
-		HandleKeyboardInput(e);
+		// ignore all repeated keys
+		if (e.key.repeat == 0)
+		{
+			if (_mmouseIsDown || _lmouseIsDown)
+			{
+				ResetVelocities();
+			}
+			else
+			{
+				switch (e.key.keysym.scancode)
+				{
+				case SDL_SCANCODE_LCTRL:
+					_dv -= _ddv;
+					_ddv = glm::vec3(0.0f, 0.0f, 0.0f);
+					break;
+				case SDL_SCANCODE_SPACE:
+					_dv -= _duv;
+					_duv = glm::vec3(0.0f, 0.0f, 0.0f);
+					break;
+				default:
+					break;
+				}
+			}
+		}
 		break;
 	case SDL_MOUSEMOTION:
 	case SDL_MOUSEBUTTONDOWN:
@@ -289,55 +345,39 @@ void Camera::HandleActions()
 			}
 		}
 	}
-}
 
-void Camera::HandleKeyboardInput(const SDL_Event& e)
-{
-	if (e.key.repeat > 0) // ignore all repeated keys
+	auto movementSpeed = _movementSpeed * std::max(_position.y * 0.01f, 0.0f) + 1.0f;
+
+	// ignore all repeated keys
+	if (actionSystem.GetRepeatAll(input::BindableActionMap::ROTATE_ON, input::BindableActionMap::MOVE_LEFT,
+	                              input::BindableActionMap::MOVE_RIGHT, input::BindableActionMap::MOVE_FORWARDS,
+	                              input::BindableActionMap::MOVE_BACKWARDS, input::BindableActionMap::ROTATE_LEFT,
+	                              input::BindableActionMap::ROTATE_RIGHT, input::BindableActionMap::TILT_UP,
+	                              input::BindableActionMap::TILT_DOWN))
 	{
 		return;
 	}
 
-	auto movementSpeed = _movementSpeed * std::max(_position.y * 0.01f, 0.0f) + 1.0f;
-
-	switch (e.key.keysym.scancode) // stop Fly if any movement keys are pressed down
+	// stop Fly if any movement keys are pressed down
+	if (actionSystem.GetAny(input::BindableActionMap::ROTATE_ON, input::BindableActionMap::MOVE_LEFT,
+	                        input::BindableActionMap::MOVE_RIGHT, input::BindableActionMap::MOVE_FORWARDS,
+	                        input::BindableActionMap::MOVE_BACKWARDS, input::BindableActionMap::ROTATE_LEFT,
+	                        input::BindableActionMap::ROTATE_RIGHT, input::BindableActionMap::TILT_UP,
+	                        input::BindableActionMap::TILT_DOWN))
 	{
-	case SDL_SCANCODE_W:
-	case SDL_SCANCODE_S:
-	case SDL_SCANCODE_A:
-	case SDL_SCANCODE_D:
-	case SDL_SCANCODE_LCTRL:
-	case SDL_SCANCODE_SPACE:
-	case SDL_SCANCODE_Q:
-	case SDL_SCANCODE_E:
-	case SDL_SCANCODE_R:
-	case SDL_SCANCODE_V:
-		if (e.type == SDL_KEYDOWN)
-		{
-			_flyInProgress = false;
-		}
-		break;
-	default:
-		break;
+		_flyInProgress = false;
 	}
 
-	if (!(_mmouseIsDown || _lmouseIsDown))
+	if (_mmouseIsDown || _lmouseIsDown)
 	{
-		switch (e.key.keysym.scancode)
+		ResetVelocities();
+	}
+	else
+	{
+		_shiftHeld = actionSystem.GetBindable(input::BindableActionMap::ROTATE_ON);
+		if (actionSystem.GetBindableChanged(input::BindableActionMap::MOVE_FORWARDS))
 		{
-		case SDL_SCANCODE_LSHIFT:
-		case SDL_SCANCODE_RSHIFT:
-			if (e.type == SDL_KEYDOWN)
-			{
-				_shiftHeld = true;
-			}
-			if (e.type == SDL_KEYUP)
-			{
-				_shiftHeld = false;
-			}
-			break;
-		case SDL_SCANCODE_W:
-			if (e.type == SDL_KEYDOWN)
+			if (actionSystem.GetBindable(input::BindableActionMap::MOVE_FORWARDS))
 			{
 				glm::vec3 temp = GetForward() * glm::vec3(1.f, 0.f, 1.f);
 				glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
@@ -350,9 +390,10 @@ void Camera::HandleKeyboardInput(const SDL_Event& e)
 				_dv -= _dwv;
 				_dwv = glm::vec3(0.0f, 0.0f, 0.0f);
 			}
-			break;
-		case SDL_SCANCODE_S:
-			if (e.type == SDL_KEYDOWN)
+		}
+		else if (actionSystem.GetBindableChanged(input::BindableActionMap::MOVE_BACKWARDS))
+		{
+			if (actionSystem.GetBindable(input::BindableActionMap::MOVE_BACKWARDS))
 			{
 				glm::vec3 temp = -GetForward() * glm::vec3(1.f, 0.f, 1.f);
 				glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
@@ -365,62 +406,31 @@ void Camera::HandleKeyboardInput(const SDL_Event& e)
 				_dv -= _dsv;
 				_dsv = glm::vec3(0.0f, 0.0f, 0.0f);
 			}
-			break;
-		case SDL_SCANCODE_A:
-			_dv.x += (e.type == SDL_KEYDOWN) ? -movementSpeed : -_dv.x;
-			break;
-		case SDL_SCANCODE_D:
-			_dv.x += (e.type == SDL_KEYDOWN) ? movementSpeed : -_dv.x;
-			break;
-		case SDL_SCANCODE_LCTRL:
-			if (e.type == SDL_KEYDOWN)
-			{
-				glm::vec3 temp = -glm::vec3(0.f, 1.f, 0.f);
-				glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
-				temp = glm::normalize(temp) * mRotation * movementSpeed;
-				_dv += temp;
-				_ddv = temp;
-			}
-			else
-			{
-				_dv -= _ddv;
-				_ddv = glm::vec3(0.0f, 0.0f, 0.0f);
-			}
-			break;
-		case SDL_SCANCODE_SPACE:
-			if (e.type == SDL_KEYDOWN)
-			{
-				glm::vec3 temp = glm::vec3(0.f, 1.f, 0.f);
-				glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
-				temp = glm::normalize(temp) * mRotation * movementSpeed;
-				_dv += temp;
-				_duv = temp;
-			}
-			else
-			{
-				_dv -= _duv;
-				_duv = glm::vec3(0.0f, 0.0f, 0.0f);
-			}
-			break;
-		case SDL_SCANCODE_Q:
-			_drv.y += (e.type == SDL_KEYDOWN) ? _movementSpeed : -_drv.y;
-			break;
-		case SDL_SCANCODE_E:
-			_drv.y += (e.type == SDL_KEYDOWN) ? -_movementSpeed : -_drv.y;
-			break;
-		case SDL_SCANCODE_R:
-			_drv.x += (e.type == SDL_KEYDOWN) ? _movementSpeed : -_drv.x;
-			break;
-		case SDL_SCANCODE_V:
-			_drv.x += (e.type == SDL_KEYDOWN) ? -_movementSpeed : -_drv.x;
-			break;
-		default:
-			break;
 		}
-	}
-	else
-	{
-		ResetVelocities();
+		else if (actionSystem.GetBindableChanged(input::BindableActionMap::MOVE_LEFT))
+		{
+			_dv.x += actionSystem.GetBindable(input::BindableActionMap::MOVE_LEFT) ? -movementSpeed : -_dv.x;
+		}
+		else if (actionSystem.GetBindableChanged(input::BindableActionMap::MOVE_RIGHT))
+		{
+			_dv.x += actionSystem.GetBindable(input::BindableActionMap::MOVE_RIGHT) ? movementSpeed : -_dv.x;
+		}
+		else if (actionSystem.GetBindableChanged(input::BindableActionMap::ROTATE_LEFT))
+		{
+			_drv.y += actionSystem.GetBindable(input::BindableActionMap::ROTATE_LEFT) ? _movementSpeed : -_drv.y;
+		}
+		else if (actionSystem.GetBindableChanged(input::BindableActionMap::ROTATE_RIGHT))
+		{
+			_drv.y += actionSystem.GetBindable(input::BindableActionMap::ROTATE_RIGHT) ? -_movementSpeed : -_drv.y;
+		}
+		else if (actionSystem.GetBindableChanged(input::BindableActionMap::TILT_UP))
+		{
+			_drv.x += actionSystem.GetBindable(input::BindableActionMap::TILT_UP) ? _movementSpeed : -_drv.x;
+		}
+		else if (actionSystem.GetBindableChanged(input::BindableActionMap::TILT_DOWN))
+		{
+			_drv.x += actionSystem.GetBindable(input::BindableActionMap::TILT_DOWN) ? -_movementSpeed : -_drv.x;
+		}
 	}
 }
 
