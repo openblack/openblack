@@ -15,8 +15,8 @@
 #include <glm/gtx/string_cast.hpp>
 #include <spdlog/spdlog.h>
 
-#include "3D/Camera.h"
 #include "3D/LandIslandInterface.h"
+#include "Camera/Camera.h"
 #include "ECS/Archetypes/AbodeArchetype.h"
 #include "ECS/Archetypes/AnimatedStaticArchetype.h"
 #include "ECS/Archetypes/BigForestArchetype.h"

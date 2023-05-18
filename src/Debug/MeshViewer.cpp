@@ -18,10 +18,10 @@
 #include <imgui_bitfield.h>
 #include <spdlog/spdlog.h>
 
-#include "3D/Camera.h"
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIslandInterface.h"
+#include "Camera/Camera.h"
 #include "Debug/Gui.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Registry.h"

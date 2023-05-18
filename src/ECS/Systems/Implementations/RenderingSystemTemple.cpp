@@ -13,8 +13,8 @@
 
 #include <glm/gtx/transform.hpp>
 
-#include "3D/Camera.h"
 #include "3D/L3DMesh.h"
+#include "Camera/Camera.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Stream.h"
 #include "ECS/Components/Temple.h"

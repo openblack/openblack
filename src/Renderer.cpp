@@ -17,13 +17,13 @@
 #include <glm/gtx/transform.hpp>
 #include <spdlog/spdlog.h>
 
-#include "3D/Camera.h"
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandBlock.h"
 #include "3D/LandIslandInterface.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
+#include "Camera/Camera.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Registry.h"

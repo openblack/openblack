@@ -41,7 +41,7 @@
 #define BGFX_EMBEDDED_SHADER_DX9BC(...)
 #endif
 
-#include "3D/Camera.h"
+#include "Camera/Camera.h"
 
 // clang-format off
 #define SHADER_NAME vs_line
