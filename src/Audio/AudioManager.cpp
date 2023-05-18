@@ -17,8 +17,8 @@
 #include <glm/gtc/constants.hpp>
 #include <spdlog/spdlog.h>
 
-#include "3D/Camera.h"
 #include "AudioPlayerInterface.h"
+#include "Camera/Camera.h"
 #include "ECS/Registry.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"

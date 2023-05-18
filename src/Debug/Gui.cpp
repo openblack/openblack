@@ -41,8 +41,8 @@
 #include <SDL2/SDL_syswm.h>
 #endif
 
-#include <3D/Camera.h>
 #include <3D/Sky.h>
+#include <Camera/Camera.h>
 #include <ECS/Components/LivingAction.h>
 #include <ECS/Components/Transform.h>
 #include <ECS/Components/Villager.h>

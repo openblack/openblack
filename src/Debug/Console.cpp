@@ -15,7 +15,7 @@
 #include <glm/gtc/constants.hpp>
 #include <imgui.h>
 
-#include "3D/Camera.h"
+#include "Camera/Camera.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"

@@ -15,7 +15,7 @@
 
 #include <glm/gtx/euler_angles.hpp>
 
-#include "3D/Camera.h"
+#include "Camera/Camera.h"
 #include "Common/EventManager.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Temple.h"
