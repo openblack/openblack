@@ -71,6 +71,7 @@ public:
 	void Update(std::chrono::microseconds dt);
 	void ProcessSDLEvent(const SDL_Event&);
 
+	void HandleActions();
 	void HandleKeyboardInput(const SDL_Event&);
 	void HandleMouseInput(const SDL_Event&);
 

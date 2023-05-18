@@ -355,6 +355,7 @@ bool Game::Update()
 		{
 			_eventManager->Create<SDL_Event>(e);
 		}
+		_camera->HandleActions();
 	}
 
 	if (!this->_config.running)
