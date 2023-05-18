@@ -19,8 +19,6 @@
 
 #include "ECS/Components/Transform.h"
 
-union SDL_Event;
-
 namespace openblack
 {
 
@@ -69,7 +67,6 @@ public:
 	bool ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& outScreenPosition) const;
 
 	void Update(std::chrono::microseconds dt);
-	void ProcessSDLEvent(const SDL_Event&);
 
 	void HandleActions();
 
