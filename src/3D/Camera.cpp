@@ -11,7 +11,6 @@
 
 #include <optional>
 
-#include <SDL_events.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/intersect.hpp>
@@ -79,8 +78,7 @@ std::optional<ecs::components::Transform> Camera::RaycastMouseToLand()
 	const auto windowSize = Locator::windowing::value().GetSize();
 	glm::vec3 rayOrigin;
 	glm::vec3 rayDirection;
-	glm::ivec2 mouseVec;
-	SDL_GetMouseState(&mouseVec.x, &mouseVec.y);
+	const auto mouseVec = Locator::gameActionSystem::value().GetMousePosition();
 	DeprojectScreenToWorld(mouseVec, windowSize, rayOrigin, rayDirection);
 	const auto& dynamicsSystem = Locator::dynamicsSystem::value();
 	if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
@@ -233,137 +231,13 @@ bool Camera::ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, g
 	return true;
 }
 
-void Camera::ProcessSDLEvent(const SDL_Event& e)
-{
-	switch (e.type)
-	{
-	case SDL_KEYDOWN:
-		// ignore all repeated keys
-		if (e.key.repeat == 0)
-		{
-			if (_mmouseIsDown || _lmouseIsDown)
-			{
-				ResetVelocities();
-			}
-			else
-			{
-				const auto movementSpeed =
-				    _movementSpeed * 4 * glm::smoothstep(0.1f, 1.0f, _position.y * 0.01f) * glm::log(_position.y + 1);
-				glm::vec3 temp = glm::vec3(0.f, 1.f, 0.f);
-				const glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
-				switch (e.key.keysym.scancode)
-				{
-				case SDL_SCANCODE_LCTRL:
-					temp = glm::normalize(-temp) * mRotation * movementSpeed;
-					_dv += temp;
-					_ddv = temp;
-					_flyInProgress = false;
-					break;
-				case SDL_SCANCODE_SPACE:
-					temp = glm::normalize(temp) * mRotation * movementSpeed;
-					_dv += temp;
-					_duv = temp;
-					_flyInProgress = false;
-					break;
-				default:
-					break;
-				}
-			}
-		}
-		break;
-	case SDL_KEYUP:
-		// ignore all repeated keys
-		if (e.key.repeat == 0)
-		{
-			if (_mmouseIsDown || _lmouseIsDown)
-			{
-				ResetVelocities();
-			}
-			else
-			{
-				switch (e.key.keysym.scancode)
-				{
-				case SDL_SCANCODE_LCTRL:
-					_dv -= _ddv;
-					_ddv = glm::vec3(0.0f, 0.0f, 0.0f);
-					break;
-				case SDL_SCANCODE_SPACE:
-					_dv -= _duv;
-					_duv = glm::vec3(0.0f, 0.0f, 0.0f);
-					break;
-				default:
-					break;
-				}
-			}
-		}
-		break;
-	case SDL_MOUSEMOTION:
-	{
-		const auto& actionSystem = Locator::gameActionSystem::value();
-		if (actionSystem.Get(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON))
-		{
-			if (_shiftHeld) // Holding down the middle mouse button and shift enables FPV camera rotation.
-			{
-				glm::vec3 rot = GetRotation();
-				rot.y -= e.motion.xrel * glm::radians(0.1f);
-				rot.x -= e.motion.yrel * glm::radians(0.1f);
-				SetRotation(rot);
-			}
-			else // Holding down the middle mouse button without shift enables hand orbit camera rotation.
-			{
-				auto& entityReg = Locator::entitiesRegistry::value();
-				auto handEntity = Game::Instance()->GetHand();
-				auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
-				auto handPos = handTransform.position;
-
-				auto handDist = glm::length2(handPos - _position);
-				if (handDist > 250000.0f) // if hand is more than 500 away (500^2)
-				{
-					handPos = _position + GetForward() * 500.0f; // orbit around a point 500 away from cam
-				}
-				const auto windowSize = static_cast<glm::vec2>(Locator::windowing::value().GetSize());
-				const float yaw = e.motion.xrel * (glm::two_pi<float>() / windowSize.x);
-				float pitch = e.motion.yrel * (glm::pi<float>() / windowSize.y);
-
-				// limit orbit cam by cam rotation in x
-				if (pitch > 0.0f)
-				{
-					auto pitchMult = glm::smoothstep(0.f, 0.1f, _rotation.x + glm::radians(60.0f));
-					pitch *= pitchMult;
-				}
-
-				_rotation.x -= pitch;
-				_rotation.y -= yaw;
-
-				glm::mat4 rotationMatrixX(1.0f);
-				rotationMatrixX = glm::rotate(rotationMatrixX, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
-				_position = (rotationMatrixX * glm::vec4(_position - handPos, 0.0f)) + glm::vec4(handPos, 0.0f);
-
-				glm::mat4 rotationMatrixY(1.0f);
-				rotationMatrixY = glm::rotate(rotationMatrixY, pitch, GetRight());
-				_position = (rotationMatrixY * glm::vec4(_position - handPos, 0.0f)) + glm::vec4(handPos, 0.0f);
-				_position.y = (_position.y < 15.0f) ? 15.0f : _position.y;
-			}
-		}
-		else if (actionSystem.Get(input::BindableActionMap::MOVE))
-		{
-			_mouseIsMoving = true;
-		}
-	}
-	break;
-	default:
-		break;
-	}
-}
-
 void Camera::HandleActions()
 {
 	const auto& actionSystem = Locator::gameActionSystem::value();
 
 	if (actionSystem.Get(input::UnbindableActionMap::DOUBLE_CLICK))
 	{
-		glm::ivec2 mousePosition;
-		SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
+		const glm::ivec2 mousePosition = actionSystem.GetMousePosition();
 		const float dist = glm::distance(glm::vec2(mousePosition), glm::vec2(_mouseFirstClick));
 		// fly to double click location.
 		if (dist < 10.0f)
@@ -397,7 +271,7 @@ void Camera::HandleActions()
 	if (actionSystem.GetChanged(input::BindableActionMap::MOVE) && !actionSystem.Get(input::BindableActionMap::MOVE))
 	{
 		_lmouseIsDown = false;
-		SDL_GetMouseState(&_mouseFirstClick.x, &_mouseFirstClick.y);
+		_mouseFirstClick = actionSystem.GetMousePosition();
 	}
 	else if (actionSystem.GetChanged(input::BindableActionMap::MOVE) && actionSystem.Get(input::BindableActionMap::MOVE))
 	{
@@ -465,6 +339,60 @@ void Camera::HandleActions()
 		}
 	}
 
+	if (actionSystem.GetMouseDelta() != glm::zero<glm::ivec2>())
+	{
+		if (actionSystem.Get(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON))
+		{
+			const auto delta = actionSystem.GetMouseDelta();
+			if (_shiftHeld) // Holding down the middle mouse button and shift enables FPV camera rotation.
+			{
+				glm::vec3 rot = GetRotation();
+				rot.y -= delta.x * glm::radians(0.1f);
+				rot.x -= delta.y * glm::radians(0.1f);
+				SetRotation(rot);
+			}
+			else // Holding down the middle mouse button without shift enables hand orbit camera rotation.
+			{
+				auto& entityReg = Locator::entitiesRegistry::value();
+				auto handEntity = Game::Instance()->GetHand();
+				auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
+				auto handPos = handTransform.position;
+
+				auto handDist = glm::length2(handPos - _position);
+				if (handDist > 250000.0f) // if hand is more than 500 away (500^2)
+				{
+					handPos = _position + GetForward() * 500.0f; // orbit around a point 500 away from cam
+				}
+				const auto screenSize = Locator::windowing::value().GetSize();
+				const float yaw = delta.x * (glm::two_pi<float>() / screenSize.x);
+				float pitch = delta.y * (glm::pi<float>() / screenSize.y);
+
+				// limit orbit cam by cam rotation in x
+				if (pitch > 0.0f)
+				{
+					auto pitchMult = glm::smoothstep(0.f, 0.1f, _rotation.x + glm::radians(60.0f));
+					pitch *= pitchMult;
+				}
+
+				_rotation.x -= pitch;
+				_rotation.y -= yaw;
+
+				glm::mat4 rotationMatrixX(1.0f);
+				rotationMatrixX = glm::rotate(rotationMatrixX, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
+				_position = (rotationMatrixX * glm::vec4(_position - handPos, 0.0f)) + glm::vec4(handPos, 0.0f);
+
+				glm::mat4 rotationMatrixY(1.0f);
+				rotationMatrixY = glm::rotate(rotationMatrixY, pitch, GetRight());
+				_position = (rotationMatrixY * glm::vec4(_position - handPos, 0.0f)) + glm::vec4(handPos, 0.0f);
+				_position.y = (_position.y < 15.0f) ? 15.0f : _position.y;
+			}
+		}
+		else if (actionSystem.Get(input::BindableActionMap::MOVE))
+		{
+			_mouseIsMoving = true;
+		}
+	}
+
 	auto movementSpeed = _movementSpeed * std::max(_position.y * 0.01f, 0.0f) + 1.0f;
 
 	// ignore all repeated keys
@@ -493,10 +421,10 @@ void Camera::HandleActions()
 	}
 	else
 	{
-		_shiftHeld = actionSystem.GetBindable(input::BindableActionMap::ROTATE_ON);
-		if (actionSystem.GetBindableChanged(input::BindableActionMap::MOVE_FORWARDS))
+		_shiftHeld = actionSystem.Get(input::BindableActionMap::ROTATE_ON);
+		if (actionSystem.GetChanged(input::BindableActionMap::MOVE_FORWARDS))
 		{
-			if (actionSystem.GetBindable(input::BindableActionMap::MOVE_FORWARDS))
+			if (actionSystem.Get(input::BindableActionMap::MOVE_FORWARDS))
 			{
 				glm::vec3 temp = GetForward() * glm::vec3(1.f, 0.f, 1.f);
 				glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
@@ -510,9 +438,9 @@ void Camera::HandleActions()
 				_dwv = glm::vec3(0.0f, 0.0f, 0.0f);
 			}
 		}
-		else if (actionSystem.GetBindableChanged(input::BindableActionMap::MOVE_BACKWARDS))
+		else if (actionSystem.GetChanged(input::BindableActionMap::MOVE_BACKWARDS))
 		{
-			if (actionSystem.GetBindable(input::BindableActionMap::MOVE_BACKWARDS))
+			if (actionSystem.Get(input::BindableActionMap::MOVE_BACKWARDS))
 			{
 				glm::vec3 temp = -GetForward() * glm::vec3(1.f, 0.f, 1.f);
 				glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
@@ -526,29 +454,60 @@ void Camera::HandleActions()
 				_dsv = glm::vec3(0.0f, 0.0f, 0.0f);
 			}
 		}
-		else if (actionSystem.GetBindableChanged(input::BindableActionMap::MOVE_LEFT))
+		else if (actionSystem.GetChanged(input::BindableActionMap::MOVE_LEFT))
 		{
-			_dv.x += actionSystem.GetBindable(input::BindableActionMap::MOVE_LEFT) ? -movementSpeed : -_dv.x;
+			_dv.x += actionSystem.Get(input::BindableActionMap::MOVE_LEFT) ? -movementSpeed : -_dv.x;
 		}
-		else if (actionSystem.GetBindableChanged(input::BindableActionMap::MOVE_RIGHT))
+		else if (actionSystem.GetChanged(input::BindableActionMap::MOVE_RIGHT))
 		{
-			_dv.x += actionSystem.GetBindable(input::BindableActionMap::MOVE_RIGHT) ? movementSpeed : -_dv.x;
+			_dv.x += actionSystem.Get(input::BindableActionMap::MOVE_RIGHT) ? movementSpeed : -_dv.x;
 		}
-		else if (actionSystem.GetBindableChanged(input::BindableActionMap::ROTATE_LEFT))
+		else if (actionSystem.GetChanged(input::BindableActionMap::ROTATE_LEFT))
 		{
-			_drv.y += actionSystem.GetBindable(input::BindableActionMap::ROTATE_LEFT) ? _movementSpeed : -_drv.y;
+			_drv.y += actionSystem.Get(input::BindableActionMap::ROTATE_LEFT) ? _movementSpeed : -_drv.y;
 		}
-		else if (actionSystem.GetBindableChanged(input::BindableActionMap::ROTATE_RIGHT))
+		else if (actionSystem.GetChanged(input::BindableActionMap::ROTATE_RIGHT))
 		{
-			_drv.y += actionSystem.GetBindable(input::BindableActionMap::ROTATE_RIGHT) ? -_movementSpeed : -_drv.y;
+			_drv.y += actionSystem.Get(input::BindableActionMap::ROTATE_RIGHT) ? -_movementSpeed : -_drv.y;
 		}
-		else if (actionSystem.GetBindableChanged(input::BindableActionMap::TILT_UP))
+		else if (actionSystem.GetChanged(input::BindableActionMap::TILT_UP))
 		{
-			_drv.x += actionSystem.GetBindable(input::BindableActionMap::TILT_UP) ? _movementSpeed : -_drv.x;
+			_drv.x += actionSystem.Get(input::BindableActionMap::TILT_UP) ? _movementSpeed : -_drv.x;
 		}
-		else if (actionSystem.GetBindableChanged(input::BindableActionMap::TILT_DOWN))
+		else if (actionSystem.GetChanged(input::BindableActionMap::TILT_DOWN))
 		{
-			_drv.x += actionSystem.GetBindable(input::BindableActionMap::TILT_DOWN) ? -_movementSpeed : -_drv.x;
+			_drv.x += actionSystem.Get(input::BindableActionMap::TILT_DOWN) ? -_movementSpeed : -_drv.x;
+		}
+		else if (actionSystem.GetChanged(input::BindableActionMap::ZOOM_TO_TEMPLE))
+		{
+			if (actionSystem.Get(input::BindableActionMap::ZOOM_TO_TEMPLE))
+			{
+				movementSpeed =
+				    _movementSpeed * 4 * glm::smoothstep(0.1f, 1.0f, _position.y * 0.01f) * glm::log(_position.y + 1);
+				glm::vec3 temp = glm::vec3(0.f, 1.f, 0.f);
+				const glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
+				if (_shiftHeld)
+				{
+					temp = glm::normalize(-temp) * mRotation * movementSpeed;
+					_dv += temp;
+					_ddv = temp;
+					_flyInProgress = false;
+				}
+				else
+				{
+					temp = glm::normalize(temp) * mRotation * movementSpeed;
+					_dv += temp;
+					_duv = temp;
+					_flyInProgress = false;
+				}
+			}
+			else
+			{
+				_dv -= _ddv;
+				_ddv = glm::vec3(0.0f, 0.0f, 0.0f);
+				_dv -= _duv;
+				_duv = glm::vec3(0.0f, 0.0f, 0.0f);
+			}
 		}
 	}
 }
@@ -564,7 +523,7 @@ void Camera::Update(std::chrono::microseconds dt)
 	const auto size = Locator::windowing::value().GetSize();
 	if (_lmouseIsDown) // drag camera using hand
 	{
-		// get hand transform and project to screen coords
+		// get hand transform and project to screen coordinates
 		auto& entityReg = Locator::entitiesRegistry::value();
 		auto handEntity = Game::Instance()->GetHand();
 		auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
@@ -579,19 +538,19 @@ void Camera::Update(std::chrono::microseconds dt)
 		}
 		if (ProjectWorldToScreen(handPos, viewport, handToScreen) && hit)
 		{
-			// calculate distance between hand and mouse in screen cooords
-			glm::ivec2 mousePosition;
-
-			SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
-			auto handScreenCoords = glm::ivec2(handToScreen);
-			handScreenCoords.y = size.y - handScreenCoords.y;
-			_handScreenVec = mousePosition - handScreenCoords;
+			const auto& actionSystem = Locator::gameActionSystem::value();
+			// calculate distance between hand and mouse in screen coordinates
+			const auto mousePosition = actionSystem.GetMousePosition();
+			auto handScreenCoordinates = glm::ivec2(handToScreen);
+			handScreenCoordinates.y = size.y - handScreenCoordinates.y;
+			_handScreenVec = static_cast<glm::ivec2>(mousePosition) - handScreenCoordinates;
 			_handDragMult = glm::length(glm::vec2(_handScreenVec));
 			worldHandDist = glm::length(hit->position - handPos);
 			_handDragMult /= size.y;
 		}
+		// still on screen but did not hit land
 		else if (!hit)
-		{                            // still on screen but did not hit land
+		{
 			_handDragMult -= 0.002f; // slow down movement
 		}
 		else // if hand is off-screen, culled or behind camera.
@@ -613,7 +572,7 @@ void Camera::Update(std::chrono::microseconds dt)
 		    glm::normalize(GetForward() * glm::vec3(1.f, 0.f, 1.f)) * static_cast<float>(_handScreenVec.y * momentum);
 		auto right = GetRight() * -static_cast<float>(_handScreenVec.x * momentum);
 		auto futurePosition = _position + forward + right;
-		auto logPosY = log(_position.y + 1.0f);
+		auto logPosY = glm::log(_position.y + 1.0f);
 		auto handVelHeightMult = logPosY * logPosY;
 		glm::vec3 vecTo = futurePosition - _position;
 		if (vecTo != glm::vec3(0.0f))
