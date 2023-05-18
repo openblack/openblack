@@ -12,7 +12,11 @@
 #include "GameActionMap.h"
 
 #include <SDL_events.h>
+#include <glm/gtc/constants.hpp>
 #include <spdlog/spdlog.h>
+
+#include "Game.h"
+#include "GameWindow.h"
 
 using namespace openblack::input;
 
@@ -101,6 +105,16 @@ bool GameActionMap::GetUnbindableRepeat(UnbindableActionMap action) const
 	        static_cast<uint8_t>(action)) != 0;
 }
 
+glm::uvec2 GameActionMap::GetMousePosition() const
+{
+	return _mousePosition;
+}
+
+glm::ivec2 GameActionMap::GetMouseDelta() const
+{
+	return _mouseDelta;
+}
+
 void GameActionMap::Frame()
 {
 	if (_bindableMap != BindableActionMap::NONE || _unbindableMap != UnbindableActionMap::NONE)
@@ -165,6 +179,14 @@ void GameActionMap::Frame()
 
 #undef get_print
 
+	{
+		glm::ivec2 absoluteMousePosition;
+		glm::ivec2 screenSize;
+		SDL_GetMouseState(&absoluteMousePosition.x, &absoluteMousePosition.y);
+		Game::Instance()->GetWindow()->GetSize(screenSize.x, screenSize.y);
+		_mousePosition = glm::clamp(absoluteMousePosition, glm::zero<decltype(screenSize)>(), screenSize);
+	}
+	_mouseDelta = glm::ivec2(0, 0);
 	_bindableMapPrevious = _bindableMap;
 	_bindableMap =
 	    static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) &
@@ -256,5 +278,9 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 			_bindableMap = static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) &
 			                                              ~static_cast<uint64_t>(_mouseBindings[event.button.button]));
 		}
+	}
+	else if (event.type == SDL_MOUSEMOTION)
+	{
+		_mouseDelta = {event.motion.xrel, event.motion.yrel};
 	}
 }
