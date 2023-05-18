@@ -27,10 +27,15 @@ public:
 
 	void FlyInit();
 	void ResetVelocities();
-	void Update(std::chrono::microseconds dt, Camera& camera);
-	void HandleActions(Camera& camera);
+	void Update(std::chrono::microseconds dt, const Camera& camera);
+	void HandleActions(const Camera& camera);
+
+	glm::vec3 GetTargetPosition() const { return _targetPosition; }
+	glm::vec3 GetTargetRotation() const { return _targetRotation; }
 
 protected:
+	glm::vec3 _targetPosition;
+	glm::vec3 _targetRotation;
 	glm::vec3 _dv;
 	glm::vec3 _dwv;
 	glm::vec3 _dsv;

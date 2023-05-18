@@ -39,6 +39,11 @@ public:
 	[[nodiscard]] std::optional<ecs::components::Transform> RaycastScreenCoordToLand(glm::vec2 screenCoord) const;
 
 	[[nodiscard]] glm::vec3 GetPosition() const { return _position; }
+	[[nodiscard]] glm::vec3 GetVelocity() const
+	{
+		// TODO
+		return {0.0f, 0.0f, 0.0f};
+	}
 	/// Get rotation as euler angles in radians
 	[[nodiscard]] glm::vec3 GetRotation() const { return _rotation; }
 
