@@ -13,6 +13,8 @@
 
 #include <variant>
 
+#include <glm/vec2.hpp>
+
 union SDL_Event;
 
 namespace openblack::input
@@ -182,6 +184,8 @@ public:
 	[[nodiscard]] virtual bool GetUnbindableChanged(UnbindableActionMap action) const = 0;
 	[[nodiscard]] virtual bool GetBindableRepeat(BindableActionMap action) const = 0;
 	[[nodiscard]] virtual bool GetUnbindableRepeat(UnbindableActionMap action) const = 0;
+	[[nodiscard]] virtual glm::uvec2 GetMousePosition() const = 0;
+	[[nodiscard]] virtual glm::ivec2 GetMouseDelta() const = 0;
 
 	virtual void Frame() = 0;
 	virtual void ProcessEvent(const SDL_Event& event) = 0;

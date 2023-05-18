@@ -38,6 +38,8 @@ public:
 	bool GetUnbindableChanged(UnbindableActionMap action) const final;
 	bool GetBindableRepeat(BindableActionMap action) const final;
 	bool GetUnbindableRepeat(UnbindableActionMap action) const final;
+	glm::uvec2 GetMousePosition() const final;
+	glm::ivec2 GetMouseDelta() const final;
 
 	void Frame() final;
 	void ProcessEvent(const SDL_Event& event) final;
@@ -52,5 +54,7 @@ private:
 	std::unordered_map<uint8_t /*mousebutton*/, BindableActionMap> _mouseBindings;
 	std::unordered_map<uint8_t /*mousebutton*/, std::pair<SDL_Keymod, BindableActionMap>> _mouseModBindings;
 	std::array<std::optional<BindableActionMap>, 2> _mouseWheelBinding; // up, down
+	glm::uvec2 _mousePosition;
+	glm::ivec2 _mouseDelta;
 };
 } // namespace openblack::input
