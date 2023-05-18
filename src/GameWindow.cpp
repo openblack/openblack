@@ -94,8 +94,9 @@ SDL_Window* GameWindow::GetHandle() const
 	return _window.get();
 }
 
-void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) const
+GameWindow::NativeHandles GameWindow::GetNativeHandles() const
 {
+	NativeHandles result {nullptr, nullptr};
 #if defined(__EMSCRIPTEN__)
 	static const char* canvas = "#canvas";
 	nativeWindow = const_cast<void*>(reinterpret_cast<const void*>(canvas));
@@ -129,8 +130,8 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 			SDL_SetWindowData(_window.get(), "wl_egl_window", winImpl);
 		}
 		// NOLINTNEXTLINE(performance-no-int-to-ptr)
-		nativeWindow = reinterpret_cast<void*>(winImpl);
-		nativeDisplay = wmi.info.wl.display;
+		result.nativeWindow = reinterpret_cast<void*>(winImpl);
+		result.nativeDisplay = wmi.info.wl.display;
 	}
 	else
 #endif // defined(SDL_VIDEO_DRIVER_WAYLAND)
@@ -138,8 +139,8 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 	if (wmi.subsystem == SDL_SYSWM_X11)
 	{
 		// NOLINTNEXTLINE(performance-no-int-to-ptr)
-		nativeWindow = reinterpret_cast<void*>(wmi.info.x11.window);
-		nativeDisplay = wmi.info.x11.display;
+		result.nativeWindow = reinterpret_cast<void*>(wmi.info.x11.window);
+		result.nativeDisplay = wmi.info.x11.display;
 	}
 	else
 #endif // defined(SDL_VIDEO_DRIVER_X11)
@@ -148,8 +149,8 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 #if defined(SDL_VIDEO_DRIVER_COCOA)
 	if (wmi.subsystem == SDL_SYSWM_COCOA)
 	{
-		nativeWindow = cbSetupMetalLayer(wmi.info.cocoa.window);
-		nativeDisplay = nullptr;
+		result.nativeWindow = cbSetupMetalLayer(wmi.info.cocoa.window);
+		result.nativeDisplay = nullptr;
 	}
 	else
 #endif // defined(SDL_VIDEO_DRIVER_COCOA)
@@ -158,8 +159,8 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 #if defined(SDL_VIDEO_DRIVER_WINDOWS)
 	if (wmi.subsystem == SDL_SYSWM_WINDOWS)
 	{
-		nativeWindow = wmi.info.win.window;
-		nativeDisplay = nullptr;
+		result.nativeWindow = wmi.info.win.window;
+		result.nativeDisplay = nullptr;
 	}
 	else
 #endif // defined(SDL_VIDEO_DRIVER_WINDOWS)
@@ -168,8 +169,8 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 #if defined(SDL_VIDEO_DRIVER_VIVANTE)
 	if (wmi.subsystem == SDL_SYSWM_VIVANTE)
 	{
-		nativeWindow = wmi.info.vivante.window;
-		nativeDisplay = wmi.info.vivante.display;
+		result.nativeWindow = wmi.info.vivante.window;
+		result.nativeDisplay = wmi.info.vivante.display;
 	}
 	else
 #endif // defined(SDL_VIDEO_DRIVER_VIVANTE)
@@ -178,14 +179,15 @@ void GameWindow::GetNativeHandles(void*& nativeWindow, void*& nativeDisplay) con
 #if defined(SDL_VIDEO_DRIVER_ANDROID)
 	if (wmi.subsystem == SDL_SYSWM_ANDROID)
 	{
-		nativeWindow = wmi.info.android.window;
-		nativeDisplay = nullptr; // wmi.info.android.surface;
+		result.nativeWindow = wmi.info.android.window;
+		result.nativeDisplay = nullptr; // wmi.info.android.surface;
 	}
 	else
 #endif // defined(SDL_VIDEO_DRIVER_ANDROID)
 	{
 		throw std::runtime_error("Unsupported platform or window manager: " + std::to_string(wmi.subsystem));
 	}
+	return result;
 	// clang-format on
 }
 
@@ -199,12 +201,13 @@ float GameWindow::GetBrightness() const
 	return SDL_GetWindowBrightness(_window.get());
 }
 
-void GameWindow::SetBrightness(float brightness)
+GameWindow& GameWindow::SetBrightness(float brightness)
 {
 	if (SDL_SetWindowBrightness(_window.get(), brightness) != 0)
 	{
 		throw std::runtime_error("SDL_SetWindowBrightness Error: " + std::string(SDL_GetError()));
 	}
+	return *this;
 }
 
 uint32_t GameWindow::GetID() const
@@ -217,14 +220,16 @@ uint32_t GameWindow::GetFlags() const
 	return SDL_GetWindowFlags(_window.get());
 }
 
-void GameWindow::GrabInput(bool b)
+GameWindow& GameWindow::GrabInput(bool b)
 {
 	SDL_SetWindowGrab(_window.get(), b ? SDL_TRUE : SDL_FALSE);
+	return *this;
 }
 
-void GameWindow::SetMousePosition(int x, int y)
+GameWindow& GameWindow::SetMousePosition(glm::ivec2 position)
 {
-	SDL_WarpMouseInWindow(_window.get(), x, y);
+	SDL_WarpMouseInWindow(_window.get(), position.x, position.y);
+	return *this;
 }
 
 bool GameWindow::IsInputGrabbed() const
@@ -237,9 +242,10 @@ std::string GameWindow::GetTitle() const
 	return SDL_GetWindowTitle(_window.get());
 }
 
-void GameWindow::SetTitle(const std::string& str)
+GameWindow& GameWindow::SetTitle(const std::string& str)
 {
 	SDL_SetWindowTitle(_window.get(), str.c_str());
+	return *this;
 }
 
 float GameWindow::GetAspectRatio() const
@@ -251,91 +257,112 @@ float GameWindow::GetAspectRatio() const
 	return static_cast<float>(width) / static_cast<float>(height);
 }
 
-void GameWindow::SetPosition(int x, int y)
+GameWindow& GameWindow::SetPosition(glm::ivec2 position)
 {
-	SDL_SetWindowPosition(_window.get(), x, y);
+	SDL_SetWindowPosition(_window.get(), position.x, position.y);
+	return *this;
 }
 
-void GameWindow::GetPosition(int& x, int& y) const
+glm::ivec2 GameWindow::GetPosition() const
 {
-	SDL_GetWindowPosition(_window.get(), &x, &y);
+	glm::ivec2 result;
+	SDL_GetWindowPosition(_window.get(), &result.x, &result.y);
+	return result;
 }
 
-void GameWindow::SetMinimumSize(int width, int height)
+GameWindow& GameWindow::SetMinimumSize(glm::ivec2 size)
 {
-	SDL_SetWindowMinimumSize(_window.get(), width, height);
+	SDL_SetWindowMinimumSize(_window.get(), size.x, size.y);
+	return *this;
 }
 
-void GameWindow::GetMinimumSize(int& width, int& height) const
+glm::ivec2 GameWindow::GetMinimumSize() const
 {
-	SDL_GetWindowMinimumSize(_window.get(), &width, &height);
+	glm::ivec2 result;
+	SDL_GetWindowMinimumSize(_window.get(), &result.x, &result.y);
+	return result;
 }
 
-void GameWindow::SetMaximumSize(int width, int height)
+GameWindow& GameWindow::SetMaximumSize(glm::ivec2 size)
 {
-	SDL_SetWindowMaximumSize(_window.get(), width, height);
+	SDL_SetWindowMaximumSize(_window.get(), size.x, size.y);
+	return *this;
 }
 
-void GameWindow::GetMaximumSize(int& width, int& height) const
+glm::ivec2 GameWindow::GetMaximumSize() const
 {
-	SDL_GetWindowMaximumSize(_window.get(), &width, &height);
+	glm::ivec2 result;
+	SDL_GetWindowMaximumSize(_window.get(), &result.x, &result.y);
+	return result;
 }
 
-void GameWindow::SetSize(int width, int height)
+GameWindow& GameWindow::SetSize(glm::ivec2 size)
 {
-	SDL_SetWindowSize(_window.get(), width, height);
+	SDL_SetWindowSize(_window.get(), size.x, size.y);
+	return *this;
 }
 
-void GameWindow::GetSize(int& width, int& height) const
+glm::ivec2 GameWindow::GetSize() const
 {
-	SDL_GetWindowSize(_window.get(), &width, &height);
+	glm::ivec2 result;
+	SDL_GetWindowSize(_window.get(), &result.x, &result.y);
+	return result;
 }
 
-void GameWindow::Show()
+GameWindow& GameWindow::Show()
 {
 	SDL_ShowWindow(_window.get());
+	return *this;
 }
 
-void GameWindow::Hide()
+GameWindow& GameWindow::Hide()
 {
 	SDL_HideWindow(_window.get());
+	return *this;
 }
 
-void GameWindow::Maximise()
+GameWindow& GameWindow::Maximise()
 {
 	SDL_MaximizeWindow(_window.get());
+	return *this;
 }
 
-void GameWindow::Minimise()
+GameWindow& GameWindow::Minimise()
 {
 	SDL_MinimizeWindow(_window.get());
+	return *this;
 }
 
-void GameWindow::Restore()
+GameWindow& GameWindow::Restore()
 {
 	SDL_RestoreWindow(_window.get());
+	return *this;
 }
 
-void GameWindow::Raise()
+GameWindow& GameWindow::Raise()
 {
 	SDL_RaiseWindow(_window.get());
+	return *this;
 }
 
-void GameWindow::SetBordered(bool b)
+GameWindow& GameWindow::SetBordered(bool b)
 {
 	SDL_SetWindowBordered(_window.get(), b ? SDL_TRUE : SDL_FALSE);
+	return *this;
 }
 
-void GameWindow::SetFullscreen(bool f)
+GameWindow& GameWindow::SetFullscreen(bool f)
 {
 	// todo: use DisplayMode
 	if (SDL_SetWindowFullscreen(_window.get(), f ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0) != 0)
 	{
 		throw std::runtime_error("SDL_SetWindowFullscreen Error: " + std::string(SDL_GetError()));
 	}
+	return *this;
 }
 
-void GameWindow::Close()
+GameWindow& GameWindow::Close()
 {
 	_window.reset(nullptr);
+	return *this;
 }

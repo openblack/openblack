@@ -12,6 +12,7 @@
 #include <algorithm>
 
 #include <SDL.h>
+#include <glm/gtc/constants.hpp>
 #include <imgui.h>
 
 #include "3D/Camera.h"
@@ -217,11 +218,7 @@ void Console::Draw(Game& game)
 {
 	ImGuiIO& io = ImGui::GetIO();
 
-	glm::ivec2 screenSize {};
-	if (game.GetWindow() != nullptr)
-	{
-		game.GetWindow()->GetSize(screenSize.x, screenSize.y);
-	}
+	const glm::ivec2 screenSize = game.GetWindow() != nullptr ? game.GetWindow()->GetSize() : glm::zero<glm::ivec2>();
 	glm::ivec2 mousePosition {};
 	SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
 	if (!io.WantCaptureMouse && screenSize.x > 0 && screenSize.y > 0)
