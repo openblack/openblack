@@ -298,11 +298,59 @@ void Camera::ProcessSDLEvent(const SDL_Event& e)
 		}
 		break;
 	case SDL_MOUSEMOTION:
-	case SDL_MOUSEBUTTONDOWN:
-	case SDL_MOUSEBUTTONUP:
-	case SDL_MOUSEWHEEL:
-		HandleMouseInput(e);
-		break;
+	{
+		const auto& actionSystem = Locator::gameActionSystem::value();
+		if (actionSystem.Get(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON))
+		{
+			if (_shiftHeld) // Holding down the middle mouse button and shift enables FPV camera rotation.
+			{
+				glm::vec3 rot = GetRotation();
+				rot.y -= e.motion.xrel * glm::radians(0.1f);
+				rot.x -= e.motion.yrel * glm::radians(0.1f);
+				SetRotation(rot);
+			}
+			else // Holding down the middle mouse button without shift enables hand orbit camera rotation.
+			{
+				auto& entityReg = Locator::entitiesRegistry::value();
+				auto handEntity = Game::Instance()->GetHand();
+				auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
+				auto handPos = handTransform.position;
+
+				auto handDist = glm::length2(handPos - _position);
+				if (handDist > 250000.0f) // if hand is more than 500 away (500^2)
+				{
+					handPos = _position + GetForward() * 500.0f; // orbit around a point 500 away from cam
+				}
+				const auto windowSize = static_cast<glm::vec2>(Locator::windowing::value().GetSize());
+				const float yaw = e.motion.xrel * (glm::two_pi<float>() / windowSize.x);
+				float pitch = e.motion.yrel * (glm::pi<float>() / windowSize.y);
+
+				// limit orbit cam by cam rotation in x
+				if (pitch > 0.0f)
+				{
+					auto pitchMult = glm::smoothstep(0.f, 0.1f, _rotation.x + glm::radians(60.0f));
+					pitch *= pitchMult;
+				}
+
+				_rotation.x -= pitch;
+				_rotation.y -= yaw;
+
+				glm::mat4 rotationMatrixX(1.0f);
+				rotationMatrixX = glm::rotate(rotationMatrixX, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
+				_position = (rotationMatrixX * glm::vec4(_position - handPos, 0.0f)) + glm::vec4(handPos, 0.0f);
+
+				glm::mat4 rotationMatrixY(1.0f);
+				rotationMatrixY = glm::rotate(rotationMatrixY, pitch, GetRight());
+				_position = (rotationMatrixY * glm::vec4(_position - handPos, 0.0f)) + glm::vec4(handPos, 0.0f);
+				_position.y = (_position.y < 15.0f) ? 15.0f : _position.y;
+			}
+		}
+		else if (actionSystem.Get(input::BindableActionMap::MOVE))
+		{
+			_mouseIsMoving = true;
+		}
+	}
+	break;
 	default:
 		break;
 	}
@@ -342,6 +390,77 @@ void Camera::HandleActions()
 					_flyFromTan += glm::vec3(0.0f, 1.0f, 0.0f) * _flyDist * 0.4f;
 					_flyToTan += glm::vec3(0.0f, -1.0f, 0.0f) * _flyDist * 0.4f;
 				}
+			}
+		}
+	}
+
+	if (actionSystem.GetChanged(input::BindableActionMap::MOVE) && !actionSystem.Get(input::BindableActionMap::MOVE))
+	{
+		_lmouseIsDown = false;
+		SDL_GetMouseState(&_mouseFirstClick.x, &_mouseFirstClick.y);
+	}
+	else if (actionSystem.GetChanged(input::BindableActionMap::MOVE) && actionSystem.Get(input::BindableActionMap::MOVE))
+	{
+		if (!_lmouseIsDown)
+		{
+			ResetVelocities();
+		}
+		if (!_mmouseIsDown)
+		{
+			_lmouseIsDown = true;
+		}
+	}
+	if (actionSystem.GetChanged(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON) &&
+	    !actionSystem.Get(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON))
+	{
+		_mmouseIsDown = false;
+	}
+	else if (actionSystem.GetChanged(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON) &&
+	         actionSystem.Get(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON))
+	{
+		_mmouseIsDown = true;
+		_lmouseIsDown = false;
+		if (!_mmouseIsDown)
+		{
+			ResetVelocities();
+		}
+	}
+
+	if (actionSystem.GetAny(input::BindableActionMap::ZOOM_IN, input::BindableActionMap::ZOOM_OUT)) // scroll up or down
+	{
+		auto movementSpeed = _movementSpeed * 4 * glm::smoothstep(0.1f, 1.0f, _position.y * 0.01f) * glm::log(_position.y + 1);
+		_flyInProgress = false;
+		const auto direction = actionSystem.Get(input::BindableActionMap::ZOOM_IN) ? 10.0f : -10.0f;
+		auto dist = 9999.0f;
+		const auto& dynamicsSystem = Locator::dynamicsSystem::value();
+		if (auto hit = dynamicsSystem.RayCastClosestHit(_position, GetForward(), 1e10f))
+		{
+			dist = glm::length(hit->first.position - _position);
+		}
+		auto amount = (((movementSpeed * direction * _maxMovementSpeed) - _velocity.z) * _accelFactor);
+		if (actionSystem.Get(input::BindableActionMap::ZOOM_IN)) // scrolling in
+		{
+			if (dist > 40.0f) // if the cam is far from the ground
+			{
+				_velocity.z += amount;
+			}
+			else // if the cam is just over the ground
+			{
+				if (_rotation.x > glm::radians(-60.0f)) // rotation greater than -60 degrees
+				{
+					_rotVelocity.x += (((-direction * 4.0f * _maxRotationSpeed) - _rotVelocity.x) * _accelFactor);
+				}
+			}
+		}
+		else // scrolling out
+		{
+			if (dist <= 40.0f && _rotation.x < glm::radians(-50.0f))
+			{
+				_rotVelocity.x += (((-direction * 4.0f * _maxRotationSpeed) - _rotVelocity.x) * _accelFactor);
+			}
+			else
+			{
+				_velocity.z += amount;
 			}
 		}
 	}
@@ -431,135 +550,6 @@ void Camera::HandleActions()
 		{
 			_drv.x += actionSystem.GetBindable(input::BindableActionMap::TILT_DOWN) ? -_movementSpeed : -_drv.x;
 		}
-	}
-}
-
-void Camera::HandleMouseInput(const SDL_Event& e)
-{
-	if (e.type == SDL_MOUSEMOTION && (e.motion.state & SDL_BUTTON(SDL_BUTTON_MIDDLE)) != 0u)
-	{
-		if (_shiftHeld) // Holding down the middle mouse button and shift enables FPV camera rotation.
-		{
-			glm::vec3 rot = GetRotation();
-			rot.y -= e.motion.xrel * glm::radians(0.1f);
-			rot.x -= e.motion.yrel * glm::radians(0.1f);
-			SetRotation(rot);
-		}
-		else // Holding down the middle mouse button without shift enables hand orbit camera rotation.
-		{
-			auto& entityReg = Locator::entitiesRegistry::value();
-			auto handEntity = Game::Instance()->GetHand();
-			auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
-			auto handPos = handTransform.position;
-
-			auto handDist = glm::length2(handPos - _position);
-			if (handDist > 250000.0f) // if hand is more than 500 away (500^2)
-			{
-				handPos = _position + GetForward() * 500.0f; // orbit around a point 500 away from cam
-			}
-			const auto screenSize = Locator::windowing::value().GetSize();
-			const float yaw = e.motion.xrel * (glm::two_pi<float>() / screenSize.x);
-			float pitch = e.motion.yrel * (glm::pi<float>() / screenSize.y);
-
-			// limit orbit cam by cam rotation in x
-			if (pitch > 0.0f)
-			{
-				auto pitchMult = glm::smoothstep(0.f, 0.1f, _rotation.x + glm::radians(60.0f));
-				pitch *= pitchMult;
-			}
-
-			_rotation.x -= pitch;
-			_rotation.y -= yaw;
-
-			glm::mat4 rotationMatrixX(1.0f);
-			rotationMatrixX = glm::rotate(rotationMatrixX, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
-			_position = (rotationMatrixX * glm::vec4(_position - handPos, 0.0f)) + glm::vec4(handPos, 0.0f);
-
-			glm::mat4 rotationMatrixY(1.0f);
-			rotationMatrixY = glm::rotate(rotationMatrixY, pitch, GetRight());
-			_position = (rotationMatrixY * glm::vec4(_position - handPos, 0.0f)) + glm::vec4(handPos, 0.0f);
-			_position.y = (_position.y < 15.0f) ? 15.0f : _position.y;
-		}
-	}
-	else if (e.type == SDL_MOUSEMOTION && (e.motion.state & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0)
-	{
-		_mouseIsMoving = true;
-	}
-	else if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON(SDL_BUTTON_LEFT))
-	{
-		_lmouseIsDown = false;
-	}
-	else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON(SDL_BUTTON_LEFT))
-	{
-		if (!_lmouseIsDown)
-		{
-			ResetVelocities();
-		}
-		if (!_mmouseIsDown)
-		{
-			_lmouseIsDown = true;
-		}
-	}
-	else if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON(SDL_BUTTON_MIDDLE))
-	{
-		_mmouseIsDown = false;
-	}
-	else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON(SDL_BUTTON_MIDDLE))
-	{
-		_mmouseIsDown = true;
-		_lmouseIsDown = false;
-		if (!_mmouseIsDown)
-		{
-			ResetVelocities();
-		}
-	}
-	if (e.type == SDL_MOUSEWHEEL)
-	{
-		_flyInProgress = false;
-		auto movementSpeed = _movementSpeed * 4 * glm::smoothstep(0.1f, 1.0f, _position.y * 0.01f) * log(_position.y + 1);
-		if (e.wheel.y != 0) // scroll up or down
-		{
-			float dist = 9999.0f;
-			const auto& dynamicsSystem = Locator::dynamicsSystem::value();
-			if (auto hit = dynamicsSystem.RayCastClosestHit(_position, GetForward(), 1e10f))
-			{
-				dist = glm::length(hit->first.position - _position);
-			}
-			auto amount = (((movementSpeed * e.wheel.y * _maxMovementSpeed) - _velocity.z) * _accelFactor);
-			if (e.wheel.y > 0.0f) // scrolling in
-			{
-				if (dist > 40.0f) // if the cam is far from the ground
-				{
-					_velocity.z += amount;
-				}
-				else // if the cam is just over the ground
-				{
-					if (_rotation.x > glm::radians(-60.0f)) // rotation greater than -60 degrees
-					{
-						_rotVelocity.x += (((-e.wheel.y * 4.0f * _maxRotationSpeed) - _rotVelocity.x) * _accelFactor);
-					}
-				}
-			}
-			else // scrolling out
-			{
-				if (dist <= 40.0f && _rotation.x < glm::radians(-50.0f))
-				{
-					_rotVelocity.x += (((-e.wheel.y * 4.0f * _maxRotationSpeed) - _rotVelocity.x) * _accelFactor);
-				}
-				else
-				{
-					_velocity.z += amount;
-				}
-			}
-		}
-		if (e.wheel.x != 0) // mouse wheel left or right
-		{
-			_rotation.z += (((movementSpeed * e.wheel.x * _maxMovementSpeed) - _velocity.z) * _accelFactor);
-		}
-	}
-	if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON(SDL_BUTTON_LEFT) && e.button.clicks == 1)
-	{
-		SDL_GetMouseState(&_mouseFirstClick.x, &_mouseFirstClick.y);
 	}
 }
 

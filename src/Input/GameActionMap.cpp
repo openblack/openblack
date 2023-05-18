@@ -12,11 +12,12 @@
 #include "GameActionMap.h"
 
 #include <SDL_events.h>
+#include <glm/common.hpp>
 #include <glm/gtc/constants.hpp>
 #include <spdlog/spdlog.h>
 
-#include "Game.h"
-#include "GameWindow.h"
+#include "Locator.h"
+#include "Windowing/WindowingInterface.h"
 
 using namespace openblack::input;
 
@@ -181,9 +182,9 @@ void GameActionMap::Frame()
 
 	{
 		glm::ivec2 absoluteMousePosition;
-		glm::ivec2 screenSize;
 		SDL_GetMouseState(&absoluteMousePosition.x, &absoluteMousePosition.y);
-		Game::Instance()->GetWindow()->GetSize(screenSize.x, screenSize.y);
+		const auto screenSize =
+		    Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::ivec2(1.0f, 1.0f);
 		_mousePosition = glm::clamp(absoluteMousePosition, glm::zero<decltype(screenSize)>(), screenSize);
 	}
 	_mouseDelta = glm::ivec2(0, 0);
