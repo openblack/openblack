@@ -534,3 +534,13 @@ void CameraModel::Update(std::chrono::microseconds dt, const Camera& camera)
 	_rotVelocity *= airResistance;
 	_mouseIsMoving = false;
 }
+
+glm::vec3 CameraModel::GetTargetPosition() const
+{
+	return _targetPosition;
+}
+
+glm::vec3 CameraModel::GetTargetRotation() const
+{
+	return _targetRotation;
+}
