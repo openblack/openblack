@@ -231,6 +231,16 @@ Camera& Camera::SetPosition(const glm::vec3& position)
 	return *this;
 }
 
+Camera& Camera::SetFocus(const glm::vec3& position)
+{
+	const auto viewMatrix = glm::lookAt(_position, position, glm::vec3(0.0f, 1.0f, 0.0f));
+	const auto rotationMatrix = static_cast<glm::mat3>(viewMatrix);
+	const auto rotation = static_cast<glm::quat>(rotationMatrix);
+	_rotation = glm::eulerAngles(rotation);
+
+	return *this;
+}
+
 Camera& Camera::SetRotation(const glm::vec3& eulerRadians)
 {
 	_rotation = eulerRadians;

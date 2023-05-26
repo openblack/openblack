@@ -890,7 +890,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 	(*_camera)
 	    .SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip)
 	    .SetPosition(glm::vec3(1441.56f, 24.764f, 2081.76f))
-	    .SetRotation(glm::radians(glm::vec3(0.0f, -45.0f, 0.0f)));
+	    .SetFocus(glm::vec3(1442.27f, 24.764f, 2082.47f));
 
 	Script script;
 	script.Load(source);
