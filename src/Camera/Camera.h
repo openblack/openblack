@@ -43,12 +43,12 @@ public:
 	/// Get rotation as euler angles in radians
 	[[nodiscard]] glm::vec3 GetRotation() const;
 
-	void SetPosition(const glm::vec3& position);
+	Camera& SetPosition(const glm::vec3& position);
 	/// Set rotation as euler angles in radians
-	void SetRotation(const glm::vec3& eulerRadians);
+	Camera& SetRotation(const glm::vec3& eulerRadians);
 
-	void SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip);
-	void SetProjectionMatrix(const glm::mat4& projection);
+	Camera& SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip);
+	Camera& SetProjectionMatrix(const glm::mat4& projection);
 
 	[[nodiscard]] glm::vec3 GetForward() const;
 	[[nodiscard]] glm::vec3 GetRight() const;
