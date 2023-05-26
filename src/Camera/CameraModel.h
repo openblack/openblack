@@ -30,8 +30,8 @@ public:
 	void Update(std::chrono::microseconds dt, const Camera& camera);
 	void HandleActions(const Camera& camera);
 
-	glm::vec3 GetTargetPosition() const { return _targetPosition; }
-	glm::vec3 GetTargetRotation() const { return _targetRotation; }
+	glm::vec3 GetTargetPosition() const;
+	glm::vec3 GetTargetRotation() const;
 
 protected:
 	glm::vec3 _targetPosition;

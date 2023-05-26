@@ -194,3 +194,39 @@ void Camera::HandleActions()
 	SetPosition(_model.GetTargetPosition());
 	SetRotation(_model.GetTargetRotation());
 }
+
+const glm::mat4& Camera::GetProjectionMatrix() const
+{
+	return _projectionMatrix;
+}
+
+glm::vec3 Camera::GetPosition() const
+{
+	return _position;
+}
+
+glm::vec3 Camera::GetVelocity() const
+{
+	// TODO
+	return {0.0f, 0.0f, 0.0f};
+}
+
+glm::vec3 Camera::GetRotation() const
+{
+	return _rotation;
+}
+
+void Camera::SetPosition(const glm::vec3& position)
+{
+	_position = position;
+}
+
+void Camera::SetRotation(const glm::vec3& eulerRadians)
+{
+	_rotation = eulerRadians;
+}
+
+void Camera::SetProjectionMatrix(const glm::mat4& projection)
+{
+	_projectionMatrix = projection;
+}
