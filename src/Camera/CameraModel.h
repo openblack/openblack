@@ -27,6 +27,7 @@ class CameraModel
 public:
 	enum class Model : uint8_t
 	{
+		DefaultWorld,
 		Old,
 	};
 
