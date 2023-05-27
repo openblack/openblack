@@ -19,21 +19,13 @@
 #include "Game.h"
 #include "Input/GameActionMapInterface.h"
 #include "Locator.h"
-#include "ReflectionCamera.h"
+#include "ReflectionXZCamera.h"
 
 using namespace openblack;
 
-Camera::Camera(glm::vec3 position, glm::vec3 rotation)
-    : _position(position)
-    , _rotation(glm::radians(rotation))
-    , _projectionMatrix(1.0f)
+Camera::Camera()
 {
 	_model.FlyInit();
-}
-
-Camera::Camera()
-    : Camera(glm::vec3(0.0f), glm::vec3(0.0f))
-{
 }
 
 float Camera::GetHorizontalFieldOfView() const
@@ -120,11 +112,12 @@ glm::vec3 Camera::GetUp() const
 	return mRotation * glm::vec3(0, 1, 0);
 }
 
-std::unique_ptr<Camera> Camera::Reflect(const glm::vec4& reflectionPlane) const
+std::unique_ptr<Camera> Camera::Reflect() const
 {
-	auto reflectionCamera = std::make_unique<ReflectionCamera>(_position, glm::degrees(_rotation), reflectionPlane);
-	reflectionCamera->SetProjectionMatrix(_projectionMatrix);
-
+	// TODO(bwrsandman): The copy to reflection camera has way too much of Camera including model which is useless
+	//                   This also touches on other cameras such as the citadel camera which use a different kind of model
+	auto reflectionCamera = std::make_unique<ReflectionXZCamera>();
+	(*reflectionCamera).SetPosition(_position).SetRotation(_rotation).SetProjectionMatrix(_projectionMatrix);
 	return reflectionCamera;
 }
 

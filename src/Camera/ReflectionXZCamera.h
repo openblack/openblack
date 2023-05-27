@@ -13,22 +13,10 @@
 
 namespace openblack
 {
-class ReflectionCamera: public Camera
+// Reflection of distance 0 about the y-axis
+class ReflectionXZCamera final: public Camera
 {
 public:
-	ReflectionCamera()
-	    : ReflectionCamera(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec4(0.0f))
-	{
-	}
-	ReflectionCamera(glm::vec3 position, glm::vec3 rotation, glm::vec4 reflectionPlane)
-	    : Camera(position, rotation)
-	    , _reflectionPlane(reflectionPlane)
-	{
-	}
-	[[nodiscard]] glm::mat4 GetViewMatrix() const override;
-
-private:
-	glm::vec4 _reflectionPlane;
-	void ReflectMatrix(glm::mat4& m, const glm::vec4& plane) const;
+	[[nodiscard]] glm::mat4 GetViewMatrix() const final;
 };
 } // namespace openblack
