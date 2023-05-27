@@ -355,7 +355,7 @@ bool Game::Update()
 		{
 			_eventManager->Create<SDL_Event>(e);
 		}
-		_camera->HandleActions();
+		_camera->HandleActions(deltaTime);
 	}
 
 	if (!this->_config.running)
