@@ -210,6 +210,17 @@ glm::vec3 Camera::GetFocus() const
 	return _focus;
 }
 
+glm::vec3 Camera::GetTargetPosition() const
+{
+	// TODO: Camera should interpolate between current state and target with a modified sigmoid interpolation
+	return _position;
+}
+
+glm::vec3 Camera::GetTargetFocus() const
+{
+	// TODO: Camera should interpolate between current state and target with a modified sigmoid interpolation
+	return _focus;
+}
 
 glm::vec3 Camera::GetVelocity() const
 {

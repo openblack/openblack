@@ -326,6 +326,9 @@ void OldCameraModel::HandleActions([[maybe_unused]] std::chrono::microseconds dt
 			}
 		}
 	}
+
+	camera.SetPosition(GetTargetPosition());
+	camera.SetFocus(GetTargetFocus());
 }
 
 std::optional<CameraModel::CameraInterpolationUpdateInfo> OldCameraModel::Update(std::chrono::microseconds dt,
