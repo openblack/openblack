@@ -35,7 +35,6 @@ public:
 	Water();
 	~Water();
 
-	[[nodiscard]] glm::vec4 GetReflectionPlane() const { return {0.0f, 1.0f, 0.0f, 0.0f}; };
 	[[nodiscard]] graphics::FrameBuffer& GetFrameBuffer() const;
 
 private:

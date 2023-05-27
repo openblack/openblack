@@ -26,15 +26,13 @@ namespace openblack
 class Camera
 {
 public:
-	Camera(glm::vec3, glm::vec3);
 	Camera();
-
 	virtual ~Camera() = default;
 
 	[[nodiscard]] virtual float GetHorizontalFieldOfView() const;
 	[[nodiscard]] virtual glm::mat4 GetViewMatrix() const;
 	[[nodiscard]] const glm::mat4& GetProjectionMatrix() const;
-	[[nodiscard]] virtual glm::mat4 GetViewProjectionMatrix() const;
+	[[nodiscard]] glm::mat4 GetViewProjectionMatrix() const;
 
 	[[nodiscard]] std::optional<ecs::components::Transform> RaycastMouseToLand() const;
 	[[nodiscard]] std::optional<ecs::components::Transform> RaycastScreenCoordToLand(glm::vec2 screenCoord) const;
@@ -56,7 +54,7 @@ public:
 	[[nodiscard]] glm::vec3 GetRight() const;
 	[[nodiscard]] glm::vec3 GetUp() const;
 
-	[[nodiscard]] std::unique_ptr<Camera> Reflect(const glm::vec4& reflectionPlane) const;
+	[[nodiscard]] std::unique_ptr<Camera> Reflect() const;
 
 	void DeprojectScreenToWorld(glm::vec2 screenCoord, glm::vec3& outWorldOrigin, glm::vec3& outWorldDirection) const;
 	bool ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& outScreenPosition) const;
@@ -67,10 +65,10 @@ public:
 	[[nodiscard]] glm::mat4 GetRotationMatrix() const;
 
 protected:
-	glm::vec3 _position;
-	glm::vec3 _rotation;
+	glm::vec3 _position = glm::vec3();
+	glm::vec3 _rotation = glm::vec3();
 	float _xFov = 0.0f; // TODO(#707): This should be a zoomer for animations
-	glm::mat4 _projectionMatrix;
+	glm::mat4 _projectionMatrix = glm::mat4 {1.0f};
 	CameraModel _model;
 };
 

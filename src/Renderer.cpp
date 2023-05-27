@@ -462,7 +462,7 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const
 			DrawSceneDesc drawPassDesc = drawDesc;
 
 			auto& frameBuffer = drawDesc.water.GetFrameBuffer();
-			auto reflectionCamera = drawDesc.camera->Reflect(drawDesc.water.GetReflectionPlane());
+			auto reflectionCamera = drawDesc.camera->Reflect();
 
 			drawPassDesc.viewId = graphics::RenderPass::Reflection;
 			drawPassDesc.camera = reflectionCamera.get();
