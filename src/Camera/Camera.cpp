@@ -35,12 +35,13 @@ float Camera::GetHorizontalFieldOfView() const
 
 glm::mat4 Camera::GetRotationMatrix() const
 {
-	return glm::eulerAngleZXY(_rotation.z, _rotation.x, _rotation.y);
+	return glm::eulerAngleYXZ(_rotation.y, _rotation.x, _rotation.z);
 }
 
 glm::mat4 Camera::GetViewMatrix() const
 {
-	return GetRotationMatrix() * glm::translate(glm::mat4(1.0f), -_position);
+	// Invert the camera's rotation (transposed) and position (negated) to get the view matrix.
+	return glm::translate(glm::transpose(GetRotationMatrix()), -_position);
 }
 
 glm::mat4 Camera::GetViewProjectionMatrix() const
@@ -96,20 +97,17 @@ Camera& Camera::SetProjectionMatrixPerspective(float xFov, float aspect, float n
 glm::vec3 Camera::GetForward() const
 {
 	// Forward is +1 in openblack but is -1 in OpenGL
-	const auto mRotation = static_cast<glm::mat3>(glm::transpose(GetRotationMatrix()));
-	return mRotation * glm::vec3(0, 0, 1);
+	return static_cast<glm::mat3>(GetRotationMatrix()) * glm::vec3(0.0f, 0.0f, 1.0f);
 }
 
 glm::vec3 Camera::GetRight() const
 {
-	const auto mRotation = static_cast<glm::mat3>(glm::transpose(GetRotationMatrix()));
-	return mRotation * glm::vec3(1, 0, 0);
+	return static_cast<glm::mat3>(GetRotationMatrix()) * glm::vec3(1.0f, 0.0f, 0.0f);
 }
 
 glm::vec3 Camera::GetUp() const
 {
-	const auto mRotation = static_cast<glm::mat3>(glm::transpose(GetRotationMatrix()));
-	return mRotation * glm::vec3(0, 1, 0);
+	return static_cast<glm::mat3>(GetRotationMatrix()) * glm::vec3(0.0f, 1.0f, 0.0f);
 }
 
 std::unique_ptr<Camera> Camera::Reflect() const
@@ -227,7 +225,7 @@ Camera& Camera::SetPosition(const glm::vec3& position)
 Camera& Camera::SetFocus(const glm::vec3& position)
 {
 	const auto viewMatrix = glm::lookAt(_position, position, glm::vec3(0.0f, 1.0f, 0.0f));
-	const auto rotationMatrix = static_cast<glm::mat3>(viewMatrix);
+	const auto rotationMatrix = glm::transpose(static_cast<glm::mat3>(viewMatrix));
 	const auto rotation = static_cast<glm::quat>(rotationMatrix);
 	_rotation = glm::eulerAngles(rotation);
 

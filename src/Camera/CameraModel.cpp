@@ -171,17 +171,17 @@ void CameraModel::HandleActions(const Camera& camera)
 			}
 			else // if the cam is just over the ground
 			{
-				if (_targetRotation.x > glm::radians(-60.0f)) // rotation greater than -60 degrees
+				if (_targetRotation.x < glm::radians(60.0f)) // rotation greater than 60 degrees
 				{
-					_rotVelocity.x += (((-direction * 4.0f * _maxRotationSpeed) - _rotVelocity.x) * _accelFactor);
+					_rotVelocity.x += ((direction * 4.0f * _maxRotationSpeed) + _rotVelocity.x) * _accelFactor;
 				}
 			}
 		}
 		else // scrolling out
 		{
-			if (dist <= 40.0f && _targetRotation.x < glm::radians(-50.0f))
+			if (dist <= 40.0f && _targetRotation.x > glm::radians(50.0f))
 			{
-				_rotVelocity.x += (((-direction * 4.0f * _maxRotationSpeed) - _rotVelocity.x) * _accelFactor);
+				_rotVelocity.x += ((direction * 4.0f * _maxRotationSpeed) + _rotVelocity.x) * _accelFactor;
 			}
 			else
 			{
@@ -199,8 +199,8 @@ void CameraModel::HandleActions(const Camera& camera)
 			if (_shiftHeld) // Holding down the middle mouse button and shift enables FPV camera rotation.
 			{
 				glm::vec3 rot = _targetRotation;
-				rot.y -= delta.x * glm::radians(0.1f);
-				rot.x -= delta.y * glm::radians(0.1f);
+				rot.y += delta.x * glm::radians(0.1f);
+				rot.x += delta.y * glm::radians(0.1f);
 				_targetRotation = rot;
 			}
 			// Holding down the middle mouse button without shift enables hand orbit camera rotation.
@@ -220,12 +220,12 @@ void CameraModel::HandleActions(const Camera& camera)
 				// limit orbit cam by cam rotation in x
 				if (pitch > 0.0f)
 				{
-					pitch *= glm::smoothstep(0.f, 0.1f, _targetRotation.x + glm::radians(60.0f));
+					pitch *= glm::smoothstep(0.f, 0.1f, -_targetRotation.x + glm::radians(60.0f));
 				}
 
 				auto cameraRotation = _targetRotation;
-				cameraRotation.x -= pitch;
-				cameraRotation.y -= yaw;
+				cameraRotation.x += pitch;
+				cameraRotation.y += yaw;
 				_targetRotation = cameraRotation;
 
 				glm::mat4 rotationMatrixX(1.0f);
@@ -280,8 +280,7 @@ void CameraModel::HandleActions(const Camera& camera)
 			if (actionSystem.Get(input::BindableActionMap::MOVE_FORWARDS))
 			{
 				glm::vec3 temp = camera.GetForward() * glm::vec3(1.f, 0.f, 1.f);
-				auto mRotation = static_cast<glm::mat3>(glm::transpose(camera.GetRotationMatrix()));
-				temp = glm::normalize(temp) * mRotation * movementSpeed;
+				temp = glm::normalize(temp) * static_cast<glm::mat3>(camera.GetRotationMatrix()) * movementSpeed;
 				_dv += temp;
 				_dwv = temp;
 			}
@@ -296,8 +295,7 @@ void CameraModel::HandleActions(const Camera& camera)
 			if (actionSystem.Get(input::BindableActionMap::MOVE_BACKWARDS))
 			{
 				glm::vec3 temp = -camera.GetForward() * glm::vec3(1.f, 0.f, 1.f);
-				auto mRotation = static_cast<glm::mat3>(glm::transpose(camera.GetRotationMatrix()));
-				temp = glm::normalize(temp) * mRotation * movementSpeed;
+				temp = glm::normalize(temp) * static_cast<glm::mat3>(camera.GetRotationMatrix()) * movementSpeed;
 				_dv += temp;
 				_dsv = temp;
 			}
@@ -369,7 +367,7 @@ void CameraModel::Update(std::chrono::microseconds dt, const Camera& camera)
 {
 	auto airResistance = .92f; // reduced to make more floaty
 	auto fdt = static_cast<float>(dt.count());
-	auto rotation = static_cast<glm::mat3>(glm::transpose(camera.GetViewMatrix()));
+	auto rotation = static_cast<glm::mat3>(camera.GetRotationMatrix());
 
 	// deal with hand pulling camera around
 	float worldHandDist = 0.0f;
@@ -495,12 +493,12 @@ void CameraModel::Update(std::chrono::microseconds dt, const Camera& camera)
 		}
 		else if (_flyProgress >= 0.5f && glm::dot(_flyToNorm, glm::vec3(0.0f, 1.0f, 0.0f)) > 0.8f) // rotate cam down
 		{
-			auto angleDown = -glm::radians(_flyEndAngle) - camera.GetRotation().x;
+			auto angleDown = -glm::radians(_flyEndAngle) + camera.GetRotation().x;
 			_drv.x = angleDown * 2.0f * (((_flyProgress * 2 - 2) * (_flyProgress * 2 - 2)) * -1.0f + 1.0f);
 		}
 		else if (_flyProgress <= 0.5f && cameraPosition.y < _flyThreshold) // rotate cam up
 		{
-			auto angleUp = glm::radians(_flyStartAngle) - camera.GetRotation().x;
+			auto angleUp = glm::radians(_flyStartAngle) + camera.GetRotation().x;
 			_drv.x = angleUp * 0.5f * (((_flyProgress * 2 - 1) * (_flyProgress * 2 - 1)) * -1.0f + 1.0f);
 		}
 		_flyPrevPos = cameraPosition;
@@ -524,10 +522,10 @@ void CameraModel::Update(std::chrono::microseconds dt, const Camera& camera)
 	// stop the camera from going below ground level.
 	_targetPosition =
 	    glm::vec3(cameraPosition.x, (cameraPosition.y < height + 13.0f) ? height + 13.0f : cameraPosition.y, cameraPosition.z);
-	_rotVelocity += (((_drv * _maxRotationSpeed) - _rotVelocity) * _accelFactor);
+	_rotVelocity += -(((_drv * _maxRotationSpeed) - _rotVelocity) * _accelFactor);
 	glm::vec3 rot = camera.GetRotation();
 	rot += glm::radians(_rotVelocity * fdt);
-	rot.x = glm::max(rot.x, glm::radians(-70.0f)); // limit cam rotation in x
+	rot.x = glm::min(rot.x, glm::radians(70.0f)); // limit cam rotation in x
 	_targetRotation = rot;
 
 	_velocity *= airResistance;
