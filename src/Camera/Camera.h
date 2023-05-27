@@ -38,7 +38,10 @@ public:
 	[[nodiscard]] std::optional<ecs::components::Transform> RaycastScreenCoordToLand(glm::vec2 screenCoord) const;
 
 	[[nodiscard]] glm::vec3 GetPosition() const;
+	[[nodiscard]] glm::vec3 GetFocus() const;
+
 	[[nodiscard]] glm::vec3 GetVelocity() const;
+
 	/// Get rotation as euler angles in radians
 	[[nodiscard]] glm::vec3 GetRotation() const;
 
@@ -66,7 +69,7 @@ public:
 
 protected:
 	glm::vec3 _position = glm::vec3();
-	glm::vec3 _rotation = glm::vec3();
+	glm::vec3 _focus = glm::vec3(0.0f, 0.0f, 1.0f);
 	float _xFov = 0.0f; // TODO(#707): This should be a zoomer for animations
 	glm::mat4 _projectionMatrix = glm::mat4 {1.0f};
 	CameraModel _model;

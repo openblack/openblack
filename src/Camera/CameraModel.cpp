@@ -538,7 +538,7 @@ glm::vec3 CameraModel::GetTargetPosition() const
 	return _targetPosition;
 }
 
-glm::vec3 CameraModel::GetTargetRotation() const
+glm::vec3 CameraModel::GetTargetFocus() const
 {
-	return _targetRotation;
+	return _targetPosition + glm::quat(_targetRotation) * glm::vec3(0.0f, 0.0f, 1.0f);
 }
