@@ -35,13 +35,14 @@ float Camera::GetHorizontalFieldOfView() const
 
 glm::mat4 Camera::GetRotationMatrix() const
 {
-	return glm::eulerAngleYXZ(_rotation.y, _rotation.x, _rotation.z);
+	const auto rotation = GetRotation();
+	return glm::eulerAngleYXZ(rotation.y, rotation.x, rotation.z);
 }
 
 glm::mat4 Camera::GetViewMatrix() const
 {
 	// Invert the camera's rotation (transposed) and position (negated) to get the view matrix.
-	return glm::translate(glm::transpose(GetRotationMatrix()), -_position);
+	return glm::lookAt(_position, _focus, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 glm::mat4 Camera::GetViewProjectionMatrix() const
@@ -115,7 +116,7 @@ std::unique_ptr<Camera> Camera::Reflect() const
 	// TODO(bwrsandman): The copy to reflection camera has way too much of Camera including model which is useless
 	//                   This also touches on other cameras such as the citadel camera which use a different kind of model
 	auto reflectionCamera = std::make_unique<ReflectionXZCamera>();
-	(*reflectionCamera).SetPosition(_position).SetRotation(_rotation).SetProjectionMatrix(_projectionMatrix);
+	(*reflectionCamera).SetPosition(_position).SetFocus(_focus).SetProjectionMatrix(_projectionMatrix);
 	return reflectionCamera;
 }
 
@@ -183,7 +184,7 @@ void Camera::Update(std::chrono::microseconds dt)
 	_model.Update(dt, *this);
 
 	SetPosition(_model.GetTargetPosition());
-	SetRotation(_model.GetTargetRotation());
+	SetFocus(_model.GetTargetFocus());
 }
 
 void Camera::HandleActions()
@@ -191,7 +192,7 @@ void Camera::HandleActions()
 	_model.HandleActions(*this);
 
 	SetPosition(_model.GetTargetPosition());
-	SetRotation(_model.GetTargetRotation());
+	SetFocus(_model.GetTargetFocus());
 }
 
 const glm::mat4& Camera::GetProjectionMatrix() const
@@ -204,6 +205,12 @@ glm::vec3 Camera::GetPosition() const
 	return _position;
 }
 
+glm::vec3 Camera::GetFocus() const
+{
+	return _focus;
+}
+
+
 glm::vec3 Camera::GetVelocity() const
 {
 	// TODO
@@ -212,7 +219,9 @@ glm::vec3 Camera::GetVelocity() const
 
 glm::vec3 Camera::GetRotation() const
 {
-	return _rotation;
+	// The view matrix transforms from world to view space.
+	// Transposing it (as rotation matrices are orthonormal) gives the inverse - view to world space.
+	return glm::eulerAngles(static_cast<glm::quat>(glm::transpose(GetViewMatrix())));
 }
 
 Camera& Camera::SetPosition(const glm::vec3& position)
@@ -224,17 +233,7 @@ Camera& Camera::SetPosition(const glm::vec3& position)
 
 Camera& Camera::SetFocus(const glm::vec3& position)
 {
-	const auto viewMatrix = glm::lookAt(_position, position, glm::vec3(0.0f, 1.0f, 0.0f));
-	const auto rotationMatrix = glm::transpose(static_cast<glm::mat3>(viewMatrix));
-	const auto rotation = static_cast<glm::quat>(rotationMatrix);
-	_rotation = glm::eulerAngles(rotation);
-
-	return *this;
-}
-
-Camera& Camera::SetRotation(const glm::vec3& eulerRadians)
-{
-	_rotation = eulerRadians;
+	_focus = position;
 
 	return *this;
 }

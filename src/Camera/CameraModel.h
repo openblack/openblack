@@ -31,7 +31,7 @@ public:
 	void HandleActions(const Camera& camera);
 
 	glm::vec3 GetTargetPosition() const;
-	glm::vec3 GetTargetRotation() const;
+	glm::vec3 GetTargetFocus() const;
 
 protected:
 	glm::vec3 _targetPosition;

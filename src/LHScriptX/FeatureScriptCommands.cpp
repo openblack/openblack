@@ -574,8 +574,9 @@ void FeatureScriptCommands::CreateArea([[maybe_unused]] glm::vec3 position, floa
 void FeatureScriptCommands::StartCameraPos(glm::vec3 position)
 {
 	auto& camera = Game::Instance()->GetCamera();
-	const glm::vec3 offset(0.0f, 10.0f, 0.0f);
-	camera.SetPosition(position + offset);
+	const auto offset = glm::vec3(0.0f, 10.0f, 0.0f);
+	const auto focusOffset = camera.GetFocus() - camera.GetPosition();
+	camera.SetPosition(position + offset).SetFocus(position + offset + focusOffset);
 }
 
 void FeatureScriptCommands::FlyByFile([[maybe_unused]] const std::string& path)
