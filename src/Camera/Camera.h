@@ -46,8 +46,6 @@ public:
 	[[nodiscard]] glm::vec3 GetRotation() const;
 
 	Camera& SetPosition(const glm::vec3& position);
-	/// Set rotation as euler angles in radians
-	Camera& SetRotation(const glm::vec3& eulerRadians);
 	Camera& SetFocus(const glm::vec3& position);
 
 	Camera& SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip);
@@ -63,7 +61,7 @@ public:
 	bool ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& outScreenPosition) const;
 
 	void Update(std::chrono::microseconds dt);
-	void HandleActions();
+	void HandleActions(std::chrono::microseconds dt);
 
 	[[nodiscard]] glm::mat4 GetRotationMatrix() const;
 
@@ -72,7 +70,7 @@ protected:
 	glm::vec3 _focus = glm::vec3(0.0f, 0.0f, 1.0f);
 	float _xFov = 0.0f; // TODO(#707): This should be a zoomer for animations
 	glm::mat4 _projectionMatrix = glm::mat4 {1.0f};
-	CameraModel _model;
+	std::unique_ptr<CameraModel> _model;
 };
 
 } // namespace openblack
