@@ -82,6 +82,7 @@ jobs:
         env:
           CC: ${{matrix.cc}}
           CXX: ${{matrix.cxx}}
+          VCPKG_ROOT: ${{GITHUB_WORKSPACE}}/vcpkg
 
       - name: Run CMake+vcpkg+Ninja+CTest to build/test (Release).
         uses: lukka/run-cmake@v10
