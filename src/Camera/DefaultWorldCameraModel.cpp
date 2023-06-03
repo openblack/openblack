@@ -9,7 +9,10 @@
 
 #include "DefaultWorldCameraModel.h"
 
+#include <numeric>
+
 #include <glm/gtc/constants.hpp>
+#include <glm/gtx/polar_coordinates.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 #include <spdlog/spdlog.h>
@@ -75,11 +78,65 @@ void DefaultWorldCameraModel::TiltZoom(glm::vec3& eulerAngles, float scalingFact
 
 	// TODO: zoom_delta to average island distance
 
-	// TODO: Hand status
+	const auto rotateAroundActivated = _rotateAroundDelta != glm::zero<glm::vec3>();
+	if (rotateAroundActivated)
+	{
+		_mode = Mode::Polar;
+	}
+	else
+	{
+		_mode = Mode::Cartesian;
+	}
+	// TODO: TiltOn
 
 	// Reset deltas once they're consumed
 	_keyBoardMoveDelta = glm::zero<glm::vec2>();
 	_rotateAroundDelta = glm::zero<glm::vec3>();
+}
+
+float DefaultWorldCameraModel::GetVerticalLineInverseDistanceWeighingRayCast(const Camera& camera) const
+{
+	std::vector<float> inverseHitDistances;
+	inverseHitDistances.reserve(0x10);
+
+	for (int i = 0; i < 0x10; ++i)
+	{
+		const glm::vec2 coord = glm::vec2(0.5f, i / 16.0f);
+
+		if (const auto hit = camera.RaycastScreenCoordToLand(coord, Camera::Interpolation::Target))
+		{
+			inverseHitDistances.push_back(1.0f / glm::length(hit->position - _targetOrigin));
+		}
+	}
+
+	// Default distance of 50 if no hits happen, therefore divide by size + 1
+	const auto average = std::accumulate(inverseHitDistances.cbegin(), inverseHitDistances.cend(), 1.0f / 50.0f) /
+	                     (inverseHitDistances.size() + 1);
+	return 1.0f / average;
+}
+
+void DefaultWorldCameraModel::UpdateMode(glm::vec3 eulerAngles)
+{
+	switch (_mode)
+	{
+	case Mode::Cartesian:
+		break;
+	case Mode::Polar:
+		UpdateModePolar(eulerAngles);
+		break;
+	}
+}
+
+void DefaultWorldCameraModel::UpdateModePolar(glm::vec3 eulerAngles)
+{
+	// Pitch should already be clamped in TiltZoom
+
+	// Put average distance point on half-line from camera
+	const auto averageIslandPoint = _targetOrigin + _averageIslandDistance * glm::normalize(_targetFocus - _targetOrigin);
+
+	// Rotate camera origin based on euler angles as polar coordinates and focus and distance at interaction
+	_targetOrigin = _focusAtClick + _originFocusDistanceAtInteractionStart * glm::euclidean(glm::yx(eulerAngles));
+	_targetFocus = _focusAtClick;
 }
 
 void DefaultWorldCameraModel::UpdateCameraInterpolationValues(const Camera& camera)
@@ -94,12 +151,23 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraMode
 {
 	UpdateCameraInterpolationValues(camera);
 
+	const float scalingFactor = 60.0f;
+
+	// TODO: update click param ONLY if status has changed
+	_originFocusDistanceAtInteractionStart = glm::distance(_targetOrigin, _targetFocus);
+	_averageIslandDistance = GetVerticalLineInverseDistanceWeighingRayCast(camera);
+	// TODO: add extra based on focus distance and pitch
+
 	// Get angles (yaw, pitch, roll). Roll is always 0
 	glm::vec3 eulerAngles = EulerFromPoints(_targetOrigin, _focusAtClick);
 
-	const float scalingFactor = 60.0f;
-	// Adjust camera's orientation based on user input. Call will reset deltas.
-	TiltZoom(eulerAngles, scalingFactor);
+	if (_mode == Mode::Polar)
+	{
+		// Adjust camera's orientation based on user input. Call will reset deltas.
+		TiltZoom(eulerAngles, scalingFactor);
+	}
+
+	UpdateMode(eulerAngles);
 
 	return {{GetTargetOrigin(), GetTargetFocus(), camera.GetInterpolatorTime()}};
 }
