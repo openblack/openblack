@@ -397,7 +397,8 @@ bool Game::Update()
 			{
 				glm::vec3 rayOrigin;
 				glm::vec3 rayDirection;
-				_camera->DeprojectScreenToWorld(_mousePosition, screenSize, rayOrigin, rayDirection);
+				_camera->DeprojectScreenToWorld(static_cast<glm::vec2>(_mousePosition) / static_cast<glm::vec2>(screenSize),
+				                                rayOrigin, rayDirection);
 				auto& dynamicsSystem = Locator::dynamicsSystem::value();
 
 				if (!glm::any(glm::isnan(rayOrigin) || glm::isnan(rayDirection)))

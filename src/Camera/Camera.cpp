@@ -54,13 +54,19 @@ glm::mat4 Camera::GetViewProjectionMatrix() const
 std::optional<ecs::components::Transform> Camera::RaycastMouseToLand() const
 {
 	// get the hit by raycasting to the land down via the mouse
+	const auto mousePosition = Locator::gameActionSystem::value().GetMousePosition();
+	const auto screenSize = Locator::windowing::value().GetSize();
+	return RaycastScreenCoordToLand(static_cast<glm::vec2>(mousePosition) / static_cast<glm::vec2>(screenSize));
+}
+
+std::optional<ecs::components::Transform> Camera::RaycastScreenCoordToLand(glm::vec2 screenCoord) const
+{
+	// get the hit by raycasting to the land down via the pixel coordinate
 	ecs::components::Transform intersectionTransform;
 	float intersectDistance = 0.0f;
-	const auto windowSize = Locator::windowing::value().GetSize();
 	glm::vec3 rayOrigin;
 	glm::vec3 rayDirection;
-	const auto mouseVec = Locator::gameActionSystem::value().GetMousePosition();
-	DeprojectScreenToWorld(mouseVec, windowSize, rayOrigin, rayDirection);
+	DeprojectScreenToWorld(screenCoord, rayOrigin, rayDirection);
 	const auto& dynamicsSystem = Locator::dynamicsSystem::value();
 	if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
 	{
@@ -114,14 +120,10 @@ std::unique_ptr<Camera> Camera::Reflect(const glm::vec4& reflectionPlane) const
 	return reflectionCamera;
 }
 
-void Camera::DeprojectScreenToWorld(glm::ivec2 screenPosition, glm::ivec2 screenSize, glm::vec3& outWorldOrigin,
-                                    glm::vec3& outWorldDirection) const
+void Camera::DeprojectScreenToWorld(glm::vec2 screenCoord, glm::vec3& outWorldOrigin, glm::vec3& outWorldDirection) const
 {
-	const float normalizedX = static_cast<float>(screenPosition.x) / static_cast<float>(screenSize.x);
-	const float normalizedY = static_cast<float>(screenPosition.y) / static_cast<float>(screenSize.y);
-
-	const float screenSpaceX = (normalizedX - 0.5f) * 2.0f;
-	const float screenSpaceY = ((1.0f - normalizedY) - 0.5f) * 2.0f;
+	const float screenSpaceX = (screenCoord.x - 0.5f) * 2.0f;
+	const float screenSpaceY = ((1.0f - screenCoord.y) - 0.5f) * 2.0f;
 
 	// The start of the ray trace is defined to be at mousex,mousey,1 in
 	// projection space (z=0 is near, z=1 is far - this gives us better
