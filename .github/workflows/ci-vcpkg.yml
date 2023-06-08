@@ -3,9 +3,11 @@ on:
   pull_request_target:
   push:
     tags:
+      - '*'
     branches:
       - 'master'
       - 'ci-tests/**'  # Branch namespace can be used to test changes to test before going to master
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -28,8 +30,25 @@ jobs:
           - os: ubuntu-20.04
             cc: clang
             cxx: clang++
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
+      # Indicates the location of the vcpkg as a Git submodule of the project repository.
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      # Tells vcpkg where binary packages are stored.
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg/bincache
+      # Let's use GitHub Action cache as storage for the vcpkg Binary Caching feature.
+      VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
 
     steps:
+      # Set env vars needed for vcpkg to leverage the GitHub Action cache as a storage
+      # for Binary Caching.
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
       - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.ref }}
@@ -51,48 +70,54 @@ jobs:
           brew install pkg-config
         if: startsWith(matrix.os, 'macos')
 
+      - name: "Create directory '${{ env.VCPKG_DEFAULT_BINARY_CACHE }}'"
+        run: mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
+        shell: bash
+
       # Setup the build machine with the most recent versions of CMake and Ninja. Both are cached if not already: on subsequent runs both will be quickly restored from GitHub cache service.
       - uses: lukka/get-cmake@latest
 
-      - name: Restore artifacts, or setup vcpkg for building artifacts
-        uses: lukka/run-vcpkg@v10
-        id: runvcpkg
+      # Restore vcpkg from the GitHub Action cache service. Note that packages are restored by vcpkg's binary caching
+      # when it is being run afterwards by CMake.
+      - name: Restore vcpkg
+        uses: actions/cache@v3
         with:
-          vcpkgJsonGlob: 'vcpkg.json'
-          # Prevent ubuntu-latest and ubuntu-latest (clang) from having the same key
-          appendedCacheKey: ${{matrix.cc}}
-            # doNotCache: true
+          # The first path is the location of vcpkg: it contains the vcpkg executable and data files, as long as the
+          # built package archives (aka binary cache) which are located by VCPKG_DEFAULT_BINARY_CACHE env var.
+          # The other paths starting with '!' are exclusions: they contain termporary files generated during the build of the installed packages.
+          path: |
+            ${{ env.VCPKG_ROOT }}
+            !${{ env.VCPKG_ROOT }}/buildtrees
+            !${{ env.VCPKG_ROOT }}/packages
+            !${{ env.VCPKG_ROOT }}/downloads
+            !${{ env.VCPKG_ROOT }}/installed
+          # The key is composed in a way that it gets properly invalidated whenever a different version of vcpkg is being used.
+          key: |
+            ${{ hashFiles( '.git/modules/vcpkg/HEAD' )}}
 
-      - name: Configure CMake+vcpkg+Ninja to generate.
-        uses: lukka/run-cmake@v10
-        with:
-          configurePreset: 'ninja-multi-vcpkg'
-          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
-        env:
-          CC: ${{matrix.cc}}
-          CXX: ${{matrix.cxx}}
+      # On Windows runners, let's ensure to have the Developer Command Prompt environment setup correctly.
+      # As used here the Developer Command Prompt created is targeting x64 and using the default the Windows SDK.
+      - uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Run CMake+vcpkg+Ninja+CTest to build/test (Debug).
-        uses: lukka/run-cmake@v10
-        with:
-          configurePreset: 'ninja-multi-vcpkg'
-          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
-          buildPreset: 'ninja-multi-vcpkg-debug'
-          testPreset: 'ninja-multi-vcpkg-debug'
-        env:
-          CC: ${{matrix.cc}}
-          CXX: ${{matrix.cxx}}
+      # Run CMake to generate Ninja project files, using the vcpkg's toolchain file to resolve and install
+      # the dependencies as specified in vcpkg.json. Note that the vcpkg's toolchain is specified
+      # in the CMakePresets.json file.
+      # This step also runs vcpkg with Binary Caching leveraging GitHub Action cache to
+      # store the built packages artifacts.
+      - name: Restore from cache the dependencies and generate project files
+        run: cmake --preset ninja-multi-vcpkg -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DOPENBLACK_WARNINGS_AS_ERRORS=ON
 
-      - name: Run CMake+vcpkg+Ninja+CTest to build/test (Release).
-        uses: lukka/run-cmake@v10
-        with:
-          configurePreset: 'ninja-multi-vcpkg'
-          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
-          buildPreset: 'ninja-multi-vcpkg-release'
-          testPreset: 'ninja-multi-vcpkg-release'
-        env:
-          CC: ${{matrix.cc}}
-          CXX: ${{matrix.cxx}}
+      - name: Build (Debug configuration)
+        run: cmake --build --preset ninja-multi-vcpkg-debug
+
+      - name: Build (Release configuration)
+        run: cmake --build --preset ninja-multi-vcpkg-release
+
+      - name: Test (Debug configuration)
+        run: ctest --preset ninja-multi-vcpkg-debug
+
+      - name: Test (Release configuration)
+        run: ctest --preset ninja-multi-vcpkg-release
 
       - name: Upload compile database and system includes
         uses: actions/upload-artifact@v3
@@ -123,10 +148,6 @@ jobs:
             cmake-build-presets/ninja-multi-vcpkg/test/mock/Scripts
             cmake-build-presets/ninja-multi-vcpkg/test/mock/Data
           if-no-files-found: error
-
-    env:
-      CC: ${{ matrix.cc }}
-      CXX: ${{ matrix.cxx }}
 
   clang-tidy:
     needs: build
