@@ -54,6 +54,14 @@ private:
 	/// @return The harmonic mean of the distances from the origin to each hit point.
 	[[nodiscard]] float GetVerticalLineInverseDistanceWeighingRayCast(const Camera& camera) const;
 
+	bool ConstrainCamera();
+	/// Corrects altitude of the camera
+	/// @return If a modification to the camera position was applied.
+	bool ConstrainAltitude();
+	/// Corrects distance of the camera from the island
+	/// @return If a modification to the camera position was applied.
+	bool ConstrainDisc();
+
 	Mode _mode = Mode::Cartesian;
 
 	// Values from target camera state which the camera may interpolate to. Not the current camera state.
