@@ -9,6 +9,7 @@
 
 #include "CameraModel.h"
 
+#include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/spline.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
@@ -523,10 +524,24 @@ void CameraModel::Update(std::chrono::microseconds dt, const Camera& camera)
 	_targetPosition =
 	    glm::vec3(cameraPosition.x, (cameraPosition.y < height + 13.0f) ? height + 13.0f : cameraPosition.y, cameraPosition.z);
 	_rotVelocity += -(((_drv * _maxRotationSpeed) - _rotVelocity) * _accelFactor);
-	glm::vec3 rot = camera.GetRotation();
-	rot += glm::radians(_rotVelocity * fdt);
-	rot.x = glm::min(rot.x, glm::radians(70.0f)); // limit cam rotation in x
-	_targetRotation = rot;
+
+	auto orientation = static_cast<glm::quat>(camera.GetRotationMatrix());
+	const auto angularVelocity = glm::radians(_rotVelocity * fdt);
+
+	// Convert angular velocity to a quaternion
+	const auto velocityQuat = glm::length2(angularVelocity) > 0.0f
+	                              ? glm::angleAxis(glm::length(angularVelocity), glm::normalize(angularVelocity))
+	                              : glm::quat();
+
+	// Update the orientation
+	orientation *= velocityQuat;
+
+	// Extract the yaw, pitch, and roll angles from the rotation matrix
+	float yaw, pitch, roll;
+
+	// Use the GLM function `extractEulerAngleYXZ` to get the Euler angles
+	glm::extractEulerAngleZYX(glm::mat4(orientation), roll, yaw, pitch);
+	_targetRotation = glm::vec3(pitch, yaw, roll);
 
 	_velocity *= airResistance;
 	_rotVelocity *= airResistance;

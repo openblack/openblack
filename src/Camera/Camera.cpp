@@ -35,8 +35,7 @@ float Camera::GetHorizontalFieldOfView() const
 
 glm::mat4 Camera::GetRotationMatrix() const
 {
-	const auto rotation = GetRotation();
-	return glm::eulerAngleYXZ(rotation.y, rotation.x, rotation.z);
+	return static_cast<glm::mat3>(glm::transpose(GetViewMatrix()));
 }
 
 glm::mat4 Camera::GetViewMatrix() const
@@ -219,9 +218,20 @@ glm::vec3 Camera::GetVelocity() const
 
 glm::vec3 Camera::GetRotation() const
 {
-	// The view matrix transforms from world to view space.
-	// Transposing it (as rotation matrices are orthonormal) gives the inverse - view to world space.
-	return glm::eulerAngles(static_cast<glm::quat>(glm::transpose(GetViewMatrix())));
+	// Extract the yaw, pitch, and roll angles from the rotation matrix
+	float yaw;
+	float pitch;
+	float roll;
+
+	// Use the GLM function `extractEulerAngleYXZ` to get the Euler angles
+	glm::extractEulerAngleZYX(GetRotationMatrix(), roll, yaw, pitch);
+	// Fix angles to make sure roll is 0, it tends to flip to 180 and -180
+	if (roll > glm::radians(90.0f) || roll < glm::radians(-90.0f))
+	{
+		pitch -= glm::radians(180.0f) * glm::sign(pitch);
+		yaw = glm::radians(180.0f) - yaw;
+	}
+	return {pitch, yaw, 0.0f};
 }
 
 Camera& Camera::SetPosition(const glm::vec3& position)
