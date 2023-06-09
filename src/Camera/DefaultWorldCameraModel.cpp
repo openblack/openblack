@@ -50,6 +50,8 @@ DefaultWorldCameraModel::~DefaultWorldCameraModel() = default;
 
 void DefaultWorldCameraModel::TiltZoom(glm::vec3& eulerAngles, float scalingFactor)
 {
+	const float CAMERA_INTERACTION_STEP_SIZE = 3.0f;
+
 	// Update the camera's yaw if there's significant horizontal movement.
 	if (glm::abs(_rotateAroundDelta.y) > glm::epsilon<float>())
 	{
@@ -78,7 +80,8 @@ void DefaultWorldCameraModel::TiltZoom(glm::vec3& eulerAngles, float scalingFact
 		_focusAtClick += offset;
 	}
 
-	// TODO: zoom_delta to average island distance
+	_averageIslandDistance += _rotateAroundDelta.z;
+	_averageIslandDistance = glm::max(_averageIslandDistance, CAMERA_INTERACTION_STEP_SIZE + 0.1f);
 
 	const auto rotateAroundActivated = _rotateAroundDelta != glm::zero<glm::vec3>();
 	if (rotateAroundActivated)
@@ -162,19 +165,19 @@ bool DefaultWorldCameraModel::ConstrainDisc()
 	return hasBeenAdjusted;
 }
 
-void DefaultWorldCameraModel::UpdateMode(glm::vec3 eulerAngles)
+void DefaultWorldCameraModel::UpdateMode(glm::vec3 eulerAngles, float zoomDelta)
 {
 	switch (_mode)
 	{
 	case Mode::Cartesian:
 		break;
 	case Mode::Polar:
-		UpdateModePolar(eulerAngles);
+		UpdateModePolar(eulerAngles, zoomDelta == 0.0f);
 		break;
 	}
 }
 
-void DefaultWorldCameraModel::UpdateModePolar(glm::vec3 eulerAngles)
+void DefaultWorldCameraModel::UpdateModePolar(glm::vec3 eulerAngles, bool recalculatePoint)
 {
 	// Pitch should already be clamped in TiltZoom
 
@@ -183,6 +186,15 @@ void DefaultWorldCameraModel::UpdateModePolar(glm::vec3 eulerAngles)
 
 	// Rotate camera origin based on euler angles as polar coordinates and focus and distance at interaction
 	_targetOrigin = _focusAtClick + _originFocusDistanceAtInteractionStart * glm::euclidean(glm::yx(eulerAngles));
+
+	if (recalculatePoint)
+	{
+		const auto forward = glm::normalize(_targetFocus - _targetOrigin);
+		const auto newAverageIslandPoint = _targetOrigin + forward * _averageIslandDistance;
+		const auto diff = averageIslandPoint - newAverageIslandPoint;
+		_targetOrigin += diff;
+		_focusAtClick += diff;
+	}
 	_targetFocus = _focusAtClick;
 }
 
@@ -208,13 +220,15 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraMode
 	// Get angles (yaw, pitch, roll). Roll is always 0
 	glm::vec3 eulerAngles = EulerFromPoints(_targetOrigin, _focusAtClick);
 
+	const auto zoomDelta = _rotateAroundDelta.z;
+
 	if (_mode == Mode::Polar)
 	{
 		// Adjust camera's orientation based on user input. Call will reset deltas.
 		TiltZoom(eulerAngles, scalingFactor);
 	}
 
-	UpdateMode(eulerAngles);
+	UpdateMode(eulerAngles, zoomDelta);
 
 	const bool originHasBeenAdjusted = ConstrainCamera();
 
