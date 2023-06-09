@@ -25,24 +25,14 @@ GameActionMap::GameActionMap()
 {
 	// TODO(#604): Support remapping
 	_keyboardBindings.emplace(SDL_SCANCODE_F1, BindableActionMap::HELP);
-	_mouseBindings.emplace(SDL_BUTTON_LEFT, BindableActionMap::MOVE);
-	_mouseBindings.emplace(SDL_BUTTON_RIGHT, BindableActionMap::ACTION);
+	_mouseBindings.emplace(SDL_BUTTON_LMASK, BindableActionMap::MOVE);
+	_mouseBindings.emplace(SDL_BUTTON_RMASK, BindableActionMap::ACTION);
 	_mouseWheelBinding[0] = BindableActionMap::ZOOM_IN;
 	_mouseWheelBinding[1] = BindableActionMap::ZOOM_OUT;
-	_mouseBindings.emplace(SDL_BUTTON_RIGHT, BindableActionMap::ACTION);
 	_keyboardBindings.emplace(SDL_SCANCODE_T, BindableActionMap::TALK);
-	_mouseModBindings.emplace(SDL_BUTTON_LEFT, std::make_pair(KMOD_LCTRL, BindableActionMap::ZOOM_ON));
-	_mouseModBindings.emplace(SDL_BUTTON_LEFT, std::make_pair(KMOD_RCTRL, BindableActionMap::ZOOM_ON));
-	_mouseModBindings.emplace(SDL_BUTTON_RIGHT, std::make_pair(KMOD_LCTRL, BindableActionMap::ZOOM_ON));
-	_mouseModBindings.emplace(SDL_BUTTON_RIGHT, std::make_pair(KMOD_RCTRL, BindableActionMap::ZOOM_ON));
-	_keyboardModBindings.emplace(SDL_SCANCODE_LEFT, std::make_pair(KMOD_LCTRL, BindableActionMap::ZOOM_ON));
-	_keyboardModBindings.emplace(SDL_SCANCODE_LEFT, std::make_pair(KMOD_RCTRL, BindableActionMap::ZOOM_ON));
-	_keyboardModBindings.emplace(SDL_SCANCODE_RIGHT, std::make_pair(KMOD_LCTRL, BindableActionMap::ZOOM_ON));
-	_keyboardModBindings.emplace(SDL_SCANCODE_RIGHT, std::make_pair(KMOD_RCTRL, BindableActionMap::ZOOM_ON));
-	_keyboardModBindings.emplace(SDL_SCANCODE_UP, std::make_pair(KMOD_LCTRL, BindableActionMap::ZOOM_ON));
-	_keyboardModBindings.emplace(SDL_SCANCODE_UP, std::make_pair(KMOD_RCTRL, BindableActionMap::ZOOM_ON));
-	_keyboardModBindings.emplace(SDL_SCANCODE_DOWN, std::make_pair(KMOD_LCTRL, BindableActionMap::ZOOM_ON));
-	_keyboardModBindings.emplace(SDL_SCANCODE_DOWN, std::make_pair(KMOD_RCTRL, BindableActionMap::ZOOM_ON));
+	_mouseBindings.emplace(SDL_BUTTON_LMASK | SDL_BUTTON_RMASK, BindableActionMap::ZOOM_ON);
+	_keyboardBindings.emplace(SDL_SCANCODE_LCTRL, BindableActionMap::ZOOM_ON);
+	_keyboardBindings.emplace(SDL_SCANCODE_RCTRL, BindableActionMap::ZOOM_ON);
 	_keyboardBindings.emplace(SDL_SCANCODE_LEFT, BindableActionMap::MOVE_LEFT);
 	_keyboardBindings.emplace(SDL_SCANCODE_RIGHT, BindableActionMap::MOVE_RIGHT);
 	_keyboardBindings.emplace(SDL_SCANCODE_UP, BindableActionMap::MOVE_FORWARDS);
@@ -53,7 +43,7 @@ GameActionMap::GameActionMap()
 	_keyboardBindings.emplace(SDL_SCANCODE_U, BindableActionMap::ROTATE_RIGHT);
 	_keyboardBindings.emplace(SDL_SCANCODE_LSHIFT, BindableActionMap::ROTATE_ON);
 	_keyboardBindings.emplace(SDL_SCANCODE_RSHIFT, BindableActionMap::ROTATE_ON);
-	_mouseBindings.emplace(SDL_BUTTON_MIDDLE, BindableActionMap::ROTATE_AROUND_MOUSE_ON);
+	_mouseBindings.emplace(SDL_BUTTON_MMASK, BindableActionMap::ROTATE_AROUND_MOUSE_ON);
 	_keyboardBindings.emplace(SDL_SCANCODE_SPACE, BindableActionMap::ZOOM_TO_TEMPLE);
 	_keyboardBindings.emplace(SDL_SCANCODE_C, BindableActionMap::ZOOM_TO_CREATURE);
 	_keyboardBindings.emplace(SDL_SCANCODE_F3, BindableActionMap::ZOOM_TO_REALM);
@@ -223,20 +213,60 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 	}
 	else if (event.type == SDL_MOUSEBUTTONDOWN)
 	{
-		auto mod = SDL_GetModState();
-		if (_mouseModBindings.contains(event.button.button) && (_mouseModBindings[event.button.button].first & mod) != 0)
+		const auto mod = static_cast<SDL_Keymod>(SDL_GetModState());
+		const uint8_t buttonMask = SDL_BUTTON(event.button.button);
+		const uint8_t newComboMask = _currentMouseButtons | buttonMask;
+		if (newComboMask != buttonMask)
+		{
+			if (_mouseModBindings.contains(newComboMask) && (_mouseModBindings[newComboMask].first & mod) != 0)
+			{
+				_bindableMap = static_cast<BindableActionMap>(
+				    // Remove non-modded action
+				    (static_cast<uint64_t>(_bindableMap) & ~static_cast<uint64_t>(_mouseBindings[newComboMask])) |
+				    // Add modded action
+				    static_cast<uint64_t>(_mouseModBindings[newComboMask].second));
+				// Remove non-combo keys
+				for (uint8_t i = 0; i < SDL_BUTTON_X2; ++i)
+				{
+					const uint8_t keyMask = (1 << i);
+					if ((newComboMask & keyMask) != 0u && _mouseModBindings.contains(keyMask) &&
+					    (_mouseModBindings[keyMask].first & mod) != 0)
+					{
+						_bindableMap = static_cast<BindableActionMap>(
+						    static_cast<uint64_t>(_bindableMap) & ~static_cast<uint64_t>(_mouseModBindings[keyMask].second));
+					}
+				}
+			}
+			else if (_mouseBindings.contains(newComboMask))
+			{
+				_bindableMap = static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) |
+				                                              static_cast<uint64_t>(_mouseBindings[newComboMask]));
+				// Remove non-combo keys
+				for (uint8_t i = 0; i < SDL_BUTTON_X2; ++i)
+				{
+					const uint8_t keyMask = (1 << i);
+					if ((newComboMask & keyMask) != 0u && _mouseBindings.contains(keyMask))
+					{
+						_bindableMap = static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) &
+						                                              ~static_cast<uint64_t>(_mouseBindings[keyMask]));
+					}
+				}
+			}
+		}
+		else if (_mouseModBindings.contains(buttonMask) && (_mouseModBindings[buttonMask].first & mod) != 0)
 		{
 			_bindableMap = static_cast<BindableActionMap>(
 			    // Remove non-modded action
-			    (static_cast<uint64_t>(_bindableMap) & ~static_cast<uint64_t>(_mouseBindings[event.button.button])) |
+			    (static_cast<uint64_t>(_bindableMap) & ~static_cast<uint64_t>(_mouseBindings[buttonMask])) |
 			    // Add modded action
-			    static_cast<uint64_t>(_mouseModBindings[event.button.button].second));
+			    static_cast<uint64_t>(_mouseModBindings[buttonMask].second));
 		}
-		else if (_mouseBindings.contains(event.button.button))
+		else if (_mouseBindings.contains(buttonMask))
 		{
 			_bindableMap = static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) |
-			                                              static_cast<uint64_t>(_mouseBindings[event.button.button]));
+			                                              static_cast<uint64_t>(_mouseBindings[buttonMask]));
 		}
+		_currentMouseButtons |= buttonMask;
 	}
 	else if (event.type == SDL_MOUSEWHEEL)
 	{
@@ -264,21 +294,35 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 			                                              ~static_cast<uint64_t>(_keyboardBindings[event.key.keysym.scancode]));
 		}
 	}
-	else if (event.type == SDL_MOUSEBUTTONUP && (event.button.button & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0 &&
-	         event.button.clicks == 2)
+	else if (event.type == SDL_MOUSEBUTTONUP && (event.button.button & SDL_BUTTON_LMASK) != 0 && event.button.clicks == 2)
 	{
 		_unbindableMap = static_cast<UnbindableActionMap>(static_cast<uint8_t>(_unbindableMap) &
 		                                                  ~static_cast<uint8_t>(UnbindableActionMap::DOUBLE_CLICK));
 	}
 	else if (event.type == SDL_MOUSEBUTTONUP)
 	{
-		if (_mouseBindings.contains(event.button.button))
+		const uint8_t buttonMask = SDL_BUTTON(event.button.button);
+		if (_mouseBindings.contains(buttonMask))
 		{
-			_bindableMap = static_cast<BindableActionMap>(
-			    static_cast<uint64_t>(_bindableMap) & ~static_cast<uint64_t>(_mouseModBindings[event.button.button].second));
 			_bindableMap = static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) &
-			                                              ~static_cast<uint64_t>(_mouseBindings[event.button.button]));
+			                                              ~static_cast<uint64_t>(_mouseModBindings[buttonMask].second));
+			_bindableMap = static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) &
+			                                              ~static_cast<uint64_t>(_mouseBindings[buttonMask]));
 		}
+		// Remove combo keys
+		for (uint8_t i = 0; i < SDL_BUTTON_X2; ++i)
+		{
+			const uint8_t keyMask = (1 << i);
+			const uint8_t comboMask = keyMask | buttonMask;
+			if (buttonMask != comboMask && _mouseBindings.contains(comboMask))
+			{
+				_bindableMap = static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) &
+				                                              ~static_cast<uint64_t>(_mouseModBindings[comboMask].second));
+				_bindableMap = static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) &
+				                                              ~static_cast<uint64_t>(_mouseBindings[comboMask]));
+			}
+		}
+		_currentMouseButtons &= ~buttonMask;
 	}
 	else if (event.type == SDL_MOUSEMOTION)
 	{

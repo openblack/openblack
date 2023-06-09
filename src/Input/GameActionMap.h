@@ -51,8 +51,9 @@ private:
 	UnbindableActionMap _unbindableMapPrevious = UnbindableActionMap::NONE;
 	std::unordered_map<SDL_Keycode, std::pair<SDL_Keymod, BindableActionMap>> _keyboardModBindings;
 	std::unordered_map<SDL_Keycode, BindableActionMap> _keyboardBindings;
-	std::unordered_map<uint8_t /*mousebutton*/, BindableActionMap> _mouseBindings;
-	std::unordered_map<uint8_t /*mousebutton*/, std::pair<SDL_Keymod, BindableActionMap>> _mouseModBindings;
+	std::unordered_map<int /*mousebutton*/, BindableActionMap> _mouseBindings;
+	std::unordered_map<int /*mousebutton*/, std::pair<SDL_Keymod, BindableActionMap>> _mouseModBindings;
+	uint8_t _currentMouseButtons = 0;
 	std::array<std::optional<BindableActionMap>, 2> _mouseWheelBinding; // up, down
 	glm::uvec2 _mousePosition;
 	glm::ivec2 _mouseDelta;
