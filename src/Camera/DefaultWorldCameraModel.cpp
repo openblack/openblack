@@ -12,11 +12,13 @@
 #include <numeric>
 
 #include <glm/gtc/constants.hpp>
+#include <glm/gtx/norm.hpp>
 #include <glm/gtx/polar_coordinates.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 #include <spdlog/spdlog.h>
 
+#include "3D/LandIsland.h"
 #include "Camera.h"
 #include "Game.h"
 #include "Input/GameActionMapInterface.h"
@@ -115,6 +117,51 @@ float DefaultWorldCameraModel::GetVerticalLineInverseDistanceWeighingRayCast(con
 	return 1.0f / average;
 }
 
+bool DefaultWorldCameraModel::ConstrainCamera()
+{
+	const auto originBackup = _targetOrigin;
+	bool originHasBeenAdjusted = false;
+	originHasBeenAdjusted |= ConstrainAltitude();
+	originHasBeenAdjusted |= ConstrainDisc();
+	if (originHasBeenAdjusted)
+	{
+		_targetFocus = _targetFocus - originBackup + _targetOrigin;
+	}
+	return originHasBeenAdjusted;
+}
+
+bool DefaultWorldCameraModel::ConstrainAltitude()
+{
+	constexpr float floatingHeight = 3.0f;
+	bool hasBeenAdjusted = false;
+	const auto minAltitude = floatingHeight + Locator::terrainSystem::value().GetHeightAt(glm::xz(_targetOrigin));
+	if (_targetOrigin.y < minAltitude)
+	{
+		_targetOrigin.y = minAltitude;
+		hasBeenAdjusted = true;
+	}
+
+	return hasBeenAdjusted;
+}
+
+bool DefaultWorldCameraModel::ConstrainDisc()
+{
+	bool hasBeenAdjusted = false;
+	constexpr auto k_discCentre = glm::vec3(2560.0f, 0.0f, 2560.0f);
+	constexpr auto k_discRadius = 5120.0f;
+
+	const auto delta = _targetOrigin - k_discCentre;
+	const auto distance2 = glm::length2(delta);
+
+	if (distance2 > k_discRadius * k_discRadius)
+	{
+		_targetOrigin = k_discCentre + delta * (k_discRadius / glm::sqrt(distance2));
+		hasBeenAdjusted = true;
+	}
+
+	return hasBeenAdjusted;
+}
+
 void DefaultWorldCameraModel::UpdateMode(glm::vec3 eulerAngles)
 {
 	switch (_mode)
@@ -168,6 +215,8 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraMode
 	}
 
 	UpdateMode(eulerAngles);
+
+	const bool originHasBeenAdjusted = ConstrainCamera();
 
 	return {{GetTargetOrigin(), GetTargetFocus(), camera.GetInterpolatorTime()}};
 }
