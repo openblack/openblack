@@ -573,7 +573,7 @@ void LHVMViewer::DrawScriptsTab(const openblack::LHVM::LHVM& lhvm)
 
 	ImGui::PushItemWidth(200);
 
-	ImGui::ListBoxHeader("##scripts", static_cast<int>(scripts.size()), 32);
+	ImGui::BeginListBox("##scripts", ImVec2(static_cast<float>(scripts.size()), 32.0f));
 
 	for (auto const& script : scripts)
 	{
@@ -589,7 +589,7 @@ void LHVMViewer::DrawScriptsTab(const openblack::LHVM::LHVM& lhvm)
 		}
 	}
 
-	ImGui::ListBoxFooter();
+	ImGui::EndListBox();
 
 	ImGui::SameLine();
 
