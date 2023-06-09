@@ -38,8 +38,8 @@ public:
 private:
 	void UpdateCameraInterpolationValues(const Camera& camera);
 
-	void UpdateMode(glm::vec3 eulerAngles);
-	void UpdateModePolar(glm::vec3 eulerAngles);
+	void UpdateMode(glm::vec3 eulerAngles, float zoomDelta);
+	void UpdateModePolar(glm::vec3 eulerAngles, bool recalculatePoint);
 
 	/// Modifies the given Euler angles based on the rotate Around and keyboard Move Deltas for rotation and zoom.
 	/// @param eulerAngles A reference representing Euler angles (yaw, pitch, roll) to be adjusted. Roll is always 0.
