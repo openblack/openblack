@@ -3,7 +3,6 @@ on:
   pull_request_target:
   push:
     tags:
-      - '*'
     branches:
       - 'master'
       - 'ci-tests/**'  # Branch namespace can be used to test changes to test before going to master
@@ -24,25 +23,7 @@ jobs:
         #     preset: ninja-multi-vcpkg
         #     triplet: x86-windows
 
-    env:
-      EMSDK: '/tmp/emsdk'
-      ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.2.8568313'
-      # Indicates the location of the vcpkg as a Git submodule of the project repository.
-      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
-      # Tells vcpkg where binary packages are stored.
-      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg/bincache
-      # Let's use GitHub Action cache as storage for the vcpkg Binary Caching feature.
-      VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
-
     steps:
-      # Set env vars needed for vcpkg to leverage the GitHub Action cache as a storage
-      # for Binary Caching.
-      - uses: actions/github-script@v6
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
       - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.ref }}
@@ -67,52 +48,46 @@ jobs:
           ./emsdk activate latest
         if: matrix.preset == 'emscripten-vcpkg'
 
-      - name: "Create directory '${{ env.VCPKG_DEFAULT_BINARY_CACHE }}'"
-        run: mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
-        shell: bash
-
       # Setup the build machine with the most recent versions of CMake and Ninja. Both are cached if not already: on subsequent runs both will be quickly restored from GitHub cache service.
       - uses: lukka/get-cmake@latest
 
-      # Restore vcpkg from the GitHub Action cache service. Note that packages are restored by vcpkg's binary caching
-      # when it is being run afterwards by CMake.
-      - name: Restore vcpkg
-        uses: actions/cache@v3
+      - name: Restore artifacts, or setup vcpkg for building artifacts
+        uses: lukka/run-vcpkg@v10
+        id: runvcpkg
         with:
-          # The first path is the location of vcpkg: it contains the vcpkg executable and data files, as long as the
-          # built package archives (aka binary cache) which are located by VCPKG_DEFAULT_BINARY_CACHE env var.
-          # The other paths starting with '!' are exclusions: they contain termporary files generated during the build of the installed packages.
-          path: |
-            ${{ env.VCPKG_ROOT }}
-            !${{ env.VCPKG_ROOT }}/buildtrees
-            !${{ env.VCPKG_ROOT }}/packages
-            !${{ env.VCPKG_ROOT }}/downloads
-            !${{ env.VCPKG_ROOT }}/installed
-          # The key is composed in a way that it gets properly invalidated whenever a different version of vcpkg is being used.
-          key: |
-            ${{ hashFiles( '.git/modules/vcpkg/HEAD' )}}
+          vcpkgJsonGlob: 'vcpkg.json'
+          # Prevent all ubuntu-latest and windows-latest builds from having the same key
+          appendedCacheKey: ${{matrix.preset}}${{matrix.triplet}}
 
-      # On Windows runners, let's ensure to have the Developer Command Prompt environment setup correctly.
-      # As used here the Developer Command Prompt created is targeting x64 and using the default the Windows SDK.
-      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Configure CMake+vcpkg.
+        uses: lukka/run-cmake@v10
+        with:
+          configurePreset: '${{ matrix.preset }}'
+          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
 
-      # Run CMake to generate Ninja project files, using the vcpkg's toolchain file to resolve and install
-      # the dependencies as specified in vcpkg.json. Note that the vcpkg's toolchain is specified
-      # in the CMakePresets.json file.
-      # This step also runs vcpkg with Binary Caching leveraging GitHub Action cache to
-      # store the built packages artifacts.
-      - name: Restore from cache the dependencies and generate project files
-        run: cmake --preset ${{ matrix.preset }} -DOPENBLACK_WARNINGS_AS_ERRORS=ON ${{ matrix.triplet && '-DVCPKG_TARGET_TRIPLET=' }}${{ matrix.triplet }}
+      - name: Run CMake+vcpkg to build (Debug).
+        uses: lukka/run-cmake@v10
+        with:
+          configurePreset: '${{ matrix.preset }}'
+          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
+          buildPreset: '${{ matrix.preset }}-debug'
 
-
-      - name: Build (Debug configuration)
-        run: cmake --build --preset ${{ matrix.preset }}-debug
-
-      - name: Build (Release configuration)
-        run: cmake --build --preset ${{ matrix.preset }}-release
+      - name: Run CMake+vcpkg to build (Release).
+        uses: lukka/run-cmake@v10
+        with:
+          configurePreset: '${{ matrix.preset }}'
+          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
+          buildPreset: '${{ matrix.preset }}-release'
 
       - uses: actions/upload-artifact@v3
         with:
           name: openblack-${{ matrix.triplet || matrix.preset }}-${{github.sha}}
           path: cmake-build-presets/${{ matrix.preset }}/bin
           if-no-files-found: error
+
+    env:
+      VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
+      EMSDK: '/tmp/emsdk'
+      ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.2.8568313'
+      CXX: ''
+      CC: ''
