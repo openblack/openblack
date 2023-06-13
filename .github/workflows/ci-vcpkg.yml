@@ -3,6 +3,7 @@ on:
   pull_request_target:
   push:
     tags:
+      - '*'
     branches:
       - 'master'
       - 'ci-tests/**'  # Branch namespace can be used to test changes to test before going to master
@@ -54,45 +55,32 @@ jobs:
       # Setup the build machine with the most recent versions of CMake and Ninja. Both are cached if not already: on subsequent runs both will be quickly restored from GitHub cache service.
       - uses: lukka/get-cmake@latest
 
-      - name: Restore artifacts, or setup vcpkg for building artifacts
-        uses: lukka/run-vcpkg@v10
-        id: runvcpkg
+      - name: Restore from cache and setup vcpkg executable and data files.
+        uses: lukka/run-vcpkg@v11
         with:
           vcpkgJsonGlob: 'vcpkg.json'
-          # Prevent ubuntu-latest and ubuntu-latest (clang) from having the same key
-          appendedCacheKey: ${{matrix.cc}}
-            # doNotCache: true
 
-      - name: Configure CMake+vcpkg+Ninja to generate.
+      - name: Run CMake+vcpkg to build packages.
         uses: lukka/run-cmake@main
         with:
           configurePreset: 'ninja-multi-vcpkg'
-          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
-        env:
-          CC: ${{matrix.cc}}
-          CXX: ${{matrix.cxx}}
+          configurePresetAdditionalArgs: "['-DCMAKE_EXPORT_COMPILE_COMMANDS=ON', '-DOPENBLACK_WARNINGS_AS_ERRORS=ON']"
 
-      - name: Run CMake+vcpkg+Ninja+CTest to build/test (Debug).
+      - name: Run CMake+Ninja+CTest to build/test the code (Debug).
         uses: lukka/run-cmake@main
         with:
           configurePreset: 'ninja-multi-vcpkg'
-          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
+          configurePresetAdditionalArgs: "['-DOPENBLACK_WARNINGS_AS_ERRORS=ON']"
           buildPreset: 'ninja-multi-vcpkg-debug'
           testPreset: 'ninja-multi-vcpkg-debug'
-        env:
-          CC: ${{matrix.cc}}
-          CXX: ${{matrix.cxx}}
 
-      - name: Run CMake+vcpkg+Ninja+CTest to build/test (Release).
+      - name: Run CMake+Ninja+CTest to build packages and build/test the code (Release).
         uses: lukka/run-cmake@main
         with:
+          configurePresetAdditionalArgs: "['-DOPENBLACK_WARNINGS_AS_ERRORS=ON']"
           configurePreset: 'ninja-multi-vcpkg'
-          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
           buildPreset: 'ninja-multi-vcpkg-release'
           testPreset: 'ninja-multi-vcpkg-release'
-        env:
-          CC: ${{matrix.cc}}
-          CXX: ${{matrix.cxx}}
 
       - name: Upload compile database and system includes
         uses: actions/upload-artifact@v3
