@@ -156,7 +156,8 @@ L3DAnimLoader::result_type L3DAnimLoader::operator()(FromDiskTag, const std::fil
 	return animation;
 }
 
-LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string& name, const std::filesystem::path& path, bool isCampaign) const
+LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string& name, const std::filesystem::path& path,
+                                                 bool isCampaign) const
 {
 	std::string description;
 	std::string levelName(name);
