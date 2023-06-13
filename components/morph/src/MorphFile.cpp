@@ -5,8 +5,9 @@
  * Interested in contributing? Visit https://github.com/openblack/openblack
  *
  * openblack is licensed under the GNU General Public License version 3.
- *******************************************************************************
- *
+ *******************************************************************************/
+
+/*
  * The layout of a Morph Spec Text File is as follows:
  *
  * - 1 line with an int representing the spec version

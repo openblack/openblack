@@ -5,7 +5,7 @@
  * Interested in contributing? Visit https://github.com/openblack/openblack
  *
  * openblack is licensed under the GNU General Public License version 3.
- ******************************************************************************/
+ *******************************************************************************/
 
 #pragma once
 
