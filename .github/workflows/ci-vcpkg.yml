@@ -68,7 +68,7 @@ jobs:
           buildPreset: 'ninja-multi-vcpkg-debug'
           testPreset: 'ninja-multi-vcpkg-debug'
 
-      - name: Run CMake+Ninja+CTest to build packages and build/test the code (Release).
+      - name: Run CMake+Ninja+CTest to build/test the code (Release).
         uses: lukka/run-cmake@main
         with:
           configurePresetAdditionalArgs: "['-DOPENBLACK_WARNINGS_AS_ERRORS=ON']"
