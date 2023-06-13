@@ -60,20 +60,20 @@ jobs:
           appendedCacheKey: ${{matrix.preset}}${{matrix.triplet}}
 
       - name: Configure CMake+vcpkg.
-        uses: lukka/run-cmake@v10
+        uses: lukka/run-cmake@main
         with:
           configurePreset: '${{ matrix.preset }}'
           configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
 
       - name: Run CMake+vcpkg to build (Debug).
-        uses: lukka/run-cmake@v10
+        uses: lukka/run-cmake@main
         with:
           configurePreset: '${{ matrix.preset }}'
           configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
           buildPreset: '${{ matrix.preset }}-debug'
 
       - name: Run CMake+vcpkg to build (Release).
-        uses: lukka/run-cmake@v10
+        uses: lukka/run-cmake@main
         with:
           configurePreset: '${{ matrix.preset }}'
           configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
@@ -87,6 +87,7 @@ jobs:
 
     env:
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
+      VCPKG_ROOT: ${{github.workspace}}/vcpkg
       EMSDK: '/tmp/emsdk'
       ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.2.8568313'
       CXX: ''

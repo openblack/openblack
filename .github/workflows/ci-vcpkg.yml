@@ -64,7 +64,7 @@ jobs:
             # doNotCache: true
 
       - name: Configure CMake+vcpkg+Ninja to generate.
-        uses: lukka/run-cmake@v10
+        uses: lukka/run-cmake@main
         with:
           configurePreset: 'ninja-multi-vcpkg'
           configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
@@ -73,7 +73,7 @@ jobs:
           CXX: ${{matrix.cxx}}
 
       - name: Run CMake+vcpkg+Ninja+CTest to build/test (Debug).
-        uses: lukka/run-cmake@v10
+        uses: lukka/run-cmake@main
         with:
           configurePreset: 'ninja-multi-vcpkg'
           configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
@@ -84,7 +84,7 @@ jobs:
           CXX: ${{matrix.cxx}}
 
       - name: Run CMake+vcpkg+Ninja+CTest to build/test (Release).
-        uses: lukka/run-cmake@v10
+        uses: lukka/run-cmake@main
         with:
           configurePreset: 'ninja-multi-vcpkg'
           configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
@@ -127,6 +127,7 @@ jobs:
     env:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
+      VCPKG_ROOT: ${{github.workspace}}/vcpkg
 
   clang-tidy:
     needs: build
