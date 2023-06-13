@@ -61,8 +61,12 @@
 #include "Resources/ResourceManager.h"
 #include "Resources/Resources.h"
 
-#ifdef WIN32
-#include <Windows.h>
+#ifdef _WIN32
+// clang-format off
+// can't sort these includes
+#include <wtypes.h>
+#include <winreg.h>
+// clang-format on
 #endif
 
 using namespace openblack;
