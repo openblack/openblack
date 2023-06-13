@@ -3,6 +3,7 @@ on:
   pull_request_target:
   push:
     tags:
+      - '*'
     branches:
       - 'master'
       - 'ci-tests/**'  # Branch namespace can be used to test changes to test before going to master
@@ -149,5 +150,35 @@ jobs:
       - name: Add base repo to git config
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
         if: startsWith(github.event_name, 'pull_request')
+      - uses: denoland/setup-deno@main
+        with:
+          deno-version: v1.x
       - name: Check License Lines
-        uses: kt3k/license_checker@v1.0.6
+        run: deno run --allow-read https://deno.land/x/license_checker@v3.2.2/main.ts --quiet
+  
+  copyright-check-action-suggester:
+    name: license_checker fix suggester
+    runs-on: ubuntu-latest
+    needs: copyright-check
+    if: always() && startsWith(github.event_name, 'pull_request') && needs.copyright-check.result == 'failure'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+      - name: Add base repo to git config
+        run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
+        if: startsWith(github.event_name, 'pull_request')
+      - uses: denoland/setup-deno@main
+        with:
+          deno-version: v1.x
+      - name: Check License Lines
+        run: deno run --allow-read --allow-write https://deno.land/x/license_checker@v3.2.2/main.ts --quiet --inject
+      - run: git diff > license-check.patch
+      - uses: actions/upload-artifact@v2
+        with:
+          name: formatting-fix-${{github.sha}}
+          path: license-check.patch.patch
+      - uses: reviewdog/action-suggester@v1
+        with:
+          tool_name: license_checker
