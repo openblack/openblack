@@ -1,12 +1,13 @@
-/*******************************************************************************
+/******************************************************************************
  * Copyright (c) 2018-2023 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
  *
  * openblack is licensed under the GNU General Public License version 3.
- *******************************************************************************
- *
+ *******************************************************************************/
+
+/*
  * The layout of a ANM File is as follows:
  *
  * - 84 byte header

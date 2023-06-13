@@ -5,8 +5,9 @@
  * Interested in contributing? Visit https://github.com/openblack/openblack
  *
  * openblack is licensed under the GNU General Public License version 3.
- *******************************************************************************
- *
+ *******************************************************************************/
+
+/*
  * The layout of a L3D File is as follows:
  *
  * - 76 byte header, containing 19 ints
