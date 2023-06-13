@@ -1,11 +1,11 @@
 name: Formatting Check
 on:
-  pull_request_target:
+  pull_request:
   push:
     tags:
+      - '*'
     branches:
       - 'master'
-      - 'ci-tests/**'  # Branch namespace can be used to test changes to test before going to master
 jobs:
   clang-format-check:
     name: clang-format
@@ -24,35 +24,6 @@ jobs:
           clangFormatVersion: 15
           inplace: False
 
-  # Run only if a PR and clang-format has failed
-  clang-format-action-suggester:
-    name: clang-format fix suggester
-    runs-on: ubuntu-latest
-    needs: clang-format-check
-    if: always() && startsWith(github.event_name, 'pull_request') && needs.clang-format-check.result == 'failure'
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-      - name: Add base repo to git config
-        run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
-        if: startsWith(github.event_name, 'pull_request')
-      - uses: DoozyX/clang-format-lint-action@v0.13
-        with:
-          source: 'src apps components test'
-          clangFormatVersion: 12
-          inplace: True
-      - run: |
-          git diff > clang-format.patch
-      - uses: actions/upload-artifact@v2
-        with:
-          name: formatting-fix-${{github.sha}}
-          path: clang-format.patch
-      - uses: reviewdog/action-suggester@v1
-        with:
-          tool_name: clang-format
-
   linelint:
     name: linelint
     runs-on: ubuntu-latest
@@ -65,32 +36,6 @@ jobs:
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
         if: startsWith(github.event_name, 'pull_request')
       - uses: fernandrone/linelint@master
-
-  linelint-action-suggester:
-    name: linelint fix suggester
-    runs-on: ubuntu-latest
-    needs: linelint
-    if: always() && startsWith(github.event_name, 'pull_request') && needs.linelint.result == 'failure'
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-      - name: Add base repo to git config
-        run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
-        if: startsWith(github.event_name, 'pull_request')
-      - run: |
-          printf 'autofix: true\nrules:\n  end-of-file:\n    enable: true\n' > .linelint.yml
-      - uses: fernandrone/linelint@master
-      - run: |
-          git diff > linelint.patch
-      - uses: actions/upload-artifact@v2
-        with:
-          name: formatting-fix-${{github.sha}}
-          path: linelint.patch
-      - uses: reviewdog/action-suggester@v1
-        with:
-          tool_name: linelint
 
   cmake-format-check:
     name: cmake-format
@@ -109,35 +54,6 @@ jobs:
         with:
           args: --config-files .cmake-format.py --check
 
-  # Run only if a PR and cmake-format has failed
-  cmake-format-action-suggester:
-    name: cmake-format fix suggester
-    runs-on: ubuntu-latest
-    needs: cmake-format-check
-    if: always() && startsWith(github.event_name, 'pull_request') && needs.cmake-format-check.result == 'failure'
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-      - name: Add base repo to git config
-        run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
-        if: startsWith(github.event_name, 'pull_request')
-      - name: Format CMake files
-        id: cmake-format
-        uses: PuneetMatharu/cmake-format-lint-action@v1.0.0
-        with:
-          args: --config-files .cmake-format.py --in-place
-      - run: |
-          git diff > cmake-format.patch
-      - uses: actions/upload-artifact@v2
-        with:
-          name: formatting-fix-${{github.sha}}
-          path: cmake-format.patch
-      - uses: reviewdog/action-suggester@v1
-        with:
-          tool_name: cmake-format
-
   copyright-check:
     name: license_checker
     runs-on: ubuntu-latest
@@ -154,30 +70,3 @@ jobs:
           deno-version: v1.x
       - name: Check License Lines
         run: deno run --allow-read https://deno.land/x/license_checker@v3.2.2/main.ts --quiet
-  
-  copyright-check-action-suggester:
-    name: license_checker fix suggester
-    runs-on: ubuntu-latest
-    needs: cmake-format-check
-    if: always() && startsWith(github.event_name, 'pull_request') && needs.copyright-check.result == 'failure'
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-      - name: Add base repo to git config
-        run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
-        if: startsWith(github.event_name, 'pull_request')
-      - uses: denoland/setup-deno@main
-        with:
-          deno-version: v1.x
-      - name: Check License Lines
-        run: deno run --allow-read --allow-write https://deno.land/x/license_checker@v3.2.2/main.ts --quiet --inject
-      - run: git diff > license-check.patch
-      - uses: actions/upload-artifact@v2
-        with:
-          name: formatting-fix-${{github.sha}}
-          path: license-check.patch.patch
-      - uses: reviewdog/action-suggester@v1
-        with:
-          tool_name: license_checker

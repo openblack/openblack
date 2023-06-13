@@ -1,12 +1,11 @@
 name: VCPKG CI
 on:
-  pull_request_target:
+  pull_request:
   push:
     tags:
       - '*'
     branches:
       - 'master'
-      - 'ci-tests/**'  # Branch namespace can be used to test changes to test before going to master
 jobs:
   build:
     runs-on: ${{ matrix.os }}
