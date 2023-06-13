@@ -18,10 +18,10 @@ jobs:
       - name: Add base repo to git config
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
         if: startsWith(github.event_name, 'pull_request')
-      - uses: DoozyX/clang-format-lint-action@v0.13
+      - uses: DoozyX/clang-format-lint-action@v0.16
         with:
           source: 'src apps components test'
-          clangFormatVersion: 12
+          clangFormatVersion: 15
           inplace: False
 
   # Run only if a PR and clang-format has failed
