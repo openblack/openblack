@@ -15,6 +15,7 @@
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "Creature/CreatureMind.h"
+#include "Enums.h"
 #include "Level.h"
 
 namespace openblack::resources
@@ -60,7 +61,7 @@ struct L3DAnimLoader final: BaseLoader<L3DAnim>
 struct LevelLoader final: BaseLoader<Level>
 {
 	[[nodiscard]] result_type operator()(FromDiskTag, const std::string& name, const std::filesystem::path& path,
-	                                     bool isCampaign) const;
+	                                     LandType isCampaign) const;
 };
 
 struct CreatureMindLoader final: BaseLoader<creature::CreatureMind>

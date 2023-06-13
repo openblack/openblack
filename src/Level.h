@@ -13,12 +13,14 @@
 #include <string>
 #include <utility>
 
+#include "Enums.h"
+
 namespace openblack
 {
 class Level
 {
 public:
-	Level(std::string name, std::filesystem::path path, std::string description, bool isCampaign, bool isValid = false)
+	Level(std::string name, std::filesystem::path path, std::string description, LandType isCampaign, bool isValid = false)
 	    : _name(std::move(name))
 	    , _scriptPath(std::move(path))
 	    , _description(std::move(description))
@@ -27,7 +29,7 @@ public:
 
 	[[nodiscard]] const std::string& GetName() const { return _name; };
 	[[nodiscard]] const std::filesystem::path& GetScriptPath() const { return _scriptPath; };
-	[[nodiscard]] bool IsCampaign() const { return _isCampaign; };
+	[[nodiscard]] bool IsCampaign() const { return _isCampaign == LandType::Campaign; };
 	[[nodiscard]] const std::string& GetDescription() const { return _description; };
 	[[nodiscard]] bool IsValid() const { return _isValid; };
 
@@ -35,7 +37,7 @@ private:
 	std::string _name;
 	std::filesystem::path _scriptPath;
 	std::string _description;
-	bool _isCampaign;
+	LandType _isCampaign;
 	bool _isValid;
 };
 } // namespace openblack

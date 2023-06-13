@@ -3406,4 +3406,10 @@ enum class CreatureType : int32_t
 	_COUNT = 18
 };
 
+enum class LandType : uint32_t
+{
+	Skirmish = 0,
+	Campaign = 1,
+};
+
 } // namespace openblack
