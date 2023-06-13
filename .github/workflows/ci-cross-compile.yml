@@ -3,6 +3,7 @@ on:
   pull_request_target:
   push:
     tags:
+      - '*'
     branches:
       - 'master'
       - 'ci-tests/**'  # Branch namespace can be used to test changes to test before going to master
@@ -51,32 +52,29 @@ jobs:
       # Setup the build machine with the most recent versions of CMake and Ninja. Both are cached if not already: on subsequent runs both will be quickly restored from GitHub cache service.
       - uses: lukka/get-cmake@latest
 
-      - name: Restore artifacts, or setup vcpkg for building artifacts
-        uses: lukka/run-vcpkg@v10
-        id: runvcpkg
+      - name: Restore from cache and setup vcpkg executable and data files.
+        uses: lukka/run-vcpkg@v11
         with:
           vcpkgJsonGlob: 'vcpkg.json'
-          # Prevent all ubuntu-latest and windows-latest builds from having the same key
-          appendedCacheKey: ${{matrix.preset}}${{matrix.triplet}}
 
-      - name: Configure CMake+vcpkg.
+      - name: Run CMake+vcpkg to build packages.
+        uses: lukka/run-cmake@main
+        with:
+          configurePreset: 'ninja-multi-vcpkg'
+          configurePresetAdditionalArgs: "['-DOPENBLACK_WARNINGS_AS_ERRORS=ON']"
+
+      - name: Run CMake+Ninja to build the code (Debug).
         uses: lukka/run-cmake@main
         with:
           configurePreset: '${{ matrix.preset }}'
-          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
-
-      - name: Run CMake+vcpkg to build (Debug).
-        uses: lukka/run-cmake@main
-        with:
-          configurePreset: '${{ matrix.preset }}'
-          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
+          configurePresetAdditionalArgs: "['-DOPENBLACK_WARNINGS_AS_ERRORS=ON']"
           buildPreset: '${{ matrix.preset }}-debug'
 
-      - name: Run CMake+vcpkg to build (Release).
+      - name: Run CMake+vcpkg to build the code (Release).
         uses: lukka/run-cmake@main
         with:
           configurePreset: '${{ matrix.preset }}'
-          configurePresetCmdString: "[`--preset`, `$[env.CONFIGURE_PRESET_NAME]`, `-DOPENBLACK_WARNINGS_AS_ERRORS=ON`]"
+          configurePresetAdditionalArgs: "['-DOPENBLACK_WARNINGS_AS_ERRORS=ON']"
           buildPreset: '${{ matrix.preset }}-release'
 
       - uses: actions/upload-artifact@v3
@@ -90,5 +88,3 @@ jobs:
       VCPKG_ROOT: ${{github.workspace}}/vcpkg
       EMSDK: '/tmp/emsdk'
       ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.2.8568313'
-      CXX: ''
-      CC: ''
