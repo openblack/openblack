@@ -14,19 +14,13 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ubuntu-22.04, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         cc: [""]
         cxx: [""]
         # These are additional individual jobs. There are no permutations of these.
         include:
           # Testing clang
-          - os: ubuntu-22.04
-            cc: clang-12
-            cxx: clang++-12
-          - os: ubuntu-20.04
-            cc: gcc-10
-            cxx: g++-10
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             cc: clang
             cxx: clang++
 
@@ -44,7 +38,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt update -y
-          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev clang-tidy
+          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
         if: startsWith(matrix.os, 'ubuntu')
 
       - name: Install MacOS dependencies
@@ -135,15 +129,13 @@ jobs:
       - name: Add base repo to git config
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
         if: startsWith(github.event_name, 'pull_request')
-      - uses: ZedThree/clang-tidy-review@v0.9.0
+      - uses: ZedThree/clang-tidy-review@v0.13.0
         id: review
         with:
           build_dir: cmake-build-presets/ninja-multi-vcpkg
-          config_file: '.clang-tidy'
-          clang_tidy_version: 12
-          apt_packages: g++-10 # g++-9 doesn't support all of c++20 like spans
           exclude: "*ShaderIncluder.h,*json.hpp,*imgui_impl_sdl*,*stb_image_write.h"
           lgtm_comment_body: "" # don't post a lgtm message
+          annotations: false
       - name: If there are any comments, fail the check
         if: steps.review.outputs.total_comments > 0
         run: exit 1
@@ -155,7 +147,7 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ ubuntu-22.04, macos-latest, windows-latest ]
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
     steps:
       - name: Download compiled openblack and tools
         uses: actions/download-artifact@v3
