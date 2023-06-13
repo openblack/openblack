@@ -3256,7 +3256,7 @@ constexpr uint32_t MakeSpeedState(float ms)
 {
 	constexpr uint32_t ms100 = 0x10000;
 	constexpr float ms1 = static_cast<float>(ms100) * 0.01f;
-	float scaled = ms * ms1;
+	float scaled = ms1 * ms;
 	// Speed needs to be positive. Round cast to int won't work in negative.
 	// NOLINTNEXTLINE(bugprone-incorrect-roundings): can't use lroundf in constexpr
 	return static_cast<uint32_t>(scaled + 0.5f);
