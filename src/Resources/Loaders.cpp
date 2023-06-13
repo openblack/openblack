@@ -167,12 +167,12 @@ LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string&
 		std::string startMessageLine("START_GAME_MESSAGE");
 		std::string gameMessageLine("ADD_GAME_MESSAGE_LINE");
 
-		std::fstream level_file;
-		level_file.open(path, std::ios::in);
-		while (!level_file.eof())
+		std::fstream levelFile;
+		levelFile.open(path, std::ios::in);
+		while (!levelFile.eof())
 		{
 			std::string line;
-			std::getline(level_file, line);
+			std::getline(levelFile, line);
 			if (line.find(landNumberLine) != std::string::npos)
 			{
 				int levelNumber(stoi(line.substr(16, 16 - line.find(")"))));

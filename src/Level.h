@@ -11,6 +11,7 @@
 
 #include <filesystem>
 #include <string>
+#include <utility>
 
 namespace openblack
 {
@@ -21,7 +22,7 @@ public:
 	    : _name(std::move(name))
 	    , _scriptPath(std::move(path))
 	    , _isCampaign(isCampaign)
-	    , _description(description) {};
+	    , _description(std::move(description)) {};
 
 	[[nodiscard]] const std::string& GetName() const { return _name; };
 	[[nodiscard]] const std::filesystem::path& GetScriptPath() const { return _scriptPath; };
