@@ -18,11 +18,11 @@ namespace openblack
 class Level
 {
 public:
-	Level(std::string name, std::filesystem::path path, bool isCampaign, std::string description, bool isValid = false)
+	Level(std::string name, std::filesystem::path path, std::string description, bool isCampaign, bool isValid = false)
 	    : _name(std::move(name))
 	    , _scriptPath(std::move(path))
-	    , _isCampaign(isCampaign)
 	    , _description(std::move(description))
+	    , _isCampaign(isCampaign)
 	    , _isValid(isValid) {};
 
 	[[nodiscard]] const std::string& GetName() const { return _name; };
@@ -34,9 +34,8 @@ public:
 private:
 	std::string _name;
 	std::filesystem::path _scriptPath;
+	std::string _description;
 	bool _isCampaign;
 	bool _isValid;
-	int _playerCount;
-	std::string _description;
 };
 } // namespace openblack
