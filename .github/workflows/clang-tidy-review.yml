@@ -1,0 +1,37 @@
+name: Clang-tidy review
+
+on:
+  workflow_run:
+    workflows: ["VCPKG CI"]
+    types:
+      - completed
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: startsWith(github.event_name, 'pull_request')
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          submodules: recursive
+
+      - name: Download generated compile database
+        uses: actions/download-artifact@v3
+        with:
+          name: openblack-compile-database
+          path: cmake-build-presets/ninja-multi-vcpkg
+
+      - name: Add base repo to git config
+        run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
+        if: startsWith(github.event_name, 'pull_request')
+
+      - uses: ZedThree/clang-tidy-review@v0.13.0
+        id: review
+        with:
+          split_workflow: true
+          exclude: "*ShaderIncluder.h,*json.hpp,*imgui_impl_sdl*,*stb_image_write.h"
+
+      - uses: ZedThree/clang-tidy-review/upload@v0.13.0
