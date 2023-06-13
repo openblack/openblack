@@ -92,6 +92,7 @@ endif ()
 target_link_directories(
   openblack_lib PRIVATE ${BULLET_ROOT_DIR}/${BULLET_LIBRARY_DIRS}
 )
+target_compile_definitions(openblack_lib PRIVATE ${BULLET_DEFINITIONS})
 target_link_libraries(
   openblack_lib
   PRIVATE "$<$<CXX_COMPILER_ID:MSVC>:-SAFESEH:NO>"
