@@ -159,10 +159,12 @@ L3DAnimLoader::result_type L3DAnimLoader::operator()(FromDiskTag, const std::fil
 LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string& name, const std::filesystem::path& path) const
 {
 	bool isCampaign(false);
+	bool isValid(false);
 	std::string description;
 	std::string levelName(name);
 
 	{
+		std::string loadLandscapeLine("LOAD_LANDSCAPE");
 		std::string landNumberLine("SET_LAND_NUMBER");
 		std::string startMessageLine("START_GAME_MESSAGE");
 		std::string gameMessageLine("ADD_GAME_MESSAGE_LINE");
@@ -173,6 +175,10 @@ LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string&
 		{
 			std::string line;
 			std::getline(levelFile, line);
+			if (!isValid && line.find(loadLandscapeLine) != std::string::npos)
+			{
+				isValid = true;
+			}
 			if (line.find(landNumberLine) != std::string::npos)
 			{
 				int levelNumber(stoi(line.substr(16, 16 - line.find(")"))));
@@ -194,7 +200,7 @@ LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string&
 		}
 	}
 
-	return std::make_shared<Level>(levelName, path, isCampaign, description);
+	return std::make_shared<Level>(levelName, path, isCampaign, description, isValid);
 }
 
 CreatureMindLoader::result_type CreatureMindLoader::operator()(FromDiskTag, const std::filesystem::path& /*unused*/) const
