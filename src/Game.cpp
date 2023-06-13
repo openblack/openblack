@@ -585,12 +585,6 @@ bool Game::Initialize()
 		}
 	}
 	// Load Playgrounds
-	levelManager.Load("playgrounds/TwoGods", resources::LevelLoader::FromDiskTag {}, "Two Gods",
-	                  scriptsPath / "Playgrounds" / "TwoGods.txt");
-	levelManager.Load("playgrounds/ThreeGods", resources::LevelLoader::FromDiskTag {}, "Three Gods",
-	                  scriptsPath / "Playgrounds" / "ThreeGods.txt");
-	levelManager.Load("playgrounds/FourGods", resources::LevelLoader::FromDiskTag {}, "Four Gods",
-	                  scriptsPath / "Playgrounds" / "FourGods.txt");
 	// Attempt to load additional levels as playgrounds
 	for (const auto& f : std::filesystem::directory_iterator {scriptsPath / "Playgrounds"})
 	{
