@@ -7,11 +7,10 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
-#include <iostream>
+#include "Resources/Loaders.h"
 
 #include <fstream>
-
-#include "Resources/Loaders.h"
+#include <iostream>
 
 #include "Common/FileSystem.h"
 #include "Common/StringUtils.h"
@@ -160,7 +159,7 @@ L3DAnimLoader::result_type L3DAnimLoader::operator()(FromDiskTag, const std::fil
 LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string& name, const std::filesystem::path& path) const
 {
 	bool isCampaign(false);
-	std::string description;	
+	std::string description;
 	std::string levelName(name);
 
 	{
@@ -174,16 +173,20 @@ LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string&
 		{
 			std::string line;
 			std::getline(level_file, line);
-			if(line.find(landNumberLine) != std::string::npos) {
+			if (line.find(landNumberLine) != std::string::npos)
+			{
 				int levelNumber(stoi(line.substr(16, 16 - line.find(")"))));
-				if (levelNumber > 0) isCampaign = true;
+				if (levelNumber > 0)
+					isCampaign = true;
 			}
-			if(line.find(startMessageLine) != std::string::npos) {
+			if (line.find(startMessageLine) != std::string::npos)
+			{
 				size_t first(line.find('\"'));
 				size_t second(line.find('\"', first + 1));
 				levelName = line.substr(first + 1, second - first - 1);
 			}
-			if(line.find(gameMessageLine) != std::string::npos) {
+			if (line.find(gameMessageLine) != std::string::npos)
+			{
 				size_t first(line.find('\"'));
 				size_t second(line.find('\"', first + 1));
 				description = line.substr(first + 1, second - first - 1);
