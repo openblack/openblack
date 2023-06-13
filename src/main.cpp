@@ -15,7 +15,11 @@
 #include <cxxopts.hpp>
 
 #ifdef _WIN32
-#include <windows.h>
+// clang-format off
+// can't sort these includes
+#include <wtypes.h>
+#include <winreg.h>
+// clang-format on
 #endif
 
 #include "Game.h"
