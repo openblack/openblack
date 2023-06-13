@@ -577,7 +577,7 @@ bool Game::Initialize()
 		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading campaign level: {}", f.path().stem().string());
 		try
 		{
-			levelManager.Load(fmt::format("campaign/{}", name), resources::LevelLoader::FromDiskTag {}, name, f, true);
+			levelManager.Load(fmt::format("campaign/{}", name), resources::LevelLoader::FromDiskTag {}, name, f);
 		}
 		catch (std::runtime_error& err)
 		{
@@ -586,11 +586,11 @@ bool Game::Initialize()
 	}
 	// Load Playgrounds
 	levelManager.Load("playgrounds/TwoGods", resources::LevelLoader::FromDiskTag {}, "Two Gods",
-	                  scriptsPath / "Playgrounds" / "TwoGods.txt", false);
+	                  scriptsPath / "Playgrounds" / "TwoGods.txt");
 	levelManager.Load("playgrounds/ThreeGods", resources::LevelLoader::FromDiskTag {}, "Three Gods",
-	                  scriptsPath / "Playgrounds" / "ThreeGods.txt", false);
+	                  scriptsPath / "Playgrounds" / "ThreeGods.txt");
 	levelManager.Load("playgrounds/FourGods", resources::LevelLoader::FromDiskTag {}, "Four Gods",
-	                  scriptsPath / "Playgrounds" / "FourGods.txt", false);
+	                  scriptsPath / "Playgrounds" / "FourGods.txt");
 	// Attempt to load additional levels as playgrounds
 	for (const auto& f : std::filesystem::directory_iterator {scriptsPath / "Playgrounds"})
 	{
@@ -608,7 +608,7 @@ bool Game::Initialize()
 		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading custom level: {}", f.path().stem().string());
 		try
 		{
-			levelManager.Load(fmt::format("playgrounds/{}", name), resources::LevelLoader::FromDiskTag {}, name, f, false);
+			levelManager.Load(fmt::format("playgrounds/{}", name), resources::LevelLoader::FromDiskTag {}, name, f);
 		}
 		catch (std::runtime_error& err)
 		{

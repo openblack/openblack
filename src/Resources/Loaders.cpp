@@ -7,6 +7,10 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include <iostream>
+
+#include <fstream>
+
 #include "Resources/Loaders.h"
 
 #include "Common/FileSystem.h"
@@ -153,10 +157,34 @@ L3DAnimLoader::result_type L3DAnimLoader::operator()(FromDiskTag, const std::fil
 	return animation;
 }
 
-LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string& name, const std::filesystem::path& path,
-                                                 bool isCampaign) const
+LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string& name, const std::filesystem::path& path) const
 {
-	return std::make_shared<Level>(name, path, isCampaign);
+	bool isCampaign(false);
+	std::string description;
+
+	std::string landNumberLine("SET_LAND_NUMBER");
+	std::string startMessageLine("START_GAME_MESSAGE");
+	std::string gameMessageLine("ADD_GAME_MESSAGE_LINE");
+	
+	std::string levelName(name);
+	std::string line;
+
+	std::fstream level_file;
+	level_file.open(path, std::ios::in);
+	while (level_file >> line)
+	{
+		if(line.find(landNumberLine) != std::string::npos) {
+
+			int levelNumber(stoi(line.substr(16, 16 - line.find(")"))));
+
+			if (levelNumber > 0) isCampaign = true;
+
+		}
+		if(line.find(startMessageLine) != std::string::npos) break;
+		if(line.find(gameMessageLine) != std::string::npos) break;
+	}
+	level_file.close();
+	return std::make_shared<Level>(levelName, path, isCampaign, description);
 }
 
 CreatureMindLoader::result_type CreatureMindLoader::operator()(FromDiskTag, const std::filesystem::path& /*unused*/) const

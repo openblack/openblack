@@ -17,12 +17,13 @@ namespace openblack
 class Level
 {
 public:
-	Level(std::string name, std::filesystem::path path, bool isCampaign)
+	Level(std::string name, std::filesystem::path path, bool isCampaign, std::string description)
 	    : _name(std::move(name))
 	    , _scriptPath(std::move(path))
 	    , _isCampaign(isCampaign)
-	{
-	}
+		, _description(description)
+		{
+		};
 
 	[[nodiscard]] const std::string& GetName() const { return _name; };
 	[[nodiscard]] const std::filesystem::path& GetScriptPath() const { return _scriptPath; };
@@ -32,5 +33,7 @@ private:
 	std::string _name;
 	std::filesystem::path _scriptPath;
 	bool _isCampaign;
+	int _playerCount;
+	std::string _description;
 };
 } // namespace openblack
