@@ -167,21 +167,27 @@ LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string&
 	std::string gameMessageLine("ADD_GAME_MESSAGE_LINE");
 	
 	std::string levelName(name);
-	std::string line;
 
 	std::fstream level_file;
 	level_file.open(path, std::ios::in);
-	while (level_file >> line)
+	while (!level_file.eof())
 	{
+		std::string line;
+		std::getline(level_file, line);
 		if(line.find(landNumberLine) != std::string::npos) {
-
 			int levelNumber(stoi(line.substr(16, 16 - line.find(")"))));
-
 			if (levelNumber > 0) isCampaign = true;
-
 		}
-		if(line.find(startMessageLine) != std::string::npos) break;
-		if(line.find(gameMessageLine) != std::string::npos) break;
+		if(line.find(startMessageLine) != std::string::npos) {
+			size_t first(line.find('\"'));
+			size_t second(line.find('\"', first + 1));
+			levelName = line.substr(first + 1, second - first - 1);
+		}
+		if(line.find(gameMessageLine) != std::string::npos) {
+			size_t first(line.find('\"'));
+			size_t second(line.find('\"', first + 1));
+			description = line.substr(first + 1, second - first - 1);
+		}
 	}
 	level_file.close();
 	return std::make_shared<Level>(levelName, path, isCampaign, description);
