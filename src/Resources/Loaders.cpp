@@ -156,16 +156,14 @@ L3DAnimLoader::result_type L3DAnimLoader::operator()(FromDiskTag, const std::fil
 	return animation;
 }
 
-LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string& name, const std::filesystem::path& path) const
+LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string& name, const std::filesystem::path& path, bool isCampaign) const
 {
-	bool isCampaign(false);
-	bool isValid(false);
 	std::string description;
 	std::string levelName(name);
+	bool isValid(false);
 
 	{
 		std::string loadLandscapeLine("LOAD_LANDSCAPE");
-		std::string landNumberLine("SET_LAND_NUMBER");
 		std::string startMessageLine("START_GAME_MESSAGE");
 		std::string gameMessageLine("ADD_GAME_MESSAGE_LINE");
 
@@ -178,12 +176,6 @@ LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string&
 			if (!isValid && line.find(loadLandscapeLine) != std::string::npos)
 			{
 				isValid = true;
-			}
-			if (line.find(landNumberLine) != std::string::npos)
-			{
-				int levelNumber(stoi(line.substr(16, 16 - line.find(")"))));
-				if (levelNumber > 0)
-					isCampaign = true;
 			}
 			if (line.find(startMessageLine) != std::string::npos)
 			{
