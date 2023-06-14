@@ -85,6 +85,5 @@ jobs:
 
     env:
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
-      VCPKG_ROOT: ${{github.workspace}}/vcpkg
       EMSDK: '/tmp/emsdk'
       ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.2.8568313'
