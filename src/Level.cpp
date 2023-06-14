@@ -11,8 +11,16 @@
 #include "Common/StringUtils.h"
 
 #include <fstream>
+#include <utility>
 
 using namespace openblack;
+
+Level::Level(std::string name, std::filesystem::path path, std::string description, LandType landType, bool isValid)
+	    : _name(std::move(name))
+	    , _scriptPath(std::move(path))
+	    , _description(std::move(description))
+	    , _landType(landType)
+	    , _isValid(isValid) {};
 
 const std::string& Level::GetName() const
 {

@@ -11,7 +11,6 @@
 
 #include <filesystem>
 #include <string>
-#include <utility>
 
 namespace openblack
 {
@@ -25,12 +24,7 @@ public:
 		Campaign = 1,
 	};
 
-	Level(std::string name, std::filesystem::path path, std::string description, LandType landType, bool isValid = false)
-	    : _name(std::move(name))
-	    , _scriptPath(std::move(path))
-	    , _description(std::move(description))
-	    , _landType(landType)
-	    , _isValid(isValid) {};
+	Level(std::string name, std::filesystem::path path, std::string description, LandType landType, bool isValid = false);
 
 	[[nodiscard]] const std::string& GetName() const;
 	[[nodiscard]] const std::filesystem::path& GetScriptPath() const;
