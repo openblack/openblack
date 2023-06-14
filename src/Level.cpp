@@ -20,6 +20,31 @@ std::string extractQuote(std::string& string)
 	return string.substr(first + 1, second - first - 1);
 }
 
+const std::string& Level::GetName() const
+{
+	return _name;
+}
+
+const std::filesystem::path& Level::GetScriptPath() const
+{
+	return _scriptPath;
+}
+
+Level::LandType Level::GetType() const
+{
+	return _landType;
+}
+
+const std::string& Level::GetDescription() const
+{
+	return _description;
+}
+
+bool Level::IsValid() const
+{
+	return _isValid;
+}
+
 void Level::ParseLevel(const std::filesystem::path& path, bool& isValid, std::string& levelName, std::string& description)
 {
 	std::string const loadLandscapeLine("LOAD_LANDSCAPE");

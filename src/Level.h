@@ -32,11 +32,11 @@ public:
 	    , _landType(landType)
 	    , _isValid(isValid) {};
 
-	[[nodiscard]] const std::string& GetName() const { return _name; };
-	[[nodiscard]] const std::filesystem::path& GetScriptPath() const { return _scriptPath; };
-	[[nodiscard]] LandType GetType() const { return _landType; };
-	[[nodiscard]] const std::string& GetDescription() const { return _description; };
-	[[nodiscard]] bool IsValid() const { return _isValid; };
+	[[nodiscard]] const std::string& GetName() const;
+	[[nodiscard]] const std::filesystem::path& GetScriptPath() const;
+	[[nodiscard]] LandType GetType() const;
+	[[nodiscard]] const std::string& GetDescription() const;
+	[[nodiscard]] bool IsValid() const;
 
 	static void ParseLevel(const std::filesystem::path& path, bool& isValid, std::string& levelName, std::string& description);
 
