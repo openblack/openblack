@@ -40,7 +40,7 @@ private:
 	std::filesystem::path _scriptPath;
 	std::string _description;
 	LandType _landType;
-	/// @brief Does the loaded level script have a landscape that can be loaded ?
+	/// @brief The loaded level script have a landscape that can be loaded
 	bool _isValid;
 };
 
