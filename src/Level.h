@@ -18,10 +18,10 @@ namespace openblack
 class Level
 {
 public:
-	enum class LandType : uint32_t
+	enum class LandType : bool
 	{
-		Skirmish = 0,
-		Campaign = 1,
+		Skirmish,
+		Campaign,
 	};
 
 	Level(std::string name, std::filesystem::path path, std::string description, LandType landType, bool isValid = false);
