@@ -70,7 +70,6 @@ std::string openblack::string_utils::Capitalise(const std::string& string)
 	return parts;
 }
 
-/// Extract a substring of the characters in between the first two quote of a string
 std::string openblack::string_utils::ExtractQuote(std::string& string)
 {
 	size_t const first(string.find('\"'));
