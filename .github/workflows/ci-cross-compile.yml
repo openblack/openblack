@@ -60,21 +60,17 @@ jobs:
       - name: Run CMake+vcpkg to build packages.
         uses: lukka/run-cmake@main
         with:
-          configurePreset: 'ninja-multi-vcpkg'
+          configurePreset: '${{ matrix.preset }}'
           configurePresetAdditionalArgs: "['-DOPENBLACK_WARNINGS_AS_ERRORS=ON']"
 
       - name: Run CMake+Ninja to build the code (Debug).
         uses: lukka/run-cmake@main
         with:
-          configurePreset: '${{ matrix.preset }}'
-          configurePresetAdditionalArgs: "['-DOPENBLACK_WARNINGS_AS_ERRORS=ON']"
           buildPreset: '${{ matrix.preset }}-debug'
 
       - name: Run CMake+vcpkg to build the code (Release).
         uses: lukka/run-cmake@main
         with:
-          configurePreset: '${{ matrix.preset }}'
-          configurePresetAdditionalArgs: "['-DOPENBLACK_WARNINGS_AS_ERRORS=ON']"
           buildPreset: '${{ matrix.preset }}-release'
 
       - uses: actions/upload-artifact@v3
