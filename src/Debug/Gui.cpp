@@ -467,7 +467,7 @@ bool Gui::ShowMenu(Game& game)
 			ImGui::MenuItem("Story Islands", nullptr, false, false);
 			for (auto& level : campaigns)
 			{
-				menuItem(level->GetName(), level->GetScriptPath(), level->GetScriptPath().generic_string(), level->IsValid());
+				menuItem(level->GetName(), level->GetScriptPath(), level->GetDescription(), level->IsValid());
 			}
 			ImGui::Separator();
 			ImGui::MenuItem("Playground Islands", nullptr, false, false);
