@@ -578,8 +578,10 @@ bool Game::Initialize()
 		try
 		{
 			if (Level::IsLevelFile(f))
+			{
 				levelManager.Load(fmt::format("campaign/{}", name), resources::LevelLoader::FromDiskTag {}, f,
-								Level::LandType::Campaign);
+				                  Level::LandType::Campaign);
+			}
 		}
 		catch (std::runtime_error& err)
 		{
@@ -605,8 +607,10 @@ bool Game::Initialize()
 		try
 		{
 			if (Level::IsLevelFile(f))
+			{
 				levelManager.Load(fmt::format("playgrounds/{}", name), resources::LevelLoader::FromDiskTag {}, f,
-								Level::LandType::Skirmish);
+				                  Level::LandType::Skirmish);
+			}
 		}
 		catch (std::runtime_error& err)
 		{

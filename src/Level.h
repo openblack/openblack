@@ -34,12 +34,15 @@ public:
 
 	static bool IsLevelFile(const std::filesystem::path& path);
 	static Level ParseLevel(const std::filesystem::path& path, Level::LandType landType);
+
 private:
 	std::string _name;
 	std::filesystem::path _scriptPath;
 	std::string _description;
 	LandType _landType;
-	/// @brief Does the loaded level script contains at least a LOAD_LANDSCAPE instruction ?
+	/// @brief Does the loaded level script have a landscape that can be loaded ?
 	bool _isValid;
 };
+
+bool operator<(const Level& first, const Level& second);
 } // namespace openblack

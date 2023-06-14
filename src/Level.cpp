@@ -60,7 +60,9 @@ bool Level::IsLevelFile(const std::filesystem::path& path)
 		std::string line;
 		std::getline(levelFile, line);
 		if (line.find(loadLandscapeLine) != std::string::npos)
+		{
 			return true;
+		}
 	}
 
 	return false;
@@ -98,4 +100,9 @@ Level Level::ParseLevel(const std::filesystem::path& path, Level::LandType landT
 	}
 
 	return {levelName, path, description, landType, isValid};
+}
+
+bool operator<(const Level& first, const Level& second)
+{
+	return first.GetName() < second.GetName();
 }
