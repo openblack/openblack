@@ -50,6 +50,22 @@ bool Level::IsValid() const
 	return _isValid;
 }
 
+bool Level::IsLevelFile(const std::filesystem::path& path)
+{
+	std::string const loadLandscapeLine("LOAD_LANDSCAPE");
+	std::fstream levelFile;
+	levelFile.open(path, std::ios::in);
+	while (!levelFile.eof())
+	{
+		std::string line;
+		std::getline(levelFile, line);
+		if (line.find(loadLandscapeLine) != std::string::npos)
+			return true;
+	}
+
+	return false;
+}
+
 Level Level::ParseLevel(const std::filesystem::path& path, Level::LandType landType)
 {
 	std::string description;

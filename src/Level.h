@@ -32,8 +32,8 @@ public:
 	[[nodiscard]] const std::string& GetDescription() const;
 	[[nodiscard]] bool IsValid() const;
 
+	static bool IsLevelFile(const std::filesystem::path& path);
 	static Level ParseLevel(const std::filesystem::path& path, Level::LandType landType);
-
 private:
 	std::string _name;
 	std::filesystem::path _scriptPath;
