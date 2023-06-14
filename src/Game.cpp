@@ -577,7 +577,7 @@ bool Game::Initialize()
 		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading campaign level: {}", f.path().stem().string());
 		try
 		{
-			levelManager.Load(fmt::format("campaign/{}", name), resources::LevelLoader::FromDiskTag {}, name, f,
+			levelManager.Load(fmt::format("campaign/{}", name), resources::LevelLoader::FromDiskTag {}, f,
 			                  Level::LandType::Campaign);
 		}
 		catch (std::runtime_error& err)
@@ -603,7 +603,7 @@ bool Game::Initialize()
 		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading custom level: {}", f.path().stem().string());
 		try
 		{
-			levelManager.Load(fmt::format("playgrounds/{}", name), resources::LevelLoader::FromDiskTag {}, name, f,
+			levelManager.Load(fmt::format("playgrounds/{}", name), resources::LevelLoader::FromDiskTag {}, f,
 			                  Level::LandType::Skirmish);
 		}
 		catch (std::runtime_error& err)

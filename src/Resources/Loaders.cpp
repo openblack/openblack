@@ -156,8 +156,7 @@ L3DAnimLoader::result_type L3DAnimLoader::operator()(FromDiskTag, const std::fil
 	return animation;
 }
 
-LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string& name, const std::filesystem::path& path,
-                                                 Level::LandType landType) const
+LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::filesystem::path& path, Level::LandType landType) const
 {
 	return std::make_shared<Level>(Level::ParseLevel(path, landType));
 }
