@@ -465,12 +465,14 @@ bool Gui::ShowMenu(Game& game)
 			};
 
 			ImGui::MenuItem("Story Islands", nullptr, false, false);
+			ImGui::Separator();
 			for (auto& level : campaigns)
 			{
 				menuItem(level->GetName(), level->GetScriptPath(), level->GetDescription(), level->IsValid());
 			}
 			ImGui::Separator();
 			ImGui::MenuItem("Playground Islands", nullptr, false, false);
+			ImGui::Separator();
 			for (auto& level : playgrounds)
 			{
 				menuItem(level->GetName(), level->GetScriptPath(), level->GetDescription(), level->IsValid());

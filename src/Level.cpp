@@ -8,19 +8,22 @@
  *******************************************************************************/
 
 #include "Level.h"
-#include "Common/StringUtils.h"
 
 #include <fstream>
 #include <utility>
 
+#include "Common/FileSystem.h"
+#include "Common/StringUtils.h"
+#include "Game.h"
+
 using namespace openblack;
 
 Level::Level(std::string name, std::filesystem::path path, std::string description, LandType landType, bool isValid)
-	    : _name(std::move(name))
-	    , _scriptPath(std::move(path))
-	    , _description(std::move(description))
-	    , _landType(landType)
-	    , _isValid(isValid) {};
+    : _name(std::move(name))
+    , _scriptPath(std::move(path))
+    , _description(std::move(description))
+    , _landType(landType)
+    , _isValid(isValid) {};
 
 const std::string& Level::GetName() const
 {
@@ -47,8 +50,12 @@ bool Level::IsValid() const
 	return _isValid;
 }
 
-void Level::ParseLevel(const std::filesystem::path& path, bool& isValid, std::string& levelName, std::string& description)
+Level Level::ParseLevel(const std::filesystem::path& path, Level::LandType landType)
 {
+	std::string description("");
+	std::string levelName(path.stem().filename().string());
+	bool isValid(false);
+
 	std::string const loadLandscapeLine("LOAD_LANDSCAPE");
 	std::string const startMessageLine("START_GAME_MESSAGE");
 	std::string const gameMessageLine("ADD_GAME_MESSAGE_LINE");
@@ -61,7 +68,8 @@ void Level::ParseLevel(const std::filesystem::path& path, bool& isValid, std::st
 		std::getline(levelFile, line);
 		if (!isValid && line.find(loadLandscapeLine) != std::string::npos)
 		{
-			isValid = true;
+			std::filesystem::path landscapePath(string_utils::ExtractQuote(line));
+			isValid = Game::Instance()->GetFileSystem().Exists(landscapePath);
 		}
 		if (line.find(startMessageLine) != std::string::npos)
 		{
@@ -72,4 +80,6 @@ void Level::ParseLevel(const std::filesystem::path& path, bool& isValid, std::st
 			description = string_utils::ExtractQuote(line);
 		}
 	}
+
+	return Level(levelName, path, description, landType, isValid);
 }

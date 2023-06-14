@@ -159,13 +159,7 @@ L3DAnimLoader::result_type L3DAnimLoader::operator()(FromDiskTag, const std::fil
 LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string& name, const std::filesystem::path& path,
                                                  Level::LandType landType) const
 {
-	std::string description(path.string());
-	std::string levelName(name);
-	bool isValid(false);
-
-	Level::ParseLevel(path, isValid, levelName, description);
-
-	return std::make_shared<Level>(levelName, path, description, landType, isValid);
+	return std::make_shared<Level>(Level::ParseLevel(path, landType));
 }
 
 CreatureMindLoader::result_type CreatureMindLoader::operator()(FromDiskTag, const std::filesystem::path& /*unused*/) const

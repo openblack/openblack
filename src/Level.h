@@ -32,7 +32,7 @@ public:
 	[[nodiscard]] const std::string& GetDescription() const;
 	[[nodiscard]] bool IsValid() const;
 
-	static void ParseLevel(const std::filesystem::path& path, bool& isValid, std::string& levelName, std::string& description);
+	static Level ParseLevel(const std::filesystem::path& path, Level::LandType landType);
 
 private:
 	std::string _name;
