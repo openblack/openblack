@@ -23,7 +23,7 @@ Level::Level(std::string name, std::filesystem::path path, std::string descripti
     , _scriptPath(std::move(path))
     , _description(std::move(description))
     , _landType(landType)
-    , _isValid(isValid) 
+    , _isValid(isValid)
 {
 }
 
