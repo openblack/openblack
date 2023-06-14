@@ -112,7 +112,6 @@ jobs:
     env:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
-      VCPKG_ROOT: ${{github.workspace}}/vcpkg
 
   clang-tidy:
     needs: build

@@ -16,6 +16,9 @@
           "value": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
         },
         "OPENBLACK_USE_VCPKG": true
+      },
+      "environment": {
+          "VCPKG_ROOT": "./vcpkg"
       }
     },
     {
@@ -39,6 +42,9 @@
         "OPENBLACK_USE_VCPKG": true,
         "VCPKG_TARGET_ANDROID": true,
         "ANDROID_PLATFORM": "android-21"
+      },
+      "environment": {
+          "VCPKG_ROOT": "./vcpkg"
       }
     },
     {
@@ -57,6 +63,9 @@
         },
         "OPENBLACK_USE_VCPKG": true,
         "VCPKG_TARGET_TRIPLET": "wasm32-emscripten"
+      },
+      "environment": {
+          "VCPKG_ROOT": "./vcpkg"
       }
     },
     {
