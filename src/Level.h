@@ -13,13 +13,18 @@
 #include <string>
 #include <utility>
 
-#include "Enums.h"
-
 namespace openblack
 {
+
 class Level
 {
 public:
+	enum class LandType : uint32_t
+	{
+		Skirmish = 0,
+		Campaign = 1,
+	};
+
 	Level(std::string name, std::filesystem::path path, std::string description, LandType landType, bool isValid = false)
 	    : _name(std::move(name))
 	    , _scriptPath(std::move(path))
@@ -30,7 +35,6 @@ public:
 	[[nodiscard]] const std::string& GetName() const { return _name; };
 	[[nodiscard]] const std::filesystem::path& GetScriptPath() const { return _scriptPath; };
 	[[nodiscard]] LandType getType() const { return _landType; };
-	[[nodiscard]] bool IsCampaign() const { return _landType == LandType::Campaign; };
 	[[nodiscard]] const std::string& GetDescription() const { return _description; };
 	[[nodiscard]] bool IsValid() const { return _isValid; };
 

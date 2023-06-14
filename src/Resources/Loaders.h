@@ -61,7 +61,7 @@ struct L3DAnimLoader final: BaseLoader<L3DAnim>
 struct LevelLoader final: BaseLoader<Level>
 {
 	[[nodiscard]] result_type operator()(FromDiskTag, const std::string& name, const std::filesystem::path& path,
-	                                     LandType isCampaign) const;
+	                                     Level::LandType isCampaign) const;
 };
 
 struct CreatureMindLoader final: BaseLoader<creature::CreatureMind>

@@ -157,7 +157,7 @@ L3DAnimLoader::result_type L3DAnimLoader::operator()(FromDiskTag, const std::fil
 }
 
 LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string& name, const std::filesystem::path& path,
-                                                 LandType isCampaign) const
+                                                 Level::LandType landType) const
 {
 	std::string description;
 	std::string levelName(name);
@@ -193,7 +193,7 @@ LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string&
 		}
 	}
 
-	return std::make_shared<Level>(levelName, path, description, isCampaign, isValid);
+	return std::make_shared<Level>(levelName, path, description, landType, isValid);
 }
 
 CreatureMindLoader::result_type CreatureMindLoader::operator()(FromDiskTag, const std::filesystem::path& /*unused*/) const
