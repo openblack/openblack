@@ -15,16 +15,16 @@ using namespace openblack;
 
 std::string extractQuote(std::string& string)
 {
-	size_t first(string.find('\"'));
-	size_t second(string.find('\"', first + 1));
+	size_t const first(string.find('\"'));
+	size_t const second(string.find('\"', first + 1));
 	return string.substr(first + 1, second - first - 1);
 }
 
 void Level::ParseLevel(const std::filesystem::path& path, bool& isValid, std::string& levelName, std::string& description)
 {
-	std::string loadLandscapeLine("LOAD_LANDSCAPE");
-	std::string startMessageLine("START_GAME_MESSAGE");
-	std::string gameMessageLine("ADD_GAME_MESSAGE_LINE");
+	std::string const loadLandscapeLine("LOAD_LANDSCAPE");
+	std::string const startMessageLine("START_GAME_MESSAGE");
+	std::string const gameMessageLine("ADD_GAME_MESSAGE_LINE");
 
 	std::fstream levelFile;
 	levelFile.open(path, std::ios::in);
