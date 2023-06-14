@@ -163,35 +163,7 @@ LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string&
 	std::string levelName(name);
 	bool isValid(false);
 
-	{
-		std::string loadLandscapeLine("LOAD_LANDSCAPE");
-		std::string startMessageLine("START_GAME_MESSAGE");
-		std::string gameMessageLine("ADD_GAME_MESSAGE_LINE");
-
-		std::fstream levelFile;
-		levelFile.open(path, std::ios::in);
-		while (!levelFile.eof())
-		{
-			std::string line;
-			std::getline(levelFile, line);
-			if (!isValid && line.find(loadLandscapeLine) != std::string::npos)
-			{
-				isValid = true;
-			}
-			if (line.find(startMessageLine) != std::string::npos)
-			{
-				size_t first(line.find('\"'));
-				size_t second(line.find('\"', first + 1));
-				levelName = line.substr(first + 1, second - first - 1);
-			}
-			if (line.find(gameMessageLine) != std::string::npos)
-			{
-				size_t first(line.find('\"'));
-				size_t second(line.find('\"', first + 1));
-				description = line.substr(first + 1, second - first - 1);
-			}
-		}
-	}
+	Level::ParseLevel(path, isValid, levelName, description);
 
 	return std::make_shared<Level>(levelName, path, description, landType, isValid);
 }

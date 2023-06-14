@@ -34,9 +34,11 @@ public:
 
 	[[nodiscard]] const std::string& GetName() const { return _name; };
 	[[nodiscard]] const std::filesystem::path& GetScriptPath() const { return _scriptPath; };
-	[[nodiscard]] LandType getType() const { return _landType; };
+	[[nodiscard]] LandType GetType() const { return _landType; };
 	[[nodiscard]] const std::string& GetDescription() const { return _description; };
 	[[nodiscard]] bool IsValid() const { return _isValid; };
+
+	static void ParseLevel(const std::filesystem::path& path, bool& isValid, std::string& levelName, std::string& description);
 
 private:
 	std::string _name;

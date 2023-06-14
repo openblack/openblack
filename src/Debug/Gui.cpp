@@ -442,7 +442,7 @@ bool Gui::ShowMenu(Game& game)
 			auto campaigns = std::vector<const Level*>();
 			auto playgrounds = std::vector<const Level*>();
 			levelsManager.Each([&campaigns, &playgrounds](entt::id_type /*id*/, const Level& level) {
-				if (level.getType() == Level::LandType::Campaign)
+				if (level.GetType() == Level::LandType::Campaign)
 				{
 					campaigns.emplace_back(&level);
 				}
