@@ -8,17 +8,11 @@
  *******************************************************************************/
 
 #include "Level.h"
+#include "Common/StringUtils.h"
 
 #include <fstream>
 
 using namespace openblack;
-
-std::string extractQuote(std::string& string)
-{
-	size_t const first(string.find('\"'));
-	size_t const second(string.find('\"', first + 1));
-	return string.substr(first + 1, second - first - 1);
-}
 
 const std::string& Level::GetName() const
 {
@@ -63,11 +57,11 @@ void Level::ParseLevel(const std::filesystem::path& path, bool& isValid, std::st
 		}
 		if (line.find(startMessageLine) != std::string::npos)
 		{
-			levelName = extractQuote(line);
+			levelName = string_utils::ExtractQuote(line);
 		}
 		if (line.find(gameMessageLine) != std::string::npos)
 		{
-			description = extractQuote(line);
+			description = string_utils::ExtractQuote(line);
 		}
 	}
 }

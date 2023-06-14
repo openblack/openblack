@@ -69,3 +69,10 @@ std::string openblack::string_utils::Capitalise(const std::string& string)
 
 	return parts;
 }
+
+std::string openblack::string_utils::ExtractQuote(std::string& string)
+{
+	size_t const first(string.find('\"'));
+	size_t const second(string.find('\"', first + 1));
+	return string.substr(first + 1, second - first - 1);
+}
