@@ -15,7 +15,6 @@
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "Creature/CreatureMind.h"
-#include "Enums.h"
 #include "Level.h"
 
 namespace openblack::resources
