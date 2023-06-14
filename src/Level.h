@@ -43,6 +43,7 @@ private:
 	std::filesystem::path _scriptPath;
 	std::string _description;
 	LandType _landType;
+	/// @brief Does the loaded level script contains at least a LOAD_LANDSCAPE instruction ?
 	bool _isValid;
 };
 } // namespace openblack
