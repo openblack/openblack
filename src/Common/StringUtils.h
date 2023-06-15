@@ -28,4 +28,7 @@ namespace openblack::string_utils
 
 [[nodiscard]] std::vector<std::string> Split(const std::string& string, const std::string& delimiter);
 
+/// Extract a substring of the characters in between the first two quote of a string
+[[nodiscard]] std::string ExtractQuote(std::string& string);
+
 } // namespace openblack::string_utils

@@ -14,23 +14,35 @@
 
 namespace openblack
 {
+
 class Level
 {
 public:
-	Level(std::string name, std::filesystem::path path, bool isCampaign)
-	    : _name(std::move(name))
-	    , _scriptPath(std::move(path))
-	    , _isCampaign(isCampaign)
+	enum class LandType : bool
 	{
-	}
+		Skirmish,
+		Campaign,
+	};
 
-	[[nodiscard]] const std::string& GetName() const { return _name; };
-	[[nodiscard]] const std::filesystem::path& GetScriptPath() const { return _scriptPath; };
-	[[nodiscard]] bool IsCampaign() const { return _isCampaign; };
+	Level(std::string name, std::filesystem::path path, std::string description, LandType landType, bool isValid = false);
+
+	[[nodiscard]] const std::string& GetName() const;
+	[[nodiscard]] const std::filesystem::path& GetScriptPath() const;
+	[[nodiscard]] LandType GetType() const;
+	[[nodiscard]] const std::string& GetDescription() const;
+	[[nodiscard]] bool IsValid() const;
+
+	static bool IsLevelFile(const std::filesystem::path& path);
+	static Level ParseLevel(const std::filesystem::path& path, Level::LandType landType);
 
 private:
 	std::string _name;
 	std::filesystem::path _scriptPath;
-	bool _isCampaign;
+	std::string _description;
+	LandType _landType;
+	/// @brief The loaded level script have a landscape that can be loaded
+	bool _isValid;
 };
+
+bool operator<(const Level& first, const Level& second);
 } // namespace openblack

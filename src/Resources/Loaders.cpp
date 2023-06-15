@@ -9,6 +9,9 @@
 
 #include "Resources/Loaders.h"
 
+#include <fstream>
+#include <iostream>
+
 #include "Common/FileSystem.h"
 #include "Common/StringUtils.h"
 #include "Common/Zip.h"
@@ -153,10 +156,9 @@ L3DAnimLoader::result_type L3DAnimLoader::operator()(FromDiskTag, const std::fil
 	return animation;
 }
 
-LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::string& name, const std::filesystem::path& path,
-                                                 bool isCampaign) const
+LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::filesystem::path& path, Level::LandType landType) const
 {
-	return std::make_shared<Level>(name, path, isCampaign);
+	return std::make_shared<Level>(Level::ParseLevel(path, landType));
 }
 
 CreatureMindLoader::result_type CreatureMindLoader::operator()(FromDiskTag, const std::filesystem::path& /*unused*/) const
