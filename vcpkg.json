@@ -28,7 +28,13 @@
         {
             "name": "bgfx",
             "default-features": false,
-            "features": [ "multithreaded" ]
+            "platform": "emscripten"
+        },
+        {
+            "name": "bgfx",
+            "default-features": false,
+            "features": [ "multithreaded" ],
+            "platform": "!emscripten"
         },
         "bullet3",
         "minizip",
