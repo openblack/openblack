@@ -11,7 +11,7 @@
 
 #include <cstddef>
 
-namespace openblack
+namespace openblack::filesystem
 {
 
 enum class SeekMode
@@ -51,4 +51,4 @@ public:
 	}
 };
 
-} // namespace openblack
+} // namespace openblack::filesystem

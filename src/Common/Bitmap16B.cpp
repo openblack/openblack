@@ -11,7 +11,7 @@
 
 #include <cstring> // memcpy
 
-#include "FileSystem.h"
+#include "FileSystem/FileSystem.h"
 #include "Game.h"
 
 using namespace openblack;

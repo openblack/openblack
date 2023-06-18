@@ -13,7 +13,7 @@
 #include <glm/gtx/matrix_interpolation.hpp>
 #include <spdlog/spdlog.h>
 
-#include "Common/FileSystem.h"
+#include "FileSystem/FileSystem.h"
 #include "Game.h"
 
 using namespace openblack;

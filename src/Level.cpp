@@ -12,8 +12,8 @@
 #include <fstream>
 #include <utility>
 
-#include "Common/FileSystem.h"
 #include "Common/StringUtils.h"
+#include "FileSystem/FileSystem.h"
 #include "Game.h"
 
 using namespace openblack;
@@ -89,7 +89,7 @@ Level Level::ParseLevel(const std::filesystem::path& path, Level::LandType landT
 		if (!isValid && line.find(loadLandscapeLine) != std::string::npos)
 		{
 			std::filesystem::path const landscapePath(string_utils::ExtractQuote(line));
-			isValid = Game::Instance()->GetFileSystem().Exists(FileSystem::FixPath(landscapePath));
+			isValid = Game::Instance()->GetFileSystem().Exists(filesystem::FileSystem::FixPath(landscapePath));
 		}
 		if (line.find(startMessageLine) != std::string::npos)
 		{

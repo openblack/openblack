@@ -17,7 +17,7 @@
 
 #include "FileStream.h"
 
-namespace openblack
+namespace openblack::filesystem
 {
 
 /*
@@ -66,4 +66,4 @@ private:
 	std::vector<std::filesystem::path> _additionalPaths;
 };
 
-} // namespace openblack
+} // namespace openblack::filesystem

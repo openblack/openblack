@@ -32,7 +32,6 @@
 #include "3D/Sky.h"
 #include "3D/Water.h"
 #include "Common/EventManager.h"
-#include "Common/FileSystem.h"
 #include "Common/RandomNumberManager.h"
 #include "Common/StringUtils.h"
 #include "Debug/Gui.h"
@@ -48,6 +47,7 @@
 #include "ECS/Systems/PathfindingSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/Systems/TownSystemInterface.h"
+#include "FileSystem/FileSystem.h"
 #include "GameWindow.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/Texture2D.h"
@@ -78,7 +78,7 @@ Game* Game::sInstance = nullptr;
 
 Game::Game(Arguments&& args)
     : _eventManager(std::make_unique<EventManager>())
-    , _fileSystem(std::make_unique<FileSystem>())
+    , _fileSystem(std::make_unique<filesystem::FileSystem>())
     , _entityRegistry(std::make_unique<ecs::Registry>())
     , _entityMap(std::make_unique<ecs::Map>())
     , _handPose(glm::identity<glm::mat4>())
@@ -811,7 +811,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 void Game::LoadLandscape(const std::filesystem::path& path)
 {
 
-	auto fixedName = Game::Instance()->GetFileSystem().FindPath(FileSystem::FixPath(path));
+	auto fixedName = Game::Instance()->GetFileSystem().FindPath(filesystem::FileSystem::FixPath(path));
 
 	if (!_fileSystem->Exists(fixedName))
 	{

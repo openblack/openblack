@@ -14,9 +14,10 @@
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
 
-#include "Common/IStream.h"
+#include "FileSystem/IStream.h"
 
 using namespace openblack::serializer;
+using namespace openblack::filesystem;
 
 template <>
 constexpr GameThingType openblack::serializer::k_GameThingTypeEnum<GameThingSerializer::Footpath> = GameThingType::Footpath;
