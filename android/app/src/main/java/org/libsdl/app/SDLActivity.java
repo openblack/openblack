@@ -84,7 +84,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
 
         int s2 = s_copy & ~InputDevice.SOURCE_ANY; // keep class bits
-        s2 &= ~(  InputDevice.SOURCE_CLASS_BUTTON 
+        s2 &= ~(  InputDevice.SOURCE_CLASS_BUTTON
                 | InputDevice.SOURCE_CLASS_JOYSTICK
                 | InputDevice.SOURCE_CLASS_POINTER
                 | InputDevice.SOURCE_CLASS_POSITION
@@ -878,6 +878,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     }
 
     // C functions we call
+    public static native String nativeGetVersion();
     public static native int nativeSetupJNI();
     public static native int nativeRunMain(String library, String function, Object arguments);
     public static native void nativeLowMemory();
