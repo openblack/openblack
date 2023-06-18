@@ -13,7 +13,7 @@
 #include <spdlog/spdlog.h>
 
 #include "FileSystem/FileSystemInterface.h"
-#include "Game.h"
+#include "Locator.h"
 
 namespace openblack
 {
@@ -26,7 +26,7 @@ bool InfoFile::LoadFromFile(const std::filesystem::path& path, InfoConstants& in
 	try
 	{
 		pack::PackFile pack;
-		pack.Open(Game::Instance()->GetFileSystem().FindPath(path));
+		pack.Open(Locator::filesystem::value().FindPath(path));
 		data = pack.GetBlock("Info");
 		if (data.size() != sizeof(InfoConstants))
 		{

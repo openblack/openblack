@@ -12,7 +12,7 @@
 #include <cstring> // memcpy
 
 #include "FileSystem/FileSystemInterface.h"
-#include "Game.h"
+#include "Locator.h"
 
 using namespace openblack;
 
@@ -33,7 +33,7 @@ Bitmap16B::~Bitmap16B()
 
 Bitmap16B* Bitmap16B::LoadFromFile(const std::filesystem::path& path)
 {
-	auto const& data = Game::Instance()->GetFileSystem().ReadAll(path);
+	auto const& data = Locator::filesystem::value().ReadAll(path);
 	auto* bitmap = new Bitmap16B(data.data());
 
 	return bitmap;
