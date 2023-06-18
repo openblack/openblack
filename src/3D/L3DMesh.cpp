@@ -19,8 +19,8 @@
 #include <spdlog/spdlog.h>
 
 #include "FileSystem/FileSystemInterface.h"
-#include "Game.h"
 #include "Graphics/VertexBuffer.h"
+#include "Locator.h"
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -169,7 +169,7 @@ bool L3DMesh::LoadFromFile(const std::filesystem::path& path)
 
 	try
 	{
-		l3d.Open(Game::Instance()->GetFileSystem().FindPath(path));
+		l3d.Open(Locator::filesystem::value().FindPath(path));
 	}
 	catch (std::runtime_error& err)
 	{

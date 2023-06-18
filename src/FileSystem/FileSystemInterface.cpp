@@ -12,8 +12,6 @@
 #include <algorithm>
 #include <array>
 
-#include "DefaultFileSystem.h"
-
 using namespace openblack::filesystem;
 
 FileSystemInterface::~FileSystemInterface() = default;

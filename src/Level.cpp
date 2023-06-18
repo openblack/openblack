@@ -14,7 +14,7 @@
 
 #include "Common/StringUtils.h"
 #include "FileSystem/FileSystemInterface.h"
-#include "Game.h"
+#include "Locator.h"
 
 using namespace openblack;
 
@@ -89,7 +89,7 @@ Level Level::ParseLevel(const std::filesystem::path& path, Level::LandType landT
 		if (!isValid && line.find(loadLandscapeLine) != std::string::npos)
 		{
 			std::filesystem::path const landscapePath(string_utils::ExtractQuote(line));
-			isValid = Game::Instance()->GetFileSystem().Exists(filesystem::FileSystemInterface::FixPath(landscapePath));
+			isValid = Locator::filesystem::value().Exists(filesystem::FileSystemInterface::FixPath(landscapePath));
 		}
 		if (line.find(startMessageLine) != std::string::npos)
 		{

@@ -15,7 +15,7 @@
 #include "Common/StringUtils.h"
 #include "Common/Zip.h"
 #include "FileSystem/FileSystemInterface.h"
-#include "Game.h"
+#include "Locator.h"
 
 using namespace openblack;
 using namespace openblack::filesystem;
@@ -47,7 +47,7 @@ L3DLoader::result_type L3DLoader::operator()(FromDiskTag, const std::filesystem:
 	}
 	else if (pathExt == ".zzz")
 	{
-		auto stream = Game::Instance()->GetFileSystem().Open(path, Stream::Mode::Read);
+		auto stream = Locator::filesystem::value().Open(path, Stream::Mode::Read);
 		uint32_t decompressedSize = 0;
 		stream->Read(reinterpret_cast<uint32_t*>(&decompressedSize), sizeof(decompressedSize));
 		auto buffer = std::vector<uint8_t>(stream->Size() - sizeof(decompressedSize));
@@ -100,7 +100,7 @@ Texture2DLoader::result_type Texture2DLoader::operator()(FromDiskTag, const std:
 	bool found = false;
 	const std::array<uint16_t, 6> resolutions = {{256, 40, 32, 14, 12, 6}};
 
-	const auto data = Game::Instance()->GetFileSystem().ReadAll(rawTexturePath);
+	const auto data = Locator::filesystem::value().ReadAll(rawTexturePath);
 	graphics::Format format = graphics::Format::R8;
 	uint16_t width = 0;
 	uint16_t height = 0;

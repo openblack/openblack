@@ -47,7 +47,7 @@
 #include "ECS/Systems/PathfindingSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/Systems/TownSystemInterface.h"
-#include "FileSystem/DefaultFileSystem.h"
+#include "FileSystem/FileSystemInterface.h"
 #include "GameWindow.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/Texture2D.h"
@@ -78,9 +78,9 @@ Game* Game::sInstance = nullptr;
 
 Game::Game(Arguments&& args)
     : _eventManager(std::make_unique<EventManager>())
-    , _fileSystem(new filesystem::DefaultFileSystem())
     , _entityRegistry(std::make_unique<ecs::Registry>())
     , _entityMap(std::make_unique<ecs::Map>())
+    , _startMap(args.startLevel)
     , _handPose(glm::identity<glm::mat4>())
     , _requestScreenshot(args.requestScreenshot)
 {
@@ -133,30 +133,6 @@ Game::Game(Arguments&& args)
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Failed to create renderer", exception.what(), nullptr);
 		throw exception;
 	}
-	_fileSystem->SetGamePath(GetGamePath());
-	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "The GamePath is \"{}\".", _fileSystem->GetGamePath().generic_string());
-
-	if (std::filesystem::path(args.startLevel).is_absolute())
-	{
-		_startMap = args.startLevel;
-		if (std::find(_startMap.begin(), _startMap.end(), "Scripts") != _startMap.end())
-		{
-			auto p = _startMap;
-			while (p.filename() != "Scripts" && p != p.parent_path())
-			{
-				p = p.parent_path();
-			}
-			_fileSystem->AddAdditionalPath(p.parent_path());
-		}
-		else
-		{
-			_fileSystem->AddAdditionalPath(_startMap.parent_path());
-		}
-	}
-	else
-	{
-		_startMap = _fileSystem->ScriptsPath() / args.startLevel;
-	}
 
 	_gui = debug::gui::Gui::Create(_window.get(), graphics::RenderPass::ImGui, args.scale);
 
@@ -188,6 +164,7 @@ Game::~Game()
 	Locator::townSystem::reset();
 	Locator::pathfindingSystem::reset();
 	Locator::terrainSystem::reset();
+	Locator::filesystem::reset();
 
 	_water.reset();
 	_sky.reset();
@@ -476,12 +453,38 @@ bool Game::Update()
 bool Game::Initialize()
 {
 	ecs::systems::InitializeGame();
+	auto& fileSystem = Locator::filesystem::value();
 	auto& resources = Locator::resources::value();
 	auto& meshManager = resources.GetMeshes();
 	auto& textureManager = resources.GetTextures();
 	auto& animationManager = resources.GetAnimations();
 	auto& levelManager = resources.GetLevels();
-	const auto citadelOutsideMeshesPath = _fileSystem->FindPath(_fileSystem->CitadelPath() / "OutsideMeshes");
+
+	fileSystem.SetGamePath(GetGamePath());
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "The GamePath is \"{}\".", fileSystem.GetGamePath().generic_string());
+
+	if (std::filesystem::path(_startMap).is_absolute())
+	{
+		if (std::find(_startMap.begin(), _startMap.end(), "Scripts") != _startMap.end())
+		{
+			auto p = _startMap;
+			while (p.filename() != "Scripts" && p != p.parent_path())
+			{
+				p = p.parent_path();
+			}
+			fileSystem.AddAdditionalPath(p.parent_path());
+		}
+		else
+		{
+			fileSystem.AddAdditionalPath(_startMap.parent_path());
+		}
+	}
+	else
+	{
+		_startMap = fileSystem.ScriptsPath() / _startMap;
+	}
+
+	const auto citadelOutsideMeshesPath = fileSystem.FindPath(fileSystem.CitadelPath() / "OutsideMeshes");
 
 	for (const auto& f : std::filesystem::directory_iterator {citadelOutsideMeshesPath})
 	{
@@ -499,7 +502,7 @@ bool Game::Initialize()
 		}
 	}
 	pack::PackFile pack;
-	pack.Open(_fileSystem->FindPath(_fileSystem->DataPath() / "AllMeshes.g3d"));
+	pack.Open(fileSystem.FindPath(fileSystem.DataPath() / "AllMeshes.g3d"));
 	const auto& meshes = pack.GetMeshes();
 	for (size_t i = 0; const auto& mesh : meshes)
 	{
@@ -515,14 +518,14 @@ bool Game::Initialize()
 	}
 
 	pack::PackFile animationPack;
-	animationPack.Open(_fileSystem->FindPath(_fileSystem->DataPath() / "AllAnims.anm"));
+	animationPack.Open(fileSystem.FindPath(fileSystem.DataPath() / "AllAnims.anm"));
 	const auto& animations = animationPack.GetAnimations();
 	for (size_t i = 0; i < animations.size(); i++)
 	{
 		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animations[i]);
 	}
 
-	const auto creatures = _fileSystem->FindPath(_fileSystem->CreatureMeshPath());
+	const auto creatures = fileSystem.FindPath(fileSystem.CreatureMeshPath());
 	for (const auto& f : std::filesystem::directory_iterator {creatures})
 	{
 		const auto& fileName = f.path().stem().string();
@@ -545,25 +548,21 @@ bool Game::Initialize()
 
 	// Load loose one-off assets
 	animationManager.Load("coffre", resources::L3DAnimLoader::FromDiskTag {},
-	                      _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.anm"));
+	                      fileSystem.FindPath(fileSystem.MiscPath() / "coffre.anm"));
 	meshManager.Load("hand", resources::L3DLoader::FromDiskTag {},
-	                 _fileSystem->FindPath(_fileSystem->CreatureMeshPath() / "Hand_Boned_Base2.l3d"));
-	meshManager.Load("coffre", resources::L3DLoader::FromDiskTag {},
-	                 _fileSystem->FindPath(_fileSystem->MiscPath() / "coffre.l3d"));
-	meshManager.Load("cone", resources::L3DLoader::FromDiskTag {}, _fileSystem->FindPath(_fileSystem->DataPath() / "cone.l3d"));
-	meshManager.Load("marker", resources::L3DLoader::FromDiskTag {},
-	                 _fileSystem->FindPath(_fileSystem->DataPath() / "marker.l3d"));
-	meshManager.Load("river", resources::L3DLoader::FromDiskTag {},
-	                 _fileSystem->FindPath(_fileSystem->DataPath() / "river.l3d"));
-	meshManager.Load("river2", resources::L3DLoader::FromDiskTag {},
-	                 _fileSystem->FindPath(_fileSystem->DataPath() / "river2.l3d"));
+	                 fileSystem.FindPath(fileSystem.CreatureMeshPath() / "Hand_Boned_Base2.l3d"));
+	meshManager.Load("coffre", resources::L3DLoader::FromDiskTag {}, fileSystem.FindPath(fileSystem.MiscPath() / "coffre.l3d"));
+	meshManager.Load("cone", resources::L3DLoader::FromDiskTag {}, fileSystem.FindPath(fileSystem.DataPath() / "cone.l3d"));
+	meshManager.Load("marker", resources::L3DLoader::FromDiskTag {}, fileSystem.FindPath(fileSystem.DataPath() / "marker.l3d"));
+	meshManager.Load("river", resources::L3DLoader::FromDiskTag {}, fileSystem.FindPath(fileSystem.DataPath() / "river.l3d"));
+	meshManager.Load("river2", resources::L3DLoader::FromDiskTag {}, fileSystem.FindPath(fileSystem.DataPath() / "river2.l3d"));
 	meshManager.Load("metre_sphere", resources::L3DLoader::FromDiskTag {},
-	                 _fileSystem->FindPath(_fileSystem->DataPath() / "metre_sphere.l3d"));
+	                 fileSystem.FindPath(fileSystem.DataPath() / "metre_sphere.l3d"));
 
 	// TODO(raffclar): #400: Parse level files within the resource loader
 	// TODO(raffclar): #405: Determine campaign levels from the challenge script file
 	// Load the campaign levels
-	const auto scriptsPath = _fileSystem->FindPath(_fileSystem->ScriptsPath());
+	const auto scriptsPath = fileSystem.FindPath(fileSystem.ScriptsPath());
 	for (const auto& f : std::filesystem::directory_iterator {scriptsPath})
 	{
 		const auto& name = f.path().stem().string();
@@ -631,7 +630,7 @@ bool Game::Initialize()
 		return false;
 	}
 
-	for (const auto& f : std::filesystem::directory_iterator {_fileSystem->FindPath(_fileSystem->TexturePath())})
+	for (const auto& f : std::filesystem::directory_iterator {fileSystem.FindPath(fileSystem.TexturePath())})
 	{
 		if (f.path().extension() == ".raw")
 		{
@@ -658,16 +657,18 @@ bool Game::Run()
 	LoadMap(_startMap);
 	Locator::dynamicsSystem::value().RegisterRigidBodies();
 
-	auto challengePath = _fileSystem->QuestsPath() / "challenge.chl";
-	if (_fileSystem->Exists(challengePath))
+	auto& fileSystem = Locator::filesystem::value();
+
+	auto challengePath = fileSystem.QuestsPath() / "challenge.chl";
+	if (fileSystem.Exists(challengePath))
 	{
 		_lhvm = std::make_unique<LHVM::LHVM>();
-		_lhvm->LoadBinary((_fileSystem->GetGamePath() / challengePath).generic_string());
+		_lhvm->LoadBinary((fileSystem.GetGamePath() / challengePath).generic_string());
 	}
 	else
 	{
 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Challenge file not found at {}",
-		                    (_fileSystem->GetGamePath() / challengePath).generic_string());
+		                    (fileSystem.GetGamePath() / challengePath).generic_string());
 		return false;
 	}
 
@@ -768,12 +769,14 @@ bool Game::Run()
 
 void Game::LoadMap(const std::filesystem::path& path)
 {
-	if (!_fileSystem->Exists(path))
+	auto& fileSystem = Locator::filesystem::value();
+
+	if (!fileSystem.Exists(path))
 	{
 		throw std::runtime_error("Could not find script " + path.generic_string());
 	}
 
-	auto data = _fileSystem->ReadAll(path);
+	auto data = fileSystem.ReadAll(path);
 	std::string source(reinterpret_cast<const char*>(data.data()), data.size());
 
 	// Reset everything. Deletes all entities and their components
@@ -788,9 +791,9 @@ void Game::LoadMap(const std::filesystem::path& path)
 
 	// Each released map comes with an optional .fot file which contains the footpath information for the map
 	auto stem = string_utils::LowerCase(path.stem().generic_string());
-	auto fotPath = _fileSystem->LandscapePath() / fmt::format("{}.fot", stem);
+	auto fotPath = fileSystem.LandscapePath() / fmt::format("{}.fot", stem);
 
-	if (_fileSystem->Exists(fotPath))
+	if (fileSystem.Exists(fotPath))
 	{
 		FotFile fotFile(*this);
 		fotFile.Load(fotPath);
@@ -810,10 +813,11 @@ void Game::LoadMap(const std::filesystem::path& path)
 
 void Game::LoadLandscape(const std::filesystem::path& path)
 {
+	auto& fileSystem = Locator::filesystem::value();
 
-	auto fixedName = Game::Instance()->GetFileSystem().FindPath(filesystem::FileSystemInterface::FixPath(path));
+	auto fixedName = fileSystem.FindPath(filesystem::FileSystemInterface::FixPath(path));
 
-	if (!_fileSystem->Exists(fixedName))
+	if (!fileSystem.Exists(fixedName))
 	{
 		throw std::runtime_error("Could not find landscape " + path.generic_string());
 	}
@@ -826,7 +830,7 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 bool Game::LoadVariables()
 {
 	InfoFile infoFile;
-	return infoFile.LoadFromFile(_fileSystem->ScriptsPath() / "info.dat", _infoConstants);
+	return infoFile.LoadFromFile(filesystem::FileSystemInterface::ScriptsPath() / "info.dat", _infoConstants);
 }
 
 void Game::SetGamePath(std::filesystem::path gamePath)

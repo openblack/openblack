@@ -14,7 +14,7 @@
 #include <spdlog/spdlog.h>
 
 #include "FileSystem/FileSystemInterface.h"
-#include "Game.h"
+#include "Locator.h"
 
 using namespace openblack;
 
@@ -60,7 +60,7 @@ bool L3DAnim::LoadFromFile(const std::filesystem::path& path)
 
 	try
 	{
-		anm.Open(Game::Instance()->GetFileSystem().FindPath(path));
+		anm.Open(Locator::filesystem::value().FindPath(path));
 	}
 	catch (std::runtime_error& err)
 	{
