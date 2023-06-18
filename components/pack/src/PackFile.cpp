@@ -147,23 +147,16 @@ void PackFile::Fail(const std::string& msg)
 	throw std::runtime_error("Pack Error: " + msg + "\nFilename: " + _filename.string());
 }
 
-void PackFile::ReadBlocks()
+void PackFile::ReadBlocks(std::istream& stream)
 {
 	assert(!_isLoaded);
 
-	std::ifstream input(_filename, std::ios::binary);
-
-	if (!input.is_open())
-	{
-		Fail("Could not open file.");
-	}
-
 	// Total file size
 	std::size_t fsize = 0;
-	if (input.seekg(0, std::ios_base::end))
+	if (stream.seekg(0, std::ios_base::end))
 	{
-		fsize = static_cast<std::size_t>(input.tellg());
-		input.seekg(0);
+		fsize = static_cast<std::size_t>(stream.tellg());
+		stream.seekg(0);
 	}
 
 	std::array<char, k_Magic.size()> magic;
@@ -173,21 +166,21 @@ void PackFile::ReadBlocks()
 	}
 
 	// First 8 bytes
-	input.read(magic.data(), magic.size());
+	stream.read(magic.data(), magic.size());
 	if (std::memcmp(magic.data(), k_Magic.data(), magic.size()) != 0)
 	{
 		Fail("Unrecognized Pack header");
 	}
 
-	if (fsize < static_cast<std::size_t>(input.tellg()) + sizeof(PackBlockHeader))
+	if (fsize < static_cast<std::size_t>(stream.tellg()) + sizeof(PackBlockHeader))
 	{
 		Fail("File too small to contain any blocks.");
 	}
 
 	PackBlockHeader header;
-	while (fsize - sizeof(PackBlockHeader) > static_cast<std::size_t>(input.tellg()))
+	while (fsize - sizeof(PackBlockHeader) > static_cast<std::size_t>(stream.tellg()))
 	{
-		input.read(reinterpret_cast<char*>(&header), sizeof(PackBlockHeader));
+		stream.read(reinterpret_cast<char*>(&header), sizeof(PackBlockHeader));
 
 		if (_blocks.contains(header.blockName.data()))
 		{
@@ -195,10 +188,10 @@ void PackFile::ReadBlocks()
 		}
 
 		_blocks[std::string(header.blockName.data())] = std::vector<uint8_t>(header.blockSize);
-		input.read(reinterpret_cast<char*>(_blocks[header.blockName.data()].data()), header.blockSize);
+		stream.read(reinterpret_cast<char*>(_blocks[header.blockName.data()].data()), header.blockSize);
 	}
 
-	if (fsize < static_cast<std::size_t>(input.tellg()))
+	if (fsize < static_cast<std::size_t>(stream.tellg()))
 	{
 		Fail("File not evenly split into whole blocks.");
 	}
@@ -497,10 +490,9 @@ void PackFile::CreateBodyBlock()
 PackFile::PackFile() = default;
 PackFile::~PackFile() = default;
 
-void PackFile::Open(const std::filesystem::path& file)
+void PackFile::ReadFile(std::istream& stream)
 {
-	_filename = file;
-	ReadBlocks();
+	ReadBlocks(stream);
 	// Mesh pack
 	if (HasBlock("INFO"))
 	{
@@ -515,6 +507,33 @@ void PackFile::Open(const std::filesystem::path& file)
 		ExtractAnimationsFromBlock();
 	}
 	_isLoaded = true;
+}
+
+void PackFile::Open(const std::filesystem::path& file)
+{
+	_filename = file;
+
+	std::ifstream stream(_filename, std::ios::binary);
+
+	if (!stream.is_open())
+	{
+		Fail("Could not open file.");
+	}
+
+	ReadFile(stream);
+}
+
+void PackFile::Open(const std::vector<uint8_t>& buffer)
+{
+	assert(!_isLoaded);
+
+	imemstream stream(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
+
+	// File name set to "buffer" when file is load from a buffer
+	// Impact code using L3DFile::GetFilename method
+	_filename = std::filesystem::path("buffer");
+
+	ReadFile(stream);
 }
 
 void PackFile::Write(const std::filesystem::path& file)
