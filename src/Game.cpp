@@ -77,7 +77,8 @@ const std::string k_WindowTitle = "openblack";
 Game* Game::sInstance = nullptr;
 
 Game::Game(Arguments&& args)
-    : _eventManager(std::make_unique<EventManager>())
+    : _gamePath(args.gamePath)
+    , _eventManager(std::make_unique<EventManager>())
     , _entityRegistry(std::make_unique<ecs::Registry>())
     , _entityMap(std::make_unique<ecs::Map>())
     , _startMap(args.startLevel)
@@ -113,7 +114,6 @@ Game::Game(Arguments&& args)
 	std::string binaryPath = std::filesystem::path {args.executablePath}.parent_path().generic_string();
 	_config.numFramesToSimulate = args.numFramesToSimulate;
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), "current binary path: {}", binaryPath);
-	SetGamePath(args.gamePath);
 	if (args.rendererType != bgfx::RendererType::Noop)
 	{
 		uint32_t extraFlags = 0;
@@ -460,6 +460,7 @@ bool Game::Initialize()
 	auto& animationManager = resources.GetAnimations();
 	auto& levelManager = resources.GetLevels();
 
+	SetGamePath(_gamePath);
 	fileSystem.SetGamePath(GetGamePath());
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "The GamePath is \"{}\".", fileSystem.GetGamePath().generic_string());
 
@@ -847,11 +848,12 @@ void Game::SetGamePath(std::filesystem::path gamePath)
 	}
 #endif
 
-	if (!std::filesystem::exists(gamePath))
+	if (!Locator::filesystem::value().Exists(gamePath))
 	{
 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "GamePath does not exist: '{}'", gamePath.generic_string());
 		return;
 	}
+
 	_gamePath = gamePath;
 }
 
