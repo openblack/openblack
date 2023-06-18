@@ -1,16 +1,51 @@
 package org.openblack.app;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ContextWrapper;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
-import android.os.Environment;
+import android.util.Log;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import org.libsdl.app.SDLActivity;
 
+import java.io.IOException;
+import java.util.Arrays;
+
 public class OpenblackActivity extends SDLActivity {
+
+    private static final int REQUEST_GAME_PATH = 1001;
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_GAME_PATH) {
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                Uri uri = data.getData();
+                if (uri != null) {
+                    getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                    // Save the URI into SharedPreferences
+                    getSharedPreferences("Openblack", MODE_PRIVATE)
+                            .edit()
+                            .putString("selected_directory_uri", uri.toString())
+                            .apply();
+
+                    synchronized (this) {
+                        notify();
+                    }
+                }
+            } else {
+                Log.e("OpenblackActivity", "Directory not selected or error");
+            }
+        }
+    }
 
     /**
      * This method returns the name of the application entry point
@@ -18,6 +53,22 @@ public class OpenblackActivity extends SDLActivity {
      */
     protected String getMainFunction() {
         return "main";
+    }
+
+    private String requestGamePath() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        startActivityForResult(intent, REQUEST_GAME_PATH);
+
+        // Block execution until the user selects a directory
+        synchronized (this) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                Log.e("OpenblackActivity", "Error waiting for game path selection", e);
+            }
+        }
+
+        return getSharedPreferences("Openblack", MODE_PRIVATE).getString("selected_directory_uri", null);
     }
 
     /**
@@ -29,22 +80,9 @@ public class OpenblackActivity extends SDLActivity {
      */
     @RequiresApi(api = Build.VERSION_CODES.M)
     protected String[] getArguments() {
-        ContextWrapper c = new ContextWrapper(this);
-        if (c.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            // Should we show an explanation?
-            if (shouldShowRequestPermissionRationale(
-                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                // Explain to the user why we need to read the contacts
-            }
-
-            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                    0x13648559);
-        }
-        // FIXME(bwrsandman): Currently requires user to upload game assets to "/data/local/tmp/bw" and `chmod -R a+wrx /data/local/tmp/bw`
+        String gamePath = requestGamePath();
         return new String[]{
-                "--game-path", "/data/local/tmp/bw",
+                "--game-path", gamePath,
                 "--backend-type", "Vulkan",
                 "--log-file", "logcat"
         };
