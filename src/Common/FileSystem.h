@@ -52,7 +52,7 @@ public:
 
 	[[nodiscard]] std::filesystem::path FindPath(const std::filesystem::path& path) const;
 
-	std::unique_ptr<FileStream> Open(const std::filesystem::path& path, FileMode mode);
+	std::unique_ptr<IStream> Open(const std::filesystem::path& path, FileMode mode);
 	bool Exists(const std::filesystem::path& path);
 
 	void SetGamePath(const std::filesystem::path& path) { _gamePath = path; }
