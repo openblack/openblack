@@ -15,8 +15,7 @@
 
 #include <spdlog/fmt/fmt.h>
 
-namespace openblack
-{
+using namespace openblack::filesystem;
 
 FileStream::FileStream(const std::filesystem::path& path, FileMode mode)
 {
@@ -96,5 +95,3 @@ void FileStream::Read(void* buffer, std::size_t length)
 		throw std::runtime_error(fmt::format("Error while reading file"));
 	}
 }
-
-} // namespace openblack

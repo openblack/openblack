@@ -9,15 +9,25 @@
 
 #pragma once
 
+#include <filesystem>
+
 #include "IStream.h"
 
-namespace openblack
+namespace openblack::filesystem
 {
 
-class MemoryStream: public IStream
+enum class FileMode
+{
+	Read,
+	Write,
+	Append
+};
+
+class FileStream final: public IStream
 {
 public:
-	MemoryStream(const void* data, std::size_t size);
+	FileStream(const std::filesystem::path& path, FileMode mode);
+	virtual ~FileStream();
 
 	[[nodiscard]] std::size_t Position() const override;
 	[[nodiscard]] std::size_t Size() const override;
@@ -26,9 +36,8 @@ public:
 	void Read(void* buffer, std::size_t length) override;
 
 protected:
-	const void* _data;
-	std::size_t _size;
-	std::size_t _position;
+	FILE* _file {nullptr};
+	std::size_t _fileSize {0};
 };
 
-} // namespace openblack
+} // namespace openblack::filesystem

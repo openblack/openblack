@@ -15,8 +15,7 @@
 #include <algorithm>
 #include <array>
 
-namespace openblack
-{
+using namespace openblack::filesystem;
 
 std::filesystem::path FileSystem::FixPath(const std::filesystem::path& path)
 {
@@ -117,5 +116,3 @@ std::vector<std::byte> FileSystem::ReadAll(const std::filesystem::path& path)
 
 	return data;
 }
-
-} // namespace openblack

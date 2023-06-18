@@ -10,12 +10,11 @@
 #include "MemoryStream.h"
 
 #include <cstddef>
-#include <cstdint> // uint8_t
+#include <cstdint>
 
 #include <algorithm>
 
-namespace openblack
-{
+using namespace openblack::filesystem;
 
 MemoryStream::MemoryStream(const void* data, std::size_t size)
 {
@@ -55,5 +54,3 @@ void MemoryStream::Read(void* buffer, std::size_t length)
 	std::copy_n(reinterpret_cast<const uint8_t*>(_data) + _position, length, reinterpret_cast<uint8_t*>(buffer));
 	_position += length;
 }
-
-} // namespace openblack

@@ -12,14 +12,15 @@
 #include <spdlog/spdlog.h>
 
 #include "3D/LandIslandInterface.h"
-#include "Common/FileSystem.h"
 #include "ECS/Components/Footpath.h"
 #include "ECS/Registry.h"
+#include "FileSystem/FileSystem.h"
 #include "Game.h"
 #include "GameThingSerializer.h"
 #include "Locator.h"
 
 using namespace openblack;
+using namespace openblack::filesystem;
 
 FotFile::FotFile(Game& game)
     : _game(game)

@@ -12,12 +12,13 @@
 #include <fstream>
 #include <iostream>
 
-#include "Common/FileSystem.h"
 #include "Common/StringUtils.h"
 #include "Common/Zip.h"
+#include "FileSystem/FileSystem.h"
 #include "Game.h"
 
 using namespace openblack;
+using namespace openblack::filesystem;
 using namespace openblack::resources;
 
 L3DLoader::result_type L3DLoader::operator()(FromBufferTag, const std::string& debugName,

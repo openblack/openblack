@@ -18,7 +18,7 @@
 
 #include "Common.h"
 
-namespace openblack
+namespace openblack::filesystem
 {
 class IStream;
 }
@@ -88,7 +88,7 @@ public:
 		bool Deserialize(GameThingSerializer& deserializer) override;
 	};
 
-	explicit GameThingSerializer(IStream& stream);
+	explicit GameThingSerializer(filesystem::IStream& stream);
 
 	template <typename T>
 	T ReadValue();
@@ -100,7 +100,7 @@ public:
 	std::vector<T> DeserializeList();
 
 private:
-	IStream& _stream;
+	filesystem::IStream& _stream;
 	uint32_t _checkSum {0};
 	std::vector<std::shared_ptr<GameThing>> _cache;
 };
