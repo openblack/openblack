@@ -24,7 +24,7 @@ enum class SeekMode
 class IStream
 {
 public:
-	// virtual ~IStream() {}
+	virtual ~IStream() = default;
 
 	[[nodiscard]] virtual std::size_t Position() const = 0;
 	[[nodiscard]] virtual std::size_t Size() const = 0;
