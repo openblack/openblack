@@ -14,7 +14,7 @@
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
 
-#include "FileSystem/IStream.h"
+#include "FileSystem/Stream.h"
 
 using namespace openblack::serializer;
 using namespace openblack::filesystem;
@@ -34,7 +34,7 @@ template <>
 constexpr GameThingType openblack::serializer::k_GameThingTypeEnum<GameThingSerializer::FootpathLinkSave> =
     GameThingType::FootpathLinkSave;
 
-GameThingSerializer::GameThingSerializer(IStream& stream)
+GameThingSerializer::GameThingSerializer(Stream& stream)
     : _stream(stream)
 {
 }

@@ -9,12 +9,12 @@
 
 #pragma once
 
-#include "IStream.h"
+#include "Stream.h"
 
 namespace openblack::filesystem
 {
 
-class MemoryStream: public IStream
+class MemoryStream: public Stream
 {
 public:
 	MemoryStream(const void* data, std::size_t size);

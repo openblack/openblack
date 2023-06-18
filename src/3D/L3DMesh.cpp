@@ -19,7 +19,7 @@
 #include <spdlog/spdlog.h>
 
 #include "FileSystem/FileSystem.h"
-#include "FileSystem/IStream.h"
+#include "FileSystem/Stream.h"
 #include "Game.h"
 #include "Graphics/VertexBuffer.h"
 

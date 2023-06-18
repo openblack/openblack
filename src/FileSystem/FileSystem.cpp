@@ -88,9 +88,9 @@ std::filesystem::path FileSystem::FindPath(const std::filesystem::path& path) co
 	throw std::runtime_error("File " + path.string() + " not found");
 }
 
-std::unique_ptr<IStream> FileSystem::Open(const std::filesystem::path& path, FileMode mode)
+std::unique_ptr<Stream> FileSystem::Open(const std::filesystem::path& path, FileMode mode)
 {
-	return std::unique_ptr<IStream>(new FileStream(FindPath(path), mode));
+	return std::unique_ptr<Stream>(new FileStream(FindPath(path), mode));
 }
 
 bool FileSystem::Exists(const std::filesystem::path& path)

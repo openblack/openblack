@@ -21,7 +21,7 @@
 
 #include "Common/stb_image_write.h"
 #include "Dynamics/LandBlockBulletMeshInterface.h"
-#include "FileSystem/IStream.h"
+#include "FileSystem/Stream.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/Texture2D.h"
