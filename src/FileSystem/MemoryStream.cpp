@@ -16,11 +16,11 @@
 
 using namespace openblack::filesystem;
 
-MemoryStream::MemoryStream(const void* data, std::size_t size)
+MemoryStream::MemoryStream(void* data, std::size_t size)
+    : _data(data)
+    , _size(size)
+    , _position(0)
 {
-	_data = data;
-	_size = size;
-	_position = 0;
 }
 
 std::size_t MemoryStream::Position() const
@@ -49,8 +49,16 @@ void MemoryStream::Seek(std::size_t position, SeekMode seek)
 	}
 }
 
-void MemoryStream::Read(void* buffer, std::size_t length)
+Stream& MemoryStream::Read(void* buffer, std::size_t length)
 {
 	std::copy_n(reinterpret_cast<const uint8_t*>(_data) + _position, length, reinterpret_cast<uint8_t*>(buffer));
 	_position += length;
+	return *this;
+}
+
+Stream& MemoryStream::Write(const void* buffer, std::size_t length)
+{
+	std::copy_n(reinterpret_cast<const uint8_t*>(buffer), length, reinterpret_cast<uint8_t*>(_data) + _position);
+	_position += length;
+	return *this;
 }

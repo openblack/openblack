@@ -87,11 +87,22 @@ void FileStream::Seek(std::size_t position, SeekMode seek)
 	}
 }
 
-void FileStream::Read(void* buffer, std::size_t length)
+Stream& FileStream::Read(void* buffer, std::size_t length)
 {
 	size_t size = std::fread(buffer, 1, length, _file);
 	if (size != length)
 	{
 		throw std::runtime_error(fmt::format("Error while reading file"));
 	}
+	return *this;
+}
+
+Stream& FileStream::Write(const void* buffer, std::size_t length)
+{
+	size_t size = std::fwrite(buffer, 1, length, _file);
+	if (size != length)
+	{
+		throw std::runtime_error(fmt::format("Error while writing file"));
+	}
+	return *this;
 }

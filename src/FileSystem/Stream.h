@@ -30,12 +30,19 @@ public:
 	[[nodiscard]] virtual std::size_t Size() const = 0;
 	virtual void Seek(std::size_t position, SeekMode seek) = 0;
 
-	virtual void Read(void* buffer, std::size_t length) = 0;
+	virtual Stream& Read(void* buffer, std::size_t length) = 0;
+	virtual Stream& Write(const void* buffer, std::size_t length) = 0;
 
 	template <typename T>
-	void Read(T* value)
+	Stream& Read(T* value)
 	{
-		Read(value, sizeof(T));
+		return Read(value, sizeof(T));
+	}
+
+	template <typename T>
+	Stream& Write(const T* value)
+	{
+		return Write(value, sizeof(T));
 	}
 
 	template <typename T>
@@ -44,6 +51,12 @@ public:
 		T value;
 		Read(&value);
 		return value;
+	}
+
+	template <typename T>
+	Stream& WriteValue(const T& value)
+	{
+		return Write(&value, sizeof(T));
 	}
 };
 
