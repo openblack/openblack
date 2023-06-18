@@ -16,7 +16,7 @@
 #include "3D/L3DMesh.h"
 #include "Common/Bitmap16B.h"
 #include "Common/StringUtils.h"
-#include "FileSystem/FileSystem.h"
+#include "FileSystem/FileSystemInterface.h"
 
 using namespace openblack::filesystem;
 using namespace openblack::graphics;
@@ -30,7 +30,7 @@ Sky::Sky()
 
 	// load in the mesh
 	_model = std::make_unique<L3DMesh>("Sky");
-	_model->LoadFromFile(FileSystem::WeatherSystemPath() / "sky.l3d");
+	_model->LoadFromFile(FileSystemInterface::WeatherSystemPath() / "sky.l3d");
 
 	for (uint32_t idx = 0; const auto& alignment : k_Alignments)
 	{
@@ -44,7 +44,7 @@ Sky::Sky()
 				prefix = string_utils::Capitalise(prefix);
 			}
 			const auto filename = fmt::format("{}_{}_{}.555", prefix, alignment, time);
-			const auto path = FileSystem::WeatherSystemPath() / filename;
+			const auto path = FileSystemInterface::WeatherSystemPath() / filename;
 			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading sky texture: {}", path.generic_string());
 
 			Bitmap16B* bitmap = Bitmap16B::LoadFromFile(path);

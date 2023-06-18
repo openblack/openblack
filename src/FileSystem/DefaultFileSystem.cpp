@@ -7,46 +7,16 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
-#include "FileSystem.h"
+#include "DefaultFileSystem.h"
 
 #include <cctype>
 #include <cstddef>
 
-#include <algorithm>
-#include <array>
-
 using namespace openblack::filesystem;
-
-std::filesystem::path FileSystem::FixPath(const std::filesystem::path& path)
-{
-	std::string result = path.generic_string();
-
-	constexpr std::array<std::string_view, 3> caseFixTable = {
-	    "\\Data\\",
-	    "\\Landscape\\",
-	    "\\Multi_Player\\",
-	};
-	for (const auto& pattern : caseFixTable)
-	{
-		auto foundIter = std::search(result.cbegin(), result.cend(), pattern.cbegin(), pattern.cend(),
-		                             [](char left, char right) { return std::toupper(left) == std::toupper(right); });
-		if (foundIter != result.cend())
-		{
-			result.replace(foundIter, foundIter + pattern.size(), pattern.data());
-		}
-	}
-
-	for (auto pos = result.find('\\'); pos != std::string::npos; pos = result.find('\\', pos + 1))
-	{
-		result[pos] = '/';
-	}
-
-	return result;
-}
 
 // todo: exceptions need to be replaced with real exceptions
 
-std::filesystem::path FileSystem::FindPath(const std::filesystem::path& path) const
+std::filesystem::path DefaultFileSystem::FindPath(const std::filesystem::path& path) const
 {
 	if (path.empty())
 	{
@@ -88,12 +58,12 @@ std::filesystem::path FileSystem::FindPath(const std::filesystem::path& path) co
 	throw std::runtime_error("File " + path.string() + " not found");
 }
 
-std::unique_ptr<Stream> FileSystem::Open(const std::filesystem::path& path, FileMode mode)
+std::unique_ptr<Stream> DefaultFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
 {
 	return std::unique_ptr<Stream>(new FileStream(FindPath(path), mode));
 }
 
-bool FileSystem::Exists(const std::filesystem::path& path)
+bool DefaultFileSystem::Exists(const std::filesystem::path& path) const
 {
 	try
 	{
@@ -106,10 +76,10 @@ bool FileSystem::Exists(const std::filesystem::path& path)
 	}
 }
 
-std::vector<std::byte> FileSystem::ReadAll(const std::filesystem::path& path)
+std::vector<std::byte> DefaultFileSystem::ReadAll(const std::filesystem::path& path)
 {
-	auto file = Open(path, FileMode::Read);
-	std::size_t size = file->Size();
+	auto file = Open(path, Stream::Mode::Read);
+	const std::size_t size = file->Size();
 
 	std::vector<std::byte> data(size);
 	file->Read(data.data(), size);

@@ -14,16 +14,23 @@
 namespace openblack::filesystem
 {
 
-enum class SeekMode
-{
-	Begin,
-	Current,
-	End
-};
-
 class Stream
 {
 public:
+	enum class Mode
+	{
+		Read,
+		Write,
+		Append
+	};
+
+	enum class SeekMode
+	{
+		Begin,
+		Current,
+		End
+	};
+
 	virtual ~Stream() = default;
 
 	[[nodiscard]] virtual std::size_t Position() const = 0;

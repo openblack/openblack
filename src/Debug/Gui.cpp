@@ -47,7 +47,7 @@
 #include <ECS/Components/Transform.h>
 #include <ECS/Components/Villager.h>
 #include <ECS/Registry.h>
-#include <FileSystem/FileSystem.h>
+#include <FileSystem/FileSystemInterface.h>
 #include <Game.h>
 #include <GameWindow.h>
 #include <Locator.h>

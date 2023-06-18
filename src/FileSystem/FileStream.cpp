@@ -17,19 +17,19 @@
 
 using namespace openblack::filesystem;
 
-FileStream::FileStream(const std::filesystem::path& path, FileMode mode)
+FileStream::FileStream(const std::filesystem::path& path, Stream::Mode mode)
 {
 	std::wstring recognisedMode;
 
 	switch (mode)
 	{
-	case FileMode::Read:
+	case Stream::Mode::Read:
 		recognisedMode = L"rb";
 		break;
-	case FileMode::Write:
+	case Stream::Mode::Write:
 		recognisedMode = L"wb";
 		break;
-	case FileMode::Append:
+	case Stream::Mode::Append:
 		recognisedMode = L"ab";
 		break;
 	}
