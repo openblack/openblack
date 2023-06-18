@@ -112,8 +112,11 @@ protected:
 	/// Error handling
 	void Fail(const std::string& msg);
 
+	/// Read file from the input source
+	virtual void ReadFile(std::istream& stream);
+
 	/// Read blocks from pack
-	virtual void ReadBlocks();
+	virtual void ReadBlocks(std::istream& stream);
 
 	/// Write blocks to file
 	virtual void WriteBlocks(std::ostream& stream) const;
@@ -137,8 +140,11 @@ public:
 	PackFile();
 	virtual ~PackFile();
 
-	/// Read l3d file from the filesystem
-	void Open(const std::filesystem::path& file);
+	/// Read g3d file from the filesystem
+	void Open(const std::filesystem::path& filepath);
+
+	/// Read g3d file from a buffer
+	void Open(const std::vector<uint8_t>& buffer);
 
 	/// Write pack file to path on the filesystem
 	void Write(const std::filesystem::path& file);
