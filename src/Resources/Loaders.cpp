@@ -14,7 +14,7 @@
 
 #include "Common/StringUtils.h"
 #include "Common/Zip.h"
-#include "FileSystem/FileSystem.h"
+#include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
 
 using namespace openblack;
@@ -47,7 +47,7 @@ L3DLoader::result_type L3DLoader::operator()(FromDiskTag, const std::filesystem:
 	}
 	else if (pathExt == ".zzz")
 	{
-		auto stream = Game::Instance()->GetFileSystem().Open(path, FileMode::Read);
+		auto stream = Game::Instance()->GetFileSystem().Open(path, Stream::Mode::Read);
 		uint32_t decompressedSize = 0;
 		stream->Read(reinterpret_cast<uint32_t*>(&decompressedSize), sizeof(decompressedSize));
 		auto buffer = std::vector<uint8_t>(stream->Size() - sizeof(decompressedSize));

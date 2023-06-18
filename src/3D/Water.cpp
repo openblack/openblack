@@ -11,7 +11,7 @@
 
 #include <glm/vec2.hpp>
 
-#include "FileSystem/FileSystem.h"
+#include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/IndexBuffer.h"

@@ -18,8 +18,7 @@
 #include <glm/matrix.hpp>
 #include <spdlog/spdlog.h>
 
-#include "FileSystem/FileSystem.h"
-#include "FileSystem/Stream.h"
+#include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
 #include "Graphics/VertexBuffer.h"
 

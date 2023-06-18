@@ -16,17 +16,10 @@
 namespace openblack::filesystem
 {
 
-enum class FileMode
-{
-	Read,
-	Write,
-	Append
-};
-
 class FileStream final: public Stream
 {
 public:
-	FileStream(const std::filesystem::path& path, FileMode mode);
+	FileStream(const std::filesystem::path& path, Stream::Mode mode);
 	virtual ~FileStream();
 
 	[[nodiscard]] std::size_t Position() const override;

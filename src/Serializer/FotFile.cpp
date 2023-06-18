@@ -14,7 +14,7 @@
 #include "3D/LandIslandInterface.h"
 #include "ECS/Components/Footpath.h"
 #include "ECS/Registry.h"
-#include "FileSystem/FileSystem.h"
+#include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
 #include "GameThingSerializer.h"
 #include "Locator.h"
@@ -29,7 +29,7 @@ FotFile::FotFile(Game& game)
 
 void FotFile::Load(const std::filesystem::path& path)
 {
-	auto stream = _game.GetFileSystem().Open(path, FileMode::Read);
+	auto stream = _game.GetFileSystem().Open(path, Stream::Mode::Read);
 	serializer::GameThingSerializer serializer(*stream);
 	auto footpathLinkSaves = serializer.DeserializeList<serializer::GameThingSerializer::FootpathLinkSave>();
 	auto footpaths = serializer.DeserializeList<serializer::GameThingSerializer::Footpath>();
