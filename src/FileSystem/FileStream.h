@@ -11,7 +11,7 @@
 
 #include <filesystem>
 
-#include "IStream.h"
+#include "Stream.h"
 
 namespace openblack::filesystem
 {
@@ -23,7 +23,7 @@ enum class FileMode
 	Append
 };
 
-class FileStream final: public IStream
+class FileStream final: public Stream
 {
 public:
 	FileStream(const std::filesystem::path& path, FileMode mode);
