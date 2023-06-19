@@ -21,10 +21,11 @@
 
 #include "Common/stb_image_write.h"
 #include "Dynamics/LandBlockBulletMeshInterface.h"
-#include "FileSystem/Stream.h"
+#include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/Texture2D.h"
+#include "Locator.h"
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -47,7 +48,12 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 
 	try
 	{
+#if __ANDROID__
+		//  Android has a complicated permissions API, must call java code to read contents.
+		lnd.Open(Locator::filesystem::value().ReadAll(path));
+#else
 		lnd.Open(path);
+#endif
 	}
 	catch (std::runtime_error& err)
 	{
