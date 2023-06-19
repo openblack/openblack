@@ -90,3 +90,12 @@ std::vector<uint8_t> DefaultFileSystem::ReadAll(const std::filesystem::path& pat
 
 	return data;
 }
+
+void DefaultFileSystem::Iterate(const std::filesystem::path& path,
+                                const std::function<void(const std::filesystem::path&)>& function) const
+{
+	for (const auto& f : std::filesystem::directory_iterator {FindPath(path)})
+	{
+		function(f);
+	}
+}
