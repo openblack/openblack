@@ -26,8 +26,8 @@ public:
 	[[nodiscard]] std::size_t Size() const override;
 	void Seek(std::size_t position, SeekMode seek) override;
 
-	Stream& Read(void* buffer, std::size_t length) override;
-	Stream& Write(const void* buffer, std::size_t length) override;
+	Stream& Read(uint8_t* buffer, std::size_t length) override;
+	Stream& Write(const uint8_t* buffer, std::size_t length) override;
 
 protected:
 	FILE* _file {nullptr};

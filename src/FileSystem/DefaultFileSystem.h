@@ -9,13 +9,8 @@
 
 #pragma once
 
-#include <cstddef>
-
-#include <list>
-#include <memory>
 #include <vector>
 
-#include "FileStream.h"
 #include "FileSystemInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
@@ -34,7 +29,7 @@ public:
 	void SetGamePath(const std::filesystem::path& path) override { _gamePath = path; }
 	[[nodiscard]] const std::filesystem::path& GetGamePath() const override { return _gamePath; }
 	void AddAdditionalPath(const std::filesystem::path& path) override { _additionalPaths.push_back(path); }
-	std::vector<std::byte> ReadAll(const std::filesystem::path& path) override;
+	std::vector<uint8_t> ReadAll(const std::filesystem::path& path) override;
 
 private:
 	std::filesystem::path _gamePath;

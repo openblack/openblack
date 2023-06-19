@@ -16,9 +16,8 @@
 
 using namespace openblack::filesystem;
 
-MemoryStream::MemoryStream(void* data, std::size_t size)
+MemoryStream::MemoryStream(std::vector<uint8_t>&& data)
     : _data(data)
-    , _size(size)
     , _position(0)
 {
 }
@@ -30,7 +29,7 @@ std::size_t MemoryStream::Position() const
 
 std::size_t MemoryStream::Size() const
 {
-	return _size;
+	return _data.size();
 }
 
 void MemoryStream::Seek(std::size_t position, SeekMode seek)
@@ -44,21 +43,21 @@ void MemoryStream::Seek(std::size_t position, SeekMode seek)
 		_position += position;
 		break;
 	case SeekMode::End:
-		_position = _size + position;
+		_position = _data.size() + position;
 		break;
 	}
 }
 
-Stream& MemoryStream::Read(void* buffer, std::size_t length)
+Stream& MemoryStream::Read(uint8_t* buffer, std::size_t length)
 {
-	std::copy_n(reinterpret_cast<const uint8_t*>(_data) + _position, length, reinterpret_cast<uint8_t*>(buffer));
+	std::copy_n(_data.data() + _position, length, buffer);
 	_position += length;
 	return *this;
 }
 
-Stream& MemoryStream::Write(const void* buffer, std::size_t length)
+Stream& MemoryStream::Write(const uint8_t* buffer, std::size_t length)
 {
-	std::copy_n(reinterpret_cast<const uint8_t*>(buffer), length, reinterpret_cast<uint8_t*>(_data) + _position);
+	std::copy_n(buffer, length, _data.data() + _position);
 	_position += length;
 	return *this;
 }
