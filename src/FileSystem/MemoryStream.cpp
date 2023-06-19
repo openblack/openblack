@@ -61,3 +61,27 @@ Stream& MemoryStream::Write(const uint8_t* buffer, std::size_t length)
 	_position += length;
 	return *this;
 }
+
+std::string MemoryStream::GetLine()
+{
+	auto it = std::find(_data.begin() + _position, _data.end(), '\n');
+
+	std::string line;
+	if (it != _data.end())
+	{
+		line.assign(_data.begin() + _position, it);
+		_position = std::distance(_data.begin(), it) + 1; // move the cursor past the '\n'
+	}
+	else
+	{
+		line.assign(_data.begin() + _position, _data.end());
+		_position = _data.size(); // move the cursor to the end
+	}
+
+	return line;
+}
+
+bool MemoryStream::IsEndOfFile() const
+{
+	return Position() >= Size();
+}

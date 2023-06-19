@@ -30,6 +30,10 @@ public:
 	Stream& Read(uint8_t* buffer, std::size_t length) override;
 	Stream& Write(const uint8_t* buffer, std::size_t length) override;
 
+	std::string GetLine() override;
+
+	bool IsEndOfFile() const override;
+
 protected:
 	std::vector<uint8_t> _data;
 	std::size_t _position;

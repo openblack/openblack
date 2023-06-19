@@ -11,6 +11,8 @@
 
 #include <cstddef>
 
+#include <string>
+
 namespace openblack::filesystem
 {
 
@@ -39,6 +41,10 @@ public:
 
 	virtual Stream& Read(uint8_t* buffer, std::size_t length) = 0;
 	virtual Stream& Write(const uint8_t* buffer, std::size_t length) = 0;
+
+	virtual std::string GetLine() = 0;
+
+	virtual bool IsEndOfFile() const = 0;
 
 	template <typename T>
 	Stream& Read(T* value)
