@@ -106,3 +106,31 @@ Stream& FileStream::Write(const uint8_t* buffer, std::size_t length)
 	}
 	return *this;
 }
+
+std::string FileStream::GetLine()
+{
+	const int MAX_LINE_LENGTH = 1024;
+	char buffer[MAX_LINE_LENGTH];
+	if (fgets(buffer, MAX_LINE_LENGTH, _file) != nullptr)
+	{
+		// fgets() includes the newline character in the output,
+		// so we remove it if it's there
+		auto len = strlen(buffer);
+		if (len > 0 && buffer[len - 1] == '\n')
+		{
+			buffer[len - 1] = '\0';
+		}
+
+		return std::string(buffer);
+	}
+	else
+	{
+		// EOF or error
+		return std::string();
+	}
+}
+
+bool FileStream::IsEndOfFile() const
+{
+	return std::feof(_file);
+}

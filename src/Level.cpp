@@ -9,7 +9,6 @@
 
 #include "Level.h"
 
-#include <fstream>
 #include <utility>
 
 #include "Common/StringUtils.h"
@@ -54,13 +53,11 @@ bool Level::IsValid() const
 
 bool Level::IsLevelFile(const std::filesystem::path& path)
 {
-	std::string const loadLandscapeLine("LOAD_LANDSCAPE");
-	std::fstream levelFile;
-	levelFile.open(path, std::ios::in);
-	while (!levelFile.eof())
+	const std::string loadLandscapeLine("LOAD_LANDSCAPE");
+	auto levelFile = Locator::filesystem::value().Open(path, filesystem::Stream::Mode::Read);
+	while (!levelFile->IsEndOfFile())
 	{
-		std::string line;
-		std::getline(levelFile, line);
+		const std::string line = levelFile->GetLine();
 		if (line.find(loadLandscapeLine) != std::string::npos)
 		{
 			return true;
@@ -76,19 +73,17 @@ Level Level::ParseLevel(const std::filesystem::path& path, Level::LandType landT
 	std::string levelName(path.stem().filename().string());
 	bool isValid(false);
 
-	std::string const loadLandscapeLine("LOAD_LANDSCAPE");
-	std::string const startMessageLine("START_GAME_MESSAGE");
-	std::string const gameMessageLine("ADD_GAME_MESSAGE_LINE");
+	const std::string loadLandscapeLine("LOAD_LANDSCAPE");
+	const std::string startMessageLine("START_GAME_MESSAGE");
+	const std::string gameMessageLine("ADD_GAME_MESSAGE_LINE");
 
-	std::fstream levelFile;
-	levelFile.open(path, std::ios::in);
-	while (!levelFile.eof())
+	auto levelFile = Locator::filesystem::value().Open(path, filesystem::Stream::Mode::Read);
+	while (!levelFile->IsEndOfFile())
 	{
-		std::string line;
-		std::getline(levelFile, line);
+		std::string line = levelFile->GetLine();
 		if (!isValid && line.find(loadLandscapeLine) != std::string::npos)
 		{
-			std::filesystem::path const landscapePath(string_utils::ExtractQuote(line));
+			const std::filesystem::path landscapePath(string_utils::ExtractQuote(line));
 			isValid = Locator::filesystem::value().Exists(filesystem::FileSystemInterface::FixPath(landscapePath));
 		}
 		if (line.find(startMessageLine) != std::string::npos)
