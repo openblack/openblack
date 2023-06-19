@@ -504,7 +504,12 @@ bool Game::Initialize()
 		    }
 	    });
 	pack::PackFile pack;
+#if __ANDROID__
+	//  Android has a complicated permissions API, must call java code to read contents.
+	pack.Open(fileSystem.ReadAll(fileSystem.GetPath<filesystem::Path::Data>(true) / "AllMeshes.g3d"));
+#else
 	pack.Open(fileSystem.GetPath<filesystem::Path::Data>(true) / "AllMeshes.g3d");
+#endif
 	const auto& meshes = pack.GetMeshes();
 	for (size_t i = 0; const auto& mesh : meshes)
 	{
@@ -520,7 +525,12 @@ bool Game::Initialize()
 	}
 
 	pack::PackFile animationPack;
+#if __ANDROID__
+	//  Android has a complicated permissions API, must call java code to read contents.
+	animationPack.Open(fileSystem.ReadAll(fileSystem.GetPath<filesystem::Path::Data>(true) / "AllAnims.anm"));
+#else
 	animationPack.Open(fileSystem.GetPath<filesystem::Path::Data>(true) / "AllAnims.anm");
+#endif
 	const auto& animations = animationPack.GetAnimations();
 	for (size_t i = 0; i < animations.size(); i++)
 	{
@@ -662,7 +672,12 @@ bool Game::Run()
 	if (fileSystem.Exists(challengePath))
 	{
 		_lhvm = std::make_unique<LHVM::LHVM>();
-		_lhvm->Open(fileSystem.GetGamePath() / challengePath);
+#if __ANDROID__
+		//  Android has a complicated permissions API, must call java code to read contents.
+		_lhvm->Open(fileSystem.ReadAll(fileSystem.FindPath(challengePath)));
+#else
+		_lhvm->Open(fileSystem.FindPath(challengePath));
+#endif
 	}
 	else
 	{
