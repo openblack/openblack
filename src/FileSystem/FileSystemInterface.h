@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include <filesystem>
 #include <vector>
 
@@ -41,7 +43,7 @@ public:
 	virtual void SetGamePath(const std::filesystem::path& path) = 0;
 	[[nodiscard]] virtual const std::filesystem::path& GetGamePath() const = 0;
 	virtual void AddAdditionalPath(const std::filesystem::path& path) = 0;
-	virtual std::vector<std::byte> ReadAll(const std::filesystem::path& path) = 0;
+	virtual std::vector<uint8_t> ReadAll(const std::filesystem::path& path) = 0;
 };
 
 } // namespace openblack::filesystem

@@ -49,9 +49,9 @@ L3DLoader::result_type L3DLoader::operator()(FromDiskTag, const std::filesystem:
 	{
 		auto stream = Locator::filesystem::value().Open(path, Stream::Mode::Read);
 		uint32_t decompressedSize = 0;
-		stream->Read(reinterpret_cast<uint32_t*>(&decompressedSize), sizeof(decompressedSize));
+		stream->Read(&decompressedSize);
 		auto buffer = std::vector<uint8_t>(stream->Size() - sizeof(decompressedSize));
-		stream->Read(reinterpret_cast<char*>(buffer.data()), buffer.size());
+		stream->Read(buffer.data(), buffer.size());
 		auto decompressedBuffer = zip::Inflate(buffer, decompressedSize);
 		if (!mesh->LoadFromBuffer(decompressedBuffer))
 		{

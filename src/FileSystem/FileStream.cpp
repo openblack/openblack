@@ -87,7 +87,7 @@ void FileStream::Seek(std::size_t position, SeekMode seek)
 	}
 }
 
-Stream& FileStream::Read(void* buffer, std::size_t length)
+Stream& FileStream::Read(uint8_t* buffer, std::size_t length)
 {
 	size_t size = std::fread(buffer, 1, length, _file);
 	if (size != length)
@@ -97,7 +97,7 @@ Stream& FileStream::Read(void* buffer, std::size_t length)
 	return *this;
 }
 
-Stream& FileStream::Write(const void* buffer, std::size_t length)
+Stream& FileStream::Write(const uint8_t* buffer, std::size_t length)
 {
 	size_t size = std::fwrite(buffer, 1, length, _file);
 	if (size != length)

@@ -14,6 +14,8 @@
 #include <cctype>
 #include <cstddef>
 
+#include "FileStream.h"
+
 using namespace openblack::filesystem;
 
 // todo: exceptions need to be replaced with real exceptions
@@ -78,12 +80,12 @@ bool DefaultFileSystem::Exists(const std::filesystem::path& path) const
 	}
 }
 
-std::vector<std::byte> DefaultFileSystem::ReadAll(const std::filesystem::path& path)
+std::vector<uint8_t> DefaultFileSystem::ReadAll(const std::filesystem::path& path)
 {
 	auto file = Open(path, Stream::Mode::Read);
 	const std::size_t size = file->Size();
 
-	std::vector<std::byte> data(size);
+	std::vector<uint8_t> data(size);
 	file->Read(data.data(), size);
 
 	return data;

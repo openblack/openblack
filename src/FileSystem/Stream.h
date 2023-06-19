@@ -37,19 +37,19 @@ public:
 	[[nodiscard]] virtual std::size_t Size() const = 0;
 	virtual void Seek(std::size_t position, SeekMode seek) = 0;
 
-	virtual Stream& Read(void* buffer, std::size_t length) = 0;
-	virtual Stream& Write(const void* buffer, std::size_t length) = 0;
+	virtual Stream& Read(uint8_t* buffer, std::size_t length) = 0;
+	virtual Stream& Write(const uint8_t* buffer, std::size_t length) = 0;
 
 	template <typename T>
 	Stream& Read(T* value)
 	{
-		return Read(value, sizeof(T));
+		return Read(reinterpret_cast<uint8_t*>(value), sizeof(T));
 	}
 
 	template <typename T>
 	Stream& Write(const T* value)
 	{
-		return Write(value, sizeof(T));
+		return Write(reinterpret_cast<const uint8_t*>(value), sizeof(T));
 	}
 
 	template <typename T>

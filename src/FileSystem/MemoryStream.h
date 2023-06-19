@@ -9,6 +9,10 @@
 
 #pragma once
 
+#include <cstdint>
+
+#include <vector>
+
 #include "Stream.h"
 
 namespace openblack::filesystem
@@ -17,18 +21,17 @@ namespace openblack::filesystem
 class MemoryStream: public Stream
 {
 public:
-	MemoryStream(void* data, std::size_t size);
+	MemoryStream(std::vector<uint8_t>&& data);
 
 	[[nodiscard]] std::size_t Position() const override;
 	[[nodiscard]] std::size_t Size() const override;
 	void Seek(std::size_t position, SeekMode seek) override;
 
-	Stream& Read(void* buffer, std::size_t length) override;
-	Stream& Write(const void* buffer, std::size_t length) override;
+	Stream& Read(uint8_t* buffer, std::size_t length) override;
+	Stream& Write(const uint8_t* buffer, std::size_t length) override;
 
 protected:
-	void* _data;
-	std::size_t _size;
+	std::vector<uint8_t> _data;
 	std::size_t _position;
 };
 
