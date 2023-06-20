@@ -452,8 +452,10 @@ bool Gui::ShowMenu(Game& game)
 				}
 			});
 
-			std::sort(campaigns.begin(), campaigns.end());
-			std::sort(playgrounds.begin(), campaigns.end());
+			std::sort(campaigns.begin(), campaigns.end(),
+			          [](const Level* level1, const Level* level2) { return level1->GetName() < level2->GetName(); });
+			std::sort(playgrounds.begin(), playgrounds.end(),
+			          [](const Level* level1, const Level* level2) { return level1->GetName() < level2->GetName(); });
 
 			auto menuItem = [&game](const auto& label, const std::filesystem::path& path, const std::string description,
 			                        bool validLevel) {
@@ -461,26 +463,28 @@ bool Gui::ShowMenu(Game& game)
 				{
 					game.LoadMap(path);
 				}
-				if (ImGui::IsItemHovered())
+				if (!description.empty() && ImGui::IsItemHovered())
 				{
 					ImGui::SetTooltip("%s", description.c_str());
 				}
 			};
 
-			ImGui::MenuItem("Story Islands", nullptr, false, false);
-			ImGui::Separator();
-			for (auto& level : campaigns)
+			if (ImGui::BeginMenu("Story Islands"))
 			{
-				menuItem(level->GetName(), level->GetScriptPath(), level->GetDescription(), level->IsValid());
+				for (auto& level : campaigns)
+				{
+					menuItem(level->GetName(), level->GetScriptPath(), level->GetDescription(), level->IsValid());
+				}
+				ImGui::EndMenu();
 			}
-			ImGui::Separator();
-			ImGui::MenuItem("Playground Islands", nullptr, false, false);
-			ImGui::Separator();
-			for (auto& level : playgrounds)
+			if (ImGui::BeginMenu("Playground Islands"))
 			{
-				menuItem(level->GetName(), level->GetScriptPath(), level->GetDescription(), level->IsValid());
+				for (auto& level : playgrounds)
+				{
+					menuItem(level->GetName(), level->GetScriptPath(), level->GetDescription(), level->IsValid());
+				}
+				ImGui::EndMenu();
 			}
-
 			ImGui::EndMenu();
 		}
 

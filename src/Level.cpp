@@ -89,7 +89,7 @@ Level Level::ParseLevel(const std::filesystem::path& path, Level::LandType landT
 		if (!isValid && line.find(loadLandscapeLine) != std::string::npos)
 		{
 			std::filesystem::path const landscapePath(string_utils::ExtractQuote(line));
-			isValid = Game::Instance()->GetFileSystem().Exists(landscapePath);
+			isValid = Game::Instance()->GetFileSystem().Exists(FileSystem::FixPath(landscapePath));
 		}
 		if (line.find(startMessageLine) != std::string::npos)
 		{
@@ -102,9 +102,4 @@ Level Level::ParseLevel(const std::filesystem::path& path, Level::LandType landT
 	}
 
 	return {levelName, path, description, landType, isValid};
-}
-
-bool operator<(const Level& first, const Level& second)
-{
-	return first.GetName() < second.GetName();
 }
