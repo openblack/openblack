@@ -452,12 +452,10 @@ bool Gui::ShowMenu(Game& game)
 				}
 			});
 
-			std::sort(campaigns.begin(), campaigns.end(), [](const Level* level1, const Level* level2) {
-				return &level1 < &level2;
-			});
-			std::sort(playgrounds.begin(), playgrounds.end(), [](const Level* level1, const Level* level2) {
-				return &level1 < &level2;
-			});
+			std::sort(campaigns.begin(), campaigns.end(),
+			          [](const Level* level1, const Level* level2) { return &level1 < &level2; });
+			std::sort(playgrounds.begin(), playgrounds.end(),
+			          [](const Level* level1, const Level* level2) { return &level1 < &level2; });
 
 			auto menuItem = [&game](const auto& label, const std::filesystem::path& path, const std::string description,
 			                        bool validLevel) {
@@ -467,24 +465,30 @@ bool Gui::ShowMenu(Game& game)
 				}
 				if (ImGui::IsItemHovered())
 				{
-					ImGui::SetTooltip("%s", description.c_str());
+					if (!description.empty())
+					{
+						ImGui::SetTooltip("%s", description.c_str());
+					}
 				}
 			};
 
-			ImGui::MenuItem("Story Islands", nullptr, false, false);
-			ImGui::Separator();
-			for (auto& level : campaigns)
+			if (ImGui::BeginMenu("Story Islands"))
 			{
-				menuItem(level->GetName(), level->GetScriptPath(), level->GetDescription(), level->IsValid());
+				for (auto& level : campaigns)
+				{
+					menuItem(level->GetName(), level->GetScriptPath(), level->GetDescription(), level->IsValid());
+				}
+				ImGui::EndMenu();
 			}
-			ImGui::Separator();
-			ImGui::MenuItem("Playground Islands", nullptr, false, false);
-			ImGui::Separator();
-			for (auto& level : playgrounds)
+			if (ImGui::BeginMenu("Playground Islands"))
 			{
-				menuItem(level->GetName(), level->GetScriptPath(), level->GetDescription(), level->IsValid());
+				ImGui::Separator();
+				for (auto& level : playgrounds)
+				{
+					menuItem(level->GetName(), level->GetScriptPath(), level->GetDescription(), level->IsValid());
+				}
+				ImGui::EndMenu();
 			}
-
 			ImGui::EndMenu();
 		}
 
