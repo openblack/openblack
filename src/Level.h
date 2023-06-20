@@ -14,9 +14,7 @@
 
 namespace openblack
 {
-
-class Level
-{
+class Level {
 public:
 	enum class LandType : bool
 	{

@@ -452,8 +452,12 @@ bool Gui::ShowMenu(Game& game)
 				}
 			});
 
-			std::sort(campaigns.begin(), campaigns.end());
-			std::sort(playgrounds.begin(), playgrounds.end());
+			std::sort(campaigns.begin(), campaigns.end(), [](const Level* level1, const Level* level2) {
+				return &level1 < &level2;
+			});
+			std::sort(playgrounds.begin(), playgrounds.end(), [](const Level* level1, const Level* level2) {
+				return &level1 < &level2;
+			});
 
 			auto menuItem = [&game](const auto& label, const std::filesystem::path& path, const std::string description,
 			                        bool validLevel) {

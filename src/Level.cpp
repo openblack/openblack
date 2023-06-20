@@ -106,5 +106,5 @@ Level Level::ParseLevel(const std::filesystem::path& path, Level::LandType landT
 
 bool operator<(const Level& first, const Level& second)
 {
-	return first.GetName() < second.GetName();
+	return (first.GetName() < second.GetName());
 }
