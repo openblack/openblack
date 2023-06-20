@@ -43,5 +43,4 @@ private:
 	bool _isValid;
 };
 
-bool operator<(const Level& first, const Level& second);
 } // namespace openblack
