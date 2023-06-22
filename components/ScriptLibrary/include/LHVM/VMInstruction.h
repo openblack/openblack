@@ -19,7 +19,7 @@ namespace openblack::LHVM
 class VMInstruction
 {
 public:
-	enum class Opcode : uint_fast8_t
+	enum class Opcode : uint8_t
 	{
 		END = 0,
 		WAIT,
@@ -53,12 +53,12 @@ public:
 		SWAP,
 		LINE
 	};
-	enum class Access : uint_fast8_t
+	enum class Access : uint8_t
 	{
 		STACK = 0,
 		VARIABLE
 	};
-	enum class DataType : uint_fast8_t
+	enum class DataType : uint8_t
 	{
 		NONE = 0,
 		INT,

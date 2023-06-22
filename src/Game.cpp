@@ -654,7 +654,7 @@ bool Game::Run()
 	if (fileSystem.Exists(challengePath))
 	{
 		_lhvm = std::make_unique<LHVM::LHVM>();
-		_lhvm->LoadBinary((fileSystem.GetGamePath() / challengePath).generic_string());
+		_lhvm->Open(fileSystem.GetGamePath() / challengePath);
 	}
 	else
 	{

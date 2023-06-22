@@ -542,7 +542,7 @@ void LHVMViewer::Draw(Game& game)
 		{
 			static MemoryEditor lhvmDataEditor;
 			auto& data = lhvm.GetData();
-			lhvmDataEditor.DrawContents(reinterpret_cast<void*>(data.data()), data.size(), 0);
+			lhvmDataEditor.DrawContents(const_cast<void*>(reinterpret_cast<const void*>(data.data())), data.size(), 0);
 
 			ImGui::EndTabItem();
 		}
