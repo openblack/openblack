@@ -559,7 +559,6 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			;
 
 			constexpr auto discard = 0u
-				| BGFX_DISCARD_INDEX_BUFFER
 				| BGFX_DISCARD_INSTANCE_DATA
 				| BGFX_DISCARD_INDEX_BUFFER
 				| BGFX_DISCARD_TRANSFORM
@@ -591,6 +590,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), terrainShader->GetRawHandle(), 0U, discard);
 			}
+			bgfx::discard(BGFX_DISCARD_BINDINGS);
 		}
 	}
 
