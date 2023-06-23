@@ -552,8 +552,11 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			glm::vec2 extentMax;
 			desc.island.GetExtent(extentMin, extentMax);
 			auto islandExtent = glm::vec4(extentMin, extentMax);
+			auto k_HeightUnit = desc.island.k_HeightUnit;
 
 			auto texture = Locator::resources::value().GetTextures().Handle(LandIsland::k_SmallBumpTextureId);
+			const glm::vec4 u_skyAndBump = {desc.sky.GetCurrentSkyType(), desc.bumpMapStrength, desc.smallBumpMapStrength,
+				                                0.0f};
 
 			terrainShader->SetTextureSampler("t0_heightmap", 0, desc.island.GetHeightMap());
 
@@ -576,8 +579,6 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			{
 				// pack uniforms
 				const glm::vec4 mapPositionAndSize = glm::vec4(block.GetMapPosition(), 160.0f, 160.0f);
-				const glm::vec4 u_skyAndBump = {desc.sky.GetCurrentSkyType(), desc.bumpMapStrength, desc.smallBumpMapStrength,
-				                                0.0f};
 
 				// Pack mapPositionAndSize
 				auto* mpz = reinterpret_cast<float *>(data);
@@ -593,16 +594,17 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				is[2] = islandExtent.z;
 				is[3] = islandExtent.w;
 
-				// Pack u_skyAndBump
+				// Pack u_skyAndBump and k_HeightUnit
 				auto* sab = reinterpret_cast<float *>(&data[32]);
 				sab[0] = u_skyAndBump.x;
 				sab[1] = u_skyAndBump.y;
 				sab[2] = u_skyAndBump.z;
+				sab[3] = k_HeightUnit;
 
 				data += instanceStride;
 			}
 
-			desc.island.GetBlocks()[20].GetMesh().GetVertexBuffer().Bind();
+			desc.island.GetBlocks()[16].GetMesh().GetVertexBuffer().Bind();
 			bgfx::setInstanceDataBuffer(&idb);
 
 			// clang-format off

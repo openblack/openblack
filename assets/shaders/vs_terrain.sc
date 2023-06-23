@@ -39,7 +39,7 @@ void main()
 
 	vec3 transformedPosition = vec3(a_position.x + blockPosition.x, 15.0f, a_position.z + blockPosition.y);
 	vec4 height = texture2DLod(t0_heightmap, uv_pos, 0);
-	transformedPosition.y = height.r * 255.0;
+	transformedPosition.y = height.r * 255.0 * v_skyABump.w;
 
 	vec4 cs_position = mul(u_view, vec4(transformedPosition, 1.0f));
 	v_distToCamera = cs_position.z;
