@@ -191,10 +191,13 @@ public:
 	LNDFile();
 	virtual ~LNDFile();
 
-	/// Read l3d file from the filesystem
+	/// Read lnd file from the filesystem
 	void Open(const std::filesystem::path& filepath);
 
-	/// Write l3d file to path on the filesystem
+	/// Read lnd file from a buffer
+	void Open(const std::vector<uint8_t>& buffer);
+
+	/// Write lnd file to path on the filesystem
 	void Write(const std::filesystem::path& filepath);
 
 	[[nodiscard]] std::string GetFilename() const { return _filename.string(); }
