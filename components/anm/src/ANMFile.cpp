@@ -85,7 +85,7 @@ struct membuf: std::streambuf
 
 	std::streampos seekpos([[maybe_unused]] pos_type pos, [[maybe_unused]] std::ios_base::openmode which) override
 	{
-		return seekoff(pos - pos_type(off_type(0)), std::ios_base::beg, which);
+		return seekoff(pos - static_cast<off_type>(0), std::ios_base::beg, which);
 	}
 };
 struct imemstream: virtual membuf, std::istream
