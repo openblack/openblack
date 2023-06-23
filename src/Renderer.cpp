@@ -552,37 +552,71 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			glm::vec2 extentMax;
 			desc.island.GetExtent(extentMin, extentMax);
 			auto islandExtent = glm::vec4(extentMin, extentMax);
+
+			auto texture = Locator::resources::value().GetTextures().Handle(LandIsland::k_SmallBumpTextureId);
+
+			terrainShader->SetTextureSampler("t0_heightmap", 0, desc.island.GetHeightMap());
+
+			terrainShader->SetTextureSampler("s0_materials", 1, desc.island.GetAlbedoArray());
+			terrainShader->SetTextureSampler("s1_bump", 2, desc.island.GetBump());
+			terrainShader->SetTextureSampler("s2_smallBump", 3, *texture);
+			terrainShader->SetTextureSampler("s3_footprints", 4, desc.island.GetFootprintFramebuffer().GetColorAttachment());
+
+			const uint16_t instanceStride = 48;
+			uint32_t totalBlock = desc.island.GetBlocks().size();
+
+			uint32_t drawnBlock = bgfx::getAvailInstanceDataBuffer(totalBlock, instanceStride);
+
+			bgfx::InstanceDataBuffer idb;
+			bgfx::allocInstanceDataBuffer(&idb, drawnBlock, instanceStride);
+
+			uint8_t* data = idb.data;
+
 			for (const auto& block : desc.island.GetBlocks())
 			{
-				auto texture = Locator::resources::value().GetTextures().Handle(LandIsland::k_SmallBumpTextureId);
-
-				terrainShader->SetTextureSampler("s0_materials", 0, desc.island.GetAlbedoArray());
-				terrainShader->SetTextureSampler("s1_bump", 1, desc.island.GetBump());
-				terrainShader->SetTextureSampler("s2_smallBump", 2, *texture);
-				terrainShader->SetTextureSampler("s3_footprints", 3,
-				                                 desc.island.GetFootprintFramebuffer().GetColorAttachment());
-
 				// pack uniforms
 				const glm::vec4 mapPositionAndSize = glm::vec4(block.GetMapPosition(), 160.0f, 160.0f);
-				terrainShader->SetUniformValue("u_blockPositionAndSize", &mapPositionAndSize); // vs
-				terrainShader->SetUniformValue("u_islandExtent", &islandExtent);               // vs
 				const glm::vec4 u_skyAndBump = {desc.sky.GetCurrentSkyType(), desc.bumpMapStrength, desc.smallBumpMapStrength,
 				                                0.0f};
-				terrainShader->SetUniformValue("u_skyAndBump", &u_skyAndBump); // fs
 
-				// clang-format off
-				constexpr auto defaultState = 0u
-					| BGFX_STATE_WRITE_MASK
-					| BGFX_STATE_DEPTH_TEST_LESS
-					| BGFX_STATE_BLEND_ALPHA
-					| BGFX_STATE_MSAA
-				;
-				// clang-format on
+				// Pack mapPositionAndSize
+				auto* mpz = reinterpret_cast<float *>(data);
+				mpz[0] = mapPositionAndSize.x;
+				mpz[1] = mapPositionAndSize.y;
+				mpz[2] = mapPositionAndSize.z;
+				mpz[3] = mapPositionAndSize.w;
 
-				block.GetMesh().GetVertexBuffer().Bind();
-				bgfx::setState(defaultState | (desc.cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW), 0);
-				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), terrainShader->GetRawHandle());
+				// Pack islandExtant
+				auto* is = reinterpret_cast<float *>(&data[16]);
+				is[0] = islandExtent.x;
+				is[1] = islandExtent.y;
+				is[2] = islandExtent.z;
+				is[3] = islandExtent.w;
+
+				// Pack u_skyAndBump
+				auto* sab = reinterpret_cast<float *>(&data[32]);
+				sab[0] = u_skyAndBump.x;
+				sab[1] = u_skyAndBump.y;
+				sab[2] = u_skyAndBump.z;
+
+				data += instanceStride;
 			}
+
+			desc.island.GetBlocks()[20].GetMesh().GetVertexBuffer().Bind();
+			bgfx::setInstanceDataBuffer(&idb);
+
+			// clang-format off
+			constexpr auto defaultState = 0u
+				| BGFX_STATE_WRITE_MASK
+				| BGFX_STATE_DEPTH_TEST_LESS
+				| BGFX_STATE_BLEND_ALPHA
+				| BGFX_STATE_MSAA
+			;
+			// clang-format on
+			bgfx::setState(defaultState | (desc.cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW), 0);
+
+			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), terrainShader->GetRawHandle());
+			bgfx::discard(BGFX_DISCARD_BINDINGS);
 		}
 	}
 

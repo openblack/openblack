@@ -1,22 +1,22 @@
-$input v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera
+$input v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera, v_skyABump
 
 #include <bgfx_shader.sh>
 
 #define M_PI 3.1415926535897932384626433832795
 
-SAMPLER2DARRAY(s0_materials, 0);
-SAMPLER2D(s1_bump, 1);
-SAMPLER2D(s2_smallBump, 2);
-SAMPLER2D(s3_footprints, 3);
+SAMPLER2DARRAY(s0_materials, 1);
+SAMPLER2D(s1_bump, 2);
+SAMPLER2D(s2_smallBump, 3);
+SAMPLER2D(s3_footprints, 4);
 
-uniform vec4 u_skyAndBump;
+// uniform vec4 u_skyAndBump;
 
 void main()
 {
 	// unpack uniforms
-	float skyType = u_skyAndBump.x;
-	float bumpMapStrength = u_skyAndBump.y;
-	float smallBumpMapStrength = u_skyAndBump.z;
+	float skyType = v_skyABump.x;
+	float bumpMapStrength = v_skyABump.y;
+	float smallBumpMapStrength = v_skyABump.z;
 
 	// do each vert with both materials
 	vec4 colOne = mix(
