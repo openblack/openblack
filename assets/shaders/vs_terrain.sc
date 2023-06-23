@@ -21,9 +21,8 @@ void main()
 
 	v_skyABump = vec4(i_data2);
 
-	vec2 normalizedPos = (a_position.xz + blockPosition);
-	v_texcoord0 = vec4(a_position.zx / blockSize.yx, 0.0f, 0.0f);
 	vec2 blockStartUv = (blockPosition + a_position.xz - extentMin) / (extentMax - extentMin);
+	v_texcoord0 = vec4(a_position.zx / blockSize.yx, 0.0f, 0.0f);
 	#if !BGFX_SHADER_LANGUAGE_GLSL
 		blockStartUv.y = 1.0f - blockStartUv.y;
 	#endif
@@ -40,6 +39,8 @@ void main()
 	vec3 transformedPosition = vec3(a_position.x + blockPosition.x, 15.0f, a_position.z + blockPosition.y);
 	vec4 height = texture2DLod(t0_heightmap, uv_pos, 0);
 	transformedPosition.y = height.r * 255.0 * v_skyABump.w;
+
+	v_waterAlpha = clamp(transformedPosition.y, 0.0f , 1.0f);
 
 	vec4 cs_position = mul(u_view, vec4(transformedPosition, 1.0f));
 	v_distToCamera = cs_position.z;
