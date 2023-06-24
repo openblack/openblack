@@ -133,7 +133,7 @@ struct BgfxCallback: public bgfx::CallbackI
 		return false;
 	}
 	void cacheWrite([[maybe_unused]] uint64_t id, [[maybe_unused]] const void* data, [[maybe_unused]] uint32_t size) override {}
-	// Saving a screen shot
+	// Saving a screenshot
 	void screenShot(const char* filePath, uint32_t width, uint32_t height, uint32_t pitch, const void* data,
 	                [[maybe_unused]] uint32_t size, bool yflip) override
 	{
