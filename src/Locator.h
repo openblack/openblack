@@ -15,6 +15,7 @@ namespace openblack
 {
 
 class RandomNumberManagerInterface;
+class LandIsland;
 
 namespace resources
 {
@@ -44,5 +45,6 @@ struct Locator
 	using livingActionSystem = entt::locator<ecs::systems::LivingActionSystemInterface>;
 	using townSystem = entt::locator<ecs::systems::TownSystemInterface>;
 	using pathfindingSystem = entt::locator<ecs::systems::PathfindingSystemInterface>;
+	using terrainSystem = entt::locator<LandIsland>;
 };
 } // namespace openblack

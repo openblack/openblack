@@ -365,7 +365,7 @@ void MeshViewer::Update(Game& game, const Renderer& renderer)
 	auto& registry = game.GetEntityRegistry();
 	const auto& handTransform = registry.Get<Transform>(game.GetHand());
 	_handPosition = handTransform.position;
-	_handPosition.y = game.GetLandIsland().GetHeightAt(glm::xz(_handPosition));
+	_handPosition.y = Locator::terrainSystem::value().GetHeightAt(glm::xz(_handPosition));
 }
 
 void MeshViewer::ProcessEventOpen([[maybe_unused]] const SDL_Event& event)

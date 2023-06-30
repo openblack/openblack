@@ -287,7 +287,7 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 	glm::vec2 extentMin;
 	glm::vec2 extentMax;
 
-	const auto& island = Game::Instance()->GetLandIsland();
+	const auto& island = Locator::terrainSystem::value();
 	island.GetExtent(extentMin, extentMax);
 	auto islandExtent = glm::vec4(extentMin, extentMax);
 	const auto& heightMap = island.GetHeightMap();
@@ -399,7 +399,7 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 	auto section = drawDesc.profiler.BeginScoped(Profiler::Stage::FootprintPass);
 	if (drawDesc.drawIsland)
 	{
-		const auto& island = Game::Instance()->GetLandIsland();
+		const auto& island = Locator::terrainSystem::value();
 		island.GetFootprintFramebuffer().Bind(viewId);
 
 		// This dummy draw call is here to make sure that view is cleared if no

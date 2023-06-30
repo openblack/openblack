@@ -15,6 +15,7 @@
 #include "Game.h"
 #include "Graphics/FrameBuffer.h"
 #include "Gui.h"
+#include "Locator.h"
 
 using namespace openblack::debug::gui;
 
@@ -27,7 +28,7 @@ void LandIsland::Draw(openblack::Game& game)
 {
 	auto& config = game.GetConfig();
 
-	const auto& landIsland = game.GetLandIsland();
+	const auto& landIsland = Locator::terrainSystem::value();
 
 	ImGui::SliderFloat("Bump", &config.bumpMapStrength, 0.0f, 1.0f, "%.3f");
 	ImGui::SliderFloat("Small Bump", &config.smallBumpMapStrength, 0.0f, 1.0f, "%.3f");

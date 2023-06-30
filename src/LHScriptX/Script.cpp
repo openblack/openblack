@@ -19,6 +19,7 @@
 #include "FeatureScriptCommands.h"
 #include "Game.h"
 #include "Lexer.h"
+#include "Locator.h"
 
 using namespace openblack;
 using namespace openblack::lhscriptx;
@@ -119,7 +120,7 @@ ScriptCommandParameter GetParameter(Token& argument)
 				const auto z = std::strtof(floatEnd + 1, &floatEnd);
 				if (static_cast<size_t>(floatEnd - str.c_str()) == static_cast<size_t>(str.length()))
 				{
-					const auto& island = Game::Instance()->GetLandIsland();
+					const auto& island = Locator::terrainSystem::value();
 					return {x, island.GetHeightAt(glm::vec2(x, z)), z};
 				}
 			}
