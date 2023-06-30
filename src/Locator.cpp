@@ -24,7 +24,6 @@ using openblack::ecs::systems::LivingActionSystem;
 using openblack::ecs::systems::PathfindingSystem;
 using openblack::ecs::systems::RenderingSystem;
 using openblack::ecs::systems::TownSystem;
-using openblack::LandIsland;
 
 namespace openblack::ecs::systems
 {
