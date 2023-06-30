@@ -287,7 +287,12 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 	glm::vec2 extentMin;
 	glm::vec2 extentMax;
 
-	const auto& island = Game::Instance()->GetLandIsland();
+	if (!Locator::terrainSystem::has_value())
+	{
+		throw std::runtime_error("Cannot get landscape before any are loaded");
+	}
+	const auto& island = Locator::terrainSystem::value();
+
 	island.GetExtent(extentMin, extentMax);
 	auto islandExtent = glm::vec4(extentMin, extentMax);
 	const auto& heightMap = island.GetHeightMap();
@@ -399,7 +404,11 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 	auto section = drawDesc.profiler.BeginScoped(Profiler::Stage::FootprintPass);
 	if (drawDesc.drawIsland)
 	{
-		const auto& island = Game::Instance()->GetLandIsland();
+		if (!Locator::terrainSystem::has_value())
+		{
+			throw std::runtime_error("Cannot get landscape before any are loaded");
+		}
+		const auto& island = Locator::terrainSystem::value();
 		island.GetFootprintFramebuffer().Bind(viewId);
 
 		// This dummy draw call is here to make sure that view is cleared if no
@@ -550,17 +559,20 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		{
 			glm::vec2 extentMin;
 			glm::vec2 extentMax;
-			desc.island.GetExtent(extentMin, extentMax);
+			auto& island = Locator::terrainSystem::value();
+			// this method here is weird! What a nonconvetional name for a method that passes the value
+			// of the extentMin and extentMax that is set on the island.
+			island.GetExtent(extentMin, extentMax);
 			auto islandExtent = glm::vec4(extentMin, extentMax);
-			for (const auto& block : desc.island.GetBlocks())
+			for (const auto& block : island.GetBlocks())
 			{
 				auto texture = Locator::resources::value().GetTextures().Handle(LandIsland::k_SmallBumpTextureId);
 
-				terrainShader->SetTextureSampler("s0_materials", 0, desc.island.GetAlbedoArray());
-				terrainShader->SetTextureSampler("s1_bump", 1, desc.island.GetBump());
+				terrainShader->SetTextureSampler("s0_materials", 0, island.GetAlbedoArray());
+				terrainShader->SetTextureSampler("s1_bump", 1, island.GetBump());
 				terrainShader->SetTextureSampler("s2_smallBump", 2, *texture);
 				terrainShader->SetTextureSampler("s3_footprints", 3,
-				                                 desc.island.GetFootprintFramebuffer().GetColorAttachment());
+				                                 island.GetFootprintFramebuffer().GetColorAttachment());
 
 				// pack uniforms
 				const glm::vec4 mapPositionAndSize = glm::vec4(block.GetMapPosition(), 160.0f, 160.0f);

@@ -196,7 +196,7 @@ void PathFinding::Update(Game& game, [[maybe_unused]] const openblack::Renderer&
 		return;
 	}
 	_handPosition = handTransform.position;
-	_handPosition.y = game.GetLandIsland().GetHeightAt(glm::xz(_handPosition));
+	_handPosition.y = Locator::terrainSystem::value().GetHeightAt(glm::xz(_handPosition));
 
 	if (_handTo == HandTo::Entity)
 	{

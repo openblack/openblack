@@ -17,6 +17,7 @@
 #include "ECS/Registry.h"
 #include "Game.h"
 #include "GameThingSerializer.h"
+#include "Locator.h"
 
 using namespace openblack;
 
@@ -32,7 +33,11 @@ void FotFile::Load(const std::filesystem::path& path)
 	auto footpathLinkSaves = serializer.DeserializeList<serializer::GameThingSerializer::FootpathLinkSave>();
 	auto footpaths = serializer.DeserializeList<serializer::GameThingSerializer::Footpath>();
 	auto& registry = _game.GetEntityRegistry();
-	const auto& island = _game.GetLandIsland();
+	if (!Locator::terrainSystem::has_value())
+	{
+		throw std::runtime_error("Cannot get landscape before any are loaded");
+	}
+	const auto& island = Locator::terrainSystem::value();
 
 	// Keep track of footpath entities in order to associate them to the footpath link saves later
 	std::vector<ecs::components::Footpath::Id> footpathEntities;

@@ -39,7 +39,6 @@ class Camera;
 class FileSystem;
 class GameWindow;
 class EventManager;
-class LandIsland;
 class Profiler;
 class Renderer;
 class L3DAnim;
@@ -179,22 +178,6 @@ public:
 	[[nodiscard]] Camera& GetCamera() const { return *_camera; }
 	[[nodiscard]] Sky& GetSky() const { return *_sky; }
 	[[nodiscard]] Water& GetWater() const { return *_water; }
-	LandIsland& GetLandIsland()
-	{
-		if (_landIsland == nullptr)
-		{
-			throw std::runtime_error("Cannot get landscape before any are loaded");
-		}
-		return *_landIsland;
-	}
-	[[nodiscard]] LandIsland& GetLandIsland() const
-	{
-		if (_landIsland == nullptr)
-		{
-			throw std::runtime_error("Cannot get landscape before any are loaded");
-		}
-		return *_landIsland;
-	}
 	[[nodiscard]] entt::entity GetHand() const;
 	[[nodiscard]] const LHVM::LHVM& GetLhvm() const { return *_lhvm; }
 	LHVM::LHVM& GetLhvm() { return *_lhvm; }
@@ -229,7 +212,6 @@ private:
 	std::unique_ptr<EventManager> _eventManager;
 
 	std::unique_ptr<FileSystem> _fileSystem;
-	std::unique_ptr<LandIsland> _landIsland;
 
 	// std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<L3DMesh> _testModel;
