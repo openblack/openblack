@@ -815,7 +815,6 @@ void Game::LoadMap(const std::filesystem::path& path)
 void Game::LoadLandscape(const std::filesystem::path& path)
 {
 	ecs::systems::InitializeLevel();
-	
 	if (Locator::terrainSystem::has_value())
 	{
 		Locator::terrainSystem::reset();
