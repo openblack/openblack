@@ -717,7 +717,7 @@ bool Game::Run()
 			    /*frameBuffer =*/nullptr,
 			    /*sky =*/*_sky,
 			    /*water =*/*_water,
-				/*island =*/Locator::terrainSystem::value(),
+			    /*island =*/Locator::terrainSystem::value(),
 			    /*entities =*/*_entityRegistry,
 			    /*time =*/milliseconds.count(), // TODO(#481): get actual time
 			    /*timeOfDay =*/_config.timeOfDay,
