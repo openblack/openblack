@@ -20,6 +20,7 @@
 #include <3D/LandIsland.h>
 
 using openblack::LandIsland;
+using openblack::LandIsland;
 using openblack::ecs::systems::CameraBookmarkSystem;
 using openblack::ecs::systems::DynamicsSystem;
 using openblack::ecs::systems::LivingActionSystem;
