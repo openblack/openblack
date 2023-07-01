@@ -717,7 +717,6 @@ bool Game::Run()
 			    /*frameBuffer =*/nullptr,
 			    /*sky =*/*_sky,
 			    /*water =*/*_water,
-			    /*island =*/Locator::terrainSystem::value(),
 			    /*entities =*/*_entityRegistry,
 			    /*time =*/milliseconds.count(), // TODO(#481): get actual time
 			    /*timeOfDay =*/_config.timeOfDay,
@@ -815,10 +814,6 @@ void Game::LoadMap(const std::filesystem::path& path)
 void Game::LoadLandscape(const std::filesystem::path& path)
 {
 	ecs::systems::InitializeLevel();
-	if (Locator::terrainSystem::has_value())
-	{
-		Locator::terrainSystem::reset();
-	}
 
 	auto fixedName = Game::Instance()->GetFileSystem().FindPath(FileSystem::FixPath(path));
 
@@ -826,7 +821,6 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	{
 		throw std::runtime_error("Could not find landscape " + path.generic_string());
 	}
-	Locator::terrainSystem::emplace<LandIsland>();
 	Locator::terrainSystem::value().LoadFromFile(fixedName);
 
 	Locator::cameraBookmarkSystem::value().Initialize();

@@ -18,11 +18,11 @@
 #include <entt/core/hashed_string.hpp>
 #include <glm/mat4x4.hpp>
 
+#include "ECS/Systems/LandIslandSystemInterface.h"
 #include "LandBlock.h"
 
 namespace openblack
 {
-
 namespace ecs::systems
 {
 class DynamicsSystem;
@@ -38,7 +38,7 @@ namespace lnd
 struct LNDCountry;
 }
 
-class LandIsland
+class LandIsland final: public LandIslandSystemInterface
 {
 public:
 	static const uint8_t k_CellCount;
@@ -49,49 +49,50 @@ public:
 	LandIsland();
 	~LandIsland();
 
-	void LoadFromFile(const std::filesystem::path& path);
+	void LoadFromFile(const std::filesystem::path& path) override;
 
-	[[nodiscard]] float GetHeightAt(glm::vec2) const;
-	[[nodiscard]] const LandBlock* GetBlock(const glm::u8vec2& coordinates) const;
-	[[nodiscard]] const lnd::LNDCell& GetCell(const glm::u16vec2& coordinates) const;
+	[[nodiscard]] float GetHeightAt(glm::vec2) const override;
+	[[nodiscard]] const LandBlock* GetBlock(const glm::u8vec2& coordinates) const override;
+	[[nodiscard]] const lnd::LNDCell& GetCell(const glm::u16vec2& coordinates) const override;
 
 	// Debug
-	void DumpTextures() const;
-	void DumpMaps() const;
+	void DumpTextures() const override;
+	void DumpMaps() const override;
 
 private:
 	[[nodiscard]] std::vector<uint8_t> CreateHeightMap() const;
-
-	std::array<uint8_t, 1024> _blockIndexLookup {0};
 	std::vector<LandBlock> _landBlocks;
 	std::vector<lnd::LNDCountry> _countries;
 
+	std::array<uint8_t, 1024> _blockIndexLookup {0};
+
 	// Renderer, Dynamics
 public:
-	[[nodiscard]] std::vector<LandBlock>& GetBlocks() { return _landBlocks; }
-	[[nodiscard]] const std::vector<LandBlock>& GetBlocks() const { return _landBlocks; }
-	[[nodiscard]] const std::vector<lnd::LNDCountry>& GetCountries() const { return _countries; }
-	[[nodiscard]] const graphics::Texture2D& GetAlbedoArray() const { return *_materialArray; }
-	[[nodiscard]] const graphics::Texture2D& GetBump() const { return *_textureBumpMap; }
-	[[nodiscard]] const graphics::Texture2D& GetHeightMap() const { return *_heightMap; }
-	[[nodiscard]] const graphics::FrameBuffer& GetFootprintFramebuffer() const { return *_footprintFrameBuffer; }
-	void GetOrthoViewProj(glm::mat4& view, glm::mat4& proj) const
+	[[nodiscard]] std::vector<LandBlock>& GetBlocks() override { return _landBlocks; }
+	[[nodiscard]] const std::vector<LandBlock>& GetBlocks() const override { return _landBlocks; }
+	[[nodiscard]] const std::vector<lnd::LNDCountry>& GetCountries() const override { return _countries; }
+
+	[[nodiscard]] const graphics::Texture2D& GetAlbedoArray() const override { return *_materialArray; }
+	[[nodiscard]] const graphics::Texture2D& GetBump() const override { return *_textureBumpMap; }
+	[[nodiscard]] const graphics::Texture2D& GetHeightMap() const override { return *_heightMap; }
+	[[nodiscard]] const graphics::FrameBuffer& GetFootprintFramebuffer() const override { return *_footprintFrameBuffer; }
+	void GetOrthoViewProj(glm::mat4& view, glm::mat4& proj) const override
 	{
 		view = _view;
 		proj = _proj;
 	}
-	void GetIndexExtent(glm::u16vec2& extentMin, glm::u16vec2& extentMax) const
+	void GetIndexExtent(glm::u16vec2& extentMin, glm::u16vec2& extentMax) const override
 	{
 		extentMin = _extentIndexMin;
 		extentMax = _extentIndexMax;
 	}
-	void GetExtent(glm::vec2& extentMin, glm::vec2& extentMax) const
+	void GetExtent(glm::vec2& extentMin, glm::vec2& extentMax) const override
 	{
 		extentMin = _extentMin;
 		extentMax = _extentMax;
 	}
 
-	uint8_t GetNoise(glm::u8vec2 pos);
+	uint8_t GetNoise(glm::u8vec2 pos) override;
 
 private:
 	std::unique_ptr<graphics::Texture2D> _materialArray;

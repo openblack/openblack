@@ -34,7 +34,6 @@ class Game;
 class L3DAnim;
 class L3DMesh;
 class L3DSubMesh;
-class LandIsland;
 class Profiler;
 class Sky;
 class Water;
@@ -63,7 +62,6 @@ public:
 		const graphics::FrameBuffer* frameBuffer;
 		const Sky& sky;
 		const Water& water;
-		const LandIsland& island;
 		const ecs::Registry& entities;
 		uint32_t time;
 		float timeOfDay;
