@@ -46,7 +46,7 @@ public:
 
 	virtual void GetIndexExtent(glm::u16vec2& extentMin, glm::u16vec2& extentMax) const = 0;
 	virtual void GetOrthoViewProj(glm::mat4& view, glm::mat4& proj) const = 0;
-	virtual void GetExtent(glm::vec2& extentMin, glm::vec2& extentMax) const = 0; 
+	virtual void GetExtent(glm::vec2& extentMin, glm::vec2& extentMax) const = 0;
 	virtual uint8_t GetNoise(glm::u8vec2 pos) = 0;
 };
 } // namespace openblack
