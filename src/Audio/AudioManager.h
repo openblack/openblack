@@ -72,8 +72,8 @@ private:
 	/// Music resources are loaded on demand to avoid storing large audio buffers. There are no resource IDs yet
 	std::vector<std::string> _music;
 	float _globalVolume;
-	float _sfxVolume;
 	float _musicVolume;
+	float _sfxVolume;
 	entt::entity _musicEntity;
 };
 

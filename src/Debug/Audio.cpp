@@ -34,8 +34,10 @@ Audio::Audio()
 
 void Audio::Emitters()
 {
-	if (ImGui::Button("Play") && _selectedSound != -1)
+	if (ImGui::Button("Play") && _selectedSound != entt::null)
+	{
 		Locator::audio::value().PlaySound(_selectedSound, _playType);
+	}
 	ImGui::SameLine();
 	const char* items[] = {"Repeat", "Once", "Overlap"};
 	auto currentCombo = static_cast<int>(_playType);
