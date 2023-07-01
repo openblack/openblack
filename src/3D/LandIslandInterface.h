@@ -23,7 +23,7 @@ namespace graphics
 class FrameBuffer;
 class Texture2D;
 } // namespace graphics
-class LandIslandSystemInterface
+class LandIslandInterface
 {
 public:
 	virtual void LoadFromFile(const std::filesystem::path& path) = 0;

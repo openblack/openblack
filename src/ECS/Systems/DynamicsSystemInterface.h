@@ -19,7 +19,7 @@ class btRigidBody;
 
 namespace openblack
 {
-class LandIslandSystemInterface;
+class LandIslandInterface;
 namespace ecs::components
 {
 struct Transform;
@@ -48,7 +48,7 @@ public:
 	virtual void Update(std::chrono::microseconds& dt) = 0;
 	virtual void AddRigidBody(btRigidBody* object) = 0;
 	virtual void RegisterRigidBodies() = 0;
-	virtual void RegisterIslandRigidBodies(LandIslandSystemInterface& island) = 0;
+	virtual void RegisterIslandRigidBodies(LandIslandInterface& island) = 0;
 	virtual void UpdatePhysicsTransforms() = 0;
 	[[nodiscard]] virtual std::optional<std::pair<ecs::components::Transform, RigidBodyDetails>>
 	RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float tMax) const = 0;

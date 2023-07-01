@@ -25,7 +25,7 @@ class btSequentialImpulseConstraintSolver;
 
 namespace openblack
 {
-class LandIslandSystemInterface;
+class LandIslandInterface;
 namespace ecs::components
 {
 struct Transform;
@@ -45,7 +45,7 @@ public:
 	void Update(std::chrono::microseconds& dt) override;
 	void AddRigidBody(btRigidBody* object) override;
 	void RegisterRigidBodies() override;
-	void RegisterIslandRigidBodies(LandIslandSystemInterface& island) override;
+	void RegisterIslandRigidBodies(LandIslandInterface& island) override;
 	void UpdatePhysicsTransforms() override;
 	[[nodiscard]] std::optional<std::pair<ecs::components::Transform, RigidBodyDetails>>
 	RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float tMax) const override;

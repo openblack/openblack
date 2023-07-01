@@ -86,7 +86,7 @@ void DynamicsSystem::RegisterRigidBodies()
 	});
 }
 
-void DynamicsSystem::RegisterIslandRigidBodies(LandIslandSystemInterface& island)
+void DynamicsSystem::RegisterIslandRigidBodies(LandIslandInterface& island)
 {
 	auto& landBlocks = island.GetBlocks();
 	for (uint32_t i = 0; i < landBlocks.size(); ++i)

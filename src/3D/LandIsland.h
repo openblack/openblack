@@ -18,7 +18,7 @@
 #include <entt/core/hashed_string.hpp>
 #include <glm/mat4x4.hpp>
 
-#include "ECS/Systems/LandIslandSystemInterface.h"
+#include "3D/LandIslandInterface.h"
 #include "LandBlock.h"
 
 namespace openblack
@@ -38,7 +38,7 @@ namespace lnd
 struct LNDCountry;
 }
 
-class LandIsland final: public LandIslandSystemInterface
+class LandIsland final: public LandIslandInterface
 {
 public:
 	static const uint8_t k_CellCount;
