@@ -22,7 +22,7 @@ namespace graphics
 {
 class FrameBuffer;
 class Texture2D;
-}
+} // namespace graphics
 class LandIslandSystemInterface
 {
 public:
