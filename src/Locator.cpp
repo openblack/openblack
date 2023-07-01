@@ -11,13 +11,13 @@
 
 #define LOCATOR_IMPLEMENTATIONS
 
+#include "3D/LandIsland.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
 #include "ECS/Systems/Implementations/PathfindingSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/TownSystem.h"
-#include <3D/LandIsland.h>
 
 using openblack::LandIsland;
 using openblack::ecs::systems::CameraBookmarkSystem;
