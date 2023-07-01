@@ -379,6 +379,12 @@ void ApplyStepGoal(ecs::Registry& registry, Exclude... exclude)
 
 void PathfindingSystem::Update()
 {
+	// can this slowdown stuff?
+	if (!Locator::terrainSystem::has_value())
+	{
+		throw std::runtime_error("Cannot get landscape before any are loaded");
+	}
+
 	auto& registry = Game::Instance()->GetEntityRegistry();
 
 	// 1.  ARRIVED:

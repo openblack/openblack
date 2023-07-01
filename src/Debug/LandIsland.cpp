@@ -27,6 +27,10 @@ LandIsland::LandIsland()
 void LandIsland::Draw(openblack::Game& game)
 {
 	auto& config = game.GetConfig();
+	if (!Locator::terrainSystem::has_value())
+	{
+		throw std::runtime_error("Cannot get landscape before any are loaded");
+	}
 
 	const auto& landIsland = Locator::terrainSystem::value();
 
