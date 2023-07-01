@@ -200,7 +200,6 @@ void PathFinding::Update(Game& game, [[maybe_unused]] const openblack::Renderer&
 	{
 		throw std::runtime_error("Cannot get landscape before any are loaded");
 	}
-	
 	_handPosition.y = Locator::terrainSystem::value().GetHeightAt(glm::xz(_handPosition));
 
 	if (_handTo == HandTo::Entity)
