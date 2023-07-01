@@ -571,8 +571,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				terrainShader->SetTextureSampler("s0_materials", 0, island.GetAlbedoArray());
 				terrainShader->SetTextureSampler("s1_bump", 1, island.GetBump());
 				terrainShader->SetTextureSampler("s2_smallBump", 2, *texture);
-				terrainShader->SetTextureSampler("s3_footprints", 3,
-				                                 island.GetFootprintFramebuffer().GetColorAttachment());
+				terrainShader->SetTextureSampler("s3_footprints", 3, island.GetFootprintFramebuffer().GetColorAttachment());
 
 				// pack uniforms
 				const glm::vec4 mapPositionAndSize = glm::vec4(block.GetMapPosition(), 160.0f, 160.0f);
