@@ -8,9 +8,10 @@
  *******************************************************************************/
 
 #pragma once
-#include <glm/mat4x4.hpp>
 #include <filesystem>
+
 #include <LNDFile.h>
+#include <glm/mat4x4.hpp>
 
 using LNDCell = openblack::lnd::LNDCell;
 
@@ -21,7 +22,7 @@ namespace graphics
 {
 class FrameBuffer;
 class Texture2D;
-}
+} // namespace graphics
 class LandIslandSystemInterface
 {
 public:
@@ -45,7 +46,7 @@ public:
 
 	virtual void GetIndexExtent(glm::u16vec2& extentMin, glm::u16vec2& extentMax) const = 0;
 	virtual void GetOrthoViewProj(glm::mat4& view, glm::mat4& proj) const = 0;
-	virtual void GetExtent(glm::vec2& extentMin, glm::vec2& extentMax) const = 0; 
+	virtual void GetExtent(glm::vec2& extentMin, glm::vec2& extentMax) const = 0;
 	virtual uint8_t GetNoise(glm::u8vec2 pos) = 0;
 };
 } // namespace openblack
