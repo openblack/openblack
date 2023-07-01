@@ -11,6 +11,7 @@
 #include <filesystem>
 
 #include <LNDFile.h>
+#include <glm/mat4x4.hpp>
 
 using LNDCell = openblack::lnd::LNDCell;
 
