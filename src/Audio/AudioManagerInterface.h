@@ -47,15 +47,15 @@ public:
 	[[nodiscard]] virtual float GetGlobalVolume() = 0;
 	[[nodiscard]] virtual float GetSfxVolume() = 0;
 	[[nodiscard]] virtual float GetMusicVolume() = 0;
-	virtual void PlayMusic(std::string& packPath, PlayType type) = 0;
+	virtual void PlayMusic(const std::string& packPath, PlayType type) = 0;
 	virtual void StopMusic() = 0;
 	virtual void PlaySound(entt::id_type id, PlayType type) = 0;
-	virtual Sound& GetSound(entt::id_type id) = 0;
-	virtual void CreateSoundGroup(std::string& name) = 0;
-	virtual void AddToSoundGroup(std::string& name, entt::id_type id) = 0;
-	virtual const SoundGroup& GetSoundGroup(std::string& name) = 0;
+	virtual const Sound& GetSound(entt::id_type id) = 0;
+	virtual void CreateSoundGroup(const std::string& name) = 0;
+	virtual void AddToSoundGroup(const std::string& name, entt::id_type id) = 0;
+	virtual const SoundGroup& GetSoundGroup(const std::string& name) = 0;
 	virtual const std::map<std::string, SoundGroup>& GetSoundGroups() = 0;
-	virtual void AddMusicEntry(std::string& name) = 0;
+	virtual void AddMusicEntry(const std::string& name) = 0;
 	[[nodiscard]] virtual const std::vector<std::string>& GetMusicTracks() const = 0;
 };
 } // namespace audio

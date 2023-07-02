@@ -11,7 +11,10 @@
 
 #define LOCATOR_IMPLEMENTATIONS
 
+#include <spdlog/spdlog.h>
+
 #include "Audio/AudioManager.h"
+#include "Audio/AudioManagerNoOp.h"
 #include "Common/RandomNumberManagerProduction.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
@@ -21,7 +24,7 @@
 #include "ECS/Systems/Implementations/TownSystem.h"
 #include "Resources/Resources.h"
 
-using openblack::audio::AudioManager;
+using namespace openblack::audio;
 using openblack::ecs::systems::CameraBookmarkSystem;
 using openblack::ecs::systems::DynamicsSystem;
 using openblack::ecs::systems::LivingActionSystem;
@@ -36,7 +39,15 @@ void InitializeGame()
 {
 	Locator::resources::emplace<Resources>();
 	Locator::rng::emplace<RandomNumberManagerProduction>();
-	Locator::audio::emplace<AudioManager>();
+	try
+	{
+		Locator::audio::emplace<AudioManager>();
+	}
+	catch (std::runtime_error& error)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("audio"), "Falling back to no-op audio: {}", error.what());
+		Locator::audio::emplace<AudioManagerNoOp>();
+	}
 	Locator::rendereringSystem::emplace<RenderingSystem>();
 }
 
