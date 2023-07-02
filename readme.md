@@ -23,6 +23,8 @@ You still need to have the original game assets in order to use this. See furthe
 
 Clone the code using: `git clone --recursive https://github.com/openblack/openblack.git`
 
+If you forgot to add `--recursive`, you will have to also run `git submodule update --init` from the `openblack/` directory.
+
 ## Configuration for using vcpkg (Recommended for new users)
 
 The simplest way to obtain all the required dependencies is through [vcpkg](https://github.com/Microsoft/vcpkg) which is included with a [manifest file](https://github.com/microsoft/vcpkg/blob/master/docs/users/manifests.md).
