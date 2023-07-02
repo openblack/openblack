@@ -11,6 +11,8 @@
 
 #include <random>
 
+#include <fmt/format.h>
+
 #include "AlCheck.h"
 
 using namespace openblack::audio;
@@ -134,6 +136,15 @@ AudioPlayer::AudioPlayer()
     : _device(alcOpenDevice(nullptr), DeleteDevice)
     , _context(alcCreateContext(_device.get(), nullptr), DeleteContext)
 {
+	if (!_device)
+	{
+		throw std::runtime_error(fmt::format("Error creating audio device {}", alcGetString(nullptr, alcGetError(nullptr))));
+	}
+	if (!_context)
+	{
+		throw std::runtime_error(
+		    fmt::format("Error creating audio context {}", alcGetString(_device.get(), alcGetError(_device.get()))));
+	}
 }
 
 AudioPlayer::~AudioPlayer() = default;
