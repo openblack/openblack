@@ -5,6 +5,9 @@ target_include_directories(gen_info PRIVATE ../../src)
 target_link_libraries(gen_info PRIVATE glm::glm cxxopts::cxxopts)
 set_property(TARGET gen_info PROPERTY FOLDER "tests")
 
+set(AUDIO_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Audio)
+set(AUDIO_PLACEHOLDER_OUTPUT ${AUDIO_BINARY_DIR}/placeholder)
+
 set(DATA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data)
 set(CONE_MESH_OUTPUT ${DATA_BINARY_DIR}/cone.l3d)
 set(CONE_INPUT ${DATA_BINARY_DIR}/cone.gltf)
@@ -47,7 +50,7 @@ set(VILLAGE_CENTRE_MESH_OUTPUT
 )
 
 set(SYMBOLS_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/Symbols)
-set(SYMBOLS_PLACEHODER_OUTPUT ${SYMBOLS_BINARY_DIR}/placeholder)
+set(SYMBOLS_PLACEHOLDER_OUTPUT ${SYMBOLS_BINARY_DIR}/placeholder)
 
 set(CREATURE_MESH_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/CreatureMesh)
 set(HAND_BASE_OUTPUT ${CREATURE_MESH_BINARY_DIR}/Hand_Boned_Base2.l3d)
@@ -90,6 +93,7 @@ set(QUEST_CHALLENGE_OUTPUT ${QUESTS_BINARY_DIR}/challenge.chl)
 
 add_custom_target(
   generate_mock_game_data
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${AUDIO_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${DATA_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${TEXTURES_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${CITADEL_BINARY_DIR}
@@ -106,7 +110,8 @@ add_custom_target(
   COMMAND ${CMAKE_COMMAND} -E make_directory ${INTERMEDIATE_DATA_BINARY_DIR}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${INTERMEDIATE_MESH_BINARY_DIR}
   # Add placeholders so that the directories get copied
-  COMMAND ${CMAKE_COMMAND} -E touch ${SYMBOLS_PLACEHODER_OUTPUT}
+  COMMAND ${CMAKE_COMMAND} -E touch ${AUDIO_PLACEHOLDER_OUTPUT}
+  COMMAND ${CMAKE_COMMAND} -E touch ${SYMBOLS_PLACEHOLDER_OUTPUT}
   COMMAND ${CMAKE_COMMAND} -E touch ${CITADEL_ENGINE_PLACEHOLDER_OUTPUT}
   # Copy the Scripts Directory
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Scripts

@@ -103,6 +103,7 @@ jobs:
             cmake-build-presets/ninja-multi-vcpkg/test/mobile_wall_hug
             cmake-build-presets/ninja-multi-vcpkg/test/mock/Scripts
             cmake-build-presets/ninja-multi-vcpkg/test/mock/Data
+            cmake-build-presets/ninja-multi-vcpkg/test/mock/Audio
           if-no-files-found: error
 
     env:
