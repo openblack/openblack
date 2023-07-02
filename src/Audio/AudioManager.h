@@ -50,9 +50,9 @@ public:
 	[[nodiscard]] bool EmitterExists(entt::entity emitter) override;
 	[[nodiscard]] float GetProgress(entt::entity entity) override;
 	[[nodiscard]] AudioStatus GetStatus(entt::entity emitter) override;
-	void PlayMusic(std::string& packPath, PlayType type) override;
+	void PlayMusic(const std::string& packPath, PlayType type) override;
 	void StopMusic() override;
-	Sound& GetSound(entt::id_type id) override;
+	const Sound& GetSound(entt::id_type id) override;
 	void PlaySound(entt::id_type id, PlayType type) override;
 	void SetGlobalVolume(float volume) override { _globalVolume = volume; }
 	void SetSfxVolume(float volume) override { _sfxVolume = volume; }
@@ -62,11 +62,11 @@ public:
 	[[nodiscard]] float GetMusicVolume() override { return _musicVolume; }
 	void Stop() override;
 	void Update(Game& game) override;
-	void CreateSoundGroup(std::string& name) override;
-	void AddMusicEntry(std::string& name) override;
+	void CreateSoundGroup(const std::string& name) override;
+	void AddMusicEntry(const std::string& name) override;
 	[[nodiscard]] const std::vector<std::string>& GetMusicTracks() const override { return _music; }
-	void AddToSoundGroup(std::string& name, entt::id_type id) override;
-	const SoundGroup& GetSoundGroup(std::string& name) override;
+	void AddToSoundGroup(const std::string& name, entt::id_type id) override;
+	const SoundGroup& GetSoundGroup(const std::string& name) override;
 	const std::map<std::string, SoundGroup>& GetSoundGroups() override;
 
 private:

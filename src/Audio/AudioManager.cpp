@@ -208,7 +208,7 @@ AudioStatus AudioManager::GetStatus(entt::entity emitter)
 	return _audioPlayer->GetStatus(component.sourceId);
 }
 
-Sound& AudioManager::GetSound(entt::id_type id)
+const Sound& AudioManager::GetSound(entt::id_type id)
 {
 	return Locator::resources::value().GetSounds().Handle(id);
 }
@@ -223,22 +223,22 @@ void AudioManager::PlaySound(entt::id_type id, PlayType playType)
 	PlayEmitter(entity);
 }
 
-void AudioManager::CreateSoundGroup(std::string& name)
+void AudioManager::CreateSoundGroup(const std::string& name)
 {
 	_soundGroups[name] = SoundGroup();
 }
 
-void AudioManager::AddMusicEntry(std::string& name)
+void AudioManager::AddMusicEntry(const std::string& name)
 {
 	_music.emplace_back(name);
 }
 
-void AudioManager::AddToSoundGroup(std::string& name, entt::id_type id)
+void AudioManager::AddToSoundGroup(const std::string& name, entt::id_type id)
 {
 	_soundGroups[name].sounds.emplace_back(id);
 }
 
-const SoundGroup& AudioManager::GetSoundGroup(std::string& name)
+const SoundGroup& AudioManager::GetSoundGroup(const std::string& name)
 {
 	return _soundGroups[name];
 }
@@ -248,7 +248,7 @@ const std::map<std::string, SoundGroup>& AudioManager::GetSoundGroups()
 	return _soundGroups;
 }
 
-void AudioManager::PlayMusic(std::string& packPath, PlayType type)
+void AudioManager::PlayMusic(const std::string& packPath, PlayType type)
 {
 	StopMusic();
 	const entt::id_type id = entt::hashed_string(fmt::format("{}", packPath).c_str());
