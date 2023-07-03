@@ -549,7 +549,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		{
 			auto& island = Locator::terrainSystem::value();
 			auto islandExtent = glm::vec4(island.GetExtent().minimum, island.GetExtent().maximum);
-			auto islandConstant = glm::vec4(island.k_HeightUnit, 0.0f, 0.0f, 0.0f);
+			auto islandConstant = glm::vec4(LandIslandInterface::k_HeightUnit, 0.0f, 0.0f, 0.0f);
 
 			auto texture = Locator::resources::value().GetTextures().Handle(LandIslandInterface::k_SmallBumpTextureId);
 			const glm::vec4 u_skyAndBump = {desc.sky.GetCurrentSkyType(), desc.bumpMapStrength, desc.smallBumpMapStrength,
