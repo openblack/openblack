@@ -4,10 +4,10 @@ $input v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_mater
 
 #define M_PI 3.1415926535897932384626433832795
 
-SAMPLER2DARRAY(s0_materials, 0);
-SAMPLER2D(s1_bump, 1);
-SAMPLER2D(s2_smallBump, 2);
-SAMPLER2D(s3_footprints, 3);
+SAMPLER2DARRAY(s0_materials, 1);
+SAMPLER2D(s1_bump, 2);
+SAMPLER2D(s2_smallBump, 3);
+SAMPLER2D(s3_footprints, 4);
 
 uniform vec4 u_skyAndBump;
 
