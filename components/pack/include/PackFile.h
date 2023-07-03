@@ -86,6 +86,71 @@ struct G3DTexture
 	std::vector<uint8_t> ddsData;
 };
 
+enum class AudioBankLoop : uint16_t
+{
+	None,
+	Restart,
+	Once,
+	Overlap,
+};
+
+enum class ChannelLayout
+{
+	Mono,
+	Stereo
+};
+
+// TODO(raffclar): Look for channel count (e.g 2)
+// TODO(raffclar): Look for word length (e.g 16);
+struct AudioBankSampleHeader
+{
+	std::array<char, 0x100> name;
+	int32_t unknown0;
+	int32_t id;
+	int32_t isBank;
+	uint32_t size;
+	uint32_t offset;
+	int32_t isClone;
+	int16_t group;
+	int16_t atmosGroup;
+	int32_t unknown4;
+	int32_t unknown5;
+	int16_t unknown6a;
+	int16_t unknown6b;
+	uint32_t sampleRate;
+	int16_t unknownOthera;
+	int16_t unknownOtherb;
+	int16_t unknown7a;
+	int16_t unknown7b;
+	int32_t unknown8;
+	int32_t lStart;
+	int32_t lEnd;
+	std::array<char, 0x100> description;
+	uint16_t priority;        ///< 0-9999
+	uint16_t unknown9;        ///<
+	uint16_t unknown10;       ///<
+	uint16_t unknown11;       ///<
+	int16_t loop;             ///<
+	uint16_t start;           ///<
+	uint8_t pan;              ///<
+	uint16_t unknown12;       ///<
+	std::array<float, 3> pos; ///< -9999 to 9999
+	uint8_t volume;           ///<
+	uint16_t userParam;       ///<
+	uint16_t pitch;           ///<
+	uint16_t unknown18;       ///<
+	uint16_t pitchDeviation;  ///<
+	uint16_t unknown20;       ///<
+	float minDist;            ///<
+	float maxDist;            ///<
+	float scale;              ///< 0-50 (multiply by 10)
+	AudioBankLoop loopType;   ///<
+	uint16_t unknown21;       ///<
+	uint16_t unknown22;       ///<
+	uint16_t unknown23;       ///<
+	uint16_t atmos;           ///<
+};
+
 /**
   This class is used to read LionHead Packs files
  */
@@ -108,6 +173,10 @@ protected:
 	std::vector<std::vector<uint8_t>> _meshes;
 	/// Bytes of anm meshes
 	std::vector<std::vector<uint8_t>> _animations;
+	/// Headers of snd audio samples
+	std::vector<AudioBankSampleHeader> _audioSampleHeaders;
+	/// Bytes of snd audio samples
+	std::vector<std::vector<uint8_t>> _audioSampleData;
 
 	/// Error handling
 	void Fail(const std::string& msg);
@@ -124,11 +193,17 @@ protected:
 	/// Parse Body Block for anim pack
 	virtual void ResolveBodyBlock();
 
+	/// Parse Audio Block for sound pack
+	virtual void ResolveAudioBankSampleTableBlock();
+
 	/// Extract Textures from all Blocks named in INFO Block
 	virtual void ExtractTexturesFromBlock();
 
 	/// Extract Animations from all Blocks named in Body Block
 	virtual void ExtractAnimationsFromBlock();
+
+	/// Extract Sounds from all Blocks named in LHAudioBankSampleTable Block
+	virtual void ExtractSoundsFromBlock();
 
 	/// Parse Info Block
 	virtual void ResolveMeshBlock();
@@ -174,6 +249,10 @@ public:
 	[[nodiscard]] const std::vector<uint8_t>& GetMesh(uint32_t index) const { return _meshes[index]; }
 	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetAnimations() const { return _animations; }
 	[[nodiscard]] const std::vector<uint8_t>& GetAnimation(uint32_t index) const { return _animations[index]; }
+	[[nodiscard]] const std::vector<AudioBankSampleHeader>& GetAudioSampleHeaders() const { return _audioSampleHeaders; }
+	[[nodiscard]] const AudioBankSampleHeader& GetAudioSampleHeader(uint32_t index) const { return _audioSampleHeaders[index]; }
+	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetAudioSamplesData() const { return _audioSampleData; }
+	[[nodiscard]] const std::vector<uint8_t>& GetAudioSampleData(uint32_t index) const { return _audioSampleData[index]; }
 };
 
 } // namespace openblack::pack
