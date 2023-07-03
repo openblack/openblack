@@ -12,9 +12,9 @@
  * The layout of a Pack File is as follows:
  *
  * - 8 byte magic header, containing the chars "LiOnHeAd"
- * - A number of blocks, one having the name MESHES, INFO and the rest
- *   containing textures. The blocks are concatenated one after the other.
- *   (see below)
+ * - A number of blocks, one having the name MESHES, INFO,
+ *   LHAudioBankSampleTable and the rest containing textures. The blocks are
+ *   concatenated one after the other. (see below)
  *
  * ------------------------- start of block ------------------------------------
  *
@@ -54,13 +54,55 @@
  *
  * The layout of a INFO block is as follows:
  *
- * - 4 byte int, containing the number of textures in the file.
+ * - 4 byte int, containing the number of textures in the block.
  * - 8 byte look-up table * number of textures, containing
  *         block id - integer whose hexadecimal string corresponds of a block in
  *                    the file.
  *         unknown - TODO: Maybe type? Maybe layers?
  *
  * ------------------------- end of INFO block ---------------------------------
+ *
+ * The layout of a LHAudioBankSampleTable block is as follows:
+ *
+ * - 2 byte int, containing the number of sound samples in the block.
+ * - 2 byte int, unknown
+ * - 640 byte audio metadata * number of sound samples, containing
+ *         name - 256 characters
+ *         unknown - TODO: 4 bytes
+ *         id - 4 bytes
+ *         if the sample is a bank - 4 bytes
+ *         the size of the sample - 4 bytes
+ *         the offset of the sample - 4 bytes
+ *         if the sample is a clone - 4 bytes
+ *         group - 2 bytes
+ *         atmospheric group - 2 bytes
+ *         4 unknowns - TODO: 4 bytes, 4 bytes, 2 bytes, 2 bytes
+ *         sample rate - 4 bytes
+ *         5 unknowns - TODO: 2 bytes, 2 bytes, 2 bytes, 2 bytes, 4 bytes
+ *         start - 4 bytes
+ *         end - 4 bytes
+ *         description - 256 characters
+ *         priority - 2 bytes
+ *         3 unknowns - TODO: 2 bytes, 2 bytes, 2 bytes
+ *         loop - 2 bytes
+ *         start - 2 bytes
+ *         pan - 1 byte
+ *         unknowns - TODO: 2 bytes
+ *         position - 3 * 32 bit floats
+ *         volume - 1 byte
+ *         user parameters - 2 bytes
+ *         pitch - 2 bytes
+ *         unknown - 2 bytes
+ *         pitchDeviation - 2 bytes
+ *         unknown - 2 bytes
+ *         minimum distance - 32 bit float
+ *         maximum distance - 32 bit float
+ *         scale - 32 bit float
+ *         loop type - 16 bit enumeration where: 0 is None, 1 is Restart, 2 is Once and 3 is Overlap
+ *         3 unknowns - TODO: 2 bytes, 2 bytes, 2 bytes
+ *         atmosphere - 2 bytes
+ *
+ * ------------------------- end of LHAudioBankSampleTable block ---------------
  *
  * The layout of a texture block is as follows:
  *
@@ -241,6 +283,49 @@ void PackFile::ResolveBodyBlock()
 	stream.read(reinterpret_cast<char*>(_bodyBlockLookup.data()), _bodyBlockLookup.size() * sizeof(_bodyBlockLookup[0]));
 }
 
+void PackFile::ResolveAudioBankSampleTableBlock()
+{
+	if (!HasBlock("LHAudioBankSampleTable"))
+	{
+		Fail("no LHAudioBankSampleTable block in sad pack");
+	}
+
+	auto data = GetBlock("LHAudioBankSampleTable");
+	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
+	std::size_t fsize = 0;
+	if (stream.seekg(0, std::ios_base::end))
+	{
+		fsize = static_cast<std::size_t>(stream.tellg());
+		stream.seekg(0);
+	}
+
+	if (fsize < sizeof(uint32_t))
+	{
+		Fail("Audio bank block cannot fit sample count: " + std::to_string(fsize) + " < " + std::to_string(sizeof(uint8_t)));
+	}
+
+	uint16_t sampleCount;
+	stream.read(reinterpret_cast<char*>(&sampleCount), sizeof(sampleCount));
+
+	uint16_t unknown;
+	stream.read(reinterpret_cast<char*>(&unknown), sizeof(unknown));
+
+	if (sampleCount == 0)
+	{
+		Fail("There are no sound entries");
+	}
+
+	_audioSampleHeaders.resize(sampleCount);
+
+	if (fsize != sizeof(uint32_t) + _audioSampleHeaders.size() * sizeof(_audioSampleHeaders[0]))
+	{
+		Fail("Cannot fit all " + std::to_string(sampleCount) + " sample headers");
+	}
+
+	stream.read(reinterpret_cast<char*>(_audioSampleHeaders.data()),
+	            _audioSampleHeaders.size() * sizeof(_audioSampleHeaders[0]));
+}
+
 void PackFile::ExtractTexturesFromBlock()
 {
 	G3DTextureHeader header;
@@ -335,6 +420,39 @@ void PackFile::ExtractAnimationsFromBlock()
 		stream.seekg(_bodyBlockLookup[i].offset);
 		stream.read(reinterpret_cast<char*>(_animations[i].data()), animationHeaderSize);
 		memcpy(_animations[i].data() + animationHeaderSize, animationData.data(), animationData.size());
+	}
+}
+
+void PackFile::ExtractSoundsFromBlock()
+{
+	if (!HasBlock("LHAudioWaveData"))
+	{
+		Fail("No LHAudioWaveData block in sad pack");
+	}
+
+	auto data = GetBlock("LHAudioWaveData");
+	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
+	//	auto isSector = false;
+	//	auto isPrevSector = false;
+
+	_audioSampleData.resize(_audioSampleHeaders.size());
+	for (int i = 0; const auto& sample : _audioSampleHeaders)
+	{
+		if (sample.offset > data.size())
+		{
+			Fail("Sound sample offset points to beyond file");
+		}
+		if (sample.offset + sample.size > data.size())
+		{
+			Fail("Sound sample size exceeds LHAudioWaveData size");
+		}
+
+		_audioSampleData[i].resize(sample.size);
+
+		stream.seekg(sample.offset);
+		stream.read(reinterpret_cast<char*>(_audioSampleData[i].data()), sample.size);
+
+		++i;
 	}
 }
 
@@ -506,6 +624,14 @@ void PackFile::ReadFile(std::istream& stream)
 		ResolveBodyBlock();
 		ExtractAnimationsFromBlock();
 	}
+	// Sound pack
+	if (HasBlock("LHAudioBankSampleTable"))
+	{
+		ResolveAudioBankSampleTableBlock();
+		// ResolveFileSegmentBankBlock();
+		ExtractSoundsFromBlock();
+	}
+
 	_isLoaded = true;
 }
 
