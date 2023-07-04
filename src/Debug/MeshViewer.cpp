@@ -21,7 +21,7 @@
 #include "3D/Camera.h"
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
-#include "3D/LandIsland.h"
+#include "3D/LandIslandInterface.h"
 #include "Debug/Gui.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Registry.h"

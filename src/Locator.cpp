@@ -11,13 +11,14 @@
 
 #define LOCATOR_IMPLEMENTATIONS
 
-#include "3D/LandIsland.h"
+#include "3D/LandIslandInterface.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
 #include "ECS/Systems/Implementations/PathfindingSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/TownSystem.h"
+#include <3D/LandIsland.h>
 
 using openblack::LandIsland;
 using openblack::ecs::systems::CameraBookmarkSystem;
@@ -34,13 +35,13 @@ void InitializeGame()
 	Locator::rendereringSystem::emplace<RenderingSystem>();
 }
 
-void InitializeLevel()
+void InitializeLevel(const std::filesystem::path& path)
 {
 	Locator::dynamicsSystem::emplace<DynamicsSystem>();
 	Locator::livingActionSystem::emplace<LivingActionSystem>();
 	Locator::townSystem::emplace<TownSystem>();
 	Locator::pathfindingSystem::emplace<PathfindingSystem>();
 	Locator::cameraBookmarkSystem::emplace<CameraBookmarkSystem>();
-	Locator::terrainSystem::emplace<LandIsland>();
+	Locator::terrainSystem::emplace<LandIsland>(path);
 }
 } // namespace openblack::ecs::systems

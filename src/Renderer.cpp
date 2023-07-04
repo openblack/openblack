@@ -20,7 +20,8 @@
 #include "3D/Camera.h"
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
-#include "3D/LandIsland.h"
+#include "3D/LandIslandInterface.h"
+#include "3D/LandBlock.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
 #include "ECS/Components/Mesh.h"
@@ -284,17 +285,14 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 		return;
 	}
 
-	glm::vec2 extentMin;
-	glm::vec2 extentMax;
-
 	if (!Locator::terrainSystem::has_value())
 	{
 		throw std::runtime_error("Cannot get landscape before any are loaded");
 	}
 	const auto& island = Locator::terrainSystem::value();
 
-	island.GetExtent(extentMin, extentMax);
-	auto islandExtent = glm::vec4(extentMin, extentMax);
+	auto extent = island.GetExtent();
+	auto islandExtent = glm::vec4(extent.minimum, extent.maximum);
 	const auto& heightMap = island.GetHeightMap();
 
 	auto const& skins = mesh.GetSkins();
@@ -416,9 +414,9 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 		bgfx::touch(static_cast<bgfx::ViewId>(viewId));
 
 		// _shaderManager->SetCamera(viewId, *drawDesc.camera); // TODO
-		glm::mat4 view;
-		glm::mat4 proj;
-		island.GetOrthoViewProj(view, proj);
+
+		auto view = island.GetOrthoView();
+		auto proj = island.GetOrthoProj();
 		bgfx::setViewTransform(static_cast<bgfx::ViewId>(viewId), &view, &proj);
 
 		const auto& meshManager = Locator::resources::value().GetMeshes();
@@ -557,16 +555,12 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		                                                                               : Profiler::Stage::MainPassDrawIsland);
 		if (desc.drawIsland)
 		{
-			glm::vec2 extentMin;
-			glm::vec2 extentMax;
 			auto& island = Locator::terrainSystem::value();
-			// this method here is weird! What a nonconvetional name for a method that passes the value
-			// of the extentMin and extentMax that is set on the island.
-			island.GetExtent(extentMin, extentMax);
-			auto islandExtent = glm::vec4(extentMin, extentMax);
+			auto extent = island.GetExtent();
+			auto islandExtent = glm::vec4(extent.minimum, extent.maximum);
 			for (const auto& block : island.GetBlocks())
 			{
-				auto texture = Locator::resources::value().GetTextures().Handle(LandIsland::k_SmallBumpTextureId);
+				auto texture = Locator::resources::value().GetTextures().Handle(LandIslandInterface::k_SmallBumpTextureId);
 
 				terrainShader->SetTextureSampler("s0_materials", 0, island.GetAlbedoArray());
 				terrainShader->SetTextureSampler("s1_bump", 1, island.GetBump());

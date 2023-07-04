@@ -10,8 +10,12 @@
 #pragma once
 #include <filesystem>
 
-#include <LNDFile.h>
 #include <glm/mat4x4.hpp>
+#include <entt/core/hashed_string.hpp>
+
+#include <LNDFile.h>
+#include "Extent2D.h"
+#include "LandBlock.h"
 
 using LNDCell = openblack::lnd::LNDCell;
 
@@ -26,9 +30,12 @@ class Texture2D;
 class LandIslandInterface
 {
 public:
-	virtual void LoadFromFile(const std::filesystem::path& path) = 0;
+	static const uint8_t k_CellCount;
+	static const float k_HeightUnit;
+	static const float k_CellSize;
+	static constexpr entt::hashed_string k_SmallBumpTextureId = entt::hashed_string("raw/smallbumpa");
+
 	[[nodiscard]] virtual float GetHeightAt(glm::vec2) const = 0;
-	[[nodiscard]] virtual const LandBlock* GetBlock(const glm::u8vec2& coordinates) const = 0;
 	[[nodiscard]] virtual const LNDCell& GetCell(const glm::u16vec2& coordinates) const = 0;
 
 	// Debug
@@ -44,9 +51,10 @@ public:
 	[[nodiscard]] virtual const graphics::Texture2D& GetHeightMap() const = 0;
 	[[nodiscard]] virtual const graphics::FrameBuffer& GetFootprintFramebuffer() const = 0;
 
-	virtual void GetIndexExtent(glm::u16vec2& extentMin, glm::u16vec2& extentMax) const = 0;
-	virtual void GetOrthoViewProj(glm::mat4& view, glm::mat4& proj) const = 0;
-	virtual void GetExtent(glm::vec2& extentMin, glm::vec2& extentMax) const = 0;
+	virtual IndexExtent GetIndexExtent() const = 0;
+	virtual glm::mat4 GetOrthoView() const = 0;
+	virtual glm::mat4 GetOrthoProj() const = 0;
+	virtual Extent2D GetExtent() const = 0;
 	virtual uint8_t GetNoise(glm::u8vec2 pos) = 0;
 };
 } // namespace openblack

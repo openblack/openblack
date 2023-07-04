@@ -7,9 +7,10 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+
 #include "LandIsland.h"
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stdexcept>
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
@@ -28,11 +29,14 @@
 using namespace openblack;
 using namespace openblack::graphics;
 
-const uint8_t LandIsland::k_CellCount = 16;
-const float LandIsland::k_HeightUnit = 0.67f;
-const float LandIsland::k_CellSize = 10.0f;
+const uint8_t LandIslandInterface::k_CellCount = 16;
+const float LandIslandInterface::k_HeightUnit = 0.67f;
+const float LandIslandInterface::k_CellSize = 10.0f;
 
-LandIsland::LandIsland() = default;
+LandIsland::LandIsland(const std::filesystem::path& path)
+{
+	LoadFromFile(path);
+}
 
 LandIsland::~LandIsland() = default;
 
@@ -58,7 +62,7 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	_landBlocks.resize(lndBlocks.size());
 	for (size_t i = 0; i < _landBlocks.size(); i++)
 	{
-		_landBlocks[i]._block = std::make_unique<lnd::LNDBlock>(lndBlocks[i]);
+		_landBlocks[i].GetLndBlock() = std::make_unique<lnd::LNDBlock>(lndBlocks[i]);
 	}
 
 	_extentIndexMin.x = std::numeric_limits<uint16_t>::max();
@@ -67,24 +71,24 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	_extentIndexMax.y = 0;
 	for (auto& b : _landBlocks)
 	{
-		if (_extentIndexMin.x > b._block->blockX)
+		if (_extentIndexMin.x > b.GetLndBlock()->blockX)
 		{
-			_extentIndexMin.x = static_cast<uint16_t>(b._block->blockX);
+			_extentIndexMin.x = static_cast<uint16_t>(b.GetLndBlock()->blockX);
 			_extentMin.x = b.GetMapPosition().x;
 		}
-		if (_extentIndexMax.x < b._block->blockX)
+		if (_extentIndexMax.x < b.GetLndBlock()->blockX)
 		{
-			_extentIndexMax.x = static_cast<uint16_t>(b._block->blockX);
+			_extentIndexMax.x = static_cast<uint16_t>(b.GetLndBlock()->blockX);
 			_extentMax.x = b.GetMapPosition().x;
 		}
-		if (_extentIndexMin.y > b._block->blockZ)
+		if (_extentIndexMin.y > b.GetLndBlock()->blockZ)
 		{
-			_extentIndexMin.y = static_cast<uint16_t>(b._block->blockZ);
+			_extentIndexMin.y = static_cast<uint16_t>(b.GetLndBlock()->blockZ);
 			_extentMin.y = b.GetMapPosition().y;
 		}
-		if (_extentIndexMax.y < b._block->blockZ)
+		if (_extentIndexMax.y < b.GetLndBlock()->blockZ)
 		{
-			_extentIndexMax.y = static_cast<uint16_t>(b._block->blockZ);
+			_extentIndexMax.y = static_cast<uint16_t>(b.GetLndBlock()->blockZ);
 			_extentMax.y = b.GetMapPosition().y;
 		}
 	}

@@ -16,7 +16,6 @@
 
 #include "Dynamics/LandBlockBulletMeshInterface.h"
 #include "Graphics/VertexBuffer.h"
-#include "LandIsland.h"
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -33,7 +32,7 @@ LandVertex::LandVertex(const glm::vec3& position, const glm::vec3& weight, const
 {
 }
 
-void LandBlock::BuildMesh(LandIsland& island)
+void LandBlock::BuildMesh(LandIslandInterface& island)
 {
 	if (_mesh != nullptr)
 	{
@@ -74,7 +73,7 @@ void LandBlock::BuildMesh(LandIsland& island)
 	_rigidBody->setUserIndex(-1);
 }
 
-const bgfx::Memory* LandBlock::BuildVertexList(LandIsland& island)
+const bgfx::Memory* LandBlock::BuildVertexList(LandIslandInterface& island)
 {
 	// reserve 16*16 quads of 2 tris with 3 verts = 1536
 	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(LandVertex) * 1536);
@@ -125,9 +124,9 @@ const bgfx::Memory* LandBlock::BuildVertexList(LandIsland& island)
 			for (size_t i = 0; i < pos.size(); ++i)
 			{
 				pos[i] = glm::vec3(                                // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
-				    offset[i].x * LandIsland::k_CellSize,          // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
-				    cells[i]->altitude * LandIsland::k_HeightUnit, // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
-				    offset[i].y * LandIsland::k_CellSize           // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+				    offset[i].x * LandIslandInterface::k_CellSize, // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+				    cells[i]->altitude * LandIslandInterface::k_HeightUnit, // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+				    offset[i].y * LandIslandInterface::k_CellSize // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 				);
 			}
 

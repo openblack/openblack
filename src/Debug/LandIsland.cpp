@@ -11,7 +11,7 @@
 
 #include <LNDFile.h>
 
-#include "3D/LandIsland.h"
+#include "3D/LandIslandInterface.h"
 #include "Game.h"
 #include "Graphics/FrameBuffer.h"
 #include "Gui.h"
@@ -46,11 +46,9 @@ void LandIsland::Draw(openblack::Game& game)
 
 	if (ImGui::TreeNodeEx("Height Map", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		glm::u16vec2 extentMin;
-		glm::u16vec2 extentMax;
-		landIsland.GetIndexExtent(extentMin, extentMax);
-		const auto extentSize = extentMax - extentMin;
-		const auto dim = static_cast<uint16_t>(openblack::LandIsland::k_CellCount) * extentSize;
+		auto indexExtent = landIsland.GetIndexExtent();
+		const auto extentSize = indexExtent.maximum - indexExtent.minimum;
+		const auto dim = static_cast<uint16_t>(LandIslandInterface::k_CellCount) * extentSize;
 		const auto& texture = landIsland.GetHeightMap();
 		ImGui::Text("Resolution: %ux%u", dim.x, dim.y);
 		float scaling = 512.0f / static_cast<float>(dim.x);

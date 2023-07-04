@@ -17,7 +17,7 @@
 #include <spdlog/spdlog.h>
 
 #include "3D/L3DMesh.h"
-#include "3D/LandIsland.h"
+#include "3D/LandIslandInterface.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"

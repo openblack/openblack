@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <filesystem>
+
 #include <entt/locator/locator.hpp>
 
 namespace openblack
@@ -31,7 +33,7 @@ class TownSystemInterface;
 class PathfindingSystemInterface;
 
 void InitializeGame();
-void InitializeLevel();
+void InitializeLevel(const std::filesystem::path& path);
 } // namespace ecs::systems
 
 struct Locator

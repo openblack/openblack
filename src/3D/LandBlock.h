@@ -19,6 +19,7 @@
 
 #include "Graphics/Mesh.h"
 #include "Graphics/ShaderProgram.h"
+#include "LandIslandInterface.h"
 
 class btBvhTriangleMeshShape;
 class btRigidBody;
@@ -46,7 +47,7 @@ struct LandVertex
 	           uint8_t lightLevel, float alpha);
 };
 
-class LandIsland;
+class LandIslandInterface;
 
 namespace dynamics
 {
@@ -57,13 +58,14 @@ class LandBlock
 {
 public:
 	LandBlock() = default;
-	void BuildMesh(LandIsland& island);
+	void BuildMesh(LandIslandInterface& island);
 
 	[[nodiscard]] const graphics::Mesh& GetMesh() const { return *_mesh; }
 	[[nodiscard]] const lnd::LNDCell* GetCells() const;
 	[[nodiscard]] glm::ivec2 GetBlockPosition() const;
 	[[nodiscard]] glm::vec2 GetMapPosition() const;
 	[[nodiscard]] std::unique_ptr<btRigidBody>& GetRigidBody() { return _rigidBody; };
+	[[nodiscard]] std::unique_ptr<lnd::LNDBlock>& GetLndBlock() { return _block; };
 
 private:
 	std::unique_ptr<lnd::LNDBlock> _block;
@@ -72,8 +74,6 @@ private:
 	std::unique_ptr<btBvhTriangleMeshShape> _physicsMesh;
 	std::unique_ptr<btRigidBody> _rigidBody;
 
-	const bgfx::Memory* BuildVertexList(LandIsland& island);
-
-	friend LandIsland;
+	const bgfx::Memory* BuildVertexList(LandIslandInterface& island);
 };
 } // namespace openblack

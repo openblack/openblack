@@ -16,7 +16,7 @@
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/spline.hpp>
 
-#include "3D/LandIsland.h"
+#include "3D/LandIslandInterface.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "Game.h"

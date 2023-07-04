@@ -28,7 +28,7 @@
 
 #include "3D/Camera.h"
 #include "3D/CreatureBody.h"
-#include "3D/LandIsland.h"
+#include "3D/LandIslandInterface.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
 #include "Common/EventManager.h"
@@ -813,7 +813,6 @@ void Game::LoadMap(const std::filesystem::path& path)
 
 void Game::LoadLandscape(const std::filesystem::path& path)
 {
-	ecs::systems::InitializeLevel();
 
 	auto fixedName = Game::Instance()->GetFileSystem().FindPath(FileSystem::FixPath(path));
 
@@ -821,7 +820,7 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	{
 		throw std::runtime_error("Could not find landscape " + path.generic_string());
 	}
-	Locator::terrainSystem::value().LoadFromFile(fixedName);
+	ecs::systems::InitializeLevel(fixedName);
 
 	Locator::cameraBookmarkSystem::value().Initialize();
 	Locator::dynamicsSystem::value().RegisterIslandRigidBodies(Locator::terrainSystem::value());

@@ -15,44 +15,20 @@
 #include <string>
 #include <vector>
 
-#include <entt/core/hashed_string.hpp>
-#include <glm/mat4x4.hpp>
-
 #include "3D/LandIslandInterface.h"
-#include "LandBlock.h"
 
 namespace openblack
 {
-namespace ecs::systems
-{
-class DynamicsSystem;
-}
-
-namespace graphics
-{
-class FrameBuffer;
-}
-
-namespace lnd
-{
-struct LNDCountry;
-}
-
 class LandIsland final: public LandIslandInterface
 {
 public:
-	static const uint8_t k_CellCount;
-	static const float k_HeightUnit;
-	static const float k_CellSize;
-	static constexpr entt::hashed_string k_SmallBumpTextureId = entt::hashed_string("raw/smallbumpa");
-
-	LandIsland();
+	explicit LandIsland(const std::filesystem::path& path);
 	~LandIsland();
 
-	void LoadFromFile(const std::filesystem::path& path) override;
+	void LoadFromFile(const std::filesystem::path& path);
 
 	[[nodiscard]] float GetHeightAt(glm::vec2) const override;
-	[[nodiscard]] const LandBlock* GetBlock(const glm::u8vec2& coordinates) const override;
+	[[nodiscard]] const LandBlock* GetBlock(const glm::u8vec2& coordinates) const;
 	[[nodiscard]] const lnd::LNDCell& GetCell(const glm::u16vec2& coordinates) const override;
 
 	// Debug
@@ -76,21 +52,11 @@ public:
 	[[nodiscard]] const graphics::Texture2D& GetBump() const override { return *_textureBumpMap; }
 	[[nodiscard]] const graphics::Texture2D& GetHeightMap() const override { return *_heightMap; }
 	[[nodiscard]] const graphics::FrameBuffer& GetFootprintFramebuffer() const override { return *_footprintFrameBuffer; }
-	void GetOrthoViewProj(glm::mat4& view, glm::mat4& proj) const override
-	{
-		view = _view;
-		proj = _proj;
-	}
-	void GetIndexExtent(glm::u16vec2& extentMin, glm::u16vec2& extentMax) const override
-	{
-		extentMin = _extentIndexMin;
-		extentMax = _extentIndexMax;
-	}
-	void GetExtent(glm::vec2& extentMin, glm::vec2& extentMax) const override
-	{
-		extentMin = _extentMin;
-		extentMax = _extentMax;
-	}
+
+	glm::mat4 GetOrthoView() const override { return _view; }
+	glm::mat4 GetOrthoProj() const override { return _proj; }
+	IndexExtent GetIndexExtent() const override { return IndexExtent {_extentIndexMin, _extentIndexMax}; }
+	Extent2D GetExtent() const override { return Extent2D {_extentMin, _extentMax}; }
 
 	uint8_t GetNoise(glm::u8vec2 pos) override;
 

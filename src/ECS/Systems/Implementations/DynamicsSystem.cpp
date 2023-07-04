@@ -23,7 +23,7 @@
 #include <glm/gtx/rotate_vector.hpp>
 
 #include "3D/LandBlock.h"
-#include "3D/LandIsland.h"
+#include "3D/LandIslandInterface.h"
 #include "ECS/Components/RigidBody.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
