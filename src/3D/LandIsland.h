@@ -53,10 +53,10 @@ public:
 	[[nodiscard]] const graphics::Texture2D& GetHeightMap() const override { return *_heightMap; }
 	[[nodiscard]] const graphics::FrameBuffer& GetFootprintFramebuffer() const override { return *_footprintFrameBuffer; }
 
-	glm::mat4 GetOrthoView() const override { return _view; }
-	glm::mat4 GetOrthoProj() const override { return _proj; }
-	IndexExtent GetIndexExtent() const override { return IndexExtent {_extentIndexMin, _extentIndexMax}; }
-	Extent2D GetExtent() const override { return Extent2D {_extentMin, _extentMax}; }
+	[[nodiscard]] glm::mat4 GetOrthoView() const override { return _view; }
+	[[nodiscard]] glm::mat4 GetOrthoProj() const override { return _proj; }
+	[[nodiscard]] IndexExtent GetIndexExtent() const override { return IndexExtent {_extentIndexMin, _extentIndexMax}; }
+	[[nodiscard]] Extent2D GetExtent() const override { return Extent2D {_extentMin, _extentMax}; }
 
 	uint8_t GetNoise(glm::u8vec2 pos) override;
 
