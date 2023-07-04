@@ -51,10 +51,10 @@ public:
 	[[nodiscard]] virtual const graphics::Texture2D& GetHeightMap() const = 0;
 	[[nodiscard]] virtual const graphics::FrameBuffer& GetFootprintFramebuffer() const = 0;
 
-	virtual IndexExtent GetIndexExtent() const = 0;
-	virtual glm::mat4 GetOrthoView() const = 0;
-	virtual glm::mat4 GetOrthoProj() const = 0;
-	virtual Extent2D GetExtent() const = 0;
+	[[nodiscard]] virtual IndexExtent GetIndexExtent() const = 0;
+	[[nodiscard]] virtual glm::mat4 GetOrthoView() const = 0;
+	[[nodiscard]] virtual glm::mat4 GetOrthoProj() const = 0;
+	[[nodiscard]] virtual Extent2D GetExtent() const = 0;
 	virtual uint8_t GetNoise(glm::u8vec2 pos) = 0;
 };
 } // namespace openblack
