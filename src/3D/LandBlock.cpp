@@ -125,7 +125,8 @@ const bgfx::Memory* LandBlock::BuildVertexList(LandIslandInterface& island)
 			{
 				pos[i] = glm::vec3(                                // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 				    offset[i].x * LandIslandInterface::k_CellSize, // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
-				    cells[i]->altitude * LandIslandInterface::k_HeightUnit, // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+				    cells[i]->altitude *
+				        LandIslandInterface::k_HeightUnit,        // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 				    offset[i].y * LandIslandInterface::k_CellSize // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 				);
 			}

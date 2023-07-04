@@ -13,14 +13,14 @@
 
 namespace openblack
 {
-	struct Extent2D
-	{
-		glm::vec2 minimum;
-		glm::vec2 maximum;
-	};
-    struct IndexExtent
-	{
-	    glm::u16vec2 minimum;
-	    glm::u16vec2 maximum;
-	};
-}
+struct Extent2D
+{
+	glm::vec2 minimum;
+	glm::vec2 maximum;
+};
+struct IndexExtent
+{
+	glm::u16vec2 minimum;
+	glm::u16vec2 maximum;
+};
+} // namespace openblack

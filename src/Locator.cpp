@@ -11,6 +11,8 @@
 
 #define LOCATOR_IMPLEMENTATIONS
 
+#include <3D/LandIsland.h>
+
 #include "3D/LandIslandInterface.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
