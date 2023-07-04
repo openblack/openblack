@@ -3534,7 +3534,7 @@ DRWAV_PRIVATE drwav_bool32 drwav_init__internal(drwav* pWav, drwav_chunk_proc on
 
         /* Getting here means it's not a chunk that we care about internally, but might need to be handled as metadata by the caller. */
         if (isProcessingMetadata) {
-            drwav_uint64 metadataBytesRead;
+            [[maybe_unused]] drwav_uint64 metadataBytesRead;
             
             metadataBytesRead = drwav__metadata_process_chunk(&metadataParser, &header, drwav_metadata_type_all_including_unknown);
             DRWAV_ASSERT(metadataBytesRead <= header.sizeInBytes);
