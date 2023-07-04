@@ -6,3 +6,5 @@ src/Common/stb_image_write.h
 test/mobile_wall_hug/json.hpp
 externals/imgui_user/imgui_impl_sdl.h
 externals/imgui_user/imgui_impl_sdl.cpp
+externals/dr_libs/dr_mp3.h
+externals/dr_libs/dr_wav.h

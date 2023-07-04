@@ -103,6 +103,7 @@ target_link_libraries(
           morph
           imgui::imgui
           imgui_user
+          dr_libs
           ScriptLibrary
           glm::glm
           EnTT::EnTT
