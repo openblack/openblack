@@ -132,7 +132,7 @@ jobs:
         id: review
         with:
           build_dir: cmake-build-presets/ninja-multi-vcpkg
-          exclude: "*ShaderIncluder.h,*json.hpp,*imgui_impl_sdl*,*stb_image_write.h,dr_*.h"
+          exclude: "*ShaderIncluder.h,*json.hpp,*imgui_impl_sdl*,*stb_image_write.h,*dr_*.h"
           lgtm_comment_body: "" # don't post a lgtm message
           annotations: false
       - name: If there are any comments, fail the check
