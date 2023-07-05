@@ -37,11 +37,16 @@ public:
 	{
 		_registry.create(first, last);
 	}
-	void Release(entt::entity entity) { _registry.release(entity); }
+	void Release(entt::entity entity)
+	{
+		ENTT_ASSERT(_registry.orphan(entity), "Non-orphan entity");
+		_registry.storage<entt::entity>().erase(entity);
+	}
 	template <typename It>
 	void Release(It first, It last)
 	{
-		_registry.release(first, last);
+		ENTT_ASSERT(std::all_of(first, last, [this](const auto entt) { return orphan(entt); }), "Non-orphan entity");
+		_registry.storage<entt::entity>().erase(std::move(first), std::move(last));
 	}
 	void Destroy(entt::entity entity) { _registry.destroy(entity); }
 	template <typename It>
