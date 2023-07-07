@@ -33,7 +33,7 @@
 #include "3D/Water.h"
 #include "Common/EventManager.h"
 #include "Common/FileSystem.h"
-#include "Common/RandomNumberManagerProduction.h"
+#include "Common/RandomNumberManager.h"
 #include "Common/StringUtils.h"
 #include "Debug/Gui.h"
 #include "ECS/Archetypes/HandArchetype.h"
@@ -475,7 +475,6 @@ bool Game::Update()
 
 bool Game::Initialize()
 {
-	Locator::rng::emplace<RandomNumberManagerProduction>();
 	ecs::systems::InitializeGame();
 	auto& resources = Locator::resources::value();
 	auto& meshManager = resources.GetMeshes();
