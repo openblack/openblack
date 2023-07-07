@@ -51,7 +51,7 @@
 #include <Game.h>
 #include <GameWindow.h>
 #include <Locator.h>
-#include <Resources/Resources.h>
+#include <Resources/ResourcesInterface.h>
 
 #include "Console.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"

@@ -26,7 +26,7 @@
 #include "ECS/Registry.h"
 #include "Game.h"
 #include "Locator.h"
-#include "Resources/Resources.h"
+#include "Resources/ResourcesInterface.h"
 
 using namespace openblack::debug::gui;
 
