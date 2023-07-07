@@ -56,6 +56,9 @@ option(OPENBLACK_WARNINGS_AS_ERRORS
        "Treat warnings as errors (disable easier prototyping, enable for CI)"
        OFF
 )
+option(OPENBLACK_TRACE_TIME
+       "Compilation Time analysis (only available with clang)" OFF
+)
 
 find_program(
   CLANG_TIDY NAMES clang-tidy-7 clang-tidy-6.0 clang-tidy-5.0 clang-tidy-4.0

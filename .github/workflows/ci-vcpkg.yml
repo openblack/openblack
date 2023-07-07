@@ -44,6 +44,13 @@ jobs:
           sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
         if: startsWith(matrix.os, 'ubuntu')
 
+      - name: Download ClangBuildAnalyzer
+        uses: dsaltares/fetch-gh-release-asset@master
+        if: matrix.cc == 'clang' || startsWith(matrix.os, 'macos')
+        with:
+          repo: 'aras-p/ClangBuildAnalyzer'
+          file: ${{ startsWith(matrix.os, 'ubuntu') && 'ClangBuildAnalyzer-linux' || startsWith(matrix.os, 'windows') && 'ClangBuildAnalyzer-windows.exe' || startsWith(matrix.os, 'macos') && 'ClangBuildAnalyzer-mac' }}
+
       - name: Install MacOS dependencies
         run: |
           brew install pkg-config
@@ -61,7 +68,14 @@ jobs:
         uses: lukka/run-cmake@v10
         with:
           configurePreset: 'ninja-multi-vcpkg'
-          configurePresetAdditionalArgs: "['-DCMAKE_EXPORT_COMPILE_COMMANDS=ON', '-DOPENBLACK_WARNINGS_AS_ERRORS=ON']"
+          configurePresetAdditionalArgs: "['-DCMAKE_EXPORT_COMPILE_COMMANDS=ON', '-DOPENBLACK_WARNINGS_AS_ERRORS=ON', '-DOPENBLACK_TRACE_TIME=ON']"
+
+      - name: Start Clang Build Analysis.
+        if: matrix.cc == 'clang' || startsWith(matrix.os, 'macos')
+        run: |
+          chmod +x ./${{ startsWith(matrix.os, 'ubuntu') && 'ClangBuildAnalyzer-linux' || startsWith(matrix.os, 'windows') && 'ClangBuildAnalyzer-windows.exe' || startsWith(matrix.os, 'macos') && 'ClangBuildAnalyzer-mac' }}
+          ./${{ startsWith(matrix.os, 'ubuntu') && 'ClangBuildAnalyzer-linux' || startsWith(matrix.os, 'windows') && 'ClangBuildAnalyzer-windows.exe' || startsWith(matrix.os, 'macos') && 'ClangBuildAnalyzer-mac' }} --start cmake-build-presets/ninja-multi-vcpkg
+        shell: bash
 
       - name: Run CMake+Ninja+CTest to build/test the code (Debug).
         uses: lukka/run-cmake@v10
@@ -74,6 +88,21 @@ jobs:
         with:
           buildPreset: 'ninja-multi-vcpkg-release'
           testPreset: 'ninja-multi-vcpkg-release'
+
+      - name: Stop Clang Build Analysis.
+        if: matrix.cc == 'clang' || startsWith(matrix.os, 'macos')
+        run: |
+          ./${{ startsWith(matrix.os, 'ubuntu') && 'ClangBuildAnalyzer-linux' || startsWith(matrix.os, 'windows') && 'ClangBuildAnalyzer-windows.exe' || startsWith(matrix.os, 'macos') && 'ClangBuildAnalyzer-mac' }} --stop cmake-build-presets/ninja-multi-vcpkg clang-build-analysis-${{ matrix.os }}.cap
+          ./${{ startsWith(matrix.os, 'ubuntu') && 'ClangBuildAnalyzer-linux' || startsWith(matrix.os, 'windows') && 'ClangBuildAnalyzer-windows.exe' || startsWith(matrix.os, 'macos') && 'ClangBuildAnalyzer-mac' }} --analyze clang-build-analysis-${{ matrix.os }}.cap
+
+      - name: Upload Clang Build Analysis
+        uses: actions/upload-artifact@v3
+        if: matrix.cc == 'clang' || startsWith(matrix.os, 'macos')
+        with:
+          name: openblack-clang-build-analysis
+          path: |
+            clang-build-analysis-${{ matrix.os }}.cap
+          if-no-files-found: error
 
       - name: Upload compile database and system includes
         uses: actions/upload-artifact@v3
