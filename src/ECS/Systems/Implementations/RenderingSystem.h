@@ -20,7 +20,7 @@
 #include "ECS/Systems/RenderingSystemInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
-#error "ECS System implementations should only be included in Locator.cpp"
+#warning "Locator interface implementations should only be included in Locator.cpp, use interface instead."
 #endif
 
 namespace openblack::ecs::systems
