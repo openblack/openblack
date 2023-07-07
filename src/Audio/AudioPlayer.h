@@ -44,6 +44,7 @@ public:
 	[[nodiscard]] float GetProgress(size_t sizeInBytes, SourceId sourceId) const override;
 
 private:
+	static void SetupLogging();
 	static void DeleteDevice(ALCdevice* device);
 	static void DeleteContext(ALCcontext* context);
 	std::unique_ptr<ALCdevice, decltype(&DeleteDevice)> _device;
