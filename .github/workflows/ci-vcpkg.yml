@@ -235,7 +235,9 @@ jobs:
           filename: bw.7z
           target: game-data
       - name: Extract Game Data
-        run: 7z x -ogame-data\bw "$PWD\game-data\${{steps.game-data.outputs.filename}}"
+        run: 7z x -ogame-data/bw "$PWD/game-data/${{steps.game-data.outputs.filename}}"
+      - name: Add empty Audio directory
+        run: mkdir game-data/bw/Audio
       - name: Set Screenshot Position For Maps
         run: |
           'START_CAMERA_POS("1788.40,2710.00")' | Add-Content -Path game-data\bw\Scripts\Land1.txt
