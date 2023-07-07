@@ -9,27 +9,14 @@
 
 #pragma once
 
-#include "Loaders.h"
-#include "ResourceManager.h"
+#include "ResourcesInterface.h"
+
+#if !defined(LOCATOR_IMPLEMENTATIONS)
+#warning "Locator interface implementations should only be included in Locator.cpp, use interface instead."
+#endif
 
 namespace openblack::resources
 {
-using MeshManager = ResourceManager<L3DLoader>;
-using TextureManager = ResourceManager<Texture2DLoader>;
-using AnimationManager = ResourceManager<L3DAnimLoader>;
-using LevelManager = ResourceManager<LevelLoader>;
-using CreatureMindManager = ResourceManager<CreatureMindLoader>;
-
-class ResourcesInterface
-{
-public:
-	virtual MeshManager& GetMeshes() = 0;
-	virtual TextureManager& GetTextures() = 0;
-	virtual AnimationManager& GetAnimations() = 0;
-	virtual LevelManager& GetLevels() = 0;
-	virtual CreatureMindManager& GetCreatureMinds() = 0;
-};
-
 class Resources final: public ResourcesInterface
 {
 public:

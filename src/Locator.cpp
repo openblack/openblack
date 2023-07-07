@@ -17,6 +17,7 @@
 #include "ECS/Systems/Implementations/PathfindingSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/TownSystem.h"
+#include "Resources/Resources.h"
 
 using openblack::ecs::systems::CameraBookmarkSystem;
 using openblack::ecs::systems::DynamicsSystem;
@@ -24,11 +25,13 @@ using openblack::ecs::systems::LivingActionSystem;
 using openblack::ecs::systems::PathfindingSystem;
 using openblack::ecs::systems::RenderingSystem;
 using openblack::ecs::systems::TownSystem;
+using openblack::resources::Resources;
 
 namespace openblack::ecs::systems
 {
 void InitializeGame()
 {
+	Locator::resources::emplace<Resources>();
 	Locator::rendereringSystem::emplace<RenderingSystem>();
 }
 

@@ -25,7 +25,7 @@
 #include "Locator.h"
 #include "PotArchetype.h"
 #include "Resources/MeshId.h"
-#include "Resources/Resources.h"
+#include "Resources/ResourcesInterface.h"
 #include "Utils.h"
 
 using namespace openblack;

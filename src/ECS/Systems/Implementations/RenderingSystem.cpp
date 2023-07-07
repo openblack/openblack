@@ -23,7 +23,7 @@
 #include "Graphics/DebugLines.h"
 #include "Graphics/ShaderManager.h"
 #include "Locator.h"
-#include "Resources/Resources.h"
+#include "Resources/ResourcesInterface.h"
 
 using namespace openblack::ecs::systems;
 using namespace openblack::ecs::components;
