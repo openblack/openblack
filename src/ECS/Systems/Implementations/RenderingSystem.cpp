@@ -112,12 +112,11 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 		    auto offset = uniformOffsets.insert(std::make_pair(mesh.id, 0));
 		    auto desc = _renderContext.instancedDrawDescs.find(mesh.id);
 
-		    glm::mat4 modelMatrix = glm::mat4(1.0f);
-		    modelMatrix = glm::translate(modelMatrix, transform.position);
-		    modelMatrix *= glm::mat4(transform.rotation);
+		    auto modelMatrix = glm::mat4(transform.rotation);
+		    modelMatrix = glm::translate(modelMatrix, transform.position * transform.rotation);
 		    modelMatrix = glm::scale(modelMatrix, transform.scale);
 
-		    uint32_t idx = desc->second.offset + offset.first->second;
+		    const uint32_t idx = desc->second.offset + offset.first->second;
 		    _renderContext.instanceUniforms[idx] = modelMatrix;
 		    if (drawBoundingBox)
 		    {
