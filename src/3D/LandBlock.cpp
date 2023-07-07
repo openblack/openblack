@@ -15,6 +15,7 @@
 #include <LNDFile.h>
 
 #include "Dynamics/LandBlockBulletMeshInterface.h"
+#include "Graphics/Mesh.h"
 #include "Graphics/VertexBuffer.h"
 
 using namespace openblack;
@@ -241,4 +242,9 @@ glm::vec2 LandBlock::GetMapPosition() const
 {
 	assert(_block);
 	return {_block->mapX, _block->mapZ};
+}
+
+void LandBlock::SetLndBlock(const lnd::LNDBlock& block)
+{
+	_block = std::make_unique<lnd::LNDBlock>(block);
 }

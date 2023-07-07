@@ -17,7 +17,6 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-#include "Graphics/Mesh.h"
 #include "Graphics/ShaderProgram.h"
 #include "LandIslandInterface.h"
 
@@ -32,6 +31,11 @@ namespace lnd
 struct LNDBlock;
 struct LNDCell;
 } // namespace lnd
+
+namespace graphics
+{
+class Mesh;
+}
 
 struct LandVertex
 {
@@ -66,7 +70,7 @@ public:
 	[[nodiscard]] glm::vec2 GetMapPosition() const;
 	[[nodiscard]] std::unique_ptr<btRigidBody>& GetRigidBody() { return _rigidBody; };
 	[[nodiscard]] const std::unique_ptr<lnd::LNDBlock>& GetLndBlock() const { return _block; };
-	void SetLndBlock(lnd::LNDBlock block) { _block = std::make_unique<lnd::LNDBlock>(block); };
+	void SetLndBlock(const lnd::LNDBlock& block);
 
 private:
 	std::unique_ptr<lnd::LNDBlock> _block;

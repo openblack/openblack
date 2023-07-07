@@ -8,16 +8,15 @@
  *******************************************************************************/
 
 #pragma once
-#include <filesystem>
 
-#include <LNDFile.h>
+#include <filesystem>
+#include <vector>
+
 #include <entt/core/hashed_string.hpp>
 #include <glm/mat4x4.hpp>
 
 #include "Extent.h"
 #include "LandBlock.h"
-
-using LNDCell = openblack::lnd::LNDCell;
 
 namespace openblack
 {
@@ -27,6 +26,11 @@ namespace graphics
 class FrameBuffer;
 class Texture2D;
 } // namespace graphics
+namespace lnd
+{
+struct LNDCell;
+struct LNDCountry;
+} // namespace lnd
 class LandIslandInterface
 {
 public:
@@ -36,7 +40,7 @@ public:
 	static constexpr entt::hashed_string k_SmallBumpTextureId = entt::hashed_string("raw/smallbumpa");
 
 	[[nodiscard]] virtual float GetHeightAt(glm::vec2) const = 0;
-	[[nodiscard]] virtual const LNDCell& GetCell(const glm::u16vec2& coordinates) const = 0;
+	[[nodiscard]] virtual const lnd::LNDCell& GetCell(const glm::u16vec2& coordinates) const = 0;
 
 	// Debug
 	virtual void DumpTextures() const = 0;

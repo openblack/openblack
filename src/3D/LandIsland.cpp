@@ -17,13 +17,12 @@
 #include <LNDFile.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
-#include <glm/gtx/vec_swizzle.hpp>
 #include <spdlog/spdlog.h>
 
-#include "Common/IStream.h"
 #include "Common/stb_image_write.h"
 #include "Dynamics/LandBlockBulletMeshInterface.h"
 #include "Graphics/FrameBuffer.h"
+#include "Graphics/Mesh.h"
 #include "Graphics/Texture2D.h"
 
 using namespace openblack;
