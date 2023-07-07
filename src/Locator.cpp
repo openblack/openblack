@@ -11,6 +11,7 @@
 
 #define LOCATOR_IMPLEMENTATIONS
 
+#include "Common/RandomNumberManagerProduction.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
@@ -32,6 +33,7 @@ namespace openblack::ecs::systems
 void InitializeGame()
 {
 	Locator::resources::emplace<Resources>();
+	Locator::rng::emplace<RandomNumberManagerProduction>();
 	Locator::rendereringSystem::emplace<RenderingSystem>();
 }
 

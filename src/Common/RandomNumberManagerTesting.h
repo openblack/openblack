@@ -14,6 +14,10 @@
 
 #include "RandomNumberManager.h"
 
+#if !defined(LOCATOR_IMPLEMENTATIONS)
+#warning "Locator interface implementations should only be included in Locator.cpp, use interface instead."
+#endif
+
 namespace openblack
 {
 class RandomNumberManagerTesting final: public RandomNumberManagerInterface
