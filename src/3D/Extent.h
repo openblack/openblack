@@ -9,18 +9,17 @@
 
 #pragma once
 
-#include <glm/mat4x4.hpp>
+#include <glm/detail/qualifier.hpp>
 
 namespace openblack
 {
-struct Extent2D
+template <glm::length_t L, typename T, glm::qualifier Q = glm::defaultp>
+struct Extent
 {
-	glm::vec2 minimum;
-	glm::vec2 maximum;
+	glm::vec<L, T, Q> minimum;
+	glm::vec<L, T, Q> maximum;
 };
-struct IndexExtent
-{
-	glm::u16vec2 minimum;
-	glm::u16vec2 maximum;
-};
+
+using Extent2 = Extent<2, float>;
+using U16Extent2 = Extent<2, uint16_t>;
 } // namespace openblack

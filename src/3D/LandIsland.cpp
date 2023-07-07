@@ -62,7 +62,7 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	_landBlocks.resize(lndBlocks.size());
 	for (size_t i = 0; i < _landBlocks.size(); i++)
 	{
-		_landBlocks[i].GetLndBlock() = std::make_unique<lnd::LNDBlock>(lndBlocks[i]);
+		_landBlocks[i].SetLndBlock(lndBlocks[i]);
 	}
 
 	_extentIndexMin.x = std::numeric_limits<uint16_t>::max();

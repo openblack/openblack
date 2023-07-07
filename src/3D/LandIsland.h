@@ -55,8 +55,8 @@ public:
 
 	[[nodiscard]] glm::mat4 GetOrthoView() const override { return _view; }
 	[[nodiscard]] glm::mat4 GetOrthoProj() const override { return _proj; }
-	[[nodiscard]] IndexExtent GetIndexExtent() const override { return IndexExtent {_extentIndexMin, _extentIndexMax}; }
-	[[nodiscard]] Extent2D GetExtent() const override { return Extent2D {_extentMin, _extentMax}; }
+	[[nodiscard]] U16Extent2 GetIndexExtent() const override { return U16Extent2 {_extentIndexMin, _extentIndexMax}; }
+	[[nodiscard]] Extent2 GetExtent() const override { return Extent2 {_extentMin, _extentMax}; }
 
 	uint8_t GetNoise(glm::u8vec2 pos) override;
 

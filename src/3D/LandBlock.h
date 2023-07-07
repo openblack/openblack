@@ -65,7 +65,8 @@ public:
 	[[nodiscard]] glm::ivec2 GetBlockPosition() const;
 	[[nodiscard]] glm::vec2 GetMapPosition() const;
 	[[nodiscard]] std::unique_ptr<btRigidBody>& GetRigidBody() { return _rigidBody; };
-	[[nodiscard]] std::unique_ptr<lnd::LNDBlock>& GetLndBlock() { return _block; };
+	[[nodiscard]] const std::unique_ptr<lnd::LNDBlock>& GetLndBlock() const { return _block; };
+	void SetLndBlock(lnd::LNDBlock block) { _block = std::make_unique<lnd::LNDBlock>(block); };
 
 private:
 	std::unique_ptr<lnd::LNDBlock> _block;

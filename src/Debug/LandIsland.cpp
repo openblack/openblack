@@ -46,7 +46,7 @@ void LandIsland::Draw(openblack::Game& game)
 
 	if (ImGui::TreeNodeEx("Height Map", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		auto indexExtent = landIsland.GetIndexExtent();
+		const auto indexExtent = landIsland.GetIndexExtent();
 		const auto extentSize = indexExtent.maximum - indexExtent.minimum;
 		const auto dim = static_cast<uint16_t>(LandIslandInterface::k_CellCount) * extentSize;
 		const auto& texture = landIsland.GetHeightMap();
