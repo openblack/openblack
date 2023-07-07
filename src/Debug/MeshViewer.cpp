@@ -33,7 +33,7 @@
 #include "Locator.h"
 #include "Renderer.h"
 #include "Resources/MeshId.h"
-#include "Resources/Resources.h"
+#include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
 using namespace openblack::debug::gui;

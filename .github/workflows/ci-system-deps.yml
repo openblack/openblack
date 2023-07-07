@@ -3,6 +3,7 @@ on:
   pull_request:
   push:
     tags:
+      - '*'
     branches:
       - 'master'
 jobs:
@@ -16,59 +17,87 @@ jobs:
         - /sys/fs/cgroup:/sys/fs/cgroup
 
     steps:
-      - name: Install dependencies and configure system
+      - name: Adding build user and configure system
         run: |
-          pacman -Syu --noconfirm --noprogressbar --needed git cmake mesa libx11 fmt spdlog sdl2 glm bullet minizip cxxopts
           sed -E -i "s|#? ?MAKEFLAGS=.*|MAKEFLAGS=-j$(nproc)|" /etc/makepkg.conf
           useradd builduser -p ""
           printf 'builduser ALL=(ALL) ALL\n' >> /etc/sudoers
+          pacman -Syu --noconfirm --noprogressbar --needed git
           git config --global --add safe.directory /__w/openblack/openblack
 
-      - uses: actions/checkout@v2
+      - name: Clone the openblack repo
+        uses: actions/checkout@v3
+        with:
+          path: src
+
+      - name: Clone the openblack AUR files
+        run: |
+          git clone https://aur.archlinux.org/openblack-git.git ${GITHUB_WORKSPACE}/openblack-git
+          chown -R builduser ${GITHUB_WORKSPACE}/openblack-git
+
+      - name: Install non-AUR dependencies
+        shell: bash
+        run: |
+          source ${GITHUB_WORKSPACE}/openblack-git/PKGBUILD
+          export makedepends=${makedepends[@]}
+          export depends=${depends[@]}
+          export makedepends=${makedepends/bgfx-cmake-git/}
+          export depends=${depends/bgfx/}
+          export depends=${depends/entt/}
+          export depends=${depends/imgui/}
+          pacman -S --noconfirm --noprogressbar --needed mesa libx11 ${makedepends} ${depends}
 
       - name: Cache AUR Packages
         id: cache-packages
         uses: actions/cache@v2
         with:
           path: |
-            /tmp/entt/entt*.pkg.tar.*
-            /tmp/bgfx-cmake-git/bgfx-cmake-git*.pkg.tar.*
-            /tmp/imgui/imgui*.pkg.tar.*
+            entt/entt*.pkg.tar.*
+            bgfx-cmake-git/bgfx-cmake-git*.pkg.tar.*
+            imgui/imgui*.pkg.tar.*
           key: ${{ runner.os }}-cmake
 
-      - name: Build entt from the AUR
+      - name: Build ${{ env.PKG }} from the AUR
         if: steps.cache-packages.outputs.cache-hit != 'true'
         run: |
-          sudo -u builduser git clone https://aur.archlinux.org/entt.git /tmp/entt
-          cd /tmp/entt
+          git clone https://aur.archlinux.org/${{ env.PKG }}.git ${GITHUB_WORKSPACE}/${{ env.PKG }}
+          chown -R builduser ${GITHUB_WORKSPACE}/${{ env.PKG }}
+          cd ${GITHUB_WORKSPACE}/${{ env.PKG }}
           sudo -u builduser makepkg
+        env:
+          PKG: entt
 
-      - name: Build bgfx.cmake from the AUR
+      - name: Build ${{ env.PKG }} from the AUR
         if: steps.cache-packages.outputs.cache-hit != 'true'
         run: |
-          sudo -u builduser git clone https://aur.archlinux.org/bgfx-cmake-git.git /tmp/bgfx-cmake-git
-          cd /tmp/bgfx-cmake-git
+          git clone https://aur.archlinux.org/${{ env.PKG }}.git ${GITHUB_WORKSPACE}/${{ env.PKG }}
+          chown -R builduser ${GITHUB_WORKSPACE}/${{ env.PKG }}
+          cd ${GITHUB_WORKSPACE}/${{ env.PKG }}
           sudo -u builduser makepkg
+        env:
+          PKG: bgfx-cmake-git
 
-      - name: Build imgui from the AUR
+      - name: Build ${{ env.PKG }} from the AUR
         if: steps.cache-packages.outputs.cache-hit != 'true'
         run: |
-          sudo -u builduser git clone https://aur.archlinux.org/imgui.git /tmp/imgui
-          cd /tmp/imgui
+          git clone https://aur.archlinux.org/${{ env.PKG }}.git ${GITHUB_WORKSPACE}/${{ env.PKG }}
+          chown -R builduser ${GITHUB_WORKSPACE}/${{ env.PKG }}
+          cd ${GITHUB_WORKSPACE}/${{ env.PKG }}
           sudo -u builduser makepkg
+        env:
+          PKG: imgui
 
       - name: Install AUR dependencies
-        run: pacman -U --noconfirm --noprogressbar /tmp/entt/entt*.pkg.tar.* /tmp/bgfx-cmake-git/bgfx-cmake-git*.pkg.tar.* /tmp/imgui/imgui*.pkg.tar.*
+        run: pacman -U --noconfirm --noprogressbar ${GITHUB_WORKSPACE}/*/*.pkg.tar.*
 
       - name: Building and Packaging openblack from the AUR
         run: |
-          sudo -u builduser git clone https://aur.archlinux.org/openblack-git.git /tmp/openblack-git
-          cd /tmp/openblack-git
-          sed "s,source=.*,source=('openblack::git+file://${GITHUB_WORKSPACE}')," -i PKGBUILD
+          cd ${GITHUB_WORKSPACE}/openblack-git
+          sed "s,source=.*,source=('openblack::git+file://${GITHUB_WORKSPACE}/src')," -i PKGBUILD
           sudo -u builduser makepkg
 
       - uses: actions/upload-artifact@v3
         with:
           name: openblack-arch-linux-pkg-${{github.sha}}
-          path: /tmp/openblack-git/openblack-git*.pkg.tar.*
+          path: openblack-git/openblack-git*.pkg.tar.*
           if-no-files-found: error

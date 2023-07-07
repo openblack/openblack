@@ -33,7 +33,7 @@
 #include "3D/Water.h"
 #include "Common/EventManager.h"
 #include "Common/FileSystem.h"
-#include "Common/RandomNumberManagerProduction.h"
+#include "Common/RandomNumberManager.h"
 #include "Common/StringUtils.h"
 #include "Debug/Gui.h"
 #include "ECS/Archetypes/HandArchetype.h"
@@ -58,8 +58,7 @@
 #include "Profiler.h"
 #include "Renderer.h"
 #include "Resources/Loaders.h"
-#include "Resources/ResourceManager.h"
-#include "Resources/Resources.h"
+#include "Resources/ResourcesInterface.h"
 
 #ifdef _WIN32
 // clang-format off
@@ -476,8 +475,6 @@ bool Game::Update()
 
 bool Game::Initialize()
 {
-	Locator::resources::emplace<resources::Resources>();
-	Locator::rng::emplace<RandomNumberManagerProduction>();
 	ecs::systems::InitializeGame();
 	auto& resources = Locator::resources::value();
 	auto& meshManager = resources.GetMeshes();

@@ -103,6 +103,7 @@ jobs:
             cmake-build-presets/ninja-multi-vcpkg/test/mobile_wall_hug
             cmake-build-presets/ninja-multi-vcpkg/test/mock/Scripts
             cmake-build-presets/ninja-multi-vcpkg/test/mock/Data
+            cmake-build-presets/ninja-multi-vcpkg/test/mock/Audio
           if-no-files-found: error
 
     env:
@@ -131,7 +132,7 @@ jobs:
         id: review
         with:
           build_dir: cmake-build-presets/ninja-multi-vcpkg
-          exclude: "*ShaderIncluder.h,*json.hpp,*imgui_impl_sdl*,*stb_image_write.h"
+          exclude: "*ShaderIncluder.h,*json.hpp,*imgui_impl_sdl*,*stb_image_write.h,*dr_*.h"
           lgtm_comment_body: "" # don't post a lgtm message
           annotations: false
       - name: If there are any comments, fail the check
@@ -167,6 +168,8 @@ jobs:
           target: game-data
       - name: Extract Game Data
         run: 7z x -ogame-data/bw "$PWD/game-data/${{steps.game-data.outputs.filename}}"
+      - name: Add empty Audio directory
+        run: mkdir game-data/bw/Audio
       - name: Enable execute permissions on binary
         run: chmod +x ${{steps.download-binary.outputs.download-path}}/*/*
         if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
@@ -186,12 +189,18 @@ jobs:
               valgrind --tool=memcheck --track-origins=yes --leak-check=full -s --error-exitcode=1 "$test"
           done
         if: startsWith(matrix.os, 'ubuntu')
+        env:
+          ALSOFT_DRIVERS: "null" # avoid using also which fails, then leaks memory outside of project
       - name: Check openblack for memory leaks (Mock)
         run: valgrind --tool=memcheck --track-origins=yes --leak-check=full -s --error-exitcode=1 ${{steps.download-binary.outputs.download-path}}/Debug/openblack -g ${{steps.download-test.outputs.download-path}}/mock -b Noop --num-frames-to-simulate 10  --log-level all=error
         if: startsWith(matrix.os, 'ubuntu')
+        env:
+          ALSOFT_DRIVERS: "null" # avoid using also which fails, then leaks memory outside of project
       - name: Check openblack for memory leaks (Real)
         run: valgrind --tool=memcheck --track-origins=yes --leak-check=full -s --error-exitcode=1 ${{steps.download-binary.outputs.download-path}}/Debug/openblack -g game-data/bw -b Noop --num-frames-to-simulate 10  --log-level all=error
         if: startsWith(matrix.os, 'ubuntu')
+        env:
+          ALSOFT_DRIVERS: "null" # avoid using also which fails, then leaks memory outside of project
 
   screenshot:
     needs: run

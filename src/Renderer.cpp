@@ -39,7 +39,7 @@
 #include "Locator.h"
 #include "Profiler.h"
 #include "Resources/ResourceManager.h"
-#include "Resources/Resources.h"
+#include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
 using namespace openblack::graphics;
