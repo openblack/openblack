@@ -9,13 +9,82 @@
 
 #include "AudioPlayer.h"
 
+#include <cstdlib>
+
+#include <array>
 #include <random>
 
 #include <fmt/format.h>
+#include <spdlog/spdlog.h>
 
 #include "AlCheck.h"
 
 using namespace openblack::audio;
+
+void ALC_APIENTRY AudioPlayerAlLogger([[maybe_unused]] void* userptr, char level, const char* message,
+                                      [[maybe_unused]] int length) noexcept
+{
+	switch (level)
+	{
+	case 'E':
+		SPDLOG_LOGGER_ERROR(spdlog::get("audio"), "{}", message);
+		break;
+	case 'W':
+		SPDLOG_LOGGER_WARN(spdlog::get("audio"), "{}", message);
+		break;
+	case 'I':
+		SPDLOG_LOGGER_INFO(spdlog::get("audio"), "{}", message);
+		break;
+	}
+}
+
+void AudioPlayer::SetupLogging()
+{
+	auto* alsoftSetLogCallback = reinterpret_cast<void (*)(void (*)(void*, char, const char*, int) noexcept, void*) noexcept>(
+	    alcGetProcAddress(nullptr, "alsoft_set_log_callback"));
+	if (alsoftSetLogCallback != nullptr)
+	{
+		alsoftSetLogCallback(AudioPlayerAlLogger, nullptr);
+	}
+	else
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Could not set openal logging callback");
+		SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Falling back to tracing directly in openal");
+		enum class LogLevel
+		{
+			Disable,
+			Error,
+			Warning,
+			Trace
+		};
+		LogLevel level;
+		switch (spdlog::get("audio")->level())
+		{
+		case spdlog::level::trace:
+		case spdlog::level::debug:
+		case spdlog::level::info:
+			level = LogLevel::Trace;
+			break;
+		case spdlog::level::warn:
+			level = LogLevel::Warning;
+			break;
+		case spdlog::level::err:
+		case spdlog::level::critical:
+			level = LogLevel::Error;
+			break;
+		default:
+			level = LogLevel::Disable;
+			break;
+		}
+		std::array<char, 2> levelStr = {'0', '\0'};
+		levelStr[0] += static_cast<char>(level);
+#if defined(_MSC_VER)
+		_putenv_s("ALSOFT_LOGLEVEL", levelStr.data());
+#else
+		setenv("ALSOFT_LOGLEVEL", levelStr.data(), 0);
+#endif
+	}
+}
 
 void AudioPlayer::Initialize()
 {
@@ -133,9 +202,15 @@ float AudioPlayer::GetVolume() const
 }
 
 AudioPlayer::AudioPlayer()
-    : _device(alcOpenDevice(nullptr), DeleteDevice)
-    , _context(alcCreateContext(_device.get(), nullptr), DeleteContext)
+    : _device(nullptr, DeleteDevice)
+    , _context(nullptr, DeleteContext)
 {
+	// Register audio logging before doing any other calls to openal
+	SetupLogging();
+
+	_device = decltype(_device)(alcOpenDevice(nullptr), DeleteDevice);
+	_context = decltype(_context)(alcCreateContext(_device.get(), nullptr), DeleteContext);
+
 	if (!_device)
 	{
 		throw std::runtime_error(fmt::format("Error creating audio device {}", alcGetString(nullptr, alcGetError(nullptr))));
