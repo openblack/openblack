@@ -23,10 +23,19 @@
 
 using namespace openblack;
 
-Camera::Camera()
-    : _model(CameraModel::CreateModel(CameraModel::Model::Old))
+namespace
+{
+constexpr auto k_DefaultCameraOriginOffset = glm::vec3(0.0f, 0.0f, 120.0f);
+}
+
+Camera::Camera(glm::vec3 focus)
+    : _origin(focus + k_DefaultCameraOriginOffset)
+    , _focus(focus)
+    , _model(CameraModel::CreateModel(CameraModel::Model::Old))
 {
 }
+
+Camera::~Camera() = default;
 
 float Camera::GetHorizontalFieldOfView() const
 {
