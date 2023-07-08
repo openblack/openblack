@@ -695,10 +695,6 @@ void Camera::Update(std::chrono::microseconds dt)
 		_hVelocity *= _handDragMult;
 		_position += rotation * (_velocity + _hVelocity) * fdt;
 	}
-	if (!Locator::terrainSystem::has_value())
-	{
-		throw std::runtime_error("Cannot get landscape before any are loaded");
-	}
 	const auto& land = Locator::terrainSystem::value();
 
 	auto height = land.GetHeightAt(glm::vec2(_position.x + 5, _position.z + 5));

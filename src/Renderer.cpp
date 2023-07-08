@@ -285,10 +285,6 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 		return;
 	}
 
-	if (!Locator::terrainSystem::has_value())
-	{
-		throw std::runtime_error("Cannot get landscape before any are loaded");
-	}
 	const auto& island = Locator::terrainSystem::value();
 
 	auto extent = island.GetExtent();
@@ -402,10 +398,6 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 	auto section = drawDesc.profiler.BeginScoped(Profiler::Stage::FootprintPass);
 	if (drawDesc.drawIsland)
 	{
-		if (!Locator::terrainSystem::has_value())
-		{
-			throw std::runtime_error("Cannot get landscape before any are loaded");
-		}
 		const auto& island = Locator::terrainSystem::value();
 		island.GetFootprintFramebuffer().Bind(viewId);
 

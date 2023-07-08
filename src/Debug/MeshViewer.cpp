@@ -365,10 +365,6 @@ void MeshViewer::Update(Game& game, const Renderer& renderer)
 	auto& registry = game.GetEntityRegistry();
 	const auto& handTransform = registry.Get<Transform>(game.GetHand());
 	_handPosition = handTransform.position;
-	if (!Locator::terrainSystem::has_value())
-	{
-		throw std::runtime_error("Cannot get landscape before any are loaded");
-	}
 	_handPosition.y = Locator::terrainSystem::value().GetHeightAt(glm::xz(_handPosition));
 }
 
