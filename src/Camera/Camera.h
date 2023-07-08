@@ -26,8 +26,8 @@ namespace openblack
 class Camera
 {
 public:
-	Camera();
-	virtual ~Camera() = default;
+	explicit Camera(glm::vec3 focus = glm::vec3(1000.0f, 0.0f, 1000.0f));
+	virtual ~Camera();
 
 	[[nodiscard]] virtual float GetHorizontalFieldOfView() const;
 	[[nodiscard]] virtual glm::mat4 GetViewMatrix() const;

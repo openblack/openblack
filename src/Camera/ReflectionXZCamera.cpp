@@ -9,7 +9,14 @@
 
 #include "ReflectionXZCamera.h"
 
+#include <glm/gtc/constants.hpp>
+
 using namespace openblack;
+
+ReflectionXZCamera::ReflectionXZCamera()
+    : Camera(glm::zero<glm::vec3>())
+{
+}
 
 glm::mat4 ReflectionXZCamera::GetViewMatrix() const
 {

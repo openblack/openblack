@@ -886,7 +886,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 
 	// create our camera
 	const auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
-	_camera = std::make_unique<Camera>();
+	_camera = std::make_unique<Camera>(glm::zero<glm::vec3>());
 	(*_camera)
 	    .SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip)
 	    .SetOrigin(glm::vec3(1441.56f, 24.764f, 2081.76f))

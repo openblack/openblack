@@ -17,6 +17,7 @@ namespace openblack
 class ReflectionXZCamera final: public Camera
 {
 public:
+	ReflectionXZCamera();
 	[[nodiscard]] glm::mat4 GetViewMatrix() const final;
 };
 } // namespace openblack
