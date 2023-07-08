@@ -41,7 +41,7 @@ glm::mat4 Camera::GetRotationMatrix() const
 glm::mat4 Camera::GetViewMatrix() const
 {
 	// Invert the camera's rotation (transposed) and position (negated) to get the view matrix.
-	return glm::lookAt(_position, _focus, glm::vec3(0.0f, 1.0f, 0.0f));
+	return glm::lookAt(_origin, _focus, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 glm::mat4 Camera::GetViewProjectionMatrix() const
@@ -115,7 +115,7 @@ std::unique_ptr<Camera> Camera::Reflect() const
 	// TODO(bwrsandman): The copy to reflection camera has way too much of Camera including model which is useless
 	//                   This also touches on other cameras such as the citadel camera which use a different kind of model
 	auto reflectionCamera = std::make_unique<ReflectionXZCamera>();
-	(*reflectionCamera).SetPosition(_position).SetFocus(_focus).SetProjectionMatrix(_projectionMatrix);
+	(*reflectionCamera).SetOrigin(_origin).SetFocus(_focus).SetProjectionMatrix(_projectionMatrix);
 	return reflectionCamera;
 }
 
@@ -185,7 +185,7 @@ void Camera::Update(std::chrono::microseconds dt)
 
 	if (updateInfo)
 	{
-		SetPosition(updateInfo->origin);
+		SetOrigin(updateInfo->origin);
 		SetFocus(updateInfo->focus);
 	}
 }
@@ -200,9 +200,9 @@ const glm::mat4& Camera::GetProjectionMatrix() const
 	return _projectionMatrix;
 }
 
-glm::vec3 Camera::GetPosition() const
+glm::vec3 Camera::GetOrigin() const
 {
-	return _position;
+	return _origin;
 }
 
 glm::vec3 Camera::GetFocus() const
@@ -210,10 +210,10 @@ glm::vec3 Camera::GetFocus() const
 	return _focus;
 }
 
-glm::vec3 Camera::GetTargetPosition() const
+glm::vec3 Camera::GetTargetOrigin() const
 {
 	// TODO: Camera should interpolate between current state and target with a modified sigmoid interpolation
-	return _position;
+	return _origin;
 }
 
 glm::vec3 Camera::GetTargetFocus() const
@@ -246,9 +246,9 @@ glm::vec3 Camera::GetRotation() const
 	return {pitch, yaw, 0.0f};
 }
 
-Camera& Camera::SetPosition(const glm::vec3& position)
+Camera& Camera::SetOrigin(const glm::vec3& position)
 {
-	_position = position;
+	_origin = position;
 
 	return *this;
 }

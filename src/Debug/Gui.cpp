@@ -820,7 +820,7 @@ void Gui::ShowVillagerNames(const Game& game)
 
 		    // 3.5 was measured in vanilla but it is possible that it is configurable
 		    float const maxDistance = 3.5f;
-		    const glm::vec3 relativePosition = (camera.GetPosition() - transform.position) / 100.0f;
+		    const glm::vec3 relativePosition = (camera.GetOrigin() - transform.position) / 100.0f;
 		    if (glm::dot(relativePosition, relativePosition) > maxDistance * maxDistance)
 		    {
 			    return;
@@ -937,7 +937,7 @@ void Gui::ShowCameraPositionOverlay(const Game& game)
 
 	if (ImGui::Begin("Camera position overlay", nullptr, cameraPositionOverlayFlags))
 	{
-		const auto camPos = game.GetCamera().GetPosition();
+		const auto camPos = game.GetCamera().GetOrigin();
 		const auto camRot = glm::degrees(game.GetCamera().GetRotation());
 		ImGui::Text("Camera Position: (%.1f,%.1f,%.1f)", camPos.x, camPos.y, camPos.z);
 		ImGui::Text("Camera Rotation: (%.1f,%.1f,%.1f)", camRot.x, camRot.y, camRot.z);

@@ -45,7 +45,7 @@ void OldCameraModel::HandleActions([[maybe_unused]] std::chrono::microseconds dt
 
 	const auto& actionSystem = Locator::gameActionSystem::value();
 
-	_targetPosition = camera.GetPosition();
+	_targetPosition = camera.GetOrigin();
 	_targetRotation = camera.GetRotation();
 
 	if (actionSystem.Get(input::UnbindableActionMap::DOUBLE_CLICK))
@@ -327,7 +327,7 @@ void OldCameraModel::HandleActions([[maybe_unused]] std::chrono::microseconds dt
 		}
 	}
 
-	camera.SetPosition(GetTargetPosition());
+	camera.SetOrigin(GetTargetOrigin());
 	camera.SetFocus(GetTargetFocus());
 }
 
@@ -384,7 +384,7 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> OldCameraModel::Update
 
 	if (_handDragMult > 0.0f)
 	{
-		const auto cameraPosition = camera.GetPosition();
+		const auto cameraPosition = camera.GetOrigin();
 		const auto cameraForward = camera.GetForward();
 		auto momentum = cameraPosition.y / 300;
 		auto forward =
@@ -424,7 +424,7 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> OldCameraModel::Update
 		_handDragMult = 0.0f;
 	}
 
-	auto cameraPosition = camera.GetPosition();
+	auto cameraPosition = camera.GetOrigin();
 	if (_flyInProgress)
 	{
 		cameraPosition =
@@ -485,7 +485,7 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> OldCameraModel::Update
 	}
 	const auto& land = Locator::terrainSystem::value();
 
-	cameraPosition = camera.GetPosition();
+	cameraPosition = camera.GetOrigin();
 	auto height = land.GetHeightAt(glm::xz(cameraPosition) + 5.0f);
 	// stop the camera from going below ground level.
 	_targetPosition =
@@ -516,10 +516,10 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> OldCameraModel::Update
 	_rotVelocity *= airResistance;
 	_mouseIsMoving = false;
 
-	return {{GetTargetPosition(), GetTargetFocus()}};
+	return {{GetTargetOrigin(), GetTargetFocus()}};
 }
 
-glm::vec3 OldCameraModel::GetTargetPosition() const
+glm::vec3 OldCameraModel::GetTargetOrigin() const
 {
 	return _targetPosition;
 }

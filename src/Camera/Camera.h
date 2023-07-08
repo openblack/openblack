@@ -37,9 +37,9 @@ public:
 	[[nodiscard]] std::optional<ecs::components::Transform> RaycastMouseToLand() const;
 	[[nodiscard]] std::optional<ecs::components::Transform> RaycastScreenCoordToLand(glm::vec2 screenCoord) const;
 
-	[[nodiscard]] glm::vec3 GetPosition() const;
+	[[nodiscard]] glm::vec3 GetOrigin() const;
 	[[nodiscard]] glm::vec3 GetFocus() const;
-	[[nodiscard]] glm::vec3 GetTargetPosition() const;
+	[[nodiscard]] glm::vec3 GetTargetOrigin() const;
 	[[nodiscard]] glm::vec3 GetTargetFocus() const;
 
 	[[nodiscard]] glm::vec3 GetVelocity() const;
@@ -47,7 +47,7 @@ public:
 	/// Get rotation as euler angles in radians
 	[[nodiscard]] glm::vec3 GetRotation() const;
 
-	Camera& SetPosition(const glm::vec3& position);
+	Camera& SetOrigin(const glm::vec3& position);
 	Camera& SetFocus(const glm::vec3& position);
 
 	Camera& SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip);
@@ -68,7 +68,7 @@ public:
 	[[nodiscard]] glm::mat4 GetRotationMatrix() const;
 
 protected:
-	glm::vec3 _position = glm::vec3();
+	glm::vec3 _origin = glm::vec3();
 	glm::vec3 _focus = glm::vec3(0.0f, 0.0f, 1.0f);
 	float _xFov = 0.0f; // TODO(#707): This should be a zoomer for animations
 	glm::mat4 _projectionMatrix = glm::mat4 {1.0f};
