@@ -17,7 +17,7 @@
 #include <spdlog/spdlog.h>
 
 #include "3D/L3DMesh.h"
-#include "3D/LandIsland.h"
+#include "3D/LandIslandInterface.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
@@ -196,7 +196,7 @@ void PathFinding::Update(Game& game, [[maybe_unused]] const openblack::Renderer&
 		return;
 	}
 	_handPosition = handTransform.position;
-	_handPosition.y = game.GetLandIsland().GetHeightAt(glm::xz(_handPosition));
+	_handPosition.y = Locator::terrainSystem::value().GetHeightAt(glm::xz(_handPosition));
 
 	if (_handTo == HandTo::Entity)
 	{

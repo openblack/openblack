@@ -11,7 +11,7 @@
 
 #include "CameraBookmarkSystem.h"
 
-#include "3D/LandIsland.h"
+#include "3D/LandIslandInterface.h"
 #include "ECS/Archetypes/CameraBookmarkArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
 #include "ECS/Components/Transform.h"

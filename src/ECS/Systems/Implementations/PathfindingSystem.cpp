@@ -19,7 +19,7 @@
 #include <glm/gtx/vec_swizzle.hpp>
 #include <spdlog/spdlog.h>
 
-#include "3D/LandIsland.h"
+#include "3D/LandIslandInterface.h"
 #include "ECS/Components/Field.h"
 #include "ECS/Components/Fixed.h"
 #include "ECS/Components/Transform.h"
@@ -27,6 +27,7 @@
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
 #include "Game.h"
+#include "Locator.h"
 
 using namespace openblack;
 using namespace openblack::ecs;
@@ -368,7 +369,7 @@ void ApplyStepGoal(ecs::Registry& registry, Exclude... exclude)
 {
 	registry.Each<const MoveStateTagComponent<S>, Transform>(
 	    [](const MoveStateTagComponent<S>& state, Transform& transform) {
-		    const float altitude = Game::Instance()->GetLandIsland().GetHeightAt(state.stepGoal);
+		    const float altitude = Locator::terrainSystem::value().GetHeightAt(state.stepGoal);
 		    transform.position = glm::xzy(glm::vec3(state.stepGoal, altitude));
 	    },
 	    exclude...);

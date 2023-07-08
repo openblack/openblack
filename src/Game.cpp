@@ -28,7 +28,7 @@
 
 #include "3D/Camera.h"
 #include "3D/CreatureBody.h"
-#include "3D/LandIsland.h"
+#include "3D/LandIslandInterface.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
 #include "Common/EventManager.h"
@@ -187,10 +187,10 @@ Game::~Game()
 	Locator::livingActionSystem::reset();
 	Locator::townSystem::reset();
 	Locator::pathfindingSystem::reset();
+	Locator::terrainSystem::reset();
 
 	_water.reset();
 	_sky.reset();
-	_landIsland.reset();
 	_entityRegistry.reset();
 	_gui.reset();
 	_renderer.reset();
@@ -693,7 +693,7 @@ bool Game::Run()
 	{
 		uint16_t width;
 		uint16_t height;
-		_landIsland->GetFootprintFramebuffer().GetSize(width, height);
+		Locator::terrainSystem::value().GetFootprintFramebuffer().GetSize(width, height);
 		_renderer->ConfigureView(graphics::RenderPass::Footprint, width, height, 0x00000000);
 	}
 
@@ -714,7 +714,6 @@ bool Game::Run()
 			    /*frameBuffer =*/nullptr,
 			    /*sky =*/*_sky,
 			    /*water =*/*_water,
-			    /*island =*/*_landIsland,
 			    /*entities =*/*_entityRegistry,
 			    /*time =*/milliseconds.count(), // TODO(#481): get actual time
 			    /*timeOfDay =*/_config.timeOfDay,
@@ -811,11 +810,6 @@ void Game::LoadMap(const std::filesystem::path& path)
 
 void Game::LoadLandscape(const std::filesystem::path& path)
 {
-	ecs::systems::InitializeLevel();
-	if (_landIsland)
-	{
-		_landIsland.reset();
-	}
 
 	auto fixedName = Game::Instance()->GetFileSystem().FindPath(FileSystem::FixPath(path));
 
@@ -823,12 +817,10 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	{
 		throw std::runtime_error("Could not find landscape " + path.generic_string());
 	}
-
-	_landIsland = std::make_unique<LandIsland>();
-	_landIsland->LoadFromFile(fixedName);
+	ecs::systems::InitializeLevel(fixedName);
 
 	Locator::cameraBookmarkSystem::value().Initialize();
-	Locator::dynamicsSystem::value().RegisterIslandRigidBodies(*_landIsland);
+	Locator::dynamicsSystem::value().RegisterIslandRigidBodies(Locator::terrainSystem::value());
 }
 
 bool Game::LoadVariables()

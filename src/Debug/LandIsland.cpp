@@ -11,10 +11,11 @@
 
 #include <LNDFile.h>
 
-#include "3D/LandIsland.h"
+#include "3D/LandIslandInterface.h"
 #include "Game.h"
 #include "Graphics/FrameBuffer.h"
 #include "Gui.h"
+#include "Locator.h"
 
 using namespace openblack::debug::gui;
 
@@ -27,7 +28,7 @@ void LandIsland::Draw(openblack::Game& game)
 {
 	auto& config = game.GetConfig();
 
-	const auto& landIsland = game.GetLandIsland();
+	const auto& landIsland = Locator::terrainSystem::value();
 
 	ImGui::SliderFloat("Bump", &config.bumpMapStrength, 0.0f, 1.0f, "%.3f");
 	ImGui::SliderFloat("Small Bump", &config.smallBumpMapStrength, 0.0f, 1.0f, "%.3f");
@@ -41,11 +42,9 @@ void LandIsland::Draw(openblack::Game& game)
 
 	if (ImGui::TreeNodeEx("Height Map", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		glm::u16vec2 extentMin;
-		glm::u16vec2 extentMax;
-		landIsland.GetIndexExtent(extentMin, extentMax);
-		const auto extentSize = extentMax - extentMin;
-		const auto dim = static_cast<uint16_t>(openblack::LandIsland::k_CellCount) * extentSize;
+		const auto indexExtent = landIsland.GetIndexExtent();
+		const auto extentSize = indexExtent.maximum - indexExtent.minimum;
+		const auto dim = static_cast<uint16_t>(LandIslandInterface::k_CellCount) * extentSize;
 		const auto& texture = landIsland.GetHeightMap();
 		ImGui::Text("Resolution: %ux%u", dim.x, dim.y);
 		float scaling = 512.0f / static_cast<float>(dim.x);

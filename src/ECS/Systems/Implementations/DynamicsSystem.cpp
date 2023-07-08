@@ -23,7 +23,7 @@
 #include <glm/gtx/rotate_vector.hpp>
 
 #include "3D/LandBlock.h"
-#include "3D/LandIsland.h"
+#include "3D/LandIslandInterface.h"
 #include "ECS/Components/RigidBody.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
@@ -86,7 +86,7 @@ void DynamicsSystem::RegisterRigidBodies()
 	});
 }
 
-void DynamicsSystem::RegisterIslandRigidBodies(LandIsland& island)
+void DynamicsSystem::RegisterIslandRigidBodies(LandIslandInterface& island)
 {
 	auto& landBlocks = island.GetBlocks();
 	for (uint32_t i = 0; i < landBlocks.size(); ++i)

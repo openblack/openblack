@@ -11,6 +11,9 @@
 
 #define LOCATOR_IMPLEMENTATIONS
 
+#include "3D/LandIsland.h"
+#include "3D/LandIslandInterface.h"
+#include "3D/UnloadedIsland.h"
 #include "Common/RandomNumberManagerProduction.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
@@ -32,17 +35,19 @@ namespace openblack::ecs::systems
 {
 void InitializeGame()
 {
+	Locator::terrainSystem::emplace<UnloadedIsland>();
 	Locator::resources::emplace<Resources>();
 	Locator::rng::emplace<RandomNumberManagerProduction>();
 	Locator::rendereringSystem::emplace<RenderingSystem>();
 }
 
-void InitializeLevel()
+void InitializeLevel(const std::filesystem::path& path)
 {
 	Locator::dynamicsSystem::emplace<DynamicsSystem>();
 	Locator::livingActionSystem::emplace<LivingActionSystem>();
 	Locator::townSystem::emplace<TownSystem>();
 	Locator::pathfindingSystem::emplace<PathfindingSystem>();
 	Locator::cameraBookmarkSystem::emplace<CameraBookmarkSystem>();
+	Locator::terrainSystem::emplace<LandIsland>(path);
 }
 } // namespace openblack::ecs::systems

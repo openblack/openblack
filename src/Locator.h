@@ -9,12 +9,14 @@
 
 #pragma once
 
+#include <filesystem>
+
 #include <entt/locator/locator.hpp>
 
 namespace openblack
 {
-
 class RandomNumberManagerInterface;
+class LandIslandInterface;
 
 namespace resources
 {
@@ -31,13 +33,14 @@ class TownSystemInterface;
 class PathfindingSystemInterface;
 
 void InitializeGame();
-void InitializeLevel();
+void InitializeLevel(const std::filesystem::path& path);
 } // namespace ecs::systems
 
 struct Locator
 {
 	using resources = entt::locator<resources::ResourcesInterface>;
 	using rng = entt::locator<RandomNumberManagerInterface>;
+	using terrainSystem = entt::locator<LandIslandInterface>;
 	using rendereringSystem = entt::locator<ecs::systems::RenderingSystemInterface>;
 	using dynamicsSystem = entt::locator<ecs::systems::DynamicsSystemInterface>;
 	using cameraBookmarkSystem = entt::locator<ecs::systems::CameraBookmarkSystemInterface>;
