@@ -219,6 +219,10 @@ else ()
             -Wno-missing-field-initializers
             -Wno-deprecated-declarations
   )
+
+  if (OPENBLACK_TRACE_TIME AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options(openblack_lib PRIVATE -ftime-trace)
+  endif ()
   if (OPENBLACK_WARNINGS_AS_ERRORS)
     target_compile_options(openblack_lib PRIVATE -Werror)
   endif ()
