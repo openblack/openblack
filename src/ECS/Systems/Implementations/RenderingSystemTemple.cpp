@@ -44,7 +44,7 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 	                                          const TempleInteriorPart& templePart) {
 		auto l3dMesh = entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(mesh.id);
 		auto box = l3dMesh->GetBoundingBox();
-		auto cameraInsideRoom = box.Contains(camera.GetPosition() - transform.position);
+		auto cameraInsideRoom = box.Contains(camera.GetOrigin() - transform.position);
 		if (cameraInsideRoom)
 		{
 			loadedRooms.emplace(templePart.room);

@@ -92,7 +92,7 @@ void TempleInterior::Activate()
 	auto& config = Game::Instance()->GetConfig();
 	auto& camera = Game::Instance()->GetCamera();
 
-	_playerPositionOutside = camera.GetPosition();
+	_playerPositionOutside = camera.GetOrigin();
 	_playerRotationOutside = camera.GetRotation();
 
 	config.drawIsland = false;
@@ -108,7 +108,7 @@ void TempleInterior::Activate()
 	}
 
 	Locator::rendereringSystem::emplace<ecs::systems::RenderingSystemTemple>();
-	camera.SetPosition(_templePosition);
+	camera.SetOrigin(_templePosition);
 	camera.SetFocus(_templePosition + glm::quat(_templeRotation) * glm::vec3(0.0f, 0.0f, 1.0f));
 	_active = true;
 }
@@ -129,7 +129,7 @@ void TempleInterior::Deactivate()
 
 	auto& camera = Game::Instance()->GetCamera();
 	Locator::rendereringSystem::emplace<ecs::systems::RenderingSystem>();
-	camera.SetPosition(_playerPositionOutside);
+	camera.SetOrigin(_playerPositionOutside);
 	camera.SetFocus(_playerPositionOutside + glm::quat(_playerRotationOutside) * glm::vec3(0.0f, 0.0f, 1.0f));
 	_active = false;
 }
