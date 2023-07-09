@@ -71,7 +71,7 @@ void Audio::Emitters()
 	}
 	ImGui::EndChild();
 	ImGui::SameLine();
-	ImGui::BeginChild("Sounds", ImVec2(ImGui::GetContentRegionAvail().x - 50, ImGui::GetContentRegionAvail().y), true);
+	ImGui::BeginChild("Sounds", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y), true);
 	ImGui::Separator();
 	ImGui::Columns(2, "SoundColumns", true);
 	ImGui::Text("Name / Play");
@@ -126,7 +126,7 @@ void Audio::Music()
 	_playType = static_cast<PlayType>(currentCombo);
 	ImGui::Separator();
 	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-	ImGui::BeginChild("MusicPacks", ImVec2(ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y), true);
+	ImGui::BeginChild("MusicPacks", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y), true);
 	ImGui::Columns(1, "MusicPackColumns", true);
 	ImGui::Separator();
 	ImGui::Text("Name");
@@ -161,7 +161,8 @@ void Audio::AudioSettings()
 	}
 
 	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-	ImGui::BeginChild("Audio Handler Settings", ImVec2(500, ImGui::GetContentRegionAvail().y), true);
+	ImGui::BeginChild("Audio Handler Settings", ImVec2(ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y),
+	                  true);
 	ImGui::Text("Audio handler settings");
 	ImGui::Separator();
 	ImGui::Text("Active Emitters");
@@ -204,12 +205,6 @@ void Audio::AudioSettings()
 		    }
 		    ImGui::NextColumn();
 	    });
-	ImGui::EndChild();
-	ImGui::SameLine();
-	ImGui::BeginChild("Audio Decoder Settings", ImVec2(500, ImGui::GetContentRegionAvail().y), true);
-	ImGui::Separator();
-	ImGui::Text("Audio Decoder settings");
-	ImGui::Separator();
 	ImGui::EndChild();
 	ImGui::SameLine();
 	ImGui::BeginChild("Audio Player Settings", ImGui::GetContentRegionAvail(), true);
