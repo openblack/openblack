@@ -17,6 +17,7 @@
 #include "Common/Bitmap16B.h"
 #include "Common/StringUtils.h"
 #include "FileSystem/FileSystemInterface.h"
+#include "Locator.h"
 
 using namespace openblack::filesystem;
 using namespace openblack::graphics;
@@ -26,11 +27,13 @@ namespace openblack
 
 Sky::Sky()
 {
+	auto& fileSystem = Locator::filesystem::value();
+
 	SetDayNightTimes(4.5, 7.0, 7.5, 8.25);
 
 	// load in the mesh
 	_model = std::make_unique<L3DMesh>("Sky");
-	_model->LoadFromFile(FileSystemInterface::WeatherSystemPath() / "sky.l3d");
+	_model->LoadFromFile(fileSystem.GetPath<filesystem::Path::WeatherSystem>() / "sky.l3d");
 
 	for (uint32_t idx = 0; const auto& alignment : k_Alignments)
 	{
@@ -44,7 +47,7 @@ Sky::Sky()
 				prefix = string_utils::Capitalise(prefix);
 			}
 			const auto filename = fmt::format("{}_{}_{}.555", prefix, alignment, time);
-			const auto path = FileSystemInterface::WeatherSystemPath() / filename;
+			const auto path = fileSystem.GetPath<filesystem::Path::WeatherSystem>() / filename;
 			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading sky texture: {}", path.generic_string());
 
 			Bitmap16B* bitmap = Bitmap16B::LoadFromFile(path);
