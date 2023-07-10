@@ -36,6 +36,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Enums.h"
+#include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
@@ -537,7 +538,8 @@ void FeatureScriptCommands::CreateCreatureFromFile(const std::string& playerName
 	auto scale = .3f;
 	auto& resources = Locator::resources::value();
 	auto& creatureMindManager = resources.GetCreatureMinds();
-	auto creatureMindPath = Game::Instance()->GetGamePath() / "Scripts/CreatureMind" / creatureMind;
+	auto creatureMindPath =
+	    Locator::filesystem::value().GetGamePath() / filesystem::FileSystemInterface::CreatureMindPath() / creatureMind;
 	auto loadResult = creatureMindManager.Load(creatureMind, resources::CreatureMindLoader::FromDiskTag {}, creatureMindPath);
 	auto creatureMindId = loadResult.first->first;
 	CreatureArchetype::Create(position, static_cast<PlayerNames>(playerType), creatureType, creatureMindId, yAngleRadians,

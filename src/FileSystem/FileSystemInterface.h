@@ -25,6 +25,7 @@ public:
 	static inline std::filesystem::path ScriptsPath() { return "Scripts"; }
 	static inline std::filesystem::path PlaygroundPath() { return ScriptsPath() / "Playgrounds"; }
 	static inline std::filesystem::path QuestsPath() { return ScriptsPath() / "Quests"; }
+	static inline std::filesystem::path CreatureMindPath() { return ScriptsPath() / "CreatureMind"; }
 	static inline std::filesystem::path DataPath() { return "Data"; }
 	static inline std::filesystem::path MiscPath() { return DataPath() / "Misc"; }
 	static inline std::filesystem::path SymbolsPath() { return DataPath() / "Symbols"; }

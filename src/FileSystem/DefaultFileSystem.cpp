@@ -14,7 +14,17 @@
 #include <cctype>
 #include <cstddef>
 
+#include <spdlog/spdlog.h>
+
 #include "FileStream.h"
+
+#ifdef _WIN32
+// clang-format off
+// can't sort these includes
+#include <wtypes.h>
+#include <winreg.h>
+// clang-format on
+#endif
 
 using namespace openblack::filesystem;
 
@@ -97,5 +107,43 @@ void DefaultFileSystem::Iterate(const std::filesystem::path& path,
 	for (const auto& f : std::filesystem::directory_iterator {FindPath(path)})
 	{
 		function(f);
+	}
+}
+
+void DefaultFileSystem::SetGamePath(const std::filesystem::path& path)
+{
+	_gamePath = path;
+
+#if defined(unix) || defined(__unix__) || defined(__unix)
+	if (_gamePath.string().size() >= 2 && _gamePath.string().c_str()[0] == '~' && _gamePath.string().c_str()[1] == '/')
+	{
+		_gamePath = std::getenv("HOME") + _gamePath.string().substr(1);
+	}
+#endif
+
+	if (_gamePath.empty())
+	{
+#ifdef _WIN32
+		DWORD dataLen = 0;
+		LSTATUS status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir",
+		                             RRF_RT_REG_SZ, nullptr, nullptr, &dataLen);
+		if (status == ERROR_SUCCESS)
+		{
+			std::vector<char> data(dataLen);
+			status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ,
+			                     nullptr, data.data(), &dataLen);
+
+			_gamePath = std::filesystem::path(data.data());
+		}
+		else
+		{
+			throw std::runtime_error(fmt::format("Failed to find the GameDir registry value, game not installed."));
+		}
+#endif // _WIN32
+	}
+
+	if (!_gamePath.empty() && !Exists(_gamePath))
+	{
+		throw std::runtime_error(fmt::format("GamePath does not exist: '{}'", _gamePath.generic_string()));
 	}
 }

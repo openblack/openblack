@@ -60,14 +60,6 @@
 #include "Resources/Loaders.h"
 #include "Resources/ResourcesInterface.h"
 
-#ifdef _WIN32
-// clang-format off
-// can't sort these includes
-#include <wtypes.h>
-#include <winreg.h>
-// clang-format on
-#endif
-
 using namespace openblack;
 using namespace openblack::lhscriptx;
 using namespace std::chrono_literals;
@@ -460,8 +452,19 @@ bool Game::Initialize()
 	auto& animationManager = resources.GetAnimations();
 	auto& levelManager = resources.GetLevels();
 
-	SetGamePath(_gamePath);
-	fileSystem.SetGamePath(GetGamePath());
+	fileSystem.SetGamePath(_gamePath);
+
+	if (fileSystem.GetGamePath().empty())
+	{
+		// no key, don't guess, let the user know to set the command param
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Game Path missing",
+		                         "Game path was not supplied, use the -g "
+		                         "command parameter to set it.",
+		                         nullptr);
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to find the GameDir.");
+		return false;
+	}
+
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "The GamePath is \"{}\".", fileSystem.GetGamePath().generic_string());
 
 	if (std::filesystem::path(_startMap).is_absolute())
@@ -822,62 +825,6 @@ bool Game::LoadVariables()
 {
 	InfoFile infoFile;
 	return infoFile.LoadFromFile(filesystem::FileSystemInterface::ScriptsPath() / "info.dat", _infoConstants);
-}
-
-void Game::SetGamePath(std::filesystem::path gamePath)
-{
-	if (gamePath.empty())
-	{
-		return;
-	}
-
-#if defined(unix) || defined(__unix__) || defined(__unix)
-	if (gamePath.string().size() >= 2 && gamePath.string().c_str()[0] == '~' && gamePath.string().c_str()[1] == '/')
-	{
-		gamePath = std::getenv("HOME") + gamePath.string().substr(1);
-	}
-#endif
-
-	if (!Locator::filesystem::value().Exists(gamePath))
-	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "GamePath does not exist: '{}'", gamePath.generic_string());
-		return;
-	}
-
-	_gamePath = gamePath;
-}
-
-const std::filesystem::path& Game::GetGamePath()
-{
-	if (_gamePath.empty())
-	{
-#ifdef _WIN32
-		DWORD dataLen = 0;
-		LSTATUS status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir",
-		                             RRF_RT_REG_SZ, nullptr, nullptr, &dataLen);
-		if (status == ERROR_SUCCESS)
-		{
-			std::vector<char> path(dataLen);
-			status = RegGetValue(HKEY_CURRENT_USER, "SOFTWARE\\Lionhead Studios Ltd\\Black & White", "GameDir", RRF_RT_REG_SZ,
-			                     nullptr, path.data(), &dataLen);
-
-			_gamePath = std::filesystem::path(path.data());
-			return _gamePath;
-		}
-
-		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to find the GameDir registry value, game not installed.");
-#endif // _WIN32
-
-		// no key, don't guess, let the user know to set the command param
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Game Path missing",
-		                         "Game path was not supplied, use the -g "
-		                         "command parameter to set it.",
-		                         nullptr);
-		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to find the GameDir.");
-		exit(1);
-	}
-
-	return _gamePath;
 }
 
 void Game::SetTime(float time)
