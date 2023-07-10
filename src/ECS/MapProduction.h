@@ -14,7 +14,7 @@
 namespace openblack::ecs
 {
 
-class MapProduction: public MapInterface
+class MapProduction final: public MapInterface
 {
 	[[nodiscard]] const std::unordered_set<entt::entity>& GetFixedInGridCell(const CellId& cellId) const override;
 	[[nodiscard]] const std::unordered_set<entt::entity>& GetFixedInGridCell(const glm::vec3& pos) const override;
