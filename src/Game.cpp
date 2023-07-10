@@ -485,25 +485,26 @@ bool Game::Initialize()
 	}
 	else
 	{
-		_startMap = fileSystem.ScriptsPath() / _startMap;
+		_startMap = fileSystem.GetPath<filesystem::Path::Scripts>() / _startMap;
 	}
 
-	fileSystem.Iterate(fileSystem.CitadelPath() / "OutsideMeshes", [&meshManager](const std::filesystem::path& f) {
-		if (f.extension() == ".zzz")
-		{
-			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading temple mesh: {}", f.stem().string());
-			try
-			{
-				meshManager.Load(fmt::format("temple/{}", f.stem().string()), resources::L3DLoader::FromDiskTag {}, f);
-			}
-			catch (std::runtime_error& err)
-			{
-				SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
-			}
-		}
-	});
+	fileSystem.Iterate(
+	    fileSystem.GetPath<filesystem::Path::Citadel>() / "OutsideMeshes", [&meshManager](const std::filesystem::path& f) {
+		    if (f.extension() == ".zzz")
+		    {
+			    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading temple mesh: {}", f.stem().string());
+			    try
+			    {
+				    meshManager.Load(fmt::format("temple/{}", f.stem().string()), resources::L3DLoader::FromDiskTag {}, f);
+			    }
+			    catch (std::runtime_error& err)
+			    {
+				    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+			    }
+		    }
+	    });
 	pack::PackFile pack;
-	pack.Open(fileSystem.FindPath(fileSystem.DataPath() / "AllMeshes.g3d"));
+	pack.Open(fileSystem.GetPath<filesystem::Path::Data>(true) / "AllMeshes.g3d");
 	const auto& meshes = pack.GetMeshes();
 	for (size_t i = 0; const auto& mesh : meshes)
 	{
@@ -519,14 +520,14 @@ bool Game::Initialize()
 	}
 
 	pack::PackFile animationPack;
-	animationPack.Open(fileSystem.FindPath(fileSystem.DataPath() / "AllAnims.anm"));
+	animationPack.Open(fileSystem.GetPath<filesystem::Path::Data>(true) / "AllAnims.anm");
 	const auto& animations = animationPack.GetAnimations();
 	for (size_t i = 0; i < animations.size(); i++)
 	{
 		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animations[i]);
 	}
 
-	fileSystem.Iterate(fileSystem.CreatureMeshPath(), [&meshManager](const std::filesystem::path& f) {
+	fileSystem.Iterate(fileSystem.GetPath<filesystem::Path::CreatureMesh>(), [&meshManager](const std::filesystem::path& f) {
 		const auto& fileName = f.stem().string();
 		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading creature mesh: {}", fileName);
 		try
@@ -546,22 +547,26 @@ bool Game::Initialize()
 	});
 
 	// Load loose one-off assets
-	animationManager.Load("coffre", resources::L3DAnimLoader::FromDiskTag {},
-	                      fileSystem.FindPath(fileSystem.MiscPath() / "coffre.anm"));
-	meshManager.Load("hand", resources::L3DLoader::FromDiskTag {},
-	                 fileSystem.FindPath(fileSystem.CreatureMeshPath() / "Hand_Boned_Base2.l3d"));
-	meshManager.Load("coffre", resources::L3DLoader::FromDiskTag {}, fileSystem.FindPath(fileSystem.MiscPath() / "coffre.l3d"));
-	meshManager.Load("cone", resources::L3DLoader::FromDiskTag {}, fileSystem.FindPath(fileSystem.DataPath() / "cone.l3d"));
-	meshManager.Load("marker", resources::L3DLoader::FromDiskTag {}, fileSystem.FindPath(fileSystem.DataPath() / "marker.l3d"));
-	meshManager.Load("river", resources::L3DLoader::FromDiskTag {}, fileSystem.FindPath(fileSystem.DataPath() / "river.l3d"));
-	meshManager.Load("river2", resources::L3DLoader::FromDiskTag {}, fileSystem.FindPath(fileSystem.DataPath() / "river2.l3d"));
-	meshManager.Load("metre_sphere", resources::L3DLoader::FromDiskTag {},
-	                 fileSystem.FindPath(fileSystem.DataPath() / "metre_sphere.l3d"));
+	{
+		using Path = filesystem::Path;
+
+		using AFromDiskTag = resources::L3DAnimLoader::FromDiskTag;
+		animationManager.Load("coffre", AFromDiskTag {}, fileSystem.GetPath<Path::Misc>() / "coffre.anm");
+
+		using LFromDiskTag = resources::L3DLoader::FromDiskTag;
+		meshManager.Load("hand", LFromDiskTag {}, fileSystem.GetPath<Path::CreatureMesh>() / "Hand_Boned_Base2.l3d");
+		meshManager.Load("coffre", LFromDiskTag {}, fileSystem.GetPath<Path::Misc>() / "coffre.l3d");
+		meshManager.Load("cone", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "cone.l3d");
+		meshManager.Load("marker", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "marker.l3d");
+		meshManager.Load("river", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "river.l3d");
+		meshManager.Load("river2", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "river2.l3d");
+		meshManager.Load("metre_sphere", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "metre_sphere.l3d");
+	}
 
 	// TODO(raffclar): #400: Parse level files within the resource loader
 	// TODO(raffclar): #405: Determine campaign levels from the challenge script file
 	// Load the campaign levels
-	fileSystem.Iterate(fileSystem.ScriptsPath(), [&levelManager](const std::filesystem::path& f) {
+	fileSystem.Iterate(fileSystem.GetPath<filesystem::Path::Scripts>(), [&levelManager](const std::filesystem::path& f) {
 		const auto& name = f.stem().string();
 		if (f.extension() != ".txt" || name.rfind("InfoScript", 0) != std::string::npos)
 		{
@@ -583,7 +588,7 @@ bool Game::Initialize()
 	});
 	// Load Playgrounds
 	// Attempt to load additional levels as playgrounds
-	fileSystem.Iterate(fileSystem.PlaygroundPath(), [&levelManager](const std::filesystem::path& f) {
+	fileSystem.Iterate(fileSystem.GetPath<filesystem::Path::Playgrounds>(), [&levelManager](const std::filesystem::path& f) {
 		if (f.extension() != ".txt")
 		{
 			return;
@@ -626,7 +631,7 @@ bool Game::Initialize()
 		return false;
 	}
 
-	fileSystem.Iterate(fileSystem.TexturePath(), [&textureManager](const std::filesystem::path& f) {
+	fileSystem.Iterate(fileSystem.GetPath<filesystem::Path::Textures>(), [&textureManager](const std::filesystem::path& f) {
 		if (f.extension() == ".raw")
 		{
 			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading raw texture: {}", f.stem().string());
@@ -653,7 +658,7 @@ bool Game::Run()
 
 	auto& fileSystem = Locator::filesystem::value();
 
-	auto challengePath = fileSystem.QuestsPath() / "challenge.chl";
+	auto challengePath = fileSystem.GetPath<filesystem::Path::Quests>() / "challenge.chl";
 	if (fileSystem.Exists(challengePath))
 	{
 		_lhvm = std::make_unique<LHVM::LHVM>();
@@ -785,7 +790,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 
 	// Each released map comes with an optional .fot file which contains the footpath information for the map
 	auto stem = string_utils::LowerCase(path.stem().generic_string());
-	auto fotPath = fileSystem.LandscapePath() / fmt::format("{}.fot", stem);
+	auto fotPath = fileSystem.GetPath<filesystem::Path::Landscape>() / fmt::format("{}.fot", stem);
 
 	if (fileSystem.Exists(fotPath))
 	{
@@ -824,7 +829,8 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 bool Game::LoadVariables()
 {
 	InfoFile infoFile;
-	return infoFile.LoadFromFile(filesystem::FileSystemInterface::ScriptsPath() / "info.dat", _infoConstants);
+	return infoFile.LoadFromFile(Locator::filesystem::value().GetPath<filesystem::Path::Scripts>() / "info.dat",
+	                             _infoConstants);
 }
 
 void Game::SetTime(float time)

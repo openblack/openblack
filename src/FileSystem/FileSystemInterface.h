@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 
 #include <filesystem>
@@ -19,29 +20,91 @@
 
 namespace openblack::filesystem
 {
+enum class Path
+{
+	Scripts,
+	Data,
+	Playgrounds,
+	Quests,
+	CreatureMind,
+	Misc,
+	Symbols,
+	Landscape,
+	Textures,
+	WeatherSystem,
+	CreatureMesh,
+	Citadel,
+};
+
 class FileSystemInterface
 {
 public:
-	static inline std::filesystem::path ScriptsPath() { return "Scripts"; }
-	static inline std::filesystem::path PlaygroundPath() { return ScriptsPath() / "Playgrounds"; }
-	static inline std::filesystem::path QuestsPath() { return ScriptsPath() / "Quests"; }
-	static inline std::filesystem::path CreatureMindPath() { return ScriptsPath() / "CreatureMind"; }
-	static inline std::filesystem::path DataPath() { return "Data"; }
-	static inline std::filesystem::path MiscPath() { return DataPath() / "Misc"; }
-	static inline std::filesystem::path SymbolsPath() { return DataPath() / "Symbols"; }
-	static inline std::filesystem::path LandscapePath() { return DataPath() / "Landscape"; }
-	static inline std::filesystem::path TexturePath() { return DataPath() / "Textures"; }
-	static inline std::filesystem::path WeatherSystemPath() { return DataPath() / "WeatherSystem"; }
-	static inline std::filesystem::path CreatureMeshPath() { return DataPath() / "CreatureMesh"; }
-	static inline std::filesystem::path CitadelPath() { return DataPath() / "Citadel"; }
-
 	static std::filesystem::path FixPath(const std::filesystem::path& path);
 
 	virtual ~FileSystemInterface();
 
+	template <Path pathType>
+	[[nodiscard]] std::filesystem::path GetPath(bool withGamePath = false) const
+	{
+		std::filesystem::path result;
+		if constexpr (pathType == Path::Scripts)
+		{
+			result = "Scripts";
+		}
+		else if constexpr (pathType == Path::Data)
+		{
+			result = "Data";
+		}
+		else if constexpr (pathType == Path::Playgrounds)
+		{
+			result = GetPath<Path::Scripts>() / "Playgrounds";
+		}
+		else if constexpr (pathType == Path::Quests)
+		{
+			result = GetPath<Path::Scripts>() / "Quests";
+		}
+		else if constexpr (pathType == Path::CreatureMind)
+		{
+			result = GetPath<Path::Scripts>() / "CreatureMind";
+		}
+		else if constexpr (pathType == Path::Misc)
+		{
+			result = GetPath<Path::Data>() / "Misc";
+		}
+		else if constexpr (pathType == Path::Symbols)
+		{
+			result = GetPath<Path::Data>() / "Symbols";
+		}
+		else if constexpr (pathType == Path::Landscape)
+		{
+			result = GetPath<Path::Data>() / "Landscape";
+		}
+		else if constexpr (pathType == Path::Textures)
+		{
+			result = GetPath<Path::Data>() / "Textures";
+		}
+		else if constexpr (pathType == Path::WeatherSystem)
+		{
+			result = GetPath<Path::Data>() / "WeatherSystem";
+		}
+		else if constexpr (pathType == Path::CreatureMesh)
+		{
+			result = GetPath<Path::Data>() / "CreatureMesh";
+		}
+		else if constexpr (pathType == Path::Citadel)
+		{
+			result = GetPath<Path::Data>() / "Citadel";
+		}
+		else
+		{
+			assert(false);
+		}
+		return withGamePath ? (GetGamePath() / result) : result;
+	}
+
 	[[nodiscard]] virtual std::filesystem::path FindPath(const std::filesystem::path& path) const = 0;
 	virtual std::unique_ptr<Stream> Open(const std::filesystem::path& path, Stream::Mode mode) = 0;
-	virtual bool Exists(const std::filesystem::path& path) const = 0;
+	[[nodiscard]] virtual bool Exists(const std::filesystem::path& path) const = 0;
 	virtual void SetGamePath(const std::filesystem::path& path) = 0;
 	[[nodiscard]] virtual const std::filesystem::path& GetGamePath() const = 0;
 	virtual void AddAdditionalPath(const std::filesystem::path& path) = 0;
