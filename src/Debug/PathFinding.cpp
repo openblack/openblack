@@ -180,11 +180,11 @@ void PathFinding::Draw([[maybe_unused]] Game& game)
 	ImGui::PopStyleVar();
 }
 
-void PathFinding::Update(Game& game, [[maybe_unused]] const openblack::Renderer& renderer)
+void PathFinding::Update([[maybe_unused]] Game& game, [[maybe_unused]] const openblack::Renderer& renderer)
 {
 	using namespace ecs::components;
 	auto& registry = Locator::entitiesRegistry::value();
-	const auto& handTransform = registry.Get<Transform>(game.GetHand());
+	const auto& handTransform = registry.Get<Transform>(Game::Instance()->GetHand());
 	auto const& meshes = Locator::resources::value().GetMeshes();
 	glm::bvec3 invalidValue {};
 	for (glm::length_t l = 0; l < decltype(handTransform.position)::length(); ++l)
