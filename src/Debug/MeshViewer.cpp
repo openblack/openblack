@@ -200,7 +200,7 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 		ImGui::DragFloat("Scale", &_spawnScale);
 		if (ImGui::Button("Spawn"))
 		{
-			auto& registry = Game::Instance()->GetEntityRegistry();
+			auto& registry = Locator::entitiesRegistry::value();
 			auto entity = registry.Create();
 			auto rot = glm::eulerAngleY(glm::radians(_spawnRotation));
 			auto scale = glm::vec3(_spawnScale, _spawnScale, _spawnScale);
@@ -362,7 +362,7 @@ void MeshViewer::Update(Game& game, const Renderer& renderer)
 	}
 
 	// Get hand position for spawn location
-	auto& registry = game.GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	const auto& handTransform = registry.Get<Transform>(game.GetHand());
 	_handPosition = handTransform.position;
 	_handPosition.y = Locator::terrainSystem::value().GetHeightAt(glm::xz(_handPosition));

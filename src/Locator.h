@@ -30,8 +30,9 @@ class ResourcesInterface;
 
 namespace ecs
 {
+class RegistryInterface;
 class MapInterface;
-}
+} // namespace ecs
 
 namespace ecs::systems
 {
@@ -58,6 +59,7 @@ struct Locator
 	using livingActionSystem = entt::locator<ecs::systems::LivingActionSystemInterface>;
 	using townSystem = entt::locator<ecs::systems::TownSystemInterface>;
 	using pathfindingSystem = entt::locator<ecs::systems::PathfindingSystemInterface>;
+	using entitiesRegistry = entt::locator<ecs::RegistryInterface>;
 	using entitiesMap = entt::locator<ecs::MapInterface>;
 };
 } // namespace openblack

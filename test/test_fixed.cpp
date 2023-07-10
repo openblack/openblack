@@ -12,6 +12,7 @@
 #include <ECS/Components/Fixed.h>
 #include <ECS/Registry.h>
 #include <Game.h>
+#include <Locator.h>
 #include <glm/gtx/string_cast.hpp>
 #include <gtest/gtest.h>
 
@@ -66,7 +67,7 @@ TEST_F(TestFixed, celticTownCentreBoundingCircle)
 	TownArchetype::Create(0, glm::vec3(2185.72f, 0.0f, 2315.78f), PlayerNames::PLAYER_ONE, Tribe::CELTIC);
 	const glm::vec3 pos = {2188.23f, 0.0f, 2317.47f};
 	auto entity = AbodeArchetype::Create(0, {2188.23f, 0.0f, 2317.47f}, AbodeInfo::CelticTownCentre, 2.932f, 1.0f, 0, 0);
-	const auto& fixed = _game->GetEntityRegistry().Get<const Fixed>(entity);
+	const auto& fixed = Locator::entitiesRegistry::value().Get<const Fixed>(entity);
 	ASSERT_EQ(fixed.boundingCenter, glm::vec2(2188.182129f, 2317.253906f));
 	ASSERT_EQ(fixed.boundingRadius, 12.9809408f);
 }
@@ -87,7 +88,7 @@ TEST_F(TestFixed, celticAbodeBoundingCircle)
 	auto entity = AbodeArchetype::Create(0, glm::vec3(2224.63f, 0.0f, 2372.52f),
 	                                     AbodeInfo::CelticTempleY, // CELTIC_ABODE_F
 	                                     2.932f, 1.0f, 0, 0);
-	const auto& fixed = _game->GetEntityRegistry().Get<const Fixed>(entity);
+	const auto& fixed = Locator::entitiesRegistry::value().Get<const Fixed>(entity);
 	ASSERT_EQ(fixed.boundingCenter, glm::vec2(2224.504150f, 2372.354248f));
 	ASSERT_FLOAT_EQ(fixed.boundingRadius, 6.33014917f);
 }
@@ -100,7 +101,7 @@ TEST_F(TestFixed, celticAbodeBoundingCircleScaled)
 	auto entity = AbodeArchetype::Create(0, glm::vec3(2224.63f, 0.0f, 2372.52f),
 	                                     AbodeInfo::CelticTempleY, // CELTIC_ABODE_F
 	                                     2.932f, scale, 0, 0);
-	const auto& fixed = _game->GetEntityRegistry().Get<const Fixed>(entity);
+	const auto& fixed = Locator::entitiesRegistry::value().Get<const Fixed>(entity);
 	ASSERT_EQ(fixed.boundingCenter, glm::vec2(2224.492432f, 2372.338379f));
 	ASSERT_FLOAT_EQ(fixed.boundingRadius, 6.33014917f * scale);
 }

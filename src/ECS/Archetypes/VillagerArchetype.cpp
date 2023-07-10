@@ -33,7 +33,7 @@ using namespace openblack::ecs::systems;
 entt::entity VillagerArchetype::Create([[maybe_unused]] const glm::vec3& abodePosition, const glm::vec3& position,
                                        VillagerInfo type, uint32_t age)
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 
 	const auto& info = Game::Instance()->GetInfoConstants().villager.at(static_cast<size_t>(type));

@@ -33,7 +33,7 @@ void FotFile::Load(const std::filesystem::path& path)
 	serializer::GameThingSerializer serializer(*stream);
 	auto footpathLinkSaves = serializer.DeserializeList<serializer::GameThingSerializer::FootpathLinkSave>();
 	auto footpaths = serializer.DeserializeList<serializer::GameThingSerializer::Footpath>();
-	auto& registry = _game.GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	const auto& island = Locator::terrainSystem::value();
 
 	// Keep track of footpath entities in order to associate them to the footpath link saves later

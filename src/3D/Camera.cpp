@@ -392,7 +392,7 @@ void Camera::HandleMouseInput(const SDL_Event& e)
 		}
 		else // Holding down the middle mouse button without shift enables hand orbit camera rotation.
 		{
-			auto& entityReg = Game::Instance()->GetEntityRegistry();
+			auto& entityReg = Locator::entitiesRegistry::value();
 			auto handEntity = Game::Instance()->GetHand();
 			auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
 			auto handPos = handTransform.position;
@@ -557,7 +557,7 @@ void Camera::Update(std::chrono::microseconds dt)
 	if (_lmouseIsDown) // drag camera using hand
 	{
 		// get hand transform and project to screen coords
-		auto& entityReg = Game::Instance()->GetEntityRegistry();
+		auto& entityReg = Locator::entitiesRegistry::value();
 		auto handEntity = Game::Instance()->GetHand();
 		auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
 		const glm::vec3 handOffset(0, 1.5f, 0);

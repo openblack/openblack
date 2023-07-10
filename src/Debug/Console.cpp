@@ -381,7 +381,7 @@ void Console::Draw(Game& game)
 			std::string pre(_inputBuffer.data(), _inputBuffer.data() + _inputCursorPosition);
 			std::string post(_inputBuffer.data() + _inputCursorPosition);
 
-			const auto& position = game.GetEntityRegistry().Get<ecs::components::Transform>(game.GetHand()).position;
+			const auto& position = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(game.GetHand()).position;
 			snprintf(_inputBuffer.data(), _inputBuffer.size(), "%s%.2f,%.2f%s", pre.c_str(), position.x, position.z,
 			         post.c_str());
 		}

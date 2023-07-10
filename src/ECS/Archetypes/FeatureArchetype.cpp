@@ -31,7 +31,7 @@ using namespace openblack::ecs::components;
 
 entt::entity FeatureArchetype::Create(const glm::vec3& position, FeatureInfo type, float yAngleRadians, float scale)
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 
 	const auto& info = Game::Instance()->GetInfoConstants().feature.at(static_cast<size_t>(type));

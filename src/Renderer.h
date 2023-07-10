@@ -40,7 +40,7 @@ class Water;
 
 namespace ecs
 {
-class Registry;
+class RegistryInterface;
 }
 
 namespace graphics
@@ -62,7 +62,7 @@ public:
 		const graphics::FrameBuffer* frameBuffer;
 		const Sky& sky;
 		const Water& water;
-		const ecs::Registry& entities;
+		const ecs::RegistryInterface& entities;
 		uint32_t time;
 		float timeOfDay;
 		float bumpMapStrength;

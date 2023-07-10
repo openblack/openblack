@@ -682,7 +682,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			{
 				using namespace ecs::components;
 
-				auto& registry = Game::Instance()->GetEntityRegistry();
+				auto& registry = Locator::entitiesRegistry::value();
 				registry.Each<const Sprite, const Transform>(
 				    [this, &spriteShader, &desc](const Sprite& sprite, const Transform& transform) {
 					    glm::mat4 modelMatrix = glm::mat4(1.0f);

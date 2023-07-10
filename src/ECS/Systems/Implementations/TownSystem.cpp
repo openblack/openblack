@@ -17,6 +17,7 @@
 #include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
 #include "Game.h"
+#include "Locator.h"
 
 using namespace openblack::ecs::components;
 using namespace openblack::ecs::systems;
@@ -24,7 +25,7 @@ using namespace openblack::ecs::systems;
 entt::entity TownSystem::FindAbodeWithSpace(entt::entity townEntity) const
 {
 	const auto& infoConstants = Game::Instance()->GetInfoConstants();
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	const auto& town = registry.Get<Town>(townEntity);
 
 	entt::entity result = entt::null;
@@ -45,7 +46,7 @@ entt::entity TownSystem::FindAbodeWithSpace(entt::entity townEntity) const
 
 entt::entity TownSystem::FindClosestTown(const glm::vec3& point) const
 {
-	const auto& registry = Game::Instance()->GetEntityRegistry();
+	const auto& registry = Locator::entitiesRegistry::value();
 
 	entt::entity result = entt::null;
 	auto closest = std::numeric_limits<float>::infinity();
@@ -65,7 +66,7 @@ entt::entity TownSystem::FindClosestTown(const glm::vec3& point) const
 
 void TownSystem::AddHomelessVillagerToTown(entt::entity townEntity, entt::entity villagerEntity)
 {
-	[[maybe_unused]] auto& registry = Game::Instance()->GetEntityRegistry();
+	[[maybe_unused]] auto& registry = Locator::entitiesRegistry::value();
 	[[maybe_unused]] auto& registryContext = registry.Context();
 
 	auto& town = registry.Get<Town>(townEntity);

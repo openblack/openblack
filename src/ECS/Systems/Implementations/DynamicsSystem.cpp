@@ -28,6 +28,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Game.h"
+#include "Locator.h"
 
 using namespace openblack;
 using namespace openblack::ecs::components;
@@ -77,7 +78,7 @@ void DynamicsSystem::AddRigidBody(btRigidBody* object)
 
 void DynamicsSystem::RegisterRigidBodies()
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	registry.Each<RigidBody>([this](RigidBody& body) {
 		body.handle.setUserIndex(static_cast<int>(ecs::systems::RigidBodyType::Entity));
 		body.handle.setUserIndex2(0);
@@ -101,7 +102,7 @@ void DynamicsSystem::RegisterIslandRigidBodies(LandIslandInterface& island)
 
 void DynamicsSystem::UpdatePhysicsTransforms()
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	registry.Each<Transform, const RigidBody>([&registry](Transform& transform, const RigidBody& body) {
 		btTransform trans;
 		body.motionState->getWorldTransform(trans);

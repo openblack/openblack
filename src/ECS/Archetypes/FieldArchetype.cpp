@@ -16,6 +16,7 @@
 #include "ECS/Registry.h"
 #include "Game.h"
 #include "InfoConstants.h"
+#include "Locator.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
@@ -23,7 +24,7 @@ using namespace openblack::ecs::components;
 
 entt::entity FieldArchetype::Create(int townId, const glm::vec3& position, FieldTypeInfo type, float yAngleRadians)
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 
 	[[maybe_unused]] const auto& info = Game::Instance()->GetInfoConstants().fieldType.at(static_cast<size_t>(type));
 
