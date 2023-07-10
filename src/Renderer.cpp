@@ -561,7 +561,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 				// pack uniforms
 				const glm::vec4 mapPositionAndSize = glm::vec4(block.GetMapPosition(), 160.0f, 160.0f);
-				terrainShader->SetUniformValue("u_blockPositionAndSize", &mapPositionAndSize); // vs
+				terrainShader->SetUniformValue("u_mapPositionAndSize", &mapPositionAndSize);   // vs
 				terrainShader->SetUniformValue("u_islandExtent", &islandExtent);               // vs
 				const glm::vec4 u_skyAndBump = {desc.sky.GetCurrentSkyType(), desc.bumpMapStrength, desc.smallBumpMapStrength,
 				                                0.0f};
