@@ -216,7 +216,7 @@ protected:
 
 	void MobileWallHugScenarioAssert()
 	{
-		auto& map = Game::Instance()->GetEntityMap();
+		auto& map = Locator::entitiesMap::value();
 		auto& registry = Game::Instance()->GetEntityRegistry();
 		map.Rebuild();
 		registry.Each<ecs::components::WallHug>([&registry, this](entt::entity entity, ecs::components::WallHug& wallHug) {
