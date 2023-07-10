@@ -26,7 +26,7 @@ public:
 	[[nodiscard]] std::filesystem::path FindPath(const std::filesystem::path& path) const override;
 	std::unique_ptr<Stream> Open(const std::filesystem::path& path, Stream::Mode mode) override;
 	[[nodiscard]] bool Exists(const std::filesystem::path& path) const override;
-	void SetGamePath(const std::filesystem::path& path) override { _gamePath = path; }
+	void SetGamePath(const std::filesystem::path& path) override;
 	[[nodiscard]] const std::filesystem::path& GetGamePath() const override { return _gamePath; }
 	void AddAdditionalPath(const std::filesystem::path& path) override { _additionalPaths.push_back(path); }
 	std::vector<uint8_t> ReadAll(const std::filesystem::path& path) override;

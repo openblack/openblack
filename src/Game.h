@@ -163,8 +163,6 @@ public:
 
 	bool LoadVariables();
 
-	void SetGamePath(std::filesystem::path gamePath);
-	const std::filesystem::path& GetGamePath();
 	void SetTime(float time);
 	void SetGameSpeed(float multiplier) { _gameSpeedMultiplier = multiplier; }
 	[[nodiscard]] float GetGameSpeed() const { return _gameSpeedMultiplier; }
@@ -200,7 +198,7 @@ private:
 	static Game* sInstance;
 
 	/// path to Lionhead Studios Ltd/Black & White folder
-	std::filesystem::path _gamePath;
+	const std::filesystem::path _gamePath;
 
 	std::unique_ptr<GameWindow> _window;
 	std::unique_ptr<Renderer> _renderer;
