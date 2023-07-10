@@ -30,7 +30,7 @@ bool CameraBookmarkSystem::Initialize()
 void CameraBookmarkSystem::Update(const std::chrono::microseconds& dt) const
 {
 	Locator::entitiesRegistry::value().Each<CameraBookmark, Transform>([&dt](CameraBookmark& bookmark, Transform& transform) {
-		std::chrono::duration<float> seconds = dt;
+		std::chrono::duration<float> const seconds = dt;
 		auto t = bookmark.animationTime * 5.0f;
 		transform.scale = glm::vec3(glm::sin(t) * 0.5f + 0.5f, glm::cos(t) * 0.5f + 0.5f, 1.0f);
 		bookmark.animationTime += seconds.count();
