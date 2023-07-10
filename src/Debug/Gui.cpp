@@ -802,7 +802,7 @@ void Gui::ShowVillagerNames(const Game& game)
 		    }
 
 		    // 3.5 was measured in vanilla but it is possible that it is configurable
-		    float maxDistance = 3.5f;
+		    float const maxDistance = 3.5f;
 		    const glm::vec3 relativePosition = (camera.GetPosition() - transform.position) / 100.0f;
 		    if (glm::dot(relativePosition, relativePosition) > maxDistance * maxDistance)
 		    {
