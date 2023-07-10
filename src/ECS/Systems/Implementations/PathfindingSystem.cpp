@@ -88,10 +88,10 @@ bool AreWeThere(const glm::vec2& pos, const glm::vec2& goal, float threshold)
 /// +-----+-----+-----+
 /// | [6] | [3] | [8] |
 /// +-----+-----+-----+
-std::array<ecs::Map::CellId, 9> GetNeighboringCells(const glm::vec2& pos)
+std::array<ecs::MapInterface::CellId, 9> GetNeighboringCells(const glm::vec2& pos)
 {
-	const auto cellIndex = Map::GetGridCell(pos);
-	assert(glm::compMin(cellIndex) > 0 && glm::all(glm::lessThan(cellIndex, Map::k_GridSize - glm::u16vec2(1))));
+	const auto cellIndex = MapInterface::GetGridCell(pos);
+	assert(glm::compMin(cellIndex) > 0 && glm::all(glm::lessThan(cellIndex, MapInterface::k_GridSize - glm::u16vec2(1))));
 	return {
 	    cellIndex,                          // Current
 	    {cellIndex.x + 1, cellIndex.y},     // Right
@@ -109,7 +109,7 @@ std::array<ecs::Map::CellId, 9> GetNeighboringCells(const glm::vec2& pos)
 /// If that object is in front (and we are not in it) and less than 256 steps away, set as target and store steps
 bool LinearScanForObstacle(entt::entity entity, const glm::vec2& pos, const glm::vec2& step)
 {
-	const auto& map = Game::Instance()->GetEntityMap();
+	const auto& map = Locator::entitiesMap::value();
 	auto& registry = Game::Instance()->GetEntityRegistry();
 
 	// Reference will be updated or removed
@@ -182,7 +182,7 @@ bool LinearScanForObstacle(entt::entity entity, const glm::vec2& pos, const glm:
 bool OrbitScanForObstacle(entt::entity entity, bool clockwise, Transform& transform, WallHug& wallHug)
 {
 	auto& registry = Game::Instance()->GetEntityRegistry();
-	const auto& map = Game::Instance()->GetEntityMap();
+	const auto& map = Locator::entitiesMap::value();
 	auto& reference = registry.Get<WallHugObjectReference>(entity);
 
 	const uint32_t numAttempts = 5;
@@ -353,8 +353,8 @@ void HandleCellTransition(ecs::Registry& registry)
 	registry.Each<const MoveStateTagComponent<S>, WallHug, Transform>(
 	    [](entt::entity entity, const MoveStateTagComponent<S>& state, WallHug& wallHug, Transform& transform) {
 		    const auto position = glm::xz(transform.position);
-		    const auto positionId = Map::GetGridCell(position);
-		    const auto goalId = Map::GetGridCell(state.stepGoal);
+		    const auto positionId = MapInterface::GetGridCell(position);
+		    const auto goalId = MapInterface::GetGridCell(state.stepGoal);
 		    if (positionId != goalId)
 		    {
 			    CellTransition(entity, state, transform, wallHug);

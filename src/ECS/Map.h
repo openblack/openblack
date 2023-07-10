@@ -21,7 +21,7 @@
 namespace openblack::ecs
 {
 
-class Map
+class MapInterface
 {
 public:
 	using CellId = glm::u16vec2;
@@ -33,19 +33,16 @@ public:
 	static CellId GetGridCell(const glm::vec3& pos);
 	static glm::vec2 GetCellCenter(const CellId& cellId);
 
-	[[nodiscard]] const std::unordered_set<entt::entity>& GetFixedInGridCell(const CellId& cellId) const;
-	[[nodiscard]] const std::unordered_set<entt::entity>& GetFixedInGridCell(const glm::vec3& pos) const;
-	[[nodiscard]] const std::unordered_set<entt::entity>& GetMobileInGridCell(const CellId& cellId) const;
-	[[nodiscard]] const std::unordered_set<entt::entity>& GetMobileInGridCell(const glm::vec3& pos) const;
+	[[nodiscard]] virtual const std::unordered_set<entt::entity>& GetFixedInGridCell(const CellId& cellId) const = 0;
+	[[nodiscard]] virtual const std::unordered_set<entt::entity>& GetFixedInGridCell(const glm::vec3& pos) const = 0;
+	[[nodiscard]] virtual const std::unordered_set<entt::entity>& GetMobileInGridCell(const CellId& cellId) const = 0;
+	[[nodiscard]] virtual const std::unordered_set<entt::entity>& GetMobileInGridCell(const glm::vec3& pos) const = 0;
 
-	void Rebuild();
+	virtual void Rebuild() = 0;
 
 private:
-	void Clear();
-	void Build();
-
-	std::array<std::unordered_set<entt::entity>, k_GridSize.x * k_GridSize.y> _fixedGrid;
-	std::array<std::unordered_set<entt::entity>, k_GridSize.x * k_GridSize.y> _mobileGrid;
+	virtual void Clear() = 0;
+	virtual void Build() = 0;
 };
 
 } // namespace openblack::ecs
