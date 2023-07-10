@@ -15,7 +15,6 @@
 
 #include "3D/L3DMesh.h"
 #include "ECS/Components/Transform.h"
-#include "Game.h"
 #include "Locator.h"
 #include "Resources/MeshId.h"
 #include "Resources/ResourcesInterface.h"

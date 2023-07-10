@@ -17,7 +17,6 @@
 
 #include "3D/LandIslandInterface.h"
 #include "FeatureScriptCommands.h"
-#include "Game.h"
 #include "Lexer.h"
 #include "Locator.h"
 
