@@ -303,7 +303,7 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 		const Texture2D* texture = GetTexture(prim.skinID, skins);
 		const Texture2D* nextTexture = !hasNext ? nullptr : GetTexture(std::next(it)->skinID, skins);
 
-		bool primitivePreserveState = texture != nullptr && texture == nextTexture && (preserveState || hasNext);
+		const bool primitivePreserveState = texture != nullptr && texture == nextTexture && (preserveState || hasNext);
 
 		uint32_t skip = Mesh::SkipState::SkipNone;
 		if (!lastPreserveState)
@@ -425,12 +425,12 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 			footprintShaderInstanced->SetTextureSampler("s_footprint", 0, *footprint.texture);
 			footprint.mesh->GetVertexBuffer().Bind();
 			bgfx::setInstanceDataBuffer(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
-			uint64_t state = 0u                       //
-			                 | BGFX_STATE_WRITE_RGB   //
-			                 | BGFX_STATE_WRITE_A     //
-			                 | BGFX_STATE_BLEND_ALPHA //
-			                 | BGFX_STATE_CULL_CW     //
-			                 | BGFX_STATE_MSAA;
+			const uint64_t state = 0u                       //
+			                       | BGFX_STATE_WRITE_RGB   //
+			                       | BGFX_STATE_WRITE_A     //
+			                       | BGFX_STATE_BLEND_ALPHA //
+			                       | BGFX_STATE_CULL_CW     //
+			                       | BGFX_STATE_MSAA;
 			bgfx::setState(state);
 			bgfx::submit(static_cast<bgfx::ViewId>(viewId), footprintShaderInstanced->GetRawHandle());
 		}
@@ -548,38 +548,49 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		if (desc.drawIsland)
 		{
 			auto& island = Locator::terrainSystem::value();
-			auto extent = island.GetExtent();
-			auto islandExtent = glm::vec4(extent.minimum, extent.maximum);
+			auto islandExtent = glm::vec4(island.GetExtent().minimum, island.GetExtent().maximum);
+
+			auto texture = Locator::resources::value().GetTextures().Handle(LandIslandInterface::k_SmallBumpTextureId);
+			const glm::vec4 u_skyAndBump = {desc.sky.GetCurrentSkyType(), desc.bumpMapStrength, desc.smallBumpMapStrength,
+			                                0.0f};
+
+			terrainShader->SetTextureSampler("s0_materials", 0, island.GetAlbedoArray());
+			terrainShader->SetTextureSampler("s1_bump", 1, island.GetBump());
+			terrainShader->SetTextureSampler("s2_smallBump", 2, *texture);
+			terrainShader->SetTextureSampler("s3_footprints", 3, island.GetFootprintFramebuffer().GetColorAttachment());
+
+			terrainShader->SetUniformValue("u_skyAndBump", &u_skyAndBump);
+			terrainShader->SetUniformValue("u_islandExtent", &islandExtent);
+
+			// clang-format off
+			constexpr auto defaultState = 0u
+				| BGFX_STATE_WRITE_MASK
+				| BGFX_STATE_DEPTH_TEST_LESS
+				| BGFX_STATE_BLEND_ALPHA
+				| BGFX_STATE_MSAA
+			;
+
+			constexpr auto discard = 0u
+				| BGFX_DISCARD_INSTANCE_DATA
+				| BGFX_DISCARD_INDEX_BUFFER
+				| BGFX_DISCARD_TRANSFORM
+				| BGFX_DISCARD_VERTEX_STREAMS
+				| BGFX_DISCARD_STATE
+			;
+			// clang-format on
+
 			for (const auto& block : island.GetBlocks())
 			{
-				auto texture = Locator::resources::value().GetTextures().Handle(LandIslandInterface::k_SmallBumpTextureId);
-
-				terrainShader->SetTextureSampler("s0_materials", 0, island.GetAlbedoArray());
-				terrainShader->SetTextureSampler("s1_bump", 1, island.GetBump());
-				terrainShader->SetTextureSampler("s2_smallBump", 2, *texture);
-				terrainShader->SetTextureSampler("s3_footprints", 3, island.GetFootprintFramebuffer().GetColorAttachment());
-
 				// pack uniforms
 				const glm::vec4 mapPositionAndSize = glm::vec4(block.GetMapPosition(), 160.0f, 160.0f);
-				terrainShader->SetUniformValue("u_blockPositionAndSize", &mapPositionAndSize); // vs
-				terrainShader->SetUniformValue("u_islandExtent", &islandExtent);               // vs
-				const glm::vec4 u_skyAndBump = {desc.sky.GetCurrentSkyType(), desc.bumpMapStrength, desc.smallBumpMapStrength,
-				                                0.0f};
-				terrainShader->SetUniformValue("u_skyAndBump", &u_skyAndBump); // fs
-
-				// clang-format off
-				constexpr auto defaultState = 0u
-					| BGFX_STATE_WRITE_MASK
-					| BGFX_STATE_DEPTH_TEST_LESS
-					| BGFX_STATE_BLEND_ALPHA
-					| BGFX_STATE_MSAA
-				;
-				// clang-format on
+				terrainShader->SetUniformValue("u_blockPositionAndSize", &mapPositionAndSize);
 
 				block.GetMesh().GetVertexBuffer().Bind();
+
 				bgfx::setState(defaultState | (desc.cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW), 0);
-				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), terrainShader->GetRawHandle());
+				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), terrainShader->GetRawHandle(), 0, discard);
 			}
+			bgfx::discard(BGFX_DISCARD_BINDINGS);
 		}
 	}
 
@@ -765,6 +776,6 @@ void Renderer::Frame()
 
 void Renderer::RequestScreenshot(const std::filesystem::path& filepath)
 {
-	bgfx::FrameBufferHandle mainBackbuffer = BGFX_INVALID_HANDLE;
+	const bgfx::FrameBufferHandle mainBackbuffer = BGFX_INVALID_HANDLE;
 	bgfx::requestScreenShot(mainBackbuffer, filepath.string().c_str());
 }
