@@ -62,7 +62,6 @@ class LHVM;
 
 namespace ecs
 {
-class Map;
 class Registry;
 } // namespace ecs
 
@@ -181,8 +180,6 @@ public:
 	ecs::Registry& GetEntityRegistry() { return *_entityRegistry; }
 	[[nodiscard]] ecs::Registry& GetEntityRegistry() const { return *_entityRegistry; }
 	const InfoConstants& GetInfoConstants() { return _infoConstants; } ///< Access should be only read-only
-	[[nodiscard]] ecs::Map& GetEntityMap() { return *_entityMap; }
-	[[nodiscard]] const ecs::Map& GetEntityMap() const { return *_entityMap; }
 	Config& GetConfig() { return _config; }
 	[[nodiscard]] const Config& GetConfig() const { return _config; }
 	[[nodiscard]] uint16_t GetTurn() const { return _turnCount; }
@@ -216,7 +213,6 @@ private:
 	std::unique_ptr<lhscriptx::Script> _scriptx;
 	std::unique_ptr<LHVM::LHVM> _lhvm;
 	std::unique_ptr<ecs::Registry> _entityRegistry;
-	std::unique_ptr<ecs::Map> _entityMap;
 
 	InfoConstants _infoConstants;
 	Config _config;

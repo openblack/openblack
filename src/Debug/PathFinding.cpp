@@ -204,7 +204,7 @@ void PathFinding::Update(Game& game, [[maybe_unused]] const openblack::Renderer&
 
 		if (!found)
 		{
-			auto& map = game.GetEntityMap();
+			auto& map = Locator::entitiesMap::value();
 			for (const auto& entity : map.GetMobileInGridCell(_handPosition))
 			{
 				if (registry.AllOf<Villager>(entity))

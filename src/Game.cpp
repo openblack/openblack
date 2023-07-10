@@ -72,7 +72,6 @@ Game::Game(Arguments&& args)
     : _gamePath(args.gamePath)
     , _eventManager(std::make_unique<EventManager>())
     , _entityRegistry(std::make_unique<ecs::Registry>())
-    , _entityMap(std::make_unique<ecs::Map>())
     , _startMap(args.startLevel)
     , _handPose(glm::identity<glm::mat4>())
     , _requestScreenshot(args.requestScreenshot)
@@ -288,7 +287,7 @@ bool Game::GameLogicLoop()
 	}
 
 	// Build Map Grid Acceleration Structure
-	_entityMap->Rebuild();
+	Locator::entitiesMap::value().Rebuild();
 
 	{
 		auto pathfinding = _profiler->BeginScoped(Profiler::Stage::PathfindingUpdate);
@@ -687,7 +686,7 @@ bool Game::Run()
 	}
 
 	// Initialize the Acceleration Structure
-	_entityMap->Rebuild();
+	Locator::entitiesMap::value().Rebuild();
 
 	if (_window)
 	{
