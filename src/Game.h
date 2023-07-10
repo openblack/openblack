@@ -60,11 +60,6 @@ namespace LHVM
 class LHVM;
 }
 
-namespace ecs
-{
-class Registry;
-} // namespace ecs
-
 namespace lhscriptx
 {
 class Script;
