@@ -206,8 +206,8 @@ protected:
 		auto script = openblack::lhscriptx::Script(_game.get());
 		script.Load(_sceneScript);
 
-		_villagerEntt = _game->GetEntityRegistry().Front<const ecs::components::Villager>();
-		auto& villagerTransform = _game->GetEntityRegistry().Get<ecs::components::Transform>(_villagerEntt);
+		_villagerEntt = Locator::entitiesRegistry::value().Front<const ecs::components::Villager>();
+		auto& villagerTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(_villagerEntt);
 
 		villagerTransform.position = glm::vec3(_expectedStates[0].pos.x, 0.0f, _expectedStates[0].pos.y);
 	}
@@ -217,7 +217,7 @@ protected:
 	void MobileWallHugScenarioAssert()
 	{
 		auto& map = Locator::entitiesMap::value();
-		auto& registry = Game::Instance()->GetEntityRegistry();
+		auto& registry = Locator::entitiesRegistry::value();
 		map.Rebuild();
 		registry.Each<ecs::components::WallHug>([&registry, this](entt::entity entity, ecs::components::WallHug& wallHug) {
 			using namespace openblack::ecs::components;

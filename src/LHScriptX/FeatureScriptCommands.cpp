@@ -253,7 +253,7 @@ void FeatureScriptCommands::CreateTown(int32_t townId, glm::vec3 position, const
 
 void FeatureScriptCommands::SetTownBelief(int32_t townId, const std::string& playerOwner, float belief)
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	auto& registryContext = registry.Context();
 
 	Town& town = registry.Get<Town>(registryContext.towns.at(townId));
@@ -648,7 +648,7 @@ void FeatureScriptCommands::BrushSize(float, float)
 
 void FeatureScriptCommands::CreateStream(int32_t streamId)
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	auto& registryContext = registry.Context();
 	const auto entity = registry.Create();
 
@@ -658,7 +658,7 @@ void FeatureScriptCommands::CreateStream(int32_t streamId)
 
 void FeatureScriptCommands::CreateStreamPoint(int32_t streamId, glm::vec3 position)
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	auto& registryContext = registry.Context();
 
 	Stream& stream = registry.Get<Stream>(registryContext.streams.at(streamId));
@@ -679,7 +679,7 @@ void FeatureScriptCommands::CreateArena([[maybe_unused]] glm::vec3 position, flo
 
 void FeatureScriptCommands::CreateFootpath(int32_t footpathId)
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 	registry.Assign<Footpath>(entity);
 	auto& registryContext = registry.Context();
@@ -688,7 +688,7 @@ void FeatureScriptCommands::CreateFootpath(int32_t footpathId)
 
 void FeatureScriptCommands::CreateFootpathNode(int footpathId, glm::vec3 position)
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	auto& registryContext = registry.Context();
 	auto& footpath = registry.Get<Footpath>(registryContext.footpaths.at(footpathId));
 	footpath.nodes.emplace_back(Footpath::Node {position});

@@ -789,114 +789,115 @@ void Gui::ShowVillagerNames(const Game& game)
 	const glm::vec4 viewport =
 	    glm::vec4(ImGui::GetStyle().WindowPadding.x, 0, displaySize.x - ImGui::GetStyle().WindowPadding.x, displaySize.y);
 	std::vector<glm::vec4> coveredAreas;
-	coveredAreas.reserve(game.GetEntityRegistry().Size<Villager>());
-	game.GetEntityRegistry().Each<const Transform, Villager, LivingAction>([this, &i, &coveredAreas, &camera, config, viewport](
-	                                                                           const Transform& transform, Villager& villager,
-	                                                                           LivingAction& action) {
-		++i;
-		const float height = 2.0f * transform.scale.y; // TODO(bwrsandman): get from bounding box max y
-		glm::vec3 screenPoint;
-		if (!camera.ProjectWorldToScreen(transform.position + glm::vec3(0.0f, height, 0.0f), viewport, screenPoint))
-		{
-			return;
-		}
+	coveredAreas.reserve(Locator::entitiesRegistry::value().Size<Villager>());
+	Locator::entitiesRegistry::value().Each<const Transform, Villager, LivingAction>(
+	    [this, &i, &coveredAreas, &camera, config, viewport](const Transform& transform, Villager& villager,
+	                                                         LivingAction& action) {
+		    ++i;
+		    const float height = 2.0f * transform.scale.y; // TODO(bwrsandman): get from bounding box max y
+		    glm::vec3 screenPoint;
+		    if (!camera.ProjectWorldToScreen(transform.position + glm::vec3(0.0f, height, 0.0f), viewport, screenPoint))
+		    {
+			    return;
+		    }
 
-		// 3.5 was measured in vanilla but it is possible that it is configurable
-		float maxDistance = 3.5f;
-		const glm::vec3 relativePosition = (camera.GetPosition() - transform.position) / 100.0f;
-		if (glm::dot(relativePosition, relativePosition) > maxDistance * maxDistance)
-		{
-			return;
-		}
+		    // 3.5 was measured in vanilla but it is possible that it is configurable
+		    float maxDistance = 3.5f;
+		    const glm::vec3 relativePosition = (camera.GetPosition() - transform.position) / 100.0f;
+		    if (glm::dot(relativePosition, relativePosition) > maxDistance * maxDistance)
+		    {
+			    return;
+		    }
 
-		// TODO(bwrsandman): Get owner player and associated color
-		glm::vec4 color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-		// Female villagers have a lighter colour
-		if (villager.sex == Villager::Sex::FEMALE)
-		{
-			color += glm::vec4((glm::vec3(1.0f) - glm::vec3(color)) * glm::vec3(144.0f / 255.0f), color.a);
-			color = glm::saturate(color);
-		}
+		    // TODO(bwrsandman): Get owner player and associated color
+		    glm::vec4 color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		    // Female villagers have a lighter colour
+		    if (villager.sex == Villager::Sex::FEMALE)
+		    {
+			    color += glm::vec4((glm::vec3(1.0f) - glm::vec3(color)) * glm::vec3(144.0f / 255.0f), color.a);
+			    color = glm::saturate(color);
+		    }
 
-		const std::string name = "Villager #" + std::to_string(i);
-		const std::string stateHelpText = "TODO: STATE HELP TEXT";
-		std::string details =
-		    fmt::format("{}\nA:{} L:{}%, H:{}%", stateHelpText, villager.age, villager.health, villager.hunger);
-		const auto& actionSystem = Locator::livingActionSystem::value();
-		if (config.debugVillagerStates)
-		{
-			details += fmt::format(
-			    "\n"
-			    "Top State:      {}\n"
-			    "Final State:    {}\n"
-			    "Previous State: {}\n"
-			    "Turns until next state change: {}\n"
-			    "Turns since last state change: {}",
-			    k_VillagerStateStrings.at(static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Top))),
-			    k_VillagerStateStrings.at(
-			        static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Final))),
-			    k_VillagerStateStrings.at(
-			        static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Previous))),
-			    action.turnsUntilStateChange, action.turnsSinceStateChange);
-		}
+		    const std::string name = "Villager #" + std::to_string(i);
+		    const std::string stateHelpText = "TODO: STATE HELP TEXT";
+		    std::string details =
+		        fmt::format("{}\nA:{} L:{}%, H:{}%", stateHelpText, villager.age, villager.health, villager.hunger);
+		    const auto& actionSystem = Locator::livingActionSystem::value();
+		    if (config.debugVillagerStates)
+		    {
+			    details +=
+			        fmt::format("\n"
+			                    "Top State:      {}\n"
+			                    "Final State:    {}\n"
+			                    "Previous State: {}\n"
+			                    "Turns until next state change: {}\n"
+			                    "Turns since last state change: {}",
+			                    k_VillagerStateStrings.at(
+			                        static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Top))),
+			                    k_VillagerStateStrings.at(
+			                        static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Final))),
+			                    k_VillagerStateStrings.at(
+			                        static_cast<size_t>(actionSystem.VillagerGetState(action, LivingAction::Index::Previous))),
+			                    action.turnsUntilStateChange, action.turnsSinceStateChange);
+		    }
 
-		std::function<void(void)> debugCallback;
-		if (config.debugVillagerNames)
-		{
-			debugCallback = [&villager, &action, &actionSystem] {
-				if (villager.abode == entt::null)
-				{
-					ImGui::Text("Homeless");
-				}
-				ImGui::InputInt("Health", reinterpret_cast<int*>(&villager.health));
-				ImGui::InputInt("Age", reinterpret_cast<int*>(&villager.age));
-				ImGui::InputInt("Hunger", reinterpret_cast<int*>(&villager.hunger));
-				ImGui::Combo("Life Stage", &villager.lifeStage, Villager::k_LifeStageStrs);
-				ImGui::Combo("Sex", &villager.sex, Villager::k_SexStrs);
-				ImGui::Combo("Tribe", &villager.tribe, k_TribeStrs);
-				ImGui::Combo("Villager Number", &villager.number, k_VillagerRoleStrs);
-				ImGui::Combo("Task", &villager.task, Villager::k_TaskStrs);
+		    std::function<void(void)> debugCallback;
+		    if (config.debugVillagerNames)
+		    {
+			    debugCallback = [&villager, &action, &actionSystem] {
+				    if (villager.abode == entt::null)
+				    {
+					    ImGui::Text("Homeless");
+				    }
+				    ImGui::InputInt("Health", reinterpret_cast<int*>(&villager.health));
+				    ImGui::InputInt("Age", reinterpret_cast<int*>(&villager.age));
+				    ImGui::InputInt("Hunger", reinterpret_cast<int*>(&villager.hunger));
+				    ImGui::Combo("Life Stage", &villager.lifeStage, Villager::k_LifeStageStrs);
+				    ImGui::Combo("Sex", &villager.sex, Villager::k_SexStrs);
+				    ImGui::Combo("Tribe", &villager.tribe, k_TribeStrs);
+				    ImGui::Combo("Villager Number", &villager.number, k_VillagerRoleStrs);
+				    ImGui::Combo("Task", &villager.task, Villager::k_TaskStrs);
 
-				size_t index = 0;
-				for (const auto& str : LivingAction::k_IndexStrings)
-				{
-					if (ImGui::BeginCombo(str.data(), k_VillagerStateStrings
-					                                      .at(static_cast<size_t>(actionSystem.VillagerGetState(
-					                                          action, static_cast<LivingAction::Index>(index))))
-					                                      .data()))
-					{
-						size_t n = 0;
-						for (const auto& stateStr : k_VillagerStateStrings)
-						{
-							const bool isSelected = static_cast<size_t>(actionSystem.VillagerGetState(
-							                            action, static_cast<LivingAction::Index>(index))) == n;
-							if (ImGui::Selectable(stateStr.data(), isSelected))
-							{
-								actionSystem.VillagerSetState(action, static_cast<LivingAction::Index>(index),
-								                              static_cast<VillagerStates>(n), true);
-							}
+				    size_t index = 0;
+				    for (const auto& str : LivingAction::k_IndexStrings)
+				    {
+					    if (ImGui::BeginCombo(str.data(), k_VillagerStateStrings
+					                                          .at(static_cast<size_t>(actionSystem.VillagerGetState(
+					                                              action, static_cast<LivingAction::Index>(index))))
+					                                          .data()))
+					    {
+						    size_t n = 0;
+						    for (const auto& stateStr : k_VillagerStateStrings)
+						    {
+							    const bool isSelected = static_cast<size_t>(actionSystem.VillagerGetState(
+							                                action, static_cast<LivingAction::Index>(index))) == n;
+							    if (ImGui::Selectable(stateStr.data(), isSelected))
+							    {
+								    actionSystem.VillagerSetState(action, static_cast<LivingAction::Index>(index),
+								                                  static_cast<VillagerStates>(n), true);
+							    }
 
-							// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-							if (isSelected)
-							{
-								ImGui::SetItemDefaultFocus();
-							}
-							++n;
-						}
-						ImGui::EndCombo();
-					}
-					++index;
-				}
-			};
-		}
+							    // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+							    if (isSelected)
+							    {
+								    ImGui::SetItemDefaultFocus();
+							    }
+							    ++n;
+						    }
+						    ImGui::EndCombo();
+					    }
+					    ++index;
+				    }
+			    };
+		    }
 
-		const auto area = RenderVillagerName(coveredAreas, name, details, color,
-		                                     ImVec2(screenPoint.x, viewport.w - screenPoint.y), 100.0f, debugCallback);
-		if (area.has_value())
-		{
-			coveredAreas.emplace_back(area.value());
-		}
-	});
+		    const auto area = RenderVillagerName(coveredAreas, name, details, color,
+		                                         ImVec2(screenPoint.x, viewport.w - screenPoint.y), 100.0f, debugCallback);
+		    if (area.has_value())
+		    {
+			    coveredAreas.emplace_back(area.value());
+		    }
+	    });
 }
 
 void Gui::ShowCameraPositionOverlay(const Game& game)
@@ -934,7 +935,7 @@ void Gui::ShowCameraPositionOverlay(const Game& game)
 			ImGui::Text("Mouse Position: <invalid>");
 		}
 
-		const auto& handPosition = game.GetEntityRegistry().Get<ecs::components::Transform>(game.GetHand()).position;
+		const auto& handPosition = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(game.GetHand()).position;
 		ImGui::Text("Hand Position: (%.1f,%.1f,%.1f)", handPosition.x, handPosition.y, handPosition.z);
 
 		ImGui::Text("Game Turn: %u (%.3f ms)%s", game.GetTurn(), game.GetDeltaTime().count(),

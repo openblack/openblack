@@ -110,7 +110,7 @@ std::array<ecs::MapInterface::CellId, 9> GetNeighboringCells(const glm::vec2& po
 bool LinearScanForObstacle(entt::entity entity, const glm::vec2& pos, const glm::vec2& step)
 {
 	const auto& map = Locator::entitiesMap::value();
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 
 	// Reference will be updated or removed
 	registry.Remove<WallHugObjectReference>(entity);
@@ -181,7 +181,7 @@ bool LinearScanForObstacle(entt::entity entity, const glm::vec2& pos, const glm:
 /// If we have a number of turns to an obstacle but no obstacle saved: search in an arc to find one
 bool OrbitScanForObstacle(entt::entity entity, bool clockwise, Transform& transform, WallHug& wallHug)
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	const auto& map = Locator::entitiesMap::value();
 	auto& reference = registry.Get<WallHugObjectReference>(entity);
 
@@ -318,7 +318,7 @@ bool OrbitScanForObstacle(entt::entity entity, bool clockwise, Transform& transf
 }
 
 template <MoveState S, typename... Exclude>
-void StepForward(ecs::Registry& registry, Exclude... exclude)
+void StepForward(ecs::RegistryInterface& registry, Exclude... exclude)
 {
 	registry.Each<MoveStateTagComponent<S>, const WallHug, Transform>(
 	    [](MoveStateTagComponent<S>& state, const WallHug& wallHug, const Transform& transform) {
@@ -348,7 +348,7 @@ bool CellTransition(entt::entity entity, const MoveStateTagComponent<MoveState::
 
 /// Transition from one grid cell to another requires another check for obstacle in the line
 template <MoveState S>
-void HandleCellTransition(ecs::Registry& registry)
+void HandleCellTransition(ecs::RegistryInterface& registry)
 {
 	registry.Each<const MoveStateTagComponent<S>, WallHug, Transform>(
 	    [](entt::entity entity, const MoveStateTagComponent<S>& state, WallHug& wallHug, Transform& transform) {
@@ -365,7 +365,7 @@ void HandleCellTransition(ecs::Registry& registry)
 // TODO(bwrsandman): Vanilla is more complex than this. Update to the map might be needed when transitioning from one block to
 // the other.
 template <MoveState S, typename... Exclude>
-void ApplyStepGoal(ecs::Registry& registry, Exclude... exclude)
+void ApplyStepGoal(ecs::RegistryInterface& registry, Exclude... exclude)
 {
 	registry.Each<const MoveStateTagComponent<S>, Transform>(
 	    [](const MoveStateTagComponent<S>& state, Transform& transform) {
@@ -379,7 +379,7 @@ void ApplyStepGoal(ecs::Registry& registry, Exclude... exclude)
 
 void PathfindingSystem::Update()
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 
 	// 1.  ARRIVED:
 	//         If AreWeThere is false, set to STEP_THROUGH (and it will trigger following steps)

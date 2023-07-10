@@ -13,6 +13,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Game.h"
+#include "Locator.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
@@ -20,7 +21,7 @@ using namespace openblack::ecs::components;
 
 entt::entity TownArchetype::Create(int id, const glm::vec3& position, [[maybe_unused]] PlayerNames playerOwner, Tribe tribe)
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 
 	// const auto& info = Game::Instance()->GetInfoConstants().town;

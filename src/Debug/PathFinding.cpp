@@ -51,7 +51,7 @@ void PathFinding::Draw(Game& game)
 	if (_selectedVillager.has_value())
 	{
 		using namespace ecs::components;
-		auto& registry = game.GetEntityRegistry();
+		auto& registry = Locator::entitiesRegistry::value();
 
 		ImGui::Columns(2);
 
@@ -87,7 +87,7 @@ void PathFinding::Draw(Game& game)
 		if (ImGui::BeginTabBar("Actions"))
 		{
 			using namespace ecs::components;
-			auto& registry = game.GetEntityRegistry();
+			auto& registry = Locator::entitiesRegistry::value();
 			if (ImGui::BeginTabItem("Teleport"))
 			{
 				ImGui::DragFloat3("Destination", glm::value_ptr(_destination));
@@ -183,7 +183,7 @@ void PathFinding::Draw(Game& game)
 void PathFinding::Update(Game& game, [[maybe_unused]] const openblack::Renderer& renderer)
 {
 	using namespace ecs::components;
-	auto& registry = game.GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	const auto& handTransform = registry.Get<Transform>(game.GetHand());
 	auto const& meshes = Locator::resources::value().GetMeshes();
 	glm::bvec3 invalidValue {};

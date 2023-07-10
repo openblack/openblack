@@ -26,51 +26,45 @@ class ShaderManager;
 
 namespace openblack::ecs
 {
-class Registry
+class RegistryInterface
 {
 public:
-	Registry();
-
-	decltype(auto) Create() { return _registry.create(); }
+	decltype(auto) Create() { return GetRegistry().create(); }
 	template <typename It>
 	void Create(It first, It last)
 	{
-		_registry.create(first, last);
+		GetRegistry().create(first, last);
 	}
-	void Release(entt::entity entity)
-	{
-		ENTT_ASSERT(_registry.orphan(entity), "Non-orphan entity");
-		_registry.storage<entt::entity>().erase(entity);
-	}
+	virtual void Release(entt::entity entity) = 0;
 	template <typename It>
 	void Release(It first, It last)
 	{
 		ENTT_ASSERT(std::all_of(first, last, [this](const auto entt) { return orphan(entt); }), "Non-orphan entity");
-		_registry.storage<entt::entity>().erase(std::move(first), std::move(last));
+		GetRegistry().storage<entt::entity>().erase(std::move(first), std::move(last));
 	}
-	void Destroy(entt::entity entity) { _registry.destroy(entity); }
+	virtual void Destroy(entt::entity entity) = 0;
 	template <typename It>
 	void Destroy(It first, It last)
 	{
-		_registry.destroy(first, last);
+		GetRegistry().destroy(first, last);
 	}
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args)
 	{
 		SetDirty();
-		return _registry.emplace<Component>(entity, std::forward<Args>(args)...);
+		return GetRegistry().emplace<Component>(entity, std::forward<Args>(args)...);
 	}
 	template <typename Component, typename... Args>
 	decltype(auto) AssignOrReplace(entt::entity entity, [[maybe_unused]] Args&&... args)
 	{
 		SetDirty();
-		return _registry.emplace_or_replace<Component>(entity, std::forward<Args>(args)...);
+		return GetRegistry().emplace_or_replace<Component>(entity, std::forward<Args>(args)...);
 	}
 	template <typename Component, typename... Other>
 	decltype(auto) Remove(entt::entity entity)
 	{
 		SetDirty();
-		return _registry.remove<Component, Other...>(entity);
+		return GetRegistry().remove<Component, Other...>(entity);
 	}
 	template <typename After, typename Before, typename... Args>
 	decltype(auto) SwapComponents(entt::entity entity, [[maybe_unused]] Before previousComponent,
@@ -79,60 +73,54 @@ public:
 		Remove<Before>(entity);
 		return Assign<After>(entity, std::forward<Args>(args)...);
 	}
-	void SetDirty();
-	RegistryContext& Context();
-	[[nodiscard]] const RegistryContext& Context() const;
-	void Reset()
-	{
-		SetDirty();
-		_registry.clear();
-		_registry.ctx().erase<RegistryContext>();
-		_registry.ctx().emplace<RegistryContext>();
-	};
+	virtual void SetDirty() = 0;
+	virtual RegistryContext& Context() = 0;
+	[[nodiscard]] virtual const RegistryContext& Context() const = 0;
+	virtual void Reset() = 0;
 	template <typename Component>
 	size_t Size()
 	{
-		return _registry.storage<Component>().size();
+		return GetRegistry().storage<Component>().size();
 	}
 	template <typename... Components>
 	[[nodiscard]] bool AllOf(entt::entity entity) const
 	{
-		return _registry.all_of<Components...>(entity);
+		return GetRegistry().all_of<Components...>(entity);
 	}
 	template <typename... Components>
 	[[nodiscard]] bool AnyOf(entt::entity entity) const
 	{
-		return _registry.any_of<Components...>(entity);
+		return GetRegistry().any_of<Components...>(entity);
 	}
 	template <typename... Components>
 	decltype(auto) Get(entt::entity entity)
 	{
-		return _registry.get<Components...>(entity);
+		return GetRegistry().get<Components...>(entity);
 	}
 	template <typename... Components>
 	[[nodiscard]] decltype(auto) Get(entt::entity entity) const
 	{
-		return _registry.get<Components...>(entity);
+		return GetRegistry().get<Components...>(entity);
 	}
 	template <typename... Components>
 	[[nodiscard]] decltype(auto) Front() const
 	{
-		return _registry.view<Components...>().front();
+		return GetRegistry().view<Components...>().front();
 	}
 	template <typename... Components, typename... Exclude, typename Func>
 	decltype(auto) Each(Func func, Exclude... exclude)
 	{
-		return _registry.view<Components...>(exclude...).each(func);
+		return GetRegistry().view<Components...>(exclude...).each(func);
 	}
 	template <typename... Components, typename... Exclude, typename Func>
 	[[nodiscard]] decltype(auto) Each(Func func, Exclude... exclude) const
 	{
-		return _registry.view<Components...>(exclude...).each(func);
+		return GetRegistry().view<Components...>(exclude...).each(func);
 	}
 	template <typename Component>
 	[[nodiscard]] decltype(auto) ToEntity(const Component& component) const
 	{
-		return entt::to_entity(_registry, component);
+		return entt::to_entity(GetRegistry(), component);
 	}
 	template <typename Dst, typename Src>
 	decltype(auto) As(Src& component)
@@ -147,11 +135,12 @@ public:
 	template <typename... Components>
 	[[nodiscard]] decltype(auto) Size() const
 	{
-		return _registry.view<Components...>().size();
+		return GetRegistry().view<Components...>().size();
 	}
 
 private:
-	entt::registry _registry;
+	[[nodiscard]] virtual entt::registry& GetRegistry() = 0;
+	[[nodiscard]] virtual const entt::registry& GetRegistry() const = 0;
 };
 
 } // namespace openblack::ecs

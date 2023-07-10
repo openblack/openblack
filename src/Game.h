@@ -177,8 +177,6 @@ public:
 	[[nodiscard]] entt::entity GetHand() const;
 	[[nodiscard]] const LHVM::LHVM& GetLhvm() const { return *_lhvm; }
 	LHVM::LHVM& GetLhvm() { return *_lhvm; }
-	ecs::Registry& GetEntityRegistry() { return *_entityRegistry; }
-	[[nodiscard]] ecs::Registry& GetEntityRegistry() const { return *_entityRegistry; }
 	const InfoConstants& GetInfoConstants() { return _infoConstants; } ///< Access should be only read-only
 	Config& GetConfig() { return _config; }
 	[[nodiscard]] const Config& GetConfig() const { return _config; }
@@ -212,7 +210,6 @@ private:
 	std::unique_ptr<Water> _water;
 	std::unique_ptr<lhscriptx::Script> _scriptx;
 	std::unique_ptr<LHVM::LHVM> _lhvm;
-	std::unique_ptr<ecs::Registry> _entityRegistry;
 
 	InfoConstants _infoConstants;
 	Config _config;

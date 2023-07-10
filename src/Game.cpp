@@ -71,7 +71,6 @@ Game* Game::sInstance = nullptr;
 Game::Game(Arguments&& args)
     : _gamePath(args.gamePath)
     , _eventManager(std::make_unique<EventManager>())
-    , _entityRegistry(std::make_unique<ecs::Registry>())
     , _startMap(args.startLevel)
     , _handPose(glm::identity<glm::mat4>())
     , _requestScreenshot(args.requestScreenshot)
@@ -159,7 +158,6 @@ Game::~Game()
 
 	_water.reset();
 	_sky.reset();
-	_entityRegistry.reset();
 	_gui.reset();
 	_renderer.reset();
 	_window.reset();
@@ -417,14 +415,14 @@ bool Game::Update()
 		{
 			const glm::vec3 handOffset(0, 1.5f, 0);
 			const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
-			auto& handTransform = _entityRegistry->Get<ecs::components::Transform>(_handEntity);
+			auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(_handEntity);
 			// TODO(#480): move using velocity rather than snapping hand to intersectionTransform
 			handTransform.position = intersectionTransform.position;
 			auto cameraRotation = _camera->GetRotation();
 			handTransform.rotation = glm::eulerAngleY(-cameraRotation.y) * modelRotationCorrection;
 			handTransform.rotation = intersectionTransform.rotation * handTransform.rotation;
 			handTransform.position += intersectionTransform.rotation * handOffset;
-			_entityRegistry->SetDirty();
+			Locator::entitiesRegistry::value().SetDirty();
 		}
 
 		// Update Entities
@@ -728,7 +726,7 @@ bool Game::Run()
 			    /*frameBuffer =*/nullptr,
 			    /*sky =*/*_sky,
 			    /*water =*/*_water,
-			    /*entities =*/*_entityRegistry,
+			    /*entities =*/Locator::entitiesRegistry::value(),
 			    /*time =*/milliseconds.count(), // TODO(#481): get actual time
 			    /*timeOfDay =*/_config.timeOfDay,
 			    /*bumpMapStrength =*/_config.bumpMapStrength,
@@ -793,7 +791,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 	std::string source(reinterpret_cast<const char*>(data.data()), data.size());
 
 	// Reset everything. Deletes all entities and their components
-	_entityRegistry->Reset();
+	Locator::entitiesRegistry::value().Reset();
 
 	// We need a hand for the player
 	_handEntity = ecs::archetypes::HandArchetype::Create(glm::vec3(0.0f), glm::half_pi<float>(), 0.0f, glm::half_pi<float>(),

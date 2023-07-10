@@ -18,6 +18,7 @@
 #include "ECS/Registry.h"
 #include "Enums.h"
 #include "Game.h"
+#include "Locator.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
@@ -27,7 +28,7 @@ using namespace openblack::creature;
 entt::entity CreatureArchetype::Create(const glm::vec3& position, PlayerNames playerName, CreatureType creatureType,
                                        entt::id_type creatureMindId, float yAngleRadians, float scale)
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 	auto meshId = creature::GetIdFromType(creatureType, CreatureBody::Appearance::Base);
 	registry.Assign<Creature>(entity, playerName, creatureType, creatureMindId);

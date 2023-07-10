@@ -37,7 +37,7 @@ void AddStoragePitComponents(entt::entity entity, const Mesh& pitMesh, const GAb
                              float yAngleRadians, uint32_t foodAmount, uint32_t woodAmount)
 {
 	auto* game = Game::Instance();
-	auto& registry = game->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	const auto& potInfoConstants = game->GetInfoConstants().pot;
 
 	const auto l3dMesh = entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(pitMesh.id);
@@ -64,7 +64,7 @@ entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, 
                                     float scale, uint32_t foodAmount, uint32_t woodAmount)
 {
 	auto* game = Game::Instance();
-	auto& registry = game->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 
 	// If there is no town, assign to closest
 	if (registry.Context().towns.find(townId) == registry.Context().towns.end())

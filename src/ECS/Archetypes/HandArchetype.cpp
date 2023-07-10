@@ -17,6 +17,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Game.h"
+#include "Locator.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
@@ -25,7 +26,7 @@ using namespace openblack::ecs::components;
 entt::entity HandArchetype::Create(const glm::vec3& position, float xAngleRadians, float yAngleRadians, float zAngleRadians,
                                    float scale, bool rightHanded)
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 
 	const auto rotation = glm::mat3(glm::eulerAngleXYZ(xAngleRadians, yAngleRadians, zAngleRadians));

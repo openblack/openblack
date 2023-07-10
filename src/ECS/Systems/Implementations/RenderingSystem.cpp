@@ -48,7 +48,7 @@ RenderingSystem::~RenderingSystem() = default;
 
 void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 
 	// Count number of instances
 	uint32_t instanceCount = 0;
@@ -101,7 +101,7 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 
 void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 
 	// Store offsets of uniforms for descs
 	std::map<entt::id_type, uint32_t> uniformOffsets;
@@ -142,7 +142,7 @@ void RenderingSystem::SetDirty()
 
 void RenderingSystem::PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawStreams)
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 
 	if (_renderContext.dirty || _renderContext.hasBoundingBoxes != drawBoundingBox ||
 	    (_renderContext.footpaths != nullptr) != drawFootpaths || (_renderContext.streams != nullptr) != drawStreams)

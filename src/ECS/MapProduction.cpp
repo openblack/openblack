@@ -20,6 +20,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Game.h"
+#include "Locator.h"
 
 using namespace openblack::ecs;
 using namespace openblack::ecs::components;
@@ -66,7 +67,7 @@ void MapProduction::Clear()
 
 void MapProduction::Build()
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	registry.Each<const Fixed, const Transform>([this](entt::entity entity, const Fixed& fixed, const Transform& transform) {
 		// TODO(bwrsandman): This is only in the case of a square bb underling the bounding circle (x/z) <= 1.4
 		const float radius = fixed.boundingRadius * glm::compMax(transform.scale) + 1.0f;

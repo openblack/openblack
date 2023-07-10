@@ -15,6 +15,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Game.h"
+#include "Locator.h"
 #include "Resources/MeshId.h"
 
 using namespace openblack;
@@ -23,7 +24,7 @@ using namespace openblack::ecs::components;
 
 entt::entity BonfireArchetype::Create(const glm::vec3& position)
 {
-	auto& registry = Game::Instance()->GetEntityRegistry();
+	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(glm::radians(180.0f)), glm::vec3(1.0f));
 	const auto resourceId = resources::MeshIdToResourceId(MeshId::BuildingCampfire);
