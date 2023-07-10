@@ -35,7 +35,7 @@ PathFinding::PathFinding()
 {
 }
 
-void PathFinding::Draw(Game& game)
+void PathFinding::Draw([[maybe_unused]] Game& game)
 {
 	ImGui::TextWrapped(
 	    "Select Villager by left clicking on it, then select a pathfinding action and right click the destination");
