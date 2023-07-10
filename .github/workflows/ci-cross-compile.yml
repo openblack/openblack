@@ -136,11 +136,12 @@ jobs:
         with:
           arguments: assembleDebug -PusePrebuiltNativeLibs
           build-root-directory: android
-      - name: Run Gradle Assemble (Release)
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: assembleRelease -PusePrebuiltNativeLibs
-          build-root-directory: android
+      # TODO(#632): Setup digital signing for Android release build
+      # - name: Run Gradle Assemble (Release)
+      #   uses: gradle/gradle-build-action@v2
+      #   with:
+      #     arguments: assembleRelease -PusePrebuiltNativeLibs
+      #     build-root-directory: android
       - uses: actions/upload-artifact@v3
         with:
           name: openblack-android-apk-${{github.sha}}
