@@ -19,7 +19,6 @@
 #include "ECS/Components/Stream.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
-#include "Game.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/ShaderManager.h"
 #include "Locator.h"

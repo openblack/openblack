@@ -17,7 +17,6 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Enums.h"
-#include "Game.h"
 #include "Locator.h"
 
 using namespace openblack;

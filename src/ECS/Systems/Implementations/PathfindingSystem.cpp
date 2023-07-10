@@ -26,7 +26,6 @@
 #include "ECS/Components/WallHug.h"
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
-#include "Game.h"
 #include "Locator.h"
 
 using namespace openblack;

@@ -12,7 +12,6 @@
 #include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
-#include "Game.h"
 #include "Locator.h"
 
 using namespace openblack;

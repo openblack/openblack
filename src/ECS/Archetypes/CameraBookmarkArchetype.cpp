@@ -12,7 +12,6 @@
 #include "ECS/Components/CameraBookmark.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Registry.h"
-#include "Game.h"
 #include "Graphics/Texture2D.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
