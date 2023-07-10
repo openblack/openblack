@@ -9,9 +9,8 @@
 
 #pragma once
 
-#include "entt/fwd.hpp"
-#include "glm/vec2.hpp"
-#include "glm/vec3.hpp"
+#include <entt/fwd.hpp>
+#include <glm/vec2.hpp>
 
 namespace openblack::ecs::components
 {
