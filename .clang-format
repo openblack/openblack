@@ -47,6 +47,8 @@ IncludeCategories:
   # cpp standard libs starting with c
   - Regex:           '^<chrono>'
     Priority:        2
+  - Regex:           '^<codecvt>'
+    Priority:        2
   # c standard libs
   - Regex:           '^<c[^\.]*>'
     Priority:        1
