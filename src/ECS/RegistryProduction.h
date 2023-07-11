@@ -9,6 +9,10 @@
 
 #pragma once
 
+#if !defined(LOCATOR_IMPLEMENTATIONS)
+#warning "Locator interface implementations should only be included in Locator.cpp, use interface instead."
+#endif
+
 #include <entt/entt.hpp>
 
 #include "ECS/RegistryContext.h"
