@@ -11,18 +11,11 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtx/component_wise.hpp>
-#include <glm/gtx/norm.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
-#include <glm/vec3.hpp>
 
-#include "ECS/Components/Fixed.h"
-#include "ECS/Components/Mobile.h"
-#include "ECS/Components/Transform.h"
-#include "ECS/Registry.h"
 #include "Locator.h"
 
 using namespace openblack::ecs;
-using namespace openblack::ecs::components;
 
 MapInterface::CellId MapInterface::GetGridCell(const glm::vec2& pos)
 {

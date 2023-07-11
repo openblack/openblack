@@ -317,7 +317,7 @@ bool OrbitScanForObstacle(entt::entity entity, bool clockwise, Transform& transf
 }
 
 template <MoveState S, typename... Exclude>
-void StepForward(ecs::RegistryInterface& registry, Exclude... exclude)
+void StepForward(ecs::Registry& registry, Exclude... exclude)
 {
 	registry.Each<MoveStateTagComponent<S>, const WallHug, Transform>(
 	    [](MoveStateTagComponent<S>& state, const WallHug& wallHug, const Transform& transform) {
@@ -347,7 +347,7 @@ bool CellTransition(entt::entity entity, const MoveStateTagComponent<MoveState::
 
 /// Transition from one grid cell to another requires another check for obstacle in the line
 template <MoveState S>
-void HandleCellTransition(ecs::RegistryInterface& registry)
+void HandleCellTransition(ecs::Registry& registry)
 {
 	registry.Each<const MoveStateTagComponent<S>, WallHug, Transform>(
 	    [](entt::entity entity, const MoveStateTagComponent<S>& state, WallHug& wallHug, Transform& transform) {
@@ -364,7 +364,7 @@ void HandleCellTransition(ecs::RegistryInterface& registry)
 // TODO(bwrsandman): Vanilla is more complex than this. Update to the map might be needed when transitioning from one block to
 // the other.
 template <MoveState S, typename... Exclude>
-void ApplyStepGoal(ecs::RegistryInterface& registry, Exclude... exclude)
+void ApplyStepGoal(ecs::Registry& registry, Exclude... exclude)
 {
 	registry.Each<const MoveStateTagComponent<S>, Transform>(
 	    [](const MoveStateTagComponent<S>& state, Transform& transform) {
