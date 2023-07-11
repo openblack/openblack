@@ -16,7 +16,6 @@
         "vcpkg/",
         "cmake-build-presets/",
         "CMakeFiles/",
-        "stb_image_write.h",
         "tiny_gltf.h"
     ]
 }

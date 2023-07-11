@@ -18,8 +18,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
 #include <spdlog/spdlog.h>
+#include <stb_image_write.h>
 
-#include "Common/stb_image_write.h"
 #include "Dynamics/LandBlockBulletMeshInterface.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"

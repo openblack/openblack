@@ -82,7 +82,7 @@ set_target_properties(openblack_lib PROPERTIES LINKER_LANGUAGE CXX)
 
 target_include_directories(
   openblack_lib PUBLIC ${CMAKE_CURRENT_LIST_DIR} ${BULLET_INCLUDE_DIR}
-                       ${CMAKE_BINARY_DIR}/include
+                       ${Stb_INCLUDE_DIR} ${CMAKE_BINARY_DIR}/include
 )
 if (NOT VCPKG_TARGET_ANDROID)
   target_include_directories(

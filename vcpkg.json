@@ -15,6 +15,7 @@
         "imgui",
         "spdlog",
         "glm",
+        "stb",
         "entt",
         "cxxopts",
         {

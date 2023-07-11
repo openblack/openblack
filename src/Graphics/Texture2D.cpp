@@ -15,8 +15,7 @@
 #include <array>
 
 #include <spdlog/spdlog.h>
-
-#include "Common/stb_image_write.h"
+#include <stb_image_write.h>
 
 namespace openblack::graphics
 {
