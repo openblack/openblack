@@ -74,7 +74,11 @@ endif ()
 
 find_package(Stb QUIET)
 if (NOT Stb_FOUND)
-  find_path(Stb_INCLUDE_DIR NAMES stb_image_write.h stb_image.h stb_rect_pack.h PATHS /usr/include/stb REQUIRED)
+  find_path(
+    Stb_INCLUDE_DIR
+    NAMES stb_image_write.h stb_image.h stb_rect_pack.h
+    PATHS /usr/include/stb REQUIRED
+  )
 endif ()
 
 find_package(unofficial-minizip CONFIG QUIET)
