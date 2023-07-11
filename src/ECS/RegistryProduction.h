@@ -42,11 +42,6 @@ public:
 	RegistryContext& Context() override;
 	[[nodiscard]] const RegistryContext& Context() const override;
 	void Reset() override;
-
-private:
-	entt::registry _registry;
-	[[nodiscard]] entt::registry& GetRegistry() override;
-	[[nodiscard]] const entt::registry& GetRegistry() const override;
 };
 
 } // namespace openblack::ecs

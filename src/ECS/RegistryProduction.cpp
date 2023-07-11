@@ -54,14 +54,4 @@ void RegistryProduction::SetDirty()
 {
 	Locator::rendereringSystem::value().SetDirty();
 }
-
-entt::registry& RegistryProduction::GetRegistry()
-{
-	return _registry;
-}
-
-const entt::registry& RegistryProduction::GetRegistry() const
-{
-	return _registry;
-}
 } // namespace openblack::ecs
