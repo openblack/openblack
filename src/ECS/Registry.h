@@ -26,23 +26,24 @@ class ShaderManager;
 
 namespace openblack::ecs
 {
-class RegistryInterface
+class Registry
 {
 public:
+	Registry();
 	decltype(auto) Create() { return _registry.create(); }
 	template <typename It>
 	void Create(It first, It last)
 	{
 		_registry.create(first, last);
 	}
-	virtual void Release(entt::entity entity) = 0;
+	virtual void Release(entt::entity entity);
 	template <typename It>
 	void Release(It first, It last)
 	{
 		ENTT_ASSERT(std::all_of(first, last, [this](const auto entt) { return orphan(entt); }), "Non-orphan entity");
 		_registry.storage<entt::entity>().erase(std::move(first), std::move(last));
 	}
-	virtual void Destroy(entt::entity entity) = 0;
+	virtual void Destroy(entt::entity entity);
 	template <typename It>
 	void Destroy(It first, It last)
 	{
@@ -73,10 +74,10 @@ public:
 		Remove<Before>(entity);
 		return Assign<After>(entity, std::forward<Args>(args)...);
 	}
-	virtual void SetDirty() = 0;
-	virtual RegistryContext& Context() = 0;
-	[[nodiscard]] virtual const RegistryContext& Context() const = 0;
-	virtual void Reset() = 0;
+	virtual void SetDirty();
+	virtual RegistryContext& Context();
+	[[nodiscard]] virtual const RegistryContext& Context() const;
+	virtual void Reset();
 	template <typename Component>
 	size_t Size()
 	{
@@ -137,6 +138,7 @@ public:
 	{
 		return _registry.view<Components...>().size();
 	}
+	virtual ~Registry() = default;
 
 protected:
 	entt::registry _registry;

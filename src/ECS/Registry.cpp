@@ -7,8 +7,7 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
-#define LOCATOR_IMPLEMENTATIONS
-#include "RegistryProduction.h"
+#include "Registry.h"
 
 #include "Locator.h"
 #include "Systems/RenderingSystemInterface.h"
@@ -16,33 +15,33 @@
 namespace openblack::ecs
 {
 
-RegistryProduction::RegistryProduction()
+Registry::Registry()
 {
 	_registry.ctx().emplace<RegistryContext>();
 }
 
-void RegistryProduction::Release(entt::entity entity)
+void Registry::Release(entt::entity entity)
 {
 	ENTT_ASSERT(_registry.orphan(entity), "Non-orphan entity");
 	_registry.storage<entt::entity>().erase(entity);
 }
 
-void RegistryProduction::Destroy(entt::entity entity)
+void Registry::Destroy(entt::entity entity)
 {
 	_registry.destroy(entity);
 }
 
-RegistryContext& RegistryProduction::Context()
+RegistryContext& Registry::Context()
 {
 	return _registry.ctx().get<RegistryContext>();
 }
 
-const RegistryContext& RegistryProduction::Context() const
+const RegistryContext& Registry::Context() const
 {
 	return _registry.ctx().get<const RegistryContext>();
 }
 
-void RegistryProduction::Reset()
+void Registry::Reset()
 {
 	SetDirty();
 	_registry.clear();
@@ -50,7 +49,7 @@ void RegistryProduction::Reset()
 	_registry.ctx().emplace<RegistryContext>();
 };
 
-void RegistryProduction::SetDirty()
+void Registry::SetDirty()
 {
 	Locator::rendereringSystem::value().SetDirty();
 }

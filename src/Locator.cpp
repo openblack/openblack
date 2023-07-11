@@ -15,7 +15,7 @@
 #include "3D/UnloadedIsland.h"
 #include "Common/RandomNumberManagerProduction.h"
 #include "ECS/MapProduction.h"
-#include "ECS/RegistryProduction.h"
+#include "ECS/Registry.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
@@ -31,7 +31,7 @@
 
 using namespace openblack::filesystem;
 using openblack::ecs::MapProduction;
-using openblack::ecs::RegistryProduction;
+using openblack::ecs::Registry;
 using openblack::ecs::systems::CameraBookmarkSystem;
 using openblack::ecs::systems::DynamicsSystem;
 using openblack::ecs::systems::LivingActionSystem;
@@ -53,7 +53,7 @@ void InitializeGame()
 	Locator::resources::emplace<Resources>();
 	Locator::rng::emplace<RandomNumberManagerProduction>();
 	Locator::rendereringSystem::emplace<RenderingSystem>();
-	Locator::entitiesRegistry::emplace<RegistryProduction>();
+	Locator::entitiesRegistry::emplace<Registry>();
 }
 
 void InitializeLevel(const std::filesystem::path& path)
