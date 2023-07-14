@@ -35,19 +35,9 @@ jobs:
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
         if: startsWith(github.event_name, 'pull_request')
 
-      - name: Install Linux dependencies
-        run: |
-          sudo apt update -y
-          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
-        if: startsWith(matrix.os, 'ubuntu')
-
-      - name: Install EMSDK
-        run: |
-          git clone https://github.com/emscripten-core/emsdk ${EMSDK}
-          pushd ${EMSDK}
-          ./emsdk install latest
-          ./emsdk activate latest
-        if: matrix.preset == 'emscripten-vcpkg'
+      - name: Setup
+        run: ${{ matrix.setup }}
+        if: matrix.setup
 
       # Setup the build machine with the most recent versions of CMake and Ninja. Both are cached if not already: on subsequent runs both will be quickly restored from GitHub cache service.
       - uses: lukka/get-cmake@latest
