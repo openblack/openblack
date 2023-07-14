@@ -26,7 +26,25 @@ jobs:
               sudo dpkg --add-architecture i386
               sudo apt-get update
               sudo apt-get install -y libx11-dev:i386 libxext-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 gcc:i386 g++:i386
+          # - triplet: arm64-linux
+          #   os: ubuntu-latest
+          #   preset: ninja-multi-vcpkg
+          #   setup: |
+          #     sudo dpkg --add-architecture arm64
+          #     echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy main restricted"                               | sudo tee    /etc/apt/sources.list.d/arm-cross-compile-sources.list
+          #     echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy-updates main restricted"                       | sudo tee -a /etc/apt/sources.list.d/arm-cross-compile-sources.list
+          #     echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy universe"                                      | sudo tee -a /etc/apt/sources.list.d/arm-cross-compile-sources.list
+          #     echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy-updates universe"                              | sudo tee -a /etc/apt/sources.list.d/arm-cross-compile-sources.list
+          #     echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy multiverse"                                    | sudo tee -a /etc/apt/sources.list.d/arm-cross-compile-sources.list
+          #     echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy-updates multiverse"                            | sudo tee -a /etc/apt/sources.list.d/arm-cross-compile-sources.list
+          #     echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/arm-cross-compile-sources.list
+          #     sudo sed -i 's/^deb /deb [arch=amd64] /g' /etc/apt/sources.list
+          #     sudo apt-get update
+          #     sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libx11-dev:arm64 libxext-dev:arm64 libgl1-mesa-dev:arm64 libglu1-mesa-dev:arm64
           - triplet: x86-windows
+            os: windows-latest
+            preset: ninja-multi-vcpkg
+          - triplet: arm64-windows
             os: windows-latest
             preset: ninja-multi-vcpkg
 
