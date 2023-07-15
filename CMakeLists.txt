@@ -126,12 +126,38 @@ add_subdirectory(apps/lndtool)
 add_subdirectory(apps/anmtool)
 add_subdirectory(apps/morphtool)
 
-if (NOT CMAKE_CROSSCOMPILING) # Requires python and running compiled apps
+# Map CMAKE_HOST_SYSTEM_PROCESSOR value
+if (${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "AMD64"
+    OR ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64"
+)
+  set(OPENBLACK_HOST_ARCH "x64")
+elseif (${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86"
+        OR ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "i386"
+)
+  set(OPENBLACK_HOST_ARCH "Win32")
+elseif (${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "ARM64")
+  set(OPENBLACK_HOST_ARCH "ARM64")
+else ()
+  set(OPENBLACK_HOST_ARCH ${CMAKE_HOST_SYSTEM_PROCESSOR})
+endif ()
+
+# Cross compile check
+set(OPENBLACK_CROSSCOMPILING ${CMAKE_CROSSCOMPILING})
+if (MSVC)
+  if (NOT "${OPENBLACK_HOST_ARCH}" STREQUAL "${CMAKE_VS_PLATFORM_NAME}"
+      AND VCPKG_TARGET_TRIPLET
+      AND NOT VCPKG_TARGET_TRIPLET MATCHES "${OPENBLACK_HOST_ARCH}*"
+  )
+    set(OPENBLACK_CROSSCOMPILING ON)
+  endif ()
+endif ()
+
+if (NOT OPENBLACK_CROSSCOMPILING) # Requires python and running compiled apps
   add_subdirectory(test/mock)
 endif ()
 
 find_package(GTest CONFIG)
-if (GTest_FOUND AND NOT CMAKE_CROSSCOMPILING)
+if (GTest_FOUND AND NOT OPENBLACK_CROSSCOMPILING)
   enable_testing()
   add_subdirectory(test)
 endif ()
