@@ -33,7 +33,7 @@ public:
 	[[nodiscard]] const std::filesystem::path& GetGamePath() const override { return _gamePath; }
 	void AddAdditionalPath(const std::filesystem::path& path) override { _additionalPaths.push_back(path); }
 	std::vector<uint8_t> ReadAll(const std::filesystem::path& path) override;
-	void Iterate(const std::filesystem::path& path,
+	void Iterate(const std::filesystem::path& path, bool recursive,
 	             const std::function<void(const std::filesystem::path&)>& function) const override;
 
 private:

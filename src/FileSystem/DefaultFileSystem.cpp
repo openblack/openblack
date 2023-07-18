@@ -101,12 +101,23 @@ std::vector<uint8_t> DefaultFileSystem::ReadAll(const std::filesystem::path& pat
 	return data;
 }
 
-void DefaultFileSystem::Iterate(const std::filesystem::path& path,
+void DefaultFileSystem::Iterate(const std::filesystem::path& path, bool recursive,
                                 const std::function<void(const std::filesystem::path&)>& function) const
 {
-	for (const auto& f : std::filesystem::directory_iterator {FindPath(path)})
+	const auto fixedPath = FindPath(path);
+	if (recursive)
 	{
-		function(f);
+		for (const auto& f : std::filesystem::recursive_directory_iterator {fixedPath})
+		{
+			function(f);
+		}
+	}
+	else
+	{
+		for (const auto& f : std::filesystem::directory_iterator {fixedPath})
+		{
+			function(f);
+		}
 	}
 }
 

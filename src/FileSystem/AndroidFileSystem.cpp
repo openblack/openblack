@@ -31,7 +31,7 @@ AndroidFileSystem::AndroidFileSystem()
 	                                                     "(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)[B");
 	_jniListFilesFromPathMid =
 	    _jniEnv->GetStaticMethodID(_jniInteropClass, "listFilesFromPath",
-	                               "(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
+	                               "(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Z)[Ljava/lang/String;");
 }
 
 AndroidFileSystem::~AndroidFileSystem()
@@ -92,16 +92,17 @@ std::vector<uint8_t> AndroidFileSystem::ReadAll(const std::filesystem::path& pat
 	return data;
 }
 
-void AndroidFileSystem::Iterate(const std::filesystem::path& path,
+void AndroidFileSystem::Iterate(const std::filesystem::path& path, bool recursive,
                                 const std::function<void(const std::filesystem::path&)>& function) const
 {
 	// Converting C++ string to Java string
 	jstring jgamePath = _jniEnv->NewStringUTF(_gamePath.c_str());
 	jstring jpath = _jniEnv->NewStringUTF(path.c_str());
+	jboolean jrecursive = (jboolean)recursive;
 
 	// Calling Java method
 	jobjectArray jfilePaths = (jobjectArray)_jniEnv->CallStaticObjectMethod(_jniInteropClass, _jniListFilesFromPathMid,
-	                                                                        _jniActivity, jgamePath, jpath);
+	                                                                        _jniActivity, jgamePath, jpath, jrecursive);
 
 	// Processing returned string array
 	int stringCount = _jniEnv->GetArrayLength(jfilePaths);

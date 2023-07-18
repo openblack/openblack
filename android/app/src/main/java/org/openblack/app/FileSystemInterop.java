@@ -33,17 +33,28 @@ public class FileSystemInterop {
         return null;
     }
 
-    public static String[] listFilesFromPath(Context context, String storageUriString, String path) {
+    public static String[] listFilesFromPath(Context context, String storageUriString, String path, boolean recursive) {
         Uri uri = getDirectoryFromPath(context, storageUriString, path);
         DocumentFile directory = DocumentFile.fromTreeUri(context, uri);
+        ArrayList<String> fileNames = new ArrayList<>();
+
+        listFilesRecursive(directory, fileNames, recursive);
+
+        String[] fileNamesArray = new String[fileNames.size()];
+        fileNamesArray = fileNames.toArray(fileNamesArray);
+        return fileNamesArray;
+    }
+
+    private static void listFilesRecursive(DocumentFile directory, ArrayList<String> fileNames, boolean recursive) {
         DocumentFile[] files = directory.listFiles();
-        String[] fileNames = new String[files.length];
 
-        for (int i = 0; i < files.length; i++) {
-            fileNames[i] = files[i].getName();
+        for (DocumentFile file : files) {
+            fileNames.add(file.getName());
+
+            if (recursive && file.isDirectory()) {
+                listFilesRecursive(file, fileNames, recursive);
+            }
         }
-
-        return fileNames;
     }
 
     public static byte[] readFileFromPath(Context context, String storageUriString, String path) {
