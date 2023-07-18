@@ -441,6 +441,7 @@ bool Game::Update()
 
 bool Game::Initialize()
 {
+	using filesystem::Path;
 	ecs::systems::InitializeGame();
 	auto& fileSystem = Locator::filesystem::value();
 	auto& resources = Locator::resources::value();
@@ -482,11 +483,11 @@ bool Game::Initialize()
 	}
 	else
 	{
-		_startMap = fileSystem.GetPath<filesystem::Path::Scripts>() / _startMap;
+		_startMap = fileSystem.GetPath<Path::Scripts>() / _startMap;
 	}
 
 	fileSystem.Iterate(
-	    fileSystem.GetPath<filesystem::Path::Citadel>() / "OutsideMeshes", [&meshManager](const std::filesystem::path& f) {
+	    fileSystem.GetPath<Path::Citadel>() / "OutsideMeshes", false, [&meshManager](const std::filesystem::path& f) {
 		    if (f.extension() == ".zzz")
 		    {
 			    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading temple mesh: {}", f.stem().string());
@@ -503,9 +504,9 @@ bool Game::Initialize()
 	pack::PackFile pack;
 #if __ANDROID__
 	//  Android has a complicated permissions API, must call java code to read contents.
-	pack.Open(fileSystem.ReadAll(fileSystem.GetPath<filesystem::Path::Data>(true) / "AllMeshes.g3d"));
+	pack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>(true) / "AllMeshes.g3d"));
 #else
-	pack.Open(fileSystem.GetPath<filesystem::Path::Data>(true) / "AllMeshes.g3d");
+	pack.Open(fileSystem.GetPath<Path::Data>(true) / "AllMeshes.g3d");
 #endif
 	const auto& meshes = pack.GetMeshes();
 	for (size_t i = 0; const auto& mesh : meshes)
@@ -524,9 +525,9 @@ bool Game::Initialize()
 	pack::PackFile animationPack;
 #if __ANDROID__
 	//  Android has a complicated permissions API, must call java code to read contents.
-	animationPack.Open(fileSystem.ReadAll(fileSystem.GetPath<filesystem::Path::Data>(true) / "AllAnims.anm"));
+	animationPack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>(true) / "AllAnims.anm"));
 #else
-	animationPack.Open(fileSystem.GetPath<filesystem::Path::Data>(true) / "AllAnims.anm");
+	animationPack.Open(fileSystem.GetPath<Path::Data>(true) / "AllAnims.anm");
 #endif
 	const auto& animations = animationPack.GetAnimations();
 	for (size_t i = 0; i < animations.size(); i++)
@@ -534,7 +535,7 @@ bool Game::Initialize()
 		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animations[i]);
 	}
 
-	fileSystem.Iterate(fileSystem.GetPath<filesystem::Path::CreatureMesh>(), [&meshManager](const std::filesystem::path& f) {
+	fileSystem.Iterate(fileSystem.GetPath<Path::CreatureMesh>(), false, [&meshManager](const std::filesystem::path& f) {
 		const auto& fileName = f.stem().string();
 		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading creature mesh: {}", fileName);
 		try
@@ -555,8 +556,6 @@ bool Game::Initialize()
 
 	// Load loose one-off assets
 	{
-		using Path = filesystem::Path;
-
 		using AFromDiskTag = resources::L3DAnimLoader::FromDiskTag;
 		animationManager.Load("coffre", AFromDiskTag {}, fileSystem.GetPath<Path::Misc>() / "coffre.anm");
 
@@ -573,7 +572,7 @@ bool Game::Initialize()
 	// TODO(raffclar): #400: Parse level files within the resource loader
 	// TODO(raffclar): #405: Determine campaign levels from the challenge script file
 	// Load the campaign levels
-	fileSystem.Iterate(fileSystem.GetPath<filesystem::Path::Scripts>(), [&levelManager](const std::filesystem::path& f) {
+	fileSystem.Iterate(fileSystem.GetPath<Path::Scripts>(), false, [&levelManager](const std::filesystem::path& f) {
 		const auto& name = f.stem().string();
 		if (f.extension() != ".txt" || name.rfind("InfoScript", 0) != std::string::npos)
 		{
@@ -595,7 +594,7 @@ bool Game::Initialize()
 	});
 	// Load Playgrounds
 	// Attempt to load additional levels as playgrounds
-	fileSystem.Iterate(fileSystem.GetPath<filesystem::Path::Playgrounds>(), [&levelManager](const std::filesystem::path& f) {
+	fileSystem.Iterate(fileSystem.GetPath<Path::Playgrounds>(), false, [&levelManager](const std::filesystem::path& f) {
 		if (f.extension() != ".txt")
 		{
 			return;
@@ -638,7 +637,7 @@ bool Game::Initialize()
 		return false;
 	}
 
-	fileSystem.Iterate(fileSystem.GetPath<filesystem::Path::Textures>(), [&textureManager](const std::filesystem::path& f) {
+	fileSystem.Iterate(fileSystem.GetPath<Path::Textures>(), false, [&textureManager](const std::filesystem::path& f) {
 		if (f.extension() == ".raw")
 		{
 			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading raw texture: {}", f.stem().string());

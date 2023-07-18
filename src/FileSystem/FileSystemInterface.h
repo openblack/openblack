@@ -109,7 +109,7 @@ public:
 	[[nodiscard]] virtual const std::filesystem::path& GetGamePath() const = 0;
 	virtual void AddAdditionalPath(const std::filesystem::path& path) = 0;
 	virtual std::vector<uint8_t> ReadAll(const std::filesystem::path& path) = 0;
-	virtual void Iterate(const std::filesystem::path& path,
+	virtual void Iterate(const std::filesystem::path& path, bool recursive,
 	                     const std::function<void(const std::filesystem::path&)>& function) const = 0;
 };
 
