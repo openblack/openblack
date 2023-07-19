@@ -71,19 +71,19 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 			uint32_t vertexOffset = 0;
 			for (uint32_t i = 0; i < primitive.numGroups; ++i)
 			{
+				auto matrix = glm::identity<glm::mat4>();
+				for (uint32_t parent = vertexGroupSpans[i].boneIndex; parent != std::numeric_limits<uint32_t>::max();
+				     parent = boneSpans[parent].parent)
+				{
+					const auto& bone = boneSpans[parent];
+					const auto orientation = glm::make_mat3(bone.orientation.data());
+					const auto translation = glm::make_vec3(&bone.position.x) * orientation;
+					const auto local = glm::translate(glm::mat4(orientation), translation);
+					matrix = local * matrix;
+				}
+
 				for (uint32_t j = 0; j < vertexGroupSpans[i].vertexCount; ++j)
 				{
-					auto matrix = glm::identity<glm::mat4>();
-					for (uint32_t parent = vertexGroupSpans[i].boneIndex; parent != std::numeric_limits<uint32_t>::max();
-					     parent = boneSpans[parent].parent)
-					{
-						const auto& bone = boneSpans[parent];
-						const auto orientation = glm::make_mat3(bone.orientation.data());
-						const auto translation = glm::make_vec3(&bone.position.x);
-						const auto local = glm::translate(glm::identity<glm::mat4>(), translation) * glm::mat4(orientation);
-						matrix = local * matrix;
-					}
-
 					const auto& vertex = verticesSpan[vertexOffset + j];
 					const auto position = glm::xyz(matrix * glm::vec4(glm::make_vec3(&vertex.position.x), 1.0f));
 					_boundingBox.maxima = glm::max(_boundingBox.maxima, position);
