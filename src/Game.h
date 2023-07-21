@@ -36,6 +36,7 @@ union SDL_Event;
 namespace openblack
 {
 class Camera;
+class Font;
 class GameWindow;
 class EventManager;
 class Profiler;
@@ -43,6 +44,7 @@ class Renderer;
 class L3DAnim;
 class L3DMesh;
 class Sky;
+class TextRenderer;
 class Water;
 
 namespace debug::gui
@@ -174,6 +176,7 @@ public:
 	LHVM::LHVM& GetLhvm() { return *_lhvm; }
 	const InfoConstants& GetInfoConstants() { return _infoConstants; } ///< Access should be only read-only
 	Config& GetConfig() { return _config; }
+	const std::vector<std::unique_ptr<Font>>& GetFonts() const { return _fonts; }
 	[[nodiscard]] const Config& GetConfig() const { return _config; }
 	[[nodiscard]] uint16_t GetTurn() const { return _turnCount; }
 	[[nodiscard]] bool IsPaused() const { return _paused; }
@@ -196,6 +199,7 @@ private:
 	std::unique_ptr<Camera> _camera;
 	std::unique_ptr<Profiler> _profiler;
 	std::unique_ptr<EventManager> _eventManager;
+	std::unique_ptr<TextRenderer> _textRenderer;
 
 	// std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<L3DMesh> _testModel;
@@ -207,6 +211,8 @@ private:
 	std::unique_ptr<LHVM::LHVM> _lhvm;
 
 	InfoConstants _infoConstants;
+	std::vector<std::unique_ptr<Font>> _fonts;
+
 	Config _config;
 	std::filesystem::path _startMap;
 
