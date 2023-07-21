@@ -7,8 +7,7 @@ import android.util.Log;
 import androidx.documentfile.provider.DocumentFile;
 
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
+import java.util.ArrayList;
 
 public class FileSystemInterop {
 
