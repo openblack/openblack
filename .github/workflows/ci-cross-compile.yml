@@ -42,13 +42,14 @@ jobs:
           #     sudo sed -i 's/^deb /deb [arch=amd64] /g' /etc/apt/sources.list
           #     sudo apt-get update
           #     sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libx11-dev:arm64 libxext-dev:arm64 libgl1-mesa-dev:arm64 libglu1-mesa-dev:arm64
-          - preset: emscripten-vcpkg
-            os: ubuntu-latest
-            setup: |
-              git clone https://github.com/emscripten-core/emsdk ${EMSDK}
-              cd ${EMSDK}
-              ./emsdk install latest
-              ./emsdk activate latest
+          # TODO(#638): Many of the emscripten dependencies conflict due to pthreads
+          # - preset: emscripten-vcpkg
+          #   os: ubuntu-latest
+          #   setup: |
+          #     git clone https://github.com/emscripten-core/emsdk ${EMSDK}
+          #     cd ${EMSDK}
+          #     ./emsdk install latest
+          #     ./emsdk activate latest
           - triplet: x86-windows
             os: windows-latest
             preset: ninja-multi-vcpkg
