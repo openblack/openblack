@@ -108,7 +108,7 @@ void TempleInterior::Deactivate()
 	auto& config = Game::Instance()->GetConfig();
 	config.drawIsland = true;
 	config.drawWater = true;
-	registry.Each<const TempleInterior>([&registry](const entt::entity entity, auto&&...) { registry.Destroy(entity); });
+	registry.Each<const TempleInteriorPart>([&registry](const entt::entity entity, auto&&...) { registry.Destroy(entity); });
 
 	auto& camera = Game::Instance()->GetCamera();
 	camera.SetPosition(_playerPositionOutside);
