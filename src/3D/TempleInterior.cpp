@@ -74,11 +74,15 @@ void TempleInterior::Activate()
 	auto& registry = Locator::entitiesRegistry::value();
 	auto& config = Game::Instance()->GetConfig();
 	auto& camera = Game::Instance()->GetCamera();
+
+	_playerPositionOutside = camera.GetPosition();
+	_playerRotationOutside = camera.GetRotation();
+
 	config.drawIsland = false;
 	config.drawWater = false;
 
 	// Create temple entities
-	auto rotation = glm::eulerAngleY(glm::radians(0.0f));
+	auto rotation = glm::eulerAngleY(_templeRotation.y);
 	auto scale = glm::vec3(1.0f);
 
 	for (const auto& [assetName, indoorPartType] : k_TempleInteriorParts)
@@ -91,9 +95,8 @@ void TempleInterior::Activate()
 		registry.Assign<ecs::components::Mesh>(entity, meshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
 	}
 
-	_playerPositionOutside = camera.GetPosition();
-	_playerRotationOutside = camera.GetRotation();
-	camera.SetPosition(_templePosition);
+	camera.SetPosition(_templePosition + glm::vec3(0.0f, 1.0f, 0.0f));
+	camera.SetRotation(_templeRotation);
 	_active = true;
 }
 
