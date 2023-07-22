@@ -74,6 +74,7 @@ public:
 private:
 	bool _active;
 	glm::vec3 _templePosition;
+	glm::vec3 _templeRotation;
 	glm::vec3 _playerPositionOutside;
 	glm::vec3 _playerRotationOutside;
 };
