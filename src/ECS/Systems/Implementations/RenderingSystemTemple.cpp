@@ -9,13 +9,12 @@
 
 #define LOCATOR_IMPLEMENTATIONS
 
-#include "RenderingSystem.h"
+#include "RenderingSystemTemple.h"
 
 #include <glm/gtx/transform.hpp>
 
 #include "3D/L3DMesh.h"
 #include "ECS/Components/Mesh.h"
-#include "ECS/Components/MorphWithTerrain.h"
 #include "ECS/Components/Stream.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Temple.h"
@@ -28,25 +27,11 @@
 using namespace openblack::ecs::systems;
 using namespace openblack::ecs::components;
 
-RenderContext::RenderContext()
-    : instanceUniformBuffer(BGFX_INVALID_HANDLE)
-{
-}
-RenderContext::~RenderContext()
-{
-	if (bgfx::isValid(instanceUniformBuffer))
-	{
-		bgfx::destroy(instanceUniformBuffer);
-		bgfx::frame();
-		bgfx::frame();
-	}
-}
-
 // RenderingSystemInterface::~RenderingSystemInterface() = default;
 
-RenderingSystem::~RenderingSystem() = default;
+RenderingSystemTemple::~RenderingSystemTemple() = default;
 
-void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
+void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 {
 	auto& registry = Locator::entitiesRegistry::value();
 
@@ -60,10 +45,7 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 		instanceCount++;
 	};
 
-	registry.Each<const Mesh, const Transform>([&prep](const Mesh& mesh, const Transform& /*unused*/) { prep(mesh, false); },
-	                                           entt::exclude<MorphWithTerrain, TempleInteriorPart>);
-	registry.Each<const Mesh, const Transform, const MorphWithTerrain>(
-	     [&prep](const Mesh& mesh, const Transform& /*unused*/, const MorphWithTerrain& /*unused*/) { prep(mesh, true); });
+	registry.Each<const Mesh, const Transform, const TempleInteriorPart>([&prep](const Mesh& mesh, const Transform& /*unused*/, const TempleInteriorPart& /* unused */) { prep(mesh, false); });
 	
 	if (drawBoundingBox)
 	{
@@ -99,7 +81,7 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 	}
 }
 
-void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
+void RenderingSystemTemple::PrepareDrawUploadUniforms(bool drawBoundingBox)
 {
 	auto& registry = Locator::entitiesRegistry::value();
 
@@ -107,8 +89,8 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	std::map<entt::id_type, uint32_t> uniformOffsets;
 
 	// Set transforms for instanced draw at offsets
-	registry.Each<const Mesh, const Transform>(
-	    [this, &uniformOffsets, drawBoundingBox](const Mesh& mesh, const Transform& transform) {
+	registry.Each<const Mesh, const Transform, const TempleInteriorPart>(
+	    [this, &uniformOffsets, drawBoundingBox](const Mesh& mesh, const Transform& transform, const TempleInteriorPart& /* unused */) {
 		    auto offset = uniformOffsets.insert(std::make_pair(mesh.id, 0));
 		    auto desc = _renderContext.instancedDrawDescs.find(mesh.id);
 
@@ -126,7 +108,7 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 			    _renderContext.instanceUniforms[idx + _renderContext.instanceUniforms.size() / 2] = boxMatrix;
 		    }
 		    offset.first->second++;
-	    }, entt::exclude<TempleInteriorPart>);
+	    });
 
 	if (!_renderContext.instanceUniforms.empty())
 	{
@@ -135,12 +117,12 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	}
 }
 
-void RenderingSystem::SetDirty()
+void RenderingSystemTemple::SetDirty()
 {
 	_renderContext.dirty = true;
 }
 
-void RenderingSystem::PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawStreams)
+void RenderingSystemTemple::PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawStreams)
 {
 	auto& registry = Locator::entitiesRegistry::value();
 

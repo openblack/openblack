@@ -26,10 +26,10 @@
 namespace openblack::ecs::systems
 {
 
-class RenderingSystem final: public RenderingSystemInterface
+class RenderingSystemTemple final: public RenderingSystemInterface
 {
 public:
-	~RenderingSystem();
+	~RenderingSystemTemple();
 	void SetDirty() override;
 	void PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawStreams) override;
 	const RenderContext& GetContext() override { return _renderContext; }

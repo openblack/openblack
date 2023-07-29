@@ -66,6 +66,6 @@ public:
 	virtual void SetDirty() = 0;
 	virtual void PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawStreams) = 0;
 	virtual const RenderContext& GetContext() = 0;
-	virtual ~RenderingSystemInterface();
+	inline ~RenderingSystemInterface() = default;
 };
 } // namespace openblack::ecs::systems
