@@ -15,6 +15,8 @@
 
 #include "3D/Camera.h"
 #include "Common/EventManager.h"
+#include "ECS/Systems/Implementations/RenderingSystem.h"
+#include "ECS/Systems/Implementations/RenderingSystemTemple.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Registry.h"
 #include "Game.h"
@@ -95,6 +97,7 @@ void TempleInterior::Activate()
 		registry.Assign<ecs::components::Mesh>(entity, meshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
 	}
 
+	Locator::rendereringSystem::emplace<ecs::systems::RenderingSystemTemple>();
 	camera.SetPosition(_templePosition + glm::vec3(0.0f, 1.0f, 0.0f));
 	camera.SetRotation(_templeRotation);
 	_active = true;
@@ -114,6 +117,7 @@ void TempleInterior::Deactivate()
 	registry.Each<const TempleInteriorPart>([&registry](const entt::entity entity, auto&&...) { registry.Destroy(entity); });
 
 	auto& camera = Game::Instance()->GetCamera();
+	Locator::rendereringSystem::emplace<ecs::systems::RenderingSystem>();
 	camera.SetPosition(_playerPositionOutside);
 	camera.SetRotation(_playerRotationOutside);
 	_active = false;
