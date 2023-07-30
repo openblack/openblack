@@ -105,7 +105,7 @@ void TempleInterior::Activate()
 	}
 
 	Locator::rendereringSystem::emplace<ecs::systems::RenderingSystemTemple>();
-	camera.SetPosition(_templePosition + glm::vec3(0.0f, 1.0f, 0.0f));
+	camera.SetPosition(_templePosition);
 	camera.SetRotation(_templeRotation);
 	_active = true;
 	_currentRoom = TempleRoom::Main;
