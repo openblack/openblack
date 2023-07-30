@@ -17,8 +17,8 @@
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/MorphWithTerrain.h"
 #include "ECS/Components/Stream.h"
-#include "ECS/Components/Transform.h"
 #include "ECS/Components/Temple.h"
+#include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/ShaderManager.h"
@@ -63,8 +63,8 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 	registry.Each<const Mesh, const Transform>([&prep](const Mesh& mesh, const Transform& /*unused*/) { prep(mesh, false); },
 	                                           entt::exclude<MorphWithTerrain, TempleInteriorPart>);
 	registry.Each<const Mesh, const Transform, const MorphWithTerrain>(
-	     [&prep](const Mesh& mesh, const Transform& /*unused*/, const MorphWithTerrain& /*unused*/) { prep(mesh, true); });
-	
+	    [&prep](const Mesh& mesh, const Transform& /*unused*/, const MorphWithTerrain& /*unused*/) { prep(mesh, true); });
+
 	if (drawBoundingBox)
 	{
 		instanceCount *= 2;
@@ -126,7 +126,8 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 			    _renderContext.instanceUniforms[idx + _renderContext.instanceUniforms.size() / 2] = boxMatrix;
 		    }
 		    offset.first->second++;
-	    }, entt::exclude<TempleInteriorPart>);
+	    },
+	    entt::exclude<TempleInteriorPart>);
 
 	if (!_renderContext.instanceUniforms.empty())
 	{

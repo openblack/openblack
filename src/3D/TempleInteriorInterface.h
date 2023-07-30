@@ -33,5 +33,7 @@ public:
 	[[nodiscard]] virtual glm::vec3 GetPosition() const = 0;
 	virtual void Activate() = 0;
 	virtual void Deactivate() = 0;
+	virtual void ChangeRoom(TempleRoom nextRoom) = 0;
+	[[nodiscard]] virtual TempleRoom GetCurrentRoom() const = 0;
 };
 } // namespace openblack
