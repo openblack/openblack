@@ -9,6 +9,8 @@
 
 #include "Temple.h"
 
+#include <unordered_map>
+
 #include "3D/TempleInteriorInterface.h"
 #include "Game.h"
 #include "Locator.h"
@@ -19,6 +21,12 @@ TempleInterior::TempleInterior()
     : Window("Citadel", ImVec2(250.0f, 165.0f))
 {
 }
+
+const std::unordered_map<openblack::TempleRoom, std::string_view> k_RoomComponentMap = {
+    {openblack::TempleRoom::Challenge, "Challenge Room"}, {openblack::TempleRoom::CreatureCave, "Creature Cave"},
+    {openblack::TempleRoom::Credits, "Creature Cave"},    {openblack::TempleRoom::Main, "Main Room"},
+    {openblack::TempleRoom::Multi, "Multi Room"},         {openblack::TempleRoom::Options, "Option Room"},
+    {openblack::TempleRoom::SaveGame, "Save Game Room"}};
 
 void TempleInterior::Draw([[maybe_unused]] openblack::Game& game)
 {
@@ -36,6 +44,30 @@ void TempleInterior::Draw([[maybe_unused]] openblack::Game& game)
 			else
 			{
 				temple.Deactivate();
+			}
+		}
+		if (!active)
+		{
+			if (temple.GetCurrentRoom() == openblack::TempleRoom::Main)
+			{
+				for (const auto& [room, name] : k_RoomComponentMap)
+				{
+					if (room != openblack::TempleRoom::Main)
+					{
+						if (ImGui::Button(name.data()))
+						{
+							temple.ChangeRoom(room);
+						}
+					}
+				}
+			}
+			else
+			{
+				auto roomView = k_RoomComponentMap.at(openblack::TempleRoom::Main);
+				if (ImGui::Button(roomView.data()))
+				{
+					temple.ChangeRoom(openblack::TempleRoom::Main);
+				}
 			}
 		}
 	}

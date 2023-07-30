@@ -15,7 +15,6 @@
 #include <glm/vec3.hpp>
 
 #include "3D/TempleInteriorInterface.h"
-#include "ECS/Components/Temple.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
 #warning "Locator interface implementations should only be included in Locator.cpp, use interface instead."
@@ -23,53 +22,16 @@
 
 namespace openblack
 {
+
 class TempleInterior final: public TempleInteriorInterface
 {
 public:
-	enum class TempleIndoorPart
-	{
-		Challenge,
-		ChallengeLO,
-		ChallengeDome,
-		ChallengeFloor,
-		ChallengeFloorLO,
-		CreatureCave,
-		CreatureCaveLO,
-		CreatureCaveWater,
-		CreatureCaveWaterLO,
-		Credits,
-		CreditsLO,
-		CreditsDome,
-		CreditsFloor,
-		CreditsFloorLO,
-		Main,
-		MainLO,
-		MainFloor,
-		MainFloorLO,
-		MainWater,
-		MainWaterLO,
-		Movement,
-		Multi,
-		MultiLO,
-		MultiDome,
-		MultiFloor,
-		MultiFloorLO,
-		Options,
-		OptionsLO,
-		OptionsDome,
-		OptionsFloor,
-		OptionsFloorLO,
-		SaveGame,
-		SaveGameLO,
-		SaveGameDome,
-		SaveGameFloor,
-		SaveGameFloorLO,
-	};
-
 	[[nodiscard]] bool Active() const override { return _active; }
 	[[nodiscard]] glm::vec3 GetPosition() const override { return _templePosition; }
 	void Activate() override;
 	void Deactivate() override;
+	void ChangeRoom(TempleRoom nextRoom) override;
+	[[nodiscard]] TempleRoom GetCurrentRoom() const override;
 
 private:
 	bool _active;
@@ -77,5 +39,6 @@ private:
 	glm::vec3 _templeRotation;
 	glm::vec3 _playerPositionOutside;
 	glm::vec3 _playerRotationOutside;
+	TempleRoom _currentRoom;
 };
 } // namespace openblack

@@ -16,8 +16,8 @@
 #include "3D/L3DMesh.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Stream.h"
-#include "ECS/Components/Transform.h"
 #include "ECS/Components/Temple.h"
+#include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/ShaderManager.h"
@@ -45,8 +45,9 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 		instanceCount++;
 	};
 
-	registry.Each<const Mesh, const Transform, const TempleInteriorPart>([&prep](const Mesh& mesh, const Transform& /*unused*/, const TempleInteriorPart& /* unused */) { prep(mesh, false); });
-	
+	registry.Each<const Mesh, const Transform, const TempleInteriorPart>(
+	    [&prep](const Mesh& mesh, const Transform& /*unused*/, const TempleInteriorPart& /* unused */) { prep(mesh, false); });
+
 	if (drawBoundingBox)
 	{
 		instanceCount *= 2;
@@ -90,7 +91,8 @@ void RenderingSystemTemple::PrepareDrawUploadUniforms(bool drawBoundingBox)
 
 	// Set transforms for instanced draw at offsets
 	registry.Each<const Mesh, const Transform, const TempleInteriorPart>(
-	    [this, &uniformOffsets, drawBoundingBox](const Mesh& mesh, const Transform& transform, const TempleInteriorPart& /* unused */) {
+	    [this, &uniformOffsets, drawBoundingBox](const Mesh& mesh, const Transform& transform,
+	                                             const TempleInteriorPart& /* unused */) {
 		    auto offset = uniformOffsets.insert(std::make_pair(mesh.id, 0));
 		    auto desc = _renderContext.instancedDrawDescs.find(mesh.id);
 
