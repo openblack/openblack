@@ -608,7 +608,10 @@ void Camera::Update(std::chrono::microseconds dt)
 		auto logPosY = log(_position.y + 1.0f);
 		auto handVelHeightMult = logPosY * logPosY;
 		glm::vec3 vecTo = futurePosition - _position;
-		vecTo = glm::min(glm::normalize(vecTo) * handVelHeightMult, glm::vec3(5.0f));
+		if (vecTo != glm::vec3(0.0f))
+		{
+			vecTo = glm::min(glm::normalize(vecTo) * handVelHeightMult, glm::vec3(5.0f));
+		}
 		glm::mat3 mRotation = glm::transpose(GetRotationMatrix());
 		_hVelocity += vecTo * mRotation * 0.00005f;
 		if (GetForward().y > 0.0f) // camera is pointing upwards
