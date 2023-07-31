@@ -71,6 +71,17 @@ const std::unordered_multimap<Indoors, std::string_view> k_TempleInteriorParts {
     // {"savegamefloorlo_l3d", Indoors::SaveGameFloorLO},
 };
 
+inline void addRoomToRegistry(std::string_view assetName, Indoors templeRoom, glm::vec3 position, glm::mat3 rotation,
+                              glm::vec3 scale)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	auto meshId = entt::hashed_string(fmt::format("temple/interior/{}", assetName).c_str());
+	auto entity = registry.Create();
+	registry.Assign<ecs::components::TempleInteriorPart>(entity, templeRoom);
+	registry.Assign<ecs::components::Transform>(entity, position, rotation, scale);
+	registry.Assign<ecs::components::Mesh>(entity, meshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
+}
+
 void TempleInterior::Activate()
 {
 	if (_active)
@@ -78,7 +89,6 @@ void TempleInterior::Activate()
 		return;
 	}
 
-	auto& registry = Locator::entitiesRegistry::value();
 	auto& config = Game::Instance()->GetConfig();
 	auto& camera = Game::Instance()->GetCamera();
 
@@ -96,12 +106,7 @@ void TempleInterior::Activate()
 	auto bucket = k_TempleInteriorParts.bucket(roomType);
 	for (auto it = k_TempleInteriorParts.begin(bucket); it != k_TempleInteriorParts.end(bucket); it++)
 	{
-		auto assetName = it->second;
-		auto meshId = entt::hashed_string(fmt::format("temple/interior/{}", assetName).c_str());
-		auto entity = registry.Create();
-		registry.Assign<ecs::components::TempleInteriorPart>(entity, roomType);
-		registry.Assign<ecs::components::Transform>(entity, _templePosition, rotation, scale);
-		registry.Assign<ecs::components::Mesh>(entity, meshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
+		addRoomToRegistry(it->second, roomType, _templePosition, rotation, scale);
 	}
 
 	Locator::rendereringSystem::emplace<ecs::systems::RenderingSystemTemple>();
@@ -142,27 +147,26 @@ void TempleInterior::ChangeRoom(TempleRoom nextRoom)
 {
 	auto rotation = glm::eulerAngleY(_templeRotation.y);
 	auto scale = glm::vec3(1.0f);
-	auto& camera = Game::Instance()->GetCamera();
 	auto& registry = Locator::entitiesRegistry::value();
 
-	// auto currentRoomComponent = k_RoomComponentMap.find(_currentRoom)->second;
 	auto nextRoomComponent = k_RoomComponentMap.find(nextRoom)->second;
 
 	registry.Each<const ecs::components::TempleInteriorPart>(
-	    [&registry](const entt::entity entity, auto&&...) { registry.Destroy(entity); });
-	auto bucket = k_TempleInteriorParts.bucket(nextRoomComponent);
-	for (auto it = k_TempleInteriorParts.begin(bucket); it != k_TempleInteriorParts.end(bucket); it++)
-	{
-		auto assetName = it->second;
-		auto meshId = entt::hashed_string(fmt::format("temple/interior/{}", assetName).c_str());
-		auto entity = registry.Create();
-		registry.Assign<ecs::components::TempleInteriorPart>(entity, nextRoomComponent);
-		registry.Assign<ecs::components::Transform>(entity, _templePosition, rotation, scale);
-		registry.Assign<ecs::components::Mesh>(entity, meshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
-	}
+	    [&registry](const entt::entity entity, const ecs::components::TempleInteriorPart templeRoom) {
+		    if (Indoors::MainRoom != templeRoom.room)
+		    {
+			    registry.Destroy(entity);
+		    }
+	    });
 
-	camera.SetPosition(_templePosition);
-	camera.SetRotation(_templeRotation);
+	if (nextRoomComponent != Indoors::MainRoom)
+	{
+		auto bucket = k_TempleInteriorParts.bucket(nextRoomComponent);
+		for (auto it = k_TempleInteriorParts.begin(bucket); it != k_TempleInteriorParts.end(bucket); it++)
+		{
+			addRoomToRegistry(it->second, nextRoomComponent, _templePosition, rotation, scale);
+		}
+	}
 	_currentRoom = nextRoom;
 }
 
