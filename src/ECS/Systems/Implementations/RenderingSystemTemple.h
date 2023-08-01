@@ -17,6 +17,7 @@
 #include <glm/mat4x4.hpp>
 
 #include "3D/AllMeshes.h"
+#include "ECS/Components/Temple.h"
 #include "RenderingSystemCommon.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
@@ -34,5 +35,6 @@ public:
 private:
 	void PrepareDrawDescs(bool drawBoundingBox) override;
 	void PrepareDrawUploadUniforms(bool drawBoundingBox) override;
+	std::set<ecs::components::TempleRoom> _loadedRooms;
 };
 } // namespace openblack::ecs::systems

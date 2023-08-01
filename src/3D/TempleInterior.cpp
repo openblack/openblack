@@ -102,18 +102,15 @@ void TempleInterior::Activate()
 	auto rotation = glm::eulerAngleY(_templeRotation.y);
 	auto scale = glm::vec3(1.0f);
 
-	auto roomType = Indoors::MainRoom;
-	auto bucket = k_TempleInteriorParts.bucket(roomType);
-	for (auto it = k_TempleInteriorParts.begin(bucket); it != k_TempleInteriorParts.end(bucket); it++)
+	for (const auto& [roomType, assetName] : k_TempleInteriorParts)
 	{
-		addRoomToRegistry(it->second, roomType, _templePosition, rotation, scale);
+		addRoomToRegistry(assetName, roomType, _templePosition, rotation, scale);
 	}
 
 	Locator::rendereringSystem::emplace<ecs::systems::RenderingSystemTemple>();
 	camera.SetPosition(_templePosition);
 	camera.SetRotation(_templeRotation);
 	_active = true;
-	_currentRoom = TempleRoom::Main;
 }
 
 void TempleInterior::Deactivate()
@@ -135,42 +132,4 @@ void TempleInterior::Deactivate()
 	camera.SetPosition(_playerPositionOutside);
 	camera.SetRotation(_playerRotationOutside);
 	_active = false;
-}
-
-const std::map<TempleRoom, Indoors> k_RoomComponentMap = {
-    {TempleRoom::Challenge, Indoors::ChallengeRoom}, {TempleRoom::CreatureCave, Indoors::CreatureCave},
-    {TempleRoom::Credits, Indoors::CreditsRoom},     {TempleRoom::Main, Indoors::MainRoom},
-    {TempleRoom::Multi, Indoors::MultiplayerRoom},   {TempleRoom::Options, Indoors::OptionsRoom},
-    {TempleRoom::SaveGame, Indoors::SaveGameRoom}};
-
-void TempleInterior::ChangeRoom(TempleRoom nextRoom)
-{
-	auto rotation = glm::eulerAngleY(_templeRotation.y);
-	auto scale = glm::vec3(1.0f);
-	auto& registry = Locator::entitiesRegistry::value();
-
-	auto nextRoomComponent = k_RoomComponentMap.find(nextRoom)->second;
-
-	registry.Each<const ecs::components::TempleInteriorPart>(
-	    [&registry](const entt::entity entity, const ecs::components::TempleInteriorPart templeRoom) {
-		    if (Indoors::MainRoom != templeRoom.room)
-		    {
-			    registry.Destroy(entity);
-		    }
-	    });
-
-	if (nextRoomComponent != Indoors::MainRoom)
-	{
-		auto bucket = k_TempleInteriorParts.bucket(nextRoomComponent);
-		for (auto it = k_TempleInteriorParts.begin(bucket); it != k_TempleInteriorParts.end(bucket); it++)
-		{
-			addRoomToRegistry(it->second, nextRoomComponent, _templePosition, rotation, scale);
-		}
-	}
-	_currentRoom = nextRoom;
-}
-
-TempleRoom TempleInterior::GetCurrentRoom() const
-{
-	return _currentRoom;
 }
