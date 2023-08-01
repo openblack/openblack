@@ -30,8 +30,6 @@ public:
 	[[nodiscard]] glm::vec3 GetPosition() const override { return _templePosition; }
 	void Activate() override;
 	void Deactivate() override;
-	void ChangeRoom(TempleRoom nextRoom) override;
-	[[nodiscard]] TempleRoom GetCurrentRoom() const override;
 
 private:
 	bool _active;
@@ -39,6 +37,5 @@ private:
 	glm::vec3 _templeRotation;
 	glm::vec3 _playerPositionOutside;
 	glm::vec3 _playerRotationOutside;
-	TempleRoom _currentRoom;
 };
 } // namespace openblack
