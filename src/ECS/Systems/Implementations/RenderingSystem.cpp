@@ -28,22 +28,6 @@
 using namespace openblack::ecs::systems;
 using namespace openblack::ecs::components;
 
-RenderContext::RenderContext()
-    : instanceUniformBuffer(BGFX_INVALID_HANDLE)
-{
-}
-RenderContext::~RenderContext()
-{
-	if (bgfx::isValid(instanceUniformBuffer))
-	{
-		bgfx::destroy(instanceUniformBuffer);
-		bgfx::frame();
-		bgfx::frame();
-	}
-}
-
-// RenderingSystemInterface::~RenderingSystemInterface() = default;
-
 RenderingSystem::~RenderingSystem() = default;
 
 void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
@@ -133,87 +117,5 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	{
 		const auto size = static_cast<uint32_t>(_renderContext.instanceUniforms.size() * sizeof(glm::mat4));
 		bgfx::update(_renderContext.instanceUniformBuffer, 0, bgfx::makeRef(_renderContext.instanceUniforms.data(), size));
-	}
-}
-
-void RenderingSystem::SetDirty()
-{
-	_renderContext.dirty = true;
-}
-
-void RenderingSystem::PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawStreams)
-{
-	auto& registry = Locator::entitiesRegistry::value();
-
-	if (_renderContext.dirty || _renderContext.hasBoundingBoxes != drawBoundingBox ||
-	    (_renderContext.footpaths != nullptr) != drawFootpaths || (_renderContext.streams != nullptr) != drawStreams)
-	{
-		PrepareDrawDescs(drawBoundingBox);
-		PrepareDrawUploadUniforms(drawBoundingBox);
-
-		_renderContext.boundingBox.reset();
-		if (drawBoundingBox)
-		{
-			_renderContext.boundingBox = graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f));
-		}
-
-		_renderContext.footpaths.reset();
-		if (drawFootpaths)
-		{
-			uint32_t nodeCount = 0;
-			registry.Each<const Footpath>(
-			    [&nodeCount](const Footpath& ent) { nodeCount += 2 * std::max(static_cast<int>(ent.nodes.size()) - 1, 0); });
-
-			std::vector<graphics::DebugLines::Vertex> edges;
-			edges.reserve(nodeCount);
-			registry.Each<const Footpath>([&edges](const Footpath& ent) {
-				const auto color = glm::vec4(0, 1, 0, 1);
-				const auto offset = glm::vec3(0, 1, 0);
-				for (int i = 0; i < static_cast<int>(ent.nodes.size()) - 1; ++i)
-				{
-					edges.push_back({glm::vec4(ent.nodes[i].position + offset, 1.0f), color});
-					edges.push_back({glm::vec4(ent.nodes[i + 1].position + offset, 1.0f), color});
-				}
-			});
-			if (!edges.empty())
-			{
-				_renderContext.footpaths =
-				    graphics::DebugLines::CreateDebugLines(edges.data(), static_cast<uint32_t>(edges.size()));
-			}
-		}
-
-		_renderContext.streams.reset();
-		if (drawStreams)
-		{
-			uint32_t edgeCount = 0;
-			registry.Each<const Stream>([&edgeCount](const Stream& ent) {
-				for (const auto& from : ent.nodes)
-				{
-					edgeCount += static_cast<uint32_t>(from.edges.size());
-				}
-			});
-			std::vector<graphics::DebugLines::Vertex> edges;
-			edges.reserve(edgeCount * 2);
-			registry.Each<const Stream>([&edges](const Stream& ent) {
-				const auto color = glm::vec4(1, 0, 0, 1);
-				for (const auto& from : ent.nodes)
-				{
-					for (const auto& to : from.edges)
-					{
-						edges.push_back({glm::vec4(from.position, 1.0f), color});
-						edges.push_back({glm::vec4(to.position, 1.0f), color});
-					}
-				}
-			});
-
-			if (!edges.empty())
-			{
-				_renderContext.streams =
-				    graphics::DebugLines::CreateDebugLines(edges.data(), static_cast<uint32_t>(edges.size()));
-			}
-		}
-
-		_renderContext.dirty = false;
-		_renderContext.hasBoundingBoxes = drawBoundingBox;
 	}
 }

@@ -17,7 +17,7 @@
 #include <glm/mat4x4.hpp>
 
 #include "3D/AllMeshes.h"
-#include "ECS/Systems/RenderingSystemInterface.h"
+#include "RenderingSystemCommon.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
 #warning "Locator interface implementations should only be included in Locator.cpp, use interface instead."
@@ -26,18 +26,13 @@
 namespace openblack::ecs::systems
 {
 
-class RenderingSystemTemple final: public RenderingSystemInterface
+class RenderingSystemTemple final: public RenderingSystemCommon
 {
 public:
 	~RenderingSystemTemple();
-	void SetDirty() override;
-	void PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawStreams) override;
-	const RenderContext& GetContext() override { return _renderContext; }
 
 private:
-	void PrepareDrawDescs(bool drawBoundingBox);
-	void PrepareDrawUploadUniforms(bool drawBoundingBox);
-
-	RenderContext _renderContext;
+	void PrepareDrawDescs(bool drawBoundingBox) override;
+	void PrepareDrawUploadUniforms(bool drawBoundingBox) override;
 };
 } // namespace openblack::ecs::systems
