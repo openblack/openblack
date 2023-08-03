@@ -674,6 +674,7 @@ bool Game::Initialize()
 		}
 
 		pack::PackFile soundPack;
+		SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Opening sound pack {}", f.filename().string());
 		soundPack.Open(f);
 		const auto& audioHeaders = soundPack.GetAudioSampleHeaders();
 		const auto& audioData = soundPack.GetAudioSamplesData();
@@ -708,6 +709,7 @@ bool Game::Initialize()
 
 				const entt::id_type id = entt::hashed_string(fmt::format("{}/{}", groupName, i).c_str());
 				const std::vector<std::vector<uint8_t>> buffer = {audioData[i]};
+				SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Loading sound {}/{}", groupName, i);
 				soundManager.Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[i], buffer);
 				audioManager.AddToSoundGroup(groupName, id);
 			}
