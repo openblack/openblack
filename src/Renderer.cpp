@@ -579,13 +579,13 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			;
 			// clang-format on
 
-			for (const auto& block : island.GetBlocks())
+			const size_t instanceCount = island.GetBlocks().size();
+			for (size_t idx = 0; idx < instanceCount; idx++)
 			{
-				// pack uniforms
-				const glm::vec4 mapPositionAndSize = glm::vec4(block.GetMapPosition(), 160.0f, 160.0f);
-				terrainShader->SetUniformValue("u_blockPositionAndSize", &mapPositionAndSize);
-
+				const auto& block = island.GetBlocks()[idx];
+				const auto instanceData = island.GetInstanceData();
 				block.GetMesh().GetVertexBuffer().Bind();
+				bgfx::setInstanceDataBuffer(instanceData, static_cast<uint32_t>(idx), 1);
 
 				bgfx::setState(defaultState | (desc.cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW), 0);
 				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), terrainShader->GetRawHandle(), 0, discard);

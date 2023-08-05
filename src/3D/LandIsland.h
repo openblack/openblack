@@ -39,6 +39,8 @@ private:
 	[[nodiscard]] std::vector<uint8_t> CreateHeightMap() const;
 	std::vector<LandBlock> _landBlocks;
 	std::vector<lnd::LNDCountry> _countries;
+	bgfx::DynamicVertexBufferHandle _instanceData;
+	std::vector<glm::vec4> _instanceUniforms;
 
 	std::array<uint8_t, 1024> _blockIndexLookup {0};
 
@@ -46,6 +48,7 @@ private:
 public:
 	[[nodiscard]] std::vector<LandBlock>& GetBlocks() override { return _landBlocks; }
 	[[nodiscard]] const std::vector<LandBlock>& GetBlocks() const override { return _landBlocks; }
+	[[nodiscard]] const bgfx::DynamicVertexBufferHandle& GetInstanceData() const override { return _instanceData; }
 	[[nodiscard]] const std::vector<lnd::LNDCountry>& GetCountries() const override { return _countries; }
 
 	[[nodiscard]] const graphics::Texture2D& GetAlbedoArray() const override { return *_materialArray; }

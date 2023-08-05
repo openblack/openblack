@@ -46,6 +46,11 @@ public:
 		throw std::runtime_error("Cannot get landscape before any are loaded");
 	}
 
+	[[nodiscard]] const bgfx::DynamicVertexBufferHandle& GetInstanceData() const override
+	{
+		throw std::runtime_error("Cannot get landscape before any are loaded");
+	}
+
 	[[nodiscard]] const std::vector<lnd::LNDCountry>& GetCountries() const override
 	{
 		throw std::runtime_error("Cannot get landscape before any are loaded");

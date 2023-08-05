@@ -1,4 +1,4 @@
-$input a_position, a_texcoord1, a_color1, a_color2, a_texcoord2, a_color0, a_color3
+$input a_position, a_texcoord1, a_color1, a_color2, a_texcoord2, a_color0, a_color3, i_data0
 $output v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera
 
 #include <bgfx_shader.sh>
@@ -9,12 +9,13 @@ $output v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_mate
 #   define materialIdFix(x) (ivec3(x))
 #endif
 
-uniform vec4 u_blockPositionAndSize;
+// uniform vec4 u_blockPositionAndSize;
 uniform vec4 u_islandExtent;
 
 void main()
 {
 	// Unpack
+	vec4 u_blockPositionAndSize = i_data0;
 	vec2 blockPosition = u_blockPositionAndSize.xy;
 	vec2 blockSize = u_blockPositionAndSize.zw;
 	vec2 extentMin = u_islandExtent.xy;

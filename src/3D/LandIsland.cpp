@@ -37,9 +37,31 @@ const float LandIslandInterface::k_CellSize = 10.0f;
 LandIsland::LandIsland(const std::filesystem::path& path)
 {
 	LoadFromFile(path);
+
+	const size_t instanceCount = GetBlocks().size();
+	bgfx::VertexLayout layout;
+	layout.begin().add(bgfx::Attrib::TexCoord7, 4, bgfx::AttribType::Float).end();
+	_instanceData = bgfx::createDynamicVertexBuffer(static_cast<uint32_t>(instanceCount), layout);
+	for (size_t idx = 0; idx < instanceCount; idx++)
+	{
+		// pack uniforms
+		const auto& block = GetBlocks()[idx];
+		const glm::vec4 mapPositionAndSize = glm::vec4(block.GetMapPosition(), 160.0f, 160.0f);
+		_instanceUniforms.emplace_back(mapPositionAndSize);
+	}
+	const auto size = static_cast<uint32_t>(_instanceUniforms.size() * sizeof(glm::vec4));
+	bgfx::update(_instanceData, 0, bgfx::makeRef(_instanceUniforms.data(), size));
 }
 
-LandIsland::~LandIsland() = default;
+LandIsland::~LandIsland()
+{
+	if (bgfx::isValid(_instanceData))
+	{
+		bgfx::destroy(_instanceData);
+		bgfx::frame();
+		bgfx::frame();
+	}
+};
 
 void LandIsland::LoadFromFile(const std::filesystem::path& path)
 {
