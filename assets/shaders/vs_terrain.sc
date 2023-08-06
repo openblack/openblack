@@ -9,7 +9,6 @@ $output v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_mate
 #   define materialIdFix(x) (ivec3(x))
 #endif
 
-// uniform vec4 u_blockPositionAndSize;
 uniform vec4 u_islandExtent;
 
 void main()
