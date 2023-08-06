@@ -40,7 +40,6 @@ private:
 	std::vector<LandBlock> _landBlocks;
 	std::vector<lnd::LNDCountry> _countries;
 	bgfx::DynamicVertexBufferHandle _instanceData;
-	std::vector<glm::vec4> _instanceUniforms;
 
 	std::array<uint8_t, 1024> _blockIndexLookup {0};
 

@@ -41,16 +41,18 @@ LandIsland::LandIsland(const std::filesystem::path& path)
 	const size_t instanceCount = GetBlocks().size();
 	bgfx::VertexLayout layout;
 	layout.begin().add(bgfx::Attrib::TexCoord7, 4, bgfx::AttribType::Float).end();
+	const auto* mem = bgfx::alloc(static_cast<uint32_t>(sizeof(glm::vec4) * instanceCount));
+	auto* instanceUniforms = reinterpret_cast<glm::vec4*>(mem->data);
+
 	_instanceData = bgfx::createDynamicVertexBuffer(static_cast<uint32_t>(instanceCount), layout);
 	for (size_t idx = 0; idx < instanceCount; idx++)
 	{
 		// pack uniforms
 		const auto& block = GetBlocks()[idx];
 		const glm::vec4 mapPositionAndSize = glm::vec4(block.GetMapPosition(), 160.0f, 160.0f);
-		_instanceUniforms.emplace_back(mapPositionAndSize);
+		instanceUniforms[idx] = mapPositionAndSize;
 	}
-	const auto size = static_cast<uint32_t>(_instanceUniforms.size() * sizeof(glm::vec4));
-	bgfx::update(_instanceData, 0, bgfx::makeRef(_instanceUniforms.data(), size));
+	bgfx::update(_instanceData, 0, mem);
 }
 
 LandIsland::~LandIsland()
