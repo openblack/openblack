@@ -16,7 +16,7 @@ class LoadScene: public ::testing::Test
 public:
 	void LoadTestScene(const char* sceneScript)
 	{
-		auto script = openblack::lhscriptx::Script(game_.get());
+		openblack::lhscriptx::Script script;
 		script.Load(sceneScript);
 	}
 

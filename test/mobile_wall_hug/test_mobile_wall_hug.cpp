@@ -203,7 +203,7 @@ protected:
 		args.logLevels[static_cast<uint8_t>(openblack::LoggingSubsystem::pathfinding)] = spdlog::level::debug;
 		_game = std::make_unique<openblack::Game>(std::move(args));
 		ASSERT_TRUE(_game->Initialize());
-		auto script = openblack::lhscriptx::Script(_game.get());
+		openblack::lhscriptx::Script script;
 		script.Load(_sceneScript);
 
 		_villagerEntt = Locator::entitiesRegistry::value().Front<const ecs::components::Villager>();
