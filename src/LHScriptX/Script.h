@@ -39,14 +39,7 @@ public:
 
 	void Load(const std::string&);
 
-	// void SetCommands(std::unique_ptr<ScriptCommands> &commands) { _commands =
-	// std::move(commands); } ScriptCommands &GetCommands() const { return
-	// *_commands; }
 private:
-	// std::unique_ptr<ScriptCommands> _commands;
-	// void processCommand(const std::string& command, std::vector<std::string>
-	// parameters);
-
 	[[nodiscard]] bool IsCommand(const std::string& identifier) const;
 	void RunCommand(const std::string& identifier, const std::vector<Token>& args);
 
