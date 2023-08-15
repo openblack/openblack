@@ -108,8 +108,6 @@ public:
 
 	[[nodiscard]] Game& GetGame() const { return *_game; }
 
-	[[nodiscard]] const ScriptCommandParameters& GetParameters() const { return *_parameters; }
-
 	const ScriptCommandParameter& operator[](uint32_t arg) const { return _parameters->at(arg); }
 
 private:
