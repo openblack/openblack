@@ -31,11 +31,7 @@ public:
 class Script
 {
 public:
-	explicit Script(Game* game)
-	    : _game(game)
-	    , _token(Token::MakeInvalidToken())
-	{
-	}
+	Script() = default;
 
 	void Load(const std::string&);
 
@@ -49,7 +45,7 @@ private:
 	// Game instance
 	Game* _game;
 	// The current token.
-	Token _token;
+	Token _token {Token::MakeInvalidToken()};
 };
 
 } // namespace openblack::lhscriptx
