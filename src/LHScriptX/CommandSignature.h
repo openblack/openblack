@@ -97,25 +97,7 @@ private:
 
 using ScriptCommandParameters = std::vector<ScriptCommandParameter>;
 
-class ScriptCommandContext
-{
-public:
-	ScriptCommandContext(Game* game, const ScriptCommandParameters* parameters)
-	    : _game(game)
-	    , _parameters(parameters)
-	{
-	}
-
-	[[nodiscard]] Game& GetGame() const { return *_game; }
-
-	const ScriptCommandParameter& operator[](uint32_t arg) const { return _parameters->at(arg); }
-
-private:
-	Game* _game;
-	const ScriptCommandParameters* _parameters;
-};
-
-using ScriptCommand = std::function<void(const ScriptCommandContext&)>;
+using ScriptCommand = std::function<void(const ScriptCommandParameters&)>;
 
 struct ScriptCommandSignature
 {

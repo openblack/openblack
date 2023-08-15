@@ -45,28 +45,28 @@ inline typename std::enable_if_t<std::is_enum<T>::value, ParameterType> GetParam
 }
 
 template <class T>
-T GetParamValueRegular(const ScriptCommandContext& ctx, int index);
+T GetParamValueRegular(const ScriptCommandParameters& ctx, int index);
 
 template <>
-inline const std::string& GetParamValueRegular(const ScriptCommandContext& ctx, int index)
+inline const std::string& GetParamValueRegular(const ScriptCommandParameters& ctx, int index)
 {
 	return ctx[index].GetString();
 }
 
 template <>
-inline float GetParamValueRegular(const ScriptCommandContext& ctx, int index)
+inline float GetParamValueRegular(const ScriptCommandParameters& ctx, int index)
 {
 	return ctx[index].GetFloat();
 }
 
 template <>
-inline int32_t GetParamValueRegular(const ScriptCommandContext& ctx, int index)
+inline int32_t GetParamValueRegular(const ScriptCommandParameters& ctx, int index)
 {
 	return ctx[index].GetNumber();
 }
 
 template <>
-inline glm::vec3 GetParamValueRegular(const ScriptCommandContext& ctx, int index)
+inline glm::vec3 GetParamValueRegular(const ScriptCommandParameters& ctx, int index)
 {
 	glm::vec3 result;
 	ctx[index].GetVector(result.x, result.y, result.z);
@@ -74,20 +74,20 @@ inline glm::vec3 GetParamValueRegular(const ScriptCommandContext& ctx, int index
 }
 
 template <typename T>
-inline typename std::enable_if_t<!std::is_enum<T>::value, T> GetParamValue(const ScriptCommandContext& ctx, int index)
+inline typename std::enable_if_t<!std::is_enum<T>::value, T> GetParamValue(const ScriptCommandParameters& ctx, int index)
 {
 	return GetParamValueRegular<T>(ctx, index);
 }
 
 template <typename T>
-inline typename std::enable_if_t<std::is_enum<T>::value, T> GetParamValue(const ScriptCommandContext& ctx, int index)
+inline typename std::enable_if_t<std::is_enum<T>::value, T> GetParamValue(const ScriptCommandParameters& ctx, int index)
 {
 	return static_cast<T>(GetParamValueRegular<std::underlying_type_t<T>>(ctx, index));
 }
 
 /// Base case which is triggered when RemainingTypes is void (see remaining non-parsed params case)
 template <typename... ParsedParamTypes, typename... ArgTypes>
-void InvokeCallableFromContext([[maybe_unused]] const ScriptCommandContext& ctx, [[maybe_unused]] int paramIndex,
+void InvokeCallableFromContext([[maybe_unused]] const ScriptCommandParameters& ctx, [[maybe_unused]] int paramIndex,
                                /// This case is why the original function is passed along
                                [[maybe_unused]] std::function<void(ArgTypes...)> originalFunction,
                                /// Empty working function type which means all the parameter types have been extracted
@@ -103,7 +103,7 @@ template <typename PoppedArgType, typename... ArgTypes, typename... RemainingTyp
           typename = std::enable_if_t<!std::is_array<PoppedArgType>::value>>
 void InvokeCallableFromContext(
     /// Pass along the script context which contains runtime parameter values
-    const ScriptCommandContext& ctx,
+    const ScriptCommandParameters& ctx,
     /// Keep track of which runtime parameter to fetch from context
     int paramIndex,
     /// Keep track of the original function for later call
@@ -127,14 +127,14 @@ void InvokeCallableFromContext(
 	                          // Growing list of parameter values taken from previous template-calls
 	                          std::forward<ParsedParamTypes>(params)...,
 	                          // Get parameter from the scripting context and append it to template-parsed parameters for call
-	                          // above If the template fails, it could be that the template ScriptCommandContext::GetParameter
-	                          // is undefined for that particular type
+	                          // above If the template fails, it could be that the template
+	                          // ScriptCommandParameters::GetParameter is undefined for that particular type
 	                          GetParamValue<PoppedArgType>(ctx, paramIndex));
 }
 
 /// Helper entry point to extract the parameter types and values
 template <typename... ArgTypes>
-void InvokeCallableFromContext(const ScriptCommandContext& ctx, std::function<void(ArgTypes...)> fn)
+void InvokeCallableFromContext(const ScriptCommandParameters& ctx, std::function<void(ArgTypes...)> fn)
 {
 	InvokeCallableFromContext(ctx, 0, fn, fn);
 }
@@ -161,10 +161,10 @@ constexpr std::array<ParameterType, 9> GetScriptCommandParameters(void (&fn)(Arg
 	return parameters;
 }
 
-#define CREATE_COMMAND_BINDING(NAME, FUNCTION)                                                                    \
-	{                                                                                                             \
-		{NAME}, [](const ScriptCommandContext& ctx) { InvokeCallableFromContext(ctx, std::function(FUNCTION)); }, \
-		    GetScriptCommandParameters(FUNCTION)                                                                  \
+#define CREATE_COMMAND_BINDING(NAME, FUNCTION)                                                                       \
+	{                                                                                                                \
+		{NAME}, [](const ScriptCommandParameters& ctx) { InvokeCallableFromContext(ctx, std::function(FUNCTION)); }, \
+		    GetScriptCommandParameters(FUNCTION)                                                                     \
 	}
 
 } // namespace openblack::lhscriptx
