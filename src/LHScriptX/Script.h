@@ -24,7 +24,7 @@ namespace openblack::lhscriptx
 class Script
 {
 public:
-	Script() = default;
+	Script();
 
 	void Load(const std::string&);
 
@@ -35,8 +35,6 @@ private:
 	const Token* PeekToken(Lexer&);
 	const Token* AdvanceToken(Lexer&);
 
-	// Game instance
-	Game* _game;
 	// The current token.
 	Token _token {Token::MakeInvalidToken()};
 };

@@ -23,6 +23,8 @@
 using namespace openblack;
 using namespace openblack::lhscriptx;
 
+Script::Script() = default;
+
 void Script::Load(const std::string& source)
 {
 	Lexer lexer(source);
