@@ -74,7 +74,7 @@ jobs:
         if: matrix.cc == 'clang' || startsWith(matrix.os, 'macos')
         run: |
           chmod +x ./${{ startsWith(matrix.os, 'ubuntu') && 'ClangBuildAnalyzer-linux' || startsWith(matrix.os, 'windows') && 'ClangBuildAnalyzer.exe' || startsWith(matrix.os, 'macos') && 'ClangBuildAnalyzer-mac' }}
-          ./${{ startsWith(matrix.os, 'ubuntu') && 'ClangBuildAnalyzer-linux' || startsWith(matrix.os, 'windows') && 'ClangBuildAnalyzer-windows.exe' || startsWith(matrix.os, 'macos') && 'ClangBuildAnalyzer-mac' }} --start cmake-build-presets/ninja-multi-vcpkg
+          ./${{ startsWith(matrix.os, 'ubuntu') && 'ClangBuildAnalyzer-linux' || startsWith(matrix.os, 'windows') && 'ClangBuildAnalyzer.exe' || startsWith(matrix.os, 'macos') && 'ClangBuildAnalyzer-mac' }} --start cmake-build-presets/ninja-multi-vcpkg
         shell: bash
 
       - name: Run CMake+Ninja+CTest to build/test the code (Debug).
