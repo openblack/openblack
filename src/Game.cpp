@@ -888,7 +888,7 @@ void Game::LoadMap(const std::filesystem::path& path)
 	_handEntity = ecs::archetypes::HandArchetype::Create(glm::vec3(0.0f), glm::half_pi<float>(), 0.0f, glm::half_pi<float>(),
 	                                                     0.01f, false);
 
-	Script script(this);
+	Script script;
 	script.Load(source);
 
 	// Each released map comes with an optional .fot file which contains the footpath information for the map

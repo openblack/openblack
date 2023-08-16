@@ -365,7 +365,7 @@ void Console::Draw(Game& game)
 
 		if (s[0] != 0)
 		{
-			ExecCommand(s, game);
+			ExecCommand(s);
 		}
 
 		_inputBuffer[0] = '\0';
@@ -411,7 +411,7 @@ void Console::AddLog(const char* fmt, ...)
 	_items.emplace_back(buf.data());
 }
 
-void Console::ExecCommand(const std::string& commandLine, Game& game)
+void Console::ExecCommand(const std::string& commandLine)
 {
 	AddLog("# %s\n", commandLine.c_str());
 
@@ -453,7 +453,7 @@ void Console::ExecCommand(const std::string& commandLine, Game& game)
 	{
 		try
 		{
-			lhscriptx::Script script(&game);
+			lhscriptx::Script script;
 			script.Load(commandLine);
 		}
 		catch (std::runtime_error& error)
