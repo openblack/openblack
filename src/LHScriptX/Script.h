@@ -13,11 +13,6 @@
 
 #include "Lexer.h"
 
-namespace openblack
-{
-class Game;
-}
-
 namespace openblack::lhscriptx
 {
 

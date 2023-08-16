@@ -14,11 +14,6 @@
 #include <string>
 #include <vector>
 
-namespace openblack
-{
-class Game;
-}
-
 namespace openblack::lhscriptx
 {
 enum class ParameterType
