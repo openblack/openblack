@@ -47,6 +47,16 @@ using namespace openblack::ecs::systems;
 
 namespace openblack
 {
+// clang-format off
+constexpr auto k_BgfxDefaultStateInvertedZ = 0 \
+                                     | BGFX_STATE_WRITE_RGB \
+                                     | BGFX_STATE_WRITE_A \
+                                     | BGFX_STATE_WRITE_Z \
+                                     | BGFX_STATE_CULL_CW \
+                                     | BGFX_STATE_DEPTH_TEST_GREATER \
+                                     | BGFX_STATE_MSAA;
+// clang-format on
+
 struct BgfxCallback: public bgfx::CallbackI
 {
 	constexpr static std::array<std::string_view, bgfx::Fatal::Count> k_CodeLookup = {
@@ -231,7 +241,7 @@ Renderer::~Renderer()
 
 void Renderer::ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height, uint32_t clearColor) const
 {
-	bgfx::setViewClear(static_cast<bgfx::ViewId>(viewId), BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, clearColor, 1.0f, 0);
+	bgfx::setViewClear(static_cast<bgfx::ViewId>(viewId), BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, clearColor, 0.0f, 0);
 	bgfx::setViewRect(static_cast<bgfx::ViewId>(viewId), 0, 0, width, height);
 }
 
@@ -425,12 +435,7 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 			footprintShaderInstanced->SetTextureSampler("s_footprint", 0, *footprint.texture);
 			footprint.mesh->GetVertexBuffer().Bind();
 			bgfx::setInstanceDataBuffer(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
-			const uint64_t state = 0u                       //
-			                       | BGFX_STATE_WRITE_RGB   //
-			                       | BGFX_STATE_WRITE_A     //
-			                       | BGFX_STATE_BLEND_ALPHA //
-			                       | BGFX_STATE_CULL_CW     //
-			                       | BGFX_STATE_MSAA;
+			const uint64_t state = k_BgfxDefaultStateInvertedZ;
 			bgfx::setState(state);
 			bgfx::submit(static_cast<bgfx::ViewId>(viewId), footprintShaderInstanced->GetRawHandle());
 		}
@@ -508,7 +513,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			L3DMeshSubmitDesc submitDesc = {};
 			submitDesc.viewId = desc.viewId;
 			submitDesc.program = skyShader;
-			submitDesc.state = BGFX_STATE_DEFAULT;
+			submitDesc.state = k_BgfxDefaultStateInvertedZ;
 			if (!desc.cullBack)
 			{
 				submitDesc.state &= ~BGFX_STATE_CULL_MASK;
@@ -530,7 +535,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			const auto& mesh = desc.water._mesh;
 			mesh->GetIndexBuffer().Bind(mesh->GetIndexBuffer().GetCount(), 0);
 			mesh->GetVertexBuffer().Bind();
-			bgfx::setState(BGFX_STATE_DEFAULT);
+			bgfx::setState(k_BgfxDefaultStateInvertedZ);
 			auto diffuse = Locator::resources::value().GetTextures().Handle(Water::k_DiffuseTextureId);
 			auto alpha = Locator::resources::value().GetTextures().Handle(Water::k_AlphaTextureId);
 			waterShader->SetTextureSampler("s_diffuse", 0, *diffuse);
@@ -565,7 +570,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			// clang-format off
 			constexpr auto defaultState = 0u
 				| BGFX_STATE_WRITE_MASK
-				| BGFX_STATE_DEPTH_TEST_LESS
+				| BGFX_STATE_DEPTH_TEST_GREATER
 				| BGFX_STATE_BLEND_ALPHA
 				| BGFX_STATE_MSAA
 			;
@@ -602,10 +607,10 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			L3DMeshSubmitDesc submitDesc = {};
 			submitDesc.viewId = desc.viewId;
 			submitDesc.program = objectShaderInstanced;
-			submitDesc.state = 0u                           //
-			                   | BGFX_STATE_WRITE_MASK      //
-			                   | BGFX_STATE_DEPTH_TEST_LESS //
-			                   | BGFX_STATE_MSAA            //
+			submitDesc.state = 0u                              //
+			                   | BGFX_STATE_WRITE_MASK         //
+			                   | BGFX_STATE_DEPTH_TEST_GREATER //
+			                   | BGFX_STATE_MSAA               //
 			    ;
 			const auto& renderCtx = Locator::rendereringSystem::value().GetContext();
 
@@ -655,19 +660,19 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					const auto boundBoxCount = static_cast<uint32_t>(renderCtx.instanceUniforms.size() / 2);
 					renderCtx.boundingBox->GetVertexBuffer().Bind();
 					bgfx::setInstanceDataBuffer(renderCtx.instanceUniformBuffer, boundBoxOffset, boundBoxCount);
-					bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
+					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
 					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShaderInstanced->GetRawHandle());
 				}
 				if (renderCtx.footpaths)
 				{
 					renderCtx.footpaths->GetVertexBuffer().Bind();
-					bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
+					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
 					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
 				}
 				if (renderCtx.streams)
 				{
 					renderCtx.streams->GetVertexBuffer().Bind();
-					bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
+					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
 					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
 				}
 			}
@@ -699,7 +704,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 					    _plane->GetVertexBuffer().Bind();
 
-					    bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_BLEND_ALPHA);
+					    bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_BLEND_ALPHA);
 
 					    bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), spriteShader->GetRawHandle());
 				    });
@@ -714,7 +719,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			// clang-format off
 			submitDesc.state = 0u
 				| BGFX_STATE_WRITE_MASK
-				| BGFX_STATE_DEPTH_TEST_LESS
+				| BGFX_STATE_DEPTH_TEST_GREATER
 				| BGFX_STATE_CULL_CCW
 				| BGFX_STATE_MSAA
 			;
@@ -746,7 +751,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		{
 			bgfx::setTransform(glm::value_ptr(_debugCrossPose));
 			_debugCross->GetVertexBuffer().Bind();
-			bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);
+			bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
 			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
 		}
 	}
