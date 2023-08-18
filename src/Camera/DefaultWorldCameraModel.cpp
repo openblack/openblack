@@ -45,7 +45,11 @@ glm::vec3 EulerFromPoints(glm::vec3 p0, glm::vec3 p1)
 	return {glm::pi<float>() - glm::atan(diff.x, -diff.z), glm::atan(diff.y, glm::length(glm::xz(diff))), 0.0f};
 }
 
-DefaultWorldCameraModel::DefaultWorldCameraModel() = default;
+DefaultWorldCameraModel::DefaultWorldCameraModel(glm::vec3 origin, glm::vec3 focus)
+    : _targetOrigin(origin)
+    , _targetFocus(focus)
+{
+}
 
 DefaultWorldCameraModel::~DefaultWorldCameraModel() = default;
 
@@ -127,10 +131,10 @@ bool DefaultWorldCameraModel::ConstrainCamera()
 	bool originHasBeenAdjusted = false;
 	originHasBeenAdjusted |= ConstrainAltitude();
 	originHasBeenAdjusted |= ConstrainDisc();
-	if (originHasBeenAdjusted)
-	{
-		_targetFocus = _targetFocus - originBackup + _targetOrigin;
-	}
+	// if (originHasBeenAdjusted)
+	// {
+	// 	_targetFocus = _targetFocus - originBackup + _targetOrigin;
+	// }
 	return originHasBeenAdjusted;
 }
 
@@ -180,6 +184,7 @@ void DefaultWorldCameraModel::UpdateMode(glm::vec3 eulerAngles, float zoomDelta)
 	switch (_mode)
 	{
 	case Mode::Cartesian:
+		UpdateModeCartesian();
 		break;
 	case Mode::Polar:
 		UpdateModePolar(eulerAngles, zoomDelta == 0.0f);
@@ -187,21 +192,28 @@ void DefaultWorldCameraModel::UpdateMode(glm::vec3 eulerAngles, float zoomDelta)
 	}
 }
 
+void DefaultWorldCameraModel::UpdateModeCartesian()
+{
+	// Drag focus on land
+	const auto dist = _screenSpaceCenterRaycastHit.has_value() ? glm::distance(*_screenSpaceCenterRaycastHit, _targetOrigin)
+	                                                           : _originFocusDistanceAtInteractionStart;
+	_targetFocus = ProjectPointOnForwardVector(glm::max(dist - 1.0f, 0.1f));
+	_focusAtClick = _targetFocus;
+}
+
 void DefaultWorldCameraModel::UpdateModePolar(glm::vec3 eulerAngles, bool recalculatePoint)
 {
 	// Pitch should already be clamped in TiltZoom
 
 	// Put average distance point on half-line from camera
-	const auto averageIslandPoint = _targetOrigin + _averageIslandDistance * glm::normalize(_targetFocus - _targetOrigin);
+	const auto averageIslandPoint = _targetOrigin + _averageIslandDistance * glm::normalize(GetTargetForwardVector());
 
 	// Rotate camera origin based on euler angles as polar coordinates and focus and distance at interaction
 	_targetOrigin = _focusAtClick + _originFocusDistanceAtInteractionStart * glm::euclidean(glm::yx(eulerAngles));
 
 	if (recalculatePoint)
 	{
-		const auto forward = glm::normalize(_targetFocus - _targetOrigin);
-		const auto newAverageIslandPoint = _targetOrigin + forward * _averageIslandDistance;
-		const auto diff = averageIslandPoint - newAverageIslandPoint;
+		const auto diff = averageIslandPoint - ProjectPointOnForwardVector(_averageIslandDistance);
 		_targetOrigin += diff;
 		_focusAtClick += diff;
 	}
@@ -211,14 +223,37 @@ void DefaultWorldCameraModel::UpdateModePolar(glm::vec3 eulerAngles, bool recalc
 void DefaultWorldCameraModel::UpdateCameraInterpolationValues(const Camera& camera)
 {
 	// Get current curve interpolated values from camera
+	_currentOrigin = camera.GetOrigin(Camera::Interpolation::Current);
+	_currentFocus = camera.GetFocus(Camera::Interpolation::Current);
 	_targetOrigin = camera.GetOrigin(Camera::Interpolation::Target);
 	_targetFocus = camera.GetFocus(Camera::Interpolation::Target);
+}
+
+void DefaultWorldCameraModel::UpdateRaycastHitPoints(const Camera& camera)
+{
+	// Raycast mouse and screen center
+	// TODO(#656) in c++23 use camera.RaycastMouseToLand().and_then
+	_screenSpaceMouseRaycastHit = std::nullopt;
+	_screenSpaceCenterRaycastHit = std::nullopt;
+	if (const auto hit = camera.RaycastMouseToLand(Camera::Interpolation::Target))
+	{
+		_screenSpaceMouseRaycastHit = hit->position;
+	}
+	if (const auto hit = camera.RaycastScreenCoordToLand(static_cast<glm::vec2>(Locator::windowing ::value().GetSize()) / 2.0f, Camera::Interpolation::Target))
+	{
+		_screenSpaceCenterRaycastHit = hit->position;
+	}
+	else
+	{
+		_screenSpaceCenterRaycastHit = std::nullopt;
+	}
 }
 
 std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraModel::Update(std::chrono::microseconds dt,
                                                                                           const Camera& camera)
 {
 	UpdateCameraInterpolationValues(camera);
+	UpdateRaycastHitPoints(camera);
 
 	const float scalingFactor = 60.0f;
 
@@ -327,4 +362,19 @@ std::chrono::seconds DefaultWorldCameraModel::GetIdleTime() const
 {
 	SPDLOG_LOGGER_WARN(spdlog::get("game"), "TODO: Idle Time not implemented");
 	return {};
+}
+
+glm::vec3 DefaultWorldCameraModel::GetTargetForwardVector() const
+{
+	return GetTargetFocus() - GetTargetOrigin();
+}
+
+glm::vec3 DefaultWorldCameraModel::GetTargetForwardUnitVector() const
+{
+	return glm::normalize(GetTargetForwardVector());
+}
+
+glm::vec3 DefaultWorldCameraModel::ProjectPointOnForwardVector(float distanceFromOrigin) const
+{
+	return _targetOrigin + GetTargetForwardUnitVector() * distanceFromOrigin;
 }

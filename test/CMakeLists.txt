@@ -45,3 +45,4 @@ openblack_setup_and_add_test(test_interpolator test_interpolator.cpp)
 openblack_setup_and_add_json_test(
   test_mobile_wall_hug mobile_wall_hug/test_mobile_wall_hug.cpp
 )
+openblack_setup_and_add_json_test(test_camera camera/test_camera.cpp)

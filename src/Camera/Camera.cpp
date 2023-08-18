@@ -32,7 +32,7 @@ Camera::Camera(glm::vec3 focus)
     // Maybe a struct is not the right thing... Maybe an optional?
     : _originInterpolators(ZoomInterpolator3f(focus + k_DefaultCameraOriginOffset))
     , _focusInterpolators(ZoomInterpolator3f(focus))
-    , _model(CameraModel::CreateModel(CameraModel::Model::DefaultWorld))
+    , _model(CameraModel::CreateModel(CameraModel::Model::DefaultWorld, focus + glm::vec3(0.0f, 0.0f, 120.0f), focus))
 {
 }
 
