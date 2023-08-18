@@ -38,7 +38,7 @@ public:
 		std::chrono::duration<float> duration;
 	};
 
-	static std::unique_ptr<CameraModel> CreateModel(Model model);
+	static std::unique_ptr<CameraModel> CreateModel(Model model, glm::vec3 origin, glm::vec3 focus);
 
 	virtual ~CameraModel();
 
