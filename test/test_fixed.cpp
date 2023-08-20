@@ -9,15 +9,14 @@
 
 #include <ECS/Archetypes/AbodeArchetype.h>
 #include <ECS/Archetypes/TownArchetype.h>
+#include <ECS/Archetypes/Utils.h>
 #include <ECS/Components/Fixed.h>
+#include <ECS/Components/Transform.h>
 #include <ECS/Registry.h>
 #include <Game.h>
 #include <Locator.h>
 #include <glm/gtx/string_cast.hpp>
 #include <gtest/gtest.h>
-
-#include "ECS/Archetypes/Utils.h"
-#include "ECS/Components/Transform.h"
 
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
