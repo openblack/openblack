@@ -6,6 +6,9 @@ include(CTest)
 macro (OPENBLACK_SETUP_AND_ADD_TEST TEST_NAME TEST_SOURCE)
   add_executable(${TEST_NAME} ${TEST_SOURCE})
   add_dependencies(${TEST_NAME} generate_mock_game_data)
+  target_include_directories(
+    ${TEST_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party
+  )
   target_link_libraries(${TEST_NAME} PRIVATE GTest::gtest_main openblack_lib)
   target_compile_definitions(
     ${TEST_NAME} PRIVATE TEST_BINARY_DIR="${CMAKE_CURRENT_BINARY_DIR}"
@@ -42,6 +45,7 @@ openblack_setup_and_add_test(test_game_initialize test_game_initialize.cpp)
 openblack_setup_and_add_test(test_load_scene test_load_scene.cpp)
 openblack_setup_and_add_test(test_fixed test_fixed.cpp)
 openblack_setup_and_add_test(test_interpolator test_interpolator.cpp)
+openblack_setup_and_add_test(test_camera camera/test_camera.cpp)
 openblack_setup_and_add_test(test_set_camera_pos camera/test_set_camera_pos.cpp)
 openblack_setup_and_add_json_test(
   test_mobile_wall_hug mobile_wall_hug/test_mobile_wall_hug.cpp

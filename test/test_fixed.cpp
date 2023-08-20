@@ -18,8 +18,7 @@
 #include <Locator.h>
 #include <glm/gtx/string_cast.hpp>
 #include <gtest/gtest.h>
-
-#include "third_party/json_helpers.h"
+#include <json_helpers.h>
 
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
