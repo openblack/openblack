@@ -79,7 +79,7 @@ std::optional<ecs::components::Transform> Camera::RaycastMouseToLand()
 	SDL_GetMouseState(&mouseVec.x, &mouseVec.y);
 	const auto ray = DeprojectScreenToWorld(mouseVec, glm::vec2(sWidth, sHeight));
 	const auto& dynamicsSystem = Locator::dynamicsSystem::value();
-	if (auto hit = dynamicsSystem.RayCastClosestHit(ray.origin, ray.direction, 1e10f))
+	if (auto hit = dynamicsSystem.RayCastClosestHit(ray, 1e10f))
 	{
 		intersectionTransform = hit->first;
 		return std::make_optional(intersectionTransform);
@@ -470,7 +470,7 @@ void Camera::HandleMouseInput(const SDL_Event& e)
 		{
 			float dist = 9999.0f;
 			const auto& dynamicsSystem = Locator::dynamicsSystem::value();
-			if (auto hit = dynamicsSystem.RayCastClosestHit(_position, GetForward(), 1e10f))
+			if (auto hit = dynamicsSystem.RayCastClosestHit(Ray {_position, GetForward()}, 1e10f))
 			{
 				dist = glm::length(hit->first.position - _position);
 			}
@@ -647,9 +647,10 @@ void Camera::Update(std::chrono::microseconds dt)
 
 		// Check if there are obstacles in the way, if there are fly over them
 		const auto& dynamicsSystem = Locator::dynamicsSystem::value();
-		if (auto obst = dynamicsSystem.RayCastClosestHit(_position - glm::vec3(0.0f, 20.0f, 0.0f),
-		                                                 glm::normalize((_flyToPos - glm::vec3(0.0f, 20.0f, 0.0f)) - _position),
-		                                                 glm::length(_flyToPos - _position) + 10.0f))
+		if (auto obst =
+		        dynamicsSystem.RayCastClosestHit(Ray {_position - glm::vec3(0.0f, 20.0f, 0.0f),
+		                                              glm::normalize((_flyToPos - glm::vec3(0.0f, 20.0f, 0.0f)) - _position)},
+		                                         glm::length(_flyToPos - _position) + 10.0f))
 		{
 			auto closest = obst->first;
 			auto dist = glm::length(_flyToPos - closest.position);

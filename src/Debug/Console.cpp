@@ -228,7 +228,7 @@ void Console::Draw(Game& game)
 	{
 		const auto ray = game.GetCamera().DeprojectScreenToWorld(mousePosition, screenSize);
 		const auto& dynamicsSystem = Locator::dynamicsSystem::value();
-		if (auto hit = dynamicsSystem.RayCastClosestHit(ray.origin, ray.direction, 1e10f))
+		if (auto hit = dynamicsSystem.RayCastClosestHit(ray, 1e10f))
 		{
 			if (hit->second.userData != nullptr)
 			{
