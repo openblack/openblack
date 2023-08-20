@@ -895,9 +895,8 @@ void Gui::ShowVillagerNames(const Game& game)
 			    };
 		    }
 
-		    const auto area =
-		        RenderVillagerName(coveredAreas, name, details, color,
-		                           ImVec2(screenPoint->x, viewport.maximum.y - screenPoint->y), 100.0f, debugCallback);
+		    const auto area = RenderVillagerName(coveredAreas, name, details, color, ImVec2(screenPoint->x, screenPoint->y),
+		                                         100.0f, debugCallback);
 		    if (area.has_value())
 		    {
 			    coveredAreas.emplace_back(area.value());

@@ -225,7 +225,8 @@ std::optional<glm::vec3> Camera::ProjectWorldToScreen(glm::vec3 worldPosition, U
 	{
 		return std::nullopt; // Clipped
 	}
-	return std::make_optional(outScreenPosition);
+	const auto yflipped = viewport.maximum.y - (outScreenPosition.y - viewport.minimum.y) + viewport.minimum.y;
+	return {{outScreenPosition.x, yflipped, outScreenPosition.z}};
 }
 
 void Camera::ProcessSDLEvent(const SDL_Event& e)
@@ -575,9 +576,7 @@ void Camera::Update(std::chrono::microseconds dt)
 			glm::ivec2 mousePosition;
 
 			SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
-			auto handScreenCoords = glm::ivec2(handToScreen.value());
-			handScreenCoords.y = sHeight - handScreenCoords.y;
-			_handScreenVec = mousePosition - handScreenCoords;
+			_handScreenVec = mousePosition - glm::ivec2(handToScreen.value());
 			_handDragMult = glm::length(glm::vec2(_handScreenVec));
 			worldHandDist = glm::length(hit->position - handPos);
 			_handDragMult /= sHeight;
