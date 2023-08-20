@@ -357,7 +357,6 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> OldCameraModel::Update
 			// calculate distance between hand and mouse in screen coordinates
 			const auto mousePosition = actionSystem.GetMousePosition();
 			auto handScreenCoordinates = glm::ivec2(handToScreen);
-			handScreenCoordinates.y = windowSize.y - handScreenCoordinates.y;
 			_handScreenVec = static_cast<glm::ivec2>(mousePosition) - handScreenCoordinates;
 			_handDragMult = glm::length(glm::vec2(_handScreenVec));
 			worldHandDist = glm::length(hit->position - handPos);

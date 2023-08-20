@@ -175,6 +175,7 @@ bool Camera::ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, g
 	{
 		return false; // Clipped
 	}
+	outScreenPosition.y = viewport.w - (outScreenPosition.y - viewport.y) + viewport.y;
 	return true;
 }
 
