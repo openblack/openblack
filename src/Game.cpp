@@ -352,15 +352,13 @@ bool Game::Update() noexcept
 			const auto scale = glm::vec3(50.0f, 50.0f, 50.0f);
 			if (screenSize.x > 0 && screenSize.y > 0)
 			{
-				glm::vec3 rayOrigin;
-				glm::vec3 rayDirection;
-				camera.DeprojectScreenToWorld(static_cast<glm::vec2>(_mousePosition) / static_cast<glm::vec2>(screenSize),
-				                              rayOrigin, rayDirection);
+				const auto ray =
+				    camera.DeprojectScreenToWorld(static_cast<glm::vec2>(_mousePosition) / static_cast<glm::vec2>(screenSize));
 				auto& dynamicsSystem = Locator::dynamicsSystem::value();
 
-				if (!glm::any(glm::isnan(rayOrigin) || glm::isnan(rayDirection)))
+				if (!glm::any(glm::isnan(ray.origin) || glm::isnan(ray.direction)))
 				{
-					if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
+					if (auto hit = dynamicsSystem.RayCastClosestHit(ray.origin, ray.direction, 1e10f))
 					{
 						intersectionTransform = hit->first;
 					}
@@ -369,9 +367,9 @@ bool Game::Update() noexcept
 						float intersectDistance = 0.0f;
 						const auto planeOrigin = glm::vec3(0.0f, 0.0f, 0.0f);
 						const auto planeNormal = glm::vec3(0.0f, 1.0f, 0.0f);
-						if (glm::intersectRayPlane(rayOrigin, rayDirection, planeOrigin, planeNormal, intersectDistance))
+						if (glm::intersectRayPlane(ray.origin, ray.direction, planeOrigin, planeNormal, intersectDistance))
 						{
-							intersectionTransform.position = rayOrigin + rayDirection * intersectDistance;
+							intersectionTransform.position = ray.At(intersectDistance);
 							intersectionTransform.rotation = glm::mat3(1.0f);
 						}
 					}

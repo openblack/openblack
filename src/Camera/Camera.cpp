@@ -81,19 +81,17 @@ std::optional<ecs::components::Transform> Camera::RaycastScreenCoordToLand(glm::
 	// get the hit by raycasting to the land down via the pixel coordinate
 	ecs::components::Transform intersectionTransform;
 	float intersectDistance = 0.0f;
-	glm::vec3 rayOrigin;
-	glm::vec3 rayDirection;
-	DeprojectScreenToWorld(screenCoord, rayOrigin, rayDirection, interpolation);
+	const auto ray = DeprojectScreenToWorld(screenCoord, interpolation);
 	const auto& dynamicsSystem = Locator::dynamicsSystem::value();
-	if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
+	if (auto hit = dynamicsSystem.RayCastClosestHit(ray.origin, ray.direction, 1e10f))
 	{
 		intersectionTransform = hit->first;
 		return std::make_optional(intersectionTransform);
 	}
-	if (includeWater && glm::intersectRayPlane(rayOrigin, rayDirection, glm::vec3(0.0f, 0.0f, 0.0f),
+	if (includeWater && glm::intersectRayPlane(ray.origin, ray.direction, glm::vec3(0.0f, 0.0f, 0.0f),
 	                                           glm::vec3(0.0f, 1.0f, 0.0f), intersectDistance))
 	{
-		intersectionTransform.position = rayOrigin + rayDirection * intersectDistance;
+		intersectionTransform.position = ray.origin + ray.direction * intersectDistance;
 		intersectionTransform.rotation = glm::mat3(1.0f);
 		return std::make_optional(intersectionTransform);
 	}
@@ -143,8 +141,7 @@ std::unique_ptr<Camera> Camera::Reflect() const
 	return reflectionCamera;
 }
 
-void Camera::DeprojectScreenToWorld(glm::vec2 screenCoord, glm::vec3& outWorldOrigin, glm::vec3& outWorldDirection,
-                                    Interpolation interpolation) const
+Ray Camera::DeprojectScreenToWorld(glm::vec2 screenCoord, Interpolation interpolation) const
 {
 	const float screenSpaceX = (screenCoord.x - 0.5f) * 2.0f;
 	const float screenSpaceY = ((1.0f - screenCoord.y) - 0.5f) * 2.0f;
@@ -179,36 +176,36 @@ void Camera::DeprojectScreenToWorld(glm::vec2 screenCoord, glm::vec3& outWorldOr
 
 	const glm::vec3 rayDirWorldSpace = glm::normalize(rayEndWorldSpace - rayStartWorldSpace);
 
-	// finally, store the results in the outputs
-	outWorldOrigin = rayStartWorldSpace;
-	outWorldDirection = rayDirWorldSpace;
+	return {rayStartWorldSpace, rayDirWorldSpace};
 }
 
-bool Camera::ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& outScreenPosition,
-                                  Interpolation interpolation) const
+std::optional<glm::vec3> Camera::ProjectWorldToScreen(glm::vec3 worldPosition, U16Extent2 viewport,
+                                                      Interpolation interpolation) const
 {
 	if (glm::all(glm::epsilonEqual(worldPosition, GetOrigin(), glm::epsilon<float>())))
 	{
-		outScreenPosition = glm::vec3(glm::lerp(glm::xy(viewport), glm::zw(viewport), {0.5f, 0.5f}), 0.0f);
-		return true; // Right at the camera position
+		// Right at the camera position
+		return glm::vec3(
+		    glm::lerp(static_cast<glm::vec2>(viewport.minimum), static_cast<glm::vec2>(viewport.maximum), {0.5f, 0.5f}), 0.0f);
 	}
-	outScreenPosition =
-	    glm::project(worldPosition, GetViewMatrix(interpolation), GetProjectionMatrix(Projection::Normal), viewport);
-	if (outScreenPosition.x < viewport.x || outScreenPosition.y < viewport.y || glm::round(outScreenPosition.x) > viewport.z ||
-	    glm::round(outScreenPosition.y) > viewport.w)
+	auto outScreenPosition =
+	    glm::project(worldPosition, GetViewMatrix(interpolation), GetProjectionMatrix(Projection::Normal),
+	                 glm::vec4 {viewport.minimum.x, viewport.minimum.y, viewport.maximum.x, viewport.maximum.y});
+	if (outScreenPosition.x < viewport.minimum.x || outScreenPosition.y < viewport.minimum.y ||
+	    glm::round(outScreenPosition.x) > viewport.maximum.x || glm::round(outScreenPosition.y) > viewport.maximum.y)
 	{
-		return false; // Outside viewport bounds
+		return std::nullopt; // Outside viewport bounds
 	}
 	if (outScreenPosition.z > 1.0f)
 	{
-		return false; // Clipped
+		return std::nullopt; // Clipped
 	}
 	if (outScreenPosition.z < 0.0f)
 	{
-		return false; // Behind Camera
+		return std::nullopt; // Behind Camera
 	}
-	outScreenPosition.y = viewport.w - (outScreenPosition.y - viewport.y) + viewport.y;
-	return true;
+	outScreenPosition.y = viewport.maximum.y - (outScreenPosition.y - viewport.minimum.y) + viewport.minimum.y;
+	return std::make_optional(outScreenPosition);
 }
 
 void Camera::Update(std::chrono::microseconds dt)

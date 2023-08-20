@@ -140,15 +140,14 @@ public:
 
 	[[nodiscard]] std::optional<glm::u16vec2> GetWindowCoordinates(const glm::vec3& position) const
 	{
-		glm::vec3 screenPosition;
 		const auto size = openblack::Locator::windowing::value().GetSize();
-		const auto viewport = glm::vec4(0, 0, size.x, size.y);
-		if (!camera->ProjectWorldToScreen(position, viewport, screenPosition, openblack::Camera::Interpolation::Target))
+		const auto viewport = openblack::U16Extent2({0, 0}, size);
+		if (auto screenPosition = camera->ProjectWorldToScreen(position, viewport, openblack::Camera::Interpolation::Target))
 		{
-			return std::nullopt;
+			// Move point because of precision loss in project/deproject
+			return static_cast<glm::u16vec2>(glm::round(glm::round(glm::xy(*screenPosition * 10.0f)) / 10.0f));
 		}
-		// Move point because of precision loss in project/deproject
-		return static_cast<glm::u16vec2>(glm::round(glm::round(glm::xy(screenPosition * 10.0f)) / 10.0f));
+		return std::nullopt;
 	}
 
 	uint16_t frameNumber = 0;
