@@ -808,8 +808,8 @@ void Gui::ShowVillagerNames(const Game& game)
 	std::vector<glm::vec4> coveredAreas;
 	coveredAreas.reserve(Locator::entitiesRegistry::value().Size<Villager>());
 	Locator::entitiesRegistry::value().Each<const Transform, Villager, LivingAction>(
-	    [this, &i, &coveredAreas, &camera, config, viewport](const Transform& transform, Villager& villager,
-	                                                         LivingAction& action) {
+	    [this, &i, &coveredAreas, &camera, config, viewport] //
+	    (const Transform& transform, Villager& villager, LivingAction& action) {
 		    ++i;
 		    const float height = 2.0f * transform.scale.y; // TODO(bwrsandman): get from bounding box max y
 		    glm::vec3 screenPoint;
@@ -908,8 +908,8 @@ void Gui::ShowVillagerNames(const Game& game)
 			    };
 		    }
 
-		    const auto area = RenderVillagerName(coveredAreas, name, details, color,
-		                                         ImVec2(screenPoint.x, viewport.w - screenPoint.y), 100.0f, debugCallback);
+		    const auto area = RenderVillagerName(coveredAreas, name, details, color, ImVec2(screenPoint.x, screenPoint.y),
+		                                         100.0f, debugCallback);
 		    if (area.has_value())
 		    {
 			    coveredAreas.emplace_back(area.value());
