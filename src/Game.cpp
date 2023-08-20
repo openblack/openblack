@@ -358,7 +358,7 @@ bool Game::Update() noexcept
 
 				if (!glm::any(glm::isnan(ray.origin) || glm::isnan(ray.direction)))
 				{
-					if (auto hit = dynamicsSystem.RayCastClosestHit(ray.origin, ray.direction, 1e10f))
+					if (auto hit = dynamicsSystem.RayCastClosestHit(ray, 1e10f))
 					{
 						intersectionTransform = hit->first;
 					}

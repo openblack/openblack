@@ -83,7 +83,7 @@ std::optional<ecs::components::Transform> Camera::RaycastScreenCoordToLand(glm::
 	float intersectDistance = 0.0f;
 	const auto ray = DeprojectScreenToWorld(screenCoord, interpolation);
 	const auto& dynamicsSystem = Locator::dynamicsSystem::value();
-	if (auto hit = dynamicsSystem.RayCastClosestHit(ray.origin, ray.direction, 1e10f))
+	if (auto hit = dynamicsSystem.RayCastClosestHit(ray, 1e10f))
 	{
 		intersectionTransform = hit->first;
 		return std::make_optional(intersectionTransform);

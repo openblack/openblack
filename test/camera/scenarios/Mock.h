@@ -121,11 +121,10 @@ public:
 	void UpdatePhysicsTransforms() override {}
 	[[nodiscard]] virtual std::optional<glm::vec2> RayCastClosestHitScreenCoord(glm::u16vec2 screenCoord) const = 0;
 	[[nodiscard]] std::optional<std::pair<openblack::ecs::components::Transform, openblack::RigidBodyDetails>>
-	RayCastClosestHit(const glm::vec3& origin, [[maybe_unused]] const glm::vec3& direction,
-	                  [[maybe_unused]] float tMax) const override
+	RayCastClosestHit(const openblack::Ray& ray, [[maybe_unused]] float tMax) const override
 	{
 		const auto& terrain = openblack::Locator::terrainSystem::value();
-		const auto screenCoord = GetWindowCoordinates(origin);
+		const auto screenCoord = GetWindowCoordinates(ray.origin);
 		if (!screenCoord.has_value())
 		{
 			return std::nullopt;
