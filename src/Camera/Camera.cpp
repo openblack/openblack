@@ -12,6 +12,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/intersect.hpp>
+#include <glm/gtx/vec_swizzle.hpp>
 
 #include "3D/LandIsland.h"
 #include "ECS/Registry.h"
@@ -180,6 +181,11 @@ void Camera::DeprojectScreenToWorld(glm::vec2 screenCoord, glm::vec3& outWorldOr
 bool Camera::ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& outScreenPosition,
                                   Interpolation interpolation) const
 {
+	if (glm::all(glm::epsilonEqual(worldPosition, GetOrigin(), glm::epsilon<float>())))
+	{
+		outScreenPosition = glm::vec3(glm::lerp(glm::xy(viewport), glm::zw(viewport), {0.5f, 0.5f}), 0.0f);
+		return true; // Right at the camera position
+	}
 	outScreenPosition = glm::project(worldPosition, GetViewMatrix(interpolation), GetProjectionMatrix(), viewport);
 	if (outScreenPosition.x < viewport.x || outScreenPosition.y < viewport.y || outScreenPosition.x > viewport.z ||
 	    outScreenPosition.y > viewport.w)

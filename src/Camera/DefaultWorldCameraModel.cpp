@@ -32,6 +32,7 @@ constexpr auto k_WheelZoomFactor = 20.0f;
 constexpr auto k_InteractionSpeedMultiplier = 400.0f;
 // Vanilla black and white uses a pretty bad PI/2 approximation
 constexpr auto k_CameraModelHalfPi = 1.53938043f;
+constexpr auto k_CameraInteractionStepSize = 3.0f;
 
 glm::vec3 EulerFromPoints(glm::vec3 p0, glm::vec3 p1)
 {
@@ -48,6 +49,7 @@ glm::vec3 EulerFromPoints(glm::vec3 p0, glm::vec3 p1)
 DefaultWorldCameraModel::DefaultWorldCameraModel(glm::vec3 origin, glm::vec3 focus)
     : _targetOrigin(origin)
     , _targetFocus(focus)
+    , _focusDistance(glm::distance(_targetOrigin, _targetFocus))
 {
 }
 
@@ -55,8 +57,6 @@ DefaultWorldCameraModel::~DefaultWorldCameraModel() = default;
 
 void DefaultWorldCameraModel::TiltZoom(glm::vec3& eulerAngles, float scalingFactor)
 {
-	const float CAMERA_INTERACTION_STEP_SIZE = 3.0f;
-
 	// Update the camera's yaw if there's significant horizontal movement.
 	if (glm::abs(_rotateAroundDelta.y) > glm::epsilon<float>())
 	{
@@ -86,7 +86,7 @@ void DefaultWorldCameraModel::TiltZoom(glm::vec3& eulerAngles, float scalingFact
 	}
 
 	_averageIslandDistance += _rotateAroundDelta.z;
-	_averageIslandDistance = glm::max(_averageIslandDistance, CAMERA_INTERACTION_STEP_SIZE + 0.1f);
+	_averageIslandDistance = glm::max(_averageIslandDistance, k_CameraInteractionStepSize + 0.1f);
 
 	const auto rotateAroundActivated = _rotateAroundDelta != glm::zero<glm::vec3>();
 	if (rotateAroundActivated)
@@ -125,7 +125,7 @@ float DefaultWorldCameraModel::GetVerticalLineInverseDistanceWeighingRayCast(con
 	return 1.0f / average;
 }
 
-bool DefaultWorldCameraModel::ConstrainCamera()
+bool DefaultWorldCameraModel::ConstrainCamera(glm::vec3& eulerAngles, const Camera& camera)
 {
 	const auto originBackup = _targetOrigin;
 	bool originHasBeenAdjusted = false;
@@ -135,6 +135,9 @@ bool DefaultWorldCameraModel::ConstrainCamera()
 	// {
 	// 	_targetFocus = _targetFocus - originBackup + _targetOrigin;
 	// }
+
+	UpdateFocusPointInteractionParameters(eulerAngles, camera);
+
 	return originHasBeenAdjusted;
 }
 
@@ -179,6 +182,39 @@ bool DefaultWorldCameraModel::ConstrainDisc()
 	return hasBeenAdjusted;
 }
 
+void DefaultWorldCameraModel::UpdateFocusPointInteractionParameters(glm::vec3 eulerAngles, const Camera& camera)
+{
+	// TODO: Use mouse delta
+	if (true)
+	{
+		// if hand not tilting and not panning
+		_originFocusDistanceAtInteractionStart =
+		    glm::max(glm::distance(_targetOrigin, _targetFocus), k_CameraInteractionStepSize + 0.1f);
+		// FIXME: Might be duplicate code
+		// TODO: Update at click params
+		_averageIslandDistance = GetVerticalLineInverseDistanceWeighingRayCast(camera);
+		{
+			// TODO: factor out this bit of code for euler angles
+			// diff is different from other
+			const auto diff = _targetOrigin - _targetFocus;
+			// If the camera is directly above the focus point, set pitch to 90 degrees.
+			if (glm::all(glm::lessThan(glm::abs(glm::xz(diff)), glm::vec2(0.1f, 0.1f))))
+			{
+				eulerAngles = glm::vec3(0.0f, glm::half_pi<float>(), 0.0f);
+			}
+			// Otherwise, calculate yaw and pitch based on the direction to the focus point.
+			else
+			{
+				eulerAngles = glm::vec3(glm::pi<float>() - glm::atan(diff.x, -diff.z),
+				                        glm::atan(diff.y, glm::length(glm::xz(diff))), 0.0f);
+			}
+		}
+		auto extra =
+		    glm::clamp((_focusDistance - _averageIslandDistance) * eulerAngles.y / (6.0f * glm::pi<float>()), 0.0f, 1.0f);
+		_averageIslandDistance += extra;
+	}
+}
+
 void DefaultWorldCameraModel::UpdateMode(glm::vec3 eulerAngles, float zoomDelta)
 {
 	switch (_mode)
@@ -195,8 +231,8 @@ void DefaultWorldCameraModel::UpdateMode(glm::vec3 eulerAngles, float zoomDelta)
 void DefaultWorldCameraModel::UpdateModeCartesian()
 {
 	// Drag focus on land
-	const auto dist = _screenSpaceCenterRaycastHit.has_value() ? glm::distance(*_screenSpaceCenterRaycastHit, _targetOrigin)
-	                                                           : _originFocusDistanceAtInteractionStart;
+	const auto dist =
+	    _screenSpaceCenterRaycastHit.has_value() ? glm::distance(*_screenSpaceCenterRaycastHit, _targetOrigin) : _focusDistance;
 	_targetFocus = ProjectPointOnForwardVector(glm::max(dist - 1.0f, 0.1f));
 	_focusAtClick = _targetFocus;
 }
@@ -239,7 +275,7 @@ void DefaultWorldCameraModel::UpdateRaycastHitPoints(const Camera& camera)
 	{
 		_screenSpaceMouseRaycastHit = hit->position;
 	}
-	if (const auto hit = camera.RaycastScreenCoordToLand(static_cast<glm::vec2>(Locator::windowing ::value().GetSize()) / 2.0f, Camera::Interpolation::Target))
+	if (const auto hit = camera.RaycastScreenCoordToLand({0.5f, 0.5f}, Camera::Interpolation::Target))
 	{
 		_screenSpaceCenterRaycastHit = hit->position;
 	}
@@ -249,23 +285,37 @@ void DefaultWorldCameraModel::UpdateRaycastHitPoints(const Camera& camera)
 	}
 }
 
+void DefaultWorldCameraModel::UpdateFocusDistance()
+{
+	// TODO(#656) in c++23 use _screenSpaceCenterRaycastHit.and_then
+	if (_screenSpaceCenterRaycastHit.has_value())
+	{
+		_focusDistance = glm::max(10.0f, glm::distance(_screenSpaceCenterRaycastHit.value(), _targetOrigin));
+	}
+	else
+	{
+		_focusDistance = glm::max(10.0f, _averageIslandDistance);
+	}
+}
+
 std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraModel::Update(std::chrono::microseconds dt,
                                                                                           const Camera& camera)
 {
 	UpdateCameraInterpolationValues(camera);
 	UpdateRaycastHitPoints(camera);
+	UpdateFocusDistance();
 
 	const float scalingFactor = 60.0f;
 
-	// TODO: update click param ONLY if status has changed
-	_originFocusDistanceAtInteractionStart = glm::distance(_targetOrigin, _targetFocus);
-	_averageIslandDistance = GetVerticalLineInverseDistanceWeighingRayCast(camera);
+	// Get step size
+	auto zoomDelta = _rotateAroundDelta.z * 0.0015f * scalingFactor;
+	_originFocusDistanceAtInteractionStart =
+	    glm::max(_originFocusDistanceAtInteractionStart + zoomDelta, k_CameraInteractionStepSize + 0.1f);
+
 	// TODO: add extra based on focus distance and pitch
 
 	// Get angles (yaw, pitch, roll). Roll is always 0
 	glm::vec3 eulerAngles = EulerFromPoints(_targetOrigin, _focusAtClick);
-
-	const auto zoomDelta = _rotateAroundDelta.z;
 
 	if (_mode == Mode::Polar)
 	{
@@ -275,7 +325,7 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraMode
 
 	UpdateMode(eulerAngles, zoomDelta);
 
-	const bool originHasBeenAdjusted = ConstrainCamera();
+	const bool originHasBeenAdjusted = ConstrainCamera(eulerAngles, camera);
 
 	return {{GetTargetOrigin(), GetTargetFocus(), camera.GetInterpolatorTime()}};
 }

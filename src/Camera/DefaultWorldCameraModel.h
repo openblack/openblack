@@ -41,11 +41,14 @@ public:
 private:
 	void UpdateCameraInterpolationValues(const Camera& camera);
 	void UpdateRaycastHitPoints(const Camera& camera);
+	void UpdateFocusDistance();
 
 	void UpdateMode(glm::vec3 eulerAngles, float zoomDelta);
 	void UpdateModeCartesian();
 	void UpdateModePolar(glm::vec3 eulerAngles, bool recalculatePoint);
 
+	/// Updates the model's focus point parameters after a change in position or focus point of view
+	void UpdateFocusPointInteractionParameters(glm::vec3 eulerAngles, const Camera& camera);
 	/// Modifies the given Euler angles based on the rotate Around and keyboard Move Deltas for rotation and zoom.
 	/// @param eulerAngles A reference representing Euler angles (yaw, pitch, roll) to be adjusted. Roll is always 0.
 	void TiltZoom(glm::vec3& eulerAngles, float scalingFactor);
@@ -59,7 +62,7 @@ private:
 	/// @return The harmonic mean of the distances from the origin to each hit point.
 	[[nodiscard]] float GetVerticalLineInverseDistanceWeighingRayCast(const Camera& camera) const;
 
-	bool ConstrainCamera();
+	bool ConstrainCamera(glm::vec3& eulerAngles, const Camera& camera);
 	/// Corrects altitude of the camera
 	/// @return If a modification to the camera position was applied.
 	bool ConstrainAltitude();
@@ -87,6 +90,8 @@ private:
 	// State of input Action
 	glm::vec3 _rotateAroundDelta = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::vec2 _keyBoardMoveDelta = glm::vec2(0.0f, 0.0f);
+
+	float _focusDistance = 0.0f;
 
 	// Estimate of camera to island geometry
 	float _averageIslandDistance = 0.0f;
