@@ -134,7 +134,7 @@ bool DefaultWorldCameraModel::ConstrainCamera(std::chrono::microseconds dt, glm:
 
 	const auto dtSeconds = std::chrono::duration_cast<std::chrono::duration<float>>(dt).count();
 	const auto threshold = glm::max(300.0f, 1.6f * _focusDistance * dtSeconds);
-	if (glm::distance2(_targetOrigin, originBackup) > threshold * threshold)
+	if (glm::distance2(_targetOrigin, originBackup) > threshold * threshold || originHasBeenAdjusted)
 	{
 		UpdateFocusPointInteractionParameters(eulerAngles, camera);
 	}
