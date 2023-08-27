@@ -10,35 +10,52 @@
 #include <fstream>
 
 #include <Camera/Camera.h>
+#include <ECS/Registry.h>
 #include <Locator.h>
 #include <gtest/gtest.h>
 #include <json_helpers.h>
 
+#include "scenarios/MoveBackwardForward.h"
+#include "scenarios/MoveRightLeft.h"
+
 // Enable this define because we use a custom locator
 #define LOCATOR_IMPLEMENTATIONS
 #include <Camera/DefaultWorldCameraModel.h>
-#include <ECS/Systems/Implementations/DynamicsSystem.h>
 
 #include "scenarios/Mock.h"
 
 using nlohmann::json;
+using openblack::ecs::Registry;
 using namespace openblack;
 
-class TestDefaultCameraModel: public ::testing::Test
+struct TestValues
+{
+	std::string_view name;
+	MockDynamicsSystem* dynamicsSystem;
+	MockAction* actionInterface;
+};
+// Padding causes valgrind errors https://github.com/google/googletest/issues/3805
+static_assert(std::has_unique_object_representations_v<TestValues>);
+
+class TestDefaultCameraModel: public testing::TestWithParam<TestValues>
 {
 protected:
 	void SetUp() override
 	{
-		const auto* testName = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-		const auto testResultsPath = std::filesystem::path(k_ScenarioPath) / (testName + std::string(".json"));
+		const auto testName = GetParam().name;
+		const auto testResultsPath = std::filesystem::path(k_ScenarioPath) / (testName.data() + std::string(".json"));
 		ASSERT_TRUE(std::filesystem::exists(testResultsPath));
 		std::ifstream(testResultsPath) >> _scenario;
 
+		Locator::entitiesRegistry::emplace<Registry>();
+
 		_camera = std::make_unique<Camera>();
-		Locator::windowing::emplace<MockWindowingSystem>();
+		GetParam().dynamicsSystem->camera = _camera.get();
+
 		Locator::terrainSystem::emplace<MockTerrain>();
-		Locator::dynamicsSystem::emplace<ecs::systems::DynamicsSystem>();
-		Locator::gameActionSystem::emplace<MockAction>();
+		Locator::windowing::emplace<MockWindowingSystem>();
+		Locator::dynamicsSystem::reset<MockDynamicsSystem>(GetParam().dynamicsSystem);
+		Locator::gameActionSystem::reset<MockAction>(GetParam().actionInterface);
 
 		const auto aspect = Locator::windowing::value().GetAspectRatio();
 		constexpr float k_CameraXFov {70.0f};
@@ -59,6 +76,7 @@ protected:
 		Locator::gameActionSystem::reset();
 	}
 
+	static void SetModel(DefaultWorldCameraModel& m, const json& json);
 	static void ValidateModel(const DefaultWorldCameraModel& m, const json& json, int frameNumber);
 
 	static constexpr std::string_view k_ScenarioPath = TEST_BINARY_DIR "/camera/scenarios";
@@ -77,42 +95,119 @@ void ValidateCamera(const Camera& c, json expected)
 	                                  expected["camera_heading_zoomer"]["z"]["current_value"].get<float>()));
 }
 
-void TestDefaultCameraModel::ValidateModel(const DefaultWorldCameraModel& m, const json& json, int frameNumber)
+void TestDefaultCameraModel::SetModel(DefaultWorldCameraModel& m, const json& json)
 {
 	const auto& expected = json["cameraController"];
 
+	if (expected["screenCentreHit"].get<bool>())
+	{
+		m._screenSpaceCenterRaycastHit = expected["screenCentreHitPoint"].get<glm::vec3>();
+	}
+	else
+	{
+		m._screenSpaceCenterRaycastHit = std::nullopt;
+	}
+
+	m._currentOrigin = expected["origin"].get<glm::vec3>();
+	m._currentFocus = expected["heading"].get<glm::vec3>();
+
+	m._originFocusDistanceAtInteractionStart = expected["originHeadingDistanceAtInteractionStart"].get<float>();
+	m._focusDistance = expected["headingDistance"].get<float>();
+	m._averageIslandDistance = expected["averageIslandDistance"].get<float>();
+	m._focusAtClick = expected["headingAtClick"].get<glm::vec3>();
+
+	m._targetOrigin = expected["fallbackOrigin"].get<glm::vec3>();
+	m._targetFocus = expected["fallbackHeading"].get<glm::vec3>();
+
+	if (expected["handHit"].get<bool>())
+	{
+		m._screenSpaceMouseRaycastHit = expected["mouseHitPoint"].get<glm::vec3>();
+	}
+	else
+	{
+		m._screenSpaceMouseRaycastHit = std::nullopt;
+	}
+
+	m._rotateAroundDelta = json["RotateAroundDelta"].get<glm::vec3>();
+	m._keyBoardMoveDelta = json["KeyboardMoveDelta"].get<glm::vec2>();
+
+	const auto handStatus = expected["handStatus"].get<std::string>();
+	if (handStatus == "CAMERA_MODE_HAND_STATUS_NORMAL")
+	{
+		m._modePrev = DefaultWorldCameraModel::Mode::Cartesian;
+	}
+	else if (handStatus == "CAMERA_MODE_HAND_STATUS_ZOOMING")
+	{
+		m._modePrev = DefaultWorldCameraModel::Mode::Polar;
+	}
+	else
+	{
+		assert(false);
+	}
+}
+
+void TestDefaultCameraModel::ValidateModel(const DefaultWorldCameraModel& m, const json& json, int frameNumber)
+{
+	const float ep = 1e-3f;
+	const auto& expected = json["cameraController"];
+
 	ASSERT_EQ(m._screenSpaceCenterRaycastHit.has_value(), expected["screenCentreHit"].get<bool>())
-	    << "at frame " << frameNumber;
+	    << "at start of frame " << frameNumber;
 	if (m._screenSpaceCenterRaycastHit.has_value())
 	{
 		ASSERT_EQ(m._screenSpaceCenterRaycastHit, expected["screenCentreHitPoint"].get<glm::vec3>())
-		    << "at frame " << frameNumber;
+		    << "at start of frame " << frameNumber;
 	}
 
-	ASSERT_EQ(m._originFocusDistanceAtInteractionStart, expected["originHeadingDistanceAtInteractionStart"].get<float>())
-	    << "at frame " << frameNumber;
-	ASSERT_EQ(m._focusDistance, expected["headingDistance"].get<float>()) << "at frame " << frameNumber;
-	ASSERT_EQ(m._averageIslandDistance, expected["averageIslandDistance"].get<float>()) << "at frame " << frameNumber;
-	ASSERT_EQ(m._focusAtClick, expected["headingAtClick"].get<glm::vec3>()) << "at frame " << frameNumber;
+	ASSERT_NEAR(m._originFocusDistanceAtInteractionStart, expected["originHeadingDistanceAtInteractionStart"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(m._focusDistance, expected["headingDistance"].get<float>(), ep) << "at start of frame " << frameNumber;
+	ASSERT_NEAR(m._averageIslandDistance, expected["averageIslandDistance"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(m._focusAtClick.x, expected["headingAtClick"].get<glm::vec3>().x, ep) << "at start of frame " << frameNumber;
+	ASSERT_NEAR(m._focusAtClick.y, expected["headingAtClick"].get<glm::vec3>().y, ep) << "at start of frame " << frameNumber;
+	ASSERT_NEAR(m._focusAtClick.z, expected["headingAtClick"].get<glm::vec3>().z, ep) << "at start of frame " << frameNumber;
 
-	ASSERT_EQ(m.GetTargetOrigin(), expected["fallbackOrigin"].get<glm::vec3>()) << "at frame " << frameNumber;
-	ASSERT_EQ(m.GetTargetFocus(), expected["fallbackHeading"].get<glm::vec3>()) << "at frame " << frameNumber;
+	ASSERT_NEAR(m.GetTargetOrigin().x, expected["fallbackOrigin"].get<glm::vec3>().x, ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(m.GetTargetOrigin().y, expected["fallbackOrigin"].get<glm::vec3>().y, ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(m.GetTargetOrigin().z, expected["fallbackOrigin"].get<glm::vec3>().z, ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(m.GetTargetFocus().x, expected["fallbackHeading"].get<glm::vec3>().x, ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(m.GetTargetFocus().y, expected["fallbackHeading"].get<glm::vec3>().y, ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(m.GetTargetFocus().z, expected["fallbackHeading"].get<glm::vec3>().z, ep)
+	    << "at start of frame " << frameNumber;
 
 	// Frame 1 should have 15.8141842, -13.4212151 but current raycasting doesn't find anything.
 	// This will have to be investigated and reversed if the mouse mock pos contributes greatly
-	ASSERT_EQ(m._screenSpaceMouseRaycastHit.has_value(), expected["handHit"].get<bool>()) << "at frame " << frameNumber;
+	ASSERT_EQ(m._screenSpaceMouseRaycastHit.has_value(), expected["handHit"].get<bool>())
+	    << "at start of frame " << frameNumber;
 	if (m._screenSpaceMouseRaycastHit.has_value())
 	{
-		ASSERT_EQ(m._screenSpaceMouseRaycastHit, expected["mouseHitPoint"].get<glm::vec3>()) << "at frame " << frameNumber;
+		ASSERT_EQ(m._screenSpaceMouseRaycastHit, expected["mouseHitPoint"].get<glm::vec3>())
+		    << "at start of frame " << frameNumber;
 	}
 
-	ASSERT_EQ(m._rotateAroundDelta, json["RotateAroundDelta"].get<glm::vec3>()) << "at frame " << frameNumber;
-	ASSERT_EQ(m._keyBoardMoveDelta, json["KeyboardMoveDelta"].get<glm::vec2>()) << "at frame " << frameNumber;
+	const auto handStatus = expected["handStatus"].get<std::string>();
+	if (handStatus == "CAMERA_MODE_HAND_STATUS_NORMAL")
+	{
+		ASSERT_EQ(m._modePrev, DefaultWorldCameraModel::Mode::Cartesian);
+	}
+	else if (handStatus == "CAMERA_MODE_HAND_STATUS_ZOOMING")
+	{
+		ASSERT_EQ(m._modePrev, DefaultWorldCameraModel::Mode::Polar);
+	}
+	else
+	{
+		ASSERT_FALSE(true);
+	}
 }
 
-TEST_F(TestDefaultCameraModel, single_line)
+TEST_P(TestDefaultCameraModel, ValidateRecordedData)
 {
-	ValidateModel(reinterpret_cast<DefaultWorldCameraModel&>(*_model), _scenario["frames"][0], 0);
 	for (int i = 0; i < _scenario["frames"].size() - 1; ++i)
 	{
 		const auto& framePrev = _scenario["frames"][i];
@@ -120,8 +215,67 @@ TEST_F(TestDefaultCameraModel, single_line)
 		ASSERT_EQ(framePrev["frame"], i);
 		ASSERT_EQ(framePost["frame"], i + 1);
 
-		const auto deltaTimePrev = framePrev["g_delta_time"].get<std::chrono::milliseconds>();
+		SetModel(reinterpret_cast<DefaultWorldCameraModel&>(*_model), framePrev);
+
+		{
+			const auto p0 = glm::vec3 {
+			    framePrev["camera"]["camera_origin_zoomer"]["x"]["start_value"].get<float>(),
+			    framePrev["camera"]["camera_origin_zoomer"]["y"]["start_value"].get<float>(),
+			    framePrev["camera"]["camera_origin_zoomer"]["z"]["start_value"].get<float>(),
+			};
+			const auto p1 = glm::vec3 {
+			    framePrev["camera"]["camera_origin_zoomer"]["x"]["destination"].get<float>(),
+			    framePrev["camera"]["camera_origin_zoomer"]["y"]["destination"].get<float>(),
+			    framePrev["camera"]["camera_origin_zoomer"]["z"]["destination"].get<float>(),
+			};
+			const auto v0 = glm::vec3 {
+			    framePrev["camera"]["camera_origin_zoomer"]["x"]["start_speed"].get<float>(),
+			    framePrev["camera"]["camera_origin_zoomer"]["y"]["start_speed"].get<float>(),
+			    framePrev["camera"]["camera_origin_zoomer"]["z"]["start_speed"].get<float>(),
+			};
+			const auto v1 = glm::vec3 {
+			    framePrev["camera"]["camera_origin_zoomer"]["x"]["destination_speed"].get<float>(),
+			    framePrev["camera"]["camera_origin_zoomer"]["y"]["destination_speed"].get<float>(),
+			    framePrev["camera"]["camera_origin_zoomer"]["z"]["destination_speed"].get<float>(),
+			};
+			const auto duration = framePrev["camera"]["camera_origin_zoomer"]["x"]["duration"].get<float>();
+			const auto currentTime = framePrev["camera"]["camera_origin_zoomer"]["x"]["current_time"].get<float>();
+			const auto t = duration != 0.0f ? currentTime / duration : 0.0f;
+			(*_camera).SetOriginInterpolator(p0, p1, v0 * duration, v1 * duration).SetInterpolatorT(t);
+		}
+		{
+			const auto p0 = glm::vec3 {
+			    framePrev["camera"]["camera_heading_zoomer"]["x"]["start_value"].get<float>(),
+			    framePrev["camera"]["camera_heading_zoomer"]["y"]["start_value"].get<float>(),
+			    framePrev["camera"]["camera_heading_zoomer"]["z"]["start_value"].get<float>(),
+			};
+			const auto p1 = glm::vec3 {
+			    framePrev["camera"]["camera_heading_zoomer"]["x"]["destination"].get<float>(),
+			    framePrev["camera"]["camera_heading_zoomer"]["y"]["destination"].get<float>(),
+			    framePrev["camera"]["camera_heading_zoomer"]["z"]["destination"].get<float>(),
+			};
+			const auto v0 = glm::vec3 {
+			    framePrev["camera"]["camera_heading_zoomer"]["x"]["start_speed"].get<float>(),
+			    framePrev["camera"]["camera_heading_zoomer"]["y"]["start_speed"].get<float>(),
+			    framePrev["camera"]["camera_heading_zoomer"]["z"]["start_speed"].get<float>(),
+			};
+			const auto v1 = glm::vec3 {
+			    framePrev["camera"]["camera_heading_zoomer"]["x"]["destination_speed"].get<float>(),
+			    framePrev["camera"]["camera_heading_zoomer"]["y"]["destination_speed"].get<float>(),
+			    framePrev["camera"]["camera_heading_zoomer"]["z"]["destination_speed"].get<float>(),
+			};
+			const auto duration = framePrev["camera"]["camera_heading_zoomer"]["x"]["duration"].get<float>();
+			const auto currentTime = framePrev["camera"]["camera_heading_zoomer"]["x"]["current_time"].get<float>();
+			const auto t = duration != 0.0f ? currentTime / duration : 0.0f;
+			(*_camera).SetFocusInterpolator(p0, p1, v0 * duration, v1 * duration).SetInterpolatorT(t);
+		}
+
+		GetParam().dynamicsSystem->frameNumber = i;
+		GetParam().actionInterface->frameNumber = i;
+
+		const auto deltaTimePrev = std::chrono::milliseconds(framePrev["g_delta_time"].get<int>());
 		const auto updateInfo = _model->Update(deltaTimePrev, *_camera);
+		_model->HandleActions(deltaTimePrev);
 
 		if (updateInfo)
 		{
@@ -149,3 +303,19 @@ TEST_F(TestDefaultCameraModel, single_line)
 		ValidateModel(reinterpret_cast<DefaultWorldCameraModel&>(*_model), framePost, i + 1);
 	}
 }
+
+#define SCENARIO_VALUES(name)                                     \
+	TestValues                                                    \
+	{                                                             \
+		#name, new name##MockDynamicsSystem, new name##MockAction \
+	}
+
+const auto k_TestingScenarioValues = testing::Values( //
+    SCENARIO_VALUES(MoveBackwardForward),             //
+    SCENARIO_VALUES(MoveRightLeft)                    //
+);
+
+INSTANTIATE_TEST_SUITE_P(TestScenarioInstantiation, TestDefaultCameraModel, k_TestingScenarioValues,
+                         [](const testing::TestParamInfo<TestDefaultCameraModel::ParamType>& info) {
+	                         return info.param.name.data();
+                         });
