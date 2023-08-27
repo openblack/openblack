@@ -62,7 +62,7 @@ private:
 	/// @return The harmonic mean of the distances from the origin to each hit point.
 	[[nodiscard]] float GetVerticalLineInverseDistanceWeighingRayCast(const Camera& camera) const;
 
-	bool ConstrainCamera(glm::vec3& eulerAngles, const Camera& camera);
+	bool ConstrainCamera(std::chrono::microseconds dt, glm::vec3 eulerAngles, const Camera& camera);
 	/// Corrects altitude of the camera
 	/// @return If a modification to the camera position was applied.
 	bool ConstrainAltitude();
