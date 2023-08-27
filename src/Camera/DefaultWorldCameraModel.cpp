@@ -87,21 +87,6 @@ void DefaultWorldCameraModel::TiltZoom(glm::vec3& eulerAngles, float scalingFact
 
 	_averageIslandDistance += _rotateAroundDelta.z;
 	_averageIslandDistance = glm::max(_averageIslandDistance, k_CameraInteractionStepSize + 0.1f);
-
-	const auto rotateAroundActivated = _rotateAroundDelta != glm::zero<glm::vec3>();
-	if (rotateAroundActivated)
-	{
-		_mode = Mode::Polar;
-	}
-	else
-	{
-		_mode = Mode::Cartesian;
-	}
-	// TODO: TiltOn
-
-	// Reset deltas once they're consumed
-	_keyBoardMoveDelta = glm::zero<glm::vec2>();
-	_rotateAroundDelta = glm::zero<glm::vec3>();
 }
 
 float DefaultWorldCameraModel::GetVerticalLineInverseDistanceWeighingRayCast(const Camera& camera) const
@@ -301,15 +286,15 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraMode
 
 	const float scalingFactor = 60.0f;
 
-	// Get step size
-	auto zoomDelta = _rotateAroundDelta.z * 0.0015f * scalingFactor;
-	_originFocusDistanceAtInteractionStart =
-	    glm::max(_originFocusDistanceAtInteractionStart + zoomDelta, k_CameraInteractionStepSize + 0.1f);
-
-	// TODO: add extra based on focus distance and pitch
-
 	// Get angles (yaw, pitch, roll). Roll is always 0
 	glm::vec3 eulerAngles = EulerFromPoints(_targetOrigin, _focusAtClick);
+
+	// Get step size
+	auto zoomDelta = _rotateAroundDelta.z * 0.0015f * scalingFactor;
+	if (_mode != _modePrev)
+	{
+		UpdateFocusPointInteractionParameters(eulerAngles, camera);
+	}
 
 	if (_mode == Mode::Polar)
 	{
@@ -332,6 +317,9 @@ DefaultWorldCameraModel::ComputeUpdateReturnInfo(bool originHasBeenAdjusted, std
 
 void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 {
+	_rotateAroundDelta = glm::vec3();
+	_keyBoardMoveDelta = glm::vec2();
+
 	// Compute delta position (dp) based on the elapsed time and speed.
 	const auto dp = k_InteractionSpeedMultiplier * std::chrono::duration_cast<std::chrono::duration<float>>(dt).count();
 	const auto& actionSystem = Locator::gameActionSystem::value();
@@ -396,6 +384,16 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 	}
 
 	// TODO: Hand-based movement
+
+	_modePrev = _mode;
+	if (_keyBoardMoveDelta != glm::vec2() || _rotateAroundDelta != glm::vec3())
+	{
+		_mode = Mode::Polar;
+	}
+	else
+	{
+		_mode = Mode::Cartesian;
+	}
 }
 
 glm::vec3 DefaultWorldCameraModel::GetTargetOrigin() const

@@ -14,6 +14,7 @@
 
 #include <3D/LandIsland.h>
 #include <Camera/Camera.h>
+#include <ECS/Systems/DynamicsSystemInterface.h>
 #include <Input/GameActionMapInterface.h>
 #include <Locator.h>
 #include <Windowing/WindowingInterface.h>
@@ -27,6 +28,11 @@
 #pragma warning(push)
 #pragma warning(disable : 4716)
 #endif
+
+namespace openblack
+{
+class Camera;
+}
 
 constexpr uint16_t k_Width = 800;
 constexpr uint16_t k_Height = 600;
@@ -44,6 +50,9 @@ constexpr auto k_ScreenCentreLine = []() -> std::array<glm::u16vec2, 16> {
 	return results;
 }();
 constexpr glm::u16vec2 k_MockMousePos = {k_Width - 10, k_Height - 10};
+
+const uint32_t k_StabilizeFrames = 200;
+const uint32_t k_InteractionFrames = 100;
 
 class MockWindowingSystem final: public openblack::windowing::WindowingInterface
 {
@@ -79,7 +88,10 @@ class MockTerrain final: public openblack::LandIslandInterface
 class MockAction: public openblack::input::GameActionInterface
 {
 public:
-	[[nodiscard]] bool GetBindable(openblack::input::BindableActionMap) const final { return false; }
+	MockAction() = default;
+	virtual ~MockAction() = default;
+
+	[[nodiscard]] bool GetBindable(openblack::input::BindableActionMap) const override { return false; }
 	[[nodiscard]] bool GetUnbindable(openblack::input::UnbindableActionMap) const final { return false; }
 	[[nodiscard]] bool GetBindableChanged(openblack::input::BindableActionMap) const final { return false; }
 	[[nodiscard]] bool GetUnbindableChanged(openblack::input::UnbindableActionMap) const final { return false; }
@@ -90,14 +102,15 @@ public:
 	[[nodiscard]] std::array<std::optional<glm::vec3>, 2> GetHandPositions() const final { return {}; }
 	void Frame() final {}
 	void ProcessEvent(const SDL_Event& event) final {}
+
+	uint32_t frameNumber = 0;
 };
 
 // The mock land should work perfectly well and if not, there is something wrong with the physics
 class MockDynamicsSystem: public openblack::ecs::systems::DynamicsSystemInterface
 {
 public:
-	explicit MockDynamicsSystem(openblack::Camera& camera)
-	    : _camera(camera) {};
+	virtual ~MockDynamicsSystem() = default;
 
 	void Reset() override {}
 	void Update(std::chrono::microseconds& dt) override {}
@@ -105,172 +118,40 @@ public:
 	void RegisterRigidBodies() override {}
 	void RegisterIslandRigidBodies(openblack::LandIslandInterface& island) override {}
 	void UpdatePhysicsTransforms() override {}
+	[[nodiscard]] virtual std::optional<glm::vec2> RayCastClosestHitScreenCoord(glm::u16vec2 screenCoord) const = 0;
 	[[nodiscard]] std::optional<std::pair<openblack::ecs::components::Transform, openblack::RigidBodyDetails>>
 	RayCastClosestHit(const glm::vec3& origin, [[maybe_unused]] const glm::vec3& direction,
 	                  [[maybe_unused]] float tMax) const override
 	{
 		const auto& terrain = openblack::Locator::terrainSystem::value();
 		const auto screenCoord = GetWindowCoordinates(origin);
-
-		auto makeHit = [&terrain](float x,
-		                          float z) -> std::pair<openblack::ecs::components::Transform, openblack::RigidBodyDetails> {
-			auto p = glm::vec2(x, z);
-			return {{{p.x, terrain.GetHeightAt(p), p.y}}, {}};
-		};
-
-		if (screenCoord == k_ScreenCentreLine[0])
+		if (!screenCoord.has_value())
 		{
-			switch (_frameNumber)
-			{
-			case 0:
-				return std::nullopt;
-			}
+			return std::nullopt;
 		}
-		else if (screenCoord == k_ScreenCentreLine[1])
+		auto hit = RayCastClosestHitScreenCoord(*screenCoord);
+		if (!hit.has_value())
 		{
-			switch (_frameNumber)
-			{
-			case 0:
-				return std::nullopt;
-			}
+			return std::nullopt;
 		}
-		else if (screenCoord == k_ScreenCentreLine[2])
-		{
-			switch (_frameNumber)
-			{
-			case 0:
-				return makeHit(0.0f, 563.2467041f);
-			}
-		}
-		else if (screenCoord == k_ScreenCentreLine[3])
-		{
-			switch (_frameNumber)
-			{
-			case 0:
-				return makeHit(0.0f, 189.2355652f);
-			}
-		}
-		else if (screenCoord == k_ScreenCentreLine[4])
-		{
-			switch (_frameNumber)
-			{
-			case 0:
-				return makeHit(0.0f, 100.4535294f);
-			}
-		}
-		else if (screenCoord == k_ScreenCentreLine[5])
-		{
-			switch (_frameNumber)
-			{
-			case 0:
-				return makeHit(0.0f, 62.1956444f);
-			}
-		}
-		else if (screenCoord == k_ScreenCentreLine[6])
-		{
-			switch (_frameNumber)
-			{
-			case 0:
-				return makeHit(0.0f, 39.9825211f);
-			}
-		}
-		else if (screenCoord == k_ScreenCentreLine[7])
-		{
-			switch (_frameNumber)
-			{
-			case 0:
-				return makeHit(0.0f, 26.0952835f);
-			}
-		}
-		else if (screenCoord == k_ScreenCentreLine[8])
-		{
-			switch (_frameNumber)
-			{
-			case 0:
-				return makeHit(0.0f, 16.1538353f);
-			}
-		}
-		else if (screenCoord == k_ScreenCentreLine[9])
-		{
-			switch (_frameNumber)
-			{
-			case 0:
-				return makeHit(0.0f, 9.0254517f);
-			}
-		}
-		else if (screenCoord == k_ScreenCentreLine[10])
-		{
-			switch (_frameNumber)
-			{
-			case 0:
-				return makeHit(0.0f, 3.4066925f);
-			}
-		}
-		else if (screenCoord == k_ScreenCentreLine[11])
-		{
-			switch (_frameNumber)
-			{
-			case 0:
-				return makeHit(0.0f, -0.9229774f);
-			}
-		}
-		else if (screenCoord == k_ScreenCentreLine[12])
-		{
-			switch (_frameNumber)
-			{
-			case 0:
-				return makeHit(0.0f, -4.5307636f);
-			}
-		}
-		else if (screenCoord == k_ScreenCentreLine[13])
-		{
-			switch (_frameNumber)
-			{
-			case 0:
-				return makeHit(0.0f, -7.4373074f);
-			}
-		}
-		else if (screenCoord == k_ScreenCentreLine[14])
-		{
-			switch (_frameNumber)
-			{
-			case 0:
-				return makeHit(0.0f, -9.9486294f);
-			}
-		}
-		else if (screenCoord == k_ScreenCentreLine[15])
-		{
-			switch (_frameNumber)
-			{
-			case 0:
-				return makeHit(0.0f, -12.0339508f);
-			}
-		}
-		else if (screenCoord == k_MockMousePos)
-		{
-			switch (_frameNumber)
-			{
-			case 0:
-				return makeHit(15.8141842f, -13.4212151f);
-			}
-		}
-		assert(false); // Shouldn't be any unaccounted raycasts
-		return std::nullopt;
+		return {{{{hit->x, terrain.GetHeightAt(*hit), hit->y}}, {}}};
 	}
 
-	[[nodiscard]] glm::u16vec2 GetWindowCoordinates(const glm::vec3& position) const
+	[[nodiscard]] std::optional<glm::u16vec2> GetWindowCoordinates(const glm::vec3& position) const
 	{
 		glm::vec3 screenPosition;
 		const auto size = openblack::Locator::windowing::value().GetSize();
 		const auto viewport = glm::vec4(0, 0, size.x, size.y);
-		_camera.ProjectWorldToScreen(position, viewport, screenPosition, openblack::Camera::Interpolation::Target);
+		if (!camera->ProjectWorldToScreen(position, viewport, screenPosition, openblack::Camera::Interpolation::Target))
+		{
+			return std::nullopt;
+		}
 		// Move point because of precision loss in project/deproject
 		return static_cast<glm::u16vec2>(glm::round(glm::round(glm::xy(screenPosition * 10.0f)) / 10.0f));
 	}
 
-private:
-	uint16_t _frameNumber = 0;
-	openblack::Camera& _camera;
+	uint16_t frameNumber = 0;
+	const openblack::Camera* camera;
 };
 
 #if defined(_MSC_VER)

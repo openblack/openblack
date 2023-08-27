@@ -78,6 +78,7 @@ private:
 	                                                                                   std::chrono::duration<float> t);
 
 	Mode _mode = Mode::Cartesian;
+	Mode _modePrev = _mode;
 
 	// Values from camera state where the camera has interpolated to.
 	glm::vec3 _currentOrigin = glm::vec3(0.0f, 0.0f, 0.0f);
