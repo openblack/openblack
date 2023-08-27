@@ -150,6 +150,11 @@ bool DefaultWorldCameraModel::ConstrainAltitude()
 		hasBeenAdjusted = true;
 	}
 
+	if (_rotateAroundDelta.x != 0.0f)
+	{
+		_targetFocus = _targetOrigin + glm::normalize(_targetFocus - _targetOrigin) * _focusDistance;
+	}
+
 	return hasBeenAdjusted;
 }
 
@@ -210,6 +215,14 @@ void DefaultWorldCameraModel::UpdateMode(glm::vec3 eulerAngles, float zoomDelta)
 	case Mode::Polar:
 		UpdateModePolar(eulerAngles, zoomDelta == 0.0f);
 		break;
+	}
+
+	if (_rotateAroundDelta.x != 0.0f)
+	{
+		const auto diff = _targetFocus - _targetOrigin;
+		_targetOrigin = _currentOrigin;
+		_targetFocus = _targetOrigin + diff;
+		_focusAtClick = _targetFocus;
 	}
 }
 
