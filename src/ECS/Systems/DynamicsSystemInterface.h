@@ -24,10 +24,7 @@ namespace ecs::components
 {
 struct Transform;
 }
-} // namespace openblack
 
-namespace openblack::ecs::systems
-{
 enum class RigidBodyType
 {
 	Terrain,
@@ -41,6 +38,10 @@ struct RigidBodyDetails
 	const void* userData;
 };
 
+} // namespace openblack
+
+namespace openblack::ecs::systems
+{
 class DynamicsSystemInterface
 {
 public:
