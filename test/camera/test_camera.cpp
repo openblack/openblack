@@ -17,6 +17,7 @@
 
 #include "scenarios/MoveBackwardForward.h"
 #include "scenarios/MoveRightLeft.h"
+#include "scenarios/PanRightLeft.h"
 
 // Enable this define because we use a custom locator
 #define LOCATOR_IMPLEMENTATIONS
@@ -312,7 +313,8 @@ TEST_P(TestDefaultCameraModel, ValidateRecordedData)
 
 const auto k_TestingScenarioValues = testing::Values( //
     SCENARIO_VALUES(MoveBackwardForward),             //
-    SCENARIO_VALUES(MoveRightLeft)                    //
+    SCENARIO_VALUES(MoveRightLeft),                   //
+    SCENARIO_VALUES(PanRightLeft)                     //
 );
 
 INSTANTIATE_TEST_SUITE_P(TestScenarioInstantiation, TestDefaultCameraModel, k_TestingScenarioValues,
