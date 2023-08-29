@@ -45,6 +45,11 @@ uint32_t VillagerCreated(LivingAction& action)
 	return 0;
 }
 
+uint32_t VillagerSimpleState([[maybe_unused]] LivingAction& action)
+{
+	return 1;
+}
+
 // TODO(#657) Find the meaning of field0x50 and use a better name for this function
 bool Field0x50Default([[maybe_unused]] LivingAction& action)
 {
@@ -62,6 +67,11 @@ struct VillagerStateTableEntry
 	std::function<bool(LivingAction&)> field0x60 = nullptr;
 	std::function<int(LivingAction&)> transitionAnimation = nullptr;
 	std::function<bool(LivingAction&)> validate = nullptr;
+};
+
+static const VillagerStateTableEntry k_SimpleEntry = {
+    .state = &VillagerSimpleState,
+    .field0x50 = &Field0x50Default,
 };
 
 static const VillagerStateTableEntry k_TodoEntry = {
@@ -201,7 +211,7 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* FARMER_ARRIVES_AT_FARM */ k_TodoEntry,
     /* FARMER_PLANTS_CROP */ k_TodoEntry,
     /* FARMER_DIGS_UP_CROP */ k_TodoEntry,
-    /* MOVE_TO_FOOTBALL_PITCH_CONSTRUCTION */ k_TodoEntry,
+    /* MOVE_TO_FOOTBALL_PITCH_CONSTRUCTION */ k_SimpleEntry,
     /* FOOTBALL_WALK_TO_POSITION */ k_TodoEntry,
     /* FOOTBALL_WAIT_FOR_KICK_OFF */ k_TodoEntry,
     /* FOOTBALL_ATTACKER */ k_TodoEntry,
@@ -221,8 +231,8 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
         .state = &VillagerCreated,
         .field0x50 = &Field0x50Default,
     },
-    /* ARRIVES_IN_ABODE_TO_TRADE */ k_TodoEntry,
-    /* ARRIVES_IN_ABODE_TO_PICK_UP_EXCESS */ k_TodoEntry,
+    /* ARRIVES_IN_ABODE_TO_TRADE */ k_SimpleEntry,
+    /* ARRIVES_IN_ABODE_TO_PICK_UP_EXCESS */ k_SimpleEntry,
     /* MAKE_SCARED_STIFF */ k_TodoEntry,
     /* SCARED_STIFF */ k_TodoEntry,
     /* WORSHIPPING_CREATURE */ k_TodoEntry,
@@ -251,7 +261,7 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* CHILD_AT_CRECHE */ k_TodoEntry,
     /* CHILD_FOLLOWS_MOTHER */ k_TodoEntry,
     /* CHILD_BECOMES_ADULT */ k_TodoEntry,
-    /* SITS_DOWN_TO_DINNER */ k_TodoEntry,
+    /* SITS_DOWN_TO_DINNER */ k_SimpleEntry,
     /* EAT_FOOD */ k_TodoEntry,
     /* EAT_FOOD_AT_HOME */ k_TodoEntry,
     /* GOTO_BED_AT_HOME */ k_TodoEntry,
@@ -263,7 +273,7 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* START_HAVING_SEX_AT_HOME */ k_TodoEntry,
     /* HAVING_SEX_AT_HOME */ k_TodoEntry,
     /* STOP_HAVING_SEX_AT_HOME */ k_TodoEntry,
-    /* WAIT_FOR_DINNER */ k_TodoEntry,
+    /* WAIT_FOR_DINNER */ k_SimpleEntry,
     /* HOMELESS_START */ k_TodoEntry,
     /* VAGRANT_START */ k_TodoEntry,
     /* MORN_DEATH */ k_TodoEntry,
@@ -280,7 +290,7 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* PERFORM_IMPRESSED_REACTION */ k_TodoEntry,
     /* INITIALISE_FIGHT_REACTION */ k_TodoEntry,
     /* PERFORM_FIGHT_REACTION */ k_TodoEntry,
-    /* HOMELESS_EAT_DINNER */ k_TodoEntry,
+    /* HOMELESS_EAT_DINNER */ k_SimpleEntry,
     /* INSPECT_CREATURE_REACTION */ k_TodoEntry,
     /* PERFORM_INSPECT_CREATURE_REACTION */ k_TodoEntry,
     /* APPROACH_CREATURE_REACTION */ k_TodoEntry,
@@ -300,11 +310,11 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* POINT_AT_FLYING_OBJECT_REACTION */ k_TodoEntry,
     /* DECIDE_WHAT_TO_DO */ k_TodoEntry,
     /* INTERACT_DECIDE_WHAT_TO_DO */ k_TodoEntry,
-    /* EAT_OUTSIDE */ k_TodoEntry,
+    /* EAT_OUTSIDE */ k_SimpleEntry,
     /* RUN_AWAY_FROM_OBJECT_REACTION */ k_TodoEntry,
     /* MOVE_TOWARDS_CREATURE_REACTION */ k_TodoEntry,
     /* AMAZED_BY_MAGIC_SHIELD_REACTION */ k_TodoEntry,
-    /* VILLAGER_GOSSIPS */ k_TodoEntry,
+    /* VILLAGER_GOSSIPS */ k_SimpleEntry,
     /* CHECK_INTERACT_WITH_ANIMAL */ k_TodoEntry,
     /* CHECK_INTERACT_WITH_WORSHIP_SITE */ k_TodoEntry,
     /* CHECK_INTERACT_WITH_ABODE */ k_TodoEntry,
@@ -312,11 +322,11 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* CHECK_INTERACT_WITH_FISH_FARM */ k_TodoEntry,
     /* CHECK_INTERACT_WITH_TREE */ k_TodoEntry,
     /* CHECK_INTERACT_WITH_BALL */ k_TodoEntry,
-    /* CHECK_INTERACT_WITH_POT */ k_TodoEntry,
+    /* CHECK_INTERACT_WITH_POT */ k_SimpleEntry,
     /* CHECK_INTERACT_WITH_FOOTBALL */ k_TodoEntry,
     /* CHECK_INTERACT_WITH_VILLAGER */ k_TodoEntry,
     /* CHECK_INTERACT_WITH_MAGIC_LIVING */ k_TodoEntry,
-    /* CHECK_INTERACT_WITH_ROCK */ k_TodoEntry,
+    /* CHECK_INTERACT_WITH_ROCK */ k_SimpleEntry,
     /* ARRIVES_AT_ROCK_FOR_WOOD */ k_TodoEntry,
     /* GOT_WOOD_FROM_ROCK */ k_TodoEntry,
     /* REENTER_BUILDING_STATE */ k_TodoEntry,
@@ -344,7 +354,7 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* GO_TOWARDS_DEAD_PERSON */ k_TodoEntry,
     /* LOOK_AT_DEAD_PERSON */ k_TodoEntry,
     /* MOURN_DEAD_PERSON */ k_TodoEntry,
-    /* NOTHING_TO_DO */ k_TodoEntry,
+    /* NOTHING_TO_DO */ k_SimpleEntry,
     /* ARRIVES_AT_WORKSHOP_FOR_DROP_OFF */ k_TodoEntry,
     /* ARRIVES_AT_STORAGE_PIT_FOR_WORKSHOP_MATERIALS */ k_TodoEntry,
     /* SHOW_POISONED */ k_TodoEntry,
