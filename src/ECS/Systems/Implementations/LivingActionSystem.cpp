@@ -45,6 +45,12 @@ uint32_t VillagerCreated(LivingAction& action)
 	return 0;
 }
 
+// TODO(#657) Find the meaning of field0x50 and use a better name for this function
+bool Field0x50Default([[maybe_unused]] LivingAction& action)
+{
+	return true;
+}
+
 struct VillagerStateTableEntry
 {
 	std::function<uint32_t(LivingAction&)> state = nullptr;
@@ -213,7 +219,7 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* CREATED */
     VillagerStateTableEntry {
         .state = &VillagerCreated,
-        .field0x50 = k_TodoEntry.field0x50,
+        .field0x50 = &Field0x50Default,
     },
     /* ARRIVES_IN_ABODE_TO_TRADE */ k_TodoEntry,
     /* ARRIVES_IN_ABODE_TO_PICK_UP_EXCESS */ k_TodoEntry,
