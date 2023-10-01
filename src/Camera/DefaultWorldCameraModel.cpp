@@ -10,11 +10,11 @@
 #include "DefaultWorldCameraModel.h"
 
 #include <numeric>
+#include <ranges>
 
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/polar_coordinates.hpp>
-#include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 #include <spdlog/spdlog.h>
 
@@ -477,17 +477,15 @@ void DefaultWorldCameraModel::UpdateModeFlying(glm::vec3 eulerAngles)
 
 	// Find best angles
 	{
-		// TODO(#522): Use zip_view in c++23
 		std::array<float, 0x20> scores {};
-		for (size_t i = 0; auto& score : scores)
+		for (auto [score, flyingScore] : std::views::zip(scores, k_FlyingScoreAngles))
 		{
 			for (int j = 0; j < 5; ++j)
 			{
 				const auto p = point + static_cast<float>(j) + 3.0f * distanceFromFocus * glm::euclidean(glm::yx(eulerAngles));
 				score += point.y - Locator::terrainSystem::value().GetHeightAt(glm::xz(p));
 			}
-			score += 50.0f * std::cos(k_FlyingScoreAngles.at(i));
-			++i;
+			score += 50.0f * std::cos(flyingScore);
 		}
 
 		const auto bestAngleIndex = std::distance(scores.begin(), std::max_element(scores.begin(), scores.end()));
