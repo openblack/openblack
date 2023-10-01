@@ -10,6 +10,7 @@
 #include "LandBlock.h"
 
 #include <cassert>
+#include <ranges>
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LNDFile.h>
@@ -105,42 +106,30 @@ const bgfx::Memory* LandBlock::BuildVertexList(LandIslandInterface& island)
 				_COUNT
 			};
 
-			std::array<glm::u16vec2, static_cast<size_t>(Corner::_COUNT)> offset;
-			offset[static_cast<size_t>(Corner::TopLeft)] = glm::u16vec2(x, z);
-			offset[static_cast<size_t>(Corner::TopRight)] = glm::u16vec2(x + 1, z);
-			offset[static_cast<size_t>(Corner::BottomLeft)] = glm::u16vec2(x, z + 1);
-			offset[static_cast<size_t>(Corner::BottomRight)] = glm::u16vec2(x + 1, z + 1);
+			std::array<glm::u16vec2, static_cast<size_t>(Corner::_COUNT)> offsets;
+			offsets[static_cast<size_t>(Corner::TopLeft)] = glm::u16vec2(x, z);
+			offsets[static_cast<size_t>(Corner::TopRight)] = glm::u16vec2(x + 1, z);
+			offsets[static_cast<size_t>(Corner::BottomLeft)] = glm::u16vec2(x, z + 1);
+			offsets[static_cast<size_t>(Corner::BottomRight)] = glm::u16vec2(x + 1, z + 1);
 
 			std::array<const lnd::LNDCell*, static_cast<size_t>(Corner::_COUNT)> cells;
-			// TODO(#522): Use zip_view in c++23
-			for (size_t i = 0; i < cells.size(); ++i)
-			{
-				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-				cells[i] = &island.GetCell(blockOffset + offset[i]);
-			}
-
 			// construct positions from cell altitudes
 			std::array<glm::vec3, static_cast<size_t>(Corner::_COUNT)> pos;
-			// TODO(#522): Use zip_view in c++23
-			for (size_t i = 0; i < pos.size(); ++i)
-			{
-				pos[i] = glm::vec3(                                // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
-				    offset[i].x * LandIslandInterface::k_CellSize, // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
-				    cells[i]->altitude *                           // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
-				        LandIslandInterface::k_HeightUnit,         // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
-				    offset[i].y * LandIslandInterface::k_CellSize  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
-				);
-			}
-
 			std::array<const lnd::LNDMapMaterial*, static_cast<size_t>(Corner::_COUNT)> materials;
-			for (size_t i = 0; i < pos.size(); ++i)
+			for (auto [position, cell, material, offset]: std::ranges::views::zip(pos, cells, materials, offsets))
 			{
-				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-				const auto& country = countries.at(cells[i]->properties.country);
-				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-				const auto noise = island.GetNoise(blockOffset + offset[i]);
-				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-				materials[i] = &country.materials[(cells[i]->altitude + noise) % country.materials.size()];
+				cell = &island.GetCell(blockOffset + offset);
+				position = glm::vec3(
+				    offset.x * LandIslandInterface::k_CellSize,
+				    cell->altitude *
+				        LandIslandInterface::k_HeightUnit,
+				    offset.y * LandIslandInterface::k_CellSize
+				);
+
+				const auto& country = countries.at(cell->properties.country);
+				const auto noise = island.GetNoise(blockOffset + offset);
+
+				material = &country.materials.at((cell->altitude + noise) % country.materials.size());
 			}
 
 			// TODO(470): This is temporary way for drawing landscape, should be moved to a shader in the renderer
@@ -158,7 +147,7 @@ const bgfx::Memory* LandBlock::BuildVertexList(LandIslandInterface& island)
 			};
 			auto makeVert = [&getAlpha, &pos, &cells, &materials](Corner corner, const glm::vec3& weight,
 			                                                      const std::array<Corner, 3>& m) -> LandVertex {
-				std::array<uint32_t, 6> mat = {
+				const std::array<uint32_t, 6> mat = {
 				    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
 				    materials[static_cast<size_t>(m[0])]->indices[0],
 				    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
@@ -190,20 +179,14 @@ const bgfx::Memory* LandBlock::BuildVertexList(LandIslandInterface& island)
 			auto makeTriangle = [&makeVert, &vertices, &index](const std::array<Corner, 3>& corners, bool forward) {
 				if (forward)
 				{
-					// NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 					vertices[index++] = makeVert(corners[0], glm::vec3(1, 0, 0), corners);
-					// NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 					vertices[index++] = makeVert(corners[1], glm::vec3(0, 1, 0), corners);
-					// NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 					vertices[index++] = makeVert(corners[2], glm::vec3(0, 0, 1), corners);
 				}
 				else
 				{
-					// NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 					vertices[index++] = makeVert(corners[2], glm::vec3(0, 0, 1), corners);
-					// NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 					vertices[index++] = makeVert(corners[1], glm::vec3(0, 1, 0), corners);
-					// NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 					vertices[index++] = makeVert(corners[0], glm::vec3(1, 0, 0), corners);
 				}
 			};
