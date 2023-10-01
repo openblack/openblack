@@ -10,6 +10,7 @@
 #include "LandBlock.h"
 
 #include <cassert>
+
 #include <ranges>
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
@@ -116,15 +117,12 @@ const bgfx::Memory* LandBlock::BuildVertexList(LandIslandInterface& island)
 			// construct positions from cell altitudes
 			std::array<glm::vec3, static_cast<size_t>(Corner::_COUNT)> pos;
 			std::array<const lnd::LNDMapMaterial*, static_cast<size_t>(Corner::_COUNT)> materials;
-			for (auto [position, cell, material, offset]: std::ranges::views::zip(pos, cells, materials, offsets))
+			for (auto [position, cell, material, offset] : std::ranges::views::zip(pos, cells, materials, offsets))
 			{
 				cell = &island.GetCell(blockOffset + offset);
-				position = glm::vec3(
-				    offset.x * LandIslandInterface::k_CellSize,
-				    cell->altitude *
-				        LandIslandInterface::k_HeightUnit,
-				    offset.y * LandIslandInterface::k_CellSize
-				);
+				position =
+				    glm::vec3(offset.x * LandIslandInterface::k_CellSize, cell->altitude * LandIslandInterface::k_HeightUnit,
+				              offset.y * LandIslandInterface::k_CellSize);
 
 				const auto& country = countries.at(cell->properties.country);
 				const auto noise = island.GetNoise(blockOffset + offset);

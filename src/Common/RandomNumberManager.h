@@ -20,7 +20,7 @@ class RandomNumberManagerInterface
 {
 public:
 	template <typename T>
-	requires (std::is_arithmetic_v<T>)
+	    requires(std::is_arithmetic_v<T>)
 	T NextValue(T min, T max)
 	{
 		using dist_t =
