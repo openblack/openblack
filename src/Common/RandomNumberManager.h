@@ -20,7 +20,7 @@ class RandomNumberManagerInterface
 {
 public:
 	template <typename T>
-	    requires(std::is_arithmetic_v<T>)
+	requires (std::is_arithmetic_v<T>)
 	T NextValue(T min, T max)
 	{
 		using dist_t =
@@ -29,7 +29,7 @@ public:
 		std::optional<std::reference_wrapper<std::mutex>> lock(LockAccess());
 		if (lock)
 		{
-			std::lock_guard<std::mutex> contextLock(*lock);
+			std::lock_guard<std::mutex> const contextLock(*lock);
 			return dist(Generator());
 		}
 		return dist(Generator());
