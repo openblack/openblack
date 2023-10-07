@@ -425,7 +425,7 @@ bool Game::Update()
 				_handPose = glm::translate(_handPose, intersectionTransform.position);
 				_handPose *= glm::mat4(intersectionTransform.rotation);
 				_handPose = glm::scale(_handPose, intersectionTransform.scale);
-				_renderer->UpdateDebugCrossUniforms(glm::translate(_camera->GetFocus()));
+				_renderer->UpdateDebugCrossUniforms(glm::translate(_camera->GetFocus(Camera::Interpolation::Target)));
 			}
 		}
 

@@ -516,7 +516,7 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> OldCameraModel::Update
 	_rotVelocity *= airResistance;
 	_mouseIsMoving = false;
 
-	return {{GetTargetOrigin(), GetTargetFocus()}};
+	return {{GetTargetOrigin(), GetTargetFocus(), camera.GetInterpolatorTime()}};
 }
 
 glm::vec3 OldCameraModel::GetTargetOrigin() const

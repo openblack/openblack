@@ -34,6 +34,7 @@ public:
 	{
 		glm::vec3 origin;
 		glm::vec3 focus;
+		std::chrono::duration<float> duration;
 	};
 
 	static std::unique_ptr<CameraModel> CreateModel(Model model);

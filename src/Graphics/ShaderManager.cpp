@@ -157,7 +157,7 @@ const ShaderProgram* ShaderManager::GetShader(const std::string& name) const
 
 void ShaderManager::SetCamera(graphics::RenderPass viewId, const Camera& camera)
 {
-	auto view = camera.GetViewMatrix();
+	auto view = camera.GetViewMatrix(Camera::Interpolation::Current);
 	auto proj = camera.GetProjectionMatrix();
 	bgfx::setViewTransform(static_cast<bgfx::ViewId>(viewId), &view, &proj);
 }
