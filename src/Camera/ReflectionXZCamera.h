@@ -18,6 +18,6 @@ class ReflectionXZCamera final: public Camera
 {
 public:
 	ReflectionXZCamera();
-	[[nodiscard]] glm::mat4 GetViewMatrix() const final;
+	[[nodiscard]] glm::mat4 GetViewMatrix(Interpolation interpolation) const final;
 };
 } // namespace openblack

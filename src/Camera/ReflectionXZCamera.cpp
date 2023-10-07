@@ -18,9 +18,9 @@ ReflectionXZCamera::ReflectionXZCamera()
 {
 }
 
-glm::mat4 ReflectionXZCamera::GetViewMatrix() const
+glm::mat4 ReflectionXZCamera::GetViewMatrix(Interpolation interpolation) const
 {
-	return Camera::GetViewMatrix() *
+	return Camera::GetViewMatrix(interpolation) *
 	       // Reflection matrix when the normal is (0, 1, 0)
 	       glm::mat4(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 }

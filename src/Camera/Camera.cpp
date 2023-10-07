@@ -29,8 +29,9 @@ constexpr auto k_DefaultCameraOriginOffset = glm::vec3(0.0f, 0.0f, 120.0f);
 }
 
 Camera::Camera(glm::vec3 focus)
-    : _origin(focus + k_DefaultCameraOriginOffset)
-    , _focus(focus)
+    // Maybe a struct is not the right thing... Maybe an optional?
+    : _originInterpolators(ZoomInterpolator3f(focus + k_DefaultCameraOriginOffset))
+    , _focusInterpolators(ZoomInterpolator3f(focus))
     , _model(CameraModel::CreateModel(CameraModel::Model::Old))
 {
 }
@@ -44,36 +45,37 @@ float Camera::GetHorizontalFieldOfView() const
 
 glm::mat4 Camera::GetRotationMatrix() const
 {
-	return static_cast<glm::mat3>(glm::transpose(GetViewMatrix()));
+	return static_cast<glm::mat3>(glm::transpose(GetViewMatrix(Camera::Interpolation::Current)));
 }
 
-glm::mat4 Camera::GetViewMatrix() const
+glm::mat4 Camera::GetViewMatrix(Interpolation interpolation) const
 {
 	// Invert the camera's rotation (transposed) and position (negated) to get the view matrix.
-	return glm::lookAt(_origin, _focus, glm::vec3(0.0f, 1.0f, 0.0f));
+	return glm::lookAt(GetOrigin(interpolation), GetFocus(interpolation), glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
-glm::mat4 Camera::GetViewProjectionMatrix() const
+glm::mat4 Camera::GetViewProjectionMatrix(Interpolation interpolation) const
 {
-	return GetProjectionMatrix() * GetViewMatrix();
+	return GetProjectionMatrix() * GetViewMatrix(interpolation);
 }
 
-std::optional<ecs::components::Transform> Camera::RaycastMouseToLand() const
+std::optional<ecs::components::Transform> Camera::RaycastMouseToLand(Interpolation interpolation) const
 {
 	// get the hit by raycasting to the land down via the mouse
 	const auto mousePosition = Locator::gameActionSystem::value().GetMousePosition();
 	const auto screenSize = Locator::windowing::value().GetSize();
-	return RaycastScreenCoordToLand(static_cast<glm::vec2>(mousePosition) / static_cast<glm::vec2>(screenSize));
+	return RaycastScreenCoordToLand(static_cast<glm::vec2>(mousePosition) / static_cast<glm::vec2>(screenSize), interpolation);
 }
 
-std::optional<ecs::components::Transform> Camera::RaycastScreenCoordToLand(glm::vec2 screenCoord) const
+std::optional<ecs::components::Transform> Camera::RaycastScreenCoordToLand(glm::vec2 screenCoord,
+                                                                           Interpolation interpolation) const
 {
 	// get the hit by raycasting to the land down via the pixel coordinate
 	ecs::components::Transform intersectionTransform;
 	float intersectDistance = 0.0f;
 	glm::vec3 rayOrigin;
 	glm::vec3 rayDirection;
-	DeprojectScreenToWorld(screenCoord, rayOrigin, rayDirection);
+	DeprojectScreenToWorld(screenCoord, rayOrigin, rayDirection, interpolation);
 	const auto& dynamicsSystem = Locator::dynamicsSystem::value();
 	if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
 	{
@@ -103,6 +105,12 @@ Camera& Camera::SetProjectionMatrixPerspective(float xFov, float aspect, float n
 	return *this;
 }
 
+Camera& Camera::SetInterpolatorTime(std::chrono::duration<float> t)
+{
+	_interpolatorTime = t;
+	return *this;
+}
+
 glm::vec3 Camera::GetForward() const
 {
 	// Forward is +1 in openblack but is -1 in OpenGL
@@ -124,11 +132,12 @@ std::unique_ptr<Camera> Camera::Reflect() const
 	// TODO(bwrsandman): The copy to reflection camera has way too much of Camera including model which is useless
 	//                   This also touches on other cameras such as the citadel camera which use a different kind of model
 	auto reflectionCamera = std::make_unique<ReflectionXZCamera>();
-	(*reflectionCamera).SetOrigin(_origin).SetFocus(_focus).SetProjectionMatrix(_projectionMatrix);
+	(*reflectionCamera).SetOrigin(GetOrigin()).SetFocus(GetFocus()).SetProjectionMatrix(_projectionMatrix);
 	return reflectionCamera;
 }
 
-void Camera::DeprojectScreenToWorld(glm::vec2 screenCoord, glm::vec3& outWorldOrigin, glm::vec3& outWorldDirection) const
+void Camera::DeprojectScreenToWorld(glm::vec2 screenCoord, glm::vec3& outWorldOrigin, glm::vec3& outWorldDirection,
+                                    Interpolation interpolation) const
 {
 	const float screenSpaceX = (screenCoord.x - 0.5f) * 2.0f;
 	const float screenSpaceY = ((1.0f - screenCoord.y) - 0.5f) * 2.0f;
@@ -141,7 +150,7 @@ void Camera::DeprojectScreenToWorld(glm::vec2 screenCoord, glm::vec3& outWorldOr
 	const glm::vec4 rayEndProjectionSpace = glm::vec4(screenSpaceX, screenSpaceY, 0.5f, 1.0f);
 
 	// Calculate our inverse view projection matrix
-	auto inverseViewProj = glm::inverse(GetViewProjectionMatrix());
+	auto inverseViewProj = glm::inverse(GetViewProjectionMatrix(interpolation));
 
 	// Get our homogeneous coordinates for our start and end ray positions
 	const glm::vec4 hgRayStartWorldSpace = inverseViewProj * rayStartProjectionSpace;
@@ -168,9 +177,10 @@ void Camera::DeprojectScreenToWorld(glm::vec2 screenCoord, glm::vec3& outWorldOr
 	outWorldDirection = rayDirWorldSpace;
 }
 
-bool Camera::ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& outScreenPosition) const
+bool Camera::ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& outScreenPosition,
+                                  Interpolation interpolation) const
 {
-	outScreenPosition = glm::project(worldPosition, GetViewMatrix(), GetProjectionMatrix(), viewport);
+	outScreenPosition = glm::project(worldPosition, GetViewMatrix(interpolation), GetProjectionMatrix(), viewport);
 	if (outScreenPosition.x < viewport.x || outScreenPosition.y < viewport.y || outScreenPosition.x > viewport.z ||
 	    outScreenPosition.y > viewport.w)
 	{
@@ -194,8 +204,22 @@ void Camera::Update(std::chrono::microseconds dt)
 
 	if (updateInfo)
 	{
-		SetOrigin(updateInfo->origin);
-		SetFocus(updateInfo->focus);
+		const auto m1 = glm::zero<glm::vec3>();
+		// You have to normalize the velocity with the NEW duration
+		SetOriginInterpolator(GetOrigin(), updateInfo->origin, GetOriginVelocity() * updateInfo->duration.count(), m1);
+		SetFocusInterpolator(GetFocus(), updateInfo->focus, GetFocusVelocity() * updateInfo->duration.count(), m1);
+		SetInterpolatorDuration(updateInfo->duration);
+	}
+
+	const auto duration = GetInterpolatorDuration().count();
+	if (duration == 0.0f)
+	{
+		SetInterpolatorT(1.0f);
+	}
+	else
+	{
+		const auto dtSeconds = std::chrono::duration_cast<std::chrono::duration<float>>(dt);
+		SetInterpolatorTime(std::min(std::chrono::duration<float>(0.1f), dtSeconds));
 	}
 }
 
@@ -209,32 +233,116 @@ const glm::mat4& Camera::GetProjectionMatrix() const
 	return _projectionMatrix;
 }
 
-glm::vec3 Camera::GetOrigin() const
+glm::vec3 Camera::GetOrigin(Interpolation interpolation) const
 {
-	return _origin;
+	switch (interpolation)
+	{
+	case Interpolation::Current:
+		return _originInterpolators.PositionAt(GetInterpolatorT());
+	case Interpolation::Start:
+		return _originInterpolators.p0;
+	case Interpolation::Target:
+		return _originInterpolators.p1;
+#ifdef __cpp_lib_unreachable
+	default:
+		// TODO(#656): Remove check in C++23 and just use unreachable
+		assert(false);
+		std::unreachable();
+#else
+	default:
+		assert(false);
+		return {};
+#endif
+	}
 }
 
-glm::vec3 Camera::GetFocus() const
+glm::vec3 Camera::GetFocus(Interpolation interpolation) const
 {
-	return _focus;
+	switch (interpolation)
+	{
+	case Interpolation::Current:
+		return _focusInterpolators.PositionAt(GetInterpolatorT());
+	case Interpolation::Start:
+		return _focusInterpolators.p0;
+	case Interpolation::Target:
+		return _focusInterpolators.p1;
+#ifdef __cpp_lib_unreachable
+	default:
+		// TODO(#656): Remove check in C++23 and just use unreachable
+		assert(false);
+		std::unreachable();
+#else
+	default:
+		assert(false);
+		return {};
+#endif
+	}
 }
 
-glm::vec3 Camera::GetTargetOrigin() const
+glm::vec3 Camera::GetOriginVelocity(Interpolation interpolation) const
 {
-	// TODO: Camera should interpolate between current state and target with a modified sigmoid interpolation
-	return _origin;
+	glm::vec3 result;
+	switch (interpolation)
+	{
+	case Interpolation::Current:
+		result = _originInterpolators.VelocityAt(GetInterpolatorT());
+		break;
+	case Interpolation::Start:
+		result = _originInterpolators.v0;
+		break;
+	case Interpolation::Target:
+		result = _originInterpolators.v1;
+		break;
+#ifdef __cpp_lib_unreachable
+	default:
+		// TODO(#656): Remove check in C++23 and just use unreachable
+		assert(false);
+		std::unreachable();
+#else
+	default:
+		assert(false);
+		return {};
+#endif
+	}
+
+	if (_interpolatorDuration == decltype(_interpolatorDuration)::zero())
+	{
+		return result;
+	}
+	return result / _interpolatorDuration.count();
 }
 
-glm::vec3 Camera::GetTargetFocus() const
+glm::vec3 Camera::GetFocusVelocity(Interpolation interpolation) const
 {
-	// TODO: Camera should interpolate between current state and target with a modified sigmoid interpolation
-	return _focus;
-}
+	glm::vec3 result;
+	switch (interpolation)
+	{
+	case Interpolation::Current:
+		result = _focusInterpolators.VelocityAt(GetInterpolatorT());
+		break;
+	case Interpolation::Start:
+		result = _focusInterpolators.v0;
+		break;
+	case Interpolation::Target:
+		result = _focusInterpolators.v1;
+		break;
+#ifdef __cpp_lib_unreachable
+	default:
+		// TODO(#656): Remove check in C++23 and just use unreachable
+		assert(false);
+		std::unreachable();
+#else
+	default:
+		assert(false);
+		return {};
+#endif
+	}
 
-glm::vec3 Camera::GetVelocity() const
-{
-	// TODO
-	return {0.0f, 0.0f, 0.0f};
+	if (_interpolatorDuration == decltype(_interpolatorDuration)::zero())
+	{
+		return result;
+	}
+	return result / _interpolatorDuration.count();
 }
 
 glm::vec3 Camera::GetRotation() const
@@ -257,14 +365,35 @@ glm::vec3 Camera::GetRotation() const
 
 Camera& Camera::SetOrigin(const glm::vec3& position)
 {
-	_origin = position;
+	_originInterpolators = ZoomInterpolator3f(position);
 
 	return *this;
 }
 
 Camera& Camera::SetFocus(const glm::vec3& position)
 {
-	_focus = position;
+	_focusInterpolators = ZoomInterpolator3f(position);
+
+	return *this;
+}
+
+Camera& Camera::SetOriginInterpolator(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& m0, const glm::vec3& m1)
+{
+	_originInterpolators = ZoomInterpolator3f(p0, p1, m0, m1);
+
+	return *this;
+}
+
+Camera& Camera::SetFocusInterpolator(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& m0, const glm::vec3& m1)
+{
+	_focusInterpolators = ZoomInterpolator3f(p0, p1, m0, m1);
+
+	return *this;
+}
+
+Camera& Camera::SetInterpolatorDuration(std::chrono::duration<float> duration)
+{
+	_interpolatorDuration = duration;
 
 	return *this;
 }

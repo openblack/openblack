@@ -18,6 +18,7 @@
 #include <glm/vec3.hpp>
 
 #include "CameraModel.h"
+#include "Common/ZoomInterpolator.h"
 #include "ECS/Components/Transform.h"
 
 namespace openblack
@@ -26,29 +27,50 @@ namespace openblack
 class Camera
 {
 public:
+	enum class Interpolation : uint8_t
+	{
+		Current,
+		Start,
+		Target,
+	};
 	explicit Camera(glm::vec3 focus = glm::vec3(1000.0f, 0.0f, 1000.0f));
 	virtual ~Camera();
 
-	[[nodiscard]] virtual float GetHorizontalFieldOfView() const;
-	[[nodiscard]] virtual glm::mat4 GetViewMatrix() const;
+	[[nodiscard]] float GetHorizontalFieldOfView() const;
+	[[nodiscard]] virtual glm::mat4 GetViewMatrix(Interpolation interpolation) const;
 	[[nodiscard]] const glm::mat4& GetProjectionMatrix() const;
-	[[nodiscard]] glm::mat4 GetViewProjectionMatrix() const;
+	[[nodiscard]] glm::mat4 GetViewProjectionMatrix(Interpolation interpolation = Camera::Interpolation::Current) const;
 
-	[[nodiscard]] std::optional<ecs::components::Transform> RaycastMouseToLand() const;
-	[[nodiscard]] std::optional<ecs::components::Transform> RaycastScreenCoordToLand(glm::vec2 screenCoord) const;
+	[[nodiscard]] std::optional<ecs::components::Transform>
+	RaycastMouseToLand(Interpolation interpolation = Camera::Interpolation::Current) const;
+	[[nodiscard]] std::optional<ecs::components::Transform>
+	RaycastScreenCoordToLand(glm::vec2 screenCoord, Interpolation interpolation = Camera::Interpolation::Current) const;
 
-	[[nodiscard]] glm::vec3 GetOrigin() const;
-	[[nodiscard]] glm::vec3 GetFocus() const;
-	[[nodiscard]] glm::vec3 GetTargetOrigin() const;
-	[[nodiscard]] glm::vec3 GetTargetFocus() const;
-
-	[[nodiscard]] glm::vec3 GetVelocity() const;
+	[[nodiscard]] glm::vec3 GetOrigin(Interpolation interpolation = Interpolation::Current) const;
+	[[nodiscard]] glm::vec3 GetOriginVelocity(Interpolation interpolation = Interpolation::Current) const;
+	[[nodiscard]] glm::vec3 GetFocus(Interpolation interpolation = Interpolation::Current) const;
+	[[nodiscard]] glm::vec3 GetFocusVelocity(Interpolation interpolation = Interpolation::Current) const;
 
 	/// Get rotation as euler angles in radians
 	[[nodiscard]] glm::vec3 GetRotation() const;
 
 	Camera& SetOrigin(const glm::vec3& position);
 	Camera& SetFocus(const glm::vec3& position);
+
+	Camera& SetOriginInterpolator(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& m0, const glm::vec3& m1);
+	Camera& SetFocusInterpolator(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& m0, const glm::vec3& m1);
+
+	[[nodiscard]] std::chrono::duration<float> GetInterpolatorTime() const { return _interpolatorTime; }
+	[[nodiscard]] float GetInterpolatorT() const
+	{
+		const auto duration = GetInterpolatorDuration();
+		return (duration == decltype(duration)::zero()) ? 1.0f : GetInterpolatorTime() / duration;
+	}
+	[[nodiscard]] std::chrono::duration<float> GetInterpolatorDuration() const { return _interpolatorDuration; }
+
+	Camera& SetInterpolatorTime(std::chrono::duration<float> t);
+	Camera& SetInterpolatorT(float t) { return SetInterpolatorTime(t * GetInterpolatorDuration()); }
+	Camera& SetInterpolatorDuration(std::chrono::duration<float> duration);
 
 	Camera& SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip);
 	Camera& SetProjectionMatrix(const glm::mat4& projection);
@@ -59,8 +81,10 @@ public:
 
 	[[nodiscard]] std::unique_ptr<Camera> Reflect() const;
 
-	void DeprojectScreenToWorld(glm::vec2 screenCoord, glm::vec3& outWorldOrigin, glm::vec3& outWorldDirection) const;
-	bool ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& outScreenPosition) const;
+	void DeprojectScreenToWorld(glm::vec2 screenCoord, glm::vec3& outWorldOrigin, glm::vec3& outWorldDirection,
+	                            Interpolation interpolation = Camera::Interpolation::Current) const;
+	bool ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& outScreenPosition,
+	                          Interpolation interpolation = Camera::Interpolation::Current) const;
 
 	void Update(std::chrono::microseconds dt);
 	void HandleActions(std::chrono::microseconds dt);
@@ -68,8 +92,11 @@ public:
 	[[nodiscard]] glm::mat4 GetRotationMatrix() const;
 
 protected:
-	glm::vec3 _origin = glm::vec3();
-	glm::vec3 _focus = glm::vec3(0.0f, 0.0f, 1.0f);
+	ZoomInterpolator3f _originInterpolators;
+	ZoomInterpolator3f _focusInterpolators;
+	// As a value between 0 and _interpolatorDuration
+	std::chrono::duration<float> _interpolatorTime = std::chrono::duration<float>::zero();
+	std::chrono::duration<float> _interpolatorDuration = std::chrono::duration<float>::zero();
 	float _xFov = 0.0f; // TODO(#707): This should be a zoomer for animations
 	glm::mat4 _projectionMatrix = glm::mat4 {1.0f};
 	std::unique_ptr<CameraModel> _model;

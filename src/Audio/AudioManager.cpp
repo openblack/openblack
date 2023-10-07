@@ -65,7 +65,7 @@ void AudioManager::Update(Game& game)
 {
 	auto& cam = game.GetCamera();
 	auto pos = cam.GetOrigin();
-	auto vel = cam.GetVelocity();
+	auto vel = cam.GetOriginVelocity();
 	auto forward = cam.GetForward();
 	auto top = cam.GetUp();
 	_audioPlayer->UpdateListener(pos, vel, forward, top);
