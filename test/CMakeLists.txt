@@ -15,6 +15,7 @@ endmacro ()
 openblack_setup_and_add_test(test_game_initialize test_game_initialize.cpp)
 openblack_setup_and_add_test(test_load_scene test_load_scene.cpp)
 openblack_setup_and_add_test(test_fixed test_fixed.cpp)
+openblack_setup_and_add_test(test_interpolator test_interpolator.cpp)
 
 add_custom_target(
   test_mobile_wall_hug_scenarios
