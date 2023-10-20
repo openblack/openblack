@@ -877,8 +877,8 @@ void Game::LoadMap(const std::filesystem::path& path)
 		throw std::runtime_error("Could not find script " + path.generic_string());
 	}
 
-	auto data = fileSystem.ReadAll(path);
-	std::string source(reinterpret_cast<const char*>(data.data()), data.size());
+	const auto data = fileSystem.ReadAll(path);
+	const auto source = std::string(reinterpret_cast<const char*>(data.data()), data.size());
 
 	// Reset everything. Deletes all entities and their components
 	Locator::entitiesRegistry::value().Reset();
@@ -891,8 +891,8 @@ void Game::LoadMap(const std::filesystem::path& path)
 	script.Load(source);
 
 	// Each released map comes with an optional .fot file which contains the footpath information for the map
-	auto stem = string_utils::LowerCase(path.stem().generic_string());
-	auto fotPath = fileSystem.GetPath<filesystem::Path::Landscape>() / fmt::format("{}.fot", stem);
+	const auto stem = string_utils::LowerCase(path.stem().generic_string());
+	const auto fotPath = fileSystem.GetPath<filesystem::Path::Landscape>() / fmt::format("{}.fot", stem);
 
 	if (fileSystem.Exists(fotPath))
 	{
