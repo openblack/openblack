@@ -132,11 +132,11 @@ bool DefaultWorldCameraModel::ConstrainCamera(std::chrono::microseconds dt, glm:
 
 bool DefaultWorldCameraModel::ConstrainAltitude()
 {
-	constexpr float floatingHeight = 3.0f;
-	// constexpr float nearClip = 0.0f; // TODO sync with game args
+	constexpr float k_floatingHeight = 2.9999f; // 3 in vanilla, but less due to fp precision with recorded data in tests
+	// constexpr float nearClip = 0.0f;       // TODO sync with game args
 	bool hasBeenAdjusted = false;
 	// const auto nearPoint = ProjectPointOnForwardVector(nearClip);
-	const auto minAltitude = floatingHeight + Locator::terrainSystem::value().GetHeightAt(glm::xz(_targetOrigin));
+	const auto minAltitude = k_floatingHeight + Locator::terrainSystem::value().GetHeightAt(glm::xz(_targetOrigin));
 	// if (const auto hit = Locator::dynamicsSystem::value().RayCastClosestHit(_targetOrigin, _targetFocus, 16.0f))
 	// {
 	// 	if (glm::distance2(hit->first.position, _targetOrigin) < 64.0f)
