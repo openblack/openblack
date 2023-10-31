@@ -42,9 +42,10 @@ public:
 	[[nodiscard]] glm::mat4 GetViewProjectionMatrix(Interpolation interpolation = Camera::Interpolation::Current) const;
 
 	[[nodiscard]] std::optional<ecs::components::Transform>
-	RaycastMouseToLand(Interpolation interpolation = Camera::Interpolation::Current) const;
+	RaycastMouseToLand(bool includeWater = true, Interpolation interpolation = Camera::Interpolation::Current) const;
 	[[nodiscard]] std::optional<ecs::components::Transform>
-	RaycastScreenCoordToLand(glm::vec2 screenCoord, Interpolation interpolation = Camera::Interpolation::Current) const;
+	RaycastScreenCoordToLand(glm::vec2 screenCoord, bool includeWater,
+	                         Interpolation interpolation = Camera::Interpolation::Current) const;
 
 	[[nodiscard]] glm::vec3 GetOrigin(Interpolation interpolation = Interpolation::Current) const;
 	[[nodiscard]] glm::vec3 GetOriginVelocity(Interpolation interpolation = Interpolation::Current) const;

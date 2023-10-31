@@ -113,7 +113,7 @@ float DefaultWorldCameraModel::GetVerticalLineInverseDistanceWeighingRayCast(con
 	{
 		const glm::vec2 coord = glm::vec2(0.5f, i / 16.0f);
 
-		if (const auto hit = camera.RaycastScreenCoordToLand(coord, Camera::Interpolation::Target))
+		if (const auto hit = camera.RaycastScreenCoordToLand(coord, false, Camera::Interpolation::Target))
 		{
 			inverseHitDistances.push_back(1.0f / glm::length(hit->position - _targetOrigin));
 		}
@@ -265,11 +265,11 @@ void DefaultWorldCameraModel::UpdateRaycastHitPoints(const Camera& camera)
 	// TODO(#656) in c++23 use camera.RaycastMouseToLand().and_then
 	_screenSpaceMouseRaycastHit = std::nullopt;
 	_screenSpaceCenterRaycastHit = std::nullopt;
-	if (const auto hit = camera.RaycastMouseToLand(Camera::Interpolation::Target))
+	if (const auto hit = camera.RaycastMouseToLand(false, Camera::Interpolation::Target))
 	{
 		_screenSpaceMouseRaycastHit = hit->position;
 	}
-	if (const auto hit = camera.RaycastScreenCoordToLand({0.5f, 0.5f}, Camera::Interpolation::Target))
+	if (const auto hit = camera.RaycastScreenCoordToLand({0.5f, 0.5f}, false, Camera::Interpolation::Target))
 	{
 		_screenSpaceCenterRaycastHit = hit->position;
 	}
