@@ -60,15 +60,16 @@ glm::mat4 Camera::GetViewProjectionMatrix(Interpolation interpolation) const
 	return GetProjectionMatrix() * GetViewMatrix(interpolation);
 }
 
-std::optional<ecs::components::Transform> Camera::RaycastMouseToLand(Interpolation interpolation) const
+std::optional<ecs::components::Transform> Camera::RaycastMouseToLand(bool includeWater, Interpolation interpolation) const
 {
 	// get the hit by raycasting to the land down via the mouse
 	const auto mousePosition = Locator::gameActionSystem::value().GetMousePosition();
 	const auto screenSize = Locator::windowing::value().GetSize();
-	return RaycastScreenCoordToLand(static_cast<glm::vec2>(mousePosition) / static_cast<glm::vec2>(screenSize), interpolation);
+	return RaycastScreenCoordToLand(static_cast<glm::vec2>(mousePosition) / static_cast<glm::vec2>(screenSize), includeWater,
+	                                interpolation);
 }
 
-std::optional<ecs::components::Transform> Camera::RaycastScreenCoordToLand(glm::vec2 screenCoord,
+std::optional<ecs::components::Transform> Camera::RaycastScreenCoordToLand(glm::vec2 screenCoord, bool includeWater,
                                                                            Interpolation interpolation) const
 {
 	// get the hit by raycasting to the land down via the pixel coordinate
@@ -83,8 +84,8 @@ std::optional<ecs::components::Transform> Camera::RaycastScreenCoordToLand(glm::
 		intersectionTransform = hit->first;
 		return std::make_optional(intersectionTransform);
 	}
-	if (glm::intersectRayPlane(rayOrigin, rayDirection, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
-	                           intersectDistance))
+	if (includeWater && glm::intersectRayPlane(rayOrigin, rayDirection, glm::vec3(0.0f, 0.0f, 0.0f),
+	                                           glm::vec3(0.0f, 1.0f, 0.0f), intersectDistance))
 	{
 		intersectionTransform.position = rayOrigin + rayDirection * intersectDistance;
 		intersectionTransform.rotation = glm::mat3(1.0f);
@@ -187,8 +188,8 @@ bool Camera::ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, g
 		return true; // Right at the camera position
 	}
 	outScreenPosition = glm::project(worldPosition, GetViewMatrix(interpolation), GetProjectionMatrix(), viewport);
-	if (outScreenPosition.x < viewport.x || outScreenPosition.y < viewport.y || outScreenPosition.x > viewport.z ||
-	    outScreenPosition.y > viewport.w)
+	if (outScreenPosition.x < viewport.x || outScreenPosition.y < viewport.y || glm::round(outScreenPosition.x) > viewport.z ||
+	    glm::round(outScreenPosition.y) > viewport.w)
 	{
 		return false; // Outside viewport bounds
 	}
