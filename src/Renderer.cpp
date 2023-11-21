@@ -435,7 +435,12 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 			footprintShaderInstanced->SetTextureSampler("s_footprint", 0, *footprint.texture);
 			footprint.mesh->GetVertexBuffer().Bind();
 			bgfx::setInstanceDataBuffer(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
-			const uint64_t state = k_BgfxDefaultStateInvertedZ;
+			const uint64_t state = 0u                       //
+			                       | BGFX_STATE_WRITE_RGB   //
+			                       | BGFX_STATE_WRITE_A     //
+			                       | BGFX_STATE_BLEND_ALPHA //
+			                       | BGFX_STATE_CULL_CW     //
+			                       | BGFX_STATE_MSAA;
 			bgfx::setState(state);
 			bgfx::submit(static_cast<bgfx::ViewId>(viewId), footprintShaderInstanced->GetRawHandle());
 		}

@@ -134,11 +134,11 @@ void Camera::ResetVelocities()
 void Camera::SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip)
 {
 	const float yFov = (glm::atan(glm::tan(glm::radians(xFov) / 2.0f)) / aspect) * 2.0f;
-	const float h = -1.0f / tan(yFov * 0.5f);
-	const float w = -h / aspect;
+	const float h = 1.0f / glm::tan(yFov * 0.5f);
+	const float w = h / aspect;
 	const float a = nearClip / (farClip - nearClip);
 	const float b = (nearClip * farClip) / (farClip - nearClip);
-	_projectionMatrix = glm::mat4x4(w, 0.f, 0.f, 0.f, 0.f, -h, 0.f, 0.f, 0.f, 0.f, a, 1.f, 0.f, 0.f, b, 0.f);
+	_projectionMatrix = glm::mat4x4(w, 0.f, 0.f, 0.f, 0.f, h, 0.f, 0.f, 0.f, 0.f, a, 1.f, 0.f, 0.f, b, 0.f);
 }
 
 glm::vec3 Camera::GetForward() const
