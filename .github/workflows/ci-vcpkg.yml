@@ -61,10 +61,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: bwrsandman/clang-tidy-review
+          ref: windows_shell_fix
           path: clang-tidy-review
 
       - name: Non-docker clang-tidy-check
         run: |
+          ls ${{github.workspace}}/clang-tidy-review
+          python3 -m pip install pip -U
           python3 -m pip install ${{github.workspace}}/clang-tidy-review/post/clang_tidy_review
           review --token=${{ secrets.GITHUB_TOKEN }} --repo=openblack/openblack --pr=${{ github.event.pull_request.number }} --clang_tidy_binary=clang-tidy
 
