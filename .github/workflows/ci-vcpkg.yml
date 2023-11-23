@@ -8,7 +8,7 @@ on:
       - 'master'
       - 'ci-tests/**'  # Branch namespace can be used to test changes to test before going to master
 jobs:
-  clang-tidy:
+  clang-tidy-review:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -73,7 +73,6 @@ jobs:
           python3 -m pip install pip -U
           python3 -m pip install ${{github.workspace}}/clang-tidy-review/post/clang_tidy_review
           review --token=${{ secrets.GITHUB_TOKEN }} --repo=openblack/openblack --pr=${{ github.event.pull_request.number }} --clang_tidy_binary=clang-tidy --build_dir=cmake-build-presets/ninja-multi-vcpkg --config_file=.clang-tidy --split_workflow=True
-          post --token=${{ secrets.GITHUB_TOKEN }} --repo=openblack/openblack
         env:
           USER: ${{ github.event.pull_request.user.login }}
 
@@ -84,3 +83,37 @@ jobs:
             clang-tidy-review-metadata.json
             clang-tidy-review-output.json
             clang_tidy_review.yaml
+
+  clang-tidy-comments:
+    runs-on: ubuntu-latest
+    needs: clang-tidy-review
+    steps:
+      - name: Checkout clang-tidy-review
+        uses: actions/checkout@v4
+        with:
+          repository: bwrsandman/clang-tidy-review
+          ref: windows_shell_fix
+          path: clang-tidy-review
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: ClangTidyReviewOutputs-ubuntu-latest
+          path: ubuntu-latest
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: ClangTidyReviewOutputs-macos-latest
+          path: macos-latest
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: ClangTidyReviewOutputs-windows-latest
+          path: windows-latest
+
+      - name: Non-docker clang-tidy-check
+        run: |
+          clang-tidy --version
+          python3 -m pip install pip -U
+          python3 -m pip install ${{github.workspace}}/clang-tidy-review/post/clang_tidy_review
+          cp ubuntu-latest/clang-tidy-review-metadata.json .
+          post --token=${{ secrets.GITHUB_TOKEN }} --repo=openblack/openblack ubuntu-latest/clang-tidy-review-output.json macos-latest/clang-tidy-review-output.json windows-latest/clang-tidy-review-output.json
