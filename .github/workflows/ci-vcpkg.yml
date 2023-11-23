@@ -36,7 +36,9 @@ jobs:
       - name: Install MacOS dependencies
         run: |
           brew install pkg-config
-          echo "alias clang-tidy=$(brew --prefix llvm@15)/bin/clang-tidy" >> $GITHUB_ENV
+          mkdir -p ~/bin
+          ln -s $(brew --prefix llvm@15)/bin/clang-tidy ~/bin/clang-tidy
+          echo "export PATH=$PATH:~/bin" >> $GITHUB_ENV
         if: startsWith(matrix.os, 'macos')
 
       # Setup the build machine with the most recent versions of CMake and Ninja. Both are cached if not already: on subsequent runs both will be quickly restored from GitHub cache service.
@@ -67,6 +69,7 @@ jobs:
 
       - name: Non-docker clang-tidy-check
         run: |
+          clang-tidy --version
           git config user.name "Test"
           python3 -m pip install pip -U
           python3 -m pip install ${{github.workspace}}/clang-tidy-review/post/clang_tidy_review
