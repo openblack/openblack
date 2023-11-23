@@ -69,5 +69,12 @@ jobs:
           ls ${{github.workspace}}/clang-tidy-review
           python3 -m pip install pip -U
           python3 -m pip install ${{github.workspace}}/clang-tidy-review/post/clang_tidy_review
-          review --token=${{ secrets.GITHUB_TOKEN }} --repo=openblack/openblack --pr=${{ github.event.pull_request.number }} --clang_tidy_binary=clang-tidy
+          review --token=${{ secrets.GITHUB_TOKEN }} --repo=openblack/openblack --pr=${{ github.event.pull_request.number }} --clang_tidy_binary=clang-tidy --build_dir=cmake-build-presets/ninja-multi-vcpkg --config_file=.clang-tidy --lgtm-comment-body=
 
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ClangTidyReviewOutputs-${{matrix.os}}
+          path: |
+            clang-tidy-review-metadata.json
+            clang-tidy-review-output.json
+            clang_tidy_review.yaml
