@@ -70,10 +70,11 @@ jobs:
       - name: Non-docker clang-tidy-check
         run: |
           clang-tidy --version
-          git config user.name "Test"
           python3 -m pip install pip -U
           python3 -m pip install ${{github.workspace}}/clang-tidy-review/post/clang_tidy_review
           review --token=${{ secrets.GITHUB_TOKEN }} --repo=openblack/openblack --pr=${{ github.event.pull_request.number }} --clang_tidy_binary=clang-tidy --build_dir=cmake-build-presets/ninja-multi-vcpkg --config_file=.clang-tidy --lgtm-comment-body=
+        env:
+          USER: Test
 
       - uses: actions/upload-artifact@v3
         with:
