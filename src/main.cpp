@@ -7,6 +7,7 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+// TODO: Cause a clang-tidy error
 #include <iostream>
 #include <map>
 #include <memory>

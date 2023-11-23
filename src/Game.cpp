@@ -67,7 +67,7 @@ using namespace openblack;
 using namespace openblack::lhscriptx;
 using namespace std::chrono_literals;
 
-const std::string k_WindowTitle = "openblack";
+const std::string k_windowTitle = "openblack";
 
 Game* Game::sInstance = nullptr;
 
@@ -115,7 +115,7 @@ Game::Game(Arguments&& args)
 			extraFlags |= SDL_WINDOW_METAL;
 		}
 		_window =
-		    std::make_unique<GameWindow>(k_WindowTitle, args.windowWidth, args.windowHeight, args.displayMode, extraFlags);
+		    std::make_unique<GameWindow>(k_windowTitle, args.windowWidth, args.windowHeight, args.displayMode, extraFlags);
 	}
 	try
 	{
