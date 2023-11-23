@@ -65,6 +65,11 @@ jobs:
 
       - name: Non-docker clang-tidy-check
         run: |
+          pwd
+          ls
+          ls clang-tidy-review
+          ls clang-tidy-review/post
+          ls clang-tidy-review/clang_tidy_review
           python3 -m pip install clang-tidy-review/post/clang_tidy_review
           review --token=${{ secrets.GITHUB_TOKEN }} --repo=openblack/openblack --pr=${{ github.event.pull_request.number }} --clang_tidy_binary=clang-tidy
 
