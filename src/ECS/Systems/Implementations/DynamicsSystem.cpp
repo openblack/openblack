@@ -137,7 +137,11 @@ DynamicsSystem::RayCastClosestHit(const glm::vec3& origin, const glm::vec3& dire
 	auto translation = glm::vec3(callback.m_hitPointWorld.x(), callback.m_hitPointWorld.y(), callback.m_hitPointWorld.z());
 	auto normal = glm::vec3(callback.m_hitNormalWorld.x(), callback.m_hitNormalWorld.y(), callback.m_hitNormalWorld.z());
 	const auto up = glm::vec3(0, 1, 0);
-	auto rotation = glm::orientation(normal, up);
+	auto rotation = glm::mat4(1.f);
+	if (abs(normal) != abs(up))
+	{
+		rotation = glm::orientation(normal, up);
+	}
 
 	return std::make_optional(std::make_pair(
 	    Transform {translation, rotation, glm::vec3(1.0f)},
