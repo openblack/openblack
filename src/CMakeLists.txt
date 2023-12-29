@@ -144,7 +144,9 @@ if (VCPKG_TARGET_ANDROID)
     openblack_lib PUBLIC -Wl,--whole-archive SDL2::SDL2 -Wl,--no-whole-archive
   )
 else ()
-  target_link_libraries(openblack_lib PUBLIC SDL2::SDL2)
+  target_link_libraries(openblack_lib PUBLIC
+  $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
+  $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>)
 endif ()
 
 target_compile_definitions(
