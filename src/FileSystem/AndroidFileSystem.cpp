@@ -158,7 +158,7 @@ std::unique_ptr<Stream> AndroidFileSystem::Open(const std::filesystem::path& pat
 	return value;
 }
 
-bool AndroidFileSystem::Exists(const std::filesystem::path& path) const
+bool AndroidFileSystem::Exists(const std::filesystem::path& path)
 {
 	try
 	{
@@ -183,7 +183,7 @@ std::vector<uint8_t> AndroidFileSystem::ReadAll(const std::filesystem::path& pat
 }
 
 void AndroidFileSystem::Iterate(const std::filesystem::path& path, bool recursive,
-                                const std::function<void(const std::filesystem::path&)>& function) const
+                                const std::function<void(const std::filesystem::path&)>& function)
 {
 	// Converting C++ string to Java string
 	jstring jgamePath = _jniEnv->NewStringUTF(_gamePath.c_str());
