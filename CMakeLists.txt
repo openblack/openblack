@@ -65,12 +65,7 @@ find_program(
                    clang-tidy
 )
 
-# Special case for SDL2 dependency, goal is to find a config that exports SDL2::SDL2 target
-# libsdl2-dev has a `sdl2-config.cmake` that doesn't export this, but vcpkg does..
-find_package(SDL2 CONFIG QUIET)
-if (NOT TARGET SDL2::SDL2)
-  find_package(SDL2 MODULE REQUIRED)
-endif ()
+find_package(SDL2 CONFIG REQUIRED)
 
 find_package(Stb QUIET)
 if (NOT Stb_FOUND)
