@@ -50,7 +50,7 @@ class TownSystemInterface;
 class PathfindingSystemInterface;
 class PlayerSystemInterface;
 
-void InitializeGame();
+void InitializeGame(const std::filesystem::path& path);
 void InitializeLevel(const std::filesystem::path& path);
 } // namespace ecs::systems
 

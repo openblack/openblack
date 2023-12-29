@@ -464,7 +464,7 @@ bool Game::Update()
 bool Game::Initialize()
 {
 	using filesystem::Path;
-	ecs::systems::InitializeGame();
+	ecs::systems::InitializeGame(_gamePath);
 	auto& fileSystem = Locator::filesystem::value();
 	auto& resources = Locator::resources::value();
 	auto& meshManager = resources.GetMeshes();
