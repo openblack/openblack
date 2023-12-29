@@ -416,7 +416,7 @@ bool Game::Initialize() noexcept
 	}
 
 	using filesystem::Path;
-	if (!InitializeEngine(config.graphicsBackend, config.vsync))
+	if (!InitializeEngine(config.graphicsBackend, config.vsync, _gamePath))
 	{
 		SPDLOG_LOGGER_CRITICAL(spdlog::get("game"), "Failed to initialize engine services.");
 		return false;
@@ -444,7 +444,17 @@ bool Game::Initialize() noexcept
 		return false;
 	}
 
-	fileSystem.SetGamePath(_gamePath);
+	try
+	{
+		// Opening a disc image can fail, e.g. when it does not contain the game's cabinet files
+		fileSystem.SetGamePath(_gamePath);
+	}
+	catch (const std::runtime_error& error)
+	{
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Invalid game path", error.what(), nullptr);
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open game path {}: {}", _gamePath.generic_string(), error.what());
+		return false;
+	}
 
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "The GamePath is \"{}\".", fileSystem.GetGamePath().generic_string());
 
