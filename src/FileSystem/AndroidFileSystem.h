@@ -30,13 +30,13 @@ public:
 	[[nodiscard]] bool PreferBuffer() const override { return true; }
 	[[nodiscard]] std::filesystem::path FindPath(const std::filesystem::path& path) const override;
 	std::unique_ptr<Stream> Open(const std::filesystem::path& path, Stream::Mode mode) override;
-	bool Exists(const std::filesystem::path& path) const override;
+	bool Exists(const std::filesystem::path& path) override;
 	void SetGamePath(const std::filesystem::path& path) override { _gamePath = path; }
 	[[nodiscard]] const std::filesystem::path& GetGamePath() const override { return _gamePath; }
 	void AddAdditionalPath(const std::filesystem::path& path) override { _additionalPaths.push_back(path); }
 	std::vector<uint8_t> ReadAll(const std::filesystem::path& path) override;
 	void Iterate(const std::filesystem::path& path, bool recursive,
-	             const std::function<void(const std::filesystem::path&)>& function) const override;
+	             const std::function<void(const std::filesystem::path&)>& function) override;
 
 private:
 	JNIEnv* _jniEnv;
