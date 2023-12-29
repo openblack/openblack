@@ -87,6 +87,11 @@ else ()
   target_link_libraries(PkgConfig::minizip INTERFACE z ${minizip_LIBRARIES})
 endif ()
 
+pkg_check_modules(libcdio++ REQUIRED IMPORTED_TARGET libcdio++)
+pkg_check_modules(libiso9660++ REQUIRED IMPORTED_TARGET libiso9660++)
+add_library(libcdio::libcdio++ ALIAS PkgConfig::libcdio++)
+add_library(libcdio::libiso9660++ ALIAS PkgConfig::libiso9660++)
+
 # patch until next glm release
 find_package(glm REQUIRED)
 if (TARGET glm AND NOT TARGET glm::glm)
@@ -111,6 +116,7 @@ find_package(Bullet REQUIRED)
 find_package(spdlog 1.3.0 REQUIRED)
 find_package(EnTT 3.7.0 CONFIG REQUIRED) # only available as a config
 find_package(cxxopts REQUIRED)
+find_package(unshield REQUIRED)
 
 include(ClangFormat)
 
