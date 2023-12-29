@@ -22,6 +22,7 @@
 namespace openblack
 {
 #pragma pack(push, 1)
+
 struct GTribeInfo
 {
 	Tribe tribeType;
@@ -1611,67 +1612,6 @@ struct GFieldTypeInfo: GMultiMapFixedInfo
 	float effectOfWaterSpell;
 };
 
-struct CreatureActionInfo
-{
-	float field0x0;
-	float field0x4;
-	float field0x8;
-	uint32_t field0xc;
-	float field0x10;
-	std::array<char, 0x20> name;
-	uint32_t field0x34;
-	uint32_t field0x38;
-	uint32_t field0x3c;
-	uint32_t field0x40;
-	uint32_t field0x44;
-	uint32_t field0x48;
-	uint32_t field0x4c;
-	uint32_t field0x50;
-	uint32_t field0x54;
-	uint32_t field0x58;
-	uint32_t field0x5c;
-	uint32_t field0x60;
-	uint32_t field0x64;
-	uint32_t field0x68;
-	uint32_t field0x6c;
-	uint32_t field0x70;
-	uint32_t field0x74;
-	uint32_t field0x78;
-	uint32_t field0x7c;
-	uint32_t field0x80;
-	uint32_t field0x84;
-	uint32_t field0x88;
-	uint32_t field0x8c;
-	uint32_t field0x90;
-	uint32_t field0x94;
-	uint32_t field0x98;
-	uint32_t field0x9c;
-	uint32_t field0xa0;
-	uint32_t field0xa4;
-	uint32_t field0xa8;
-	uint32_t field0xac;
-	uint32_t field0xb0;
-	uint32_t field0xb4;
-	uint32_t field0xb8;
-	uint32_t field0xbc;
-	float field0xc0;
-	float field0xc4;
-	uint32_t field0xc8;
-	float field0xcc;
-	float field0xd0;
-	float field0xd4;
-	uint32_t field0xd8;
-	uint32_t field0xdc;
-	uint32_t field0xe0;
-	uint32_t field0xe4;
-	float field0xe8;
-	float field0xec;
-	uint32_t field0xf0;
-	uint32_t field0xf4;
-	uint32_t field0xf8;
-	uint32_t field0xfc;
-};
-
 struct GSpellSystemInfo
 {
 	GestureType selectionSystemGestureR;
@@ -1801,6 +1741,68 @@ struct GGroundInfo: GObjectInfo
 	MeshId editorMesh;
 };
 
+namespace v100 // original release 1.0
+{
+struct CreatureActionInfo
+{
+	float field0x0;
+	float field0x4;
+	float field0x8;
+	uint32_t field0xc;
+	float field0x10;
+	std::array<char, 0x20> name;
+	uint32_t field0x34;
+	uint32_t field0x38;
+	uint32_t field0x3c;
+	uint32_t field0x40;
+	uint32_t field0x44;
+	uint32_t field0x48;
+	uint32_t field0x4c;
+	uint32_t field0x50;
+	uint32_t field0x54;
+	uint32_t field0x58;
+	uint32_t field0x5c;
+	uint32_t field0x60;
+	uint32_t field0x64;
+	uint32_t field0x68;
+	uint32_t field0x6c;
+	uint32_t field0x70;
+	uint32_t field0x74;
+	uint32_t field0x78;
+	uint32_t field0x7c;
+	uint32_t field0x80;
+	uint32_t field0x84;
+	uint32_t field0x88;
+	uint32_t field0x8c;
+	uint32_t field0x90;
+	uint32_t field0x94;
+	uint32_t field0x98;
+	uint32_t field0x9c;
+	uint32_t field0xa0;
+	uint32_t field0xa4;
+	uint32_t field0xa8;
+	uint32_t field0xac;
+	uint32_t field0xb0;
+	uint32_t field0xb4;
+	uint32_t field0xb8;
+	uint32_t field0xbc;
+	float field0xc0;
+	float field0xc4;
+	uint32_t field0xc8;
+	float field0xcc;
+	float field0xd0;
+	float field0xd4;
+	uint32_t field0xd8;
+	uint32_t field0xdc;
+	uint32_t field0xe0;
+	uint32_t field0xe4;
+	float field0xe8;
+	float field0xec;
+	uint32_t field0xf0;
+	uint32_t field0xf4;
+	uint32_t field0xf8;
+};
+
 struct InfoConstants
 {
 	std::array<GMagicGeneralInfo, 10> magicGeneral;
@@ -1906,8 +1908,133 @@ struct InfoConstants
 	std::array<GScriptOpposingCreature, 17> scriptOpposingCreature;
 	std::array<GHelpSystemTooltipsInfo, 170> toolTips;
 };
-#pragma pack(pop)
-static_assert(std::is_trivial<InfoConstants>::value, "GInfo must be trivial to be read properly");
+static_assert(std::is_trivial_v<InfoConstants>, "GInfo must be trivial to be read properly");
+static_assert(sizeof(InfoConstants) == 0x8dc66);
+} // namespace v100
+
+namespace v120 // official patch 1.20
+{
+struct CreatureActionInfo: v100::CreatureActionInfo
+{
+	uint32_t field0xfc;
+};
+
+struct InfoConstants
+{
+	std::array<GMagicGeneralInfo, 10> magicGeneral;
+	std::array<GMagicHealInfo, 2> magicHeal;
+	std::array<GMagicTeleportInfo, 1> magicTeleport;
+	std::array<GMagicForestInfo, 1> magicForest;
+	std::array<GMagicFoodInfo, 2> magicFood;
+	std::array<GMagicStormAndTornadoInfo, 3> magicStormAndTornado;
+	std::array<GMagicShieldInfo, 2> magicShield;
+	std::array<GMagicWoodInfo, 1> magicWood;
+	std::array<GMagicWaterInfo, 2> magicWater;
+	std::array<GMagicFlockFlyingInfo, 1> magicFlockFlying;
+	std::array<GMagicFlockGroundInfo, 1> magicFlockGround;
+	std::array<GMagicCreatureSpellInfo, 0x10> magicCreatureSpell;
+	std::array<GMagicEffectInfo, 42> magicEffect;
+	std::array<GSpellSeedInfo, 30> spellSeed;
+	std::array<GAnimalInfo, static_cast<size_t>(AnimalInfo::_COUNT)> animal;
+	std::array<GCreatureInfo, 17> creature;
+	std::array<DifferentCreatureInfo, 17> differentCreature;
+	std::array<CreatureDesireForType, 40> creatureDesireForType;
+	std::array<CreatureDevelopmentPhaseEntry, 14> creatureDevelopmentPhaseEntry;
+	std::array<CreatureDevelopmentDurationEntry, 17> creatureDevelopmentDurationEntry;
+	GCitadelInfo citadel;
+	GCitadelHeartInfo citadelHeart;
+	std::array<GCreaturePenInfo, 5> creaturePen;
+	std::array<GWorshipSiteInfo, 9> worshipSite;
+	std::array<GSpellIconInfo, 2> spellIcon;
+	std::array<GAbodeInfo, static_cast<size_t>(AbodeInfo::_COUNT)> abode;
+	std::array<GVillagerInfo, static_cast<size_t>(VillagerInfo::_COUNT)> villager;
+	std::array<GSpecialVillagerInfo, 0x30> specialVillager;
+	std::array<GTreeInfo, static_cast<size_t>(TreeInfo::_COUNT)> tree;
+	std::array<GSingleMapFixedInfo, 4> singleMapFixed;
+	std::array<GScriptHighlightInfo, 4> scriptHighlight;
+	std::array<GMapShieldInfo, 2> mapShield;
+	GBallInfo ball;
+	GTownInfo town;
+	std::array<GJobInfo, static_cast<size_t>(JobInfo::_COUNT)> job;
+	std::array<GFeatureInfo, static_cast<size_t>(FeatureInfo::_COUNT)> feature;
+	std::array<GFlowersInfo, 2> flowers;
+	std::array<GAnimatedStaticInfo, static_cast<size_t>(AnimatedStaticInfo::_COUNT)> animatedStatic;
+	std::array<GMobileObjectInfo, static_cast<size_t>(MobileObjectInfo::_COUNT)> mobileObject;
+	GScaffoldInfo scaffold;
+	std::array<GMobileStaticInfo, static_cast<size_t>(MobileStaticInfo::_COUNT)> mobileStatic;
+	std::array<GPotInfo, static_cast<size_t>(PotInfo::_COUNT)> pot;
+	GPrayerIconInfo prayerIcon;
+	GPrayerSiteInfo prayerSite;
+	std::array<GShowNeedsInfo, 4> showNeeds;
+	std::array<GTownDesireInfo, 17> townDesire;
+	GWorshipSiteUpgradeInfo worshipSiteUpgrade;
+	std::array<HelpSpiritInfo, 3> helpSpirit;
+	GArrowInfo arrow;
+	std::array<GSpotVisualInfo, 50> spotVisual;
+	std::array<GEffectInfo, 12> effect;
+	std::array<GFieldInfo, 2> field;
+	std::array<GFieldTypeInfo, static_cast<size_t>(FieldTypeInfo::_COUNT)> fieldType;
+	GFishFarmInfo fishFarm;
+	std::array<GFootballPositionInfo, 10> footballPosition;
+	std::array<GPlaytimeInfo, 5> playtime;
+	GPlayerInfo player;
+	GSoundInfo sound;
+	GBeliefInfo belief;
+	std::array<GHelpSpritesGuidance, 22> helpSpritesGuidance;
+	GInfluenceInfo influence;
+	HelpSystemInfo helpSystem;
+	std::array<GAlignmentInfo, 7> alignment;
+	std::array<ReactionInfo, 41> reaction;
+	std::array<CreatureActionInfo, 328> creatureAction;
+	std::array<CreatureDesireActionEntry, 40> creatureDesireAction1;
+	std::array<CreatureDesireActionEntry, 17> creatureDesireAction2;
+	std::array<CreatureDesireActionEntry, 40> creatureDesireAction3;
+	std::array<CreatureDesireDependency, 40> creatureDesireDependency;
+	std::array<CreatureInitialDesireInfo, 40> creatureInitialDesire;
+	std::array<CreatureDesireSourceTable, 61> desireSourceTable;
+	std::array<CreatureInitialSourceInfo, 61> creatureInitialSource1;
+	std::array<CreatureInitialSourceInfo, 61> creatureInitialSource2;
+	std::array<CreatureSourceBoundsInfo, 61> creatureSourceBounds;
+	std::array<CreatureDesireAttributeEntry, 40> creatureDesireAttributeEntry;
+	std::array<CreatureActionKnownAboutEntry, 6> creatireActionKnownAboutEntry;
+	std::array<CreatureMagicActionKnownAboutEntry, 42> creatureMagicActionKnownAboutEntry;
+	std::array<CreatureMimicInfo, 46> creatureMimic;
+	std::array<GTerrainMaterialInfo, 43> terrainMaterial;
+	std::array<GTribeInfo, static_cast<size_t>(Tribe::_COUNT)> tribe;
+	std::array<GSpeedThreshold, 10> speedThreshold;
+	GPBallInfo pBall;
+	GPFootballInfo pFootball;
+	std::array<GPFootballPositionInfo, 10> pFootballPosition;
+	std::array<GDanceInfo, 25> dance;
+	std::array<GVillagerStateTableInfo, 0xFF> villagerStateTable;
+	std::array<GAnimalStateTableInfo, 53> animalStateTable;
+	std::array<GTotemStatueInfo, 9> totemStatue;
+	std::array<GBigForestInfo, static_cast<size_t>(BigForestInfo::_COUNT)> bigForest;
+	std::array<GFurnitureInfo, 31> furniture;
+	std::array<GWeatherInfo, 7> weather;
+	std::array<GClimateInfo, 7> climate;
+	GSpellSystemInfo spellSystem;
+	std::array<GVortexInfo, 3> vortex;
+	std::array<GMagicFireBallInfo, 3> magicFireBall;
+	std::array<GRewardInfo, 61> reward;
+	GLeashSelectorInfo leashSelector;
+	std::array<GRewardProgressGood, 30> rewardProgressGood;
+	std::array<GRewardProgressEvil, 30> rewardProgressEvil;
+	std::array<GSpookyVoiceInfo, 5> spookyVoice;
+	std::array<GScriptOpposingCreature, 17> scriptOpposingCreature;
+	std::array<GHelpSystemTooltipsInfo, 170> toolTips;
+};
+
+static_assert(std::is_trivial_v<InfoConstants>, "GInfo must be trivial to be read properly");
 static_assert(sizeof(InfoConstants) == 0x8E186);
+} // namespace v120
+
+using CreatureActionInfo = v120::CreatureActionInfo;
+using InfoConstants = v120::InfoConstants;
+
+void UpdateInfo(CreatureActionInfo& info, const v100::CreatureActionInfo& old);
+void UpdateInfo(InfoConstants& info, const v100::InfoConstants& old);
+
+#pragma pack(pop)
 
 } // namespace openblack
