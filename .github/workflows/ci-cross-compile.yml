@@ -60,7 +60,6 @@ jobs:
     env:
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
       EMSDK: '/tmp/emsdk'
-      ANDROID_NDK_HOME: '/usr/local/lib/android/sdk/ndk/23.2.8568313'
 
     steps:
       - uses: actions/checkout@v3
