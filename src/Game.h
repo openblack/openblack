@@ -68,6 +68,7 @@ class Script;
 enum class LoggingSubsystem : uint8_t
 {
 	game,
+	filesystem,
 	graphics,
 	scripting,
 	audio,
@@ -79,6 +80,7 @@ enum class LoggingSubsystem : uint8_t
 
 constexpr static std::array<std::string_view, static_cast<size_t>(LoggingSubsystem::_count)> k_LoggingSubsystemStrs {
     "game",        //
+    "filesystem",  //
     "graphics",    //
     "scripting",   //
     "audio",       //
