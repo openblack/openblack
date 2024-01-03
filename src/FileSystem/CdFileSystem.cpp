@@ -136,6 +136,34 @@ void cdio_log_handler(cdio_log_level_t level, const char message[])
 	SPDLOG_LOGGER_CALL(spdlog::get("filesystem"), spdlogLevel, "cdio: {}", message);
 }
 
+void unshield_log_handler([[maybe_unused]] void* userdata, int level, const char* file, int line, const char* format, va_list args)
+{
+	spdlog::level::level_enum spdlogLevel;
+	switch (level)
+	{
+	case UNSHIELD_LOG_LEVEL_TRACE:
+		spdlogLevel = spdlog::level::trace;
+		break;
+	case UNSHIELD_LOG_LEVEL_WARNING:
+		spdlogLevel = spdlog::level::warn;
+		break;
+	case UNSHIELD_LOG_LEVEL_ERROR:
+		spdlogLevel = spdlog::level::err;
+		break;
+	}
+
+	// Get the length of the message
+	va_list args_copy;
+	va_copy(args_copy, args);
+	int length = vsnprintf(nullptr, 0, format, args_copy) + 1;
+	va_end(args_copy);
+
+	std::vector<char> message(length);
+	vsnprintf(message.data(), message.size(), format, args);
+
+	SPDLOG_LOGGER_CALL(spdlog::get("filesystem"), spdlogLevel, "unshield: {}", message.data());
+}
+
 IsoEmbeddedFile* CdFileSystem::IsoOpen(const std::filesystem::path& path, const char* modes)
 {
 	SPDLOG_LOGGER_TRACE(spdlog::get("filesystem"), "Opening {} with mode {}", path.c_str(), modes);
@@ -331,6 +359,7 @@ std::unique_ptr<Stream> CdFileSystem::Open(const std::filesystem::path& path, St
 void CdFileSystem::SetGamePath(const std::filesystem::path& path)
 {
 	cdio_log_set_handler(cdio_log_handler);
+	unshield_set_log_handler(unshield_log_handler, nullptr);
 
 	if (!_isoFilesystem.open(path.c_str()))
 	{
