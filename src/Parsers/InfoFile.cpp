@@ -36,11 +36,22 @@ bool InfoFile::LoadFromFile(const std::filesystem::path& path, InfoConstants& in
 			pack.Open(Locator::filesystem::value().FindPath(path));
 		}
 		data = pack.GetBlock("Info");
-		if (data.size() != sizeof(InfoConstants))
+		if (data.size() == sizeof(v100::InfoConstants))
 		{
-			// TODO(bwrsandman): Rename current InfoConstants to InfoConstantsV12 and add support to different versions
-			throw std::runtime_error(fmt::format("Info block size does not match that of GInfo of version 1.2: {} != {}",
-			                                     data.size(), sizeof(InfoConstants)));
+			auto oldInfos = std::make_unique<v100::InfoConstants>();
+			std::memcpy(oldInfos.get(), data.data(), sizeof(v100::InfoConstants));
+			// Only 4 bytes in CreatureActionInfo needs to be filled
+			UpdateInfo(infos, *oldInfos);
+		}
+		else if (data.size() == sizeof(v120::InfoConstants))
+		{
+			std::memcpy(&infos, data.data(), sizeof(infos));
+		}
+		else
+		{
+			throw std::runtime_error(
+			    fmt::format("Info block size does not match that of GInfo of version 1.0 or 1.2: {} != {} or {}", data.size(),
+			                sizeof(v100::InfoConstants), sizeof(v120::InfoConstants)));
 		}
 	}
 	catch (std::runtime_error& err)
@@ -48,8 +59,6 @@ bool InfoFile::LoadFromFile(const std::filesystem::path& path, InfoConstants& in
 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open {}: {}", path.generic_string(), err.what());
 		return false;
 	}
-
-	std::memcpy(&infos, data.data(), sizeof(infos));
 
 	return true;
 }

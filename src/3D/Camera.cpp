@@ -133,8 +133,12 @@ void Camera::ResetVelocities()
 
 void Camera::SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip)
 {
-	float yFov = (glm::atan(glm::tan(glm::radians(xFov) / 2.0f)) / aspect) * 2.0f;
-	_projectionMatrix = glm::perspective(yFov, aspect, nearClip, farClip);
+	const float yFov = (glm::atan(glm::tan(glm::radians(xFov) / 2.0f)) / aspect) * 2.0f;
+	const float h = 1.0f / glm::tan(yFov * 0.5f);
+	const float w = h / aspect;
+	const float a = nearClip / (farClip - nearClip);
+	const float b = (nearClip * farClip) / (farClip - nearClip);
+	_projectionMatrix = glm::mat4x4(w, 0.f, 0.f, 0.f, 0.f, h, 0.f, 0.f, 0.f, 0.f, a, 1.f, 0.f, 0.f, b, 0.f);
 }
 
 glm::vec3 Camera::GetForward() const
@@ -177,7 +181,7 @@ void Camera::DeprojectScreenToWorld(glm::ivec2 screenPosition, glm::ivec2 screen
 	// projection space (z=0 is near, z=1 is far - this gives us better
 	// precision) To get the direction of the ray trace we need to use any z
 	// between the near and the far plane, so let's use (mousex, mousey, 0.5)
-	const glm::vec4 rayStartProjectionSpace = glm::vec4(screenSpaceX, screenSpaceY, 0.0f, 1.0f);
+	const glm::vec4 rayStartProjectionSpace = glm::vec4(screenSpaceX, screenSpaceY, 1.0f, 1.0f);
 	const glm::vec4 rayEndProjectionSpace = glm::vec4(screenSpaceX, screenSpaceY, 0.5f, 1.0f);
 
 	// Calculate our inverse view projection matrix

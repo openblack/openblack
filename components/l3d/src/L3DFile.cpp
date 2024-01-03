@@ -332,6 +332,17 @@ void L3DFile::ReadFile(std::istream& stream)
 	_skins.reserve(skinOffsets.size());
 	for (auto offset : skinOffsets)
 	{
+		// In 1.00, sometimes the offset is the size of the file.
+		// Not certain if it had special significance or a bug.
+		// In any case, skipping it doesn't result in catastrophe.
+		if (offset == fsize)
+		{
+			continue;
+		}
+		if (offset + sizeof(_skins[0]) > fsize)
+		{
+			Fail("Skin texture data is beyond the end of the file");
+		}
 		stream.seekg(offset);
 		auto& skin = _skins.emplace_back();
 		stream.read(reinterpret_cast<char*>(&skin), sizeof(skin));

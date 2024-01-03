@@ -519,7 +519,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 		options.add_options()                                                                                   //
 		    ("h,help", "Display this help message.")                                                            //
 		    ("l,list-blocks", "List all blocks statistics.")                                                    //
-		    ("b,view-bytes", "View raw byte content of block.")                                                 //
+		    ("b,view-bytes", "View raw byte content of block.", cxxopts::value<std::string>())                  //
 		    ("s,block", "List statistics of block.", cxxopts::value<std::string>())                             //
 		    ("i,info-block", "List INFO block statistics.")                                                     //
 		    ("B,body-block", "List Body block statistics.")                                                     //
