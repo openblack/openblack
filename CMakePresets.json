@@ -110,7 +110,8 @@
       "description": "Configure with vcpkg toolchain and generate Android version 7 with Arm Architecture project files for all configurations",
       "inherits": "template-android-vcpkg",
       "cacheVariables": {
-        "ANDROID_ABI": "armeabi-v7a"
+        "ANDROID_ABI": "armeabi-v7a",
+        "ANDROID_ARM_NEON": "ON"
       }
     },
     {
