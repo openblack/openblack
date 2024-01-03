@@ -20,6 +20,7 @@ using AnimationManager = ResourceManager<L3DAnimLoader>;
 using LevelManager = ResourceManager<LevelLoader>;
 using CreatureMindManager = ResourceManager<CreatureMindLoader>;
 using SoundManager = ResourceManager<SoundLoader>;
+using GlowManager = ResourceManager<GlowLoader>;
 
 class ResourcesInterface
 {
@@ -30,6 +31,7 @@ public:
 	virtual LevelManager& GetLevels() = 0;
 	virtual CreatureMindManager& GetCreatureMinds() = 0;
 	virtual SoundManager& GetSounds() = 0;
+	virtual GlowManager& GetGlows() = 0;
 };
 
 } // namespace openblack::resources

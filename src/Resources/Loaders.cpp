@@ -10,7 +10,9 @@
 #include "Resources/Loaders.h"
 
 #include <iostream>
-#include <queue>
+
+#include <GLWFile.h>
+#include <spdlog/spdlog.h>
 
 #include "Audio/AudioManagerInterface.h"
 #include "Common/StringUtils.h"
@@ -192,4 +194,44 @@ SoundLoader::result_type SoundLoader::operator()(BaseLoader<audio::Sound>::FromB
 	sound->playType = static_cast<audio::PlayType>(header.loopType);
 	sound->buffer = buffer;
 	return sound;
+}
+
+GlowLoader::result_type GlowLoader::operator()(BaseLoader<Glows>::FromDiskTag, const std::filesystem::path& path) const
+{
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading glows from file: {}", path.string());
+	glw::GLWFile glw;
+
+	try
+	{
+#if __ANDROID__
+		//  Android has a complicated permissions API, must call java code to read contents.
+		lnd.Open(Locator::filesystem::value().ReadAll(path));
+#else
+		glw.Open(path);
+#endif
+	}
+	catch (std::runtime_error& err)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open glw file from filesystem {}: {}", path.string(), err.what());
+		throw err;
+	}
+	auto glows = std::make_shared<Glows>();
+	auto newPath = path;
+	for (auto entry : glw.GetGlows())
+	{
+		auto glow = Glow();
+		glow.name = entry.name;
+		glow.colour = glm::vec4(entry.red, entry.green, entry.blue, 1.f);
+		glow.scale = glm::vec3(entry.red, entry.green, entry.blue);
+		auto transform = ecs::components::Transform();
+		transform.scale = glm::vec3(1.f);
+		transform.position = glm::vec3(entry.glowX, entry.glowY, entry.dirZ);
+		glows->entries.emplace_back(glow, transform);
+	}
+
+	//	if (newPath.filename() == "main.glw")
+	//	{
+	//		glw.Write(newPath);
+	//	}
+	return glows;
 }

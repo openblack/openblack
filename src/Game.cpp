@@ -472,6 +472,7 @@ bool Game::Initialize()
 	auto& animationManager = resources.GetAnimations();
 	auto& levelManager = resources.GetLevels();
 	auto& soundManager = resources.GetSounds();
+	auto& glowManager = resources.GetGlows();
 
 	fileSystem.SetGamePath(_gamePath);
 
@@ -525,22 +526,35 @@ bool Game::Initialize()
 		    }
 	    });
 
-	fileSystem.Iterate( //
-	    fileSystem.GetPath<filesystem::Path::Citadel>() / "engine", false, [&meshManager](const std::filesystem::path& f) {
-		    if (f.extension() == ".zzz")
-		    {
-			    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading interior temple mesh: {}", f.stem().string());
-			    try
-			    {
-				    meshManager.Load(fmt::format("temple/interior/{}", f.stem().string()), resources::L3DLoader::FromDiskTag {},
-				                     f);
-			    }
-			    catch (std::runtime_error& err)
-			    {
-				    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
-			    }
-		    }
-	    });
+	fileSystem.Iterate(fileSystem.GetPath<filesystem::Path::Citadel>() / "engine", false,
+	                   [&meshManager, &glowManager](const std::filesystem::path& f) {
+		                   if (f.extension() == ".zzz")
+		                   {
+			                   SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading interior temple mesh: {}", f.stem().string());
+			                   try
+			                   {
+				                   meshManager.Load(fmt::format("temple/interior/{}", f.stem().string()),
+				                                    resources::L3DLoader::FromDiskTag {}, f);
+			                   }
+			                   catch (std::runtime_error& err)
+			                   {
+				                   SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+			                   }
+		                   }
+		                   else if (f.extension() == ".glw")
+		                   {
+			                   SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading interior temple glows: {}", f.stem().string());
+			                   try
+			                   {
+				                   glowManager.Load(fmt::format("temple/interior/glow/{}", f.stem().string()),
+				                                    resources::GlowLoader::FromDiskTag {}, f);
+			                   }
+			                   catch (std::runtime_error& err)
+			                   {
+				                   SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+			                   }
+		                   }
+	                   });
 
 	pack::PackFile pack;
 #if __ANDROID__
