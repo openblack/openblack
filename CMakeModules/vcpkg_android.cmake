@@ -44,7 +44,7 @@ if (VCPKG_TARGET_ANDROID)
   # |VCPKG_TARGET_TRIPLET       | ANDROID_ABI          |
   # |---------------------------|----------------------|
   # |arm64-android              | arm64-v8a            |
-  # |arm-android                | armeabi-v7a          |
+  # |arm-neon-android           | armeabi-v7a          |
   # |x64-android                | x86_64               |
   # |x86-android                | x86                  |
   #
@@ -57,7 +57,7 @@ if (VCPKG_TARGET_ANDROID)
     )
   elseif (ANDROID_ABI MATCHES "armeabi-v7a")
     set(VCPKG_TARGET_TRIPLET
-        "arm-android"
+        "arm-neon-android"
         CACHE STRING "" FORCE
     )
   elseif (ANDROID_ABI MATCHES "x86_64")
