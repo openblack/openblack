@@ -80,7 +80,7 @@ bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
 
 	std::ifstream file(path);
 
-	if (file.is_open())
+	if (std::filesystem::exists(path))
 	{
 		file.close();
 		return true;
