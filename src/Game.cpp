@@ -475,7 +475,7 @@ bool Game::Initialize()
 
 	fileSystem.SetGamePath(_gamePath);
 
-	if (fileSystem.GetGamePath().empty())
+	if (fileSystem.IsPathValid(fileSystem.GetGamePath()))
 	{
 		// no key, don't guess, let the user know to set the command param
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Game Path missing",
