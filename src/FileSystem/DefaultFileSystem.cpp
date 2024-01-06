@@ -15,6 +15,7 @@
 #include <cstddef>
 
 #include <fstream>
+
 #include <spdlog/spdlog.h>
 
 #include "FileStream.h"
