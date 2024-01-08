@@ -13,6 +13,7 @@
 
 #include <cctype>
 #include <cstddef>
+
 #include <fstream>
 
 #include <SDL2/SDL.h>
