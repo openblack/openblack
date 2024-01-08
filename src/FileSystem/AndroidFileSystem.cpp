@@ -51,7 +51,7 @@ std::filesystem::path AndroidFileSystem::FindPath(const std::filesystem::path& p
 	return path;
 }
 
-bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
+bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
 {
 	if (path.empty())
 		return false;
