@@ -13,6 +13,7 @@
 
 #include <cctype>
 #include <cstddef>
+#include <fstream>
 
 #include <SDL2/SDL.h>
 
@@ -48,6 +49,22 @@ std::filesystem::path AndroidFileSystem::FindPath(const std::filesystem::path& p
 	}
 
 	return path;
+}
+
+bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
+{
+	if (path.empty())
+		return false;
+
+	std::ifstream file(path);
+
+	if (std::filesystem::exists(path))
+	{
+		file.close();
+		return true;
+	}
+
+	return false;
 }
 
 std::unique_ptr<Stream> AndroidFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
