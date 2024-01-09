@@ -17,7 +17,6 @@
 #include <fstream>
 
 #include <SDL2/SDL.h>
-
 #include <spdlog/spdlog.h>
 
 #include "MemoryStream.h"
