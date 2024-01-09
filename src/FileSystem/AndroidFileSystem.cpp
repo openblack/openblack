@@ -57,15 +57,25 @@ bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
 	if (path.empty())
 		return false;
 
-	std::ifstream file(path);
-
-	if (std::filesystem::exists(path))
+	std::error_code ec;
+	bool exists = std::filesystem::exists(path, ec);
+	if (ec)
 	{
-		file.close();
-		return true;
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Error checking path existence: {}", ec.message());
+		return false;
 	}
 
-	return false;
+	if (!exists)
+		return false;
+
+	bool isRegularFileOrDir = std::filesystem::is_regular_file(path, ec) || std::filesystem::is_directory(path, ec);
+	if (ec)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Error checking if path is a regular file or directory: {}", ec.message());
+		return false;
+	}
+
+	return isRegularFileOrDir;
 }
 
 std::unique_ptr<Stream> AndroidFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
