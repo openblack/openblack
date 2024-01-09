@@ -19,8 +19,11 @@
 #include <system_error>
 
 #include <spdlog/spdlog.h>
+#include <filesystem>
+#include <system_error>
 
 #include "FileStream.h"
+#include "fmt/format.h"
 
 #ifdef _WIN32
 // clang-format off
@@ -81,25 +84,13 @@ bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
 	if (path.empty())
 		return false;
 
-	std::error_code ec;
-	bool exists = std::filesystem::exists(path, ec);
-	if (ec)
-	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Error checking path existence: {}", ec.message());
-		return false;
-	}
-
-	if (!exists)
+	if (!Exists(path))
 		return false;
 
-	bool isDir = std::filesystem::is_directory(path, ec);
-	if (ec)
-	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Error checking if path is a regular file or directory: {}", ec.message());
+	if (!std::filesystem::is_directory(path))
 		return false;
-	}
 
-	return isDir;
+	return true;
 }
 
 std::unique_ptr<Stream> DefaultFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
