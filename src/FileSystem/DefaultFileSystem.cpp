@@ -93,7 +93,8 @@ bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
 
 	if (!std::filesystem::is_directory(path))
 	{
-		return false;
+	if (!std::filesystem::is_directory(path))
+	{
 	}
 	}
 	return true;
