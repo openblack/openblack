@@ -84,6 +84,7 @@ bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
 	if (path.empty())
 	{
 	{
+	{
 		return false;
 	}
 	}
