@@ -95,7 +95,7 @@ bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
 	{
 		return false;
 	}
-
+	}
 	return true;
 }
 
