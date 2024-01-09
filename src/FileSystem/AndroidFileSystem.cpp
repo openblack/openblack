@@ -20,8 +20,6 @@
 
 #include <SDL2/SDL.h>
 #include <spdlog/spdlog.h>
-#include <filesystem>
-#include <system_error>
 
 #include "MemoryStream.h"
 
