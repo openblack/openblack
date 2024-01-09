@@ -81,8 +81,9 @@ std::filesystem::path DefaultFileSystem::FindPath(const std::filesystem::path& p
 
 bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
 {
-	if (path.empty())
+	if (path.empty()) {
 		return false;
+}
 
 	if (!Exists(path)) {
 		return false;
