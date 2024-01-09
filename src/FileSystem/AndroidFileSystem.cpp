@@ -14,6 +14,7 @@
 #include <cctype>
 #include <cstddef>
 
+#include <filesystem>
 #include <fstream>
 
 #include <SDL2/SDL.h>
