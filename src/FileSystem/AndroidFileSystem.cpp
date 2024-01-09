@@ -18,6 +18,8 @@
 
 #include <SDL2/SDL.h>
 
+#include <spdlog/spdlog.h>
+
 #include "MemoryStream.h"
 
 using namespace openblack::filesystem;
