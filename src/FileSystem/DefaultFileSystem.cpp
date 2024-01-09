@@ -16,6 +16,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <system_error>
 
 #include <spdlog/spdlog.h>
 #include <filesystem>
