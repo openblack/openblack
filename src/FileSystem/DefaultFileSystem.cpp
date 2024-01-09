@@ -17,6 +17,8 @@
 #include <fstream>
 
 #include <spdlog/spdlog.h>
+#include <filesystem>
+#include <system_error>
 
 #include "FileStream.h"
 
@@ -90,14 +92,14 @@ bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
 	if (!exists)
 		return false;
 
-	bool isRegularFileOrDir = std::filesystem::is_regular_file(path, ec) || std::filesystem::is_directory(path, ec);
+	bool isDir = std::filesystem::is_directory(path, ec);
 	if (ec)
 	{
 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Error checking if path is a regular file or directory: {}", ec.message());
 		return false;
 	}
 
-	return isRegularFileOrDir;
+	return isDir;
 }
 
 std::unique_ptr<Stream> DefaultFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
