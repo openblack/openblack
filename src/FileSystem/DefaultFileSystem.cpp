@@ -19,8 +19,6 @@
 #include <system_error>
 
 #include <spdlog/spdlog.h>
-#include <filesystem>
-#include <system_error>
 
 #include "FileStream.h"
 #include "fmt/format.h"
@@ -83,25 +81,20 @@ bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
 {
 	if (path.empty())
 	{
-		{
-			{
-				return false;
-			}
-		}
-		if (!Exists(path))
-		{
-			if (!Exists(path))
-			{
-			}
-
-			if (!std::filesystem::is_directory(path))
-			{
-				if (!std::filesystem::is_directory(path))
-				{
-				}
-			}
-		}
+		return false;
 	}
+
+	if (!Exists(path))
+	{
+		return false;
+	}
+
+	if (!std::filesystem::is_directory(path))
+	{
+		return false;
+	}
+
+	return true;
 }
 
 std::unique_ptr<Stream> DefaultFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)

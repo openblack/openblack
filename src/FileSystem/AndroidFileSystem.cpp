@@ -20,8 +20,6 @@
 
 #include <SDL2/SDL.h>
 #include <spdlog/spdlog.h>
-#include <filesystem>
-#include <system_error>
 
 #include "MemoryStream.h"
 
@@ -60,13 +58,19 @@ std::filesystem::path AndroidFileSystem::FindPath(const std::filesystem::path& p
 bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
 {
 	if (path.empty())
+	{
 		return false;
+	}
 
 	if (!Exists(path))
+	{
 		return false;
+	}
 
 	if (!std::filesystem::is_directory(path))
+	{
 		return false;
+	}
 
 	return true;
 }
