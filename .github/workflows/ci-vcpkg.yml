@@ -64,7 +64,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: bwrsandman/clang-tidy-review
-          ref: windows_shell_fix
+          ref: master
           path: clang-tidy-review
 
       - name: Non-docker clang-tidy-check
@@ -92,7 +92,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: bwrsandman/clang-tidy-review
-          ref: windows_shell_fix
+          ref: master
           path: clang-tidy-review
 
       - uses: actions/download-artifact@v3
