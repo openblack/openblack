@@ -37,8 +37,12 @@ jobs:
         run: |
           brew install pkg-config
           mkdir -p ~/bin
+          brew --prefix llvm@15
+          ls $(brew --prefix llvm@15)/bin
           ln -s $(brew --prefix llvm@15)/bin/clang-tidy ~/bin/clang-tidy
           echo "export PATH=$PATH:~/bin" >> $GITHUB_ENV
+          ls -l ~/bin/clang-tidy
+          clang-tidy --version
         if: startsWith(matrix.os, 'macos')
 
       # Setup the build machine with the most recent versions of CMake and Ninja. Both are cached if not already: on subsequent runs both will be quickly restored from GitHub cache service.
