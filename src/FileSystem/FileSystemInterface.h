@@ -107,15 +107,16 @@ public:
 		return withGamePath ? (GetGamePath() / result) : result;
 	}
 
+	[[nodiscard]] virtual bool PreferBuffer() const = 0;
 	[[nodiscard]] virtual std::filesystem::path FindPath(const std::filesystem::path& path) const = 0;
 	virtual std::unique_ptr<Stream> Open(const std::filesystem::path& path, Stream::Mode mode) = 0;
-	[[nodiscard]] virtual bool Exists(const std::filesystem::path& path) const = 0;
+	[[nodiscard]] virtual bool Exists(const std::filesystem::path& path) = 0;
 	virtual void SetGamePath(const std::filesystem::path& path) = 0;
 	[[nodiscard]] virtual const std::filesystem::path& GetGamePath() const = 0;
 	virtual void AddAdditionalPath(const std::filesystem::path& path) = 0;
 	virtual std::vector<uint8_t> ReadAll(const std::filesystem::path& path) = 0;
 	virtual void Iterate(const std::filesystem::path& path, bool recursive,
-	                     const std::function<void(const std::filesystem::path&)>& function) const = 0;
+	                     const std::function<void(const std::filesystem::path&)>& function) = 0;
 };
 
 } // namespace openblack::filesystem

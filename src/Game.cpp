@@ -464,7 +464,7 @@ bool Game::Update()
 bool Game::Initialize()
 {
 	using filesystem::Path;
-	ecs::systems::InitializeGame();
+	ecs::systems::InitializeGame(_gamePath);
 	auto& fileSystem = Locator::filesystem::value();
 	auto& resources = Locator::resources::value();
 	auto& meshManager = resources.GetMeshes();
@@ -543,12 +543,16 @@ bool Game::Initialize()
 	    });
 
 	pack::PackFile pack;
-#if __ANDROID__
-	//  Android has a complicated permissions API, must call java code to read contents.
-	pack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>(true) / "AllMeshes.g3d"));
-#else
-	pack.Open(fileSystem.GetPath<Path::Data>(true) / "AllMeshes.g3d");
-#endif
+
+	if (Locator::filesystem::value().PreferBuffer())
+	{
+		pack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>(true) / "AllMeshes.g3d"));
+	}
+	else
+	{
+		pack.Open(fileSystem.GetPath<Path::Data>(true) / "AllMeshes.g3d");
+	}
+
 	const auto& meshes = pack.GetMeshes();
 	for (size_t i = 0; const auto& mesh : meshes)
 	{
@@ -564,12 +568,15 @@ bool Game::Initialize()
 	}
 
 	pack::PackFile animationPack;
-#if __ANDROID__
-	//  Android has a complicated permissions API, must call java code to read contents.
-	animationPack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>(true) / "AllAnims.anm"));
-#else
-	animationPack.Open(fileSystem.GetPath<Path::Data>(true) / "AllAnims.anm");
-#endif
+
+	if (Locator::filesystem::value().PreferBuffer())
+	{
+		animationPack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>(true) / "AllAnims.anm"));
+	}
+	else
+	{
+		animationPack.Open(fileSystem.GetPath<Path::Data>(true) / "AllAnims.anm");
+	}
 	const auto& animations = animationPack.GetAnimations();
 	for (size_t i = 0; i < animations.size(); i++)
 	{
@@ -760,12 +767,15 @@ bool Game::Run()
 	if (fileSystem.Exists(challengePath))
 	{
 		_lhvm = std::make_unique<LHVM::LHVM>();
-#if __ANDROID__
-		//  Android has a complicated permissions API, must call java code to read contents.
-		_lhvm->Open(fileSystem.ReadAll(fileSystem.FindPath(challengePath)));
-#else
-		_lhvm->Open(fileSystem.FindPath(challengePath));
-#endif
+
+		if (Locator::filesystem::value().PreferBuffer())
+		{
+			_lhvm->Open(fileSystem.ReadAll(fileSystem.FindPath(challengePath)));
+		}
+		else
+		{
+			_lhvm->Open(fileSystem.FindPath(challengePath));
+		}
 	}
 	else
 	{

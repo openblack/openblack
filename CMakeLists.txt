@@ -60,6 +60,8 @@ option(OPENBLACK_TRACE_TIME
        "Compilation Time analysis (only available with clang)" OFF
 )
 
+find_package(PkgConfig)
+
 find_program(
   CLANG_TIDY NAMES clang-tidy-7 clang-tidy-6.0 clang-tidy-5.0 clang-tidy-4.0
                    clang-tidy
@@ -80,11 +82,15 @@ find_package(unofficial-minizip CONFIG QUIET)
 if (TARGET unofficial::minizip::minizip)
   add_library(minizip::minizip ALIAS unofficial::minizip::minizip)
 else ()
-  find_package(PkgConfig)
-  pkg_check_modules(minizip REQUIRED minizip IMPORTED_TARGET)
+  pkg_check_modules(minizip REQUIRED IMPORTED_TARGET minizip)
   add_library(minizip::minizip ALIAS PkgConfig::minizip)
   target_link_libraries(PkgConfig::minizip INTERFACE z ${minizip_LIBRARIES})
 endif ()
+
+pkg_check_modules(libcdio++ REQUIRED IMPORTED_TARGET libcdio++)
+pkg_check_modules(libiso9660++ REQUIRED IMPORTED_TARGET libiso9660++)
+add_library(libcdio::libcdio++ ALIAS PkgConfig::libcdio++)
+add_library(libcdio::libiso9660++ ALIAS PkgConfig::libiso9660++)
 
 # patch until next glm release
 find_package(glm REQUIRED)
@@ -110,6 +116,7 @@ find_package(Bullet REQUIRED)
 find_package(spdlog 1.3.0 REQUIRED)
 find_package(EnTT 3.7.0 CONFIG REQUIRED) # only available as a config
 find_package(cxxopts REQUIRED)
+find_package(unshield REQUIRED)
 
 include(ClangFormat)
 

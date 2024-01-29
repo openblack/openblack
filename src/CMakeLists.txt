@@ -117,6 +117,9 @@ target_link_libraries(
           BulletSoftBody
           LinearMath
           minizip::minizip
+          libcdio::libcdio++
+          libcdio::libiso9660++
+          unshield::libunshield
   PUBLIC spdlog::spdlog
 )
 

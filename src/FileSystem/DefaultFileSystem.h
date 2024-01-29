@@ -23,15 +23,16 @@ namespace openblack::filesystem
 class DefaultFileSystem: public FileSystemInterface
 {
 public:
+	[[nodiscard]] bool PreferBuffer() const override { return false; }
 	[[nodiscard]] std::filesystem::path FindPath(const std::filesystem::path& path) const override;
 	std::unique_ptr<Stream> Open(const std::filesystem::path& path, Stream::Mode mode) override;
-	[[nodiscard]] bool Exists(const std::filesystem::path& path) const override;
+	[[nodiscard]] bool Exists(const std::filesystem::path& path) override;
 	void SetGamePath(const std::filesystem::path& path) override;
 	[[nodiscard]] const std::filesystem::path& GetGamePath() const override { return _gamePath; }
 	void AddAdditionalPath(const std::filesystem::path& path) override { _additionalPaths.push_back(path); }
 	std::vector<uint8_t> ReadAll(const std::filesystem::path& path) override;
 	void Iterate(const std::filesystem::path& path, bool recursive,
-	             const std::function<void(const std::filesystem::path&)>& function) const override;
+	             const std::function<void(const std::filesystem::path&)>& function) override;
 
 private:
 	std::filesystem::path _gamePath;

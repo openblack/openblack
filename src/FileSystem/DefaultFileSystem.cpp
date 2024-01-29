@@ -77,7 +77,7 @@ std::unique_ptr<Stream> DefaultFileSystem::Open(const std::filesystem::path& pat
 	return std::unique_ptr<Stream>(new FileStream(FindPath(path), mode));
 }
 
-bool DefaultFileSystem::Exists(const std::filesystem::path& path) const
+bool DefaultFileSystem::Exists(const std::filesystem::path& path)
 {
 	try
 	{
@@ -102,7 +102,7 @@ std::vector<uint8_t> DefaultFileSystem::ReadAll(const std::filesystem::path& pat
 }
 
 void DefaultFileSystem::Iterate(const std::filesystem::path& path, bool recursive,
-                                const std::function<void(const std::filesystem::path&)>& function) const
+                                const std::function<void(const std::filesystem::path&)>& function)
 {
 	const auto fixedPath = FindPath(path);
 	if (recursive)

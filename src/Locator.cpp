@@ -29,11 +29,9 @@
 #include "ECS/Systems/Implementations/PlayerSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/TownSystem.h"
-#if __ANDROID__
 #include "FileSystem/AndroidFileSystem.h"
-#else
+#include "FileSystem/CdFileSystem.h"
 #include "FileSystem/DefaultFileSystem.h"
-#endif
 #include "Resources/Resources.h"
 
 using namespace openblack::audio;
@@ -51,13 +49,20 @@ using openblack::resources::Resources;
 
 namespace openblack::ecs::systems
 {
-void InitializeGame()
+void InitializeGame(const std::filesystem::path& path)
 {
+	if (path.extension() == ".iso")
+	{
+		Locator::filesystem::emplace<filesystem::CdFileSystem>();
+	}
+	else
+	{
 #if __ANDROID__
-	Locator::filesystem::emplace<filesystem::AndroidFileSystem>();
+		Locator::filesystem::emplace<filesystem::AndroidFileSystem>();
 #else
-	Locator::filesystem::emplace<filesystem::DefaultFileSystem>();
+		Locator::filesystem::emplace<filesystem::DefaultFileSystem>();
 #endif
+	}
 	Locator::terrainSystem::emplace<UnloadedIsland>();
 	Locator::resources::emplace<Resources>();
 	Locator::rng::emplace<RandomNumberManagerProduction>();
