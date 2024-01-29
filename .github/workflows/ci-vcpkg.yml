@@ -169,11 +169,12 @@ jobs:
       - name: Add base repo to git config
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
         if: startsWith(github.event_name, 'pull_request')
-      - uses: ZedThree/clang-tidy-review@v0.13.0
+      - uses: ZedThree/clang-tidy-review@v0.17.1
         id: review
         with:
           build_dir: cmake-build-presets/ninja-multi-vcpkg
           exclude: "*ShaderIncluder.h,*json.hpp,*imgui_impl_sdl*,*stb_image_write.h,*dr_*.h"
+          clang_tidy_checks: "" # Use checks from .clang-tidy tree
           lgtm_comment_body: "" # don't post a lgtm message
           annotations: false
       - name: If there are any comments, fail the check
