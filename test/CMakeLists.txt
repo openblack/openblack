@@ -6,6 +6,7 @@ macro (OPENBLACK_SETUP_AND_ADD_TEST TEST_NAME TEST_SOURCE)
   target_link_libraries(${TEST_NAME} PRIVATE GTest::gtest_main openblack_lib)
   target_compile_definitions(
     ${TEST_NAME} PRIVATE TEST_BINARY_DIR="${CMAKE_CURRENT_BINARY_DIR}"
+                         GLM_ENABLE_EXPERIMENTAL
   )
   set_property(TARGET ${TEST_NAME} PROPERTY FOLDER "tests")
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
