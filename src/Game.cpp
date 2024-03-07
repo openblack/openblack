@@ -539,7 +539,7 @@ bool Game::Initialize()
 	pack::PackFile pack;
 #if __ANDROID__
 	//  Android has a complicated permissions API, must call java code to read contents.
-	pack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>(true) / "AllMeshes.g3d"));
+	pack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>() / "AllMeshes.g3d"));
 #else
 	pack.Open(fileSystem.GetPath<Path::Data>(true) / "AllMeshes.g3d");
 #endif
@@ -560,7 +560,7 @@ bool Game::Initialize()
 	pack::PackFile animationPack;
 #if __ANDROID__
 	//  Android has a complicated permissions API, must call java code to read contents.
-	animationPack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>(true) / "AllAnims.anm"));
+	animationPack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>() / "AllAnims.anm"));
 #else
 	animationPack.Open(fileSystem.GetPath<Path::Data>(true) / "AllAnims.anm");
 #endif
