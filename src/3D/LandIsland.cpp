@@ -156,6 +156,33 @@ float LandIsland::GetHeightAt(glm::vec2 vec) const
 	return GetCell(vec * 0.1f).altitude * LandIsland::k_HeightUnit;
 }
 
+glm::vec3 LandIsland::GetNormalAt(glm::vec2 vec) const
+{
+	const auto delta = 0.1f;
+	const auto posLeft = vec - glm::vec2(delta, 0.0f);
+	const auto posRight = vec + glm::vec2(delta, 0.0f);
+	const auto posBack = vec - glm::vec2(0.0f, delta);
+	const auto posForward = vec + glm::vec2(0.0f, delta);
+
+	const auto heightLeft = GetHeightAt(posLeft);
+	const auto heightRight = GetHeightAt(posRight);
+	const auto heightBack = GetHeightAt(posBack);
+	const auto heightForward = GetHeightAt(posForward);
+
+	const auto slopeLeftRight = glm::vec3(2.0f * delta, heightRight - heightLeft, 0.0f);
+	const auto slopeBackForward = glm::vec3(0.0f, heightForward - heightBack, 2.0f * delta);
+
+	auto normal = glm::cross(slopeBackForward, slopeLeftRight);
+	normal = glm::normalize(normal);
+
+	if (normal.y < 0)
+	{
+		normal = -normal;
+	}
+
+	return normal;
+}
+
 uint8_t LandIsland::GetNoise(glm::u8vec2 pos)
 {
 	return _noiseMap.at(pos.x * 256 + pos.y);
