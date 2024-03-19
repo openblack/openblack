@@ -33,6 +33,7 @@ constexpr auto k_InteractionSpeedMultiplier = 400.0f;
 // Vanilla black and white uses a pretty bad PI/2 approximation
 constexpr auto k_CameraModelHalfPi = 1.53938043f;
 constexpr auto k_CameraInteractionStepSize = 3.0f;
+constexpr auto k_MinimalCameraAnimationDuration = std::chrono::duration<float> {1.5f};
 
 glm::vec3 EulerFromPoints(glm::vec3 p0, glm::vec3 p1)
 {
@@ -285,6 +286,8 @@ void DefaultWorldCameraModel::UpdateFocusDistance()
 std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraModel::Update(std::chrono::microseconds dt,
                                                                                           const Camera& camera)
 {
+	_elapsedTime += dt;
+
 	UpdateCameraInterpolationValues(camera);
 	UpdateRaycastHitPoints(camera);
 	UpdateFocusDistance();
@@ -321,7 +324,18 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraMode
 std::optional<CameraModel::CameraInterpolationUpdateInfo>
 DefaultWorldCameraModel::ComputeUpdateReturnInfo(bool originHasBeenAdjusted, std::chrono::duration<float> t)
 {
-	return {{GetTargetOrigin(), GetTargetFocus(), t}};
+	static constinit auto kTimeThreshold = std::chrono::duration<float> {1.5f};
+	auto duration = std::chrono::duration<float> {0.3f};
+	if (originHasBeenAdjusted)
+	{
+		duration *= 2.0f;
+	}
+	if (_elapsedTime <= kTimeThreshold)
+	{
+		duration = std::chrono::duration<float> {
+		    glm::mix(k_MinimalCameraAnimationDuration.count(), duration.count(), (_elapsedTime / kTimeThreshold))};
+	}
+	return {{GetTargetOrigin(), GetTargetFocus(), duration}};
 }
 
 void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
