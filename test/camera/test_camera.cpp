@@ -92,14 +92,47 @@ protected:
 	std::unique_ptr<CameraModel> _model;
 };
 
-void ValidateCamera(const Camera& c, json expected)
+void ValidateCamera(const Camera& c, const json& expected, int frameNumber)
 {
-	ASSERT_EQ(c.GetOrigin(), glm::vec3(expected["camera_origin_zoomer"]["x"]["current_value"].get<float>(),
-	                                   expected["camera_origin_zoomer"]["y"]["current_value"].get<float>(),
-	                                   expected["camera_origin_zoomer"]["z"]["current_value"].get<float>()));
-	ASSERT_EQ(c.GetFocus(), glm::vec3(expected["camera_heading_zoomer"]["x"]["current_value"].get<float>(),
-	                                  expected["camera_heading_zoomer"]["y"]["current_value"].get<float>(),
-	                                  expected["camera_heading_zoomer"]["z"]["current_value"].get<float>()));
+	const float ep = 5e-2f;
+	const auto& expectedOriginZoomer = expected["camera_origin_zoomer"];
+	const auto& expectedFocusZoomer = expected["camera_heading_zoomer"];
+	ASSERT_NEAR(c.GetInterpolatorTime().count(), expectedOriginZoomer["x"]["current_time"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(c.GetInterpolatorTime().count(), expectedOriginZoomer["y"]["current_time"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(c.GetInterpolatorTime().count(), expectedOriginZoomer["z"]["current_time"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(c.GetInterpolatorTime().count(), expectedFocusZoomer["x"]["current_time"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(c.GetInterpolatorTime().count(), expectedFocusZoomer["y"]["current_time"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(c.GetInterpolatorTime().count(), expectedFocusZoomer["z"]["current_time"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(c.GetOrigin(Camera::Interpolation::Start).x, expectedOriginZoomer["x"]["start_value"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(c.GetOrigin(Camera::Interpolation::Start).y, expectedOriginZoomer["y"]["start_value"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(c.GetOrigin(Camera::Interpolation::Start).z, expectedOriginZoomer["z"]["start_value"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(c.GetFocus(Camera::Interpolation::Start).x, expectedFocusZoomer["x"]["start_value"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(c.GetFocus(Camera::Interpolation::Start).y, expectedFocusZoomer["y"]["start_value"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(c.GetFocus(Camera::Interpolation::Start).z, expectedFocusZoomer["z"]["start_value"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(c.GetOrigin(Camera::Interpolation::Target).x, expectedOriginZoomer["x"]["destination"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(c.GetOrigin(Camera::Interpolation::Target).y, expectedOriginZoomer["y"]["destination"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(c.GetOrigin(Camera::Interpolation::Target).z, expectedOriginZoomer["z"]["destination"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(c.GetFocus(Camera::Interpolation::Target).x, expectedFocusZoomer["x"]["destination"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(c.GetFocus(Camera::Interpolation::Target).y, expectedFocusZoomer["y"]["destination"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(c.GetFocus(Camera::Interpolation::Target).z, expectedFocusZoomer["z"]["destination"].get<float>(), ep)
+	    << "at start of frame " << frameNumber;
 }
 
 void TestDefaultCameraModel::SetModel(DefaultWorldCameraModel& m, const json& json)
@@ -357,6 +390,7 @@ TEST_P(TestDefaultCameraModel, ValidateRecordedData)
 		}
 
 		ValidateModel(reinterpret_cast<DefaultWorldCameraModel&>(*_model), framePost, i + 1);
+		ValidateCamera(*_camera, framePost["camera"], i + 1);
 	}
 }
 
