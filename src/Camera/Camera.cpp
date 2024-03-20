@@ -216,6 +216,7 @@ void Camera::Update(std::chrono::microseconds dt)
 		SetOriginInterpolator(GetOrigin(), updateInfo->origin, GetOriginVelocity() * updateInfo->duration.count(), m1);
 		SetFocusInterpolator(GetFocus(), updateInfo->focus, GetFocusVelocity() * updateInfo->duration.count(), m1);
 		SetInterpolatorDuration(updateInfo->duration);
+		SetInterpolatorTime(std::chrono::duration<float>::zero());
 	}
 
 	const auto duration = GetInterpolatorDuration().count();
@@ -226,7 +227,7 @@ void Camera::Update(std::chrono::microseconds dt)
 	else
 	{
 		const auto dtSeconds = std::chrono::duration_cast<std::chrono::duration<float>>(dt);
-		SetInterpolatorTime(std::min(std::chrono::duration<float>(0.1f), dtSeconds));
+		AddInterpolatorTime(std::min(std::chrono::duration<float>(0.1f), dtSeconds));
 	}
 }
 
