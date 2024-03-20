@@ -70,6 +70,7 @@ public:
 	[[nodiscard]] std::chrono::duration<float> GetInterpolatorDuration() const { return _interpolatorDuration; }
 
 	Camera& SetInterpolatorTime(std::chrono::duration<float> t);
+	Camera& AddInterpolatorTime(std::chrono::duration<float> t) { return SetInterpolatorTime(t + GetInterpolatorTime()); }
 	Camera& SetInterpolatorT(float t) { return SetInterpolatorTime(t * GetInterpolatorDuration()); }
 	Camera& SetInterpolatorDuration(std::chrono::duration<float> duration);
 

@@ -341,7 +341,8 @@ TEST_P(TestDefaultCameraModel, ValidateRecordedData)
 			                           _camera->GetOriginVelocity() * updateInfo->duration.count(), m1)
 			    .SetFocusInterpolator(_camera->GetFocus(), updateInfo->focus,
 			                          _camera->GetFocusVelocity() * updateInfo->duration.count(), m1)
-			    .SetInterpolatorDuration(updateInfo->duration);
+			    .SetInterpolatorDuration(updateInfo->duration)
+			    .SetInterpolatorTime(std::chrono::duration<float>::zero());
 		}
 
 		const auto duration = _camera->GetInterpolatorDuration().count();
@@ -352,7 +353,7 @@ TEST_P(TestDefaultCameraModel, ValidateRecordedData)
 		else
 		{
 			const auto dtSeconds = std::chrono::duration_cast<std::chrono::duration<float>>(deltaTimePrev);
-			(*_camera).SetInterpolatorTime(std::min(std::chrono::duration<float>(0.1f), dtSeconds));
+			(*_camera).AddInterpolatorTime(std::min(std::chrono::duration<float>(0.1f), dtSeconds));
 		}
 
 		ValidateModel(reinterpret_cast<DefaultWorldCameraModel&>(*_model), framePost, i + 1);
