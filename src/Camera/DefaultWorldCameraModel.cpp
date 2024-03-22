@@ -53,6 +53,8 @@ constexpr auto k_FlyingThresholdFactor = 1.5f;
 constexpr auto k_GroundDistanceMinimum = 10.0f;
 constexpr auto k_FlightHeightFactor = 0.1f;
 constexpr auto k_FlyingScoreAngles = MakeFlyingScoreAngles<float, 0x20>();
+constexpr auto k_ConstrainDiscCentre = glm::vec3(2560.0f, 0.0f, 2560.0f);
+constexpr auto k_ConstrainDiscRadius = 5120.0f;
 
 glm::vec3 EulerFromPoints(glm::vec3 p0, glm::vec3 p1)
 {
@@ -143,9 +145,12 @@ bool DefaultWorldCameraModel::ConstrainCamera(std::chrono::microseconds dt, floa
 	if ((mouseMovementDistance == 0.0f && glm::distance2(_targetOrigin, originBackup) > threshold * threshold) ||
 	    originHasBeenAdjusted)
 	{
-		_originFocusDistanceAtInteractionStart =
-		    glm::max(glm::distance(_targetOrigin, _targetFocus), k_CameraInteractionStepSize + 0.1f);
-		UpdateFocusPointInteractionParameters(_targetOrigin, _targetFocus, eulerAngles, camera);
+		if (_mode != Mode::DraggingLandscape)
+		{
+			_originFocusDistanceAtInteractionStart =
+			    glm::max(glm::distance(_targetOrigin, _targetFocus), k_CameraInteractionStepSize + 0.1f);
+			UpdateFocusPointInteractionParameters(_targetOrigin, _targetFocus, eulerAngles, camera);
+		}
 	}
 
 	return originHasBeenAdjusted;
@@ -153,11 +158,11 @@ bool DefaultWorldCameraModel::ConstrainCamera(std::chrono::microseconds dt, floa
 
 bool DefaultWorldCameraModel::ConstrainAltitude()
 {
-	constexpr float k_floatingHeight = 2.9999f; // 3 in vanilla, but less due to fp precision with recorded data in tests
+	constexpr float kfloatingHeight = 2.9999f; // 3 in vanilla, but less due to fp precision with recorded data in tests
 	// constexpr float nearClip = 0.0f;       // TODO sync with game args
 	bool hasBeenAdjusted = false;
 	// const auto nearPoint = ProjectPointOnForwardVector(nearClip);
-	const auto minAltitude = k_floatingHeight + Locator::terrainSystem::value().GetHeightAt(glm::xz(_targetOrigin));
+	const auto minAltitude = kfloatingHeight + Locator::terrainSystem::value().GetHeightAt(glm::xz(_targetOrigin));
 	// if (const auto hit = Locator::dynamicsSystem::value().RayCastClosestHit(_targetOrigin, _targetFocus, 16.0f))
 	// {
 	// 	if (glm::distance2(hit->first.position, _targetOrigin) < 64.0f)
@@ -182,15 +187,13 @@ bool DefaultWorldCameraModel::ConstrainAltitude()
 bool DefaultWorldCameraModel::ConstrainDisc()
 {
 	bool hasBeenAdjusted = false;
-	constexpr auto k_discCentre = glm::vec3(2560.0f, 0.0f, 2560.0f);
-	constexpr auto k_discRadius = 5120.0f;
 
-	const auto delta = _targetOrigin - k_discCentre;
+	const auto delta = _targetOrigin - k_ConstrainDiscCentre;
 	const auto distance2 = glm::length2(delta);
 
-	if (distance2 > k_discRadius * k_discRadius)
+	if (distance2 > k_ConstrainDiscRadius * k_ConstrainDiscRadius)
 	{
-		_targetOrigin = k_discCentre + delta * (k_discRadius / glm::sqrt(distance2));
+		_targetOrigin = k_ConstrainDiscCentre + delta * (k_ConstrainDiscRadius / glm::sqrt(distance2));
 		hasBeenAdjusted = true;
 	}
 
@@ -344,7 +347,7 @@ void DefaultWorldCameraModel::UpdateModeDragging(const Camera& camera, glm::u16v
 			const auto movementDistance2 = glm::length2(movement);
 			if (movementDistance2 > mouseMovementDistance)
 			{
-				movement *= mouseMovementDistance * glm::sqrt(movementDistance2);
+				// movement *= mouseMovementDistance *glm::sqrt(movementDistance2); // FIXME: This whole section is broken
 			}
 
 			_targetOrigin = _originAtClick - movement;
