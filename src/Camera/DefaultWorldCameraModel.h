@@ -50,7 +50,7 @@ private:
 	void UpdateModeCartesian();
 	void UpdateModePolar(glm::vec3 eulerAngles, bool recalculatePoint);
 	void UpdateModeDragging(const Camera& camera, glm::u16vec2 mouseCurrent, float mouseMovementDistance);
-	void UpdateModeFlying(const Camera& camera, glm::vec3 eulerAngles);
+	void UpdateModeFlying(glm::vec3 eulerAngles);
 
 	/// Updates the model's focus point parameters after a change in position or focus point of view
 	void UpdateFocusPointInteractionParameters(glm::vec3 origin, glm::vec3 focus, glm::vec3 eulerAngles, const Camera& camera);
@@ -100,6 +100,7 @@ private:
 	// State of input Action
 	glm::vec3 _rotateAroundDelta = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::vec2 _keyBoardMoveDelta = glm::vec2(0.0f, 0.0f);
+	std::optional<glm::vec3> _handPosition;
 
 	float _focusDistance = 0.0f;
 

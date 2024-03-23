@@ -99,7 +99,7 @@ public:
 	[[nodiscard]] bool GetUnbindableRepeat(openblack::input::UnbindableActionMap) const final { return false; }
 	[[nodiscard]] glm::uvec2 GetMousePosition() const override { return k_MockMousePos; }
 	[[nodiscard]] glm::ivec2 GetMouseDelta() const final { return {}; }
-	[[nodiscard]] std::array<std::optional<glm::vec3>, 2> GetHandPositions() const final { return {}; }
+	[[nodiscard]] std::array<std::optional<glm::vec3>, 2> GetHandPositions() const override { return {}; }
 	void Frame() final {}
 	void ProcessEvent(const SDL_Event& event) final {}
 

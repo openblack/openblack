@@ -268,7 +268,7 @@ void DefaultWorldCameraModel::UpdateMode(const Camera& camera, glm::vec3 eulerAn
 		UpdateModeDragging(camera, mouseCurrent, mouseMovementDistance);
 		break;
 	case Mode::FlyingToPoint:
-		UpdateModeFlying(camera, eulerAngles);
+		UpdateModeFlying(eulerAngles);
 		break;
 	}
 
@@ -359,15 +359,13 @@ void DefaultWorldCameraModel::UpdateModeDragging(const Camera& camera, glm::u16v
 	}
 }
 
-void DefaultWorldCameraModel::UpdateModeFlying(const Camera& camera, glm::vec3 eulerAngles)
+void DefaultWorldCameraModel::UpdateModeFlying(glm::vec3 eulerAngles)
 {
-	// TODO: check if you double clicked something such as creature then take its coordinates, otherwise get the land point
-	const auto hit = camera.RaycastMouseToLand(true, Camera::Interpolation::Target);
-	if (!hit.has_value() || !_screenSpaceCenterRaycastHit.has_value())
+	if (!_handPosition.has_value() && !_screenSpaceCenterRaycastHit.has_value())
 	{
 		return;
 	}
-	const auto point = hit->position;
+	const auto point = _handPosition.value_or(_screenSpaceCenterRaycastHit.value());
 
 	const auto distanceFromHitPoint = glm::length(point - *_screenSpaceCenterRaycastHit);
 	const auto distanceFromOrigin = glm::length(point - _targetOrigin);
@@ -619,12 +617,23 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 		_rotateAroundDelta.z += distance;
 	}
 
+	const auto handPositions = actionSystem.GetHandPositions();
+	// TODO(#656): in C++23 use or_else
+	if (handPositions[0].has_value())
+	{
+		_handPosition = handPositions[0];
+	}
+	else
+	{
+		_handPosition = handPositions[1];
+	}
+
 	_modePrev = _mode;
-	if (actionSystem.Get(input::UnbindableActionMap::DOUBLE_CLICK))
+	if (_handPosition.has_value() && actionSystem.Get(input::UnbindableActionMap::DOUBLE_CLICK))
 	{
 		_mode = Mode::FlyingToPoint;
 	}
-	else if (actionSystem.Get(input::BindableActionMap::MOVE))
+	else if (_handPosition.has_value() && actionSystem.Get(input::BindableActionMap::MOVE))
 	{
 		_mode = Mode::DraggingLandscape;
 	}
