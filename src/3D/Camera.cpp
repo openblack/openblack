@@ -345,6 +345,7 @@ void Camera::HandleActions()
 		if (actionSystem.Get(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON))
 		{
 			const auto delta = actionSystem.GetMouseDelta();
+			const auto handPositions = actionSystem.GetHandPositions();
 			if (_shiftHeld) // Holding down the middle mouse button and shift enables FPV camera rotation.
 			{
 				glm::vec3 rot = GetRotation();
@@ -352,12 +353,10 @@ void Camera::HandleActions()
 				rot.x -= delta.y * glm::radians(0.1f);
 				SetRotation(rot);
 			}
-			else // Holding down the middle mouse button without shift enables hand orbit camera rotation.
+			// Holding down the middle mouse button without shift enables hand orbit camera rotation.
+			else if (handPositions[0].has_value() || handPositions[1].has_value())
 			{
-				auto& entityReg = Locator::entitiesRegistry::value();
-				auto handEntity = Game::Instance()->GetHand();
-				auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
-				auto handPos = handTransform.position;
+				auto handPos = handPositions[0].value_or(handPositions[1].value_or(glm::zero<glm::vec3>()));
 
 				auto handDist = glm::length2(handPos - _position);
 				if (handDist > 250000.0f) // if hand is more than 500 away (500^2)
@@ -526,14 +525,13 @@ void Camera::Update(std::chrono::microseconds dt)
 	int sWidth;
 	int sHeight;
 	Game::Instance()->GetWindow()->GetSize(sWidth, sHeight);
-	if (_lmouseIsDown) // drag camera using hand
+	const auto& actionSystem = Locator::gameActionSystem::value();
+	const auto handPositions = actionSystem.GetHandPositions();
+	if (_lmouseIsDown && (handPositions[0].has_value() || handPositions[1].has_value())) // drag camera using hand
 	{
 		// get hand transform and project to screen coordinates
-		auto& entityReg = Locator::entitiesRegistry::value();
-		auto handEntity = Game::Instance()->GetHand();
-		auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
+		auto handPos = handPositions[0].value_or(handPositions[1].value_or(glm::zero<glm::vec3>()));
 		const glm::vec3 handOffset(0, 1.5f, 0);
-		auto handPos = handTransform.position;
 		glm::vec3 handToScreen;
 		glm::vec4 viewport = glm::vec4(0, 0, sWidth, sHeight);
 		auto hit = RaycastMouseToLand();
@@ -543,7 +541,6 @@ void Camera::Update(std::chrono::microseconds dt)
 		}
 		if (ProjectWorldToScreen(handPos, viewport, handToScreen) && hit)
 		{
-			const auto& actionSystem = Locator::gameActionSystem::value();
 			// calculate distance between hand and mouse in screen coordinates
 			const auto mousePosition = actionSystem.GetMousePosition();
 			auto handScreenCoordinates = glm::ivec2(handToScreen);
