@@ -65,6 +65,11 @@ public:
 
 		return {k_Width / 2, 450};
 	}
+
+	[[nodiscard]] std::array<std::optional<glm::vec3>, 2> GetHandPositions() const final
+	{
+		return {{{}, {{1000.0f, 0.0f, 1000.0f}}}};
+	}
 };
 
 class DragUpDownMockDynamicsSystem final: public MockDynamicsSystem

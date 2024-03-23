@@ -27,6 +27,11 @@ public:
 		return false;
 	}
 
+	[[nodiscard]] std::array<std::optional<glm::vec3>, 2> GetHandPositions() const final
+	{
+		return {{{}, {{1080.70996f, 0.0f, 966.307434f}}}};
+	}
+
 	[[nodiscard]] glm::uvec2 GetMousePosition() const final { return {100, 600 - 290}; }
 };
 
