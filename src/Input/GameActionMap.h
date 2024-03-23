@@ -15,6 +15,7 @@
 
 #include <SDL_keyboard.h>
 #include <SDL_mouse.h>
+#include <glm/vec3.hpp>
 
 #include "GameActionMapInterface.h"
 
@@ -40,6 +41,7 @@ public:
 	bool GetUnbindableRepeat(UnbindableActionMap action) const final;
 	glm::uvec2 GetMousePosition() const final;
 	glm::ivec2 GetMouseDelta() const final;
+	std::array<std::optional<glm::vec3>, 2> GetHandPositions() const final;
 
 	void Frame() final;
 	void ProcessEvent(const SDL_Event& event) final;

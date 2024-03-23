@@ -16,6 +16,9 @@
 #include <glm/gtc/constants.hpp>
 #include <spdlog/spdlog.h>
 
+#include "ECS/Components/Transform.h"
+#include "ECS/Registry.h"
+#include "Game.h" // For hand
 #include "Locator.h"
 #include "Windowing/WindowingInterface.h"
 
@@ -328,4 +331,39 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 	{
 		_mouseDelta = {event.motion.xrel, event.motion.yrel};
 	}
+}
+
+std::array<std::optional<glm::vec3>, 2> GameActionMap::GetHandPositions() const
+{
+	// Assume left-handed player since that's what the hand mesh is at the time of writing
+	const auto& registry = Locator::entitiesRegistry::value();
+
+	const auto& leftHand = std::make_optional(Game::Instance()->GetHand());
+	// Only one hand at this point in time
+	const auto& rightHand = std::optional<entt::entity>();
+
+	// TODO(#692): In C++23 use position = hand.and_then
+	std::optional<glm::vec3> leftPosition;
+	std::optional<glm::vec3> rightPosition;
+	if (leftHand.has_value())
+	{
+		leftPosition = registry.Get<ecs::components::Transform>(*leftHand).position;
+	}
+	if (rightHand.has_value())
+	{
+		rightPosition = registry.Get<ecs::components::Transform>(*rightHand).position;
+	}
+
+	// TODO(#693): Hand Getter should return an optional if the hand doesn't have a valid position
+	// When the position is zero, it probably means it's not on the map (e.g. mouse is in the sky)
+	if (leftPosition == glm::zero<glm::vec3>())
+	{
+		leftPosition = std::nullopt;
+	}
+	if (rightPosition == glm::zero<glm::vec3>())
+	{
+		rightPosition = std::nullopt;
+	}
+
+	return {{leftPosition, rightPosition}};
 }
