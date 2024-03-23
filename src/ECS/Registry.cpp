@@ -51,6 +51,9 @@ void Registry::Reset()
 
 void Registry::SetDirty()
 {
-	Locator::rendereringSystem::value().SetDirty();
+	if (Locator::rendereringSystem::has_value())
+	{
+		Locator::rendereringSystem::value().SetDirty();
+	}
 }
 } // namespace openblack::ecs
