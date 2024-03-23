@@ -127,7 +127,7 @@ void Camera::DeprojectScreenToWorld(glm::ivec2 screenPosition, glm::ivec2 screen
 	// projection space (z=0 is near, z=1 is far - this gives us better
 	// precision) To get the direction of the ray trace we need to use any z
 	// between the near and the far plane, so let's use (mousex, mousey, 0.5)
-	const glm::vec4 rayStartProjectionSpace = glm::vec4(screenSpaceX, screenSpaceY, 1.0f, 1.0f);
+	const glm::vec4 rayStartProjectionSpace = glm::vec4(screenSpaceX, screenSpaceY, 0.0f, 1.0f);
 	const glm::vec4 rayEndProjectionSpace = glm::vec4(screenSpaceX, screenSpaceY, 0.5f, 1.0f);
 
 	// Calculate our inverse view projection matrix
