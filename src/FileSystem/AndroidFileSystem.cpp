@@ -60,7 +60,7 @@ bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
 	jstring jstorageUriString = _jniEnv->NewStringUTF(_storageUri.c_str());
 	jstring jpath = _jniEnv->NewStringUTF(path.c_str());
 
-    jmethodID midGetDirectoryFromPath =
+	jmethodID midGetDirectoryFromPath =
 	    _jniEnv->GetStaticMethodID(_jniInteropClass, "getDirectoryFromPath",
 	                               "(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Landroid/net/Uri;");
 	if (midGetDirectoryFromPath == nullptr)
