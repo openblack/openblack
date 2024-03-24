@@ -57,22 +57,32 @@ std::filesystem::path AndroidFileSystem::FindPath(const std::filesystem::path& p
 
 bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
 {
-	if (path.empty())
+	jstring jstorageUriString = _jniEnv->NewStringUTF(_storageUri.c_str());
+	jstring jpath = _jniEnv->NewStringUTF(path.c_str());
+
+    jmethodID midGetDirectoryFromPath =
+	    _jniEnv->GetStaticMethodID(_jniInteropClass, "getDirectoryFromPath",
+	                               "(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Landroid/net/Uri;");
+	if (midGetDirectoryFromPath == nullptr)
 	{
+		spdlog::error("Failed to find method: getDirectoryFromPath");
 		return false;
 	}
 
-	if (!Exists(path))
+    jobject juri =
+	    _jniEnv->CallStaticObjectMethod(_jniInteropClass, midGetDirectoryFromPath, _jniActivity, jstorageUriString, jpath);
+
+	bool isValid = juri != nullptr;
+
+	if (juri != nullptr)
 	{
-		return false;
+		_jniEnv->DeleteLocalRef(juri);
 	}
 
-	if (!std::filesystem::is_directory(path))
-	{
-		return false;
-	}
+	_jniEnv->DeleteLocalRef(jstorageUriString);
+	_jniEnv->DeleteLocalRef(jpath);
 
-	return true;
+	return isValid;
 }
 
 std::unique_ptr<Stream> AndroidFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
