@@ -720,14 +720,6 @@ bool Game::Initialize()
 		    }
 	    });
 
-	// create our camera
-	_camera = std::make_unique<Camera>();
-	const auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
-	_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
-
-	_camera->SetPosition(glm::vec3(1441.56f, 24.764f, 2081.76f));
-	_camera->SetRotation(glm::radians(glm::vec3(0.0f, -45.0f, 0.0f)));
-
 	if (!LoadVariables())
 	{
 		return false;
@@ -886,9 +878,18 @@ void Game::LoadMap(const std::filesystem::path& path)
 	// Reset everything. Deletes all entities and their components
 	Locator::entitiesRegistry::value().Reset();
 
+	// TODO(#661): split entities that are permanent from map entities and move hand and camera to init
 	// We need a hand for the player
 	_handEntity = ecs::archetypes::HandArchetype::Create(glm::vec3(0.0f), glm::half_pi<float>(), 0.0f, glm::half_pi<float>(),
 	                                                     0.01f, false);
+
+	// create our camera
+	_camera = std::make_unique<Camera>();
+	const auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
+	_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
+
+	_camera->SetPosition(glm::vec3(1441.56f, 24.764f, 2081.76f));
+	_camera->SetRotation(glm::radians(glm::vec3(0.0f, -45.0f, 0.0f)));
 
 	Script script;
 	script.Load(source);
