@@ -69,8 +69,6 @@ bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
 		return false;
 	}
 
-	jobject juri =
-	    _jniEnv->CallStaticObjectMethod(_jniInteropClass, midGetDirectoryFromPath, _jniActivity, jstorageUriString, jpath);
     jobject juri = _jniEnv->CallStaticObjectMethod(_jniInteropClass, midGetDirectoryFromPath, _jniActivity, jgamePath, jpath);
 
 	bool isValid = juri != nullptr;
