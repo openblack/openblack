@@ -78,7 +78,7 @@ bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
 		_jniEnv->DeleteLocalRef(juri);
 	}
 
-	_jniEnv->DeleteLocalRef(jstorageUriString);
+	_jniEnv->DeleteLocalRef(jgamePath);
 	_jniEnv->DeleteLocalRef(jpath);
 
 	return isValid;
