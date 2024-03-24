@@ -100,7 +100,7 @@ public:
 	};
 
 	Renderer() = delete;
-	explicit Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererType, bool vsync);
+	explicit Renderer(bgfx::RendererType::Enum rendererType, bool vsync);
 
 	virtual ~Renderer();
 
