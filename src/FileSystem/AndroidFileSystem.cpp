@@ -57,7 +57,7 @@ std::filesystem::path AndroidFileSystem::FindPath(const std::filesystem::path& p
 
 bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
 {
-	jstring jstorageUriString = _jniEnv->NewStringUTF(_storageUri.c_str());
+	jstring jgamePath = _jniEnv->NewStringUTF(_gamePath.c_str());
 	jstring jpath = _jniEnv->NewStringUTF(path.c_str());
 
 	jmethodID midGetDirectoryFromPath =
@@ -71,6 +71,7 @@ bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
 
 	jobject juri =
 	    _jniEnv->CallStaticObjectMethod(_jniInteropClass, midGetDirectoryFromPath, _jniActivity, jstorageUriString, jpath);
+    jobject juri = _jniEnv->CallStaticObjectMethod(_jniInteropClass, midGetDirectoryFromPath, _jniActivity, jgamePath, jpath);
 
 	bool isValid = juri != nullptr;
 
