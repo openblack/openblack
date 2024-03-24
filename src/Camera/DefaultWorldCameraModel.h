@@ -48,7 +48,7 @@ private:
 	void UpdateModePolar(glm::vec3 eulerAngles, bool recalculatePoint);
 
 	/// Updates the model's focus point parameters after a change in position or focus point of view
-	void UpdateFocusPointInteractionParameters(glm::vec3 eulerAngles, const Camera& camera);
+	void UpdateFocusPointInteractionParameters(glm::vec3 origin, glm::vec3 focus, glm::vec3 eulerAngles, const Camera& camera);
 	/// Modifies the given Euler angles based on the rotate Around and keyboard Move Deltas for rotation and zoom.
 	/// @param eulerAngles A reference representing Euler angles (yaw, pitch, roll) to be adjusted. Roll is always 0.
 	void TiltZoom(glm::vec3& eulerAngles, float scalingFactor);
