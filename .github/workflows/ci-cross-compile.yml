@@ -77,6 +77,7 @@ jobs:
         run: |
           sudo apt update -y
           sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV # to use C++23 on 26.2.11394342
         if: (startsWith(matrix.preset, 'android') || startsWith(matrix.preset, 'emscripten')) && startsWith(matrix.os, 'ubuntu')
 
       - name: Setup
@@ -165,7 +166,7 @@ jobs:
           mv android/app/src/main/jniLibs/x86/Release/libopenblack_lib.so          android/app/src/main/jniLibs/release/x86
           mv android/app/src/main/jniLibs/x86_64/Debug/libopenblack_lib.so         android/app/src/main/jniLibs/debug/x86_64
           mv android/app/src/main/jniLibs/x86_64/Release/libopenblack_lib.so       android/app/src/main/jniLibs/release/x86_64
-          find android/app/src/main/jniLibs 
+          find android/app/src/main/jniLibs
       - name: Run Gradle Assemble (Debug)
         uses: gradle/gradle-build-action@v2
         with:
