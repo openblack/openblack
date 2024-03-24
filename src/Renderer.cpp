@@ -29,7 +29,6 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "Game.h"
-#include "GameWindow.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/IndexBuffer.h"
@@ -40,6 +39,7 @@
 #include "Profiler.h"
 #include "Resources/ResourceManager.h"
 #include "Resources/ResourcesInterface.h"
+#include "Windowing/WindowingInterface.h"
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -177,7 +177,7 @@ struct BgfxCallback: public bgfx::CallbackI
 
 } // namespace openblack
 
-Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererType, bool vsync)
+Renderer::Renderer(bgfx::RendererType::Enum rendererType, bool vsync)
     : _shaderManager(std::make_unique<ShaderManager>())
     , _bgfxCallback(std::make_unique<BgfxCallback>())
 {
@@ -188,12 +188,14 @@ Renderer::Renderer(const GameWindow* window, bgfx::RendererType::Enum rendererTy
 	glm::uvec2 drawableSize;
 	if (rendererType != bgfx::RendererType::Noop)
 	{
-		drawableSize = static_cast<glm::uvec2>(window->GetSize());
+		const auto& window = Locator::windowing::value();
+
+		drawableSize = static_cast<glm::uvec2>(window.GetSize());
 		init.resolution.width = static_cast<uint32_t>(drawableSize.x);
 		init.resolution.height = static_cast<uint32_t>(drawableSize.y);
 
 		// Get Native Handles from SDL window
-		const auto handles = window->GetNativeHandles();
+		const auto handles = window.GetNativeHandles();
 		init.platformData.nwh = handles.nativeWindow;
 		init.platformData.ndt = handles.nativeDisplay;
 	}

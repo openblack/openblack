@@ -34,6 +34,11 @@ namespace resources
 class ResourcesInterface;
 }
 
+namespace windowing
+{
+class WindowingInterface;
+}
+
 namespace ecs
 {
 class Registry;
@@ -56,6 +61,7 @@ void InitializeLevel(const std::filesystem::path& path);
 
 struct Locator
 {
+	using windowing = entt::locator<windowing::WindowingInterface>;
 	using filesystem = entt::locator<filesystem::FileSystemInterface>;
 	using resources = entt::locator<resources::ResourcesInterface>;
 	using rng = entt::locator<RandomNumberManagerInterface>;

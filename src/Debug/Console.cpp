@@ -23,6 +23,7 @@
 #include "LHScriptX/FeatureScriptCommands.h"
 #include "LHScriptX/Script.h"
 #include "Locator.h"
+#include "Windowing/WindowingInterface.h"
 
 using namespace openblack;
 using namespace openblack::debug::gui;
@@ -218,7 +219,7 @@ void Console::Draw(Game& game)
 {
 	ImGuiIO& io = ImGui::GetIO();
 
-	const glm::ivec2 screenSize = game.GetWindow() != nullptr ? game.GetWindow()->GetSize() : glm::zero<glm::ivec2>();
+	const auto screenSize = Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::ivec2 {};
 	glm::ivec2 mousePosition {};
 	SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
 	if (!io.WantCaptureMouse && screenSize.x > 0 && screenSize.y > 0)

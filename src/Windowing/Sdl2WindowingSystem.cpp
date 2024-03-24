@@ -7,10 +7,11 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
-#include "GameWindow.h"
+#include "Sdl2WindowingSystem.h"
 
 #include <SDL_syswm.h>
 #include <spdlog/spdlog.h>
+
 #if defined(SDL_VIDEO_DRIVER_WAYLAND)
 #include <wayland-egl.h>
 #endif // defined(SDL_VIDEO_DRIVER_WAYLAND)
@@ -20,14 +21,15 @@ void* cbSetupMetalLayer(void* wnd);
 
 #include "Renderer.h"
 
-using namespace openblack;
+using namespace openblack::windowing;
 
-void GameWindow::SDLDestroyer::operator()(SDL_Window* window) const
+void Sdl2WindowingSystem::SDLDestroyer::operator()(SDL_Window* window) const
 {
 	SDL_DestroyWindow(window);
 }
 
-GameWindow::GameWindow(const std::string& title, int width, int height, DisplayMode displayMode, uint32_t extraFlags)
+Sdl2WindowingSystem::Sdl2WindowingSystem(const std::string& title, int width, int height, DisplayMode displayMode,
+                                         uint32_t extraFlags)
 {
 	SDL_version compiledVersion;
 	SDL_VERSION(&compiledVersion);
@@ -89,12 +91,12 @@ GameWindow::GameWindow(const std::string& title, int width, int height, DisplayM
 	_window = std::move(window);
 }
 
-SDL_Window* GameWindow::GetHandle() const
+void* Sdl2WindowingSystem::GetHandle() const
 {
 	return _window.get();
 }
 
-GameWindow::NativeHandles GameWindow::GetNativeHandles() const
+Sdl2WindowingSystem::NativeHandles Sdl2WindowingSystem::GetNativeHandles() const
 {
 	NativeHandles result {nullptr, nullptr};
 #if defined(__EMSCRIPTEN__)
@@ -191,17 +193,17 @@ GameWindow::NativeHandles GameWindow::GetNativeHandles() const
 	// clang-format on
 }
 
-bool GameWindow::IsOpen() const
+bool Sdl2WindowingSystem::IsOpen() const
 {
 	return _window != nullptr;
 }
 
-float GameWindow::GetBrightness() const
+float Sdl2WindowingSystem::GetBrightness() const
 {
 	return SDL_GetWindowBrightness(_window.get());
 }
 
-GameWindow& GameWindow::SetBrightness(float brightness)
+Sdl2WindowingSystem& Sdl2WindowingSystem::SetBrightness(float brightness)
 {
 	if (SDL_SetWindowBrightness(_window.get(), brightness) != 0)
 	{
@@ -210,45 +212,45 @@ GameWindow& GameWindow::SetBrightness(float brightness)
 	return *this;
 }
 
-uint32_t GameWindow::GetID() const
+uint32_t Sdl2WindowingSystem::GetID() const
 {
 	return SDL_GetWindowID(_window.get());
 }
 
-uint32_t GameWindow::GetFlags() const
+uint32_t Sdl2WindowingSystem::GetFlags() const
 {
 	return SDL_GetWindowFlags(_window.get());
 }
 
-GameWindow& GameWindow::GrabInput(bool b)
+Sdl2WindowingSystem& Sdl2WindowingSystem::GrabInput(bool b)
 {
 	SDL_SetWindowGrab(_window.get(), b ? SDL_TRUE : SDL_FALSE);
 	return *this;
 }
 
-GameWindow& GameWindow::SetMousePosition(glm::ivec2 position)
+Sdl2WindowingSystem& Sdl2WindowingSystem::SetMousePosition(glm::ivec2 position)
 {
 	SDL_WarpMouseInWindow(_window.get(), position.x, position.y);
 	return *this;
 }
 
-bool GameWindow::IsInputGrabbed() const
+bool Sdl2WindowingSystem::IsInputGrabbed() const
 {
 	return SDL_GetWindowGrab(_window.get()) != SDL_FALSE;
 }
 
-std::string GameWindow::GetTitle() const
+std::string Sdl2WindowingSystem::GetTitle() const
 {
 	return SDL_GetWindowTitle(_window.get());
 }
 
-GameWindow& GameWindow::SetTitle(const std::string& str)
+Sdl2WindowingSystem& Sdl2WindowingSystem::SetTitle(const std::string& str)
 {
 	SDL_SetWindowTitle(_window.get(), str.c_str());
 	return *this;
 }
 
-float GameWindow::GetAspectRatio() const
+float Sdl2WindowingSystem::GetAspectRatio() const
 {
 	int width;
 	int height;
@@ -257,101 +259,101 @@ float GameWindow::GetAspectRatio() const
 	return static_cast<float>(width) / static_cast<float>(height);
 }
 
-GameWindow& GameWindow::SetPosition(glm::ivec2 position)
+Sdl2WindowingSystem& Sdl2WindowingSystem::SetPosition(glm::ivec2 position)
 {
 	SDL_SetWindowPosition(_window.get(), position.x, position.y);
 	return *this;
 }
 
-glm::ivec2 GameWindow::GetPosition() const
+glm::ivec2 Sdl2WindowingSystem::GetPosition() const
 {
 	glm::ivec2 result;
 	SDL_GetWindowPosition(_window.get(), &result.x, &result.y);
 	return result;
 }
 
-GameWindow& GameWindow::SetMinimumSize(glm::ivec2 size)
+Sdl2WindowingSystem& Sdl2WindowingSystem::SetMinimumSize(glm::ivec2 size)
 {
 	SDL_SetWindowMinimumSize(_window.get(), size.x, size.y);
 	return *this;
 }
 
-glm::ivec2 GameWindow::GetMinimumSize() const
+glm::ivec2 Sdl2WindowingSystem::GetMinimumSize() const
 {
 	glm::ivec2 result;
 	SDL_GetWindowMinimumSize(_window.get(), &result.x, &result.y);
 	return result;
 }
 
-GameWindow& GameWindow::SetMaximumSize(glm::ivec2 size)
+Sdl2WindowingSystem& Sdl2WindowingSystem::SetMaximumSize(glm::ivec2 size)
 {
 	SDL_SetWindowMaximumSize(_window.get(), size.x, size.y);
 	return *this;
 }
 
-glm::ivec2 GameWindow::GetMaximumSize() const
+glm::ivec2 Sdl2WindowingSystem::GetMaximumSize() const
 {
 	glm::ivec2 result;
 	SDL_GetWindowMaximumSize(_window.get(), &result.x, &result.y);
 	return result;
 }
 
-GameWindow& GameWindow::SetSize(glm::ivec2 size)
+Sdl2WindowingSystem& Sdl2WindowingSystem::SetSize(glm::ivec2 size)
 {
 	SDL_SetWindowSize(_window.get(), size.x, size.y);
 	return *this;
 }
 
-glm::ivec2 GameWindow::GetSize() const
+glm::ivec2 Sdl2WindowingSystem::GetSize() const
 {
 	glm::ivec2 result;
 	SDL_GetWindowSize(_window.get(), &result.x, &result.y);
 	return result;
 }
 
-GameWindow& GameWindow::Show()
+Sdl2WindowingSystem& Sdl2WindowingSystem::Show()
 {
 	SDL_ShowWindow(_window.get());
 	return *this;
 }
 
-GameWindow& GameWindow::Hide()
+Sdl2WindowingSystem& Sdl2WindowingSystem::Hide()
 {
 	SDL_HideWindow(_window.get());
 	return *this;
 }
 
-GameWindow& GameWindow::Maximise()
+Sdl2WindowingSystem& Sdl2WindowingSystem::Maximise()
 {
 	SDL_MaximizeWindow(_window.get());
 	return *this;
 }
 
-GameWindow& GameWindow::Minimise()
+Sdl2WindowingSystem& Sdl2WindowingSystem::Minimise()
 {
 	SDL_MinimizeWindow(_window.get());
 	return *this;
 }
 
-GameWindow& GameWindow::Restore()
+Sdl2WindowingSystem& Sdl2WindowingSystem::Restore()
 {
 	SDL_RestoreWindow(_window.get());
 	return *this;
 }
 
-GameWindow& GameWindow::Raise()
+Sdl2WindowingSystem& Sdl2WindowingSystem::Raise()
 {
 	SDL_RaiseWindow(_window.get());
 	return *this;
 }
 
-GameWindow& GameWindow::SetBordered(bool b)
+Sdl2WindowingSystem& Sdl2WindowingSystem::SetBordered(bool b)
 {
 	SDL_SetWindowBordered(_window.get(), b ? SDL_TRUE : SDL_FALSE);
 	return *this;
 }
 
-GameWindow& GameWindow::SetFullscreen(bool f)
+Sdl2WindowingSystem& Sdl2WindowingSystem::SetFullscreen(bool f)
 {
 	// todo: use DisplayMode
 	if (SDL_SetWindowFullscreen(_window.get(), f ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0) != 0)
@@ -361,7 +363,7 @@ GameWindow& GameWindow::SetFullscreen(bool f)
 	return *this;
 }
 
-GameWindow& GameWindow::Close()
+Sdl2WindowingSystem& Sdl2WindowingSystem::Close()
 {
 	_window.reset(nullptr);
 	return *this;

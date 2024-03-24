@@ -49,9 +49,9 @@
 #include <ECS/Registry.h>
 #include <FileSystem/FileSystemInterface.h>
 #include <Game.h>
-#include <GameWindow.h>
 #include <Locator.h>
 #include <Resources/ResourcesInterface.h>
+#include <Windowing/WindowingInterface.h>
 
 #include "Audio.h"
 #include "Console.h"
@@ -98,7 +98,7 @@ const std::array<bgfx::EmbeddedShader, 5> k_EmbeddedShaders = {{
 }};
 } // namespace
 
-std::unique_ptr<Gui> Gui::Create(const GameWindow* window, graphics::RenderPass viewId, float scale)
+std::unique_ptr<Gui> Gui::Create(graphics::RenderPass viewId, float scale)
 {
 	IMGUI_CHECKVERSION();
 	auto* imgui = ImGui::CreateContext();
@@ -120,14 +120,18 @@ std::unique_ptr<Gui> Gui::Create(const GameWindow* window, graphics::RenderPass 
 	debugWindows.emplace_back(new Audio);
 	debugWindows.emplace_back(new TempleInterior);
 
-	auto gui =
-	    std::unique_ptr<Gui>(new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows), window == nullptr));
+	auto gui = std::unique_ptr<Gui>(
+	    new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows), !Locator::windowing::has_value()));
 
-	if (window != nullptr)
+	if (Locator::windowing::has_value())
 	{
-		if (!ImGui_ImplSDL2_InitForSDLRenderer(window->GetHandle(), nullptr))
+		auto* handle = Locator::windowing::value().GetHandle();
+		if (handle != nullptr)
 		{
-			return nullptr;
+			if (!ImGui_ImplSDL2_InitForSDLRenderer(static_cast<SDL_Window*>(handle), nullptr))
+			{
+				return nullptr;
+			}
 		}
 	}
 
