@@ -28,15 +28,14 @@
 #endif
 #include <spdlog/common.h>
 
-#include "GameWindow.h"
 #include "InfoConstants.h"
+#include "Windowing/WindowingInterface.h" // For DisplayMode
 
 union SDL_Event;
 
 namespace openblack
 {
 class Camera;
-class GameWindow;
 class EventManager;
 class Profiler;
 class Renderer;
@@ -92,7 +91,7 @@ struct Arguments
 	int windowWidth;
 	int windowHeight;
 	bool vsync;
-	openblack::DisplayMode displayMode;
+	openblack::windowing::DisplayMode displayMode;
 	bgfx::RendererType::Enum rendererType;
 	std::string gamePath;
 	float scale;
@@ -163,8 +162,6 @@ public:
 	void SetGameSpeed(float multiplier) { _gameSpeedMultiplier = multiplier; }
 	[[nodiscard]] float GetGameSpeed() const { return _gameSpeedMultiplier; }
 
-	GameWindow* GetWindow() { return _window.get(); }
-	[[nodiscard]] const GameWindow& GetWindow() const { return *_window; }
 	Camera& GetCamera() { return *_camera; }
 	[[nodiscard]] Profiler& GetProfiler() const { return *_profiler; }
 	[[nodiscard]] Renderer& GetRenderer() const { return *_renderer; }
@@ -192,7 +189,6 @@ private:
 	/// path to Lionhead Studios Ltd/Black & White folder
 	const std::filesystem::path _gamePath;
 
-	std::unique_ptr<GameWindow> _window;
 	std::unique_ptr<Renderer> _renderer;
 	std::unique_ptr<debug::gui::Gui> _gui;
 	std::unique_ptr<Camera> _camera;

@@ -21,6 +21,7 @@
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "Game.h"
 #include "Locator.h"
+#include "Windowing/WindowingInterface.h"
 
 using namespace openblack;
 
@@ -72,7 +73,7 @@ std::optional<ecs::components::Transform> Camera::RaycastMouseToLand()
 	// get the hit by raycasting to the land down via the mouse
 	ecs::components::Transform intersectionTransform;
 	float intersectDistance = 0.0f;
-	const auto windowSize = static_cast<glm::vec2>(Game::Instance()->GetWindow()->GetSize());
+	const auto windowSize = Locator::windowing::value().GetSize();
 	glm::vec3 rayOrigin;
 	glm::vec3 rayDirection;
 	glm::ivec2 mouseVec;
@@ -404,7 +405,7 @@ void Camera::HandleMouseInput(const SDL_Event& e)
 			{
 				handPos = _position + GetForward() * 500.0f; // orbit around a point 500 away from cam
 			}
-			const auto screenSize = Game::Instance()->GetWindow()->GetSize();
+			const auto screenSize = Locator::windowing::value().GetSize();
 			const float yaw = e.motion.xrel * (glm::two_pi<float>() / screenSize.x);
 			float pitch = e.motion.yrel * (glm::pi<float>() / screenSize.y);
 
@@ -551,7 +552,7 @@ void Camera::Update(std::chrono::microseconds dt)
 
 	// deal with hand pulling camera around
 	float worldHandDist = 0.0f;
-	const auto size = Game::Instance()->GetWindow()->GetSize();
+	const auto size = Locator::windowing::value().GetSize();
 	if (_lmouseIsDown) // drag camera using hand
 	{
 		// get hand transform and project to screen coords
@@ -584,7 +585,7 @@ void Camera::Update(std::chrono::microseconds dt)
 		{                            // still on screen but did not hit land
 			_handDragMult -= 0.002f; // slow down movement
 		}
-		else // if hand is off screen, culled or behind camera.
+		else // if hand is off-screen, culled or behind camera.
 		{
 			_hVelocity = glm::vec3(0.f);
 		}
