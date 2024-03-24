@@ -121,7 +121,8 @@ public:
 	template <typename Component>
 	[[nodiscard]] decltype(auto) ToEntity(const Component& component) const
 	{
-		return entt::to_entity(_registry, component);
+		const auto* storage = _registry.template storage<Component>();
+		return entt::to_entity(*storage, component);
 	}
 	template <typename Dst, typename Src>
 	decltype(auto) As(Src& component)
