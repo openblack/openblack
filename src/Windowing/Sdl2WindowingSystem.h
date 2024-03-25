@@ -20,6 +20,10 @@
 
 #include "WindowingInterface.h"
 
+#if !defined(LOCATOR_IMPLEMENTATIONS)
+#warning "Locator interface implementations should only be included in Locator.cpp"
+#endif
+
 struct SDL_Window;
 
 namespace openblack::windowing
@@ -75,7 +79,6 @@ private:
 
 	Sdl2WindowingSystem& Close();
 
-private:
 	std::unique_ptr<SDL_Window, SDLDestroyer> _window;
 };
 } // namespace openblack::windowing
