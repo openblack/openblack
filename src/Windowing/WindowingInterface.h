@@ -16,7 +16,7 @@
 namespace openblack::windowing
 {
 
-enum DisplayMode : std::uint8_t
+enum class DisplayMode : std::uint8_t
 {
 	Windowed,
 	Fullscreen,

@@ -9,7 +9,10 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include <filesystem>
+#include <string>
 
 #include <entt/locator/locator.hpp>
 
@@ -36,8 +39,9 @@ class ResourcesInterface;
 
 namespace windowing
 {
+enum class DisplayMode : std::uint8_t;
 class WindowingInterface;
-}
+} // namespace windowing
 
 namespace ecs
 {
@@ -54,10 +58,11 @@ class LivingActionSystemInterface;
 class TownSystemInterface;
 class PathfindingSystemInterface;
 class PlayerSystemInterface;
+} // namespace ecs::systems
 
+void InitializeWindow(const std::string& title, int width, int height, windowing::DisplayMode displayMode, uint32_t extraFlags);
 void InitializeGame();
 void InitializeLevel(const std::filesystem::path& path);
-} // namespace ecs::systems
 
 struct Locator
 {

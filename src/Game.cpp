@@ -61,8 +61,6 @@
 #include "Renderer.h"
 #include "Resources/Loaders.h"
 #include "Resources/ResourcesInterface.h"
-// TODO: Can this be moved to Locator.cpp?
-#include "Windowing/Sdl2WindowingSystem.h"
 
 using namespace openblack;
 using namespace openblack::lhscriptx;
@@ -115,8 +113,7 @@ Game::Game(Arguments&& args)
 		{
 			extraFlags |= SDL_WINDOW_METAL;
 		}
-		Locator::windowing::emplace<windowing::Sdl2WindowingSystem>(k_WindowTitle, args.windowWidth, args.windowHeight,
-		                                                            args.displayMode, extraFlags);
+		openblack::InitializeWindow(k_WindowTitle, args.windowWidth, args.windowHeight, args.displayMode, extraFlags);
 	}
 	try
 	{
@@ -462,7 +459,7 @@ bool Game::Update()
 bool Game::Initialize()
 {
 	using filesystem::Path;
-	ecs::systems::InitializeGame();
+	InitializeGame();
 	auto& fileSystem = Locator::filesystem::value();
 	auto& resources = Locator::resources::value();
 	auto& meshManager = resources.GetMeshes();
@@ -919,7 +916,7 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	{
 		throw std::runtime_error("Could not find landscape " + path.generic_string());
 	}
-	ecs::systems::InitializeLevel(fixedName);
+	InitializeLevel(fixedName);
 
 	// There is always a player active
 	Locator::playerSystem::value().AddPlayer(ecs::archetypes::PlayerArchetype::Create(PlayerNames::PLAYER_ONE));
