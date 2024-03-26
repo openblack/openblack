@@ -1,5 +1,5 @@
 <lint>
     <issue id="all">
-        <ignore path="app/java/org/libsdl.app" />
+        <ignore path="src/main/java/org/libsdl/app" />
     </issue>
 </lint>
