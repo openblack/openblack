@@ -11,7 +11,6 @@
 
 #include <queue>
 
-#include <PackFile.h>
 #include <entt/entt.hpp>
 
 #include "3D/L3DAnim.h"
@@ -19,6 +18,12 @@
 #include "Audio/Sound.h"
 #include "Creature/CreatureMind.h"
 #include "Level.h"
+
+namespace openblack::pack
+{
+struct AudioBankSampleHeader;
+struct G3DTexture;
+} // namespace openblack::pack
 
 namespace openblack::resources
 {

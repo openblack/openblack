@@ -27,6 +27,8 @@ const std::array<const char*, 3> k_AudioBankLoopStrings = {"Repeat", "Once", "Ov
 
 Audio::Audio()
     : Window("Audio Player", ImVec2(600.0f, 600.0f))
+    , _selectedSound(entt::null)
+    , _selectedEmitter(entt::null)
 {
 }
 
