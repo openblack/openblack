@@ -57,8 +57,7 @@ public class FileSystemInterop {
                 }
                 else
                 {
-                    String[] pathParts = {path, file.getName()};
-                    fileNames.add(String.join("/", pathParts));
+                    fileNames.add(path + "/" + file.getName());
                 }
             }
             else if (recursive) {
@@ -70,7 +69,7 @@ public class FileSystemInterop {
                 else
                 {
                     String[] pathParts = {path, file.getName()};
-                    recursivePath = String.join("/", pathParts);
+                    recursivePath = path + "/" + file.getName();
                 }
                 listFilesRecursive(file, fileNames, recursive, recursivePath);
             }
