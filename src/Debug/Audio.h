@@ -31,9 +31,9 @@ private:
 	void Music();
 	void AudioSettings();
 	audio::PlayType _playType {audio::PlayType::Once};
-	entt::id_type _selectedSound {entt::null};
+	entt::id_type _selectedSound;
 	std::string _selectedSoundPack;
 	std::string _selectedMusicPack;
-	entt::entity _selectedEmitter {entt::null};
+	entt::entity _selectedEmitter;
 };
 } // namespace openblack::debug::gui

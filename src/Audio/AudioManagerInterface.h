@@ -9,12 +9,13 @@
 
 #pragma once
 
+#include <map>
+
 #include <entt/fwd.hpp>
 
 #include "AudioDecoderInterface.h"
 #include "AudioPlayerInterface.h"
 #include "ECS/Components/AudioEmitter.h"
-#include "Resources/Loaders.h"
 #include "Sound.h"
 #include "SoundGroup.h"
 
@@ -25,6 +26,7 @@ class Game;
 
 namespace audio
 {
+
 class AudioManagerInterface
 {
 public:

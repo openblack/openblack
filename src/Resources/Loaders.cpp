@@ -12,6 +12,8 @@
 #include <iostream>
 #include <queue>
 
+#include <PackFile.h>
+
 #include "Audio/AudioManagerInterface.h"
 #include "Common/StringUtils.h"
 #include "Common/Zip.h"

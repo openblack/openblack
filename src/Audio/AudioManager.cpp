@@ -13,6 +13,7 @@
 
 #include <fstream>
 
+#include <PackFile.h>
 #include <glm/gtc/constants.hpp>
 #include <spdlog/spdlog.h>
 
