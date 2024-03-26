@@ -707,9 +707,10 @@ bool Game::Initialize()
 					return;
 				}
 
-				const entt::id_type id = entt::hashed_string(fmt::format("{}/{}", groupName, i).c_str());
+				const auto stringId = fmt::format("{}/{}", groupName, audioHeaders[i].id);
+				const entt::id_type id = entt::hashed_string(stringId.c_str());
 				const std::vector<std::vector<uint8_t>> buffer = {audioData[i]};
-				SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Loading sound {}/{}", groupName, i);
+				SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Loading sound {}", stringId);
 				soundManager.Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[i], buffer);
 				audioManager.AddToSoundGroup(groupName, id);
 			}
