@@ -27,6 +27,7 @@ public:
 	~AndroidFileSystem();
 
 	[[nodiscard]] std::filesystem::path FindPath(const std::filesystem::path& path) const override;
+	[[nodiscard]] bool IsPathValid(const std::filesystem::path& path) override;
 	std::unique_ptr<Stream> Open(const std::filesystem::path& path, Stream::Mode mode) override;
 	bool Exists(const std::filesystem::path& path) const override;
 	void SetGamePath(const std::filesystem::path& path) override { _gamePath = path; }
