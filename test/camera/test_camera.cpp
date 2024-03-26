@@ -27,7 +27,9 @@
 
 // Enable this define because we use a custom locator
 #define LOCATOR_IMPLEMENTATIONS
+#include <Audio/AudioManagerNoOp.h>
 #include <Camera/DefaultWorldCameraModel.h>
+#include <Common/RandomNumberManagerTesting.h>
 
 #include "scenarios/Mock.h"
 
@@ -59,6 +61,8 @@ protected:
 		_camera = std::make_unique<Camera>();
 		GetParam().dynamicsSystem->camera = _camera.get();
 
+		Locator::rng::emplace<openblack::RandomNumberManagerTesting>();
+		Locator::audio::emplace<openblack::audio::AudioManagerNoOp>();
 		Locator::terrainSystem::emplace<MockTerrain>();
 		Locator::windowing::emplace<MockWindowingSystem>();
 		Locator::dynamicsSystem::reset<MockDynamicsSystem>(GetParam().dynamicsSystem);
