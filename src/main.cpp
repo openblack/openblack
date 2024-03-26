@@ -80,6 +80,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		    std::pair {"Gnm", bgfx::RendererType::Gnm},
 		    std::pair {"Nvn", bgfx::RendererType::Nvn},
 		    std::pair {"Noop", bgfx::RendererType::Noop},
+		    std::pair {"WebGPU", bgfx::RendererType::WebGPU},
 		};
 
 		// pick a sane renderer based on the user os
