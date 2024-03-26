@@ -48,6 +48,7 @@ public:
 
 	[[nodiscard]] virtual std::vector<LandBlock>& GetBlocks() = 0;
 	[[nodiscard]] virtual const std::vector<LandBlock>& GetBlocks() const = 0;
+	[[nodiscard]] virtual const bgfx::DynamicVertexBufferHandle& GetInstanceData() const = 0;
 	[[nodiscard]] virtual const std::vector<lnd::LNDCountry>& GetCountries() const = 0;
 
 	[[nodiscard]] virtual const graphics::Texture2D& GetAlbedoArray() const = 0;
