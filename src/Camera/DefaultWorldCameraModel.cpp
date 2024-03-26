@@ -19,7 +19,9 @@
 #include <spdlog/spdlog.h>
 
 #include "3D/LandIsland.h"
+#include "Audio/AudioManagerInterface.h"
 #include "Camera.h"
+#include "Common/RandomNumberManager.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "Game.h"
 #include "Input/GameActionMapInterface.h"
@@ -426,7 +428,14 @@ void DefaultWorldCameraModel::UpdateModeFlying(glm::vec3 eulerAngles)
 	if (wooshingDistance)
 	{
 		_flightPath = CharterFlight(_targetOrigin, _targetFocus, _currentOrigin, k_FlightHeightFactor);
-		// TODO: Play the whooshing sound
+		static constexpr auto k_WooshingNoiseIds = std::array<audio::SoundId, 4> {
+		    audio::SoundId::G_Woosh_01,
+		    audio::SoundId::G_Woosh_02,
+		    audio::SoundId::G_Woosh_03,
+		    audio::SoundId::G_Woosh_04,
+		};
+		const auto wooshNoiseId = static_cast<entt::id_type>(Locator::rng::value().Choose(k_WooshingNoiseIds));
+		Locator::audio::value().PlaySound(wooshNoiseId, audio::PlayType::Once);
 	}
 }
 
