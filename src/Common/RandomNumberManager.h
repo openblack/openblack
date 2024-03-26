@@ -19,7 +19,8 @@ namespace openblack
 class RandomNumberManagerInterface
 {
 public:
-	template <typename T, typename E = typename std::enable_if<std::is_arithmetic_v<T>>::type>
+	template <typename T>
+	    requires(std::is_arithmetic_v<T>)
 	T NextValue(T min, T max)
 	{
 		using dist_t =
@@ -33,6 +34,26 @@ public:
 		}
 		return dist(Generator());
 	}
+
+	template <typename T>
+	    requires((std::is_same_v<T, std::array<typename T::value_type, std::tuple_size<T>::value>> &&
+	              std::tuple_size<T>::value > 1) ||
+	             std::is_same_v<T, std::vector<typename T::value_type>>)
+	auto Choose(const T& container) -> const decltype(container[0])&
+	{
+		const auto size = container.size();
+		if constexpr (std::is_same_v<T, std::vector<typename T::value_type>>)
+		{
+			assert(size > 0);
+		}
+#if __has_cpp_attribute(assume)
+		[[assume(size > 0)]];
+#endif
+
+		const auto index = NextValue<std::size_t>(0, size - 1);
+		return container[index];
+	}
+
 	virtual ~RandomNumberManagerInterface() = default;
 
 protected:
