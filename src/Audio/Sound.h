@@ -20,8 +20,8 @@ extern "C" {
 
 namespace openblack::audio
 {
-typedef ALuint SourceId; // NOLINT(modernize-use-using)
-typedef ALuint BufferId; // NOLINT(modernize-use-using)
+using SourceId = ALuint;
+using BufferId = ALuint;
 
 enum class AudioStatus
 {
@@ -48,6 +48,7 @@ class Sound
 {
 public:
 	std::string name;
+	int id;
 	int sampleRate;
 	int priority;
 	int bitRate;
