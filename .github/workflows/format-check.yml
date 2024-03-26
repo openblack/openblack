@@ -206,4 +206,4 @@ jobs:
         if: failure()
         with:
           name: lint-report-upload
-          path: app/build/reports/lint-results-debug.html
+          path: android/app/build/reports/lint-results-debug.html
