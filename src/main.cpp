@@ -104,13 +104,13 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 			}
 		}
 
-		static const std::map<std::string_view, openblack::DisplayMode> displayModeLookup = {
-		    std::pair {"windowed", openblack::DisplayMode::Windowed},
-		    std::pair {"fullscreen", openblack::DisplayMode::Fullscreen},
-		    std::pair {"borderless", openblack::DisplayMode::Borderless},
+		static const std::map<std::string_view, openblack::windowing::DisplayMode> displayModeLookup = {
+		    std::pair {"windowed", openblack::windowing::DisplayMode::Windowed},
+		    std::pair {"fullscreen", openblack::windowing::DisplayMode::Fullscreen},
+		    std::pair {"borderless", openblack::windowing::DisplayMode::Borderless},
 		};
 
-		openblack::DisplayMode displayMode;
+		openblack::windowing::DisplayMode displayMode;
 		auto displayModeIter = displayModeLookup.find(result["window-mode"].as<std::string>());
 		if (displayModeIter != displayModeLookup.cend())
 		{

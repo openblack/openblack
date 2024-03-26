@@ -29,15 +29,20 @@
 #include "ECS/Systems/Implementations/PlayerSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/TownSystem.h"
+#include "Resources/Resources.h"
+#include "Windowing/Sdl2WindowingSystem.h"
 #if __ANDROID__
 #include "FileSystem/AndroidFileSystem.h"
 #else
 #include "FileSystem/DefaultFileSystem.h"
 #endif
-#include "Resources/Resources.h"
 
 using namespace openblack::audio;
 using namespace openblack::filesystem;
+using openblack::LandIsland;
+using openblack::RandomNumberManagerProduction;
+using openblack::TempleInterior;
+using openblack::UnloadedIsland;
 using openblack::ecs::MapProduction;
 using openblack::ecs::Registry;
 using openblack::ecs::systems::CameraBookmarkSystem;
@@ -48,15 +53,20 @@ using openblack::ecs::systems::PlayerSystem;
 using openblack::ecs::systems::RenderingSystem;
 using openblack::ecs::systems::TownSystem;
 using openblack::resources::Resources;
+using openblack::windowing::DisplayMode;
+using openblack::windowing::Sdl2WindowingSystem;
 
-namespace openblack::ecs::systems
+void openblack::InitializeWindow(const std::string& title, int width, int height, DisplayMode displayMode, uint32_t extraFlags)
 {
-void InitializeGame()
+	Locator::windowing::emplace<Sdl2WindowingSystem>(title, width, height, displayMode, extraFlags);
+}
+
+void openblack::InitializeGame()
 {
 #if __ANDROID__
-	Locator::filesystem::emplace<filesystem::AndroidFileSystem>();
+	Locator::filesystem::emplace<AndroidFileSystem>();
 #else
-	Locator::filesystem::emplace<filesystem::DefaultFileSystem>();
+	Locator::filesystem::emplace<DefaultFileSystem>();
 #endif
 	Locator::terrainSystem::emplace<UnloadedIsland>();
 	Locator::resources::emplace<Resources>();
@@ -76,7 +86,7 @@ void InitializeGame()
 	Locator::temple::emplace<TempleInterior>();
 }
 
-void InitializeLevel(const std::filesystem::path& path)
+void openblack::InitializeLevel(const std::filesystem::path& path)
 {
 	Locator::entitiesMap::emplace<MapProduction>();
 	Locator::dynamicsSystem::emplace<DynamicsSystem>();
@@ -86,4 +96,3 @@ void InitializeLevel(const std::filesystem::path& path)
 	Locator::cameraBookmarkSystem::emplace<CameraBookmarkSystem>();
 	Locator::terrainSystem::emplace<LandIsland>(path);
 }
-} // namespace openblack::ecs::systems

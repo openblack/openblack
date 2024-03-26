@@ -87,7 +87,7 @@ class Window;
 class Gui
 {
 public:
-	static std::unique_ptr<Gui> Create(const GameWindow* window, graphics::RenderPass viewId, float scale);
+	static std::unique_ptr<Gui> Create(graphics::RenderPass viewId, float scale);
 
 	virtual ~Gui();
 

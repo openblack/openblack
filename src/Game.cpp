@@ -51,7 +51,6 @@
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/Systems/TownSystemInterface.h"
 #include "FileSystem/FileSystemInterface.h"
-#include "GameWindow.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/Texture2D.h"
 #include "LHScriptX/Script.h"
@@ -114,12 +113,11 @@ Game::Game(Arguments&& args)
 		{
 			extraFlags |= SDL_WINDOW_METAL;
 		}
-		_window =
-		    std::make_unique<GameWindow>(k_WindowTitle, args.windowWidth, args.windowHeight, args.displayMode, extraFlags);
+		openblack::InitializeWindow(k_WindowTitle, args.windowWidth, args.windowHeight, args.displayMode, extraFlags);
 	}
 	try
 	{
-		_renderer = std::make_unique<Renderer>(_window.get(), args.rendererType, args.vsync);
+		_renderer = std::make_unique<Renderer>(args.rendererType, args.vsync);
 	}
 	catch (std::runtime_error& exception)
 	{
@@ -127,7 +125,7 @@ Game::Game(Arguments&& args)
 		throw exception;
 	}
 
-	_gui = debug::gui::Gui::Create(_window.get(), graphics::RenderPass::ImGui, args.scale);
+	_gui = debug::gui::Gui::Create(graphics::RenderPass::ImGui, args.scale);
 
 	_eventManager->AddHandler(std::function([this](const SDL_Event& event) {
 		// If gui captures this input, do not propagate
@@ -176,7 +174,7 @@ Game::~Game()
 	_sky.reset();
 	_gui.reset();
 	_renderer.reset();
-	_window.reset();
+	Locator::windowing::reset();
 	_eventManager.reset();
 	SDL_Quit(); // todo: move to GameWindow
 	spdlog::shutdown();
@@ -203,12 +201,14 @@ bool Game::ProcessEvents(const SDL_Event& event)
 
 	_handGripping = middleMouseButton || leftMouseButton;
 
+	auto& window = Locator::windowing::value();
+
 	switch (event.type)
 	{
 	case SDL_QUIT:
 		return false;
 	case SDL_WINDOWEVENT:
-		if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == _window->GetID())
+		if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == window.GetID())
 		{
 			return false;
 		}
@@ -219,7 +219,7 @@ bool Game::ProcessEvents(const SDL_Event& event)
 			_renderer->Reset(width, height);
 			_renderer->ConfigureView(graphics::RenderPass::Main, width, height);
 
-			auto aspect = _window->GetAspectRatio();
+			auto aspect = window.GetAspectRatio();
 			_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
 		}
 		break;
@@ -229,7 +229,7 @@ bool Game::ProcessEvents(const SDL_Event& event)
 		case SDLK_ESCAPE:
 			return false;
 		case SDLK_f:
-			_window->SetFullscreen(true);
+			window.SetDisplayMode(windowing::DisplayMode::Fullscreen);
 			break;
 		case SDLK_p:
 			_paused = !_paused;
@@ -268,10 +268,9 @@ bool Game::ProcessEvents(const SDL_Event& event)
 		{
 		case SDL_BUTTON_MIDDLE:
 		{
-			glm::ivec2 screenSize;
-			_window->GetSize(screenSize.x, screenSize.y);
+			const glm::ivec2 screenSize = window.GetSize();
 			SDL_SetRelativeMouseMode((event.type == SDL_MOUSEBUTTONDOWN) ? SDL_TRUE : SDL_FALSE);
-			SDL_WarpMouseInWindow(_window->GetHandle(), screenSize.x / 2, screenSize.y / 2);
+			SDL_WarpMouseInWindow(static_cast<SDL_Window*>(window.GetHandle()), screenSize.x / 2, screenSize.y / 2);
 		}
 		break;
 		}
@@ -385,12 +384,8 @@ bool Game::Update()
 		// Update Debug Cross
 		ecs::components::Transform intersectionTransform {};
 		{
-			glm::ivec2 screenSize {};
-			if (_window)
-			{
-				_window->GetSize(screenSize.x, screenSize.y);
-			}
-
+			const auto screenSize =
+			    Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::zero<glm::ivec2>();
 			const auto scale = glm::vec3(50.0f, 50.0f, 50.0f);
 			if (screenSize.x > 0 && screenSize.y > 0)
 			{
@@ -464,7 +459,7 @@ bool Game::Update()
 bool Game::Initialize()
 {
 	using filesystem::Path;
-	ecs::systems::InitializeGame();
+	InitializeGame();
 	auto& fileSystem = Locator::filesystem::value();
 	auto& resources = Locator::resources::value();
 	auto& meshManager = resources.GetMeshes();
@@ -719,7 +714,7 @@ bool Game::Initialize()
 
 	// create our camera
 	_camera = std::make_unique<Camera>();
-	auto aspect = _window ? _window->GetAspectRatio() : 1.0f;
+	const auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
 	_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
 
 	_camera->SetPosition(glm::vec3(1441.56f, 24.764f, 2081.76f));
@@ -778,12 +773,10 @@ bool Game::Run()
 	// Initialize the Acceleration Structure
 	Locator::entitiesMap::value().Rebuild();
 
-	if (_window)
+	if (Locator::windowing::has_value())
 	{
-		int width;
-		int height;
-		_window->GetSize(width, height);
-		_renderer->ConfigureView(graphics::RenderPass::Main, static_cast<uint16_t>(width), static_cast<uint16_t>(height));
+		const auto size = static_cast<glm::u16vec2>(Locator::windowing::value().GetSize());
+		_renderer->ConfigureView(graphics::RenderPass::Main, size.x, size.y);
 	}
 
 	{
@@ -924,7 +917,7 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	{
 		throw std::runtime_error("Could not find landscape " + path.generic_string());
 	}
-	ecs::systems::InitializeLevel(fixedName);
+	InitializeLevel(fixedName);
 
 	// There is always a player active
 	Locator::playerSystem::value().AddPlayer(ecs::archetypes::PlayerArchetype::Create(PlayerNames::PLAYER_ONE));
