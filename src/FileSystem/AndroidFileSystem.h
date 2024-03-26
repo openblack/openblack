@@ -26,6 +26,8 @@ public:
 	AndroidFileSystem();
 	~AndroidFileSystem();
 
+	// Android has a complicated permissions API, must call java code to read contents.
+	[[nodiscard]] bool PreferBuffer() const override { return true; }
 	[[nodiscard]] std::filesystem::path FindPath(const std::filesystem::path& path) const override;
 	std::unique_ptr<Stream> Open(const std::filesystem::path& path, Stream::Mode mode) override;
 	bool Exists(const std::filesystem::path& path) const override;

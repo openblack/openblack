@@ -107,6 +107,7 @@ public:
 		return withGamePath ? (GetGamePath() / result) : result;
 	}
 
+	[[nodiscard]] virtual bool PreferBuffer() const = 0;
 	[[nodiscard]] virtual std::filesystem::path FindPath(const std::filesystem::path& path) const = 0;
 	virtual std::unique_ptr<Stream> Open(const std::filesystem::path& path, Stream::Mode mode) = 0;
 	[[nodiscard]] virtual bool Exists(const std::filesystem::path& path) const = 0;
