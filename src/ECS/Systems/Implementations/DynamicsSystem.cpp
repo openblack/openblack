@@ -79,7 +79,7 @@ void DynamicsSystem::RegisterRigidBodies()
 {
 	auto& registry = Locator::entitiesRegistry::value();
 	registry.Each<RigidBody>([this](RigidBody& body) {
-		body.handle.setUserIndex(static_cast<int>(ecs::systems::RigidBodyType::Entity));
+		body.handle.setUserIndex(static_cast<int>(RigidBodyType::Entity));
 		body.handle.setUserIndex2(0);
 		body.handle.setUserPointer(this);
 		AddRigidBody(&body.handle);
@@ -92,7 +92,7 @@ void DynamicsSystem::RegisterIslandRigidBodies(LandIslandInterface& island)
 	for (uint32_t i = 0; i < landBlocks.size(); ++i)
 	{
 		auto& rigidBody = landBlocks[i].GetRigidBody();
-		rigidBody->setUserIndex(static_cast<int>(ecs::systems::RigidBodyType::Terrain));
+		rigidBody->setUserIndex(static_cast<int>(RigidBodyType::Terrain));
 		rigidBody->setUserIndex2(i);
 		rigidBody->setUserPointer(reinterpret_cast<void*>(this));
 		AddRigidBody(rigidBody.get());

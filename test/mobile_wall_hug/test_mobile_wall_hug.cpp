@@ -20,23 +20,12 @@
 #include <Game.h>
 #include <LHScriptX/Script.h>
 #include <Locator.h>
-#include <glm/gtx/string_cast.hpp>
 #include <gtest/gtest.h>
+#include <json_helpers.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
-
-#include "json.hpp"
 
 using nlohmann::json;
 using namespace openblack;
-
-namespace glm
-{
-template <length_t L, typename T, qualifier Q>
-std::ostream& operator<<(std::ostream& os, const vec<L, T, Q>& v)
-{
-	return os << glm::to_string(v);
-}
-} // namespace glm
 
 enum MOVE_STATE
 {

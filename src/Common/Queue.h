@@ -17,6 +17,9 @@
 
 #pragma once
 
+namespace openblack
+{
+
 template <typename Event>
 using EventHandler = std::function<void(const Event&)>;
 
@@ -56,3 +59,5 @@ private:
 	Queue _instance;
 	std::vector<EventHandler<T>> _handlers;
 };
+
+} // namespace openblack

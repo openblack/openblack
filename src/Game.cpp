@@ -9,19 +9,14 @@
 
 #include "Game.h"
 
-#include <cstdint>
-
 #include <string>
 
 #include <LHVM/LHVM.h>
-#include <Serializer/FotFile.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/intersect.hpp>
-#include <glm/gtx/transform.hpp>
-#include <spdlog/sinks/android_sink.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
@@ -38,7 +33,6 @@
 #include "Debug/Gui.h"
 #include "ECS/Archetypes/HandArchetype.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
-#include "ECS/Components/Fixed.h"
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Map.h"
@@ -62,6 +56,11 @@
 #include "Renderer.h"
 #include "Resources/Loaders.h"
 #include "Resources/ResourcesInterface.h"
+#include "Serializer/FotFile.h"
+
+#ifdef __ANDROID__
+#include <spdlog/sinks/android_sink.h>
+#endif
 
 using namespace openblack;
 using namespace openblack::lhscriptx;
@@ -879,8 +878,8 @@ void Game::LoadMap(const std::filesystem::path& path)
 		throw std::runtime_error("Could not find script " + path.generic_string());
 	}
 
-	auto data = fileSystem.ReadAll(path);
-	std::string source(reinterpret_cast<const char*>(data.data()), data.size());
+	const auto data = fileSystem.ReadAll(path);
+	const auto source = std::string(reinterpret_cast<const char*>(data.data()), data.size());
 
 	// Reset everything. Deletes all entities and their components
 	Locator::entitiesRegistry::value().Reset();
@@ -893,8 +892,8 @@ void Game::LoadMap(const std::filesystem::path& path)
 	script.Load(source);
 
 	// Each released map comes with an optional .fot file which contains the footpath information for the map
-	auto stem = string_utils::LowerCase(path.stem().generic_string());
-	auto fotPath = fileSystem.GetPath<filesystem::Path::Landscape>() / fmt::format("{}.fot", stem);
+	const auto stem = string_utils::LowerCase(path.stem().generic_string());
+	const auto fotPath = fileSystem.GetPath<filesystem::Path::Landscape>() / fmt::format("{}.fot", stem);
 
 	if (fileSystem.Exists(fotPath))
 	{

@@ -40,6 +40,7 @@ public:
 	static constexpr entt::hashed_string k_SmallBumpTextureId = entt::hashed_string("raw/smallbumpa");
 
 	[[nodiscard]] virtual float GetHeightAt(glm::vec2) const = 0;
+	[[nodiscard]] virtual glm::vec3 GetNormalAt(glm::vec2) const = 0;
 	[[nodiscard]] virtual const lnd::LNDCell& GetCell(const glm::u16vec2& coordinates) const = 0;
 
 	// Debug

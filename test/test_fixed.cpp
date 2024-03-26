@@ -9,28 +9,20 @@
 
 #include <ECS/Archetypes/AbodeArchetype.h>
 #include <ECS/Archetypes/TownArchetype.h>
+#include <ECS/Archetypes/Utils.h>
 #include <ECS/Components/Fixed.h>
+#include <ECS/Components/Transform.h>
 #include <ECS/Registry.h>
 #include <Game.h>
 #include <Locator.h>
 #include <glm/gtx/string_cast.hpp>
 #include <gtest/gtest.h>
 
-#include "ECS/Archetypes/Utils.h"
-#include "ECS/Components/Transform.h"
+#include "third_party/json_helpers.h"
 
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
 using namespace openblack;
-
-namespace glm
-{
-template <length_t L, typename T, qualifier Q>
-std::ostream& operator<<(std::ostream& os, const vec<L, T, Q>& v)
-{
-	return os << glm::to_string(v);
-}
-} // namespace glm
 
 class TestFixed: public ::testing::Test
 {

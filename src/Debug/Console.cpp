@@ -236,14 +236,14 @@ void Console::Draw(Game& game)
 			{
 				switch (hit->second.type)
 				{
-				case ecs::systems::RigidBodyType::Terrain:
+				case RigidBodyType::Terrain:
 				{
 					// auto landIsland = reinterpret_cast<const LandIsland*>(hit->second.userData);
 					auto blockIndex = hit->second.id;
 					ImGui::SetTooltip("Block Index: %d", blockIndex);
 				}
 				break;
-				case ecs::systems::RigidBodyType::Entity:
+				case RigidBodyType::Entity:
 				{
 					// auto registry = reinterpret_cast<const openblack::ecs::Registry*>(hit->second.userData);
 					auto entity = hit->second.id;

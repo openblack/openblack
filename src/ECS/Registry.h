@@ -40,7 +40,7 @@ public:
 	template <typename It>
 	void Release(It first, It last)
 	{
-		ENTT_ASSERT(std::all_of(first, last, [this](const auto entt) { return orphan(entt); }), "Non-orphan entity");
+		ENTT_ASSERT(std::all_of(first, last, [](const auto entt) { return orphan(entt); }), "Non-orphan entity");
 		_registry.storage<entt::entity>().erase(std::move(first), std::move(last));
 	}
 	virtual void Destroy(entt::entity entity);
