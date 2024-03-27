@@ -661,55 +661,57 @@ bool Game::Initialize()
 
 	// Load all sound packs in the Audio directory
 	auto& audioManager = Locator::audio::value();
-	fileSystem.Iterate(fileSystem.GetPath<Path::Audio>(), true, [&audioManager, &soundManager](const std::filesystem::path& f) {
-		if (f.extension() != ".sad")
-		{
-			return;
-		}
+	fileSystem.Iterate(
+	    fileSystem.GetPath<Path::Audio>(), true, [&audioManager, &soundManager, &fileSystem](const std::filesystem::path& f) {
+		    if (f.extension() != ".sad")
+		    {
+			    return;
+		    }
 
-		pack::PackFile soundPack;
-		SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Opening sound pack {}", f.filename().string());
-		soundPack.Open(f);
-		const auto& audioHeaders = soundPack.GetAudioSampleHeaders();
-		const auto& audioData = soundPack.GetAudioSamplesData();
-		auto soundName = std::filesystem::path(audioHeaders[0].name.data());
+		    pack::PackFile soundPack;
+		    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Opening sound pack {}", f.filename().string());
+		    soundPack.Open(fileSystem.ReadAll(f));
+		    const auto& audioHeaders = soundPack.GetAudioSampleHeaders();
+		    const auto& audioData = soundPack.GetAudioSamplesData();
+		    auto soundName = std::filesystem::path(audioHeaders[0].name.data());
 
-		if (audioHeaders.empty())
-		{
-			SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound pack found for {}. Skipping", f.filename().string());
-			return;
-		}
+		    if (audioHeaders.empty())
+		    {
+			    SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound pack found for {}. Skipping", f.filename().string());
+			    return;
+		    }
 
-		auto groupName = f.filename().string();
+		    auto groupName = f.filename().string();
 
-		// A hacky way of detecting if the sound is music as all music sounds end with "mpg"
-		if (soundName.extension() == ".mpg")
-		{
-			auto buffers = std::queue<std::vector<uint8_t>>();
-			auto packName = f.string();
-			audioManager.AddMusicEntry(packName);
-		}
-		else
-		{
-			audioManager.CreateSoundGroup(groupName);
-			for (size_t i = 0; i < audioHeaders.size(); i++)
-			{
-				soundName = std::filesystem::path(audioHeaders[i].name.data());
-				if (audioData[i].empty())
-				{
-					SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound buffer found for {}. Skipping", soundName.string());
-					return;
-				}
+		    // A hacky way of detecting if the sound is music as all music sounds end with "mpg"
+		    if (soundName.extension() == ".mpg")
+		    {
+			    auto buffers = std::queue<std::vector<uint8_t>>();
+			    auto packName = f.string();
+			    audioManager.AddMusicEntry(packName);
+		    }
+		    else
+		    {
+			    audioManager.CreateSoundGroup(groupName);
+			    for (size_t i = 0; i < audioHeaders.size(); i++)
+			    {
+				    soundName = std::filesystem::path(audioHeaders[i].name.data());
+				    if (audioData[i].empty())
+				    {
+					    SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound buffer found for {}. Skipping",
+					                       soundName.string());
+					    return;
+				    }
 
-				const auto stringId = fmt::format("{}/{}", groupName, audioHeaders[i].id);
-				const entt::id_type id = entt::hashed_string(stringId.c_str());
-				const std::vector<std::vector<uint8_t>> buffer = {audioData[i]};
-				SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Loading sound {}: {}", stringId, audioHeaders[i].name.data());
-				soundManager.Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[i], buffer);
-				audioManager.AddToSoundGroup(groupName, id);
-			}
-		}
-	});
+				    const auto stringId = fmt::format("{}/{}", groupName, audioHeaders[i].id);
+				    const entt::id_type id = entt::hashed_string(stringId.c_str());
+				    const std::vector<std::vector<uint8_t>> buffer = {audioData[i]};
+				    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Loading sound {}: {}", stringId, audioHeaders[i].name.data());
+				    soundManager.Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[i], buffer);
+				    audioManager.AddToSoundGroup(groupName, id);
+			    }
+		    }
+	    });
 
 	// create our camera
 	_camera = std::make_unique<Camera>();
