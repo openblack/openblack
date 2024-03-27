@@ -37,21 +37,41 @@ public class FileSystemInterop {
         DocumentFile directory = DocumentFile.fromTreeUri(context, uri);
         ArrayList<String> fileNames = new ArrayList<>();
 
-        listFilesRecursive(directory, fileNames, recursive);
+        listFilesRecursive(directory, fileNames, recursive, "");
 
         String[] fileNamesArray = new String[fileNames.size()];
         fileNamesArray = fileNames.toArray(fileNamesArray);
         return fileNamesArray;
     }
 
-    private static void listFilesRecursive(DocumentFile directory, ArrayList<String> fileNames, boolean recursive) {
+    private static void listFilesRecursive(DocumentFile directory, ArrayList<String> fileNames, boolean recursive, String path) {
         DocumentFile[] files = directory.listFiles();
 
         for (DocumentFile file : files) {
-            fileNames.add(file.getName());
-
-            if (recursive && file.isDirectory()) {
-                listFilesRecursive(file, fileNames, recursive);
+            if (!file.isDirectory())
+            {
+                String[] pathsPart;
+                if (path.isEmpty())
+                {
+                    fileNames.add((file.getName()));
+                }
+                else
+                {
+                    fileNames.add(path + "/" + file.getName());
+                }
+            }
+            else if (recursive) {
+                String recursivePath;
+                if (path.isEmpty())
+                {
+                    recursivePath = file.getName();
+                }
+                else
+                {
+                    String[] pathParts = {path, file.getName()};
+                    recursivePath = path + "/" + file.getName();
+                }
+                listFilesRecursive(file, fileNames, recursive, recursivePath);
             }
         }
     }
