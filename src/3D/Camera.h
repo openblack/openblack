@@ -13,13 +13,11 @@
 #include <memory>
 #include <optional>
 
-#include <SDL_events.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 
 #include "ECS/Components/Transform.h"
-
-union SDL_Event;
 
 namespace openblack
 {
@@ -56,7 +54,7 @@ public:
 	void SetRotation(const glm::vec3& eulerRadians) { _rotation = eulerRadians; }
 
 	void SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip);
-	void SetProjectionMatrix(const glm::mat4x4& projection) { _projectionMatrix = projection; }
+	void SetProjectionMatrix(const glm::mat4& projection) { _projectionMatrix = projection; }
 
 	[[nodiscard]] glm::vec3 GetForward() const;
 	[[nodiscard]] glm::vec3 GetRight() const;
@@ -69,10 +67,8 @@ public:
 	bool ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& outScreenPosition) const;
 
 	void Update(std::chrono::microseconds dt);
-	void ProcessSDLEvent(const SDL_Event&);
 
-	void HandleKeyboardInput(const SDL_Event&);
-	void HandleMouseInput(const SDL_Event&);
+	void HandleActions();
 
 	[[nodiscard]] glm::mat4 GetRotationMatrix() const;
 
@@ -131,6 +127,6 @@ public:
 
 private:
 	glm::vec4 _reflectionPlane;
-	void ReflectMatrix(glm::mat4x4& m, const glm::vec4& plane) const;
+	void ReflectMatrix(glm::mat4& m, const glm::vec4& plane) const;
 };
 } // namespace openblack
