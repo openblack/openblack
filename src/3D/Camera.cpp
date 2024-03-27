@@ -75,21 +75,19 @@ std::optional<ecs::components::Transform> Camera::RaycastMouseToLand()
 	int sWidth;
 	int sHeight;
 	Game::Instance()->GetWindow()->GetSize(sWidth, sHeight);
-	glm::vec3 rayOrigin;
-	glm::vec3 rayDirection;
 	glm::ivec2 mouseVec;
 	SDL_GetMouseState(&mouseVec.x, &mouseVec.y);
-	DeprojectScreenToWorld(mouseVec, glm::vec2(sWidth, sHeight), rayOrigin, rayDirection);
+	const auto ray = DeprojectScreenToWorld(mouseVec, glm::vec2(sWidth, sHeight));
 	const auto& dynamicsSystem = Locator::dynamicsSystem::value();
-	if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
+	if (auto hit = dynamicsSystem.RayCastClosestHit(ray, 1e10f))
 	{
 		intersectionTransform = hit->first;
 		return std::make_optional(intersectionTransform);
 	}
-	if (glm::intersectRayPlane(rayOrigin, rayDirection, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
+	if (glm::intersectRayPlane(ray.origin, ray.direction, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
 	                           intersectDistance))
 	{
-		intersectionTransform.position = rayOrigin + rayDirection * intersectDistance;
+		intersectionTransform.position = ray.At(intersectDistance);
 		intersectionTransform.rotation = glm::mat3(1.0f);
 		return std::make_optional(intersectionTransform);
 	}
@@ -168,8 +166,7 @@ std::unique_ptr<Camera> Camera::Reflect(const glm::vec4& relectionPlane) const
 	return reflectionCamera;
 }
 
-void Camera::DeprojectScreenToWorld(glm::ivec2 screenPosition, glm::ivec2 screenSize, glm::vec3& outWorldOrigin,
-                                    glm::vec3& outWorldDirection)
+Ray Camera::DeprojectScreenToWorld(glm::u16vec2 screenPosition, glm::u16vec2 screenSize) const
 {
 	const float normalizedX = static_cast<float>(screenPosition.x) / static_cast<float>(screenSize.x);
 	const float normalizedY = static_cast<float>(screenPosition.y) / static_cast<float>(screenSize.y);
@@ -207,28 +204,29 @@ void Camera::DeprojectScreenToWorld(glm::ivec2 screenPosition, glm::ivec2 screen
 
 	const glm::vec3 rayDirWorldSpace = glm::normalize(rayEndWorldSpace - rayStartWorldSpace);
 
-	// finally, store the results in the outputs
-	outWorldOrigin = rayStartWorldSpace;
-	outWorldDirection = rayDirWorldSpace;
+	return {rayStartWorldSpace, rayDirWorldSpace};
 }
 
-bool Camera::ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& outScreenPosition) const
+std::optional<glm::vec3> Camera::ProjectWorldToScreen(glm::vec3 worldPosition, U16Extent2 viewport) const
 {
-	outScreenPosition = glm::project(worldPosition, GetViewMatrix(), GetProjectionMatrix(), viewport);
-	if (outScreenPosition.x < viewport.x || outScreenPosition.y < viewport.y || outScreenPosition.x > viewport.z ||
-	    outScreenPosition.y > viewport.w)
+	const auto outScreenPosition =
+	    glm::project(worldPosition, GetViewMatrix(), GetProjectionMatrix(),
+	                 glm::vec4 {viewport.minimum.x, viewport.minimum.y, viewport.maximum.x, viewport.maximum.y});
+	if (outScreenPosition.x < viewport.minimum.x || outScreenPosition.y < viewport.minimum.y ||
+	    outScreenPosition.x > viewport.maximum.x || outScreenPosition.y > viewport.maximum.y)
 	{
-		return false; // Outside viewport bounds
+		return std::nullopt; // Outside viewport bounds
 	}
 	if (outScreenPosition.z > 1.0f)
 	{
-		return false; // Behind Camera
+		return std::nullopt; // Behind Camera
 	}
 	if (outScreenPosition.z < 0.0f)
 	{
-		return false; // Clipped
+		return std::nullopt; // Clipped
 	}
-	return true;
+	const auto yflipped = viewport.maximum.y - (outScreenPosition.y - viewport.minimum.y) + viewport.minimum.y;
+	return {{outScreenPosition.x, yflipped, outScreenPosition.z}};
 }
 
 void Camera::ProcessSDLEvent(const SDL_Event& e)
@@ -472,7 +470,7 @@ void Camera::HandleMouseInput(const SDL_Event& e)
 		{
 			float dist = 9999.0f;
 			const auto& dynamicsSystem = Locator::dynamicsSystem::value();
-			if (auto hit = dynamicsSystem.RayCastClosestHit(_position, GetForward(), 1e10f))
+			if (auto hit = dynamicsSystem.RayCastClosestHit(Ray {_position, GetForward()}, 1e10f))
 			{
 				dist = glm::length(hit->first.position - _position);
 			}
@@ -566,22 +564,19 @@ void Camera::Update(std::chrono::microseconds dt)
 		auto& handTransform = entityReg.Get<ecs::components::Transform>(handEntity);
 		const glm::vec3 handOffset(0, 1.5f, 0);
 		auto handPos = handTransform.position;
-		glm::vec3 handToScreen;
-		glm::vec4 viewport = glm::vec4(0, 0, sWidth, sHeight);
+		const auto viewport = U16Extent2 {{0, 0}, {sWidth, sHeight}};
 		auto hit = RaycastMouseToLand();
 		if (hit)
 		{
 			handPos -= handOffset * glm::transpose(hit->rotation);
 		}
-		if (ProjectWorldToScreen(handPos, viewport, handToScreen) && hit)
+		if (const auto handToScreen = ProjectWorldToScreen(handPos, viewport))
 		{
 			// calculate distance between hand and mouse in screen cooords
 			glm::ivec2 mousePosition;
 
 			SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
-			auto handScreenCoords = glm::ivec2(handToScreen);
-			handScreenCoords.y = sHeight - handScreenCoords.y;
-			_handScreenVec = mousePosition - handScreenCoords;
+			_handScreenVec = mousePosition - glm::ivec2(handToScreen.value());
 			_handDragMult = glm::length(glm::vec2(_handScreenVec));
 			worldHandDist = glm::length(hit->position - handPos);
 			_handDragMult /= sHeight;
@@ -652,9 +647,10 @@ void Camera::Update(std::chrono::microseconds dt)
 
 		// Check if there are obstacles in the way, if there are fly over them
 		const auto& dynamicsSystem = Locator::dynamicsSystem::value();
-		if (auto obst = dynamicsSystem.RayCastClosestHit(_position - glm::vec3(0.0f, 20.0f, 0.0f),
-		                                                 glm::normalize((_flyToPos - glm::vec3(0.0f, 20.0f, 0.0f)) - _position),
-		                                                 glm::length(_flyToPos - _position) + 10.0f))
+		if (auto obst =
+		        dynamicsSystem.RayCastClosestHit(Ray {_position - glm::vec3(0.0f, 20.0f, 0.0f),
+		                                              glm::normalize((_flyToPos - glm::vec3(0.0f, 20.0f, 0.0f)) - _position)},
+		                                         glm::length(_flyToPos - _position) + 10.0f))
 		{
 			auto closest = obst->first;
 			auto dist = glm::length(_flyToPos - closest.position);

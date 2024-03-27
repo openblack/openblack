@@ -18,6 +18,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "ECS/Components/Transform.h"
+#include "Extent.h"
+#include "Ray.h"
 
 union SDL_Event;
 
@@ -64,9 +66,8 @@ public:
 
 	[[nodiscard]] std::unique_ptr<Camera> Reflect(const glm::vec4& relectionPlane) const;
 
-	void DeprojectScreenToWorld(glm::ivec2 screenPosition, glm::ivec2 screenSize, glm::vec3& outWorldOrigin,
-	                            glm::vec3& outWorldDirection);
-	bool ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& outScreenPosition) const;
+	[[nodiscard]] Ray DeprojectScreenToWorld(glm::u16vec2 screenPosition, glm::u16vec2 screenSize) const;
+	[[nodiscard]] std::optional<glm::vec3> ProjectWorldToScreen(glm::vec3 worldPosition, U16Extent2 viewport) const;
 
 	void Update(std::chrono::microseconds dt);
 	void ProcessSDLEvent(const SDL_Event&);
