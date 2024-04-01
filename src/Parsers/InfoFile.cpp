@@ -26,13 +26,15 @@ bool InfoFile::LoadFromFile(const std::filesystem::path& path, InfoConstants& in
 	try
 	{
 		pack::PackFile pack;
-#if __ANDROID__
-		//  Android has a complicated permissions API, must call java code to read contents.
-		auto bytes = Locator::filesystem::value().ReadAll(Locator::filesystem::value().FindPath(path));
-		pack.Open(bytes);
-#else
-		pack.Open(Locator::filesystem::value().FindPath(path));
-#endif
+		if (Locator::filesystem::value().PreferBuffer())
+		{
+			auto bytes = Locator::filesystem::value().ReadAll(Locator::filesystem::value().FindPath(path));
+			pack.Open(bytes);
+		}
+		else
+		{
+			pack.Open(Locator::filesystem::value().FindPath(path));
+		}
 		data = pack.GetBlock("Info");
 		if (data.size() == sizeof(v100::InfoConstants))
 		{
