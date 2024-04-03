@@ -28,10 +28,9 @@ using namespace openblack::filesystem;
 AndroidFileSystem::AndroidFileSystem()
     : _jniEnv(static_cast<JNIEnv*>(SDL_AndroidGetJNIEnv()))
     , _jniActivity(static_cast<jobject>(SDL_AndroidGetActivity()))
-    , _jniInteropClass(_jniEnv->FindClass("org/openblack/app/FileSystemInterop"))
+    , _jniInteropClass((jclass)_jniEnv->NewGlobalRef(_jniEnv->FindClass("org/openblack/app/FileSystemInterop")))
 {
 	// You need to create a global reference to use it outside the method where it was created
-	_jniInteropClass = _jniEnv->FindClass("org/openblack/app/FileSystemInterop");
 	_jniReadFileFromPathMid = _jniEnv->GetStaticMethodID(_jniInteropClass, "readFileFromPath",
 	                                                     "(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)[B");
 	_jniListFilesFromPathMid =
@@ -97,9 +96,11 @@ std::unique_ptr<Stream> AndroidFileSystem::Open(const std::filesystem::path& pat
 	jbyte* jbytesPtr = _jniEnv->GetByteArrayElements(jbytes, nullptr);
 
 	std::vector<uint8_t> bytes(jbytesPtr, jbytesPtr + length);
+	auto value = std::unique_ptr<Stream>(new MemoryStream(std::move(bytes)));
 
 	_jniEnv->ReleaseByteArrayElements(jbytes, jbytesPtr, 0);
-	return std::unique_ptr<Stream>(new MemoryStream(std::move(bytes)));
+	_jniEnv->DeleteLocalRef(jbytes);
+	return value;
 }
 
 bool AndroidFileSystem::Exists(const std::filesystem::path& path) const

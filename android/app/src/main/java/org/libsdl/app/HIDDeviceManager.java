@@ -170,7 +170,7 @@ public class HIDDeviceManager {
                 Log.i(TAG,"  Interface protocol: " + mUsbInterface.getInterfaceProtocol());
                 Log.i(TAG,"  Endpoint count: " + mUsbInterface.getEndpointCount());
 
-                // Get endpoint details 
+                // Get endpoint details
                 for (int epi = 0; epi < mUsbInterface.getEndpointCount(); epi++)
                 {
                     UsbEndpoint mEndpoint = mUsbInterface.getEndpoint(epi);
@@ -248,7 +248,11 @@ public class HIDDeviceManager {
             0x1689, // Razer Onza
             0x1949, // Lab126, Inc.
             0x1bad, // Harmonix
+            0x20d6, // PowerA
             0x24c6, // PowerA
+            0x2c22, // Qanba
+            0x2dc8, // 8BitDo
+            0x9886, // ASTRO Gaming
         };
 
         if (usbInterface.getInterfaceClass() == UsbConstants.USB_CLASS_VENDOR_SPEC &&
@@ -269,13 +273,19 @@ public class HIDDeviceManager {
         final int XB1_IFACE_SUBCLASS = 71;
         final int XB1_IFACE_PROTOCOL = 208;
         final int[] SUPPORTED_VENDORS = {
+            0x03f0, // HP
+            0x044f, // Thrustmaster
             0x045e, // Microsoft
             0x0738, // Mad Catz
             0x0e6f, // PDP
             0x0f0d, // Hori
+            0x10f5, // Turtle Beach
             0x1532, // Razer Wildcat
+            0x20d6, // PowerA
             0x24c6, // PowerA
+            0x2dc8, // 8BitDo
             0x2e24, // Hyperkin
+            0x3537, // GameSir
         };
 
         if (usbInterface.getId() == 0 &&
@@ -349,13 +359,19 @@ public class HIDDeviceManager {
     private void initializeBluetooth() {
         Log.d(TAG, "Initializing Bluetooth");
 
-        if (Build.VERSION.SDK_INT <= 30 &&
+        if (Build.VERSION.SDK_INT >= 31 /* Android 12  */ &&
+            mContext.getPackageManager().checkPermission(android.Manifest.permission.BLUETOOTH_CONNECT, mContext.getPackageName()) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Couldn't initialize Bluetooth, missing android.permission.BLUETOOTH_CONNECT");
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT <= 30 /* Android 11.0 (R) */ &&
             mContext.getPackageManager().checkPermission(android.Manifest.permission.BLUETOOTH, mContext.getPackageName()) != PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "Couldn't initialize Bluetooth, missing android.permission.BLUETOOTH");
             return;
         }
 
-        if (!mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE) || (Build.VERSION.SDK_INT < 18)) {
+        if (!mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE) || (Build.VERSION.SDK_INT < 18 /* Android 4.3 (JELLY_BEAN_MR2) */)) {
             Log.d(TAG, "Couldn't initialize Bluetooth, this version of Android does not support Bluetooth LE");
             return;
         }
@@ -422,24 +438,20 @@ public class HIDDeviceManager {
         ArrayList<BluetoothDevice> disconnected = new ArrayList<BluetoothDevice>();
         ArrayList<BluetoothDevice> connected = new ArrayList<BluetoothDevice>();
 
-        try {
-            List<BluetoothDevice> currentConnected = mBluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
+        List<BluetoothDevice> currentConnected = mBluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
 
-            for (BluetoothDevice bluetoothDevice : currentConnected) {
-                if (!mLastBluetoothDevices.contains(bluetoothDevice)) {
-                    connected.add(bluetoothDevice);
-                }
+        for (BluetoothDevice bluetoothDevice : currentConnected) {
+            if (!mLastBluetoothDevices.contains(bluetoothDevice)) {
+                connected.add(bluetoothDevice);
             }
-            for (BluetoothDevice bluetoothDevice : mLastBluetoothDevices) {
-                if (!currentConnected.contains(bluetoothDevice)) {
-                    disconnected.add(bluetoothDevice);
-                }
-            }
-
-            mLastBluetoothDevices = currentConnected;
-        } catch (SecurityException e) {
-            Log.e(TAG, "SecurityException: " + e.toString());
         }
+        for (BluetoothDevice bluetoothDevice : mLastBluetoothDevices) {
+            if (!currentConnected.contains(bluetoothDevice)) {
+                disconnected.add(bluetoothDevice);
+            }
+        }
+
+        mLastBluetoothDevices = currentConnected;
 
         for (BluetoothDevice bluetoothDevice : disconnected) {
             disconnectBluetoothDevice(bluetoothDevice);
@@ -498,16 +510,12 @@ public class HIDDeviceManager {
             return false;
         }
 
-        try {
-            // If the device has no local name, we really don't want to try an equality check against it.
-            if (bluetoothDevice.getName() == null) {
-                return false;
-            }
-            return bluetoothDevice.getName().equals("SteamController") && ((bluetoothDevice.getType() & BluetoothDevice.DEVICE_TYPE_LE) != 0);
-        } catch (SecurityException e) {
-            Log.e(TAG, "SecurityException: " + e.toString());
+        // If the device has no local name, we really don't want to try an equality check against it.
+        if (bluetoothDevice.getName() == null) {
             return false;
         }
+
+        return bluetoothDevice.getName().equals("SteamController") && ((bluetoothDevice.getType() & BluetoothDevice.DEVICE_TYPE_LE) != 0);
     }
 
     private void close() {
@@ -528,7 +536,7 @@ public class HIDDeviceManager {
             for (HIDDevice device : mDevicesById.values()) {
                 device.setFrozen(frozen);
             }
-        }        
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -577,7 +585,7 @@ public class HIDDeviceManager {
             try {
                 final int FLAG_MUTABLE = 0x02000000; // PendingIntent.FLAG_MUTABLE, but don't require SDK 31
                 int flags;
-                if (Build.VERSION.SDK_INT >= 31) {
+                if (Build.VERSION.SDK_INT >= 31 /* Android 12.0 (S) */) {
                     flags = FLAG_MUTABLE;
                 } else {
                     flags = 0;

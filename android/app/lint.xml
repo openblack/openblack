@@ -1,0 +1,5 @@
+<lint>
+    <issue id="all">
+        <ignore path="src/main/java/org/libsdl/app" />
+    </issue>
+</lint>

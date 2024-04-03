@@ -27,11 +27,14 @@ const std::array<const char*, 3> k_AudioBankLoopStrings = {"Repeat", "Once", "Ov
 
 Audio::Audio()
     : Window("Audio Player", ImVec2(600.0f, 600.0f))
+    , _selectedSound(entt::null)
+    , _selectedEmitter(entt::null)
 {
 }
 
 void Audio::Emitters()
 {
+	using namespace std::literals;
 	if (ImGui::Button("Play") && _selectedSound != entt::null)
 	{
 		Locator::audio::value().PlaySound(_selectedSound, _playType);
@@ -71,12 +74,25 @@ void Audio::Emitters()
 	}
 	ImGui::EndChild();
 	ImGui::SameLine();
-	ImGui::BeginChild("Sounds", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y), true);
+
+	ImGui::BeginChild("Sounds", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y),
+	                  ImGuiWindowFlags_None);
 	ImGui::Separator();
-	ImGui::Columns(2, "SoundColumns", true);
-	ImGui::Text("Name / Play");
+	ImGui::Columns(3, "SoundColumns", true);
+	const float extraPadding = ImGui::GetStyle().ItemSpacing.x * 2;
+	const float totalWidth = ImGui::GetWindowContentRegionMax().x;
+	const float firstColumnWidth = ImGui::CalcTextSize("123").x + extraPadding;
+	const auto lastColumnString = "Length in (s)"sv;
+	const float lastColumnWidth = ImGui::CalcTextSize(lastColumnString.data()).x + extraPadding;
+	const float secondColumnWidth = totalWidth - firstColumnWidth - lastColumnWidth;
+	ImGui::Text("id");
+	ImGui::SetColumnWidth(0, firstColumnWidth);
 	ImGui::NextColumn();
-	ImGui::Text("Length in seconds");
+	ImGui::Text("Name / Play");
+	ImGui::SetColumnWidth(1, secondColumnWidth);
+	ImGui::NextColumn();
+	ImGui::Text("%s", lastColumnString.data());
+	ImGui::SetColumnWidth(2, lastColumnWidth);
 	ImGui::NextColumn();
 	ImGui::Separator();
 	auto& soundManager = Locator::audio::value();
@@ -102,6 +118,8 @@ void Audio::Emitters()
 				_selectedSound = soundId;
 			}
 			ImGui::SameLine();
+			ImGui::Text("%u", sound->id);
+			ImGui::NextColumn();
 			ImGui::Text("%s", sound->name.c_str());
 			ImGui::NextColumn();
 			auto length = sound->duration;

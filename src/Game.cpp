@@ -9,19 +9,14 @@
 
 #include "Game.h"
 
-#include <cstdint>
-
 #include <string>
 
 #include <LHVM/LHVM.h>
-#include <Serializer/FotFile.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/intersect.hpp>
-#include <glm/gtx/transform.hpp>
-#include <spdlog/sinks/android_sink.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
@@ -38,7 +33,6 @@
 #include "Debug/Gui.h"
 #include "ECS/Archetypes/HandArchetype.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
-#include "ECS/Components/Fixed.h"
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Map.h"
@@ -51,7 +45,6 @@
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/Systems/TownSystemInterface.h"
 #include "FileSystem/FileSystemInterface.h"
-#include "GameWindow.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/Texture2D.h"
 #include "LHScriptX/Script.h"
@@ -62,6 +55,11 @@
 #include "Renderer.h"
 #include "Resources/Loaders.h"
 #include "Resources/ResourcesInterface.h"
+#include "Serializer/FotFile.h"
+
+#ifdef __ANDROID__
+#include <spdlog/sinks/android_sink.h>
+#endif
 
 using namespace openblack;
 using namespace openblack::lhscriptx;
@@ -114,12 +112,11 @@ Game::Game(Arguments&& args)
 		{
 			extraFlags |= SDL_WINDOW_METAL;
 		}
-		_window =
-		    std::make_unique<GameWindow>(k_WindowTitle, args.windowWidth, args.windowHeight, args.displayMode, extraFlags);
+		openblack::InitializeWindow(k_WindowTitle, args.windowWidth, args.windowHeight, args.displayMode, extraFlags);
 	}
 	try
 	{
-		_renderer = std::make_unique<Renderer>(_window.get(), args.rendererType, args.vsync);
+		_renderer = std::make_unique<Renderer>(args.rendererType, args.vsync);
 	}
 	catch (std::runtime_error& exception)
 	{
@@ -127,7 +124,7 @@ Game::Game(Arguments&& args)
 		throw exception;
 	}
 
-	_gui = debug::gui::Gui::Create(_window.get(), graphics::RenderPass::ImGui, args.scale);
+	_gui = debug::gui::Gui::Create(graphics::RenderPass::ImGui, args.scale);
 
 	_eventManager->AddHandler(std::function([this](const SDL_Event& event) {
 		// If gui captures this input, do not propagate
@@ -176,7 +173,7 @@ Game::~Game()
 	_sky.reset();
 	_gui.reset();
 	_renderer.reset();
-	_window.reset();
+	Locator::windowing::reset();
 	_eventManager.reset();
 	SDL_Quit(); // todo: move to GameWindow
 	spdlog::shutdown();
@@ -203,12 +200,14 @@ bool Game::ProcessEvents(const SDL_Event& event)
 
 	_handGripping = middleMouseButton || leftMouseButton;
 
+	auto& window = Locator::windowing::value();
+
 	switch (event.type)
 	{
 	case SDL_QUIT:
 		return false;
 	case SDL_WINDOWEVENT:
-		if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == _window->GetID())
+		if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == window.GetID())
 		{
 			return false;
 		}
@@ -219,7 +218,7 @@ bool Game::ProcessEvents(const SDL_Event& event)
 			_renderer->Reset(width, height);
 			_renderer->ConfigureView(graphics::RenderPass::Main, width, height);
 
-			auto aspect = _window->GetAspectRatio();
+			auto aspect = window.GetAspectRatio();
 			_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
 		}
 		break;
@@ -229,7 +228,7 @@ bool Game::ProcessEvents(const SDL_Event& event)
 		case SDLK_ESCAPE:
 			return false;
 		case SDLK_f:
-			_window->SetFullscreen(true);
+			window.SetDisplayMode(windowing::DisplayMode::Fullscreen);
 			break;
 		case SDLK_p:
 			_paused = !_paused;
@@ -268,10 +267,9 @@ bool Game::ProcessEvents(const SDL_Event& event)
 		{
 		case SDL_BUTTON_MIDDLE:
 		{
-			glm::ivec2 screenSize;
-			_window->GetSize(screenSize.x, screenSize.y);
+			const glm::ivec2 screenSize = window.GetSize();
 			SDL_SetRelativeMouseMode((event.type == SDL_MOUSEBUTTONDOWN) ? SDL_TRUE : SDL_FALSE);
-			SDL_WarpMouseInWindow(_window->GetHandle(), screenSize.x / 2, screenSize.y / 2);
+			SDL_WarpMouseInWindow(static_cast<SDL_Window*>(window.GetHandle()), screenSize.x / 2, screenSize.y / 2);
 		}
 		break;
 		}
@@ -385,12 +383,8 @@ bool Game::Update()
 		// Update Debug Cross
 		ecs::components::Transform intersectionTransform {};
 		{
-			glm::ivec2 screenSize {};
-			if (_window)
-			{
-				_window->GetSize(screenSize.x, screenSize.y);
-			}
-
+			const auto screenSize =
+			    Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::zero<glm::ivec2>();
 			const auto scale = glm::vec3(50.0f, 50.0f, 50.0f);
 			if (screenSize.x > 0 && screenSize.y > 0)
 			{
@@ -464,7 +458,7 @@ bool Game::Update()
 bool Game::Initialize()
 {
 	using filesystem::Path;
-	ecs::systems::InitializeGame();
+	InitializeGame();
 	auto& fileSystem = Locator::filesystem::value();
 	auto& resources = Locator::resources::value();
 	auto& meshManager = resources.GetMeshes();
@@ -545,7 +539,7 @@ bool Game::Initialize()
 	pack::PackFile pack;
 #if __ANDROID__
 	//  Android has a complicated permissions API, must call java code to read contents.
-	pack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>(true) / "AllMeshes.g3d"));
+	pack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>() / "AllMeshes.g3d"));
 #else
 	pack.Open(fileSystem.GetPath<Path::Data>(true) / "AllMeshes.g3d");
 #endif
@@ -566,7 +560,7 @@ bool Game::Initialize()
 	pack::PackFile animationPack;
 #if __ANDROID__
 	//  Android has a complicated permissions API, must call java code to read contents.
-	animationPack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>(true) / "AllAnims.anm"));
+	animationPack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>() / "AllAnims.anm"));
 #else
 	animationPack.Open(fileSystem.GetPath<Path::Data>(true) / "AllAnims.anm");
 #endif
@@ -667,58 +661,61 @@ bool Game::Initialize()
 
 	// Load all sound packs in the Audio directory
 	auto& audioManager = Locator::audio::value();
-	fileSystem.Iterate(fileSystem.GetPath<Path::Audio>(), true, [&audioManager, &soundManager](const std::filesystem::path& f) {
-		if (f.extension() != ".sad")
-		{
-			return;
-		}
+	fileSystem.Iterate(
+	    fileSystem.GetPath<Path::Audio>(), true, [&audioManager, &soundManager, &fileSystem](const std::filesystem::path& f) {
+		    if (f.extension() != ".sad")
+		    {
+			    return;
+		    }
 
-		pack::PackFile soundPack;
-		SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Opening sound pack {}", f.filename().string());
-		soundPack.Open(f);
-		const auto& audioHeaders = soundPack.GetAudioSampleHeaders();
-		const auto& audioData = soundPack.GetAudioSamplesData();
-		auto soundName = std::filesystem::path(audioHeaders[0].name.data());
+		    pack::PackFile soundPack;
+		    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Opening sound pack {}", f.filename().string());
+		    soundPack.Open(fileSystem.ReadAll(f));
+		    const auto& audioHeaders = soundPack.GetAudioSampleHeaders();
+		    const auto& audioData = soundPack.GetAudioSamplesData();
+		    auto soundName = std::filesystem::path(audioHeaders[0].name.data());
 
-		if (audioHeaders.empty())
-		{
-			SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound pack found for {}. Skipping", f.filename().string());
-			return;
-		}
+		    if (audioHeaders.empty())
+		    {
+			    SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound pack found for {}. Skipping", f.filename().string());
+			    return;
+		    }
 
-		auto groupName = f.filename().string();
+		    auto groupName = f.filename().string();
 
-		// A hacky way of detecting if the sound is music as all music sounds end with "mpg"
-		if (soundName.extension() == ".mpg")
-		{
-			auto buffers = std::queue<std::vector<uint8_t>>();
-			auto packName = f.string();
-			audioManager.AddMusicEntry(packName);
-		}
-		else
-		{
-			audioManager.CreateSoundGroup(groupName);
-			for (size_t i = 0; i < audioHeaders.size(); i++)
-			{
-				soundName = std::filesystem::path(audioHeaders[i].name.data());
-				if (audioData[i].empty())
-				{
-					SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound buffer found for {}. Skipping", soundName.string());
-					return;
-				}
+		    // A hacky way of detecting if the sound is music as all music sounds end with "mpg"
+		    if (soundName.extension() == ".mpg")
+		    {
+			    auto buffers = std::queue<std::vector<uint8_t>>();
+			    auto packName = f.string();
+			    audioManager.AddMusicEntry(packName);
+		    }
+		    else
+		    {
+			    audioManager.CreateSoundGroup(groupName);
+			    for (size_t i = 0; i < audioHeaders.size(); i++)
+			    {
+				    soundName = std::filesystem::path(audioHeaders[i].name.data());
+				    if (audioData[i].empty())
+				    {
+					    SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound buffer found for {}. Skipping",
+					                       soundName.string());
+					    return;
+				    }
 
-				const entt::id_type id = entt::hashed_string(fmt::format("{}/{}", groupName, i).c_str());
-				const std::vector<std::vector<uint8_t>> buffer = {audioData[i]};
-				SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Loading sound {}/{}", groupName, i);
-				soundManager.Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[i], buffer);
-				audioManager.AddToSoundGroup(groupName, id);
-			}
-		}
-	});
+				    const auto stringId = fmt::format("{}/{}", groupName, audioHeaders[i].id);
+				    const entt::id_type id = entt::hashed_string(stringId.c_str());
+				    const std::vector<std::vector<uint8_t>> buffer = {audioData[i]};
+				    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Loading sound {}: {}", stringId, audioHeaders[i].name.data());
+				    soundManager.Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[i], buffer);
+				    audioManager.AddToSoundGroup(groupName, id);
+			    }
+		    }
+	    });
 
 	// create our camera
 	_camera = std::make_unique<Camera>();
-	auto aspect = _window ? _window->GetAspectRatio() : 1.0f;
+	const auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
 	_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
 
 	_camera->SetPosition(glm::vec3(1441.56f, 24.764f, 2081.76f));
@@ -777,12 +774,10 @@ bool Game::Run()
 	// Initialize the Acceleration Structure
 	Locator::entitiesMap::value().Rebuild();
 
-	if (_window)
+	if (Locator::windowing::has_value())
 	{
-		int width;
-		int height;
-		_window->GetSize(width, height);
-		_renderer->ConfigureView(graphics::RenderPass::Main, static_cast<uint16_t>(width), static_cast<uint16_t>(height));
+		const auto size = static_cast<glm::u16vec2>(Locator::windowing::value().GetSize());
+		_renderer->ConfigureView(graphics::RenderPass::Main, size.x, size.y);
 	}
 
 	{
@@ -878,8 +873,8 @@ void Game::LoadMap(const std::filesystem::path& path)
 		throw std::runtime_error("Could not find script " + path.generic_string());
 	}
 
-	auto data = fileSystem.ReadAll(path);
-	std::string source(reinterpret_cast<const char*>(data.data()), data.size());
+	const auto data = fileSystem.ReadAll(path);
+	const auto source = std::string(reinterpret_cast<const char*>(data.data()), data.size());
 
 	// Reset everything. Deletes all entities and their components
 	Locator::entitiesRegistry::value().Reset();
@@ -892,8 +887,8 @@ void Game::LoadMap(const std::filesystem::path& path)
 	script.Load(source);
 
 	// Each released map comes with an optional .fot file which contains the footpath information for the map
-	auto stem = string_utils::LowerCase(path.stem().generic_string());
-	auto fotPath = fileSystem.GetPath<filesystem::Path::Landscape>() / fmt::format("{}.fot", stem);
+	const auto stem = string_utils::LowerCase(path.stem().generic_string());
+	const auto fotPath = fileSystem.GetPath<filesystem::Path::Landscape>() / fmt::format("{}.fot", stem);
 
 	if (fileSystem.Exists(fotPath))
 	{
@@ -923,7 +918,7 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	{
 		throw std::runtime_error("Could not find landscape " + path.generic_string());
 	}
-	ecs::systems::InitializeLevel(fixedName);
+	InitializeLevel(fixedName);
 
 	// There is always a player active
 	Locator::playerSystem::value().AddPlayer(ecs::archetypes::PlayerArchetype::Create(PlayerNames::PLAYER_ONE));

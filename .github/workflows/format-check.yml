@@ -202,3 +202,8 @@ jobs:
         with:
           arguments: lint
           build-root-directory: android
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: lint-report-upload
+          path: android/app/build/reports/lint-results-debug.html

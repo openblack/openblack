@@ -12,6 +12,8 @@
 #include <iostream>
 #include <queue>
 
+#include <PackFile.h>
+
 #include "Audio/AudioManagerInterface.h"
 #include "Common/StringUtils.h"
 #include "Common/Zip.h"
@@ -183,6 +185,7 @@ SoundLoader::result_type SoundLoader::operator()(BaseLoader<audio::Sound>::FromB
 	auto sound = std::make_shared<audio::Sound>();
 	// Let's clean up the names as they're very difficult to read from the debug GUI
 	sound->name = std::filesystem::path(header.name.data()).filename().string();
+	sound->id = header.id;
 	sound->priority = header.priority;
 	sound->sampleRate = static_cast<int>(header.sampleRate);
 	sound->bitRate = 0;

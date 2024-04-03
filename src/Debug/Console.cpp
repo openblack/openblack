@@ -12,6 +12,7 @@
 #include <algorithm>
 
 #include <SDL.h>
+#include <glm/gtc/constants.hpp>
 #include <imgui.h>
 
 #include "3D/Camera.h"
@@ -22,6 +23,7 @@
 #include "LHScriptX/FeatureScriptCommands.h"
 #include "LHScriptX/Script.h"
 #include "Locator.h"
+#include "Windowing/WindowingInterface.h"
 
 using namespace openblack;
 using namespace openblack::debug::gui;
@@ -217,11 +219,7 @@ void Console::Draw(Game& game)
 {
 	ImGuiIO& io = ImGui::GetIO();
 
-	glm::ivec2 screenSize {};
-	if (game.GetWindow() != nullptr)
-	{
-		game.GetWindow()->GetSize(screenSize.x, screenSize.y);
-	}
+	const auto screenSize = Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::ivec2 {};
 	glm::ivec2 mousePosition {};
 	SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
 	if (!io.WantCaptureMouse && screenSize.x > 0 && screenSize.y > 0)
@@ -236,14 +234,14 @@ void Console::Draw(Game& game)
 			{
 				switch (hit->second.type)
 				{
-				case ecs::systems::RigidBodyType::Terrain:
+				case RigidBodyType::Terrain:
 				{
 					// auto landIsland = reinterpret_cast<const LandIsland*>(hit->second.userData);
 					auto blockIndex = hit->second.id;
 					ImGui::SetTooltip("Block Index: %d", blockIndex);
 				}
 				break;
-				case ecs::systems::RigidBodyType::Entity:
+				case RigidBodyType::Entity:
 				{
 					// auto registry = reinterpret_cast<const openblack::ecs::Registry*>(hit->second.userData);
 					auto entity = hit->second.id;
