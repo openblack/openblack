@@ -48,7 +48,7 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 
 	try
 	{
-		lnd.Open(Locator::filesystem::value().ReadAll(path));
+		lnd.ReadFile(*Locator::filesystem::value().GetData(path));
 	}
 	catch (std::runtime_error& err)
 	{

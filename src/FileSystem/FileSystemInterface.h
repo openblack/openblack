@@ -108,6 +108,7 @@ public:
 	}
 
 	[[nodiscard]] virtual std::filesystem::path FindPath(const std::filesystem::path& path) const = 0;
+	virtual std::unique_ptr<std::istream> GetData(const std::filesystem::path& path) = 0;
 	[[nodiscard]] virtual bool IsPathValid(const std::filesystem::path& path) = 0;
 	virtual std::unique_ptr<Stream> Open(const std::filesystem::path& path, Stream::Mode mode) = 0;
 	[[nodiscard]] virtual bool Exists(const std::filesystem::path& path) const = 0;

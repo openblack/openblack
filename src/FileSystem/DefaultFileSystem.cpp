@@ -11,14 +11,9 @@
 
 #include "DefaultFileSystem.h"
 
-#include <cctype>
-#include <cstddef>
-
 #include <filesystem>
 #include <fstream>
 #include <system_error>
-
-#include <spdlog/spdlog.h>
 
 #include "FileStream.h"
 #include "fmt/format.h"
@@ -177,4 +172,8 @@ void DefaultFileSystem::SetGamePath(const std::filesystem::path& path)
 	{
 		throw std::runtime_error(fmt::format("GamePath does not exist: '{}'", _gamePath.generic_string()));
 	}
+}
+std::unique_ptr<std::istream> DefaultFileSystem::GetData(const std::filesystem::path& path)
+{
+	return std::make_unique<std::ifstream>(FindPath(path), std::ios::binary);
 }
