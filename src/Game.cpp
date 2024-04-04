@@ -565,7 +565,7 @@ bool Game::Initialize()
 
 	pack::PackFile pack;
 
-	pack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>() / "AllMeshes.g3d"));
+	pack.ReadFile(*fileSystem.GetData(fileSystem.GetPath<Path::Data>() / "AllMeshes.g3d"));
 
 	const auto& meshes = pack.GetMeshes();
 	// TODO (#749) use std::views::enumerate
@@ -583,7 +583,7 @@ bool Game::Initialize()
 	}
 
 	pack::PackFile animationPack;
-	animationPack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>() / "AllAnims.anm"));
+	animationPack.ReadFile(*fileSystem.GetData(fileSystem.GetPath<Path::Data>() / "AllAnims.anm"));
 
 	const auto& animations = animationPack.GetAnimations();
 	// TODO (#749) use std::views::enumerate
@@ -692,7 +692,7 @@ bool Game::Initialize()
 
 		    pack::PackFile soundPack;
 		    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Opening sound pack {}", f.filename().string());
-		    soundPack.Open(fileSystem.ReadAll(f));
+		    soundPack.ReadFile(*fileSystem.GetData(f));
 		    const auto& audioHeaders = soundPack.GetAudioSampleHeaders();
 		    const auto& audioData = soundPack.GetAudioSamplesData();
 		    auto soundName = std::filesystem::path(audioHeaders[0].name.data());
