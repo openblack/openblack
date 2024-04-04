@@ -53,6 +53,25 @@ void L3DAnim::Load(const anm::ANMFile& anm)
 	}
 }
 
+bool L3DAnim::LoadFromFilesystem(const std::filesystem::path& path)
+{
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading L3DAnim from file: {}", path.generic_string());
+	anm::ANMFile anm;
+
+	try
+	{
+		anm.Open(Locator::filesystem::value().ReadAll(path));
+	}
+	catch (std::runtime_error& err)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open l3d animation from buffer: {}", err.what());
+		return false;
+	}
+
+	Load(anm);
+	return true;
+}
+
 bool L3DAnim::LoadFromFile(const std::filesystem::path& path)
 {
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading L3DAnim from file: {}", path.generic_string());

@@ -33,13 +33,7 @@ Sky::Sky()
 
 	// load in the mesh
 	_model = std::make_unique<L3DMesh>("Sky");
-#if __ANDROID__
-	//  Android has a complicated permissions API, must call java code to read contents.
-	_model->LoadFromBuffer(
-	    Locator::filesystem::value().ReadAll(fileSystem.GetPath<filesystem::Path::WeatherSystem>() / "sky.l3d"));
-#else
-	_model->LoadFromFile(fileSystem.GetPath<filesystem::Path::WeatherSystem>() / "sky.l3d");
-#endif
+	_model->LoadFromFilesystem(fileSystem.GetPath<filesystem::Path::WeatherSystem>() / "sky.l3d");
 
 	// TODO (#749) Maybe use std::views::enumerate
 	for (uint32_t idx = 0; const auto& alignment : k_Alignments)
