@@ -26,7 +26,7 @@ bool InfoFile::LoadFromFile(const std::filesystem::path& path, InfoConstants& in
 	try
 	{
 		pack::PackFile pack;
-		pack.Open(Locator::filesystem::value().ReadAll(path));
+		pack.ReadFile(*Locator::filesystem::value().GetData(path));
 
 		data = pack.GetBlock("Info");
 		if (data.size() == sizeof(v100::InfoConstants))
