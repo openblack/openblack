@@ -304,15 +304,15 @@ protected:
 	/// Error handling
 	void Fail(const std::string& msg);
 
-	/// Read file from the input source
-	virtual void ReadFile(std::istream& stream);
-
 	/// Write file to the input source
 	virtual void WriteFile(std::ostream& stream) const;
 
 public:
 	L3DFile();
 	virtual ~L3DFile();
+
+	/// Read file from the input source
+	virtual void ReadFile(std::istream& stream);
 
 	/// Read l3d file from the filesystem
 	void Open(const std::filesystem::path& filepath);
