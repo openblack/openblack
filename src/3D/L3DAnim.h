@@ -41,6 +41,7 @@ public:
 	virtual ~L3DAnim() = default;
 
 	void Load(const anm::ANMFile& anm);
+	bool LoadFromFilesystem(const std::filesystem::path& path);
 	bool LoadFromFile(const std::filesystem::path& path);
 	void LoadFromBuffer(const std::vector<uint8_t>& data);
 

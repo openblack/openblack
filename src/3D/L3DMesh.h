@@ -86,6 +86,7 @@ public:
 	virtual ~L3DMesh();
 
 	void Load(const l3d::L3DFile& l3d);
+	bool LoadFromFilesystem(const std::filesystem::path& path);
 	bool LoadFromFile(const std::filesystem::path& path);
 	bool LoadFromBuffer(const std::vector<uint8_t>& data);
 
