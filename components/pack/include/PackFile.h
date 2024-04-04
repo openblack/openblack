@@ -181,9 +181,6 @@ protected:
 	/// Error handling
 	void Fail(const std::string& msg);
 
-	/// Read file from the input source
-	virtual void ReadFile(std::istream& stream);
-
 	/// Read blocks from pack
 	virtual void ReadBlocks(std::istream& stream);
 
@@ -214,6 +211,9 @@ protected:
 public:
 	PackFile();
 	virtual ~PackFile();
+
+	/// Read file from the input source
+	virtual void ReadFile(std::istream& stream);
 
 	/// Read g3d file from the filesystem
 	void Open(const std::filesystem::path& filepath);
