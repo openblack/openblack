@@ -65,6 +65,7 @@ enum class UnbindableActionMap : uint8_t
 {
 	NONE                   = 0b00000000,
 	DOUBLE_CLICK           = 0b00000001,
+	TWO_BUTTON_CLICK       = 0b00000010, // Is in the bindable menu in vanilla but in practice it is not.
 };
 using ActionMap = std::variant<BindableActionMap, UnbindableActionMap>;
 // clang-format on
