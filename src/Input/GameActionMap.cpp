@@ -33,7 +33,6 @@ GameActionMap::GameActionMap()
 	_mouseWheelBinding[0] = BindableActionMap::ZOOM_IN;
 	_mouseWheelBinding[1] = BindableActionMap::ZOOM_OUT;
 	_keyboardBindings.emplace(SDL_SCANCODE_T, BindableActionMap::TALK);
-	_mouseBindings.emplace(SDL_BUTTON_LMASK | SDL_BUTTON_RMASK, BindableActionMap::ZOOM_ON);
 	_keyboardBindings.emplace(SDL_SCANCODE_LCTRL, BindableActionMap::ZOOM_ON);
 	_keyboardBindings.emplace(SDL_SCANCODE_RCTRL, BindableActionMap::ZOOM_ON);
 	_keyboardBindings.emplace(SDL_SCANCODE_LEFT, BindableActionMap::MOVE_LEFT);
@@ -111,6 +110,23 @@ glm::ivec2 GameActionMap::GetMouseDelta() const
 
 void GameActionMap::Frame()
 {
+	if ((SDL_GetMouseState(nullptr, nullptr) & (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK)) == (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK))
+	{
+		_unbindableMap = static_cast<UnbindableActionMap>(static_cast<uint8_t>(_unbindableMap) |
+		                                                  static_cast<uint8_t>(UnbindableActionMap::TWO_BUTTON_CLICK));
+		_bindableMap = static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) &
+		                                              ~(static_cast<uint64_t>(_mouseModBindings[SDL_BUTTON_LMASK].second) |
+		                                                static_cast<uint64_t>(_mouseModBindings[SDL_BUTTON_RMASK].second)));
+		_bindableMap = static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) &
+		                                              ~(static_cast<uint64_t>(_mouseBindings[SDL_BUTTON_LMASK]) |
+		                                                static_cast<uint64_t>(_mouseBindings[SDL_BUTTON_LMASK])));
+	}
+	else
+	{
+		_unbindableMap = static_cast<UnbindableActionMap>(static_cast<uint8_t>(_unbindableMap) &
+		                                                  ~static_cast<uint8_t>(UnbindableActionMap::TWO_BUTTON_CLICK));
+	}
+
 	if (_bindableMap != BindableActionMap::NONE || _unbindableMap != UnbindableActionMap::NONE)
 	{
 		SPDLOG_LOGGER_DEBUG(spdlog::get("input"), "GameActionMap:");
@@ -170,6 +186,7 @@ void GameActionMap::Frame()
 	} while (0)
 
 	get_print(DOUBLE_CLICK);
+	get_print(TWO_BUTTON_CLICK);
 
 #undef get_print
 
