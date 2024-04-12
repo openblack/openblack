@@ -23,6 +23,7 @@
 #include "scenarios/TiltDownZoomOut.h"
 #include "scenarios/TiltUpDown.h"
 #include "scenarios/TiltUpPanLeft.h"
+#include "scenarios/TwoButtonZoomOutIn.h"
 #include "scenarios/ZoomOutIn.h"
 
 // Enable this define because we use a custom locator
@@ -175,7 +176,7 @@ void TestDefaultCameraModel::SetModel(DefaultWorldCameraModel& m, const json& js
 		m._screenSpaceMouseRaycastHit = std::nullopt;
 	}
 
-	m._rotateAroundDelta = json["RotateAroundDelta"].get<glm::vec3>();
+	glm::xz(m._rotateAroundDelta) = glm::xz(json["RotateAroundDelta"].get<glm::vec3>());
 	m._keyBoardMoveDelta = json["KeyboardMoveDelta"].get<glm::vec2>();
 
 	const auto handStatus = expected["handStatus"].get<std::string>();
@@ -413,7 +414,8 @@ const auto k_TestingScenarioValues = testing::Values( //
     SCENARIO_VALUES(TiltDownZoomOut),                 //
     SCENARIO_VALUES(TiltUpPanLeft),                   //
     SCENARIO_VALUES(DragUpDown),                      //
-    SCENARIO_VALUES(DoubleClickFlyTo)                 //
+    SCENARIO_VALUES(DoubleClickFlyTo),                //
+    SCENARIO_VALUES(TwoButtonZoomOutIn)               //
 );
 
 INSTANTIATE_TEST_SUITE_P(TestScenarioInstantiation, TestDefaultCameraModel, k_TestingScenarioValues,

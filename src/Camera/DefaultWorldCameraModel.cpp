@@ -46,6 +46,7 @@ constexpr auto k_WheelZoomFactor = 20.0f;
 constexpr auto k_InteractionSpeedMultiplier = 400.0f;
 // Vanilla black and white uses a pretty bad PI/2 approximation
 constexpr auto k_CameraModelHalfPi = 1.53938043f;
+constexpr auto k_TwoButtonZoomFactor = 1.9f;
 constexpr auto k_CameraInteractionStepSize = 3.0f;
 constexpr auto k_MinimalCameraAnimationDuration = std::chrono::duration<float> {1.5f};
 constexpr auto k_HandDragVectorAlignmentThreshold = 0.001f;
@@ -624,6 +625,12 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 		const float distance =
 		    (actionSystem.Get(input::BindableActionMap::ZOOM_IN) ? -k_WheelZoomFactor : k_WheelZoomFactor) * dp;
 		_rotateAroundDelta.z += distance;
+	}
+
+	if (actionSystem.Get(input::UnbindableActionMap::TWO_BUTTON_CLICK))
+	{
+		_rotateAroundDelta.z += actionSystem.GetMouseDelta().y * k_TwoButtonZoomFactor;
+		// TODO(#711): the mouse has to be reset
 	}
 
 	const auto handPositions = actionSystem.GetHandPositions();
