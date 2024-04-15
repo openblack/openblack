@@ -31,6 +31,7 @@ public:
 
 	virtual ~Camera() = default;
 
+	[[nodiscard]] virtual float GetHorizontalFieldOfView() const;
 	[[nodiscard]] virtual glm::mat4 GetViewMatrix() const;
 	[[nodiscard]] const glm::mat4& GetProjectionMatrix() const;
 	[[nodiscard]] virtual glm::mat4 GetViewProjectionMatrix() const;
@@ -67,6 +68,7 @@ public:
 protected:
 	glm::vec3 _position;
 	glm::vec3 _rotation;
+	float _xFov = 0.0f; // TODO(#707): This should be a zoomer for animations
 	glm::mat4 _projectionMatrix;
 	CameraModel _model;
 };

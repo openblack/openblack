@@ -36,6 +36,11 @@ Camera::Camera()
 {
 }
 
+float Camera::GetHorizontalFieldOfView() const
+{
+	return _xFov;
+}
+
 glm::mat4 Camera::GetRotationMatrix() const
 {
 	return glm::eulerAngleZXY(_rotation.z, _rotation.x, _rotation.y);
@@ -85,7 +90,8 @@ std::optional<ecs::components::Transform> Camera::RaycastScreenCoordToLand(glm::
 
 Camera& Camera::SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip)
 {
-	const float yFov = (glm::atan(glm::tan(glm::radians(xFov) / 2.0f)) / aspect) * 2.0f;
+	_xFov = glm::radians(xFov);
+	const float yFov = (glm::atan(glm::tan(_xFov / 2.0f)) / aspect) * 2.0f;
 	const float h = 1.0f / glm::tan(yFov * 0.5f);
 	const float w = h / aspect;
 	const float a = nearClip / (farClip - nearClip);
