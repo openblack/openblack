@@ -72,7 +72,7 @@ bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
 
 	bool isValid = juri != nullptr;
 
-	if (juri != nullptr)
+	if (isValid)
 	{
 		_jniEnv->DeleteLocalRef(juri);
 	}
