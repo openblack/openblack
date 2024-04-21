@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 #include <json_helpers.h>
 
+#include "scenarios/DoubleClickFlyTo.h"
 #include "scenarios/DragUpDown.h"
 #include "scenarios/MoveBackwardForward.h"
 #include "scenarios/MoveRightLeft.h"
@@ -209,22 +210,54 @@ void TestDefaultCameraModel::ValidateModel(const DefaultWorldCameraModel& m, con
 		    << "at start of frame " << frameNumber;
 	}
 
-	const auto handStatus = expected["handStatus"].get<std::string>();
-	if (handStatus == "CAMERA_MODE_HAND_STATUS_NORMAL")
+	if (!m._flightPath.has_value())
 	{
-		ASSERT_EQ(m._modePrev, DefaultWorldCameraModel::Mode::Cartesian);
+		const auto handStatus = expected["handStatus"].get<std::string>();
+		if (handStatus == "CAMERA_MODE_HAND_STATUS_NORMAL")
+		{
+			ASSERT_EQ(m._modePrev, DefaultWorldCameraModel::Mode::Cartesian) << "at start of frame " << frameNumber;
+		}
+		else if (handStatus == "CAMERA_MODE_HAND_STATUS_ZOOMING")
+		{
+			ASSERT_EQ(m._modePrev, DefaultWorldCameraModel::Mode::Polar) << "at start of frame " << frameNumber;
+		}
+		else if (handStatus == "CAMERA_MODE_HAND_STATUS_GRABBING_LAND")
+		{
+			ASSERT_EQ(m._modePrev, DefaultWorldCameraModel::Mode::DraggingLandscape) << "at start of frame " << frameNumber;
+		}
+		else
+		{
+			ASSERT_FALSE(true) << "at start of frame " << frameNumber;
+		}
 	}
-	else if (handStatus == "CAMERA_MODE_HAND_STATUS_ZOOMING")
+
+	ASSERT_EQ(m._flightPath.has_value(), expected["setZoomerToFlyToTargetFocus"].get<bool>())
+	    << "at start of frame " << frameNumber;
+	if (m._flightPath.has_value())
 	{
-		ASSERT_EQ(m._modePrev, DefaultWorldCameraModel::Mode::Polar);
-	}
-	else if (handStatus == "CAMERA_MODE_HAND_STATUS_GRABBING_LAND")
-	{
-		ASSERT_EQ(m._modePrev, DefaultWorldCameraModel::Mode::DraggingLandscape);
-	}
-	else
-	{
-		ASSERT_FALSE(true);
+		ASSERT_EQ(m._flightPath->midpoint.has_value(), expected["setZoomerToFlyToHalfWay"].get<bool>())
+		    << "at start of frame " << frameNumber;
+		ASSERT_NEAR(m._flightPath->origin.x, expected["flyToTargetOrigin"].get<glm::vec3>().x, ep)
+		    << "at start of frame " << frameNumber;
+		ASSERT_NEAR(m._flightPath->origin.y, expected["flyToTargetOrigin"].get<glm::vec3>().y, ep)
+		    << "at start of frame " << frameNumber;
+		ASSERT_NEAR(m._flightPath->origin.z, expected["flyToTargetOrigin"].get<glm::vec3>().z, ep)
+		    << "at start of frame " << frameNumber;
+		ASSERT_NEAR(m._flightPath->focus.x, expected["flyToTargetFocus"].get<glm::vec3>().x, ep)
+		    << "at start of frame " << frameNumber;
+		ASSERT_NEAR(m._flightPath->focus.y, expected["flyToTargetFocus"].get<glm::vec3>().y, ep)
+		    << "at start of frame " << frameNumber;
+		ASSERT_NEAR(m._flightPath->focus.z, expected["flyToTargetFocus"].get<glm::vec3>().z, ep)
+		    << "at start of frame " << frameNumber;
+		if (m._flightPath->midpoint.has_value())
+		{
+			ASSERT_NEAR(m._flightPath->midpoint->x, expected["setZoomerToFlyToHalfWay"].get<glm::vec3>().x, ep)
+			    << "at start of frame " << frameNumber;
+			ASSERT_NEAR(m._flightPath->midpoint->y, expected["setZoomerToFlyToHalfWay"].get<glm::vec3>().y, ep)
+			    << "at start of frame " << frameNumber;
+			ASSERT_NEAR(m._flightPath->midpoint->z, expected["setZoomerToFlyToHalfWay"].get<glm::vec3>().z, ep)
+			    << "at start of frame " << frameNumber;
+		}
 	}
 }
 
@@ -340,7 +373,8 @@ const auto k_TestingScenarioValues = testing::Values( //
     SCENARIO_VALUES(ZoomOutIn),                       //
     SCENARIO_VALUES(TiltDownZoomOut),                 //
     SCENARIO_VALUES(TiltUpPanLeft),                   //
-    SCENARIO_VALUES(DragUpDown)                       //
+    SCENARIO_VALUES(DragUpDown),                      //
+    SCENARIO_VALUES(DoubleClickFlyTo)                 //
 );
 
 INSTANTIATE_TEST_SUITE_P(TestScenarioInstantiation, TestDefaultCameraModel, k_TestingScenarioValues,
