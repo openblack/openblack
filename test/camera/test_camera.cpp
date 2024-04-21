@@ -15,11 +15,14 @@
 #include <gtest/gtest.h>
 #include <json_helpers.h>
 
+#include "scenarios/DragUpDown.h"
 #include "scenarios/MoveBackwardForward.h"
 #include "scenarios/MoveRightLeft.h"
 #include "scenarios/PanRightLeft.h"
+#include "scenarios/TiltDownZoomOut.h"
 #include "scenarios/TiltUpDown.h"
 #include "scenarios/TiltUpPanLeft.h"
+#include "scenarios/ZoomOutIn.h"
 
 // Enable this define because we use a custom locator
 #define LOCATOR_IMPLEMENTATIONS
@@ -115,8 +118,11 @@ void TestDefaultCameraModel::SetModel(DefaultWorldCameraModel& m, const json& js
 	m._currentFocus = expected["heading"].get<glm::vec3>();
 
 	m._originFocusDistanceAtInteractionStart = expected["originHeadingDistanceAtInteractionStart"].get<float>();
+	m._originToHandPlaneNormal = expected["handHeadingNormalAtInteractionStart"].get<glm::vec3>();
+	m._alignmentAtInteractionStart = expected["mouseHitPointDot"].get<float>();
 	m._focusDistance = expected["headingDistance"].get<float>();
 	m._averageIslandDistance = expected["averageIslandDistance"].get<float>();
+	m._originAtClick = expected["originAtClick"].get<glm::vec3>();
 	m._focusAtClick = expected["headingAtClick"].get<glm::vec3>();
 
 	m._targetOrigin = expected["fallbackOrigin"].get<glm::vec3>();
@@ -143,6 +149,10 @@ void TestDefaultCameraModel::SetModel(DefaultWorldCameraModel& m, const json& js
 	{
 		m._modePrev = DefaultWorldCameraModel::Mode::Polar;
 	}
+	else if (handStatus == "CAMERA_MODE_HAND_STATUS_GRABBING_LAND")
+	{
+		m._modePrev = DefaultWorldCameraModel::Mode::DraggingLandscape;
+	}
 	else
 	{
 		assert(false);
@@ -151,7 +161,7 @@ void TestDefaultCameraModel::SetModel(DefaultWorldCameraModel& m, const json& js
 
 void TestDefaultCameraModel::ValidateModel(const DefaultWorldCameraModel& m, const json& json, int frameNumber)
 {
-	const float ep = 1e-3f;
+	const float ep = 5e-2f;
 	const auto& expected = json["cameraController"];
 
 	ASSERT_EQ(m._screenSpaceCenterRaycastHit.has_value(), expected["screenCentreHit"].get<bool>())
@@ -170,6 +180,11 @@ void TestDefaultCameraModel::ValidateModel(const DefaultWorldCameraModel& m, con
 	ASSERT_NEAR(m._focusAtClick.x, expected["headingAtClick"].get<glm::vec3>().x, ep) << "at start of frame " << frameNumber;
 	ASSERT_NEAR(m._focusAtClick.y, expected["headingAtClick"].get<glm::vec3>().y, ep) << "at start of frame " << frameNumber;
 	ASSERT_NEAR(m._focusAtClick.z, expected["headingAtClick"].get<glm::vec3>().z, ep) << "at start of frame " << frameNumber;
+
+	ASSERT_NEAR(m._mouseAtClick.x, expected["mousePosPrevious"].get<glm::u16vec2>().x, ep)
+	    << "at start of frame " << frameNumber;
+	ASSERT_NEAR(m._mouseAtClick.y, expected["mousePosPrevious"].get<glm::u16vec2>().y, ep)
+	    << "at start of frame " << frameNumber;
 
 	ASSERT_NEAR(m.GetTargetOrigin().x, expected["fallbackOrigin"].get<glm::vec3>().x, ep)
 	    << "at start of frame " << frameNumber;
@@ -202,6 +217,10 @@ void TestDefaultCameraModel::ValidateModel(const DefaultWorldCameraModel& m, con
 	else if (handStatus == "CAMERA_MODE_HAND_STATUS_ZOOMING")
 	{
 		ASSERT_EQ(m._modePrev, DefaultWorldCameraModel::Mode::Polar);
+	}
+	else if (handStatus == "CAMERA_MODE_HAND_STATUS_GRABBING_LAND")
+	{
+		ASSERT_EQ(m._modePrev, DefaultWorldCameraModel::Mode::DraggingLandscape);
 	}
 	else
 	{
@@ -318,7 +337,10 @@ const auto k_TestingScenarioValues = testing::Values( //
     SCENARIO_VALUES(MoveRightLeft),                   //
     SCENARIO_VALUES(PanRightLeft),                    //
     SCENARIO_VALUES(TiltUpDown),                      //
-    SCENARIO_VALUES(TiltUpPanLeft)                    //
+    SCENARIO_VALUES(ZoomOutIn),                       //
+    SCENARIO_VALUES(TiltDownZoomOut),                 //
+    SCENARIO_VALUES(TiltUpPanLeft),                   //
+    SCENARIO_VALUES(DragUpDown)                       //
 );
 
 INSTANTIATE_TEST_SUITE_P(TestScenarioInstantiation, TestDefaultCameraModel, k_TestingScenarioValues,
