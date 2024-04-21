@@ -17,6 +17,7 @@
 
 #include "scenarios/DoubleClickFlyTo.h"
 #include "scenarios/DragUpDown.h"
+#include "scenarios/MiddleDragRightUp.h"
 #include "scenarios/MoveBackwardForward.h"
 #include "scenarios/MoveRightLeft.h"
 #include "scenarios/PanRightLeft.h"
@@ -160,6 +161,7 @@ void TestDefaultCameraModel::SetModel(DefaultWorldCameraModel& m, const json& js
 	m._originToHandPlaneNormal = expected["handHeadingNormalAtInteractionStart"].get<glm::vec3>();
 	m._alignmentAtInteractionStart = expected["mouseHitPointDot"].get<float>();
 	m._focusDistance = expected["headingDistance"].get<float>();
+	m._distanceFromBoundY = expected["verticalDistance"].get<float>();
 	m._averageIslandDistance = expected["averageIslandDistance"].get<float>();
 	m._originAtClick = expected["originAtClick"].get<glm::vec3>();
 	m._focusAtClick = expected["headingAtClick"].get<glm::vec3>();
@@ -175,6 +177,7 @@ void TestDefaultCameraModel::SetModel(DefaultWorldCameraModel& m, const json& js
 	{
 		m._screenSpaceMouseRaycastHit = std::nullopt;
 	}
+	m._screenSpaceMouseRaycastHitAtClick = expected["lastGrabMouseHitPoint"].get<glm::vec3>();
 
 	glm::xz(m._rotateAroundDelta) = glm::xz(json["RotateAroundDelta"].get<glm::vec3>());
 	m._keyBoardMoveDelta = json["KeyboardMoveDelta"].get<glm::vec2>();
@@ -191,6 +194,10 @@ void TestDefaultCameraModel::SetModel(DefaultWorldCameraModel& m, const json& js
 	else if (handStatus == "CAMERA_MODE_HAND_STATUS_GRABBING_LAND")
 	{
 		m._modePrev = DefaultWorldCameraModel::Mode::DraggingLandscape;
+	}
+	else if (handStatus == "CAMERA_MODE_HAND_STATUS_TILT_ON")
+	{
+		m._modePrev = DefaultWorldCameraModel::Mode::ArcBall;
 	}
 	else
 	{
@@ -214,6 +221,7 @@ void TestDefaultCameraModel::ValidateModel(const DefaultWorldCameraModel& m, con
 	ASSERT_NEAR(m._originFocusDistanceAtInteractionStart, expected["originHeadingDistanceAtInteractionStart"].get<float>(), ep)
 	    << "at start of frame " << frameNumber;
 	ASSERT_NEAR(m._focusDistance, expected["headingDistance"].get<float>(), ep) << "at start of frame " << frameNumber;
+	ASSERT_NEAR(m._distanceFromBoundY, expected["verticalDistance"].get<float>(), ep) << "at start of frame " << frameNumber;
 	ASSERT_NEAR(m._averageIslandDistance, expected["averageIslandDistance"].get<float>(), ep)
 	    << "at start of frame " << frameNumber;
 	ASSERT_NEAR(m._focusAtClick.x, expected["headingAtClick"].get<glm::vec3>().x, ep) << "at start of frame " << frameNumber;
@@ -262,6 +270,10 @@ void TestDefaultCameraModel::ValidateModel(const DefaultWorldCameraModel& m, con
 		else if (handStatus == "CAMERA_MODE_HAND_STATUS_GRABBING_LAND")
 		{
 			ASSERT_EQ(m._modePrev, DefaultWorldCameraModel::Mode::DraggingLandscape) << "at start of frame " << frameNumber;
+		}
+		else if (handStatus == "CAMERA_MODE_HAND_STATUS_TILT_ON")
+		{
+			ASSERT_EQ(m._modePrev, DefaultWorldCameraModel::Mode::ArcBall) << "at start of frame " << frameNumber;
 		}
 		else
 		{
@@ -415,7 +427,8 @@ const auto k_TestingScenarioValues = testing::Values( //
     SCENARIO_VALUES(TiltUpPanLeft),                   //
     SCENARIO_VALUES(DragUpDown),                      //
     SCENARIO_VALUES(DoubleClickFlyTo),                //
-    SCENARIO_VALUES(TwoButtonZoomOutIn)               //
+    SCENARIO_VALUES(TwoButtonZoomOutIn),              //
+    SCENARIO_VALUES(MiddleDragRightUp)                //
 );
 
 INSTANTIATE_TEST_SUITE_P(TestScenarioInstantiation, TestDefaultCameraModel, k_TestingScenarioValues,

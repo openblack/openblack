@@ -26,6 +26,7 @@ class DefaultWorldCameraModel final: public CameraModel
 	{
 		Cartesian,
 		Polar,
+		ArcBall,
 		DraggingLandscape,
 		FlyingToPoint,
 	};
@@ -49,6 +50,7 @@ private:
 	                float mouseMovementDistance);
 	void UpdateModeCartesian();
 	void UpdateModePolar(glm::vec3 eulerAngles, bool recalculatePoint);
+	void UpdateModeArcBall(glm::vec3 eulerAngles, glm::u16vec2 mouseCurrent, float xFov);
 	void UpdateModeDragging(const Camera& camera, glm::u16vec2 mouseCurrent, float mouseMovementDistance);
 	void UpdateModeFlying(glm::vec3 eulerAngles);
 
@@ -67,6 +69,7 @@ private:
 	/// @return The harmonic mean of the distances from the origin to each hit point.
 	[[nodiscard]] float GetVerticalLineInverseDistanceWeighingRayCast(const Camera& camera) const;
 
+	void ComputeDistanceFromBoundY();
 	bool ConstrainCamera(std::chrono::microseconds dt, float mouseMovementDistance, glm::vec3 eulerAngles,
 	                     const Camera& camera);
 	/// Corrects altitude of the camera
@@ -93,8 +96,10 @@ private:
 	// Values from target camera state which the camera may interpolate to. Not the current camera state.
 	glm::vec3 _targetOrigin = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::vec3 _targetFocus = glm::vec3(0.0f, 0.0f, 0.0f);
+	float _arcBallRadius = 0.0f;
 
 	std::optional<glm::vec3> _screenSpaceMouseRaycastHit;
+	std::optional<glm::vec3> _screenSpaceMouseRaycastHitAtClick;
 	std::optional<glm::vec3> _screenSpaceCenterRaycastHit;
 
 	// State of input Action
@@ -103,6 +108,7 @@ private:
 	std::optional<glm::vec3> _handPosition;
 
 	float _focusDistance = 0.0f;
+	float _distanceFromBoundY = 0.0f;
 
 	// Estimate of camera to island geometry
 	float _averageIslandDistance = 0.0f;
