@@ -40,6 +40,7 @@ public:
 	}
 };
 
+// NOLINTBEGIN(bugprone-branch-clone, google-readability-function-size)
 class PanRightLeftMockDynamicsSystem: public MockDynamicsSystem
 {
 public:
@@ -3528,3 +3529,4 @@ public:
 		return std::nullopt;
 	}
 };
+// NOLINTEND(bugprone-branch-clone, google-readability-function-size)

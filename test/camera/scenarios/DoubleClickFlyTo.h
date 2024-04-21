@@ -35,6 +35,7 @@ public:
 	[[nodiscard]] glm::uvec2 GetMousePosition() const final { return {100, 600 - 290}; }
 };
 
+// NOLINTBEGIN(bugprone-branch-clone, google-readability-function-size, readability-function-size)
 class DoubleClickFlyToMockDynamicsSystem: public MockDynamicsSystem
 {
 public:
@@ -3399,3 +3400,4 @@ public:
 		return std::nullopt;
 	}
 };
+// NOLINTEND(bugprone-branch-clone, google-readability-function-size, readability-function-size)
