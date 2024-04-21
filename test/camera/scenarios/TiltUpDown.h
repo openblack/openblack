@@ -40,6 +40,7 @@ public:
 	}
 };
 
+// NOLINTBEGIN(bugprone-branch-clone, google-readability-function-size, readability-function-size)
 class TiltUpDownMockDynamicsSystem: public MockDynamicsSystem
 {
 public:
@@ -2136,3 +2137,4 @@ public:
 		return std::nullopt;
 	}
 };
+// NOLINTEND(bugprone-branch-clone, google-readability-function-size, readability-function-size)
