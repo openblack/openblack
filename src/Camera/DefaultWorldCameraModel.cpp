@@ -321,7 +321,13 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraMode
 
 	const bool originHasBeenAdjusted = ConstrainCamera(dt, eulerAngles, camera);
 
-	return {{GetTargetOrigin(), GetTargetFocus(), camera.GetInterpolatorTime()}};
+	return ComputeUpdateReturnInfo(originHasBeenAdjusted, camera.GetInterpolatorTime());
+}
+
+std::optional<CameraModel::CameraInterpolationUpdateInfo>
+DefaultWorldCameraModel::ComputeUpdateReturnInfo(bool originHasBeenAdjusted, std::chrono::duration<float> t)
+{
+	return {{GetTargetOrigin(), GetTargetFocus(), t}};
 }
 
 void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
