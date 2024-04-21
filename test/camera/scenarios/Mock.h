@@ -92,12 +92,12 @@ public:
 	virtual ~MockAction() = default;
 
 	[[nodiscard]] bool GetBindable(openblack::input::BindableActionMap) const override { return false; }
-	[[nodiscard]] bool GetUnbindable(openblack::input::UnbindableActionMap) const final { return false; }
+	[[nodiscard]] bool GetUnbindable(openblack::input::UnbindableActionMap) const override { return false; }
 	[[nodiscard]] bool GetBindableChanged(openblack::input::BindableActionMap) const final { return false; }
 	[[nodiscard]] bool GetUnbindableChanged(openblack::input::UnbindableActionMap) const final { return false; }
 	[[nodiscard]] bool GetBindableRepeat(openblack::input::BindableActionMap) const final { return false; }
 	[[nodiscard]] bool GetUnbindableRepeat(openblack::input::UnbindableActionMap) const final { return false; }
-	[[nodiscard]] glm::uvec2 GetMousePosition() const final { return k_MockMousePos; }
+	[[nodiscard]] glm::uvec2 GetMousePosition() const override { return k_MockMousePos; }
 	[[nodiscard]] glm::ivec2 GetMouseDelta() const final { return {}; }
 	[[nodiscard]] std::array<std::optional<glm::vec3>, 2> GetHandPositions() const final { return {}; }
 	void Frame() final {}

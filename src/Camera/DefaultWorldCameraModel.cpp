@@ -34,6 +34,8 @@ constexpr auto k_InteractionSpeedMultiplier = 400.0f;
 constexpr auto k_CameraModelHalfPi = 1.53938043f;
 constexpr auto k_CameraInteractionStepSize = 3.0f;
 constexpr auto k_MinimalCameraAnimationDuration = std::chrono::duration<float> {1.5f};
+constexpr auto k_HandDragVectorAlignmentThreshold = 0.001f;
+constexpr auto k_HandDragVectorAlignmentRatioThreshold = 0.000'1f;
 
 glm::vec3 EulerFromPoints(glm::vec3 p0, glm::vec3 p1)
 {
@@ -56,7 +58,7 @@ DefaultWorldCameraModel::DefaultWorldCameraModel(glm::vec3 origin, glm::vec3 foc
 
 DefaultWorldCameraModel::~DefaultWorldCameraModel() = default;
 
-void DefaultWorldCameraModel::TiltZoom(glm::vec3& eulerAngles, float scalingFactor)
+void DefaultWorldCameraModel::TiltZoom(glm::vec3& eulerAngles, float scalingFactor, float zoomDelta)
 {
 	// Update the camera's yaw if there's significant horizontal movement.
 	if (glm::abs(_rotateAroundDelta.y) > glm::epsilon<float>())
@@ -86,7 +88,7 @@ void DefaultWorldCameraModel::TiltZoom(glm::vec3& eulerAngles, float scalingFact
 		_focusAtClick += offset;
 	}
 
-	_averageIslandDistance += _rotateAroundDelta.z;
+	_averageIslandDistance += zoomDelta;
 	_averageIslandDistance = glm::max(_averageIslandDistance, k_CameraInteractionStepSize + 0.1f);
 }
 
@@ -111,7 +113,8 @@ float DefaultWorldCameraModel::GetVerticalLineInverseDistanceWeighingRayCast(con
 	return 1.0f / average;
 }
 
-bool DefaultWorldCameraModel::ConstrainCamera(std::chrono::microseconds dt, glm::vec3 eulerAngles, const Camera& camera)
+bool DefaultWorldCameraModel::ConstrainCamera(std::chrono::microseconds dt, float mouseMovementDistance, glm::vec3 eulerAngles,
+                                              const Camera& camera)
 {
 	const auto originBackup = _targetOrigin;
 	bool originHasBeenAdjusted = false;
@@ -120,7 +123,8 @@ bool DefaultWorldCameraModel::ConstrainCamera(std::chrono::microseconds dt, glm:
 
 	const auto dtSeconds = std::chrono::duration_cast<std::chrono::duration<float>>(dt).count();
 	const auto threshold = glm::max(300.0f, 1.6f * _focusDistance * dtSeconds);
-	if (glm::distance2(_targetOrigin, originBackup) > threshold * threshold || originHasBeenAdjusted)
+	if ((mouseMovementDistance == 0.0f && glm::distance2(_targetOrigin, originBackup) > threshold * threshold) ||
+	    originHasBeenAdjusted)
 	{
 		_originFocusDistanceAtInteractionStart =
 		    glm::max(glm::distance(_targetOrigin, _targetFocus), k_CameraInteractionStepSize + 0.1f);
@@ -179,10 +183,13 @@ bool DefaultWorldCameraModel::ConstrainDisc()
 void DefaultWorldCameraModel::UpdateFocusPointInteractionParameters(glm::vec3 origin, glm::vec3 focus, glm::vec3 eulerAngles,
                                                                     const Camera& camera)
 {
-	// if hand not tilting and not panning
-	_originFocusDistanceAtInteractionStart =
-	    glm::max(glm::distance(_targetOrigin, _targetFocus), k_CameraInteractionStepSize + 0.1f);
+	_originAtClick = _targetOrigin;
+	_focusAtClick = _targetFocus;
+	_mouseAtClick = Locator::gameActionSystem::value().GetMousePosition();
 	_originFocusDistanceAtInteractionStart = glm::distance(origin, focus);
+	// TODO(#713): calculate a y-basis based on the projection on land of camera origin and hand
+	_originToHandPlaneNormal = glm::vec3(0.0f, 1.0f, 0.0f);
+	// TODO(#713): Calculate the with _originToHandPlaneNormal and the mouse hit point to put in _alignmentAtInteractionStart
 	_averageIslandDistance = GetVerticalLineInverseDistanceWeighingRayCast(camera);
 	{
 		// TODO: factor out this bit of code for euler angles
@@ -205,7 +212,29 @@ void DefaultWorldCameraModel::UpdateFocusPointInteractionParameters(glm::vec3 or
 	_averageIslandDistance += extra;
 }
 
-void DefaultWorldCameraModel::UpdateMode(glm::vec3 eulerAngles, float zoomDelta)
+// This is a vanilla-style deprojection but with a few math errors
+glm::vec3 ScreenToWorld(const Camera& camera, glm::u16vec2 pixelCoord)
+{
+	const auto& window = Locator::windowing ::value();
+
+	const auto screenSize = window.GetSize();
+	const auto aspect = window.GetAspectRatio();
+	const auto yFov = 2.0f * glm::atan(1.0f / camera.GetProjectionMatrix()[1][1]);
+
+	const auto screenCoord = static_cast<glm::vec2>(pixelCoord) / static_cast<glm::vec2>(screenSize);
+	const auto clipSpaceCoordinates = ((screenCoord - 0.5f) * 2.0f) * glm::vec2(1.0f, -1.0f);
+
+	// The multiplication by aspect within the tan is odd and wrong
+	const auto baseTanHalfFov = glm::tan(yFov / 2.0f * aspect);
+	// Using baseTanHalfFov directly to scale is also odd
+	const auto extents = glm::vec3(baseTanHalfFov, baseTanHalfFov / aspect, 1.0f);
+	const auto point = glm::vec4(glm::vec3(clipSpaceCoordinates, 1.0f) * extents, 1.0f);
+
+	return camera.GetRotationMatrix() * point;
+}
+
+void DefaultWorldCameraModel::UpdateMode(const Camera& camera, glm::vec3 eulerAngles, float zoomDelta, glm::uvec2 mouseCurrent,
+                                         float mouseMovementDistance)
 {
 	switch (_mode)
 	{
@@ -214,6 +243,9 @@ void DefaultWorldCameraModel::UpdateMode(glm::vec3 eulerAngles, float zoomDelta)
 		break;
 	case Mode::Polar:
 		UpdateModePolar(eulerAngles, zoomDelta == 0.0f);
+		break;
+	case Mode::DraggingLandscape:
+		UpdateModeDragging(camera, mouseCurrent, mouseMovementDistance);
 		break;
 	}
 
@@ -252,6 +284,56 @@ void DefaultWorldCameraModel::UpdateModePolar(glm::vec3 eulerAngles, bool recalc
 		_focusAtClick += diff;
 	}
 	_targetFocus = _focusAtClick;
+}
+
+void DefaultWorldCameraModel::UpdateModeDragging(const Camera& camera, glm::u16vec2 mouseCurrent, float mouseMovementDistance)
+{
+	// TODO(#713): Check on optional of _originToHandPlaneNormal to see if there even is a valid grabbing
+
+	// deproject with camera at origin (0, 0, 0), you can use the current
+	// rotation, because during this operation, we cannot rotate so the
+	// current rotation will be the same as rotation at click
+	// Use the current projection matrix too because we don't want fov
+	// changes to affect the current operation.
+	// In fact, using the regular deprojection followed by removing the
+	// current translation will have the same effect
+	const auto depth = glm::mix(0.3f, 3.5f, glm::clamp(camera.GetOrigin().y / 20.0f, 0.0f, 1.0f));
+	const auto mouseDeltaCurrent = ScreenToWorld(camera, mouseCurrent) * depth;
+	const auto mouseDeltaAtClick = ScreenToWorld(camera, _mouseAtClick) * depth;
+
+	// Get dot product of mouse-camera vector and the normal of the up maximizing plane between the camera and hand
+	// Note that mouseAlignment could be unit vectors, but they are scaled by the near plane
+	const auto mouseAlignmentCurrent = glm::dot(mouseDeltaCurrent, _originToHandPlaneNormal);
+	const auto mouseAlignmentAtClick = glm::dot(mouseDeltaAtClick, _originToHandPlaneNormal);
+
+	if ((mouseAlignmentCurrent < -k_HandDragVectorAlignmentThreshold &&
+	     mouseAlignmentAtClick < -k_HandDragVectorAlignmentThreshold) ||
+	    (mouseAlignmentCurrent > k_HandDragVectorAlignmentThreshold &&
+	     mouseAlignmentAtClick > k_HandDragVectorAlignmentThreshold))
+	{
+		const auto originAlignmentAtClick = glm::dot(_originAtClick, _originToHandPlaneNormal);
+		const auto alignmentDelta = _alignmentAtInteractionStart - originAlignmentAtClick;
+
+		const auto alignmentRatioCurrent = alignmentDelta / mouseAlignmentCurrent;
+		const auto alignmentRatioAtClick = alignmentDelta / mouseAlignmentAtClick;
+
+		if (alignmentRatioCurrent > k_HandDragVectorAlignmentRatioThreshold &&
+		    alignmentRatioAtClick > k_HandDragVectorAlignmentRatioThreshold)
+		{
+			auto movement = mouseDeltaCurrent * alignmentRatioCurrent - mouseDeltaAtClick * alignmentRatioAtClick;
+			const auto movementDistance2 = glm::length2(movement);
+			if (movementDistance2 > mouseMovementDistance)
+			{
+				movement *= mouseMovementDistance * glm::sqrt(movementDistance2);
+			}
+
+			_targetOrigin = _originAtClick - movement;
+			_targetFocus = _focusAtClick - movement;
+
+			_targetOrigin =
+			    _targetFocus + glm::normalize(_targetOrigin - _targetFocus) * _originFocusDistanceAtInteractionStart;
+		}
+	}
 }
 
 void DefaultWorldCameraModel::UpdateCameraInterpolationValues(const Camera& camera)
@@ -321,15 +403,20 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraMode
 	if (_mode == Mode::Polar)
 	{
 		// Adjust camera's orientation based on user input. Call will reset deltas.
-		TiltZoom(eulerAngles, scalingFactor);
+		TiltZoom(eulerAngles, scalingFactor, zoomDelta);
 	}
 
+	const auto mouseCurrent = Locator::gameActionSystem::value().GetMousePosition();
 	_originFocusDistanceAtInteractionStart =
 	    glm::max(_originFocusDistanceAtInteractionStart + zoomDelta, k_CameraInteractionStepSize + 0.1f);
+	const auto mouseMovementDistance =
+	    glm::max(glm::distance(static_cast<glm::vec2>(mouseCurrent), static_cast<glm::vec2>(_mouseAtClick)) *
+	                 _originFocusDistanceAtInteractionStart * 0.11f,
+	             50.0f);
 
-	UpdateMode(eulerAngles, zoomDelta);
+	UpdateMode(camera, eulerAngles, zoomDelta, mouseCurrent, mouseMovementDistance);
 
-	const bool originHasBeenAdjusted = ConstrainCamera(dt, eulerAngles, camera);
+	const bool originHasBeenAdjusted = ConstrainCamera(dt, mouseMovementDistance, eulerAngles, camera);
 
 	return ComputeUpdateReturnInfo(originHasBeenAdjusted, camera.GetInterpolatorTime());
 }
@@ -419,10 +506,12 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 		_rotateAroundDelta.z += distance;
 	}
 
-	// TODO: Hand-based movement
-
 	_modePrev = _mode;
-	if (_keyBoardMoveDelta != glm::vec2() || _rotateAroundDelta != glm::vec3())
+	if (actionSystem.Get(input::BindableActionMap::MOVE))
+	{
+		_mode = Mode::DraggingLandscape;
+	}
+	else if (_keyBoardMoveDelta != glm::vec2() || _rotateAroundDelta != glm::vec3())
 	{
 		_mode = Mode::Polar;
 	}

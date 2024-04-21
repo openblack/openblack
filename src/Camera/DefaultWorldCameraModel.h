@@ -26,6 +26,7 @@ class DefaultWorldCameraModel final: public CameraModel
 	{
 		Cartesian,
 		Polar,
+		DraggingLandscape,
 	};
 
 public:
@@ -43,15 +44,17 @@ private:
 	void UpdateRaycastHitPoints(const Camera& camera);
 	void UpdateFocusDistance();
 
-	void UpdateMode(glm::vec3 eulerAngles, float zoomDelta);
+	void UpdateMode(const Camera& camera, glm::vec3 eulerAngles, float zoomDelta, glm::uvec2 mouseCurrent,
+	                float mouseMovementDistance);
 	void UpdateModeCartesian();
 	void UpdateModePolar(glm::vec3 eulerAngles, bool recalculatePoint);
+	void UpdateModeDragging(const Camera& camera, glm::u16vec2 mouseCurrent, float mouseMovementDistance);
 
 	/// Updates the model's focus point parameters after a change in position or focus point of view
 	void UpdateFocusPointInteractionParameters(glm::vec3 origin, glm::vec3 focus, glm::vec3 eulerAngles, const Camera& camera);
 	/// Modifies the given Euler angles based on the rotate Around and keyboard Move Deltas for rotation and zoom.
 	/// @param eulerAngles A reference representing Euler angles (yaw, pitch, roll) to be adjusted. Roll is always 0.
-	void TiltZoom(glm::vec3& eulerAngles, float scalingFactor);
+	void TiltZoom(glm::vec3& eulerAngles, float scalingFactor, float zoomDelta);
 	/// Computes the harmonic mean of the distances from a point of origin to a set of points determined by raycasting in screen
 	/// space.
 	///
@@ -62,7 +65,8 @@ private:
 	/// @return The harmonic mean of the distances from the origin to each hit point.
 	[[nodiscard]] float GetVerticalLineInverseDistanceWeighingRayCast(const Camera& camera) const;
 
-	bool ConstrainCamera(std::chrono::microseconds dt, glm::vec3 eulerAngles, const Camera& camera);
+	bool ConstrainCamera(std::chrono::microseconds dt, float mouseMovementDistance, glm::vec3 eulerAngles,
+	                     const Camera& camera);
 	/// Corrects altitude of the camera
 	/// @return If a modification to the camera position was applied.
 	bool ConstrainAltitude();
@@ -102,9 +106,12 @@ private:
 
 	// Updated at the start of a click+drag or keyboard input
 	// Only useful for interaction.
-	// TODO: Make part of optional of a struct?
 	float _originFocusDistanceAtInteractionStart = 0.0f;
+	glm::vec3 _originToHandPlaneNormal = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::vec3 _originAtClick = glm::vec3(0.0f, 0.0f, 0.0f);
+	float _alignmentAtInteractionStart = 0.0f;
 	glm::vec3 _focusAtClick = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::u16vec2 _mouseAtClick = glm::u16vec2(0.0f, 0.0f);
 	std::chrono::duration<float> _elapsedTime = std::chrono::duration<float>::zero();
 
 	// For unit testing
