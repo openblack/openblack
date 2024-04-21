@@ -74,6 +74,9 @@ private:
 	[[nodiscard]] glm::vec3 GetTargetForwardUnitVector() const;
 	[[nodiscard]] glm::vec3 ProjectPointOnForwardVector(float distanceFromOrigin) const;
 
+	[[nodiscard]] std::optional<CameraInterpolationUpdateInfo> ComputeUpdateReturnInfo(bool originHasBeenAdjusted,
+	                                                                                   std::chrono::duration<float> t);
+
 	Mode _mode = Mode::Cartesian;
 
 	// Values from camera state where the camera has interpolated to.
