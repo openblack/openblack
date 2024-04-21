@@ -58,6 +58,7 @@ constexpr auto k_FlightHeightFactor = 0.1f;
 constexpr auto k_FlyingScoreAngles = MakeFlyingScoreAngles<float, 0x20>();
 constexpr auto k_ConstrainDiscCentre = glm::vec3(2560.0f, 0.0f, 2560.0f);
 constexpr auto k_ConstrainDiscRadius = 5120.0f;
+constexpr auto k_MaxAltitude = 30'000.0f;
 
 glm::vec3 EulerFromPoints(glm::vec3 p0, glm::vec3 p1)
 {
@@ -69,6 +70,34 @@ glm::vec3 EulerFromPoints(glm::vec3 p0, glm::vec3 p1)
 	}
 	// Otherwise, calculate yaw and pitch based on the direction to the focus point.
 	return {glm::pi<float>() - glm::atan(diff.x, -diff.z), glm::atan(diff.y, glm::length(glm::xz(diff))), 0.0f};
+}
+
+/// Calculates the projection length of a vector onto another vector.
+///
+/// Given three points `p1`, `p2`, and `p3`, this function computes the projection length
+/// of the vector from `p1` to `p3` onto the direction defined by the vector from `p1` to `p2`.
+/// The result represents how much `p3` is "along" the direction from `p1` to `p2`, scaled
+/// by the magnitude of the vector from `p1` to `p3`.
+///
+/// # Arguments
+///
+/// * `p1` - The origin point.
+/// * `p2` - The point defining the direction vector.
+/// * `p3` - The point whose projection onto the direction from `p1` to `p2` is calculated.
+///
+/// # Returns
+///
+/// The projection length of `p3` onto the direction from `p1` to `p2`.
+float PointDistanceAlongLineSegment(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3)
+{
+	const glm::vec3 v12 = p2 - p1; // Vector from p1 to p2
+	const glm::vec3 v13 = p3 - p1; // Vector from p1 to p3
+
+	// Normalize v12 to get its direction
+	const glm::vec3 u12 = glm::normalize(v12);
+
+	// Project v13 onto u12 to get the projection length from p1
+	return glm::abs(glm::dot(v13, u12)); // Using glm::abs to ensure the distance is non-negative
 }
 
 DefaultWorldCameraModel::DefaultWorldCameraModel(glm::vec3 origin, glm::vec3 focus)
@@ -92,10 +121,20 @@ void DefaultWorldCameraModel::TiltZoom(glm::vec3& eulerAngles, float scalingFact
 	// Update the camera's pitch if there's significant vertical movement.
 	if (glm::abs(_rotateAroundDelta.x) > glm::epsilon<float>())
 	{
-		eulerAngles.y -= _rotateAroundDelta.x * 0.002f;
+		const auto pitchStep = _rotateAroundDelta.x * 0.002f;
+		eulerAngles.y -= pitchStep;
 		// Clamp the pitch angle to keep the camera within between -30 and 78.75 degrees.
 		eulerAngles.y = glm::clamp(eulerAngles.y, -1.0f / 6.0f * glm::pi<float>(), 7.0f / 16.0f * glm::pi<float>());
-		// TODO: special case if rotate_around_pressed is false
+		if (_mode == Mode::ArcBall)
+		{
+			const auto distanceFromBound = (2.0f * k_CameraInteractionStepSize) - _distanceFromBoundY;
+			if (distanceFromBound > glm::epsilon<float>())
+			{
+				const auto verticalStep = distanceFromBound * pitchStep * _focusDistance * 0.051f;
+				_targetFocus += verticalStep;
+				_focusAtClick += verticalStep;
+			}
+		}
 	}
 
 	{
@@ -133,6 +172,21 @@ float DefaultWorldCameraModel::GetVerticalLineInverseDistanceWeighingRayCast(con
 	const auto average = std::accumulate(inverseHitDistances.cbegin(), inverseHitDistances.cend(), 1.0f / 50.0f) /
 	                     (inverseHitDistances.size() + 1);
 	return 1.0f / average;
+}
+
+void DefaultWorldCameraModel::ComputeDistanceFromBoundY()
+{
+	if (_targetOrigin.y < _targetFocus.y)
+	{
+		_distanceFromBoundY = 0.0f;
+	}
+	else
+	{
+		const auto groundAltitude = Locator::terrainSystem::value().GetHeightAt(glm::xz(_targetOrigin));
+		const auto boundsMinY = groundAltitude + k_CameraInteractionStepSize;
+		const auto boundsMaxY = glm::min(groundAltitude, 0.0f) + k_MaxAltitude;
+		_distanceFromBoundY = glm::min(glm::abs(_targetOrigin.y - boundsMinY), glm::abs(_targetOrigin.y - boundsMaxY));
+	}
 }
 
 bool DefaultWorldCameraModel::ConstrainCamera(std::chrono::microseconds dt, float mouseMovementDistance, glm::vec3 eulerAngles,
@@ -179,7 +233,7 @@ bool DefaultWorldCameraModel::ConstrainAltitude()
 		hasBeenAdjusted = true;
 	}
 
-	if (_rotateAroundDelta.x != 0.0f)
+	if (_mode != Mode::ArcBall && _rotateAroundDelta.x != 0.0f)
 	{
 		_targetFocus = _targetOrigin + glm::normalize(_targetFocus - _targetOrigin) * _focusDistance;
 	}
@@ -206,8 +260,13 @@ bool DefaultWorldCameraModel::ConstrainDisc()
 void DefaultWorldCameraModel::UpdateFocusPointInteractionParameters(glm::vec3 origin, glm::vec3 focus, glm::vec3 eulerAngles,
                                                                     const Camera& camera)
 {
-	_originAtClick = _targetOrigin;
 	_focusAtClick = _targetFocus;
+	_screenSpaceMouseRaycastHitAtClick = _screenSpaceMouseRaycastHit;
+	if (_screenSpaceMouseRaycastHitAtClick.has_value())
+	{
+		_arcBallRadius = PointDistanceAlongLineSegment(origin, focus, *_screenSpaceMouseRaycastHitAtClick);
+	}
+	_originAtClick = _targetOrigin;
 	_mouseAtClick = Locator::gameActionSystem::value().GetMousePosition();
 	_originFocusDistanceAtInteractionStart = glm::distance(origin, focus);
 	// TODO(#713): calculate a y-basis based on the projection on land of camera origin and hand
@@ -267,6 +326,9 @@ void DefaultWorldCameraModel::UpdateMode(const Camera& camera, glm::vec3 eulerAn
 	case Mode::Polar:
 		UpdateModePolar(eulerAngles, zoomDelta == 0.0f);
 		break;
+	case Mode::ArcBall:
+		UpdateModeArcBall(eulerAngles, mouseCurrent, camera.GetHorizontalFieldOfView());
+		break;
 	case Mode::DraggingLandscape:
 		UpdateModeDragging(camera, mouseCurrent, mouseMovementDistance);
 		break;
@@ -275,7 +337,7 @@ void DefaultWorldCameraModel::UpdateMode(const Camera& camera, glm::vec3 eulerAn
 		break;
 	}
 
-	if (_rotateAroundDelta.x != 0.0f)
+	if (_mode != Mode::ArcBall && _rotateAroundDelta.x != 0.0f)
 	{
 		const auto diff = _targetFocus - _targetOrigin;
 		_targetOrigin = _currentOrigin;
@@ -310,6 +372,29 @@ void DefaultWorldCameraModel::UpdateModePolar(glm::vec3 eulerAngles, bool recalc
 		_focusAtClick += diff;
 	}
 	_targetFocus = _focusAtClick;
+}
+
+void DefaultWorldCameraModel::UpdateModeArcBall(glm::vec3 eulerAngles, glm::u16vec2 mouseCurrent, float xFov)
+{
+	const auto point = _focusAtClick + _originFocusDistanceAtInteractionStart * glm::euclidean(glm::yx(eulerAngles));
+
+	const auto basisZ = glm::normalize(point - _focusAtClick);
+	const auto basisX = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), basisZ));
+	const auto basisY = glm::normalize(glm::cross(basisZ, basisX));
+
+	const auto windowSize = static_cast<glm::vec2>(Locator::windowing::value().GetSize());
+	const auto aspect = windowSize.y / windowSize.x;
+	const auto screenCentreOffset = static_cast<glm::vec2>(mouseCurrent) / windowSize - 0.5f;
+
+	const auto halfTanX = glm::tan(xFov * 0.5f);
+	const auto halfTanY = halfTanX * aspect;
+
+	const auto cameraOffsetX = screenCentreOffset.x * halfTanX * basisX * _arcBallRadius * 2.0f;
+	const auto cameraOffsetY = screenCentreOffset.y * halfTanY * basisY * _arcBallRadius * 2.0f;
+
+	_targetFocus = _screenSpaceMouseRaycastHitAtClick.value() + cameraOffsetX + cameraOffsetY;
+	_targetOrigin = _targetFocus + basisZ * _arcBallRadius;
+	_focusAtClick = _targetFocus;
 }
 
 void DefaultWorldCameraModel::UpdateModeDragging(const Camera& camera, glm::u16vec2 mouseCurrent, float mouseMovementDistance)
@@ -500,11 +585,13 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraMode
 		                                      camera.GetFocus(Camera::Interpolation::Target), eulerAngles, camera);
 	}
 
+	ComputeDistanceFromBoundY();
+
 	// Get step size
 	const auto scalingFactor = 60.0f;
 	const auto zoomDelta = _rotateAroundDelta.z * 0.0015f * scalingFactor;
 
-	if (_mode == Mode::Polar)
+	if (_mode == Mode::Polar || _mode == Mode::ArcBall)
 	{
 		// Adjust camera's orientation based on user input. Call will reset deltas.
 		TiltZoom(eulerAngles, scalingFactor, zoomDelta);
@@ -633,6 +720,12 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 		// TODO(#711): the mouse has to be reset
 	}
 
+	if (actionSystem.Get(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON))
+	{
+		const auto mouseDelta = static_cast<glm::vec2>(actionSystem.GetMouseDelta());
+		_rotateAroundDelta += glm::vec3(glm::yx(mouseDelta * kRotateOnSpeedMultiplier), 0.0f);
+	}
+
 	const auto handPositions = actionSystem.GetHandPositions();
 	// TODO(#656): in C++23 use or_else
 	if (handPositions[0].has_value())
@@ -648,6 +741,10 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 	if (_handPosition.has_value() && actionSystem.Get(input::UnbindableActionMap::DOUBLE_CLICK))
 	{
 		_mode = Mode::FlyingToPoint;
+	}
+	else if (actionSystem.Get(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON))
+	{
+		_mode = Mode::ArcBall;
 	}
 	else if (_handPosition.has_value() && actionSystem.Get(input::BindableActionMap::MOVE))
 	{
