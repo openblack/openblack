@@ -27,6 +27,7 @@ class DefaultWorldCameraModel final: public CameraModel
 		Cartesian,
 		Polar,
 		DraggingLandscape,
+		FlyingToPoint,
 	};
 
 public:
@@ -49,6 +50,7 @@ private:
 	void UpdateModeCartesian();
 	void UpdateModePolar(glm::vec3 eulerAngles, bool recalculatePoint);
 	void UpdateModeDragging(const Camera& camera, glm::u16vec2 mouseCurrent, float mouseMovementDistance);
+	void UpdateModeFlying(const Camera& camera, glm::vec3 eulerAngles);
 
 	/// Updates the model's focus point parameters after a change in position or focus point of view
 	void UpdateFocusPointInteractionParameters(glm::vec3 origin, glm::vec3 focus, glm::vec3 eulerAngles, const Camera& camera);
@@ -113,6 +115,7 @@ private:
 	glm::vec3 _focusAtClick = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::u16vec2 _mouseAtClick = glm::u16vec2(0.0f, 0.0f);
 	std::chrono::duration<float> _elapsedTime = std::chrono::duration<float>::zero();
+	std::optional<FlightPath> _flightPath;
 
 	// For unit testing
 	friend TestDefaultCameraModel;

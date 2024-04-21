@@ -27,6 +27,18 @@
 
 using namespace openblack;
 
+template <typename T, size_t S>
+    requires std::floating_point<T>
+constexpr std::array<T, S> MakeFlyingScoreAngles()
+{
+	std::array<T, S> result {};
+	for (size_t i = 0; i < S; ++i)
+	{
+		result.at(i) = static_cast<T>(i) * glm::pi<T>() * 2.0f / static_cast<T>(S);
+	}
+	return result;
+}
+
 // TODO(#708): Add to global configurations
 constexpr auto k_WheelZoomFactor = 20.0f;
 constexpr auto k_InteractionSpeedMultiplier = 400.0f;
@@ -36,6 +48,11 @@ constexpr auto k_CameraInteractionStepSize = 3.0f;
 constexpr auto k_MinimalCameraAnimationDuration = std::chrono::duration<float> {1.5f};
 constexpr auto k_HandDragVectorAlignmentThreshold = 0.001f;
 constexpr auto k_HandDragVectorAlignmentRatioThreshold = 0.000'1f;
+constexpr auto k_FlyingDistanceThresholds = std::array<float, 4> {100.0f, 60.0f, 30.0f, 15.0f};
+constexpr auto k_FlyingThresholdFactor = 1.5f;
+constexpr auto k_GroundDistanceMinimum = 10.0f;
+constexpr auto k_FlightHeightFactor = 0.1f;
+constexpr auto k_FlyingScoreAngles = MakeFlyingScoreAngles<float, 0x20>();
 
 glm::vec3 EulerFromPoints(glm::vec3 p0, glm::vec3 p1)
 {
@@ -247,6 +264,9 @@ void DefaultWorldCameraModel::UpdateMode(const Camera& camera, glm::vec3 eulerAn
 	case Mode::DraggingLandscape:
 		UpdateModeDragging(camera, mouseCurrent, mouseMovementDistance);
 		break;
+	case Mode::FlyingToPoint:
+		UpdateModeFlying(camera, eulerAngles);
+		break;
 	}
 
 	if (_rotateAroundDelta.x != 0.0f)
@@ -336,6 +356,79 @@ void DefaultWorldCameraModel::UpdateModeDragging(const Camera& camera, glm::u16v
 	}
 }
 
+void DefaultWorldCameraModel::UpdateModeFlying(const Camera& camera, glm::vec3 eulerAngles)
+{
+	// TODO: check if you double clicked something such as creature then take its coordinates, otherwise get the land point
+	const auto hit = camera.RaycastMouseToLand(true, Camera::Interpolation::Target);
+	if (!hit.has_value() || !_screenSpaceCenterRaycastHit.has_value())
+	{
+		return;
+	}
+	const auto point = hit->position;
+
+	const auto distanceFromHitPoint = glm::length(point - *_screenSpaceCenterRaycastHit);
+	const auto distanceFromOrigin = glm::length(point - _targetOrigin);
+
+	const auto thresholdDistance = distanceFromOrigin / k_FlyingThresholdFactor;
+
+	const bool wooshingDistance =
+	    thresholdDistance > k_FlyingDistanceThresholds[0] && distanceFromHitPoint > k_GroundDistanceMinimum;
+	float distanceFromFocus;
+	if (wooshingDistance)
+	{
+		distanceFromFocus = k_FlyingDistanceThresholds[0];
+	}
+	else if (thresholdDistance > k_FlyingDistanceThresholds[1])
+	{
+		distanceFromFocus = k_FlyingDistanceThresholds[1];
+	}
+	else if (thresholdDistance > k_FlyingDistanceThresholds[2])
+	{
+		distanceFromFocus = k_FlyingDistanceThresholds[2];
+	}
+	else
+	{
+		distanceFromFocus = k_FlyingDistanceThresholds[3];
+	}
+
+	// Find best angles
+	{
+		// TODO(#522): Use zip_view in c++23
+		std::array<float, 0x20> scores {};
+		for (size_t i = 0; auto& score : scores)
+		{
+			for (int j = 0; j < 5; ++j)
+			{
+				const auto p = point + static_cast<float>(j) + 3.0f * distanceFromFocus * glm::euclidean(glm::yx(eulerAngles));
+				score += point.y - Locator::terrainSystem::value().GetHeightAt(glm::xz(p));
+			}
+			score += 50.0f * std::cos(k_FlyingScoreAngles.at(i));
+			++i;
+		}
+
+		const auto bestAngleIndex = std::distance(scores.begin(), std::max_element(scores.begin(), scores.end()));
+		const auto normal = Locator::terrainSystem::value().GetNormalAt(glm::xz(point));
+		const auto offsetPoint = point + normal;
+
+		const auto oldAngles = eulerAngles;
+		eulerAngles = EulerFromPoints(offsetPoint, point); // Placeholder
+
+		eulerAngles.y = std::clamp((eulerAngles.y / 2.0f + oldAngles.y) / 5.0f + 3.0f * glm::pi<float>() / 25.0f,
+		                           glm::pi<float>() / 8.0f, glm::pi<float>() / 3.0f);
+		eulerAngles.x = static_cast<float>(bestAngleIndex) * glm::pi<float>() / 16.0f + oldAngles.x;
+	}
+	eulerAngles.y = glm::clamp(eulerAngles.y, glm::pi<float>() / 8.0f, glm::pi<float>() * 10.0f / 21.0f);
+
+	_targetFocus = point;
+	_targetOrigin = _targetFocus + distanceFromFocus * glm::euclidean(glm::yx(eulerAngles));
+
+	if (wooshingDistance)
+	{
+		_flightPath = CharterFlight(_targetOrigin, _targetFocus, _currentOrigin, k_FlightHeightFactor);
+		// TODO: Play the whooshing sound
+	}
+}
+
 void DefaultWorldCameraModel::UpdateCameraInterpolationValues(const Camera& camera)
 {
 	// Get current curve interpolated values from camera
@@ -390,7 +483,7 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraMode
 	// Get angles (yaw, pitch, roll). Roll is always 0
 	glm::vec3 eulerAngles = EulerFromPoints(_targetOrigin, _focusAtClick);
 
-	if (_mode != _modePrev)
+	if (_mode != _modePrev && _mode != Mode::FlyingToPoint && _modePrev != Mode::FlyingToPoint)
 	{
 		UpdateFocusPointInteractionParameters(camera.GetOrigin(Camera::Interpolation::Target),
 		                                      camera.GetFocus(Camera::Interpolation::Target), eulerAngles, camera);
@@ -424,18 +517,35 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraMode
 std::optional<CameraModel::CameraInterpolationUpdateInfo>
 DefaultWorldCameraModel::ComputeUpdateReturnInfo(bool originHasBeenAdjusted, std::chrono::duration<float> t)
 {
-	static constinit auto kTimeThreshold = std::chrono::duration<float> {1.5f};
-	auto duration = std::chrono::duration<float> {0.3f};
-	if (originHasBeenAdjusted)
+	if (!_flightPath.has_value())
 	{
-		duration *= 2.0f;
+		static constinit auto kTimeThreshold = std::chrono::duration<float> {1.5f};
+		auto duration = std::chrono::duration<float> {0.3f};
+		if (originHasBeenAdjusted)
+		{
+			duration *= 2.0f;
+		}
+		if (_elapsedTime <= kTimeThreshold)
+		{
+			duration = std::chrono::duration<float> {
+			    glm::mix(k_MinimalCameraAnimationDuration.count(), duration.count(), (_elapsedTime / kTimeThreshold))};
+		}
+		return {{GetTargetOrigin(), GetTargetFocus(), duration}};
 	}
-	if (_elapsedTime <= kTimeThreshold)
+	if (t > k_MinimalCameraAnimationDuration / 2.0f)
 	{
-		duration = std::chrono::duration<float> {
-		    glm::mix(k_MinimalCameraAnimationDuration.count(), duration.count(), (_elapsedTime / kTimeThreshold))};
+		std::optional<FlightPath> backup = std::nullopt;
+		std::swap(backup, _flightPath);
+		_elapsedTime = decltype(_elapsedTime)::zero();
+		return {{backup->origin, backup->focus, k_MinimalCameraAnimationDuration}};
 	}
-	return {{GetTargetOrigin(), GetTargetFocus(), duration}};
+	if (_flightPath->midpoint.has_value())
+	{
+		std::optional<glm::vec3> backup = std::nullopt;
+		std::swap(backup, _flightPath->midpoint);
+		return {{*backup, _flightPath->focus, {k_MinimalCameraAnimationDuration * 0.9f}}};
+	}
+	return std::nullopt;
 }
 
 void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
@@ -507,7 +617,11 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 	}
 
 	_modePrev = _mode;
-	if (actionSystem.Get(input::BindableActionMap::MOVE))
+	if (actionSystem.Get(input::UnbindableActionMap::DOUBLE_CLICK))
+	{
+		_mode = Mode::FlyingToPoint;
+	}
+	else if (actionSystem.Get(input::BindableActionMap::MOVE))
 	{
 		_mode = Mode::DraggingLandscape;
 	}
