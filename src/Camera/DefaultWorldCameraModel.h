@@ -32,7 +32,7 @@ class DefaultWorldCameraModel final: public CameraModel
 	};
 
 public:
-	DefaultWorldCameraModel(glm::vec3 origin, glm::vec3 focus);
+	DefaultWorldCameraModel();
 	~DefaultWorldCameraModel() final;
 
 	std::optional<CameraInterpolationUpdateInfo> Update(std::chrono::microseconds dt, const Camera& camera) final;
