@@ -107,9 +107,10 @@ Camera& Camera::SetProjectionMatrixPerspective(float xFov, float aspect, float n
 	return *this;
 }
 
-Camera& Camera::SetInterpolatorTime(std::chrono::duration<float> t)
+Camera& Camera::SetInterpolatorTime(std::chrono::microseconds t)
 {
 	_interpolatorTime = t;
+
 	return *this;
 }
 
@@ -207,16 +208,19 @@ bool Camera::ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, g
 
 void Camera::Update(std::chrono::microseconds dt)
 {
+	using namespace std::chrono_literals;
+
 	const auto updateInfo = _model->Update(dt, *this);
 
 	if (updateInfo)
 	{
 		const auto m1 = glm::zero<glm::vec3>();
 		// You have to normalize the velocity with the NEW duration
-		SetOriginInterpolator(GetOrigin(), updateInfo->origin, GetOriginVelocity() * updateInfo->duration.count(), m1);
-		SetFocusInterpolator(GetFocus(), updateInfo->focus, GetFocusVelocity() * updateInfo->duration.count(), m1);
+		const auto durationSeconds = std::chrono::duration_cast<std::chrono::duration<float>>(updateInfo->duration);
+		SetOriginInterpolator(GetOrigin(), updateInfo->origin, GetOriginVelocity() * durationSeconds.count(), m1);
+		SetFocusInterpolator(GetFocus(), updateInfo->focus, GetFocusVelocity() * durationSeconds.count(), m1);
 		SetInterpolatorDuration(updateInfo->duration);
-		SetInterpolatorTime(std::chrono::duration<float>::zero());
+		SetInterpolatorTime(0us);
 	}
 
 	const auto duration = GetInterpolatorDuration().count();
@@ -226,8 +230,7 @@ void Camera::Update(std::chrono::microseconds dt)
 	}
 	else
 	{
-		const auto dtSeconds = std::chrono::duration_cast<std::chrono::duration<float>>(dt);
-		AddInterpolatorTime(std::min(std::chrono::duration<float>(0.1f), dtSeconds));
+		AddInterpolatorTime(std::min(100'000us, dt));
 	}
 }
 
@@ -317,7 +320,7 @@ glm::vec3 Camera::GetOriginVelocity(Interpolation interpolation) const
 	{
 		return result;
 	}
-	return result / _interpolatorDuration.count();
+	return result / std::chrono::duration_cast<std::chrono::duration<float>>(_interpolatorDuration).count();
 }
 
 glm::vec3 Camera::GetFocusVelocity(Interpolation interpolation) const
@@ -350,7 +353,7 @@ glm::vec3 Camera::GetFocusVelocity(Interpolation interpolation) const
 	{
 		return result;
 	}
-	return result / _interpolatorDuration.count();
+	return result / std::chrono::duration_cast<std::chrono::duration<float>>(_interpolatorDuration).count();
 }
 
 glm::vec3 Camera::GetRotation() const
@@ -399,7 +402,7 @@ Camera& Camera::SetFocusInterpolator(const glm::vec3& p0, const glm::vec3& p1, c
 	return *this;
 }
 
-Camera& Camera::SetInterpolatorDuration(std::chrono::duration<float> duration)
+Camera& Camera::SetInterpolatorDuration(std::chrono::microseconds duration)
 {
 	_interpolatorDuration = duration;
 

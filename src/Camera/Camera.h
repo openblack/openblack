@@ -61,18 +61,23 @@ public:
 	Camera& SetOriginInterpolator(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& m0, const glm::vec3& m1);
 	Camera& SetFocusInterpolator(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& m0, const glm::vec3& m1);
 
-	[[nodiscard]] std::chrono::duration<float> GetInterpolatorTime() const { return _interpolatorTime; }
+	[[nodiscard]] std::chrono::microseconds GetInterpolatorTime() const { return _interpolatorTime; }
 	[[nodiscard]] float GetInterpolatorT() const
 	{
 		const auto duration = GetInterpolatorDuration();
-		return (duration == decltype(duration)::zero()) ? 1.0f : GetInterpolatorTime() / duration;
+		return (duration == decltype(duration)::zero())
+		           ? 1.0f
+		           : static_cast<float>(GetInterpolatorTime().count()) / GetInterpolatorDuration().count();
 	}
-	[[nodiscard]] std::chrono::duration<float> GetInterpolatorDuration() const { return _interpolatorDuration; }
+	[[nodiscard]] std::chrono::microseconds GetInterpolatorDuration() const { return _interpolatorDuration; }
 
-	Camera& SetInterpolatorTime(std::chrono::duration<float> t);
-	Camera& AddInterpolatorTime(std::chrono::duration<float> t) { return SetInterpolatorTime(t + GetInterpolatorTime()); }
-	Camera& SetInterpolatorT(float t) { return SetInterpolatorTime(t * GetInterpolatorDuration()); }
-	Camera& SetInterpolatorDuration(std::chrono::duration<float> duration);
+	Camera& SetInterpolatorTime(std::chrono::microseconds t);
+	Camera& AddInterpolatorTime(std::chrono::microseconds t) { return SetInterpolatorTime(t + GetInterpolatorTime()); }
+	Camera& SetInterpolatorT(float t)
+	{
+		return SetInterpolatorTime(std::chrono::duration_cast<std::chrono::microseconds>(t * GetInterpolatorDuration()));
+	}
+	Camera& SetInterpolatorDuration(std::chrono::microseconds duration);
 
 	Camera& SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip);
 	Camera& SetProjectionMatrix(const glm::mat4& projection);
@@ -97,8 +102,8 @@ protected:
 	ZoomInterpolator3f _originInterpolators;
 	ZoomInterpolator3f _focusInterpolators;
 	// As a value between 0 and _interpolatorDuration
-	std::chrono::duration<float> _interpolatorTime = std::chrono::duration<float>::zero();
-	std::chrono::duration<float> _interpolatorDuration = std::chrono::duration<float>::zero();
+	std::chrono::microseconds _interpolatorTime = std::chrono::microseconds::zero();
+	std::chrono::microseconds _interpolatorDuration = std::chrono::microseconds::zero();
 	float _xFov = 0.0f; // TODO(#707): This should be a zoomer for animations
 	glm::mat4 _projectionMatrix = glm::mat4 {1.0f};
 	std::unique_ptr<CameraModel> _model;
