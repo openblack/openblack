@@ -35,7 +35,7 @@ public:
 	{
 		glm::vec3 origin;
 		glm::vec3 focus;
-		std::chrono::duration<float> duration;
+		std::chrono::microseconds duration;
 	};
 
 	struct FlightPath

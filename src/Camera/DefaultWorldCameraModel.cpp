@@ -28,6 +28,7 @@
 #include "Locator.h"
 
 using namespace openblack;
+using namespace std::chrono_literals;
 
 template <typename T, size_t S>
     requires std::floating_point<T>
@@ -46,9 +47,10 @@ constexpr auto k_WheelZoomFactor = 20.0f;
 constexpr auto k_InteractionSpeedMultiplier = 400.0f;
 // Vanilla black and white uses a pretty bad PI/2 approximation
 constexpr auto k_CameraModelHalfPi = 1.53938043f;
+constexpr auto k_RotateOnSpeedMultiplier = glm::vec2(1.9f, -1.7f);
 constexpr auto k_TwoButtonZoomFactor = 1.9f;
 constexpr auto k_CameraInteractionStepSize = 3.0f;
-constexpr auto k_MinimalCameraAnimationDuration = std::chrono::duration<float> {1.5f};
+constexpr auto k_MinimalCameraAnimationDuration = 1'500'000us;
 constexpr auto k_HandDragVectorAlignmentThreshold = 0.001f;
 constexpr auto k_HandDragVectorAlignmentRatioThreshold = 0.000'1f;
 constexpr auto k_FlyingDistanceThresholds = std::array<float, 4> {100.0f, 60.0f, 30.0f, 15.0f};
@@ -613,24 +615,25 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraMode
 }
 
 std::optional<CameraModel::CameraInterpolationUpdateInfo>
-DefaultWorldCameraModel::ComputeUpdateReturnInfo(bool originHasBeenAdjusted, std::chrono::duration<float> t)
+DefaultWorldCameraModel::ComputeUpdateReturnInfo(bool originHasBeenAdjusted, std::chrono::microseconds t)
 {
 	if (!_flightPath.has_value())
 	{
-		static constinit auto kTimeThreshold = std::chrono::duration<float> {1.5f};
-		auto duration = std::chrono::duration<float> {0.3f};
+		static constinit auto kTimeThreshold = 1'500'000us;
+		auto duration = 300'000us;
 		if (originHasBeenAdjusted)
 		{
-			duration *= 2.0f;
+			duration *= 2;
 		}
 		if (_elapsedTime <= kTimeThreshold)
 		{
-			duration = std::chrono::duration<float> {
-			    glm::mix(k_MinimalCameraAnimationDuration.count(), duration.count(), (_elapsedTime / kTimeThreshold))};
+			duration =
+			    std::chrono::microseconds {glm::mix(k_MinimalCameraAnimationDuration.count(), duration.count(),
+			                                        (static_cast<float>(_elapsedTime.count()) / kTimeThreshold.count()))};
 		}
 		return {{GetTargetOrigin(), GetTargetFocus(), duration}};
 	}
-	if (t > k_MinimalCameraAnimationDuration / 2.0f)
+	if (t > k_MinimalCameraAnimationDuration / 2)
 	{
 		std::optional<FlightPath> backup = std::nullopt;
 		std::swap(backup, _flightPath);
@@ -641,7 +644,8 @@ DefaultWorldCameraModel::ComputeUpdateReturnInfo(bool originHasBeenAdjusted, std
 	{
 		std::optional<glm::vec3> backup = std::nullopt;
 		std::swap(backup, _flightPath->midpoint);
-		return {{*backup, _flightPath->focus, {k_MinimalCameraAnimationDuration * 0.9f}}};
+		return {{*backup, _flightPath->focus,
+		         std::chrono::duration_cast<std::chrono::microseconds>(k_MinimalCameraAnimationDuration * 0.9f)}};
 	}
 	return std::nullopt;
 }
@@ -723,7 +727,7 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 	if (actionSystem.Get(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON))
 	{
 		const auto mouseDelta = static_cast<glm::vec2>(actionSystem.GetMouseDelta());
-		_rotateAroundDelta += glm::vec3(glm::yx(mouseDelta * kRotateOnSpeedMultiplier), 0.0f);
+		_rotateAroundDelta += glm::vec3(glm::yx(mouseDelta * k_RotateOnSpeedMultiplier), 0.0f);
 	}
 
 	const auto handPositions = actionSystem.GetHandPositions();

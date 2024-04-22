@@ -84,7 +84,7 @@ private:
 	[[nodiscard]] glm::vec3 ProjectPointOnForwardVector(float distanceFromOrigin) const;
 
 	[[nodiscard]] std::optional<CameraInterpolationUpdateInfo> ComputeUpdateReturnInfo(bool originHasBeenAdjusted,
-	                                                                                   std::chrono::duration<float> t);
+	                                                                                   std::chrono::microseconds t);
 
 	Mode _mode = Mode::Cartesian;
 	Mode _modePrev = _mode;
@@ -121,7 +121,7 @@ private:
 	float _alignmentAtInteractionStart = 0.0f;
 	glm::vec3 _focusAtClick = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::u16vec2 _mouseAtClick = glm::u16vec2(0.0f, 0.0f);
-	std::chrono::duration<float> _elapsedTime = std::chrono::duration<float>::zero();
+	std::chrono::microseconds _elapsedTime = std::chrono::microseconds::zero();
 	std::optional<FlightPath> _flightPath;
 
 	// For unit testing

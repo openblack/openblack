@@ -103,17 +103,18 @@ void ValidateCamera(const Camera& c, const json& expected, int frameNumber)
 	const float ep = 5e-2f;
 	const auto& expectedOriginZoomer = expected["camera_origin_zoomer"];
 	const auto& expectedFocusZoomer = expected["camera_heading_zoomer"];
-	ASSERT_NEAR(c.GetInterpolatorTime().count(), expectedOriginZoomer["x"]["current_time"].get<float>(), ep)
+	const auto interpolatorTime = std::chrono::duration_cast<std::chrono::duration<float>>(c.GetInterpolatorTime()).count();
+	ASSERT_NEAR(interpolatorTime, expectedOriginZoomer["x"]["current_time"].get<float>(), ep)
 	    << "at start of frame " << frameNumber;
-	ASSERT_NEAR(c.GetInterpolatorTime().count(), expectedOriginZoomer["y"]["current_time"].get<float>(), ep)
+	ASSERT_NEAR(interpolatorTime, expectedOriginZoomer["y"]["current_time"].get<float>(), ep)
 	    << "at start of frame " << frameNumber;
-	ASSERT_NEAR(c.GetInterpolatorTime().count(), expectedOriginZoomer["z"]["current_time"].get<float>(), ep)
+	ASSERT_NEAR(interpolatorTime, expectedOriginZoomer["z"]["current_time"].get<float>(), ep)
 	    << "at start of frame " << frameNumber;
-	ASSERT_NEAR(c.GetInterpolatorTime().count(), expectedFocusZoomer["x"]["current_time"].get<float>(), ep)
+	ASSERT_NEAR(interpolatorTime, expectedFocusZoomer["x"]["current_time"].get<float>(), ep)
 	    << "at start of frame " << frameNumber;
-	ASSERT_NEAR(c.GetInterpolatorTime().count(), expectedFocusZoomer["y"]["current_time"].get<float>(), ep)
+	ASSERT_NEAR(interpolatorTime, expectedFocusZoomer["y"]["current_time"].get<float>(), ep)
 	    << "at start of frame " << frameNumber;
-	ASSERT_NEAR(c.GetInterpolatorTime().count(), expectedFocusZoomer["z"]["current_time"].get<float>(), ep)
+	ASSERT_NEAR(interpolatorTime, expectedFocusZoomer["z"]["current_time"].get<float>(), ep)
 	    << "at start of frame " << frameNumber;
 	ASSERT_NEAR(c.GetOrigin(Camera::Interpolation::Start).x, expectedOriginZoomer["x"]["start_value"].get<float>(), ep)
 	    << "at start of frame " << frameNumber;
@@ -313,6 +314,8 @@ void TestDefaultCameraModel::ValidateModel(const DefaultWorldCameraModel& m, con
 
 TEST_P(TestDefaultCameraModel, ValidateRecordedData)
 {
+	using namespace std::chrono_literals;
+
 	for (int i = 0; i < _scenario["frames"].size() - 1; ++i)
 	{
 		const auto& framePrev = _scenario["frames"][i];
@@ -386,13 +389,14 @@ TEST_P(TestDefaultCameraModel, ValidateRecordedData)
 		{
 			const auto m1 = glm::zero<glm::vec3>();
 			// You have to normalize the velocity with the NEW duration
+			const auto durationSeconds = std::chrono::duration_cast<std::chrono::duration<float>>(updateInfo->duration);
 			(*_camera)
 			    .SetOriginInterpolator(_camera->GetOrigin(), updateInfo->origin,
-			                           _camera->GetOriginVelocity() * updateInfo->duration.count(), m1)
+			                           _camera->GetOriginVelocity() * durationSeconds.count(), m1)
 			    .SetFocusInterpolator(_camera->GetFocus(), updateInfo->focus,
-			                          _camera->GetFocusVelocity() * updateInfo->duration.count(), m1)
+			                          _camera->GetFocusVelocity() * durationSeconds.count(), m1)
 			    .SetInterpolatorDuration(updateInfo->duration)
-			    .SetInterpolatorTime(std::chrono::duration<float>::zero());
+			    .SetInterpolatorTime(0us);
 		}
 
 		const auto duration = _camera->GetInterpolatorDuration().count();
@@ -402,8 +406,7 @@ TEST_P(TestDefaultCameraModel, ValidateRecordedData)
 		}
 		else
 		{
-			const auto dtSeconds = std::chrono::duration_cast<std::chrono::duration<float>>(deltaTimePrev);
-			(*_camera).AddInterpolatorTime(std::min(std::chrono::duration<float>(0.1f), dtSeconds));
+			(*_camera).AddInterpolatorTime(std::min(100ms, deltaTimePrev));
 		}
 
 		ValidateModel(reinterpret_cast<DefaultWorldCameraModel&>(*_model), framePost, i + 1);

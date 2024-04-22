@@ -38,7 +38,7 @@ public:
 	}
 };
 
-// NOLINTBEGIN(bugprone-branch-clone, google-readability-function-size)
+// NOLINTBEGIN(bugprone-branch-clone, google-readability-function-size, readability-function-size)
 class TiltUpPanLeftMockDynamicsSystem: public MockDynamicsSystem
 {
 public:
@@ -3570,4 +3570,4 @@ public:
 		return std::nullopt;
 	}
 };
-// NOLINTEND(bugprone-branch-clone, google-readability-function-size)
+// NOLINTEND(bugprone-branch-clone, google-readability-function-size, readability-function-size)
