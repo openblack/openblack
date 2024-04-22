@@ -45,7 +45,7 @@ public:
 		std::optional<glm::vec3> midpoint;
 	};
 
-	static std::unique_ptr<CameraModel> CreateModel(Model model, glm::vec3 origin, glm::vec3 focus);
+	static std::unique_ptr<CameraModel> CreateModel(Model model);
 
 	static FlightPath CharterFlight(glm::vec3 origin, glm::vec3 focus, glm::vec3 currentOrigin, float heightFactor);
 

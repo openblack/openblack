@@ -76,7 +76,7 @@ protected:
 		constexpr float k_CameraFarClip {static_cast<float>(0x10000)};
 		_camera->SetProjectionMatrixPerspective(k_CameraXFov, aspect, k_CameraNearClip, k_CameraFarClip);
 		// Camera has a model, but we want to test in isolation, so we create a model here
-		_model = CameraModel::CreateModel(CameraModel::Model::DefaultWorld, _camera->GetOrigin(), _camera->GetFocus());
+		_model = CameraModel::CreateModel(CameraModel::Model::DefaultWorld);
 	}
 
 	void TearDown() override

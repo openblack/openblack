@@ -21,13 +21,12 @@ using namespace openblack;
 
 CameraModel::~CameraModel() = default;
 
-std::unique_ptr<CameraModel> CameraModel::CreateModel(CameraModel::Model model, glm::vec3 origin, glm::vec3 focus)
+std::unique_ptr<CameraModel> CameraModel::CreateModel(CameraModel::Model model)
 {
 	switch (model)
 	{
 	case CameraModel::Model::DefaultWorld:
-		// TODO: Will the model still work if we don't set original origin and focus here?
-		return std::unique_ptr<CameraModel>(new DefaultWorldCameraModel(origin, focus));
+		return std::unique_ptr<CameraModel>(new DefaultWorldCameraModel());
 	case CameraModel::Model::Old:
 		return std::unique_ptr<CameraModel>(new OldCameraModel());
 	default:

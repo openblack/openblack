@@ -102,12 +102,7 @@ float PointDistanceAlongLineSegment(const glm::vec3& p1, const glm::vec3& p2, co
 	return glm::abs(glm::dot(v13, u12)); // Using glm::abs to ensure the distance is non-negative
 }
 
-DefaultWorldCameraModel::DefaultWorldCameraModel(glm::vec3 origin, glm::vec3 focus)
-    : _targetOrigin(origin)
-    , _targetFocus(focus)
-    , _focusDistance(glm::distance(_targetOrigin, _targetFocus))
-{
-}
+DefaultWorldCameraModel::DefaultWorldCameraModel() = default;
 
 DefaultWorldCameraModel::~DefaultWorldCameraModel() = default;
 
