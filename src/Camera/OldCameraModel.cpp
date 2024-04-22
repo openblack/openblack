@@ -24,50 +24,9 @@
 
 using namespace openblack;
 
-OldCameraModel::OldCameraModel()
-    : _dv(0.0f, 0.0f, 0.0f)
-    , _dwv(0.0f, 0.0f, 0.0f)
-    , _dsv(0.0f, 0.0f, 0.0f)
-    , _ddv(0.0f, 0.0f, 0.0f)
-    , _duv(0.0f, 0.0f, 0.0f)
-    , _drv(0.0f, 0.0f, 0.0f)
-    , _velocity(0.0f, 0.0f, 0.0f)
-    , _hVelocity(0.0f, 0.0f, 0.0f)
-    , _rotVelocity(0.0f, 0.0f, 0.0f)
-    , _accelFactor(0.001f)
-    , _movementSpeed(1.5f)
-    , _maxMovementSpeed(0.005f)
-    , _maxRotationSpeed(0.005f)
-    , _lmouseIsDown(false)
-    , _mmouseIsDown(false)
-    , _mouseIsMoving(false)
-    , _mouseFirstClick(0, 0)
-    , _shiftHeld(false)
-    , _handScreenVec(0)
-    , _handDragMult(0.0f)
-{
-	FlyInit();
-}
+OldCameraModel::OldCameraModel() = default;
 
 OldCameraModel::~OldCameraModel() = default;
-
-void OldCameraModel::FlyInit()
-{
-	// call to initialise a new flight. eventually may be refactored out to a separate file.
-	_flyInProgress = false;
-	_flyDist = 0.0f;
-	_flyProgress = 1.0f;
-	_flySpeed = 0.5f;
-	_flyStartAngle = 10.0f;
-	_flyEndAngle = 30.0f;
-	_flyThreshold = 50.0f;
-	_flyFromPos = glm::vec3(0.0f, 0.0f, 0.0f);
-	_flyFromTan = glm::vec3(0.0f, 0.0f, 0.0f);
-	_flyToPos = glm::vec3(0.0f, 0.0f, 0.0f);
-	_flyToNorm = glm::vec3(0.0f, 0.0f, 0.0f);
-	_flyToTan = glm::vec3(0.0f, 0.0f, 0.0f);
-	_flyPrevPos = glm::vec3(0.0f, 0.0f, 0.0f);
-}
 
 void OldCameraModel::ResetVelocities()
 {
@@ -79,7 +38,7 @@ void OldCameraModel::ResetVelocities()
 	_duv = glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
-void OldCameraModel::HandleActions(std::chrono::microseconds dt)
+void OldCameraModel::HandleActions([[maybe_unused]] std::chrono::microseconds dt)
 {
 	// This is bad design, but we need a way to transition between the old model and the new
 	auto& camera = Game::Instance()->GetCamera();
