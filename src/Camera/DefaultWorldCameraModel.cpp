@@ -61,6 +61,7 @@ constexpr auto k_FlyingScoreAngles = MakeFlyingScoreAngles<float, 0x20>();
 constexpr auto k_ConstrainDiscCentre = glm::vec3(2560.0f, 0.0f, 2560.0f);
 constexpr auto k_ConstrainDiscRadius = 5120.0f;
 constexpr auto k_MaxAltitude = 30'000.0f;
+constexpr auto k_FloatingHeight = 2.9999f; // 3 in vanilla, but less due to fp precision with recorded data in tests
 
 glm::vec3 EulerFromPoints(glm::vec3 p0, glm::vec3 p1)
 {
@@ -212,18 +213,8 @@ bool DefaultWorldCameraModel::ConstrainCamera(std::chrono::microseconds dt, floa
 
 bool DefaultWorldCameraModel::ConstrainAltitude()
 {
-	constexpr float kfloatingHeight = 2.9999f; // 3 in vanilla, but less due to fp precision with recorded data in tests
-	// constexpr float nearClip = 0.0f;       // TODO sync with game args
 	bool hasBeenAdjusted = false;
-	// const auto nearPoint = ProjectPointOnForwardVector(nearClip);
-	const auto minAltitude = kfloatingHeight + Locator::terrainSystem::value().GetHeightAt(glm::xz(_targetOrigin));
-	// if (const auto hit = Locator::dynamicsSystem::value().RayCastClosestHit(_targetOrigin, _targetFocus, 16.0f))
-	// {
-	// 	if (glm::distance2(hit->first.position, _targetOrigin) < 64.0f)
-	// 	{
-	// 		minAltitude = glm::max(floatingHeight + hit->first.position.y, minAltitude);
-	// 	}
-	// }
+	const auto minAltitude = k_FloatingHeight + Locator::terrainSystem::value().GetHeightAt(glm::xz(_targetOrigin));
 	if (_targetOrigin.y < minAltitude)
 	{
 		_targetOrigin.y = minAltitude;
@@ -271,8 +262,6 @@ void DefaultWorldCameraModel::UpdateFocusPointInteractionParameters(glm::vec3 or
 	// TODO(#713): Calculate the with _originToHandPlaneNormal and the mouse hit point to put in _alignmentAtInteractionStart
 	_averageIslandDistance = GetVerticalLineInverseDistanceWeighingRayCast(camera);
 	{
-		// TODO: factor out this bit of code for euler angles
-		// diff is different from other
 		const auto diff = _targetOrigin - _targetFocus;
 		// If the camera is directly above the focus point, set pitch to 90 degrees.
 		if (glm::all(glm::lessThan(glm::abs(glm::xz(diff)), glm::vec2(0.1f, 0.1f))))
