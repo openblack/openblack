@@ -194,14 +194,18 @@ jobs:
       - name: Add base repo to git config
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
         if: startsWith(github.event_name, 'pull_request')
-      - uses: actions/setup-java@v3
+      - name: Setup Java
+        uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '11'
-      - uses: gradle/gradle-build-action@v2
+          java-version: '17'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
         with:
-          arguments: lint
-          build-root-directory: android
+          build-root-directory: ./android
+      - run: echo "ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV # to use C++23 on 26.2.11394342
+      - run: ./gradlew lint
+        working-directory: ./android
       - uses: actions/upload-artifact@v2
         if: failure()
         with:
