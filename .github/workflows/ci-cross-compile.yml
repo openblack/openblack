@@ -167,17 +167,14 @@ jobs:
           mv android/app/src/main/jniLibs/x86_64/Debug/libopenblack_lib.so         android/app/src/main/jniLibs/debug/x86_64
           mv android/app/src/main/jniLibs/x86_64/Release/libopenblack_lib.so       android/app/src/main/jniLibs/release/x86_64
           find android/app/src/main/jniLibs
-      - name: Run Gradle Assemble (Debug)
-        uses: gradle/gradle-build-action@v2
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
         with:
-          arguments: assembleDebug -PusePrebuiltNativeLibs
-          build-root-directory: android
+          build-root-directory: ./android
+      - name: Build with Gradle (Debug)
+        run: ./gradlew build --no-daemon clean assembleDebug -PusePrebuiltNativeLibs
+        working-directory: ./android
       # TODO(#632): Setup digital signing for Android release build
-      # - name: Run Gradle Assemble (Release)
-      #   uses: gradle/gradle-build-action@v2
-      #   with:
-      #     arguments: assembleRelease -PusePrebuiltNativeLibs
-      #     build-root-directory: android
       - uses: actions/upload-artifact@v3
         with:
           name: openblack-android-apk-${{github.sha}}
