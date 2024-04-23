@@ -24,6 +24,30 @@
 
 #include "Game.h"
 
+struct MoveBackwardForwardMockDynamicsSystem
+{
+};
+
+struct MoveBackwardForwardMockAction
+{
+};
+
+struct TestValues
+{
+	std::string name;
+	MockDynamicsSystem* dynamicsSystem;
+	MockAction* actionInterface;
+};
+
+#define SCENARIO_VALUES(name)                                     \
+	TestValues                                                    \
+	{                                                             \
+		#name, new name##MockDynamicsSystem, new name##MockAction \
+	}
+
+const auto k_TestingScenarioValues = testing::Values( //
+    SCENARIO_VALUES(MoveBackwardForward));
+
 bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& returnCode)
 {
 	cxxopts::Options options("openblack", "Open source reimplementation of the game Black & White (2001).");
