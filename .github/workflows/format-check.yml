@@ -19,10 +19,10 @@ jobs:
       - name: Add base repo to git config
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
         if: startsWith(github.event_name, 'pull_request')
-      - uses: DoozyX/clang-format-lint-action@v0.16
+      - uses: DoozyX/clang-format-lint-action@v0.17
         with:
           source: 'src apps components test'
-          clangFormatVersion: 15
+          clangFormatVersion: 17
           inplace: False
 
   # Run only if a PR and clang-format has failed
@@ -39,10 +39,10 @@ jobs:
       - name: Add base repo to git config
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
         if: startsWith(github.event_name, 'pull_request')
-      - uses: DoozyX/clang-format-lint-action@v0.13
+      - uses: DoozyX/clang-format-lint-action@v0.17
         with:
           source: 'src apps components test'
-          clangFormatVersion: 12
+          clangFormatVersion: 17
           inplace: True
       - run: |
           git diff > clang-format.patch
@@ -155,7 +155,7 @@ jobs:
           deno-version: v1.x
       - name: Check License Lines
         run: deno run --allow-read https://deno.land/x/license_checker@v3.2.2/main.ts --quiet
-  
+
   copyright-check-action-suggester:
     name: license_checker fix suggester
     runs-on: ubuntu-latest
