@@ -362,6 +362,10 @@ void DefaultWorldCameraModel::UpdateModePolar(glm::vec3 eulerAngles, bool recalc
 
 void DefaultWorldCameraModel::UpdateModeArcBall(glm::vec3 eulerAngles, glm::u16vec2 mouseCurrent, float xFov)
 {
+	if (!_screenSpaceMouseRaycastHitAtClick.has_value())
+	{
+		return;
+	}
 	const auto point = _focusAtClick + _originFocusDistanceAtInteractionStart * glm::euclidean(glm::yx(eulerAngles));
 
 	const auto basisZ = glm::normalize(point - _focusAtClick);
@@ -439,7 +443,7 @@ void DefaultWorldCameraModel::UpdateModeFlying(glm::vec3 eulerAngles)
 	{
 		return;
 	}
-	const auto point = _handPosition.value_or(_screenSpaceCenterRaycastHit.value());
+	const auto point = _handPosition.value_or(_screenSpaceCenterRaycastHit.value_or(glm::zero<glm::vec3>()));
 
 	const auto distanceFromHitPoint = glm::length(point - *_screenSpaceCenterRaycastHit);
 	const auto distanceFromOrigin = glm::length(point - _targetOrigin);
