@@ -44,7 +44,9 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt update -y
-          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
+          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev gcc-13 g++-13
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 1
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 1
         if: startsWith(matrix.os, 'ubuntu')
 
       - name: Download ClangBuildAnalyzer
