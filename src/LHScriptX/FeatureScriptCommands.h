@@ -86,7 +86,7 @@ public:
 	static void LoadLandscape(const std::string& path);
 	static void Version(float version);
 	static void CreateArea(glm::vec3 position, float);
-	static void StartCameraPos(glm::vec3 position);
+	static void StartCameraPos(glm::vec3 focus);
 	static void FlyByFile(const std::string& path);
 	static void TownNeedsPos(int32_t townId, glm::vec3 position);
 	static void CreateFurniture(glm::vec3 position, int32_t, float);
