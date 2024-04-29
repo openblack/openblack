@@ -937,9 +937,11 @@ void Gui::ShowCameraPositionOverlay(const Game& game)
 
 	if (ImGui::Begin("Camera position overlay", nullptr, cameraPositionOverlayFlags))
 	{
-		const auto camPos = game.GetCamera().GetOrigin();
+		const auto camOrigin = game.GetCamera().GetOrigin();
+		const auto camFocus = game.GetCamera().GetFocus();
 		const auto camRot = glm::degrees(game.GetCamera().GetRotation());
-		ImGui::Text("Camera Position: (%.1f,%.1f,%.1f)", camPos.x, camPos.y, camPos.z);
+		ImGui::Text("Camera Origin: (%.1f,%.1f,%.1f)", camOrigin.x, camOrigin.y, camOrigin.z);
+		ImGui::Text("Camera Focus: (%.1f,%.1f,%.1f)", camFocus.x, camFocus.y, camFocus.z);
 		ImGui::Text("Camera Rotation: (%.1f,%.1f,%.1f)", camRot.x, camRot.y, camRot.z);
 
 		if (ImGui::IsMousePosValid())
