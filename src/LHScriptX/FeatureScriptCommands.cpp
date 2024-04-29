@@ -12,6 +12,7 @@
 #include <tuple>
 
 #include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/polar_coordinates.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <spdlog/spdlog.h>
 
@@ -571,12 +572,14 @@ void FeatureScriptCommands::CreateArea([[maybe_unused]] glm::vec3 position, floa
 	// __func__);
 }
 
-void FeatureScriptCommands::StartCameraPos(glm::vec3 position)
+void FeatureScriptCommands::StartCameraPos(glm::vec3 focus)
 {
+	static constexpr auto k_DefaultCameraOriginOffset = 120.0f;
+	static constexpr auto k_DefaultCameraOriginOffsetAngles = glm::radians(glm::vec2(12.8571f, 157.51f));
+
 	auto& camera = Game::Instance()->GetCamera();
-	const auto offset = glm::vec3(0.0f, 10.0f, 0.0f);
-	const auto focusOffset = camera.GetFocus() - camera.GetOrigin();
-	camera.SetOrigin(position + offset).SetFocus(position + offset + focusOffset);
+	const auto offset = k_DefaultCameraOriginOffset * glm::euclidean(k_DefaultCameraOriginOffsetAngles);
+	camera.SetFocus(focus).SetOrigin(focus + offset);
 }
 
 void FeatureScriptCommands::FlyByFile([[maybe_unused]] const std::string& path)
