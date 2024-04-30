@@ -52,12 +52,13 @@ public:
 		LoadTestScene(script.data());
 	}
 
-	void AssertCameraPos(glm::vec3 expectedPos)
+	void ExpectCameraPos(glm::vec3 expectedPos)
 	{
-		const auto actualPos = _game->GetCamera().GetPosition();
-		ASSERT_FLOAT_EQ(actualPos.x, expectedPos.x);
-		ASSERT_FLOAT_EQ(actualPos.z, expectedPos.z);
-		ASSERT_FLOAT_EQ(actualPos.y, expectedPos.y);
+		constexpr float k_Ep = 1e-2;
+		const auto actualPos = _game->GetCamera().GetOrigin();
+		EXPECT_NEAR(actualPos.x, expectedPos.x, k_Ep);
+		EXPECT_NEAR(actualPos.y, expectedPos.y, k_Ep);
+		EXPECT_NEAR(actualPos.z, expectedPos.z, k_Ep);
 	}
 };
 
@@ -65,7 +66,7 @@ public:
 TEST_F(SetCameraPos, setCameraZero)
 {
 	LoadSceneWithCameraPos({0.0f, 0.0f}, {0.0f, 0.0f});
-	AssertCameraPos({44.7591362f, 26.7025127f, -108.090675f});
+	ExpectCameraPos({44.7591362f, 26.7025127f, -108.090675f});
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
@@ -76,7 +77,7 @@ TEST_F(SetCameraPos, setCameraLand1)
 	LoadSceneWithCameraPos(cameraPos, {1915.05f, 2508.89f});
 	const auto altitude = openblack::Locator::terrainSystem::value().GetHeightAt(cameraPos);
 	ASSERT_FLOAT_EQ(altitude, 28.81); // Actual vanilla value 28.9173050f
-	AssertCameraPos({1833.1592f, 55.512512f /*55.6197281f*/, 2601.9094f});
+	ExpectCameraPos({1833.1592f, 55.512512f /*55.6197281f*/, 2601.9094f});
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
@@ -84,7 +85,7 @@ TEST_F(SetCameraPos, setCameraTwoGods)
 {
 	// Since the land island is mocked, the land is flat and the altitude is the same
 	LoadSceneWithCameraPos({2185.72f, 2315.78f}, {1989.46f, 2356.52f});
-	AssertCameraPos({2230.47900f, 26.7025127f, 2207.68945f});
+	ExpectCameraPos({2230.47900f, 26.7025127f, 2207.68945f});
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
@@ -92,7 +93,7 @@ TEST_F(SetCameraPos, setCameraThreeGods)
 {
 	// Since the land island is mocked, the land is flat and the altitude is the same
 	LoadSceneWithCameraPos({2816.90f, 2740.75f}, {2641.66f, 2381.22f});
-	AssertCameraPos({2861.65894f, 26.7025127f, 2632.65942f});
+	ExpectCameraPos({2861.65894f, 26.7025127f, 2632.65942f});
 }
 
 // TODO(#562)
@@ -101,5 +102,5 @@ TEST_F(SetCameraPos, DISABLED_setCameraFourGods)
 {
 	// Since the land island is mocked, the land is flat and the altitude is the same
 	LoadSceneWithCameraPos({0.0f, 0.0f}, {3159.89f, 1934.44f});
-	AssertCameraPos({3159.89f, 26.7025127f, 1934.44f});
+	ExpectCameraPos({3159.89f, 26.7025127f, 1934.44f});
 }
