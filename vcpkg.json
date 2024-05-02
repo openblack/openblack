@@ -2,16 +2,7 @@
     "name": "openblack",
     "version-string": "0.0.1-dev",
     "dependencies": [
-        {
-            "name": "sdl2",
-            "features": ["x11"],
-            "platform": "linux&!android",
-            "$reason": "https://github.com/microsoft/vcpkg/issues/21750"
-        },
-        {
-            "name": "sdl2",
-            "platform": "!(linux&!android)"
-        },
+        "sdl2",
         "imgui",
         "spdlog",
         "glm",
