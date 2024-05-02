@@ -33,15 +33,15 @@ public:
 	GameActionMap(const GameActionMap&) = delete;
 	GameActionMap& operator=(const GameActionMap&) = delete;
 
-	bool GetBindable(BindableActionMap action) const final;
-	bool GetUnbindable(UnbindableActionMap action) const final;
-	bool GetBindableChanged(BindableActionMap action) const final;
-	bool GetUnbindableChanged(UnbindableActionMap action) const final;
-	bool GetBindableRepeat(BindableActionMap action) const final;
-	bool GetUnbindableRepeat(UnbindableActionMap action) const final;
-	glm::uvec2 GetMousePosition() const final;
-	glm::ivec2 GetMouseDelta() const final;
-	std::array<std::optional<glm::vec3>, 2> GetHandPositions() const final;
+	[[nodiscard]] bool GetBindable(BindableActionMap action) const final;
+	[[nodiscard]] bool GetUnbindable(UnbindableActionMap action) const final;
+	[[nodiscard]] bool GetBindableChanged(BindableActionMap action) const final;
+	[[nodiscard]] bool GetUnbindableChanged(UnbindableActionMap action) const final;
+	[[nodiscard]] bool GetBindableRepeat(BindableActionMap action) const final;
+	[[nodiscard]] bool GetUnbindableRepeat(UnbindableActionMap action) const final;
+	[[nodiscard]] glm::uvec2 GetMousePosition() const final;
+	[[nodiscard]] glm::ivec2 GetMouseDelta() const final;
+	[[nodiscard]] std::array<std::optional<glm::vec3>, 2> GetHandPositions() const final;
 
 	void Frame() final;
 	void ProcessEvent(const SDL_Event& event) final;
