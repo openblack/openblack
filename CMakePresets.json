@@ -59,7 +59,7 @@
         },
         "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": {
           "type": "FILEPATH",
-          "value": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+          "value": "$env{EMSDK}/cmake/Modules/Platform/Emscripten.cmake"
         },
         "OPENBLACK_USE_VCPKG": true,
         "VCPKG_TARGET_TRIPLET": "wasm32-emscripten"

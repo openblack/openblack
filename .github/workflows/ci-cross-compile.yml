@@ -59,7 +59,7 @@ jobs:
 
     env:
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
-      EMSDK: '/tmp/emsdk'
+      EMSDK: '/tmp/emsdk/upstream/emscripten'
 
     steps:
       - uses: actions/checkout@v3
