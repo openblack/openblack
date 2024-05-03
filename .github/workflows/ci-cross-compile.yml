@@ -25,7 +25,7 @@ jobs:
             setup: |
               sudo dpkg --add-architecture i386
               sudo apt-get update
-              sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libx11-dev:i386 libxext-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libtool autoconf gcc-multilib g++-multilib libc6-dev-i386
+              sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libx11-dev:i386 libxext-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libtool autoconf gcc-multilib g++-multilib libc6-dev-i386 libgpg-error-dev:i386
             additional_args: "`-DCMAKE_C_FLAGS=-m32`, `-DCMAKE_CXX_FLAGS=-m32`"
           # - triplet: arm64-linux
           #   os: ubuntu-latest
