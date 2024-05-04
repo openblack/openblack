@@ -167,6 +167,13 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 				args.gamePath = std::string(path);
 			}
 			else
+#elif __EMSCRIPTEN__
+			// NOLINTNEXTLINE(readability-simplify-boolean-expr)
+			if (true)
+			{
+				args.gamePath = "bw";
+			}
+			else
 #endif
 			{
 				throw cxxopts::exceptions::option_has_no_value("game-path");
