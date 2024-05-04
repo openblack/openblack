@@ -109,7 +109,6 @@ target_link_libraries(
           glm::glm
           EnTT::EnTT
           bgfx::bgfx
-          OpenAL::OpenAL
           cxxopts::cxxopts
           Bullet3Common
           BulletDynamics
@@ -127,6 +126,12 @@ if (OPENBLACK_CLANG_TIDY_CHECKS)
   else ()
     message("Clang-tidy checks requested but unavailable")
   endif ()
+endif ()
+
+if (EMSCRIPTEN)
+  target_link_libraries(openblack_lib PRIVATE openal)
+else ()
+  target_link_libraries(openblack_lib PRIVATE OpenAL::OpenAL)
 endif ()
 
 if (ANDROID)
