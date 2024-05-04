@@ -489,6 +489,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	const auto* terrainShader = _shaderManager->GetShader("Terrain");
 	const auto* debugShader = _shaderManager->GetShader("DebugLine");
 	const auto* spriteShader = _shaderManager->GetShader("Sprite");
+	const auto* glowShader = _shaderManager->GetShader("Glow");
 	const auto* debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
 	const auto* objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
 	const auto* objectShaderHeightMapInstanced = _shaderManager->GetShader("ObjectHeightMapInstanced");
@@ -699,14 +700,42 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 					    _plane->GetVertexBuffer().Bind();
 
-					    bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_BLEND_ALPHA);
+					    bgfx::setState(0 | BGFX_STATE_DEPTH_TEST_LEQUAL | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
+					                   BGFX_STATE_BLEND_FUNC_SEPARATE(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE,
+					                                                  BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE) |
+					                   BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_ADD));
 
 					    bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), spriteShader->GetRawHandle());
 				    });
 			}
 		}
 
-		if (desc.drawTestModel)
+		{
+			auto subSection =
+			    desc.profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawGlowEffects
+			                                                                    : Profiler::Stage::MainPassDrawGlowEffects);
+
+			if (desc.drawGlowEffects)
+			{
+				using namespace ecs::components;
+
+				auto& registry = Locator::entitiesRegistry::value();
+				registry.Each<const LightEmitter, const Transform>(
+				    [this, &glowShader, &desc](const LightEmitter& glowEmitter, const Transform& transform) {
+					    auto pos = glm::mat4(1.0f);
+					    pos = glm::translate(pos, transform.position);
+					    pos = glm::scale(pos, glm::vec3(0.3f));
+					    bgfx::setTransform(glm::value_ptr(pos));
+					    _plane->GetVertexBuffer().Bind();
+
+					    bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_BLEND_ALPHA);
+
+					    bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), glowShader->GetRawHandle());
+				    });
+			}
+		}
+
+		if (!desc.drawTestModel)
 		{
 			L3DMeshSubmitDesc submitDesc = {};
 			submitDesc.viewId = desc.viewId;

@@ -67,7 +67,6 @@ void GLWFile::ReadFile(std::istream& stream)
 {
 	assert(!_isLoaded);
 
-	// Total file size
 	std::size_t fsize = 0;
 	if (stream.seekg(0, std::ios_base::end))
 	{
@@ -75,9 +74,9 @@ void GLWFile::ReadFile(std::istream& stream)
 		stream.seekg(0);
 	}
 
-	while ((fsize - stream.tellg()) > sizeof(GlowEntry))
+	while ((fsize - stream.tellg()) > sizeof(Glow))
 	{
-		GlowEntry glow;
+		Glow glow;
 		stream.read(reinterpret_cast<char*>(&glow), sizeof(glow));
 		_glows.emplace_back(glow);
 	}
@@ -87,7 +86,7 @@ void GLWFile::ReadFile(std::istream& stream)
 
 	if (glowCount != _glows.size())
 	{
-		Fail("Invalid number of glows");
+		Fail("Less glow items than expected");
 	}
 }
 
@@ -95,12 +94,6 @@ void GLWFile::WriteFile(std::ostream& stream) const
 {
 	for (auto glow : _glows)
 	{
-		glow.red = 3.0f;
-		glow.green = 0;
-		glow.blue = 0;
-		glow.dirX = 0;
-		glow.dirY = 0;
-		glow.dirZ = 0;
 		stream.write(reinterpret_cast<char*>(&glow), sizeof(glow));
 	}
 	auto glowCount = static_cast<uint32_t>(_glows.size());

@@ -76,6 +76,7 @@ public:
 		bool drawTestModel;
 		bool drawDebugCross;
 		bool drawBoundingBoxes;
+		bool drawGlowEffects;
 		bool cullBack;
 		bool bgfxDebug;
 		bool bgfxProfile;

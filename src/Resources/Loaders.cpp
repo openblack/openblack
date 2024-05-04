@@ -10,6 +10,8 @@
 #include "Resources/Loaders.h"
 
 #include <iostream>
+#include <ranges>
+#include <utility>
 
 #include <GLWFile.h>
 #include <spdlog/spdlog.h>
@@ -105,7 +107,7 @@ Texture2DLoader::result_type Texture2DLoader::operator()(FromPackTag, const std:
 Texture2DLoader::result_type Texture2DLoader::operator()(FromDiskTag, const std::filesystem::path& rawTexturePath) const
 {
 	bool found = false;
-	const std::array<uint16_t, 6> resolutions = {{256, 40, 32, 14, 12, 6}};
+	const std::array<uint16_t, 12> resolutions = {{1024, 512, 256, 128, 64, 40, 32, 14, 12, 6}};
 
 	const auto data = Locator::filesystem::value().ReadAll(rawTexturePath);
 	graphics::Format format = graphics::Format::R8;
@@ -196,9 +198,9 @@ SoundLoader::result_type SoundLoader::operator()(BaseLoader<audio::Sound>::FromB
 	return sound;
 }
 
-GlowLoader::result_type GlowLoader::operator()(BaseLoader<Glows>::FromDiskTag, const std::filesystem::path& path) const
+LightLoader::result_type LightLoader::operator()(BaseLoader<Lights>::FromDiskTag, const std::filesystem::path& path) const
 {
-	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading glows from file: {}", path.string());
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading lights from file: {}", path.string());
 	glw::GLWFile glw;
 
 	try
@@ -215,23 +217,16 @@ GlowLoader::result_type GlowLoader::operator()(BaseLoader<Glows>::FromDiskTag, c
 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open glw file from filesystem {}: {}", path.string(), err.what());
 		throw err;
 	}
-	auto glows = std::make_shared<Glows>();
-	auto newPath = path;
+	auto lights = std::make_shared<Lights>();
 	for (auto entry : glw.GetGlows())
 	{
-		auto glow = Glow();
-		glow.name = entry.name;
-		glow.colour = glm::vec4(entry.red, entry.green, entry.blue, 1.f);
-		glow.scale = glm::vec3(entry.red, entry.green, entry.blue);
-		auto transform = ecs::components::Transform();
-		transform.scale = glm::vec3(1.f);
-		transform.position = glm::vec3(entry.glowX, entry.glowY, entry.dirZ);
-		glows->entries.emplace_back(glow, transform);
+		Glow glow;
+		glow.backgroundColour = glm::vec4(entry.red * 0.5f, entry.green * 0.5f, entry.blue * 0.5f, 1.0f);
+		glow.brightSpotColour = glm::vec4 {100.0f / 256.0f, 172 / 256.0f, 146.0f / 256.0f, 1.0f};
+		glow.backgroundScale = (1.0f / 3) * 2.0f;
+		glow.brightSpotScale = 1.3f;
+		glow.position = glm::vec3(entry.posX, entry.posY, entry.posZ);
+		lights->emitters.emplace_back(glow);
 	}
-
-	//	if (newPath.filename() == "main.glw")
-	//	{
-	//		glw.Write(newPath);
-	//	}
-	return glows;
+	return lights;
 }

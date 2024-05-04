@@ -11,6 +11,7 @@
 
 #include <string>
 
+#include <GLWFile.h>
 #include <glm/vec3.hpp>
 
 #include "ECS/Components/Transform.h"
@@ -20,19 +21,20 @@ namespace openblack
 
 struct Glow
 {
-	std::string name;
-	glm::vec4 colour;
-	glm::vec3 scale;
+	glm::vec4 backgroundColour;
+	glm::vec4 brightSpotColour;
+	float backgroundScale;
+	float brightSpotScale;
+	glm::vec3 position;
 };
 
-struct GlowEmitter
+struct LightEmitter
 {
 	Glow glow;
-	ecs::components::Transform transform;
 };
 
-struct Glows
+struct Lights
 {
-	std::vector<GlowEmitter> entries;
+	std::vector<LightEmitter> emitters;
 };
 } // namespace openblack

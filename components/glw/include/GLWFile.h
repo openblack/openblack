@@ -7,44 +7,53 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#pragma once
+
 #include <filesystem>
 #include <vector>
 
 namespace openblack::glw
 {
 
-struct GlowEntry
+struct Glow
 {
-	uint32_t size;     // Changing this crashes the game. Value is almost always the size of this struct in bytes
-	uint16_t unk1;     // Always seems to be 0
-	float red;         // The emitter size and colour. 0 is invisible. Can be greater than 1
-	float green;       // The emitter size and colour. 0 is invisible. Can be greater than 1
-	float blue;        // The emitter size and colour. 0 is invisible. Can be greater than 1
-	float glowX;       // The emitter x coordinate. These are world coordinates
-	float glowY;       // The emitter y coordinate. These are world coordinates
-	float glowZ;       // The emitter z coordinate. These are world coordinates
-	float unkX;        // Unknown coordinate, copies glowX
-	float unkY;        // Unknown coordinate, copies glowY
-	float unkZ;        // Unknown coordinate, copies glowZ
-	float unkX2;       // Unknown coordinate, copies glowX
-	float unkY2;       // Unknown coordinate, copies glowY
-	float unkZ2;       // Unknown coordinate, copies glowZ
-	float unk14;       //
-	uint32_t unk15;    //
-	uint8_t other[44]; //
-	float dirX;        // Affect the direction of the emitter e.g. god-rays coming from the stained-glass windows
-	float dirY;        // Affect the direction of the emitter e.g. god-rays coming from the stained-glass windows
-	float dirZ;        // Affect the direction of the emitter e.g. god-rays coming from the stained-glass windows
-	uint8_t unkA1;
-	uint8_t unkA2;
-	uint8_t unkA3;
-	uint8_t unkA4;
-	uint8_t unkA5;
-	uint8_t unkA6;
-	uint8_t unkA7;
-	uint8_t unkA8;
-	char name[68];
+	uint32_t size; // Must be 196
+	uint32_t unk1; // Always seems to be 0
+	float red;     // The emitter size and colour. 0 is invisible. Can be greater than 1
+	float green;   // The emitter size and colour. 0 is invisible. Can be greater than 1
+	float blue;    // The emitter size and colour. 0 is invisible. Can be greater than 1
+	float posX;    // The emitter x coordinate. These are world coordinates
+	float posY;    // The emitter y coordinate. These are world coordinates
+	float posZ;    // The emitter z coordinate. These are world coordinates
+	float unkX;    // Unknown coordinate, sometimes copies glowX
+	float unkY;    // Unknown coordinate, sometimes copies glowY
+	float unkZ;    // Unknown coordinate, sometimes copies glowZ
+	float unkX2;   // Unknown coordinate, sometimes copies glowX
+	float unkY2;   // Unknown coordinate, sometimes copies glowY
+	float unkZ2;   // Unknown coordinate, sometimes copies glowZ
+	float unk14;
+	float unk15;
+	float unk16;
+	float unk17;
+	float unk18;
+	float unk19;
+	float unk20;
+	float unk21;
+	float unk22;
+	float unk23;
+	float unk24;
+	float unk25;
+	float unk26;
+	float dirX; // Unknown coordinate
+	float dirY; // Unknown coordinate
+	float dirZ; // Unknown coordinate
+	float unk27;
+	float unk28;
+	uint8_t name[64];
+	float emitterSize; // Usually a number between 1 and 10. Multiplies the size
 };
+
+static_assert(sizeof(Glow) == 196);
 
 /**
 This class is used to read and write GLW files.
@@ -57,7 +66,7 @@ protected:
 
 	std::filesystem::path _filename;
 
-	std::vector<GlowEntry> _glows;
+	std::vector<Glow> _glows;
 
 	/// Error handling
 	void Fail(const std::string& msg);
@@ -80,8 +89,8 @@ public:
 
 	[[nodiscard]] std::string GetFilename() const { return _filename.string(); }
 
-	[[nodiscard]] const std::vector<GlowEntry>& GetGlows() const { return _glows; }
-	[[nodiscard]] const GlowEntry& GetGlow(uint32_t index) const { return _glows[index]; }
+	[[nodiscard]] const std::vector<Glow>& GetGlows() const { return _glows; }
+	[[nodiscard]] const Glow& GetGlow(uint32_t index) const { return _glows[index]; }
 };
 
 } // namespace openblack::glw

@@ -20,7 +20,7 @@ using AnimationManager = ResourceManager<L3DAnimLoader>;
 using LevelManager = ResourceManager<LevelLoader>;
 using CreatureMindManager = ResourceManager<CreatureMindLoader>;
 using SoundManager = ResourceManager<SoundLoader>;
-using GlowManager = ResourceManager<GlowLoader>;
+using GlowManager = ResourceManager<LightLoader>;
 
 class ResourcesInterface
 {

@@ -126,6 +126,7 @@ public:
 		bool drawTestModel {true};
 		bool drawDebugCross {true};
 		bool drawBoundingBoxes {false};
+		bool drawGlowEffects {true};
 		bool drawFootpaths {false};
 		bool drawStreams {false};
 

@@ -46,24 +46,10 @@ int ViewGlow(GLWFile& glw)
 		std::printf("file: %s, glow: %u\n", glw.GetFilename().c_str(), index);
 		std::printf("information:\n");
 		std::printf("\tname: %s\n", glow.name);
-		std::printf("\tsize: %u\n", glow.size);
-		std::printf("\tunk1: %u\n", glow.unk1);
 		std::printf("\tred: %f\n", glow.red);
 		std::printf("\tgreen: %f\n", glow.green);
 		std::printf("\tblue: %f\n", glow.blue);
-		std::printf("\tglowX: %f\n", glow.glowX);
-		std::printf("\tglowY: %f\n", glow.glowY);
-		std::printf("\tglowZ: %f\n", glow.glowZ);
-		std::printf("\tunkX: %f\n", glow.unkX);
-		std::printf("\tunkY: %f\n", glow.unkY);
-		std::printf("\tunkZ: %f\n", glow.unkZ);
-		std::printf("\tunkX2: %f\n", glow.unkX2);
-		std::printf("\tunkY2: %f\n", glow.unkY2);
-		std::printf("\tunkZ2: %f\n", glow.unkZ2);
-		std::printf("\tunk14: %f\n", glow.unk14);
-		std::printf("\tdirX: %f\n", glow.dirX);
-		std::printf("\tdirY: %f\n", glow.dirY);
-		std::printf("\tdirZ: %f\n", glow.dirZ);
+		std::printf("\tPosition XYZ: %f, %f, %f\n", glow.posX, glow.posY, glow.posZ);
 	}
 
 	return EXIT_SUCCESS;
@@ -77,6 +63,7 @@ struct Arguments
 		ListGlows,
 		ViewGlow,
 		Write,
+		Extract,
 	};
 	Mode mode;
 	struct Read
@@ -86,38 +73,85 @@ struct Arguments
 	struct Write
 	{
 		std::filesystem::path outFilename;
-		std::filesystem::path gltfFile;
+		std::filesystem::path jsonFile;
 	} write;
+	struct Extract
+	{
+		std::filesystem::path inFilename;
+		std::filesystem::path jsonFile;
+	} extract;
 };
 
 int WriteFile(const Arguments::Write& args) noexcept
 {
+	//	GLWFile glw {};
+	//
+	if (args.jsonFile.empty())
+	{
+		return EXIT_FAILURE;
+	}
+	//
+	//	std::ifstream f(args.jsonFile);
+	//	json data = json::parse(f);
+	//	data glw.Open();
+	//	glw.Write(args.outFilename);
+	return EXIT_SUCCESS;
+}
+
+int ExtractFile(const Arguments::Extract& args) noexcept
+{
 	GLWFile glw {};
 
-	if (args.gltfFile.empty())
+	if (args.jsonFile.empty() || args.inFilename.empty())
 	{
 		return EXIT_FAILURE;
 	}
 
-	tinygltf::TinyGLTF loader;
-	tinygltf::Model gltf;
+	glw.Open(args.inFilename);
+	nlohmann::ordered_json data;
+	for (auto& glow : glw.GetGlows())
+	{
+		nlohmann::ordered_json json_emitter;
+		json_emitter["size"] = glow.size;
+		json_emitter["unk1"] = glow.unk1;
+		json_emitter["red"] = glow.red;
+		json_emitter["green"] = glow.green;
+		json_emitter["blue"] = glow.blue;
+		json_emitter["posX"] = glow.posX;
+		json_emitter["posY"] = glow.posY;
+		json_emitter["posZ"] = glow.posZ;
+		json_emitter["unkX"] = glow.unkX;
+		json_emitter["unkY"] = glow.unkY;
+		json_emitter["unkZ"] = glow.unkZ;
+		json_emitter["unkX2"] = glow.unkX2;
+		json_emitter["unkY2"] = glow.unkY2;
+		json_emitter["unkZ2"] = glow.unkZ2;
+		json_emitter["unk14"] = glow.unk14;
+		json_emitter["unk15"] = glow.unk15;
+		json_emitter["unk16"] = glow.unk16;
+		json_emitter["unk17"] = glow.unk17;
+		json_emitter["unk18"] = glow.unk18;
+		json_emitter["unk19"] = glow.unk19;
+		json_emitter["unk20"] = glow.unk20;
+		json_emitter["unk21"] = glow.unk21;
+		json_emitter["unk22"] = glow.unk22;
+		json_emitter["unk23"] = glow.unk23;
+		json_emitter["unk24"] = glow.unk24;
+		json_emitter["unk25"] = glow.unk25;
+		json_emitter["unk26"] = glow.unk26;
+		json_emitter["name"] = std::string((char*)glow.name);
+		json_emitter["emitterSize"] = glow.emitterSize;
+		data.push_back(json_emitter);
+	}
 
-	std::string err;
-	std::string warn;
-
-	//	const std::string name = "TODO";
-	//	memcpy(anm.GetHeader().name.data(), name.c_str(),
-	//	       std::min(sizeof(anm.GetHeader().name[0]) * anm.GetHeader().name.size(), name.length()));
-	//	anm.GetHeader().frameCount = 0;
-	//	anm.GetHeader().animationDuration = 0;
-	//	anm.Write(args.outFilename);
-
+	std::ofstream o(args.jsonFile);
+	o << std::setw(4) << data << std::endl;
 	return EXIT_SUCCESS;
 }
 
 bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexcept
 {
-	cxxopts::Options options("glwtool", "Inspect and extract files from LionHead GLW files.");
+	cxxopts::Options options("glwtool", "Inspect and extract information from LionHead GLW files.");
 
 	try
 	{
@@ -125,12 +159,12 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 		    ("h,help", "Display this help message.")                     //
 		    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
 		    ;
-		options.positional_help("[read|write] [OPTION...]");
+		options.positional_help("[read|write|extract] [OPTION...]");
 		options.add_options()                                                                              //
 		    ("l,list-glows", "List glows.", cxxopts::value<std::vector<std::filesystem::path>>())          //
 		    ("g,glow-content", "View Glow Contents", cxxopts::value<std::vector<std::filesystem::path>>()) //
 		    ;
-		options.add_options("write from and to glTF format")                                    //
+		options.add_options("write/extract from and to json format")                            //
 		    ("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())    //
 		    ("i,input-glow", "Input file (required).", cxxopts::value<std::filesystem::path>()) //
 		    ;
@@ -183,7 +217,21 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 				args.write.outFilename = result["output"].as<std::filesystem::path>();
 				if (result["input-glow"].count() > 0)
 				{
-					args.write.gltfFile = result["input-mesh"].as<std::filesystem::path>();
+					args.write.jsonFile = result["input-glow"].as<std::filesystem::path>();
+				}
+				return true;
+			}
+		}
+		else if (result["subcommand"].as<std::string>() == "extract")
+		{
+			args.write.outFilename = "";
+			if (result["output"].count() > 0)
+			{
+				args.mode = Arguments::Mode::Extract;
+				args.extract.inFilename = result["input-glow"].as<std::filesystem::path>();
+				if (result["input-glow"].count() > 0)
+				{
+					args.extract.jsonFile = result["output"].as<std::filesystem::path>();
 				}
 				return true;
 			}
@@ -211,6 +259,10 @@ int main(int argc, char* argv[]) noexcept
 	if (args.mode == Arguments::Mode::Write)
 	{
 		return WriteFile(args.write);
+	}
+	else if (args.mode == Arguments::Mode::Extract)
+	{
+		return ExtractFile(args.extract);
 	}
 
 	for (auto& filename : args.read.filenames)

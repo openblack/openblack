@@ -30,6 +30,7 @@
 #include "3D/CreatureBody.h"
 #include "3D/LandIslandInterface.h"
 #include "3D/Sky.h"
+#include "3D/TempleInteriorInterface.h"
 #include "3D/Water.h"
 #include "Audio/AudioManagerInterface.h"
 #include "Common/EventManager.h"
@@ -547,7 +548,7 @@ bool Game::Initialize()
 			                   try
 			                   {
 				                   glowManager.Load(fmt::format("temple/interior/glow/{}", f.stem().string()),
-				                                    resources::GlowLoader::FromDiskTag {}, f);
+				                                    resources::LightLoader::FromDiskTag {}, f);
 			                   }
 			                   catch (std::runtime_error& err)
 			                   {
@@ -744,7 +745,7 @@ bool Game::Initialize()
 	}
 
 	fileSystem.Iterate(fileSystem.GetPath<Path::Textures>(), false, [&textureManager](const std::filesystem::path& f) {
-		if (f.extension() == ".raw")
+		if (string_utils::LowerCase(f.extension().string()) == ".raw")
 		{
 			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading raw texture: {}", f.stem().string());
 			try
@@ -767,6 +768,7 @@ bool Game::Run()
 {
 	LoadMap(_startMap);
 	Locator::dynamicsSystem::value().RegisterRigidBodies();
+	Locator::temple::value().Activate();
 
 	auto& fileSystem = Locator::filesystem::value();
 
@@ -845,6 +847,7 @@ bool Game::Run()
 			    /*drawTestModel =*/_config.drawTestModel,
 			    /*drawDebugCross =*/_config.drawDebugCross,
 			    /*drawBoundingBoxes =*/_config.drawBoundingBoxes,
+			    /*drawGlowEffects =*/_config.drawGlowEffects,
 			    /*cullBack =*/false,
 			    /*bgfxDebug =*/_config.bgfxDebug,
 			    /*bgfxProfile =*/_config.bgfxProfile,

@@ -17,6 +17,7 @@
 
 #include "3D/Camera.h"
 #include "Common/EventManager.h"
+#include "ECS/Archetypes/GlowArchetype.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Temple.h"
 #include "ECS/Registry.h"
@@ -90,18 +91,13 @@ inline void addRoomToRegistry(std::string_view assetName, Indoors templeRoom, gl
 
 inline void addGlowsToRegistry(Indoors templeRoom)
 {
-	auto& registry = Locator::entitiesRegistry::value();
 	auto& glowManager = Locator::resources::value().GetGlows();
 	auto glowId = entt::hashed_string(fmt::format("temple/interior/glow/{}", k_TempleInteriorGlows.at(templeRoom)).c_str());
 	auto glows = glowManager.Handle(glowId);
-	for (auto glow : glows->entries)
+	auto i = 0;
+	for (auto glow : glows->emitters)
 	{
-		auto entity = registry.Create();
-		const auto resourceId = resources::MeshIdToResourceId(MeshId::ObjectArk);
-		registry.Assign<ecs::components::TempleInteriorPart>(entity, templeRoom);
-		registry.Assign<ecs::components::Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
-		registry.Assign<Glow>(entity, glow.glow);
-		registry.Assign<ecs::components::Transform>(entity, glow.transform);
+		ecs::archetypes::GlowArchetype::Create(glow, templeRoom);
 	}
 }
 
