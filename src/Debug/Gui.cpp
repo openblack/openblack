@@ -545,6 +545,7 @@ bool Gui::ShowMenu(Game& game)
 
 			if (ImGui::BeginMenu("View"))
 			{
+				ImGui::Checkbox("Game Detail Overlay", &config.viewDetailOverlay);
 				ImGui::Checkbox("Sky", &config.drawSky);
 				ImGui::Checkbox("Water", &config.drawWater);
 				ImGui::Checkbox("Island", &config.drawIsland);
@@ -935,30 +936,34 @@ void Gui::ShowCameraPositionOverlay(const Game& game)
 	ImGui::SetNextWindowPos(ImVec2(displaySize.x - 8.0f, displaySize.y - 8.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
 	ImGui::SetNextWindowBgAlpha(0.35f);
 
-	if (ImGui::Begin("Camera position overlay", nullptr, cameraPositionOverlayFlags))
+	if (game.GetConfig().viewDetailOverlay)
 	{
-		const auto camOrigin = game.GetCamera().GetOrigin();
-		const auto camFocus = game.GetCamera().GetFocus();
-		const auto camRot = glm::degrees(game.GetCamera().GetRotation());
-		ImGui::Text("Camera Origin: (%.1f,%.1f,%.1f)", camOrigin.x, camOrigin.y, camOrigin.z);
-		ImGui::Text("Camera Focus: (%.1f,%.1f,%.1f)", camFocus.x, camFocus.y, camFocus.z);
-		ImGui::Text("Camera Rotation: (%.1f,%.1f,%.1f)", camRot.x, camRot.y, camRot.z);
-
-		if (ImGui::IsMousePosValid())
+		if (ImGui::Begin("Game Details Overlay", nullptr, cameraPositionOverlayFlags))
 		{
-			const auto& mousePos = ImGui::GetIO().MousePos;
-			ImGui::Text("Mouse Position: (%.1f,%.1f)", mousePos.x, mousePos.y);
-		}
-		else
-		{
-			ImGui::Text("Mouse Position: <invalid>");
-		}
+			const auto camOrigin = game.GetCamera().GetOrigin();
+			const auto camFocus = game.GetCamera().GetFocus();
+			const auto camRot = glm::degrees(game.GetCamera().GetRotation());
+			ImGui::Text("Camera Origin: (%.1f,%.1f,%.1f)", camOrigin.x, camOrigin.y, camOrigin.z);
+			ImGui::Text("Camera Focus: (%.1f,%.1f,%.1f)", camFocus.x, camFocus.y, camFocus.z);
+			ImGui::Text("Camera Rotation: (%.1f,%.1f,%.1f)", camRot.x, camRot.y, camRot.z);
 
-		const auto& handPosition = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(game.GetHand()).position;
-		ImGui::Text("Hand Position: (%.1f,%.1f,%.1f)", handPosition.x, handPosition.y, handPosition.z);
+			if (ImGui::IsMousePosValid())
+			{
+				const auto& mousePos = ImGui::GetIO().MousePos;
+				ImGui::Text("Mouse Position: (%.1f,%.1f)", mousePos.x, mousePos.y);
+			}
+			else
+			{
+				ImGui::Text("Mouse Position: <invalid>");
+			}
 
-		ImGui::Text("Game Turn: %u (%.3f ms)%s", game.GetTurn(), game.GetDeltaTime().count(),
-		            game.IsPaused() ? " - paused" : "");
+			const auto& handPosition =
+			    Locator::entitiesRegistry::value().Get<ecs::components::Transform>(game.GetHand()).position;
+			ImGui::Text("Hand Position: (%.1f,%.1f,%.1f)", handPosition.x, handPosition.y, handPosition.z);
+
+			ImGui::Text("Game Turn: %u (%.3f ms)%s", game.GetTurn(), game.GetDeltaTime().count(),
+			            game.IsPaused() ? " - paused" : "");
+		}
+		ImGui::End();
 	}
-	ImGui::End();
 }
