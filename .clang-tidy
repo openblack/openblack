@@ -36,6 +36,10 @@ CheckOptions:
     value: CamelCase
   - key: readability-identifier-naming.GlobalConstantPrefix
     value: k_
+  - key: readability-identifier-naming.ConstexprVariableCase
+    value: CamelCase
+  - key: readability-identifier-naming.ConstexprVariablePrefix
+    value: k_
   - key: readability-identifier-naming.GlobalConstantIgnoredRegexp
     value: '^Disassembly_[^_]*'
   - key: readability-identifier-naming.MethodCase
