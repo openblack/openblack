@@ -961,6 +961,11 @@ void Gui::ShowCameraPositionOverlay(const Game& game)
 			    Locator::entitiesRegistry::value().Get<ecs::components::Transform>(game.GetHand()).position;
 			ImGui::Text("Hand Position: (%.1f,%.1f,%.1f)", handPosition.x, handPosition.y, handPosition.z);
 
+			const auto* stats = bgfx::getStats();
+			const auto* caps = bgfx::getCaps();
+			ImGui::Text("Num Vertex Buffers: %u/%u", stats->numVertexBuffers, caps->limits.maxVertexBuffers);
+			ImGui::Text("Num Textures: %u/%u", stats->numTextures, caps->limits.maxTextures);
+
 			ImGui::Text("Game Turn: %u (%.3f ms)%s", game.GetTurn(), game.GetDeltaTime().count(),
 			            game.IsPaused() ? " - paused" : "");
 		}
