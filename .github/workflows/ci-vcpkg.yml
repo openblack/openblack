@@ -287,7 +287,7 @@ jobs:
           repository: openblack/openblack-assets
           path: openblack-assets
       - name: Install openblack-assets
-        run: cp -r openblack-assets/assets game-data
+        run: cp -v -r openblack-assets/assets game-data/bw
       - name: Set Screenshot Position For Maps
         run: |
           'START_CAMERA_POS("1788.40,2710.00")' | Add-Content -Path game-data\bw\Scripts\Land1.txt
