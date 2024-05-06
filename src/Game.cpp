@@ -532,6 +532,13 @@ bool Game::Initialize()
 	    fileSystem.GetPath<filesystem::Path::Citadel>() / "engine", false, [&meshManager](const std::filesystem::path& f) {
 		    if (f.extension() == ".zzz")
 		    {
+			    if (f.stem().string().ends_with("lo_l3d"))
+			    {
+				    SPDLOG_LOGGER_WARN(
+				        spdlog::get("game"),
+				        "Skipping lo duplicate lo meshes. See https://github.com/openblack/openblack/issues/727");
+				    return;
+			    }
 			    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading interior temple mesh: {}", f.stem().string());
 			    try
 			    {
