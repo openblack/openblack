@@ -439,7 +439,7 @@ void DefaultWorldCameraModel::UpdateModeDragging(const Camera& camera, glm::u16v
 
 void DefaultWorldCameraModel::UpdateModeFlying(glm::vec3 eulerAngles)
 {
-	if (!_handPosition.has_value() && !_screenSpaceCenterRaycastHit.has_value())
+	if (!_screenSpaceCenterRaycastHit.has_value())
 	{
 		return;
 	}
