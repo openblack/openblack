@@ -522,11 +522,11 @@ void DefaultWorldCameraModel::UpdateRaycastHitPoints(const Camera& camera)
 	// TODO(#656) in c++23 use camera.RaycastMouseToLand().and_then
 	_screenSpaceMouseRaycastHit = std::nullopt;
 	_screenSpaceCenterRaycastHit = std::nullopt;
-	if (const auto hit = camera.RaycastMouseToLand(true, Camera::Interpolation::Target))
+	if (const auto hit = camera.RaycastMouseToLand(false, Camera::Interpolation::Target))
 	{
 		_screenSpaceMouseRaycastHit = hit->position;
 	}
-	if (const auto hit = camera.RaycastScreenCoordToLand({0.5f, 0.5f}, true, Camera::Interpolation::Target))
+	if (const auto hit = camera.RaycastScreenCoordToLand({0.5f, 0.5f}, false, Camera::Interpolation::Target))
 	{
 		_screenSpaceCenterRaycastHit = hit->position;
 	}
