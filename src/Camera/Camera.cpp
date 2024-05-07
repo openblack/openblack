@@ -12,6 +12,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/intersect.hpp>
+#include <glm/gtx/transform.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 
 #include "3D/LandIsland.h"
@@ -98,11 +99,8 @@ Camera& Camera::SetProjectionMatrixPerspective(float xFov, float aspect, float n
 {
 	_xFov = glm::radians(xFov);
 	const float yFov = (glm::atan(glm::tan(_xFov / 2.0f)) / aspect) * 2.0f;
-	const float h = 1.0f / glm::tan(yFov * 0.5f);
-	const float w = h / aspect;
-	const float a = nearClip / (farClip - nearClip);
-	const float b = (nearClip * farClip) / (farClip - nearClip);
-	_projectionMatrix = glm::mat4x4(w, 0.f, 0.f, 0.f, 0.f, h, 0.f, 0.f, 0.f, 0.f, a, 1.f, 0.f, 0.f, b, 0.f);
+	// Inverse near and far for reverse z, we need to translate z by 1 to get back to the [0 1] range
+	_projectionMatrix = glm::translate(glm::vec3(0.f, 0.f, 1.f)) * glm::perspective(yFov, aspect, farClip, nearClip);
 
 	return *this;
 }
