@@ -274,7 +274,8 @@ else ()
   install(TARGETS openblack RUNTIME DESTINATION bin)
   if (UNIX)
     install(
-      FILES "${CMAKE_SOURCE_DIR}/assets/resource/shortcut/openblack.desktop"
+      FILES
+        "${CMAKE_SOURCE_DIR}/assets/resource/shortcut/org.openblack.openblack.desktop"
       DESTINATION "share/applications"
     )
     foreach (RES 64 128 256)
