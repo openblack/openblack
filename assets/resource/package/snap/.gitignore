@@ -1,0 +1,3 @@
+*.snap
+vcpkg_installed/
+*.log

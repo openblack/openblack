@@ -1,0 +1,84 @@
+# snapcraft.yaml must be copied to project root to work
+name: openblack
+base: core24
+version: '0.1.0'
+summary: Open source reimplementation of the game Black & White (2001).
+description: |
+  openblack is an open source reimplementation of Black & White (2001) written
+  in modern C++ and modern rendering engines.
+  The original game assets are needed in order to use this.
+
+grade: stable
+confinement: strict
+
+apps:
+  openblack:
+    command: usr/bin/openblack
+    desktop: usr/share/applications/openblack.desktop
+    plugs:
+      - opengl
+      - audio-playback
+      - desktop
+      - desktop-legacy
+      - wayland
+      - x11
+      - unity7
+
+parts:
+  desktop-glib-only:
+    source: https://github.com/ubuntu/snapcraft-desktop-helpers.git
+    source-subdir: glib-only
+    plugin: make
+    build-packages:
+      - libglib2.0-dev
+    stage-packages:
+      - libglib2.0-bin
+
+  openblack:
+    after:
+      - desktop-glib-only
+    plugin: cmake
+    cmake-parameters:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_PREFIX=/usr
+      - -DOPENBLACK_USE_VCPKG=ON
+    override-build: |
+      set -xe
+      for file in $SNAPCRAFT_PART_SRC/vcpkg/triplets/*.cmake $SNAPCRAFT_PART_SRC/vcpkg/triplets/community/*.cmake; do
+        echo "set(VCPKG_BUILD_TYPE release)" >> "$file"
+      done
+      cmake -S$SNAPCRAFT_PART_SRC -B$SNAPCRAFT_PART_BUILD -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DOPENBLACK_USE_VCPKG=ON
+      cmake --build $SNAPCRAFT_PART_BUILD --parallel "$(nproc)"
+      cmake --install $SNAPCRAFT_PART_BUILD -v --strip --prefix $SNAPCRAFT_PART_INSTALL/usr
+      mkdir -p $SNAPCRAFT_PRIME/meta/gui/
+      mv -v $SNAPCRAFT_PART_INSTALL/usr/share/icons/hicolor/256x256/apps/openblack.png $SNAPCRAFT_PRIME/meta/gui/icon.png
+      mv -v $SNAPCRAFT_PART_INSTALL/usr/share/applications/{org.openblack.,}openblack.desktop
+      sed -i "s|^Icon=.*|Icon=\${SNAP}/meta/gui/icon.png|g" $SNAPCRAFT_PART_INSTALL/usr/share/applications/openblack.desktop
+    source: .
+    build-packages:
+      # vcpkg
+      - git
+      - curl
+      - zip
+      - unzip
+      - tar
+      - build-essential
+      - ninja-build
+      - pkg-config
+      - automake
+      - libltdl-dev
+      - libtool
+      # bgfx
+      - libgl1-mesa-dev
+      - x11proto-core-dev
+      - libx11-dev
+      # sdl2
+      - python3-jinja2
+      - libxft-dev
+      - libxext-dev
+      - libwayland-dev
+      - libwayland-egl1
+      - libxkbcommon-dev
+      - libibus-1.0-dev
+    stage-packages:
+      - libwayland-egl1
