@@ -32,9 +32,9 @@ For the latest build of openblack without having to build it yourself, we offer 
 [![Windows (x86) Build](https://img.shields.io/badge/Build-Windows%20(x86)-0078d4)](https://nightly.link/openblack/openblack/workflows/ci-cross-compile/master/openblack-x86-windows-master.zip)
 [![Windows (arm64) Build](https://img.shields.io/badge/Build-Windows%20(arm64)-0078d4)](https://nightly.link/openblack/openblack/workflows/ci-cross-compile/master/openblack-arm64-windows-master.zip) 
 
-[![Arch Linux](https://img.shields.io/badge/Package-Arch%20Linux-1793d0)](https://nightly.link/openblack/openblack/workflows/packaging/master/openblack-arch-linux-pkg-master.zip)
 [![Android](https://img.shields.io/badge/Package-Android-3ddc84)](https://nightly.link/openblack/openblack/workflows/ci-cross-compile/master/openblack-android-apk-master.zip)
-
+[![Arch Linux](https://img.shields.io/badge/Package-Arch%20Linux-1793d0)](https://nightly.link/openblack/openblack/workflows/packaging/master/openblack-arch-linux-pkg-master.zip)
+[![Flatpak](https://img.shields.io/badge/Package-Flatpak-79ADE3)](https://nightly.link/openblack/openblack/workflows/packaging/master/openblack-master.flatpak.zip)
 # Building
 
 Clone the code using: `git clone --recursive https://github.com/openblack/openblack.git`

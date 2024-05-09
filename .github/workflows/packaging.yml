@@ -117,3 +117,32 @@ jobs:
           name: openblack-arch-linux-pkg-${{ env.GITHUB_REF_NAME_DASHES }}
           path: openblack-git/openblack-git*.pkg.tar.*
           if-no-files-found: error
+
+  flatpak:
+    name: Package for flatpak
+    runs-on: ubuntu-latest
+    container:
+      image: bilelmoussaoui/flatpak-github-actions:freedesktop-23.08
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Only build release
+        run: |
+          for file in vcpkg/triplets/*.cmake vcpkg/triplets/community/*.cmake; do
+            echo "set(VCPKG_BUILD_TYPE release)" >> "$file"
+          done
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@master
+        with:
+          bundle: openblack-${{github.sha}}.flatpak
+          manifest-path: assets/resource/package/flatpak/org.openblack.openblack.yaml
+          cache-key: flatpak-builder-${{ github.sha }}
+          upload-artifact: false
+      - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openblack-${{env.GITHUB_REF_NAME_DASHES}}.flatpak
+          path: openblack-${{github.sha}}.flatpak
+          if-no-files-found: error
