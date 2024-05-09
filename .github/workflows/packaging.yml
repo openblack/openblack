@@ -1,4 +1,4 @@
-name: System Deps CI
+name: Packaging
 on:
   pull_request:
   push:
@@ -6,8 +6,9 @@ on:
       - '*'
     branches:
       - 'master'
+      - 'ci-tests/**'  # Branch namespace can be used to test changes to test before going to master
 jobs:
-  arch-packaging-system-deps:
+  aur:
     name: Arch Linux AUR Packaging
     runs-on: ubuntu-latest
     container:
