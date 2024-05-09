@@ -111,7 +111,7 @@ Sdl2WindowingSystem::NativeHandles Sdl2WindowingSystem::GetNativeHandles() const
 	SDL_VERSION(&wmi.version);
 	if (SDL_GetWindowWMInfo(_window.get(), &wmi) == 0u)
 	{
-		throw std::runtime_error("Failed getting native window handles: " + std::string(SDL_GetError()));
+		throw std::runtime_error("Failed getting native window info: " + std::string(SDL_GetError()));
 	}
 
 	// clang-format off

@@ -180,3 +180,21 @@ jobs:
           name: openblack-${{ env.GITHUB_REF_NAME_DASHES }}.AppImage
           path: openblack-*.AppImage
           if-no-files-found: error
+
+  snapcraft:
+    name: Package for snap
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Move snap config to project root
+        run: cp -r assets/resource/package/snap .
+      - uses: snapcore/action-build@v1
+        id: snap
+      - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
+        shell: bash
+      - uses: actions/upload-artifact@v3
+        with:
+          name: openblack-${{ env.GITHUB_REF_NAME_DASHES }}.snap
+          path: ${{ steps.snap.outputs.snap }}
