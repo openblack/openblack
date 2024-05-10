@@ -94,6 +94,11 @@ void AudioPlayer::SetupLogging()
 
 void AudioPlayer::Initialize()
 {
+	ALCint majorVersion;
+	ALCint minorVersion;
+	alcGetIntegerv(_device.get(), ALC_MAJOR_VERSION, 1, &majorVersion);
+	alcGetIntegerv(_device.get(), ALC_MINOR_VERSION, 1, &minorVersion);
+	SPDLOG_LOGGER_INFO(spdlog::get("audio"), "ALC Version {}.{}", majorVersion, minorVersion);
 	alCheckCall(alcMakeContextCurrent(_context.get()));
 }
 
