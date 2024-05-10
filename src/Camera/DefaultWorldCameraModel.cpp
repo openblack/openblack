@@ -495,7 +495,7 @@ void DefaultWorldCameraModel::UpdateModeFlying(glm::vec3 eulerAngles)
 		const auto oldAngles = eulerAngles;
 		eulerAngles = EulerFromPoints(offsetPoint, point); // Placeholder
 
-		eulerAngles.y = std::clamp((eulerAngles.y / 2.0f + oldAngles.y) / 5.0f + 3.0f * glm::pi<float>() / 25.0f,
+		eulerAngles.y = glm::clamp((eulerAngles.y / 2.0f + oldAngles.y) / 5.0f + 3.0f * glm::pi<float>() / 25.0f,
 		                           glm::pi<float>() / 8.0f, glm::pi<float>() / 3.0f);
 		eulerAngles.x = static_cast<float>(bestAngleIndex) * glm::pi<float>() / 16.0f + oldAngles.x;
 	}
