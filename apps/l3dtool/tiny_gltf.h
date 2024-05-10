@@ -3042,7 +3042,7 @@ bool GetFileSizeInBytes(size_t *filesize_out, std::string *err,
     return false;
   }
 
-  (*filesize_out) = sz;
+  (*filesize_out) = static_cast<size_t>(sz);
   return true;
 #endif
 }
@@ -3137,7 +3137,7 @@ bool ReadWholeFile(std::vector<unsigned char> *out, std::string *err,
     return false;
   }
 
-  out->resize(sz);
+  out->resize(static_cast<size_t>(sz));
   f.read(reinterpret_cast<char *>(&out->at(0)),
          static_cast<std::streamsize>(sz));
 
