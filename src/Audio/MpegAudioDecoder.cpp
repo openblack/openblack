@@ -12,8 +12,17 @@
 #include <spdlog/spdlog.h>
 
 extern "C" {
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#if __GNUC__ >= 13
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
+#endif
 #define DR_MP3_IMPLEMENTATION
 #include <dr_mp3.h>
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 }
 
 using namespace openblack::audio;
