@@ -151,9 +151,9 @@ jobs:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
 
-  clang-tidy:
-    needs: build
+  clang-tidy-review:
     runs-on: ubuntu-latest
+    needs: build
     if: startsWith(github.event_name, 'pull_request')
     steps:
       - uses: actions/checkout@v3
@@ -161,26 +161,51 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           submodules: recursive
+
       - name: Download generated compile database
         uses: actions/download-artifact@v3
         with:
           name: openblack-compile-database
           path: cmake-build-presets/ninja-multi-vcpkg
-      - name: Add base repo to git config
-        run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
-        if: startsWith(github.event_name, 'pull_request')
-      - uses: ZedThree/clang-tidy-review@v0.17.1
-        id: review
+
+      - name: Checkout clang-tidy-review
+        uses: actions/checkout@v4
         with:
-          build_dir: cmake-build-presets/ninja-multi-vcpkg
-          exclude: "*ShaderIncluder.h,*json.hpp,*imgui_impl_sdl*,*stb_image_write.h,*dr_*.h"
-          config_file: ""       # Don't use a single config file
-          clang_tidy_checks: "" # Use checks from .clang-tidy tree
-          lgtm_comment_body: "" # Don't post a lgtm message
-          annotations: false
-      - name: If there are any comments, fail the check
-        if: steps.review.outputs.total_comments > 0
-        run: exit 1
+          repository: ZedThree/clang-tidy-review
+          ref: master
+          path: clang-tidy-review
+
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: '17'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Create review
+        run: |
+          clang-tidy --version
+          pip install ${{github.workspace}}/clang-tidy-review/post/clang_tidy_review
+          review --token=${{ secrets.GITHUB_TOKEN }} --repo=${{ github.event.pull_request.base.repo.full_name }} --pr=${{ github.event.pull_request.number }} --clang_tidy_binary=clang-tidy --build_dir=cmake-build-presets/ninja-multi-vcpkg --config_file=.clang-tidy --split_workflow=True --lgtm-comment-body=
+        env:
+          USER: ${{ github.event.pull_request.user.login }}
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ClangTidyReviewOutputs-${{matrix.os}}
+          path: |
+            clang-tidy-review-metadata.json
+            clang-tidy-review-output.json
+            clang_tidy_review.yaml
+
+      - name: Post review
+        run: |
+          clang-tidy --version
+          pip install ${{github.workspace}}/clang-tidy-review/post/clang_tidy_review
+          post --token=${{ secrets.GITHUB_TOKEN }} --repo=${{ github.event.pull_request.base.repo.full_name }} clang-tidy-review-output.json
 
   run:
     needs: build
