@@ -33,15 +33,16 @@ template <>
 constexpr inline ParameterType k_ParameterTypeStaticLookUpRegular<int32_t> = ParameterType::Number;
 
 template <typename T>
-inline typename std::enable_if_t<!std::is_enum<T>::value, ParameterType> GetParamType()
+inline ParameterType GetParamType()
 {
-	return k_ParameterTypeStaticLookUpRegular<T>;
-}
-
-template <typename T>
-inline typename std::enable_if_t<std::is_enum<T>::value, ParameterType> GetParamType()
-{
-	return k_ParameterTypeStaticLookUpRegular<std::underlying_type_t<T>>;
+	if constexpr (std::is_enum_v<T>)
+	{
+		return k_ParameterTypeStaticLookUpRegular<std::underlying_type_t<T>>;
+	}
+	else
+	{
+		return k_ParameterTypeStaticLookUpRegular<T>;
+	}
 }
 
 template <class T>
@@ -74,15 +75,16 @@ inline glm::vec3 GetParamValueRegular(const ScriptCommandParameters& ctx, int in
 }
 
 template <typename T>
-inline typename std::enable_if_t<!std::is_enum<T>::value, T> GetParamValue(const ScriptCommandParameters& ctx, int index)
+inline T GetParamValue(const ScriptCommandParameters& ctx, int index)
 {
-	return GetParamValueRegular<T>(ctx, index);
-}
-
-template <typename T>
-inline typename std::enable_if_t<std::is_enum<T>::value, T> GetParamValue(const ScriptCommandParameters& ctx, int index)
-{
-	return static_cast<T>(GetParamValueRegular<std::underlying_type_t<T>>(ctx, index));
+	if constexpr (std::is_enum_v<T>)
+	{
+		return static_cast<T>(GetParamValueRegular<std::underlying_type_t<T>>(ctx, index));
+	}
+	else
+	{
+		return GetParamValueRegular<T>(ctx, index);
+	}
 }
 
 /// Base case which is triggered when RemainingTypes is void (see remaining non-parsed params case)
@@ -99,8 +101,8 @@ void InvokeCallableFromContext([[maybe_unused]] const ScriptCommandParameters& c
 }
 
 /// Remaining non-parsed params case
-template <typename PoppedArgType, typename... ArgTypes, typename... RemainingTypes, typename... ParsedParamTypes,
-          typename = std::enable_if_t<!std::is_array<PoppedArgType>::value>>
+template <typename PoppedArgType, typename... ArgTypes, typename... RemainingTypes, typename... ParsedParamTypes>
+    requires(!std::is_array_v<PoppedArgType>)
 void InvokeCallableFromContext(
     /// Pass along the script context which contains runtime parameter values
     const ScriptCommandParameters& ctx,

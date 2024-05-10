@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-13, windows-latest]
         cc: [""]
         cxx: [""]
         # These are additional individual jobs. There are no permutations of these.
@@ -141,7 +141,7 @@ jobs:
         with:
           name: openblack-test-data
           path: |
-            cmake-build-presets/ninja-multi-vcpkg/test/mobile_wall_hug
+            cmake-build-presets/ninja-multi-vcpkg/test/*/scenarios
             cmake-build-presets/ninja-multi-vcpkg/test/mock/Scripts
             cmake-build-presets/ninja-multi-vcpkg/test/mock/Data
             cmake-build-presets/ninja-multi-vcpkg/test/mock/Audio
@@ -189,7 +189,7 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        os: [ ubuntu-latest, macos-13, windows-latest ]
     steps:
       - name: Download compiled openblack and tools
         uses: actions/download-artifact@v3
@@ -281,6 +281,14 @@ jobs:
         run: 7z x -ogame-data/bw "$PWD/game-data/${{steps.game-data.outputs.filename}}"
       - name: Add empty Audio directory
         run: mkdir game-data/bw/Audio
+      - name: Get openblack-assets
+        uses: actions/checkout@v3
+        with:
+          repository: openblack/openblack-assets
+          path: openblack-assets
+      - name: Install openblack-assets
+        run: cp -v -r openblack-assets/assets/* game-data/bw
+        shell: bash
       - name: Set Screenshot Position For Maps
         run: |
           'START_CAMERA_POS("1788.40,2710.00")' | Add-Content -Path game-data\bw\Scripts\Land1.txt
@@ -290,6 +298,7 @@ jobs:
           'START_CAMERA_POS("2654.25,3059.49")' | Add-Content -Path game-data\bw\Scripts\LandT.txt
           'START_CAMERA_POS("2802.60,2154.76")' | Add-Content -Path game-data\bw\Scripts\Playgrounds/ThreeGods.txt
           'START_CAMERA_POS("1801.69,2012.08")' | Add-Content -Path game-data\bw\Scripts\Playgrounds/FourGods.txt
+          'START_CAMERA_POS("2550.00,2000.00")' | Add-Content -Path game-data\bw\Scripts\Playgrounds/construct.txt
       - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-1.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-1.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Land2.txt --screenshot-path "screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-2.png"
@@ -308,6 +317,8 @@ jobs:
       - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Playgrounds/ThreeGods.txt --screenshot-path "screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-three-gods.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Playgrounds/FourGods.txt --screenshot-path "screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-four-gods.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Playgrounds/FourGods.txt --screenshot-path "screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-four-gods.png"
+      - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Playgrounds/construct.txt --screenshot-path "screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-construct.png"
+      - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Playgrounds/construct.txt --screenshot-path "screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-construct.png"
       - name: Upload screenshots
         uses: actions/upload-artifact@v3
         if: always()
@@ -477,6 +488,24 @@ jobs:
           url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-four-gods.png"
           method: 'PUT'
           customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
+      - name: Upload Construct Debug screenshot for comments
+        id: upload-screenshot-debug-construct
+        uses: fjogeleit/http-request-action@v1
+        if: github.event_name == 'pull_request_target'
+        with:
+          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-construct.png
+          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-construct.png"
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
+      - name: Upload Construct Release screenshot for comments
+        id: upload-screenshot-release-construct
+        uses: fjogeleit/http-request-action@v1
+        if: github.event_name == 'pull_request_target'
+        with:
+          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-construct.png
+          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-construct.png"
+          method: 'PUT'
+          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
       - name: Find Image Comment
         if: github.event_name == 'pull_request_target'
         uses: peter-evans/find-comment@v2
@@ -496,7 +525,7 @@ jobs:
             | Map | Debug | Release | Vanilla |
             | --- | ----- | ------- | ------- |
             | Land1.txt | ![Land1 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-1.png) | ![Land1 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-1.png) | ![Land1 Vanilla](https://user-images.githubusercontent.com/1013356/188042342-a6e84dfd-840d-4b90-a1b8-84128e4aab5d.png) |
-            | Land2.txt | ![Land2 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-2.png) | ![Land2 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-2.png) | ![Land2 Vanilla](https://user-images.githubusercontent.com/1013356/188042340-f844869a-50dd-42e9-9738-1a93e7409d24.png) |
+            | Land2.txt | ![Land2 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-2.png) | ![Land2 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-2.png) | ![Land2 Vanilla](https://github.com/openblack/openblack/assets/1013356/0910a1c9-23f2-4cb2-a617-8e5efff9d9ab) |
             | Land3.txt | ![Land3 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-3.png) | ![Land3 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-3.png) | ![Land3 Vanilla](https://user-images.githubusercontent.com/1013356/188042339-4a3941f3-1089-4838-a086-9836c6fe5113.png) |
             | Land4.txt | ![Land4 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-4.png) | ![Land4 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-4.png) | ![Land4 Vanilla](https://user-images.githubusercontent.com/1013356/188042337-6d139916-5988-4020-a738-1a1fe64a915d.png) |
             | Land5.txt | ![Land5 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-5.png) | ![Land5 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-5.png) | ![Land5 Vanilla](https://user-images.githubusercontent.com/1013356/188042333-5009397c-087f-48fd-a150-b811284f65ed.png) |
@@ -504,5 +533,5 @@ jobs:
             | TwoGods.txt | ![TwoGods Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-two-gods.png) | ![TwoGods Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-two-gods.png) | ![TwoGods Vanilla](https://user-images.githubusercontent.com/1013356/188042326-6cbe726c-6753-4157-86fa-63016804f313.png) |
             | ThreeGods.txt | ![ThreeGods Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-three-gods.png) | ![ThreeGods Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-three-gods.png) | ![ThreeGods Vanilla](https://user-images.githubusercontent.com/1013356/188042329-51054173-dec5-47b2-8537-ac605ab2be4b.png) |
             | FourGods.txt | ![FourGods Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-four-gods.png) | ![FourGods Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-four-gods.png) | ![FourGods Vanilla](https://user-images.githubusercontent.com/1013356/188042323-7d428031-cf7e-4e46-b185-a12950bff76a.png) |
-            | construct.txt | TODO | TODO | ![construct Vanilla](https://user-images.githubusercontent.com/1013356/182029114-25c31d78-7c21-4375-963d-c52141b17111.png) |
+            | construct.txt | ![Construct Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-construct.png) | ![Construct Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-construct.png) | ![construct Vanilla](https://github.com/openblack/openblack/assets/1013356/8e7480a9-5839-49d2-894f-b9821c3dd3e2) |
           edit-mode: replace

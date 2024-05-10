@@ -67,6 +67,7 @@ class Script;
 enum class LoggingSubsystem : uint8_t
 {
 	game,
+	input,
 	graphics,
 	scripting,
 	audio,
@@ -78,6 +79,7 @@ enum class LoggingSubsystem : uint8_t
 
 constexpr static std::array<std::string_view, static_cast<size_t>(LoggingSubsystem::_count)> k_LoggingSubsystemStrs {
     "game",        //
+    "input",       //
     "graphics",    //
     "scripting",   //
     "audio",       //
@@ -117,6 +119,7 @@ public:
 		bool debugVillagerNames {false};
 		bool debugVillagerStates {false};
 
+		bool viewDetailOverlay {false};
 		bool drawSky {true};
 		bool drawWater {true};
 		bool drawIsland {true};

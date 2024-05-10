@@ -269,13 +269,13 @@ void LNDFile::WriteFile(std::ostream& stream) const
 	// Write Blocks
 	stream.write(reinterpret_cast<const char*>(_blocks.data()), _blocks.size() * sizeof(_blocks[0]));
 
-	// Read Countries
+	// Write Countries
 	stream.write(reinterpret_cast<const char*>(_countries.data()), _countries.size() * sizeof(_countries[0]));
 
-	// Read Materials
+	// Write Materials
 	stream.write(reinterpret_cast<const char*>(_materials.data()), _materials.size() * sizeof(_materials[0]));
 
-	// Read Extra textures (noise and bump map)
+	// Write Extra textures (noise and bump map)
 	stream.write(reinterpret_cast<const char*>(&_extra), sizeof(_extra));
 
 	// TODO(bwrsandman): Figure out what the unaccounted bytes are for and write
@@ -332,6 +332,11 @@ void LNDFile::Write(const std::filesystem::path& filepath)
 	_header.materialSize = static_cast<uint32_t>(sizeof(LNDMaterial));
 	_header.countrySize = static_cast<uint32_t>(sizeof(LNDCountry));
 	_header.lowResolutionCount = static_cast<uint32_t>(_lowResolutionTextures.size());
+	for (const auto& block : _blocks)
+	{
+		const auto lookupIndex = block.blockX << 5 | block.blockZ;
+		_header.lookUpTable.at(lookupIndex) = static_cast<uint8_t>(block.index);
+	}
 
 	for (int i = 1; auto& b : _blocks)
 	{
@@ -371,7 +376,7 @@ void LNDFile::AddBumpMap(const LNDBumpMap& bumpMap)
 
 void LNDFile::AddBlock(const LNDBlock& block)
 {
-	_blocks.emplace_back(block);
+	_blocks.emplace_back(block).index = static_cast<uint32_t>(_blocks.size()) + 1;
 }
 
 void LNDFile::AddCountry(const LNDCountry& country)

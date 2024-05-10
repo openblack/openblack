@@ -17,16 +17,17 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/intersect.hpp>
+#include <glm/gtx/transform.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#include "3D/Camera.h"
 #include "3D/CreatureBody.h"
 #include "3D/LandIslandInterface.h"
 #include "3D/Sky.h"
 #include "3D/Water.h"
 #include "Audio/AudioManagerInterface.h"
+#include "Camera/Camera.h"
 #include "Common/EventManager.h"
 #include "Common/RandomNumberManager.h"
 #include "Common/StringUtils.h"
@@ -47,6 +48,7 @@
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/Texture2D.h"
+#include "Input/GameActionMapInterface.h"
 #include "LHScriptX/Script.h"
 #include "Locator.h"
 #include "PackFile.h"
@@ -71,6 +73,7 @@ Game* Game::sInstance = nullptr;
 
 Game::Game(Arguments&& args)
     : _gamePath(args.gamePath)
+    , _camera(std::make_unique<Camera>(glm::zero<glm::vec3>()))
     , _eventManager(std::make_unique<EventManager>())
     , _startMap(args.startLevel)
     , _handPose(glm::identity<glm::mat4>())
@@ -130,8 +133,8 @@ Game::Game(Arguments&& args)
 		// If gui captures this input, do not propagate
 		if (!this->_gui->ProcessEvents(event))
 		{
-			this->_camera->ProcessSDLEvent(event);
 			this->_config.running = this->ProcessEvents(event);
+			Locator::gameActionSystem::value().ProcessEvent(event);
 		}
 	}));
 }
@@ -168,6 +171,7 @@ Game::~Game()
 	Locator::pathfindingSystem::reset();
 	Locator::terrainSystem::reset();
 	Locator::filesystem::reset();
+	Locator::gameActionSystem::reset();
 
 	_water.reset();
 	_sky.reset();
@@ -343,11 +347,16 @@ bool Game::Update()
 	// Input events
 	{
 		auto sdlInput = _profiler->BeginScoped(Profiler::Stage::SdlInput);
+		if (!this->_gui->StealsFocus())
+		{
+			Locator::gameActionSystem::value().Frame();
+		}
 		SDL_Event e;
 		while (SDL_PollEvent(&e) != 0)
 		{
 			_eventManager->Create<SDL_Event>(e);
 		}
+		_camera->HandleActions(deltaTime);
 	}
 
 	if (!this->_config.running)
@@ -390,7 +399,8 @@ bool Game::Update()
 			{
 				glm::vec3 rayOrigin;
 				glm::vec3 rayDirection;
-				_camera->DeprojectScreenToWorld(_mousePosition, screenSize, rayOrigin, rayDirection);
+				_camera->DeprojectScreenToWorld(static_cast<glm::vec2>(_mousePosition) / static_cast<glm::vec2>(screenSize),
+				                                rayOrigin, rayDirection);
 				auto& dynamicsSystem = Locator::dynamicsSystem::value();
 
 				if (!glm::any(glm::isnan(rayOrigin) || glm::isnan(rayDirection)))
@@ -416,7 +426,7 @@ bool Game::Update()
 				_handPose = glm::translate(_handPose, intersectionTransform.position);
 				_handPose *= glm::mat4(intersectionTransform.rotation);
 				_handPose = glm::scale(_handPose, intersectionTransform.scale);
-				_renderer->UpdateDebugCrossUniforms(_handPose);
+				_renderer->UpdateDebugCrossUniforms(glm::translate(_camera->GetFocus(Camera::Interpolation::Target)));
 			}
 		}
 
@@ -428,8 +438,7 @@ bool Game::Update()
 			auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(_handEntity);
 			// TODO(#480): move using velocity rather than snapping hand to intersectionTransform
 			handTransform.position = intersectionTransform.position;
-			auto cameraRotation = _camera->GetRotation();
-			handTransform.rotation = glm::eulerAngleY(-cameraRotation.y) * modelRotationCorrection;
+			handTransform.rotation = glm::eulerAngleY(_camera->GetRotation().y) * modelRotationCorrection;
 			handTransform.rotation = intersectionTransform.rotation * handTransform.rotation;
 			handTransform.position += intersectionTransform.rotation * handOffset;
 			Locator::entitiesRegistry::value().SetDirty();
@@ -523,6 +532,13 @@ bool Game::Initialize()
 	    fileSystem.GetPath<filesystem::Path::Citadel>() / "engine", false, [&meshManager](const std::filesystem::path& f) {
 		    if (f.extension() == ".zzz")
 		    {
+			    if (f.stem().string().ends_with("lo_l3d"))
+			    {
+				    SPDLOG_LOGGER_WARN(
+				        spdlog::get("game"),
+				        "Skipping lo duplicate lo meshes. See https://github.com/openblack/openblack/issues/727");
+				    return;
+			    }
 			    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading interior temple mesh: {}", f.stem().string());
 			    try
 			    {
@@ -713,14 +729,6 @@ bool Game::Initialize()
 		    }
 	    });
 
-	// create our camera
-	_camera = std::make_unique<Camera>();
-	const auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
-	_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
-
-	_camera->SetPosition(glm::vec3(1441.56f, 24.764f, 2081.76f));
-	_camera->SetRotation(glm::radians(glm::vec3(0.0f, -45.0f, 0.0f)));
-
 	if (!LoadVariables())
 	{
 		return false;
@@ -879,9 +887,14 @@ void Game::LoadMap(const std::filesystem::path& path)
 	// Reset everything. Deletes all entities and their components
 	Locator::entitiesRegistry::value().Reset();
 
+	// TODO(#661): split entities that are permanent from map entities and move hand and camera to init
 	// We need a hand for the player
 	_handEntity = ecs::archetypes::HandArchetype::Create(glm::vec3(0.0f), glm::half_pi<float>(), 0.0f, glm::half_pi<float>(),
 	                                                     0.01f, false);
+
+	// create our camera
+	const auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
+	_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
 
 	Script script;
 	script.Load(source);

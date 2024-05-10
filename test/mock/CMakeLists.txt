@@ -122,9 +122,7 @@ add_custom_target(
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py
           --output-files "${RAW_TEXTURES_0x30000}" --size 0x30000
   # Generate Citadel files
-  COMMAND
-    Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py
-    --output-files "${CITADEL_OUTSIDE_BINARY_DIR}/Entrance_l3d.zzz" --size 0x616
+  COMMAND ${CMAKE_COMMAND} -E touch ${CITADEL_OUTSIDE_BINARY_DIR}/placeholder
   # Data/AllMeshes.g3d
   # Dummy mesh for 626 meshes
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
@@ -157,7 +155,8 @@ add_custom_target(
   COMMAND
     lndtool write -o ${TERRAIN_LAND_1_OUTPUT} --terrain-type ${TERRAIN_TYPE}
     --noise-map ${TERRAIN_NOISE_MAP} --bump-map ${TERRAIN_BUMP_MAP}
-    --material-array=${TERRAIN_MATERIAL_LIST}
+    --material-array=${TERRAIN_MATERIAL_LIST} --points
+    "1788.40 28.9173050 2710.00"
   COMMAND
     lndtool write -o ${TERRAIN_LAND_MPM_2P_1_OUTPUT} --terrain-type
     ${TERRAIN_TYPE} --noise-map ${TERRAIN_NOISE_MAP} --bump-map

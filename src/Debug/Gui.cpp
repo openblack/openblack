@@ -41,8 +41,8 @@
 #include <SDL2/SDL_syswm.h>
 #endif
 
-#include <3D/Camera.h>
 #include <3D/Sky.h>
+#include <Camera/Camera.h>
 #include <ECS/Components/LivingAction.h>
 #include <ECS/Components/Transform.h>
 #include <ECS/Components/Villager.h>
@@ -182,6 +182,11 @@ Gui::~Gui()
 	}
 }
 
+bool Gui::StealsFocus() const
+{
+	return _stealsFocus;
+}
+
 bool Gui::ProcessEvents(const SDL_Event& event)
 {
 	ImGui::SetCurrentContext(_imgui);
@@ -194,23 +199,27 @@ bool Gui::ProcessEvents(const SDL_Event& event)
 	ImGui_ImplSDL2_ProcessEvent(&event);
 
 	ImGuiIO& io = ImGui::GetIO();
+	_stealsFocus = io.WantCaptureMouse;
 	switch (event.type)
 	{
 	case SDL_QUIT:
-		return false;
+		_stealsFocus = false;
+		break;
 	case SDL_TEXTINPUT:
-		return io.WantTextInput;
+		_stealsFocus = io.WantTextInput;
+		break;
 	case SDL_KEYDOWN:
 	case SDL_KEYUP:
-		return io.WantCaptureKeyboard;
+		_stealsFocus = io.WantCaptureKeyboard;
+		break;
 	case SDL_WINDOWEVENT:
 		if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
 		{
-			return false;
+			_stealsFocus = false;
 		}
 		break;
 	}
-	return io.WantCaptureMouse;
+	return _stealsFocus;
 }
 
 bool Gui::CreateFontsTextureBgfx()
@@ -536,6 +545,7 @@ bool Gui::ShowMenu(Game& game)
 
 			if (ImGui::BeginMenu("View"))
 			{
+				ImGui::Checkbox("Game Detail Overlay", &config.viewDetailOverlay);
 				ImGui::Checkbox("Sky", &config.drawSky);
 				ImGui::Checkbox("Water", &config.drawWater);
 				ImGui::Checkbox("Island", &config.drawIsland);
@@ -799,8 +809,8 @@ void Gui::ShowVillagerNames(const Game& game)
 	std::vector<glm::vec4> coveredAreas;
 	coveredAreas.reserve(Locator::entitiesRegistry::value().Size<Villager>());
 	Locator::entitiesRegistry::value().Each<const Transform, Villager, LivingAction>(
-	    [this, &i, &coveredAreas, &camera, config, viewport](const Transform& transform, Villager& villager,
-	                                                         LivingAction& action) {
+	    [this, &i, &coveredAreas, &camera, config, viewport] //
+	    (const Transform& transform, Villager& villager, LivingAction& action) {
 		    ++i;
 		    const float height = 2.0f * transform.scale.y; // TODO(bwrsandman): get from bounding box max y
 		    glm::vec3 screenPoint;
@@ -811,7 +821,7 @@ void Gui::ShowVillagerNames(const Game& game)
 
 		    // 3.5 was measured in vanilla but it is possible that it is configurable
 		    float const maxDistance = 3.5f;
-		    const glm::vec3 relativePosition = (camera.GetPosition() - transform.position) / 100.0f;
+		    const glm::vec3 relativePosition = (camera.GetOrigin() - transform.position) / 100.0f;
 		    if (glm::dot(relativePosition, relativePosition) > maxDistance * maxDistance)
 		    {
 			    return;
@@ -899,8 +909,8 @@ void Gui::ShowVillagerNames(const Game& game)
 			    };
 		    }
 
-		    const auto area = RenderVillagerName(coveredAreas, name, details, color,
-		                                         ImVec2(screenPoint.x, viewport.w - screenPoint.y), 100.0f, debugCallback);
+		    const auto area = RenderVillagerName(coveredAreas, name, details, color, ImVec2(screenPoint.x, screenPoint.y),
+		                                         100.0f, debugCallback);
 		    if (area.has_value())
 		    {
 			    coveredAreas.emplace_back(area.value());
@@ -926,28 +936,39 @@ void Gui::ShowCameraPositionOverlay(const Game& game)
 	ImGui::SetNextWindowPos(ImVec2(displaySize.x - 8.0f, displaySize.y - 8.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
 	ImGui::SetNextWindowBgAlpha(0.35f);
 
-	if (ImGui::Begin("Camera position overlay", nullptr, cameraPositionOverlayFlags))
+	if (game.GetConfig().viewDetailOverlay)
 	{
-		const auto camPos = game.GetCamera().GetPosition();
-		const auto camRot = glm::degrees(game.GetCamera().GetRotation());
-		ImGui::Text("Camera Position: (%.1f,%.1f,%.1f)", camPos.x, camPos.y, camPos.z);
-		ImGui::Text("Camera Rotation: (%.1f,%.1f,%.1f)", camRot.x, camRot.y, camRot.z);
-
-		if (ImGui::IsMousePosValid())
+		if (ImGui::Begin("Game Details Overlay", nullptr, cameraPositionOverlayFlags))
 		{
-			const auto& mousePos = ImGui::GetIO().MousePos;
-			ImGui::Text("Mouse Position: (%.1f,%.1f)", mousePos.x, mousePos.y);
-		}
-		else
-		{
-			ImGui::Text("Mouse Position: <invalid>");
-		}
+			const auto camOrigin = game.GetCamera().GetOrigin();
+			const auto camFocus = game.GetCamera().GetFocus();
+			const auto camRot = glm::degrees(game.GetCamera().GetRotation());
+			ImGui::Text("Camera Origin: (%.1f,%.1f,%.1f)", camOrigin.x, camOrigin.y, camOrigin.z);
+			ImGui::Text("Camera Focus: (%.1f,%.1f,%.1f)", camFocus.x, camFocus.y, camFocus.z);
+			ImGui::Text("Camera Rotation: (%.1f,%.1f,%.1f)", camRot.x, camRot.y, camRot.z);
 
-		const auto& handPosition = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(game.GetHand()).position;
-		ImGui::Text("Hand Position: (%.1f,%.1f,%.1f)", handPosition.x, handPosition.y, handPosition.z);
+			if (ImGui::IsMousePosValid())
+			{
+				const auto& mousePos = ImGui::GetIO().MousePos;
+				ImGui::Text("Mouse Position: (%.1f,%.1f)", mousePos.x, mousePos.y);
+			}
+			else
+			{
+				ImGui::Text("Mouse Position: <invalid>");
+			}
 
-		ImGui::Text("Game Turn: %u (%.3f ms)%s", game.GetTurn(), game.GetDeltaTime().count(),
-		            game.IsPaused() ? " - paused" : "");
+			const auto& handPosition =
+			    Locator::entitiesRegistry::value().Get<ecs::components::Transform>(game.GetHand()).position;
+			ImGui::Text("Hand Position: (%.1f,%.1f,%.1f)", handPosition.x, handPosition.y, handPosition.z);
+
+			const auto* stats = bgfx::getStats();
+			const auto* caps = bgfx::getCaps();
+			ImGui::Text("Num Vertex Buffers: %u/%u", stats->numVertexBuffers, caps->limits.maxVertexBuffers);
+			ImGui::Text("Num Textures: %u/%u", stats->numTextures, caps->limits.maxTextures);
+
+			ImGui::Text("Game Turn: %u (%.3f ms)%s", game.GetTurn(), game.GetDeltaTime().count(),
+			            game.IsPaused() ? " - paused" : "");
+		}
+		ImGui::End();
 	}
-	ImGui::End();
 }

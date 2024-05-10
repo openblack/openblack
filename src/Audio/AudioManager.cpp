@@ -17,8 +17,8 @@
 #include <glm/gtc/constants.hpp>
 #include <spdlog/spdlog.h>
 
-#include "3D/Camera.h"
 #include "AudioPlayerInterface.h"
+#include "Camera/Camera.h"
 #include "ECS/Registry.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
@@ -64,8 +64,8 @@ void AudioManager::Stop()
 void AudioManager::Update(Game& game)
 {
 	auto& cam = game.GetCamera();
-	auto pos = cam.GetPosition();
-	auto vel = cam.GetVelocity();
+	auto pos = cam.GetOrigin();
+	auto vel = cam.GetOriginVelocity();
 	auto forward = cam.GetForward();
 	auto top = cam.GetUp();
 	_audioPlayer->UpdateListener(pos, vel, forward, top);
