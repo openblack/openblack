@@ -66,6 +66,7 @@ void openblack::InitializeWindow(const std::string& title, int width, int height
 void openblack::InitializeGame()
 {
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), "EnTT version: {}", ENTT_VERSION);
+	SPDLOG_LOGGER_INFO(spdlog::get("game"), GLM_VERSION_MESSAGE);
 
 #if __ANDROID__
 	Locator::filesystem::emplace<AndroidFileSystem>();
