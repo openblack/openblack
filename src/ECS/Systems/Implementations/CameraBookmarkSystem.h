@@ -30,7 +30,7 @@ public:
 
 	[[nodiscard]] const std::array<entt::entity, 8>& GetBookmarks() const override { return _bookmarks; }
 
-	void SetBookmark(uint8_t index, const glm::vec3& position) const override;
+	void SetBookmark(uint8_t index, const glm::vec3& position, const glm::vec3& savedCameraOrigin) const override;
 	void ClearBookmark(uint8_t index) const override;
 
 private:

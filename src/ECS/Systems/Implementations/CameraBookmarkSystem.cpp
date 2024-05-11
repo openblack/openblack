@@ -37,7 +37,7 @@ void CameraBookmarkSystem::Update(const std::chrono::microseconds& dt) const
 	});
 }
 
-void CameraBookmarkSystem::SetBookmark(uint8_t index, const glm::vec3& position) const
+void CameraBookmarkSystem::SetBookmark(uint8_t index, const glm::vec3& position, const glm::vec3& savedCameraOrigin) const
 {
 	if (index < _bookmarks.size())
 	{
@@ -46,6 +46,7 @@ void CameraBookmarkSystem::SetBookmark(uint8_t index, const glm::vec3& position)
 		registry.AssignOrReplace<Transform>(entity, position + glm::vec3(0.0f, 1.0f, 0.0f), glm::mat3(1.0f), glm::vec3(1.0f));
 		auto& bookmark = registry.Get<CameraBookmark>(entity);
 		bookmark.animationTime = 0.0f;
+		bookmark.savedOrigin = savedCameraOrigin;
 	}
 	else
 	{
