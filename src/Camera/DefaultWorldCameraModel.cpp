@@ -503,15 +503,7 @@ void DefaultWorldCameraModel::UpdateModeFlying(glm::vec3 eulerAngles)
 
 	if (wooshingDistance)
 	{
-		_flightPath = CharterFlight(_targetOrigin, _targetFocus, _currentOrigin, k_FlightHeightFactor);
-		static constexpr auto k_WooshingNoiseIds = std::array<audio::SoundId, 4> {
-		    audio::SoundId::G_Woosh_01,
-		    audio::SoundId::G_Woosh_02,
-		    audio::SoundId::G_Woosh_03,
-		    audio::SoundId::G_Woosh_04,
-		};
-		const auto wooshNoiseId = static_cast<entt::id_type>(Locator::rng::value().Choose(k_WooshingNoiseIds));
-		Locator::audio::value().PlaySound(wooshNoiseId, audio::PlayType::Once);
+		SetFlight(_targetOrigin, _targetFocus);
 	}
 }
 
@@ -750,6 +742,19 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 	{
 		_mode = Mode::Cartesian;
 	}
+}
+
+void DefaultWorldCameraModel::SetFlight(glm::vec3 origin, glm::vec3 focus)
+{
+	_flightPath = CharterFlight(origin, focus, _currentOrigin, k_FlightHeightFactor);
+	static constexpr auto k_WooshingNoiseIds = std::array<audio::SoundId, 4> {
+	    audio::SoundId::G_Woosh_01,
+	    audio::SoundId::G_Woosh_02,
+	    audio::SoundId::G_Woosh_03,
+	    audio::SoundId::G_Woosh_04,
+	};
+	const auto wooshNoiseId = static_cast<entt::id_type>(Locator::rng::value().Choose(k_WooshingNoiseIds));
+	Locator::audio::value().PlaySound(wooshNoiseId, audio::PlayType::Once);
 }
 
 glm::vec3 DefaultWorldCameraModel::GetTargetOrigin() const

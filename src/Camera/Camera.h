@@ -98,6 +98,9 @@ public:
 
 	[[nodiscard]] glm::mat4 GetRotationMatrix() const;
 
+	CameraModel& GetModel() { return *_model; }
+	[[nodiscard]] const CameraModel& GetModel() const { return *_model; }
+
 protected:
 	ZoomInterpolator3f _originInterpolators;
 	ZoomInterpolator3f _focusInterpolators;
