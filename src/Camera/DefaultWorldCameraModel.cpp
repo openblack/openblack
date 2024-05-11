@@ -22,6 +22,7 @@
 #include "Audio/AudioManagerInterface.h"
 #include "Camera.h"
 #include "Common/RandomNumberManager.h"
+#include "ECS/Components/Transform.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "Game.h"
 #include "Input/GameActionMapInterface.h"
@@ -62,6 +63,7 @@ constexpr auto k_ConstrainDiscCentre = glm::vec3(2560.0f, 0.0f, 2560.0f);
 constexpr auto k_ConstrainDiscRadius = 5120.0f;
 constexpr auto k_MaxAltitude = 30'000.0f;
 constexpr auto k_FloatingHeight = 2.9999f; // 3 in vanilla, but less due to fp precision with recorded data in tests
+const auto k_GetMouseHit = [](auto hit) -> std::optional<glm::vec3> { return hit.position; };
 
 glm::vec3 EulerFromPoints(glm::vec3 p0, glm::vec3 p1)
 {
@@ -249,12 +251,7 @@ void DefaultWorldCameraModel::UpdateFocusPointInteractionParameters(glm::vec3 or
                                                                     const Camera& camera)
 {
 	_focusAtClick = _targetFocus;
-	// TODO(#656) in c++23 use camera.RaycastMouseToLand().and_then
-	_screenSpaceMouseRaycastHitAtClick = std::nullopt;
-	if (auto hit = camera.RaycastMouseToLand(true, Camera::Interpolation::Target))
-	{
-		_screenSpaceMouseRaycastHitAtClick = hit->position;
-	}
+	_screenSpaceMouseRaycastHitAtClick = camera.RaycastMouseToLand(true, Camera::Interpolation::Target).and_then(k_GetMouseHit);
 	if (_screenSpaceMouseRaycastHitAtClick.has_value())
 	{
 		_arcBallRadius = PointDistanceAlongLineSegment(origin, focus, *_screenSpaceMouseRaycastHitAtClick);
@@ -522,30 +519,22 @@ void DefaultWorldCameraModel::UpdateCameraInterpolationValues(const Camera& came
 void DefaultWorldCameraModel::UpdateRaycastHitPoints(const Camera& camera)
 {
 	// Raycast mouse and screen center
-	// TODO(#656) in c++23 use camera.RaycastMouseToLand().and_then
-	_screenSpaceMouseRaycastHit = std::nullopt;
-	_screenSpaceCenterRaycastHit = std::nullopt;
-	if (const auto hit = camera.RaycastMouseToLand(false, Camera::Interpolation::Target))
 	{
-		_screenSpaceMouseRaycastHit = hit->position;
+		const auto hit = camera.RaycastMouseToLand(false, Camera::Interpolation::Target);
+		_screenSpaceMouseRaycastHit = hit.and_then(k_GetMouseHit);
 	}
-	if (const auto hit = camera.RaycastScreenCoordToLand({0.5f, 0.5f}, false, Camera::Interpolation::Target))
 	{
-		_screenSpaceCenterRaycastHit = hit->position;
+		const auto hit = camera.RaycastScreenCoordToLand({0.5f, 0.5f}, false, Camera::Interpolation::Target);
+		_screenSpaceCenterRaycastHit = hit.and_then(k_GetMouseHit);
 	}
 }
 
 void DefaultWorldCameraModel::UpdateFocusDistance()
 {
-	// TODO(#656) in c++23 use _screenSpaceCenterRaycastHit.and_then
-	if (_screenSpaceCenterRaycastHit.has_value())
-	{
-		_focusDistance = glm::max(10.0f, glm::distance(_screenSpaceCenterRaycastHit.value(), _targetOrigin));
-	}
-	else
-	{
-		_focusDistance = glm::max(10.0f, _averageIslandDistance);
-	}
+	_focusDistance =
+	    _screenSpaceCenterRaycastHit
+	        .and_then([this](auto hit) -> std::optional<float> { return glm::max(10.0f, glm::distance(hit, _targetOrigin)); })
+	        .value_or(glm::max(10.0f, _averageIslandDistance));
 }
 
 std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraModel::Update(std::chrono::microseconds dt,
@@ -710,15 +699,7 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 	}
 
 	const auto handPositions = actionSystem.GetHandPositions();
-	// TODO(#656): in C++23 use or_else
-	if (handPositions[0].has_value())
-	{
-		_handPosition = handPositions[0];
-	}
-	else
-	{
-		_handPosition = handPositions[1];
-	}
+	_handPosition = handPositions[0].or_else([handPositions] { return handPositions[1]; });
 
 	_modePrev = _mode;
 	if (_handPosition.has_value() && actionSystem.Get(input::UnbindableActionMap::DOUBLE_CLICK))
