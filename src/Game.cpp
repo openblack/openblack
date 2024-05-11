@@ -34,6 +34,7 @@
 #include "Debug/Gui.h"
 #include "ECS/Archetypes/HandArchetype.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
+#include "ECS/Components/CameraBookmark.h"
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Map.h"
@@ -254,9 +255,18 @@ bool Game::ProcessEvents(const SDL_Event& event)
 				const auto index = static_cast<uint8_t>(event.key.keysym.sym - SDLK_1);
 				Locator::cameraBookmarkSystem::value().SetBookmark(index, handPosition, _camera->GetOrigin());
 			}
-			else if (event.key.keysym.mod == 0)
+			else
 			{
-				// TODO(#348): Fly-to the bookmark
+				const auto& entitiesRegistry = Locator::entitiesRegistry::value();
+				const size_t index = event.key.keysym.sym - SDLK_1;
+				const auto& bookmarkEntities = Locator::cameraBookmarkSystem::value().GetBookmarks();
+				const auto entity = bookmarkEntities.at(index);
+				const auto [transform, bookmark] =
+				    entitiesRegistry.TryGet<ecs::components::Transform, ecs::components::CameraBookmark>(entity);
+				if (transform != nullptr && bookmark != nullptr)
+				{
+					_camera->GetModel().SetFlight(bookmark->savedOrigin, transform->position);
+				}
 			}
 			break;
 		}
