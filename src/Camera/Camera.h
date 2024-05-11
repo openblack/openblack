@@ -33,13 +33,21 @@ public:
 		Start,
 		Target,
 	};
+	enum class Projection : uint8_t
+	{
+		Normal,
+		ReversedZ,
+	};
 	explicit Camera(glm::vec3 focus = glm::vec3(1000.0f, 0.0f, 1000.0f));
 	virtual ~Camera();
 
 	[[nodiscard]] float GetHorizontalFieldOfView() const;
 	[[nodiscard]] virtual glm::mat4 GetViewMatrix(Interpolation interpolation) const;
 	[[nodiscard]] const glm::mat4& GetProjectionMatrix() const;
+	[[nodiscard]] const glm::mat4& GetProjectionMatrix(Projection projection) const;
 	[[nodiscard]] glm::mat4 GetViewProjectionMatrix(Interpolation interpolation = Camera::Interpolation::Current) const;
+	[[nodiscard]] glm::mat4 GetViewProjectionMatrix(Projection projection,
+	                                                Interpolation interpolation = Camera::Interpolation::Current) const;
 
 	[[nodiscard]] std::optional<ecs::components::Transform>
 	RaycastMouseToLand(bool includeWater = true, Interpolation interpolation = Camera::Interpolation::Current) const;
@@ -97,6 +105,7 @@ public:
 	void HandleActions(std::chrono::microseconds dt);
 
 	[[nodiscard]] glm::mat4 GetRotationMatrix() const;
+	[[nodiscard]] Projection GetCameraProjection() const;
 
 	CameraModel& GetModel() { return *_model; }
 	[[nodiscard]] const CameraModel& GetModel() const { return *_model; }
@@ -109,7 +118,9 @@ protected:
 	std::chrono::microseconds _interpolatorDuration = std::chrono::microseconds::zero();
 	float _xFov = 0.0f; // TODO(#707): This should be a zoomer for animations
 	glm::mat4 _projectionMatrix = glm::mat4 {1.0f};
+	glm::mat4 _projectionMatrixReversedZ = glm::mat4 {1.0f};
 	std::unique_ptr<CameraModel> _model;
+	Projection _cameraProjection = Projection::ReversedZ;
 };
 
 } // namespace openblack

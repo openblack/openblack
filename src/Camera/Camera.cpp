@@ -12,7 +12,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/intersect.hpp>
-#include <glm/gtx/transform.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 
 #include "3D/LandIsland.h"
@@ -28,7 +27,8 @@ using namespace openblack;
 namespace
 {
 constexpr auto k_DefaultCameraOriginOffset = glm::vec3(0.0f, 0.0f, 120.0f);
-}
+constexpr auto k_ReverseZMatrix = glm::mat4(1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, -1.f, 0.f, 0.f, 0.f, 1.f, 1.f);
+} // namespace
 
 Camera::Camera(glm::vec3 focus)
     // Maybe a struct is not the right thing... Maybe an optional?
@@ -59,6 +59,11 @@ glm::mat4 Camera::GetViewMatrix(Interpolation interpolation) const
 glm::mat4 Camera::GetViewProjectionMatrix(Interpolation interpolation) const
 {
 	return GetProjectionMatrix() * GetViewMatrix(interpolation);
+}
+
+glm::mat4 Camera::GetViewProjectionMatrix(Projection projection, Interpolation interpolation) const
+{
+	return GetProjectionMatrix(projection) * GetViewMatrix(interpolation);
 }
 
 std::optional<ecs::components::Transform> Camera::RaycastMouseToLand(bool includeWater, Interpolation interpolation) const
@@ -100,7 +105,8 @@ Camera& Camera::SetProjectionMatrixPerspective(float xFov, float aspect, float n
 	_xFov = glm::radians(xFov);
 	const float yFov = (glm::atan(glm::tan(_xFov / 2.0f)) / aspect) * 2.0f;
 	// Inverse near and far for reverse z, we need to translate z by 1 to get back to the [0 1] range
-	_projectionMatrix = glm::translate(glm::vec3(0.f, 0.f, 1.f)) * glm::perspective(yFov, aspect, farClip, nearClip);
+	_projectionMatrix = glm::perspective(yFov, aspect, nearClip, farClip);
+	_projectionMatrixReversedZ = k_ReverseZMatrix * _projectionMatrix;
 
 	return *this;
 }
@@ -147,11 +153,11 @@ void Camera::DeprojectScreenToWorld(glm::vec2 screenCoord, glm::vec3& outWorldOr
 	// projection space (z=1 is near, z=0 is far - this gives us better
 	// precision) To get the direction of the ray trace we need to use any z
 	// between the near and the far plane, so let's use (mousex, mousey, 0.5)
-	const glm::vec4 rayStartProjectionSpace = glm::vec4(screenSpaceX, screenSpaceY, 0.999f, 1.0f);
+	const glm::vec4 rayStartProjectionSpace = glm::vec4(screenSpaceX, screenSpaceY, 0.0f, 1.0f);
 	const glm::vec4 rayEndProjectionSpace = glm::vec4(screenSpaceX, screenSpaceY, 0.5f, 1.0f);
 
 	// Calculate our inverse view projection matrix
-	auto inverseViewProj = glm::inverse(GetViewProjectionMatrix(interpolation));
+	auto inverseViewProj = glm::inverse(GetViewProjectionMatrix(Projection::Normal, interpolation));
 
 	// Get our homogeneous coordinates for our start and end ray positions
 	const glm::vec4 hgRayStartWorldSpace = inverseViewProj * rayStartProjectionSpace;
@@ -186,7 +192,8 @@ bool Camera::ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, g
 		outScreenPosition = glm::vec3(glm::lerp(glm::xy(viewport), glm::zw(viewport), {0.5f, 0.5f}), 0.0f);
 		return true; // Right at the camera position
 	}
-	outScreenPosition = glm::project(worldPosition, GetViewMatrix(interpolation), GetProjectionMatrix(), viewport);
+	outScreenPosition =
+	    glm::project(worldPosition, GetViewMatrix(interpolation), GetProjectionMatrix(Projection::Normal), viewport);
 	if (outScreenPosition.x < viewport.x || outScreenPosition.y < viewport.y || glm::round(outScreenPosition.x) > viewport.z ||
 	    glm::round(outScreenPosition.y) > viewport.w)
 	{
@@ -194,11 +201,11 @@ bool Camera::ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, g
 	}
 	if (outScreenPosition.z > 1.0f)
 	{
-		return false; // Behind Camera
+		return false; // Clipped
 	}
 	if (outScreenPosition.z < 0.0f)
 	{
-		return false; // Clipped
+		return false; // Behind Camera
 	}
 	outScreenPosition.y = viewport.w - (outScreenPosition.y - viewport.y) + viewport.y;
 	return true;
@@ -239,7 +246,28 @@ void Camera::HandleActions(std::chrono::microseconds dt)
 
 const glm::mat4& Camera::GetProjectionMatrix() const
 {
-	return _projectionMatrix;
+	return GetProjectionMatrix(_cameraProjection);
+}
+
+const glm::mat4& Camera::GetProjectionMatrix(Projection projection) const
+{
+	switch (projection)
+	{
+	case Projection::Normal:
+		return _projectionMatrix;
+	case Projection::ReversedZ:
+		return _projectionMatrixReversedZ;
+#ifdef __cpp_lib_unreachable
+	default:
+		// TODO(#656): Remove check in C++23 and just use unreachable
+		assert(false);
+		std::unreachable();
+#else
+	default:
+		assert(false);
+		return _projectionMatrix;
+#endif
+	}
 }
 
 glm::vec3 Camera::GetOrigin(Interpolation interpolation) const
@@ -410,6 +438,11 @@ Camera& Camera::SetInterpolatorDuration(std::chrono::microseconds duration)
 Camera& Camera::SetProjectionMatrix(const glm::mat4& projection)
 {
 	_projectionMatrix = projection;
+	_projectionMatrixReversedZ = k_ReverseZMatrix * _projectionMatrix;
 
 	return *this;
+}
+Camera::Projection Camera::GetCameraProjection() const
+{
+	return _cameraProjection;
 }
