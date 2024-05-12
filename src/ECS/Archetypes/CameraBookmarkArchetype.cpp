@@ -9,6 +9,8 @@
 
 #include "CameraBookmarkArchetype.h"
 
+#include <ranges>
+
 #include "ECS/Components/CameraBookmark.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Registry.h"
@@ -35,13 +37,11 @@ std::array<entt::entity, 8> CameraBookmarkArchetype::CreateAll()
 	const glm::vec2 extent = glm::vec2 {1.0f / 8.0f, 1.0f / 8.0f};
 	const glm::vec4 tint = glm::vec4 {1.0f, 1.0f, 0.0f, 1.0f};
 
-	// TODO (#749) use std::views::enumerate
-	for (uint8_t i = 0; auto entity : result)
+	for (auto [i, entity] : std::views::enumerate(result))
 	{
 		const float u = static_cast<float>(i) / static_cast<float>(result.size());
 		registry.Assign<Sprite>(entity, texture->GetNativeHandle(), glm::vec2 {u, 3.0f / 8.0f}, extent, tint);
-		++i;
-		registry.Assign<CameraBookmark>(entity, i, 0.0f);
+		registry.Assign<CameraBookmark>(entity, static_cast<uint8_t>(i), 0.0f);
 	}
 
 	return result;
