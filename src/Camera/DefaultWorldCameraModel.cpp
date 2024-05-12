@@ -249,7 +249,12 @@ void DefaultWorldCameraModel::UpdateFocusPointInteractionParameters(glm::vec3 or
                                                                     const Camera& camera)
 {
 	_focusAtClick = _targetFocus;
-	_screenSpaceMouseRaycastHitAtClick = _screenSpaceMouseRaycastHit;
+	// TODO(#656) in c++23 use camera.RaycastMouseToLand().and_then
+	_screenSpaceMouseRaycastHitAtClick = std::nullopt;
+	if (auto hit = camera.RaycastMouseToLand(true, Camera::Interpolation::Target))
+	{
+		_screenSpaceMouseRaycastHitAtClick = hit->position;
+	}
 	if (_screenSpaceMouseRaycastHitAtClick.has_value())
 	{
 		_arcBallRadius = PointDistanceAlongLineSegment(origin, focus, *_screenSpaceMouseRaycastHitAtClick);
@@ -529,10 +534,6 @@ void DefaultWorldCameraModel::UpdateRaycastHitPoints(const Camera& camera)
 	if (const auto hit = camera.RaycastScreenCoordToLand({0.5f, 0.5f}, false, Camera::Interpolation::Target))
 	{
 		_screenSpaceCenterRaycastHit = hit->position;
-	}
-	else
-	{
-		_screenSpaceCenterRaycastHit = std::nullopt;
 	}
 }
 
