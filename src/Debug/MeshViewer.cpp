@@ -9,6 +9,8 @@
 
 #include "MeshViewer.h"
 
+#include <ranges>
+
 #include <SDL_events.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -134,22 +136,20 @@ void MeshViewer::Draw() noexcept
 		if (!metrics.empty() && ImGui::TreeNode("ExtraMetrics", "Extra Metrics %zu", metrics.size()))
 		{
 			std::array<char, 0x20> label;
-			// TODO (#749) Maybe use std::views::enumerate
-			for (int i = 0; auto& m : const_cast<std::vector<glm::mat4>&>(metrics))
+			for (const auto& [i, m] : std::views::enumerate(const_cast<std::vector<glm::mat4>&>(metrics)))
 			{
 				if (i != 0)
 				{
 					ImGui::Separator();
 				}
-				snprintf(label.data(), label.size(), "m[%d][0]", i);
+				snprintf(label.data(), label.size(), "m[%d][0]", static_cast<int>(i));
 				ImGui::InputFloat4(label.data(), glm::value_ptr(m[0]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-				snprintf(label.data(), label.size(), "m[%d][1]", i);
+				snprintf(label.data(), label.size(), "m[%d][1]", static_cast<int>(i));
 				ImGui::InputFloat4(label.data(), glm::value_ptr(m[1]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-				snprintf(label.data(), label.size(), "m[%d][2]", i);
+				snprintf(label.data(), label.size(), "m[%d][2]", static_cast<int>(i));
 				ImGui::InputFloat4(label.data(), glm::value_ptr(m[2]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-				snprintf(label.data(), label.size(), "m[%d][3]", i);
+				snprintf(label.data(), label.size(), "m[%d][3]", static_cast<int>(i));
 				ImGui::InputFloat4(label.data(), glm::value_ptr(m[3]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-				++i;
 			}
 			ImGui::TreePop();
 		}

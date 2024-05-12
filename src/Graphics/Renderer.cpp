@@ -13,6 +13,8 @@
 
 #include <cstdint>
 
+#include <ranges>
+
 #include <SDL_video.h>
 #include <bgfx/platform.h>
 #include <bimg/bimg.h>
@@ -251,11 +253,9 @@ Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallb
 	_plane = Primitive::CreatePlane();
 
 	// give debug names to views
-	// TODO (#749) use std::views::enumerate
-	for (bgfx::ViewId i = 0; const auto& name : k_RenderPassNames)
+	for (const auto& [i, name] : std::views::enumerate(k_RenderPassNames))
 	{
-		bgfx::setViewName(i, name.data());
-		++i;
+		bgfx::setViewName(static_cast<bgfx::ViewId>(i), name.data());
 	}
 }
 
