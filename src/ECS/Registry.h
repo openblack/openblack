@@ -104,6 +104,16 @@ public:
 		return _registry.get<Components...>(entity);
 	}
 	template <typename... Components>
+	decltype(auto) TryGet(entt::entity entity)
+	{
+		return _registry.try_get<Components...>(entity);
+	}
+	template <typename... Components>
+	[[nodiscard]] decltype(auto) TryGet(entt::entity entity) const
+	{
+		return _registry.try_get<Components...>(entity);
+	}
+	template <typename... Components>
 	[[nodiscard]] decltype(auto) Front() const
 	{
 		return _registry.view<Components...>().front();
