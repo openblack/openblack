@@ -38,6 +38,7 @@ public:
 	    : _vertices(vertexCount / stride)
 	    , _indices(vertexCount / stride)
 	{
+		// TODO (#749) use std::views::enumerate
 		for (uint16_t i = 0; auto& v : _vertices)
 		{
 			const auto* vertexBase = reinterpret_cast<const float*>(&vertexData[i * stride]);

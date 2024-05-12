@@ -165,6 +165,7 @@ void Profiler::Draw(Game& game)
 		auto cursorX = ImGui::GetCursorPosX();
 		auto indentSize = ImGui::CalcTextSize("    ").x;
 
+		// TODO (#749) use std::views::enumerate
 		for (uint8_t i = 0; const auto& stage : entry.stages)
 		{
 			std::chrono::duration<float, std::milli> duration = stage.end - stage.start;
@@ -187,7 +188,7 @@ void Profiler::Draw(Game& game)
 		for (uint8_t i = 0; i < stats->numViews; ++i)
 		{
 			auto const& viewStat = stats->viewStats[i];
-			int64_t gpuTimeElapsed = viewStat.gpuTimeEnd - viewStat.gpuTimeBegin;
+			const int64_t gpuTimeElapsed = viewStat.gpuTimeEnd - viewStat.gpuTimeBegin;
 
 			ImGui::Text("    %s: %0.3f", viewStat.name, 1000.0f * gpuTimeElapsed / static_cast<double>(stats->gpuTimerFreq));
 			frameDuration -= gpuTimeElapsed;

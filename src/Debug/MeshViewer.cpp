@@ -132,6 +132,7 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 		if (!metrics.empty() && ImGui::TreeNode("ExtraMetrics", "Extra Metrics %zu", metrics.size()))
 		{
 			std::array<char, 0x20> label;
+			// TODO (#749) Maybe use std::views::enumerate
 			for (int i = 0; auto& m : const_cast<std::vector<glm::mat4>&>(metrics))
 			{
 				if (i != 0)
