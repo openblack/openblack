@@ -63,6 +63,8 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 		decl.emplace_back(VertexAttrib::Attribute::TexCoord0, static_cast<uint8_t>(2), VertexAttrib::Type::Float);
 
 		const auto& footprint = l3d.GetFootprint().value();
+
+		// TODO (#749) use use std::views::enumerate
 		for (uint32_t i = 1; const auto& entry : footprint.entries)
 		{
 			auto texture = std::make_unique<Texture2D>("footprints/texture/" + _debugName + "/" + std::to_string(i));
@@ -74,6 +76,7 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 			const bgfx::Memory* verticesMem =
 			    bgfx::alloc(static_cast<uint32_t>(sizeof(FootprintVertex) * entry.triangles.size() * 3));
 			auto* vertices = reinterpret_cast<FootprintVertex*>(verticesMem->data);
+			// TODO (#749) Maybe use std::views::enumerate
 			for (uint8_t j = 0; const auto& t : entry.triangles)
 			{
 				for (uint8_t k = 0; k < 3; ++k)

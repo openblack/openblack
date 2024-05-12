@@ -138,6 +138,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 			{
 				level = all;
 			}
+			// TODO (#749) use std::views::enumerate
 			for (size_t i = 0; const auto& str : openblack::k_LoggingSubsystemStrs)
 			{
 				const auto iter = logLevelMap.find(str.data());
