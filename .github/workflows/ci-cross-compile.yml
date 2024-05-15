@@ -116,9 +116,12 @@ jobs:
         with:
           buildPreset: '${{ matrix.preset }}-release'
 
+      - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
+        shell: bash
+
       - uses: actions/upload-artifact@v4
         with:
-          name: openblack-${{ matrix.triplet || matrix.preset }}-${{ github.ref_name }}
+          name: openblack-${{ matrix.triplet || matrix.preset }}-${{ env.GITHUB_REF_NAME_DASHES }}
           path: cmake-build-presets/${{ matrix.preset }}/bin
           if-no-files-found: error
 
@@ -142,25 +145,27 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
+      - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
+        shell: bash
       - uses: actions/download-artifact@v4
         name: Download pre-compiled android-armeabi-v7a-vcpkg
         with:
-          name: openblack-android-armeabi-v7a-vcpkg-${{ github.ref_name }}
+          name: openblack-android-armeabi-v7a-vcpkg-${{ env.GITHUB_REF_NAME_DASHES }}
           path: android/app/src/main/jniLibs/armeabi-v7a
       - uses: actions/download-artifact@v4
         name: Download pre-compiled android-arm64-v8a-vcpkg
         with:
-          name: openblack-android-arm64-v8a-vcpkg-${{ github.ref_name }}
+          name: openblack-android-arm64-v8a-vcpkg-${{ env.GITHUB_REF_NAME_DASHES }}
           path: android/app/src/main/jniLibs/arm64-v8a
       - uses: actions/download-artifact@v4
         name: Download pre-compiled android-x86-vcpkg
         with:
-          name: openblack-android-x86-vcpkg-${{ github.ref_name }}
+          name: openblack-android-x86-vcpkg-${{ env.GITHUB_REF_NAME_DASHES }}
           path: android/app/src/main/jniLibs/x86
       - uses: actions/download-artifact@v4
         name: Download pre-compiled android-x86_64-vcpkg
         with:
-          name: openblack-android-x86_64-vcpkg-${{ github.ref_name }}
+          name: openblack-android-x86_64-vcpkg-${{ env.GITHUB_REF_NAME_DASHES }}
           path: android/app/src/main/jniLibs/x86_64
       - name: Move downloads around
         shell: bash
@@ -185,7 +190,7 @@ jobs:
       # TODO(#632): Setup digital signing for Android release build
       - uses: actions/upload-artifact@v4
         with:
-          name: openblack-android-apk-${{ github.ref_name }}
+          name: openblack-android-apk-${{ env.GITHUB_REF_NAME_DASHES }}
           path: android/app/build/outputs/apk
           if-no-files-found: error
           overwrite: true
