@@ -137,11 +137,14 @@ jobs:
           if-no-files-found: error
           overwrite: true
 
+      - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
+        shell: bash
+
       - name: Upload compiled openblack and tools
         uses: actions/upload-artifact@v4
         if: matrix.cc == ''
         with:
-          name: openblack-${{ matrix.os }}-${{ github.ref_name }}
+          name: openblack-${{ matrix.os }}-${{ env.GITHUB_REF_NAME_DASHES }}
           path: cmake-build-presets/ninja-multi-vcpkg/bin
           if-no-files-found: error
 
@@ -149,7 +152,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: matrix.cc == ''
         with:
-          name: openblack-test-data-${{ github.ref_name }}
+          name: openblack-test-data-${{ env.GITHUB_REF_NAME_DASHES }}
           path: |
             cmake-build-presets/ninja-multi-vcpkg/test/*/scenarios
             cmake-build-presets/ninja-multi-vcpkg/test/mock/Scripts
@@ -202,16 +205,18 @@ jobs:
         # This is the matrix. They form permutations.
         os: [ ubuntu-24.04, macos-13, windows-latest ]
     steps:
+      - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
+        shell: bash
       - name: Download compiled openblack and tools
         uses: actions/download-artifact@v4
         id: download-binary
         with:
-          name: openblack-${{ matrix.os }}-${{ github.ref_name }}
+          name: openblack-${{ matrix.os }}-${{ env.GITHUB_REF_NAME_DASHES }}
       - name: Download generated mock data
         uses: actions/download-artifact@v4
         id: download-test
         with:
-          name: openblack-test-data-${{ github.ref_name }}
+          name: openblack-test-data-${{ env.GITHUB_REF_NAME_DASHES }}
           path: cmake-build-presets/ninja-multi-vcpkg/test
       - name: Download Pre-patched and installed Game Data
         uses: suisei-cn/actions-download-file@v1
@@ -268,16 +273,18 @@ jobs:
       ARGS: -g game-data\bw --num-frames-to-simulate 10 --screenshot-frame 5 --log-file stdout --log-level all=debug -W 800 -H 600
       BACKEND: Direct3D11
     steps:
+      - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
+        shell: bash
       - name: Download compiled openblack and tools
         uses: actions/download-artifact@v4
         id: download-binary
         with:
-          name: openblack-${{ matrix.os }}-${{ github.ref_name }}
+          name: openblack-${{ matrix.os }}-${{ env.GITHUB_REF_NAME_DASHES }}
       - name: Download generated mock data
         uses: actions/download-artifact@v4
         id: download-test
         with:
-          name: openblack-test-data-${{ github.ref_name }}
+          name: openblack-test-data-${{ env.GITHUB_REF_NAME_DASHES }}
       - name: Enable execute permissions on binary
         run: chmod +x ${{steps.download-binary.outputs.download-path}}/*/*
         if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
