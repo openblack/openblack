@@ -108,8 +108,8 @@ jobs:
           sed "s,source=.*,source=('openblack::git+file://${GITHUB_WORKSPACE}/src')," -i PKGBUILD
           sudo -u builduser makepkg
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: openblack-arch-linux-pkg-${{github.sha}}
+          name: openblack-arch-linux-pkg-${{ github.ref_name }}
           path: openblack-git/openblack-git*.pkg.tar.*
           if-no-files-found: error

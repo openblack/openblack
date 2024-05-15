@@ -46,7 +46,7 @@ jobs:
           inplace: True
       - run: |
           git diff > clang-format.patch
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: formatting-fix-${{github.sha}}
           path: clang-format.patch
@@ -85,7 +85,7 @@ jobs:
       - uses: fernandrone/linelint@master
       - run: |
           git diff > linelint.patch
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: formatting-fix-${{github.sha}}
           path: linelint.patch
@@ -131,7 +131,7 @@ jobs:
           args: --config-files .cmake-format.py --in-place
       - run: |
           git diff > cmake-format.patch
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: formatting-fix-${{github.sha}}
           path: cmake-format.patch
@@ -175,7 +175,7 @@ jobs:
       - name: Check License Lines
         run: deno run --allow-read --allow-write https://deno.land/x/license_checker@v3.2.2/main.ts --quiet --inject
       - run: git diff > license-check.patch
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: formatting-fix-${{github.sha}}
           path: license-check.patch.patch
@@ -206,7 +206,7 @@ jobs:
       - run: echo "ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV # to use C++23 on 26.2.11394342
       - run: ./gradlew lint
         working-directory: ./android
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: lint-report-upload
