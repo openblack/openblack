@@ -115,45 +115,48 @@ jobs:
           ./${{ startsWith(matrix.os, 'ubuntu') && 'ClangBuildAnalyzer-linux' || startsWith(matrix.os, 'windows') && 'ClangBuildAnalyzer.exe' || startsWith(matrix.os, 'macos') && 'ClangBuildAnalyzer-mac' }} --analyze clang-build-analysis-release-${{ matrix.os }}.cap
 
       - name: Upload Clang Build Analysis
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: matrix.cc == 'clang' || startsWith(matrix.os, 'macos')
         with:
-          name: openblack-clang-build-analysis
+          name: openblack-clang-build-analysis-${{ github.sha }}
           path: |
             clang-build-analysis-debug-${{ matrix.os }}.cap
             clang-build-analysis-release-${{ matrix.os }}.cap
           if-no-files-found: error
+          overwrite: true
 
       - name: Upload compile database and system includes
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: startsWith(matrix.os, 'ubuntu')
         with:
-          name: openblack-compile-database
+          name: openblack-compile-database-${{ github.sha }}
           path: |
             cmake-build-presets/ninja-multi-vcpkg/include
             cmake-build-presets/ninja-multi-vcpkg/vcpkg_installed/x64-linux/include
             cmake-build-presets/ninja-multi-vcpkg/compile_commands.json
           if-no-files-found: error
+          overwrite: true
 
       - name: Upload compiled openblack and tools
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: matrix.cc == ''
         with:
-          name: openblack-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
+          name: openblack-${{ matrix.os }}-${{ github.ref_name }}
           path: cmake-build-presets/ninja-multi-vcpkg/bin
           if-no-files-found: error
 
       - name: Upload generated test data
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: matrix.cc == ''
         with:
-          name: openblack-test-data
+          name: openblack-test-data-${{ github.ref_name }}
           path: |
             cmake-build-presets/ninja-multi-vcpkg/test/*/scenarios
             cmake-build-presets/ninja-multi-vcpkg/test/mock/Scripts
             cmake-build-presets/ninja-multi-vcpkg/test/mock/Data
             cmake-build-presets/ninja-multi-vcpkg/test/mock/Audio
           if-no-files-found: error
+          overwrite: true
 
     env:
       CC: ${{ matrix.cc }}
@@ -170,9 +173,9 @@ jobs:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           submodules: recursive
       - name: Download generated compile database
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: openblack-compile-database
+          name: openblack-compile-database-${{ github.sha }}
           path: cmake-build-presets/ninja-multi-vcpkg
       - name: Add base repo to git config
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
@@ -200,15 +203,15 @@ jobs:
         os: [ ubuntu-24.04, macos-13, windows-latest ]
     steps:
       - name: Download compiled openblack and tools
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         id: download-binary
         with:
-          name: openblack-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
+          name: openblack-${{ matrix.os }}-${{ github.ref_name }}
       - name: Download generated mock data
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         id: download-test
         with:
-          name: openblack-test-data
+          name: openblack-test-data-${{ github.ref_name }}
           path: cmake-build-presets/ninja-multi-vcpkg/test
       - name: Download Pre-patched and installed Game Data
         uses: suisei-cn/actions-download-file@v1
@@ -266,15 +269,15 @@ jobs:
       BACKEND: Direct3D11
     steps:
       - name: Download compiled openblack and tools
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         id: download-binary
         with:
-          name: openblack-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
+          name: openblack-${{ matrix.os }}-${{ github.ref_name }}
       - name: Download generated mock data
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         id: download-test
         with:
-          name: openblack-test-data
+          name: openblack-test-data-${{ github.ref_name }}
       - name: Enable execute permissions on binary
         run: chmod +x ${{steps.download-binary.outputs.download-path}}/*/*
         if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
