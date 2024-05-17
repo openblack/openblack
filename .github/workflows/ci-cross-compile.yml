@@ -16,16 +16,16 @@ jobs:
         # This is the matrix. They form permutations.
         triplet: [""]
         preset: [android-armeabi-v7a-vcpkg, android-arm64-v8a-vcpkg, android-x86-vcpkg, android-x86_64-vcpkg]
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04]
         # These are additional individual jobs. There are no permutations of these.
         include:
           - triplet: x86-linux
-            os: ubuntu-latest
+            os: ubuntu-24.04
             preset: ninja-multi-vcpkg
             setup: |
               sudo dpkg --add-architecture i386
               sudo apt-get update
-              sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libx11-dev:i386 libxext-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libtool autoconf gcc-multilib g++-multilib libc6-dev-i386 libgpg-error-dev:i386
+              sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libx11-dev:i386 libxext-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libtool autoconf gcc-multilib g++-multilib libc6-dev-i386 libgpg-error-dev:i386 libltdl-dev:i386
             additional_args: "`-DCMAKE_C_FLAGS=-m32`, `-DCMAKE_CXX_FLAGS=-m32`"
           # - triplet: arm64-linux
           #   os: ubuntu-latest
