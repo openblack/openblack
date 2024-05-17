@@ -10,6 +10,7 @@
 #pragma once
 
 #include <cassert>
+#include <cstdint>
 
 #include <array>
 #include <vector>
