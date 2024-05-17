@@ -93,10 +93,18 @@ jobs:
           vcpkgJsonGlob: 'vcpkg.json'
 
       - name: Run CMake+vcpkg to build packages.
+        id: build-packages
         uses: lukka/run-cmake@v10
         with:
           configurePreset: '${{ matrix.preset }}'
           configurePresetAdditionalArgs: "[`-DOPENBLACK_WARNINGS_AS_ERRORS=ON`${{ matrix.triplet && format(', `-DVCPKG_TARGET_TRIPLET={0}`', matrix.triplet) }}${{ matrix.additional_args && format(', {0}', matrix.additional_args) }}]"
+
+      - name: Upload logs if failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vcpkg-build-logs-${{ matrix.triplet || matrix.preset }}
+          path: vcpkg/buildtrees/*/*.log
 
       - name: Run CMake+Ninja to build the code (Debug).
         uses: lukka/run-cmake@v10

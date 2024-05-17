@@ -68,10 +68,18 @@ jobs:
           vcpkgJsonGlob: 'vcpkg.json'
 
       - name: Run CMake+vcpkg to build packages.
+        id: build-packages
         uses: lukka/run-cmake@v10
         with:
           configurePreset: 'ninja-multi-vcpkg'
           configurePresetAdditionalArgs: "['-DCMAKE_EXPORT_COMPILE_COMMANDS=ON', '-DOPENBLACK_WARNINGS_AS_ERRORS=ON', '-DOPENBLACK_TRACE_TIME=ON']"
+
+      - name: Upload logs if failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vcpkg-build-logs-${{ matrix.os }}
+          path: vcpkg/buildtrees/*/*.log
 
       - name: Clang Build Analysis (Debug).
         if: matrix.cc == 'clang' || startsWith(matrix.os, 'macos')
