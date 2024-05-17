@@ -19,6 +19,22 @@ You still need to have the original game assets in order to use this. See furthe
     <img src="https://user-images.githubusercontent.com/32263167/184559291-f37e44b3-c738-4c0f-82eb-28b7c84a3919.png" width="45%">
 </a>
 
+# Pre-built Binaries
+
+For the latest build of openblack without having to build it yourself, we offer pre-built binaries from our test service.
+
+[![Linux (amd64) Build](https://img.shields.io/badge/Build-Linux%20(amd64)-333333)](https://nightly.link/openblack/openblack/workflows/ci-vcpkg/master/openblack-ubuntu-24.04-master.zip)
+[![Linux (x86) Build](https://img.shields.io/badge/Build-Linux%20(amd64)-333333)](https://nightly.link/openblack/openblack/workflows/ci-cross-compile/master/openblack-x86-linux-master.zip)
+
+[![OSX (amd64) Build](https://img.shields.io/badge/Build-OSX%20(amd64)-eeeeee)](https://nightly.link/openblack/openblack/workflows/ci-vcpkg/master/openblack-macos-13-master.zip)
+
+[![Windows (amd64) Build](https://img.shields.io/badge/Build-Windows%20(amd64)-0078d4)](https://nightly.link/openblack/openblack/workflows/ci-vcpkg/master/openblack-ubuntu-24.04-master.zip)
+[![Windows (x86) Build](https://img.shields.io/badge/Build-Windows%20(x86)-0078d4)](https://nightly.link/openblack/openblack/workflows/ci-cross-compile/master/openblack-x86-windows-master.zip)
+[![Windows (arm64) Build](https://img.shields.io/badge/Build-Windows%20(arm64)-0078d4)](https://nightly.link/openblack/openblack/workflows/ci-cross-compile/master/openblack-arm64-windows-master.zip) 
+
+[![Arch Linux](https://img.shields.io/badge/Package-Arch%20Linux-1793d0)](https://nightly.link/openblack/openblack/workflows/ci-system-deps/master/openblack-arch-linux-pkg-master.zip)
+[![Android](https://img.shields.io/badge/Package-Android-3ddc84)](https://nightly.link/openblack/openblack/workflows/ci-cross-compile/master/openblack-android-apk-master.zip)
+
 # Building
 
 Clone the code using: `git clone --recursive https://github.com/openblack/openblack.git`
