@@ -177,7 +177,7 @@ jobs:
       - name: Add base repo to git config
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
         if: startsWith(github.event_name, 'pull_request')
-      - uses: ZedThree/clang-tidy-review@v0.17.1
+      - uses: ZedThree/clang-tidy-review@v0.19.0
         id: review
         with:
           build_dir: cmake-build-presets/ninja-multi-vcpkg
