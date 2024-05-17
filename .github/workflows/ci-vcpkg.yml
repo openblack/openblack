@@ -19,13 +19,9 @@ jobs:
         cxx: [""]
         # These are additional individual jobs. There are no permutations of these.
         include:
-          # Testing clang
-          # Temporarily disable test until issue on github runners is resolved
-          # https://github.com/actions/runner-images/issues/8659
-          # TODO(#682): Revert this disabling
-          # - os: ubuntu-latest
-          #   cc: clang
-          #   cxx: clang++
+          - os: ubuntu-24.04
+            cc: clang
+            cxx: clang++
           - os: windows-latest
             cc: clang
             cxx: clang++
