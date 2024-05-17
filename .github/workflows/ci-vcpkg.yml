@@ -273,7 +273,7 @@ jobs:
           name: openblack-test-data
       - name: Enable execute permissions on binary
         run: chmod +x ${{steps.download-binary.outputs.download-path}}/*/*
-        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+        if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
       - name: Download Pre-patched and installed Game Data
         uses: suisei-cn/actions-download-file@v1
         id: game-data
