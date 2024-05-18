@@ -56,6 +56,8 @@ jobs:
           - triplet: arm64-windows
             os: windows-latest
             preset: ninja-multi-vcpkg
+          - os: macos-latest
+            preset: ios-arm64-vcpkg
 
     env:
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}

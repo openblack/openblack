@@ -48,6 +48,26 @@
       }
     },
     {
+      "name": "template-ios-vcpkg",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/cmake-build-presets/${presetName}",
+      "generator": "Ninja Multi-Config",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        },
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "${sourceDir}/CMakeModules/ios.toolchain.cmake"
+        },
+        "OPENBLACK_USE_VCPKG": true
+      },
+      "environment": {
+          "VCPKG_ROOT": "./vcpkg"
+      }
+    },
+    {
       "name": "template-emscripten-vcpkg",
       "hidden": true,
       "binaryDir": "${sourceDir}/cmake-build-presets/${presetName}",
@@ -98,6 +118,17 @@
       "inherits": "template-vcpkg"
     },
     {
+      "name": "ios-xcode-vcpkg",
+      "displayName": "XCode for iOS Simulator (vcpkg)",
+      "description": "Configure with vcpkg iOS Simulator toolchain and XCode project files for all configurations",
+      "generator": "Xcode",
+      "inherits": "template-ios-vcpkg",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "arm64-ios-simulator",
+        "PLATFORM": "OS64COMBINED"
+      }
+    },
+    {
       "name": "unix-makefile-vcpkg",
       "displayName": "Makefile (vcpkg)",
       "description": "Configure with vcpkg toolchain and generate Makefile project files for all configurations",
@@ -139,6 +170,15 @@
       "inherits": "template-android-vcpkg",
       "cacheVariables": {
         "ANDROID_ABI": "x86_64"
+      }
+    },
+    {
+      "name": "ios-arm64-vcpkg",
+      "displayName": "iOS ARM64 (vcpkg)",
+      "description": "Configure with vcpkg toolchain and generate iOS with Arm64 Architecture project files for all configurations",
+      "inherits": "template-ios-vcpkg",
+      "cacheVariables": {
+        "PLATFORM": "OS64"
       }
     },
     {
@@ -197,6 +237,20 @@
       "configurePreset": "xcode-vcpkg",
       "displayName": "Build xcode-vcpkg-release",
       "description": "Build xcode-vcpkg Release configuration",
+      "configuration": "Release"
+    },
+    {
+      "name": "ios-xcode-vcpkg-debug",
+      "configurePreset": "ios-xcode-vcpkg",
+      "displayName": "Build ios-xcode-vcpkg-debug",
+      "description": "Build ios-xcode-vcpkg Debug configuration",
+      "configuration": "Debug"
+    },
+    {
+      "name": "ios-xcode-vcpkg-release",
+      "configurePreset": "ios-xcode-vcpkg",
+      "displayName": "Build ios-xcode-vcpkg-release",
+      "description": "Build ios-xcode-vcpkg Release configuration",
       "configuration": "Release"
     },
     {
@@ -270,6 +324,20 @@
       "configuration": "Release"
     },
     {
+      "name": "ios-arm64-vcpkg-debug",
+      "configurePreset": "ios-arm64-vcpkg",
+      "displayName": "Build ios-arm64-vcpkg-debug",
+      "description": "Build ios-arm64-vcpkg Debug configuration",
+      "configuration": "Debug"
+    },
+    {
+      "name": "ios-arm64-vcpkg-release",
+      "configurePreset": "ios-arm64-vcpkg",
+      "displayName": "Build ios-arm64-vcpkg-release",
+      "description": "Build ios-arm64-vcpkg Release configuration",
+      "configuration": "Release"
+    },
+     {
       "name": "emscripten-vcpkg-debug",
       "configurePreset": "emscripten-vcpkg",
       "displayName": "Build emscripten-vcpkg-debug",
