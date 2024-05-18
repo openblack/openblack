@@ -1,0 +1,4 @@
+autofix: true
+rules:
+  end-of-file:
+    enable: true
