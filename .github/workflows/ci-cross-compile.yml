@@ -187,9 +187,20 @@ jobs:
       - name: Build with Gradle (Debug)
         run: ./gradlew build --no-daemon assembleDebug -PusePrebuiltNativeLibs
         working-directory: ./android
+      - name: Write signing key
+        id: write_key
+        uses: timheuer/base64-to-file@v1.2
+        with:
+          fileName: 'keystore/signing_keystore.jks'
+          encodedString: ${{ secrets.ANDROID_SIGNING_STORE_KEY_B64 }}
       - name: Build with Gradle (Release)
         run: ./gradlew build --no-daemon assembleRelease -PusePrebuiltNativeLibs
         working-directory: ./android
+        env:
+          STORE_KEY: ${{ steps.write_key.outputs.filePath }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          STORE_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_STORE_KEY_ALIAS }}
+          STORE_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
       - uses: actions/upload-artifact@v4
         with:
           name: openblack-android-apk-${{ env.GITHUB_REF_NAME_DASHES }}
