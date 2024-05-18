@@ -12,7 +12,7 @@ android {
         ndkVersion "26.3.11579264"
         versionCode 1
         versionName "0.1.0"
-        archivesBaseName = "$applicationId-$versionName"
+        archivesBaseName = "${applicationId}-${versionName}"
 
         // To use this configuration, pre-built native libraries must be placed into the respective directories:
         // For debug build variant, place libraries in 'src/main/jniLibs/Debug' and call ./gradlew assembleDebug -PusePrebuiltNativeLibs
@@ -43,10 +43,24 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            if (System.getenv("STORE_KEY") != null) {
+                storeFile = file(System.getenv("STORE_KEY"))
+                storePassword = System.getenv("STORE_PASSWORD")
+                keyAlias = System.getenv("STORE_KEY_ALIAS")
+                keyPassword = System.getenv("STORE_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (System.getenv("STORE_KEY") != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {
