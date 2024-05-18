@@ -276,10 +276,63 @@ else ()
         #LINK_FLAGS "-s USE_SDL=2 -s FULL_ES3=1 -s GL_ASSERTIONS=1 -s USE_WEBGL2=1 -s USE_PTHREADS=1 -s TOTAL_MEMORY=128MB --emrun"
         SUFFIX ".html"
     )
+  elseif (APPLE)
+    set(OPENBLACK_ICON_SOURCE_DIR ${CMAKE_SOURCE_DIR}/assets/resource/icon)
+    set(OPENBLACK_ICON_BINARY_DIR ${CMAKE_BINARY_DIR}/assets/resource/icon)
+    set(OPENBLACK_ICON_SOURCE
+        ${OPENBLACK_ICON_SOURCE_DIR}/openblack-400x400.png
+    )
+    set(OPENBLACK_ICONSET_BINARY_DIR
+        ${OPENBLACK_ICON_BINARY_DIR}/openblack.iconset
+    )
+    set(OPENBLACK_ICONSET_BINARY ${OPENBLACK_ICON_BINARY_DIR}/openblack.icns)
+    add_custom_command(
+      OUTPUT ${OPENBLACK_ICONSET_BINARY}
+      COMMENT "Generate MacOSX bundle icon set"
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${OPENBLACK_ICONSET_BINARY_DIR}
+      COMMAND sips -z 16 16 ${OPENBLACK_ICON_SOURCE_DIR}/openblack-256x256.png
+              --out ${OPENBLACK_ICONSET_BINARY_DIR}/icon_16x16.png
+      COMMAND sips -z 32 32 ${OPENBLACK_ICON_SOURCE_DIR}/openblack-256x256.png
+              --out ${OPENBLACK_ICONSET_BINARY_DIR}/icon_32x32.png
+      COMMAND
+        ${CMAKE_COMMAND} -E copy
+        ${OPENBLACK_ICON_SOURCE_DIR}/openblack-64x64.png
+        ${OPENBLACK_ICONSET_BINARY_DIR}/icon_64x64.png
+      COMMAND
+        ${CMAKE_COMMAND} -E copy
+        ${OPENBLACK_ICON_SOURCE_DIR}/openblack-128x128.png
+        ${OPENBLACK_ICONSET_BINARY_DIR}/icon_128x128.png
+      COMMAND
+        ${CMAKE_COMMAND} -E copy
+        ${OPENBLACK_ICON_SOURCE_DIR}/openblack-256x256.png
+        ${OPENBLACK_ICONSET_BINARY_DIR}/icon_256x256.png
+      COMMAND
+        ${CMAKE_COMMAND} -E copy
+        ${OPENBLACK_ICON_SOURCE_DIR}/openblack-400x400.png
+        ${OPENBLACK_ICONSET_BINARY_DIR}/icon_400x400.png
+      COMMAND iconutil -c icns ${OPENBLACK_ICONSET_BINARY_DIR} -o
+              ${OPENBLACK_ICONSET_BINARY}
+    )
+    set_source_files_properties(
+      ${OPENBLACK_ICONSET_BINARY} PROPERTIES MACOSX_PACKAGE_LOCATION
+                                             "Resources"
+    )
+    target_sources(openblack PRIVATE ${OPENBLACK_ICONSET_BINARY})
+    set_target_properties(
+      openblack
+      PROPERTIES MACOSX_BUNDLE_GUI_IDENTIFIER org.openblack.openblack
+                 MACOSX_BUNDLE_ICON_FILE openblack.icns
+                 MACOSX_BUNDLE_BUNDLE_VERSION ${openblack_VERSION}
+                 MACOSX_BUNDLE_SHORT_VERSION_STRING ${openblack_VERSION}
+    )
   endif ()
 
   # Installation configuration
-  install(TARGETS openblack RUNTIME DESTINATION bin)
+  install(
+    TARGETS openblack
+    BUNDLE DESTINATION bundle
+    RUNTIME DESTINATION bin
+  )
   if (UNIX)
     install(
       FILES
