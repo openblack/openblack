@@ -187,7 +187,9 @@ jobs:
       - name: Build with Gradle (Debug)
         run: ./gradlew build --no-daemon assembleDebug -PusePrebuiltNativeLibs
         working-directory: ./android
-      # TODO(#632): Setup digital signing for Android release build
+      - name: Build with Gradle (Release)
+        run: ./gradlew build --no-daemon assembleRelease -PusePrebuiltNativeLibs
+        working-directory: ./android
       - uses: actions/upload-artifact@v4
         with:
           name: openblack-android-apk-${{ env.GITHUB_REF_NAME_DASHES }}
