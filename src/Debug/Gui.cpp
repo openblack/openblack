@@ -17,8 +17,6 @@
 #if BX_PLATFORM_LINUX
 #undef BGFX_EMBEDDED_SHADER_DXBC
 #define BGFX_EMBEDDED_SHADER_DXBC(...)
-#undef BGFX_EMBEDDED_SHADER_DX9BC
-#define BGFX_EMBEDDED_SHADER_DX9BC(...)
 #endif
 #ifdef __GNUC__
 #pragma GCC diagnostic push
