@@ -7,6 +7,9 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include "TargetConditionals.h"
+
+#if !TARGET_OS_IPHONE
 #import <QuartzCore/CAMetalLayer.h>
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
@@ -21,3 +24,4 @@ void *cbSetupMetalLayer(void *wnd) {
     [contentView setLayer:res];
     return res;
 }
+#endif
