@@ -246,9 +246,9 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 				    // Add modded action
 				    static_cast<uint64_t>(_mouseModBindings[newComboMask].second));
 				// Remove non-combo keys
-				for (uint8_t i = 0; i < SDL_BUTTON_X2; ++i)
+				for (uint8_t I = 0; I < SDL_BUTTON_X2; ++I)
 				{
-					const uint8_t keyMask = (1 << i);
+					const uint8_t keyMask = (1 << I);
 					if ((newComboMask & keyMask) != 0u && _mouseModBindings.contains(keyMask) &&
 					    (_mouseModBindings[keyMask].first & mod) != 0)
 					{
@@ -262,9 +262,9 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 				_bindableMap = static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) |
 				                                              static_cast<uint64_t>(_mouseBindings[newComboMask]));
 				// Remove non-combo keys
-				for (uint8_t i = 0; i < SDL_BUTTON_X2; ++i)
+				for (uint8_t I = 0; I < SDL_BUTTON_X2; ++I)
 				{
-					const uint8_t keyMask = (1 << i);
+					const uint8_t keyMask = (1 << I);
 					if ((newComboMask & keyMask) != 0u && _mouseBindings.contains(keyMask))
 					{
 						_bindableMap = static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) &
@@ -330,9 +330,9 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 			                                              ~static_cast<uint64_t>(_mouseBindings[buttonMask]));
 		}
 		// Remove combo keys
-		for (uint8_t i = 0; i < SDL_BUTTON_X2; ++i)
+		for (uint8_t I = 0; I < SDL_BUTTON_X2; ++I)
 		{
-			const uint8_t keyMask = (1 << i);
+			const uint8_t keyMask = (1 << I);
 			const uint8_t comboMask = keyMask | buttonMask;
 			if (buttonMask != comboMask && _mouseBindings.contains(comboMask))
 			{

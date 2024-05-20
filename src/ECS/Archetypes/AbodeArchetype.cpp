@@ -45,16 +45,16 @@ void AddStoragePitComponents(entt::entity entity, const Mesh& pitMesh, const GAb
 
 	auto& pit = registry.Assign<StoragePit>(entity);
 
-	size_t i = 0;
+	size_t I = 0;
 	for (auto type = info.potForResourceWood; type != PotInfo::_COUNT;
 	     type = potInfoConstants.at(static_cast<size_t>(type)).nextPotForResource)
 	{
-		const auto& m = extraMetrics.at(i);
+		const auto& m = extraMetrics.at(I);
 		auto translation = static_cast<glm::vec3>(glm::eulerAngleY(-yAngleRadians) * m[3]);
-		pit.woodPiles.at(i) = PotArchetype::Create(position + translation, yAngleRadians, type, woodAmount);
-		++i;
+		pit.woodPiles.at(I) = PotArchetype::Create(position + translation, yAngleRadians, type, woodAmount);
+		++I;
 	}
-	assert(i == pit.woodPiles.size());
+	assert(I == pit.woodPiles.size());
 	const auto& m = extraMetrics.at(5);
 	auto translation = static_cast<glm::vec3>(glm::eulerAngleY(-yAngleRadians) * m[3]);
 	pit.foodPile = PotArchetype::Create(position + translation, yAngleRadians, info.potForResourceFood, foodAmount);

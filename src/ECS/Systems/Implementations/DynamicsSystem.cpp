@@ -47,9 +47,9 @@ DynamicsSystem::DynamicsSystem()
 void DynamicsSystem::Reset()
 {
 	std::vector<btRigidBody*> toRemove;
-	for (int i = 0; i < _world->getNumCollisionObjects(); ++i)
+	for (int I = 0; I < _world->getNumCollisionObjects(); ++I)
 	{
-		auto* obj = _world->getCollisionObjectArray()[i];
+		auto* obj = _world->getCollisionObjectArray()[I];
 		btRigidBody* body = btRigidBody::upcast(obj);
 		if (body != nullptr)
 		{
@@ -89,11 +89,11 @@ void DynamicsSystem::RegisterRigidBodies()
 void DynamicsSystem::RegisterIslandRigidBodies(LandIslandInterface& island)
 {
 	auto& landBlocks = island.GetBlocks();
-	for (uint32_t i = 0; i < landBlocks.size(); ++i)
+	for (uint32_t I = 0; I < landBlocks.size(); ++I)
 	{
-		auto& rigidBody = landBlocks[i].GetRigidBody();
+		auto& rigidBody = landBlocks[I].GetRigidBody();
 		rigidBody->setUserIndex(static_cast<int>(RigidBodyType::Terrain));
-		rigidBody->setUserIndex2(i);
+		rigidBody->setUserIndex2(I);
 		rigidBody->setUserPointer(reinterpret_cast<void*>(this));
 		AddRigidBody(rigidBody.get());
 	}

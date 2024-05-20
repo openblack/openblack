@@ -69,10 +69,10 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 		for (auto& primitive : primitiveSpan)
 		{
 			uint32_t vertexOffset = 0;
-			for (uint32_t i = 0; i < primitive.numGroups; ++i)
+			for (uint32_t I = 0; I < primitive.numGroups; ++I)
 			{
 				auto matrix = glm::identity<glm::mat4>();
-				for (uint32_t parent = vertexGroupSpans[i].boneIndex; parent != std::numeric_limits<uint32_t>::max();
+				for (uint32_t parent = vertexGroupSpans[I].boneIndex; parent != std::numeric_limits<uint32_t>::max();
 				     parent = boneSpans[parent].parent)
 				{
 					const auto& bone = boneSpans[parent];
@@ -82,22 +82,22 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 					matrix = local * matrix;
 				}
 
-				for (uint32_t j = 0; j < vertexGroupSpans[i].vertexCount; ++j)
+				for (uint32_t j = 0; j < vertexGroupSpans[I].vertexCount; ++j)
 				{
 					const auto& vertex = verticesSpan[vertexOffset + j];
 					const auto position = glm::xyz(matrix * glm::vec4(glm::make_vec3(&vertex.position.x), 1.0f));
 					_boundingBox.maxima = glm::max(_boundingBox.maxima, position);
 					_boundingBox.minima = glm::min(_boundingBox.minima, position);
 				}
-				vertexOffset += vertexGroupSpans[i].vertexCount;
+				vertexOffset += vertexGroupSpans[I].vertexCount;
 			}
 		}
 	}
 	else
 	{
-		for (uint32_t i = 0; i < nVertices; i++)
+		for (uint32_t I = 0; I < nVertices; I++)
 		{
-			const auto position = glm::make_vec3(&verticesSpan[i].position.x);
+			const auto position = glm::make_vec3(&verticesSpan[I].position.x);
 			_boundingBox.maxima = glm::max(_boundingBox.maxima, position);
 			_boundingBox.minima = glm::min(_boundingBox.minima, position);
 		}
@@ -111,14 +111,14 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 	// Get vertices
 	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(EnhancedL3DVertex) * nVertices);
 	auto* verticesMemAccess = reinterpret_cast<EnhancedL3DVertex*>(verticesMem->data);
-	for (uint32_t i = 0; i < nVertices; ++i)
+	for (uint32_t I = 0; I < nVertices; ++I)
 	{
-		verticesMemAccess[i].pos = glm::make_vec3(&verticesSpan[i].position.x);
-		verticesMemAccess[i].uv = glm::make_vec2(&verticesSpan[i].texCoord.x);
+		verticesMemAccess[I].pos = glm::make_vec3(&verticesSpan[I].position.x);
+		verticesMemAccess[I].uv = glm::make_vec2(&verticesSpan[I].texCoord.x);
 		// TODO(bwrsandman): build normals from mesh
-		verticesMemAccess[i].norm = glm::make_vec3(&verticesSpan[i].normal.x);
-		verticesMemAccess[i].index.x = -1;
-		verticesMemAccess[i].index.y = -1;
+		verticesMemAccess[I].norm = glm::make_vec3(&verticesSpan[I].normal.x);
+		verticesMemAccess[I].index.x = -1;
+		verticesMemAccess[I].index.y = -1;
 	}
 
 	if (nIndices == 0)
@@ -134,7 +134,7 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
 	uint32_t vertexIndex = 0;
 	for (auto& vertexGroupSpan : vertexGroupSpans)
 	{
-		for (uint32_t i = 0; i < vertexGroupSpan.vertexCount; ++i)
+		for (uint32_t I = 0; I < vertexGroupSpan.vertexCount; ++I)
 		{
 			verticesMemAccess[vertexIndex].index[0] = vertexGroupSpan.boneIndex;
 			verticesMemAccess[vertexIndex].index[1] = -1;

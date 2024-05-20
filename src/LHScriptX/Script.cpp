@@ -189,13 +189,13 @@ void Script::RunCommand(const std::string& identifier, const std::vector<Token>&
 	}
 
 	// Validate the typing of the given arguments against what is expected
-	for (auto i = 0u; const auto& param : parameters)
+	for (auto I = 0u; const auto& param : parameters)
 	{
-		if (param.GetType() != expectedParameters.at(i))
+		if (param.GetType() != expectedParameters.at(I))
 		{
 			throw std::runtime_error("Invalid script argument type");
 		}
-		++i;
+		++I;
 	}
 
 	commandSignature->command(parameters);

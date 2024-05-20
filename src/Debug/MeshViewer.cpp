@@ -132,21 +132,21 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 		if (!metrics.empty() && ImGui::TreeNode("ExtraMetrics", "Extra Metrics %zu", metrics.size()))
 		{
 			std::array<char, 0x20> label;
-			for (int i = 0; auto& m : const_cast<std::vector<glm::mat4>&>(metrics))
+			for (int I = 0; auto& m : const_cast<std::vector<glm::mat4>&>(metrics))
 			{
-				if (i != 0)
+				if (I != 0)
 				{
 					ImGui::Separator();
 				}
-				snprintf(label.data(), label.size(), "m[%d][0]", i);
+				snprintf(label.data(), label.size(), "m[%d][0]", I);
 				ImGui::InputFloat4(label.data(), glm::value_ptr(m[0]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-				snprintf(label.data(), label.size(), "m[%d][1]", i);
+				snprintf(label.data(), label.size(), "m[%d][1]", I);
 				ImGui::InputFloat4(label.data(), glm::value_ptr(m[1]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-				snprintf(label.data(), label.size(), "m[%d][2]", i);
+				snprintf(label.data(), label.size(), "m[%d][2]", I);
 				ImGui::InputFloat4(label.data(), glm::value_ptr(m[2]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-				snprintf(label.data(), label.size(), "m[%d][3]", i);
+				snprintf(label.data(), label.size(), "m[%d][3]", I);
 				ImGui::InputFloat4(label.data(), glm::value_ptr(m[3]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-				++i;
+				++I;
 			}
 			ImGui::TreePop();
 		}
@@ -314,7 +314,7 @@ void MeshViewer::Update(Game& game, const Renderer& renderer)
 		| BGFX_STATE_WRITE_MASK
 		| BGFX_STATE_DEPTH_TEST_LESS
 		| BGFX_STATE_CULL_CCW // TODO(bwrsandman): Some meshes wind one way and
-		                      //                   some others (i.e. rocks, gate)
+		                      //                   some others (I.e. rocks, gate)
 		| BGFX_STATE_MSAA;
 	// clang-format on
 
@@ -337,12 +337,12 @@ void MeshViewer::Update(Game& game, const Renderer& renderer)
 			if (_selectedAnimation.has_value() && _matchBones)
 			{
 				const auto& frames = animations.Handle(*_selectedAnimation)->GetFrames();
-				for (uint32_t i = 0; i < frames[_selectedFrame].bones.size(); ++i)
+				for (uint32_t I = 0; I < frames[_selectedFrame].bones.size(); ++I)
 				{
-					bones[i] = frames[_selectedFrame].bones[i];
-					if (boneParents[i] != std::numeric_limits<uint32_t>::max())
+					bones[I] = frames[_selectedFrame].bones[I];
+					if (boneParents[I] != std::numeric_limits<uint32_t>::max())
 					{
-						bones[i] = bones[boneParents[i]] * bones[i];
+						bones[I] = bones[boneParents[I]] * bones[I];
 					}
 				}
 			}

@@ -147,11 +147,11 @@ void Texture2D::DumpTexture() const
 	const auto stride = _info.width * _info.bitsPerPixel / 8;
 	// TODO(bwrsandman): get the number of components from _info.format
 	const auto numComponents = 4u;
-	for (uint16_t i = 0; i < _info.numLayers; ++i)
+	for (uint16_t I = 0; I < _info.numLayers; ++I)
 	{
-		auto filename = "dump/" + _name + "_" + std::to_string(i) + ".png";
-		SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "Writing texture layer {} to {}.", i, filename.c_str());
-		auto* currentPixels = &pixels[i * stride * _info.height];
+		auto filename = "dump/" + _name + "_" + std::to_string(I) + ".png";
+		SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "Writing texture layer {} to {}.", I, filename.c_str());
+		auto* currentPixels = &pixels[I * stride * _info.height];
 		auto writeResult = stbi_write_png(filename.c_str(), _info.width, _info.height, numComponents, currentPixels, stride);
 		if (writeResult == 0)
 		{

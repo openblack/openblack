@@ -129,13 +129,13 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 			{
 				char c = 0;
 				bool allCandidatesMatches = true;
-				for (size_t i = 0; i < candidates.size() && allCandidatesMatches; i++)
+				for (size_t I = 0; I < candidates.size() && allCandidatesMatches; I++)
 				{
-					if (i == 0)
+					if (I == 0)
 					{
-						c = candidates[i][matchLen];
+						c = candidates[I][matchLen];
 					}
-					else if (c == 0 || c != candidates[i][matchLen])
+					else if (c == 0 || c != candidates[I][matchLen])
 					{
 						allCandidatesMatches = false;
 					}
@@ -294,11 +294,11 @@ void Console::Draw(Game& game)
 	// you can use ImGui::TextUnformatted(log.begin(), log.end()); NB- if you have thousands of entries this approach may be
 	// too inefficient and may require user-side clipping to only process visible items. You can seek and display only the
 	// lines that are visible using the ImGuiListClipper helper, if your elements are evenly spaced and you have cheap
-	// random access to the elements. To use the clipper we could replace the 'for (int i = 0; i < Items.Size; i++)' loop
+	// random access to the elements. To use the clipper we could replace the 'for (int I = 0; I < Items.Size; I++)' loop
 	// with:
 	//     ImGuiListClipper clipper(Items.Size);
 	//     while (clipper.Step())
-	//         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+	//         for (int I = clipper.DisplayStart; I < clipper.DisplayEnd; I++)
 	// However, note that you can not use this code as is if a filter is active because it breaks the 'cheap random-access'
 	// property. We would need random-access on the post-filtered list. A typical application wanting coarse clipping and
 	// filtering may want to pre-compute an array of indices that passed the filtering test, recomputing this array when
@@ -417,11 +417,11 @@ void Console::ExecCommand(const std::string& commandLine)
 	// Insert into history. First find match and delete it so it can be pushed to the back. This isn't trying to be smart or
 	// optimal.
 	_historyPos.reset();
-	for (int i = static_cast<int>(_history.size()) - 1; i >= 0; i--)
+	for (int I = static_cast<int>(_history.size()) - 1; I >= 0; I--)
 	{
-		if (_history[i] == commandLine)
+		if (_history[I] == commandLine)
 		{
-			_history.erase(_history.begin() + i);
+			_history.erase(_history.begin() + I);
 			break;
 		}
 	}
@@ -443,9 +443,9 @@ void Console::ExecCommand(const std::string& commandLine)
 	else if (commandLine == "history")
 	{
 		size_t first = _history.size() - 10;
-		for (size_t i = first > 0 ? first : 0; i < _history.size(); i++)
+		for (size_t I = first > 0 ? first : 0; I < _history.size(); I++)
 		{
-			AddLog("%3zu: %s\n", i, _history[i].c_str());
+			AddLog("%3zu: %s\n", I, _history[I].c_str());
 		}
 	}
 	else

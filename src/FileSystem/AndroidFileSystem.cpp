@@ -108,9 +108,9 @@ void AndroidFileSystem::Iterate(const std::filesystem::path& path, bool recursiv
 	// Processing returned string array
 	int stringCount = _jniEnv->GetArrayLength(jfilePaths);
 
-	for (int i = 0; i < stringCount; i++)
+	for (int I = 0; I < stringCount; I++)
 	{
-		jstring filePath = (jstring)(_jniEnv->GetObjectArrayElement(jfilePaths, i));
+		jstring filePath = (jstring)(_jniEnv->GetObjectArrayElement(jfilePaths, I));
 		const char* rawString = _jniEnv->GetStringUTFChars(filePath, nullptr);
 
 		// Calling provided function

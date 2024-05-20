@@ -165,16 +165,16 @@ void Profiler::Draw(Game& game)
 		auto cursorX = ImGui::GetCursorPosX();
 		auto indentSize = ImGui::CalcTextSize("    ").x;
 
-		for (uint8_t i = 0; const auto& stage : entry.stages)
+		for (uint8_t I = 0; const auto& stage : entry.stages)
 		{
 			std::chrono::duration<float, std::milli> duration = stage.end - stage.start;
 			ImGui::SetCursorPosX(cursorX + indentSize * stage.level);
-			ImGui::Text("    %s: %0.3f", openblack::Profiler::k_StageNames.at(i).data(), duration.count());
+			ImGui::Text("    %s: %0.3f", openblack::Profiler::k_StageNames.at(I).data(), duration.count());
 			if (stage.level == 0)
 			{
 				frameDuration -= duration;
 			}
-			++i;
+			++I;
 		}
 		ImGui::Text("    Unaccounted: %0.3f", frameDuration.count());
 	}
@@ -184,9 +184,9 @@ void Profiler::Draw(Game& game)
 		auto frameDuration = stats->gpuTimeEnd - stats->gpuTimeBegin;
 		ImGui::Text("Full Frame: %0.3f", 1000.0f * frameDuration / static_cast<double>(stats->gpuTimerFreq));
 
-		for (uint8_t i = 0; i < stats->numViews; ++i)
+		for (uint8_t I = 0; I < stats->numViews; ++I)
 		{
-			auto const& viewStat = stats->viewStats[i];
+			auto const& viewStat = stats->viewStats[I];
 			int64_t gpuTimeElapsed = viewStat.gpuTimeEnd - viewStat.gpuTimeBegin;
 
 			ImGui::Text("    %s: %0.3f", viewStat.name, 1000.0f * gpuTimeElapsed / static_cast<double>(stats->gpuTimerFreq));

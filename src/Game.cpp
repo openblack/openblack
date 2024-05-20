@@ -98,11 +98,11 @@ Game::Game(Arguments&& args)
 			createLogger = [](const std::string& name) { return spdlog::stdout_color_mt(name); };
 		}
 	}
-	for (size_t i = 0; const auto& subsystem : k_LoggingSubsystemStrs)
+	for (size_t I = 0; const auto& subsystem : k_LoggingSubsystemStrs)
 	{
 		auto logger = createLogger(subsystem.data());
-		logger->set_level(args.logLevels.at(i));
-		++i;
+		logger->set_level(args.logLevels.at(I));
+		++I;
 	}
 	sInstance = this;
 
@@ -570,11 +570,11 @@ bool Game::Initialize()
 	pack.Open(fileSystem.GetPath<Path::Data>(true) / "AllMeshes.g3d");
 #endif
 	const auto& meshes = pack.GetMeshes();
-	for (size_t i = 0; const auto& mesh : meshes)
+	for (size_t I = 0; const auto& mesh : meshes)
 	{
-		const auto meshId = static_cast<MeshId>(i);
-		meshManager.Load(meshId, resources::L3DLoader::FromBufferTag {}, k_MeshNames.at(i), mesh);
-		++i;
+		const auto meshId = static_cast<MeshId>(I);
+		meshManager.Load(meshId, resources::L3DLoader::FromBufferTag {}, k_MeshNames.at(I), mesh);
+		++I;
 	}
 
 	const auto& textures = pack.GetTextures();
@@ -591,9 +591,9 @@ bool Game::Initialize()
 	animationPack.Open(fileSystem.GetPath<Path::Data>(true) / "AllAnims.anm");
 #endif
 	const auto& animations = animationPack.GetAnimations();
-	for (size_t i = 0; i < animations.size(); i++)
+	for (size_t I = 0; I < animations.size(); I++)
 	{
-		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animations[i]);
+		animationManager.Load(I, resources::L3DAnimLoader::FromBufferTag {}, animations[I]);
 	}
 
 	fileSystem.Iterate(fileSystem.GetPath<Path::CreatureMesh>(), false, [&meshManager](const std::filesystem::path& f) {
@@ -719,21 +719,21 @@ bool Game::Initialize()
 		    else
 		    {
 			    audioManager.CreateSoundGroup(groupName);
-			    for (size_t i = 0; i < audioHeaders.size(); i++)
+			    for (size_t I = 0; I < audioHeaders.size(); I++)
 			    {
-				    soundName = std::filesystem::path(audioHeaders[i].name.data());
-				    if (audioData[i].empty())
+				    soundName = std::filesystem::path(audioHeaders[I].name.data());
+				    if (audioData[I].empty())
 				    {
 					    SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound buffer found for {}. Skipping",
 					                       soundName.string());
 					    return;
 				    }
 
-				    const auto stringId = fmt::format("{}/{}", groupName, audioHeaders[i].id);
+				    const auto stringId = fmt::format("{}/{}", groupName, audioHeaders[I].id);
 				    const entt::id_type id = entt::hashed_string(stringId.c_str());
-				    const std::vector<std::vector<uint8_t>> buffer = {audioData[i]};
-				    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Loading sound {}: {}", stringId, audioHeaders[i].name.data());
-				    soundManager.Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[i], buffer);
+				    const std::vector<std::vector<uint8_t>> buffer = {audioData[I]};
+				    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Loading sound {}: {}", stringId, audioHeaders[I].name.data());
+				    soundManager.Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[I], buffer);
 				    audioManager.AddToSoundGroup(groupName, id);
 			    }
 		    }

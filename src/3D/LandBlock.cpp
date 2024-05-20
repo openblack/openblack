@@ -113,34 +113,34 @@ const bgfx::Memory* LandBlock::BuildVertexList(LandIslandInterface& island)
 
 			std::array<const lnd::LNDCell*, static_cast<size_t>(Corner::_COUNT)> cells;
 			// TODO(#522): Use zip_view in c++23
-			for (size_t i = 0; i < cells.size(); ++i)
+			for (size_t I = 0; I < cells.size(); ++I)
 			{
 				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-				cells[i] = &island.GetCell(blockOffset + offset[i]);
+				cells[I] = &island.GetCell(blockOffset + offset[I]);
 			}
 
 			// construct positions from cell altitudes
 			std::array<glm::vec3, static_cast<size_t>(Corner::_COUNT)> pos;
 			// TODO(#522): Use zip_view in c++23
-			for (size_t i = 0; i < pos.size(); ++i)
+			for (size_t I = 0; I < pos.size(); ++I)
 			{
-				pos[i] = glm::vec3(                                // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
-				    offset[i].x * LandIslandInterface::k_CellSize, // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
-				    cells[i]->altitude *                           // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+				pos[I] = glm::vec3(                                // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+				    offset[I].x * LandIslandInterface::k_CellSize, // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+				    cells[I]->altitude *                           // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 				        LandIslandInterface::k_HeightUnit,         // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
-				    offset[i].y * LandIslandInterface::k_CellSize  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+				    offset[I].y * LandIslandInterface::k_CellSize  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 				);
 			}
 
 			std::array<const lnd::LNDMapMaterial*, static_cast<size_t>(Corner::_COUNT)> materials;
-			for (size_t i = 0; i < pos.size(); ++i)
+			for (size_t I = 0; I < pos.size(); ++I)
 			{
 				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-				const auto& country = countries.at(cells[i]->properties.country);
+				const auto& country = countries.at(cells[I]->properties.country);
 				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-				const auto noise = island.GetNoise(blockOffset + offset[i]);
+				const auto noise = island.GetNoise(blockOffset + offset[I]);
 				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-				materials[i] = &country.materials[(cells[i]->altitude + noise) % country.materials.size()];
+				materials[I] = &country.materials[(cells[I]->altitude + noise) % country.materials.size()];
 			}
 
 			// TODO(470): This is temporary way for drawing landscape, should be moved to a shader in the renderer

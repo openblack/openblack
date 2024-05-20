@@ -55,10 +55,10 @@ template <class C, size_t size>
 constexpr std::unordered_map<std::string_view, C> makeLookup(std::array<std::string_view, size> strings)
 {
 	std::unordered_map<std::string_view, C> table;
-	for (size_t i = 0; const auto& str : strings)
+	for (size_t I = 0; const auto& str : strings)
 	{
-		table.insert(std::make_pair(str, static_cast<C>(i)));
-		++i;
+		table.insert(std::make_pair(str, static_cast<C>(I)));
+		++I;
 	}
 	return table;
 }

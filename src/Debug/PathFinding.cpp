@@ -231,12 +231,12 @@ void PathFinding::Update([[maybe_unused]] Game& game, [[maybe_unused]] const ope
 				{
 					return;
 				}
-				for (int32_t i = 0; i < static_cast<int32_t>(footpath.nodes.size()) - 1; ++i)
+				for (int32_t I = 0; I < static_cast<int32_t>(footpath.nodes.size()) - 1; ++I)
 				{
 					const auto distance2Threshold = 4.0f;
 
-					const auto& p1 = footpath.nodes[i].position;
-					const auto& p2 = footpath.nodes[i + 1].position;
+					const auto& p1 = footpath.nodes[I].position;
+					const auto& p2 = footpath.nodes[I + 1].position;
 					const auto p1p2 = p2 - p1;
 
 					const float t2 = glm::dot(_handPosition - p1, p1p2) / glm::length2(p1p2);

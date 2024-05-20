@@ -802,16 +802,16 @@ void Gui::ShowVillagerNames(const Game& game)
 
 	const auto& displaySize = ImGui::GetIO().DisplaySize;
 
-	uint32_t i = 0;
+	uint32_t I = 0;
 	const auto& camera = game.GetCamera();
 	const glm::vec4 viewport =
 	    glm::vec4(ImGui::GetStyle().WindowPadding.x, 0, displaySize.x - ImGui::GetStyle().WindowPadding.x, displaySize.y);
 	std::vector<glm::vec4> coveredAreas;
 	coveredAreas.reserve(Locator::entitiesRegistry::value().Size<Villager>());
 	Locator::entitiesRegistry::value().Each<const Transform, Villager, LivingAction>(
-	    [this, &i, &coveredAreas, &camera, config, viewport] //
+	    [this, &I, &coveredAreas, &camera, config, viewport] //
 	    (const Transform& transform, Villager& villager, LivingAction& action) {
-		    ++i;
+		    ++I;
 		    const float height = 2.0f * transform.scale.y; // TODO(bwrsandman): get from bounding box max y
 		    glm::vec3 screenPoint;
 		    if (!camera.ProjectWorldToScreen(transform.position + glm::vec3(0.0f, height, 0.0f), viewport, screenPoint))
@@ -836,7 +836,7 @@ void Gui::ShowVillagerNames(const Game& game)
 			    color = glm::saturate(color);
 		    }
 
-		    const std::string name = "Villager #" + std::to_string(i);
+		    const std::string name = "Villager #" + std::to_string(I);
 		    const std::string stateHelpText = "TODO: STATE HELP TEXT";
 		    std::string details =
 		        fmt::format("{}\nA:{} L:{}%, H:{}%", stateHelpText, villager.age, villager.health, villager.hunger);
