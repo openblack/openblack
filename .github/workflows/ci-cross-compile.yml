@@ -25,7 +25,7 @@ jobs:
             setup: |
               sudo dpkg --add-architecture i386
               sudo apt-get update
-              sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libx11-dev:i386 libxext-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libtool autoconf gcc13-multilib g++13-multilib libc6-dev-i386 libgpg-error-dev:i386 libltdl-dev:i386
+              sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libx11-dev:i386 libxext-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libtool autoconf gcc-multilib g++-multilib libc6-dev-i386 libgpg-error-dev:i386 libltdl-dev:i386
             additional_args: "`-DCMAKE_C_FLAGS=-m32`, `-DCMAKE_CXX_FLAGS=-m32`, `-DOPENBLACK_CROSSCOMPILING=ON`"
           # - triplet: arm64-linux
           #   os: ubuntu-latest
@@ -76,7 +76,7 @@ jobs:
       - name: Setup (Android and Emscripten on Linux)
         run: |
           sudo apt update -y
-          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
+          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev gcc-multilib g++-multilib
           echo "ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV # to use C++23 on 26.2.11394342
         if: (startsWith(matrix.preset, 'android') || startsWith(matrix.preset, 'emscripten')) && startsWith(matrix.os, 'ubuntu')
 
