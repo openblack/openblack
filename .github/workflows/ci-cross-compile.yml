@@ -76,7 +76,7 @@ jobs:
       - name: Setup (Android and Emscripten on Linux)
         run: |
           sudo apt update -y
-          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev gcc-multilib g++-multilib
+          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev gcc-multilib g++-multilib clang-18
           echo "ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV # to use C++23 on 26.2.11394342
         if: (startsWith(matrix.preset, 'android') || startsWith(matrix.preset, 'emscripten')) && startsWith(matrix.os, 'ubuntu')
 
