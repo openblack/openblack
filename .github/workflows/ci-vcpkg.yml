@@ -14,18 +14,14 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ubuntu-latest, macos-13, windows-latest]
+        os: [ubuntu-24.04, macos-13, windows-latest]
         cc: [""]
         cxx: [""]
         # These are additional individual jobs. There are no permutations of these.
         include:
-          # Testing clang
-          # Temporarily disable test until issue on github runners is resolved
-          # https://github.com/actions/runner-images/issues/8659
-          # TODO(#682): Revert this disabling
-          # - os: ubuntu-latest
-          #   cc: clang
-          #   cxx: clang++
+          - os: ubuntu-24.04
+            cc: clang
+            cxx: clang++
           - os: windows-latest
             cc: clang
             cxx: clang++
@@ -44,7 +40,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt update -y
-          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
+          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev libltdl-dev libxext-dev
         if: startsWith(matrix.os, 'ubuntu')
 
       - name: Download ClangBuildAnalyzer
@@ -57,6 +53,10 @@ jobs:
       - name: Install MacOS dependencies
         run: |
           brew install pkg-config
+          brew install llvm@17
+          echo "$(brew --prefix llvm@17)/bin" >> $GITHUB_PATH
+          echo "CC=$(brew --prefix llvm@17)/bin/clang" >> $GITHUB_ENV
+          echo "CXX=$(brew --prefix llvm@17)/bin/clang++" >> $GITHUB_ENV
         if: startsWith(matrix.os, 'macos')
 
       # Setup the build machine with the most recent versions of CMake and Ninja. Both are cached if not already: on subsequent runs both will be quickly restored from GitHub cache service.
@@ -68,10 +68,18 @@ jobs:
           vcpkgJsonGlob: 'vcpkg.json'
 
       - name: Run CMake+vcpkg to build packages.
+        id: build-packages
         uses: lukka/run-cmake@v10
         with:
           configurePreset: 'ninja-multi-vcpkg'
           configurePresetAdditionalArgs: "['-DCMAKE_EXPORT_COMPILE_COMMANDS=ON', '-DOPENBLACK_WARNINGS_AS_ERRORS=ON', '-DOPENBLACK_TRACE_TIME=ON']"
+
+      - name: Upload logs if failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vcpkg-build-logs-${{ matrix.os }}
+          path: vcpkg/buildtrees/*/*.log
 
       - name: Clang Build Analysis (Debug).
         if: matrix.cc == 'clang' || startsWith(matrix.os, 'macos')
@@ -107,45 +115,51 @@ jobs:
           ./${{ startsWith(matrix.os, 'ubuntu') && 'ClangBuildAnalyzer-linux' || startsWith(matrix.os, 'windows') && 'ClangBuildAnalyzer.exe' || startsWith(matrix.os, 'macos') && 'ClangBuildAnalyzer-mac' }} --analyze clang-build-analysis-release-${{ matrix.os }}.cap
 
       - name: Upload Clang Build Analysis
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: matrix.cc == 'clang' || startsWith(matrix.os, 'macos')
         with:
-          name: openblack-clang-build-analysis
+          name: openblack-clang-build-analysis-${{ github.sha }}
           path: |
             clang-build-analysis-debug-${{ matrix.os }}.cap
             clang-build-analysis-release-${{ matrix.os }}.cap
           if-no-files-found: error
+          overwrite: true
 
       - name: Upload compile database and system includes
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: startsWith(matrix.os, 'ubuntu')
         with:
-          name: openblack-compile-database
+          name: openblack-compile-database-${{ github.sha }}
           path: |
             cmake-build-presets/ninja-multi-vcpkg/include
             cmake-build-presets/ninja-multi-vcpkg/vcpkg_installed/x64-linux/include
             cmake-build-presets/ninja-multi-vcpkg/compile_commands.json
           if-no-files-found: error
+          overwrite: true
+
+      - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
+        shell: bash
 
       - name: Upload compiled openblack and tools
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: matrix.cc == ''
         with:
-          name: openblack-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
+          name: openblack-${{ matrix.os }}-${{ env.GITHUB_REF_NAME_DASHES }}
           path: cmake-build-presets/ninja-multi-vcpkg/bin
           if-no-files-found: error
 
       - name: Upload generated test data
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: matrix.cc == ''
         with:
-          name: openblack-test-data
+          name: openblack-test-data-${{ env.GITHUB_REF_NAME_DASHES }}
           path: |
             cmake-build-presets/ninja-multi-vcpkg/test/*/scenarios
             cmake-build-presets/ninja-multi-vcpkg/test/mock/Scripts
             cmake-build-presets/ninja-multi-vcpkg/test/mock/Data
             cmake-build-presets/ninja-multi-vcpkg/test/mock/Audio
           if-no-files-found: error
+          overwrite: true
 
     env:
       CC: ${{ matrix.cc }}
@@ -162,14 +176,14 @@ jobs:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           submodules: recursive
       - name: Download generated compile database
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: openblack-compile-database
+          name: openblack-compile-database-${{ github.sha }}
           path: cmake-build-presets/ninja-multi-vcpkg
       - name: Add base repo to git config
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
         if: startsWith(github.event_name, 'pull_request')
-      - uses: ZedThree/clang-tidy-review@v0.17.1
+      - uses: ZedThree/clang-tidy-review@v0.19.0
         id: review
         with:
           build_dir: cmake-build-presets/ninja-multi-vcpkg
@@ -189,18 +203,20 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ ubuntu-latest, macos-13, windows-latest ]
+        os: [ ubuntu-24.04, macos-13, windows-latest ]
     steps:
+      - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
+        shell: bash
       - name: Download compiled openblack and tools
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         id: download-binary
         with:
-          name: openblack-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
+          name: openblack-${{ matrix.os }}-${{ env.GITHUB_REF_NAME_DASHES }}
       - name: Download generated mock data
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         id: download-test
         with:
-          name: openblack-test-data
+          name: openblack-test-data-${{ env.GITHUB_REF_NAME_DASHES }}
           path: cmake-build-presets/ninja-multi-vcpkg/test
       - name: Download Pre-patched and installed Game Data
         uses: suisei-cn/actions-download-file@v1
@@ -257,19 +273,21 @@ jobs:
       ARGS: -g game-data\bw --num-frames-to-simulate 10 --screenshot-frame 5 --log-file stdout --log-level all=debug -W 800 -H 600
       BACKEND: Direct3D11
     steps:
+      - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
+        shell: bash
       - name: Download compiled openblack and tools
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         id: download-binary
         with:
-          name: openblack-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
+          name: openblack-${{ matrix.os }}-${{ env.GITHUB_REF_NAME_DASHES }}
       - name: Download generated mock data
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         id: download-test
         with:
-          name: openblack-test-data
+          name: openblack-test-data-${{ env.GITHUB_REF_NAME_DASHES }}
       - name: Enable execute permissions on binary
         run: chmod +x ${{steps.download-binary.outputs.download-path}}/*/*
-        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+        if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
       - name: Download Pre-patched and installed Game Data
         uses: suisei-cn/actions-download-file@v1
         id: game-data

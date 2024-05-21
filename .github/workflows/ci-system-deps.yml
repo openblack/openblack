@@ -20,10 +20,10 @@ jobs:
       - name: Adding build user and configure system
         run: |
           sed -E -i "s|#? ?MAKEFLAGS=.*|MAKEFLAGS=-j$(nproc)|" /etc/makepkg.conf
-          useradd builduser -p ""
+          useradd builduser --create-home --password ""
           printf 'builduser ALL=(ALL) ALL\n' >> /etc/sudoers
           pacman -Syu --noconfirm --noprogressbar --needed git
-          git config --global --add safe.directory /__w/openblack/openblack
+          sudo -u builduser git config --global safe.directory '*'
 
       - name: Clone the openblack repo
         uses: actions/checkout@v3
@@ -108,8 +108,11 @@ jobs:
           sed "s,source=.*,source=('openblack::git+file://${GITHUB_WORKSPACE}/src')," -i PKGBUILD
           sudo -u builduser makepkg
 
-      - uses: actions/upload-artifact@v3
+      - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
+        shell: bash
+
+      - uses: actions/upload-artifact@v4
         with:
-          name: openblack-arch-linux-pkg-${{github.sha}}
+          name: openblack-arch-linux-pkg-${{ env.GITHUB_REF_NAME_DASHES }}
           path: openblack-git/openblack-git*.pkg.tar.*
           if-no-files-found: error

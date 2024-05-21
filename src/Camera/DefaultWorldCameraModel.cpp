@@ -249,7 +249,12 @@ void DefaultWorldCameraModel::UpdateFocusPointInteractionParameters(glm::vec3 or
                                                                     const Camera& camera)
 {
 	_focusAtClick = _targetFocus;
-	_screenSpaceMouseRaycastHitAtClick = _screenSpaceMouseRaycastHit;
+	// TODO(#656) in c++23 use camera.RaycastMouseToLand().and_then
+	_screenSpaceMouseRaycastHitAtClick = std::nullopt;
+	if (auto hit = camera.RaycastMouseToLand(true, Camera::Interpolation::Target))
+	{
+		_screenSpaceMouseRaycastHitAtClick = hit->position;
+	}
 	if (_screenSpaceMouseRaycastHitAtClick.has_value())
 	{
 		_arcBallRadius = PointDistanceAlongLineSegment(origin, focus, *_screenSpaceMouseRaycastHitAtClick);
@@ -439,7 +444,7 @@ void DefaultWorldCameraModel::UpdateModeDragging(const Camera& camera, glm::u16v
 
 void DefaultWorldCameraModel::UpdateModeFlying(glm::vec3 eulerAngles)
 {
-	if (!_handPosition.has_value() && !_screenSpaceCenterRaycastHit.has_value())
+	if (!_screenSpaceCenterRaycastHit.has_value())
 	{
 		return;
 	}
@@ -503,15 +508,7 @@ void DefaultWorldCameraModel::UpdateModeFlying(glm::vec3 eulerAngles)
 
 	if (wooshingDistance)
 	{
-		_flightPath = CharterFlight(_targetOrigin, _targetFocus, _currentOrigin, k_FlightHeightFactor);
-		static constexpr auto k_WooshingNoiseIds = std::array<audio::SoundId, 4> {
-		    audio::SoundId::G_Woosh_01,
-		    audio::SoundId::G_Woosh_02,
-		    audio::SoundId::G_Woosh_03,
-		    audio::SoundId::G_Woosh_04,
-		};
-		const auto wooshNoiseId = static_cast<entt::id_type>(Locator::rng::value().Choose(k_WooshingNoiseIds));
-		Locator::audio::value().PlaySound(wooshNoiseId, audio::PlayType::Once);
+		SetFlight(_targetOrigin, _targetFocus);
 	}
 }
 
@@ -537,10 +534,6 @@ void DefaultWorldCameraModel::UpdateRaycastHitPoints(const Camera& camera)
 	if (const auto hit = camera.RaycastScreenCoordToLand({0.5f, 0.5f}, false, Camera::Interpolation::Target))
 	{
 		_screenSpaceCenterRaycastHit = hit->position;
-	}
-	else
-	{
-		_screenSpaceCenterRaycastHit = std::nullopt;
 	}
 }
 
@@ -750,6 +743,19 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 	{
 		_mode = Mode::Cartesian;
 	}
+}
+
+void DefaultWorldCameraModel::SetFlight(glm::vec3 origin, glm::vec3 focus)
+{
+	_flightPath = CharterFlight(origin, focus, _currentOrigin, k_FlightHeightFactor);
+	static constexpr auto k_WooshingNoiseIds = std::array<audio::SoundId, 4> {
+	    audio::SoundId::G_Woosh_01,
+	    audio::SoundId::G_Woosh_02,
+	    audio::SoundId::G_Woosh_03,
+	    audio::SoundId::G_Woosh_04,
+	};
+	const auto wooshNoiseId = static_cast<entt::id_type>(Locator::rng::value().Choose(k_WooshingNoiseIds));
+	Locator::audio::value().PlaySound(wooshNoiseId, audio::PlayType::Once);
 }
 
 glm::vec3 DefaultWorldCameraModel::GetTargetOrigin() const

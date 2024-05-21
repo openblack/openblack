@@ -25,7 +25,9 @@ public:
 	virtual bool Initialize() = 0;
 	virtual void Update(const std::chrono::microseconds& dt) const = 0;
 	[[nodiscard]] virtual const std::array<entt::entity, 8>& GetBookmarks() const = 0;
-	virtual void SetBookmark(uint8_t index, const glm::vec3& position) const = 0;
+	/// When flying to a bookmark, the bookmark position becomes the camera focus
+	/// and the saved camera origin is restored. The original focus is lost.
+	virtual void SetBookmark(uint8_t index, const glm::vec3& position, const glm::vec3& savedCameraOrigin) const = 0;
 	virtual void ClearBookmark(uint8_t index) const = 0;
 };
 

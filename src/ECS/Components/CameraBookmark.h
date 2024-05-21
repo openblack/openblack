@@ -13,12 +13,15 @@
 
 #include <chrono>
 
+#include <glm/vec3.hpp>
+
 namespace openblack::ecs::components
 {
 struct CameraBookmark
 {
 	uint8_t number;
 	float animationTime;
+	glm::vec3 savedOrigin;
 };
 
 } // namespace openblack::ecs::components

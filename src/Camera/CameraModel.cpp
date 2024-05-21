@@ -15,7 +15,6 @@
 #include "3D/LandIsland.h"
 #include "DefaultWorldCameraModel.h"
 #include "Locator.h"
-#include "OldCameraModel.h"
 
 using namespace openblack;
 
@@ -27,8 +26,6 @@ std::unique_ptr<CameraModel> CameraModel::CreateModel(CameraModel::Model model)
 	{
 	case CameraModel::Model::DefaultWorld:
 		return std::unique_ptr<CameraModel>(new DefaultWorldCameraModel());
-	case CameraModel::Model::Old:
-		return std::unique_ptr<CameraModel>(new OldCameraModel());
 	default:
 		assert(false);
 		return nullptr;

@@ -16,17 +16,17 @@ jobs:
         # This is the matrix. They form permutations.
         triplet: [""]
         preset: [android-armeabi-v7a-vcpkg, android-arm64-v8a-vcpkg, android-x86-vcpkg, android-x86_64-vcpkg]
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04]
         # These are additional individual jobs. There are no permutations of these.
         include:
           - triplet: x86-linux
-            os: ubuntu-latest
+            os: ubuntu-24.04
             preset: ninja-multi-vcpkg
             setup: |
               sudo dpkg --add-architecture i386
               sudo apt-get update
-              sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libx11-dev:i386 libxext-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libtool autoconf gcc-multilib g++-multilib libc6-dev-i386 libgpg-error-dev:i386
-            additional_args: "`-DCMAKE_C_FLAGS=-m32`, `-DCMAKE_CXX_FLAGS=-m32`"
+              sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libx11-dev:i386 libxext-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libtool autoconf gcc-multilib g++-multilib libc6-dev-i386 libgpg-error-dev:i386 libltdl-dev:i386
+            additional_args: "`-DCMAKE_C_FLAGS=-m32`, `-DCMAKE_CXX_FLAGS=-m32`, `-DOPENBLACK_CROSSCOMPILING=ON`"
           # - triplet: arm64-linux
           #   os: ubuntu-latest
           #   preset: ninja-multi-vcpkg
@@ -93,10 +93,18 @@ jobs:
           vcpkgJsonGlob: 'vcpkg.json'
 
       - name: Run CMake+vcpkg to build packages.
+        id: build-packages
         uses: lukka/run-cmake@v10
         with:
           configurePreset: '${{ matrix.preset }}'
           configurePresetAdditionalArgs: "[`-DOPENBLACK_WARNINGS_AS_ERRORS=ON`${{ matrix.triplet && format(', `-DVCPKG_TARGET_TRIPLET={0}`', matrix.triplet) }}${{ matrix.additional_args && format(', {0}', matrix.additional_args) }}]"
+
+      - name: Upload logs if failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vcpkg-build-logs-${{ matrix.triplet || matrix.preset }}
+          path: vcpkg/buildtrees/*/*.log
 
       - name: Run CMake+Ninja to build the code (Debug).
         uses: lukka/run-cmake@v10
@@ -108,9 +116,12 @@ jobs:
         with:
           buildPreset: '${{ matrix.preset }}-release'
 
-      - uses: actions/upload-artifact@v3
+      - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
+        shell: bash
+
+      - uses: actions/upload-artifact@v4
         with:
-          name: openblack-${{ matrix.triplet || matrix.preset }}-${{github.sha}}
+          name: openblack-${{ matrix.triplet || matrix.preset }}-${{ env.GITHUB_REF_NAME_DASHES }}
           path: cmake-build-presets/${{ matrix.preset }}/bin
           if-no-files-found: error
 
@@ -134,25 +145,27 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
-      - uses: actions/download-artifact@v3
+      - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
+        shell: bash
+      - uses: actions/download-artifact@v4
         name: Download pre-compiled android-armeabi-v7a-vcpkg
         with:
-          name: openblack-android-armeabi-v7a-vcpkg-${{github.sha}}
+          name: openblack-android-armeabi-v7a-vcpkg-${{ env.GITHUB_REF_NAME_DASHES }}
           path: android/app/src/main/jniLibs/armeabi-v7a
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         name: Download pre-compiled android-arm64-v8a-vcpkg
         with:
-          name: openblack-android-arm64-v8a-vcpkg-${{github.sha}}
+          name: openblack-android-arm64-v8a-vcpkg-${{ env.GITHUB_REF_NAME_DASHES }}
           path: android/app/src/main/jniLibs/arm64-v8a
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         name: Download pre-compiled android-x86-vcpkg
         with:
-          name: openblack-android-x86-vcpkg-${{github.sha}}
+          name: openblack-android-x86-vcpkg-${{ env.GITHUB_REF_NAME_DASHES }}
           path: android/app/src/main/jniLibs/x86
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         name: Download pre-compiled android-x86_64-vcpkg
         with:
-          name: openblack-android-x86_64-vcpkg-${{github.sha}}
+          name: openblack-android-x86_64-vcpkg-${{ env.GITHUB_REF_NAME_DASHES }}
           path: android/app/src/main/jniLibs/x86_64
       - name: Move downloads around
         shell: bash
@@ -175,8 +188,9 @@ jobs:
         run: ./gradlew build --no-daemon assembleDebug -PusePrebuiltNativeLibs
         working-directory: ./android
       # TODO(#632): Setup digital signing for Android release build
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: openblack-android-apk-${{github.sha}}
+          name: openblack-android-apk-${{ env.GITHUB_REF_NAME_DASHES }}
           path: android/app/build/outputs/apk
           if-no-files-found: error
+          overwrite: true
