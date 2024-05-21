@@ -14,9 +14,14 @@
 #include <cctype>
 #include <cstddef>
 
+#include <filesystem>
+#include <fstream>
+#include <system_error>
+
 #include <spdlog/spdlog.h>
 
 #include "FileStream.h"
+#include "fmt/format.h"
 
 #ifdef _WIN32
 // clang-format off
@@ -70,6 +75,21 @@ std::filesystem::path DefaultFileSystem::FindPath(const std::filesystem::path& p
 	}
 
 	throw std::runtime_error("File " + path.string() + " not found");
+}
+
+bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
+{
+	if (path.empty())
+	{
+		return false;
+	}
+
+	if (!std::filesystem::exists(path))
+	{
+		return false;
+	}
+
+	return true;
 }
 
 std::unique_ptr<Stream> DefaultFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)

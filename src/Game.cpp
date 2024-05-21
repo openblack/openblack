@@ -486,9 +486,7 @@ bool Game::Initialize()
 	auto& levelManager = resources.GetLevels();
 	auto& soundManager = resources.GetSounds();
 
-	fileSystem.SetGamePath(_gamePath);
-
-	if (fileSystem.GetGamePath().empty())
+	if (!fileSystem.IsPathValid(_gamePath))
 	{
 		// no key, don't guess, let the user know to set the command param
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Game Path missing",
@@ -498,6 +496,8 @@ bool Game::Initialize()
 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to find the GameDir.");
 		return false;
 	}
+
+	fileSystem.SetGamePath(_gamePath);
 
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "The GamePath is \"{}\".", fileSystem.GetGamePath().generic_string());
 
