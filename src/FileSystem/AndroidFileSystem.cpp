@@ -83,7 +83,7 @@ bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
 	_jniEnv->DeleteLocalRef(jgamePath);
 	_jniEnv->DeleteLocalRef(jpath);
 
-    return isValid;
+	return isValid;
 }
 
 std::unique_ptr<Stream> AndroidFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
