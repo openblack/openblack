@@ -91,7 +91,8 @@ bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
 	return true;
 }
 
-auto DefaultFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode) -> std::expected<std::unique_ptr<Stream>, std::invalid_argument>
+auto DefaultFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
+    -> std::expected<std::unique_ptr<Stream>, std::invalid_argument>
 {
 	auto result = FindPath(path);
 	if (result.has_value())
