@@ -23,19 +23,19 @@ namespace openblack::filesystem
 {
 enum class Path
 {
-    Audio,
-    Scripts,
-    Data,
-    Playgrounds,
-    Quests,
-    CreatureMind,
-    Misc,
-    Symbols,
-    Landscape,
-    Textures,
-    WeatherSystem,
-    CreatureMesh,
-    Citadel,
+	Audio,
+	Scripts,
+	Data,
+	Playgrounds,
+	Quests,
+	CreatureMind,
+	Misc,
+	Symbols,
+	Landscape,
+	Textures,
+	WeatherSystem,
+	CreatureMesh,
+	Citadel,
 };
 
 class FileSystemInterface
