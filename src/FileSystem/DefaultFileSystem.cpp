@@ -33,7 +33,8 @@
 
 using namespace openblack::filesystem;
 
-auto DefaultFileSystem::FindPath(const std::filesystem::path& path) const->std::expected<std::filesystem::path, std::invalid_argument>
+auto DefaultFileSystem::FindPath(const std::filesystem::path& path) const
+    -> std::expected<std::filesystem::path, std::invalid_argument>
 {
 	if (path.empty())
 	{
