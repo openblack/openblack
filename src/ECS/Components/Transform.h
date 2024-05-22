@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <optional>
+
 #include <glm/glm.hpp>
 
 namespace openblack::ecs::components
@@ -20,6 +22,11 @@ struct Transform
 	glm::mat3 rotation;
 	// TODO(bwrsandman): Change to float. For all intents and purposes, transform scales uniformly.
 	glm::vec3 scale;
+};
+
+inline std::optional<glm::vec3> GetTransformPosition(const Transform& hit)
+{
+	return hit.position;
 };
 
 } // namespace openblack::ecs::components
