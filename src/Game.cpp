@@ -779,7 +779,7 @@ bool Game::Run()
 		//  Android has a complicated permissions API, must call java code to read contents.
 		_lhvm->Open(fileSystem.ReadAll(fileSystem.FindPath(challengePath)));
 #else
-		_lhvm->Open(fileSystem.FindPath(challengePath));
+		_lhvm->Open(fileSystem.FindPath(challengePath).value());
 #endif
 	}
 	else
@@ -937,11 +937,11 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 
 	auto fixedName = fileSystem.FindPath(filesystem::FileSystemInterface::FixPath(path));
 
-	if (!fileSystem.Exists(fixedName))
+	if (!fileSystem.Exists(fixedName.value()))
 	{
 		throw std::runtime_error("Could not find landscape " + path.generic_string());
 	}
-	InitializeLevel(fixedName);
+	InitializeLevel(fixedName.value());
 
 	// There is always a player active
 	Locator::playerSystem::value().AddPlayer(ecs::archetypes::PlayerArchetype::Create(PlayerNames::PLAYER_ONE));

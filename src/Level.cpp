@@ -54,7 +54,7 @@ bool Level::IsValid() const
 bool Level::IsLevelFile(const std::filesystem::path& path)
 {
 	const std::string loadLandscapeLine("LOAD_LANDSCAPE");
-	auto levelFile = Locator::filesystem::value().Open(path, filesystem::Stream::Mode::Read);
+	auto levelFile = Locator::filesystem::value().Open(path, filesystem::Stream::Mode::Read).value();
 	while (!levelFile->IsEndOfFile())
 	{
 		const std::string line = levelFile->GetLine();
@@ -77,7 +77,7 @@ Level Level::ParseLevel(const std::filesystem::path& path, Level::LandType landT
 	const std::string startMessageLine("START_GAME_MESSAGE");
 	const std::string gameMessageLine("ADD_GAME_MESSAGE_LINE");
 
-	auto levelFile = Locator::filesystem::value().Open(path, filesystem::Stream::Mode::Read);
+	auto levelFile = Locator::filesystem::value().Open(path, filesystem::Stream::Mode::Read).value();
 	while (!levelFile->IsEndOfFile())
 	{
 		std::string line = levelFile->GetLine();

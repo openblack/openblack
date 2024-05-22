@@ -169,7 +169,7 @@ bool L3DMesh::LoadFromFile(const std::filesystem::path& path)
 
 	try
 	{
-		l3d.Open(Locator::filesystem::value().FindPath(path));
+		l3d.Open(Locator::filesystem::value().FindPath(path).value());
 	}
 	catch (std::runtime_error& err)
 	{

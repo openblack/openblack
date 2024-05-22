@@ -54,7 +54,7 @@ L3DLoader::result_type L3DLoader::operator()(FromDiskTag, const std::filesystem:
 	}
 	else if (pathExt == ".zzz")
 	{
-		auto stream = Locator::filesystem::value().Open(path, Stream::Mode::Read);
+		auto stream = Locator::filesystem::value().Open(path, Stream::Mode::Read).value();
 		uint32_t decompressedSize = 0;
 		stream->Read(&decompressedSize);
 		auto buffer = std::vector<uint8_t>(stream->Size() - sizeof(decompressedSize));
