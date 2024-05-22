@@ -41,7 +41,7 @@ enum class Path
 class FileSystemInterface
 {
 public:
-    static std::filesystem::path FixPath(const std::filesystem::path& path);
+	static std::filesystem::path FixPath(const std::filesystem::path& path);
 
 	virtual ~FileSystemInterface();
 
