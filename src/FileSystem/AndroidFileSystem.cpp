@@ -155,7 +155,7 @@ void AndroidFileSystem::Iterate(const std::filesystem::path& path, bool recursiv
 		_jniEnv->ReleaseStringUTFChars(filePath, rawString);
 	}
 
-	//Be explicit to avoid exceeding limit of local resources.
+	// Be explicit to avoid exceeding limit of local resources.
 	_jniEnv->DeleteLocalRef(jfilePaths);
 	_jniEnv->DeleteLocalRef(jgamePath);
 	_jniEnv->DeleteLocalRef(jpath);
