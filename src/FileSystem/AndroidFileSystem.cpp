@@ -137,8 +137,8 @@ auto AndroidFileSystem::Open(const std::filesystem::path& path, Stream::Mode mod
 		return std::unexpected<std::invalid_argument>("File " + path.string() + " not found.");
 	}
 
-    jsize length = _jniEnv->GetArrayLength(jbytes);
-    jbyte* jbytesPtr = _jniEnv->GetByteArrayElements(jbytes, nullptr);
+	jsize length = _jniEnv->GetArrayLength(jbytes);
+	jbyte* jbytesPtr = _jniEnv->GetByteArrayElements(jbytes, nullptr);
 
 	std::vector<uint8_t> bytes(jbytesPtr, jbytesPtr + length);
 	auto value = std::make_unique<MemoryStream>(std::move(bytes));
