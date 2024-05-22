@@ -36,44 +36,44 @@ using namespace openblack::filesystem;
 auto DefaultFileSystem::FindPath(const std::filesystem::path& path) const
     -> std::expected<std::filesystem::path, std::invalid_argument>
 {
-    if (path.empty())
-    {
-        return std::unexpected<std::invalid_argument>("empty_path");
-    }
+	if (path.empty())
+	{
+		return std::unexpected<std::invalid_argument>("empty_path");
+	}
 
-    // try absolute first
-    if (path.is_absolute())
-    {
-        if (std::filesystem::exists(path))
-        {
-            return path;
-        }
-    }
-    else
-    {
-        // try relative to current directory
-        if (std::filesystem::exists(path))
-        {
-            return path;
-        }
+	// try absolute first
+	if (path.is_absolute())
+	{
+		if (std::filesystem::exists(path))
+		{
+			return path;
+		}
+	}
+	else
+	{
+		// try relative to current directory
+		if (std::filesystem::exists(path))
+		{
+			return path;
+		}
 
-        // try relative to game directory
-        if (std::filesystem::exists(_gamePath / path))
-        {
-            return _gamePath / path;
-        }
+		// try relative to game directory
+		if (std::filesystem::exists(_gamePath / path))
+		{
+			return _gamePath / path;
+		}
 
-        // try relative to additional paths
-        for (const auto& p : _additionalPaths)
-        {
-            if (std::filesystem::exists(p / path))
-            {
-                return p / path;
-            }
-        }
-    }
+		// try relative to additional paths
+		for (const auto& p : _additionalPaths)
+		{
+			if (std::filesystem::exists(p / path))
+			{
+				return p / path;
+			}
+		}
+	}
 
-    return std::unexpected<std::invalid_argument>("File " + path.string() + " not found");
+	return std::unexpected<std::invalid_argument>("File " + path.string() + " not found");
 }
 
 bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
