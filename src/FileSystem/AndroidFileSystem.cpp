@@ -143,10 +143,10 @@ auto AndroidFileSystem::Open(const std::filesystem::path& path, Stream::Mode mod
 	std::vector<uint8_t> bytes(jbytesPtr, jbytesPtr + length);
 	auto value = std::make_unique<MemoryStream>(std::move(bytes));
 
-    _jniEnv->ReleaseByteArrayElements(jbytes, jbytesPtr, 0);
-    _jniEnv->DeleteLocalRef(jbytes);
-    _jniEnv->DeleteLocalRef(jpath);
-    _jniEnv->DeleteLocalRef(jgamePath);
+	_jniEnv->ReleaseByteArrayElements(jbytes, jbytesPtr, 0);
+	_jniEnv->DeleteLocalRef(jbytes);
+	_jniEnv->DeleteLocalRef(jpath);
+	_jniEnv->DeleteLocalRef(jgamePath);
 
 	return value;
 }
