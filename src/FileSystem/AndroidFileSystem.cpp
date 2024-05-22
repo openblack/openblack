@@ -126,9 +126,9 @@ auto AndroidFileSystem::Open(const std::filesystem::path& path, Stream::Mode mod
 	jstring jpath = _jniEnv->NewStringUTF(path.c_str());
 	jstring jgamePath = _jniEnv->NewStringUTF(_gamePath.c_str());
 
-    // You need to create a global reference to use it outside the method where it was created
-    jbyteArray jbytes =
-        (jbyteArray)_jniEnv->CallStaticObjectMethod(_jniInteropClass, _jniReadFileFromPathMid, _jniActivity, jgamePath, jpath);
+	// You need to create a global reference to use it outside the method where it was created
+	jbyteArray jbytes =
+	    (jbyteArray)_jniEnv->CallStaticObjectMethod(_jniInteropClass, _jniReadFileFromPathMid, _jniActivity, jgamePath, jpath);
 
 	if (jbytes == nullptr)
 	{
