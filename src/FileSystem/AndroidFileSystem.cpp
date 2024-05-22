@@ -75,10 +75,10 @@ bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
 
     bool isValid = juri != nullptr;
 
-    if (isValid)
-    {
-        _jniEnv->DeleteLocalRef(juri);
-    }
+	if (isValid)
+	{
+		_jniEnv->DeleteLocalRef(juri);
+	}
 
     _jniEnv->DeleteLocalRef(jgamePath);
     _jniEnv->DeleteLocalRef(jpath);
