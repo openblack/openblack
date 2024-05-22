@@ -123,8 +123,8 @@ auto AndroidFileSystem::Open(const std::filesystem::path& path, Stream::Mode mod
 		return std::unexpected<std::invalid_argument>("File " + path.string() + " not found");
 	}
 
-    jstring jpath = _jniEnv->NewStringUTF(path.c_str());
-    jstring jgamePath = _jniEnv->NewStringUTF(_gamePath.c_str());
+	jstring jpath = _jniEnv->NewStringUTF(path.c_str());
+	jstring jgamePath = _jniEnv->NewStringUTF(_gamePath.c_str());
 
     // You need to create a global reference to use it outside the method where it was created
     jbyteArray jbytes =
