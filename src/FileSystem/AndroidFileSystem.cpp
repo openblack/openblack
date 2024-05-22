@@ -60,16 +60,16 @@ bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
     jstring jgamePath = _jniEnv->NewStringUTF(_gamePath.c_str());
     jstring jpath = _jniEnv->NewStringUTF(path.c_str());
 
-    jmethodID midGetDirectoryFromPath =
-        _jniEnv->GetStaticMethodID(_jniInteropClass, "getDirectoryFromPath",
-                                   "(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Landroid/net/Uri;");
-    if (midGetDirectoryFromPath == nullptr)
-    {
-        spdlog::error("Failed to find method: getDirectoryFromPath");
-        _jniEnv->DeleteLocalRef(jgamePath);
-        _jniEnv->DeleteLocalRef(jpath);
-        return false;
-    }
+	jmethodID midGetDirectoryFromPath =
+	    _jniEnv->GetStaticMethodID(_jniInteropClass, "getDirectoryFromPath",
+	                               "(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Landroid/net/Uri;");
+	if (midGetDirectoryFromPath == nullptr)
+	{
+		spdlog::error("Failed to find method: getDirectoryFromPath");
+		_jniEnv->DeleteLocalRef(jgamePath);
+		_jniEnv->DeleteLocalRef(jpath);
+		return false;
+	}
 
 	jobject juri = _jniEnv->CallStaticObjectMethod(_jniInteropClass, midGetDirectoryFromPath, _jniActivity, jgamePath, jpath);
 
