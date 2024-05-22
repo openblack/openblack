@@ -118,10 +118,10 @@ std::unique_ptr<Stream> AndroidFileSystem::Open(const std::filesystem::path& pat
 auto AndroidFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
     -> std::expected<std::unique_ptr<Stream>, std::invalid_argument>
 {
-    if (path.empty())
-    {
-        return std::unexpected<std::invalid_argument>("File " + path.string() + " not found");
-    }
+	if (path.empty())
+	{
+		return std::unexpected<std::invalid_argument>("File " + path.string() + " not found");
+	}
 
     jstring jpath = _jniEnv->NewStringUTF(path.c_str());
     jstring jgamePath = _jniEnv->NewStringUTF(_gamePath.c_str());
