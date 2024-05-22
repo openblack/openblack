@@ -148,7 +148,7 @@ auto AndroidFileSystem::Open(const std::filesystem::path& path, Stream::Mode mod
     _jniEnv->DeleteLocalRef(jpath);
     _jniEnv->DeleteLocalRef(jgamePath);
 
-    return value;
+	return value;
 }
 
 bool AndroidFileSystem::Exists(const std::filesystem::path& path) const
