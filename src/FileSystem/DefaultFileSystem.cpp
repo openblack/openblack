@@ -125,7 +125,7 @@ void DefaultFileSystem::Iterate(const std::filesystem::path& path, bool recursiv
 	const auto fixedPath = FindPath(path);
 	if (recursive)
 	{
-		//Let's assume that value() is always valid for now, as that was what was here initially...
+		// Let's assume that value() is always valid for now, as that was what was here initially...
 		for (const auto& f : std::filesystem::recursive_directory_iterator {fixedPath.value()})
 		{
 			function(f);
