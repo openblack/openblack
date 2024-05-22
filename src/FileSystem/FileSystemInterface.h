@@ -43,7 +43,7 @@ class FileSystemInterface
 public:
     static std::filesystem::path FixPath(const std::filesystem::path& path);
 
-    virtual ~FileSystemInterface();
+	virtual ~FileSystemInterface();
 
 	template <Path pathType>
 	[[nodiscard]] std::filesystem::path GetPath(bool withGamePath = false) const
