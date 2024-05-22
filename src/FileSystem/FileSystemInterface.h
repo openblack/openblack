@@ -111,7 +111,8 @@ public:
 	[[nodiscard]] virtual auto FindPath(const std::filesystem::path& path) const
 	    -> std::expected<std::filesystem::path, std::invalid_argument> = 0;
 	[[nodiscard]] virtual bool IsPathValid(const std::filesystem::path& path) = 0;
-	virtual auto Open(const std::filesystem::path& path, Stream::Mode mode) -> std::expected<std::unique_ptr<Stream>, std::invalid_argument> = 0;
+	virtual auto Open(const std::filesystem::path& path, Stream::Mode mode)
+	    -> std::expected<std::unique_ptr<Stream>, std::invalid_argument> = 0;
 	[[nodiscard]] virtual bool Exists(const std::filesystem::path& path) const = 0;
 	virtual void SetGamePath(const std::filesystem::path& path) = 0;
 	[[nodiscard]] virtual const std::filesystem::path& GetGamePath() const = 0;
