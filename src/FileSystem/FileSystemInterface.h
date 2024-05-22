@@ -12,6 +12,7 @@
 #include <cassert>
 #include <cstdint>
 
+#include <expected>
 #include <filesystem>
 #include <functional>
 #include <vector>
