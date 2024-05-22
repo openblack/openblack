@@ -133,7 +133,7 @@ void DefaultFileSystem::Iterate(const std::filesystem::path& path, bool recursiv
 	}
 	else
 	{
-		//Let's assume that value() is always valid for now, as that was what was here initially...
+		// Let's assume that value() is always valid for now, as that was what was here initially...
 		for (const auto& f : std::filesystem::directory_iterator {fixedPath.value()})
 		{
 			function(f);
