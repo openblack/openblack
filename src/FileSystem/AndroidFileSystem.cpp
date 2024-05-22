@@ -44,7 +44,8 @@ AndroidFileSystem::~AndroidFileSystem()
 	_jniEnv->DeleteGlobalRef(_jniInteropClass);
 }
 
-auto AndroidFileSystem::FindPath(const std::filesystem::path& path) const->std::expected<std::filesystem::path, std::invalid_argument>
+auto AndroidFileSystem::FindPath(const std::filesystem::path& path) const
+    -> std::expected<std::filesystem::path, std::invalid_argument>
 {
 	if (path.empty())
 	{
