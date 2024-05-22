@@ -23,103 +23,103 @@ namespace openblack::filesystem
 {
 enum class Path
 {
-	Audio,
-	Scripts,
-	Data,
-	Playgrounds,
-	Quests,
-	CreatureMind,
-	Misc,
-	Symbols,
-	Landscape,
-	Textures,
-	WeatherSystem,
-	CreatureMesh,
-	Citadel,
+    Audio,
+    Scripts,
+    Data,
+    Playgrounds,
+    Quests,
+    CreatureMind,
+    Misc,
+    Symbols,
+    Landscape,
+    Textures,
+    WeatherSystem,
+    CreatureMesh,
+    Citadel,
 };
 
 class FileSystemInterface
 {
 public:
-	static std::filesystem::path FixPath(const std::filesystem::path& path);
+    static std::filesystem::path FixPath(const std::filesystem::path& path);
 
-	virtual ~FileSystemInterface();
+    virtual ~FileSystemInterface();
 
-	template <Path pathType>
-	[[nodiscard]] std::filesystem::path GetPath(bool withGamePath = false) const
-	{
-		std::filesystem::path result;
-		if constexpr (pathType == Path::Audio)
-		{
-			result = "Audio";
-		}
-		else if constexpr (pathType == Path::Scripts)
-		{
-			result = "Scripts";
-		}
-		else if constexpr (pathType == Path::Data)
-		{
-			result = "Data";
-		}
-		else if constexpr (pathType == Path::Playgrounds)
-		{
-			result = GetPath<Path::Scripts>() / "Playgrounds";
-		}
-		else if constexpr (pathType == Path::Quests)
-		{
-			result = GetPath<Path::Scripts>() / "Quests";
-		}
-		else if constexpr (pathType == Path::CreatureMind)
-		{
-			result = GetPath<Path::Scripts>() / "CreatureMind";
-		}
-		else if constexpr (pathType == Path::Misc)
-		{
-			result = GetPath<Path::Data>() / "Misc";
-		}
-		else if constexpr (pathType == Path::Symbols)
-		{
-			result = GetPath<Path::Data>() / "Symbols";
-		}
-		else if constexpr (pathType == Path::Landscape)
-		{
-			result = GetPath<Path::Data>() / "Landscape";
-		}
-		else if constexpr (pathType == Path::Textures)
-		{
-			result = GetPath<Path::Data>() / "Textures";
-		}
-		else if constexpr (pathType == Path::WeatherSystem)
-		{
-			result = GetPath<Path::Data>() / "WeatherSystem";
-		}
-		else if constexpr (pathType == Path::CreatureMesh)
-		{
-			result = GetPath<Path::Data>() / "CreatureMesh";
-		}
-		else if constexpr (pathType == Path::Citadel)
-		{
-			result = GetPath<Path::Data>() / "Citadel";
-		}
-		else
-		{
-			assert(false);
-		}
-		return withGamePath ? (GetGamePath() / result) : result;
-	}
+    template <Path pathType>
+    [[nodiscard]] std::filesystem::path GetPath(bool withGamePath = false) const
+    {
+        std::filesystem::path result;
+        if constexpr (pathType == Path::Audio)
+        {
+            result = "Audio";
+        }
+        else if constexpr (pathType == Path::Scripts)
+        {
+            result = "Scripts";
+        }
+        else if constexpr (pathType == Path::Data)
+        {
+            result = "Data";
+        }
+        else if constexpr (pathType == Path::Playgrounds)
+        {
+            result = GetPath<Path::Scripts>() / "Playgrounds";
+        }
+        else if constexpr (pathType == Path::Quests)
+        {
+            result = GetPath<Path::Scripts>() / "Quests";
+        }
+        else if constexpr (pathType == Path::CreatureMind)
+        {
+            result = GetPath<Path::Scripts>() / "CreatureMind";
+        }
+        else if constexpr (pathType == Path::Misc)
+        {
+            result = GetPath<Path::Data>() / "Misc";
+        }
+        else if constexpr (pathType == Path::Symbols)
+        {
+            result = GetPath<Path::Data>() / "Symbols";
+        }
+        else if constexpr (pathType == Path::Landscape)
+        {
+            result = GetPath<Path::Data>() / "Landscape";
+        }
+        else if constexpr (pathType == Path::Textures)
+        {
+            result = GetPath<Path::Data>() / "Textures";
+        }
+        else if constexpr (pathType == Path::WeatherSystem)
+        {
+            result = GetPath<Path::Data>() / "WeatherSystem";
+        }
+        else if constexpr (pathType == Path::CreatureMesh)
+        {
+            result = GetPath<Path::Data>() / "CreatureMesh";
+        }
+        else if constexpr (pathType == Path::Citadel)
+        {
+            result = GetPath<Path::Data>() / "Citadel";
+        }
+        else
+        {
+            assert(false);
+        }
+        return withGamePath ? (GetGamePath() / result) : result;
+    }
 
-	[[nodiscard]] virtual auto FindPath(const std::filesystem::path& path) const
-	    -> std::expected<std::filesystem::path, std::invalid_argument> = 0;
-	[[nodiscard]] virtual bool IsPathValid(const std::filesystem::path& path) = 0;
-	virtual auto Open(const std::filesystem::path& path, Stream::Mode mode)
-	    -> std::expected<std::unique_ptr<Stream>, std::invalid_argument> = 0;
-	[[nodiscard]] virtual bool Exists(const std::filesystem::path& path) const = 0;
-	virtual void SetGamePath(const std::filesystem::path& path) = 0;
-	[[nodiscard]] virtual const std::filesystem::path& GetGamePath() const = 0;
-	virtual void AddAdditionalPath(const std::filesystem::path& path) = 0;
-	virtual std::vector<uint8_t> ReadAll(const std::filesystem::path& path) = 0;
-	virtual void Iterate(const std::filesystem::path& path, bool recursive,
-	                     const std::function<void(const std::filesystem::path&)>& function) const = 0;
+    [[nodiscard]] virtual auto FindPath(const std::filesystem::path& path) const
+        -> std::expected<std::filesystem::path, std::invalid_argument> = 0;
+    [[nodiscard]] virtual bool IsPathValid(const std::filesystem::path& path) = 0;
+    virtual auto Open(const std::filesystem::path& path, Stream::Mode mode)
+        -> std::expected<std::unique_ptr<Stream>, std::invalid_argument> = 0;
+    [[nodiscard]] virtual bool Exists(const std::filesystem::path& path) const = 0;
+    virtual void SetGamePath(const std::filesystem::path& path) = 0;
+    [[nodiscard]] virtual const std::filesystem::path& GetGamePath() const = 0;
+    virtual void AddAdditionalPath(const std::filesystem::path& path) = 0;
+    virtual std::vector<uint8_t> ReadAll(const std::filesystem::path& path) = 0;
+    virtual void Iterate(const std::filesystem::path& path, bool recursive,
+                         const std::function<void(const std::filesystem::path&)>& function) const = 0;
 };
 
 } // namespace openblack::filesystem

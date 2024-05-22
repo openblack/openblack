@@ -36,44 +36,71 @@ using namespace openblack::filesystem;
 auto DefaultFileSystem::FindPath(const std::filesystem::path& path) const
     -> std::expected<std::filesystem::path, std::invalid_argument>
 {
+    if (path.empty())
+    {
+        return std::unexpected<std::invalid_argument>("empty_path");
+    }
+
+    // try absolute first
+    if (path.is_absolute())
+    {
+        if (std::filesystem::exists(path))
+        {
+            return path;
+        }
+    }
+    else
+    {
+        // try relative to current directory
+        if (std::filesystem::exists(path))
+        {
+            return path;
+        }
+
+        // try relative to game directory
+        if (std::filesystem::exists(_gamePath / path))
+        {
+            return _gamePath / path;
+        }
+
+        // try relative to additional paths
+        for (const auto& p : _additionalPaths)
+        {
+            if (std::filesystem::exists(p / path))
+            {
+                return p / path;
+            }
+        }
+    }
+
+    return std::unexpected<std::invalid_argument>("File " + path.string() + " not found");
+}
+
+bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
+{
 	if (path.empty())
 	{
-		return std::unexpected<std::invalid_argument>("empty_path");
+		return false;
 	}
 
-	// try absolute first
-	if (path.is_absolute())
+	if (!std::filesystem::exists(path))
 	{
-		if (std::filesystem::exists(path))
-		{
-			return path;
-		}
-	}
-	else
-	{
-		// try relative to current directory
-		if (std::filesystem::exists(path))
-		{
-			return path;
-		}
-
-		// try relative to game directory
-		if (std::filesystem::exists(_gamePath / path))
-		{
-			return _gamePath / path;
-		}
-
-		// try relative to additional paths
-		for (const auto& p : _additionalPaths)
-		{
-			if (std::filesystem::exists(p / path))
-			{
-				return p / path;
-			}
-		}
+		return false;
 	}
 
-	return std::unexpected<std::invalid_argument>("File " + path.string() + " not found");
+	return true;
+}
+
+auto DefaultFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
+    -> std::expected<std::unique_ptr<Stream>, std::invalid_argument>
+{
+    auto result = FindPath(path);
+    if (result.has_value())
+    {
+        return std::unique_ptr<Stream>(new FileStream(result.value(), mode));
+    }
+
+    return std::unexpected<std::invalid_argument>("File " + path.string() + " not found");
 }
 
 bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
