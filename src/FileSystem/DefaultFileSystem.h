@@ -10,6 +10,7 @@
 #pragma once
 
 #include <expected>
+#include <vector>
 
 #include "FileSystemInterface.h"
 
