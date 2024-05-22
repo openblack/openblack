@@ -130,12 +130,12 @@ auto AndroidFileSystem::Open(const std::filesystem::path& path, Stream::Mode mod
     jbyteArray jbytes =
         (jbyteArray)_jniEnv->CallStaticObjectMethod(_jniInteropClass, _jniReadFileFromPathMid, _jniActivity, jgamePath, jpath);
 
-    if (jbytes == nullptr)
-    {
-        _jniEnv->DeleteLocalRef(jpath);
-        _jniEnv->DeleteLocalRef(jgamePath);
-        return std::unexpected<std::invalid_argument>("File " + path.string() + " not found.");
-    }
+	if (jbytes == nullptr)
+	{
+		_jniEnv->DeleteLocalRef(jpath);
+		_jniEnv->DeleteLocalRef(jgamePath);
+		return std::unexpected<std::invalid_argument>("File " + path.string() + " not found.");
+	}
 
     jsize length = _jniEnv->GetArrayLength(jbytes);
     jbyte* jbytesPtr = _jniEnv->GetByteArrayElements(jbytes, nullptr);
