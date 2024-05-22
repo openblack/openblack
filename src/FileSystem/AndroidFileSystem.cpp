@@ -84,7 +84,8 @@ bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
 	return isValid;
 }
 
-auto AndroidFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode) -> std::expected<std::unique_ptr<Stream>, std::invalid_argument>
+auto AndroidFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
+    -> std::expected<std::unique_ptr<Stream>, std::invalid_argument>
 {
 	if (path.empty())
 	{
