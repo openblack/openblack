@@ -63,7 +63,6 @@ constexpr auto k_ConstrainDiscCentre = glm::vec3(2560.0f, 0.0f, 2560.0f);
 constexpr auto k_ConstrainDiscRadius = 5120.0f;
 constexpr auto k_MaxAltitude = 30'000.0f;
 constexpr auto k_FloatingHeight = 2.9999f; // 3 in vanilla, but less due to fp precision with recorded data in tests
-const auto k_GetMouseHit = [](auto hit) -> std::optional<glm::vec3> { return hit.position; };
 
 glm::vec3 EulerFromPoints(glm::vec3 p0, glm::vec3 p1)
 {
@@ -251,7 +250,8 @@ void DefaultWorldCameraModel::UpdateFocusPointInteractionParameters(glm::vec3 or
                                                                     const Camera& camera)
 {
 	_focusAtClick = _targetFocus;
-	_screenSpaceMouseRaycastHitAtClick = camera.RaycastMouseToLand(true, Camera::Interpolation::Target).and_then(k_GetMouseHit);
+	_screenSpaceMouseRaycastHitAtClick =
+	    camera.RaycastMouseToLand(true, Camera::Interpolation::Target).and_then(ecs::components::GetTransformPosition);
 	if (_screenSpaceMouseRaycastHitAtClick.has_value())
 	{
 		_arcBallRadius = PointDistanceAlongLineSegment(origin, focus, *_screenSpaceMouseRaycastHitAtClick);
@@ -521,11 +521,11 @@ void DefaultWorldCameraModel::UpdateRaycastHitPoints(const Camera& camera)
 	// Raycast mouse and screen center
 	{
 		const auto hit = camera.RaycastMouseToLand(false, Camera::Interpolation::Target);
-		_screenSpaceMouseRaycastHit = hit.and_then(k_GetMouseHit);
+		_screenSpaceMouseRaycastHit = hit.and_then(ecs::components::GetTransformPosition);
 	}
 	{
 		const auto hit = camera.RaycastScreenCoordToLand({0.5f, 0.5f}, false, Camera::Interpolation::Target);
-		_screenSpaceCenterRaycastHit = hit.and_then(k_GetMouseHit);
+		_screenSpaceCenterRaycastHit = hit.and_then(ecs::components::GetTransformPosition);
 	}
 }
 
