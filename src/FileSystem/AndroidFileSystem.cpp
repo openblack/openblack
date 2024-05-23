@@ -86,35 +86,6 @@ bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
 	return isValid;
 }
 
-std::unique_ptr<Stream> AndroidFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
-{
-	jstring jgamePath = _jniEnv->NewStringUTF(_gamePath.c_str());
-	jstring jpath = _jniEnv->NewStringUTF(path.c_str());
-
-	jmethodID midGetDirectoryFromPath =
-	    _jniEnv->GetStaticMethodID(_jniInteropClass, "getDirectoryFromPath",
-	                               "(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Landroid/net/Uri;");
-	if (midGetDirectoryFromPath == nullptr)
-	{
-		spdlog::error("Failed to find method: getDirectoryFromPath");
-		return false;
-	}
-
-	jobject juri = _jniEnv->CallStaticObjectMethod(_jniInteropClass, midGetDirectoryFromPath, _jniActivity, jgamePath, jpath);
-
-	bool isValid = juri != nullptr;
-
-	if (isValid)
-	{
-		_jniEnv->DeleteLocalRef(juri);
-	}
-
-	_jniEnv->DeleteLocalRef(jgamePath);
-	_jniEnv->DeleteLocalRef(jpath);
-
-	return isValid;
-}
-
 auto AndroidFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
     -> std::expected<std::unique_ptr<Stream>, std::invalid_argument>
 {
