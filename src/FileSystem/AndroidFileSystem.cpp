@@ -56,8 +56,8 @@ std::filesystem::path AndroidFileSystem::FindPath(const std::filesystem::path& p
 
 bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
 {
-	jstring jgamePath = _jniEnv->NewStringUTF(_gamePath.c_str());
-	jstring jpath = _jniEnv->NewStringUTF(path.c_str());
+	jstring jgamePath = _jniEnv->NewStringUTF(path.c_str());
+	jstring jpath = _jniEnv->NewStringUTF("/");
 
 	jmethodID midGetDirectoryFromPath =
 	    _jniEnv->GetStaticMethodID(_jniInteropClass, "getDirectoryFromPath",
