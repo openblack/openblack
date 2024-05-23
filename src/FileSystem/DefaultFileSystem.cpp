@@ -103,33 +103,6 @@ auto DefaultFileSystem::Open(const std::filesystem::path& path, Stream::Mode mod
 	return std::unexpected<std::invalid_argument>("File " + path.string() + " not found");
 }
 
-bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
-{
-	if (path.empty())
-	{
-		return false;
-	}
-
-	if (!std::filesystem::exists(path))
-	{
-		return false;
-	}
-
-	return true;
-}
-
-auto DefaultFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
-    -> std::expected<std::unique_ptr<Stream>, std::invalid_argument>
-{
-	auto result = FindPath(path);
-	if (result.has_value())
-	{
-		return std::unique_ptr<Stream>(new FileStream(result.value(), mode));
-	}
-
-	return std::unexpected<std::invalid_argument>("File " + path.string() + " not found");
-}
-
 bool DefaultFileSystem::Exists(const std::filesystem::path& path) const
 {
 	return FindPath(path).has_value();

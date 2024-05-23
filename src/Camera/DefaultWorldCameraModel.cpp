@@ -9,6 +9,7 @@
 
 #include "DefaultWorldCameraModel.h"
 
+#include <algorithm>
 #include <numeric>
 
 #include <glm/gtc/constants.hpp>
