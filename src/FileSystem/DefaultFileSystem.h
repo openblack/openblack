@@ -29,7 +29,6 @@ public:
 	[[nodiscard]] bool IsPathValid(const std::filesystem::path& path) override;
 	auto Open(const std::filesystem::path& path, Stream::Mode mode)
 	    -> std::expected<std::unique_ptr<Stream>, std::invalid_argument> override;
-	[[nodiscard]] std::filesystem::path FindPath(const std::filesystem::path& path) const override;
 	[[nodiscard]] bool IsPathValid(const std::filesystem::path& path) override;
 	auto Open(const std::filesystem::path& path, Stream::Mode mode)
 	    -> std::expected<std::unique_ptr<Stream>, std::invalid_argument> override;

@@ -17,6 +17,8 @@
 
 #include "FileSystemInterface.h"
 
+#include <expected>
+
 namespace openblack::filesystem
 {
 
