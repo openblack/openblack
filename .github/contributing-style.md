@@ -124,7 +124,7 @@ Class Member: myClassMember, _privateClassMember
 - C++ files: We use tabs of size 4 for indentation, not spaces.
 - CMake Files: We use 2 spaces to indent.
 
-### [Cognitive Complexity](https://clang.llvm.org/extra/clang-tidy/checks/readability/function-cognitive-complexity.html) 
+### [Cognitive Complexity](https://clang.llvm.org/extra/clang-tidy/checks/readability/function-cognitive-complexity.html)
 
 We aim to keep functions as simple as possible.
 
@@ -188,6 +188,13 @@ We encourage the use of `auto` for variable declarations, as it offers several b
 
 While there are differing opinions about the usage of `auto`, we believe that the benefits of improved code readability and maintainability outweigh the concerns about not explicitly specifying the type on the declaration line.
 Modern IDEs indeed provide information about the inferred types, and code navigation tools make it easy to understand the context and type of variables.
+
+### Header Management
+
+Avoid using mega headers such as `entt/entt.hpp` which bring in more code than necessary and in turn slow down compilation times.
+Especially in headers.
+
+Instead, try using forward declaration in headers and including more fine-grained includes.
 
 ### Compiler and style warnings
 

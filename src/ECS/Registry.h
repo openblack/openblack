@@ -9,7 +9,9 @@
 
 #pragma once
 
-#include <entt/entt.hpp>
+#include <entt/entity/entity.hpp>
+#include <entt/entity/helper.hpp>
+#include <entt/entity/registry.hpp>
 
 #include "ECS/RegistryContext.h"
 

@@ -11,7 +11,7 @@
 
 #include <memory>
 
-#include <entt/entt.hpp>
+#include <entt/core/hashed_string.hpp>
 
 #include "3D/L3DMesh.h"
 #include "Graphics/Mesh.h"

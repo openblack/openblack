@@ -9,7 +9,6 @@ Checks: >-
   performance-*,
   -performance-unnecessary-value-param,
   misc-*,
-  -misc-include-cleaner,
   -misc-non-private-member-variables-in-classes,
   -misc-redundant-expression,
   bugprone-*,
