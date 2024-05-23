@@ -54,6 +54,7 @@
 #include <Windowing/WindowingInterface.h>
 
 #include "Audio.h"
+#include "Camera.h"
 #include "Console.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "LHVMViewer.h"
@@ -119,6 +120,7 @@ std::unique_ptr<Gui> Gui::Create(graphics::RenderPass viewId, float scale)
 	debugWindows.emplace_back(new PathFinding);
 	debugWindows.emplace_back(new Audio);
 	debugWindows.emplace_back(new TempleInterior);
+	debugWindows.emplace_back(new Camera);
 
 	auto gui = std::unique_ptr<Gui>(
 	    new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows), !Locator::windowing::has_value()));
