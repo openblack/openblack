@@ -131,9 +131,9 @@ std::vector<T> GameThingSerializer::DeserializeList()
 	auto count = ReadValue<uint32_t>();
 	std::vector<T> list;
 	list.reserve(count);
-	for (uint32_t i = 0; i < count; ++i)
+	for (uint32_t I = 0; I < count; ++I)
 	{
-		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "i={}", i);
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "I={}", I);
 		auto ptr = std::dynamic_pointer_cast<T>(DeserializeOne(k_GameThingTypeEnum<T>));
 		if (ptr)
 		{

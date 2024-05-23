@@ -145,10 +145,10 @@ void ShaderManager::LoadShaders()
 
 const ShaderProgram* ShaderManager::GetShader(const std::string& name) const
 {
-	auto i = _shaderPrograms.find(name);
-	if (i != _shaderPrograms.end())
+	auto I = _shaderPrograms.find(name);
+	if (I != _shaderPrograms.end())
 	{
-		return i->second;
+		return I->second;
 	}
 
 	// todo: return an empty shader?

@@ -39,14 +39,14 @@ public:
 	    , _indices(vertexCount / stride)
 	{
 		// TODO (#749) use std::views::enumerate
-		for (uint16_t i = 0; auto& v : _vertices)
+		for (uint16_t I = 0; auto& v : _vertices)
 		{
-			const auto* vertexBase = reinterpret_cast<const float*>(&vertexData[i * stride]);
+			const auto* vertexBase = reinterpret_cast<const float*>(&vertexData[I * stride]);
 			v[0] = vertexBase[0];
 			v[1] = vertexBase[1];
 			v[2] = vertexBase[2];
-			_indices[i] = i;
-			++i;
+			_indices[I] = I;
+			++I;
 		}
 	}
 

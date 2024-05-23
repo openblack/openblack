@@ -29,19 +29,19 @@ ShaderProgram::ShaderProgram(const std::string& name, bgfx::ShaderHandle vertexS
 	numShaderUniforms = bgfx::getShaderUniforms(vertexShader);
 	uniforms.resize(numShaderUniforms);
 	bgfx::getShaderUniforms(vertexShader, uniforms.data(), numShaderUniforms);
-	for (uint16_t i = 0; i < numShaderUniforms; ++i)
+	for (uint16_t I = 0; I < numShaderUniforms; ++I)
 	{
-		bgfx::getUniformInfo(uniforms[i], info);
-		_uniforms.emplace(std::string(info.name), uniforms[i]);
+		bgfx::getUniformInfo(uniforms[I], info);
+		_uniforms.emplace(std::string(info.name), uniforms[I]);
 	}
 
 	numShaderUniforms = bgfx::getShaderUniforms(fragmentShader);
 	uniforms.resize(numShaderUniforms);
 	bgfx::getShaderUniforms(fragmentShader, uniforms.data(), numShaderUniforms);
-	for (uint16_t i = 0; i < numShaderUniforms; ++i)
+	for (uint16_t I = 0; I < numShaderUniforms; ++I)
 	{
-		bgfx::getUniformInfo(uniforms[i], info);
-		_uniforms.emplace(std::string(info.name), uniforms[i]);
+		bgfx::getUniformInfo(uniforms[I], info);
+		_uniforms.emplace(std::string(info.name), uniforms[I]);
 	}
 
 	_program = bgfx::createProgram(vertexShader, fragmentShader, true);

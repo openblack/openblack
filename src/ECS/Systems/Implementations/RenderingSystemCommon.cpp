@@ -77,10 +77,10 @@ void RenderingSystemCommon::PrepareDraw(bool drawBoundingBox, bool drawFootpaths
 			registry.Each<const Footpath>([&edges](const Footpath& ent) {
 				const auto color = glm::vec4(0, 1, 0, 1);
 				const auto offset = glm::vec3(0, 1, 0);
-				for (int i = 0; i < static_cast<int>(ent.nodes.size()) - 1; ++i)
+				for (int I = 0; I < static_cast<int>(ent.nodes.size()) - 1; ++I)
 				{
-					edges.push_back({glm::vec4(ent.nodes[i].position + offset, 1.0f), color});
-					edges.push_back({glm::vec4(ent.nodes[i + 1].position + offset, 1.0f), color});
+					edges.push_back({glm::vec4(ent.nodes[I].position + offset, 1.0f), color});
+					edges.push_back({glm::vec4(ent.nodes[I + 1].position + offset, 1.0f), color});
 				}
 			});
 			if (!edges.empty())
