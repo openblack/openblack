@@ -11,7 +11,6 @@
 
 #include <map>
 
-#include <entt/entt.hpp>
 #include <glm/vec3.hpp>
 
 #include "3D/TempleInteriorInterface.h"

@@ -9,7 +9,6 @@
 
 #include "Audio.h"
 
-#include <entt/entt.hpp>
 #include <imgui.h>
 
 #include "ECS/Registry.h"

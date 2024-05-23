@@ -12,7 +12,7 @@
 #include <memory>
 #include <optional>
 
-#include <entt/entt.hpp>
+#include <entt/core/fwd.hpp>
 #include <glm/vec3.hpp>
 #include <imgui.h>
 
