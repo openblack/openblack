@@ -40,15 +40,15 @@ void L3DAnim::Load(const anm::ANMFile& anm)
 		auto& frame = _frames.emplace_back();
 		frame.time = keyframe.time;
 		frame.bones.resize(keyframe.bones.size());
-		for (uint32_t i = 0; i < keyframe.bones.size(); ++i)
+		for (uint32_t I = 0; I < keyframe.bones.size(); ++I)
 		{
 			// clang-format off
-			auto matrix = glm::mat4(keyframe.bones[i].matrix[0], keyframe.bones[i].matrix[1], keyframe.bones[i].matrix[2], 0.0f,
-			                        keyframe.bones[i].matrix[3], keyframe.bones[i].matrix[4], keyframe.bones[i].matrix[5], 0.0f,
-			                        keyframe.bones[i].matrix[6], keyframe.bones[i].matrix[7], keyframe.bones[i].matrix[8], 0.0f,
-			                        keyframe.bones[i].matrix[9], keyframe.bones[i].matrix[10], keyframe.bones[i].matrix[11], 1.0f);
+			auto matrix = glm::mat4(keyframe.bones[I].matrix[0], keyframe.bones[I].matrix[1], keyframe.bones[I].matrix[2], 0.0f,
+			                        keyframe.bones[I].matrix[3], keyframe.bones[I].matrix[4], keyframe.bones[I].matrix[5], 0.0f,
+			                        keyframe.bones[I].matrix[6], keyframe.bones[I].matrix[7], keyframe.bones[I].matrix[8], 0.0f,
+			                        keyframe.bones[I].matrix[9], keyframe.bones[I].matrix[10], keyframe.bones[I].matrix[11], 1.0f);
 			// clang-format on
-			frame.bones[i] = matrix;
+			frame.bones[I] = matrix;
 		}
 	}
 }
@@ -130,15 +130,15 @@ std::vector<glm::mat4> L3DAnim::GetBoneMatrices(uint32_t time) const
 	// Interpolate
 	std::vector<glm::mat4> bones;
 	bones.resize(_frames[index].bones.size());
-	for (uint32_t i = 0; i < bones.size(); ++i)
+	for (uint32_t I = 0; I < bones.size(); ++I)
 	{
 		// Doing matrix interpolation is not ideal. Would prefer quaternions but
 		// extracting a quaternion from a glm::mat4 does not reconstruct the
 		// same matrix from the quaternion.
-		bones[i] = glm::mat4(glm::mix(_frames[index - 1].bones[i][0], _frames[index].bones[i][0], t),
-		                     glm::mix(_frames[index - 1].bones[i][1], _frames[index].bones[i][1], t),
-		                     glm::mix(_frames[index - 1].bones[i][2], _frames[index].bones[i][2], t),
-		                     glm::mix(_frames[index - 1].bones[i][3], _frames[index].bones[i][3], t));
+		bones[I] = glm::mat4(glm::mix(_frames[index - 1].bones[I][0], _frames[index].bones[I][0], t),
+		                     glm::mix(_frames[index - 1].bones[I][1], _frames[index].bones[I][1], t),
+		                     glm::mix(_frames[index - 1].bones[I][2], _frames[index].bones[I][2], t),
+		                     glm::mix(_frames[index - 1].bones[I][3], _frames[index].bones[I][3], t));
 	}
 
 	// assert(index < _frames.size());
