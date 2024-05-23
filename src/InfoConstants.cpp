@@ -18,14 +18,14 @@ VillagerInfo GVillagerInfo::Find(Tribe tribe, VillagerNumber villagerNumber)
 	bool found = false;
 	auto result = VillagerInfo::None;
 	// TODO (#749) use std::views::enumerate
-	for (size_t i = 0; const auto& villager : Game::Instance()->GetInfoConstants().villager)
+	for (size_t I = 0; const auto& villager : Game::Instance()->GetInfoConstants().villager)
 	{
 		if (villager.tribeType == tribe && villager.villagerNumber == villagerNumber)
 		{
-			result = static_cast<VillagerInfo>(i);
+			result = static_cast<VillagerInfo>(I);
 			found = true;
 		}
-		++i;
+		++I;
 	}
 	if (found)
 	{
@@ -39,15 +39,15 @@ VillagerInfo GVillagerInfo::Find(Tribe tribe, VillagerNumber villagerNumber)
 AbodeInfo GAbodeInfo::Find(const std::string& name)
 {
 	// TODO (#749) use std::views::enumerate
-	for (size_t i = 0; const auto& abode : Game::Instance()->GetInfoConstants().abode)
+	for (size_t I = 0; const auto& abode : Game::Instance()->GetInfoConstants().abode)
 	{
 		const auto tribeName = k_TribeStrs.at(static_cast<uint8_t>(abode.tribeType));
 		const auto abodeName = std::string(abode.debugString.data());
 		if (std::string(tribeName.data()) + "_" + abodeName == name)
 		{
-			return static_cast<AbodeInfo>(i);
+			return static_cast<AbodeInfo>(I);
 		}
-		++i;
+		++I;
 	}
 
 	throw std::runtime_error("Could not find info for " + name);
@@ -58,14 +58,14 @@ AbodeInfo GAbodeInfo::Find(Tribe tribe, AbodeNumber abodeNumber)
 	bool found = false;
 	auto result = AbodeInfo::None;
 	// TODO (#749) use std::views::enumerate
-	for (size_t i = 0; const auto& abode : Game::Instance()->GetInfoConstants().abode)
+	for (size_t I = 0; const auto& abode : Game::Instance()->GetInfoConstants().abode)
 	{
 		if ((abode.tribeType == tribe || abode.tribeType == Tribe::NONE) && abode.abodeNumber == abodeNumber)
 		{
-			result = static_cast<AbodeInfo>(i);
+			result = static_cast<AbodeInfo>(I);
 			found = true;
 		}
-		++i;
+		++I;
 	}
 	if (found)
 	{
@@ -79,13 +79,13 @@ AbodeInfo GAbodeInfo::Find(Tribe tribe, AbodeNumber abodeNumber)
 FeatureInfo GFeatureInfo::Find(const std::string& name)
 {
 	// TODO (#749) use std::views::enumerate
-	for (size_t i = 0; const auto& feature : Game::Instance()->GetInfoConstants().feature)
+	for (size_t I = 0; const auto& feature : Game::Instance()->GetInfoConstants().feature)
 	{
 		if (name == feature.debugString.data())
 		{
-			return static_cast<FeatureInfo>(i);
+			return static_cast<FeatureInfo>(I);
 		}
-		++i;
+		++I;
 	}
 	throw std::runtime_error("Could not find info for " + name);
 }
@@ -93,13 +93,13 @@ FeatureInfo GFeatureInfo::Find(const std::string& name)
 AnimatedStaticInfo GAnimatedStaticInfo::Find(const std::string& name)
 {
 	// TODO (#749) use std::views::enumerate
-	for (size_t i = 0; const auto& as : Game::Instance()->GetInfoConstants().animatedStatic)
+	for (size_t I = 0; const auto& as : Game::Instance()->GetInfoConstants().animatedStatic)
 	{
 		if (name == as.debugString.data())
 		{
-			return static_cast<AnimatedStaticInfo>(i);
+			return static_cast<AnimatedStaticInfo>(I);
 		}
-		++i;
+		++I;
 	}
 	throw std::runtime_error("Could not find info for " + name);
 }
@@ -177,9 +177,9 @@ void openblack::UpdateInfo(InfoConstants& info, const v100::InfoConstants& old)
 	info.helpSystem = old.helpSystem;
 	info.alignment = old.alignment;
 	info.reaction = old.reaction;
-	for (size_t i = 0; i < old.creatureAction.size(); ++i)
+	for (size_t I = 0; I < old.creatureAction.size(); ++I)
 	{
-		UpdateInfo(info.creatureAction.at(i), old.creatureAction.at(i));
+		UpdateInfo(info.creatureAction.at(I), old.creatureAction.at(I));
 	}
 	info.creatureDesireAction1 = old.creatureDesireAction1;
 	info.creatureDesireAction2 = old.creatureDesireAction2;

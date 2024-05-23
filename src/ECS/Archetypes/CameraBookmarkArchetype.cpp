@@ -36,12 +36,12 @@ std::array<entt::entity, 8> CameraBookmarkArchetype::CreateAll()
 	const glm::vec4 tint = glm::vec4 {1.0f, 1.0f, 0.0f, 1.0f};
 
 	// TODO (#749) use std::views::enumerate
-	for (uint8_t i = 0; auto entity : result)
+	for (uint8_t I = 0; auto entity : result)
 	{
-		const float u = static_cast<float>(i) / static_cast<float>(result.size());
+		const float u = static_cast<float>(I) / static_cast<float>(result.size());
 		registry.Assign<Sprite>(entity, texture->GetNativeHandle(), glm::vec2 {u, 3.0f / 8.0f}, extent, tint);
-		++i;
-		registry.Assign<CameraBookmark>(entity, i, 0.0f);
+		++I;
+		registry.Assign<CameraBookmark>(entity, I, 0.0f);
 	}
 
 	return result;

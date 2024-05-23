@@ -518,11 +518,11 @@ void LHVMViewer::Draw(Game& game)
 			ImGui::BeginChild("left pane", ImVec2(240, 0), true);
 
 			auto variables = lhvm.GetVariables();
-			for (size_t i = 0; i < variables.size(); i++)
+			for (size_t I = 0; I < variables.size(); I++)
 			{
-				if (ImGui::Selectable(variables[i].c_str(), selected == i))
+				if (ImGui::Selectable(variables[I].c_str(), selected == I))
 				{
-					selected = i;
+					selected = I;
 				}
 			}
 
@@ -644,11 +644,11 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 
 	auto const& code = lhvm.GetInstructions();
 
-	for (unsigned int i = script.GetInstructionAddress(); i < code.size(); i++)
+	for (unsigned int I = script.GetInstructionAddress(); I < code.size(); I++)
 	{
-		auto const& instruction = code[i];
+		auto const& instruction = code[I];
 
-		ImGui::TextColored(Disassembly_ColorComment, "0x%04x:", i);
+		ImGui::TextColored(Disassembly_ColorComment, "0x%04x:", I);
 		ImGui::SameLine();
 
 		switch (instruction.GetOpcode())

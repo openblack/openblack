@@ -36,9 +36,9 @@ template <typename T, size_t S>
 constexpr std::array<T, S> MakeFlyingScoreAngles()
 {
 	std::array<T, S> result {};
-	for (size_t i = 0; i < S; ++i)
+	for (size_t I = 0; I < S; ++I)
 	{
-		result.at(i) = static_cast<T>(i) * glm::pi<T>() * 2.0f / static_cast<T>(S);
+		result.at(I) = static_cast<T>(I) * glm::pi<T>() * 2.0f / static_cast<T>(S);
 	}
 	return result;
 }
@@ -157,9 +157,9 @@ float DefaultWorldCameraModel::GetVerticalLineInverseDistanceWeighingRayCast(con
 	std::vector<float> inverseHitDistances;
 	inverseHitDistances.reserve(0x10);
 
-	for (int i = 0; i < 0x10; ++i)
+	for (int I = 0; I < 0x10; ++I)
 	{
-		const glm::vec2 coord = glm::vec2(0.5f, i / 16.0f);
+		const glm::vec2 coord = glm::vec2(0.5f, I / 16.0f);
 
 		if (const auto hit = camera.RaycastScreenCoordToLand(coord, false, Camera::Interpolation::Target))
 		{

@@ -227,10 +227,10 @@ Renderer::Renderer(bgfx::RendererType::Enum rendererType, bool vsync)
 
 	// give debug names to views
 	// TODO (#749) use std::views::enumerate
-	for (bgfx::ViewId i = 0; const auto& name : k_RenderPassNames)
+	for (bgfx::ViewId I = 0; const auto& name : k_RenderPassNames)
 	{
-		bgfx::setViewName(i, name.data());
-		++i;
+		bgfx::setViewName(I, name.data());
+		++I;
 	}
 }
 
@@ -737,11 +737,11 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			const auto& testAnimation = Locator::resources::value().GetAnimations().Handle(entt::hashed_string("coffre"));
 			const std::vector<uint32_t>& boneParents = mesh->GetBoneParents();
 			auto bones = testAnimation->GetBoneMatrices(desc.time);
-			for (uint32_t i = 0; i < bones.size(); ++i)
+			for (uint32_t I = 0; I < bones.size(); ++I)
 			{
-				if (boneParents[i] != std::numeric_limits<uint32_t>::max())
+				if (boneParents[I] != std::numeric_limits<uint32_t>::max())
 				{
-					bones[i] = bones[boneParents[i]] * bones[i];
+					bones[I] = bones[boneParents[I]] * bones[I];
 				}
 			}
 			submitDesc.modelMatrices = bones.data();

@@ -65,10 +65,10 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 		const auto& footprint = l3d.GetFootprint().value();
 
 		// TODO (#749) use use std::views::enumerate
-		for (uint32_t i = 1; const auto& entry : footprint.entries)
+		for (uint32_t I = 1; const auto& entry : footprint.entries)
 		{
-			auto texture = std::make_unique<Texture2D>("footprints/texture/" + _debugName + "/" + std::to_string(i));
-			++i;
+			auto texture = std::make_unique<Texture2D>("footprints/texture/" + _debugName + "/" + std::to_string(I));
+			++I;
 			texture->Create(static_cast<uint16_t>(footprint.header.width), static_cast<uint16_t>(footprint.header.height), 1,
 			                graphics::Format::BGRA4, Wrapping::ClampEdge, Filter::Linear, entry.pixels.data(),
 			                static_cast<uint32_t>(entry.pixels.size() * sizeof(entry.pixels[0])));
@@ -97,7 +97,7 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 				}
 			}
 
-			auto* vertexBuffer = new VertexBuffer("footprints/quad/" + _debugName + "/" + std::to_string(i), verticesMem, decl);
+			auto* vertexBuffer = new VertexBuffer("footprints/quad/" + _debugName + "/" + std::to_string(I), verticesMem, decl);
 			auto mesh = std::make_unique<Mesh>(vertexBuffer);
 			_footprints.emplace_back(Footprint {std::move(texture), std::move(mesh)});
 		}
@@ -116,36 +116,36 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 	std::map<uint32_t, glm::mat4> matrices;
 	const auto& bones = l3d.GetBones();
 	_bonesParents.resize(bones.size());
-	for (uint32_t i = 0; i < bones.size(); ++i)
+	for (uint32_t I = 0; I < bones.size(); ++I)
 	{
-		const auto& bone = bones[i];
+		const auto& bone = bones[I];
 		// clang-format off
 		auto matrix = glm::mat4(bone.orientation[0], bone.orientation[1], bone.orientation[2], 0.0f,
 		                        bone.orientation[3], bone.orientation[4], bone.orientation[5], 0.0f,
 		                        bone.orientation[6], bone.orientation[7], bone.orientation[8], 0.0f,
 		                        bone.position.x, bone.position.y, bone.position.z, 1.0f);
 		// clang-format on
-		_bonesParents[i] = bone.parent;
+		_bonesParents[I] = bone.parent;
 		if (bone.parent != std::numeric_limits<uint32_t>::max())
 		{
 			matrix = matrices[bone.parent] * matrix;
 		}
 		_bonesDefaultMatrices.emplace_back(matrix);
-		matrices.emplace(i, matrix);
+		matrices.emplace(I, matrix);
 	}
 
 	auto submeshCount = l3d.GetSubmeshHeaders().size();
-	for (uint32_t i = 0; i < submeshCount; ++i)
+	for (uint32_t I = 0; I < submeshCount; ++I)
 	{
 		auto subMesh = std::make_unique<L3DSubMesh>(*this);
-		if (!subMesh->Load(l3d, i))
+		if (!subMesh->Load(l3d, I))
 		{
 			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open L3DSubMesh from file: {}", l3d.GetFilename());
 			continue;
 		}
 		if (subMesh->GetFlags().isPhysics)
 		{
-			const auto& verticesSpan = l3d.GetVertexSpan(i);
+			const auto& verticesSpan = l3d.GetVertexSpan(I);
 			auto* physicsMesh =
 			    new btConvexHullShape(reinterpret_cast<const btScalar*>(verticesSpan.data()),
 			                          static_cast<int>(verticesSpan.size()), static_cast<int>(sizeof(verticesSpan[0])));

@@ -66,9 +66,9 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	const auto& lndBlocks = lnd.GetBlocks();
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} blocks", lndBlocks.size());
 	_landBlocks.resize(lndBlocks.size());
-	for (size_t i = 0; i < _landBlocks.size(); i++)
+	for (size_t I = 0; I < _landBlocks.size(); I++)
 	{
-		_landBlocks[i].SetLndBlock(lndBlocks[i]);
+		_landBlocks[I].SetLndBlock(lndBlocks[I]);
 	}
 
 	_extentIndexMin.x = std::numeric_limits<uint16_t>::max();
@@ -120,11 +120,11 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} textures", materialCount);
 	std::vector<uint16_t> rgba5TextureData;
 	rgba5TextureData.resize(lnd::LNDMaterial::k_Width * lnd::LNDMaterial::k_Height * lnd.GetMaterials().size());
-	for (size_t i = 0; i < lnd.GetMaterials().size(); i++)
+	for (size_t I = 0; I < lnd.GetMaterials().size(); I++)
 	{
-		std::memcpy(&rgba5TextureData[lnd::LNDMaterial::k_Width * lnd::LNDMaterial::k_Height * i],
-		            lnd.GetMaterials()[i].texels.data(),
-		            sizeof(lnd.GetMaterials()[i].texels[0]) * lnd.GetMaterials()[i].texels.size());
+		std::memcpy(&rgba5TextureData[lnd::LNDMaterial::k_Width * lnd::LNDMaterial::k_Height * I],
+		            lnd.GetMaterials()[I].texels.data(),
+		            sizeof(lnd.GetMaterials()[I].texels[0]) * lnd.GetMaterials()[I].texels.size());
 	}
 	_materialArray = std::make_unique<Texture2D>("LandIslandMaterialArray");
 	_materialArray->Create(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height, materialCount, Format::BGR5A1,

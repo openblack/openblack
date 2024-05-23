@@ -67,9 +67,9 @@ public:
 	template <typename Func>
 	void Each(Func func) const
 	{
-		for (const auto [i, r] : _resourceCache)
+		for (const auto [I, r] : _resourceCache)
 		{
-			func(i, r);
+			func(I, r);
 		}
 	}
 
