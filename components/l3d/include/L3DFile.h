@@ -11,6 +11,7 @@
 
 #include <array>
 #include <filesystem>
+#include <istream>
 #include <optional>
 #include <span>
 #include <string>

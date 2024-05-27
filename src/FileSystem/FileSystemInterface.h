@@ -14,6 +14,8 @@
 
 #include <filesystem>
 #include <functional>
+#include <istream>
+#include <memory>
 #include <vector>
 
 #include "Stream.h"

@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <istream>
 #include <vector>
 
 #include "FileSystemInterface.h"

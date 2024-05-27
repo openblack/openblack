@@ -13,6 +13,9 @@
 
 #include <filesystem>
 #include <fstream>
+#include <ios>
+#include <istream>
+#include <memory>
 #include <system_error>
 
 #include "FileStream.h"

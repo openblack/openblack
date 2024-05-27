@@ -9,6 +9,7 @@
 
 #include "L3DMesh.h"
 
+#include <filesystem>
 #include <stdexcept>
 
 #include <BulletCollision/CollisionShapes/btConvexHullShape.h>
