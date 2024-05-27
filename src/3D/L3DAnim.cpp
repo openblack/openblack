@@ -9,6 +9,9 @@
 
 #include "L3DAnim.h"
 
+#include <filesystem>
+#include <stdexcept>
+
 #include <ANMFile.h>
 #include <glm/gtx/matrix_interpolation.hpp>
 #include <spdlog/spdlog.h>
