@@ -11,8 +11,6 @@
 
 #include <queue>
 
-#include <entt/entt.hpp>
-
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "Audio/Sound.h"

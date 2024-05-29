@@ -11,11 +11,11 @@
 
 #include <algorithm>
 #include <numeric>
+#include <ranges>
 
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/polar_coordinates.hpp>
-#include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 #include <spdlog/spdlog.h>
 
@@ -23,6 +23,7 @@
 #include "Audio/AudioManagerInterface.h"
 #include "Camera.h"
 #include "Common/RandomNumberManager.h"
+#include "ECS/Components/Transform.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "Game.h"
 #include "Input/GameActionMapInterface.h"
@@ -250,12 +251,8 @@ void DefaultWorldCameraModel::UpdateFocusPointInteractionParameters(glm::vec3 or
                                                                     const Camera& camera)
 {
 	_focusAtClick = _targetFocus;
-	// TODO(#656) in c++23 use camera.RaycastMouseToLand().and_then
-	_screenSpaceMouseRaycastHitAtClick = std::nullopt;
-	if (auto hit = camera.RaycastMouseToLand(true, Camera::Interpolation::Target))
-	{
-		_screenSpaceMouseRaycastHitAtClick = hit->position;
-	}
+	_screenSpaceMouseRaycastHitAtClick =
+	    camera.RaycastMouseToLand(true, Camera::Interpolation::Target).and_then(ecs::components::GetTransformPosition);
 	if (_screenSpaceMouseRaycastHitAtClick.has_value())
 	{
 		_arcBallRadius = PointDistanceAlongLineSegment(origin, focus, *_screenSpaceMouseRaycastHitAtClick);
@@ -478,17 +475,15 @@ void DefaultWorldCameraModel::UpdateModeFlying(glm::vec3 eulerAngles)
 
 	// Find best angles
 	{
-		// TODO(#522): Use zip_view in c++23
 		std::array<float, 0x20> scores {};
-		for (size_t i = 0; auto& score : scores)
+		for (auto [score, flyingScore] : std::views::zip(scores, k_FlyingScoreAngles))
 		{
 			for (int j = 0; j < 5; ++j)
 			{
 				const auto p = point + static_cast<float>(j) + 3.0f * distanceFromFocus * glm::euclidean(glm::yx(eulerAngles));
 				score += point.y - Locator::terrainSystem::value().GetHeightAt(glm::xz(p));
 			}
-			score += 50.0f * std::cos(k_FlyingScoreAngles.at(i));
-			++i;
+			score += 50.0f * std::cos(flyingScore);
 		}
 
 		const auto bestAngleIndex = std::distance(scores.begin(), std::max_element(scores.begin(), scores.end()));
@@ -498,7 +493,7 @@ void DefaultWorldCameraModel::UpdateModeFlying(glm::vec3 eulerAngles)
 		const auto oldAngles = eulerAngles;
 		eulerAngles = EulerFromPoints(offsetPoint, point); // Placeholder
 
-		eulerAngles.y = std::clamp((eulerAngles.y / 2.0f + oldAngles.y) / 5.0f + 3.0f * glm::pi<float>() / 25.0f,
+		eulerAngles.y = glm::clamp((eulerAngles.y / 2.0f + oldAngles.y) / 5.0f + 3.0f * glm::pi<float>() / 25.0f,
 		                           glm::pi<float>() / 8.0f, glm::pi<float>() / 3.0f);
 		eulerAngles.x = static_cast<float>(bestAngleIndex) * glm::pi<float>() / 16.0f + oldAngles.x;
 	}
@@ -525,30 +520,22 @@ void DefaultWorldCameraModel::UpdateCameraInterpolationValues(const Camera& came
 void DefaultWorldCameraModel::UpdateRaycastHitPoints(const Camera& camera)
 {
 	// Raycast mouse and screen center
-	// TODO(#656) in c++23 use camera.RaycastMouseToLand().and_then
-	_screenSpaceMouseRaycastHit = std::nullopt;
-	_screenSpaceCenterRaycastHit = std::nullopt;
-	if (const auto hit = camera.RaycastMouseToLand(false, Camera::Interpolation::Target))
 	{
-		_screenSpaceMouseRaycastHit = hit->position;
+		const auto hit = camera.RaycastMouseToLand(false, Camera::Interpolation::Target);
+		_screenSpaceMouseRaycastHit = hit.and_then(ecs::components::GetTransformPosition);
 	}
-	if (const auto hit = camera.RaycastScreenCoordToLand({0.5f, 0.5f}, false, Camera::Interpolation::Target))
 	{
-		_screenSpaceCenterRaycastHit = hit->position;
+		const auto hit = camera.RaycastScreenCoordToLand({0.5f, 0.5f}, false, Camera::Interpolation::Target);
+		_screenSpaceCenterRaycastHit = hit.and_then(ecs::components::GetTransformPosition);
 	}
 }
 
 void DefaultWorldCameraModel::UpdateFocusDistance()
 {
-	// TODO(#656) in c++23 use _screenSpaceCenterRaycastHit.and_then
-	if (_screenSpaceCenterRaycastHit.has_value())
-	{
-		_focusDistance = glm::max(10.0f, glm::distance(_screenSpaceCenterRaycastHit.value(), _targetOrigin));
-	}
-	else
-	{
-		_focusDistance = glm::max(10.0f, _averageIslandDistance);
-	}
+	_focusDistance =
+	    _screenSpaceCenterRaycastHit
+	        .and_then([this](auto hit) -> std::optional<float> { return glm::max(10.0f, glm::distance(hit, _targetOrigin)); })
+	        .value_or(glm::max(10.0f, _averageIslandDistance));
 }
 
 std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraModel::Update(std::chrono::microseconds dt,
@@ -713,15 +700,7 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 	}
 
 	const auto handPositions = actionSystem.GetHandPositions();
-	// TODO(#656): in C++23 use or_else
-	if (handPositions[0].has_value())
-	{
-		_handPosition = handPositions[0];
-	}
-	else
-	{
-		_handPosition = handPositions[1];
-	}
+	_handPosition = handPositions[0].or_else([handPositions] { return handPositions[1]; });
 
 	_modePrev = _mode;
 	if (_handPosition.has_value() && actionSystem.Get(input::UnbindableActionMap::DOUBLE_CLICK))

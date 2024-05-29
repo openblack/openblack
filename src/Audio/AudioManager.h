@@ -14,6 +14,7 @@
 #include <type_traits>
 #include <vector>
 
+#include <entt/entity/entity.hpp>
 #include <glm/glm.hpp>
 
 #include "AudioDecoderInterface.h"

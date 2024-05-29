@@ -1,0 +1,41 @@
+id: org.openblack.openblack
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+command: openblack
+modules:
+  - name: python3-jinja2
+    buildsystem: simple
+    cleanup: [ "*" ]
+    build-commands:
+      - pip3 install --verbose --exists-action=i --no-index --find-links="file://${PWD}" --prefix=${FLATPAK_DEST} "jinja2" --no-build-isolation
+    sources:
+      - type: file
+        url: https://files.pythonhosted.org/packages/1d/97/2288fe498044284f39ab8950703e88abbac2abbdf65524d576157af70556/MarkupSafe-2.1.1.tar.gz
+        sha256: 7f91197cc9e48f989d12e4e6fbc46495c446636dfc81b9ccf50bb0ec74b91d4b
+      - type: file
+        url: https://files.pythonhosted.org/packages/bc/c3/f068337a370801f372f2f8f6bad74a5c140f6fda3d9de154052708dd3c65/Jinja2-3.1.2-py3-none-any.whl
+        sha256: 6088930bfe239f0e6710546ab9c19c9ef35e29792895fed6e6e31a023a182a61
+  - name: openblack
+    arch: ${{ matrix.arch }}
+    buildsystem: cmake
+    build-options:
+      build-args:
+        - "--share=network"
+    config-opts:
+      - -DOPENBLACK_USE_VCPKG=ON
+    sources:
+      - type: dir
+        path: ../../../..
+finish-args:
+  # X11 + XShm access
+  - --share=ipc
+  - --socket=fallback-x11
+  # Wayland access
+  - --socket=wayland
+  # GPU acceleration if needed
+  - --device=dri
+  # Keyboard, mouse and joystick
+  - --device=input
+  # Game files
+  - --filesystem=host:ro

@@ -55,6 +55,7 @@ template <class C, size_t size>
 constexpr std::unordered_map<std::string_view, C> makeLookup(std::array<std::string_view, size> strings)
 {
 	std::unordered_map<std::string_view, C> table;
+	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; const auto& str : strings)
 	{
 		table.insert(std::make_pair(str, static_cast<C>(i)));

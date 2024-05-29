@@ -9,11 +9,10 @@
 
 #pragma once
 
-#include <map>
+#include <set>
 #include <vector>
 
 #include <bgfx/bgfx.h>
-#include <entt/entt.hpp>
 #include <glm/mat4x4.hpp>
 
 #include "3D/AllMeshes.h"

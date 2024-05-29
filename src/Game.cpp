@@ -98,6 +98,7 @@ Game::Game(Arguments&& args)
 			createLogger = [](const std::string& name) { return spdlog::stdout_color_mt(name); };
 		}
 	}
+	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; const auto& subsystem : k_LoggingSubsystemStrs)
 	{
 		auto logger = createLogger(subsystem.data());
@@ -570,6 +571,7 @@ bool Game::Initialize()
 	pack.Open(fileSystem.GetPath<Path::Data>(true) / "AllMeshes.g3d");
 #endif
 	const auto& meshes = pack.GetMeshes();
+	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; const auto& mesh : meshes)
 	{
 		const auto meshId = static_cast<MeshId>(i);
@@ -591,6 +593,7 @@ bool Game::Initialize()
 	animationPack.Open(fileSystem.GetPath<Path::Data>(true) / "AllAnims.anm");
 #endif
 	const auto& animations = animationPack.GetAnimations();
+	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; i < animations.size(); i++)
 	{
 		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animations[i]);

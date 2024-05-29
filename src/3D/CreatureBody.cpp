@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include <entt/entt.hpp>
+#include <entt/core/hashed_string.hpp>
 #include <spdlog/spdlog.h>
 
 #include "Common/StringUtils.h"

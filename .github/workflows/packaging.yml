@@ -1,4 +1,4 @@
-name: System Deps CI
+name: Packaging
 on:
   pull_request:
   push:
@@ -6,8 +6,9 @@ on:
       - '*'
     branches:
       - 'master'
+      - 'ci-tests/**'  # Branch namespace can be used to test changes to test before going to master
 jobs:
-  arch-packaging-system-deps:
+  aur:
     name: Arch Linux AUR Packaging
     runs-on: ubuntu-latest
     container:
@@ -116,3 +117,84 @@ jobs:
           name: openblack-arch-linux-pkg-${{ env.GITHUB_REF_NAME_DASHES }}
           path: openblack-git/openblack-git*.pkg.tar.*
           if-no-files-found: error
+
+  flatpak:
+    name: Package for flatpak
+    runs-on: ubuntu-latest
+    container:
+      image: bilelmoussaoui/flatpak-github-actions:freedesktop-23.08
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Only build release
+        run: |
+          for file in vcpkg/triplets/*.cmake vcpkg/triplets/community/*.cmake; do
+            echo "set(VCPKG_BUILD_TYPE release)" >> "$file"
+          done
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@master
+        with:
+          bundle: openblack-${{github.sha}}.flatpak
+          manifest-path: assets/resource/package/flatpak/org.openblack.openblack.yaml
+          cache-key: flatpak-builder-${{ github.sha }}
+          upload-artifact: false
+      - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openblack-${{env.GITHUB_REF_NAME_DASHES}}.flatpak
+          path: openblack-${{github.sha}}.flatpak
+          if-no-files-found: error
+
+  appimage:
+    name: Package for appimage
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Only build release
+        run: |
+          for file in vcpkg/triplets/*.cmake vcpkg/triplets/community/*.cmake; do
+            echo "set(VCPKG_BUILD_TYPE release)" >> "$file"
+          done
+      - name: Install Linux dependencies
+        run: |
+          sudo apt update -y
+          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev libltdl-dev libxext-dev
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+      - name: Run script
+        run: assets/resource/package/appimage/package-appimage.sh $GITHUB_REF_NAME
+        env:
+          VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
+        shell: bash
+      - uses: actions/upload-artifact@v3
+        with:
+          name: openblack-${{ env.GITHUB_REF_NAME_DASHES }}.AppImage
+          path: openblack-*.AppImage
+          if-no-files-found: error
+
+  snapcraft:
+    name: Package for snap
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Move snap config to project root
+        run: cp -r assets/resource/package/snap .
+      - uses: snapcore/action-build@v1
+        id: snap
+      - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
+        shell: bash
+      - uses: actions/upload-artifact@v3
+        with:
+          name: openblack-${{ env.GITHUB_REF_NAME_DASHES }}.snap
+          path: ${{ steps.snap.outputs.snap }}
