@@ -359,17 +359,13 @@ std::array<std::optional<glm::vec3>, 2> GameActionMap::GetHandPositions() const
 	// Only one hand at this point in time
 	const auto& rightHand = std::optional<entt::entity>();
 
-	// TODO(#692): In C++23 use position = hand.and_then
 	std::optional<glm::vec3> leftPosition;
 	std::optional<glm::vec3> rightPosition;
-	if (leftHand.has_value())
-	{
-		leftPosition = registry.Get<ecs::components::Transform>(*leftHand).position;
-	}
-	if (rightHand.has_value())
-	{
-		rightPosition = registry.Get<ecs::components::Transform>(*rightHand).position;
-	}
+	auto getHandPosition = [&registry](auto hand) -> std::optional<glm::vec3> {
+		return registry.Get<ecs::components::Transform>(hand).position;
+	};
+	leftPosition = leftHand.and_then(getHandPosition);
+	rightPosition = rightHand.and_then(getHandPosition);
 
 	// TODO(#693): Hand Getter should return an optional if the hand doesn't have a valid position
 	// When the position is zero, it probably means it's not on the map (e.g. mouse is in the sky)

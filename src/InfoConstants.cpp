@@ -17,6 +17,7 @@ VillagerInfo GVillagerInfo::Find(Tribe tribe, VillagerNumber villagerNumber)
 {
 	bool found = false;
 	auto result = VillagerInfo::None;
+	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; const auto& villager : Game::Instance()->GetInfoConstants().villager)
 	{
 		if (villager.tribeType == tribe && villager.villagerNumber == villagerNumber)
@@ -37,6 +38,7 @@ VillagerInfo GVillagerInfo::Find(Tribe tribe, VillagerNumber villagerNumber)
 
 AbodeInfo GAbodeInfo::Find(const std::string& name)
 {
+	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; const auto& abode : Game::Instance()->GetInfoConstants().abode)
 	{
 		const auto tribeName = k_TribeStrs.at(static_cast<uint8_t>(abode.tribeType));
@@ -55,6 +57,7 @@ AbodeInfo GAbodeInfo::Find(Tribe tribe, AbodeNumber abodeNumber)
 {
 	bool found = false;
 	auto result = AbodeInfo::None;
+	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; const auto& abode : Game::Instance()->GetInfoConstants().abode)
 	{
 		if ((abode.tribeType == tribe || abode.tribeType == Tribe::NONE) && abode.abodeNumber == abodeNumber)
@@ -75,6 +78,7 @@ AbodeInfo GAbodeInfo::Find(Tribe tribe, AbodeNumber abodeNumber)
 
 FeatureInfo GFeatureInfo::Find(const std::string& name)
 {
+	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; const auto& feature : Game::Instance()->GetInfoConstants().feature)
 	{
 		if (name == feature.debugString.data())
@@ -88,6 +92,7 @@ FeatureInfo GFeatureInfo::Find(const std::string& name)
 
 AnimatedStaticInfo GAnimatedStaticInfo::Find(const std::string& name)
 {
+	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; const auto& as : Game::Instance()->GetInfoConstants().animatedStatic)
 	{
 		if (name == as.debugString.data())

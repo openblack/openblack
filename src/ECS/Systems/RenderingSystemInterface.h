@@ -9,8 +9,10 @@
 
 #pragma once
 
+#include <map>
+
 #include <bgfx/bgfx.h>
-#include <entt/entt.hpp>
+#include <entt/fwd.hpp>
 #include <glm/mat4x4.hpp>
 
 #include "Graphics/Mesh.h"

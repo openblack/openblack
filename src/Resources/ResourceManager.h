@@ -10,7 +10,8 @@
 #pragma once
 
 #include <entt/core/hashed_string.hpp>
-#include <entt/entt.hpp>
+#include <entt/fwd.hpp>
+#include <entt/resource/cache.hpp>
 #include <fmt/format.h>
 
 #include "MeshId.h"

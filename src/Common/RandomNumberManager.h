@@ -29,7 +29,7 @@ public:
 		std::optional<std::reference_wrapper<std::mutex>> lock(LockAccess());
 		if (lock)
 		{
-			std::lock_guard<std::mutex> contextLock(*lock);
+			std::lock_guard<std::mutex> const contextLock(*lock);
 			return dist(Generator());
 		}
 		return dist(Generator());

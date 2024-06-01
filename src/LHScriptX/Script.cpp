@@ -10,10 +10,9 @@
 #include "Script.h"
 
 #include <algorithm>
-#include <iostream>
+#include <ranges>
 
 #include <glm/vec2.hpp>
-#include <spdlog/spdlog.h>
 
 #include "3D/LandIslandInterface.h"
 #include "FeatureScriptCommands.h"
@@ -165,12 +164,13 @@ void Script::RunCommand(const std::string& identifier, const std::vector<Token>&
 
 	for (auto arg : args)
 	{
-		ScriptCommandParameter param = GetParameter(arg);
+		const ScriptCommandParameter param = GetParameter(arg);
 		parameters.push_back(param);
 	}
 
 	const auto expectedParameters = commandSignature->parameters;
 	uint32_t expectedSize;
+	// TODO (#749) use std::views::enumerate
 	for (expectedSize = 0; const auto& p : commandSignature->parameters)
 	{
 		// Looping until None because parameters is a fixed sized array.
@@ -189,13 +189,12 @@ void Script::RunCommand(const std::string& identifier, const std::vector<Token>&
 	}
 
 	// Validate the typing of the given arguments against what is expected
-	for (auto i = 0u; const auto& param : parameters)
+	for (const auto& [param, expected] : std::views::zip(parameters, expectedParameters))
 	{
-		if (param.GetType() != expectedParameters.at(i))
+		if (param.GetType() != expected)
 		{
 			throw std::runtime_error("Invalid script argument type");
 		}
-		++i;
 	}
 
 	commandSignature->command(parameters);

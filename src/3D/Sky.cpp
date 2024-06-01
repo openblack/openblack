@@ -41,6 +41,7 @@ Sky::Sky()
 	_model->LoadFromFile(fileSystem.GetPath<filesystem::Path::WeatherSystem>() / "sky.l3d");
 #endif
 
+	// TODO (#749) Maybe use std::views::enumerate
 	for (uint32_t idx = 0; const auto& alignment : k_Alignments)
 	{
 		for (const auto& timeView : k_Times)

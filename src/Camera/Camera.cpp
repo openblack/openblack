@@ -257,16 +257,9 @@ const glm::mat4& Camera::GetProjectionMatrix(Projection projection) const
 		return _projectionMatrix;
 	case Projection::ReversedZ:
 		return _projectionMatrixReversedZ;
-#ifdef __cpp_lib_unreachable
 	default:
-		// TODO(#656): Remove check in C++23 and just use unreachable
 		assert(false);
 		std::unreachable();
-#else
-	default:
-		assert(false);
-		return _projectionMatrix;
-#endif
 	}
 }
 
@@ -280,16 +273,9 @@ glm::vec3 Camera::GetOrigin(Interpolation interpolation) const
 		return _originInterpolators.p0;
 	case Interpolation::Target:
 		return _originInterpolators.p1;
-#ifdef __cpp_lib_unreachable
 	default:
-		// TODO(#656): Remove check in C++23 and just use unreachable
 		assert(false);
 		std::unreachable();
-#else
-	default:
-		assert(false);
-		return {};
-#endif
 	}
 }
 
@@ -303,16 +289,9 @@ glm::vec3 Camera::GetFocus(Interpolation interpolation) const
 		return _focusInterpolators.p0;
 	case Interpolation::Target:
 		return _focusInterpolators.p1;
-#ifdef __cpp_lib_unreachable
 	default:
-		// TODO(#656): Remove check in C++23 and just use unreachable
 		assert(false);
 		std::unreachable();
-#else
-	default:
-		assert(false);
-		return {};
-#endif
 	}
 }
 
@@ -330,16 +309,9 @@ glm::vec3 Camera::GetOriginVelocity(Interpolation interpolation) const
 	case Interpolation::Target:
 		result = _originInterpolators.v1;
 		break;
-#ifdef __cpp_lib_unreachable
 	default:
-		// TODO(#656): Remove check in C++23 and just use unreachable
 		assert(false);
 		std::unreachable();
-#else
-	default:
-		assert(false);
-		return {};
-#endif
 	}
 
 	if (_interpolatorDuration == decltype(_interpolatorDuration)::zero())
@@ -363,16 +335,9 @@ glm::vec3 Camera::GetFocusVelocity(Interpolation interpolation) const
 	case Interpolation::Target:
 		result = _focusInterpolators.v1;
 		break;
-#ifdef __cpp_lib_unreachable
 	default:
-		// TODO(#656): Remove check in C++23 and just use unreachable
 		assert(false);
 		std::unreachable();
-#else
-	default:
-		assert(false);
-		return {};
-#endif
 	}
 
 	if (_interpolatorDuration == decltype(_interpolatorDuration)::zero())
