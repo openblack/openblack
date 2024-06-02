@@ -28,7 +28,7 @@ bool InfoFile::LoadFromFile(const std::filesystem::path& path, InfoConstants& in
 		pack::PackFile pack;
 #if __ANDROID__
 		//  Android has a complicated permissions API, must call java code to read contents.
-		auto bytes = Locator::filesystem::value().ReadAll(Locator::filesystem::value().FindPath(path));
+		auto bytes = Locator::filesystem::value().ReadAll(Locator::filesystem::value().FindPath(path).value());
 		pack.Open(bytes);
 #else
 		pack.Open(Locator::filesystem::value().FindPath(path).value());

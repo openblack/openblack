@@ -780,7 +780,7 @@ bool Game::Run()
 		_lhvm = std::make_unique<LHVM::LHVM>();
 #if __ANDROID__
 		//  Android has a complicated permissions API, must call java code to read contents.
-		_lhvm->Open(fileSystem.ReadAll(fileSystem.FindPath(challengePath)));
+		_lhvm->Open(fileSystem.ReadAll(fileSystem.FindPath(challengePath).value()));
 #else
 		_lhvm->Open(fileSystem.FindPath(challengePath).value());
 #endif
