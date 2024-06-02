@@ -26,12 +26,14 @@ public:
 	AndroidFileSystem();
 	~AndroidFileSystem();
 
-	[[nodiscard]] std::filesystem::path
-	FindPath(const std::filesystem::path& path) const override
-		-> std::expected<std::filesystem::path, std::invalid_argument>;
+	[[nodiscard]] auto FindPath(const std::filesystem::path& path) const
+	    -> std::expected<std::filesystem::path, std::invalid_argument> override;
+
 	[[nodiscard]] bool IsPathValid(const std::filesystem::path& path) override;
-	std::unique_ptr<Stream> Open(const std::filesystem::path& path, Stream::Mode mode) override
-		-> std::expected<std::unique_ptr<Stream>, std::invalid_argument>;
+
+	auto Open(const std::filesystem::path& path, Stream::Mode mode)
+	    -> std::expected<std::unique_ptr<Stream>, std::invalid_argument> override;
+
 	bool Exists(const std::filesystem::path& path) const override;
 	void SetGamePath(const std::filesystem::path& path) override { _gamePath = path; }
 	[[nodiscard]] const std::filesystem::path& GetGamePath() const override { return _gamePath; }
