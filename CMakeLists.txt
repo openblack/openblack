@@ -37,11 +37,12 @@ project(openblack)
 # Configure C++ standard
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# don't allow in source builds
+# Don't allow in-source builds
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
-# do find_package with CONFIG before MODULE
+# Do find_package with CONFIG before MODULE
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
 
 # Output binaries to bin/
