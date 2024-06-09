@@ -37,7 +37,9 @@ project(openblack)
 # Configure C++ standard
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Add compile definitions for concepts and experimental features
+add_compile_definitions(__cpp_concepts=201907L)
 
 # Don't allow in-source builds
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
