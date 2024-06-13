@@ -186,7 +186,7 @@ if (MSVC)
             /MP
             # Enables stricter C++ standards conformance checks
             /permissive-
-            # Should make clang work with newest standards
+            # Set correct version of c++
             /Zc:__cplusplus
   )
 
