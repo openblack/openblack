@@ -224,12 +224,10 @@ void Console::Draw(Game& game)
 	SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
 	if (!io.WantCaptureMouse && screenSize.x > 0 && screenSize.y > 0)
 	{
-		glm::vec3 rayOrigin;
-		glm::vec3 rayDirection;
-		game.GetCamera().DeprojectScreenToWorld(static_cast<glm::vec2>(mousePosition) / static_cast<glm::vec2>(screenSize),
-		                                        rayOrigin, rayDirection);
+		const auto ray =
+		    game.GetCamera().DeprojectScreenToWorld(static_cast<glm::vec2>(mousePosition) / static_cast<glm::vec2>(screenSize));
 		const auto& dynamicsSystem = Locator::dynamicsSystem::value();
-		if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
+		if (auto hit = dynamicsSystem.RayCastClosestHit(ray, 1e10f))
 		{
 			if (hit->second.userData != nullptr)
 			{
