@@ -9,6 +9,9 @@
 
 #include "L3DAnim.h"
 
+#include <filesystem>
+#include <stdexcept>
+
 #include <ANMFile.h>
 #include <glm/gtx/matrix_interpolation.hpp>
 #include <spdlog/spdlog.h>
@@ -51,6 +54,25 @@ void L3DAnim::Load(const anm::ANMFile& anm)
 			frame.bones[i] = matrix;
 		}
 	}
+}
+
+bool L3DAnim::LoadFromFilesystem(const std::filesystem::path& path)
+{
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading L3DAnim from file: {}", path.generic_string());
+	anm::ANMFile anm;
+
+	try
+	{
+		anm.ReadFile(*Locator::filesystem::value().GetData(path));
+	}
+	catch (std::runtime_error& err)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open l3d animation from buffer: {}", err.what());
+		return false;
+	}
+
+	Load(anm);
+	return true;
 }
 
 bool L3DAnim::LoadFromFile(const std::filesystem::path& path)

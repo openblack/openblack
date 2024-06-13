@@ -54,9 +54,6 @@ protected:
 	/// Error handling
 	void Fail(const std::string& msg);
 
-	/// Read file from the input source
-	virtual void ReadFile(std::istream& stream);
-
 	void LoadVariables(std::istream& stream, std::vector<std::string>& variables);
 	void LoadCode(std::istream& stream);
 	void LoadAuto(std::istream& stream);
@@ -66,6 +63,9 @@ protected:
 public:
 	LHVM();
 	virtual ~LHVM();
+
+	/// Read file from the input source
+	virtual void ReadFile(std::istream& stream);
 
 	/// Read lhvm file from the filesystem
 	void Open(const std::filesystem::path& filepath);
