@@ -44,11 +44,12 @@ AndroidFileSystem::~AndroidFileSystem()
 	_jniEnv->DeleteGlobalRef(_jniInteropClass);
 }
 
-std::filesystem::path AndroidFileSystem::FindPath(const std::filesystem::path& path) const
+auto AndroidFileSystem::FindPath(const std::filesystem::path& path) const
+    -> std::expected<std::filesystem::path, std::invalid_argument>
 {
 	if (path.empty())
 	{
-		throw std::invalid_argument("empty path");
+		return std::unexpected<std::invalid_argument>("empty_path");
 	}
 
 	return path;
@@ -65,6 +66,8 @@ bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
 	if (midGetDirectoryFromPath == nullptr)
 	{
 		spdlog::error("Failed to find method: getDirectoryFromPath");
+		_jniEnv->DeleteLocalRef(jgamePath);
+		_jniEnv->DeleteLocalRef(jpath);
 		return false;
 	}
 
@@ -83,8 +86,14 @@ bool AndroidFileSystem::IsPathValid(const std::filesystem::path& path)
 	return isValid;
 }
 
-std::unique_ptr<Stream> AndroidFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
+auto AndroidFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
+    -> std::expected<std::unique_ptr<Stream>, std::invalid_argument>
 {
+	if (path.empty())
+	{
+		return std::unexpected<std::invalid_argument>("File " + path.string() + " not found");
+	}
+
 	jstring jpath = _jniEnv->NewStringUTF(path.c_str());
 	jstring jgamePath = _jniEnv->NewStringUTF(_gamePath.c_str());
 
@@ -92,33 +101,35 @@ std::unique_ptr<Stream> AndroidFileSystem::Open(const std::filesystem::path& pat
 	jbyteArray jbytes =
 	    (jbyteArray)_jniEnv->CallStaticObjectMethod(_jniInteropClass, _jniReadFileFromPathMid, _jniActivity, jgamePath, jpath);
 
+	if (jbytes == nullptr)
+	{
+		_jniEnv->DeleteLocalRef(jpath);
+		_jniEnv->DeleteLocalRef(jgamePath);
+		return std::unexpected<std::invalid_argument>("File " + path.string() + " not found.");
+	}
+
 	jsize length = _jniEnv->GetArrayLength(jbytes);
 	jbyte* jbytesPtr = _jniEnv->GetByteArrayElements(jbytes, nullptr);
 
 	std::vector<uint8_t> bytes(jbytesPtr, jbytesPtr + length);
-	auto value = std::unique_ptr<Stream>(new MemoryStream(std::move(bytes)));
+	auto value = std::make_unique<MemoryStream>(std::move(bytes));
 
 	_jniEnv->ReleaseByteArrayElements(jbytes, jbytesPtr, 0);
 	_jniEnv->DeleteLocalRef(jbytes);
+	_jniEnv->DeleteLocalRef(jpath);
+	_jniEnv->DeleteLocalRef(jgamePath);
+
 	return value;
 }
 
 bool AndroidFileSystem::Exists(const std::filesystem::path& path) const
 {
-	try
-	{
-		[[maybe_unused]] auto realPath = FindPath(path);
-		return true;
-	}
-	catch (std::exception&)
-	{
-		return false;
-	}
+	return FindPath(path).has_value();
 }
 
 std::vector<uint8_t> AndroidFileSystem::ReadAll(const std::filesystem::path& path)
 {
-	auto file = Open(path, Stream::Mode::Read);
+	auto file = Open(path, Stream::Mode::Read).value();
 	std::size_t size = file->Size();
 
 	std::vector<uint8_t> data(size);
@@ -153,6 +164,11 @@ void AndroidFileSystem::Iterate(const std::filesystem::path& path, bool recursiv
 		// Don't forget to release the string
 		_jniEnv->ReleaseStringUTFChars(filePath, rawString);
 	}
+
+	// Be explicit to avoid exceeding limit of local resources.
+	_jniEnv->DeleteLocalRef(jfilePaths);
+	_jniEnv->DeleteLocalRef(jgamePath);
+	_jniEnv->DeleteLocalRef(jpath);
 }
 
 #endif

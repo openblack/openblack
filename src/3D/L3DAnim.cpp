@@ -60,7 +60,7 @@ bool L3DAnim::LoadFromFile(const std::filesystem::path& path)
 
 	try
 	{
-		anm.Open(Locator::filesystem::value().FindPath(path));
+		anm.Open(Locator::filesystem::value().FindPath(path).value());
 	}
 	catch (std::runtime_error& err)
 	{
