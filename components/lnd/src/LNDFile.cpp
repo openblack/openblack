@@ -108,6 +108,7 @@
 #include <cstring>
 
 #include <fstream>
+#include <ranges>
 #include <stdexcept>
 
 using namespace openblack::lnd;
@@ -338,20 +339,17 @@ void LNDFile::Write(const std::filesystem::path& filepath)
 		_header.lookUpTable.at(lookupIndex) = static_cast<uint8_t>(block.index);
 	}
 
-	// TODO (#749) use std::views::enumerate
-	for (int i = 1; auto& b : _blocks)
+	for (auto [i, b] : std::views::enumerate(_blocks))
 	{
-		b.index = i;
-		++i;
+		b.index = static_cast<uint32_t>(i);
 	}
 
-	// TODO (#749) use std::views::enumerate
-	for (int i = 0; auto& t : _lowResolutionTextures)
+	for (auto [i, t] : std::views::enumerate(_lowResolutionTextures))
 	{
-		t.header.index = i;
+		t.header.index = static_cast<uint32_t>(i);
 		t.header.size = static_cast<uint32_t>(t.texels.size()) + 4;
-		++i;
 	}
+
 	WriteFile(stream);
 }
 
