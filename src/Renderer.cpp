@@ -713,7 +713,9 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 					    _plane->GetVertexBuffer().Bind();
 
-					    bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_BLEND_ALPHA);
+					    bgfx::setState(0 | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
+					                   BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE) |
+					                   BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_ADD));
 
 					    bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), spriteShader->GetRawHandle());
 				    });
