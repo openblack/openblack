@@ -25,6 +25,7 @@
 #include "3D/CreatureBody.h"
 #include "3D/LandIslandInterface.h"
 #include "3D/Sky.h"
+#include "3D/TempleInteriorInterface.h"
 #include "3D/Water.h"
 #include "Audio/AudioManagerInterface.h"
 #include "Camera/Camera.h"
@@ -486,6 +487,7 @@ bool Game::Initialize()
 	auto& animationManager = resources.GetAnimations();
 	auto& levelManager = resources.GetLevels();
 	auto& soundManager = resources.GetSounds();
+	auto& glowManager = resources.GetGlows();
 
 	if (!fileSystem.IsPathValid(_gamePath))
 	{
@@ -540,7 +542,8 @@ bool Game::Initialize()
 	    });
 
 	fileSystem.Iterate( //
-	    fileSystem.GetPath<filesystem::Path::Citadel>() / "engine", false, [&meshManager](const std::filesystem::path& f) {
+	    fileSystem.GetPath<filesystem::Path::Citadel>() / "engine", false,
+	    [&meshManager, &glowManager](const std::filesystem::path& f) {
 		    if (f.extension() == ".zzz")
 		    {
 			    if (f.stem().string().ends_with("lo_l3d"))
@@ -555,6 +558,19 @@ bool Game::Initialize()
 			    {
 				    meshManager.Load(fmt::format("temple/interior/{}", f.stem().string()), resources::L3DLoader::FromDiskTag {},
 				                     f);
+			    }
+			    catch (std::runtime_error& err)
+			    {
+				    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+			    }
+		    }
+		    else if (f.extension() == ".glw")
+		    {
+			    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading interior temple glows: {}", f.stem().string());
+			    try
+			    {
+				    glowManager.Load(fmt::format("temple/interior/glow/{}", f.stem().string()),
+				                     resources::LightLoader::FromDiskTag {}, f);
 			    }
 			    catch (std::runtime_error& err)
 			    {
