@@ -17,6 +17,7 @@
 
 #include "Camera/Camera.h"
 #include "Common/EventManager.h"
+#include "ECS/Archetypes/GlowArchetype.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Temple.h"
 #include "ECS/Registry.h"
@@ -71,6 +72,16 @@ const std::unordered_multimap<Indoors, std::string_view> k_TempleInteriorParts {
     // {"savegamefloorlo_l3d", Indoors::SaveGameFloorLO},
 };
 
+const std::unordered_map<Indoors, std::string_view> k_TempleInteriorGlows {
+    {Indoors::ChallengeRoom, "challenge"}, //
+    {Indoors::CreatureCave, "creature"},   //
+    {Indoors::CreditsRoom, "credits"},     //
+    {Indoors::MainRoom, "main"},           //
+    {Indoors::MultiplayerRoom, "multi"},   //
+    {Indoors::OptionsRoom, "options"},     //
+    {Indoors::SaveGameRoom, "savegame"},   //
+};
+
 inline void addRoomToRegistry(std::string_view assetName, Indoors templeRoom, glm::vec3 position, glm::mat3 rotation,
                               glm::vec3 scale)
 {
@@ -80,6 +91,18 @@ inline void addRoomToRegistry(std::string_view assetName, Indoors templeRoom, gl
 	registry.Assign<ecs::components::TempleInteriorPart>(entity, templeRoom);
 	registry.Assign<ecs::components::Transform>(entity, position, rotation, scale);
 	registry.Assign<ecs::components::Mesh>(entity, meshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
+}
+
+inline void addGlowsToRegistry(Indoors templeRoom)
+{
+	const auto& glowManager = Locator::resources::value().GetGlows();
+	const auto glowId =
+	    entt::hashed_string(fmt::format("temple/interior/glow/{}", k_TempleInteriorGlows.at(templeRoom)).c_str());
+	const auto glows = glowManager.Handle(glowId);
+	for (const auto& glow : glows->emitters)
+	{
+		ecs::archetypes::GlowArchetype::Create(glow, templeRoom);
+	}
 }
 
 void TempleInterior::Activate()
@@ -105,6 +128,10 @@ void TempleInterior::Activate()
 	for (const auto& [roomType, assetName] : k_TempleInteriorParts)
 	{
 		addRoomToRegistry(assetName, roomType, _templePosition, rotation, scale);
+	}
+	for (const auto& [roomType, assetName] : k_TempleInteriorGlows)
+	{
+		addGlowsToRegistry(roomType);
 	}
 
 	Locator::rendereringSystem::emplace<ecs::systems::RenderingSystemTemple>();
