@@ -26,6 +26,7 @@ public:
 	LevelManager& GetLevels() override { return _levels; }
 	CreatureMindManager& GetCreatureMinds() override { return _creatureMinds; }
 	SoundManager& GetSounds() override { return _sounds; }
+	GlowManager& GetGlows() override { return _glows; }
 
 private:
 	MeshManager _meshes;
@@ -34,5 +35,6 @@ private:
 	LevelManager _levels;
 	CreatureMindManager _creatureMinds;
 	SoundManager _sounds;
+	GlowManager _glows;
 };
 } // namespace openblack::resources
