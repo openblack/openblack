@@ -757,7 +757,7 @@ bool Game::Initialize()
 	}
 
 	fileSystem.Iterate(fileSystem.GetPath<Path::Textures>(), false, [&textureManager](const std::filesystem::path& f) {
-		if (f.extension() == ".raw")
+		if (string_utils::LowerCase(f.extension().string()) == ".raw")
 		{
 			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading raw texture: {}", f.stem().string());
 			try
