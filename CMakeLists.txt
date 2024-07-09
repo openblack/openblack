@@ -127,6 +127,7 @@ add_subdirectory(apps/l3dtool)
 add_subdirectory(apps/packtool)
 add_subdirectory(apps/lndtool)
 add_subdirectory(apps/anmtool)
+add_subdirectory(apps/glwtool)
 add_subdirectory(apps/morphtool)
 
 # Map CMAKE_HOST_SYSTEM_PROCESSOR value
