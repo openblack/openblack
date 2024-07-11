@@ -50,6 +50,8 @@ jobs:
           pacman-key --list-keys "brett@i--b.com"
           pacman -Syy archlinux-keyring
           pacman-key --list-keys "brett@i--b.com"
+          gpg --recv-keys BE2DBCF2B1E3E588AC325AEAA06B49470F8E620A
+          pacman-key --list-keys "brett@i--b.com"
           pacman -S --noconfirm --noprogressbar --needed mesa libx11 ${makedepends} ${depends}
 
       - name: Cache AUR Packages
