@@ -47,6 +47,8 @@ jobs:
           export depends=${depends/bgfx/}
           export depends=${depends/entt/}
           export depends=${depends/imgui/}
+          pacman-key --list-keys "brett@i--b.com"
+          gpg --locate-external-keys "brett@i--b.com"
           pacman -S --noconfirm --noprogressbar --needed mesa libx11 ${makedepends} ${depends}
 
       - name: Cache AUR Packages
