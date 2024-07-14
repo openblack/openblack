@@ -22,10 +22,9 @@ jobs:
           - os: ubuntu-24.04
             cc: clang
             cxx: clang++
-          # Broken for bgfx 1.127.8725-469, fixed in 1.128.8777-475
-          # - os: windows-latest
-          #   cc: clang
-          #   cxx: clang++
+          - os: windows-latest
+            cc: clang
+            cxx: clang++
 
     steps:
       - uses: actions/checkout@v3
