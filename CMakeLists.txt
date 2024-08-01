@@ -127,6 +127,7 @@ add_subdirectory(apps/packtool)
 add_subdirectory(apps/lndtool)
 add_subdirectory(apps/anmtool)
 add_subdirectory(apps/morphtool)
+add_subdirectory(apps/lhvmtool)
 
 # Map CMAKE_HOST_SYSTEM_PROCESSOR value
 if (${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "AMD64"

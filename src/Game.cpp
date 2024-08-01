@@ -11,7 +11,6 @@
 
 #include <string>
 
-#include <LHVM/LHVM.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -51,6 +50,7 @@
 #include "Graphics/Texture2D.h"
 #include "Input/GameActionMapInterface.h"
 #include "LHScriptX/Script.h"
+#include "LHVM.h"
 #include "Locator.h"
 #include "PackFile.h"
 #include "Parsers/InfoFile.h"
@@ -778,17 +778,18 @@ bool Game::Run()
 	if (fileSystem.Exists(challengePath))
 	{
 		_lhvm = std::make_unique<LHVM::LHVM>();
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading LHVM from: {}", challengePath.generic_string());
 #if __ANDROID__
 		//  Android has a complicated permissions API, must call java code to read contents.
-		_lhvm->Open(fileSystem.ReadAll(fileSystem.FindPath(challengePath)));
+		_lhvm->LoadBinary(fileSystem.ReadAll(fileSystem.FindPath(challengePath)));
 #else
-		_lhvm->Open(fileSystem.FindPath(challengePath));
+		_lhvm->LoadBinary(fileSystem.FindPath(challengePath));
 #endif
 	}
 	else
 	{
 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Challenge file not found at {}",
-		                    (fileSystem.GetGamePath() / challengePath).generic_string());
+			                (fileSystem.GetGamePath() / challengePath).generic_string());
 		return false;
 	}
 

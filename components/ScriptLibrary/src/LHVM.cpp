@@ -52,20 +52,15 @@
  *         data - size of data
  */
 
-#include "LHVM/LHVM.h"
-
 #include <cassert>
 #include <cstring>
-
 #include <fstream>
 #include <stdexcept>
 
-#include "LHVM/OpcodeNames.h"
-#include "LHVM/VMInstruction.h"
+#include "LHVM.h"
+#include "LHVMFile.h"
 
-using namespace openblack::LHVM;
-
-namespace
+namespace openblack::LHVM
 {
 // Adapted from https://stackoverflow.com/a/13059195/10604387
 //          and https://stackoverflow.com/a/46069245/10604387
@@ -106,274 +101,609 @@ struct imemstream: virtual membuf, std::istream
 	{
 	}
 };
-} // namespace
+
+LHVM::LHVM()
+{
+	_currentStack = &_mainStack;
+
+	_opcodesImpl[0] = _opcode00_END;
+	_opcodesImpl[1] = _opcode01_JZ;
+	_opcodesImpl[2] = _opcode02_PUSH;
+	_opcodesImpl[3] = _opcode03_POP;
+	_opcodesImpl[4] = _opcode04_ADD;
+	_opcodesImpl[5] = _opcode05_SYS;
+	_opcodesImpl[6] = _opcode06_SUB;
+	_opcodesImpl[7] = _opcode07_NEG;
+	_opcodesImpl[8] = _opcode08_MUL;
+	_opcodesImpl[9] = _opcode09_DIV;
+
+	_opcodesImpl[10] = _opcode10_MOD;
+	_opcodesImpl[11] = _opcode11_NOT;
+	_opcodesImpl[12] = _opcode12_AND;
+	_opcodesImpl[13] = _opcode13_OR;
+	_opcodesImpl[14] = _opcode14_EQ;
+	_opcodesImpl[15] = _opcode15_NEQ;
+	_opcodesImpl[16] = _opcode16_GEQ;
+	_opcodesImpl[17] = _opcode17_LEQ;
+	_opcodesImpl[18] = _opcode18_GT;
+	_opcodesImpl[19] = _opcode19_LT;
+
+	_opcodesImpl[20] = _opcode20_JMP;
+	_opcodesImpl[21] = _opcode21_SLEEP;
+	_opcodesImpl[22] = _opcode22_EXCEPT;
+	_opcodesImpl[23] = _opcode23_CAST;
+	_opcodesImpl[24] = _opcode24_CALL;
+	_opcodesImpl[25] = _opcode25_ENDEXCEPT;
+	_opcodesImpl[26] = _opcode26_RETEXCEPT;
+	_opcodesImpl[27] = _opcode27_ITEREXCEPT;
+	_opcodesImpl[28] = _opcode28_BRKEXCEPT;
+	_opcodesImpl[29] = _opcode29_SWAP;
+
+	_opcodesImpl[30] = _opcode30_LINE;
+}
 
 /// Error handling
 void LHVM::Fail(const std::string& msg)
 {
-	throw std::runtime_error("LLVM Error: " + msg + "\nFilename: " + _filename.string());
+	throw std::runtime_error("LHVM Error: " + msg);
 }
 
-LHVM::LHVM() = default;
-LHVM::~LHVM() = default;
-
-void LHVM::ReadFile(std::istream& stream)
+void LHVM::Initialise(NativeFunction* functions, void (*nativeCallEnterCallback)(uint32_t func),
+                      void (*nativeCallExitCallback)(uint32_t func), void (*stopTaskCallback)(uint32_t taskNumber),
+                      void (*addReference)(uint32_t objid), void (*removeReference)(uint32_t objid))
 {
-	assert(!_isLoaded);
+	_functions = functions;
+	_nativeCallEnterCallback = nativeCallEnterCallback;
+	_nativeCallExitCallback = nativeCallExitCallback;
+	_stopTaskCallback = stopTaskCallback;
+	_addReference = addReference;
+	_removeReference = removeReference;
+	Reboot();
 
-	// Total file size
-	std::size_t fsize = 0;
-	if (stream.seekg(0, std::ios_base::end))
-	{
-		fsize = static_cast<std::size_t>(stream.tellg());
-		stream.seekg(0);
-	}
-
-	if (fsize < sizeof(LHVMHeader))
-	{
-		Fail("File too small to be a valid LLVM file.");
-	}
-
-	// First 8 bytes
-	stream.read(reinterpret_cast<char*>(&_header), sizeof(LHVMHeader));
-	if (_header.magic != k_Magic)
-	{
-		Fail("Unrecognized LLVM header");
-	}
-
-	/* only support bw1 at the moment */
-	if (_header.version != LHVMVersion::BlackAndWhite)
-	{
-		Fail("Unsupported LHVM version");
-	}
-
-	LoadVariables(stream, _variables);
-	LoadCode(stream);
-	LoadAuto(stream);
-	LoadScripts(stream);
-	LoadData(stream);
-
-	// creature isle
-	if (_header.version == LHVMVersion::CreatureIsle)
-	{
-		// VMTypedVariableInfo::Load((std::_FILE *))
-		// there is extra data: 512 loop { 2 int32 } final int32
-	}
-
-	_isLoaded = true;
 }
 
-void LHVM::Open(const std::filesystem::path& filepath)
+void LHVM::LoadBinary(const std::filesystem::path& filepath)
 {
-	assert(!_isLoaded);
-
-	_filename = filepath;
-
-	std::ifstream stream(_filename, std::ios::binary);
-
-	if (!stream.is_open())
+	LHVMFile file;
+	file.Open(filepath);
+	if (file.HasStatus())
 	{
-		Fail("Could not open file.");
+		Fail("File contains status data");
 	}
 
-	ReadFile(stream);
-}
+	StopAllTasks();
 
-void LHVM::Open(const std::vector<uint8_t>& buffer)
-{
-	assert(!_isLoaded);
+	_instructions = file.GetInstructions();
+	_scripts = file.GetScripts();
+	_data = file.GetData();
+	_mainStack.count = 0;
+	_mainStack.pushCount = 0;
+	_mainStack.popCount = 0;
+	_currentStack = &_mainStack;
 
-	imemstream stream(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
-
-	// File name set to "buffer" when file is load from a buffer
-	// Impact code using L3DFile::GetFilename method
-	_filename = std::filesystem::path("buffer");
-
-	ReadFile(stream);
-}
-
-void LHVM::LoadVariables(std::istream& stream, std::vector<std::string>& variables)
-{
-	int32_t count;
-
-	if (!stream.read(reinterpret_cast<char*>(&count), sizeof(count)))
+	_variablesNames = file.GetVariablesNames();
+	_variables.clear();
+	_variables.reserve(_variablesNames.size() + 1);
+	_variables.emplace_back(VMVar {.type = DataType::FLOAT, .floatVal = 0.0, .name = "Null variable"});
+	for (auto name : _variablesNames)
 	{
-		Fail("Error reading variable count");
+		_variables.emplace_back(VMVar {.type = DataType::FLOAT, .floatVal = 0.0, .name = name});
 	}
 
-	// if there are no variables, return
-	if (count <= 0)
-	{
-		return;
-	}
+	_tasks.clear();
+	_ticks = 0;
+	_currentLineNumber = 0;
+	_highestTaskId = 0;
+	_highestScriptId = _scripts.size();
+	_executedInstructions = 0;
 
-	// preallocate a buffer to reuse for each variable
-	char buffer[255];
-
-	for (int32_t i = 0; i < count; i++)
+	_auto = file.GetAutostart();
+	for (auto &scriptId : _auto)
 	{
-		// reset cur pointer to 0
-		char* cur = &buffer[0];
-		do
+		if (scriptId > 0 && scriptId <= _scripts.size())
 		{
-			if (!stream.read(cur++, sizeof(*cur)))
+			auto& script = _scripts[scriptId + 1];
+			StartScript(script.GetName(), 0xFFFFFFFF);
+		}
+		else
+		{
+			SignalError(ErrorCode::SCRIPT_ID_NOT_FOUND, scriptId);
+		}
+	}
+}
+
+void LHVM::RestoreState(const std::filesystem::path& filepath) {
+	auto file = LHVMFile();
+	file.Open(filepath);
+	if (!file.HasStatus())
+	{
+		Fail("File doesn't contain status data");
+	}
+
+	StopAllTasks();
+
+	_instructions = file.GetInstructions();
+	_scripts = file.GetScripts();
+	_data = file.GetData();
+	_mainStack = file.GetStack();
+	_currentStack = &_mainStack;
+	_variablesNames = file.GetVariablesNames();
+	_variables = file.GetVariablesValues();
+
+	_auto = file.GetAutostart();
+
+	_tasks.clear();
+	for (auto task : file.GetTasks())
+	{
+		_tasks.emplace(task.id, task);
+	}
+
+	_ticks = file.GetTicks();
+	_currentLineNumber = file.GetCurrentLineNumber();
+	_highestTaskId = file.GetHighestTaskId();
+	_highestScriptId = file.GetHighestScriptId();
+	_executedInstructions = file.GetScriptInstructionCount();
+}
+
+VMValue LHVM::Pop(DataType& type) {
+	_currentStack->popCount++;
+	if (_currentStack->count > 0)
+	{
+		_currentStack->count--;
+		type = _currentStack->types[_currentStack->count];
+		return _currentStack->values[_currentStack->count];
+	}
+	else
+	{
+		SignalError(ErrorCode::STACK_EMPTY);
+	}
+	return VMValue {.uintVal = 0};
+}
+
+void LHVM::Push(VMValue value, DataType type)
+{
+	_currentStack->pushCount++;
+	if (_currentStack->count < 32)
+	{
+		_currentStack->values[_currentStack->count] = value;
+		_currentStack->types[_currentStack->count] = type;
+		_currentStack->count++;
+	}
+	else
+	{
+		SignalError(ErrorCode::STACK_FULL);
+	}
+}
+
+void LHVM::Push(float_t value, DataType type)
+{
+	Push(VMValue {.floatVal = value}, type);
+}
+
+void LHVM::Push(int32_t value, DataType type)
+{
+	Push(VMValue {.intVal = value}, type);
+}
+
+void LHVM::Reboot()
+{
+	StopAllTasks();
+	_variables.clear();
+	_variablesNames.clear();
+	_scripts.clear();
+	_auto.clear();
+	_instructions.clear();
+	_data.clear();
+
+	_ticks = 0;
+	_highestTaskId = 0;
+	_highestScriptId = 0;
+	_currentLineNumber = 0;
+	_executedInstructions = 0;
+
+	_mainStack.popCount += _mainStack.count;
+	_mainStack.count = 0;
+	
+	_currentTask = NULL;
+	_currentStack = &_mainStack;
+}
+
+void LHVM::SaveBinary(const std::filesystem::path& filepath)
+{
+	LHVMFile file(LHVMHeader {.magic = k_Magic, .version = LHVMVersion::BlackAndWhite}, _variablesNames, _instructions,
+		_auto, _scripts, _data);
+	file.Write(filepath);
+}
+
+void LHVM::SaveState(const std::filesystem::path& filepath)
+{
+	std::vector<VMTask> tasks;
+	tasks.reserve(_tasks.size());
+	for (const auto& [id, task] : _tasks)
+	{
+		tasks.emplace_back(task);
+	}
+
+	LHVMFile file(LHVMHeader {.magic = k_Magic, .version = LHVMVersion::BlackAndWhite}, _variablesNames, _instructions,
+				  _auto, _scripts, _data, _mainStack, _variables, tasks, _ticks, _currentLineNumber, _highestTaskId, _highestScriptId,
+	              _executedInstructions);
+	file.Write(filepath);
+}
+
+void LookIn(uint32_t allowedScriptTypesMask)
+{
+	// TODO
+
+}
+
+uint32_t LHVM::StartScript(std::string name, uint32_t allowedScriptTypesMask)
+{
+	const auto script = GetScript(name);
+	if (script != NULL)
+	{
+		if (script->GetType() & allowedScriptTypesMask)
+		{
+			const auto taskNumber = ++_highestTaskId;
+
+			// copy values from current stack to new stack
+			VMStack stack {};
+			for (unsigned int i = 0; i < script->GetParameterCount(); i++)
 			{
-				Fail("Error reading variable");
+				DataType type;
+				const auto& value = Pop(type);
+
+				stack.pushCount++;
+				if (stack.count < 31)
+				{
+					stack.values[stack.count] = value;
+					stack.types[stack.count] = type;
+					stack.count++;
+				}
 			}
-		} while (*(cur - 1) != '\0');
 
-		// throw it into the std::string vector
-		variables.emplace_back(buffer);
-	}
-}
-
-void LHVM::LoadCode(std::istream& stream)
-{
-	int32_t count;
-	if (!stream.read(reinterpret_cast<char*>(&count), sizeof(count)))
-	{
-		Fail("Error reading code count");
-	}
-
-	// if there are no variables, return
-	if (count <= 0)
-	{
-		return;
-	}
-
-	for (int32_t i = 0; i < count; i++)
-	{
-		std::array<uint32_t, 5> instruction; // quick way to minimize code
-		if (!stream.read(reinterpret_cast<char*>(instruction.data()), sizeof(instruction[0]) * instruction.size()))
-		{
-			Fail("Error reading instructions");
-		}
-
-		_instructions.emplace_back(static_cast<VMInstruction::Opcode>(instruction[0]),
-		                           static_cast<VMInstruction::Access>(instruction[1]),
-		                           static_cast<VMInstruction::DataType>(instruction[2]), instruction[3], instruction[4]);
-	}
-}
-
-void LHVM::LoadAuto(std::istream& stream)
-{
-	int32_t count;
-	if (!stream.read(reinterpret_cast<char*>(&count), sizeof(count)))
-	{
-		Fail("error reading id count");
-	}
-
-	// if there are no variables, return
-	if (count <= 0)
-	{
-		return;
-	}
-
-	std::vector<uint32_t> ids(count);
-
-	if (!stream.read(reinterpret_cast<char*>(&count), sizeof(ids[0]) * ids.size()))
-	{
-		Fail("error reading ids");
-	}
-}
-
-void LHVM::LoadScripts(std::istream& stream)
-{
-	int32_t count;
-	if (!stream.read(reinterpret_cast<char*>(&count), sizeof(count)))
-	{
-		Fail("error reading script count");
-	}
-
-	// if there are no variables, return
-	if (count <= 0)
-	{
-		return;
-	}
-
-	char script_name[255];
-	char file_name[255];
-
-	for (int32_t i = 0; i < count; i++)
-	{
-		char* cur = &script_name[0];
-		do
-		{
-			if (!stream.read(cur++, sizeof(*cur)))
+			// allocate local variables with default values
+			const auto& scriptVariables = script->GetVariables();
+			std::vector<VMVar> taskVariables;
+			taskVariables.reserve(scriptVariables.size());
+			for (unsigned int i = 0; i < scriptVariables.size(); i++)
 			{
-				Fail("Error script name");
+				taskVariables.push_back(VMVar {.type = DataType::FLOAT, .floatVal = 0.0f, .name = scriptVariables.at(i)});
 			}
-		} while (*(cur - 1) != '\0');
 
-		cur = &file_name[0];
-		do
+			const auto& task = VMTask(taskVariables, script->GetScriptID(), taskNumber,
+			                          script->GetInstructionAddress(), 0, 0, script->GetVariablesOffset(), stack, 0,
+			                          VMExceptStruct {.instructionAddress = script->GetInstructionAddress()}, 1, 0, 0, 0, 0,
+			                          script->GetName(), script->GetFileName(), script->GetType());
+
+			_tasks.emplace(taskNumber, task);
+
+			return taskNumber;
+		}
+		else
 		{
-			if (!stream.read(cur++, sizeof(*cur)))
+			SignalError(ErrorCode::NO_SCRIPT_OF_TYPE, name);
+		}
+		return 0;
+	}
+	else
+	{
+		SignalError(ErrorCode::SCRIPT_NAME_NOT_FOUND, name);
+		return 0;
+	}
+}
+
+void LHVM::StopAllTasks()
+{
+	while (_tasks.size() > 0)
+	{
+		auto iter = _tasks.begin();
+		StopTask((*iter).first);
+	}
+}
+
+void LHVM::StopScripts(bool filter(std::string name, std::string filename))
+{
+	std::vector<uint32_t> ids;
+	for (const auto& [id, task] : _tasks)
+	{
+		if (filter(task.name, task.filename))
+		{
+			ids.emplace_back(id);
+		}
+	}
+
+	for (const auto id : ids)
+	{
+		StopTask(id);
+	}
+}
+
+void LHVM::StopTask(uint32_t taskNumber)
+{
+	if (_tasks.contains(taskNumber))
+	{
+		InvokeStopTaskCallback(taskNumber);
+		auto& task = _tasks.at(taskNumber);
+		for (auto& var : task.localVars)
+		{
+			if (var.type == DataType::OBJECT)
 			{
-				Fail("Error reading script filename");
+				RemoveReference(var.uintVal);
 			}
-		} while (*(cur - 1) != '\0');
-
-		uint32_t scriptType;
-		if (!stream.read(reinterpret_cast<char*>(&scriptType), sizeof(scriptType)))
-		{
-			Fail("Error reading script type");
 		}
-
-		uint32_t varOffset;
-		if (!stream.read(reinterpret_cast<char*>(&varOffset), sizeof(varOffset)))
-		{
-			Fail("Error reading script variables offset");
-		}
-
-		std::vector<std::string> variables;
-		LoadVariables(stream, variables);
-
-		uint32_t instructionAddress;
-		if (!stream.read(reinterpret_cast<char*>(&instructionAddress), sizeof(instructionAddress)))
-		{
-			Fail("Error reading instruction address");
-		}
-
-		uint32_t parameterCount;
-		if (!stream.read(reinterpret_cast<char*>(&parameterCount), sizeof(parameterCount)))
-		{
-			Fail("Error reading parameter count");
-		}
-
-		uint32_t scriptId;
-		if (!stream.read(reinterpret_cast<char*>(&scriptId), sizeof(scriptId)))
-		{
-			Fail("Error reading script_id");
-		}
-
-		_scripts.emplace_back(std::string(script_name), std::string(file_name), scriptType, varOffset, variables,
-		                      instructionAddress, parameterCount, scriptId);
+		_tasks.erase(taskNumber);
 	}
-}
-
-void LHVM::LoadData(std::istream& stream)
-{
-	int32_t size;
-	if (!stream.read(reinterpret_cast<char*>(&size), sizeof(size)))
+	else
 	{
-		Fail("Error reading data size");
-	}
-
-	_data.resize(size);
-	if (!stream.read(reinterpret_cast<char*>(_data.data()), sizeof(_data[0]) * _data.size()))
-	{
-		Fail("Error reading data");
+		SignalError(ErrorCode::TASK_ID_NOT_FOUND, taskNumber);
 	}
 }
 
-/*
-    a pretty long method to turn each different opcode into a somewhat
-    human readable string
-*/
-std::string VMInstruction::Disassemble() const
+void LHVM::StopTasksOfType(uint32_t typesMask)
 {
-	std::string opcodeName = Opcode_Names.at(static_cast<int>(_code));
+	std::vector<uint32_t> ids;
+	for (const auto& [id, task] : _tasks)
+	{
+		if (task.type & typesMask)
+		{
+			ids.emplace_back(task.id);
+		}
+	}
 
-	return opcodeName;
+	for (const auto id : ids)
+	{
+		StopTask(id);
+	}
 }
+
+void LHVM::InvokeStopTaskCallback(const uint32_t taskNumber)
+{
+	if (_stopTaskCallback != NULL)
+	{
+		_stopTaskCallback(taskNumber);
+	}
+}
+
+void LHVM::AddReference(const uint32_t objectId)
+{
+	if (_addReference != NULL)
+	{
+		_addReference(objectId);
+	}
+}
+
+void LHVM::RemoveReference(const uint32_t objectId)
+{
+	if (_removeReference != NULL)
+	{
+		_removeReference(objectId);
+	}
+}
+
+void LHVM::InvokeNativeCallEnterCallback(const uint32_t taskNumber)
+{
+	if (_nativeCallEnterCallback != NULL)
+	{
+		_nativeCallEnterCallback(taskNumber);
+	}
+}
+
+void LHVM::InvokeNativeCallExitCallback(const uint32_t taskNumber)
+{
+	if (_nativeCallExitCallback != NULL)
+	{
+		_nativeCallExitCallback(taskNumber);
+	}
+}
+
+void LHVM::SignalError(const ErrorCode code)
+{
+	if (_errorCallback != NULL)
+	{
+		_errorCallback(code, "", 0);
+	}
+}
+
+void LHVM::SignalError(const ErrorCode code, const uint32_t data)
+{
+	if (_errorCallback != NULL)
+	{
+		_errorCallback(code, "", data);
+	}
+}
+
+void LHVM::SignalError(const ErrorCode code, const std::string& data)
+{
+	if (_errorCallback != NULL)
+	{
+		_errorCallback(code, data, 0);
+	}
+}
+
+const VMScript* LHVM::GetScript(const std::string& name)
+{
+	for (const auto& script : _scripts)
+	{
+		if (script.GetName() == name)
+		{
+			return &script;
+		}
+	}
+	return NULL;
+}
+
+uint32_t LHVM::GetTicksCount()
+{
+	return _ticks;
+}
+
+void LHVM::PushElaspedTime()
+{
+	float_t time = GetTicksCount() * 10.0f;
+	Push(time, DataType::FLOAT);
+}
+
+void LHVM::CpuLoop(VMTask& task)
+{
+	bool wasInExceptionHandler = task.inExceptionHandler;
+
+	// TODO
+
+}
+
+void LHVM::_opcode00_END(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode01_JZ(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode02_PUSH(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode03_POP(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode04_ADD(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode05_SYS(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode06_SUB(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode07_NEG(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode08_MUL(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode09_DIV(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode10_MOD(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode11_NOT(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode12_AND(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode13_OR(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode14_EQ(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode15_NEQ(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode16_GEQ(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode17_LEQ(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode18_GT(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode19_LT(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode20_JMP(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode21_SLEEP(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode22_EXCEPT(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode23_CAST(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode24_CALL(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode25_ENDEXCEPT(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode26_RETEXCEPT(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode27_ITEREXCEPT(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode28_BRKEXCEPT(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode29_SWAP(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+void LHVM::_opcode30_LINE(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO
+}
+
+} // namespace openblack::LHVM
