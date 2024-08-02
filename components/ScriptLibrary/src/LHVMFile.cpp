@@ -551,13 +551,13 @@ const VMTask LHVMFile::LoadTask(std::istream& stream)
 	uint32_t prevInstructionAddress;
 	uint32_t waitingTask;
 	uint32_t varOffset;
-	uint32_t exceptionHandlersCount;
+	uint32_t currentExceptionHandlerIndex;
 	uint32_t ticks;
 	uint32_t scriptId;
 	ScriptType type;
 	uint8_t inExceptionHandler;
 	uint8_t stop;
-	uint8_t stopExceptionHandler;
+	uint8_t yield;
 	uint8_t sleeping;
 	VMStack stack;
 	uint32_t exceptStructCount;
@@ -590,7 +590,7 @@ const VMTask LHVMFile::LoadTask(std::istream& stream)
 		Fail("Error reading var offset");
 	}
 
-	if (!stream.read(reinterpret_cast<char*>(&exceptionHandlersCount), sizeof(exceptionHandlersCount)))
+	if (!stream.read(reinterpret_cast<char*>(&currentExceptionHandlerIndex), sizeof(currentExceptionHandlerIndex)))
 	{
 		Fail("Error reading current exception handler index");
 	}
@@ -620,9 +620,9 @@ const VMTask LHVMFile::LoadTask(std::istream& stream)
 		Fail("Error reading stop");
 	}
 
-	if (!stream.read(reinterpret_cast<char*>(&stopExceptionHandler), sizeof(stopExceptionHandler)))
+	if (!stream.read(reinterpret_cast<char*>(&yield), sizeof(yield)))
 	{
-		Fail("Error reading 'stop exception handler'");
+		Fail("Error reading yield");
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&sleeping), sizeof(sleeping)))
@@ -652,8 +652,8 @@ const VMTask LHVMFile::LoadTask(std::istream& stream)
 	}
 	auto& script = _scripts[scriptId - 1];
 
-	return VMTask(localVars, scriptId, taskNumber, instructionAddress, prevInstructionAddress, waitingTask, varOffset,
-	                    stack, exceptionHandlersCount, exceptStruct, ticks, inExceptionHandler, stop, stopExceptionHandler,
+	return VMTask(localVars, scriptId, taskNumber, instructionAddress, prevInstructionAddress, waitingTask, varOffset, stack,
+	              currentExceptionHandlerIndex, exceptStruct, ticks, inExceptionHandler, stop, yield,
 		sleeping, script.GetName(), script.GetFileName(), type);
 }
 

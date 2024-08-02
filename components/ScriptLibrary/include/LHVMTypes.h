@@ -160,9 +160,9 @@ enum class Mode : uint32_t
 	// CAST or ZERO
 	CAST = 0,
 	ZERO = 1,
-	// ENDEXCEPT or FREE
+	// ENDEXCEPT or YIELD
 	ENDEXCEPT = 0,
-	FREE = 1
+	YIELD = 1
 };
 static_assert(sizeof(Mode) == 4);
 
@@ -198,13 +198,13 @@ struct VMTask
 	uint32_t waitingTaskId;
 	uint32_t variablesOffset;
 	VMStack stack;
-	uint32_t exceptionHandlersCount;
+	uint32_t currentExceptionHandlerIndex;
 	VMExceptStruct exceptStruct;
 	uint32_t ticks;
-	uint8_t inExceptionHandler;
-	uint8_t stop;
-	uint8_t stopExceptionHandler;
-	uint8_t sleeping;
+	bool inExceptionHandler;
+	bool stop;
+	bool yield;
+	bool sleeping;
 	std::string name;
 	std::string filename;
 	ScriptType type;
@@ -228,6 +228,9 @@ enum class ErrorCode : uint32_t
 	SCRIPT_NAME_NOT_FOUND,
 	NO_SCRIPT_OF_TYPE,
 	TASK_ID_NOT_FOUND,
+	NATIVE_FUNC_NOT_FOUND,
+	DIV_BY_ZERO,
+	INVALID_TYPE,
 };
 
 } // namespace openblack::LHVM

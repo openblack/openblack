@@ -349,8 +349,9 @@ int PrintTasks(const LHVMFile& file)
 		std::printf("Sleeping: %u\n", task.sleeping);
 		std::printf("Waiting task number: %u\n", task.waitingTaskId);
 		std::printf("Stop: %s\n", task.stop ? "true" : "false");
-		std::printf("Stop exception handler: %s\n", task.stopExceptionHandler ? "true" : "false");
+		std::printf("Yield: %s\n", task.yield ? "true" : "false");
 		std::printf("In exception handler: %s\n", task.inExceptionHandler ? "true" : "false");
+		std::printf("Current exception handler index: %d\n", task.currentExceptionHandlerIndex);
 		const auto &exceptionHandlers = task.exceptStruct;
 		std::printf("Exception handlers instruction address: %u\n", exceptionHandlers.instructionAddress);
 		std::printf("Exception handlers instructions pointers:\n");

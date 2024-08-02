@@ -834,7 +834,8 @@ void LHVMViewer::DrawTasksTab(const LHVM::LHVM& lhvm)
 
 		ImGui::Text("Stop: %s", task.stop ? "true" : "false");
 		ImGui::Text("In exception handler: %s", task.inExceptionHandler ? "true" : "false");
-		ImGui::Text("Stop exception handler: %s", task.stopExceptionHandler ? "true" : "false");
+		ImGui::Text("Current exception handler: %d", task.currentExceptionHandlerIndex);
+		ImGui::Text("Yield: %s", task.yield ? "true" : "false");
 		if (ImGui::BeginTabBar("##TaskTabs", ImGuiTabBarFlags_None))
 		{
 			if (ImGui::BeginTabItem("Local Variables"))
