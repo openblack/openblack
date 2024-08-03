@@ -82,11 +82,12 @@ with section("parse"):
                                                      'INPUT_FILE': 1,
                                                      'OUTPUT_FILE': 1},
                                           'pargs': {'flags': [], 'nargs': '*'}},
-        'bgfx_compile_shader_to_header': {'kwargs': {'OUTPUT_DIR': 1,
-                                                     'SHADERS': '+',
-                                                     'TYPE': 1,
-                                                     'VARYING_DEF': 1},
-                                          'pargs': {'flags': [], 'nargs': '*'}}
+        'bgfx_compile_shaders': {'kwargs': {'OUTPUT_DIR': 1,
+                                            'SHADERS': '+',
+                                            'TYPE': 1,
+                                            'AS_HEADERS': 0,
+                                            'VARYING_DEF': 1},
+                                 'pargs': {'flags': [], 'nargs': '*'}}
     }
 
 # -----------------------------
