@@ -188,6 +188,8 @@ if (MSVC)
             /permissive-
             # Set correct version of c++
             /Zc:__cplusplus
+            # Use utf-8 for std::print and fmt/spdlog
+            /utf-8
   )
 
   # Debug builds create a debug console
