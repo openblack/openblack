@@ -14,6 +14,7 @@
 #include <vector>
 
 #include <entt/core/hashed_string.hpp>
+#include <fmt/ranges.h>
 #include <spdlog/spdlog.h>
 
 #include "Common/StringUtils.h"
