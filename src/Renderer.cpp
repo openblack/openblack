@@ -153,7 +153,7 @@ struct BgfxCallback: public bgfx::CallbackI
 			else
 			{
 				SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to save Screenshot ({}x{}) at {}: {}", width, height,
-				                    filePath, std::string(err.getMessage().getPtr(), err.getMessage().getLength()));
+				                    filePath, std::string(err.getMessage().getCPtr(), err.getMessage().getLength()));
 			}
 		}
 		else
