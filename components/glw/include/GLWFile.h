@@ -99,6 +99,7 @@ public:
 
 	[[nodiscard]] const std::vector<Glow>& GetGlows() const { return _glows; }
 	[[nodiscard]] const Glow& GetGlow(uint32_t index) const { return _glows[index]; }
+	void AddGlow(const Glow& glow) { _glows.push_back(glow); }
 };
 
 } // namespace openblack::glw

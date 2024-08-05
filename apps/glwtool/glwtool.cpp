@@ -88,18 +88,83 @@ struct Arguments
 
 int WriteFile(const Arguments::Write& args) noexcept
 {
-	// TODO(raffclar):
-	//	GLWFile glw {};
-	//
+	GLWFile glw {};
+
 	if (args.jsonFile.empty())
 	{
 		return EXIT_FAILURE;
 	}
-	//
-	//	std::ifstream f(args.jsonFile);
-	//	json data = json::parse(f);
-	//	data glw.Open();
-	//	glw.Write(args.outFilename);
+
+	std::ifstream f(args.jsonFile);
+
+	if (!f.is_open())
+	{
+		return EXIT_FAILURE;
+	}
+
+	nlohmann::json data;
+
+	try
+	{
+		data = nlohmann::json::parse(f);
+	}
+	catch (const nlohmann::json::parse_error&)
+	{
+		return EXIT_FAILURE;
+	}
+
+	try
+	{
+		for (auto jsonEmitter : data)
+		{
+			Glow glow;
+			glow.size = jsonEmitter["size"];
+			glow.unk1 = jsonEmitter["unk1"];
+			glow.red = jsonEmitter["red"];
+			glow.green = jsonEmitter["green"];
+			glow.blue = jsonEmitter["blue"];
+			glow.posX = jsonEmitter["posX"];
+			glow.posY = jsonEmitter["posY"];
+			glow.posZ = jsonEmitter["posZ"];
+			glow.unkX = jsonEmitter["unkX"];
+			glow.unkY = jsonEmitter["unkY"];
+			glow.unkZ = jsonEmitter["unkZ"];
+			glow.unkX2 = jsonEmitter["unkX2"];
+			glow.unkY2 = jsonEmitter["unkY2"];
+			glow.unkZ2 = jsonEmitter["unkZ2"];
+			glow.unk14 = jsonEmitter["unk14"];
+			glow.unk15 = jsonEmitter["unk15"];
+			glow.unk16 = jsonEmitter["unk16"];
+			glow.unk17 = jsonEmitter["unk17"];
+			glow.unk18 = jsonEmitter["unk18"];
+			glow.unk19 = jsonEmitter["unk19"];
+			glow.unk20 = jsonEmitter["unk20"];
+			glow.unk21 = jsonEmitter["unk21"];
+			glow.unk22 = jsonEmitter["unk22"];
+			glow.unk23 = jsonEmitter["unk23"];
+			glow.unk24 = jsonEmitter["unk24"];
+			glow.unk25 = jsonEmitter["unk25"];
+			glow.unk26 = jsonEmitter["unk26"];
+			glow.dirX = jsonEmitter["dirX"];
+			glow.dirY = jsonEmitter["dirY"];
+			glow.dirZ = jsonEmitter["dirZ"];
+			glow.unk27 = jsonEmitter["unk27"];
+			glow.unk28 = jsonEmitter["unk28"];
+			const std::string name = jsonEmitter["name"];
+			assert(name.length() < glow.name.size());
+			glow.name.fill(0);
+			std::copy(name.begin(), name.end(), glow.name.data());
+			glow.emitterSize = jsonEmitter["emitterSize"];
+			glw.AddGlow(glow);
+		}
+	}
+	catch (const nlohmann::json::exception& error)
+	{
+		return error.id;
+	}
+
+	glw.Write(args.outFilename);
+
 	return EXIT_SUCCESS;
 }
 
@@ -153,6 +218,11 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 		jsonEmitter["unk24"] = glow.unk24;
 		jsonEmitter["unk25"] = glow.unk25;
 		jsonEmitter["unk26"] = glow.unk26;
+		jsonEmitter["dirX"] = glow.dirX;
+		jsonEmitter["dirY"] = glow.dirY;
+		jsonEmitter["dirZ"] = glow.dirZ;
+		jsonEmitter["unk27"] = glow.unk27;
+		jsonEmitter["unk28"] = glow.unk28;
 		jsonEmitter["name"] = std::string(glow.name.data());
 		jsonEmitter["emitterSize"] = glow.emitterSize;
 		try
