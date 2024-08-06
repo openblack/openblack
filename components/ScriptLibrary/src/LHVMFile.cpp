@@ -422,9 +422,12 @@ void LHVMFile::LoadData(std::istream& stream)
 	}
 
 	_data.resize(size);
-	if (!stream.read(reinterpret_cast<char*>(&_data[0]), sizeof(_data[0]) * _data.size()))
+	if (size > 0)
 	{
-		Fail("Error reading data");
+		if (!stream.read(reinterpret_cast<char*>(&_data[0]), sizeof(_data[0]) * _data.size()))
+		{
+			Fail("Error reading data");
+		}
 	}
 }
 

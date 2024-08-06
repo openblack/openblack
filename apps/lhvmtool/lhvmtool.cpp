@@ -227,6 +227,33 @@ int PrintCode(const LHVMFile& file)
 				arg = file.GetScripts().at(instruction.intVal - 1).GetName();
 				std::printf("\tRUN %s%s\n", type.c_str(), arg.c_str());
 				break;
+			case Opcode::ENDEXCEPT:
+				if (instruction.mode == Mode::ENDEXCEPT)
+				{
+					std::printf("\tENDEXCEPT\n");
+				}
+				else // Mode::YIELD
+				{
+					std::printf("\tYIELD\n");
+				}
+				break;
+			case Opcode::SWAP:
+				if (instruction.type == DataType::INT)
+				{
+					std::printf("\tSWAP\n");
+				}
+				else
+				{
+					if (instruction.mode == Mode::COPYFROM)
+					{
+						std::printf("\tCOPY from %i\n", instruction.intVal);
+					}
+					else // Mode::COPYTO
+					{
+						std::printf("\tCOPY to %i\n", instruction.intVal);
+					}
+				}
+				break;
 			default:
 				std::printf("\t%s\n", opcode.c_str());
 			}
@@ -270,12 +297,11 @@ int PrintScripts(const LHVMFile& file)
 int PrintData(const LHVMFile& file)
 {
 	const auto& data = file.GetData();
-	const auto& bytes = reinterpret_cast<const char*>(data.data());
 	std::printf("Data:\n");
 	size_t offset = 0;
 	while (offset < data.size())
 	{
-		const char* str = &bytes[offset];
+		const char* str = &data[offset];
 		std::printf("%zu: %s\n", offset, str);
 		offset += strlen(str) + 1;
 	}

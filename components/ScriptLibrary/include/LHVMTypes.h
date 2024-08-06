@@ -14,14 +14,15 @@
 #include <array>
 #include <map>
 #include <string>
+#include <functional>
 
 namespace openblack::LHVM
 {
 
 static const std::array<std::string, 31> Opcode_Names = {
-    "END",    "WAIT",    "PUSH", "POP",       "ADD",       "CALL",       "MINUS",     "UMINUS", "TIMES", "DIVIDE", "MODULUS",
-    "NOT",    "AND",     "OR",   "EQ",        "NEQ",       "GEQ",        "LEQ",       "GT",     "LT",    "JUMP",   "SLEEP",
-    "EXCEPT", "INTCAST", "RUN",  "ENDEXCEPT", "RETEXCEPT", "FAILEXCEPT", "BRKEXCEPT", "SWAP",   "LINE"};
+    "END",    "JZ"  , "PUSH", "POP",       "ADD",       "SYS",        "SUB",       "NEG",  "MUL", "DIV", "MOD",
+    "NOT",    "AND" , "OR"  , "EQ",        "NE",        "GE",         "LE" ,       "GT",   "LT",  "JMP", "SLEEP",
+    "EXCEPT", "CAST", "RUN" , "ENDEXCEPT", "RETEXCEPT", "FAILEXCEPT", "BRKEXCEPT", "SWAP", "LINE"};
 
 enum class LHVMVersion : uint32_t
 {
@@ -89,13 +90,20 @@ enum class ScriptType : uint32_t
 	CHALLENGE_HELP = 4,
 	TEMPLE_HELP = 8,
 	TEMPLE_SPECIAL = 16,
-	MULTIPLAYER_HELP = 64
+	MULTIPLAYER_HELP = 64,
+
+	ALL = 0xFFFFFFFF
 };
 static_assert(sizeof(ScriptType) == 4);
 
 inline constexpr ScriptType operator|(ScriptType Lhs, ScriptType Rhs)
 {
 	return static_cast<ScriptType>(static_cast<uint32_t>(Lhs) | static_cast<uint32_t>(Rhs));
+}
+
+inline constexpr bool operator&(ScriptType Lhs, ScriptType Rhs)
+{
+	return (static_cast<uint32_t>(Lhs) & static_cast<uint32_t>(Rhs)) != 0;
 }
 
 inline constexpr bool operator&(ScriptType Lhs, uint32_t Rhs)
@@ -162,7 +170,10 @@ enum class Mode : uint32_t
 	ZERO = 1,
 	// ENDEXCEPT or YIELD
 	ENDEXCEPT = 0,
-	YIELD = 1
+	YIELD = 1,
+	// SWAP alternatives
+	COPYTO = 0,
+	COPYFROM = 1,
 };
 static_assert(sizeof(Mode) == 4);
 
@@ -212,8 +223,8 @@ struct VMTask
 
 struct NativeFunction
 {
-	void (*impl)();
-	uint32_t stackIn;
+	std::function<void()> impl;
+	int32_t stackIn;
 	uint32_t stackOut;
 	uint32_t filler;
 	char name[128];
@@ -232,5 +243,9 @@ enum class ErrorCode : uint32_t
 	DIV_BY_ZERO,
 	INVALID_TYPE,
 };
+
+static const std::array<std::string, 10> Error_Msg = {"no error", "stack is empty",  "stack is full",
+	"script id not found", "script name not found", "no script of type", "task id not found",
+	"native function not found", "division by zero", "invalid data type"};
 
 } // namespace openblack::LHVM

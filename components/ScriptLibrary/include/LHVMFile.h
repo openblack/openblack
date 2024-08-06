@@ -43,7 +43,7 @@ protected:
 	std::vector<VMInstruction> _instructions;
 	std::vector<uint32_t> _autostart;
 	std::vector<VMScript> _scripts;
-	std::vector<uint8_t> _data;
+	std::vector<char> _data;
 	bool _hasStatus {false};
 	VMStack _stack;
 	std::vector<VMVar> _variableValues;
@@ -90,7 +90,7 @@ public:
 
 	LHVMFile(const LHVMHeader& header, const std::vector<std::string>& variablesNames,
 	         const std::vector<VMInstruction>& instructions, const std::vector<uint32_t>& autostart,
-	         const std::vector<VMScript>& scripts, const std::vector<uint8_t>& data)
+	         const std::vector<VMScript>& scripts, const std::vector<char>& data)
 	    : _header(header)
 	    , _variablesNames(variablesNames)
 	    , _instructions(instructions)
@@ -109,7 +109,7 @@ public:
 
 	LHVMFile(const LHVMHeader& header, const std::vector<std::string>& variablesNames,
 	         const std::vector<VMInstruction>& instructions, const std::vector<uint32_t>& autostart,
-	         const std::vector<VMScript>& scripts, const std::vector<uint8_t>& data, const VMStack& stack,
+	         const std::vector<VMScript>& scripts, const std::vector<char>& data, const VMStack& stack,
 	         const std::vector<VMVar>& variableValues, const std::vector<VMTask>& tasks, const uint32_t ticks,
 	         const uint32_t currentLineNumber, const uint32_t highestTaskId, const uint32_t highestScriptId,
 	         const uint32_t scriptInstructionCount)
@@ -146,7 +146,7 @@ public:
 	[[nodiscard]] const std::vector<VMInstruction>& GetInstructions() const { return _instructions; }
 	[[nodiscard]] const std::vector<uint32_t>& GetAutostart() const { return _autostart; }
 	[[nodiscard]] const std::vector<VMScript>& GetScripts() const { return _scripts; }
-	[[nodiscard]] const std::vector<uint8_t>& GetData() const { return _data; }
+	[[nodiscard]] const std::vector<char>& GetData() const { return _data; }
 	[[nodiscard]] const bool HasStatus() const { return _hasStatus; }
 	[[nodiscard]] const VMStack& GetStack() const { return _stack; }
 	[[nodiscard]] const std::vector<VMVar>& GetVariablesValues() const { return _variableValues; }

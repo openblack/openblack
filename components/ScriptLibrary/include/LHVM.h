@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <functional>
 
 #include "LHVMFile.h"
 
@@ -31,7 +32,7 @@ protected:
 	std::vector<VMInstruction> _instructions;
 	std::vector<VMScript> _scripts;
 	std::vector<uint32_t> _auto;
-	std::vector<uint8_t> _data;
+	std::vector<char> _data;
 	VMStack _mainStack {};
 	VMTask* _currentTask {NULL};
 	VMExceptStruct* _currentExceptStruct {NULL};
@@ -44,13 +45,13 @@ protected:
 	uint32_t _highestScriptId {0};
 	uint32_t _executedInstructions {0};
 
-	std::vector<NativeFunction*> _functions {};
-	void (*_nativeCallEnterCallback)(const uint32_t func) {NULL};
-	void (*_nativeCallExitCallback)(const uint32_t func) {NULL};
-	void (*_stopTaskCallback)(const uint32_t taskNumber) {NULL};
-	void (*_errorCallback)(const ErrorCode code, const std::string v0, uint32_t v1) {NULL};
-	void (*_addReference)(const uint32_t objid) {NULL};
-	void (*_removeReference)(const uint32_t objid) {NULL};
+	std::vector<NativeFunction>* _functions {NULL};
+	std::function<void(const uint32_t func)> _nativeCallEnterCallback;
+	std::function<void(const uint32_t func)> _nativeCallExitCallback;
+	std::function<void(const uint32_t taskNumber)> _stopTaskCallback;
+	std::function<void(const ErrorCode code, const std::string v0, const uint32_t v1)> _errorCallback;
+	std::function<void(const uint32_t objId)> _addReference;
+	std::function<void(const uint32_t objId)> _removeReference;
 
 	void (LHVM::*_opcodesImpl[31])(VMTask& task, const VMInstruction& instruction) {};
 	void _opcode00_END(VMTask& task, const VMInstruction& instruction);
@@ -101,6 +102,7 @@ protected:
 	uint32_t StartScript(const uint32_t id);
 	uint32_t StartScript(const VMScript& script);
 	const VMScript* GetScript(const std::string& name);
+	bool TaskExists(const uint32_t taskId);
 	uint32_t GetTicksCount();
 	void PushElaspedTime();
 	VMVar& GetVar(VMTask& task, const uint32_t id);
@@ -109,6 +111,7 @@ protected:
 	uint32_t GetExceptionHandlersCount();
 	uint32_t GetCurrentExceptionHandlerIp(const uint32_t index);
 
+	void PrintInstruction(const VMTask& task, const VMInstruction& instruction);
 	void CpuLoop(VMTask& task);
 
 public:
@@ -117,10 +120,14 @@ public:
 	~LHVM() = default;
 
 	/// Set environment
-	void Initialise(const std::vector<NativeFunction*>& functions, void (*nativeCallEnterCallback)(uint32_t func),
-	                void (*nativeCallExitCallback)(uint32_t func), void (*stopTaskCallback)(uint32_t taskNumber),
-	                void (*errorCallback)(const ErrorCode code, const std::string v0, uint32_t v1),
-	                void (*addReference)(uint32_t objid), void (*removeReference)(uint32_t objid));
+	void Initialise(std::vector<NativeFunction>* functions,
+					std::function<void(const uint32_t func)> nativeCallEnterCallback,
+	                std::function<void(const uint32_t func)> nativeCallExitCallback,
+	                std::function<void(const uint32_t taskNumber)> stopTaskCallback,
+					std::function<void(const ErrorCode code, [[maybe_unused]] const std::string v0,
+							[[maybe_unused]] const uint32_t v1)> errorCallback,
+	                std::function<void(const uint32_t objId)> addReference,
+					std::function<void(const uint32_t objId)> removeReference);
 
 	/// Read CHL file from the filesystem
 	void LoadBinary(const std::filesystem::path& filepath);
@@ -130,35 +137,42 @@ public:
 
 	VMValue Pop(DataType &type);
 	VMValue Pop();
+	float_t Popf();
 	void Push(VMValue value, DataType type);
 	void Pushf(float_t value);
 	void Pushv(float_t value);
 	void Pushi(int32_t value);
+	void Pusho(uint32_t value);
 	void Pushb(bool value);
 
 	void Reboot();
 
+	/// Write CHL file to filesystem
 	void SaveBinary(const std::filesystem::path& filepath);
 
+	/// Write SAV file to filesystem
 	void SaveState(const std::filesystem::path& filepath);
 
-	void LookIn(uint32_t allowedScriptTypesMask);
+	void LookIn(const ScriptType allowedScriptTypesMask);
 
-	uint32_t StartScript(const std::string& name, const uint32_t allowedScriptTypesMask);
+	uint32_t StartScript(const std::string& name, const ScriptType allowedScriptTypesMask);
 
 	void StopAllTasks();
 
-	void StopScripts(bool filter(std::string name, std::string filename));
+	void StopScripts(
+	    std::function<bool([[maybe_unused]] const std::string& name, [[maybe_unused]] const std::string& filename)> filter);
 
-	void StopTask(uint32_t taskNumber);
+	void StopTask(const uint32_t taskNumber);
 
-	void StopTasksOfType(uint32_t typesMask);
+	void StopTasksOfType(const ScriptType typesMask);
+
+	[[nodiscard]] const std::string GetString(uint32_t offset);
 
 	[[nodiscard]] const std::vector<VMVar>& GetVariables() const { return _variables; }
 	[[nodiscard]] const std::vector<VMInstruction>& GetInstructions() const { return _instructions; }
 	[[nodiscard]] const std::vector<VMScript>& GetScripts() const { return _scripts; }
 	[[nodiscard]] const std::map<uint32_t, VMTask>& GetTasks() const { return _tasks; }
-	[[nodiscard]] const std::vector<uint8_t>& GetData() const { return _data; }
+	[[nodiscard]] const std::vector<char>& GetData() const { return _data; }
 };
 
 } // namespace openblack::LHVM
