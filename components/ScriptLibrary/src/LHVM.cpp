@@ -11,6 +11,7 @@
 
 #include <cassert>
 #include <cstring>
+
 #include <fstream>
 #include <stdexcept>
 
@@ -297,7 +298,7 @@ void LHVM::Reboot()
 void LHVM::SaveBinary(const std::filesystem::path& filepath)
 {
 	LHVMFile file(LHVMHeader {.magic = k_Magic, .version = LHVMVersion::BlackAndWhite}, _variablesNames, _instructions, _auto,
-                  _scripts, _data);
+	              _scripts, _data);
 	file.Write(filepath);
 }
 
@@ -311,7 +312,7 @@ void LHVM::SaveState(const std::filesystem::path& filepath)
 	}
 
 	LHVMFile file(LHVMHeader {.magic = k_Magic, .version = LHVMVersion::BlackAndWhite}, _variablesNames, _instructions, _auto,
-                  _scripts, _data, _mainStack, _variables, tasks, _ticks, _currentLineNumber, _highestTaskId, _highestScriptId,
+	              _scripts, _data, _mainStack, _variables, tasks, _ticks, _currentLineNumber, _highestTaskId, _highestScriptId,
 	              _executedInstructions);
 	file.Write(filepath);
 }
@@ -449,8 +450,8 @@ uint32_t LHVM::StartScript(const VMScript& script)
 	}
 
 	const auto& task =
-        VMTask(taskVariables, script.GetScriptID(), taskNumber, script.GetInstructionAddress(), 0, 0,
-               script.GetVariablesOffset(), stack, 0, VMExceptStruct {.instructionAddress = script.GetInstructionAddress()}, 1,
+	    VMTask(taskVariables, script.GetScriptID(), taskNumber, script.GetInstructionAddress(), 0, 0,
+	           script.GetVariablesOffset(), stack, 0, VMExceptStruct {.instructionAddress = script.GetInstructionAddress()}, 1,
 	           0, 0, 0, 0, script.GetName(), script.GetFileName(), script.GetType());
 
 	_tasks.emplace(taskNumber, task);

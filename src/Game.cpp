@@ -857,8 +857,8 @@ std::vector<float_t> Game::PopVarArg(const int32_t argc)
 }
 
 entt::entity Game::CreateScriptObject(const SCRIPT_OBJECT_TYPE type, uint32_t subtype, const glm::vec3& position,
-									  float altitude, float xAngleRadians, float yAngleRadians, const float zAngleRadians,
-									  const float scale)
+                                      float altitude, float xAngleRadians, float yAngleRadians, const float zAngleRadians,
+                                      const float scale)
 {
 	// TODO: handle all types
 	switch (type)
@@ -894,7 +894,7 @@ bool Game::Run()
 		_removeObjectReference = std::bind(&Game::RemoveObjectReference, this, std::placeholders::_1);
 
 		_lhvm->Initialise(&_functionsTable, _nativeCallEnterCallback, _nativeCallExitCallback, _stopTaskCallback,
-						  _lhvmErrorCallback, _addObjectReference, _removeObjectReference);
+		                  _lhvmErrorCallback, _addObjectReference, _removeObjectReference);
 
 		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading LHVM from: {}", challengePath.generic_string());
 #if __ANDROID__
@@ -909,7 +909,7 @@ bool Game::Run()
 	else
 	{
 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Challenge file not found at {}",
-							(fileSystem.GetGamePath() / challengePath).generic_string());
+		                    (fileSystem.GetGamePath() / challengePath).generic_string());
 		return false;
 	}
 
@@ -4231,7 +4231,7 @@ void Game::Native352_STOP_SCRIPTS_IN_FILES_EXCLUDING()
 	const auto names = GetUniqueWords(scriptNames);
 	const auto filenames = GetUniqueWords(sourceFilenames);
 	_lhvm->StopScripts([&names, &filenames](const std::string& name, const std::string& filename) -> bool {
-					   return filenames.contains(filename) && !names.contains(name);
+		return filenames.contains(filename) && !names.contains(name);
 	});
 }
 

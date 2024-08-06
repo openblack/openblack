@@ -206,10 +206,10 @@ public:
 	                                              float altitude, float xAngleRadians, float yAngleRadians,
 	                                              const float zAngleRadians, const float scale);
 
-#define CREATE_FUNCTION_BINDING(NAME, STACKIN, STACKOUT, FUNCTION) \
-	{ \
-		_functionsTable.emplace_back(LHVM::NativeFunction \
-			{.impl = std::bind(&Game::FUNCTION, this), .stackIn = STACKIN, .stackOut = STACKOUT, .name = NAME}); \
+#define CREATE_FUNCTION_BINDING(NAME, STACKIN, STACKOUT, FUNCTION)                                              \
+	{                                                                                                           \
+		_functionsTable.emplace_back(LHVM::NativeFunction {                                                     \
+		    .impl = std::bind(&Game::FUNCTION, this), .stackIn = STACKIN, .stackOut = STACKOUT, .name = NAME}); \
 	}
 
 	void InitFunctionsTable();

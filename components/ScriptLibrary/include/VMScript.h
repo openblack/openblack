@@ -21,13 +21,11 @@ class VMScript
 {
 public:
 	VMScript()
-        : _type(ScriptType::SCRIPT)
+	    : _type(ScriptType::SCRIPT)
 	    , _variablesOffset(0)
 	    , _instructionAddress(0)
 	    , _parameterCount(0)
-	    , _scriptId(0)
-	{
-	};
+	    , _scriptId(0) {};
 
 	VMScript(std::string name, std::string filename, ScriptType type, uint32_t varOffset, std::vector<std::string> variables,
 	         uint32_t instructionAddress, uint32_t parameterCount, uint32_t scriptId)
@@ -38,9 +36,8 @@ public:
 	    , _variablesOffset(varOffset)
 	    , _instructionAddress(instructionAddress)
 	    , _parameterCount(parameterCount)
-	    , _scriptId(scriptId)
-	{
-	}
+	    , _scriptId(scriptId) {}
+
 	~VMScript() = default;
 
 	[[nodiscard]] const std::string& GetName() const { return _name; }

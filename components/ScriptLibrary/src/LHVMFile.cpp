@@ -248,7 +248,6 @@ void LHVMFile::Write(const std::filesystem::path& filepath)
 	if (_hasStatus)
 	{
 		// TODO write runtime status data
-
 	}
 }
 
@@ -411,7 +410,7 @@ const VMScript LHVMFile::LoadScript(std::istream& stream)
 	}
 
 	return VMScript(std::string(script_name), std::string(file_name), scriptType, varOffset, variables, instructionAddress,
-                    parameterCount, scriptId);
+	                parameterCount, scriptId);
 }
 
 void LHVMFile::LoadData(std::istream& stream)
@@ -658,8 +657,8 @@ const VMTask LHVMFile::LoadTask(std::istream& stream)
 	auto& script = _scripts[scriptId - 1];
 
 	return VMTask(localVars, scriptId, taskNumber, instructionAddress, prevInstructionAddress, waitingTask, varOffset, stack,
-                  currentExceptionHandlerIndex, exceptStruct, ticks, inExceptionHandler, stop, yield, sleeping,
-                  script.GetName(), script.GetFileName(), type);
+	              currentExceptionHandlerIndex, exceptStruct, ticks, inExceptionHandler, stop, yield, sleeping,
+	              script.GetName(), script.GetFileName(), type);
 }
 
 void LHVMFile::LoadRuntimeInfo(std::istream& stream)

@@ -45,7 +45,7 @@ enum class DataType : uint32_t
 };
 static_assert(sizeof(DataType) == 4);
 
-static const std::array<std::string, 8> DataType_Names = {"NONE", "INT", "FLOAT", "VECTOR",
+static const std::array<std::string, 8> DataType_Names = {"NONE",   "INT",  "FLOAT",   "VECTOR",
                                                           "OBJECT", "UNK2", "BOOLEAN", "UNK4"};
 
 static const std::array<std::string, 8> DataType_Chars = {"", "I", "F", "V", "O", "", "B", ""};

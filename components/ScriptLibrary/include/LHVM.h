@@ -121,7 +121,7 @@ public:
 
 	/// Set environment
 	void Initialise(
-        std::vector<NativeFunction>* functions, std::function<void(const uint32_t func)> nativeCallEnterCallback,
+	    std::vector<NativeFunction>* functions, std::function<void(const uint32_t func)> nativeCallEnterCallback,
 	    std::function<void(const uint32_t func)> nativeCallExitCallback,
 	    std::function<void(const uint32_t taskNumber)> stopTaskCallback,
 	    std::function<void(const ErrorCode code, [[maybe_unused]] const std::string v0, [[maybe_unused]] const uint32_t v1)>
