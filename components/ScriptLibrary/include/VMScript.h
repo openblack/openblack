@@ -9,9 +9,10 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include <string>
 #include <vector>
-#include <cstdint>
 
 namespace openblack::LHVM
 {
@@ -20,7 +21,7 @@ class VMScript
 {
 public:
 	VMScript()
-	    : _type(ScriptType::SCRIPT)
+		: _type(ScriptType::SCRIPT)
 		, _variablesOffset(0)
 		, _instructionAddress(0)
 		, _parameterCount(0)

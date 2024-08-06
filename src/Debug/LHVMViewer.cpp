@@ -583,23 +583,23 @@ void LHVMViewer::DrawScriptsTab(const openblack::LHVM::LHVM& lhvm)
 
 	ImGui::PushItemWidth(200);
 
-	ImGui::BeginListBox("##scripts", ImVec2(240, ImGui::GetContentRegionAvail().y));
-
-	for (auto const& script : scripts)
+	if (ImGui::BeginListBox("##scripts", ImVec2(240, ImGui::GetContentRegionAvail().y)))
 	{
-		if (ImGui::Selectable(script.GetName().c_str(), script.GetScriptID() == _selectedScriptID))
+		for (auto const& script : scripts)
 		{
-			SelectScript(script.GetScriptID());
-		}
+			if (ImGui::Selectable(script.GetName().c_str(), script.GetScriptID() == _selectedScriptID))
+			{
+				SelectScript(script.GetScriptID());
+			}
 
-		if (_scrollToSelected && _selectedScriptID == script.GetScriptID())
-		{
-			ImGui::SetScrollHereY(0.25f);
-			_scrollToSelected = false;
+			if (_scrollToSelected && _selectedScriptID == script.GetScriptID())
+			{
+				ImGui::SetScrollHereY(0.25f);
+				_scrollToSelected = false;
+			}
 		}
+		ImGui::EndListBox();
 	}
-
-	ImGui::EndListBox();
 
 	ImGui::SameLine();
 
@@ -659,6 +659,8 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 	for (unsigned int i = script.GetInstructionAddress(); i < code.size(); i++)
 	{
 		auto const& instruction = code[i];
+		auto const opcodeName = LHVM::Opcode_Names.at(static_cast<int>(instruction.opcode)).c_str();
+		auto const typeChar = LHVM::DataType_Chars.at(static_cast<uint32_t>(instruction.type)).c_str();
 
 		ImGui::TextColored(Disassembly_ColorComment, "0x%04x:", i);
 		ImGui::SameLine();
@@ -666,7 +668,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 		switch (instruction.opcode)
 		{
 		case LHVM::Opcode::PUSH:
-			ImGui::TextColored(Disassembly_ColorKeyword, "PUSH");
+			ImGui::TextColored(Disassembly_ColorKeyword, "PUSH%s", typeChar);
 			ImGui::SameLine();
 
 			if (instruction.mode == LHVM::Mode::REFERENCE)
@@ -675,14 +677,13 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 			}
 			else if (instruction.mode == LHVM::Mode::IMMEDIATE)
 			{
-				ImGui::TextColored(Disassembly_ColorConstant, "%s",
-				                   DataToString(instruction.data, instruction.type).c_str());
+				ImGui::TextColored(Disassembly_ColorConstant, "%s", DataToString(instruction.data, instruction.type).c_str());
 			}
 
 			break;
 
 		case LHVM::Opcode::POP:
-			ImGui::TextColored(Disassembly_ColorKeyword, "POP");
+			ImGui::TextColored(Disassembly_ColorKeyword, "POP%s", typeChar);
 			if (instruction.mode == LHVM::Mode::REFERENCE)
 			{
 				ImGui::SameLine();
@@ -691,25 +692,12 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 
 			break;
 		case LHVM::Opcode::ADD:
-			if (instruction.type == LHVM::DataType::INT)
-			{
-				ImGui::TextColored(Disassembly_ColorKeyword, "ADDI");
-			}
-			else if (instruction.type == LHVM::DataType::FLOAT)
-			{
-				ImGui::TextColored(Disassembly_ColorKeyword, "ADDF");
-			}
-			else if (instruction.type == LHVM::DataType::VECTOR)
-			{
-				ImGui::TextColored(Disassembly_ColorKeyword, "ADDV");
-			}
-			else
-			{
-				ImGui::TextColored(Disassembly_ColorKeyword, "ADD");
-			}
+		case LHVM::Opcode::MINUS:
+		case LHVM::Opcode::CAST:
+			ImGui::TextColored(Disassembly_ColorKeyword, "%s%s", opcodeName, typeChar);
 			break;
 		case LHVM::Opcode::CALL:
-			ImGui::TextColored(Disassembly_ColorKeyword, "CALL");
+			ImGui::TextColored(Disassembly_ColorKeyword, "SYS");
 			ImGui::SameLine();
 			ImGui::TextColored(Disassembly_ColorFuncName, "%s", k_FunctionNames.at(instruction.uintVal).c_str());
 			break;
@@ -735,19 +723,44 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 
 			break;
 		}
-
+		case LHVM::Opcode::ENDEXCEPT:
+			if (instruction.mode == LHVM::Mode::ENDEXCEPT)
+			{
+				ImGui::TextColored(Disassembly_ColorKeyword, "ENDEXCEPT");
+			}
+			else // Mode::YIELD
+			{
+				ImGui::TextColored(Disassembly_ColorKeyword, "YIELD");
+			}
+			break;
 		case LHVM::Opcode::JUMP:
-			ImGui::TextColored(Disassembly_ColorKeyword, "JUMP");
+		case LHVM::Opcode::WAIT:
+		case LHVM::Opcode::EXCEPT:
+			ImGui::TextColored(Disassembly_ColorKeyword, "%s", opcodeName);
 			ImGui::SameLine();
 			ImGui::TextColored(Disassembly_ColorConstant, "0x%04x", instruction.data.uintVal);
 			break;
-		case LHVM::Opcode::WAIT:
-			ImGui::TextColored(Disassembly_ColorKeyword, "WAIT");
-			ImGui::SameLine();
-			ImGui::TextColored(Disassembly_ColorConstant, "0x%04x", instruction.data.uintVal);
+		case LHVM::Opcode::SWAP:
+			if (instruction.type == LHVM::DataType::INT)
+			{
+				ImGui::TextColored(Disassembly_ColorKeyword, "SWAP");
+			}
+			else
+			{
+				if (instruction.mode == LHVM::Mode::COPYFROM)
+				{
+					ImGui::TextColored(Disassembly_ColorKeyword, "COPY from");
+				}
+				else // Mode::COPYTO
+				{
+					ImGui::TextColored(Disassembly_ColorKeyword, "COPY to");
+				}
+				ImGui::SameLine();
+				ImGui::TextColored(Disassembly_ColorConstant, "%d", instruction.data.intVal);
+			}
 			break;
 		default:
-			ImGui::TextColored(Disassembly_ColorKeyword, "%s", LHVM::Opcode_Names.at(static_cast<int>(instruction.opcode)).c_str());
+			ImGui::TextColored(Disassembly_ColorKeyword, "%s", opcodeName);
 			break;
 		}
 
@@ -766,29 +779,29 @@ void LHVMViewer::DrawTasksTab(const LHVM::LHVM& lhvm)
 {
 	const auto& tasks = lhvm.GetTasks();
 
-	const auto selectedTaskID = _selectedTaskID;	//the selected task may change while drawing
+	const auto selectedTaskID = _selectedTaskID; // the selected task may change while drawing
 
 	ImGui::PushItemWidth(200);
 
-	ImGui::BeginListBox("##tasks", ImVec2(240, ImGui::GetContentRegionAvail().y));
-
-	for (auto const& taskEntry : tasks)
+	if (ImGui::BeginListBox("##tasks", ImVec2(240, ImGui::GetContentRegionAvail().y)))
 	{
-		auto const& task = taskEntry.second;
-
-		if (ImGui::Selectable(task.name.c_str(), task.id == selectedTaskID))
+		for (auto const& taskEntry : tasks)
 		{
-			SelectTask(task.id);
-		}
+			auto const& task = taskEntry.second;
 
-		if (_scrollToSelected && selectedTaskID == task.id)
-		{
-			ImGui::SetScrollHereY(0.25f);
-			_scrollToSelected = false;
+			if (ImGui::Selectable(task.name.c_str(), task.id == selectedTaskID))
+			{
+				SelectTask(task.id);
+			}
+
+			if (_scrollToSelected && selectedTaskID == task.id)
+			{
+				ImGui::SetScrollHereY(0.25f);
+				_scrollToSelected = false;
+			}
 		}
+		ImGui::EndListBox();
 	}
-
-	ImGui::EndListBox();
 
 	ImGui::SameLine();
 

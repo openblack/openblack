@@ -100,13 +100,14 @@
  *         script instruction count - 4 bytes
  */
 
+#include "LHVMFile.h"
+
 #include <cassert>
 #include <cstring>
 
 #include <fstream>
 #include <stdexcept>
 
-#include "LHVMFile.h"
 #include "LHVMTypes.h"
 
 using namespace openblack::LHVM;
@@ -203,7 +204,7 @@ void LHVMFile::ReadFile(std::istream& stream)
 		// there is extra data: 512 loop { 2 int32 } final int32
 	}
 
-	//VM status data (.sav files only)
+	// VM status data (.sav files only)
 	LoadStatus(stream);
 
 	_isLoaded = true;
@@ -409,8 +410,8 @@ const VMScript LHVMFile::LoadScript(std::istream& stream)
 		Fail("Error reading script_id");
 	}
 
-	return VMScript(std::string(script_name), std::string(file_name), scriptType, varOffset, variables,
-		                    instructionAddress, parameterCount, scriptId);
+	return VMScript(std::string(script_name), std::string(file_name), scriptType, varOffset, variables, instructionAddress,
+					parameterCount, scriptId);
 }
 
 void LHVMFile::LoadData(std::istream& stream)
@@ -422,15 +423,19 @@ void LHVMFile::LoadData(std::istream& stream)
 	}
 
 	_data.resize(size);
-	if (!stream.read(reinterpret_cast<char*>(&_data[0]), sizeof(_data[0]) * _data.size()))
+	if (size > 0)
 	{
-		Fail("Error reading data");
+		if (!stream.read(reinterpret_cast<char*>(&_data[0]), sizeof(_data[0]) * _data.size()))
+		{
+			Fail("Error reading data");
+		}
 	}
 }
 
 bool LHVMFile::LoadStatus(std::istream& stream)
 {
-	if (!LoadStack(stream, _stack)) {
+	if (!LoadStack(stream, _stack))
+	{
 		return false;
 	}
 
@@ -562,7 +567,7 @@ const VMTask LHVMFile::LoadTask(std::istream& stream)
 	VMStack stack;
 	uint32_t exceptStructCount;
 	std::vector<uint32_t> exceptStructIps;
-	
+
 	LoadVariableValues(stream, localVars);
 
 	if (!stream.read(reinterpret_cast<char*>(&taskNumber), sizeof(taskNumber)))
@@ -653,8 +658,8 @@ const VMTask LHVMFile::LoadTask(std::istream& stream)
 	auto& script = _scripts[scriptId - 1];
 
 	return VMTask(localVars, scriptId, taskNumber, instructionAddress, prevInstructionAddress, waitingTask, varOffset, stack,
-	              currentExceptionHandlerIndex, exceptStruct, ticks, inExceptionHandler, stop, yield,
-		sleeping, script.GetName(), script.GetFileName(), type);
+	              currentExceptionHandlerIndex, exceptStruct, ticks, inExceptionHandler, stop, yield, sleeping,
+				  script.GetName(), script.GetFileName(), type);
 }
 
 void LHVMFile::LoadRuntimeInfo(std::istream& stream)

@@ -7,57 +7,13 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
-/*
- * The layout of a LHVM File is as follows:
- *
- * - 8 byte header, containing
- *         magic number, containing 4 chars "LHVM"
- *         version number - 4 bytes
- *
- * ------------------------ start of variable block ----------------------------
- * - 4 byte header containing:
- *         number of entries - 4 bytes
- * - number of entries * null terminated strings
- *
- * ------------------------ start of code block --------------------------------
- * - 4 byte header containing:
- *         number of entries - 4 bytes
- * - number of entries, each containing:
- *         opcode - 4 bytes
- *         access code - 4 bytes
- *         three data types - 4 bytes each
- *
- * ------------------------ start of auto block --------------------------------
- * - 4 byte header containing:
- *         number of entries - 4 bytes
- * - number of entries, each containing:
- *         id - 4 bytes
- *
- * ------------------------ start of script block ------------------------------
- * - 4 byte header containing:
- *         number of entries - 4 bytes
- * - number of entries, each containing:
- *         script name - null terminated string
- *         file name - null terminated string
- *         script type - 4 bytes
- *         variable offset - 4 bytes
- *         variable block - see above
- *         instruction address - 4 bytes
- *         parameter count - 4 bytes
- *         script id - 4 bytes
- *
- * ------------------------ start of data block --------------------------------
- * - 4 byte header containing:
- *         size of data - 4 bytes
- *         data - size of data
- */
+#include "LHVM.h"
 
 #include <cassert>
 #include <cstring>
 #include <fstream>
 #include <stdexcept>
 
-#include "LHVM.h"
 #include "LHVMFile.h"
 
 namespace openblack::LHVM
@@ -146,10 +102,12 @@ void LHVM::Fail(const std::string& msg)
 	throw std::runtime_error("LHVM Error: " + msg);
 }
 
-void LHVM::Initialise(const std::vector<NativeFunction*>& functions, void (*nativeCallEnterCallback)(uint32_t func),
-                      void (*nativeCallExitCallback)(uint32_t func), void (*stopTaskCallback)(uint32_t taskNumber),
-                      void (*errorCallback)(const ErrorCode code, const std::string v0, uint32_t v1),
-                      void (*addReference)(uint32_t objid), void (*removeReference)(uint32_t objid))
+void LHVM::Initialise(std::vector<NativeFunction>* functions, std::function<void(const uint32_t func)> nativeCallEnterCallback,
+					  std::function<void(const uint32_t func)> nativeCallExitCallback,
+					  std::function<void(const uint32_t taskNumber)> stopTaskCallback,
+					  std::function<void(const ErrorCode code, const std::string v0, const uint32_t v1)> errorCallback,
+					  std::function<void(const uint32_t objId)> addReference,
+					  std::function<void(const uint32_t objId)> removeReference)
 {
 	_functions = functions;
 	_nativeCallEnterCallback = nativeCallEnterCallback;
@@ -159,7 +117,6 @@ void LHVM::Initialise(const std::vector<NativeFunction*>& functions, void (*nati
 	_addReference = addReference;
 	_removeReference = removeReference;
 	Reboot();
-
 }
 
 void LHVM::LoadBinary(const std::filesystem::path& filepath)
@@ -185,7 +142,7 @@ void LHVM::LoadBinary(const std::filesystem::path& filepath)
 	_variables.clear();
 	_variables.reserve(_variablesNames.size() + 1);
 	_variables.emplace_back(VMVar {.type = DataType::FLOAT, .floatVal = 0.0, .name = "Null variable"});
-	for (auto name : _variablesNames)
+	for (auto& name : _variablesNames)
 	{
 		_variables.emplace_back(VMVar {.type = DataType::FLOAT, .floatVal = 0.0, .name = name});
 	}
@@ -198,12 +155,12 @@ void LHVM::LoadBinary(const std::filesystem::path& filepath)
 	_executedInstructions = 0;
 
 	_auto = file.GetAutostart();
-	for (auto &scriptId : _auto)
+	for (const auto scriptId : _auto)
 	{
 		if (scriptId > 0 && scriptId <= _scripts.size())
 		{
 			auto& script = _scripts[scriptId - 1];
-			StartScript(script.GetName(), 0xFFFFFFFF);
+			StartScript(script.GetName(), ScriptType::ALL);
 		}
 		else
 		{
@@ -212,7 +169,8 @@ void LHVM::LoadBinary(const std::filesystem::path& filepath)
 	}
 }
 
-void LHVM::RestoreState(const std::filesystem::path& filepath) {
+void LHVM::RestoreState(const std::filesystem::path& filepath)
+{
 	auto file = LHVMFile();
 	file.Open(filepath);
 	if (!file.HasStatus())
@@ -233,7 +191,7 @@ void LHVM::RestoreState(const std::filesystem::path& filepath) {
 	_auto = file.GetAutostart();
 
 	_tasks.clear();
-	for (auto task : file.GetTasks())
+	for (const auto& task : file.GetTasks())
 	{
 		_tasks.emplace(task.id, task);
 	}
@@ -245,7 +203,8 @@ void LHVM::RestoreState(const std::filesystem::path& filepath) {
 	_executedInstructions = file.GetScriptInstructionCount();
 }
 
-VMValue LHVM::Pop(DataType& type) {
+VMValue LHVM::Pop(DataType& type)
+{
 	_currentStack->popCount++;
 	if (_currentStack->count > 0)
 	{
@@ -264,6 +223,12 @@ VMValue LHVM::Pop()
 {
 	DataType tmp;
 	return Pop(tmp);
+}
+
+float_t LHVM::Popf()
+{
+	DataType tmp;
+	return Pop(tmp).floatVal;
 }
 
 void LHVM::Push(VMValue value, DataType type)
@@ -296,6 +261,11 @@ void LHVM::Pushi(int32_t value)
 	Push(VMValue {.intVal = value}, DataType::INT);
 }
 
+void LHVM::Pusho(uint32_t value)
+{
+	Push(VMValue {.uintVal = value}, DataType::OBJECT);
+}
+
 void LHVM::Pushb(bool value)
 {
 	Push(VMValue {.intVal = value ? 1 : 0}, DataType::BOOLEAN);
@@ -326,8 +296,8 @@ void LHVM::Reboot()
 
 void LHVM::SaveBinary(const std::filesystem::path& filepath)
 {
-	LHVMFile file(LHVMHeader {.magic = k_Magic, .version = LHVMVersion::BlackAndWhite}, _variablesNames, _instructions,
-		_auto, _scripts, _data);
+	LHVMFile file(LHVMHeader {.magic = k_Magic, .version = LHVMVersion::BlackAndWhite}, _variablesNames, _instructions, _auto,
+				  _scripts, _data);
 	file.Write(filepath);
 }
 
@@ -340,19 +310,82 @@ void LHVM::SaveState(const std::filesystem::path& filepath)
 		tasks.emplace_back(task);
 	}
 
-	LHVMFile file(LHVMHeader {.magic = k_Magic, .version = LHVMVersion::BlackAndWhite}, _variablesNames, _instructions,
-				  _auto, _scripts, _data, _mainStack, _variables, tasks, _ticks, _currentLineNumber, _highestTaskId, _highestScriptId,
-	              _executedInstructions);
+	LHVMFile file(LHVMHeader {.magic = k_Magic, .version = LHVMVersion::BlackAndWhite}, _variablesNames, _instructions, _auto,
+				  _scripts, _data, _mainStack, _variables, tasks, _ticks, _currentLineNumber, _highestTaskId, _highestScriptId,
+				  _executedInstructions);
 	file.Write(filepath);
 }
 
-void LookIn(uint32_t allowedScriptTypesMask)
+void LHVM::LookIn(const ScriptType allowedScriptTypesMask)
 {
-	// TODO
+	// execute exception handlers first
+	for (auto& [id, task] : _tasks)
+	{
+		if (task.type & allowedScriptTypesMask)
+		{
+			_currentStack = &task.stack;
+			_currentExceptStruct = &task.exceptStruct;
+			if (task.inExceptionHandler)
+			{
+				CpuLoop(task);
+			}
+			else if (task.waitingTaskId == 0)
+			{
+				task.currentExceptionHandlerIndex = 0;
+				if (GetExceptionHandlersCount() > 0)
+				{
+					task.prevInstructionAddress = task.instructionAddress;
+					task.instructionAddress = GetCurrentExceptionHandlerIp(task.currentExceptionHandlerIndex);
+					task.inExceptionHandler = true;
+					CpuLoop(task);
+				}
+			}
+		}
+	}
 
+	// execute normal code
+	for (auto& [id, task] : _tasks)
+	{
+		if (task.type & allowedScriptTypesMask)
+		{
+			_currentStack = &task.stack;
+			_currentExceptStruct = &task.exceptStruct;
+			if (!task.inExceptionHandler)
+			{
+				CpuLoop(task);
+			}
+		}
+	}
+
+	// handle tasks termination
+	for (auto iter = _tasks.begin(); iter != _tasks.end();)
+	{
+		auto& task = (*iter++).second;
+		if (task.stop)
+		{
+			StopTask(task.id);
+		}
+	}
+
+	// unlock waiting tasks
+	for (auto& [id, task] : _tasks)
+	{
+		if (task.type & allowedScriptTypesMask)
+		{
+			task.ticks++;
+			if (task.waitingTaskId != 0 && !TaskExists(task.waitingTaskId))
+			{
+				task.waitingTaskId = 0;
+				task.instructionAddress++;
+			}
+		}
+	}
+
+	_ticks++;
+	_currentStack = &_mainStack;
 }
 
-uint32_t LHVM::StartScript(const std::string& name, const uint32_t allowedScriptTypesMask)
+uint32_t LHVM::StartScript(const std::string& name, const ScriptType allowedScriptTypesMask)
 {
 	const auto script = GetScript(name);
 	if (script != NULL)
@@ -373,10 +406,11 @@ uint32_t LHVM::StartScript(const std::string& name, const uint32_t allowedScript
 	return 0;
 }
 
-uint32_t LHVM::StartScript(const uint32_t id) {
+uint32_t LHVM::StartScript(const uint32_t id)
+{
 	if (id > 0 && id <= _scripts.size())
 	{
-		return StartScript(_scripts.at(id));
+		return StartScript(_scripts.at(id - 1));
 	}
 	else
 	{
@@ -414,10 +448,10 @@ uint32_t LHVM::StartScript(const VMScript& script)
 		taskVariables.push_back(VMVar {.type = DataType::FLOAT, .floatVal = 0.0f, .name = scriptVariables.at(i)});
 	}
 
-	const auto& task = VMTask(taskVariables, script.GetScriptID(), taskNumber,
-			                    script.GetInstructionAddress(), 0, 0, script.GetVariablesOffset(), stack, 0,
-			                    VMExceptStruct {.instructionAddress = script.GetInstructionAddress()}, 1, 0, 0, 0, 0,
-			                    script.GetName(), script.GetFileName(), script.GetType());
+	const auto& task =
+		VMTask(taskVariables, script.GetScriptID(), taskNumber, script.GetInstructionAddress(), 0, 0,
+			   script.GetVariablesOffset(), stack, 0, VMExceptStruct {.instructionAddress = script.GetInstructionAddress()}, 1,
+			   0, 0, 0, 0, script.GetName(), script.GetFileName(), script.GetType());
 
 	_tasks.emplace(taskNumber, task);
 
@@ -433,7 +467,7 @@ void LHVM::StopAllTasks()
 	}
 }
 
-void LHVM::StopScripts(bool filter(std::string name, std::string filename))
+void LHVM::StopScripts(std::function<bool(const std::string& name, const std::string& filename)> filter)
 {
 	std::vector<uint32_t> ids;
 	for (const auto& [id, task] : _tasks)
@@ -452,7 +486,7 @@ void LHVM::StopScripts(bool filter(std::string name, std::string filename))
 
 void LHVM::StopTask(uint32_t taskNumber)
 {
-	if (_tasks.contains(taskNumber))
+	if (TaskExists(taskNumber))
 	{
 		InvokeStopTaskCallback(taskNumber);
 		auto& task = _tasks.at(taskNumber);
@@ -463,6 +497,13 @@ void LHVM::StopTask(uint32_t taskNumber)
 				RemoveReference(var.uintVal);
 			}
 		}
+
+		if (_currentTask == &task)
+		{
+			_currentStack = &_mainStack;
+			_currentExceptStruct = NULL;
+		}
+
 		_tasks.erase(taskNumber);
 	}
 	else
@@ -471,7 +512,7 @@ void LHVM::StopTask(uint32_t taskNumber)
 	}
 }
 
-void LHVM::StopTasksOfType(uint32_t typesMask)
+void LHVM::StopTasksOfType(const ScriptType typesMask)
 {
 	std::vector<uint32_t> ids;
 	for (const auto& [id, task] : _tasks)
@@ -488,9 +529,21 @@ void LHVM::StopTasksOfType(uint32_t typesMask)
 	}
 }
 
+const std::string LHVM::GetString(uint32_t offset)
+{
+	if (offset < _data.size())
+	{
+		return std::string(_data.data() + offset);
+	}
+	else
+	{
+		return "";
+	}
+}
+
 void LHVM::InvokeStopTaskCallback(const uint32_t taskNumber)
 {
-	if (_stopTaskCallback != NULL)
+	if (_stopTaskCallback != nullptr)
 	{
 		_stopTaskCallback(taskNumber);
 	}
@@ -498,7 +551,7 @@ void LHVM::InvokeStopTaskCallback(const uint32_t taskNumber)
 
 void LHVM::AddReference(const uint32_t objectId)
 {
-	if (_addReference != NULL)
+	if (_addReference != nullptr)
 	{
 		_addReference(objectId);
 	}
@@ -506,7 +559,7 @@ void LHVM::AddReference(const uint32_t objectId)
 
 void LHVM::RemoveReference(const uint32_t objectId)
 {
-	if (_removeReference != NULL)
+	if (_removeReference != nullptr)
 	{
 		_removeReference(objectId);
 	}
@@ -514,7 +567,7 @@ void LHVM::RemoveReference(const uint32_t objectId)
 
 void LHVM::InvokeNativeCallEnterCallback(const uint32_t funcId)
 {
-	if (_nativeCallEnterCallback != NULL)
+	if (_nativeCallEnterCallback != nullptr)
 	{
 		_nativeCallEnterCallback(funcId);
 	}
@@ -522,7 +575,7 @@ void LHVM::InvokeNativeCallEnterCallback(const uint32_t funcId)
 
 void LHVM::InvokeNativeCallExitCallback(const uint32_t funcId)
 {
-	if (_nativeCallExitCallback != NULL)
+	if (_nativeCallExitCallback != nullptr)
 	{
 		_nativeCallExitCallback(funcId);
 	}
@@ -530,7 +583,7 @@ void LHVM::InvokeNativeCallExitCallback(const uint32_t funcId)
 
 void LHVM::SignalError(const ErrorCode code)
 {
-	if (_errorCallback != NULL)
+	if (_errorCallback != nullptr)
 	{
 		_errorCallback(code, "", 0);
 	}
@@ -538,7 +591,7 @@ void LHVM::SignalError(const ErrorCode code)
 
 void LHVM::SignalError(const ErrorCode code, const uint32_t data)
 {
-	if (_errorCallback != NULL)
+	if (_errorCallback != nullptr)
 	{
 		_errorCallback(code, "", data);
 	}
@@ -546,7 +599,7 @@ void LHVM::SignalError(const ErrorCode code, const uint32_t data)
 
 void LHVM::SignalError(const ErrorCode code, const std::string& data)
 {
-	if (_errorCallback != NULL)
+	if (_errorCallback != nullptr)
 	{
 		_errorCallback(code, data, 0);
 	}
@@ -562,6 +615,11 @@ const VMScript* LHVM::GetScript(const std::string& name)
 		}
 	}
 	return NULL;
+}
+
+bool LHVM::TaskExists(const uint32_t taskId)
+{
+	return _tasks.contains(taskId);
 }
 
 uint32_t LHVM::GetTicksCount()
@@ -609,7 +667,8 @@ uint32_t LHVM::GetExceptionHandlersCount()
 	}
 }
 
-uint32_t LHVM::GetCurrentExceptionHandlerIp(const uint32_t index) {
+uint32_t LHVM::GetCurrentExceptionHandlerIp(const uint32_t index)
+{
 	if (_currentExceptStruct != NULL)
 	{
 		return _currentExceptStruct->exceptionHandlerIps.at(_currentExceptStruct->exceptionHandlerIps.size() - index - 1);
@@ -620,12 +679,88 @@ uint32_t LHVM::GetCurrentExceptionHandlerIp(const uint32_t index) {
 	}
 }
 
+void LHVM::PrintInstruction(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO: improve this
+	std::string opcode = Opcode_Names[(int)instruction.opcode];
+	std::string arg = "";
+	if (instruction.opcode == Opcode::RUN)
+	{
+		if (instruction.mode == Mode::ASYNC)
+		{
+			arg = "async ";
+		}
+		arg += _scripts[instruction.intVal - 1].GetName();
+	}
+	else if (instruction.opcode == Opcode::CALL)
+	{
+		arg += _functions->at(instruction.intVal).name;
+	}
+	else
+	{
+		if (instruction.opcode == Opcode::PUSH || instruction.opcode == Opcode::POP || instruction.opcode == Opcode::CAST ||
+		    instruction.opcode == Opcode::ADD || instruction.opcode == Opcode::MINUS || instruction.opcode == Opcode::TIMES ||
+		    instruction.opcode == Opcode::DIVIDE || instruction.opcode == Opcode::MODULUS)
+		{
+			opcode += DataType_Chars[(int)instruction.type];
+		}
+		if ((instruction.opcode == Opcode::PUSH || instruction.opcode == Opcode::POP) && instruction.mode == Mode::REFERENCE)
+		{
+			if (instruction.intVal > task.variablesOffset)
+			{
+				arg = std::format("{}", task.localVars[instruction.intVal - task.variablesOffset - 1].name);
+			}
+			else
+			{
+				arg = std::format("{}", _variables[instruction.intVal].name);
+			}
+		}
+		else if (instruction.opcode == Opcode::PUSH && instruction.mode == Mode::IMMEDIATE)
+		{
+			if (instruction.type == DataType::FLOAT || instruction.type == DataType::VECTOR)
+			{
+				arg = std::format("{}", instruction.floatVal);
+			}
+			else
+			{
+				arg = std::format("{}", instruction.intVal);
+			}
+		}
+		else if (instruction.opcode == Opcode::JUMP || instruction.opcode == Opcode::WAIT || instruction.opcode == Opcode::SWAP)
+		{
+			arg = std::format("{}", instruction.intVal);
+		}
+		if (instruction.opcode == Opcode::WAIT)
+		{
+			bool val = task.stack.values[task.stack.count - 1].intVal;
+			arg += val ? " [true] -> continue" : " [false] -> JUMP";
+		}
+	}
+	printf("%s:%d %s[%d] %s %s\n", task.filename.c_str(), instruction.line, task.name.c_str(), task.id, opcode.c_str(),
+	       arg.c_str());
+}
+
 void LHVM::CpuLoop(VMTask& task)
 {
-	bool wasInExceptionHandler = task.inExceptionHandler;
+	const auto wasExceptionHandler = task.inExceptionHandler;
+	task.yield = false;
+	while (task.waitingTaskId == 0)
+	{
+		_currentTask = &task;
+		_executedInstructions++;
+		const auto& instruction = _instructions[task.instructionAddress];
 
-	// TODO
+		// PrintInstruction(task, instruction); // just for debug purposes
 
+		(this->*_opcodesImpl[static_cast<int>(instruction.opcode)])(task, instruction);
+
+		if (task.stop || task.yield || task.waitingTaskId != 0 || task.inExceptionHandler != wasExceptionHandler)
+		{
+			break;
+		}
+		task.instructionAddress++;
+	}
+	_currentTask = NULL;
 }
 
 void LHVM::_opcode00_END(VMTask& task, const VMInstruction& instruction)
@@ -635,7 +770,8 @@ void LHVM::_opcode00_END(VMTask& task, const VMInstruction& instruction)
 
 void LHVM::_opcode01_JZ(VMTask& task, const VMInstruction& instruction)
 {
-	if (Pop().intVal)
+	const auto val = Pop().intVal;
+	if (val)
 	{
 		task.ticks = 1;
 	}
@@ -670,7 +806,7 @@ void LHVM::_opcode03_POP(VMTask& task, const VMInstruction& instruction)
 {
 	if (instruction.mode == Mode::REFERENCE)
 	{
-		auto var = GetVar(task, instruction.uintVal);
+		auto& var = GetVar(task, instruction.uintVal);
 		DataType type;
 		const auto newVal = Pop(type);
 		if (type == DataType::OBJECT)
@@ -682,10 +818,11 @@ void LHVM::_opcode03_POP(VMTask& task, const VMInstruction& instruction)
 			RemoveReference(newVal.uintVal);
 		}
 		var.value = newVal;
+		var.type = type;
 	}
 	else // Mode::IMMEDIATE
 	{
-		Pop();	// cannot POP to immediate value, just discard the value
+		Pop(); // cannot POP to immediate value, just discard the value
 	}
 }
 
@@ -726,24 +863,24 @@ void LHVM::_opcode04_ADD(VMTask& task, const VMInstruction& instruction)
 void LHVM::_opcode05_SYS(VMTask& task, const VMInstruction& instruction)
 {
 	const auto id = instruction.intVal;
-	if (id > 0 && id < _functions.size())
+	if (id > 0 && id < _functions->size())
 	{
-		const auto& func = _functions.at(id);
-		if (func->impl != NULL)
+		const auto& func = _functions->at(id);
+		if (func.impl != nullptr)
 		{
 			_currentStack->pushCount = 0;
 			_currentStack->popCount = 0;
 			InvokeNativeCallEnterCallback(id);
-			func->impl();
+			func.impl();
 			InvokeNativeCallExitCallback(id);
 		}
 		else // if impl not provided, then just adjust the stack
 		{
-			for (unsigned int i = 0; i < func->stackIn; i++)
+			for (int i = 0; i < func.stackIn; i++)
 			{
 				Pop();
 			}
-			for (unsigned int i = 0; i < func->stackOut; i++)
+			for (unsigned int i = 0; i < func.stackOut; i++)
 			{
 				Pushf(0.0f);
 			}
@@ -967,17 +1104,22 @@ void LHVM::_opcode10_MOD(VMTask& task, const VMInstruction& instruction)
 
 void LHVM::_opcode11_NOT(VMTask& task, const VMInstruction& instruction)
 {
-	Pushb(Pop().intVal == 0);
+	bool a = Pop().intVal;
+	Pushb(!a);
 }
 
 void LHVM::_opcode12_AND(VMTask& task, const VMInstruction& instruction)
 {
-	Pushb(Pop().intVal && Pop().intVal);
+	bool b = Pop().intVal;
+	bool a = Pop().intVal;
+	Pushb(a && b);
 }
 
 void LHVM::_opcode13_OR(VMTask& task, const VMInstruction& instruction)
 {
-	Pushb(Pop().intVal || Pop().intVal);
+	bool b = Pop().intVal;
+	bool a = Pop().intVal;
+	Pushb(a || b);
 }
 
 void LHVM::_opcode14_EQ(VMTask& task, const VMInstruction& instruction)
@@ -987,27 +1129,27 @@ void LHVM::_opcode14_EQ(VMTask& task, const VMInstruction& instruction)
 	{
 	case DataType::INT:
 	case DataType::BOOLEAN:
-		a0 = Pop();
 		b0 = Pop();
+		a0 = Pop();
 		Pushb(a0.intVal == b0.intVal);
 		break;
 	case DataType::FLOAT:
-		a0 = Pop();
 		b0 = Pop();
+		a0 = Pop();
 		Pushb(a0.floatVal == b0.floatVal);
 		break;
 	case DataType::VECTOR:
-		a0 = Pop();
-		a1 = Pop();
-		a2 = Pop();
 		b0 = Pop();
 		b1 = Pop();
 		b2 = Pop();
+		a0 = Pop();
+		a1 = Pop();
+		a2 = Pop();
 		Pushb(a0.floatVal == b0.floatVal && a1.floatVal == b1.floatVal && a2.floatVal == b2.floatVal);
 		break;
 	case DataType::OBJECT:
-		a0 = Pop();
 		b0 = Pop();
+		a0 = Pop();
 		Pushb(a0.uintVal == b0.uintVal);
 		break;
 	default:
@@ -1025,27 +1167,27 @@ void LHVM::_opcode15_NEQ(VMTask& task, const VMInstruction& instruction)
 	{
 	case DataType::INT:
 	case DataType::BOOLEAN:
-		a0 = Pop();
 		b0 = Pop();
+		a0 = Pop();
 		Pushb(a0.intVal != b0.intVal);
 		break;
 	case DataType::FLOAT:
-		a0 = Pop();
 		b0 = Pop();
+		a0 = Pop();
 		Pushb(a0.floatVal != b0.floatVal);
 		break;
 	case DataType::VECTOR:
-		a0 = Pop();
-		a1 = Pop();
-		a2 = Pop();
 		b0 = Pop();
 		b1 = Pop();
 		b2 = Pop();
+		a0 = Pop();
+		a1 = Pop();
+		a2 = Pop();
 		Pushb(a0.floatVal != b0.floatVal || a1.floatVal != b1.floatVal || a2.floatVal != b2.floatVal);
 		break;
 	case DataType::OBJECT:
-		a0 = Pop();
 		b0 = Pop();
+		a0 = Pop();
 		Pushb(a0.uintVal != b0.uintVal);
 		break;
 	default:
@@ -1062,13 +1204,13 @@ void LHVM::_opcode16_GEQ(VMTask& task, const VMInstruction& instruction)
 	switch (instruction.type)
 	{
 	case DataType::INT:
-		a0 = Pop();
 		b0 = Pop();
+		a0 = Pop();
 		Pushb(a0.intVal >= b0.intVal);
 		break;
 	case DataType::FLOAT:
-		a0 = Pop();
 		b0 = Pop();
+		a0 = Pop();
 		Pushb(a0.floatVal >= b0.floatVal);
 		break;
 	default:
@@ -1083,13 +1225,13 @@ void LHVM::_opcode17_LEQ(VMTask& task, const VMInstruction& instruction)
 	switch (instruction.type)
 	{
 	case DataType::INT:
-		a0 = Pop();
 		b0 = Pop();
+		a0 = Pop();
 		Pushb(a0.intVal <= b0.intVal);
 		break;
 	case DataType::FLOAT:
-		a0 = Pop();
 		b0 = Pop();
+		a0 = Pop();
 		Pushb(a0.floatVal <= b0.floatVal);
 		break;
 	default:
@@ -1104,13 +1246,13 @@ void LHVM::_opcode18_GT(VMTask& task, const VMInstruction& instruction)
 	switch (instruction.type)
 	{
 	case DataType::INT:
-		a0 = Pop();
 		b0 = Pop();
+		a0 = Pop();
 		Pushb(a0.intVal > b0.intVal);
 		break;
 	case DataType::FLOAT:
-		a0 = Pop();
 		b0 = Pop();
+		a0 = Pop();
 		Pushb(a0.floatVal > b0.floatVal);
 		break;
 	default:
@@ -1125,13 +1267,13 @@ void LHVM::_opcode19_LT(VMTask& task, const VMInstruction& instruction)
 	switch (instruction.type)
 	{
 	case DataType::INT:
-		a0 = Pop();
 		b0 = Pop();
+		a0 = Pop();
 		Pushb(a0.intVal < b0.intVal);
 		break;
 	case DataType::FLOAT:
-		a0 = Pop();
 		b0 = Pop();
+		a0 = Pop();
 		Pushb(a0.floatVal < b0.floatVal);
 		break;
 	default:
@@ -1249,7 +1391,7 @@ void LHVM::_opcode28_BRKEXCEPT(VMTask& task, const VMInstruction& instruction)
 
 void LHVM::_opcode29_SWAP(VMTask& task, const VMInstruction& instruction)
 {
-	if (instruction.type == DataType::INT)	// swap the 2 topmost values on the stack
+	if (instruction.type == DataType::INT) // swap the 2 topmost values on the stack
 	{
 		DataType t0, t1;
 		VMValue v0 = Pop(t0);
@@ -1264,7 +1406,7 @@ void LHVM::_opcode29_SWAP(VMTask& task, const VMInstruction& instruction)
 		VMValue copyVal {.floatVal = 0.0f};
 		std::array<DataType, 32> tmpTypes;
 		std::array<VMValue, 32> tmpVals;
-		if (static_cast<uint32_t>(instruction.mode) == 1) // push a copy of the Nth value from top of the stack
+		if (instruction.mode == Mode::COPYFROM) // push a copy of the Nth value from top of the stack
 		{
 			for (int i = 0; i < offset; i++)
 			{
@@ -1287,7 +1429,7 @@ void LHVM::_opcode29_SWAP(VMTask& task, const VMInstruction& instruction)
 			}
 			Push(copyVal, copyType);
 		}
-		else // insert a copy of the topmost value on the stack N places below
+		else // Mode::COPYTO insert a copy of the topmost value on the stack N places below
 		{
 			for (int i = 0; i < offset; i++)
 			{

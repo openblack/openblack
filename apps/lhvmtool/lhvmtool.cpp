@@ -82,7 +82,7 @@ int PrintHeader(const LHVMFile& file)
 int PrintVarNames(const LHVMFile& file)
 {
 	const auto& names = file.GetVariablesNames();
-	int id = 1;	// id 0 is reserved for "Null variable", which is added at runtime
+	int id = 1; // id 0 is reserved for "Null variable", which is added at runtime
 	std::printf("Global variables:\n");
 	for (const auto& name : names)
 	{
@@ -108,7 +108,8 @@ std::string GetSignature(const VMScript& script)
 	return s;
 }
 
-std::map<uint32_t, std::string> GetLabels(const LHVMFile& file) {
+std::map<uint32_t, std::string> GetLabels(const LHVMFile& file)
+{
 	std::map<uint32_t, std::string> labels;
 	const auto& scripts = file.GetScripts();
 	const auto& instructions = file.GetInstructions();
@@ -118,7 +119,8 @@ std::map<uint32_t, std::string> GetLabels(const LHVMFile& file) {
 		for (unsigned int i = script.GetInstructionAddress(); i < instructions.size(); i++)
 		{
 			auto const& instruction = instructions[i];
-			if (instruction.opcode == Opcode::JUMP || instruction.opcode == Opcode::WAIT || instruction.opcode == Opcode::EXCEPT)
+			if (instruction.opcode == Opcode::JUMP || instruction.opcode == Opcode::WAIT ||
+				instruction.opcode == Opcode::EXCEPT)
 			{
 				std::string name = script.GetName();
 				if (instruction.opcode == Opcode::EXCEPT)
@@ -227,6 +229,33 @@ int PrintCode(const LHVMFile& file)
 				arg = file.GetScripts().at(instruction.intVal - 1).GetName();
 				std::printf("\tRUN %s%s\n", type.c_str(), arg.c_str());
 				break;
+			case Opcode::ENDEXCEPT:
+				if (instruction.mode == Mode::ENDEXCEPT)
+				{
+					std::printf("\tENDEXCEPT\n");
+				}
+				else // Mode::YIELD
+				{
+					std::printf("\tYIELD\n");
+				}
+				break;
+			case Opcode::SWAP:
+				if (instruction.type == DataType::INT)
+				{
+					std::printf("\tSWAP\n");
+				}
+				else
+				{
+					if (instruction.mode == Mode::COPYFROM)
+					{
+						std::printf("\tCOPY from %i\n", instruction.intVal);
+					}
+					else // Mode::COPYTO
+					{
+						std::printf("\tCOPY to %i\n", instruction.intVal);
+					}
+				}
+				break;
 			default:
 				std::printf("\t%s\n", opcode.c_str());
 			}
@@ -270,12 +299,11 @@ int PrintScripts(const LHVMFile& file)
 int PrintData(const LHVMFile& file)
 {
 	const auto& data = file.GetData();
-	const auto& bytes = reinterpret_cast<const char*>(data.data());
 	std::printf("Data:\n");
 	size_t offset = 0;
 	while (offset < data.size())
 	{
-		const char* str = &bytes[offset];
+		const char* str = &data[offset];
 		std::printf("%zu: %s\n", offset, str);
 		offset += strlen(str) + 1;
 	}
@@ -352,7 +380,7 @@ int PrintTasks(const LHVMFile& file)
 		std::printf("Yield: %s\n", task.yield ? "true" : "false");
 		std::printf("In exception handler: %s\n", task.inExceptionHandler ? "true" : "false");
 		std::printf("Current exception handler index: %d\n", task.currentExceptionHandlerIndex);
-		const auto &exceptionHandlers = task.exceptStruct;
+		const auto& exceptionHandlers = task.exceptStruct;
 		std::printf("Exception handlers instruction address: %u\n", exceptionHandlers.instructionAddress);
 		std::printf("Exception handlers instructions pointers:\n");
 		for (const auto& ip : exceptionHandlers.exceptionHandlerIps)
@@ -362,7 +390,7 @@ int PrintTasks(const LHVMFile& file)
 		std::printf("\n");
 		std::printf("Local variables offset: %u\n", task.variablesOffset);
 		std::printf("Variables:\n");
-		const auto &vars = task.localVars;
+		const auto& vars = task.localVars;
 		for (int i = 0; i < vars.size(); i++)
 		{
 			const auto& var = vars[i];
@@ -395,25 +423,22 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 
 	try
 	{
-		options.add_options()
-		    ("h,help", "Display this help message.")
-		    ("subcommand", "Subcommand.", cxxopts::value<std::string>())
+		options.add_options()("h,help", "Display this help message.")("subcommand", "Subcommand.",
+																	  cxxopts::value<std::string>())
 		    ;
 		options.positional_help("[read] [OPTION...]");
-		options.add_options("read")
-		    ("I,info", "Print info.", cxxopts::value<std::string>())
-			("A,all", "Print all relevant data.", cxxopts::value<std::string>())
-		    ("H,header", "Print header contents.", cxxopts::value<std::string>())
-		    ("G,globals", "Print global var names.", cxxopts::value<std::string>())
-			("C,code", "Print asm code.", cxxopts::value<std::string>())
-			("a,autostart", "Print autostart scripts.", cxxopts::value<std::string>())
-			("S,scripts", "Print scripts.", cxxopts::value<std::string>())
-			("D,data", "Print data.", cxxopts::value<std::string>())
-			("s,stack", "Print global stack.", cxxopts::value<std::string>())
-			("V,values", "Print global var values.", cxxopts::value<std::string>())
-			("T,tasks", "Print active tasks.", cxxopts::value<std::string>())
-			("R,rtinfo", "Print runtime info.", cxxopts::value<std::string>())
-		    ;
+		options.add_options("read")("I,info", "Print info.", cxxopts::value<std::string>())("A,all", "Print all relevant data.",
+																							cxxopts::value<std::string>())(
+			"H,header", "Print header contents.", cxxopts::value<std::string>())(
+			"G,globals", "Print global var names.", cxxopts::value<std::string>())(
+			"C,code", "Print asm code.", cxxopts::value<std::string>())(
+			"a,autostart", "Print autostart scripts.", cxxopts::value<std::string>())(
+			"S,scripts", "Print scripts.", cxxopts::value<std::string>())(
+			"D,data", "Print data.", cxxopts::value<std::string>())(
+			"s,stack", "Print global stack.", cxxopts::value<std::string>())(
+			"V,values", "Print global var values.", cxxopts::value<std::string>())(
+			"T,tasks", "Print active tasks.", cxxopts::value<std::string>())(
+			"R,rtinfo", "Print runtime info.", cxxopts::value<std::string>());
 
 		options.parse_positional({"subcommand"});
 	}
