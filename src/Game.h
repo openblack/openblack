@@ -16,6 +16,7 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
+#include <unordered_set>
 
 #include <bgfx/bgfx.h>
 #include <entt/entity/fwd.hpp>
@@ -33,6 +34,8 @@
 #include "ReferenceManager.h"
 #include "ScriptHeaders/ScriptEnums.h"
 #include "Windowing/WindowingInterface.h" // For DisplayMode
+#include "ReferenceManager.h"
+#include "ScriptHeaders/ScriptEnums.h"
 
 union SDL_Event;
 

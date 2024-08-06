@@ -16,6 +16,7 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <functional>
 
 namespace openblack::LHVM
 {

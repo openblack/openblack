@@ -33,6 +33,7 @@
 #include "Debug/Gui.h"
 #include "ECS/Archetypes/HandArchetype.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
+#include <ECS/Archetypes/MobileStaticArchetype.h>
 #include "ECS/Components/CameraBookmark.h"
 #include "ECS/Components/Mobile.h"
 #include <ECS/Archetypes/MobileStaticArchetype.h>
@@ -52,6 +53,8 @@
 #include "Input/GameActionMapInterface.h"
 #include "LHScriptX/Script.h"
 #include "LHVM.h"
+#include "ReferenceManager.h"
+#include "ScriptHeaders/ScriptEnums.h"
 #include "Locator.h"
 #include "PackFile.h"
 #include "Parsers/InfoFile.h"

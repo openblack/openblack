@@ -36,7 +36,7 @@ public:
 			}
 			else
 			{
-				id = ++_maxId;
+			    id = ++_maxId;
 			}
 			_id2ref.emplace(id, Reference {.id = id, .count = 0, .target = target});
 			_target2id[target] = id;
