@@ -803,16 +803,16 @@ void Game::NativeCallExitCallback([[maybe_unused]] const uint32_t func)
 	// SPDLOG_LOGGER_DEBUG(spdlog::get("lhvm"), "exit {}()", _functionsTable[func].name);
 }
 
-void Game::StopTaskCallback(const uint32_t taskNumber)
+void Game::StopTaskCallback([[maybe_unused]] const uint32_t taskNumber)
 {
 	SPDLOG_LOGGER_DEBUG(spdlog::get("lhvm"), "Task {} stopped", taskNumber);
 }
 
-void Game::LhvmErrorCallback(const LHVM::ErrorCode code, [[maybe_unused]] const std::string v0,
+void Game::LhvmErrorCallback([[maybe_unused]] const LHVM::ErrorCode code, [[maybe_unused]] const std::string v0,
                              [[maybe_unused]] const uint32_t v1)
 {
 	const auto msg = LHVM::Error_Msg.at(static_cast<int>(code));
-	SPDLOG_LOGGER_DEBUG(spdlog::get("lhvm"), "{}", msg);
+	SPDLOG_LOGGER_ERROR(spdlog::get("lhvm"), "{}", msg);
 }
 
 void Game::AddObjectReference(const uint32_t objId)
