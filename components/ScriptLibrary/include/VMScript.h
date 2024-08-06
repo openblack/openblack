@@ -21,11 +21,11 @@ class VMScript
 {
 public:
 	VMScript()
-		: _type(ScriptType::SCRIPT)
-		, _variablesOffset(0)
-		, _instructionAddress(0)
-		, _parameterCount(0)
-		, _scriptId(0)
+        : _type(ScriptType::SCRIPT)
+	    , _variablesOffset(0)
+	    , _instructionAddress(0)
+	    , _parameterCount(0)
+	    , _scriptId(0)
 	{
 	};
 

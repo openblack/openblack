@@ -103,11 +103,11 @@ void LHVM::Fail(const std::string& msg)
 }
 
 void LHVM::Initialise(std::vector<NativeFunction>* functions, std::function<void(const uint32_t func)> nativeCallEnterCallback,
-					  std::function<void(const uint32_t func)> nativeCallExitCallback,
-					  std::function<void(const uint32_t taskNumber)> stopTaskCallback,
-					  std::function<void(const ErrorCode code, const std::string v0, const uint32_t v1)> errorCallback,
-					  std::function<void(const uint32_t objId)> addReference,
-					  std::function<void(const uint32_t objId)> removeReference)
+                      std::function<void(const uint32_t func)> nativeCallExitCallback,
+                      std::function<void(const uint32_t taskNumber)> stopTaskCallback,
+                      std::function<void(const ErrorCode code, const std::string v0, const uint32_t v1)> errorCallback,
+                      std::function<void(const uint32_t objId)> addReference,
+                      std::function<void(const uint32_t objId)> removeReference)
 {
 	_functions = functions;
 	_nativeCallEnterCallback = nativeCallEnterCallback;
@@ -297,7 +297,7 @@ void LHVM::Reboot()
 void LHVM::SaveBinary(const std::filesystem::path& filepath)
 {
 	LHVMFile file(LHVMHeader {.magic = k_Magic, .version = LHVMVersion::BlackAndWhite}, _variablesNames, _instructions, _auto,
-				  _scripts, _data);
+                  _scripts, _data);
 	file.Write(filepath);
 }
 
@@ -311,8 +311,8 @@ void LHVM::SaveState(const std::filesystem::path& filepath)
 	}
 
 	LHVMFile file(LHVMHeader {.magic = k_Magic, .version = LHVMVersion::BlackAndWhite}, _variablesNames, _instructions, _auto,
-				  _scripts, _data, _mainStack, _variables, tasks, _ticks, _currentLineNumber, _highestTaskId, _highestScriptId,
-				  _executedInstructions);
+                  _scripts, _data, _mainStack, _variables, tasks, _ticks, _currentLineNumber, _highestTaskId, _highestScriptId,
+	              _executedInstructions);
 	file.Write(filepath);
 }
 
@@ -449,9 +449,9 @@ uint32_t LHVM::StartScript(const VMScript& script)
 	}
 
 	const auto& task =
-		VMTask(taskVariables, script.GetScriptID(), taskNumber, script.GetInstructionAddress(), 0, 0,
-			   script.GetVariablesOffset(), stack, 0, VMExceptStruct {.instructionAddress = script.GetInstructionAddress()}, 1,
-			   0, 0, 0, 0, script.GetName(), script.GetFileName(), script.GetType());
+        VMTask(taskVariables, script.GetScriptID(), taskNumber, script.GetInstructionAddress(), 0, 0,
+               script.GetVariablesOffset(), stack, 0, VMExceptStruct {.instructionAddress = script.GetInstructionAddress()}, 1,
+	           0, 0, 0, 0, script.GetName(), script.GetFileName(), script.GetType());
 
 	_tasks.emplace(taskNumber, task);
 
@@ -526,6 +526,18 @@ void LHVM::StopTasksOfType(const ScriptType typesMask)
 	for (const auto id : ids)
 	{
 		StopTask(id);
+	}
+}
+
+const std::string LHVM::GetString(uint32_t offset)
+{
+	if (offset < _data.size())
+	{
+		return std::string(_data.data() + offset);
+	}
+	else
+	{
+		return "";
 	}
 }
 
@@ -677,6 +689,67 @@ uint32_t LHVM::GetCurrentExceptionHandlerIp(const uint32_t index)
 	{
 		return 0;
 	}
+}
+
+void LHVM::PrintInstruction(const VMTask& task, const VMInstruction& instruction)
+{
+	// TODO: improve this
+	std::string opcode = Opcode_Names[(int)instruction.opcode];
+	std::string arg = "";
+	if (instruction.opcode == Opcode::RUN)
+	{
+		if (instruction.mode == Mode::ASYNC)
+		{
+			arg = "async ";
+		}
+		arg += _scripts[instruction.intVal - 1].GetName();
+	}
+	else if (instruction.opcode == Opcode::CALL)
+	{
+		arg += _functions->at(instruction.intVal).name;
+	}
+	else
+	{
+		if (instruction.opcode == Opcode::PUSH || instruction.opcode == Opcode::POP || instruction.opcode == Opcode::CAST ||
+		    instruction.opcode == Opcode::ADD || instruction.opcode == Opcode::MINUS || instruction.opcode == Opcode::TIMES ||
+		    instruction.opcode == Opcode::DIVIDE || instruction.opcode == Opcode::MODULUS)
+		{
+			opcode += DataType_Chars[(int)instruction.type];
+		}
+		if ((instruction.opcode == Opcode::PUSH || instruction.opcode == Opcode::POP) && instruction.mode == Mode::REFERENCE)
+		{
+			if (instruction.intVal > task.variablesOffset)
+			{
+				arg = std::format("{}", task.localVars[instruction.intVal - task.variablesOffset - 1].name);
+			}
+			else
+			{
+				arg = std::format("{}", _variables[instruction.intVal].name);
+			}
+		}
+		else if (instruction.opcode == Opcode::PUSH && instruction.mode == Mode::IMMEDIATE)
+		{
+			if (instruction.type == DataType::FLOAT || instruction.type == DataType::VECTOR)
+			{
+				arg = std::format("{}", instruction.floatVal);
+			}
+			else
+			{
+				arg = std::format("{}", instruction.intVal);
+			}
+		}
+		else if (instruction.opcode == Opcode::JUMP || instruction.opcode == Opcode::WAIT || instruction.opcode == Opcode::SWAP)
+		{
+			arg = std::format("{}", instruction.intVal);
+		}
+		if (instruction.opcode == Opcode::WAIT)
+		{
+			bool val = task.stack.values[task.stack.count - 1].intVal;
+			arg += val ? " [true] -> continue" : " [false] -> JUMP";
+		}
+	}
+	printf("%s:%d %s[%d] %s %s\n", task.filename.c_str(), instruction.line, task.name.c_str(), task.id, opcode.c_str(),
+	       arg.c_str());
 }
 
 void LHVM::PrintInstruction(const VMTask& task, const VMInstruction& instruction)

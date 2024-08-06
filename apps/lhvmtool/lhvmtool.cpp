@@ -120,7 +120,7 @@ std::map<uint32_t, std::string> GetLabels(const LHVMFile& file)
 		{
 			auto const& instruction = instructions[i];
 			if (instruction.opcode == Opcode::JUMP || instruction.opcode == Opcode::WAIT ||
-				instruction.opcode == Opcode::EXCEPT)
+			    instruction.opcode == Opcode::EXCEPT)
 			{
 				std::string name = script.GetName();
 				if (instruction.opcode == Opcode::EXCEPT)
@@ -424,21 +424,20 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 	try
 	{
 		options.add_options()("h,help", "Display this help message.")("subcommand", "Subcommand.",
-																	  cxxopts::value<std::string>())
-		    ;
+                                                                      cxxopts::value<std::string>());
 		options.positional_help("[read] [OPTION...]");
 		options.add_options("read")("I,info", "Print info.", cxxopts::value<std::string>())("A,all", "Print all relevant data.",
-																							cxxopts::value<std::string>())(
-			"H,header", "Print header contents.", cxxopts::value<std::string>())(
-			"G,globals", "Print global var names.", cxxopts::value<std::string>())(
-			"C,code", "Print asm code.", cxxopts::value<std::string>())(
-			"a,autostart", "Print autostart scripts.", cxxopts::value<std::string>())(
-			"S,scripts", "Print scripts.", cxxopts::value<std::string>())(
-			"D,data", "Print data.", cxxopts::value<std::string>())(
-			"s,stack", "Print global stack.", cxxopts::value<std::string>())(
-			"V,values", "Print global var values.", cxxopts::value<std::string>())(
-			"T,tasks", "Print active tasks.", cxxopts::value<std::string>())(
-			"R,rtinfo", "Print runtime info.", cxxopts::value<std::string>());
+                                                                                            cxxopts::value<std::string>())(
+            "H,header", "Print header contents.", cxxopts::value<std::string>())(
+            "G,globals", "Print global var names.", cxxopts::value<std::string>())(
+		    "C,code", "Print asm code.", cxxopts::value<std::string>())(
+            "a,autostart", "Print autostart scripts.", cxxopts::value<std::string>())(
+		    "S,scripts", "Print scripts.", cxxopts::value<std::string>())(
+            "D,data", "Print data.", cxxopts::value<std::string>())(
+		    "s,stack", "Print global stack.", cxxopts::value<std::string>())(
+            "V,values", "Print global var values.", cxxopts::value<std::string>())(
+		    "T,tasks", "Print active tasks.", cxxopts::value<std::string>())(
+            "R,rtinfo", "Print runtime info.", cxxopts::value<std::string>());
 
 		options.parse_positional({"subcommand"});
 	}

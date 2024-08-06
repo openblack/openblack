@@ -75,7 +75,7 @@ protected:
 
 public:
 	LHVMFile()
-		: _header {.magic = {' ', ' ', ' ', ' '}, .version = LHVMVersion::BlackAndWhite}
+        : _header {.magic = {' ', ' ', ' ', ' '}, .version = LHVMVersion::BlackAndWhite}
 	    , _hasStatus(false)
 	    , _stack {.count = 0, .pushCount = 0, .popCount = 0}
 	    , _ticks(0)

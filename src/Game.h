@@ -203,13 +203,13 @@ public:
 	[[nodiscard]] std::string PopString();
 	[[nodiscard]] std::vector<float_t> PopVarArg(const int32_t argc);
 	[[nodiscard]] entt::entity CreateScriptObject(const SCRIPT_OBJECT_TYPE type, uint32_t subtype, const glm::vec3& position,
-												  float altitude, float xAngleRadians, float yAngleRadians,
-												  const float zAngleRadians, const float scale);
+	                                              float altitude, float xAngleRadians, float yAngleRadians,
+	                                              const float zAngleRadians, const float scale);
 
-#define CREATE_FUNCTION_BINDING(NAME, STACKIN, STACKOUT, FUNCTION)                                               \
-	{                                                                                                            \
-		_functionsTable.emplace_back(LHVM::NativeFunction                                                        \
-		    {.impl = std::bind(&Game::FUNCTION, this), .stackIn = STACKIN, .stackOut = STACKOUT, .name = NAME}); \
+#define CREATE_FUNCTION_BINDING(NAME, STACKIN, STACKOUT, FUNCTION) \
+	{ \
+		_functionsTable.emplace_back(LHVM::NativeFunction \
+			{.impl = std::bind(&Game::FUNCTION, this), .stackIn = STACKIN, .stackOut = STACKOUT, .name = NAME}); \
 	}
 
 	void InitFunctionsTable();

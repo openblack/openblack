@@ -22,7 +22,7 @@ namespace openblack::LHVM
 
 static const std::array<std::string, 31> Opcode_Names = {
     "END",    "JZ",   "PUSH", "POP",       "ADD",       "SYS",        "SUB",       "NEG",  "MUL", "DIV", "MOD",
-    "NOT",    "AND",  "OR",   "EQ",        "NE",        "GE",         "LE" ,       "GT",   "LT",  "JMP", "SLEEP",
+    "NOT",    "AND",  "OR",   "EQ",        "NE",        "GE",         "LE",        "GT",   "LT",  "JMP", "SLEEP",
     "EXCEPT", "CAST", "RUN",  "ENDEXCEPT", "RETEXCEPT", "FAILEXCEPT", "BRKEXCEPT", "SWAP", "LINE"};
 
 enum class LHVMVersion : uint32_t
@@ -46,7 +46,7 @@ enum class DataType : uint32_t
 static_assert(sizeof(DataType) == 4);
 
 static const std::array<std::string, 8> DataType_Names = {"NONE", "INT", "FLOAT", "VECTOR",
-														  "OBJECT", "UNK2", "BOOLEAN", "UNK4"};
+                                                          "OBJECT", "UNK2", "BOOLEAN", "UNK4"};
 
 static const std::array<std::string, 8> DataType_Chars = {"", "I", "F", "V", "O", "", "B", ""};
 
@@ -246,14 +246,14 @@ enum class ErrorCode : uint32_t
 };
 
 static const std::array<std::string, 10> Error_Msg = {"no error",
-													  "stack is empty",
-													  "stack is full",
-													  "script id not found",
-													  "script name not found",
-													  "no script of type",
-													  "task id not found",
-													  "native function not found",
-													  "division by zero",
-													  "invalid data type"};
+                                                      "stack is empty",
+                                                      "stack is full",
+                                                      "script id not found",
+                                                      "script name not found",
+                                                      "no script of type",
+                                                      "task id not found",
+                                                      "native function not found",
+                                                      "division by zero",
+                                                      "invalid data type"};
 
 } // namespace openblack::LHVM

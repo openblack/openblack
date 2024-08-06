@@ -32,10 +32,10 @@
 #include "Common/StringUtils.h"
 #include "Debug/Gui.h"
 #include "ECS/Archetypes/HandArchetype.h"
+#include "ECS/Archetypes/MobileStaticArchetype.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
 #include "ECS/Components/Mobile.h"
-#include <ECS/Archetypes/MobileStaticArchetype.h>
 #include "ECS/Components/Transform.h"
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
@@ -4231,7 +4231,7 @@ void Game::Native352_STOP_SCRIPTS_IN_FILES_EXCLUDING()
 	const auto names = GetUniqueWords(scriptNames);
 	const auto filenames = GetUniqueWords(sourceFilenames);
 	_lhvm->StopScripts([&names, &filenames](const std::string& name, const std::string& filename) -> bool {
-			return filenames.contains(filename) && !names.contains(name);
+					   return filenames.contains(filename) && !names.contains(name);
 	});
 }
 

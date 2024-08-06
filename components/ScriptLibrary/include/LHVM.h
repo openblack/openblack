@@ -121,12 +121,12 @@ public:
 
 	/// Set environment
 	void Initialise(
-		std::vector<NativeFunction>* functions, std::function<void(const uint32_t func)> nativeCallEnterCallback,
-	                std::function<void(const uint32_t func)> nativeCallExitCallback,
-	                std::function<void(const uint32_t taskNumber)> stopTaskCallback,
-					std::function<void(const ErrorCode code, [[maybe_unused]] const std::string v0, [[maybe_unused]] const uint32_t v1)>
-						errorCallback,
-	                std::function<void(const uint32_t objId)> addReference, std::function<void(const uint32_t objId)> removeReference);
+        std::vector<NativeFunction>* functions, std::function<void(const uint32_t func)> nativeCallEnterCallback,
+	    std::function<void(const uint32_t func)> nativeCallExitCallback,
+	    std::function<void(const uint32_t taskNumber)> stopTaskCallback,
+	    std::function<void(const ErrorCode code, [[maybe_unused]] const std::string v0, [[maybe_unused]] const uint32_t v1)>
+	        errorCallback,
+	    std::function<void(const uint32_t objId)> addReference, std::function<void(const uint32_t objId)> removeReference);
 
 	/// Read CHL file from the filesystem
 	void LoadBinary(const std::filesystem::path& filepath);
