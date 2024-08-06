@@ -159,7 +159,7 @@ int PrintCode(const LHVMFile& file)
 		std::printf("begin %s\n", GetSignature(script).c_str());
 		// Local vars
 		const auto& vars = script.GetVariables();
-		for (int i = script.GetParameterCount(); i < vars.size(); i++)
+		for (unsigned int i = script.GetParameterCount(); i < vars.size(); i++)
 		{
 			std::printf("\tLocal %s\n", vars.at(i).c_str());
 		}
@@ -391,7 +391,7 @@ int PrintTasks(const LHVMFile& file)
 		std::printf("Local variables offset: %u\n", task.variablesOffset);
 		std::printf("Variables:\n");
 		const auto& vars = task.localVars;
-		for (int i = 0; i < vars.size(); i++)
+		for (unsigned int i = 0; i < vars.size(); i++)
 		{
 			const auto& var = vars[i];
 			const int id = task.variablesOffset + 1 + i;
