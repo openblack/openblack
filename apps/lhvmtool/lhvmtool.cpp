@@ -615,7 +615,7 @@ int main(int argc, char* argv[]) noexcept
 		case Arguments::Mode::RuntimeInfo:
 			returnCode |= PrintRuntimeInfo(file);
 			break;
-			
+
 		default:
 			returnCode = EXIT_FAILURE;
 			break;

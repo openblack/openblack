@@ -36,7 +36,9 @@ public:
 	    , _variablesOffset(varOffset)
 	    , _instructionAddress(instructionAddress)
 	    , _parameterCount(parameterCount)
-	    , _scriptId(scriptId) {}
+	    , _scriptId(scriptId)
+	{
+	}
 
 	~VMScript() = default;
 

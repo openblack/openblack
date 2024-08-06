@@ -868,7 +868,6 @@ entt::entity Game::CreateScriptObject(const SCRIPT_OBJECT_TYPE type, uint32_t su
 	case SCRIPT_OBJECT_TYPE::SCRIPT_OBJECT_TYPE_ROCK: // TODO: is this a MobileStatic???
 		return MobileStaticArchetype::Create(position, static_cast<MobileStaticInfo>(subtype), altitude, xAngleRadians,
 		                                     yAngleRadians, zAngleRadians, scale);
-
 	}
 	return static_cast<entt::entity>(0);
 }
@@ -1589,7 +1588,6 @@ void Game::Native003_MOVE_CAMERA_POSITION()
 	const auto time = _lhvm->Popf();
 	const auto position = PopVec();
 	// TODO
-	
 }
 
 void Game::Native004_MOVE_CAMERA_FOCUS()
@@ -1746,7 +1744,7 @@ void Game::Native024_SET_POSITION()
 {
 	auto position = PopVec();
 	const auto objId = _lhvm->Pop().uintVal;
-	
+
 	const auto pObject = _refManager.GetTarget(objId);
 	if (pObject != nullptr)
 	{
@@ -3470,7 +3468,7 @@ void Game::Native252_CREATE_WITH_ANGLE_AND_SCALE()
 	const auto type = static_cast<SCRIPT_OBJECT_TYPE>(_lhvm->Pop().intVal);
 	const auto scale = _lhvm->Popf();
 	const auto angle = _lhvm->Popf();
-	
+
 	entt::entity object = CreateScriptObject(type, subtype, position, 0.0f, 0.0f, angle, 0.0f, scale);
 	const auto objId = _refManager.GetReference(object);
 
