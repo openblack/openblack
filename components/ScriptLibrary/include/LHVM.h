@@ -158,8 +158,7 @@ public:
 
 	void StopAllTasks();
 
-	void StopScripts(
-	    std::function<bool(const std::string& name, const std::string& filename)> filter);
+	void StopScripts(std::function<bool(const std::string& name, const std::string& filename)> filter);
 
 	void StopTask(const uint32_t taskNumber);
 

@@ -52,7 +52,7 @@ protected:
 	uint32_t _currentLineNumber {0};
 	uint32_t _highestTaskId {0};
 	uint32_t _highestScriptId {0};
-	uint32_t _scriptInstructionCount {0};
+	uint32_t _executedInstructions {0};
 
 	/// Error handling
 	void Fail(const std::string& msg);
@@ -82,12 +82,13 @@ public:
 	    , _currentLineNumber(0)
 	    , _highestTaskId(0)
 	    , _highestScriptId(0)
-	    , _scriptInstructionCount(0) {};
+	    , _executedInstructions(0) {};
 
 	LHVMFile(const LHVMHeader& header, const std::vector<std::string>& variablesNames,
 	         const std::vector<VMInstruction>& instructions, const std::vector<uint32_t>& autostart,
 	         const std::vector<VMScript>& scripts, const std::vector<char>& data)
-	    : _header(header)
+	    : _isLoaded(true)
+		, _header(header)
 	    , _variablesNames(variablesNames)
 	    , _instructions(instructions)
 	    , _autostart(autostart)
@@ -99,16 +100,16 @@ public:
 	    , _currentLineNumber(0)
 	    , _highestTaskId(0)
 	    , _highestScriptId(0)
-	    , _scriptInstructionCount(0)
-	    , _isLoaded(true) {};
+	    , _executedInstructions(0) {};
 
 	LHVMFile(const LHVMHeader& header, const std::vector<std::string>& variablesNames,
 	         const std::vector<VMInstruction>& instructions, const std::vector<uint32_t>& autostart,
 	         const std::vector<VMScript>& scripts, const std::vector<char>& data, const VMStack& stack,
 	         const std::vector<VMVar>& variableValues, const std::vector<VMTask>& tasks, const uint32_t ticks,
 	         const uint32_t currentLineNumber, const uint32_t highestTaskId, const uint32_t highestScriptId,
-	         const uint32_t scriptInstructionCount)
-	    : _header(header)
+	         const uint32_t executedInstructions)
+	    : _isLoaded(true)
+		, _header(header)
 	    , _variablesNames(variablesNames)
 	    , _instructions(instructions)
 	    , _autostart(autostart)
@@ -122,8 +123,7 @@ public:
 	    , _currentLineNumber(currentLineNumber)
 	    , _highestTaskId(highestTaskId)
 	    , _highestScriptId(highestScriptId)
-	    , _scriptInstructionCount(scriptInstructionCount)
-	    , _isLoaded(true) {};
+	    , _executedInstructions(executedInstructions) {};
 
 	~LHVMFile() = default;
 
@@ -141,7 +141,7 @@ public:
 	[[nodiscard]] const std::vector<uint32_t>& GetAutostart() const { return _autostart; }
 	[[nodiscard]] const std::vector<VMScript>& GetScripts() const { return _scripts; }
 	[[nodiscard]] const std::vector<char>& GetData() const { return _data; }
-	[[nodiscard]] const bool HasStatus() const { return _hasStatus; }
+	[[nodiscard]] bool HasStatus() const { return _hasStatus; }
 	[[nodiscard]] const VMStack& GetStack() const { return _stack; }
 	[[nodiscard]] const std::vector<VMVar>& GetVariablesValues() const { return _variableValues; }
 	[[nodiscard]] const std::vector<VMTask>& GetTasks() const { return _tasks; }
@@ -149,7 +149,7 @@ public:
 	[[nodiscard]] uint32_t GetCurrentLineNumber() const { return _currentLineNumber; }
 	[[nodiscard]] uint32_t GetHighestTaskId() const { return _highestTaskId; }
 	[[nodiscard]] uint32_t GetHighestScriptId() const { return _highestScriptId; }
-	[[nodiscard]] uint32_t GetScriptInstructionCount() const { return _scriptInstructionCount; }
+	[[nodiscard]] uint32_t GetExecutedInstructions() const { return _executedInstructions; }
 };
 
 } // namespace openblack::LHVM

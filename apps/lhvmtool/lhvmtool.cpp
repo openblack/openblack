@@ -60,7 +60,7 @@ int PrintInfo(const LHVMFile& file)
 		std::printf("Current line number: %u\n", file.GetCurrentLineNumber());
 		std::printf("Highest task ID: %u\n", file.GetHighestTaskId());
 		std::printf("Highest script ID: %u\n", file.GetHighestScriptId());
-		std::printf("Script instruction count: %u\n", file.GetScriptInstructionCount());
+		std::printf("Executed instructions: %u\n", file.GetExecutedInstructions());
 	}
 	else
 	{
@@ -412,7 +412,7 @@ int PrintRuntimeInfo(const LHVMFile& file)
 	std::printf("Current line number: %u\n", file.GetCurrentLineNumber());
 	std::printf("Highest task ID: %u\n", file.GetHighestTaskId());
 	std::printf("Highest script ID: %u\n", file.GetHighestScriptId());
-	std::printf("Script instruction count: %u\n", file.GetScriptInstructionCount());
+	std::printf("Executed instructions: %u\n", file.GetExecutedInstructions());
 	std::printf("\n");
 	return EXIT_SUCCESS;
 }

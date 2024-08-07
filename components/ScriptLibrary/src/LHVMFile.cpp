@@ -683,7 +683,7 @@ void LHVMFile::LoadRuntimeInfo(std::istream& stream)
 		Fail("Error reading highest script id");
 	}
 
-	if (!stream.read(reinterpret_cast<char*>(&_scriptInstructionCount), sizeof(_scriptInstructionCount)))
+	if (!stream.read(reinterpret_cast<char*>(&_executedInstructions), sizeof(_executedInstructions)))
 	{
 		Fail("Error reading script instruction count");
 	}

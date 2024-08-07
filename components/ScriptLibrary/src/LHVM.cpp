@@ -203,7 +203,7 @@ void LHVM::RestoreState(const std::filesystem::path& filepath)
 	_currentLineNumber = file.GetCurrentLineNumber();
 	_highestTaskId = file.GetHighestTaskId();
 	_highestScriptId = file.GetHighestScriptId();
-	_executedInstructions = file.GetScriptInstructionCount();
+	_executedInstructions = file.GetExecutedInstructions();
 }
 
 VMValue LHVM::Pop(DataType& type)
