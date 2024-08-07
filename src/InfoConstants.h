@@ -1037,11 +1037,11 @@ struct GVillagerStateTableInfo
 	uint32_t field0x0;
 	int field0x4;
 	float field0x8;
-	int field0xc;
+	uint32_t isFinalState;
 	int field0x10;
 	uint32_t field0x14;
-	uint32_t field0x18;
-	uint32_t field0x1c;
+	uint32_t isScriptState;
+	uint32_t isScriptInterruptableState;
 	int field0x20;
 	uint32_t field0x24;
 	std::array<char, 0x80> name;
