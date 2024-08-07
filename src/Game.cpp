@@ -845,9 +845,9 @@ std::string Game::PopString()
 	return _lhvm->GetString(_lhvm->Pop().intVal);
 }
 
-std::vector<float_t> Game::PopVarArg(const int32_t argc)
+std::vector<float> Game::PopVarArg(const int32_t argc)
 {
-	std::vector<float_t> vals;
+	std::vector<float> vals;
 	vals.resize(argc);
 	for (int i = argc - 1; i >= 0; i--)
 	{
@@ -856,16 +856,17 @@ std::vector<float_t> Game::PopVarArg(const int32_t argc)
 	return vals;
 }
 
-entt::entity Game::CreateScriptObject(const SCRIPT_OBJECT_TYPE type, uint32_t subtype, const glm::vec3& position,
+entt::entity Game::CreateScriptObject(const script::ObjectType type, uint32_t subtype, const glm::vec3& position,
                                       float altitude, float xAngleRadians, float yAngleRadians, const float zAngleRadians,
                                       const float scale)
 {
 	// TODO: handle all types
 	switch (type)
 	{
-
-	case SCRIPT_OBJECT_TYPE::SCRIPT_OBJECT_TYPE_MOBILE_STATIC:
-	case SCRIPT_OBJECT_TYPE::SCRIPT_OBJECT_TYPE_ROCK: // TODO: is this a MobileStatic???
+	case script::ObjectType::MobileStatic:
+		return MobileStaticArchetype::Create(position, static_cast<MobileStaticInfo>(subtype), altitude, xAngleRadians,
+		                                     yAngleRadians, zAngleRadians, scale);
+	case script::ObjectType::Rock: // TODO: add a Rock archetype
 		return MobileStaticArchetype::Create(position, static_cast<MobileStaticInfo>(subtype), altitude, xAngleRadians,
 		                                     yAngleRadians, zAngleRadians, scale);
 	}
@@ -1777,7 +1778,7 @@ void Game::Native027_CREATE()
 {
 	const auto position = PopVec();
 	const auto subtype = _lhvm->Pop().intVal;
-	const auto type = static_cast<SCRIPT_OBJECT_TYPE>(_lhvm->Pop().intVal);
+	const auto type = static_cast<script::ObjectType>(_lhvm->Pop().intVal);
 
 	const auto object = CreateScriptObject(type, subtype, position, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 	const auto objId = _refManager.GetReference(object);
@@ -3465,7 +3466,7 @@ void Game::Native252_CREATE_WITH_ANGLE_AND_SCALE()
 {
 	const auto position = PopVec();
 	const auto subtype = _lhvm->Pop().intVal;
-	const auto type = static_cast<SCRIPT_OBJECT_TYPE>(_lhvm->Pop().intVal);
+	const auto type = static_cast<script::ObjectType>(_lhvm->Pop().intVal);
 	const auto scale = _lhvm->Popf();
 	const auto angle = _lhvm->Popf();
 

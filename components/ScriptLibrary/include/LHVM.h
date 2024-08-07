@@ -136,10 +136,10 @@ public:
 
 	VMValue Pop(DataType& type);
 	VMValue Pop();
-	float_t Popf();
+	float Popf();
 	void Push(VMValue value, DataType type);
-	void Pushf(float_t value);
-	void Pushv(float_t value);
+	void Pushf(float value);
+	void Pushv(float value);
 	void Pushi(int32_t value);
 	void Pusho(uint32_t value);
 	void Pushb(bool value);

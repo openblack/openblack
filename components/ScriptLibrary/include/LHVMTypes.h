@@ -54,7 +54,7 @@ struct VMValue
 {
 	union
 	{
-		float_t floatVal;
+		float floatVal;
 		int32_t intVal;
 		uint32_t uintVal;
 	};
@@ -67,7 +67,7 @@ struct VMVar
 	union
 	{
 		VMValue value;
-		float_t floatVal;
+		float floatVal;
 		int32_t intVal;
 		uint32_t uintVal;
 	};
@@ -186,7 +186,7 @@ struct VMInstruction
 	union
 	{
 		VMValue data;
-		float_t floatVal;
+		float floatVal;
 		int32_t intVal;
 		uint32_t uintVal;
 	};

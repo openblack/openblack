@@ -226,7 +226,7 @@ VMValue LHVM::Pop()
 	return Pop(tmp);
 }
 
-float_t LHVM::Popf()
+float LHVM::Popf()
 {
 	DataType tmp;
 	return Pop(tmp).floatVal;
@@ -247,12 +247,12 @@ void LHVM::Push(VMValue value, DataType type)
 	}
 }
 
-void LHVM::Pushf(float_t value)
+void LHVM::Pushf(float value)
 {
 	Push(VMValue {.floatVal = value}, DataType::FLOAT);
 }
 
-void LHVM::Pushv(float_t value)
+void LHVM::Pushv(float value)
 {
 	Push(VMValue {.floatVal = value}, DataType::VECTOR);
 }
@@ -630,7 +630,7 @@ uint32_t LHVM::GetTicksCount()
 
 void LHVM::PushElaspedTime()
 {
-	float_t time = GetTicksCount() * 10.0f;
+	float time = GetTicksCount() * 10.0f;
 	Pushf(time);
 }
 
