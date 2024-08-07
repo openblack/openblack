@@ -16,13 +16,15 @@ file(GLOB OPENBLACK_IMGUI_VS_SHADERS
 file(GLOB OPENBLACK_IMGUI_FS_SHADERS
      "${CMAKE_SOURCE_DIR}/assets/shaders/imgui/fs_*.sc"
 )
-bgfx_compile_shader_to_header(
+bgfx_compile_shaders(
+  AS_HEADERS
   TYPE VERTEX
   SHADERS ${OPENBLACK_IMGUI_VS_SHADERS}
   VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/shaders/imgui/varying.def.sc
   OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders/imgui
 )
-bgfx_compile_shader_to_header(
+bgfx_compile_shaders(
+  AS_HEADERS
   TYPE FRAGMENT
   SHADERS ${OPENBLACK_IMGUI_FS_SHADERS}
   VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/shaders/imgui/varying.def.sc
@@ -37,13 +39,15 @@ file(GLOB OPENBLACK_VARYING_DEF_FILE
      "${CMAKE_SOURCE_DIR}/assets/shaders/varying.def.sc"
 )
 
-bgfx_compile_shader_to_header(
+bgfx_compile_shaders(
+  AS_HEADERS
   TYPE VERTEX
   SHADERS ${OPENBLACK_VERTEX_SHADERS}
   VARYING_DEF ${OPENBLACK_VARYING_DEF_FILE}
   OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders
 )
-bgfx_compile_shader_to_header(
+bgfx_compile_shaders(
+  AS_HEADERS
   TYPE FRAGMENT
   SHADERS ${OPENBLACK_FRAGMENT_SHADERS}
   VARYING_DEF ${OPENBLACK_VARYING_DEF_FILE}
@@ -188,6 +192,8 @@ if (MSVC)
             /permissive-
             # Set correct version of c++
             /Zc:__cplusplus
+            # Use utf-8 for std::print and fmt/spdlog
+            /utf-8
   )
 
   # Debug builds create a debug console

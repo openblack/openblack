@@ -9,10 +9,10 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include <array>
 #include <string>
-
-#include <fmt/format.h>
 
 //  626 Meshes.
 //  441 Anims.

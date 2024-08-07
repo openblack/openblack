@@ -10,13 +10,17 @@
 #pragma once
 
 #include <entt/core/hashed_string.hpp>
+#include <fmt/format.h>
 
 #include "3D/AllMeshes.h"
 
 template <>
 struct fmt::formatter<openblack::MeshId>: fmt::formatter<uint32_t>
 {
-	auto format(openblack::MeshId c, format_context& ctx) { return formatter<uint32_t>::format(static_cast<uint32_t>(c), ctx); }
+	auto format(openblack::MeshId c, format_context& ctx) const
+	{
+		return formatter<uint32_t>::format(static_cast<uint32_t>(c), ctx);
+	}
 };
 
 namespace openblack::resources
