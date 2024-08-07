@@ -10,7 +10,9 @@
 #include "LHVM.h"
 
 #include <cassert>
+#include <cmath>
 #include <cstring>
+#include <format>
 
 #include <fstream>
 #include <stdexcept>
