@@ -11,6 +11,7 @@ Checks: >-
   misc-*,
   -misc-non-private-member-variables-in-classes,
   -misc-redundant-expression,
+  -misc-include-cleaner,
   bugprone-*,
   -bugprone-reserved-identifier,
   -bugprone-easily-swappable-parameters,
