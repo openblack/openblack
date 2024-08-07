@@ -7,8 +7,7 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
-#ifndef __SCRIPTENUMS_H__
-#define __SCRIPTENUMS_H__
+#pragma once
 
 //------------------------------------------------------------------------------------------------------------------------
 enum SCRIPT_FIND_TYPE
