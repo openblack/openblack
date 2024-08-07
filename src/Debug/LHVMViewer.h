@@ -19,7 +19,7 @@ namespace openblack::debug::gui
 class LHVMViewer: public Window
 {
 public:
-	LHVMViewer(std::vector<LHVM::NativeFunction>* functions);
+	LHVMViewer();
 
 protected:
 	void Draw(Game& game) override;
@@ -38,8 +38,6 @@ private:
 	void DrawStack(const openblack::LHVM::VMStack& stack);
 	void DrawExceptionHandlers(const openblack::LHVM::VMExceptStruct& exceptStruct);
 	void SelectTask(uint32_t idx);
-
-	std::vector<LHVM::NativeFunction>* _functions {NULL};
 
 	uint32_t _selectedScriptID {1};
 	bool _openScriptTab {false};

@@ -7,6 +7,11 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+/* This file is based on the ScriptEnumstwo.h from the Black & White Scripting Tools
+ * for Creature Isle that can be downloaded from here:
+ * https://forum.bwgame.net/downloads/black-white-scripting-tools.1456/
+ */
+
 #pragma once
 
 namespace openblack::script

@@ -27,9 +27,8 @@ const ImVec4 Disassembly_ColorKeyword = ImVec4(0.976f, 0.149f, 0.447f, 1.0f);
 const ImVec4 Disassembly_ColorVariable = ImVec4(0.972f, 0.972f, 0.949f, 1.0f);
 const ImVec4 Disassembly_ColorConstant = ImVec4(0.682f, 0.505f, 1.0f, 1.0f);
 
-LHVMViewer::LHVMViewer(std::vector<LHVM::NativeFunction>* functions)
+LHVMViewer::LHVMViewer()
     : Window("LHVM Viewer", ImVec2(720.0f, 612.0f))
-    , _functions(functions)
 {
 }
 
@@ -233,7 +232,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 		case LHVM::Opcode::CALL:
 			ImGui::TextColored(Disassembly_ColorKeyword, "SYS");
 			ImGui::SameLine();
-			ImGui::TextColored(Disassembly_ColorFuncName, "%s", _functions->at(instruction.uintVal).name);
+			ImGui::TextColored(Disassembly_ColorFuncName, "%s", lhvm.GetFunctions()->at(instruction.uintVal).name);
 			break;
 		case LHVM::Opcode::RUN:
 		{

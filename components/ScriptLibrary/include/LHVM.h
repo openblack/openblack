@@ -166,6 +166,7 @@ public:
 	void StopTasksOfType(const ScriptType typesMask);
 
 	[[nodiscard]] const std::string GetString(uint32_t offset);
+	[[nodiscard]] const std::vector<NativeFunction>* GetFunctions() const { return _functions; };
 
 	[[nodiscard]] const std::vector<VMVar>& GetVariables() const { return _variables; }
 	[[nodiscard]] const std::vector<VMInstruction>& GetInstructions() const { return _instructions; }
