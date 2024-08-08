@@ -347,7 +347,7 @@ void LHVMViewer::DrawTasksTab(const LHVM::LHVM& lhvm)
 
 		ImGui::Text("Script ID: %d", task.scriptId);
 		ImGui::SameLine();
-		if (ImGui::TextButtonColored(Disassembly_ColorFuncName, std::format("{}", task.scriptId).c_str()))
+		if (ImGui::TextButtonColored(Disassembly_ColorFuncName, std::to_string(task.scriptId).c_str()))
 		{
 			SelectScript(task.scriptId);
 		}
@@ -372,7 +372,7 @@ void LHVMViewer::DrawTasksTab(const LHVM::LHVM& lhvm)
 		if (task.waitingTaskId > 0)
 		{
 			ImGui::SameLine();
-			if (ImGui::TextButtonColored(Disassembly_ColorFuncName, std::format("{}", task.waitingTaskId).c_str()))
+			if (ImGui::TextButtonColored(Disassembly_ColorFuncName, std::to_string(task.waitingTaskId).c_str()))
 			{
 				SelectTask(task.waitingTaskId);
 			}
