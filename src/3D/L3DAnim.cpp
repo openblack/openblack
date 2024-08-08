@@ -96,13 +96,13 @@ bool L3DAnim::LoadFromFile(const std::filesystem::path& path)
 	return true;
 }
 
-void L3DAnim::LoadFromBuffer(const std::vector<uint8_t>& data)
+void L3DAnim::LoadFromBuffer(const std::span<const char>& span)
 {
 	anm::ANMFile anm;
 
 	try
 	{
-		anm.Open(data);
+		anm.Open(span);
 	}
 	catch (std::runtime_error& err)
 	{

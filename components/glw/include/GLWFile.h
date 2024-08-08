@@ -86,8 +86,8 @@ public:
 	/// Read glw file from the filesystem
 	void Open(const std::filesystem::path& filepath);
 
-	/// Read glw file from a buffer
-	void Open(const std::vector<uint8_t>& buffer);
+	/// Read glw file from a span
+	void Open(const std::span<char>& span);
 
 	/// Read file from the input source
 	void ReadFile(std::istream& stream);

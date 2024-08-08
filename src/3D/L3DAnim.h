@@ -12,6 +12,7 @@
 #include <cstdint>
 
 #include <filesystem>
+#include <span>
 #include <vector>
 
 #include <glm/fwd.hpp>
@@ -43,7 +44,7 @@ public:
 	void Load(const anm::ANMFile& anm);
 	bool LoadFromFilesystem(const std::filesystem::path& path);
 	bool LoadFromFile(const std::filesystem::path& path);
-	void LoadFromBuffer(const std::vector<uint8_t>& data);
+	void LoadFromBuffer(const std::span<const char>& data);
 
 	[[nodiscard]] const std::string& GetName() const { return _name; }
 	[[nodiscard]] uint32_t GetDuration() const { return _duration; }

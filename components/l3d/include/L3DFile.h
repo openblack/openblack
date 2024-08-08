@@ -318,8 +318,8 @@ public:
 	/// Read l3d file from the filesystem
 	void Open(const std::filesystem::path& filepath);
 
-	/// Read l3d file from a buffer
-	void Open(const std::vector<uint8_t>& buffer);
+	/// Read l3d file from a span
+	void Open(const std::span<const char>& span);
 
 	/// Write l3d file to path on the filesystem
 	void Write(const std::filesystem::path& filepath);

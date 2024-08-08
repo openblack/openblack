@@ -12,6 +12,7 @@
 #include <array>
 #include <filesystem>
 #include <iosfwd>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -78,8 +79,8 @@ public:
 	/// Read anm file from the filesystem
 	void Open(const std::filesystem::path& filepath);
 
-	/// Read anm file from a buffer
-	void Open(const std::vector<uint8_t>& buffer);
+	/// Read anm file from a span
+	void Open(const std::span<const char>& span);
 
 	/// Write anm file to path on the filesystem
 	void Write(const std::filesystem::path& filepath);
