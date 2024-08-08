@@ -1568,8 +1568,6 @@ void Game::InitFunctionsTable()
 	CREATE_FUNCTION_BINDING("CURRENT_PROFILE_HAS_CREATURE", 0, 1, Native463_CURRENT_PROFILE_HAS_CREATURE);
 }
 
-#pragma warning(push)
-#pragma warning(disable : 4189)
 void Game::Native000_NONE() {}
 
 void Game::Native001_SET_CAMERA_POSITION()
@@ -1588,15 +1586,15 @@ void Game::Native002_SET_CAMERA_FOCUS()
 
 void Game::Native003_MOVE_CAMERA_POSITION()
 {
-	const auto time = _lhvm->Popf();
-	const auto position = PopVec();
+	// const auto time = _lhvm->Popf();
+	// const auto position = PopVec();
 	// TODO
 }
 
 void Game::Native004_MOVE_CAMERA_FOCUS()
 {
-	const auto time = _lhvm->Popf();
-	const auto position = PopVec();
+	// const auto time = _lhvm->Popf();
+	// const auto position = PopVec();
 	// TODO
 }
 
@@ -1614,59 +1612,59 @@ void Game::Native006_GET_CAMERA_FOCUS()
 
 void Game::Native007_SPIRIT_EJECT()
 {
-	const auto spirit = _lhvm->Pop().intVal;
+	// const auto spirit = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native008_SPIRIT_HOME()
 {
-	const auto spirit = _lhvm->Pop().intVal;
+	// const auto spirit = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native009_SPIRIT_POINT_POS()
 {
-	const auto inWorld = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto position = PopVec();
-	const auto spirit = _lhvm->Pop().intVal;
+	// const auto inWorld = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto position = PopVec();
+	// const auto spirit = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native010_SPIRIT_POINT_GAME_THING()
 {
-	const auto inWorld = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto target = _lhvm->Pop().uintVal;
-	const auto spirit = _lhvm->Pop().intVal;
+	// const auto inWorld = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto target = _lhvm->Pop().uintVal;
+	// const auto spirit = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native011_GAME_THING_FIELD_OF_VIEW()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native012_POS_FIELD_OF_VIEW()
 {
-	const auto position = PopVec();
+	// const auto position = PopVec();
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native013_RUN_TEXT()
 {
-	const auto withInteraction = _lhvm->Pop().intVal;
-	const auto textID = _lhvm->Pop().intVal;
-	const auto singleLine = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto withInteraction = _lhvm->Pop().intVal;
+	// const auto textID = _lhvm->Pop().intVal;
+	// const auto singleLine = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native014_TEMP_TEXT()
 {
-	const auto withInteraction = _lhvm->Pop().intVal;
-	const auto string = PopString();
-	const auto singleLine = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto withInteraction = _lhvm->Pop().intVal;
+	// const auto string = PopString();
+	// const auto singleLine = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
@@ -1678,53 +1676,53 @@ void Game::Native015_TEXT_READ()
 
 void Game::Native016_GAME_THING_CLICKED()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native017_SET_SCRIPT_STATE()
 {
-	const auto state = _lhvm->Pop().intVal;
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto state = _lhvm->Pop().intVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native018_SET_SCRIPT_STATE_POS()
 {
-	const auto position = PopVec();
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto position = PopVec();
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native019_SET_SCRIPT_FLOAT()
 {
-	const auto value = _lhvm->Popf();
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto value = _lhvm->Popf();
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native020_SET_SCRIPT_ULONG()
 {
-	const auto loop = _lhvm->Pop().intVal;
-	const auto animation = _lhvm->Pop().intVal;
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto loop = _lhvm->Pop().intVal;
+	// const auto animation = _lhvm->Pop().intVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native021_GET_PROPERTY()
 {
-	const auto object = _lhvm->Pop().uintVal;
-	const auto prop = _lhvm->Pop().intVal;
+	// const auto object = _lhvm->Pop().uintVal;
+	// const auto prop = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushi(0);
 }
 
 void Game::Native022_SET_PROPERTY()
 {
-	const auto val = _lhvm->Popf();
-	const auto object = _lhvm->Pop().uintVal;
-	const auto prop = _lhvm->Pop().intVal;
+	// const auto val = _lhvm->Popf();
+	// const auto object = _lhvm->Pop().uintVal;
+	// const auto prop = _lhvm->Pop().intVal;
 	// TODO
 }
 
@@ -1768,10 +1766,10 @@ void Game::Native025_GET_DISTANCE()
 
 void Game::Native026_CALL()
 {
-	const auto excludingScripted = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto position = PopVec();
-	const auto subtype = _lhvm->Pop().intVal;
-	const auto type = _lhvm->Pop().intVal;
+	// const auto excludingScripted = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto position = PopVec();
+	// const auto subtype = _lhvm->Pop().intVal;
+	// const auto type = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
@@ -1814,22 +1812,22 @@ void Game::Native031_END_CAMERA_CONTROL()
 
 void Game::Native032_SET_WIDESCREEN()
 {
-	const auto enabled = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto enabled = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native033_MOVE_GAME_THING()
 {
-	const auto radius = _lhvm->Popf();
-	const auto position = PopVec();
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto radius = _lhvm->Popf();
+	// const auto position = PopVec();
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native034_SET_FOCUS()
 {
-	const auto position = PopVec();
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto position = PopVec();
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
@@ -1841,45 +1839,45 @@ void Game::Native035_HAS_CAMERA_ARRIVED()
 
 void Game::Native036_FLOCK_CREATE()
 {
-	const auto position = PopVec();
+	// const auto position = PopVec();
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native037_FLOCK_ATTACH()
 {
-	const auto asLeader = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto flock = _lhvm->Pop().uintVal;
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto asLeader = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto flock = _lhvm->Pop().uintVal;
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native038_FLOCK_DETACH()
 {
-	const auto flock = _lhvm->Pop().uintVal;
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto flock = _lhvm->Pop().uintVal;
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native039_FLOCK_DISBAND()
 {
-	const auto flock = _lhvm->Pop().uintVal;
+	// const auto flock = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native040_ID_SIZE()
 {
-	const auto container = _lhvm->Pop().uintVal;
+	// const auto container = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native041_FLOCK_MEMBER()
 {
-	const auto flock = _lhvm->Pop().uintVal;
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto flock = _lhvm->Pop().uintVal;
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
@@ -1893,16 +1891,16 @@ void Game::Native042_GET_HAND_POSITION()
 
 void Game::Native043_PLAY_SOUND_EFFECT()
 {
-	const auto withPosition = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto position = PopVec();
-	const auto soundbank = _lhvm->Pop().intVal;
-	const auto sound = _lhvm->Pop().intVal;
+	// const auto withPosition = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto position = PopVec();
+	// const auto soundbank = _lhvm->Pop().intVal;
+	// const auto sound = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native044_START_MUSIC()
 {
-	const auto music = _lhvm->Pop().intVal;
+	// const auto music = _lhvm->Pop().intVal;
 	// TODO
 }
 
@@ -1913,296 +1911,296 @@ void Game::Native045_STOP_MUSIC()
 
 void Game::Native046_ATTACH_MUSIC()
 {
-	const auto target = _lhvm->Pop().uintVal;
-	const auto music = _lhvm->Pop().intVal;
+	// const auto target = _lhvm->Pop().uintVal;
+	// const auto music = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native047_DETACH_MUSIC()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native048_OBJECT_DELETE()
 {
-	const auto withFade = _lhvm->Pop().intVal;
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto withFade = _lhvm->Pop().intVal;
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native049_FOCUS_FOLLOW()
 {
-	const auto target = _lhvm->Pop().uintVal;
+	// const auto target = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native050_POSITION_FOLLOW()
 {
-	const auto target = _lhvm->Pop().uintVal;
+	// const auto target = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native051_CALL_NEAR()
 {
-	const auto excludingScripted = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto radius = _lhvm->Popf();
-	const auto position = PopVec();
-	const auto subtype = _lhvm->Pop().intVal;
-	const auto type = _lhvm->Pop().intVal;
+	// const auto excludingScripted = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto radius = _lhvm->Popf();
+	// const auto position = PopVec();
+	// const auto subtype = _lhvm->Pop().intVal;
+	// const auto type = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native052_SPECIAL_EFFECT_POSITION()
 {
-	const auto duration = _lhvm->Popf();
-	const auto position = PopVec();
-	const auto effect = _lhvm->Pop().intVal;
+	// const auto duration = _lhvm->Popf();
+	// const auto position = PopVec();
+	// const auto effect = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native053_SPECIAL_EFFECT_OBJECT()
 {
-	const auto duration = _lhvm->Popf();
-	const auto target = _lhvm->Pop().uintVal;
-	const auto effect = _lhvm->Pop().intVal;
+	// const auto duration = _lhvm->Popf();
+	// const auto target = _lhvm->Pop().uintVal;
+	// const auto effect = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native054_DANCE_CREATE()
 {
-	const auto duration = _lhvm->Popf();
-	const auto position = PopVec();
-	const auto type = _lhvm->Pop().intVal;
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto duration = _lhvm->Popf();
+	// const auto position = PopVec();
+	// const auto type = _lhvm->Pop().intVal;
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native055_CALL_IN()
 {
-	const auto excludingScripted = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto container = _lhvm->Pop().uintVal;
-	const auto subtype = _lhvm->Pop().intVal;
-	const auto type = _lhvm->Pop().intVal;
+	// const auto excludingScripted = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto container = _lhvm->Pop().uintVal;
+	// const auto subtype = _lhvm->Pop().intVal;
+	// const auto type = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native056_CHANGE_INNER_OUTER_PROPERTIES()
 {
-	const auto calm = _lhvm->Popf();
-	const auto outer = _lhvm->Popf();
-	const auto inner = _lhvm->Popf();
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto calm = _lhvm->Popf();
+	// const auto outer = _lhvm->Popf();
+	// const auto inner = _lhvm->Popf();
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native057_SNAPSHOT()
 {
-	const auto challengeId = _lhvm->Pop().intVal;
-	const auto argc = _lhvm->Pop().intVal;
-	const auto argv = PopVarArg(argc);
-	const auto reminderScript = PopString();
-	const auto titleStrID = _lhvm->Pop().intVal;
-	const auto alignment = _lhvm->Popf();
-	const auto success = _lhvm->Popf();
-	const auto focus = PopVec();
-	const auto position = PopVec();
-	const auto quest = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto challengeId = _lhvm->Pop().intVal;
+	// const auto argc = _lhvm->Pop().intVal;
+	// const auto argv = PopVarArg(argc);
+	// const auto reminderScript = PopString();
+	// const auto titleStrID = _lhvm->Pop().intVal;
+	// const auto alignment = _lhvm->Popf();
+	// const auto success = _lhvm->Popf();
+	// const auto focus = PopVec();
+	// const auto position = PopVec();
+	// const auto quest = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native058_GET_ALIGNMENT()
 {
-	const auto zero = _lhvm->Pop().intVal;
+	// const auto zero = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native059_SET_ALIGNMENT()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native060_INFLUENCE_OBJECT()
 {
-	const auto anti = _lhvm->Pop().intVal;
-	const auto zero = _lhvm->Pop().intVal;
-	const auto radius = _lhvm->Popf();
-	const auto target = _lhvm->Pop().uintVal;
+	// const auto anti = _lhvm->Pop().intVal;
+	// const auto zero = _lhvm->Pop().intVal;
+	// const auto radius = _lhvm->Popf();
+	// const auto target = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native061_INFLUENCE_POSITION()
 {
-	const auto anti = _lhvm->Pop().intVal;
-	const auto zero = _lhvm->Pop().intVal;
-	const auto radius = _lhvm->Popf();
-	const auto position = PopVec();
+	// const auto anti = _lhvm->Pop().intVal;
+	// const auto zero = _lhvm->Pop().intVal;
+	// const auto radius = _lhvm->Popf();
+	// const auto position = PopVec();
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native062_GET_INFLUENCE()
 {
-	const auto position = PopVec();
-	const auto raw = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto player = _lhvm->Popf();
+	// const auto position = PopVec();
+	// const auto raw = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto player = _lhvm->Popf();
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native063_SET_INTERFACE_INTERACTION()
 {
-	const auto level = _lhvm->Pop().intVal;
+	// const auto level = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native064_PLAYED()
 {
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native065_RANDOM_ULONG()
 {
-	const auto max = _lhvm->Pop().intVal;
-	const auto min = _lhvm->Pop().intVal;
+	// const auto max = _lhvm->Pop().intVal;
+	// const auto min = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushi(0);
 }
 
 void Game::Native066_SET_GAMESPEED()
 {
-	const auto speed = _lhvm->Popf();
+	// const auto speed = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native067_CALL_IN_NEAR()
 {
-	const auto excludingScripted = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto radius = _lhvm->Popf();
-	const auto pos = PopVec();
-	const auto container = _lhvm->Pop().uintVal;
-	const auto subtype = _lhvm->Pop().intVal;
-	const auto type = _lhvm->Pop().intVal;
+	// const auto excludingScripted = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto radius = _lhvm->Popf();
+	// const auto pos = PopVec();
+	// const auto container = _lhvm->Pop().uintVal;
+	// const auto subtype = _lhvm->Pop().intVal;
+	// const auto type = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native068_OVERRIDE_STATE_ANIMATION()
 {
-	const auto animType = _lhvm->Pop().intVal;
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto animType = _lhvm->Pop().intVal;
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native069_CREATURE_CREATE_RELATIVE_TO_CREATURE()
 {
-	const auto type = _lhvm->Pop().intVal;
-	const auto position = PopVec();
-	const auto scale = _lhvm->Popf();
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto type = _lhvm->Pop().intVal;
+	// const auto position = PopVec();
+	// const auto scale = _lhvm->Popf();
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native070_CREATURE_LEARN_EVERYTHING()
 {
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native071_CREATURE_SET_KNOWS_ACTION()
 {
-	const auto knows = _lhvm->Pop().intVal;
-	const auto action = _lhvm->Pop().intVal;
-	const auto typeOfAction = _lhvm->Pop().intVal;
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto knows = _lhvm->Pop().intVal;
+	// const auto action = _lhvm->Pop().intVal;
+	// const auto typeOfAction = _lhvm->Pop().intVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native072_CREATURE_SET_AGENDA_PRIORITY()
 {
-	const auto priority = _lhvm->Popf();
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto priority = _lhvm->Popf();
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native073_CREATURE_TURN_OFF_ALL_DESIRES()
 {
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native074_CREATURE_LEARN_DISTINCTION_ABOUT_ACTIVITY_OBJECT()
 {
-	const auto unk3 = _lhvm->Pop().intVal;
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk3 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native075_CREATURE_DO_ACTION()
 {
-	const auto withObject = _lhvm->Pop().uintVal;
-	const auto target = _lhvm->Pop().uintVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto withObject = _lhvm->Pop().uintVal;
+	// const auto target = _lhvm->Pop().uintVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native076_IN_CREATURE_HAND()
 {
-	const auto creature = _lhvm->Pop().uintVal;
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto creature = _lhvm->Pop().uintVal;
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native077_CREATURE_SET_DESIRE_VALUE()
 {
-	const auto value = _lhvm->Popf();
-	const auto desire = _lhvm->Pop().intVal;
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto value = _lhvm->Popf();
+	// const auto desire = _lhvm->Pop().intVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native078_CREATURE_SET_DESIRE_ACTIVATED()
 {
-	const auto active = _lhvm->Pop().intVal;
-	const auto desire = _lhvm->Pop().intVal;
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto active = _lhvm->Pop().intVal;
+	// const auto desire = _lhvm->Pop().intVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native079_CREATURE_SET_DESIRE_ACTIVATED()
 {
-	const auto active = _lhvm->Pop().intVal;
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto active = _lhvm->Pop().intVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native080_CREATURE_SET_DESIRE_MAXIMUM()
 {
-	const auto value = _lhvm->Popf();
-	const auto desire = _lhvm->Pop().intVal;
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto value = _lhvm->Popf();
+	// const auto desire = _lhvm->Pop().intVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native081_CONVERT_CAMERA_POSITION()
 {
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushv(0.0f); // x
 	_lhvm->Pushv(0.0f); // y
@@ -2211,7 +2209,7 @@ void Game::Native081_CONVERT_CAMERA_POSITION()
 
 void Game::Native082_CONVERT_CAMERA_FOCUS()
 {
-	const auto camera_enum = _lhvm->Pop().intVal;
+	// const auto camera_enum = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushv(0.0f); // x
 	_lhvm->Pushv(0.0f); // y
@@ -2220,27 +2218,27 @@ void Game::Native082_CONVERT_CAMERA_FOCUS()
 
 void Game::Native083_CREATURE_SET_PLAYER()
 {
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native084_START_COUNTDOWN_TIMER()
 {
-	const auto timeout = _lhvm->Popf();
+	// const auto timeout = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native085_CREATURE_INITIALISE_NUM_TIMES_PERFORMED_ACTION()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native086_CREATURE_GET_NUM_TIMES_ACTION_PERFORMED()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
@@ -2252,27 +2250,27 @@ void Game::Native087_REMOVE_COUNTDOWN_TIMER()
 
 void Game::Native088_GET_OBJECT_DROPPED()
 {
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native089_CLEAR_DROPPED_BY_OBJECT()
 {
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native090_CREATE_REACTION()
 {
-	const auto reaction = _lhvm->Pop().intVal;
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto reaction = _lhvm->Pop().intVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native091_REMOVE_REACTION()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
@@ -2284,15 +2282,15 @@ void Game::Native092_GET_COUNTDOWN_TIMER()
 
 void Game::Native093_START_DUAL_CAMERA()
 {
-	const auto obj2 = _lhvm->Pop().uintVal;
-	const auto obj1 = _lhvm->Pop().uintVal;
+	// const auto obj2 = _lhvm->Pop().uintVal;
+	// const auto obj1 = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native094_UPDATE_DUAL_CAMERA()
 {
-	const auto obj2 = _lhvm->Pop().uintVal;
-	const auto obj1 = _lhvm->Pop().uintVal;
+	// const auto obj2 = _lhvm->Pop().uintVal;
+	// const auto obj1 = _lhvm->Pop().uintVal;
 	// TODO
 }
 
@@ -2303,21 +2301,21 @@ void Game::Native095_RELEASE_DUAL_CAMERA()
 
 void Game::Native096_SET_CREATURE_HELP()
 {
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native097_GET_TARGET_OBJECT()
 {
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native098_CREATURE_DESIRE_IS()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushi(0);
 }
@@ -2330,14 +2328,14 @@ void Game::Native099_COUNTDOWN_TIMER_EXISTS()
 
 void Game::Native100_LOOK_GAME_THING()
 {
-	const auto target = _lhvm->Pop().uintVal;
-	const auto spirit = _lhvm->Pop().intVal;
+	// const auto target = _lhvm->Pop().uintVal;
+	// const auto spirit = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native101_GET_OBJECT_DESTINATION()
 {
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushv(0.0f); // x
 	_lhvm->Pushv(0.0f); // y
@@ -2346,7 +2344,7 @@ void Game::Native101_GET_OBJECT_DESTINATION()
 
 void Game::Native102_CREATURE_FORCE_FINISH()
 {
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
@@ -2357,30 +2355,30 @@ void Game::Native103_HIDE_COUNTDOWN_TIMER()
 
 void Game::Native104_GET_ACTION_TEXT_FOR_OBJECT()
 {
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushi(0);
 }
 
 void Game::Native105_CREATE_DUAL_CAMERA_WITH_POINT()
 {
-	const auto position = PopVec();
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto position = PopVec();
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native106_SET_CAMERA_TO_FACE_OBJECT()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native107_MOVE_CAMERA_TO_FACE_OBJECT()
 {
-	const auto time = _lhvm->Popf();
-	const auto distance = _lhvm->Popf();
-	const auto target = _lhvm->Pop().uintVal;
+	// const auto time = _lhvm->Popf();
+	// const auto distance = _lhvm->Popf();
+	// const auto target = _lhvm->Pop().uintVal;
 	// TODO
 }
 
@@ -2392,10 +2390,10 @@ void Game::Native108_GET_MOON_PERCENTAGE()
 
 void Game::Native109_POPULATE_CONTAINER()
 {
-	const auto subtype = _lhvm->Pop().intVal;
-	const auto type = _lhvm->Pop().intVal;
-	const auto quantity = _lhvm->Popf();
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto subtype = _lhvm->Pop().intVal;
+	// const auto type = _lhvm->Pop().intVal;
+	// const auto quantity = _lhvm->Popf();
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 }
 
@@ -2415,7 +2413,7 @@ void Game::Native111_REMOVE_REFERENCE()
 
 void Game::Native112_SET_GAME_TIME()
 {
-	const auto time = _lhvm->Popf();
+	// const auto time = _lhvm->Popf();
 	// TODO
 }
 
@@ -2457,7 +2455,7 @@ void Game::Native118_GET_REAL_YEAR()
 
 void Game::Native119_RUN_CAMERA_PATH()
 {
-	const auto cameraEnum = _lhvm->Pop().intVal;
+	// const auto cameraEnum = _lhvm->Pop().intVal;
 	// TODO
 }
 
@@ -2480,47 +2478,47 @@ void Game::Native122_IS_DIALOGUE_READY()
 
 void Game::Native123_CHANGE_WEATHER_PROPERTIES()
 {
-	const auto fallspeed = _lhvm->Popf();
-	const auto overcast = _lhvm->Popf();
-	const auto snowfall = _lhvm->Popf();
-	const auto rainfall = _lhvm->Popf();
-	const auto temperature = _lhvm->Popf();
-	const auto storm = _lhvm->Pop().uintVal;
+	// const auto fallspeed = _lhvm->Popf();
+	// const auto overcast = _lhvm->Popf();
+	// const auto snowfall = _lhvm->Popf();
+	// const auto rainfall = _lhvm->Popf();
+	// const auto temperature = _lhvm->Popf();
+	// const auto storm = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native124_CHANGE_LIGHTNING_PROPERTIES()
 {
-	const auto forkmax = _lhvm->Popf();
-	const auto forkmin = _lhvm->Popf();
-	const auto sheetmax = _lhvm->Popf();
-	const auto sheetmin = _lhvm->Popf();
-	const auto storm = _lhvm->Pop().uintVal;
+	// const auto forkmax = _lhvm->Popf();
+	// const auto forkmin = _lhvm->Popf();
+	// const auto sheetmax = _lhvm->Popf();
+	// const auto sheetmin = _lhvm->Popf();
+	// const auto storm = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native125_CHANGE_TIME_FADE_PROPERTIES()
 {
-	const auto fadeTime = _lhvm->Popf();
-	const auto duration = _lhvm->Popf();
-	const auto storm = _lhvm->Pop().uintVal;
+	// const auto fadeTime = _lhvm->Popf();
+	// const auto duration = _lhvm->Popf();
+	// const auto storm = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native126_CHANGE_CLOUD_PROPERTIES()
 {
-	const auto elevation = _lhvm->Popf();
-	const auto blackness = _lhvm->Popf();
-	const auto numClouds = _lhvm->Popf();
-	const auto storm = _lhvm->Pop().uintVal;
+	// const auto elevation = _lhvm->Popf();
+	// const auto blackness = _lhvm->Popf();
+	// const auto numClouds = _lhvm->Popf();
+	// const auto storm = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native127_SET_HEADING_AND_SPEED()
 {
-	const auto speed = _lhvm->Popf();
-	const auto position = PopVec();
-	const auto unk0 = _lhvm->Pop().uintVal;
+	// const auto speed = _lhvm->Popf();
+	// const auto position = PopVec();
+	// const auto unk0 = _lhvm->Pop().uintVal;
 	// TODO
 }
 
@@ -2536,15 +2534,15 @@ void Game::Native129_END_GAME_SPEED()
 
 void Game::Native130_BUILD_BUILDING()
 {
-	const auto desire = _lhvm->Popf();
-	const auto position = PopVec();
+	// const auto desire = _lhvm->Popf();
+	// const auto position = PopVec();
 	// TODO
 }
 
 void Game::Native131_SET_AFFECTED_BY_WIND()
 {
-	const auto object = _lhvm->Pop().uintVal;
-	const auto enabled = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto object = _lhvm->Pop().uintVal;
+	// const auto enabled = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
@@ -2556,36 +2554,36 @@ void Game::Native132_WIDESCREEN_TRANSISTION_FINISHED()
 
 void Game::Native133_GET_RESOURCE()
 {
-	const auto container = _lhvm->Pop().uintVal;
-	const auto resource = _lhvm->Pop().intVal;
+	// const auto container = _lhvm->Pop().uintVal;
+	// const auto resource = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native134_ADD_RESOURCE()
 {
-	const auto container = _lhvm->Pop().uintVal;
-	const auto quantity = _lhvm->Popf();
-	const auto resource = _lhvm->Pop().intVal;
+	// const auto container = _lhvm->Pop().uintVal;
+	// const auto quantity = _lhvm->Popf();
+	// const auto resource = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native135_REMOVE_RESOURCE()
 {
-	const auto container = _lhvm->Pop().uintVal;
-	const auto quantity = _lhvm->Popf();
-	const auto resource = _lhvm->Pop().intVal;
+	// const auto container = _lhvm->Pop().uintVal;
+	// const auto quantity = _lhvm->Popf();
+	// const auto resource = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native136_GET_TARGET_RELATIVE_POS()
 {
-	const auto angle = _lhvm->Popf();
-	const auto distance = _lhvm->Popf();
-	const auto to = PopVec();
-	const auto from = PopVec();
+	// const auto angle = _lhvm->Popf();
+	// const auto distance = _lhvm->Popf();
+	// const auto to = PopVec();
+	// const auto from = PopVec();
 	// TODO
 	_lhvm->Pushv(0.0f); // x
 	_lhvm->Pushv(0.0f); // y
@@ -2594,54 +2592,54 @@ void Game::Native136_GET_TARGET_RELATIVE_POS()
 
 void Game::Native137_STOP_POINTING()
 {
-	const auto spirit = _lhvm->Pop().intVal;
+	// const auto spirit = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native138_STOP_LOOKING()
 {
-	const auto spirit = _lhvm->Pop().intVal;
+	// const auto spirit = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native139_LOOK_AT_POSITION()
 {
-	const auto position = PopVec();
-	const auto spirit = _lhvm->Pop().intVal;
+	// const auto position = PopVec();
+	// const auto spirit = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native140_PLAY_SPIRIT_ANIM()
 {
-	const auto unk4 = _lhvm->Pop().intVal;
-	const auto unk3 = _lhvm->Pop().intVal;
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk4 = _lhvm->Pop().intVal;
+	// const auto unk3 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native141_CALL_IN_NOT_NEAR()
 {
-	const auto excludingScripted = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto radius = _lhvm->Popf();
-	const auto pos = PopVec();
-	const auto container = _lhvm->Pop().uintVal;
-	const auto subtype = _lhvm->Pop().intVal;
-	const auto type = _lhvm->Pop().intVal;
+	// const auto excludingScripted = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto radius = _lhvm->Popf();
+	// const auto pos = PopVec();
+	// const auto container = _lhvm->Pop().uintVal;
+	// const auto subtype = _lhvm->Pop().intVal;
+	// const auto type = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native142_SET_CAMERA_ZONE()
 {
-	const auto filename = PopString();
+	// const auto filename = PopString();
 	// TODO
 }
 
 void Game::Native143_GET_OBJECT_STATE()
 {
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushi(0);
 }
@@ -2653,36 +2651,36 @@ void Game::Native144_REVEAL_COUNTDOWN_TIMER()
 
 void Game::Native145_SET_TIMER_TIME()
 {
-	const auto time = _lhvm->Popf();
-	const auto timer = _lhvm->Pop().uintVal;
+	// const auto time = _lhvm->Popf();
+	// const auto timer = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native146_CREATE_TIMER()
 {
-	const auto timeout = _lhvm->Popf();
+	// const auto timeout = _lhvm->Popf();
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native147_GET_TIMER_TIME_REMAINING()
 {
-	const auto timer = _lhvm->Pop().uintVal;
+	// const auto timer = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native148_GET_TIMER_TIME_SINCE_SET()
 {
-	const auto timer = _lhvm->Pop().uintVal;
+	// const auto timer = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native149_MOVE_MUSIC()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
@@ -2695,8 +2693,10 @@ void Game::Native150_GET_INCLUSION_DISTANCE()
 void Game::Native151_GET_LAND_HEIGHT()
 {
 	const auto position = PopVec();
+
 	const auto& island = Locator::terrainSystem::value();
 	const auto elevation = island.GetHeightAt(glm::vec2(position.x, position.z));
+
 	_lhvm->Pushf(elevation);
 }
 
@@ -2749,17 +2749,17 @@ void Game::Native157_CLEAR_CLICKED_POSITION()
 
 void Game::Native158_POSITION_CLICKED()
 {
-	const auto unk3 = _lhvm->Pop().intVal;
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk3 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native159_RELEASE_FROM_SCRIPT()
 {
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 }
 
@@ -2771,86 +2771,86 @@ void Game::Native160_GET_OBJECT_HAND_IS_OVER()
 
 void Game::Native161_ID_POISONED_SIZE()
 {
-	const auto container = _lhvm->Pop().uintVal;
+	// const auto container = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native162_IS_POISONED()
 {
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native163_CALL_POISONED_IN()
 {
-	const auto excludingScripted = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto container = _lhvm->Pop().uintVal;
-	const auto subtype = _lhvm->Pop().intVal;
-	const auto type = _lhvm->Pop().intVal;
+	// const auto excludingScripted = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto container = _lhvm->Pop().uintVal;
+	// const auto subtype = _lhvm->Pop().intVal;
+	// const auto type = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native164_CALL_NOT_POISONED_IN()
 {
-	const auto excludingScripted = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto container = _lhvm->Pop().uintVal;
-	const auto subtype = _lhvm->Pop().intVal;
-	const auto type = _lhvm->Pop().intVal;
+	// const auto excludingScripted = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto container = _lhvm->Pop().uintVal;
+	// const auto subtype = _lhvm->Pop().intVal;
+	// const auto type = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native165_SPIRIT_PLAYED()
 {
-	const auto spirit = _lhvm->Pop().intVal;
+	// const auto spirit = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native166_CLING_SPIRIT()
 {
-	const auto yPercent = _lhvm->Popf();
-	const auto xPercent = _lhvm->Popf();
-	const auto spirit = _lhvm->Pop().intVal;
+	// const auto yPercent = _lhvm->Popf();
+	// const auto xPercent = _lhvm->Popf();
+	// const auto spirit = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native167_FLY_SPIRIT()
 {
-	const auto yPercent = _lhvm->Popf();
-	const auto xPercent = _lhvm->Popf();
-	const auto spirit = _lhvm->Pop().intVal;
+	// const auto yPercent = _lhvm->Popf();
+	// const auto xPercent = _lhvm->Popf();
+	// const auto spirit = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native168_SET_ID_MOVEABLE()
 {
-	const auto obj = _lhvm->Pop().uintVal;
-	const auto moveable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto obj = _lhvm->Pop().uintVal;
+	// const auto moveable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native169_SET_ID_PICKUPABLE()
 {
-	const auto obj = _lhvm->Pop().uintVal;
-	const auto pickupable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto obj = _lhvm->Pop().uintVal;
+	// const auto pickupable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native170_IS_ON_FIRE()
 {
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native171_IS_FIRE_NEAR()
 {
-	const auto radius = _lhvm->Popf();
-	const auto position = PopVec();
+	// const auto radius = _lhvm->Popf();
+	// const auto position = PopVec();
 	// TODO
 	_lhvm->Pushb(false);
 }
@@ -2867,148 +2867,148 @@ void Game::Native172_STOP_SCRIPTS_IN_FILES()
 
 void Game::Native173_SET_POISONED()
 {
-	const auto obj = _lhvm->Pop().uintVal;
-	const auto poisoned = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto obj = _lhvm->Pop().uintVal;
+	// const auto poisoned = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native174_SET_TEMPERATURE()
 {
-	const auto temperature = _lhvm->Popf();
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto temperature = _lhvm->Popf();
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native175_SET_ON_FIRE()
 {
-	const auto burnSpeed = _lhvm->Popf();
-	const auto object = _lhvm->Pop().uintVal;
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto burnSpeed = _lhvm->Popf();
+	// const auto object = _lhvm->Pop().uintVal;
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native176_SET_TARGET()
 {
-	const auto time = _lhvm->Popf();
-	const auto position = PopVec();
-	const auto obj = _lhvm->Pop().uintVal;
+	// const auto time = _lhvm->Popf();
+	// const auto position = PopVec();
+	// const auto obj = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native177_WALK_PATH()
 {
-	const auto valTo = _lhvm->Popf();
-	const auto valFrom = _lhvm->Popf();
-	const auto camera_enum = _lhvm->Pop().intVal;
-	const auto forward = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto valTo = _lhvm->Popf();
+	// const auto valFrom = _lhvm->Popf();
+	// const auto camera_enum = _lhvm->Pop().intVal;
+	// const auto forward = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native178_FOCUS_AND_POSITION_FOLLOW()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native179_GET_WALK_PATH_PERCENTAGE()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native180_CAMERA_PROPERTIES()
 {
-	const auto enableBehind = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto angle = _lhvm->Popf();
-	const auto speed = _lhvm->Popf();
-	const auto distance = _lhvm->Popf();
+	// const auto enableBehind = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto angle = _lhvm->Popf();
+	// const auto speed = _lhvm->Popf();
+	// const auto distance = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native181_ENABLE_DISABLE_MUSIC()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native182_GET_MUSIC_OBJ_DISTANCE()
 {
-	const auto source = _lhvm->Pop().uintVal;
+	// const auto source = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native183_GET_MUSIC_ENUM_DISTANCE()
 {
-	const auto type = _lhvm->Pop().intVal;
+	// const auto type = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native184_SET_MUSIC_PLAY_POSITION()
 {
-	const auto unk3 = _lhvm->Pop().intVal;
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk3 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native185_ATTACH_OBJECT_LEASH_TO_OBJECT()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native186_ATTACH_OBJECT_LEASH_TO_HAND()
 {
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native187_DETACH_OBJECT_LEASH()
 {
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native188_SET_CREATURE_ONLY_DESIRE()
 {
-	const auto value = _lhvm->Popf();
-	const auto desire = _lhvm->Pop().intVal;
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto value = _lhvm->Popf();
+	// const auto desire = _lhvm->Pop().intVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native189_SET_CREATURE_ONLY_DESIRE_OFF()
 {
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native190_RESTART_MUSIC()
 {
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native191_MUSIC_PLAYED()
 {
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushi(0);
 }
 
 void Game::Native192_IS_OF_TYPE()
 {
-	const auto subtype = _lhvm->Pop().intVal;
-	const auto type = _lhvm->Pop().intVal;
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto subtype = _lhvm->Pop().intVal;
+	// const auto type = _lhvm->Pop().intVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
@@ -3020,45 +3020,45 @@ void Game::Native193_CLEAR_HIT_OBJECT()
 
 void Game::Native194_GAME_THING_HIT()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native195_SPELL_AT_THING()
 {
-	const auto curl = _lhvm->Popf();
-	const auto duration = _lhvm->Popf();
-	const auto radius = _lhvm->Popf();
-	const auto from = PopVec();
-	const auto target = _lhvm->Pop().uintVal;
-	const auto spell = _lhvm->Pop().intVal;
+	// const auto curl = _lhvm->Popf();
+	// const auto duration = _lhvm->Popf();
+	// const auto radius = _lhvm->Popf();
+	// const auto from = PopVec();
+	// const auto target = _lhvm->Pop().uintVal;
+	// const auto spell = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native196_SPELL_AT_POS()
 {
-	const auto curl = _lhvm->Popf();
-	const auto duration = _lhvm->Popf();
-	const auto radius = _lhvm->Popf();
-	const auto from = PopVec();
-	const auto target = PopVec();
-	const auto spell = _lhvm->Pop().intVal;
+	// const auto curl = _lhvm->Popf();
+	// const auto duration = _lhvm->Popf();
+	// const auto radius = _lhvm->Popf();
+	// const auto from = PopVec();
+	// const auto target = PopVec();
+	// const auto spell = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native197_CALL_PLAYER_CREATURE()
 {
-	const auto player = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native198_GET_SLOWEST_SPEED()
 {
-	const auto flock = _lhvm->Pop().uintVal;
+	// const auto flock = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
@@ -3077,40 +3077,40 @@ void Game::Native200_HELP_SYSTEM_ON()
 
 void Game::Native201_SHAKE_CAMERA()
 {
-	const auto duration = _lhvm->Popf();
-	const auto amplitude = _lhvm->Popf();
-	const auto radius = _lhvm->Popf();
-	const auto position = PopVec();
+	// const auto duration = _lhvm->Popf();
+	// const auto amplitude = _lhvm->Popf();
+	// const auto radius = _lhvm->Popf();
+	// const auto position = PopVec();
 	// TODO
 }
 
 void Game::Native202_SET_ANIMATION_MODIFY()
 {
-	const auto creature = _lhvm->Pop().uintVal;
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto creature = _lhvm->Pop().uintVal;
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native203_SET_AVI_SEQUENCE()
 {
-	const auto aviSequence = _lhvm->Pop().intVal;
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto aviSequence = _lhvm->Pop().intVal;
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native204_PLAY_GESTURE()
 {
-	const auto unk4 = _lhvm->Pop().intVal;
-	const auto unk3 = _lhvm->Pop().intVal;
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk4 = _lhvm->Pop().intVal;
+	// const auto unk3 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native205_DEV_FUNCTION()
 {
-	const auto func = _lhvm->Pop().intVal;
+	// const auto func = _lhvm->Pop().intVal;
 	// TODO
 }
 
@@ -3128,120 +3128,120 @@ void Game::Native207_NUM_MOUSE_BUTTONS()
 
 void Game::Native208_SET_CREATURE_DEV_STAGE()
 {
-	const auto stage = _lhvm->Pop().intVal;
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto stage = _lhvm->Pop().intVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native209_SET_FIXED_CAM_ROTATION()
 {
-	const auto unk3 = _lhvm->Pop().intVal;
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk3 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native210_SWAP_CREATURE()
 {
-	const auto toCreature = _lhvm->Pop().uintVal;
-	const auto fromCreature = _lhvm->Pop().uintVal;
+	// const auto toCreature = _lhvm->Pop().uintVal;
+	// const auto fromCreature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native211_GET_ARENA()
 {
-	const auto unk4 = _lhvm->Pop().intVal;
-	const auto unk3 = _lhvm->Pop().intVal;
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk4 = _lhvm->Pop().intVal;
+	// const auto unk3 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native212_GET_FOOTBALL_PITCH()
 {
-	const auto town = _lhvm->Pop().uintVal;
+	// const auto town = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native213_STOP_ALL_GAMES()
 {
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native214_ATTACH_TO_GAME()
 {
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native215_DETACH_FROM_GAME()
 {
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native216_DETACH_UNDEFINED_FROM_GAME()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native217_SET_ONLY_FOR_SCRIPTS()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native218_START_MATCH_WITH_REFEREE()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native219_GAME_TEAM_SIZE()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native220_GAME_TYPE()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushi(0);
 }
 
 void Game::Native221_GAME_SUB_TYPE()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushi(0);
 }
 
 void Game::Native222_IS_LEASHED()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native223_SET_CREATURE_HOME()
 {
-	const auto position = PopVec();
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto position = PopVec();
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
@@ -3259,142 +3259,142 @@ void Game::Native225_GET_OBJECT_WHICH_HIT()
 
 void Game::Native226_GET_NEAREST_TOWN_OF_PLAYER()
 {
-	const auto unk4 = _lhvm->Pop().intVal;
-	const auto unk3 = _lhvm->Pop().intVal;
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk4 = _lhvm->Pop().intVal;
+	// const auto unk3 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native227_SPELL_AT_POINT()
 {
-	const auto radius = _lhvm->Popf();
-	const auto position = PopVec();
-	const auto spell = _lhvm->Pop().intVal;
+	// const auto radius = _lhvm->Popf();
+	// const auto position = PopVec();
+	// const auto spell = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native228_SET_ATTACK_OWN_TOWN()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native229_IS_FIGHTING()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native230_SET_MAGIC_RADIUS()
 {
-	const auto radius = _lhvm->Popf();
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto radius = _lhvm->Popf();
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native231_TEMP_TEXT_WITH_NUMBER()
 {
-	const auto withInteraction = _lhvm->Pop().intVal;
-	const auto value = _lhvm->Popf();
-	const auto format = PopString();
-	const auto singleLine = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto withInteraction = _lhvm->Pop().intVal;
+	// const auto value = _lhvm->Popf();
+	// const auto format = PopString();
+	// const auto singleLine = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native232_RUN_TEXT_WITH_NUMBER()
 {
-	const auto withInteraction = _lhvm->Pop().intVal;
-	const auto number = _lhvm->Popf();
-	const auto string = _lhvm->Pop().intVal;
-	const auto singleLine = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto withInteraction = _lhvm->Pop().intVal;
+	// const auto number = _lhvm->Popf();
+	// const auto string = _lhvm->Pop().intVal;
+	// const auto singleLine = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native233_CREATURE_SPELL_REVERSION()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native234_GET_DESIRE()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native235_GET_EVENTS_PER_SECOND()
 {
-	const auto type = _lhvm->Pop().intVal;
+	// const auto type = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native236_GET_TIME_SINCE()
 {
-	const auto type = _lhvm->Pop().intVal;
+	// const auto type = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native237_GET_TOTAL_EVENTS()
 {
-	const auto type = _lhvm->Pop().intVal;
+	// const auto type = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native238_UPDATE_SNAPSHOT()
 {
-	const auto challengeId = _lhvm->Pop().intVal;
-	const auto argc = _lhvm->Pop().intVal;
-	const auto argv = PopVarArg(argc);
-	const auto reminderScript = PopString();
-	const auto titleStrID = _lhvm->Pop().intVal;
-	const auto alignment = _lhvm->Popf();
-	const auto success = _lhvm->Popf();
+	// const auto challengeId = _lhvm->Pop().intVal;
+	// const auto argc = _lhvm->Pop().intVal;
+	// const auto argv = PopVarArg(argc);
+	// const auto reminderScript = PopString();
+	// const auto titleStrID = _lhvm->Pop().intVal;
+	// const auto alignment = _lhvm->Popf();
+	// const auto success = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native239_CREATE_REWARD()
 {
-	const auto fromSky = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto position = PopVec();
-	const auto reward = _lhvm->Pop().intVal;
+	// const auto fromSky = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto position = PopVec();
+	// const auto reward = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native240_CREATE_REWARD_IN_TOWN()
 {
-	const auto fromSky = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto position = PopVec();
-	const auto town = _lhvm->Pop().uintVal;
-	const auto reward = _lhvm->Pop().intVal;
+	// const auto fromSky = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto position = PopVec();
+	// const auto town = _lhvm->Pop().uintVal;
+	// const auto reward = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native241_SET_FADE()
 {
-	const auto time = _lhvm->Popf();
-	const auto blue = _lhvm->Popf();
-	const auto green = _lhvm->Popf();
-	const auto red = _lhvm->Popf();
+	// const auto time = _lhvm->Popf();
+	// const auto blue = _lhvm->Popf();
+	// const auto green = _lhvm->Popf();
+	// const auto red = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native242_SET_FADE_IN()
 {
-	const auto duration = _lhvm->Popf();
+	// const auto duration = _lhvm->Popf();
 	// TODO
 }
 
@@ -3406,61 +3406,61 @@ void Game::Native243_FADE_FINISHED()
 
 void Game::Native244_SET_PLAYER_MAGIC()
 {
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native245_HAS_PLAYER_MAGIC()
 {
-	const auto player = _lhvm->Popf();
-	const auto spell = _lhvm->Pop().intVal;
+	// const auto player = _lhvm->Popf();
+	// const auto spell = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native246_SPIRIT_SPEAKS()
 {
-	const auto textID = _lhvm->Pop().intVal;
-	const auto spirit = _lhvm->Pop().intVal;
+	// const auto textID = _lhvm->Pop().intVal;
+	// const auto spirit = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native247_BELIEF_FOR_PLAYER()
 {
-	const auto player = _lhvm->Popf();
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto player = _lhvm->Popf();
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native248_GET_HELP()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native249_SET_LEASH_WORKS()
 {
-	const auto creature = _lhvm->Pop().uintVal;
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto creature = _lhvm->Pop().uintVal;
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native250_LOAD_MY_CREATURE()
 {
-	const auto position = PopVec();
+	// const auto position = PopVec();
 	// TODO
 }
 
 void Game::Native251_OBJECT_RELATIVE_BELIEF()
 {
-	const auto belief = _lhvm->Popf();
-	const auto player = _lhvm->Popf();
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto belief = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
@@ -3480,21 +3480,21 @@ void Game::Native252_CREATE_WITH_ANGLE_AND_SCALE()
 
 void Game::Native253_SET_HELP_SYSTEM()
 {
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native254_SET_VIRTUAL_INFLUENCE()
 {
-	const auto player = _lhvm->Popf();
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto player = _lhvm->Popf();
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native255_SET_ACTIVE()
 {
-	const auto object = _lhvm->Pop().uintVal;
-	const auto active = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto object = _lhvm->Pop().uintVal;
+	// const auto active = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
@@ -3515,82 +3515,82 @@ void Game::Native256_THING_VALID()
 
 void Game::Native257_VORTEX_FADE_OUT()
 {
-	const auto vortex = _lhvm->Pop().uintVal;
+	// const auto vortex = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native258_REMOVE_REACTION_OF_TYPE()
 {
-	const auto reaction = _lhvm->Pop().intVal;
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto reaction = _lhvm->Pop().intVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native259_CREATURE_LEARN_EVERYTHING_EXCLUDING()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native260_PLAYED_PERCENTAGE()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native261_OBJECT_CAST_BY_OBJECT()
 {
-	const auto caster = _lhvm->Pop().uintVal;
-	const auto spellInstance = _lhvm->Pop().uintVal;
+	// const auto caster = _lhvm->Pop().uintVal;
+	// const auto spellInstance = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native262_IS_WIND_MAGIC_AT_POS()
 {
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native263_CREATE_MIST()
 {
-	const auto heightRatio = _lhvm->Popf();
-	const auto transparency = _lhvm->Popf();
-	const auto b = _lhvm->Popf();
-	const auto g = _lhvm->Popf();
-	const auto r = _lhvm->Popf();
-	const auto scale = _lhvm->Popf();
-	const auto pos = PopVec();
+	// const auto heightRatio = _lhvm->Popf();
+	// const auto transparency = _lhvm->Popf();
+	// const auto b = _lhvm->Popf();
+	// const auto g = _lhvm->Popf();
+	// const auto r = _lhvm->Popf();
+	// const auto scale = _lhvm->Popf();
+	// const auto pos = PopVec();
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native264_SET_MIST_FADE()
 {
-	const auto duration = _lhvm->Popf();
-	const auto endTransparency = _lhvm->Popf();
-	const auto startTransparency = _lhvm->Popf();
-	const auto endScale = _lhvm->Popf();
-	const auto startScale = _lhvm->Popf();
-	const auto mist = _lhvm->Pop().uintVal;
+	// const auto duration = _lhvm->Popf();
+	// const auto endTransparency = _lhvm->Popf();
+	// const auto startTransparency = _lhvm->Popf();
+	// const auto endScale = _lhvm->Popf();
+	// const auto startScale = _lhvm->Popf();
+	// const auto mist = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native265_GET_OBJECT_FADE()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native266_PLAY_HAND_DEMO()
 {
-	const auto withoutHandModify = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto withPause = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto string = PopString();
+	// const auto withoutHandModify = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto withPause = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto string = PopString();
 	// TODO
 }
 
@@ -3602,7 +3602,7 @@ void Game::Native267_IS_PLAYING_HAND_DEMO()
 
 void Game::Native268_GET_ARSE_POSITION()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushv(0.0f); // x
 	_lhvm->Pushv(0.0f); // y
@@ -3611,100 +3611,100 @@ void Game::Native268_GET_ARSE_POSITION()
 
 void Game::Native269_IS_LEASHED_TO_OBJECT()
 {
-	const auto target = _lhvm->Pop().uintVal;
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto target = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native270_GET_INTERACTION_MAGNITUDE()
 {
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native271_IS_CREATURE_AVAILABLE()
 {
-	const auto type = _lhvm->Pop().intVal;
+	// const auto type = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native272_CREATE_HIGHLIGHT()
 {
-	const auto challengeID = _lhvm->Pop().intVal;
-	const auto position = PopVec();
-	const auto type = _lhvm->Pop().intVal;
+	// const auto challengeID = _lhvm->Pop().intVal;
+	// const auto position = PopVec();
+	// const auto type = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native273_GET_OBJECT_HELD()
 {
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native274_GET_ACTION_COUNT()
 {
-	const auto creature = _lhvm->Pop().uintVal;
-	const auto action = _lhvm->Pop().intVal;
+	// const auto creature = _lhvm->Pop().uintVal;
+	// const auto action = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native275_GET_OBJECT_LEASH_TYPE()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushi(0);
 }
 
 void Game::Native276_SET_FOCUS_FOLLOW()
 {
-	const auto target = _lhvm->Pop().uintVal;
+	// const auto target = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native277_SET_POSITION_FOLLOW()
 {
-	const auto target = _lhvm->Pop().uintVal;
+	// const auto target = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native278_SET_FOCUS_AND_POSITION_FOLLOW()
 {
-	const auto distance = _lhvm->Popf();
-	const auto target = _lhvm->Pop().uintVal;
+	// const auto distance = _lhvm->Popf();
+	// const auto target = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native279_SET_CAMERA_LENS()
 {
-	const auto lens = _lhvm->Popf();
+	// const auto lens = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native280_MOVE_CAMERA_LENS()
 {
-	const auto time = _lhvm->Popf();
-	const auto lens = _lhvm->Popf();
+	// const auto time = _lhvm->Popf();
+	// const auto lens = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native281_CREATURE_REACTION()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native282_CREATURE_IN_DEV_SCRIPT()
 {
-	const auto creature = _lhvm->Pop().uintVal;
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto creature = _lhvm->Pop().uintVal;
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
@@ -3720,86 +3720,86 @@ void Game::Native284_RESTORE_CAMERA_DETAILS()
 
 void Game::Native285_START_ANGLE_SOUND()
 {
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native286_SET_CAMERA_POS_FOC_LENS()
 {
-	const auto unk6 = _lhvm->Pop().intVal;
-	const auto unk5 = _lhvm->Pop().intVal;
-	const auto unk4 = _lhvm->Pop().intVal;
-	const auto unk3 = _lhvm->Pop().intVal;
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk6 = _lhvm->Pop().intVal;
+	// const auto unk5 = _lhvm->Pop().intVal;
+	// const auto unk4 = _lhvm->Pop().intVal;
+	// const auto unk3 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native287_MOVE_CAMERA_POS_FOC_LENS()
 {
-	const auto unk7 = _lhvm->Pop().intVal;
-	const auto unk6 = _lhvm->Pop().intVal;
-	const auto unk5 = _lhvm->Pop().intVal;
-	const auto unk4 = _lhvm->Pop().intVal;
-	const auto unk3 = _lhvm->Pop().intVal;
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk7 = _lhvm->Pop().intVal;
+	// const auto unk6 = _lhvm->Pop().intVal;
+	// const auto unk5 = _lhvm->Pop().intVal;
+	// const auto unk4 = _lhvm->Pop().intVal;
+	// const auto unk3 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native288_GAME_TIME_ON_OFF()
 {
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native289_MOVE_GAME_TIME()
 {
-	const auto duration = _lhvm->Popf();
-	const auto hourOfTheDay = _lhvm->Popf();
+	// const auto duration = _lhvm->Popf();
+	// const auto hourOfTheDay = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native290_SET_HIGH_GRAPHICS_DETAIL()
 {
-	const auto object = _lhvm->Pop().uintVal;
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto object = _lhvm->Pop().uintVal;
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native291_SET_SKELETON()
 {
-	const auto object = _lhvm->Pop().uintVal;
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto object = _lhvm->Pop().uintVal;
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native292_IS_SKELETON()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native293_PLAYER_SPELL_CAST_TIME()
 {
-	const auto player = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native294_PLAYER_SPELL_LAST_CAST()
 {
-	const auto player = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
 	// TODO
 	_lhvm->Pushi(0);
 }
 
 void Game::Native295_GET_LAST_SPELL_CAST_POS()
 {
-	const auto player = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
 	// TODO
 	_lhvm->Pushv(0.0f); // x
 	_lhvm->Pushv(0.0f); // y
@@ -3808,54 +3808,54 @@ void Game::Native295_GET_LAST_SPELL_CAST_POS()
 
 void Game::Native296_ADD_SPOT_VISUAL_TARGET_POS()
 {
-	const auto position = PopVec();
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto position = PopVec();
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native297_ADD_SPOT_VISUAL_TARGET_OBJECT()
 {
-	const auto target = _lhvm->Pop().uintVal;
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto target = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native298_SET_INDESTRUCTABLE()
 {
-	const auto object = _lhvm->Pop().uintVal;
-	const auto indestructible = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto object = _lhvm->Pop().uintVal;
+	// const auto indestructible = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native299_SET_GRAPHICS_CLIPPING()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native300_SPIRIT_APPEAR()
 {
-	const auto spirit = _lhvm->Pop().intVal;
+	// const auto spirit = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native301_SPIRIT_DISAPPEAR()
 {
-	const auto spirit = _lhvm->Pop().intVal;
+	// const auto spirit = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native302_SET_FOCUS_ON_OBJECT()
 {
-	const auto target = _lhvm->Pop().uintVal;
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto target = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native303_RELEASE_OBJECT_FOCUS()
 {
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
@@ -3867,56 +3867,56 @@ void Game::Native304_IMMERSION_EXISTS()
 
 void Game::Native305_SET_DRAW_LEASH()
 {
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native306_SET_DRAW_HIGHLIGHT()
 {
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native307_SET_OPEN_CLOSE()
 {
-	const auto object = _lhvm->Pop().uintVal;
-	const auto open = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto object = _lhvm->Pop().uintVal;
+	// const auto open = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native308_SET_INTRO_BUILDING()
 {
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native309_CREATURE_FORCE_FRIENDS()
 {
-	const auto targetCreature = _lhvm->Pop().uintVal;
-	const auto creature = _lhvm->Pop().uintVal;
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto targetCreature = _lhvm->Pop().uintVal;
+	// const auto creature = _lhvm->Pop().uintVal;
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native310_MOVE_COMPUTER_PLAYER_POSITION()
 {
-	const auto withFixedHeight = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto speed = _lhvm->Popf();
-	const auto position = PopVec();
-	const auto player = _lhvm->Popf();
+	// const auto withFixedHeight = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto speed = _lhvm->Popf();
+	// const auto position = PopVec();
+	// const auto player = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native311_ENABLE_DISABLE_COMPUTER_PLAYER()
 {
-	const auto player = _lhvm->Popf();
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto player = _lhvm->Popf();
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native312_GET_COMPUTER_PLAYER_POSITION()
 {
-	const auto player = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
 	// TODO
 	_lhvm->Pushv(0.0f); // x
 	_lhvm->Pushv(0.0f); // y
@@ -3925,9 +3925,9 @@ void Game::Native312_GET_COMPUTER_PLAYER_POSITION()
 
 void Game::Native313_SET_COMPUTER_PLAYER_POSITION()
 {
-	const auto withFixedHeight = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto position = PopVec();
-	const auto player = _lhvm->Popf();
+	// const auto withFixedHeight = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto position = PopVec();
+	// const auto player = _lhvm->Popf();
 	// TODO
 }
 
@@ -3949,154 +3949,154 @@ void Game::Native315_GET_STORED_CAMERA_FOCUS()
 
 void Game::Native316_CALL_NEAR_IN_STATE()
 {
-	const auto excludingScripted = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto radius = _lhvm->Popf();
-	const auto position = PopVec();
-	const auto state = _lhvm->Pop().intVal;
-	const auto subtype = _lhvm->Pop().intVal;
-	const auto type = _lhvm->Pop().intVal;
+	// const auto excludingScripted = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto radius = _lhvm->Popf();
+	// const auto position = PopVec();
+	// const auto state = _lhvm->Pop().intVal;
+	// const auto subtype = _lhvm->Pop().intVal;
+	// const auto type = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native317_SET_CREATURE_SOUND()
 {
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native318_CREATURE_INTERACTING_WITH()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native319_SET_SUN_DRAW()
 {
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native320_OBJECT_INFO_BITS()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native321_SET_HURT_BY_FIRE()
 {
-	const auto object = _lhvm->Pop().uintVal;
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto object = _lhvm->Pop().uintVal;
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native322_CONFINED_OBJECT()
 {
-	const auto unk4 = _lhvm->Pop().intVal;
-	const auto unk3 = _lhvm->Pop().intVal;
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk4 = _lhvm->Pop().intVal;
+	// const auto unk3 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native323_CLEAR_CONFINED_OBJECT()
 {
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native324_GET_OBJECT_FLOCK()
 {
-	const auto member = _lhvm->Pop().uintVal;
+	// const auto member = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native325_SET_PLAYER_BELIEF()
 {
-	const auto belief = _lhvm->Popf();
-	const auto player = _lhvm->Popf();
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto belief = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native326_PLAY_JC_SPECIAL()
 {
-	const auto feature = _lhvm->Pop().intVal;
+	// const auto feature = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native327_IS_PLAYING_JC_SPECIAL()
 {
-	const auto feature = _lhvm->Pop().intVal;
+	// const auto feature = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native328_VORTEX_PARAMETERS()
 {
-	const auto flock = _lhvm->Pop().uintVal;
-	const auto radius = _lhvm->Popf();
-	const auto distance = _lhvm->Popf();
-	const auto position = PopVec();
-	const auto town = _lhvm->Pop().uintVal;
-	const auto vortex = _lhvm->Pop().uintVal;
+	// const auto flock = _lhvm->Pop().uintVal;
+	// const auto radius = _lhvm->Popf();
+	// const auto distance = _lhvm->Popf();
+	// const auto position = PopVec();
+	// const auto town = _lhvm->Pop().uintVal;
+	// const auto vortex = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native329_LOAD_CREATURE()
 {
-	const auto position = PopVec();
-	const auto player = _lhvm->Popf();
-	const auto mindFilename = PopString();
-	const auto type = _lhvm->Pop().intVal;
+	// const auto position = PopVec();
+	// const auto player = _lhvm->Popf();
+	// const auto mindFilename = PopString();
+	// const auto type = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native330_IS_SPELL_CHARGING()
 {
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native331_IS_THAT_SPELL_CHARGING()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native332_OPPOSING_CREATURE()
 {
-	const auto god = _lhvm->Pop().intVal;
+	// const auto god = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushi(0);
 }
 
 void Game::Native333_FLOCK_WITHIN_LIMITS()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native334_HIGHLIGHT_PROPERTIES()
 {
-	const auto category = _lhvm->Pop().intVal;
-	const auto text = _lhvm->Pop().intVal;
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto category = _lhvm->Pop().intVal;
+	// const auto text = _lhvm->Pop().intVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native335_LAST_MUSIC_LINE()
 {
-	const auto line = _lhvm->Popf();
+	// const auto line = _lhvm->Popf();
 	// TODO
 	_lhvm->Pushb(false);
 }
@@ -4109,7 +4109,7 @@ void Game::Native336_HAND_DEMO_TRIGGER()
 
 void Game::Native337_GET_BELLY_POSITION()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushv(0.0f); // x
 	_lhvm->Pushv(0.0f); // y
@@ -4118,109 +4118,109 @@ void Game::Native337_GET_BELLY_POSITION()
 
 void Game::Native338_SET_CREATURE_CREED_PROPERTIES()
 {
-	const auto time = _lhvm->Popf();
-	const auto power = _lhvm->Popf();
-	const auto scale = _lhvm->Popf();
-	const auto handGlow = _lhvm->Pop().intVal;
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto time = _lhvm->Popf();
+	// const auto power = _lhvm->Popf();
+	// const auto scale = _lhvm->Popf();
+	// const auto handGlow = _lhvm->Pop().intVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native339_GAME_THING_CAN_VIEW_CAMERA()
 {
-	const auto degrees = _lhvm->Popf();
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto degrees = _lhvm->Popf();
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native340_GAME_PLAY_SAY_SOUND_EFFECT()
 {
-	const auto withPosition = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto position = PopVec();
-	const auto sound = _lhvm->Pop().intVal;
-	const auto extra = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto withPosition = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto position = PopVec();
+	// const auto sound = _lhvm->Pop().intVal;
+	// const auto extra = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native341_SET_TOWN_DESIRE_BOOST()
 {
-	const auto boost = _lhvm->Popf();
-	const auto desire = _lhvm->Pop().intVal;
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto boost = _lhvm->Popf();
+	// const auto desire = _lhvm->Pop().intVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native342_IS_LOCKED_INTERACTION()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native343_SET_CREATURE_NAME()
 {
-	const auto textID = _lhvm->Pop().intVal;
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto textID = _lhvm->Pop().intVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native344_COMPUTER_PLAYER_READY()
 {
-	const auto player = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native345_ENABLE_DISABLE_COMPUTER_PLAYER()
 {
-	const auto player = _lhvm->Popf();
-	const auto pause = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto player = _lhvm->Popf();
+	// const auto pause = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native346_CLEAR_ACTOR_MIND()
 {
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native347_ENTER_EXIT_CITADEL()
 {
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native348_START_ANGLE_SOUND()
 {
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native349_THING_JC_SPECIAL()
 {
-	const auto target = _lhvm->Pop().uintVal;
-	const auto feature = _lhvm->Pop().intVal;
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto target = _lhvm->Pop().uintVal;
+	// const auto feature = _lhvm->Pop().intVal;
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native350_MUSIC_PLAYED()
 {
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushi(0);
 }
 
 void Game::Native351_UPDATE_SNAPSHOT_PICTURE()
 {
-	const auto challengeID = _lhvm->Pop().intVal;
-	const auto takingPicture = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto titleStrID = _lhvm->Pop().intVal;
-	const auto alignment = _lhvm->Popf();
-	const auto success = _lhvm->Popf();
-	const auto focus = PopVec();
-	const auto position = PopVec();
+	// const auto challengeID = _lhvm->Pop().intVal;
+	// const auto takingPicture = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto titleStrID = _lhvm->Pop().intVal;
+	// const auto alignment = _lhvm->Popf();
+	// const auto success = _lhvm->Popf();
+	// const auto focus = PopVec();
+	// const auto position = PopVec();
 	// TODO
 }
 
@@ -4238,186 +4238,186 @@ void Game::Native352_STOP_SCRIPTS_IN_FILES_EXCLUDING()
 
 void Game::Native353_CREATE_RANDOM_VILLAGER_OF_TRIBE()
 {
-	const auto position = PopVec();
-	const auto tribe = _lhvm->Pop().intVal;
+	// const auto position = PopVec();
+	// const auto tribe = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native354_TOGGLE_LEASH()
 {
-	const auto player = _lhvm->Pop().intVal;
+	// const auto player = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native355_GAME_SET_MANA()
 {
-	const auto mana = _lhvm->Popf();
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto mana = _lhvm->Popf();
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native356_SET_MAGIC_PROPERTIES()
 {
-	const auto duration = _lhvm->Popf();
-	const auto magicType = _lhvm->Pop().intVal;
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto duration = _lhvm->Popf();
+	// const auto magicType = _lhvm->Pop().intVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native357_SET_GAME_SOUND()
 {
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native358_SEX_IS_MALE()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native359_GET_FIRST_HELP()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native360_GET_LAST_HELP()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native361_IS_ACTIVE()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native362_SET_BOOKMARK_POSITION()
 {
-	const auto unk3 = _lhvm->Pop().intVal;
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk3 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native363_SET_SCAFFOLD_PROPERTIES()
 {
-	const auto destroy = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto size = _lhvm->Popf();
-	const auto type = _lhvm->Pop().intVal;
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto destroy = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto size = _lhvm->Popf();
+	// const auto type = _lhvm->Pop().intVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native364_SET_COMPUTER_PLAYER_PERSONALITY()
 {
-	const auto probability = _lhvm->Popf();
-	const auto aspect = PopString();
-	const auto player = _lhvm->Popf();
+	// const auto probability = _lhvm->Popf();
+	// const auto aspect = PopString();
+	// const auto player = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native365_SET_COMPUTER_PLAYER_SUPPRESSION()
 {
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native366_FORCE_COMPUTER_PLAYER_ACTION()
 {
-	const auto obj2 = _lhvm->Pop().uintVal;
-	const auto obj1 = _lhvm->Pop().uintVal;
-	const auto action = PopString();
-	const auto player = _lhvm->Popf();
+	// const auto obj2 = _lhvm->Pop().uintVal;
+	// const auto obj1 = _lhvm->Pop().uintVal;
+	// const auto action = PopString();
+	// const auto player = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native367_QUEUE_COMPUTER_PLAYER_ACTION()
 {
-	const auto obj2 = _lhvm->Pop().uintVal;
-	const auto obj1 = _lhvm->Pop().uintVal;
-	const auto action = PopString();
-	const auto player = _lhvm->Popf();
+	// const auto obj2 = _lhvm->Pop().uintVal;
+	// const auto obj1 = _lhvm->Pop().uintVal;
+	// const auto action = PopString();
+	// const auto player = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native368_GET_TOWN_WITH_ID()
 {
-	const auto id = _lhvm->Popf();
+	// const auto id = _lhvm->Popf();
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native369_SET_DISCIPLE()
 {
-	const auto withSound = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto discipleType = _lhvm->Pop().intVal;
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto withSound = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto discipleType = _lhvm->Pop().intVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native370_RELEASE_COMPUTER_PLAYER()
 {
-	const auto player = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native371_SET_COMPUTER_PLAYER_SPEED()
 {
-	const auto speed = _lhvm->Popf();
-	const auto player = _lhvm->Popf();
+	// const auto speed = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native372_SET_FOCUS_FOLLOW_COMPUTER_PLAYER()
 {
-	const auto player = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native373_SET_POSITION_FOLLOW_COMPUTER_PLAYER()
 {
-	const auto player = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native374_CALL_COMPUTER_PLAYER()
 {
-	const auto player = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native375_CALL_BUILDING_IN_TOWN()
 {
-	const auto unk3 = _lhvm->Pop().intVal;
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk3 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushi(0);
 }
 
 void Game::Native376_SET_CAN_BUILD_WORSHIPSITE()
 {
-	const auto object = _lhvm->Pop().uintVal;
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto object = _lhvm->Pop().uintVal;
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native377_GET_FACING_CAMERA_POSITION()
 {
-	const auto distance = _lhvm->Popf();
+	// const auto distance = _lhvm->Popf();
 	// TODO
 	_lhvm->Pushv(0.0f); // x
 	_lhvm->Pushv(0.0f); // y
@@ -4426,199 +4426,199 @@ void Game::Native377_GET_FACING_CAMERA_POSITION()
 
 void Game::Native378_SET_COMPUTER_PLAYER_ATTITUDE()
 {
-	const auto attitude = _lhvm->Popf();
-	const auto player2 = _lhvm->Popf();
-	const auto player1 = _lhvm->Popf();
+	// const auto attitude = _lhvm->Popf();
+	// const auto player2 = _lhvm->Popf();
+	// const auto player1 = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native379_GET_COMPUTER_PLAYER_ATTITUDE()
 {
-	const auto player2 = _lhvm->Popf();
-	const auto player1 = _lhvm->Popf();
+	// const auto player2 = _lhvm->Popf();
+	// const auto player1 = _lhvm->Popf();
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native380_LOAD_COMPUTER_PLAYER_PERSONALITY()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native381_SAVE_COMPUTER_PLAYER_PERSONALITY()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native382_SET_PLAYER_ALLY()
 {
-	const auto percentage = _lhvm->Popf();
-	const auto player2 = _lhvm->Popf();
-	const auto player1 = _lhvm->Popf();
+	// const auto percentage = _lhvm->Popf();
+	// const auto player2 = _lhvm->Popf();
+	// const auto player1 = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native383_CALL_FLYING()
 {
-	const auto excluding = static_cast<bool>(_lhvm->Pop().intVal);
-	const auto radius = _lhvm->Popf();
-	const auto position = PopVec();
-	const auto subtype = _lhvm->Pop().intVal;
-	const auto type = _lhvm->Pop().intVal;
+	// const auto excluding = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto radius = _lhvm->Popf();
+	// const auto position = PopVec();
+	// const auto subtype = _lhvm->Pop().intVal;
+	// const auto type = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native384_SET_OBJECT_FADE_IN()
 {
-	const auto time = _lhvm->Popf();
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto time = _lhvm->Popf();
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native385_IS_AFFECTED_BY_SPELL()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native386_SET_MAGIC_IN_OBJECT()
 {
-	const auto object = _lhvm->Pop().uintVal;
-	const auto MAGIC_TYPE = _lhvm->Pop().intVal;
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto object = _lhvm->Pop().uintVal;
+	// const auto MAGIC_TYPE = _lhvm->Pop().intVal;
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native387_ID_ADULT_SIZE()
 {
-	const auto container = _lhvm->Pop().uintVal;
+	// const auto container = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native388_OBJECT_CAPACITY()
 {
-	const auto container = _lhvm->Pop().uintVal;
+	// const auto container = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native389_OBJECT_ADULT_CAPACITY()
 {
-	const auto container = _lhvm->Pop().uintVal;
+	// const auto container = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native390_SET_CREATURE_AUTO_FIGHTING()
 {
-	const auto creature = _lhvm->Pop().uintVal;
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto creature = _lhvm->Pop().uintVal;
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native391_IS_AUTO_FIGHTING()
 {
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native392_SET_CREATURE_QUEUE_FIGHT_MOVE()
 {
-	const auto move = _lhvm->Pop().intVal;
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto move = _lhvm->Pop().intVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native393_SET_CREATURE_QUEUE_FIGHT_SPELL()
 {
-	const auto spell = _lhvm->Pop().intVal;
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto spell = _lhvm->Pop().intVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native394_SET_CREATURE_QUEUE_FIGHT_STEP()
 {
-	const auto step = _lhvm->Pop().intVal;
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto step = _lhvm->Pop().intVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native395_GET_CREATURE_FIGHT_ACTION()
 {
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushi(0);
 }
 
 void Game::Native396_CREATURE_FIGHT_QUEUE_HITS()
 {
-	const auto creature = _lhvm->Pop().uintVal;
+	// const auto creature = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native397_SQUARE_ROOT()
 {
-	const auto value = _lhvm->Popf();
+	// const auto value = _lhvm->Popf();
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native398_GET_PLAYER_ALLY()
 {
-	const auto player2 = _lhvm->Popf();
-	const auto player1 = _lhvm->Popf();
+	// const auto player2 = _lhvm->Popf();
+	// const auto player1 = _lhvm->Popf();
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native399_SET_PLAYER_WIND_RESISTANCE()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushi(0);
 }
 
 void Game::Native400_GET_PLAYER_WIND_RESISTANCE()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushi(0);
 }
 
 void Game::Native401_PAUSE_UNPAUSE_CLIMATE_SYSTEM()
 {
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native402_PAUSE_UNPAUSE_STORM_CREATION_IN_CLIMATE_SYSTEM()
 {
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native403_GET_MANA_FOR_SPELL()
 {
-	const auto spell = _lhvm->Pop().intVal;
+	// const auto spell = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native404_KILL_STORMS_IN_AREA()
 {
-	const auto radius = _lhvm->Popf();
-	const auto position = PopVec();
+	// const auto radius = _lhvm->Popf();
+	// const auto position = PopVec();
 	// TODO
 }
 
@@ -4630,15 +4630,15 @@ void Game::Native405_INSIDE_TEMPLE()
 
 void Game::Native406_RESTART_OBJECT()
 {
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native407_SET_GAME_TIME_PROPERTIES()
 {
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
@@ -4655,7 +4655,7 @@ void Game::Native409_SOUND_EXISTS()
 
 void Game::Native410_GET_TOWN_WORSHIP_DEATHS()
 {
-	const auto town = _lhvm->Pop().uintVal;
+	// const auto town = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
@@ -4678,13 +4678,13 @@ void Game::Native413_GET_HAND_STATE()
 
 void Game::Native414_SET_INTERFACE_CITADEL()
 {
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native415_MAP_SCRIPT_FUNCTION()
 {
-	const auto command = PopString();
+	// const auto command = PopString();
 	// TODO
 }
 
@@ -4696,16 +4696,16 @@ void Game::Native416_WITHIN_ROTATION()
 
 void Game::Native417_GET_PLAYER_TOWN_TOTAL()
 {
-	const auto player = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native418_SPIRIT_SCREEN_POINT()
 {
-	const auto unk2 = _lhvm->Pop().intVal;
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk2 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
@@ -4718,7 +4718,7 @@ void Game::Native419_KEY_DOWN()
 
 void Game::Native420_SET_FIGHT_EXIT()
 {
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
@@ -4730,62 +4730,62 @@ void Game::Native421_GET_OBJECT_CLICKED()
 
 void Game::Native422_GET_MANA()
 {
-	const auto worshipSite = _lhvm->Pop().uintVal;
+	// const auto worshipSite = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native423_CLEAR_PLAYER_SPELL_CHARGING()
 {
-	const auto player = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native424_STOP_SOUND_EFFECT()
 {
-	const auto soundbank = _lhvm->Pop().intVal;
-	const auto sound = _lhvm->Pop().intVal;
-	const auto alwaysFalse = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto soundbank = _lhvm->Pop().intVal;
+	// const auto sound = _lhvm->Pop().intVal;
+	// const auto alwaysFalse = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native425_GET_TOTEM_STATUE()
 {
-	const auto town = _lhvm->Pop().uintVal;
+	// const auto town = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native426_SET_SET_ON_FIRE()
 {
-	const auto object = _lhvm->Pop().uintVal;
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto object = _lhvm->Pop().uintVal;
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native427_SET_LAND_BALANCE()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native428_SET_OBJECT_BELIEF_SCALE()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native429_START_IMMERSION()
 {
-	const auto effect = _lhvm->Pop().intVal;
+	// const auto effect = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native430_STOP_IMMERSION()
 {
-	const auto effect = _lhvm->Pop().intVal;
+	// const auto effect = _lhvm->Pop().intVal;
 	// TODO
 }
 
@@ -4796,155 +4796,155 @@ void Game::Native431_STOP_ALL_IMMERSION()
 
 void Game::Native432_SET_CREATURE_IN_TEMPLE()
 {
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native433_GAME_DRAW_TEXT()
 {
-	const auto fade = _lhvm->Popf();
-	const auto size = _lhvm->Popf();
-	const auto height = _lhvm->Popf();
-	const auto width = _lhvm->Popf();
-	const auto down = _lhvm->Popf();
-	const auto across = _lhvm->Popf();
-	const auto textID = _lhvm->Pop().intVal;
+	// const auto fade = _lhvm->Popf();
+	// const auto size = _lhvm->Popf();
+	// const auto height = _lhvm->Popf();
+	// const auto width = _lhvm->Popf();
+	// const auto down = _lhvm->Popf();
+	// const auto across = _lhvm->Popf();
+	// const auto textID = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native434_GAME_DRAW_TEMP_TEXT()
 {
-	const auto fade = _lhvm->Popf();
-	const auto size = _lhvm->Popf();
-	const auto height = _lhvm->Popf();
-	const auto width = _lhvm->Popf();
-	const auto down = _lhvm->Popf();
-	const auto across = _lhvm->Popf();
-	const auto string = PopString();
+	// const auto fade = _lhvm->Popf();
+	// const auto size = _lhvm->Popf();
+	// const auto height = _lhvm->Popf();
+	// const auto width = _lhvm->Popf();
+	// const auto down = _lhvm->Popf();
+	// const auto across = _lhvm->Popf();
+	// const auto string = PopString();
 	// TODO
 }
 
 void Game::Native435_FADE_ALL_DRAW_TEXT()
 {
-	const auto time = _lhvm->Popf();
+	// const auto time = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native436_SET_DRAW_TEXT_COLOUR()
 {
-	const auto blue = _lhvm->Popf();
-	const auto green = _lhvm->Popf();
-	const auto red = _lhvm->Popf();
+	// const auto blue = _lhvm->Popf();
+	// const auto green = _lhvm->Popf();
+	// const auto red = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native437_SET_CLIPPING_WINDOW()
 {
-	const auto time = _lhvm->Popf();
-	const auto height = _lhvm->Popf();
-	const auto width = _lhvm->Popf();
-	const auto down = _lhvm->Popf();
-	const auto across = _lhvm->Popf();
+	// const auto time = _lhvm->Popf();
+	// const auto height = _lhvm->Popf();
+	// const auto width = _lhvm->Popf();
+	// const auto down = _lhvm->Popf();
+	// const auto across = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native438_CLEAR_CLIPPING_WINDOW()
 {
-	const auto time = _lhvm->Popf();
+	// const auto time = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native439_SAVE_GAME_IN_SLOT()
 {
-	const auto slot = _lhvm->Pop().intVal;
+	// const auto slot = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native440_SET_OBJECT_CARRYING()
 {
-	const auto carriedObj = _lhvm->Pop().intVal;
-	const auto object = _lhvm->Pop().uintVal;
+	// const auto carriedObj = _lhvm->Pop().intVal;
+	// const auto object = _lhvm->Pop().uintVal;
 	// TODO
 }
 
 void Game::Native441_POS_VALID_FOR_CREATURE()
 {
-	const auto position = PopVec();
+	// const auto position = PopVec();
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native442_GET_TIME_SINCE_OBJECT_ATTACKED()
 {
-	const auto town = _lhvm->Pop().uintVal;
-	const auto player = _lhvm->Popf();
+	// const auto town = _lhvm->Pop().uintVal;
+	// const auto player = _lhvm->Popf();
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native443_GET_TOWN_AND_VILLAGER_HEALTH_TOTAL()
 {
-	const auto town = _lhvm->Pop().uintVal;
+	// const auto town = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native444_GAME_ADD_FOR_BUILDING()
 {
-	const auto unk1 = _lhvm->Pop().intVal;
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk1 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native445_ENABLE_DISABLE_ALIGNMENT_MUSIC()
 {
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native446_GET_DEAD_LIVING()
 {
-	const auto radius = _lhvm->Popf();
-	const auto position = PopVec();
+	// const auto radius = _lhvm->Popf();
+	// const auto position = PopVec();
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native447_ATTACH_SOUND_TAG()
 {
-	const auto target = _lhvm->Pop().uintVal;
-	const auto soundbank = _lhvm->Pop().intVal;
-	const auto sound = _lhvm->Pop().intVal;
-	const auto threeD = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto target = _lhvm->Pop().uintVal;
+	// const auto soundbank = _lhvm->Pop().intVal;
+	// const auto sound = _lhvm->Pop().intVal;
+	// const auto threeD = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native448_DETACH_SOUND_TAG()
 {
-	const auto target = _lhvm->Pop().uintVal;
-	const auto soundbank = _lhvm->Pop().intVal;
-	const auto sound = _lhvm->Pop().intVal;
+	// const auto target = _lhvm->Pop().uintVal;
+	// const auto soundbank = _lhvm->Pop().intVal;
+	// const auto sound = _lhvm->Pop().intVal;
 	// TODO
 }
 
 void Game::Native449_GET_SACRIFICE_TOTAL()
 {
-	const auto worshipSite = _lhvm->Pop().uintVal;
+	// const auto worshipSite = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pushf(0.0f);
 }
 
 void Game::Native450_GAME_SOUND_PLAYING()
 {
-	const auto soundbank = _lhvm->Pop().intVal;
-	const auto sound = _lhvm->Pop().intVal;
+	// const auto soundbank = _lhvm->Pop().intVal;
+	// const auto sound = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native451_GET_TEMPLE_POSITION()
 {
-	const auto player = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
 	// TODO
 	_lhvm->Pushv(0.0f); // x
 	_lhvm->Pushv(0.0f); // y
@@ -4953,46 +4953,46 @@ void Game::Native451_GET_TEMPLE_POSITION()
 
 void Game::Native452_CREATURE_AUTOSCALE()
 {
-	const auto size = _lhvm->Popf();
-	const auto creature = _lhvm->Pop().uintVal;
-	const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto size = _lhvm->Popf();
+	// const auto creature = _lhvm->Pop().uintVal;
+	// const auto enable = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 }
 
 void Game::Native453_GET_SPELL_ICON_IN_TEMPLE()
 {
-	const auto temple = _lhvm->Pop().uintVal;
-	const auto spell = _lhvm->Pop().intVal;
+	// const auto temple = _lhvm->Pop().uintVal;
+	// const auto spell = _lhvm->Pop().intVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native454_GAME_CLEAR_COMPUTER_PLAYER_ACTIONS()
 {
-	const auto player = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
 	// TODO
 }
 
 void Game::Native455_GET_FIRST_IN_CONTAINER()
 {
-	const auto container = _lhvm->Pop().uintVal;
+	// const auto container = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native456_GET_NEXT_IN_CONTAINER()
 {
-	const auto after = _lhvm->Pop().uintVal;
-	const auto container = _lhvm->Pop().uintVal;
+	// const auto after = _lhvm->Pop().uintVal;
+	// const auto container = _lhvm->Pop().uintVal;
 	// TODO
 	_lhvm->Pusho(0);
 }
 
 void Game::Native457_GET_TEMPLE_ENTRANCE_POSITION()
 {
-	const auto height = _lhvm->Popf();
-	const auto radius = _lhvm->Popf();
-	const auto player = _lhvm->Popf();
+	// const auto height = _lhvm->Popf();
+	// const auto radius = _lhvm->Popf();
+	// const auto player = _lhvm->Popf();
 	// TODO
 	_lhvm->Pushv(0.0f); // x
 	_lhvm->Pushv(0.0f); // y
@@ -5001,15 +5001,15 @@ void Game::Native457_GET_TEMPLE_ENTRANCE_POSITION()
 
 void Game::Native458_SAY_SOUND_EFFECT_PLAYING()
 {
-	const auto sound = _lhvm->Pop().intVal;
-	const auto alwaysFalse = static_cast<bool>(_lhvm->Pop().intVal);
+	// const auto sound = _lhvm->Pop().intVal;
+	// const auto alwaysFalse = static_cast<bool>(_lhvm->Pop().intVal);
 	// TODO
 	_lhvm->Pushb(false);
 }
 
 void Game::Native459_SET_HAND_DEMO_KEYS()
 {
-	const auto unk0 = _lhvm->Pop().intVal;
+	// const auto unk0 = _lhvm->Pop().intVal;
 	// TODO
 }
 
@@ -5036,4 +5036,3 @@ void Game::Native463_CURRENT_PROFILE_HAS_CREATURE()
 	// TODO
 	_lhvm->Pushb(false);
 }
-#pragma warning(pop)
