@@ -220,7 +220,7 @@ jobs:
           name: openblack-test-data-${{ env.GITHUB_REF_NAME_DASHES }}
           path: cmake-build-presets/ninja-multi-vcpkg/test
       - name: Download Pre-patched and installed Game Data
-        uses: suisei-cn/actions-download-file@v1
+        uses: suisei-cn/actions-download-file@v1.6.0
         id: game-data
         with:
           url: ${{secrets.BW_DOWNLOAD_URL}}
@@ -290,7 +290,7 @@ jobs:
         run: chmod +x ${{steps.download-binary.outputs.download-path}}/*/*
         if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
       - name: Download Pre-patched and installed Game Data
-        uses: suisei-cn/actions-download-file@v1
+        uses: suisei-cn/actions-download-file@v1.6.0
         id: game-data
         with:
           url: ${{secrets.BW_DOWNLOAD_URL}}
