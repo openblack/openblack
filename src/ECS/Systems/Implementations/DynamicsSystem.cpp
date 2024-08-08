@@ -24,6 +24,7 @@
 
 #include "3D/LandBlock.h"
 #include "3D/LandIslandInterface.h"
+#include "3D/Ray.h"
 #include "ECS/Components/RigidBody.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
@@ -119,11 +120,10 @@ void DynamicsSystem::UpdatePhysicsTransforms()
 	});
 }
 
-std::optional<std::pair<Transform, RigidBodyDetails>>
-DynamicsSystem::RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float tMax) const
+std::optional<std::pair<Transform, RigidBodyDetails>> DynamicsSystem::RayCastClosestHit(const Ray& ray, float tMax) const
 {
-	auto from = btVector3(origin.x, origin.y, origin.z);
-	auto to = from + tMax * btVector3(direction.x, direction.y, direction.z);
+	auto from = btVector3(ray.origin.x, ray.origin.y, ray.origin.z);
+	auto to = from + tMax * btVector3(ray.direction.x, ray.direction.y, ray.direction.z);
 
 	btCollisionWorld::ClosestRayResultCallback callback(from, to);
 
