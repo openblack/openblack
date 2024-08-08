@@ -12,7 +12,6 @@
 #include "AudioManager.h"
 
 #include <fstream>
-#include <ranges>
 
 #include <PackFile.h>
 #include <glm/gtc/constants.hpp>
@@ -259,14 +258,7 @@ void AudioManager::PlayMusic(const std::string& packPath, PlayType type)
 		soundPack.Open(packPath);
 		const auto& audioHeaders = soundPack.GetAudioSampleHeaders();
 		const auto& audioData = soundPack.GetAudioSamplesData();
-		auto audioDataSpans = std::vector<std::span<const char>>();
-		audioDataSpans.reserve(audioData.size());
-		for (const auto& data : audioData)
-		{
-			audioDataSpans.emplace_back(reinterpret_cast<const char*>(data.data()), data.size());
-		}
-		Locator::resources::value().GetSounds().Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[0],
-		                                             audioDataSpans);
+		Locator::resources::value().GetSounds().Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[0], audioData);
 	}
 	auto sound = Locator::resources::value().GetSounds().Handle(id);
 	auto position = glm::one<glm::vec3>();
