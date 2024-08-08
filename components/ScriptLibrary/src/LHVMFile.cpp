@@ -227,11 +227,10 @@ void LHVMFile::Open(const std::filesystem::path& filepath)
 	ReadFile(stream);
 }
 
-void LHVMFile::Open(const std::vector<uint8_t>& buffer)
+void LHVMFile::Open(const std::span<const char>& span)
 {
 	assert(!_isLoaded);
 
-	auto span = std::span(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
 	auto stream = std::ispanstream(span);
 
 	ReadFile(stream);

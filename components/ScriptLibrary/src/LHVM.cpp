@@ -83,10 +83,10 @@ int LHVM::LoadBinary(const std::filesystem::path& filepath)
 	return LoadBinary(file);
 }
 
-int LHVM::LoadBinary(const std::vector<uint8_t>& buffer)
+int LHVM::LoadBinary(const std::span<const char>& span)
 {
 	LHVMFile file;
-	file.Open(buffer);
+	file.Open(span);
 	return LoadBinary(file);
 }
 

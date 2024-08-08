@@ -830,11 +830,10 @@ L3DResult L3DFile::Open(const std::filesystem::path& filepath) noexcept
 	return ReadFile(stream);
 }
 
-L3DResult L3DFile::Open(const std::vector<uint8_t>& buffer) noexcept
+L3DResult L3DFile::Open(const std::span<const char>& span) noexcept
 {
 	assert(!_isLoaded);
 
-	auto span = std::span(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
 	auto stream = std::ispanstream(span);
 
 	return ReadFile(stream);

@@ -14,6 +14,7 @@
 #include <array>
 #include <filesystem>
 #include <iosfwd>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -90,8 +91,8 @@ public:
 	/// Read glw file from the filesystem
 	GLWResult Open(const std::filesystem::path& filepath) noexcept;
 
-	/// Read glw file from a buffer
-	GLWResult Open(const std::vector<uint8_t>& buffer) noexcept;
+	/// Read glw file from a span
+	GLWResult Open(const std::span<char>& span) noexcept;
 
 	/// Read file from the input source
 	GLWResult ReadFile(std::istream& stream) noexcept;

@@ -49,7 +49,7 @@ struct BaseLoader
 
 struct L3DLoader final: BaseLoader<graphics::L3DMesh>
 {
-	[[nodiscard]] result_type operator()(FromBufferTag, const std::string& debugName, const std::vector<uint8_t>& data) const;
+	[[nodiscard]] result_type operator()(FromBufferTag, const std::string& debugName, const std::span<const char>& span) const;
 	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;
 };
 
@@ -65,7 +65,7 @@ struct Texture2DLoader final: BaseLoader<graphics::Texture2D>
 
 struct L3DAnimLoader final: BaseLoader<L3DAnim>
 {
-	[[nodiscard]] result_type operator()(FromBufferTag, const std::vector<uint8_t>& data) const;
+	[[nodiscard]] result_type operator()(FromBufferTag, const std::span<const char>& span) const;
 	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;
 };
 
@@ -82,7 +82,7 @@ struct CreatureMindLoader final: BaseLoader<creature::CreatureMind>
 struct SoundLoader final: BaseLoader<audio::Sound>
 {
 	[[nodiscard]] result_type operator()(FromBufferTag, const pack::AudioBankSampleHeader& header,
-	                                     const std::vector<std::vector<uint8_t>>& buffer) const;
+	                                     const std::vector<std::span<const char>>& spans) const;
 };
 
 struct LightLoader final: BaseLoader<Lights>

@@ -12,6 +12,7 @@
 #include <array>
 #include <filesystem>
 #include <iosfwd>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -82,8 +83,8 @@ public:
 	/// Read anm file from the filesystem
 	ANMResult Open(const std::filesystem::path& filepath) noexcept;
 
-	/// Read anm file from a buffer
-	ANMResult Open(const std::vector<uint8_t>& buffer) noexcept;
+	/// Read anm file from a span
+	ANMResult Open(const std::span<const char>& span) noexcept;
 
 	/// Write anm file to path on the filesystem
 	ANMResult Write(const std::filesystem::path& filepath) noexcept;

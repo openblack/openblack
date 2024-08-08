@@ -377,11 +377,10 @@ MorphResult MorphFile::Open(const std::filesystem::path& filepath, const std::fi
 	return ReadFile(stream, specsDirectory);
 }
 
-MorphResult MorphFile::Open(const std::vector<uint8_t>& buffer, const std::filesystem::path& specsDirectory) noexcept
+MorphResult MorphFile::Open(const std::span<const char>& span, const std::filesystem::path& specsDirectory) noexcept
 {
 	assert(!_isLoaded);
 
-	auto span = std::span(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
 	auto stream = std::ispanstream(span);
 
 	return ReadFile(stream, specsDirectory);
