@@ -869,6 +869,8 @@ entt::entity Game::CreateScriptObject(const script::ObjectType type, uint32_t su
 	case script::ObjectType::Rock: // TODO: add a Rock archetype
 		return MobileStaticArchetype::Create(position, static_cast<MobileStaticInfo>(subtype), altitude, xAngleRadians,
 		                                     yAngleRadians, zAngleRadians, scale);
+	default:
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "CreateScriptObject not implemented for type {}", static_cast<int>(type));
 	}
 	return static_cast<entt::entity>(0);
 }

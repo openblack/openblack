@@ -133,6 +133,10 @@ public:
 	/// Read CHL file from the filesystem
 	void LoadBinary(const std::filesystem::path& filepath);
 
+	void LoadBinary(const std::vector<uint8_t>& buffer);
+
+	void LoadBinary(const LHVMFile& file);
+
 	/// Read SAV file from the filesystem
 	void RestoreState(const std::filesystem::path& filepath);
 

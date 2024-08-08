@@ -126,6 +126,18 @@ void LHVM::LoadBinary(const std::filesystem::path& filepath)
 {
 	LHVMFile file;
 	file.Open(filepath);
+	LoadBinary(file);
+}
+
+void LHVM::LoadBinary(const std::vector<uint8_t>& buffer)
+{
+	LHVMFile file;
+	file.Open(buffer);
+	LoadBinary(file);
+}
+
+void LHVM::LoadBinary(const LHVMFile& file)
+{
 	if (file.HasStatus())
 	{
 		Fail("File contains status data");
