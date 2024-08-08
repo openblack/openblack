@@ -11,10 +11,9 @@
 
 #include <array>
 #include <filesystem>
-#include <istream>
 #include <map>
 #include <memory>
-#include <streambuf>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -170,13 +169,13 @@ protected:
 	/// Metadata and DDS formatted texture data
 	std::map<std::string, G3DTexture> _textures;
 	/// Bytes of l3d meshes
-	std::vector<std::vector<uint8_t>> _meshes;
-	/// Bytes of anm meshes
-	std::vector<std::vector<uint8_t>> _animations;
+	std::vector<std::span<const char>> _meshes;
+	/// Bytes of anm meshes (cannot be span because data is truncated in pack file vs anim files)
+	std::vector<std::vector<char>> _animations;
 	/// Headers of snd audio samples
 	std::vector<AudioBankSampleHeader> _audioSampleHeaders;
 	/// Bytes of snd audio samples
-	std::vector<std::vector<uint8_t>> _audioSampleData;
+	std::vector<std::span<const char>> _audioSampleData;
 
 	/// Error handling
 	void Fail(const std::string& msg);
@@ -234,7 +233,7 @@ public:
 	void CreateMeshBlock();
 
 	/// Insert Mesh Data for the Mesh Block
-	void InsertMesh(std::vector<uint8_t> data);
+	void InsertMesh(std::span<const char> span);
 
 	/// Create Info block from look-up table
 	void CreateInfoBlock();
@@ -246,19 +245,18 @@ public:
 	[[nodiscard]] const std::map<std::string, std::vector<uint8_t>>& GetBlocks() const { return _blocks; }
 	[[nodiscard]] bool HasBlock(const std::string& name) const { return _blocks.contains(name); }
 	[[nodiscard]] const std::vector<uint8_t>& GetBlock(const std::string& name) const { return _blocks.at(name); }
-	[[nodiscard]] std::unique_ptr<std::istream> GetBlockAsStream(const std::string& name) const;
 	[[nodiscard]] const std::vector<InfoBlockLookup>& GetInfoBlockLookup() const { return _infoBlockLookup; }
 	[[nodiscard]] const std::vector<BodyBlockLookup>& GetBodyBlockLookup() const { return _bodyBlockLookup; }
 	[[nodiscard]] const std::map<std::string, G3DTexture>& GetTextures() const { return _textures; }
 	[[nodiscard]] const G3DTexture& GetTexture(const std::string& name) const { return _textures.at(name); }
-	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetMeshes() const { return _meshes; }
-	[[nodiscard]] const std::vector<uint8_t>& GetMesh(uint32_t index) const { return _meshes[index]; }
-	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetAnimations() const { return _animations; }
-	[[nodiscard]] const std::vector<uint8_t>& GetAnimation(uint32_t index) const { return _animations[index]; }
+	[[nodiscard]] const std::vector<std::span<const char>>& GetMeshes() const { return _meshes; }
+	[[nodiscard]] const std::span<const char>& GetMesh(uint32_t index) const { return _meshes[index]; }
+	[[nodiscard]] const std::vector<std::vector<char>>& GetAnimations() const { return _animations; }
+	[[nodiscard]] const std::vector<char>& GetAnimation(uint32_t index) const { return _animations[index]; }
 	[[nodiscard]] const std::vector<AudioBankSampleHeader>& GetAudioSampleHeaders() const { return _audioSampleHeaders; }
 	[[nodiscard]] const AudioBankSampleHeader& GetAudioSampleHeader(uint32_t index) const { return _audioSampleHeaders[index]; }
-	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetAudioSamplesData() const { return _audioSampleData; }
-	[[nodiscard]] const std::vector<uint8_t>& GetAudioSampleData(uint32_t index) const { return _audioSampleData[index]; }
+	[[nodiscard]] const std::vector<std::span<const char>>& GetAudioSamplesData() const { return _audioSampleData; }
+	[[nodiscard]] const std::span<const char>& GetAudioSampleData(uint32_t index) const { return _audioSampleData[index]; }
 };
 
 } // namespace openblack::pack

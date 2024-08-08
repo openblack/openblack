@@ -588,8 +588,7 @@ bool Game::Initialize()
 	for (const auto&& [i, mesh] : std::views::enumerate(meshes))
 	{
 		const auto meshId = static_cast<MeshId>(i);
-		auto meshSpan = std::span<const char>(reinterpret_cast<const char*>(mesh.data()), mesh.size());
-		meshManager.Load(meshId, resources::L3DLoader::FromBufferTag {}, k_MeshNames.at(i), meshSpan);
+		meshManager.Load(meshId, resources::L3DLoader::FromBufferTag {}, k_MeshNames.at(i), mesh);
 	}
 
 	const auto& textures = pack.GetTextures();
@@ -603,8 +602,7 @@ bool Game::Initialize()
 
 	for (const auto&& [i, animation] : std::views::enumerate(animationPack.GetAnimations()))
 	{
-		auto animationSpan = std::span<const char>(reinterpret_cast<const char*>(animation.data()), animation.size());
-		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animationSpan);
+		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animation);
 	}
 
 	fileSystem.Iterate(fileSystem.GetPath<Path::CreatureMesh>(), false, [&meshManager](const std::filesystem::path& f) {
@@ -742,8 +740,7 @@ bool Game::Initialize()
 
 				    const auto stringId = fmt::format("{}/{}", groupName, audioHeaders[i].id);
 				    const entt::id_type id = entt::hashed_string(stringId.c_str());
-				    const std::vector<std::span<const char>> spans = {
-				        {reinterpret_cast<const char*>(audioData[i].data()), audioData[i].size()}};
+				    const std::vector<std::span<const char>> spans = {audioData[i]};
 				    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Loading sound {}: {}", stringId, audioHeaders[i].name.data());
 				    soundManager.Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[i], spans);
 				    audioManager.AddToSoundGroup(groupName, id);
