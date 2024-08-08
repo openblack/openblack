@@ -4,6 +4,7 @@ Checks: >-
   clang-analyzer-*,
   modernize-*,
   -modernize-use-trailing-return-type,
+  -modernize-use-std-print,
   cppcoreguidelines-pro-bounds-constant-array-index,
   cppcoreguidelines-avoid-non-const-global-variables,
   performance-*,
