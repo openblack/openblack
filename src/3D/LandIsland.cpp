@@ -48,12 +48,7 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 
 	try
 	{
-#if __ANDROID__
-		//  Android has a complicated permissions API, must call java code to read contents.
-		lnd.Open(Locator::filesystem::value().ReadAll(path));
-#else
-		lnd.Open(path);
-#endif
+		lnd.ReadFile(*Locator::filesystem::value().GetData(path));
 	}
 	catch (std::runtime_error& err)
 	{

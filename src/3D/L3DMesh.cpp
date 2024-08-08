@@ -9,6 +9,7 @@
 
 #include "L3DMesh.h"
 
+#include <filesystem>
 #include <stdexcept>
 
 #include <BulletCollision/CollisionShapes/btConvexHullShape.h>
@@ -163,6 +164,26 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 
 	// TODO(bwrsandman): store vertex and index buffers at mesh level
 	bgfx::frame();
+}
+
+bool L3DMesh::LoadFromFilesystem(const std::filesystem::path& path)
+{
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading L3DMesh from file: {}", path.generic_string());
+	l3d::L3DFile l3d;
+
+	try
+	{
+		l3d.ReadFile(*Locator::filesystem::value().GetData(path));
+	}
+	catch (std::runtime_error& err)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open l3d mesh from filesystem {}: {}", path.generic_string(),
+		                    err.what());
+		return false;
+	}
+
+	Load(l3d);
+	return true;
 }
 
 bool L3DMesh::LoadFromFile(const std::filesystem::path& path)

@@ -11,6 +11,7 @@
 
 #include <array>
 #include <filesystem>
+#include <iosfwd>
 #include <string>
 #include <vector>
 
@@ -64,15 +65,15 @@ protected:
 	/// Error handling
 	void Fail(const std::string& msg);
 
-	/// Read file from the input source
-	virtual void ReadFile(std::istream& stream);
-
 	/// Write file to the input source
 	virtual void WriteFile(std::ostream& stream) const;
 
 public:
 	ANMFile();
 	virtual ~ANMFile();
+
+	/// Read file from the input source
+	virtual void ReadFile(std::istream& stream);
 
 	/// Read anm file from the filesystem
 	void Open(const std::filesystem::path& filepath);

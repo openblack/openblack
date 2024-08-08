@@ -587,12 +587,9 @@ bool Game::Initialize()
 	    });
 
 	pack::PackFile pack;
-#if __ANDROID__
-	//  Android has a complicated permissions API, must call java code to read contents.
-	pack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>() / "AllMeshes.g3d"));
-#else
-	pack.Open(fileSystem.GetPath<Path::Data>(true) / "AllMeshes.g3d");
-#endif
+
+	pack.ReadFile(*fileSystem.GetData(fileSystem.GetPath<Path::Data>() / "AllMeshes.g3d"));
+
 	const auto& meshes = pack.GetMeshes();
 	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; const auto& mesh : meshes)
@@ -609,12 +606,8 @@ bool Game::Initialize()
 	}
 
 	pack::PackFile animationPack;
-#if __ANDROID__
-	//  Android has a complicated permissions API, must call java code to read contents.
-	animationPack.Open(fileSystem.ReadAll(fileSystem.GetPath<Path::Data>() / "AllAnims.anm"));
-#else
-	animationPack.Open(fileSystem.GetPath<Path::Data>(true) / "AllAnims.anm");
-#endif
+	animationPack.ReadFile(*fileSystem.GetData(fileSystem.GetPath<Path::Data>() / "AllAnims.anm"));
+
 	const auto& animations = animationPack.GetAnimations();
 	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; i < animations.size(); i++)
@@ -722,7 +715,7 @@ bool Game::Initialize()
 
 		    pack::PackFile soundPack;
 		    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Opening sound pack {}", f.filename().string());
-		    soundPack.Open(fileSystem.ReadAll(f));
+		    soundPack.ReadFile(*fileSystem.GetData(f));
 		    const auto& audioHeaders = soundPack.GetAudioSampleHeaders();
 		    const auto& audioData = soundPack.GetAudioSamplesData();
 		    auto soundName = std::filesystem::path(audioHeaders[0].name.data());
