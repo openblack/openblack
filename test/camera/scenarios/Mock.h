@@ -20,13 +20,14 @@
 #include <Windowing/WindowingInterface.h>
 #include <glm/gtx/vec_swizzle.hpp>
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4716)
+#else
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreturn-type"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wreturn-type"
-#if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4716)
 #endif
 
 namespace openblack
@@ -156,6 +157,7 @@ public:
 
 #if defined(_MSC_VER)
 #pragma warning(pop)
-#endif
+#else
 #pragma GCC diagnostic pop
 #pragma clang diagnostic pop
+#endif
