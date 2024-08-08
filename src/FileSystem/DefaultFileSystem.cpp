@@ -33,13 +33,12 @@
 
 using namespace openblack::filesystem;
 
-// todo: exceptions need to be replaced with real exceptions
-
-std::filesystem::path DefaultFileSystem::FindPath(const std::filesystem::path& path) const
+auto DefaultFileSystem::FindPath(const std::filesystem::path& path) const
+    -> std::expected<std::filesystem::path, std::invalid_argument>
 {
 	if (path.empty())
 	{
-		throw std::invalid_argument("empty path");
+		return std::unexpected<std::invalid_argument>("empty_path");
 	}
 
 	// try absolute first
@@ -74,7 +73,7 @@ std::filesystem::path DefaultFileSystem::FindPath(const std::filesystem::path& p
 		}
 	}
 
-	throw std::runtime_error("File " + path.string() + " not found");
+	return std::unexpected<std::invalid_argument>("File " + path.string() + " not found");
 }
 
 bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
@@ -92,27 +91,26 @@ bool DefaultFileSystem::IsPathValid(const std::filesystem::path& path)
 	return true;
 }
 
-std::unique_ptr<Stream> DefaultFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
+auto DefaultFileSystem::Open(const std::filesystem::path& path, Stream::Mode mode)
+    -> std::expected<std::unique_ptr<Stream>, std::invalid_argument>
 {
-	return std::unique_ptr<Stream>(new FileStream(FindPath(path), mode));
+	auto result = FindPath(path);
+	if (result.has_value())
+	{
+		return std::unique_ptr<Stream>(new FileStream(result.value(), mode));
+	}
+
+	return std::unexpected<std::invalid_argument>("File " + path.string() + " not found");
 }
 
 bool DefaultFileSystem::Exists(const std::filesystem::path& path) const
 {
-	try
-	{
-		[[maybe_unused]] auto realPath = FindPath(path);
-		return true;
-	}
-	catch (std::exception&)
-	{
-		return false;
-	}
+	return FindPath(path).has_value();
 }
 
 std::vector<uint8_t> DefaultFileSystem::ReadAll(const std::filesystem::path& path)
 {
-	auto file = Open(path, Stream::Mode::Read);
+	auto file = Open(path, Stream::Mode::Read).value();
 	const std::size_t size = file->Size();
 
 	std::vector<uint8_t> data(size);
@@ -127,14 +125,16 @@ void DefaultFileSystem::Iterate(const std::filesystem::path& path, bool recursiv
 	const auto fixedPath = FindPath(path);
 	if (recursive)
 	{
-		for (const auto& f : std::filesystem::recursive_directory_iterator {fixedPath})
+		// Let's assume that value() is always valid for now, as that was what was here initially...
+		for (const auto& f : std::filesystem::recursive_directory_iterator {fixedPath.value()})
 		{
 			function(f);
 		}
 	}
 	else
 	{
-		for (const auto& f : std::filesystem::directory_iterator {fixedPath})
+		// Let's assume that value() is always valid for now, as that was what was here initially...
+		for (const auto& f : std::filesystem::directory_iterator {fixedPath.value()})
 		{
 			function(f);
 		}
