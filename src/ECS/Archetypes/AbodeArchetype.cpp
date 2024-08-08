@@ -12,11 +12,11 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <spdlog/spdlog.h>
 
-#include "3D/L3DMesh.h"
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Fixed.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/MorphWithTerrain.h"
+#include "ECS/Components/RigidBody.h"
 #include "ECS/Components/StoragePit.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
@@ -124,6 +124,27 @@ entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, 
 		break;
 	default:
 		break;
+	}
+
+	auto l3dMesh = Locator::resources::value().GetMeshes().Handle(resourceId);
+	if (l3dMesh->HasPhysicsMesh())
+	{
+		const auto& templateShape = l3dMesh->GetPhysicsMesh();
+		auto shape = std::make_unique<btConvexHullShape>(reinterpret_cast<const btScalar*>(templateShape.getUnscaledPoints()),
+		                                                 templateShape.getNumVertices());
+		btVector3 bodyInertia(0, 0, 0);
+		shape->calculateLocalInertia(l3dMesh->GetMass(), bodyInertia);
+		shape->setLocalScaling(btVector3(scale, scale, scale));
+
+		btTransform startTransform;
+		startTransform.setIdentity();
+		startTransform.setOrigin(btVector3(position.x, position.y, position.z));
+		auto quaternion = btQuaternion(btVector3(0.0f, 1.0f, 0.0f), -yAngleRadians);
+		startTransform.setRotation(quaternion);
+
+		btRigidBody::btRigidBodyConstructionInfo rbInfo(l3dMesh->GetMass(), nullptr, shape.get(), bodyInertia);
+
+		registry.Assign<RigidBody>(entity, rbInfo, startTransform, std::move(shape));
 	}
 
 	return entity;

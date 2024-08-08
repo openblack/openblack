@@ -21,7 +21,7 @@
 #include "Graphics/Texture2D.h"
 #include "L3DSubMesh.h"
 
-class btConvexShape;
+class btConvexHullShape;
 
 namespace openblack
 {
@@ -99,8 +99,7 @@ public:
 	[[nodiscard]] const std::optional<glm::vec3>& GetDoorPos() const { return _doorPos; }
 	[[nodiscard]] const std::vector<glm::mat4>& GetExtraMetrics() const { return _extraMetrics; }
 	[[nodiscard]] bool HasPhysicsMesh() const { return _physicsMesh != nullptr; }
-	[[nodiscard]] btConvexShape& GetPhysicsMesh() { return *_physicsMesh; }
-	[[nodiscard]] const btConvexShape& GetPhysicsMesh() const { return *_physicsMesh; }
+	[[nodiscard]] const btConvexHullShape& GetPhysicsMesh() const { return *_physicsMesh; }
 	[[nodiscard]] float GetMass() const { return _physicsMass; }
 	[[nodiscard]] AxisAlignedBoundingBox GetBoundingBox() const { return _boundingBox; }
 
@@ -116,7 +115,7 @@ private:
 	std::optional<glm::vec3> _doorPos;
 	std::vector<glm::mat4> _extraMetrics;
 	/// Bounding box if no physics mesh was found
-	std::unique_ptr<btConvexShape> _physicsMesh;
+	std::unique_ptr<btConvexHullShape> _physicsMesh;
 	float _physicsMass {1.0f}; // TODO(bwrsandman): Find somewhere in file a value
 	AxisAlignedBoundingBox _boundingBox {
 	    {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()},
