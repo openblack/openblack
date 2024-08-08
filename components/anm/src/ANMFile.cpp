@@ -49,55 +49,12 @@
 #include "ANMFile.h"
 
 #include <cassert>
-#include <cstring>
 
 #include <fstream>
+#include <spanstream>
 #include <utility>
 
 using namespace openblack::anm;
-
-namespace
-{
-// Adapted from https://stackoverflow.com/a/13059195/10604387
-//          and https://stackoverflow.com/a/46069245/10604387
-struct membuf: std::streambuf
-{
-	membuf(char const* base, size_t size)
-	{
-		char* p(const_cast<char*>(base));
-		this->setg(p, p, p + size);
-	}
-	std::streampos seekoff(off_type off, std::ios_base::seekdir way, [[maybe_unused]] std::ios_base::openmode which) override
-	{
-		if (way == std::ios_base::cur)
-		{
-			gbump(static_cast<int>(off));
-		}
-		else if (way == std::ios_base::end)
-		{
-			setg(eback(), egptr() + off, egptr());
-		}
-		else if (way == std::ios_base::beg)
-		{
-			setg(eback(), eback() + off, egptr());
-		}
-		return gptr() - eback();
-	}
-
-	std::streampos seekpos([[maybe_unused]] pos_type pos, [[maybe_unused]] std::ios_base::openmode which) override
-	{
-		return seekoff(pos - static_cast<off_type>(0), std::ios_base::beg, which);
-	}
-};
-struct imemstream: virtual membuf, std::istream
-{
-	imemstream(char const* base, size_t size)
-	    : membuf(base, size)
-	    , std::istream(dynamic_cast<std::streambuf*>(this))
-	{
-	}
-};
-} // namespace
 
 std::string_view openblack::anm::ResultToStr(ANMResult result)
 {
@@ -196,7 +153,8 @@ ANMResult ANMFile::Open(const std::vector<uint8_t>& buffer) noexcept
 {
 	assert(!_isLoaded);
 
-	imemstream stream(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
+	auto span = std::span(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
+	auto stream = std::ispanstream(span);
 
 	return ReadFile(stream);
 }
