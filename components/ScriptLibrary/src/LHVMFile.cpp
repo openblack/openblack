@@ -488,7 +488,7 @@ bool LHVMFile::LoadStack(std::istream& stream, VMStack& stack)
 		}
 	}
 
-	stack = VMStack(count, values, types, pushCount, popCount);
+	stack = VMStack {.count = count, .values = values, .types = types, .pushCount = pushCount, .popCount = popCount};
 
 	return true;
 }
@@ -559,10 +559,10 @@ const VMTask LHVMFile::LoadTask(std::istream& stream)
 	uint32_t ticks;
 	uint32_t scriptId;
 	ScriptType type;
-	uint8_t inExceptionHandler;
-	uint8_t stop;
-	uint8_t yield;
-	uint8_t sleeping;
+	bool inExceptionHandler;
+	bool stop;
+	bool yield;
+	bool sleeping;
 	VMStack stack;
 	uint32_t exceptStructCount;
 	std::vector<uint32_t> exceptStructIps;
@@ -648,7 +648,7 @@ const VMTask LHVMFile::LoadTask(std::istream& stream)
 	{
 		Fail("Error reading except struct");
 	}
-	VMExceptStruct exceptStruct(0, exceptStructIps);
+	VMExceptStruct exceptStruct {.instructionAddress = 0, .exceptionHandlerIps = exceptStructIps};
 
 	if (scriptId < 1 || scriptId >= _scripts.size())
 	{
@@ -656,9 +656,24 @@ const VMTask LHVMFile::LoadTask(std::istream& stream)
 	}
 	auto& script = _scripts[scriptId - 1];
 
-	return VMTask(localVars, scriptId, taskNumber, instructionAddress, prevInstructionAddress, waitingTask, varOffset, stack,
-	              currentExceptionHandlerIndex, exceptStruct, ticks, inExceptionHandler, stop, yield, sleeping,
-	              script.GetName(), script.GetFileName(), type);
+	return VMTask {.localVars = localVars,
+	               .scriptId = scriptId,
+	               .id = taskNumber,
+	               .instructionAddress = instructionAddress,
+	               .prevInstructionAddress = prevInstructionAddress,
+	               .waitingTaskId = waitingTask,
+	               .variablesOffset = varOffset,
+	               .stack = stack,
+	               .currentExceptionHandlerIndex = currentExceptionHandlerIndex,
+	               .exceptStruct = exceptStruct,
+	               .ticks = ticks,
+	               .inExceptionHandler = inExceptionHandler,
+	               .stop = stop,
+	               .yield = yield,
+	               .sleeping = sleeping,
+	               .name = script.GetName(),
+	               .filename = script.GetFileName(),
+	               .type = type};
 }
 
 void LHVMFile::LoadRuntimeInfo(std::istream& stream)

@@ -463,10 +463,24 @@ uint32_t LHVM::StartScript(const VMScript& script)
 		taskVariables.push_back(VMVar {.type = DataType::FLOAT, .floatVal = 0.0f, .name = scriptVariables.at(i)});
 	}
 
-	const auto& task =
-	    VMTask(taskVariables, script.GetScriptID(), taskNumber, script.GetInstructionAddress(), 0, 0,
-	           script.GetVariablesOffset(), stack, 0, VMExceptStruct {.instructionAddress = script.GetInstructionAddress()}, 1,
-	           0, 0, 0, 0, script.GetName(), script.GetFileName(), script.GetType());
+	const auto& task = VMTask {.localVars = taskVariables,
+	                           .scriptId = script.GetScriptID(),
+	                           .id = taskNumber,
+	                           .instructionAddress = script.GetInstructionAddress(),
+	                           .prevInstructionAddress = 0,
+	                           .waitingTaskId = 0,
+	                           .variablesOffset = script.GetVariablesOffset(),
+	                           .stack = stack,
+	                           .currentExceptionHandlerIndex = 0,
+	                           .exceptStruct = VMExceptStruct {.instructionAddress = script.GetInstructionAddress()},
+	                           .ticks = 1,
+	                           .inExceptionHandler = false,
+	                           .stop = false,
+	                           .yield = false,
+	                           .sleeping = false,
+	                           .name = script.GetName(),
+	                           .filename = script.GetFileName(),
+	                           .type = script.GetType()};
 
 	_tasks.emplace(taskNumber, task);
 
