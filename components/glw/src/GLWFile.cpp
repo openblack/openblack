@@ -94,12 +94,11 @@ GLWResult GLWFile::Open(const std::filesystem::path& filepath) noexcept
 	return ReadFile(stream);
 }
 
-GLWResult GLWFile::Open(const std::vector<uint8_t>& buffer) noexcept
+GLWResult GLWFile::Open(const std::span<char>& span) noexcept
 {
 	assert(!_isLoaded);
 
-	auto span = std::span(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
-	auto stream = std::ispanstream(span);
+	auto stream = std::spanstream(span);
 
 	return ReadFile(stream);
 }
