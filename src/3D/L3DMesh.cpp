@@ -206,13 +206,13 @@ bool L3DMesh::LoadFromFile(const std::filesystem::path& path)
 	return true;
 }
 
-bool L3DMesh::LoadFromBuffer(const std::vector<uint8_t>& data)
+bool L3DMesh::LoadFromBuffer(const std::span<const char>& span)
 {
 	l3d::L3DFile l3d;
 
 	try
 	{
-		l3d.Open(data);
+		l3d.Open(span);
 	}
 	catch (std::runtime_error& err)
 	{

@@ -257,11 +257,10 @@ void LNDFile::Open(const std::filesystem::path& filepath)
 	ReadFile(stream);
 }
 
-void LNDFile::Open(const std::vector<uint8_t>& buffer)
+void LNDFile::Open(const std::span<const char>& span)
 {
 	assert(!_isLoaded);
 
-	auto span = std::span(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
 	auto stream = std::ispanstream(span);
 
 	_filename = std::filesystem::path("buffer");

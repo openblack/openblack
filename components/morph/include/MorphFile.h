@@ -11,6 +11,7 @@
 
 #include <array>
 #include <filesystem>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -185,8 +186,8 @@ public:
 	/// Read morph file from the filesystem
 	void Open(const std::filesystem::path& filepath, const std::filesystem::path& specsDirectory);
 
-	/// Read morph file from a buffer
-	void Open(const std::vector<uint8_t>& buffer, const std::filesystem::path& specsDirectory);
+	/// Read morph file from a span
+	void Open(const std::span<const char>& span, const std::filesystem::path& specsDirectory);
 
 	[[nodiscard]] std::string GetFilename() const { return _filename.string(); }
 	[[nodiscard]] const MorphHeader& GetHeader() const { return _header; }
