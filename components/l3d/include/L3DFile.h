@@ -11,7 +11,7 @@
 
 #include <array>
 #include <filesystem>
-#include <istream>
+#include <iosfwd>
 #include <optional>
 #include <span>
 #include <string>

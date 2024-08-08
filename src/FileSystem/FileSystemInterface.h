@@ -14,7 +14,7 @@
 
 #include <filesystem>
 #include <functional>
-#include <istream>
+#include <iosfwd>
 #include <memory>
 #include <vector>
 
