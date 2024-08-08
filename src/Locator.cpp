@@ -23,6 +23,7 @@
 #include "ECS/MapProduction.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
+#include "ECS/Systems/Implementations/CameraPathSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
 #include "ECS/Systems/Implementations/PathfindingSystem.h"
@@ -47,6 +48,7 @@ using openblack::UnloadedIsland;
 using openblack::ecs::MapProduction;
 using openblack::ecs::Registry;
 using openblack::ecs::systems::CameraBookmarkSystem;
+using openblack::ecs::systems::CameraPathSystem;
 using openblack::ecs::systems::DynamicsSystem;
 using openblack::ecs::systems::LivingActionSystem;
 using openblack::ecs::systems::PathfindingSystem;
@@ -101,4 +103,5 @@ void openblack::InitializeLevel(const std::filesystem::path& path)
 	Locator::pathfindingSystem::emplace<PathfindingSystem>();
 	Locator::cameraBookmarkSystem::emplace<CameraBookmarkSystem>();
 	Locator::terrainSystem::emplace<LandIsland>(path);
+	Locator::cameraPathSystem::emplace<CameraPathSystem>();
 }

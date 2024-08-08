@@ -22,6 +22,8 @@ set(RIVER2_MESH_OUTPUT ${DATA_BINARY_DIR}/river2.l3d)
 set(RIVER2_INPUT ${DATA_BINARY_DIR}/river2.gltf)
 set(SPHERE_MESH_OUTPUT ${DATA_BINARY_DIR}/metre_sphere.l3d)
 set(SPHERE_INPUT ${DATA_BINARY_DIR}/metre_sphere.gltf)
+set(CAM_CAM_OUTPUT ${DATA_BINARY_DIR}/cam.cam)
+set(FLYING_CAM_OUTPUT ${DATA_BINARY_DIR}/flying.cam)
 
 set(TEXTURES_BINARY_DIR ${DATA_BINARY_DIR}/Textures)
 list(APPEND RAW_TEXTURES_0x10000_ARRAY ${TEXTURES_BINARY_DIR}/misc0a.raw)
@@ -34,7 +36,7 @@ string(REPLACE ";" "," RAW_TEXTURES_0x30000 "${RAW_TEXTURES_0x30000_ARRAY}")
 set(CITADEL_BINARY_DIR ${DATA_BINARY_DIR}/Citadel)
 set(CITADEL_OUTSIDE_BINARY_DIR ${CITADEL_BINARY_DIR}/OutsideMeshes)
 set(CITADEL_ENGINE_BINARY_DIR ${CITADEL_BINARY_DIR}/engine)
-set(CITADEL_ENGINE_PLACEHOLDER_OUTPUT ${CITADEL_ENGINE_BINARY_DIR}/placeholder)
+set(CITADEL_ENGINE_CAM_OUTPUT ${CITADEL_ENGINE_BINARY_DIR}/test.cam)
 
 set(ALL_MESHES_OUTPUT ${DATA_BINARY_DIR}/AllMeshes.g3d)
 set(ALL_ANIMATIONS_OUTPUT ${DATA_BINARY_DIR}/AllAnims.anm)
@@ -54,6 +56,7 @@ set(VILLAGE_CENTRE_MESH_OUTPUT
 
 set(SYMBOLS_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/Symbols)
 set(SYMBOLS_PLACEHOLDER_OUTPUT ${SYMBOLS_BINARY_DIR}/placeholder)
+set(PATH_SYMBOL_1_CAM_OUTPUT ${SYMBOLS_BINARY_DIR}/PathSymbol1.cam)
 
 set(CREATURE_MESH_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/CreatureMesh)
 set(HAND_BASE_OUTPUT ${CREATURE_MESH_BINARY_DIR}/Hand_Boned_Base2.l3d)
@@ -114,8 +117,6 @@ add_custom_target(
   COMMAND ${CMAKE_COMMAND} -E make_directory ${INTERMEDIATE_MESH_BINARY_DIR}
   # Add placeholders so that the directories get copied
   COMMAND ${CMAKE_COMMAND} -E touch ${AUDIO_PLACEHOLDER_OUTPUT}
-  COMMAND ${CMAKE_COMMAND} -E touch ${SYMBOLS_PLACEHOLDER_OUTPUT}
-  COMMAND ${CMAKE_COMMAND} -E touch ${CITADEL_ENGINE_PLACEHOLDER_OUTPUT}
   # Copy the Scripts Directory
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/Scripts
           ${CMAKE_CURRENT_BINARY_DIR}/Scripts
@@ -196,6 +197,18 @@ add_custom_target(
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
           --output-file ${SPHERE_INPUT}
   COMMAND l3dtool write -o ${SPHERE_MESH_OUTPUT} -i ${SPHERE_INPUT}
+  # Data/cam.cam
+  COMMAND camtool write -o ${CAM_CAM_OUTPUT} -s 0 --points
+          "0.0 0.0 0.0 0.0 0.0 0.0"
+  # Data/flying.cam
+  COMMAND camtool write -o ${FLYING_CAM_OUTPUT} -s 0 --points
+          "0.0 0.0 0.0 0.0 0.0 0.0"
+  # Data/Symbols/PathSymbol1.cam
+  COMMAND camtool write -o ${PATH_SYMBOL_1_CAM_OUTPUT} -s 0 --points
+          "0.0 0.0 0.0 0.0 0.0 0.0"
+  # Data/Citadel/engine/challenge.cam
+  COMMAND camtool write -o ${CITADEL_ENGINE_CAM_OUTPUT} -s 0 --points
+          "0.0 0.0 0.0 0.0 0.0 0.0"
   # Scripts/info.dat
   COMMAND gen_info --output-file "${INFO_UNPACKED_OUTPUT}"
   COMMAND packtool --write-raw ${INFO_DAT_OUTPUT} ${INFO_UNPACKED_OUTPUT}

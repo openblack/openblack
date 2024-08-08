@@ -11,6 +11,7 @@
 
 #include <queue>
 
+#include "3D/CameraPath.h"
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "Audio/Sound.h"
@@ -77,5 +78,10 @@ struct SoundLoader final: BaseLoader<audio::Sound>
 {
 	[[nodiscard]] result_type operator()(FromBufferTag, const pack::AudioBankSampleHeader& header,
 	                                     const std::vector<std::vector<uint8_t>>& buffer) const;
+};
+
+struct CameraPathLoader final: BaseLoader<CameraPath>
+{
+	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;
 };
 } // namespace openblack::resources
