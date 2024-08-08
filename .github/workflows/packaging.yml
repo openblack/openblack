@@ -27,7 +27,7 @@ jobs:
           sudo -u builduser git config --global safe.directory '*'
 
       - name: Clone the openblack repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: src
 
@@ -51,7 +51,7 @@ jobs:
 
       - name: Cache AUR Packages
         id: cache-packages
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             entt/entt*.pkg.tar.*
@@ -175,7 +175,7 @@ jobs:
           VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
       - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
         shell: bash
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: openblack-${{ env.GITHUB_REF_NAME_DASHES }}.AppImage
           path: openblack-*.AppImage
@@ -194,7 +194,7 @@ jobs:
         id: snap
       - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
         shell: bash
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: openblack-${{ env.GITHUB_REF_NAME_DASHES }}.snap
           path: ${{ steps.snap.outputs.snap }}
