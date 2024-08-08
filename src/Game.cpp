@@ -48,7 +48,9 @@
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/Systems/TownSystemInterface.h"
 #include "FileSystem/FileSystemInterface.h"
+#include "Graphics/Font/Font.h"
 #include "Graphics/FrameBuffer.h"
+#include "Graphics/TextRenderer.h"
 #include "Graphics/Texture2D.h"
 #include "Input/GameActionMapInterface.h"
 #include "LHScriptX/Script.h"
@@ -131,6 +133,7 @@ Game::Game(Arguments&& args)
 	}
 
 	_gui = debug::gui::Gui::Create(graphics::RenderPass::ImGui, args.scale);
+	_textRenderer = std::make_unique<TextRenderer>(static_cast<bgfx::ViewId>(graphics::RenderPass::Gui), *_renderer);
 
 	_eventManager->AddHandler(std::function([this](const SDL_Event& event) {
 		// If gui captures this input, do not propagate
@@ -178,7 +181,9 @@ Game::~Game()
 
 	_water.reset();
 	_sky.reset();
+	_fonts.clear();
 	_gui.reset();
+	_textRenderer.reset();
 	_renderer.reset();
 	Locator::windowing::reset();
 	_eventManager.reset();
@@ -773,6 +778,16 @@ bool Game::Initialize()
 
 	_sky = std::make_unique<Sky>();
 	_water = std::make_unique<Water>();
+
+	constexpr std::array<std::string_view, 3> FontFiles = {"./Data/j0", "./Data/f1", "./Data/f3"};
+
+	for (auto& filename : FontFiles)
+	{
+		auto font = std::make_unique<Font>();
+		font->LoadFromFile(std::string(filename));
+		_fonts.push_back(std::move(font));
+	}
+
 	return true;
 }
 
@@ -863,6 +878,13 @@ bool Game::Run()
 		{
 			auto section = _profiler->BeginScoped(Profiler::Stage::GuiDraw);
 			_gui->Draw();
+		}
+
+		{
+			// auto section = _profiler->BeginScoped(Profiler::Stage::GuiDraw);
+#undef DrawText
+			_textRenderer->DrawText(*_fonts[2], "Yeah, Silver ones ain't");
+			_textRenderer->Draw();
 		}
 
 		{
