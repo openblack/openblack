@@ -33,7 +33,7 @@ if (NOT CLANG_FORMAT)
       unset(CLANG_FORMAT)
     endif ()
   else ()
-    message(WARNING "Clang format not found! Disabling the clang format target")
+    message("Clang format not found! Disabling the clang format target")
   endif ()
 endif ()
 
