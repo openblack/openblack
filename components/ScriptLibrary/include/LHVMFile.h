@@ -77,7 +77,7 @@ public:
 	LHVMFile()
 	    : _header {.magic = {' ', ' ', ' ', ' '}, .version = LHVMVersion::BlackAndWhite}
 	    , _hasStatus(false)
-	    , _stack {.count = 0, .pushCount = 0, .popCount = 0}
+	    , _stack {.count = 0, .values = {}, .types = {}, .pushCount = 0, .popCount = 0}
 	    , _ticks(0)
 	    , _currentLineNumber(0)
 	    , _highestTaskId(0)
@@ -95,7 +95,7 @@ public:
 	    , _scripts(scripts)
 	    , _data(data)
 	    , _hasStatus(false)
-	    , _stack {.count = 0, .pushCount = 0, .popCount = 0}
+	    , _stack {.count = 0, .values = {}, .types = {}, .pushCount = 0, .popCount = 0}
 	    , _ticks(0)
 	    , _currentLineNumber(0)
 	    , _highestTaskId(0)

@@ -44,7 +44,7 @@ struct Arguments
 
 int PrintInfo(const LHVMFile& file)
 {
-	std::printf("LHVM Version: %u\n", file.GetHeader().version);
+	std::printf("LHVM Version: %u\n", static_cast<uint32_t>(file.GetHeader().version));
 	std::printf("Global vars count: %zu\n", file.GetVariablesNames().size());
 	std::printf("Scripts count: %zu\n", file.GetScripts().size());
 	std::printf("Instructions count: %zu\n", file.GetInstructions().size());
@@ -74,7 +74,7 @@ int PrintHeader(const LHVMFile& file)
 {
 	const auto& header = file.GetHeader();
 	std::printf("Magic: %.*s\n", 4, header.magic.data());
-	std::printf("Version: %i\n", header.version);
+	std::printf("Version: %u\n", static_cast<uint32_t>(header.version));
 	std::printf("\n");
 	return EXIT_SUCCESS;
 }
