@@ -13,7 +13,6 @@
 #include <cmath>
 #include <cstring>
 
-#include <format>
 #include <fstream>
 #include <stdexcept>
 
@@ -737,27 +736,27 @@ void LHVM::PrintInstruction(const VMTask& task, const VMInstruction& instruction
 		{
 			if (instruction.intVal > task.variablesOffset)
 			{
-				arg = std::format("{}", task.localVars[instruction.intVal - task.variablesOffset - 1].name);
+				arg = task.localVars[instruction.intVal - task.variablesOffset - 1].name;
 			}
 			else
 			{
-				arg = std::format("{}", _variables[instruction.intVal].name);
+				arg = _variables[instruction.intVal].name;
 			}
 		}
 		else if (instruction.opcode == Opcode::PUSH && instruction.mode == Mode::IMMEDIATE)
 		{
 			if (instruction.type == DataType::FLOAT || instruction.type == DataType::VECTOR)
 			{
-				arg = std::format("{}", instruction.floatVal);
+				arg = std::to_string(instruction.floatVal);
 			}
 			else
 			{
-				arg = std::format("{}", instruction.intVal);
+				arg = std::to_string(instruction.intVal);
 			}
 		}
 		else if (instruction.opcode == Opcode::JUMP || instruction.opcode == Opcode::WAIT || instruction.opcode == Opcode::SWAP)
 		{
-			arg = std::format("{}", instruction.intVal);
+			arg = std::to_string(instruction.intVal);
 		}
 		if (instruction.opcode == Opcode::WAIT)
 		{
