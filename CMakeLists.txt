@@ -32,7 +32,7 @@ if (OPENBLACK_USE_VCPKG AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   )
 endif ()
 
-project(openblack)
+project(openblack VERSION 0.1.0)
 
 # Configure C++ standard
 set(CMAKE_CXX_STANDARD 23)
