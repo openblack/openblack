@@ -345,7 +345,7 @@ void LHVMViewer::DrawTasksTab(const LHVM::LHVM& lhvm)
 		ImGui::BeginChild("##task");
 		ImGui::Text("Task ID: %d", task.id);
 
-		ImGui::Text("Script ID: %s", task.scriptId);
+		ImGui::Text("Script ID: %d", task.scriptId);
 		ImGui::SameLine();
 		if (ImGui::TextButtonColored(Disassembly_ColorFuncName, std::format("{}", task.scriptId).c_str()))
 		{
