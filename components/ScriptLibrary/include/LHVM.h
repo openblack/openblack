@@ -114,6 +114,8 @@ protected:
 	void PrintInstruction(const VMTask& task, const VMInstruction& instruction);
 	void CpuLoop(VMTask& task);
 
+	static float fmod(float a, float b);
+
 public:
 	LHVM();
 

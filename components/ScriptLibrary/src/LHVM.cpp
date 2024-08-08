@@ -12,8 +12,8 @@
 #include <cassert>
 #include <cmath>
 #include <cstring>
-#include <format>
 
+#include <format>
 #include <fstream>
 #include <stdexcept>
 
@@ -766,6 +766,11 @@ void LHVM::CpuLoop(VMTask& task)
 	_currentTask = NULL;
 }
 
+float LHVM::fmod(float a, float b)
+{
+	return a - b * static_cast<int64_t>(a / b);
+}
+
 void LHVM::_opcode00_END(VMTask& task, const VMInstruction& instruction)
 {
 	task.stop = true;
@@ -1070,7 +1075,7 @@ void LHVM::_opcode10_MOD(VMTask& task, const VMInstruction& instruction)
 		b0 = Pop();
 		if (a0.floatVal != 0.0f)
 		{
-			Pushf(std::fmodf(b0.floatVal, a0.floatVal));
+			Pushf(fmod(b0.floatVal, a0.floatVal));
 		}
 		else
 		{
@@ -1085,9 +1090,9 @@ void LHVM::_opcode10_MOD(VMTask& task, const VMInstruction& instruction)
 		b2 = Pop();
 		if (a0.floatVal != 0.0f)
 		{
-			Pushv(std::fmodf(b2.floatVal, a0.floatVal));
-			Pushv(std::fmodf(b1.floatVal, a0.floatVal));
-			Pushv(std::fmodf(b0.floatVal, a0.floatVal));
+			Pushv(fmod(b2.floatVal, a0.floatVal));
+			Pushv(fmod(b1.floatVal, a0.floatVal));
+			Pushv(fmod(b0.floatVal, a0.floatVal));
 		}
 		else
 		{

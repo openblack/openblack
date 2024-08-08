@@ -88,7 +88,7 @@ public:
 	         const std::vector<VMInstruction>& instructions, const std::vector<uint32_t>& autostart,
 	         const std::vector<VMScript>& scripts, const std::vector<char>& data)
 	    : _isLoaded(true)
-		, _header(header)
+	    , _header(header)
 	    , _variablesNames(variablesNames)
 	    , _instructions(instructions)
 	    , _autostart(autostart)
@@ -109,7 +109,7 @@ public:
 	         const uint32_t currentLineNumber, const uint32_t highestTaskId, const uint32_t highestScriptId,
 	         const uint32_t executedInstructions)
 	    : _isLoaded(true)
-		, _header(header)
+	    , _header(header)
 	    , _variablesNames(variablesNames)
 	    , _instructions(instructions)
 	    , _autostart(autostart)
