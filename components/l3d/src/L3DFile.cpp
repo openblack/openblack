@@ -172,6 +172,7 @@
 
 #include <fstream>
 #include <limits>
+#include <utility>
 #include <vector>
 
 using namespace openblack::l3d;
@@ -233,16 +234,70 @@ void add_span(std::vector<std::span<Item>>& container, typename std::vector<Item
 	}
 }
 
-/// Error handling
-void L3DFile::Fail(const std::string& msg)
+std::string_view openblack::l3d::ResultToStr(L3DResult result)
 {
-	throw std::runtime_error("L3D Error: " + msg + "\nFilename: " + _filename.string());
+	switch (result)
+	{
+	case L3DResult::Success:
+		return "Success";
+	case L3DResult::ErrCantOpen:
+		return "Could not open file.";
+	case L3DResult::ErrFileTooSmall:
+		return "File too small to be a valid L3D file.";
+	case L3DResult::ErrBadHeader:
+		return "Unrecognized L3D header.";
+	case L3DResult::ErrBadSubmeshOffset:
+		return "Submesh data is beyond the size of the file.";
+	case L3DResult::ErrBadSubmeshHeaderOffset:
+		return "Submesh header is beyond the end of the file.";
+	case L3DResult::ErrBadSkinOffset:
+		return "Skin data is beyond the size of the file.";
+	case L3DResult::ErrBadSkinTextureOffset:
+		return "Skin texture data is beyond the end of the file.";
+	case L3DResult::ErrBadPointsOffset:
+		return "Point data is beyond the size of the file.";
+	case L3DResult::ErrBadPrimitiveCount:
+		return "Could not account for all primitives.";
+	case L3DResult::ErrBadPrimitiveOffset:
+		return "Primitive data is beyond the size of the file.";
+	case L3DResult::ErrBadPrimitiveHeaderOffset:
+		return "Primitive headers are beyond the end of the file.";
+	case L3DResult::ErrBadVertexOffset:
+		return "Vertex data is beyond the size of the file.";
+	case L3DResult::ErrBadVertexCount:
+		return "Could not account for all vertices.";
+	case L3DResult::ErrBadTriangleOffset:
+		return "Triangle data go beyond file.";
+	case L3DResult::ErrBadTriangleCount:
+		return "Could not account for all triangles.";
+	case L3DResult::ErrBadVertexGroupOffset:
+		return "Vertex group data go beyond file.";
+	case L3DResult::ErrBadVertexGroupCount:
+		return "Could not account for all vertex groups.";
+	case L3DResult::ErrBadBlendOffset:
+		return "Blend data go beyond file.";
+	case L3DResult::ErrBadBlendCount:
+		return "Could not account for all blend values.";
+	case L3DResult::ErrBadBoneOffset:
+		return "Bone data go beyond file.";
+	case L3DResult::ErrBadBoneCount:
+		return "Could not account for all bone values.";
+	case L3DResult::ErrBadFootprintOffset:
+		return "Footprint data go beyond file.";
+	case L3DResult::ErrBadFootprintMeshOffset:
+		return "Footprint mesh data go beyond file.";
+	case L3DResult::ErrBadFootprintTextureOffset:
+		return "Footprint texture data go beyond footprint data.";
+	case L3DResult::ErrBadFootprintPixelOffset:
+		return "Footprint pixel data go beyond footprint data.";
+	}
+	std::unreachable();
 }
 
-L3DFile::L3DFile() = default;
-L3DFile::~L3DFile() = default;
+L3DFile::L3DFile() noexcept = default;
+L3DFile::~L3DFile() noexcept = default;
 
-void L3DFile::ReadFile(std::istream& stream)
+L3DResult L3DFile::ReadFile(std::istream& stream) noexcept
 {
 	assert(!_isLoaded);
 
@@ -256,14 +311,14 @@ void L3DFile::ReadFile(std::istream& stream)
 
 	if (fsize < sizeof(L3DHeader))
 	{
-		Fail("File too small to be a valid L3D file.");
+		return L3DResult::ErrFileTooSmall;
 	}
 
 	// First 76 bytes
 	stream.read(reinterpret_cast<char*>(&_header), sizeof(L3DHeader));
 	if (_header.magic != k_Magic)
 	{
-		Fail("Unrecognized L3D header");
+		return L3DResult::ErrBadHeader;
 	}
 
 	// Read the offset info into a temporary buffers
@@ -272,11 +327,11 @@ void L3DFile::ReadFile(std::istream& stream)
 	{
 		if (_header.submeshOffsetsOffset > fsize)
 		{
-			Fail("Submesh Offset is beyond the size of the file");
+			return L3DResult::ErrBadSubmeshOffset;
 		}
 		if (_header.submeshOffsetsOffset + submeshOffsets.size() * sizeof(submeshOffsets[0]) > fsize)
 		{
-			Fail("Submesh Offsets are beyond the end of the file");
+			return L3DResult::ErrBadSubmeshOffset;
 		}
 		stream.seekg(_header.submeshOffsetsOffset);
 		stream.read(reinterpret_cast<char*>(submeshOffsets.data()), submeshOffsets.size() * sizeof(submeshOffsets[0]));
@@ -287,11 +342,11 @@ void L3DFile::ReadFile(std::istream& stream)
 	{
 		if (_header.skinOffsetsOffset > fsize)
 		{
-			Fail("Skin Offset is beyond the size of the file");
+			return L3DResult::ErrBadSkinOffset;
 		}
 		if (_header.skinOffsetsOffset + skinOffsets.size() * sizeof(skinOffsets[0]) > fsize)
 		{
-			Fail("Skin Offsets are beyond the end of the file");
+			return L3DResult::ErrBadSkinOffset;
 		}
 		stream.seekg(_header.skinOffsetsOffset);
 		stream.read(reinterpret_cast<char*>(skinOffsets.data()), skinOffsets.size() * sizeof(skinOffsets[0]));
@@ -301,11 +356,11 @@ void L3DFile::ReadFile(std::istream& stream)
 	{
 		if (_header.extraDataOffset > fsize)
 		{
-			Fail("Point Offset is beyond the size of the file");
+			return L3DResult::ErrBadPointsOffset;
 		}
 		if (_header.extraDataOffset + _extraPoints.size() * sizeof(_extraPoints[0]) > fsize)
 		{
-			Fail("Points are beyond the end of the file");
+			return L3DResult::ErrBadPointsOffset;
 		}
 		stream.seekg(_header.extraDataOffset);
 		stream.read(reinterpret_cast<char*>(_extraPoints.data()), _extraPoints.size() * sizeof(_extraPoints[0]));
@@ -319,7 +374,7 @@ void L3DFile::ReadFile(std::istream& stream)
 	{
 		if (offset + sizeof(_submeshHeaders[0]) > fsize)
 		{
-			Fail("Submesh header is beyond the end of the file");
+			return L3DResult::ErrBadSubmeshHeaderOffset;
 		}
 		stream.seekg(offset);
 		auto& header = _submeshHeaders.emplace_back();
@@ -341,7 +396,7 @@ void L3DFile::ReadFile(std::istream& stream)
 		}
 		if (offset + sizeof(_skins[0]) > fsize)
 		{
-			Fail("Skin texture data is beyond the end of the file");
+			return L3DResult::ErrBadSkinTextureOffset;
 		}
 		stream.seekg(offset);
 		auto& skin = _skins.emplace_back();
@@ -356,7 +411,7 @@ void L3DFile::ReadFile(std::istream& stream)
 		stream.seekg(header.primitivesOffset);
 		if (primitiveCounter + header.numPrimitives > totalPrimitives)
 		{
-			Fail("More primitives found than declared");
+			return L3DResult::ErrBadPrimitiveCount;
 		}
 
 		if (header.numPrimitives == 0)
@@ -365,15 +420,15 @@ void L3DFile::ReadFile(std::istream& stream)
 		}
 		if (primitiveOffsets.size() <= primitiveCounter)
 		{
-			Fail("Less Primitives than expected");
+			return L3DResult::ErrBadPrimitiveCount;
 		}
 		if (primitiveOffsets[primitiveCounter] > fsize)
 		{
-			Fail("Primitive Offset is beyond the size of the file");
+			return L3DResult::ErrBadPrimitiveOffset;
 		}
 		if (primitiveOffsets[primitiveCounter] + primitiveOffsets[primitiveCounter] * sizeof(primitiveOffsets[0]) > fsize)
 		{
-			Fail("Primitive Offsets are beyond the end of the file");
+			return L3DResult::ErrBadPrimitiveOffset;
 		}
 		stream.read(reinterpret_cast<char*>(&primitiveOffsets[primitiveCounter]),
 		            header.numPrimitives * sizeof(primitiveOffsets[0]));
@@ -381,7 +436,7 @@ void L3DFile::ReadFile(std::istream& stream)
 	}
 	if (primitiveCounter != totalPrimitives)
 	{
-		Fail("Could not account for all primitives");
+		return L3DResult::ErrBadPrimitiveCount;
 	}
 
 	// Reserve space for primitives
@@ -394,7 +449,7 @@ void L3DFile::ReadFile(std::istream& stream)
 	{
 		if (offset + sizeof(_primitiveHeaders[0]) > fsize)
 		{
-			Fail("Primitive headers are beyond the end of the file");
+			return L3DResult::ErrBadPrimitiveHeaderOffset;
 		}
 		stream.seekg(offset);
 		_primitiveHeaders.emplace_back();
@@ -418,7 +473,7 @@ void L3DFile::ReadFile(std::istream& stream)
 			}
 			if (header.verticesOffset + header.numVertices * sizeof(_vertices[0]) > fsize)
 			{
-				Fail("Vertex list go beyond file");
+				return L3DResult::ErrBadVertexOffset;
 			}
 			stream.seekg(header.verticesOffset);
 			stream.read(reinterpret_cast<char*>(&_vertices[counter]), header.numVertices * sizeof(_vertices[0]));
@@ -426,7 +481,7 @@ void L3DFile::ReadFile(std::istream& stream)
 		}
 		if (counter != totalVertices)
 		{
-			Fail("Could not account for all vertices");
+			return L3DResult::ErrBadVertexCount;
 		}
 	}
 
@@ -443,7 +498,7 @@ void L3DFile::ReadFile(std::istream& stream)
 			}
 			if (header.trianglesOffset + header.numTriangles * 3 * sizeof(_indices[0]) > fsize)
 			{
-				Fail("Triangle list go beyond file");
+				return L3DResult::ErrBadTriangleOffset;
 			}
 			stream.seekg(header.trianglesOffset);
 			stream.read(reinterpret_cast<char*>(&_indices[counter]), header.numTriangles * 3 * sizeof(_indices[0]));
@@ -451,7 +506,7 @@ void L3DFile::ReadFile(std::istream& stream)
 		}
 		if (counter != totalIndices)
 		{
-			Fail("Could not account for all indices");
+			return L3DResult::ErrBadTriangleCount;
 		}
 	}
 
@@ -468,7 +523,7 @@ void L3DFile::ReadFile(std::istream& stream)
 			}
 			if (header.groupsOffset + header.numGroups * sizeof(_vertexGroups[0]) > fsize)
 			{
-				Fail("Vertex groups go beyond end of file");
+				return L3DResult::ErrBadVertexGroupOffset;
 			}
 			stream.seekg(header.groupsOffset);
 			stream.read(reinterpret_cast<char*>(&_vertexGroups[counter]), header.numGroups * sizeof(_vertexGroups[0]));
@@ -476,7 +531,7 @@ void L3DFile::ReadFile(std::istream& stream)
 		}
 		if (counter != totalGroups)
 		{
-			Fail("Could not account for vertex group data");
+			return L3DResult::ErrBadVertexGroupCount;
 		}
 	}
 
@@ -494,7 +549,7 @@ void L3DFile::ReadFile(std::istream& stream)
 			}
 			if (header.vertexBlendsOffset + header.numVertexBlends * sizeof(_blends[0]) > fsize)
 			{
-				Fail("Blend value data goes beyond file");
+				return L3DResult::ErrBadBlendOffset;
 			}
 			stream.seekg(header.vertexBlendsOffset);
 			stream.read(reinterpret_cast<char*>(&_blends[counter]), header.numVertexBlends * sizeof(_blends[0]));
@@ -502,7 +557,7 @@ void L3DFile::ReadFile(std::istream& stream)
 		}
 		if (counter != totalBlendValues)
 		{
-			Fail("Could not account for blend values data");
+			return L3DResult::ErrBadBlendCount;
 		}
 	}
 
@@ -519,7 +574,7 @@ void L3DFile::ReadFile(std::istream& stream)
 			}
 			if (header.bonesOffset + header.numBones * sizeof(_bones[0]) > fsize)
 			{
-				Fail("Bone value data goes beyond file");
+				return L3DResult::ErrBadBoneOffset;
 			}
 			stream.seekg(header.bonesOffset);
 			stream.read(reinterpret_cast<char*>(&_bones[counter]), header.numBones * sizeof(_bones[0]));
@@ -527,7 +582,7 @@ void L3DFile::ReadFile(std::istream& stream)
 		}
 		if (counter != totalBones)
 		{
-			Fail("Could not account for bone values data");
+			return L3DResult::ErrBadBoneCount;
 		}
 	}
 
@@ -556,7 +611,7 @@ void L3DFile::ReadFile(std::istream& stream)
 			if (static_cast<int>(footprintData.size()) - offset <
 			    sizeof(entry.unknown1) + sizeof(entry.unknown2) + sizeof(entry.triangleCount))
 			{
-				Fail("Footprint goes beyond footprint data");
+				return L3DResult::ErrBadFootprintOffset;
 			}
 			memcpy(&entry.unknown1, &footprintData[offset],
 			       sizeof(entry.unknown1) + sizeof(entry.unknown2) + sizeof(entry.triangleCount));
@@ -569,7 +624,7 @@ void L3DFile::ReadFile(std::istream& stream)
 
 			if (static_cast<int>(footprintData.size()) - offset < entry.triangleCount * sizeof(L3DFootprintTriangle))
 			{
-				Fail("Footprint mesh go beyond footprint data");
+				return L3DResult::ErrBadFootprintMeshOffset;
 			}
 			entry.triangles.resize(entry.triangleCount);
 			memcpy(entry.triangles.data(), &footprintData[offset], entry.triangleCount * sizeof(L3DFootprintTriangle));
@@ -577,7 +632,7 @@ void L3DFile::ReadFile(std::istream& stream)
 
 			if (static_cast<int>(footprintData.size()) - offset < header.width * header.height * sizeof(uint16_t))
 			{
-				Fail("Footprint texture go beyond footprint data");
+				return L3DResult::ErrBadFootprintTextureOffset;
 			}
 			entry.pixels.resize(header.width * header.height);
 			memcpy(entry.pixels.data(), &footprintData[offset], header.width * header.height * sizeof(uint16_t));
@@ -586,7 +641,7 @@ void L3DFile::ReadFile(std::istream& stream)
 			if (static_cast<int>(footprintData.size()) - offset <
 			    sizeof(entry.unknown3) + sizeof(entry.unknown4) + sizeof(entry.unknown5))
 			{
-				Fail("Footprint pixels go beyond footprint data");
+				return L3DResult::ErrBadFootprintPixelOffset;
 			}
 			memcpy(&entry.unknown3, &footprintData[offset],
 			       sizeof(entry.unknown3) + sizeof(entry.unknown4) + sizeof(entry.unknown5));
@@ -699,19 +754,21 @@ void L3DFile::ReadFile(std::istream& stream)
 	}
 
 	_isLoaded = true;
+
+	return L3DResult::Success;
 }
 
-void L3DFile::WriteFile(std::ostream& stream) const
+L3DResult L3DFile::WriteFile(std::ostream& stream) const noexcept
 {
 	assert(!_isLoaded);
 
-	size_t submeshOffsetsBase = sizeof(L3DHeader);
+	const size_t submeshOffsetsBase = sizeof(L3DHeader);
 	size_t skinOffsetsBase = submeshOffsetsBase + _header.submeshCount * sizeof(uint32_t);
-	size_t pointsBase = skinOffsetsBase + _header.skinCount * sizeof(uint32_t);
+	const size_t pointsBase = skinOffsetsBase + _header.skinCount * sizeof(uint32_t);
 	size_t submeshBase = pointsBase + _header.extraDataCount * sizeof(_extraPoints[0]);
-	size_t skinBase = submeshBase + _header.submeshCount * sizeof(_submeshHeaders[0]);
-	size_t primitiveOffsetBase = skinBase + _header.skinCount * sizeof(_skins[0]);
-	size_t primitiveBase = primitiveOffsetBase + _primitiveHeaders.size() * sizeof(uint32_t);
+	const size_t skinBase = submeshBase + _header.submeshCount * sizeof(_submeshHeaders[0]);
+	const size_t primitiveOffsetBase = skinBase + _header.skinCount * sizeof(_skins[0]);
+	const size_t primitiveBase = primitiveOffsetBase + _primitiveHeaders.size() * sizeof(uint32_t);
 
 	std::vector<uint32_t> submeshOffsets;
 	submeshOffsets.resize(_header.submeshCount);
@@ -797,48 +854,42 @@ void L3DFile::WriteFile(std::ostream& stream) const
 	{
 		stream.write(reinterpret_cast<const char*>(_blends.data()), _blends.size() * sizeof(_blends[0]));
 	}
+
+	return L3DResult::Success;
 }
 
-void L3DFile::Open(const std::filesystem::path& filepath)
+L3DResult L3DFile::Open(const std::filesystem::path& filepath) noexcept
 {
 	assert(!_isLoaded);
 
-	_filename = filepath;
-
-	std::ifstream stream(_filename, std::ios::binary);
+	std::ifstream stream(filepath, std::ios::binary);
 
 	if (!stream.is_open())
 	{
-		Fail("Could not open file.");
+		return L3DResult::ErrCantOpen;
 	}
 
-	ReadFile(stream);
+	return ReadFile(stream);
 }
 
-void L3DFile::Open(const std::vector<uint8_t>& buffer)
+L3DResult L3DFile::Open(const std::vector<uint8_t>& buffer) noexcept
 {
 	assert(!_isLoaded);
 
 	imemstream stream(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
 
-	// File name set to "buffer" when file is load from a buffer
-	// Impact code using L3DFile::GetFilename method
-	_filename = std::filesystem::path("buffer");
-
-	ReadFile(stream);
+	return ReadFile(stream);
 }
 
-void L3DFile::Write(const std::filesystem::path& filepath)
+L3DResult L3DFile::Write(const std::filesystem::path& filepath) noexcept
 {
 	assert(!_isLoaded);
 
-	_filename = filepath;
-
-	std::ofstream stream(_filename, std::ios::binary);
+	std::ofstream stream(filepath, std::ios::binary);
 
 	if (!stream.is_open())
 	{
-		Fail("Could not open file.");
+		return L3DResult::ErrCantOpen;
 	}
 
 	// Set magic number
@@ -863,18 +914,18 @@ void L3DFile::Write(const std::filesystem::path& filepath)
 	// offset += _header.extraDataCount * sizeof(_extraPoints[0]);
 	_header.footprintDataOffset = std::numeric_limits<uint32_t>::max();
 
-	size_t submeshOffsetsBase = sizeof(L3DHeader);
-	size_t skinOffsetsBase = submeshOffsetsBase + _header.submeshCount * sizeof(uint32_t);
-	size_t pointsBase = skinOffsetsBase + _header.skinCount * sizeof(uint32_t);
-	size_t submeshBase = pointsBase + _header.extraDataCount * sizeof(_extraPoints[0]);
-	size_t skinBase = submeshBase + _submeshHeaders.size() * sizeof(_submeshHeaders[0]);
-	size_t primitiveOffsetBase = skinBase + _skins.size() * sizeof(_skins[0]);
+	const size_t submeshOffsetsBase = sizeof(L3DHeader);
+	const size_t skinOffsetsBase = submeshOffsetsBase + _header.submeshCount * sizeof(uint32_t);
+	const size_t pointsBase = skinOffsetsBase + _header.skinCount * sizeof(uint32_t);
+	const size_t submeshBase = pointsBase + _header.extraDataCount * sizeof(_extraPoints[0]);
+	const size_t skinBase = submeshBase + _submeshHeaders.size() * sizeof(_submeshHeaders[0]);
+	const size_t primitiveOffsetBase = skinBase + _skins.size() * sizeof(_skins[0]);
 	size_t primitiveBase = primitiveOffsetBase + _primitiveHeaders.size() * sizeof(uint32_t);
 	size_t boneBase = primitiveBase + _primitiveHeaders.size() * sizeof(_primitiveHeaders[0]);
 	size_t vertexBase = boneBase + _bones.size() * sizeof(_bones[0]);
 	size_t triangleBase = vertexBase + _vertices.size() * sizeof(_vertices[0]);
-	size_t lutBase = triangleBase + _indices.size() * sizeof(_indices[0]);
-	size_t blendBase = lutBase + _vertexGroups.size() * sizeof(_vertexGroups[0]);
+	const size_t lutBase = triangleBase + _indices.size() * sizeof(_indices[0]);
+	const size_t blendBase = lutBase + _vertexGroups.size() * sizeof(_vertexGroups[0]);
 	_header.size = static_cast<uint32_t>(blendBase + _blends.size() * sizeof(_blends[0]));
 	if (!_bones.empty())
 	{
@@ -906,7 +957,7 @@ void L3DFile::Write(const std::filesystem::path& filepath)
 		boneBase += header.numBones * sizeof(L3DBone);
 	}
 
-	WriteFile(stream);
+	return WriteFile(stream);
 }
 
 void L3DFile::AddSubmesh(const L3DSubmeshHeader& header) noexcept

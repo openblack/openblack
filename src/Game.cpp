@@ -73,7 +73,7 @@ const std::string k_WindowTitle = "openblack";
 
 Game* Game::sInstance = nullptr;
 
-Game::Game(Arguments&& args)
+Game::Game(Arguments&& args) noexcept
     : _gamePath(args.gamePath)
     , _camera(std::make_unique<Camera>(glm::zero<glm::vec3>()))
     , _eventManager(std::make_unique<EventManager>())
@@ -142,7 +142,7 @@ Game::Game(Arguments&& args)
 	}));
 }
 
-Game::~Game()
+Game::~Game() noexcept
 {
 	// Stop all sounds
 	if (Locator::audio::has_value())
@@ -191,7 +191,7 @@ entt::entity Game::GetHand() const
 	return _handEntity;
 }
 
-bool Game::ProcessEvents(const SDL_Event& event)
+bool Game::ProcessEvents(const SDL_Event& event) noexcept
 {
 	static bool leftMouseButton = false;
 	static bool middleMouseButton = false;
@@ -295,7 +295,7 @@ bool Game::ProcessEvents(const SDL_Event& event)
 	return true;
 }
 
-bool Game::GameLogicLoop()
+bool Game::GameLogicLoop() noexcept
 {
 	using namespace ecs::components;
 	using namespace ecs::systems;
@@ -333,7 +333,7 @@ bool Game::GameLogicLoop()
 	return false;
 }
 
-bool Game::Update()
+bool Game::Update() noexcept
 {
 	_profiler->Frame();
 	auto previous = _profiler->GetEntries().at(_profiler->GetEntryIndex(-1)).frameStart;
@@ -476,7 +476,7 @@ bool Game::Update()
 	return _config.numFramesToSimulate == 0 || _frameCount < _config.numFramesToSimulate;
 }
 
-bool Game::Initialize()
+bool Game::Initialize() noexcept
 {
 	using filesystem::Path;
 	InitializeGame();
@@ -581,7 +581,12 @@ bool Game::Initialize()
 
 	pack::PackFile pack;
 
-	pack.ReadFile(*fileSystem.GetData(fileSystem.GetPath<Path::Data>() / "AllMeshes.g3d"));
+	auto packResult = pack.ReadFile(*fileSystem.GetData(fileSystem.GetPath<Path::Data>() / "AllMeshes.g3d"));
+	if (packResult != pack::PackResult::Success)
+	{
+		SPDLOG_LOGGER_CRITICAL(spdlog::get("game"), "Unable to load AllMeshes.g3d: {}", pack::ResultToStr(packResult));
+		return false;
+	}
 
 	const auto& meshes = pack.GetMeshes();
 	// TODO (#749) use std::views::enumerate
@@ -599,7 +604,12 @@ bool Game::Initialize()
 	}
 
 	pack::PackFile animationPack;
-	animationPack.ReadFile(*fileSystem.GetData(fileSystem.GetPath<Path::Data>() / "AllAnims.anm"));
+	packResult = animationPack.ReadFile(*fileSystem.GetData(fileSystem.GetPath<Path::Data>() / "AllAnims.anm"));
+	if (packResult != pack::PackResult::Success)
+	{
+		SPDLOG_LOGGER_CRITICAL(spdlog::get("game"), "Unable to load AllAnims.anm: {}", pack::ResultToStr(packResult));
+		return false;
+	}
 
 	const auto& animations = animationPack.GetAnimations();
 	// TODO (#749) use std::views::enumerate
@@ -708,7 +718,13 @@ bool Game::Initialize()
 
 		    pack::PackFile soundPack;
 		    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Opening sound pack {}", f.filename().string());
-		    soundPack.ReadFile(*fileSystem.GetData(f));
+		    const auto result = soundPack.ReadFile(*fileSystem.GetData(f));
+		    if (result != pack::PackResult::Success)
+		    {
+			    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Unable to load sound pack {}: {}", f.filename().string(),
+			                        pack::ResultToStr(result));
+			    return;
+		    }
 		    const auto& audioHeaders = soundPack.GetAudioSampleHeaders();
 		    const auto& audioData = soundPack.GetAudioSamplesData();
 		    auto soundName = std::filesystem::path(audioHeaders[0].name.data());
@@ -776,9 +792,13 @@ bool Game::Initialize()
 	return true;
 }
 
-bool Game::Run()
+bool Game::Run() noexcept
 {
-	LoadMap(_startMap);
+	if (!LoadMap(_startMap))
+	{
+		return false;
+	}
+
 	Locator::dynamicsSystem::value().RegisterRigidBodies();
 
 	auto& fileSystem = Locator::filesystem::value();
@@ -831,7 +851,7 @@ bool Game::Run()
 		{
 			auto section = _profiler->BeginScoped(Profiler::Stage::SceneDraw);
 
-			Renderer::DrawSceneDesc drawDesc {
+			const Renderer::DrawSceneDesc drawDesc {
 			    /*profiler =*/*_profiler,
 			    /*camera =*/_camera.get(),
 			    /*frameBuffer =*/nullptr,
@@ -889,13 +909,14 @@ bool Game::Run()
 	return true;
 }
 
-void Game::LoadMap(const std::filesystem::path& path)
+bool Game::LoadMap(const std::filesystem::path& path) noexcept
 {
 	auto& fileSystem = Locator::filesystem::value();
 
 	if (!fileSystem.Exists(path))
 	{
-		throw std::runtime_error("Could not find script " + path.generic_string());
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Could not find script {}", path.generic_string());
+		return false;
 	}
 
 	const auto data = fileSystem.ReadAll(path);
@@ -936,6 +957,8 @@ void Game::LoadMap(const std::filesystem::path& path)
 	SetGameSpeed(Game::k_TurnDurationMultiplierNormal);
 	_turnCount = 0;
 	_paused = true;
+
+	return true;
 }
 
 void Game::LoadLandscape(const std::filesystem::path& path)
@@ -961,19 +984,19 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	Locator::playerSystem::value().RegisterPlayers();
 }
 
-bool Game::LoadVariables()
+bool Game::LoadVariables() noexcept
 {
 	InfoFile infoFile;
 	return infoFile.LoadFromFile(Locator::filesystem::value().GetPath<filesystem::Path::Scripts>() / "info.dat",
 	                             _infoConstants);
 }
 
-void Game::SetTime(float time)
+void Game::SetTime(float time) noexcept
 {
 	GetSky().SetTime(time);
 }
 
-void Game::RequestScreenshot(const std::filesystem::path& path)
+void Game::RequestScreenshot(const std::filesystem::path& path) noexcept
 {
 	_requestScreenshot = std::make_pair(_frameCount, path);
 }

@@ -26,16 +26,18 @@
 using namespace openblack;
 using namespace openblack::graphics;
 
-L3DMesh::L3DMesh(std::string debugName)
+L3DMesh::L3DMesh(std::string debugName) noexcept
     : _flags(static_cast<l3d::L3DMeshFlags>(0))
     , _debugName(std::move(debugName))
 {
 }
 
-L3DMesh::~L3DMesh() = default;
+L3DMesh::~L3DMesh() noexcept = default;
 
-void L3DMesh::Load(const l3d::L3DFile& l3d)
+bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 {
+	bool result = true;
+
 	_flags = static_cast<l3d::L3DMeshFlags>(l3d.GetHeader().flags);
 	_nameData = l3d.GetNameData();
 	for (const auto& skin : l3d.GetSkins())
@@ -141,7 +143,8 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 		auto subMesh = std::make_unique<L3DSubMesh>(*this);
 		if (!subMesh->Load(l3d, i))
 		{
-			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open L3DSubMesh from file: {}", l3d.GetFilename());
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open L3DSubMesh");
+			result = false;
 			continue;
 		}
 		if (subMesh->GetFlags().isPhysics)
@@ -164,9 +167,11 @@ void L3DMesh::Load(const l3d::L3DFile& l3d)
 
 	// TODO(bwrsandman): store vertex and index buffers at mesh level
 	bgfx::frame();
+
+	return result;
 }
 
-bool L3DMesh::LoadFromFilesystem(const std::filesystem::path& path)
+bool L3DMesh::LoadFromFilesystem(const std::filesystem::path& path) noexcept
 {
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading L3DMesh from file: {}", path.generic_string());
 	l3d::L3DFile l3d;
@@ -186,40 +191,43 @@ bool L3DMesh::LoadFromFilesystem(const std::filesystem::path& path)
 	return true;
 }
 
-bool L3DMesh::LoadFromFile(const std::filesystem::path& path)
+bool L3DMesh::LoadFromFile(const std::filesystem::path& path) noexcept
 {
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading L3DMesh from file: {}", path.generic_string());
 	l3d::L3DFile l3d;
 
-	try
-	{
-		l3d.Open(Locator::filesystem::value().FindPath(path));
-	}
-	catch (std::runtime_error& err)
+	const auto result = l3d.Open(Locator::filesystem::value().FindPath(path));
+	if (result != l3d::L3DResult::Success)
 	{
 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open l3d mesh from filesystem {}: {}", path.generic_string(),
-		                    err.what());
+		                    l3d::ResultToStr(result));
 		return false;
 	}
 
-	Load(l3d);
+	if (!Load(l3d))
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("game"), "Some issues were seen while loading l3d mesh from from file: {}.",
+		                   path.generic_string());
+	}
+
 	return true;
 }
 
-bool L3DMesh::LoadFromBuffer(const std::vector<uint8_t>& data)
+bool L3DMesh::LoadFromBuffer(const std::vector<uint8_t>& data) noexcept
 {
 	l3d::L3DFile l3d;
 
-	try
+	const auto result = l3d.Open(data);
+	if (result != l3d::L3DResult::Success)
 	{
-		l3d.Open(data);
-	}
-	catch (std::runtime_error& err)
-	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open l3d mesh from buffer: {}", err.what());
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open l3d mesh from buffer: {}", l3d::ResultToStr(result));
 		return false;
 	}
 
-	Load(l3d);
+	if (!Load(l3d))
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("game"), "Some issues were seen while loading l3d mesh from buffer.");
+	}
+
 	return true;
 }

@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <streambuf>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace
@@ -66,12 +67,21 @@ struct imemstream: virtual membuf, std::istream
 
 using namespace openblack::glw;
 
-void GLWFile::Fail(const std::string& msg)
+std::string_view openblack::glw::ResultToStr(GLWResult result)
 {
-	throw std::runtime_error("GLW Error: " + msg + "\nFilename: " + _filename.string());
+	switch (result)
+	{
+	case GLWResult::Success:
+		return "Success";
+	case GLWResult::ErrCantOpen:
+		return "Could not open file.";
+	case GLWResult::ErrItemCountMismatch:
+		return "Less glow items than expected.";
+	}
+	std::unreachable();
 }
 
-void GLWFile::ReadFile(std::istream& stream)
+GLWResult GLWFile::ReadFile(std::istream& stream) noexcept
 {
 	assert(!_isLoaded);
 
@@ -94,11 +104,13 @@ void GLWFile::ReadFile(std::istream& stream)
 
 	if (glowCount != _glows.size())
 	{
-		Fail("Less glow items than expected");
+		return GLWResult::ErrItemCountMismatch;
 	}
+
+	return GLWResult::Success;
 }
 
-void GLWFile::WriteFile(std::ostream& stream) const
+GLWResult GLWFile::WriteFile(std::ostream& stream) const noexcept
 {
 	for (auto glow : _glows)
 	{
@@ -106,49 +118,45 @@ void GLWFile::WriteFile(std::ostream& stream) const
 	}
 	auto glowCount = static_cast<uint32_t>(_glows.size());
 	stream.write(reinterpret_cast<char*>(&glowCount), sizeof(glowCount));
+
+	return GLWResult::Success;
 }
 
-GLWFile::GLWFile() = default;
-GLWFile::~GLWFile() = default;
+GLWFile::GLWFile() noexcept = default;
+GLWFile::~GLWFile() noexcept = default;
 
-void GLWFile::Open(const std::filesystem::path& filepath)
+GLWResult GLWFile::Open(const std::filesystem::path& filepath) noexcept
 {
 	assert(!_isLoaded);
 
-	_filename = filepath;
-
-	std::ifstream stream(_filename, std::ios::binary);
+	std::ifstream stream(filepath, std::ios::binary);
 
 	if (!stream.is_open())
 	{
-		Fail("Could not open file.");
+		return GLWResult::ErrCantOpen;
 	}
 
-	ReadFile(stream);
+	return ReadFile(stream);
 }
 
-void GLWFile::Open(const std::vector<uint8_t>& buffer)
+GLWResult GLWFile::Open(const std::vector<uint8_t>& buffer) noexcept
 {
 	assert(!_isLoaded);
 
 	auto stream = imemstream(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
 
-	// File name set to "buffer" when file is load from a buffer
-	// Impact code using GLWFile::GetFilename method
-	_filename = std::filesystem::path("buffer");
-
-	ReadFile(stream);
+	return ReadFile(stream);
 }
 
-void GLWFile::Write(const std::filesystem::path& filepath)
+GLWResult GLWFile::Write(const std::filesystem::path& filepath) noexcept
 {
 	assert(!_isLoaded);
-	_filename = filepath;
-	std::ofstream stream(_filename, std::ios::binary);
+	std::ofstream stream(filepath, std::ios::binary);
 
 	if (!stream.is_open())
 	{
-		Fail("Could not open file.");
+		return GLWResult::ErrCantOpen;
 	}
-	WriteFile(stream);
+
+	return WriteFile(stream);
 }

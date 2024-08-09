@@ -52,6 +52,7 @@
 #include <cstring>
 
 #include <fstream>
+#include <utility>
 
 using namespace openblack::anm;
 
@@ -98,16 +99,24 @@ struct imemstream: virtual membuf, std::istream
 };
 } // namespace
 
-/// Error handling
-void ANMFile::Fail(const std::string& msg)
+std::string_view openblack::anm::ResultToStr(ANMResult result)
 {
-	throw std::runtime_error("ANM Error: " + msg + "\nFilename: " + _filename.string());
+	switch (result)
+	{
+	case ANMResult::Success:
+		return "Success";
+	case ANMResult::ErrCantOpen:
+		return "Could not open file.";
+	case ANMResult::ErrFileTooSmall:
+		return "File too small to be a valid ANM file.";
+	}
+	std::unreachable();
 }
 
-ANMFile::ANMFile() = default;
-ANMFile::~ANMFile() = default;
+ANMFile::ANMFile() noexcept = default;
+ANMFile::~ANMFile() noexcept = default;
 
-void ANMFile::ReadFile(std::istream& stream)
+ANMResult ANMFile::ReadFile(std::istream& stream) noexcept
 {
 	assert(!_isLoaded);
 
@@ -121,7 +130,7 @@ void ANMFile::ReadFile(std::istream& stream)
 
 	if (fsize < sizeof(ANMHeader))
 	{
-		Fail("File too small to be a valid ANM file.");
+		return ANMResult::ErrFileTooSmall;
 	}
 
 	// First 84 bytes
@@ -157,55 +166,51 @@ void ANMFile::ReadFile(std::istream& stream)
 	}
 
 	_isLoaded = true;
+
+	return ANMResult::Success;
 }
 
-void ANMFile::WriteFile([[maybe_unused]] std::ostream& stream) const
+ANMResult ANMFile::WriteFile([[maybe_unused]] std::ostream& stream) const noexcept
 {
 	assert(!_isLoaded);
 	stream.write(reinterpret_cast<const char*>(&_header), sizeof(_header));
+
+	return ANMResult::Success;
 }
 
-void ANMFile::Open(const std::filesystem::path& filepath)
+ANMResult ANMFile::Open(const std::filesystem::path& filepath) noexcept
 {
 	assert(!_isLoaded);
 
-	_filename = filepath;
-
-	std::ifstream stream(_filename, std::ios::binary);
+	std::ifstream stream(filepath, std::ios::binary);
 
 	if (!stream.is_open())
 	{
-		Fail("Could not open file.");
+		return ANMResult::ErrCantOpen;
 	}
 
-	ReadFile(stream);
+	return ReadFile(stream);
 }
 
-void ANMFile::Open(const std::vector<uint8_t>& buffer)
+ANMResult ANMFile::Open(const std::vector<uint8_t>& buffer) noexcept
 {
 	assert(!_isLoaded);
 
 	imemstream stream(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
 
-	// File name set to "buffer" when file is load from a buffer
-	// Impact code using ANMFile::GetFilename method
-	_filename = std::filesystem::path("buffer");
-
-	ReadFile(stream);
+	return ReadFile(stream);
 }
 
-void ANMFile::Write(const std::filesystem::path& filepath)
+ANMResult ANMFile::Write(const std::filesystem::path& filepath) noexcept
 {
 	assert(!_isLoaded);
 
-	_filename = filepath;
-
-	std::ofstream stream(_filename, std::ios::binary);
+	std::ofstream stream(filepath, std::ios::binary);
 
 	if (!stream.is_open())
 	{
-		Fail("Could not open file.");
+		return ANMResult::ErrCantOpen;
 	}
 
-	WriteFile(stream);
+	return WriteFile(stream);
 }
