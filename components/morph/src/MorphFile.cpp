@@ -83,8 +83,8 @@
 #include <cassert>
 #include <cstring>
 
-#include <algorithm>
 #include <fstream>
+#include <utility>
 #include <vector>
 
 using namespace openblack::morph;
@@ -147,7 +147,7 @@ std::istream& safe_getline(std::istream& is, std::string& t)
 
 	for (;;)
 	{
-		int c = sb->sbumpc();
+		const int c = sb->sbumpc();
 		switch (c)
 		{
 		case '\n':
@@ -172,17 +172,31 @@ std::istream& safe_getline(std::istream& is, std::string& t)
 }
 } // namespace
 
-/// Error handling
-void MorphFile::Fail(const std::string& msg)
+std::string_view openblack::morph::ResultToStr(MorphResult result)
 {
-	throw std::runtime_error("MorphFile Error: " + msg + "\nFilename: " + _filename.string());
+	switch (result)
+	{
+	case MorphResult::Success:
+		return "Success";
+	case MorphResult::ErrCantOpen:
+		return "Could not open file.";
+	case MorphResult::ErrFileTooSmall:
+		return "File too small to be a valid Morph file.";
+	case MorphResult::ErrSpecFileCantOpen:
+		return "Could not open file spec file.";
+	case MorphResult::ErrSpecFileVersionMismatch:
+		return "Spec file version mismatch.";
+	case MorphResult::ErrSpecFileAnimationsBeforeCategories:
+		return "Spec file has animations before categories.";
+	}
+	std::unreachable();
 }
 
-MorphFile::MorphFile() = default;
+MorphFile::MorphFile() noexcept = default;
 
-MorphFile::~MorphFile() = default;
+MorphFile::~MorphFile() noexcept = default;
 
-void MorphFile::ReadSpecFile(const std::filesystem::path& specFilePath)
+MorphResult MorphFile::ReadSpecFile(const std::filesystem::path& specFilePath) noexcept
 {
 	assert(!_isLoaded);
 
@@ -191,13 +205,13 @@ void MorphFile::ReadSpecFile(const std::filesystem::path& specFilePath)
 	std::ifstream spec(_animationSpecs.path);
 	if (!spec.good())
 	{
-		Fail("Failed to read spec file: " + _animationSpecs.path.string());
+		return MorphResult::ErrSpecFileCantOpen;
 	}
 	std::string line;
 	spec >> _animationSpecs.version >> std::ws;
 	if (_header.specFileVersion != _animationSpecs.version)
 	{
-		Fail("Spec file version mismatch: " + _animationSpecs.path.string());
+		return MorphResult::ErrSpecFileVersionMismatch;
 	}
 
 	[[maybe_unused]] bool reachedEnd = false;
@@ -220,16 +234,18 @@ void MorphFile::ReadSpecFile(const std::filesystem::path& specFilePath)
 		{
 			if (_animationSpecs.animationSets.empty())
 			{
-				Fail("Spec file has animations before categories: " + _animationSpecs.path.string());
+				return MorphResult::ErrSpecFileAnimationsBeforeCategories;
 			}
 			_animationSpecs.animationSets.back().animations.emplace_back(
 			    AnimationDesc {line, static_cast<AnimationType>(type)});
 		}
 	}
 	assert(reachedEnd);
+
+	return MorphResult::Success;
 }
 
-std::vector<Animation> MorphFile::ReadAnimations(std::istream& stream, const std::vector<uint32_t>& offsets)
+std::vector<Animation> MorphFile::ReadAnimations(std::istream& stream, const std::vector<uint32_t>& offsets) noexcept
 {
 	assert(!_isLoaded);
 
@@ -273,7 +289,7 @@ std::vector<Animation> MorphFile::ReadAnimations(std::istream& stream, const std
 	return animations;
 }
 
-HairGroup MorphFile::ReadHairGroup(std::istream& stream)
+HairGroup MorphFile::ReadHairGroup(std::istream& stream) noexcept
 {
 	HairGroup hairGroup;
 	stream.read(reinterpret_cast<char*>(&hairGroup.header), sizeof(hairGroup.header));
@@ -282,7 +298,7 @@ HairGroup MorphFile::ReadHairGroup(std::istream& stream)
 	return hairGroup;
 }
 
-void MorphFile::ReadFile(std::istream& stream, const std::filesystem::path& specsDirectory)
+MorphResult MorphFile::ReadFile(std::istream& stream, const std::filesystem::path& specsDirectory) noexcept
 {
 	assert(!_isLoaded);
 
@@ -296,7 +312,7 @@ void MorphFile::ReadFile(std::istream& stream, const std::filesystem::path& spec
 
 	if (fsize < sizeof(MorphHeader))
 	{
-		Fail("File too small to be a valid MORPH file.");
+		return MorphResult::ErrFileTooSmall;
 	}
 
 	// First 236 bytes
@@ -316,7 +332,11 @@ void MorphFile::ReadFile(std::istream& stream, const std::filesystem::path& spec
 	{
 		specName = "hndspec" + std::to_string(_header.specFileVersion) + ".txt";
 	}
-	ReadSpecFile(specsDirectory / specName);
+	const auto specResult = ReadSpecFile(specsDirectory / specName);
+	if (specResult != MorphResult::Success)
+	{
+		return specResult;
+	}
 	size_t numAnimations = 0;
 	for (auto& animSet : _animationSpecs.animationSets)
 	{
@@ -378,31 +398,29 @@ void MorphFile::ReadFile(std::istream& stream, const std::filesystem::path& spec
 	}
 
 	_isLoaded = true;
+
+	return MorphResult::Success;
 }
 
-void MorphFile::Open(const std::filesystem::path& filepath, const std::filesystem::path& specsDirectory)
+MorphResult MorphFile::Open(const std::filesystem::path& filepath, const std::filesystem::path& specsDirectory) noexcept
 {
 	assert(!_isLoaded);
 
-	_filename = filepath;
-
-	std::ifstream stream(_filename, std::ios::binary);
+	std::ifstream stream(filepath, std::ios::binary);
 
 	if (!stream.is_open())
 	{
-		Fail("Could not open file.");
+		return MorphResult::ErrCantOpen;
 	}
 
-	ReadFile(stream, specsDirectory);
+	return ReadFile(stream, specsDirectory);
 }
 
-void MorphFile::Open(const std::vector<uint8_t>& buffer, const std::filesystem::path& specsDirectory)
+MorphResult MorphFile::Open(const std::vector<uint8_t>& buffer, const std::filesystem::path& specsDirectory) noexcept
 {
 	assert(!_isLoaded);
 
 	imemstream stream(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
 
-	_filename = "buffer";
-
-	ReadFile(stream, specsDirectory);
+	return ReadFile(stream, specsDirectory);
 }

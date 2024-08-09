@@ -20,8 +20,6 @@ int ListDetails(openblack::morph::MorphFile& morph)
 {
 	const auto& header = morph.GetHeader();
 
-	std::printf("file: %s\n", morph.GetFilename().c_str());
-
 	std::printf("base mesh: \"%s\"\n", header.baseMeshName.data());
 	uint32_t numVariants = 0;
 	for (const auto& meshes : header.variantMeshNames)
@@ -77,8 +75,6 @@ int PrintHeader(openblack::morph::MorphFile& morph)
 {
 	const auto& header = morph.GetHeader();
 
-	std::printf("file: %s\n", morph.GetFilename().c_str());
-
 	std::printf("unknown0x0: 0x%08X\n", header.unknown0x0);
 	std::printf("specFileVersion: %u\n", header.specFileVersion);
 	std::printf("binaryVersion: %u\n", header.binaryVersion);
@@ -94,8 +90,6 @@ int PrintHeader(openblack::morph::MorphFile& morph)
 int PrintSpecs(openblack::morph::MorphFile& morph)
 {
 	const auto& specs = morph.GetAnimationSpecs();
-
-	std::printf("file: %s\n", morph.GetFilename().c_str());
 
 	std::printf("specs path: %s\n", specs.path.string().c_str());
 	std::printf("specs version: %u\n", specs.version);
@@ -178,7 +172,6 @@ int ShowBaseAnimationSet(openblack::morph::MorphFile& morph)
 {
 	const auto& animationSet = morph.GetBaseAnimationSet();
 
-	std::printf("file: %s\n", morph.GetFilename().c_str());
 	std::printf("%zu base animations\n", animationSet.size());
 
 	uint32_t i = 0;
@@ -195,8 +188,6 @@ int ShowBaseAnimationSet(openblack::morph::MorphFile& morph)
 int ShowVariantAnimationSets(openblack::morph::MorphFile& morph)
 {
 	const auto& header = morph.GetHeader();
-
-	std::printf("file: %s\n", morph.GetFilename().c_str());
 
 	uint8_t numVariants = 0;
 	for (uint8_t i = 0; i < 4; ++i)
@@ -227,7 +218,6 @@ int ShowHairGroups(openblack::morph::MorphFile& morph)
 {
 	const auto& hairGroups = morph.GetHairGroups();
 
-	std::printf("file: %s\n", morph.GetFilename().c_str());
 	std::printf("%zu hair groups\n", hairGroups.size());
 
 	uint32_t i = 0;
@@ -288,7 +278,6 @@ int ShowExtraData(openblack::morph::MorphFile& morph)
 		extraDataTotal += data.size();
 	}
 
-	std::printf("file: %s\n", morph.GetFilename().c_str());
 	std::printf("%zu total extra data segments\n", extraDataTotal);
 	std::printf("%zu extra data groups (one per animation)\n", extraData.size());
 
@@ -348,110 +337,94 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 	cxxopts::Options options("morphtool", "Inspect and read data files from LionHead CBN and HBN files internal segment (use "
 	                                      "\"stdin\" if piping from packtool).");
 
-	try
-	{
-		options.add_options()                                            //
-		    ("h,help", "Display this help message.")                     //
-		    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
-		    ;
-		options.positional_help("[read|write] [OPTION...]");
-		options.add_options()                                                                                            //
-		    ("l,list-details", "Print Content Details.", cxxopts::value<std::vector<std::filesystem::path>>())           //
-		    ("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())                 //
-		    ("d,spec-files-directory", "Directory of spec files (required).", cxxopts::value<std::filesystem::path>())   //
-		    ("s,list-animation-set", "List content of spec file.", cxxopts::value<std::vector<std::filesystem::path>>()) //
-		    ("b,show-base-animation-set", "Display animation data for the base animation.",                              //
-		     cxxopts::value<std::vector<std::filesystem::path>>())                                                       //
-		    ("V,show-variant-animation-sets", "Display animation data for the variant animations.",                      //
-		     cxxopts::value<std::vector<std::filesystem::path>>())                                                       //
-		    ("g,show-hair-groups", "Display hair group data.", cxxopts::value<std::vector<std::filesystem::path>>())     //
-		    ("e,show-extra-data", "Display extra data.", cxxopts::value<std::vector<std::filesystem::path>>())           //
-		    ;
+	options.add_options()                                            //
+	    ("h,help", "Display this help message.")                     //
+	    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
+	    ;
+	options.positional_help("[read|write] [OPTION...]");
+	options.add_options()                                                                                            //
+	    ("l,list-details", "Print Content Details.", cxxopts::value<std::vector<std::filesystem::path>>())           //
+	    ("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())                 //
+	    ("d,spec-files-directory", "Directory of spec files (required).", cxxopts::value<std::filesystem::path>())   //
+	    ("s,list-animation-set", "List content of spec file.", cxxopts::value<std::vector<std::filesystem::path>>()) //
+	    ("b,show-base-animation-set", "Display animation data for the base animation.",                              //
+	     cxxopts::value<std::vector<std::filesystem::path>>())                                                       //
+	    ("V,show-variant-animation-sets", "Display animation data for the variant animations.",                      //
+	     cxxopts::value<std::vector<std::filesystem::path>>())                                                       //
+	    ("g,show-hair-groups", "Display hair group data.", cxxopts::value<std::vector<std::filesystem::path>>())     //
+	    ("e,show-extra-data", "Display extra data.", cxxopts::value<std::vector<std::filesystem::path>>())           //
+	    ;
 
-		options.parse_positional({"subcommand"});
-	}
-	catch (const std::exception& e)
+	options.parse_positional({"subcommand"});
+
+	auto result = options.parse(argc, argv);
+	if (result["help"].as<bool>())
 	{
-		std::cerr << e.what() << '\n';
+		std::cout << options.help() << '\n';
+		returnCode = EXIT_SUCCESS;
+		return false;
+	}
+	if (result["subcommand"].count() == 0)
+	{
+		std::cerr << options.help() << '\n';
+		returnCode = EXIT_FAILURE;
+		return false;
+	}
+	if (result["spec-files-directory"].count() == 0)
+	{
+		std::cerr << options.help() << '\n';
 		returnCode = EXIT_FAILURE;
 		return false;
 	}
 
-	try
+	args.specDirectory = result["spec-files-directory"].as<std::filesystem::path>();
+	if (result["subcommand"].as<std::string>() == "read")
 	{
-		auto result = options.parse(argc, argv);
-		if (result["help"].as<bool>())
+		if (result["list-details"].count() > 0)
 		{
-			std::cout << options.help() << std::endl;
-			returnCode = EXIT_SUCCESS;
-			return false;
+			args.mode = Arguments::Mode::List;
+			args.read.filenames = result["list-details"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
-		if (result["subcommand"].count() == 0)
+		if (result["header"].count() > 0)
 		{
-			std::cerr << options.help() << std::endl;
-			returnCode = EXIT_FAILURE;
-			return false;
+			args.mode = Arguments::Mode::Header;
+			args.read.filenames = result["header"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
-		if (result["spec-files-directory"].count() == 0)
+		if (result["list-animation-set"].count() > 0)
 		{
-			std::cerr << options.help() << std::endl;
-			returnCode = EXIT_FAILURE;
-			return false;
+			args.mode = Arguments::Mode::ListAnimationSet;
+			args.read.filenames = result["list-animation-set"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
-
-		args.specDirectory = result["spec-files-directory"].as<std::filesystem::path>();
-		if (result["subcommand"].as<std::string>() == "read")
+		if (result["show-base-animation-set"].count() > 0)
 		{
-			if (result["list-details"].count() > 0)
-			{
-				args.mode = Arguments::Mode::List;
-				args.read.filenames = result["list-details"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["header"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Header;
-				args.read.filenames = result["header"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["list-animation-set"].count() > 0)
-			{
-				args.mode = Arguments::Mode::ListAnimationSet;
-				args.read.filenames = result["list-animation-set"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["show-base-animation-set"].count() > 0)
-			{
-				args.mode = Arguments::Mode::ShowBaseAnimationSet;
-				args.read.filenames = result["show-base-animation-set"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["show-variant-animation-sets"].count() > 0)
-			{
-				args.mode = Arguments::Mode::ShowVariantAnimationSets;
-				args.read.filenames = result["show-variant-animation-sets"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["show-hair-groups"].count() > 0)
-			{
-				args.mode = Arguments::Mode::ShowHairGroups;
-				args.read.filenames = result["show-hair-groups"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["show-extra-data"].count() > 0)
-			{
-				args.mode = Arguments::Mode::ShowExtraData;
-				args.read.filenames = result["show-extra-data"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
+			args.mode = Arguments::Mode::ShowBaseAnimationSet;
+			args.read.filenames = result["show-base-animation-set"].as<std::vector<std::filesystem::path>>();
+			return true;
+		}
+		if (result["show-variant-animation-sets"].count() > 0)
+		{
+			args.mode = Arguments::Mode::ShowVariantAnimationSets;
+			args.read.filenames = result["show-variant-animation-sets"].as<std::vector<std::filesystem::path>>();
+			return true;
+		}
+		if (result["show-hair-groups"].count() > 0)
+		{
+			args.mode = Arguments::Mode::ShowHairGroups;
+			args.read.filenames = result["show-hair-groups"].as<std::vector<std::filesystem::path>>();
+			return true;
+		}
+		if (result["show-extra-data"].count() > 0)
+		{
+			args.mode = Arguments::Mode::ShowExtraData;
+			args.read.filenames = result["show-extra-data"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
 	}
-	catch (const std::exception& err)
-	{
-		std::cerr << err.what() << std::endl;
-	}
 
-	std::cerr << options.help() << std::endl;
+	std::cerr << options.help() << '\n';
 	returnCode = EXIT_FAILURE;
 	return false;
 }
@@ -468,61 +441,68 @@ int main(int argc, char* argv[]) noexcept
 	for (auto& filename : args.read.filenames)
 	{
 		openblack::morph::MorphFile morph;
-		try
+		// Open file
+		openblack::morph::MorphResult result;
+		if (filename == "stdin")
 		{
-			// Open file
-			if (filename == "stdin")
+			std::vector<uint8_t> buffer;
+			while (!std::cin.eof())
 			{
-				std::vector<uint8_t> buffer;
-				while (!std::cin.eof())
+				char byte;
+				std::cin.get(byte);
+				if (!std::cin.eof())
 				{
-					char byte;
-					std::cin.get(byte);
-					if (!std::cin.eof())
-					{
-						buffer.push_back(static_cast<uint8_t>(byte));
-					}
+					buffer.push_back(static_cast<uint8_t>(byte));
 				}
-				printf("got %zu bytes from stdin\n", buffer.size());
-				morph.Open(buffer, args.specDirectory);
 			}
-			else
-			{
-				morph.Open(filename, args.specDirectory);
-			}
-
-			switch (args.mode)
-			{
-			case Arguments::Mode::List:
-				returnCode |= ListDetails(morph);
-				break;
-			case Arguments::Mode::Header:
-				returnCode |= PrintHeader(morph);
-				break;
-			case Arguments::Mode::ListAnimationSet:
-				returnCode |= PrintSpecs(morph);
-				break;
-			case Arguments::Mode::ShowBaseAnimationSet:
-				returnCode |= ShowBaseAnimationSet(morph);
-				break;
-			case Arguments::Mode::ShowVariantAnimationSets:
-				returnCode |= ShowVariantAnimationSets(morph);
-				break;
-			case Arguments::Mode::ShowHairGroups:
-				returnCode |= ShowHairGroups(morph);
-				break;
-			case Arguments::Mode::ShowExtraData:
-				returnCode |= ShowExtraData(morph);
-				break;
-			default:
-				returnCode = EXIT_FAILURE;
-				break;
-			}
+			printf("got %zu bytes from stdin\n", buffer.size());
+			result = morph.Open(buffer, args.specDirectory);
 		}
-		catch (const std::exception& err)
+		else
 		{
-			std::cerr << err.what() << std::endl;
+			result = morph.Open(filename, args.specDirectory);
+		}
+
+		if (result != openblack::morph::MorphResult::Success)
+		{
+			std::cerr << openblack::morph::ResultToStr(result) << "\n";
 			returnCode |= EXIT_FAILURE;
+			continue;
+		}
+
+		switch (args.mode)
+		{
+		case Arguments::Mode::List:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ListDetails(morph);
+			break;
+		case Arguments::Mode::Header:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintHeader(morph);
+			break;
+		case Arguments::Mode::ListAnimationSet:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintSpecs(morph);
+			break;
+		case Arguments::Mode::ShowBaseAnimationSet:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ShowBaseAnimationSet(morph);
+			break;
+		case Arguments::Mode::ShowVariantAnimationSets:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ShowVariantAnimationSets(morph);
+			break;
+		case Arguments::Mode::ShowHairGroups:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ShowHairGroups(morph);
+			break;
+		case Arguments::Mode::ShowExtraData:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ShowExtraData(morph);
+			break;
+		default:
+			returnCode = EXIT_FAILURE;
+			break;
 		}
 	}
 
