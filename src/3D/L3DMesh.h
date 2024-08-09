@@ -82,13 +82,13 @@ public:
 		std::unique_ptr<graphics::Texture2D> texture;
 		std::unique_ptr<graphics::Mesh> mesh;
 	};
-	explicit L3DMesh(std::string debugName = "");
-	virtual ~L3DMesh();
+	explicit L3DMesh(std::string debugName = "") noexcept;
+	virtual ~L3DMesh() noexcept;
 
-	void Load(const l3d::L3DFile& l3d);
-	bool LoadFromFilesystem(const std::filesystem::path& path);
-	bool LoadFromFile(const std::filesystem::path& path);
-	bool LoadFromBuffer(const std::vector<uint8_t>& data);
+	bool Load(const l3d::L3DFile& l3d) noexcept;
+	bool LoadFromFilesystem(const std::filesystem::path& path) noexcept;
+	bool LoadFromFile(const std::filesystem::path& path) noexcept;
+	bool LoadFromBuffer(const std::vector<uint8_t>& data) noexcept;
 
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return static_cast<uint8_t>(_subMeshes.size()); }
 	[[nodiscard]] const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }

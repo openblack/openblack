@@ -34,14 +34,14 @@ struct EnhancedL3DVertex
 	glm::i16vec2 index;
 };
 
-L3DSubMesh::L3DSubMesh(L3DMesh& mesh)
+L3DSubMesh::L3DSubMesh(L3DMesh& mesh) noexcept
     : _l3dMesh(mesh)
 {
 }
 
-L3DSubMesh::~L3DSubMesh() = default;
+L3DSubMesh::~L3DSubMesh() noexcept = default;
 
-bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex)
+bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 {
 	const auto& header = l3d.GetSubmeshHeaders()[meshIndex];
 	const auto primitiveSpan = l3d.GetPrimitiveSpan(meshIndex);
