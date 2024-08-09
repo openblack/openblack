@@ -21,6 +21,31 @@
 namespace openblack::pack
 {
 
+enum class PackResult : uint8_t
+{
+	Success = 0,
+	ErrCantOpen,
+	ErrFileTooSmall,
+	ErrNoEntries,
+	ErrUnrecognizedHeader,
+	ErrUnrecognizedBlockHeader,
+	ErrFileNotEvenlySplit,
+	ErrDuplicateBlockName,
+	ErrMissingInfoBlock,
+	ErrMissingBodyBlock,
+	ErrMissingAudioBankSampleTableBlock,
+	ErrMissingAudioWaveDataBlock,
+	ErrMissingTextureBlock,
+	ErrTextureBlockIdMismatch,
+	ErrTextureDuplicate,
+	ErrTextureInvalidDDSHeaderSize,
+	ErrMissingMeshBlock,
+	ErrMeshBlockHeaderMalformed,
+	ErrNotImplemented,
+};
+
+std::string_view ResultToStr(PackResult result);
+
 struct InfoBlockLookup
 {
 	uint32_t blockId;
@@ -162,8 +187,6 @@ protected:
 	/// True when a file has been loaded
 	bool _isLoaded {false};
 
-	std::filesystem::path _filename;
-
 	std::map<std::string, std::vector<uint8_t>> _blocks;
 	std::vector<InfoBlockLookup> _infoBlockLookup;
 	std::vector<BodyBlockLookup> _bodyBlockLookup;
@@ -178,87 +201,92 @@ protected:
 	/// Bytes of snd audio samples
 	std::vector<std::vector<uint8_t>> _audioSampleData;
 
-	/// Error handling
-	void Fail(const std::string& msg);
-
 	/// Read blocks from pack
-	virtual void ReadBlocks(std::istream& stream);
+	PackResult ReadBlocks(std::istream& stream) noexcept;
 
 	/// Write blocks to file
-	virtual void WriteBlocks(std::ostream& stream) const;
+	PackResult WriteBlocks(std::ostream& stream) const noexcept;
 
 	/// Parse Info Block for mesh pack
-	virtual void ResolveInfoBlock();
+	PackResult ResolveInfoBlock() noexcept;
 
 	/// Parse Body Block for anim pack
-	virtual void ResolveBodyBlock();
+	PackResult ResolveBodyBlock() noexcept;
 
 	/// Parse Audio Block for sound pack
-	virtual void ResolveAudioBankSampleTableBlock();
+	PackResult ResolveAudioBankSampleTableBlock() noexcept;
 
 	/// Extract Textures from all Blocks named in INFO Block
-	virtual void ExtractTexturesFromBlock();
+	PackResult ExtractTexturesFromBlock() noexcept;
 
 	/// Extract Animations from all Blocks named in Body Block
-	virtual void ExtractAnimationsFromBlock();
+	PackResult ExtractAnimationsFromBlock() noexcept;
 
 	/// Extract Sounds from all Blocks named in LHAudioBankSampleTable Block
-	virtual void ExtractSoundsFromBlock();
+	PackResult ExtractSoundsFromBlock() noexcept;
 
 	/// Parse Info Block
-	virtual void ResolveMeshBlock();
+	PackResult ResolveMeshBlock() noexcept;
 
 public:
-	PackFile();
-	virtual ~PackFile();
+	PackFile() noexcept;
+	virtual ~PackFile() noexcept;
 
 	/// Read file from the input source
-	virtual void ReadFile(std::istream& stream);
+	PackResult ReadFile(std::istream& stream) noexcept;
 
 	/// Read g3d file from the filesystem
-	void Open(const std::filesystem::path& filepath);
+	PackResult Open(const std::filesystem::path& filepath) noexcept;
 
 	/// Read g3d file from a buffer
-	void Open(const std::vector<uint8_t>& buffer);
+	PackResult Open(const std::vector<uint8_t>& buffer) noexcept;
 
 	/// Write pack file to path on the filesystem
-	void Write(const std::filesystem::path& file);
+	PackResult Write(const std::filesystem::path& filepath) noexcept;
 
 	/// Create Texture Blocks from textures
-	void CreateTextureBlocks();
+	PackResult CreateTextureBlocks() noexcept;
 
 	/// Create Data Block from Raw Data
-	void CreateRawBlock(const std::string& name, std::vector<uint8_t>&& data);
+	PackResult CreateRawBlock(const std::string& name, std::vector<uint8_t>&& data) noexcept;
 
 	/// Create Mesh Block from meshes
-	void CreateMeshBlock();
+	PackResult CreateMeshBlock() noexcept;
 
 	/// Insert Mesh Data for the Mesh Block
-	void InsertMesh(std::vector<uint8_t> data);
+	PackResult InsertMesh(std::vector<uint8_t> data) noexcept;
 
 	/// Create Info block from look-up table
-	void CreateInfoBlock();
+	PackResult CreateInfoBlock() noexcept;
 
 	/// Create Body block from look-up table
-	void CreateBodyBlock();
+	PackResult CreateBodyBlock() noexcept;
 
-	[[nodiscard]] std::string GetFilename() const { return _filename.string(); }
-	[[nodiscard]] const std::map<std::string, std::vector<uint8_t>>& GetBlocks() const { return _blocks; }
-	[[nodiscard]] bool HasBlock(const std::string& name) const { return _blocks.contains(name); }
-	[[nodiscard]] const std::vector<uint8_t>& GetBlock(const std::string& name) const { return _blocks.at(name); }
-	[[nodiscard]] std::unique_ptr<std::istream> GetBlockAsStream(const std::string& name) const;
-	[[nodiscard]] const std::vector<InfoBlockLookup>& GetInfoBlockLookup() const { return _infoBlockLookup; }
-	[[nodiscard]] const std::vector<BodyBlockLookup>& GetBodyBlockLookup() const { return _bodyBlockLookup; }
-	[[nodiscard]] const std::map<std::string, G3DTexture>& GetTextures() const { return _textures; }
-	[[nodiscard]] const G3DTexture& GetTexture(const std::string& name) const { return _textures.at(name); }
-	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetMeshes() const { return _meshes; }
-	[[nodiscard]] const std::vector<uint8_t>& GetMesh(uint32_t index) const { return _meshes[index]; }
-	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetAnimations() const { return _animations; }
-	[[nodiscard]] const std::vector<uint8_t>& GetAnimation(uint32_t index) const { return _animations[index]; }
-	[[nodiscard]] const std::vector<AudioBankSampleHeader>& GetAudioSampleHeaders() const { return _audioSampleHeaders; }
-	[[nodiscard]] const AudioBankSampleHeader& GetAudioSampleHeader(uint32_t index) const { return _audioSampleHeaders[index]; }
-	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetAudioSamplesData() const { return _audioSampleData; }
-	[[nodiscard]] const std::vector<uint8_t>& GetAudioSampleData(uint32_t index) const { return _audioSampleData[index]; }
+	[[nodiscard]] const std::map<std::string, std::vector<uint8_t>>& GetBlocks() const noexcept { return _blocks; }
+	[[nodiscard]] bool HasBlock(const std::string& name) const noexcept { return _blocks.contains(name); }
+	[[nodiscard]] const std::vector<uint8_t>& GetBlock(const std::string& name) const noexcept { return _blocks.at(name); }
+	[[nodiscard]] std::unique_ptr<std::istream> GetBlockAsStream(const std::string& name) const noexcept;
+	[[nodiscard]] const std::vector<InfoBlockLookup>& GetInfoBlockLookup() const noexcept { return _infoBlockLookup; }
+	[[nodiscard]] const std::vector<BodyBlockLookup>& GetBodyBlockLookup() const noexcept { return _bodyBlockLookup; }
+	[[nodiscard]] const std::map<std::string, G3DTexture>& GetTextures() const noexcept { return _textures; }
+	[[nodiscard]] const G3DTexture& GetTexture(const std::string& name) const noexcept { return _textures.at(name); }
+	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetMeshes() const noexcept { return _meshes; }
+	[[nodiscard]] const std::vector<uint8_t>& GetMesh(uint32_t index) const noexcept { return _meshes[index]; }
+	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetAnimations() const noexcept { return _animations; }
+	[[nodiscard]] const std::vector<uint8_t>& GetAnimation(uint32_t index) const noexcept { return _animations[index]; }
+	[[nodiscard]] const std::vector<AudioBankSampleHeader>& GetAudioSampleHeaders() const noexcept
+	{
+		return _audioSampleHeaders;
+	}
+	[[nodiscard]] const AudioBankSampleHeader& GetAudioSampleHeader(uint32_t index) const noexcept
+	{
+		return _audioSampleHeaders[index];
+	}
+	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetAudioSamplesData() const noexcept { return _audioSampleData; }
+	[[nodiscard]] const std::vector<uint8_t>& GetAudioSampleData(uint32_t index) const noexcept
+	{
+		return _audioSampleData[index];
+	}
 };
 
 } // namespace openblack::pack

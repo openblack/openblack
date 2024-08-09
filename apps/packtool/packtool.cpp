@@ -54,7 +54,6 @@ int ListBlocks(openblack::pack::PackFile& pack)
 {
 	const auto& blocks = pack.GetBlocks();
 
-	std::printf("file: %s\n", pack.GetFilename().c_str());
 	std::printf("%u blocks\n", static_cast<uint32_t>(blocks.size()));
 	std::printf("%u textures\n", static_cast<uint32_t>(pack.GetTextures().size()));
 	std::printf("%u meshes\n", static_cast<uint32_t>(pack.GetMeshes().size()));
@@ -82,11 +81,10 @@ int ListBlock(openblack::pack::PackFile& pack, const std::string& name, const st
 	auto block = blocks.find(name);
 	if (block == blocks.end())
 	{
-		std::fprintf(stderr, "no \"%s\" block in file: %s\n", name.c_str(), pack.GetFilename().c_str());
+		std::fprintf(stderr, "no \"%s\" block in file\n", name.c_str());
 		return EXIT_FAILURE;
 	}
 
-	std::fprintf(outputLogStream, "file: %s\n", pack.GetFilename().c_str());
 	std::fprintf(outputLogStream, "name \"%s\", size %u\n", name.c_str(), static_cast<uint32_t>(block->second.size()));
 	std::fprintf(outputLogStream, "\n");
 
@@ -112,8 +110,6 @@ int ViewBytes(openblack::pack::PackFile& pack, const std::string& name)
 {
 	const auto& block = pack.GetBlock(name);
 
-	std::printf("file: %s, block %s\n", pack.GetFilename().c_str(), name.c_str());
-
 	PrintRawBytes(block.data(), block.size() * sizeof(block[0]));
 
 	return EXIT_SUCCESS;
@@ -124,8 +120,6 @@ int ViewInfo(openblack::pack::PackFile& pack)
 	using Lookup = openblack::pack::InfoBlockLookup;
 	auto lookup = pack.GetInfoBlockLookup();
 	std::sort(lookup.begin(), lookup.end(), [](const Lookup& a, Lookup& b) { return a.blockId < b.blockId; });
-
-	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	for (auto& item : lookup)
 	{
@@ -139,8 +133,6 @@ int ViewBody(openblack::pack::PackFile& pack)
 {
 	const auto& lookup = pack.GetBodyBlockLookup();
 
-	std::printf("file: %s\n", pack.GetFilename().c_str());
-
 	for (uint32_t i = 0; i < lookup.size(); ++i)
 	{
 		std::printf("block: Julien%-3u offset: %4x unknown: %u\n", i, lookup[i].offset, lookup[i].unknown);
@@ -153,8 +145,6 @@ int ViewTextures(openblack::pack::PackFile& pack)
 {
 	const auto& textures = pack.GetTextures();
 
-	std::printf("file: %s\n", pack.GetFilename().c_str());
-
 	for (const auto& [name, texture] : textures)
 	{
 		std::printf("%s: type %u, size %u\n", name.c_str(), texture.header.type, texture.header.size);
@@ -166,8 +156,6 @@ int ViewTextures(openblack::pack::PackFile& pack)
 int ViewMeshes(openblack::pack::PackFile& pack)
 {
 	const auto& meshes = pack.GetMeshes();
-
-	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	uint32_t i = 0;
 	for (const auto& mesh : meshes)
@@ -182,8 +170,6 @@ int ViewAnimations(openblack::pack::PackFile& pack)
 {
 	const auto& animations = pack.GetAnimations();
 
-	std::printf("file: %s\n", pack.GetFilename().c_str());
-
 	uint32_t i = 0;
 	for (const auto& animation : animations)
 	{
@@ -196,7 +182,6 @@ int ViewAnimations(openblack::pack::PackFile& pack)
 int ViewSounds(openblack::pack::PackFile& pack)
 {
 	const auto& headers = pack.GetAudioSampleHeaders();
-	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	for (uint32_t i = 0; i < headers.size(); ++i)
 	{
@@ -211,8 +196,6 @@ int ViewSounds(openblack::pack::PackFile& pack)
 int ViewTexture(openblack::pack::PackFile& pack, const std::string& name, const std::filesystem::path& outFilename)
 {
 	const auto& texture = pack.GetTexture(name);
-
-	std::printf("file: %s\n", pack.GetFilename().c_str());
 
 	std::printf("size: %u\n", static_cast<uint32_t>(texture.header.size));
 	std::printf("id: %u\n", static_cast<uint32_t>(texture.header.id));
@@ -267,7 +250,6 @@ int ViewMesh(openblack::pack::PackFile& pack, uint32_t index, const std::filesys
 
 	const auto& mesh = pack.GetMesh(index);
 
-	std::printf("file: %s\n", pack.GetFilename().c_str());
 	std::printf("mesh: %u bytes\n", static_cast<uint32_t>(mesh.size()));
 
 	if (!outFilename.empty())
@@ -290,7 +272,6 @@ int ViewAnimation(openblack::pack::PackFile& pack, uint32_t index, const std::fi
 
 	const auto& animation = pack.GetAnimation(index);
 
-	std::printf("file: %s\n", pack.GetFilename().c_str());
 	std::printf("animation: %-32s %u bytes\n", animation.data(), static_cast<uint32_t>(animation.size()));
 
 	if (!outFilename.empty())
@@ -314,9 +295,7 @@ int ViewSound(openblack::pack::PackFile& pack, uint32_t index, const std::filesy
 	const auto& header = pack.GetAudioSampleHeader(index);
 	const auto& data = pack.GetAudioSampleData(index);
 
-	std::printf("file: %s\n", pack.GetFilename().c_str());
-
-	auto name = std::string(header.name.begin(), header.name.end());
+	const auto name = std::string(header.name.begin(), header.name.end());
 	std::printf("sound %-32s size %u\n", data.data(), static_cast<uint32_t>(data.size()));
 
 	if (!outFilename.empty())
@@ -350,21 +329,8 @@ int WriteRaw(const std::filesystem::path& outFilename, const std::vector<std::fi
 		const auto size = file.tellg();
 		file.seekg(0, std::ios_base::beg);
 		std::vector<uint8_t> data(static_cast<size_t>(size));
-		try
-		{
-			file.read(reinterpret_cast<char*>(data.data()), data.size());
-			file.close();
-		}
-		catch (const std::ios_base::failure& e)
-		{
-			std::fprintf(stderr, "I/O error while reading \"%s\": %s\n", filename.string().c_str(), e.what());
-			return EXIT_FAILURE;
-		}
-		catch (const std::exception& e)
-		{
-			std::cerr << e.what() << std::endl;
-			return EXIT_FAILURE;
-		}
+		file.read(reinterpret_cast<char*>(data.data()), data.size());
+		file.close();
 
 		pack.CreateRawBlock(filename.filename().string(), std::move(data));
 	}
@@ -393,16 +359,8 @@ int WriteMeshFile(const std::filesystem::path& outFilename, const std::vector<st
 			const auto size = file.tellg();
 			file.seekg(0, std::ios_base::beg);
 			data.resize(static_cast<size_t>(size));
-			try
-			{
-				file.read(reinterpret_cast<char*>(data.data()), data.size());
-				file.close();
-			}
-			catch (const std::ios_base::failure& e)
-			{
-				std::fprintf(stderr, "I/O error while reading \"%s\": %s\n", filename.string().c_str(), e.what());
-				return EXIT_FAILURE;
-			}
+			file.read(reinterpret_cast<char*>(data.data()), data.size());
+			file.close();
 		}
 		pack.InsertMesh(data);
 	}
@@ -438,7 +396,7 @@ int WriteSoundFile(const std::filesystem::path& outFilename) noexcept
 
 struct Arguments
 {
-	enum class Mode
+	enum class Mode : uint8_t
 	{
 		List,
 		Block,
@@ -470,8 +428,8 @@ struct Arguments
 	auto colCount = std::count(range.begin(), range.end(), ':');
 	if (colCount > 2)
 	{
-		throw cxxopts::exceptions::invalid_option_syntax(
-		    "pack-files entry cannot have more than two ':' for file.l3d[[:START]:LENGTH]");
+		std::cerr << "pack-files entry cannot have more than two ':' for file.l3d[[:START]:LENGTH]\n";
+		std::exit(1);
 	}
 	// If there are none, it's like :1
 	if (colCount == 0)
@@ -496,14 +454,16 @@ struct Arguments
 	auto ul = std::strtoul(startStr.c_str(), nullptr, 0);
 	if (ul == std::numeric_limits<decltype(ul)>::max())
 	{
-		throw cxxopts::exceptions::invalid_option_syntax("couldn't parse pack-file's start index as a number: " + startStr);
+		std::cerr << "couldn't parse pack-file's start index as a number: " + startStr + '\n';
+		std::exit(1);
 	}
 	start = static_cast<uint32_t>(ul);
 
 	ul = std::strtoul(lengthStr.c_str(), nullptr, 0);
 	if (ul == std::numeric_limits<decltype(ul)>::max())
 	{
-		throw cxxopts::exceptions::invalid_option_syntax("couldn't parse pack-file's length as a number: " + lengthStr);
+		std::cerr << "couldn't parse pack-file's length as a number: " + lengthStr + '\n';
+		std::exit(1);
 	}
 	length = static_cast<uint32_t>(ul);
 
@@ -514,210 +474,196 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 {
 	cxxopts::Options options("packtool", "Inspect and extract files from LionHead pack files.");
 
-	try
-	{
-		options.add_options()                                                                                   //
-		    ("h,help", "Display this help message.")                                                            //
-		    ("l,list-blocks", "List all blocks statistics.")                                                    //
-		    ("b,view-bytes", "View raw byte content of block.", cxxopts::value<std::string>())                  //
-		    ("s,block", "List statistics of block.", cxxopts::value<std::string>())                             //
-		    ("i,info-block", "List INFO block statistics.")                                                     //
-		    ("B,body-block", "List Body block statistics.")                                                     //
-		    ("M,meshes-block", "List MESHES block statistics.")                                                 //
-		    ("m,mesh", "List mesh statistics.", cxxopts::value<uint32_t>())                                     //
-		    ("T,texture-block", "View texture block statistics.")                                               //
-		    ("t,texture", "View texture statistics.", cxxopts::value<std::string>())                            //
-		    ("A,animation-block", "List animation block statistics.")                                           //
-		    ("S,sound-block", "List sound block statistics.")                                                   //
-		    ("a,animation", "List animation statistics.", cxxopts::value<uint32_t>())                           //
-		    ("d,sound", "List sound statistics.", cxxopts::value<uint32_t>())                                   //
-		    ("e,extract", "Extract contents of a block to filename (use \"stdout\" for piping to other tool).", //
-		     cxxopts::value<std::filesystem::path>())                                                           //
-		    ("w,write-raw", "Create Raw Data Pack.", cxxopts::value<std::filesystem::path>())                   //
-		    ("write-mesh", "Create Mesh Pack (file.l3d[[:START]:LENGTH]...).",                                  //
-		     cxxopts::value<std::filesystem::path>())                                                           //
-		    ("write-animation", "Create Mesh Pack.", cxxopts::value<std::filesystem::path>())                   //
-		    ("pack-files", "Pack Files.", cxxopts::value<std::vector<std::filesystem::path>>())                 //
-		    ;
+	options.add_options()                                                                                   //
+	    ("h,help", "Display this help message.")                                                            //
+	    ("l,list-blocks", "List all blocks statistics.")                                                    //
+	    ("b,view-bytes", "View raw byte content of block.", cxxopts::value<std::string>())                  //
+	    ("s,block", "List statistics of block.", cxxopts::value<std::string>())                             //
+	    ("i,info-block", "List INFO block statistics.")                                                     //
+	    ("B,body-block", "List Body block statistics.")                                                     //
+	    ("M,meshes-block", "List MESHES block statistics.")                                                 //
+	    ("m,mesh", "List mesh statistics.", cxxopts::value<uint32_t>())                                     //
+	    ("T,texture-block", "View texture block statistics.")                                               //
+	    ("t,texture", "View texture statistics.", cxxopts::value<std::string>())                            //
+	    ("A,animation-block", "List animation block statistics.")                                           //
+	    ("S,sound-block", "List sound block statistics.")                                                   //
+	    ("a,animation", "List animation statistics.", cxxopts::value<uint32_t>())                           //
+	    ("d,sound", "List sound statistics.", cxxopts::value<uint32_t>())                                   //
+	    ("e,extract", "Extract contents of a block to filename (use \"stdout\" for piping to other tool).", //
+	     cxxopts::value<std::filesystem::path>())                                                           //
+	    ("w,write-raw", "Create Raw Data Pack.", cxxopts::value<std::filesystem::path>())                   //
+	    ("write-mesh", "Create Mesh Pack (file.l3d[[:START]:LENGTH]...).",                                  //
+	     cxxopts::value<std::filesystem::path>())                                                           //
+	    ("write-animation", "Create Mesh Pack.", cxxopts::value<std::filesystem::path>())                   //
+	    ("pack-files", "Pack Files.", cxxopts::value<std::vector<std::filesystem::path>>())                 //
+	    ;
 
-		options.parse_positional({"pack-files"});
-		options.positional_help("pack-files...");
-	}
-	catch (const std::exception& e)
+	options.parse_positional({"pack-files"});
+	options.positional_help("pack-files...");
+
+	auto result = options.parse(argc, argv);
+	args.outFilename = "";
+	if (result["help"].as<bool>())
 	{
-		std::cerr << e.what() << '\n';
+		std::cout << options.help() << '\n';
+		returnCode = EXIT_SUCCESS;
+		return false;
+	}
+	if (result["write-animation"].count() > 0)
+	{
+		args.mode = Arguments::Mode::WriteAnimationPack;
+		args.outFilename = result["write-animation"].as<std::filesystem::path>();
+		return true;
+	}
+	// Following this, all args require positional arguments
+	if (result["pack-files"].count() == 0)
+	{
+		std::cerr << "Option \"pack-files\" is missing an argument\n" << options.help() << '\n';
 		returnCode = EXIT_FAILURE;
 		return false;
 	}
-
-	try
+	if (result["write-mesh"].count() > 0)
 	{
-		auto result = options.parse(argc, argv);
-		args.outFilename = "";
-		if (result["help"].as<bool>())
+		args.mode = Arguments::Mode::WriteMeshPack;
+		args.outFilename = result["write-mesh"].as<std::filesystem::path>();
+		const auto ranges = result["pack-files"].as<std::vector<std::filesystem::path>>();
+		// Get size of expanded out filename
+		uint32_t currentSize = 0;
+		for (const auto& range : ranges)
 		{
-			std::cout << options.help() << std::endl;
-			returnCode = EXIT_SUCCESS;
-			return false;
+			uint32_t start;
+			uint32_t length;
+			[[maybe_unused]] const auto filename = parseRange(range.filename().string(), currentSize, start, length);
+			currentSize = std::max(start + length, currentSize);
 		}
-		if (result["write-animation"].count() > 0)
+		// Expand out filename
+		std::vector<std::filesystem::path> expandedOutFilename;
+		expandedOutFilename.resize(static_cast<std::vector<std::filesystem::path>::size_type>(currentSize));
+		currentSize = 0;
+		for ([[maybe_unused]] const auto& range : result["pack-files"].as<std::vector<std::filesystem::path>>())
 		{
-			args.mode = Arguments::Mode::WriteAnimationPack;
-			args.outFilename = result["write-animation"].as<std::filesystem::path>();
-			return true;
-		}
-		// Following this, all args require positional arguments
-		if (result["pack-files"].count() == 0)
-		{
-			throw cxxopts::exceptions::missing_argument("pack-files");
-		}
-		if (result["write-mesh"].count() > 0)
-		{
-			args.mode = Arguments::Mode::WriteMeshPack;
-			args.outFilename = result["write-mesh"].as<std::filesystem::path>();
-			const auto ranges = result["pack-files"].as<std::vector<std::filesystem::path>>();
-			// Get size of expanded out filename
-			uint32_t currentSize = 0;
-			for (const auto& range : ranges)
+			uint32_t start;
+			uint32_t length;
+			const auto filename = parseRange(range.filename().string(), currentSize, start, length);
+			const auto parent = range.parent_path();
+			for (uint32_t i = 0; i < length; ++i)
 			{
-				uint32_t start;
-				uint32_t length;
-				const auto filename = parseRange(range.filename().string(), currentSize, start, length);
-				currentSize = std::max(start + length, currentSize);
+				expandedOutFilename[start + i] = parent / filename;
 			}
-			// Expand out filename
-			std::vector<std::filesystem::path> expandedOutFilename;
-			expandedOutFilename.resize(static_cast<std::vector<std::filesystem::path>::size_type>(currentSize));
-			currentSize = 0;
-			for ([[maybe_unused]] const auto& range : result["pack-files"].as<std::vector<std::filesystem::path>>())
-			{
-				uint32_t start;
-				uint32_t length;
-				const auto filename = parseRange(range.filename().string(), currentSize, start, length);
-				const auto parent = range.parent_path();
-				for (uint32_t i = 0; i < length; ++i)
-				{
-					expandedOutFilename[start + i] = parent / filename;
-				}
-			}
-			args.filenames = expandedOutFilename;
-			return true;
 		}
-		if (result["list-blocks"].count() > 0)
-		{
-			args.mode = Arguments::Mode::List;
-			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
-			return true;
-		}
-		if (result["view-bytes"].count() > 0)
-		{
-			args.mode = Arguments::Mode::Bytes;
-			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
-			args.block = result["view-bytes"].as<std::string>();
-			return true;
-		}
-		if (result["info-block"].count() > 0)
-		{
-			args.mode = Arguments::Mode::Info;
-			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
-			return true;
-		}
-		if (result["body-block"].count() > 0)
-		{
-			args.mode = Arguments::Mode::Body;
-			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
-			return true;
-		}
-		if (result["animation-block"].count() > 0)
-		{
-			args.mode = Arguments::Mode::Animations;
-			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
-			return true;
-		}
-		if (result["sound-block"].count() > 0)
-		{
-			args.mode = Arguments::Mode::Sounds;
-			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
-			return true;
-		}
-		if (result["meshes-block"].count() > 0)
-		{
-			args.mode = Arguments::Mode::Meshes;
-			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
-			return true;
-		}
-		if (result["texture-block"].count() > 0)
-		{
-			args.mode = Arguments::Mode::Textures;
-			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
-			return true;
-		}
-		if (result["block"].count() > 0)
-		{
-			if (result["extract"].count() > 0)
-			{
-				args.outFilename = result["extract"].as<std::filesystem::path>();
-			}
-			args.mode = Arguments::Mode::Block;
-			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
-			args.block = result["block"].as<std::string>();
-			return true;
-		}
-		if (result["write-raw"].count() > 0)
-		{
-			args.outFilename = result["write-raw"].as<std::filesystem::path>();
-			args.mode = Arguments::Mode::WriteRaw;
-			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
-			return true;
-		}
-		if (result["animation"].count() > 0)
-		{
-			if (result["extract"].count() > 0)
-			{
-				args.outFilename = result["extract"].as<std::filesystem::path>();
-			}
-			args.mode = Arguments::Mode::Animation;
-			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
-			args.blockId = result["animation"].as<uint32_t>();
-			return true;
-		}
-		if (result["mesh"].count() > 0)
-		{
-			if (result["extract"].count() > 0)
-			{
-				args.outFilename = result["extract"].as<std::filesystem::path>();
-			}
-			args.mode = Arguments::Mode::Mesh;
-			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
-			args.blockId = result["mesh"].as<uint32_t>();
-			return true;
-		}
-		if (result["texture"].count() > 0)
-		{
-			if (result["extract"].count() > 0)
-			{
-				args.outFilename = result["extract"].as<std::filesystem::path>();
-			}
-			args.mode = Arguments::Mode::Texture;
-			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
-			args.block = result["texture"].as<std::string>();
-			return true;
-		}
-		if (result["sound"].count() > 0)
-		{
-			if (result["extract"].count() > 0)
-			{
-				args.outFilename = result["extract"].as<std::filesystem::path>();
-			}
-			args.mode = Arguments::Mode::Sound;
-			args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
-			args.blockId = result["sound"].as<uint32_t>();
-			return true;
-		}
+		args.filenames = expandedOutFilename;
+		return true;
 	}
-	catch (const std::exception& err)
+	if (result["list-blocks"].count() > 0)
 	{
-		std::cerr << err.what() << std::endl;
+		args.mode = Arguments::Mode::List;
+		args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
+		return true;
+	}
+	if (result["view-bytes"].count() > 0)
+	{
+		args.mode = Arguments::Mode::Bytes;
+		args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
+		args.block = result["view-bytes"].as<std::string>();
+		return true;
+	}
+	if (result["info-block"].count() > 0)
+	{
+		args.mode = Arguments::Mode::Info;
+		args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
+		return true;
+	}
+	if (result["body-block"].count() > 0)
+	{
+		args.mode = Arguments::Mode::Body;
+		args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
+		return true;
+	}
+	if (result["animation-block"].count() > 0)
+	{
+		args.mode = Arguments::Mode::Animations;
+		args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
+		return true;
+	}
+	if (result["sound-block"].count() > 0)
+	{
+		args.mode = Arguments::Mode::Sounds;
+		args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
+		return true;
+	}
+	if (result["meshes-block"].count() > 0)
+	{
+		args.mode = Arguments::Mode::Meshes;
+		args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
+		return true;
+	}
+	if (result["texture-block"].count() > 0)
+	{
+		args.mode = Arguments::Mode::Textures;
+		args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
+		return true;
+	}
+	if (result["block"].count() > 0)
+	{
+		if (result["extract"].count() > 0)
+		{
+			args.outFilename = result["extract"].as<std::filesystem::path>();
+		}
+		args.mode = Arguments::Mode::Block;
+		args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
+		args.block = result["block"].as<std::string>();
+		return true;
+	}
+	if (result["write-raw"].count() > 0)
+	{
+		args.outFilename = result["write-raw"].as<std::filesystem::path>();
+		args.mode = Arguments::Mode::WriteRaw;
+		args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
+		return true;
+	}
+	if (result["animation"].count() > 0)
+	{
+		if (result["extract"].count() > 0)
+		{
+			args.outFilename = result["extract"].as<std::filesystem::path>();
+		}
+		args.mode = Arguments::Mode::Animation;
+		args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
+		args.blockId = result["animation"].as<uint32_t>();
+		return true;
+	}
+	if (result["mesh"].count() > 0)
+	{
+		if (result["extract"].count() > 0)
+		{
+			args.outFilename = result["extract"].as<std::filesystem::path>();
+		}
+		args.mode = Arguments::Mode::Mesh;
+		args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
+		args.blockId = result["mesh"].as<uint32_t>();
+		return true;
+	}
+	if (result["texture"].count() > 0)
+	{
+		if (result["extract"].count() > 0)
+		{
+			args.outFilename = result["extract"].as<std::filesystem::path>();
+		}
+		args.mode = Arguments::Mode::Texture;
+		args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
+		args.block = result["texture"].as<std::string>();
+		return true;
+	}
+	if (result["sound"].count() > 0)
+	{
+		if (result["extract"].count() > 0)
+		{
+			args.outFilename = result["extract"].as<std::filesystem::path>();
+		}
+		args.mode = Arguments::Mode::Sound;
+		args.filenames = result["pack-files"].as<std::vector<std::filesystem::path>>();
+		args.blockId = result["sound"].as<uint32_t>();
+		return true;
 	}
 
 	std::cerr << options.help() << std::endl;
@@ -752,61 +698,72 @@ int main(int argc, char* argv[]) noexcept
 	for (auto& filename : args.filenames)
 	{
 		openblack::pack::PackFile pack;
-		try
+		// Open file
+		const auto result = pack.Open(filename);
+		if (result != openblack::pack::PackResult::Success)
 		{
-			// Open file
-			pack.Open(filename);
-
-			switch (args.mode)
-			{
-			case Arguments::Mode::List:
-				returnCode |= ListBlocks(pack);
-				break;
-			case Arguments::Mode::Block:
-				returnCode |= ListBlock(pack, args.block, args.outFilename);
-				break;
-			case Arguments::Mode::Bytes:
-				returnCode |= ViewBytes(pack, args.block);
-				break;
-			case Arguments::Mode::Info:
-				returnCode |= ViewInfo(pack);
-				break;
-			case Arguments::Mode::Body:
-				returnCode |= ViewBody(pack);
-				break;
-			case Arguments::Mode::Textures:
-				returnCode |= ViewTextures(pack);
-				break;
-			case Arguments::Mode::Meshes:
-				returnCode |= ViewMeshes(pack);
-				break;
-			case Arguments::Mode::Animations:
-				returnCode |= ViewAnimations(pack);
-				break;
-			case Arguments::Mode::Sounds:
-				returnCode |= ViewSounds(pack);
-				break;
-			case Arguments::Mode::Texture:
-				returnCode |= ViewTexture(pack, args.block, args.outFilename);
-				break;
-			case Arguments::Mode::Mesh:
-				returnCode |= ViewMesh(pack, args.blockId, args.outFilename);
-				break;
-			case Arguments::Mode::Animation:
-				returnCode |= ViewAnimation(pack, args.blockId, args.outFilename);
-				break;
-			case Arguments::Mode::Sound:
-				returnCode |= ViewSound(pack, args.blockId, args.outFilename);
-				break;
-			default:
-				returnCode = EXIT_FAILURE;
-				break;
-			}
-		}
-		catch (std::exception& err)
-		{
-			std::cerr << err.what() << std::endl;
+			std::cerr << openblack::pack::ResultToStr(result) << "\n";
 			returnCode |= EXIT_FAILURE;
+			continue;
+		}
+
+		switch (args.mode)
+		{
+		case Arguments::Mode::List:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ListBlocks(pack);
+			break;
+		case Arguments::Mode::Block:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ListBlock(pack, args.block, args.outFilename);
+			break;
+		case Arguments::Mode::Bytes:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ViewBytes(pack, args.block);
+			break;
+		case Arguments::Mode::Info:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ViewInfo(pack);
+			break;
+		case Arguments::Mode::Body:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ViewBody(pack);
+			break;
+		case Arguments::Mode::Textures:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ViewTextures(pack);
+			break;
+		case Arguments::Mode::Meshes:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ViewMeshes(pack);
+			break;
+		case Arguments::Mode::Animations:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ViewAnimations(pack);
+			break;
+		case Arguments::Mode::Sounds:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ViewSounds(pack);
+			break;
+		case Arguments::Mode::Texture:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ViewTexture(pack, args.block, args.outFilename);
+			break;
+		case Arguments::Mode::Mesh:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ViewMesh(pack, args.blockId, args.outFilename);
+			break;
+		case Arguments::Mode::Animation:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ViewAnimation(pack, args.blockId, args.outFilename);
+			break;
+		case Arguments::Mode::Sound:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ViewSound(pack, args.blockId, args.outFilename);
+			break;
+		default:
+			returnCode = EXIT_FAILURE;
+			break;
 		}
 	}
 

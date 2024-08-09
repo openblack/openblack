@@ -4,6 +4,7 @@ source_group(apps\\packtool FILES ${PACKTOOL})
 
 add_executable(packtool ${PACKTOOL})
 
+target_compile_definitions(packtool PRIVATE CXXOPTS_NO_EXCEPTIONS)
 target_link_libraries(packtool PRIVATE cxxopts::cxxopts pack)
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
@@ -16,9 +17,12 @@ if (OPENBLACK_CLANG_TIDY_CHECKS)
 endif ()
 
 if (MSVC)
-  target_compile_options(packtool PRIVATE /W4 /WX)
+  target_compile_definitions(packtool PRIVATE _HAS_EXCEPTIONS=0)
+  target_compile_options(packtool PRIVATE /W4 /WX /EHs-c-)
 else ()
-  target_compile_options(packtool PRIVATE -Wall -Wextra -pedantic -Werror)
+  target_compile_options(
+    packtool PRIVATE -Wall -Wextra -pedantic -Werror -fno-exceptions
+  )
 endif ()
 
 set_property(TARGET packtool PROPERTY FOLDER "tools")
