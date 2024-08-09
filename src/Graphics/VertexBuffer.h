@@ -59,7 +59,7 @@ struct VertexAttrib
 	bool asInt;          /// < Should not be altered. Unpacking will have to be done in
 	                     /// vertex shader.
 
-	VertexAttrib(Attribute attribute, uint8_t num, Type type, bool normalized = false, bool asInt = false)
+	VertexAttrib(Attribute attribute, uint8_t num, Type type, bool normalized = false, bool asInt = false) noexcept
 	    : attribute(attribute)
 	    , num(num)
 	    , type(type)
@@ -74,9 +74,9 @@ using VertexDecl = std::vector<VertexAttrib>;
 class VertexBuffer
 {
 public:
-	VertexBuffer(std::string name, const void* vertices, uint32_t vertexCount, VertexDecl decl);
-	VertexBuffer(std::string name, const bgfx::Memory* memory, VertexDecl decl);
-	~VertexBuffer();
+	VertexBuffer(std::string name, const void* vertices, uint32_t vertexCount, VertexDecl decl) noexcept;
+	VertexBuffer(std::string name, const bgfx::Memory* memory, VertexDecl decl) noexcept;
+	~VertexBuffer() noexcept;
 
 	[[nodiscard]] uint32_t GetCount() const noexcept;
 	[[nodiscard]] uint32_t GetStrideBytes() const noexcept;

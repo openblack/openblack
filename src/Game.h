@@ -160,7 +160,7 @@ public:
 
 	bool LoadVariables() noexcept;
 
-	void SetTime(float time);
+	void SetTime(float time) noexcept;
 	void SetGameSpeed(float multiplier) { _gameSpeedMultiplier = multiplier; }
 	[[nodiscard]] float GetGameSpeed() const { return _gameSpeedMultiplier; }
 
@@ -180,7 +180,7 @@ public:
 	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const { return _turnDeltaTime; }
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
 
-	void RequestScreenshot(const std::filesystem::path& path);
+	void RequestScreenshot(const std::filesystem::path& path) noexcept;
 
 	static Game* Instance() { return sInstance; }
 

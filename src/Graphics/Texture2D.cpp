@@ -95,7 +95,7 @@ Texture2D::~Texture2D()
 }
 
 void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format format, Wrapping wrapping, Filter filter,
-                       const bgfx::Memory* memory)
+                       const bgfx::Memory* memory) noexcept
 {
 	uint64_t flags = BGFX_TEXTURE_NONE;
 	switch (wrapping)
@@ -131,7 +131,7 @@ void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format 
 }
 
 void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format format, Wrapping wrapping, Filter filter,
-                       const void* data, uint32_t size)
+                       const void* data, uint32_t size) noexcept
 {
 
 	Texture2D::Create(width, height, layers, format, wrapping, filter, bgfx::makeRef(data, size));

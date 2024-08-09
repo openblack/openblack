@@ -39,8 +39,9 @@ public:
 		TriangleStrip,
 	};
 
-	explicit Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer = nullptr, Topology topology = Topology::TriangleList);
-	~Mesh();
+	explicit Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer = nullptr,
+	              Topology topology = Topology::TriangleList) noexcept;
+	~Mesh() noexcept;
 
 	[[nodiscard]] const VertexBuffer& GetVertexBuffer() const;
 	[[nodiscard]] const IndexBuffer& GetIndexBuffer() const;

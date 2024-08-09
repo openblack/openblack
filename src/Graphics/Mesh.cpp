@@ -15,14 +15,14 @@
 
 using namespace openblack::graphics;
 
-Mesh::Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, Topology topology)
+Mesh::Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, Topology topology) noexcept
     : _vertexBuffer(vertexBuffer)
     , _indexBuffer(indexBuffer)
     , _topology(topology)
 {
 }
 
-Mesh::~Mesh() = default;
+Mesh::~Mesh() noexcept = default;
 
 const VertexBuffer& Mesh::GetVertexBuffer() const
 {
