@@ -581,7 +581,12 @@ bool Game::Initialize()
 
 	pack::PackFile pack;
 
-	pack.ReadFile(*fileSystem.GetData(fileSystem.GetPath<Path::Data>() / "AllMeshes.g3d"));
+	auto packResult = pack.ReadFile(*fileSystem.GetData(fileSystem.GetPath<Path::Data>() / "AllMeshes.g3d"));
+	if (packResult != pack::PackResult::Success)
+	{
+		SPDLOG_LOGGER_CRITICAL(spdlog::get("game"), "Unable to load AllMeshes.g3d: {}", pack::ResultToStr(packResult));
+		return false;
+	}
 
 	const auto& meshes = pack.GetMeshes();
 	// TODO (#749) use std::views::enumerate
@@ -599,7 +604,12 @@ bool Game::Initialize()
 	}
 
 	pack::PackFile animationPack;
-	animationPack.ReadFile(*fileSystem.GetData(fileSystem.GetPath<Path::Data>() / "AllAnims.anm"));
+	packResult = animationPack.ReadFile(*fileSystem.GetData(fileSystem.GetPath<Path::Data>() / "AllAnims.anm"));
+	if (packResult != pack::PackResult::Success)
+	{
+		SPDLOG_LOGGER_CRITICAL(spdlog::get("game"), "Unable to load AllAnims.anm: {}", pack::ResultToStr(packResult));
+		return false;
+	}
 
 	const auto& animations = animationPack.GetAnimations();
 	// TODO (#749) use std::views::enumerate
@@ -708,7 +718,13 @@ bool Game::Initialize()
 
 		    pack::PackFile soundPack;
 		    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Opening sound pack {}", f.filename().string());
-		    soundPack.ReadFile(*fileSystem.GetData(f));
+		    const auto result = soundPack.ReadFile(*fileSystem.GetData(f));
+		    if (result != pack::PackResult::Success)
+		    {
+			    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Unable to load sound pack {}: {}", f.filename().string(),
+			                        pack::ResultToStr(result));
+			    return;
+		    }
 		    const auto& audioHeaders = soundPack.GetAudioSampleHeaders();
 		    const auto& audioData = soundPack.GetAudioSamplesData();
 		    auto soundName = std::filesystem::path(audioHeaders[0].name.data());
@@ -961,7 +977,7 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	Locator::playerSystem::value().RegisterPlayers();
 }
 
-bool Game::LoadVariables()
+bool Game::LoadVariables() noexcept
 {
 	InfoFile infoFile;
 	return infoFile.LoadFromFile(Locator::filesystem::value().GetPath<filesystem::Path::Scripts>() / "info.dat",
