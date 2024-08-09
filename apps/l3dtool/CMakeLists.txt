@@ -4,6 +4,7 @@ source_group(apps\\l3dtool FILES ${L3DTOOL})
 
 add_executable(l3dtool ${L3DTOOL})
 
+target_compile_definitions(l3dtool PRIVATE CXXOPTS_NO_EXCEPTIONS)
 target_link_libraries(l3dtool PRIVATE cxxopts::cxxopts l3d)
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
@@ -16,11 +17,12 @@ if (OPENBLACK_CLANG_TIDY_CHECKS)
 endif ()
 
 if (MSVC)
-  target_compile_options(l3dtool PRIVATE /W4 /WX)
+  target_compile_definitions(l3dtool PRIVATE _HAS_EXCEPTIONS=0)
+  target_compile_options(l3dtool PRIVATE /W4 /WX /EHs-c-)
 else ()
   target_compile_options(
     l3dtool
-    PRIVATE -Wall -Wextra -pedantic -Werror
+    PRIVATE -Wall -Wextra -pedantic -Werror -fno-exceptions
             # Disabled due to tiny-gltf
             -Wno-switch
   )

@@ -194,7 +194,6 @@ int PrintHeader(openblack::l3d::L3DFile& l3d)
 		return result.size() > 1 ? result.substr(0, result.size() - 1) : result;
 	};
 
-	std::printf("file: %s\n", l3d.GetFilename().c_str());
 	std::printf("magic: %s\n", std::string(header.magic.data(), sizeof(header.magic[0]) * header.magic.size()).c_str());
 	std::printf("flags: %s\n", flagToString(header.flags).c_str());
 	std::printf("size: %u\n", header.size);
@@ -220,7 +219,6 @@ int PrintHeader(openblack::l3d::L3DFile& l3d)
 int PrintMeshHeaders(openblack::l3d::L3DFile& l3d)
 {
 	const auto& meshHeaders = l3d.GetSubmeshHeaders();
-	std::printf("file: %s\n", l3d.GetFilename().c_str());
 
 	uint32_t i = 0;
 	using Flags = openblack::l3d::L3DSubmeshHeader::Flags;
@@ -263,35 +261,34 @@ int PrintMeshHeaders(openblack::l3d::L3DFile& l3d)
 int PrintSkins(openblack::l3d::L3DFile& l3d)
 {
 	const auto& skins = l3d.GetSkins();
-	std::printf("file: %s\n", l3d.GetFilename().c_str());
 
 	for (const auto& skin : skins)
 	{
 		std::printf("skin id: 0x%X\n", skin.id);
 		std::printf("data:\n");
-		constexpr uint16_t subsample = 8;
-		constexpr uint16_t magnitude = (subsample * subsample) / 16;
-		for (uint16_t y = 0; y < openblack::l3d::L3DTexture::k_Height / subsample; ++y)
+		constexpr uint16_t k_Subsample = 8;
+		constexpr uint16_t k_Magnitude = (k_Subsample * k_Subsample) / 16;
+		for (uint16_t y = 0; y < openblack::l3d::L3DTexture::k_Height / k_Subsample; ++y)
 		{
-			for (uint16_t x = 0; x < openblack::l3d::L3DTexture::k_Width / subsample; ++x)
+			for (uint16_t x = 0; x < openblack::l3d::L3DTexture::k_Width / k_Subsample; ++x)
 			{
 				uint32_t red = 0;
 				uint32_t green = 0;
 				uint32_t blue = 0;
-				for (uint16_t j = 0; j < subsample; ++j)
+				for (uint16_t j = 0; j < k_Subsample; ++j)
 				{
-					for (uint16_t i = 0; i < subsample; ++i)
+					for (uint16_t i = 0; i < k_Subsample; ++i)
 					{
 						const auto& color =
-						    skin.texels.at(x * subsample + i + (y * subsample + j) * openblack::l3d::L3DTexture::k_Width);
+						    skin.texels.at(x * k_Subsample + i + (y * k_Subsample + j) * openblack::l3d::L3DTexture::k_Width);
 						red += color.r;
 						green += color.g;
 						blue += color.b;
 					}
 				}
-				red /= magnitude;
-				green /= magnitude;
-				blue /= magnitude;
+				red /= k_Magnitude;
+				green /= k_Magnitude;
+				blue /= k_Magnitude;
 				std::printf("\x1b[48;2;%u;%u;%um  \x1b[0m", static_cast<uint8_t>(red), static_cast<uint8_t>(green),
 				            static_cast<uint8_t>(blue));
 			}
@@ -305,7 +302,6 @@ int PrintSkins(openblack::l3d::L3DFile& l3d)
 int PrintExtraPoints(openblack::l3d::L3DFile& l3d)
 {
 	const auto& points = l3d.GetExtraPoints();
-	std::printf("file: %s\n", l3d.GetFilename().c_str());
 
 	for (const auto& point : points)
 	{
@@ -318,7 +314,6 @@ int PrintExtraPoints(openblack::l3d::L3DFile& l3d)
 int PrintPrimitiveHeaders(openblack::l3d::L3DFile& l3d)
 {
 	const auto& primitiveHeaders = l3d.GetPrimitiveHeaders();
-	std::printf("file: %s\n", l3d.GetFilename().c_str());
 
 	uint32_t i = 0;
 	for (const auto& header : primitiveHeaders)
@@ -378,7 +373,6 @@ int PrintPrimitiveHeaders(openblack::l3d::L3DFile& l3d)
 int PrintBones(openblack::l3d::L3DFile& l3d)
 {
 	const auto& bones = l3d.GetBones();
-	std::printf("file: %s\n", l3d.GetFilename().c_str());
 
 	uint32_t i = 0;
 	for (const auto& bone : bones)
@@ -422,7 +416,6 @@ int PrintBones(openblack::l3d::L3DFile& l3d)
 int PrintVertices(openblack::l3d::L3DFile& l3d)
 {
 	const auto& vertices = l3d.GetVertices();
-	std::printf("file: %s\n", l3d.GetFilename().c_str());
 	std::printf("|     position     |   uv coord   |        normal        |\n");
 	std::printf("|------------------|--------------|----------------------|\n");
 
@@ -437,13 +430,16 @@ int PrintVertices(openblack::l3d::L3DFile& l3d)
 
 int PrintIndices(openblack::l3d::L3DFile& l3d)
 {
-	constexpr uint8_t indexPerLine = 12;
+	constexpr uint8_t k_IndexPerLine = 12;
 	const auto& indices = l3d.GetIndices();
-	std::printf("file: %s\n", l3d.GetFilename().c_str());
 
 	for (std::size_t i = 0; i < indices.size(); ++i)
 	{
-		std::printf("%s%4u", i == 0 ? "" : ((i % indexPerLine != 0) ? " " : "\n"), indices[i]);
+		if (i > 0)
+		{
+			std::printf((i % k_IndexPerLine != 0) ? " " : "\n");
+		}
+		std::printf("%4u", indices[i]);
 	}
 	std::printf("\n");
 
@@ -453,21 +449,18 @@ int PrintIndices(openblack::l3d::L3DFile& l3d)
 int PrintLookUpTables(openblack::l3d::L3DFile& l3d)
 {
 	const auto& lookUpTable = l3d.GetLookUpTableData();
-	std::printf("file: %s\n", l3d.GetFilename().c_str());
 	return PrintRawBytes(lookUpTable.data(), lookUpTable.size() * sizeof(lookUpTable[0]));
 }
 
 int PrintBlendValues(openblack::l3d::L3DFile& l3d)
 {
 	const auto& blendValues = l3d.GetLookUpTableData();
-	std::printf("file: %s\n", l3d.GetFilename().c_str());
 	return PrintRawBytes(blendValues.data(), blendValues.size() * sizeof(blendValues[0]));
 }
 
 int PrintFootprintValues(openblack::l3d::L3DFile& l3d)
 {
 	const auto& footprint = l3d.GetFootprint();
-	std::printf("file: %s\n", l3d.GetFilename().c_str());
 
 	if (!footprint.has_value())
 	{
@@ -526,14 +519,12 @@ int PrintFootprintValues(openblack::l3d::L3DFile& l3d)
 int PrintUv2Values(openblack::l3d::L3DFile& l3d)
 {
 	const auto& uv2Values = l3d.GetUv2Data();
-	std::printf("file: %s\n", l3d.GetFilename().c_str());
 	return PrintRawBytes(uv2Values.data(), uv2Values.size() * sizeof(uv2Values[0]));
 }
 
 int PrintNameValue(openblack::l3d::L3DFile& l3d)
 {
 	const auto& nameValue = l3d.GetNameData();
-	std::printf("file: %s\n", l3d.GetFilename().c_str());
 	std::printf("name data: %s\n", nameValue.c_str());
 	return EXIT_SUCCESS;
 }
@@ -541,7 +532,6 @@ int PrintNameValue(openblack::l3d::L3DFile& l3d)
 int PrintExtraMetricsValues(openblack::l3d::L3DFile& l3d)
 {
 	const auto& extraMetrics = l3d.GetExtraMetrics();
-	std::printf("file: %s\n", l3d.GetFilename().c_str());
 
 	if (extraMetrics.empty())
 	{
@@ -563,7 +553,7 @@ int PrintExtraMetricsValues(openblack::l3d::L3DFile& l3d)
 
 struct Arguments
 {
-	enum class Mode
+	enum class Mode : uint8_t
 	{
 		Header,
 		MeshHeader,
@@ -601,24 +591,27 @@ struct Arguments
 
 namespace details
 {
-template <typename dstT, typename srcT, typename = std::enable_if<std::is_same<dstT, srcT>::type>>
-void copyBufferView(dstT* dst, const uint8_t* src, size_t count)
+template <typename dstT, typename srcT>
+    requires(std::is_same_v<dstT, srcT>)
+bool copyBufferView(dstT* dst, const uint8_t* src, size_t count)
 {
 	for (size_t j = 0; j < count; ++j)
 	{
 		dst[j] = static_cast<dstT>(reinterpret_cast<const srcT*>(src)[j]);
 	}
+	return true;
 }
 
 template <typename dstT, typename srcT>
-void copyBufferView(dstT* dst, const uint8_t* src, size_t count)
+bool copyBufferView(dstT* dst, const uint8_t* src, size_t count)
 {
 	memcpy(dst, src, count * sizeof(dstT));
+	return true;
 }
 } // namespace details
 
 template <typename desT>
-void copyBufferView(desT* dst, const uint8_t* src, size_t count, uint32_t componentType)
+bool copyBufferView(desT* dst, const uint8_t* src, size_t count, uint32_t componentType)
 {
 	switch (componentType)
 	{
@@ -647,15 +640,16 @@ void copyBufferView(desT* dst, const uint8_t* src, size_t count, uint32_t compon
 		details::copyBufferView<desT, double>(dst, src, count);
 		break;
 	default:
-		throw std::runtime_error("Unsupported component type");
+		return false;
 	}
+	return true;
 }
 
 bool NoopLoadImageDataFunction(tinygltf::Image* /*unused*/, const int /*unused*/, std::string* /*unused*/,
                                std::string* /*unused*/, int /*unused*/, int /*unused*/, const unsigned char* /*unused*/,
                                int /*unused*/, void* /*unused*/)
 {
-	std::cerr << "Warn: GLTF Image Data function called but not implemented." << std::endl;
+	std::cerr << "Warn: GLTF Image Data function called but not implemented.\n";
 	return true;
 }
 
@@ -675,37 +669,29 @@ int WriteFile(const Arguments::Write& args) noexcept
 	bool ret;
 
 	loader.SetImageLoader(NoopLoadImageDataFunction, nullptr);
-	try
-	{
-		ret = loader.LoadASCIIFromFile(&gltf, &err, &warn, args.gltfFile.string(),
-		                               tinygltf::REQUIRE_VERSION | tinygltf::REQUIRE_ACCESSORS | tinygltf::REQUIRE_BUFFERS |
-		                                   tinygltf::REQUIRE_BUFFER_VIEWS);
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-		ret = false;
-	}
+	ret = loader.LoadASCIIFromFile(&gltf, &err, &warn, args.gltfFile.string(),
+	                               tinygltf::REQUIRE_VERSION | tinygltf::REQUIRE_ACCESSORS | tinygltf::REQUIRE_BUFFERS |
+	                                   tinygltf::REQUIRE_BUFFER_VIEWS);
 
 	if (!warn.empty())
 	{
-		std::cerr << "Warn: " << warn << std::endl;
+		std::cerr << "Warn: " << warn << '\n';
 	}
 
 	if (!err.empty())
 	{
-		std::cerr << "Err: " << err << std::endl;
+		std::cerr << "Err: " << err << '\n';
 	}
 
 	if (!ret)
 	{
-		std::cerr << "Err: Failed to parse glTF." << std::endl;
+		std::cerr << "Err: Failed to parse glTF.\n";
 		return EXIT_FAILURE;
 	}
 
 	if (gltf.meshes.empty())
 	{
-		std::cerr << "Err: There are no meshes in glTF." << std::endl;
+		std::cerr << "Err: There are no meshes in glTF.\n";
 		return EXIT_FAILURE;
 	}
 
@@ -747,14 +733,13 @@ int WriteFile(const Arguments::Write& args) noexcept
 			{
 				submesh.flags.hasBones = true;
 				std::vector<openblack::l3d::L3DBone> bones;
-				std::function<void(const std::vector<int>&, uint32_t parent)> buildJoints;
-				buildJoints = [&gltf, &bones, &buildJoints](const std::vector<int>& children, uint32_t parentId) {
-					openblack::l3d::L3DBone* leftSibbling = nullptr;
+				std::function<bool(const std::vector<int>&, uint32_t parent)> buildJoints;
+				buildJoints = [&gltf, &bones, &buildJoints](const std::vector<int>& children, uint32_t parentId) -> bool {
+					openblack::l3d::L3DBone* leftSibling = nullptr;
 					for (const auto& child : children)
 					{
-						auto& gltfJoint = gltf.nodes[child];
-
-						auto id = static_cast<uint32_t>(bones.size());
+						const auto& gltfJoint = gltf.nodes[child];
+						const auto id = static_cast<uint32_t>(bones.size());
 						bones.emplace_back();
 						auto& bone = bones.back();
 						bone.parent = parentId;
@@ -782,24 +767,20 @@ int WriteFile(const Arguments::Write& args) noexcept
 						bone.position.x = static_cast<float>(gltfJoint.translation[0]);
 						bone.position.y = static_cast<float>(gltfJoint.translation[1]);
 						bone.position.z = static_cast<float>(gltfJoint.translation[2]);
-						buildJoints(gltfJoint.children, id);
-						if (leftSibbling != nullptr)
+						if (!buildJoints(gltfJoint.children, id))
 						{
-							leftSibbling->rightSibling = id;
+							return false;
 						}
-						leftSibbling = &bone;
+						if (leftSibling != nullptr)
+						{
+							leftSibling->rightSibling = id;
+						}
+						leftSibling = &bone;
 					}
+					return true;
 				};
 
-				try
-				{
-					buildJoints({skelton}, std::numeric_limits<uint32_t>::max());
-				}
-				catch (const std::exception& e)
-				{
-					std::cerr << e.what() << '\n';
-					return EXIT_FAILURE;
-				}
+				buildJoints({skelton}, std::numeric_limits<uint32_t>::max());
 
 				l3d.AddBones(bones);
 				submesh.numBones += static_cast<uint32_t>(bones.size());
@@ -848,20 +829,17 @@ int WriteFile(const Arguments::Write& args) noexcept
 					auto& buffer = gltf.buffers[view.buffer];
 					auto offset = view.byteOffset + accessor.byteOffset;
 					attribute.values.resize(accessor.count * accessor.type);
-					try
+
+					if (!copyBufferView(attribute.values.data(), buffer.data.data() + offset, attribute.values.size(),
+					                    accessor.componentType))
 					{
-						copyBufferView(attribute.values.data(), buffer.data.data() + offset, attribute.values.size(),
-						               accessor.componentType);
-					}
-					catch (const std::runtime_error& e)
-					{
-						std::cerr << e.what() << std::endl;
+						std::cerr << "Unsupported component type.\n";
 						return EXIT_FAILURE;
 					}
 					attribute.type = static_cast<uint8_t>(accessor.type);
 					if (count != 0 && count != accessor.count)
 					{
-						std::cerr << "Err: Attributes do not match in length." << std::endl;
+						std::cerr << "Err: Attributes do not match in length.\n";
 						return EXIT_FAILURE;
 					}
 					count = static_cast<uint32_t>(accessor.count);
@@ -870,7 +848,7 @@ int WriteFile(const Arguments::Write& args) noexcept
 
 			if (count == 0)
 			{
-				std::cerr << "Err: No vertex attributes found." << std::endl;
+				std::cerr << "Err: No vertex attributes found.\n";
 				return EXIT_FAILURE;
 			}
 
@@ -907,13 +885,9 @@ int WriteFile(const Arguments::Write& args) noexcept
 				auto offset = view.byteOffset + accessor.byteOffset;
 				std::vector<uint16_t> indices;
 				indices.resize(accessor.count);
-				try
+				if (!copyBufferView(indices.data(), buffer.data.data() + offset, indices.size(), accessor.componentType))
 				{
-					copyBufferView(indices.data(), buffer.data.data() + offset, indices.size(), accessor.componentType);
-				}
-				catch (const std::runtime_error& e)
-				{
-					std::cerr << e.what() << std::endl;
+					std::cerr << "Unsupported component type.\n";
 					return EXIT_FAILURE;
 				}
 				l3d.AddIndices(indices);
@@ -935,13 +909,10 @@ int WriteFile(const Arguments::Write& args) noexcept
 	auto decodedName = tinygltf::base64_decode(gltf.extras.Get("name").Get<std::string>());
 	l3d.SetNameData(decodedName);
 
-	try
+	const auto result = l3d.Write(args.outFilename);
+	if (result != openblack::l3d::L3DResult::Success)
 	{
-		l3d.Write(args.outFilename);
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
+		std::cerr << openblack::l3d::ResultToStr(result) << '\n';
 	}
 
 	return EXIT_SUCCESS;
@@ -956,14 +927,11 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 		return EXIT_FAILURE;
 	}
 
-	try
+	// Open file
+	const auto result = l3d.Open(args.inFilename);
+	if (result != openblack::l3d::L3DResult::Success)
 	{
-		// Open file
-		l3d.Open(args.inFilename);
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
+		std::cerr << openblack::l3d::ResultToStr(result) << '\n';
 	}
 
 	tinygltf::Model gltf;
@@ -973,13 +941,13 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 
 	// Data buffer
 	tinygltf::Buffer vertexBuffer; // 0
-	size_t sizeOfVertices = l3d.GetVertices().size() * sizeof(l3d.GetVertices()[0]);
+	const size_t sizeOfVertices = l3d.GetVertices().size() * sizeof(l3d.GetVertices()[0]);
 	vertexBuffer.data.resize(sizeOfVertices);
 	memcpy(vertexBuffer.data.data(), l3d.GetVertices().data(), sizeOfVertices);
 	gltf.buffers.push_back(vertexBuffer);
 
 	tinygltf::Buffer indexBuffer; // 1
-	size_t sizeOfIndices = l3d.GetIndices().size() * sizeof(l3d.GetIndices()[0]);
+	const size_t sizeOfIndices = l3d.GetIndices().size() * sizeof(l3d.GetIndices()[0]);
 	indexBuffer.data.resize(sizeOfIndices);
 	memcpy(indexBuffer.data.data(), l3d.GetIndices().data(), sizeOfIndices);
 	gltf.buffers.push_back(indexBuffer);
@@ -1115,7 +1083,7 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 		}
 	}
 
-	for (uint32_t i : roots)
+	for (const uint32_t i : roots)
 	{
 		auto boneToNode = [](tinygltf::Node& node, const openblack::l3d::L3DBone& bone) {
 			node.translation.clear();
@@ -1130,10 +1098,10 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 			auto& z = node.rotation.emplace_back(0);
 
 			// From glm quat_cast
-			float fourXSquaredMinus1 = bone.orientation[0] - bone.orientation[4] - bone.orientation[8];
-			float fourYSquaredMinus1 = bone.orientation[4] - bone.orientation[0] - bone.orientation[8];
-			float fourZSquaredMinus1 = bone.orientation[8] - bone.orientation[0] - bone.orientation[4];
-			float fourWSquaredMinus1 = bone.orientation[0] + bone.orientation[4] + bone.orientation[8];
+			const float fourXSquaredMinus1 = bone.orientation[0] - bone.orientation[4] - bone.orientation[8];
+			const float fourYSquaredMinus1 = bone.orientation[4] - bone.orientation[0] - bone.orientation[8];
+			const float fourZSquaredMinus1 = bone.orientation[8] - bone.orientation[0] - bone.orientation[4];
+			const float fourWSquaredMinus1 = bone.orientation[0] + bone.orientation[4] + bone.orientation[8];
 
 			int biggestIndex = 0;
 			float fourBiggestSquaredMinus1 = fourWSquaredMinus1;
@@ -1153,8 +1121,8 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 				biggestIndex = 3;
 			}
 
-			float biggestVal = -std::sqrt(fourBiggestSquaredMinus1 + 1.0f) * 0.5f;
-			float mult = 0.25f / biggestVal;
+			const float biggestVal = -std::sqrt(fourBiggestSquaredMinus1 + 1.0f) * 0.5f;
+			const float mult = 0.25f / biggestVal;
 
 			switch (biggestIndex)
 			{
@@ -1182,70 +1150,53 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 				y = (bone.orientation[5] - bone.orientation[7]) * mult;
 				z = biggestVal;
 				break;
+			default:
+				std::unreachable();
 			}
 		};
 
 		// l3d index of current node + gltf index of parent node
 		std::stack<std::pair<uint32_t, uint32_t>> traversalStack;
-		try
-		{
-			traversalStack.emplace(i, rootNodeIndex);
+		traversalStack.emplace(i, rootNodeIndex);
 
-			tinygltf::Node node;
-			uint32_t index;
-			uint32_t parentIndex;
-			while (!traversalStack.empty())
+		tinygltf::Node node;
+		uint32_t index;
+		uint32_t parentIndex;
+		while (!traversalStack.empty())
+		{
+			std::tie(index, parentIndex) = traversalStack.top();
+			traversalStack.pop();
+			if (parentIndex == rootNodeIndex)
 			{
-				std::tie(index, parentIndex) = traversalStack.top();
-				traversalStack.pop();
-				if (parentIndex == rootNodeIndex)
-				{
-					node.name = "Bones root node #" + std::to_string(i);
-				}
-				else
-				{
-					node.name = "Bone Child #" + std::to_string(index) + " of #" + std::to_string(i);
-				}
-
-				gltf.nodes[parentIndex].children.push_back(static_cast<int>(gltf.nodes.size()));
-				const auto& l3dNode = bones[index];
-				boneToNode(node, l3dNode);
-				gltf.nodes.emplace_back(node);
-
-				if (l3dNode.rightSibling != std::numeric_limits<uint32_t>::max())
-				{
-					traversalStack.emplace(l3dNode.rightSibling, parentIndex);
-				}
-
-				if (l3dNode.firstChild != std::numeric_limits<uint32_t>::max())
-				{
-					traversalStack.emplace(l3dNode.firstChild, static_cast<uint32_t>(gltf.nodes.size() - 1));
-				}
+				node.name = "Bones root node #" + std::to_string(i);
 			}
-		}
-		catch (const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-			return EXIT_FAILURE;
+			else
+			{
+				node.name = "Bone Child #" + std::to_string(index) + " of #" + std::to_string(i);
+			}
+
+			gltf.nodes[parentIndex].children.push_back(static_cast<int>(gltf.nodes.size()));
+			const auto& l3dNode = bones[index];
+			boneToNode(node, l3dNode);
+			gltf.nodes.emplace_back(node);
+
+			if (l3dNode.rightSibling != std::numeric_limits<uint32_t>::max())
+			{
+				traversalStack.emplace(l3dNode.rightSibling, parentIndex);
+			}
+
+			if (l3dNode.firstChild != std::numeric_limits<uint32_t>::max())
+			{
+				traversalStack.emplace(l3dNode.firstChild, static_cast<uint32_t>(gltf.nodes.size() - 1));
+			}
 		}
 	}
 	// TODO(474): Associate mesh and joints to node
 
 	tinygltf::TinyGLTF exporter;
-	bool ret;
-	try
+	if (!exporter.WriteGltfSceneToFile(&gltf, args.gltfFile.string(), true, true, true, false))
 	{
-		ret = exporter.WriteGltfSceneToFile(&gltf, args.gltfFile.string(), true, true, true, false);
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-		ret = false;
-	}
-
-	if (!ret)
-	{
-		std::cerr << "Err: Failed to write glTF." << std::endl;
+		std::cerr << "Err: Failed to write glTF.\n";
 		return EXIT_FAILURE;
 	}
 
@@ -1256,180 +1207,164 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 {
 	cxxopts::Options options("l3dtool", "Inspect and extract files from LionHead L3D files.");
 
-	try
-	{
-		options.add_options()                                            //
-		    ("h,help", "Display this help message.")                     //
-		    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
-		    ;
-		options.positional_help("[read|write|extract] [OPTION...]");
-		options.add_options("read")                                                                                       //
-		    ("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())                  //
-		    ("m,mesh-header", "Print Mesh Headers.", cxxopts::value<std::vector<std::filesystem::path>>())                //
-		    ("s,skins", "Print Skins.", cxxopts::value<std::vector<std::filesystem::path>>())                             //
-		    ("p,extra-points", "Print Extra Points.", cxxopts::value<std::vector<std::filesystem::path>>())               //
-		    ("P,primitive-header", "Print Primitive Headers.", cxxopts::value<std::vector<std::filesystem::path>>())      //
-		    ("b,bones", "Print Bones.", cxxopts::value<std::vector<std::filesystem::path>>())                             //
-		    ("V,vertices", "Print Vertices.", cxxopts::value<std::vector<std::filesystem::path>>())                       //
-		    ("I,indices", "Print Indices.", cxxopts::value<std::vector<std::filesystem::path>>())                         //
-		    ("L,look-up-tables", "Print Look Up Table Data.", cxxopts::value<std::vector<std::filesystem::path>>())       //
-		    ("B,vertex-blend-values", "Print Vertex Blend Values.", cxxopts::value<std::vector<std::filesystem::path>>()) //
-		    ("u,uv2-data", "Print UV2 Data.", cxxopts::value<std::vector<std::string>>())                                 //
-		    ("f,footprint-data", "Print Footprint Data.", cxxopts::value<std::vector<std::string>>())                     //
-		    ("n,name-data", "Print Name Data.", cxxopts::value<std::vector<std::string>>())                               //
-		    ("extra-metrics", "Print Extra Metrics.", cxxopts::value<std::vector<std::string>>())                         //
-		    ;
-		options.add_options("write/extract from and to glTF format")                            //
-		    ("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())    //
-		    ("i,input-mesh", "Input file (required).", cxxopts::value<std::filesystem::path>()) //
-		    ;
+	options.add_options()                                            //
+	    ("h,help", "Display this help message.")                     //
+	    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
+	    ;
+	options.positional_help("[read|write|extract] [OPTION...]");
+	options.add_options("read")                                                                                       //
+	    ("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())                  //
+	    ("m,mesh-header", "Print Mesh Headers.", cxxopts::value<std::vector<std::filesystem::path>>())                //
+	    ("s,skins", "Print Skins.", cxxopts::value<std::vector<std::filesystem::path>>())                             //
+	    ("p,extra-points", "Print Extra Points.", cxxopts::value<std::vector<std::filesystem::path>>())               //
+	    ("P,primitive-header", "Print Primitive Headers.", cxxopts::value<std::vector<std::filesystem::path>>())      //
+	    ("b,bones", "Print Bones.", cxxopts::value<std::vector<std::filesystem::path>>())                             //
+	    ("V,vertices", "Print Vertices.", cxxopts::value<std::vector<std::filesystem::path>>())                       //
+	    ("I,indices", "Print Indices.", cxxopts::value<std::vector<std::filesystem::path>>())                         //
+	    ("L,look-up-tables", "Print Look Up Table Data.", cxxopts::value<std::vector<std::filesystem::path>>())       //
+	    ("B,vertex-blend-values", "Print Vertex Blend Values.", cxxopts::value<std::vector<std::filesystem::path>>()) //
+	    ("u,uv2-data", "Print UV2 Data.", cxxopts::value<std::vector<std::string>>())                                 //
+	    ("f,footprint-data", "Print Footprint Data.", cxxopts::value<std::vector<std::string>>())                     //
+	    ("n,name-data", "Print Name Data.", cxxopts::value<std::vector<std::string>>())                               //
+	    ("extra-metrics", "Print Extra Metrics.", cxxopts::value<std::vector<std::string>>())                         //
+	    ;
+	options.add_options("write/extract from and to glTF format")                            //
+	    ("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())    //
+	    ("i,input-mesh", "Input file (required).", cxxopts::value<std::filesystem::path>()) //
+	    ;
 
-		options.parse_positional({"subcommand"});
-	}
-	catch (const std::exception& e)
+	options.parse_positional({"subcommand"});
+
+	auto result = options.parse(argc, argv);
+	if (result["help"].as<bool>())
 	{
-		std::cerr << e.what() << '\n';
+		std::cout << options.help() << '\n';
+		returnCode = EXIT_SUCCESS;
+		return false;
+	}
+	if (result["subcommand"].count() == 0)
+	{
+		std::cerr << options.help() << '\n';
 		returnCode = EXIT_FAILURE;
 		return false;
 	}
-
-	try
+	if (result["subcommand"].as<std::string>() == "read")
 	{
-		auto result = options.parse(argc, argv);
-		if (result["help"].as<bool>())
+		if (result["header"].count() > 0)
 		{
-			std::cout << options.help() << std::endl;
-			returnCode = EXIT_SUCCESS;
-			return false;
+			args.mode = Arguments::Mode::Header;
+			args.read.filenames = result["header"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
-		if (result["subcommand"].count() == 0)
+		if (result["mesh-header"].count() > 0)
 		{
-			std::cerr << options.help() << std::endl;
-			returnCode = EXIT_FAILURE;
-			return false;
+			args.mode = Arguments::Mode::MeshHeader;
+			args.read.filenames = result["mesh-header"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
-		if (result["subcommand"].as<std::string>() == "read")
+		if (result["skins"].count() > 0)
 		{
-			if (result["header"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Header;
-				args.read.filenames = result["header"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["mesh-header"].count() > 0)
-			{
-				args.mode = Arguments::Mode::MeshHeader;
-				args.read.filenames = result["mesh-header"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["skins"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Skin;
-				args.read.filenames = result["skins"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["extra-points"].count() > 0)
-			{
-				args.mode = Arguments::Mode::ExtraPoint;
-				args.read.filenames = result["extra-points"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["primitive-header"].count() > 0)
-			{
-				args.mode = Arguments::Mode::PrimitiveHeader;
-				args.read.filenames = result["primitive-header"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["bones"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Bones;
-				args.read.filenames = result["bones"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["vertices"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Vertices;
-				args.read.filenames = result["vertices"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["indices"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Indices;
-				args.read.filenames = result["indices"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["look-up-tables"].count() > 0)
-			{
-				args.mode = Arguments::Mode::LookUpTables;
-				args.read.filenames = result["look-up-tables"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["vertex-blend-values"].count() > 0)
-			{
-				args.mode = Arguments::Mode::VertexBlendValues;
-				args.read.filenames = result["vertex-blend-values"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["footprint-data"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Footprint;
-				args.read.filenames = result["footprint-data"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["uv2-data"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Uv2;
-				args.read.filenames = result["uv2-data"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["name-data"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Name;
-				args.read.filenames = result["name-data"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["extra-metrics"].count() > 0)
-			{
-				args.mode = Arguments::Mode::ExtraMetrics;
-				args.read.filenames = result["extra-metrics"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
+			args.mode = Arguments::Mode::Skin;
+			args.read.filenames = result["skins"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
-		else if (result["subcommand"].as<std::string>() == "write")
+		if (result["extra-points"].count() > 0)
 		{
-			args.write.outFilename = "";
-			if (result["output"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Write;
-				args.write.outFilename = result["output"].as<std::filesystem::path>();
-				if (result["input-mesh"].count() > 0)
-				{
-					args.write.gltfFile = result["input-mesh"].as<std::filesystem::path>();
-				}
-				return true;
-			}
+			args.mode = Arguments::Mode::ExtraPoint;
+			args.read.filenames = result["extra-points"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
-		else if (result["subcommand"].as<std::string>() == "extract")
+		if (result["primitive-header"].count() > 0)
 		{
-			args.write.outFilename = "";
-			if (result["output"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Extract;
-				args.extract.inFilename = result["input-mesh"].as<std::filesystem::path>();
-				if (result["input-mesh"].count() > 0)
-				{
-					args.extract.gltfFile = result["output"].as<std::filesystem::path>();
-				}
-				return true;
-			}
+			args.mode = Arguments::Mode::PrimitiveHeader;
+			args.read.filenames = result["primitive-header"].as<std::vector<std::filesystem::path>>();
+			return true;
+		}
+		if (result["bones"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Bones;
+			args.read.filenames = result["bones"].as<std::vector<std::filesystem::path>>();
+			return true;
+		}
+		if (result["vertices"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Vertices;
+			args.read.filenames = result["vertices"].as<std::vector<std::filesystem::path>>();
+			return true;
+		}
+		if (result["indices"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Indices;
+			args.read.filenames = result["indices"].as<std::vector<std::filesystem::path>>();
+			return true;
+		}
+		if (result["look-up-tables"].count() > 0)
+		{
+			args.mode = Arguments::Mode::LookUpTables;
+			args.read.filenames = result["look-up-tables"].as<std::vector<std::filesystem::path>>();
+			return true;
+		}
+		if (result["vertex-blend-values"].count() > 0)
+		{
+			args.mode = Arguments::Mode::VertexBlendValues;
+			args.read.filenames = result["vertex-blend-values"].as<std::vector<std::filesystem::path>>();
+			return true;
+		}
+		if (result["footprint-data"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Footprint;
+			args.read.filenames = result["footprint-data"].as<std::vector<std::filesystem::path>>();
+			return true;
+		}
+		if (result["uv2-data"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Uv2;
+			args.read.filenames = result["uv2-data"].as<std::vector<std::filesystem::path>>();
+			return true;
+		}
+		if (result["name-data"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Name;
+			args.read.filenames = result["name-data"].as<std::vector<std::filesystem::path>>();
+			return true;
+		}
+		if (result["extra-metrics"].count() > 0)
+		{
+			args.mode = Arguments::Mode::ExtraMetrics;
+			args.read.filenames = result["extra-metrics"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
 	}
-	catch (const std::exception& err)
+	else if (result["subcommand"].as<std::string>() == "write")
 	{
-		std::cerr << err.what() << std::endl;
+		args.write.outFilename = "";
+		if (result["output"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Write;
+			args.write.outFilename = result["output"].as<std::filesystem::path>();
+			if (result["input-mesh"].count() > 0)
+			{
+				args.write.gltfFile = result["input-mesh"].as<std::filesystem::path>();
+			}
+			return true;
+		}
+	}
+	else if (result["subcommand"].as<std::string>() == "extract")
+	{
+		args.write.outFilename = "";
+		if (result["output"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Extract;
+			args.extract.inFilename = result["input-mesh"].as<std::filesystem::path>();
+			if (result["input-mesh"].count() > 0)
+			{
+				args.extract.gltfFile = result["output"].as<std::filesystem::path>();
+			}
+			return true;
+		}
 	}
 
-	std::cerr << options.help() << std::endl;
+	std::cerr << options.help() << '\n';
 	returnCode = EXIT_FAILURE;
 	return false;
 }
@@ -1456,64 +1391,77 @@ int main(int argc, char* argv[]) noexcept
 	for (auto& filename : args.read.filenames)
 	{
 		openblack::l3d::L3DFile l3d;
-		try
-		{
-			// Open file
-			l3d.Open(filename);
 
-			switch (args.mode)
-			{
-			case Arguments::Mode::Header:
-				returnCode |= PrintHeader(l3d);
-				break;
-			case Arguments::Mode::MeshHeader:
-				returnCode |= PrintMeshHeaders(l3d);
-				break;
-			case Arguments::Mode::Skin:
-				returnCode |= PrintSkins(l3d);
-				break;
-			case Arguments::Mode::ExtraPoint:
-				returnCode |= PrintExtraPoints(l3d);
-				break;
-			case Arguments::Mode::PrimitiveHeader:
-				returnCode |= PrintPrimitiveHeaders(l3d);
-				break;
-			case Arguments::Mode::Bones:
-				returnCode |= PrintBones(l3d);
-				break;
-			case Arguments::Mode::Vertices:
-				returnCode |= PrintVertices(l3d);
-				break;
-			case Arguments::Mode::Indices:
-				returnCode |= PrintIndices(l3d);
-				break;
-			case Arguments::Mode::LookUpTables:
-				returnCode |= PrintLookUpTables(l3d);
-				break;
-			case Arguments::Mode::VertexBlendValues:
-				returnCode |= PrintBlendValues(l3d);
-				break;
-			case Arguments::Mode::Footprint:
-				returnCode |= PrintFootprintValues(l3d);
-				break;
-			case Arguments::Mode::Uv2:
-				returnCode |= PrintUv2Values(l3d);
-				break;
-			case Arguments::Mode::Name:
-				returnCode |= PrintNameValue(l3d);
-				break;
-			case Arguments::Mode::ExtraMetrics:
-				returnCode |= PrintExtraMetricsValues(l3d);
-				break;
-			default:
-				returnCode = EXIT_FAILURE;
-				break;
-			}
-		}
-		catch (std::exception& err)
+		// Open file
+		const auto result = l3d.Open(filename);
+		if (result != openblack::l3d::L3DResult::Success)
 		{
-			std::cerr << err.what() << std::endl;
+			std::cerr << openblack::l3d::ResultToStr(result) << "\n";
 			returnCode |= EXIT_FAILURE;
+			break;
+		}
+
+		switch (args.mode)
+		{
+		case Arguments::Mode::Header:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintHeader(l3d);
+			break;
+		case Arguments::Mode::MeshHeader:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintMeshHeaders(l3d);
+			break;
+		case Arguments::Mode::Skin:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintSkins(l3d);
+			break;
+		case Arguments::Mode::ExtraPoint:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintExtraPoints(l3d);
+			break;
+		case Arguments::Mode::PrimitiveHeader:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintPrimitiveHeaders(l3d);
+			break;
+		case Arguments::Mode::Bones:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintBones(l3d);
+			break;
+		case Arguments::Mode::Vertices:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintVertices(l3d);
+			break;
+		case Arguments::Mode::Indices:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintIndices(l3d);
+			break;
+		case Arguments::Mode::LookUpTables:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintLookUpTables(l3d);
+			break;
+		case Arguments::Mode::VertexBlendValues:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintBlendValues(l3d);
+			break;
+		case Arguments::Mode::Footprint:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintFootprintValues(l3d);
+			break;
+		case Arguments::Mode::Uv2:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintUv2Values(l3d);
+			break;
+		case Arguments::Mode::Name:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintNameValue(l3d);
+			break;
+		case Arguments::Mode::ExtraMetrics:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintExtraMetricsValues(l3d);
+			break;
+		default:
+			returnCode = EXIT_FAILURE;
+			break;
 		}
 	}
 
