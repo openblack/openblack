@@ -18,9 +18,12 @@ if (OPENBLACK_CLANG_TIDY_CHECKS)
 endif ()
 
 if (MSVC)
-  target_compile_options(lnd PRIVATE /W4 /WX)
+  target_compile_definitions(lnd PRIVATE _HAS_EXCEPTIONS=0)
+  target_compile_options(lnd PRIVATE /W4 /WX /EHs-c-)
 else ()
-  target_compile_options(lnd PRIVATE -Wall -Wextra -pedantic -Werror)
+  target_compile_options(
+    lnd PRIVATE -Wall -Wextra -pedantic -Werror -fno-exceptions
+  )
 endif ()
 
 set_property(TARGET lnd PROPERTY FOLDER "components")

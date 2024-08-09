@@ -18,6 +18,23 @@
 namespace openblack::lnd
 {
 
+enum class LNDResult : uint8_t
+{
+	Success = 0,
+	ErrCantOpen,
+	ErrFileTooSmall,
+	ErrNonStandardBlockSize,
+	ErrNonStandardMaterialSize,
+	ErrNonStandardCountrySize,
+	ErrBadBlockSize,
+	ErrBadMaterialSize,
+	ErrBadCountrySize,
+	ErrExtraTextureData,
+	ErrUnaccountedData,
+};
+
+std::string_view ResultToStr(LNDResult result);
+
 struct LNDHeader
 {
 	uint32_t blockCount;
@@ -165,8 +182,6 @@ protected:
 	/// True when a file has been loaded
 	bool _isLoaded {false};
 
-	std::filesystem::path _filename;
-
 	LNDHeader _header {};
 	std::vector<LNDLowResolutionTexture> _lowResolutionTextures;
 	std::vector<LNDBlock> _blocks;
@@ -179,43 +194,39 @@ protected:
 	/// current model.
 	std::vector<uint8_t> _unaccounted;
 
-	/// Error handling
-	void Fail(const std::string& msg);
-
 	/// Write file to the input source
-	virtual void WriteFile(std::ostream& stream) const;
+	LNDResult WriteFile(std::ostream& stream) const noexcept;
 
 public:
-	LNDFile();
-	virtual ~LNDFile();
+	LNDFile() noexcept;
+	virtual ~LNDFile() noexcept;
 
 	/// Read file from the input source
-	virtual void ReadFile(std::istream& stream);
+	LNDResult ReadFile(std::istream& stream) noexcept;
 
 	/// Read lnd file from the filesystem
-	void Open(const std::filesystem::path& filepath);
+	LNDResult Open(const std::filesystem::path& filepath) noexcept;
 
 	/// Read lnd file from a buffer
-	void Open(const std::vector<uint8_t>& buffer);
+	LNDResult Open(const std::vector<uint8_t>& buffer) noexcept;
 
 	/// Write lnd file to path on the filesystem
-	void Write(const std::filesystem::path& filepath);
+	LNDResult Write(const std::filesystem::path& filepath) noexcept;
 
-	[[nodiscard]] std::string GetFilename() const { return _filename.string(); }
-	[[nodiscard]] const auto& GetHeader() const { return _header; }
-	[[nodiscard]] const auto& GetLowResolutionTextures() const { return _lowResolutionTextures; }
-	[[nodiscard]] const auto& GetBlocks() const { return _blocks; }
-	[[nodiscard]] const auto& GetCountries() const { return _countries; }
-	[[nodiscard]] const auto& GetMaterials() const { return _materials; }
-	[[nodiscard]] const auto& GetExtra() const { return _extra; }
-	[[nodiscard]] const auto& GetUnaccounted() const { return _unaccounted; }
+	[[nodiscard]] const auto& GetHeader() const noexcept { return _header; }
+	[[nodiscard]] const auto& GetLowResolutionTextures() const noexcept { return _lowResolutionTextures; }
+	[[nodiscard]] const auto& GetBlocks() const noexcept { return _blocks; }
+	[[nodiscard]] const auto& GetCountries() const noexcept { return _countries; }
+	[[nodiscard]] const auto& GetMaterials() const noexcept { return _materials; }
+	[[nodiscard]] const auto& GetExtra() const noexcept { return _extra; }
+	[[nodiscard]] const auto& GetUnaccounted() const noexcept { return _unaccounted; }
 
-	void AddLowResolutionTexture(const LNDLowResolutionTexture& texture);
-	void AddMaterial(const LNDMaterial& material);
-	void AddNoiseMap(const LNDBumpMap& noiseMap);
-	void AddBumpMap(const LNDBumpMap& bumpMap);
-	void AddBlock(const LNDBlock& block);
-	void AddCountry(const LNDCountry& country);
+	void AddLowResolutionTexture(const LNDLowResolutionTexture& texture) noexcept;
+	void AddMaterial(const LNDMaterial& material) noexcept;
+	void AddNoiseMap(const LNDBumpMap& noiseMap) noexcept;
+	void AddBumpMap(const LNDBumpMap& bumpMap) noexcept;
+	void AddBlock(const LNDBlock& block) noexcept;
+	void AddCountry(const LNDCountry& country) noexcept;
 };
 
 } // namespace openblack::lnd
