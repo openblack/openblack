@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <LHVM/LHVM.h>
+#include <LHVM.h>
 
 #include "Window.h"
 
@@ -32,12 +32,23 @@ private:
 	void DrawScriptDisassembly(const openblack::LHVM::LHVM&, openblack::LHVM::VMScript&);
 
 	void DrawVariable(const openblack::LHVM::LHVM&, openblack::LHVM::VMScript&, uint32_t idx);
-	std::string DataToString(uint32_t data, openblack::LHVM::VMInstruction::DataType type);
 	void SelectScript(uint32_t idx);
 
+	void DrawTasksTab(const openblack::LHVM::LHVM& lhvm);
+	void DrawStack(const openblack::LHVM::VMStack& stack);
+	void DrawExceptionHandlers(const openblack::LHVM::VMExceptStruct& exceptStruct);
+	void SelectTask(uint32_t idx);
+
 	uint32_t _selectedScriptID {1};
+	bool _openScriptTab {false};
 	bool _scrollToSelected {false};
 	bool _resetScriptDisassemblyScroll {false};
+
+	uint32_t _selectedTaskID {0};
+	bool _resetStackScroll {false};
+	bool _resetExceptionHandlersScroll {false};
+
+	static std::string DataToString(LHVM::VMValue data, openblack::LHVM::DataType type);
 };
 
 } // namespace openblack::debug::gui
