@@ -28,7 +28,7 @@ jobs:
           #   cxx: clang++
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
@@ -53,7 +53,6 @@ jobs:
 
       - name: Install MacOS dependencies
         run: |
-          brew install pkg-config
           brew install llvm@18
           echo "$(brew --prefix llvm@18)/bin" >> $GITHUB_PATH
           echo "CC=$(brew --prefix llvm@18)/bin/clang" >> $GITHUB_ENV
@@ -171,7 +170,7 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.event_name, 'pull_request')
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
@@ -220,7 +219,7 @@ jobs:
           name: openblack-test-data-${{ env.GITHUB_REF_NAME_DASHES }}
           path: cmake-build-presets/ninja-multi-vcpkg/test
       - name: Download Pre-patched and installed Game Data
-        uses: suisei-cn/actions-download-file@v1
+        uses: suisei-cn/actions-download-file@v1.6.0
         id: game-data
         with:
           url: ${{secrets.BW_DOWNLOAD_URL}}
@@ -290,7 +289,7 @@ jobs:
         run: chmod +x ${{steps.download-binary.outputs.download-path}}/*/*
         if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
       - name: Download Pre-patched and installed Game Data
-        uses: suisei-cn/actions-download-file@v1
+        uses: suisei-cn/actions-download-file@v1.6.0
         id: game-data
         with:
           url: ${{secrets.BW_DOWNLOAD_URL}}
@@ -301,7 +300,7 @@ jobs:
       - name: Add empty Audio directory
         run: mkdir game-data/bw/Audio
       - name: Get openblack-assets
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: openblack/openblack-assets
           path: openblack-assets
@@ -339,7 +338,7 @@ jobs:
       - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Playgrounds/construct.txt --screenshot-path "screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-construct.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Playgrounds/construct.txt --screenshot-path "screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-construct.png"
       - name: Upload screenshots
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: openblack-screenshots

@@ -11,8 +11,11 @@
 
 #include <queue>
 
+#include <PackFile.h>
+
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
+#include "3D/Light.h"
 #include "Audio/Sound.h"
 #include "Creature/CreatureMind.h"
 #include "Level.h"
@@ -77,5 +80,10 @@ struct SoundLoader final: BaseLoader<audio::Sound>
 {
 	[[nodiscard]] result_type operator()(FromBufferTag, const pack::AudioBankSampleHeader& header,
 	                                     const std::vector<std::vector<uint8_t>>& buffer) const;
+};
+
+struct LightLoader final: BaseLoader<Lights>
+{
+	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;
 };
 } // namespace openblack::resources

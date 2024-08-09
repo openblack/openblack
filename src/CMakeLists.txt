@@ -106,6 +106,7 @@ target_link_libraries(
           pack
           lnd
           anm
+          glw
           morph
           imgui::imgui
           imgui_user

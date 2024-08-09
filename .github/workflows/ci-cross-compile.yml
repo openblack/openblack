@@ -64,7 +64,7 @@ jobs:
       EMSDK: '/tmp/emsdk/upstream/emscripten'
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
@@ -136,14 +136,14 @@ jobs:
         # This is the matrix. They form permutations.
         os: [ ubuntu-latest, windows-latest ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
       - name: Add base repo to git config
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
         if: startsWith(github.event_name, 'pull_request')
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '11'
