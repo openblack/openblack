@@ -18,6 +18,15 @@
 namespace openblack::anm
 {
 
+enum class ANMResult : uint8_t
+{
+	Success = 0,
+	ErrCantOpen,
+	ErrFileTooSmall,
+};
+
+std::string_view ResultToStr(ANMResult result);
+
 struct ANMHeader
 {
 	std::array<char, 0x20> name;
@@ -57,38 +66,32 @@ protected:
 	/// True when a file has been loaded
 	bool _isLoaded {false};
 
-	std::filesystem::path _filename;
-
 	ANMHeader _header;
 	std::vector<ANMFrame> _keyframes;
 
-	/// Error handling
-	void Fail(const std::string& msg);
-
 	/// Write file to the input source
-	virtual void WriteFile(std::ostream& stream) const;
+	ANMResult WriteFile(std::ostream& stream) const noexcept;
 
 public:
-	ANMFile();
-	virtual ~ANMFile();
+	ANMFile() noexcept;
+	virtual ~ANMFile() noexcept;
 
 	/// Read file from the input source
-	virtual void ReadFile(std::istream& stream);
+	ANMResult ReadFile(std::istream& stream) noexcept;
 
 	/// Read anm file from the filesystem
-	void Open(const std::filesystem::path& filepath);
+	ANMResult Open(const std::filesystem::path& filepath) noexcept;
 
 	/// Read anm file from a buffer
-	void Open(const std::vector<uint8_t>& buffer);
+	ANMResult Open(const std::vector<uint8_t>& buffer) noexcept;
 
 	/// Write anm file to path on the filesystem
-	void Write(const std::filesystem::path& filepath);
+	ANMResult Write(const std::filesystem::path& filepath) noexcept;
 
-	[[nodiscard]] std::string GetFilename() const { return _filename.string(); }
-	[[nodiscard]] const ANMHeader& GetHeader() const { return _header; }
-	[[nodiscard]] ANMHeader& GetHeader() { return _header; }
-	[[nodiscard]] const std::vector<ANMFrame>& GetKeyframes() const { return _keyframes; }
-	[[nodiscard]] const ANMFrame& GetKeyframe(uint32_t index) const { return _keyframes[index]; }
+	[[nodiscard]] const ANMHeader& GetHeader() const noexcept { return _header; }
+	[[nodiscard]] ANMHeader& GetHeader() noexcept { return _header; }
+	[[nodiscard]] const std::vector<ANMFrame>& GetKeyframes() const noexcept { return _keyframes; }
+	[[nodiscard]] const ANMFrame& GetKeyframe(uint32_t index) const noexcept { return _keyframes[index]; }
 };
 
 } // namespace openblack::anm

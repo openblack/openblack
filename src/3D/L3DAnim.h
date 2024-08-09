@@ -37,18 +37,18 @@ public:
 		std::vector<glm::mat4> bones;
 	};
 
-	L3DAnim() = default;
-	virtual ~L3DAnim() = default;
+	L3DAnim() noexcept = default;
+	virtual ~L3DAnim() noexcept = default;
 
-	void Load(const anm::ANMFile& anm);
-	bool LoadFromFilesystem(const std::filesystem::path& path);
-	bool LoadFromFile(const std::filesystem::path& path);
-	void LoadFromBuffer(const std::vector<uint8_t>& data);
+	void Load(const anm::ANMFile& anm) noexcept;
+	bool LoadFromFilesystem(const std::filesystem::path& path) noexcept;
+	bool LoadFromFile(const std::filesystem::path& path) noexcept;
+	bool LoadFromBuffer(const std::vector<uint8_t>& data) noexcept;
 
-	[[nodiscard]] const std::string& GetName() const { return _name; }
-	[[nodiscard]] uint32_t GetDuration() const { return _duration; }
-	[[nodiscard]] const std::vector<Frame>& GetFrames() const { return _frames; }
-	[[nodiscard]] std::vector<glm::mat4> GetBoneMatrices(uint32_t time) const;
+	[[nodiscard]] const std::string& GetName() const noexcept { return _name; }
+	[[nodiscard]] uint32_t GetDuration() const noexcept { return _duration; }
+	[[nodiscard]] const std::vector<Frame>& GetFrames() const noexcept { return _frames; }
+	[[nodiscard]] std::vector<glm::mat4> GetBoneMatrices(uint32_t time) const noexcept;
 
 private:
 	std::string _name;
