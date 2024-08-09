@@ -23,7 +23,7 @@ class LandIsland final: public LandIslandInterface
 {
 public:
 	explicit LandIsland(const std::filesystem::path& path);
-	~LandIsland();
+	~LandIsland() noexcept;
 
 	void LoadFromFile(const std::filesystem::path& path);
 

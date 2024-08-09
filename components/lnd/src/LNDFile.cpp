@@ -109,11 +109,12 @@
 
 #include <fstream>
 #include <stdexcept>
+#include <utility>
 
 using namespace openblack::lnd;
 
-LNDFile::LNDFile() = default;
-LNDFile::~LNDFile() = default;
+LNDFile::LNDFile() noexcept = default;
+LNDFile::~LNDFile() noexcept = default;
 
 namespace
 {
@@ -158,13 +159,37 @@ struct imemstream: virtual membuf, std::istream
 };
 } // namespace
 
-/// Error handling
-void LNDFile::Fail(const std::string& msg)
+std::string_view openblack::lnd::ResultToStr(LNDResult result)
 {
-	throw std::runtime_error("LND Error: " + msg + "\nFilename: " + _filename.string());
+	switch (result)
+	{
+	case LNDResult::Success:
+		return "Success";
+	case LNDResult::ErrCantOpen:
+		return "Could not open file.";
+	case LNDResult::ErrFileTooSmall:
+		return "File too small to be a valid LND file.";
+	case LNDResult::ErrNonStandardBlockSize:
+		return "File has non standard block size.";
+	case LNDResult::ErrNonStandardMaterialSize:
+		return "File has non standard material size.";
+	case LNDResult::ErrNonStandardCountrySize:
+		return "File has non standard country size.";
+	case LNDResult::ErrBadBlockSize:
+		return "Blocks are beyond the end of the file.";
+	case LNDResult::ErrBadMaterialSize:
+		return "Materials are beyond the end of the file.";
+	case LNDResult::ErrBadCountrySize:
+		return "Countries are beyond the end of the file.";
+	case LNDResult::ErrExtraTextureData:
+		return "Extra Textures are beyond the end of the file.";
+	case LNDResult::ErrUnaccountedData:
+		return "Parsing ended without reaching end of file.";
+	}
+	std::unreachable();
 }
 
-void LNDFile::ReadFile(std::istream& stream)
+LNDResult LNDFile::ReadFile(std::istream& stream) noexcept
 {
 	assert(!_isLoaded);
 
@@ -178,7 +203,7 @@ void LNDFile::ReadFile(std::istream& stream)
 
 	if (fsize < sizeof(LNDHeader))
 	{
-		Fail("File too small to be a valid LND file.");
+		return LNDResult::ErrFileTooSmall;
 	}
 
 	// First 1052 bytes
@@ -186,18 +211,15 @@ void LNDFile::ReadFile(std::istream& stream)
 
 	if (_header.blockSize != sizeof(LNDBlock))
 	{
-		Fail("File has non standard block size got " + std::to_string(_header.blockSize) + " expected " +
-		     std::to_string(sizeof(LNDBlock)));
+		return LNDResult::ErrNonStandardBlockSize;
 	}
 	if (_header.materialSize != sizeof(LNDMaterial))
 	{
-		Fail("File has non standard material size got " + std::to_string(_header.materialSize) + " expected " +
-		     std::to_string(sizeof(LNDMaterial)));
+		return LNDResult::ErrNonStandardMaterialSize;
 	}
 	if (_header.countrySize != sizeof(LNDCountry))
 	{
-		Fail("File has non standard country size got " + std::to_string(_header.countrySize) + " expected " +
-		     std::to_string(sizeof(LNDCountry)));
+		return LNDResult::ErrNonStandardCountrySize;
 	}
 
 	// Read low resolution textures
@@ -214,7 +236,7 @@ void LNDFile::ReadFile(std::istream& stream)
 	_blocks.resize(_header.blockCount - 1);
 	if (static_cast<std::size_t>(stream.tellg()) + _blocks.size() * sizeof(_blocks[0]) > fsize)
 	{
-		Fail("Blocks are beyond the end of the file");
+		return LNDResult::ErrBadBlockSize;
 	}
 	stream.read(reinterpret_cast<char*>(_blocks.data()), _blocks.size() * sizeof(_blocks[0]));
 
@@ -222,7 +244,7 @@ void LNDFile::ReadFile(std::istream& stream)
 	_countries.resize(_header.countryCount);
 	if (static_cast<std::size_t>(stream.tellg()) + _countries.size() * sizeof(_countries[0]) > fsize)
 	{
-		Fail("Countries are beyond the end of the file");
+		return LNDResult::ErrBadCountrySize;
 	}
 	stream.read(reinterpret_cast<char*>(_countries.data()), _countries.size() * sizeof(_countries[0]));
 
@@ -230,14 +252,14 @@ void LNDFile::ReadFile(std::istream& stream)
 	_materials.resize(_header.materialCount);
 	if (static_cast<std::size_t>(stream.tellg()) + _materials.size() * sizeof(_materials[0]) > fsize)
 	{
-		Fail("Materials are beyond the end of the file");
+		return LNDResult::ErrBadMaterialSize;
 	}
 	stream.read(reinterpret_cast<char*>(_materials.data()), _materials.size() * sizeof(_materials[0]));
 
 	// Read Extra textures (noise and bump map)
 	if (static_cast<std::size_t>(stream.tellg()) + sizeof(_extra) > fsize)
 	{
-		Fail("Extra Textures are beyond the end of the file");
+		return LNDResult::ErrExtraTextureData;
 	}
 	stream.read(reinterpret_cast<char*>(&_extra), sizeof(_extra));
 
@@ -250,11 +272,13 @@ void LNDFile::ReadFile(std::istream& stream)
 
 	if (stream.peek() != EOF)
 	{
-		Fail("Parsing ended without reaching end of file");
+		return LNDResult::ErrUnaccountedData;
 	}
+
+	return LNDResult::Success;
 }
 
-void LNDFile::WriteFile(std::ostream& stream) const
+LNDResult LNDFile::WriteFile(std::ostream& stream) const noexcept
 {
 	// First 1052 bytes
 	stream.write(reinterpret_cast<const char*>(&_header), sizeof(LNDHeader));
@@ -281,46 +305,42 @@ void LNDFile::WriteFile(std::ostream& stream) const
 	// TODO(bwrsandman): Figure out what the unaccounted bytes are for and write
 	//                   them to the file
 	stream.write(reinterpret_cast<const char*>(_unaccounted.data()), _unaccounted.size() * sizeof(_unaccounted[0]));
+
+	return LNDResult::Success;
 }
 
-void LNDFile::Open(const std::filesystem::path& filepath)
+LNDResult LNDFile::Open(const std::filesystem::path& filepath) noexcept
 {
 	assert(!_isLoaded);
 
-	_filename = filepath;
-
-	std::ifstream stream(_filename, std::ios::binary);
+	std::ifstream stream(filepath, std::ios::binary);
 
 	if (!stream.is_open())
 	{
-		Fail("Could not open file.");
+		return LNDResult::ErrCantOpen;
 	}
 
-	ReadFile(stream);
+	return ReadFile(stream);
 }
 
-void LNDFile::Open(const std::vector<uint8_t>& buffer)
+LNDResult LNDFile::Open(const std::vector<uint8_t>& buffer) noexcept
 {
 	assert(!_isLoaded);
 
 	imemstream stream(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
 
-	_filename = std::filesystem::path("buffer");
-
-	ReadFile(stream);
+	return ReadFile(stream);
 }
 
-void LNDFile::Write(const std::filesystem::path& filepath)
+LNDResult LNDFile::Write(const std::filesystem::path& filepath) noexcept
 {
 	assert(!_isLoaded);
 
-	_filename = filepath;
-
-	std::ofstream stream(_filename, std::ios::binary);
+	std::ofstream stream(filepath, std::ios::binary);
 
 	if (!stream.is_open())
 	{
-		Fail("Could not open file.");
+		return LNDResult::ErrCantOpen;
 	}
 
 	// Prepare header
@@ -352,35 +372,36 @@ void LNDFile::Write(const std::filesystem::path& filepath)
 		t.header.size = static_cast<uint32_t>(t.texels.size()) + 4;
 		++i;
 	}
-	WriteFile(stream);
+
+	return WriteFile(stream);
 }
 
-void LNDFile::AddLowResolutionTexture(const LNDLowResolutionTexture& texture)
+void LNDFile::AddLowResolutionTexture(const LNDLowResolutionTexture& texture) noexcept
 {
 	_lowResolutionTextures.emplace_back(texture);
 }
 
-void LNDFile::AddMaterial(const LNDMaterial& material)
+void LNDFile::AddMaterial(const LNDMaterial& material) noexcept
 {
 	_materials.emplace_back(material);
 }
 
-void LNDFile::AddNoiseMap(const LNDBumpMap& noiseMap)
+void LNDFile::AddNoiseMap(const LNDBumpMap& noiseMap) noexcept
 {
 	_extra.noise = noiseMap;
 }
 
-void LNDFile::AddBumpMap(const LNDBumpMap& bumpMap)
+void LNDFile::AddBumpMap(const LNDBumpMap& bumpMap) noexcept
 {
 	_extra.bump = bumpMap;
 }
 
-void LNDFile::AddBlock(const LNDBlock& block)
+void LNDFile::AddBlock(const LNDBlock& block) noexcept
 {
 	_blocks.emplace_back(block).index = static_cast<uint32_t>(_blocks.size()) + 1;
 }
 
-void LNDFile::AddCountry(const LNDCountry& country)
+void LNDFile::AddCountry(const LNDCountry& country) noexcept
 {
 	_countries.emplace_back(country);
 }
