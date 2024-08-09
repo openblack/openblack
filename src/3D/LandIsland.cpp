@@ -39,7 +39,7 @@ LandIsland::LandIsland(const std::filesystem::path& path)
 	LoadFromFile(path);
 }
 
-LandIsland::~LandIsland() = default;
+LandIsland::~LandIsland() noexcept = default;
 
 void LandIsland::LoadFromFile(const std::filesystem::path& path)
 {

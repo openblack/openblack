@@ -796,7 +796,11 @@ bool Game::Initialize() noexcept
 
 bool Game::Run() noexcept
 {
-	LoadMap(_startMap);
+	if (!LoadMap(_startMap))
+	{
+		return false;
+	}
+
 	Locator::dynamicsSystem::value().RegisterRigidBodies();
 
 	auto& fileSystem = Locator::filesystem::value();
@@ -994,12 +998,12 @@ bool Game::LoadVariables() noexcept
 	                             _infoConstants);
 }
 
-void Game::SetTime(float time)
+void Game::SetTime(float time) noexcept
 {
 	GetSky().SetTime(time);
 }
 
-void Game::RequestScreenshot(const std::filesystem::path& path)
+void Game::RequestScreenshot(const std::filesystem::path& path) noexcept
 {
 	_requestScreenshot = std::make_pair(_frameCount, path);
 }

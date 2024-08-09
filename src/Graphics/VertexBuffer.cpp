@@ -33,7 +33,7 @@ constexpr std::array<bgfx::Attrib::Enum, 18> k_Attributes {
 
 } // namespace
 
-VertexBuffer::VertexBuffer(std::string name, const void* vertices, uint32_t vertexCount, VertexDecl decl)
+VertexBuffer::VertexBuffer(std::string name, const void* vertices, uint32_t vertexCount, VertexDecl decl) noexcept
     : _name(std::move(name))
     , _vertexCount(vertexCount)
     , _vertexDecl(std::move(decl))
@@ -71,7 +71,7 @@ VertexBuffer::VertexBuffer(std::string name, const void* vertices, uint32_t vert
 	bgfx::setName(_handle, _name.c_str());
 }
 
-VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl decl)
+VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl decl) noexcept
     : _name(std::move(name))
     , _vertexCount(0)
     , _vertexDecl(std::move(decl))
@@ -109,7 +109,7 @@ VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl
 	bgfx::setName(_handle, _name.c_str());
 }
 
-VertexBuffer::~VertexBuffer()
+VertexBuffer::~VertexBuffer() noexcept
 {
 	if (bgfx::isValid(_handle))
 	{
