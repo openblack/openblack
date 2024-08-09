@@ -95,7 +95,7 @@ int PrintVarNames(const LHVMFile& file)
 
 std::string GetSignature(const VMScript& script)
 {
-	std::string s = std::format("{} {}(", ScriptType_Names.at(script.GetType()).c_str(), script.GetName());
+	std::string s = ScriptType_Names.at(script.GetType()) + " " + script.GetName();
 	if (script.GetParameterCount() > 0)
 	{
 		const auto& vars = script.GetVariables();
@@ -136,7 +136,7 @@ std::map<uint32_t, std::string> GetLabels(const LHVMFile& file)
 				{
 					name += "_skip_";
 				}
-				name += std::format("{}", labelCount);
+				name += std::to_string(labelCount);
 				labels.emplace(instruction.data.uintVal, name);
 				labelCount++;
 			}
@@ -197,13 +197,13 @@ int PrintCode(const LHVMFile& file)
 					{
 					case DataType::FLOAT:
 					case DataType::VECTOR:
-						arg = std::format("{}", instruction.floatVal);
+						arg = std::to_string(instruction.floatVal);
 						break;
 					case DataType::OBJECT:
-						arg = std::format("{}", instruction.uintVal);
+						arg = std::to_string(instruction.uintVal);
 						break;
 					default:
-						arg = std::format("{}", instruction.intVal);
+						arg = std::to_string(instruction.intVal);
 						break;
 					}
 				}
