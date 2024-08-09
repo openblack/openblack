@@ -127,6 +127,7 @@
 #include <cstring>
 
 #include <fstream>
+#include <utility>
 
 using namespace openblack::pack;
 
@@ -183,13 +184,53 @@ struct PackBlockHeader
 constexpr const std::array<char, 4> k_BlockMagic = {'M', 'K', 'J', 'C'};
 } // namespace
 
-/// Error handling
-void PackFile::Fail(const std::string& msg)
+std::string_view openblack::pack::ResultToStr(PackResult result)
 {
-	throw std::runtime_error("Pack Error: " + msg + "\nFilename: " + _filename.string());
+	switch (result)
+	{
+	case PackResult::Success:
+		return "Success";
+	case PackResult::ErrCantOpen:
+		return "Could not open file.";
+	case PackResult::ErrFileTooSmall:
+		return "File too small to be a valid Pack file.";
+	case PackResult::ErrNoEntries:
+		return "There are no sound entries in block.";
+	case PackResult::ErrUnrecognizedHeader:
+		return "Unrecognized Pack header.";
+	case PackResult::ErrUnrecognizedBlockHeader:
+		return "Unrecognized Pack Block header.";
+	case PackResult::ErrFileNotEvenlySplit:
+		return "File not evenly split into whole blocks.";
+	case PackResult::ErrDuplicateBlockName:
+		return "Duplicate block name.";
+	case PackResult::ErrMissingInfoBlock:
+		return "No INFO block in pack.";
+	case PackResult::ErrMissingBodyBlock:
+		return "No Body block in pack.";
+	case PackResult::ErrMissingAudioBankSampleTableBlock:
+		return "No LHAudioBankSampleTable block in pack.";
+	case PackResult::ErrMissingAudioWaveDataBlock:
+		return "No LHAudioWaveData block in sad pack.";
+	case PackResult::ErrMissingTextureBlock:
+		return "Required texture block missing.";
+	case PackResult::ErrTextureBlockIdMismatch:
+		return "Texture block id is not the same as block id.";
+	case PackResult::ErrTextureDuplicate:
+		return "Duplicate texture extracted.";
+	case PackResult::ErrTextureInvalidDDSHeaderSize:
+		return "Invalid DDS header sizes.";
+	case PackResult::ErrMissingMeshBlock:
+		return "No MESHES block in pack.";
+	case PackResult::ErrMeshBlockHeaderMalformed:
+		return "Unrecognized Mesh Block header.";
+	case PackResult::ErrNotImplemented:
+		return "Function is not yet implemented.";
+	}
+	std::unreachable();
 }
 
-void PackFile::ReadBlocks(std::istream& stream)
+PackResult PackFile::ReadBlocks(std::istream& stream) noexcept
 {
 	assert(!_isLoaded);
 
@@ -204,19 +245,19 @@ void PackFile::ReadBlocks(std::istream& stream)
 	std::array<char, k_Magic.size()> magic;
 	if (fsize < magic.size() + sizeof(PackBlockHeader))
 	{
-		Fail("File too small to be a valid Pack file.");
+		return PackResult::ErrFileTooSmall;
 	}
 
 	// First 8 bytes
 	stream.read(magic.data(), magic.size());
 	if (std::memcmp(magic.data(), k_Magic.data(), magic.size()) != 0)
 	{
-		Fail("Unrecognized Pack header");
+		return PackResult::ErrUnrecognizedHeader;
 	}
 
 	if (fsize < static_cast<std::size_t>(stream.tellg()) + sizeof(PackBlockHeader))
 	{
-		Fail("File too small to contain any blocks.");
+		return PackResult::ErrFileTooSmall;
 	}
 
 	PackBlockHeader header;
@@ -226,7 +267,7 @@ void PackFile::ReadBlocks(std::istream& stream)
 
 		if (_blocks.contains(header.blockName.data()))
 		{
-			Fail(std::string("Duplicate block name: ") + header.blockName.data());
+			return PackResult::ErrDuplicateBlockName;
 		}
 
 		_blocks[std::string(header.blockName.data())] = std::vector<uint8_t>(header.blockSize);
@@ -235,15 +276,17 @@ void PackFile::ReadBlocks(std::istream& stream)
 
 	if (fsize < static_cast<std::size_t>(stream.tellg()))
 	{
-		Fail("File not evenly split into whole blocks.");
+		return PackResult::ErrFileNotEvenlySplit;
 	}
+
+	return PackResult::Success;
 }
 
-void PackFile::ResolveInfoBlock()
+PackResult PackFile::ResolveInfoBlock() noexcept
 {
 	if (!HasBlock("INFO"))
 	{
-		Fail("no INFO block in mesh pack");
+		return PackResult::ErrMissingInfoBlock;
 	}
 
 	auto data = GetBlock("INFO");
@@ -255,13 +298,15 @@ void PackFile::ResolveInfoBlock()
 	// Read lookup
 	_infoBlockLookup.resize(totalTextures);
 	stream.read(reinterpret_cast<char*>(_infoBlockLookup.data()), _infoBlockLookup.size() * sizeof(_infoBlockLookup[0]));
+
+	return PackResult::Success;
 }
 
-void PackFile::ResolveBodyBlock()
+PackResult PackFile::ResolveBodyBlock() noexcept
 {
 	if (!HasBlock("Body"))
 	{
-		Fail("no Body block in anim pack");
+		return PackResult::ErrMissingBodyBlock;
 	}
 
 	auto data = GetBlock("Body");
@@ -272,7 +317,7 @@ void PackFile::ResolveBodyBlock()
 	stream.read(magic.data(), magic.size());
 	if (std::memcmp(magic.data(), k_BlockMagic.data(), magic.size()) != 0)
 	{
-		Fail("Unrecognized Body Block header");
+		return PackResult::ErrUnrecognizedBlockHeader;
 	}
 
 	uint32_t totalAnimations;
@@ -281,13 +326,15 @@ void PackFile::ResolveBodyBlock()
 	// Read lookup offsets
 	_bodyBlockLookup.resize(totalAnimations);
 	stream.read(reinterpret_cast<char*>(_bodyBlockLookup.data()), _bodyBlockLookup.size() * sizeof(_bodyBlockLookup[0]));
+
+	return PackResult::Success;
 }
 
-void PackFile::ResolveAudioBankSampleTableBlock()
+PackResult PackFile::ResolveAudioBankSampleTableBlock() noexcept
 {
 	if (!HasBlock("LHAudioBankSampleTable"))
 	{
-		Fail("no LHAudioBankSampleTable block in sad pack");
+		return PackResult::ErrMissingAudioBankSampleTableBlock;
 	}
 
 	auto data = GetBlock("LHAudioBankSampleTable");
@@ -301,7 +348,7 @@ void PackFile::ResolveAudioBankSampleTableBlock()
 
 	if (fsize < sizeof(uint32_t))
 	{
-		Fail("Audio bank block cannot fit sample count: " + std::to_string(fsize) + " < " + std::to_string(sizeof(uint8_t)));
+		return PackResult::ErrFileTooSmall;
 	}
 
 	uint16_t sampleCount;
@@ -312,21 +359,23 @@ void PackFile::ResolveAudioBankSampleTableBlock()
 
 	if (sampleCount == 0)
 	{
-		Fail("There are no sound entries");
+		return PackResult::ErrNoEntries;
 	}
 
 	_audioSampleHeaders.resize(sampleCount);
 
 	if (fsize != sizeof(uint32_t) + _audioSampleHeaders.size() * sizeof(_audioSampleHeaders[0]))
 	{
-		Fail("Cannot fit all " + std::to_string(sampleCount) + " sample headers");
+		return PackResult::ErrFileTooSmall;
 	}
 
 	stream.read(reinterpret_cast<char*>(_audioSampleHeaders.data()),
 	            _audioSampleHeaders.size() * sizeof(_audioSampleHeaders[0]));
+
+	return PackResult::Success;
 }
 
-void PackFile::ExtractTexturesFromBlock()
+PackResult PackFile::ExtractTexturesFromBlock() noexcept
 {
 	G3DTextureHeader header;
 	constexpr uint32_t blockNameSize = 0x20;
@@ -338,7 +387,7 @@ void PackFile::ExtractTexturesFromBlock()
 
 		if (!HasBlock(blockName.data()))
 		{
-			Fail(std::string("Required texture block \"") + blockName.data() + "\" missing.");
+			return PackResult::ErrMissingTextureBlock;
 		}
 
 		auto stream = GetBlockAsStream(blockName.data());
@@ -349,12 +398,12 @@ void PackFile::ExtractTexturesFromBlock()
 
 		if (header.id != item.blockId)
 		{
-			Fail("Texture block id is not the same as block id");
+			return PackResult::ErrTextureBlockIdMismatch;
 		}
 
 		if (_textures.contains(blockName.data()))
 		{
-			Fail("Duplicate texture extracted");
+			return PackResult::ErrTextureDuplicate;
 		}
 
 		imemstream ddsStream(reinterpret_cast<const char*>(dds.data()), dds.size());
@@ -365,7 +414,7 @@ void PackFile::ExtractTexturesFromBlock()
 		// Verify the header to validate the DDS file
 		if (ddsHeader.size != sizeof(DdsHeader) || ddsHeader.format.size != sizeof(DdsPixelFormat))
 		{
-			Fail("Invalid DDS header sizes");
+			return PackResult::ErrTextureInvalidDDSHeaderSize;
 		}
 
 		// Handle cases where this field is not provided
@@ -393,9 +442,11 @@ void PackFile::ExtractTexturesFromBlock()
 
 		_textures[blockName.data()] = {header, ddsHeader, dssTexels};
 	}
+
+	return PackResult::Success;
 }
 
-void PackFile::ExtractAnimationsFromBlock()
+PackResult PackFile::ExtractAnimationsFromBlock() noexcept
 {
 	auto data = GetBlock("Body");
 	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
@@ -411,7 +462,7 @@ void PackFile::ExtractAnimationsFromBlock()
 		snprintf(blockName.data(), blockNameSize, "Julien%d", i);
 		if (!HasBlock(blockName.data()))
 		{
-			Fail(std::string("Required texture block \"") + blockName.data() + "\" missing.");
+			return PackResult::ErrMissingTextureBlock;
 		}
 
 		auto animationData = GetBlock(blockName.data());
@@ -421,13 +472,15 @@ void PackFile::ExtractAnimationsFromBlock()
 		stream.read(reinterpret_cast<char*>(_animations[i].data()), animationHeaderSize);
 		memcpy(_animations[i].data() + animationHeaderSize, animationData.data(), animationData.size());
 	}
+
+	return PackResult::Success;
 }
 
-void PackFile::ExtractSoundsFromBlock()
+PackResult PackFile::ExtractSoundsFromBlock() noexcept
 {
 	if (!HasBlock("LHAudioWaveData"))
 	{
-		Fail("No LHAudioWaveData block in sad pack");
+		return PackResult::ErrMissingAudioWaveDataBlock;
 	}
 
 	auto data = GetBlock("LHAudioWaveData");
@@ -440,11 +493,11 @@ void PackFile::ExtractSoundsFromBlock()
 	{
 		if (sample.offset > data.size())
 		{
-			Fail("Sound sample offset points to beyond file");
+			return PackResult::ErrFileTooSmall;
 		}
 		if (sample.offset + sample.size > data.size())
 		{
-			Fail("Sound sample size exceeds LHAudioWaveData size");
+			return PackResult::ErrFileTooSmall;
 		}
 
 		_audioSampleData[i].resize(sample.size);
@@ -454,13 +507,15 @@ void PackFile::ExtractSoundsFromBlock()
 
 		++i;
 	}
+
+	return PackResult::Success;
 }
 
-void PackFile::ResolveMeshBlock()
+PackResult PackFile::ResolveMeshBlock() noexcept
 {
 	if (!HasBlock("MESHES"))
 	{
-		Fail("no MESHES block in mesh pack");
+		return PackResult::ErrMissingMeshBlock;
 	}
 	auto data = GetBlock("MESHES");
 
@@ -470,7 +525,7 @@ void PackFile::ResolveMeshBlock()
 	stream.read(magic.data(), magic.size());
 	if (std::memcmp(magic.data(), k_BlockMagic.data(), magic.size()) != 0)
 	{
-		Fail("Unrecognized Mesh Block header");
+		return PackResult::ErrMeshBlockHeaderMalformed;
 	}
 
 	uint32_t meshCount;
@@ -485,9 +540,11 @@ void PackFile::ResolveMeshBlock()
 		_meshes[i].resize(size);
 		stream.read(reinterpret_cast<char*>(_meshes[i].data()), _meshes[i].size() * sizeof(_meshes[i][0]));
 	}
+
+	return PackResult::Success;
 }
 
-void PackFile::WriteBlocks(std::ostream& stream) const
+PackResult PackFile::WriteBlocks(std::ostream& stream) const noexcept
 {
 	assert(!_isLoaded);
 
@@ -504,31 +561,36 @@ void PackFile::WriteBlocks(std::ostream& stream) const
 		stream.write(reinterpret_cast<const char*>(&header), sizeof(header));
 		stream.write(reinterpret_cast<const char*>(contents.data()), header.blockSize);
 	}
+
+	return PackResult::Success;
 }
 
-void PackFile::CreateTextureBlocks()
+PackResult PackFile::CreateTextureBlocks() noexcept
 {
 	// TODO(bwrsandman): Loop through every texture and create a block with
 	//                   their id. Then fill in the look-up table.
 	assert(_isLoaded);
-	assert(false);
+
+	return PackResult::ErrNotImplemented;
 }
 
-void PackFile::CreateRawBlock(const std::string& name, std::vector<uint8_t>&& data)
+PackResult PackFile::CreateRawBlock(const std::string& name, std::vector<uint8_t>&& data) noexcept
 {
 	if (HasBlock(name))
 	{
-		Fail("Pack file already has a " + name + " block");
+		return PackResult::ErrDuplicateBlockName;
 	}
 
 	_blocks[name] = std::move(data);
+
+	return PackResult::Success;
 }
 
-void PackFile::CreateMeshBlock()
+PackResult PackFile::CreateMeshBlock() noexcept
 {
 	if (HasBlock("MESHES"))
 	{
-		Fail("Mesh pack already has a MESHES block");
+		return PackResult::ErrDuplicateBlockName;
 	}
 
 	size_t offset = 0;
@@ -565,18 +627,22 @@ void PackFile::CreateMeshBlock()
 	}
 
 	_blocks["MESHES"] = std::move(contents);
+
+	return PackResult::Success;
 }
 
-void PackFile::InsertMesh(std::vector<uint8_t> data)
+PackResult PackFile::InsertMesh(std::vector<uint8_t> data) noexcept
 {
 	_meshes.emplace_back(std::move(data));
+
+	return PackResult::Success;
 }
 
-void PackFile::CreateInfoBlock()
+PackResult PackFile::CreateInfoBlock() noexcept
 {
 	if (HasBlock("INFO"))
 	{
-		Fail("Mesh pack already has an INFO block");
+		return PackResult::ErrDuplicateBlockName;
 	}
 
 	uint32_t offset = 0;
@@ -591,94 +657,137 @@ void PackFile::CreateInfoBlock()
 	std::memcpy(contents.data() + offset, _infoBlockLookup.data(), _infoBlockLookup.size() * sizeof(_infoBlockLookup[0]));
 
 	_blocks["INFO"] = std::move(contents);
+
+	return PackResult::Success;
 }
 
-void PackFile::CreateBodyBlock()
+PackResult PackFile::CreateBodyBlock() noexcept
 {
 	if (HasBlock("Body"))
 	{
-		Fail("Pack already has an Body block");
+		return PackResult::ErrDuplicateBlockName;
 	}
 
 	std::vector<uint8_t> contents;
 
 	_blocks["Body"] = std::move(contents);
+
+	return PackResult::Success;
 }
 
-PackFile::PackFile() = default;
-PackFile::~PackFile() = default;
+PackFile::PackFile() noexcept = default;
+PackFile::~PackFile() noexcept = default;
 
-void PackFile::ReadFile(std::istream& stream)
+PackResult PackFile::ReadFile(std::istream& stream) noexcept
 {
-	ReadBlocks(stream);
+	PackResult result;
+
+	result = ReadBlocks(stream);
+	if (result != PackResult::Success)
+	{
+		return result;
+	}
+
 	// Mesh pack
 	if (HasBlock("INFO"))
 	{
-		ResolveInfoBlock();
-		ExtractTexturesFromBlock();
-		ResolveMeshBlock();
+		result = ResolveInfoBlock();
+		if (result != PackResult::Success)
+		{
+			return result;
+		}
+
+		result = ExtractTexturesFromBlock();
+		if (result != PackResult::Success)
+		{
+			return result;
+		}
+
+		result = ResolveMeshBlock();
+		if (result != PackResult::Success)
+		{
+			return result;
+		}
 	}
+
 	// Anim pack
 	if (HasBlock("Body"))
 	{
-		ResolveBodyBlock();
-		ExtractAnimationsFromBlock();
+		result = ResolveBodyBlock();
+		if (result != PackResult::Success)
+		{
+			return result;
+		}
+
+		result = ExtractAnimationsFromBlock();
+		if (result != PackResult::Success)
+		{
+			return result;
+		}
 	}
+
 	// Sound pack
 	if (HasBlock("LHAudioBankSampleTable"))
 	{
-		ResolveAudioBankSampleTableBlock();
+		result = ResolveAudioBankSampleTableBlock();
+		if (result != PackResult::Success)
+		{
+			return result;
+		}
+
 		// ResolveFileSegmentBankBlock();
-		ExtractSoundsFromBlock();
+		// if (result != PackResult::Success)
+		// {
+		// 	return result;
+		// }
+		result = ExtractSoundsFromBlock();
+		if (result != PackResult::Success)
+		{
+			return result;
+		}
 	}
 
 	_isLoaded = true;
+
+	return PackResult::Success;
 }
 
-void PackFile::Open(const std::filesystem::path& file)
+PackResult PackFile::Open(const std::filesystem::path& filepath) noexcept
 {
-	_filename = file;
-
-	std::ifstream stream(_filename, std::ios::binary);
+	std::ifstream stream(filepath, std::ios::binary);
 
 	if (!stream.is_open())
 	{
-		Fail("Could not open file.");
+		return PackResult::ErrCantOpen;
 	}
 
-	ReadFile(stream);
+	return ReadFile(stream);
 }
 
-void PackFile::Open(const std::vector<uint8_t>& buffer)
+PackResult PackFile::Open(const std::vector<uint8_t>& buffer) noexcept
 {
 	assert(!_isLoaded);
 
 	imemstream stream(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
 
-	// File name set to "buffer" when file is load from a buffer
-	// Impact code using L3DFile::GetFilename method
-	_filename = std::filesystem::path("buffer");
-
-	ReadFile(stream);
+	return ReadFile(stream);
 }
 
-void PackFile::Write(const std::filesystem::path& file)
+PackResult PackFile::Write(const std::filesystem::path& filepath) noexcept
 {
 	assert(!_isLoaded);
 
-	_filename = file;
-
-	std::ofstream stream(_filename, std::ios::binary);
+	std::ofstream stream(filepath, std::ios::binary);
 
 	if (!stream.is_open())
 	{
-		Fail("Could not open file.");
+		return PackResult::ErrCantOpen;
 	}
 
-	WriteBlocks(stream);
+	return WriteBlocks(stream);
 }
 
-std::unique_ptr<std::istream> PackFile::GetBlockAsStream(const std::string& name) const
+std::unique_ptr<std::istream> PackFile::GetBlockAsStream(const std::string& name) const noexcept
 {
 	const auto& data = GetBlock(name);
 	return std::make_unique<imemstream>(reinterpret_cast<const char*>(data.data()), data.size());

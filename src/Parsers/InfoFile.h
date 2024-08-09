@@ -21,7 +21,7 @@ namespace openblack
 class InfoFile
 {
 public:
-	bool LoadFromFile(const std::filesystem::path& path, InfoConstants& infos);
+	bool LoadFromFile(const std::filesystem::path& path, InfoConstants& infos) noexcept;
 };
 
 } // namespace openblack

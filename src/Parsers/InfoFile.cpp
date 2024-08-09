@@ -18,38 +18,36 @@
 namespace openblack
 {
 
-bool InfoFile::LoadFromFile(const std::filesystem::path& path, InfoConstants& infos)
+bool InfoFile::LoadFromFile(const std::filesystem::path& path, InfoConstants& infos) noexcept
 {
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Info Pack from file: {}", path.generic_string());
 
 	std::vector<uint8_t> data;
-	try
+	pack::PackFile pack;
+	const auto result = pack.ReadFile(*Locator::filesystem::value().GetData(path));
+	if (result != pack::PackResult::Success)
 	{
-		pack::PackFile pack;
-		pack.ReadFile(*Locator::filesystem::value().GetData(path));
-
-		data = pack.GetBlock("Info");
-		if (data.size() == sizeof(v100::InfoConstants))
-		{
-			auto oldInfos = std::make_unique<v100::InfoConstants>();
-			std::memcpy(oldInfos.get(), data.data(), sizeof(v100::InfoConstants));
-			// Only 4 bytes in CreatureActionInfo needs to be filled
-			UpdateInfo(infos, *oldInfos);
-		}
-		else if (data.size() == sizeof(v120::InfoConstants))
-		{
-			std::memcpy(&infos, data.data(), sizeof(infos));
-		}
-		else
-		{
-			throw std::runtime_error(
-			    fmt::format("Info block size does not match that of GInfo of version 1.0 or 1.2: {} != {} or {}", data.size(),
-			                sizeof(v100::InfoConstants), sizeof(v120::InfoConstants)));
-		}
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open {}: {}", path.generic_string(), pack::ResultToStr(result));
+		return false;
 	}
-	catch (std::runtime_error& err)
+
+	data = pack.GetBlock("Info");
+	if (data.size() == sizeof(v100::InfoConstants))
 	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open {}: {}", path.generic_string(), err.what());
+		auto oldInfos = std::make_unique<v100::InfoConstants>();
+		std::memcpy(oldInfos.get(), data.data(), sizeof(v100::InfoConstants));
+		// Only 4 bytes in CreatureActionInfo needs to be filled
+		UpdateInfo(infos, *oldInfos);
+	}
+	else if (data.size() == sizeof(v120::InfoConstants))
+	{
+		std::memcpy(&infos, data.data(), sizeof(infos));
+	}
+	else
+	{
+		SPDLOG_LOGGER_CRITICAL(spdlog::get("game"),
+		                       "Info block size does not match that of GInfo of version 1.0 or 1.2: {} != {} or {}",
+		                       data.size(), sizeof(v100::InfoConstants), sizeof(v120::InfoConstants));
 		return false;
 	}
 
