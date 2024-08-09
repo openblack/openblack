@@ -21,7 +21,7 @@
 
 using namespace openblack;
 
-void L3DAnim::Load(const anm::ANMFile& anm)
+void L3DAnim::Load(const anm::ANMFile& anm) noexcept
 {
 	_name = std::string(anm.GetHeader().name.data(), anm.GetHeader().name.size());
 	_unknown_0x20 = anm.GetHeader().unknown0x20;
@@ -56,18 +56,16 @@ void L3DAnim::Load(const anm::ANMFile& anm)
 	}
 }
 
-bool L3DAnim::LoadFromFilesystem(const std::filesystem::path& path)
+bool L3DAnim::LoadFromFilesystem(const std::filesystem::path& path) noexcept
 {
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading L3DAnim from file: {}", path.generic_string());
 	anm::ANMFile anm;
 
-	try
+	const auto result = anm.ReadFile(*Locator::filesystem::value().GetData(path));
+
+	if (result != anm::ANMResult::Success)
 	{
-		anm.ReadFile(*Locator::filesystem::value().GetData(path));
-	}
-	catch (std::runtime_error& err)
-	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open l3d animation from buffer: {}", err.what());
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open l3d animation from buffer: {}", anm::ResultToStr(result));
 		return false;
 	}
 
@@ -75,19 +73,16 @@ bool L3DAnim::LoadFromFilesystem(const std::filesystem::path& path)
 	return true;
 }
 
-bool L3DAnim::LoadFromFile(const std::filesystem::path& path)
+bool L3DAnim::LoadFromFile(const std::filesystem::path& path) noexcept
 {
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading L3DAnim from file: {}", path.generic_string());
 	anm::ANMFile anm;
 
-	try
-	{
-		anm.Open(Locator::filesystem::value().FindPath(path));
-	}
-	catch (std::runtime_error& err)
+	const auto result = anm.Open(Locator::filesystem::value().FindPath(path));
+	if (result != anm::ANMResult::Success)
 	{
 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open l3d mesh from filesystem {}: {}", path.generic_string(),
-		                    err.what());
+		                    anm::ResultToStr(result));
 		return false;
 	}
 
@@ -96,24 +91,24 @@ bool L3DAnim::LoadFromFile(const std::filesystem::path& path)
 	return true;
 }
 
-void L3DAnim::LoadFromBuffer(const std::vector<uint8_t>& data)
+bool L3DAnim::LoadFromBuffer(const std::vector<uint8_t>& data) noexcept
 {
 	anm::ANMFile anm;
 
-	try
+	const auto result = anm.Open(data);
+
+	if (result != anm::ANMResult::Success)
 	{
-		anm.Open(data);
-	}
-	catch (std::runtime_error& err)
-	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open l3d animation from buffer: {}", err.what());
-		return;
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open l3d animation from buffer: {}", anm::ResultToStr(result));
+		return false;
 	}
 
 	Load(anm);
+
+	return true;
 }
 
-std::vector<glm::mat4> L3DAnim::GetBoneMatrices(uint32_t time) const
+std::vector<glm::mat4> L3DAnim::GetBoneMatrices(uint32_t time) const noexcept
 {
 	if (_frames.empty())
 	{
