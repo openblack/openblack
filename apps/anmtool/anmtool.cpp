@@ -25,8 +25,6 @@ int PrintHeader(openblack::anm::ANMFile& anm)
 {
 	auto& header = anm.GetHeader();
 
-	std::printf("file: %s\n", anm.GetFilename().c_str());
-
 	std::printf("name: %s\n", header.name.data());
 	std::printf("unknown0x20: 0x%X\n", header.unknown0x20);
 	std::printf("unknown0x24: %f\n", header.unknown0x24);
@@ -49,8 +47,6 @@ int ListKeyframes(openblack::anm::ANMFile& anm)
 {
 	const auto& keyframes = anm.GetKeyframes();
 
-	std::printf("file: %s\n", anm.GetFilename().c_str());
-
 	uint32_t lastTime = 0;
 	for (uint32_t i = 0; i < keyframes.size(); ++i)
 	{
@@ -61,13 +57,13 @@ int ListKeyframes(openblack::anm::ANMFile& anm)
 	return EXIT_SUCCESS;
 }
 
-int ViewKeyframe(openblack::anm::ANMFile& anm)
+int ViewKeyframe(const std::filesystem::path& filename, openblack::anm::ANMFile& anm)
 {
 	for (uint32_t index = 0; index < anm.GetKeyframes().size(); ++index)
 	{
 		const auto& keyframe = anm.GetKeyframe(index);
 
-		std::printf("file: %s, frame: %u, time: %u\n", anm.GetFilename().c_str(), index, keyframe.time);
+		std::printf("file: %s, frame: %u, time: %u\n", filename.generic_string().c_str(), index, keyframe.time);
 		std::printf("bones:\n");
 
 		for (uint32_t i = 0; i < keyframe.bones.size(); ++i)
@@ -134,86 +130,70 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 {
 	cxxopts::Options options("anmtool", "Inspect and extract files from LionHead ANM files.");
 
-	try
-	{
-		options.add_options()                                            //
-		    ("h,help", "Display this help message.")                     //
-		    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
-		    ;
-		options.positional_help("[read|write] [OPTION...]");
-		options.add_options()                                                                                      //
-		    ("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())           //
-		    ("l,list-keyframes", "List Keyframes.", cxxopts::value<std::vector<std::filesystem::path>>())          //
-		    ("k,keyframe-content", "View Keyframe Contents", cxxopts::value<std::vector<std::filesystem::path>>()) //
-		    ;
-		options.add_options("write from and to glTF format")                                    //
-		    ("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())    //
-		    ("i,input-mesh", "Input file (required).", cxxopts::value<std::filesystem::path>()) //
-		    ;
+	options.add_options()                                            //
+	    ("h,help", "Display this help message.")                     //
+	    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
+	    ;
+	options.positional_help("[read|write] [OPTION...]");
+	options.add_options()                                                                                      //
+	    ("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())           //
+	    ("l,list-keyframes", "List Keyframes.", cxxopts::value<std::vector<std::filesystem::path>>())          //
+	    ("k,keyframe-content", "View Keyframe Contents", cxxopts::value<std::vector<std::filesystem::path>>()) //
+	    ;
+	options.add_options("write from and to glTF format")                                    //
+	    ("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())    //
+	    ("i,input-mesh", "Input file (required).", cxxopts::value<std::filesystem::path>()) //
+	    ;
 
-		options.parse_positional({"subcommand"});
-	}
-	catch (const std::exception& e)
+	options.parse_positional({"subcommand"});
+
+	auto result = options.parse(argc, argv);
+	if (result["help"].as<bool>())
 	{
-		std::cerr << e.what() << '\n';
+		std::cout << options.help() << '\n';
+		returnCode = EXIT_SUCCESS;
+		return false;
+	}
+	if (result["subcommand"].count() == 0)
+	{
+		std::cerr << options.help() << '\n';
 		returnCode = EXIT_FAILURE;
 		return false;
 	}
-
-	try
+	if (result["subcommand"].as<std::string>() == "read")
 	{
-		auto result = options.parse(argc, argv);
-		if (result["help"].as<bool>())
+		if (result["header"].count() > 0)
 		{
-			std::cout << options.help() << std::endl;
-			returnCode = EXIT_SUCCESS;
-			return false;
+			args.mode = Arguments::Mode::Header;
+			args.read.filenames = result["header"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
-		if (result["subcommand"].count() == 0)
+		if (result["list-keyframes"].count() > 0)
 		{
-			std::cerr << options.help() << std::endl;
-			returnCode = EXIT_FAILURE;
-			return false;
+			args.mode = Arguments::Mode::ListKeyframes;
+			args.read.filenames = result["list-keyframes"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
-		if (result["subcommand"].as<std::string>() == "read")
+		if (result["keyframe-content"].count() > 0)
 		{
-			if (result["header"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Header;
-				args.read.filenames = result["header"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["list-keyframes"].count() > 0)
-			{
-				args.mode = Arguments::Mode::ListKeyframes;
-				args.read.filenames = result["list-keyframes"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["keyframe-content"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Keyframe;
-				args.read.filenames = result["keyframe-content"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-		}
-		else if (result["subcommand"].as<std::string>() == "write")
-		{
-			args.write.outFilename = "";
-			if (result["output"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Write;
-				args.write.outFilename = result["output"].as<std::filesystem::path>();
-				if (result["input-mesh"].count() > 0)
-				{
-					args.write.gltfFile = result["input-mesh"].as<std::filesystem::path>();
-				}
-				return true;
-			}
+			args.mode = Arguments::Mode::Keyframe;
+			args.read.filenames = result["keyframe-content"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
 	}
-	catch (const std::exception& err)
+	else if (result["subcommand"].as<std::string>() == "write")
 	{
-		std::cerr << err.what() << std::endl;
+		args.write.outFilename = "";
+		if (result["output"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Write;
+			args.write.outFilename = result["output"].as<std::filesystem::path>();
+			if (result["input-mesh"].count() > 0)
+			{
+				args.write.gltfFile = result["input-mesh"].as<std::filesystem::path>();
+			}
+			return true;
+		}
 	}
 
 	std::cerr << options.help() << std::endl;
@@ -238,31 +218,32 @@ int main(int argc, char* argv[]) noexcept
 	for (auto& filename : args.read.filenames)
 	{
 		openblack::anm::ANMFile anm;
-		try
-		{
-			// Open file
-			anm.Open(filename);
 
-			switch (args.mode)
-			{
-			case Arguments::Mode::Header:
-				returnCode |= PrintHeader(anm);
-				break;
-			case Arguments::Mode::ListKeyframes:
-				returnCode |= ListKeyframes(anm);
-				break;
-			case Arguments::Mode::Keyframe:
-				returnCode |= ViewKeyframe(anm);
-				break;
-			default:
-				returnCode = EXIT_FAILURE;
-				break;
-			}
-		}
-		catch (std::exception& err)
+		// Open file
+		const auto result = anm.Open(filename);
+		if (result != openblack::anm::ANMResult::Success)
 		{
-			std::cerr << err.what() << std::endl;
+			std::cerr << openblack::anm::ResultToStr(result) << "\n";
 			returnCode |= EXIT_FAILURE;
+			continue;
+		}
+
+		switch (args.mode)
+		{
+		case Arguments::Mode::Header:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintHeader(anm);
+			break;
+		case Arguments::Mode::ListKeyframes:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ListKeyframes(anm);
+			break;
+		case Arguments::Mode::Keyframe:
+			returnCode |= ViewKeyframe(filename, anm);
+			break;
+		default:
+			returnCode = EXIT_FAILURE;
+			break;
 		}
 	}
 

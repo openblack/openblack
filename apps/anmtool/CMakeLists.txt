@@ -4,6 +4,7 @@ source_group(apps\\anmtool FILES ${ANMTOOL})
 
 add_executable(anmtool ${ANMTOOL})
 
+target_compile_definitions(anmtool PRIVATE CXXOPTS_NO_EXCEPTIONS)
 target_link_libraries(anmtool PRIVATE cxxopts::cxxopts anm)
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
@@ -16,11 +17,12 @@ if (OPENBLACK_CLANG_TIDY_CHECKS)
 endif ()
 
 if (MSVC)
-  target_compile_options(anmtool PRIVATE /W4 /WX)
+  target_compile_definitions(anmtool PRIVATE _HAS_EXCEPTIONS=0)
+  target_compile_options(anmtool PRIVATE /W4 /WX /EHs-c-)
 else ()
   target_compile_options(
     anmtool
-    PRIVATE -Wall -Wextra -pedantic -Werror
+    PRIVATE -Wall -Wextra -pedantic -Werror -fno-exceptions
             # Disabled due to tiny-gltf
             -Wno-switch
   )
