@@ -73,7 +73,7 @@ const std::string k_WindowTitle = "openblack";
 
 Game* Game::sInstance = nullptr;
 
-Game::Game(Arguments&& args)
+Game::Game(Arguments&& args) noexcept
     : _gamePath(args.gamePath)
     , _camera(std::make_unique<Camera>(glm::zero<glm::vec3>()))
     , _eventManager(std::make_unique<EventManager>())
@@ -142,7 +142,7 @@ Game::Game(Arguments&& args)
 	}));
 }
 
-Game::~Game()
+Game::~Game() noexcept
 {
 	// Stop all sounds
 	if (Locator::audio::has_value())
@@ -191,7 +191,7 @@ entt::entity Game::GetHand() const
 	return _handEntity;
 }
 
-bool Game::ProcessEvents(const SDL_Event& event)
+bool Game::ProcessEvents(const SDL_Event& event) noexcept
 {
 	static bool leftMouseButton = false;
 	static bool middleMouseButton = false;
@@ -295,7 +295,7 @@ bool Game::ProcessEvents(const SDL_Event& event)
 	return true;
 }
 
-bool Game::GameLogicLoop()
+bool Game::GameLogicLoop() noexcept
 {
 	using namespace ecs::components;
 	using namespace ecs::systems;
@@ -333,7 +333,7 @@ bool Game::GameLogicLoop()
 	return false;
 }
 
-bool Game::Update()
+bool Game::Update() noexcept
 {
 	_profiler->Frame();
 	auto previous = _profiler->GetEntries().at(_profiler->GetEntryIndex(-1)).frameStart;
@@ -476,7 +476,7 @@ bool Game::Update()
 	return _config.numFramesToSimulate == 0 || _frameCount < _config.numFramesToSimulate;
 }
 
-bool Game::Initialize()
+bool Game::Initialize() noexcept
 {
 	using filesystem::Path;
 	InitializeGame();
@@ -792,9 +792,13 @@ bool Game::Initialize()
 	return true;
 }
 
-bool Game::Run()
+bool Game::Run() noexcept
 {
-	LoadMap(_startMap);
+	if (!LoadMap(_startMap))
+	{
+		return false;
+	}
+
 	Locator::dynamicsSystem::value().RegisterRigidBodies();
 
 	auto& fileSystem = Locator::filesystem::value();
@@ -847,7 +851,7 @@ bool Game::Run()
 		{
 			auto section = _profiler->BeginScoped(Profiler::Stage::SceneDraw);
 
-			Renderer::DrawSceneDesc drawDesc {
+			const Renderer::DrawSceneDesc drawDesc {
 			    /*profiler =*/*_profiler,
 			    /*camera =*/_camera.get(),
 			    /*frameBuffer =*/nullptr,
@@ -905,13 +909,14 @@ bool Game::Run()
 	return true;
 }
 
-void Game::LoadMap(const std::filesystem::path& path)
+bool Game::LoadMap(const std::filesystem::path& path) noexcept
 {
 	auto& fileSystem = Locator::filesystem::value();
 
 	if (!fileSystem.Exists(path))
 	{
-		throw std::runtime_error("Could not find script " + path.generic_string());
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Could not find script {}", path.generic_string());
+		return false;
 	}
 
 	const auto data = fileSystem.ReadAll(path);
@@ -952,6 +957,8 @@ void Game::LoadMap(const std::filesystem::path& path)
 	SetGameSpeed(Game::k_TurnDurationMultiplierNormal);
 	_turnCount = 0;
 	_paused = true;
+
+	return true;
 }
 
 void Game::LoadLandscape(const std::filesystem::path& path)
@@ -984,12 +991,12 @@ bool Game::LoadVariables() noexcept
 	                             _infoConstants);
 }
 
-void Game::SetTime(float time)
+void Game::SetTime(float time) noexcept
 {
 	GetSky().SetTime(time);
 }
 
-void Game::RequestScreenshot(const std::filesystem::path& path)
+void Game::RequestScreenshot(const std::filesystem::path& path) noexcept
 {
 	_requestScreenshot = std::make_pair(_frameCount, path);
 }
