@@ -17,6 +17,18 @@
 namespace openblack::morph
 {
 
+enum class MorphResult : uint8_t
+{
+	Success = 0,
+	ErrCantOpen,
+	ErrFileTooSmall,
+	ErrSpecFileCantOpen,
+	ErrSpecFileVersionMismatch,
+	ErrSpecFileAnimationsBeforeCategories,
+};
+
+std::string_view ResultToStr(MorphResult result);
+
 struct MorphHeader
 {
 	uint32_t unknown0x0; // TODO(#458): is 0 for hands and 21 for creatures
@@ -159,8 +171,6 @@ protected:
 	/// True when a file has been loaded
 	bool _isLoaded {false};
 
-	std::filesystem::path _filename;
-
 	MorphHeader _header;
 	AnimationSpecs _animationSpecs;
 	std::vector<Animation> _baseAnimation;
@@ -169,35 +179,31 @@ protected:
 	std::vector<HairGroup> _hairGroups;
 	std::vector<std::vector<ExtraData>> _extraData; ///< related to \ref _base_animation
 
-	/// Error handling
-	void Fail(const std::string& msg);
-
 	/// Read file from the input source
-	virtual void ReadFile(std::istream& stream, const std::filesystem::path& specsDirectory);
-	void ReadSpecFile(const std::filesystem::path& specFilePath);
-	std::vector<Animation> ReadAnimations(std::istream& stream, const std::vector<uint32_t>& offsets);
-	HairGroup ReadHairGroup(std::istream& stream);
+	MorphResult ReadFile(std::istream& stream, const std::filesystem::path& specsDirectory) noexcept;
+	MorphResult ReadSpecFile(const std::filesystem::path& specFilePath) noexcept;
+	std::vector<Animation> ReadAnimations(std::istream& stream, const std::vector<uint32_t>& offsets) noexcept;
+	HairGroup ReadHairGroup(std::istream& stream) noexcept;
 
 public:
-	MorphFile();
-	virtual ~MorphFile();
+	MorphFile() noexcept;
+	virtual ~MorphFile() noexcept;
 
 	/// Read morph file from the filesystem
-	void Open(const std::filesystem::path& filepath, const std::filesystem::path& specsDirectory);
+	MorphResult Open(const std::filesystem::path& filepath, const std::filesystem::path& specsDirectory) noexcept;
 
 	/// Read morph file from a buffer
-	void Open(const std::vector<uint8_t>& buffer, const std::filesystem::path& specsDirectory);
+	MorphResult Open(const std::vector<uint8_t>& buffer, const std::filesystem::path& specsDirectory) noexcept;
 
-	[[nodiscard]] std::string GetFilename() const { return _filename.string(); }
-	[[nodiscard]] const MorphHeader& GetHeader() const { return _header; }
-	[[nodiscard]] const AnimationSpecs& GetAnimationSpecs() const { return _animationSpecs; }
-	[[nodiscard]] const std::vector<Animation>& GetBaseAnimationSet() const { return _baseAnimation; }
-	[[nodiscard]] const std::vector<Animation>& GetVariantAnimationSet(uint32_t index) const
+	[[nodiscard]] const MorphHeader& GetHeader() const noexcept { return _header; }
+	[[nodiscard]] const AnimationSpecs& GetAnimationSpecs() const noexcept { return _animationSpecs; }
+	[[nodiscard]] const std::vector<Animation>& GetBaseAnimationSet() const noexcept { return _baseAnimation; }
+	[[nodiscard]] const std::vector<Animation>& GetVariantAnimationSet(uint32_t index) const noexcept
 	{
 		return _variantAnimations.at(index);
 	}
-	[[nodiscard]] const std::vector<HairGroup>& GetHairGroups() const { return _hairGroups; }
-	[[nodiscard]] const std::vector<std::vector<ExtraData>>& GetExtraData() const { return _extraData; }
+	[[nodiscard]] const std::vector<HairGroup>& GetHairGroups() const noexcept { return _hairGroups; }
+	[[nodiscard]] const std::vector<std::vector<ExtraData>>& GetExtraData() const noexcept { return _extraData; }
 };
 
 } // namespace openblack::morph
