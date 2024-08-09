@@ -18,9 +18,12 @@ if (OPENBLACK_CLANG_TIDY_CHECKS)
 endif ()
 
 if (MSVC)
-  target_compile_options(l3d PRIVATE /W4 /WX)
+  target_compile_definitions(l3d PRIVATE "_HAS_EXCEPTIONS=0")
+  target_compile_options(l3d PRIVATE /W4 /WX /EHs-c-)
 else ()
-  target_compile_options(l3d PRIVATE -Wall -Wextra -pedantic -Werror)
+  target_compile_options(
+    l3d PRIVATE -Wall -Wextra -pedantic -Werror -fno-exceptions
+  )
 endif ()
 
 set_property(TARGET l3d PROPERTY FOLDER "components")

@@ -20,6 +20,38 @@
 namespace openblack::l3d
 {
 
+enum class L3DResult : uint8_t
+{
+	Success = 0,
+	ErrCantOpen,
+	ErrFileTooSmall,
+	ErrBadHeader,
+	ErrBadSubmeshOffset,
+	ErrBadSubmeshHeaderOffset,
+	ErrBadSkinOffset,
+	ErrBadSkinTextureOffset,
+	ErrBadPointsOffset,
+	ErrBadPrimitiveCount,
+	ErrBadPrimitiveOffset,
+	ErrBadPrimitiveHeaderOffset,
+	ErrBadVertexOffset,
+	ErrBadVertexCount,
+	ErrBadTriangleOffset,
+	ErrBadTriangleCount,
+	ErrBadVertexGroupOffset,
+	ErrBadVertexGroupCount,
+	ErrBadBlendOffset,
+	ErrBadBlendCount,
+	ErrBadBoneOffset,
+	ErrBadBoneCount,
+	ErrBadFootprintOffset,
+	ErrBadFootprintMeshOffset,
+	ErrBadFootprintTextureOffset,
+	ErrBadFootprintPixelOffset,
+};
+
+std::string_view ResultToStr(L3DResult result);
+
 enum class L3DMeshFlags : uint32_t
 {
 	None,
@@ -279,8 +311,6 @@ protected:
 	/// True when a file has been loaded
 	bool _isLoaded {false};
 
-	std::filesystem::path _filename;
-
 	L3DHeader _header;
 	std::vector<L3DSubmeshHeader> _submeshHeaders;
 	std::vector<L3DTexture> _skins;
@@ -302,55 +332,60 @@ protected:
 	std::string _nameData;
 	std::vector<std::array<float, 3 * 4>> _extraMetrics;
 
-	/// Error handling
-	void Fail(const std::string& msg);
-
 	/// Write file to the input source
-	virtual void WriteFile(std::ostream& stream) const;
+	L3DResult WriteFile(std::ostream& stream) const noexcept;
 
 public:
-	L3DFile();
-	virtual ~L3DFile();
+	L3DFile() noexcept;
+	virtual ~L3DFile() noexcept;
 
 	/// Read file from the input source
-	virtual void ReadFile(std::istream& stream);
+	L3DResult ReadFile(std::istream& stream) noexcept;
 
 	/// Read l3d file from the filesystem
-	void Open(const std::filesystem::path& filepath);
+	L3DResult Open(const std::filesystem::path& filepath) noexcept;
 
 	/// Read l3d file from a buffer
-	void Open(const std::vector<uint8_t>& buffer);
+	L3DResult Open(const std::vector<uint8_t>& buffer) noexcept;
 
 	/// Write l3d file to path on the filesystem
-	void Write(const std::filesystem::path& filepath);
+	L3DResult Write(const std::filesystem::path& filepath) noexcept;
 
-	[[nodiscard]] std::string GetFilename() const { return _filename.string(); }
-	[[nodiscard]] const L3DHeader& GetHeader() const { return _header; }
-	[[nodiscard]] const std::vector<L3DSubmeshHeader>& GetSubmeshHeaders() const { return _submeshHeaders; }
-	[[nodiscard]] const std::vector<L3DTexture>& GetSkins() const { return _skins; }
-	[[nodiscard]] const std::vector<L3DPoint>& GetExtraPoints() const { return _extraPoints; }
-	[[nodiscard]] const std::vector<L3DPrimitiveHeader>& GetPrimitiveHeaders() const { return _primitiveHeaders; }
-	[[nodiscard]] const std::vector<L3DVertex>& GetVertices() const { return _vertices; }
-	[[nodiscard]] const std::vector<uint16_t>& GetIndices() const { return _indices; }
-	[[nodiscard]] const std::vector<L3DVertexGroup>& GetLookUpTableData() const { return _vertexGroups; }
-	[[nodiscard]] const std::vector<L3DBlend>& GetBlends() const { return _blends; }
-	[[nodiscard]] const std::vector<L3DBone>& GetBones() const { return _bones; }
-	[[nodiscard]] const std::optional<L3DFootprint>& GetFootprint() const { return _footprint; }
-	[[nodiscard]] const std::vector<std::array<float, 3 * 4>>& GetExtraMetrics() const { return _extraMetrics; }
-	[[nodiscard]] const std::vector<uint8_t>& GetUv2Data() const { return _uv2Data; }
-	void SetFootprint(const L3DFootprint& footprint) { _footprint = footprint; }
-	void SetExtraMetrics(const std::vector<std::array<float, 3 * 4>>& metrics) { _extraMetrics = metrics; }
-	void SetUv2Data(std::vector<uint8_t>& uv2Data) { _uv2Data = uv2Data; }
-	void SetNameData(std::string& nameData) { _nameData = nameData; }
-	[[nodiscard]] const std::string& GetNameData() const { return _nameData; }
-	[[nodiscard]] const std::span<L3DPrimitiveHeader>& GetPrimitiveSpan(uint32_t submeshIndex) const
+	[[nodiscard]] const L3DHeader& GetHeader() const noexcept { return _header; }
+	[[nodiscard]] const std::vector<L3DSubmeshHeader>& GetSubmeshHeaders() const noexcept { return _submeshHeaders; }
+	[[nodiscard]] const std::vector<L3DTexture>& GetSkins() const noexcept { return _skins; }
+	[[nodiscard]] const std::vector<L3DPoint>& GetExtraPoints() const noexcept { return _extraPoints; }
+	[[nodiscard]] const std::vector<L3DPrimitiveHeader>& GetPrimitiveHeaders() const noexcept { return _primitiveHeaders; }
+	[[nodiscard]] const std::vector<L3DVertex>& GetVertices() const noexcept { return _vertices; }
+	[[nodiscard]] const std::vector<uint16_t>& GetIndices() const noexcept { return _indices; }
+	[[nodiscard]] const std::vector<L3DVertexGroup>& GetLookUpTableData() const noexcept { return _vertexGroups; }
+	[[nodiscard]] const std::vector<L3DBlend>& GetBlends() const noexcept { return _blends; }
+	[[nodiscard]] const std::vector<L3DBone>& GetBones() const noexcept { return _bones; }
+	[[nodiscard]] const std::optional<L3DFootprint>& GetFootprint() const noexcept { return _footprint; }
+	[[nodiscard]] const std::vector<std::array<float, 3 * 4>>& GetExtraMetrics() const noexcept { return _extraMetrics; }
+	[[nodiscard]] const std::vector<uint8_t>& GetUv2Data() const noexcept { return _uv2Data; }
+	void SetFootprint(const L3DFootprint& footprint) noexcept { _footprint = footprint; }
+	void SetExtraMetrics(const std::vector<std::array<float, 3 * 4>>& metrics) noexcept { _extraMetrics = metrics; }
+	void SetUv2Data(std::vector<uint8_t>& uv2Data) noexcept { _uv2Data = uv2Data; }
+	void SetNameData(std::string& nameData) noexcept { _nameData = nameData; }
+	[[nodiscard]] const std::string& GetNameData() const noexcept { return _nameData; }
+	[[nodiscard]] const std::span<L3DPrimitiveHeader>& GetPrimitiveSpan(uint32_t submeshIndex) const noexcept
 	{
 		return _primitiveSpans[submeshIndex];
 	}
-	[[nodiscard]] const std::span<L3DBone>& GetBoneSpan(uint32_t submeshIndex) const { return _boneSpans[submeshIndex]; }
-	[[nodiscard]] const std::span<L3DVertex>& GetVertexSpan(uint32_t submeshIndex) const { return _vertexSpans[submeshIndex]; }
-	[[nodiscard]] const std::span<uint16_t>& GetIndexSpan(uint32_t submeshIndex) const { return _indexSpans[submeshIndex]; }
-	[[nodiscard]] const std::span<L3DVertexGroup>& GetVertexGroupSpan(uint32_t submeshIndex) const
+	[[nodiscard]] const std::span<L3DBone>& GetBoneSpan(uint32_t submeshIndex) const noexcept
+	{
+		return _boneSpans[submeshIndex];
+	}
+	[[nodiscard]] const std::span<L3DVertex>& GetVertexSpan(uint32_t submeshIndex) const noexcept
+	{
+		return _vertexSpans[submeshIndex];
+	}
+	[[nodiscard]] const std::span<uint16_t>& GetIndexSpan(uint32_t submeshIndex) const noexcept
+	{
+		return _indexSpans[submeshIndex];
+	}
+	[[nodiscard]] const std::span<L3DVertexGroup>& GetVertexGroupSpan(uint32_t submeshIndex) const noexcept
 	{
 		return _vertexGroupSpans[submeshIndex];
 	}
