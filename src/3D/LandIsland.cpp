@@ -46,14 +46,12 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Land from file: {}", path.string());
 	lnd::LNDFile lnd;
 
-	try
+	const auto result = lnd.ReadFile(*Locator::filesystem::value().GetData(path));
+	if (result != lnd::LNDResult::Success)
 	{
-		lnd.ReadFile(*Locator::filesystem::value().GetData(path));
-	}
-	catch (std::runtime_error& err)
-	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open lnd file from filesystem {}: {}", path.string(), err.what());
-		throw err;
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open lnd file from filesystem {}: {}", path.string(),
+		                    lnd::ResultToStr(result));
+		throw lnd::ResultToStr(result);
 	}
 
 	_blockIndexLookup = lnd.GetHeader().lookUpTable;

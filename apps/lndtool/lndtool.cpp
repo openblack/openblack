@@ -18,7 +18,7 @@
 
 struct Arguments
 {
-	enum class Mode
+	enum class Mode : uint8_t
 	{
 		Header,
 		LowResolution,
@@ -81,7 +81,6 @@ int PrintHeader(openblack::lnd::LNDFile& lnd)
 {
 	const auto& header = lnd.GetHeader();
 
-	std::printf("file: %s\n", lnd.GetFilename().c_str());
 	std::printf("block count: %u\n", header.blockCount);
 	std::printf("block index look-up table:\n");
 	PrintRawBytes(header.lookUpTable.data(), sizeof(header.lookUpTable[0]) * header.lookUpTable.size());
@@ -103,7 +102,6 @@ int PrintLowRes(openblack::lnd::LNDFile& lnd)
 {
 	const auto& textures = lnd.GetLowResolutionTextures();
 
-	std::printf("file: %s\n", lnd.GetFilename().c_str());
 	uint32_t i = 0;
 	for (const auto& texture : textures)
 	{
@@ -123,7 +121,6 @@ int PrintBlocks(openblack::lnd::LNDFile& lnd)
 {
 	const auto& blocks = lnd.GetBlocks();
 
-	std::printf("file: %s\n", lnd.GetFilename().c_str());
 	uint32_t i = 0;
 	for (const auto& block : blocks)
 	{
@@ -229,7 +226,6 @@ int PrintCountries(openblack::lnd::LNDFile& lnd)
 {
 	const auto& countries = lnd.GetCountries();
 
-	std::printf("file: %s\n", lnd.GetFilename().c_str());
 	uint32_t i = 0;
 	for (const auto& country : countries)
 	{
@@ -251,7 +247,6 @@ int PrintMaterials(openblack::lnd::LNDFile& lnd)
 {
 	const auto& materials = lnd.GetMaterials();
 
-	std::printf("file: %s\n", lnd.GetFilename().c_str());
 	uint32_t k = 0;
 	for (const auto& material : materials)
 	{
@@ -296,7 +291,6 @@ int PrintExtra(openblack::lnd::LNDFile& lnd)
 {
 	const auto& extra = lnd.GetExtra();
 
-	std::printf("file: %s\n", lnd.GetFilename().c_str());
 	constexpr uint16_t subsample = 8;
 	constexpr uint16_t magnitude = (subsample * subsample);
 	std::printf("noise:\n");
@@ -348,7 +342,6 @@ int PrintUnaccounted(openblack::lnd::LNDFile& lnd)
 {
 	const auto& unaccounted = lnd.GetUnaccounted();
 
-	std::printf("file: %s\n", lnd.GetFilename().c_str());
 	PrintRawBytes(unaccounted.data(), unaccounted.size());
 	std::printf("\n");
 
@@ -366,7 +359,7 @@ int WriteFile(const Arguments::Write& args) noexcept
 		std::ifstream stream(filename, std::ios::binary);
 		if (!stream.is_open())
 		{
-			std::cerr << "Could not open " << filename << std::endl;
+			std::cerr << "Could not open " << filename << '\n';
 			return EXIT_FAILURE;
 		}
 		// Total file size
@@ -384,7 +377,7 @@ int WriteFile(const Arguments::Write& args) noexcept
 			          << openblack::lnd::LNDMaterial::k_Width << "x"
 			          << openblack::lnd::LNDMaterial::k_Height
 			          << " BGR5A1 texture: size should be "
-			          << fsize << std::endl;
+			          << fsize << '\n';
 			// clang-format on
 			return EXIT_FAILURE;
 		}
@@ -438,7 +431,7 @@ int WriteFile(const Arguments::Write& args) noexcept
 		std::ifstream stream(args.noiseMapFile, std::ios::binary);
 		if (!stream.is_open())
 		{
-			std::cerr << "Could not open " << args.noiseMapFile << std::endl;
+			std::cerr << "Could not open " << args.noiseMapFile << '\n';
 			return EXIT_FAILURE;
 		}
 		// Total file size
@@ -456,7 +449,7 @@ int WriteFile(const Arguments::Write& args) noexcept
 			          << openblack::lnd::LNDBumpMap::k_Width << "x"
 			          << openblack::lnd::LNDBumpMap::k_Height
 			          << " R8 texture: size should be "
-			          << fsize << std::endl;
+			          << fsize << '\n';
 			// clang-format on
 			return EXIT_FAILURE;
 		}
@@ -467,7 +460,7 @@ int WriteFile(const Arguments::Write& args) noexcept
 		std::ifstream stream(args.bumpMapFile, std::ios::binary);
 		if (!stream.is_open())
 		{
-			std::cerr << "Could not open " << args.bumpMapFile << std::endl;
+			std::cerr << "Could not open " << args.bumpMapFile << '\n';
 			return EXIT_FAILURE;
 		}
 		// Total file size
@@ -485,7 +478,7 @@ int WriteFile(const Arguments::Write& args) noexcept
 			          << openblack::lnd::LNDBumpMap::k_Width << "x"
 			          << openblack::lnd::LNDBumpMap::k_Height
 			          << " R8 texture: size should be "
-			          << fsize << std::endl;
+			          << fsize << '\n';
 			// clang-format on
 			return EXIT_FAILURE;
 		}
@@ -554,151 +547,137 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 {
 	cxxopts::Options options("lndtool", "Inspect and extract files from LionHead LND files.");
 
-	try
-	{
-		options.add_options()                                            //
-		    ("h,help", "Display this help message.")                     //
-		    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
-		    ;
-		options.positional_help("[read|write] [OPTION...]");
-		options.add_options("read")                                                                                     //
-		    ("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())                //
-		    ("l,low-resolution-textures", "Print Low Resolution Texture Contents.",                                     //
-		     cxxopts::value<std::vector<std::filesystem::path>>())                                                      //
-		    ("b,blocks", "Print Block Contents.", cxxopts::value<std::vector<std::filesystem::path>>())                 //
-		    ("c,country", "Print Country Contents.", cxxopts::value<std::vector<std::filesystem::path>>())              //
-		    ("m,material", "Print Material Contents.", cxxopts::value<std::vector<std::filesystem::path>>())            //
-		    ("x,extra", "Print Extra Content.", cxxopts::value<std::vector<std::filesystem::path>>())                   //
-		    ("u,unaccounted", "Print Unaccounted bytes Content.", cxxopts::value<std::vector<std::filesystem::path>>()) //
-		    ;
-		options.add_options("write")                                                                    //
-		    ("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())            //
-		    ("terrain-type", "Type of terrain (required).", cxxopts::value<uint16_t>())                 //
-		    ("noise-map", "File with R8 bytes for noise map.", cxxopts::value<std::filesystem::path>()) //
-		    ("bump-map", "File with R8 bytes for bump map.", cxxopts::value<std::filesystem::path>())   //
-		    ("material-array", "Files with BGBRA1 bytes for material array (comma-separated).",         //
-		     cxxopts::value<std::vector<std::filesystem::path>>())                                      //
-		    ("points", "Points in height map in format \"x1 y1 z1, x2 y2 z2\" (3 floats).",             //
-		     cxxopts::value<std::vector<std::string>>())                                                //
-		    ;
+	options.add_options()                                            //
+	    ("h,help", "Display this help message.")                     //
+	    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
+	    ;
+	options.positional_help("[read|write] [OPTION...]");
+	options.add_options("read")                                                                                     //
+	    ("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())                //
+	    ("l,low-resolution-textures", "Print Low Resolution Texture Contents.",                                     //
+	     cxxopts::value<std::vector<std::filesystem::path>>())                                                      //
+	    ("b,blocks", "Print Block Contents.", cxxopts::value<std::vector<std::filesystem::path>>())                 //
+	    ("c,country", "Print Country Contents.", cxxopts::value<std::vector<std::filesystem::path>>())              //
+	    ("m,material", "Print Material Contents.", cxxopts::value<std::vector<std::filesystem::path>>())            //
+	    ("x,extra", "Print Extra Content.", cxxopts::value<std::vector<std::filesystem::path>>())                   //
+	    ("u,unaccounted", "Print Unaccounted bytes Content.", cxxopts::value<std::vector<std::filesystem::path>>()) //
+	    ;
+	options.add_options("write")                                                                    //
+	    ("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())            //
+	    ("terrain-type", "Type of terrain (required).", cxxopts::value<uint16_t>())                 //
+	    ("noise-map", "File with R8 bytes for noise map.", cxxopts::value<std::filesystem::path>()) //
+	    ("bump-map", "File with R8 bytes for bump map.", cxxopts::value<std::filesystem::path>())   //
+	    ("material-array", "Files with BGBRA1 bytes for material array (comma-separated).",         //
+	     cxxopts::value<std::vector<std::filesystem::path>>())                                      //
+	    ("points", "Points in height map in format \"x1 y1 z1, x2 y2 z2\" (3 floats).",             //
+	     cxxopts::value<std::vector<std::string>>())                                                //
+	    ;
 
-		options.parse_positional({"subcommand"});
-	}
-	catch (const std::exception& e)
+	options.parse_positional({"subcommand"});
+
+	auto result = options.parse(argc, argv);
+	if (result["help"].as<bool>())
 	{
-		std::cerr << e.what() << '\n';
+		std::cout << options.help() << '\n';
+		returnCode = EXIT_SUCCESS;
+		return false;
+	}
+	if (result["subcommand"].count() == 0)
+	{
+		std::cerr << options.help() << '\n';
 		returnCode = EXIT_FAILURE;
 		return false;
 	}
-
-	try
+	if (result["subcommand"].as<std::string>() == "read")
 	{
-		auto result = options.parse(argc, argv);
-		if (result["help"].as<bool>())
+		if (result["header"].count() > 0)
 		{
-			std::cout << options.help() << std::endl;
-			returnCode = EXIT_SUCCESS;
-			return false;
+			args.mode = Arguments::Mode::Header;
+			args.read.filenames = result["header"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
-		if (result["subcommand"].count() == 0)
+		if (result["low-resolution-textures"].count() > 0)
 		{
-			std::cerr << options.help() << std::endl;
-			returnCode = EXIT_FAILURE;
-			return false;
+			args.mode = Arguments::Mode::LowResolution;
+			args.read.filenames = result["low-resolution-textures"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
-		if (result["subcommand"].as<std::string>() == "read")
+		if (result["blocks"].count() > 0)
 		{
-			if (result["header"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Header;
-				args.read.filenames = result["header"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["low-resolution-textures"].count() > 0)
-			{
-				args.mode = Arguments::Mode::LowResolution;
-				args.read.filenames = result["low-resolution-textures"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["blocks"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Blocks;
-				args.read.filenames = result["blocks"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["country"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Countries;
-				args.read.filenames = result["country"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["material"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Materials;
-				args.read.filenames = result["material"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["extra"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Extra;
-				args.read.filenames = result["extra"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["unaccounted"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Unaccounted;
-				args.read.filenames = result["unaccounted"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
+			args.mode = Arguments::Mode::Blocks;
+			args.read.filenames = result["blocks"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
-		else if (result["subcommand"].as<std::string>() == "write")
+		if (result["country"].count() > 0)
 		{
-			args.write.outFilename = "";
-			if (result["output"].count() > 0 && result["terrain-type"].count() > 0)
+			args.mode = Arguments::Mode::Countries;
+			args.read.filenames = result["country"].as<std::vector<std::filesystem::path>>();
+			return true;
+		}
+		if (result["material"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Materials;
+			args.read.filenames = result["material"].as<std::vector<std::filesystem::path>>();
+			return true;
+		}
+		if (result["extra"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Extra;
+			args.read.filenames = result["extra"].as<std::vector<std::filesystem::path>>();
+			return true;
+		}
+		if (result["unaccounted"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Unaccounted;
+			args.read.filenames = result["unaccounted"].as<std::vector<std::filesystem::path>>();
+			return true;
+		}
+	}
+	else if (result["subcommand"].as<std::string>() == "write")
+	{
+		args.write.outFilename = "";
+		if (result["output"].count() > 0 && result["terrain-type"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Write;
+			args.write.outFilename = result["output"].as<std::filesystem::path>();
+			args.write.terrainType = result["terrain-type"].as<uint16_t>();
+			if (result["noise-map"].count() > 0)
 			{
-				args.mode = Arguments::Mode::Write;
-				args.write.outFilename = result["output"].as<std::filesystem::path>();
-				args.write.terrainType = result["terrain-type"].as<uint16_t>();
-				if (result["noise-map"].count() > 0)
+				args.write.noiseMapFile = result["noise-map"].as<std::filesystem::path>();
+			}
+			if (result["bump-map"].count() > 0)
+			{
+				args.write.bumpMapFile = result["bump-map"].as<std::filesystem::path>();
+			}
+			if (result["material-array"].count() > 0)
+			{
+				args.write.materialArray = result["material-array"].as<std::vector<std::filesystem::path>>();
+			}
+			if (result["points"].count() > 0)
+			{
+				const auto regex = std::regex(R"( *(-?\d+\.\d+) ?(-?\d+\.\d+) ?(-?\d+\.\d+))");
+				for (const auto& str : result["points"].as<std::vector<std::string>>())
 				{
-					args.write.noiseMapFile = result["noise-map"].as<std::filesystem::path>();
-				}
-				if (result["bump-map"].count() > 0)
-				{
-					args.write.bumpMapFile = result["bump-map"].as<std::filesystem::path>();
-				}
-				if (result["material-array"].count() > 0)
-				{
-					args.write.materialArray = result["material-array"].as<std::vector<std::filesystem::path>>();
-				}
-				if (result["points"].count() > 0)
-				{
-					const auto regex = std::regex(R"( *(-?\d+\.\d+) ?(-?\d+\.\d+) ?(-?\d+\.\d+))");
-					for (const auto& str : result["points"].as<std::vector<std::string>>())
+					std::smatch match;
+					std::regex_match(str, match, regex);
+					if (match.size() != 4)
 					{
-						std::smatch match;
-						std::regex_match(str, match, regex);
-						if (match.size() != 4)
-						{
-							throw cxxopts::exceptions::invalid_option_syntax(
-							    "points must be a 3 floats separated by spaces: 1900.0 20.0 2000.0");
-						}
-						auto& point = args.write.pointsToAdd.emplace_back();
-						point[0] = std::stof(match[1]);
-						point[1] = std::stof(match[2]);
-						point[2] = std::stof(match[3]);
+						std::cerr << "points must be a 3 floats separated by spaces: 1900.0 20.0 2000.0\n"
+						          << options.help() << '\n';
+						returnCode = EXIT_FAILURE;
+						return false;
 					}
+					auto& point = args.write.pointsToAdd.emplace_back();
+					point[0] = std::stof(match[1]);
+					point[1] = std::stof(match[2]);
+					point[2] = std::stof(match[3]);
 				}
-				return true;
 			}
+			return true;
 		}
 	}
-	catch (const std::exception& err)
-	{
-		std::cerr << err.what() << std::endl;
-	}
 
-	std::cerr << options.help() << std::endl;
+	std::cerr << options.help() << '\n';
 	returnCode = EXIT_FAILURE;
 	return false;
 }
@@ -720,43 +699,49 @@ int main(int argc, char* argv[]) noexcept
 	for (auto& filename : args.read.filenames)
 	{
 		openblack::lnd::LNDFile lnd;
-		try
-		{
-			// Open file
-			lnd.Open(filename);
 
-			switch (args.mode)
-			{
-			case Arguments::Mode::Header:
-				returnCode |= PrintHeader(lnd);
-				break;
-			case Arguments::Mode::LowResolution:
-				returnCode |= PrintLowRes(lnd);
-				break;
-			case Arguments::Mode::Blocks:
-				returnCode |= PrintBlocks(lnd);
-				break;
-			case Arguments::Mode::Countries:
-				returnCode |= PrintCountries(lnd);
-				break;
-			case Arguments::Mode::Materials:
-				returnCode |= PrintMaterials(lnd);
-				break;
-			case Arguments::Mode::Extra:
-				returnCode |= PrintExtra(lnd);
-				break;
-			case Arguments::Mode::Unaccounted:
-				returnCode |= PrintUnaccounted(lnd);
-				break;
-			default:
-				returnCode = EXIT_FAILURE;
-				break;
-			}
-		}
-		catch (std::exception& err)
+		// Open file
+		const auto result = lnd.Open(filename);
+		if (result != openblack::lnd::LNDResult::Success)
 		{
-			std::cerr << err.what() << std::endl;
+			std::cerr << openblack::lnd::ResultToStr(result) << "\n";
 			returnCode |= EXIT_FAILURE;
+			break;
+		}
+
+		switch (args.mode)
+		{
+		case Arguments::Mode::Header:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintHeader(lnd);
+			break;
+		case Arguments::Mode::LowResolution:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintLowRes(lnd);
+			break;
+		case Arguments::Mode::Blocks:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintBlocks(lnd);
+			break;
+		case Arguments::Mode::Countries:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintCountries(lnd);
+			break;
+		case Arguments::Mode::Materials:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintMaterials(lnd);
+			break;
+		case Arguments::Mode::Extra:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintExtra(lnd);
+			break;
+		case Arguments::Mode::Unaccounted:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= PrintUnaccounted(lnd);
+			break;
+		default:
+			returnCode = EXIT_FAILURE;
+			break;
 		}
 	}
 
