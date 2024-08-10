@@ -185,7 +185,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 
 		args.windowWidth = result["width"].as<uint16_t>();
 		args.windowHeight = result["height"].as<uint16_t>();
-		args.scale = result["ui-scale"].as<float>();
+		args.guiScale = result["ui-scale"].as<float>();
 		args.vsync = result["vsync"].as<bool>();
 		args.displayMode = displayMode;
 		args.rendererType = rendererType;

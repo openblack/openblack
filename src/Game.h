@@ -95,7 +95,7 @@ struct Arguments
 	openblack::windowing::DisplayMode displayMode;
 	bgfx::RendererType::Enum rendererType;
 	std::string gamePath;
-	float scale;
+	float guiScale;
 	uint32_t numFramesToSimulate;
 	std::string logFile;
 	std::array<spdlog::level::level_enum, k_LoggingSubsystemStrs.size()> logLevels;
@@ -130,6 +130,11 @@ public:
 		bool drawFootpaths {false};
 		bool drawStreams {false};
 
+		bool bgfxDebug {false};
+		bool bgfxProfile {false};
+		bool vsync {false};
+		bool running {false};
+
 		float timeOfDay {12.0f};
 		float skyAlignment {0.0f};
 		float bumpMapStrength {1.0f};
@@ -139,9 +144,11 @@ public:
 		float cameraNearClip {1.0f};
 		float cameraFarClip {static_cast<float>(0x10000)};
 
-		bool bgfxDebug {false};
-		bool bgfxProfile {false};
-		bool running {false};
+		float guiScale {1.0f};
+
+		bgfx::RendererType::Enum rendererType {bgfx::RendererType::Noop};
+		glm::u16vec2 resolution {256, 256};
+		openblack::windowing::DisplayMode displayMode {openblack::windowing::DisplayMode::Windowed};
 
 		uint32_t numFramesToSimulate {0};
 	};
