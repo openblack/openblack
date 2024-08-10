@@ -76,7 +76,6 @@ Game* Game::sInstance = nullptr;
 Game::Game(Arguments&& args)
     : _gamePath(args.gamePath)
     , _camera(std::make_unique<Camera>(glm::zero<glm::vec3>()))
-    , _eventManager(std::make_unique<EventManager>())
     , _startMap(args.startLevel)
     , _handPose(glm::identity<glm::mat4>())
     , _requestScreenshot(args.requestScreenshot)
@@ -131,15 +130,6 @@ Game::Game(Arguments&& args)
 	}
 
 	_gui = debug::gui::Gui::Create(graphics::RenderPass::ImGui, args.scale);
-
-	_eventManager->AddHandler(std::function([this](const SDL_Event& event) {
-		// If gui captures this input, do not propagate
-		if (!this->_gui->ProcessEvents(event))
-		{
-			this->_config.running = this->ProcessEvents(event);
-			Locator::gameActionSystem::value().ProcessEvent(event);
-		}
-	}));
 }
 
 Game::~Game()
@@ -181,7 +171,7 @@ Game::~Game()
 	_gui.reset();
 	_renderer.reset();
 	Locator::windowing::reset();
-	_eventManager.reset();
+	Locator::events::reset();
 	SDL_Quit(); // todo: move to GameWindow
 	spdlog::shutdown();
 }
@@ -366,7 +356,7 @@ bool Game::Update()
 		SDL_Event e;
 		while (SDL_PollEvent(&e) != 0)
 		{
-			_eventManager->Create<SDL_Event>(e);
+			Locator::events::value().Create<SDL_Event>(e);
 		}
 		_camera->HandleActions(deltaTime);
 	}
@@ -488,6 +478,15 @@ bool Game::Initialize()
 	auto& levelManager = resources.GetLevels();
 	auto& soundManager = resources.GetSounds();
 	auto& glowManager = resources.GetGlows();
+
+	Locator::events::value().AddHandler(std::function([this](const SDL_Event& event) {
+		// If gui captures this input, do not propagate
+		if (!this->_gui->ProcessEvents(event))
+		{
+			this->_config.running = this->ProcessEvents(event);
+			Locator::gameActionSystem::value().ProcessEvent(event);
+		}
+	}));
 
 	if (!fileSystem.IsPathValid(_gamePath))
 	{
