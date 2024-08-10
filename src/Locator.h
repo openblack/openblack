@@ -28,6 +28,11 @@ namespace audio
 class AudioManagerInterface;
 }
 
+namespace debug::gui
+{
+class DebugGuiInterface;
+}
+
 namespace filesystem
 {
 class FileSystemInterface;
@@ -74,6 +79,7 @@ struct Locator
 {
 	using events = entt::locator<EventManager>;
 	using windowing = entt::locator<windowing::WindowingInterface>;
+	using debugGui = entt::locator<debug::gui::DebugGuiInterface>;
 	using filesystem = entt::locator<filesystem::FileSystemInterface>;
 	using resources = entt::locator<resources::ResourcesInterface>;
 	using rng = entt::locator<RandomNumberManagerInterface>;

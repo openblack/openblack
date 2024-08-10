@@ -9,7 +9,7 @@
 
 #include "TextureViewer.h"
 
-#include "Debug/Gui.h"
+#include "Debug/ImGuiUtils.h"
 #include "Graphics/Texture2D.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"

@@ -12,9 +12,9 @@
 #include <LNDFile.h>
 
 #include "3D/LandIslandInterface.h"
+#include "Debug/ImGuiUtils.h"
 #include "Game.h"
 #include "Graphics/FrameBuffer.h"
-#include "Gui.h"
 #include "Locator.h"
 
 using namespace openblack::debug::gui;

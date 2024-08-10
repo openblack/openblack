@@ -32,7 +32,7 @@
 #include "Common/EventManager.h"
 #include "Common/RandomNumberManager.h"
 #include "Common/StringUtils.h"
-#include "Debug/Gui.h"
+#include "Debug/DebugGuiInterface.h"
 #include "ECS/Archetypes/HandArchetype.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
@@ -154,7 +154,7 @@ Game::~Game() noexcept
 
 	_water.reset();
 	_sky.reset();
-	_gui.reset();
+	Locator::debugGui ::reset();
 	_renderer.reset();
 	Locator::windowing::reset();
 	Locator::events::reset();
@@ -321,6 +321,8 @@ bool Game::Update() noexcept
 	}
 	auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(current - previous);
 
+	Locator::debugGui::value().SetScale(_config.guiScale);
+
 	// Physics
 	{
 		auto physics = _profiler->BeginScoped(Profiler::Stage::PhysicsUpdate);
@@ -335,7 +337,7 @@ bool Game::Update() noexcept
 	// Input events
 	{
 		auto sdlInput = _profiler->BeginScoped(Profiler::Stage::SdlInput);
-		if (!this->_gui->StealsFocus())
+		if (!Locator::debugGui::value().StealsFocus())
 		{
 			Locator::gameActionSystem::value().Frame();
 		}
@@ -355,7 +357,7 @@ bool Game::Update() noexcept
 	// ImGui events + prepare
 	{
 		auto guiLoop = _profiler->BeginScoped(Profiler::Stage::GuiLoop);
-		if (_gui->Loop(*this, *_renderer))
+		if (Locator::debugGui::value().Loop(*this, *_renderer))
 		{
 			return false; // Quit event
 		}
@@ -473,8 +475,6 @@ bool Game::Initialize() noexcept
 		return false;
 	}
 
-	_gui = debug::gui::Gui::Create(graphics::RenderPass::ImGui, _config.guiScale);
-
 	using filesystem::Path;
 	InitializeGame();
 	auto& fileSystem = Locator::filesystem::value();
@@ -488,7 +488,7 @@ bool Game::Initialize() noexcept
 
 	Locator::events::value().AddHandler(std::function([this](const SDL_Event& event) {
 		// If gui captures this input, do not propagate
-		if (!this->_gui->ProcessEvents(event))
+		if (!Locator::debugGui::value().ProcessEvents(event))
 		{
 			this->_config.running = this->ProcessEvents(event);
 			Locator::gameActionSystem::value().ProcessEvent(event);
@@ -868,7 +868,7 @@ bool Game::Run() noexcept
 
 		{
 			auto section = _profiler->BeginScoped(Profiler::Stage::GuiDraw);
-			_gui->Draw();
+			Locator::debugGui::value().Draw();
 		}
 
 		{

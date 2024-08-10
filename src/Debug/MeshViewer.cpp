@@ -22,7 +22,7 @@
 #include "3D/L3DMesh.h"
 #include "3D/LandIslandInterface.h"
 #include "Camera/Camera.h"
-#include "Debug/Gui.h"
+#include "Debug/ImGuiUtils.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Registry.h"
 #include "Game.h"

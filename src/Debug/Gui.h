@@ -20,84 +20,29 @@
 #include <glm/fwd.hpp>
 #include <imgui.h>
 
-#include "Graphics/RenderPass.h"
+#include "DebugGuiInterface.h"
 
-struct SDL_Window;
-struct SDL_Cursor;
-union SDL_Event;
-
-namespace ImGui
-{
-#define IMGUI_FLAGS_NONE UINT8_C(0x00)
-#define IMGUI_FLAGS_ALPHA_BLEND UINT8_C(0x01)
-
-// Helper function for passing bgfx::TextureHandle to ImGui::Image.
-inline void Image(bgfx::TextureHandle handle, uint8_t flags, uint8_t mip, const ImVec2& size,
-                  const ImVec2& cuv0 = ImVec2(0.0f, 0.0f), const ImVec2& cuv1 = ImVec2(1.0f, 1.0f),
-                  const ImVec4& tintCol = ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
-                  const ImVec4& borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f))
-{
-	union
-	{
-		struct
-		{
-			bgfx::TextureHandle handle;
-			uint8_t flags;
-			uint8_t mip;
-		} s;
-		ImTextureID ptr;
-	} texture;
-	texture.s.handle = handle;
-	texture.s.flags = flags;
-	texture.s.mip = mip;
-
-	// Do y-flip
-	auto uv0 = cuv0;
-	auto uv1 = cuv1;
-	if (bgfx::getRendererType() == bgfx::RendererType::OpenGL || bgfx::getRendererType() == bgfx::RendererType::OpenGLES)
-	{
-		uv0.y = 1.0f - uv0.y;
-		uv1.y = 1.0f - uv1.y;
-	}
-
-	Image(texture.ptr, size, uv0, uv1, tintCol, borderCol);
-}
-
-// Helper function for passing bgfx::TextureHandle to ImGui::Image.
-inline void Image(bgfx::TextureHandle handle, const ImVec2& size, const ImVec2& uv0 = ImVec2(0.0f, 0.0f),
-                  const ImVec2& uv1 = ImVec2(1.0f, 1.0f), const ImVec4& tintCol = ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
-                  const ImVec4& borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f))
-{
-	Image(handle, IMGUI_FLAGS_ALPHA_BLEND, 0, size, uv0, uv1, tintCol, borderCol);
-}
-
-} // namespace ImGui
-
-namespace openblack
-{
-class Game;
-class GameWindow;
-class Renderer;
-} // namespace openblack
+#if !defined(LOCATOR_IMPLEMENTATIONS)
+#warning "Locator interface implementations should only be included in Locator.cpp, use interface instead."
+#endif
 
 namespace openblack::debug::gui
 {
 class Window;
 
-class Gui
+class Gui: public DebugGuiInterface
 {
 public:
-	static std::unique_ptr<Gui> Create(graphics::RenderPass viewId, float scale);
-
+	Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<Window>>&& debugWindows, bool headless);
 	virtual ~Gui();
 
-	[[nodiscard]] bool StealsFocus() const;
-	bool ProcessEvents(const SDL_Event& event);
-	bool Loop(Game& game, const Renderer& renderer);
-	void Draw();
+	[[nodiscard]] bool StealsFocus() const noexcept override;
+	void SetScale(float scale) noexcept override;
+	bool ProcessEvents(const SDL_Event& event) noexcept override;
+	bool Loop(Game& game, const Renderer& renderer) noexcept override;
+	void Draw() noexcept override;
 
 private:
-	Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<Window>>&& debugWindows, bool headless);
 	bool CreateFontsTextureBgfx();
 	bool CreateDeviceObjectsBgfx();
 	void NewFrame();

@@ -7,6 +7,8 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#define LOCATOR_IMPLEMENTATIONS
+
 #include "Gui.h"
 
 #include <cinttypes>
@@ -80,6 +82,7 @@
 #define SHADER_NAME fs_ocornut_imgui
 #define SHADER_DIR IMGUI_SHADER_DIR
 #include "Graphics/ShaderIncluder.h"
+#include "ImGuiUtils.h"
 
 using namespace openblack;
 using namespace openblack::debug::gui;
@@ -96,16 +99,11 @@ const std::array<bgfx::EmbeddedShader, 5> k_EmbeddedShaders = {{
 }};
 } // namespace
 
-std::unique_ptr<Gui> Gui::Create(graphics::RenderPass viewId, float scale)
+std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPass viewId) noexcept
 {
 	IMGUI_CHECKVERSION();
 	auto* imgui = ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
-
-	ImGuiStyle& style = ImGui::GetStyle();
-	style.ScaleAllSizes(scale);
-	io.FontGlobalScale = scale;
-	io.BackendRendererName = "imgui_impl_bgfx";
+	ImGui::GetIO().BackendRendererName = "imgui_impl_bgfx";
 
 	std::vector<std::unique_ptr<Window>> debugWindows;
 	debugWindows.emplace_back(new Profiler);
@@ -118,7 +116,7 @@ std::unique_ptr<Gui> Gui::Create(graphics::RenderPass viewId, float scale)
 	debugWindows.emplace_back(new Audio);
 	debugWindows.emplace_back(new TempleInterior);
 
-	auto gui = std::unique_ptr<Gui>(
+	auto gui = std::unique_ptr<DebugGuiInterface>(
 	    new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows), !Locator::windowing::has_value()));
 
 	if (Locator::windowing::has_value())
@@ -180,12 +178,18 @@ Gui::~Gui()
 	}
 }
 
-bool Gui::StealsFocus() const
+bool Gui::StealsFocus() const noexcept
 {
 	return _stealsFocus;
 }
 
-bool Gui::ProcessEvents(const SDL_Event& event)
+void Gui::SetScale(float scale) noexcept
+{
+	ImGui::GetStyle().ScaleAllSizes(scale);
+	ImGui::GetIO().FontGlobalScale = scale;
+}
+
+bool Gui::ProcessEvents(const SDL_Event& event) noexcept
 {
 	ImGui::SetCurrentContext(_imgui);
 
@@ -275,7 +279,7 @@ void Gui::NewFrame()
 	ImGui::NewFrame();
 }
 
-bool Gui::Loop(Game& game, const Renderer& renderer)
+bool Gui::Loop(Game& game, const Renderer& renderer) noexcept
 {
 	for (auto& window : _debugWindows)
 	{
@@ -439,7 +443,7 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData)
 	}
 }
 
-void Gui::Draw()
+void Gui::Draw() noexcept
 {
 	ImGui::SetCurrentContext(_imgui);
 
