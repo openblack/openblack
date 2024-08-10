@@ -153,14 +153,14 @@ public:
 		uint32_t numFramesToSimulate {0};
 	};
 
-	explicit Game(Arguments&& args);
-	virtual ~Game();
+	explicit Game(Arguments&& args) noexcept;
+	virtual ~Game() noexcept;
 
-	bool ProcessEvents(const SDL_Event& event);
-	bool GameLogicLoop();
-	bool Update();
-	bool Initialize();
-	bool Run();
+	bool ProcessEvents(const SDL_Event& event) noexcept;
+	bool GameLogicLoop() noexcept;
+	bool Update() noexcept;
+	bool Initialize() noexcept;
+	bool Run() noexcept;
 
 	void LoadMap(const std::filesystem::path& path);
 	void LoadLandscape(const std::filesystem::path& path);
