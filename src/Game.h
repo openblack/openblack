@@ -43,11 +43,6 @@ class L3DMesh;
 class Sky;
 class Water;
 
-namespace debug::gui
-{
-class Gui;
-}
-
 namespace graphics
 {
 class Texture2D;
@@ -199,7 +194,6 @@ private:
 	const std::filesystem::path _gamePath;
 
 	std::unique_ptr<Renderer> _renderer;
-	std::unique_ptr<debug::gui::Gui> _gui;
 	std::unique_ptr<Camera> _camera;
 	std::unique_ptr<Profiler> _profiler;
 

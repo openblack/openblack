@@ -20,6 +20,7 @@
 #include "Audio/AudioManagerNoOp.h"
 #include "Common/EventManager.h"
 #include "Common/RandomNumberManagerProduction.h"
+#include "Debug/DebugGuiInterface.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/MapProduction.h"
 #include "ECS/Registry.h"
@@ -45,6 +46,7 @@ using openblack::LandIsland;
 using openblack::RandomNumberManagerProduction;
 using openblack::TempleInterior;
 using openblack::UnloadedIsland;
+using openblack::debug::gui::DebugGuiInterface;
 using openblack::ecs::MapProduction;
 using openblack::ecs::Registry;
 using openblack::ecs::systems::CameraBookmarkSystem;
@@ -69,6 +71,7 @@ void openblack::InitializeGame()
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), "EnTT version: {}", ENTT_VERSION);
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), GLM_VERSION_MESSAGE);
 
+	Locator::debugGui::reset(DebugGuiInterface::Create(graphics::RenderPass::ImGui).release());
 	Locator::events::emplace<EventManager>();
 
 #if __ANDROID__
