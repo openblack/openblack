@@ -73,7 +73,7 @@ const std::string k_WindowTitle = "openblack";
 
 Game* Game::sInstance = nullptr;
 
-Game::Game(Arguments&& args)
+Game::Game(Arguments&& args) noexcept
     : _gamePath(args.gamePath)
     , _camera(std::make_unique<Camera>(glm::zero<glm::vec3>()))
     , _startMap(args.startLevel)
@@ -118,7 +118,7 @@ Game::Game(Arguments&& args)
 	_config.guiScale = args.guiScale;
 }
 
-Game::~Game()
+Game::~Game() noexcept
 {
 	// Stop all sounds
 	if (Locator::audio::has_value())
@@ -167,7 +167,7 @@ entt::entity Game::GetHand() const
 	return _handEntity;
 }
 
-bool Game::ProcessEvents(const SDL_Event& event)
+bool Game::ProcessEvents(const SDL_Event& event) noexcept
 {
 	static bool leftMouseButton = false;
 	static bool middleMouseButton = false;
@@ -271,7 +271,7 @@ bool Game::ProcessEvents(const SDL_Event& event)
 	return true;
 }
 
-bool Game::GameLogicLoop()
+bool Game::GameLogicLoop() noexcept
 {
 	using namespace ecs::components;
 	using namespace ecs::systems;
@@ -309,7 +309,7 @@ bool Game::GameLogicLoop()
 	return false;
 }
 
-bool Game::Update()
+bool Game::Update() noexcept
 {
 	_profiler->Frame();
 	auto previous = _profiler->GetEntries().at(_profiler->GetEntryIndex(-1)).frameStart;
@@ -452,7 +452,7 @@ bool Game::Update()
 	return _config.numFramesToSimulate == 0 || _frameCount < _config.numFramesToSimulate;
 }
 
-bool Game::Initialize()
+bool Game::Initialize() noexcept
 {
 	if (_config.rendererType != bgfx::RendererType::Noop)
 	{
@@ -782,7 +782,7 @@ bool Game::Initialize()
 	return true;
 }
 
-bool Game::Run()
+bool Game::Run() noexcept
 {
 	LoadMap(_startMap);
 	Locator::dynamicsSystem::value().RegisterRigidBodies();
@@ -837,7 +837,7 @@ bool Game::Run()
 		{
 			auto section = _profiler->BeginScoped(Profiler::Stage::SceneDraw);
 
-			Renderer::DrawSceneDesc drawDesc {
+			const Renderer::DrawSceneDesc drawDesc {
 			    /*profiler =*/*_profiler,
 			    /*camera =*/_camera.get(),
 			    /*frameBuffer =*/nullptr,
