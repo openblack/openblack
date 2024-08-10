@@ -36,7 +36,6 @@ union SDL_Event;
 namespace openblack
 {
 class Camera;
-class EventManager;
 class Profiler;
 class Renderer;
 class L3DAnim;
@@ -196,7 +195,6 @@ private:
 	std::unique_ptr<debug::gui::Gui> _gui;
 	std::unique_ptr<Camera> _camera;
 	std::unique_ptr<Profiler> _profiler;
-	std::unique_ptr<EventManager> _eventManager;
 
 	// std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<L3DMesh> _testModel;

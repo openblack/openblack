@@ -8,10 +8,8 @@
  *******************************************************************************/
 
 #include <functional>
-#include <stdexcept>
+#include <memory>
 #include <unordered_map>
-
-#include <SDL.h>
 
 #include "Queue.h"
 

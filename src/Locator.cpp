@@ -18,6 +18,7 @@
 #include "3D/UnloadedIsland.h"
 #include "Audio/AudioManager.h"
 #include "Audio/AudioManagerNoOp.h"
+#include "Common/EventManager.h"
 #include "Common/RandomNumberManagerProduction.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/MapProduction.h"
@@ -67,6 +68,8 @@ void openblack::InitializeGame()
 {
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), "EnTT version: {}", ENTT_VERSION);
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), GLM_VERSION_MESSAGE);
+
+	Locator::events::emplace<EventManager>();
 
 #if __ANDROID__
 	Locator::filesystem::emplace<AndroidFileSystem>();

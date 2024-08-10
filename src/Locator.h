@@ -18,6 +18,7 @@
 
 namespace openblack
 {
+class EventManager;
 class RandomNumberManagerInterface;
 class LandIslandInterface;
 class TempleInteriorInterface;
@@ -71,6 +72,7 @@ void InitializeLevel(const std::filesystem::path& path);
 
 struct Locator
 {
+	using events = entt::locator<EventManager>;
 	using windowing = entt::locator<windowing::WindowingInterface>;
 	using filesystem = entt::locator<filesystem::FileSystemInterface>;
 	using resources = entt::locator<resources::ResourcesInterface>;
