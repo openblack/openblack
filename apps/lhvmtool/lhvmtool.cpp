@@ -127,7 +127,7 @@ std::map<uint32_t, std::string> GetLabels(const LHVMFile& file)
 				{
 					name += "_exception_handler_";
 				}
-				else if (instruction.Mode == Mode::BACKWARD)
+				else if (instruction.Mode == VMMode::BACKWARD)
 				{
 					name += "_loop_";
 				}
@@ -179,7 +179,7 @@ int PrintCode(const LHVMFile& file)
 			{
 			case Opcode::PUSH:
 			case Opcode::POP:
-				if (instruction.Mode == Mode::REFERENCE)
+				if (instruction.Mode == VMMode::REFERENCE)
 				{
 					if (instruction.UintVal > script.GetVariablesOffset())
 					{
@@ -225,12 +225,12 @@ int PrintCode(const LHVMFile& file)
 				std::printf("\tCALL %u\n", instruction.UintVal);
 				break;
 			case Opcode::RUN:
-				type = instruction.Mode == Mode::ASYNC ? "async " : "";
+				type = instruction.Mode == VMMode::ASYNC ? "async " : "";
 				arg = file.GetScripts().at(instruction.IntVal - 1).GetName();
 				std::printf("\tRUN %s%s\n", type.c_str(), arg.c_str());
 				break;
 			case Opcode::ENDEXCEPT:
-				if (instruction.Mode == Mode::ENDEXCEPT)
+				if (instruction.Mode == VMMode::ENDEXCEPT)
 				{
 					std::printf("\tENDEXCEPT\n");
 				}
@@ -246,7 +246,7 @@ int PrintCode(const LHVMFile& file)
 				}
 				else
 				{
-					if (instruction.Mode == Mode::COPYFROM)
+					if (instruction.Mode == VMMode::COPYFROM)
 					{
 						std::printf("\tCOPY from %i\n", instruction.IntVal);
 					}

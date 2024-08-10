@@ -193,7 +193,7 @@ enum class Opcode : uint32_t
 };
 static_assert(sizeof(Opcode) == 4);
 
-enum class Mode : uint32_t
+enum class VMMode : uint32_t
 {
 	// Data access modes
 	IMMEDIATE = 0,
@@ -216,14 +216,14 @@ enum class Mode : uint32_t
 
 	Last = 0xFFFFFFFF
 };
-static_assert(sizeof(Mode) == 4);
+static_assert(sizeof(VMMode) == 4);
 
 class VMInstruction
 {
 public:
 	VMInstruction() {}
 
-	VMInstruction(Opcode code, Mode mode, DataType type, VMValue data, uint32_t line)
+	VMInstruction(Opcode code, VMMode mode, DataType type, VMValue data, uint32_t line)
 	    : Code(code)
 	    , Mode(mode)
 	    , Type(type)
@@ -233,7 +233,7 @@ public:
 	}
 
 	Opcode Code {Opcode::LINE};
-	Mode Mode {Mode::IMMEDIATE};
+	VMMode Mode {VMMode::IMMEDIATE};
 	DataType Type {DataType::FLOAT};
 	union
 	{

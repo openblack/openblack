@@ -205,11 +205,11 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 			ImGui::TextColored(Disassembly_ColorKeyword, "PUSH%s", typeChar);
 			ImGui::SameLine();
 
-			if (instruction.Mode == LHVM::Mode::REFERENCE)
+			if (instruction.Mode == LHVM::VMMode::REFERENCE)
 			{
 				DrawVariable(lhvm, script, instruction.IntVal);
 			}
-			else if (instruction.Mode == LHVM::Mode::IMMEDIATE)
+			else if (instruction.Mode == LHVM::VMMode::IMMEDIATE)
 			{
 				ImGui::TextColored(Disassembly_ColorConstant, "%s", DataToString(instruction.Data, instruction.Type).c_str());
 			}
@@ -218,7 +218,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 
 		case LHVM::Opcode::POP:
 			ImGui::TextColored(Disassembly_ColorKeyword, "POP%s", typeChar);
-			if (instruction.Mode == LHVM::Mode::REFERENCE)
+			if (instruction.Mode == LHVM::VMMode::REFERENCE)
 			{
 				ImGui::SameLine();
 				DrawVariable(lhvm, script, instruction.IntVal);
@@ -240,7 +240,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 			auto const& runScript = lhvm.GetScripts().at(instruction.UintVal - 1);
 
 			ImGui::TextColored(Disassembly_ColorKeyword, "RUN");
-			if (instruction.Mode == LHVM::Mode::ASYNC)
+			if (instruction.Mode == LHVM::VMMode::ASYNC)
 			{
 				ImGui::SameLine();
 				ImGui::TextColored(Disassembly_ColorKeyword, "async");
@@ -258,7 +258,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 			break;
 		}
 		case LHVM::Opcode::ENDEXCEPT:
-			if (instruction.Mode == LHVM::Mode::ENDEXCEPT)
+			if (instruction.Mode == LHVM::VMMode::ENDEXCEPT)
 			{
 				ImGui::TextColored(Disassembly_ColorKeyword, "ENDEXCEPT");
 			}
@@ -281,7 +281,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 			}
 			else
 			{
-				if (instruction.Mode == LHVM::Mode::COPYFROM)
+				if (instruction.Mode == LHVM::VMMode::COPYFROM)
 				{
 					ImGui::TextColored(Disassembly_ColorKeyword, "COPY from");
 				}

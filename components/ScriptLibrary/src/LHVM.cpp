@@ -679,7 +679,7 @@ void LHVM::PrintInstruction(const VMTask& task, const VMInstruction& instruction
 	std::string arg = "";
 	if (instruction.Code == Opcode::RUN)
 	{
-		if (instruction.Mode == Mode::ASYNC)
+		if (instruction.Mode == VMMode::ASYNC)
 		{
 			arg = "async ";
 		}
@@ -697,7 +697,7 @@ void LHVM::PrintInstruction(const VMTask& task, const VMInstruction& instruction
 		{
 			opcode += k_DataTypeChars[static_cast<int>(instruction.Type)];
 		}
-		if ((instruction.Code == Opcode::PUSH || instruction.Code == Opcode::POP) && instruction.Mode == Mode::REFERENCE)
+		if ((instruction.Code == Opcode::PUSH || instruction.Code == Opcode::POP) && instruction.Mode == VMMode::REFERENCE)
 		{
 			if (instruction.IntVal > task.VariablesOffset)
 			{
@@ -708,7 +708,7 @@ void LHVM::PrintInstruction(const VMTask& task, const VMInstruction& instruction
 				arg = _variables.at(instruction.IntVal).Name;
 			}
 		}
-		else if (instruction.Code == Opcode::PUSH && instruction.Mode == Mode::IMMEDIATE)
+		else if (instruction.Code == Opcode::PUSH && instruction.Mode == VMMode::IMMEDIATE)
 		{
 			if (instruction.Type == DataType::FLOAT || instruction.Type == DataType::VECTOR)
 			{
@@ -775,7 +775,7 @@ void LHVM::_opcode01Jz(VMTask& task, const VMInstruction& instruction)
 	}
 	else // jump if popped value isn't zero
 	{
-		if (instruction.Mode == Mode::FORWARD)
+		if (instruction.Mode == VMMode::FORWARD)
 		{
 			task.InstructionAddress = instruction.IntVal - 1;
 		}
@@ -789,7 +789,7 @@ void LHVM::_opcode01Jz(VMTask& task, const VMInstruction& instruction)
 
 void LHVM::_opcode02Push(VMTask& task, const VMInstruction& instruction)
 {
-	if (instruction.Mode == Mode::IMMEDIATE)
+	if (instruction.Mode == VMMode::IMMEDIATE)
 	{
 		Push(instruction.Data, instruction.Type);
 	}
@@ -802,7 +802,7 @@ void LHVM::_opcode02Push(VMTask& task, const VMInstruction& instruction)
 
 void LHVM::_opcode03Pop(VMTask& task, const VMInstruction& instruction)
 {
-	if (instruction.Mode == Mode::REFERENCE)
+	if (instruction.Mode == VMMode::REFERENCE)
 	{
 		auto& var = GetVar(task, instruction.UintVal);
 		DataType type;
@@ -1282,7 +1282,7 @@ void LHVM::_opcode19Lt(VMTask& task, const VMInstruction& instruction)
 
 void LHVM::_opcode20Jmp(VMTask& task, const VMInstruction& instruction)
 {
-	if (instruction.Mode == Mode::FORWARD)
+	if (instruction.Mode == VMMode::FORWARD)
 	{
 		task.InstructionAddress = instruction.IntVal - 1;
 	}
@@ -1318,7 +1318,7 @@ void LHVM::_opcode22Except(VMTask& task, const VMInstruction& instruction)
 
 void LHVM::_opcode23Cast(VMTask& task, const VMInstruction& instruction)
 {
-	if (instruction.Mode == Mode::ZERO)
+	if (instruction.Mode == VMMode::ZERO)
 	{
 		auto& var = GetVar(task, instruction.UintVal);
 		if (var.Type == DataType::OBJECT)
@@ -1337,7 +1337,7 @@ void LHVM::_opcode23Cast(VMTask& task, const VMInstruction& instruction)
 void LHVM::_opcode24Call(VMTask& task, const VMInstruction& instruction)
 {
 	const auto newTaskId = StartScript(instruction.UintVal);
-	if (instruction.Mode == Mode::SYNC)
+	if (instruction.Mode == VMMode::SYNC)
 	{
 		task.WaitingTaskId = newTaskId;
 	}
@@ -1345,7 +1345,7 @@ void LHVM::_opcode24Call(VMTask& task, const VMInstruction& instruction)
 
 void LHVM::_opcode25EndExcept(VMTask& task, const VMInstruction& instruction)
 {
-	if (instruction.Mode == Mode::ENDEXCEPT)
+	if (instruction.Mode == VMMode::ENDEXCEPT)
 	{
 		if (_currentTask != NULL && _currentTask->ExceptionHandlerIps.size() > 0)
 		{
@@ -1410,7 +1410,7 @@ void LHVM::_opcode29Swap(VMTask& task, const VMInstruction& instruction)
 		VMValue copyVal(0.0f);
 		std::array<DataType, 32> tmpTypes;
 		std::array<VMValue, 32> tmpVals;
-		if (instruction.Mode == Mode::COPYFROM) // push a copy of the Nth value from top of the stack
+		if (instruction.Mode == VMMode::COPYFROM) // push a copy of the Nth value from top of the stack
 		{
 			for (int i = 0; i < offset; i++)
 			{
