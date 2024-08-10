@@ -107,7 +107,6 @@ Game::Game(Arguments&& args)
 	}
 	sInstance = this;
 
-	std::string binaryPath = std::filesystem::path {args.executablePath}.parent_path().generic_string();
 	_config.numFramesToSimulate = args.numFramesToSimulate;
 	_config.numFramesToSimulate = args.numFramesToSimulate;
 	_config.numFramesToSimulate = args.numFramesToSimulate;
@@ -117,28 +116,6 @@ Game::Game(Arguments&& args)
 	_config.rendererType = args.rendererType;
 	_config.vsync = args.vsync;
 	_config.guiScale = args.guiScale;
-
-	SPDLOG_LOGGER_INFO(spdlog::get("game"), "current binary path: {}", binaryPath);
-	if (_config.rendererType != bgfx::RendererType::Noop)
-	{
-		uint32_t extraFlags = 0;
-		if (_config.rendererType == bgfx::RendererType::Enum::Metal)
-		{
-			extraFlags |= SDL_WINDOW_METAL;
-		}
-		openblack::InitializeWindow(k_WindowTitle, _config.resolution.x, _config.resolution.y, _config.displayMode, extraFlags);
-	}
-	try
-	{
-		_renderer = std::make_unique<Renderer>(_config.rendererType, _config.vsync);
-	}
-	catch (std::runtime_error& exception)
-	{
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Failed to create renderer", exception.what(), nullptr);
-		throw exception;
-	}
-
-	_gui = debug::gui::Gui::Create(graphics::RenderPass::ImGui, _config.guiScale);
 }
 
 Game::~Game()
@@ -477,6 +454,27 @@ bool Game::Update()
 
 bool Game::Initialize()
 {
+	if (_config.rendererType != bgfx::RendererType::Noop)
+	{
+		uint32_t extraFlags = 0;
+		if (_config.rendererType == bgfx::RendererType::Enum::Metal)
+		{
+			extraFlags |= SDL_WINDOW_METAL;
+		}
+		openblack::InitializeWindow(k_WindowTitle, _config.resolution.x, _config.resolution.y, _config.displayMode, extraFlags);
+	}
+	try
+	{
+		_renderer = std::make_unique<Renderer>(_config.rendererType, _config.vsync);
+	}
+	catch (std::runtime_error& exception)
+	{
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Failed to create renderer", exception.what(), nullptr);
+		return false;
+	}
+
+	_gui = debug::gui::Gui::Create(graphics::RenderPass::ImGui, _config.guiScale);
+
 	using filesystem::Path;
 	InitializeGame();
 	auto& fileSystem = Locator::filesystem::value();
