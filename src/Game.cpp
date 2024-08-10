@@ -109,19 +109,28 @@ Game::Game(Arguments&& args)
 
 	std::string binaryPath = std::filesystem::path {args.executablePath}.parent_path().generic_string();
 	_config.numFramesToSimulate = args.numFramesToSimulate;
+	_config.numFramesToSimulate = args.numFramesToSimulate;
+	_config.numFramesToSimulate = args.numFramesToSimulate;
+	_config.rendererType = args.rendererType;
+	_config.resolution = {args.windowWidth, args.windowHeight};
+	_config.displayMode = args.displayMode;
+	_config.rendererType = args.rendererType;
+	_config.vsync = args.vsync;
+	_config.guiScale = args.guiScale;
+
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), "current binary path: {}", binaryPath);
-	if (args.rendererType != bgfx::RendererType::Noop)
+	if (_config.rendererType != bgfx::RendererType::Noop)
 	{
 		uint32_t extraFlags = 0;
-		if (args.rendererType == bgfx::RendererType::Enum::Metal)
+		if (_config.rendererType == bgfx::RendererType::Enum::Metal)
 		{
 			extraFlags |= SDL_WINDOW_METAL;
 		}
-		openblack::InitializeWindow(k_WindowTitle, args.windowWidth, args.windowHeight, args.displayMode, extraFlags);
+		openblack::InitializeWindow(k_WindowTitle, _config.resolution.x, _config.resolution.y, _config.displayMode, extraFlags);
 	}
 	try
 	{
-		_renderer = std::make_unique<Renderer>(args.rendererType, args.vsync);
+		_renderer = std::make_unique<Renderer>(_config.rendererType, _config.vsync);
 	}
 	catch (std::runtime_error& exception)
 	{
@@ -129,7 +138,7 @@ Game::Game(Arguments&& args)
 		throw exception;
 	}
 
-	_gui = debug::gui::Gui::Create(graphics::RenderPass::ImGui, args.scale);
+	_gui = debug::gui::Gui::Create(graphics::RenderPass::ImGui, _config.guiScale);
 }
 
 Game::~Game()
