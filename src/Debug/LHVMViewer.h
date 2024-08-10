@@ -36,7 +36,7 @@ private:
 
 	void DrawTasksTab(const openblack::LHVM::LHVM& lhvm);
 	void DrawStack(const openblack::LHVM::VMStack& stack);
-	void DrawExceptionHandlers(const openblack::LHVM::VMExceptStruct& exceptStruct);
+	void DrawExceptionHandlers(const std::vector<uint32_t>& exceptionHandlerIps);
 	void SelectTask(uint32_t idx);
 
 	uint32_t _selectedScriptID {1};

@@ -17,7 +17,6 @@
 #include <vector>
 
 #include "LHVMTypes.h"
-#include "VMScript.h"
 
 namespace openblack::LHVM
 {
@@ -68,21 +67,14 @@ protected:
 	void LoadData(std::istream& stream);
 	bool LoadStatus(std::istream& stream);
 	bool LoadStack(std::istream& stream, VMStack& stack);
-	void LoadVariableValues(std::istream& stream, std::vector<VMVar>& variables);
+	std::vector<VMVar> LoadVariableValues(std::istream& stream);
 	void LoadTasks(std::istream& stream);
-	const VMTask LoadTask(std::istream& stream);
+	VMTask LoadTask(std::istream& stream);
 	void LoadRuntimeInfo(std::istream& stream);
 
 public:
 	LHVMFile()
-	    : _header {.magic = {' ', ' ', ' ', ' '}, .version = LHVMVersion::BlackAndWhite}
-	    , _hasStatus(false)
-	    , _stack {.count = 0, .values = {}, .types = {}, .pushCount = 0, .popCount = 0}
-	    , _ticks(0)
-	    , _currentLineNumber(0)
-	    , _highestTaskId(0)
-	    , _highestScriptId(0)
-	    , _executedInstructions(0) {};
+	    : _header {.magic = {' ', ' ', ' ', ' '}, .version = LHVMVersion::BlackAndWhite} {};
 
 	LHVMFile(const LHVMHeader& header, const std::vector<std::string>& variablesNames,
 	         const std::vector<VMInstruction>& instructions, const std::vector<uint32_t>& autostart,
@@ -93,14 +85,7 @@ public:
 	    , _instructions(instructions)
 	    , _autostart(autostart)
 	    , _scripts(scripts)
-	    , _data(data)
-	    , _hasStatus(false)
-	    , _stack {.count = 0, .values = {}, .types = {}, .pushCount = 0, .popCount = 0}
-	    , _ticks(0)
-	    , _currentLineNumber(0)
-	    , _highestTaskId(0)
-	    , _highestScriptId(0)
-	    , _executedInstructions(0) {};
+	    , _data(data) {};
 
 	LHVMFile(const LHVMHeader& header, const std::vector<std::string>& variablesNames,
 	         const std::vector<VMInstruction>& instructions, const std::vector<uint32_t>& autostart,

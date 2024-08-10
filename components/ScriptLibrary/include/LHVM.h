@@ -34,9 +34,8 @@ protected:
 	std::vector<uint32_t> _auto;
 	std::vector<char> _data;
 	VMStack _mainStack {};
-	VMTask* _currentTask {NULL};
-	VMExceptStruct* _currentExceptStruct {NULL};
-	VMStack* _currentStack {NULL};
+	VMTask* _currentTask {nullptr};
+	VMStack* _currentStack {nullptr};
 	std::vector<VMVar> _variables;
 	std::map<uint32_t, VMTask> _tasks;
 	uint32_t _ticks {0};
@@ -45,7 +44,7 @@ protected:
 	uint32_t _highestScriptId {0};
 	uint32_t _executedInstructions {0};
 
-	std::vector<NativeFunction>* _functions {NULL};
+	std::vector<NativeFunction>* _functions {nullptr};
 	std::function<void(const uint32_t func)> _nativeCallEnterCallback;
 	std::function<void(const uint32_t func)> _nativeCallExitCallback;
 	std::function<void(const uint32_t taskNumber)> _stopTaskCallback;
@@ -53,68 +52,66 @@ protected:
 	std::function<void(const uint32_t objId)> _addReference;
 	std::function<void(const uint32_t objId)> _removeReference;
 
-	void (LHVM::*_opcodesImpl[31])(VMTask& task, const VMInstruction& instruction) {};
-	void _opcode00_END(VMTask& task, const VMInstruction& instruction);
-	void _opcode01_JZ(VMTask& task, const VMInstruction& instruction);
-	void _opcode02_PUSH(VMTask& task, const VMInstruction& instruction);
-	void _opcode03_POP(VMTask& task, const VMInstruction& instruction);
-	void _opcode04_ADD(VMTask& task, const VMInstruction& instruction);
-	void _opcode05_SYS(VMTask& task, const VMInstruction& instruction);
-	void _opcode06_SUB(VMTask& task, const VMInstruction& instruction);
-	void _opcode07_NEG(VMTask& task, const VMInstruction& instruction);
-	void _opcode08_MUL(VMTask& task, const VMInstruction& instruction);
-	void _opcode09_DIV(VMTask& task, const VMInstruction& instruction);
-	void _opcode10_MOD(VMTask& task, const VMInstruction& instruction);
-	void _opcode11_NOT(VMTask& task, const VMInstruction& instruction);
-	void _opcode12_AND(VMTask& task, const VMInstruction& instruction);
-	void _opcode13_OR(VMTask& task, const VMInstruction& instruction);
-	void _opcode14_EQ(VMTask& task, const VMInstruction& instruction);
-	void _opcode15_NEQ(VMTask& task, const VMInstruction& instruction);
-	void _opcode16_GEQ(VMTask& task, const VMInstruction& instruction);
-	void _opcode17_LEQ(VMTask& task, const VMInstruction& instruction);
-	void _opcode18_GT(VMTask& task, const VMInstruction& instruction);
-	void _opcode19_LT(VMTask& task, const VMInstruction& instruction);
-	void _opcode20_JMP(VMTask& task, const VMInstruction& instruction);
-	void _opcode21_SLEEP(VMTask& task, const VMInstruction& instruction);
-	void _opcode22_EXCEPT(VMTask& task, const VMInstruction& instruction);
-	void _opcode23_CAST(VMTask& task, const VMInstruction& instruction);
-	void _opcode24_CALL(VMTask& task, const VMInstruction& instruction);
-	void _opcode25_ENDEXCEPT(VMTask& task, const VMInstruction& instruction);
-	void _opcode26_RETEXCEPT(VMTask& task, const VMInstruction& instruction);
-	void _opcode27_ITEREXCEPT(VMTask& task, const VMInstruction& instruction);
-	void _opcode28_BRKEXCEPT(VMTask& task, const VMInstruction& instruction);
-	void _opcode29_SWAP(VMTask& task, const VMInstruction& instruction);
-	void _opcode30_LINE(VMTask& task, const VMInstruction& instruction);
+	std::array<void (LHVM::*)(VMTask& task, const VMInstruction& instruction), 31> _opcodesImpl {};
+	void _opcode00End(VMTask& task, const VMInstruction& instruction);
+	void _opcode01Jz(VMTask& task, const VMInstruction& instruction);
+	void _opcode02Push(VMTask& task, const VMInstruction& instruction);
+	void _opcode03Pop(VMTask& task, const VMInstruction& instruction);
+	void _opcode04Add(VMTask& task, const VMInstruction& instruction);
+	void _opcode05Sys(VMTask& task, const VMInstruction& instruction);
+	void _opcode06Sub(VMTask& task, const VMInstruction& instruction);
+	void _opcode07Neg(VMTask& task, const VMInstruction& instruction);
+	void _opcode08Mul(VMTask& task, const VMInstruction& instruction);
+	void _opcode09Div(VMTask& task, const VMInstruction& instruction);
+	void _opcode10Mod(VMTask& task, const VMInstruction& instruction);
+	void _opcode11Not(VMTask& task, const VMInstruction& instruction);
+	void _opcode12And(VMTask& task, const VMInstruction& instruction);
+	void _opcode13Or(VMTask& task, const VMInstruction& instruction);
+	void _opcode14Eq(VMTask& task, const VMInstruction& instruction);
+	void _opcode15Neq(VMTask& task, const VMInstruction& instruction);
+	void _opcode16Geq(VMTask& task, const VMInstruction& instruction);
+	void _opcode17Leq(VMTask& task, const VMInstruction& instruction);
+	void _opcode18Gt(VMTask& task, const VMInstruction& instruction);
+	void _opcode19Lt(VMTask& task, const VMInstruction& instruction);
+	void _opcode20Jmp(VMTask& task, const VMInstruction& instruction);
+	void _opcode21Sleep(VMTask& task, const VMInstruction& instruction);
+	void _opcode22Except(VMTask& task, const VMInstruction& instruction);
+	void _opcode23Cast(VMTask& task, const VMInstruction& instruction);
+	void _opcode24Call(VMTask& task, const VMInstruction& instruction);
+	void _opcode25EndExcept(VMTask& task, const VMInstruction& instruction);
+	void _opcode26RetExcept(VMTask& task, const VMInstruction& instruction);
+	void _opcode27IterExcept(VMTask& task, const VMInstruction& instruction);
+	void _opcode28BrkExcept(VMTask& task, const VMInstruction& instruction);
+	void _opcode29Swap(VMTask& task, const VMInstruction& instruction);
+	void _opcode30Line(VMTask& task, const VMInstruction& instruction);
 
 	/// Error handling
 	void Fail(const std::string& msg);
 
-	void InvokeNativeCallEnterCallback(const uint32_t taskNumber);
-	void InvokeNativeCallExitCallback(const uint32_t taskNumber);
-	void InvokeStopTaskCallback(const uint32_t taskNumber);
-	void SignalError(const ErrorCode code);
-	void SignalError(const ErrorCode code, const uint32_t data);
-	void SignalError(const ErrorCode code, const std::string& data);
+	void InvokeNativeCallEnterCallback(uint32_t taskNumber);
+	void InvokeNativeCallExitCallback(uint32_t taskNumber);
+	void InvokeStopTaskCallback(uint32_t taskNumber);
+	void SignalError(ErrorCode code);
+	void SignalError(ErrorCode code, uint32_t data);
+	void SignalError(ErrorCode code, const std::string& data);
 
-	void AddReference(const uint32_t objectId);
-	void RemoveReference(const uint32_t objectId);
+	void AddReference(uint32_t objectId);
+	void RemoveReference(uint32_t objectId);
 
-	uint32_t StartScript(const uint32_t id);
+	uint32_t StartScript(uint32_t id);
 	uint32_t StartScript(const VMScript& script);
 	const VMScript* GetScript(const std::string& name);
-	bool TaskExists(const uint32_t taskId);
+	bool TaskExists(uint32_t taskId);
 	uint32_t GetTicksCount();
 	void PushElaspedTime();
-	VMVar& GetVar(VMTask& task, const uint32_t id);
-	void PushExceptionHandler(const uint32_t address);
-	void PopExceptionHandler();
+	VMVar& GetVar(VMTask& task, uint32_t id);
 	uint32_t GetExceptionHandlersCount();
-	uint32_t GetCurrentExceptionHandlerIp(const uint32_t index);
+	uint32_t GetCurrentExceptionHandlerIp(uint32_t index);
 
 	void PrintInstruction(const VMTask& task, const VMInstruction& instruction);
 	void CpuLoop(VMTask& task);
 
-	static float fmod(float a, float b);
+	static float Fmod(float a, float b);
 
 public:
 	LHVM();
@@ -158,17 +155,17 @@ public:
 	/// Write SAV file to filesystem
 	void SaveState(const std::filesystem::path& filepath);
 
-	void LookIn(const ScriptType allowedScriptTypesMask);
+	void LookIn(ScriptType allowedScriptTypesMask);
 
-	uint32_t StartScript(const std::string& name, const ScriptType allowedScriptTypesMask);
+	uint32_t StartScript(const std::string& name, ScriptType allowedScriptTypesMask);
 
 	void StopAllTasks();
 
 	void StopScripts(std::function<bool(const std::string& name, const std::string& filename)> filter);
 
-	void StopTask(const uint32_t taskNumber);
+	void StopTask(uint32_t taskNumber);
 
-	void StopTasksOfType(const ScriptType typesMask);
+	void StopTasksOfType(ScriptType typesMask);
 
 	[[nodiscard]] const std::string GetString(uint32_t offset);
 	[[nodiscard]] const std::vector<NativeFunction>* GetFunctions() const { return _functions; };

@@ -21,7 +21,7 @@ using namespace openblack::LHVM;
 
 struct Arguments
 {
-	enum class Mode
+	enum class Mode : uint8_t
 	{
 		Info,
 		All,
@@ -95,7 +95,7 @@ int PrintVarNames(const LHVMFile& file)
 
 std::string GetSignature(const VMScript& script)
 {
-	std::string s = ScriptType_Names.at(script.GetType()) + " " + script.GetName();
+	std::string s = k_ScriptTypeNames.at(script.GetType()) + " " + script.GetName();
 	if (script.GetParameterCount() > 0)
 	{
 		const auto& vars = script.GetVariables();
@@ -119,16 +119,16 @@ std::map<uint32_t, std::string> GetLabels(const LHVMFile& file)
 		int labelCount = 0;
 		for (unsigned int i = script.GetInstructionAddress(); i < instructions.size(); i++)
 		{
-			auto const& instruction = instructions[i];
-			if (instruction.opcode == Opcode::JUMP || instruction.opcode == Opcode::WAIT ||
-			    instruction.opcode == Opcode::EXCEPT)
+			auto const& instruction = instructions.at(i);
+			if (instruction.Opcode == Opcode::JUMP || instruction.Opcode == Opcode::WAIT ||
+			    instruction.Opcode == Opcode::EXCEPT)
 			{
 				std::string name = script.GetName();
-				if (instruction.opcode == Opcode::EXCEPT)
+				if (instruction.Opcode == Opcode::EXCEPT)
 				{
 					name += "_exception_handler_";
 				}
-				else if (instruction.mode == Mode::BACKWARD)
+				else if (instruction.Mode == Mode::BACKWARD)
 				{
 					name += "_loop_";
 				}
@@ -137,10 +137,10 @@ std::map<uint32_t, std::string> GetLabels(const LHVMFile& file)
 					name += "_skip_";
 				}
 				name += std::to_string(labelCount);
-				labels.emplace(instruction.data.uintVal, name);
+				labels.emplace(instruction.UintVal, name);
 				labelCount++;
 			}
-			else if (instruction.opcode == Opcode::END)
+			else if (instruction.Opcode == Opcode::END)
 			{
 				break;
 			}
@@ -175,63 +175,63 @@ int PrintCode(const LHVMFile& file)
 				std::printf("%s:\n", labels.at(i).c_str());
 			}
 			auto const& instruction = instructions[i];
-			opcode = Opcode_Names.at(static_cast<int>(instruction.opcode));
-			switch (instruction.opcode)
+			opcode = k_OpcodeNames.at(static_cast<int>(instruction.Opcode));
+			switch (instruction.Opcode)
 			{
 			case Opcode::PUSH:
 			case Opcode::POP:
-				if (instruction.mode == Mode::REFERENCE)
+				if (instruction.Mode == Mode::REFERENCE)
 				{
-					if (instruction.uintVal > script.GetVariablesOffset())
+					if (instruction.UintVal > script.GetVariablesOffset())
 					{
-						arg = "local " + script.GetVariables().at(instruction.uintVal - script.GetVariablesOffset() - 1);
+						arg = "local " + script.GetVariables().at(instruction.UintVal - script.GetVariablesOffset() - 1);
 					}
 					else
 					{
-						arg = "global " + file.GetVariablesNames().at(instruction.uintVal - 1);
+						arg = "global " + file.GetVariablesNames().at(instruction.UintVal - 1);
 					}
 				}
 				else
 				{
-					switch (instruction.type)
+					switch (instruction.Type)
 					{
 					case DataType::FLOAT:
 					case DataType::VECTOR:
-						arg = std::to_string(instruction.floatVal);
+						arg = std::to_string(instruction.FloatVal);
 						break;
 					case DataType::OBJECT:
-						arg = std::to_string(instruction.uintVal);
+						arg = std::to_string(instruction.UintVal);
 						break;
 					default:
-						arg = std::to_string(instruction.intVal);
+						arg = std::to_string(instruction.IntVal);
 						break;
 					}
 				}
-				type = DataType_Chars.at(static_cast<int>(instruction.type));
+				type = k_DataTypeChars.at(static_cast<int>(instruction.Type));
 				std::printf("\t%s%s %s\n", opcode.c_str(), type.c_str(), arg.c_str());
 				break;
 			case Opcode::ADD:
 			case Opcode::MINUS:
 			case Opcode::CAST:
-				type = DataType_Chars.at(static_cast<int>(instruction.type));
+				type = k_DataTypeChars.at(static_cast<int>(instruction.Type));
 				std::printf("\t%s%s\n", opcode.c_str(), type.c_str());
 				break;
 			case Opcode::JUMP:
 			case Opcode::WAIT:
 			case Opcode::EXCEPT:
-				arg = labels.at(instruction.uintVal);
+				arg = labels.at(instruction.UintVal);
 				std::printf("\t%s %s\n", opcode.c_str(), arg.c_str());
 				break;
 			case Opcode::CALL:
-				std::printf("\tCALL %u\n", instruction.uintVal);
+				std::printf("\tCALL %u\n", instruction.UintVal);
 				break;
 			case Opcode::RUN:
-				type = instruction.mode == Mode::ASYNC ? "async " : "";
-				arg = file.GetScripts().at(instruction.intVal - 1).GetName();
+				type = instruction.Mode == Mode::ASYNC ? "async " : "";
+				arg = file.GetScripts().at(instruction.IntVal - 1).GetName();
 				std::printf("\tRUN %s%s\n", type.c_str(), arg.c_str());
 				break;
 			case Opcode::ENDEXCEPT:
-				if (instruction.mode == Mode::ENDEXCEPT)
+				if (instruction.Mode == Mode::ENDEXCEPT)
 				{
 					std::printf("\tENDEXCEPT\n");
 				}
@@ -241,26 +241,26 @@ int PrintCode(const LHVMFile& file)
 				}
 				break;
 			case Opcode::SWAP:
-				if (instruction.type == DataType::INT)
+				if (instruction.Type == DataType::INT)
 				{
 					std::printf("\tSWAP\n");
 				}
 				else
 				{
-					if (instruction.mode == Mode::COPYFROM)
+					if (instruction.Mode == Mode::COPYFROM)
 					{
-						std::printf("\tCOPY from %i\n", instruction.intVal);
+						std::printf("\tCOPY from %i\n", instruction.IntVal);
 					}
 					else // Mode::COPYTO
 					{
-						std::printf("\tCOPY to %i\n", instruction.intVal);
+						std::printf("\tCOPY to %i\n", instruction.IntVal);
 					}
 				}
 				break;
 			default:
 				std::printf("\t%s\n", opcode.c_str());
 			}
-			if (instruction.opcode == Opcode::END)
+			if (instruction.Opcode == Opcode::END)
 			{
 				break;
 			}
@@ -317,25 +317,25 @@ std::string DataToString(VMValue data, DataType type)
 	switch (type)
 	{
 	case DataType::INT:
-		return std::to_string(data.intVal);
+		return std::to_string(data.IntVal);
 	case DataType::FLOAT:
 	case DataType::VECTOR:
-		return std::to_string(data.floatVal) + "f";
+		return std::to_string(data.FloatVal) + "f";
 	case DataType::BOOLEAN:
-		return data.intVal != 0 ? "true" : "false";
+		return data.IntVal != 0 ? "true" : "false";
 	case DataType::OBJECT:
-		return std::to_string(data.uintVal) + " (object)";
+		return std::to_string(data.UintVal) + " (object)";
 	default:
-		return std::to_string(data.intVal) + " (unk type)";
+		return std::to_string(data.IntVal) + " (unk type)";
 	}
 }
 
 int PrintStack(const VMStack& stack)
 {
 	std::printf("Stack:\n");
-	for (unsigned int i = 0; i < stack.count; i++)
+	for (unsigned int i = 0; i < stack.Count; i++)
 	{
-		std::printf("%u: %s\n", i, DataToString(stack.values[i], stack.types[i]).c_str());
+		std::printf("%u: %s\n", i, DataToString(stack.Values.at(i), stack.Types.at(i)).c_str());
 	}
 	std::printf("\n");
 	return EXIT_SUCCESS;
@@ -355,7 +355,7 @@ int PrintVarValues(const LHVMFile& file)
 	for (unsigned int i = 0; i < vars.size(); i++)
 	{
 		const auto& var = vars[i];
-		std::printf("%u, %s = %s\n", i, var.name.c_str(), DataToString(var.value, var.type).c_str());
+		std::printf("%u, %s = %s\n", i, var.Name.c_str(), DataToString(var.Value, var.Type).c_str());
 	}
 	std::printf("\n");
 	return EXIT_SUCCESS;
@@ -367,39 +367,37 @@ int PrintTasks(const LHVMFile& file)
 	std::printf("Active tasks:\n");
 	for (const auto& task : tasks)
 	{
-		std::printf("Task number: %u\n", task.id);
-		std::printf("Type: %s\n", ScriptType_Names.at(task.type).c_str());
-		std::printf("Script ID: %u\n", task.scriptId);
-		std::printf("Script name: %s\n", task.name.c_str());
-		std::printf("Filename: %s\n", task.filename.c_str());
-		std::printf("Instruction address: %u\n", task.instructionAddress);
-		std::printf("Prev instruction address: %u\n", task.prevInstructionAddress);
-		std::printf("Ticks: %u\n", task.ticks);
-		std::printf("Sleeping: %u\n", task.sleeping);
-		std::printf("Waiting task number: %u\n", task.waitingTaskId);
-		std::printf("Stop: %s\n", task.stop ? "true" : "false");
-		std::printf("Yield: %s\n", task.yield ? "true" : "false");
-		std::printf("In exception handler: %s\n", task.inExceptionHandler ? "true" : "false");
-		std::printf("Current exception handler index: %d\n", task.currentExceptionHandlerIndex);
-		const auto& exceptionHandlers = task.exceptStruct;
-		std::printf("Exception handlers instruction address: %u\n", exceptionHandlers.instructionAddress);
+		std::printf("Task number: %u\n", task.Id);
+		std::printf("Type: %s\n", k_ScriptTypeNames.at(task.Type).c_str());
+		std::printf("Script ID: %u\n", task.ScriptId);
+		std::printf("Script name: %s\n", task.Name.c_str());
+		std::printf("Filename: %s\n", task.Filename.c_str());
+		std::printf("Instruction address: %u\n", task.InstructionAddress);
+		std::printf("Prev instruction address: %u\n", task.PrevInstructionAddress);
+		std::printf("Ticks: %u\n", task.Ticks);
+		std::printf("Sleeping: %s\n", task.Sleeping ? "true" : "false");
+		std::printf("Waiting task number: %u\n", task.WaitingTaskId);
+		std::printf("Stop: %s\n", task.Stop ? "true" : "false");
+		std::printf("Yield: %s\n", task.Yield ? "true" : "false");
+		std::printf("In exception handler: %s\n", task.InExceptionHandler ? "true" : "false");
+		std::printf("Current exception handler index: %d\n", task.CurrentExceptionHandlerIndex);
 		std::printf("Exception handlers instructions pointers:\n");
-		for (const auto& ip : exceptionHandlers.exceptionHandlerIps)
+		for (const auto& ip : task.ExceptionHandlerIps)
 		{
 			std::printf("%u\n", ip);
 		}
 		std::printf("\n");
-		std::printf("Local variables offset: %u\n", task.variablesOffset);
+		std::printf("Local variables offset: %u\n", task.VariablesOffset);
 		std::printf("Variables:\n");
-		const auto& vars = task.localVars;
+		const auto& vars = task.LocalVars;
 		for (unsigned int i = 0; i < vars.size(); i++)
 		{
 			const auto& var = vars[i];
-			const int id = task.variablesOffset + 1 + i;
-			std::printf("%i, %s = %s\n", id, var.name.c_str(), DataToString(var.value, var.type).c_str());
+			const int id = task.VariablesOffset + 1 + i;
+			std::printf("%i, %s = %s\n", id, var.Name.c_str(), DataToString(var.Value, var.Type).c_str());
 		}
 		std::printf("\n");
-		PrintStack(task.stack);
+		PrintStack(task.Stack);
 		std::printf("----------------------------------------\n");
 		std::printf("\n");
 	}
@@ -454,13 +452,13 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 		auto result = options.parse(argc, argv);
 		if (result["help"].as<bool>())
 		{
-			std::cout << options.help() << std::endl;
+			std::cout << options.help() << '\n';
 			returnCode = EXIT_SUCCESS;
 			return false;
 		}
 		if (result["subcommand"].count() == 0)
 		{
-			std::cerr << options.help() << std::endl;
+			std::cerr << options.help() << '\n';
 			returnCode = EXIT_FAILURE;
 			return false;
 		}
@@ -542,10 +540,10 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 	}
 	catch (const std::exception& err)
 	{
-		std::cerr << err.what() << std::endl;
+		std::cerr << err.what() << '\n';
 	}
 
-	std::cerr << options.help() << std::endl;
+	std::cerr << options.help() << '\n';
 	returnCode = EXIT_FAILURE;
 	return false;
 }
@@ -624,7 +622,7 @@ int main(int argc, char* argv[]) noexcept
 	}
 	catch (std::exception& err)
 	{
-		std::cerr << err.what() << std::endl;
+		std::cerr << err.what() << '\n';
 		returnCode |= EXIT_FAILURE;
 	}
 
