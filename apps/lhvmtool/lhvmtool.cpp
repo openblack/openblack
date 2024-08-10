@@ -120,11 +120,10 @@ std::map<uint32_t, std::string> GetLabels(const LHVMFile& file)
 		for (unsigned int i = script.GetInstructionAddress(); i < instructions.size(); i++)
 		{
 			auto const& instruction = instructions.at(i);
-			if (instruction.Opcode == Opcode::JUMP || instruction.Opcode == Opcode::WAIT ||
-			    instruction.Opcode == Opcode::EXCEPT)
+			if (instruction.Code == Opcode::JUMP || instruction.Code == Opcode::WAIT || instruction.Code == Opcode::EXCEPT)
 			{
 				std::string name = script.GetName();
-				if (instruction.Opcode == Opcode::EXCEPT)
+				if (instruction.Code == Opcode::EXCEPT)
 				{
 					name += "_exception_handler_";
 				}
@@ -140,7 +139,7 @@ std::map<uint32_t, std::string> GetLabels(const LHVMFile& file)
 				labels.emplace(instruction.UintVal, name);
 				labelCount++;
 			}
-			else if (instruction.Opcode == Opcode::END)
+			else if (instruction.Code == Opcode::END)
 			{
 				break;
 			}
@@ -175,8 +174,8 @@ int PrintCode(const LHVMFile& file)
 				std::printf("%s:\n", labels.at(i).c_str());
 			}
 			auto const& instruction = instructions[i];
-			opcode = k_OpcodeNames.at(static_cast<int>(instruction.Opcode));
-			switch (instruction.Opcode)
+			opcode = k_OpcodeNames.at(static_cast<int>(instruction.Code));
+			switch (instruction.Code)
 			{
 			case Opcode::PUSH:
 			case Opcode::POP:
@@ -260,7 +259,7 @@ int PrintCode(const LHVMFile& file)
 			default:
 				std::printf("\t%s\n", opcode.c_str());
 			}
-			if (instruction.Opcode == Opcode::END)
+			if (instruction.Code == Opcode::END)
 			{
 				break;
 			}

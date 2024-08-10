@@ -193,13 +193,13 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 	for (unsigned int i = script.GetInstructionAddress(); i < code.size(); i++)
 	{
 		auto const& instruction = code[i];
-		auto const *const opcodeName = LHVM::k_OpcodeNames.at(static_cast<int>(instruction.Opcode)).c_str();
-		auto const *const typeChar = LHVM::k_DataTypeChars.at(static_cast<uint32_t>(instruction.Type)).c_str();
+		auto const* const opcodeName = LHVM::k_OpcodeNames.at(static_cast<int>(instruction.Code)).c_str();
+		auto const* const typeChar = LHVM::k_DataTypeChars.at(static_cast<uint32_t>(instruction.Type)).c_str();
 
 		ImGui::TextColored(Disassembly_ColorComment, "0x%04x:", i);
 		ImGui::SameLine();
 
-		switch (instruction.Opcode)
+		switch (instruction.Code)
 		{
 		case LHVM::Opcode::PUSH:
 			ImGui::TextColored(Disassembly_ColorKeyword, "PUSH%s", typeChar);
@@ -298,7 +298,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 			break;
 		}
 
-		if (instruction.Opcode == LHVM::Opcode::END)
+		if (instruction.Code == LHVM::Opcode::END)
 		{
 			break;
 		}

@@ -206,9 +206,9 @@ public:
 	                                              float altitude, float xAngleRadians, float yAngleRadians,
 	                                              const float zAngleRadians, const float scale);
 
-#define CREATE_FUNCTION_BINDING(NAME, STACKIN, STACKOUT, FUNCTION)                                              \
-	{                                                                                                           \
-		_functionsTable.emplace_back([this]() { FUNCTION(); }, STACKIN, STACKOUT, NAME);                        \
+#define CREATE_FUNCTION_BINDING(NAME, STACKIN, STACKOUT, FUNCTION)                       \
+	{                                                                                    \
+		_functionsTable.emplace_back([this]() { FUNCTION(); }, STACKIN, STACKOUT, NAME); \
 	}
 
 	void InitFunctionsTable();

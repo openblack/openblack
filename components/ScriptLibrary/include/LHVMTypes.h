@@ -58,16 +58,24 @@ class VMValue
 {
 public:
 	VMValue()
-		: FloatVal(0.0f) {}
+	    : FloatVal(0.0f)
+	{
+	}
 
 	VMValue(float value)
-	    : FloatVal(value) {}
+	    : FloatVal(value)
+	{
+	}
 
 	VMValue(int32_t value)
-	    : IntVal(value) {}
+	    : IntVal(value)
+	{
+	}
 
 	VMValue(uint32_t value)
-	    : UintVal(value) {}
+	    : UintVal(value)
+	{
+	}
 
 	union
 	{
@@ -84,7 +92,9 @@ public:
 	VMVar(DataType type, VMValue value, std::string name)
 	    : Type(type)
 	    , Value(value)
-	    , Name(name) {}
+	    , Name(name)
+	{
+	}
 
 	DataType Type;
 	union
@@ -213,14 +223,16 @@ class VMInstruction
 public:
 	VMInstruction() {}
 
-	VMInstruction(Opcode opcode, Mode mode, DataType type, VMValue data, uint32_t line)
-		: Opcode(opcode)
-		, Mode(mode)
-		, Type(type)
-		, Data(data)
-		, Line(line) {}
+	VMInstruction(Opcode code, Mode mode, DataType type, VMValue data, uint32_t line)
+	    : Code(code)
+	    , Mode(mode)
+	    , Type(type)
+	    , Data(data)
+	    , Line(line)
+	{
+	}
 
-	Opcode Opcode {Opcode::LINE};
+	Opcode Code {Opcode::LINE};
 	Mode Mode {Mode::IMMEDIATE};
 	DataType Type {DataType::FLOAT};
 	union
@@ -282,15 +294,17 @@ public:
 
 	VMTask(std::vector<VMVar> localVars, uint32_t scriptId, uint32_t id, uint32_t instructionAddress, uint32_t variablesOffset,
 	       VMStack stack, std::string name, std::string filename, ScriptType type)
-		: LocalVars(localVars)
-		, ScriptId(scriptId)
-		, Id(id)
-		, InstructionAddress(instructionAddress)
-		, VariablesOffset(variablesOffset)
-		, Stack(stack)
-		, Name(name)
-		, Filename(filename)
-		, Type(type) {}
+	    : LocalVars(localVars)
+	    , ScriptId(scriptId)
+	    , Id(id)
+	    , InstructionAddress(instructionAddress)
+	    , VariablesOffset(variablesOffset)
+	    , Stack(stack)
+	    , Name(name)
+	    , Filename(filename)
+	    , Type(type)
+	{
+	}
 
 	std::vector<VMVar> LocalVars {};
 	uint32_t ScriptId {0};
@@ -319,7 +333,9 @@ public:
 	    : Impl(impl)
 	    , StackIn(stackIn)
 	    , StackOut(stackOut)
-	    , Name(name) {}
+	    , Name(name)
+	{
+	}
 
 	std::function<void()> Impl;
 	int32_t StackIn;

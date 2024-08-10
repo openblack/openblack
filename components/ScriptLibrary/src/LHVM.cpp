@@ -460,15 +460,8 @@ uint32_t LHVM::StartScript(const VMScript& script)
 		taskVariables.emplace_back(DataType::FLOAT, VMValue(0.0f), scriptVariables.at(i));
 	}
 
-	const auto& task = VMTask(taskVariables,
-	                          script.GetScriptID(),
-	                          taskNumber,
-	                          script.GetInstructionAddress(),
-	                          script.GetVariablesOffset(),
-	                          stack,
-	                          script.GetName(),
-	                          script.GetFileName(),
-	                          script.GetType());
+	const auto& task = VMTask(taskVariables, script.GetScriptID(), taskNumber, script.GetInstructionAddress(),
+	                          script.GetVariablesOffset(), stack, script.GetName(), script.GetFileName(), script.GetType());
 
 	_tasks.emplace(taskNumber, task);
 
@@ -682,9 +675,9 @@ uint32_t LHVM::GetCurrentExceptionHandlerIp(const uint32_t index)
 void LHVM::PrintInstruction(const VMTask& task, const VMInstruction& instruction)
 {
 	// TODO: improve this
-	std::string opcode = k_OpcodeNames[static_cast<int>(instruction.Opcode)];
+	std::string opcode = k_OpcodeNames[static_cast<int>(instruction.Code)];
 	std::string arg = "";
-	if (instruction.Opcode == Opcode::RUN)
+	if (instruction.Code == Opcode::RUN)
 	{
 		if (instruction.Mode == Mode::ASYNC)
 		{
@@ -692,19 +685,19 @@ void LHVM::PrintInstruction(const VMTask& task, const VMInstruction& instruction
 		}
 		arg += _scripts.at(instruction.IntVal - 1).GetName();
 	}
-	else if (instruction.Opcode == Opcode::CALL)
+	else if (instruction.Code == Opcode::CALL)
 	{
 		arg += _functions->at(instruction.IntVal).Name;
 	}
 	else
 	{
-		if (instruction.Opcode == Opcode::PUSH || instruction.Opcode == Opcode::POP || instruction.Opcode == Opcode::CAST ||
-		    instruction.Opcode == Opcode::ADD || instruction.Opcode == Opcode::MINUS || instruction.Opcode == Opcode::TIMES ||
-		    instruction.Opcode == Opcode::DIVIDE || instruction.Opcode == Opcode::MODULUS)
+		if (instruction.Code == Opcode::PUSH || instruction.Code == Opcode::POP || instruction.Code == Opcode::CAST ||
+		    instruction.Code == Opcode::ADD || instruction.Code == Opcode::MINUS || instruction.Code == Opcode::TIMES ||
+		    instruction.Code == Opcode::DIVIDE || instruction.Code == Opcode::MODULUS)
 		{
 			opcode += k_DataTypeChars[static_cast<int>(instruction.Type)];
 		}
-		if ((instruction.Opcode == Opcode::PUSH || instruction.Opcode == Opcode::POP) && instruction.Mode == Mode::REFERENCE)
+		if ((instruction.Code == Opcode::PUSH || instruction.Code == Opcode::POP) && instruction.Mode == Mode::REFERENCE)
 		{
 			if (instruction.IntVal > task.VariablesOffset)
 			{
@@ -715,7 +708,7 @@ void LHVM::PrintInstruction(const VMTask& task, const VMInstruction& instruction
 				arg = _variables.at(instruction.IntVal).Name;
 			}
 		}
-		else if (instruction.Opcode == Opcode::PUSH && instruction.Mode == Mode::IMMEDIATE)
+		else if (instruction.Code == Opcode::PUSH && instruction.Mode == Mode::IMMEDIATE)
 		{
 			if (instruction.Type == DataType::FLOAT || instruction.Type == DataType::VECTOR)
 			{
@@ -726,11 +719,11 @@ void LHVM::PrintInstruction(const VMTask& task, const VMInstruction& instruction
 				arg = std::to_string(instruction.IntVal);
 			}
 		}
-		else if (instruction.Opcode == Opcode::JUMP || instruction.Opcode == Opcode::WAIT || instruction.Opcode == Opcode::SWAP)
+		else if (instruction.Code == Opcode::JUMP || instruction.Code == Opcode::WAIT || instruction.Code == Opcode::SWAP)
 		{
 			arg = std::to_string(instruction.IntVal);
 		}
-		if (instruction.Opcode == Opcode::WAIT)
+		if (instruction.Code == Opcode::WAIT)
 		{
 			bool val = task.Stack.Values.at(task.Stack.Count - 1).IntVal;
 			arg += val ? " [true] -> continue" : " [false] -> JUMP";
@@ -752,7 +745,7 @@ void LHVM::CpuLoop(VMTask& task)
 
 		// PrintInstruction(task, instruction); // just for debug purposes
 
-		(this->*_opcodesImpl.at(static_cast<int>(instruction.Opcode)))(task, instruction);
+		(this->*_opcodesImpl.at(static_cast<int>(instruction.Code)))(task, instruction);
 
 		if (task.Stop || task.Yield || task.WaitingTaskId != 0 || task.InExceptionHandler != wasExceptionHandler)
 		{
