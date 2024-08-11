@@ -198,7 +198,7 @@ void Profiler::Draw(Game& game)
 	ImGui::Columns(1);
 }
 
-void Profiler::Update([[maybe_unused]] Game& game, [[maybe_unused]] const graphics::Renderer& renderer) {}
+void Profiler::Update([[maybe_unused]] Game& game) {}
 
 void Profiler::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
 

@@ -551,7 +551,7 @@ void LHVMViewer::Draw(Game& game)
 	}
 }
 
-void LHVMViewer::Update([[maybe_unused]] Game& game, [[maybe_unused]] const graphics::Renderer& renderer) {}
+void LHVMViewer::Update([[maybe_unused]] openblack::Game& game) {}
 
 void LHVMViewer::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
 

@@ -24,6 +24,11 @@
 #include <glm/mat4x4.hpp>
 
 #include "Graphics/RenderPass.h"
+#include "Graphics/RendererInterface.h"
+
+#if !defined(LOCATOR_IMPLEMENTATIONS)
+#warning "Locator interface implementations should only be included in Locator.cpp, use interface instead."
+#endif
 
 namespace openblack
 {
@@ -49,71 +54,24 @@ class Mesh;
 class ShaderManager;
 class ShaderProgram;
 
-class Renderer
+class Renderer final: public RendererInterface
 {
 public:
-	struct DrawSceneDesc
-	{
-		Profiler& profiler;
-		const Camera* camera;
-		const graphics::FrameBuffer* frameBuffer;
-		const Sky& sky;
-		const Water& water;
-		const ecs::Registry& entities;
-		uint32_t time;
-		float timeOfDay;
-		float bumpMapStrength;
-		float smallBumpMapStrength;
-		graphics::RenderPass viewId;
-		bool drawSky;
-		bool drawWater;
-		bool drawIsland;
-		bool drawEntities;
-		bool drawSprites;
-		bool drawTestModel;
-		bool drawDebugCross;
-		bool drawBoundingBoxes;
-		bool cullBack;
-		bool bgfxDebug;
-		bool bgfxProfile;
-		bool wireframe;
-	};
-
-	struct L3DMeshSubmitDesc
-	{
-		graphics::RenderPass viewId;
-		const graphics::ShaderProgram* program;
-		uint64_t state;
-		uint32_t rgba;
-		const glm::mat4* modelMatrices;
-		uint8_t matrixCount;
-		const bgfx::DynamicVertexBufferHandle* instanceBuffer;
-		uint32_t instanceStart;
-		uint32_t instanceCount;
-		bool isSky;
-		float skyType;
-		bool drawAll; ///< For use in the mesh viewer
-		bool morphWithTerrain;
-	};
-
-	static std::unique_ptr<Renderer> Create(bgfx::RendererType::Enum rendererType, bool vsync) noexcept;
-
 	Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallback) noexcept;
-
 	virtual ~Renderer() noexcept;
 
-	[[nodiscard]] graphics::ShaderManager& GetShaderManager() const;
+	[[nodiscard]] graphics::ShaderManager& GetShaderManager() const noexcept final;
 
-	void UpdateDebugCrossUniforms(const glm::mat4& pose);
+	void UpdateDebugCrossUniforms(const glm::mat4& pose) noexcept final;
 
-	void ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height, uint32_t clearColor = 0x274659ff) const;
+	void ConfigureView(graphics::RenderPass viewId, glm::u16vec2 resolution, uint32_t clearColor) const noexcept final;
 
-	void DrawScene(const DrawSceneDesc& drawDesc) const;
-	void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const;
-	void Frame();
-	void RequestScreenshot(const std::filesystem::path& filepath);
+	void DrawScene(const DrawSceneDesc& drawDesc) const noexcept final;
+	void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const noexcept final;
+	void Frame() noexcept final;
+	void RequestScreenshot(const std::filesystem::path& filepath) noexcept final;
 
-	void Reset(uint16_t width, uint16_t height) const;
+	void Reset(glm::u16vec2 resolution) const noexcept final;
 
 private:
 	void DrawFootprintPass(const DrawSceneDesc& drawDesc) const;

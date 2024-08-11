@@ -157,7 +157,7 @@ public:
 	bool Initialize() noexcept;
 	bool Run() noexcept;
 
-	void LoadMap(const std::filesystem::path& path);
+	bool LoadMap(const std::filesystem::path& path) noexcept;
 	void LoadLandscape(const std::filesystem::path& path);
 
 	bool LoadVariables();
@@ -192,7 +192,6 @@ private:
 	/// path to Lionhead Studios Ltd/Black & White folder
 	const std::filesystem::path _gamePath;
 
-	std::unique_ptr<graphics::Renderer> _renderer;
 	std::unique_ptr<Camera> _camera;
 	std::unique_ptr<Profiler> _profiler;
 

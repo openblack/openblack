@@ -38,6 +38,11 @@ namespace filesystem
 class FileSystemInterface;
 }
 
+namespace graphics
+{
+class RendererInterface;
+}
+
 namespace input
 {
 class GameActionInterface;
@@ -72,7 +77,7 @@ class PlayerSystemInterface;
 } // namespace ecs::systems
 
 void InitializeWindow(const std::string& title, int width, int height, windowing::DisplayMode displayMode, uint32_t extraFlags);
-void InitializeGame();
+bool InitializeGame(uint8_t rendererType, bool vsync) noexcept;
 void InitializeLevel(const std::filesystem::path& path);
 
 struct Locator
@@ -87,6 +92,7 @@ struct Locator
 	using audio = entt::locator<audio::AudioManagerInterface>;
 	using gameActionSystem = entt::locator<input::GameActionInterface>;
 	using rendereringSystem = entt::locator<ecs::systems::RenderingSystemInterface>;
+	using rendererInterface = entt::locator<graphics::RendererInterface>;
 	using dynamicsSystem = entt::locator<ecs::systems::DynamicsSystemInterface>;
 	using cameraBookmarkSystem = entt::locator<ecs::systems::CameraBookmarkSystemInterface>;
 	using livingActionSystem = entt::locator<ecs::systems::LivingActionSystemInterface>;

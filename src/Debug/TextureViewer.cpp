@@ -78,7 +78,7 @@ void TextureViewer::Draw([[maybe_unused]] Game& game)
 	ImGui::EndChild();
 }
 
-void TextureViewer::Update([[maybe_unused]] Game& game, [[maybe_unused]] const graphics::Renderer& renderer) {}
+void TextureViewer::Update([[maybe_unused]] Game& game) {}
 
 void TextureViewer::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
 

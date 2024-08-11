@@ -23,7 +23,7 @@ public:
 
 protected:
 	void Draw(Game& game) override;
-	void Update(Game& game, const graphics::Renderer& renderer) override;
+	void Update(Game& game) override;
 	void ProcessEventOpen(const SDL_Event& event) override;
 	void ProcessEventAlways(const SDL_Event& event) override;
 

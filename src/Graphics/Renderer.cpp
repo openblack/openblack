@@ -7,6 +7,8 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#define LOCATOR_IMPLEMENTATIONS
+
 #include "Renderer.h"
 
 #include <SDL_video.h>
@@ -177,7 +179,7 @@ struct BgfxCallback: public bgfx::CallbackI
 
 } // namespace openblack
 
-std::unique_ptr<Renderer> Renderer::Create(bgfx::RendererType::Enum rendererType, bool vsync) noexcept
+std::unique_ptr<RendererInterface> RendererInterface::Create(bgfx::RendererType::Enum rendererType, bool vsync) noexcept
 {
 	bgfx::Init init {};
 	init.type = rendererType;
@@ -251,23 +253,23 @@ Renderer::~Renderer() noexcept
 	bgfx::shutdown();
 }
 
-void Renderer::ConfigureView(graphics::RenderPass viewId, uint16_t width, uint16_t height, uint32_t clearColor) const
+void Renderer::ConfigureView(graphics::RenderPass viewId, glm::u16vec2 resolution, uint32_t clearColor) const noexcept
 {
 	bgfx::setViewClear(static_cast<bgfx::ViewId>(viewId), BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, clearColor, 0.0f, 0);
-	bgfx::setViewRect(static_cast<bgfx::ViewId>(viewId), 0, 0, width, height);
+	bgfx::setViewRect(static_cast<bgfx::ViewId>(viewId), 0, 0, resolution.x, resolution.y);
 }
 
-void Renderer::Reset(uint16_t width, uint16_t height) const
+void Renderer::Reset(glm::u16vec2 resolution) const noexcept
 {
-	bgfx::reset(width, height, _bgfxReset);
+	bgfx::reset(resolution.x, resolution.y, _bgfxReset);
 }
 
-graphics::ShaderManager& Renderer::GetShaderManager() const
+graphics::ShaderManager& Renderer::GetShaderManager() const noexcept
 {
 	return *_shaderManager;
 }
 
-void Renderer::UpdateDebugCrossUniforms(const glm::mat4& pose)
+void Renderer::UpdateDebugCrossUniforms(const glm::mat4& pose) noexcept
 {
 	_debugCrossPose = pose;
 }
@@ -385,7 +387,7 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 	}
 }
 
-void Renderer::DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const
+void Renderer::DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const noexcept
 {
 	if (mesh.GetNumSubMeshes() == 0)
 	{
@@ -459,7 +461,7 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 	}
 }
 
-void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const
+void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 {
 	// TODO(bwrsandman): Footprint framebuffer doesn't need to be updated each frame
 	DrawFootprintPass(drawDesc);
@@ -792,13 +794,13 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	bgfx::setDebug(debugMode);
 }
 
-void Renderer::Frame()
+void Renderer::Frame() noexcept
 {
 	// Advance to next frame. Process submitted rendering primitives.
 	bgfx::frame();
 }
 
-void Renderer::RequestScreenshot(const std::filesystem::path& filepath)
+void Renderer::RequestScreenshot(const std::filesystem::path& filepath) noexcept
 {
 	const bgfx::FrameBufferHandle mainBackbuffer = BGFX_INVALID_HANDLE;
 	bgfx::requestScreenShot(mainBackbuffer, filepath.string().c_str());

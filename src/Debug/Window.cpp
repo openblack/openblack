@@ -7,9 +7,9 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
-#include <utility>
-
 #include "Window.h"
+
+#include <utility>
 
 using namespace openblack::debug::gui;
 
@@ -43,11 +43,11 @@ void Window::Toggle()
 	}
 }
 
-void Window::WindowUpdate(Game& game, const graphics::Renderer& renderer)
+void Window::WindowUpdate(openblack::Game& game)
 {
 	if (_open)
 	{
-		Update(game, renderer);
+		Update(game);
 	}
 }
 
