@@ -108,8 +108,7 @@ void LHVM::Initialise(std::vector<NativeFunction>* functions, std::function<void
                       std::function<void(uint32_t func)> nativeCallExitCallback,
                       std::function<void(uint32_t taskNumber)> stopTaskCallback,
                       std::function<void(ErrorCode code, const std::string v0, uint32_t v1)> errorCallback,
-                      std::function<void(uint32_t objId)> addReference,
-                      std::function<void(uint32_t objId)> removeReference)
+                      std::function<void(uint32_t objId)> addReference, std::function<void(uint32_t objId)> removeReference)
 {
 	_functions = functions;
 	_nativeCallEnterCallback = nativeCallEnterCallback;
@@ -397,7 +396,7 @@ void LHVM::LookIn(const ScriptType allowedScriptTypesMask)
 
 uint32_t LHVM::StartScript(const std::string& name, const ScriptType allowedScriptTypesMask)
 {
-	const auto *const script = GetScript(name);
+	const auto* const script = GetScript(name);
 	if (script != nullptr)
 	{
 		if (script->GetType() & allowedScriptTypesMask)
@@ -534,7 +533,7 @@ std::string LHVM::GetString(uint32_t offset)
 {
 	if (offset < _data.size())
 	{
-		return std::string(_data.data() + offset);
+		return {_data.data() + offset};
 	}
 	return "";
 }
@@ -1106,21 +1105,21 @@ void LHVM::Opcode10Mod(VMTask& /*task*/, const VMInstruction& instruction)
 
 void LHVM::Opcode11Not(VMTask& /*task*/, const VMInstruction& /*instruction*/)
 {
-	bool a = Pop().intVal;
+	const bool a = Pop().intVal != 0;
 	Pushb(!a);
 }
 
 void LHVM::Opcode12And(VMTask& /*task*/, const VMInstruction& /*instruction*/)
 {
-	bool b = Pop().intVal;
-	bool a = Pop().intVal;
+	const bool b = Pop().intVal != 0;
+	const bool a = Pop().intVal != 0;
 	Pushb(a && b);
 }
 
 void LHVM::Opcode13Or(VMTask& /*task*/, const VMInstruction& /*instruction*/)
 {
-	bool b = Pop().intVal;
-	bool a = Pop().intVal;
+	const bool b = Pop().intVal != 0;
+	const bool a = Pop().intVal != 0;
 	Pushb(a || b);
 }
 
@@ -1448,13 +1447,13 @@ void LHVM::Opcode29Swap(VMTask& /*task*/, const VMInstruction& instruction)
 				}
 				if (i < tmpTypes.size())
 				{
-					tmpTypes[i] = ti;
-					tmpVals[i] = vi;
+					tmpTypes.at(i) = ti;
+					tmpVals.at(i) = vi;
 				}
 			}
 			for (int i = std::min(offset, 32) - 1; i >= 0; i--)
 			{
-				Push(tmpVals[i], tmpTypes[i]);
+				Push(tmpVals.at(i), tmpTypes.at(i));
 			}
 			Push(copyVal, copyType);
 		}
@@ -1471,14 +1470,14 @@ void LHVM::Opcode29Swap(VMTask& /*task*/, const VMInstruction& instruction)
 				}
 				if (i < tmpTypes.size())
 				{
-					tmpTypes[i] = ti;
-					tmpVals[i] = vi;
+					tmpTypes.at(i) = ti;
+					tmpVals.at(i) = vi;
 				}
 			}
 			Push(copyVal, copyType);
 			for (int i = std::min(offset, 32) - 1; i >= 0; i--)
 			{
-				Push(tmpVals[i], tmpTypes[i]);
+				Push(tmpVals.at(i), tmpTypes.at(i));
 			}
 		}
 	}

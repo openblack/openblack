@@ -353,7 +353,7 @@ void LHVMFile::LoadScripts(std::istream& stream)
 	}
 }
 
-const VMScript LHVMFile::LoadScript(std::istream& stream)
+VMScript LHVMFile::LoadScript(std::istream& stream)
 {
 	std::array<char, 256> scriptName;
 	std::array<char, 256> filename;

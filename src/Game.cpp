@@ -814,7 +814,7 @@ void Game::NativeCallExitCallback([[maybe_unused]] const uint32_t func)
 
 void Game::StopTaskCallback([[maybe_unused]] const uint32_t taskNumber)
 {
-	//SPDLOG_LOGGER_DEBUG(spdlog::get("lhvm"), "Task {} stopped", taskNumber);
+	// SPDLOG_LOGGER_DEBUG(spdlog::get("lhvm"), "Task {} stopped", taskNumber);
 }
 
 void Game::LhvmErrorCallback([[maybe_unused]] LHVM::ErrorCode code, [[maybe_unused]] std::string v0,
@@ -1824,7 +1824,7 @@ void Game::VmRandom() // 028 RANDOM
 {
 	const auto max = _lhvm->Popf();
 	const auto min = _lhvm->Popf();
-	const float random = min + (max - min) * static_cast<float>(rand()) / (float)RAND_MAX;
+	const float random = min + (max - min) * static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 	_lhvm->Pushf(random);
 }
 

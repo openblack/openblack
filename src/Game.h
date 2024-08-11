@@ -201,10 +201,10 @@ public:
 	[[nodiscard]] glm::vec3 PopVec();
 	void PushVec(const glm::vec3& vec);
 	[[nodiscard]] std::string PopString();
-	[[nodiscard]] std::vector<float> PopVarArg(const int32_t argc);
-	[[nodiscard]] entt::entity CreateScriptObject(const script::ObjectType type, uint32_t subtype, const glm::vec3& position,
-	                                              float altitude, float xAngleRadians, float yAngleRadians,
-	                                              float zAngleRadians, float scale);
+	[[nodiscard]] std::vector<float> PopVarArg(int32_t argc);
+	[[nodiscard]] entt::entity CreateScriptObject(script::ObjectType type, uint32_t subtype, const glm::vec3& position,
+	                                              float altitude, float xAngleRadians, float yAngleRadians, float zAngleRadians,
+	                                              float scale);
 
 #define CREATE_FUNCTION_BINDING(NAME, STACKIN, STACKOUT, FUNCTION)                       \
 	{                                                                                    \

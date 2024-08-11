@@ -63,7 +63,7 @@ protected:
 	void LoadCode(std::istream& stream);
 	void LoadAuto(std::istream& stream);
 	void LoadScripts(std::istream& stream);
-	const VMScript LoadScript(std::istream& stream);
+	VMScript LoadScript(std::istream& stream);
 	void LoadData(std::istream& stream);
 	bool LoadStatus(std::istream& stream);
 	bool LoadStack(std::istream& stream, VMStack& stack);

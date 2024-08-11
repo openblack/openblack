@@ -121,10 +121,8 @@ public:
 	/// Set environment
 	void Initialise(
 	    std::vector<NativeFunction>* functions, std::function<void(uint32_t func)> nativeCallEnterCallback,
-	    std::function<void(uint32_t func)> nativeCallExitCallback,
-	    std::function<void(uint32_t taskNumber)> stopTaskCallback,
-	    std::function<void(ErrorCode code, [[maybe_unused]] const std::string v0, [[maybe_unused]] uint32_t v1)>
-	        errorCallback,
+	    std::function<void(uint32_t func)> nativeCallExitCallback, std::function<void(uint32_t taskNumber)> stopTaskCallback,
+	    std::function<void(ErrorCode code, [[maybe_unused]] const std::string v0, [[maybe_unused]] uint32_t v1)> errorCallback,
 	    std::function<void(uint32_t objId)> addReference, std::function<void(uint32_t objId)> removeReference);
 
 	/// Read CHL file from the filesystem
