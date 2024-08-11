@@ -851,7 +851,7 @@ void Game::PushVec(const glm::vec3& vec)
 
 std::string Game::PopString()
 {
-	return _lhvm->GetString(_lhvm->Pop().IntVal);
+	return _lhvm->GetString(_lhvm->Pop().intVal);
 }
 
 std::vector<float> Game::PopVarArg(const int32_t argc)
@@ -1592,14 +1592,14 @@ void Game::VmNone() {} // 000 NONE
 void Game::VmSetCameraPosition() // 001 SET_CAMERA_POSITION
 {
 	const auto position = PopVec();
-
+	// TODO(Daniels118): check if cinema mode is enabled
 	_camera->SetOrigin(position);
 }
 
 void Game::VmSetCameraFocus() // 002 SET_CAMERA_FOCUS
 {
 	const auto position = PopVec();
-
+	// TODO(Daniels118): check if cinema mode is enabled
 	_camera->SetFocus(position);
 }
 
@@ -1747,7 +1747,7 @@ void Game::VmSetProperty() // 022 SET_PROPERTY
 
 void Game::VmGetPosition() // 023 GET_POSITION
 {
-	const auto objId = _lhvm->Pop().UintVal;
+	const auto objId = _lhvm->Pop().uintVal;
 
 	glm::vec3 position(0.0f);
 	const auto pObject = _refManager.GetTarget(objId);
@@ -1763,7 +1763,7 @@ void Game::VmGetPosition() // 023 GET_POSITION
 void Game::VmSetPosition() // 024 SET_POSITION
 {
 	auto position = PopVec();
-	const auto objId = _lhvm->Pop().UintVal;
+	const auto objId = _lhvm->Pop().uintVal;
 
 	const auto pObject = _refManager.GetTarget(objId);
 	if (pObject != nullptr)
@@ -1796,8 +1796,8 @@ void Game::VmCall() // 026 CALL
 void Game::VmCreate() // 027 CREATE
 {
 	const auto position = PopVec();
-	const auto subtype = _lhvm->Pop().IntVal;
-	const auto type = static_cast<script::ObjectType>(_lhvm->Pop().IntVal);
+	const auto subtype = _lhvm->Pop().intVal;
+	const auto type = static_cast<script::ObjectType>(_lhvm->Pop().intVal);
 
 	const auto object = CreateScriptObject(type, subtype, position, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 	const auto objId = _refManager.GetReference(object);
@@ -2418,14 +2418,14 @@ void Game::VmPopulateContainer() // 109 POPULATE_CONTAINER
 
 void Game::VmAddReference() // 110 ADD_REFERENCE
 {
-	const auto objId = _lhvm->Pop().UintVal;
+	const auto objId = _lhvm->Pop().uintVal;
 	AddObjectReference(objId);
 	_lhvm->Pusho(objId);
 }
 
 void Game::VmRemoveReference() // 111 REMOVE_REFERENCE
 {
-	const auto objId = _lhvm->Pop().UintVal;
+	const auto objId = _lhvm->Pop().uintVal;
 	RemoveObjectReference(objId);
 	_lhvm->Pusho(objId);
 }
@@ -3486,8 +3486,8 @@ void Game::VmObjectRelativeBelief() // 251 OBJECT_RELATIVE_BELIEF
 void Game::VmCreateWithAngleAndScale() // 252 CREATE_WITH_ANGLE_AND_SCALE
 {
 	const auto position = PopVec();
-	const auto subtype = _lhvm->Pop().IntVal;
-	const auto type = static_cast<script::ObjectType>(_lhvm->Pop().IntVal);
+	const auto subtype = _lhvm->Pop().intVal;
+	const auto type = static_cast<script::ObjectType>(_lhvm->Pop().intVal);
 	const auto scale = _lhvm->Popf();
 	const auto angle = _lhvm->Popf();
 
@@ -3519,7 +3519,7 @@ void Game::VmSetActive() // 255 SET_ACTIVE
 
 void Game::VmThingValid() // 256 THING_VALID
 {
-	const auto objId = _lhvm->Pop().UintVal;
+	const auto objId = _lhvm->Pop().uintVal;
 	// TODO is this the right way?
 	bool valid = false;
 	const auto pObject = _refManager.GetTarget(objId);
@@ -4730,7 +4730,7 @@ void Game::VmSpiritScreenPoint() // 418 SPIRIT_SCREEN_POINT
 
 void Game::VmKeyDown() // 419 KEY_DOWN
 {
-	const auto key = _lhvm->Pop().IntVal;
+	const auto key = _lhvm->Pop().intVal;
 	// TODO(Daniels118): implement this translate key to physical key code
 	_lhvm->Pushb(_keysdown.contains(key));
 }

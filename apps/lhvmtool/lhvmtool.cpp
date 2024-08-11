@@ -136,7 +136,7 @@ std::map<uint32_t, std::string> GetLabels(const LHVMFile& file)
 					name += "_skip_";
 				}
 				name += std::to_string(labelCount);
-				labels.emplace(instruction.UintVal, name);
+				labels.emplace(instruction.uintVal, name);
 				labelCount++;
 			}
 			else if (instruction.Code == Opcode::END)
@@ -181,52 +181,52 @@ int PrintCode(const LHVMFile& file)
 			case Opcode::POP:
 				if (instruction.Mode == VMMode::REFERENCE)
 				{
-					if (instruction.UintVal > script.GetVariablesOffset())
+					if (instruction.uintVal > script.GetVariablesOffset())
 					{
-						arg = "local " + script.GetVariables().at(instruction.UintVal - script.GetVariablesOffset() - 1);
+						arg = "local " + script.GetVariables().at(instruction.uintVal - script.GetVariablesOffset() - 1);
 					}
 					else
 					{
-						arg = "global " + file.GetVariablesNames().at(instruction.UintVal - 1);
+						arg = "global " + file.GetVariablesNames().at(instruction.uintVal - 1);
 					}
 				}
 				else
 				{
-					switch (instruction.Type)
+					switch (instruction.type)
 					{
 					case DataType::FLOAT:
 					case DataType::VECTOR:
-						arg = std::to_string(instruction.FloatVal);
+						arg = std::to_string(instruction.floatVal);
 						break;
 					case DataType::OBJECT:
-						arg = std::to_string(instruction.UintVal);
+						arg = std::to_string(instruction.uintVal);
 						break;
 					default:
-						arg = std::to_string(instruction.IntVal);
+						arg = std::to_string(instruction.intVal);
 						break;
 					}
 				}
-				type = k_DataTypeChars.at(static_cast<int>(instruction.Type));
+				type = k_DataTypeChars.at(static_cast<int>(instruction.type));
 				std::printf("\t%s%s %s\n", opcode.c_str(), type.c_str(), arg.c_str());
 				break;
 			case Opcode::ADD:
 			case Opcode::MINUS:
 			case Opcode::CAST:
-				type = k_DataTypeChars.at(static_cast<int>(instruction.Type));
+				type = k_DataTypeChars.at(static_cast<int>(instruction.type));
 				std::printf("\t%s%s\n", opcode.c_str(), type.c_str());
 				break;
 			case Opcode::JUMP:
 			case Opcode::WAIT:
 			case Opcode::EXCEPT:
-				arg = labels.at(instruction.UintVal);
+				arg = labels.at(instruction.uintVal);
 				std::printf("\t%s %s\n", opcode.c_str(), arg.c_str());
 				break;
 			case Opcode::CALL:
-				std::printf("\tCALL %u\n", instruction.UintVal);
+				std::printf("\tCALL %u\n", instruction.uintVal);
 				break;
 			case Opcode::RUN:
 				type = instruction.Mode == VMMode::ASYNC ? "async " : "";
-				arg = file.GetScripts().at(instruction.IntVal - 1).GetName();
+				arg = file.GetScripts().at(instruction.intVal - 1).GetName();
 				std::printf("\tRUN %s%s\n", type.c_str(), arg.c_str());
 				break;
 			case Opcode::ENDEXCEPT:
@@ -240,7 +240,7 @@ int PrintCode(const LHVMFile& file)
 				}
 				break;
 			case Opcode::SWAP:
-				if (instruction.Type == DataType::INT)
+				if (instruction.type == DataType::INT)
 				{
 					std::printf("\tSWAP\n");
 				}
@@ -248,11 +248,11 @@ int PrintCode(const LHVMFile& file)
 				{
 					if (instruction.Mode == VMMode::COPYFROM)
 					{
-						std::printf("\tCOPY from %i\n", instruction.IntVal);
+						std::printf("\tCOPY from %i\n", instruction.intVal);
 					}
 					else // Mode::COPYTO
 					{
-						std::printf("\tCOPY to %i\n", instruction.IntVal);
+						std::printf("\tCOPY to %i\n", instruction.intVal);
 					}
 				}
 				break;
@@ -316,16 +316,16 @@ std::string DataToString(VMValue data, DataType type)
 	switch (type)
 	{
 	case DataType::INT:
-		return std::to_string(data.IntVal);
+		return std::to_string(data.intVal);
 	case DataType::FLOAT:
 	case DataType::VECTOR:
-		return std::to_string(data.FloatVal) + "f";
+		return std::to_string(data.floatVal) + "f";
 	case DataType::BOOLEAN:
-		return data.IntVal != 0 ? "true" : "false";
+		return data.intVal != 0 ? "true" : "false";
 	case DataType::OBJECT:
-		return std::to_string(data.UintVal) + " (object)";
+		return std::to_string(data.uintVal) + " (object)";
 	default:
-		return std::to_string(data.IntVal) + " (unk type)";
+		return std::to_string(data.intVal) + " (unk type)";
 	}
 }
 
@@ -354,7 +354,7 @@ int PrintVarValues(const LHVMFile& file)
 	for (unsigned int i = 0; i < vars.size(); i++)
 	{
 		const auto& var = vars[i];
-		std::printf("%u, %s = %s\n", i, var.Name.c_str(), DataToString(var.Value, var.Type).c_str());
+		std::printf("%u, %s = %s\n", i, var.Name.c_str(), DataToString(var.value, var.type).c_str());
 	}
 	std::printf("\n");
 	return EXIT_SUCCESS;
@@ -367,7 +367,7 @@ int PrintTasks(const LHVMFile& file)
 	for (const auto& task : tasks)
 	{
 		std::printf("Task number: %u\n", task.Id);
-		std::printf("Type: %s\n", k_ScriptTypeNames.at(task.Type).c_str());
+		std::printf("Type: %s\n", k_ScriptTypeNames.at(task.type).c_str());
 		std::printf("Script ID: %u\n", task.ScriptId);
 		std::printf("Script name: %s\n", task.Name.c_str());
 		std::printf("Filename: %s\n", task.Filename.c_str());
@@ -393,7 +393,7 @@ int PrintTasks(const LHVMFile& file)
 		{
 			const auto& var = vars[i];
 			const int id = task.VariablesOffset + 1 + i;
-			std::printf("%i, %s = %s\n", id, var.Name.c_str(), DataToString(var.Value, var.Type).c_str());
+			std::printf("%i, %s = %s\n", id, var.Name.c_str(), DataToString(var.value, var.type).c_str());
 		}
 		std::printf("\n");
 		PrintStack(task.Stack);

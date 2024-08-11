@@ -592,7 +592,7 @@ VMTask LHVMFile::LoadTask(std::istream& stream)
 		Fail("Error reading script id");
 	}
 
-	if (!stream.read(reinterpret_cast<char*>(&task.Type), sizeof(task.Type)))
+	if (!stream.read(reinterpret_cast<char*>(&task.type), sizeof(task.type)))
 	{
 		Fail("Error reading type");
 	}

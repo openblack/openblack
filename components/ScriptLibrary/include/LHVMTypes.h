@@ -58,30 +58,30 @@ class VMValue
 {
 public:
 	VMValue()
-	    : FloatVal(0.0f)
+	    : floatVal(0.0f)
 	{
 	}
 
-	VMValue(float value)
-	    : FloatVal(value)
+	explicit VMValue(float value)
+	    : floatVal(value)
 	{
 	}
 
-	VMValue(int32_t value)
-	    : IntVal(value)
+	explicit VMValue(int32_t value)
+	    : intVal(value)
 	{
 	}
 
-	VMValue(uint32_t value)
-	    : UintVal(value)
+	explicit VMValue(uint32_t value)
+	    : uintVal(value)
 	{
 	}
 
 	union
 	{
-		float FloatVal;
-		int32_t IntVal;
-		uint32_t UintVal;
+		float floatVal;
+		int32_t intVal;
+		uint32_t uintVal;
 	};
 };
 static_assert(sizeof(VMValue) == 4);
@@ -90,19 +90,19 @@ class VMVar
 {
 public:
 	VMVar(DataType type, VMValue value, std::string name)
-	    : Type(type)
-	    , Value(value)
-	    , Name(name)
+	    : type(type)
+	    , value(value)
+	    , Name(std::move(name))
 	{
 	}
 
-	DataType Type;
+	DataType type;
 	union
 	{
-		VMValue Value;
-		float FloatVal;
-		int32_t IntVal;
-		uint32_t UintVal;
+		VMValue value;
+		float floatVal;
+		int32_t intVal;
+		uint32_t uintVal;
 	};
 	std::string Name;
 };
@@ -226,7 +226,7 @@ public:
 	VMInstruction(Opcode code, VMMode mode, DataType type, VMValue data, uint32_t line)
 	    : Code(code)
 	    , Mode(mode)
-	    , Type(type)
+	    , type(type)
 	    , Data(data)
 	    , Line(line)
 	{
@@ -234,13 +234,13 @@ public:
 
 	Opcode Code {Opcode::LINE};
 	VMMode Mode {VMMode::IMMEDIATE};
-	DataType Type {DataType::FLOAT};
+	DataType type {DataType::FLOAT};
 	union
 	{
 		VMValue Data;
-		float FloatVal {0.0f};
-		int32_t IntVal;
-		uint32_t UintVal;
+		float floatVal {0.0f};
+		int32_t intVal;
+		uint32_t uintVal;
 	};
 	uint32_t Line {0};
 };
@@ -302,7 +302,7 @@ public:
 	    , Stack(stack)
 	    , Name(name)
 	    , Filename(filename)
-	    , Type(type)
+	    , type(type)
 	{
 	}
 
@@ -323,7 +323,7 @@ public:
 	bool Sleeping {false};
 	std::string Name;
 	std::string Filename;
-	ScriptType Type {ScriptType::SCRIPT};
+	ScriptType type {ScriptType::SCRIPT};
 };
 
 class NativeFunction
