@@ -92,7 +92,7 @@ public:
 	VMVar(DataType type, VMValue value, std::string name)
 	    : type(type)
 	    , value(value)
-	    , Name(std::move(name))
+	    , name(std::move(name))
 	{
 	}
 
@@ -104,19 +104,19 @@ public:
 		int32_t intVal;
 		uint32_t uintVal;
 	};
-	std::string Name;
+	std::string name;
 };
 
 class VMStack
 {
 public:
-	VMStack() {}
+	VMStack() = default;
 
-	uint32_t Count {0};
-	std::array<VMValue, 32> Values {};
-	std::array<DataType, 32> Types {};
-	uint32_t PushCount {0};
-	uint32_t PopCount {0};
+	uint32_t count {0};
+	std::array<VMValue, 32> values {};
+	std::array<DataType, 32> types {};
+	uint32_t pushCount {0};
+	uint32_t popCount {0};
 };
 static_assert(sizeof(VMStack) == 268);
 
@@ -224,25 +224,25 @@ public:
 	VMInstruction() {}
 
 	VMInstruction(Opcode code, VMMode mode, DataType type, VMValue data, uint32_t line)
-	    : Code(code)
-	    , Mode(mode)
+	    : code(code)
+	    , mode(mode)
 	    , type(type)
-	    , Data(data)
-	    , Line(line)
+	    , data(data)
+	    , line(line)
 	{
 	}
 
-	Opcode Code {Opcode::LINE};
-	VMMode Mode {VMMode::IMMEDIATE};
+	Opcode code {Opcode::LINE};
+	VMMode mode {VMMode::IMMEDIATE};
 	DataType type {DataType::FLOAT};
 	union
 	{
-		VMValue Data;
+		VMValue data;
 		float floatVal {0.0f};
 		int32_t intVal;
 		uint32_t uintVal;
 	};
-	uint32_t Line {0};
+	uint32_t line {0};
 };
 static_assert(sizeof(VMInstruction) == 20);
 
@@ -294,35 +294,35 @@ public:
 
 	VMTask(std::vector<VMVar> localVars, uint32_t scriptId, uint32_t id, uint32_t instructionAddress, uint32_t variablesOffset,
 	       VMStack stack, std::string name, std::string filename, ScriptType type)
-	    : LocalVars(localVars)
-	    , ScriptId(scriptId)
-	    , Id(id)
-	    , InstructionAddress(instructionAddress)
-	    , VariablesOffset(variablesOffset)
-	    , Stack(stack)
-	    , Name(name)
-	    , Filename(filename)
+	    : localVars(localVars)
+	    , scriptId(scriptId)
+	    , id(id)
+	    , instructionAddress(instructionAddress)
+	    , variablesOffset(variablesOffset)
+	    , stack(stack)
+	    , name(name)
+	    , filename(filename)
 	    , type(type)
 	{
 	}
 
-	std::vector<VMVar> LocalVars {};
-	uint32_t ScriptId {0};
-	uint32_t Id {0};
-	uint32_t InstructionAddress {0};
-	uint32_t PrevInstructionAddress {0};
-	uint32_t WaitingTaskId {0};
-	uint32_t VariablesOffset {0};
-	VMStack Stack;
-	uint32_t CurrentExceptionHandlerIndex {0};
-	std::vector<uint32_t> ExceptionHandlerIps;
-	uint32_t Ticks {1};
-	bool InExceptionHandler {false};
-	bool Stop {false};
-	bool Yield {false};
-	bool Sleeping {false};
-	std::string Name;
-	std::string Filename;
+	std::vector<VMVar> localVars {};
+	uint32_t scriptId {0};
+	uint32_t id {0};
+	uint32_t instructionAddress {0};
+	uint32_t pevInstructionAddress {0};
+	uint32_t waitingTaskId {0};
+	uint32_t variablesOffset {0};
+	VMStack stack;
+	uint32_t currentExceptionHandlerIndex {0};
+	std::vector<uint32_t> exceptionHandlerIps;
+	uint32_t ticks {1};
+	bool inExceptionHandler {false};
+	bool stop {false};
+	bool iield {false};
+	bool sleeping {false};
+	std::string name;
+	std::string filename;
 	ScriptType type {ScriptType::SCRIPT};
 };
 
@@ -330,17 +330,17 @@ class NativeFunction
 {
 public:
 	NativeFunction(std::function<void()> impl, int32_t stackIn, int32_t stackOut, std::string name)
-	    : Impl(impl)
-	    , StackIn(stackIn)
-	    , StackOut(stackOut)
-	    , Name(name)
+	    : impl(impl)
+	    , stackIn(stackIn)
+	    , stackOut(stackOut)
+	    , name(name)
 	{
 	}
 
-	std::function<void()> Impl;
-	int32_t StackIn;
-	uint32_t StackOut;
-	std::string Name;
+	std::function<void()> impl;
+	int32_t stackIn;
+	uint32_t stackOut;
+	std::string name;
 };
 
 enum class ErrorCode : uint8_t

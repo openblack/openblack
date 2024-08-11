@@ -55,7 +55,7 @@ void LHVMViewer::Draw(Game& game)
 			auto variables = lhvm.GetVariables();
 			for (size_t i = 0; i < variables.size(); i++)
 			{
-				if (ImGui::Selectable(variables.at(i).Name.c_str(), selected == i))
+				if (ImGui::Selectable(variables.at(i).name.c_str(), selected == i))
 				{
 					selected = i;
 				}
@@ -68,7 +68,7 @@ void LHVMViewer::Draw(Game& game)
 			const auto& var = variables.at(selected);
 			ImGui::BeginChild("item view"); // Leave room for 1 line below us
 			ImGui::Text("Variable ID: %s", std::to_string(selected).c_str());
-			ImGui::Text("Variable Name: %s", var.Name.c_str());
+			ImGui::Text("Variable Name: %s", var.name.c_str());
 			ImGui::Text("Variable Value: %s", DataToString(var.value, var.type).c_str());
 			ImGui::EndChild();
 
@@ -193,32 +193,32 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 	for (unsigned int i = script.GetInstructionAddress(); i < code.size(); i++)
 	{
 		auto const& instruction = code[i];
-		auto const* const opcodeName = LHVM::k_OpcodeNames.at(static_cast<int>(instruction.Code)).c_str();
+		auto const* const opcodeName = LHVM::k_OpcodeNames.at(static_cast<int>(instruction.code)).c_str();
 		auto const* const typeChar = LHVM::k_DataTypeChars.at(static_cast<uint32_t>(instruction.type)).c_str();
 
 		ImGui::TextColored(Disassembly_ColorComment, "0x%04x:", i);
 		ImGui::SameLine();
 
-		switch (instruction.Code)
+		switch (instruction.code)
 		{
 		case LHVM::Opcode::PUSH:
 			ImGui::TextColored(Disassembly_ColorKeyword, "PUSH%s", typeChar);
 			ImGui::SameLine();
 
-			if (instruction.Mode == LHVM::VMMode::REFERENCE)
+			if (instruction.mode == LHVM::VMMode::REFERENCE)
 			{
 				DrawVariable(lhvm, script, instruction.intVal);
 			}
-			else if (instruction.Mode == LHVM::VMMode::IMMEDIATE)
+			else if (instruction.mode == LHVM::VMMode::IMMEDIATE)
 			{
-				ImGui::TextColored(Disassembly_ColorConstant, "%s", DataToString(instruction.Data, instruction.type).c_str());
+				ImGui::TextColored(Disassembly_ColorConstant, "%s", DataToString(instruction.data, instruction.type).c_str());
 			}
 
 			break;
 
 		case LHVM::Opcode::POP:
 			ImGui::TextColored(Disassembly_ColorKeyword, "POP%s", typeChar);
-			if (instruction.Mode == LHVM::VMMode::REFERENCE)
+			if (instruction.mode == LHVM::VMMode::REFERENCE)
 			{
 				ImGui::SameLine();
 				DrawVariable(lhvm, script, instruction.intVal);
@@ -233,14 +233,14 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 		case LHVM::Opcode::CALL:
 			ImGui::TextColored(Disassembly_ColorKeyword, "SYS");
 			ImGui::SameLine();
-			ImGui::TextColored(Disassembly_ColorFuncName, "%s", lhvm.GetFunctions()->at(instruction.uintVal).Name.c_str());
+			ImGui::TextColored(Disassembly_ColorFuncName, "%s", lhvm.GetFunctions()->at(instruction.uintVal).name.c_str());
 			break;
 		case LHVM::Opcode::RUN:
 		{
 			auto const& runScript = lhvm.GetScripts().at(instruction.uintVal - 1);
 
 			ImGui::TextColored(Disassembly_ColorKeyword, "RUN");
-			if (instruction.Mode == LHVM::VMMode::ASYNC)
+			if (instruction.mode == LHVM::VMMode::ASYNC)
 			{
 				ImGui::SameLine();
 				ImGui::TextColored(Disassembly_ColorKeyword, "async");
@@ -258,7 +258,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 			break;
 		}
 		case LHVM::Opcode::ENDEXCEPT:
-			if (instruction.Mode == LHVM::VMMode::ENDEXCEPT)
+			if (instruction.mode == LHVM::VMMode::ENDEXCEPT)
 			{
 				ImGui::TextColored(Disassembly_ColorKeyword, "ENDEXCEPT");
 			}
@@ -281,7 +281,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 			}
 			else
 			{
-				if (instruction.Mode == LHVM::VMMode::COPYFROM)
+				if (instruction.mode == LHVM::VMMode::COPYFROM)
 				{
 					ImGui::TextColored(Disassembly_ColorKeyword, "COPY from");
 				}
@@ -298,7 +298,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 			break;
 		}
 
-		if (instruction.Code == LHVM::Opcode::END)
+		if (instruction.code == LHVM::Opcode::END)
 		{
 			break;
 		}
@@ -323,12 +323,12 @@ void LHVMViewer::DrawTasksTab(const LHVM::LHVM& lhvm)
 		{
 			auto const& task = taskEntry.second;
 
-			if (ImGui::Selectable(task.Name.c_str(), task.Id == selectedTaskID))
+			if (ImGui::Selectable(task.name.c_str(), task.id == selectedTaskID))
 			{
-				SelectTask(task.Id);
+				SelectTask(task.id);
 			}
 
-			if (_scrollToSelected && selectedTaskID == task.Id)
+			if (_scrollToSelected && selectedTaskID == task.id)
 			{
 				ImGui::SetScrollHereY(0.25f);
 				_scrollToSelected = false;
@@ -344,65 +344,65 @@ void LHVMViewer::DrawTasksTab(const LHVM::LHVM& lhvm)
 		auto task = tasks.at(selectedTaskID);
 
 		ImGui::BeginChild("##task");
-		ImGui::Text("Task ID: %d", task.Id);
+		ImGui::Text("Task ID: %d", task.id);
 
-		ImGui::Text("Script ID: %d", task.ScriptId);
+		ImGui::Text("Script ID: %d", task.scriptId);
 		ImGui::SameLine();
-		if (ImGui::TextButtonColored(Disassembly_ColorFuncName, std::to_string(task.ScriptId).c_str()))
+		if (ImGui::TextButtonColored(Disassembly_ColorFuncName, std::to_string(task.scriptId).c_str()))
 		{
-			SelectScript(task.ScriptId);
+			SelectScript(task.scriptId);
 		}
 
 		ImGui::Text("Type: %s", LHVM::k_ScriptTypeNames.at(task.type).c_str());
 
 		ImGui::Text("Name: ");
 		ImGui::SameLine();
-		if (ImGui::TextButtonColored(Disassembly_ColorFuncName, task.Name.c_str()))
+		if (ImGui::TextButtonColored(Disassembly_ColorFuncName, task.name.c_str()))
 		{
-			SelectScript(task.ScriptId);
+			SelectScript(task.scriptId);
 		}
 
-		ImGui::Text("File: %s", task.Filename.c_str());
-		ImGui::Text("Variables offset: %d", task.VariablesOffset);
-		ImGui::Text("Instruction address: %d", task.InstructionAddress);
-		ImGui::Text("Prev instruction address: %d", task.PrevInstructionAddress);
-		ImGui::Text("Ticks: %d", task.Ticks);
-		ImGui::Text("Sleeping: %s", task.Sleeping ? "true" : "false");
+		ImGui::Text("File: %s", task.filename.c_str());
+		ImGui::Text("Variables offset: %d", task.variablesOffset);
+		ImGui::Text("Instruction address: %d", task.instructionAddress);
+		ImGui::Text("Prev instruction address: %d", task.pevInstructionAddress);
+		ImGui::Text("Ticks: %d", task.ticks);
+		ImGui::Text("Sleeping: %s", task.sleeping ? "true" : "false");
 
 		ImGui::Text("Waiting task number: ");
-		if (task.WaitingTaskId > 0)
+		if (task.waitingTaskId > 0)
 		{
 			ImGui::SameLine();
-			if (ImGui::TextButtonColored(Disassembly_ColorFuncName, std::to_string(task.WaitingTaskId).c_str()))
+			if (ImGui::TextButtonColored(Disassembly_ColorFuncName, std::to_string(task.waitingTaskId).c_str()))
 			{
-				SelectTask(task.WaitingTaskId);
+				SelectTask(task.waitingTaskId);
 			}
 		}
 
-		ImGui::Text("Stop: %s", task.Stop ? "true" : "false");
-		ImGui::Text("In exception handler: %s", task.InExceptionHandler ? "true" : "false");
-		ImGui::Text("Current exception handler: %d", task.CurrentExceptionHandlerIndex);
-		ImGui::Text("Yield: %s", task.Yield ? "true" : "false");
+		ImGui::Text("Stop: %s", task.stop ? "true" : "false");
+		ImGui::Text("In exception handler: %s", task.inExceptionHandler ? "true" : "false");
+		ImGui::Text("Current exception handler: %d", task.currentExceptionHandlerIndex);
+		ImGui::Text("Yield: %s", task.iield ? "true" : "false");
 		if (ImGui::BeginTabBar("##TaskTabs", ImGuiTabBarFlags_None))
 		{
 			if (ImGui::BeginTabItem("Local Variables"))
 			{
-				for (const auto& var : task.LocalVars)
+				for (const auto& var : task.localVars)
 				{
-					ImGui::Text("%s = %s", var.Name.c_str(), DataToString(var.value, var.type).c_str());
+					ImGui::Text("%s = %s", var.name.c_str(), DataToString(var.value, var.type).c_str());
 				}
 				ImGui::EndTabItem();
 			}
 
 			if (ImGui::BeginTabItem("Stack"))
 			{
-				DrawStack(task.Stack);
+				DrawStack(task.stack);
 				ImGui::EndTabItem();
 			}
 
 			if (ImGui::BeginTabItem("Exception handlers"))
 			{
-				DrawExceptionHandlers(task.ExceptionHandlerIps);
+				DrawExceptionHandlers(task.exceptionHandlerIps);
 				ImGui::EndTabItem();
 			}
 
@@ -422,9 +422,9 @@ void LHVMViewer::DrawStack(const openblack::LHVM::VMStack& stack)
 		_resetStackScroll = false;
 	}
 
-	for (unsigned int i = 0; i < stack.Count; i++)
+	for (unsigned int i = 0; i < stack.count; i++)
 	{
-		ImGui::Text("%s", DataToString(stack.Values.at(i), stack.Types.at(i)).c_str());
+		ImGui::Text("%s", DataToString(stack.values.at(i), stack.types.at(i)).c_str());
 	}
 
 	ImGui::EndChild();
@@ -460,7 +460,7 @@ void LHVMViewer::DrawVariable(const openblack::LHVM::LHVM& lhvm, openblack::LHVM
 
 	// global variable
 	auto variable = lhvm.GetVariables()[idx - 1];
-	ImGui::TextColored(Disassembly_ColorVariable, "global %s", variable.Name.c_str());
+	ImGui::TextColored(Disassembly_ColorVariable, "global %s", variable.name.c_str());
 }
 
 std::string LHVMViewer::DataToString(LHVM::VMValue data, openblack::LHVM::DataType type)

@@ -120,14 +120,14 @@ std::map<uint32_t, std::string> GetLabels(const LHVMFile& file)
 		for (unsigned int i = script.GetInstructionAddress(); i < instructions.size(); i++)
 		{
 			auto const& instruction = instructions.at(i);
-			if (instruction.Code == Opcode::JUMP || instruction.Code == Opcode::WAIT || instruction.Code == Opcode::EXCEPT)
+			if (instruction.code == Opcode::JUMP || instruction.code == Opcode::WAIT || instruction.code == Opcode::EXCEPT)
 			{
 				std::string name = script.GetName();
-				if (instruction.Code == Opcode::EXCEPT)
+				if (instruction.code == Opcode::EXCEPT)
 				{
 					name += "_exception_handler_";
 				}
-				else if (instruction.Mode == VMMode::BACKWARD)
+				else if (instruction.mode == VMMode::BACKWARD)
 				{
 					name += "_loop_";
 				}
@@ -139,7 +139,7 @@ std::map<uint32_t, std::string> GetLabels(const LHVMFile& file)
 				labels.emplace(instruction.uintVal, name);
 				labelCount++;
 			}
-			else if (instruction.Code == Opcode::END)
+			else if (instruction.code == Opcode::END)
 			{
 				break;
 			}
@@ -174,12 +174,12 @@ int PrintCode(const LHVMFile& file)
 				std::printf("%s:\n", labels.at(i).c_str());
 			}
 			auto const& instruction = instructions[i];
-			opcode = k_OpcodeNames.at(static_cast<int>(instruction.Code));
-			switch (instruction.Code)
+			opcode = k_OpcodeNames.at(static_cast<int>(instruction.code));
+			switch (instruction.code)
 			{
 			case Opcode::PUSH:
 			case Opcode::POP:
-				if (instruction.Mode == VMMode::REFERENCE)
+				if (instruction.mode == VMMode::REFERENCE)
 				{
 					if (instruction.uintVal > script.GetVariablesOffset())
 					{
@@ -225,12 +225,12 @@ int PrintCode(const LHVMFile& file)
 				std::printf("\tCALL %u\n", instruction.uintVal);
 				break;
 			case Opcode::RUN:
-				type = instruction.Mode == VMMode::ASYNC ? "async " : "";
+				type = instruction.mode == VMMode::ASYNC ? "async " : "";
 				arg = file.GetScripts().at(instruction.intVal - 1).GetName();
 				std::printf("\tRUN %s%s\n", type.c_str(), arg.c_str());
 				break;
 			case Opcode::ENDEXCEPT:
-				if (instruction.Mode == VMMode::ENDEXCEPT)
+				if (instruction.mode == VMMode::ENDEXCEPT)
 				{
 					std::printf("\tENDEXCEPT\n");
 				}
@@ -246,7 +246,7 @@ int PrintCode(const LHVMFile& file)
 				}
 				else
 				{
-					if (instruction.Mode == VMMode::COPYFROM)
+					if (instruction.mode == VMMode::COPYFROM)
 					{
 						std::printf("\tCOPY from %i\n", instruction.intVal);
 					}
@@ -259,7 +259,7 @@ int PrintCode(const LHVMFile& file)
 			default:
 				std::printf("\t%s\n", opcode.c_str());
 			}
-			if (instruction.Code == Opcode::END)
+			if (instruction.code == Opcode::END)
 			{
 				break;
 			}
@@ -332,9 +332,9 @@ std::string DataToString(VMValue data, DataType type)
 int PrintStack(const VMStack& stack)
 {
 	std::printf("Stack:\n");
-	for (unsigned int i = 0; i < stack.Count; i++)
+	for (unsigned int i = 0; i < stack.count; i++)
 	{
-		std::printf("%u: %s\n", i, DataToString(stack.Values.at(i), stack.Types.at(i)).c_str());
+		std::printf("%u: %s\n", i, DataToString(stack.values.at(i), stack.types.at(i)).c_str());
 	}
 	std::printf("\n");
 	return EXIT_SUCCESS;
@@ -354,7 +354,7 @@ int PrintVarValues(const LHVMFile& file)
 	for (unsigned int i = 0; i < vars.size(); i++)
 	{
 		const auto& var = vars[i];
-		std::printf("%u, %s = %s\n", i, var.Name.c_str(), DataToString(var.value, var.type).c_str());
+		std::printf("%u, %s = %s\n", i, var.name.c_str(), DataToString(var.value, var.type).c_str());
 	}
 	std::printf("\n");
 	return EXIT_SUCCESS;
@@ -366,37 +366,37 @@ int PrintTasks(const LHVMFile& file)
 	std::printf("Active tasks:\n");
 	for (const auto& task : tasks)
 	{
-		std::printf("Task number: %u\n", task.Id);
+		std::printf("Task number: %u\n", task.id);
 		std::printf("Type: %s\n", k_ScriptTypeNames.at(task.type).c_str());
-		std::printf("Script ID: %u\n", task.ScriptId);
-		std::printf("Script name: %s\n", task.Name.c_str());
-		std::printf("Filename: %s\n", task.Filename.c_str());
-		std::printf("Instruction address: %u\n", task.InstructionAddress);
-		std::printf("Prev instruction address: %u\n", task.PrevInstructionAddress);
-		std::printf("Ticks: %u\n", task.Ticks);
-		std::printf("Sleeping: %s\n", task.Sleeping ? "true" : "false");
-		std::printf("Waiting task number: %u\n", task.WaitingTaskId);
-		std::printf("Stop: %s\n", task.Stop ? "true" : "false");
-		std::printf("Yield: %s\n", task.Yield ? "true" : "false");
-		std::printf("In exception handler: %s\n", task.InExceptionHandler ? "true" : "false");
-		std::printf("Current exception handler index: %d\n", task.CurrentExceptionHandlerIndex);
+		std::printf("Script ID: %u\n", task.scriptId);
+		std::printf("Script name: %s\n", task.name.c_str());
+		std::printf("Filename: %s\n", task.filename.c_str());
+		std::printf("Instruction address: %u\n", task.instructionAddress);
+		std::printf("Prev instruction address: %u\n", task.pevInstructionAddress);
+		std::printf("Ticks: %u\n", task.ticks);
+		std::printf("Sleeping: %s\n", task.sleeping ? "true" : "false");
+		std::printf("Waiting task number: %u\n", task.waitingTaskId);
+		std::printf("Stop: %s\n", task.stop ? "true" : "false");
+		std::printf("Yield: %s\n", task.iield ? "true" : "false");
+		std::printf("In exception handler: %s\n", task.inExceptionHandler ? "true" : "false");
+		std::printf("Current exception handler index: %d\n", task.currentExceptionHandlerIndex);
 		std::printf("Exception handlers instructions pointers:\n");
-		for (const auto& ip : task.ExceptionHandlerIps)
+		for (const auto& ip : task.exceptionHandlerIps)
 		{
 			std::printf("%u\n", ip);
 		}
 		std::printf("\n");
-		std::printf("Local variables offset: %u\n", task.VariablesOffset);
+		std::printf("Local variables offset: %u\n", task.variablesOffset);
 		std::printf("Variables:\n");
-		const auto& vars = task.LocalVars;
+		const auto& vars = task.localVars;
 		for (unsigned int i = 0; i < vars.size(); i++)
 		{
 			const auto& var = vars[i];
-			const int id = task.VariablesOffset + 1 + i;
-			std::printf("%i, %s = %s\n", id, var.Name.c_str(), DataToString(var.value, var.type).c_str());
+			const int id = task.variablesOffset + 1 + i;
+			std::printf("%i, %s = %s\n", id, var.name.c_str(), DataToString(var.value, var.type).c_str());
 		}
 		std::printf("\n");
-		PrintStack(task.Stack);
+		PrintStack(task.stack);
 		std::printf("----------------------------------------\n");
 		std::printf("\n");
 	}
