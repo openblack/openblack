@@ -36,10 +36,9 @@ public:
 	~Water();
 
 	[[nodiscard]] graphics::FrameBuffer& GetFrameBuffer() const;
+	[[nodiscard]] graphics::Mesh& GetMesh() const noexcept { return *_mesh; }
 
 private:
-	friend class Renderer;
-
 	void CreateMesh();
 
 	std::unique_ptr<graphics::Mesh> _mesh;

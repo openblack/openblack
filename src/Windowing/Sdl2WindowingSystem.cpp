@@ -21,7 +21,7 @@
 void* cbSetupMetalLayer(void* wnd);
 #endif
 
-#include "Renderer.h"
+#include <SDL.h>
 
 using namespace openblack::windowing;
 
