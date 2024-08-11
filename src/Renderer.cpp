@@ -524,7 +524,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			const glm::vec4 u_typeAlignment = {desc.sky.GetCurrentSkyType(), Game::Instance()->GetConfig().skyAlignment + 1.0f,
 			                                   0.0f, 0.0f};
 
-			skyShader->SetTextureSampler("s_diffuse", 0, *desc.sky._texture);
+			skyShader->SetTextureSampler("s_diffuse", 0, desc.sky.GetTexture());
 			skyShader->SetUniformValue("u_typeAlignment", &u_typeAlignment);
 
 			L3DMeshSubmitDesc submitDesc = {};
@@ -540,7 +540,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			submitDesc.matrixCount = 1;
 			submitDesc.isSky = true;
 
-			DrawMesh(*desc.sky._model, submitDesc, 0);
+			DrawMesh(desc.sky.GetMesh(), submitDesc, 0);
 		}
 	}
 
@@ -549,9 +549,9 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		                                                                               : Profiler::Stage::MainPassDrawWater);
 		if (desc.drawWater)
 		{
-			const auto& mesh = desc.water._mesh;
-			mesh->GetIndexBuffer().Bind(mesh->GetIndexBuffer().GetCount(), 0);
-			mesh->GetVertexBuffer().Bind();
+			const auto& mesh = desc.water.GetMesh();
+			mesh.GetIndexBuffer().Bind(mesh.GetIndexBuffer().GetCount(), 0);
+			mesh.GetVertexBuffer().Bind();
 			bgfx::setState(k_BgfxDefaultStateInvertedZ);
 			auto diffuse = Locator::resources::value().GetTextures().Handle(Water::k_DiffuseTextureId);
 			auto alpha = Locator::resources::value().GetTextures().Handle(Water::k_AlphaTextureId);

@@ -32,8 +32,8 @@ Sky::Sky()
 	SetDayNightTimes(4.5, 7.0, 7.5, 8.25);
 
 	// load in the mesh
-	_model = std::make_unique<L3DMesh>("Sky");
-	_model->LoadFromFilesystem(fileSystem.GetPath<filesystem::Path::WeatherSystem>() / "sky.l3d");
+	_mesh = std::make_unique<L3DMesh>("Sky");
+	_mesh->LoadFromFilesystem(fileSystem.GetPath<filesystem::Path::WeatherSystem>() / "sky.l3d");
 
 	// TODO (#749) Maybe use std::views::enumerate
 	for (uint32_t idx = 0; const auto& alignment : k_Alignments)
