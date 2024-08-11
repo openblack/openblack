@@ -9,6 +9,7 @@
 
 #include "MeshViewer.h"
 
+#include <SDL_events.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -27,7 +28,7 @@
 #include "ECS/Registry.h"
 #include "Game.h"
 #include "Graphics/IndexBuffer.h"
-#include "Graphics/Renderer.h"
+#include "Graphics/RendererInterface.h"
 #include "Graphics/ShaderManager.h"
 #include "Graphics/Texture2D.h"
 #include "Graphics/VertexBuffer.h"
@@ -278,9 +279,11 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 	ImGui::EndChild();
 }
 
-void MeshViewer::Update(Game& game, const graphics::Renderer& renderer)
+void MeshViewer::Update(Game& game)
 {
 	using namespace ecs::components;
+
+	auto& renderer = Locator::rendererInterface::value();
 
 	auto const& meshes = Locator::resources::value().GetMeshes();
 	auto const& animations = Locator::resources::value().GetAnimations();
@@ -323,7 +326,7 @@ void MeshViewer::Update(Game& game, const graphics::Renderer& renderer)
 	if (_selectedSubMesh >= 0 && static_cast<uint32_t>(_selectedSubMesh) < mesh->GetSubMeshes().size())
 	{
 		const auto identity = glm::mat4(1.0f);
-		graphics::Renderer::L3DMeshSubmitDesc desc = {};
+		graphics::RendererInterface::L3DMeshSubmitDesc desc = {};
 		desc.viewId = k_ViewId;
 		desc.program = objectShader;
 		desc.state = state;
@@ -371,7 +374,7 @@ void MeshViewer::Update(Game& game, const graphics::Renderer& renderer)
 
 void MeshViewer::ProcessEventOpen([[maybe_unused]] const SDL_Event& event)
 {
-	ImGuiIO& io = ImGui::GetIO();
+	const ImGuiIO& io = ImGui::GetIO();
 	switch (event.type)
 	{
 	case SDL_MOUSEBUTTONDOWN:

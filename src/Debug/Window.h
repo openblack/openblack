@@ -35,7 +35,7 @@ public:
 	Window(const Window&) = delete;
 	virtual ~Window();
 
-	void WindowUpdate(Game& game, const graphics::Renderer& renderer);
+	void WindowUpdate(Game& game);
 	void WindowDraw(Game& game);
 	void WindowProcessEvent(const SDL_Event& event);
 	[[nodiscard]] bool IsOpen() const { return _open; }
@@ -46,7 +46,7 @@ public:
 
 protected:
 	virtual void Draw(Game& game) = 0;
-	virtual void Update(Game& game, const graphics::Renderer& renderer) = 0;
+	virtual void Update(Game& game) = 0;
 	virtual void ProcessEventOpen(const SDL_Event& event) = 0;
 	virtual void ProcessEventAlways(const SDL_Event& event) = 0;
 

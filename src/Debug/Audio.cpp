@@ -343,7 +343,7 @@ void Audio::Draw(Game&)
 	ImGui::Separator();
 }
 
-void Audio::Update(Game&, const graphics::Renderer&) {}
+void Audio::Update([[maybe_unused]] Game& game) {}
 
 void Audio::ProcessEventOpen(const SDL_Event&) {}
 

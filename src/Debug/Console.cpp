@@ -391,12 +391,12 @@ void Console::Draw(Game& game)
 	ImGui::SetItemDefaultFocus();
 	if (_reclaimFocus)
 	{
-		ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
+		ImGui::SetKeyboardFocusHere(-1); // Autofocus previous widget
 		_reclaimFocus = false;
 	}
 }
 
-void Console::Update([[maybe_unused]] Game& game, [[maybe_unused]] const graphics::Renderer& renderer) {}
+void Console::Update([[maybe_unused]] Game& game) {}
 
 void Console::AddLog(const char* fmt, ...)
 {

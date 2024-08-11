@@ -279,11 +279,11 @@ void Gui::NewFrame()
 	ImGui::NewFrame();
 }
 
-bool Gui::Loop(Game& game, const graphics::Renderer& renderer) noexcept
+bool Gui::Loop(Game& game) noexcept
 {
 	for (auto& window : _debugWindows)
 	{
-		window->WindowUpdate(game, renderer);
+		window->WindowUpdate(game);
 	}
 	NewFrame();
 	if (ShowMenu(game))

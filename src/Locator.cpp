@@ -31,6 +31,7 @@
 #include "ECS/Systems/Implementations/PlayerSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/TownSystem.h"
+#include "Graphics/RendererInterface.h"
 #include "Input/GameActionMap.h"
 #include "Resources/Resources.h"
 #include "Windowing/Sdl2WindowingSystem.h"
@@ -56,6 +57,7 @@ using openblack::ecs::systems::PathfindingSystem;
 using openblack::ecs::systems::PlayerSystem;
 using openblack::ecs::systems::RenderingSystem;
 using openblack::ecs::systems::TownSystem;
+using openblack::graphics::RendererInterface;
 using openblack::input::GameActionMap;
 using openblack::resources::Resources;
 using openblack::windowing::DisplayMode;
@@ -66,11 +68,18 @@ void openblack::InitializeWindow(const std::string& title, int width, int height
 	Locator::windowing::emplace<Sdl2WindowingSystem>(title, width, height, displayMode, extraFlags);
 }
 
-void openblack::InitializeGame()
+bool openblack::InitializeGame(uint8_t rendererType, bool vsync) noexcept
 {
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), "EnTT version: {}", ENTT_VERSION);
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), GLM_VERSION_MESSAGE);
 
+	Locator::rendererInterface::reset(
+	    RendererInterface::Create(static_cast<bgfx::RendererType::Enum>(rendererType), vsync).release());
+	if (!Locator::rendererInterface::has_value())
+	{
+		SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "Failed to create renderer");
+		return false;
+	}
 	Locator::debugGui::reset(DebugGuiInterface::Create(graphics::RenderPass::ImGui).release());
 	Locator::events::emplace<EventManager>();
 
@@ -96,6 +105,8 @@ void openblack::InitializeGame()
 	Locator::rendereringSystem::emplace<RenderingSystem>();
 	Locator::entitiesRegistry::emplace<Registry>();
 	Locator::temple::emplace<TempleInterior>();
+
+	return true;
 }
 
 void openblack::InitializeLevel(const std::filesystem::path& path)

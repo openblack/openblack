@@ -47,7 +47,7 @@ void TempleInterior::Draw([[maybe_unused]] Game& game)
 	}
 }
 
-void TempleInterior::Update([[maybe_unused]] Game& game, [[maybe_unused]] const graphics::Renderer& renderer) {}
+void TempleInterior::Update([[maybe_unused]] openblack::Game& game) {}
 
 void TempleInterior::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
 

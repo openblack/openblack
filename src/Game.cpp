@@ -12,6 +12,7 @@
 #include <string>
 
 #include <LHVM/LHVM.h>
+#include <SDL.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -49,7 +50,7 @@
 #include "ECS/Systems/TownSystemInterface.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"
-#include "Graphics/Renderer.h"
+#include "Graphics/RendererInterface.h"
 #include "Graphics/Texture2D.h"
 #include "Input/GameActionMapInterface.h"
 #include "LHScriptX/Script.h"
@@ -155,7 +156,7 @@ Game::~Game() noexcept
 	_water.reset();
 	_sky.reset();
 	Locator::debugGui ::reset();
-	_renderer.reset();
+	Locator::rendererInterface::reset();
 	Locator::windowing::reset();
 	Locator::events::reset();
 	SDL_Quit(); // todo: move to GameWindow
@@ -196,10 +197,9 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 		}
 		else if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
 		{
-			const auto width = static_cast<uint16_t>(event.window.data1);
-			const auto height = static_cast<uint16_t>(event.window.data2);
-			_renderer->Reset(width, height);
-			_renderer->ConfigureView(graphics::RenderPass::Main, width, height);
+			const auto resolution = glm::u16vec2(event.window.data1, event.window.data2);
+			Locator::rendererInterface::value().Reset(resolution);
+			Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Main, resolution, 0x274659ff);
 
 			auto aspect = window.GetAspectRatio();
 			_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
@@ -357,7 +357,7 @@ bool Game::Update() noexcept
 	// ImGui events + prepare
 	{
 		auto guiLoop = _profiler->BeginScoped(Profiler::Stage::GuiLoop);
-		if (Locator::debugGui::value().Loop(*this, *_renderer))
+		if (Locator::debugGui::value().Loop(*this))
 		{
 			return false; // Quit event
 		}
@@ -416,7 +416,8 @@ bool Game::Update() noexcept
 				_handPose = glm::translate(_handPose, intersectionTransform.position);
 				_handPose *= glm::mat4(intersectionTransform.rotation);
 				_handPose = glm::scale(_handPose, intersectionTransform.scale);
-				_renderer->UpdateDebugCrossUniforms(glm::translate(_camera->GetFocus(Camera::Interpolation::Target)));
+				Locator::rendererInterface::value().UpdateDebugCrossUniforms(
+				    glm::translate(_camera->GetFocus(Camera::Interpolation::Target)));
 			}
 		}
 
@@ -466,15 +467,12 @@ bool Game::Initialize() noexcept
 		openblack::InitializeWindow(k_WindowTitle, _config.resolution.x, _config.resolution.y, _config.displayMode, extraFlags);
 	}
 
-	_renderer = graphics::Renderer::Create(_config.rendererType, _config.vsync);
-	if (_renderer == nullptr)
+	using filesystem::Path;
+	if (!InitializeGame(static_cast<uint8_t>(_config.rendererType), _config.vsync))
 	{
-		SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "Failed to create renderer");
+		SPDLOG_LOGGER_CRITICAL(spdlog::get("game"), "Failed to initialize services.");
 		return false;
 	}
-
-	using filesystem::Path;
-	InitializeGame();
 	auto& fileSystem = Locator::filesystem::value();
 	auto& resources = Locator::resources::value();
 	auto& meshManager = resources.GetMeshes();
@@ -791,7 +789,15 @@ bool Game::Run() noexcept
 	if (fileSystem.Exists(challengePath))
 	{
 		_lhvm = std::make_unique<LHVM::LHVM>();
-		_lhvm->Open(fileSystem.ReadAll(challengePath));
+		try
+		{
+			_lhvm->Open(fileSystem.ReadAll(challengePath));
+		}
+		catch (const std::runtime_error& err)
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to read challenge file at {}: {}",
+			                    (fileSystem.GetGamePath() / challengePath).generic_string(), err.what());
+		}
 	}
 	else
 	{
@@ -806,14 +812,14 @@ bool Game::Run() noexcept
 	if (Locator::windowing::has_value())
 	{
 		const auto size = static_cast<glm::u16vec2>(Locator::windowing::value().GetSize());
-		_renderer->ConfigureView(graphics::RenderPass::Main, size.x, size.y);
+		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Main, size, 0x274659ff);
 	}
 
 	{
 		uint16_t width;
 		uint16_t height;
 		_water->GetFrameBuffer().GetSize(width, height);
-		_renderer->ConfigureView(graphics::RenderPass::Reflection, width, height);
+		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Reflection, {width, height}, 0x274659ff);
 	}
 
 	if (_config.drawIsland)
@@ -821,7 +827,7 @@ bool Game::Run() noexcept
 		uint16_t width;
 		uint16_t height;
 		Locator::terrainSystem::value().GetFootprintFramebuffer().GetSize(width, height);
-		_renderer->ConfigureView(graphics::RenderPass::Footprint, width, height, 0x00000000);
+		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Footprint, {width, height}, 0x00000000);
 	}
 
 	Game::SetTime(_config.timeOfDay);
@@ -835,7 +841,7 @@ bool Game::Run() noexcept
 		{
 			auto section = _profiler->BeginScoped(Profiler::Stage::SceneDraw);
 
-			const graphics::Renderer::DrawSceneDesc drawDesc {
+			const graphics::RendererInterface::DrawSceneDesc drawDesc {
 			    /*profiler =*/*_profiler,
 			    /*camera =*/_camera.get(),
 			    /*frameBuffer =*/nullptr,
@@ -860,8 +866,7 @@ bool Game::Run() noexcept
 			    /*bgfxProfile =*/_config.bgfxProfile,
 			    /*wireframe =*/_config.wireframe,
 			};
-
-			_renderer->DrawScene(drawDesc);
+			Locator::rendererInterface::value().DrawScene(drawDesc);
 		}
 
 		{
@@ -871,7 +876,7 @@ bool Game::Run() noexcept
 
 		{
 			auto section = _profiler->BeginScoped(Profiler::Stage::RendererFrame);
-			_renderer->Frame();
+			Locator::rendererInterface::value().Frame();
 		}
 
 		if (_requestScreenshot.has_value())
@@ -879,7 +884,7 @@ bool Game::Run() noexcept
 			if (_requestScreenshot->first == _frameCount)
 			{
 				SPDLOG_LOGGER_INFO(spdlog::get("game"), "Requesting a screenshot at frame {}...", _frameCount);
-				_renderer->RequestScreenshot(_requestScreenshot->second);
+				Locator::rendererInterface::value().RequestScreenshot(_requestScreenshot->second);
 			}
 			if (_requestScreenshot->first <= _frameCount)
 			{
@@ -893,13 +898,14 @@ bool Game::Run() noexcept
 	return true;
 }
 
-void Game::LoadMap(const std::filesystem::path& path)
+bool Game::LoadMap(const std::filesystem::path& path) noexcept
 {
 	auto& fileSystem = Locator::filesystem::value();
 
 	if (!fileSystem.Exists(path))
 	{
-		throw std::runtime_error("Could not find script " + path.generic_string());
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Could not find script {}", path.generic_string());
+		return false;
 	}
 
 	const auto data = fileSystem.ReadAll(path);
@@ -940,6 +946,8 @@ void Game::LoadMap(const std::filesystem::path& path)
 	SetGameSpeed(Game::k_TurnDurationMultiplierNormal);
 	_turnCount = 0;
 	_paused = true;
+
+	return true;
 }
 
 void Game::LoadLandscape(const std::filesystem::path& path)
