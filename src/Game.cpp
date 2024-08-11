@@ -465,13 +465,11 @@ bool Game::Initialize() noexcept
 		}
 		openblack::InitializeWindow(k_WindowTitle, _config.resolution.x, _config.resolution.y, _config.displayMode, extraFlags);
 	}
-	try
+
+	_renderer = Renderer::Create(_config.rendererType, _config.vsync);
+	if (_renderer == nullptr)
 	{
-		_renderer = std::make_unique<Renderer>(_config.rendererType, _config.vsync);
-	}
-	catch (std::runtime_error& exception)
-	{
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Failed to create renderer", exception.what(), nullptr);
+		SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "Failed to create renderer");
 		return false;
 	}
 

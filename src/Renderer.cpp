@@ -177,9 +177,7 @@ struct BgfxCallback: public bgfx::CallbackI
 
 } // namespace openblack
 
-Renderer::Renderer(bgfx::RendererType::Enum rendererType, bool vsync)
-    : _shaderManager(std::make_unique<ShaderManager>())
-    , _bgfxCallback(std::make_unique<BgfxCallback>())
+std::unique_ptr<Renderer> Renderer::Create(bgfx::RendererType::Enum rendererType, bool vsync) noexcept
 {
 	bgfx::Init init {};
 	init.type = rendererType;
@@ -200,27 +198,37 @@ Renderer::Renderer(bgfx::RendererType::Enum rendererType, bool vsync)
 		init.platformData.ndt = handles.nativeDisplay;
 	}
 
-	_bgfxReset = BGFX_RESET_NONE;
+	uint32_t bgfxReset = BGFX_RESET_NONE;
+	auto bgfxCallback = std::make_unique<BgfxCallback>();
 	if (vsync)
 	{
-		_bgfxReset |= BGFX_RESET_VSYNC;
+		bgfxReset |= BGFX_RESET_VSYNC;
 	}
-	init.resolution.reset = _bgfxReset;
-	init.callback = dynamic_cast<bgfx::CallbackI*>(_bgfxCallback.get());
+	init.resolution.reset = bgfxReset;
+	init.callback = dynamic_cast<bgfx::CallbackI*>(bgfxCallback.get());
 
 	if (!bgfx::init(init))
 	{
-		throw std::runtime_error("Failed to initialize bgfx.");
+		SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "Failed to initialize bgfx.");
+		return nullptr;
 	}
 
 	const bgfx::Caps* caps = bgfx::getCaps();
 	if ((caps->supported & BGFX_CAPS_TEXTURE_2D_ARRAY) == 0 || caps->limits.maxTextureLayers < 9)
 	{
-		throw std::runtime_error("Graphics device must support texture layers.");
+		SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "Graphics device must support texture layers.");
+		return nullptr;
 	}
 
-	_shaderManager->LoadShaders();
+	return std::make_unique<Renderer>(bgfxReset, std::move(bgfxCallback));
+}
 
+Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallback) noexcept
+    : _shaderManager(std::make_unique<ShaderManager>())
+    , _bgfxCallback(std::move(bgfxCallback))
+    , _bgfxReset(bgfxReset)
+{
+	_shaderManager->LoadShaders();
 	// allocate vertex buffers for our debug draw and for primitives
 	_debugCross = DebugLines::CreateCross();
 	_plane = Primitive::CreatePlane();
@@ -234,7 +242,7 @@ Renderer::Renderer(bgfx::RendererType::Enum rendererType, bool vsync)
 	}
 }
 
-Renderer::~Renderer()
+Renderer::~Renderer() noexcept
 {
 	_plane.reset();
 	_shaderManager.reset();
