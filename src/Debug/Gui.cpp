@@ -279,7 +279,7 @@ void Gui::NewFrame()
 	ImGui::NewFrame();
 }
 
-bool Gui::Loop(Game& game, const Renderer& renderer) noexcept
+bool Gui::Loop(Game& game, const graphics::Renderer& renderer) noexcept
 {
 	for (auto& window : _debugWindows)
 	{

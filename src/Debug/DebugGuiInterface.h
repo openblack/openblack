@@ -20,8 +20,12 @@ union SDL_Event;
 namespace openblack
 {
 class Game;
+}
+
+namespace openblack::graphics
+{
 class Renderer;
-} // namespace openblack
+}
 
 namespace openblack::debug::gui
 {
@@ -34,7 +38,7 @@ public:
 	[[nodiscard]] virtual bool StealsFocus() const noexcept = 0;
 	virtual void SetScale(float scale) noexcept = 0;
 	virtual bool ProcessEvents(const SDL_Event& event) noexcept = 0;
-	virtual bool Loop(Game& game, const Renderer& renderer) noexcept = 0;
+	virtual bool Loop(Game& game, const graphics::Renderer& renderer) noexcept = 0;
 	virtual void Draw() noexcept = 0;
 };
 } // namespace openblack::debug::gui

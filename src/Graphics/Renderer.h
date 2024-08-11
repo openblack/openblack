@@ -29,7 +29,6 @@ namespace openblack
 {
 struct BgfxCallback;
 class Camera;
-class GameWindow;
 class Game;
 class L3DAnim;
 class L3DMesh;
@@ -49,11 +48,9 @@ class FrameBuffer;
 class Mesh;
 class ShaderManager;
 class ShaderProgram;
-} // namespace graphics
 
 class Renderer
 {
-
 public:
 	struct DrawSceneDesc
 	{
@@ -131,4 +128,5 @@ private:
 	std::unique_ptr<graphics::Mesh> _plane;
 	glm::mat4 _debugCrossPose;
 };
+} // namespace graphics
 } // namespace openblack

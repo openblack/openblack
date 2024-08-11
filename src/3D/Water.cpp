@@ -16,6 +16,7 @@
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/Mesh.h"
+#include "Graphics/Renderer.h"
 #include "Graphics/ShaderProgram.h"
 #include "Graphics/Texture2D.h"
 #include "Graphics/VertexBuffer.h"

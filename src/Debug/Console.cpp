@@ -396,7 +396,7 @@ void Console::Draw(Game& game)
 	}
 }
 
-void Console::Update([[maybe_unused]] Game& game, [[maybe_unused]] const Renderer& renderer) {}
+void Console::Update([[maybe_unused]] Game& game, [[maybe_unused]] const graphics::Renderer& renderer) {}
 
 void Console::AddLog(const char* fmt, ...)
 {

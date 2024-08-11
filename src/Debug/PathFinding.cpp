@@ -180,7 +180,7 @@ void PathFinding::Draw([[maybe_unused]] Game& game)
 	ImGui::PopStyleVar();
 }
 
-void PathFinding::Update([[maybe_unused]] Game& game, [[maybe_unused]] const openblack::Renderer& renderer)
+void PathFinding::Update([[maybe_unused]] Game& game, [[maybe_unused]] const graphics::Renderer& renderer)
 {
 	using namespace ecs::components;
 	auto& registry = Locator::entitiesRegistry::value();

@@ -39,7 +39,7 @@ public:
 	[[nodiscard]] bool StealsFocus() const noexcept override;
 	void SetScale(float scale) noexcept override;
 	bool ProcessEvents(const SDL_Event& event) noexcept override;
-	bool Loop(Game& game, const Renderer& renderer) noexcept override;
+	bool Loop(Game& game, const graphics::Renderer& renderer) noexcept override;
 	void Draw() noexcept override;
 
 private:
