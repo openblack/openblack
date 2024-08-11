@@ -27,11 +27,11 @@
 #include "ECS/Registry.h"
 #include "Game.h"
 #include "Graphics/IndexBuffer.h"
+#include "Graphics/Renderer.h"
 #include "Graphics/ShaderManager.h"
 #include "Graphics/Texture2D.h"
 #include "Graphics/VertexBuffer.h"
 #include "Locator.h"
-#include "Renderer.h"
 #include "Resources/MeshId.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -278,7 +278,7 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 	ImGui::EndChild();
 }
 
-void MeshViewer::Update(Game& game, const Renderer& renderer)
+void MeshViewer::Update(Game& game, const graphics::Renderer& renderer)
 {
 	using namespace ecs::components;
 
@@ -323,7 +323,7 @@ void MeshViewer::Update(Game& game, const Renderer& renderer)
 	if (_selectedSubMesh >= 0 && static_cast<uint32_t>(_selectedSubMesh) < mesh->GetSubMeshes().size())
 	{
 		const auto identity = glm::mat4(1.0f);
-		Renderer::L3DMeshSubmitDesc desc = {};
+		graphics::Renderer::L3DMeshSubmitDesc desc = {};
 		desc.viewId = k_ViewId;
 		desc.program = objectShader;
 		desc.state = state;

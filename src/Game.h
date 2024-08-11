@@ -37,7 +37,6 @@ namespace openblack
 {
 class Camera;
 class Profiler;
-class Renderer;
 class L3DAnim;
 class L3DMesh;
 class Sky;
@@ -45,8 +44,9 @@ class Water;
 
 namespace graphics
 {
+class Renderer;
 class Texture2D;
-}
+} // namespace graphics
 
 namespace LHVM
 {
@@ -168,7 +168,6 @@ public:
 
 	Camera& GetCamera() { return *_camera; }
 	[[nodiscard]] Profiler& GetProfiler() const { return *_profiler; }
-	[[nodiscard]] Renderer& GetRenderer() const { return *_renderer; }
 	[[nodiscard]] Camera& GetCamera() const { return *_camera; }
 	[[nodiscard]] Sky& GetSky() const { return *_sky; }
 	[[nodiscard]] Water& GetWater() const { return *_water; }
@@ -193,7 +192,7 @@ private:
 	/// path to Lionhead Studios Ltd/Black & White folder
 	const std::filesystem::path _gamePath;
 
-	std::unique_ptr<Renderer> _renderer;
+	std::unique_ptr<graphics::Renderer> _renderer;
 	std::unique_ptr<Camera> _camera;
 	std::unique_ptr<Profiler> _profiler;
 

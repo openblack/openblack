@@ -551,13 +551,13 @@ void LHVMViewer::Draw(Game& game)
 	}
 }
 
-void LHVMViewer::Update([[maybe_unused]] openblack::Game& game, [[maybe_unused]] const openblack::Renderer& renderer) {}
+void LHVMViewer::Update([[maybe_unused]] Game& game, [[maybe_unused]] const graphics::Renderer& renderer) {}
 
 void LHVMViewer::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
 
 void LHVMViewer::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) {}
 
-void LHVMViewer::DrawScriptsTab(const openblack::LHVM::LHVM& lhvm)
+void LHVMViewer::DrawScriptsTab(const LHVM::LHVM& lhvm)
 {
 	static auto vectorGetter = [](void* vec, int idx, const char** outText) {
 		auto& vector = *static_cast<std::vector<std::string>*>(vec);
@@ -627,7 +627,7 @@ void LHVMViewer::DrawScriptsTab(const openblack::LHVM::LHVM& lhvm)
 	ImGui::EndChild();
 }
 
-void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openblack::LHVM::VMScript& script)
+void LHVMViewer::DrawScriptDisassembly(const LHVM::LHVM& lhvm, LHVM::VMScript& script)
 {
 	ImGui::PushStyleColor(ImGuiCol_ChildBg, Disassembly_ColorBG);
 	ImGui::PushStyleColor(ImGuiCol_Text, Disassembly_ColorFG);
@@ -739,7 +739,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::LHVM::LHVM& lhvm, openbl
 	ImGui::PopStyleColor(4);
 }
 
-void LHVMViewer::DrawVariable(const openblack::LHVM::LHVM& lhvm, openblack::LHVM::VMScript& script, uint32_t idx)
+void LHVMViewer::DrawVariable(const LHVM::LHVM& lhvm, LHVM::VMScript& script, uint32_t idx)
 {
 	// local variable
 	if (idx > script.GetVariableOffset())
@@ -754,7 +754,7 @@ void LHVMViewer::DrawVariable(const openblack::LHVM::LHVM& lhvm, openblack::LHVM
 	ImGui::TextColored(Disassembly_ColorVariable, "global %s", variable.c_str());
 }
 
-std::string LHVMViewer::DataToString(uint32_t data, openblack::LHVM::VMInstruction::DataType type)
+std::string LHVMViewer::DataToString(uint32_t data, LHVM::VMInstruction::DataType type)
 {
 	switch (type)
 	{

@@ -43,7 +43,7 @@ void Window::Toggle()
 	}
 }
 
-void Window::WindowUpdate(openblack::Game& game, const openblack::Renderer& renderer)
+void Window::WindowUpdate(Game& game, const graphics::Renderer& renderer)
 {
 	if (_open)
 	{

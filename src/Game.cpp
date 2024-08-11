@@ -49,6 +49,7 @@
 #include "ECS/Systems/TownSystemInterface.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"
+#include "Graphics/Renderer.h"
 #include "Graphics/Texture2D.h"
 #include "Input/GameActionMapInterface.h"
 #include "LHScriptX/Script.h"
@@ -56,7 +57,6 @@
 #include "PackFile.h"
 #include "Parsers/InfoFile.h"
 #include "Profiler.h"
-#include "Renderer.h"
 #include "Resources/Loaders.h"
 #include "Resources/ResourcesInterface.h"
 #include "Serializer/FotFile.h"
@@ -466,7 +466,7 @@ bool Game::Initialize() noexcept
 		openblack::InitializeWindow(k_WindowTitle, _config.resolution.x, _config.resolution.y, _config.displayMode, extraFlags);
 	}
 
-	_renderer = Renderer::Create(_config.rendererType, _config.vsync);
+	_renderer = graphics::Renderer::Create(_config.rendererType, _config.vsync);
 	if (_renderer == nullptr)
 	{
 		SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "Failed to create renderer");
@@ -835,7 +835,7 @@ bool Game::Run() noexcept
 		{
 			auto section = _profiler->BeginScoped(Profiler::Stage::SceneDraw);
 
-			const Renderer::DrawSceneDesc drawDesc {
+			const graphics::Renderer::DrawSceneDesc drawDesc {
 			    /*profiler =*/*_profiler,
 			    /*camera =*/_camera.get(),
 			    /*frameBuffer =*/nullptr,
