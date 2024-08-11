@@ -99,10 +99,11 @@ public:
 		bool morphWithTerrain;
 	};
 
-	Renderer() = delete;
-	explicit Renderer(bgfx::RendererType::Enum rendererType, bool vsync);
+	static std::unique_ptr<Renderer> Create(bgfx::RendererType::Enum rendererType, bool vsync) noexcept;
 
-	virtual ~Renderer();
+	Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallback) noexcept;
+
+	virtual ~Renderer() noexcept;
 
 	[[nodiscard]] graphics::ShaderManager& GetShaderManager() const;
 
