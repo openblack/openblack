@@ -120,12 +120,12 @@ public:
 
 	/// Set environment
 	void Initialise(
-	    std::vector<NativeFunction>* functions, std::function<void(const uint32_t func)> nativeCallEnterCallback,
-	    std::function<void(const uint32_t func)> nativeCallExitCallback,
-	    std::function<void(const uint32_t taskNumber)> stopTaskCallback,
-	    std::function<void(const ErrorCode code, [[maybe_unused]] const std::string v0, [[maybe_unused]] const uint32_t v1)>
+	    std::vector<NativeFunction>* functions, std::function<void(uint32_t func)> nativeCallEnterCallback,
+	    std::function<void(uint32_t func)> nativeCallExitCallback,
+	    std::function<void(uint32_t taskNumber)> stopTaskCallback,
+	    std::function<void(ErrorCode code, [[maybe_unused]] const std::string v0, [[maybe_unused]] uint32_t v1)>
 	        errorCallback,
-	    std::function<void(const uint32_t objId)> addReference, std::function<void(const uint32_t objId)> removeReference);
+	    std::function<void(uint32_t objId)> addReference, std::function<void(uint32_t objId)> removeReference);
 
 	/// Read CHL file from the filesystem
 	void LoadBinary(const std::filesystem::path& filepath);
@@ -167,7 +167,7 @@ public:
 
 	void StopTasksOfType(ScriptType typesMask);
 
-	[[nodiscard]] const std::string GetString(uint32_t offset);
+	[[nodiscard]] std::string GetString(uint32_t offset);
 	[[nodiscard]] const std::vector<NativeFunction>* GetFunctions() const { return _functions; };
 
 	[[nodiscard]] const std::vector<VMVar>& GetVariables() const { return _variables; }

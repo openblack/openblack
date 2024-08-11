@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include <list>
 #include <unordered_map>
 #include <unordered_set>
@@ -26,22 +28,19 @@ public:
 		{
 			return _target2id[target];
 		}
+		uint32_t id;
+		if (!_freeList.empty())
+		{
+			id = _freeList.front();
+			_freeList.pop_front();
+		}
 		else
 		{
-			uint32_t id;
-			if (_freeList.size() > 0)
-			{
-				id = _freeList.front();
-				_freeList.pop_front();
-			}
-			else
-			{
-				id = ++_maxId;
-			}
-			_id2ref.emplace(id, Reference {.id = id, .count = 0, .target = target});
-			_target2id[target] = id;
-			return id;
+			id = ++_maxId;
 		}
+		_id2ref.emplace(id, Reference {.id = id, .count = 0, .target = target});
+		_target2id[target] = id;
+		return id;
 	}
 
 	void AddReference(const uint32_t id)
@@ -75,10 +74,7 @@ public:
 			ref.count++;
 			return &ref.target;
 		}
-		else
-		{
-			return NULL;
-		}
+		return nullptr;
 	}
 
 	void ForceReference(const T target, const uint32_t id)
@@ -121,7 +117,7 @@ public:
 			}
 		}
 		_garbage.clear();
-		if (_id2ref.size() == 0)
+		if (_id2ref.empty())
 		{
 			_maxId = 0;
 		}

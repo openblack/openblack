@@ -14,15 +14,17 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace openblack::script
 {
 
-enum class FindType
+enum class FindType : uint16_t
 {
 	Any = 5000,
 };
 
-enum class SpiritType
+enum class SpiritType : uint8_t
 {
 	None,
 	Good,
@@ -33,7 +35,7 @@ enum class SpiritType
 	Last,
 };
 
-enum class PuzzleGameType
+enum class PuzzleGameType : uint8_t
 {
 	None,
 	Tree1,
@@ -58,7 +60,7 @@ enum class PuzzleGameType
 	Last,
 };
 
-enum class PuzzleGameStatus
+enum class PuzzleGameStatus : uint8_t
 {
 	Won,
 	Lost,
@@ -69,7 +71,7 @@ enum class PuzzleGameStatus
 	Last,
 };
 
-enum class ObjectPropertyType
+enum class ObjectPropertyType : uint8_t
 {
 	None,
 	Health,
@@ -118,7 +120,7 @@ enum class ObjectPropertyType
 	Last,
 };
 
-enum class ObjectType
+enum class ObjectType : uint8_t
 {
 	None,
 	Marker,
@@ -173,7 +175,7 @@ enum class ObjectType
 	Last,
 };
 
-enum class InterfaceSet
+enum class InterfaceSet : uint8_t
 {
 	SetNone,
 	SetNoInterface,
@@ -183,7 +185,7 @@ enum class InterfaceSet
 	ActivateGestures,
 };
 
-enum class AviSequence
+enum class AviSequence : uint8_t
 {
 	None,
 	Intro,
@@ -191,7 +193,7 @@ enum class AviSequence
 	Last,
 };
 
-enum class InterfaceLevel
+enum class InterfaceLevel : uint8_t
 {
 	Normal,
 	JustGrab,
@@ -211,7 +213,7 @@ enum class InterfaceLevel
 	JustGrabDoubleClickAndRotatePitchAndZoom,
 };
 
-enum class CountDownDraw
+enum class CountDownDraw : uint8_t
 {
 	None,
 	TopLeft,
@@ -224,7 +226,7 @@ enum class CountDownDraw
 	Last,
 };
 
-enum class DevFunction
+enum class DevFunction : uint8_t
 {
 	None,
 	StartDevelopmentScripts,

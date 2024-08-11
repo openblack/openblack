@@ -249,7 +249,7 @@ static_assert(sizeof(VMInstruction) == 20);
 class VMScript
 {
 public:
-	VMScript() {};
+	VMScript() = default;
 
 	VMScript(std::string name, std::string filename, ScriptType type, uint32_t varOffset, std::vector<std::string> variables,
 	         uint32_t instructionAddress, uint32_t parameterCount, uint32_t scriptId)
@@ -290,23 +290,23 @@ private:
 class VMTask
 {
 public:
-	VMTask() {}
+	VMTask() = default;
 
 	VMTask(std::vector<VMVar> localVars, uint32_t scriptId, uint32_t id, uint32_t instructionAddress, uint32_t variablesOffset,
 	       VMStack stack, std::string name, std::string filename, ScriptType type)
-	    : localVars(localVars)
+	    : localVars(std::move(localVars))
 	    , scriptId(scriptId)
 	    , id(id)
 	    , instructionAddress(instructionAddress)
 	    , variablesOffset(variablesOffset)
 	    , stack(stack)
-	    , name(name)
-	    , filename(filename)
+	    , name(std::move(name))
+	    , filename(std::move(filename))
 	    , type(type)
 	{
 	}
 
-	std::vector<VMVar> localVars {};
+	std::vector<VMVar> localVars;
 	uint32_t scriptId {0};
 	uint32_t id {0};
 	uint32_t instructionAddress {0};
@@ -330,10 +330,10 @@ class NativeFunction
 {
 public:
 	NativeFunction(std::function<void()> impl, int32_t stackIn, int32_t stackOut, std::string name)
-	    : impl(impl)
+	    : impl(std::move(impl))
 	    , stackIn(stackIn)
 	    , stackOut(stackOut)
-	    , name(name)
+	    , name(std::move(name))
 	{
 	}
 

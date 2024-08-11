@@ -14,10 +14,12 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace openblack::script
 {
 
-enum class JcSpecial
+enum class JcSpecial : uint8_t
 {
 	CreateFireBall,
 	CameraFollowFireBall,
@@ -58,7 +60,7 @@ enum class JcSpecial
 	SwitchOffInfluence,
 };
 
-enum class CreatureTattooType
+enum class CreatureTattooType : uint8_t
 {
 	None,
 	TheBrotherhood,
@@ -68,7 +70,7 @@ enum class CreatureTattooType
 	Last,
 };
 
-enum class SpotVisualAlex
+enum class SpotVisualAlex : uint8_t
 {
 	Hulahoop,
 	Fence,

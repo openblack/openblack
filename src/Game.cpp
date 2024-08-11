@@ -814,11 +814,11 @@ void Game::NativeCallExitCallback([[maybe_unused]] const uint32_t func)
 
 void Game::StopTaskCallback([[maybe_unused]] const uint32_t taskNumber)
 {
-	SPDLOG_LOGGER_DEBUG(spdlog::get("lhvm"), "Task {} stopped", taskNumber);
+	//SPDLOG_LOGGER_DEBUG(spdlog::get("lhvm"), "Task {} stopped", taskNumber);
 }
 
-void Game::LhvmErrorCallback([[maybe_unused]] const LHVM::ErrorCode code, [[maybe_unused]] const std::string v0,
-                             [[maybe_unused]] const uint32_t v1)
+void Game::LhvmErrorCallback([[maybe_unused]] LHVM::ErrorCode code, [[maybe_unused]] std::string v0,
+                             [[maybe_unused]] uint32_t v1)
 {
 	const auto& msg = LHVM::k_ErrorMsg.at(static_cast<int>(code));
 	SPDLOG_LOGGER_ERROR(spdlog::get("lhvm"), "{}", msg);
@@ -894,15 +894,15 @@ bool Game::Run()
 	{
 		_lhvm = std::make_unique<LHVM::LHVM>();
 
-		_nativeCallEnterCallback = [this](auto&& PH1) { NativeCallEnterCallback(std::forward<decltype(PH1)>(PH1)); };
-		_nativeCallExitCallback = [this](auto&& PH1) { NativeCallExitCallback(std::forward<decltype(PH1)>(PH1)); };
-		_stopTaskCallback = [this](auto&& PH1) { StopTaskCallback(std::forward<decltype(PH1)>(PH1)); };
-		_lhvmErrorCallback = [this](auto&& PH1, auto&& PH2, auto&& PH3) {
-			LhvmErrorCallback(std::forward<decltype(PH1)>(PH1), std::forward<decltype(PH2)>(PH2),
-			                  std::forward<decltype(PH3)>(PH3));
+		_nativeCallEnterCallback = [this](auto&& pH1) { NativeCallEnterCallback(std::forward<decltype(pH1)>(pH1)); };
+		_nativeCallExitCallback = [this](auto&& pH1) { NativeCallExitCallback(std::forward<decltype(pH1)>(pH1)); };
+		_stopTaskCallback = [this](auto&& pH1) { StopTaskCallback(std::forward<decltype(pH1)>(pH1)); };
+		_lhvmErrorCallback = [this](auto&& pH1, auto&& pH2, auto&& pH3) {
+			LhvmErrorCallback(std::forward<decltype(pH1)>(pH1), std::forward<decltype(pH2)>(pH2),
+			                  std::forward<decltype(pH3)>(pH3));
 		};
-		_addObjectReference = [this](auto&& PH1) { AddObjectReference(std::forward<decltype(PH1)>(PH1)); };
-		_removeObjectReference = [this](auto&& PH1) { RemoveObjectReference(std::forward<decltype(PH1)>(PH1)); };
+		_addObjectReference = [this](auto&& pH1) { AddObjectReference(std::forward<decltype(pH1)>(pH1)); };
+		_removeObjectReference = [this](auto&& pH1) { RemoveObjectReference(std::forward<decltype(pH1)>(pH1)); };
 
 		_lhvm->Initialise(&_functionsTable, _nativeCallEnterCallback, _nativeCallExitCallback, _stopTaskCallback,
 		                  _lhvmErrorCallback, _addObjectReference, _removeObjectReference);
@@ -1109,11 +1109,14 @@ void Game::RequestScreenshot(const std::filesystem::path& path)
 void Game::InitFunctionsTable()
 {
 	_functionsTable.reserve(464);
+	InitFunctionsTable0();
 	InitFunctionsTable1();
 	InitFunctionsTable2();
+	InitFunctionsTable3();
+	InitFunctionsTable4();
 }
 
-void Game::InitFunctionsTable1()
+void Game::InitFunctionsTable0()
 {
 	CREATE_FUNCTION_BINDING("NONE", 0, 0, VmNone);
 	CREATE_FUNCTION_BINDING("SET_CAMERA_POSITION", 3, 0, VmSetCameraPosition);
@@ -1225,6 +1228,10 @@ void Game::InitFunctionsTable1()
 	CREATE_FUNCTION_BINDING("CREATE_DUAL_CAMERA_WITH_POINT", 4, 0, VmCreateDualCameraWithPoint);
 	CREATE_FUNCTION_BINDING("SET_CAMERA_TO_FACE_OBJECT", 2, 0, VmSetCameraToFaceObject);
 	CREATE_FUNCTION_BINDING("MOVE_CAMERA_TO_FACE_OBJECT", 3, 0, VmMoveCameraToFaceObject);
+}
+
+void Game::InitFunctionsTable1()
+{
 	CREATE_FUNCTION_BINDING("GET_MOON_PERCENTAGE", 0, 1, VmGetMoonPercentage);
 	CREATE_FUNCTION_BINDING("POPULATE_CONTAINER", 4, 0, VmPopulateContainer);
 	CREATE_FUNCTION_BINDING("ADD_REFERENCE", 1, 1, VmAddReference);
@@ -1317,6 +1324,10 @@ void Game::InitFunctionsTable1()
 	CREATE_FUNCTION_BINDING("CALL_PLAYER_CREATURE", 1, 1, VmCallPlayerCreature);
 	CREATE_FUNCTION_BINDING("GET_SLOWEST_SPEED", 1, 1, VmGetSlowestSpeed);
 	CREATE_FUNCTION_BINDING("GET_OBJECT_HELD", 0, 1, VmGetObjectHeld199);
+}
+
+void Game::InitFunctionsTable2()
+{
 	CREATE_FUNCTION_BINDING("HELP_SYSTEM_ON", 0, 1, VmHelpSystemOn);
 	CREATE_FUNCTION_BINDING("SHAKE_CAMERA", 6, 0, VmShakeCamera);
 	CREATE_FUNCTION_BINDING("SET_ANIMATION_MODIFY", 2, 0, VmSetAnimationModify);
@@ -1419,7 +1430,7 @@ void Game::InitFunctionsTable1()
 	CREATE_FUNCTION_BINDING("SET_GRAPHICS_CLIPPING", 2, 0, VmSetGraphicsClipping);
 }
 
-void Game::InitFunctionsTable2()
+void Game::InitFunctionsTable3()
 {
 	CREATE_FUNCTION_BINDING("SPIRIT_APPEAR", 1, 0, VmSpiritAppear);
 	CREATE_FUNCTION_BINDING("SPIRIT_DISAPPEAR", 1, 0, VmSpiritDisappear);
@@ -1521,6 +1532,10 @@ void Game::InitFunctionsTable2()
 	CREATE_FUNCTION_BINDING("SQUARE_ROOT", 1, 1, VmSquareRoot);
 	CREATE_FUNCTION_BINDING("GET_PLAYER_ALLY", 2, 1, VmGetPlayerAlly);
 	CREATE_FUNCTION_BINDING("SET_PLAYER_WIND_RESISTANCE", 2, 1, VmSetPlayerWindResistance);
+}
+
+void Game::InitFunctionsTable4()
+{
 	CREATE_FUNCTION_BINDING("GET_PLAYER_WIND_RESISTANCE", 2, 1, VmGetPlayerWindResistance);
 	CREATE_FUNCTION_BINDING("PAUSE_UNPAUSE_CLIMATE_SYSTEM", 1, 0, VmPauseUnpauseClimateSystem);
 	CREATE_FUNCTION_BINDING("PAUSE_UNPAUSE_STORM_CREATION_IN_CLIMATE_SYSTEM", 1, 0, VmPauseUnpauseStormCreationInClimateSystem);
@@ -1750,7 +1765,7 @@ void Game::VmGetPosition() // 023 GET_POSITION
 	const auto objId = _lhvm->Pop().uintVal;
 
 	glm::vec3 position(0.0f);
-	const auto pObject = _refManager.GetTarget(objId);
+	const auto* pObject = _refManager.GetTarget(objId);
 	if (pObject != nullptr)
 	{
 		auto& registry = Locator::entitiesRegistry::value();
@@ -1765,7 +1780,7 @@ void Game::VmSetPosition() // 024 SET_POSITION
 	auto position = PopVec();
 	const auto objId = _lhvm->Pop().uintVal;
 
-	const auto pObject = _refManager.GetTarget(objId);
+	const auto* pObject = _refManager.GetTarget(objId);
 	if (pObject != nullptr)
 	{
 		const auto& island = Locator::terrainSystem::value();
@@ -1809,13 +1824,13 @@ void Game::VmRandom() // 028 RANDOM
 {
 	const auto max = _lhvm->Popf();
 	const auto min = _lhvm->Popf();
-	float random = min + (max - min) * ((float)rand()) / (float)RAND_MAX;
+	const float random = min + (max - min) * static_cast<float>(rand()) / (float)RAND_MAX;
 	_lhvm->Pushf(random);
 }
 
 void Game::VmDllGettime() // 029 DLL_GETTIME
 {
-	_lhvm->Pushf((float)_turnCount / 10.0f); // TODO(Daniels118): should it be divided by 10 or not?
+	_lhvm->Pushf(static_cast<float>(_turnCount) / 10.0f); // TODO(Daniels118): should it be divided by 10 or not?
 }
 
 void Game::VmStartCameraControl() // 030 START_CAMERA_CONTROL
@@ -3491,7 +3506,7 @@ void Game::VmCreateWithAngleAndScale() // 252 CREATE_WITH_ANGLE_AND_SCALE
 	const auto scale = _lhvm->Popf();
 	const auto angle = _lhvm->Popf();
 
-	entt::entity object = CreateScriptObject(type, subtype, position, 0.0f, 0.0f, angle, 0.0f, scale);
+	const entt::entity object = CreateScriptObject(type, subtype, position, 0.0f, 0.0f, angle, 0.0f, scale);
 	const auto objId = _refManager.GetReference(object);
 
 	_lhvm->Pusho(objId);
@@ -3520,9 +3535,9 @@ void Game::VmSetActive() // 255 SET_ACTIVE
 void Game::VmThingValid() // 256 THING_VALID
 {
 	const auto objId = _lhvm->Pop().uintVal;
-	// TODO is this the right way?
+	// TODO(Daniels118): is this the right way?
 	bool valid = false;
-	const auto pObject = _refManager.GetTarget(objId);
+	const auto* pObject = _refManager.GetTarget(objId);
 	if (pObject != nullptr)
 	{
 		auto& registry = Locator::entitiesRegistry::value();

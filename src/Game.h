@@ -191,12 +191,12 @@ public:
 
 	void RequestScreenshot(const std::filesystem::path& path);
 
-	void NativeCallEnterCallback(const uint32_t func);
-	void NativeCallExitCallback(const uint32_t func);
-	void StopTaskCallback(const uint32_t taskNumber);
-	void LhvmErrorCallback(const LHVM::ErrorCode code, const std::string v0, const uint32_t v1);
-	void AddObjectReference(const uint32_t objId);
-	void RemoveObjectReference(const uint32_t objId);
+	void NativeCallEnterCallback(uint32_t func);
+	void NativeCallExitCallback(uint32_t func);
+	void StopTaskCallback(uint32_t taskNumber);
+	void LhvmErrorCallback(LHVM::ErrorCode code, std::string v0, uint32_t v1);
+	void AddObjectReference(uint32_t objId);
+	void RemoveObjectReference(uint32_t objId);
 
 	[[nodiscard]] glm::vec3 PopVec();
 	void PushVec(const glm::vec3& vec);
@@ -204,7 +204,7 @@ public:
 	[[nodiscard]] std::vector<float> PopVarArg(const int32_t argc);
 	[[nodiscard]] entt::entity CreateScriptObject(const script::ObjectType type, uint32_t subtype, const glm::vec3& position,
 	                                              float altitude, float xAngleRadians, float yAngleRadians,
-	                                              const float zAngleRadians, const float scale);
+	                                              float zAngleRadians, float scale);
 
 #define CREATE_FUNCTION_BINDING(NAME, STACKIN, STACKOUT, FUNCTION)                       \
 	{                                                                                    \
@@ -212,8 +212,11 @@ public:
 	}
 
 	void InitFunctionsTable();
+	void InitFunctionsTable0();
 	void InitFunctionsTable1();
 	void InitFunctionsTable2();
+	void InitFunctionsTable3();
+	void InitFunctionsTable4();
 
 	void VmNone();                                        // 000 NONE
 	void VmSetCameraPosition();                           // 001 SET_CAMERA_POSITION
