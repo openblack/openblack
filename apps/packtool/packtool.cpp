@@ -295,7 +295,7 @@ int ViewSound(openblack::pack::PackFile& pack, uint32_t index, const std::filesy
 	const auto& header = pack.GetAudioSampleHeader(index);
 	const auto& data = pack.GetAudioSampleData(index);
 
-	const auto name = std::string(header.name.begin(), header.name.end());
+	// const auto name = std::string(header.name.begin(), header.name.end());
 	std::printf("sound %-32s size %u\n", data.data(), static_cast<uint32_t>(data.size()));
 
 	if (!outFilename.empty())
@@ -422,7 +422,7 @@ struct Arguments
 	std::filesystem::path outFilename;
 };
 
-[[nodiscard]] std::string parseRange(std::string range, uint32_t currentSize, uint32_t& start, uint32_t& length)
+std::string parseRange(std::string range, uint32_t currentSize, uint32_t& start, uint32_t& length)
 {
 	// Split ':' after all file seps. Ignore drives like 'C:/', should be followed by either numbers or other ':'
 	auto colCount = std::count(range.begin(), range.end(), ':');
@@ -533,7 +533,7 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 		{
 			uint32_t start;
 			uint32_t length;
-			[[maybe_unused]] const auto filename = parseRange(range.filename().string(), currentSize, start, length);
+			parseRange(range.filename().string(), currentSize, start, length);
 			currentSize = std::max(start + length, currentSize);
 		}
 		// Expand out filename
