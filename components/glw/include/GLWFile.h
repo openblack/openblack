@@ -20,6 +20,15 @@
 namespace openblack::glw
 {
 
+enum class GLWResult : uint8_t
+{
+	Success = 0,
+	ErrCantOpen,
+	ErrItemCountMismatch,
+};
+
+std::string_view ResultToStr(GLWResult result);
+
 struct Glow
 {
 	uint32_t size; // Must be 196
@@ -69,37 +78,30 @@ protected:
 	/// True when a file has been loaded
 	bool _isLoaded {false};
 
-	std::filesystem::path _filename;
-
 	std::vector<Glow> _glows;
 
-	/// Error handling
-	void Fail(const std::string& msg);
-
 	/// Write file to the input source
-	void WriteFile(std::ostream& stream) const;
+	GLWResult WriteFile(std::ostream& stream) const noexcept;
 
 public:
-	GLWFile();
-	virtual ~GLWFile();
+	GLWFile() noexcept;
+	virtual ~GLWFile() noexcept;
 
 	/// Read glw file from the filesystem
-	void Open(const std::filesystem::path& filepath);
+	GLWResult Open(const std::filesystem::path& filepath) noexcept;
 
 	/// Read glw file from a buffer
-	void Open(const std::vector<uint8_t>& buffer);
+	GLWResult Open(const std::vector<uint8_t>& buffer) noexcept;
 
 	/// Read file from the input source
-	void ReadFile(std::istream& stream);
+	GLWResult ReadFile(std::istream& stream) noexcept;
 
 	/// Write glw file to path on the filesystem
-	void Write(const std::filesystem::path& filepath);
+	GLWResult Write(const std::filesystem::path& filepath) noexcept;
 
-	[[nodiscard]] std::string GetFilename() const { return _filename.string(); }
-
-	[[nodiscard]] const std::vector<Glow>& GetGlows() const { return _glows; }
-	[[nodiscard]] const Glow& GetGlow(uint32_t index) const { return _glows[index]; }
-	void AddGlow(const Glow& glow) { _glows.push_back(glow); }
+	[[nodiscard]] const std::vector<Glow>& GetGlows() const noexcept { return _glows; }
+	[[nodiscard]] const Glow& GetGlow(uint32_t index) const noexcept { return _glows[index]; }
+	void AddGlow(const Glow& glow) noexcept { _glows.push_back(glow); }
 };
 
 } // namespace openblack::glw

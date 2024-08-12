@@ -4,6 +4,7 @@ source_group(apps\\glwtool FILES ${GLWTOOL})
 
 add_executable(glwtool ${GLWTOOL})
 
+target_compile_definitions(glwtool PRIVATE CXXOPTS_NO_EXCEPTIONS)
 target_link_libraries(glwtool PRIVATE cxxopts::cxxopts glw)
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
@@ -16,9 +17,12 @@ if (OPENBLACK_CLANG_TIDY_CHECKS)
 endif ()
 
 if (MSVC)
-  target_compile_options(glwtool PRIVATE /W4 /WX)
+  target_compile_definitions(glwtool PRIVATE _HAS_EXCEPTIONS=0)
+  target_compile_options(glwtool PRIVATE /W4 /WX /EHs-c-)
 else ()
-  target_compile_options(glwtool PRIVATE -Wall -Wextra -pedantic -Werror)
+  target_compile_options(
+    glwtool PRIVATE -Wall -Wextra -pedantic -Werror -fno-exceptions
+  )
 endif ()
 
 set_property(TARGET glwtool PROPERTY FOLDER "tools")
