@@ -65,7 +65,7 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 		decl.emplace_back(VertexAttrib::Attribute::Position, static_cast<uint8_t>(2), VertexAttrib::Type::Float);
 		decl.emplace_back(VertexAttrib::Attribute::TexCoord0, static_cast<uint8_t>(2), VertexAttrib::Type::Float);
 
-		const auto& footprint = l3d.GetFootprint().value();
+		const auto& footprint = *l3d.GetFootprint();
 
 		// TODO (#749) use use std::views::enumerate
 		for (uint32_t i = 1; const auto& entry : footprint.entries)
