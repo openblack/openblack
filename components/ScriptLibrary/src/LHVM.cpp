@@ -1234,9 +1234,7 @@ void LHVM::Opcode16Geq(VMTask& /*task*/, const VMInstruction& instruction)
 void LHVM::Opcode17Leq(VMTask& /*task*/, const VMInstruction& instruction)
 {
 	VMValue a0;
-	VMValue a1;
 	VMValue b0;
-	VMValue b1;
 	switch (instruction.type)
 	{
 	case DataType::INT:
@@ -1258,9 +1256,7 @@ void LHVM::Opcode17Leq(VMTask& /*task*/, const VMInstruction& instruction)
 void LHVM::Opcode18Gt(VMTask& /*task*/, const VMInstruction& instruction)
 {
 	VMValue a0;
-	VMValue a1;
 	VMValue b0;
-	VMValue b1;
 	switch (instruction.type)
 	{
 	case DataType::INT:
@@ -1282,9 +1278,7 @@ void LHVM::Opcode18Gt(VMTask& /*task*/, const VMInstruction& instruction)
 void LHVM::Opcode19Lt(VMTask& /*task*/, const VMInstruction& instruction)
 {
 	VMValue a0;
-	VMValue a1;
 	VMValue b0;
-	VMValue b1;
 	switch (instruction.type)
 	{
 	case DataType::INT:
@@ -1439,7 +1433,7 @@ void LHVM::Opcode29Swap(VMTask& /*task*/, const VMInstruction& instruction)
 			for (int i = 0; i < offset; i++)
 			{
 				DataType ti;
-				VMValue vi = Pop(ti);
+				const VMValue vi = Pop(ti);
 				if (i == offset - 1)
 				{
 					copyType = ti;
@@ -1462,7 +1456,7 @@ void LHVM::Opcode29Swap(VMTask& /*task*/, const VMInstruction& instruction)
 			for (int i = 0; i < offset; i++)
 			{
 				DataType ti;
-				VMValue vi = Pop(ti);
+				const VMValue vi = Pop(ti);
 				if (i == 0)
 				{
 					copyType = ti;

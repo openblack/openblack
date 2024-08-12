@@ -12,10 +12,9 @@
 #include <cstdint>
 
 #include <list>
+#include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
-
-#include <stdexcept>
 
 namespace openblack
 {
