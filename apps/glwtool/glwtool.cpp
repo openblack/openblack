@@ -31,8 +31,6 @@ int ListGlows(GLWFile& glw)
 {
 	const auto& glows = glw.GetGlows();
 
-	std::printf("file: %s\n", glw.GetFilename().c_str());
-
 	for (uint32_t i = 0; i < glows.size(); ++i)
 	{
 		std::printf("\t%u: name \"%s\"\n", i, glows[i].name.data());
@@ -41,13 +39,13 @@ int ListGlows(GLWFile& glw)
 	return EXIT_SUCCESS;
 }
 
-int ViewGlow(GLWFile& glw)
+int ViewGlow(const std::filesystem::path& path, GLWFile& glw)
 {
 	for (uint32_t index = 0; index < glw.GetGlows().size(); ++index)
 	{
 		const auto& glow = glw.GetGlow(index);
 
-		std::printf("file: %s, glow: %u\n", glw.GetFilename().c_str(), index);
+		std::printf("file: %s, glow: %u\n", path.generic_string().c_str(), index);
 		std::printf("information:\n");
 		std::printf("\tname: %s\n", glow.name.data());
 		std::printf("\tred: %f\n", glow.red);
@@ -104,68 +102,61 @@ int WriteFile(const Arguments::Write& args) noexcept
 
 	nlohmann::json data;
 
-	try
-	{
-		data = nlohmann::json::parse(f);
-	}
-	catch (const nlohmann::json::parse_error&)
+	data = nlohmann::json::parse(f);
+
+	if (data.is_discarded())
 	{
 		return EXIT_FAILURE;
 	}
 
-	try
+	for (auto jsonEmitter : data)
 	{
-		for (auto jsonEmitter : data)
+		if (jsonEmitter.is_discarded())
 		{
-			Glow glow;
-			glow.size = jsonEmitter["size"];
-			glow.unk1 = jsonEmitter["unk1"];
-			glow.red = jsonEmitter["red"];
-			glow.green = jsonEmitter["green"];
-			glow.blue = jsonEmitter["blue"];
-			glow.posX = jsonEmitter["posX"];
-			glow.posY = jsonEmitter["posY"];
-			glow.posZ = jsonEmitter["posZ"];
-			glow.unkX = jsonEmitter["unkX"];
-			glow.unkY = jsonEmitter["unkY"];
-			glow.unkZ = jsonEmitter["unkZ"];
-			glow.unkX2 = jsonEmitter["unkX2"];
-			glow.unkY2 = jsonEmitter["unkY2"];
-			glow.unkZ2 = jsonEmitter["unkZ2"];
-			glow.unk14 = jsonEmitter["unk14"];
-			glow.unk15 = jsonEmitter["unk15"];
-			glow.unk16 = jsonEmitter["unk16"];
-			glow.unk17 = jsonEmitter["unk17"];
-			glow.unk18 = jsonEmitter["unk18"];
-			glow.unk19 = jsonEmitter["unk19"];
-			glow.unk20 = jsonEmitter["unk20"];
-			glow.unk21 = jsonEmitter["unk21"];
-			glow.unk22 = jsonEmitter["unk22"];
-			glow.unk23 = jsonEmitter["unk23"];
-			glow.unk24 = jsonEmitter["unk24"];
-			glow.unk25 = jsonEmitter["unk25"];
-			glow.unk26 = jsonEmitter["unk26"];
-			glow.dirX = jsonEmitter["dirX"];
-			glow.dirY = jsonEmitter["dirY"];
-			glow.dirZ = jsonEmitter["dirZ"];
-			glow.unk27 = jsonEmitter["unk27"];
-			glow.unk28 = jsonEmitter["unk28"];
-			const std::string name = jsonEmitter["name"];
-			assert(name.length() < glow.name.size());
-			glow.name.fill(0);
-			std::copy(name.begin(), name.end(), glow.name.data());
-			glow.emitterSize = jsonEmitter["emitterSize"];
-			glw.AddGlow(glow);
+			return EXIT_FAILURE;
 		}
-	}
-	catch (const nlohmann::json::exception& error)
-	{
-		return error.id;
+		Glow glow;
+		glow.size = jsonEmitter["size"];
+		glow.unk1 = jsonEmitter["unk1"];
+		glow.red = jsonEmitter["red"];
+		glow.green = jsonEmitter["green"];
+		glow.blue = jsonEmitter["blue"];
+		glow.posX = jsonEmitter["posX"];
+		glow.posY = jsonEmitter["posY"];
+		glow.posZ = jsonEmitter["posZ"];
+		glow.unkX = jsonEmitter["unkX"];
+		glow.unkY = jsonEmitter["unkY"];
+		glow.unkZ = jsonEmitter["unkZ"];
+		glow.unkX2 = jsonEmitter["unkX2"];
+		glow.unkY2 = jsonEmitter["unkY2"];
+		glow.unkZ2 = jsonEmitter["unkZ2"];
+		glow.unk14 = jsonEmitter["unk14"];
+		glow.unk15 = jsonEmitter["unk15"];
+		glow.unk16 = jsonEmitter["unk16"];
+		glow.unk17 = jsonEmitter["unk17"];
+		glow.unk18 = jsonEmitter["unk18"];
+		glow.unk19 = jsonEmitter["unk19"];
+		glow.unk20 = jsonEmitter["unk20"];
+		glow.unk21 = jsonEmitter["unk21"];
+		glow.unk22 = jsonEmitter["unk22"];
+		glow.unk23 = jsonEmitter["unk23"];
+		glow.unk24 = jsonEmitter["unk24"];
+		glow.unk25 = jsonEmitter["unk25"];
+		glow.unk26 = jsonEmitter["unk26"];
+		glow.dirX = jsonEmitter["dirX"];
+		glow.dirY = jsonEmitter["dirY"];
+		glow.dirZ = jsonEmitter["dirZ"];
+		glow.unk27 = jsonEmitter["unk27"];
+		glow.unk28 = jsonEmitter["unk28"];
+		const std::string name = jsonEmitter["name"];
+		assert(name.length() < glow.name.size());
+		glow.name.fill(0);
+		std::copy(name.begin(), name.end(), glow.name.data());
+		glow.emitterSize = jsonEmitter["emitterSize"];
+		glw.AddGlow(glow);
 	}
 
-	glw.Write(args.outFilename);
-
-	return EXIT_SUCCESS;
+	return glw.Write(args.outFilename) == openblack::glw::GLWResult::Success ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int ExtractFile(const Arguments::Extract& args) noexcept
@@ -177,13 +168,11 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 		return EXIT_FAILURE;
 	}
 
-	try
+	const auto result = glw.Open(args.inFilename);
+
+	if (result != openblack::glw::GLWResult::Success)
 	{
-		glw.Open(args.inFilename);
-	}
-	catch (const std::runtime_error& err)
-	{
-		std::cerr << err.what() << '\n';
+		std::cerr << openblack::glw::ResultToStr(result) << '\n';
 		return EXIT_FAILURE;
 	}
 
@@ -225,15 +214,7 @@ int ExtractFile(const Arguments::Extract& args) noexcept
 		jsonEmitter["unk28"] = glow.unk28;
 		jsonEmitter["name"] = std::string(glow.name.data());
 		jsonEmitter["emitterSize"] = glow.emitterSize;
-		try
-		{
-			data.push_back(jsonEmitter);
-		}
-		catch (nlohmann::json::exception& err)
-		{
-			std::cerr << err.what() << '\n';
-			return EXIT_FAILURE;
-		}
+		data.push_back(jsonEmitter);
 	}
 
 	auto o = std::ofstream(args.jsonFile);
@@ -245,93 +226,77 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 {
 	cxxopts::Options options("glwtool", "Inspect and extract information from LionHead GLW files.");
 
-	try
-	{
-		options.add_options()                                            //
-		    ("h,help", "Display this help message.")                     //
-		    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
-		    ;
-		options.positional_help("[read|write|extract] [OPTION...]");
-		options.add_options()                                                                              //
-		    ("l,list-glows", "List glows.", cxxopts::value<std::vector<std::filesystem::path>>())          //
-		    ("g,glow-content", "View Glow Contents", cxxopts::value<std::vector<std::filesystem::path>>()) //
-		    ;
-		options.add_options("write/extract from and to json format")                            //
-		    ("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())    //
-		    ("i,input-glow", "Input file (required).", cxxopts::value<std::filesystem::path>()) //
-		    ;
+	options.add_options()                                            //
+	    ("h,help", "Display this help message.")                     //
+	    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
+	    ;
+	options.positional_help("[read|write|extract] [OPTION...]");
+	options.add_options()                                                                              //
+	    ("l,list-glows", "List glows.", cxxopts::value<std::vector<std::filesystem::path>>())          //
+	    ("g,glow-content", "View Glow Contents", cxxopts::value<std::vector<std::filesystem::path>>()) //
+	    ;
+	options.add_options("write/extract from and to json format")                            //
+	    ("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())    //
+	    ("i,input-glow", "Input file (required).", cxxopts::value<std::filesystem::path>()) //
+	    ;
 
-		options.parse_positional({"subcommand"});
-	}
-	catch (const std::exception& err)
+	options.parse_positional({"subcommand"});
+
+	auto result = options.parse(argc, argv);
+	if (result["help"].as<bool>())
 	{
-		std::cerr << err.what() << '\n';
+		std::cout << options.help() << '\n';
+		returnCode = EXIT_SUCCESS;
+		return false;
+	}
+	if (result["subcommand"].count() == 0)
+	{
+		std::cerr << options.help() << '\n';
 		returnCode = EXIT_FAILURE;
 		return false;
 	}
-
-	try
+	if (result["subcommand"].as<std::string>() == "read")
 	{
-		auto result = options.parse(argc, argv);
-		if (result["help"].as<bool>())
+		if (result["list-glows"].count() > 0)
 		{
-			std::cout << options.help() << '\n';
-			returnCode = EXIT_SUCCESS;
-			return false;
+			args.mode = Arguments::Mode::ListGlows;
+			args.read.filenames = result["list-glows"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
-		if (result["subcommand"].count() == 0)
+		if (result["glow-content"].count() > 0)
 		{
-			std::cerr << options.help() << '\n';
-			returnCode = EXIT_FAILURE;
-			return false;
-		}
-		if (result["subcommand"].as<std::string>() == "read")
-		{
-			if (result["list-glows"].count() > 0)
-			{
-				args.mode = Arguments::Mode::ListGlows;
-				args.read.filenames = result["list-glows"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["glow-content"].count() > 0)
-			{
-				args.mode = Arguments::Mode::ViewGlow;
-				args.read.filenames = result["glow-content"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-		}
-		else if (result["subcommand"].as<std::string>() == "write")
-		{
-			args.write.outFilename = "";
-			if (result["output"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Write;
-				args.write.outFilename = result["output"].as<std::filesystem::path>();
-				if (result["input-glow"].count() > 0)
-				{
-					args.write.jsonFile = result["input-glow"].as<std::filesystem::path>();
-				}
-				return true;
-			}
-		}
-		else if (result["subcommand"].as<std::string>() == "extract")
-		{
-			args.write.outFilename = "";
-			if (result["output"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Extract;
-				args.extract.inFilename = result["input-glow"].as<std::filesystem::path>();
-				if (result["input-glow"].count() > 0)
-				{
-					args.extract.jsonFile = result["output"].as<std::filesystem::path>();
-				}
-				return true;
-			}
+			args.mode = Arguments::Mode::ViewGlow;
+			args.read.filenames = result["glow-content"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
 	}
-	catch (const std::exception& err)
+	else if (result["subcommand"].as<std::string>() == "write")
 	{
-		std::cerr << err.what() << '\n';
+		args.write.outFilename = "";
+		if (result["output"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Write;
+			args.write.outFilename = result["output"].as<std::filesystem::path>();
+			if (result["input-glow"].count() > 0)
+			{
+				args.write.jsonFile = result["input-glow"].as<std::filesystem::path>();
+			}
+			return true;
+		}
+	}
+	else if (result["subcommand"].as<std::string>() == "extract")
+	{
+		args.write.outFilename = "";
+		if (result["output"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Extract;
+			args.extract.inFilename = result["input-glow"].as<std::filesystem::path>();
+			if (result["input-glow"].count() > 0)
+			{
+				args.extract.jsonFile = result["output"].as<std::filesystem::path>();
+			}
+			return true;
+		}
 	}
 
 	std::cerr << options.help() << '\n';
@@ -361,30 +326,30 @@ int main(int argc, char* argv[]) noexcept
 	for (auto& filename : args.read.filenames)
 	{
 		GLWFile glw;
-		try
-		{
-			// Open file
-			glw.Open(filename);
 
-			switch (args.mode)
-			{
-			case Arguments::Mode::Header:
-				break;
-			case Arguments::Mode::ListGlows:
-				returnCode |= ListGlows(glw);
-				break;
-			case Arguments::Mode::ViewGlow:
-				returnCode |= ViewGlow(glw);
-				break;
-			default:
-				returnCode = EXIT_FAILURE;
-				break;
-			}
-		}
-		catch (std::exception& err)
+		// Open file
+		const auto result = glw.Open(filename);
+		if (result != openblack::glw::GLWResult::Success)
 		{
-			std::cerr << err.what() << '\n';
+			std::cerr << openblack::glw::ResultToStr(result) << "\n";
 			returnCode |= EXIT_FAILURE;
+			continue;
+		}
+
+		switch (args.mode)
+		{
+		case Arguments::Mode::Header:
+			break;
+		case Arguments::Mode::ListGlows:
+			std::printf("file: %s\n", filename.generic_string().c_str());
+			returnCode |= ListGlows(glw);
+			break;
+		case Arguments::Mode::ViewGlow:
+			returnCode |= ViewGlow(filename, glw);
+			break;
+		default:
+			returnCode = EXIT_FAILURE;
+			break;
 		}
 	}
 

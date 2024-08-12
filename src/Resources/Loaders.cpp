@@ -199,14 +199,12 @@ LightLoader::result_type LightLoader::operator()(BaseLoader<Lights>::FromDiskTag
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading lights from file: {}", path.string());
 	glw::GLWFile glw;
 
-	try
+	const auto result = glw.ReadFile(*Locator::filesystem::value().GetData(path));
+	if (result != glw::GLWResult::Success)
 	{
-		glw.ReadFile(*Locator::filesystem::value().GetData(path));
-	}
-	catch (std::runtime_error& err)
-	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open glw file from filesystem {}: {}", path.string(), err.what());
-		throw err;
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open glw file from filesystem {}: {}", path.string(),
+		                    glw::ResultToStr(result));
+		throw glw::ResultToStr(result);
 	}
 	auto lights = std::make_shared<Lights>();
 	for (auto entry : glw.GetGlows())

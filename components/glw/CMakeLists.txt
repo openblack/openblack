@@ -18,9 +18,12 @@ if (OPENBLACK_CLANG_TIDY_CHECKS)
 endif ()
 
 if (MSVC)
-  target_compile_options(glw PRIVATE /W4 /WX)
+  target_compile_definitions(glw PRIVATE _HAS_EXCEPTIONS=0)
+  target_compile_options(glw PRIVATE /W4 /WX /EHs-c-)
 else ()
-  target_compile_options(glw PRIVATE -Wall -Wextra -pedantic -Werror)
+  target_compile_options(
+    glw PRIVATE -Wall -Wextra -pedantic -Werror -fno-exceptions
+  )
 endif ()
 
 set_property(TARGET glw PROPERTY FOLDER "components")
