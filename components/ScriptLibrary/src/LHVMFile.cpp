@@ -409,8 +409,14 @@ VMScript LHVMFile::LoadScript(std::istream& stream)
 		Fail("Error reading script_id");
 	}
 
-	return {std::string(scriptName.data()), std::string(filename.data()), scriptType, varOffset, variables, instructionAddress,
-	        parameterCount, scriptId};
+	return {std::string(scriptName.data()),
+	        std::string(filename.data()),
+	        scriptType,
+	        varOffset,
+	        variables,
+	        instructionAddress,
+	        parameterCount,
+	        scriptId};
 }
 
 void LHVMFile::LoadData(std::istream& stream)
