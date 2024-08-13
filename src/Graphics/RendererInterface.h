@@ -11,6 +11,8 @@
 
 #include <glm/vec2.hpp>
 
+#include "RenderPass.h"
+
 namespace openblack
 {
 class Camera;
@@ -56,8 +58,6 @@ public:
 		bool drawDebugCross;
 		bool drawBoundingBoxes;
 		bool cullBack;
-		bool bgfxDebug;
-		bool bgfxProfile;
 		bool wireframe;
 	};
 
@@ -87,6 +87,10 @@ public:
 	virtual void DrawScene(const DrawSceneDesc& drawDesc) const noexcept = 0;
 	virtual void Frame() noexcept = 0;
 	virtual void RequestScreenshot(const std::filesystem::path& filepath) noexcept = 0;
+	[[nodiscard]] virtual bool GetDebug() const noexcept = 0;
+	virtual void SetDebug(bool value) noexcept = 0;
+	[[nodiscard]] virtual bool GetProfile() const noexcept = 0;
+	virtual void SetProfile(bool value) noexcept = 0;
 
 	// TODO: Remove this function. All renderables should be specified through RenderingSystem with Components
 	virtual void UpdateDebugCrossUniforms(const glm::mat4& pose) noexcept = 0;

@@ -779,7 +779,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 	// Enable stats or debug text.
 	auto debugMode = BGFX_DEBUG_NONE;
-	if (desc.bgfxDebug)
+	if (_bgfxDebug)
 	{
 		debugMode |= BGFX_DEBUG_STATS;
 	}
@@ -787,7 +787,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	{
 		debugMode |= BGFX_DEBUG_WIREFRAME;
 	}
-	if (desc.bgfxProfile)
+	if (_bgfxProfile)
 	{
 		debugMode |= BGFX_DEBUG_PROFILER;
 	}

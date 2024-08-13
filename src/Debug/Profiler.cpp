@@ -18,6 +18,7 @@
 #include "ECS/Components/Tree.h"
 #include "ECS/Registry.h"
 #include "Game.h"
+#include "Graphics/RendererInterface.h"
 #include "Locator.h"
 
 #include "../Profiler.h"
@@ -32,13 +33,13 @@ Profiler::Profiler()
 void Profiler::Open()
 {
 	Window::Open();
-	Game::Instance()->GetConfig().bgfxProfile = true;
+	Locator::rendererInterface::value().SetProfile(true);
 }
 
 void Profiler::Close()
 {
 	Window::Close();
-	Game::Instance()->GetConfig().bgfxProfile = false;
+	Locator::rendererInterface::value().SetProfile(false);
 }
 
 void Profiler::Draw(Game& game)

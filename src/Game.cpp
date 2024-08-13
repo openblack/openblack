@@ -217,7 +217,7 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 			_paused = !_paused;
 			break;
 		case SDLK_F1:
-			_config.bgfxDebug = !_config.bgfxDebug;
+			Locator::rendererInterface::value().SetDebug(!Locator::rendererInterface::value().GetDebug());
 			break;
 		case SDLK_1:
 		case SDLK_2:
@@ -842,29 +842,27 @@ bool Game::Run() noexcept
 			auto section = _profiler->BeginScoped(Profiler::Stage::SceneDraw);
 
 			const graphics::RendererInterface::DrawSceneDesc drawDesc {
-			    /*profiler =*/*_profiler,
-			    /*camera =*/_camera.get(),
-			    /*frameBuffer =*/nullptr,
-			    /*sky =*/*_sky,
-			    /*water =*/*_water,
-			    /*entities =*/Locator::entitiesRegistry::value(),
-			    /*time =*/milliseconds.count(), // TODO(#481): get actual time
-			    /*timeOfDay =*/_config.timeOfDay,
-			    /*bumpMapStrength =*/_config.bumpMapStrength,
-			    /*smallBumpMapStrength =*/_config.smallBumpMapStrength,
-			    /*viewId =*/graphics::RenderPass::Main,
-			    /*drawSky =*/_config.drawSky,
-			    /*drawWater =*/_config.drawWater,
-			    /*drawIsland =*/_config.drawIsland,
-			    /*drawEntities =*/_config.drawEntities,
-			    /*drawSprites =*/_config.drawSprites,
-			    /*drawTestModel =*/_config.drawTestModel,
-			    /*drawDebugCross =*/_config.drawDebugCross,
-			    /*drawBoundingBoxes =*/_config.drawBoundingBoxes,
-			    /*cullBack =*/false,
-			    /*bgfxDebug =*/_config.bgfxDebug,
-			    /*bgfxProfile =*/_config.bgfxProfile,
-			    /*wireframe =*/_config.wireframe,
+			    .profiler = *_profiler,
+			    .camera = _camera.get(),
+			    .frameBuffer = nullptr,
+			    .sky = *_sky,
+			    .water = *_water,
+			    .entities = Locator::entitiesRegistry::value(),
+			    .time = milliseconds.count(), // TODO(#481): get actual time
+			    .timeOfDay = _config.timeOfDay,
+			    .bumpMapStrength = _config.bumpMapStrength,
+			    .smallBumpMapStrength = _config.smallBumpMapStrength,
+			    .viewId = graphics::RenderPass::Main,
+			    .drawSky = _config.drawSky,
+			    .drawWater = _config.drawWater,
+			    .drawIsland = _config.drawIsland,
+			    .drawEntities = _config.drawEntities,
+			    .drawSprites = _config.drawSprites,
+			    .drawTestModel = _config.drawTestModel,
+			    .drawDebugCross = _config.drawDebugCross,
+			    .drawBoundingBoxes = _config.drawBoundingBoxes,
+			    .cullBack = false,
+			    .wireframe = _config.wireframe,
 			};
 			Locator::rendererInterface::value().DrawScene(drawDesc);
 		}

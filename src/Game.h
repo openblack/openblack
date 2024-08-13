@@ -125,8 +125,6 @@ public:
 		bool drawFootpaths {false};
 		bool drawStreams {false};
 
-		bool bgfxDebug {false};
-		bool bgfxProfile {false};
 		bool vsync {false};
 		bool running {false};
 
