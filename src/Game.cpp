@@ -11,7 +11,7 @@
 
 #include <string>
 
-#include <LHVM/LHVM.h>
+#include <LHVM.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -786,8 +786,8 @@ bool Game::Run()
 	auto challengePath = fileSystem.GetPath<filesystem::Path::Quests>() / "challenge.chl";
 	if (fileSystem.Exists(challengePath))
 	{
-		_lhvm = std::make_unique<LHVM::LHVM>();
-		_lhvm->Open(fileSystem.ReadAll(challengePath));
+		_lhvm = std::make_unique<lhvm::LHVM>();
+		_lhvm->LoadBinary(fileSystem.ReadAll(challengePath));
 	}
 	else
 	{

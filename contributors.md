@@ -7,3 +7,4 @@ Includes all git commit authors. Aliases are GitHub user names.
 * Alexandre Berdeaux (FalseIlyu) <ilyulemail@gmail.com>
 * Reinhold Gschweicher (NeroBurner) <pyro4hell@gmail.com>
 * Michał Janiszewski (janisozaur) <janisozaur@gmail.com>
+* Daniele Lombardi (Daniels118) <daniele118@hotmail.it>
