@@ -44,7 +44,7 @@ struct Arguments
 	} read;
 };
 
-static int PrintInfo(const LHVMFile& file)
+int PrintInfo(const LHVMFile& file)
 {
 	std::printf("LHVM Version: %u\n", static_cast<uint32_t>(file.GetVersion()));
 	std::printf("Global vars count: %zu\n", file.GetVariablesNames().size());
@@ -72,14 +72,14 @@ static int PrintInfo(const LHVMFile& file)
 	return EXIT_SUCCESS;
 }
 
-static int PrintHeader(const LHVMFile& file)
+int PrintHeader(const LHVMFile& file)
 {
 	std::printf("Version: %u\n", static_cast<uint32_t>(file.GetVersion()));
 	std::printf("\n");
 	return EXIT_SUCCESS;
 }
 
-static int PrintVarNames(const LHVMFile& file)
+int PrintVarNames(const LHVMFile& file)
 {
 	const auto& names = file.GetVariablesNames();
 	int id = 1; // id 0 is reserved for "Null variable", which is added at runtime
@@ -92,7 +92,7 @@ static int PrintVarNames(const LHVMFile& file)
 	return EXIT_SUCCESS;
 }
 
-static std::string GetSignature(const VMScript& script)
+std::string GetSignature(const VMScript& script)
 {
 	std::string s = k_ScriptTypeNames.at(script.GetType()) + " " + script.GetName() + "(";
 	if (script.GetParameterCount() > 0)
@@ -108,7 +108,7 @@ static std::string GetSignature(const VMScript& script)
 	return s;
 }
 
-static std::map<uint32_t, std::string> GetLabels(const LHVMFile& file)
+std::map<uint32_t, std::string> GetLabels(const LHVMFile& file)
 {
 	std::map<uint32_t, std::string> labels;
 	const auto& scripts = file.GetScripts();
@@ -147,7 +147,7 @@ static std::map<uint32_t, std::string> GetLabels(const LHVMFile& file)
 	return labels;
 }
 
-static int PrintCode(const LHVMFile& file, const std::string& name)
+int PrintCode(const LHVMFile& file, const std::string& name)
 {
 	const auto& scripts = file.GetScripts();
 	const auto& instructions = file.GetInstructions();
@@ -282,7 +282,7 @@ static int PrintCode(const LHVMFile& file, const std::string& name)
 	return EXIT_SUCCESS;
 }
 
-static int PrintAutostart(const LHVMFile& file)
+int PrintAutostart(const LHVMFile& file)
 {
 	const auto& scripts = file.GetScripts();
 	const auto& autostart = file.GetAutostart();
@@ -296,7 +296,7 @@ static int PrintAutostart(const LHVMFile& file)
 	return EXIT_SUCCESS;
 }
 
-static int PrintScripts(const LHVMFile& file)
+int PrintScripts(const LHVMFile& file)
 {
 	const auto& scripts = file.GetScripts();
 	std::printf("Scripts:\n");
@@ -308,7 +308,7 @@ static int PrintScripts(const LHVMFile& file)
 	return EXIT_SUCCESS;
 }
 
-static int PrintScript(const LHVMFile& file, const std::string& name)
+int PrintScript(const LHVMFile& file, const std::string& name)
 {
 	const auto& scripts = file.GetScripts();
 	for (const auto& script : scripts)
@@ -332,7 +332,7 @@ static int PrintScript(const LHVMFile& file, const std::string& name)
 	return EXIT_FAILURE;
 }
 
-static int PrintData(const LHVMFile& file)
+int PrintData(const LHVMFile& file)
 {
 	const auto& data = file.GetData();
 	std::printf("Data:\n");
@@ -347,7 +347,7 @@ static int PrintData(const LHVMFile& file)
 	return EXIT_SUCCESS;
 }
 
-static std::string DataToString(VMValue data, DataType type)
+std::string DataToString(VMValue data, DataType type)
 {
 	switch (type)
 	{
@@ -365,7 +365,7 @@ static std::string DataToString(VMValue data, DataType type)
 	}
 }
 
-static int PrintStack(const VMStack& stack)
+int PrintStack(const VMStack& stack)
 {
 	std::printf("Stack:\n");
 	for (unsigned int i = 0; i < stack.count; i++)
@@ -376,7 +376,7 @@ static int PrintStack(const VMStack& stack)
 	return EXIT_SUCCESS;
 }
 
-static int PrintGlobalStack(const LHVMFile& file)
+int PrintGlobalStack(const LHVMFile& file)
 {
 	if (file.HasStatus())
 	{
@@ -390,7 +390,7 @@ static int PrintGlobalStack(const LHVMFile& file)
 	return EXIT_SUCCESS;
 }
 
-static int PrintVarValues(const LHVMFile& file)
+int PrintVarValues(const LHVMFile& file)
 {
 	if (file.HasStatus())
 	{
@@ -410,7 +410,7 @@ static int PrintVarValues(const LHVMFile& file)
 	return EXIT_SUCCESS;
 }
 
-static int PrintTasks(const LHVMFile& file)
+int PrintTasks(const LHVMFile& file)
 {
 	if (file.HasStatus())
 	{
@@ -461,7 +461,7 @@ static int PrintTasks(const LHVMFile& file)
 	return EXIT_SUCCESS;
 }
 
-static int PrintRuntimeInfo(const LHVMFile& file)
+int PrintRuntimeInfo(const LHVMFile& file)
 {
 	if (file.HasStatus())
 	{
@@ -479,7 +479,7 @@ static int PrintRuntimeInfo(const LHVMFile& file)
 	return EXIT_SUCCESS;
 }
 
-static bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexcept
+bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexcept
 {
 	cxxopts::Options options("lhvmtool", "Inspect and extract files from LionHead Virtual Machine files.");
 
