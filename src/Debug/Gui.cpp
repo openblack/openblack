@@ -566,7 +566,8 @@ bool Gui::ShowMenu(Game& game)
 				if (ImGui::MenuItem("Reset"))
 				{
 					auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
-					camera.SetProjectionMatrixPerspective(config.cameraXFov, aspect, config.cameraNearClip, config.cameraFarClip);
+					camera.SetProjectionMatrixPerspective(config.cameraXFov, aspect, config.cameraNearClip,
+					                                      config.cameraFarClip);
 				}
 
 				if (ImGui::SliderFloat("Field of View", &fieldOfView, 30.0f, 120.0f, "%.1f"))
