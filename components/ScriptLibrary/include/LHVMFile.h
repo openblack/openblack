@@ -21,6 +21,12 @@
 namespace openblack::lhvm
 {
 
+struct LHVMHeader
+{
+	std::array<char, 4> magic;
+	LHVMVersion version;
+};
+
 class LHVMFile
 {
 protected:

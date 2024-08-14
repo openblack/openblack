@@ -235,6 +235,13 @@ void LHVMFile::ReadFile(std::istream& stream)
 	LoadScripts(stream);
 	LoadData(stream);
 
+	// creature isle
+	if (_header.version == LHVMVersion::CreatureIsle)
+	{
+		// VMTypedVariableInfo::Load((std::_FILE *))
+		// there is extra data: 512 loop { 2 int32 } final int32
+	}
+
 	// VM status data (.sav files only)
 	LoadStatus(stream);
 
