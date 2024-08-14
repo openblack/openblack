@@ -69,11 +69,11 @@ protected:
 public:
 	LHVMFile();
 
-	LHVMFile(const LHVMVersion version, const std::vector<std::string>& variablesNames,
+	LHVMFile(LHVMVersion version, const std::vector<std::string>& variablesNames,
 	         const std::vector<VMInstruction>& instructions, const std::vector<uint32_t>& autostart,
 	         const std::vector<VMScript>& scripts, const std::vector<char>& data);
 
-	LHVMFile(const LHVMVersion version, const std::vector<std::string>& variablesNames,
+	LHVMFile(LHVMVersion version, const std::vector<std::string>& variablesNames,
 	         const std::vector<VMInstruction>& instructions, const std::vector<uint32_t>& autostart,
 	         const std::vector<VMScript>& scripts, const std::vector<char>& data, const VMStack& stack,
 	         const std::vector<VMVar>& variableValues, const std::vector<VMTask>& tasks, uint32_t ticks,
