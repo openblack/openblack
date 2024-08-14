@@ -559,6 +559,25 @@ bool Gui::ShowMenu(Game& game)
 				ImGui::EndMenu();
 			}
 
+			if (ImGui::BeginMenu("Field of View"))
+			{
+				auto& camera = game.GetCamera();
+				float fieldOfView = glm::degrees(camera.GetHorizontalFieldOfView());
+				if (ImGui::MenuItem("Reset"))
+				{
+					auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
+					camera.SetProjectionMatrixPerspective(config.cameraXFov, aspect, config.cameraNearClip, config.cameraFarClip);
+				}
+
+				if (ImGui::SliderFloat("Field of View", &fieldOfView, 30.0f, 120.0f, "%.1f"))
+				{
+					auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
+					camera.SetProjectionMatrixPerspective(fieldOfView, aspect, config.cameraNearClip, config.cameraFarClip);
+				}
+
+				ImGui::EndMenu();
+			}
+
 			if (ImGui::BeginMenu("Game Speed"))
 			{
 				float multiplier = game.GetGameSpeed();
