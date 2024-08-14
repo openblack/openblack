@@ -188,14 +188,15 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::lhvm::LHVM& lhvm, openbl
 		_resetScriptDisassemblyScroll = false;
 	}
 
-	auto const& code = lhvm.GetInstructions();
+	const auto& code = lhvm.GetInstructions();
+	const auto* functions = lhvm.GetFunctions();
 
 	for (unsigned int i = script.GetInstructionAddress(); i < code.size(); i++)
 	{
-		auto const& instruction = code[i];
-		auto const* const opcodeName = lhvm::k_OpcodeNames.at(static_cast<int>(instruction.code)).c_str();
-		auto const* const typeChar = lhvm::k_DataTypeChars.at(static_cast<uint32_t>(instruction.type)).c_str();
-
+		const auto& instruction = code[i];
+		const auto* const opcodeName = lhvm::k_OpcodeNames.at(static_cast<int>(instruction.code)).c_str();
+		const auto* const typeChar = lhvm::k_DataTypeChars.at(static_cast<uint32_t>(instruction.type)).c_str();
+		
 		ImGui::TextColored(Disassembly_ColorComment, "0x%04x:", i);
 		ImGui::SameLine();
 
@@ -231,15 +232,22 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::lhvm::LHVM& lhvm, openbl
 			ImGui::TextColored(Disassembly_ColorKeyword, "%s%s", opcodeName, typeChar);
 			break;
 		case lhvm::Opcode::Sys:
-			ImGui::TextColored(Disassembly_ColorKeyword, "SYS");
+			ImGui::TextColored(Disassembly_ColorKeyword, "%s", opcodeName);
 			ImGui::SameLine();
-			ImGui::TextColored(Disassembly_ColorFuncName, "%s", lhvm.GetFunctions()->at(instruction.uintVal).name.c_str());
+			if (functions != nullptr && instruction.uintVal < functions->size())
+			{
+				ImGui::TextColored(Disassembly_ColorFuncName, "%s", functions->at(instruction.uintVal).name.c_str());
+			}
+			else
+			{
+				ImGui::TextColored(Disassembly_ColorFuncName, "FUNC_%u", instruction.uintVal);
+			}
 			break;
 		case lhvm::Opcode::Run:
 		{
 			auto const& runScript = lhvm.GetScripts().at(instruction.uintVal - 1);
 
-			ImGui::TextColored(Disassembly_ColorKeyword, "RUN");
+			ImGui::TextColored(Disassembly_ColorKeyword, "%s", opcodeName);
 			if (instruction.mode == lhvm::VMMode::Async)
 			{
 				ImGui::SameLine();
