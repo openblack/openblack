@@ -11,7 +11,7 @@
 
 #include <string>
 
-#include <LHVM/LHVM.h>
+#include <LHVM.h>
 #include <SDL.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
@@ -791,7 +791,7 @@ bool Game::Run() noexcept
 		_lhvm = std::make_unique<LHVM::LHVM>();
 		try
 		{
-			_lhvm->Open(fileSystem.ReadAll(challengePath));
+			_lhvm->LoadBinary(fileSystem.ReadAll(challengePath));
 		}
 		catch (const std::runtime_error& err)
 		{
