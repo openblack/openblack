@@ -321,7 +321,7 @@ static int PrintScript(const LHVMFile& file, const std::string& name)
 			std::printf("Address:     %u\n", script.GetInstructionAddress());
 			std::printf("Vars offset: %u\n", script.GetVariablesOffset());
 			std::printf("Local vars:\n");
-			for (int i = script.GetParameterCount(); i < script.GetVariables().size(); i++)
+			for (size_t i = script.GetParameterCount(); i < script.GetVariables().size(); i++)
 			{
 				std::printf("\tlocal %s\n", script.GetVariables().at(i).c_str());
 			}
