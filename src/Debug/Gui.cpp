@@ -563,16 +563,16 @@ bool Gui::ShowMenu(Game& game)
 			{
 				auto& camera = game.GetCamera();
 				float fieldOfView = glm::degrees(camera.GetHorizontalFieldOfView());
+				auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
+				ImGui::Text("Aspect Ratio %.3f", aspect);
 				if (ImGui::MenuItem("Reset"))
 				{
-					auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
 					camera.SetProjectionMatrixPerspective(config.cameraXFov, aspect, config.cameraNearClip,
 					                                      config.cameraFarClip);
 				}
 
-				if (ImGui::SliderFloat("Field of View", &fieldOfView, 30.0f, 120.0f, "%.1f"))
+				if (ImGui::SliderFloat("Field of View", &fieldOfView, 30.0f, 179.0f, "%.1f"))
 				{
-					auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
 					camera.SetProjectionMatrixPerspective(fieldOfView, aspect, config.cameraNearClip, config.cameraFarClip);
 				}
 
