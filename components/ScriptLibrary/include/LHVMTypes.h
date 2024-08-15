@@ -20,11 +20,6 @@
 namespace openblack::lhvm
 {
 
-static const std::array<std::string, 31> k_OpcodeNames = {
-    "END",    "JZ",   "PUSH", "POP",       "ADD",       "SYS",        "SUB",       "NEG",  "MUL", "DIV", "MOD",
-    "NOT",    "AND",  "OR",   "EQ",        "NE",        "GE",         "LE",        "GT",   "LT",  "JMP", "SLEEP",
-    "EXCEPT", "CAST", "RUN",  "ENDEXCEPT", "RETEXCEPT", "FAILEXCEPT", "BRKEXCEPT", "SWAP", "LINE"};
-
 enum class LHVMVersion : uint32_t
 {
 	BlackAndWhite = 7,
@@ -110,11 +105,13 @@ public:
 class VMStack
 {
 public:
+	static const size_t Size = 32;
+
 	VMStack() = default;
 
 	uint32_t count {0};
-	std::array<VMValue, 32> values {};
-	std::array<DataType, 32> types {};
+	std::array<VMValue, Size> values {};
+	std::array<DataType, Size> types {};
 	uint32_t pushCount {0};
 	uint32_t popCount {0};
 };
@@ -189,9 +186,16 @@ enum class Opcode : uint32_t
 	Swap,
 	Line,
 
+	Count,
+
 	Last = 0xFFFFFFFF
 };
 static_assert(sizeof(Opcode) == 4);
+
+static const std::array<std::string, (size_t)Opcode::Count> k_OpcodeNames = {
+    "END",    "JZ",   "PUSH", "POP",       "ADD",       "SYS",        "SUB",       "NEG",  "MUL", "DIV", "MOD",
+    "NOT",    "AND",  "OR",   "EQ",        "NE",        "GE",         "LE",        "GT",   "LT",  "JMP", "SLEEP",
+    "EXCEPT", "CAST", "RUN",  "ENDEXCEPT", "RETEXCEPT", "FAILEXCEPT", "BRKEXCEPT", "SWAP", "LINE"};
 
 enum class VMMode : uint32_t
 {
@@ -253,38 +257,28 @@ public:
 
 	VMScript(std::string name, std::string filename, ScriptType type, uint32_t varOffset, std::vector<std::string> variables,
 	         uint32_t instructionAddress, uint32_t parameterCount, uint32_t scriptId)
-	    : _name(std::move(name))
-	    , _filename(std::move(filename))
-	    , _type(type)
-	    , _variables(std::move(variables))
-	    , _variablesOffset(varOffset)
-	    , _instructionAddress(instructionAddress)
-	    , _parameterCount(parameterCount)
-	    , _scriptId(scriptId)
+	    : name(std::move(name))
+	    , filename(std::move(filename))
+	    , type(type)
+	    , variables(std::move(variables))
+	    , variablesOffset(varOffset)
+	    , instructionAddress(instructionAddress)
+	    , parameterCount(parameterCount)
+	    , scriptId(scriptId)
 	{
 	}
 
 	~VMScript() = default;
 
-	[[nodiscard]] const std::string& GetName() const { return _name; }
-	[[nodiscard]] const std::string& GetFileName() const { return _filename; }
-	[[nodiscard]] ScriptType GetType() const { return _type; }
-	[[nodiscard]] const std::vector<std::string>& GetVariables() const { return _variables; }
-	[[nodiscard]] uint32_t GetVariablesOffset() const { return _variablesOffset; }
-	[[nodiscard]] uint32_t GetInstructionAddress() const { return _instructionAddress; }
-	[[nodiscard]] uint32_t GetParameterCount() const { return _parameterCount; }
-	[[nodiscard]] uint32_t GetScriptID() const { return _scriptId; }
+	std::string name;
+	std::string filename;
+	ScriptType type = ScriptType::Script;
+	std::vector<std::string> variables;
 
-private:
-	std::string _name;
-	std::string _filename;
-	ScriptType _type = ScriptType::Script;
-	std::vector<std::string> _variables;
-
-	uint32_t _variablesOffset = 0;
-	uint32_t _instructionAddress = 0;
-	uint32_t _parameterCount = 0;
-	uint32_t _scriptId = 0;
+	uint32_t variablesOffset = 0;
+	uint32_t instructionAddress = 0;
+	uint32_t parameterCount = 0;
+	uint32_t scriptId = 0;
 };
 
 class VMTask

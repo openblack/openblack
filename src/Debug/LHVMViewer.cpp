@@ -121,12 +121,12 @@ void LHVMViewer::DrawScriptsTab(const openblack::lhvm::LHVM& lhvm)
 	{
 		for (auto const& script : scripts)
 		{
-			if (ImGui::Selectable(script.GetName().c_str(), script.GetScriptID() == _selectedScriptID))
+			if (ImGui::Selectable(script.name.c_str(), script.scriptId == _selectedScriptID))
 			{
-				SelectScript(script.GetScriptID());
+				SelectScript(script.scriptId);
 			}
 
-			if (_scrollToSelected && _selectedScriptID == script.GetScriptID())
+			if (_scrollToSelected && _selectedScriptID == script.scriptId)
 			{
 				ImGui::SetScrollHereY(0.25f);
 				_scrollToSelected = false;
@@ -140,15 +140,15 @@ void LHVMViewer::DrawScriptsTab(const openblack::lhvm::LHVM& lhvm)
 	auto script = scripts[_selectedScriptID - 1];
 
 	ImGui::BeginChild("##script");
-	ImGui::Text("ID: %d", script.GetScriptID());
+	ImGui::Text("ID: %d", script.scriptId);
 	ImGui::SameLine();
-	ImGui::Text("Name: %s", script.GetName().c_str());
-	ImGui::Text("Type: %s", lhvm::k_ScriptTypeNames.at(script.GetType()).c_str());
-	ImGui::Text("File: %s", script.GetFileName().c_str());
-	ImGui::Text("Instruction address: %d", script.GetInstructionAddress());
-	ImGui::Text("Variables offset: %d", script.GetVariablesOffset());
+	ImGui::Text("Name: %s", script.name.c_str());
+	ImGui::Text("Type: %s", lhvm::k_ScriptTypeNames.at(script.type).c_str());
+	ImGui::Text("File: %s", script.filename.c_str());
+	ImGui::Text("Instruction address: %d", script.instructionAddress);
+	ImGui::Text("Variables offset: %d", script.variablesOffset);
 	ImGui::SameLine();
-	ImGui::Text("Parameter count: %d", script.GetParameterCount());
+	ImGui::Text("Parameter count: %d", script.parameterCount);
 	if (ImGui::BeginTabBar("##ScriptTabs", ImGuiTabBarFlags_None))
 	{
 		if (ImGui::BeginTabItem("Code"))
@@ -159,7 +159,7 @@ void LHVMViewer::DrawScriptsTab(const openblack::lhvm::LHVM& lhvm)
 
 		if (ImGui::BeginTabItem("Local Variables"))
 		{
-			auto scriptVars = script.GetVariables();
+			auto scriptVars = script.variables;
 
 			static int selectedVar = 0;
 			ImGui::PushItemWidth(-1);
@@ -191,7 +191,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::lhvm::LHVM& lhvm, openbl
 	const auto& code = lhvm.GetInstructions();
 	const auto* functions = lhvm.GetFunctions();
 
-	for (unsigned int i = script.GetInstructionAddress(); i < code.size(); i++)
+	for (unsigned int i = script.instructionAddress; i < code.size(); i++)
 	{
 		const auto& instruction = code[i];
 		const auto* const opcodeName = lhvm::k_OpcodeNames.at(static_cast<int>(instruction.code)).c_str();
@@ -255,13 +255,13 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::lhvm::LHVM& lhvm, openbl
 			}
 
 			ImGui::SameLine();
-			if (ImGui::TextButtonColored(Disassembly_ColorFuncName, runScript.GetName().c_str()))
+			if (ImGui::TextButtonColored(Disassembly_ColorFuncName, runScript.name.c_str()))
 			{
 				SelectScript(instruction.uintVal);
 			}
 
 			ImGui::SameLine();
-			ImGui::TextColored(Disassembly_ColorComment, "// expecting %d parameters", runScript.GetParameterCount());
+			ImGui::TextColored(Disassembly_ColorComment, "// expecting %d parameters", runScript.parameterCount);
 
 			break;
 		}
@@ -459,9 +459,9 @@ void LHVMViewer::DrawExceptionHandlers(const std::vector<uint32_t>& exceptionHan
 void LHVMViewer::DrawVariable(const openblack::lhvm::LHVM& lhvm, openblack::lhvm::VMScript& script, uint32_t idx)
 {
 	// local variable
-	if (idx > script.GetVariablesOffset())
+	if (idx > script.variablesOffset)
 	{
-		const auto& variable = script.GetVariables().at(idx - script.GetVariablesOffset() - 1);
+		const auto& variable = script.variables.at(idx - script.variablesOffset - 1);
 		ImGui::TextColored(Disassembly_ColorVariable, "local %s", variable.c_str());
 		return;
 	}

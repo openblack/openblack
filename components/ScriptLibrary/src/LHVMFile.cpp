@@ -103,6 +103,7 @@
 #include "LHVMFile.h"
 
 #include <cassert>
+#include <cstdlib>
 #include <cstring>
 
 #include <fstream>
@@ -155,12 +156,6 @@ struct imemstream: virtual membuf, std::istream
 };
 } // namespace
 
-/// Error handling
-void LHVMFile::Fail(const std::string& msg)
-{
-	throw std::runtime_error("LHVM file error: " + msg + "\nFilename: " + _filename.string());
-}
-
 LHVMFile::LHVMFile()
     : _version(LHVMVersion::BlackAndWhite) {};
 
@@ -197,6 +192,8 @@ LHVMFile::LHVMFile(const LHVMVersion version, const std::vector<std::string>& va
     , _highestScriptId(highestScriptId)
     , _executedInstructions(executedInstructions) {};
 
+LHVMFile::~LHVMFile() = default;
+
 void LHVMFile::ReadFile(std::istream& stream)
 {
 	assert(!_isLoaded);
@@ -211,7 +208,7 @@ void LHVMFile::ReadFile(std::istream& stream)
 
 	if (fsize < 8)
 	{
-		Fail("File too small to be a valid LHVM file.");
+		return; // File too small to be a valid LHVM file.
 	}
 
 	// First 8 bytes
@@ -219,24 +216,42 @@ void LHVMFile::ReadFile(std::istream& stream)
 	stream.read(reinterpret_cast<char*>(magic.data()), 4);
 	if (magic != k_Magic)
 	{
-		Fail("Unrecognized LHVM header");
+		return; // Unrecognized LHVM header
 	}
 
 	stream.read(reinterpret_cast<char*>(&_version), sizeof(_version));
 	/* only support bw1 at the moment */
 	if (_version != LHVMVersion::BlackAndWhite)
 	{
-		Fail("Unsupported LHVM version");
+		return; // Unsupported LHVM version
 	}
 
-	LoadVariablesNames(stream, _variablesNames);
-	LoadCode(stream);
-	LoadAuto(stream);
-	LoadScripts(stream);
-	LoadData(stream);
+	if (LoadVariablesNames(stream, _variablesNames) != EXIT_SUCCESS)
+	{
+		return;
+	}
+	if (LoadCode(stream) != EXIT_SUCCESS)
+	{
+		return;
+	}
+	if (LoadAuto(stream) != EXIT_SUCCESS)
+	{
+		return;
+	}
+	if (LoadScripts(stream) != EXIT_SUCCESS)
+	{
+		return;
+	}
+	if (LoadData(stream) != EXIT_SUCCESS)
+	{
+		return;
+	}
 
 	// VM status data (.sav files only)
-	LoadStatus(stream);
+	if (LoadStatus(stream) != EXIT_SUCCESS)
+	{
+		return;
+	}
 
 	_isLoaded = true;
 }
@@ -245,13 +260,11 @@ void LHVMFile::Open(const std::filesystem::path& filepath)
 {
 	assert(!_isLoaded);
 
-	_filename = filepath;
-
-	std::ifstream stream(_filename, std::ios::binary);
+	std::ifstream stream(filepath, std::ios::binary);
 
 	if (!stream.is_open())
 	{
-		Fail("Could not open file.");
+		return; // Could not open file.
 	}
 
 	ReadFile(stream);
@@ -262,10 +275,6 @@ void LHVMFile::Open(const std::vector<uint8_t>& buffer)
 	assert(!_isLoaded);
 
 	imemstream stream(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
-
-	// File name set to "buffer" when file is load from a buffer
-	// Impact code using L3DFile::GetFilename method
-	_filename = std::filesystem::path("buffer");
 
 	ReadFile(stream);
 }
@@ -282,19 +291,19 @@ void LHVMFile::Write([[maybe_unused]] const std::filesystem::path& filepath)
 	}
 }
 
-void LHVMFile::LoadVariablesNames(std::istream& stream, std::vector<std::string>& variables)
+int LHVMFile::LoadVariablesNames(std::istream& stream, std::vector<std::string>& variables)
 {
 	int32_t count;
 
 	if (!stream.read(reinterpret_cast<char*>(&count), sizeof(count)))
 	{
-		Fail("Error reading variable count");
+		return EXIT_FAILURE; // Error reading variable count
 	}
 
 	// if there are no variables, return
 	if (count <= 0)
 	{
-		return;
+		return EXIT_SUCCESS;
 	}
 
 	// preallocate a buffer to reuse for each variable
@@ -309,82 +318,90 @@ void LHVMFile::LoadVariablesNames(std::istream& stream, std::vector<std::string>
 		{
 			if (!stream.read(cur++, sizeof(*cur)))
 			{
-				Fail("Error reading variable");
+				return EXIT_FAILURE; // Error reading variable
 			}
 		} while (*(cur - 1) != '\0');
 
 		// throw it into the std::string vector
 		variables.emplace_back(buffer.data());
 	}
+
+	return EXIT_SUCCESS;
 }
 
-void LHVMFile::LoadCode(std::istream& stream)
+int LHVMFile::LoadCode(std::istream& stream)
 {
 	int32_t count;
 	if (!stream.read(reinterpret_cast<char*>(&count), sizeof(count)))
 	{
-		Fail("Error reading code count");
+		return EXIT_FAILURE; // Error reading code count
 	}
 
 	// if there are no variables, return
 	if (count <= 0)
 	{
-		return;
+		return EXIT_SUCCESS;
 	}
 
 	_instructions.resize(count);
 	if (!stream.read(reinterpret_cast<char*>(_instructions.data()), sizeof(VMInstruction) * _instructions.size()))
 	{
-		Fail("Error reading instructions");
+		return EXIT_FAILURE; // Error reading instructions
 	}
+
+	return EXIT_SUCCESS;
 }
 
-void LHVMFile::LoadAuto(std::istream& stream)
+int LHVMFile::LoadAuto(std::istream& stream)
 {
 	int32_t count;
 	if (!stream.read(reinterpret_cast<char*>(&count), sizeof(count)))
 	{
-		Fail("error reading id count");
+		return EXIT_FAILURE; // error reading id count
 	}
 
 	// if there are no auto scripts, return
 	if (count <= 0)
 	{
-		return;
+		return EXIT_SUCCESS;
 	}
 
-	std::vector<uint32_t> ids;
-	ids.resize(count);
-	if (!stream.read(reinterpret_cast<char*>(ids.data()), sizeof(ids[0]) * ids.size()))
+	_autostart.resize(count);
+	if (!stream.read(reinterpret_cast<char*>(_autostart.data()), sizeof(_autostart[0]) * _autostart.size()))
 	{
-		Fail("error reading ids");
+		return EXIT_FAILURE; // error reading ids
 	}
 
-	_autostart = ids;
+	return EXIT_SUCCESS;
 }
 
-void LHVMFile::LoadScripts(std::istream& stream)
+int LHVMFile::LoadScripts(std::istream& stream)
 {
 	int32_t count;
 	if (!stream.read(reinterpret_cast<char*>(&count), sizeof(count)))
 	{
-		Fail("error reading script count");
+		return EXIT_FAILURE; // error reading script count
 	}
 
 	// if there are no variables, return
 	if (count <= 0)
 	{
-		return;
+		return EXIT_SUCCESS;
 	}
 
 	_scripts.reserve(count);
 	for (int32_t i = 0; i < count; i++)
 	{
-		_scripts.emplace_back(LoadScript(stream));
+		if (LoadScript(stream, _scripts.emplace_back()) != EXIT_SUCCESS)
+		{
+			return EXIT_FAILURE;
+		}
 	}
+
+	return EXIT_SUCCESS;
 }
 
-VMScript LHVMFile::LoadScript(std::istream& stream)
+int LHVMFile::LoadScript(std::istream& stream, VMScript& script)
 {
 	std::array<char, 256> scriptName;
 	std::array<char, 256> filename;
@@ -394,68 +411,60 @@ VMScript LHVMFile::LoadScript(std::istream& stream)
 	{
 		if (!stream.read(cur++, sizeof(*cur)))
 		{
-			Fail("Error script name");
+			return EXIT_FAILURE; // Error script name
 		}
 	} while (*(cur - 1) != '\0');
+	script.name = std::string(scriptName.data());
 
 	cur = filename.data();
 	do
 	{
 		if (!stream.read(cur++, sizeof(*cur)))
 		{
-			Fail("Error reading script filename");
+			return EXIT_FAILURE; // Error reading script filename
 		}
 	} while (*(cur - 1) != '\0');
+	script.filename = std::string(filename.data());
 
-	ScriptType scriptType;
-	if (!stream.read(reinterpret_cast<char*>(&scriptType), sizeof(scriptType)))
+	if (!stream.read(reinterpret_cast<char*>(&script.type), sizeof(script.type)))
 	{
-		Fail("Error reading script type");
+		return EXIT_FAILURE; // Error reading script type
 	}
 
-	uint32_t varOffset;
-	if (!stream.read(reinterpret_cast<char*>(&varOffset), sizeof(varOffset)))
+	if (!stream.read(reinterpret_cast<char*>(&script.variablesOffset), sizeof(script.variablesOffset)))
 	{
-		Fail("Error reading script variables offset");
+		return EXIT_FAILURE; // Error reading script variables offset
 	}
 
-	std::vector<std::string> variables;
-	LoadVariablesNames(stream, variables);
-
-	uint32_t instructionAddress;
-	if (!stream.read(reinterpret_cast<char*>(&instructionAddress), sizeof(instructionAddress)))
+	if (LoadVariablesNames(stream, script.variables) != EXIT_SUCCESS)
 	{
-		Fail("Error reading instruction address");
+		return EXIT_FAILURE;
 	}
 
-	uint32_t parameterCount;
-	if (!stream.read(reinterpret_cast<char*>(&parameterCount), sizeof(parameterCount)))
+	if (!stream.read(reinterpret_cast<char*>(&script.instructionAddress), sizeof(script.instructionAddress)))
 	{
-		Fail("Error reading parameter count");
+		return EXIT_FAILURE; // Error reading instruction address
 	}
 
-	uint32_t scriptId;
-	if (!stream.read(reinterpret_cast<char*>(&scriptId), sizeof(scriptId)))
+	if (!stream.read(reinterpret_cast<char*>(&script.parameterCount), sizeof(script.parameterCount)))
 	{
-		Fail("Error reading script_id");
+		return EXIT_FAILURE; // Error reading parameter count
 	}
 
-	return {std::string(scriptName.data()),
-	        std::string(filename.data()),
-	        scriptType,
-	        varOffset,
-	        variables,
-	        instructionAddress,
-	        parameterCount,
-	        scriptId};
+	if (!stream.read(reinterpret_cast<char*>(&script.scriptId), sizeof(script.scriptId)))
+	{
+		return EXIT_FAILURE; // Error reading script_id
+	}
+
+	return EXIT_SUCCESS;
 }
 
-void LHVMFile::LoadData(std::istream& stream)
+int LHVMFile::LoadData(std::istream& stream)
 {
 	int32_t size;
 	if (!stream.read(reinterpret_cast<char*>(&size), sizeof(size)))
 	{
-		Fail("Error reading data size");
+		return EXIT_FAILURE; // Error reading data size
 	}
 
 	_data.resize(size);
@@ -463,55 +472,71 @@ void LHVMFile::LoadData(std::istream& stream)
 	{
 		if (!stream.read(reinterpret_cast<char*>(_data.data()), sizeof(_data[0]) * _data.size()))
 		{
-			Fail("Error reading data");
+			return EXIT_FAILURE; // Error reading data
 		}
 	}
+
+	return EXIT_SUCCESS;
 }
 
-bool LHVMFile::LoadStatus(std::istream& stream)
+int LHVMFile::LoadStatus(std::istream& stream)
 {
-	if (!LoadStack(stream, _stack))
+	int rc = LoadStack(stream, _stack);
+	if (rc == EXIT_FAILURE) {
+		return EXIT_FAILURE;
+	}
+	else if (rc == EOF)
 	{
-		return false;
+		return EXIT_SUCCESS;
 	}
 
-	_variableValues = LoadVariableValues(stream);
-	LoadTasks(stream);
-	LoadRuntimeInfo(stream);
+	if (LoadVariableValues(stream, _variableValues) != EXIT_SUCCESS)
+	{
+		return EXIT_FAILURE;
+	}
+	if (LoadTasks(stream) != EXIT_SUCCESS)
+	{
+		return EXIT_FAILURE;
+	}
+	if (LoadRuntimeInfo(stream) != EXIT_SUCCESS)
+	{
+		return EXIT_FAILURE;
+	}
 	_hasStatus = true;
-	return true;
+
+	return EXIT_SUCCESS;
 }
 
-bool LHVMFile::LoadStack(std::istream& stream, VMStack& stack)
+int LHVMFile::LoadStack(std::istream& stream, VMStack& stack)
 {
 	if (!stream.read(reinterpret_cast<char*>(&stack.count), sizeof(stack.count)))
 	{
 		if (stream.eof())
 		{
-			return false;
+			return EOF;
 		}
-		Fail("Error reading stack count");
+		return EXIT_FAILURE; // Error reading stack count
 	}
-	if (stack.count > 32)
+	if (stack.count > VMStack::Size)
 	{
-		Fail("Invalid stack count");
+		return EXIT_FAILURE; // Invalid stack count
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&stack.pushCount), sizeof(stack.pushCount)))
 	{
-		Fail("Error reading stack push count");
+		return EXIT_FAILURE; // Error reading stack push count
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&stack.popCount), sizeof(stack.popCount)))
 	{
-		Fail("Error reading stack pop count");
+		return EXIT_FAILURE; // Error reading stack pop count
 	}
 
 	for (int i = 0; i < stack.count; i++)
 	{
 		if (!stream.read(reinterpret_cast<char*>(&stack.values.at(i)), sizeof(stack.values[0])))
 		{
-			Fail("Error reading stack values");
+			return EXIT_FAILURE; // Error reading stack values
 		}
 	}
 
@@ -519,14 +544,14 @@ bool LHVMFile::LoadStack(std::istream& stream, VMStack& stack)
 	{
 		if (!stream.read(reinterpret_cast<char*>(&stack.types.at(i)), sizeof(stack.types[0])))
 		{
-			Fail("Error reading stack types");
+			return EXIT_FAILURE; // Error reading stack types
 		}
 	}
 
-	return true;
+	return EXIT_SUCCESS;
 }
 
-std::vector<VMVar> LHVMFile::LoadVariableValues(std::istream& stream)
+int LHVMFile::LoadVariableValues(std::istream& stream, std::vector<VMVar>& variables)
 {
 	uint32_t count;
 	uint8_t type;
@@ -535,21 +560,20 @@ std::vector<VMVar> LHVMFile::LoadVariableValues(std::istream& stream)
 
 	if (!stream.read(reinterpret_cast<char*>(&count), sizeof(count)))
 	{
-		Fail("Error reading variables count");
+		return EXIT_FAILURE; // Error reading variables count
 	}
 
-	std::vector<VMVar> variables;
 	variables.reserve(count);
 	for (int i = 0; i < count; i++)
 	{
 		if (!stream.read(reinterpret_cast<char*>(&type), sizeof(type)))
 		{
-			Fail("Error reading variable type");
+			return EXIT_FAILURE; // Error reading variable type
 		}
 
 		if (!stream.read(reinterpret_cast<char*>(&value), sizeof(value)))
 		{
-			Fail("Error reading variable value");
+			return EXIT_FAILURE; // Error reading variable value
 		}
 
 		char* cur = name.data();
@@ -557,154 +581,162 @@ std::vector<VMVar> LHVMFile::LoadVariableValues(std::istream& stream)
 		{
 			if (!stream.read(cur++, sizeof(*cur)))
 			{
-				Fail("Error reading variable name");
+				return EXIT_FAILURE; // Error reading variable name
 			}
 		} while (*(cur - 1) != '\0');
 
 		variables.emplace_back(DataType(type), value, std::string(name.data()));
 	}
 
-	return variables;
+	return EXIT_SUCCESS;
 }
 
-void LHVMFile::LoadTasks(std::istream& stream)
+int LHVMFile::LoadTasks(std::istream& stream)
 {
 	uint32_t count;
 
 	if (!stream.read(reinterpret_cast<char*>(&count), sizeof(count)))
 	{
-		Fail("Error reading tasks count");
+		return EXIT_FAILURE; // Error reading tasks count
 	}
 
 	_tasks.reserve(count);
 	for (int i = 0; i < count; i++)
 	{
-		_tasks.emplace_back(LoadTask(stream));
+		if (LoadTask(stream, _tasks.emplace_back()) != EXIT_SUCCESS)
+		{
+			return EXIT_FAILURE;
+		}
 	}
+
+	return EXIT_SUCCESS;
 }
 
-VMTask LHVMFile::LoadTask(std::istream& stream)
+int LHVMFile::LoadTask(std::istream& stream, VMTask& task)
 {
-	VMTask task;
-
-	task.localVars = LoadVariableValues(stream);
+	if (LoadVariableValues(stream, task.localVars) != EXIT_SUCCESS)
+	{
+		return EXIT_FAILURE;
+	}
 
 	if (!stream.read(reinterpret_cast<char*>(&task.id), sizeof(task.id)))
 	{
-		Fail("Error reading task number");
+		return EXIT_FAILURE; // Error reading task number
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&task.instructionAddress), sizeof(task.instructionAddress)))
 	{
-		Fail("Error reading instruction address");
+		return EXIT_FAILURE; // Error reading instruction address
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&task.pevInstructionAddress), sizeof(task.pevInstructionAddress)))
 	{
-		Fail("Error reading prev instruction address");
+		return EXIT_FAILURE; // Error reading prev instruction address
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&task.waitingTaskId), sizeof(task.waitingTaskId)))
 	{
-		Fail("Error reading waiting task");
+		return EXIT_FAILURE; // Error reading waiting task
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&task.variablesOffset), sizeof(task.variablesOffset)))
 	{
-		Fail("Error reading var offset");
+		return EXIT_FAILURE; // Error reading var offset
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&task.currentExceptionHandlerIndex), sizeof(task.currentExceptionHandlerIndex)))
 	{
-		Fail("Error reading current exception handler index");
+		return EXIT_FAILURE; // Error reading current exception handler index
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&task.ticks), sizeof(task.ticks)))
 	{
-		Fail("Error reading ticks");
+		return EXIT_FAILURE; // Error reading ticks
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&task.scriptId), sizeof(task.scriptId)))
 	{
-		Fail("Error reading script id");
+		return EXIT_FAILURE; // Error reading script id
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&task.type), sizeof(task.type)))
 	{
-		Fail("Error reading type");
+		return EXIT_FAILURE; // Error reading type
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&task.inExceptionHandler), sizeof(task.inExceptionHandler)))
 	{
-		Fail("Error reading 'in exception handler'");
+		return EXIT_FAILURE; // Error reading 'in exception handler'
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&task.stop), sizeof(task.stop)))
 	{
-		Fail("Error reading stop");
+		return EXIT_FAILURE; // Error reading stop
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&task.iield), sizeof(task.iield)))
 	{
-		Fail("Error reading yield");
+		return EXIT_FAILURE; // Error reading yield
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&task.sleeping), sizeof(task.sleeping)))
 	{
-		Fail("Error reading sleeping");
+		return EXIT_FAILURE; // Error reading sleeping
 	}
 
-	if (!LoadStack(stream, task.stack))
+	if (LoadStack(stream, task.stack) != EXIT_SUCCESS)
 	{
-		Fail("Error reading stack");
+		return EXIT_FAILURE; // Error reading stack
 	}
 
 	uint32_t exceptStructCount;
 	if (!stream.read(reinterpret_cast<char*>(&exceptStructCount), sizeof(exceptStructCount)))
 	{
-		Fail("Error reading except struct count");
+		return EXIT_FAILURE; // Error reading except struct count
 	}
 	task.exceptionHandlerIps.resize(exceptStructCount);
 	if (!stream.read(reinterpret_cast<char*>(task.exceptionHandlerIps.data()), sizeof(uint32_t) * exceptStructCount))
 	{
-		Fail("Error reading except struct");
+		return EXIT_FAILURE; // Error reading except struct
 	}
 
 	if (task.scriptId < 1 || task.scriptId >= _scripts.size())
 	{
-		Fail("Script not found");
+		return EXIT_FAILURE; // Script not found
 	}
 	auto& script = _scripts[task.scriptId - 1];
-	task.name = script.GetName();
-	task.filename = script.GetFileName();
+	task.name = script.name;
+	task.filename = script.filename;
 
-	return task;
+	return EXIT_SUCCESS;
 }
 
-void LHVMFile::LoadRuntimeInfo(std::istream& stream)
+int LHVMFile::LoadRuntimeInfo(std::istream& stream)
 {
 	if (!stream.read(reinterpret_cast<char*>(&_ticks), sizeof(_ticks)))
 	{
-		Fail("Error reading clock ticks");
+		return EXIT_FAILURE; // Error reading clock ticks
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&_currentLineNumber), sizeof(_currentLineNumber)))
 	{
-		Fail("Error reading current line number");
+		return EXIT_FAILURE; // Error reading current line number
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&_highestTaskId), sizeof(_highestTaskId)))
 	{
-		Fail("Error reading highest task id");
+		return EXIT_FAILURE; // Error reading highest task id
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&_highestScriptId), sizeof(_highestScriptId)))
 	{
-		Fail("Error reading highest script id");
+		return EXIT_FAILURE; // Error reading highest script id
 	}
 
 	if (!stream.read(reinterpret_cast<char*>(&_executedInstructions), sizeof(_executedInstructions)))
 	{
-		Fail("Error reading script instruction count");
+		return EXIT_FAILURE; // Error reading script instruction count
 	}
+
+	return EXIT_SUCCESS;
 }

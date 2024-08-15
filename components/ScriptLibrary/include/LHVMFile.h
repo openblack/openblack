@@ -29,8 +29,6 @@ protected:
 	/// True when a file has been loaded
 	bool _isLoaded {false};
 
-	std::filesystem::path _filename;
-
 	LHVMVersion _version;
 	std::vector<std::string> _variablesNames;
 	std::vector<VMInstruction> _instructions;
@@ -47,24 +45,21 @@ protected:
 	uint32_t _highestScriptId {0};
 	uint32_t _executedInstructions {0};
 
-	/// Error handling
-	void Fail(const std::string& msg);
-
 	/// Read file from the input source
 	void ReadFile(std::istream& stream);
 
-	void LoadVariablesNames(std::istream& stream, std::vector<std::string>& variables);
-	void LoadCode(std::istream& stream);
-	void LoadAuto(std::istream& stream);
-	void LoadScripts(std::istream& stream);
-	VMScript LoadScript(std::istream& stream);
-	void LoadData(std::istream& stream);
-	bool LoadStatus(std::istream& stream);
-	bool LoadStack(std::istream& stream, VMStack& stack);
-	std::vector<VMVar> LoadVariableValues(std::istream& stream);
-	void LoadTasks(std::istream& stream);
-	VMTask LoadTask(std::istream& stream);
-	void LoadRuntimeInfo(std::istream& stream);
+	int LoadVariablesNames(std::istream& stream, std::vector<std::string>& variables);
+	int LoadCode(std::istream& stream);
+	int LoadAuto(std::istream& stream);
+	int LoadScripts(std::istream& stream);
+	int LoadScript(std::istream& stream, VMScript& script);
+	int LoadData(std::istream& stream);
+	int LoadStatus(std::istream& stream);
+	int LoadStack(std::istream& stream, VMStack& stack);
+	int LoadVariableValues(std::istream& stream, std::vector<VMVar>& variables);
+	int LoadTasks(std::istream& stream);
+	int LoadTask(std::istream& stream, VMTask& task);
+	int LoadRuntimeInfo(std::istream& stream);
 
 public:
 	LHVMFile();
@@ -79,7 +74,7 @@ public:
 	         const std::vector<VMVar>& variableValues, const std::vector<VMTask>& tasks, uint32_t ticks,
 	         uint32_t currentLineNumber, uint32_t highestTaskId, uint32_t highestScriptId, uint32_t executedInstructions);
 
-	~LHVMFile() = default;
+	~LHVMFile();
 
 	/// Read lhvm file from the filesystem
 	void Open(const std::filesystem::path& filepath);
@@ -89,6 +84,7 @@ public:
 
 	void Write(const std::filesystem::path& filepath);
 
+	[[nodiscard]] bool IsLoaded() const { return _isLoaded; }
 	[[nodiscard]] LHVMVersion GetVersion() const { return _version; }
 	[[nodiscard]] const std::vector<std::string>& GetVariablesNames() const { return _variablesNames; }
 	[[nodiscard]] const std::vector<VMInstruction>& GetInstructions() const { return _instructions; }
