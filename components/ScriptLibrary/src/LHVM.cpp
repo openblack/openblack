@@ -11,6 +11,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
 
 #include <fstream>
@@ -120,25 +121,25 @@ void LHVM::Initialise(std::vector<NativeFunction>* functions, std::function<void
 	Reboot();
 }
 
-void LHVM::LoadBinary(const std::filesystem::path& filepath)
+int LHVM::LoadBinary(const std::filesystem::path& filepath)
 {
 	LHVMFile file;
 	file.Open(filepath);
-	LoadBinary(file);
+	return LoadBinary(file);
 }
 
-void LHVM::LoadBinary(const std::vector<uint8_t>& buffer)
+int LHVM::LoadBinary(const std::vector<uint8_t>& buffer)
 {
 	LHVMFile file;
 	file.Open(buffer);
-	LoadBinary(file);
+	return LoadBinary(file);
 }
 
-void LHVM::LoadBinary(const LHVMFile& file)
+int LHVM::LoadBinary(const LHVMFile& file)
 {
-	if (file.HasStatus())
+	if (!file.IsLoaded() || file.HasStatus())
 	{
-		Fail("File contains status data");
+		return EXIT_FAILURE;
 	}
 
 	StopAllTasks();
@@ -173,22 +174,24 @@ void LHVM::LoadBinary(const LHVMFile& file)
 		if (scriptId > 0 && scriptId <= _scripts.size())
 		{
 			auto& script = _scripts[scriptId - 1];
-			StartScript(script.GetName(), ScriptType::All);
+			StartScript(script.name, ScriptType::All);
 		}
 		else
 		{
 			SignalError(ErrorCode::ScriptIdNotFound, scriptId);
 		}
 	}
+
+	return EXIT_SUCCESS;
 }
 
-void LHVM::RestoreState(const std::filesystem::path& filepath)
+int LHVM::RestoreState(const std::filesystem::path& filepath)
 {
 	auto file = LHVMFile();
 	file.Open(filepath);
-	if (!file.HasStatus())
+	if (!file.IsLoaded() || !file.HasStatus())
 	{
-		Fail("File doesn't contain status data");
+		return EXIT_FAILURE;
 	}
 
 	StopAllTasks();
@@ -214,6 +217,8 @@ void LHVM::RestoreState(const std::filesystem::path& filepath)
 	_highestTaskId = file.GetHighestTaskId();
 	_highestScriptId = file.GetHighestScriptId();
 	_executedInstructions = file.GetExecutedInstructions();
+
+	return EXIT_SUCCESS;
 }
 
 VMValue LHVM::Pop(DataType& type)
@@ -305,13 +310,14 @@ void LHVM::Reboot()
 	_currentStack = &_mainStack;
 }
 
-void LHVM::SaveBinary(const std::filesystem::path& filepath)
+int LHVM::SaveBinary(const std::filesystem::path& filepath)
 {
 	LHVMFile file(LHVMVersion::BlackAndWhite, _variablesNames, _instructions, _auto, _scripts, _data);
 	file.Write(filepath);
+	return EXIT_SUCCESS;
 }
 
-void LHVM::SaveState(const std::filesystem::path& filepath)
+int LHVM::SaveState(const std::filesystem::path& filepath)
 {
 	std::vector<VMTask> tasks;
 	tasks.reserve(_tasks.size());
@@ -323,6 +329,7 @@ void LHVM::SaveState(const std::filesystem::path& filepath)
 	LHVMFile file(LHVMVersion::BlackAndWhite, _variablesNames, _instructions, _auto, _scripts, _data, _mainStack, _variables,
 	              tasks, _ticks, _currentLineNumber, _highestTaskId, _highestScriptId, _executedInstructions);
 	file.Write(filepath);
+	return EXIT_SUCCESS;
 }
 
 void LHVM::LookIn(const ScriptType allowedScriptTypesMask)
@@ -397,7 +404,7 @@ uint32_t LHVM::StartScript(const std::string& name, const ScriptType allowedScri
 	const auto* const script = GetScript(name);
 	if (script != nullptr)
 	{
-		if (script->GetType() & allowedScriptTypesMask)
+		if (script->type & allowedScriptTypesMask)
 		{
 			return StartScript(*script);
 		}
@@ -426,7 +433,7 @@ uint32_t LHVM::StartScript(const VMScript& script)
 
 	// copy values from current stack to new stack
 	VMStack stack {};
-	for (unsigned int i = 0; i < script.GetParameterCount(); i++)
+	for (unsigned int i = 0; i < script.parameterCount; i++)
 	{
 		DataType type;
 		const auto& value = Pop(type);
@@ -441,7 +448,7 @@ uint32_t LHVM::StartScript(const VMScript& script)
 	}
 
 	// allocate local variables with default values
-	const auto& scriptVariables = script.GetVariables();
+	const auto& scriptVariables = script.variables;
 	std::vector<VMVar> taskVariables;
 	taskVariables.reserve(scriptVariables.size());
 	for (const auto& name : scriptVariables)
@@ -449,8 +456,8 @@ uint32_t LHVM::StartScript(const VMScript& script)
 		taskVariables.emplace_back(DataType::Float, VMValue(0.0f), name);
 	}
 
-	const auto& task = VMTask(taskVariables, script.GetScriptID(), taskNumber, script.GetInstructionAddress(),
-	                          script.GetVariablesOffset(), stack, script.GetName(), script.GetFileName(), script.GetType());
+	const auto& task = VMTask(taskVariables, script.scriptId, taskNumber, script.instructionAddress, script.variablesOffset,
+	                          stack, script.name, script.filename, script.type);
 
 	_tasks.emplace(taskNumber, task);
 
@@ -604,7 +611,7 @@ const VMScript* LHVM::GetScript(const std::string& name)
 {
 	for (const auto& script : _scripts)
 	{
-		if (script.GetName() == name)
+		if (script.name == name)
 		{
 			return &script;
 		}
@@ -663,7 +670,7 @@ void LHVM::PrintInstruction(const VMTask& task, const VMInstruction& instruction
 		{
 			arg = "async ";
 		}
-		arg += _scripts.at(instruction.intVal - 1).GetName();
+		arg += _scripts.at(instruction.intVal - 1).name;
 	}
 	else if (instruction.code == Opcode::Sys)
 	{

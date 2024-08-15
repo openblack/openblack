@@ -52,7 +52,7 @@ protected:
 	std::function<void(const uint32_t objId)> _addReference;
 	std::function<void(const uint32_t objId)> _removeReference;
 
-	std::array<void (LHVM::*)(VMTask& task, const VMInstruction& instruction), 31> _opcodesImpl {};
+	std::array<void (LHVM::*)(VMTask& task, const VMInstruction& instruction), (size_t)Opcode::Count> _opcodesImpl {};
 	void Opcode00End(VMTask& task, const VMInstruction& instruction);
 	void Opcode01Jz(VMTask& task, const VMInstruction& instruction);
 	void Opcode02Push(VMTask& task, const VMInstruction& instruction);
@@ -126,14 +126,14 @@ public:
 	    std::function<void(uint32_t objId)> addReference, std::function<void(uint32_t objId)> removeReference);
 
 	/// Read CHL file from the filesystem
-	void LoadBinary(const std::filesystem::path& filepath);
+	int LoadBinary(const std::filesystem::path& filepath);
 
-	void LoadBinary(const std::vector<uint8_t>& buffer);
+	int LoadBinary(const std::vector<uint8_t>& buffer);
 
-	void LoadBinary(const LHVMFile& file);
+	int LoadBinary(const LHVMFile& file);
 
 	/// Read SAV file from the filesystem
-	void RestoreState(const std::filesystem::path& filepath);
+	int RestoreState(const std::filesystem::path& filepath);
 
 	VMValue Pop(DataType& type);
 	VMValue Pop();
@@ -148,10 +148,10 @@ public:
 	void Reboot();
 
 	/// Write CHL file to filesystem
-	void SaveBinary(const std::filesystem::path& filepath);
+	int SaveBinary(const std::filesystem::path& filepath);
 
 	/// Write SAV file to filesystem
-	void SaveState(const std::filesystem::path& filepath);
+	int SaveState(const std::filesystem::path& filepath);
 
 	void LookIn(ScriptType allowedScriptTypesMask);
 

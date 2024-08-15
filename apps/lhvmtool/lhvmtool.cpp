@@ -94,12 +94,12 @@ int PrintVarNames(const LHVMFile& file)
 
 std::string GetSignature(const VMScript& script)
 {
-	std::string s = k_ScriptTypeNames.at(script.GetType()) + " " + script.GetName() + "(";
-	if (script.GetParameterCount() > 0)
+	std::string s = k_ScriptTypeNames.at(script.type) + " " + script.name + "(";
+	if (script.parameterCount > 0)
 	{
-		const auto& vars = script.GetVariables();
+		const auto& vars = script.variables;
 		s += vars.at(0);
-		for (unsigned int i = 1; i < script.GetParameterCount(); i++)
+		for (unsigned int i = 1; i < script.parameterCount; i++)
 		{
 			s += ", " + vars.at(i);
 		}
@@ -116,12 +116,12 @@ std::map<uint32_t, std::string> GetLabels(const LHVMFile& file)
 	for (const auto& script : scripts)
 	{
 		int labelCount = 0;
-		for (unsigned int i = script.GetInstructionAddress(); i < instructions.size(); i++)
+		for (unsigned int i = script.instructionAddress; i < instructions.size(); i++)
 		{
 			auto const& instruction = instructions.at(i);
 			if (instruction.code == Opcode::Jmp || instruction.code == Opcode::Wait || instruction.code == Opcode::Except)
 			{
-				std::string name = script.GetName();
+				std::string name = script.name;
 				if (instruction.code == Opcode::Except)
 				{
 					name += "_exception_handler_";
@@ -155,12 +155,12 @@ int PrintCode(const LHVMFile& file, const std::string& name)
 	std::printf("Code:\n");
 	for (const auto& script : scripts)
 	{
-		if (name.empty() || name == script.GetName())
+		if (name.empty() || name == script.name)
 		{
 			std::printf("begin %s\n", GetSignature(script).c_str());
 			// Local vars
-			const auto& vars = script.GetVariables();
-			for (unsigned int i = script.GetParameterCount(); i < vars.size(); i++)
+			const auto& vars = script.variables;
+			for (unsigned int i = script.parameterCount; i < vars.size(); i++)
 			{
 				std::printf("\tLocal %s\n", vars.at(i).c_str());
 			}
@@ -168,7 +168,7 @@ int PrintCode(const LHVMFile& file, const std::string& name)
 			std::string opcode;
 			std::string type;
 			std::string arg;
-			for (unsigned int i = script.GetInstructionAddress(); i < instructions.size(); i++)
+			for (unsigned int i = script.instructionAddress; i < instructions.size(); i++)
 			{
 				if (labels.contains(i))
 				{
@@ -183,9 +183,9 @@ int PrintCode(const LHVMFile& file, const std::string& name)
 					if (instruction.mode == VMMode::Reference)
 					{
 						const auto varId = static_cast<size_t>(instruction.uintVal);
-						if (instruction.uintVal > script.GetVariablesOffset())
+						if (instruction.uintVal > script.variablesOffset)
 						{
-							arg = "local " + script.GetVariables().at(varId - script.GetVariablesOffset() - 1);
+							arg = "local " + script.variables.at(varId - script.variablesOffset - 1);
 						}
 						else
 						{
@@ -228,7 +228,7 @@ int PrintCode(const LHVMFile& file, const std::string& name)
 					break;
 				case Opcode::Run:
 					type = instruction.mode == VMMode::Async ? "async " : "";
-					arg = file.GetScripts().at(static_cast<size_t>(instruction.intVal) - 1).GetName();
+					arg = file.GetScripts().at(static_cast<size_t>(instruction.intVal) - 1).name;
 					std::printf("\tRUN %s%s\n", type.c_str(), arg.c_str());
 					break;
 				case Opcode::EndExcept:
@@ -290,7 +290,7 @@ int PrintAutostart(const LHVMFile& file)
 	for (const auto& scriptId : autostart)
 	{
 		const auto& script = scripts.at(static_cast<size_t>(scriptId) - 1);
-		std::printf("%s\n", script.GetName().c_str());
+		std::printf("%s\n", script.name.c_str());
 	}
 	std::printf("\n");
 	return EXIT_SUCCESS;
@@ -302,7 +302,7 @@ int PrintScripts(const LHVMFile& file)
 	std::printf("Scripts:\n");
 	for (const auto& script : scripts)
 	{
-		std::printf("%s = %u\n", GetSignature(script).c_str(), script.GetInstructionAddress());
+		std::printf("%s = %u\n", GetSignature(script).c_str(), script.instructionAddress);
 	}
 	std::printf("\n");
 	return EXIT_SUCCESS;
@@ -313,17 +313,17 @@ int PrintScript(const LHVMFile& file, const std::string& name)
 	const auto& scripts = file.GetScripts();
 	for (const auto& script : scripts)
 	{
-		if (script.GetName() == name)
+		if (script.name == name)
 		{
 			std::printf("%s\n", GetSignature(script).c_str());
-			std::printf("Source:      %s\n", script.GetFileName().c_str());
-			std::printf("ID:          %u\n", script.GetScriptID());
-			std::printf("Address:     %u\n", script.GetInstructionAddress());
-			std::printf("Vars offset: %u\n", script.GetVariablesOffset());
+			std::printf("Source:      %s\n", script.filename.c_str());
+			std::printf("ID:          %u\n", script.scriptId);
+			std::printf("Address:     %u\n", script.instructionAddress);
+			std::printf("Vars offset: %u\n", script.variablesOffset);
 			std::printf("Local vars:\n");
-			for (size_t i = script.GetParameterCount(); i < script.GetVariables().size(); i++)
+			for (size_t i = script.parameterCount; i < script.variables.size(); i++)
 			{
-				std::printf("\tlocal %s\n", script.GetVariables().at(i).c_str());
+				std::printf("\tlocal %s\n", script.variables.at(i).c_str());
 			}
 			return EXIT_SUCCESS;
 		}
@@ -483,136 +483,120 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 {
 	cxxopts::Options options("lhvmtool", "Inspect and extract files from LionHead Virtual Machine files.");
 
-	try
-	{
-		options.add_options()                                            //
-		    ("h,help", "Display this help message.")                     //
-		    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
-		    ;
-		options.positional_help("[read] [OPTION...]");
-		options.add_options("read")                                                     //
-		    ("I,info", "Print info.", cxxopts::value<std::string>())                    //
-		    ("A,all", "Print all relevant data.", cxxopts::value<std::string>())        //
-		    ("H,header", "Print header contents.", cxxopts::value<std::string>())       //
-		    ("G,globals", "Print global var names.", cxxopts::value<std::string>())     //
-		    ("C,code", "Print asm code.", cxxopts::value<std::string>())                //
-		    ("a,autostart", "Print autostart scripts.", cxxopts::value<std::string>())  //
-		    ("S,scripts", "Print scripts.", cxxopts::value<std::string>())              //
-		    ("D,data", "Print data.", cxxopts::value<std::string>())                    //
-		    ("s,stack", "Print global stack.", cxxopts::value<std::string>())           //
-		    ("V,values", "Print global var values.", cxxopts::value<std::string>())     //
-		    ("T,tasks", "Print active tasks.", cxxopts::value<std::string>())           //
-		    ("R,rtinfo", "Print runtime info.", cxxopts::value<std::string>())          //
-		    ("n,name", "Object name", cxxopts::value<std::string>()->default_value("")) //
-		    ;
+	options.add_options()                                            //
+		("h,help", "Display this help message.")                     //
+		("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
+		;
+	options.positional_help("[read] [OPTION...]");
+	options.add_options("read")                                                     //
+		("I,info", "Print info.", cxxopts::value<std::string>())                    //
+		("A,all", "Print all relevant data.", cxxopts::value<std::string>())        //
+		("H,header", "Print header contents.", cxxopts::value<std::string>())       //
+		("G,globals", "Print global var names.", cxxopts::value<std::string>())     //
+		("C,code", "Print asm code.", cxxopts::value<std::string>())                //
+		("a,autostart", "Print autostart scripts.", cxxopts::value<std::string>())  //
+		("S,scripts", "Print scripts.", cxxopts::value<std::string>())              //
+		("D,data", "Print data.", cxxopts::value<std::string>())                    //
+		("s,stack", "Print global stack.", cxxopts::value<std::string>())           //
+		("V,values", "Print global var values.", cxxopts::value<std::string>())     //
+		("T,tasks", "Print active tasks.", cxxopts::value<std::string>())           //
+		("R,rtinfo", "Print runtime info.", cxxopts::value<std::string>())          //
+		("n,name", "Object name", cxxopts::value<std::string>()->default_value("")) //
+		;
 
-		options.parse_positional({"subcommand"});
-	}
-	catch (const std::exception& e)
+	options.parse_positional({"subcommand"});
+	
+	auto result = options.parse(argc, argv);
+	if (result["help"].as<bool>())
 	{
-		std::cerr << e.what() << '\n';
+		std::cout << options.help() << '\n';
+		returnCode = EXIT_SUCCESS;
+		return false;
+	}
+	if (result["subcommand"].count() == 0)
+	{
+		std::cerr << options.help() << '\n';
 		returnCode = EXIT_FAILURE;
 		return false;
 	}
-
-	try
+	if (result["subcommand"].as<std::string>() == "read")
 	{
-		auto result = options.parse(argc, argv);
-		if (result["help"].as<bool>())
+		if (result["info"].count() > 0)
 		{
-			std::cout << options.help() << '\n';
-			returnCode = EXIT_SUCCESS;
-			return false;
+			args.mode = Arguments::Mode::Info;
+			args.read.filename = result["info"].as<std::string>();
+			return true;
 		}
-		if (result["subcommand"].count() == 0)
+		if (result["all"].count() > 0)
 		{
-			std::cerr << options.help() << '\n';
-			returnCode = EXIT_FAILURE;
-			return false;
+			args.mode = Arguments::Mode::All;
+			args.read.filename = result["all"].as<std::string>();
+			return true;
 		}
-		if (result["subcommand"].as<std::string>() == "read")
+		if (result["header"].count() > 0)
 		{
-			if (result["info"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Info;
-				args.read.filename = result["info"].as<std::string>();
-				return true;
-			}
-			if (result["all"].count() > 0)
-			{
-				args.mode = Arguments::Mode::All;
-				args.read.filename = result["all"].as<std::string>();
-				return true;
-			}
-			if (result["header"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Header;
-				args.read.filename = result["header"].as<std::string>();
-				return true;
-			}
-			if (result["globals"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Vars;
-				args.read.filename = result["globals"].as<std::string>();
-				return true;
-			}
-			if (result["code"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Code;
-				args.read.filename = result["code"].as<std::string>();
-				args.read.objName = result["name"].as<std::string>();
-				return true;
-			}
-			if (result["autostart"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Autostart;
-				args.read.filename = result["autostart"].as<std::string>();
-				return true;
-			}
-			if (result["scripts"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Scripts;
-				args.read.filename = result["scripts"].as<std::string>();
-				args.read.objName = result["name"].as<std::string>();
-				return true;
-			}
-			if (result["data"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Data;
-				args.read.filename = result["data"].as<std::string>();
-				return true;
-			}
-			if (result["stack"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Stack;
-				args.read.filename = result["stack"].as<std::string>();
-				return true;
-			}
-			if (result["values"].count() > 0)
-			{
-				args.mode = Arguments::Mode::VarValues;
-				args.read.filename = result["values"].as<std::string>();
-				return true;
-			}
-			if (result["tasks"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Tasks;
-				args.read.filename = result["tasks"].as<std::string>();
-				return true;
-			}
-			if (result["rtinfo"].count() > 0)
-			{
-				args.mode = Arguments::Mode::RuntimeInfo;
-				args.read.filename = result["rtinfo"].as<std::string>();
-				return true;
-			}
+			args.mode = Arguments::Mode::Header;
+			args.read.filename = result["header"].as<std::string>();
+			return true;
+		}
+		if (result["globals"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Vars;
+			args.read.filename = result["globals"].as<std::string>();
+			return true;
+		}
+		if (result["code"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Code;
+			args.read.filename = result["code"].as<std::string>();
+			args.read.objName = result["name"].as<std::string>();
+			return true;
+		}
+		if (result["autostart"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Autostart;
+			args.read.filename = result["autostart"].as<std::string>();
+			return true;
+		}
+		if (result["scripts"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Scripts;
+			args.read.filename = result["scripts"].as<std::string>();
+			args.read.objName = result["name"].as<std::string>();
+			return true;
+		}
+		if (result["data"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Data;
+			args.read.filename = result["data"].as<std::string>();
+			return true;
+		}
+		if (result["stack"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Stack;
+			args.read.filename = result["stack"].as<std::string>();
+			return true;
+		}
+		if (result["values"].count() > 0)
+		{
+			args.mode = Arguments::Mode::VarValues;
+			args.read.filename = result["values"].as<std::string>();
+			return true;
+		}
+		if (result["tasks"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Tasks;
+			args.read.filename = result["tasks"].as<std::string>();
+			return true;
+		}
+		if (result["rtinfo"].count() > 0)
+		{
+			args.mode = Arguments::Mode::RuntimeInfo;
+			args.read.filename = result["rtinfo"].as<std::string>();
+			return true;
 		}
 	}
-	catch (const std::exception& err)
-	{
-		std::cerr << err.what() << '\n';
-	}
-
+	
 	std::cerr << options.help() << '\n';
 	returnCode = EXIT_FAILURE;
 	return false;
@@ -628,80 +612,72 @@ int main(int argc, char* argv[]) noexcept
 	}
 
 	LHVMFile file;
-	try
+	std::printf("Filename: %s\n", args.read.filename.string().c_str());
+
+	// Open file
+	file.Open(args.read.filename);
+
+	switch (args.mode)
 	{
-		std::printf("Filename: %s\n", args.read.filename.string().c_str());
-
-		// Open file
-		file.Open(args.read.filename);
-
-		switch (args.mode)
+	case Arguments::Mode::Info:
+		returnCode |= PrintInfo(file);
+		break;
+	case Arguments::Mode::All:
+		returnCode |= PrintInfo(file);
+		returnCode |= PrintAutostart(file);
+		returnCode |= PrintVarNames(file);
+		returnCode |= PrintScripts(file);
+		returnCode |= PrintData(file);
+		if (file.HasStatus())
 		{
-		case Arguments::Mode::Info:
-			returnCode |= PrintInfo(file);
-			break;
-		case Arguments::Mode::All:
-			returnCode |= PrintInfo(file);
-			returnCode |= PrintAutostart(file);
-			returnCode |= PrintVarNames(file);
-			returnCode |= PrintScripts(file);
-			returnCode |= PrintData(file);
-			if (file.HasStatus())
-			{
-				returnCode |= PrintRuntimeInfo(file);
-				returnCode |= PrintVarValues(file);
-				returnCode |= PrintGlobalStack(file);
-				returnCode |= PrintTasks(file);
-			}
-			break;
-		case Arguments::Mode::Header:
-			returnCode |= PrintHeader(file);
-			break;
-		case Arguments::Mode::Vars:
-			returnCode |= PrintVarNames(file);
-			break;
-		case Arguments::Mode::Code:
-			returnCode |= PrintCode(file, args.read.objName);
-			break;
-		case Arguments::Mode::Autostart:
-			returnCode |= PrintAutostart(file);
-			break;
-		case Arguments::Mode::Scripts:
-			if (args.read.objName.empty())
-			{
-				returnCode |= PrintScripts(file);
-			}
-			else
-			{
-				returnCode |= PrintScript(file, args.read.objName);
-			}
-			break;
-		case Arguments::Mode::Data:
-			returnCode |= PrintData(file);
-			break;
-		case Arguments::Mode::Stack:
-			returnCode |= PrintGlobalStack(file);
-			break;
-		case Arguments::Mode::VarValues:
-			returnCode |= PrintVarValues(file);
-			break;
-		case Arguments::Mode::Tasks:
-			returnCode |= PrintTasks(file);
-			break;
-		case Arguments::Mode::RuntimeInfo:
 			returnCode |= PrintRuntimeInfo(file);
-			break;
-
-		default:
-			returnCode = EXIT_FAILURE;
-			break;
+			returnCode |= PrintVarValues(file);
+			returnCode |= PrintGlobalStack(file);
+			returnCode |= PrintTasks(file);
 		}
-	}
-	catch (std::exception& err)
-	{
-		std::cerr << err.what() << '\n';
-		returnCode |= EXIT_FAILURE;
-	}
+		break;
+	case Arguments::Mode::Header:
+		returnCode |= PrintHeader(file);
+		break;
+	case Arguments::Mode::Vars:
+		returnCode |= PrintVarNames(file);
+		break;
+	case Arguments::Mode::Code:
+		returnCode |= PrintCode(file, args.read.objName);
+		break;
+	case Arguments::Mode::Autostart:
+		returnCode |= PrintAutostart(file);
+		break;
+	case Arguments::Mode::Scripts:
+		if (args.read.objName.empty())
+		{
+			returnCode |= PrintScripts(file);
+		}
+		else
+		{
+			returnCode |= PrintScript(file, args.read.objName);
+		}
+		break;
+	case Arguments::Mode::Data:
+		returnCode |= PrintData(file);
+		break;
+	case Arguments::Mode::Stack:
+		returnCode |= PrintGlobalStack(file);
+		break;
+	case Arguments::Mode::VarValues:
+		returnCode |= PrintVarValues(file);
+		break;
+	case Arguments::Mode::Tasks:
+		returnCode |= PrintTasks(file);
+		break;
+	case Arguments::Mode::RuntimeInfo:
+		returnCode |= PrintRuntimeInfo(file);
+		break;
 
+	default:
+		returnCode = EXIT_FAILURE;
+		break;
+	}
+	
 	return returnCode;
 }
