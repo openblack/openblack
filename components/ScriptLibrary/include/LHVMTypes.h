@@ -42,12 +42,11 @@ enum class DataType : uint32_t
 };
 
 static const std::array<std::string, static_cast<size_t>(DataType::Count)> k_DataTypeNames = {
-	"NONE", "INT", "FLOAT", "VECTOR", "OBJECT", "UNK2", "BOOLEAN", "UNK4"
+    "NONE", "INT", "FLOAT", "VECTOR", "OBJECT", "UNK2", "BOOLEAN", "UNK4"
 };
 
-static const std::array<std::string, static_cast<size_t>(DataType::Count)> k_DataTypeChars = {
-	"",  "I", "F", "V", "O", "",  "B", ""
-};
+static const std::array<std::string, static_cast<size_t>(DataType::Count)> k_DataTypeChars = {"",  "I", "F", "V",
+                                                                                              "O", "",  "B", ""};
 
 class VMValue
 {
@@ -105,7 +104,7 @@ public:
 class VMStack
 {
 public:
-	static const size_t k_Size = 32;
+	static constexpr const size_t k_Size = 32;
 
 	VMStack() = default;
 
@@ -342,21 +341,20 @@ enum class ErrorCode : uint8_t
 	NativeFuncNotFound,
 	DivByZero,
 	InvalidType,
+	InvalidOperand,
 
 	Count
 };
 
-static const std::array<std::string, static_cast<size_t>(ErrorCode::Count)> k_ErrorMsg = {
-	"no error",
-	"stack is empty",
-	"stack is full",
-	"script id not found",
-	"script name not found",
-	"no script of type",
-	"task id not found",
-	"native function not found",
-	"division by zero",
-	"invalid data type"
-};
+static const std::array<std::string, static_cast<size_t>(ErrorCode::Count)> k_ErrorMsg = {"no error",
+                                                                                          "stack is empty",
+                                                                                          "stack is full",
+                                                                                          "script id not found",
+                                                                                          "script name not found",
+                                                                                          "no script of type",
+                                                                                          "task id not found",
+                                                                                          "native function not found",
+                                                                                          "division by zero",
+                                                                                          "invalid data type"};
 
 } // namespace openblack::lhvm
