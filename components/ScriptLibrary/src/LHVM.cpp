@@ -1421,59 +1421,62 @@ void LHVM::Opcode29Swap(VMTask& /*task*/, const VMInstruction& instruction)
 		const VMValue v1 = Pop(t1);
 		Push(v0, t0);
 		Push(v1, t1);
+		return;
 	}
-	else
+	const auto offset = static_cast<size_t>(instruction.intVal);
+	if (offset == 0 || offset >= VMStack::k_Size - 1)
 	{
-		const auto offset = static_cast<size_t>(instruction.intVal);
-		DataType copyType = DataType::Float;
-		VMValue copyVal(0.0f);
-		std::array<DataType, VMStack::k_Size> tmpTypes;
-		std::array<VMValue, VMStack::k_Size> tmpVals;
-		if (instruction.mode == VMMode::CopyFrom) // push a copy of the Nth value from top of the stack
+		SignalError(ErrorCode::InvalidOperand);
+		return;
+	}
+	DataType copyType = DataType::Float;
+	VMValue copyVal(0.0f);
+	std::array<DataType, VMStack::k_Size> tmpTypes;
+	std::array<VMValue, VMStack::k_Size> tmpVals;
+	if (instruction.mode == VMMode::CopyFrom) // push a copy of the Nth value from top of the stack
+	{
+		for (size_t i = 0; i < offset; i++)
 		{
-			for (size_t i = 0; i < offset; i++)
+			DataType ti;
+			const VMValue vi = Pop(ti);
+			if (i == offset - 1)
 			{
-				DataType ti;
-				const VMValue vi = Pop(ti);
-				if (i == offset - 1)
-				{
-					copyType = ti;
-					copyVal = vi;
-				}
-				if (i < tmpTypes.size())
-				{
-					tmpTypes.at(i) = ti;
-					tmpVals.at(i) = vi;
-				}
+				copyType = ti;
+				copyVal = vi;
 			}
-			for (size_t i = std::min(offset, VMStack::k_Size) - 1; i >= 0; i--)
+			if (i < tmpTypes.size())
 			{
-				Push(tmpVals.at(i), tmpTypes.at(i));
+				tmpTypes.at(i) = ti;
+				tmpVals.at(i) = vi;
 			}
-			Push(copyVal, copyType);
 		}
-		else // Mode::CopyTo insert a copy of the topmost value on the stack N places below
+		for (int i = static_cast<int>(std::min(offset, VMStack::k_Size)) - 1; i >= 0; i--)
 		{
-			for (size_t i = 0; i < offset; i++)
+			Push(tmpVals.at(i), tmpTypes.at(i));
+		}
+		Push(copyVal, copyType);
+	}
+	else // Mode::CopyTo insert a copy of the topmost value on the stack N places below
+	{
+		for (int i = 0; i < offset; i++)
+		{
+			DataType ti;
+			const VMValue vi = Pop(ti);
+			if (i == 0)
 			{
-				DataType ti;
-				const VMValue vi = Pop(ti);
-				if (i == 0)
-				{
-					copyType = ti;
-					copyVal = vi;
-				}
-				if (i < tmpTypes.size())
-				{
-					tmpTypes.at(i) = ti;
-					tmpVals.at(i) = vi;
-				}
+				copyType = ti;
+				copyVal = vi;
 			}
-			Push(copyVal, copyType);
-			for (size_t i = std::min(offset, VMStack::k_Size) - 1; i >= 0; i--)
+			if (i < tmpTypes.size())
 			{
-				Push(tmpVals.at(i), tmpTypes.at(i));
+				tmpTypes.at(i) = ti;
+				tmpVals.at(i) = vi;
 			}
+		}
+		Push(copyVal, copyType);
+		for (int i = static_cast<int>(std::min(offset, VMStack::k_Size)) - 1; i >= 0; i--)
+		{
+			Push(tmpVals.at(i), tmpTypes.at(i));
 		}
 	}
 }
