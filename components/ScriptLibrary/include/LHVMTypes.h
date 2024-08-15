@@ -24,9 +24,7 @@ enum class LHVMVersion : uint32_t
 {
 	BlackAndWhite = 7,
 	CreatureIsle = 8,
-	BlackAndWhite2 = 12,
-
-	Last = 0xFFFFFFFF
+	BlackAndWhite2 = 12
 };
 
 enum class DataType : uint32_t
@@ -40,14 +38,16 @@ enum class DataType : uint32_t
 	Boolean,
 	Unk7,
 
-	Last = 0xFFFFFFFF
+	Count
 };
-static_assert(sizeof(DataType) == 4);
 
-static const std::array<std::string, 8> k_DataTypeNames = {"NONE",   "INT",  "FLOAT",   "VECTOR",
-                                                           "OBJECT", "UNK2", "BOOLEAN", "UNK4"};
+static const std::array<std::string, static_cast<size_t>(DataType::Count)> k_DataTypeNames = {
+	"NONE", "INT", "FLOAT", "VECTOR", "OBJECT", "UNK2", "BOOLEAN", "UNK4"
+};
 
-static const std::array<std::string, 8> k_DataTypeChars = {"", "I", "F", "V", "O", "", "B", ""};
+static const std::array<std::string, static_cast<size_t>(DataType::Count)> k_DataTypeChars = {
+	"",  "I", "F", "V", "O", "",  "B", ""
+};
 
 class VMValue
 {
@@ -105,13 +105,13 @@ public:
 class VMStack
 {
 public:
-	static const size_t Size = 32;
+	static const size_t k_Size = 32;
 
 	VMStack() = default;
 
 	uint32_t count {0};
-	std::array<VMValue, Size> values {};
-	std::array<DataType, Size> types {};
+	std::array<VMValue, k_Size> values {};
+	std::array<DataType, k_Size> types {};
 	uint32_t pushCount {0};
 	uint32_t popCount {0};
 };
@@ -128,7 +128,6 @@ enum class ScriptType : uint32_t
 
 	All = 0xFFFFFFFF
 };
-static_assert(sizeof(ScriptType) == 4);
 
 constexpr ScriptType operator|(ScriptType lhs, ScriptType rhs)
 {
@@ -186,13 +185,10 @@ enum class Opcode : uint32_t
 	Swap,
 	Line,
 
-	Count,
-
-	Last = 0xFFFFFFFF
+	Count
 };
-static_assert(sizeof(Opcode) == 4);
 
-static const std::array<std::string, (size_t)Opcode::Count> k_OpcodeNames = {
+static const std::array<std::string, static_cast<size_t>(Opcode::Count)> k_OpcodeNames = {
     "END",    "JZ",   "PUSH", "POP",       "ADD",       "SYS",        "SUB",       "NEG",  "MUL", "DIV", "MOD",
     "NOT",    "AND",  "OR",   "EQ",        "NE",        "GE",         "LE",        "GT",   "LT",  "JMP", "SLEEP",
     "EXCEPT", "CAST", "RUN",  "ENDEXCEPT", "RETEXCEPT", "FAILEXCEPT", "BRKEXCEPT", "SWAP", "LINE"};
@@ -217,10 +213,7 @@ enum class VMMode : uint32_t
 	// SWAP alternatives
 	CopyTo = 0,
 	CopyFrom = 1,
-
-	Last = 0xFFFFFFFF
 };
-static_assert(sizeof(VMMode) == 4);
 
 class VMInstruction
 {
@@ -349,17 +342,21 @@ enum class ErrorCode : uint8_t
 	NativeFuncNotFound,
 	DivByZero,
 	InvalidType,
+
+	Count
 };
 
-static const std::array<std::string, 10> k_ErrorMsg = {"no error",
-                                                       "stack is empty",
-                                                       "stack is full",
-                                                       "script id not found",
-                                                       "script name not found",
-                                                       "no script of type",
-                                                       "task id not found",
-                                                       "native function not found",
-                                                       "division by zero",
-                                                       "invalid data type"};
+static const std::array<std::string, static_cast<size_t>(ErrorCode::Count)> k_ErrorMsg = {
+	"no error",
+	"stack is empty",
+	"stack is full",
+	"script id not found",
+	"script name not found",
+	"no script of type",
+	"task id not found",
+	"native function not found",
+	"division by zero",
+	"invalid data type"
+};
 
 } // namespace openblack::lhvm

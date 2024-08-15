@@ -52,7 +52,7 @@ protected:
 	std::function<void(const uint32_t objId)> _addReference;
 	std::function<void(const uint32_t objId)> _removeReference;
 
-	std::array<void (LHVM::*)(VMTask& task, const VMInstruction& instruction), (size_t)Opcode::Count> _opcodesImpl {};
+	std::array<void (LHVM::*)(VMTask& task, const VMInstruction& instruction), static_cast<size_t>(Opcode::Count)> _opcodesImpl {};
 	void Opcode00End(VMTask& task, const VMInstruction& instruction);
 	void Opcode01Jz(VMTask& task, const VMInstruction& instruction);
 	void Opcode02Push(VMTask& task, const VMInstruction& instruction);
@@ -85,9 +85,6 @@ protected:
 	void Opcode29Swap(VMTask& task, const VMInstruction& instruction);
 	void Opcode30Line(VMTask& task, const VMInstruction& instruction);
 
-	/// Error handling
-	void Fail(const std::string& msg);
-
 	void InvokeNativeCallEnterCallback(uint32_t funcId);
 	void InvokeNativeCallExitCallback(uint32_t funcId);
 	void InvokeStopTaskCallback(uint32_t taskNumber);
@@ -116,7 +113,7 @@ protected:
 public:
 	LHVM();
 
-	~LHVM() = default;
+	~LHVM();
 
 	/// Set environment
 	void Initialise(

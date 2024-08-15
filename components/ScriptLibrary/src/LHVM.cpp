@@ -99,11 +99,7 @@ LHVM::LHVM()
 	_opcodesImpl[30] = &LHVM::Opcode30Line;
 }
 
-/// Error handling
-void LHVM::Fail(const std::string& msg)
-{
-	throw std::runtime_error("LHVM Error: " + msg);
-}
+LHVM::~LHVM() = default;
 
 void LHVM::Initialise(std::vector<NativeFunction>* functions, std::function<void(uint32_t func)> nativeCallEnterCallback,
                       std::function<void(uint32_t func)> nativeCallExitCallback,
@@ -250,7 +246,7 @@ float LHVM::Popf()
 void LHVM::Push(VMValue value, DataType type)
 {
 	_currentStack->pushCount++;
-	if (_currentStack->count < 32)
+	if (_currentStack->count < VMStack::k_Size)
 	{
 		_currentStack->values.at(_currentStack->count) = value;
 		_currentStack->types.at(_currentStack->count) = type;
@@ -1428,14 +1424,14 @@ void LHVM::Opcode29Swap(VMTask& /*task*/, const VMInstruction& instruction)
 	}
 	else
 	{
-		const auto offset = instruction.intVal;
+		const auto offset = static_cast<size_t>(instruction.intVal);
 		DataType copyType = DataType::Float;
 		VMValue copyVal(0.0f);
-		std::array<DataType, 32> tmpTypes;
-		std::array<VMValue, 32> tmpVals;
+		std::array<DataType, VMStack::k_Size> tmpTypes;
+		std::array<VMValue, VMStack::k_Size> tmpVals;
 		if (instruction.mode == VMMode::CopyFrom) // push a copy of the Nth value from top of the stack
 		{
-			for (int i = 0; i < offset; i++)
+			for (size_t i = 0; i < offset; i++)
 			{
 				DataType ti;
 				const VMValue vi = Pop(ti);
@@ -1450,7 +1446,7 @@ void LHVM::Opcode29Swap(VMTask& /*task*/, const VMInstruction& instruction)
 					tmpVals.at(i) = vi;
 				}
 			}
-			for (int i = std::min(offset, 32) - 1; i >= 0; i--)
+			for (size_t i = std::min(offset, VMStack::k_Size) - 1; i >= 0; i--)
 			{
 				Push(tmpVals.at(i), tmpTypes.at(i));
 			}
@@ -1458,7 +1454,7 @@ void LHVM::Opcode29Swap(VMTask& /*task*/, const VMInstruction& instruction)
 		}
 		else // Mode::CopyTo insert a copy of the topmost value on the stack N places below
 		{
-			for (int i = 0; i < offset; i++)
+			for (size_t i = 0; i < offset; i++)
 			{
 				DataType ti;
 				const VMValue vi = Pop(ti);
@@ -1474,7 +1470,7 @@ void LHVM::Opcode29Swap(VMTask& /*task*/, const VMInstruction& instruction)
 				}
 			}
 			Push(copyVal, copyType);
-			for (int i = std::min(offset, 32) - 1; i >= 0; i--)
+			for (size_t i = std::min(offset, VMStack::k_Size) - 1; i >= 0; i--)
 			{
 				Push(tmpVals.at(i), tmpTypes.at(i));
 			}

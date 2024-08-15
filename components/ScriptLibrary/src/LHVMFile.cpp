@@ -481,11 +481,12 @@ int LHVMFile::LoadData(std::istream& stream)
 
 int LHVMFile::LoadStatus(std::istream& stream)
 {
-	int rc = LoadStack(stream, _stack);
-	if (rc == EXIT_FAILURE) {
+	const int rc = LoadStack(stream, _stack);
+	if (rc == EXIT_FAILURE)
+	{
 		return EXIT_FAILURE;
 	}
-	else if (rc == EOF)
+	if (rc == EOF)
 	{
 		return EXIT_SUCCESS;
 	}
@@ -517,7 +518,7 @@ int LHVMFile::LoadStack(std::istream& stream, VMStack& stack)
 		}
 		return EXIT_FAILURE; // Error reading stack count
 	}
-	if (stack.count > VMStack::Size)
+	if (stack.count > VMStack::k_Size)
 	{
 		return EXIT_FAILURE; // Invalid stack count
 	}
