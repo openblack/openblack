@@ -269,11 +269,11 @@ The `ExtFile.h` for each custom file type should have the following functions:
 
 ```cpp
 // Read ext file from the filesystem
-void Open(const std::filesystem::path& filepath);
+EXTResult Open(const std::filesystem::path& filepath) noexcept;
 // Read ext file from a buffer
-void Open(const std::vector<uint8_t>& buffer);
+EXTResult Open(const std::vector<uint8_t>& buffer) noexcept;
 // Write ext file to path on the filesystem
-void Write(const std::filesystem::path& filepath);
+EXTResult Write(const std::filesystem::path& filepath) noexcept;
 ```
 
 Replace `ext` with the appropriate extension for each file type.
