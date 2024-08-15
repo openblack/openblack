@@ -20,7 +20,9 @@ if (MSVC)
   target_compile_definitions(lhvmtool PRIVATE _HAS_EXCEPTIONS=0)
   target_compile_options(lhvmtool PRIVATE /W4 /WX /EHs-c-)
 else ()
-  target_compile_options(lhvmtool PRIVATE -Wall -Wextra -pedantic -Werror -fno-exceptions)
+  target_compile_options(
+    lhvmtool PRIVATE -Wall -Wextra -pedantic -Werror -fno-exceptions
+  )
 endif ()
 
 set_property(TARGET lhvmtool PROPERTY FOLDER "tools")
