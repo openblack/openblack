@@ -13,13 +13,14 @@
 #include <limits>
 #include <optional>
 #include <unordered_map>
+#include <vector>
 
+#include <L3DFile.h>
 #include <glm/gtc/quaternion.hpp>
 
+#include "AxisAlignedBoundingBox.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/ShaderProgram.h"
-#include "Graphics/Texture2D.h"
-#include "L3DSubMesh.h"
 
 class btConvexShape;
 
@@ -29,8 +30,6 @@ namespace l3d
 {
 class L3DFile;
 }
-
-using SkinId = uint32_t;
 
 constexpr std::array<std::string_view, 32> k_L3DMeshFlagNames {
     "Unknown1",
@@ -66,6 +65,13 @@ constexpr std::array<std::string_view, 32> k_L3DMeshFlagNames {
     "Unknown31",
     "Unknown32",
 };
+} // namespace openblack
+
+namespace openblack::graphics
+{
+class L3DSubMesh;
+
+using SkinId = uint32_t;
 
 // todo: template this
 inline l3d::L3DMeshFlags operator&(l3d::L3DMeshFlags a, l3d::L3DMeshFlags b)
@@ -149,4 +155,4 @@ public:
 	[[nodiscard]] bool IsContainsNewEP() const { return static_cast<bool>(_flags & l3d::L3DMeshFlags::ContainsNewEP); }
 	// const bool IsContainsNewData() const { return _flags & 0xFC8000; } // ???
 };
-} // namespace openblack
+} // namespace openblack::graphics

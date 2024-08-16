@@ -37,12 +37,12 @@ union SDL_Event;
 namespace openblack
 {
 class L3DAnim;
-class L3DMesh;
 class Sky;
 class Water;
 
 namespace graphics
 {
+class L3DMesh;
 class Renderer;
 class Texture2D;
 } // namespace graphics
@@ -140,9 +140,9 @@ private:
 	/// path to Lionhead Studios Ltd/Black & White folder
 	const std::filesystem::path _gamePath;
 
-	std::unique_ptr<L3DMesh> _testModel;
+	std::unique_ptr<graphics::L3DMesh> _testModel;
 	std::unique_ptr<L3DAnim> _testAnimation;
-	std::unique_ptr<L3DMesh> _handModel;
+	std::unique_ptr<graphics::L3DMesh> _handModel;
 	std::unique_ptr<Sky> _sky;
 	std::unique_ptr<Water> _water;
 	std::unique_ptr<lhscriptx::Script> _scriptx;

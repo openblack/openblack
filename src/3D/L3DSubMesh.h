@@ -21,16 +21,11 @@
 
 #include "../Graphics/RenderPass.h"
 
-namespace openblack
+namespace openblack::graphics
 {
 class L3DMesh;
-struct L3DMeshSubmitDesc;
-
-namespace graphics
-{
 class Mesh;
 class ShaderProgram;
-} // namespace graphics
 
 class L3DSubMesh
 {
@@ -55,7 +50,7 @@ class L3DSubMesh
 	};
 
 public:
-	explicit L3DSubMesh(L3DMesh& mesh) noexcept;
+	explicit L3DSubMesh(graphics::L3DMesh& mesh) noexcept;
 	~L3DSubMesh() noexcept;
 
 	bool Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept;
@@ -67,7 +62,7 @@ public:
 	[[nodiscard]] const std::vector<Primitive>& GetPrimitives() const { return _primitives; }
 
 private:
-	L3DMesh& _l3dMesh;
+	graphics::L3DMesh& _l3dMesh;
 
 	openblack::l3d::L3DSubmeshHeader::Flags _flags;
 
@@ -76,4 +71,4 @@ private:
 
 	AxisAlignedBoundingBox _boundingBox;
 };
-} // namespace openblack
+} // namespace openblack::graphics

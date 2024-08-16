@@ -21,6 +21,7 @@
 
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
+#include "3D/L3DSubMesh.h"
 #include "3D/LandIslandInterface.h"
 #include "Camera/Camera.h"
 #include "Debug/ImGuiUtils.h"
@@ -70,7 +71,7 @@ void MeshViewer::Draw() noexcept
 	                  ImGuiChildFlags_Border);
 	uint32_t displayedMeshes = 0;
 
-	meshes.Each([this, &displayedMeshes](entt::id_type id, const L3DMesh& mesh) {
+	meshes.Each([this, &displayedMeshes](entt::id_type id, const graphics::L3DMesh& mesh) {
 		if (_filter.PassFilter(mesh.GetDebugName().c_str()) && (mesh.GetFlags() & _meshFlagFilter) != 0u)
 		{
 			displayedMeshes++;

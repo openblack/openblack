@@ -21,7 +21,6 @@
 #include "AudioDecoderInterface.h"
 #include "AudioManagerInterface.h"
 #include "AudioPlayer.h"
-#include "Resources/Loaders.h"
 #include "SoundGroup.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)

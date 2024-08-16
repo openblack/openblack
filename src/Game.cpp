@@ -23,6 +23,7 @@
 #include <spdlog/spdlog.h>
 
 #include "3D/CreatureBody.h"
+#include "3D/L3DMesh.h"
 #include "3D/LandIslandInterface.h"
 #include "3D/Sky.h"
 #include "3D/TempleInteriorInterface.h"

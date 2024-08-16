@@ -16,6 +16,7 @@
 #include "ECS/Components/Sprite.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "Graphics/Texture2D.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
 
