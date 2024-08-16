@@ -16,7 +16,7 @@
 #include "ECS/Components/Pot.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
-#include "Game.h"
+#include "InfoConstants.h"
 #include "Locator.h"
 #include "Resources/MeshId.h"
 
@@ -38,7 +38,7 @@ entt::entity PotArchetype::Create(const glm::vec3& position, float yAngleRadians
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 
-	const auto& info = Game::Instance()->GetInfoConstants().pot.at(static_cast<size_t>(type));
+	const auto& info = Locator::infoConstants::value().pot.at(static_cast<size_t>(type));
 
 	registry.Assign<Transform>(entity, position, glm::mat3(glm::eulerAngleY(-yAngleRadians)), glm::vec3(1.0f));
 	registry.Assign<Pot>(entity, static_cast<uint16_t>(amount), static_cast<uint16_t>(info.maxAmountInPot));

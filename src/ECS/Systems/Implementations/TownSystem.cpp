@@ -16,7 +16,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
-#include "Game.h"
+#include "InfoConstants.h"
 #include "Locator.h"
 
 using namespace openblack::ecs::components;
@@ -24,7 +24,7 @@ using namespace openblack::ecs::systems;
 
 entt::entity TownSystem::FindAbodeWithSpace(entt::entity townEntity) const
 {
-	const auto& infoConstants = Game::Instance()->GetInfoConstants();
+	const auto& infoConstants = Locator::infoConstants::value();
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto& town = registry.Get<Town>(townEntity);
 

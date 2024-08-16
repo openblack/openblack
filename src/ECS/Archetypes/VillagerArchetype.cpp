@@ -21,7 +21,7 @@
 #include "ECS/Components/WallHug.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/TownSystemInterface.h"
-#include "Game.h"
+#include "InfoConstants.h"
 #include "Locator.h"
 #include "Resources/MeshId.h"
 
@@ -36,7 +36,7 @@ entt::entity VillagerArchetype::Create([[maybe_unused]] const glm::vec3& abodePo
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 
-	const auto& info = Game::Instance()->GetInfoConstants().villager.at(static_cast<size_t>(type));
+	const auto& info = Locator::infoConstants::value().villager.at(static_cast<size_t>(type));
 
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(glm::radians(180.0f)), glm::vec3(1.0));
 	registry.Assign<Mobile>(entity);

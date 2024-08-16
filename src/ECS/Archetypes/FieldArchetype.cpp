@@ -14,7 +14,6 @@
 #include "ECS/Components/Field.h"
 #include "ECS/Components/Town.h"
 #include "ECS/Registry.h"
-#include "Game.h"
 #include "InfoConstants.h"
 #include "Locator.h"
 
@@ -26,7 +25,7 @@ entt::entity FieldArchetype::Create(int townId, const glm::vec3& position, Field
 {
 	auto& registry = Locator::entitiesRegistry::value();
 
-	[[maybe_unused]] const auto& info = Game::Instance()->GetInfoConstants().fieldType.at(static_cast<size_t>(type));
+	[[maybe_unused]] const auto& info = Locator::infoConstants::value().fieldType.at(static_cast<size_t>(type));
 
 	auto townTribe = registry.Get<Tribe>(registry.Context().towns[townId]);
 	auto abodeInfo = GAbodeInfo::Find(townTribe, AbodeNumber::Field);
