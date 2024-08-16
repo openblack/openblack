@@ -753,9 +753,15 @@ bool Game::Initialize() noexcept
 		    }
 	    });
 
-	if (!LoadVariables())
 	{
-		return false;
+		InfoFile infoFile;
+		const auto result = infoFile.LoadFromFile(
+		    Locator::filesystem::value().GetPath<filesystem::Path::Scripts>() / "info.dat", _infoConstants);
+		if (!result)
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to load game info data.");
+			return false;
+		}
 	}
 
 	fileSystem.Iterate(fileSystem.GetPath<Path::Textures>(), false, [&textureManager](const std::filesystem::path& f) {
@@ -969,13 +975,6 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	Locator::cameraBookmarkSystem::value().Initialize();
 	Locator::dynamicsSystem::value().RegisterIslandRigidBodies(Locator::terrainSystem::value());
 	Locator::playerSystem::value().RegisterPlayers();
-}
-
-bool Game::LoadVariables()
-{
-	InfoFile infoFile;
-	return infoFile.LoadFromFile(Locator::filesystem::value().GetPath<filesystem::Path::Scripts>() / "info.dat",
-	                             _infoConstants);
 }
 
 void Game::SetTime(float time)
