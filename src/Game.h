@@ -118,8 +118,6 @@ public:
 	bool LoadMap(const std::filesystem::path& path) noexcept;
 	void LoadLandscape(const std::filesystem::path& path);
 
-	bool LoadVariables() noexcept;
-
 	void SetTime(float time) noexcept;
 	void SetGameSpeed(float multiplier) { _gameSpeedMultiplier = multiplier; }
 	[[nodiscard]] float GetGameSpeed() const { return _gameSpeedMultiplier; }
