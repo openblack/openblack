@@ -24,9 +24,9 @@ LandIsland::LandIsland()
 {
 }
 
-void LandIsland::Draw(Game& game)
+void LandIsland::Draw([[maybe_unused]] Game& game)
 {
-	auto& config = game.GetConfig();
+	auto& config = Locator::config::value();
 
 	const auto& landIsland = Locator::terrainSystem::value();
 

@@ -30,7 +30,7 @@
 #include "ECS/Components/Sprite.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
-#include "Game.h"
+#include "EngineConfig.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/IndexBuffer.h"
@@ -523,8 +523,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		if (desc.drawSky)
 		{
 			const auto modelMatrix = glm::mat4(1.0f);
-			const glm::vec4 u_typeAlignment = {desc.sky.GetCurrentSkyType(), Game::Instance()->GetConfig().skyAlignment + 1.0f,
-			                                   0.0f, 0.0f};
+			const glm::vec4 u_typeAlignment = {desc.sky.GetCurrentSkyType(), Locator::config::value().skyAlignment + 1.0f, 0.0f,
+			                                   0.0f};
 
 			skyShader->SetTextureSampler("s_diffuse", 0, desc.sky.GetTexture());
 			skyShader->SetUniformValue("u_typeAlignment", &u_typeAlignment);

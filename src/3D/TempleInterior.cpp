@@ -23,7 +23,7 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystemTemple.h"
-#include "Game.h"
+#include "EngineConfig.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -112,7 +112,7 @@ void TempleInterior::Activate()
 		return;
 	}
 
-	auto& config = Game::Instance()->GetConfig();
+	auto& config = Locator::config::value();
 	auto& camera = Locator::camera::value();
 
 	_playerPositionOutside = camera.GetOrigin();
@@ -148,7 +148,7 @@ void TempleInterior::Deactivate()
 	}
 
 	auto& registry = Locator::entitiesRegistry::value();
-	auto& config = Game::Instance()->GetConfig();
+	auto& config = Locator::config::value();
 	config.drawIsland = true;
 	config.drawWater = true;
 	registry.Each<const ecs::components::TempleInteriorPart>(

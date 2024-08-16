@@ -131,8 +131,6 @@ public:
 	[[nodiscard]] const lhvm::LHVM& GetLhvm() const { return *_lhvm; }
 	lhvm::LHVM& GetLhvm() { return *_lhvm; }
 	const InfoConstants& GetInfoConstants() { return _infoConstants; } ///< Access should be only read-only
-	EngineConfig& GetConfig() { return _config; }
-	[[nodiscard]] const EngineConfig& GetConfig() const { return _config; }
 	[[nodiscard]] uint16_t GetTurn() const { return _turnCount; }
 	[[nodiscard]] bool IsPaused() const { return _paused; }
 	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const { return _turnDeltaTime; }
@@ -160,7 +158,6 @@ private:
 	std::unique_ptr<lhvm::LHVM> _lhvm;
 
 	InfoConstants _infoConstants;
-	EngineConfig _config;
 	std::filesystem::path _startMap;
 
 	std::chrono::steady_clock::time_point _lastGameLoopTime;

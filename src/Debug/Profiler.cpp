@@ -44,7 +44,7 @@ void Profiler::Close()
 
 void Profiler::Draw(Game& game)
 {
-	auto& config = game.GetConfig();
+	auto& config = Locator::config::value();
 
 	using namespace ecs::components;
 
