@@ -143,12 +143,12 @@ constexpr bool operator&(ScriptType lhs, uint32_t rhs)
 }
 
 static const std::map<ScriptType, std::string> k_ScriptTypeNames = {
-	{ScriptType::Script, "script"},
-	{ScriptType::Help, "help script"},
-	{ScriptType::ChallengeHelp, "challenge help script"},
-	{ScriptType::TempleHelp, "temple help script"},
-	{ScriptType::TempleSpecial, "temple special script"},
-	{ScriptType::MultiplayerHelp, "multiplayer help script"},
+    {ScriptType::Script, "script"},
+    {ScriptType::Help, "help script"},
+    {ScriptType::ChallengeHelp, "challenge help script"},
+    {ScriptType::TempleHelp, "temple help script"},
+    {ScriptType::TempleSpecial, "temple special script"},
+    {ScriptType::MultiplayerHelp, "multiplayer help script"},
 };
 
 enum class Opcode : uint32_t
@@ -346,16 +346,16 @@ enum class ErrorCode : uint8_t
 };
 
 static const std::array<std::string, static_cast<size_t>(ErrorCode::_Count)> k_ErrorMsg = {
-	"no error",
-	"stack is empty",
-	"stack is full",
-	"script id not found",
-	"script name not found",
-	"no script of type",
-	"task id not found",
-	"native function not found",
-	"division by zero",
-	"invalid data type",
+    "no error",
+    "stack is empty",
+    "stack is full",
+    "script id not found",
+    "script name not found",
+    "no script of type",
+    "task id not found",
+    "native function not found",
+    "division by zero",
+    "invalid data type",
 };
 
 } // namespace openblack::lhvm
