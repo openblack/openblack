@@ -62,7 +62,7 @@ public:
 	[[nodiscard]] float GetSfxVolume() override { return _sfxVolume; }
 	[[nodiscard]] float GetMusicVolume() override { return _musicVolume; }
 	void Stop() override;
-	void Update(Game& game) override;
+	void Update() override;
 	void CreateSoundGroup(const std::string& name) override;
 	void AddMusicEntry(const std::string& name) override;
 	[[nodiscard]] const std::vector<std::string>& GetMusicTracks() const override { return _music; }
