@@ -16,7 +16,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Registry.h"
-#include "Game.h"
+#include "InfoConstants.h"
 #include "Locator.h"
 #include "Resources/MeshId.h"
 #include "Utils.h"
@@ -31,7 +31,7 @@ entt::entity TreeArchetype::Create([[maybe_unused]] uint32_t forestId, const glm
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 
-	const auto& info = Game::Instance()->GetInfoConstants().tree.at(static_cast<size_t>(type));
+	const auto& info = Locator::infoConstants::value().tree.at(static_cast<size_t>(type));
 
 	const auto& transform = registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));
 	const auto [point, radius] = GetFixedObstacleBoundingCircle(info.normal, transform);

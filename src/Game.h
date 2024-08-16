@@ -170,7 +170,6 @@ public:
 	[[nodiscard]] entt::entity GetHand() const;
 	[[nodiscard]] const LHVM::LHVM& GetLhvm() const { return *_lhvm; }
 	LHVM::LHVM& GetLhvm() { return *_lhvm; }
-	const InfoConstants& GetInfoConstants() { return _infoConstants; } ///< Access should be only read-only
 	Config& GetConfig() { return _config; }
 	[[nodiscard]] const Config& GetConfig() const { return _config; }
 	[[nodiscard]] uint16_t GetTurn() const { return _turnCount; }
@@ -200,7 +199,6 @@ private:
 	std::unique_ptr<lhscriptx::Script> _scriptx;
 	std::unique_ptr<LHVM::LHVM> _lhvm;
 
-	InfoConstants _infoConstants;
 	Config _config;
 	std::filesystem::path _startMap;
 

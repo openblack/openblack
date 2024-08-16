@@ -17,7 +17,7 @@
 #include "ECS/Components/MorphWithTerrain.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
-#include "Game.h"
+#include "InfoConstants.h"
 #include "Locator.h"
 #include "Resources/MeshId.h"
 #include "Utils.h"
@@ -32,7 +32,7 @@ entt::entity BigForestArchetype::Create(const glm::vec3& position, BigForestInfo
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 
-	const auto& info = Game::Instance()->GetInfoConstants().bigForest.at(static_cast<size_t>(type));
+	const auto& info = Locator::infoConstants::value().bigForest.at(static_cast<size_t>(type));
 
 	const auto& transform = registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));
 	const auto [point, radius] = GetFixedObstacleBoundingCircle(info.meshId, transform);

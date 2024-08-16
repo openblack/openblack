@@ -21,7 +21,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/TownSystemInterface.h"
-#include "Game.h"
+#include "InfoConstants.h"
 #include "Locator.h"
 #include "PotArchetype.h"
 #include "Resources/MeshId.h"
@@ -36,9 +36,8 @@ using namespace openblack::ecs::systems;
 void AddStoragePitComponents(entt::entity entity, const Mesh& pitMesh, const GAbodeInfo& info, const glm::vec3& position,
                              float yAngleRadians, uint32_t foodAmount, uint32_t woodAmount)
 {
-	auto* game = Game::Instance();
 	auto& registry = Locator::entitiesRegistry::value();
-	const auto& potInfoConstants = game->GetInfoConstants().pot;
+	const auto& potInfoConstants = Locator::infoConstants::value().pot;
 
 	const auto l3dMesh = entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(pitMesh.id);
 	const auto& extraMetrics = l3dMesh->GetExtraMetrics();
@@ -63,7 +62,6 @@ void AddStoragePitComponents(entt::entity entity, const Mesh& pitMesh, const GAb
 entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, AbodeInfo type, float yAngleRadians,
                                     float scale, uint32_t foodAmount, uint32_t woodAmount)
 {
-	auto* game = Game::Instance();
 	auto& registry = Locator::entitiesRegistry::value();
 
 	// If there is no town, assign to closest
@@ -84,7 +82,7 @@ entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, 
 
 	const auto entity = registry.Create();
 
-	const auto& info = game->GetInfoConstants().abode.at(static_cast<size_t>(type));
+	const auto& info = Locator::infoConstants::value().abode.at(static_cast<size_t>(type));
 	bool morphsWithTerrain = false;
 	morphsWithTerrain |= info.abodeType == AbodeType::Graveyard;
 	morphsWithTerrain |= info.abodeType == AbodeType::StoragePit;
