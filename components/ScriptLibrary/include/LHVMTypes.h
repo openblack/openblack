@@ -52,7 +52,12 @@ typedef union UnionValue
 	float floatVal;
 	int32_t intVal;
 	uint32_t uintVal;
-} VMValue;
+using VMValue = union UnionValue
+{
+	float floatVal;
+	int32_t intVal;
+	uint32_t uintVal;
+};
 static_assert(sizeof(VMValue) == 4);
 
 class VMVar
