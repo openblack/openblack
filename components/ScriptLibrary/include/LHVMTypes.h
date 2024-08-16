@@ -47,9 +47,15 @@ static const std::array<std::string, static_cast<size_t>(DataType::Count)> k_Dat
 static const std::array<std::string, static_cast<size_t>(DataType::Count)> k_DataTypeChars = {"",  "I", "F", "V",
                                                                                               "O", "",  "B", ""};
 
-class VMValue
+struct VMValue
 {
-public:
+	union
+	{
+		float floatVal;
+		int32_t intVal;
+		uint32_t uintVal;
+	};
+
 	VMValue()
 	    : floatVal(0.0f)
 	{
@@ -69,13 +75,6 @@ public:
 	    : uintVal(value)
 	{
 	}
-
-	union
-	{
-		float floatVal;
-		int32_t intVal;
-		uint32_t uintVal;
-	};
 };
 static_assert(sizeof(VMValue) == 4);
 
