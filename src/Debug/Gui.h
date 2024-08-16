@@ -30,31 +30,31 @@ namespace openblack::debug::gui
 {
 class Window;
 
-class Gui: public DebugGuiInterface
+class Gui final: public DebugGuiInterface
 {
 public:
-	Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<Window>>&& debugWindows, bool headless);
-	virtual ~Gui();
+	Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<Window>>&& debugWindows, bool headless) noexcept;
+	~Gui() noexcept override;
 
 	[[nodiscard]] bool StealsFocus() const noexcept override;
 	void SetScale(float scale) noexcept override;
 	bool ProcessEvents(const SDL_Event& event) noexcept override;
-	bool Loop(Game& game) noexcept override;
+	bool Loop() noexcept override;
 	void Draw() noexcept override;
 
 private:
-	bool CreateFontsTextureBgfx();
-	bool CreateDeviceObjectsBgfx();
-	void NewFrame();
-	void RenderDrawDataBgfx(ImDrawData* drawData);
+	bool CreateFontsTextureBgfx() noexcept;
+	bool CreateDeviceObjectsBgfx() noexcept;
+	void NewFrame() noexcept;
+	void RenderDrawDataBgfx(ImDrawData* drawData) noexcept;
 
-	void RenderArrow(const std::string& name, const ImVec2& pos, const ImVec2& size) const;
+	void RenderArrow(const std::string& name, const ImVec2& pos, const ImVec2& size) const noexcept;
 	std::optional<glm::uvec4> RenderVillagerName(const std::vector<glm::vec4>& coveredAreas, const std::string& name,
 	                                             const std::string& text, const glm::vec4& color, const ImVec2& pos,
-	                                             float arrowLength, std::function<void(void)> debugCallback) const;
-	bool ShowMenu(Game& game);
-	void ShowVillagerNames(const Game& game);
-	void ShowCameraPositionOverlay(const Game& game);
+	                                             float arrowLength, std::function<void(void)> debugCallback) const noexcept;
+	bool ShowMenu() noexcept;
+	void ShowVillagerNames() noexcept;
+	void ShowCameraPositionOverlay() noexcept;
 
 	ImGuiContext* _imgui;
 	const bool _headless;

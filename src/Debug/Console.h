@@ -22,32 +22,25 @@
 
 struct ImGuiInputTextCallbackData;
 
-namespace openblack
-{
-namespace lhscriptx
-{
-class Script;
-}
-
-namespace debug::gui
+namespace openblack::debug::gui
 {
 
-class Console: public Window
+class Console final: public Window
 {
 public:
-	Console();
-	void Open() override;
+	Console() noexcept;
+	void Open() noexcept override;
 
 protected:
-	void Draw(Game& game) override;
-	void Update(Game& game) override;
-	void ProcessEventOpen(const SDL_Event& event) override;
-	void ProcessEventAlways(const SDL_Event& event) override;
+	void Draw() noexcept override;
+	void Update() noexcept override;
+	void ProcessEventOpen(const SDL_Event& event) noexcept override;
+	void ProcessEventAlways(const SDL_Event& event) noexcept override;
 
 private:
-	void AddLog(const char* fmt, ...);
-	void ExecCommand(const std::string& commandLine);
-	int InputTextCallback(ImGuiInputTextCallbackData* data);
+	void AddLog(const char* fmt, ...) noexcept;
+	void ExecCommand(const std::string& commandLine) noexcept;
+	int InputTextCallback(ImGuiInputTextCallbackData* data) noexcept;
 
 	bool _reclaimFocus {false};
 	bool _insertHandPosition {false};
@@ -60,6 +53,4 @@ private:
 	std::optional<size_t> _historyPos;
 };
 
-} // namespace debug::gui
-
-} // namespace openblack
+} // namespace openblack::debug::gui

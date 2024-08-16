@@ -19,16 +19,16 @@
 namespace openblack::debug::gui
 {
 
-class PathFinding: public Window
+class PathFinding final: public Window
 {
 public:
-	PathFinding();
+	PathFinding() noexcept;
 
 protected:
-	void Draw(Game& game) override;
-	void Update(Game& game) override;
-	void ProcessEventOpen(const SDL_Event& event) override;
-	void ProcessEventAlways(const SDL_Event& event) override;
+	void Draw() noexcept override;
+	void Update() noexcept override;
+	void ProcessEventOpen(const SDL_Event& event) noexcept override;
+	void ProcessEventAlways(const SDL_Event& event) noexcept override;
 
 private:
 	enum class HandTo

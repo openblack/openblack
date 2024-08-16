@@ -28,7 +28,7 @@
 using namespace openblack;
 using namespace openblack::debug::gui;
 
-Console::Console()
+Console::Console() noexcept
     : Window("Console", ImVec2(520, 600))
     // , _items {"Welcome message goes here"}
     , _commands {
@@ -72,16 +72,18 @@ Console::Console()
 	}
 }
 
-void Console::Open()
+void Console::Open() noexcept
 {
 	Window::Open();
 	_reclaimFocus = true;
 }
 
-int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
+int Console::InputTextCallback(ImGuiInputTextCallbackData* data) noexcept
 {
 	switch (data->EventFlag)
 	{
+	default:
+		break;
 	case ImGuiInputTextFlags_CallbackCompletion:
 	{
 		// Example of TEXT COMPLETION
@@ -177,16 +179,16 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 				}
 				_partial = _inputBuffer.data();
 			}
-			else if (_historyPos.value() > 0)
+			else if (*_historyPos > 0)
 			{
-				_historyPos.value()--;
+				(*_historyPos)--;
 			}
 		}
 		else if (data->EventKey == ImGuiKey_DownArrow)
 		{
 			if (_historyPos.has_value())
 			{
-				if (++_historyPos.value() >= _history.size())
+				if (++*_historyPos >= _history.size())
 				{
 					_historyPos.reset();
 				}
@@ -215,9 +217,9 @@ int Console::InputTextCallback(ImGuiInputTextCallbackData* data)
 	return 0;
 }
 
-void Console::Draw(Game& game)
+void Console::Draw() noexcept
 {
-	ImGuiIO& io = ImGui::GetIO();
+	const auto& io = ImGui::GetIO();
 
 	const auto screenSize = Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::ivec2 {};
 	glm::ivec2 mousePosition {};
@@ -273,14 +275,14 @@ void Console::Draw(Game& game)
 		_items.clear();
 	}
 	ImGui::SameLine();
-	bool copyToClipboard = ImGui::SmallButton("Copy");
+	const auto copyToClipboard = ImGui::SmallButton("Copy");
 
 	ImGui::Separator();
 
-	const float footerHeightToReserve =
-	    ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing(); // 1 separator, 1 input text
-	ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footerHeightToReserve), false,
-	                  ImGuiWindowFlags_HorizontalScrollbar); // Leave room for 1 separator + 1 InputText
+	// 1 separator, 1 input text
+	const auto footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+	// Leave room for 1 separator + 1 InputText
+	ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footerHeightToReserve), 0, ImGuiWindowFlags_HorizontalScrollbar);
 	if (ImGui::BeginPopupContextWindow())
 	{
 		if (ImGui::Selectable("Clear"))
@@ -377,10 +379,11 @@ void Console::Draw(Game& game)
 	{
 		if (_inputCursorPosition >= 0)
 		{
-			std::string pre(_inputBuffer.data(), _inputBuffer.data() + _inputCursorPosition);
-			std::string post(_inputBuffer.data() + _inputCursorPosition);
+			const auto pre = std::string(_inputBuffer.data(), _inputBuffer.data() + _inputCursorPosition);
+			const auto post = std::string(_inputBuffer.data() + _inputCursorPosition);
 
-			const auto& position = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(game.GetHand()).position;
+			const auto& position =
+			    Locator::entitiesRegistry::value().Get<ecs::components::Transform>(Game::Instance()->GetHand()).position;
 			snprintf(_inputBuffer.data(), _inputBuffer.size(), "%s%.2f,%.2f%s", pre.c_str(), position.x, position.z,
 			         post.c_str());
 		}
@@ -396,9 +399,9 @@ void Console::Draw(Game& game)
 	}
 }
 
-void Console::Update([[maybe_unused]] Game& game) {}
+void Console::Update() noexcept {}
 
-void Console::AddLog(const char* fmt, ...)
+void Console::AddLog(const char* fmt, ...) noexcept
 {
 	// FIXME-OPT
 	std::array<char, 1024> buf;
@@ -410,7 +413,7 @@ void Console::AddLog(const char* fmt, ...)
 	_items.emplace_back(buf.data());
 }
 
-void Console::ExecCommand(const std::string& commandLine)
+void Console::ExecCommand(const std::string& commandLine) noexcept
 {
 	AddLog("# %s\n", commandLine.c_str());
 
@@ -442,7 +445,7 @@ void Console::ExecCommand(const std::string& commandLine)
 	}
 	else if (commandLine == "history")
 	{
-		size_t first = _history.size() - 10;
+		const size_t first = _history.size() - 10;
 		for (size_t i = first > 0 ? first : 0; i < _history.size(); i++)
 		{
 			AddLog("%3zu: %s\n", i, _history[i].c_str());
@@ -462,11 +465,13 @@ void Console::ExecCommand(const std::string& commandLine)
 	}
 }
 
-void Console::ProcessEventOpen(const SDL_Event& event)
+void Console::ProcessEventOpen(const SDL_Event& event) noexcept
 {
-	ImGuiIO& io = ImGui::GetIO();
+	const ImGuiIO& io = ImGui::GetIO();
 	switch (event.type)
 	{
+	default:
+		break;
 	case SDL_MOUSEBUTTONDOWN:
 		if (event.button.clicks == 2 && !io.WantCaptureMouse)
 		{
@@ -476,12 +481,12 @@ void Console::ProcessEventOpen(const SDL_Event& event)
 	}
 }
 
-void Console::ProcessEventAlways(const SDL_Event& event)
+void Console::ProcessEventAlways(const SDL_Event& event) noexcept
 {
-	// ImGuiIO& io = ImGui::GetIO();
-
 	switch (event.type)
 	{
+	default:
+		break;
 	case SDL_KEYDOWN:
 		if (event.key.keysym.sym == SDLK_BACKQUOTE)
 		{

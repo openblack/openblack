@@ -9,8 +9,6 @@
 
 #include "LHVMViewer.h"
 
-#include <array>
-
 #include <imgui.h>
 #include <imgui_memory_editor.h>
 #include <imgui_user.h>
@@ -27,14 +25,14 @@ const ImVec4 Disassembly_ColorKeyword = ImVec4(0.976f, 0.149f, 0.447f, 1.0f);
 const ImVec4 Disassembly_ColorVariable = ImVec4(0.972f, 0.972f, 0.949f, 1.0f);
 const ImVec4 Disassembly_ColorConstant = ImVec4(0.682f, 0.505f, 1.0f, 1.0f);
 
-LHVMViewer::LHVMViewer()
+LHVMViewer::LHVMViewer() noexcept
     : Window("LHVM Viewer", ImVec2(720.0f, 612.0f))
 {
 }
 
-void LHVMViewer::Draw(Game& game)
+void LHVMViewer::Draw() noexcept
 {
-	auto& lhvm = game.GetLhvm();
+	auto& lhvm = Game::Instance()->GetLhvm();
 	if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
 	{
 
@@ -50,7 +48,7 @@ void LHVMViewer::Draw(Game& game)
 		{
 			// left
 			static size_t selected = 0;
-			ImGui::BeginChild("left pane", ImVec2(240, 0), true);
+			ImGui::BeginChild("left pane", ImVec2(240, 0), ImGuiChildFlags_Border);
 
 			auto variables = lhvm.GetVariables();
 			for (size_t i = 0; i < variables.size(); i++)
@@ -78,7 +76,7 @@ void LHVMViewer::Draw(Game& game)
 		if (ImGui::BeginTabItem("Data"))
 		{
 			static MemoryEditor lhvmDataEditor;
-			auto& data = lhvm.GetData();
+			const auto& data = lhvm.GetData();
 			lhvmDataEditor.DrawContents(const_cast<void*>(reinterpret_cast<const void*>(data.data())), data.size(), 0);
 
 			ImGui::EndTabItem();
@@ -95,13 +93,13 @@ void LHVMViewer::Draw(Game& game)
 	}
 }
 
-void LHVMViewer::Update([[maybe_unused]] openblack::Game& game) {}
+void LHVMViewer::Update() noexcept {}
 
-void LHVMViewer::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
+void LHVMViewer::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) noexcept {}
 
-void LHVMViewer::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) {}
+void LHVMViewer::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) noexcept {}
 
-void LHVMViewer::DrawScriptsTab(const openblack::lhvm::LHVM& lhvm)
+void LHVMViewer::DrawScriptsTab(const openblack::lhvm::LHVM& lhvm) noexcept
 {
 	static auto vectorGetter = [](void* vec, int idx, const char** outText) {
 		auto& vector = *static_cast<std::vector<std::string>*>(vec);
@@ -173,7 +171,7 @@ void LHVMViewer::DrawScriptsTab(const openblack::lhvm::LHVM& lhvm)
 	ImGui::EndChild();
 }
 
-void LHVMViewer::DrawScriptDisassembly(const openblack::lhvm::LHVM& lhvm, openblack::lhvm::VMScript& script)
+void LHVMViewer::DrawScriptDisassembly(const openblack::lhvm::LHVM& lhvm, openblack::lhvm::VMScript& script) noexcept
 {
 	ImGui::PushStyleColor(ImGuiCol_ChildBg, Disassembly_ColorBG);
 	ImGui::PushStyleColor(ImGuiCol_Text, Disassembly_ColorFG);
@@ -318,7 +316,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::lhvm::LHVM& lhvm, openbl
 	ImGui::PopStyleColor(4);
 }
 
-void LHVMViewer::DrawTasksTab(const lhvm::LHVM& lhvm)
+void LHVMViewer::DrawTasksTab(const lhvm::LHVM& lhvm) noexcept
 {
 	const auto& tasks = lhvm.GetTasks();
 
@@ -421,7 +419,7 @@ void LHVMViewer::DrawTasksTab(const lhvm::LHVM& lhvm)
 	}
 }
 
-void LHVMViewer::DrawStack(const openblack::lhvm::VMStack& stack)
+void LHVMViewer::DrawStack(const openblack::lhvm::VMStack& stack) noexcept
 {
 	ImGui::BeginChild("##stack");
 
@@ -439,7 +437,7 @@ void LHVMViewer::DrawStack(const openblack::lhvm::VMStack& stack)
 	ImGui::EndChild();
 }
 
-void LHVMViewer::DrawExceptionHandlers(const std::vector<uint32_t>& exceptionHandlerIps)
+void LHVMViewer::DrawExceptionHandlers(const std::vector<uint32_t>& exceptionHandlerIps) noexcept
 {
 	ImGui::BeginChild("##exception_handlers");
 
@@ -457,7 +455,7 @@ void LHVMViewer::DrawExceptionHandlers(const std::vector<uint32_t>& exceptionHan
 	ImGui::EndChild();
 }
 
-void LHVMViewer::DrawVariable(const openblack::lhvm::LHVM& lhvm, openblack::lhvm::VMScript& script, uint32_t idx)
+void LHVMViewer::DrawVariable(const openblack::lhvm::LHVM& lhvm, openblack::lhvm::VMScript& script, uint32_t idx) noexcept
 {
 	// local variable
 	if (idx > script.variablesOffset)
@@ -472,7 +470,7 @@ void LHVMViewer::DrawVariable(const openblack::lhvm::LHVM& lhvm, openblack::lhvm
 	ImGui::TextColored(Disassembly_ColorVariable, "global %s", variable.name.c_str());
 }
 
-std::string LHVMViewer::DataToString(lhvm::VMValue data, openblack::lhvm::DataType type)
+std::string LHVMViewer::DataToString(lhvm::VMValue data, openblack::lhvm::DataType type) noexcept
 {
 	switch (type)
 	{
@@ -490,7 +488,7 @@ std::string LHVMViewer::DataToString(lhvm::VMValue data, openblack::lhvm::DataTy
 	}
 }
 
-void LHVMViewer::SelectScript(uint32_t idx)
+void LHVMViewer::SelectScript(uint32_t idx) noexcept
 {
 	_selectedScriptID = idx;
 	_scrollToSelected = true;
@@ -498,7 +496,7 @@ void LHVMViewer::SelectScript(uint32_t idx)
 	_openScriptTab = true;
 }
 
-void LHVMViewer::SelectTask(uint32_t idx)
+void LHVMViewer::SelectTask(uint32_t idx) noexcept
 {
 	_selectedTaskID = idx;
 	_resetStackScroll = true;

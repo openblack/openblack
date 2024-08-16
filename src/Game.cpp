@@ -367,7 +367,7 @@ bool Game::Update() noexcept
 	// ImGui events + prepare
 	{
 		auto guiLoop = _profiler->BeginScoped(Profiler::Stage::GuiLoop);
-		if (Locator::debugGui::value().Loop(*this))
+		if (Locator::debugGui::value().Loop())
 		{
 			return false; // Quit event
 		}

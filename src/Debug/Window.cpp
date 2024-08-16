@@ -13,25 +13,25 @@
 
 using namespace openblack::debug::gui;
 
-Window::Window(std::string name, ImVec2 defaultSize)
+Window::Window(std::string name, ImVec2 defaultSize) noexcept
     : _name(std::move(name))
     , _defaultSize(defaultSize)
 {
 }
 
-Window::~Window() = default;
+Window::~Window() noexcept = default;
 
-void Window::Open()
+void Window::Open() noexcept
 {
 	_open = true;
 }
 
-void Window::Close()
+void Window::Close() noexcept
 {
 	_open = false;
 }
 
-void Window::Toggle()
+void Window::Toggle() noexcept
 {
 	if (IsOpen())
 	{
@@ -43,26 +43,26 @@ void Window::Toggle()
 	}
 }
 
-void Window::WindowUpdate(openblack::Game& game)
+void Window::WindowUpdate() noexcept
 {
 	if (_open)
 	{
-		Update(game);
+		Update();
 	}
 }
 
-void Window::WindowDraw(Game& game)
+void Window::WindowDraw() noexcept
 {
 	if (_open)
 	{
 		ImGui::SetNextWindowSize(_defaultSize, ImGuiCond_FirstUseEver);
 		ImGui::Begin(_name.c_str(), &_open);
-		Draw(game);
+		Draw();
 		ImGui::End();
 	}
 }
 
-void Window::WindowProcessEvent(const SDL_Event& event)
+void Window::WindowProcessEvent(const SDL_Event& event) noexcept
 {
 	ProcessEventAlways(event);
 	if (_open)

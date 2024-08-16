@@ -17,11 +17,6 @@ struct SDL_Window;
 struct SDL_Cursor;
 union SDL_Event;
 
-namespace openblack
-{
-class Game;
-}
-
 namespace openblack::graphics
 {
 class Renderer;
@@ -38,7 +33,7 @@ public:
 	[[nodiscard]] virtual bool StealsFocus() const noexcept = 0;
 	virtual void SetScale(float scale) noexcept = 0;
 	virtual bool ProcessEvents(const SDL_Event& event) noexcept = 0;
-	virtual bool Loop(Game& game) noexcept = 0;
+	virtual bool Loop() noexcept = 0;
 	virtual void Draw() noexcept = 0;
 };
 } // namespace openblack::debug::gui

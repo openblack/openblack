@@ -12,16 +12,16 @@
 namespace openblack::debug::gui
 {
 
-class LandIsland: public Window
+class LandIsland final: public Window
 {
 public:
-	LandIsland();
+	LandIsland() noexcept;
 
 protected:
-	void Draw(Game& game) override;
-	void Update(Game& game) override;
-	void ProcessEventOpen(const SDL_Event& event) override;
-	void ProcessEventAlways(const SDL_Event& event) override;
+	void Draw() noexcept override;
+	void Update() noexcept override;
+	void ProcessEventOpen(const SDL_Event& event) noexcept override;
+	void ProcessEventAlways(const SDL_Event& event) noexcept override;
 };
 
 } // namespace openblack::debug::gui

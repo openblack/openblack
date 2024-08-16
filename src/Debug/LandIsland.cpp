@@ -13,18 +13,18 @@
 
 #include "3D/LandIslandInterface.h"
 #include "Debug/ImGuiUtils.h"
-#include "Game.h"
+#include "EngineConfig.h"
 #include "Graphics/FrameBuffer.h"
 #include "Locator.h"
 
 using namespace openblack::debug::gui;
 
-LandIsland::LandIsland()
+LandIsland::LandIsland() noexcept
     : Window("Land Island", ImVec2(600.0f, 600.0f))
 {
 }
 
-void LandIsland::Draw([[maybe_unused]] Game& game)
+void LandIsland::Draw() noexcept
 {
 	auto& config = Locator::config::value();
 
@@ -47,7 +47,7 @@ void LandIsland::Draw([[maybe_unused]] Game& game)
 		const auto dim = static_cast<uint16_t>(LandIslandInterface::k_CellCount) * extentSize;
 		const auto& texture = landIsland.GetHeightMap();
 		ImGui::Text("Resolution: %ux%u", dim.x, dim.y);
-		float scaling = 512.0f / static_cast<float>(dim.x);
+		const float scaling = 512.0f / static_cast<float>(dim.x);
 		ImGui::Image(texture.GetNativeHandle(), ImVec2(dim.x * scaling, dim.y * scaling));
 		ImGui::TreePop();
 	}
@@ -59,7 +59,7 @@ void LandIsland::Draw([[maybe_unused]] Game& game)
 		uint16_t height;
 		frameBuffer.GetSize(width, height);
 		ImGui::Text("Resolution: %ux%u", width, height);
-		float scaling = 512.0f / static_cast<float>(width);
+		const float scaling = 512.0f / static_cast<float>(width);
 		ImGui::Image(frameBuffer.GetColorAttachment().GetNativeHandle(), ImVec2(width * scaling, height * scaling));
 		ImGui::TreePop();
 	}
@@ -77,8 +77,8 @@ void LandIsland::Draw([[maybe_unused]] Game& game)
 	}
 }
 
-void LandIsland::Update([[maybe_unused]] openblack::Game& game) {}
+void LandIsland::Update() noexcept {}
 
-void LandIsland::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
+void LandIsland::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) noexcept {}
 
-void LandIsland::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) {}
+void LandIsland::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) noexcept {}

@@ -24,14 +24,14 @@ const ImVec4 k_RedColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
 const ImVec4 k_GreenColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
 const std::array<const char*, 3> k_AudioBankLoopStrings = {"Repeat", "Once", "Overlap"};
 
-Audio::Audio()
+Audio::Audio() noexcept
     : Window("Audio Player", ImVec2(600.0f, 600.0f))
     , _selectedSound(entt::null)
     , _selectedEmitter(entt::null)
 {
 }
 
-void Audio::Emitters()
+void Audio::Emitters() noexcept
 {
 	using namespace std::literals;
 	if (ImGui::Button("Play") && _selectedSound != entt::null)
@@ -44,7 +44,8 @@ void Audio::Emitters()
 	_playType = static_cast<PlayType>(currentCombo);
 	ImGui::Separator();
 	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-	ImGui::BeginChild("SoundPacks", ImVec2(ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y), true);
+	ImGui::BeginChild("SoundPacks", ImVec2(ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y),
+	                  ImGuiChildFlags_Border);
 	ImGui::Button("Sort by sound count");
 	ImGui::SameLine();
 	ImGui::Button("Sort by bytes");
@@ -131,7 +132,7 @@ void Audio::Emitters()
 	ImGui::PopStyleVar();
 }
 
-void Audio::Music()
+void Audio::Music() noexcept
 {
 	if (ImGui::Button("Play") && !_selectedMusicPack.empty())
 	{
@@ -143,7 +144,8 @@ void Audio::Music()
 	_playType = static_cast<PlayType>(currentCombo);
 	ImGui::Separator();
 	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-	ImGui::BeginChild("MusicPacks", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y), true);
+	ImGui::BeginChild("MusicPacks", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y),
+	                  ImGuiChildFlags_Border);
 	ImGui::Columns(1, "MusicPackColumns", true);
 	ImGui::Separator();
 	ImGui::Text("Name");
@@ -169,7 +171,7 @@ void Audio::Music()
 	ImGui::PopStyleVar();
 }
 
-void Audio::AudioSettings()
+void Audio::AudioSettings() noexcept
 {
 	auto& soundManager = Locator::audio::value();
 	if (!soundManager.EmitterExists(_selectedEmitter))
@@ -179,7 +181,7 @@ void Audio::AudioSettings()
 
 	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
 	ImGui::BeginChild("Audio Handler Settings", ImVec2(ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y),
-	                  true);
+	                  ImGuiChildFlags_Border);
 	ImGui::Text("Audio handler settings");
 	ImGui::Separator();
 	ImGui::Text("Active Emitters");
@@ -224,7 +226,7 @@ void Audio::AudioSettings()
 	    });
 	ImGui::EndChild();
 	ImGui::SameLine();
-	ImGui::BeginChild("Audio Player Settings", ImGui::GetContentRegionAvail(), true);
+	ImGui::BeginChild("Audio Player Settings", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Border);
 	ImGui::Text("Audio Player settings");
 	ImGui::Separator();
 	float globalVolume = soundManager.GetGlobalVolume();
@@ -312,7 +314,7 @@ void Audio::AudioSettings()
 	ImGui::EndChild();
 	ImGui::PopStyleVar();
 }
-void Audio::Draw(Game&)
+void Audio::Draw() noexcept
 {
 	const ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_None;
 	if (ImGui::BeginTabBar("Tabs", tabBarFlags))
@@ -343,8 +345,8 @@ void Audio::Draw(Game&)
 	ImGui::Separator();
 }
 
-void Audio::Update([[maybe_unused]] Game& game) {}
+void Audio::Update() noexcept {}
 
-void Audio::ProcessEventOpen(const SDL_Event&) {}
+void Audio::ProcessEventOpen(const SDL_Event&) noexcept {}
 
-void Audio::ProcessEventAlways(const SDL_Event&) {}
+void Audio::ProcessEventAlways(const SDL_Event&) noexcept {}

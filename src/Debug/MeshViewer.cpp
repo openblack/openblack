@@ -39,7 +39,7 @@
 using namespace openblack;
 using namespace openblack::debug::gui;
 
-MeshViewer::MeshViewer()
+MeshViewer::MeshViewer() noexcept
     : Window("MeshPack Viewer", ImVec2(950.0f, 780.0f))
     , _selectedMesh(resources::MeshIdToResourceId(MeshId::Dummy))
     , _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f)))
@@ -48,10 +48,9 @@ MeshViewer::MeshViewer()
 {
 }
 
-void MeshViewer::Draw([[maybe_unused]] Game& game)
+void MeshViewer::Draw() noexcept
 {
-
-	float fontSize = ImGui::GetFontSize();
+	const float fontSize = ImGui::GetFontSize();
 	auto const& meshes = Locator::resources::value().GetMeshes();
 	auto const& animations = Locator::resources::value().GetAnimations();
 
@@ -67,7 +66,8 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 
 	ImGui::BeginChild("meshes", ImVec2(fontSize * 15.0f, 0));
 	auto meshSize = ImGui::GetItemRectSize();
-	ImGui::BeginChild("meshesSelect", ImVec2(meshSize.x - 5, meshSize.y - ImGui::GetTextLineHeight() - 5), true);
+	ImGui::BeginChild("meshesSelect", ImVec2(meshSize.x - 5, meshSize.y - ImGui::GetTextLineHeight() - 5),
+	                  ImGuiChildFlags_Border);
 	uint32_t displayedMeshes = 0;
 
 	meshes.Each([this, &displayedMeshes](entt::id_type id, const L3DMesh& mesh) {
@@ -252,7 +252,8 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 
 	ImGui::BeginChild("animations", ImVec2(fontSize * 15.0f, 0));
 	auto animationSize = ImGui::GetItemRectSize();
-	ImGui::BeginChild("animationSelect", ImVec2(animationSize.x - 5, animationSize.y - ImGui::GetTextLineHeight() - 5), true);
+	ImGui::BeginChild("animationSelect", ImVec2(animationSize.x - 5, animationSize.y - ImGui::GetTextLineHeight() - 5),
+	                  ImGuiChildFlags_Border);
 	uint32_t displayedAnimations = 0;
 	if (_matchBones && _selectedAnimation.has_value() &&
 	    animations.Handle(*_selectedAnimation)->GetBoneMatrices(0).size() != mesh->GetBoneMatrices().size())
@@ -279,7 +280,7 @@ void MeshViewer::Draw([[maybe_unused]] Game& game)
 	ImGui::EndChild();
 }
 
-void MeshViewer::Update(Game& game)
+void MeshViewer::Update() noexcept
 {
 	using namespace ecs::components;
 
@@ -314,7 +315,7 @@ void MeshViewer::Update(Game& game)
 	bgfx::setViewRect(static_cast<bgfx::ViewId>(k_ViewId), 0, 0, width, height);
 
 	// clang-format off
-	uint64_t state = 0u
+	const uint64_t state = 0u
 		| BGFX_STATE_WRITE_MASK
 		| BGFX_STATE_DEPTH_TEST_LESS
 		| BGFX_STATE_CULL_CCW // TODO(bwrsandman): Some meshes wind one way and
@@ -367,16 +368,18 @@ void MeshViewer::Update(Game& game)
 
 	// Get hand position for spawn location
 	auto& registry = Locator::entitiesRegistry::value();
-	const auto& handTransform = registry.Get<Transform>(game.GetHand());
+	const auto& handTransform = registry.Get<Transform>(Game::Instance()->GetHand());
 	_handPosition = handTransform.position;
 	_handPosition.y = Locator::terrainSystem::value().GetHeightAt(glm::xz(_handPosition));
 }
 
-void MeshViewer::ProcessEventOpen([[maybe_unused]] const SDL_Event& event)
+void MeshViewer::ProcessEventOpen(const SDL_Event& event) noexcept
 {
 	const ImGuiIO& io = ImGui::GetIO();
 	switch (event.type)
 	{
+	default:
+		break;
 	case SDL_MOUSEBUTTONDOWN:
 	{
 		if (!io.WantCaptureMouse)
@@ -391,4 +394,4 @@ void MeshViewer::ProcessEventOpen([[maybe_unused]] const SDL_Event& event)
 	}
 }
 
-void MeshViewer::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) {}
+void MeshViewer::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) noexcept {}

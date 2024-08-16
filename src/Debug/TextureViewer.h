@@ -15,16 +15,16 @@
 
 namespace openblack::debug::gui
 {
-class TextureViewer: public Window
+class TextureViewer final: public Window
 {
 public:
-	TextureViewer();
+	TextureViewer() noexcept;
 
 protected:
-	void Draw(Game& game) override;
-	void Update(Game& game) override;
-	void ProcessEventOpen(const SDL_Event& event) override;
-	void ProcessEventAlways(const SDL_Event& event) override;
+	void Draw() noexcept override;
+	void Update() noexcept override;
+	void ProcessEventOpen(const SDL_Event& event) noexcept override;
+	void ProcessEventAlways(const SDL_Event& event) noexcept override;
 
 private:
 	entt::id_type _selectedTexture;
