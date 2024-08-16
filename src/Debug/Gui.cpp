@@ -565,7 +565,7 @@ bool Gui::ShowMenu(Game& game)
 
 			if (ImGui::BeginMenu("Field of View"))
 			{
-				auto& camera = game.GetCamera();
+				auto& camera = Locator::camera::value();
 				float fieldOfView = glm::degrees(camera.GetHorizontalFieldOfView());
 				auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
 				ImGui::Text("Aspect Ratio %.3f", aspect);
@@ -825,7 +825,7 @@ void Gui::ShowVillagerNames(const Game& game)
 	const auto& displaySize = ImGui::GetIO().DisplaySize;
 
 	uint32_t i = 0;
-	const auto& camera = game.GetCamera();
+	const auto& camera = Locator::camera::value();
 	const glm::vec4 viewport =
 	    glm::vec4(ImGui::GetStyle().WindowPadding.x, 0, displaySize.x - ImGui::GetStyle().WindowPadding.x, displaySize.y);
 	std::vector<glm::vec4> coveredAreas;
@@ -962,9 +962,10 @@ void Gui::ShowCameraPositionOverlay(const Game& game)
 	{
 		if (ImGui::Begin("Game Details Overlay", nullptr, cameraPositionOverlayFlags))
 		{
-			const auto camOrigin = game.GetCamera().GetOrigin();
-			const auto camFocus = game.GetCamera().GetFocus();
-			const auto camRot = glm::degrees(game.GetCamera().GetRotation());
+			const auto& camera = Locator::camera::value();
+			const auto camOrigin = camera.GetOrigin();
+			const auto camFocus = camera.GetFocus();
+			const auto camRot = glm::degrees(camera.GetRotation());
 			ImGui::Text("Camera Origin: (%.1f,%.1f,%.1f)", camOrigin.x, camOrigin.y, camOrigin.z);
 			ImGui::Text("Camera Focus: (%.1f,%.1f,%.1f)", camFocus.x, camFocus.y, camFocus.z);
 			ImGui::Text("Camera Rotation: (%.1f,%.1f,%.1f)", camRot.x, camRot.y, camRot.z);

@@ -40,6 +40,7 @@
 #include "ECS/Systems/PlayerSystemInterface.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
+#include "InfoConstants.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
 #include "ScriptingBindingUtils.h"
@@ -578,7 +579,7 @@ void FeatureScriptCommands::StartCameraPos(glm::vec3 focus)
 	static constexpr auto k_DefaultCameraOriginOffset = 120.0f;
 	static constexpr auto k_DefaultCameraOriginOffsetAngles = glm::radians(glm::vec2(12.8571f, 157.51f));
 
-	auto& camera = Game::Instance()->GetCamera();
+	auto& camera = Locator::camera::value();
 	const auto offset = k_DefaultCameraOriginOffset * glm::euclidean(k_DefaultCameraOriginOffsetAngles);
 	camera.SetFocus(focus).SetOrigin(focus + offset);
 }
