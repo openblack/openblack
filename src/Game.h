@@ -36,7 +36,6 @@ union SDL_Event;
 
 namespace openblack
 {
-class Profiler;
 class L3DAnim;
 class L3DMesh;
 class Sky;
@@ -122,7 +121,6 @@ public:
 	void SetGameSpeed(float multiplier) { _gameSpeedMultiplier = multiplier; }
 	[[nodiscard]] float GetGameSpeed() const { return _gameSpeedMultiplier; }
 
-	[[nodiscard]] Profiler& GetProfiler() const { return *_profiler; }
 	[[nodiscard]] Sky& GetSky() const { return *_sky; }
 	[[nodiscard]] Water& GetWater() const { return *_water; }
 	[[nodiscard]] entt::entity GetHand() const;
@@ -143,9 +141,6 @@ private:
 	/// path to Lionhead Studios Ltd/Black & White folder
 	const std::filesystem::path _gamePath;
 
-	std::unique_ptr<Profiler> _profiler;
-
-	// std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<L3DAnim> _testAnimation;
 	std::unique_ptr<L3DMesh> _handModel;

@@ -33,6 +33,7 @@
 #include "ECS/Systems/Implementations/TownSystem.h"
 #include "Graphics/RendererInterface.h"
 #include "Input/GameActionMap.h"
+#include "Profiler.h"
 #include "Resources/Resources.h"
 #include "Windowing/Sdl2WindowingSystem.h"
 #if __ANDROID__
@@ -72,6 +73,8 @@ bool openblack::InitializeGame(uint8_t rendererType, bool vsync) noexcept
 {
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), "EnTT version: {}", ENTT_VERSION);
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), GLM_VERSION_MESSAGE);
+
+	Locator::profiler::emplace();
 
 	Locator::rendererInterface::reset(
 	    RendererInterface::Create(static_cast<bgfx::RendererType::Enum>(rendererType), vsync).release());

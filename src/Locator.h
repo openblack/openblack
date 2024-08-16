@@ -21,9 +21,11 @@ namespace openblack
 struct EngineConfig;
 class Camera;
 class EventManager;
-class RandomNumberManagerInterface;
 class LandIslandInterface;
+class Profiler;
+class RandomNumberManagerInterface;
 class TempleInteriorInterface;
+
 namespace v120
 {
 struct InfoConstants;
@@ -91,6 +93,7 @@ struct Locator
 {
 	using config = entt::locator<EngineConfig>;
 	using infoConstants = entt::locator<const InfoConstants>;
+	using profiler = entt::locator<Profiler>;
 	using events = entt::locator<EventManager>;
 	using windowing = entt::locator<windowing::WindowingInterface>;
 	using debugGui = entt::locator<debug::gui::DebugGuiInterface>;

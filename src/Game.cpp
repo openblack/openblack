@@ -163,6 +163,7 @@ Game::~Game() noexcept
 	Locator::camera::reset();
 	Locator::config::reset();
 	Locator::infoConstants::reset();
+	Locator::profiler::reset();
 	SDL_Quit(); // todo: move to GameWindow
 	spdlog::shutdown();
 }
@@ -299,12 +300,14 @@ bool Game::GameLogicLoop() noexcept
 	// Build Map Grid Acceleration Structure
 	Locator::entitiesMap::value().Rebuild();
 
+	auto& profiler = Locator::profiler::value();
+
 	{
-		auto pathfinding = _profiler->BeginScoped(Profiler::Stage::PathfindingUpdate);
+		auto pathfinding = profiler.BeginScoped(Profiler::Stage::PathfindingUpdate);
 		Locator::pathfindingSystem::value().Update();
 	}
 	{
-		auto actions = _profiler->BeginScoped(Profiler::Stage::LivingActionUpdate);
+		auto actions = profiler.BeginScoped(Profiler::Stage::LivingActionUpdate);
 		Locator::livingActionSystem::value().Update();
 	}
 
@@ -317,13 +320,15 @@ bool Game::GameLogicLoop() noexcept
 
 bool Game::Update() noexcept
 {
-	_profiler->Frame();
+	auto& profiler = Locator::profiler::value();
+
+	profiler.Frame();
 
 	auto& camera = Locator::camera::value();
 	auto& config = Locator::config::value();
 
-	auto previous = _profiler->GetEntries().at(_profiler->GetEntryIndex(-1)).frameStart;
-	auto current = _profiler->GetEntries().at(_profiler->GetEntryIndex(0)).frameStart;
+	auto previous = profiler.GetEntries().at(profiler.GetEntryIndex(-1)).frameStart;
+	auto current = profiler.GetEntries().at(profiler.GetEntryIndex(0)).frameStart;
 	// Prevent spike at first frame
 	if (previous.time_since_epoch().count() == 0)
 	{
@@ -335,7 +340,7 @@ bool Game::Update() noexcept
 
 	// Physics
 	{
-		auto physics = _profiler->BeginScoped(Profiler::Stage::PhysicsUpdate);
+		auto physics = profiler.BeginScoped(Profiler::Stage::PhysicsUpdate);
 		if (_frameCount > 0)
 		{
 			auto& dynamicsSystem = Locator::dynamicsSystem::value();
@@ -346,7 +351,7 @@ bool Game::Update() noexcept
 
 	// Input events
 	{
-		auto sdlInput = _profiler->BeginScoped(Profiler::Stage::SdlInput);
+		auto sdlInput = profiler.BeginScoped(Profiler::Stage::SdlInput);
 		if (!Locator::debugGui::value().StealsFocus())
 		{
 			Locator::gameActionSystem::value().Frame();
@@ -366,7 +371,7 @@ bool Game::Update() noexcept
 
 	// ImGui events + prepare
 	{
-		auto guiLoop = _profiler->BeginScoped(Profiler::Stage::GuiLoop);
+		auto guiLoop = profiler.BeginScoped(Profiler::Stage::GuiLoop);
 		if (Locator::debugGui::value().Loop())
 		{
 			return false; // Quit event
@@ -378,7 +383,7 @@ bool Game::Update() noexcept
 
 	// Update Game Logic in Registry
 	{
-		auto gameLogic = _profiler->BeginScoped(Profiler::Stage::GameLogic);
+		auto gameLogic = profiler.BeginScoped(Profiler::Stage::GameLogic);
 		if (GameLogicLoop())
 		{
 			return false; // Quit event
@@ -387,7 +392,7 @@ bool Game::Update() noexcept
 
 	// Update Uniforms
 	{
-		auto profilerScopedUpdateUniforms = _profiler->BeginScoped(Profiler::Stage::UpdateUniforms);
+		auto profilerScopedUpdateUniforms = profiler.BeginScoped(Profiler::Stage::UpdateUniforms);
 
 		// Update Debug Cross
 		ecs::components::Transform intersectionTransform {};
@@ -447,7 +452,7 @@ bool Game::Update() noexcept
 
 		// Update Entities
 		{
-			auto updateEntities = _profiler->BeginScoped(Profiler::Stage::UpdateEntities);
+			auto updateEntities = profiler.BeginScoped(Profiler::Stage::UpdateEntities);
 			if (config.drawEntities)
 			{
 				Locator::rendereringSystem::value().PrepareDraw(config.drawBoundingBoxes, config.drawFootpaths,
@@ -458,7 +463,7 @@ bool Game::Update() noexcept
 
 	// Update Audio
 	{
-		auto updateAudio = _profiler->BeginScoped(Profiler::Stage::UpdateAudio);
+		auto updateAudio = profiler.BeginScoped(Profiler::Stage::UpdateAudio);
 		Locator::audio::value().Update();
 	} // Update Audio
 
@@ -718,9 +723,6 @@ bool Game::Initialize() noexcept
 		}
 	});
 
-	// Create profiler
-	_profiler = std::make_unique<Profiler>();
-
 	// Load all sound packs in the Audio directory
 	auto& audioManager = Locator::audio::value();
 	fileSystem.Iterate(
@@ -874,15 +876,15 @@ bool Game::Run() noexcept
 
 	_frameCount = 0;
 	auto lastTime = std::chrono::high_resolution_clock::now();
+	auto& profiler = Locator::profiler::value();
 	while (Update())
 	{
 		auto duration = std::chrono::high_resolution_clock::now() - lastTime;
 		auto milliseconds = std::chrono::duration_cast<std::chrono::duration<uint32_t, std::milli>>(duration);
 		{
-			auto section = _profiler->BeginScoped(Profiler::Stage::SceneDraw);
+			auto section = profiler.BeginScoped(Profiler::Stage::SceneDraw);
 
 			const graphics::RendererInterface::DrawSceneDesc drawDesc {
-			    .profiler = *_profiler,
 			    .camera = &Locator::camera::value(),
 			    .frameBuffer = nullptr,
 			    .sky = *_sky,
@@ -908,12 +910,12 @@ bool Game::Run() noexcept
 		}
 
 		{
-			auto section = _profiler->BeginScoped(Profiler::Stage::GuiDraw);
+			auto section = profiler.BeginScoped(Profiler::Stage::GuiDraw);
 			Locator::debugGui::value().Draw();
 		}
 
 		{
-			auto section = _profiler->BeginScoped(Profiler::Stage::RendererFrame);
+			auto section = profiler.BeginScoped(Profiler::Stage::RendererFrame);
 			Locator::rendererInterface::value().Frame();
 		}
 

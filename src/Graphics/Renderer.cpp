@@ -419,7 +419,7 @@ void Renderer::DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint
 void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 {
 	const auto viewId = graphics::RenderPass::Footprint;
-	auto section = drawDesc.profiler.BeginScoped(Profiler::Stage::FootprintPass);
+	auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::FootprintPass);
 	if (drawDesc.drawIsland)
 	{
 		const auto& island = Locator::terrainSystem::value();
@@ -467,7 +467,7 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 	DrawFootprintPass(drawDesc);
 	// Reflection Pass
 	{
-		auto section = drawDesc.profiler.BeginScoped(Profiler::Stage::ReflectionPass);
+		auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::ReflectionPass);
 		if (drawDesc.drawWater)
 		{
 			DrawSceneDesc drawPassDesc = drawDesc;
@@ -489,7 +489,7 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 
 	// Main Draw Pass
 	{
-		auto section = drawDesc.profiler.BeginScoped(Profiler::Stage::MainPass);
+		auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::MainPass);
 		DrawPass(drawDesc);
 	}
 }
@@ -497,6 +497,7 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 void Renderer::DrawPass(const DrawSceneDesc& desc) const
 {
 	const auto& meshManager = Locator::resources::value().GetMeshes();
+	auto& profiler = Locator::profiler::value();
 
 	if (desc.frameBuffer != nullptr)
 	{
@@ -518,8 +519,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	const auto* objectShaderHeightMapInstanced = _shaderManager->GetShader("ObjectHeightMapInstanced");
 
 	{
-		auto section = desc.profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSky
-		                                                                               : Profiler::Stage::MainPassDrawSky);
+		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSky
+		                                                                          : Profiler::Stage::MainPassDrawSky);
 		if (desc.drawSky)
 		{
 			const auto modelMatrix = glm::mat4(1.0f);
@@ -547,8 +548,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	}
 
 	{
-		auto section = desc.profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawWater
-		                                                                               : Profiler::Stage::MainPassDrawWater);
+		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawWater
+		                                                                          : Profiler::Stage::MainPassDrawWater);
 		if (desc.drawWater)
 		{
 			const auto& mesh = desc.water.GetMesh();
@@ -567,8 +568,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	}
 
 	{
-		auto section = desc.profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawIsland
-		                                                                               : Profiler::Stage::MainPassDrawIsland);
+		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawIsland
+		                                                                          : Profiler::Stage::MainPassDrawIsland);
 		if (desc.drawIsland)
 		{
 			auto& island = Locator::terrainSystem::value();
@@ -619,8 +620,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	}
 
 	{
-		auto section = desc.profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawModels
-		                                                                               : Profiler::Stage::MainPassDrawModels);
+		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawModels
+		                                                                          : Profiler::Stage::MainPassDrawModels);
 		if (desc.drawEntities)
 		{
 			L3DMeshSubmitDesc submitDesc = {};
@@ -699,8 +700,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 		{
 			auto subSection =
-			    desc.profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSprites
-			                                                                    : Profiler::Stage::MainPassDrawSprites);
+			    profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSprites
+			                                                               : Profiler::Stage::MainPassDrawSprites);
 
 			if (desc.drawSprites)
 			{
@@ -765,9 +766,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	}
 
 	{
-		auto section =
-		    desc.profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawDebugCross
-		                                                                    : Profiler::Stage::MainPassDrawDebugCross);
+		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawDebugCross
+		                                                                          : Profiler::Stage::MainPassDrawDebugCross);
 		if (desc.drawDebugCross)
 		{
 			bgfx::setTransform(glm::value_ptr(_debugCrossPose));

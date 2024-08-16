@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <filesystem>
+
 #include <glm/vec2.hpp>
 
 #include "RenderPass.h"
@@ -38,7 +40,6 @@ class RendererInterface
 public:
 	struct DrawSceneDesc
 	{
-		Profiler& profiler;
 		const Camera* camera;
 		const graphics::FrameBuffer* frameBuffer;
 		const Sky& sky;

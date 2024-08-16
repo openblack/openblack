@@ -18,7 +18,6 @@
 #include "ECS/Components/Tree.h"
 #include "ECS/Registry.h"
 #include "EngineConfig.h"
-#include "Game.h"
 #include "Graphics/RendererInterface.h"
 #include "Locator.h"
 
@@ -103,7 +102,7 @@ void Profiler::Draw() noexcept
 
 	ImGui::Columns(1);
 
-	const auto& profiler = Game::Instance()->GetProfiler();
+	const auto& profiler = Locator::profiler::value();
 	const auto& entry = profiler.GetEntries().at(profiler.GetEntryIndex(-1));
 
 	ImGuiWidgetFlameGraph::PlotFlame(
