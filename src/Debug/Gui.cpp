@@ -41,27 +41,29 @@
 #include <SDL2/SDL_syswm.h>
 #endif
 
-#include <3D/Sky.h>
-#include <Camera/Camera.h>
-#include <ECS/Components/LivingAction.h>
-#include <ECS/Components/Transform.h>
-#include <ECS/Components/Villager.h>
-#include <ECS/Registry.h>
-#include <FileSystem/FileSystemInterface.h>
-#include <Locator.h>
-#include <Resources/ResourcesInterface.h>
-#include <Windowing/WindowingInterface.h>
-
+#include "3D/Sky.h"
 #include "Audio.h"
+#include "Camera/Camera.h"
 #include "Console.h"
+#include "ECS/Components/LivingAction.h"
+#include "ECS/Components/Transform.h"
+#include "ECS/Components/Villager.h"
+#include "ECS/Registry.h"
+#include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
+#include "FileSystem/FileSystemInterface.h"
+#include "Game.h"
+#include "ImGuiUtils.h"
 #include "LHVMViewer.h"
 #include "LandIsland.h"
+#include "Locator.h"
 #include "MeshViewer.h"
 #include "PathFinding.h"
 #include "Profiler.h"
+#include "Resources/ResourcesInterface.h"
 #include "Temple.h"
 #include "TextureViewer.h"
+#include "Windowing/WindowingInterface.h"
 
 // Turn off formatting because it adds spaces which break the stringifying
 // clang-format off
@@ -80,9 +82,7 @@
 #include "Graphics/ShaderIncluder.h"
 #define SHADER_NAME fs_ocornut_imgui
 #define SHADER_DIR IMGUI_SHADER_DIR
-#include "Game.h"
 #include "Graphics/ShaderIncluder.h"
-#include "ImGuiUtils.h"
 
 using namespace openblack;
 using namespace openblack::debug::gui;
@@ -985,9 +985,15 @@ void Gui::ShowCameraPositionOverlay() noexcept
 
 			auto& game = *Game::Instance();
 
-			const auto& handPosition =
-			    Locator::entitiesRegistry::value().Get<ecs::components::Transform>(game.GetHand()).position;
-			ImGui::Text("Hand Position: (%.1f,%.1f,%.1f)", handPosition.x, handPosition.y, handPosition.z);
+			const auto positions = Locator::handSystem::value().GetPlayerHandPositions();
+			if (positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)] ||
+			    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)])
+			{
+				const auto position = positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)].value_or(
+				    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)].value_or(
+				        glm::zero<glm::vec3>()));
+				ImGui::Text("Hand Position: (%.1f,%.1f,%.1f)", position.x, position.y, position.z);
+			}
 
 			const auto* stats = bgfx::getStats();
 			const auto* caps = bgfx::getCaps();

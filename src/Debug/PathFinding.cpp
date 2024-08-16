@@ -24,7 +24,7 @@
 #include "ECS/Components/WallHug.h"
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
-#include "Game.h"
+#include "ECS/Systems/HandSystemInterface.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -184,19 +184,31 @@ void PathFinding::Update() noexcept
 {
 	using namespace ecs::components;
 	auto& registry = Locator::entitiesRegistry::value();
-	const auto& handTransform = registry.Get<Transform>(Game::Instance()->GetHand());
 	auto const& meshes = Locator::resources::value().GetMeshes();
-	glm::bvec3 invalidValue {};
-	for (glm::length_t l = 0; l < decltype(handTransform.position)::length(); ++l)
+
+	std::optional<glm::vec3> handPosition;
+	const auto positions = Locator::handSystem::value().GetPlayerHandPositions();
+	if (positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)] ||
+	    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)])
 	{
-		invalidValue[l] = glm::isnan(handTransform.position[l]) || glm::isinf(handTransform.position[l]);
+		handPosition = positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)].value_or(
+		    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)].value_or(glm::zero<glm::vec3>()));
 	}
-	if (glm::any(invalidValue))
+
+	if (handPosition.has_value())
 	{
-		return;
+		glm::bvec3 invalidValue {};
+		for (glm::length_t l = 0; l < std::remove_reference_t<decltype(*handPosition)>::length(); ++l)
+		{
+			invalidValue[l] = glm::isnan((*handPosition)[l]) || glm::isinf((*handPosition)[l]);
+		}
+		if (glm::any(invalidValue))
+		{
+			return;
+		}
+		_handPosition = *handPosition;
+		_handPosition.y = Locator::terrainSystem::value().GetHeightAt(glm::xz(_handPosition));
 	}
-	_handPosition = handTransform.position;
-	_handPosition.y = Locator::terrainSystem::value().GetHeightAt(glm::xz(_handPosition));
 
 	if (_handTo == HandTo::Entity)
 	{
@@ -255,7 +267,10 @@ void PathFinding::Update() noexcept
 	}
 	else if (_handTo == HandTo::Destination)
 	{
-		_destination = handTransform.position;
+		if (handPosition.has_value())
+		{
+			_destination = *handPosition;
+		}
 	}
 	_handTo = HandTo::None;
 }

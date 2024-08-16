@@ -76,13 +76,14 @@ class MapInterface;
 
 namespace ecs::systems
 {
-class RenderingSystemInterface;
-class DynamicsSystemInterface;
 class CameraBookmarkSystemInterface;
+class DynamicsSystemInterface;
+class HandSystemInterface;
 class LivingActionSystemInterface;
-class TownSystemInterface;
 class PathfindingSystemInterface;
 class PlayerSystemInterface;
+class RenderingSystemInterface;
+class TownSystemInterface;
 } // namespace ecs::systems
 
 void InitializeWindow(const std::string& title, int width, int height, windowing::DisplayMode displayMode, uint32_t extraFlags);
@@ -114,6 +115,7 @@ struct Locator
 	using entitiesRegistry = entt::locator<ecs::Registry>;
 	using entitiesMap = entt::locator<ecs::MapInterface>;
 	using playerSystem = entt::locator<ecs::systems::PlayerSystemInterface>;
+	using handSystem = entt::locator<ecs::systems::HandSystemInterface>;
 	using temple = entt::locator<TempleInteriorInterface>;
 };
 } // namespace openblack

@@ -34,7 +34,6 @@
 #include "Common/RandomNumberManager.h"
 #include "Common/StringUtils.h"
 #include "Debug/DebugGuiInterface.h"
-#include "ECS/Archetypes/HandArchetype.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
 #include "ECS/Components/Mobile.h"
@@ -43,6 +42,7 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/CameraBookmarkSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
+#include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "ECS/Systems/PathfindingSystemInterface.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
@@ -149,6 +149,7 @@ Game::~Game() noexcept
 	Locator::cameraBookmarkSystem::reset();
 	Locator::livingActionSystem::reset();
 	Locator::townSystem::reset();
+	Locator::handSystem::reset();
 	Locator::pathfindingSystem::reset();
 	Locator::terrainSystem::reset();
 	Locator::filesystem::reset();
@@ -156,7 +157,8 @@ Game::~Game() noexcept
 
 	_water.reset();
 	_sky.reset();
-	Locator::debugGui ::reset();
+	Locator::debugGui::reset();
+	Locator::entitiesRegistry::reset();
 	Locator::rendererInterface::reset();
 	Locator::windowing::reset();
 	Locator::events::reset();
@@ -166,11 +168,6 @@ Game::~Game() noexcept
 	Locator::profiler::reset();
 	SDL_Quit(); // todo: move to GameWindow
 	spdlog::shutdown();
-}
-
-entt::entity Game::GetHand() const
-{
-	return _handEntity;
 }
 
 bool Game::ProcessEvents(const SDL_Event& event) noexcept
@@ -441,7 +438,10 @@ bool Game::Update() noexcept
 		{
 			const glm::vec3 handOffset(0, 1.5f, 0);
 			const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
-			auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(_handEntity);
+
+			const auto handEntity = Locator::handSystem::value()
+			                            .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
+			auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(handEntity);
 			// TODO(#480): move using velocity rather than snapping hand to intersectionTransform
 			handTransform.position = intersectionTransform.position;
 			handTransform.rotation = glm::eulerAngleY(camera.GetRotation().y) * modelRotationCorrection;
@@ -953,11 +953,9 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 
 	// Reset everything. Deletes all entities and their components
 	Locator::entitiesRegistry::value().Reset();
-
 	// TODO(#661): split entities that are permanent from map entities and move hand and camera to init
 	// We need a hand for the player
-	_handEntity = ecs::archetypes::HandArchetype::Create(glm::vec3(0.0f), glm::half_pi<float>(), 0.0f, glm::half_pi<float>(),
-	                                                     0.01f, false);
+	Locator::handSystem::value().Initialize();
 
 	// create our camera
 	auto& config = Locator::config::value();

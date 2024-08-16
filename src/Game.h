@@ -123,7 +123,6 @@ public:
 
 	[[nodiscard]] Sky& GetSky() const { return *_sky; }
 	[[nodiscard]] Water& GetWater() const { return *_water; }
-	[[nodiscard]] entt::entity GetHand() const;
 	[[nodiscard]] const lhvm::LHVM& GetLhvm() const { return *_lhvm; }
 	lhvm::LHVM& GetLhvm() { return *_lhvm; }
 	[[nodiscard]] uint16_t GetTurn() const { return _turnCount; }
@@ -161,7 +160,6 @@ private:
 	glm::ivec2 _mousePosition;
 	glm::mat4 _handPose;
 
-	entt::entity _handEntity;
 	bool _handGripping;
 
 	std::optional<std::pair</* frame number */ uint32_t, /* output */ std::filesystem::path>> _requestScreenshot;

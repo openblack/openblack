@@ -18,7 +18,7 @@
 
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
-#include "Game.h" // For hand
+#include "ECS/Systems/HandSystemInterface.h"
 #include "Locator.h"
 #include "Windowing/WindowingInterface.h"
 
@@ -352,31 +352,10 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 
 std::array<std::optional<glm::vec3>, 2> GameActionMap::GetHandPositions() const
 {
-	// Assume left-handed player since that's what the hand mesh is at the time of writing
-	const auto& registry = Locator::entitiesRegistry::value();
+	auto handPositions = Locator::handSystem::value().GetPlayerHandPositions();
 
-	const auto& leftHand = std::make_optional(Game::Instance()->GetHand());
-	// Only one hand at this point in time
-	const auto& rightHand = std::optional<entt::entity>();
-
-	std::optional<glm::vec3> leftPosition;
-	std::optional<glm::vec3> rightPosition;
-	auto getHandPosition = [&registry](auto hand) -> std::optional<glm::vec3> {
-		return registry.Get<ecs::components::Transform>(hand).position;
-	};
-	leftPosition = leftHand.and_then(getHandPosition);
-	rightPosition = rightHand.and_then(getHandPosition);
-
-	// TODO(#693): Hand Getter should return an optional if the hand doesn't have a valid position
-	// When the position is zero, it probably means it's not on the map (e.g. mouse is in the sky)
-	if (leftPosition == glm::zero<glm::vec3>())
-	{
-		leftPosition = std::nullopt;
-	}
-	if (rightPosition == glm::zero<glm::vec3>())
-	{
-		rightPosition = std::nullopt;
-	}
-
-	return {{leftPosition, rightPosition}};
+	return {{
+	    handPositions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)],
+	    handPositions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)],
+	}};
 }
