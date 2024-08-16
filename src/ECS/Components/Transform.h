@@ -11,7 +11,8 @@
 
 #include <optional>
 
-#include <glm/glm.hpp>
+#include <glm/mat3x3.hpp>
+#include <glm/vec3.hpp>
 
 namespace openblack::ecs::components
 {
@@ -24,9 +25,9 @@ struct Transform
 	glm::vec3 scale;
 };
 
-inline std::optional<glm::vec3> GetTransformPosition(const Transform& hit)
+inline std::optional<glm::vec3> GetTransformPosition(const Transform& transform)
 {
-	return hit.position;
+	return transform.position;
 };
 
 } // namespace openblack::ecs::components

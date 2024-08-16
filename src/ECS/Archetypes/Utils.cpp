@@ -9,7 +9,6 @@
 
 #include "Utils.h"
 
-#include <glm/glm.hpp>
 #include <glm/gtx/component_wise.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 

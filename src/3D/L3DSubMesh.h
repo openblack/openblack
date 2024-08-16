@@ -16,7 +16,6 @@
 
 #include <L3DFile.h>
 #include <bgfx/bgfx.h>
-#include <glm/fwd.hpp>
 
 #include "AxisAlignedBoundingBox.h"
 
