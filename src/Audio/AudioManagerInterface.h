@@ -22,8 +22,6 @@
 namespace openblack
 {
 
-class Game;
-
 namespace audio
 {
 
@@ -31,7 +29,7 @@ class AudioManagerInterface
 {
 public:
 	virtual void Stop() = 0;
-	virtual void Update(Game& game) = 0;
+	virtual void Update() = 0;
 	virtual BufferId CreateBuffer(ChannelLayout layout, const std::vector<int16_t>& buffer, int sampleRate) = 0;
 	virtual void CreateBuffer(Sound& sound) = 0;
 	virtual void PlayEmitter(entt::entity emitter) = 0;

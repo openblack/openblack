@@ -60,7 +60,7 @@ void AudioManager::Stop()
 	StopMusic();
 }
 
-void AudioManager::Update(Game& game)
+void AudioManager::Update()
 {
 	auto& camera = Locator::camera::value();
 	auto pos = camera.GetOrigin();
