@@ -26,6 +26,7 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
+#include "ECS/Systems/Implementations/HandSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
 #include "ECS/Systems/Implementations/PathfindingSystem.h"
 #include "ECS/Systems/Implementations/PlayerSystem.h"
@@ -53,6 +54,7 @@ using openblack::ecs::MapProduction;
 using openblack::ecs::Registry;
 using openblack::ecs::systems::CameraBookmarkSystem;
 using openblack::ecs::systems::DynamicsSystem;
+using openblack::ecs::systems::HandSystem;
 using openblack::ecs::systems::LivingActionSystem;
 using openblack::ecs::systems::PathfindingSystem;
 using openblack::ecs::systems::PlayerSystem;
@@ -107,6 +109,7 @@ bool openblack::InitializeGame(uint8_t rendererType, bool vsync) noexcept
 	Locator::gameActionSystem::emplace<GameActionMap>();
 	Locator::rendereringSystem::emplace<RenderingSystem>();
 	Locator::entitiesRegistry::emplace<Registry>();
+	Locator::handSystem::emplace<HandSystem>();
 	Locator::temple::emplace<TempleInterior>();
 
 	return true;

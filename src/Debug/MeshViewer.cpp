@@ -26,7 +26,7 @@
 #include "Debug/ImGuiUtils.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Registry.h"
-#include "Game.h"
+#include "ECS/Systems/HandSystemInterface.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/RendererInterface.h"
 #include "Graphics/ShaderManager.h"
@@ -367,10 +367,15 @@ void MeshViewer::Update() noexcept
 	}
 
 	// Get hand position for spawn location
-	auto& registry = Locator::entitiesRegistry::value();
-	const auto& handTransform = registry.Get<Transform>(Game::Instance()->GetHand());
-	_handPosition = handTransform.position;
-	_handPosition.y = Locator::terrainSystem::value().GetHeightAt(glm::xz(_handPosition));
+	const auto positions = Locator::handSystem::value().GetPlayerHandPositions();
+	if (positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)] ||
+	    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)])
+	{
+		const auto position = positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)].value_or(
+		    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)].value_or(glm::zero<glm::vec3>()));
+		_handPosition = position;
+		_handPosition.y = Locator::terrainSystem::value().GetHeightAt(glm::xz(_handPosition));
+	}
 }
 
 void MeshViewer::ProcessEventOpen(const SDL_Event& event) noexcept

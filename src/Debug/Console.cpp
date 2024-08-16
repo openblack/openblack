@@ -19,7 +19,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
-#include "Game.h"
+#include "ECS/Systems/HandSystemInterface.h"
 #include "LHScriptX/FeatureScriptCommands.h"
 #include "LHScriptX/Script.h"
 #include "Locator.h"
@@ -382,15 +382,21 @@ void Console::Draw() noexcept
 			const auto pre = std::string(_inputBuffer.data(), _inputBuffer.data() + _inputCursorPosition);
 			const auto post = std::string(_inputBuffer.data() + _inputCursorPosition);
 
-			const auto& position =
-			    Locator::entitiesRegistry::value().Get<ecs::components::Transform>(Game::Instance()->GetHand()).position;
-			snprintf(_inputBuffer.data(), _inputBuffer.size(), "%s%.2f,%.2f%s", pre.c_str(), position.x, position.z,
-			         post.c_str());
+			const auto positions = Locator::handSystem::value().GetPlayerHandPositions();
+			if (positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)] ||
+			    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)])
+			{
+				const auto position = positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)].value_or(
+				    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)].value_or(
+				        glm::zero<glm::vec3>()));
+				snprintf(_inputBuffer.data(), _inputBuffer.size(), "%s%.2f,%.2f%s", pre.c_str(), position.x, position.z,
+				         post.c_str());
+			}
 		}
 	}
 	_insertHandPosition = false;
 
-	// Auto-focus on window apparition
+	// Autofocus on window apparition
 	ImGui::SetItemDefaultFocus();
 	if (_reclaimFocus)
 	{
