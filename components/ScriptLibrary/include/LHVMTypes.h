@@ -47,11 +47,6 @@ static const std::array<std::string, static_cast<size_t>(DataType::Count)> k_Dat
 static const std::array<std::string, static_cast<size_t>(DataType::Count)> k_DataTypeChars = {"",  "I", "F", "V",
                                                                                               "O", "",  "B", ""};
 
-typedef union UnionValue
-{
-	float floatVal;
-	int32_t intVal;
-	uint32_t uintVal;
 using VMValue = union UnionValue
 {
 	float floatVal;
