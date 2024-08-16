@@ -37,15 +37,14 @@ enum class DataType : uint32_t
 	Unk5,
 	Boolean,
 	Unk7,
-
-	Count
+	_Count
 };
 
-static const std::array<std::string, static_cast<size_t>(DataType::Count)> k_DataTypeNames = {
+static const std::array<std::string, static_cast<size_t>(DataType::_Count)> k_DataTypeNames = {
     "NONE", "INT", "FLOAT", "VECTOR", "OBJECT", "UNK2", "BOOLEAN", "UNK4"};
 
-static const std::array<std::string, static_cast<size_t>(DataType::Count)> k_DataTypeChars = {"",  "I", "F", "V",
-                                                                                              "O", "",  "B", ""};
+static const std::array<std::string, static_cast<size_t>(DataType::_Count)> k_DataTypeChars = {"",  "I", "F", "V",
+                                                                                               "O", "",  "B", ""};
 
 struct VMValue
 {
@@ -116,12 +115,14 @@ static_assert(sizeof(VMStack) == 268);
 
 enum class ScriptType : uint32_t
 {
-	Script = 1,
-	Help = 2,
-	ChallengeHelp = 4,
-	TempleHelp = 8,
-	TempleSpecial = 16,
-	MultiplayerHelp = 64,
+	None = 0,
+	Script = 1 << 0,
+	Help = 1 << 1,
+	ChallengeHelp = 1 << 2,
+	TempleHelp = 1 << 3,
+	TempleSpecial = 1 << 4,
+	Unknown5 = 1 << 5,
+	MultiplayerHelp = 1 << 6,
 
 	All = 0xFFFFFFFF
 };
@@ -141,12 +142,14 @@ constexpr bool operator&(ScriptType lhs, uint32_t rhs)
 	return (static_cast<uint32_t>(lhs) & rhs) != 0;
 }
 
-static const std::map<ScriptType, std::string> k_ScriptTypeNames = {{ScriptType::Script, "script"},
-                                                                    {ScriptType::Help, "help script"},
-                                                                    {ScriptType::ChallengeHelp, "challenge help script"},
-                                                                    {ScriptType::TempleHelp, "temple help script"},
-                                                                    {ScriptType::TempleSpecial, "temple special script"},
-                                                                    {ScriptType::MultiplayerHelp, "multiplayer help script"}};
+static const std::map<ScriptType, std::string> k_ScriptTypeNames = {
+	{ScriptType::Script, "script"},
+	{ScriptType::Help, "help script"},
+	{ScriptType::ChallengeHelp, "challenge help script"},
+	{ScriptType::TempleHelp, "temple help script"},
+	{ScriptType::TempleSpecial, "temple special script"},
+	{ScriptType::MultiplayerHelp, "multiplayer help script"},
+};
 
 enum class Opcode : uint32_t
 {
@@ -181,11 +184,10 @@ enum class Opcode : uint32_t
 	BrkExcept,
 	Swap,
 	Line,
-
-	Count
+	_Count
 };
 
-static const std::array<std::string, static_cast<size_t>(Opcode::Count)> k_OpcodeNames = {
+static const std::array<std::string, static_cast<size_t>(Opcode::_Count)> k_OpcodeNames = {
     "END",    "JZ",   "PUSH", "POP",       "ADD",       "SYS",        "SUB",       "NEG",  "MUL", "DIV", "MOD",
     "NOT",    "AND",  "OR",   "EQ",        "NE",        "GE",         "LE",        "GT",   "LT",  "JMP", "SLEEP",
     "EXCEPT", "CAST", "RUN",  "ENDEXCEPT", "RETEXCEPT", "FAILEXCEPT", "BRKEXCEPT", "SWAP", "LINE"};
@@ -340,19 +342,20 @@ enum class ErrorCode : uint8_t
 	DivByZero,
 	InvalidType,
 	InvalidOperand,
-
-	Count
+	_Count
 };
 
-static const std::array<std::string, static_cast<size_t>(ErrorCode::Count)> k_ErrorMsg = {"no error",
-                                                                                          "stack is empty",
-                                                                                          "stack is full",
-                                                                                          "script id not found",
-                                                                                          "script name not found",
-                                                                                          "no script of type",
-                                                                                          "task id not found",
-                                                                                          "native function not found",
-                                                                                          "division by zero",
-                                                                                          "invalid data type"};
+static const std::array<std::string, static_cast<size_t>(ErrorCode::_Count)> k_ErrorMsg = {
+	"no error",
+	"stack is empty",
+	"stack is full",
+	"script id not found",
+	"script name not found",
+	"no script of type",
+	"task id not found",
+	"native function not found",
+	"division by zero",
+	"invalid data type",
+};
 
 } // namespace openblack::lhvm
