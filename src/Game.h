@@ -28,6 +28,7 @@
 #endif
 #include <spdlog/common.h>
 
+#include "EngineConfig.h"
 #include "InfoConstants.h"
 #include "Windowing/WindowingInterface.h" // For DisplayMode
 
@@ -106,46 +107,6 @@ public:
 	static constexpr float k_TurnDurationMultiplierNormal = 1.0f;
 	static constexpr float k_TurnDurationMultiplierFast = 0.5f;
 
-	struct Config
-	{
-		bool wireframe {false};
-		bool showVillagerNames {false};
-		bool debugVillagerNames {false};
-		bool debugVillagerStates {false};
-
-		bool viewDetailOverlay {false};
-		bool drawSky {true};
-		bool drawWater {true};
-		bool drawIsland {true};
-		bool drawEntities {true};
-		bool drawSprites {true};
-		bool drawTestModel {true};
-		bool drawDebugCross {true};
-		bool drawBoundingBoxes {false};
-		bool drawFootpaths {false};
-		bool drawStreams {false};
-
-		bool vsync {false};
-		bool running {false};
-
-		float timeOfDay {12.0f};
-		float skyAlignment {0.0f};
-		float bumpMapStrength {1.0f};
-		float smallBumpMapStrength {1.0f};
-
-		float cameraXFov {70.0f};
-		float cameraNearClip {1.0f};
-		float cameraFarClip {static_cast<float>(0x10000)};
-
-		float guiScale {1.0f};
-
-		bgfx::RendererType::Enum rendererType {bgfx::RendererType::Noop};
-		glm::u16vec2 resolution {256, 256};
-		openblack::windowing::DisplayMode displayMode {openblack::windowing::DisplayMode::Windowed};
-
-		uint32_t numFramesToSimulate {0};
-	};
-
 	explicit Game(Arguments&& args) noexcept;
 	virtual ~Game() noexcept;
 
@@ -173,8 +134,8 @@ public:
 	[[nodiscard]] const LHVM::LHVM& GetLhvm() const { return *_lhvm; }
 	LHVM::LHVM& GetLhvm() { return *_lhvm; }
 	const InfoConstants& GetInfoConstants() { return _infoConstants; } ///< Access should be only read-only
-	Config& GetConfig() { return _config; }
-	[[nodiscard]] const Config& GetConfig() const { return _config; }
+	EngineConfig& GetConfig() { return _config; }
+	[[nodiscard]] const EngineConfig& GetConfig() const { return _config; }
 	[[nodiscard]] uint16_t GetTurn() const { return _turnCount; }
 	[[nodiscard]] bool IsPaused() const { return _paused; }
 	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const { return _turnDeltaTime; }
@@ -203,7 +164,7 @@ private:
 	std::unique_ptr<LHVM::LHVM> _lhvm;
 
 	InfoConstants _infoConstants;
-	Config _config;
+	EngineConfig _config;
 	std::filesystem::path _startMap;
 
 	std::chrono::steady_clock::time_point _lastGameLoopTime;
