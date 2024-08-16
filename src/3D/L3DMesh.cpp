@@ -19,7 +19,9 @@
 #include <glm/matrix.hpp>
 #include <spdlog/spdlog.h>
 
+#include "3D/L3DSubMesh.h"
 #include "FileSystem/FileSystemInterface.h"
+#include "Graphics/Texture2D.h"
 #include "Graphics/VertexBuffer.h"
 #include "Locator.h"
 

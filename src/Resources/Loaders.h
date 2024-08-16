@@ -14,11 +14,16 @@
 #include <PackFile.h>
 
 #include "3D/L3DAnim.h"
-#include "3D/L3DMesh.h"
 #include "3D/Light.h"
 #include "Audio/Sound.h"
 #include "Creature/CreatureMind.h"
 #include "Level.h"
+
+namespace openblack::graphics
+{
+class L3DMesh;
+class Texture2D;
+} // namespace openblack::graphics
 
 namespace openblack::pack
 {
@@ -28,8 +33,6 @@ struct G3DTexture;
 
 namespace openblack::resources
 {
-
-using namespace l3d;
 
 template <typename Resource>
 struct BaseLoader
@@ -44,7 +47,7 @@ struct BaseLoader
 	};
 };
 
-struct L3DLoader final: BaseLoader<L3DMesh>
+struct L3DLoader final: BaseLoader<graphics::L3DMesh>
 {
 	[[nodiscard]] result_type operator()(FromBufferTag, const std::string& debugName, const std::vector<uint8_t>& data) const;
 	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;

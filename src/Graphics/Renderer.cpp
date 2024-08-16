@@ -21,6 +21,7 @@
 
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
+#include "3D/L3DSubMesh.h"
 #include "3D/LandBlock.h"
 #include "3D/LandIslandInterface.h"
 #include "3D/Sky.h"
@@ -299,7 +300,7 @@ const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, st
 	return texture;
 }
 
-void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc,
+void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc,
                            bool preserveState) const
 {
 	assert(&subMesh.GetMesh());
@@ -387,7 +388,7 @@ void Renderer::DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const
 	}
 }
 
-void Renderer::DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const noexcept
+void Renderer::DrawMesh(const graphics::L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const noexcept
 {
 	if (mesh.GetNumSubMeshes() == 0)
 	{

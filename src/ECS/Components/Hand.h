@@ -9,20 +9,14 @@
 
 #pragma once
 
-#include <memory>
-
 #include <entt/core/hashed_string.hpp>
-
-#include "3D/L3DMesh.h"
-#include "Graphics/Mesh.h"
-#include "Graphics/Texture2D.h"
 
 namespace openblack::ecs::components
 {
 
 struct Hand
 {
-	enum class RenderType
+	enum class RenderType : uint8_t
 	{
 		Model,
 		Symbol

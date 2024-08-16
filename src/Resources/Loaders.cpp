@@ -17,11 +17,13 @@
 #include <PackFile.h>
 #include <spdlog/spdlog.h>
 
+#include "3D/L3DMesh.h"
 #include "3D/Light.h"
 #include "Audio/AudioManagerInterface.h"
 #include "Common/StringUtils.h"
 #include "Common/Zip.h"
 #include "FileSystem/FileSystemInterface.h"
+#include "Graphics/Texture2D.h"
 #include "Locator.h"
 
 using namespace openblack;
@@ -31,7 +33,7 @@ using namespace openblack::resources;
 L3DLoader::result_type L3DLoader::operator()(FromBufferTag, const std::string& debugName,
                                              const std::vector<uint8_t>& data) const
 {
-	auto mesh = std::make_shared<L3DMesh>(debugName);
+	auto mesh = std::make_shared<graphics::L3DMesh>(debugName);
 	if (!mesh->LoadFromBuffer(data))
 	{
 		throw std::runtime_error("Unable to load mesh");
@@ -42,7 +44,7 @@ L3DLoader::result_type L3DLoader::operator()(FromBufferTag, const std::string& d
 
 L3DLoader::result_type L3DLoader::operator()(FromDiskTag, const std::filesystem::path& path) const
 {
-	auto mesh = std::make_shared<L3DMesh>(path.stem().string());
+	auto mesh = std::make_shared<graphics::L3DMesh>(path.stem().string());
 	auto pathExt = string_utils::LowerCase(path.extension().string());
 
 	if (pathExt == ".l3d")

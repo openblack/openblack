@@ -18,7 +18,6 @@
 namespace openblack
 {
 class Camera;
-class L3DMesh;
 class Profiler;
 class Sky;
 class Water;
@@ -31,6 +30,7 @@ class Registry;
 
 namespace openblack::graphics
 {
+class L3DMesh;
 class FrameBuffer;
 class ShaderManager;
 class ShaderProgram;

@@ -17,6 +17,7 @@
 #include "Common/Bitmap16B.h"
 #include "Common/StringUtils.h"
 #include "FileSystem/FileSystemInterface.h"
+#include "Graphics/Texture2D.h"
 #include "Locator.h"
 
 using namespace openblack::filesystem;
@@ -32,7 +33,7 @@ Sky::Sky()
 	SetDayNightTimes(4.5, 7.0, 7.5, 8.25);
 
 	// load in the mesh
-	_mesh = std::make_unique<L3DMesh>("Sky");
+	_mesh = std::make_unique<graphics::L3DMesh>("Sky");
 	_mesh->LoadFromFilesystem(fileSystem.GetPath<filesystem::Path::WeatherSystem>() / "sky.l3d");
 
 	// TODO (#749) Maybe use std::views::enumerate
