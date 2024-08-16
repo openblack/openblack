@@ -18,6 +18,7 @@
 
 namespace openblack
 {
+class Camera;
 class EventManager;
 class RandomNumberManagerInterface;
 class LandIslandInterface;
@@ -90,6 +91,7 @@ struct Locator
 	using rng = entt::locator<RandomNumberManagerInterface>;
 	using terrainSystem = entt::locator<LandIslandInterface>;
 	using audio = entt::locator<audio::AudioManagerInterface>;
+	using camera = entt::locator<Camera>;
 	using gameActionSystem = entt::locator<input::GameActionInterface>;
 	using rendereringSystem = entt::locator<ecs::systems::RenderingSystemInterface>;
 	using rendererInterface = entt::locator<graphics::RendererInterface>;

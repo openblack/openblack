@@ -21,7 +21,6 @@
 #include "Camera/Camera.h"
 #include "ECS/Registry.h"
 #include "FileSystem/FileSystemInterface.h"
-#include "Game.h"
 #include "Locator.h"
 #include "MpegAudioDecoder.h"
 #include "Resources/Resources.h"
@@ -63,11 +62,11 @@ void AudioManager::Stop()
 
 void AudioManager::Update(Game& game)
 {
-	auto& cam = game.GetCamera();
-	auto pos = cam.GetOrigin();
-	auto vel = cam.GetOriginVelocity();
-	auto forward = cam.GetForward();
-	auto top = cam.GetUp();
+	auto& camera = Locator::camera::value();
+	auto pos = camera.GetOrigin();
+	auto vel = camera.GetOriginVelocity();
+	auto forward = camera.GetForward();
+	auto top = camera.GetUp();
 	_audioPlayer->UpdateListener(pos, vel, forward, top);
 	auto& registry = Locator::entitiesRegistry::value();
 	registry.Each<Transform, AudioEmitter>(

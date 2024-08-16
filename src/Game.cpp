@@ -76,11 +76,11 @@ Game* Game::sInstance = nullptr;
 
 Game::Game(Arguments&& args) noexcept
     : _gamePath(args.gamePath)
-    , _camera(std::make_unique<Camera>(glm::zero<glm::vec3>()))
     , _startMap(args.startLevel)
     , _handPose(glm::identity<glm::mat4>())
     , _requestScreenshot(args.requestScreenshot)
 {
+	Locator::camera::emplace(glm::zero<glm::vec3>());
 	std::function<std::shared_ptr<spdlog::logger>(const std::string&)> createLogger;
 #ifdef __ANDROID__
 	if (!args.logFile.empty() && args.logFile == "logcat")
@@ -159,6 +159,7 @@ Game::~Game() noexcept
 	Locator::rendererInterface::reset();
 	Locator::windowing::reset();
 	Locator::events::reset();
+	Locator::camera::reset();
 	SDL_Quit(); // todo: move to GameWindow
 	spdlog::shutdown();
 }
@@ -185,6 +186,7 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 	_handGripping = middleMouseButton || leftMouseButton;
 
 	auto& window = Locator::windowing::value();
+	auto& camera = Locator::camera::value();
 
 	switch (event.type)
 	{
@@ -202,7 +204,7 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 			Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Main, resolution, 0x274659ff);
 
 			auto aspect = window.GetAspectRatio();
-			_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
+			camera.SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
 		}
 		break;
 	case SDL_KEYDOWN:
@@ -231,7 +233,7 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 			{
 				const auto handPosition = _handPose * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 				const auto index = static_cast<uint8_t>(event.key.keysym.sym - SDLK_1);
-				Locator::cameraBookmarkSystem::value().SetBookmark(index, handPosition, _camera->GetOrigin());
+				Locator::cameraBookmarkSystem::value().SetBookmark(index, handPosition, camera.GetOrigin());
 			}
 			else
 			{
@@ -243,7 +245,7 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 				    entitiesRegistry.TryGet<ecs::components::Transform, ecs::components::CameraBookmark>(entity);
 				if (transform != nullptr && bookmark != nullptr)
 				{
-					_camera->GetModel().SetFlight(bookmark->savedOrigin, transform->position);
+					camera.GetModel().SetFlight(bookmark->savedOrigin, transform->position);
 				}
 			}
 			break;
@@ -312,6 +314,9 @@ bool Game::GameLogicLoop() noexcept
 bool Game::Update() noexcept
 {
 	_profiler->Frame();
+
+	auto& camera = Locator::camera::value();
+
 	auto previous = _profiler->GetEntries().at(_profiler->GetEntryIndex(-1)).frameStart;
 	auto current = _profiler->GetEntries().at(_profiler->GetEntryIndex(0)).frameStart;
 	// Prevent spike at first frame
@@ -346,7 +351,7 @@ bool Game::Update() noexcept
 		{
 			Locator::events::value().Create<SDL_Event>(e);
 		}
-		_camera->HandleActions(deltaTime);
+		camera.HandleActions(deltaTime);
 	}
 
 	if (!this->_config.running)
@@ -363,7 +368,7 @@ bool Game::Update() noexcept
 		}
 	}
 
-	_camera->Update(deltaTime);
+	camera.Update(deltaTime);
 	Locator::cameraBookmarkSystem::value().Update(deltaTime);
 
 	// Update Game Logic in Registry
@@ -389,8 +394,8 @@ bool Game::Update() noexcept
 			{
 				glm::vec3 rayOrigin;
 				glm::vec3 rayDirection;
-				_camera->DeprojectScreenToWorld(static_cast<glm::vec2>(_mousePosition) / static_cast<glm::vec2>(screenSize),
-				                                rayOrigin, rayDirection);
+				camera.DeprojectScreenToWorld(static_cast<glm::vec2>(_mousePosition) / static_cast<glm::vec2>(screenSize),
+				                              rayOrigin, rayDirection);
 				auto& dynamicsSystem = Locator::dynamicsSystem::value();
 
 				if (!glm::any(glm::isnan(rayOrigin) || glm::isnan(rayDirection)))
@@ -417,7 +422,7 @@ bool Game::Update() noexcept
 				_handPose *= glm::mat4(intersectionTransform.rotation);
 				_handPose = glm::scale(_handPose, intersectionTransform.scale);
 				Locator::rendererInterface::value().UpdateDebugCrossUniforms(
-				    glm::translate(_camera->GetFocus(Camera::Interpolation::Target)));
+				    glm::translate(camera.GetFocus(Camera::Interpolation::Target)));
 			}
 		}
 
@@ -429,7 +434,7 @@ bool Game::Update() noexcept
 			auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(_handEntity);
 			// TODO(#480): move using velocity rather than snapping hand to intersectionTransform
 			handTransform.position = intersectionTransform.position;
-			handTransform.rotation = glm::eulerAngleY(_camera->GetRotation().y) * modelRotationCorrection;
+			handTransform.rotation = glm::eulerAngleY(camera.GetRotation().y) * modelRotationCorrection;
 			handTransform.rotation = intersectionTransform.rotation * handTransform.rotation;
 			handTransform.position += intersectionTransform.rotation * handOffset;
 			Locator::entitiesRegistry::value().SetDirty();
@@ -843,7 +848,7 @@ bool Game::Run() noexcept
 
 			const graphics::RendererInterface::DrawSceneDesc drawDesc {
 			    .profiler = *_profiler,
-			    .camera = _camera.get(),
+			    .camera = &Locator::camera::value(),
 			    .frameBuffer = nullptr,
 			    .sky = *_sky,
 			    .water = *_water,
@@ -919,7 +924,8 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 
 	// create our camera
 	const auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
-	_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
+	Locator::camera::value().SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip,
+	                                                        _config.cameraFarClip);
 
 	Script script;
 	script.Load(source);
