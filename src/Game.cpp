@@ -454,7 +454,7 @@ bool Game::Update() noexcept
 	// Update Audio
 	{
 		auto updateAudio = _profiler->BeginScoped(Profiler::Stage::UpdateAudio);
-		Locator::audio::value().Update(*this);
+		Locator::audio::value().Update();
 	} // Update Audio
 
 	return _config.numFramesToSimulate == 0 || _frameCount < _config.numFramesToSimulate;
