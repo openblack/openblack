@@ -15,7 +15,6 @@
 #include <glm/gtx/vec_swizzle.hpp>
 #include <spdlog/spdlog.h>
 
-#include "Game.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/ShaderProgram.h"
 #include "Graphics/VertexBuffer.h"

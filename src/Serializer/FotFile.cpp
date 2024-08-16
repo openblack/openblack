@@ -15,7 +15,6 @@
 #include "ECS/Components/Footpath.h"
 #include "ECS/Registry.h"
 #include "FileSystem/FileSystemInterface.h"
-#include "Game.h"
 #include "GameThingSerializer.h"
 #include "Locator.h"
 

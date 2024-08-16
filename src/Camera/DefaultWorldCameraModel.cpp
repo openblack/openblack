@@ -24,9 +24,9 @@
 #include "Common/RandomNumberManager.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
-#include "Game.h"
 #include "Input/GameActionMapInterface.h"
 #include "Locator.h"
+#include "Windowing/WindowingInterface.h"
 
 using namespace openblack;
 using namespace std::chrono_literals;

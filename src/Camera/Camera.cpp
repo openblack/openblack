@@ -17,10 +17,10 @@
 #include "3D/LandIsland.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
-#include "Game.h"
 #include "Input/GameActionMapInterface.h"
 #include "Locator.h"
 #include "ReflectionXZCamera.h"
+#include "Windowing/WindowingInterface.h"
 
 using namespace openblack;
 

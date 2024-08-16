@@ -12,7 +12,6 @@
 #include <spdlog/spdlog.h>
 
 #include "FileSystem/FileSystemInterface.h"
-#include "Game.h"
 #include "Texture2D.h"
 
 namespace openblack::graphics
