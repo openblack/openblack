@@ -755,13 +755,13 @@ bool Game::Initialize() noexcept
 
 	{
 		InfoFile infoFile;
-		const auto result = infoFile.LoadFromFile(
-		    Locator::filesystem::value().GetPath<filesystem::Path::Scripts>() / "info.dat", _infoConstants);
+		auto result = infoFile.LoadFromFile(Locator::filesystem::value().GetPath<filesystem::Path::Scripts>() / "info.dat");
 		if (!result)
 		{
 			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to load game info data.");
 			return false;
 		}
+		_infoConstants = *result;
 	}
 
 	fileSystem.Iterate(fileSystem.GetPath<Path::Textures>(), false, [&textureManager](const std::filesystem::path& f) {

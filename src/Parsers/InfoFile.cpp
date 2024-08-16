@@ -18,10 +18,11 @@
 namespace openblack
 {
 
-bool InfoFile::LoadFromFile(const std::filesystem::path& path, InfoConstants& infos)
+std::unique_ptr<const InfoConstants> InfoFile::LoadFromFile(const std::filesystem::path& path)
 {
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Info Pack from file: {}", path.generic_string());
 
+	std::unique_ptr<InfoConstants> infos;
 	std::vector<uint8_t> data;
 	try
 	{
@@ -34,11 +35,11 @@ bool InfoFile::LoadFromFile(const std::filesystem::path& path, InfoConstants& in
 			auto oldInfos = std::make_unique<v100::InfoConstants>();
 			std::memcpy(oldInfos.get(), data.data(), sizeof(v100::InfoConstants));
 			// Only 4 bytes in CreatureActionInfo needs to be filled
-			UpdateInfo(infos, *oldInfos);
+			UpdateInfo(*infos, *oldInfos);
 		}
 		else if (data.size() == sizeof(v120::InfoConstants))
 		{
-			std::memcpy(&infos, data.data(), sizeof(infos));
+			std::memcpy(infos.get(), data.data(), sizeof(*infos));
 		}
 		else
 		{
@@ -50,10 +51,10 @@ bool InfoFile::LoadFromFile(const std::filesystem::path& path, InfoConstants& in
 	catch (std::runtime_error& err)
 	{
 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open {}: {}", path.generic_string(), err.what());
-		return false;
+		return nullptr;
 	}
 
-	return true;
+	return infos;
 }
 
 } // namespace openblack
