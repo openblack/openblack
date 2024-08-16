@@ -18,6 +18,7 @@
 
 namespace openblack
 {
+struct EngineConfig;
 class Camera;
 class EventManager;
 class RandomNumberManagerInterface;
@@ -83,6 +84,7 @@ void InitializeLevel(const std::filesystem::path& path);
 
 struct Locator
 {
+	using config = entt::locator<EngineConfig>;
 	using events = entt::locator<EventManager>;
 	using windowing = entt::locator<windowing::WindowingInterface>;
 	using debugGui = entt::locator<debug::gui::DebugGuiInterface>;

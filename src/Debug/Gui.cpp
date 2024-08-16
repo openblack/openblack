@@ -507,7 +507,7 @@ bool Gui::ShowMenu(Game& game)
 			ImGui::EndMenu();
 		}
 
-		auto& config = game.GetConfig();
+		auto& config = Locator::config::value();
 
 		if (ImGui::BeginMenu("World"))
 		{
@@ -816,7 +816,7 @@ void Gui::ShowVillagerNames(const Game& game)
 	using namespace ecs::components;
 	using namespace ecs::systems;
 
-	const auto& config = game.GetConfig();
+	const auto& config = Locator::config::value();
 	if (!config.showVillagerNames)
 	{
 		return;
@@ -958,7 +958,7 @@ void Gui::ShowCameraPositionOverlay(const Game& game)
 	ImGui::SetNextWindowPos(ImVec2(displaySize.x - 8.0f, displaySize.y - 8.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
 	ImGui::SetNextWindowBgAlpha(0.35f);
 
-	if (game.GetConfig().viewDetailOverlay)
+	if (Locator::config::value().viewDetailOverlay)
 	{
 		if (ImGui::Begin("Game Details Overlay", nullptr, cameraPositionOverlayFlags))
 		{
