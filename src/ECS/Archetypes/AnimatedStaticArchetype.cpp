@@ -17,7 +17,7 @@
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
-#include "Game.h"
+#include "InfoConstants.h"
 #include "Locator.h"
 #include "Resources/MeshId.h"
 #include "Utils.h"
@@ -32,7 +32,7 @@ entt::entity AnimatedStaticArchetype::Create(const glm::vec3& position, Animated
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 
-	const auto& info = Game::Instance()->GetInfoConstants().animatedStatic.at(static_cast<size_t>(type));
+	const auto& info = Locator::infoConstants::value().animatedStatic.at(static_cast<size_t>(type));
 
 	// The exact same as Feature but info is different and type is a different enum
 	const auto& transform = registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));

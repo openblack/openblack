@@ -16,7 +16,6 @@
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
-#include "Game.h"
 #include "InfoConstants.h"
 #include "Locator.h"
 #include "Resources/MeshId.h"
@@ -31,7 +30,7 @@ entt::entity MobileStaticArchetype::Create(const glm::vec3& position, MobileStat
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 
-	const auto& info = Game::Instance()->GetInfoConstants().mobileStatic.at(static_cast<size_t>(type));
+	const auto& info = Locator::infoConstants::value().mobileStatic.at(static_cast<size_t>(type));
 
 	glm::vec3 offset(0.0f, altitude, 0.0f);
 

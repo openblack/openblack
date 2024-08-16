@@ -162,6 +162,7 @@ Game::~Game() noexcept
 	Locator::events::reset();
 	Locator::camera::reset();
 	Locator::config::reset();
+	Locator::infoConstants::reset();
 	SDL_Quit(); // todo: move to GameWindow
 	spdlog::shutdown();
 }
@@ -788,7 +789,7 @@ bool Game::Initialize() noexcept
 			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to load game info data.");
 			return false;
 		}
-		_infoConstants = *result;
+		Locator::infoConstants::reset(result.release());
 	}
 
 	fileSystem.Iterate(fileSystem.GetPath<Path::Textures>(), false, [&textureManager](const std::filesystem::path& f) {

@@ -24,6 +24,11 @@ class EventManager;
 class RandomNumberManagerInterface;
 class LandIslandInterface;
 class TempleInteriorInterface;
+namespace v120
+{
+struct InfoConstants;
+}
+using InfoConstants = v120::InfoConstants;
 
 namespace audio
 {
@@ -85,6 +90,7 @@ void InitializeLevel(const std::filesystem::path& path);
 struct Locator
 {
 	using config = entt::locator<EngineConfig>;
+	using infoConstants = entt::locator<const InfoConstants>;
 	using events = entt::locator<EventManager>;
 	using windowing = entt::locator<windowing::WindowingInterface>;
 	using debugGui = entt::locator<debug::gui::DebugGuiInterface>;
