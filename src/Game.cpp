@@ -788,7 +788,7 @@ bool Game::Run() noexcept
 	auto challengePath = fileSystem.GetPath<filesystem::Path::Quests>() / "challenge.chl";
 	if (fileSystem.Exists(challengePath))
 	{
-		_lhvm = std::make_unique<LHVM::LHVM>();
+		_lhvm = std::make_unique<lhvm::LHVM>();
 		try
 		{
 			_lhvm->LoadBinary(fileSystem.ReadAll(challengePath));
