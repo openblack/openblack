@@ -10,9 +10,8 @@
 #pragma once
 
 #include <filesystem>
-#include <optional>
+#include <memory>
 
-// NOLINTBEGIN(readability-identifier-naming): Naming comes from vanilla, this we maintain the style
 #include "InfoConstants.h"
 
 namespace openblack
@@ -21,7 +20,7 @@ namespace openblack
 class InfoFile
 {
 public:
-	bool LoadFromFile(const std::filesystem::path& path, InfoConstants& infos) noexcept;
+	std::unique_ptr<const InfoConstants> LoadFromFile(const std::filesystem::path& path) noexcept;
 };
 
 } // namespace openblack
