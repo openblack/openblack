@@ -20,7 +20,6 @@
 #include "ECS/Components/Temple.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
-#include "Game.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/ShaderManager.h"
 #include "Locator.h"
@@ -34,7 +33,7 @@ RenderingSystemTemple::~RenderingSystemTemple() = default;
 void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 {
 	auto& registry = Locator::entitiesRegistry::value();
-	auto& camera = Game::Instance()->GetCamera();
+	auto& camera = Locator::camera::value();
 
 	// Count number of instances
 	uint32_t instanceCount = 0;

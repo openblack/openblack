@@ -55,7 +55,7 @@ public:
 	void ExpectCameraPos(glm::vec3 expectedPos)
 	{
 		constexpr float k_Ep = 1e-2;
-		const auto actualPos = _game->GetCamera().GetOrigin();
+		const auto actualPos = openblack::Locator::camera::value().GetOrigin();
 		EXPECT_NEAR(actualPos.x, expectedPos.x, k_Ep);
 		EXPECT_NEAR(actualPos.y, expectedPos.y, k_Ep);
 		EXPECT_NEAR(actualPos.z, expectedPos.z, k_Ep);

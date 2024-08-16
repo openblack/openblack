@@ -113,7 +113,7 @@ void TempleInterior::Activate()
 	}
 
 	auto& config = Game::Instance()->GetConfig();
-	auto& camera = Game::Instance()->GetCamera();
+	auto& camera = Locator::camera::value();
 
 	_playerPositionOutside = camera.GetOrigin();
 	_playerRotationOutside = camera.GetRotation();
@@ -154,7 +154,7 @@ void TempleInterior::Deactivate()
 	registry.Each<const ecs::components::TempleInteriorPart>(
 	    [&registry](const entt::entity entity, auto&&...) { registry.Destroy(entity); });
 
-	auto& camera = Game::Instance()->GetCamera();
+	auto& camera = Locator::camera::value();
 	Locator::rendereringSystem::emplace<ecs::systems::RenderingSystem>();
 	camera.SetOrigin(_playerPositionOutside);
 	camera.SetFocus(_playerPositionOutside + glm::quat(_playerRotationOutside) * glm::vec3(0.0f, 0.0f, 1.0f));
