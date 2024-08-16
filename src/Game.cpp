@@ -108,15 +108,16 @@ Game::Game(Arguments&& args) noexcept
 	}
 	sInstance = this;
 
-	_config.numFramesToSimulate = args.numFramesToSimulate;
-	_config.numFramesToSimulate = args.numFramesToSimulate;
-	_config.numFramesToSimulate = args.numFramesToSimulate;
-	_config.rendererType = args.rendererType;
-	_config.resolution = {args.windowWidth, args.windowHeight};
-	_config.displayMode = args.displayMode;
-	_config.rendererType = args.rendererType;
-	_config.vsync = args.vsync;
-	_config.guiScale = args.guiScale;
+	auto& config = Locator::config::emplace();
+	config.numFramesToSimulate = args.numFramesToSimulate;
+	config.numFramesToSimulate = args.numFramesToSimulate;
+	config.numFramesToSimulate = args.numFramesToSimulate;
+	config.rendererType = args.rendererType;
+	config.resolution = {args.windowWidth, args.windowHeight};
+	config.displayMode = args.displayMode;
+	config.rendererType = args.rendererType;
+	config.vsync = args.vsync;
+	config.guiScale = args.guiScale;
 }
 
 Game::~Game() noexcept
@@ -159,6 +160,7 @@ Game::~Game() noexcept
 	Locator::rendererInterface::reset();
 	Locator::windowing::reset();
 	Locator::events::reset();
+	Locator::config::reset();
 	SDL_Quit(); // todo: move to GameWindow
 	spdlog::shutdown();
 }
@@ -202,7 +204,8 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 			Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Main, resolution, 0x274659ff);
 
 			auto aspect = window.GetAspectRatio();
-			_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
+			const auto& config = Locator::config::value();
+			_camera->SetProjectionMatrixPerspective(config.cameraXFov, aspect, config.cameraNearClip, config.cameraFarClip);
 		}
 		break;
 	case SDL_KEYDOWN:
@@ -312,6 +315,8 @@ bool Game::GameLogicLoop() noexcept
 bool Game::Update() noexcept
 {
 	_profiler->Frame();
+	auto& config = Locator::config::value();
+
 	auto previous = _profiler->GetEntries().at(_profiler->GetEntryIndex(-1)).frameStart;
 	auto current = _profiler->GetEntries().at(_profiler->GetEntryIndex(0)).frameStart;
 	// Prevent spike at first frame
@@ -321,7 +326,7 @@ bool Game::Update() noexcept
 	}
 	auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(current - previous);
 
-	Locator::debugGui::value().SetScale(_config.guiScale);
+	Locator::debugGui::value().SetScale(config.guiScale);
 
 	// Physics
 	{
@@ -349,7 +354,7 @@ bool Game::Update() noexcept
 		_camera->HandleActions(deltaTime);
 	}
 
-	if (!this->_config.running)
+	if (!config.running)
 	{
 		return false;
 	}
@@ -438,10 +443,10 @@ bool Game::Update() noexcept
 		// Update Entities
 		{
 			auto updateEntities = _profiler->BeginScoped(Profiler::Stage::UpdateEntities);
-			if (_config.drawEntities)
+			if (config.drawEntities)
 			{
-				Locator::rendereringSystem::value().PrepareDraw(_config.drawBoundingBoxes, _config.drawFootpaths,
-				                                                _config.drawStreams);
+				Locator::rendereringSystem::value().PrepareDraw(config.drawBoundingBoxes, config.drawFootpaths,
+				                                                config.drawStreams);
 			}
 		}
 	} // Update Uniforms
@@ -452,23 +457,25 @@ bool Game::Update() noexcept
 		Locator::audio::value().Update(*this);
 	} // Update Audio
 
-	return _config.numFramesToSimulate == 0 || _frameCount < _config.numFramesToSimulate;
+	return config.numFramesToSimulate == 0 || _frameCount < config.numFramesToSimulate;
 }
 
 bool Game::Initialize() noexcept
 {
-	if (_config.rendererType != bgfx::RendererType::Noop)
+	auto& config = Locator::config::value();
+
+	if (config.rendererType != bgfx::RendererType::Noop)
 	{
 		uint32_t extraFlags = 0;
-		if (_config.rendererType == bgfx::RendererType::Enum::Metal)
+		if (config.rendererType == bgfx::RendererType::Enum::Metal)
 		{
 			extraFlags |= SDL_WINDOW_METAL;
 		}
-		openblack::InitializeWindow(k_WindowTitle, _config.resolution.x, _config.resolution.y, _config.displayMode, extraFlags);
+		openblack::InitializeWindow(k_WindowTitle, config.resolution.x, config.resolution.y, config.displayMode, extraFlags);
 	}
 
 	using filesystem::Path;
-	if (!InitializeGame(static_cast<uint8_t>(_config.rendererType), _config.vsync))
+	if (!InitializeGame(static_cast<uint8_t>(config.rendererType), config.vsync))
 	{
 		SPDLOG_LOGGER_CRITICAL(spdlog::get("game"), "Failed to initialize services.");
 		return false;
@@ -482,11 +489,11 @@ bool Game::Initialize() noexcept
 	auto& soundManager = resources.GetSounds();
 	auto& glowManager = resources.GetGlows();
 
-	Locator::events::value().AddHandler(std::function([this](const SDL_Event& event) {
+	Locator::events::value().AddHandler(std::function([this, &config](const SDL_Event& event) {
 		// If gui captures this input, do not propagate
 		if (!Locator::debugGui::value().ProcessEvents(event))
 		{
-			this->_config.running = this->ProcessEvents(event);
+			config.running = this->ProcessEvents(event);
 			Locator::gameActionSystem::value().ProcessEvent(event);
 		}
 	}));
@@ -780,6 +787,8 @@ bool Game::Initialize() noexcept
 
 bool Game::Run() noexcept
 {
+	auto& config = Locator::config::value();
+
 	LoadMap(_startMap);
 	Locator::dynamicsSystem::value().RegisterRigidBodies();
 
@@ -822,7 +831,7 @@ bool Game::Run() noexcept
 		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Reflection, {width, height}, 0x274659ff);
 	}
 
-	if (_config.drawIsland)
+	if (config.drawIsland)
 	{
 		uint16_t width;
 		uint16_t height;
@@ -830,7 +839,7 @@ bool Game::Run() noexcept
 		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Footprint, {width, height}, 0x00000000);
 	}
 
-	Game::SetTime(_config.timeOfDay);
+	Game::SetTime(config.timeOfDay);
 
 	_frameCount = 0;
 	auto lastTime = std::chrono::high_resolution_clock::now();
@@ -849,20 +858,20 @@ bool Game::Run() noexcept
 			    .water = *_water,
 			    .entities = Locator::entitiesRegistry::value(),
 			    .time = milliseconds.count(), // TODO(#481): get actual time
-			    .timeOfDay = _config.timeOfDay,
-			    .bumpMapStrength = _config.bumpMapStrength,
-			    .smallBumpMapStrength = _config.smallBumpMapStrength,
+			    .timeOfDay = config.timeOfDay,
+			    .bumpMapStrength = config.bumpMapStrength,
+			    .smallBumpMapStrength = config.smallBumpMapStrength,
 			    .viewId = graphics::RenderPass::Main,
-			    .drawSky = _config.drawSky,
-			    .drawWater = _config.drawWater,
-			    .drawIsland = _config.drawIsland,
-			    .drawEntities = _config.drawEntities,
-			    .drawSprites = _config.drawSprites,
-			    .drawTestModel = _config.drawTestModel,
-			    .drawDebugCross = _config.drawDebugCross,
-			    .drawBoundingBoxes = _config.drawBoundingBoxes,
+			    .drawSky = config.drawSky,
+			    .drawWater = config.drawWater,
+			    .drawIsland = config.drawIsland,
+			    .drawEntities = config.drawEntities,
+			    .drawSprites = config.drawSprites,
+			    .drawTestModel = config.drawTestModel,
+			    .drawDebugCross = config.drawDebugCross,
+			    .drawBoundingBoxes = config.drawBoundingBoxes,
 			    .cullBack = false,
-			    .wireframe = _config.wireframe,
+			    .wireframe = config.wireframe,
 			};
 			Locator::rendererInterface::value().DrawScene(drawDesc);
 		}
@@ -918,8 +927,9 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 	                                                     0.01f, false);
 
 	// create our camera
+	auto& config = Locator::config::value();
 	const auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
-	_camera->SetProjectionMatrixPerspective(_config.cameraXFov, aspect, _config.cameraNearClip, _config.cameraFarClip);
+	_camera->SetProjectionMatrixPerspective(config.cameraXFov, aspect, config.cameraNearClip, config.cameraFarClip);
 
 	Script script;
 	script.Load(source);

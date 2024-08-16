@@ -112,7 +112,7 @@ void TempleInterior::Activate()
 		return;
 	}
 
-	auto& config = Game::Instance()->GetConfig();
+	auto& config = Locator::config::value();
 	auto& camera = Game::Instance()->GetCamera();
 
 	_playerPositionOutside = camera.GetOrigin();
@@ -148,7 +148,7 @@ void TempleInterior::Deactivate()
 	}
 
 	auto& registry = Locator::entitiesRegistry::value();
-	auto& config = Game::Instance()->GetConfig();
+	auto& config = Locator::config::value();
 	config.drawIsland = true;
 	config.drawWater = true;
 	registry.Each<const ecs::components::TempleInteriorPart>(
