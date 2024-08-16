@@ -18,17 +18,18 @@
 namespace openblack
 {
 
-bool InfoFile::LoadFromFile(const std::filesystem::path& path, InfoConstants& infos) noexcept
+std::unique_ptr<const InfoConstants> InfoFile::LoadFromFile(const std::filesystem::path& path) noexcept
 {
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Info Pack from file: {}", path.generic_string());
 
+	auto infos = std::make_unique<InfoConstants>();
 	std::vector<uint8_t> data;
 	pack::PackFile pack;
 	const auto result = pack.ReadFile(*Locator::filesystem::value().GetData(path));
 	if (result != pack::PackResult::Success)
 	{
 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open {}: {}", path.generic_string(), pack::ResultToStr(result));
-		return false;
+		return nullptr;
 	}
 
 	data = pack.GetBlock("Info");
@@ -37,21 +38,21 @@ bool InfoFile::LoadFromFile(const std::filesystem::path& path, InfoConstants& in
 		auto oldInfos = std::make_unique<v100::InfoConstants>();
 		std::memcpy(oldInfos.get(), data.data(), sizeof(v100::InfoConstants));
 		// Only 4 bytes in CreatureActionInfo needs to be filled
-		UpdateInfo(infos, *oldInfos);
+		UpdateInfo(*infos, *oldInfos);
 	}
 	else if (data.size() == sizeof(v120::InfoConstants))
 	{
-		std::memcpy(&infos, data.data(), sizeof(infos));
+		std::memcpy(infos.get(), data.data(), sizeof(*infos));
 	}
 	else
 	{
 		SPDLOG_LOGGER_CRITICAL(spdlog::get("game"),
 		                       "Info block size does not match that of GInfo of version 1.0 or 1.2: {} != {} or {}",
 		                       data.size(), sizeof(v100::InfoConstants), sizeof(v120::InfoConstants));
-		return false;
+		return nullptr;
 	}
 
-	return true;
+	return infos;
 }
 
 } // namespace openblack
