@@ -15,7 +15,8 @@
 #include <vector>
 
 #include <entt/entity/entity.hpp>
-#include <glm/glm.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 
 #include "AudioDecoderInterface.h"
 #include "AudioManagerInterface.h"

@@ -11,6 +11,8 @@
 
 #include "CameraBookmarkSystem.h"
 
+#include <glm/trigonometric.hpp>
+
 #include "3D/LandIslandInterface.h"
 #include "ECS/Archetypes/CameraBookmarkArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
