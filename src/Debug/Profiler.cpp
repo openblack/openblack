@@ -17,6 +17,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Registry.h"
+#include "EngineConfig.h"
 #include "Game.h"
 #include "Graphics/RendererInterface.h"
 #include "Locator.h"
@@ -25,24 +26,24 @@
 
 using namespace openblack::debug::gui;
 
-Profiler::Profiler()
+Profiler::Profiler() noexcept
     : Window("Profiler", ImVec2(650.0f, 800.0f))
 {
 }
 
-void Profiler::Open()
+void Profiler::Open() noexcept
 {
 	Window::Open();
 	Locator::rendererInterface::value().SetProfile(true);
 }
 
-void Profiler::Close()
+void Profiler::Close() noexcept
 {
 	Window::Close();
 	Locator::rendererInterface::value().SetProfile(false);
 }
 
-void Profiler::Draw(Game& game)
+void Profiler::Draw() noexcept
 {
 	auto& config = Locator::config::value();
 
@@ -51,15 +52,16 @@ void Profiler::Draw(Game& game)
 	const bgfx::Stats* stats = bgfx::getStats();
 	const double toMsCpu = 1000.0 / stats->cpuTimerFreq;
 	const double toMsGpu = 1000.0 / stats->gpuTimerFreq;
-	const double frameMs = double(stats->cpuTimeFrame) * toMsCpu;
+	const auto frameMs = static_cast<double>(stats->cpuTimeFrame) * toMsCpu;
 	_times.PushBack(static_cast<float>(frameMs));
 	_fps.PushBack(static_cast<float>(1000.0 / frameMs));
 
 	std::array<char, 256> frameTextOverlay;
 	std::snprintf(frameTextOverlay.data(), frameTextOverlay.size(), "%.3fms, %.1f FPS", _times.Back(), _fps.Back());
 
-	ImGui::Text("Submit CPU %0.3f, GPU %0.3f (Max GPU Latency: %d)", double(stats->cpuTimeEnd - stats->cpuTimeBegin) * toMsCpu,
-	            double(stats->gpuTimeEnd - stats->gpuTimeBegin) * toMsGpu, stats->maxGpuLatency);
+	ImGui::Text("Submit CPU %0.3f, GPU %0.3f (Max GPU Latency: %d)",
+	            static_cast<double>(stats->cpuTimeEnd - stats->cpuTimeBegin) * toMsCpu,
+	            static_cast<double>(stats->gpuTimeEnd - stats->gpuTimeBegin) * toMsGpu, stats->maxGpuLatency);
 	ImGui::Text("Wait Submit %0.3f, Wait Render %0.3f", stats->waitSubmit * toMsCpu, stats->waitRender * toMsCpu);
 
 	ImGui::Columns(5);
@@ -101,7 +103,8 @@ void Profiler::Draw(Game& game)
 
 	ImGui::Columns(1);
 
-	auto& entry = game.GetProfiler().GetEntries().at(game.GetProfiler().GetEntryIndex(-1));
+	const auto& profiler = Game::Instance()->GetProfiler();
+	const auto& entry = profiler.GetEntries().at(profiler.GetEntryIndex(-1));
 
 	ImGuiWidgetFlameGraph::PlotFlame(
 	    "CPU",
@@ -110,14 +113,14 @@ void Profiler::Draw(Game& game)
 		    const auto& stage = entry->stages.at(idx);
 		    if (startTimestamp != nullptr)
 		    {
-			    std::chrono::duration<float, std::milli> fltStart = stage.start - entry->frameStart;
+			    const std::chrono::duration<float, std::milli> fltStart = stage.start - entry->frameStart;
 			    *startTimestamp = fltStart.count();
 		    }
 		    if (endTimestamp != nullptr)
 		    {
 			    *endTimestamp = stage.end.time_since_epoch().count() / 1e6f;
 
-			    std::chrono::duration<float, std::milli> fltEnd = stage.end - entry->frameStart;
+			    const std::chrono::duration<float, std::milli> fltEnd = stage.end - entry->frameStart;
 			    *endTimestamp = fltEnd.count();
 		    }
 		    if (level != nullptr)
@@ -199,8 +202,8 @@ void Profiler::Draw(Game& game)
 	ImGui::Columns(1);
 }
 
-void Profiler::Update([[maybe_unused]] Game& game) {}
+void Profiler::Update() noexcept {}
 
-void Profiler::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
+void Profiler::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) noexcept {}
 
-void Profiler::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) {}
+void Profiler::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) noexcept {}

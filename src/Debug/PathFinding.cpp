@@ -30,12 +30,12 @@
 
 using namespace openblack::debug::gui;
 
-PathFinding::PathFinding()
+PathFinding::PathFinding() noexcept
     : Window("Path Finding", ImVec2(400, 400))
 {
 }
 
-void PathFinding::Draw([[maybe_unused]] Game& game)
+void PathFinding::Draw() noexcept
 {
 	ImGui::TextWrapped(
 	    "Select Villager by left clicking on it, then select a pathfinding action and right click the destination");
@@ -47,7 +47,7 @@ void PathFinding::Draw([[maybe_unused]] Game& game)
 	const float halfHeight = (size.y - pos.y) / numChildren - 2 * rounding;
 
 	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, rounding);
-	ImGui::BeginChild("Selected Villager", ImVec2(0, halfHeight), true);
+	ImGui::BeginChild("Selected Villager", ImVec2(0, halfHeight), ImGuiChildFlags_Border);
 	if (_selectedVillager.has_value())
 	{
 		using namespace ecs::components;
@@ -81,7 +81,7 @@ void PathFinding::Draw([[maybe_unused]] Game& game)
 	}
 	ImGui::EndChild();
 
-	ImGui::BeginChild("Actions", ImVec2(0, halfHeight), true);
+	ImGui::BeginChild("Actions", ImVec2(0, halfHeight), ImGuiChildFlags_Border);
 	if (_selectedVillager.has_value())
 	{
 		if (ImGui::BeginTabBar("Actions"))
@@ -180,7 +180,7 @@ void PathFinding::Draw([[maybe_unused]] Game& game)
 	ImGui::PopStyleVar();
 }
 
-void PathFinding::Update([[maybe_unused]] Game& game)
+void PathFinding::Update() noexcept
 {
 	using namespace ecs::components;
 	auto& registry = Locator::entitiesRegistry::value();
@@ -260,11 +260,13 @@ void PathFinding::Update([[maybe_unused]] Game& game)
 	_handTo = HandTo::None;
 }
 
-void PathFinding::ProcessEventOpen(const SDL_Event& event)
+void PathFinding::ProcessEventOpen(const SDL_Event& event) noexcept
 {
-	ImGuiIO& io = ImGui::GetIO();
+	const ImGuiIO& io = ImGui::GetIO();
 	switch (event.type)
 	{
+	default:
+		break;
 	case SDL_MOUSEBUTTONDOWN:
 	{
 		if (!io.WantCaptureMouse)
@@ -283,4 +285,4 @@ void PathFinding::ProcessEventOpen(const SDL_Event& event)
 	}
 }
 
-void PathFinding::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) {}
+void PathFinding::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) noexcept {}

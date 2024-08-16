@@ -12,16 +12,16 @@
 namespace openblack::debug::gui
 {
 
-class TempleInterior: public Window
+class TempleInterior final: public Window
 {
 public:
-	TempleInterior();
+	TempleInterior() noexcept;
 
 protected:
-	void Draw(Game& game) override;
-	void Update(Game& game) override;
-	void ProcessEventOpen(const SDL_Event& event) override;
-	void ProcessEventAlways(const SDL_Event& event) override;
+	void Draw() noexcept override;
+	void Update() noexcept override;
+	void ProcessEventOpen(const SDL_Event& event) noexcept override;
+	void ProcessEventAlways(const SDL_Event& event) noexcept override;
 };
 
 } // namespace openblack::debug::gui

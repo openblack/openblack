@@ -48,7 +48,6 @@
 #include <ECS/Components/Villager.h>
 #include <ECS/Registry.h>
 #include <FileSystem/FileSystemInterface.h>
-#include <Game.h>
 #include <Locator.h>
 #include <Resources/ResourcesInterface.h>
 #include <Windowing/WindowingInterface.h>
@@ -81,6 +80,7 @@
 #include "Graphics/ShaderIncluder.h"
 #define SHADER_NAME fs_ocornut_imgui
 #define SHADER_DIR IMGUI_SHADER_DIR
+#include "Game.h"
 #include "Graphics/ShaderIncluder.h"
 #include "ImGuiUtils.h"
 
@@ -134,7 +134,7 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 	return gui;
 }
 
-Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<Window>>&& debugWindows, bool headless)
+Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<Window>>&& debugWindows, bool headless) noexcept
     : _imgui(imgui)
     , _headless(headless)
     , _program(BGFX_INVALID_HANDLE)
@@ -148,7 +148,7 @@ Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<W
 	CreateDeviceObjectsBgfx();
 }
 
-Gui::~Gui()
+Gui::~Gui() noexcept
 {
 	if (!_headless)
 	{
@@ -200,10 +200,12 @@ bool Gui::ProcessEvents(const SDL_Event& event) noexcept
 
 	ImGui_ImplSDL2_ProcessEvent(&event);
 
-	ImGuiIO& io = ImGui::GetIO();
+	const auto& io = ImGui::GetIO();
 	_stealsFocus = io.WantCaptureMouse;
 	switch (event.type)
 	{
+	default:
+		break;
 	case SDL_QUIT:
 		_stealsFocus = false;
 		break;
@@ -224,10 +226,10 @@ bool Gui::ProcessEvents(const SDL_Event& event) noexcept
 	return _stealsFocus;
 }
 
-bool Gui::CreateFontsTextureBgfx()
+bool Gui::CreateFontsTextureBgfx() noexcept
 {
 	// Build texture atlas
-	ImGuiIO& io = ImGui::GetIO();
+	const auto& io = ImGui::GetIO();
 	unsigned char* pixels;
 	int width;
 	int height;
@@ -245,10 +247,10 @@ bool Gui::CreateFontsTextureBgfx()
 	return true;
 }
 
-bool Gui::CreateDeviceObjectsBgfx()
+bool Gui::CreateDeviceObjectsBgfx() noexcept
 {
 	// Create shaders
-	bgfx::RendererType::Enum type = bgfx::getRendererType();
+	const auto type = bgfx::getRendererType();
 	_program = bgfx::createProgram(bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "vs_ocornut_imgui"),
 	                               bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "fs_ocornut_imgui"), true);
 	_imageProgram = bgfx::createProgram(bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "vs_imgui_image"),
@@ -270,7 +272,7 @@ bool Gui::CreateDeviceObjectsBgfx()
 	return true;
 }
 
-void Gui::NewFrame()
+void Gui::NewFrame() noexcept
 {
 	ImGui::SetCurrentContext(_imgui);
 	ImGui_ImplSDL2_NewFrame();
@@ -279,24 +281,24 @@ void Gui::NewFrame()
 	ImGui::NewFrame();
 }
 
-bool Gui::Loop(Game& game) noexcept
+bool Gui::Loop() noexcept
 {
 	for (auto& window : _debugWindows)
 	{
-		window->WindowUpdate(game);
+		window->WindowUpdate();
 	}
 	NewFrame();
-	if (ShowMenu(game))
+	if (ShowMenu())
 	{
 		// Exit option selected
 		return true;
 	}
 	for (auto& window : _debugWindows)
 	{
-		window->WindowDraw(game);
+		window->WindowDraw();
 	}
-	ShowVillagerNames(game);
-	ShowCameraPositionOverlay(game);
+	ShowVillagerNames();
+	ShowCameraPositionOverlay();
 
 	ImGui::Render();
 
@@ -310,17 +312,17 @@ bool Gui::Loop(Game& game) noexcept
 /// @param[in] layout Vertex layout.
 /// @param[in] numIndices Number of indices.
 ///
-inline bool checkAvailTransientBuffers(uint32_t numVertices, const bgfx::VertexLayout& layout, uint32_t numIndices)
+inline bool checkAvailTransientBuffers(uint32_t numVertices, const bgfx::VertexLayout& layout, uint32_t numIndices) noexcept
 {
 	return numVertices == bgfx::getAvailTransientVertexBuffer(numVertices, layout) &&
 	       (0 == numIndices || numIndices == bgfx::getAvailTransientIndexBuffer(numIndices));
 }
 
-void Gui::RenderDrawDataBgfx(ImDrawData* drawData)
+void Gui::RenderDrawDataBgfx(ImDrawData* drawData) noexcept
 {
 	// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
-	int fbWidth = static_cast<int>(drawData->DisplaySize.x * drawData->FramebufferScale.x);
-	int fbHeight = static_cast<int>(drawData->DisplaySize.y * drawData->FramebufferScale.y);
+	const int fbWidth = static_cast<int>(drawData->DisplaySize.x * drawData->FramebufferScale.x);
+	const int fbHeight = static_cast<int>(drawData->DisplaySize.y * drawData->FramebufferScale.y);
 	if (fbWidth <= 0 || fbHeight <= 0)
 	{
 		return;
@@ -331,10 +333,10 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData)
 	const bgfx::Caps* caps = bgfx::getCaps();
 	{
 		glm::mat4 ortho;
-		float x = drawData->DisplayPos.x;
-		float y = drawData->DisplayPos.y;
-		float width = drawData->DisplaySize.x;
-		float height = drawData->DisplaySize.y;
+		const float x = drawData->DisplayPos.x;
+		const float y = drawData->DisplayPos.y;
+		const float width = drawData->DisplaySize.x;
+		const float height = drawData->DisplaySize.y;
 
 		bx::mtxOrtho(glm::value_ptr(ortho), x, x + width, y + height, y, 0.0f, 1000.0f, 0.0f, caps->homogeneousDepth);
 		bgfx::setViewTransform(_viewId, nullptr, glm::value_ptr(ortho));
@@ -390,7 +392,7 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData)
 
 				if (cmd->TextureId != nullptr)
 				{
-					union
+					const union
 					{
 						ImTextureID ptr;
 						struct
@@ -450,10 +452,11 @@ void Gui::Draw() noexcept
 	RenderDrawDataBgfx(ImGui::GetDrawData());
 }
 
-bool Gui::ShowMenu(Game& game)
+bool Gui::ShowMenu() noexcept
 {
 	if (ImGui::BeginMainMenuBar())
 	{
+		auto& game = *Game::Instance();
 		if (ImGui::BeginMenu("Load Island"))
 		{
 			auto& resources = Locator::resources::value();
@@ -637,7 +640,7 @@ bool Gui::ShowMenu(Game& game)
 	return false;
 }
 
-void Gui::RenderArrow(const std::string& name, const ImVec2& pos, const ImVec2& size) const
+void Gui::RenderArrow(const std::string& name, const ImVec2& pos, const ImVec2& size) const noexcept
 {
 	// clang-format off
 	static const auto boxOverlayFlags =
@@ -658,7 +661,7 @@ void Gui::RenderArrow(const std::string& name, const ImVec2& pos, const ImVec2& 
 	ImGui::SetNextWindowSize(size);
 	if (ImGui::Begin((name + " Frame").c_str(), nullptr, boxOverlayFlags))
 	{
-		std::string strId = name + " Arrow";
+		const auto strId = name + " Arrow";
 		ImGuiWindow* window = ImGui::GetCurrentWindow();
 		if (!window->SkipItems)
 		{
@@ -723,7 +726,7 @@ bool fitBox(float minY, const std::vector<glm::vec4>& coveredAreas, glm::vec4& b
 
 std::optional<glm::uvec4> Gui::RenderVillagerName(const std::vector<glm::vec4>& coveredAreas, const std::string& name,
                                                   const std::string& text, const glm::vec4& color, const ImVec2& pos,
-                                                  float arrowLength, std::function<void(void)> debugCallback) const
+                                                  float arrowLength, std::function<void(void)> debugCallback) const noexcept
 {
 	// clang-format off
 	const auto boxOverlayFlags =
@@ -771,8 +774,8 @@ std::optional<glm::uvec4> Gui::RenderVillagerName(const std::vector<glm::vec4>& 
 		boxExtent = glm::uvec4(boxPos.x, boxPos.y, boxSize.x, boxSize.y);
 	}
 
-	float originalY = boxExtent.y;
-	bool fits = fitBox(_menuBarSize.y, coveredAreas, boxExtent);
+	const float originalY = boxExtent.y;
+	const bool fits = fitBox(_menuBarSize.y, coveredAreas, boxExtent);
 
 	if (fits)
 	{
@@ -811,7 +814,7 @@ std::optional<glm::uvec4> Gui::RenderVillagerName(const std::vector<glm::vec4>& 
 	return std::make_optional<glm::uvec4>(boxExtent);
 }
 
-void Gui::ShowVillagerNames(const Game& game)
+void Gui::ShowVillagerNames() noexcept
 {
 	using namespace ecs::components;
 	using namespace ecs::systems;
@@ -940,7 +943,7 @@ void Gui::ShowVillagerNames(const Game& game)
 	    });
 }
 
-void Gui::ShowCameraPositionOverlay(const Game& game)
+void Gui::ShowCameraPositionOverlay() noexcept
 {
 	// clang-format off
 	static const auto cameraPositionOverlayFlags =
@@ -979,6 +982,8 @@ void Gui::ShowCameraPositionOverlay(const Game& game)
 			{
 				ImGui::Text("Mouse Position: <invalid>");
 			}
+
+			auto& game = *Game::Instance();
 
 			const auto& handPosition =
 			    Locator::entitiesRegistry::value().Get<ecs::components::Transform>(game.GetHand()).position;

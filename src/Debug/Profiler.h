@@ -18,18 +18,18 @@
 namespace openblack::debug::gui
 {
 
-class Profiler: public Window
+class Profiler final: public Window
 {
 public:
-	Profiler();
-	void Open() override;
-	void Close() override;
+	Profiler() noexcept;
+	void Open() noexcept override;
+	void Close() noexcept override;
 
 protected:
-	void Draw(Game& game) override;
-	void Update(Game& game) override;
-	void ProcessEventOpen(const SDL_Event& event) override;
-	void ProcessEventAlways(const SDL_Event& event) override;
+	void Draw() noexcept override;
+	void Update() noexcept override;
+	void ProcessEventOpen(const SDL_Event& event) noexcept override;
+	void ProcessEventAlways(const SDL_Event& event) noexcept override;
 
 private:
 	template <typename T, uint8_t N>
@@ -39,12 +39,12 @@ private:
 		std::array<T, N> values;
 		uint8_t offset = 0;
 
-		[[nodiscard]] T Back() const
+		[[nodiscard]] T Back() const noexcept
 		{
 			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index): perf sensitive
 			return values[offset];
 		}
-		void PushBack(T value)
+		void PushBack(T value) noexcept
 		{
 
 			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index): perf sensitive

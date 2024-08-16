@@ -10,26 +10,25 @@
 #pragma once
 
 #include "Audio/AudioManagerInterface.h"
-#include "Game.h"
 #include "Window.h"
 
 namespace openblack::debug::gui
 {
-class Audio: public Window
+class Audio final: public Window
 {
 public:
-	Audio();
+	Audio() noexcept;
 
 protected:
-	void Draw(Game& game) override;
-	void Update(Game& game) override;
-	void ProcessEventOpen(const SDL_Event& event) override;
-	void ProcessEventAlways(const SDL_Event& event) override;
+	void Draw() noexcept override;
+	void Update() noexcept override;
+	void ProcessEventOpen(const SDL_Event& event) noexcept override;
+	void ProcessEventAlways(const SDL_Event& event) noexcept override;
 
 private:
-	void Emitters();
-	void Music();
-	void AudioSettings();
+	void Emitters() noexcept;
+	void Music() noexcept;
+	void AudioSettings() noexcept;
 	audio::PlayType _playType {audio::PlayType::Once};
 	entt::id_type _selectedSound;
 	std::string _selectedSoundPack;

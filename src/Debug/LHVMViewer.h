@@ -16,28 +16,28 @@
 namespace openblack::debug::gui
 {
 
-class LHVMViewer: public Window
+class LHVMViewer final: public Window
 {
 public:
-	LHVMViewer();
+	LHVMViewer() noexcept;
 
 protected:
-	void Draw(Game& game) override;
-	void Update(Game& game) override;
-	void ProcessEventOpen(const SDL_Event& event) override;
-	void ProcessEventAlways(const SDL_Event& event) override;
+	void Draw() noexcept override;
+	void Update() noexcept override;
+	void ProcessEventOpen(const SDL_Event& event) noexcept override;
+	void ProcessEventAlways(const SDL_Event& event) noexcept override;
 
 private:
-	void DrawScriptsTab(const openblack::lhvm::LHVM&);
-	void DrawScriptDisassembly(const openblack::lhvm::LHVM&, openblack::lhvm::VMScript&);
+	void DrawScriptsTab(const lhvm::LHVM&) noexcept;
+	void DrawScriptDisassembly(const lhvm::LHVM&, lhvm::VMScript&) noexcept;
 
-	void DrawVariable(const openblack::lhvm::LHVM&, openblack::lhvm::VMScript&, uint32_t idx);
-	void SelectScript(uint32_t idx);
+	void DrawVariable(const lhvm::LHVM&, lhvm::VMScript&, uint32_t idx) noexcept;
+	void SelectScript(uint32_t idx) noexcept;
 
-	void DrawTasksTab(const openblack::lhvm::LHVM& lhvm);
-	void DrawStack(const openblack::lhvm::VMStack& stack);
-	void DrawExceptionHandlers(const std::vector<uint32_t>& exceptionHandlerIps);
-	void SelectTask(uint32_t idx);
+	void DrawTasksTab(const lhvm::LHVM& lhvm) noexcept;
+	void DrawStack(const lhvm::VMStack& stack) noexcept;
+	void DrawExceptionHandlers(const std::vector<uint32_t>& exceptionHandlerIps) noexcept;
+	void SelectTask(uint32_t idx) noexcept;
 
 	uint32_t _selectedScriptID {1};
 	bool _openScriptTab {false};
@@ -48,7 +48,7 @@ private:
 	bool _resetStackScroll {false};
 	bool _resetExceptionHandlersScroll {false};
 
-	static std::string DataToString(lhvm::VMValue data, openblack::lhvm::DataType type);
+	static std::string DataToString(lhvm::VMValue data, lhvm::DataType type) noexcept;
 };
 
 } // namespace openblack::debug::gui

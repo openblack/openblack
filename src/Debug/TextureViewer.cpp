@@ -17,12 +17,12 @@
 using namespace openblack;
 using namespace openblack::debug::gui;
 
-TextureViewer::TextureViewer()
+TextureViewer::TextureViewer() noexcept
     : Window("Texture Viewer", ImVec2(950.0f, 780.0f))
 {
 }
 
-void TextureViewer::Draw([[maybe_unused]] Game& game)
+void TextureViewer::Draw() noexcept
 {
 	float fontSize = ImGui::GetFontSize();
 	const auto& textures = Locator::resources::value().GetTextures();
@@ -78,8 +78,8 @@ void TextureViewer::Draw([[maybe_unused]] Game& game)
 	ImGui::EndChild();
 }
 
-void TextureViewer::Update([[maybe_unused]] Game& game) {}
+void TextureViewer::Update() noexcept {}
 
-void TextureViewer::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
+void TextureViewer::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) noexcept {}
 
-void TextureViewer::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) {}
+void TextureViewer::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) noexcept {}

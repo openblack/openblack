@@ -15,40 +15,30 @@
 
 union SDL_Event;
 
-namespace openblack
-{
-
-class Game;
-
-namespace graphics
-{
-class Renderer;
-}
-
-namespace debug::gui
+namespace openblack::debug::gui
 {
 
 class Window
 {
 public:
-	Window(std::string name, ImVec2 defaultSize);
+	Window(std::string name, ImVec2 defaultSize) noexcept;
 	Window(const Window&) = delete;
-	virtual ~Window();
+	virtual ~Window() noexcept;
 
-	void WindowUpdate(Game& game);
-	void WindowDraw(Game& game);
-	void WindowProcessEvent(const SDL_Event& event);
-	[[nodiscard]] bool IsOpen() const { return _open; }
-	[[nodiscard]] const std::string& GetName() const { return _name; }
-	virtual void Open();
-	virtual void Close();
-	virtual void Toggle();
+	void WindowUpdate() noexcept;
+	void WindowDraw() noexcept;
+	void WindowProcessEvent(const SDL_Event& event) noexcept;
+	[[nodiscard]] bool IsOpen() const noexcept { return _open; }
+	[[nodiscard]] const std::string& GetName() const noexcept { return _name; }
+	virtual void Open() noexcept;
+	virtual void Close() noexcept;
+	virtual void Toggle() noexcept;
 
 protected:
-	virtual void Draw(Game& game) = 0;
-	virtual void Update(Game& game) = 0;
-	virtual void ProcessEventOpen(const SDL_Event& event) = 0;
-	virtual void ProcessEventAlways(const SDL_Event& event) = 0;
+	virtual void Draw() noexcept = 0;
+	virtual void Update() noexcept = 0;
+	virtual void ProcessEventOpen(const SDL_Event& event) noexcept = 0;
+	virtual void ProcessEventAlways(const SDL_Event& event) noexcept = 0;
 
 private:
 	const std::string _name;
@@ -56,6 +46,4 @@ private:
 	bool _open {false};
 };
 
-} // namespace debug::gui
-
-} // namespace openblack
+} // namespace openblack::debug::gui
