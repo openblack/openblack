@@ -7,7 +7,7 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
-#include <3D/LandIsland.h>
+#include <3D/LandIslandInterface.h>
 #include <Camera/Camera.h>
 #include <gtest/gtest.h>
 
