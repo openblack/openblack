@@ -11,6 +11,7 @@
 
 #include <LNDFile.h>
 
+#include "3D/LandBlock.h"
 #include "3D/LandIslandInterface.h"
 #include "Debug/ImGuiUtils.h"
 #include "Game.h"
