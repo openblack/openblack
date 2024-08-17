@@ -14,8 +14,6 @@
 #include <entt/resource/cache.hpp>
 #include <fmt/format.h>
 
-#include "MeshId.h"
-
 namespace openblack::resources
 {
 
