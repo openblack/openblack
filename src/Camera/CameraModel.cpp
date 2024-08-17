@@ -12,7 +12,7 @@
 #include <glm/geometric.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 
-#include "3D/LandIsland.h"
+#include "3D/LandIslandInterface.h"
 #include "DefaultWorldCameraModel.h"
 #include "Locator.h"
 

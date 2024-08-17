@@ -13,9 +13,9 @@
 
 #include <spdlog/spdlog.h>
 
-#include "3D/LandIsland.h"
-#include "3D/TempleInterior.h"
-#include "3D/UnloadedIsland.h"
+#include "3D/Implementations/LandIsland.h"
+#include "3D/Implementations/TempleInterior.h"
+#include "3D/Implementations/UnloadedIsland.h"
 #include "Audio/AudioManager.h"
 #include "Audio/AudioManagerNoOp.h"
 #include "Common/EventManager.h"
