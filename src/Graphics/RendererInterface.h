@@ -42,7 +42,6 @@ public:
 	{
 		const Camera* camera;
 		const graphics::FrameBuffer* frameBuffer;
-		const Sky& sky;
 		const ecs::Registry& entities;
 		uint32_t time;
 		float timeOfDay;
@@ -73,7 +72,6 @@ public:
 		uint32_t instanceStart;
 		uint32_t instanceCount;
 		bool isSky;
-		float skyType;
 		bool drawAll; ///< For use in the mesh viewer
 		bool morphWithTerrain;
 	};

@@ -25,7 +25,7 @@
 #include "3D/LandBlock.h"
 #include "3D/LandIslandInterface.h"
 #include "3D/OceanInterface.h"
-#include "3D/Sky.h"
+#include "3D/SkyInterface.h"
 #include "Camera/Camera.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Sprite.h"
@@ -349,7 +349,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			if (!desc.isSky)
 			{
 				const glm::vec4 u_skyAlphaThreshold = {
-				    desc.skyType,
+				    Locator::skySystem::value().GetCurrentSkyType(),
 				    prim.thresholdAlpha ? prim.alphaCutoutThreshold : 0.0f,
 				    0.0f,
 				    0.0f,
@@ -519,16 +519,17 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	const auto* objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
 	const auto* objectShaderHeightMapInstanced = _shaderManager->GetShader("ObjectHeightMapInstanced");
 
+	const auto skyType = Locator::skySystem::value().GetCurrentSkyType();
+
 	{
 		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSky
 		                                                                          : Profiler::Stage::MainPassDrawSky);
 		if (desc.drawSky)
 		{
 			const auto modelMatrix = glm::mat4(1.0f);
-			const glm::vec4 u_typeAlignment = {desc.sky.GetCurrentSkyType(), Locator::config::value().skyAlignment + 1.0f, 0.0f,
-			                                   0.0f};
+			const glm::vec4 u_typeAlignment = {skyType, Locator::config::value().skyAlignment + 1.0f, 0.0f, 0.0f};
 
-			skyShader->SetTextureSampler("s_diffuse", 0, desc.sky.GetTexture());
+			skyShader->SetTextureSampler("s_diffuse", 0, Locator::skySystem::value().GetTexture());
 			skyShader->SetUniformValue("u_typeAlignment", &u_typeAlignment);
 
 			L3DMeshSubmitDesc submitDesc = {};
@@ -544,7 +545,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			submitDesc.matrixCount = 1;
 			submitDesc.isSky = true;
 
-			DrawMesh(desc.sky.GetMesh(), submitDesc, 0);
+			DrawMesh(Locator::skySystem::value().GetMesh(), submitDesc, 0);
 		}
 	}
 
@@ -563,7 +564,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			waterShader->SetTextureSampler("s_diffuse", 0, *diffuse);
 			waterShader->SetTextureSampler("s_alpha", 1, *alpha);
 			waterShader->SetTextureSampler("s_reflection", 2, ocean.GetReflectionFramebuffer().GetColorAttachment());
-			const glm::vec4 u_sky = {desc.sky.GetCurrentSkyType(), 0.0f, 0.0f, 0.0f};
+			const glm::vec4 u_sky = {skyType, 0.0f, 0.0f, 0.0f};
 			waterShader->SetUniformValue("u_sky", &u_sky); // fs
 			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), waterShader->GetRawHandle());
 		}
@@ -578,8 +579,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			auto islandExtent = glm::vec4(island.GetExtent().minimum, island.GetExtent().maximum);
 
 			auto texture = Locator::resources::value().GetTextures().Handle(LandIslandInterface::k_SmallBumpTextureId);
-			const glm::vec4 u_skyAndBump = {desc.sky.GetCurrentSkyType(), desc.bumpMapStrength, desc.smallBumpMapStrength,
-			                                0.0f};
+			const glm::vec4 u_skyAndBump = {skyType, desc.bumpMapStrength, desc.smallBumpMapStrength, 0.0f};
 
 			terrainShader->SetTextureSampler("s0_materials", 0, island.GetAlbedoArray());
 			terrainShader->SetTextureSampler("s1_bump", 1, island.GetBump());
@@ -657,7 +657,6 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					submitDesc.matrixCount = 1;
 				}
 				submitDesc.isSky = false;
-				submitDesc.skyType = desc.sky.GetCurrentSkyType();
 				submitDesc.morphWithTerrain = placers.morphWithTerrain;
 				submitDesc.program = submitDesc.morphWithTerrain ? objectShaderHeightMapInstanced : objectShaderInstanced;
 
@@ -762,7 +761,6 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			submitDesc.modelMatrices = bones.data();
 			submitDesc.matrixCount = static_cast<uint8_t>(bones.size());
 			submitDesc.isSky = false;
-			submitDesc.skyType = desc.sky.GetCurrentSkyType();
 			DrawMesh(*mesh, submitDesc, 0);
 		}
 	}
