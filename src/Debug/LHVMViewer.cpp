@@ -208,7 +208,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::lhvm::LHVM& lhvm, openbl
 
 			if (instruction.mode == lhvm::VMMode::Reference)
 			{
-				DrawVariable(lhvm, script, instruction.intVal);
+				DrawVariable(lhvm, script, instruction.data.intVal);
 			}
 			else if (instruction.mode == lhvm::VMMode::Immediate)
 			{
@@ -222,7 +222,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::lhvm::LHVM& lhvm, openbl
 			if (instruction.mode == lhvm::VMMode::Reference)
 			{
 				ImGui::SameLine();
-				DrawVariable(lhvm, script, instruction.intVal);
+				DrawVariable(lhvm, script, instruction.data.intVal);
 			}
 
 			break;
@@ -234,18 +234,19 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::lhvm::LHVM& lhvm, openbl
 		case lhvm::Opcode::Sys:
 			ImGui::TextColored(Disassembly_ColorKeyword, "SYS");
 			ImGui::SameLine();
-			if (functions != nullptr && instruction.uintVal < functions->size())
+			if (functions != nullptr && instruction.data.uintVal < functions->size())
 			{
-				ImGui::TextColored(Disassembly_ColorFuncName, "%s", lhvm.GetFunctions()->at(instruction.uintVal).name.c_str());
+				ImGui::TextColored(Disassembly_ColorFuncName, "%s",
+				                   lhvm.GetFunctions()->at(instruction.data.uintVal).name.c_str());
 			}
 			else
 			{
-				ImGui::TextColored(Disassembly_ColorFuncName, "FUNC_%u", instruction.uintVal);
+				ImGui::TextColored(Disassembly_ColorFuncName, "FUNC_%u", instruction.data.uintVal);
 			}
 			break;
 		case lhvm::Opcode::Run:
 		{
-			auto const& runScript = lhvm.GetScripts().at(instruction.uintVal - 1);
+			auto const& runScript = lhvm.GetScripts().at(instruction.data.uintVal - 1);
 
 			ImGui::TextColored(Disassembly_ColorKeyword, "RUN");
 			if (instruction.mode == lhvm::VMMode::Async)
@@ -257,7 +258,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::lhvm::LHVM& lhvm, openbl
 			ImGui::SameLine();
 			if (ImGui::TextButtonColored(Disassembly_ColorFuncName, runScript.name.c_str()))
 			{
-				SelectScript(instruction.uintVal);
+				SelectScript(instruction.data.uintVal);
 			}
 
 			ImGui::SameLine();
@@ -280,7 +281,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::lhvm::LHVM& lhvm, openbl
 		case lhvm::Opcode::Except:
 			ImGui::TextColored(Disassembly_ColorKeyword, "%s", opcodeName);
 			ImGui::SameLine();
-			ImGui::TextColored(Disassembly_ColorConstant, "0x%04x", instruction.uintVal);
+			ImGui::TextColored(Disassembly_ColorConstant, "0x%04x", instruction.data.uintVal);
 			break;
 		case lhvm::Opcode::Swap:
 			if (instruction.type == lhvm::DataType::Int)
@@ -298,7 +299,7 @@ void LHVMViewer::DrawScriptDisassembly(const openblack::lhvm::LHVM& lhvm, openbl
 					ImGui::TextColored(Disassembly_ColorKeyword, "COPY to");
 				}
 				ImGui::SameLine();
-				ImGui::TextColored(Disassembly_ColorConstant, "%d", instruction.intVal);
+				ImGui::TextColored(Disassembly_ColorConstant, "%d", instruction.data.intVal);
 			}
 			break;
 		default:

@@ -88,13 +88,7 @@ public:
 	}
 
 	DataType type;
-	union
-	{
-		VMValue value;
-		float floatVal;
-		int32_t intVal;
-		uint32_t uintVal;
-	};
+	VMValue value;
 	std::string name;
 };
 
@@ -231,13 +225,7 @@ public:
 	Opcode code {Opcode::Line};
 	VMMode mode {VMMode::Immediate};
 	DataType type {DataType::Float};
-	union
-	{
-		VMValue data;
-		float floatVal {0.0f};
-		int32_t intVal;
-		uint32_t uintVal;
-	};
+	VMValue data;
 	uint32_t line {0};
 };
 static_assert(sizeof(VMInstruction) == 20);

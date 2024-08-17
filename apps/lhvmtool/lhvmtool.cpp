@@ -126,7 +126,7 @@ std::map<uint32_t, std::string> GetLabels(const LHVMFile& file)
 				{
 					name += "_exception_handler_";
 				}
-				else if (instruction.uintVal < i) // Backward jumps are used for 'while' loops
+				else if (instruction.data.uintVal < i) // Backward jumps are used for 'while' loops
 				{
 					name += "_loop_";
 				}
@@ -135,7 +135,7 @@ std::map<uint32_t, std::string> GetLabels(const LHVMFile& file)
 					name += "_skip_";
 				}
 				name += std::to_string(labelCount);
-				labels.emplace(instruction.uintVal, name);
+				labels.emplace(instruction.data.uintVal, name);
 				labelCount++;
 			}
 			else if (instruction.code == Opcode::End)
@@ -182,8 +182,8 @@ int PrintCode(const LHVMFile& file, const std::string& name)
 				case Opcode::Pop:
 					if (instruction.mode == VMMode::Reference)
 					{
-						const auto varId = static_cast<size_t>(instruction.uintVal);
-						if (instruction.uintVal > script.variablesOffset)
+						const auto varId = static_cast<size_t>(instruction.data.uintVal);
+						if (instruction.data.uintVal > script.variablesOffset)
 						{
 							arg = "local " + script.variables.at(varId - script.variablesOffset - 1);
 						}
@@ -198,13 +198,13 @@ int PrintCode(const LHVMFile& file, const std::string& name)
 						{
 						case DataType::Float:
 						case DataType::Vector:
-							arg = std::to_string(instruction.floatVal);
+							arg = std::to_string(instruction.data.floatVal);
 							break;
 						case DataType::Object:
-							arg = std::to_string(instruction.uintVal);
+							arg = std::to_string(instruction.data.uintVal);
 							break;
 						default:
-							arg = std::to_string(instruction.intVal);
+							arg = std::to_string(instruction.data.intVal);
 							break;
 						}
 					}
@@ -220,15 +220,15 @@ int PrintCode(const LHVMFile& file, const std::string& name)
 				case Opcode::Jmp:
 				case Opcode::Wait:
 				case Opcode::Except:
-					arg = labels.at(instruction.uintVal);
+					arg = labels.at(instruction.data.uintVal);
 					std::printf("\t%s %s\n", opcode.c_str(), arg.c_str());
 					break;
 				case Opcode::Sys:
-					std::printf("\tCALL %u\n", instruction.uintVal);
+					std::printf("\tCALL %u\n", instruction.data.uintVal);
 					break;
 				case Opcode::Run:
 					type = instruction.mode == VMMode::Async ? "async " : "";
-					arg = file.GetScripts().at(static_cast<size_t>(instruction.intVal) - 1).name;
+					arg = file.GetScripts().at(static_cast<size_t>(instruction.data.intVal) - 1).name;
 					std::printf("\tRUN %s%s\n", type.c_str(), arg.c_str());
 					break;
 				case Opcode::EndExcept:
@@ -250,11 +250,11 @@ int PrintCode(const LHVMFile& file, const std::string& name)
 					{
 						if (instruction.mode == VMMode::CopyFrom)
 						{
-							std::printf("\tCOPY from %i\n", instruction.intVal);
+							std::printf("\tCOPY from %i\n", instruction.data.intVal);
 						}
 						else // Mode::CopyTo
 						{
-							std::printf("\tCOPY to %i\n", instruction.intVal);
+							std::printf("\tCOPY to %i\n", instruction.data.intVal);
 						}
 					}
 					break;

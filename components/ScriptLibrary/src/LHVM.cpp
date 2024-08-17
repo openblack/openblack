@@ -496,7 +496,7 @@ void LHVM::StopTask(uint32_t taskNumber)
 		{
 			if (var.type == DataType::Object)
 			{
-				RemoveReference(var.uintVal);
+				RemoveReference(var.value.uintVal);
 			}
 		}
 
@@ -666,11 +666,11 @@ void LHVM::PrintInstruction(const VMTask& task, const VMInstruction& instruction
 		{
 			arg = "async ";
 		}
-		arg += _scripts.at(instruction.intVal - 1).name;
+		arg += _scripts.at(instruction.data.intVal - 1).name;
 	}
 	else if (instruction.code == Opcode::Sys)
 	{
-		arg += _functions->at(instruction.intVal).name;
+		arg += _functions->at(instruction.data.intVal).name;
 	}
 	else
 	{
@@ -682,29 +682,29 @@ void LHVM::PrintInstruction(const VMTask& task, const VMInstruction& instruction
 		}
 		if ((instruction.code == Opcode::Push || instruction.code == Opcode::Pop) && instruction.mode == VMMode::Reference)
 		{
-			if (instruction.intVal > task.variablesOffset)
+			if (instruction.data.intVal > task.variablesOffset)
 			{
-				arg = task.localVars[instruction.intVal - task.variablesOffset - 1].name;
+				arg = task.localVars[instruction.data.intVal - task.variablesOffset - 1].name;
 			}
 			else
 			{
-				arg = _variables.at(instruction.intVal).name;
+				arg = _variables.at(instruction.data.intVal).name;
 			}
 		}
 		else if (instruction.code == Opcode::Push && instruction.mode == VMMode::Immediate)
 		{
 			if (instruction.type == DataType::Float || instruction.type == DataType::Vector)
 			{
-				arg = std::to_string(instruction.floatVal);
+				arg = std::to_string(instruction.data.floatVal);
 			}
 			else
 			{
-				arg = std::to_string(instruction.intVal);
+				arg = std::to_string(instruction.data.intVal);
 			}
 		}
 		else if (instruction.code == Opcode::Jmp || instruction.code == Opcode::Wait || instruction.code == Opcode::Swap)
 		{
-			arg = std::to_string(instruction.intVal);
+			arg = std::to_string(instruction.data.intVal);
 		}
 		if (instruction.code == Opcode::Wait)
 		{
@@ -760,11 +760,11 @@ void LHVM::Opcode01Jz(VMTask& task, const VMInstruction& instruction)
 	{
 		if (instruction.mode == VMMode::Forward)
 		{
-			task.instructionAddress = instruction.intVal - 1;
+			task.instructionAddress = instruction.data.intVal - 1;
 		}
 		else // Mode::BACKWARD
 		{
-			task.instructionAddress = instruction.intVal;
+			task.instructionAddress = instruction.data.intVal;
 			task.iield = true;
 		}
 	}
@@ -778,7 +778,7 @@ void LHVM::Opcode02Push(VMTask& task, const VMInstruction& instruction)
 	}
 	else // Mode::REFERENCE
 	{
-		const auto& var = GetVar(task, instruction.uintVal);
+		const auto& var = GetVar(task, instruction.data.uintVal);
 		Push(var.value, var.type);
 	}
 }
@@ -787,7 +787,7 @@ void LHVM::Opcode03Pop(VMTask& task, const VMInstruction& instruction)
 {
 	if (instruction.mode == VMMode::Reference)
 	{
-		auto& var = GetVar(task, instruction.uintVal);
+		auto& var = GetVar(task, instruction.data.uintVal);
 		DataType type;
 		const auto newVal = Pop(type);
 		if (type == DataType::Object)
@@ -848,7 +848,7 @@ void LHVM::Opcode04Add(VMTask& /*task*/, const VMInstruction& instruction)
 
 void LHVM::Opcode05Sys(VMTask& /*task*/, const VMInstruction& instruction)
 {
-	const auto id = instruction.intVal;
+	const auto id = instruction.data.intVal;
 	if (id > 0 && id < _functions->size())
 	{
 		const auto& func = _functions->at(id);
@@ -1302,11 +1302,11 @@ void LHVM::Opcode20Jmp(VMTask& task, const VMInstruction& instruction)
 {
 	if (instruction.mode == VMMode::Forward)
 	{
-		task.instructionAddress = instruction.intVal - 1;
+		task.instructionAddress = instruction.data.intVal - 1;
 	}
 	else // Mode::BACKWARD
 	{
-		task.instructionAddress = instruction.intVal;
+		task.instructionAddress = instruction.data.intVal;
 		task.iield = true;
 	}
 }
@@ -1330,7 +1330,7 @@ void LHVM::Opcode22Except(VMTask& /*task*/, const VMInstruction& instruction)
 {
 	if (_currentTask != nullptr)
 	{
-		_currentTask->exceptionHandlerIps.emplace_back(instruction.uintVal);
+		_currentTask->exceptionHandlerIps.emplace_back(instruction.data.uintVal);
 	}
 }
 
@@ -1338,12 +1338,12 @@ void LHVM::Opcode23Cast(VMTask& task, const VMInstruction& instruction)
 {
 	if (instruction.mode == VMMode::Zero)
 	{
-		auto& var = GetVar(task, instruction.uintVal);
+		auto& var = GetVar(task, instruction.data.uintVal);
 		if (var.type == DataType::Object)
 		{
-			RemoveReference(var.uintVal);
+			RemoveReference(var.value.uintVal);
 		}
-		var.floatVal = 0.0f;
+		var.value.floatVal = 0.0f;
 		var.type = DataType::Float;
 	}
 	else // Mode::CAST
@@ -1354,7 +1354,7 @@ void LHVM::Opcode23Cast(VMTask& task, const VMInstruction& instruction)
 
 void LHVM::Opcode24Call(VMTask& task, const VMInstruction& instruction)
 {
-	const auto newTaskId = StartScript(instruction.uintVal);
+	const auto newTaskId = StartScript(instruction.data.uintVal);
 	if (instruction.mode == VMMode::Sync)
 	{
 		task.waitingTaskId = newTaskId;
@@ -1423,7 +1423,7 @@ void LHVM::Opcode29Swap(VMTask& /*task*/, const VMInstruction& instruction)
 		Push(v1, t1);
 		return;
 	}
-	const auto offset = static_cast<size_t>(instruction.intVal);
+	const auto offset = static_cast<size_t>(instruction.data.intVal);
 	if (offset == 0 || offset >= VMStack::k_Size - 1)
 	{
 		SignalError(ErrorCode::InvalidOperand);
