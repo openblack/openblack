@@ -92,6 +92,7 @@ void InitializeWindow(const std::string& title, int width, int height, windowing
 bool InitializeEngine(uint8_t rendererType, bool vsync) noexcept;
 bool InitializeGame() noexcept;
 void InitializeLevel(const std::filesystem::path& path);
+void ShutDownServices();
 
 struct Locator
 {
