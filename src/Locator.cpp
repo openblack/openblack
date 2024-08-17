@@ -128,3 +128,45 @@ void openblack::InitializeLevel(const std::filesystem::path& path)
 	Locator::cameraBookmarkSystem::emplace<CameraBookmarkSystem>();
 	Locator::terrainSystem::emplace<LandIsland>(path);
 }
+
+void openblack::ShutDownServices()
+{
+	// Stop all sounds
+	if (Locator::audio::has_value())
+	{
+		Locator::audio::value().Stop();
+	}
+
+	// Manually delete the assets here before BGFX renderer clears its buffers resulting in invalid handles in our assets
+	if (Locator::resources::has_value())
+	{
+		auto& resources = Locator::resources::value();
+		resources.GetMeshes().Clear();
+		resources.GetTextures().Clear();
+		resources.GetAnimations().Clear();
+		resources.GetSounds().Clear();
+	}
+
+	// The audio resources have been cleared and all sounds have been stopped. It is now safe to reset audio
+	if (Locator::audio::has_value())
+	{
+		Locator::audio::reset();
+	}
+
+	Locator::rendereringSystem::reset();
+	Locator::dynamicsSystem::reset();
+	Locator::cameraBookmarkSystem::reset();
+	Locator::livingActionSystem::reset();
+	Locator::townSystem::reset();
+	Locator::pathfindingSystem::reset();
+	Locator::terrainSystem::reset();
+	Locator::filesystem::reset();
+	Locator::gameActionSystem::reset();
+
+	Locator::oceanSystem::reset();
+	Locator::skySystem ::reset();
+	Locator::debugGui ::reset();
+	Locator::rendererInterface::reset();
+	Locator::windowing::reset();
+	Locator::events::reset();
+}
