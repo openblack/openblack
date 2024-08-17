@@ -48,10 +48,10 @@ class Renderer;
 class Texture2D;
 } // namespace graphics
 
-namespace LHVM
+namespace lhvm
 {
 class LHVM;
-}
+} // namespace lhvm
 
 namespace lhscriptx
 {
@@ -170,8 +170,8 @@ public:
 	[[nodiscard]] Sky& GetSky() const { return *_sky; }
 	[[nodiscard]] Water& GetWater() const { return *_water; }
 	[[nodiscard]] entt::entity GetHand() const;
-	[[nodiscard]] const LHVM::LHVM& GetLhvm() const { return *_lhvm; }
-	LHVM::LHVM& GetLhvm() { return *_lhvm; }
+	[[nodiscard]] const lhvm::LHVM& GetLhvm() const { return *_lhvm; }
+	lhvm::LHVM& GetLhvm() { return *_lhvm; }
 	const InfoConstants& GetInfoConstants() { return _infoConstants; } ///< Access should be only read-only
 	Config& GetConfig() { return _config; }
 	[[nodiscard]] const Config& GetConfig() const { return _config; }
@@ -200,7 +200,7 @@ private:
 	std::unique_ptr<Sky> _sky;
 	std::unique_ptr<Water> _water;
 	std::unique_ptr<lhscriptx::Script> _scriptx;
-	std::unique_ptr<LHVM::LHVM> _lhvm;
+	std::unique_ptr<lhvm::LHVM> _lhvm;
 
 	InfoConstants _infoConstants;
 	Config _config;
