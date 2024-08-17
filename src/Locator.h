@@ -87,7 +87,8 @@ class TownSystemInterface;
 } // namespace ecs::systems
 
 void InitializeWindow(const std::string& title, int width, int height, windowing::DisplayMode displayMode, uint32_t extraFlags);
-bool InitializeGame(uint8_t rendererType, bool vsync) noexcept;
+bool InitializeEngine(uint8_t rendererType, bool vsync) noexcept;
+bool InitializeGame() noexcept;
 void InitializeLevel(const std::filesystem::path& path);
 
 struct Locator
