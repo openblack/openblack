@@ -174,7 +174,7 @@ int LHVM::LoadBinary(const LHVMFile& file)
 		}
 		else
 		{
-			SignalError(ErrorCode::ScriptIdNotFound, scriptId);
+			SignalError(ErrorCode::ErrScriptIdNotFound, scriptId);
 		}
 	}
 
@@ -227,7 +227,7 @@ VMValue LHVM::Pop(DataType& type)
 		return _currentStack->values.at(_currentStack->count);
 	}
 	type = DataType::None;
-	SignalError(ErrorCode::StackEmpty);
+	SignalError(ErrorCode::ErrStackEmpty);
 	return VMValue(0u);
 }
 
@@ -254,7 +254,7 @@ void LHVM::Push(VMValue value, DataType type)
 	}
 	else
 	{
-		SignalError(ErrorCode::StackFull);
+		SignalError(ErrorCode::ErrStackFull);
 	}
 }
 
@@ -404,11 +404,11 @@ uint32_t LHVM::StartScript(const std::string& name, const ScriptType allowedScri
 		{
 			return StartScript(*script);
 		}
-		SignalError(ErrorCode::NoScriptOfType, name);
+		SignalError(ErrorCode::ErrNoScriptOfType, name);
 	}
 	else
 	{
-		SignalError(ErrorCode::ScriptNameNotFound, name);
+		SignalError(ErrorCode::ErrScriptNameNotFound, name);
 	}
 	return 0;
 }
@@ -419,7 +419,7 @@ uint32_t LHVM::StartScript(const uint32_t id)
 	{
 		return StartScript(_scripts.at(id - 1));
 	}
-	SignalError(ErrorCode::ScriptIdNotFound, id);
+	SignalError(ErrorCode::ErrScriptIdNotFound, id);
 	return 0;
 }
 
@@ -509,7 +509,7 @@ void LHVM::StopTask(uint32_t taskNumber)
 	}
 	else
 	{
-		SignalError(ErrorCode::TaskIdNotFound, taskNumber);
+		SignalError(ErrorCode::ErrTaskIdNotFound, taskNumber);
 	}
 }
 
@@ -842,7 +842,7 @@ void LHVM::Opcode04Add(VMTask& /*task*/, const VMInstruction& instruction)
 		Pop();
 		Pop();
 		Pushf(0.0f);
-		SignalError(ErrorCode::InvalidType);
+		SignalError(ErrorCode::ErrInvalidType);
 	}
 }
 
@@ -874,7 +874,7 @@ void LHVM::Opcode05Sys(VMTask& /*task*/, const VMInstruction& instruction)
 	}
 	else
 	{
-		SignalError(ErrorCode::NativeFuncNotFound, id);
+		SignalError(ErrorCode::ErrNativeFuncNotFound, id);
 	}
 }
 
@@ -913,7 +913,7 @@ void LHVM::Opcode06Sub(VMTask& /*task*/, const VMInstruction& instruction)
 		Pop();
 		Pop();
 		Pushf(0.0f);
-		SignalError(ErrorCode::InvalidType);
+		SignalError(ErrorCode::ErrInvalidType);
 	}
 }
 
@@ -943,7 +943,7 @@ void LHVM::Opcode07Neg(VMTask& /*task*/, const VMInstruction& instruction)
 	default:
 		Pop();
 		Pushf(0.0f);
-		SignalError(ErrorCode::InvalidType);
+		SignalError(ErrorCode::ErrInvalidType);
 	}
 }
 
@@ -978,7 +978,7 @@ void LHVM::Opcode08Mul(VMTask& /*task*/, const VMInstruction& instruction)
 		Pop();
 		Pop();
 		Pushf(0.0f);
-		SignalError(ErrorCode::InvalidType);
+		SignalError(ErrorCode::ErrInvalidType);
 	}
 }
 
@@ -1000,7 +1000,7 @@ void LHVM::Opcode09Div(VMTask& /*task*/, const VMInstruction& instruction)
 		else
 		{
 			Pushi(0);
-			SignalError(ErrorCode::DivByZero);
+			SignalError(ErrorCode::ErrDivByZero);
 		}
 		break;
 	case DataType::Float:
@@ -1013,7 +1013,7 @@ void LHVM::Opcode09Div(VMTask& /*task*/, const VMInstruction& instruction)
 		else
 		{
 			Pushf(0.0f);
-			SignalError(ErrorCode::DivByZero);
+			SignalError(ErrorCode::ErrDivByZero);
 		}
 		break;
 	case DataType::Vector:
@@ -1032,14 +1032,14 @@ void LHVM::Opcode09Div(VMTask& /*task*/, const VMInstruction& instruction)
 			Pushv(0.0f);
 			Pushv(0.0f);
 			Pushv(0.0f);
-			SignalError(ErrorCode::DivByZero);
+			SignalError(ErrorCode::ErrDivByZero);
 		}
 		break;
 	default:
 		Pop();
 		Pop();
 		Pushf(0.0f);
-		SignalError(ErrorCode::InvalidType);
+		SignalError(ErrorCode::ErrInvalidType);
 	}
 }
 
@@ -1061,7 +1061,7 @@ void LHVM::Opcode10Mod(VMTask& /*task*/, const VMInstruction& instruction)
 		else
 		{
 			Pushi(0);
-			SignalError(ErrorCode::DivByZero);
+			SignalError(ErrorCode::ErrDivByZero);
 		}
 		break;
 	case DataType::Float:
@@ -1074,7 +1074,7 @@ void LHVM::Opcode10Mod(VMTask& /*task*/, const VMInstruction& instruction)
 		else
 		{
 			Pushf(0.0f);
-			SignalError(ErrorCode::DivByZero);
+			SignalError(ErrorCode::ErrDivByZero);
 		}
 		break;
 	case DataType::Vector:
@@ -1093,14 +1093,14 @@ void LHVM::Opcode10Mod(VMTask& /*task*/, const VMInstruction& instruction)
 			Pushv(0.0f);
 			Pushv(0.0f);
 			Pushv(0.0f);
-			SignalError(ErrorCode::DivByZero);
+			SignalError(ErrorCode::ErrDivByZero);
 		}
 		break;
 	default:
 		Pop();
 		Pop();
 		Pushf(0.0f);
-		SignalError(ErrorCode::InvalidType);
+		SignalError(ErrorCode::ErrInvalidType);
 	}
 }
 
@@ -1163,7 +1163,7 @@ void LHVM::Opcode14Eq(VMTask& /*task*/, const VMInstruction& instruction)
 		Pop();
 		Pop();
 		Pushb(false);
-		SignalError(ErrorCode::InvalidType);
+		SignalError(ErrorCode::ErrInvalidType);
 	}
 }
 
@@ -1206,7 +1206,7 @@ void LHVM::Opcode15Neq(VMTask& /*task*/, const VMInstruction& instruction)
 		Pop();
 		Pop();
 		Pushb(false);
-		SignalError(ErrorCode::InvalidType);
+		SignalError(ErrorCode::ErrInvalidType);
 	}
 }
 
@@ -1228,7 +1228,7 @@ void LHVM::Opcode16Geq(VMTask& /*task*/, const VMInstruction& instruction)
 		break;
 	default:
 		Pushb(false);
-		SignalError(ErrorCode::InvalidType);
+		SignalError(ErrorCode::ErrInvalidType);
 	}
 }
 
@@ -1250,7 +1250,7 @@ void LHVM::Opcode17Leq(VMTask& /*task*/, const VMInstruction& instruction)
 		break;
 	default:
 		Pushb(false);
-		SignalError(ErrorCode::InvalidType);
+		SignalError(ErrorCode::ErrInvalidType);
 	}
 }
 
@@ -1272,7 +1272,7 @@ void LHVM::Opcode18Gt(VMTask& /*task*/, const VMInstruction& instruction)
 		break;
 	default:
 		Pushb(false);
-		SignalError(ErrorCode::InvalidType);
+		SignalError(ErrorCode::ErrInvalidType);
 	}
 }
 
@@ -1294,7 +1294,7 @@ void LHVM::Opcode19Lt(VMTask& /*task*/, const VMInstruction& instruction)
 		break;
 	default:
 		Pushb(false);
-		SignalError(ErrorCode::InvalidType);
+		SignalError(ErrorCode::ErrInvalidType);
 	}
 }
 
@@ -1426,7 +1426,7 @@ void LHVM::Opcode29Swap(VMTask& /*task*/, const VMInstruction& instruction)
 	const auto offset = static_cast<size_t>(instruction.data.intVal);
 	if (offset == 0 || offset >= VMStack::k_Size - 1)
 	{
-		SignalError(ErrorCode::InvalidOperand);
+		SignalError(ErrorCode::ErrInvalidOperand);
 		return;
 	}
 	DataType copyType = DataType::Float;

@@ -319,31 +319,32 @@ public:
 
 enum class ErrorCode : uint8_t
 {
-	NoErr = 0,
-	StackEmpty,
-	StackFull,
-	ScriptIdNotFound,
-	ScriptNameNotFound,
-	NoScriptOfType,
-	TaskIdNotFound,
-	NativeFuncNotFound,
-	DivByZero,
-	InvalidType,
-	InvalidOperand,
+	Success = 0,
+	ErrStackEmpty,
+	ErrStackFull,
+	ErrScriptIdNotFound,
+	ErrScriptNameNotFound,
+	ErrNoScriptOfType,
+	ErrTaskIdNotFound,
+	ErrNativeFuncNotFound,
+	ErrDivByZero,
+	ErrInvalidType,
+	ErrInvalidOperand,
 	_Count
 };
 
 static const std::array<std::string, static_cast<size_t>(ErrorCode::_Count)> k_ErrorMsg = {
-    "no error",
-    "stack is empty",
-    "stack is full",
-    "script id not found",
-    "script name not found",
-    "no script of type",
-    "task id not found",
-    "native function not found",
-    "division by zero",
-    "invalid data type",
+    "Success.",
+    "Attempting to pop an empty stack.",
+    "Attempting to push on a full stack.",
+    "Script id not found.",
+    "Script name not found.",
+    "No script of specified type.",
+    "Task id not found.",
+    "Native function not found.",
+    "Division by zero.",
+    "Invalid data type.",
+    "Invalid operand.",
 };
 
 } // namespace openblack::lhvm
