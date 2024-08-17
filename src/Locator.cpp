@@ -14,6 +14,7 @@
 #include <spdlog/spdlog.h>
 
 #include "3D/Implementations/LandIsland.h"
+#include "3D/Implementations/Ocean.h"
 #include "3D/Implementations/TempleInterior.h"
 #include "3D/Implementations/UnloadedIsland.h"
 #include "Audio/AudioManager.h"
@@ -116,6 +117,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::entitiesRegistry::emplace<Registry>();
 	Locator::handSystem::emplace<HandSystem>();
 	Locator::temple::emplace<TempleInterior>();
+	Locator::oceanSystem::emplace<Ocean>();
 
 	return true;
 }

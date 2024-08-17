@@ -12,7 +12,12 @@
 #include <memory>
 
 #include <entt/core/hashed_string.hpp>
-#include <glm/vec4.hpp>
+
+#include "3D/OceanInterface.h"
+
+#if !defined(LOCATOR_IMPLEMENTATIONS)
+#warning "Locator interface implementations should only be included in Locator.cpp, use interface instead."
+#endif
 
 namespace openblack
 {
@@ -21,22 +26,22 @@ namespace graphics
 {
 class FrameBuffer;
 class Mesh;
-class ShaderProgram;
-class Texture2D;
 } // namespace graphics
 
-class Water
+class Ocean final: public OceanInterface
 {
 public:
 	// Oddly enough the water texture is labeled Sky
 	static constexpr entt::hashed_string k_DiffuseTextureId = entt::hashed_string("raw/Sky");
 	static constexpr entt::hashed_string k_AlphaTextureId = entt::hashed_string("raw/Skya");
 
-	Water();
-	~Water();
+	Ocean() noexcept;
+	~Ocean() noexcept;
 
-	[[nodiscard]] graphics::FrameBuffer& GetFrameBuffer() const;
-	[[nodiscard]] graphics::Mesh& GetMesh() const noexcept { return *_mesh; }
+	[[nodiscard]] graphics::FrameBuffer& GetReflectionFramebuffer() const noexcept override { return *_reflectionFrameBuffer; }
+	[[nodiscard]] graphics::Mesh& GetMesh() const noexcept override { return *_mesh; }
+	[[nodiscard]] entt::id_type GetDiffuseTexture() const noexcept override { return k_DiffuseTextureId; }
+	[[nodiscard]] entt::id_type GetAlphaTexture() const noexcept override { return k_AlphaTextureId; }
 
 private:
 	void CreateMesh();
