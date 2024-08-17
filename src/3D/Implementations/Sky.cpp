@@ -7,6 +7,8 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#define LOCATOR_IMPLEMENTATIONS
+
 #include "Sky.h"
 
 #include <glm/vec3.hpp>
@@ -26,7 +28,7 @@ using namespace openblack::graphics;
 namespace openblack
 {
 
-Sky::Sky()
+Sky::Sky() noexcept
 {
 	auto& fileSystem = Locator::filesystem::value();
 
@@ -67,7 +69,9 @@ Sky::Sky()
 	                 static_cast<uint32_t>(_bitmaps.size() * sizeof(_bitmaps[0])));
 }
 
-void Sky::SetDayNightTimes(float nightFull, float duskStart, float duskEnd, float dayFull)
+Sky::~Sky() noexcept = default;
+
+void Sky::SetDayNightTimes(float nightFull, float duskStart, float duskEnd, float dayFull) noexcept
 {
 	_nightFullTime = nightFull;
 	_duskStartTime = duskStart;
@@ -75,13 +79,13 @@ void Sky::SetDayNightTimes(float nightFull, float duskStart, float duskEnd, floa
 	_dayFullTime = dayFull;
 }
 
-void Sky::SetTime(float time)
+void Sky::SetTime(float time) noexcept
 {
 	assert(time <= 24.0f);
 	_timeOfDay = time;
 }
 
-float Sky::GetCurrentSkyType() const
+float Sky::GetCurrentSkyType() const noexcept
 {
 	assert(_timeOfDay <= 24.0f);
 

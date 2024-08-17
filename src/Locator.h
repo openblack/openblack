@@ -25,6 +25,7 @@ class LandIslandInterface;
 class OceanInterface;
 class Profiler;
 class RandomNumberManagerInterface;
+class SkyInterface;
 class TempleInteriorInterface;
 
 namespace v120
@@ -105,6 +106,7 @@ struct Locator
 	using rng = entt::locator<RandomNumberManagerInterface>;
 	using terrainSystem = entt::locator<LandIslandInterface>;
 	using oceanSystem = entt::locator<OceanInterface>;
+	using skySystem = entt::locator<SkyInterface>;
 	using audio = entt::locator<audio::AudioManagerInterface>;
 	using camera = entt::locator<Camera>;
 	using gameActionSystem = entt::locator<input::GameActionInterface>;

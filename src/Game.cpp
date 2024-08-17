@@ -26,7 +26,7 @@
 #include "3D/L3DMesh.h"
 #include "3D/LandIslandInterface.h"
 #include "3D/OceanInterface.h"
-#include "3D/Sky.h"
+#include "3D/SkyInterface.h"
 #include "3D/TempleInteriorInterface.h"
 #include "Audio/AudioManagerInterface.h"
 #include "Camera/Camera.h"
@@ -157,7 +157,7 @@ Game::~Game() noexcept
 	Locator::gameActionSystem::reset();
 
 	Locator::oceanSystem::reset();
-	_sky.reset();
+	Locator::skySystem ::reset();
 	Locator::debugGui::reset();
 	Locator::entitiesRegistry::reset();
 	Locator::rendererInterface::reset();
@@ -818,7 +818,6 @@ bool Game::Initialize() noexcept
 		}
 	});
 
-	_sky = std::make_unique<Sky>();
 	return true;
 }
 
@@ -895,7 +894,6 @@ bool Game::Run() noexcept
 			const graphics::RendererInterface::DrawSceneDesc drawDesc {
 			    .camera = &Locator::camera::value(),
 			    .frameBuffer = nullptr,
-			    .sky = *_sky,
 			    .entities = Locator::entitiesRegistry::value(),
 			    .time = milliseconds.count(), // TODO(#481): get actual time
 			    .timeOfDay = config.timeOfDay,
@@ -1022,7 +1020,7 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 
 void Game::SetTime(float time) noexcept
 {
-	GetSky().SetTime(time);
+	Locator::skySystem::value().SetTime(time);
 }
 
 void Game::RequestScreenshot(const std::filesystem::path& path) noexcept

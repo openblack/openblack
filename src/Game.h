@@ -120,7 +120,6 @@ public:
 	void SetGameSpeed(float multiplier) { _gameSpeedMultiplier = multiplier; }
 	[[nodiscard]] float GetGameSpeed() const { return _gameSpeedMultiplier; }
 
-	[[nodiscard]] Sky& GetSky() const { return *_sky; }
 	[[nodiscard]] const lhvm::LHVM& GetLhvm() const { return *_lhvm; }
 	lhvm::LHVM& GetLhvm() { return *_lhvm; }
 	[[nodiscard]] uint16_t GetTurn() const { return _turnCount; }
@@ -141,7 +140,6 @@ private:
 	std::unique_ptr<graphics::L3DMesh> _testModel;
 	std::unique_ptr<L3DAnim> _testAnimation;
 	std::unique_ptr<graphics::L3DMesh> _handModel;
-	std::unique_ptr<Sky> _sky;
 	std::unique_ptr<lhscriptx::Script> _scriptx;
 	std::unique_ptr<lhvm::LHVM> _lhvm;
 
