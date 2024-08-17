@@ -25,9 +25,9 @@
 #include "3D/CreatureBody.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIslandInterface.h"
+#include "3D/OceanInterface.h"
 #include "3D/Sky.h"
 #include "3D/TempleInteriorInterface.h"
-#include "3D/Water.h"
 #include "Audio/AudioManagerInterface.h"
 #include "Camera/Camera.h"
 #include "Common/EventManager.h"
@@ -156,7 +156,7 @@ Game::~Game() noexcept
 	Locator::filesystem::reset();
 	Locator::gameActionSystem::reset();
 
-	_water.reset();
+	Locator::oceanSystem::reset();
 	_sky.reset();
 	Locator::debugGui::reset();
 	Locator::entitiesRegistry::reset();
@@ -819,7 +819,6 @@ bool Game::Initialize() noexcept
 	});
 
 	_sky = std::make_unique<Sky>();
-	_water = std::make_unique<Water>();
 	return true;
 }
 
@@ -869,7 +868,7 @@ bool Game::Run() noexcept
 	{
 		uint16_t width;
 		uint16_t height;
-		_water->GetFrameBuffer().GetSize(width, height);
+		Locator::oceanSystem::value().GetReflectionFramebuffer().GetSize(width, height);
 		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Reflection, {width, height}, 0x274659ff);
 	}
 
@@ -897,7 +896,6 @@ bool Game::Run() noexcept
 			    .camera = &Locator::camera::value(),
 			    .frameBuffer = nullptr,
 			    .sky = *_sky,
-			    .water = *_water,
 			    .entities = Locator::entitiesRegistry::value(),
 			    .time = milliseconds.count(), // TODO(#481): get actual time
 			    .timeOfDay = config.timeOfDay,

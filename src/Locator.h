@@ -22,6 +22,7 @@ struct EngineConfig;
 class Camera;
 class EventManager;
 class LandIslandInterface;
+class OceanInterface;
 class Profiler;
 class RandomNumberManagerInterface;
 class TempleInteriorInterface;
@@ -103,6 +104,7 @@ struct Locator
 	using resources = entt::locator<resources::ResourcesInterface>;
 	using rng = entt::locator<RandomNumberManagerInterface>;
 	using terrainSystem = entt::locator<LandIslandInterface>;
+	using oceanSystem = entt::locator<OceanInterface>;
 	using audio = entt::locator<audio::AudioManagerInterface>;
 	using camera = entt::locator<Camera>;
 	using gameActionSystem = entt::locator<input::GameActionInterface>;
