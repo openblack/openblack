@@ -12,7 +12,7 @@
 #include <array>
 #include <optional>
 
-#include <3D/LandIsland.h>
+#include <3D/LandIslandInterface.h>
 #include <Camera/Camera.h>
 #include <ECS/Systems/DynamicsSystemInterface.h>
 #include <Input/GameActionMapInterface.h>

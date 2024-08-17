@@ -14,7 +14,7 @@
 #include <glm/gtx/intersect.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 
-#include "3D/LandIsland.h"
+#include "3D/LandIslandInterface.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "Input/GameActionMapInterface.h"
