@@ -21,6 +21,7 @@ namespace openblack
 class EventManager;
 class RandomNumberManagerInterface;
 class LandIslandInterface;
+class OceanInterface;
 class TempleInteriorInterface;
 
 namespace audio
@@ -90,6 +91,7 @@ struct Locator
 	using resources = entt::locator<resources::ResourcesInterface>;
 	using rng = entt::locator<RandomNumberManagerInterface>;
 	using terrainSystem = entt::locator<LandIslandInterface>;
+	using oceanSystem = entt::locator<OceanInterface>;
 	using audio = entt::locator<audio::AudioManagerInterface>;
 	using gameActionSystem = entt::locator<input::GameActionInterface>;
 	using rendereringSystem = entt::locator<ecs::systems::RenderingSystemInterface>;

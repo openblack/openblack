@@ -23,8 +23,8 @@
 #include "3D/L3DMesh.h"
 #include "3D/LandBlock.h"
 #include "3D/LandIslandInterface.h"
+#include "3D/OceanInterface.h"
 #include "3D/Sky.h"
-#include "3D/Water.h"
 #include "Camera/Camera.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Sprite.h"
@@ -472,7 +472,7 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 		{
 			DrawSceneDesc drawPassDesc = drawDesc;
 
-			auto& frameBuffer = drawDesc.water.GetFrameBuffer();
+			const auto& frameBuffer = Locator::oceanSystem::value().GetReflectionFramebuffer();
 			auto reflectionCamera = drawDesc.camera->Reflect();
 
 			drawPassDesc.viewId = graphics::RenderPass::Reflection;
@@ -551,15 +551,16 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		                                                                               : Profiler::Stage::MainPassDrawWater);
 		if (desc.drawWater)
 		{
-			const auto& mesh = desc.water.GetMesh();
+			const auto& ocean = Locator::oceanSystem::value();
+			const auto& mesh = ocean.GetMesh();
 			mesh.GetIndexBuffer().Bind(mesh.GetIndexBuffer().GetCount(), 0);
 			mesh.GetVertexBuffer().Bind();
 			bgfx::setState(k_BgfxDefaultStateInvertedZ);
-			auto diffuse = Locator::resources::value().GetTextures().Handle(Water::k_DiffuseTextureId);
-			auto alpha = Locator::resources::value().GetTextures().Handle(Water::k_AlphaTextureId);
+			auto diffuse = Locator::resources::value().GetTextures().Handle(ocean.GetDiffuseTexture());
+			auto alpha = Locator::resources::value().GetTextures().Handle(ocean.GetAlphaTexture());
 			waterShader->SetTextureSampler("s_diffuse", 0, *diffuse);
 			waterShader->SetTextureSampler("s_alpha", 1, *alpha);
-			waterShader->SetTextureSampler("s_reflection", 2, desc.water.GetFrameBuffer().GetColorAttachment());
+			waterShader->SetTextureSampler("s_reflection", 2, ocean.GetReflectionFramebuffer().GetColorAttachment());
 			const glm::vec4 u_sky = {desc.sky.GetCurrentSkyType(), 0.0f, 0.0f, 0.0f};
 			waterShader->SetUniformValue("u_sky", &u_sky); // fs
 			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), waterShader->GetRawHandle());

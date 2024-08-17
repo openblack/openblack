@@ -19,7 +19,7 @@ class Camera;
 class L3DMesh;
 class Profiler;
 class Sky;
-class Water;
+class Ocean;
 } // namespace openblack
 
 namespace openblack::ecs
@@ -42,7 +42,6 @@ public:
 		const Camera* camera;
 		const graphics::FrameBuffer* frameBuffer;
 		const Sky& sky;
-		const Water& water;
 		const ecs::Registry& entities;
 		uint32_t time;
 		float timeOfDay;

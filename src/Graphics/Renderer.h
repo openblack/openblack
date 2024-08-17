@@ -40,7 +40,7 @@ class L3DMesh;
 class L3DSubMesh;
 class Profiler;
 class Sky;
-class Water;
+class Ocean;
 
 namespace ecs
 {

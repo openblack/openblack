@@ -40,7 +40,6 @@ class Profiler;
 class L3DAnim;
 class L3DMesh;
 class Sky;
-class Water;
 
 namespace graphics
 {
@@ -168,7 +167,6 @@ public:
 	[[nodiscard]] Profiler& GetProfiler() const { return *_profiler; }
 	[[nodiscard]] Camera& GetCamera() const { return *_camera; }
 	[[nodiscard]] Sky& GetSky() const { return *_sky; }
-	[[nodiscard]] Water& GetWater() const { return *_water; }
 	[[nodiscard]] entt::entity GetHand() const;
 	[[nodiscard]] const LHVM::LHVM& GetLhvm() const { return *_lhvm; }
 	LHVM::LHVM& GetLhvm() { return *_lhvm; }
@@ -198,7 +196,6 @@ private:
 	std::unique_ptr<L3DAnim> _testAnimation;
 	std::unique_ptr<L3DMesh> _handModel;
 	std::unique_ptr<Sky> _sky;
-	std::unique_ptr<Water> _water;
 	std::unique_ptr<lhscriptx::Script> _scriptx;
 	std::unique_ptr<LHVM::LHVM> _lhvm;
 
