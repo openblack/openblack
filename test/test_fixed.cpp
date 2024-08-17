@@ -7,6 +7,7 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include <3D/AllMeshes.h>
 #include <ECS/Archetypes/AbodeArchetype.h>
 #include <ECS/Archetypes/TownArchetype.h>
 #include <ECS/Archetypes/Utils.h>

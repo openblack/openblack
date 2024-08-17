@@ -51,6 +51,7 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
+#include "EngineConfig.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
 #include "ImGuiUtils.h"

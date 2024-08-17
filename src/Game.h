@@ -14,47 +14,22 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <vector>
 
 #include <bgfx/bgfx.h>
-#include <entt/entity/fwd.hpp>
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4701) // func_common.inl glm::any template
-#endif
 #include <glm/mat4x4.hpp>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 #include <spdlog/common.h>
 
-#include "EngineConfig.h"
-#include "InfoConstants.h"
 #include "Windowing/WindowingInterface.h" // For DisplayMode
 
 union SDL_Event;
 
 namespace openblack
 {
-class L3DAnim;
-class Sky;
-
-namespace graphics
-{
-class L3DMesh;
-class Renderer;
-class Texture2D;
-} // namespace graphics
 
 namespace lhvm
 {
 class LHVM;
 } // namespace lhvm
-
-namespace lhscriptx
-{
-class Script;
-}
 
 enum class LoggingSubsystem : uint8_t
 {
@@ -137,10 +112,6 @@ private:
 	/// path to Lionhead Studios Ltd/Black & White folder
 	const std::filesystem::path _gamePath;
 
-	std::unique_ptr<graphics::L3DMesh> _testModel;
-	std::unique_ptr<L3DAnim> _testAnimation;
-	std::unique_ptr<graphics::L3DMesh> _handModel;
-	std::unique_ptr<lhscriptx::Script> _scriptx;
 	std::unique_ptr<lhvm::LHVM> _lhvm;
 
 	std::filesystem::path _startMap;
