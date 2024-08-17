@@ -14,7 +14,12 @@
 
 #include <glm/fwd.hpp>
 
+#include "3D/SkyInterface.h"
 #include "Graphics/RenderPass.h"
+
+#if !defined(LOCATOR_IMPLEMENTATIONS)
+#warning "Locator interface implementations should only be included in Locator.cpp, use interface instead."
+#endif
 
 namespace openblack
 {
@@ -27,23 +32,23 @@ class ShaderProgram;
 class Texture2D;
 } // namespace graphics
 
-class Sky
+class Sky final: public SkyInterface
 {
 public:
-	Sky();
-	~Sky() = default;
+	Sky() noexcept;
+	~Sky() noexcept;
 
-	void SetDayNightTimes(float nightFull, float duskStart, float duskEnd, float dayFull);
+	void SetDayNightTimes(float nightFull, float duskStart, float duskEnd, float dayFull) noexcept;
 	/// Time between 0 and 24 in hours
-	void SetTime(float time);
+	void SetTime(float time) noexcept override;
 	/// Return index in times as a float for interpolation between adjacent times
 	/// Will use _nightFullTime, _duskStartTime, _duskEndTime and _dayFullTime to determine value
 	/// 0 -> Night (min value)
 	/// 1 -> Dawn/Dusk
 	/// 2 -> Day (max value)
-	[[nodiscard]] float GetCurrentSkyType() const;
-	[[nodiscard]] L3DMesh& GetMesh() const noexcept { return *_mesh; }
-	[[nodiscard]] graphics::Texture2D& GetTexture() const noexcept { return *_texture; }
+	[[nodiscard]] float GetCurrentSkyType() const noexcept override;
+	[[nodiscard]] L3DMesh& GetMesh() const noexcept override { return *_mesh; }
+	[[nodiscard]] graphics::Texture2D& GetTexture() const noexcept override { return *_texture; }
 
 private:
 	static constexpr std::array<std::string_view, 3> k_Alignments = {

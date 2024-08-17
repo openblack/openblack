@@ -26,7 +26,7 @@
 #include "3D/CreatureBody.h"
 #include "3D/LandIslandInterface.h"
 #include "3D/OceanInterface.h"
-#include "3D/Sky.h"
+#include "3D/SkyInterface.h"
 #include "3D/TempleInteriorInterface.h"
 #include "Audio/AudioManagerInterface.h"
 #include "Camera/Camera.h"
@@ -154,7 +154,7 @@ Game::~Game() noexcept
 	Locator::gameActionSystem::reset();
 
 	Locator::oceanSystem::reset();
-	_sky.reset();
+	Locator::skySystem ::reset();
 	Locator::debugGui ::reset();
 	Locator::rendererInterface::reset();
 	Locator::windowing::reset();
@@ -781,7 +781,6 @@ bool Game::Initialize() noexcept
 		}
 	});
 
-	_sky = std::make_unique<Sky>();
 	return true;
 }
 
@@ -852,7 +851,6 @@ bool Game::Run() noexcept
 			    .profiler = *_profiler,
 			    .camera = _camera.get(),
 			    .frameBuffer = nullptr,
-			    .sky = *_sky,
 			    .entities = Locator::entitiesRegistry::value(),
 			    .time = milliseconds.count(), // TODO(#481): get actual time
 			    .timeOfDay = _config.timeOfDay,
@@ -986,7 +984,7 @@ bool Game::LoadVariables()
 
 void Game::SetTime(float time)
 {
-	GetSky().SetTime(time);
+	Locator::skySystem::value().SetTime(time);
 }
 
 void Game::RequestScreenshot(const std::filesystem::path& path)

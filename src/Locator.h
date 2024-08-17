@@ -22,6 +22,7 @@ class EventManager;
 class RandomNumberManagerInterface;
 class LandIslandInterface;
 class OceanInterface;
+class SkyInterface;
 class TempleInteriorInterface;
 
 namespace audio
@@ -92,6 +93,7 @@ struct Locator
 	using rng = entt::locator<RandomNumberManagerInterface>;
 	using terrainSystem = entt::locator<LandIslandInterface>;
 	using oceanSystem = entt::locator<OceanInterface>;
+	using skySystem = entt::locator<SkyInterface>;
 	using audio = entt::locator<audio::AudioManagerInterface>;
 	using gameActionSystem = entt::locator<input::GameActionInterface>;
 	using rendereringSystem = entt::locator<ecs::systems::RenderingSystemInterface>;

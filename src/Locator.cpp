@@ -15,6 +15,7 @@
 
 #include "3D/Implementations/LandIsland.h"
 #include "3D/Implementations/Ocean.h"
+#include "3D/Implementations/Sky.h"
 #include "3D/Implementations/TempleInterior.h"
 #include "3D/Implementations/UnloadedIsland.h"
 #include "Audio/AudioManager.h"
@@ -112,6 +113,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::entitiesRegistry::emplace<Registry>();
 	Locator::temple::emplace<TempleInterior>();
 	Locator::oceanSystem::emplace<Ocean>();
+	Locator::skySystem::emplace<Sky>();
 
 	return true;
 }

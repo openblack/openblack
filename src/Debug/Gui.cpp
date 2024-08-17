@@ -41,7 +41,7 @@
 #include <SDL2/SDL_syswm.h>
 #endif
 
-#include <3D/Sky.h>
+#include <3D/SkyInterface.h>
 #include <Camera/Camera.h>
 #include <ECS/Components/LivingAction.h>
 #include <ECS/Components/Transform.h>
@@ -516,7 +516,7 @@ bool Gui::ShowMenu(Game& game)
 				Game::Instance()->SetTime(fmodf(config.timeOfDay, 24.0f));
 			}
 
-			ImGui::Text("Sky Type Index %f", game.GetSky().GetCurrentSkyType());
+			ImGui::Text("Sky Type Index %f", Locator::skySystem::value().GetCurrentSkyType());
 			ImGui::SliderFloat("Sky alignment", &config.skyAlignment, -1.0f, 1.0f, "%.3f");
 
 			ImGui::EndMenu();

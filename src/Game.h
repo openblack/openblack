@@ -166,7 +166,6 @@ public:
 	Camera& GetCamera() { return *_camera; }
 	[[nodiscard]] Profiler& GetProfiler() const { return *_profiler; }
 	[[nodiscard]] Camera& GetCamera() const { return *_camera; }
-	[[nodiscard]] Sky& GetSky() const { return *_sky; }
 	[[nodiscard]] entt::entity GetHand() const;
 	[[nodiscard]] const LHVM::LHVM& GetLhvm() const { return *_lhvm; }
 	LHVM::LHVM& GetLhvm() { return *_lhvm; }
@@ -195,7 +194,6 @@ private:
 	std::unique_ptr<L3DMesh> _testModel;
 	std::unique_ptr<L3DAnim> _testAnimation;
 	std::unique_ptr<L3DMesh> _handModel;
-	std::unique_ptr<Sky> _sky;
 	std::unique_ptr<lhscriptx::Script> _scriptx;
 	std::unique_ptr<LHVM::LHVM> _lhvm;
 
