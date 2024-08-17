@@ -468,21 +468,15 @@ bool Game::Initialize() noexcept
 	}
 
 	using filesystem::Path;
-	if (!InitializeGame(static_cast<uint8_t>(_config.rendererType), _config.vsync))
+	if (!InitializeEngine(static_cast<uint8_t>(_config.rendererType), _config.vsync))
 	{
-		SPDLOG_LOGGER_CRITICAL(spdlog::get("game"), "Failed to initialize services.");
+		SPDLOG_LOGGER_CRITICAL(spdlog::get("game"), "Failed to initialize engine services.");
 		return false;
 	}
 	auto& fileSystem = Locator::filesystem::value();
-	auto& resources = Locator::resources::value();
-	auto& meshManager = resources.GetMeshes();
-	auto& textureManager = resources.GetTextures();
-	auto& animationManager = resources.GetAnimations();
-	auto& levelManager = resources.GetLevels();
-	auto& soundManager = resources.GetSounds();
-	auto& glowManager = resources.GetGlows();
+	auto& events = Locator::events::value();
 
-	Locator::events::value().AddHandler(std::function([this](const SDL_Event& event) {
+	events.AddHandler(std::function([this](const SDL_Event& event) {
 		// If gui captures this input, do not propagate
 		if (!Locator::debugGui::value().ProcessEvents(event))
 		{
@@ -526,6 +520,20 @@ bool Game::Initialize() noexcept
 	{
 		_startMap = fileSystem.GetPath<Path::Scripts>() / _startMap;
 	}
+
+	if (!InitializeGame())
+	{
+		SPDLOG_LOGGER_CRITICAL(spdlog::get("game"), "Failed to initialize game services.");
+		return false;
+	}
+
+	auto& resources = Locator::resources::value();
+	auto& meshManager = resources.GetMeshes();
+	auto& textureManager = resources.GetTextures();
+	auto& animationManager = resources.GetAnimations();
+	auto& levelManager = resources.GetLevels();
+	auto& soundManager = resources.GetSounds();
+	auto& glowManager = resources.GetGlows();
 
 	fileSystem.Iterate(
 	    fileSystem.GetPath<Path::Citadel>() / "OutsideMeshes", false, [&meshManager](const std::filesystem::path& f) {

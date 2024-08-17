@@ -68,7 +68,7 @@ void openblack::InitializeWindow(const std::string& title, int width, int height
 	Locator::windowing::emplace<Sdl2WindowingSystem>(title, width, height, displayMode, extraFlags);
 }
 
-bool openblack::InitializeGame(uint8_t rendererType, bool vsync) noexcept
+bool openblack::InitializeEngine(uint8_t rendererType, bool vsync) noexcept
 {
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), "EnTT version: {}", ENTT_VERSION);
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), GLM_VERSION_MESSAGE);
@@ -88,8 +88,6 @@ bool openblack::InitializeGame(uint8_t rendererType, bool vsync) noexcept
 #else
 	Locator::filesystem::emplace<DefaultFileSystem>();
 #endif
-	Locator::terrainSystem::emplace<UnloadedIsland>();
-	Locator::resources::emplace<Resources>();
 	Locator::rng::emplace<RandomNumberManagerProduction>();
 	try
 	{
@@ -100,6 +98,13 @@ bool openblack::InitializeGame(uint8_t rendererType, bool vsync) noexcept
 		SPDLOG_LOGGER_ERROR(spdlog::get("audio"), "Falling back to no-op audio: {}", error.what());
 		Locator::audio::emplace<AudioManagerNoOp>();
 	}
+	return true;
+}
+
+bool openblack::InitializeGame() noexcept
+{
+	Locator::terrainSystem::emplace<UnloadedIsland>();
+	Locator::resources::emplace<Resources>();
 	Locator::playerSystem::emplace<PlayerSystem>();
 	Locator::gameActionSystem::emplace<GameActionMap>();
 	Locator::rendereringSystem::emplace<RenderingSystem>();
