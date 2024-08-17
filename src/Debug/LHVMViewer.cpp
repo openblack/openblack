@@ -145,8 +145,8 @@ void LHVMViewer::DrawScriptsTab(const openblack::lhvm::LHVM& lhvm)
 	ImGui::Text("Name: %s", script.name.c_str());
 	ImGui::Text("Type: %s", lhvm::k_ScriptTypeNames.at(script.type).c_str());
 	ImGui::Text("File: %s", script.filename.c_str());
-	ImGui::Text("Instruction address: %d", script.instructionAddress);
-	ImGui::Text("Variables offset: %d", script.variablesOffset);
+	ImGui::Text("Instruction address: 0x%04x", script.instructionAddress);
+	ImGui::Text("Variables offset: 0x%04x", script.variablesOffset);
 	ImGui::SameLine();
 	ImGui::Text("Parameter count: %d", script.parameterCount);
 	if (ImGui::BeginTabBar("##ScriptTabs", ImGuiTabBarFlags_None))
@@ -372,9 +372,9 @@ void LHVMViewer::DrawTasksTab(const lhvm::LHVM& lhvm)
 		}
 
 		ImGui::Text("File: %s", task.filename.c_str());
-		ImGui::Text("Variables offset: %d", task.variablesOffset);
-		ImGui::Text("Instruction address: %d", task.instructionAddress);
-		ImGui::Text("Prev instruction address: %d", task.pevInstructionAddress);
+		ImGui::Text("Variables offset: 0x%04x", task.variablesOffset);
+		ImGui::Text("Instruction address: 0x%04x", task.instructionAddress);
+		ImGui::Text("Prev instruction address: 0x%04x", task.pevInstructionAddress);
 		ImGui::Text("Ticks: %d", task.ticks);
 		ImGui::Text("Sleeping: %s", task.sleeping ? "true" : "false");
 
@@ -451,7 +451,7 @@ void LHVMViewer::DrawExceptionHandlers(const std::vector<uint32_t>& exceptionHan
 
 	for (const auto address : exceptionHandlerIps)
 	{
-		ImGui::Text("%d", address);
+		ImGui::Text("0x%04x", address);
 	}
 
 	ImGui::EndChild();
@@ -480,7 +480,7 @@ std::string LHVMViewer::DataToString(lhvm::VMValue data, openblack::lhvm::DataTy
 		return std::to_string(data.intVal);
 	case lhvm::DataType::Float:
 	case lhvm::DataType::Vector:
-		return std::to_string(data.floatVal) + "f";
+		return std::to_string(data.floatVal);
 	case lhvm::DataType::Boolean:
 		return data.intVal != 0 ? "true" : "false";
 	case lhvm::DataType::Object:

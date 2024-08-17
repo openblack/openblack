@@ -302,7 +302,7 @@ int PrintScripts(const LHVMFile& file)
 	std::printf("Scripts:\n");
 	for (const auto& script : scripts)
 	{
-		std::printf("%s = %u\n", GetSignature(script).c_str(), script.instructionAddress);
+		std::printf("%s = 0x%04x\n", GetSignature(script).c_str(), script.instructionAddress);
 	}
 	std::printf("\n");
 	return EXIT_SUCCESS;
@@ -318,8 +318,8 @@ int PrintScript(const LHVMFile& file, const std::string& name)
 			std::printf("%s\n", GetSignature(script).c_str());
 			std::printf("Source:      %s\n", script.filename.c_str());
 			std::printf("ID:          %u\n", script.scriptId);
-			std::printf("Address:     %u\n", script.instructionAddress);
-			std::printf("Vars offset: %u\n", script.variablesOffset);
+			std::printf("Address:     0x%04x\n", script.instructionAddress);
+			std::printf("Vars offset: 0x%04x\n", script.variablesOffset);
 			std::printf("Local vars:\n");
 			for (size_t i = script.parameterCount; i < script.variables.size(); i++)
 			{
@@ -423,8 +423,8 @@ int PrintTasks(const LHVMFile& file)
 			std::printf("Script ID: %u\n", task.scriptId);
 			std::printf("Script name: %s\n", task.name.c_str());
 			std::printf("Filename: %s\n", task.filename.c_str());
-			std::printf("Instruction address: %u\n", task.instructionAddress);
-			std::printf("Prev instruction address: %u\n", task.pevInstructionAddress);
+			std::printf("Instruction address: 0x%04x\n", task.instructionAddress);
+			std::printf("Prev instruction address: 0x%04x\n", task.pevInstructionAddress);
 			std::printf("Ticks: %u\n", task.ticks);
 			std::printf("Sleeping: %s\n", task.sleeping ? "true" : "false");
 			std::printf("Waiting task number: %u\n", task.waitingTaskId);
@@ -435,17 +435,17 @@ int PrintTasks(const LHVMFile& file)
 			std::printf("Exception handlers instructions pointers:\n");
 			for (const auto& ip : task.exceptionHandlerIps)
 			{
-				std::printf("%u\n", ip);
+				std::printf("0x%04x\n", ip);
 			}
 			std::printf("\n");
-			std::printf("Local variables offset: %u\n", task.variablesOffset);
+			std::printf("Local variables offset: 0x%04x\n", task.variablesOffset);
 			std::printf("Variables:\n");
 			const auto& vars = task.localVars;
 			for (unsigned int i = 0; i < vars.size(); i++)
 			{
 				const auto& var = vars[i];
 				const int id = task.variablesOffset + 1 + i;
-				std::printf("%i, %s = %s\n", id, var.name.c_str(), DataToString(var.value, var.type).c_str());
+				std::printf("0x%04x, %s = %s\n", id, var.name.c_str(), DataToString(var.value, var.type).c_str());
 			}
 			std::printf("\n");
 			PrintStack(task.stack);
