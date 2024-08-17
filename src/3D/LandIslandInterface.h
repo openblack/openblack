@@ -16,7 +16,6 @@
 #include <glm/mat4x4.hpp>
 
 #include "Extent.h"
-#include "LandBlock.h"
 
 namespace openblack
 {

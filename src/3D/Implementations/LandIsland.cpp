@@ -21,6 +21,7 @@
 #include <spdlog/spdlog.h>
 #include <stb_image_write.h>
 
+#include "3D/LandBlock.h"
 #include "Dynamics/LandBlockBulletMeshInterface.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"
