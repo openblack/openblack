@@ -211,7 +211,7 @@ enum class VMMode : uint32_t
 class VMInstruction
 {
 public:
-	VMInstruction() {}
+	VMInstruction() = default;
 
 	VMInstruction(Opcode code, VMMode mode, DataType type, VMValue data, uint32_t line)
 	    : code(code)
