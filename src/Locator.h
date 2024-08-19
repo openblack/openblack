@@ -59,6 +59,11 @@ namespace input
 class GameActionInterface;
 }
 
+namespace lhvm
+{
+class LHVM;
+}
+
 namespace resources
 {
 class ResourcesInterface;
@@ -123,5 +128,6 @@ struct Locator
 	using playerSystem = entt::locator<ecs::systems::PlayerSystemInterface>;
 	using handSystem = entt::locator<ecs::systems::HandSystemInterface>;
 	using temple = entt::locator<TempleInteriorInterface>;
+	using vm = entt::locator<lhvm::LHVM>;
 };
 } // namespace openblack

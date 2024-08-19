@@ -26,11 +26,6 @@ union SDL_Event;
 namespace openblack
 {
 
-namespace lhvm
-{
-class LHVM;
-} // namespace lhvm
-
 enum class LoggingSubsystem : uint8_t
 {
 	game,
@@ -95,8 +90,6 @@ public:
 	void SetGameSpeed(float multiplier) { _gameSpeedMultiplier = multiplier; }
 	[[nodiscard]] float GetGameSpeed() const { return _gameSpeedMultiplier; }
 
-	[[nodiscard]] const lhvm::LHVM& GetLhvm() const { return *_lhvm; }
-	lhvm::LHVM& GetLhvm() { return *_lhvm; }
 	[[nodiscard]] uint16_t GetTurn() const { return _turnCount; }
 	[[nodiscard]] bool IsPaused() const { return _paused; }
 	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const { return _turnDeltaTime; }
@@ -111,8 +104,6 @@ private:
 
 	/// path to Lionhead Studios Ltd/Black & White folder
 	const std::filesystem::path _gamePath;
-
-	std::unique_ptr<lhvm::LHVM> _lhvm;
 
 	std::filesystem::path _startMap;
 

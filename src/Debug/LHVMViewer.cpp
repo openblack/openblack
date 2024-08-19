@@ -13,7 +13,7 @@
 #include <imgui_memory_editor.h>
 #include <imgui_user.h>
 
-#include "Game.h"
+#include "Locator.h"
 
 using namespace openblack::debug::gui;
 
@@ -32,7 +32,7 @@ LHVMViewer::LHVMViewer() noexcept
 
 void LHVMViewer::Draw() noexcept
 {
-	auto& lhvm = Game::Instance()->GetLhvm();
+	auto& lhvm = Locator::vm::value();
 	if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
 	{
 

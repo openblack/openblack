@@ -36,6 +36,7 @@
 #include "ECS/Systems/Implementations/TownSystem.h"
 #include "Graphics/RendererInterface.h"
 #include "Input/GameActionMap.h"
+#include "LHVM.h"
 #include "Profiler.h"
 #include "Resources/Resources.h"
 #include "Windowing/Sdl2WindowingSystem.h"
@@ -64,6 +65,7 @@ using openblack::ecs::systems::RenderingSystem;
 using openblack::ecs::systems::TownSystem;
 using openblack::graphics::RendererInterface;
 using openblack::input::GameActionMap;
+using openblack::lhvm::LHVM;
 using openblack::resources::Resources;
 using openblack::windowing::DisplayMode;
 using openblack::windowing::Sdl2WindowingSystem;
@@ -105,6 +107,8 @@ bool openblack::InitializeEngine(uint8_t rendererType, bool vsync) noexcept
 		SPDLOG_LOGGER_ERROR(spdlog::get("audio"), "Falling back to no-op audio: {}", error.what());
 		Locator::audio::emplace<AudioManagerNoOp>();
 	}
+
+	Locator::vm::emplace<LHVM>();
 	return true;
 }
 
@@ -181,4 +185,6 @@ void openblack::ShutDownServices()
 	Locator::config::reset();
 	Locator::infoConstants::reset();
 	Locator::profiler::reset();
+
+	Locator::vm::reset();
 }
