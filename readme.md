@@ -40,7 +40,6 @@ Don't expect to be able to launch without some effort and your own patches.
 [![Android](https://img.shields.io/badge/Package-Android-3ddc84)](https://nightly.link/openblack/openblack/workflows/ci-cross-compile/master/openblack-android-apk-master.zip)
 [![iOS](https://img.shields.io/badge/Package-iOS-eeeeee)](https://nightly.link/openblack/openblack/workflows/ci-cross-compile/master/openblack-ios-arm64-vcpkg-master.zip)
 
-[![Linux (x86) Build](https://img.shields.io/badge/Build-Linux%20(x86)-333333)](https://nightly.link/openblack/openblack/workflows/ci-cross-compile/master/openblack-x86-linux-master.zip)
 [![Flatpak](https://img.shields.io/badge/Package-Flatpak-79ADE3)](https://nightly.link/openblack/openblack/workflows/packaging/master/openblack-master.flatpak.zip)
 [![AppImage](https://img.shields.io/badge/Package-AppImage-00BBFF)](https://nightly.link/openblack/openblack/workflows/packaging/master/openblack-master.AppImage.zip)
 [![Snap](https://img.shields.io/badge/Package-Snap-E95420)](https://nightly.link/openblack/openblack/workflows/packaging/master/openblack-master.snap.zip)
