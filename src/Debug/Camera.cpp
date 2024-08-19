@@ -16,7 +16,6 @@
 #include "Camera/Camera.h"
 #include "3D/TempleInteriorInterface.h"
 #include "ECS/Systems/CameraPathSystemInterface.h"
-#include "Game.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -28,10 +27,9 @@ Camera::Camera()
 {
 }
 
-void Camera::Draw([[maybe_unused]] openblack::Game& game)
+void Camera::Draw() noexcept
 {
 	auto& cameraPathSystem = Locator::cameraPathSystem::value();
-	auto& registry = Locator::entitiesRegistry::value();
 	const float fontSize = ImGui::GetFontSize();
 	ImGui::BeginChild("cameraPaths", ImVec2(fontSize * 10.0f, 0));
 
@@ -49,7 +47,7 @@ void Camera::Draw([[maybe_unused]] openblack::Game& game)
 	{
 		if (Locator::temple::value().Active())
 		{
-			Game::Instance()->GetCamera().SetOrigin(Locator::temple::value().GetPosition());
+			Locator::camera::value().SetOrigin(Locator::temple::value().GetPosition());
 		}
 		cameraPathSystem.Start(_selectedCameraPath);
 	}
@@ -121,8 +119,8 @@ void Camera::DrawCameraResourceList()
 	ImGui::EndChild();
 }
 
-void Camera::Update([[maybe_unused]] openblack::Game& game, [[maybe_unused]] const openblack::Renderer& renderer) {}
+void Camera::Update() noexcept {}
 
-void Camera::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) {}
+void Camera::ProcessEventOpen([[maybe_unused]] const SDL_Event& event) noexcept {}
 
-void Camera::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) {}
+void Camera::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) noexcept {}

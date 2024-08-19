@@ -20,16 +20,16 @@
 namespace openblack::debug::gui
 {
 
-class Camera: public Window
+class Camera final: public Window
 {
 public:
 	Camera();
 
 protected:
-	void Draw(Game& game) override;
-	void Update(Game& game, const Renderer& renderer) override;
-	void ProcessEventOpen(const SDL_Event& event) override;
-	void ProcessEventAlways(const SDL_Event& event) override;
+	void Draw() noexcept override;
+	void Update() noexcept override;
+	void ProcessEventOpen(const SDL_Event& event) noexcept override;
+	void ProcessEventAlways(const SDL_Event& event) noexcept override;
 
 private:
 	void DrawControls();
@@ -37,7 +37,6 @@ private:
 	entt::id_type _selectedCameraPath;
 	std::map<entt::id_type, std::tuple<bool, entt::entity>> _drawingCameraPaths;
 	std::map<entt::id_type, std::vector<entt::entity>> _cameraPathEntities;
-	bool _running = false;
 };
 
 } // namespace openblack::debug::gui
