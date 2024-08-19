@@ -15,7 +15,6 @@
 
 #include <glm/gtx/euler_angles.hpp>
 
-#include "3D/CameraPath.h"
 #include "Camera/Camera.h"
 #include "ECS/Registry.h"
 #include "Game.h"
@@ -76,7 +75,7 @@ void CameraPathSystem::Update(const std::chrono::microseconds& dt)
 		return;
 	}
 
-	auto& camera = Game::Instance()->GetCamera();
+	auto& camera = Locator::camera::value();
 	const auto& currentStep = _path->GetPoints()[_pathIndex];
 	const auto& nextStep = _path->GetPoints()[_pathIndex + 1];
 	_timeElapsedDuringStep += dt;
