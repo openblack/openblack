@@ -11,8 +11,6 @@
 
 #include "CameraPathSystem.h"
 
-#include <cmath>
-
 #include <glm/gtx/euler_angles.hpp>
 
 #include "Camera/Camera.h"
@@ -58,11 +56,6 @@ void CameraPathSystem::Stop()
 	_path = entt::resource<CameraPath>();
 }
 
-float easeOutQuart(float n)
-{
-	return 1.f - std::pow(1.f - n, 4.f);
-}
-
 void CameraPathSystem::Update(const std::chrono::microseconds& dt)
 {
 	if (_state == CameraPathState::STOPPED || (_path && (_pathIndex + 1) >= _path->GetPoints().size()))
@@ -81,7 +74,6 @@ void CameraPathSystem::Update(const std::chrono::microseconds& dt)
 	_timeElapsedDuringStep += dt;
 	float blendFactor = std::chrono::duration<float, std::micro>(_timeElapsedDuringStep / _duration).count();
 	blendFactor = glm::min(blendFactor, 1.f); // Avoid overstepping
-//	float easedBlend = easeCubic(blendFactor);
 	camera.SetOrigin(glm::lerp(currentStep.position, nextStep.position, blendFactor));
 	camera.SetFocus(glm::lerp(currentStep.rotation, nextStep.rotation, blendFactor));
 

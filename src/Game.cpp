@@ -1024,6 +1024,7 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	Locator::cameraBookmarkSystem::value().Initialize();
 	Locator::dynamicsSystem::value().RegisterIslandRigidBodies(Locator::terrainSystem::value());
 	Locator::playerSystem::value().RegisterPlayers();
+	Locator::cameraPathSystem::value().Stop();
 }
 
 void Game::SetTime(float time) noexcept
