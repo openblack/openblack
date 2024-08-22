@@ -868,7 +868,17 @@ bool Game::Run() noexcept
 
 		{
 			auto section = profiler.BeginScoped(Profiler::Stage::GuiDraw);
-			Locator::debugGui::value().Draw();
+			const bool screenshotThisFrame = _requestScreenshot.has_value() && _requestScreenshot->first == _frameCount;
+			// Skip drawing Debug UI for screenshots
+			if (screenshotThisFrame)
+			{
+				SPDLOG_LOGGER_INFO(spdlog::get("game"), "Requesting a screenshot at frame {}...", _frameCount);
+				Locator::rendererInterface::value().RequestScreenshot(_requestScreenshot->second);
+			}
+			else
+			{
+				Locator::debugGui::value().Draw();
+			}
 		}
 
 		{
@@ -876,13 +886,9 @@ bool Game::Run() noexcept
 			Locator::rendererInterface::value().Frame();
 		}
 
+		// Clear the stale screenshot request
 		if (_requestScreenshot.has_value())
 		{
-			if (_requestScreenshot->first == _frameCount)
-			{
-				SPDLOG_LOGGER_INFO(spdlog::get("game"), "Requesting a screenshot at frame {}...", _frameCount);
-				Locator::rendererInterface::value().RequestScreenshot(_requestScreenshot->second);
-			}
 			if (_requestScreenshot->first <= _frameCount)
 			{
 				_requestScreenshot = std::nullopt;
