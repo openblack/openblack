@@ -1862,7 +1862,7 @@ public:
 			}
 			assert(false); // Shouldn't be any unaccounted raycasts
 		}
-		else if (screenCoord == k_ScreenCentreLine[13])
+		else if (screenCoord == k_ScreenCentreLine[13] || (screenCoord + glm::u16vec2(0, 1)) == k_ScreenCentreLine[13])
 		{
 			switch (frameNumber)
 			{
