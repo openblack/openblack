@@ -282,7 +282,6 @@ void DefaultWorldCameraModel::UpdateFocusPointInteractionParameters(glm::vec3 or
 	_averageIslandDistance += extra;
 }
 
-// This is a vanilla-style deprojection but with a few math errors
 glm::vec3 ScreenToWorld(const Camera& camera, glm::u16vec2 pixelCoord)
 {
 	const auto& window = Locator::windowing ::value();
@@ -294,10 +293,8 @@ glm::vec3 ScreenToWorld(const Camera& camera, glm::u16vec2 pixelCoord)
 	const auto screenCoord = static_cast<glm::vec2>(pixelCoord) / static_cast<glm::vec2>(screenSize);
 	const auto clipSpaceCoordinates = ((screenCoord - 0.5f) * 2.0f) * glm::vec2(1.0f, -1.0f);
 
-	// The multiplication by aspect within the tan is odd and wrong
-	const auto baseTanHalfFov = glm::tan(yFov / 2.0f * aspect);
-	// Using baseTanHalfFov directly to scale is also odd
-	const auto extents = glm::vec3(baseTanHalfFov, baseTanHalfFov / aspect, 1.0f);
+	const auto tanHalfFov = glm::tan(yFov / 2.0f);
+	const auto extents = glm::vec3(tanHalfFov * aspect, tanHalfFov, 1.0f);
 	const auto point = glm::vec4(glm::vec3(clipSpaceCoordinates, 1.0f) * extents, 1.0f);
 
 	return camera.GetRotationMatrix() * point;
