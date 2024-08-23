@@ -110,6 +110,7 @@ find_package(Bullet REQUIRED)
 find_package(spdlog 1.3.0 REQUIRED)
 find_package(EnTT 3.7.0 CONFIG REQUIRED) # only available as a config
 find_package(cxxopts REQUIRED)
+find_package(jsoncpp CONFIG REQUIRED)
 
 include(ClangFormat)
 

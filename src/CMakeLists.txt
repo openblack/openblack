@@ -122,6 +122,7 @@ target_link_libraries(
           BulletSoftBody
           LinearMath
           minizip::minizip
+          JsonCpp::JsonCpp
   PUBLIC spdlog::spdlog
 )
 
