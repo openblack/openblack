@@ -10,9 +10,9 @@
 #include <concepts>
 
 #include <fstream>
+
 #include <cxxopts.hpp>
 #include <json/json.h>
-
 
 namespace details
 {
@@ -101,7 +101,7 @@ public:
 		{
 			const auto& arr = config[key];
 			fallback = arr[0].asString();
-			for (int i = 1; i < arr.size(); i++)
+			for (std::size_t i = 1; i < arr.size(); i++)
 			{
 				fallback += std::string(",") + arr.asString();
 			}
