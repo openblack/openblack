@@ -9,6 +9,7 @@
 
 #include <concepts>
 
+#include <filesystem>
 #include <fstream>
 
 #include <cxxopts.hpp>
@@ -29,15 +30,15 @@ concept String = std::same_as<T, std::string> || std::same_as<T, std::filesystem
 class StartupConfig
 {
 private:
-	Json::Value config;
+	Json::Value _config;
 
 public:
-	StartupConfig(std::filesystem::path path)
+	explicit StartupConfig(std::filesystem::path path)
 	{
 		if (std::filesystem::exists(path))
 		{
 			std::ifstream o(path.generic_string());
-			o >> config;
+			o >> _config;
 		}
 	}
 
@@ -45,10 +46,10 @@ public:
 	auto get(const char* key, std::optional<T> fallback = std::nullopt) const
 	{
 		auto opt = cxxopts::value<T>();
-		if (config.isMember(key))
+		if (_config.isMember(key))
 		{
 			// Config provided default
-			return opt->default_value(std::to_string(config[key].asInt()));
+			return opt->default_value(std::to_string(_config[key].asInt()));
 		}
 		if (fallback.has_value())
 		{
@@ -63,10 +64,10 @@ public:
 	auto get(const char* key, std::optional<T> fallback = std::nullopt) const
 	{
 		auto opt = cxxopts::value<T>();
-		if (config.isMember(key))
+		if (_config.isMember(key))
 		{
 			// Config provided default
-			return opt->default_value(std::to_string(config[key].asFloat()));
+			return opt->default_value(std::to_string(_config[key].asFloat()));
 		}
 		if (fallback.has_value())
 		{
@@ -81,10 +82,10 @@ public:
 	auto get(const char* key, std::optional<std::string> fallback = std::nullopt) const
 	{
 		auto opt = cxxopts::value<T>();
-		if (config.isMember(key))
+		if (_config.isMember(key))
 		{
 			// Config provided default
-			return opt->default_value(config[key].asString());
+			return opt->default_value(_config[key].asString());
 		}
 		if (fallback.has_value())
 		{
@@ -97,9 +98,9 @@ public:
 
 	auto getStrVec(const char* key, std::string fallback) const
 	{
-		if (config.isMember(key) && config[key].isArray() && config[key].size() > 0)
+		if (_config.isMember(key) && _config[key].isArray() && _config[key].size() > 0)
 		{
-			const auto& arr = config[key];
+			const auto& arr = _config[key];
 			fallback = arr[0].asString();
 			for (std::size_t i = 1; i < arr.size(); i++)
 			{
