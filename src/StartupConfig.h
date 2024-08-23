@@ -43,7 +43,7 @@ public:
 	}
 
 	template <details::Integer T>
-	auto get(const char* key, std::optional<T> fallback = std::nullopt) const
+	auto Get(const char* key, std::optional<T> fallback = std::nullopt) const
 	{
 		auto opt = cxxopts::value<T>();
 		if (_config.isMember(key))
@@ -61,7 +61,7 @@ public:
 	};
 
 	template <details::FloatingPoint T>
-	auto get(const char* key, std::optional<T> fallback = std::nullopt) const
+	auto Get(const char* key, std::optional<T> fallback = std::nullopt) const
 	{
 		auto opt = cxxopts::value<T>();
 		if (_config.isMember(key))
@@ -79,7 +79,7 @@ public:
 	};
 
 	template <details::String T>
-	auto get(const char* key, std::optional<std::string> fallback = std::nullopt) const
+	auto Get(const char* key, std::optional<std::string> fallback = std::nullopt) const
 	{
 		auto opt = cxxopts::value<T>();
 		if (_config.isMember(key))
@@ -96,9 +96,9 @@ public:
 		return opt;
 	};
 
-	auto getStrVec(const char* key, std::string fallback) const
+	auto GetStrVec(const char* key, std::string fallback) const
 	{
-		if (_config.isMember(key) && _config[key].isArray() && _config[key].size() > 0)
+		if (_config.isMember(key) && _config[key].isArray() && !_config[key].empty())
 		{
 			const auto& arr = _config[key];
 			fallback = arr[0].asString();
