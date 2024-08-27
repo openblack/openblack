@@ -8,8 +8,7 @@ target_compile_definitions(lndtool PRIVATE CXXOPTS_NO_EXCEPTIONS)
 target_link_libraries(lndtool PRIVATE cxxopts::cxxopts lnd)
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
-  # FIXME(bwrsandman) MSVC is throwing false errors about exceptions being disabled
-  if (NOT MSVC AND CLANG_TIDY)
+  if (CLANG_TIDY)
     set_target_properties(lndtool PROPERTIES CXX_CLANG_TIDY ${CLANG_TIDY})
   else ()
     message("Clang-tidy checks requested but unavailable")
