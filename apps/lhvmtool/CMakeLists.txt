@@ -8,8 +8,7 @@ target_compile_definitions(lhvmtool PRIVATE CXXOPTS_NO_EXCEPTIONS)
 target_link_libraries(lhvmtool PRIVATE cxxopts::cxxopts ScriptLibrary)
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
-  # FIXME(bwrsandman) MSVC is throwing false errors about exceptions being disabled
-  if (NOT MSVC AND CLANG_TIDY)
+  if (CLANG_TIDY)
     set_target_properties(lhvmtool PROPERTIES CXX_CLANG_TIDY ${CLANG_TIDY})
   else ()
     message("Clang-tidy checks requested but unavailable")

@@ -126,9 +126,19 @@ target_link_libraries(
 )
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
-  # FIXME(bwrsandman) MSVC is throwing false errors about exceptions being disabled
-  if (NOT MSVC AND CLANG_TIDY)
-    set_target_properties(openblack_lib PROPERTIES CXX_CLANG_TIDY ${CLANG_TIDY})
+  if (CLANG_TIDY)
+    if (MSVC)
+      # as for now, /EHsc has to be passed manually to clang-tidy
+      # see https://gitlab.kitware.com/cmake/cmake/-/issues/20512
+      set_target_properties(
+        openblack_lib PROPERTIES CXX_CLANG_TIDY
+                                 "${CLANG_TIDY};--extra-arg=/EHsc"
+      )
+    else ()
+      set_target_properties(
+        openblack_lib PROPERTIES CXX_CLANG_TIDY ${CLANG_TIDY}
+      )
+    endif ()
   else ()
     message("Clang-tidy checks requested but unavailable")
   endif ()
