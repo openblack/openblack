@@ -11,18 +11,19 @@
 
 #include <filesystem>
 #include <fstream>
+#include <optional>
+#include <string>
+#include <vector>
 
 #include <cxxopts.hpp>
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 
 namespace details
 {
 template <class T>
 concept Integer = std::integral<T>;
-
 template <typename T>
 concept FloatingPoint = std::floating_point<T>;
-
 template <typename T>
 concept String = std::same_as<T, std::string> || std::same_as<T, std::filesystem::path>;
 } // namespace details
@@ -30,7 +31,7 @@ concept String = std::same_as<T, std::string> || std::same_as<T, std::filesystem
 class StartupConfig
 {
 private:
-	Json::Value _config;
+	nlohmann::json _config;
 
 public:
 	explicit StartupConfig(std::filesystem::path path)
@@ -46,10 +47,10 @@ public:
 	auto Get(const char* key, std::optional<T> fallback = std::nullopt) const
 	{
 		auto opt = cxxopts::value<T>();
-		if (_config.isMember(key))
+		if (_config.contains(key))
 		{
 			// Config provided default
-			return opt->default_value(std::to_string(_config[key].asInt()));
+			return opt->default_value(std::to_string(_config[key].get<T>()));
 		}
 		if (fallback.has_value())
 		{
@@ -58,16 +59,16 @@ public:
 		}
 		// No default at all
 		return opt;
-	};
+	}
 
 	template <details::FloatingPoint T>
 	auto Get(const char* key, std::optional<T> fallback = std::nullopt) const
 	{
 		auto opt = cxxopts::value<T>();
-		if (_config.isMember(key))
+		if (_config.contains(key))
 		{
 			// Config provided default
-			return opt->default_value(std::to_string(_config[key].asFloat()));
+			return opt->default_value(std::to_string(_config[key].get<T>()));
 		}
 		if (fallback.has_value())
 		{
@@ -76,16 +77,16 @@ public:
 		}
 		// No default at all
 		return opt;
-	};
+	}
 
 	template <details::String T>
 	auto Get(const char* key, std::optional<std::string> fallback = std::nullopt) const
 	{
 		auto opt = cxxopts::value<T>();
-		if (_config.isMember(key))
+		if (_config.contains(key))
 		{
 			// Config provided default
-			return opt->default_value(_config[key].asString());
+			return opt->default_value(_config[key].get<std::string>());
 		}
 		if (fallback.has_value())
 		{
@@ -94,17 +95,17 @@ public:
 		}
 		// No default at all
 		return opt;
-	};
+	}
 
 	auto GetStrVec(const char* key, std::string fallback) const
 	{
-		if (_config.isMember(key) && _config[key].isArray() && !_config[key].empty())
+		if (_config.contains(key) && _config[key].is_array() && !_config[key].empty())
 		{
 			const auto& arr = _config[key];
-			fallback = arr[0].asString();
+			fallback = arr[0].get<std::string>();
 			for (std::size_t i = 1; i < arr.size(); i++)
 			{
-				fallback += std::string(",") + arr.asString();
+				fallback += std::string(",") + arr[i].get<std::string>();
 			}
 		}
 		return cxxopts::value<std::vector<std::string>>()->default_value(fallback);

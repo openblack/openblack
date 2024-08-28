@@ -31,7 +31,6 @@
         },
         "bullet3",
         "minizip",
-        "jsoncpp",
         "gtest"
     ]
 }
