@@ -1,0 +1,80 @@
+/******************************************************************************
+ * Copyright (c) 2018-2024 openblack developers
+ *
+ * For a complete list of all authors, please refer to contributors.md
+ * Interested in contributing? Visit https://github.com/openblack/openblack
+ *
+ * openblack is licensed under the GNU General Public License version 3.
+ *******************************************************************************/
+
+/* This file is based on the ScriptEnumstwo.h from the Black & White Scripting Tools
+ * for Creature Isle that can be downloaded from here:
+ * https://forum.bwgame.net/downloads/black-white-scripting-tools.1456/
+ */
+
+#pragma once
+
+#include <cstdint>
+
+namespace openblack::script
+{
+
+enum class JcSpecial : uint8_t
+{
+	CreateFireBall,
+	CameraFollowFireBall,
+	CancelCameraFollowFireBall,
+	DansLesNuages,
+	CreateHandWithKid,
+	ActivatedHand,
+	IlEtaitUnPetitNavire,
+	IAmTheLittleBoy,
+	BlendAngle,
+	PrepareRotate180,
+	PrepareRotateLeft90,
+	PrepareRotateRight90,
+	FadeInHand,
+	StartHandWithBoy,
+	SwitchOnBookmark,
+	SwitchOffBookmark,
+	PrepareTurnLeft,
+	PrepareTurnRight,
+	CleanIntro,
+	AlwaysVisible,
+	CiBoatArrival,
+	CiBoatArrivalEnd,
+	RaiseTotem,
+
+	StartEye,
+	EndEye,
+	ZoomEye,
+
+	CiBoatLaunch,
+	CiBoatLaunchEnd,
+
+	CiBoatCrash,
+	CiBoatCrash2,
+	CiBoatCrashEnd,
+
+	SwitchOnInfluence,
+	SwitchOffInfluence,
+};
+
+enum class CreatureTattooType : uint8_t
+{
+	None,
+	TheBrotherhood,
+	SuperGods,
+	Fighter,
+	FighterAlways,
+	Last,
+};
+
+enum class SpotVisualAlex : uint8_t
+{
+	Hulahoop,
+	Fence,
+	Last,
+};
+
+} // namespace openblack::script
