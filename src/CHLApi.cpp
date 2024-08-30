@@ -7,32 +7,32 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
-#pragma once
+#include "CHLApi.h"
 
 #include <cmath>
 #include <cstdint>
+
 #include <sstream>
 #include <string>
 #include <unordered_set>
 
+#include <LHVM.h>
+#include <LHVMTypes.h>
 #include <entt/entity/entity.hpp>
 #include <entt/entity/fwd.hpp>
 #include <glm/vec3.hpp>
-#include <LHVM.h>
 #include <spdlog/spdlog.h>
 
 #include "3D/LandIslandInterface.h"
 #include "3D/TempleInteriorInterface.h"
 #include "Camera/Camera.h"
-#include "CHLApi.h"
-#include "Enums.h"
-#include "ECS/archetypes/MobileStaticArchetype.h"
-#include "ECS/components/Transform.h"
+#include "ECS/Archetypes/MobileStaticArchetype.h"
+#include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
-#include "ECS/systems/HandSystemInterface.h"
+#include "ECS/Systems/HandSystemInterface.h"
+#include "Enums.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "LHScriptX/Script.h"
-#include <LHVMTypes.h>
 #include "Locator.h"
 #include "ScriptHeaders/ScriptEnums.h"
 
@@ -41,12 +41,12 @@ namespace openblack::chlapi
 
 using namespace openblack::ecs::archetypes;
 
+using openblack::Locator;
+using openblack::MobileStaticInfo;
 using openblack::ecs::components::Transform;
 using openblack::ecs::systems::HandSystemInterface;
 using openblack::lhvm::DataType;
 using openblack::lhvm::VMValue;
-using openblack::Locator;
-using openblack::MobileStaticInfo;
 using openblack::script::ObjectType;
 
 std::unordered_set<std::string> GetUniqueWords(const std::string& strings)
@@ -68,7 +68,7 @@ bool Contains(const std::unordered_set<std::string>& set, const std::string& key
 
 glm::vec3 PopVec()
 {
-    auto& lhvm = Locator::vm::value();
+	auto& lhvm = Locator::vm::value();
 	const auto z = lhvm.Popf();
 	const auto y = lhvm.Popf();
 	const auto x = lhvm.Popf();
@@ -77,7 +77,7 @@ glm::vec3 PopVec()
 
 void PushVec(const glm::vec3& vec)
 {
-    auto& lhvm = Locator::vm::value();
+	auto& lhvm = Locator::vm::value();
 	lhvm.Pushv(vec.x);
 	lhvm.Pushv(vec.y);
 	lhvm.Pushv(vec.z);
@@ -85,7 +85,7 @@ void PushVec(const glm::vec3& vec)
 
 std::string PopString()
 {
-    auto& lhvm = Locator::vm::value();
+	auto& lhvm = Locator::vm::value();
 	return lhvm.GetString(lhvm.Pop().intVal);
 }
 
@@ -93,7 +93,7 @@ std::vector<float> PopVarArg(const int32_t argc)
 {
 	std::vector<float> vals;
 	vals.resize(argc);
-    auto& lhvm = Locator::vm::value();
+	auto& lhvm = Locator::vm::value();
 	for (int i = argc - 1; i >= 0; i--)
 	{
 		vals[i] = lhvm.Popf();
@@ -119,62 +119,62 @@ entt::entity CreateScriptObject(const ObjectType type, uint32_t subtype, const g
 
 VMValue Pop(DataType& type)
 {
-    auto& lhvm = Locator::vm::value();
-    return lhvm.Pop(type);
+	auto& lhvm = Locator::vm::value();
+	return lhvm.Pop(type);
 }
 
 VMValue Pop()
 {
-    auto& lhvm = Locator::vm::value();
-    return lhvm.Pop();
+	auto& lhvm = Locator::vm::value();
+	return lhvm.Pop();
 }
 
 float Popf()
 {
-    auto& lhvm = Locator::vm::value();
-    return lhvm.Popf();
+	auto& lhvm = Locator::vm::value();
+	return lhvm.Popf();
 }
 
 void Push(VMValue value, DataType type)
 {
-    auto& lhvm = Locator::vm::value();
-    lhvm.Push(value, type);
+	auto& lhvm = Locator::vm::value();
+	lhvm.Push(value, type);
 }
 
 void Pushf(float value)
 {
-    auto& lhvm = Locator::vm::value();
-    lhvm.Pushf(value);
+	auto& lhvm = Locator::vm::value();
+	lhvm.Pushf(value);
 }
 
 void Pushv(float value)
 {
-    auto& lhvm = Locator::vm::value();
-    lhvm.Pushv(value);
+	auto& lhvm = Locator::vm::value();
+	lhvm.Pushv(value);
 }
 
 void Pushi(int32_t value)
 {
-    auto& lhvm = Locator::vm::value();
-    lhvm.Pushi(value);
+	auto& lhvm = Locator::vm::value();
+	lhvm.Pushi(value);
 }
 
 void Pusho(uint32_t value)
 {
-    auto& lhvm = Locator::vm::value();
-    lhvm.Pusho(value);
+	auto& lhvm = Locator::vm::value();
+	lhvm.Pusho(value);
 }
 
 void Pushb(bool value)
 {
-    auto& lhvm = Locator::vm::value();
-    lhvm.Pushb(value);
+	auto& lhvm = Locator::vm::value();
+	lhvm.Pushb(value);
 }
 
 CHLApi::CHLApi()
 {
 	_functionsTable.reserve(464);
-    InitFunctionsTable0();
+	InitFunctionsTable0();
 	InitFunctionsTable1();
 	InitFunctionsTable2();
 	InitFunctionsTable3();
@@ -187,7 +187,7 @@ void SetCameraPosition() // 001 SET_CAMERA_POSITION
 {
 	const auto position = PopVec();
 	// TODO(Daniels118): check if cinema mode is enabled
-    auto& camera = Locator::camera::value();
+	auto& camera = Locator::camera::value();
 	camera.SetOrigin(position);
 }
 
@@ -195,7 +195,7 @@ void SetCameraFocus() // 002 SET_CAMERA_FOCUS
 {
 	const auto position = PopVec();
 	// TODO(Daniels118): check if cinema mode is enabled
-    auto& camera = Locator::camera::value();
+	auto& camera = Locator::camera::value();
 	camera.SetFocus(position);
 }
 
@@ -216,13 +216,13 @@ void MoveCameraFocus() // 004 MOVE_CAMERA_FOCUS
 void GetCameraPosition() // 005 GET_CAMERA_POSITION
 {
 	auto& camera = Locator::camera::value();
-    const auto position = camera.GetOrigin();
+	const auto position = camera.GetOrigin();
 	PushVec(position);
 }
 
 void GetCameraFocus() // 006 GET_CAMERA_FOCUS
 {
-    auto& camera = Locator::camera::value();
+	auto& camera = Locator::camera::value();
 	const auto focus = camera.GetFocus();
 	PushVec(focus);
 }
@@ -352,9 +352,9 @@ void GetPosition() // 023 GET_POSITION
 	{
 		auto& registry = Locator::entitiesRegistry::value();
 		auto* transform = registry.TryGet<Transform>(static_cast<entt::entity>(objId));
-        if (transform != nullptr) {
-            position = transform->position;
-        }
+		if (transform != nullptr) {
+			position = transform->position;
+		}
 	}
 
 	PushVec(position);
@@ -371,9 +371,9 @@ void SetPosition() // 024 SET_POSITION
 		position.y = island.GetHeightAt(glm::vec2(position.x, position.z));
 		auto& registry = Locator::entitiesRegistry::value();
 		auto* transform = registry.TryGet<Transform>(static_cast<entt::entity>(objId));
-        if (transform != nullptr) {
-            transform->position = position;
-        }
+		if (transform != nullptr) {
+			transform->position = position;
+		}
 	}
 }
 
@@ -416,8 +416,8 @@ void Random() // 028 RANDOM
 
 void DllGettime() // 029 DLL_GETTIME
 {
-    // TODO(Daniels118): need a way to access Game::GetTurn()
-    //Pushf(static_cast<float>(_turnCount) / 10.0f); // TODO(Daniels118): should it be divided by 10 or not?
+	// TODO(Daniels118): need a way to access Game::GetTurn()
+	//Pushf(static_cast<float>(_turnCount) / 10.0f); // TODO(Daniels118): should it be divided by 10 or not?
 }
 
 void StartCameraControl() // 030 START_CAMERA_CONTROL
@@ -505,10 +505,9 @@ void FlockMember() // 041 FLOCK_MEMBER
 
 void GetHandPosition() // 042 GET_HAND_POSITION
 {
-    const auto handEntity = Locator::handSystem::value()
-			                            .GetPlayerHands()[static_cast<size_t>(HandSystemInterface::Side::Left)];
+	const auto handEntity = Locator::handSystem::value().GetPlayerHands()[static_cast<size_t>(HandSystemInterface::Side::Left)];
 			auto& handTransform = Locator::entitiesRegistry::value().Get<Transform>(handEntity);
-    
+
 	PushVec(handTransform.position);
 }
 
@@ -1337,7 +1336,7 @@ void StopAllScriptsExcluding() // 153 STOP_ALL_SCRIPTS_EXCLUDING
 	const auto scriptNames = PopString();
 
 	const auto names = GetUniqueWords(scriptNames);
-    auto& lhvm = Locator::vm::value();
+	auto& lhvm = Locator::vm::value();
 	lhvm.StopScripts([&names](const std::string& name, [[maybe_unused]] const std::string& filename) -> bool {
 		return !Contains(names, name);
 	});
@@ -2815,14 +2814,17 @@ void EnterExitCitadel() // 347 ENTER_EXIT_CITADEL
 	if (Locator::temple::has_value())
 	{
 		auto& temple = Locator::temple::value();
-		const auto active = !temple.Active();
-		if (enter)
+		const auto active = temple.Active();
+		if (enter != active)
 		{
-			temple.Activate();
-		}
-		else
-		{
-			temple.Deactivate();
+			if (enter)
+			{
+				temple.Activate();
+			}
+			else
+			{
+				temple.Deactivate();
+			}
 		}
 	}
 	else
@@ -3210,9 +3212,9 @@ void SquareRoot() // 397 SQUARE_ROOT
 {
 	const auto value = Popf();
 	auto root = 0.0f;
-    if (value > 0.0f) {
-        root = std::sqrt(value);
-    }
+	if (value > 0.0f) {
+		root = std::sqrt(value);
+	}
 	Pushf(root);
 }
 

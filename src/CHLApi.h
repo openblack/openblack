@@ -20,23 +20,23 @@ using openblack::lhvm::VMValue;
 class CHLApi
 {
 public:
-    CHLApi();
+	CHLApi();
 
-    [[nodiscard]] const std::vector<lhvm::NativeFunction>& GetFunctionsTable() { return _functionsTable; };
+	[[nodiscard]] const std::vector<lhvm::NativeFunction>& GetFunctionsTable() { return _functionsTable; };
 
 private:
-    #define CREATE_FUNCTION_BINDING(NAME, STACKIN, STACKOUT, FUNCTION)       \
-        {                                                                    \
-            _functionsTable.emplace_back(FUNCTION, STACKIN, STACKOUT, NAME); \
-        }
+#define CREATE_FUNCTION_BINDING(NAME, STACKIN, STACKOUT, FUNCTION)       \
+	{                                                                    \
+		_functionsTable.emplace_back(FUNCTION, STACKIN, STACKOUT, NAME); \
+	}
 
-    void InitFunctionsTable0();
-    void InitFunctionsTable1();
-    void InitFunctionsTable2();
-    void InitFunctionsTable3();
-    void InitFunctionsTable4();
+	void InitFunctionsTable0();
+	void InitFunctionsTable1();
+	void InitFunctionsTable2();
+	void InitFunctionsTable3();
+	void InitFunctionsTable4();
 
-    std::vector<lhvm::NativeFunction> _functionsTable;
+	std::vector<lhvm::NativeFunction> _functionsTable;
 };
 
 } // namespace openblack::chlapi
