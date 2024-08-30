@@ -2,7 +2,19 @@
     "name": "openblack",
     "version-string": "0.0.1-dev",
     "dependencies": [
-        "sdl2",
+        {
+
+            "name": "sdl2",
+            "default-features": true,
+            "platform": "!linux"
+        },
+        {
+
+            "name": "sdl2",
+            "default-features": false,
+            "features": [ "x11", "wayland" ],
+            "platform": "linux"
+        },
         "imgui",
         "spdlog",
         "glm",
