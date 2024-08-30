@@ -419,7 +419,7 @@ void Random() // 028 RANDOM
 void DllGettime() // 029 DLL_GETTIME
 {
 	// TODO(Daniels118): need a way to access Game::GetTurn()
-	//Pushf(static_cast<float>(_turnCount) / 10.0f); // TODO(Daniels118): should it be divided by 10 or not?
+	// Pushf(static_cast<float>(_turnCount) / 10.0f); // TODO(Daniels118): should it be divided by 10 or not?
 }
 
 void StartCameraControl() // 030 START_CAMERA_CONTROL
@@ -508,7 +508,7 @@ void FlockMember() // 041 FLOCK_MEMBER
 void GetHandPosition() // 042 GET_HAND_POSITION
 {
 	const auto handEntity = Locator::handSystem::value().GetPlayerHands()[static_cast<size_t>(HandSystemInterface::Side::Left)];
-			auto& handTransform = Locator::entitiesRegistry::value().Get<Transform>(handEntity);
+	auto& handTransform = Locator::entitiesRegistry::value().Get<Transform>(handEntity);
 
 	PushVec(handTransform.position);
 }
@@ -1330,7 +1330,7 @@ void LoadMap() // 152 LOAD_MAP
 
 	auto& fileSystem = Locator::filesystem::value();
 	auto mapPath = fileSystem.GetGamePath() / path;
-	//TODO(Daniels118): LoadMap(mapPath);
+	// TODO(Daniels118): LoadMap(mapPath);
 }
 
 void StopAllScriptsExcluding() // 153 STOP_ALL_SCRIPTS_EXCLUDING
@@ -2101,7 +2101,7 @@ void CreateWithAngleAndScale() // 252 CREATE_WITH_ANGLE_AND_SCALE
 	const auto angle = Popf();
 
 	const entt::entity object = CreateScriptObject(type, subtype, position, 0.0f, 0.0f, angle, 0.0f, scale);
-	
+
 	Pusho(static_cast<uint32_t>(object));
 }
 
@@ -3214,7 +3214,8 @@ void SquareRoot() // 397 SQUARE_ROOT
 {
 	const auto value = Popf();
 	auto root = 0.0f;
-	if (value > 0.0f) {
+	if (value > 0.0f)
+	{
 		root = std::sqrt(value);
 	}
 	Pushf(root);
@@ -3359,7 +3360,7 @@ void SpiritScreenPoint() // 418 SPIRIT_SCREEN_POINT
 
 void KeyDown() // 419 KEY_DOWN
 {
-	//const auto key = Pop().intVal;
+	// const auto key = Pop().intVal;
 	// TODO(Daniels118): implement this (translate key to physical key code)
 	Pushb(false);
 }
