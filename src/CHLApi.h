@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include <LHVMTypes.h>
 
 namespace openblack::chlapi

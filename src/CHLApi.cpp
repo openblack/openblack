@@ -352,7 +352,8 @@ void GetPosition() // 023 GET_POSITION
 	{
 		auto& registry = Locator::entitiesRegistry::value();
 		auto* transform = registry.TryGet<Transform>(static_cast<entt::entity>(objId));
-		if (transform != nullptr) {
+		if (transform != nullptr)
+		{
 			position = transform->position;
 		}
 	}
@@ -371,7 +372,8 @@ void SetPosition() // 024 SET_POSITION
 		position.y = island.GetHeightAt(glm::vec2(position.x, position.z));
 		auto& registry = Locator::entitiesRegistry::value();
 		auto* transform = registry.TryGet<Transform>(static_cast<entt::entity>(objId));
-		if (transform != nullptr) {
+		if (transform != nullptr)
+		{
 			transform->position = position;
 		}
 	}
@@ -3771,8 +3773,7 @@ void CHLApi::InitFunctionsTable0()
 	CREATE_FUNCTION_BINDING("CONVERT_CAMERA_FOCUS", 1, 3, ConvertCameraFocus);
 	CREATE_FUNCTION_BINDING("CREATURE_SET_PLAYER", 1, 0, CreatureSetPlayer);
 	CREATE_FUNCTION_BINDING("START_COUNTDOWN_TIMER", 1, 0, StartCountdownTimer);
-	CREATE_FUNCTION_BINDING("CREATURE_INITIALISE_NUM_TIMES_PERFORMED_ACTION", 2, 0,
-	                        CreatureInitialiseNumTimesPerformedAction);
+	CREATE_FUNCTION_BINDING("CREATURE_INITIALISE_NUM_TIMES_PERFORMED_ACTION", 2, 0, CreatureInitialiseNumTimesPerformedAction);
 	CREATE_FUNCTION_BINDING("CREATURE_GET_NUM_TIMES_ACTION_PERFORMED", 2, 1, CreatureGetNumTimesActionPerformed);
 	CREATE_FUNCTION_BINDING("REMOVE_COUNTDOWN_TIMER", 0, 0, RemoveCountdownTimer);
 	CREATE_FUNCTION_BINDING("GET_OBJECT_DROPPED", 1, 1, GetObjectDropped);
