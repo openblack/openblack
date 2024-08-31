@@ -25,23 +25,23 @@ jobs:
             setup: |
               sudo dpkg --add-architecture i386
               sudo apt-get update
-              sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libx11-dev:i386 libxext-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libtool autoconf gcc-multilib g++-multilib libc6-dev-i386 libgpg-error-dev:i386 libltdl-dev:i386
+              sudo apt-get install -y gcc-multilib g++-multilib libx11-dev:i386 libxext-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libtool autoconf libc6-dev-i386 libgpg-error-dev:i386 libltdl-dev:i386
             additional_args: "`-DCMAKE_C_FLAGS=-m32`, `-DCMAKE_CXX_FLAGS=-m32`, `-DOPENBLACK_CROSSCOMPILING=ON`"
-          # - triplet: arm64-linux
-          #   os: ubuntu-latest
-          #   preset: ninja-multi-vcpkg
-          #   setup: |
-          #     sudo dpkg --add-architecture arm64
-          #     echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy main restricted"                               | sudo tee    /etc/apt/sources.list.d/arm-cross-compile-sources.list
-          #     echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy-updates main restricted"                       | sudo tee -a /etc/apt/sources.list.d/arm-cross-compile-sources.list
-          #     echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy universe"                                      | sudo tee -a /etc/apt/sources.list.d/arm-cross-compile-sources.list
-          #     echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy-updates universe"                              | sudo tee -a /etc/apt/sources.list.d/arm-cross-compile-sources.list
-          #     echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy multiverse"                                    | sudo tee -a /etc/apt/sources.list.d/arm-cross-compile-sources.list
-          #     echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy-updates multiverse"                            | sudo tee -a /etc/apt/sources.list.d/arm-cross-compile-sources.list
-          #     echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/arm-cross-compile-sources.list
-          #     sudo sed -i 's/^deb /deb [arch=amd64] /g' /etc/apt/sources.list
-          #     sudo apt-get update
-          #     sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libx11-dev:arm64 libxext-dev:arm64 libgl1-mesa-dev:arm64 libglu1-mesa-dev:arm64
+          - triplet: arm64-linux
+            os: ubuntu-24.04
+            preset: ninja-multi-vcpkg
+            setup: |
+              sudo dpkg --add-architecture arm64
+              # Specify amd64 for exisitng azure.archive.ubuntu.com sources
+              sudo sed -i '/^Types: deb/ a Architectures: amd64' /etc/apt/sources.list.d/ubuntu.sources
+              # Add arm64 source from azure.ports.ubuntu.com because the architecture isn't on archive
+              sudo cp /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list.d/ubuntu-arm64.sources
+              sudo sed -i 's,http://azure.archive.ubuntu.com/ubuntu/,http://azure.ports.ubuntu.com/,g' /etc/apt/sources.list.d/ubuntu-arm64.sources
+              sudo sed -i 's,Architectures: amd64,Architectures: arm64,g' /etc/apt/sources.list.d/ubuntu-arm64.sources
+              # Install the arch dependencies
+              sudo apt-get update
+              sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libx11-dev:arm64 libxext-dev:arm64 libgl1-mesa-dev:arm64 libglu1-mesa-dev:arm64
+            additional_args: "`-DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc`, `-DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++`, `-DCMAKE_C_FLAGS=-march=armv8-a`, `-DCMAKE_CXX_FLAGS=-march=armv8-a`, `-DOPENBLACK_CROSSCOMPILING=ON`"
           # TODO(#638): Many of the emscripten dependencies conflict due to pthreads
           # - preset: emscripten-vcpkg
           #   os: ubuntu-latest
@@ -74,13 +74,13 @@ jobs:
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
         if: startsWith(github.event_name, 'pull_request')
 
-      # TODO: Android and Emscripten wants opengl installed on system to build bgfx
-      - name: Setup (Android and Emscripten on Linux)
+      # TODO(https://github.com/bkaradzic/bgfx.cmake/issues/242): Android and Emscripten wants opengl installed on system to build bgfx
+      - name: Setup (Android and Emscripten and Linux)
         run: |
           sudo apt update -y
           sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
           echo "ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV # to use C++23 on 26.2.11394342
-        if: (startsWith(matrix.preset, 'android') || startsWith(matrix.preset, 'emscripten')) && startsWith(matrix.os, 'ubuntu')
+        if: (startsWith(matrix.preset, 'android') || startsWith(matrix.preset, 'emscripten')) || startsWith(matrix.os, 'ubuntu')
 
       - name: Setup
         run: ${{ matrix.setup }}
