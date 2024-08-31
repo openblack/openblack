@@ -61,11 +61,6 @@ std::unordered_set<std::string> GetUniqueWords(const std::string& strings)
 	return result;
 }
 
-bool Contains(const std::unordered_set<std::string>& set, const std::string& key)
-{
-	return set.count(key) != 0;
-}
-
 glm::vec3 PopVec()
 {
 	auto& lhvm = Locator::vm::value();
@@ -1340,7 +1335,7 @@ void StopAllScriptsExcluding() // 153 STOP_ALL_SCRIPTS_EXCLUDING
 	const auto names = GetUniqueWords(scriptNames);
 	auto& lhvm = Locator::vm::value();
 	lhvm.StopScripts([&names](const std::string& name, [[maybe_unused]] const std::string& filename) -> bool {
-		return !Contains(names, name);
+		return !names.contains(name);
 	});
 }
 
@@ -1351,7 +1346,7 @@ void StopAllScriptsInFilesExcluding() // 154 STOP_ALL_SCRIPTS_IN_FILES_EXCLUDING
 	const auto filenames = GetUniqueWords(sourceFilenames);
 	auto& lhvm = Locator::vm::value();
 	lhvm.StopScripts([&filenames]([[maybe_unused]] const std::string& name, const std::string& filename) -> bool {
-		return !Contains(filenames, filename);
+		return !filenames.contains(filename);
 	});
 }
 
@@ -1489,7 +1484,7 @@ void StopScriptsInFiles() // 172 STOP_SCRIPTS_IN_FILES
 	const auto filenames = GetUniqueWords(sourceFilenames);
 	auto& lhvm = Locator::vm::value();
 	lhvm.StopScripts([&filenames]([[maybe_unused]] const std::string& name, const std::string& filename) -> bool {
-		return Contains(filenames, filename);
+		return filenames.contains(filename);
 	});
 }
 
@@ -2877,7 +2872,7 @@ void StopScriptsInFilesExcluding() // 352 STOP_SCRIPTS_IN_FILES_EXCLUDING
 	const auto filenames = GetUniqueWords(sourceFilenames);
 	auto& lhvm = Locator::vm::value();
 	lhvm.StopScripts([&names, &filenames](const std::string& name, const std::string& filename) -> bool {
-		return Contains(filenames, filename) && !Contains(names, name);
+		return filenames.contains(filename) && !names.contains(name);
 	});
 }
 
