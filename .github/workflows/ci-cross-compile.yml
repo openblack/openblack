@@ -19,16 +19,14 @@ jobs:
         os: [ubuntu-24.04]
         # These are additional individual jobs. There are no permutations of these.
         include:
-          # TODO(#785) Cross compiling on linux is broken due to dbus in vcpkg
-          # https://github.com/microsoft/vcpkg/issues/40031
-          # - triplet: x86-linux
-          #   os: ubuntu-24.04
-          #   preset: ninja-multi-vcpkg
-          #   setup: |
-          #     sudo dpkg --add-architecture i386
-          #     sudo apt-get update
-          #     sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libx11-dev:i386 libxext-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libtool autoconf gcc-multilib g++-multilib libc6-dev-i386 libgpg-error-dev:i386 libltdl-dev:i386
-          #   additional_args: "`-DCMAKE_C_FLAGS=-m32`, `-DCMAKE_CXX_FLAGS=-m32`, `-DOPENBLACK_CROSSCOMPILING=ON`"
+          - triplet: x86-linux
+            os: ubuntu-24.04
+            preset: ninja-multi-vcpkg
+            setup: |
+              sudo dpkg --add-architecture i386
+              sudo apt-get update
+              sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libx11-dev:i386 libxext-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libtool autoconf gcc-multilib g++-multilib libc6-dev-i386 libgpg-error-dev:i386 libltdl-dev:i386
+            additional_args: "`-DCMAKE_C_FLAGS=-m32`, `-DCMAKE_CXX_FLAGS=-m32`, `-DOPENBLACK_CROSSCOMPILING=ON`"
           # - triplet: arm64-linux
           #   os: ubuntu-latest
           #   preset: ninja-multi-vcpkg
