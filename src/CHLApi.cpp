@@ -1321,10 +1321,10 @@ void GetLandHeight() // 151 GET_LAND_HEIGHT
 
 void LoadMap() // 152 LOAD_MAP
 {
-	const auto path = PopString();
+	// const auto path = PopString();
 
-	auto& fileSystem = Locator::filesystem::value();
-	auto mapPath = fileSystem.GetGamePath() / path;
+	// auto& fileSystem = Locator::filesystem::value();
+	// auto mapPath = fileSystem.GetGamePath() / path;
 	// TODO(Daniels118): LoadMap(mapPath);
 }
 
