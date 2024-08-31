@@ -404,7 +404,7 @@ void Create() // 027 CREATE
 	const auto type = static_cast<ObjectType>(Pop().intVal);
 
 	const auto object = CreateScriptObject(type, subtype, position, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-	
+
 	Pusho(static_cast<uint32_t>(object));
 }
 
