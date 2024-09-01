@@ -31,8 +31,6 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "Enums.h"
-#include "FileSystem/FileSystemInterface.h"
-#include "LHScriptX/Script.h"
 #include "Locator.h"
 #include "ScriptHeaders/ScriptEnums.h"
 
