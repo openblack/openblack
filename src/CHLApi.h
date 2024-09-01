@@ -24,14 +24,9 @@ class CHLApi
 public:
 	CHLApi();
 
-	[[nodiscard]] const std::vector<lhvm::NativeFunction>& GetFunctionsTable() { return _functionsTable; };
+	[[nodiscard]] const std::vector<lhvm::NativeFunction>& GetFunctionsTable();
 
 private:
-#define CREATE_FUNCTION_BINDING(NAME, STACKIN, STACKOUT, FUNCTION)       \
-	{                                                                    \
-		_functionsTable.emplace_back(FUNCTION, STACKIN, STACKOUT, NAME); \
-	}
-
 	void InitFunctionsTable0();
 	void InitFunctionsTable1();
 	void InitFunctionsTable2();

@@ -47,6 +47,16 @@ using openblack::lhvm::DataType;
 using openblack::lhvm::VMValue;
 using openblack::script::ObjectType;
 
+#define CREATE_FUNCTION_BINDING(NAME, STACKIN, STACKOUT, FUNCTION)       \
+	{                                                                    \
+		_functionsTable.emplace_back(FUNCTION, STACKIN, STACKOUT, NAME); \
+	}
+
+const std::vector<lhvm::NativeFunction>& CHLApi::GetFunctionsTable()
+{
+	return _functionsTable;
+}
+
 std::unordered_set<std::string> GetUniqueWords(const std::string& strings)
 {
 	std::unordered_set<std::string> result;
