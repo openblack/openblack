@@ -122,7 +122,7 @@ target_link_libraries(
           BulletSoftBody
           LinearMath
           minizip::minizip
-  PUBLIC spdlog::spdlog
+  PUBLIC spdlog::spdlog external::nlohmann_json
 )
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)

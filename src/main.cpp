@@ -23,6 +23,7 @@
 #endif
 
 #include "Game.h"
+#include "StartupConfig.h"
 
 bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& returnCode)
 {
@@ -40,24 +41,24 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 	{
 		loggingSubsystems += std::string(", ") + system.data();
 	}
+	const auto config = StartupConfig(std::filesystem::current_path() / "config.json");
 
 	// clang-format off
 	options.add_options()
 		("h,help", "Display this help message.")
-		("g,game-path", "Path to the Data/ and Scripts/ directories of the original Black & White game. (Required)", cxxopts::value<std::string>())
-		("W,width", "Window resolution in the x axis.", cxxopts::value<uint16_t>()->default_value("1280"))
-		("H,height", "Window resolution in the y axis.", cxxopts::value<uint16_t>()->default_value("1024"))
-		("u,ui-scale", "Scaling of the GUI", cxxopts::value<float>()->default_value("1.0"))
-		("s,start-level", "Level that is loaded at start-up", cxxopts::value<std::string>()->default_value("Land1.txt"))
-		("V,vsync", "Enable Vertical Sync.")
-		("m,window-mode", "Which mode to run window.", cxxopts::value<std::string>()->default_value("windowed"))
-		("b,backend-type", "Which backend to use for rendering.", cxxopts::value<std::string>())
-		("n,num-frames-to-simulate", "Number of frames to simulate before quitting.", cxxopts::value<uint32_t>()->default_value("0"))
-		("l,log-file", "Output file for logs, 'stdout'/'logcat' for terminal output.", cxxopts::value<std::string>()->default_value(defaultLogFile))
-		("L,log-level", "Level (trace, debug, info, warning, error, critical, off) of logging per subsystem (" + loggingSubsystems + ").",
-		    cxxopts::value<std::vector<std::string>>()->default_value("all=debug"))
-		("screenshot-frame", "Request a screenshot of the backbuffer at a certain frame number.", cxxopts::value<uint32_t>())
-		("screenshot-path", "Path of the request a screenshot of the backbuffer.", cxxopts::value<std::filesystem::path>()->default_value("screenshot.png"))
+		("g,game-path", "Path to the Data/ and Scripts/ directories of the original Black & White game. (Required)",  config.Get<std::string>("game-path"))
+		("W,width", "Window resolution in the x axis.", config.Get<uint16_t>("width", 1280))
+		("H,height", "Window resolution in the y axis.",  config.Get<uint16_t>("height", 1024))
+		("u,ui-scale", "Scaling of the GUI",  config.Get<float>("ui-scale", 1.0f))
+		("s,start-level", "Level that is loaded at start-up",  config.Get<std::string>("start-level", "Land1.txt"))
+		("V,vsync", "Enable Vertical Sync.",  config.Get<bool>("vsync"))
+		("m,window-mode", "Which mode to run window.",  config.Get<std::string>("window-mode", "windowed"))
+		("b,backend-type", "Which backend to use for rendering.",  config.Get<std::string>("backend-type"))
+		("n,num-frames-to-simulate", "Number of frames to simulate before quitting.",  config.Get<uint32_t>("num-frames-to-simulate", 0))
+		("l,log-file", "Output file for logs, 'stdout'/'logcat' for terminal output.",  config.Get<std::string>("log-file", defaultLogFile))
+		("L,log-level", "Level (trace, debug, info, warning, error, critical, off) of logging per subsystem (" + loggingSubsystems + ").",  config.GetStrVec("log-level", "all=debug"))
+		("screenshot-frame", "Request a screenshot of the backbuffer at a certain frame number.",  config.Get<uint32_t>("screenshot-frame"))
+		("screenshot-path", "Path of the request a screenshot of the backbuffer.",  config.Get<std::filesystem::path>("screenshot-path", "screenshot.png"))
 	;
 	// clang-format on
 
@@ -91,7 +92,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 #endif
 
 		// allow user to specify a renderer
-		if (result.count("backend-type") != 0)
+		if (hasValue(result["backend-type"]))
 		{
 			auto rendererIter = rendererLookup.find(result["backend-type"].as<std::string>());
 			if (rendererIter != rendererLookup.cend())
@@ -151,7 +152,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		}
 
 		args.executablePath = argv[0];
-		if (result.count("game-path") == 0)
+		if (!hasValue(result["game-path"]))
 		{
 #ifdef _WIN32
 			// if we're on windows we can find the install path
@@ -177,7 +178,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 			args.gamePath = result["game-path"].as<std::string>();
 		}
 
-		if (result.count("screenshot-frame") != 0)
+		if (hasValue(result["screenshot-frame"]))
 		{
 			args.requestScreenshot = std::make_pair(result["screenshot-frame"].as<uint32_t>(),
 			                                        result["screenshot-path"].as<std::filesystem::path>());
