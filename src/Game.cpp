@@ -29,6 +29,7 @@
 #include "3D/SkyInterface.h"
 #include "3D/TempleInteriorInterface.h"
 #include "Audio/AudioManagerInterface.h"
+#include "CHLApi.h"
 #include "Camera/Camera.h"
 #include "Common/EventManager.h"
 #include "Common/StringUtils.h"
@@ -260,6 +261,9 @@ bool Game::GameLogicLoop() noexcept
 		auto actions = profiler.BeginScoped(Profiler::Stage::LivingActionUpdate);
 		Locator::livingActionSystem::value().Update();
 	}
+
+	auto& lhvm = Locator::vm::value();
+	lhvm.LookIn(lhvm::ScriptType::All);
 
 	_lastGameLoopTime = currentTime;
 	_turnDeltaTime = delta;
@@ -789,10 +793,13 @@ bool Game::Run() noexcept
 	auto challengePath = fileSystem.GetPath<filesystem::Path::Quests>() / "challenge.chl";
 	if (fileSystem.Exists(challengePath))
 	{
+		auto& chlapi = Locator::chlapi::value();
 		auto& lhvm = Locator::vm::value();
+		lhvm.Initialise(&chlapi.GetFunctionsTable(), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 		try
 		{
 			lhvm.LoadBinary(fileSystem.ReadAll(challengePath));
+			lhvm.StartScript("LandControlAll", lhvm::ScriptType::All);
 		}
 		catch (const std::runtime_error& err)
 		{

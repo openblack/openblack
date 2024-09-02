@@ -90,7 +90,7 @@ public:
 	void SetGameSpeed(float multiplier) { _gameSpeedMultiplier = multiplier; }
 	[[nodiscard]] float GetGameSpeed() const { return _gameSpeedMultiplier; }
 
-	[[nodiscard]] uint16_t GetTurn() const { return _turnCount; }
+	[[nodiscard]] uint32_t GetTurn() const { return _turnCount; }
 	[[nodiscard]] bool IsPaused() const { return _paused; }
 	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const { return _turnDeltaTime; }
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
@@ -111,7 +111,7 @@ private:
 	std::chrono::steady_clock::duration _turnDeltaTime;
 	float _gameSpeedMultiplier {1.0f};
 	uint32_t _frameCount {0};
-	uint16_t _turnCount {0};
+	uint32_t _turnCount {0};
 	bool _paused {true};
 
 	glm::ivec2 _mousePosition;

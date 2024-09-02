@@ -101,7 +101,7 @@ LHVM::LHVM()
 
 LHVM::~LHVM() = default;
 
-void LHVM::Initialise(std::vector<NativeFunction>* functions, std::function<void(uint32_t func)> nativeCallEnterCallback,
+void LHVM::Initialise(const std::vector<NativeFunction>* functions, std::function<void(uint32_t func)> nativeCallEnterCallback,
                       std::function<void(uint32_t func)> nativeCallExitCallback,
                       std::function<void(uint32_t taskNumber)> stopTaskCallback,
                       std::function<void(ErrorCode code, const std::string v0, uint32_t v1)> errorCallback,

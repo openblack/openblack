@@ -20,6 +20,7 @@
 #include "3D/Implementations/UnloadedIsland.h"
 #include "Audio/AudioManager.h"
 #include "Audio/AudioManagerNoOp.h"
+#include "CHLApi.h"
 #include "Common/EventManager.h"
 #include "Common/RandomNumberManagerProduction.h"
 #include "Debug/DebugGuiInterface.h"
@@ -52,6 +53,7 @@ using openblack::LandIsland;
 using openblack::RandomNumberManagerProduction;
 using openblack::TempleInterior;
 using openblack::UnloadedIsland;
+using openblack::chlapi::CHLApi;
 using openblack::debug::gui::DebugGuiInterface;
 using openblack::ecs::MapProduction;
 using openblack::ecs::Registry;
@@ -108,6 +110,7 @@ bool openblack::InitializeEngine(uint8_t rendererType, bool vsync) noexcept
 		Locator::audio::emplace<AudioManagerNoOp>();
 	}
 
+	Locator::chlapi::emplace<CHLApi>();
 	Locator::vm::emplace<LHVM>();
 	return true;
 }

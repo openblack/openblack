@@ -39,6 +39,11 @@ namespace audio
 class AudioManagerInterface;
 }
 
+namespace chlapi
+{
+class CHLApi;
+}
+
 namespace debug::gui
 {
 class DebugGuiInterface;
@@ -129,5 +134,6 @@ struct Locator
 	using handSystem = entt::locator<ecs::systems::HandSystemInterface>;
 	using temple = entt::locator<TempleInteriorInterface>;
 	using vm = entt::locator<lhvm::LHVM>;
+	using chlapi = entt::locator<chlapi::CHLApi>;
 };
 } // namespace openblack

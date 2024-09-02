@@ -44,7 +44,7 @@ protected:
 	uint32_t _highestScriptId {0};
 	uint32_t _executedInstructions {0};
 
-	std::vector<NativeFunction>* _functions {nullptr};
+	const std::vector<NativeFunction>* _functions {nullptr};
 	std::function<void(const uint32_t func)> _nativeCallEnterCallback;
 	std::function<void(const uint32_t func)> _nativeCallExitCallback;
 	std::function<void(const uint32_t taskNumber)> _stopTaskCallback;
@@ -118,7 +118,7 @@ public:
 
 	/// Set environment
 	void Initialise(
-	    std::vector<NativeFunction>* functions, std::function<void(uint32_t func)> nativeCallEnterCallback,
+	    const std::vector<NativeFunction>* functions, std::function<void(uint32_t func)> nativeCallEnterCallback,
 	    std::function<void(uint32_t func)> nativeCallExitCallback, std::function<void(uint32_t taskNumber)> stopTaskCallback,
 	    std::function<void(ErrorCode code, [[maybe_unused]] const std::string v0, [[maybe_unused]] uint32_t v1)> errorCallback,
 	    std::function<void(uint32_t objId)> addReference, std::function<void(uint32_t objId)> removeReference);
