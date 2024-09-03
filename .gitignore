@@ -44,3 +44,4 @@ openblack.log
 # executable generated files
 screenshot.png
 compile_commands.json
+.cache
