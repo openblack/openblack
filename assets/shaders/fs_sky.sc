@@ -42,6 +42,9 @@ void main()
 	colorAlignA.a = 1.0f;
 	colorAlignB.a = 1.0f;
 
-	gl_FragColor = mix(colorAlignA, colorAlignB, typeT);
+	// TODO(#796): This seems to be vertex lit in vanilla, so brought in through the vertex shader and each vertex is a little different
+	vec4 amospheric_fog = vec4(196.0f / 255.0f, 210.0f / 255.0f, 190.0f / 255.0f, 254.0f / 255.0f);
+
+	gl_FragColor = amospheric_fog * mix(colorAlignA, colorAlignB, typeT);
 
 }
