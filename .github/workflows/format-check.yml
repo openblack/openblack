@@ -2,8 +2,6 @@ name: Formatting Check
 on:
   pull_request_target:
   push:
-    tags:
-      - '*'
     branches:
       - 'master'
       - 'ci-tests/**'  # Branch namespace can be used to test changes to test before going to master
