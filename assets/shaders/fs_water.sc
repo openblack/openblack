@@ -15,8 +15,10 @@ void main()
 	float skyBightness = skyType / 2.0f;
 
 	vec3 diffuse_colour = mix(0.25f, 1.0f, skyBightness) * texture2D(s_diffuse, v_texcoord0.xy).rgb;
+	// This was called alpha in vanilla because they rendered parts of the scene upside down in the
+	// main backbuffer, then alpha blended the ocean on top to simulate a render texture fetch.
 	float alpha = texture2D(s_alpha, v_texcoord0.xy).r;
 	vec3 reflect_colour = texture2DProj(s_reflection, v_texcoord1).rgb;
 
-	gl_FragColor = vec4(mix(reflect_colour, diffuse_colour, 0.8), alpha);
+	gl_FragColor = vec4(mix(reflect_colour, diffuse_colour, alpha), 1.0f);
 }
