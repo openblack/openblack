@@ -11,6 +11,8 @@
 
 #include "Renderer.h"
 
+#include <cstdint>
+
 #include <SDL_video.h>
 #include <bgfx/platform.h>
 #include <bimg/bimg.h>
@@ -149,7 +151,19 @@ struct BgfxCallback: public bgfx::CallbackI
 			bx::Error err;
 			if (bx::open(&writer, filePath, false, &err))
 			{
-				bimg::imageWritePng(&writer, width, height, pitch, data, bimg::TextureFormat::BGRA8, yflip, &err);
+				// Strip out alpha for screenshot
+				std::vector<uint32_t> noAlpha;
+				noAlpha.resize(size / sizeof(noAlpha[0]), 0);
+				memcpy(noAlpha.data(), data, size);
+				for (uint32_t y = 0; y < height; ++y)
+				{
+					for (uint32_t x = 0; x < width; ++x)
+					{
+						noAlpha[x + pitch / sizeof(noAlpha[0]) * y] |= 0xFF000000;
+					}
+				}
+
+				bimg::imageWritePng(&writer, width, height, pitch, noAlpha.data(), bimg::TextureFormat::BGRA8, yflip, &err);
 				bx::close(&writer);
 				SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "Screenshot ({}x{}) saved at {}", width, height, filePath);
 			}
