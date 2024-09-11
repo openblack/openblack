@@ -21,7 +21,7 @@
 #include "WindowingInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
-#warning "Locator interface implementations should only be included in Locator.cpp"
+#pragma message("Locator interface implementations should only be included in Locator.cpp")
 #endif
 
 struct SDL_Window;
