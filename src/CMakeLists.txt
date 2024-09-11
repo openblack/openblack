@@ -207,28 +207,6 @@ if (MSVC)
             /utf-8
   )
 
-  # Debug builds create a debug console
-  set_target_properties(
-    openblack_lib PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE"
-  )
-  set_target_properties(
-    openblack_lib PROPERTIES LINK_FLAGS_RELWITHDEBINFO "/SUBSYSTEM:CONSOLE"
-  )
-  set_target_properties(
-    openblack_lib PROPERTIES COMPILE_DEFINITIONS_DEBUG "_CONSOLE"
-  )
-
-  # Release builds also have a console, for now..
-  set_target_properties(
-    openblack_lib PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:CONSOLE"
-  )
-  set_target_properties(
-    openblack_lib PROPERTIES COMPILE_DEFINITIONS_RELEASE "CONSOLE"
-  )
-  set_target_properties(
-    openblack_lib PROPERTIES LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:CONSOLE"
-  )
-
   if (OPENBLACK_WARNINGS_AS_ERRORS)
     target_compile_options(openblack_lib PRIVATE /WX)
   endif ()
@@ -271,6 +249,31 @@ if (ANDROID)
 else ()
   add_executable(openblack main.cpp)
   target_link_libraries(openblack PRIVATE openblack_lib)
+
+  if (MSVC)
+    # Debug builds create a debug console
+    set_target_properties(
+      openblack PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE"
+    )
+    set_target_properties(
+      openblack PROPERTIES LINK_FLAGS_RELWITHDEBINFO "/SUBSYSTEM:CONSOLE"
+    )
+    target_compile_definitions(openblack 
+        PRIVATE
+        $<$<CONFIG:DEBUG>:_CONSOLE>
+    )
+
+    # Release builds also have a console, for now..
+    set_target_properties(
+      openblack PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:CONSOLE"
+    )
+    set_target_properties(
+      openblack PROPERTIES COMPILE_DEFINITIONS_RELEASE "CONSOLE"
+    )
+    set_target_properties(
+      openblack PROPERTIES LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:CONSOLE"
+    )
+  endif()
 
   if (EMSCRIPTEN)
     # Must be run from project root using `emrun --no_browser --serve_after_close --serve_after_exit .`
