@@ -258,10 +258,7 @@ else ()
     set_target_properties(
       openblack PROPERTIES LINK_FLAGS_RELWITHDEBINFO "/SUBSYSTEM:CONSOLE"
     )
-    target_compile_definitions(openblack 
-        PRIVATE
-        $<$<CONFIG:DEBUG>:_CONSOLE>
-    )
+    target_compile_definitions(openblack PRIVATE $<$<CONFIG:DEBUG>:_CONSOLE>)
 
     # Release builds also have a console, for now..
     set_target_properties(
@@ -273,7 +270,7 @@ else ()
     set_target_properties(
       openblack PROPERTIES LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:CONSOLE"
     )
-  endif()
+  endif ()
 
   if (EMSCRIPTEN)
     # Must be run from project root using `emrun --no_browser --serve_after_close --serve_after_exit .`
