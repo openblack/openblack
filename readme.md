@@ -144,12 +144,11 @@ don't ask. Here is a guide for extracting them from the original game.
 You will need the following:
 
 - The original installer (usually on a CD)
-- Official patch 1.10
-- Official patch 1.2
-- Not needed (but will not compromise the extraction): Unofficial patch 1.42
+- [Official patch 1.10](https://www.bwgame.net/downloads/v1-1-patch.129/)
+- [Official patch 1.2](https://www.bwgame.net/downloads/v1-2-patch.130/)
+- Not needed (but will not compromise the extraction): [Unofficial patch 1.42](https://www.bwgame.net/downloads/black-white-unofficial-patch-v1-42.1418/)
 
-Patches can be found on fan sites such as
-[Black & White REALM](https://www.bwrealm.com/official-files-patches-1)
+**Do not install 1.3, it is a patch to add P5 Power Glove support and is generally unstable**
 
 ## Installation
 
