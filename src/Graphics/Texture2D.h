@@ -34,6 +34,7 @@ enum class Format : uint8_t
 	R32F,
 	R32I,
 	R32UI,
+	A8,
 	R8,
 	R8I,
 	R8SNorm,

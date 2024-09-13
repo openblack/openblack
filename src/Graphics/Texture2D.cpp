@@ -35,6 +35,7 @@ constexpr std::array<bgfx::TextureFormat::Enum,
         bgfx::TextureFormat::R32F,    // R32F
         bgfx::TextureFormat::R32I,    // R32I
         bgfx::TextureFormat::R32U,    // R32UI
+        bgfx::TextureFormat::A8,      // R8
         bgfx::TextureFormat::R8,      // R8
         bgfx::TextureFormat::R8I,     // R8I
         bgfx::TextureFormat::R8S,     // R8SNorm
