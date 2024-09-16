@@ -53,6 +53,7 @@
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "EngineConfig.h"
 #include "FileSystem/FileSystemInterface.h"
+#include "FontViewer.h"
 #include "Game.h"
 #include "ImGuiUtils.h"
 #include "LHVMViewer.h"
@@ -116,6 +117,7 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 	debugWindows.emplace_back(new PathFinding);
 	debugWindows.emplace_back(new Audio);
 	debugWindows.emplace_back(new TempleInterior);
+	debugWindows.emplace_back(new FontViewer);
 
 	auto gui = std::unique_ptr<DebugGuiInterface>(
 	    new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows), !Locator::windowing::has_value()));

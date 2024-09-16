@@ -27,6 +27,7 @@ class Profiler;
 class RandomNumberManagerInterface;
 class SkyInterface;
 class TempleInteriorInterface;
+class TextRenderer;
 
 namespace v120
 {
@@ -135,5 +136,6 @@ struct Locator
 	using temple = entt::locator<TempleInteriorInterface>;
 	using vm = entt::locator<lhvm::LHVM>;
 	using chlapi = entt::locator<chlapi::CHLApi>;
+	using fontManager = entt::locator<TextRenderer>;
 };
 } // namespace openblack

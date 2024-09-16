@@ -49,6 +49,7 @@
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/RendererInterface.h"
+#include "Graphics/TextRenderer.h"
 #include "Input/GameActionMapInterface.h"
 #include "LHScriptX/Script.h"
 #include "Locator.h"
@@ -886,6 +887,10 @@ bool Game::Run() noexcept
 			{
 				Locator::debugGui::value().Draw();
 			}
+		}
+
+		{
+			Locator::fontManager::value().Draw();
 		}
 
 		{

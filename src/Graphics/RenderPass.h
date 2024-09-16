@@ -24,6 +24,7 @@ enum class RenderPass : uint8_t
 	Main,
 	ImGui,
 	MeshViewer,
+	Gui,
 
 	_count
 };
@@ -34,6 +35,7 @@ static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_
     "Main Pass",        //
     "ImGui Pass",       //
     "Mesh Viewer Pass", //
+    "Gui Pass",         //
 };
 
 } // namespace openblack::graphics
