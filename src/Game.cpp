@@ -890,7 +890,7 @@ bool Game::Run() noexcept
 		}
 
 		{
-			Locator::fontManager::value().Draw();
+			Locator::textRenderer::value().Draw();
 		}
 
 		{

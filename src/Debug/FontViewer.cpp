@@ -28,14 +28,14 @@ FontViewer::FontViewer() noexcept
 
 void FontViewer::Draw() noexcept
 {
-	auto& fontManager = Locator::fontManager::value();
+	auto& textRenderer = Locator::textRenderer::value();
 
-	auto const& texture = *fontManager._atlasTexture;
+	auto const& texture = *textRenderer._atlasTexture;
 
 	// 3 fonts
 	for (int i = 0; i < 3; i++)
 	{
-		auto font = fontManager._fontData[i];
+		auto font = textRenderer._fontData[i];
 		ImGui::Text("Font: %s (Size: %d)", font.name.c_str(), font.size);
 
 		for (char c = 33; c <= 126; c++)
@@ -43,7 +43,7 @@ void FontViewer::Draw() noexcept
 			if (c == 'A' || c == 'a')
 				ImGui::NewLine();
 
-			auto glyph = fontManager.GetGlyph(static_cast<TextRenderer::Font>(i), c);
+			auto glyph = textRenderer.GetGlyph(static_cast<TextRenderer::Font>(i), c);
 			ImGui::Image(texture.GetNativeHandle(), ImVec2(glyph.width / 2.0f, 80.0f / 2.0f), ImVec2(glyph.u0, glyph.v0),
 			             ImVec2(glyph.u1, glyph.v1));
 			ImGui::SetItemTooltip("Glyph: %c\nWidth: %d (%f)\nInt X Offset: %d\nX Offset: %f\nX Advance: %f\n\"padding\": %d",

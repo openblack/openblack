@@ -118,7 +118,7 @@ bool openblack::InitializeEngine(uint8_t rendererType, bool vsync) noexcept
 
 bool openblack::InitializeGame() noexcept
 {
-	Locator::fontManager::emplace<TextRenderer>();
+	Locator::textRenderer::emplace<TextRenderer>();
 	Locator::terrainSystem::emplace<UnloadedIsland>();
 	Locator::resources::emplace<Resources>();
 	Locator::playerSystem::emplace<PlayerSystem>();
@@ -178,7 +178,7 @@ void openblack::ShutDownServices()
 	Locator::terrainSystem::reset();
 	Locator::filesystem::reset();
 	Locator::gameActionSystem::reset();
-	Locator::fontManager::reset();
+	Locator::textRenderer::reset();
 
 	Locator::oceanSystem::reset();
 	Locator::skySystem ::reset();
