@@ -59,13 +59,14 @@ class TextRenderer
 {
 public:
 	/**
-	 * A
+	 * Which font to use
 	 */
 	enum class Font
 	{
 		Neutral = 0,
 		Good = 1,
-		Evil = 2
+		Evil = 2,
+		_COUNT
 	};
 
 	enum class TextAlignment
@@ -75,11 +76,10 @@ public:
 		Right
 	};
 
-public:
 	TextRenderer();
 	~TextRenderer();
 
-	// TODO: Remove me
+	// TODO(Matt): Remove me
 	void Draw();
 
 	/**
@@ -113,8 +113,8 @@ private:
 	{
 		// filedata
 		char16_t codepoint;
-		uint16_t int_width;  // Weird, not used
-		int16_t int_xoffset; // Weird, not used
+		uint16_t bitmapWidth; // Weird, not used
+		int16_t intXoffset;   // Weird, not used
 		uint16_t padding;
 		float xOffset;
 		float width;
@@ -126,16 +126,10 @@ private:
 		float u0, v0, u1, v1;
 	};
 
-	struct FontData
-	{
-		std::u16string name;
-		uint32_t size;
-		uint8_t* bitmap; // hold the .fnt bitmap data (compressed), for when we build the atlas, then we can free it
-	};
-
 	void LoadFonts();
-	void LoadFont(const std::filesystem::path& path, std::vector<stbrp_rect>& rects);
-	void BuildTextureAtlas(std::vector<stbrp_rect>& rects);
+	void LoadFont(Font font, const std::filesystem::path& path, std::vector<stbrp_rect>& rects,
+	              std::vector<uint8_t*>& bitmapData);
+	void BuildTextureAtlas(std::vector<stbrp_rect>& rects, std::vector<uint8_t*>& bitmapData);
 	[[nodiscard]] Glyph GetGlyph(Font fontID, char16_t codepoint) const;
 
 	// We're in C++20 and we still have no standard std::hash<std::tuple<...>>
@@ -150,7 +144,6 @@ private:
 
 	std::vector<std::u16string> _fontNames;
 	std::unordered_map<std::tuple<Font, char16_t>, Glyph, FontCodepointHash> _glyphs;
-	std::vector<FontData> _fontData;
 	std::unique_ptr<graphics::Texture2D> _atlasTexture;
 
 	// Using bgfx directly because our VertexBuffer abstractions don't do the transient buffers
