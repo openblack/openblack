@@ -47,6 +47,7 @@ jobs:
           export depends=${depends/bgfx/}
           export depends=${depends/entt/}
           export depends=${depends/imgui/}
+          export depends=${depends/imgui/}
           pacman -S --noconfirm --noprogressbar --needed mesa libx11 ${makedepends} ${depends}
 
       - name: Cache AUR Packages
@@ -58,6 +59,7 @@ jobs:
             bgfx-cmake-git/bgfx-cmake-git*.pkg.tar.*
             imgui/imgui*.pkg.tar.*
             dr_libs-git/dr_libs-git*.pkg.tar.*
+            utf8cpp-git/utf8cpp-git*.pkg.tar.*
           key: ${{ runner.os }}-cmake
 
       - name: Build ${{ env.PKG }} from the AUR
@@ -99,6 +101,16 @@ jobs:
           sudo -u builduser makepkg
         env:
           PKG: dr_libs-git
+
+      - name: Build ${{ env.PKG }} from the AUR
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        run: |
+          git clone https://aur.archlinux.org/${{ env.PKG }}.git ${GITHUB_WORKSPACE}/${{ env.PKG }}
+          chown -R builduser ${GITHUB_WORKSPACE}/${{ env.PKG }}
+          cd ${GITHUB_WORKSPACE}/${{ env.PKG }}
+          sudo -u builduser makepkg
+        env:
+          PKG: utf8cpp-git
 
       - name: Install AUR dependencies
         run: pacman -U --noconfirm --noprogressbar ${GITHUB_WORKSPACE}/*/*.pkg.tar.*
