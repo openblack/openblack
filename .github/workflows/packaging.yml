@@ -47,7 +47,6 @@ jobs:
           export depends=${depends/bgfx/}
           export depends=${depends/entt/}
           export depends=${depends/imgui/}
-          export depends=${depends/imgui/}
           pacman -S --noconfirm --noprogressbar --needed mesa libx11 ${makedepends} ${depends}
 
       - name: Cache AUR Packages
