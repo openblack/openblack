@@ -19,8 +19,7 @@ if (NOT CLANG_FORMAT)
     )
     file(
       DOWNLOAD
-      # https://github.com/yuzu-emu/ext-windows-bin/raw/master/clang-format${CLANG_FORMAT_POSTFIX}.exe
-      https://gitlab.com/suyu-emu/ext-windows-bin/-/tree/master/clang-format${CLANG_FORMAT_POSTFIX}.exe
+      https://gitlab.com/suyu-emu/ext-windows-bin/-/raw/master/clang-format-${CLANG_FORMAT_POSTFIX}.exe
       "${CLANG_FORMAT}"
       SHOW_PROGRESS
       STATUS DOWNLOAD_SUCCESS
