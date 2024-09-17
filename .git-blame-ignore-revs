@@ -1,0 +1,30 @@
+# These commits get ignored when you do git blame.
+# This is really useful if you've done a commit with mass auto-formatting.
+# So you can ignore it as an actual behavioural change of code.
+#
+# https://moxio.com/blog/ignoring-bulk-change-commits-with-git-blame/
+#
+# To apply the ignore list in your local Git client, you must run:
+#
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+#
+# This file is automatically used by GitHub.com's blame view.
+
+# Copyright header edits don't tell us anything about code changes
+
+# replace 2018-2023 with 2018-2024 
+ac833607851acabe3b65bd8d54e230aec89859b3
+# replace 2018-2020 with 2018-2021 (this one was actually 2023)
+9e63f2a7c4a9be55be72fe5bae0d084a0c83f0c1
+# replace 2018-2021 with 2018-2022
+e8e8431c0f813fdec2c089d609dab241f7c8ad0d
+# replace 2018-2020 with 2018-2021
+306cbe0431c48245e55c7280dbf15343b44c4f00
+# Update copyright notice on all source code files. 
+bb23341ff862c37cb4808ecf86ae797eff269122
+# Put all mentions to OpenBlack in comments lower-case
+26ca5ae981f5abdb562e5433c4b9117eecb30978
+# fix consistent typo in copyright header before the project matures more
+9743385bc46c4da287a45855d5b01e5879195fab
+# License OpenBlack under GPLV3. 
+f80beaa9b268ec6d32956c6c6d7c38543ff79f30
