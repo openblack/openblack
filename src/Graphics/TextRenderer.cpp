@@ -257,6 +257,8 @@ void TextRenderer::BuildTextureAtlas(std::vector<stbrp_rect>& rects, std::vector
 	_atlasTexture = std::make_unique<graphics::Texture2D>("Font Atlas");
 	_atlasTexture->Create(static_cast<uint16_t>(atlasWidth), static_cast<uint16_t>(atlasHeight), 1, graphics::Format::A8,
 	                      graphics::Wrapping::ClampEdge, graphics::Filter::Linear, pixels, atlasWidth * atlasHeight);
+
+	delete[] pixels;
 }
 
 float TextRenderer::GetStringWidth(const std::u16string& text, float fontSize, Font font) const
