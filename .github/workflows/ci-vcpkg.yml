@@ -187,7 +187,7 @@ jobs:
         id: review
         with:
           build_dir: cmake-build-presets/ninja-multi-vcpkg
-          exclude: "*ShaderIncluder.h,*json.hpp,*imgui_impl_sdl*,*stb_image_write.h,*dr_*.h"
+          exclude: "*ShaderIncluder.h,*json.hpp,*imgui_impl_sdl*,*stb_image_write.h,*stb_rect_pack.h,*dr_*.h"
           config_file: ""       # Don't use a single config file
           clang_tidy_checks: "" # Use checks from .clang-tidy tree
           lgtm_comment_body: "" # Don't post a lgtm message
