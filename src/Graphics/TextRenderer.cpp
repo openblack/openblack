@@ -63,10 +63,11 @@ void TextRenderer::LoadFonts()
 	std::vector<uint8_t*> fontBitmapData;
 	std::vector<stbrp_rect> rects;
 
-	const std::array<std::string_view, 3> k_FontPaths {"j0", "f1", "f3"};
-	for (int i = 0; i < static_cast<int>(Font::_COUNT); i++)
+	constexpr std::array<std::pair<Font, std::string_view>, 3> k_FontPaths {
+	    {{Font::Neutral, "j0"}, {Font::Good, "f1"}, {Font::Evil, "f3"}}};
+	for (const auto& [font, path] : k_FontPaths)
 	{
-		LoadFont(static_cast<Font>(i), fileSystem.GetPath<filesystem::Path::Data>() / k_FontPaths[i], rects, fontBitmapData);
+		LoadFont(font, fileSystem.GetPath<filesystem::Path::Data>() / path, rects, fontBitmapData);
 	}
 
 	BuildTextureAtlas(rects, fontBitmapData);
