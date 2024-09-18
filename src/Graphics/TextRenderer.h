@@ -127,8 +127,7 @@ private:
 	};
 
 	void LoadFonts();
-	void LoadFont(Font font, const std::filesystem::path& path, std::vector<stbrp_rect>& rects,
-	              std::vector<uint8_t*>& bitmapData);
+	void LoadFont(Font font, const std::filesystem::path& path, std::vector<stbrp_rect>& rects, std::vector<uint8_t*>& bitmaps);
 	void BuildTextureAtlas(std::vector<stbrp_rect>& rects, std::vector<uint8_t*>& bitmapData);
 	[[nodiscard]] Glyph GetGlyph(Font fontID, char16_t codepoint) const;
 

@@ -63,7 +63,7 @@ void TextRenderer::LoadFonts()
 	std::vector<uint8_t*> fontBitmapData;
 	std::vector<stbrp_rect> rects;
 
-	constexpr std::array<std::string_view, 3> k_FontPaths {"j0", "f1", "f3"};
+	const std::array<std::string_view, 3> k_FontPaths {"j0", "f1", "f3"};
 	for (int i = 0; i < static_cast<int>(Font::_COUNT); i++)
 	{
 		LoadFont(static_cast<Font>(i), fileSystem.GetPath<filesystem::Path::Data>() / k_FontPaths[i], rects, fontBitmapData);
@@ -135,7 +135,7 @@ void TextRenderer::LoadFont(Font font, const std::filesystem::path& path, std::v
 }
 
 // 3x3 box blur
-static void boxBlur(const uint8_t* input, uint8_t* output, int width, int height)
+void BoxBlur(const uint8_t* input, uint8_t* output, int width, int height)
 {
 	for (int y = 0; y < height; ++y)
 	{
@@ -194,7 +194,7 @@ void RenderGlyph(uint8_t* glyph, uint16_t width, uint16_t height, uint8_t* dest,
 		fill = !fill;
 	}
 
-	boxBlur(bitmap, bitmapBlurred, width, height);
+	BoxBlur(bitmap, bitmapBlurred, width, height);
 
 	// copy to dest
 	for (uint32_t y = 0; y < height; y++)
@@ -214,11 +214,11 @@ void TextRenderer::BuildTextureAtlas(std::vector<stbrp_rect>& rects, std::vector
 	auto atlasWidth = 2048;
 
 	// Pack our rects
-	const int nodeCount = 4096 * 2;
-	struct stbrp_node nodes[nodeCount];
+	const int nodeCount = 2048; // make sure 'num_nodes' >= 'width'
+	std::array<stbrp_node, nodeCount> nodes {};
 
 	stbrp_context spc = {};
-	stbrp_init_target(&spc, atlasWidth, 32768, nodes, nodeCount);
+	stbrp_init_target(&spc, atlasWidth, 32768, nodes.data(), nodeCount);
 	stbrp_pack_rects(&spc, rects.data(), static_cast<int>(rects.size()));
 
 	auto atlasHeight = std::bit_ceil(static_cast<unsigned int>(spc.height));

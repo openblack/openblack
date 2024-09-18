@@ -117,7 +117,7 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 	debugWindows.emplace_back(new PathFinding);
 	debugWindows.emplace_back(new Audio);
 	debugWindows.emplace_back(new TempleInterior);
-	debugWindows.emplace_back(new FontViewer);
+	debugWindows.emplace_back(new (std::nothrow) FontViewer);
 
 	auto gui = std::unique_ptr<DebugGuiInterface>(
 	    new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows), !Locator::windowing::has_value()));
