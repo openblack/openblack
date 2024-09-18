@@ -60,4 +60,7 @@ CheckOptions:
     value: _
   - key: readability-identifier-naming.ProtectedMemberPrefix
     value: _
+ExtraArgs:
+  - -DLOCATOR_IMPLEMENTATIONS
 # WarningsAsErrors: '*'
+...
