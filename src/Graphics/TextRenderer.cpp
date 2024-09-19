@@ -46,14 +46,13 @@ TextRenderer::~TextRenderer() = default;
 TextRenderer::Glyph TextRenderer::GetGlyph(Font fontID, char16_t codepoint) const
 {
 	auto it = _glyphs.find(std::make_tuple(fontID, codepoint));
-
-	if (it != _glyphs.end())
+	if (it == _glyphs.end())
 	{
-		return it->second;
+		// If we can't find the glyph, fallback to '?' (we know all 3 fonts have this)
+		it = _glyphs.find(std::make_tuple(fontID, u'?'));
 	}
-
-	// todo: return that box thing
-	return {};
+	// Return a valid glyph, or nothing at all is safe
+	return (it != _glyphs.end()) ? it->second : Glyph {};
 }
 
 void TextRenderer::LoadFonts()
