@@ -19,6 +19,8 @@
 
 #include <glm/fwd.hpp>
 
+#include "Common/Color.h"
+
 // !!! D:
 #include <bgfx/bgfx.h>
 
@@ -91,7 +93,7 @@ public:
 	 * @param font: Font.
 	 */
 	void DrawText(const std::u16string& text, glm::vec2 position, float fontSize, Font font = Font::Neutral,
-	              TextAlignment align = TextAlignment::Left) const;
+	              Color color = colors::k_White, TextAlignment align = TextAlignment::Left) const;
 
 	/**
 	 * Draws text on the screen.

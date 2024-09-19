@@ -274,7 +274,7 @@ float TextRenderer::GetStringWidth(const std::u16string& text, float fontSize, F
 	return width * fontSize / 80.0f;
 }
 
-void TextRenderer::DrawText(const std::u16string& text, glm::vec2 position, float fontSize, Font font,
+void TextRenderer::DrawText(const std::u16string& text, glm::vec2 position, float fontSize, Font font, Color color,
                             TextAlignment align) const
 {
 	// ...
@@ -306,18 +306,6 @@ void TextRenderer::DrawText(const std::u16string& text, glm::vec2 position, floa
 		x -= strWidth;
 	}
 
-	// These are the only colours as far as I can tell?
-	// I always thought the other gods coloured their text, but apparently not
-	uint32_t rgba = 0xffffffff;
-	if (font == Font::Evil)
-	{
-		rgba = 0xffb4b4ff;
-	}
-	if (font == Font::Good)
-	{
-		rgba = 0xffb7ebeb;
-	}
-
 	uint16_t vert = 0;
 
 	for (const char16_t& c : text)
@@ -341,10 +329,10 @@ void TextRenderer::DrawText(const std::u16string& text, glm::vec2 position, floa
 
 		const float w = glyph.width * fontScale;
 		const float h = fontSize;
-		vertices.push_back(TextVertex {x, y, glyph.u0, glyph.v0, rgba});
-		vertices.push_back(TextVertex {x + w, y, glyph.u1, glyph.v0, rgba});
-		vertices.push_back(TextVertex {x, y + h, glyph.u0, glyph.v1, rgba});
-		vertices.push_back(TextVertex {x + w, y + h, glyph.u1, glyph.v1, rgba});
+		vertices.push_back(TextVertex {x, y, glyph.u0, glyph.v0, static_cast<uint32_t>(color)});
+		vertices.push_back(TextVertex {x + w, y, glyph.u1, glyph.v0, static_cast<uint32_t>(color)});
+		vertices.push_back(TextVertex {x, y + h, glyph.u0, glyph.v1, static_cast<uint32_t>(color)});
+		vertices.push_back(TextVertex {x + w, y + h, glyph.u1, glyph.v1, static_cast<uint32_t>(color)});
 
 		x += (glyph.width + glyph.xAdvance) * fontScale;
 	}
@@ -391,12 +379,14 @@ void TextRenderer::Draw()
 	bgfx::setViewRect(static_cast<bgfx::ViewId>(graphics::RenderPass::Gui), 0, 0, static_cast<uint16_t>(size.x),
 	                  static_cast<uint16_t>(size.y));
 
-	DrawText(u"We're your conscience.", glm::vec2(size.x / 2, size.y - 192 + 32), 28.0f, Font::Evil, TextAlignment::Center);
-	DrawText(u"Greetings.", glm::vec2(size.x / 2, size.y - 160 + 32), 28.0f, Font::Good, TextAlignment::Center);
-	DrawText(u"Thank you! Thank you for your mercy!", glm::vec2(size.x / 2, size.y - 128 + 32), 28.0f, Font::Neutral,
+	DrawText(u"We're your conscience.", glm::vec2(size.x / 2, size.y - 192 + 32), 28.0f, Font::Evil, colors::k_Evil,
 	         TextAlignment::Center);
+	DrawText(u"Greetings.", glm::vec2(size.x / 2, size.y - 160 + 32), 28.0f, Font::Good, colors::k_Good, TextAlignment::Center);
+	DrawText(u"Thank you! Thank you for your mercy!", glm::vec2(size.x / 2, size.y - 128 + 32), 28.0f, Font::Neutral,
+	         colors::k_White, TextAlignment::Center);
 
-	DrawText(u"openblack 0.1", glm::vec2(size.x - 8, size.y - 32), 24.0f, Font::Neutral, TextAlignment::Right);
+	DrawText(u"openblack 0.1", glm::vec2(size.x - 8, size.y - 32), 24.0f, Font::Neutral, Color(0, 255, 255),
+	         TextAlignment::Right);
 }
 
 } // namespace openblack
