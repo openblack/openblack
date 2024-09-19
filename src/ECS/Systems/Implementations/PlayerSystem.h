@@ -15,7 +15,7 @@
 #include "ECS/Systems/PlayerSystemInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
-#pragma message("ECS System implementations should only be included in Locator.cpp, use interface instead.")
+#warning "ECS System implementations should only be included in Locator.cpp"
 #endif
 
 namespace openblack::ecs::systems

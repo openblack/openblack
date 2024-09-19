@@ -15,7 +15,7 @@
 #include "RandomNumberManager.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
-#pragma message("Locator interface implementations should only be included in Locator.cpp, use interface instead.")
+#warning "Locator interface implementations should only be included in Locator.cpp, use interface instead."
 #endif
 
 namespace openblack
