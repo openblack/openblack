@@ -15,7 +15,7 @@
 #include "FileSystemInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
-#pragma message("Locator interface implementations should only be included in Locator.cpp")
+#error "Locator interface implementations should only be included in Locator.cpp"
 #endif
 
 namespace openblack::filesystem
