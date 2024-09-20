@@ -20,7 +20,7 @@
 #include "GameActionMapInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
-#warning "Locator interface implementations should only be included in Locator.cpp"
+#error "Locator interface implementations should only be included in Locator.cpp"
 #endif
 
 namespace openblack::input

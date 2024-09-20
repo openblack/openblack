@@ -1,2 +1,2 @@
 CompileFlags:
-  Add: [-std:c++20]
+  Add: [-std:c++20, -DLOCATOR_IMPLEMENTATIONS ]
