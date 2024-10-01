@@ -180,7 +180,7 @@ All the files should be installed in the following directory:
 
 ## Getting the assets
 
-The folders you're interested in are the `Data` and `Scripts` folders in the
+The folders you're interested in are the `Audio`, `Data` and `Scripts` folders in the
 installation directory. You can use them from there or make a copy to the
 location of your choice.
 
