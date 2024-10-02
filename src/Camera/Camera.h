@@ -17,6 +17,8 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
+#include "3D/Extent.h"
+#include "3D/Ray.h"
 #include "CameraModel.h"
 #include "Common/ZoomInterpolator.h"
 #include "ECS/Components/Transform.h"
@@ -96,10 +98,11 @@ public:
 
 	[[nodiscard]] std::unique_ptr<Camera> Reflect() const;
 
-	void DeprojectScreenToWorld(glm::vec2 screenCoord, glm::vec3& outWorldOrigin, glm::vec3& outWorldDirection,
-	                            Interpolation interpolation = Camera::Interpolation::Current) const;
-	bool ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& outScreenPosition,
-	                          Interpolation interpolation = Camera::Interpolation::Current) const;
+	[[nodiscard]] Ray DeprojectScreenToWorld(glm::vec2 screenCoord,
+	                                         Interpolation interpolation = Camera::Interpolation::Current) const;
+	[[nodiscard]] std::optional<glm::vec3>
+	ProjectWorldToScreen(glm::vec3 worldPosition, U16Extent2 viewport,
+	                     Interpolation interpolation = Camera::Interpolation::Current) const;
 
 	void Update(std::chrono::microseconds dt);
 	void HandleActions(std::chrono::microseconds dt);
