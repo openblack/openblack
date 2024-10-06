@@ -360,33 +360,6 @@ void TextRenderer::DrawText(const std::u16string& text, glm::vec2 position, floa
 	bgfx::submit(static_cast<bgfx::ViewId>(graphics::RenderPass::Gui), textShader->GetRawHandle());
 }
 
-void TextRenderer::Draw()
-{
-	// No window? No size
-	if (!Locator::windowing::has_value())
-	{
-		return;
-	}
-
-	const auto size = static_cast<glm::u16vec2>(Locator::windowing::value().GetSize());
-
-	bgfx::setViewMode(static_cast<bgfx::ViewId>(graphics::RenderPass::Gui), bgfx::ViewMode::Sequential);
-
-	const bgfx::Caps* caps = bgfx::getCaps();
-	std::array<float, 16> ortho;
-	bx::mtxOrtho(ortho.data(), 0.0f, size.x, size.y, 0.0f, 0.0f, 1000.0f, 0.0f, caps->homogeneousDepth);
-	bgfx::setViewTransform(static_cast<bgfx::ViewId>(graphics::RenderPass::Gui), nullptr, ortho.data());
-	bgfx::setViewRect(static_cast<bgfx::ViewId>(graphics::RenderPass::Gui), 0, 0, static_cast<uint16_t>(size.x),
-	                  static_cast<uint16_t>(size.y));
-
-	DrawText(u"We're your conscience.", glm::vec2(size.x / 2, size.y - 192 + 32), 28.0f, Font::Evil, colors::k_Evil,
-	         TextAlignment::Center);
-	DrawText(u"Greetings.", glm::vec2(size.x / 2, size.y - 160 + 32), 28.0f, Font::Good, colors::k_Good, TextAlignment::Center);
-	DrawText(u"Thank you! Thank you for your mercy!", glm::vec2(size.x / 2, size.y - 128 + 32), 28.0f, Font::Neutral,
-	         colors::k_White, TextAlignment::Center);
-
-	DrawText(u"openblack 0.1", glm::vec2(size.x - 8, size.y - 32), 24.0f, Font::Neutral, Color(0, 255, 255),
-	         TextAlignment::Right);
-}
+void TextRenderer::Draw() {}
 
 } // namespace openblack
