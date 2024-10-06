@@ -22,6 +22,7 @@ enum class RenderPass : uint8_t
 	Footprint,
 	Reflection,
 	Main,
+	Gui,
 	ImGui,
 	MeshViewer,
 
@@ -32,6 +33,7 @@ static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_
     "Footprint Pass",   //
     "Reflection Pass",  //
     "Main Pass",        //
+    "Gui Pass",         //
     "ImGui Pass",       //
     "Mesh Viewer Pass", //
 };

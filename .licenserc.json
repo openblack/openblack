@@ -16,6 +16,7 @@
         "vcpkg/",
         "cmake-build-presets/",
         "CMakeFiles/",
-        "tiny_gltf.h"
+        "tiny_gltf.h",
+        "stb_rect_pack.h"
     ]
 }

@@ -50,6 +50,7 @@ public:
 		MainPassDrawSprites,
 		MainPassDrawDebugCross,
 		GuiDraw,
+		HelpTextDraw,
 		RendererFrame,
 
 		_count,
@@ -82,6 +83,7 @@ public:
 	    "Draw Sprites",         //
 	    "Draw Debug Cross",     //
 	    "Encode GUI Draw",      //
+	    "Help Text Draw",       //
 	    "Renderer Frame",       //
 	};
 
