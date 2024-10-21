@@ -27,4 +27,12 @@ else ()
   )
 endif ()
 
+if (MINGW)
+  target_compile_options(
+      l3dtool
+      #assembler flag for big obj files. Fixes 'file too big' errors when compiling l3dtool
+      PRIVATE -Wa,-mbig-obj
+  )  
+endif()
+
 set_property(TARGET l3dtool PROPERTY FOLDER "tools")
