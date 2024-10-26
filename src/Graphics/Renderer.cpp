@@ -241,11 +241,10 @@ std::unique_ptr<RendererInterface> RendererInterface::Create(bgfx::RendererType:
 }
 
 Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallback) noexcept
-    : _shaderManager(std::make_unique<ShaderManager>())
-    , _bgfxCallback(std::move(bgfxCallback))
+    : _bgfxCallback(std::move(bgfxCallback))
     , _bgfxReset(bgfxReset)
 {
-	_shaderManager->LoadShaders();
+	Locator::shaderManager::value().LoadShaders();
 	// allocate vertex buffers for our debug draw and for primitives
 	_debugCross = DebugLines::CreateCross();
 	_plane = Primitive::CreatePlane();
@@ -262,7 +261,7 @@ Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallb
 Renderer::~Renderer() noexcept
 {
 	_plane.reset();
-	_shaderManager.reset();
+	Locator::shaderManager::reset();
 	_debugCross.reset();
 	bgfx::frame();
 	bgfx::shutdown();
@@ -277,11 +276,6 @@ void Renderer::ConfigureView(graphics::RenderPass viewId, glm::u16vec2 resolutio
 void Renderer::Reset(glm::u16vec2 resolution) const noexcept
 {
 	bgfx::reset(resolution.x, resolution.y, _bgfxReset);
-}
-
-graphics::ShaderManager& Renderer::GetShaderManager() const noexcept
-{
-	return *_shaderManager;
 }
 
 void Renderer::UpdateDebugCrossUniforms(const glm::mat4& pose) noexcept
@@ -452,7 +446,7 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 
 		const auto& meshManager = Locator::resources::value().GetMeshes();
 		const auto& renderCtx = Locator::rendereringSystem::value().GetContext();
-		const auto* footprintShaderInstanced = _shaderManager->GetShader("FootprintInstanced");
+		const auto* footprintShaderInstanced = Locator::shaderManager::value().GetShader("FootprintInstanced");
 		for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
 		{
 			auto mesh = meshManager.Handle(meshId);
@@ -522,16 +516,16 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	// other draw calls are submitted to view
 	bgfx::touch(static_cast<bgfx::ViewId>(desc.viewId));
 
-	_shaderManager->SetCamera(desc.viewId, *desc.camera);
+	Locator::shaderManager::value().SetCamera(desc.viewId, *desc.camera);
 
-	const auto* skyShader = _shaderManager->GetShader("Sky");
-	const auto* waterShader = _shaderManager->GetShader("Water");
-	const auto* terrainShader = _shaderManager->GetShader("Terrain");
-	const auto* debugShader = _shaderManager->GetShader("DebugLine");
-	const auto* spriteShader = _shaderManager->GetShader("Sprite");
-	const auto* debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
-	const auto* objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
-	const auto* objectShaderHeightMapInstanced = _shaderManager->GetShader("ObjectHeightMapInstanced");
+	const auto* skyShader = Locator::shaderManager::value().GetShader("Sky");
+	const auto* waterShader = Locator::shaderManager::value().GetShader("Water");
+	const auto* terrainShader = Locator::shaderManager::value().GetShader("Terrain");
+	const auto* debugShader = Locator::shaderManager::value().GetShader("DebugLine");
+	const auto* spriteShader = Locator::shaderManager::value().GetShader("Sprite");
+	const auto* debugShaderInstanced = Locator::shaderManager::value().GetShader("DebugLineInstanced");
+	const auto* objectShaderInstanced = Locator::shaderManager::value().GetShader("ObjectInstanced");
+	const auto* objectShaderHeightMapInstanced = Locator::shaderManager::value().GetShader("ObjectHeightMapInstanced");
 
 	const auto skyType = Locator::skySystem::value().GetCurrentSkyType();
 
@@ -752,7 +746,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		{
 			L3DMeshSubmitDesc submitDesc = {};
 			submitDesc.viewId = desc.viewId;
-			submitDesc.program = _shaderManager->GetShader("Object");
+			submitDesc.program = Locator::shaderManager::value().GetShader("Object");
 			// clang-format off
 			submitDesc.state = 0u
 				| BGFX_STATE_WRITE_MASK

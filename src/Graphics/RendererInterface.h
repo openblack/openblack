@@ -94,8 +94,6 @@ public:
 	virtual void UpdateDebugCrossUniforms(const glm::mat4& pose) noexcept = 0;
 	// TODO: Remove this function. All renderables should be drawn through RenderingSystem with Components
 	virtual void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const noexcept = 0;
-	// TODO: Should shader manager be available through Locator as a service?
-	[[nodiscard]] virtual graphics::ShaderManager& GetShaderManager() const noexcept = 0;
 };
 
 } // namespace openblack::graphics
