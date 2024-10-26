@@ -51,6 +51,7 @@
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/RendererInterface.h"
+#include "Graphics/Technique/TechniqueManager.h"
 #include "Input/GameActionMapInterface.h"
 #include "LHScriptX/Script.h"
 #include "Locator.h"
