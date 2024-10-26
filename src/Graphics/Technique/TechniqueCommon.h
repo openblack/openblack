@@ -6,22 +6,11 @@
  *
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
-
 #pragma once
 
-#include <entt/fwd.hpp>
-#include <glm/gtx/transform.hpp>
+#include <cstdint>
 
-#include "Graphics/DebugLines.h"
-#include "Graphics/Mesh.h"
+#include <bgfx/defines.h>
 
-namespace openblack::ecs::components
-{
-
-struct DebugCross
-{
-	std::unique_ptr<openblack::graphics::Mesh> debugCross {openblack::graphics::DebugLines::CreateCross()};
-	glm::mat4 debugCrossPose {glm::identity<glm::mat4>()};
-};
-
-} // namespace openblack::ecs::components
+constexpr auto k_BgfxDefaultStateInvertedZ = 0 | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z |
+                                             BGFX_STATE_CULL_CW | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_MSAA;
