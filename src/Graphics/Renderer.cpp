@@ -29,12 +29,12 @@
 #include "3D/OceanInterface.h"
 #include "3D/SkyInterface.h"
 #include "Camera/Camera.h"
+#include "ECS/Components/DebugCross.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "EngineConfig.h"
-#include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/Primitive.h"
@@ -246,7 +246,6 @@ Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallb
 {
 	Locator::shaderManager::value().LoadShaders();
 	// allocate vertex buffers for our debug draw and for primitives
-	_debugCross = DebugLines::CreateCross();
 	_plane = Primitive::CreatePlane();
 
 	// give debug names to views
@@ -262,7 +261,6 @@ Renderer::~Renderer() noexcept
 {
 	_plane.reset();
 	Locator::shaderManager::reset();
-	_debugCross.reset();
 	bgfx::frame();
 	bgfx::shutdown();
 }
@@ -276,11 +274,6 @@ void Renderer::ConfigureView(graphics::RenderPass viewId, glm::u16vec2 resolutio
 void Renderer::Reset(glm::u16vec2 resolution) const noexcept
 {
 	bgfx::reset(resolution.x, resolution.y, _bgfxReset);
-}
-
-void Renderer::UpdateDebugCrossUniforms(const glm::mat4& pose) noexcept
-{
-	_debugCrossPose = pose;
 }
 
 const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& meshSkins)
@@ -778,10 +771,13 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		                                                                          : Profiler::Stage::MainPassDrawDebugCross);
 		if (desc.drawDebugCross)
 		{
-			bgfx::setTransform(glm::value_ptr(_debugCrossPose));
-			_debugCross->GetVertexBuffer().Bind();
-			bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
-			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
+			auto& registry = Locator::entitiesRegistry::value();
+			registry.Each<const ecs::components::DebugCross>([&desc, &debugShader](const ecs::components::DebugCross& ent) {
+				bgfx::setTransform(glm::value_ptr(ent.debugCrossPose));
+				ent.debugCross->GetVertexBuffer().Bind();
+				bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
+				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
+			});		
 		}
 	}
 

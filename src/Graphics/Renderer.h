@@ -51,8 +51,6 @@ public:
 	Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallback) noexcept;
 	~Renderer() noexcept final;
 
-	void UpdateDebugCrossUniforms(const glm::mat4& pose) noexcept final;
-
 	void ConfigureView(RenderPass viewId, glm::u16vec2 resolution, uint32_t clearColor) const noexcept final;
 
 	void DrawScene(const DrawSceneDesc& drawDesc) const noexcept final;
@@ -76,9 +74,7 @@ private:
 	bool _bgfxDebug = false;
 	bool _bgfxProfile = false;
 
-	std::unique_ptr<Mesh> _debugCross;
 	std::unique_ptr<Mesh> _plane;
-	glm::mat4 _debugCrossPose;
 };
 } // namespace graphics
 } // namespace openblack
