@@ -32,6 +32,7 @@
 #include "ECS/Components/DebugCross.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Sprite.h"
+#include "ECS/Components/SpriteMesh.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "EngineConfig.h"
@@ -246,7 +247,6 @@ Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallb
 {
 	Locator::shaderManager::value().LoadShaders();
 	// allocate vertex buffers for our debug draw and for primitives
-	_plane = Primitive::CreatePlane();
 
 	// give debug names to views
 	// TODO (#749) use std::views::enumerate
@@ -259,7 +259,6 @@ Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallb
 
 Renderer::~Renderer() noexcept
 {
-	_plane.reset();
 	Locator::shaderManager::reset();
 	bgfx::frame();
 	bgfx::shutdown();
@@ -710,8 +709,12 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				using namespace ecs::components;
 
 				auto& registry = Locator::entitiesRegistry::value();
+
+				auto entity = registry.Front<SpriteMesh>();
+				auto& spritePlane = registry.Get<const SpriteMesh>(entity);
+
 				registry.Each<const Sprite, const Transform>(
-				    [this, &spriteShader, &desc](const Sprite& sprite, const Transform& transform) {
+				    [&spritePlane, &spriteShader, &desc](const Sprite& sprite, const Transform& transform) {
 					    glm::mat4 modelMatrix = glm::mat4(1.0f);
 					    modelMatrix = glm::translate(modelMatrix, transform.position);
 					    modelMatrix *= glm::mat4(transform.rotation);
@@ -724,7 +727,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					    spriteShader->SetUniformValue("u_tint", glm::value_ptr(sprite.tint));
 					    spriteShader->SetTextureSampler("s_diffuse", 0, sprite.texture);
 
-					    _plane->GetVertexBuffer().Bind();
+					    spritePlane.plane->GetVertexBuffer().Bind();
 
 					    bgfx::setState(0 | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
 					                   BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE) |

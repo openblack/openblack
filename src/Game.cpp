@@ -37,6 +37,7 @@
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
 #include "ECS/Components/DebugCross.h"
+#include "ECS/Components/SpriteMesh.h"
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/CameraBookmarkSystemInterface.h"
@@ -927,8 +928,14 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 	// Reset everything. Deletes all entities and their components
 	Locator::entitiesRegistry::value().Reset();
 	auto& registry = Locator::entitiesRegistry::value();
-	auto entity = registry.Create();
-	registry.Assign<ecs::components::DebugCross>(entity);
+	// TODO(#661): We should not need to recreate the debugCross and the plane for the sprite each time
+	{
+		auto entity = registry.Create();
+		registry.Assign<ecs::components::DebugCross>(entity);
+
+		entity = registry.Create();
+		registry.Assign<ecs::components::SpriteMesh>(entity);
+	}
 	// TODO(#661): split entities that are permanent from map entities and move hand and camera to init
 	// We need a hand for the player
 	Locator::handSystem::value().Initialize();

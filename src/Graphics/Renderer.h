@@ -73,8 +73,6 @@ private:
 	uint32_t _bgfxReset;
 	bool _bgfxDebug = false;
 	bool _bgfxProfile = false;
-
-	std::unique_ptr<Mesh> _plane;
 };
 } // namespace graphics
 } // namespace openblack
