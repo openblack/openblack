@@ -9,6 +9,7 @@
 
 #include "Game.h"
 
+#include <ranges>
 #include <string>
 
 #include <LHVM.h>
@@ -96,12 +97,11 @@ Game::Game(Arguments&& args) noexcept
 			createLogger = [](const std::string& name) { return spdlog::stdout_color_mt(name); };
 		}
 	}
-	// TODO (#749) use std::views::enumerate
-	for (size_t i = 0; const auto& subsystem : k_LoggingSubsystemStrs)
+
+	for (const auto [i, subsystem] : std::views::enumerate(k_LoggingSubsystemStrs))
 	{
 		auto logger = createLogger(subsystem.data());
 		logger->set_level(args.logLevels.at(i));
-		++i;
 	}
 	sInstance = this;
 
@@ -573,12 +573,10 @@ bool Game::Initialize() noexcept
 	}
 
 	const auto& meshes = pack.GetMeshes();
-	// TODO (#749) use std::views::enumerate
-	for (size_t i = 0; const auto& mesh : meshes)
+	for (const auto [i, mesh] : std::views::enumerate(meshes))
 	{
 		const auto meshId = static_cast<MeshId>(i);
 		meshManager.Load(meshId, resources::L3DLoader::FromBufferTag {}, k_MeshNames.at(i), mesh);
-		++i;
 	}
 
 	const auto& textures = pack.GetTextures();

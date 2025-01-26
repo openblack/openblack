@@ -11,6 +11,8 @@
 
 #include <cinttypes>
 
+#include <ranges>
+
 #include <bgfx/bgfx.h>
 #include <imgui_widget_flamegraph.h>
 
@@ -168,17 +170,15 @@ void Profiler::Draw() noexcept
 		auto cursorX = ImGui::GetCursorPosX();
 		auto indentSize = ImGui::CalcTextSize("    ").x;
 
-		// TODO (#749) use std::views::enumerate
-		for (uint8_t i = 0; const auto& stage : entry.stages)
+		for (const auto& [i, stage] : std::views::enumerate(entry.stages))
 		{
-			std::chrono::duration<float, std::milli> const duration = stage.end - stage.start;
+			const std::chrono::duration<float, std::milli> duration = stage.end - stage.start;
 			ImGui::SetCursorPosX(cursorX + indentSize * stage.level);
 			ImGui::Text("    %s: %0.3f", openblack::Profiler::k_StageNames.at(i).data(), duration.count());
 			if (stage.level == 0)
 			{
 				frameDuration -= duration;
 			}
-			++i;
 		}
 		ImGui::Text("    Unaccounted: %0.3f", frameDuration.count());
 	}
