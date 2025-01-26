@@ -30,7 +30,7 @@
 #include "ECS/Systems/HandSystemInterface.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/RendererInterface.h"
-#include "Graphics/ShaderManager.h"
+#include "Graphics/ShaderManagerInterface.h"
 #include "Graphics/Texture2D.h"
 #include "Graphics/VertexBuffer.h"
 #include "Locator.h"
@@ -289,7 +289,7 @@ void MeshViewer::Update() noexcept
 
 	auto const& meshes = Locator::resources::value().GetMeshes();
 	auto const& animations = Locator::resources::value().GetAnimations();
-	auto& shaderManager = renderer.GetShaderManager();
+	auto& shaderManager = Locator::shaderManager::value();
 	const auto* objectShader = shaderManager.GetShader("Object");
 	const auto* debugShader = shaderManager.GetShader("DebugLine");
 
