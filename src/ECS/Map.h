@@ -12,6 +12,7 @@
 #include <cstdint>
 
 #include <array>
+#include <type_traits>
 #include <unordered_set>
 
 #include <entt/fwd.hpp>
@@ -31,6 +32,7 @@ public:
 
 	static CellId GetGridCell(const glm::vec2& pos);
 	static CellId GetGridCell(const glm::vec3& pos);
+	static glm::vec3 PointGridCellAdd(const glm::vec3& pos, const glm::i16vec2& cellIncrement);
 	static glm::vec2 GetCellCenter(const CellId& cellId);
 
 	[[nodiscard]] virtual const std::unordered_set<entt::entity>& GetFixedInGridCell(const CellId& cellId) const = 0;
