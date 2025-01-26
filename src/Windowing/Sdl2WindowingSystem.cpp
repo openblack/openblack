@@ -103,8 +103,8 @@ Sdl2WindowingSystem::NativeHandles Sdl2WindowingSystem::GetNativeHandles() const
 	NativeHandles result {nullptr, nullptr};
 #if defined(__EMSCRIPTEN__)
 	static const char* canvas = "#canvas";
-	nativeWindow = const_cast<void*>(reinterpret_cast<const void*>(canvas));
-	return;
+	result.nativeWindow = const_cast<void*>(reinterpret_cast<const void*>(canvas));
+	return result;
 #endif
 
 	SDL_SysWMinfo wmi;

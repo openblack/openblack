@@ -80,6 +80,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		    std::pair {"Gnm", bgfx::RendererType::Gnm},
 		    std::pair {"Nvn", bgfx::RendererType::Nvn},
 		    std::pair {"Noop", bgfx::RendererType::Noop},
+		    std::pair {"WebGPU", bgfx::RendererType::WebGPU},
 		};
 
 		// pick a sane renderer based on the user os
@@ -165,6 +166,13 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 				                     RRF_RT_REG_SZ, nullptr, path, &dataLen);
 
 				args.gamePath = std::string(path);
+			}
+			else
+#elif __EMSCRIPTEN__
+			// NOLINTNEXTLINE(readability-simplify-boolean-expr)
+			if (true)
+			{
+				args.gamePath = "bw";
 			}
 			else
 #endif
