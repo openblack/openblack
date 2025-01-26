@@ -28,20 +28,11 @@ jobs:
               sudo apt-get install -y gcc-multilib g++-multilib libx11-dev:i386 libxext-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libtool autoconf libc6-dev-i386 libgpg-error-dev:i386 libltdl-dev:i386
             additional_args: "`-DCMAKE_C_FLAGS=-m32`, `-DCMAKE_CXX_FLAGS=-m32`, `-DOPENBLACK_CROSSCOMPILING=ON`"
           - triplet: arm64-linux
-            os: ubuntu-24.04
+            os: ubuntu-24.04-arm
             preset: ninja-multi-vcpkg
             setup: |
-              sudo dpkg --add-architecture arm64
-              # Specify amd64 for exisitng azure.archive.ubuntu.com sources
-              sudo sed -i '/^Types: deb/ a Architectures: amd64' /etc/apt/sources.list.d/ubuntu.sources
-              # Add arm64 source from azure.ports.ubuntu.com because the architecture isn't on archive
-              sudo cp /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list.d/ubuntu-arm64.sources
-              sudo sed -i 's,http://azure.archive.ubuntu.com/ubuntu/,http://azure.ports.ubuntu.com/,g' /etc/apt/sources.list.d/ubuntu-arm64.sources
-              sudo sed -i 's,Architectures: amd64,Architectures: arm64,g' /etc/apt/sources.list.d/ubuntu-arm64.sources
-              # Install the arch dependencies
               sudo apt-get update
-              sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libx11-dev:arm64 libxext-dev:arm64 libgl1-mesa-dev:arm64 libglu1-mesa-dev:arm64
-            additional_args: "`-DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc`, `-DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++`, `-DCMAKE_C_FLAGS=-march=armv8-a`, `-DCMAKE_CXX_FLAGS=-march=armv8-a`, `-DOPENBLACK_CROSSCOMPILING=ON`"
+              sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libltdl-dev libxext-dev
           # TODO(#638): Many of the emscripten dependencies conflict due to pthreads
           # - preset: emscripten-vcpkg
           #   os: ubuntu-latest
