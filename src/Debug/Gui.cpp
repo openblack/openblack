@@ -391,7 +391,7 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData) noexcept
 				bgfx::TextureHandle th = _texture;
 				bgfx::ProgramHandle program = _program;
 
-				if (cmd->TextureId != nullptr)
+				if (cmd->TextureId != 0)
 				{
 					const union
 					{

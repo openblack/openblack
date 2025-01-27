@@ -33,13 +33,13 @@
 
 // Concatenate the four elements of your path.
 #include CONCAT5(GENERATED_SHADERS_DIR, SHADER_DIR,glsl/, SHADER_NAME,.sc.bin.h)
-#include CONCAT5(GENERATED_SHADERS_DIR, SHADER_DIR,spv/, SHADER_NAME,.sc.bin.h)
+#include CONCAT5(GENERATED_SHADERS_DIR, SHADER_DIR,spirv/, SHADER_NAME,.sc.bin.h)
 #include CONCAT5(GENERATED_SHADERS_DIR, SHADER_DIR,essl/, SHADER_NAME,.sc.bin.h)
 #if defined(_WIN32)
 #include CONCAT5(GENERATED_SHADERS_DIR, SHADER_DIR,dx11/, SHADER_NAME,.sc.bin.h)
 #endif //  defined(_WIN32)
 #if __APPLE__
-#include CONCAT5(GENERATED_SHADERS_DIR, SHADER_DIR,mtl/, SHADER_NAME,.sc.bin.h)
+#include CONCAT5(GENERATED_SHADERS_DIR, SHADER_DIR,metal/, SHADER_NAME,.sc.bin.h)
 #endif // __APPLE__
 
 #undef SHADER_DIR
