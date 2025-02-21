@@ -19,6 +19,12 @@ You still need to have the original game assets in order to use this. See furthe
     <img src="https://user-images.githubusercontent.com/32263167/184559291-f37e44b3-c738-4c0f-82eb-28b7c84a3919.png" width="45%">
 </a>
 
+## Table of Contents
+- [Pre-built Binaries](#pre-built-binaries)
+- [Experimental](#experimental)
+- [Building](#building)
+- [Extracting Asset Files](#extracting-asset-files)
+
 # Pre-built Binaries
 
 For the latest build of openblack without having to build it yourself, we offer pre-built binaries from our test service.
@@ -31,8 +37,7 @@ For the latest build of openblack without having to build it yourself, we offer 
 
 ## Experimental
 
-The following are qualified as exprimental. They have base minimum setup such as compilation and rendering system.
-Don't expect to be able to launch without some effort and your own patches.
+TThe following builds are **experimental**. They require additional setup, effort, and possibly custom patches to work correctly. Users should be prepared for troubleshooting when using these versions.
 
 [![Windows (x86) Build](https://img.shields.io/badge/Build-Windows%20(x86)-0078d4)](https://nightly.link/openblack/openblack/workflows/ci-cross-compile/master/openblack-x86-windows-master.zip)
 [![Windows (arm64) Build](https://img.shields.io/badge/Build-Windows%20(arm64)-0078d4)](https://nightly.link/openblack/openblack/workflows/ci-cross-compile/master/openblack-arm64-windows-master.zip) 
@@ -46,6 +51,15 @@ Don't expect to be able to launch without some effort and your own patches.
 [![AppImage](https://img.shields.io/badge/Package-AppImage-00BBFF)](https://nightly.link/openblack/openblack/workflows/packaging/master/openblack-master.AppImage.zip)
 [![Snap](https://img.shields.io/badge/Package-Snap-E95420)](https://nightly.link/openblack/openblack/workflows/packaging/master/openblack-master.snap.zip)
 
+# Extracting Asset Files
+
+To use openblack, you must extract assets from the original Black & White game. **Do not distribute these extracted files, as doing so may violate copyright laws.**
+
+1. Install the original game.
+2. Use the provided tools to extract necessary files.
+3. Place them in the appropriate openblack directory.
+
+By following these steps, you can use the original assets legally while ensuring compatibility with openblack.
 
 # Building
 
