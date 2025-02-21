@@ -51,6 +51,12 @@ TThe following builds are **experimental**. They require additional setup, effor
 [![AppImage](https://img.shields.io/badge/Package-AppImage-00BBFF)](https://nightly.link/openblack/openblack/workflows/packaging/master/openblack-master.AppImage.zip)
 [![Snap](https://img.shields.io/badge/Package-Snap-E95420)](https://nightly.link/openblack/openblack/workflows/packaging/master/openblack-master.snap.zip)
 
+# Building
+
+Clone the code using: `git clone --recursive https://github.com/openblack/openblack.git`
+
+If you forgot to add `--recursive`, you will have to also run `git submodule update --init` from the `openblack/` directory.
+
 # Extracting Asset Files
 
 To use openblack, you must extract assets from the original Black & White game. **Do not distribute these extracted files, as doing so may violate copyright laws.**
@@ -60,12 +66,6 @@ To use openblack, you must extract assets from the original Black & White game. 
 3. Place them in the appropriate openblack directory.
 
 By following these steps, you can use the original assets legally while ensuring compatibility with openblack.
-
-# Building
-
-Clone the code using: `git clone --recursive https://github.com/openblack/openblack.git`
-
-If you forgot to add `--recursive`, you will have to also run `git submodule update --init` from the `openblack/` directory.
 
 ## Configuration for using vcpkg (Recommended for new users)
 
