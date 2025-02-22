@@ -39,8 +39,8 @@ Original game assets are required to run openblack. See further below for an exp
     - [Installation](#installation)
         - [On Windows](#on-windows)
         - [On Linux and macOS](#on-linux-and-macOS)
-    -[Getting the Assets](#getting-the-assets)
-        -[Using Them in Place](#using-them-in-place)
+    - [Getting the Assets](#getting-the-assets)
+        - [Using Them in Place](#using-them-in-place)
 - [License](#license)
 
 # Pre-built Binaries
