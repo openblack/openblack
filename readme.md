@@ -23,7 +23,13 @@ You still need to have the original game assets in order to use this. See furthe
 - [Pre-built Binaries](#pre-built-binaries)
 - [Experimental](#experimental)
 - [Building](#building)
-- [Extracting Asset Files](#extracting-asset-files)
+- [Configuration for Using vcpkg](#configuration-for-using-vcpkg-(Recommended-for-new-users))
+- [Configuration for using System Dependencies](Configuration-for-using-System-Dependencies-(Recommended-for-packagers))
+- [Contributing](Contributing)
+- [Extracting Asset Files](#extracting-asset-files-from-original-game)
+- [Prerequisites](#prerequisites)
+- [Instalation](#installation)
+- [License](#license)
 
 # Pre-built Binaries
 
@@ -56,16 +62,6 @@ TThe following builds are **experimental**. They require additional setup, effor
 Clone the code using: `git clone --recursive https://github.com/openblack/openblack.git`
 
 If you forgot to add `--recursive`, you will have to also run `git submodule update --init` from the `openblack/` directory.
-
-# Extracting Asset Files
-
-To use openblack, you must extract assets from the original Black & White game. **Do not distribute these extracted files, as doing so may violate copyright laws.**
-
-1. Install the original game.
-2. Use the provided tools to extract necessary files.
-3. Place them in the appropriate openblack directory.
-
-By following these steps, you can use the original assets legally while ensuring compatibility with openblack.
 
 ## Configuration for using vcpkg (Recommended for new users)
 
