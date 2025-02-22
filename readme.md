@@ -6,9 +6,9 @@
 [![Discord chat](https://img.shields.io/discord/608729286513262622?logo=discord&logoColor=white)](https://discord.gg/5QTexBU)
 [![License](https://img.shields.io/github/license/openblack/openblack)](LICENSE.md)
 
-openblack is an open source reimplementation of [Black & White (2001)](https://en.wikipedia.org/wiki/Black_&_White_(video_game)) written in modern C++ and modern rendering engines (OpenGL, Vulkan).
+openblack is an open source reimplementation of [Black & White (2001)](https://en.wikipedia.org/wiki/Black_&_White_(video_game)) developed using modern C++ and rendering technologies like OpenGL and Vulkan.
 
-You still need to have the original game assets in order to use this. See further below for an explanation on how to extract them.
+Original game assets are required to run openblack. See further below for an explanation on how to extract them.
 
 ---
 
@@ -21,11 +21,26 @@ You still need to have the original game assets in order to use this. See furthe
 
 ## Table of Contents
 - [Pre-built Binaries](#pre-built-binaries)
+    - [Experimental](#experimental)
 - [Building](#building)
-- [Contributing](Contributing)
+    - [Configuration for using vcpkg](#configuration-for-using-vcpkg-(recommended-for-new-users))
+        - [Visual Studio Code](#visual-studio-code)
+        - [Visual Studio 2022](#visual-studio-2022)
+        - [Clion](#Clion)
+        - [XCode](#xcode)
+        - [Android Studio](#android-studio)
+        - [Web Assembly](#web-assembly)
+        - [Command Line](#command-line)
+    - [Configuration for using System Dependencies](#configuration-for-using-system-dependencies-(recommended-for-packagers))
+        - [Arch Linux](#arch-linux)
+    - [Contributing](#contributing)
 - [Extracting Asset Files](#extracting-asset-files-from-original-game)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+        - [On Windows](#on-windows)
+        - [On Linux and macOS](#on-linux-and-macOS)
+    -[Getting the Assets](#getting-the-assets)
+        -[Using Them in Place](#using-them-in-place)
 - [License](#license)
 
 # Pre-built Binaries
@@ -62,7 +77,7 @@ If you forgot to add `--recursive`, you will have to also run `git submodule upd
 
 ## Configuration for using vcpkg (Recommended for new users)
 
-The simplest way to obtain all the required dependencies is through [vcpkg](https://github.com/Microsoft/vcpkg) which is included with a [manifest file](https://github.com/microsoft/vcpkg/blob/master/docs/users/manifests.md).
+The easiest way to install all dependencies is via [vcpkg](https://github.com/Microsoft/vcpkg) which is comes with a [manifest file](https://github.com/microsoft/vcpkg/blob/master/docs/users/manifests.md).
 
 The easiest way to get started on any platform is to allow CMake and vcpkg to handle all dependencies and configuration
 for you. To do so, you will be selecting the `"ninja-multi-vcpkg"   - Ninja Multi-Config (vcpkg)` preset. Other presets are available for more advanced users.
