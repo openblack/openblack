@@ -28,7 +28,7 @@ You still need to have the original game assets in order to use this. See furthe
 - [Contributing](Contributing)
 - [Extracting Asset Files](#extracting-asset-files-from-original-game)
 - [Prerequisites](#prerequisites)
-- [Instalation](#installation)
+- [Installation](#installation)
 - [License](#license)
 
 # Pre-built Binaries
