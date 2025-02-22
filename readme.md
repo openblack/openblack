@@ -20,6 +20,7 @@ Original game assets are required to run openblack. See further below for an exp
 </a>
 
 ## Table of Contents
+- [Glossary](#glossary)
 - [Pre-built Binaries](#pre-built-binaries)
     - [Experimental](#experimental)
 - [Building](#building)
@@ -42,6 +43,27 @@ Original game assets are required to run openblack. See further below for an exp
     - [Getting the Assets](#getting-the-assets)
         - [Using Them in Place](#using-them-in-place)
 - [License](#license)
+
+## Glossary
+
+- **OpenBlack**: An open-source reimplementation of *Black & White (2001)*.
+- **Black & White (2001)**: A god simulation game developed by Lionhead Studios.
+- **vcpkg**: A package manager for C++ libraries.
+- **CMake**: A tool used for managing the build process in a compiler-independent manner.
+- **OpenGL**: A cross-platform graphics API used for rendering.
+- **Vulkan**: A modern, low-overhead graphics API.
+- **Clang**: A compiler for C, C++, and Objective-C.
+- **MSVC**: Microsoft Visual C++ Compiler.
+- **Xcode**: Apple’s integrated development environment (IDE) for macOS.
+- **Android Studio**: The official IDE for Android development.
+- **Flatpak**: A software deployment and package management system.
+- **AppImage**: A format for distributing portable software on Linux.
+- **Snap**: A package management system developed by Canonical.
+- **Git**: A version control system for tracking source code changes.
+- **Ninja**: A small build system with a focus on speed.
+- **Arch Linux**: A lightweight and flexible Linux distribution.
+- **Submodules**: External repositories included within a Git repository.
+- **Presets**: Predefined configurations for building software.
 
 # Pre-built Binaries
 
