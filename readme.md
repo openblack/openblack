@@ -21,10 +21,7 @@ You still need to have the original game assets in order to use this. See furthe
 
 ## Table of Contents
 - [Pre-built Binaries](#pre-built-binaries)
-- [Experimental](#experimental)
 - [Building](#building)
-- [Configuration for Using vcpkg](#configuration-for-using-vcpkg-(Recommended-for-new-users))
-- [Configuration for using System Dependencies](Configuration-for-using-System-Dependencies-(Recommended-for-packagers))
 - [Contributing](Contributing)
 - [Extracting Asset Files](#extracting-asset-files-from-original-game)
 - [Prerequisites](#prerequisites)
