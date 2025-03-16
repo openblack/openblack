@@ -18,7 +18,7 @@
 #include "ECS/Registry.h"
 #include "InfoConstants.h"
 #include "Locator.h"
-#include "Resources/MeshId.h"
+#include "Resources/ResourceManager.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
@@ -34,7 +34,7 @@ entt::entity MobileObjectArchetype::Create(const glm::vec3& position, MobileObje
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));
 	registry.Assign<Mobile>(entity);
 	registry.Assign<MobileObject>(entity, type);
-	const auto resourceId = resources::MeshIdToResourceId(info.meshId);
+	const auto resourceId = resources::HashIdentifier(info.meshId);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 
 	return entity;
