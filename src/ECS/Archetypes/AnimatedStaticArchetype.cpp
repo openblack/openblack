@@ -19,7 +19,7 @@
 #include "ECS/Registry.h"
 #include "InfoConstants.h"
 #include "Locator.h"
-#include "Resources/MeshId.h"
+#include "Resources/ResourceManager.h"
 #include "Utils.h"
 
 using namespace openblack;
@@ -39,7 +39,7 @@ entt::entity AnimatedStaticArchetype::Create(const glm::vec3& position, Animated
 	const auto [point, radius] = GetFixedObstacleBoundingCircle(info.meshId, transform);
 	registry.Assign<Fixed>(entity, point, radius);
 	// const auto& feature = registry.Assign<Feature>(entity, type);
-	const auto resourceId = resources::MeshIdToResourceId(info.meshId);
+	const auto resourceId = resources::HashIdentifier(info.meshId);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 
 	registry.Assign<AnimatedStatic>(entity, type);

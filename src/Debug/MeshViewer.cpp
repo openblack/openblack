@@ -34,7 +34,6 @@
 #include "Graphics/Texture2D.h"
 #include "Graphics/VertexBuffer.h"
 #include "Locator.h"
-#include "Resources/MeshId.h"
 #include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
@@ -42,7 +41,7 @@ using namespace openblack::debug::gui;
 
 MeshViewer::MeshViewer() noexcept
     : Window("MeshPack Viewer", ImVec2(950.0f, 780.0f))
-    , _selectedMesh(resources::MeshIdToResourceId(MeshId::Dummy))
+    , _selectedMesh(resources::HashIdentifier(MeshId::Dummy))
     , _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f)))
     , _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", static_cast<uint16_t>(512), static_cast<uint16_t>(512),
                                                            graphics::Format::RGBA8, graphics::Format::Depth24Stencil8))

@@ -16,6 +16,22 @@
 
 namespace openblack::resources
 {
+template <typename T>
+[[nodiscard]] constexpr entt::id_type HashIdentifier(const T& identifier)
+{
+	if constexpr (std::is_same_v<T, std::string>)
+	{
+		return entt::hashed_string(identifier.c_str());
+	}
+	else if constexpr (std::is_same_v<T, const char*> || std::is_same_v<T, char*>)
+	{
+		return entt::hashed_string(identifier);
+	}
+	else
+	{
+		return entt::hashed_string(fmt::format("{}", static_cast<uint32_t>(identifier)).c_str());
+	}
+}
 
 template <typename ResourceLoader>
 class ResourceManager
@@ -38,15 +54,13 @@ public:
 	template <typename T, typename... Args>
 	[[maybe_unused]] decltype(auto) Load(T identifier, Args&&... args)
 	{
-		entt::id_type id = entt::hashed_string(fmt::format("{}", identifier).c_str());
-		return Load(id, std::forward<Args>(args)...);
+		return Load(HashIdentifier(identifier), std::forward<Args>(args)...);
 	}
 
 	template <typename T, typename... Args>
 	[[maybe_unused]] decltype(auto) Erase(T identifier, Args&&... args)
 	{
-		entt::id_type id = entt::hashed_string(fmt::format("{}", identifier).c_str());
-		return Erase(id, std::forward<Args>(args)...);
+		return Erase(HashIdentifier(identifier), std::forward<Args>(args)...);
 	}
 
 	[[nodiscard]] decltype(auto) Handle(entt::id_type identifier) { return _resourceCache[identifier]; }
@@ -58,8 +72,7 @@ public:
 	template <typename T>
 	[[nodiscard]] bool Contains(T identifier) const
 	{
-		entt::id_type id = entt::hashed_string(fmt::format("{}", identifier).c_str());
-		return Contains(id);
+		return Contains(HashIdentifier(identifier));
 	}
 
 	template <typename Func>

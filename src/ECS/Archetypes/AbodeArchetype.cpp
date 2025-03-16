@@ -24,7 +24,6 @@
 #include "InfoConstants.h"
 #include "Locator.h"
 #include "PotArchetype.h"
-#include "Resources/MeshId.h"
 #include "Resources/ResourcesInterface.h"
 #include "Utils.h"
 
@@ -104,7 +103,7 @@ entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, 
 	const auto& transform =
 	    registry.Assign<Transform>(entity, position, glm::mat3(glm::eulerAngleY(-yAngleRadians)), glm::vec3(scale));
 	registry.Assign<Abode>(entity, info.abodeNumber, townId, foodAmount, woodAmount);
-	auto resourceId = resources::MeshIdToResourceId(info.meshId);
+	auto resourceId = resources::HashIdentifier(info.meshId);
 	const auto& mesh = registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(0));
 	if (morphsWithTerrain)
 	{

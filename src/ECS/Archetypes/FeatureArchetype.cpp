@@ -21,7 +21,6 @@
 #include "ECS/Registry.h"
 #include "InfoConstants.h"
 #include "Locator.h"
-#include "Resources/MeshId.h"
 #include "Resources/ResourcesInterface.h"
 #include "Utils.h"
 
@@ -40,7 +39,7 @@ entt::entity FeatureArchetype::Create(const glm::vec3& position, FeatureInfo typ
 	const auto [point, radius] = GetFixedObstacleBoundingCircle(info.meshId, transform);
 	registry.Assign<Fixed>(entity, point, radius);
 	registry.Assign<Feature>(entity, type);
-	const auto resourceId = resources::MeshIdToResourceId(info.meshId);
+	const auto resourceId = resources::HashIdentifier(info.meshId);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 
 	auto l3dMesh = Locator::resources::value().GetMeshes().Handle(resourceId);
