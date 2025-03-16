@@ -48,6 +48,8 @@ MeshViewer::MeshViewer() noexcept
 {
 }
 
+MeshViewer::~MeshViewer() noexcept = default;
+
 void MeshViewer::Draw() noexcept
 {
 	const float fontSize = ImGui::GetFontSize();

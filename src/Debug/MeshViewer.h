@@ -35,6 +35,7 @@ class MeshViewer final: public Window
 {
 public:
 	MeshViewer() noexcept;
+	~MeshViewer() noexcept;
 
 protected:
 	void Draw() noexcept override;
