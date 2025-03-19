@@ -270,8 +270,8 @@ The `ExtFile.h` for each custom file type should have the following functions:
 ```cpp
 // Read ext file from the filesystem
 EXTResult Open(const std::filesystem::path& filepath) noexcept;
-// Read ext file from a buffer
-EXTResult Open(const std::vector<uint8_t>& buffer) noexcept;
+// Read ext file from a span
+EXTResult Open(const std::span<const char>& span) noexcept;
 // Write ext file to path on the filesystem
 EXTResult Write(const std::filesystem::path& filepath) noexcept;
 ```

@@ -127,51 +127,27 @@
 #include <cstring>
 
 #include <fstream>
+#include <spanstream>
 #include <utility>
 
 using namespace openblack::pack;
 
 namespace
 {
-// Adapted from https://stackoverflow.com/a/13059195/10604387
-//          and https://stackoverflow.com/a/46069245/10604387
-struct membuf: std::streambuf
-{
-	membuf(char const* base, size_t size)
-	{
-		char* p(const_cast<char*>(base));
-		this->setg(p, p, p + size);
-	}
-	std::streampos seekoff(off_type off, std::ios_base::seekdir way, [[maybe_unused]] std::ios_base::openmode which) override
-	{
-		if (way == std::ios_base::cur)
-		{
-			gbump(static_cast<int>(off));
-		}
-		else if (way == std::ios_base::end)
-		{
-			setg(eback(), egptr() + off, egptr());
-		}
-		else if (way == std::ios_base::beg)
-		{
-			setg(eback(), eback() + off, egptr());
-		}
-		return gptr() - eback();
-	}
 
-	std::streampos seekpos([[maybe_unused]] pos_type pos, [[maybe_unused]] std::ios_base::openmode which) override
-	{
-		return seekoff(pos - pos_type(static_cast<off_type>(0)), std::ios_base::beg, which);
-	}
-};
-struct imemstream: virtual membuf, public std::istream
+inline std::span<const char> ReadSubspan(std::ispanstream& stream, size_t size)
 {
-	imemstream(char const* base, size_t size)
-	    : membuf(base, size)
-	    , std::istream(dynamic_cast<std::streambuf*>(this))
-	{
-	}
-};
+	auto result = stream.span().subspan(static_cast<size_t>(stream.tellg()), size);
+	stream.seekg(size, std::ios_base::cur);
+	return result;
+}
+
+inline std::ispanstream GetBlockAsStream(const PackFile& pack, const std::string& name)
+{
+	const auto& data = pack.GetBlock(name);
+	auto span = std::span(reinterpret_cast<const char*>(data.data()), data.size() * sizeof(data[0]));
+	return std::ispanstream {span};
+}
 
 struct PackBlockHeader
 {
@@ -289,8 +265,7 @@ PackResult PackFile::ResolveInfoBlock() noexcept
 		return PackResult::ErrMissingInfoBlock;
 	}
 
-	auto data = GetBlock("INFO");
-	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
+	auto stream = GetBlockAsStream(*this, "INFO");
 
 	uint32_t totalTextures;
 	stream.read(reinterpret_cast<char*>(&totalTextures), sizeof(uint32_t));
@@ -309,8 +284,7 @@ PackResult PackFile::ResolveBodyBlock() noexcept
 		return PackResult::ErrMissingBodyBlock;
 	}
 
-	auto data = GetBlock("Body");
-	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
+	auto stream = GetBlockAsStream(*this, "Body");
 
 	// Greetings Jean-Claude Cottier
 	std::array<char, k_BlockMagic.size()> magic;
@@ -337,8 +311,7 @@ PackResult PackFile::ResolveAudioBankSampleTableBlock() noexcept
 		return PackResult::ErrMissingAudioBankSampleTableBlock;
 	}
 
-	auto data = GetBlock("LHAudioBankSampleTable");
-	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
+	auto stream = GetBlockAsStream(*this, "LHAudioBankSampleTable");
 	std::size_t fsize = 0;
 	if (stream.seekg(0, std::ios_base::end))
 	{
@@ -378,8 +351,8 @@ PackResult PackFile::ResolveAudioBankSampleTableBlock() noexcept
 PackResult PackFile::ExtractTexturesFromBlock() noexcept
 {
 	G3DTextureHeader header;
-	constexpr uint32_t blockNameSize = 0x20;
-	std::array<char, blockNameSize> blockName;
+	constexpr uint32_t k_BlockNameSize = 0x20;
+	std::array<char, k_BlockNameSize> blockName;
 	for (const auto& item : _infoBlockLookup)
 	{
 		// Convert int id to string representation as hexadecimal key
@@ -390,11 +363,9 @@ PackResult PackFile::ExtractTexturesFromBlock() noexcept
 			return PackResult::ErrMissingTextureBlock;
 		}
 
-		auto stream = GetBlockAsStream(blockName.data());
+		auto stream = GetBlockAsStream(*this, blockName.data());
 
-		stream->read(reinterpret_cast<char*>(&header), sizeof(header));
-		std::vector<uint8_t> dds(header.size);
-		stream->read(reinterpret_cast<char*>(dds.data()), dds.size() * sizeof(dds[0]));
+		stream.read(reinterpret_cast<char*>(&header), sizeof(header));
 
 		if (header.id != item.blockId)
 		{
@@ -406,7 +377,7 @@ PackResult PackFile::ExtractTexturesFromBlock() noexcept
 			return PackResult::ErrTextureDuplicate;
 		}
 
-		imemstream ddsStream(reinterpret_cast<const char*>(dds.data()), dds.size());
+		auto ddsStream = std::ispanstream(ReadSubspan(stream, header.size));
 
 		DdsHeader ddsHeader;
 		ddsStream.read(reinterpret_cast<char*>(&ddsHeader), sizeof(DdsHeader));
@@ -448,29 +419,28 @@ PackResult PackFile::ExtractTexturesFromBlock() noexcept
 
 PackResult PackFile::ExtractAnimationsFromBlock() noexcept
 {
-	auto data = GetBlock("Body");
-	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
+	auto stream = GetBlockAsStream(*this, "Body");
 
 	// Read lookup
-	constexpr uint32_t blockNameSize = 0x20;
-	constexpr uint32_t animationHeaderSize = 0x54;
+	constexpr uint32_t k_BlockNameSize = 0x20;
+	constexpr uint32_t k_AnimationHeaderSize = 0x54;
 
-	std::array<char, blockNameSize> blockName;
+	std::array<char, k_BlockNameSize> blockName;
 	_animations.resize(_bodyBlockLookup.size());
 	for (uint32_t i = 0; i < _bodyBlockLookup.size(); ++i)
 	{
-		snprintf(blockName.data(), blockNameSize, "Julien%d", i);
+		snprintf(blockName.data(), k_BlockNameSize, "Julien%d", i);
 		if (!HasBlock(blockName.data()))
 		{
 			return PackResult::ErrMissingTextureBlock;
 		}
 
 		auto animationData = GetBlock(blockName.data());
-		_animations[i].resize(animationHeaderSize + animationData.size());
+		_animations[i].resize(k_AnimationHeaderSize + animationData.size());
 
 		stream.seekg(_bodyBlockLookup[i].offset);
-		stream.read(reinterpret_cast<char*>(_animations[i].data()), animationHeaderSize);
-		memcpy(_animations[i].data() + animationHeaderSize, animationData.data(), animationData.size());
+		stream.read(reinterpret_cast<char*>(_animations[i].data()), k_AnimationHeaderSize);
+		memcpy(_animations[i].data() + k_AnimationHeaderSize, animationData.data(), animationData.size());
 	}
 
 	return PackResult::Success;
@@ -483,27 +453,24 @@ PackResult PackFile::ExtractSoundsFromBlock() noexcept
 		return PackResult::ErrMissingAudioWaveDataBlock;
 	}
 
-	auto data = GetBlock("LHAudioWaveData");
-	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
+	auto stream = GetBlockAsStream(*this, "LHAudioWaveData");
 	//	auto isSector = false;
 	//	auto isPrevSector = false;
 
 	_audioSampleData.resize(_audioSampleHeaders.size());
 	for (int i = 0; const auto& sample : _audioSampleHeaders)
 	{
-		if (sample.offset > data.size())
+		if (sample.offset > stream.span().size())
 		{
 			return PackResult::ErrFileTooSmall;
 		}
-		if (sample.offset + sample.size > data.size())
+		if (sample.offset + sample.size > stream.span().size())
 		{
 			return PackResult::ErrFileTooSmall;
 		}
-
-		_audioSampleData[i].resize(sample.size);
 
 		stream.seekg(sample.offset);
-		stream.read(reinterpret_cast<char*>(_audioSampleData[i].data()), sample.size);
+		_audioSampleData[i] = ReadSubspan(stream, sample.size);
 
 		++i;
 	}
@@ -517,9 +484,9 @@ PackResult PackFile::ResolveMeshBlock() noexcept
 	{
 		return PackResult::ErrMissingMeshBlock;
 	}
-	auto data = GetBlock("MESHES");
 
-	imemstream stream(reinterpret_cast<const char*>(data.data()), data.size());
+	auto stream = GetBlockAsStream(*this, "MESHES");
+
 	// Greetings Jean-Claude Cottier
 	std::array<char, k_BlockMagic.size()> magic;
 	stream.read(magic.data(), magic.size());
@@ -536,9 +503,8 @@ PackResult PackFile::ResolveMeshBlock() noexcept
 	_meshes.resize(meshOffsets.size());
 	for (std::size_t i = 0; i < _meshes.size(); i++)
 	{
-		auto size = (i == _meshes.size() - 1 ? data.size() : meshOffsets[i + 1]) - meshOffsets[i];
-		_meshes[i].resize(size);
-		stream.read(reinterpret_cast<char*>(_meshes[i].data()), _meshes[i].size() * sizeof(_meshes[i][0]));
+		auto size = (i == _meshes.size() - 1 ? stream.span().size() : meshOffsets[i + 1]) - meshOffsets[i];
+		_meshes[i] = ReadSubspan(stream, size);
 	}
 
 	return PackResult::Success;
@@ -631,9 +597,9 @@ PackResult PackFile::CreateMeshBlock() noexcept
 	return PackResult::Success;
 }
 
-PackResult PackFile::InsertMesh(std::vector<uint8_t> data) noexcept
+PackResult PackFile::InsertMesh(std::span<const char> span) noexcept
 {
-	_meshes.emplace_back(std::move(data));
+	_meshes.emplace_back(std::move(span));
 
 	return PackResult::Success;
 }
@@ -768,7 +734,8 @@ PackResult PackFile::Open(const std::vector<uint8_t>& buffer) noexcept
 {
 	assert(!_isLoaded);
 
-	imemstream stream(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
+	auto span = std::span(reinterpret_cast<const char*>(buffer.data()), buffer.size() * sizeof(buffer[0]));
+	auto stream = std::ispanstream(span);
 
 	return ReadFile(stream);
 }
@@ -785,10 +752,4 @@ PackResult PackFile::Write(const std::filesystem::path& filepath) noexcept
 	}
 
 	return WriteBlocks(stream);
-}
-
-std::unique_ptr<std::istream> PackFile::GetBlockAsStream(const std::string& name) const noexcept
-{
-	const auto& data = GetBlock(name);
-	return std::make_unique<imemstream>(reinterpret_cast<const char*>(data.data()), data.size());
 }
