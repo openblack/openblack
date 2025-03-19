@@ -36,6 +36,8 @@
 #include "Debug/DebugGuiInterface.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
+#include "ECS/Components/DebugCross.h"
+#include "ECS/Components/SpriteMesh.h"
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/CameraBookmarkSystemInterface.h"
@@ -49,6 +51,7 @@
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/RendererInterface.h"
+#include "Graphics/Technique/TechniqueManager.h"
 #include "Input/GameActionMapInterface.h"
 #include "LHScriptX/Script.h"
 #include "Locator.h"
@@ -384,8 +387,10 @@ bool Game::Update() noexcept
 				_handPose = glm::translate(_handPose, intersectionTransform.position);
 				_handPose *= glm::mat4(intersectionTransform.rotation);
 				_handPose = glm::scale(_handPose, intersectionTransform.scale);
-				Locator::rendererInterface::value().UpdateDebugCrossUniforms(
-				    glm::translate(camera.GetFocus(Camera::Interpolation::Target)));
+				Locator::entitiesRegistry::value().Each<ecs::components::DebugCross>(
+				    [&camera](ecs::components::DebugCross& ent) {
+					    ent.debugCrossPose = glm::translate(camera.GetFocus(Camera::Interpolation::Target));
+				    });
 			}
 		}
 
@@ -922,6 +927,15 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 
 	// Reset everything. Deletes all entities and their components
 	Locator::entitiesRegistry::value().Reset();
+	auto& registry = Locator::entitiesRegistry::value();
+	// TODO(#661): We should not need to recreate the debugCross and the plane for the sprite each time
+	{
+		auto entity = registry.Create();
+		registry.Assign<ecs::components::DebugCross>(entity);
+
+		entity = registry.Create();
+		registry.Assign<ecs::components::SpriteMesh>(entity);
+	}
 	// TODO(#661): split entities that are permanent from map entities and move hand and camera to init
 	// We need a hand for the player
 	Locator::handSystem::value().Initialize();

@@ -9,11 +9,12 @@
 
 #pragma once
 
-#include "ShaderManagerInterface.h"
+#include <map>
+#include <memory>
+#include <string>
 
-#if !defined(LOCATOR_IMPLEMENTATIONS)
-#error "Locator interface implementations should only be included in Locator.cpp, use interface instead."
-#endif
+#include "RenderPass.h"
+#include "ShaderProgram.h"
 
 namespace openblack
 {
@@ -23,21 +24,13 @@ class Camera;
 namespace graphics
 {
 
-class ShaderManager final: public ShaderManagerInterface
+class ShaderManagerInterface
 {
 public:
-	ShaderManager() = default;
-	~ShaderManager();
+	virtual void LoadShaders() = 0;
+	[[nodiscard]] virtual const ShaderProgram* GetShader(const std::string& name) const = 0;
 
-	void LoadShaders();
-	[[nodiscard]] const ShaderProgram* GetShader(const std::string& name) const;
-
-	void SetCamera(RenderPass viewId, const Camera& camera);
-
-private:
-	using ShaderMap = std::map<std::string, const ShaderProgram*>;
-
-	ShaderMap _shaderPrograms;
+	virtual void SetCamera(RenderPass viewId, const Camera& camera) = 0;
 };
 
 } // namespace graphics
