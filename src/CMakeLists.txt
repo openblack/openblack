@@ -169,6 +169,7 @@ endif ()
 target_compile_definitions(
   openblack_lib
   PRIVATE
+    "_FORTIFY_SOURCE=2"
     "GLM_FORCE_LEFT_HANDED"
     "GLM_FORCE_RADIANS"
     "GLM_ENABLE_EXPERIMENTAL"
