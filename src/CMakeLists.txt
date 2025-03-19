@@ -114,7 +114,6 @@ target_link_libraries(
           glm::glm
           EnTT::EnTT
           bgfx::bgfx
-          OpenAL::OpenAL
           cxxopts::cxxopts
           Bullet3Common
           BulletDynamics
@@ -142,6 +141,12 @@ if (OPENBLACK_CLANG_TIDY_CHECKS)
   else ()
     message("Clang-tidy checks requested but unavailable")
   endif ()
+endif ()
+
+if (EMSCRIPTEN)
+  target_link_libraries(openblack_lib PRIVATE openal)
+else ()
+  target_link_libraries(openblack_lib PRIVATE OpenAL::OpenAL)
 endif ()
 
 if (ANDROID)
@@ -283,7 +288,8 @@ else ()
         COMPILE_FLAGS "-s USE_SDL=2 -fexceptions"
         #COMPILE_FLAGS "-s USE_SDL=2 -s USE_PTHREADS=1"
         LINK_FLAGS
-        "-s USE_SDL=2 -s FULL_ES3=1 -s GL_ASSERTIONS=1 -s USE_WEBGL2=1 -s TOTAL_MEMORY=128MB -fexceptions --emrun"
+        # Currently requires a bw/ file in the CMAKE_BINARY_DIR to have the game data
+        "-s USE_SDL=2 -s FULL_ES3=1 -s GL_ASSERTIONS=1 -s USE_WEBGL2=1 -s TOTAL_MEMORY=512MB -fexceptions --emrun --preload-file bw/"
         #LINK_FLAGS "-s USE_SDL=2 -s FULL_ES3=1 -s GL_ASSERTIONS=1 -s USE_WEBGL2=1 -s USE_PTHREADS=1 -s TOTAL_MEMORY=128MB --emrun"
         SUFFIX ".html"
     )
