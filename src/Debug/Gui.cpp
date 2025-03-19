@@ -830,8 +830,8 @@ void Gui::ShowVillagerNames() noexcept
 
 	uint32_t i = 0;
 	const auto& camera = Locator::camera::value();
-	const glm::vec4 viewport =
-	    glm::vec4(ImGui::GetStyle().WindowPadding.x, 0, displaySize.x - ImGui::GetStyle().WindowPadding.x, displaySize.y);
+	const auto viewport = U16Extent2 {glm::u16vec2(ImGui::GetStyle().WindowPadding.x, 0),
+	                                  glm::u16vec2(displaySize.x - ImGui::GetStyle().WindowPadding.x, displaySize.y)};
 	std::vector<glm::vec4> coveredAreas;
 	coveredAreas.reserve(Locator::entitiesRegistry::value().Size<Villager>());
 	Locator::entitiesRegistry::value().Each<const Transform, Villager, LivingAction>(
@@ -839,8 +839,8 @@ void Gui::ShowVillagerNames() noexcept
 	    (const Transform& transform, Villager& villager, LivingAction& action) {
 		    ++i;
 		    const float height = 2.0f * transform.scale.y; // TODO(bwrsandman): get from bounding box max y
-		    glm::vec3 screenPoint;
-		    if (!camera.ProjectWorldToScreen(transform.position + glm::vec3(0.0f, height, 0.0f), viewport, screenPoint))
+		    const auto screenPoint = camera.ProjectWorldToScreen(transform.position + glm::vec3(0.0f, height, 0.0f), viewport);
+		    if (!screenPoint.has_value())
 		    {
 			    return;
 		    }
@@ -935,7 +935,7 @@ void Gui::ShowVillagerNames() noexcept
 			    };
 		    }
 
-		    const auto area = RenderVillagerName(coveredAreas, name, details, color, ImVec2(screenPoint.x, screenPoint.y),
+		    const auto area = RenderVillagerName(coveredAreas, name, details, color, ImVec2(screenPoint->x, screenPoint->y),
 		                                         100.0f, debugCallback);
 		    if (area.has_value())
 		    {
