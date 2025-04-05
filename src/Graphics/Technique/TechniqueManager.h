@@ -13,21 +13,10 @@
 #include <unordered_map>
 
 #include "Graphics/RendererInterface.h"
+#include "Technique.h"
 
 namespace openblack::graphics
 {
-
-enum class Technique
-{
-	Sky,
-	Water,
-	Island,
-	Entities,
-	Sprites,
-	TestModel,
-	DebugCross,
-	BoundingBox,
-};
 
 template <Technique technique>
 void renderTechnique(RendererInterface::DrawSceneDesc desc);
@@ -46,6 +35,8 @@ template <>
 void renderTechnique<Technique::TestModel>(RendererInterface::DrawSceneDesc desc);
 template <>
 void renderTechnique<Technique::DebugCross>(RendererInterface::DrawSceneDesc desc);
+template <>
+void renderTechnique<Technique::Footprint>(RendererInterface::DrawSceneDesc desc);
 
 static const std::unordered_map<Technique, std::function<void(RendererInterface::DrawSceneDesc)>> k_TechniqueMap {
     {Technique::Sky, renderTechnique<Technique::Sky>},
@@ -54,6 +45,7 @@ static const std::unordered_map<Technique, std::function<void(RendererInterface:
     {Technique::Entities, renderTechnique<Technique::Entities>},
     {Technique::Sprites, renderTechnique<Technique::Sprites>},
     {Technique::TestModel, renderTechnique<Technique::TestModel>},
-    {Technique::DebugCross, renderTechnique<Technique::DebugCross>}};
+    {Technique::DebugCross, renderTechnique<Technique::DebugCross>},
+    {Technique::Footprint, renderTechnique<Technique::Footprint>}};
 
 } // namespace openblack::graphics

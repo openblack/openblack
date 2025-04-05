@@ -65,7 +65,6 @@ public:
 	void Reset(glm::u16vec2 resolution) const noexcept final;
 
 private:
-	void DrawFootprintPass(const DrawSceneDesc& drawDesc) const;
 	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, bool preserveState) const;
 	void DrawPass(const DrawSceneDesc& desc) const;
 

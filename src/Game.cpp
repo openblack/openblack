@@ -854,6 +854,22 @@ bool Game::Run() noexcept
 		{
 			auto section = profiler.BeginScoped(Profiler::Stage::SceneDraw);
 
+			std::set<graphics::Technique> drawPass {};
+			if (config.drawSky)
+				drawPass.emplace(graphics::Technique::Sky);
+			if (config.drawWater)
+				drawPass.emplace(graphics::Technique::Water);
+			if (config.drawIsland)
+				drawPass.emplace(graphics::Technique::Island);
+			if (config.drawEntities)
+				drawPass.emplace(graphics::Technique::Entities);
+			if (config.drawSprites)
+				drawPass.emplace(graphics::Technique::Sprites);
+			if (config.drawTestModel)
+				drawPass.emplace(graphics::Technique::TestModel);
+			if (config.drawDebugCross)
+				drawPass.emplace(graphics::Technique::DebugCross);
+
 			const graphics::RendererInterface::DrawSceneDesc drawDesc {
 			    .camera = &Locator::camera::value(),
 			    .frameBuffer = nullptr,
@@ -863,13 +879,7 @@ bool Game::Run() noexcept
 			    .bumpMapStrength = config.bumpMapStrength,
 			    .smallBumpMapStrength = config.smallBumpMapStrength,
 			    .viewId = graphics::RenderPass::Main,
-			    .drawSky = config.drawSky,
-			    .drawWater = config.drawWater,
-			    .drawIsland = config.drawIsland,
-			    .drawEntities = config.drawEntities,
-			    .drawSprites = config.drawSprites,
-			    .drawTestModel = config.drawTestModel,
-			    .drawDebugCross = config.drawDebugCross,
+			    .sceneTechnique = drawPass,
 			    .drawBoundingBoxes = config.drawBoundingBoxes,
 			    .cullBack = false,
 			    .wireframe = config.wireframe,

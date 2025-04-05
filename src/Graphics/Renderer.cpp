@@ -416,70 +416,39 @@ void Renderer::DrawMesh(const graphics::L3DMesh& mesh, const L3DMeshSubmitDesc& 
 	}
 }
 
-void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
-{
-	const auto viewId = graphics::RenderPass::Footprint;
-	auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::FootprintPass);
-	if (drawDesc.drawIsland)
-	{
-		const auto& island = Locator::terrainSystem::value();
-		island.GetFootprintFramebuffer().Bind(viewId);
-
-		// This dummy draw call is here to make sure that view is cleared if no
-		// other draw calls are submitted to view
-		bgfx::touch(static_cast<bgfx::ViewId>(viewId));
-
-		// _shaderManager->SetCamera(viewId, *drawDesc.camera); // TODO
-
-		auto view = island.GetOrthoView();
-		auto proj = island.GetOrthoProj();
-		bgfx::setViewTransform(static_cast<bgfx::ViewId>(viewId), &view, &proj);
-
-		const auto& meshManager = Locator::resources::value().GetMeshes();
-		const auto& renderCtx = Locator::rendereringSystem::value().GetContext();
-		const auto* footprintShaderInstanced = Locator::shaderManager::value().GetShader("FootprintInstanced");
-		for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
-		{
-			auto mesh = meshManager.Handle(meshId);
-			if (!mesh->ContainsLandscapeFeature() || mesh->GetFootprints().empty())
-			{
-				continue;
-			}
-			const auto& footprint = mesh->GetFootprints()[0];
-			footprintShaderInstanced->SetTextureSampler("s_footprint", 0, *footprint.texture);
-			footprint.mesh->GetVertexBuffer().Bind();
-			bgfx::setInstanceDataBuffer(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
-			const uint64_t state = 0u                       //
-			                       | BGFX_STATE_WRITE_RGB   //
-			                       | BGFX_STATE_WRITE_A     //
-			                       | BGFX_STATE_BLEND_ALPHA //
-			                       | BGFX_STATE_CULL_CW     //
-			                       | BGFX_STATE_MSAA;
-			bgfx::setState(state);
-			bgfx::submit(static_cast<bgfx::ViewId>(viewId), footprintShaderInstanced->GetRawHandle());
-		}
-	}
-}
-
 void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 {
-	// TODO(bwrsandman): Footprint framebuffer doesn't need to be updated each frame
-	DrawFootprintPass(drawDesc);
+	{
+		auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::FootprintPass);
+		const auto& frameBuffer = Locator::terrainSystem::value().GetFootprintFramebuffer();
+
+		DrawSceneDesc footprintPassDesc = drawDesc;
+		std::set<Technique> footprintTechnique {Technique::Footprint};
+		footprintPassDesc.viewId = graphics::RenderPass::Footprint;
+		footprintPassDesc.frameBuffer = &frameBuffer;
+		footprintPassDesc.sceneTechnique = footprintTechnique;
+
+		// TODO(bwrsandman): Footprint framebuffer doesn't need to be updated each frame
+		DrawPass(footprintPassDesc);
+	}
 	// Reflection Pass
 	{
 		auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::ReflectionPass);
-		if (drawDesc.drawWater)
+		if (drawDesc.sceneTechnique.contains(Technique::Water))
 		{
 			DrawSceneDesc drawPassDesc = drawDesc;
 
+			std::set<Technique> reflectionTechnique = drawDesc.sceneTechnique;
+			reflectionTechnique.erase(Technique::Water);
+			reflectionTechnique.erase(Technique::DebugCross);
+			reflectionTechnique.erase(Technique::BoundingBox);
 			const auto& frameBuffer = Locator::oceanSystem::value().GetReflectionFramebuffer();
 			auto reflectionCamera = drawDesc.camera->Reflect();
 
 			drawPassDesc.viewId = graphics::RenderPass::Reflection;
 			drawPassDesc.camera = reflectionCamera.get();
 			drawPassDesc.frameBuffer = &frameBuffer;
-			drawPassDesc.drawWater = false;
-			drawPassDesc.drawDebugCross = false;
+			drawPassDesc.sceneTechnique = reflectionTechnique;
 			drawPassDesc.drawBoundingBoxes = false;
 			drawPassDesc.cullBack = true;
 
@@ -509,65 +478,12 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 	Locator::shaderManager::value().SetCamera(desc.viewId, *desc.camera);
 
+	for (auto technique : desc.sceneTechnique)
 	{
-		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSky
-		                                                                          : Profiler::Stage::MainPassDrawSky);
-		if (desc.drawSky)
-		{
-			k_TechniqueMap.at(Technique::Sky)(desc);
-		}
-	}
-
-	{
-		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawWater
-		                                                                          : Profiler::Stage::MainPassDrawWater);
-		if (desc.drawWater)
-		{
-			k_TechniqueMap.at(Technique::Water)(desc);
-		}
-	}
-
-	{
-		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawIsland
-		                                                                          : Profiler::Stage::MainPassDrawIsland);
-		if (desc.drawIsland)
-		{
-			k_TechniqueMap.at(Technique::Island)(desc);
-		}
-	}
-
-	{
-		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawModels
-		                                                                          : Profiler::Stage::MainPassDrawModels);
-		if (desc.drawEntities)
-		{
-			k_TechniqueMap.at(Technique::Entities)(desc);
-		}
-
-		{
-			auto subSection =
-			    profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSprites
-			                                                               : Profiler::Stage::MainPassDrawSprites);
-
-			if (desc.drawSprites)
-			{
-				k_TechniqueMap.at(Technique::Sprites)(desc);
-			}
-		}
-
-		if (desc.drawTestModel)
-		{
-			k_TechniqueMap.at(Technique::TestModel)(desc);
-		}
-	}
-
-	{
-		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawDebugCross
-		                                                                          : Profiler::Stage::MainPassDrawDebugCross);
-		if (desc.drawDebugCross)
-		{
-			k_TechniqueMap.at(Technique::DebugCross)(desc);
-		}
+		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? k_reflectionPassTechniqueStage.at(technique)
+		                                    : desc.viewId == RenderPass::Main     ? k_mainPassTechniqueStage.at(technique)
+		                                                                          : Profiler::Stage::FootprintDrawFootprint);
+		k_TechniqueMap.at(technique)(desc);
 	}
 
 	// Enable stats or debug text.

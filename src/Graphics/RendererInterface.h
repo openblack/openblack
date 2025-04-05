@@ -10,10 +10,12 @@
 #pragma once
 
 #include <filesystem>
+#include <set>
 
 #include <glm/vec2.hpp>
 
 #include "RenderPass.h"
+#include "Technique/Technique.h"
 
 namespace openblack
 {
@@ -48,13 +50,7 @@ public:
 		float bumpMapStrength;
 		float smallBumpMapStrength;
 		graphics::RenderPass viewId;
-		bool drawSky;
-		bool drawWater;
-		bool drawIsland;
-		bool drawEntities;
-		bool drawSprites;
-		bool drawTestModel;
-		bool drawDebugCross;
+		std::set<graphics::Technique> sceneTechnique;
 		bool drawBoundingBoxes;
 		bool cullBack;
 		bool wireframe;
