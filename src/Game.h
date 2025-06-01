@@ -100,6 +100,12 @@ public:
 	static Game* Instance() { return sInstance; }
 
 private:
+	bool InitializeLoading() noexcept;
+	bool UpdateLoading() noexcept;
+
+	void RenderLoadingScene(std::chrono::milliseconds dt) noexcept;
+	void RenderMainScene(std::chrono::milliseconds dt) noexcept;
+
 	static Game* sInstance;
 
 	/// path to Lionhead Studios Ltd/Black & White folder
@@ -113,6 +119,13 @@ private:
 	uint32_t _frameCount {0};
 	uint32_t _turnCount {0};
 	bool _paused {true};
+
+	enum class Scene
+	{
+		Loading,
+		Main,
+	};
+	Scene _currentScene;
 
 	glm::ivec2 _mousePosition;
 	glm::mat4 _handPose;
