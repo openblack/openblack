@@ -34,6 +34,7 @@
 #include "Common/EventManager.h"
 #include "Common/StringUtils.h"
 #include "Debug/DebugGuiInterface.h"
+#include "ECS/Archetypes/HandArchetype.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
 #include "ECS/Map.h"
@@ -68,12 +69,9 @@ using namespace std::chrono_literals;
 
 const std::string k_WindowTitle = "openblack";
 
-Game* Game::sInstance = nullptr;
-
 Game::Game(Arguments&& args) noexcept
     : _gamePath(args.gamePath)
     , _startMap(args.startLevel)
-    , _handPose(glm::identity<glm::mat4>())
     , _requestScreenshot(args.requestScreenshot)
 {
 	Locator::camera::emplace(glm::zero<glm::vec3>());
@@ -102,7 +100,6 @@ Game::Game(Arguments&& args) noexcept
 		logger->set_level(args.logLevels.at(i));
 		++i;
 	}
-	sInstance = this;
 
 	auto& config = Locator::config::emplace();
 	config.numFramesToSimulate = args.numFramesToSimulate;
@@ -123,8 +120,38 @@ Game::~Game() noexcept
 	spdlog::shutdown();
 }
 
+const glm::ivec2& Game::GetMousePosition() const
+{
+	const auto& registry = Locator::entitiesRegistry::value();
+	const auto& gameContext = registry.GameContext();
+	return gameContext.mousePosition;
+}
+const ecs::components::PlayerHand& Game::GetPlayerHand() const
+{
+	const auto& registry = Locator::entitiesRegistry::value();
+	const auto& gameContext = registry.GameContext();
+	return registry.Get<ecs::components::PlayerHand>(gameContext.player);
+}
+ecs::components::PlayerHand& Game::GetPlayerHand()
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	auto& gameContext = registry.GameContext();
+	return registry.Get<ecs::components::PlayerHand>(gameContext.player);
+}
+glm::ivec2& Game::GetMousePosition()
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	auto& gameContext = registry.GameContext();
+	return gameContext.mousePosition;
+}
+
 bool Game::ProcessEvents(const SDL_Event& event) noexcept
 {
+	// const auto& registry = Locator::entitiesRegistry::value();
+	// const auto& gameContext = registry.GameContext();
+	auto& playerHand = GetPlayerHand();
+	auto& mousePosition = GetMousePosition();
+
 	static bool leftMouseButton = false;
 	static bool middleMouseButton = false;
 
@@ -137,7 +164,25 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 		middleMouseButton = !middleMouseButton;
 	}
 
-	_handGripping = middleMouseButton || leftMouseButton;
+	playerHand.handGripping = [&]() {
+		if (playerHand.showHands & static_cast<uint32_t>(ecs::components::PlayerHand::ActiveHand::Both))
+		{
+			// TODO: hand gripping with both hands (VR)
+		}
+		else if (playerHand.showHands & static_cast<uint32_t>(ecs::components::PlayerHand::ActiveHand::Left))
+		{
+			return middleMouseButton || leftMouseButton ? static_cast<uint32_t>(ecs::components::PlayerHand::ActiveHand::Left)
+			                                            : static_cast<uint32_t>(ecs::components::PlayerHand::ActiveHand::None);
+		}
+		else if (playerHand.showHands & static_cast<uint32_t>(ecs::components::PlayerHand::ActiveHand::Right))
+		{
+			return middleMouseButton || leftMouseButton ? static_cast<uint32_t>(ecs::components::PlayerHand::ActiveHand::Right)
+			                                            : static_cast<uint32_t>(ecs::components::PlayerHand::ActiveHand::None);
+		}
+
+		return middleMouseButton || leftMouseButton ? static_cast<uint32_t>(ecs::components::PlayerHand::ActiveHand::Left)
+		                                            : static_cast<uint32_t>(ecs::components::PlayerHand::ActiveHand::None);
+	}();
 
 	auto& window = Locator::windowing::value();
 	auto& camera = Locator::camera::value();
@@ -186,7 +231,23 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 		case SDLK_8:
 			if ((event.key.keysym.mod & KMOD_CTRL) != 0)
 			{
-				const auto handPosition = _handPose * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+				const auto& handPose = [&]() -> glm::mat4& {
+					if (playerHand.primaryHand == ecs::components::PlayerHand::ActiveHand::Both)
+					{
+						// TODO: gripping with both hands (VR)
+					}
+					else if (playerHand.primaryHand == ecs::components::PlayerHand::ActiveHand::Left)
+					{
+						return playerHand.handPoses[static_cast<size_t>(ecs::components::PlayerHand::Side::Left)];
+					}
+					else if (playerHand.primaryHand == ecs::components::PlayerHand::ActiveHand::Right)
+					{
+						return playerHand.handPoses[static_cast<size_t>(ecs::components::PlayerHand::Side::Right)];
+					}
+
+					return playerHand.handPoses[static_cast<size_t>(ecs::components::PlayerHand::Side::Right)];
+				}();
+				const auto handPosition = handPose * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 				const auto index = static_cast<uint8_t>(event.key.keysym.sym - SDLK_1);
 				Locator::cameraBookmarkSystem::value().SetBookmark(index, handPosition, camera.GetOrigin());
 			}
@@ -208,7 +269,7 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 		break;
 	case SDL_MOUSEMOTION:
 	{
-		SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y);
+		SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
 		break;
 	}
 	case SDL_MOUSEBUTTONUP:
@@ -279,6 +340,9 @@ bool Game::Update() noexcept
 
 	auto& camera = Locator::camera::value();
 	auto& config = Locator::config::value();
+	// const auto& gameContext = registry.GameContext();
+	auto& playerHand = GetPlayerHand();
+	auto& mousePosition = GetMousePosition();
 
 	auto previous = profiler.GetEntries().at(profiler.GetEntryIndex(-1)).frameStart;
 	auto current = profiler.GetEntries().at(profiler.GetEntryIndex(0)).frameStart;
@@ -357,7 +421,7 @@ bool Game::Update() noexcept
 			{
 				glm::vec3 rayOrigin;
 				glm::vec3 rayDirection;
-				camera.DeprojectScreenToWorld(static_cast<glm::vec2>(_mousePosition) / static_cast<glm::vec2>(screenSize),
+				camera.DeprojectScreenToWorld(static_cast<glm::vec2>(mousePosition) / static_cast<glm::vec2>(screenSize),
 				                              rayOrigin, rayDirection);
 				auto& dynamicsSystem = Locator::dynamicsSystem::value();
 
@@ -380,23 +444,54 @@ bool Game::Update() noexcept
 					}
 				}
 				intersectionTransform.scale = scale;
-				_handPose = glm::mat4(1.0f);
-				_handPose = glm::translate(_handPose, intersectionTransform.position);
-				_handPose *= glm::mat4(intersectionTransform.rotation);
-				_handPose = glm::scale(_handPose, intersectionTransform.scale);
+
+				auto& handPose = [&]() -> glm::mat4& {
+					if (playerHand.primaryHand == ecs::components::PlayerHand::ActiveHand::Both)
+					{
+						// TODO: set position from both hands (VR)
+					}
+					else if (playerHand.primaryHand == ecs::components::PlayerHand::ActiveHand::Left)
+					{
+						return playerHand.handPoses[static_cast<size_t>(ecs::components::PlayerHand::Side::Left)];
+					}
+					else if (playerHand.primaryHand == ecs::components::PlayerHand::ActiveHand::Right)
+					{
+						return playerHand.handPoses[static_cast<size_t>(ecs::components::PlayerHand::Side::Right)];
+					}
+
+					return playerHand.handPoses[static_cast<size_t>(ecs::components::PlayerHand::Side::Right)];
+				}();
+				handPose = glm::mat4(1.0f);
+				handPose = glm::translate(handPose, intersectionTransform.position);
+				handPose *= glm::mat4(intersectionTransform.rotation);
+				handPose = glm::scale(handPose, intersectionTransform.scale);
 				Locator::rendererInterface::value().UpdateDebugCrossUniforms(
 				    glm::translate(camera.GetFocus(Camera::Interpolation::Target)));
 			}
 		}
 
 		// Update Hand
-		if (!_handGripping)
+		if (playerHand.handGripping == static_cast<uint32_t>(ecs::components::PlayerHand::ActiveHand::None))
 		{
 			const glm::vec3 handOffset(0, 1.5f, 0);
 			const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
 
-			const auto handEntity = Locator::handSystem::value()
-			                            .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
+			const auto handEntity = [&]() {
+				if (playerHand.primaryHand == ecs::components::PlayerHand::ActiveHand::Both)
+				{
+					// TODO: gripping with both hands (VR)
+				}
+				else if (playerHand.primaryHand == ecs::components::PlayerHand::ActiveHand::Left)
+				{
+					return playerHand.hands[static_cast<size_t>(ecs::components::PlayerHand::Side::Left)];
+				}
+				else if (playerHand.primaryHand == ecs::components::PlayerHand::ActiveHand::Right)
+				{
+					return playerHand.hands[static_cast<size_t>(ecs::components::PlayerHand::Side::Right)];
+				}
+
+				return playerHand.hands[static_cast<size_t>(ecs::components::PlayerHand::Side::Right)];
+			}();
 			auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(handEntity);
 			// TODO(#480): move using velocity rather than snapping hand to intersectionTransform
 			handTransform.position = intersectionTransform.position;
@@ -449,7 +544,7 @@ bool Game::Initialize() noexcept
 	auto& fileSystem = Locator::filesystem::value();
 	auto& events = Locator::events::value();
 
-	events.AddHandler(std::function([this, &config](const SDL_Event& event) {
+	events.AddHandler(std::function<void(const SDL_Event&)>([this, &config](const SDL_Event& event) {
 		// If gui captures this input, do not propagate
 		if (!Locator::debugGui::value().ProcessEvents(event))
 		{
@@ -780,6 +875,9 @@ bool Game::Run() noexcept
 {
 	auto& config = Locator::config::value();
 
+	auto& registry = Locator::entitiesRegistry::value();
+	registry.InitMapContext();
+
 	if (!LoadMap(_startMap))
 	{
 		return false;
@@ -921,10 +1019,15 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 	const auto source = std::string(reinterpret_cast<const char*>(data.data()), data.size());
 
 	// Reset everything. Deletes all entities and their components
-	Locator::entitiesRegistry::value().Reset();
+	auto& registry = Locator::entitiesRegistry::value();
+	registry.ClearMap();
 	// TODO(#661): split entities that are permanent from map entities and move hand and camera to init
-	// We need a hand for the player
-	Locator::handSystem::value().Initialize();
+	auto& gameContext = registry.GameContext();
+	// There is always at least one player
+	auto playerOne = ecs::archetypes::PlayerArchetype::Create(PlayerNames::PLAYER_ONE);
+
+	// assign Player One Hand as Game Hand
+	gameContext.player = playerOne;
 
 	// create our camera
 	auto& config = Locator::config::value();
@@ -971,11 +1074,11 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	}
 	InitializeLevel(fixedName);
 
-	// There is always a player active
-	Locator::playerSystem::value().AddPlayer(ecs::archetypes::PlayerArchetype::Create(PlayerNames::PLAYER_ONE));
-
-	// There is always at least one player active.
-	ecs::archetypes::PlayerArchetype::Create(PlayerNames::PLAYER_ONE);
+	// TODO: create more players here, like in LoadMap for player one
+	auto& registry = Locator::entitiesRegistry::value();
+	auto& gameContext = registry.GameContext();
+	// We need a hand for the player
+	Locator::handSystem::value().Initialize(gameContext.player);
 
 	Locator::cameraBookmarkSystem::value().Initialize();
 	Locator::dynamicsSystem::value().RegisterIslandRigidBodies(Locator::terrainSystem::value());

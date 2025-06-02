@@ -17,7 +17,7 @@ namespace openblack::ecs
 
 Registry::Registry()
 {
-	_registry.ctx().emplace<RegistryContext>();
+	_registry.ctx().emplace<MainGameContext>();
 }
 
 void Registry::Release(entt::entity entity)
@@ -31,22 +31,37 @@ void Registry::Destroy(entt::entity entity)
 	_registry.destroy(entity);
 }
 
-RegistryContext& Registry::Context()
+MainMapContext& Registry::InitMapContext()
 {
-	return _registry.ctx().get<RegistryContext>();
+	return _registry.ctx().emplace<MainMapContext>();
 }
 
-const RegistryContext& Registry::Context() const
+MainMapContext& Registry::MapContext()
 {
-	return _registry.ctx().get<const RegistryContext>();
+	return _registry.ctx().get<MainMapContext>();
 }
 
-void Registry::Reset()
+const MainMapContext& Registry::MapContext() const
+{
+	return _registry.ctx().get<const MainMapContext>();
+}
+
+MainGameContext& Registry::GameContext()
+{
+	return _registry.ctx().get<MainGameContext>();
+}
+
+const MainGameContext& Registry::GameContext() const
+{
+	return _registry.ctx().get<const MainGameContext>();
+}
+
+void Registry::ClearMap()
 {
 	SetDirty();
-	_registry.clear();
-	_registry.ctx().erase<RegistryContext>();
-	_registry.ctx().emplace<RegistryContext>();
+	_registry.clear(); // TODO: clean only map entites
+	_registry.ctx().erase<MainMapContext>();
+	_registry.ctx().emplace<MainMapContext>();
 };
 
 void Registry::SetDirty()

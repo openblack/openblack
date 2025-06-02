@@ -9,17 +9,20 @@
 
 #pragma once
 
-#include "ECS/Components/PlayerHand.h"
-#include "Enums.h"
+#include <unordered_map>
 
-namespace openblack::ecs::archetypes
-{
+#include <entt/entity/fwd.hpp>
 
-class PlayerArchetype
+#include "ECS/Components/Footpath.h"
+#include "ECS/Components/Stream.h"
+#include "ECS/Components/Town.h"
+
+namespace openblack::ecs
 {
-public:
-	static entt::entity Create(PlayerNames name,
-	                           components::PlayerHand::ActiveHand primaryHand = components::PlayerHand::ActiveHand::Right);
-	PlayerArchetype() = delete;
+struct MainMapContext
+{
+	std::unordered_map<components::Footpath::Id, entt::entity> footpaths;
+	std::unordered_map<components::Stream::Id, entt::entity> streams;
+	std::unordered_map<uint32_t, entt::entity> towns;
 };
-} // namespace openblack::ecs::archetypes
+} // namespace openblack::ecs

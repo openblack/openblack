@@ -262,9 +262,9 @@ void FeatureScriptCommands::CreateTown(int32_t townId, glm::vec3 position, const
 void FeatureScriptCommands::SetTownBelief(int32_t townId, const std::string& playerOwner, float belief)
 {
 	auto& registry = Locator::entitiesRegistry::value();
-	auto& registryContext = registry.Context();
+	auto& mapContext = registry.MapContext();
 
-	Town& town = registry.Get<Town>(registryContext.towns.at(townId));
+	Town& town = registry.Get<Town>(mapContext.towns.at(townId));
 	town.beliefs.insert({playerOwner, belief});
 }
 
@@ -560,7 +560,7 @@ void FeatureScriptCommands::CreateFlock(int32_t, glm::vec3, glm::vec3, int32_t, 
 
 void FeatureScriptCommands::LoadLandscape(const std::string& path)
 {
-	Game::Instance()->LoadLandscape(path);
+	Locator::gameInterface::value().LoadLandscape(path);
 }
 
 void FeatureScriptCommands::Version([[maybe_unused]] float version)
@@ -659,19 +659,19 @@ void FeatureScriptCommands::BrushSize(float, float)
 void FeatureScriptCommands::CreateStream(int32_t streamId)
 {
 	auto& registry = Locator::entitiesRegistry::value();
-	auto& registryContext = registry.Context();
+	auto& mapContext = registry.MapContext();
 	const auto entity = registry.Create();
 
 	registry.Assign<Stream>(entity, streamId);
-	registryContext.streams.insert({streamId, entity});
+	mapContext.streams.insert({streamId, entity});
 }
 
 void FeatureScriptCommands::CreateStreamPoint(int32_t streamId, glm::vec3 position)
 {
 	auto& registry = Locator::entitiesRegistry::value();
-	auto& registryContext = registry.Context();
+	auto& mapContext = registry.MapContext();
 
-	Stream& stream = registry.Get<Stream>(registryContext.streams.at(streamId));
+	Stream& stream = registry.Get<Stream>(mapContext.streams.at(streamId));
 	stream.nodes.emplace_back(position, stream.nodes);
 }
 
@@ -692,15 +692,15 @@ void FeatureScriptCommands::CreateFootpath(int32_t footpathId)
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 	registry.Assign<Footpath>(entity);
-	auto& registryContext = registry.Context();
-	registryContext.footpaths.insert({footpathId, entity});
+	auto& mapContext = registry.MapContext();
+	mapContext.footpaths.insert({footpathId, entity});
 }
 
 void FeatureScriptCommands::CreateFootpathNode(int footpathId, glm::vec3 position)
 {
 	auto& registry = Locator::entitiesRegistry::value();
-	auto& registryContext = registry.Context();
-	auto& footpath = registry.Get<Footpath>(registryContext.footpaths.at(footpathId));
+	auto& mapContext = registry.MapContext();
+	auto& footpath = registry.Get<Footpath>(mapContext.footpaths.at(footpathId));
 	footpath.nodes.emplace_back(Footpath::Node {position});
 }
 

@@ -369,12 +369,12 @@ void MeshViewer::Update() noexcept
 	}
 
 	// Get hand position for spawn location
-	const auto positions = Locator::handSystem::value().GetPlayerHandPositions();
-	if (positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)] ||
-	    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)])
+	const auto& registry = Locator::entitiesRegistry::value();
+	const auto positions = Locator::handSystem::value().GetPlayerHandPositions(registry.GameContext().player);
+	if (positions[static_cast<size_t>(PlayerHand::Side::Left)] || positions[static_cast<size_t>(PlayerHand::Side::Right)])
 	{
-		const auto position = positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)].value_or(
-		    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)].value_or(glm::zero<glm::vec3>()));
+		const auto position = positions[static_cast<size_t>(PlayerHand::Side::Left)].value_or(
+		    positions[static_cast<size_t>(PlayerHand::Side::Right)].value_or(glm::zero<glm::vec3>()));
 		_handPosition = position;
 		_handPosition.y = Locator::terrainSystem::value().GetHeightAt(glm::xz(_handPosition));
 	}

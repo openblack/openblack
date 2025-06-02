@@ -21,12 +21,10 @@ namespace openblack::ecs::systems
 class HandSystem final: public HandSystemInterface
 {
 public:
-	bool Initialize() noexcept override;
-	[[nodiscard]] std::array<entt::entity, static_cast<size_t>(Side::_Count)> GetPlayerHands() const noexcept override;
-	[[nodiscard]] std::array<std::optional<glm::vec3>, static_cast<size_t>(Side::_Count)>
-	GetPlayerHandPositions() const noexcept override;
-
-private:
-	std::array<entt::entity, 2> _hands;
+	bool Initialize(entt::entity playerEntity) noexcept override;
+	[[nodiscard]] std::array<entt::entity, static_cast<size_t>(components::PlayerHand::Side::_Count)>
+	GetPlayerHands(entt::entity playerEntity) const noexcept override;
+	[[nodiscard]] std::array<std::optional<glm::vec3>, static_cast<size_t>(components::PlayerHand::Side::_Count)>
+	GetPlayerHandPositions(entt::entity playerEntity) const noexcept override;
 };
 } // namespace openblack::ecs::systems

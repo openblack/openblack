@@ -67,13 +67,13 @@ entt::entity TownSystem::FindClosestTown(const glm::vec3& point) const
 void TownSystem::AddHomelessVillagerToTown(entt::entity townEntity, entt::entity villagerEntity)
 {
 	[[maybe_unused]] auto& registry = Locator::entitiesRegistry::value();
-	[[maybe_unused]] auto& registryContext = registry.Context();
+	[[maybe_unused]] auto& mapContext = registry.MapContext();
 
 	auto& town = registry.Get<Town>(townEntity);
 	auto& villager = registry.Get<Villager>(villagerEntity);
 	// TODO(bwrsandman): if already assigned to abode or other villager homeless list, remove
 	assert(villager.abode == entt::null);
-	assert(villager.town == entt::null || villager.town == registryContext.towns[town.id]);
+	assert(villager.town == entt::null || villager.town == mapContext.towns[town.id]);
 	town.homelessVillagers.insert(villagerEntity);
 	villager.town = townEntity;
 }

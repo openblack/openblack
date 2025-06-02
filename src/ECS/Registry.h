@@ -13,7 +13,8 @@
 #include <entt/entity/helper.hpp>
 #include <entt/entity/registry.hpp>
 
-#include "ECS/RegistryContext.h"
+#include "Contexts/MainGameContext.h"
+#include "Contexts/MainMapContext.h"
 
 namespace openblack
 {
@@ -77,9 +78,32 @@ public:
 		return Assign<After>(entity, std::forward<Args>(args)...);
 	}
 	virtual void SetDirty();
-	virtual RegistryContext& Context();
-	[[nodiscard]] virtual const RegistryContext& Context() const;
-	virtual void Reset();
+	virtual MainMapContext& InitMapContext();
+	virtual MainMapContext& MapContext();
+	[[nodiscard]] virtual const MainMapContext& MapContext() const;
+	virtual void ClearMap();
+	virtual MainGameContext& GameContext();
+	[[nodiscard]] virtual const MainGameContext& GameContext() const;
+	template <typename Type, typename... Args>
+	Type& EmplaceContext([[maybe_unused]] Args&&... args)
+	{
+		return _registry.ctx().emplace<Type>(std::forward<Args>(args)...);
+	}
+	template <class Type>
+	Type* GetContext()
+	{
+		return _registry.ctx().find<Type>();
+	}
+	template <class Type>
+	const Type* GetContext() const
+	{
+		return _registry.ctx().find<const Type>();
+	}
+	template <typename Type>
+	decltype(auto) EraseContext()
+	{
+		return _registry.ctx().erase<Type>();
+	}
 	template <typename Component>
 	size_t Size()
 	{

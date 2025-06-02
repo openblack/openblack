@@ -27,7 +27,7 @@ entt::entity FieldArchetype::Create(int townId, const glm::vec3& position, Field
 
 	[[maybe_unused]] const auto& info = Locator::infoConstants::value().fieldType.at(static_cast<size_t>(type));
 
-	auto townTribe = registry.Get<Tribe>(registry.Context().towns[townId]);
+	auto townTribe = registry.Get<Tribe>(registry.MapContext().towns[townId]);
 	auto abodeInfo = GAbodeInfo::Find(townTribe, AbodeNumber::Field);
 
 	auto entity = AbodeArchetype::Create(townId, position, abodeInfo, yAngleRadians, 1.0f, 0, 0);

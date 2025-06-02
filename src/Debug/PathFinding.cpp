@@ -25,6 +25,7 @@
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/HandSystemInterface.h"
+#include "ECS/Systems/PlayerSystemInterface.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -187,12 +188,11 @@ void PathFinding::Update() noexcept
 	auto const& meshes = Locator::resources::value().GetMeshes();
 
 	std::optional<glm::vec3> handPosition;
-	const auto positions = Locator::handSystem::value().GetPlayerHandPositions();
-	if (positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)] ||
-	    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)])
+	const auto positions = Locator::handSystem::value().GetPlayerHandPositions(registry.GameContext().player);
+	if (positions[static_cast<size_t>(PlayerHand::Side::Left)] || positions[static_cast<size_t>(PlayerHand::Side::Right)])
 	{
-		handPosition = positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)].value_or(
-		    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)].value_or(glm::zero<glm::vec3>()));
+		handPosition = positions[static_cast<size_t>(PlayerHand::Side::Left)].value_or(
+		    positions[static_cast<size_t>(PlayerHand::Side::Right)].value_or(glm::zero<glm::vec3>()));
 	}
 
 	if (handPosition.has_value())

@@ -23,6 +23,7 @@
 #endif
 
 #include "Game.h"
+#include "Locator.h"
 
 bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& returnCode)
 {
@@ -224,12 +225,14 @@ int main(int argc, char* argv[]) noexcept
 		{
 			return returnCode;
 		}
-		auto game = std::make_unique<openblack::Game>(std::move(args));
-		if (!game->Initialize())
+
+		auto& game =
+		    dynamic_cast<openblack::Game&>(openblack::Locator::gameInterface::emplace<openblack::Game>(std::move(args)));
+		if (!game.Initialize())
 		{
 			return EXIT_FAILURE;
 		}
-		if (!game->Run())
+		if (!game.Run())
 		{
 			return EXIT_FAILURE;
 		}

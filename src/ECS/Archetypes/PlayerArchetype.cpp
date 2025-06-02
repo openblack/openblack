@@ -10,6 +10,7 @@
 #include "PlayerArchetype.h"
 
 #include "ECS/Components/Player.h"
+#include "ECS/Components/PlayerHand.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
 #include "Locator.h"
@@ -18,10 +19,12 @@ using namespace openblack;
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
 
-entt::entity PlayerArchetype::Create(PlayerNames name)
+entt::entity PlayerArchetype::Create(PlayerNames name, PlayerHand::ActiveHand primaryHand)
 {
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 	registry.Assign<Player>(entity, name);
+	registry.Assign<PlayerHand>(entity,
+	                            PlayerHand {.primaryHand = primaryHand, .showHands = static_cast<uint32_t>(primaryHand)});
 	return entity;
 }

@@ -9,20 +9,16 @@
 
 #pragma once
 
-#include <unordered_map>
-
 #include <entt/entity/fwd.hpp>
+#include <glm/vec2.hpp>
 
-#include "Components/Footpath.h"
-#include "Components/Stream.h"
-#include "Components/Town.h"
+#include "GameInterface.h"
 
 namespace openblack::ecs
 {
-struct RegistryContext
+struct MainGameContext
 {
-	std::unordered_map<components::Footpath::Id, entt::entity> footpaths;
-	std::unordered_map<components::Stream::Id, entt::entity> streams;
-	std::unordered_map<uint32_t, entt::entity> towns;
+	glm::ivec2 mousePosition;
+	entt::entity player;
 };
 } // namespace openblack::ecs

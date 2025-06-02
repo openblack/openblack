@@ -457,7 +457,7 @@ bool Gui::ShowMenu() noexcept
 {
 	if (ImGui::BeginMainMenuBar())
 	{
-		auto& game = *Game::Instance();
+		auto& game = Locator::gameInterface::value();
 		if (ImGui::BeginMenu("Load Island"))
 		{
 			auto& resources = Locator::resources::value();
@@ -517,7 +517,7 @@ bool Gui::ShowMenu() noexcept
 		{
 			if (ImGui::SliderFloat("Time of Day", &config.timeOfDay, 0.0f, 24.0f, "%.3f"))
 			{
-				Game::Instance()->SetTime(fmodf(config.timeOfDay, 24.0f));
+				game.SetTime(fmodf(config.timeOfDay, 24.0f));
 			}
 
 			ImGui::Text("Sky Type Index %f", Locator::skySystem::value().GetCurrentSkyType());
@@ -984,15 +984,15 @@ void Gui::ShowCameraPositionOverlay() noexcept
 				ImGui::Text("Mouse Position: <invalid>");
 			}
 
-			auto& game = *Game::Instance();
+			auto& game = Locator::gameInterface::value();
 
-			const auto positions = Locator::handSystem::value().GetPlayerHandPositions();
-			if (positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)] ||
-			    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)])
+			const auto& registry = Locator::entitiesRegistry::value();
+			const auto positions = Locator::handSystem::value().GetPlayerHandPositions(registry.GameContext().player);
+			if (positions[static_cast<size_t>(ecs::components::PlayerHand::Side::Left)] ||
+			    positions[static_cast<size_t>(ecs::components::PlayerHand::Side::Right)])
 			{
-				const auto position = positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)].value_or(
-				    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)].value_or(
-				        glm::zero<glm::vec3>()));
+				const auto position = positions[static_cast<size_t>(ecs::components::PlayerHand::Side::Left)].value_or(
+				    positions[static_cast<size_t>(ecs::components::PlayerHand::Side::Right)].value_or(glm::zero<glm::vec3>()));
 				ImGui::Text("Hand Position: (%.1f,%.1f,%.1f)", position.x, position.y, position.z);
 			}
 

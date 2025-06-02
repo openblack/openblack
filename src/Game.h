@@ -19,6 +19,8 @@
 #include <glm/mat4x4.hpp>
 #include <spdlog/common.h>
 
+#include "ECS/Components/PlayerHand.h"
+#include "GameInterface.h"
 #include "Windowing/WindowingInterface.h" // For DisplayMode
 
 union SDL_Event;
@@ -66,7 +68,7 @@ struct Arguments
 	std::optional<std::pair</* frame number */ uint32_t, /* output */ std::filesystem::path>> requestScreenshot;
 };
 
-class Game
+class Game: public GameInterface
 {
 public:
 	static constexpr auto k_TurnDuration = std::chrono::milliseconds(100);
@@ -83,24 +85,26 @@ public:
 	bool Initialize() noexcept;
 	bool Run() noexcept;
 
-	bool LoadMap(const std::filesystem::path& path) noexcept;
-	void LoadLandscape(const std::filesystem::path& path);
+	bool LoadMap(const std::filesystem::path& path) noexcept override;
+	void LoadLandscape(const std::filesystem::path& path) override;
 
-	void SetTime(float time) noexcept;
-	void SetGameSpeed(float multiplier) { _gameSpeedMultiplier = multiplier; }
-	[[nodiscard]] float GetGameSpeed() const { return _gameSpeedMultiplier; }
+	void SetTime(float time) noexcept override;
+	void SetGameSpeed(float multiplier) override { _gameSpeedMultiplier = multiplier; }
+	[[nodiscard]] float GetGameSpeed() const override { return _gameSpeedMultiplier; }
 
-	[[nodiscard]] uint32_t GetTurn() const { return _turnCount; }
-	[[nodiscard]] bool IsPaused() const { return _paused; }
-	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const { return _turnDeltaTime; }
-	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
+	[[nodiscard]] uint32_t GetTurn() const override { return _turnCount; }
+	[[nodiscard]] bool IsPaused() const override { return _paused; }
+	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const override { return _turnDeltaTime; }
 
-	void RequestScreenshot(const std::filesystem::path& path) noexcept;
+	void RequestScreenshot(const std::filesystem::path& path) noexcept override;
 
-	static Game* Instance() { return sInstance; }
+protected:
+	[[nodiscard]] const glm::ivec2& GetMousePosition() const;
+	[[nodiscard]] const ecs::components::PlayerHand& GetPlayerHand() const;
 
 private:
-	static Game* sInstance;
+	glm::ivec2& GetMousePosition();
+	ecs::components::PlayerHand& GetPlayerHand();
 
 	/// path to Lionhead Studios Ltd/Black & White folder
 	const std::filesystem::path _gamePath;
@@ -113,11 +117,6 @@ private:
 	uint32_t _frameCount {0};
 	uint32_t _turnCount {0};
 	bool _paused {true};
-
-	glm::ivec2 _mousePosition;
-	glm::mat4 _handPose;
-
-	bool _handGripping;
 
 	std::optional<std::pair</* frame number */ uint32_t, /* output */ std::filesystem::path>> _requestScreenshot;
 };
