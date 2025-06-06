@@ -51,14 +51,6 @@ jobs:
           repo: 'aras-p/ClangBuildAnalyzer'
           file: ${{ startsWith(matrix.os, 'ubuntu') && 'ClangBuildAnalyzer-linux' || startsWith(matrix.os, 'windows') && 'ClangBuildAnalyzer.exe' || startsWith(matrix.os, 'macos') && 'ClangBuildAnalyzer-mac' }}
 
-      - name: Install MacOS dependencies
-        run: |
-          brew install llvm@18
-          echo "$(brew --prefix llvm@18)/bin" >> $GITHUB_PATH
-          echo "CC=$(brew --prefix llvm@18)/bin/clang" >> $GITHUB_ENV
-          echo "CXX=$(brew --prefix llvm@18)/bin/clang++" >> $GITHUB_ENV
-        if: startsWith(matrix.os, 'macos')
-
       # Setup the build machine with the most recent versions of CMake and Ninja. Both are cached if not already: on subsequent runs both will be quickly restored from GitHub cache service.
       - uses: lukka/get-cmake@latest
 
