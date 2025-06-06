@@ -5,7 +5,8 @@ source_group(apps\\lhvmtool FILES ${LHVMTOOL})
 add_executable(lhvmtool ${LHVMTOOL})
 
 target_compile_definitions(lhvmtool PRIVATE CXXOPTS_NO_EXCEPTIONS)
-target_link_libraries(lhvmtool PRIVATE cxxopts::cxxopts ScriptLibrary)
+target_link_libraries(lhvmtool PRIVATE ScriptLibrary)
+target_include_directories(lhvmtool PRIVATE ${CXXOPTS_INCLUDE_DIRS})
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
   if (CLANG_TIDY)

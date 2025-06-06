@@ -1,8 +1,7 @@
 find_package(Python3 COMPONENTS Interpreter)
 
 add_executable(gen_info gen_info.cpp)
-target_include_directories(gen_info PRIVATE ../../src)
-target_link_libraries(gen_info PRIVATE glm::glm cxxopts::cxxopts)
+target_include_directories(gen_info PRIVATE ../../src ${CXXOPTS_INCLUDE_DIRS})
 set_property(TARGET gen_info PROPERTY FOLDER "tests")
 if (MSVC)
   target_compile_options(gen_info PRIVATE /utf-8)

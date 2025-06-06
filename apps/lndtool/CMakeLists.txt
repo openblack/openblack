@@ -5,7 +5,8 @@ source_group(apps\\lndtool FILES ${LNDTOOL})
 add_executable(lndtool ${LNDTOOL})
 
 target_compile_definitions(lndtool PRIVATE CXXOPTS_NO_EXCEPTIONS)
-target_link_libraries(lndtool PRIVATE cxxopts::cxxopts lnd)
+target_link_libraries(lndtool PRIVATE lnd)
+target_include_directories(lndtool PRIVATE ${CXXOPTS_INCLUDE_DIRS})
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
   if (CLANG_TIDY)

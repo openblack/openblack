@@ -115,7 +115,6 @@ target_link_libraries(
           EnTT::EnTT
           bgfx::bgfx
           OpenAL::OpenAL
-          cxxopts::cxxopts
           Bullet3Common
           BulletDynamics
           BulletCollision
@@ -124,6 +123,7 @@ target_link_libraries(
           minizip::minizip
   PUBLIC spdlog::spdlog
 )
+target_include_directories(openblack_lib PRIVATE ${CXXOPTS_INCLUDE_DIRS})
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
   if (CLANG_TIDY)

@@ -109,7 +109,7 @@ find_package(imgui REQUIRED)
 find_package(Bullet REQUIRED)
 find_package(spdlog 1.3.0 REQUIRED)
 find_package(EnTT 3.7.0 CONFIG REQUIRED) # only available as a config
-find_package(cxxopts REQUIRED)
+find_path(CXXOPTS_INCLUDE_DIRS "cxxopts.hpp")
 
 include(ClangFormat)
 
