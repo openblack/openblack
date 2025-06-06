@@ -65,11 +65,11 @@ jobs:
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
         if: startsWith(github.event_name, 'pull_request')
 
-      # TODO(https://github.com/bkaradzic/bgfx.cmake/issues/242): Android and Emscripten wants opengl installed on system to build bgfx
+      # TODO(https://github.com/bkaradzic/bgfx.cmake/issues/242): Android and Emscripten wants opengl and wayland installed on system to build bgfx
       - name: Setup (Android and Emscripten and Linux)
         run: |
           sudo apt update -y
-          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
+          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev libwayland-dev libwayland-egl-backend-dev
           echo "ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV # to use C++23 on 26.2.11394342
         if: (startsWith(matrix.preset, 'android') || startsWith(matrix.preset, 'emscripten')) || startsWith(matrix.os, 'ubuntu')
 
