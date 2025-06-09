@@ -24,6 +24,8 @@
 #include <json_helpers.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+#include "test_fixed.h"
+
 using nlohmann::json;
 using namespace openblack;
 
@@ -81,7 +83,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM( //
         {VILLAGER_STATE_ARRIVES_HOME, "ARRIVES_HOME"},
     })
 
-class MobileWallHugWalks: public ::testing::Test
+class MobileWallHugWalks: public TestFixed
 {
 protected:
 	struct State
@@ -182,16 +184,14 @@ protected:
 			_sceneScript = std::string(std::istreambuf_iterator<char> {ifs}, {});
 		}
 
-		static const auto mockGamePath = std::filesystem::path(TEST_BINARY_DIR) / "mock";
 		auto args = openblack::Arguments {
 		    .rendererType = bgfx::RendererType::Enum::Noop,
-		    .gamePath = mockGamePath.string(),
+		    .gamePath = TestFixed::k_MockGamePath.string(),
 		    .logFile = "stdout",
 		};
 		std::fill_n(args.logLevels.begin(), args.logLevels.size(), spdlog::level::warn);
 		args.logLevels[static_cast<uint8_t>(openblack::LoggingSubsystem::pathfinding)] = spdlog::level::debug;
-		_game = std::make_unique<openblack::Game>(std::move(args));
-		ASSERT_TRUE(_game->Initialize());
+		SetUpGame(std::move(args));
 		openblack::lhscriptx::Script script;
 		script.Load(_sceneScript);
 
@@ -200,8 +200,6 @@ protected:
 
 		villagerTransform.position = glm::vec3(_expectedStates[0].pos.x, 0.0f, _expectedStates[0].pos.y);
 	}
-
-	void TearDown() override { _game.reset(); }
 
 	void MobileWallHugScenarioAssert()
 	{

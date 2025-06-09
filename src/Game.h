@@ -84,6 +84,7 @@ public:
 	bool Update() noexcept;
 	bool Initialize() noexcept;
 	bool Run() noexcept;
+	bool Shutdown() noexcept;
 
 	bool LoadMap(const std::filesystem::path& path) noexcept override;
 	void LoadLandscape(const std::filesystem::path& path) override;
@@ -97,6 +98,9 @@ public:
 	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const override { return _turnDeltaTime; }
 
 	void RequestScreenshot(const std::filesystem::path& path) noexcept override;
+
+	[[nodiscard]] static Game& CreateGame(Arguments&& args) noexcept;
+	static void ResetGame() noexcept;
 
 protected:
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const;

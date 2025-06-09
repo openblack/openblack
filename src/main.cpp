@@ -226,13 +226,16 @@ int main(int argc, char* argv[]) noexcept
 			return returnCode;
 		}
 
-		auto& game =
-		    dynamic_cast<openblack::Game&>(openblack::Locator::gameInterface::emplace<openblack::Game>(std::move(args)));
+		auto& game = openblack::Game::CreateGame(std::move(args));
 		if (!game.Initialize())
 		{
 			return EXIT_FAILURE;
 		}
 		if (!game.Run())
+		{
+			return EXIT_FAILURE;
+		}
+		if (!game.Shutdown())
 		{
 			return EXIT_FAILURE;
 		}

@@ -7,6 +7,7 @@ macro (OPENBLACK_SETUP_AND_ADD_TEST TEST_NAME TEST_SOURCE)
   add_executable(${TEST_NAME} ${TEST_SOURCE})
   add_dependencies(${TEST_NAME} generate_mock_game_data)
   target_link_libraries(${TEST_NAME} PRIVATE GTest::gtest_main openblack_lib)
+  target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
   target_compile_definitions(
     ${TEST_NAME} PRIVATE TEST_BINARY_DIR="${CMAKE_CURRENT_BINARY_DIR}"
                          GLM_ENABLE_EXPERIMENTAL

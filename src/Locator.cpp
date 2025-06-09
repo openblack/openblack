@@ -120,10 +120,10 @@ bool openblack::InitializeGame() noexcept
 {
 	Locator::terrainSystem::emplace<UnloadedIsland>();
 	Locator::resources::emplace<Resources>();
-	Locator::playerSystem::emplace<PlayerSystem>();
 	Locator::gameActionSystem::emplace<GameActionMap>();
-	Locator::rendereringSystem::emplace<RenderingSystem>();
 	Locator::entitiesRegistry::emplace<Registry>();
+	Locator::rendereringSystem::emplace<RenderingSystem>();
+	Locator::playerSystem::emplace<PlayerSystem>();
 	Locator::handSystem::emplace<HandSystem>();
 	Locator::temple::emplace<TempleInterior>();
 	Locator::oceanSystem::emplace<Ocean>();
@@ -161,34 +161,41 @@ void openblack::ShutDownServices()
 		resources.GetSounds().Clear();
 	}
 
+	// Undo InitializeLevel
+	Locator::terrainSystem::reset();
+	Locator::cameraBookmarkSystem::reset();
+	Locator::pathfindingSystem::reset();
+	Locator::townSystem::reset();
+	Locator::livingActionSystem::reset();
+	Locator::dynamicsSystem::reset();
+	Locator::entitiesMap::reset();
+
+	// Undo InitializeGame
+	Locator::skySystem ::reset();
+	Locator::oceanSystem::reset();
+	Locator::temple::reset();
+	Locator::handSystem::reset();
+	Locator::playerSystem::reset();
+	Locator::rendereringSystem::reset();
+	Locator::gameActionSystem::reset();
+	Locator::resources::reset();
+
+	// Undo InitializeEngine
+	Locator::chlapi::reset();
+	Locator::vm::reset();
 	// The audio resources have been cleared and all sounds have been stopped. It is now safe to reset audio
 	if (Locator::audio::has_value())
 	{
 		Locator::audio::reset();
 	}
-
-	Locator::rendereringSystem::reset();
-	Locator::dynamicsSystem::reset();
-	Locator::cameraBookmarkSystem::reset();
-	Locator::livingActionSystem::reset();
-	Locator::townSystem::reset();
-	Locator::handSystem::reset();
-	Locator::pathfindingSystem::reset();
-	Locator::terrainSystem::reset();
-	Locator::filesystem::reset();
-	Locator::gameActionSystem::reset();
-
-	Locator::oceanSystem::reset();
-	Locator::skySystem ::reset();
-	Locator::debugGui::reset();
 	Locator::entitiesRegistry::reset();
-	Locator::rendererInterface::reset();
-	Locator::windowing::reset();
+	Locator::rng::reset();
+	Locator::filesystem::reset();
 	Locator::events::reset();
-	Locator::camera::reset();
-	Locator::config::reset();
-	Locator::infoConstants::reset();
+	Locator::debugGui::reset();
+	Locator::rendererInterface::reset();
 	Locator::profiler::reset();
 
-	Locator::vm::reset();
+	// Undo InitializeWindow
+	Locator::windowing::reset();
 }

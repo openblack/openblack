@@ -75,24 +75,20 @@ Game::Game(Arguments&& args) noexcept
     , _requestScreenshot(args.requestScreenshot)
 {
 	Locator::camera::emplace(glm::zero<glm::vec3>());
-	std::function<std::shared_ptr<spdlog::logger>(const std::string&)> createLogger;
+	const auto createLogger = [&]() -> std::function<std::shared_ptr<spdlog::logger>(const std::string&)> {
 #ifdef __ANDROID__
-	if (!args.logFile.empty() && args.logFile == "logcat")
-	{
-		createLogger = [](const std::string& name) { return spdlog::android_logger_mt(name, "spdlog-android"); };
-	}
-	else
+		if (!args.logFile.empty() && args.logFile == "logcat")
+		{
+			return [](const std::string& name) { return spdlog::android_logger_mt(name, "spdlog-android"); };
+		}
 #endif // __ANDROID__
-	{
 		if (!args.logFile.empty() && args.logFile != "stdout")
 		{
-			createLogger = [&args](const std::string& name) { return spdlog::basic_logger_mt(name, args.logFile); };
+			return [&args](const std::string& name) { return spdlog::basic_logger_mt(name, args.logFile); };
 		}
-		else
-		{
-			createLogger = [](const std::string& name) { return spdlog::stdout_color_mt(name); };
-		}
-	}
+
+		return [](const std::string& name) { return spdlog::stdout_color_mt(name); };
+	}();
 	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; const auto& subsystem : k_LoggingSubsystemStrs)
 	{
@@ -115,9 +111,19 @@ Game::Game(Arguments&& args) noexcept
 
 Game::~Game() noexcept
 {
-	ShutDownServices();
-	SDL_Quit(); // todo: move to GameWindow
 	spdlog::shutdown();
+	Locator::config::reset();
+	Locator::camera::reset();
+}
+
+Game& Game::CreateGame(Arguments&& args) noexcept
+{
+	return dynamic_cast<Game&>(Locator::gameInterface::emplace<Game>(std::forward<Arguments>(args)));
+}
+
+void Game::ResetGame() noexcept
+{
+	Locator::gameInterface::reset();
 }
 
 const glm::ivec2& Game::GetMousePosition() const
@@ -868,6 +874,21 @@ bool Game::Initialize() noexcept
 		}
 	});
 
+	return true;
+}
+
+bool Game::Shutdown() noexcept
+{
+	if (Locator::infoConstants::has_value())
+	{
+		Locator::infoConstants::reset();
+	}
+	ShutDownServices();
+	auto& config = Locator::config::value();
+	if (config.rendererType != bgfx::RendererType::Noop)
+	{
+		SDL_Quit();
+	}
 	return true;
 }
 

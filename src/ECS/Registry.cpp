@@ -33,6 +33,10 @@ void Registry::Destroy(entt::entity entity)
 
 MainMapContext& Registry::InitMapContext()
 {
+	if (auto* mapCtx = _registry.ctx().find<MainMapContext>(); mapCtx != nullptr)
+	{
+		return *mapCtx;
+	}
 	return _registry.ctx().emplace<MainMapContext>();
 }
 
