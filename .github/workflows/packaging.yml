@@ -161,8 +161,9 @@ jobs:
           done
       - name: Install Linux dependencies
         run: |
+          sudo dpkg --add-architecture i386
           sudo apt update -y
-          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev libltdl-dev libxext-dev libwayland-dev libwayland-egl-backend-dev
+          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev libltdl-dev libxext-dev libwayland-dev libwayland-egl-backend-dev gcc-i686-linux-gnu g++-i686-linux-gnu libc6:i386
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v7
         with:
