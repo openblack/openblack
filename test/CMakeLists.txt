@@ -34,6 +34,7 @@ macro (OPENBLACK_SETUP_AND_ADD_JSON_TEST TEST_NAME TEST_SOURCE)
   openblack_setup_and_add_test(${TEST_NAME} ${TEST_SOURCE})
   target_include_directories(
     ${TEST_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party
+                         vector_compare.h
   )
   add_dependencies(${TEST_NAME} ${TEST_NAME}_scenarios)
 endmacro ()

@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 
 #include "third_party/json_helpers.h"
+#include "vector_compare.h"
 
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
@@ -50,7 +51,7 @@ TEST_F(TestFixed, celticTownCentreMeshBoundingCircle)
 {
 	Transform transform {{}, glm::identity<glm::mat3>(), {1.0f, 1.0f, 1.0f}};
 	const auto [center, radius] = GetFixedObstacleBoundingCircle(MeshId::BuildingCelticVillageCentre, transform);
-	ASSERT_EQ(center, glm::vec2(0.00188350677f, 0.22130537f));
+	ASSERT_VEC2_NEAR(center, glm::vec2(0.00188350677f, 0.22130537f));
 	ASSERT_EQ(radius, 12.9809408f);
 }
 
@@ -61,7 +62,7 @@ TEST_F(TestFixed, celticTownCentreBoundingCircle)
 	const glm::vec3 pos = {2188.23f, 0.0f, 2317.47f};
 	auto entity = AbodeArchetype::Create(0, {2188.23f, 0.0f, 2317.47f}, AbodeInfo::CelticTownCentre, 2.932f, 1.0f, 0, 0);
 	const auto& fixed = Locator::entitiesRegistry::value().Get<const Fixed>(entity);
-	ASSERT_EQ(fixed.boundingCenter, glm::vec2(2188.182129f, 2317.253906f));
+	ASSERT_VEC2_NEAR(fixed.boundingCenter, glm::vec2(2188.182129f, 2317.253906f));
 	ASSERT_EQ(fixed.boundingRadius, 12.9809408f);
 }
 
@@ -70,7 +71,7 @@ TEST_F(TestFixed, celticAbodeMeshBoundingCircle)
 {
 	Transform transform {{}, glm::identity<glm::mat3>(), {1.0f, 1.0f, 1.0f}};
 	const auto [center, radius] = GetFixedObstacleBoundingCircle(MeshId::BuildingCeltic5A, transform);
-	ASSERT_EQ(center, glm::vec2(0.0883901119f, 0.188308239f));
+	ASSERT_VEC2_NEAR(center, glm::vec2(0.0883901119f, 0.188308239f));
 	ASSERT_EQ(radius, 6.33014917f);
 }
 
@@ -82,7 +83,7 @@ TEST_F(TestFixed, celticAbodeBoundingCircle)
 	                                     AbodeInfo::CelticTempleY, // CELTIC_ABODE_F
 	                                     2.932f, 1.0f, 0, 0);
 	const auto& fixed = Locator::entitiesRegistry::value().Get<const Fixed>(entity);
-	ASSERT_EQ(fixed.boundingCenter, glm::vec2(2224.504150f, 2372.354248f));
+	ASSERT_VEC2_NEAR(fixed.boundingCenter, glm::vec2(2224.504150f, 2372.354248f));
 	ASSERT_FLOAT_EQ(fixed.boundingRadius, 6.33014917f);
 }
 
@@ -95,6 +96,6 @@ TEST_F(TestFixed, celticAbodeBoundingCircleScaled)
 	                                     AbodeInfo::CelticTempleY, // CELTIC_ABODE_F
 	                                     2.932f, scale, 0, 0);
 	const auto& fixed = Locator::entitiesRegistry::value().Get<const Fixed>(entity);
-	ASSERT_EQ(fixed.boundingCenter, glm::vec2(2224.492432f, 2372.338379f));
+	ASSERT_VEC2_NEAR(fixed.boundingCenter, glm::vec2(2224.492432f, 2372.338379f));
 	ASSERT_FLOAT_EQ(fixed.boundingRadius, 6.33014917f * scale);
 }
