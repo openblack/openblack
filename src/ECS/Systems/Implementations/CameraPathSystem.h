@@ -52,6 +52,6 @@ private:
 	std::chrono::microseconds _timeElapsedDuringStep;
 	std::chrono::microseconds _duration;
 	CameraPathState _state;
-	int _pathIndex = 0;
+	size_t _pathIndex = 0;
 };
 } // namespace openblack::ecs::systems
