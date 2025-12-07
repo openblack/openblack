@@ -84,16 +84,8 @@ int WriteFile(const Arguments::Write& args) noexcept
 	for (const auto& str : args.pointStrings)
 	{
 		std::smatch match;
-		try
-		{
-			std::regex_match(
-			    str, match,
-			    std::regex {R"( *(-?\d+\.\d+) ?(-?\d+\.\d+) ?(-?\d+\.\d+) ?(-?\d+\.\d+) ?(-?\d+\.\d+) ?(-?\d+\.\d+))"});
-		}
-		catch (...)
-		{
-			return EXIT_FAILURE;
-		}
+		std::regex_match(
+		    str, match, std::regex {R"( *(-?\d+\.\d+) ?(-?\d+\.\d+) ?(-?\d+\.\d+) ?(-?\d+\.\d+) ?(-?\d+\.\d+) ?(-?\d+\.\d+))"});
 		if (match.size() != 7)
 		{
 			return EXIT_FAILURE;
@@ -108,17 +100,7 @@ int WriteFile(const Arguments::Write& args) noexcept
 	}
 
 	cam.SetPoints(std::move(points));
-
-	try
-	{
-		cam.Write(args.outFilename);
-	}
-	catch (const std::runtime_error& e)
-	{
-		std::cerr << e.what() << '\n';
-		return EXIT_FAILURE;
-	}
-
+	cam.Write(args.outFilename);
 	return EXIT_SUCCESS;
 }
 
@@ -126,82 +108,66 @@ bool parseOptions(int argc, char** argv, Arguments& args, int& returnCode) noexc
 {
 	cxxopts::Options options("camtool", "Inspect and extract files from LionHead camera files.");
 
-	try
-	{
-		options.add_options()                                            //
-		    ("h,help", "Display this help message.")                     //
-		    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
-		    ;
-		options.positional_help("[read|write] [OPTION...]");
-		options.add_options("read")                                                                           //
-		    ("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())      //
-		    ("p,print-points", "Print List of Points.", cxxopts::value<std::vector<std::filesystem::path>>()) //
-		    ;
-		options.add_options("write")                                                          //
-		    ("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())  //
-		    ("s,movement-speed", "Value for the movement speed.", cxxopts::value<uint32_t>()) //
-		    ("points", "Point in format \"p1 p2 p3 h1 h2 h3\" array (comma-separated).",      //
-		     cxxopts::value<std::vector<std::string>>())                                      //
-		    ;
+	options.add_options()                                            //
+	    ("h,help", "Display this help message.")                     //
+	    ("subcommand", "Subcommand.", cxxopts::value<std::string>()) //
+	    ;
+	options.positional_help("[read|write] [OPTION...]");
+	options.add_options("read")                                                                           //
+	    ("H,header", "Print Header Contents.", cxxopts::value<std::vector<std::filesystem::path>>())      //
+	    ("p,print-points", "Print List of Points.", cxxopts::value<std::vector<std::filesystem::path>>()) //
+	    ;
+	options.add_options("write")                                                          //
+	    ("o,output", "Output file (required).", cxxopts::value<std::filesystem::path>())  //
+	    ("s,movement-speed", "Value for the movement speed.", cxxopts::value<uint32_t>()) //
+	    ("points", "Point in format \"p1 p2 p3 h1 h2 h3\" array (comma-separated).",      //
+	     cxxopts::value<std::vector<std::string>>())                                      //
+	    ;
 
-		options.parse_positional({"subcommand"});
-	}
-	catch (const std::exception& e)
+	options.parse_positional({"subcommand"});
+
+	auto result = options.parse(argc, argv);
+	if (result["help"].as<bool>())
 	{
-		std::cerr << e.what() << '\n';
+		std::cout << options.help() << "\n";
+		returnCode = EXIT_SUCCESS;
+		return false;
+	}
+	if (result["subcommand"].count() == 0)
+	{
+		std::cerr << options.help() << "\n";
 		returnCode = EXIT_FAILURE;
 		return false;
 	}
-
-	try
+	if (result["subcommand"].as<std::string>() == "read")
 	{
-		auto result = options.parse(argc, argv);
-		if (result["help"].as<bool>())
+		if (result["header"].count() > 0)
 		{
-			std::cout << options.help() << std::endl;
-			returnCode = EXIT_SUCCESS;
-			return false;
+			args.mode = Arguments::Mode::Header;
+			args.read.filenames = result["header"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
-		if (result["subcommand"].count() == 0)
+		if (result["print-points"].count() > 0)
 		{
-			std::cerr << options.help() << std::endl;
-			returnCode = EXIT_FAILURE;
-			return false;
-		}
-		if (result["subcommand"].as<std::string>() == "read")
-		{
-			if (result["header"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Header;
-				args.read.filenames = result["header"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-			if (result["print-points"].count() > 0)
-			{
-				args.mode = Arguments::Mode::PrintPoints;
-				args.read.filenames = result["print-points"].as<std::vector<std::filesystem::path>>();
-				return true;
-			}
-		}
-		else if (result["subcommand"].as<std::string>() == "write")
-		{
-			args.write.outFilename = "";
-			if (result["output"].count() > 0 && result["movement-speed"].count() > 0 && result["points"].count() > 0)
-			{
-				args.mode = Arguments::Mode::Write;
-				args.write.outFilename = result["output"].as<std::filesystem::path>();
-				args.write.movementSpeed = result["movement-speed"].as<uint32_t>();
-				args.write.pointStrings = result["points"].as<std::vector<std::string>>();
-				return true;
-			}
+			args.mode = Arguments::Mode::PrintPoints;
+			args.read.filenames = result["print-points"].as<std::vector<std::filesystem::path>>();
+			return true;
 		}
 	}
-	catch (const std::exception& err)
+	else if (result["subcommand"].as<std::string>() == "write")
 	{
-		std::cerr << err.what() << std::endl;
+		args.write.outFilename = "";
+		if (result["output"].count() > 0 && result["movement-speed"].count() > 0 && result["points"].count() > 0)
+		{
+			args.mode = Arguments::Mode::Write;
+			args.write.outFilename = result["output"].as<std::filesystem::path>();
+			args.write.movementSpeed = result["movement-speed"].as<uint32_t>();
+			args.write.pointStrings = result["points"].as<std::vector<std::string>>();
+			return true;
+		}
 	}
 
-	std::cerr << options.help() << std::endl;
+	std::cerr << options.help() << '\n';
 	returnCode = EXIT_FAILURE;
 	return false;
 }
@@ -223,28 +189,19 @@ int main(int argc, char* argv[]) noexcept
 	for (auto& filename : args.read.filenames)
 	{
 		openblack::cam::CAMFile cam;
-		try
+		// Open file
+		cam.Open(filename);
+		switch (args.mode)
 		{
-			// Open file
-			cam.Open(filename);
-
-			switch (args.mode)
-			{
-			case Arguments::Mode::Header:
-				returnCode |= PrintHeader(cam);
-				break;
-			case Arguments::Mode::PrintPoints:
-				returnCode |= PrintPoints(cam);
-				break;
-			default:
-				returnCode = EXIT_FAILURE;
-				break;
-			}
-		}
-		catch (std::exception& err)
-		{
-			std::cerr << err.what() << std::endl;
-			returnCode |= EXIT_FAILURE;
+		case Arguments::Mode::Header:
+			returnCode |= PrintHeader(cam);
+			break;
+		case Arguments::Mode::PrintPoints:
+			returnCode |= PrintPoints(cam);
+			break;
+		default:
+			returnCode = EXIT_FAILURE;
+			break;
 		}
 	}
 
