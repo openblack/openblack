@@ -9,20 +9,11 @@
 
 #pragma once
 
+#include "3D/TempleInteriorInterface.h"
 #include "Enums.h"
 
 namespace openblack::ecs::components
 {
-enum class TempleRoom
-{
-	ChallengeRoom,
-	CreatureCave,
-	CreditsRoom,
-	MainRoom,
-	MultiplayerRoom,
-	OptionsRoom,
-	SaveGameRoom
-};
 
 struct TempleInteriorPart
 {

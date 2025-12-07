@@ -27,7 +27,8 @@ class TempleInterior final: public TempleInteriorInterface
 public:
 	[[nodiscard]] bool Active() const override { return _active; }
 	[[nodiscard]] glm::vec3 GetPosition() const override { return _templePosition; }
-	void Activate() override;
+	void Activate() { Activate(TempleRoom::Main); }
+	void Activate(TempleRoom room) override;
 	void Deactivate() override;
 
 private:
