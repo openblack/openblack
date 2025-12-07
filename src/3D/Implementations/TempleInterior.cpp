@@ -13,6 +13,7 @@
 
 #include <unordered_map>
 
+#include <fmt/format.h>
 #include <glm/gtx/euler_angles.hpp>
 
 #include "Camera/Camera.h"
@@ -21,22 +22,21 @@
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Temple.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/Implementations/CameraPathSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystemTemple.h"
-#include "ECS/Systems/Implementations/CameraPathSystem.h"
 #include "EngineConfig.h"
-#include "Game.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
 
-using Indoors = ecs::components::TempleRoom;
+using Indoors = TempleRoom;
 const std::unordered_multimap<Indoors, std::string_view> k_TempleInteriorParts {
-    {Indoors::ChallengeRoom, "challenge_l3d"},
+    {Indoors::Challenge, "challenge_l3d"},
     // {"challengelo_l3d", Indoors::ChallengeLO},
-    {Indoors::ChallengeRoom, "challengedome_l3d"},
-    {Indoors::ChallengeRoom, "challengefloor_l3d"},
+    {Indoors::Challenge, "challengedome_l3d"},
+    {Indoors::Challenge, "challengefloor_l3d"},
     // {"challengefloorlo_l3d", Indoors::ChallengeFloorLO},
     {
         Indoors::CreatureCave,
@@ -45,43 +45,43 @@ const std::unordered_multimap<Indoors, std::string_view> k_TempleInteriorParts {
     // {"creaturelo_l3d", Indoors::CreatureCaveLO},
     {Indoors::CreatureCave, "creaturewater_l3d"},
     // {"creaturewaterlo_l3d", Indoors::CreatureCaveWaterLO},
-    {Indoors::CreditsRoom, "credits_l3d"},
+    {Indoors::Credits, "credits_l3d"},
     // {"creditslo_l3d", Indoors::CreditsLO},
-    {Indoors::CreditsRoom, "creditsdome_l3d"},
-    {Indoors::CreditsRoom, "creditsfloor_l3d"},
+    {Indoors::Credits, "creditsdome_l3d"},
+    {Indoors::Credits, "creditsfloor_l3d"},
     // {"creditsfloorlo_l3d", Indoors::CreditsFloorLO},
-    {Indoors::MainRoom, "main_l3d"},
+    {Indoors::Main, "main_l3d"},
     // {"mainlo_l3d", Indoors::MainLO},
-    {Indoors::MainRoom, "mainfloor_l3d"},
+    {Indoors::Main, "mainfloor_l3d"},
     // {"mainfloorlo_l3d", Indoors::MainFloorLO},
-    {Indoors::MainRoom, "mainwater_l3d"},
+    {Indoors::Main, "mainwater_l3d"},
     // {"mainwaterlo_l3d", Indoors::MainWaterLO},
     // {"movement_l3d", Indoors::Movement}, // Navmesh
-    {Indoors::MultiplayerRoom, "multi_l3d"},
+    {Indoors::Multi, "multi_l3d"},
     // {"multilo_l3d", Indoors::MultiLO},
-    {Indoors::MultiplayerRoom, "multidome_l3d"},
-    {Indoors::MultiplayerRoom, "multifloor_l3d"},
+    {Indoors::Multi, "multidome_l3d"},
+    {Indoors::Multi, "multifloor_l3d"},
     // {"multifloorlo_l3d", Indoors::MultiFloorLO},
-    {Indoors::OptionsRoom, "options_l3d"},
+    {Indoors::Options, "options_l3d"},
     // {"optionslo_l3d", Indoors::OptionsLO},
-    {Indoors::OptionsRoom, "optionsdome_l3d"},
-    {Indoors::OptionsRoom, "optionsfloor_l3d"},
+    {Indoors::Options, "optionsdome_l3d"},
+    {Indoors::Options, "optionsfloor_l3d"},
     // {"optionsfloorlo_l3d", Indoors::OptionsFloorLO},
-    {Indoors::SaveGameRoom, "savegame_l3d"},
+    {Indoors::SaveGame, "savegame_l3d"},
     // {"savegamelo_l3d", Indoors::SaveGameLO},
-    {Indoors::SaveGameRoom, "savegamedome_l3d"},
-    {Indoors::SaveGameRoom, "savegamefloor_l3d"},
+    {Indoors::SaveGame, "savegamedome_l3d"},
+    {Indoors::SaveGame, "savegamefloor_l3d"},
     // {"savegamefloorlo_l3d", Indoors::SaveGameFloorLO},
 };
 
 const std::unordered_map<Indoors, std::string_view> k_TempleInteriorGlows {
-    {Indoors::ChallengeRoom, "challenge"}, //
-    {Indoors::CreatureCave, "creature"},   //
-    {Indoors::CreditsRoom, "credits"},     //
-    {Indoors::MainRoom, "main"},           //
-    {Indoors::MultiplayerRoom, "multi"},   //
-    {Indoors::OptionsRoom, "options"},     //
-    {Indoors::SaveGameRoom, "savegame"},   //
+    {Indoors::Challenge, "challenge"},   //
+    {Indoors::CreatureCave, "creature"}, //
+    {Indoors::Credits, "credits"},       //
+    {Indoors::Main, "main"},             //
+    {Indoors::Multi, "multi"},           //
+    {Indoors::Options, "options"},       //
+    {Indoors::SaveGame, "savegame"},     //
 };
 
 inline void addRoomToRegistry(std::string_view assetName, Indoors templeRoom, glm::vec3 position, glm::mat3 rotation,
@@ -107,7 +107,7 @@ inline void addGlowsToRegistry(Indoors templeRoom)
 	}
 }
 
-void TempleInterior::Activate()
+void TempleInterior::Activate(TempleRoom room)
 {
 	if (_active)
 	{
@@ -140,8 +140,9 @@ void TempleInterior::Activate()
 	camera.SetOrigin(_templePosition);
 	const auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
 	camera.SetProjectionMatrixPerspective(100.f, aspect, config.cameraNearClip, config.cameraFarClip);
-	Locator::cameraPathSystem::value().Start(entt::hashed_string("temple/main"));
-//	camera.SetFocus(_templePosition + glm::quat(_templeRotation) * glm::vec3(0.0f, 0.0f, 1.0f));
+	auto lookup = k_TempleInteriorGlows.at(static_cast<Indoors>(room));
+	Locator::cameraPathSystem::value().Start(entt::hashed_string(fmt::format("temple/{}", lookup).c_str()));
+	//	camera.SetFocus(_templePosition + glm::quat(_templeRotation) * glm::vec3(0.0f, 0.0f, 1.0f));
 	_active = true;
 }
 
