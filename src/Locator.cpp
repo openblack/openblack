@@ -80,7 +80,7 @@ void openblack::InitializeWindow(const std::string& title, int width, int height
 bool openblack::InitializeEngine(uint8_t rendererType, bool vsync) noexcept
 {
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), "EnTT version: {}", ENTT_VERSION);
-	SPDLOG_LOGGER_INFO(spdlog::get("game"), GLM_VERSION_MESSAGE);
+	SPDLOG_LOGGER_INFO(spdlog::get("game"), GLM_VERSION_COMPLETE);
 
 	Locator::profiler::emplace();
 
