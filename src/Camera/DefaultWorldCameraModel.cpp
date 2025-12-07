@@ -214,7 +214,6 @@ bool DefaultWorldCameraModel::ConstrainCamera(std::chrono::microseconds dt, floa
 
 bool DefaultWorldCameraModel::ConstrainAltitude()
 {
-	return false;
 	bool hasBeenAdjusted = false;
 	const auto minAltitude = k_FloatingHeight + Locator::terrainSystem::value().GetHeightAt(glm::xz(_targetOrigin));
 	if (_targetOrigin.y < minAltitude)
