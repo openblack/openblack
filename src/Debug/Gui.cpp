@@ -391,7 +391,7 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData) noexcept
 				bgfx::TextureHandle th = _texture;
 				bgfx::ProgramHandle program = _program;
 
-				if (cmd->TextureId != 0)
+				if (cmd->GetTexID() != 0)
 				{
 					const union
 					{
@@ -402,7 +402,7 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData) noexcept
 							uint8_t flags;
 							uint8_t mip;
 						} s;
-					} texture = {cmd->TextureId};
+					} texture = {cmd->GetTexID()};
 					state |= 0 != (IMGUI_FLAGS_ALPHA_BLEND & texture.s.flags)
 					             ? BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
 					             : BGFX_STATE_NONE;
