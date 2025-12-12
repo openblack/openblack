@@ -27,6 +27,7 @@ public:
 		PhysicsUpdate,
 		PathfindingUpdate,
 		LivingActionUpdate,
+		VegetationUpdate,
 		SdlInput,
 		UpdateUniforms,
 		UpdateEntities,
@@ -40,12 +41,14 @@ public:
 		ReflectionDrawWater,
 		ReflectionDrawIsland,
 		ReflectionDrawModels,
+		ReflectionDrawVegetation,
 		ReflectionDrawSprites,
 		MainPass,
 		MainPassDrawSky,
 		MainPassDrawWater,
 		MainPassDrawIsland,
 		MainPassDrawModels,
+		MainPassDrawVegetation,
 		MainPassDrawSprites,
 		GuiDraw,
 		RendererFrame,
@@ -57,6 +60,7 @@ public:
 	    "Physics Update",       //
 	    "Pathfinding Update",   //
 	    "Living Action Update", //
+	    "Vegetation Update",    //
 	    "SDL Input",            //
 	    "Update Uniforms",      //
 	    "Entities",             //
@@ -76,6 +80,7 @@ public:
 	    "Draw Water",           //
 	    "Draw Island",          //
 	    "Draw Models",          //
+	    "Draw Vegetation"       //
 	    "Draw Sprites",         //
 	    "Encode GUI Draw",      //
 	    "Renderer Frame",       //
