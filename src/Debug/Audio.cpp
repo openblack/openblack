@@ -9,6 +9,8 @@
 
 #include "Audio.h"
 
+#include <string>
+
 #include <imgui.h>
 
 #include "ECS/Registry.h"
@@ -45,88 +47,96 @@ void Audio::Emitters() noexcept
 	ImGui::Separator();
 	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
 	ImGui::BeginChild("SoundPacks", ImVec2(ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y),
-	                  ImGuiChildFlags_Border);
+	                  ImGuiChildFlags_Borders);
 	ImGui::Button("Sort by sound count");
 	ImGui::SameLine();
 	ImGui::Button("Sort by bytes");
-	ImGui::SameLine();
-	ImGui::Columns(3, "SoundPackColumns", true);
 	ImGui::Separator();
-	ImGui::Text("File");
-	ImGui::NextColumn();
-	ImGui::Text("Description");
-	ImGui::NextColumn();
-	ImGui::Text("Sounds");
-	ImGui::NextColumn();
-	ImGui::Separator();
-	for (const auto& [name, group] : Locator::audio::value().GetSoundGroups())
+	if (ImGui::BeginTable("SoundPackTable", 3,
+	                      ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV |
+	                          ImGuiTableFlags_SizingFixedFit))
 	{
-		if (ImGui::Selectable(name.c_str(), _selectedSoundPack == name, ImGuiSelectableFlags_SpanAllColumns))
-		{
-			_selectedSoundPack = name;
-		}
+		ImGui::TableSetupColumn("File", ImGuiTableColumnFlags_WidthFixed, 150.0f);
+		ImGui::TableSetupColumn("Description", ImGuiTableColumnFlags_WidthStretch);
+		ImGui::TableSetupColumn("Sounds", ImGuiTableColumnFlags_WidthFixed, 60.0f);
+		ImGui::TableHeadersRow();
 
-		ImGui::NextColumn();
-		ImGui::Text("%s", name.c_str());
-		ImGui::NextColumn();
-		ImGui::Text("%zu", group.sounds.size());
-		ImGui::NextColumn();
+		for (const auto& [name, group] : Locator::audio::value().GetSoundGroups())
+		{
+			ImGui::TableNextRow();
+
+			// Column 0: file (selectable)
+			ImGui::TableSetColumnIndex(0);
+			if (ImGui::Selectable(name.c_str(), _selectedSoundPack == name, ImGuiSelectableFlags_SpanAllColumns))
+			{
+				_selectedSoundPack = name;
+			}
+
+			ImGui::TableSetColumnIndex(1);
+			ImGui::TextUnformatted(name.c_str());
+			ImGui::TableSetColumnIndex(2);
+			ImGui::Text("%zu", group.sounds.size());
+		}
+		ImGui::EndTable();
 	}
 	ImGui::EndChild();
 	ImGui::SameLine();
 
 	ImGui::BeginChild("Sounds", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y),
-	                  ImGuiWindowFlags_None);
+	                  ImGuiChildFlags_Borders);
+
 	ImGui::Separator();
-	ImGui::Columns(3, "SoundColumns", true);
 	const float extraPadding = ImGui::GetStyle().ItemSpacing.x * 2;
-	const float totalWidth = ImGui::GetWindowContentRegionMax().x;
 	const float firstColumnWidth = ImGui::CalcTextSize("123").x + extraPadding;
-	const auto lastColumnString = "Length in (s)"sv;
-	const float lastColumnWidth = ImGui::CalcTextSize(lastColumnString.data()).x + extraPadding;
-	const float secondColumnWidth = totalWidth - firstColumnWidth - lastColumnWidth;
-	ImGui::Text("id");
-	ImGui::SetColumnWidth(0, firstColumnWidth);
-	ImGui::NextColumn();
-	ImGui::Text("Name / Play");
-	ImGui::SetColumnWidth(1, secondColumnWidth);
-	ImGui::NextColumn();
-	ImGui::Text("%s", lastColumnString.data());
-	ImGui::SetColumnWidth(2, lastColumnWidth);
-	ImGui::NextColumn();
-	ImGui::Separator();
-	auto& soundManager = Locator::audio::value();
-	for (const auto& [name, group] : Locator::audio::value().GetSoundGroups())
+	const std::string lastColumnString = "Length (s)";
+	const float lastColumnWidth = ImGui::CalcTextSize(lastColumnString.c_str()).x + extraPadding;
+
+	if (ImGui::BeginTable("SoundTable", 3,
+	                      ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV |
+	                          ImGuiTableFlags_SizingFixedFit))
 	{
-		if (_selectedSoundPack != name)
-		{
-			continue;
-		}
+		ImGui::TableSetupColumn("id", ImGuiTableColumnFlags_WidthFixed, firstColumnWidth);
+		ImGui::TableSetupColumn("Name / Play", ImGuiTableColumnFlags_WidthStretch);
+		ImGui::TableSetupColumn(lastColumnString.c_str(), ImGuiTableColumnFlags_WidthFixed, lastColumnWidth);
+		ImGui::TableHeadersRow();
 
-		for (auto soundId : group.sounds)
+		auto& audio = Locator::audio::value();
+
+		for (const auto& [name, group] : audio.GetSoundGroups())
 		{
-			auto sound = Locator::resources::value().GetSounds().Handle(soundId);
-			if (ImGui::Selectable(("##" + std::to_string(soundId)).c_str(), _selectedSound == soundId,
-			                      ImGuiSelectableFlags_SpanAllColumns))
+			if (_selectedSoundPack != name)
 			{
-				// Play the sound if already selected
-				if (_selectedSound == soundId)
-				{
-					soundManager.PlaySound(_selectedSound, _playType);
-				}
-
-				_selectedSound = soundId;
+				continue;
 			}
-			ImGui::SameLine();
-			ImGui::Text("%u", sound->id);
-			ImGui::NextColumn();
-			ImGui::Text("%s", sound->name.c_str());
-			ImGui::NextColumn();
-			auto length = sound->duration;
-			ImGui::TextColored(length < 0 ? k_RedColor : k_GreenColor, "%s",
-			                   length < 0 ? "N/A" : std::to_string(length).c_str());
-			ImGui::NextColumn();
+
+			for (auto soundId : group.sounds)
+			{
+				auto sound = Locator::resources::value().GetSounds().Handle(soundId);
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				if (ImGui::Selectable(("##" + std::to_string(soundId)).c_str(), _selectedSound == soundId,
+				                      ImGuiSelectableFlags_SpanAllColumns))
+				{
+					// Play the sound if already selected
+					if (_selectedSound == soundId)
+					{
+						audio.PlaySound(_selectedSound, _playType);
+					}
+
+					_selectedSound = soundId;
+				}
+				ImGui::SameLine();
+				ImGui::Text("%u", sound->id);
+
+				ImGui::TableSetColumnIndex(1);
+				ImGui::Text("%s", sound->name.c_str());
+				ImGui::TableSetColumnIndex(2);
+				auto length = sound->duration;
+				ImGui::TextColored(length < 0 ? k_RedColor : k_GreenColor, "%s",
+				                   length < 0 ? "N/A" : std::to_string(length).c_str());
+			}
 		}
+		ImGui::EndTable();
 	}
 	ImGui::EndChild();
 	ImGui::PopStyleVar();
@@ -145,7 +155,7 @@ void Audio::Music() noexcept
 	ImGui::Separator();
 	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
 	ImGui::BeginChild("MusicPacks", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y),
-	                  ImGuiChildFlags_Border);
+	                  ImGuiChildFlags_Borders);
 	ImGui::Columns(1, "MusicPackColumns", true);
 	ImGui::Separator();
 	ImGui::Text("Name");
@@ -181,7 +191,7 @@ void Audio::AudioSettings() noexcept
 
 	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
 	ImGui::BeginChild("Audio Handler Settings", ImVec2(ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y),
-	                  ImGuiChildFlags_Border);
+	                  ImGuiChildFlags_Borders);
 	ImGui::Text("Audio handler settings");
 	ImGui::Separator();
 	ImGui::Text("Active Emitters");
@@ -226,7 +236,7 @@ void Audio::AudioSettings() noexcept
 	    });
 	ImGui::EndChild();
 	ImGui::SameLine();
-	ImGui::BeginChild("Audio Player Settings", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Border);
+	ImGui::BeginChild("Audio Player Settings", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Borders);
 	ImGui::Text("Audio Player settings");
 	ImGui::Separator();
 	float globalVolume = soundManager.GetGlobalVolume();

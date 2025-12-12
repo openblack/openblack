@@ -172,6 +172,7 @@ target_compile_definitions(
     "GLM_FORCE_LEFT_HANDED"
     "GLM_FORCE_RADIANS"
     "GLM_ENABLE_EXPERIMENTAL"
+    # "IMGUI_DISABLE_OBSOLETE_FUNCTIONS"
     # Compile-time optimize out log messages (debug level if debug, else info)
     "SPDLOG_ACTIVE_LEVEL=$<IF:$<CONFIG:DEBUG>,SPDLOG_LEVEL_DEBUG,SPDLOG_LEVEL_INFO>"
     # Suppress WinMain() and main hijacking, provided by SDL

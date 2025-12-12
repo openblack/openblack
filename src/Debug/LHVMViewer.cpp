@@ -48,7 +48,7 @@ void LHVMViewer::Draw() noexcept
 		{
 			// left
 			static size_t selected = 0;
-			ImGui::BeginChild("left pane", ImVec2(240, 0), ImGuiChildFlags_Border);
+			ImGui::BeginChild("left pane", ImVec2(240, 0), ImGuiChildFlags_Borders);
 
 			auto variables = lhvm.GetVariables();
 			for (size_t i = 0; i < variables.size(); i++)
@@ -101,14 +101,13 @@ void LHVMViewer::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) noe
 
 void LHVMViewer::DrawScriptsTab(const openblack::lhvm::LHVM& lhvm) noexcept
 {
-	static auto vectorGetter = [](void* vec, int idx, const char** outText) {
+	static auto vectorGetter = [](void* vec, int idx) {
 		auto& vector = *static_cast<std::vector<std::string>*>(vec);
 		if (idx < 0 || idx >= static_cast<int>(vector.size()))
 		{
-			return false;
+			return "";
 		}
-		*outText = vector.at(idx).c_str();
-		return true;
+		return vector.at(idx).c_str();
 	};
 
 	auto scripts = lhvm.GetScripts();
