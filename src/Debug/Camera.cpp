@@ -11,11 +11,11 @@
 
 #include <glm/gtx/euler_angles.hpp>
 
-#include "ECS/Registry.h"
-#include "Game.h"
-#include "Camera/Camera.h"
 #include "3D/TempleInteriorInterface.h"
+#include "Camera/Camera.h"
+#include "ECS/Registry.h"
 #include "ECS/Systems/CameraPathSystemInterface.h"
+#include "Game.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -63,7 +63,8 @@ void Camera::Draw() noexcept
 		if (paused)
 		{
 			cameraPathSystem.Play();
-		} else
+		}
+		else
 		{
 			cameraPathSystem.Pause();
 		}
