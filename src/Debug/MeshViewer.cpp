@@ -69,7 +69,7 @@ void MeshViewer::Draw() noexcept
 	ImGui::BeginChild("meshes", ImVec2(fontSize * 15.0f, 0));
 	auto meshSize = ImGui::GetItemRectSize();
 	ImGui::BeginChild("meshesSelect", ImVec2(meshSize.x - 5, meshSize.y - ImGui::GetTextLineHeight() - 5),
-	                  ImGuiChildFlags_Border);
+	                  ImGuiChildFlags_Borders);
 	uint32_t displayedMeshes = 0;
 
 	meshes.Each([this, &displayedMeshes](entt::id_type id, const graphics::L3DMesh& mesh) {
@@ -255,7 +255,7 @@ void MeshViewer::Draw() noexcept
 	ImGui::BeginChild("animations", ImVec2(fontSize * 15.0f, 0));
 	auto animationSize = ImGui::GetItemRectSize();
 	ImGui::BeginChild("animationSelect", ImVec2(animationSize.x - 5, animationSize.y - ImGui::GetTextLineHeight() - 5),
-	                  ImGuiChildFlags_Border);
+	                  ImGuiChildFlags_Borders);
 	uint32_t displayedAnimations = 0;
 	if (_matchBones && _selectedAnimation.has_value() &&
 	    animations.Handle(*_selectedAnimation)->GetBoneMatrices(0).size() != mesh->GetBoneMatrices().size())
