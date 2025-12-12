@@ -16,6 +16,8 @@
 
 #include <entt/locator/locator.hpp>
 
+#include "ECS/Systems/VegetationInterface.h"
+
 namespace openblack
 {
 struct EngineConfig;
@@ -96,6 +98,8 @@ class PathfindingSystemInterface;
 class PlayerSystemInterface;
 class RenderingSystemInterface;
 class TownSystemInterface;
+class TimeSystemInterface;
+class VegetationInterface;
 } // namespace ecs::systems
 
 void InitializeWindow(const std::string& title, int width, int height, windowing::DisplayMode displayMode, uint32_t extraFlags);
@@ -133,6 +137,8 @@ struct Locator
 	using playerSystem = entt::locator<ecs::systems::PlayerSystemInterface>;
 	using handSystem = entt::locator<ecs::systems::HandSystemInterface>;
 	using temple = entt::locator<TempleInteriorInterface>;
+	using time = entt::locator<ecs::systems::TimeSystemInterface>;
+	using vegetation = entt::locator<ecs::systems::VegetationInterface>;
 	using vm = entt::locator<lhvm::LHVM>;
 	using chlapi = entt::locator<chlapi::CHLApi>;
 };

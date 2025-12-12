@@ -17,22 +17,9 @@
 
 namespace openblack::ecs::systems
 {
-class HandSystemInterface
+class VegetationInterface
 {
 public:
-	enum class Side : uint8_t
-	{
-		Left,
-		Right,
-		_Count
-	};
-	virtual bool Initialize() noexcept = 0;
-	virtual void Update() noexcept = 0;
-	[[nodiscard]] virtual std::array<entt::entity, static_cast<size_t>(Side::_Count)> GetPlayerHands() const noexcept = 0;
-	[[nodiscard]] virtual std::array<std::optional<glm::vec3>, static_cast<size_t>(Side::_Count)>
-	GetPlayerHandPositions() const noexcept = 0;
-
-private:
-	virtual void SwayNearbyEntities(const glm::vec3& handPosition) = 0;
+	virtual void Sway() = 0;
 };
 } // namespace openblack::ecs::systems

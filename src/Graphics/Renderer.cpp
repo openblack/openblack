@@ -31,9 +31,11 @@
 #include "Camera/Camera.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Sprite.h"
+#include "ECS/Components/Tree.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "EngineConfig.h"
+#include "Game.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/IndexBuffer.h"
@@ -45,6 +47,7 @@
 #include "Resources/ResourceManager.h"
 #include "Resources/ResourcesInterface.h"
 #include "Windowing/WindowingInterface.h"
+#include "entt/locator/locator.hpp"
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -473,6 +476,27 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 			bgfx::setState(state);
 			bgfx::submit(static_cast<bgfx::ViewId>(viewId), footprintShaderInstanced->GetRawHandle());
 		}
+
+		for (const auto& [meshId, placers] : renderCtx.treeInstancedDrawDescs)
+		{
+			auto mesh = meshManager.Handle(meshId);
+			if (!mesh->ContainsLandscapeFeature() || mesh->GetFootprints().empty())
+			{
+				continue;
+			}
+			const auto& footprint = mesh->GetFootprints()[0];
+			footprintShaderInstanced->SetTextureSampler("s_footprint", 0, *footprint.texture);
+			footprint.mesh->GetVertexBuffer().Bind();
+			bgfx::setInstanceDataBuffer(renderCtx.treeInstanceUniformBuffer, placers.offset, placers.count);
+			const uint64_t state = 0u                       //
+			                       | BGFX_STATE_WRITE_RGB   //
+			                       | BGFX_STATE_WRITE_A     //
+			                       | BGFX_STATE_BLEND_ALPHA //
+			                       | BGFX_STATE_CULL_CW     //
+			                       | BGFX_STATE_MSAA;
+			bgfx::setState(state);
+			bgfx::submit(static_cast<bgfx::ViewId>(viewId), footprintShaderInstanced->GetRawHandle());
+		}
 	}
 }
 
@@ -528,6 +552,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	const auto* waterShader = _shaderManager->GetShader("Water");
 	const auto* terrainShader = _shaderManager->GetShader("Terrain");
 	const auto* debugShader = _shaderManager->GetShader("DebugLine");
+	const auto* vegetationShaderInstanced = _shaderManager->GetShader("VegetationHeightMapInstanced");
 	const auto* spriteShader = _shaderManager->GetShader("Sprite");
 	const auto* debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
 	const auto* objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
@@ -709,6 +734,52 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					renderCtx.streams->GetVertexBuffer().Bind();
 					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
 					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
+				}
+			}
+		}
+
+		{
+			auto subSection =
+			    profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawVegetation
+			                                                               : Profiler::Stage::MainPassDrawVegetation);
+			const auto& renderCtx = Locator::rendereringSystem::value().GetContext();
+
+			if (desc.drawVegetation)
+			{
+				L3DMeshSubmitDesc submitDesc = {};
+				submitDesc.viewId = desc.viewId;
+				submitDesc.program = vegetationShaderInstanced;
+				submitDesc.state = 0u                              //
+				                   | BGFX_STATE_WRITE_MASK         //
+				                   | BGFX_STATE_DEPTH_TEST_GREATER //
+				                   | BGFX_STATE_MSAA               //
+				    ;
+
+				// Instance meshes
+				for (const auto& [meshId, placers] : renderCtx.treeInstancedDrawDescs)
+				{
+					auto mesh = meshManager.Handle(meshId);
+					submitDesc.instanceBuffer = &renderCtx.treeInstanceUniformBuffer;
+					submitDesc.instanceStart = placers.offset;
+					submitDesc.instanceCount = placers.count;
+					const static auto identity = glm::mat4(1.0f);
+					submitDesc.modelMatrices = &identity;
+					submitDesc.matrixCount = 1;
+					submitDesc.isSky = false;
+					submitDesc.morphWithTerrain = true;
+					submitDesc.program = vegetationShaderInstanced;
+					DrawMesh(*mesh, submitDesc, std::numeric_limits<uint8_t>::max());
+				}
+
+				// Draw tree bounding boxes if enabled
+				if (renderCtx.boundingBox)
+				{
+					const auto boundBoxOffset = static_cast<uint32_t>(renderCtx.treeInstanceData.size() / 2);
+					const auto boundBoxCount = static_cast<uint32_t>(renderCtx.treeInstanceData.size() / 2);
+					renderCtx.boundingBox->GetVertexBuffer().Bind();
+					bgfx::setInstanceDataBuffer(renderCtx.treeInstanceUniformBuffer, boundBoxOffset, boundBoxCount);
+					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
+					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShaderInstanced->GetRawHandle());
 				}
 			}
 		}
