@@ -9,12 +9,28 @@
 
 #pragma once
 
-#include <bgfx/bgfx.h>
+#include <map>
+#include <string_view>
 
 #include "Windowing/WindowingInterface.h"
 
 namespace openblack
 {
+
+enum class GraphicsBackend : uint8_t
+{
+	Noop,
+	Direct3D12,
+	Metal,
+	Vulkan,
+};
+
+static const std::map<std::string_view, GraphicsBackend> k_GraphicsBackendStringLookup {
+    std::pair {"Noop", GraphicsBackend::Noop},
+    std::pair {"Direct3D12", GraphicsBackend::Direct3D12},
+    std::pair {"Metal", GraphicsBackend::Metal},
+    std::pair {"Vulkan", GraphicsBackend::Vulkan},
+};
 
 struct EngineConfig
 {
@@ -49,7 +65,7 @@ struct EngineConfig
 
 	float guiScale {1.0f};
 
-	bgfx::RendererType::Enum rendererType {bgfx::RendererType::Noop};
+	GraphicsBackend graphicsBackend {GraphicsBackend::Noop};
 	glm::u16vec2 resolution {256, 256};
 	windowing::DisplayMode displayMode {windowing::DisplayMode::Windowed};
 

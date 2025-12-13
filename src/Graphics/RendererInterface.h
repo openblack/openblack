@@ -11,9 +11,12 @@
 
 #include <filesystem>
 
+#include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
 
 #include "RenderPass.h"
+
+#include "../EngineConfig.h"
 
 namespace openblack
 {
@@ -76,7 +79,7 @@ public:
 		bool morphWithTerrain;
 	};
 
-	static std::unique_ptr<RendererInterface> Create(bgfx::RendererType::Enum rendererType, bool vsync) noexcept;
+	static std::unique_ptr<RendererInterface> Create(GraphicsBackend backend, bool vsync) noexcept;
 
 	virtual ~RendererInterface() noexcept = default;
 

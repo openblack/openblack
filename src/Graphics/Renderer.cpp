@@ -194,14 +194,31 @@ struct BgfxCallback: public bgfx::CallbackI
 
 } // namespace openblack
 
-std::unique_ptr<RendererInterface> RendererInterface::Create(bgfx::RendererType::Enum rendererType, bool vsync) noexcept
+std::unique_ptr<RendererInterface> RendererInterface::Create(GraphicsBackend backend, bool vsync) noexcept
 {
 	bgfx::Init init {};
-	init.type = rendererType;
+	switch (backend)
+	{
+	case GraphicsBackend::Noop:
+		init.type = bgfx::RendererType::Noop;
+		break;
+	case GraphicsBackend::Direct3D12:
+		init.type = bgfx::RendererType::Direct3D12;
+		break;
+	case GraphicsBackend::Metal:
+		init.type = bgfx::RendererType::Metal;
+		break;
+	case GraphicsBackend::Vulkan:
+		init.type = bgfx::RendererType::Vulkan;
+		break;
+	default:
+		SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "Got impossible graphics backend.");
+		return nullptr;
+	}
 
 	// Get render area size
 	glm::uvec2 drawableSize;
-	if (rendererType != bgfx::RendererType::Noop)
+	if (backend != GraphicsBackend::Noop)
 	{
 		const auto& window = Locator::windowing::value();
 

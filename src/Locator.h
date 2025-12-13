@@ -16,6 +16,8 @@
 
 #include <entt/locator/locator.hpp>
 
+#include "EngineConfig.h"
+
 namespace openblack
 {
 struct EngineConfig;
@@ -99,7 +101,7 @@ class TownSystemInterface;
 } // namespace ecs::systems
 
 void InitializeWindow(const std::string& title, int width, int height, windowing::DisplayMode displayMode, uint32_t extraFlags);
-bool InitializeEngine(uint8_t rendererType, bool vsync) noexcept;
+bool InitializeEngine(GraphicsBackend backend, bool vsync) noexcept;
 bool InitializeGame() noexcept;
 void InitializeLevel(const std::filesystem::path& path);
 void ShutDownServices();
