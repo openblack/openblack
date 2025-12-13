@@ -77,15 +77,14 @@ void openblack::InitializeWindow(const std::string& title, int width, int height
 	Locator::windowing::emplace<Sdl2WindowingSystem>(title, width, height, displayMode, extraFlags);
 }
 
-bool openblack::InitializeEngine(uint8_t rendererType, bool vsync) noexcept
+bool openblack::InitializeEngine(GraphicsBackend backend, bool vsync) noexcept
 {
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), "EnTT version: {}", ENTT_VERSION);
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), GLM_VERSION_COMPLETE);
 
 	Locator::profiler::emplace();
 
-	Locator::rendererInterface::reset(
-	    RendererInterface::Create(static_cast<bgfx::RendererType::Enum>(rendererType), vsync).release());
+	Locator::rendererInterface::reset(RendererInterface::Create(backend, vsync).release());
 	if (!Locator::rendererInterface::has_value())
 	{
 		SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "Failed to create renderer");

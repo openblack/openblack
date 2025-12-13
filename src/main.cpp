@@ -22,6 +22,7 @@
 // clang-format on
 #endif
 
+#include "EngineConfig.h"
 #include "Game.h"
 
 bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& returnCode)
@@ -70,33 +71,22 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 			returnCode = EXIT_SUCCESS;
 			return false;
 		}
-		static const std::map<std::string_view, bgfx::RendererType::Enum> rendererLookup = {
-		    std::pair {"OpenGL", bgfx::RendererType::OpenGL},
-		    std::pair {"OpenGLES", bgfx::RendererType::OpenGLES},
-		    std::pair {"Vulkan", bgfx::RendererType::Vulkan},
-		    std::pair {"Direct3D11", bgfx::RendererType::Direct3D11},
-		    std::pair {"Direct3D12", bgfx::RendererType::Direct3D12},
-		    std::pair {"Metal", bgfx::RendererType::Metal},
-		    std::pair {"Gnm", bgfx::RendererType::Gnm},
-		    std::pair {"Nvn", bgfx::RendererType::Nvn},
-		    std::pair {"Noop", bgfx::RendererType::Noop},
-		};
 
 		// pick a sane renderer based on the user os
-		bgfx::RendererType::Enum rendererType;
-#ifndef _APPLE_
-		rendererType = bgfx::RendererType::Vulkan;
+		openblack::GraphicsBackend graphicsBackend;
+#ifdef _APPLE_
+		graphicsBackend = openblack::GraphicsBackend::Metal;
 #else
-		rendererType = bgfx::RendererType::Metal;
+		graphicsBackend = openblack::GraphicsBackend::Vulkan;
 #endif
 
 		// allow user to specify a renderer
 		if (result.count("backend-type") != 0)
 		{
-			auto rendererIter = rendererLookup.find(result["backend-type"].as<std::string>());
-			if (rendererIter != rendererLookup.cend())
+			auto rendererIter = openblack::k_GraphicsBackendStringLookup.find(result["backend-type"].as<std::string>());
+			if (rendererIter != openblack::k_GraphicsBackendStringLookup.cend())
 			{
-				rendererType = rendererIter->second;
+				graphicsBackend = rendererIter->second;
 			}
 			else
 			{
@@ -188,7 +178,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		args.guiScale = result["ui-scale"].as<float>();
 		args.vsync = result["vsync"].as<bool>();
 		args.displayMode = displayMode;
-		args.rendererType = rendererType;
+		args.graphicsBackend = graphicsBackend;
 		args.numFramesToSimulate = result["num-frames-to-simulate"].as<uint32_t>();
 		args.logFile = result["log-file"].as<std::string>();
 		args.logLevels = logLevels;

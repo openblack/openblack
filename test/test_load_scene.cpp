@@ -25,7 +25,7 @@ protected:
 	{
 		static const auto mock_game_path = std::filesystem::path(TEST_BINARY_DIR) / "mock";
 		auto args = openblack::Arguments {
-		    .rendererType = bgfx::RendererType::Enum::Noop,
+		    .graphicsBackend = openblack::GraphicsBackend::Noop,
 		    .gamePath = mock_game_path.string(),
 		    .numFramesToSimulate = 0,
 		    .logFile = "stdout",

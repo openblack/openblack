@@ -19,6 +19,7 @@
 #include <glm/mat4x4.hpp>
 #include <spdlog/common.h>
 
+#include "EngineConfig.h"
 #include "Windowing/WindowingInterface.h" // For DisplayMode
 
 union SDL_Event;
@@ -56,7 +57,7 @@ struct Arguments
 	int windowHeight;
 	bool vsync;
 	openblack::windowing::DisplayMode displayMode;
-	bgfx::RendererType::Enum rendererType;
+	GraphicsBackend graphicsBackend;
 	std::string gamePath;
 	float guiScale;
 	uint32_t numFramesToSimulate;

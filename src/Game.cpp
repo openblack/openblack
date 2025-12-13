@@ -108,10 +108,9 @@ Game::Game(Arguments&& args) noexcept
 	config.numFramesToSimulate = args.numFramesToSimulate;
 	config.numFramesToSimulate = args.numFramesToSimulate;
 	config.numFramesToSimulate = args.numFramesToSimulate;
-	config.rendererType = args.rendererType;
 	config.resolution = {args.windowWidth, args.windowHeight};
 	config.displayMode = args.displayMode;
-	config.rendererType = args.rendererType;
+	config.graphicsBackend = args.graphicsBackend;
 	config.vsync = args.vsync;
 	config.guiScale = args.guiScale;
 }
@@ -430,10 +429,10 @@ bool Game::Initialize() noexcept
 {
 	auto& config = Locator::config::value();
 
-	if (config.rendererType != bgfx::RendererType::Noop)
+	if (config.graphicsBackend != GraphicsBackend::Noop)
 	{
 		uint32_t extraFlags = 0;
-		if (config.rendererType == bgfx::RendererType::Enum::Metal)
+		if (config.graphicsBackend == GraphicsBackend::Metal)
 		{
 			extraFlags |= SDL_WINDOW_METAL;
 		}
@@ -441,7 +440,7 @@ bool Game::Initialize() noexcept
 	}
 
 	using filesystem::Path;
-	if (!InitializeEngine(static_cast<uint8_t>(config.rendererType), config.vsync))
+	if (!InitializeEngine(config.graphicsBackend, config.vsync))
 	{
 		SPDLOG_LOGGER_CRITICAL(spdlog::get("game"), "Failed to initialize engine services.");
 		return false;
