@@ -46,7 +46,6 @@ struct EngineConfig
 	bool drawEntities {true};
 	bool drawSprites {true};
 	bool drawTestModel {true};
-	bool drawDebugCross {true};
 	bool drawBoundingBoxes {false};
 	bool drawFootpaths {false};
 	bool drawStreams {false};

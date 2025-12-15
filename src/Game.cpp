@@ -73,7 +73,6 @@ Game* Game::sInstance = nullptr;
 Game::Game(Arguments&& args) noexcept
     : _gamePath(args.gamePath)
     , _startMap(args.startLevel)
-    , _handPose(glm::identity<glm::mat4>())
     , _requestScreenshot(args.requestScreenshot)
 {
 	Locator::camera::emplace(glm::zero<glm::vec3>());
@@ -354,7 +353,7 @@ bool Game::Update() noexcept
 	{
 		auto profilerScopedUpdateUniforms = profiler.BeginScoped(Profiler::Stage::UpdateUniforms);
 
-		// Update Debug Cross
+		// Update Hand and intersection point
 		ecs::components::Transform intersectionTransform {};
 		{
 			const auto screenSize =
@@ -387,30 +386,24 @@ bool Game::Update() noexcept
 					}
 				}
 				intersectionTransform.scale = scale;
-				_handPose = glm::mat4(1.0f);
-				_handPose = glm::translate(_handPose, intersectionTransform.position);
-				_handPose *= glm::mat4(intersectionTransform.rotation);
-				_handPose = glm::scale(_handPose, intersectionTransform.scale);
-				Locator::rendererInterface::value().UpdateDebugCrossUniforms(
-				    glm::translate(camera.GetFocus(Camera::Interpolation::Target)));
 			}
-		}
 
-		// Update Hand
-		if (!_handGripping)
-		{
-			const glm::vec3 handOffset(0, 1.5f, 0);
-			const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
+			if (!_handGripping)
+			{
+				const glm::vec3 handOffset(0, 1.5f, 0);
+				const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
 
-			const auto handEntity = Locator::handSystem::value()
-			                            .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
-			auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(handEntity);
-			// TODO(#480): move using velocity rather than snapping hand to intersectionTransform
-			handTransform.position = intersectionTransform.position;
-			handTransform.rotation = glm::eulerAngleY(camera.GetRotation().y) * modelRotationCorrection;
-			handTransform.rotation = intersectionTransform.rotation * handTransform.rotation;
-			handTransform.position += intersectionTransform.rotation * handOffset;
-			Locator::entitiesRegistry::value().SetDirty();
+				const auto handEntity =
+				    Locator::handSystem::value()
+				        .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
+				auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(handEntity);
+				// TODO(#480): move using velocity rather than snapping hand to intersectionTransform
+				handTransform.position = intersectionTransform.position;
+				handTransform.rotation = glm::eulerAngleY(camera.GetRotation().y) * modelRotationCorrection;
+				handTransform.rotation = intersectionTransform.rotation * handTransform.rotation;
+				handTransform.position += intersectionTransform.rotation * handOffset;
+				Locator::entitiesRegistry::value().SetDirty();
+			}
 		}
 
 		// Update Entities
@@ -871,7 +864,6 @@ bool Game::Run() noexcept
 			    .drawEntities = config.drawEntities,
 			    .drawSprites = config.drawSprites,
 			    .drawTestModel = config.drawTestModel,
-			    .drawDebugCross = config.drawDebugCross,
 			    .drawBoundingBoxes = config.drawBoundingBoxes,
 			    .cullBack = false,
 			    .wireframe = config.wireframe,
