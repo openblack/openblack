@@ -185,9 +185,17 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 		case SDLK_8:
 			if ((event.key.keysym.mod & KMOD_CTRL) != 0)
 			{
-				const auto handPosition = _handPose * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 				const auto index = static_cast<uint8_t>(event.key.keysym.sym - SDLK_1);
-				Locator::cameraBookmarkSystem::value().SetBookmark(index, handPosition, camera.GetOrigin());
+				const auto positions = Locator::handSystem::value().GetPlayerHandPositions();
+				if (positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)] ||
+				    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)])
+				{
+					const auto handPosition =
+					    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)].value_or(
+					        positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)].value_or(
+					            glm::zero<glm::vec3>()));
+					Locator::cameraBookmarkSystem::value().SetBookmark(index, handPosition, camera.GetOrigin());
+				}
 			}
 			else
 			{
