@@ -41,14 +41,12 @@ public:
 		ReflectionDrawIsland,
 		ReflectionDrawModels,
 		ReflectionDrawSprites,
-		ReflectionDrawDebugCross,
 		MainPass,
 		MainPassDrawSky,
 		MainPassDrawWater,
 		MainPassDrawIsland,
 		MainPassDrawModels,
 		MainPassDrawSprites,
-		MainPassDrawDebugCross,
 		GuiDraw,
 		RendererFrame,
 
@@ -73,14 +71,12 @@ public:
 	    "Draw Island",          //
 	    "Draw Models",          //
 	    "Draw Sprites",         //
-	    "Draw Debug Cross",     //
 	    "Main Pass",            //
 	    "Draw Sky",             //
 	    "Draw Water",           //
 	    "Draw Island",          //
 	    "Draw Models",          //
 	    "Draw Sprites",         //
-	    "Draw Debug Cross",     //
 	    "Encode GUI Draw",      //
 	    "Renderer Frame",       //
 	};

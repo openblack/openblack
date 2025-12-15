@@ -558,7 +558,6 @@ bool Gui::ShowMenu() noexcept
 				ImGui::Checkbox("Entities", &config.drawEntities);
 				ImGui::Checkbox("Sprites", &config.drawSprites);
 				ImGui::Checkbox("TestModel", &config.drawTestModel);
-				ImGui::Checkbox("Debug Cross", &config.drawDebugCross);
 				ImGui::Checkbox("Wireframe", &config.wireframe);
 				ImGui::Checkbox("Bounding Boxes", &config.drawBoundingBoxes);
 				ImGui::Checkbox("Footpaths", &config.drawFootpaths);

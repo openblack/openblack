@@ -263,8 +263,6 @@ Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallb
     , _bgfxReset(bgfxReset)
 {
 	_shaderManager->LoadShaders();
-	// allocate vertex buffers for our debug draw and for primitives
-	_debugCross = DebugLines::CreateCross();
 	_plane = Primitive::CreatePlane();
 
 	// give debug names to views
@@ -280,7 +278,6 @@ Renderer::~Renderer() noexcept
 {
 	_plane.reset();
 	_shaderManager.reset();
-	_debugCross.reset();
 	bgfx::frame();
 	bgfx::shutdown();
 }
@@ -299,11 +296,6 @@ void Renderer::Reset(glm::u16vec2 resolution) const noexcept
 graphics::ShaderManager& Renderer::GetShaderManager() const noexcept
 {
 	return *_shaderManager;
-}
-
-void Renderer::UpdateDebugCrossUniforms(const glm::mat4& pose) noexcept
-{
-	_debugCrossPose = pose;
 }
 
 const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& meshSkins)
@@ -512,7 +504,6 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 			drawPassDesc.camera = reflectionCamera.get();
 			drawPassDesc.frameBuffer = &frameBuffer;
 			drawPassDesc.drawWater = false;
-			drawPassDesc.drawDebugCross = false;
 			drawPassDesc.drawBoundingBoxes = false;
 			drawPassDesc.cullBack = true;
 
@@ -793,18 +784,6 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			submitDesc.matrixCount = static_cast<uint8_t>(bones.size());
 			submitDesc.isSky = false;
 			DrawMesh(*mesh, submitDesc, 0);
-		}
-	}
-
-	{
-		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawDebugCross
-		                                                                          : Profiler::Stage::MainPassDrawDebugCross);
-		if (desc.drawDebugCross)
-		{
-			bgfx::setTransform(glm::value_ptr(_debugCrossPose));
-			_debugCross->GetVertexBuffer().Bind();
-			bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
-			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
 		}
 	}
 
