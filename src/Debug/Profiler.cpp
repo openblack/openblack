@@ -73,8 +73,6 @@ void Profiler::Draw() noexcept
 	ImGui::Checkbox("Entities", &config.drawEntities);
 	ImGui::NextColumn();
 	ImGui::Checkbox("Sprites", &config.drawSprites);
-	ImGui::NextColumn();
-	ImGui::Checkbox("TestModel", &config.drawTestModel);
 	ImGui::Columns(1);
 
 	auto width = ImGui::GetColumnWidth() - ImGui::CalcTextSize("Frame").x;
