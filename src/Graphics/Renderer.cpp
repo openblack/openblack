@@ -7,9 +7,8 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include <memory>
 #define LOCATOR_IMPLEMENTATIONS
-
-#include "Renderer.h"
 
 #include <cstdint>
 
@@ -42,6 +41,7 @@
 #include "Graphics/VertexBuffer.h"
 #include "Locator.h"
 #include "Profiler.h"
+#include "Renderer.h"
 #include "Resources/ResourceManager.h"
 #include "Resources/ResourcesInterface.h"
 #include "Windowing/WindowingInterface.h"
@@ -395,9 +395,10 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 		}
 
 		{
-			if (desc.instanceBuffer != nullptr && (skip & Mesh::SkipState::SkipInstanceBuffer) == 0)
+			if (desc.instanceDesc != nullptr && (skip & Mesh::SkipState::SkipInstanceBuffer) == 0)
 			{
-				bgfx::setInstanceDataBuffer(*desc.instanceBuffer, desc.instanceStart, desc.instanceCount);
+				bgfx::setInstanceDataBuffer(desc.instanceDesc->GetRawHandle(), desc.instanceDesc->GetStart(),
+				                            desc.instanceDesc->GetCount());
 			}
 			if (subMesh.GetMesh().IsIndexed() && (skip & Mesh::SkipState::SkipIndexBuffer) == 0)
 			{
@@ -672,9 +673,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			{
 				auto mesh = meshManager.Handle(meshId);
 
-				submitDesc.instanceBuffer = &renderCtx.instanceUniformBuffer;
-				submitDesc.instanceStart = placers.offset;
-				submitDesc.instanceCount = placers.count;
+				submitDesc.instanceDesc =
+				    std::make_unique<graphics::InstanceDesc>(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
 				if (mesh->IsBoned())
 				{
 					submitDesc.modelMatrices = mesh->GetBoneMatrices().data();
