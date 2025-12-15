@@ -863,7 +863,6 @@ bool Game::Run() noexcept
 			    .drawIsland = config.drawIsland,
 			    .drawEntities = config.drawEntities,
 			    .drawSprites = config.drawSprites,
-			    .drawTestModel = config.drawTestModel,
 			    .drawBoundingBoxes = config.drawBoundingBoxes,
 			    .cullBack = false,
 			    .wireframe = config.wireframe,

@@ -755,36 +755,6 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				    });
 			}
 		}
-
-		if (desc.drawTestModel)
-		{
-			L3DMeshSubmitDesc submitDesc = {};
-			submitDesc.viewId = desc.viewId;
-			submitDesc.program = _shaderManager->GetShader("Object");
-			// clang-format off
-			submitDesc.state = 0u
-				| BGFX_STATE_WRITE_MASK
-				| BGFX_STATE_DEPTH_TEST_GREATER
-				| BGFX_STATE_CULL_CCW
-				| BGFX_STATE_MSAA
-			;
-			// clang-format on
-			const auto& mesh = meshManager.Handle(entt::hashed_string("coffre"));
-			const auto& testAnimation = Locator::resources::value().GetAnimations().Handle(entt::hashed_string("coffre"));
-			const std::vector<uint32_t>& boneParents = mesh->GetBoneParents();
-			auto bones = testAnimation->GetBoneMatrices(desc.time);
-			for (uint32_t i = 0; i < bones.size(); ++i)
-			{
-				if (boneParents[i] != std::numeric_limits<uint32_t>::max())
-				{
-					bones[i] = bones[boneParents[i]] * bones[i];
-				}
-			}
-			submitDesc.modelMatrices = bones.data();
-			submitDesc.matrixCount = static_cast<uint8_t>(bones.size());
-			submitDesc.isSky = false;
-			DrawMesh(*mesh, submitDesc, 0);
-		}
 	}
 
 	// Enable stats or debug text.
