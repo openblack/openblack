@@ -10,10 +10,12 @@
 #pragma once
 
 #include <filesystem>
+#include <memory>
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
 
+#include "InstanceDesc.h"
 #include "RenderPass.h"
 
 #include "../EngineConfig.h"
@@ -71,7 +73,7 @@ public:
 		uint32_t rgba;
 		const glm::mat4* modelMatrices;
 		uint8_t matrixCount;
-		const bgfx::DynamicVertexBufferHandle* instanceBuffer;
+		std::unique_ptr<const graphics::InstanceDesc> instanceDesc;
 		uint32_t instanceStart;
 		uint32_t instanceCount;
 		bool isSky;
