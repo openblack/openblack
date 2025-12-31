@@ -215,7 +215,7 @@ jobs:
           GH_TOKEN: ${{ secrets.BW_ASSET_TOKEN }}
         run: |
           mkdir -p game-data
-          gh release download v1.0.0 \
+          gh release download assets \
             --repo ${{secrets.BW_DOWNLOAD_URL}} \
             --pattern bw.zip \
             --dir game-data
