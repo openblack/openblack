@@ -14,8 +14,7 @@
 #include <memory>
 #include <optional>
 
-#include <bgfx/bgfx.h>
-
+#include "GraphicsHandle.h"
 #include "RenderPass.h"
 #include "Texture2D.h"
 
@@ -37,7 +36,7 @@ public:
 
 private:
 	std::string _name;
-	bgfx::FrameBufferHandle _handle;
+	FrameBufferHandle _handle;
 
 	uint16_t _width;
 	uint16_t _height;

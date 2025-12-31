@@ -13,6 +13,10 @@
 
 #include <array>
 
+#include <bgfx/bgfx.h>
+
+#include "GraphicsHandleBgfx.h"
+
 using namespace openblack::graphics;
 
 FrameBuffer::FrameBuffer(std::string&& name, uint16_t width, uint16_t height, Format colorFormat,
@@ -42,28 +46,28 @@ FrameBuffer::FrameBuffer(std::string&& name, uint16_t width, uint16_t height, Fo
 		    bgfx::createTexture2D(width, height, false, 1, getBgfxTextureFormat(colorFormat), BGFX_TEXTURE_RT),
 		    bgfx::createTexture2D(width, height, false, 1, getBgfxTextureFormat(depthStencilFormat.value()), BGFX_TEXTURE_RT),
 		};
-		_handle = bgfx::createFrameBuffer(static_cast<uint8_t>(textures.size()), textures.data());
-		_colorAttachment._handle = bgfx::getTexture(_handle, 0);
-		_depthStencilAttachment._handle = bgfx::getTexture(_handle, 1);
+		_handle = fromBgfx(bgfx::createFrameBuffer(static_cast<uint8_t>(textures.size()), textures.data()));
+		_colorAttachment._handle = bgfx::getTexture(toBgfx(_handle), 0);
+		_depthStencilAttachment._handle = bgfx::getTexture(toBgfx(_handle), 1);
 	}
 	else
 	{
-		_handle = bgfx::createFrameBuffer(_width, _height, getBgfxTextureFormat(colorFormat), BGFX_TEXTURE_RT);
-		_colorAttachment._handle = bgfx::getTexture(_handle, 0);
+		_handle = fromBgfx(bgfx::createFrameBuffer(_width, _height, getBgfxTextureFormat(colorFormat), BGFX_TEXTURE_RT));
+		_colorAttachment._handle = bgfx::getTexture(toBgfx(_handle), 0);
 	}
 
-	assert(bgfx::isValid(_handle));
+	assert(bgfx::isValid(toBgfx(_handle)));
 }
 
 FrameBuffer::~FrameBuffer()
 {
-	if (bgfx::isValid(_handle))
+	if (bgfx::isValid(toBgfx(_handle)))
 	{
-		bgfx::destroy(_handle);
+		bgfx::destroy(toBgfx(_handle));
 	}
 }
 
 void FrameBuffer::Bind(RenderPass viewId) const
 {
-	bgfx::setViewFrameBuffer(static_cast<uint8_t>(viewId), _handle);
+	bgfx::setViewFrameBuffer(static_cast<uint8_t>(viewId), toBgfx(_handle));
 }
