@@ -13,6 +13,8 @@
 
 #include <array>
 
+#include "GraphicsHandleBgfx.h"
+
 using namespace openblack::graphics;
 
 namespace
@@ -33,7 +35,7 @@ constexpr std::array<bgfx::Attrib::Enum, 18> k_Attributes {
 
 } // namespace
 
-VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl decl) noexcept
+VertexBuffer::VertexBuffer(std::string name, const void* mem, VertexDecl decl) noexcept
     : _name(std::move(name))
     , _vertexCount(0)
     , _vertexDecl(std::move(decl))
@@ -64,22 +66,24 @@ VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl
 	layout.end();
 	assert(layout.m_stride == _strideBytes);
 
-	_vertexCount = mem->size / static_cast<uint32_t>(_strideBytes);
+	const auto* bgfxMem = reinterpret_cast<const bgfx::Memory*>(mem);
 
-	_handle = bgfx::createVertexBuffer(mem, layout);
-	_layoutHandle = bgfx::createVertexLayout(layout);
-	bgfx::setName(_handle, _name.c_str());
+	_vertexCount = bgfxMem->size / _strideBytes;
+
+	_handle = fromBgfx(bgfx::createVertexBuffer(bgfxMem, layout));
+	_layoutHandle = fromBgfx(bgfx::createVertexLayout(layout));
+	bgfx::setName(toBgfx(_handle), _name.c_str());
 }
 
 VertexBuffer::~VertexBuffer() noexcept
 {
-	if (bgfx::isValid(_handle))
+	if (bgfx::isValid(toBgfx(_handle)))
 	{
-		bgfx::destroy(_handle);
+		bgfx::destroy(toBgfx(_handle));
 	}
-	if (bgfx::isValid(_layoutHandle))
+	if (bgfx::isValid(toBgfx(_layoutHandle)))
 	{
-		bgfx::destroy(_layoutHandle);
+		bgfx::destroy(toBgfx(_layoutHandle));
 	}
 }
 
@@ -100,5 +104,5 @@ uint32_t VertexBuffer::GetSizeInBytes() const noexcept
 
 void VertexBuffer::Bind() const
 {
-	bgfx::setVertexBuffer(0, _handle, 0, _vertexCount, _layoutHandle);
+	bgfx::setVertexBuffer(0, toBgfx(_handle), 0, _vertexCount, toBgfx(_layoutHandle));
 }
