@@ -215,12 +215,10 @@ jobs:
         id: game-data
         with:
           url: ${{secrets.BW_DOWNLOAD_URL}}
-          filename: bw.7z
+          filename: bw.zip
           target: game-data
       - name: Extract Game Data
-        run: 7z x -p"${{secrets.BW_DOWNLOAD_PW}}" -ogame-data/bw "$PWD/game-data/${{steps.game-data.outputs.filename}}"
-      - name: Add empty Audio directory
-        run: mkdir game-data/bw/Audio
+        run: 7z x -p"${{secrets.BW_DOWNLOAD_PW}}" -ogame-data "$PWD/game-data/${{steps.game-data.outputs.filename}}"
       - name: Enable execute permissions on binary
         run: chmod +x ${{steps.download-binary.outputs.download-path}}/*/*
         if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
