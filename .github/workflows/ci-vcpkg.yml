@@ -213,6 +213,7 @@ jobs:
       - name: Download encrypted Game Data
         env:
           GH_TOKEN: ${{ secrets.BW_ASSET_TOKEN }}
+        shell: bash
         run: |
           mkdir -p game-data
           gh release download assets \
