@@ -18,6 +18,16 @@
 namespace openblack::graphics
 {
 
+inline bgfx::IndexBufferHandle toBgfx(IndexBufferHandle handle)
+{
+	return {static_cast<uint16_t>(handle.id)};
+}
+
+inline IndexBufferHandle fromBgfx(bgfx::IndexBufferHandle handle)
+{
+	return {handle.idx};
+}
+
 inline bgfx::FrameBufferHandle toBgfx(FrameBufferHandle handle)
 {
 	return {static_cast<uint16_t>(handle.id)};
