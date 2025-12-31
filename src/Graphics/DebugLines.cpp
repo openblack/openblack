@@ -13,6 +13,8 @@
 
 #include <array>
 
+#include <bgfx/bgfx.h>
+
 #include "Mesh.h"
 #include "VertexBuffer.h"
 

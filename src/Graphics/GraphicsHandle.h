@@ -19,4 +19,14 @@ struct FrameBufferHandle
 	uint32_t id = 0;
 };
 
+struct VertexBufferHandle
+{
+	uint32_t id = 0;
+};
+
+struct VertexLayoutHandle
+{
+	uint32_t id = 0;
+};
+
 } // namespace openblack::graphics

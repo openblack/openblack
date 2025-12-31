@@ -11,11 +11,10 @@
 
 #include <cstdint>
 
-#include <memory>
 #include <string>
 #include <vector>
 
-#include <bgfx/bgfx.h>
+#include "GraphicsHandle.h"
 
 namespace openblack::graphics
 {
@@ -74,7 +73,7 @@ using VertexDecl = std::vector<VertexAttrib>;
 class VertexBuffer
 {
 public:
-	VertexBuffer(std::string name, const bgfx::Memory* memory, VertexDecl decl) noexcept;
+	VertexBuffer(std::string name, const void* memory, VertexDecl decl) noexcept;
 	~VertexBuffer() noexcept;
 
 	[[nodiscard]] uint32_t GetCount() const noexcept;
@@ -89,8 +88,8 @@ private:
 	const VertexDecl _vertexDecl;
 	uint32_t _strideBytes;
 	std::vector<uint32_t> _vertexDeclOffsets;
-	bgfx::VertexBufferHandle _handle;
-	bgfx::VertexLayoutHandle _layoutHandle;
+	VertexBufferHandle _handle;
+	VertexLayoutHandle _layoutHandle;
 };
 
 } // namespace openblack::graphics

@@ -28,4 +28,24 @@ inline FrameBufferHandle fromBgfx(bgfx::FrameBufferHandle handle)
 	return {handle.idx};
 }
 
+inline bgfx::VertexBufferHandle toBgfx(VertexBufferHandle handle)
+{
+	return {static_cast<uint16_t>(handle.id)};
+}
+
+inline VertexBufferHandle fromBgfx(bgfx::VertexBufferHandle handle)
+{
+	return {handle.idx};
+}
+
+inline bgfx::VertexLayoutHandle toBgfx(VertexLayoutHandle handle)
+{
+	return {static_cast<uint16_t>(handle.id)};
+}
+
+inline VertexLayoutHandle fromBgfx(bgfx::VertexLayoutHandle handle)
+{
+	return {handle.idx};
+}
+
 } // namespace openblack::graphics
