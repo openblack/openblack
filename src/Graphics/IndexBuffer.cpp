@@ -14,6 +14,10 @@
 #include <string>
 #include <utility>
 
+#include <bgfx/bgfx.h>
+
+#include "GraphicsHandleBgfx.h"
+
 using namespace openblack::graphics;
 
 IndexBuffer::IndexBuffer(std::string name, const void* indices, uint32_t indexCount, Type type)
@@ -26,26 +30,27 @@ IndexBuffer::IndexBuffer(std::string name, const void* indices, uint32_t indexCo
 	assert(indexCount > 0);
 
 	const auto* mem = bgfx::makeRef(indices, indexCount * GetTypeSize(_type));
-	_handle = bgfx::createIndexBuffer(mem, type == Type::Uint32 ? BGFX_BUFFER_INDEX32 : 0);
-	bgfx::setName(_handle, _name.c_str());
+	_handle = fromBgfx(bgfx::createIndexBuffer(mem, type == Type::Uint32 ? BGFX_BUFFER_INDEX32 : 0));
+	bgfx::setName(toBgfx(_handle), _name.c_str());
 }
 
-IndexBuffer::IndexBuffer(std::string name, const bgfx::Memory* mem, Type type)
+IndexBuffer::IndexBuffer(std::string name, const void* mem, Type type)
     : _name(std::move(name))
     , _type(type)
     , _handle(BGFX_INVALID_HANDLE)
 {
-	_count = mem->size / sizeof(uint16_t);
+	const auto* memBgfx = static_cast<const bgfx::Memory*>(mem);
+	_count = memBgfx->size / sizeof(uint16_t);
 
-	_handle = bgfx::createIndexBuffer(mem, type == Type::Uint32 ? BGFX_BUFFER_INDEX32 : 0);
-	bgfx::setName(_handle, _name.c_str());
+	_handle = fromBgfx(bgfx::createIndexBuffer(memBgfx, type == Type::Uint32 ? BGFX_BUFFER_INDEX32 : 0));
+	bgfx::setName(toBgfx(_handle), _name.c_str());
 }
 
 IndexBuffer::~IndexBuffer()
 {
-	if (bgfx::isValid(_handle))
+	if (bgfx::isValid(toBgfx(_handle)))
 	{
-		bgfx::destroy(_handle);
+		bgfx::destroy(toBgfx(_handle));
 	}
 }
 
@@ -76,5 +81,5 @@ uint32_t IndexBuffer::GetTypeSize(Type type)
 
 void IndexBuffer::Bind(uint32_t count, uint32_t startIndex) const
 {
-	bgfx::setIndexBuffer(_handle, startIndex, count);
+	bgfx::setIndexBuffer(toBgfx(_handle), startIndex, count);
 }

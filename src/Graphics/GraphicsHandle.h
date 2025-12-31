@@ -14,6 +14,11 @@
 namespace openblack::graphics
 {
 
+struct IndexBufferHandle
+{
+	uint32_t id = 0;
+};
+
 struct FrameBufferHandle
 {
 	uint32_t id = 0;
