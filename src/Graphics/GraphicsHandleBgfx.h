@@ -58,4 +58,14 @@ inline VertexLayoutHandle fromBgfx(bgfx::VertexLayoutHandle handle)
 	return {handle.idx};
 }
 
+inline bgfx::DynamicVertexBufferHandle toBgfx(DynamicVertexBufferHandle handle)
+{
+	return {static_cast<uint16_t>(handle.id)};
+}
+
+inline DynamicVertexBufferHandle fromBgfx(bgfx::DynamicVertexBufferHandle handle)
+{
+	return {handle.idx};
+}
+
 } // namespace openblack::graphics
