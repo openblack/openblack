@@ -7,6 +7,8 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include "test_fixed.h"
+
 #include <3D/AllMeshes.h>
 #include <ECS/Archetypes/AbodeArchetype.h>
 #include <ECS/Archetypes/TownArchetype.h>
@@ -25,26 +27,6 @@
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
 using namespace openblack;
-
-class TestFixed: public ::testing::Test
-{
-protected:
-	void SetUp() override
-	{
-		static const auto mockGamePath = std::filesystem::path(TEST_BINARY_DIR) / "mock";
-		auto args = Arguments {
-		    .rendererType = bgfx::RendererType::Enum::Noop,
-		    .gamePath = mockGamePath.string(),
-		    .numFramesToSimulate = 0,
-		    .logFile = "stdout",
-		};
-		std::fill_n(args.logLevels.begin(), args.logLevels.size(), spdlog::level::warn);
-		_game = std::make_unique<Game>(std::move(args));
-		ASSERT_TRUE(_game->Initialize());
-	}
-	void TearDown() override { _game.reset(); }
-	std::unique_ptr<Game> _game;
-};
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
 TEST_F(TestFixed, celticTownCentreMeshBoundingCircle)

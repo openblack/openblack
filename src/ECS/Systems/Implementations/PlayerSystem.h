@@ -28,6 +28,7 @@ public:
 	[[nodiscard]] entt::entity GetPlayer(PlayerNames playerName) const override;
 
 private:
+	// TODO: move players into GameContext ?
 	std::unordered_map<PlayerNames, entt::entity> _players;
 };
 } // namespace openblack::ecs::systems

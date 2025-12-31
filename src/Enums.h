@@ -3196,6 +3196,7 @@ enum class PlayerNames : uint8_t
 
 	_COUNT
 };
+static constexpr size_t k_MaxPlayers = static_cast<uint8_t>(PlayerNames::_COUNT) - 1; // -1 Neutral
 
 static constexpr std::array<std::string_view, static_cast<uint8_t>(PlayerNames::_COUNT)> k_PlayerNamesStrs = {
     "PLAYER_ONE",   //

@@ -64,7 +64,7 @@ entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, 
 	auto& registry = Locator::entitiesRegistry::value();
 
 	// If there is no town, assign to closest
-	if (registry.Context().towns.find(townId) == registry.Context().towns.end())
+	if (registry.MapContext().towns.find(townId) == registry.MapContext().towns.end())
 	{
 		SPDLOG_LOGGER_WARN(spdlog::get("scripting"), "Function {} has invalid Town ({}).", __func__, townId);
 		const auto town = Locator::townSystem::value().FindClosestTown(position);

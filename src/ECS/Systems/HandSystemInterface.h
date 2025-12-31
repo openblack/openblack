@@ -15,20 +15,17 @@
 #include <entt/fwd.hpp>
 #include <glm/vec3.hpp>
 
+#include "ECS/Components/PlayerHand.h"
+
 namespace openblack::ecs::systems
 {
 class HandSystemInterface
 {
 public:
-	enum class Side : uint8_t
-	{
-		Left,
-		Right,
-		_Count
-	};
-	virtual bool Initialize() noexcept = 0;
-	[[nodiscard]] virtual std::array<entt::entity, static_cast<size_t>(Side::_Count)> GetPlayerHands() const noexcept = 0;
-	[[nodiscard]] virtual std::array<std::optional<glm::vec3>, static_cast<size_t>(Side::_Count)>
-	GetPlayerHandPositions() const noexcept = 0;
+	virtual bool Initialize(entt::entity playerEntity) noexcept = 0;
+	[[nodiscard]] virtual std::array<entt::entity, static_cast<size_t>(components::PlayerHand::Side::_Count)>
+	GetPlayerHands(entt::entity playerEntity) const noexcept = 0;
+	[[nodiscard]] virtual std::array<std::optional<glm::vec3>, static_cast<size_t>(components::PlayerHand::Side::_Count)>
+	GetPlayerHandPositions(entt::entity playerEntity) const noexcept = 0;
 };
 } // namespace openblack::ecs::systems

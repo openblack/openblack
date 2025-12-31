@@ -7,35 +7,36 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include <ECS/Archetypes/PlayerArchetype.h>
 #include <Game.h>
 #include <LHScriptX/Script.h>
+#include <Locator.h>
 #include <gtest/gtest.h>
 
-class LoadScene: public ::testing::Test
+#include "test_fixed.h"
+
+class LoadScene: public TestFixed
 {
+protected:
+	void SetUp() override
+	{
+		using namespace openblack;
+		auto args = openblack::Arguments {
+		    .rendererType = bgfx::RendererType::Enum::Noop,
+		    .gamePath = k_MockGamePath.string(),
+		    .numFramesToSimulate = 0,
+		    .logFile = "stdout",
+		};
+		std::fill_n(args.logLevels.begin(), args.logLevels.size(), spdlog::level::debug);
+		SetUpGame(std::move(args));
+	}
+
 public:
 	void LoadTestScene(const char* sceneScript)
 	{
 		openblack::lhscriptx::Script script;
 		script.Load(sceneScript);
 	}
-
-protected:
-	void SetUp() override
-	{
-		static const auto mock_game_path = std::filesystem::path(TEST_BINARY_DIR) / "mock";
-		auto args = openblack::Arguments {
-		    .rendererType = bgfx::RendererType::Enum::Noop,
-		    .gamePath = mock_game_path.string(),
-		    .numFramesToSimulate = 0,
-		    .logFile = "stdout",
-		};
-		std::fill_n(args.logLevels.begin(), args.logLevels.size(), spdlog::level::debug);
-		game_ = std::make_unique<openblack::Game>(std::move(args));
-		ASSERT_TRUE(game_->Initialize());
-	}
-	void TearDown() override { game_.reset(); }
-	std::unique_ptr<openblack::Game> game_;
 };
 
 TEST_F(LoadScene, minimal)

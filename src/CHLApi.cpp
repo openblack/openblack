@@ -541,8 +541,10 @@ void FlockMember() // 041 FLOCK_MEMBER
 
 void GetHandPosition() // 042 GET_HAND_POSITION
 {
-	const auto handEntity = Locator::handSystem::value().GetPlayerHands()[static_cast<size_t>(HandSystemInterface::Side::Left)];
-	auto& handTransform = Locator::entitiesRegistry::value().Get<Transform>(handEntity);
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto handEntity = Locator::handSystem::value().GetPlayerHands(
+	    registry.GameContext().player)[static_cast<size_t>(ecs::components::PlayerHand::Side::Left)];
+	auto& handTransform = registry.Get<Transform>(handEntity);
 
 	PushVec(handTransform.position);
 }

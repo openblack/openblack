@@ -352,10 +352,11 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 
 std::array<std::optional<glm::vec3>, 2> GameActionMap::GetHandPositions() const
 {
-	auto handPositions = Locator::handSystem::value().GetPlayerHandPositions();
+	auto handPositions =
+	    Locator::handSystem::value().GetPlayerHandPositions(Locator::entitiesRegistry::value().GameContext().player);
 
 	return {{
-	    handPositions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)],
-	    handPositions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)],
+	    handPositions[static_cast<size_t>(ecs::components::PlayerHand::Side::Left)],
+	    handPositions[static_cast<size_t>(ecs::components::PlayerHand::Side::Right)],
 	}};
 }

@@ -14,24 +14,20 @@
 #include "Game.h"
 #include "LHScriptX/Script.h"
 #include "Locator.h"
+#include "test_fixed.h"
 
-class SetCameraPos: public ::testing::Test
+class SetCameraPos: public TestFixed
 {
 protected:
 	void SetUp() override
 	{
-		static const auto mockGamePath = std::filesystem::path(TEST_BINARY_DIR) / "mock";
-		auto args = openblack::Arguments {
+		using namespace openblack;
+		SetUpGame(Arguments {
 		    .rendererType = bgfx::RendererType::Enum::Noop,
-		    .gamePath = mockGamePath.string(),
+		    .gamePath = k_MockGamePath.string(),
 		    .logFile = "stdout",
-		};
-		std::fill_n(args.logLevels.begin(), args.logLevels.size(), spdlog::level::warn);
-		_game = std::make_unique<openblack::Game>(std::move(args));
-		ASSERT_TRUE(_game->Initialize());
+		});
 	}
-	void TearDown() override { _game.reset(); }
-	std::unique_ptr<openblack::Game> _game;
 
 public:
 	void LoadTestScene(const char* sceneScript)

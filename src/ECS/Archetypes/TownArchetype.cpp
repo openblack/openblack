@@ -23,13 +23,13 @@ entt::entity TownArchetype::Create(int id, const glm::vec3& position, [[maybe_un
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 
-	// const auto& info = Game::Instance()->GetInfoConstants().town;
+	// const auto& info = Locator::gameInterface::value().GetInfoConstants().town;
 
 	registry.Assign<Town>(entity, static_cast<uint32_t>(id));
 	registry.Assign<Tribe>(entity, tribe);
 	registry.Assign<Transform>(entity, position, glm::mat3(1.0f), glm::vec3(1.0f));
-	auto& registryContext = registry.Context();
-	registryContext.towns.insert({id, entity});
+	auto& mapContext = registry.MapContext();
+	mapContext.towns.insert({id, entity});
 
 	return entity;
 }

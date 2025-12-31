@@ -382,13 +382,13 @@ void Console::Draw() noexcept
 			const auto pre = std::string(_inputBuffer.data(), _inputBuffer.data() + _inputCursorPosition);
 			const auto post = std::string(_inputBuffer.data() + _inputCursorPosition);
 
-			const auto positions = Locator::handSystem::value().GetPlayerHandPositions();
-			if (positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)] ||
-			    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)])
+			const auto& registry = Locator::entitiesRegistry::value();
+			const auto positions = Locator::handSystem::value().GetPlayerHandPositions(registry.GameContext().player);
+			if (positions[static_cast<size_t>(ecs::components::PlayerHand::Side::Left)] ||
+			    positions[static_cast<size_t>(ecs::components::PlayerHand::Side::Right)])
 			{
-				const auto position = positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)].value_or(
-				    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)].value_or(
-				        glm::zero<glm::vec3>()));
+				const auto position = positions[static_cast<size_t>(ecs::components::PlayerHand::Side::Left)].value_or(
+				    positions[static_cast<size_t>(ecs::components::PlayerHand::Side::Right)].value_or(glm::zero<glm::vec3>()));
 				snprintf(_inputBuffer.data(), _inputBuffer.size(), "%s%.2f,%.2f%s", pre.c_str(), position.x, position.z,
 				         post.c_str());
 			}

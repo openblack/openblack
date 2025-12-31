@@ -22,9 +22,10 @@ TEST(GameInitialize, initializeOnly)
 	    .startLevel = "Land1.txt",
 	};
 	std::fill_n(args.logLevels.begin(), args.logLevels.size(), spdlog::level::debug);
-	auto game = std::make_unique<openblack::Game>(std::move(args));
-	ASSERT_TRUE(game->Initialize());
-	game.reset();
+	auto& game = openblack::Game::CreateGame(std::move(args));
+	ASSERT_TRUE(game.Initialize());
+	ASSERT_TRUE(game.Shutdown());
+	openblack::Game::ResetGame();
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
@@ -39,8 +40,9 @@ TEST(GameInitialize, run0Frames)
 	    .startLevel = "Land1.txt",
 	};
 	std::fill_n(args.logLevels.begin(), args.logLevels.size(), spdlog::level::debug);
-	auto game = std::make_unique<openblack::Game>(std::move(args));
-	ASSERT_TRUE(game->Initialize());
-	ASSERT_TRUE(game->Run());
-	game.reset();
+	auto& game = openblack::Game::CreateGame(std::move(args));
+	ASSERT_TRUE(game.Initialize());
+	ASSERT_TRUE(game.Run());
+	ASSERT_TRUE(game.Shutdown());
+	openblack::Game::ResetGame();
 }
