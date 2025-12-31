@@ -15,7 +15,6 @@
 #include <vector>
 
 #include <L3DFile.h>
-#include <bgfx/bgfx.h>
 
 #include "AxisAlignedBoundingBox.h"
 

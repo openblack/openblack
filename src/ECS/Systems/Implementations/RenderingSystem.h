@@ -12,7 +12,6 @@
 #include <map>
 #include <vector>
 
-#include <bgfx/bgfx.h>
 #include <glm/mat4x4.hpp>
 
 #include "3D/AllMeshes.h"

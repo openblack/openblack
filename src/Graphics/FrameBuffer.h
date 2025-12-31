@@ -14,6 +14,8 @@
 #include <memory>
 #include <optional>
 
+#include <bgfx/bgfx.h>
+
 #include "RenderPass.h"
 #include "Texture2D.h"
 

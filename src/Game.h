@@ -15,7 +15,6 @@
 #include <optional>
 #include <string>
 
-#include <bgfx/bgfx.h>
 #include <glm/mat4x4.hpp>
 #include <spdlog/common.h>
 
