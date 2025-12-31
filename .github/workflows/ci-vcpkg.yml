@@ -212,7 +212,7 @@ jobs:
           path: cmake-build-presets/ninja-multi-vcpkg/test
       - name: Download encrypted Game Data
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.BW_ASSET_TOKEN }}
         run: |
           mkdir -p game-data
           gh release download v1.0.0 \
