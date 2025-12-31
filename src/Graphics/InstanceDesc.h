@@ -11,10 +11,7 @@
 
 #include <cstdint>
 
-#include <map>
-#include <string>
-
-#include <bgfx/bgfx.h>
+#include "GraphicsHandle.h"
 
 namespace openblack::graphics
 {
@@ -24,14 +21,14 @@ class InstanceDesc
 {
 public:
 	InstanceDesc() = delete;
-	InstanceDesc(bgfx::DynamicVertexBufferHandle buffer, uint32_t start, uint32_t count);
+	InstanceDesc(DynamicVertexBufferHandle buffer, uint32_t start, uint32_t count);
 
-	[[nodiscard]] bgfx::DynamicVertexBufferHandle GetRawHandle() const { return _buffer; }
+	[[nodiscard]] DynamicVertexBufferHandle GetRawHandle() const { return _buffer; }
 	[[nodiscard]] uint32_t GetStart() const { return _start; }
 	[[nodiscard]] uint32_t GetCount() const { return _count; }
 
 private:
-	bgfx::DynamicVertexBufferHandle _buffer;
+	DynamicVertexBufferHandle _buffer;
 	uint32_t _start;
 	uint32_t _count;
 };

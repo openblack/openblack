@@ -35,6 +35,7 @@
 #include "EngineConfig.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
+#include "Graphics/GraphicsHandleBgfx.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/Primitive.h"
 #include "Graphics/ShaderManager.h"
@@ -389,7 +390,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 		{
 			if (desc.instanceDesc != nullptr && (skip & Mesh::SkipState::SkipInstanceBuffer) == 0)
 			{
-				bgfx::setInstanceDataBuffer(desc.instanceDesc->GetRawHandle(), desc.instanceDesc->GetStart(),
+				bgfx::setInstanceDataBuffer(toBgfx(desc.instanceDesc->GetRawHandle()), desc.instanceDesc->GetStart(),
 				                            desc.instanceDesc->GetCount());
 			}
 			if (subMesh.GetMesh().IsIndexed() && (skip & Mesh::SkipState::SkipIndexBuffer) == 0)
@@ -664,8 +665,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			{
 				auto mesh = meshManager.Handle(meshId);
 
-				submitDesc.instanceDesc =
-				    std::make_unique<graphics::InstanceDesc>(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
+				submitDesc.instanceDesc = std::make_unique<graphics::InstanceDesc>(fromBgfx(renderCtx.instanceUniformBuffer),
+				                                                                   placers.offset, placers.count);
 				if (mesh->IsBoned())
 				{
 					submitDesc.modelMatrices = mesh->GetBoneMatrices().data();

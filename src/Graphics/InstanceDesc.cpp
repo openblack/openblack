@@ -11,7 +11,7 @@
 
 using namespace openblack::graphics;
 
-InstanceDesc::InstanceDesc(bgfx::DynamicVertexBufferHandle buffer, uint32_t start, uint32_t count)
+InstanceDesc::InstanceDesc(DynamicVertexBufferHandle buffer, uint32_t start, uint32_t count)
     : _buffer(buffer)
     , _start(start)
     , _count(count)
