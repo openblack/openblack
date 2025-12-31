@@ -210,13 +210,15 @@ jobs:
         with:
           name: openblack-test-data-${{ env.GITHUB_REF_NAME_DASHES }}
           path: cmake-build-presets/ninja-multi-vcpkg/test
-      - name: Download Pre-patched and installed Game Data
-        uses: suisei-cn/actions-download-file@v1.6.0
-        id: game-data
-        with:
-          url: ${{secrets.BW_DOWNLOAD_URL}}
-          filename: bw.zip
-          target: game-data
+      - name: Download encrypted Game Data
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p game-data
+          gh release download v1.0.0 \
+            --repo ${{secrets.BW_DOWNLOAD_URL}} \
+            --pattern bw.zip \
+            --dir game-data
       - name: Extract Game Data
         run: 7z x -p"${{secrets.BW_DOWNLOAD_PW}}" -ogame-data "$PWD/game-data/${{steps.game-data.outputs.filename}}"
       - name: Enable execute permissions on binary
