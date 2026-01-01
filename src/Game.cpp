@@ -13,6 +13,7 @@
 
 #include <LHVM.h>
 #include <SDL.h>
+#include <fmt/std.h> // for fmt filesystem::path
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -61,6 +62,39 @@
 #ifdef __ANDROID__
 #include <spdlog/sinks/android_sink.h>
 #endif
+
+namespace openblack
+{
+// internal loading context with pack::PackFile
+struct GameLoadingContext
+{
+	enum class LoadingStep
+	{
+		LoadCitadelOutsideMeshes,
+		LoadCitadelEngineMeshes,
+		ReadDataAllMeshesPack,
+		LoadMeshesFromPack,
+		LoadTexturesFromPack,
+		ReadDataAllAnimations,
+		LoadAnimationsFromPack,
+		LoadCreatureMeshes,
+		LoadMiscAssets,
+		LoadCampaignLevels,
+		LoadPlaygrounds,
+		LoadAudio,
+		LoadScriptsInfo,
+		LoadTextures,
+		LoadMap,
+		Done,
+
+		_COUNT,
+	};
+	pack::PackFile pack;
+	pack::PackFile animationPack;
+
+	LoadingStep step;
+};
+} // namespace openblack
 
 using namespace openblack;
 using namespace openblack::lhscriptx;
@@ -291,15 +325,19 @@ bool Game::Update() noexcept
 
 	Locator::debugGui::value().SetScale(config.guiScale);
 
-	// Physics
+	// Loading
+	if (_currentScene == Scene::Loading)
 	{
-		auto physics = profiler.BeginScoped(Profiler::Stage::PhysicsUpdate);
-		if (_frameCount > 0)
-		{
-			auto& dynamicsSystem = Locator::dynamicsSystem::value();
-			dynamicsSystem.Update(deltaTime);
-			dynamicsSystem.UpdatePhysicsTransforms();
-		}
+		UpdateLoading();
+	}
+
+	// Physics
+	auto physics = profiler.BeginScoped(Profiler::Stage::PhysicsUpdate);
+	if (_currentScene == Scene::Main && _frameCount > 0)
+	{
+		auto& dynamicsSystem = Locator::dynamicsSystem::value();
+		dynamicsSystem.Update(deltaTime);
+		dynamicsSystem.UpdatePhysicsTransforms();
 	}
 
 	// Input events
@@ -314,7 +352,11 @@ bool Game::Update() noexcept
 		{
 			Locator::events::value().Create<SDL_Event>(e);
 		}
-		camera.HandleActions(deltaTime);
+
+		if (_currentScene == Scene::Main)
+		{
+			camera.HandleActions(deltaTime);
+		}
 	}
 
 	if (!config.running)
@@ -331,10 +373,15 @@ bool Game::Update() noexcept
 		}
 	}
 
-	camera.Update(deltaTime);
-	Locator::cameraBookmarkSystem::value().Update(deltaTime);
+	// Update camera
+	if (_currentScene == Scene::Main)
+	{
+		camera.Update(deltaTime);
+		Locator::cameraBookmarkSystem::value().Update(deltaTime);
+	}
 
 	// Update Game Logic in Registry
+	if (_currentScene == Scene::Main)
 	{
 		auto gameLogic = profiler.BeginScoped(Profiler::Stage::GameLogic);
 		if (GameLogicLoop())
@@ -344,6 +391,7 @@ bool Game::Update() noexcept
 	}
 
 	// Update Uniforms
+	if (_currentScene == Scene::Main)
 	{
 		auto profilerScopedUpdateUniforms = profiler.BeginScoped(Profiler::Stage::UpdateUniforms);
 
@@ -449,7 +497,7 @@ bool Game::Initialize() noexcept
 	auto& fileSystem = Locator::filesystem::value();
 	auto& events = Locator::events::value();
 
-	events.AddHandler(std::function([this, &config](const SDL_Event& event) {
+	events.AddHandler(std::function<void(const SDL_Event&)>([this, &config](const SDL_Event& event) {
 		// If gui captures this input, do not propagate
 		if (!Locator::debugGui::value().ProcessEvents(event))
 		{
@@ -500,6 +548,53 @@ bool Game::Initialize() noexcept
 		return false;
 	}
 
+	if (!InitializeLoading())
+	{
+		SPDLOG_LOGGER_CRITICAL(spdlog::get("game"), "Failed to initialize loading.");
+		return false;
+	}
+
+	return true;
+}
+bool Game::InitializeLoading() noexcept
+{
+	auto& reg = Locator::entitiesRegistry::value();
+	if (_currentScene == Scene::Loading || reg.GetContext<GameLoadingContext>() != nullptr)
+	{
+		return false;
+	}
+
+	_currentScene = Scene::Loading;
+	_paused = true;
+	reg.EmplaceContext<ecs::LoadingContext>();
+	auto& loadingContext = reg.EmplaceContext<GameLoadingContext>();
+	loadingContext.step = GameLoadingContext::LoadingStep::LoadCitadelOutsideMeshes;
+	Locator::debugGui::value().DisableMain();
+	if (Locator::windowing::has_value())
+	{
+		const auto size = static_cast<glm::u16vec2>(Locator::windowing::value().GetSize());
+		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Loading, size, 0x000000ff);
+	}
+
+	// TODO(#804): load Scripts/InfoScript2.txt and get random text from HELP_TEXT_TOTD_..
+	// TODO(#804): load random frame from Data/tips.bik into Texture
+
+	return true;
+}
+
+bool Game::UpdateLoading() noexcept
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	auto* loadingContext = registry.GetContext<ecs::LoadingContext>();
+	auto* gameLoadingContext = registry.GetContext<GameLoadingContext>();
+	if (_currentScene != Scene::Loading || loadingContext == nullptr || gameLoadingContext == nullptr)
+	{
+		return false;
+	}
+
+	using filesystem::Path;
+
+	auto& fileSystem = Locator::filesystem::value();
 	auto& resources = Locator::resources::value();
 	auto& meshManager = resources.GetMeshes();
 	auto& textureManager = resources.GetTextures();
@@ -508,245 +603,306 @@ bool Game::Initialize() noexcept
 	auto& soundManager = resources.GetSounds();
 	auto& glowManager = resources.GetGlows();
 
-	fileSystem.Iterate(
-	    fileSystem.GetPath<Path::Citadel>() / "OutsideMeshes", false, [&meshManager](const std::filesystem::path& f) {
-		    if (f.extension() == ".zzz")
-		    {
-			    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading temple mesh: {}", f.stem().string());
-			    try
-			    {
-				    meshManager.Load(fmt::format("temple/{}", f.stem().string()), resources::L3DLoader::FromDiskTag {}, f);
-			    }
-			    catch (std::runtime_error& err)
-			    {
-				    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
-			    }
-		    }
-	    });
+	loadingContext->progress =
+	    (static_cast<int>(gameLoadingContext->step) * 100.0f) / static_cast<int>(GameLoadingContext::LoadingStep::_COUNT);
 
-	fileSystem.Iterate( //
-	    fileSystem.GetPath<filesystem::Path::Citadel>() / "engine", false,
-	    [&meshManager, &glowManager](const std::filesystem::path& f) {
-		    if (f.extension() == ".zzz")
-		    {
-			    if (f.stem().string().ends_with("lo_l3d"))
-			    {
-				    SPDLOG_LOGGER_WARN(
-				        spdlog::get("game"),
-				        "Skipping lo duplicate lo meshes. See https://github.com/openblack/openblack/issues/727");
-				    return;
-			    }
-			    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading interior temple mesh: {}", f.stem().string());
-			    try
-			    {
-				    meshManager.Load(fmt::format("temple/interior/{}", f.stem().string()), resources::L3DLoader::FromDiskTag {},
-				                     f);
-			    }
-			    catch (std::runtime_error& err)
-			    {
-				    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
-			    }
-		    }
-		    else if (f.extension() == ".glw")
-		    {
-			    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading interior temple glows: {}", f.stem().string());
-			    try
-			    {
-				    glowManager.Load(fmt::format("temple/interior/glow/{}", f.stem().string()),
-				                     resources::LightLoader::FromDiskTag {}, f);
-			    }
-			    catch (std::runtime_error& err)
-			    {
-				    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
-			    }
-		    }
-	    });
-
-	pack::PackFile pack;
-
-	auto packResult = pack.ReadFile(*fileSystem.GetData(fileSystem.GetPath<Path::Data>() / "AllMeshes.g3d"));
-	if (packResult != pack::PackResult::Success)
+	switch (gameLoadingContext->step)
 	{
-		SPDLOG_LOGGER_CRITICAL(spdlog::get("game"), "Unable to load AllMeshes.g3d: {}", pack::ResultToStr(packResult));
-		return false;
-	}
-
-	const auto& meshes = pack.GetMeshes();
-	// TODO (#749) use std::views::enumerate
-	for (size_t i = 0; const auto& mesh : meshes)
+	case GameLoadingContext::LoadingStep::LoadCitadelOutsideMeshes:
+		fileSystem.Iterate(
+		    fileSystem.GetPath<Path::Citadel>() / "OutsideMeshes", false, [&meshManager](const std::filesystem::path& f) {
+			    if (f.extension() == ".zzz")
+			    {
+				    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading temple mesh: {}", f.stem().string());
+				    try
+				    {
+					    meshManager.Load(fmt::format("temple/{}", f.stem().string()), resources::L3DLoader::FromDiskTag {}, f);
+				    }
+				    catch (std::runtime_error& err)
+				    {
+					    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+				    }
+			    }
+		    });
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Citadel OutsideMeshes done: {}",
+		                    fileSystem.GetPath<Path::Citadel>() / "OutsideMeshes");
+		gameLoadingContext->step = GameLoadingContext::LoadingStep::LoadCitadelEngineMeshes;
+		return true;
+	case GameLoadingContext::LoadingStep::LoadCitadelEngineMeshes:
+		fileSystem.Iterate( //
+		    fileSystem.GetPath<filesystem::Path::Citadel>() / "engine", false,
+		    [&meshManager, &glowManager](const std::filesystem::path& f) {
+			    if (f.extension() == ".zzz")
+			    {
+				    if (f.stem().string().ends_with("lo_l3d"))
+				    {
+					    SPDLOG_LOGGER_WARN(
+					        spdlog::get("game"),
+					        "Skipping lo duplicate lo meshes. See https://github.com/openblack/openblack/issues/727");
+					    return;
+				    }
+				    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading interior temple mesh: {}", f.stem().string());
+				    try
+				    {
+					    meshManager.Load(fmt::format("temple/interior/{}", f.stem().string()),
+					                     resources::L3DLoader::FromDiskTag {}, f);
+				    }
+				    catch (std::runtime_error& err)
+				    {
+					    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+				    }
+			    }
+			    else if (f.extension() == ".glw")
+			    {
+				    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading interior temple glows: {}", f.stem().string());
+				    try
+				    {
+					    glowManager.Load(fmt::format("temple/interior/glow/{}", f.stem().string()),
+					                     resources::LightLoader::FromDiskTag {}, f);
+				    }
+				    catch (std::runtime_error& err)
+				    {
+					    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+				    }
+			    }
+		    });
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Citadel engine done: {}",
+		                    fileSystem.GetPath<Path::Citadel>() / "engine");
+		gameLoadingContext->step = GameLoadingContext::LoadingStep::ReadDataAllMeshesPack;
+		return true;
+	case GameLoadingContext::LoadingStep::ReadDataAllMeshesPack:
 	{
-		const auto meshId = static_cast<MeshId>(i);
-		meshManager.Load(meshId, resources::L3DLoader::FromBufferTag {}, k_MeshNames.at(i), mesh);
-		++i;
-	}
-
-	const auto& textures = pack.GetTextures();
-	for (auto const& [name, g3dTexture] : textures)
-	{
-		textureManager.Load(g3dTexture.header.id, resources::Texture2DLoader::FromPackTag {}, name, g3dTexture);
-	}
-
-	pack::PackFile animationPack;
-	packResult = animationPack.ReadFile(*fileSystem.GetData(fileSystem.GetPath<Path::Data>() / "AllAnims.anm"));
-	if (packResult != pack::PackResult::Success)
-	{
-		SPDLOG_LOGGER_CRITICAL(spdlog::get("game"), "Unable to load AllAnims.anm: {}", pack::ResultToStr(packResult));
-		return false;
-	}
-
-	const auto& animations = animationPack.GetAnimations();
-	// TODO (#749) use std::views::enumerate
-	for (size_t i = 0; i < animations.size(); i++)
-	{
-		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animations[i]);
-	}
-
-	fileSystem.Iterate(fileSystem.GetPath<Path::CreatureMesh>(), false, [&meshManager](const std::filesystem::path& f) {
-		const auto& fileName = f.stem().string();
-		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading creature mesh: {}", fileName);
-		try
+		auto packResult =
+		    gameLoadingContext->pack.ReadFile(*fileSystem.GetData(fileSystem.GetPath<Path::Data>() / "AllMeshes.g3d"));
+		if (packResult != pack::PackResult::Success)
 		{
-			if (string_utils::BeginsWith(fileName, "Hand"))
+			SPDLOG_LOGGER_CRITICAL(spdlog::get("game"), "Unable to load AllMeshes.g3d: {}", pack::ResultToStr(packResult));
+			return false;
+		}
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading AllMeshes done: {}",
+		                    fileSystem.GetPath<Path::Data>() / "AllMeshes.g3d");
+		gameLoadingContext->step = GameLoadingContext::LoadingStep::LoadMeshesFromPack;
+		return true;
+	}
+	case GameLoadingContext::LoadingStep::LoadMeshesFromPack:
+	{
+		const auto& meshes = gameLoadingContext->pack.GetMeshes();
+		// TODO (#749) use std::views::enumerate
+		for (size_t i = 0; const auto& mesh : meshes)
+		{
+			const auto meshId = static_cast<MeshId>(i);
+			meshManager.Load(meshId, resources::L3DLoader::FromBufferTag {}, k_MeshNames.at(i), mesh);
+			++i;
+		}
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Meshes from pack done: {}", meshes.size());
+		gameLoadingContext->step = GameLoadingContext::LoadingStep::LoadTexturesFromPack;
+		return true;
+	}
+	case GameLoadingContext::LoadingStep::LoadTexturesFromPack:
+	{
+		const auto& textures = gameLoadingContext->pack.GetTextures();
+		for (auto const& [name, g3dTexture] : textures)
+		{
+			textureManager.Load(g3dTexture.header.id, resources::Texture2DLoader::FromPackTag {}, name, g3dTexture);
+		}
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Textures from pack done: {}", textures.size());
+		gameLoadingContext->step = GameLoadingContext::LoadingStep::ReadDataAllAnimations;
+		return true;
+	}
+	case GameLoadingContext::LoadingStep::ReadDataAllAnimations:
+	{
+		auto packResult =
+		    gameLoadingContext->animationPack.ReadFile(*fileSystem.GetData(fileSystem.GetPath<Path::Data>() / "AllAnims.anm"));
+		if (packResult != pack::PackResult::Success)
+		{
+			SPDLOG_LOGGER_CRITICAL(spdlog::get("game"), "Unable to load AllAnims.anm: {}", pack::ResultToStr(packResult));
+			return false;
+		}
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Animations from pack done: {}",
+		                    fileSystem.GetPath<Path::Data>() / "AllAnims.anm");
+		gameLoadingContext->step = GameLoadingContext::LoadingStep::LoadAnimationsFromPack;
+		return true;
+	}
+	case GameLoadingContext::LoadingStep::LoadAnimationsFromPack:
+	{
+		const auto& animations = gameLoadingContext->animationPack.GetAnimations();
+		// TODO (#749) use std::views::enumerate
+		for (size_t i = 0; i < animations.size(); i++)
+		{
+			animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animations[i]);
+		}
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Animations done: {}", animations.size());
+		gameLoadingContext->step = GameLoadingContext::LoadingStep::LoadCreatureMeshes;
+		return true;
+	}
+	case GameLoadingContext::LoadingStep::LoadCreatureMeshes:
+		fileSystem.Iterate(fileSystem.GetPath<Path::CreatureMesh>(), false, [&meshManager](const std::filesystem::path& f) {
+			const auto& fileName = f.stem().string();
+			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading creature mesh: {}", fileName);
+			try
+			{
+				if (string_utils::BeginsWith(fileName, "Hand"))
+				{
+					return;
+				}
+
+				const auto meshId = creature::GetIdFromMeshName(fileName);
+				meshManager.Load(meshId, resources::L3DLoader::FromDiskTag {}, f);
+			}
+			catch (std::runtime_error& err)
+			{
+				SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+			}
+		});
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Creature Mesh: {}", fileSystem.GetPath<Path::CreatureMesh>());
+		gameLoadingContext->step = GameLoadingContext::LoadingStep::LoadMiscAssets;
+		return true;
+	case GameLoadingContext::LoadingStep::LoadMiscAssets:
+		// Load loose one-off assets
+		{
+			using AFromDiskTag = resources::L3DAnimLoader::FromDiskTag;
+			animationManager.Load("coffre", AFromDiskTag {}, fileSystem.GetPath<Path::Misc>() / "coffre.anm");
+
+			using LFromDiskTag = resources::L3DLoader::FromDiskTag;
+			meshManager.Load("hand", LFromDiskTag {}, fileSystem.GetPath<Path::CreatureMesh>() / "Hand_Boned_Base2.l3d");
+			meshManager.Load("coffre", LFromDiskTag {}, fileSystem.GetPath<Path::Misc>() / "coffre.l3d");
+			meshManager.Load("cone", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "cone.l3d");
+			meshManager.Load("marker", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "marker.l3d");
+			meshManager.Load("river", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "river.l3d");
+			meshManager.Load("river2", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "river2.l3d");
+			meshManager.Load("metre_sphere", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "metre_sphere.l3d");
+
+			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading loose one-off assets done");
+			gameLoadingContext->step = GameLoadingContext::LoadingStep::LoadCampaignLevels;
+			return true;
+		}
+	case GameLoadingContext::LoadingStep::LoadCampaignLevels:
+		// TODO(raffclar): #400: Parse level files within the resource loader
+		// TODO(raffclar): #405: Determine campaign levels from the challenge script file
+		// Load the campaign levels
+		fileSystem.Iterate(fileSystem.GetPath<Path::Scripts>(), false, [&levelManager](const std::filesystem::path& f) {
+			const auto& name = f.stem().string();
+			if (f.extension() != ".txt" || name.rfind("InfoScript", 0) != std::string::npos)
 			{
 				return;
 			}
+			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading campaign level: {}", f.stem().string());
+			try
+			{
+				if (Level::IsLevelFile(f))
+				{
+					levelManager.Load(fmt::format("campaign/{}", name), resources::LevelLoader::FromDiskTag {}, f,
+					                  Level::LandType::Campaign);
+				}
+			}
+			catch (std::runtime_error& err)
+			{
+				SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+			}
+		});
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading campaign levels done: {}", fileSystem.GetPath<Path::Scripts>());
+		gameLoadingContext->step = GameLoadingContext::LoadingStep::LoadPlaygrounds;
+		return true;
+	case GameLoadingContext::LoadingStep::LoadPlaygrounds:
+		// Load Playgrounds
+		// Attempt to load additional levels as playgrounds
+		fileSystem.Iterate(fileSystem.GetPath<Path::Playgrounds>(), false, [&levelManager](const std::filesystem::path& f) {
+			if (f.extension() != ".txt")
+			{
+				return;
+			}
+			const auto& name = f.stem().string();
+			if (levelManager.Contains(fmt::format("playgrounds/{}", name)))
+			{
+				// Already added
+				return;
+			}
 
-			const auto meshId = creature::GetIdFromMeshName(fileName);
-			meshManager.Load(meshId, resources::L3DLoader::FromDiskTag {}, f);
-		}
-		catch (std::runtime_error& err)
-		{
-			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
-		}
-	});
-
-	// Load loose one-off assets
+			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading custom level: {}", f.stem().string());
+			try
+			{
+				if (Level::IsLevelFile(f))
+				{
+					levelManager.Load(fmt::format("playgrounds/{}", name), resources::LevelLoader::FromDiskTag {}, f,
+					                  Level::LandType::Skirmish);
+				}
+			}
+			catch (std::runtime_error& err)
+			{
+				SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+			}
+		});
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Load Playgrounds done: {}", fileSystem.GetPath<Path::Playgrounds>());
+		gameLoadingContext->step = GameLoadingContext::LoadingStep::LoadAudio;
+		return true;
+	case GameLoadingContext::LoadingStep::LoadAudio:
 	{
-		using AFromDiskTag = resources::L3DAnimLoader::FromDiskTag;
-		animationManager.Load("coffre", AFromDiskTag {}, fileSystem.GetPath<Path::Misc>() / "coffre.anm");
+		// Load all sound packs in the Audio directory
+		auto& audioManager = Locator::audio::value();
+		fileSystem.Iterate(fileSystem.GetPath<Path::Audio>(), true,
+		                   [&audioManager, &soundManager, &fileSystem](const std::filesystem::path& f) {
+			                   if (f.extension() != ".sad")
+			                   {
+				                   return;
+			                   }
 
-		using LFromDiskTag = resources::L3DLoader::FromDiskTag;
-		meshManager.Load("hand", LFromDiskTag {}, fileSystem.GetPath<Path::CreatureMesh>() / "Hand_Boned_Base2.l3d");
-		meshManager.Load("coffre", LFromDiskTag {}, fileSystem.GetPath<Path::Misc>() / "coffre.l3d");
-		meshManager.Load("cone", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "cone.l3d");
-		meshManager.Load("marker", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "marker.l3d");
-		meshManager.Load("river", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "river.l3d");
-		meshManager.Load("river2", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "river2.l3d");
-		meshManager.Load("metre_sphere", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "metre_sphere.l3d");
+			                   pack::PackFile soundPack;
+			                   SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Opening sound pack {}", f.filename().string());
+			                   const auto result = soundPack.ReadFile(*fileSystem.GetData(f));
+			                   if (result != pack::PackResult::Success)
+			                   {
+				                   SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Unable to load sound pack {}: {}",
+				                                       f.filename().string(), pack::ResultToStr(result));
+				                   return;
+			                   }
+			                   const auto& audioHeaders = soundPack.GetAudioSampleHeaders();
+			                   const auto& audioData = soundPack.GetAudioSamplesData();
+			                   auto soundName = std::filesystem::path(audioHeaders[0].name.data());
+
+			                   if (audioHeaders.empty())
+			                   {
+				                   SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound pack found for {}. Skipping",
+				                                      f.filename().string());
+				                   return;
+			                   }
+
+			                   auto groupName = f.filename().string();
+
+			                   // A hacky way of detecting if the sound is music as all music sounds end with "mpg"
+			                   if (soundName.extension() == ".mpg")
+			                   {
+				                   auto buffers = std::queue<std::vector<uint8_t>>();
+				                   auto packName = f.string();
+				                   audioManager.AddMusicEntry(packName);
+			                   }
+			                   else
+			                   {
+				                   audioManager.CreateSoundGroup(groupName);
+				                   for (size_t i = 0; i < audioHeaders.size(); i++)
+				                   {
+					                   soundName = std::filesystem::path(audioHeaders[i].name.data());
+					                   if (audioData[i].empty())
+					                   {
+						                   SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound buffer found for {}. Skipping",
+						                                      soundName.string());
+						                   return;
+					                   }
+
+					                   const auto stringId = fmt::format("{}/{}", groupName, audioHeaders[i].id);
+					                   const entt::id_type id = entt::hashed_string(stringId.c_str());
+					                   const std::vector<std::vector<uint8_t>> buffer = {audioData[i]};
+					                   SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Loading sound {}: {}", stringId,
+					                                       audioHeaders[i].name.data());
+					                   soundManager.Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[i], buffer);
+					                   audioManager.AddToSoundGroup(groupName, id);
+				                   }
+			                   }
+		                   });
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Audio done: {}", fileSystem.GetPath<Path::Audio>());
+		gameLoadingContext->step = GameLoadingContext::LoadingStep::LoadScriptsInfo;
+		return true;
 	}
-
-	// TODO(raffclar): #400: Parse level files within the resource loader
-	// TODO(raffclar): #405: Determine campaign levels from the challenge script file
-	// Load the campaign levels
-	fileSystem.Iterate(fileSystem.GetPath<Path::Scripts>(), false, [&levelManager](const std::filesystem::path& f) {
-		const auto& name = f.stem().string();
-		if (f.extension() != ".txt" || name.rfind("InfoScript", 0) != std::string::npos)
-		{
-			return;
-		}
-		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading campaign level: {}", f.stem().string());
-		try
-		{
-			if (Level::IsLevelFile(f))
-			{
-				levelManager.Load(fmt::format("campaign/{}", name), resources::LevelLoader::FromDiskTag {}, f,
-				                  Level::LandType::Campaign);
-			}
-		}
-		catch (std::runtime_error& err)
-		{
-			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
-		}
-	});
-	// Load Playgrounds
-	// Attempt to load additional levels as playgrounds
-	fileSystem.Iterate(fileSystem.GetPath<Path::Playgrounds>(), false, [&levelManager](const std::filesystem::path& f) {
-		if (f.extension() != ".txt")
-		{
-			return;
-		}
-		const auto& name = f.stem().string();
-		if (levelManager.Contains(fmt::format("playgrounds/{}", name)))
-		{
-			// Already added
-			return;
-		}
-
-		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading custom level: {}", f.stem().string());
-		try
-		{
-			if (Level::IsLevelFile(f))
-			{
-				levelManager.Load(fmt::format("playgrounds/{}", name), resources::LevelLoader::FromDiskTag {}, f,
-				                  Level::LandType::Skirmish);
-			}
-		}
-		catch (std::runtime_error& err)
-		{
-			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
-		}
-	});
-
-	// Load all sound packs in the Audio directory
-	auto& audioManager = Locator::audio::value();
-	fileSystem.Iterate(
-	    fileSystem.GetPath<Path::Audio>(), true, [&audioManager, &soundManager, &fileSystem](const std::filesystem::path& f) {
-		    if (f.extension() != ".sad")
-		    {
-			    return;
-		    }
-
-		    pack::PackFile soundPack;
-		    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Opening sound pack {}", f.filename().string());
-		    const auto result = soundPack.ReadFile(*fileSystem.GetData(f));
-		    if (result != pack::PackResult::Success)
-		    {
-			    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Unable to load sound pack {}: {}", f.filename().string(),
-			                        pack::ResultToStr(result));
-			    return;
-		    }
-		    const auto& audioHeaders = soundPack.GetAudioSampleHeaders();
-		    const auto& audioData = soundPack.GetAudioSamplesData();
-		    auto soundName = std::filesystem::path(audioHeaders[0].name.data());
-
-		    if (audioHeaders.empty())
-		    {
-			    SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound pack found for {}. Skipping", f.filename().string());
-			    return;
-		    }
-
-		    auto groupName = f.filename().string();
-
-		    // A hacky way of detecting if the sound is music as all music sounds end with "mpg"
-		    if (soundName.extension() == ".mpg")
-		    {
-			    auto buffers = std::queue<std::vector<uint8_t>>();
-			    auto packName = f.string();
-			    audioManager.AddMusicEntry(packName);
-		    }
-		    else
-		    {
-			    audioManager.CreateSoundGroup(groupName);
-			    for (size_t i = 0; i < audioHeaders.size(); i++)
-			    {
-				    soundName = std::filesystem::path(audioHeaders[i].name.data());
-				    if (audioData[i].empty())
-				    {
-					    SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound buffer found for {}. Skipping",
-					                       soundName.string());
-					    return;
-				    }
-
-				    const auto stringId = fmt::format("{}/{}", groupName, audioHeaders[i].id);
-				    const entt::id_type id = entt::hashed_string(stringId.c_str());
-				    const std::vector<std::vector<uint8_t>> buffer = {audioData[i]};
-				    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Loading sound {}: {}", stringId, audioHeaders[i].name.data());
-				    soundManager.Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[i], buffer);
-				    audioManager.AddToSoundGroup(groupName, id);
-			    }
-		    }
-	    });
-
+	case GameLoadingContext::LoadingStep::LoadScriptsInfo:
 	{
 		InfoFile infoFile;
 		auto result = infoFile.LoadFromFile(Locator::filesystem::value().GetPath<filesystem::Path::Scripts>() / "info.dat");
@@ -756,120 +912,125 @@ bool Game::Initialize() noexcept
 			return false;
 		}
 		Locator::infoConstants::reset(result.release());
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading info.dat done: {}",
+		                    Locator::filesystem::value().GetPath<filesystem::Path::Scripts>() / "info.dat");
+		gameLoadingContext->step = GameLoadingContext::LoadingStep::LoadTextures;
+		return true;
 	}
+	case GameLoadingContext::LoadingStep::LoadTextures:
+		fileSystem.Iterate(fileSystem.GetPath<Path::Textures>(), false, [&textureManager](const std::filesystem::path& f) {
+			if (string_utils::LowerCase(f.extension().string()) == ".raw")
+			{
+				SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading raw texture: {}", f.stem().string());
+				try
+				{
+					textureManager.Load(fmt::format("raw/{}", f.stem().string()), resources::Texture2DLoader::FromDiskTag {},
+					                    f);
+				}
+				catch (std::runtime_error& err)
+				{
+					SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+				}
+			}
+		});
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Textures done: {}", fileSystem.GetPath<Path::Textures>());
+		gameLoadingContext->step = GameLoadingContext::LoadingStep::LoadMap;
+		return true;
+	case GameLoadingContext::LoadingStep::LoadMap:
+	{
+		auto& config = Locator::config::value();
 
-	fileSystem.Iterate(fileSystem.GetPath<Path::Textures>(), false, [&textureManager](const std::filesystem::path& f) {
-		if (string_utils::LowerCase(f.extension().string()) == ".raw")
+		if (!LoadMap(_startMap))
 		{
-			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading raw texture: {}", f.stem().string());
+			return false;
+		}
+
+		Locator::dynamicsSystem::value().RegisterRigidBodies();
+
+		auto& fileSystem = Locator::filesystem::value();
+
+		auto challengePath = fileSystem.GetPath<filesystem::Path::Quests>() / "challenge.chl";
+		if (fileSystem.Exists(challengePath))
+		{
+			auto& chlapi = Locator::chlapi::value();
+			auto& lhvm = Locator::vm::value();
+			lhvm.Initialise(&chlapi.GetFunctionsTable(), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 			try
 			{
-				textureManager.Load(fmt::format("raw/{}", f.stem().string()), resources::Texture2DLoader::FromDiskTag {}, f);
+				lhvm.LoadBinary(fileSystem.ReadAll(challengePath));
+				lhvm.StartScript("LandControlAll", lhvm::ScriptType::All);
 			}
-			catch (std::runtime_error& err)
+			catch (const std::runtime_error& err)
 			{
-				SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+				SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to read challenge file at {}: {}",
+				                    (fileSystem.GetGamePath() / challengePath).generic_string(), err.what());
 			}
 		}
-	});
+		else
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Challenge file not found at {}",
+			                    (fileSystem.GetGamePath() / challengePath).generic_string());
+			return false;
+		}
 
-	return true;
+		// Initialize the Acceleration Structure
+		Locator::entitiesMap::value().Rebuild();
+
+		if (Locator::windowing::has_value())
+		{
+			const auto size = static_cast<glm::u16vec2>(Locator::windowing::value().GetSize());
+			Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Main, size, 0x274659ff);
+		}
+
+		{
+			uint16_t width;
+			uint16_t height;
+			Locator::oceanSystem::value().GetReflectionFramebuffer().GetSize(width, height);
+			Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Reflection, {width, height}, 0x274659ff);
+		}
+
+		if (config.drawIsland)
+		{
+			uint16_t width;
+			uint16_t height;
+			Locator::terrainSystem::value().GetFootprintFramebuffer().GetSize(width, height);
+			Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Footprint, {width, height}, 0x00000000);
+		}
+
+		SetTime(config.timeOfDay);
+
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading Map done: {}", _startMap);
+		gameLoadingContext->step = GameLoadingContext::LoadingStep::Done;
+		return true;
+	}
+	case GameLoadingContext::LoadingStep::Done:
+		registry.EraseContext<GameLoadingContext>();
+		_currentScene = Scene::Main;
+		Locator::debugGui::value().EnableMain();
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading done");
+		return true;
+	}
+
+	return false;
 }
 
 bool Game::Run() noexcept
 {
-	auto& config = Locator::config::value();
-
-	if (!LoadMap(_startMap))
-	{
-		return false;
-	}
-
-	Locator::dynamicsSystem::value().RegisterRigidBodies();
-
-	auto& fileSystem = Locator::filesystem::value();
-
-	auto challengePath = fileSystem.GetPath<filesystem::Path::Quests>() / "challenge.chl";
-	if (fileSystem.Exists(challengePath))
-	{
-		auto& chlapi = Locator::chlapi::value();
-		auto& lhvm = Locator::vm::value();
-		lhvm.Initialise(&chlapi.GetFunctionsTable(), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
-		try
-		{
-			lhvm.LoadBinary(fileSystem.ReadAll(challengePath));
-			lhvm.StartScript("LandControlAll", lhvm::ScriptType::All);
-		}
-		catch (const std::runtime_error& err)
-		{
-			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to read challenge file at {}: {}",
-			                    (fileSystem.GetGamePath() / challengePath).generic_string(), err.what());
-		}
-	}
-	else
-	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Challenge file not found at {}",
-		                    (fileSystem.GetGamePath() / challengePath).generic_string());
-		return false;
-	}
-
-	// Initialize the Acceleration Structure
-	Locator::entitiesMap::value().Rebuild();
-
-	if (Locator::windowing::has_value())
-	{
-		const auto size = static_cast<glm::u16vec2>(Locator::windowing::value().GetSize());
-		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Main, size, 0x274659ff);
-	}
-
-	{
-		uint16_t width;
-		uint16_t height;
-		Locator::oceanSystem::value().GetReflectionFramebuffer().GetSize(width, height);
-		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Reflection, {width, height}, 0x274659ff);
-	}
-
-	if (config.drawIsland)
-	{
-		uint16_t width;
-		uint16_t height;
-		Locator::terrainSystem::value().GetFootprintFramebuffer().GetSize(width, height);
-		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Footprint, {width, height}, 0x00000000);
-	}
-
-	Game::SetTime(config.timeOfDay);
-
 	_frameCount = 0;
 	auto lastTime = std::chrono::high_resolution_clock::now();
 	auto& profiler = Locator::profiler::value();
 	while (Update())
 	{
-		auto duration = std::chrono::high_resolution_clock::now() - lastTime;
-		auto milliseconds = std::chrono::duration_cast<std::chrono::duration<uint32_t, std::milli>>(duration);
+		const auto duration =
+		    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - lastTime);
+		switch (_currentScene)
 		{
-			auto section = profiler.BeginScoped(Profiler::Stage::SceneDraw);
-
-			const graphics::RendererInterface::DrawSceneDesc drawDesc {
-			    .camera = &Locator::camera::value(),
-			    .frameBuffer = nullptr,
-			    .entities = Locator::entitiesRegistry::value(),
-			    .time = milliseconds.count(), // TODO(#481): get actual time
-			    .timeOfDay = config.timeOfDay,
-			    .bumpMapStrength = config.bumpMapStrength,
-			    .smallBumpMapStrength = config.smallBumpMapStrength,
-			    .viewId = graphics::RenderPass::Main,
-			    .drawSky = config.drawSky,
-			    .drawWater = config.drawWater,
-			    .drawIsland = config.drawIsland,
-			    .drawEntities = config.drawEntities,
-			    .drawSprites = config.drawSprites,
-			    .drawTestModel = config.drawTestModel,
-			    .drawDebugCross = config.drawDebugCross,
-			    .drawBoundingBoxes = config.drawBoundingBoxes,
-			    .cullBack = false,
-			    .wireframe = config.wireframe,
-			};
-			Locator::rendererInterface::value().DrawScene(drawDesc);
+		case Scene::Main:
+			RenderMainScene(duration);
+			break;
+		case Scene::Loading:
+			RenderLoadingScene(duration);
+			break;
 		}
 
 		{
@@ -905,6 +1066,68 @@ bool Game::Run() noexcept
 	}
 
 	return true;
+}
+
+void Game::RenderLoadingScene(std::chrono::milliseconds dt) noexcept
+{
+	const auto& config = Locator::config::value();
+	auto& profiler = Locator::profiler::value();
+	auto section = profiler.BeginScoped(Profiler::Stage::SceneDraw);
+
+	const auto milliseconds = std::chrono::duration_cast<std::chrono::duration<uint32_t, std::milli>>(dt);
+	const graphics::RendererInterface::DrawSceneDesc drawDesc {
+	    .camera = &Locator::camera::value(),
+	    .frameBuffer = nullptr,
+	    .entities = Locator::entitiesRegistry::value(),
+	    .time = milliseconds.count(), // TODO(#481): get actual time
+	    .timeOfDay = config.timeOfDay,
+	    .bumpMapStrength = config.bumpMapStrength,
+	    .smallBumpMapStrength = config.smallBumpMapStrength,
+	    .viewId = graphics::RenderPass::Loading,
+	    .drawSky = false,
+	    .drawWater = false,
+	    .drawIsland = false,
+	    .drawEntities = false,
+	    .drawSprites = false,
+	    .drawTestModel = false,
+	    .drawDebugCross = false,
+	    .drawBoundingBoxes = false,
+	    .cullBack = false,
+	    .wireframe = false,
+	};
+
+	Locator::rendererInterface::value().DrawScene(drawDesc);
+}
+
+void Game::RenderMainScene(std::chrono::milliseconds dt) noexcept
+{
+	const auto& config = Locator::config::value();
+	auto& profiler = Locator::profiler::value();
+	auto section = profiler.BeginScoped(Profiler::Stage::SceneDraw);
+
+	const auto milliseconds = std::chrono::duration_cast<std::chrono::duration<uint32_t, std::milli>>(dt);
+	const graphics::RendererInterface::DrawSceneDesc drawDesc {
+	    .camera = &Locator::camera::value(),
+	    .frameBuffer = nullptr,
+	    .entities = Locator::entitiesRegistry::value(),
+	    .time = milliseconds.count(), // TODO(#481): get actual time
+	    .timeOfDay = config.timeOfDay,
+	    .bumpMapStrength = config.bumpMapStrength,
+	    .smallBumpMapStrength = config.smallBumpMapStrength,
+	    .viewId = graphics::RenderPass::Main,
+	    .drawSky = config.drawSky,
+	    .drawWater = config.drawWater,
+	    .drawIsland = config.drawIsland,
+	    .drawEntities = config.drawEntities,
+	    .drawSprites = config.drawSprites,
+	    .drawTestModel = config.drawTestModel,
+	    .drawDebugCross = config.drawDebugCross,
+	    .drawBoundingBoxes = config.drawBoundingBoxes,
+	    .cullBack = false,
+	    .wireframe = config.wireframe,
+	};
+
+	Locator::rendererInterface::value().DrawScene(drawDesc);
 }
 
 bool Game::LoadMap(const std::filesystem::path& path) noexcept

@@ -41,6 +41,8 @@ public:
 	bool ProcessEvents(const SDL_Event& event) noexcept override;
 	bool Loop() noexcept override;
 	void Draw() noexcept override;
+	void EnableMain() noexcept override;
+	void DisableMain() noexcept override;
 
 private:
 	bool CreateFontsTextureBgfx() noexcept;
@@ -70,5 +72,6 @@ private:
 	std::vector<std::unique_ptr<Window>> _debugWindows;
 	std::string _screenshotFilename = "screenshot.png";
 	bool _stealsFocus = false;
+	bool _enableMain = true;
 };
 } // namespace openblack::debug::gui

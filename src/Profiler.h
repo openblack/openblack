@@ -51,6 +51,7 @@ public:
 		MainPassDrawDebugCross,
 		GuiDraw,
 		RendererFrame,
+		LoadingPass,
 
 		_count,
 	};
@@ -83,6 +84,7 @@ public:
 	    "Draw Debug Cross",     //
 	    "Encode GUI Draw",      //
 	    "Renderer Frame",       //
+	    "Loading Pass"          //
 	};
 
 private:

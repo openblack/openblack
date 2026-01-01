@@ -19,6 +19,7 @@ namespace openblack::graphics
 
 enum class RenderPass : uint8_t
 {
+	Loading,
 	Footprint,
 	Reflection,
 	Main,
@@ -29,6 +30,7 @@ enum class RenderPass : uint8_t
 };
 
 static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_count)> k_RenderPassNames {
+    "Loading Pass"      //
     "Footprint Pass",   //
     "Reflection Pass",  //
     "Main Pass",        //

@@ -179,6 +179,15 @@ Gui::~Gui() noexcept
 	}
 }
 
+void Gui::EnableMain() noexcept
+{
+	_enableMain = true;
+}
+void Gui::DisableMain() noexcept
+{
+	_enableMain = false;
+}
+
 bool Gui::StealsFocus() const noexcept
 {
 	return _stealsFocus;
@@ -458,7 +467,7 @@ bool Gui::ShowMenu() noexcept
 	if (ImGui::BeginMainMenuBar())
 	{
 		auto& game = *Game::Instance();
-		if (ImGui::BeginMenu("Load Island"))
+		if (_enableMain && ImGui::BeginMenu("Load Island"))
 		{
 			auto& resources = Locator::resources::value();
 			auto& levelsManager = resources.GetLevels();
@@ -513,7 +522,7 @@ bool Gui::ShowMenu() noexcept
 
 		auto& config = Locator::config::value();
 
-		if (ImGui::BeginMenu("World"))
+		if (_enableMain && ImGui::BeginMenu("World"))
 		{
 			if (ImGui::SliderFloat("Time of Day", &config.timeOfDay, 0.0f, 24.0f, "%.3f"))
 			{
@@ -526,7 +535,7 @@ bool Gui::ShowMenu() noexcept
 			ImGui::EndMenu();
 		}
 
-		if (ImGui::BeginMenu("Debug"))
+		if (_enableMain && ImGui::BeginMenu("Debug"))
 		{
 			if (ImGui::BeginMenu("Windows"))
 			{
@@ -629,6 +638,17 @@ bool Gui::ShowMenu() noexcept
 		if (ImGui::MenuItem("Quit", "Esc"))
 		{
 			return true;
+		}
+
+		// assume it's loading screen
+		if (!_enableMain)
+		{
+			if (const auto* loadingContext = Locator::entitiesRegistry::value().GetContext<ecs::LoadingContext>();
+			    loadingContext != nullptr)
+			{
+				ImGui::SameLine(ImGui::GetWindowWidth() - 228.0f);
+				ImGui::Text("%3.2f%%", loadingContext->progress);
+			}
 		}
 
 		ImGui::SameLine(ImGui::GetWindowWidth() - 154.0f);
