@@ -14,6 +14,8 @@
 #include <array>
 #include <string_view>
 
+#include "HelpTextEnums.h"
+
 // Enums translated over from ones found in the Creature Isle modding tools.
 // Creature Isle specific enums will be commented out with: CREATUREISLE
 // Enum version: Last Saved,#2001-11-15 15:39:30#,"Jonty Barnes"
@@ -3219,10 +3221,6 @@ enum class ContainerInfoType : uint32_t
 enum class CitadelHeartInfoType : uint32_t
 {
 	Normal = 0,
-};
-
-enum class HelpText : int
-{
 };
 
 enum class FoodType : uint32_t
