@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2026 openblack developers
+ * Copyright (c) 2018-2024 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -13,11 +13,7 @@
 #include <map>
 #include <vector>
 
-#include <bgfx/bgfx.h>
-#include <glm/mat4x4.hpp>
-
-#include "3D/AllMeshes.h"
-#include "ECS/Systems/RenderingSystemInterface.h"
+#include "ECS/Systems/TimeSystemInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
 #error "Locator interface implementations should only be included in Locator.cpp, use interface instead."
@@ -26,19 +22,15 @@
 namespace openblack::ecs::systems
 {
 
-class RenderingSystemCommon: public RenderingSystemInterface
+class TimeSystem final: public TimeSystemInterface
 {
 public:
-	~RenderingSystemCommon();
-	void SetDirty() override;
-	void PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawStreams) override;
-	const RenderContext& GetContext() override { return _renderContext; }
+	void Start() override;
+	void Update() override;
+	[[nodiscard]] std::chrono::milliseconds GetElapsedTime() const override;
 
 private:
-	virtual void PrepareDrawDescs(bool drawBoundingBox) = 0;
-	virtual void PrepareDrawUploadUniforms(bool drawBoundingBox) = 0;
-
-protected:
-	RenderContext _renderContext;
+	std::chrono::time_point<std::chrono::steady_clock> _start;
+	std::chrono::milliseconds _elapsedTime;
 };
 } // namespace openblack::ecs::systems

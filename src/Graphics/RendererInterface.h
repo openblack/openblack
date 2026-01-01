@@ -54,6 +54,7 @@ public:
 		bool drawEntities;
 		bool drawSprites;
 		bool drawTestModel;
+		bool drawVegetation;
 		bool drawDebugCross;
 		bool drawBoundingBoxes;
 		bool cullBack;
