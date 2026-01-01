@@ -11,6 +11,7 @@
 
 #include <array>
 #include <filesystem>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -192,8 +193,8 @@ public:
 	/// Read morph file from the filesystem
 	MorphResult Open(const std::filesystem::path& filepath, const std::filesystem::path& specsDirectory) noexcept;
 
-	/// Read morph file from a buffer
-	MorphResult Open(const std::vector<uint8_t>& buffer, const std::filesystem::path& specsDirectory) noexcept;
+	/// Read morph file from a span
+	MorphResult Open(const std::span<const char>& span, const std::filesystem::path& specsDirectory) noexcept;
 
 	[[nodiscard]] const MorphHeader& GetHeader() const noexcept { return _header; }
 	[[nodiscard]] const AnimationSpecs& GetAnimationSpecs() const noexcept { return _animationSpecs; }
