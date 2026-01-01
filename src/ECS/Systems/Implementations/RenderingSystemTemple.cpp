@@ -38,7 +38,7 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 	// Count number of instances
 	uint32_t instanceCount = 0;
 	std::unordered_map<entt::id_type, std::pair<uint32_t, bool>> meshIds;
-	std::set<TempleRoom> loadedRooms {TempleRoom::MainRoom};
+	std::set<TempleRoom> loadedRooms {TempleRoom::Main};
 	auto roomLoaded = [&loadedRooms, &camera](const Mesh& mesh, const Transform& transform,
 	                                          const TempleInteriorPart& templePart) {
 		auto l3dMesh = entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(mesh.id);

@@ -16,6 +16,7 @@
 #include <glm/mat4x4.hpp>
 
 #include "3D/AllMeshes.h"
+#include "3D/TempleInteriorInterface.h"
 #include "ECS/Components/Temple.h"
 #include "RenderingSystemCommon.h"
 
@@ -34,6 +35,6 @@ public:
 private:
 	void PrepareDrawDescs(bool drawBoundingBox) override;
 	void PrepareDrawUploadUniforms(bool drawBoundingBox) override;
-	std::set<ecs::components::TempleRoom> _loadedRooms;
+	std::set<TempleRoom> _loadedRooms;
 };
 } // namespace openblack::ecs::systems
