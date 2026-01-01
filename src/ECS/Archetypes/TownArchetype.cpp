@@ -23,7 +23,7 @@ entt::entity TownArchetype::Create(int id, const glm::vec3& position, [[maybe_un
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 
-	// const auto& info = Game::Instance()->GetInfoConstants().town;
+	// const auto& info = Locator::infoConstants::value().town;
 
 	registry.Assign<Town>(entity, static_cast<uint32_t>(id));
 	registry.Assign<Tribe>(entity, tribe);
