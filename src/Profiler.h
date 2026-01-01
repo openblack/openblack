@@ -15,6 +15,9 @@
 #include <chrono>
 #include <map>
 #include <string_view>
+#include <unordered_map>
+
+#include "Graphics/Technique/Technique.h"
 
 namespace openblack
 {
@@ -35,6 +38,7 @@ public:
 		GameLogic,
 		SceneDraw,
 		FootprintPass,
+		FootprintDrawFootprint,
 		ReflectionPass,
 		ReflectionDrawSky,
 		ReflectionDrawWater,
@@ -67,22 +71,23 @@ public:
 	    "Game Logic",           //
 	    "Encode Draw Scene",    //
 	    "Footprint Pass",       //
-	    "Reflection Pass",      //
-	    "Draw Sky",             //
-	    "Draw Water",           //
-	    "Draw Island",          //
-	    "Draw Models",          //
-	    "Draw Sprites",         //
-	    "Draw Debug Cross",     //
-	    "Main Pass",            //
-	    "Draw Sky",             //
-	    "Draw Water",           //
-	    "Draw Island",          //
-	    "Draw Models",          //
-	    "Draw Sprites",         //
-	    "Draw Debug Cross",     //
-	    "Encode GUI Draw",      //
-	    "Renderer Frame",       //
+	    "Draw Footprint",
+	    "Reflection Pass",  //
+	    "Draw Sky",         //
+	    "Draw Water",       //
+	    "Draw Island",      //
+	    "Draw Models",      //
+	    "Draw Sprites",     //
+	    "Draw Debug Cross", //
+	    "Main Pass",        //
+	    "Draw Sky",         //
+	    "Draw Water",       //
+	    "Draw Island",      //
+	    "Draw Models",      //
+	    "Draw Sprites",     //
+	    "Draw Debug Cross", //
+	    "Encode GUI Draw",  //
+	    "Renderer Frame",   //
 	};
 
 private:
@@ -131,6 +136,26 @@ private:
 	std::array<Entry, k_BufferSize> _entries;
 	uint8_t _currentEntry = k_BufferSize - 1;
 	uint8_t _currentLevel = 0;
+};
+
+const static std::unordered_map<graphics::Technique, Profiler::Stage> k_mainPassTechniqueStage {
+    {graphics::Technique::Sky, Profiler::Stage::MainPassDrawSky},
+    {graphics::Technique::Water, Profiler::Stage::MainPassDrawWater},
+    {graphics::Technique::Island, Profiler::Stage::MainPassDrawIsland},
+    {graphics::Technique::Entities, Profiler::Stage::MainPassDrawModels},
+    {graphics::Technique::Sprites, Profiler::Stage::MainPassDrawSprites},
+    {graphics::Technique::DebugCross, Profiler::Stage::MainPassDrawDebugCross},
+    {graphics::Technique::TestModel, Profiler::Stage::MainPassDrawModels},
+};
+
+const static std::unordered_map<graphics::Technique, Profiler::Stage> k_reflectionPassTechniqueStage {
+    {graphics::Technique::Sky, Profiler::Stage::ReflectionDrawSky},
+    {graphics::Technique::Water, Profiler::Stage::ReflectionDrawWater},
+    {graphics::Technique::Island, Profiler::Stage::ReflectionDrawIsland},
+    {graphics::Technique::Entities, Profiler::Stage::ReflectionDrawModels},
+    {graphics::Technique::Sprites, Profiler::Stage::ReflectionDrawSprites},
+    {graphics::Technique::DebugCross, Profiler::Stage::ReflectionDrawDebugCross},
+    {graphics::Technique::TestModel, Profiler::Stage::ReflectionDrawModels},
 };
 
 } // namespace openblack

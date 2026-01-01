@@ -10,10 +10,12 @@
 #pragma once
 
 #include <filesystem>
+#include <set>
 
 #include <glm/vec2.hpp>
 
 #include "RenderPass.h"
+#include "Technique/Technique.h"
 
 namespace openblack
 {
@@ -48,13 +50,7 @@ public:
 		float bumpMapStrength;
 		float smallBumpMapStrength;
 		graphics::RenderPass viewId;
-		bool drawSky;
-		bool drawWater;
-		bool drawIsland;
-		bool drawEntities;
-		bool drawSprites;
-		bool drawTestModel;
-		bool drawDebugCross;
+		std::set<graphics::Technique> sceneTechnique;
 		bool drawBoundingBoxes;
 		bool cullBack;
 		bool wireframe;
@@ -90,12 +86,8 @@ public:
 	[[nodiscard]] virtual bool GetProfile() const noexcept = 0;
 	virtual void SetProfile(bool value) noexcept = 0;
 
-	// TODO: Remove this function. All renderables should be specified through RenderingSystem with Components
-	virtual void UpdateDebugCrossUniforms(const glm::mat4& pose) noexcept = 0;
 	// TODO: Remove this function. All renderables should be drawn through RenderingSystem with Components
 	virtual void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const noexcept = 0;
-	// TODO: Should shader manager be available through Locator as a service?
-	[[nodiscard]] virtual graphics::ShaderManager& GetShaderManager() const noexcept = 0;
 };
 
 } // namespace openblack::graphics

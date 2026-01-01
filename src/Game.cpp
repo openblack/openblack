@@ -36,6 +36,8 @@
 #include "Debug/DebugGuiInterface.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
+#include "ECS/Components/DebugCross.h"
+#include "ECS/Components/SpriteMesh.h"
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/CameraBookmarkSystemInterface.h"
@@ -49,6 +51,7 @@
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/RendererInterface.h"
+#include "Graphics/Technique/TechniqueManager.h"
 #include "Input/GameActionMapInterface.h"
 #include "LHScriptX/Script.h"
 #include "Locator.h"
@@ -384,8 +387,10 @@ bool Game::Update() noexcept
 				_handPose = glm::translate(_handPose, intersectionTransform.position);
 				_handPose *= glm::mat4(intersectionTransform.rotation);
 				_handPose = glm::scale(_handPose, intersectionTransform.scale);
-				Locator::rendererInterface::value().UpdateDebugCrossUniforms(
-				    glm::translate(camera.GetFocus(Camera::Interpolation::Target)));
+				Locator::entitiesRegistry::value().Each<ecs::components::DebugCross>(
+				    [&camera](ecs::components::DebugCross& ent) {
+					    ent.debugCrossPose = glm::translate(camera.GetFocus(Camera::Interpolation::Target));
+				    });
 			}
 		}
 
@@ -849,6 +854,22 @@ bool Game::Run() noexcept
 		{
 			auto section = profiler.BeginScoped(Profiler::Stage::SceneDraw);
 
+			std::set<graphics::Technique> drawPass {};
+			if (config.drawSky)
+				drawPass.emplace(graphics::Technique::Sky);
+			if (config.drawWater)
+				drawPass.emplace(graphics::Technique::Water);
+			if (config.drawIsland)
+				drawPass.emplace(graphics::Technique::Island);
+			if (config.drawEntities)
+				drawPass.emplace(graphics::Technique::Entities);
+			if (config.drawSprites)
+				drawPass.emplace(graphics::Technique::Sprites);
+			if (config.drawTestModel)
+				drawPass.emplace(graphics::Technique::TestModel);
+			if (config.drawDebugCross)
+				drawPass.emplace(graphics::Technique::DebugCross);
+
 			const graphics::RendererInterface::DrawSceneDesc drawDesc {
 			    .camera = &Locator::camera::value(),
 			    .frameBuffer = nullptr,
@@ -858,13 +879,7 @@ bool Game::Run() noexcept
 			    .bumpMapStrength = config.bumpMapStrength,
 			    .smallBumpMapStrength = config.smallBumpMapStrength,
 			    .viewId = graphics::RenderPass::Main,
-			    .drawSky = config.drawSky,
-			    .drawWater = config.drawWater,
-			    .drawIsland = config.drawIsland,
-			    .drawEntities = config.drawEntities,
-			    .drawSprites = config.drawSprites,
-			    .drawTestModel = config.drawTestModel,
-			    .drawDebugCross = config.drawDebugCross,
+			    .sceneTechnique = drawPass,
 			    .drawBoundingBoxes = config.drawBoundingBoxes,
 			    .cullBack = false,
 			    .wireframe = config.wireframe,
@@ -922,6 +937,15 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 
 	// Reset everything. Deletes all entities and their components
 	Locator::entitiesRegistry::value().Reset();
+	auto& registry = Locator::entitiesRegistry::value();
+	// TODO(#661): We should not need to recreate the debugCross and the plane for the sprite each time
+	{
+		auto entity = registry.Create();
+		registry.Assign<ecs::components::DebugCross>(entity);
+
+		entity = registry.Create();
+		registry.Assign<ecs::components::SpriteMesh>(entity);
+	}
 	// TODO(#661): split entities that are permanent from map entities and move hand and camera to init
 	// We need a hand for the player
 	Locator::handSystem::value().Initialize();

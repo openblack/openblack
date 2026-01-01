@@ -36,6 +36,8 @@
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/TownSystem.h"
 #include "Graphics/RendererInterface.h"
+#include "Graphics/ShaderManager.h"
+#include "Graphics/ShaderManagerInterface.h"
 #include "Input/GameActionMap.h"
 #include "LHVM.h"
 #include "Profiler.h"
@@ -66,6 +68,7 @@ using openblack::ecs::systems::PlayerSystem;
 using openblack::ecs::systems::RenderingSystem;
 using openblack::ecs::systems::TownSystem;
 using openblack::graphics::RendererInterface;
+using openblack::graphics::ShaderManager;
 using openblack::input::GameActionMap;
 using openblack::lhvm::LHVM;
 using openblack::resources::Resources;
@@ -84,6 +87,8 @@ bool openblack::InitializeEngine(uint8_t rendererType, bool vsync) noexcept
 
 	Locator::profiler::emplace();
 
+	// auto ntm = std::make_shared<ShaderManager>();
+	Locator::shaderManager::emplace<ShaderManager>();
 	Locator::rendererInterface::reset(
 	    RendererInterface::Create(static_cast<bgfx::RendererType::Enum>(rendererType), vsync).release());
 	if (!Locator::rendererInterface::has_value())

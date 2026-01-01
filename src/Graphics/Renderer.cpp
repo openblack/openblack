@@ -18,27 +18,27 @@
 #include <bimg/bimg.h>
 #include <bx/file.h>
 #include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/transform.hpp>
 #include <spdlog/spdlog.h>
 
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "3D/L3DSubMesh.h"
 #include "3D/LandBlock.h"
-#include "3D/LandIslandInterface.h"
 #include "3D/OceanInterface.h"
 #include "3D/SkyInterface.h"
 #include "Camera/Camera.h"
+#include "ECS/Components/DebugCross.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Sprite.h"
+#include "ECS/Components/SpriteMesh.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "EngineConfig.h"
-#include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/Primitive.h"
 #include "Graphics/ShaderManager.h"
+#include "Graphics/Technique/TechniqueManager.h"
 #include "Graphics/VertexBuffer.h"
 #include "Locator.h"
 #include "Profiler.h"
@@ -241,14 +241,11 @@ std::unique_ptr<RendererInterface> RendererInterface::Create(bgfx::RendererType:
 }
 
 Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallback) noexcept
-    : _shaderManager(std::make_unique<ShaderManager>())
-    , _bgfxCallback(std::move(bgfxCallback))
+    : _bgfxCallback(std::move(bgfxCallback))
     , _bgfxReset(bgfxReset)
 {
-	_shaderManager->LoadShaders();
+	Locator::shaderManager::value().LoadShaders();
 	// allocate vertex buffers for our debug draw and for primitives
-	_debugCross = DebugLines::CreateCross();
-	_plane = Primitive::CreatePlane();
 
 	// give debug names to views
 	// TODO (#749) use std::views::enumerate
@@ -261,9 +258,7 @@ Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallb
 
 Renderer::~Renderer() noexcept
 {
-	_plane.reset();
-	_shaderManager.reset();
-	_debugCross.reset();
+	Locator::shaderManager::reset();
 	bgfx::frame();
 	bgfx::shutdown();
 }
@@ -277,16 +272,6 @@ void Renderer::ConfigureView(graphics::RenderPass viewId, glm::u16vec2 resolutio
 void Renderer::Reset(glm::u16vec2 resolution) const noexcept
 {
 	bgfx::reset(resolution.x, resolution.y, _bgfxReset);
-}
-
-graphics::ShaderManager& Renderer::GetShaderManager() const noexcept
-{
-	return *_shaderManager;
-}
-
-void Renderer::UpdateDebugCrossUniforms(const glm::mat4& pose) noexcept
-{
-	_debugCrossPose = pose;
 }
 
 const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& meshSkins)
@@ -431,70 +416,39 @@ void Renderer::DrawMesh(const graphics::L3DMesh& mesh, const L3DMeshSubmitDesc& 
 	}
 }
 
-void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
-{
-	const auto viewId = graphics::RenderPass::Footprint;
-	auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::FootprintPass);
-	if (drawDesc.drawIsland)
-	{
-		const auto& island = Locator::terrainSystem::value();
-		island.GetFootprintFramebuffer().Bind(viewId);
-
-		// This dummy draw call is here to make sure that view is cleared if no
-		// other draw calls are submitted to view
-		bgfx::touch(static_cast<bgfx::ViewId>(viewId));
-
-		// _shaderManager->SetCamera(viewId, *drawDesc.camera); // TODO
-
-		auto view = island.GetOrthoView();
-		auto proj = island.GetOrthoProj();
-		bgfx::setViewTransform(static_cast<bgfx::ViewId>(viewId), &view, &proj);
-
-		const auto& meshManager = Locator::resources::value().GetMeshes();
-		const auto& renderCtx = Locator::rendereringSystem::value().GetContext();
-		const auto* footprintShaderInstanced = _shaderManager->GetShader("FootprintInstanced");
-		for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
-		{
-			auto mesh = meshManager.Handle(meshId);
-			if (!mesh->ContainsLandscapeFeature() || mesh->GetFootprints().empty())
-			{
-				continue;
-			}
-			const auto& footprint = mesh->GetFootprints()[0];
-			footprintShaderInstanced->SetTextureSampler("s_footprint", 0, *footprint.texture);
-			footprint.mesh->GetVertexBuffer().Bind();
-			bgfx::setInstanceDataBuffer(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
-			const uint64_t state = 0u                       //
-			                       | BGFX_STATE_WRITE_RGB   //
-			                       | BGFX_STATE_WRITE_A     //
-			                       | BGFX_STATE_BLEND_ALPHA //
-			                       | BGFX_STATE_CULL_CW     //
-			                       | BGFX_STATE_MSAA;
-			bgfx::setState(state);
-			bgfx::submit(static_cast<bgfx::ViewId>(viewId), footprintShaderInstanced->GetRawHandle());
-		}
-	}
-}
-
 void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 {
-	// TODO(bwrsandman): Footprint framebuffer doesn't need to be updated each frame
-	DrawFootprintPass(drawDesc);
+	{
+		auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::FootprintPass);
+		const auto& frameBuffer = Locator::terrainSystem::value().GetFootprintFramebuffer();
+
+		DrawSceneDesc footprintPassDesc = drawDesc;
+		std::set<Technique> footprintTechnique {Technique::Footprint};
+		footprintPassDesc.viewId = graphics::RenderPass::Footprint;
+		footprintPassDesc.frameBuffer = &frameBuffer;
+		footprintPassDesc.sceneTechnique = footprintTechnique;
+
+		// TODO(bwrsandman): Footprint framebuffer doesn't need to be updated each frame
+		DrawPass(footprintPassDesc);
+	}
 	// Reflection Pass
 	{
 		auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::ReflectionPass);
-		if (drawDesc.drawWater)
+		if (drawDesc.sceneTechnique.contains(Technique::Water))
 		{
 			DrawSceneDesc drawPassDesc = drawDesc;
 
+			std::set<Technique> reflectionTechnique = drawDesc.sceneTechnique;
+			reflectionTechnique.erase(Technique::Water);
+			reflectionTechnique.erase(Technique::DebugCross);
+			reflectionTechnique.erase(Technique::BoundingBox);
 			const auto& frameBuffer = Locator::oceanSystem::value().GetReflectionFramebuffer();
 			auto reflectionCamera = drawDesc.camera->Reflect();
 
 			drawPassDesc.viewId = graphics::RenderPass::Reflection;
 			drawPassDesc.camera = reflectionCamera.get();
 			drawPassDesc.frameBuffer = &frameBuffer;
-			drawPassDesc.drawWater = false;
-			drawPassDesc.drawDebugCross = false;
+			drawPassDesc.sceneTechnique = reflectionTechnique;
 			drawPassDesc.drawBoundingBoxes = false;
 			drawPassDesc.cullBack = true;
 
@@ -511,7 +465,7 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 
 void Renderer::DrawPass(const DrawSceneDesc& desc) const
 {
-	const auto& meshManager = Locator::resources::value().GetMeshes();
+
 	auto& profiler = Locator::profiler::value();
 
 	if (desc.frameBuffer != nullptr)
@@ -522,273 +476,14 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	// other draw calls are submitted to view
 	bgfx::touch(static_cast<bgfx::ViewId>(desc.viewId));
 
-	_shaderManager->SetCamera(desc.viewId, *desc.camera);
+	Locator::shaderManager::value().SetCamera(desc.viewId, *desc.camera);
 
-	const auto* skyShader = _shaderManager->GetShader("Sky");
-	const auto* waterShader = _shaderManager->GetShader("Water");
-	const auto* terrainShader = _shaderManager->GetShader("Terrain");
-	const auto* debugShader = _shaderManager->GetShader("DebugLine");
-	const auto* spriteShader = _shaderManager->GetShader("Sprite");
-	const auto* debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
-	const auto* objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
-	const auto* objectShaderHeightMapInstanced = _shaderManager->GetShader("ObjectHeightMapInstanced");
-
-	const auto skyType = Locator::skySystem::value().GetCurrentSkyType();
-
+	for (auto technique : desc.sceneTechnique)
 	{
-		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSky
-		                                                                          : Profiler::Stage::MainPassDrawSky);
-		if (desc.drawSky)
-		{
-			const auto modelMatrix = glm::mat4(1.0f);
-			const glm::vec4 u_typeAlignment = {skyType, Locator::config::value().skyAlignment + 1.0f, 0.0f, 0.0f};
-
-			skyShader->SetTextureSampler("s_diffuse", 0, Locator::skySystem::value().GetTexture());
-			skyShader->SetUniformValue("u_typeAlignment", &u_typeAlignment);
-
-			L3DMeshSubmitDesc submitDesc = {};
-			submitDesc.viewId = desc.viewId;
-			submitDesc.program = skyShader;
-			submitDesc.state = k_BgfxDefaultStateInvertedZ;
-			if (!desc.cullBack)
-			{
-				submitDesc.state &= ~BGFX_STATE_CULL_MASK;
-				submitDesc.state |= BGFX_STATE_CULL_CCW;
-			}
-			submitDesc.modelMatrices = &modelMatrix;
-			submitDesc.matrixCount = 1;
-			submitDesc.isSky = true;
-
-			DrawMesh(Locator::skySystem::value().GetMesh(), submitDesc, 0);
-		}
-	}
-
-	{
-		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawWater
-		                                                                          : Profiler::Stage::MainPassDrawWater);
-		if (desc.drawWater)
-		{
-			const auto& ocean = Locator::oceanSystem::value();
-			const auto& mesh = ocean.GetMesh();
-			mesh.GetIndexBuffer().Bind(mesh.GetIndexBuffer().GetCount(), 0);
-			mesh.GetVertexBuffer().Bind();
-			bgfx::setState(k_BgfxDefaultStateInvertedZ);
-			auto diffuse = Locator::resources::value().GetTextures().Handle(ocean.GetDiffuseTexture());
-			auto alpha = Locator::resources::value().GetTextures().Handle(ocean.GetAlphaTexture());
-			waterShader->SetTextureSampler("s_diffuse", 0, *diffuse);
-			waterShader->SetTextureSampler("s_alpha", 1, *alpha);
-			waterShader->SetTextureSampler("s_reflection", 2, ocean.GetReflectionFramebuffer().GetColorAttachment());
-			const glm::vec4 u_sky = {skyType, 0.0f, 0.0f, 0.0f};
-			waterShader->SetUniformValue("u_sky", &u_sky); // fs
-			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), waterShader->GetRawHandle());
-		}
-	}
-
-	{
-		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawIsland
-		                                                                          : Profiler::Stage::MainPassDrawIsland);
-		if (desc.drawIsland)
-		{
-			auto& island = Locator::terrainSystem::value();
-			auto islandExtent = glm::vec4(island.GetExtent().minimum, island.GetExtent().maximum);
-
-			auto texture = Locator::resources::value().GetTextures().Handle(LandIslandInterface::k_SmallBumpTextureId);
-			const glm::vec4 u_skyAndBump = {skyType, desc.bumpMapStrength, desc.smallBumpMapStrength, 0.0f};
-
-			terrainShader->SetTextureSampler("s0_materials", 0, island.GetAlbedoArray());
-			terrainShader->SetTextureSampler("s1_bump", 1, island.GetBump());
-			terrainShader->SetTextureSampler("s2_smallBump", 2, *texture);
-			terrainShader->SetTextureSampler("s3_footprints", 3, island.GetFootprintFramebuffer().GetColorAttachment());
-
-			terrainShader->SetUniformValue("u_skyAndBump", &u_skyAndBump);
-			terrainShader->SetUniformValue("u_islandExtent", &islandExtent);
-
-			// clang-format off
-			constexpr auto defaultState = 0u
-				| BGFX_STATE_WRITE_MASK
-				| BGFX_STATE_DEPTH_TEST_GREATER
-				| BGFX_STATE_BLEND_ALPHA
-				| BGFX_STATE_MSAA
-			;
-
-			constexpr auto discard = 0u
-				| BGFX_DISCARD_INSTANCE_DATA
-				| BGFX_DISCARD_INDEX_BUFFER
-				| BGFX_DISCARD_TRANSFORM
-				| BGFX_DISCARD_VERTEX_STREAMS
-				| BGFX_DISCARD_STATE
-			;
-			// clang-format on
-
-			for (const auto& block : island.GetBlocks())
-			{
-				// pack uniforms
-				const glm::vec4 mapPositionAndSize = glm::vec4(block.GetMapPosition(), 160.0f, 160.0f);
-				terrainShader->SetUniformValue("u_blockPositionAndSize", &mapPositionAndSize);
-
-				block.GetMesh().GetVertexBuffer().Bind();
-
-				bgfx::setState(defaultState | (desc.cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW), 0);
-				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), terrainShader->GetRawHandle(), 0, discard);
-			}
-			bgfx::discard(BGFX_DISCARD_BINDINGS);
-		}
-	}
-
-	{
-		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawModels
-		                                                                          : Profiler::Stage::MainPassDrawModels);
-		if (desc.drawEntities)
-		{
-			L3DMeshSubmitDesc submitDesc = {};
-			submitDesc.viewId = desc.viewId;
-			submitDesc.program = objectShaderInstanced;
-			submitDesc.state = 0u                              //
-			                   | BGFX_STATE_WRITE_MASK         //
-			                   | BGFX_STATE_DEPTH_TEST_GREATER //
-			                   | BGFX_STATE_MSAA               //
-			    ;
-			const auto& renderCtx = Locator::rendereringSystem::value().GetContext();
-
-			// Instance meshes
-			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
-			{
-				auto mesh = meshManager.Handle(meshId);
-
-				submitDesc.instanceBuffer = &renderCtx.instanceUniformBuffer;
-				submitDesc.instanceStart = placers.offset;
-				submitDesc.instanceCount = placers.count;
-				if (mesh->IsBoned())
-				{
-					submitDesc.modelMatrices = mesh->GetBoneMatrices().data();
-					submitDesc.matrixCount = static_cast<uint8_t>(mesh->GetBoneMatrices().size());
-					// TODO(bwrsandman): Get animation frame instead of default
-				}
-				else
-				{
-					const static auto identity = glm::mat4(1.0f);
-					submitDesc.modelMatrices = &identity;
-					submitDesc.matrixCount = 1;
-				}
-				submitDesc.isSky = false;
-				submitDesc.morphWithTerrain = placers.morphWithTerrain;
-				submitDesc.program = submitDesc.morphWithTerrain ? objectShaderHeightMapInstanced : objectShaderInstanced;
-
-				// TODO(bwrsandman): choose the correct LOD
-				DrawMesh(*mesh, submitDesc, std::numeric_limits<uint8_t>::max());
-			}
-
-			// Debug
-			if (desc.viewId == graphics::RenderPass::Main)
-			{
-				for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
-				{
-					auto mesh = meshManager.Handle(meshId);
-					if (!mesh->ContainsLandscapeFeature() || mesh->GetFootprints().empty())
-					{
-						continue;
-					}
-				}
-				if (renderCtx.boundingBox)
-				{
-					const auto boundBoxOffset = static_cast<uint32_t>(renderCtx.instanceUniforms.size() / 2);
-					const auto boundBoxCount = static_cast<uint32_t>(renderCtx.instanceUniforms.size() / 2);
-					renderCtx.boundingBox->GetVertexBuffer().Bind();
-					bgfx::setInstanceDataBuffer(renderCtx.instanceUniformBuffer, boundBoxOffset, boundBoxCount);
-					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
-					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShaderInstanced->GetRawHandle());
-				}
-				if (renderCtx.footpaths)
-				{
-					renderCtx.footpaths->GetVertexBuffer().Bind();
-					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
-					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
-				}
-				if (renderCtx.streams)
-				{
-					renderCtx.streams->GetVertexBuffer().Bind();
-					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
-					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
-				}
-			}
-		}
-
-		{
-			auto subSection =
-			    profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSprites
-			                                                               : Profiler::Stage::MainPassDrawSprites);
-
-			if (desc.drawSprites)
-			{
-				using namespace ecs::components;
-
-				auto& registry = Locator::entitiesRegistry::value();
-				registry.Each<const Sprite, const Transform>(
-				    [this, &spriteShader, &desc](const Sprite& sprite, const Transform& transform) {
-					    glm::mat4 modelMatrix = glm::mat4(1.0f);
-					    modelMatrix = glm::translate(modelMatrix, transform.position);
-					    modelMatrix *= glm::mat4(transform.rotation);
-					    modelMatrix = glm::scale(modelMatrix, transform.scale);
-
-					    glm::vec4 u_sampleRect(sprite.uvExtent, sprite.uvMin);
-
-					    bgfx::setTransform(glm::value_ptr(modelMatrix));
-					    spriteShader->SetUniformValue("u_sampleRect", glm::value_ptr(u_sampleRect));
-					    spriteShader->SetUniformValue("u_tint", glm::value_ptr(sprite.tint));
-					    spriteShader->SetTextureSampler("s_diffuse", 0, sprite.texture);
-
-					    _plane->GetVertexBuffer().Bind();
-
-					    bgfx::setState(0 | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
-					                   BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE) |
-					                   BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_ADD));
-
-					    bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), spriteShader->GetRawHandle());
-				    });
-			}
-		}
-
-		if (desc.drawTestModel)
-		{
-			L3DMeshSubmitDesc submitDesc = {};
-			submitDesc.viewId = desc.viewId;
-			submitDesc.program = _shaderManager->GetShader("Object");
-			// clang-format off
-			submitDesc.state = 0u
-				| BGFX_STATE_WRITE_MASK
-				| BGFX_STATE_DEPTH_TEST_GREATER
-				| BGFX_STATE_CULL_CCW
-				| BGFX_STATE_MSAA
-			;
-			// clang-format on
-			const auto& mesh = meshManager.Handle(entt::hashed_string("coffre"));
-			const auto& testAnimation = Locator::resources::value().GetAnimations().Handle(entt::hashed_string("coffre"));
-			const std::vector<uint32_t>& boneParents = mesh->GetBoneParents();
-			auto bones = testAnimation->GetBoneMatrices(desc.time);
-			for (uint32_t i = 0; i < bones.size(); ++i)
-			{
-				if (boneParents[i] != std::numeric_limits<uint32_t>::max())
-				{
-					bones[i] = bones[boneParents[i]] * bones[i];
-				}
-			}
-			submitDesc.modelMatrices = bones.data();
-			submitDesc.matrixCount = static_cast<uint8_t>(bones.size());
-			submitDesc.isSky = false;
-			DrawMesh(*mesh, submitDesc, 0);
-		}
-	}
-
-	{
-		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawDebugCross
-		                                                                          : Profiler::Stage::MainPassDrawDebugCross);
-		if (desc.drawDebugCross)
-		{
-			bgfx::setTransform(glm::value_ptr(_debugCrossPose));
-			_debugCross->GetVertexBuffer().Bind();
-			bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
-			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
-		}
+		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? k_reflectionPassTechniqueStage.at(technique)
+		                                    : desc.viewId == RenderPass::Main     ? k_mainPassTechniqueStage.at(technique)
+		                                                                          : Profiler::Stage::FootprintDrawFootprint);
+		k_TechniqueMap.at(technique)(desc);
 	}
 
 	// Enable stats or debug text.
