@@ -9,15 +9,16 @@
 
 #pragma once
 
-#include <bgfx/bgfx.h>
 #include <glm/vec2.hpp>
 #include <glm/vec4.hpp>
+
+#include "Graphics/GraphicsHandle.h"
 
 namespace openblack::ecs::components
 {
 struct Sprite
 {
-	bgfx::TextureHandle texture;
+	graphics::TextureHandle texture;
 	glm::vec2 uvMin;
 	glm::vec2 uvExtent;
 	glm::vec4 tint;

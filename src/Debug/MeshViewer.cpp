@@ -28,6 +28,7 @@
 #include "ECS/Components/Mesh.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/HandSystemInterface.h"
+#include "Graphics/GraphicsHandleBgfx.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/RendererInterface.h"
 #include "Graphics/ShaderManager.h"
@@ -44,7 +45,8 @@ MeshViewer::MeshViewer() noexcept
     , _selectedMesh(resources::HashIdentifier(MeshId::Dummy))
     , _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f)))
     , _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", static_cast<uint16_t>(512), static_cast<uint16_t>(512),
-                                                           graphics::Format::RGBA8, graphics::Format::Depth24Stencil8))
+                                                           graphics::TextureFormat::RGBA8,
+                                                           graphics::TextureFormat::Depth24Stencil8))
 {
 }
 
@@ -224,7 +226,7 @@ void MeshViewer::Draw() noexcept
 			_selectedFootprint = static_cast<int>(mesh->GetFootprints().size()) - 1;
 		}
 		const auto& footprint = mesh->GetFootprints().at(_selectedFootprint);
-		ImGui::Image(footprint.texture->GetNativeHandle(), ImVec2(128, 128));
+		ImGui::Image(toBgfx(footprint.texture->GetNativeHandle()), ImVec2(128, 128));
 		ImGui::TreePop();
 	}
 
@@ -246,7 +248,7 @@ void MeshViewer::Draw() noexcept
 	}
 	ImGui::Columns(1);
 
-	ImGui::Image(_frameBuffer->GetColorAttachment().GetNativeHandle(), ImVec2(512, 512));
+	ImGui::Image(toBgfx(_frameBuffer->GetColorAttachment().GetNativeHandle()), ImVec2(512, 512));
 
 	ImGui::EndChild();
 

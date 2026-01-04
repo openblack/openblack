@@ -26,7 +26,7 @@ Ocean::Ocean() noexcept
 {
 	_reflectionFrameBuffer =
 	    std::make_unique<FrameBuffer>("Reflection", static_cast<uint16_t>(1024), static_cast<uint16_t>(1024),
-	                                  graphics::Format::RGBA8, graphics::Format::Depth24Stencil8);
+	                                  graphics::TextureFormat::RGBA8, graphics::TextureFormat::Depth24Stencil8);
 	CreateMesh();
 }
 Ocean::~Ocean() noexcept = default;

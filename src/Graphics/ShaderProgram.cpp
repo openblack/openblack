@@ -12,6 +12,7 @@
 #include <spdlog/spdlog.h>
 
 #include "FileSystem/FileSystemInterface.h"
+#include "Graphics/GraphicsHandleBgfx.h"
 #include "Texture2D.h"
 
 namespace openblack::graphics
@@ -62,7 +63,7 @@ void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint
 	auto uniform = _uniforms.find(samplerName);
 	if (uniform != _uniforms.cend())
 	{
-		bgfx::setTexture(bindPoint, uniform->second, texture.GetNativeHandle());
+		bgfx::setTexture(bindPoint, uniform->second, toBgfx(texture.GetNativeHandle()));
 	}
 	else
 	{
@@ -70,12 +71,12 @@ void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint
 	}
 }
 
-void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint, const bgfx::TextureHandle& texture) const
+void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint, const graphics::TextureHandle& texture) const
 {
 	auto uniform = _uniforms.find(samplerName);
 	if (uniform != _uniforms.cend())
 	{
-		bgfx::setTexture(bindPoint, uniform->second, texture);
+		bgfx::setTexture(bindPoint, uniform->second, toBgfx(texture));
 	}
 	else
 	{

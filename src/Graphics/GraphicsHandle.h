@@ -39,4 +39,9 @@ struct DynamicVertexBufferHandle
 	uint32_t id = 0;
 };
 
+struct TextureHandle
+{
+	uint32_t id = 0;
+};
+
 } // namespace openblack::graphics

@@ -25,8 +25,8 @@ class FrameBuffer
 {
 public:
 	FrameBuffer() = delete;
-	FrameBuffer(std::string&& name, uint16_t width, uint16_t height, Format colorFormat,
-	            std::optional<Format> depthStencilFormat = {});
+	FrameBuffer(std::string&& name, uint16_t width, uint16_t height, TextureFormat colorFormat,
+	            std::optional<TextureFormat> depthStencilFormat = {});
 	~FrameBuffer();
 
 	void Bind(RenderPass viewId) const;
@@ -40,8 +40,8 @@ private:
 
 	uint16_t _width;
 	uint16_t _height;
-	Format _colorFormat;
-	std::optional<Format> _depthStencilFormat;
+	TextureFormat _colorFormat;
+	std::optional<TextureFormat> _depthStencilFormat;
 
 	Texture2D _colorAttachment;
 	Texture2D _depthStencilAttachment;
