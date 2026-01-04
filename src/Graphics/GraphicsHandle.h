@@ -44,4 +44,19 @@ struct TextureHandle
 	uint32_t id = 0;
 };
 
+struct UniformHandle
+{
+	uint32_t id = 0;
+};
+
+struct ShaderHandle
+{
+	uint32_t id = 0;
+};
+
+struct ProgramHandle
+{
+	uint32_t id = 0;
+};
+
 } // namespace openblack::graphics

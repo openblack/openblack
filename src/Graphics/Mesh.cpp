@@ -9,6 +9,7 @@
 
 #include "Mesh.h"
 
+#include "GraphicsHandleBgfx.h"
 #include "IndexBuffer.h"
 #include "ShaderProgram.h"
 #include "VertexBuffer.h"
@@ -63,6 +64,6 @@ void Mesh::Draw(const DrawDesc& desc) const
 		bgfx::setState(desc.state, desc.rgba);
 	}
 
-	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), desc.program.GetRawHandle(), 0,
+	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(desc.program.GetRawHandle()), 0,
 	             desc.preserveState ? BGFX_DISCARD_NONE : BGFX_DISCARD_ALL);
 }

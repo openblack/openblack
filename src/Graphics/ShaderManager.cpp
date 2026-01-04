@@ -42,6 +42,7 @@
 #endif
 
 #include "Camera/Camera.h"
+#include "GraphicsHandleBgfx.h"
 
 // clang-format off
 #define SHADER_NAME vs_line
@@ -139,7 +140,7 @@ void ShaderManager::LoadShaders()
 		assert(bgfx::isValid(vs));
 		auto fs = bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, shader.fragmentShaderName.data());
 		assert(bgfx::isValid(fs));
-		_shaderPrograms[shader.name.data()] = new ShaderProgram(shader.name.data(), vs, fs);
+		_shaderPrograms[shader.name.data()] = new ShaderProgram(shader.name.data(), fromBgfx(vs), fromBgfx(fs));
 	}
 }
 

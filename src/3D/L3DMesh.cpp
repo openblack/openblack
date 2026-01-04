@@ -14,6 +14,7 @@
 
 #include <BulletCollision/CollisionShapes/btConvexHullShape.h>
 #include <L3DFile.h>
+#include <bgfx/bgfx.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 #include <glm/matrix.hpp>

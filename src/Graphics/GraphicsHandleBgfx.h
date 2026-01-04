@@ -80,6 +80,30 @@ inline TextureHandle fromBgfx(bgfx::TextureHandle handle)
 {
 	return {handle.idx};
 }
+inline bgfx::UniformHandle toBgfx(UniformHandle handle)
+{
+	return {static_cast<uint16_t>(handle.id)};
+}
+inline UniformHandle fromBgfx(bgfx::UniformHandle handle)
+{
+	return {handle.idx};
+}
+inline bgfx::ShaderHandle toBgfx(ShaderHandle handle)
+{
+	return {static_cast<uint16_t>(handle.id)};
+}
+inline ShaderHandle fromBgfx(bgfx::ShaderHandle handle)
+{
+	return {handle.idx};
+}
+inline bgfx::ProgramHandle toBgfx(ProgramHandle handle)
+{
+	return {static_cast<uint16_t>(handle.id)};
+}
+inline ProgramHandle fromBgfx(bgfx::ProgramHandle handle)
+{
+	return {handle.idx};
+}
 
 inline bgfx::TextureFormat::Enum toBgfx(TextureFormat format)
 {
