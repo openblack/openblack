@@ -9,7 +9,7 @@
 
 #include "MeshViewer.h"
 
-#include <SDL_events.h>
+#include <SDL3/SDL_events.h>
 #include <bgfx/bgfx.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -390,7 +390,7 @@ void MeshViewer::ProcessEventOpen(const SDL_Event& event) noexcept
 	{
 	default:
 		break;
-	case SDL_MOUSEBUTTONDOWN:
+	case SDL_EVENT_MOUSE_BUTTON_DOWN:
 	{
 		if (!io.WantCaptureMouse)
 		{

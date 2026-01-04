@@ -154,15 +154,15 @@ elseif (UNIX)
 endif ()
 
 if (VCPKG_TARGET_ANDROID)
-  # openblack_lib need to forward the JNI exports from SDL2 so the Activity can start main
+  # openblack_lib need to forward the JNI exports from SDL3 so the Activity can start main
   target_link_libraries(
-    openblack_lib PUBLIC -Wl,--whole-archive SDL2::SDL2 -Wl,--no-whole-archive
+    openblack_lib PUBLIC -Wl,--whole-archive SDL3::SDL3 -Wl,--no-whole-archive
   )
 else ()
   target_link_libraries(
     openblack_lib
-    PUBLIC $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
-           $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+    PUBLIC $<TARGET_NAME_IF_EXISTS:SDL3::SDL3main>
+           $<IF:$<TARGET_EXISTS:SDL3::SDL3>,SDL3::SDL3,SDL3::SDL3-static>
   )
 endif ()
 
