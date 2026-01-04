@@ -10,6 +10,7 @@
 #include "TextureViewer.h"
 
 #include "Debug/ImGuiUtils.h"
+#include "Graphics/GraphicsHandleBgfx.h"
 #include "Graphics/Texture2D.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
@@ -62,17 +63,9 @@ void TextureViewer::Draw() noexcept
 		auto texture = textures.Handle(_selectedTexture);
 
 		const auto format = texture->GetFormat();
-		std::string formatStr = std::to_string(format);
-		if (format == bgfx::TextureFormat::R8)
-		{
-			formatStr = "R8";
-		}
-		else if (format == bgfx::TextureFormat::RGB8)
-		{
-			formatStr = "RGB8";
-		}
-		ImGui::Text("width: %u, height: %u, format: %s", texture->GetWidth(), texture->GetHeight(), formatStr.c_str());
-		ImGui::Image(texture->GetNativeHandle(), ImVec2(512, 512));
+		const auto* formatStr = graphics::k_TextureFormatStrings.at(static_cast<size_t>(format));
+		ImGui::Text("width: %u, height: %u, format: %s", texture->GetResolution().x, texture->GetResolution().y, formatStr);
+		ImGui::Image(toBgfx(texture->GetNativeHandle()), ImVec2(512, 512));
 	}
 
 	ImGui::EndChild();

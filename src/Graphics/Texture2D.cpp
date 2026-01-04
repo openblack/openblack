@@ -11,75 +11,15 @@
 
 #include <cassert>
 
-#include <algorithm>
-#include <array>
-
+#include <bgfx/bgfx.h>
+#include <glm/ext/vector_uint2_sized.hpp>
 #include <spdlog/spdlog.h>
 #include <stb_image_write.h>
 
+#include "GraphicsHandleBgfx.h"
+
 namespace openblack::graphics
 {
-constexpr std::array<bgfx::TextureFormat::Enum,
-                     static_cast<size_t>(Format::RGBA4) + 1>
-    k_TextureFormatsBgfx {
-        bgfx::TextureFormat::BC1,     // BlockCompression1
-        bgfx::TextureFormat::BC2,     // BlockCompression2
-        bgfx::TextureFormat::BC3,     // BlockCompression3
-        bgfx::TextureFormat::D24S8,   // Depth24Stencil8
-        bgfx::TextureFormat::D16,     // DepthComponent16
-        bgfx::TextureFormat::D24,     // DepthComponent24
-        bgfx::TextureFormat::R16F,    // R16F
-        bgfx::TextureFormat::R16I,    // R16I
-        bgfx::TextureFormat::R16S,    // R16SNorm
-        bgfx::TextureFormat::R16U,    // R16UI
-        bgfx::TextureFormat::R32F,    // R32F
-        bgfx::TextureFormat::R32I,    // R32I
-        bgfx::TextureFormat::R32U,    // R32UI
-        bgfx::TextureFormat::A8,      // R8
-        bgfx::TextureFormat::R8,      // R8
-        bgfx::TextureFormat::R8I,     // R8I
-        bgfx::TextureFormat::R8S,     // R8SNorm
-        bgfx::TextureFormat::R8U,     // R8UI
-        bgfx::TextureFormat::RG16,    // RG16
-        bgfx::TextureFormat::RG16F,   // RG16F
-        bgfx::TextureFormat::RG16S,   // RG16SNorm
-        bgfx::TextureFormat::RG32F,   // RG32F
-        bgfx::TextureFormat::RG32I,   // RG32I
-        bgfx::TextureFormat::RG32U,   // RG32UI
-        bgfx::TextureFormat::RG8,     // RG8
-        bgfx::TextureFormat::RG8I,    // RG8I
-        bgfx::TextureFormat::RG8S,    // RG8SNorm
-        bgfx::TextureFormat::RG8U,    // RG8UI
-        bgfx::TextureFormat::RGB10A2, // RGB10A2
-        bgfx::TextureFormat::B5G6R5,  // B5G6R5
-        bgfx::TextureFormat::R5G6B5,  // R5G6B5
-        bgfx::TextureFormat::BGR5A1,  // BGBRA1
-        bgfx::TextureFormat::RGB5A1,  // RGB5A1
-        bgfx::TextureFormat::RGB8,    // RGB8
-        bgfx::TextureFormat::RGB8I,   // RGB8I
-        bgfx::TextureFormat::RGB8U,   // RGB8UI
-        bgfx::TextureFormat::RGB9E5F, // RGB9E5
-        bgfx::TextureFormat::RGBA8,   // RGBA8
-        bgfx::TextureFormat::RGBA8I,  // RGBA8I
-        bgfx::TextureFormat::RGBA8U,  // RGBA8UI
-        bgfx::TextureFormat::RGBA8S,  // RGBA8SNorm
-        bgfx::TextureFormat::BGRA8,   // BGRA8
-        bgfx::TextureFormat::RGBA16,  // RGBA16
-        bgfx::TextureFormat::RGBA16F, // RGBA16F
-        bgfx::TextureFormat::RGBA16I, // RGBA16I
-        bgfx::TextureFormat::RGBA16U, // RGBA16UI
-        bgfx::TextureFormat::RGBA16S, // RGBA16SNorm
-        bgfx::TextureFormat::RGBA32F, // RGBA32F
-        bgfx::TextureFormat::RGBA32I, // RGBA32I
-        bgfx::TextureFormat::RGBA32U, // RGBA32UI
-        bgfx::TextureFormat::BGRA4,   // BGRA4
-        bgfx::TextureFormat::RGBA4,   // RGBA4
-    };
-
-bgfx::TextureFormat::Enum getBgfxTextureFormat(Format format)
-{
-	return k_TextureFormatsBgfx.at(static_cast<size_t>(format));
-}
 
 Texture2D::Texture2D(std::string name)
     : _name(std::move(name))
@@ -89,13 +29,13 @@ Texture2D::Texture2D(std::string name)
 
 Texture2D::~Texture2D()
 {
-	if (bgfx::isValid(_handle))
+	if (bgfx::isValid(toBgfx(_handle)))
 	{
-		bgfx::destroy(_handle);
+		bgfx::destroy(toBgfx(_handle));
 	}
 }
 
-void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format format, Wrapping wrapping, Filter filter,
+void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, TextureFormat format, Wrapping wrapping, Filter filter,
                        const void* memory) noexcept
 {
 	uint64_t flags = BGFX_TEXTURE_NONE;
@@ -123,12 +63,19 @@ void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Format 
 	default:
 		assert(false);
 	}
-	_handle = bgfx::createTexture2D(width, height, false, layers, getBgfxTextureFormat(format), flags,
-	                                reinterpret_cast<const bgfx::Memory*>(memory));
-	bgfx::setName(_handle, _name.c_str());
+	_handle = fromBgfx(bgfx::createTexture2D(width, height, false, layers, toBgfx(format), flags,
+	                                         reinterpret_cast<const bgfx::Memory*>(memory)));
+	bgfx::setName(toBgfx(_handle), _name.c_str());
 	bgfx::frame();
 
-	bgfx::calcTextureSize(_info, width, height, 1, false, false, layers, getBgfxTextureFormat(format));
+	bgfx::TextureInfo textureInfo;
+	bgfx::calcTextureSize(textureInfo, width, height, 1, false, false, layers, toBgfx(format));
+	_resolution = glm::u16vec2(textureInfo.width, textureInfo.height);
+	_numLayers = textureInfo.numLayers;
+	_format = fromBgfx(textureInfo.format);
+	_stride = textureInfo.width * textureInfo.bitsPerPixel / 8;
+	_storageSize = textureInfo.storageSize;
+
 	bgfx::frame();
 }
 
@@ -136,18 +83,18 @@ void Texture2D::DumpTexture() const
 {
 	assert(!_name.empty());
 	std::vector<uint8_t> pixels;
-	pixels.resize(_info.storageSize);
-	bgfx::readTexture(_handle, pixels.data());
+	pixels.resize(_storageSize);
+	bgfx::readTexture(toBgfx(_handle), pixels.data());
 	bgfx::frame();
-	const auto stride = _info.width * _info.bitsPerPixel / 8;
 	// TODO(bwrsandman): get the number of components from _info.format
 	const auto numComponents = 4u;
-	for (uint16_t i = 0; i < _info.numLayers; ++i)
+	for (uint16_t i = 0; i < _numLayers; ++i)
 	{
 		auto filename = "dump/" + _name + "_" + std::to_string(i) + ".png";
 		SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "Writing texture layer {} to {}.", i, filename.c_str());
-		auto* currentPixels = &pixels[i * stride * _info.height];
-		auto writeResult = stbi_write_png(filename.c_str(), _info.width, _info.height, numComponents, currentPixels, stride);
+		auto* currentPixels = &pixels[i * _stride * _resolution.y];
+		auto writeResult =
+		    stbi_write_png(filename.c_str(), _resolution.x, _resolution.y, numComponents, currentPixels, _stride);
 		if (writeResult == 0)
 		{
 			SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Writing texture to {} failed!", filename.c_str());

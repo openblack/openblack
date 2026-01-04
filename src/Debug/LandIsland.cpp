@@ -16,9 +16,11 @@
 #include "Debug/ImGuiUtils.h"
 #include "EngineConfig.h"
 #include "Graphics/FrameBuffer.h"
+#include "Graphics/GraphicsHandleBgfx.h"
 #include "Locator.h"
 
 using namespace openblack::debug::gui;
+using namespace openblack::graphics;
 
 LandIsland::LandIsland() noexcept
     : Window("Land Island", ImVec2(600.0f, 600.0f))
@@ -49,7 +51,7 @@ void LandIsland::Draw() noexcept
 		const auto& texture = landIsland.GetHeightMap();
 		ImGui::Text("Resolution: %ux%u", dim.x, dim.y);
 		const float scaling = 512.0f / static_cast<float>(dim.x);
-		ImGui::Image(texture.GetNativeHandle(), ImVec2(dim.x * scaling, dim.y * scaling));
+		ImGui::Image(toBgfx(texture.GetNativeHandle()), ImVec2(dim.x * scaling, dim.y * scaling));
 		ImGui::TreePop();
 	}
 
@@ -61,7 +63,7 @@ void LandIsland::Draw() noexcept
 		frameBuffer.GetSize(width, height);
 		ImGui::Text("Resolution: %ux%u", width, height);
 		const float scaling = 512.0f / static_cast<float>(width);
-		ImGui::Image(frameBuffer.GetColorAttachment().GetNativeHandle(), ImVec2(width * scaling, height * scaling));
+		ImGui::Image(toBgfx(frameBuffer.GetColorAttachment().GetNativeHandle()), ImVec2(width * scaling, height * scaling));
 		ImGui::TreePop();
 	}
 

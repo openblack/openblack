@@ -80,18 +80,18 @@ Texture2DLoader::result_type Texture2DLoader::operator()(FromPackTag, const std:
 	// - always dxt1 or dxt3
 	// - all are compressed
 	auto texture2D = std::make_shared<graphics::Texture2D>(name);
-	graphics::Format internalFormat;
+	graphics::TextureFormat internalFormat;
 	if (g3dTexture.ddsHeader.format.fourCC.data() == std::string("DXT1"))
 	{
-		internalFormat = graphics::Format::BlockCompression1;
+		internalFormat = graphics::TextureFormat::BlockCompression1;
 	}
 	else if (g3dTexture.ddsHeader.format.fourCC.data() == std::string("DXT3"))
 	{
-		internalFormat = graphics::Format::BlockCompression2;
+		internalFormat = graphics::TextureFormat::BlockCompression2;
 	}
 	else if (g3dTexture.ddsHeader.format.fourCC.data() == std::string("DXT5"))
 	{
-		internalFormat = graphics::Format::BlockCompression3;
+		internalFormat = graphics::TextureFormat::BlockCompression3;
 	}
 	else
 	{
@@ -110,7 +110,7 @@ Texture2DLoader::result_type Texture2DLoader::operator()(FromDiskTag, const std:
 	const std::array<uint16_t, 12> resolutions = {{1024, 512, 256, 128, 64, 40, 32, 14, 12, 6}};
 
 	const auto data = Locator::filesystem::value().ReadAll(rawTexturePath);
-	graphics::Format format = graphics::Format::R8;
+	graphics::TextureFormat format = graphics::TextureFormat::R8;
 	uint16_t width = 0;
 	uint16_t height = 0;
 	for (auto res : resolutions)
@@ -127,12 +127,12 @@ Texture2DLoader::result_type Texture2DLoader::operator()(FromDiskTag, const std:
 
 		if (data.size() == pixelCount)
 		{
-			format = graphics::Format::R8;
+			format = graphics::TextureFormat::R8;
 			found = true;
 		}
 		if (data.size() == 3 * pixelCount)
 		{
-			format = graphics::Format::RGB8;
+			format = graphics::TextureFormat::RGB8;
 			found = true;
 		}
 	}

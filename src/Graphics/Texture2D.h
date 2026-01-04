@@ -11,14 +11,17 @@
 
 #include <cstdint>
 
+#include <array>
 #include <string>
 
-#include <bgfx/bgfx.h>
+#include <glm/ext/vector_uint2_sized.hpp>
+
+#include "GraphicsHandle.h"
 
 namespace openblack::graphics
 {
 
-enum class Format : uint8_t
+enum class TextureFormat : uint8_t
 {
 	BlockCompression1,
 	BlockCompression2,
@@ -72,7 +75,63 @@ enum class Format : uint8_t
 	RGBA32UI,
 	BGRA4,
 	RGBA4,
+	_COUNT
 };
+
+constexpr std::array<const char*, static_cast<size_t>(TextureFormat::_COUNT)> k_TextureFormatStrings = {{
+    "BlockCompression1",
+    "BlockCompression2",
+    "BlockCompression3",
+    "Depth24Stencil8",
+    "DepthComponent16",
+    "DepthComponent24",
+    "R16F",
+    "R16I",
+    "R16SNorm",
+    "R16UI",
+    "R32F",
+    "R32I",
+    "R32UI",
+    "A8",
+    "R8",
+    "R8I",
+    "R8SNorm",
+    "R8UI",
+    "RG16",
+    "RG16F",
+    "RG16SNorm",
+    "RG32F",
+    "RG32I",
+    "RG32UI",
+    "RG8",
+    "RG8I",
+    "RG8SNorm",
+    "RG8UI",
+    "RGB10A2",
+    "B5G6R5",
+    "R5G6B5",
+    "BGR5A1",
+    "RGB5A1",
+    "RGB8",
+    "RGB8I",
+    "RGB8UI",
+    "RGB9E5",
+    "RGBA8",
+    "RGBA8I",
+    "RGBA8UI",
+    "RGBA8SNorm",
+    "BGRA8",
+    "RGBA16",
+    "RGBA16F",
+    "RGBA16I",
+    "RGBA16UI",
+    "RGBA16SNorm",
+    "RGBA32F",
+    "RGBA32I",
+    "RGBA32UI",
+    "BGRA4",
+    "RGBA4",
+}};
 
 enum class Filter : uint8_t
 {
@@ -92,8 +151,6 @@ enum class Wrapping : uint8_t
 	MirroredRepeat,
 };
 
-bgfx::TextureFormat::Enum getBgfxTextureFormat(Format format);
-
 class FrameBuffer;
 
 class Texture2D
@@ -106,22 +163,25 @@ public:
 	Texture2D(const Texture2D&) = delete;
 	Texture2D& operator=(const Texture2D&) = delete;
 
-	void Create(uint16_t width, uint16_t height, uint16_t layers, Format format, Wrapping wrapping, Filter filter,
+	void Create(uint16_t width, uint16_t height, uint16_t layers, TextureFormat format, Wrapping wrapping, Filter filter,
 	            const void* memory) noexcept;
 
 	[[nodiscard]] const std::string& GetName() const { return _name; }
-	[[nodiscard]] const bgfx::TextureHandle& GetNativeHandle() const { return _handle; }
-	[[nodiscard]] uint16_t GetWidth() const { return _info.width; }
-	[[nodiscard]] uint16_t GetHeight() const { return _info.height; }
-	[[nodiscard]] uint16_t GetLayerCount() const { return _info.numLayers; }
-	[[nodiscard]] bgfx::TextureFormat::Enum GetFormat() const { return _info.format; }
+	[[nodiscard]] const TextureHandle& GetNativeHandle() const { return _handle; }
+	[[nodiscard]] glm::u16vec2 GetResolution() const { return _resolution; }
+	[[nodiscard]] uint16_t GetLayerCount() const { return _numLayers; }
+	[[nodiscard]] TextureFormat GetFormat() const { return _format; }
 
 	void DumpTexture() const;
 
 protected:
 	std::string _name;
-	bgfx::TextureHandle _handle;
-	bgfx::TextureInfo _info;
+	TextureHandle _handle;
+	glm::u16vec2 _resolution;
+	uint16_t _stride;
+	uint16_t _numLayers;
+	TextureFormat _format;
+	uint32_t _storageSize;
 
 	friend FrameBuffer;
 };
