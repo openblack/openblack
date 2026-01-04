@@ -45,9 +45,9 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 	for (const auto& skin : l3d.GetSkins())
 	{
 		_skins[skin.id] = std::make_unique<Texture2D>(_debugName.c_str());
-		_skins[skin.id]->Create(l3d::L3DTexture::k_Width, l3d::L3DTexture::k_Height, 1, Format::BGRA4, Wrapping::Repeat,
-		                        Filter::Linear, skin.texels.data(),
-		                        static_cast<uint32_t>(skin.texels.size() * sizeof(skin.texels[0])));
+		_skins[skin.id]->Create(
+		    l3d::L3DTexture::k_Width, l3d::L3DTexture::k_Height, 1, Format::BGRA4, Wrapping::Repeat, Filter::Linear,
+		    bgfx::makeRef(skin.texels.data(), static_cast<uint32_t>(skin.texels.size() * sizeof(skin.texels[0]))));
 	}
 
 	if (HasDoorPosition() && !l3d.GetExtraPoints().empty())
@@ -74,9 +74,10 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 		{
 			auto texture = std::make_unique<Texture2D>("footprints/texture/" + _debugName + "/" + std::to_string(i));
 			++i;
-			texture->Create(static_cast<uint16_t>(footprint.header.width), static_cast<uint16_t>(footprint.header.height), 1,
-			                graphics::Format::BGRA4, Wrapping::ClampEdge, Filter::Linear, entry.pixels.data(),
-			                static_cast<uint32_t>(entry.pixels.size() * sizeof(entry.pixels[0])));
+			texture->Create(
+			    static_cast<uint16_t>(footprint.header.width), static_cast<uint16_t>(footprint.header.height), 1,
+			    graphics::Format::BGRA4, Wrapping::ClampEdge, Filter::Linear,
+			    bgfx::makeRef(entry.pixels.data(), static_cast<uint32_t>(entry.pixels.size() * sizeof(entry.pixels[0]))));
 
 			const bgfx::Memory* verticesMem =
 			    bgfx::alloc(static_cast<uint32_t>(sizeof(FootprintVertex) * entry.triangles.size() * 3));

@@ -9,7 +9,6 @@
 
 #pragma once
 
-#include <cstddef>
 #include <cstdint>
 
 #include <string>
@@ -108,10 +107,7 @@ public:
 	Texture2D& operator=(const Texture2D&) = delete;
 
 	void Create(uint16_t width, uint16_t height, uint16_t layers, Format format, Wrapping wrapping, Filter filter,
-	            const bgfx::Memory* memory) noexcept;
-	void Create(uint16_t width, uint16_t height, uint16_t layers, Format format = Format::RGBA8,
-	            Wrapping wrapping = Wrapping::ClampEdge, Filter filter = Filter::Linear, const void* data = nullptr,
-	            uint32_t size = 0) noexcept;
+	            const void* memory) noexcept;
 
 	[[nodiscard]] const std::string& GetName() const { return _name; }
 	[[nodiscard]] const bgfx::TextureHandle& GetNativeHandle() const { return _handle; }
