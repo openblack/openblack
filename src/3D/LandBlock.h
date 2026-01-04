@@ -12,12 +12,12 @@
 #include <cstdint>
 
 #include <array>
+#include <span>
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-#include "Graphics/ShaderProgram.h"
 #include "LandIslandInterface.h"
 
 class btBvhTriangleMeshShape;
@@ -61,6 +61,10 @@ class LandBlockBulletMeshInterface;
 class LandBlock
 {
 public:
+	// 16*16 quads of 2 tris with 3 verts
+	static constexpr auto k_Resolution = glm::u8vec2(16, 16);
+	static constexpr uint16_t k_VertexCount = k_Resolution.x * k_Resolution.y * 2 * 3;
+
 	LandBlock() = default;
 	void BuildMesh(LandIslandInterface& island);
 
@@ -79,6 +83,6 @@ private:
 	std::unique_ptr<btBvhTriangleMeshShape> _physicsMesh;
 	std::unique_ptr<btRigidBody> _rigidBody;
 
-	const bgfx::Memory* BuildVertexList(LandIslandInterface& island);
+	void BuildVertexList(std::span<LandVertex> vertices, LandIslandInterface& island);
 };
 } // namespace openblack

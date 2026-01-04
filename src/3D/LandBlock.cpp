@@ -15,6 +15,7 @@
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LNDFile.h>
+#include <bgfx/bgfx.h>
 
 #include "Dynamics/LandBlockBulletMeshInterface.h"
 #include "Graphics/Mesh.h"
@@ -58,13 +59,16 @@ void LandBlock::BuildMesh(LandIslandInterface& island)
 	// water alpha
 	decl.emplace_back(VertexAttrib::Attribute::Color3, static_cast<uint8_t>(1), VertexAttrib::Type::Float, true);
 
-	const auto* verts = BuildVertexList(island);
+	// reserve 16*16 quads of 2 tris with 3 verts = 1536
+	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(LandVertex) * k_VertexCount);
+	auto vertices = std::span(reinterpret_cast<LandVertex*>(verticesMem->data), k_VertexCount);
 
-	auto* vertexBuffer = new VertexBuffer("LandBlock", verts, decl);
+	BuildVertexList(vertices, island);
+
+	auto* vertexBuffer = new VertexBuffer("LandBlock", verticesMem, decl);
 	_mesh = std::make_unique<Mesh>(vertexBuffer);
 
-	_dynamicsMeshInterface =
-	    std::make_unique<dynamics::LandBlockBulletMeshInterface>(verts->data, verts->size, vertexBuffer->GetStrideBytes());
+	_dynamicsMeshInterface = std::make_unique<dynamics::LandBlockBulletMeshInterface>(vertices);
 
 	_physicsMesh = std::make_unique<btBvhTriangleMeshShape>(_dynamicsMeshInterface.get(), true);
 	_rigidBody = std::make_unique<btRigidBody>(0.0f, nullptr, _physicsMesh.get());
@@ -76,12 +80,8 @@ void LandBlock::BuildMesh(LandIslandInterface& island)
 	_rigidBody->setUserIndex(-1);
 }
 
-const bgfx::Memory* LandBlock::BuildVertexList(LandIslandInterface& island)
+void LandBlock::BuildVertexList(std::span<LandVertex> vertices, LandIslandInterface& island)
 {
-	// reserve 16*16 quads of 2 tris with 3 verts = 1536
-	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(LandVertex) * 1536);
-	auto* vertices = reinterpret_cast<LandVertex*>(verticesMem->data);
-
 	auto countries = island.GetCountries();
 
 	// auto neighbourBlockR = island.GetBlock(glm::u8vec2(_block->blockX + 1, _block->blockZ));
@@ -203,8 +203,6 @@ const bgfx::Memory* LandBlock::BuildVertexList(LandIslandInterface& island)
 			}
 		}
 	}
-
-	return verticesMem;
 }
 
 const lnd::LNDCell* LandBlock::GetCells() const

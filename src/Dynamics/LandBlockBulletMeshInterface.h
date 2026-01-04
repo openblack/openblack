@@ -13,6 +13,7 @@
 #include <cstdint>
 
 #include <array>
+#include <span>
 #include <vector>
 
 #ifdef _MSC_VER
@@ -25,6 +26,8 @@
 #pragma warning(pop)
 #endif
 
+#include "3D/LandBlock.h"
+
 namespace openblack::dynamics
 {
 
@@ -34,17 +37,17 @@ class LandBlockBulletMeshInterface: public btStridingMeshInterface
 	std::vector<uint16_t> _indices;
 
 public:
-	explicit LandBlockBulletMeshInterface(const uint8_t* vertexData, uint32_t vertexCount, size_t stride)
-	    : _vertices(vertexCount / stride)
-	    , _indices(vertexCount / stride)
+	explicit LandBlockBulletMeshInterface(std::span<const LandVertex> vertices)
+	    : _vertices(vertices.size())
+	    , _indices(vertices.size())
 	{
 		// TODO (#749) use std::views::enumerate
 		for (uint16_t i = 0; auto& v : _vertices)
 		{
-			const auto* vertexBase = reinterpret_cast<const float*>(&vertexData[i * stride]);
-			v[0] = vertexBase[0];
-			v[1] = vertexBase[1];
-			v[2] = vertexBase[2];
+			const auto& vertex = vertices[i];
+			v[0] = vertex.position.x;
+			v[1] = vertex.position.y;
+			v[2] = vertex.position.z;
 			_indices[i] = i;
 			++i;
 		}
