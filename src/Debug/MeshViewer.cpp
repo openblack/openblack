@@ -10,6 +10,7 @@
 #include "MeshViewer.h"
 
 #include <SDL_events.h>
+#include <bgfx/bgfx.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -366,7 +367,7 @@ void MeshViewer::Update() noexcept
 			bgfx::setTransform(glm::value_ptr(model));
 			_boundingBox->GetVertexBuffer().Bind();
 			bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES, 0);
-			bgfx::submit(static_cast<bgfx::ViewId>(k_ViewId), debugShader->GetRawHandle());
+			bgfx::submit(static_cast<bgfx::ViewId>(k_ViewId), toBgfx(debugShader->GetRawHandle()));
 		}
 	}
 

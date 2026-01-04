@@ -11,6 +11,7 @@
 
 #include "Ocean.h"
 
+#include <bgfx/bgfx.h>
 #include <glm/vec2.hpp>
 
 #include "Graphics/FrameBuffer.h"

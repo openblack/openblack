@@ -15,6 +15,7 @@
 
 #include <GLWFile.h>
 #include <PackFile.h>
+#include <bgfx/bgfx.h>
 #include <spdlog/spdlog.h>
 
 #include "3D/L3DMesh.h"

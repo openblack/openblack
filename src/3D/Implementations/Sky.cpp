@@ -11,6 +11,7 @@
 
 #include "Sky.h"
 
+#include <bgfx/bgfx.h>
 #include <glm/vec3.hpp>
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
