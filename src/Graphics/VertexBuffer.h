@@ -74,7 +74,6 @@ using VertexDecl = std::vector<VertexAttrib>;
 class VertexBuffer
 {
 public:
-	VertexBuffer(std::string name, const void* vertices, uint32_t vertexCount, VertexDecl decl) noexcept;
 	VertexBuffer(std::string name, const bgfx::Memory* memory, VertexDecl decl) noexcept;
 	~VertexBuffer() noexcept;
 
