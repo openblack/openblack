@@ -264,7 +264,7 @@ jobs:
         os: [ windows-latest ] # ubuntu-latest, macos-latest
     env:
       ARGS: -g game-data\bw --num-frames-to-simulate 10 --screenshot-frame 5 --log-file stdout --log-level all=debug -W 800 -H 600
-      BACKEND: Direct3D11
+      BACKEND: Direct3D12
     steps:
       - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
         shell: bash
