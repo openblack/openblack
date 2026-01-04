@@ -7,11 +7,10 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include <glm/ext/vector_float2.hpp>
 #define LOCATOR_IMPLEMENTATIONS
 
-#include "GameActionMap.h"
-
-#include <SDL_events.h>
+#include <SDL3/SDL_events.h>
 #include <glm/common.hpp>
 #include <glm/gtc/constants.hpp>
 #include <spdlog/spdlog.h>
@@ -19,6 +18,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/HandSystemInterface.h"
+#include "GameActionMap.h"
 #include "Locator.h"
 #include "Windowing/WindowingInterface.h"
 
@@ -58,8 +58,8 @@ GameActionMap::GameActionMap()
 	_keyboardBindings.emplace(SDL_SCANCODE_L, BindableActionMap::LEASH_UNLEASH_CREATURE);
 	_keyboardBindings.emplace(SDL_SCANCODE_N, BindableActionMap::SHOW_VILLAGER_NAMES);
 	_keyboardBindings.emplace(SDL_SCANCODE_S, BindableActionMap::SHOW_VILLAGER_DETAILS);
-	_keyboardModBindings.emplace(SDL_SCANCODE_S, std::make_pair(KMOD_CTRL, BindableActionMap::QUICK_SAVE));
-	_keyboardModBindings.emplace(SDL_SCANCODE_L, std::make_pair(KMOD_CTRL, BindableActionMap::QUICK_LOAD));
+	_keyboardModBindings.emplace(SDL_SCANCODE_S, std::make_pair(SDL_KMOD_CTRL, BindableActionMap::QUICK_SAVE));
+	_keyboardModBindings.emplace(SDL_SCANCODE_L, std::make_pair(SDL_KMOD_CTRL, BindableActionMap::QUICK_LOAD));
 	_keyboardBindings.emplace(SDL_SCANCODE_V, BindableActionMap::PREVIOUS_LEASH);
 	_keyboardBindings.emplace(SDL_SCANCODE_B, BindableActionMap::NEXT_LEASH);
 }
@@ -191,11 +191,12 @@ void GameActionMap::Frame()
 #undef get_print
 
 	{
-		glm::ivec2 absoluteMousePosition;
+		glm::vec2 absoluteMousePosition;
 		SDL_GetMouseState(&absoluteMousePosition.x, &absoluteMousePosition.y);
 		const auto screenSize =
 		    Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::ivec2(1.0f, 1.0f);
-		_mousePosition = glm::clamp(absoluteMousePosition, glm::zero<decltype(screenSize)>(), screenSize);
+		_mousePosition =
+		    glm::clamp(absoluteMousePosition, glm::zero<decltype(absoluteMousePosition)>(), static_cast<glm::vec2>(screenSize));
 	}
 	_mouseDelta = glm::ivec2(0, 0);
 	_bindableMapPrevious = _bindableMap;
@@ -207,34 +208,34 @@ void GameActionMap::Frame()
 
 void GameActionMap::ProcessEvent(const SDL_Event& event)
 {
-	if (event.type == SDL_KEYDOWN)
+	if (event.type == SDL_EVENT_KEY_DOWN)
 	{
-		if (_keyboardModBindings.contains(event.key.keysym.scancode) &&
-		    (_keyboardModBindings[event.key.keysym.scancode].first & event.key.keysym.mod) != 0)
+		if (_keyboardModBindings.contains(event.key.scancode) &&
+		    (_keyboardModBindings[event.key.scancode].first & event.key.mod) != 0)
 		{
 			_bindableMap = static_cast<BindableActionMap>(
 			    // Remove non-modded action
-			    (static_cast<uint64_t>(_bindableMap) & ~static_cast<uint64_t>(_keyboardBindings[event.key.keysym.scancode])) |
+			    (static_cast<uint64_t>(_bindableMap) & ~static_cast<uint64_t>(_keyboardBindings[event.key.scancode])) |
 			    // Add modded action
-			    static_cast<uint64_t>(_keyboardModBindings[event.key.keysym.scancode].second));
+			    static_cast<uint64_t>(_keyboardModBindings[event.key.scancode].second));
 		}
-		else if (_keyboardBindings.contains(event.key.keysym.scancode))
+		else if (_keyboardBindings.contains(event.key.scancode))
 		{
 			_bindableMap = static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) |
-			                                              static_cast<uint64_t>(_keyboardBindings[event.key.keysym.scancode]));
+			                                              static_cast<uint64_t>(_keyboardBindings[event.key.scancode]));
 		}
 	}
 	// Double click will not count as a single click
-	else if (event.type == SDL_MOUSEBUTTONDOWN && (event.button.button & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0 &&
+	else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN && (event.button.button & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)) != 0 &&
 	         event.button.clicks == 2)
 	{
 		_unbindableMap = static_cast<UnbindableActionMap>(static_cast<uint8_t>(_unbindableMap) |
 		                                                  static_cast<uint8_t>(UnbindableActionMap::DOUBLE_CLICK));
 	}
-	else if (event.type == SDL_MOUSEBUTTONDOWN)
+	else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
 	{
-		const auto mod = static_cast<SDL_Keymod>(SDL_GetModState());
-		const uint8_t buttonMask = SDL_BUTTON(event.button.button);
+		const auto mod = SDL_GetModState();
+		const uint8_t buttonMask = SDL_BUTTON_MASK(event.button.button);
 		const uint8_t newComboMask = _currentMouseButtons | buttonMask;
 		if (newComboMask != buttonMask)
 		{
@@ -288,7 +289,7 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 		}
 		_currentMouseButtons |= buttonMask;
 	}
-	else if (event.type == SDL_MOUSEWHEEL)
+	else if (event.type == SDL_EVENT_MOUSE_WHEEL)
 	{
 		if (event.wheel.y > 0)
 		{
@@ -303,25 +304,25 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 			                                   static_cast<uint64_t>(_mouseWheelBinding[1].value_or(BindableActionMap::NONE)));
 		}
 	}
-	else if (event.type == SDL_KEYUP)
+	else if (event.type == SDL_EVENT_KEY_UP)
 	{
-		if (_keyboardBindings.contains(event.key.keysym.scancode))
+		if (_keyboardBindings.contains(event.key.scancode))
 		{
-			_bindableMap =
-			    static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) &
-			                                   ~static_cast<uint64_t>(_keyboardModBindings[event.key.keysym.scancode].second));
+			_bindableMap = static_cast<BindableActionMap>(
+			    static_cast<uint64_t>(_bindableMap) & ~static_cast<uint64_t>(_keyboardModBindings[event.key.scancode].second));
 			_bindableMap = static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) &
-			                                              ~static_cast<uint64_t>(_keyboardBindings[event.key.keysym.scancode]));
+			                                              ~static_cast<uint64_t>(_keyboardBindings[event.key.scancode]));
 		}
 	}
-	else if (event.type == SDL_MOUSEBUTTONUP && (event.button.button & SDL_BUTTON_LMASK) != 0 && event.button.clicks == 2)
+	else if (event.type == SDL_EVENT_MOUSE_BUTTON_UP && (event.button.button & SDL_BUTTON_LMASK) != 0 &&
+	         event.button.clicks == 2)
 	{
 		_unbindableMap = static_cast<UnbindableActionMap>(static_cast<uint8_t>(_unbindableMap) &
 		                                                  ~static_cast<uint8_t>(UnbindableActionMap::DOUBLE_CLICK));
 	}
-	else if (event.type == SDL_MOUSEBUTTONUP)
+	else if (event.type == SDL_EVENT_MOUSE_BUTTON_UP)
 	{
-		const uint8_t buttonMask = SDL_BUTTON(event.button.button);
+		const uint8_t buttonMask = SDL_BUTTON_MASK(event.button.button);
 		if (_mouseBindings.contains(buttonMask))
 		{
 			_bindableMap = static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) &
@@ -344,7 +345,7 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 		}
 		_currentMouseButtons &= ~buttonMask;
 	}
-	else if (event.type == SDL_MOUSEMOTION)
+	else if (event.type == SDL_EVENT_MOUSE_MOTION)
 	{
 		_mouseDelta = {event.motion.xrel, event.motion.yrel};
 	}

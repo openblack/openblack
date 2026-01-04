@@ -13,8 +13,8 @@
 #include <optional>
 #include <unordered_map>
 
-#include <SDL_keyboard.h>
-#include <SDL_mouse.h>
+#include <SDL3/SDL_keyboard.h>
+#include <SDL3/SDL_mouse.h>
 #include <glm/vec3.hpp>
 
 #include "GameActionMapInterface.h"
