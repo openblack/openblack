@@ -93,7 +93,7 @@ public:
 	[[nodiscard]] uint32_t GetTurn() const { return _turnCount; }
 	[[nodiscard]] bool IsPaused() const { return _paused; }
 	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const { return _turnDeltaTime; }
-	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
+	[[nodiscard]] const glm::vec2& GetMousePosition() const { return _mousePosition; }
 
 	void RequestScreenshot(const std::filesystem::path& path) noexcept;
 
@@ -113,7 +113,7 @@ private:
 	uint32_t _frameCount {0};
 	uint32_t _turnCount {0};
 	bool _paused {true};
-	glm::ivec2 _mousePosition;
+	glm::vec2 _mousePosition;
 	bool _handGripping;
 	std::optional<std::pair</* frame number */ uint32_t, /* output */ std::filesystem::path>> _requestScreenshot;
 };

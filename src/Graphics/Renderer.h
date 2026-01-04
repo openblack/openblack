@@ -18,7 +18,6 @@
 #include <string_view>
 #include <vector>
 
-#include <SDL.h>
 #include <glm/fwd.hpp>
 #include <glm/mat4x4.hpp>
 
