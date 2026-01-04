@@ -474,7 +474,7 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 			const auto& footprint = mesh->GetFootprints()[0];
 			footprintShaderInstanced->SetTextureSampler("s_footprint", 0, *footprint.texture);
 			footprint.mesh->GetVertexBuffer().Bind();
-			bgfx::setInstanceDataBuffer(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
+			bgfx::setInstanceDataBuffer(toBgfx(renderCtx.instanceUniformBuffer), placers.offset, placers.count);
 			const uint64_t state = 0u                       //
 			                       | BGFX_STATE_WRITE_RGB   //
 			                       | BGFX_STATE_WRITE_A     //
@@ -665,8 +665,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			{
 				auto mesh = meshManager.Handle(meshId);
 
-				submitDesc.instanceDesc = std::make_unique<graphics::InstanceDesc>(fromBgfx(renderCtx.instanceUniformBuffer),
-				                                                                   placers.offset, placers.count);
+				submitDesc.instanceDesc =
+				    std::make_unique<graphics::InstanceDesc>(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
 				if (mesh->IsBoned())
 				{
 					submitDesc.modelMatrices = mesh->GetBoneMatrices().data();
@@ -703,7 +703,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					const auto boundBoxOffset = static_cast<uint32_t>(renderCtx.instanceUniforms.size() / 2);
 					const auto boundBoxCount = static_cast<uint32_t>(renderCtx.instanceUniforms.size() / 2);
 					renderCtx.boundingBox->GetVertexBuffer().Bind();
-					bgfx::setInstanceDataBuffer(renderCtx.instanceUniformBuffer, boundBoxOffset, boundBoxCount);
+					bgfx::setInstanceDataBuffer(toBgfx(renderCtx.instanceUniformBuffer), boundBoxOffset, boundBoxCount);
 					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
 					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(debugShaderInstanced->GetRawHandle()));
 				}

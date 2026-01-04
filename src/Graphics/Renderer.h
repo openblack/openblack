@@ -19,7 +19,6 @@
 #include <vector>
 
 #include <SDL.h>
-#include <bgfx/bgfx.h>
 #include <glm/fwd.hpp>
 #include <glm/mat4x4.hpp>
 
