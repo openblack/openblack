@@ -12,7 +12,9 @@
 #include <cstdint>
 
 #include <memory>
+#include <optional>
 
+#include "GraphicsHandle.h"
 #include "RenderPass.h"
 
 namespace bgfx
@@ -64,7 +66,7 @@ public:
 		const openblack::graphics::ShaderProgram& program;
 		uint32_t count;
 		uint32_t offset;
-		const bgfx::DynamicVertexBufferHandle* instanceBuffer;
+		std::optional<DynamicVertexBufferHandle> instanceBuffer;
 		uint32_t instanceStart;
 		uint32_t instanceCount;
 		uint64_t state;

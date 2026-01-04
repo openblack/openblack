@@ -21,6 +21,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Graphics/DebugLines.h"
+#include "Graphics/GraphicsHandleBgfx.h"
 #include "Graphics/ShaderManager.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
@@ -57,9 +58,9 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 	// Recreate instancing uniform buffer if it is too small
 	if (_renderContext.instanceUniforms.size() < instanceCount)
 	{
-		if (bgfx::isValid(_renderContext.instanceUniformBuffer))
+		if (bgfx::isValid(toBgfx(_renderContext.instanceUniformBuffer)))
 		{
-			bgfx::destroy(_renderContext.instanceUniformBuffer);
+			bgfx::destroy(toBgfx(_renderContext.instanceUniformBuffer));
 		}
 		bgfx::VertexLayout layout;
 		layout.begin()
@@ -68,7 +69,7 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 		    .add(bgfx::Attrib::TexCoord5, 4, bgfx::AttribType::Float)
 		    .add(bgfx::Attrib::TexCoord4, 4, bgfx::AttribType::Float)
 		    .end();
-		_renderContext.instanceUniformBuffer = bgfx::createDynamicVertexBuffer(instanceCount, layout);
+		_renderContext.instanceUniformBuffer = graphics::fromBgfx(bgfx::createDynamicVertexBuffer(instanceCount, layout));
 		_renderContext.instanceUniforms.resize(instanceCount);
 	}
 
@@ -116,6 +117,7 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	if (!_renderContext.instanceUniforms.empty())
 	{
 		const auto size = static_cast<uint32_t>(_renderContext.instanceUniforms.size() * sizeof(glm::mat4));
-		bgfx::update(_renderContext.instanceUniformBuffer, 0, bgfx::makeRef(_renderContext.instanceUniforms.data(), size));
+		bgfx::update(toBgfx(_renderContext.instanceUniformBuffer), 0,
+		             bgfx::makeRef(_renderContext.instanceUniforms.data(), size));
 	}
 }

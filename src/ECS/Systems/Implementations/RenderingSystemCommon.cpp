@@ -21,6 +21,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Graphics/DebugLines.h"
+#include "Graphics/GraphicsHandleBgfx.h"
 #include "Graphics/ShaderManager.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
@@ -34,9 +35,9 @@ RenderContext::RenderContext()
 }
 RenderContext::~RenderContext()
 {
-	if (bgfx::isValid(instanceUniformBuffer))
+	if (bgfx::isValid(toBgfx(instanceUniformBuffer)))
 	{
-		bgfx::destroy(instanceUniformBuffer);
+		bgfx::destroy(toBgfx(instanceUniformBuffer));
 		bgfx::frame();
 		bgfx::frame();
 	}
