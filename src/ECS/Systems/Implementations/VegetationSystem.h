@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2026 openblack developers
+ * Copyright (c) 2018-2024 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "ECS/Systems/HandSystemInterface.h"
+#include "ECS/Systems/VegetationInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
 #error "Locator interface implementations should only be included in Locator.cpp, use interface instead."
@@ -18,17 +18,9 @@
 namespace openblack::ecs::systems
 {
 
-class HandSystem final: public HandSystemInterface
+class VegetationSystem final: public VegetationInterface
 {
 public:
-	bool Initialize() noexcept override;
-	void Update() noexcept override;
-	[[nodiscard]] std::array<entt::entity, static_cast<size_t>(Side::_Count)> GetPlayerHands() const noexcept override;
-	[[nodiscard]] std::array<std::optional<glm::vec3>, static_cast<size_t>(Side::_Count)>
-	GetPlayerHandPositions() const noexcept override;
-
-private:
-	void SwayNearbyEntities(const glm::vec3& handPosition) override;
-	std::array<entt::entity, 2> _hands;
+	void Sway() override;
 };
 } // namespace openblack::ecs::systems

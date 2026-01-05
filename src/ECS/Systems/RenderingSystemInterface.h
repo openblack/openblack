@@ -47,8 +47,21 @@ struct RenderContext
 	/// If debug bounding boxes are enabled, it will double in size to fit all
 	/// bounding boxes in the second half of the list.
 	std::vector<glm::mat4> instanceUniforms;
+
+	/// Tree instance data structure that combines model matrix and sway parameters
+	struct TreeInstanceData
+	{
+		glm::mat4 modelMatrix; // Model transform
+		glm::vec4 swayParams;  // x,y=direction, z=time, w=strength
+	};
+
+	/// CPU-side buffer of tree instance data (matrix + sway params)
+	std::vector<TreeInstanceData> treeInstanceData;
+
 	/// Stores information for rendering which is prepared at \ref PrepareDraw.
 	std::map<entt::id_type, const InstancedDrawDesc> instancedDrawDescs;
+	std::map<entt::id_type, const InstancedDrawDesc> treeInstancedDrawDescs;
+
 	/// Not an actual vertex buffer, but a dynamic general purpose buffer which
 	/// stores uniform data as a GPU-side copy of \ref _instanceUniforms and
 	/// which is populated in \ref PrepareDraw and consumed in \ref DrawModels.
@@ -57,6 +70,13 @@ struct RenderContext
 	/// The values stored are a list of uniforms (model matrix) needed for both
 	/// the instances of entities and their bounding boxes.
 	bgfx::DynamicVertexBufferHandle instanceUniformBuffer;
+
+	/// Dynamic buffer for tree instance data (contains both matrix and sway params)
+	bgfx::DynamicVertexBufferHandle treeInstanceUniformBuffer;
+
+	/// Kept for backward compatibility, will be removed once shader is updated
+	std::vector<glm::mat4> treeInstanceUniforms;
+	std::vector<glm::vec4> treeSwayParams;
 
 	bool dirty {true};
 	bool hasBoundingBoxes {false};

@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <map>
 #include <vector>
 
@@ -33,5 +34,7 @@ public:
 private:
 	void PrepareDrawDescs(bool drawBoundingBox) override;
 	void PrepareDrawUploadUniforms(bool drawBoundingBox) override;
+	void PrepareTreeDrawDescs(bool drawBoundingBox);
+	void PrepareTreeDrawUploadUniforms(bool drawBoundingBox);
 };
 } // namespace openblack::ecs::systems

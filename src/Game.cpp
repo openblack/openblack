@@ -45,6 +45,7 @@
 #include "ECS/Systems/PathfindingSystemInterface.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
+#include "ECS/Systems/TimeSystemInterface.h"
 #include "EngineConfig.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"
@@ -290,6 +291,7 @@ bool Game::Update() noexcept
 	auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(current - previous);
 
 	Locator::debugGui::value().SetScale(config.guiScale);
+	Locator::time::value().Update();
 
 	// Physics
 	{
@@ -341,6 +343,11 @@ bool Game::Update() noexcept
 		{
 			return false; // Quit event
 		}
+	}
+
+	{
+		auto actions = profiler.BeginScoped(Profiler::Stage::VegetationUpdate);
+		Locator::vegetation::value().Sway();
 	}
 
 	// Update Uniforms
@@ -405,6 +412,7 @@ bool Game::Update() noexcept
 			handTransform.position += intersectionTransform.rotation * handOffset;
 			Locator::entitiesRegistry::value().SetDirty();
 		}
+		Locator::handSystem::value().Update();
 
 		// Update Entities
 		{
@@ -838,6 +846,7 @@ bool Game::Run() noexcept
 	}
 
 	Game::SetTime(config.timeOfDay);
+	Locator::time::value().Start();
 
 	_frameCount = 0;
 	auto lastTime = std::chrono::high_resolution_clock::now();
@@ -864,6 +873,7 @@ bool Game::Run() noexcept
 			    .drawEntities = config.drawEntities,
 			    .drawSprites = config.drawSprites,
 			    .drawTestModel = config.drawTestModel,
+			    .drawVegetation = config.drawVegetation,
 			    .drawDebugCross = config.drawDebugCross,
 			    .drawBoundingBoxes = config.drawBoundingBoxes,
 			    .cullBack = false,
