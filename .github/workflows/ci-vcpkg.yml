@@ -301,15 +301,16 @@ jobs:
         run: cp -v -r openblack-assets/assets/* game-data/bw
         shell: bash
       - name: Set Screenshot Position For Maps
+        shell: bash
         run: |
-          'START_CAMERA_POS("1788.40,2710.00")' | Add-Content -Path game-data\bw\Scripts\Land1.txt
-          'START_CAMERA_POS("2847.10,3063.12")' | Add-Content -Path game-data\bw\Scripts\Land2.txt
-          'START_CAMERA_POS("2002.57,2122.02")' | Add-Content -Path game-data\bw\Scripts\Land3.txt
-          'START_CAMERA_POS("2689.87,2609.63")' | Add-Content -Path game-data\bw\Scripts\Land4.txt
-          'START_CAMERA_POS("2654.25,3059.49")' | Add-Content -Path game-data\bw\Scripts\LandT.txt
-          'START_CAMERA_POS("2802.60,2154.76")' | Add-Content -Path game-data\bw\Scripts\Playgrounds/ThreeGods.txt
-          'START_CAMERA_POS("1801.69,2012.08")' | Add-Content -Path game-data\bw\Scripts\Playgrounds/FourGods.txt
-          'START_CAMERA_POS("2550.00,2000.00")' | Add-Content -Path game-data\bw\Scripts\Playgrounds/construct.txt
+          echo 'START_CAMERA_POS("1788.40,2710.00")' >> game-data/bw/Scripts/Land1.txt
+          echo 'START_CAMERA_POS("2847.10,3063.12")' >> game-data/bw/Scripts/Land2.txt
+          echo 'START_CAMERA_POS("2002.57,2122.02")' >> game-data/bw/Scripts/Land3.txt
+          echo 'START_CAMERA_POS("2689.87,2609.63")' >> game-data/bw/Scripts/Land4.txt
+          echo 'START_CAMERA_POS("2654.25,3059.49")' >> game-data/bw/Scripts/LandT.txt
+          echo 'START_CAMERA_POS("2802.60,2154.76")' >> game-data/bw/Scripts/Playgrounds/ThreeGods.txt
+          echo 'START_CAMERA_POS("1801.69,2012.08")' >> game-data/bw/Scripts/Playgrounds/FourGods.txt
+          echo 'START_CAMERA_POS("2550.00,2000.00")' >> game-data/bw/Scripts/Playgrounds/construct.txt
       - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-1.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-1.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Land2.txt --screenshot-path "screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-2.png"
