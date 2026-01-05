@@ -57,7 +57,8 @@ class FileSystemInterface;
 namespace graphics
 {
 class RendererInterface;
-}
+class ShaderManagerInterface;
+} // namespace graphics
 
 namespace input
 {
@@ -123,6 +124,7 @@ struct Locator
 	using gameActionSystem = entt::locator<input::GameActionInterface>;
 	using rendereringSystem = entt::locator<ecs::systems::RenderingSystemInterface>;
 	using rendererInterface = entt::locator<graphics::RendererInterface>;
+	using shaderManager = entt::locator<graphics::ShaderManagerInterface>;
 	using dynamicsSystem = entt::locator<ecs::systems::DynamicsSystemInterface>;
 	using cameraBookmarkSystem = entt::locator<ecs::systems::CameraBookmarkSystemInterface>;
 	using livingActionSystem = entt::locator<ecs::systems::LivingActionSystemInterface>;

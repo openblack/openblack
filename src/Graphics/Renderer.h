@@ -51,10 +51,6 @@ public:
 	Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallback) noexcept;
 	~Renderer() noexcept final;
 
-	[[nodiscard]] ShaderManager& GetShaderManager() const noexcept final;
-
-	void UpdateDebugCrossUniforms(const glm::mat4& pose) noexcept final;
-
 	void ConfigureView(RenderPass viewId, glm::u16vec2 resolution, uint32_t clearColor) const noexcept final;
 
 	void DrawScene(const DrawSceneDesc& drawDesc) const noexcept final;
@@ -69,19 +65,13 @@ public:
 	void Reset(glm::u16vec2 resolution) const noexcept final;
 
 private:
-	void DrawFootprintPass(const DrawSceneDesc& drawDesc) const;
 	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, bool preserveState) const;
 	void DrawPass(const DrawSceneDesc& desc) const;
 
-	std::unique_ptr<ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
 	uint32_t _bgfxReset;
 	bool _bgfxDebug = false;
 	bool _bgfxProfile = false;
-
-	std::unique_ptr<Mesh> _debugCross;
-	std::unique_ptr<Mesh> _plane;
-	glm::mat4 _debugCrossPose;
 };
 } // namespace graphics
 } // namespace openblack

@@ -28,6 +28,8 @@
 // 3. Add BGFX_EMBEDDED_SHADER entries to s_embeddedShaders
 // 4. Add ShaderDefinition to Shaders array
 
+#define LOCATOR_IMPLEMENTATIONS
+
 #include "ShaderManager.h"
 
 #include <cstdint> // Shaders below need uint8_t
