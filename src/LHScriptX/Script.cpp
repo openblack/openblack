@@ -169,17 +169,17 @@ void Script::RunCommand(const std::string& identifier, const std::vector<Token>&
 	}
 
 	const auto expectedParameters = commandSignature->parameters;
-	uint32_t expectedSize;
-	// TODO (#749) use std::views::enumerate
-	for (expectedSize = 0; const auto& p : commandSignature->parameters)
+	uint32_t expectedSize = 0;
+	for (const auto [i, p] : std::views::enumerate(commandSignature->parameters))
 	{
+		expectedSize = static_cast<uint32_t>(i);
+
 		// Looping until None because parameters is a fixed sized array.
 		// Last Argument is the one before the first None or the 9th
 		if (p == ParameterType::None)
 		{
 			break;
 		}
-		++expectedSize;
 	}
 
 	// Validate the number of given arguments against what is expected

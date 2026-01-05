@@ -10,6 +10,7 @@
 #include "L3DMesh.h"
 
 #include <filesystem>
+#include <ranges>
 #include <stdexcept>
 
 #include <BulletCollision/CollisionShapes/btConvexHullShape.h>
@@ -69,11 +70,9 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 
 		const auto& footprint = *l3d.GetFootprint();
 
-		// TODO (#749) use use std::views::enumerate
-		for (uint32_t i = 1; const auto& entry : footprint.entries)
+		for (const auto [i, entry] : std::views::enumerate(footprint.entries))
 		{
 			auto texture = std::make_unique<Texture2D>("footprints/texture/" + _debugName + "/" + std::to_string(i));
-			++i;
 			texture->Create(static_cast<uint16_t>(footprint.header.width), static_cast<uint16_t>(footprint.header.height), 1,
 			                graphics::Format::BGRA4, Wrapping::ClampEdge, Filter::Linear, entry.pixels.data(),
 			                static_cast<uint32_t>(entry.pixels.size() * sizeof(entry.pixels[0])));
