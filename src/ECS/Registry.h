@@ -13,6 +13,7 @@
 #include <entt/entity/helper.hpp>
 #include <entt/entity/registry.hpp>
 
+#include "ECS/LoadingContext.h"
 #include "ECS/RegistryContext.h"
 
 namespace openblack
@@ -80,6 +81,26 @@ public:
 	virtual RegistryContext& Context();
 	[[nodiscard]] virtual const RegistryContext& Context() const;
 	virtual void Reset();
+	template <typename Type, typename... Args>
+	Type& EmplaceContext([[maybe_unused]] Args&&... args)
+	{
+		return _registry.ctx().emplace<Type>(std::forward<Args>(args)...);
+	}
+	template <class Type>
+	Type* GetContext()
+	{
+		return _registry.ctx().find<Type>();
+	}
+	template <class Type>
+	const Type* GetContext() const
+	{
+		return _registry.ctx().find<const Type>();
+	}
+	template <typename Type>
+	decltype(auto) EraseContext()
+	{
+		return _registry.ctx().erase<Type>();
+	}
 	template <typename Component>
 	size_t Size()
 	{

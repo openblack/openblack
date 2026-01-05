@@ -35,5 +35,7 @@ public:
 	virtual bool ProcessEvents(const SDL_Event& event) noexcept = 0;
 	virtual bool Loop() noexcept = 0;
 	virtual void Draw() noexcept = 0;
+	virtual void EnableMain() noexcept = 0;
+	virtual void DisableMain() noexcept = 0;
 };
 } // namespace openblack::debug::gui
