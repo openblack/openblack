@@ -15,6 +15,7 @@
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
 
+#include "IndexBuffer.h"
 #include "InstanceDesc.h"
 #include "RenderPass.h"
 #include "VertexBuffer.h"
@@ -102,8 +103,11 @@ public:
 
 	[[nodiscard]] virtual VertexBufferUniquePtr CreateVertexBuffer(std::string name, const void* memory,
 	                                                               VertexDecl decl) noexcept = 0;
+	[[nodiscard]] virtual IndexBufferUniquePtr CreateIndexBuffer(std::string name, const void* memory,
+	                                                             IndexBuffer::Type type) noexcept = 0;
 
 	virtual void Bind(const VertexBuffer& buffer) const noexcept = 0;
+	virtual void Bind(const IndexBuffer& buffer, uint32_t count, uint32_t startIndex) const noexcept = 0;
 };
 
 } // namespace openblack::graphics

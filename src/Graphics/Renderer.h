@@ -66,8 +66,11 @@ public:
 
 	[[nodiscard]] VertexBufferUniquePtr CreateVertexBuffer(std::string name, const void* memory,
 	                                                       VertexDecl decl) noexcept final;
+	[[nodiscard]] IndexBufferUniquePtr CreateIndexBuffer(std::string name, const void* memory,
+	                                                     IndexBuffer::Type type) noexcept final;
 
 	void Bind(const VertexBuffer& buffer) const noexcept final;
+	void Bind(const IndexBuffer& buffer, uint32_t count, uint32_t startIndex) const noexcept final;
 
 private:
 	void DrawFootprintPass(const DrawSceneDesc& drawDesc) const;
@@ -75,6 +78,7 @@ private:
 	void DrawPass(const DrawSceneDesc& desc) const;
 
 	static void DestroyVertexBuffer(VertexBuffer* buffer);
+	static void DestroyIndexBuffer(IndexBuffer* buffer);
 
 	std::unique_ptr<ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;

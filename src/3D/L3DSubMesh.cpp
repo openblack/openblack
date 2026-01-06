@@ -212,9 +212,10 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 	decl.emplace_back(VertexAttrib::Attribute::Indices, static_cast<uint8_t>(2), VertexAttrib::Type::Int16);
 
 	// build our buffers
-	auto vertexBuffer = Locator::rendererInterface::value().CreateVertexBuffer(_l3dMesh.GetDebugName(), verticesMem, decl);
-	auto* indexBuffer = new IndexBuffer(_l3dMesh.GetDebugName(), indicesMem, IndexBuffer::Type::Uint16);
-	_mesh = std::make_unique<graphics::Mesh>(std::move(vertexBuffer), indexBuffer);
+	auto& renderer = Locator::rendererInterface::value();
+	auto vertexBuffer = renderer.CreateVertexBuffer(_l3dMesh.GetDebugName(), verticesMem, decl);
+	auto indexBuffer = renderer.CreateIndexBuffer(_l3dMesh.GetDebugName(), indicesMem, IndexBuffer::Type::Uint16);
+	_mesh = std::make_unique<graphics::Mesh>(std::move(vertexBuffer), std::move(indexBuffer));
 
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "{} submesh {} with {} verts and {} indices", _l3dMesh.GetDebugName(), meshIndex,
 	                    nVertices, nIndices);

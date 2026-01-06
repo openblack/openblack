@@ -424,7 +424,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			}
 			if (subMesh.GetMesh().IsIndexed() && (skip & Mesh::SkipState::SkipIndexBuffer) == 0)
 			{
-				subMesh.GetMesh().GetIndexBuffer().Bind(prim.indicesCount, prim.indicesOffset);
+				Bind(subMesh.GetMesh().GetIndexBuffer(), prim.indicesCount, prim.indicesOffset);
 			}
 			if ((skip & Mesh::SkipState::SkipVertexBuffer) == 0)
 			{
@@ -631,7 +631,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		{
 			const auto& ocean = Locator::oceanSystem::value();
 			const auto& mesh = ocean.GetMesh();
-			mesh.GetIndexBuffer().Bind(mesh.GetIndexBuffer().GetCount(), 0);
+			Bind(mesh.GetIndexBuffer(), mesh.GetIndexBuffer().count, 0);
 			Bind(mesh.GetVertexBuffer());
 			bgfx::setState(k_BgfxDefaultStateInvertedZ);
 			auto diffuse = Locator::resources::value().GetTextures().Handle(ocean.GetDiffuseTexture());
@@ -934,6 +934,18 @@ VertexBufferUniquePtr Renderer::CreateVertexBuffer(std::string name, const void*
 	return {new VertexBuffer(name, vertexCount, strideBytes, handle, layoutHandle), DestroyVertexBuffer};
 }
 
+IndexBufferUniquePtr Renderer::CreateIndexBuffer(std::string name, const void* memory, IndexBuffer::Type type) noexcept
+{
+	const auto* memBgfx = static_cast<const bgfx::Memory*>(memory);
+	uint32_t count = memBgfx->size / sizeof(uint16_t);
+
+	IndexBufferHandle handle =
+	    fromBgfx(bgfx::createIndexBuffer(memBgfx, type == IndexBuffer::Type::Uint32 ? BGFX_BUFFER_INDEX32 : 0));
+	bgfx::setName(toBgfx(handle), name.c_str());
+
+	return {new IndexBuffer(name, count, type, handle), DestroyIndexBuffer};
+}
+
 void Renderer::DestroyVertexBuffer(VertexBuffer* buffer)
 {
 	if (bgfx::isValid(toBgfx(buffer->handle)))
@@ -946,7 +958,20 @@ void Renderer::DestroyVertexBuffer(VertexBuffer* buffer)
 	}
 }
 
+void Renderer::DestroyIndexBuffer(IndexBuffer* buffer)
+{
+	if (bgfx::isValid(toBgfx(buffer->handle)))
+	{
+		bgfx::destroy(toBgfx(buffer->handle));
+	}
+}
+
 void Renderer::Bind(const VertexBuffer& buffer) const noexcept
 {
 	bgfx::setVertexBuffer(0, toBgfx(buffer.handle), 0, buffer.vertexCount, toBgfx(buffer.layoutHandle));
+}
+
+void Renderer::Bind(const IndexBuffer& buffer, uint32_t count, uint32_t startIndex) const noexcept
+{
+	bgfx::setIndexBuffer(toBgfx(buffer.handle), startIndex, count);
 }

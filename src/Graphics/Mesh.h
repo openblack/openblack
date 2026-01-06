@@ -14,6 +14,7 @@
 #include <memory>
 #include <optional>
 
+#include "Graphics/IndexBuffer.h"
 #include "GraphicsHandle.h"
 #include "RenderPass.h"
 #include "VertexBuffer.h"
@@ -41,7 +42,7 @@ public:
 		TriangleStrip,
 	};
 
-	explicit Mesh(VertexBufferUniquePtr&& vertexBuffer, IndexBuffer* indexBuffer = nullptr,
+	explicit Mesh(VertexBufferUniquePtr&& vertexBuffer, IndexBufferUniquePtr&& indexBuffer = nullptr,
 	              Topology topology = Topology::TriangleList) noexcept;
 	~Mesh() noexcept;
 
@@ -79,7 +80,7 @@ public:
 
 protected:
 	VertexBufferUniquePtr _vertexBuffer;
-	std::unique_ptr<graphics::IndexBuffer> _indexBuffer;
+	IndexBufferUniquePtr _indexBuffer;
 
 private:
 	Topology _topology;
