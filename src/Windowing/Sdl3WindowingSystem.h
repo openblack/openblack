@@ -29,7 +29,7 @@ struct SDL_Window;
 namespace openblack::windowing
 {
 
-class Sdl2WindowingSystem final: public WindowingInterface
+class Sdl3WindowingSystem final: public WindowingInterface
 {
 	struct SDLDestroyer
 	{
@@ -37,7 +37,7 @@ class Sdl2WindowingSystem final: public WindowingInterface
 	};
 
 public:
-	Sdl2WindowingSystem(const std::string& title, int width, int height, DisplayMode displayMode, uint32_t extraFlags);
+	Sdl3WindowingSystem(const std::string& title, int width, int height, DisplayMode displayMode, uint32_t extraFlags);
 
 	[[nodiscard]] void* GetHandle() const final;
 	[[nodiscard]] NativeHandles GetNativeHandles() const final;
@@ -45,39 +45,35 @@ public:
 	[[nodiscard]] glm::ivec2 GetSize() const final;
 	[[nodiscard]] float GetAspectRatio() const final;
 
-	WindowingInterface& SetDisplayMode(DisplayMode mode) final { return SetFullscreen(mode != DisplayMode::Windowed); }
+	WindowingInterface& SetDisplayMode(DisplayMode mode) final;
 
 private:
 	[[nodiscard]] bool IsOpen() const;
-	[[nodiscard]] float GetBrightness() const;
-	Sdl2WindowingSystem& SetBrightness(float bright);
 	[[nodiscard]] uint32_t GetFlags() const;
-	Sdl2WindowingSystem& GrabInput(bool b = true);
-	Sdl2WindowingSystem& SetMousePosition(glm::ivec2 position);
+	Sdl3WindowingSystem& GrabInput(bool b = true);
+	Sdl3WindowingSystem& SetMousePosition(glm::ivec2 position);
 	[[nodiscard]] bool IsInputGrabbed() const;
 
-	Sdl2WindowingSystem& SetTitle(const std::string& str);
+	Sdl3WindowingSystem& SetTitle(const std::string& str);
 	[[nodiscard]] std::string GetTitle() const;
 
-	Sdl2WindowingSystem& Show();
-	Sdl2WindowingSystem& Hide();
+	Sdl3WindowingSystem& Show();
+	Sdl3WindowingSystem& Hide();
 
-	Sdl2WindowingSystem& SetPosition(glm::ivec2 position);
+	Sdl3WindowingSystem& SetPosition(glm::ivec2 position);
 	[[nodiscard]] glm::ivec2 GetPosition() const;
-	Sdl2WindowingSystem& SetSize(glm::ivec2 size);
-	Sdl2WindowingSystem& SetMinimumSize(glm::ivec2 size);
+	Sdl3WindowingSystem& SetSize(glm::ivec2 size);
+	Sdl3WindowingSystem& SetMinimumSize(glm::ivec2 size);
 	[[nodiscard]] glm::ivec2 GetMinimumSize() const;
-	Sdl2WindowingSystem& SetMaximumSize(glm::ivec2 size);
+	Sdl3WindowingSystem& SetMaximumSize(glm::ivec2 size);
 	[[nodiscard]] glm::ivec2 GetMaximumSize() const;
 
-	Sdl2WindowingSystem& Minimise();
-	Sdl2WindowingSystem& Maximise();
-	Sdl2WindowingSystem& Restore();
-	Sdl2WindowingSystem& Raise();
-	Sdl2WindowingSystem& SetBordered(bool b = true);
-	Sdl2WindowingSystem& SetFullscreen(bool f = true);
+	Sdl3WindowingSystem& Minimise();
+	Sdl3WindowingSystem& Maximise();
+	Sdl3WindowingSystem& Restore();
+	Sdl3WindowingSystem& Raise();
 
-	Sdl2WindowingSystem& Close();
+	Sdl3WindowingSystem& Close();
 
 	std::unique_ptr<SDL_Window, SDLDestroyer> _window;
 };

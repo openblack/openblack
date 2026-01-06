@@ -12,7 +12,7 @@
 
 #include <cstdint>
 
-#include <SDL_video.h>
+#include <SDL3/SDL_video.h>
 #include <bgfx/platform.h>
 #include <bimg/bimg.h>
 #include <bx/file.h>
@@ -231,6 +231,10 @@ std::unique_ptr<RendererInterface> RendererInterface::Create(GraphicsBackend bac
 		const auto handles = window.GetNativeHandles();
 		init.platformData.nwh = handles.nativeWindow;
 		init.platformData.ndt = handles.nativeDisplay;
+		if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0)
+		{
+			init.platformData.type = bgfx::NativeWindowHandleType::Wayland;
+		}
 	}
 
 	uint32_t bgfxReset = BGFX_RESET_NONE;

@@ -12,7 +12,7 @@
 #include <string>
 
 #include <LHVM.h>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -126,11 +126,13 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 	static bool leftMouseButton = false;
 	static bool middleMouseButton = false;
 
-	if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_LEFT)
+	if ((event.type == SDL_EVENT_MOUSE_BUTTON_DOWN || event.type == SDL_EVENT_MOUSE_BUTTON_UP) &&
+	    event.button.button == SDL_BUTTON_LEFT)
 	{
 		leftMouseButton = !leftMouseButton;
 	}
-	if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_MIDDLE)
+	if ((event.type == SDL_EVENT_MOUSE_BUTTON_DOWN || event.type == SDL_EVENT_MOUSE_BUTTON_UP) &&
+	    event.button.button == SDL_BUTTON_MIDDLE)
 	{
 		middleMouseButton = !middleMouseButton;
 	}
@@ -142,33 +144,35 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 
 	switch (event.type)
 	{
-	case SDL_QUIT:
+	case SDL_EVENT_QUIT:
 		return false;
-	case SDL_WINDOWEVENT:
-		if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == window.GetID())
+	case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+		if (event.window.windowID == window.GetID())
 		{
 			return false;
 		}
-		else if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-		{
-			const auto resolution = glm::u16vec2(event.window.data1, event.window.data2);
-			Locator::rendererInterface::value().Reset(resolution);
-			Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Main, resolution, 0x274659ff);
-
-			auto aspect = window.GetAspectRatio();
-			const auto& config = Locator::config::value();
-			camera.SetProjectionMatrixPerspective(config.cameraXFov, aspect, config.cameraNearClip, config.cameraFarClip);
-		}
 		break;
-	case SDL_KEYDOWN:
-		switch (event.key.keysym.sym)
+	case SDL_EVENT_WINDOW_RESIZED:
+	case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+	{
+		const auto resolution = glm::u16vec2(event.window.data1, event.window.data2);
+		Locator::rendererInterface::value().Reset(resolution);
+		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Main, resolution, 0x274659ff);
+
+		auto aspect = window.GetAspectRatio();
+		const auto& config = Locator::config::value();
+		camera.SetProjectionMatrixPerspective(config.cameraXFov, aspect, config.cameraNearClip, config.cameraFarClip);
+	}
+	break;
+	case SDL_EVENT_KEY_DOWN:
+		switch (event.key.key)
 		{
 		case SDLK_ESCAPE:
 			return false;
-		case SDLK_f:
+		case SDLK_F:
 			window.SetDisplayMode(windowing::DisplayMode::Fullscreen);
 			break;
-		case SDLK_p:
+		case SDLK_P:
 			_paused = !_paused;
 			break;
 		case SDLK_F1:
@@ -182,9 +186,9 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 		case SDLK_6:
 		case SDLK_7:
 		case SDLK_8:
-			if ((event.key.keysym.mod & KMOD_CTRL) != 0)
+			if ((event.key.mod & SDL_KMOD_CTRL) != 0)
 			{
-				const auto index = static_cast<uint8_t>(event.key.keysym.sym - SDLK_1);
+				const auto index = static_cast<uint8_t>(event.key.key - SDLK_1);
 				const auto positions = Locator::handSystem::value().GetPlayerHandPositions();
 				if (positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)] ||
 				    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)])
@@ -199,7 +203,7 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 			else
 			{
 				const auto& entitiesRegistry = Locator::entitiesRegistry::value();
-				const size_t index = event.key.keysym.sym - SDLK_1;
+				const size_t index = event.key.key - SDLK_1;
 				const auto& bookmarkEntities = Locator::cameraBookmarkSystem::value().GetBookmarks();
 				const auto entity = bookmarkEntities.at(index);
 				const auto [transform, bookmark] =
@@ -212,18 +216,19 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 			break;
 		}
 		break;
-	case SDL_MOUSEMOTION:
+	case SDL_EVENT_MOUSE_MOTION:
 	{
 		SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y);
 		break;
 	}
-	case SDL_MOUSEBUTTONUP:
+	case SDL_EVENT_MOUSE_BUTTON_UP:
 		switch (event.button.button)
 		{
 		case SDL_BUTTON_MIDDLE:
 		{
-			const glm::ivec2 screenSize = window.GetSize();
-			SDL_SetRelativeMouseMode((event.type == SDL_MOUSEBUTTONDOWN) ? SDL_TRUE : SDL_FALSE);
+			const glm::vec2 screenSize = window.GetSize();
+			SDL_SetWindowRelativeMouseMode(static_cast<SDL_Window*>(window.GetHandle()),
+			                               event.type == SDL_EVENT_MOUSE_BUTTON_DOWN);
 			SDL_WarpMouseInWindow(static_cast<SDL_Window*>(window.GetHandle()), screenSize.x / 2, screenSize.y / 2);
 		}
 		break;
