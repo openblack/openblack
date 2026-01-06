@@ -17,6 +17,7 @@
 
 #include "InstanceDesc.h"
 #include "RenderPass.h"
+#include "VertexBuffer.h"
 
 #include "../EngineConfig.h"
 
@@ -98,6 +99,11 @@ public:
 	virtual void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const noexcept = 0;
 	// TODO: Should shader manager be available through Locator as a service?
 	[[nodiscard]] virtual graphics::ShaderManager& GetShaderManager() const noexcept = 0;
+
+	[[nodiscard]] virtual VertexBufferUniquePtr CreateVertexBuffer(std::string name, const void* memory,
+	                                                               VertexDecl decl) noexcept = 0;
+
+	virtual void Bind(const VertexBuffer& buffer) const noexcept = 0;
 };
 
 } // namespace openblack::graphics

@@ -19,7 +19,9 @@
 
 #include "Dynamics/LandBlockBulletMeshInterface.h"
 #include "Graphics/Mesh.h"
+#include "Graphics/RendererInterface.h"
 #include "Graphics/VertexBuffer.h"
+#include "Locator.h"
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -65,8 +67,8 @@ void LandBlock::BuildMesh(LandIslandInterface& island)
 
 	BuildVertexList(vertices, island);
 
-	auto* vertexBuffer = new VertexBuffer("LandBlock", verticesMem, decl);
-	_mesh = std::make_unique<Mesh>(vertexBuffer);
+	auto vertexBuffer = Locator::rendererInterface::value().CreateVertexBuffer("LandBlock", verticesMem, decl);
+	_mesh = std::make_unique<Mesh>(std::move(vertexBuffer));
 
 	_dynamicsMeshInterface = std::make_unique<dynamics::LandBlockBulletMeshInterface>(vertices);
 

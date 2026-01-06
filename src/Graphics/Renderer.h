@@ -64,10 +64,17 @@ public:
 
 	void Reset(glm::u16vec2 resolution) const noexcept final;
 
+	[[nodiscard]] VertexBufferUniquePtr CreateVertexBuffer(std::string name, const void* memory,
+	                                                       VertexDecl decl) noexcept final;
+
+	void Bind(const VertexBuffer& buffer) const noexcept final;
+
 private:
 	void DrawFootprintPass(const DrawSceneDesc& drawDesc) const;
 	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, bool preserveState) const;
 	void DrawPass(const DrawSceneDesc& desc) const;
+
+	static void DestroyVertexBuffer(VertexBuffer* buffer);
 
 	std::unique_ptr<ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;

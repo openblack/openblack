@@ -197,7 +197,8 @@ void MeshViewer::Draw() noexcept
 	}
 
 	auto const& graphicsMesh = submesh->GetMesh();
-	ImGui::Text("Vertices %u, Indices %u", graphicsMesh.GetVertexBuffer().GetCount(), graphicsMesh.GetIndexBuffer().GetCount());
+	ImGui::Text("Vertices %u, Indices %u", graphicsMesh.GetVertexBuffer().vertexCount,
+	            graphicsMesh.GetIndexBuffer().GetCount());
 
 	if (_selectedSubMesh >= 0 && ImGui::TreeNodeEx("Spawn"))
 	{
@@ -365,7 +366,7 @@ void MeshViewer::Update() noexcept
 			auto box = mesh->GetBoundingBox();
 			auto model = glm::translate(box.Center()) * glm::scale(box.Size());
 			bgfx::setTransform(glm::value_ptr(model));
-			_boundingBox->GetVertexBuffer().Bind();
+			renderer.Bind(_boundingBox->GetVertexBuffer());
 			bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES, 0);
 			bgfx::submit(static_cast<bgfx::ViewId>(k_ViewId), toBgfx(debugShader->GetRawHandle()));
 		}

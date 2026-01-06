@@ -11,13 +11,15 @@
 
 #include "GraphicsHandleBgfx.h"
 #include "IndexBuffer.h"
+#include "Locator.h"
+#include "RendererInterface.h"
 #include "ShaderProgram.h"
 #include "VertexBuffer.h"
 
 using namespace openblack::graphics;
 
-Mesh::Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer, Topology topology) noexcept
-    : _vertexBuffer(vertexBuffer)
+Mesh::Mesh(VertexBufferUniquePtr&& vertexBuffer, IndexBuffer* indexBuffer, Topology topology) noexcept
+    : _vertexBuffer(std::move(vertexBuffer))
     , _indexBuffer(indexBuffer)
     , _topology(topology)
 {
@@ -57,7 +59,7 @@ void Mesh::Draw(const DrawDesc& desc) const
 	}
 	if ((desc.skip & SkipState::SkipVertexBuffer) == 0)
 	{
-		_vertexBuffer->Bind();
+		Locator::rendererInterface::value().Bind(*_vertexBuffer);
 	}
 	if ((desc.skip & SkipState::SkipRenderState) == 0)
 	{

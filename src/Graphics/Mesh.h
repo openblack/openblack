@@ -16,6 +16,7 @@
 
 #include "GraphicsHandle.h"
 #include "RenderPass.h"
+#include "VertexBuffer.h"
 
 namespace bgfx
 {
@@ -27,7 +28,6 @@ namespace openblack::graphics
 
 class IndexBuffer;
 class ShaderProgram;
-class VertexBuffer;
 
 class Mesh
 {
@@ -41,7 +41,7 @@ public:
 		TriangleStrip,
 	};
 
-	explicit Mesh(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer = nullptr,
+	explicit Mesh(VertexBufferUniquePtr&& vertexBuffer, IndexBuffer* indexBuffer = nullptr,
 	              Topology topology = Topology::TriangleList) noexcept;
 	~Mesh() noexcept;
 
@@ -78,7 +78,7 @@ public:
 	void Draw(const DrawDesc& desc) const;
 
 protected:
-	std::unique_ptr<graphics::VertexBuffer> _vertexBuffer;
+	VertexBufferUniquePtr _vertexBuffer;
 	std::unique_ptr<graphics::IndexBuffer> _indexBuffer;
 
 private:
