@@ -22,7 +22,7 @@
 namespace openblack::graphics
 {
 class L3DMesh;
-class Texture2D;
+struct Texture2d;
 } // namespace openblack::graphics
 
 namespace openblack::pack

@@ -15,7 +15,7 @@
 
 namespace openblack::graphics
 {
-class Texture2D;
+struct Texture2d;
 
 class InstanceDesc
 {
