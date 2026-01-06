@@ -23,7 +23,7 @@ class LandBlock;
 namespace graphics
 {
 class FrameBuffer;
-class Texture2D;
+struct Texture2d;
 } // namespace graphics
 namespace lnd
 {

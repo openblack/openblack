@@ -27,7 +27,7 @@ struct DynamicVertexBufferHandle;
 namespace openblack::graphics
 {
 
-class IndexBuffer;
+struct IndexBuffer;
 class ShaderProgram;
 
 class Mesh

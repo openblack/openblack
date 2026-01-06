@@ -28,7 +28,7 @@ namespace graphics
 {
 class L3DMesh;
 class ShaderProgram;
-class Texture2D;
+struct Texture2d;
 } // namespace graphics
 
 class Sky final: public SkyInterface

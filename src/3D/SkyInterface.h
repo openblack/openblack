@@ -15,7 +15,7 @@ namespace openblack
 namespace graphics
 {
 class L3DMesh;
-class Texture2D;
+struct Texture2d;
 } // namespace graphics
 
 class SkyInterface
