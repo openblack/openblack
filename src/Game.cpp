@@ -49,6 +49,7 @@
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/RendererInterface.h"
+#include "HelpText.h"
 #include "Input/GameActionMapInterface.h"
 #include "LHScriptX/Script.h"
 #include "Locator.h"
@@ -883,6 +884,11 @@ bool Game::Run() noexcept
 			{
 				Locator::debugGui::value().Draw();
 			}
+		}
+
+		{
+			auto section = profiler.BeginScoped(Profiler::Stage::RendererFrame);
+			Locator::helpText::value().Draw();
 		}
 
 		{
