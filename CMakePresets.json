@@ -104,6 +104,16 @@
       "inherits": "template-vcpkg"
     },
     {
+      "name": "mingw-ninja-multi-vcpkg",
+      "displayName": "MinGW Ninja Multi-Config (vcpkg)",
+      "description": "Configure with vcpkg toolchain and generate Ninja project files for all configurations",
+      "generator": "Ninja Multi-Config",
+      "inherits": "template-vcpkg",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-mingw-static"
+      }
+    },
+    {
       "name": "msvc-17-vcpkg",
       "displayName": "Visual Studio 2022 (vcpkg)",
       "description": "Configure with vcpkg toolchain and generate Visual Studio 2022 project files for all configurations",
@@ -194,6 +204,28 @@
       "description": "Configure with Makefiles to use system-installed dependencies",
       "generator": "Unix Makefiles",
       "inherits": "template-system-deps"
+    },
+    {
+      "name": "mingw-makefiles-vcpkg-debug",
+      "displayName": "MinGW MakeFiles (vcpkg) - Debug",
+      "description": "Configure with MinGW Makefiles and vcpkg toolchain - Debug Build",
+      "generator": "MinGW Makefiles",
+      "inherits": "template-vcpkg",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "debug",
+        "VCPKG_TARGET_TRIPLET": "x64-mingw-static"
+      }
+    },
+    {
+      "name": "mingw-makefiles-vcpkg-release",
+      "displayName": "MinGW MakeFiles (vcpkg) - Release",
+      "description": "Configure with MinGW Makefiles and vcpkg toolchain - Release Build",
+      "generator": "MinGW Makefiles",
+      "inherits": "template-vcpkg",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "release",
+        "VCPKG_TARGET_TRIPLET": "x64-mingw-static"
+      }
     }
   ],
   "buildPresets": [
@@ -209,6 +241,20 @@
       "configurePreset": "ninja-multi-vcpkg",
       "displayName": "Build ninja-multi-vcpkg-release",
       "description": "Build ninja-multi-vcpkg Release configuration",
+      "configuration": "Release"
+    },
+    {
+      "name": "mingw-ninja-multi-vcpkg-debug",
+      "configurePreset": "mingw-ninja-multi-vcpkg",
+      "displayName": "Build mingw-ninja-multi-vcpkg-debug",
+      "description": "Build mingw-ninja-multi-vcpkg Debug configuration",
+      "configuration": "Debug"
+    },
+    {
+      "name": "mingw-ninja-multi-vcpkg-release",
+      "configurePreset": "mingw-ninja-multi-vcpkg",
+      "displayName": "Build mingw-ninja-multi-vcpkg-release",
+      "description": "Build mingw-ninja-multi-vcpkg Release configuration",
       "configuration": "Release"
     },
     {
