@@ -9,6 +9,7 @@
 
 #include "Game.h"
 
+#include <ranges>
 #include <string>
 
 #include <LHVM.h>
@@ -572,12 +573,10 @@ bool Game::Initialize() noexcept
 	}
 
 	const auto& meshes = pack.GetMeshes();
-	// TODO (#749) use std::views::enumerate
-	for (size_t i = 0; const auto& mesh : meshes)
+	for (const auto&& [i, mesh] : std::views::enumerate(meshes))
 	{
 		const auto meshId = static_cast<MeshId>(i);
 		meshManager.Load(meshId, resources::L3DLoader::FromBufferTag {}, k_MeshNames.at(i), mesh);
-		++i;
 	}
 
 	const auto& textures = pack.GetTextures();
@@ -594,11 +593,9 @@ bool Game::Initialize() noexcept
 		return false;
 	}
 
-	const auto& animations = animationPack.GetAnimations();
-	// TODO (#749) use std::views::enumerate
-	for (size_t i = 0; i < animations.size(); i++)
+	for (const auto&& [i, animation] : std::views::enumerate(animationPack.GetAnimations()))
 	{
-		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animations[i]);
+		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animation);
 	}
 
 	fileSystem.Iterate(fileSystem.GetPath<Path::CreatureMesh>(), false, [&meshManager](const std::filesystem::path& f) {
@@ -739,9 +736,9 @@ bool Game::Initialize() noexcept
 
 				    const auto stringId = fmt::format("{}/{}", groupName, audioHeaders[i].id);
 				    const entt::id_type id = entt::hashed_string(stringId.c_str());
-				    const std::vector<std::vector<uint8_t>> buffer = {audioData[i]};
+				    const std::vector<std::span<const char>> spans = {audioData[i]};
 				    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Loading sound {}: {}", stringId, audioHeaders[i].name.data());
-				    soundManager.Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[i], buffer);
+				    soundManager.Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[i], spans);
 				    audioManager.AddToSoundGroup(groupName, id);
 			    }
 		    }
@@ -797,7 +794,9 @@ bool Game::Run() noexcept
 		lhvm.Initialise(&chlapi.GetFunctionsTable(), nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 		try
 		{
-			lhvm.LoadBinary(fileSystem.ReadAll(challengePath));
+			const auto challengeData = fileSystem.ReadAll(challengePath);
+			auto challengeSpan = std::span(reinterpret_cast<const char*>(challengeData.data()), challengeData.size());
+			lhvm.LoadBinary(challengeSpan);
 			lhvm.StartScript("LandControlAll", lhvm::ScriptType::All);
 		}
 		catch (const std::runtime_error& err)

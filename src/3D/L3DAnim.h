@@ -12,6 +12,7 @@
 #include <cstdint>
 
 #include <filesystem>
+#include <span>
 #include <vector>
 
 #include <glm/fwd.hpp>
@@ -40,10 +41,10 @@ public:
 	L3DAnim() noexcept = default;
 	virtual ~L3DAnim() noexcept = default;
 
-	void Load(const anm::ANMFile& anm) noexcept;
+	bool Load(const anm::ANMFile& anm) noexcept;
 	bool LoadFromFilesystem(const std::filesystem::path& path) noexcept;
 	bool LoadFromFile(const std::filesystem::path& path) noexcept;
-	bool LoadFromBuffer(const std::vector<uint8_t>& data) noexcept;
+	bool LoadFromBuffer(const std::span<const char>& data) noexcept;
 
 	[[nodiscard]] const std::string& GetName() const noexcept { return _name; }
 	[[nodiscard]] uint32_t GetDuration() const noexcept { return _duration; }
