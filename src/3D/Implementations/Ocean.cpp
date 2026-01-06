@@ -7,9 +7,8 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include "Locator.h"
 #define LOCATOR_IMPLEMENTATIONS
-
-#include "Ocean.h"
 
 #include <bgfx/bgfx.h>
 #include <glm/vec2.hpp>
@@ -17,8 +16,11 @@
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/Mesh.h"
+#include "Graphics/RendererInterface.h"
 #include "Graphics/Texture2D.h"
 #include "Graphics/VertexBuffer.h"
+#include "Locator.h"
+#include "Ocean.h"
 
 using namespace openblack;
 using namespace openblack::graphics;
@@ -48,9 +50,9 @@ void Ocean::CreateMesh()
 	static constexpr std::array<uint16_t, 6> k_Indices = {2, 1, 0, 0, 3, 2};
 
 	const auto* mem = bgfx::makeRef(k_Points.data(), static_cast<uint32_t>(k_Points.size() * sizeof(k_Points[0])));
-	auto* vertexBuffer = new VertexBuffer("Water", mem, decl);
+	auto vertexBuffer = Locator::rendererInterface::value().CreateVertexBuffer("Water", mem, decl);
 	auto* indexBuffer =
 	    new IndexBuffer("Water", k_Indices.data(), static_cast<uint32_t>(k_Indices.size()), IndexBuffer::Type::Uint16);
 
-	_mesh = std::make_unique<Mesh>(vertexBuffer, indexBuffer, graphics::Mesh::Topology::TriangleList);
+	_mesh = std::make_unique<Mesh>(std::move(vertexBuffer), indexBuffer, graphics::Mesh::Topology::TriangleList);
 }

@@ -16,9 +16,10 @@
 #include <spdlog/spdlog.h>
 
 #include "Graphics/IndexBuffer.h"
-#include "Graphics/ShaderProgram.h"
+#include "Graphics/RendererInterface.h"
 #include "Graphics/VertexBuffer.h"
 #include "L3DMesh.h"
+#include "Locator.h"
 
 using namespace openblack::graphics;
 
@@ -211,9 +212,9 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 	decl.emplace_back(VertexAttrib::Attribute::Indices, static_cast<uint8_t>(2), VertexAttrib::Type::Int16);
 
 	// build our buffers
-	auto* vertexBuffer = new VertexBuffer(_l3dMesh.GetDebugName(), verticesMem, decl);
+	auto vertexBuffer = Locator::rendererInterface::value().CreateVertexBuffer(_l3dMesh.GetDebugName(), verticesMem, decl);
 	auto* indexBuffer = new IndexBuffer(_l3dMesh.GetDebugName(), indicesMem, IndexBuffer::Type::Uint16);
-	_mesh = std::make_unique<graphics::Mesh>(vertexBuffer, indexBuffer);
+	_mesh = std::make_unique<graphics::Mesh>(std::move(vertexBuffer), indexBuffer);
 
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "{} submesh {} with {} verts and {} indices", _l3dMesh.GetDebugName(), meshIndex,
 	                    nVertices, nIndices);

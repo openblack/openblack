@@ -11,6 +11,8 @@
 
 #include <cstdint>
 
+#include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -70,26 +72,15 @@ struct VertexAttrib
 
 using VertexDecl = std::vector<VertexAttrib>;
 
-class VertexBuffer
+struct VertexBuffer
 {
-public:
-	VertexBuffer(std::string name, const void* memory, VertexDecl decl) noexcept;
-	~VertexBuffer() noexcept;
-
-	[[nodiscard]] uint32_t GetCount() const noexcept;
-	[[nodiscard]] uint32_t GetStrideBytes() const noexcept;
-	[[nodiscard]] uint32_t GetSizeInBytes() const noexcept;
-
-	void Bind() const;
-
-private:
-	std::string _name;
-	uint32_t _vertexCount;
-	const VertexDecl _vertexDecl;
-	uint32_t _strideBytes;
-	std::vector<uint32_t> _vertexDeclOffsets;
-	VertexBufferHandle _handle;
-	VertexLayoutHandle _layoutHandle;
+	const std::string name;
+	const uint32_t vertexCount;
+	const uint32_t strideBytes;
+	const VertexBufferHandle handle;
+	const VertexLayoutHandle layoutHandle;
 };
+
+using VertexBufferUniquePtr = std::unique_ptr<VertexBuffer, std::function<void(VertexBuffer*)>>;
 
 } // namespace openblack::graphics

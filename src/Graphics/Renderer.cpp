@@ -39,7 +39,6 @@
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/GraphicsHandleBgfx.h"
 #include "Graphics/IndexBuffer.h"
-#include "Graphics/Primitive.h"
 #include "Graphics/ShaderManager.h"
 #include "Graphics/VertexBuffer.h"
 #include "Locator.h"
@@ -271,7 +270,30 @@ Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallb
     , _bgfxReset(bgfxReset)
 {
 	_shaderManager->LoadShaders();
-	_plane = Primitive::CreatePlane();
+
+	{
+		// TODO(bwrsandman): Check if vertexID can be used in shader or remove uv
+		struct Vertex
+		{
+			glm::vec2 pos;
+		};
+
+		static const std::array<Vertex, 6> vertices = {
+		    Vertex {glm::vec2 {-1.0f, -1.0f}}, Vertex {glm::vec2 {1.0f, 1.0f}},  Vertex {glm::vec2 {-1.0f, 1.0f}},
+
+		    Vertex {glm::vec2 {-1.0f, -1.0f}}, Vertex {glm::vec2 {1.0f, -1.0f}}, Vertex {glm::vec2 {1.0f, 1.0f}},
+		};
+
+		VertexDecl decl;
+		decl.reserve(2);
+		decl.emplace_back(VertexAttrib::Attribute::Position, static_cast<uint8_t>(2), VertexAttrib::Type::Float);
+
+		const auto* mem = bgfx::makeRef(vertices.data(), static_cast<uint32_t>(vertices.size() * sizeof(vertices[0])));
+		auto vertexBuffer = CreateVertexBuffer("Plane", mem, decl);
+		bgfx::frame();
+		_plane = std::make_unique<Mesh>(std::move(vertexBuffer), nullptr, Mesh::Topology::TriangleList);
+		bgfx::frame();
+	}
 
 	// give debug names to views
 	// TODO (#749) use std::views::enumerate
@@ -406,7 +428,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			}
 			if ((skip & Mesh::SkipState::SkipVertexBuffer) == 0)
 			{
-				subMesh.GetMesh().GetVertexBuffer().Bind();
+				Bind(subMesh.GetMesh().GetVertexBuffer());
 			}
 			if ((skip & Mesh::SkipState::SkipRenderState) == 0)
 			{
@@ -480,7 +502,7 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 			}
 			const auto& footprint = mesh->GetFootprints()[0];
 			footprintShaderInstanced->SetTextureSampler("s_footprint", 0, *footprint.texture);
-			footprint.mesh->GetVertexBuffer().Bind();
+			Bind(footprint.mesh->GetVertexBuffer());
 			bgfx::setInstanceDataBuffer(toBgfx(renderCtx.instanceUniformBuffer), placers.offset, placers.count);
 			const uint64_t state = 0u                       //
 			                       | BGFX_STATE_WRITE_RGB   //
@@ -610,7 +632,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			const auto& ocean = Locator::oceanSystem::value();
 			const auto& mesh = ocean.GetMesh();
 			mesh.GetIndexBuffer().Bind(mesh.GetIndexBuffer().GetCount(), 0);
-			mesh.GetVertexBuffer().Bind();
+			Bind(mesh.GetVertexBuffer());
 			bgfx::setState(k_BgfxDefaultStateInvertedZ);
 			auto diffuse = Locator::resources::value().GetTextures().Handle(ocean.GetDiffuseTexture());
 			auto alpha = Locator::resources::value().GetTextures().Handle(ocean.GetAlphaTexture());
@@ -665,7 +687,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				const glm::vec4 mapPositionAndSize = glm::vec4(block.GetMapPosition(), 160.0f, 160.0f);
 				terrainShader->SetUniformValue("u_blockPositionAndSize", &mapPositionAndSize);
 
-				block.GetMesh().GetVertexBuffer().Bind();
+				Bind(block.GetMesh().GetVertexBuffer());
 
 				bgfx::setState(defaultState | (desc.cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW), 0);
 				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(terrainShader->GetRawHandle()), 0, discard);
@@ -731,20 +753,20 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				{
 					const auto boundBoxOffset = static_cast<uint32_t>(renderCtx.instanceUniforms.size() / 2);
 					const auto boundBoxCount = static_cast<uint32_t>(renderCtx.instanceUniforms.size() / 2);
-					renderCtx.boundingBox->GetVertexBuffer().Bind();
+					Bind(renderCtx.boundingBox->GetVertexBuffer());
 					bgfx::setInstanceDataBuffer(toBgfx(renderCtx.instanceUniformBuffer), boundBoxOffset, boundBoxCount);
 					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
 					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(debugShaderInstanced->GetRawHandle()));
 				}
 				if (renderCtx.footpaths)
 				{
-					renderCtx.footpaths->GetVertexBuffer().Bind();
+					Bind(renderCtx.footpaths->GetVertexBuffer());
 					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
 					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(debugShader->GetRawHandle()));
 				}
 				if (renderCtx.streams)
 				{
-					renderCtx.streams->GetVertexBuffer().Bind();
+					Bind(renderCtx.streams->GetVertexBuffer());
 					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
 					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(debugShader->GetRawHandle()));
 				}
@@ -820,7 +842,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					    spriteShader->SetUniformValue("u_tint", glm::value_ptr(sprite.tint));
 					    spriteShader->SetTextureSampler("s_diffuse", 0, sprite.texture);
 
-					    _plane->GetVertexBuffer().Bind();
+					    Bind(_plane->GetVertexBuffer());
 
 					    bgfx::setState(0 | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
 					                   BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE) |
@@ -859,4 +881,72 @@ void Renderer::RequestScreenshot(const std::filesystem::path& filepath) noexcept
 {
 	const bgfx::FrameBufferHandle mainBackbuffer = BGFX_INVALID_HANDLE;
 	bgfx::requestScreenShot(mainBackbuffer, filepath.string().c_str());
+}
+
+VertexBufferUniquePtr Renderer::CreateVertexBuffer(std::string name, const void* memory, VertexDecl decl) noexcept
+{
+	constexpr std::array<bgfx::AttribType::Enum, 3> k_Types {
+	    bgfx::AttribType::Uint8,
+	    bgfx::AttribType::Int16,
+	    bgfx::AttribType::Float,
+	};
+	constexpr std::array<bgfx::Attrib::Enum, 18> k_Attributes {
+	    bgfx::Attrib::Enum::Position,  bgfx::Attrib::Enum::Normal,    bgfx::Attrib::Enum::Tangent,
+	    bgfx::Attrib::Enum::Bitangent, bgfx::Attrib::Enum::Color0,    bgfx::Attrib::Enum::Color1,
+	    bgfx::Attrib::Enum::Color2,    bgfx::Attrib::Enum::Color3,    bgfx::Attrib::Enum::Indices,
+	    bgfx::Attrib::Enum::Weight,    bgfx::Attrib::Enum::TexCoord0, bgfx::Attrib::Enum::TexCoord1,
+	    bgfx::Attrib::Enum::TexCoord2, bgfx::Attrib::Enum::TexCoord3, bgfx::Attrib::Enum::TexCoord4,
+	    bgfx::Attrib::Enum::TexCoord5, bgfx::Attrib::Enum::TexCoord6, bgfx::Attrib::Enum::TexCoord7,
+	};
+
+	assert(!decl.empty());
+
+	// Extract gl types from decl
+	static const std::array<std::array<uint32_t, 4>, 3> strides = {
+	    std::array<uint32_t, 4> {4, 4, 4, 4},   // Uint8
+	    std::array<uint32_t, 4> {4, 4, 8, 8},   // Int16
+	    std::array<uint32_t, 4> {4, 8, 12, 16}, // Float
+	};
+
+	bgfx::VertexLayout layout;
+	layout.begin();
+	std::vector<uint32_t> vertexDeclOffsets;
+	uint32_t strideBytes = 0;
+	vertexDeclOffsets.reserve(decl.size());
+	for (const auto& d : decl)
+	{
+		vertexDeclOffsets.push_back(strideBytes);
+		strideBytes += strides.at(static_cast<size_t>(d.type)).at(d.num - 1);
+		layout.add(k_Attributes.at(static_cast<size_t>(d.attribute)), d.num, k_Types.at(static_cast<size_t>(d.type)),
+		           d.normalized, d.asInt);
+	}
+	layout.end();
+	assert(layout.m_stride == strideBytes);
+
+	const auto* bgfxMem = reinterpret_cast<const bgfx::Memory*>(memory);
+
+	auto vertexCount = bgfxMem->size / strideBytes;
+
+	auto handle = fromBgfx(bgfx::createVertexBuffer(bgfxMem, layout));
+	auto layoutHandle = fromBgfx(bgfx::createVertexLayout(layout));
+	bgfx::setName(toBgfx(handle), name.c_str());
+
+	return {new VertexBuffer(name, vertexCount, strideBytes, handle, layoutHandle), DestroyVertexBuffer};
+}
+
+void Renderer::DestroyVertexBuffer(VertexBuffer* buffer)
+{
+	if (bgfx::isValid(toBgfx(buffer->handle)))
+	{
+		bgfx::destroy(toBgfx(buffer->handle));
+	}
+	if (bgfx::isValid(toBgfx(buffer->layoutHandle)))
+	{
+		bgfx::destroy(toBgfx(buffer->layoutHandle));
+	}
+}
+
+void Renderer::Bind(const VertexBuffer& buffer) const noexcept
+{
+	bgfx::setVertexBuffer(0, toBgfx(buffer.handle), 0, buffer.vertexCount, toBgfx(buffer.layoutHandle));
 }

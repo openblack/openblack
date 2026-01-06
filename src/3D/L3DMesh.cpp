@@ -22,6 +22,7 @@
 
 #include "3D/L3DSubMesh.h"
 #include "FileSystem/FileSystemInterface.h"
+#include "Graphics/RendererInterface.h"
 #include "Graphics/Texture2D.h"
 #include "Graphics/VertexBuffer.h"
 #include "Locator.h"
@@ -104,8 +105,9 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 				}
 			}
 
-			auto* vertexBuffer = new VertexBuffer("footprints/quad/" + _debugName + "/" + std::to_string(i), verticesMem, decl);
-			auto mesh = std::make_unique<Mesh>(vertexBuffer);
+			auto vertexBuffer = Locator::rendererInterface::value().CreateVertexBuffer(
+			    "footprints/quad/" + _debugName + "/" + std::to_string(i), verticesMem, decl);
+			auto mesh = std::make_unique<Mesh>(std::move(vertexBuffer));
 			_footprints.emplace_back(Footprint {std::move(texture), std::move(mesh)});
 		}
 	}

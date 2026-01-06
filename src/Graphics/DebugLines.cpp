@@ -15,6 +15,8 @@
 
 #include <bgfx/bgfx.h>
 
+#include "Graphics/RendererInterface.h"
+#include "Locator.h"
 #include "Mesh.h"
 #include "VertexBuffer.h"
 
@@ -28,9 +30,9 @@ std::unique_ptr<Mesh> DebugLines::CreateDebugLines(const Vertex* data, uint32_t 
 	decl.emplace_back(VertexAttrib::Attribute::Color0, static_cast<uint8_t>(4), VertexAttrib::Type::Float);
 
 	const auto* mem = bgfx::makeRef(data, static_cast<uint32_t>(vertexCount * sizeof(data[0])));
-	auto* vertexBuffer = new VertexBuffer("DebugLines", mem, decl);
+	auto vertexBuffer = Locator::rendererInterface::value().CreateVertexBuffer("DebugLines", mem, decl);
 	bgfx::frame();
-	auto mesh = std::make_unique<Mesh>(vertexBuffer, nullptr, Mesh::Topology::LineList);
+	auto mesh = std::make_unique<Mesh>(std::move(vertexBuffer), nullptr, Mesh::Topology::LineList);
 	bgfx::frame();
 
 	return mesh;
