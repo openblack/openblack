@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2026 openblack developers
+ * Copyright (c) 2018-2024 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -9,24 +9,22 @@
 
 #pragma once
 
-#include <array>
+#include <chrono>
 
 #include <entt/fwd.hpp>
 
-#include "3D/TempleInteriorInterface.h"
-#include "ECS/Components/Temple.h"
-
-namespace openblack
+namespace openblack::ecs::systems
 {
-struct LightEmitter;
-}
 
-namespace openblack::ecs::archetypes
-{
-class GlowArchetype
+class CameraPathSystemInterface
 {
 public:
-	static std::array<entt::entity, 2> Create(const LightEmitter& emitter, TempleRoom room);
-	GlowArchetype() = delete;
+	virtual void Start(entt::id_type id) = 0;
+	virtual void Stop() = 0;
+	virtual void Play() = 0;
+	virtual void Pause() = 0;
+	virtual void Update(const std::chrono::microseconds& dt) = 0;
+	virtual bool IsPathing() = 0;
+	virtual bool IsPaused() = 0;
 };
-} // namespace openblack::ecs::archetypes
+} // namespace openblack::ecs::systems

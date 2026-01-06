@@ -27,6 +27,7 @@ public:
 	CreatureMindManager& GetCreatureMinds() override { return _creatureMinds; }
 	SoundManager& GetSounds() override { return _sounds; }
 	GlowManager& GetGlows() override { return _glows; }
+	CameraPathManager& GetCameraPaths() override { return _cameraPaths; }
 
 private:
 	MeshManager _meshes;
@@ -36,5 +37,6 @@ private:
 	CreatureMindManager _creatureMinds;
 	SoundManager _sounds;
 	GlowManager _glows;
+	CameraPathManager _cameraPaths;
 };
 } // namespace openblack::resources
