@@ -49,10 +49,12 @@ void Ocean::CreateMesh()
 
 	static constexpr std::array<uint16_t, 6> k_Indices = {2, 1, 0, 0, 3, 2};
 
-	const auto* mem = bgfx::makeRef(k_Points.data(), static_cast<uint32_t>(k_Points.size() * sizeof(k_Points[0])));
-	auto vertexBuffer = Locator::rendererInterface::value().CreateVertexBuffer("Water", mem, decl);
-	auto* indexBuffer =
-	    new IndexBuffer("Water", k_Indices.data(), static_cast<uint32_t>(k_Indices.size()), IndexBuffer::Type::Uint16);
+	auto& renderer = Locator::rendererInterface::value();
+	const auto* memVtx = bgfx::makeRef(k_Points.data(), static_cast<uint32_t>(k_Points.size() * sizeof(k_Points[0])));
+	auto vertexBuffer = renderer.CreateVertexBuffer("Water", memVtx, decl);
+	const auto* memIdx = bgfx::makeRef(
+	    k_Indices.data(), static_cast<uint32_t>(k_Indices.size() * IndexBuffer::GetTypeSize(IndexBuffer::Type::Uint16)));
+	auto indexBuffer = renderer.CreateIndexBuffer("Water", memIdx, IndexBuffer::Type::Uint16);
 
-	_mesh = std::make_unique<Mesh>(std::move(vertexBuffer), indexBuffer, graphics::Mesh::Topology::TriangleList);
+	_mesh = std::make_unique<Mesh>(std::move(vertexBuffer), std::move(indexBuffer), graphics::Mesh::Topology::TriangleList);
 }

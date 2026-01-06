@@ -18,9 +18,9 @@
 
 using namespace openblack::graphics;
 
-Mesh::Mesh(VertexBufferUniquePtr&& vertexBuffer, IndexBuffer* indexBuffer, Topology topology) noexcept
+Mesh::Mesh(VertexBufferUniquePtr&& vertexBuffer, IndexBufferUniquePtr&& indexBuffer, Topology topology) noexcept
     : _vertexBuffer(std::move(vertexBuffer))
-    , _indexBuffer(indexBuffer)
+    , _indexBuffer(std::move(indexBuffer))
     , _topology(topology)
 {
 }
@@ -39,7 +39,7 @@ const IndexBuffer& Mesh::GetIndexBuffer() const
 
 bool Mesh::IsIndexed() const
 {
-	return _indexBuffer != nullptr && _indexBuffer->GetCount() > 0;
+	return _indexBuffer != nullptr && _indexBuffer->count > 0;
 }
 
 Mesh::Topology Mesh::GetTopology() const noexcept
@@ -49,17 +49,18 @@ Mesh::Topology Mesh::GetTopology() const noexcept
 
 void Mesh::Draw(const DrawDesc& desc) const
 {
+	auto& renderer = Locator::rendererInterface::value();
 	if (desc.instanceBuffer && (desc.skip & SkipState::SkipInstanceBuffer) == 0)
 	{
 		bgfx::setInstanceDataBuffer(toBgfx(*desc.instanceBuffer), desc.instanceStart, desc.instanceCount);
 	}
-	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0 && (desc.skip & SkipState::SkipIndexBuffer) == 0)
+	if (_indexBuffer != nullptr && _indexBuffer->count > 0 && (desc.skip & SkipState::SkipIndexBuffer) == 0)
 	{
-		_indexBuffer->Bind(desc.count, desc.offset);
+		renderer.Bind(*_indexBuffer, desc.count, desc.offset);
 	}
 	if ((desc.skip & SkipState::SkipVertexBuffer) == 0)
 	{
-		Locator::rendererInterface::value().Bind(*_vertexBuffer);
+		renderer.Bind(*_vertexBuffer);
 	}
 	if ((desc.skip & SkipState::SkipRenderState) == 0)
 	{

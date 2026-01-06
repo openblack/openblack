@@ -197,8 +197,7 @@ void MeshViewer::Draw() noexcept
 	}
 
 	auto const& graphicsMesh = submesh->GetMesh();
-	ImGui::Text("Vertices %u, Indices %u", graphicsMesh.GetVertexBuffer().vertexCount,
-	            graphicsMesh.GetIndexBuffer().GetCount());
+	ImGui::Text("Vertices %u, Indices %u", graphicsMesh.GetVertexBuffer().vertexCount, graphicsMesh.GetIndexBuffer().count);
 
 	if (_selectedSubMesh >= 0 && ImGui::TreeNodeEx("Spawn"))
 	{
