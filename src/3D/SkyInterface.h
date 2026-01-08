@@ -23,7 +23,7 @@ class SkyInterface
 public:
 	[[nodiscard]] virtual float GetCurrentSkyType() const noexcept = 0;
 	[[nodiscard]] virtual graphics::L3DMesh& GetMesh() const noexcept = 0;
-	[[nodiscard]] virtual graphics::Texture2D& GetTexture() const noexcept = 0;
+	[[nodiscard]] virtual graphics::Texture2d& GetTexture() const noexcept = 0;
 	virtual void SetTime(float time) noexcept = 0;
 };
 

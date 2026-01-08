@@ -12,7 +12,7 @@
 #include "ECS/Components/CameraBookmark.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Registry.h"
-#include "Graphics/Texture2D.h"
+#include "Graphics/Texture2d.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -39,7 +39,7 @@ std::array<entt::entity, 8> CameraBookmarkArchetype::CreateAll()
 	for (uint8_t i = 0; auto entity : result)
 	{
 		const float u = static_cast<float>(i) / static_cast<float>(result.size());
-		registry.Assign<Sprite>(entity, texture->GetNativeHandle(), glm::vec2 {u, 3.0f / 8.0f}, extent, tint);
+		registry.Assign<Sprite>(entity, texture->handle, glm::vec2 {u, 3.0f / 8.0f}, extent, tint);
 		++i;
 		registry.Assign<CameraBookmark>(entity, i, 0.0f);
 	}

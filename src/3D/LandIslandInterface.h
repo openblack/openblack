@@ -42,17 +42,13 @@ public:
 	[[nodiscard]] virtual glm::vec3 GetNormalAt(glm::vec2) const = 0;
 	[[nodiscard]] virtual const lnd::LNDCell& GetCell(const glm::u16vec2& coordinates) const = 0;
 
-	// Debug
-	virtual void DumpTextures() const = 0;
-	virtual void DumpMaps() const = 0;
-
 	[[nodiscard]] virtual std::vector<LandBlock>& GetBlocks() = 0;
 	[[nodiscard]] virtual const std::vector<LandBlock>& GetBlocks() const = 0;
 	[[nodiscard]] virtual const std::vector<lnd::LNDCountry>& GetCountries() const = 0;
 
-	[[nodiscard]] virtual const graphics::Texture2D& GetAlbedoArray() const = 0;
-	[[nodiscard]] virtual const graphics::Texture2D& GetBump() const = 0;
-	[[nodiscard]] virtual const graphics::Texture2D& GetHeightMap() const = 0;
+	[[nodiscard]] virtual const graphics::Texture2d& GetAlbedoArray() const = 0;
+	[[nodiscard]] virtual const graphics::Texture2d& GetBump() const = 0;
+	[[nodiscard]] virtual const graphics::Texture2d& GetHeightMap() const = 0;
 	[[nodiscard]] virtual const graphics::FrameBuffer& GetFootprintFramebuffer() const = 0;
 
 	[[nodiscard]] virtual U16Extent2 GetIndexExtent() const = 0;

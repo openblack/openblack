@@ -53,7 +53,7 @@ struct L3DLoader final: BaseLoader<graphics::L3DMesh>
 	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;
 };
 
-struct Texture2DLoader final: BaseLoader<graphics::Texture2D>
+struct Texture2dLoader final: BaseLoader<graphics::Texture2d>
 {
 	struct FromPackTag
 	{

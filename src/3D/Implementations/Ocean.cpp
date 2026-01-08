@@ -17,7 +17,7 @@
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/RendererInterface.h"
-#include "Graphics/Texture2D.h"
+#include "Graphics/Texture2d.h"
 #include "Graphics/VertexBuffer.h"
 #include "Locator.h"
 #include "Ocean.h"

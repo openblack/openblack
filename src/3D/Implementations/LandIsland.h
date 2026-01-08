@@ -12,10 +12,10 @@
 #include <array>
 #include <filesystem>
 #include <memory>
-#include <string>
 #include <vector>
 
 #include "3D/LandIslandInterface.h"
+#include "Graphics/Texture2d.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
 #error "Locator interface implementations should only be included in Locator.cpp, use interface instead."
@@ -36,10 +36,6 @@ public:
 	[[nodiscard]] const LandBlock* GetBlock(const glm::u8vec2& coordinates) const;
 	[[nodiscard]] const lnd::LNDCell& GetCell(const glm::u16vec2& coordinates) const override;
 
-	// Debug
-	void DumpTextures() const override;
-	void DumpMaps() const override;
-
 private:
 	[[nodiscard]] std::vector<uint8_t> CreateHeightMap() const;
 	std::vector<LandBlock> _landBlocks;
@@ -53,9 +49,9 @@ public:
 	[[nodiscard]] const std::vector<LandBlock>& GetBlocks() const override { return _landBlocks; }
 	[[nodiscard]] const std::vector<lnd::LNDCountry>& GetCountries() const override { return _countries; }
 
-	[[nodiscard]] const graphics::Texture2D& GetAlbedoArray() const override { return *_materialArray; }
-	[[nodiscard]] const graphics::Texture2D& GetBump() const override { return *_textureBumpMap; }
-	[[nodiscard]] const graphics::Texture2D& GetHeightMap() const override { return *_heightMap; }
+	[[nodiscard]] const graphics::Texture2d& GetAlbedoArray() const override { return *_materialArray; }
+	[[nodiscard]] const graphics::Texture2d& GetBump() const override { return *_textureBumpMap; }
+	[[nodiscard]] const graphics::Texture2d& GetHeightMap() const override { return *_heightMap; }
 	[[nodiscard]] const graphics::FrameBuffer& GetFootprintFramebuffer() const override { return *_footprintFrameBuffer; }
 
 	[[nodiscard]] glm::mat4 GetOrthoView() const override { return _view; }
@@ -66,12 +62,12 @@ public:
 	uint8_t GetNoise(glm::u8vec2 pos) override;
 
 private:
-	std::unique_ptr<graphics::Texture2D> _materialArray;
-	std::unique_ptr<graphics::Texture2D> _countryLookup;
+	graphics::Texture2dUniquePtr _materialArray;
+	graphics::Texture2dUniquePtr _countryLookup;
 
-	std::unique_ptr<graphics::Texture2D> _heightMap;
-	std::unique_ptr<graphics::Texture2D> _textureNoiseMap;
-	std::unique_ptr<graphics::Texture2D> _textureBumpMap;
+	graphics::Texture2dUniquePtr _heightMap;
+	graphics::Texture2dUniquePtr _textureNoiseMap;
+	graphics::Texture2dUniquePtr _textureBumpMap;
 
 	std::unique_ptr<graphics::FrameBuffer> _footprintFrameBuffer;
 	glm::mat4 _proj;

@@ -33,7 +33,7 @@
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/RendererInterface.h"
 #include "Graphics/ShaderManager.h"
-#include "Graphics/Texture2D.h"
+#include "Graphics/Texture2d.h"
 #include "Graphics/VertexBuffer.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
@@ -227,7 +227,7 @@ void MeshViewer::Draw() noexcept
 			_selectedFootprint = static_cast<int>(mesh->GetFootprints().size()) - 1;
 		}
 		const auto& footprint = mesh->GetFootprints().at(_selectedFootprint);
-		ImGui::Image(toBgfx(footprint.texture->GetNativeHandle()), ImVec2(128, 128));
+		ImGui::Image(toBgfx(footprint.texture->handle), ImVec2(128, 128));
 		ImGui::TreePop();
 	}
 

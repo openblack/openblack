@@ -20,7 +20,8 @@
 #include "Common/Bitmap16B.h"
 #include "Common/StringUtils.h"
 #include "FileSystem/FileSystemInterface.h"
-#include "Graphics/Texture2D.h"
+#include "Graphics/RendererInterface.h"
+#include "Graphics/Texture2d.h"
 #include "Locator.h"
 
 using namespace openblack::filesystem;
@@ -62,12 +63,12 @@ Sky::Sky() noexcept
 		}
 	}
 
-	_texture = std::make_unique<Texture2D>("Sky");
-	_timeOfDay = 1.0f;
+	const auto* textureMem = bgfx::makeRef(_bitmaps.data(), static_cast<uint32_t>(_bitmaps.size() * sizeof(_bitmaps[0])));
+	_texture = Locator::rendererInterface::value().CreateTexture2d(
+	    "Sky", textureMem, {k_TextureResolution[0], k_TextureResolution[1]}, k_TextureResolution[2], TextureFormat::BGR5A1,
+	    Wrapping::ClampEdge, Filter::Linear);
 
-	_texture->Create(k_TextureResolution[0], k_TextureResolution[1], k_TextureResolution[2], TextureFormat::BGR5A1,
-	                 Wrapping::ClampEdge, Filter::Linear,
-	                 bgfx::makeRef(_bitmaps.data(), static_cast<uint32_t>(_bitmaps.size() * sizeof(_bitmaps[0]))));
+	_timeOfDay = 1.0f;
 }
 
 Sky::~Sky() noexcept = default;

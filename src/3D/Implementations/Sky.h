@@ -16,6 +16,7 @@
 
 #include "3D/SkyInterface.h"
 #include "Graphics/RenderPass.h"
+#include "Graphics/Texture2d.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
 #error "Locator interface implementations should only be included in Locator.cpp, use interface instead."
@@ -47,7 +48,7 @@ public:
 	/// 2 -> Day (max value)
 	[[nodiscard]] float GetCurrentSkyType() const noexcept override;
 	[[nodiscard]] graphics::L3DMesh& GetMesh() const noexcept override { return *_mesh; }
-	[[nodiscard]] graphics::Texture2D& GetTexture() const noexcept override { return *_texture; }
+	[[nodiscard]] graphics::Texture2d& GetTexture() const noexcept override { return *_texture; }
 
 private:
 	static constexpr std::array<std::string_view, 3> k_Alignments = {
@@ -67,7 +68,7 @@ private:
 	};
 
 	std::unique_ptr<graphics::L3DMesh> _mesh;
-	std::unique_ptr<graphics::Texture2D> _texture; // TODO(bwrsandman): put in a resource manager and store look-up
+	graphics::Texture2dUniquePtr _texture; // TODO(bwrsandman): put in a resource manager and store look-up
 
 	std::array<uint16_t, k_TextureResolution[0] * k_TextureResolution[1] * k_TextureResolution[2]> _bitmaps;
 

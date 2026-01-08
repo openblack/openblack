@@ -12,9 +12,11 @@
 #include <cstdint>
 
 #include <array>
+#include <functional>
+#include <memory>
 #include <string>
 
-#include <glm/ext/vector_uint2_sized.hpp>
+#include <glm/vec2.hpp>
 
 #include "GraphicsHandle.h"
 
@@ -151,39 +153,17 @@ enum class Wrapping : uint8_t
 	MirroredRepeat,
 };
 
-class FrameBuffer;
-
-class Texture2D
+struct Texture2d
 {
-public:
-	explicit Texture2D(std::string name);
-	~Texture2D();
-
-	// No copying or assignment
-	Texture2D(const Texture2D&) = delete;
-	Texture2D& operator=(const Texture2D&) = delete;
-
-	void Create(uint16_t width, uint16_t height, uint16_t layers, TextureFormat format, Wrapping wrapping, Filter filter,
-	            const void* memory) noexcept;
-
-	[[nodiscard]] const std::string& GetName() const { return _name; }
-	[[nodiscard]] const TextureHandle& GetNativeHandle() const { return _handle; }
-	[[nodiscard]] glm::u16vec2 GetResolution() const { return _resolution; }
-	[[nodiscard]] uint16_t GetLayerCount() const { return _numLayers; }
-	[[nodiscard]] TextureFormat GetFormat() const { return _format; }
-
-	void DumpTexture() const;
-
-protected:
-	std::string _name;
-	TextureHandle _handle;
-	glm::u16vec2 _resolution;
-	uint16_t _stride;
-	uint16_t _numLayers;
-	TextureFormat _format;
-	uint32_t _storageSize;
-
-	friend FrameBuffer;
+	const std::string name;
+	const TextureHandle handle;
+	const glm::u16vec2 resolution;
+	const uint16_t numLayers;
+	const uint16_t stride;
+	const TextureFormat format;
+	const uint32_t storageSize;
 };
+
+using Texture2dUniquePtr = std::unique_ptr<Texture2d, std::function<void(Texture2d*)>>;
 
 } // namespace openblack::graphics

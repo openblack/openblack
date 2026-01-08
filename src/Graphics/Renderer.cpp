@@ -8,6 +8,7 @@
  *******************************************************************************/
 
 #include <memory>
+#include <utility>
 #define LOCATOR_IMPLEMENTATIONS
 
 #include <cstdint>
@@ -328,11 +329,11 @@ graphics::ShaderManager& Renderer::GetShaderManager() const noexcept
 	return *_shaderManager;
 }
 
-const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& meshSkins)
+const Texture2d* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, Texture2dUniquePtr>& meshSkins)
 {
 	const auto& textureManager = Locator::resources::value().GetTextures();
 
-	const Texture2D* texture = nullptr;
+	const Texture2d* texture = nullptr;
 
 	if (skinID != 0xFFFFFFFF)
 	{
@@ -378,8 +379,8 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 
 		const bool hasNext = std::next(it) != primitives.end();
 
-		const Texture2D* texture = GetTexture(prim.skinID, skins);
-		const Texture2D* nextTexture = !hasNext ? nullptr : GetTexture(std::next(it)->skinID, skins);
+		const auto* texture = GetTexture(prim.skinID, skins);
+		const auto* nextTexture = !hasNext ? nullptr : GetTexture(std::next(it)->skinID, skins);
 
 		const bool primitivePreserveState = texture != nullptr && texture == nextTexture && (preserveState || hasNext);
 
@@ -946,6 +947,50 @@ IndexBufferUniquePtr Renderer::CreateIndexBuffer(std::string name, const void* m
 	return {new IndexBuffer(name, count, type, handle), DestroyIndexBuffer};
 }
 
+Texture2dUniquePtr Renderer::CreateTexture2d(std::string name, const void* memory, glm::u16vec2 resolution, uint16_t layers,
+                                             TextureFormat format, Wrapping wrapping, Filter filter) noexcept
+{
+	uint64_t flags = BGFX_TEXTURE_NONE;
+	switch (wrapping)
+	{
+	case Wrapping::ClampEdge:
+		flags |= BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
+		break;
+	case Wrapping::ClampBorder:
+		flags |= BGFX_SAMPLER_U_BORDER | BGFX_SAMPLER_V_BORDER;
+		break;
+	case Wrapping::Repeat:
+		break;
+	case Wrapping::MirroredRepeat:
+		flags |= BGFX_SAMPLER_U_MIRROR | BGFX_SAMPLER_V_MIRROR;
+		break;
+	}
+	switch (filter)
+	{
+	case Filter::Nearest:
+		flags |= BGFX_SAMPLER_POINT;
+		break;
+	case Filter::Linear:
+		break;
+	default:
+		assert(false);
+		std::unreachable();
+	}
+	auto handle = fromBgfx(bgfx::createTexture2D(resolution.x, resolution.y, false, layers, toBgfx(format), flags,
+	                                             reinterpret_cast<const bgfx::Memory*>(memory)));
+	bgfx::setName(toBgfx(handle), name.c_str());
+	bgfx::frame();
+
+	bgfx::TextureInfo textureInfo;
+	bgfx::calcTextureSize(textureInfo, resolution.x, resolution.y, 1, false, false, layers, toBgfx(format));
+
+	bgfx::frame();
+
+	return {new Texture2d(name, handle, resolution, textureInfo.numLayers, textureInfo.width * textureInfo.bitsPerPixel / 8,
+	                      fromBgfx(textureInfo.format), textureInfo.storageSize),
+	        DestroyTexture2d};
+}
+
 void Renderer::DestroyVertexBuffer(VertexBuffer* buffer)
 {
 	if (bgfx::isValid(toBgfx(buffer->handle)))
@@ -963,6 +1008,14 @@ void Renderer::DestroyIndexBuffer(IndexBuffer* buffer)
 	if (bgfx::isValid(toBgfx(buffer->handle)))
 	{
 		bgfx::destroy(toBgfx(buffer->handle));
+	}
+}
+
+void Renderer::DestroyTexture2d(Texture2d* texture)
+{
+	if (bgfx::isValid(toBgfx(texture->handle)))
+	{
+		bgfx::destroy(toBgfx(texture->handle));
 	}
 }
 

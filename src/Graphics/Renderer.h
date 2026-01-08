@@ -68,7 +68,9 @@ public:
 	                                                       VertexDecl decl) noexcept final;
 	[[nodiscard]] IndexBufferUniquePtr CreateIndexBuffer(std::string name, const void* memory,
 	                                                     IndexBuffer::Type type) noexcept final;
-
+	[[nodiscard]] Texture2dUniquePtr CreateTexture2d(std::string name, const void* memory, glm::u16vec2 resolution,
+	                                                 uint16_t layers, TextureFormat format, Wrapping wrapping,
+	                                                 Filter filter) noexcept final;
 	void Bind(const VertexBuffer& buffer) const noexcept final;
 	void Bind(const IndexBuffer& buffer, uint32_t count, uint32_t startIndex) const noexcept final;
 
@@ -79,6 +81,7 @@ private:
 
 	static void DestroyVertexBuffer(VertexBuffer* buffer);
 	static void DestroyIndexBuffer(IndexBuffer* buffer);
+	static void DestroyTexture2d(Texture2d* texture);
 
 	std::unique_ptr<ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;

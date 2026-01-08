@@ -15,7 +15,7 @@
 namespace openblack::resources
 {
 using MeshManager = ResourceManager<L3DLoader>;
-using TextureManager = ResourceManager<Texture2DLoader>;
+using TextureManager = ResourceManager<Texture2dLoader>;
 using AnimationManager = ResourceManager<L3DAnimLoader>;
 using LevelManager = ResourceManager<LevelLoader>;
 using CreatureMindManager = ResourceManager<CreatureMindLoader>;
