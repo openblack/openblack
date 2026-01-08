@@ -16,7 +16,7 @@
 #include "ECS/Components/Sprite.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
-#include "Graphics/Texture2D.h"
+#include "Graphics/Texture2d.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -34,8 +34,7 @@ std::array<entt::entity, 2> GlowArchetype::Create(const LightEmitter& emitter, c
 	auto glowEntity = registry.Create();
 	{
 		registry.Assign<ecs::components::TempleInteriorPart>(glowEntity, room);
-		registry.Assign<Sprite>(glowEntity, texture->GetNativeHandle(), glm::vec2 {.75f, .25f}, extent,
-		                        emitter.glow.backgroundColour);
+		registry.Assign<Sprite>(glowEntity, texture->handle, glm::vec2 {.75f, .25f}, extent, emitter.glow.backgroundColour);
 		registry.Assign<ecs::components::Transform>(glowEntity, emitter.glow.position, glm::mat3(1.0f),
 		                                            glm::vec3(emitter.glow.backgroundScale));
 	}
@@ -43,8 +42,7 @@ std::array<entt::entity, 2> GlowArchetype::Create(const LightEmitter& emitter, c
 	auto shineEntity = registry.Create();
 	{
 		registry.Assign<ecs::components::TempleInteriorPart>(shineEntity, room);
-		registry.Assign<Sprite>(shineEntity, texture->GetNativeHandle(), glm::vec2 {.75f, .25f}, extent,
-		                        emitter.glow.brightSpotColour);
+		registry.Assign<Sprite>(shineEntity, texture->handle, glm::vec2 {.75f, .25f}, extent, emitter.glow.brightSpotColour);
 		registry.Assign<ecs::components::Transform>(shineEntity, emitter.glow.position, glm::mat3(1.0f),
 		                                            glm::vec3(emitter.glow.brightSpotScale));
 	}

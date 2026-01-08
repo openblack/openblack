@@ -17,7 +17,7 @@
 #include <bgfx/bgfx.h>
 
 #include "GraphicsHandle.h"
-#include "Texture2D.h"
+#include "Texture2d.h"
 
 namespace openblack::graphics
 {

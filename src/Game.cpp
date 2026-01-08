@@ -599,7 +599,7 @@ bool Game::Initialize() noexcept
 	const auto& textures = pack.GetTextures();
 	for (auto const& [name, g3dTexture] : textures)
 	{
-		textureManager.Load(g3dTexture.header.id, resources::Texture2DLoader::FromPackTag {}, name, g3dTexture);
+		textureManager.Load(g3dTexture.header.id, resources::Texture2dLoader::FromPackTag {}, name, g3dTexture);
 	}
 
 	pack::PackFile animationPack;
@@ -780,7 +780,7 @@ bool Game::Initialize() noexcept
 			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading raw texture: {}", f.stem().string());
 			try
 			{
-				textureManager.Load(fmt::format("raw/{}", f.stem().string()), resources::Texture2DLoader::FromDiskTag {}, f);
+				textureManager.Load(fmt::format("raw/{}", f.stem().string()), resources::Texture2dLoader::FromDiskTag {}, f);
 			}
 			catch (std::runtime_error& err)
 			{

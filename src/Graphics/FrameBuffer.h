@@ -16,7 +16,7 @@
 
 #include "GraphicsHandle.h"
 #include "RenderPass.h"
-#include "Texture2D.h"
+#include "Texture2d.h"
 
 namespace openblack::graphics
 {

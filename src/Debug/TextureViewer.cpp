@@ -11,7 +11,7 @@
 
 #include "Debug/ImGuiUtils.h"
 #include "Graphics/GraphicsHandleBgfx.h"
-#include "Graphics/Texture2D.h"
+#include "Graphics/Texture2d.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -35,18 +35,18 @@ void TextureViewer::Draw() noexcept
 	ImGui::BeginChild("texturesSelect", ImVec2(textureSize.x - 5, textureSize.y - ImGui::GetTextLineHeight() - 5), true);
 	uint32_t displayedTexture = 0;
 
-	textures.Each([this, &displayedTexture](entt::id_type id, const graphics::Texture2D& texture) {
-		if (_filter.PassFilter(texture.GetName().c_str()))
+	textures.Each([this, &displayedTexture](entt::id_type id, const graphics::Texture2d& texture) {
+		if (_filter.PassFilter(texture.name.c_str()))
 		{
 			displayedTexture++;
 
-			if (ImGui::Selectable(texture.GetName().c_str(), id == _selectedTexture))
+			if (ImGui::Selectable(texture.name.c_str(), id == _selectedTexture))
 			{
 				_selectedTexture = id;
 			}
 			if (ImGui::IsItemHovered())
 			{
-				ImGui::SetTooltip("%s", texture.GetName().c_str());
+				ImGui::SetTooltip("%s", texture.name.c_str());
 			}
 		}
 	});
@@ -62,10 +62,10 @@ void TextureViewer::Draw() noexcept
 	{
 		auto texture = textures.Handle(_selectedTexture);
 
-		const auto format = texture->GetFormat();
+		const auto format = texture->format;
 		const auto* formatStr = graphics::k_TextureFormatStrings.at(static_cast<size_t>(format));
-		ImGui::Text("width: %u, height: %u, format: %s", texture->GetResolution().x, texture->GetResolution().y, formatStr);
-		ImGui::Image(toBgfx(texture->GetNativeHandle()), ImVec2(512, 512));
+		ImGui::Text("width: %u, height: %u, format: %s", texture->resolution.x, texture->resolution.y, formatStr);
+		ImGui::Image(toBgfx(texture->handle), ImVec2(512, 512));
 	}
 
 	ImGui::EndChild();

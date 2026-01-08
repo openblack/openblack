@@ -51,7 +51,7 @@ void LandIsland::Draw() noexcept
 		const auto& texture = landIsland.GetHeightMap();
 		ImGui::Text("Resolution: %ux%u", dim.x, dim.y);
 		const float scaling = 512.0f / static_cast<float>(dim.x);
-		ImGui::Image(toBgfx(texture.GetNativeHandle()), ImVec2(dim.x * scaling, dim.y * scaling));
+		ImGui::Image(toBgfx(texture.handle), ImVec2(dim.x * scaling, dim.y * scaling));
 		ImGui::TreePop();
 	}
 
@@ -65,18 +65,6 @@ void LandIsland::Draw() noexcept
 		const float scaling = 512.0f / static_cast<float>(width);
 		ImGui::Image(toBgfx(frameBuffer.GetColorAttachment()), ImVec2(width * scaling, height * scaling));
 		ImGui::TreePop();
-	}
-
-	ImGui::Separator();
-
-	if (ImGui::Button("Dump Textures"))
-	{
-		landIsland.DumpTextures();
-	}
-
-	if (ImGui::Button("Dump Heightmap"))
-	{
-		landIsland.DumpMaps();
 	}
 }
 

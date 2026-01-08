@@ -37,10 +37,6 @@ public:
 		throw std::runtime_error("Cannot get landscape before any are loaded");
 	}
 
-	void DumpTextures() const override { throw std::runtime_error("Cannot get landscape before any are loaded"); }
-
-	void DumpMaps() const override { throw std::runtime_error("Cannot get landscape before any are loaded"); }
-
 	[[nodiscard]] std::vector<LandBlock>& GetBlocks() override
 	{
 		throw std::runtime_error("Cannot get landscape before any are loaded");
@@ -56,17 +52,17 @@ public:
 		throw std::runtime_error("Cannot get landscape before any are loaded");
 	}
 
-	[[nodiscard]] const graphics::Texture2D& GetAlbedoArray() const override
+	[[nodiscard]] const graphics::Texture2d& GetAlbedoArray() const override
 	{
 		throw std::runtime_error("Cannot get landscape before any are loaded");
 	}
 
-	[[nodiscard]] const graphics::Texture2D& GetBump() const override
+	[[nodiscard]] const graphics::Texture2d& GetBump() const override
 	{
 		throw std::runtime_error("Cannot get landscape before any are loaded");
 	}
 
-	[[nodiscard]] const graphics::Texture2D& GetHeightMap() const override
+	[[nodiscard]] const graphics::Texture2d& GetHeightMap() const override
 	{
 		throw std::runtime_error("Cannot get landscape before any are loaded");
 	}

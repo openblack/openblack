@@ -15,6 +15,7 @@
 #include <BulletCollision/CollisionShapes/btConvexHullShape.h>
 #include <L3DFile.h>
 #include <bgfx/bgfx.h>
+#include <glm/ext/vector_uint2_sized.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 #include <glm/matrix.hpp>
@@ -23,7 +24,7 @@
 #include "3D/L3DSubMesh.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/RendererInterface.h"
-#include "Graphics/Texture2D.h"
+#include "Graphics/Texture2d.h"
 #include "Graphics/VertexBuffer.h"
 #include "Locator.h"
 
@@ -40,16 +41,18 @@ L3DMesh::~L3DMesh() noexcept = default;
 
 bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 {
+	auto& renderer = Locator::rendererInterface::value();
 	bool result = true;
 
 	_flags = static_cast<l3d::L3DMeshFlags>(l3d.GetHeader().flags);
 	_nameData = l3d.GetNameData();
+	const auto resolution = glm::u16vec2(l3d::L3DTexture::k_Width, l3d::L3DTexture::k_Height);
 	for (const auto& skin : l3d.GetSkins())
 	{
-		_skins[skin.id] = std::make_unique<Texture2D>(_debugName.c_str());
-		_skins[skin.id]->Create(
-		    l3d::L3DTexture::k_Width, l3d::L3DTexture::k_Height, 1, TextureFormat::BGRA4, Wrapping::Repeat, Filter::Linear,
-		    bgfx::makeRef(skin.texels.data(), static_cast<uint32_t>(skin.texels.size() * sizeof(skin.texels[0]))));
+		const auto* skinMem =
+		    bgfx::makeRef(skin.texels.data(), static_cast<uint32_t>(skin.texels.size() * sizeof(skin.texels[0])));
+		_skins[skin.id] = renderer.CreateTexture2d(_debugName, skinMem, resolution, 1, TextureFormat::BGRA4, Wrapping::Repeat,
+		                                           Filter::Linear);
 	}
 
 	if (HasDoorPosition() && !l3d.GetExtraPoints().empty())
@@ -70,16 +73,17 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 		decl.emplace_back(VertexAttrib::Attribute::TexCoord0, static_cast<uint8_t>(2), VertexAttrib::Type::Float);
 
 		const auto& footprint = *l3d.GetFootprint();
+		const auto resolution =
+		    glm::u16vec2(static_cast<uint16_t>(footprint.header.width), static_cast<uint16_t>(footprint.header.height));
 
 		// TODO (#749) use use std::views::enumerate
 		for (uint32_t i = 1; const auto& entry : footprint.entries)
 		{
-			auto texture = std::make_unique<Texture2D>("footprints/texture/" + _debugName + "/" + std::to_string(i));
-			++i;
-			texture->Create(
-			    static_cast<uint16_t>(footprint.header.width), static_cast<uint16_t>(footprint.header.height), 1,
-			    graphics::TextureFormat::BGRA4, Wrapping::ClampEdge, Filter::Linear,
-			    bgfx::makeRef(entry.pixels.data(), static_cast<uint32_t>(entry.pixels.size() * sizeof(entry.pixels[0]))));
+			const auto* textureMem =
+			    bgfx::makeRef(entry.pixels.data(), static_cast<uint32_t>(entry.pixels.size() * sizeof(entry.pixels[0])));
+			auto texture =
+			    renderer.CreateTexture2d("footprints/texture/" + _debugName + "/" + std::to_string(i), textureMem, resolution,
+			                             1, graphics::TextureFormat::BGRA4, Wrapping::ClampEdge, Filter::Linear);
 
 			const bgfx::Memory* verticesMem =
 			    bgfx::alloc(static_cast<uint32_t>(sizeof(FootprintVertex) * entry.triangles.size() * 3));

@@ -34,7 +34,7 @@ public:
 	ShaderProgram(const std::string& name, ShaderHandle vertexShader, ShaderHandle fragmentShader);
 	~ShaderProgram();
 
-	void SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture) const;
+	void SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2d& texture) const;
 	void SetTextureSampler(const char* samplerName, uint8_t bindPoint, const graphics::TextureHandle& texture) const;
 	void SetUniformValue(const char* uniformName, const void* value) const;
 

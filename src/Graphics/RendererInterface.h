@@ -18,6 +18,7 @@
 #include "IndexBuffer.h"
 #include "InstanceDesc.h"
 #include "RenderPass.h"
+#include "Texture2d.h"
 #include "VertexBuffer.h"
 
 #include "../EngineConfig.h"
@@ -105,6 +106,9 @@ public:
 	                                                               VertexDecl decl) noexcept = 0;
 	[[nodiscard]] virtual IndexBufferUniquePtr CreateIndexBuffer(std::string name, const void* memory,
 	                                                             IndexBuffer::Type type) noexcept = 0;
+	[[nodiscard]] virtual Texture2dUniquePtr CreateTexture2d(std::string name, const void* memory, glm::u16vec2 resolution,
+	                                                         uint16_t layers, TextureFormat format, Wrapping wrapping,
+	                                                         Filter filter) noexcept = 0;
 
 	virtual void Bind(const VertexBuffer& buffer) const noexcept = 0;
 	virtual void Bind(const IndexBuffer& buffer, uint32_t count, uint32_t startIndex) const noexcept = 0;

@@ -21,6 +21,7 @@
 #include "AxisAlignedBoundingBox.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/ShaderProgram.h"
+#include "Graphics/Texture2d.h"
 
 class btConvexShape;
 
@@ -85,7 +86,7 @@ class L3DMesh
 public:
 	struct Footprint
 	{
-		std::unique_ptr<graphics::Texture2D> texture;
+		Texture2dUniquePtr texture;
 		std::unique_ptr<graphics::Mesh> mesh;
 	};
 	explicit L3DMesh(std::string debugName = "") noexcept;
@@ -98,7 +99,7 @@ public:
 
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return static_cast<uint8_t>(_subMeshes.size()); }
 	[[nodiscard]] const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }
-	[[nodiscard]] const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& GetSkins() const { return _skins; }
+	[[nodiscard]] const std::unordered_map<SkinId, graphics::Texture2dUniquePtr>& GetSkins() const { return _skins; }
 	[[nodiscard]] const std::vector<Footprint>& GetFootprints() const { return _footprints; }
 	[[nodiscard]] const std::vector<uint32_t>& GetBoneParents() const { return _bonesParents; }
 	[[nodiscard]] const std::vector<glm::mat4>& GetBoneMatrices() const { return _bonesDefaultMatrices; }
@@ -114,7 +115,7 @@ private:
 	l3d::L3DMeshFlags _flags;
 	std::string _debugName;
 
-	std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>> _skins;
+	std::unordered_map<SkinId, graphics::Texture2dUniquePtr> _skins;
 	std::vector<Footprint> _footprints; ///< If ContainsLandscapeFeature() is true
 	std::vector<std::unique_ptr<L3DSubMesh>> _subMeshes;
 	std::vector<uint32_t> _bonesParents;
