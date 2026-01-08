@@ -31,7 +31,7 @@ public:
 
 	void Bind(RenderPass viewId) const;
 
-	[[nodiscard]] const Texture2D& GetColorAttachment() const { return _colorAttachment; }
+	[[nodiscard]] const TextureHandle& GetColorAttachment() const { return _colorAttachment; }
 	void GetSize(uint16_t& width, uint16_t& height) const { width = _width, height = _height; }
 
 private:
@@ -43,8 +43,8 @@ private:
 	TextureFormat _colorFormat;
 	std::optional<TextureFormat> _depthStencilFormat;
 
-	Texture2D _colorAttachment;
-	Texture2D _depthStencilAttachment;
+	TextureHandle _colorAttachment;
+	TextureHandle _depthStencilAttachment;
 };
 
 } // namespace openblack::graphics
