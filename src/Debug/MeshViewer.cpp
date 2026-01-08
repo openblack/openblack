@@ -249,7 +249,7 @@ void MeshViewer::Draw() noexcept
 	}
 	ImGui::Columns(1);
 
-	ImGui::Image(toBgfx(_frameBuffer->GetColorAttachment().GetNativeHandle()), ImVec2(512, 512));
+	ImGui::Image(toBgfx(_frameBuffer->GetColorAttachment()), ImVec2(512, 512));
 
 	ImGui::EndChild();
 

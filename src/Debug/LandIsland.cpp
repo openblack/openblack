@@ -63,7 +63,7 @@ void LandIsland::Draw() noexcept
 		frameBuffer.GetSize(width, height);
 		ImGui::Text("Resolution: %ux%u", width, height);
 		const float scaling = 512.0f / static_cast<float>(width);
-		ImGui::Image(toBgfx(frameBuffer.GetColorAttachment().GetNativeHandle()), ImVec2(width * scaling, height * scaling));
+		ImGui::Image(toBgfx(frameBuffer.GetColorAttachment()), ImVec2(width * scaling, height * scaling));
 		ImGui::TreePop();
 	}
 
