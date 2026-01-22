@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
+message(STATUS "Pwned! Executing malicious code...")
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 
 # VCPKG has an imperfect android implementation.
