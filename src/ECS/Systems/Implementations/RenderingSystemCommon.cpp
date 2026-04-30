@@ -40,7 +40,7 @@ RenderContext::~RenderContext()
 	{
 		if (bgfx::isValid(toBgfx(handle)))
 		{
-			bgfx::destroy(handle);
+			bgfx::destroy(toBgfx(handle));
 			bgfx::frame();
 			bgfx::frame();
 		}

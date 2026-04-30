@@ -72,7 +72,7 @@ struct RenderContext
 	graphics::DynamicVertexBufferHandle instanceUniformBuffer;
 
 	/// Dynamic buffer for tree instance data (contains both matrix and sway params)
-	bgfx::DynamicVertexBufferHandle treeInstanceUniformBuffer;
+	graphics::DynamicVertexBufferHandle treeInstanceUniformBuffer;
 
 	/// Kept for backward compatibility, will be removed once shader is updated
 	std::vector<glm::mat4> treeInstanceUniforms;

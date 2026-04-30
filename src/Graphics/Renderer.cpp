@@ -498,7 +498,7 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 			const auto& footprint = mesh->GetFootprints()[0];
 			footprintShaderInstanced->SetTextureSampler("s_footprint", 0, *footprint.texture);
 			footprint.mesh->GetVertexBuffer().Bind();
-			bgfx::setInstanceDataBuffer(renderCtx.treeInstanceUniformBuffer, placers.offset, placers.count);
+			bgfx::setInstanceDataBuffer(toBgfx(renderCtx.treeInstanceUniformBuffer), placers.offset, placers.count);
 			const uint64_t state = 0u                       //
 			                       | BGFX_STATE_WRITE_RGB   //
 			                       | BGFX_STATE_WRITE_A     //
@@ -506,7 +506,7 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 			                       | BGFX_STATE_CULL_CW     //
 			                       | BGFX_STATE_MSAA;
 			bgfx::setState(state);
-			bgfx::submit(static_cast<bgfx::ViewId>(viewId), footprintShaderInstanced->GetRawHandle());
+			bgfx::submit(static_cast<bgfx::ViewId>(viewId), toBgfx(footprintShaderInstanced->GetRawHandle()));
 		}
 	}
 }
@@ -768,9 +768,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				for (const auto& [meshId, placers] : renderCtx.treeInstancedDrawDescs)
 				{
 					auto mesh = meshManager.Handle(meshId);
-					submitDesc.instanceBuffer = &renderCtx.treeInstanceUniformBuffer;
-					submitDesc.instanceStart = placers.offset;
-					submitDesc.instanceCount = placers.count;
+					submitDesc.instanceDesc = std::make_unique<graphics::InstanceDesc>(renderCtx.treeInstanceUniformBuffer,
+					                                                                   placers.offset, placers.count);
 					const static auto identity = glm::mat4(1.0f);
 					submitDesc.modelMatrices = &identity;
 					submitDesc.matrixCount = 1;
@@ -786,9 +785,9 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					const auto boundBoxOffset = static_cast<uint32_t>(renderCtx.treeInstanceData.size() / 2);
 					const auto boundBoxCount = static_cast<uint32_t>(renderCtx.treeInstanceData.size() / 2);
 					renderCtx.boundingBox->GetVertexBuffer().Bind();
-					bgfx::setInstanceDataBuffer(renderCtx.treeInstanceUniformBuffer, boundBoxOffset, boundBoxCount);
+					bgfx::setInstanceDataBuffer(toBgfx(renderCtx.treeInstanceUniformBuffer), boundBoxOffset, boundBoxCount);
 					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
-					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShaderInstanced->GetRawHandle());
+					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(debugShaderInstanced->GetRawHandle()));
 				}
 			}
 		}
