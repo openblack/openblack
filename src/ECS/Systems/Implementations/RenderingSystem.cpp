@@ -125,9 +125,9 @@ void RenderingSystem::PrepareTreeDrawDescs(bool drawBoundingBox)
 	// Create tree instance buffer if needed
 	if (_renderContext.treeInstanceData.size() < treeInstanceCount)
 	{
-		if (bgfx::isValid(_renderContext.treeInstanceUniformBuffer))
+		if (bgfx::isValid(toBgfx(_renderContext.treeInstanceUniformBuffer)))
 		{
-			bgfx::destroy(_renderContext.treeInstanceUniformBuffer);
+			bgfx::destroy(toBgfx(_renderContext.treeInstanceUniformBuffer));
 		}
 		bgfx::VertexLayout layout;
 		layout.begin()
@@ -137,7 +137,8 @@ void RenderingSystem::PrepareTreeDrawDescs(bool drawBoundingBox)
 		    .add(bgfx::Attrib::TexCoord4, 4, bgfx::AttribType::Float) // i_data3 (matrix row 3)
 		    .add(bgfx::Attrib::TexCoord3, 4, bgfx::AttribType::Float) // i_data4 (sway params)
 		    .end();
-		_renderContext.treeInstanceUniformBuffer = bgfx::createDynamicVertexBuffer(treeInstanceCount, layout);
+		_renderContext.treeInstanceUniformBuffer =
+		    graphics::fromBgfx(bgfx::createDynamicVertexBuffer(treeInstanceCount, layout));
 		_renderContext.treeInstanceData.resize(treeInstanceCount);
 	}
 
@@ -235,6 +236,7 @@ void RenderingSystem::PrepareTreeDrawUploadUniforms(bool drawBoundingBox)
 		    static_cast<uint32_t>(_renderContext.treeInstanceData.size() * (sizeof(glm::mat4) + sizeof(glm::vec4)));
 
 		// Update the buffer with the combined data
-		bgfx::update(_renderContext.treeInstanceUniformBuffer, 0, bgfx::makeRef(_renderContext.treeInstanceData.data(), size));
+		bgfx::update(toBgfx(_renderContext.treeInstanceUniformBuffer), 0,
+		             bgfx::makeRef(_renderContext.treeInstanceData.data(), size));
 	}
 }
