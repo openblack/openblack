@@ -798,23 +798,9 @@ struct GTotemStatueInfo: GMultiMapFixedInfo
 
 struct CreatureDesireForType
 {
-	float field0x0;
-	float field0x4;
-	float field0x8;
-	float field0xc;
-	float field0x10;
-	float field0x14;
-	float field0x18;
-	float field0x1c;
-	float field0x20;
-	float field0x24;
-	float field0x28;
-	float field0x2c;
-	float field0x30;
-	float field0x34;
-	float field0x38;
-	float field0x3c;
-	float field0x40;
+	// The parsed Black & White 1.20 structure stores 17 contiguous floats in CreatureType's on-disk order,
+	// from Cow through GiantApe.
+	std::array<float, static_cast<size_t>(CreatureType::_COUNT) - 1> byCreatureType;
 };
 
 struct GVortexInfo

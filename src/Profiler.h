@@ -27,6 +27,7 @@ public:
 		PhysicsUpdate,
 		PathfindingUpdate,
 		LivingActionUpdate,
+		CreatureMindUpdate,
 		SdlInput,
 		UpdateUniforms,
 		UpdateEntities,
@@ -57,6 +58,7 @@ public:
 	    "Physics Update",       //
 	    "Pathfinding Update",   //
 	    "Living Action Update", //
+	    "Creature Mind Update", //
 	    "SDL Input",            //
 	    "Update Uniforms",      //
 	    "Entities",             //

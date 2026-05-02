@@ -13,6 +13,7 @@
 
 #include "3D/CreatureBody.h"
 #include "ECS/Components/Creature.h"
+#include "ECS/Components/CreatureState.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
@@ -33,5 +34,6 @@ entt::entity CreatureArchetype::Create(const glm::vec3& position, PlayerNames pl
 	registry.Assign<Creature>(entity, playerName, creatureType, creatureMindId);
 	registry.Assign<Mesh>(entity, meshId);
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(yAngleRadians), glm::vec3(scale));
+	registry.Assign<CreatureState>(entity);
 	return entity;
 }

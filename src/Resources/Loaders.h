@@ -10,6 +10,7 @@
 #pragma once
 
 #include <queue>
+#include <string_view>
 
 #include <PackFile.h>
 
@@ -76,7 +77,9 @@ struct LevelLoader final: BaseLoader<Level>
 
 struct CreatureMindLoader final: BaseLoader<creature::CreatureMind>
 {
-	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& creatureMindPath) const;
+	[[nodiscard]] static std::string Identifier(std::string_view creatureMind, CreatureType creatureType);
+	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& creatureMindPath,
+	                                     CreatureType creatureType) const;
 };
 
 struct SoundLoader final: BaseLoader<audio::Sound>

@@ -39,6 +39,7 @@
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/CameraBookmarkSystemInterface.h"
+#include "ECS/Systems/CreatureMindSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
@@ -265,6 +266,10 @@ bool Game::GameLogicLoop() noexcept
 	{
 		auto actions = profiler.BeginScoped(Profiler::Stage::LivingActionUpdate);
 		Locator::livingActionSystem::value().Update();
+	}
+	{
+		auto creatureMind = profiler.BeginScoped(Profiler::Stage::CreatureMindUpdate);
+		Locator::creatureMindSystem::value().Update();
 	}
 
 	auto& lhvm = Locator::vm::value();

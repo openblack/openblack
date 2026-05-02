@@ -546,7 +546,9 @@ void FeatureScriptCommands::CreateCreatureFromFile(const std::string& playerName
 	auto& resources = Locator::resources::value();
 	auto& creatureMindManager = resources.GetCreatureMinds();
 	auto creatureMindPath = Locator::filesystem::value().GetPath<filesystem::Path::CreatureMind>(true) / creatureMind;
-	auto loadResult = creatureMindManager.Load(creatureMind, resources::CreatureMindLoader::FromDiskTag {}, creatureMindPath);
+	const auto creatureMindResource = resources::CreatureMindLoader::Identifier(creatureMind, creatureType);
+	auto loadResult = creatureMindManager.Load(creatureMindResource, resources::CreatureMindLoader::FromDiskTag {},
+	                                           creatureMindPath, creatureType);
 	auto creatureMindId = loadResult.first->first;
 	CreatureArchetype::Create(position, static_cast<PlayerNames>(playerType), creatureType, creatureMindId, yAngleRadians,
 	                          scale);
