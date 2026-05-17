@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -10,6 +10,7 @@
 #include "MeshViewer.h"
 
 #include <SDL_events.h>
+#include <bgfx/bgfx.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -28,13 +29,13 @@
 #include "ECS/Components/Mesh.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/HandSystemInterface.h"
+#include "Graphics/GraphicsHandleBgfx.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/RendererInterface.h"
 #include "Graphics/ShaderManager.h"
 #include "Graphics/Texture2D.h"
 #include "Graphics/VertexBuffer.h"
 #include "Locator.h"
-#include "Resources/MeshId.h"
 #include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
@@ -42,12 +43,15 @@ using namespace openblack::debug::gui;
 
 MeshViewer::MeshViewer() noexcept
     : Window("MeshPack Viewer", ImVec2(950.0f, 780.0f))
-    , _selectedMesh(resources::MeshIdToResourceId(MeshId::Dummy))
+    , _selectedMesh(resources::HashIdentifier(MeshId::Dummy))
     , _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f)))
     , _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", static_cast<uint16_t>(512), static_cast<uint16_t>(512),
-                                                           graphics::Format::RGBA8, graphics::Format::Depth24Stencil8))
+                                                           graphics::TextureFormat::RGBA8,
+                                                           graphics::TextureFormat::Depth24Stencil8))
 {
 }
+
+MeshViewer::~MeshViewer() noexcept = default;
 
 void MeshViewer::Draw() noexcept
 {
@@ -68,7 +72,7 @@ void MeshViewer::Draw() noexcept
 	ImGui::BeginChild("meshes", ImVec2(fontSize * 15.0f, 0));
 	auto meshSize = ImGui::GetItemRectSize();
 	ImGui::BeginChild("meshesSelect", ImVec2(meshSize.x - 5, meshSize.y - ImGui::GetTextLineHeight() - 5),
-	                  ImGuiChildFlags_Border);
+	                  ImGuiChildFlags_Borders);
 	uint32_t displayedMeshes = 0;
 
 	meshes.Each([this, &displayedMeshes](entt::id_type id, const graphics::L3DMesh& mesh) {
@@ -223,7 +227,7 @@ void MeshViewer::Draw() noexcept
 			_selectedFootprint = static_cast<int>(mesh->GetFootprints().size()) - 1;
 		}
 		const auto& footprint = mesh->GetFootprints().at(_selectedFootprint);
-		ImGui::Image(footprint.texture->GetNativeHandle(), ImVec2(128, 128));
+		ImGui::Image(toBgfx(footprint.texture->GetNativeHandle()), ImVec2(128, 128));
 		ImGui::TreePop();
 	}
 
@@ -245,7 +249,7 @@ void MeshViewer::Draw() noexcept
 	}
 	ImGui::Columns(1);
 
-	ImGui::Image(_frameBuffer->GetColorAttachment().GetNativeHandle(), ImVec2(512, 512));
+	ImGui::Image(toBgfx(_frameBuffer->GetColorAttachment().GetNativeHandle()), ImVec2(512, 512));
 
 	ImGui::EndChild();
 
@@ -254,7 +258,7 @@ void MeshViewer::Draw() noexcept
 	ImGui::BeginChild("animations", ImVec2(fontSize * 15.0f, 0));
 	auto animationSize = ImGui::GetItemRectSize();
 	ImGui::BeginChild("animationSelect", ImVec2(animationSize.x - 5, animationSize.y - ImGui::GetTextLineHeight() - 5),
-	                  ImGuiChildFlags_Border);
+	                  ImGuiChildFlags_Borders);
 	uint32_t displayedAnimations = 0;
 	if (_matchBones && _selectedAnimation.has_value() &&
 	    animations.Handle(*_selectedAnimation)->GetBoneMatrices(0).size() != mesh->GetBoneMatrices().size())
@@ -363,7 +367,7 @@ void MeshViewer::Update() noexcept
 			bgfx::setTransform(glm::value_ptr(model));
 			_boundingBox->GetVertexBuffer().Bind();
 			bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES, 0);
-			bgfx::submit(static_cast<bgfx::ViewId>(k_ViewId), debugShader->GetRawHandle());
+			bgfx::submit(static_cast<bgfx::ViewId>(k_ViewId), toBgfx(debugShader->GetRawHandle()));
 		}
 	}
 

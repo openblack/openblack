@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -15,6 +15,7 @@
 
 #include <GLWFile.h>
 #include <PackFile.h>
+#include <bgfx/bgfx.h>
 #include <spdlog/spdlog.h>
 
 #include "3D/L3DMesh.h"
@@ -80,18 +81,18 @@ Texture2DLoader::result_type Texture2DLoader::operator()(FromPackTag, const std:
 	// - always dxt1 or dxt3
 	// - all are compressed
 	auto texture2D = std::make_shared<graphics::Texture2D>(name);
-	graphics::Format internalFormat;
+	graphics::TextureFormat internalFormat;
 	if (g3dTexture.ddsHeader.format.fourCC.data() == std::string("DXT1"))
 	{
-		internalFormat = graphics::Format::BlockCompression1;
+		internalFormat = graphics::TextureFormat::BlockCompression1;
 	}
 	else if (g3dTexture.ddsHeader.format.fourCC.data() == std::string("DXT3"))
 	{
-		internalFormat = graphics::Format::BlockCompression2;
+		internalFormat = graphics::TextureFormat::BlockCompression2;
 	}
 	else if (g3dTexture.ddsHeader.format.fourCC.data() == std::string("DXT5"))
 	{
-		internalFormat = graphics::Format::BlockCompression3;
+		internalFormat = graphics::TextureFormat::BlockCompression3;
 	}
 	else
 	{
@@ -99,8 +100,8 @@ Texture2DLoader::result_type Texture2DLoader::operator()(FromPackTag, const std:
 	}
 
 	texture2D->Create(static_cast<uint16_t>(g3dTexture.ddsHeader.width), static_cast<uint16_t>(g3dTexture.ddsHeader.height), 1,
-	                  internalFormat, graphics::Wrapping::Repeat, graphics::Filter::Linear, g3dTexture.ddsData.data(),
-	                  static_cast<uint32_t>(g3dTexture.ddsData.size()));
+	                  internalFormat, graphics::Wrapping::Repeat, graphics::Filter::Linear,
+	                  bgfx::makeRef(g3dTexture.ddsData.data(), static_cast<uint32_t>(g3dTexture.ddsData.size())));
 	return texture2D;
 }
 
@@ -110,7 +111,7 @@ Texture2DLoader::result_type Texture2DLoader::operator()(FromDiskTag, const std:
 	const std::array<uint16_t, 12> resolutions = {{1024, 512, 256, 128, 64, 40, 32, 14, 12, 6}};
 
 	const auto data = Locator::filesystem::value().ReadAll(rawTexturePath);
-	graphics::Format format = graphics::Format::R8;
+	graphics::TextureFormat format = graphics::TextureFormat::R8;
 	uint16_t width = 0;
 	uint16_t height = 0;
 	for (auto res : resolutions)
@@ -127,12 +128,12 @@ Texture2DLoader::result_type Texture2DLoader::operator()(FromDiskTag, const std:
 
 		if (data.size() == pixelCount)
 		{
-			format = graphics::Format::R8;
+			format = graphics::TextureFormat::R8;
 			found = true;
 		}
 		if (data.size() == 3 * pixelCount)
 		{
-			format = graphics::Format::RGB8;
+			format = graphics::TextureFormat::RGB8;
 			found = true;
 		}
 	}
@@ -142,8 +143,8 @@ Texture2DLoader::result_type Texture2DLoader::operator()(FromDiskTag, const std:
 	}
 
 	auto texture = std::make_shared<graphics::Texture2D>(("raw" / rawTexturePath.stem()).string());
-	texture->Create(width, height, 1, format, graphics::Wrapping::Repeat, graphics::Filter::Linear, data.data(),
-	                static_cast<uint32_t>(data.size()));
+	texture->Create(width, height, 1, format, graphics::Wrapping::Repeat, graphics::Filter::Linear,
+	                bgfx::makeRef(data.data(), static_cast<uint32_t>(data.size())));
 
 	return texture;
 }

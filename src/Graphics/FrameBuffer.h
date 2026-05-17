@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -14,6 +14,7 @@
 #include <memory>
 #include <optional>
 
+#include "GraphicsHandle.h"
 #include "RenderPass.h"
 #include "Texture2D.h"
 
@@ -24,8 +25,8 @@ class FrameBuffer
 {
 public:
 	FrameBuffer() = delete;
-	FrameBuffer(std::string&& name, uint16_t width, uint16_t height, Format colorFormat,
-	            std::optional<Format> depthStencilFormat = {});
+	FrameBuffer(std::string&& name, uint16_t width, uint16_t height, TextureFormat colorFormat,
+	            std::optional<TextureFormat> depthStencilFormat = {});
 	~FrameBuffer();
 
 	void Bind(RenderPass viewId) const;
@@ -35,12 +36,12 @@ public:
 
 private:
 	std::string _name;
-	bgfx::FrameBufferHandle _handle;
+	FrameBufferHandle _handle;
 
 	uint16_t _width;
 	uint16_t _height;
-	Format _colorFormat;
-	std::optional<Format> _depthStencilFormat;
+	TextureFormat _colorFormat;
+	std::optional<TextureFormat> _depthStencilFormat;
 
 	Texture2D _colorAttachment;
 	Texture2D _depthStencilAttachment;

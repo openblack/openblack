@@ -5,7 +5,8 @@ source_group(apps\\glwtool FILES ${GLWTOOL})
 add_executable(glwtool ${GLWTOOL})
 
 target_compile_definitions(glwtool PRIVATE CXXOPTS_NO_EXCEPTIONS)
-target_link_libraries(glwtool PRIVATE cxxopts::cxxopts glw)
+target_link_libraries(glwtool PRIVATE glw)
+target_include_directories(glwtool PRIVATE ${CXXOPTS_INCLUDE_DIRS})
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
   if (CLANG_TIDY)

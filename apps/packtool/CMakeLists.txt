@@ -5,7 +5,8 @@ source_group(apps\\packtool FILES ${PACKTOOL})
 add_executable(packtool ${PACKTOOL})
 
 target_compile_definitions(packtool PRIVATE CXXOPTS_NO_EXCEPTIONS)
-target_link_libraries(packtool PRIVATE cxxopts::cxxopts pack)
+target_link_libraries(packtool PRIVATE pack)
+target_include_directories(packtool PRIVATE ${CXXOPTS_INCLUDE_DIRS})
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
   if (CLANG_TIDY)

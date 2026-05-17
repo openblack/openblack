@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -10,10 +10,6 @@
 #pragma once
 
 #include <set>
-#include <vector>
-
-#include <bgfx/bgfx.h>
-#include <glm/mat4x4.hpp>
 
 #include "3D/AllMeshes.h"
 #include "ECS/Components/Temple.h"

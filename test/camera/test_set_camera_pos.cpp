@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -22,7 +22,7 @@ protected:
 	{
 		static const auto mockGamePath = std::filesystem::path(TEST_BINARY_DIR) / "mock";
 		auto args = openblack::Arguments {
-		    .rendererType = bgfx::RendererType::Enum::Noop,
+		    .graphicsBackend = openblack::GraphicsBackend::Noop,
 		    .gamePath = mockGamePath.string(),
 		    .logFile = "stdout",
 		};

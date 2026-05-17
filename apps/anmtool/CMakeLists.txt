@@ -5,7 +5,8 @@ source_group(apps\\anmtool FILES ${ANMTOOL})
 add_executable(anmtool ${ANMTOOL})
 
 target_compile_definitions(anmtool PRIVATE CXXOPTS_NO_EXCEPTIONS)
-target_link_libraries(anmtool PRIVATE cxxopts::cxxopts anm)
+target_link_libraries(anmtool PRIVATE anm)
+target_include_directories(anmtool PRIVATE ${CXXOPTS_INCLUDE_DIRS})
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
   if (CLANG_TIDY)

@@ -5,7 +5,8 @@ source_group(apps\\morphtool FILES ${MORPHTOOL})
 add_executable(morphtool ${MORPHTOOL})
 
 target_compile_definitions(morphtool PRIVATE CXXOPTS_NO_EXCEPTIONS)
-target_link_libraries(morphtool PRIVATE cxxopts::cxxopts morph)
+target_link_libraries(morphtool PRIVATE morph)
+target_include_directories(morphtool PRIVATE ${CXXOPTS_INCLUDE_DIRS})
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
   if (CLANG_TIDY)

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -21,6 +21,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Graphics/DebugLines.h"
+#include "Graphics/GraphicsHandleBgfx.h"
 #include "Graphics/ShaderManager.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
@@ -34,9 +35,9 @@ RenderContext::RenderContext()
 }
 RenderContext::~RenderContext()
 {
-	if (bgfx::isValid(instanceUniformBuffer))
+	if (bgfx::isValid(toBgfx(instanceUniformBuffer)))
 	{
-		bgfx::destroy(instanceUniformBuffer);
+		bgfx::destroy(toBgfx(instanceUniformBuffer));
 		bgfx::frame();
 		bgfx::frame();
 	}

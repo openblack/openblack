@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -14,7 +14,7 @@
 
 #include <string>
 
-#include <bgfx/bgfx.h>
+#include "GraphicsHandle.h"
 
 namespace openblack::graphics
 {
@@ -33,7 +33,7 @@ public:
 	IndexBuffer(IndexBuffer&&) = default;
 
 	IndexBuffer(std::string name, const void* indices, uint32_t indexCount, Type type);
-	IndexBuffer(std::string name, const bgfx::Memory* memory, Type type);
+	IndexBuffer(std::string name, const void* memory, Type type);
 
 	~IndexBuffer();
 
@@ -48,7 +48,7 @@ private:
 	std::string _name;
 	uint32_t _count;
 	Type _type;
-	bgfx::IndexBufferHandle _handle;
+	IndexBufferHandle _handle;
 };
 
 } // namespace openblack::graphics

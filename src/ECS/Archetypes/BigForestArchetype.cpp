@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -19,7 +19,7 @@
 #include "ECS/Registry.h"
 #include "InfoConstants.h"
 #include "Locator.h"
-#include "Resources/MeshId.h"
+#include "Resources/ResourceManager.h"
 #include "Utils.h"
 
 using namespace openblack;
@@ -40,7 +40,7 @@ entt::entity BigForestArchetype::Create(const glm::vec3& position, BigForestInfo
 	registry.Assign<Forest>(entity);
 	registry.Assign<BigForest>(entity);
 	registry.Assign<MorphWithTerrain>(entity);
-	const auto resourceId = resources::MeshIdToResourceId(info.meshId);
+	const auto resourceId = resources::HashIdentifier(info.meshId);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 
 	return entity;

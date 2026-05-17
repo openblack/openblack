@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -15,7 +15,6 @@
 #include "3D/L3DMesh.h"
 #include "ECS/Components/Transform.h"
 #include "Locator.h"
-#include "Resources/MeshId.h"
 #include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
@@ -24,7 +23,7 @@ using namespace openblack::ecs::components;
 std::pair<glm::vec2, float> openblack::ecs::archetypes::GetFixedObstacleBoundingCircle(MeshId meshId,
                                                                                        const Transform& transform)
 {
-	auto resourceId = resources::MeshIdToResourceId(meshId);
+	auto resourceId = resources::HashIdentifier(meshId);
 	const auto l3dMesh = Locator::resources::value().GetMeshes().Handle(resourceId);
 	assert(l3dMesh);
 	const auto& bb = l3dMesh->GetBoundingBox();

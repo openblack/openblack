@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -11,10 +11,10 @@
 
 #include <map>
 
-#include <bgfx/bgfx.h>
 #include <entt/fwd.hpp>
 #include <glm/mat4x4.hpp>
 
+#include "Graphics/GraphicsHandle.h"
 #include "Graphics/Mesh.h"
 
 namespace openblack::ecs::systems
@@ -56,7 +56,7 @@ struct RenderContext
 	/// its allocated size. It will never shrink.
 	/// The values stored are a list of uniforms (model matrix) needed for both
 	/// the instances of entities and their bounding boxes.
-	bgfx::DynamicVertexBufferHandle instanceUniformBuffer;
+	graphics::DynamicVertexBufferHandle instanceUniformBuffer;
 
 	bool dirty {true};
 	bool hasBoundingBoxes {false};

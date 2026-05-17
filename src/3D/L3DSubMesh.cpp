@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -9,6 +9,7 @@
 
 #include "L3DSubMesh.h"
 
+#include <bgfx/bgfx.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/component_wise.hpp>
 #include <glm/gtx/vec_swizzle.hpp>

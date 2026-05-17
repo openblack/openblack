@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ubuntu-24.04, macos-13, windows-latest]
+        os: [ubuntu-24.04, macos-14, windows-latest]
         cc: [""]
         cxx: [""]
         # These are additional individual jobs. There are no permutations of these.
@@ -22,10 +22,9 @@ jobs:
           - os: ubuntu-24.04
             cc: clang
             cxx: clang++
-          # Broken for bgfx 1.127.8725-469, fixed in 1.128.8777-475
-          # - os: windows-latest
-          #   cc: clang
-          #   cxx: clang++
+          - os: windows-latest
+            cc: clang
+            cxx: clang++
 
     steps:
       - uses: actions/checkout@v4
@@ -41,7 +40,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt update -y
-          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev libltdl-dev libxext-dev
+          sudo apt install -y autoconf autoconf-archive automake libtool libgl1-mesa-dev libglu1-mesa-dev libltdl-dev libxext-dev libwayland-dev libwayland-egl-backend-dev
         if: startsWith(matrix.os, 'ubuntu')
 
       - name: Download ClangBuildAnalyzer
@@ -50,14 +49,6 @@ jobs:
         with:
           repo: 'aras-p/ClangBuildAnalyzer'
           file: ${{ startsWith(matrix.os, 'ubuntu') && 'ClangBuildAnalyzer-linux' || startsWith(matrix.os, 'windows') && 'ClangBuildAnalyzer.exe' || startsWith(matrix.os, 'macos') && 'ClangBuildAnalyzer-mac' }}
-
-      - name: Install MacOS dependencies
-        run: |
-          brew install llvm@18
-          echo "$(brew --prefix llvm@18)/bin" >> $GITHUB_PATH
-          echo "CC=$(brew --prefix llvm@18)/bin/clang" >> $GITHUB_ENV
-          echo "CXX=$(brew --prefix llvm@18)/bin/clang++" >> $GITHUB_ENV
-        if: startsWith(matrix.os, 'macos')
 
       # Setup the build machine with the most recent versions of CMake and Ninja. Both are cached if not already: on subsequent runs both will be quickly restored from GitHub cache service.
       - uses: lukka/get-cmake@latest
@@ -203,7 +194,7 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ ubuntu-24.04, macos-13, windows-latest ]
+        os: [ ubuntu-24.04, macos-14, windows-latest ]
     steps:
       - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
         shell: bash
@@ -218,17 +209,18 @@ jobs:
         with:
           name: openblack-test-data-${{ env.GITHUB_REF_NAME_DASHES }}
           path: cmake-build-presets/ninja-multi-vcpkg/test
-      - name: Download Pre-patched and installed Game Data
-        uses: suisei-cn/actions-download-file@v1.6.0
-        id: game-data
-        with:
-          url: ${{secrets.BW_DOWNLOAD_URL}}
-          filename: bw.7z
-          target: game-data
+      - name: Download encrypted Game Data
+        env:
+          GH_TOKEN: ${{ secrets.BW_ASSET_TOKEN }}
+        shell: bash
+        run: |
+          mkdir -p game-data
+          gh release download assets \
+            --repo ${{secrets.BW_DOWNLOAD_URL}} \
+            --pattern bw.zip \
+            --dir game-data
       - name: Extract Game Data
-        run: 7z x -ogame-data/bw "$PWD/game-data/${{steps.game-data.outputs.filename}}"
-      - name: Add empty Audio directory
-        run: mkdir game-data/bw/Audio
+        run: 7z x -p"${{secrets.BW_DOWNLOAD_PW}}" -ogame-data "$PWD/game-data/${{steps.game-data.outputs.filename}}"
       - name: Enable execute permissions on binary
         run: chmod +x ${{steps.download-binary.outputs.download-path}}/*/*
         if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
@@ -271,7 +263,7 @@ jobs:
         os: [ windows-latest ] # ubuntu-latest, macos-latest
     env:
       ARGS: -g game-data\bw --num-frames-to-simulate 10 --screenshot-frame 5 --log-file stdout --log-level all=debug -W 800 -H 600
-      BACKEND: Direct3D11
+      BACKEND: Direct3D12
     steps:
       - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
         shell: bash
@@ -288,17 +280,18 @@ jobs:
       - name: Enable execute permissions on binary
         run: chmod +x ${{steps.download-binary.outputs.download-path}}/*/*
         if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
-      - name: Download Pre-patched and installed Game Data
-        uses: suisei-cn/actions-download-file@v1.6.0
-        id: game-data
-        with:
-          url: ${{secrets.BW_DOWNLOAD_URL}}
-          filename: bw.7z
-          target: game-data
+      - name: Download encrypted Game Data
+        env:
+          GH_TOKEN: ${{ secrets.BW_ASSET_TOKEN }}
+        shell: bash
+        run: |
+          mkdir -p game-data
+          gh release download assets \
+            --repo ${{secrets.BW_DOWNLOAD_URL}} \
+            --pattern bw.zip \
+            --dir game-data
       - name: Extract Game Data
-        run: 7z x -ogame-data/bw "$PWD/game-data/${{steps.game-data.outputs.filename}}"
-      - name: Add empty Audio directory
-        run: mkdir game-data/bw/Audio
+        run: 7z x -p"${{secrets.BW_DOWNLOAD_PW}}" -ogame-data "$PWD/game-data/${{steps.game-data.outputs.filename}}"
       - name: Get openblack-assets
         uses: actions/checkout@v4
         with:
@@ -308,15 +301,16 @@ jobs:
         run: cp -v -r openblack-assets/assets/* game-data/bw
         shell: bash
       - name: Set Screenshot Position For Maps
+        shell: bash
         run: |
-          'START_CAMERA_POS("1788.40,2710.00")' | Add-Content -Path game-data\bw\Scripts\Land1.txt
-          'START_CAMERA_POS("2847.10,3063.12")' | Add-Content -Path game-data\bw\Scripts\Land2.txt
-          'START_CAMERA_POS("2002.57,2122.02")' | Add-Content -Path game-data\bw\Scripts\Land3.txt
-          'START_CAMERA_POS("2689.87,2609.63")' | Add-Content -Path game-data\bw\Scripts\Land4.txt
-          'START_CAMERA_POS("2654.25,3059.49")' | Add-Content -Path game-data\bw\Scripts\LandT.txt
-          'START_CAMERA_POS("2802.60,2154.76")' | Add-Content -Path game-data\bw\Scripts\Playgrounds/ThreeGods.txt
-          'START_CAMERA_POS("1801.69,2012.08")' | Add-Content -Path game-data\bw\Scripts\Playgrounds/FourGods.txt
-          'START_CAMERA_POS("2550.00,2000.00")' | Add-Content -Path game-data\bw\Scripts\Playgrounds/construct.txt
+          echo 'START_CAMERA_POS("1788.40,2710.00")' >> game-data/bw/Scripts/Land1.txt
+          echo 'START_CAMERA_POS("2847.10,3063.12")' >> game-data/bw/Scripts/Land2.txt
+          echo 'START_CAMERA_POS("2002.57,2122.02")' >> game-data/bw/Scripts/Land3.txt
+          echo 'START_CAMERA_POS("2689.87,2609.63")' >> game-data/bw/Scripts/Land4.txt
+          echo 'START_CAMERA_POS("2654.25,3059.49")' >> game-data/bw/Scripts/LandT.txt
+          echo 'START_CAMERA_POS("2802.60,2154.76")' >> game-data/bw/Scripts/Playgrounds/ThreeGods.txt
+          echo 'START_CAMERA_POS("1801.69,2012.08")' >> game-data/bw/Scripts/Playgrounds/FourGods.txt
+          echo 'START_CAMERA_POS("2550.00,2000.00")' >> game-data/bw/Scripts/Playgrounds/construct.txt
       - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-1.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Release/openblack ${{env.ARGS}} -b ${{env.BACKEND}} -s Land1.txt --screenshot-path "screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-1.png"
       - run: ${{steps.download-binary.outputs.download-path}}/Debug/openblack   ${{env.ARGS}} -b ${{env.BACKEND}} -s Land2.txt --screenshot-path "screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-2.png"

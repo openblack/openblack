@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -55,7 +55,6 @@
 #include "Parsers/InfoFile.h"
 #include "Profiler.h"
 #include "Resources/Loaders.h"
-#include "Resources/MeshId.h"
 #include "Resources/ResourcesInterface.h"
 #include "Serializer/FotFile.h"
 
@@ -74,7 +73,6 @@ Game* Game::sInstance = nullptr;
 Game::Game(Arguments&& args) noexcept
     : _gamePath(args.gamePath)
     , _startMap(args.startLevel)
-    , _handPose(glm::identity<glm::mat4>())
     , _requestScreenshot(args.requestScreenshot)
 {
 	Locator::camera::emplace(glm::zero<glm::vec3>());
@@ -109,10 +107,9 @@ Game::Game(Arguments&& args) noexcept
 	config.numFramesToSimulate = args.numFramesToSimulate;
 	config.numFramesToSimulate = args.numFramesToSimulate;
 	config.numFramesToSimulate = args.numFramesToSimulate;
-	config.rendererType = args.rendererType;
 	config.resolution = {args.windowWidth, args.windowHeight};
 	config.displayMode = args.displayMode;
-	config.rendererType = args.rendererType;
+	config.graphicsBackend = args.graphicsBackend;
 	config.vsync = args.vsync;
 	config.guiScale = args.guiScale;
 }
@@ -187,9 +184,17 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 		case SDLK_8:
 			if ((event.key.keysym.mod & KMOD_CTRL) != 0)
 			{
-				const auto handPosition = _handPose * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 				const auto index = static_cast<uint8_t>(event.key.keysym.sym - SDLK_1);
-				Locator::cameraBookmarkSystem::value().SetBookmark(index, handPosition, camera.GetOrigin());
+				const auto positions = Locator::handSystem::value().GetPlayerHandPositions();
+				if (positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)] ||
+				    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)])
+				{
+					const auto handPosition =
+					    positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)].value_or(
+					        positions[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Right)].value_or(
+					            glm::zero<glm::vec3>()));
+					Locator::cameraBookmarkSystem::value().SetBookmark(index, handPosition, camera.GetOrigin());
+				}
 			}
 			else
 			{
@@ -348,7 +353,7 @@ bool Game::Update() noexcept
 	{
 		auto profilerScopedUpdateUniforms = profiler.BeginScoped(Profiler::Stage::UpdateUniforms);
 
-		// Update Debug Cross
+		// Update Hand and intersection point
 		ecs::components::Transform intersectionTransform {};
 		{
 			const auto screenSize =
@@ -381,30 +386,24 @@ bool Game::Update() noexcept
 					}
 				}
 				intersectionTransform.scale = scale;
-				_handPose = glm::mat4(1.0f);
-				_handPose = glm::translate(_handPose, intersectionTransform.position);
-				_handPose *= glm::mat4(intersectionTransform.rotation);
-				_handPose = glm::scale(_handPose, intersectionTransform.scale);
-				Locator::rendererInterface::value().UpdateDebugCrossUniforms(
-				    glm::translate(camera.GetFocus(Camera::Interpolation::Target)));
 			}
-		}
 
-		// Update Hand
-		if (!_handGripping)
-		{
-			const glm::vec3 handOffset(0, 1.5f, 0);
-			const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
+			if (!_handGripping)
+			{
+				const glm::vec3 handOffset(0, 1.5f, 0);
+				const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
 
-			const auto handEntity = Locator::handSystem::value()
-			                            .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
-			auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(handEntity);
-			// TODO(#480): move using velocity rather than snapping hand to intersectionTransform
-			handTransform.position = intersectionTransform.position;
-			handTransform.rotation = glm::eulerAngleY(camera.GetRotation().y) * modelRotationCorrection;
-			handTransform.rotation = intersectionTransform.rotation * handTransform.rotation;
-			handTransform.position += intersectionTransform.rotation * handOffset;
-			Locator::entitiesRegistry::value().SetDirty();
+				const auto handEntity =
+				    Locator::handSystem::value()
+				        .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
+				auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(handEntity);
+				// TODO(#480): move using velocity rather than snapping hand to intersectionTransform
+				handTransform.position = intersectionTransform.position;
+				handTransform.rotation = glm::eulerAngleY(camera.GetRotation().y) * modelRotationCorrection;
+				handTransform.rotation = intersectionTransform.rotation * handTransform.rotation;
+				handTransform.position += intersectionTransform.rotation * handOffset;
+				Locator::entitiesRegistry::value().SetDirty();
+			}
 		}
 
 		// Update Entities
@@ -431,10 +430,10 @@ bool Game::Initialize() noexcept
 {
 	auto& config = Locator::config::value();
 
-	if (config.rendererType != bgfx::RendererType::Noop)
+	if (config.graphicsBackend != GraphicsBackend::Noop)
 	{
 		uint32_t extraFlags = 0;
-		if (config.rendererType == bgfx::RendererType::Enum::Metal)
+		if (config.graphicsBackend == GraphicsBackend::Metal)
 		{
 			extraFlags |= SDL_WINDOW_METAL;
 		}
@@ -442,7 +441,7 @@ bool Game::Initialize() noexcept
 	}
 
 	using filesystem::Path;
-	if (!InitializeEngine(static_cast<uint8_t>(config.rendererType), config.vsync))
+	if (!InitializeEngine(config.graphicsBackend, config.vsync))
 	{
 		SPDLOG_LOGGER_CRITICAL(spdlog::get("game"), "Failed to initialize engine services.");
 		return false;
@@ -864,8 +863,6 @@ bool Game::Run() noexcept
 			    .drawIsland = config.drawIsland,
 			    .drawEntities = config.drawEntities,
 			    .drawSprites = config.drawSprites,
-			    .drawTestModel = config.drawTestModel,
-			    .drawDebugCross = config.drawDebugCross,
 			    .drawBoundingBoxes = config.drawBoundingBoxes,
 			    .cullBack = false,
 			    .wireframe = config.wireframe,

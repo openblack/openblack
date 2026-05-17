@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -7,9 +7,8 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include <memory>
 #define LOCATOR_IMPLEMENTATIONS
-
-#include "Renderer.h"
 
 #include <cstdint>
 
@@ -36,12 +35,14 @@
 #include "EngineConfig.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
+#include "Graphics/GraphicsHandleBgfx.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/Primitive.h"
 #include "Graphics/ShaderManager.h"
 #include "Graphics/VertexBuffer.h"
 #include "Locator.h"
 #include "Profiler.h"
+#include "Renderer.h"
 #include "Resources/ResourceManager.h"
 #include "Resources/ResourcesInterface.h"
 #include "Windowing/WindowingInterface.h"
@@ -194,14 +195,31 @@ struct BgfxCallback: public bgfx::CallbackI
 
 } // namespace openblack
 
-std::unique_ptr<RendererInterface> RendererInterface::Create(bgfx::RendererType::Enum rendererType, bool vsync) noexcept
+std::unique_ptr<RendererInterface> RendererInterface::Create(GraphicsBackend backend, bool vsync) noexcept
 {
 	bgfx::Init init {};
-	init.type = rendererType;
+	switch (backend)
+	{
+	case GraphicsBackend::Noop:
+		init.type = bgfx::RendererType::Noop;
+		break;
+	case GraphicsBackend::Direct3D12:
+		init.type = bgfx::RendererType::Direct3D12;
+		break;
+	case GraphicsBackend::Metal:
+		init.type = bgfx::RendererType::Metal;
+		break;
+	case GraphicsBackend::Vulkan:
+		init.type = bgfx::RendererType::Vulkan;
+		break;
+	default:
+		SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "Got impossible graphics backend.");
+		return nullptr;
+	}
 
 	// Get render area size
 	glm::uvec2 drawableSize;
-	if (rendererType != bgfx::RendererType::Noop)
+	if (backend != GraphicsBackend::Noop)
 	{
 		const auto& window = Locator::windowing::value();
 
@@ -246,8 +264,6 @@ Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallb
     , _bgfxReset(bgfxReset)
 {
 	_shaderManager->LoadShaders();
-	// allocate vertex buffers for our debug draw and for primitives
-	_debugCross = DebugLines::CreateCross();
 	_plane = Primitive::CreatePlane();
 
 	// give debug names to views
@@ -263,7 +279,6 @@ Renderer::~Renderer() noexcept
 {
 	_plane.reset();
 	_shaderManager.reset();
-	_debugCross.reset();
 	bgfx::frame();
 	bgfx::shutdown();
 }
@@ -282,11 +297,6 @@ void Renderer::Reset(glm::u16vec2 resolution) const noexcept
 graphics::ShaderManager& Renderer::GetShaderManager() const noexcept
 {
 	return *_shaderManager;
-}
-
-void Renderer::UpdateDebugCrossUniforms(const glm::mat4& pose) noexcept
-{
-	_debugCrossPose = pose;
 }
 
 const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& meshSkins)
@@ -378,9 +388,10 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 		}
 
 		{
-			if (desc.instanceBuffer != nullptr && (skip & Mesh::SkipState::SkipInstanceBuffer) == 0)
+			if (desc.instanceDesc != nullptr && (skip & Mesh::SkipState::SkipInstanceBuffer) == 0)
 			{
-				bgfx::setInstanceDataBuffer(*desc.instanceBuffer, desc.instanceStart, desc.instanceCount);
+				bgfx::setInstanceDataBuffer(toBgfx(desc.instanceDesc->GetRawHandle()), desc.instanceDesc->GetStart(),
+				                            desc.instanceDesc->GetCount());
 			}
 			if (subMesh.GetMesh().IsIndexed() && (skip & Mesh::SkipState::SkipIndexBuffer) == 0)
 			{
@@ -395,7 +406,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				bgfx::setState(desc.state, desc.rgba);
 			}
 
-			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), desc.program->GetRawHandle(), 0,
+			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(desc.program->GetRawHandle()), 0,
 			             primitivePreserveState ? BGFX_DISCARD_NONE : BGFX_DISCARD_ALL);
 		}
 		lastPreserveState = primitivePreserveState;
@@ -463,7 +474,7 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 			const auto& footprint = mesh->GetFootprints()[0];
 			footprintShaderInstanced->SetTextureSampler("s_footprint", 0, *footprint.texture);
 			footprint.mesh->GetVertexBuffer().Bind();
-			bgfx::setInstanceDataBuffer(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
+			bgfx::setInstanceDataBuffer(toBgfx(renderCtx.instanceUniformBuffer), placers.offset, placers.count);
 			const uint64_t state = 0u                       //
 			                       | BGFX_STATE_WRITE_RGB   //
 			                       | BGFX_STATE_WRITE_A     //
@@ -471,7 +482,7 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 			                       | BGFX_STATE_CULL_CW     //
 			                       | BGFX_STATE_MSAA;
 			bgfx::setState(state);
-			bgfx::submit(static_cast<bgfx::ViewId>(viewId), footprintShaderInstanced->GetRawHandle());
+			bgfx::submit(static_cast<bgfx::ViewId>(viewId), toBgfx(footprintShaderInstanced->GetRawHandle()));
 		}
 	}
 }
@@ -494,7 +505,6 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 			drawPassDesc.camera = reflectionCamera.get();
 			drawPassDesc.frameBuffer = &frameBuffer;
 			drawPassDesc.drawWater = false;
-			drawPassDesc.drawDebugCross = false;
 			drawPassDesc.drawBoundingBoxes = false;
 			drawPassDesc.cullBack = true;
 
@@ -580,7 +590,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			waterShader->SetTextureSampler("s_reflection", 2, ocean.GetReflectionFramebuffer().GetColorAttachment());
 			const glm::vec4 u_sky = {skyType, 0.0f, 0.0f, 0.0f};
 			waterShader->SetUniformValue("u_sky", &u_sky); // fs
-			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), waterShader->GetRawHandle());
+			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(waterShader->GetRawHandle()));
 		}
 	}
 
@@ -629,7 +639,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				block.GetMesh().GetVertexBuffer().Bind();
 
 				bgfx::setState(defaultState | (desc.cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW), 0);
-				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), terrainShader->GetRawHandle(), 0, discard);
+				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(terrainShader->GetRawHandle()), 0, discard);
 			}
 			bgfx::discard(BGFX_DISCARD_BINDINGS);
 		}
@@ -655,9 +665,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			{
 				auto mesh = meshManager.Handle(meshId);
 
-				submitDesc.instanceBuffer = &renderCtx.instanceUniformBuffer;
-				submitDesc.instanceStart = placers.offset;
-				submitDesc.instanceCount = placers.count;
+				submitDesc.instanceDesc =
+				    std::make_unique<graphics::InstanceDesc>(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
 				if (mesh->IsBoned())
 				{
 					submitDesc.modelMatrices = mesh->GetBoneMatrices().data();
@@ -694,21 +703,21 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					const auto boundBoxOffset = static_cast<uint32_t>(renderCtx.instanceUniforms.size() / 2);
 					const auto boundBoxCount = static_cast<uint32_t>(renderCtx.instanceUniforms.size() / 2);
 					renderCtx.boundingBox->GetVertexBuffer().Bind();
-					bgfx::setInstanceDataBuffer(renderCtx.instanceUniformBuffer, boundBoxOffset, boundBoxCount);
+					bgfx::setInstanceDataBuffer(toBgfx(renderCtx.instanceUniformBuffer), boundBoxOffset, boundBoxCount);
 					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
-					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShaderInstanced->GetRawHandle());
+					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(debugShaderInstanced->GetRawHandle()));
 				}
 				if (renderCtx.footpaths)
 				{
 					renderCtx.footpaths->GetVertexBuffer().Bind();
 					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
-					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
+					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(debugShader->GetRawHandle()));
 				}
 				if (renderCtx.streams)
 				{
 					renderCtx.streams->GetVertexBuffer().Bind();
 					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
-					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
+					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(debugShader->GetRawHandle()));
 				}
 			}
 		}
@@ -743,51 +752,9 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					                   BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE) |
 					                   BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_ADD));
 
-					    bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), spriteShader->GetRawHandle());
+					    bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(spriteShader->GetRawHandle()));
 				    });
 			}
-		}
-
-		if (desc.drawTestModel)
-		{
-			L3DMeshSubmitDesc submitDesc = {};
-			submitDesc.viewId = desc.viewId;
-			submitDesc.program = _shaderManager->GetShader("Object");
-			// clang-format off
-			submitDesc.state = 0u
-				| BGFX_STATE_WRITE_MASK
-				| BGFX_STATE_DEPTH_TEST_GREATER
-				| BGFX_STATE_CULL_CCW
-				| BGFX_STATE_MSAA
-			;
-			// clang-format on
-			const auto& mesh = meshManager.Handle(entt::hashed_string("coffre"));
-			const auto& testAnimation = Locator::resources::value().GetAnimations().Handle(entt::hashed_string("coffre"));
-			const std::vector<uint32_t>& boneParents = mesh->GetBoneParents();
-			auto bones = testAnimation->GetBoneMatrices(desc.time);
-			for (uint32_t i = 0; i < bones.size(); ++i)
-			{
-				if (boneParents[i] != std::numeric_limits<uint32_t>::max())
-				{
-					bones[i] = bones[boneParents[i]] * bones[i];
-				}
-			}
-			submitDesc.modelMatrices = bones.data();
-			submitDesc.matrixCount = static_cast<uint8_t>(bones.size());
-			submitDesc.isSky = false;
-			DrawMesh(*mesh, submitDesc, 0);
-		}
-	}
-
-	{
-		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawDebugCross
-		                                                                          : Profiler::Stage::MainPassDrawDebugCross);
-		if (desc.drawDebugCross)
-		{
-			bgfx::setTransform(glm::value_ptr(_debugCrossPose));
-			_debugCross->GetVertexBuffer().Bind();
-			bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
-			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), debugShader->GetRawHandle());
 		}
 	}
 

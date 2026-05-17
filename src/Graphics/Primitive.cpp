@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -8,6 +8,8 @@
  *******************************************************************************/
 
 #include "Primitive.h"
+
+#include <cstdint>
 
 #include <array>
 
@@ -37,7 +39,8 @@ std::unique_ptr<Mesh> Primitive::CreatePlane()
 	decl.reserve(2);
 	decl.emplace_back(VertexAttrib::Attribute::Position, static_cast<uint8_t>(2), VertexAttrib::Type::Float);
 
-	auto* vertexBuffer = new VertexBuffer("Plane", vertices.data(), static_cast<uint32_t>(vertices.size()), decl);
+	const auto* mem = bgfx::makeRef(vertices.data(), static_cast<uint32_t>(vertices.size() * sizeof(vertices[0])));
+	auto* vertexBuffer = new VertexBuffer("Plane", mem, decl);
 	bgfx::frame();
 	auto mesh = std::make_unique<Mesh>(vertexBuffer, nullptr, Mesh::Topology::TriangleList);
 	bgfx::frame();

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -23,7 +23,7 @@
 #include "ECS/Systems/TownSystemInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
-#include "Resources/MeshId.h"
+#include "Resources/ResourceManager.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
@@ -58,7 +58,7 @@ entt::entity VillagerArchetype::Create([[maybe_unused]] const glm::vec3& abodePo
 	registry.Assign<Villager>(entity, health, static_cast<uint32_t>(age), hunger, lifeStage, sex, info.tribeType,
 	                          info.villagerNumber, task, town, abode);
 	registry.Assign<WallHug>(entity, glm::vec2(), glm::vec2(), GetSpeedStateSpeed(info.speedGroup.speedDefault));
-	const auto resourceId = resources::MeshIdToResourceId(info.highDetail);
+	const auto resourceId = resources::HashIdentifier(info.highDetail);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(0));
 	auto turnsSinceStateChange = Locator::rng::value().NextValue<uint16_t>(1, 500);
 	registry.Assign<LivingAction>(entity, VillagerStates::Created, turnsSinceStateChange);

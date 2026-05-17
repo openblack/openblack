@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -19,7 +19,6 @@
 #include <vector>
 
 #include <SDL.h>
-#include <bgfx/bgfx.h>
 #include <glm/fwd.hpp>
 #include <glm/mat4x4.hpp>
 
@@ -53,8 +52,6 @@ public:
 
 	[[nodiscard]] ShaderManager& GetShaderManager() const noexcept final;
 
-	void UpdateDebugCrossUniforms(const glm::mat4& pose) noexcept final;
-
 	void ConfigureView(RenderPass viewId, glm::u16vec2 resolution, uint32_t clearColor) const noexcept final;
 
 	void DrawScene(const DrawSceneDesc& drawDesc) const noexcept final;
@@ -78,10 +75,7 @@ private:
 	uint32_t _bgfxReset;
 	bool _bgfxDebug = false;
 	bool _bgfxProfile = false;
-
-	std::unique_ptr<Mesh> _debugCross;
 	std::unique_ptr<Mesh> _plane;
-	glm::mat4 _debugCrossPose;
 };
 } // namespace graphics
 } // namespace openblack

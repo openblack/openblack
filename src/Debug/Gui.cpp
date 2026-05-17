@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -33,7 +33,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/compatibility.hpp>
 #include <imgui.h>
-#include <imgui_impl_sdl.h>
+#include <imgui_impl_sdl2.h>
 #include <imgui_internal.h>
 #include <imgui_stdlib.h>
 #include <imgui_user.h>
@@ -54,6 +54,7 @@
 #include "EngineConfig.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
+#include "Graphics/GraphicsHandleBgfx.h"
 #include "ImGuiUtils.h"
 #include "LHVMViewer.h"
 #include "LandIsland.h"
@@ -135,7 +136,7 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 	return gui;
 }
 
-Gui::Gui(ImGuiContext* imgui, bgfx::ViewId viewId, std::vector<std::unique_ptr<Window>>&& debugWindows, bool headless) noexcept
+Gui::Gui(ImGuiContext* imgui, uint16_t viewId, std::vector<std::unique_ptr<Window>>&& debugWindows, bool headless) noexcept
     : _imgui(imgui)
     , _headless(headless)
     , _program(BGFX_INVALID_HANDLE)
@@ -157,25 +158,25 @@ Gui::~Gui() noexcept
 	}
 	ImGui::DestroyContext(_imgui);
 
-	if (bgfx::isValid(_u_imageLodEnabled))
+	if (bgfx::isValid(toBgfx(_u_imageLodEnabled)))
 	{
-		bgfx::destroy(_u_imageLodEnabled);
+		bgfx::destroy(toBgfx(_u_imageLodEnabled));
 	}
-	if (bgfx::isValid(_s_tex))
+	if (bgfx::isValid(toBgfx(_s_tex)))
 	{
-		bgfx::destroy(_s_tex);
+		bgfx::destroy(toBgfx(_s_tex));
 	}
-	if (bgfx::isValid(_texture))
+	if (bgfx::isValid(toBgfx(_texture)))
 	{
-		bgfx::destroy(_texture);
+		bgfx::destroy(toBgfx(_texture));
 	}
-	if (bgfx::isValid(_imageProgram))
+	if (bgfx::isValid(toBgfx(_imageProgram)))
 	{
-		bgfx::destroy(_imageProgram);
+		bgfx::destroy(toBgfx(_imageProgram));
 	}
-	if (bgfx::isValid(_program))
+	if (bgfx::isValid(toBgfx(_program)))
 	{
-		bgfx::destroy(_program);
+		bgfx::destroy(toBgfx(_program));
 	}
 }
 
@@ -242,8 +243,8 @@ bool Gui::CreateFontsTextureBgfx() noexcept
 	// instead to save on GPU memory.
 	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
-	_texture = bgfx::createTexture2D(static_cast<uint16_t>(width), static_cast<uint16_t>(height), false, 1,
-	                                 bgfx::TextureFormat::BGRA8, 0, bgfx::copy(pixels, width * height * 4));
+	_texture = graphics::fromBgfx(bgfx::createTexture2D(static_cast<uint16_t>(width), static_cast<uint16_t>(height), false, 1,
+	                                                    bgfx::TextureFormat::BGRA8, 0, bgfx::copy(pixels, width * height * 4)));
 
 	return true;
 }
@@ -252,21 +253,17 @@ bool Gui::CreateDeviceObjectsBgfx() noexcept
 {
 	// Create shaders
 	const auto type = bgfx::getRendererType();
-	_program = bgfx::createProgram(bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "vs_ocornut_imgui"),
-	                               bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "fs_ocornut_imgui"), true);
-	_imageProgram = bgfx::createProgram(bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "vs_imgui_image"),
-	                                    bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "fs_imgui_image"), true);
+	_program = graphics::fromBgfx(
+	    bgfx::createProgram(bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "vs_ocornut_imgui"),
+	                        bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "fs_ocornut_imgui"), true));
+	_imageProgram = graphics::fromBgfx(
+	    bgfx::createProgram(bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "vs_imgui_image"),
+	                        bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "fs_imgui_image"), true));
 
 	// Create buffers
-	_u_imageLodEnabled = bgfx::createUniform("u_imageLodEnabled", bgfx::UniformType::Vec4);
+	_u_imageLodEnabled = graphics::fromBgfx(bgfx::createUniform("u_imageLodEnabled", bgfx::UniformType::Vec4));
 
-	_layout.begin()
-	    .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
-	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
-	    .end();
-
-	_s_tex = bgfx::createUniform("s_tex", bgfx::UniformType::Sampler);
+	_s_tex = graphics::fromBgfx(bgfx::createUniform("s_tex", bgfx::UniformType::Sampler));
 
 	CreateFontsTextureBgfx();
 
@@ -357,13 +354,20 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData) noexcept
 		const auto numVertices = static_cast<uint32_t>(drawList->VtxBuffer.size());
 		const auto numIndices = static_cast<uint32_t>(drawList->IdxBuffer.size());
 
-		if (!checkAvailTransientBuffers(numVertices, _layout, numIndices))
+		bgfx::VertexLayout layout;
+		layout.begin()
+		    .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
+		    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+		    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+		    .end();
+
+		if (!checkAvailTransientBuffers(numVertices, layout, numIndices))
 		{
 			// not enough space in transient buffer just quit drawing the rest...
 			break;
 		}
 
-		bgfx::allocTransientVertexBuffer(&tvb, numVertices, _layout);
+		bgfx::allocTransientVertexBuffer(&tvb, numVertices, layout);
 		bgfx::allocTransientIndexBuffer(&tib, numIndices, sizeof(ImDrawIdx) == 4);
 
 		auto* verts = reinterpret_cast<ImDrawVert*>(tvb.data);
@@ -388,10 +392,10 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData) noexcept
 				                 | BGFX_STATE_MSAA      //
 				    ;
 
-				bgfx::TextureHandle th = _texture;
-				bgfx::ProgramHandle program = _program;
+				bgfx::TextureHandle th = toBgfx(_texture);
+				bgfx::ProgramHandle program = toBgfx(_program);
 
-				if (cmd->TextureId != nullptr)
+				if (cmd->GetTexID() != 0)
 				{
 					const union
 					{
@@ -402,7 +406,7 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData) noexcept
 							uint8_t flags;
 							uint8_t mip;
 						} s;
-					} texture = {cmd->TextureId};
+					} texture = {cmd->GetTexID()};
 					state |= 0 != (IMGUI_FLAGS_ALPHA_BLEND & texture.s.flags)
 					             ? BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
 					             : BGFX_STATE_NONE;
@@ -410,8 +414,8 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData) noexcept
 					if (0 != texture.s.mip)
 					{
 						const glm::vec4 lodEnabled = {static_cast<float>(texture.s.mip), 1.0f, 0.0f, 0.0f};
-						bgfx::setUniform(_u_imageLodEnabled, glm::value_ptr(lodEnabled));
-						program = _imageProgram;
+						bgfx::setUniform(toBgfx(_u_imageLodEnabled), glm::value_ptr(lodEnabled));
+						program = toBgfx(_imageProgram);
 					}
 				}
 				else
@@ -434,7 +438,7 @@ void Gui::RenderDrawDataBgfx(ImDrawData* drawData) noexcept
 					                    static_cast<uint16_t>(bx::min(clipRect.w, 65535.0f) - yy));
 
 					encoder->setState(state);
-					encoder->setTexture(0, _s_tex, th);
+					encoder->setTexture(0, toBgfx(_s_tex), th);
 					encoder->setVertexBuffer(0, &tvb, cmd->VtxOffset, numVertices);
 					encoder->setIndexBuffer(&tib, cmd->IdxOffset, cmd->ElemCount);
 					encoder->submit(_viewId, program);
@@ -557,8 +561,6 @@ bool Gui::ShowMenu() noexcept
 				ImGui::Checkbox("Island", &config.drawIsland);
 				ImGui::Checkbox("Entities", &config.drawEntities);
 				ImGui::Checkbox("Sprites", &config.drawSprites);
-				ImGui::Checkbox("TestModel", &config.drawTestModel);
-				ImGui::Checkbox("Debug Cross", &config.drawDebugCross);
 				ImGui::Checkbox("Wireframe", &config.wireframe);
 				ImGui::Checkbox("Bounding Boxes", &config.drawBoundingBoxes);
 				ImGui::Checkbox("Footpaths", &config.drawFootpaths);

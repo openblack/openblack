@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -9,7 +9,11 @@
 
 #include "DebugLines.h"
 
+#include <cstdint>
+
 #include <array>
+
+#include <bgfx/bgfx.h>
 
 #include "Mesh.h"
 #include "VertexBuffer.h"
@@ -23,7 +27,8 @@ std::unique_ptr<Mesh> DebugLines::CreateDebugLines(const Vertex* data, uint32_t 
 	decl.emplace_back(VertexAttrib::Attribute::Position, static_cast<uint8_t>(4), VertexAttrib::Type::Float);
 	decl.emplace_back(VertexAttrib::Attribute::Color0, static_cast<uint8_t>(4), VertexAttrib::Type::Float);
 
-	auto* vertexBuffer = new VertexBuffer("DebugLines", data, vertexCount, decl);
+	const auto* mem = bgfx::makeRef(data, static_cast<uint32_t>(vertexCount * sizeof(data[0])));
+	auto* vertexBuffer = new VertexBuffer("DebugLines", mem, decl);
 	bgfx::frame();
 	auto mesh = std::make_unique<Mesh>(vertexBuffer, nullptr, Mesh::Topology::LineList);
 	bgfx::frame();

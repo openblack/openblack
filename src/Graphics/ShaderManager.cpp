@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -42,6 +42,7 @@
 #endif
 
 #include "Camera/Camera.h"
+#include "GraphicsHandleBgfx.h"
 
 // clang-format off
 #define SHADER_NAME vs_line
@@ -139,7 +140,7 @@ void ShaderManager::LoadShaders()
 		assert(bgfx::isValid(vs));
 		auto fs = bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, shader.fragmentShaderName.data());
 		assert(bgfx::isValid(fs));
-		_shaderPrograms[shader.name.data()] = new ShaderProgram(shader.name.data(), vs, fs);
+		_shaderPrograms[shader.name.data()] = new ShaderProgram(shader.name.data(), fromBgfx(vs), fromBgfx(fs));
 	}
 }
 

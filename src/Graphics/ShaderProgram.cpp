@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -12,12 +12,13 @@
 #include <spdlog/spdlog.h>
 
 #include "FileSystem/FileSystemInterface.h"
+#include "Graphics/GraphicsHandleBgfx.h"
 #include "Texture2D.h"
 
 namespace openblack::graphics
 {
 
-ShaderProgram::ShaderProgram(const std::string& name, bgfx::ShaderHandle vertexShader, bgfx::ShaderHandle fragmentShader)
+ShaderProgram::ShaderProgram(const std::string& name, ShaderHandle vertexShader, ShaderHandle fragmentShader)
     : _name(name)
     , _program(BGFX_INVALID_HANDLE)
 {
@@ -25,35 +26,35 @@ ShaderProgram::ShaderProgram(const std::string& name, bgfx::ShaderHandle vertexS
 	bgfx::UniformInfo info = {};
 	std::vector<bgfx::UniformHandle> uniforms;
 
-	numShaderUniforms = bgfx::getShaderUniforms(vertexShader);
+	numShaderUniforms = bgfx::getShaderUniforms(toBgfx(vertexShader));
 	uniforms.resize(numShaderUniforms);
-	bgfx::getShaderUniforms(vertexShader, uniforms.data(), numShaderUniforms);
+	bgfx::getShaderUniforms(toBgfx(vertexShader), uniforms.data(), numShaderUniforms);
 	for (uint16_t i = 0; i < numShaderUniforms; ++i)
 	{
 		bgfx::getUniformInfo(uniforms[i], info);
-		_uniforms.emplace(std::string(info.name), uniforms[i]);
+		_uniforms.emplace(std::string(info.name), fromBgfx(uniforms[i]));
 	}
 
-	numShaderUniforms = bgfx::getShaderUniforms(fragmentShader);
+	numShaderUniforms = bgfx::getShaderUniforms(toBgfx(fragmentShader));
 	uniforms.resize(numShaderUniforms);
-	bgfx::getShaderUniforms(fragmentShader, uniforms.data(), numShaderUniforms);
+	bgfx::getShaderUniforms(toBgfx(fragmentShader), uniforms.data(), numShaderUniforms);
 	for (uint16_t i = 0; i < numShaderUniforms; ++i)
 	{
 		bgfx::getUniformInfo(uniforms[i], info);
-		_uniforms.emplace(std::string(info.name), uniforms[i]);
+		_uniforms.emplace(std::string(info.name), fromBgfx(uniforms[i]));
 	}
 
-	_program = bgfx::createProgram(vertexShader, fragmentShader, true);
-	bgfx::setName(vertexShader, (name + "_vs").c_str());
-	bgfx::setName(fragmentShader, (name + "_fs").c_str());
+	_program = fromBgfx(bgfx::createProgram(toBgfx(vertexShader), toBgfx(fragmentShader), true));
+	bgfx::setName(toBgfx(vertexShader), (name + "_vs").c_str());
+	bgfx::setName(toBgfx(fragmentShader), (name + "_fs").c_str());
 	bgfx::frame();
 }
 
 ShaderProgram::~ShaderProgram()
 {
-	if (bgfx::isValid(_program))
+	if (bgfx::isValid(toBgfx(_program)))
 	{
-		bgfx::destroy(_program);
+		bgfx::destroy(toBgfx(_program));
 	}
 }
 
@@ -62,7 +63,7 @@ void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint
 	auto uniform = _uniforms.find(samplerName);
 	if (uniform != _uniforms.cend())
 	{
-		bgfx::setTexture(bindPoint, uniform->second, texture.GetNativeHandle());
+		bgfx::setTexture(bindPoint, toBgfx(uniform->second), toBgfx(texture.GetNativeHandle()));
 	}
 	else
 	{
@@ -70,12 +71,12 @@ void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint
 	}
 }
 
-void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint, const bgfx::TextureHandle& texture) const
+void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint, const graphics::TextureHandle& texture) const
 {
 	auto uniform = _uniforms.find(samplerName);
 	if (uniform != _uniforms.cend())
 	{
-		bgfx::setTexture(bindPoint, uniform->second, texture);
+		bgfx::setTexture(bindPoint, toBgfx(uniform->second), toBgfx(texture));
 	}
 	else
 	{
@@ -88,7 +89,7 @@ void ShaderProgram::SetUniformValue(const char* uniformName, const void* value) 
 	auto uniform = _uniforms.find(uniformName);
 	if (uniform != _uniforms.cend())
 	{
-		bgfx::setUniform(uniform->second, value);
+		bgfx::setUniform(toBgfx(uniform->second), value);
 	}
 	else
 	{

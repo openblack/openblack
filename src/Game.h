@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -15,10 +15,10 @@
 #include <optional>
 #include <string>
 
-#include <bgfx/bgfx.h>
 #include <glm/mat4x4.hpp>
 #include <spdlog/common.h>
 
+#include "EngineConfig.h"
 #include "Windowing/WindowingInterface.h" // For DisplayMode
 
 union SDL_Event;
@@ -56,7 +56,7 @@ struct Arguments
 	int windowHeight;
 	bool vsync;
 	openblack::windowing::DisplayMode displayMode;
-	bgfx::RendererType::Enum rendererType;
+	GraphicsBackend graphicsBackend;
 	std::string gamePath;
 	float guiScale;
 	uint32_t numFramesToSimulate;
@@ -113,12 +113,8 @@ private:
 	uint32_t _frameCount {0};
 	uint32_t _turnCount {0};
 	bool _paused {true};
-
 	glm::ivec2 _mousePosition;
-	glm::mat4 _handPose;
-
 	bool _handGripping;
-
 	std::optional<std::pair</* frame number */ uint32_t, /* output */ std::filesystem::path>> _requestScreenshot;
 };
 } // namespace openblack

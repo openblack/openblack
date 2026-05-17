@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -10,10 +10,15 @@
 #pragma once
 
 #include <filesystem>
+#include <memory>
 
+#include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
 
+#include "InstanceDesc.h"
 #include "RenderPass.h"
+
+#include "../EngineConfig.h"
 
 namespace openblack
 {
@@ -53,8 +58,6 @@ public:
 		bool drawIsland;
 		bool drawEntities;
 		bool drawSprites;
-		bool drawTestModel;
-		bool drawDebugCross;
 		bool drawBoundingBoxes;
 		bool cullBack;
 		bool wireframe;
@@ -68,7 +71,7 @@ public:
 		uint32_t rgba;
 		const glm::mat4* modelMatrices;
 		uint8_t matrixCount;
-		const bgfx::DynamicVertexBufferHandle* instanceBuffer;
+		std::unique_ptr<const graphics::InstanceDesc> instanceDesc;
 		uint32_t instanceStart;
 		uint32_t instanceCount;
 		bool isSky;
@@ -76,7 +79,7 @@ public:
 		bool morphWithTerrain;
 	};
 
-	static std::unique_ptr<RendererInterface> Create(bgfx::RendererType::Enum rendererType, bool vsync) noexcept;
+	static std::unique_ptr<RendererInterface> Create(GraphicsBackend backend, bool vsync) noexcept;
 
 	virtual ~RendererInterface() noexcept = default;
 
@@ -90,8 +93,6 @@ public:
 	[[nodiscard]] virtual bool GetProfile() const noexcept = 0;
 	virtual void SetProfile(bool value) noexcept = 0;
 
-	// TODO: Remove this function. All renderables should be specified through RenderingSystem with Components
-	virtual void UpdateDebugCrossUniforms(const glm::mat4& pose) noexcept = 0;
 	// TODO: Remove this function. All renderables should be drawn through RenderingSystem with Components
 	virtual void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const noexcept = 0;
 	// TODO: Should shader manager be available through Locator as a service?

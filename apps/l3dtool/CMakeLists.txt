@@ -5,7 +5,8 @@ source_group(apps\\l3dtool FILES ${L3DTOOL})
 add_executable(l3dtool ${L3DTOOL})
 
 target_compile_definitions(l3dtool PRIVATE CXXOPTS_NO_EXCEPTIONS)
-target_link_libraries(l3dtool PRIVATE cxxopts::cxxopts l3d)
+target_link_libraries(l3dtool PRIVATE l3d)
+target_include_directories(l3dtool PRIVATE ${CXXOPTS_INCLUDE_DIRS})
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
   if (CLANG_TIDY)

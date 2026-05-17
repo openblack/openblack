@@ -115,7 +115,6 @@ target_link_libraries(
           EnTT::EnTT
           bgfx::bgfx
           OpenAL::OpenAL
-          cxxopts::cxxopts
           Bullet3Common
           BulletDynamics
           BulletCollision
@@ -124,6 +123,7 @@ target_link_libraries(
           minizip::minizip
   PUBLIC spdlog::spdlog
 )
+target_include_directories(openblack_lib PRIVATE ${CXXOPTS_INCLUDE_DIRS})
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
   if (CLANG_TIDY)
@@ -172,6 +172,7 @@ target_compile_definitions(
     "GLM_FORCE_LEFT_HANDED"
     "GLM_FORCE_RADIANS"
     "GLM_ENABLE_EXPERIMENTAL"
+    # "IMGUI_DISABLE_OBSOLETE_FUNCTIONS"
     # Compile-time optimize out log messages (debug level if debug, else info)
     "SPDLOG_ACTIVE_LEVEL=$<IF:$<CONFIG:DEBUG>,SPDLOG_LEVEL_DEBUG,SPDLOG_LEVEL_INFO>"
     # Suppress WinMain() and main hijacking, provided by SDL

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -47,7 +47,7 @@ void PathFinding::Draw() noexcept
 	const float halfHeight = (size.y - pos.y) / numChildren - 2 * rounding;
 
 	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, rounding);
-	ImGui::BeginChild("Selected Villager", ImVec2(0, halfHeight), ImGuiChildFlags_Border);
+	ImGui::BeginChild("Selected Villager", ImVec2(0, halfHeight), ImGuiChildFlags_Borders);
 	if (_selectedVillager.has_value())
 	{
 		using namespace ecs::components;
@@ -81,7 +81,7 @@ void PathFinding::Draw() noexcept
 	}
 	ImGui::EndChild();
 
-	ImGui::BeginChild("Actions", ImVec2(0, halfHeight), ImGuiChildFlags_Border);
+	ImGui::BeginChild("Actions", ImVec2(0, halfHeight), ImGuiChildFlags_Borders);
 	if (_selectedVillager.has_value())
 	{
 		if (ImGui::BeginTabBar("Actions"))

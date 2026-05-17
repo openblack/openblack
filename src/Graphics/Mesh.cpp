@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -9,6 +9,7 @@
 
 #include "Mesh.h"
 
+#include "GraphicsHandleBgfx.h"
 #include "IndexBuffer.h"
 #include "ShaderProgram.h"
 #include "VertexBuffer.h"
@@ -46,9 +47,9 @@ Mesh::Topology Mesh::GetTopology() const noexcept
 
 void Mesh::Draw(const DrawDesc& desc) const
 {
-	if (desc.instanceBuffer != nullptr && (desc.skip & SkipState::SkipInstanceBuffer) == 0)
+	if (desc.instanceBuffer && (desc.skip & SkipState::SkipInstanceBuffer) == 0)
 	{
-		bgfx::setInstanceDataBuffer(*desc.instanceBuffer, desc.instanceStart, desc.instanceCount);
+		bgfx::setInstanceDataBuffer(toBgfx(*desc.instanceBuffer), desc.instanceStart, desc.instanceCount);
 	}
 	if (_indexBuffer != nullptr && _indexBuffer->GetCount() > 0 && (desc.skip & SkipState::SkipIndexBuffer) == 0)
 	{
@@ -63,6 +64,6 @@ void Mesh::Draw(const DrawDesc& desc) const
 		bgfx::setState(desc.state, desc.rgba);
 	}
 
-	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), desc.program.GetRawHandle(), 0,
+	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(desc.program.GetRawHandle()), 0,
 	             desc.preserveState ? BGFX_DISCARD_NONE : BGFX_DISCARD_ALL);
 }

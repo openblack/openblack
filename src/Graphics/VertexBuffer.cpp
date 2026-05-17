@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -12,6 +12,8 @@
 #include <cassert>
 
 #include <array>
+
+#include "GraphicsHandleBgfx.h"
 
 using namespace openblack::graphics;
 
@@ -33,45 +35,7 @@ constexpr std::array<bgfx::Attrib::Enum, 18> k_Attributes {
 
 } // namespace
 
-VertexBuffer::VertexBuffer(std::string name, const void* vertices, uint32_t vertexCount, VertexDecl decl) noexcept
-    : _name(std::move(name))
-    , _vertexCount(vertexCount)
-    , _vertexDecl(std::move(decl))
-    , _strideBytes(0)
-    , _handle(BGFX_INVALID_HANDLE)
-    , _layoutHandle(BGFX_INVALID_HANDLE)
-{
-	// assert(vertices != nullptr);
-	assert(vertexCount > 0);
-	assert(!_vertexDecl.empty());
-
-	// Extract gl types from decl
-	_vertexDeclOffsets.reserve(_vertexDecl.size());
-	static const std::array<std::array<uint32_t, 4>, 3> strides = {
-	    std::array<uint32_t, 4> {4, 4, 4, 4},   // Uint8
-	    std::array<uint32_t, 4> {4, 4, 8, 8},   // Int16
-	    std::array<uint32_t, 4> {4, 8, 12, 16}, // Float
-	};
-
-	bgfx::VertexLayout layout;
-	layout.begin();
-	for (const auto& d : _vertexDecl)
-	{
-		_vertexDeclOffsets.push_back(_strideBytes);
-		_strideBytes += strides.at(static_cast<size_t>(d.type)).at(d.num - 1);
-		layout.add(k_Attributes.at(static_cast<size_t>(d.attribute)), d.num, k_Types.at(static_cast<size_t>(d.type)),
-		           d.normalized, d.asInt);
-	}
-	layout.end();
-	assert(layout.m_stride == _strideBytes);
-
-	const auto* mem = bgfx::makeRef(vertices, vertexCount * layout.m_stride);
-	_handle = bgfx::createVertexBuffer(mem, layout);
-	_layoutHandle = bgfx::createVertexLayout(layout);
-	bgfx::setName(_handle, _name.c_str());
-}
-
-VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl decl) noexcept
+VertexBuffer::VertexBuffer(std::string name, const void* mem, VertexDecl decl) noexcept
     : _name(std::move(name))
     , _vertexCount(0)
     , _vertexDecl(std::move(decl))
@@ -102,22 +66,24 @@ VertexBuffer::VertexBuffer(std::string name, const bgfx::Memory* mem, VertexDecl
 	layout.end();
 	assert(layout.m_stride == _strideBytes);
 
-	_vertexCount = mem->size / static_cast<uint32_t>(_strideBytes);
+	const auto* bgfxMem = reinterpret_cast<const bgfx::Memory*>(mem);
 
-	_handle = bgfx::createVertexBuffer(mem, layout);
-	_layoutHandle = bgfx::createVertexLayout(layout);
-	bgfx::setName(_handle, _name.c_str());
+	_vertexCount = bgfxMem->size / _strideBytes;
+
+	_handle = fromBgfx(bgfx::createVertexBuffer(bgfxMem, layout));
+	_layoutHandle = fromBgfx(bgfx::createVertexLayout(layout));
+	bgfx::setName(toBgfx(_handle), _name.c_str());
 }
 
 VertexBuffer::~VertexBuffer() noexcept
 {
-	if (bgfx::isValid(_handle))
+	if (bgfx::isValid(toBgfx(_handle)))
 	{
-		bgfx::destroy(_handle);
+		bgfx::destroy(toBgfx(_handle));
 	}
-	if (bgfx::isValid(_layoutHandle))
+	if (bgfx::isValid(toBgfx(_layoutHandle)))
 	{
-		bgfx::destroy(_layoutHandle);
+		bgfx::destroy(toBgfx(_layoutHandle));
 	}
 }
 
@@ -138,5 +104,5 @@ uint32_t VertexBuffer::GetSizeInBytes() const noexcept
 
 void VertexBuffer::Bind() const
 {
-	bgfx::setVertexBuffer(0, _handle, 0, _vertexCount, _layoutHandle);
+	bgfx::setVertexBuffer(0, toBgfx(_handle), 0, _vertexCount, toBgfx(_layoutHandle));
 }

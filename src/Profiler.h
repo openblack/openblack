@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -41,14 +41,12 @@ public:
 		ReflectionDrawIsland,
 		ReflectionDrawModels,
 		ReflectionDrawSprites,
-		ReflectionDrawDebugCross,
 		MainPass,
 		MainPassDrawSky,
 		MainPassDrawWater,
 		MainPassDrawIsland,
 		MainPassDrawModels,
 		MainPassDrawSprites,
-		MainPassDrawDebugCross,
 		GuiDraw,
 		RendererFrame,
 
@@ -73,14 +71,12 @@ public:
 	    "Draw Island",          //
 	    "Draw Models",          //
 	    "Draw Sprites",         //
-	    "Draw Debug Cross",     //
 	    "Main Pass",            //
 	    "Draw Sky",             //
 	    "Draw Water",           //
 	    "Draw Island",          //
 	    "Draw Models",          //
 	    "Draw Sprites",         //
-	    "Draw Debug Cross",     //
 	    "Encode GUI Draw",      //
 	    "Renderer Frame",       //
 	};

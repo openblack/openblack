@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -13,10 +13,14 @@
 
 #include <array>
 
+#include <bgfx/bgfx.h>
+
+#include "GraphicsHandleBgfx.h"
+
 using namespace openblack::graphics;
 
-FrameBuffer::FrameBuffer(std::string&& name, uint16_t width, uint16_t height, Format colorFormat,
-                         std::optional<Format> depthStencilFormat)
+FrameBuffer::FrameBuffer(std::string&& name, uint16_t width, uint16_t height, TextureFormat colorFormat,
+                         std::optional<TextureFormat> depthStencilFormat)
     : _name(std::move(name))
     , _handle(BGFX_INVALID_HANDLE)
     , _width(width)
@@ -27,43 +31,41 @@ FrameBuffer::FrameBuffer(std::string&& name, uint16_t width, uint16_t height, Fo
     , _depthStencilAttachment(_name + "_depthStencil")
 {
 	_colorAttachment._handle = BGFX_INVALID_HANDLE;
-	_colorAttachment._info.width = width;
-	_colorAttachment._info.height = height;
-	_colorAttachment._info.numLayers = 1;
+	_colorAttachment._resolution = glm::u16vec2(width, height);
+	_colorAttachment._numLayers = 1;
 
 	_depthStencilAttachment._handle = BGFX_INVALID_HANDLE;
-	_depthStencilAttachment._info.width = width;
-	_depthStencilAttachment._info.height = height;
-	_depthStencilAttachment._info.numLayers = 1;
+	_depthStencilAttachment._resolution = glm::u16vec2(width, height);
+	_depthStencilAttachment._numLayers = 1;
 
 	if (depthStencilFormat)
 	{
 		std::array<bgfx::TextureHandle, 2> textures = {
-		    bgfx::createTexture2D(width, height, false, 1, getBgfxTextureFormat(colorFormat), BGFX_TEXTURE_RT),
-		    bgfx::createTexture2D(width, height, false, 1, getBgfxTextureFormat(depthStencilFormat.value()), BGFX_TEXTURE_RT),
+		    bgfx::createTexture2D(width, height, false, 1, toBgfx(colorFormat), BGFX_TEXTURE_RT),
+		    bgfx::createTexture2D(width, height, false, 1, toBgfx(depthStencilFormat.value()), BGFX_TEXTURE_RT),
 		};
-		_handle = bgfx::createFrameBuffer(static_cast<uint8_t>(textures.size()), textures.data());
-		_colorAttachment._handle = bgfx::getTexture(_handle, 0);
-		_depthStencilAttachment._handle = bgfx::getTexture(_handle, 1);
+		_handle = fromBgfx(bgfx::createFrameBuffer(static_cast<uint8_t>(textures.size()), textures.data()));
+		_colorAttachment._handle = fromBgfx(bgfx::getTexture(toBgfx(_handle), 0));
+		_depthStencilAttachment._handle = fromBgfx(bgfx::getTexture(toBgfx(_handle), 1));
 	}
 	else
 	{
-		_handle = bgfx::createFrameBuffer(_width, _height, getBgfxTextureFormat(colorFormat), BGFX_TEXTURE_RT);
-		_colorAttachment._handle = bgfx::getTexture(_handle, 0);
+		_handle = fromBgfx(bgfx::createFrameBuffer(_width, _height, toBgfx(colorFormat), BGFX_TEXTURE_RT));
+		_colorAttachment._handle = fromBgfx(bgfx::getTexture(toBgfx(_handle), 0));
 	}
 
-	assert(bgfx::isValid(_handle));
+	assert(bgfx::isValid(toBgfx(_handle)));
 }
 
 FrameBuffer::~FrameBuffer()
 {
-	if (bgfx::isValid(_handle))
+	if (bgfx::isValid(toBgfx(_handle)))
 	{
-		bgfx::destroy(_handle);
+		bgfx::destroy(toBgfx(_handle));
 	}
 }
 
 void FrameBuffer::Bind(RenderPass viewId) const
 {
-	bgfx::setViewFrameBuffer(static_cast<uint8_t>(viewId), _handle);
+	bgfx::setViewFrameBuffer(static_cast<uint8_t>(viewId), toBgfx(_handle));
 }

@@ -162,7 +162,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt update -y
-          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev libltdl-dev libxext-dev
+          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev libltdl-dev libxext-dev libwayland-dev libwayland-egl-backend-dev
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v7
         with:

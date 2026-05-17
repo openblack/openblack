@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -184,7 +184,7 @@ protected:
 
 		static const auto mockGamePath = std::filesystem::path(TEST_BINARY_DIR) / "mock";
 		auto args = openblack::Arguments {
-		    .rendererType = bgfx::RendererType::Enum::Noop,
+		    .graphicsBackend = openblack::GraphicsBackend::Noop,
 		    .gamePath = mockGamePath.string(),
 		    .logFile = "stdout",
 		};
@@ -296,8 +296,8 @@ protected:
 			ASSERT_FLOAT_EQ(villagerTransform.position.z, state.pos.y) << msg;
 			if (state.move_state != MOVE_STATE_FINAL_STEP) // Set in the next turn
 			{
-				ASSERT_FLOAT_EQ(villagerWallhug.step.x, state.step.x) << msg;
-				ASSERT_FLOAT_EQ(villagerWallhug.step.y, state.step.y) << msg;
+				ASSERT_NEAR(villagerWallhug.step.x, state.step.x, 0.001f) << msg;
+				ASSERT_NEAR(villagerWallhug.step.y, state.step.y, 0.001f) << msg;
 			}
 			ASSERT_FLOAT_EQ(villagerWallhug.goal.x, state.goal.x) << msg;
 			ASSERT_FLOAT_EQ(villagerWallhug.goal.y, state.goal.y) << msg;

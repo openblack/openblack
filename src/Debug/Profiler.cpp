@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -73,10 +73,6 @@ void Profiler::Draw() noexcept
 	ImGui::Checkbox("Entities", &config.drawEntities);
 	ImGui::NextColumn();
 	ImGui::Checkbox("Sprites", &config.drawSprites);
-	ImGui::NextColumn();
-	ImGui::Checkbox("TestModel", &config.drawTestModel);
-	ImGui::NextColumn();
-	ImGui::Checkbox("Debug Cross", &config.drawDebugCross);
 	ImGui::Columns(1);
 
 	auto width = ImGui::GetColumnWidth() - ImGui::CalcTextSize("Frame").x;

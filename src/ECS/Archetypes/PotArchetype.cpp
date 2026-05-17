@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -18,7 +18,7 @@
 #include "ECS/Registry.h"
 #include "InfoConstants.h"
 #include "Locator.h"
-#include "Resources/MeshId.h"
+#include "Resources/ResourceManager.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
@@ -42,7 +42,7 @@ entt::entity PotArchetype::Create(const glm::vec3& position, float yAngleRadians
 
 	registry.Assign<Transform>(entity, position, glm::mat3(glm::eulerAngleY(-yAngleRadians)), glm::vec3(1.0f));
 	registry.Assign<Pot>(entity, static_cast<uint16_t>(amount), static_cast<uint16_t>(info.maxAmountInPot));
-	const auto resourceId = resources::MeshIdToResourceId(info.meshId);
+	const auto resourceId = resources::HashIdentifier(info.meshId);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 	if (info.potType == PotType::PileFood)
 	{

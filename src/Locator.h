@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2024 openblack developers
+ * Copyright (c) 2018-2026 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -15,6 +15,8 @@
 #include <string>
 
 #include <entt/locator/locator.hpp>
+
+#include "EngineConfig.h"
 
 namespace openblack
 {
@@ -99,7 +101,7 @@ class TownSystemInterface;
 } // namespace ecs::systems
 
 void InitializeWindow(const std::string& title, int width, int height, windowing::DisplayMode displayMode, uint32_t extraFlags);
-bool InitializeEngine(uint8_t rendererType, bool vsync) noexcept;
+bool InitializeEngine(GraphicsBackend backend, bool vsync) noexcept;
 bool InitializeGame() noexcept;
 void InitializeLevel(const std::filesystem::path& path);
 void ShutDownServices();
