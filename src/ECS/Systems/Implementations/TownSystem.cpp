@@ -53,7 +53,8 @@ entt::entity TownSystem::FindClosestTown(const glm::vec3& point) const
 
 	registry.Each<const Town, const Transform>(
 	    [&point, &result, &closest](entt::entity entity, [[maybe_unused]] auto& town, [[maybe_unused]] auto& transform) {
-		    float distance2 = glm::dot(point, transform.position);
+		    const auto delta = point - transform.position;
+		    const float distance2 = glm::dot(delta, delta);
 		    if (distance2 < closest)
 		    {
 			    closest = distance2;

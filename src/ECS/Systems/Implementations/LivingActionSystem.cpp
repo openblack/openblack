@@ -11,10 +11,18 @@
 
 #include "LivingActionSystem.h"
 
+#include <glm/common.hpp>
+#include <glm/gtc/constants.hpp>
+#include <glm/gtx/vec_swizzle.hpp>
+#include <glm/trigonometric.hpp>
+#include <glm/vec2.hpp>
 #include <spdlog/spdlog.h>
 
+#include "Common/RandomNumberManager.h"
 #include "ECS/Components/LivingAction.h"
+#include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
+#include "ECS/Components/WallHug.h"
 #include "ECS/Registry.h"
 #include "Enums.h"
 #include "Locator.h"
@@ -44,6 +52,79 @@ uint32_t VillagerCreated(LivingAction& action)
 	}
 	return 0;
 }
+
+// Wander behaviour: how far (in world units) an idle villager may roam from
+// its village centre when picking a destination.
+static constexpr float k_WanderRadius = 40.0f;
+// Idle pause (in turns) before an arrived/abandoned villager picks a new destination.
+static constexpr uint16_t k_WanderCooldownTurns = 20;
+// Keep goals clear of the map edges so the pathfinder's neighbouring-cell lookups stay in
+// bounds (the movement grid is MapInterface::k_GridSize cells, each 10 world units wide).
+static constexpr float k_WanderWorldBoundMin = 30.0f;
+static constexpr float k_WanderWorldBoundMax = 5090.0f;
+
+namespace
+{
+// Pick a random nearby point and hand it to the PathfindingSystem the same way the
+// debug "Move To Point" tool does (see Debug/PathFinding.cpp), then wait in MoveToPos.
+uint32_t VillagerDecideWhatToDo(LivingAction& action)
+{
+	if (action.turnsSinceStateChange < k_WanderCooldownTurns)
+	{
+		// TODO(#863): play a "catch breath" idle animation here (lean forward, breathe) during the cooldown
+		// once villager animation playback exists. The transitionAnimation hook in k_VillagerStateTable
+		// is the intended home for it; the Mesh component has no animation state today.
+		return 0;
+	}
+
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto entity = registry.ToEntity(action);
+
+	const auto& transform = registry.Get<Transform>(entity);
+	auto& wallHug = registry.Get<WallHug>(entity);
+	auto& rng = Locator::rng::value();
+
+	const float angle = rng.NextValue(0.0f, glm::two_pi<float>());
+	const float distance = rng.NextValue(0.0f, k_WanderRadius);
+	const auto& villager = registry.Get<Villager>(entity);
+	auto origin = glm::xz(transform.position); // fallback if the villager has no valid town
+	if (villager.town != entt::null && registry.Valid(villager.town) && registry.AllOf<Transform>(villager.town))
+	{
+		origin = glm::xz(registry.Get<Transform>(villager.town).position);
+	}
+	auto goal = origin + glm::vec2(glm::cos(angle), glm::sin(angle)) * distance;
+	goal = glm::clamp(goal, glm::vec2(k_WanderWorldBoundMin), glm::vec2(k_WanderWorldBoundMax));
+
+	wallHug.goal = goal;
+	wallHug.step = glm::vec2(0.0f); // force a fresh step to be computed on the next pathfinding turn
+	registry.Remove<MoveStateLinearTag, MoveStateOrbitTag, MoveStateExitCircleTag, MoveStateStepThroughTag,
+	                MoveStateFinalStepTag, MoveStateArrivedTag>(entity);
+	registry.Remove<WallHugObjectReference>(entity);
+	registry.Assign<MoveStateLinearTag>(entity);
+
+	Locator::livingActionSystem::value().VillagerSetState(action, LivingAction::Index::Top, VillagerStates::MoveToPos, true);
+	return 0;
+}
+
+// Wait until the PathfindingSystem has walked us to the goal, then decide again.
+uint32_t VillagerMoveToPos(LivingAction& action)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto entity = registry.ToEntity(action);
+
+	// The PathfindingSystem removes the "in transit" move-state tags once the goal is reached
+	// (leaving only a FinalStep tag). When none of them remain, we've arrived.
+	const bool stillMoving =
+	    registry.AnyOf<MoveStateLinearTag, MoveStateOrbitTag, MoveStateExitCircleTag, MoveStateStepThroughTag>(entity);
+	if (!stillMoving)
+	{
+		registry.Remove<MoveStateFinalStepTag, MoveStateArrivedTag>(entity);
+		Locator::livingActionSystem::value().VillagerSetState(action, LivingAction::Index::Top, VillagerStates::DecideWhatToDo,
+		                                                      true);
+	}
+	return 0;
+}
+} // namespace
 
 struct VillagerStateTableEntry
 {
@@ -126,7 +207,10 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* INVALID_STATE */ VillagerStateTableEntry {
         .state = &VillagerInvalidState,
     },
-    /* MOVE_TO_POS */ k_TodoEntry,
+    /* MOVE_TO_POS */
+    VillagerStateTableEntry {
+        .state = &VillagerMoveToPos,
+    },
     /* MOVE_TO_OBJECT */ k_TodoEntry,
     /* MOVE_ON_STRUCTURE */ k_TodoEntry,
     /* IN_SCRIPT */ k_TodoEntry,
@@ -292,7 +376,10 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* TURN_TO_FACE_CREATURE_REACTION */ k_TodoEntry,
     /* WATCH_FLYING_OBJECT_REACTION */ k_TodoEntry,
     /* POINT_AT_FLYING_OBJECT_REACTION */ k_TodoEntry,
-    /* DECIDE_WHAT_TO_DO */ k_TodoEntry,
+    /* DECIDE_WHAT_TO_DO */
+    VillagerStateTableEntry {
+        .state = &VillagerDecideWhatToDo,
+    },
     /* INTERACT_DECIDE_WHAT_TO_DO */ k_TodoEntry,
     /* EAT_OUTSIDE */ k_TodoEntry,
     /* RUN_AWAY_FROM_OBJECT_REACTION */ k_TodoEntry,
@@ -420,29 +507,34 @@ void LivingActionSystem::VillagerSetState(LivingAction& action, LivingAction::In
                                           bool skipTransition) const
 {
 	const auto previousState = static_cast<VillagerStates>(action.states.at(static_cast<size_t>(index)));
-	if (previousState != state)
+	if (previousState == state)
 	{
-		[[maybe_unused]] auto& registry = Locator::entitiesRegistry::value();
-		SPDLOG_LOGGER_TRACE(spdlog::get("ai"), "Villager #{}: Setting state {} -> {}",
-		                    static_cast<int>(registry.ToEntity(action)),
-		                    k_VillagerStateStrings.at(static_cast<size_t>(previousState)),
-		                    k_VillagerStateStrings.at(static_cast<size_t>(state)));
+		return;
+	}
 
-		if (index == LivingAction::Index::Top)
-		{
-			action.turnsSinceStateChange = 0;
-			if (skipTransition)
-			{
-				return;
-			}
+	[[maybe_unused]] auto& registry = Locator::entitiesRegistry::value();
+	SPDLOG_LOGGER_TRACE(spdlog::get("ai"), "Villager #{}: Setting state {} -> {}", static_cast<int>(registry.ToEntity(action)),
+	                    k_VillagerStateStrings.at(static_cast<size_t>(previousState)),
+	                    k_VillagerStateStrings.at(static_cast<size_t>(state)));
 
-			if (VillagerCallExitState(action, index))
-			{
-				return;
-			}
+	const bool runTransition = index == LivingAction::Index::Top && !skipTransition;
 
-			VillagerCallEntryState(action, index, previousState, state);
-		}
+	// Exit the previous state before switching. A truthy return means it isn't ready to be
+	// left yet, so abort the transition without changing state.
+	if (runTransition && VillagerCallExitState(action, index))
+	{
+		return;
+	}
+
+	if (index == LivingAction::Index::Top)
+	{
+		action.turnsSinceStateChange = 0;
+	}
+	action.states.at(static_cast<size_t>(index)) = static_cast<uint8_t>(state);
+
+	if (runTransition)
+	{
+		VillagerCallEntryState(action, index, previousState, state);
 	}
 }
 

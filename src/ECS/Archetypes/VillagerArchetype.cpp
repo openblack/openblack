@@ -57,7 +57,7 @@ entt::entity VillagerArchetype::Create([[maybe_unused]] const glm::vec3& abodePo
 
 	registry.Assign<Villager>(entity, health, static_cast<uint32_t>(age), hunger, lifeStage, sex, info.tribeType,
 	                          info.villagerNumber, task, town, abode);
-	registry.Assign<WallHug>(entity, glm::vec2(), glm::vec2(), GetSpeedStateSpeed(info.speedGroup.speedDefault));
+	registry.Assign<WallHug>(entity, glm::vec2(), glm::vec2(), 0.0f, GetSpeedStateSpeed(info.speedGroup.speedDefault));
 	const auto resourceId = resources::HashIdentifier(info.highDetail);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(0));
 	auto turnsSinceStateChange = Locator::rng::value().NextValue<uint16_t>(1, 500);

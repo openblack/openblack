@@ -12,6 +12,7 @@
 #include "PathfindingSystem.h"
 
 #include <optional>
+#include <vector>
 
 #include <entt/entity/entity.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -70,9 +71,16 @@ void IterateStepAroundObstacle(Transform& transform, WallHug& wallHug, const Fix
 	InitializeStep(transform, wallHug, angle + angleStep * clockwiseModifier);
 }
 
-void InCircleHugWithoutObject()
+/// The wall-hug/orbit movement port has unfinished branches. To keep villager wandering
+/// working, we degrade gracefully instead of crashing: stop the villager where it is
+/// and drop all of its movement state. The LivingActionSystem's MoveToPos handler then sees no
+/// active move tags, treats the villager as "arrived", and picks a new destination.
+void AbandonMove(ecs::Registry& registry, entt::entity entity)
 {
-	throw std::runtime_error("TODO: Handle case of orbiting without an object to orbit");
+	SPDLOG_LOGGER_WARN(spdlog::get("pathfinding"), "Villager #{}: unimplemented pathfinding case hit, abandoning move",
+	                   static_cast<uint32_t>(entity));
+	registry.Remove<MoveStateLinearTag, MoveStateOrbitTag, MoveStateExitCircleTag, MoveStateStepThroughTag,
+	                MoveStateFinalStepTag, MoveStateArrivedTag, WallHugObjectReference>(entity);
 }
 bool AreWeThere(const glm::vec2& pos, const glm::vec2& goal, float threshold)
 {
@@ -198,8 +206,10 @@ bool OrbitScanForObstacle(entt::entity entity, bool clockwise, Transform& transf
 		                         obstacleFixed.boundingRadius * obstacleFixed.boundingRadius;
 		if (closeEnough)
 		{
-			throw std::runtime_error("TODO: CircleSquareSweep");
-			// Needs to return out of this scope and not run the external following code
+			// TODO(#864): CircleSquareSweep is unimplemented. Degrade gracefully instead of
+			// crashing, returning out of this scope so the external following code does not run.
+			AbandonMove(registry, entity);
+			return false;
 		}
 
 		for (const auto& c : GetNeighboringCells(glm::xz(transform.position)))
@@ -272,7 +282,13 @@ bool OrbitScanForObstacle(entt::entity entity, bool clockwise, Transform& transf
 					const auto t1 = angle1 * 2.0f / 3.0f * r1 / wallHug.speed;
 					int t = static_cast<int>(glm::round(glm::min(t0, t1)));
 
-					assert(t >= 0);
+					if (t < 0)
+					{
+						// Unfinished orbit geometry produced a negative step count. Degrade gracefully
+						// (bail out of the scan) rather than asserting and crashing.
+						AbandonMove(registry, entity);
+						return false;
+					}
 					if (t < 1)
 					{
 						// We're too close to second circle. Act like we're on the second circle and continue looking forward by
@@ -403,35 +419,31 @@ void PathfindingSystem::Update()
 	    entt::exclude<WallHugObjectReference>);
 
 	// 3.  ORBIT_CW, ORBIT_CCW, EXIT_CIRCLE_CW, EXIT_CIRCLE_CCW:
-	//         If there is no recorded obstacle (what we orbit), this is an unimplemented error
-	//         exclude from next parts
-	registry.Each<const MoveStateOrbitTag>([&registry](entt::entity entity, [[maybe_unused]] const MoveStateOrbitTag& state) {
-		if (!registry.AllOf<WallHugObjectReference>(entity))
+	//         Orbiting requires a recorded obstacle to hug. Handling a missing one is unimplemented
+	//         in the port; abandon those moves instead of crashing. Collect
+	//         first, then remove, so we never mutate the pool being iterated for a non-current entity.
+	{
+		std::vector<entt::entity> missingObstacle;
+		const auto collectIfNoObstacle = [&registry, &missingObstacle](entt::entity entity) {
+			if (!registry.AllOf<WallHugObjectReference>(entity) ||
+			    registry.Get<WallHugObjectReference>(entity).entity == entt::null)
+			{
+				missingObstacle.push_back(entity);
+			}
+		};
+		registry.Each<const MoveStateOrbitTag>(
+		    [&collectIfNoObstacle](entt::entity entity, [[maybe_unused]] const MoveStateOrbitTag& state) {
+			    collectIfNoObstacle(entity);
+		    });
+		registry.Each<const MoveStateExitCircleTag>(
+		    [&collectIfNoObstacle](entt::entity entity, [[maybe_unused]] const MoveStateExitCircleTag& state) {
+			    collectIfNoObstacle(entity);
+		    });
+		for (const auto entity : missingObstacle)
 		{
-			InCircleHugWithoutObject();
+			AbandonMove(registry, entity);
 		}
-	});
-	registry.Each<const MoveStateOrbitTag, const WallHugObjectReference>(
-	    []([[maybe_unused]] const MoveStateOrbitTag& state, const WallHugObjectReference& object) {
-		    if (object.entity == entt::null)
-		    {
-			    InCircleHugWithoutObject();
-		    }
-	    });
-	registry.Each<const MoveStateExitCircleTag>(
-	    [&registry](entt::entity entity, [[maybe_unused]] const MoveStateExitCircleTag& state) {
-		    if (!registry.AllOf<WallHugObjectReference>(entity))
-		    {
-			    InCircleHugWithoutObject();
-		    }
-	    });
-	registry.Each<const MoveStateExitCircleTag, const WallHugObjectReference>(
-	    []([[maybe_unused]] const MoveStateExitCircleTag& state, const WallHugObjectReference& object) {
-		    if (object.entity == entt::null)
-		    {
-			    InCircleHugWithoutObject();
-		    }
-	    });
+	}
 
 	// 4a. STEP_THROUGH, EXIT_CIRCLE_CW, EXIT_CIRCLE_CCW, LINEAR without obstacles:
 	//         Do StepForward and ApplyStepGoal for the step distance -> no change to state
@@ -477,7 +489,8 @@ void PathfindingSystem::Update()
 	registry.Each<const MoveStateOrbitTag>([&registry](entt::entity entity, [[maybe_unused]] const MoveStateOrbitTag& state) {
 		if (!registry.AnyOf<WallHugObjectReference>(entity))
 		{
-			throw std::runtime_error("TODO: probably transitioning to another circle, scan and select new reference");
+			// TODO(#865): circle-to-circle transition is unimplemented. Degrade gracefully.
+			AbandonMove(registry, entity);
 		}
 	});
 	ApplyStepGoal<MoveState::Orbit>(registry);
