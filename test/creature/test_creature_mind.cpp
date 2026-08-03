@@ -65,26 +65,27 @@ protected:
 };
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
-TEST_F(CreatureMindTest, LoaderMapsEachCreatureTypeToItsInfoConstantsColumn)
+TEST_F(CreatureMindTest, LoaderUsesVanillaCreatureTypeColumns)
 {
 	const CreatureMindLoader loader;
 
 	for (size_t speciesIndex = 0; speciesIndex < k_CreatureTypeCount; ++speciesIndex)
 	{
 		SCOPED_TRACE(speciesIndex);
+		const auto creatureType = static_cast<CreatureType>(speciesIndex + 1);
+		const size_t vanillaCreatureTypeIndex = creatureType == CreatureType::GiantApe ? 0 : static_cast<size_t>(creatureType);
 		for (size_t desireIndex = 0; desireIndex < _info->creatureDesireForType.size(); ++desireIndex)
 		{
 			auto& values = _info->creatureDesireForType.at(desireIndex).byCreatureType;
 			values.fill(-1.0f);
-			values.at(speciesIndex) = static_cast<float>(100 * speciesIndex + desireIndex);
+			values.at(vanillaCreatureTypeIndex) = static_cast<float>(100 * speciesIndex + desireIndex);
 		}
 
-		const auto creatureType = static_cast<CreatureType>(speciesIndex + 1);
 		const auto mind =
 		    loader(CreatureMindLoader::FromDiskTag {}, std::filesystem::path("ComputerControlledCreature"), creatureType);
-		for (size_t desireIndex = 0; desireIndex < mind->baseDesireWeights.size(); ++desireIndex)
+		for (size_t desireIndex = 0; desireIndex < mind->desireIncreaseTimes.size(); ++desireIndex)
 		{
-			EXPECT_FLOAT_EQ(mind->baseDesireWeights.at(desireIndex), static_cast<float>(100 * speciesIndex + desireIndex));
+			EXPECT_FLOAT_EQ(mind->desireIncreaseTimes.at(desireIndex), static_cast<float>(100 * speciesIndex + desireIndex));
 		}
 	}
 }
@@ -118,7 +119,7 @@ TEST_F(CreatureMindTest, FailedLoadCanRecoverAfterInfoConstantsBecomesAvailable)
 	auto info = std::make_unique<InfoConstants>();
 	for (auto& desire : info->creatureDesireForType)
 	{
-		desire.byCreatureType.at(static_cast<size_t>(CreatureType::Cow) - 1) = 2.5f;
+		desire.byCreatureType.at(static_cast<size_t>(CreatureType::Cow)) = 2.5f;
 	}
 	_info = info.get();
 	Locator::infoConstants::reset(info.release());
@@ -127,16 +128,16 @@ TEST_F(CreatureMindTest, FailedLoadCanRecoverAfterInfoConstantsBecomesAvailable)
 	    minds.Load(identifier, CreatureMindLoader::FromDiskTag {}, "ComputerControlledCreature", CreatureType::Cow);
 	EXPECT_TRUE(result.second);
 	EXPECT_TRUE(minds.Contains(identifier));
-	EXPECT_FLOAT_EQ(result.first->second->baseDesireWeights.front(), 2.5f);
+	EXPECT_FLOAT_EQ(result.first->second->desireIncreaseTimes.front(), 2.5f);
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
-TEST_F(CreatureMindTest, CacheRetainsDistinctWeightsForTheSameMindFileByCreatureType)
+TEST_F(CreatureMindTest, CacheRetainsDistinctIncreaseTimesForTheSameMindFileByCreatureType)
 {
 	for (auto& desire : _info->creatureDesireForType)
 	{
-		desire.byCreatureType.at(static_cast<size_t>(CreatureType::Cow) - 1) = 1.25f;
-		desire.byCreatureType.at(static_cast<size_t>(CreatureType::Tiger) - 1) = 2.5f;
+		desire.byCreatureType.at(static_cast<size_t>(CreatureType::Cow)) = 1.25f;
+		desire.byCreatureType.at(static_cast<size_t>(CreatureType::Tiger)) = 2.5f;
 	}
 
 	Locator::resources::emplace<Resources>();
@@ -154,18 +155,18 @@ TEST_F(CreatureMindTest, CacheRetainsDistinctWeightsForTheSameMindFileByCreature
 	EXPECT_TRUE(tigerResult.second);
 	EXPECT_NE(cowMindId, tigerMindId);
 	EXPECT_EQ(minds.Size(), 2);
-	EXPECT_FLOAT_EQ(minds.Handle(cowMindId)->baseDesireWeights.front(), 1.25f);
-	EXPECT_FLOAT_EQ(minds.Handle(tigerMindId)->baseDesireWeights.front(), 2.5f);
+	EXPECT_FLOAT_EQ(minds.Handle(cowMindId)->desireIncreaseTimes.front(), 1.25f);
+	EXPECT_FLOAT_EQ(minds.Handle(tigerMindId)->desireIncreaseTimes.front(), 2.5f);
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
-TEST_F(CreatureMindTest, SystemCopiesLoadedMindWeightsIntoCreatureState)
+TEST_F(CreatureMindTest, SystemCopiesLoadedMindIncreaseTimesIntoCreatureState)
 {
 	for (size_t desireIndex = 0; desireIndex < _info->creatureDesireForType.size(); ++desireIndex)
 	{
 		auto& values = _info->creatureDesireForType.at(desireIndex).byCreatureType;
 		values.fill(0.0f);
-		values.at(static_cast<size_t>(CreatureType::Cow) - 1) = static_cast<float>(desireIndex) + 0.25f;
+		values.at(static_cast<size_t>(CreatureType::Cow)) = static_cast<float>(desireIndex) + 0.25f;
 	}
 
 	Locator::resources::emplace<Resources>();
@@ -186,9 +187,9 @@ TEST_F(CreatureMindTest, SystemCopiesLoadedMindWeightsIntoCreatureState)
 	const auto& state = registry.Get<CreatureState>(entity);
 	EXPECT_TRUE(state.initialized);
 	EXPECT_EQ(state.mind, mindId);
-	for (size_t desireIndex = 0; desireIndex < state.desireWeights.size(); ++desireIndex)
+	for (size_t desireIndex = 0; desireIndex < state.desireIncreaseTimes.size(); ++desireIndex)
 	{
-		EXPECT_FLOAT_EQ(state.desireWeights.at(desireIndex), static_cast<float>(desireIndex) + 0.25f);
+		EXPECT_FLOAT_EQ(state.desireIncreaseTimes.at(desireIndex), static_cast<float>(desireIndex) + 0.25f);
 	}
 }
 

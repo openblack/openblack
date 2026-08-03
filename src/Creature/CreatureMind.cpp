@@ -23,10 +23,14 @@ CreatureMind::CreatureMind(const InfoConstants& info, CreatureType creatureType)
 		return;
 	}
 
-	const size_t creatureTypeIndex = static_cast<size_t>(creatureType) - 1;
-	for (size_t desireIndex = 0; desireIndex < baseDesireWeights.size(); ++desireIndex)
+	// Vanilla's 17-float table is indexed by its original CreatureType enum. Its Ape value is
+	// column 0, while Cow through Gorilla retain their enum values 1 through 16. openblack
+	// represents that Ape entry as GiantApe.
+	const size_t vanillaCreatureTypeIndex = creatureType == CreatureType::GiantApe ? 0 : static_cast<size_t>(creatureType);
+	for (size_t desireIndex = 0; desireIndex < desireIncreaseTimes.size(); ++desireIndex)
 	{
-		baseDesireWeights.at(desireIndex) = info.creatureDesireForType.at(desireIndex).byCreatureType.at(creatureTypeIndex);
+		desireIncreaseTimes.at(desireIndex) =
+		    info.creatureDesireForType.at(desireIndex).byCreatureType.at(vanillaCreatureTypeIndex);
 	}
 }
 

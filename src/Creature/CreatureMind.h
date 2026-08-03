@@ -30,9 +30,9 @@ static constexpr size_t k_DesireCount = static_cast<size_t>(CreatureDesires::Inv
 
 struct CreatureMind
 {
-	// Species-specific values from InfoConstants::creatureDesireForType, which is parsed from info.dat.
+	// Species-specific desire increase times from InfoConstants::creatureDesireForType, parsed from info.dat.
 	// Unsupported cognition behavior intentionally has no synthesized fallback values here.
-	std::array<float, k_DesireCount> baseDesireWeights {};
+	std::array<float, k_DesireCount> desireIncreaseTimes {};
 
 	CreatureMind() = default;
 	CreatureMind(const InfoConstants& info, CreatureType creatureType);

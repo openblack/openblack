@@ -798,8 +798,8 @@ struct GTotemStatueInfo: GMultiMapFixedInfo
 
 struct CreatureDesireForType
 {
-	// The parsed Black & White 1.20 structure stores 17 contiguous floats in CreatureType's on-disk order,
-	// from Cow through GiantApe.
+	// The vanilla loader reads 17 contiguous floats. They use the original creature-type indices:
+	// Ape is column 0; Cow through Gorilla are columns 1 through 16.
 	std::array<float, static_cast<size_t>(CreatureType::_COUNT) - 1> byCreatureType;
 };
 

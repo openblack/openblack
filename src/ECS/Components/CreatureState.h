@@ -20,7 +20,7 @@ namespace openblack::ecs::components
 
 struct CreatureState
 {
-	std::array<float, creature::k_DesireCount> desireWeights {};
+	std::array<float, creature::k_DesireCount> desireIncreaseTimes {};
 	entt::id_type mind {};
 	bool initialized = false;
 };

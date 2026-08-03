@@ -36,13 +36,13 @@ void CreatureMindSystem::Update()
 
 		if (!mindManager.Contains(creature.mind))
 		{
-			state.desireWeights.fill(0.0f);
+			state.desireIncreaseTimes.fill(0.0f);
 			state.initialized = false;
 			return;
 		}
 
 		const CreatureMind& mind = *mindManager.Handle(creature.mind);
-		state.desireWeights = mind.baseDesireWeights;
+		state.desireIncreaseTimes = mind.desireIncreaseTimes;
 		state.mind = creature.mind;
 		state.initialized = true;
 	});
