@@ -20,6 +20,10 @@
 #include <LHVMTypes.h>
 #include <entt/entity/entity.hpp>
 #include <entt/entity/fwd.hpp>
+#include <glm/geometric.hpp>
+#include <glm/gtc/constants.hpp>
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <spdlog/spdlog.h>
 
@@ -475,10 +479,29 @@ void MoveGameThing() // 033 MOVE_GAME_THING
 
 void SetFocus() // 034 SET_FOCUS
 {
-	// const auto position = PopVec();
-	// const auto object = Pop().uintVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto position = PopVec();
+	const auto object = Pop().uintVal;
+
+	if (object == 0)
+	{
+		return;
+	}
+
+	auto& registry = Locator::entitiesRegistry::value();
+	auto* transform = registry.TryGet<Transform>(static_cast<entt::entity>(object));
+	if (transform == nullptr)
+	{
+		return;
+	}
+
+	const glm::vec2 direction(position.x - transform->position.x, position.z - transform->position.z);
+	if (glm::dot(direction, direction) == 0.0f)
+	{
+		return;
+	}
+
+	const auto angle = std::atan2(direction.y, direction.x);
+	transform->rotation = glm::eulerAngleY(-angle - glm::half_pi<float>());
 }
 
 void HasCameraArrived() // 035 HAS_CAMERA_ARRIVED
