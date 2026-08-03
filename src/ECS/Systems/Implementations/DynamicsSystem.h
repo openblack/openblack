@@ -39,7 +39,7 @@ class DynamicsSystem final: public DynamicsSystemInterface
 {
 public:
 	DynamicsSystem();
-	virtual ~DynamicsSystem();
+	~DynamicsSystem();
 
 	void Reset() override;
 	void Update(std::chrono::microseconds& dt) override;
