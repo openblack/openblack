@@ -58,6 +58,7 @@ public:
 		bool drawIsland;
 		bool drawEntities;
 		bool drawSprites;
+		bool drawVegetation;
 		bool drawBoundingBoxes;
 		bool cullBack;
 		bool wireframe;

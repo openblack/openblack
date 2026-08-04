@@ -31,15 +31,19 @@ using namespace openblack::ecs::components;
 
 RenderContext::RenderContext()
     : instanceUniformBuffer(BGFX_INVALID_HANDLE)
+    , treeInstanceUniformBuffer(BGFX_INVALID_HANDLE)
 {
 }
 RenderContext::~RenderContext()
 {
-	if (bgfx::isValid(toBgfx(instanceUniformBuffer)))
+	for (const auto& handle : {instanceUniformBuffer, treeInstanceUniformBuffer})
 	{
-		bgfx::destroy(toBgfx(instanceUniformBuffer));
-		bgfx::frame();
-		bgfx::frame();
+		if (bgfx::isValid(toBgfx(handle)))
+		{
+			bgfx::destroy(toBgfx(handle));
+			bgfx::frame();
+			bgfx::frame();
+		}
 	}
 }
 
