@@ -28,18 +28,15 @@
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <bx/timer.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/compatibility.hpp>
 #include <imgui.h>
-#include <imgui_impl_sdl2.h>
+#include <imgui_impl_sdl3.h>
 #include <imgui_internal.h>
 #include <imgui_stdlib.h>
 #include <imgui_user.h>
-#ifdef _WIN32
-#include <SDL2/SDL_syswm.h>
-#endif
 
 #include "3D/SkyInterface.h"
 #include "Audio.h"
@@ -126,7 +123,7 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 		auto* handle = Locator::windowing::value().GetHandle();
 		if (handle != nullptr)
 		{
-			if (!ImGui_ImplSDL2_InitForSDLRenderer(static_cast<SDL_Window*>(handle), nullptr))
+			if (!ImGui_ImplSDL3_InitForSDLRenderer(static_cast<SDL_Window*>(handle), nullptr))
 			{
 				return nullptr;
 			}
@@ -154,7 +151,7 @@ Gui::~Gui() noexcept
 {
 	if (!_headless)
 	{
-		ImGui_ImplSDL2_Shutdown();
+		ImGui_ImplSDL3_Shutdown();
 	}
 	ImGui::DestroyContext(_imgui);
 
@@ -200,7 +197,7 @@ bool Gui::ProcessEvents(const SDL_Event& event) noexcept
 		window->WindowProcessEvent(event);
 	}
 
-	ImGui_ImplSDL2_ProcessEvent(&event);
+	ImGui_ImplSDL3_ProcessEvent(&event);
 
 	const auto& io = ImGui::GetIO();
 	_stealsFocus = io.WantCaptureMouse;
@@ -208,21 +205,19 @@ bool Gui::ProcessEvents(const SDL_Event& event) noexcept
 	{
 	default:
 		break;
-	case SDL_QUIT:
+	case SDL_EVENT_QUIT:
 		_stealsFocus = false;
 		break;
-	case SDL_TEXTINPUT:
+	case SDL_EVENT_TEXT_INPUT:
 		_stealsFocus = io.WantTextInput;
 		break;
-	case SDL_KEYDOWN:
-	case SDL_KEYUP:
+	case SDL_EVENT_KEY_DOWN:
+	case SDL_EVENT_KEY_UP:
 		_stealsFocus = io.WantCaptureKeyboard;
 		break;
-	case SDL_WINDOWEVENT:
-		if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-		{
-			_stealsFocus = false;
-		}
+	case SDL_EVENT_WINDOW_RESIZED:
+	case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+		_stealsFocus = false;
 		break;
 	}
 	return _stealsFocus;
@@ -273,7 +268,7 @@ bool Gui::CreateDeviceObjectsBgfx() noexcept
 void Gui::NewFrame() noexcept
 {
 	ImGui::SetCurrentContext(_imgui);
-	ImGui_ImplSDL2_NewFrame();
+	ImGui_ImplSDL3_NewFrame();
 	ImGuiIO& io = ImGui::GetIO();
 	io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 	ImGui::NewFrame();

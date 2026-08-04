@@ -11,7 +11,7 @@
 #include <map>
 #include <memory>
 
-#include <SDL_messagebox.h>
+#include <SDL3/SDL_messagebox.h>
 #include <cxxopts.hpp>
 
 #ifdef _WIN32

@@ -40,7 +40,7 @@
 #include "LHVM.h"
 #include "Profiler.h"
 #include "Resources/Resources.h"
-#include "Windowing/Sdl2WindowingSystem.h"
+#include "Windowing/Sdl3WindowingSystem.h"
 #if __ANDROID__
 #include "FileSystem/AndroidFileSystem.h"
 #else
@@ -70,11 +70,11 @@ using openblack::input::GameActionMap;
 using openblack::lhvm::LHVM;
 using openblack::resources::Resources;
 using openblack::windowing::DisplayMode;
-using openblack::windowing::Sdl2WindowingSystem;
+using openblack::windowing::Sdl3WindowingSystem;
 
 void openblack::InitializeWindow(const std::string& title, int width, int height, DisplayMode displayMode, uint32_t extraFlags)
 {
-	Locator::windowing::emplace<Sdl2WindowingSystem>(title, width, height, displayMode, extraFlags);
+	Locator::windowing::emplace<Sdl3WindowingSystem>(title, width, height, displayMode, extraFlags);
 }
 
 bool openblack::InitializeEngine(GraphicsBackend backend, bool vsync) noexcept
