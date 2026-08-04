@@ -6,9 +6,9 @@
 [![Discord chat](https://img.shields.io/discord/608729286513262622?logo=discord&logoColor=white)](https://discord.gg/5QTexBU)
 [![License](https://img.shields.io/github/license/openblack/openblack)](LICENSE.md)
 
-openblack is an open source reimplementation of [Black & White (2001)](https://en.wikipedia.org/wiki/Black_&_White_(video_game)) written in modern C++ and modern rendering engines (OpenGL, Vulkan).
+openblack is an open source reimplementation of [Black & White (2001)](https://en.wikipedia.org/wiki/Black_&_White_(video_game)) developed using modern C++ and rendering technologies like OpenGL and Vulkan.
 
-You still need to have the original game assets in order to use this. See further below for an explanation on how to extract them.
+Original game assets are required to run openblack. See further below for an explanation on how to extract them.
 
 ---
 
@@ -18,6 +18,52 @@ You still need to have the original game assets in order to use this. See furthe
 <a href="https://user-images.githubusercontent.com/32263167/184559291-f37e44b3-c738-4c0f-82eb-28b7c84a3919.png">
     <img src="https://user-images.githubusercontent.com/32263167/184559291-f37e44b3-c738-4c0f-82eb-28b7c84a3919.png" width="45%">
 </a>
+
+## Table of Contents
+- [Glossary](#glossary)
+- [Pre-built Binaries](#pre-built-binaries)
+    - [Experimental](#experimental)
+- [Building](#building)
+    - [Configuration for using vcpkg](#configuration-for-using-vcpkg-(recommended-for-new-users))
+        - [Visual Studio Code](#visual-studio-code)
+        - [Visual Studio 2022](#visual-studio-2022)
+        - [Clion](#Clion)
+        - [XCode](#xcode)
+        - [Android Studio](#android-studio)
+        - [Web Assembly](#web-assembly)
+        - [Command Line](#command-line)
+    - [Configuration for using System Dependencies](#configuration-for-using-system-dependencies-(recommended-for-packagers))
+        - [Arch Linux](#arch-linux)
+    - [Contributing](#contributing)
+- [Extracting Asset Files](#extracting-asset-files-from-original-game)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+        - [On Windows](#on-windows)
+        - [On Linux and macOS](#on-linux-and-macOS)
+    - [Getting the Assets](#getting-the-assets)
+        - [Using Them in Place](#using-them-in-place)
+- [License](#license)
+
+## Glossary
+
+- **OpenBlack**: An open-source reimplementation of *Black & White (2001)*.
+- **Black & White (2001)**: A god simulation game developed by Lionhead Studios.
+- **vcpkg**: A package manager for C++ libraries.
+- **CMake**: A tool used for managing the build process in a compiler-independent manner.
+- **OpenGL**: A cross-platform graphics API used for rendering.
+- **Vulkan**: A modern, low-overhead graphics API.
+- **Clang**: A compiler for C, C++, and Objective-C.
+- **MSVC**: Microsoft Visual C++ Compiler.
+- **Xcode**: Apple’s integrated development environment (IDE) for macOS.
+- **Android Studio**: The official IDE for Android development.
+- **Flatpak**: A software deployment and package management system.
+- **AppImage**: A format for distributing portable software on Linux.
+- **Snap**: A package management system developed by Canonical.
+- **Git**: A version control system for tracking source code changes.
+- **Ninja**: A small build system with a focus on speed.
+- **Arch Linux**: A lightweight and flexible Linux distribution.
+- **Submodules**: External repositories included within a Git repository.
+- **Presets**: Predefined configurations for building software.
 
 # Pre-built Binaries
 
@@ -31,8 +77,7 @@ For the latest build of openblack without having to build it yourself, we offer 
 
 ## Experimental
 
-The following are qualified as exprimental. They have base minimum setup such as compilation and rendering system.
-Don't expect to be able to launch without some effort and your own patches.
+TThe following builds are **experimental**. They require additional setup, effort, and possibly custom patches to work correctly. Users should be prepared for troubleshooting when using these versions.
 
 [![Windows (x86) Build](https://img.shields.io/badge/Build-Windows%20(x86)-0078d4)](https://nightly.link/openblack/openblack/workflows/ci-cross-compile/master/openblack-x86-windows-master.zip)
 [![Windows (arm64) Build](https://img.shields.io/badge/Build-Windows%20(arm64)-0078d4)](https://nightly.link/openblack/openblack/workflows/ci-cross-compile/master/openblack-arm64-windows-master.zip) 
@@ -46,7 +91,6 @@ Don't expect to be able to launch without some effort and your own patches.
 [![AppImage](https://img.shields.io/badge/Package-AppImage-00BBFF)](https://nightly.link/openblack/openblack/workflows/packaging/master/openblack-master.AppImage.zip)
 [![Snap](https://img.shields.io/badge/Package-Snap-E95420)](https://nightly.link/openblack/openblack/workflows/packaging/master/openblack-master.snap.zip)
 
-
 # Building
 
 Clone the code using: `git clone --recursive https://github.com/openblack/openblack.git`
@@ -55,7 +99,7 @@ If you forgot to add `--recursive`, you will have to also run `git submodule upd
 
 ## Configuration for using vcpkg (Recommended for new users)
 
-The simplest way to obtain all the required dependencies is through [vcpkg](https://github.com/Microsoft/vcpkg) which is included with a [manifest file](https://github.com/microsoft/vcpkg/blob/master/docs/users/manifests.md).
+The easiest way to install all dependencies is via [vcpkg](https://github.com/Microsoft/vcpkg) which is comes with a [manifest file](https://github.com/microsoft/vcpkg/blob/master/docs/users/manifests.md).
 
 The easiest way to get started on any platform is to allow CMake and vcpkg to handle all dependencies and configuration
 for you. To do so, you will be selecting the `"ninja-multi-vcpkg"   - Ninja Multi-Config (vcpkg)` preset. Other presets are available for more advanced users.
