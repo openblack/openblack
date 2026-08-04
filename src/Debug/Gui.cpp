@@ -66,6 +66,7 @@
 #include "Temple.h"
 #include "TextureViewer.h"
 #include "Windowing/WindowingInterface.h"
+#include "Camera.h"
 
 // Turn off formatting because it adds spaces which break the stringifying
 // clang-format off
@@ -117,6 +118,7 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 	debugWindows.emplace_back(new PathFinding);
 	debugWindows.emplace_back(new Audio);
 	debugWindows.emplace_back(new TempleInterior);
+	debugWindows.emplace_back(new gui::Camera);
 
 	auto gui = std::unique_ptr<DebugGuiInterface>(
 	    new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows), !Locator::windowing::has_value()));
