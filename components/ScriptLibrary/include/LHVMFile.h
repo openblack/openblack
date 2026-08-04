@@ -13,6 +13,7 @@
 
 #include <array>
 #include <filesystem>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -79,8 +80,8 @@ public:
 	/// Read lhvm file from the filesystem
 	void Open(const std::filesystem::path& filepath);
 
-	/// Read lhvm file from a buffer
-	void Open(const std::vector<uint8_t>& buffer);
+	/// Read lhvm file from a span
+	void Open(const std::span<const char>& span);
 
 	void Write(const std::filesystem::path& filepath);
 

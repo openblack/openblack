@@ -9,7 +9,10 @@
 
 #include "Resources/Loaders.h"
 
+#include <cstring>
+
 #include <iostream>
+#include <queue>
 #include <ranges>
 #include <utility>
 
@@ -32,10 +35,10 @@ using namespace openblack::filesystem;
 using namespace openblack::resources;
 
 L3DLoader::result_type L3DLoader::operator()(FromBufferTag, const std::string& debugName,
-                                             const std::vector<uint8_t>& data) const
+                                             const std::span<const char>& span) const
 {
 	auto mesh = std::make_shared<graphics::L3DMesh>(debugName);
-	if (!mesh->LoadFromBuffer(data))
+	if (!mesh->LoadFromBuffer(span))
 	{
 		throw std::runtime_error("Unable to load mesh");
 	}
@@ -63,7 +66,8 @@ L3DLoader::result_type L3DLoader::operator()(FromDiskTag, const std::filesystem:
 		auto buffer = std::vector<uint8_t>(stream->Size() - sizeof(decompressedSize));
 		stream->Read(buffer.data(), buffer.size());
 		auto decompressedBuffer = zip::Inflate(buffer, decompressedSize);
-		if (!mesh->LoadFromBuffer(decompressedBuffer))
+		auto span = std::span(reinterpret_cast<char*>(decompressedBuffer.data()), decompressedBuffer.size());
+		if (!mesh->LoadFromBuffer(span))
 		{
 			throw std::runtime_error("Unable to load decompressed mesh");
 		}
@@ -149,10 +153,10 @@ Texture2DLoader::result_type Texture2DLoader::operator()(FromDiskTag, const std:
 	return texture;
 }
 
-L3DAnimLoader::result_type L3DAnimLoader::operator()(FromBufferTag, const std::vector<uint8_t>& data) const
+L3DAnimLoader::result_type L3DAnimLoader::operator()(FromBufferTag, const std::span<const char>& span) const
 {
 	auto animation = std::make_shared<L3DAnim>();
-	animation->LoadFromBuffer(data);
+	animation->LoadFromBuffer(span);
 	return animation;
 }
 
@@ -180,7 +184,7 @@ CreatureMindLoader::result_type CreatureMindLoader::operator()(FromDiskTag, cons
 
 SoundLoader::result_type SoundLoader::operator()(BaseLoader<audio::Sound>::FromBufferTag,
                                                  const pack::AudioBankSampleHeader& header,
-                                                 const std::vector<std::vector<uint8_t>>& buffer) const
+                                                 const std::vector<std::span<const char>>& spans) const
 {
 	auto sound = std::make_shared<audio::Sound>();
 	// Let's clean up the names as they're very difficult to read from the debug GUI
@@ -193,7 +197,12 @@ SoundLoader::result_type SoundLoader::operator()(BaseLoader<audio::Sound>::FromB
 	sound->pitch = header.pitch;
 	sound->pitchDeviation = header.pitchDeviation;
 	sound->playType = static_cast<audio::PlayType>(header.loopType);
-	sound->buffer = buffer;
+	sound->buffer.resize(spans.size());
+	for (auto&& [buffer, span] : std::views::zip(sound->buffer, spans))
+	{
+		buffer.resize(span.size());
+		memcpy(buffer.data(), span.data(), span.size());
+	}
 	return sound;
 }
 

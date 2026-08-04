@@ -15,6 +15,7 @@
 #include <filesystem>
 #include <functional>
 #include <map>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -126,7 +127,7 @@ public:
 	/// Read CHL file from the filesystem
 	int LoadBinary(const std::filesystem::path& filepath);
 
-	int LoadBinary(const std::vector<uint8_t>& buffer);
+	int LoadBinary(const std::span<const char>& span);
 
 	int LoadBinary(const LHVMFile& file);
 

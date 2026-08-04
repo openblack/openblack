@@ -445,18 +445,19 @@ int main(int argc, char* argv[]) noexcept
 		openblack::morph::MorphResult result;
 		if (filename == "stdin")
 		{
-			std::vector<uint8_t> buffer;
+			std::vector<char> buffer;
 			while (!std::cin.eof())
 			{
 				char byte;
 				std::cin.get(byte);
 				if (!std::cin.eof())
 				{
-					buffer.push_back(static_cast<uint8_t>(byte));
+					buffer.push_back(byte);
 				}
 			}
 			printf("got %zu bytes from stdin\n", buffer.size());
-			result = morph.Open(buffer, args.specDirectory);
+			auto span = std::span(buffer.data(), buffer.size());
+			result = morph.Open(span, args.specDirectory);
 		}
 		else
 		{

@@ -217,11 +217,11 @@ bool L3DMesh::LoadFromFile(const std::filesystem::path& path) noexcept
 	return true;
 }
 
-bool L3DMesh::LoadFromBuffer(const std::vector<uint8_t>& data) noexcept
+bool L3DMesh::LoadFromBuffer(const std::span<const char>& span) noexcept
 {
 	l3d::L3DFile l3d;
 
-	const auto result = l3d.Open(data);
+	const auto result = l3d.Open(span);
 	if (result != l3d::L3DResult::Success)
 	{
 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Failed to open l3d mesh from buffer: {}", l3d::ResultToStr(result));

@@ -94,7 +94,7 @@ public:
 	bool Load(const l3d::L3DFile& l3d) noexcept;
 	bool LoadFromFilesystem(const std::filesystem::path& path) noexcept;
 	bool LoadFromFile(const std::filesystem::path& path) noexcept;
-	bool LoadFromBuffer(const std::vector<uint8_t>& data) noexcept;
+	bool LoadFromBuffer(const std::span<const char>& span) noexcept;
 
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return static_cast<uint8_t>(_subMeshes.size()); }
 	[[nodiscard]] const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }

@@ -12,6 +12,7 @@
 #include <array>
 #include <filesystem>
 #include <iosfwd>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -207,8 +208,8 @@ public:
 	/// Read lnd file from the filesystem
 	LNDResult Open(const std::filesystem::path& filepath) noexcept;
 
-	/// Read lnd file from a buffer
-	LNDResult Open(const std::vector<uint8_t>& buffer) noexcept;
+	/// Read lnd file from a span
+	LNDResult Open(const std::span<const char>& span) noexcept;
 
 	/// Write lnd file to path on the filesystem
 	LNDResult Write(const std::filesystem::path& filepath) noexcept;
