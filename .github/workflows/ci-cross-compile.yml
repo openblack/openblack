@@ -1,12 +1,16 @@
 name: Cross Compile CI
 on:
-  pull_request_target:
+  pull_request:
   push:
     tags:
       - '*'
     branches:
       - 'master'
       - 'ci-tests/**'  # Branch namespace can be used to test changes to test before going to master
+
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -57,8 +61,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
           submodules: recursive
 
       - name: Add base repo to git config
@@ -128,9 +130,6 @@ jobs:
         os: [ ubuntu-latest, windows-latest ]
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
       - name: Add base repo to git config
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
         if: startsWith(github.event_name, 'pull_request')
@@ -182,11 +181,15 @@ jobs:
         working-directory: ./android
       - name: Write signing key
         id: write_key
+        if: github.event_name == 'push'
         uses: timheuer/base64-to-file@v1.2
         with:
           fileName: 'keystore/signing_keystore.jks'
           encodedString: ${{ secrets.ANDROID_SIGNING_STORE_KEY_B64 }}
-      - name: Build with Gradle (Release)
+      # STORE_KEY must be absent rather than empty: build.gradle keys off
+      # System.getenv("STORE_KEY") != null, and an empty string is still set.
+      - name: Build with Gradle (Release, signed)
+        if: github.event_name == 'push'
         run: ./gradlew build --no-daemon assembleRelease -PusePrebuiltNativeLibs
         working-directory: ./android
         env:
@@ -194,6 +197,11 @@ jobs:
           STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
           STORE_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_STORE_KEY_ALIAS }}
           STORE_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+
+      - name: Build with Gradle (Release, unsigned)
+        if: github.event_name != 'push'
+        run: ./gradlew build --no-daemon assembleRelease -PusePrebuiltNativeLibs
+        working-directory: ./android
       - uses: actions/upload-artifact@v4
         with:
           name: openblack-android-apk-${{ env.GITHUB_REF_NAME_DASHES }}
