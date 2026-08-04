@@ -48,6 +48,7 @@ public:
 		MainPassDrawModels,
 		MainPassDrawSprites,
 		GuiDraw,
+		HelpTextDraw,
 		RendererFrame,
 
 		_count,
@@ -78,6 +79,7 @@ public:
 	    "Draw Models",          //
 	    "Draw Sprites",         //
 	    "Encode GUI Draw",      //
+	    "Help Text Draw",       //
 	    "Renderer Frame",       //
 	};
 

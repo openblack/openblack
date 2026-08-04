@@ -46,6 +46,8 @@
 #else
 #include "FileSystem/DefaultFileSystem.h"
 #endif
+#include "Graphics/TextRenderer.h"
+#include "HelpText.h"
 
 using namespace openblack::audio;
 using namespace openblack::filesystem;
@@ -116,6 +118,8 @@ bool openblack::InitializeEngine(GraphicsBackend backend, bool vsync) noexcept
 
 bool openblack::InitializeGame() noexcept
 {
+	Locator::textRenderer::emplace<TextRenderer>();
+	Locator::helpText::emplace<HelpText>();
 	Locator::terrainSystem::emplace<UnloadedIsland>();
 	Locator::resources::emplace<Resources>();
 	Locator::playerSystem::emplace<PlayerSystem>();
@@ -175,6 +179,8 @@ void openblack::ShutDownServices()
 	Locator::terrainSystem::reset();
 	Locator::filesystem::reset();
 	Locator::gameActionSystem::reset();
+	Locator::textRenderer::reset();
+	Locator::helpText::reset();
 
 	Locator::oceanSystem::reset();
 	Locator::skySystem ::reset();

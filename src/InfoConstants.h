@@ -37,8 +37,8 @@ struct GObjectInfo
 	std::array<char, 0x30> debugString;
 	SoundCollisionType collideSound;
 	ImmersionEffectType immersion;
-	HelpText helpStartEnum;
-	HelpText helpEndEnum;
+	EHelpText helpStartEnum;
+	EHelpText helpEndEnum;
 	HelpSystemMessageSet helpMessage;
 	HelpSystemCondition helpCondition;
 	HelpSystemMessageSet helpInHand;
@@ -463,8 +463,8 @@ struct GAbodeInfo: GMultiMapFixedInfo
 	float emptyAbodeLifeReducer;
 	int populationWhenNeeded;
 	float thresholdForStopBeingFunctional;
-	HelpText toolTipsForBuild;
-	HelpText didYouKnow;
+	EHelpText toolTipsForBuild;
+	EHelpText didYouKnow;
 	DykCategory dykCategory;
 
 	static AbodeInfo Find(const std::string& name);
@@ -486,7 +486,7 @@ struct GRewardInfo: GMobileObjectInfo
 	SpellSeedType seed;
 	GestureType gestureType;
 	MagicType powerUp;
-	HelpText helpTextEnum;
+	EHelpText helpTextEnum;
 	float beliefValue;
 	MobileStaticInfo mobileStatic;
 	uint32_t scaffold;
@@ -926,10 +926,10 @@ struct GBigForestInfo: GFeatureInfo
 struct GForestInfo: GContainerInfo
 {
 	uint32_t defaultNoTrees;
-	HelpText helpStartEnum;
+	EHelpText helpStartEnum;
 	SoundCollisionType collideSound;
 	ImmersionEffectType immersion;
-	HelpText helpEndEnum;
+	EHelpText helpEndEnum;
 	HelpSystemMessageSet helpMessage;
 	HelpSystemCondition helpCondition;
 };
@@ -1004,8 +1004,8 @@ struct GTerrainMaterialInfo
 	int immersion;
 	float surfaceFriction;
 	std::array<char, 0x30> debugString;
-	HelpText helpStartEnum;
-	HelpText helpEndEnum;
+	EHelpText helpStartEnum;
+	EHelpText helpEndEnum;
 	glm::uvec3 tornadoDustColorRGB;
 	std::array<TreeInfo, 4> magicTreeTypes;
 };
@@ -1452,13 +1452,13 @@ struct GMagicEffectInfo: GEffectInfo
 	std::array<uint32_t, static_cast<int>(Tribe::_COUNT)> useTribalPowerMultiplier;
 	uint32_t isAggressiveSpellWhichIsUsedInCreatureFightArena;
 	uint32_t isDefensiveSpellWhichIsUsedInCreatureFightArena;
-	HelpText helpStartEnum;
-	HelpText helpEndEnum;
-	HelpText creatureNearlyLearntEnum;
-	HelpText creatureLearntEnum;
+	EHelpText helpStartEnum;
+	EHelpText helpEndEnum;
+	EHelpText creatureNearlyLearntEnum;
+	EHelpText creatureLearntEnum;
 	HelpSystemMessageSet helpMessage;
 	HelpSystemCondition helpCondition;
-	HelpText toolTipsEnum;
+	EHelpText toolTipsEnum;
 	float aggressiveAttackValue;
 	float computerCastDuration;
 };
@@ -1482,9 +1482,9 @@ struct GTownDesireInfo
 	float howImportantDesireIsToAlignment;
 	uint32_t maxTimeForAlignmentChange;
 	std::array<float, static_cast<int>(Tribe::_COUNT)> tribeMultiplier;
-	HelpText helpStartEnum;
-	HelpText helpEndEnum;
-	HelpText helpStatEnum;
+	EHelpText helpStartEnum;
+	EHelpText helpEndEnum;
+	EHelpText helpStatEnum;
 	HelpSystemMessageSet helpMessage;
 	HelpSystemCondition helpCondition;
 };
