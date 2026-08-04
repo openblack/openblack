@@ -5,11 +5,17 @@ plugins {
 android {
     compileSdk 32
 
+    def ndkHome = System.getenv("ANDROID_NDK_HOME")
+    if (ndkHome) {
+        ndkPath ndkHome
+    } else {
+        ndkVersion "26.3.11579264"
+    }
+
     defaultConfig {
         applicationId "org.openblack.app"
         minSdk 21
         targetSdk 32
-        ndkVersion "26.3.11579264"
         versionCode 1
         versionName "0.1.0"
         archivesBaseName = "${applicationId}-${versionName}"
