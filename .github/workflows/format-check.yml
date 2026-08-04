@@ -96,9 +96,9 @@ jobs:
         if: startsWith(github.event_name, 'pull_request')
       - name: Format CMake files
         id: cmake-format
-        uses: PuneetMatharu/cmake-format-lint-action@main
+        uses: PuneetMatharu/cmake-format-lint-action@v1.0.8
         with:
-          args: --config-files .cmake-format.py --check
+          args: --config-files=.cmake-format.py --check
 
   # Run only if a PR and cmake-format has failed
   cmake-format-action-suggester:
@@ -113,9 +113,9 @@ jobs:
         if: startsWith(github.event_name, 'pull_request')
       - name: Format CMake files
         id: cmake-format
-        uses: PuneetMatharu/cmake-format-lint-action@v1.0.0
+        uses: PuneetMatharu/cmake-format-lint-action@v1.0.8
         with:
-          args: --config-files .cmake-format.py --in-place
+          args: --config-files=.cmake-format.py --in-place
       - run: |
           git diff > cmake-format.patch
       - uses: actions/upload-artifact@v4
