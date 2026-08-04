@@ -1,12 +1,17 @@
 name: VCPKG CI
 on:
-  pull_request_target:
+  pull_request:
   push:
     tags:
       - '*'
     branches:
       - 'master'
       - 'ci-tests/**'  # Branch namespace can be used to test changes to test before going to master
+
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -29,8 +34,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
           submodules: recursive
 
       - name: Add base repo to git config
@@ -163,8 +166,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
           submodules: recursive
       - name: Download generated compile database
         uses: actions/download-artifact@v4
@@ -176,6 +177,7 @@ jobs:
         if: startsWith(github.event_name, 'pull_request')
       - uses: ZedThree/clang-tidy-review@v0.19.0
         id: review
+        continue-on-error: true
         with:
           build_dir: cmake-build-presets/ninja-multi-vcpkg
           exclude: "*ShaderIncluder.h,*json.hpp,*imgui_impl_sdl*,*stb_image_write.h,*stb_rect_pack.h,*dr_*.h"
