@@ -12,7 +12,7 @@
 
 #include "LandIsland.h"
 
-#include <stdexcept>
+#include <cstring>
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LNDFile.h>
