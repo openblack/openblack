@@ -678,7 +678,7 @@ void Gui::RenderArrow(const std::string& name, const ImVec2& pos, const ImVec2& 
 				const float shaftCenterX = window->DC.CursorPos.x + size.x / 2.0f;
 				const ImVec2 shaftSize(size.x / 5.0f, bb.Max.y - bb.Min.y - tipDimensions.y);
 				const ImRect shaft(shaftCenterX - shaftSize.x, bb.Min.y, shaftCenterX + shaftSize.x, bb.Min.y + shaftSize.y);
-				ImGui::RenderRectFilledRangeH(window->DrawList, shaft, color, 0.0f, 1.0f, 0.0f);
+				ImGui::RenderRectFilledInRangeH(window->DrawList, shaft, color, 0.0f, 1.0f, 0.0f);
 				ImGui::RenderArrowPointingAt(window->DrawList, ImVec2(bb.Max.x - size.x / 2.0f, bb.Max.y), tipDimensions,
 				                             ImGuiDir_Down, color);
 			}
