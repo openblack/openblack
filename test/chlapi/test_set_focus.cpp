@@ -38,7 +38,7 @@ constexpr size_t k_SetFocusFunctionId = 34;
 
 void ExpectMatrixNear(const glm::mat3& actual, const glm::mat3& expected)
 {
-	for (glm::length_t column = 0; column < actual.length(); ++column)
+	for (glm::length_t column = 0; column < glm::mat3::length(); ++column)
 	{
 		for (glm::length_t row = 0; row < actual[column].length(); ++row)
 		{
