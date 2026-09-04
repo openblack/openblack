@@ -20,6 +20,10 @@
 #include <LHVMTypes.h>
 #include <entt/entity/entity.hpp>
 #include <entt/entity/fwd.hpp>
+#include <glm/geometric.hpp>
+#include <glm/gtc/constants.hpp>
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <spdlog/spdlog.h>
 
@@ -27,7 +31,10 @@
 #include "3D/TempleInteriorInterface.h"
 #include "Camera/Camera.h"
 #include "ECS/Archetypes/MobileStaticArchetype.h"
+#include "ECS/Components/Creature.h"
+#include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
+#include "ECS/Components/WallHug.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "Enums.h"
@@ -41,7 +48,10 @@ using namespace openblack::ecs::archetypes;
 
 using openblack::Locator;
 using openblack::MobileStaticInfo;
+using openblack::ecs::components::Creature;
+using openblack::ecs::components::Town;
 using openblack::ecs::components::Transform;
+using openblack::ecs::components::WallHug;
 using openblack::ecs::systems::HandSystemInterface;
 using openblack::lhvm::DataType;
 using openblack::lhvm::VMValue;
@@ -475,10 +485,53 @@ void MoveGameThing() // 033 MOVE_GAME_THING
 
 void SetFocus() // 034 SET_FOCUS
 {
-	// const auto position = PopVec();
-	// const auto object = Pop().uintVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto position = PopVec();
+	const auto object = Pop().uintVal;
+
+	if (object == 0)
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("scripting"), "CHLApi Function {}(): Thing no longer valid", __func__);
+		return;
+	}
+
+	const auto entity = static_cast<entt::entity>(object);
+	auto& registry = Locator::entitiesRegistry::value();
+	auto* transform = registry.TryGet<Transform>(entity);
+	// Vanilla rejects anything that is not an Object; without an Object class, a missing Transform is the nearest check
+	if (transform == nullptr)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}(): Thing must be living to face position!", __func__);
+		return;
+	}
+
+	// Vanilla applies SetFocus to every member of a script container (Town/Flock/Dance) instead of the container itself
+	if (registry.AllOf<Town>(entity))
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("scripting"), "CHLApi Function {}(): script container focus not implemented", __func__);
+		return;
+	}
+
+	// Vanilla dispatches creatures to Creature::SetFocus (BW1W120 0x004f6760), which does not turn them on the spot.
+	// That override is not decompiled yet, so apply nothing rather than the generic rotation
+	if (registry.AllOf<Creature>(entity))
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("scripting"), "CHLApi Function {}(): creature focus not implemented", __func__);
+		return;
+	}
+
+	// Object::SetFocus: yaw from the horizontal offset with no zero-distance guard, atan2(0, 0) == 0
+	const glm::vec2 direction(position.x - transform->position.x, position.z - transform->position.z);
+	const auto angle = std::atan2(direction.y, direction.x);
+	// Same angle-to-rotation mapping as PathfindingSystem's InitializeStep, so facing a point matches walking towards it
+	transform->rotation = glm::eulerAngleY(-angle - glm::half_pi<float>());
+
+	// Vanilla's virtual SetYAngle lets MobileWallHug keep its own angle in sync. Only the angle is mirrored: that override
+	// is not decompiled and step is the pathfinder's per-tick movement, not orientation
+	auto* wallHug = registry.TryGet<WallHug>(entity);
+	if (wallHug != nullptr)
+	{
+		wallHug->yAngle = angle;
+	}
 }
 
 void HasCameraArrived() // 035 HAS_CAMERA_ARRIVED
