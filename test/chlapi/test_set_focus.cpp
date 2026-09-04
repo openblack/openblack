@@ -16,8 +16,12 @@
 #include <utility>
 
 #include <CHLApi.h>
+#include <ECS/Components/Creature.h>
+#include <ECS/Components/Town.h>
 #include <ECS/Components/Transform.h>
+#include <ECS/Components/WallHug.h>
 #include <ECS/Registry.h>
+#include <Enums.h>
 #include <Game.h>
 #include <LHVM.h>
 #include <Locator.h>
@@ -25,6 +29,7 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/mat3x3.hpp>
+#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <gtest/gtest.h>
 
@@ -106,12 +111,70 @@ TEST_F(CHLApiSetFocusTest, TurnsObjectTowardsPositionOnHorizontalPlane)
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
-TEST_F(CHLApiSetFocusTest, KeepsRotationWhenFocusHasSameHorizontalPosition)
+TEST_F(CHLApiSetFocusTest, TurnsObjectTowardsDiagonalPosition)
 {
-	const auto initialRotation = glm::mat3(glm::eulerAngleY(0.75f));
-	const auto entity = CreateObject(glm::vec3(10.0f, 2.0f, 20.0f), initialRotation);
+	// Direction (10, 10) gives atan2 == pi / 4, so this pins the sign of the angle in the rotation
+	const auto entity = CreateObject(glm::vec3(10.0f, 0.0f, 20.0f), glm::mat3(1.0f));
+
+	InvokeSetFocus(entity, glm::vec3(20.0f, 0.0f, 30.0f));
+
+	const auto& transform = Locator::entitiesRegistry::value().Get<const Transform>(entity);
+	ExpectMatrixNear(transform.rotation, glm::mat3(glm::eulerAngleY(-glm::quarter_pi<float>() - glm::half_pi<float>())));
+}
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
+TEST_F(CHLApiSetFocusTest, FacesAngleZeroWhenFocusHasSameHorizontalPosition)
+{
+	// Mirrors vanilla Object::SetFocus, which has no zero-distance guard: atan2(0, 0) == 0
+	const auto entity = CreateObject(glm::vec3(10.0f, 2.0f, 20.0f), glm::mat3(glm::eulerAngleY(0.75f)));
 
 	InvokeSetFocus(entity, glm::vec3(10.0f, 100.0f, 20.0f));
+
+	const auto& transform = Locator::entitiesRegistry::value().Get<const Transform>(entity);
+	ExpectMatrixNear(transform.rotation, glm::mat3(glm::eulerAngleY(-glm::half_pi<float>())));
+}
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
+TEST_F(CHLApiSetFocusTest, DoesNotRotateCreature)
+{
+	// Vanilla dispatches creatures to Creature::SetFocus, which does not turn them on the spot
+	const auto initialRotation = glm::mat3(glm::eulerAngleY(0.75f));
+	const auto entity = CreateObject(glm::vec3(10.0f, 0.0f, 20.0f), initialRotation);
+	Locator::entitiesRegistry::value().Assign<Creature>(entity, PlayerNames::PLAYER_ONE, CreatureType::Cow, entt::id_type {0});
+
+	InvokeSetFocus(entity, glm::vec3(20.0f, 0.0f, 30.0f));
+
+	const auto& transform = Locator::entitiesRegistry::value().Get<const Transform>(entity);
+	ExpectMatrixNear(transform.rotation, initialRotation);
+}
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
+TEST_F(CHLApiSetFocusTest, UpdatesWallHugAngle)
+{
+	const auto entity = CreateObject(glm::vec3(10.0f, 0.0f, 20.0f), glm::mat3(1.0f));
+	Locator::entitiesRegistry::value().Assign<WallHug>(entity, glm::vec2(), glm::vec2(), 0.0f, 1.0f);
+
+	InvokeSetFocus(entity, glm::vec3(20.0f, 0.0f, 30.0f));
+
+	const auto& registry = Locator::entitiesRegistry::value();
+	const auto& transform = registry.Get<const Transform>(entity);
+	const auto& wallHug = registry.Get<const WallHug>(entity);
+	EXPECT_FLOAT_EQ(wallHug.yAngle, glm::quarter_pi<float>());
+	// step is the pathfinder's per-tick movement and is not touched by SET_FOCUS
+	EXPECT_FLOAT_EQ(wallHug.step.x, 0.0f);
+	EXPECT_FLOAT_EQ(wallHug.step.y, 0.0f);
+	ExpectMatrixNear(transform.rotation, glm::mat3(glm::eulerAngleY(-glm::quarter_pi<float>() - glm::half_pi<float>())));
+}
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
+TEST_F(CHLApiSetFocusTest, DoesNotRotateScriptContainer)
+{
+	// Vanilla applies SetFocus to a town's members, never to the town itself
+	const auto initialRotation = glm::mat3(glm::eulerAngleY(0.75f));
+	const auto entity = CreateObject(glm::vec3(10.0f, 0.0f, 20.0f), initialRotation);
+	Locator::entitiesRegistry::value().Assign<Town>(entity, 0u);
+
+	InvokeSetFocus(entity, glm::vec3(20.0f, 0.0f, 30.0f));
 
 	const auto& transform = Locator::entitiesRegistry::value().Get<const Transform>(entity);
 	ExpectMatrixNear(transform.rotation, initialRotation);
