@@ -796,26 +796,23 @@ struct GTotemStatueInfo: GMultiMapFixedInfo
 	MeshId plinth;
 };
 
+// bw1-decomp: `float ByCreatureType[0x11]`, indexed by vanilla CREATURE_TYPE (Ape = 0, Cow = 1 ... Gorilla = 16) in
+// CreatureDesires::Initialise. openblack's CreatureType has Unknown = 0 and vanilla's Ape as GiantApe = 17, so index it
+// through VanillaCreatureTypeIndex. Unknown has no column.
+constexpr size_t k_CreatureDesireForTypeColumns = 17;
+
 struct CreatureDesireForType
 {
-	float field0x0;
-	float field0x4;
-	float field0x8;
-	float field0xc;
-	float field0x10;
-	float field0x14;
-	float field0x18;
-	float field0x1c;
-	float field0x20;
-	float field0x24;
-	float field0x28;
-	float field0x2c;
-	float field0x30;
-	float field0x34;
-	float field0x38;
-	float field0x3c;
-	float field0x40;
+	std::array<float, k_CreatureDesireForTypeColumns> byCreatureType;
 };
+
+// Precondition: Cow <= type <= GiantApe; the caller rejects Unknown and _COUNT.
+[[nodiscard]] constexpr size_t VanillaCreatureTypeIndex(CreatureType type)
+{
+	return type == CreatureType::GiantApe ? 0 : static_cast<size_t>(type);
+}
+static_assert(VanillaCreatureTypeIndex(CreatureType::GiantApe) == 0);
+static_assert(VanillaCreatureTypeIndex(CreatureType::Gorilla) + 1 == k_CreatureDesireForTypeColumns);
 
 struct GVortexInfo
 {
@@ -857,8 +854,13 @@ struct GSpeedThreshold
 
 struct GCreatureInfo: GLivingInfo
 {
-	std::array<uint8_t, 416> field0x1e4;
+	// Vanilla CREATURE_TYPE of this record (Ape = 0 ... Gorilla = 16), not openblack's CreatureType. bw1-decomp
+	// CreatureInfo::CreatureType, 0x1f4 in memory behind the 0x10-byte Base/GBaseInfo header that is not on disk.
+	uint32_t vanillaCreatureType;
+	std::array<uint8_t, 412> field0x1e8;
 };
+static_assert(sizeof(GLivingInfo) == 0x1e4);
+static_assert(sizeof(GCreatureInfo) == 0x384);
 
 struct GMagicRadiusSpellInfo: GMagicInfo
 {
