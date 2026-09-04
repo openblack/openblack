@@ -16,19 +16,21 @@
 #include <stdexcept>
 #include <string_view>
 
+#include <glm/vec3.hpp>
 #include <gtest/gtest.h>
 #include <spdlog/sinks/null_sink.h>
 #include <spdlog/spdlog.h>
 
 #include "Creature/CreatureMind.h"
+#include "ECS/Archetypes/CreatureArchetype.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureState.h"
 #include "ECS/Registry.h"
-#include "ECS/Systems/Implementations/CreatureMindSystem.h"
 #include "Enums.h"
 #include "InfoConstants.h"
 #include "Locator.h"
 #include "Resources/Loaders.h"
+#include "Resources/ResourceManager.h"
 #include "Resources/Resources.h"
 
 namespace
@@ -36,8 +38,8 @@ namespace
 
 using namespace openblack;
 using namespace openblack::creature;
+using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
-using namespace openblack::ecs::systems;
 using namespace openblack::resources;
 
 struct VanillaColumn
@@ -199,7 +201,7 @@ TEST_F(CreatureMindTest, CacheRetainsDistinctIncreaseTimesForTheSameMindFileByCr
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
-TEST_F(CreatureMindTest, SystemCopiesLoadedMindIncreaseTimesIntoCreatureState)
+TEST_F(CreatureMindTest, ArchetypeBakesLoadedMindIncreaseTimesIntoCreatureState)
 {
 	for (size_t desireIndex = 0; desireIndex < _info->creatureDesireForType.size(); ++desireIndex)
 	{
@@ -212,24 +214,40 @@ TEST_F(CreatureMindTest, SystemCopiesLoadedMindIncreaseTimesIntoCreatureState)
 	Locator::entitiesRegistry::emplace<ecs::Registry>();
 
 	auto& minds = Locator::resources::value().GetCreatureMinds();
-	const auto result = minds.Load(CreatureMindLoader::Identifier("ComputerControlledCreature", CreatureType::Cow),
-	                               CreatureMindLoader::FromDiskTag {}, "ComputerControlledCreature", CreatureType::Cow);
+	const auto result = minds.Load(CreatureMindLoader::Identifier(k_MindName, CreatureType::Cow),
+	                               CreatureMindLoader::FromDiskTag {}, k_MindName, CreatureType::Cow);
 	const entt::id_type mindId = result.first->first;
 
+	const auto entity =
+	    CreatureArchetype::Create(glm::vec3(0.0f), PlayerNames::PLAYER_ONE, CreatureType::Cow, mindId, 0.0f, 1.0f);
+
 	auto& registry = Locator::entitiesRegistry::value();
-	const auto entity = registry.Create();
-	registry.Assign<Creature>(entity, PlayerNames::PLAYER_ONE, CreatureType::Cow, mindId);
-	registry.Assign<CreatureState>(entity);
-
-	CreatureMindSystem {}.Update();
-
+	ASSERT_TRUE(registry.AllOf<CreatureState>(entity));
 	const auto& state = registry.Get<CreatureState>(entity);
-	EXPECT_TRUE(state.initialized);
-	EXPECT_EQ(state.mind, mindId);
+	EXPECT_EQ(state.desireIncreaseTimes, minds.Handle(mindId)->desireIncreaseTimes);
 	for (size_t desireIndex = 0; desireIndex < state.desireIncreaseTimes.size(); ++desireIndex)
 	{
 		EXPECT_FLOAT_EQ(state.desireIncreaseTimes.at(desireIndex), static_cast<float>(desireIndex) + 0.25f);
 	}
+}
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): external macro
+TEST_F(CreatureMindTest, ArchetypeLeavesCreatureStateAbsentWhenMindIsNotLoaded)
+{
+	Locator::resources::emplace<Resources>();
+	Locator::entitiesRegistry::emplace<ecs::Registry>();
+
+	const auto& minds = Locator::resources::value().GetCreatureMinds();
+	const auto mindId = HashIdentifier(CreatureMindLoader::Identifier(k_MindName, CreatureType::Cow));
+	ASSERT_FALSE(minds.Contains(mindId));
+
+	const auto entity =
+	    CreatureArchetype::Create(glm::vec3(0.0f), PlayerNames::PLAYER_ONE, CreatureType::Cow, mindId, 0.0f, 1.0f);
+
+	const auto& registry = Locator::entitiesRegistry::value();
+	ASSERT_TRUE(registry.AllOf<Creature>(entity));
+	EXPECT_EQ(registry.Get<Creature>(entity).mind, mindId);
+	EXPECT_FALSE(registry.AllOf<CreatureState>(entity));
 }
 
 } // namespace

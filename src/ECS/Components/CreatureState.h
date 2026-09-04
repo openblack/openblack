@@ -11,18 +11,15 @@
 
 #include <array>
 
-#include <entt/fwd.hpp>
-
 #include "Creature/CreatureMind.h"
 
 namespace openblack::ecs::components
 {
 
+// Present only when the creature's mind was loaded at spawn.
 struct CreatureState
 {
 	std::array<float, creature::k_DesireCount> desireIncreaseTimes {};
-	entt::id_type mind {};
-	bool initialized = false;
 };
 
 } // namespace openblack::ecs::components

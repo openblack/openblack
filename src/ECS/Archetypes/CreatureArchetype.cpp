@@ -19,6 +19,7 @@
 #include "ECS/Registry.h"
 #include "Enums.h"
 #include "Locator.h"
+#include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
@@ -34,6 +35,10 @@ entt::entity CreatureArchetype::Create(const glm::vec3& position, PlayerNames pl
 	registry.Assign<Creature>(entity, playerName, creatureType, creatureMindId);
 	registry.Assign<Mesh>(entity, meshId);
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(yAngleRadians), glm::vec3(scale));
-	registry.Assign<CreatureState>(entity);
+	auto& mindManager = Locator::resources::value().GetCreatureMinds();
+	if (mindManager.Contains(creatureMindId))
+	{
+		registry.Assign<CreatureState>(entity, mindManager.Handle(creatureMindId)->desireIncreaseTimes);
+	}
 	return entity;
 }
