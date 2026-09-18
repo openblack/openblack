@@ -65,6 +65,8 @@ parts:
       - build-essential
       - ninja-build
       - pkg-config
+      - autoconf
+      - autoconf-archive
       - automake
       - libltdl-dev
       - libtool

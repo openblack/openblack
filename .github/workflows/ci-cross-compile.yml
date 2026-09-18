@@ -41,7 +41,7 @@ jobs:
             preset: ninja-multi-vcpkg
             setup: |
               sudo apt-get update
-              sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libltdl-dev libxext-dev libwayland-dev libwayland-egl-backend-dev
+              sudo apt-get install -y autoconf autoconf-archive automake libtool libgl1-mesa-dev libglu1-mesa-dev libltdl-dev libxext-dev libwayland-dev libwayland-egl-backend-dev
           # TODO(#638): Many of the emscripten dependencies conflict due to pthreads
           # - preset: emscripten-vcpkg
           #   os: ubuntu-latest
