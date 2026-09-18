@@ -9,6 +9,8 @@
 
 #include "InfoFile.h"
 
+#include <cstring>
+
 #include <PackFile.h>
 #include <spdlog/spdlog.h>
 
