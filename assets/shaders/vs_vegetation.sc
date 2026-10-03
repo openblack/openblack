@@ -39,8 +39,7 @@ void main()
     vec3 position = a_position.xyz;
 
     // First transform to world space WITHOUT sway
-    vec4 worldPosition = mul(u_model[modelIndex], vec4(position, 1.0));
-    worldPosition = instMul(model, worldPosition);
+    vec4 worldPosition = instMul(model, vec4(position, 1.0));
 
     // Store original world position for later
     vec3 originalWorldPos = worldPosition.xyz;
