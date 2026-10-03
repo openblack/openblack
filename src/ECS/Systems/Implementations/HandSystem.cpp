@@ -95,7 +95,7 @@ HandSystem::GetPlayerHandPositions() const noexcept
 void HandSystem::SwayNearbyEntities(const glm::vec3& handPosition)
 {
 	auto& registry = Locator::entitiesRegistry::value();
-	registry.Each<const Transform, Swayable>([this, &handPosition](const Transform& transform, Swayable& swayable) {
+	registry.Each<const Transform, Swayable>([&handPosition](const Transform& transform, Swayable& swayable) {
 		auto gameSpeed = Game::Instance()->GetGameSpeed();
 		auto elapsedTime = Locator::time::value().GetElapsedTime();
 		auto naturalSwayTime = std::sin((elapsedTime.count() / 1000.0f * gameSpeed) + (swayable.swayOffset * 100.0f));

@@ -204,7 +204,7 @@ void RenderingSystem::PrepareTreeDrawUploadUniforms(bool drawBoundingBox)
 
 	// Set transforms and sway params for tree instanced draw
 	registry.Each<const Mesh, const Transform, const Tree, Swayable>(
-	    [this, &treeUniformOffsets, drawBoundingBox](const Mesh& mesh, const Transform& transform, const Tree& tree,
+	    [this, &treeUniformOffsets, drawBoundingBox](const Mesh& mesh, const Transform& transform, const Tree& /*unused*/,
 	                                                 Swayable& swayable) {
 		    auto offset = treeUniformOffsets.insert(std::make_pair(mesh.id, 0));
 		    auto desc = _renderContext.treeInstancedDrawDescs.find(mesh.id);
