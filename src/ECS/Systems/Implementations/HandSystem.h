@@ -22,11 +22,13 @@ class HandSystem final: public HandSystemInterface
 {
 public:
 	bool Initialize() noexcept override;
+	void Update() noexcept override;
 	[[nodiscard]] std::array<entt::entity, static_cast<size_t>(Side::_Count)> GetPlayerHands() const noexcept override;
 	[[nodiscard]] std::array<std::optional<glm::vec3>, static_cast<size_t>(Side::_Count)>
 	GetPlayerHandPositions() const noexcept override;
 
 private:
+	void SwayNearbyEntities(const glm::vec3& handPosition) override;
 	std::array<entt::entity, 2> _hands;
 };
 } // namespace openblack::ecs::systems

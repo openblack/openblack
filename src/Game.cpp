@@ -412,6 +412,7 @@ bool Game::Update() noexcept
 				Locator::entitiesRegistry::value().SetDirty();
 			}
 		}
+		Locator::handSystem::value().Update();
 
 		// Update Entities
 		{
