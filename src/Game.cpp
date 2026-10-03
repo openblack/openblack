@@ -351,6 +351,11 @@ bool Game::Update() noexcept
 		}
 	}
 
+	{
+		auto actions = profiler.BeginScoped(Profiler::Stage::VegetationUpdate);
+		Locator::vegetation::value().Sway();
+	}
+
 	// Update Uniforms
 	{
 		auto profilerScopedUpdateUniforms = profiler.BeginScoped(Profiler::Stage::UpdateUniforms);
