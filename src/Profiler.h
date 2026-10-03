@@ -40,12 +40,14 @@ public:
 		ReflectionDrawWater,
 		ReflectionDrawIsland,
 		ReflectionDrawModels,
+		ReflectionDrawVegetation,
 		ReflectionDrawSprites,
 		MainPass,
 		MainPassDrawSky,
 		MainPassDrawWater,
 		MainPassDrawIsland,
 		MainPassDrawModels,
+		MainPassDrawVegetation,
 		MainPassDrawSprites,
 		GuiDraw,
 		RendererFrame,
@@ -76,6 +78,7 @@ public:
 	    "Draw Water",           //
 	    "Draw Island",          //
 	    "Draw Models",          //
+	    "Draw Vegetation"       //
 	    "Draw Sprites",         //
 	    "Encode GUI Draw",      //
 	    "Renderer Frame",       //

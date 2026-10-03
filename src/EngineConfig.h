@@ -44,6 +44,7 @@ struct EngineConfig
 	bool drawWater {true};
 	bool drawIsland {true};
 	bool drawEntities {true};
+	bool drawVegetation {true};
 	bool drawSprites {true};
 	bool drawBoundingBoxes {false};
 	bool drawFootpaths {false};
