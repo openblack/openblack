@@ -15,12 +15,12 @@ using namespace openblack::ecs::systems;
 
 void TimeSystem::Start()
 {
-	_start = std::chrono::high_resolution_clock::now();
+	_start = std::chrono::steady_clock::now();
 }
 
 void TimeSystem::Update()
 {
-	auto now = std::chrono::high_resolution_clock::now();
+	auto now = std::chrono::steady_clock::now();
 	_elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(now - _start);
 }
 
