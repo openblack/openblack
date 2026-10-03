@@ -59,8 +59,8 @@ struct RenderContext
 	std::vector<TreeInstanceData> treeInstanceData;
 
 	/// Stores information for rendering which is prepared at \ref PrepareDraw.
-	std::map<entt::id_type, const InstancedDrawDesc> instancedDrawDescs;
-	std::map<entt::id_type, const InstancedDrawDesc> treeInstancedDrawDescs;
+	std::map<entt::id_type, InstancedDrawDesc> instancedDrawDescs;
+	std::map<entt::id_type, InstancedDrawDesc> treeInstancedDrawDescs;
 
 	/// Not an actual vertex buffer, but a dynamic general purpose buffer which
 	/// stores uniform data as a GPU-side copy of \ref _instanceUniforms and
@@ -80,6 +80,7 @@ struct RenderContext
 
 	bool dirty {true};
 	bool hasBoundingBoxes {false};
+	uint32_t treeInstanceCount {0};
 };
 
 class RenderingSystemInterface

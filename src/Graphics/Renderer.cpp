@@ -780,10 +780,10 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				}
 
 				// Draw tree bounding boxes if enabled
-				if (renderCtx.boundingBox)
+				if (renderCtx.boundingBox && renderCtx.treeInstanceCount > 0)
 				{
-					const auto boundBoxOffset = static_cast<uint32_t>(renderCtx.treeInstanceData.size() / 2);
-					const auto boundBoxCount = static_cast<uint32_t>(renderCtx.treeInstanceData.size() / 2);
+					const auto boundBoxOffset = renderCtx.treeInstanceCount;
+					const auto boundBoxCount = renderCtx.treeInstanceCount;
 					renderCtx.boundingBox->GetVertexBuffer().Bind();
 					bgfx::setInstanceDataBuffer(toBgfx(renderCtx.treeInstanceUniformBuffer), boundBoxOffset, boundBoxCount);
 					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
