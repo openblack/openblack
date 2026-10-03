@@ -117,6 +117,7 @@ void RenderingSystem::PrepareTreeDrawDescs(bool drawBoundingBox)
 	registry.Each<const Mesh, const Transform, const Tree>(
 	    [&prepTree](const Mesh& mesh, const Transform& /*unused*/, const Tree& /*unused*/) { prepTree(mesh); });
 
+	_renderContext.treeInstanceCount = treeInstanceCount;
 	if (drawBoundingBox)
 	{
 		treeInstanceCount *= 2;
@@ -233,7 +234,7 @@ void RenderingSystem::PrepareTreeDrawUploadUniforms(bool drawBoundingBox)
 	{
 		// Calculate the full buffer size including both matrices and sway params
 		const auto size =
-		    static_cast<uint32_t>(_renderContext.treeInstanceData.size() * (sizeof(glm::mat4) + sizeof(glm::vec4)));
+		    static_cast<uint32_t>(_renderContext.treeInstanceData.size() * sizeof(RenderContext::TreeInstanceData));
 
 		// Update the buffer with the combined data
 		bgfx::update(toBgfx(_renderContext.treeInstanceUniformBuffer), 0,
