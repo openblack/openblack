@@ -55,6 +55,33 @@ jobs:
           export depends=${depends/imgui/}
           pacman -S --noconfirm --noprogressbar --needed mesa libx11 ${makedepends} ${depends}
 
+      # The cache key is derived from the AUR package revisions (and, for -git packages, the upstream
+      # commit they build) so the cache is rebuilt whenever a dependency changes, not only when it expires.
+      - name: Clone the AUR dependency files
+        id: aur-deps
+        shell: bash
+        run: |
+          versions=""
+          for pkg in entt bgfx-cmake-git imgui dr_libs-git; do
+            git clone --depth 1 https://aur.archlinux.org/${pkg}.git ${GITHUB_WORKSPACE}/${pkg}
+            chown -R builduser ${GITHUB_WORKSPACE}/${pkg}
+            versions+="${pkg} $(git -C ${GITHUB_WORKSPACE}/${pkg} rev-parse HEAD)"$'\n'
+            if [[ ${pkg} == *-git ]]; then
+              for src in $(source ${GITHUB_WORKSPACE}/${pkg}/PKGBUILD && echo "${source[@]}"); do
+                url=${src#*::}
+                [[ ${url} == git+* ]] || continue
+                url=${url#git+}
+                ref=HEAD
+                [[ ${url} == *#branch=* ]] && ref=refs/heads/${url##*#branch=}
+                url=${url%%#*}
+                url=${url%%\?*}
+                versions+="${url} $(git ls-remote ${url} ${ref} | cut -f1 | head -n1)"$'\n'
+              done
+            fi
+          done
+          printf '%s' "${versions}"
+          echo "hash=$(printf '%s' "${versions}" | sha256sum | cut -c1-16)" >> ${GITHUB_OUTPUT}
+
       - name: Cache AUR Packages
         id: cache-packages
         uses: actions/cache@v4
@@ -64,13 +91,11 @@ jobs:
             bgfx-cmake-git/bgfx-cmake-git*.pkg.tar.*
             imgui/imgui*.pkg.tar.*
             dr_libs-git/dr_libs-git*.pkg.tar.*
-          key: ${{ runner.os }}-cmake
+          key: ${{ runner.os }}-aur-packages-${{ steps.aur-deps.outputs.hash }}
 
       - name: Build ${{ env.PKG }} from the AUR
         if: steps.cache-packages.outputs.cache-hit != 'true'
         run: |
-          git clone https://aur.archlinux.org/${{ env.PKG }}.git ${GITHUB_WORKSPACE}/${{ env.PKG }}
-          chown -R builduser ${GITHUB_WORKSPACE}/${{ env.PKG }}
           cd ${GITHUB_WORKSPACE}/${{ env.PKG }}
           sudo -u builduser makepkg
         env:
@@ -79,8 +104,6 @@ jobs:
       - name: Build ${{ env.PKG }} from the AUR
         if: steps.cache-packages.outputs.cache-hit != 'true'
         run: |
-          git clone https://aur.archlinux.org/${{ env.PKG }}.git ${GITHUB_WORKSPACE}/${{ env.PKG }}
-          chown -R builduser ${GITHUB_WORKSPACE}/${{ env.PKG }}
           cd ${GITHUB_WORKSPACE}/${{ env.PKG }}
           sudo -u builduser makepkg
         env:
@@ -89,8 +112,6 @@ jobs:
       - name: Build ${{ env.PKG }} from the AUR
         if: steps.cache-packages.outputs.cache-hit != 'true'
         run: |
-          git clone https://aur.archlinux.org/${{ env.PKG }}.git ${GITHUB_WORKSPACE}/${{ env.PKG }}
-          chown -R builduser ${GITHUB_WORKSPACE}/${{ env.PKG }}
           cd ${GITHUB_WORKSPACE}/${{ env.PKG }}
           sudo -u builduser makepkg
         env:
@@ -99,8 +120,6 @@ jobs:
       - name: Build ${{ env.PKG }} from the AUR
         if: steps.cache-packages.outputs.cache-hit != 'true'
         run: |
-          git clone https://aur.archlinux.org/${{ env.PKG }}.git ${GITHUB_WORKSPACE}/${{ env.PKG }}
-          chown -R builduser ${GITHUB_WORKSPACE}/${{ env.PKG }}
           cd ${GITHUB_WORKSPACE}/${{ env.PKG }}
           sudo -u builduser makepkg
         env:
