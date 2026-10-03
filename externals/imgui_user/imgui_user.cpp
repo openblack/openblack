@@ -7,14 +7,13 @@
 
 namespace ImGui
 {
-static auto vector_getter = [](void* vec, int idx, const char** out_text) {
+static auto vector_getter = [](void* vec, int idx) -> const char* {
 	auto& vector = *static_cast<std::vector<std::string>*>(vec);
 	if (idx < 0 || idx >= static_cast<int>(vector.size()))
 	{
-		return false;
+		return nullptr;
 	}
-	*out_text = vector.at(idx).c_str();
-	return true;
+	return vector.at(idx).c_str();
 };
 
 struct string_view_array_getter_user_data_t
@@ -23,14 +22,13 @@ struct string_view_array_getter_user_data_t
 	int count;
 };
 
-static auto string_view_array_getter = [](void* userData, int idx, const char** out_text) {
+static auto string_view_array_getter = [](void* userData, int idx) -> const char* {
 	auto arr = static_cast<string_view_array_getter_user_data_t*>(userData);
 	if (idx < 0 || idx >= arr->count)
 	{
-		return false;
+		return nullptr;
 	}
-	*out_text = arr->data[idx].data();
-	return true;
+	return arr->data[idx].data();
 };
 
 bool Combo(const char* label, int* currIndex, std::vector<std::string>& values)
