@@ -31,7 +31,8 @@ void VegetationSystem::Sway()
 		    {
 			    auto elapsedTime = Locator::time::value().GetElapsedTime();
 			    auto gameSpeed = Game::Instance()->GetGameSpeed();
-			    auto naturalSwayTime = std::sin((elapsedTime.count() / 1000.0f * gameSpeed) + (swayable.swayOffset * 100.0f));
+			    auto elapsedSeconds = std::chrono::duration_cast<std::chrono::duration<float>>(elapsedTime).count();
+			    auto naturalSwayTime = std::sin((elapsedSeconds * gameSpeed) + (swayable.swayOffset * 100.0f));
 			    swayable.swayTime = naturalSwayTime;
 			    swayable.swayStrength = std::min(swayable.swayStrength, swayable.swayStrengthBase);
 		    }
