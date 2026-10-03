@@ -45,6 +45,7 @@
 #include "ECS/Systems/PathfindingSystemInterface.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
+#include "ECS/Systems/TimeSystemInterface.h"
 #include "EngineConfig.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"
@@ -296,6 +297,7 @@ bool Game::Update() noexcept
 	auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(current - previous);
 
 	Locator::debugGui::value().SetScale(config.guiScale);
+	Locator::time::value().Update();
 
 	// Physics
 	{
@@ -838,6 +840,7 @@ bool Game::Run() noexcept
 	}
 
 	Game::SetTime(config.timeOfDay);
+	Locator::time::value().Start();
 
 	_frameCount = 0;
 	auto lastTime = std::chrono::high_resolution_clock::now();
