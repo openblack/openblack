@@ -94,6 +94,12 @@ public:
 	/// CHand::SetDistanceFromView's limits on how far the hand is from the camera
 	static constexpr float k_HandMinDistance = 2.0f;
 	static constexpr float k_HandMaxDistance = 1800.0f;
+	/// HandStateCitadel: how far short of the room the hand hangs, its limits on how far it is from the camera, and how
+	/// long it takes to turn to the surface the cursor is on
+	static constexpr float k_HandTempleGap = 3.25f;
+	static constexpr float k_HandTempleMinDistance = 4.0f;
+	static constexpr float k_HandTempleMaxDistance = 300.0f;
+	static constexpr float k_HandTempleTurnTime = 0.4f;
 	/// Land lower than this is the sea, which the hand rests on
 	static constexpr float k_HandSeaAltitude = 0.1f;
 	/// Seconds the hand eases over to land further from and nearer to the camera
@@ -107,6 +113,8 @@ public:
 
 	bool ProcessEvents(const SDL_Event& event) noexcept;
 	bool GameLogicLoop() noexcept;
+	/// The keys that take the player into the temple's rooms, from outside it or within
+	void ProcessTempleRoomKeys();
 	bool Update() noexcept;
 	bool Initialize() noexcept;
 	bool Run() noexcept;
@@ -157,6 +165,8 @@ private:
 	glm::vec3 _handGripPoint {0.0f, 0.0f, 0.0f};
 	glm::vec3 _handGripFrom {0.0f, 0.0f, 0.0f};
 	Zoomer _handGripBlend;
+	/// The way the surface the cursor is on in the temple faces, which the hand turns to
+	Zoomer3 _handTempleNormal {glm::vec3(0.0f, 1.0f, 0.0f)};
 	/// Where the hand holds on while the camera turns
 	glm::vec3 _handHoldPoint {0.0f, 0.0f, 0.0f};
 	bool _handWasRotating {false};

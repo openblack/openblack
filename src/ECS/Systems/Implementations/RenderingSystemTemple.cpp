@@ -18,11 +18,13 @@
 #include "3D/L3DMesh.h"
 #include "3D/TempleInteriorInterface.h"
 #include "Camera/Camera.h"
+#include "ECS/Components/Hand.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Stream.h"
 #include "ECS/Components/Temple.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/HandSystemInterface.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/GraphicsHandleBgfx.h"
 #include "Graphics/ShaderManager.h"
@@ -31,6 +33,20 @@
 
 using namespace openblack::ecs::systems;
 using namespace openblack::ecs::components;
+
+namespace
+{
+/// The hand of the player, whose hand alone is in the temple. The other hand waits at the world's origin, where the
+/// temple's rooms are.
+entt::entity PlayerHand()
+{
+	if (!openblack::Locator::handSystem::has_value())
+	{
+		return entt::null;
+	}
+	return openblack::Locator::handSystem::value().GetPlayerHands()[static_cast<size_t>(HandSystemInterface::Side::Left)];
+}
+} // namespace
 
 RenderingSystemTemple::~RenderingSystemTemple() = default;
 
@@ -76,6 +92,16 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 			    }
 		    }
 	    });
+	// CHand draws the player's hand in the temple too, in HandStateCitadel
+	const auto playerHand = PlayerHand();
+	registry.Each<const Mesh, const Transform, const Hand>(
+	    [&prep, playerHand](const entt::entity entity, const Mesh& mesh, const Transform& /*unused*/, const Hand& /*unused*/) {
+		    if (entity == playerHand)
+		    {
+			    prep(mesh, false);
+		    }
+	    });
+
 	if (drawBoundingBox)
 	{
 		instanceCount *= 2;
@@ -146,6 +172,22 @@ void RenderingSystemTemple::PrepareDrawUploadUniforms(bool drawBoundingBox)
 			    offset.first->second++;
 		    }
 	    });
+	registry.Each<const Mesh, const Transform, const Hand>(
+	    [this, &uniformOffsets, playerHand = PlayerHand()](const entt::entity entity, const Mesh& mesh,
+	                                                       const Transform& transform, const Hand& /*unused*/) {
+		    if (entity != playerHand)
+		    {
+			    return;
+		    }
+		    auto offset = uniformOffsets.insert(std::make_pair(mesh.id, 0));
+		    const auto desc = _renderContext.instancedDrawDescs.find(mesh.id);
+		    auto modelMatrix = glm::mat4(transform.rotation);
+		    modelMatrix = glm::translate(modelMatrix, transform.position * transform.rotation);
+		    modelMatrix = glm::scale(modelMatrix, transform.scale);
+		    _renderContext.instanceUniforms[desc->second.offset + offset.first->second] = modelMatrix;
+		    offset.first->second++;
+	    });
+
 	if (!_renderContext.instanceUniforms.empty())
 	{
 		const auto size = static_cast<uint32_t>(_renderContext.instanceUniforms.size() * sizeof(glm::mat4));

@@ -25,6 +25,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/intersect.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -159,13 +160,15 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 		middleMouseButton = !middleMouseButton;
 	}
 
-	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT && !middleMouseButton)
+	// The hand grips the land, which the temple has none of: its camera takes the clicks (HandStateCitadel)
+	const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
+	if (!inTemple && event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT && !middleMouseButton)
 	{
 		PlayHandGrabSound();
 	}
 
-	_handGripping = middleMouseButton || leftMouseButton;
-	_handRotating = middleMouseButton;
+	_handGripping = !inTemple && (middleMouseButton || leftMouseButton);
+	_handRotating = !inTemple && middleMouseButton;
 
 	auto& window = Locator::windowing::value();
 	auto& camera = Locator::camera::value();
@@ -187,7 +190,11 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 
 			auto aspect = window.GetAspectRatio();
 			const auto& config = Locator::config::value();
-			camera.SetProjectionMatrixPerspective(config.cameraXFov, aspect, config.cameraNearClip, config.cameraFarClip);
+			// A camera model, as the temple's, can look through its own lens
+			const auto lens = camera.GetModel().GetLens();
+			camera.SetProjectionMatrixPerspective(lens.has_value() ? lens->horizontalFieldOfView : config.cameraXFov, aspect,
+			                                      lens.has_value() ? lens->nearClip : config.cameraNearClip,
+			                                      config.cameraFarClip);
 		}
 		break;
 	case SDL_KEYDOWN:
@@ -362,6 +369,42 @@ bool Game::GameLogicLoop() noexcept
 	return false;
 }
 
+void Game::ProcessTempleRoomKeys()
+{
+	if (!Locator::temple::has_value())
+	{
+		return;
+	}
+	// GGame::DoAction's keys for the temple's rooms take the player into the temple at that room's path in
+	// (GGame::GoInsideCitadel), and inside it Temple's keys cut to the room (Temple::GoToRoom)
+	constexpr std::array<std::pair<input::BindableActionMap, TempleRoom>, 6> k_RoomKeys {{
+	    {input::BindableActionMap::ZOOM_TO_INSIDE_TEMPLE, TempleRoom::Main},
+	    {input::BindableActionMap::ZOOM_TO_CREATURE_ROOM, TempleRoom::CreatureCave},
+	    {input::BindableActionMap::ZOOM_TO_CHALLENGE_ROOM, TempleRoom::Challenge},
+	    {input::BindableActionMap::ZOOM_TO_SAVE_GAME_ROOM, TempleRoom::SaveGame},
+	    {input::BindableActionMap::ZOOM_TO_OPTIONS_ROOM, TempleRoom::Options},
+	    {input::BindableActionMap::ZOOM_TO_LIBRARY, TempleRoom::Credits},
+	}};
+	const auto& actions = Locator::gameActionSystem::value();
+	auto& temple = Locator::temple::value();
+	for (const auto& [action, room] : k_RoomKeys)
+	{
+		if (!actions.Get(action) || !actions.GetChanged(action))
+		{
+			continue;
+		}
+		if (temple.Active())
+		{
+			temple.GoToRoom(room);
+		}
+		else
+		{
+			temple.Activate(room);
+		}
+		return;
+	}
+}
+
 bool Game::Update() noexcept
 {
 	auto& profiler = Locator::profiler::value();
@@ -407,6 +450,7 @@ bool Game::Update() noexcept
 			Locator::events::value().Create<SDL_Event>(e);
 		}
 		camera.HandleActions(deltaTime);
+		ProcessTempleRoomKeys();
 	}
 	Locator::cameraPathSystem::value().Update(deltaTime);
 
@@ -427,6 +471,11 @@ bool Game::Update() noexcept
 	}
 
 	camera.Update(deltaTime);
+	// The temple's camera may have taken the player out of the temple
+	if (Locator::temple::has_value())
+	{
+		Locator::temple::value().Update();
+	}
 	Locator::cameraBookmarkSystem::value().Update(deltaTime);
 	if (_interface)
 	{
@@ -471,7 +520,24 @@ bool Game::Update() noexcept
 				auto& dynamicsSystem = Locator::dynamicsSystem::value();
 
 				_cursorWorldPosition.reset();
-				if (!glm::any(glm::isnan(rayOrigin) || glm::isnan(rayDirection)))
+				if (Locator::temple::has_value() && Locator::temple::value().Active())
+				{
+					// HandStateCitadel: the hand goes where the cursor meets the room, turning to its surface
+					if (const auto hit = Locator::temple::value().GetCursorHit())
+					{
+						const auto seconds = std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count();
+						_handTempleNormal.SetDestination(hit->normal, k_HandTempleTurnTime);
+						_handTempleNormal.Update(seconds);
+						const auto normal = _handTempleNormal.GetValue();
+						_cursorWorldPosition = hit->point;
+						intersectionTransform.position = hit->point;
+						intersectionTransform.rotation =
+						    glm::length(normal) > 0.0f
+						        ? glm::mat3_cast(glm::rotation(glm::vec3(0.0f, 1.0f, 0.0f), glm::normalize(normal)))
+						        : glm::mat3(1.0f);
+					}
+				}
+				else if (!glm::any(glm::isnan(rayOrigin) || glm::isnan(rayDirection)))
 				{
 					if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
 					{
@@ -595,6 +661,13 @@ bool Game::Initialize() noexcept
 		// If gui captures this input, do not propagate
 		if (!Locator::debugGui::value().ProcessEvents(event))
 		{
+			// Inside the temple, Escape goes back to its main room and out (Temple's key handling)
+			if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE && event.key.repeat == 0 &&
+			    Locator::temple::has_value() && Locator::temple::value().Active())
+			{
+				Locator::temple::value().Escape();
+				return;
+			}
 			// The game's menu takes Escape, and the keyboard and mouse while it is open
 			if (_interface && Locator::windowing::has_value() &&
 			    _interface->ProcessEvent(event, static_cast<glm::u16vec2>(Locator::windowing::value().GetSize())))
@@ -1336,6 +1409,30 @@ void Game::PlaceHand(ecs::components::Transform& handTransform, float deltaSecon
 	const auto eye = camera.GetOrigin();
 	const bool dragging = _handGripping && !_handRotating;
 	const bool rotating = _handGripping && _handRotating;
+
+	// HandStateCitadel: in the temple the hand hangs on the line of sight through the cursor, a little short of where it
+	// meets the room, slowly away from the camera and quickly towards it
+	if (Locator::temple::has_value() && Locator::temple::value().Active())
+	{
+		if (_cursorWorldPosition)
+		{
+			const auto toRoom = *_cursorWorldPosition - eye;
+			const auto roomDistance = glm::length(toRoom);
+			if (roomDistance > 0.0f)
+			{
+				_handRayDirection = toRoom / roomDistance;
+			}
+			const auto target =
+			    glm::clamp(glm::max(roomDistance - k_HandTempleGap, 1.0f), k_HandTempleMinDistance, k_HandTempleMaxDistance);
+			const auto easeTime = _handHoverZoomer.GetDestination() <= target ? 0.4f : 0.2f;
+			_handHoverZoomer.SetDestination(target, easeTime);
+			_handHoverZoomer.Update(deltaSeconds);
+			// CHand::SetDistanceFromView
+			_handDistance = _handHoverZoomer.GetValue();
+		}
+		handTransform.position = eye + _handRayDirection * _handDistance;
+		return;
+	}
 
 	// Turning the camera, the hand holds on to the land under the cursor like it does dragging it, though it keeps
 	// its idle pose, so it hovers its height above the land as it does over it

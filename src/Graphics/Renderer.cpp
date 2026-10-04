@@ -1127,8 +1127,10 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			}
 			// CHand draws the hand after the rest of the scene, blended by its translucent texture. Black & White culls
 			// its back faces; here both sides are drawn, the inside first so that the outside blends over it.
+			// WorldRoom::Draw's reflection of the main room has no hand in it
 			if (const auto hand = renderCtx.instancedDrawDescs.find(ecs::components::Hand::k_MeshId);
-			    desc.drawHand && hand != renderCtx.instancedDrawDescs.end())
+			    desc.drawHand && hand != renderCtx.instancedDrawDescs.end() &&
+			    !(desc.viewId == RenderPass::Reflection && hand->second.hiddenFromReflection))
 			{
 				// L3D meshes face clockwise, which the mirrored reflection pass and a mirrored hand each turn around
 				const bool facesTurned = desc.cullBack != renderCtx.handMirrored;

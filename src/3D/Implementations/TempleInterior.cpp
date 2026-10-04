@@ -11,12 +11,16 @@
 
 #include "TempleInterior.h"
 
+#include <array>
 #include <unordered_map>
 
 #include <fmt/format.h>
 #include <glm/gtx/euler_angles.hpp>
+#include <spdlog/spdlog.h>
 
+#include "3D/CameraPath.h"
 #include "Camera/Camera.h"
+#include "Camera/TempleCameraModel.h"
 #include "Common/EventManager.h"
 #include "ECS/Archetypes/GlowArchetype.h"
 #include "ECS/Components/Mesh.h"
@@ -26,8 +30,10 @@
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystemTemple.h"
 #include "EngineConfig.h"
+#include "FileSystem/FileSystemInterface.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
+#include "Windowing/WindowingInterface.h"
 
 using namespace openblack;
 
@@ -118,6 +124,88 @@ inline void addGlowsToRegistry(Indoors templeRoom)
 	}
 }
 
+TempleInterior::TempleInterior() = default;
+
+TempleInterior::~TempleInterior() = default;
+
+namespace
+{
+/// Each room's path in, data/citadel/engine/<room>.cam, which the game loads as "temple/<room>"
+TempleCameraModel::Paths LoadCameraPaths()
+{
+	TempleCameraModel::Paths paths;
+	auto& cameraPaths = Locator::resources::value().GetCameraPaths();
+	for (const auto& [room, name] : k_TempleInteriorGlows)
+	{
+		const auto id = fmt::format("temple/{}", name);
+		if (!cameraPaths.Contains(id))
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Temple camera path {} isn't loaded", id);
+			continue;
+		}
+		paths.at(static_cast<size_t>(room)) = cameraPaths.Handle(entt::hashed_string(id.c_str()));
+	}
+	return paths;
+}
+} // namespace
+
+void TempleInterior::ApplyLens() const
+{
+	const auto& config = Locator::config::value();
+	auto& camera = Locator::camera::value();
+	const auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
+	const auto lens = camera.GetModel().GetLens();
+	camera.SetProjectionMatrixPerspective(lens.has_value() ? lens->horizontalFieldOfView : config.cameraXFov, aspect,
+	                                      lens.has_value() ? lens->nearClip : config.cameraNearClip, config.cameraFarClip);
+}
+
+void TempleInterior::GoToRoom(TempleRoom room)
+{
+	if (_active && _cameraModel != nullptr)
+	{
+		_cameraModel->GoToRoom(room);
+	}
+}
+
+void TempleInterior::EnterRoom(TempleRoom room)
+{
+	if (_active && _cameraModel != nullptr && !_cameraModel->GoThroughDoorTo(room))
+	{
+		GoToRoom(room);
+	}
+}
+
+std::optional<TempleCursorHit> TempleInterior::GetCursorHit() const
+{
+	if (!_active || _cameraModel == nullptr || !_cameraModel->GetCursorHit().has_value())
+	{
+		return std::nullopt;
+	}
+	const auto& hit = *_cameraModel->GetCursorHit();
+	return TempleCursorHit {.point = hit.point, .normal = hit.normal};
+}
+
+void TempleInterior::Escape()
+{
+	if (_currentRoom != Indoors::Main)
+	{
+		GoToRoom(Indoors::Main);
+	}
+	else
+	{
+		RequestLeave();
+	}
+}
+
+void TempleInterior::Update()
+{
+	if (_leaveRequested)
+	{
+		_leaveRequested = false;
+		Deactivate();
+	}
+}
+
 void TempleInterior::Activate(TempleRoom room)
 {
 	if (_active)
@@ -148,13 +236,19 @@ void TempleInterior::Activate(TempleRoom room)
 	}
 
 	Locator::rendereringSystem::emplace<ecs::systems::RenderingSystemTemple>();
-	camera.SetOrigin(_templePosition);
-	const auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
-	camera.SetProjectionMatrixPerspective(100.f, aspect, config.cameraNearClip, config.cameraFarClip);
-	auto lookup = k_TempleInteriorGlows.at(static_cast<Indoors>(room));
-	Locator::cameraPathSystem::value().Start(entt::hashed_string(fmt::format("temple/{}", lookup).c_str()));
-	//	camera.SetFocus(_templePosition + glm::quat(_templeRotation) * glm::vec3(0.0f, 0.0f, 1.0f));
+
+	// The temple's camera takes over from the island's, coming into the room along its path
 	_active = true;
+	_leaveRequested = false;
+	_transitionRoom.reset();
+	_currentRoom = room;
+	auto model = std::make_unique<TempleCameraModel>(LoadCameraPaths(), _currentRoom);
+	_cameraModel = model.get();
+	_outsideCameraModel = camera.SetModel(std::move(model));
+	_cameraModel->StartIntro(_currentRoom, false);
+	camera.SetOrigin(_cameraModel->GetTargetOrigin());
+	camera.SetFocus(_cameraModel->GetTargetFocus());
+	ApplyLens();
 }
 
 void TempleInterior::Deactivate()
@@ -173,13 +267,18 @@ void TempleInterior::Deactivate()
 
 	auto& camera = Locator::camera::value();
 	Locator::rendereringSystem::emplace<ecs::systems::RenderingSystem>();
+	if (_outsideCameraModel != nullptr)
+	{
+		camera.SetModel(std::move(_outsideCameraModel));
+	}
+	_cameraModel = nullptr;
+	_transitionRoom.reset();
+	ApplyLens();
 	camera.SetOrigin(_playerPositionOutside);
 	camera.SetFocus(_playerPositionOutside + glm::quat(_playerRotationOutside) * glm::vec3(0.0f, 0.0f, 1.0f));
 	if (Locator::cameraPathSystem::value().IsPathing())
 	{
 		Locator::cameraPathSystem::value().Stop();
 	}
-	const auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
-	camera.SetProjectionMatrixPerspective(config.cameraXFov, aspect, config.cameraNearClip, config.cameraFarClip);
 	_active = false;
 }

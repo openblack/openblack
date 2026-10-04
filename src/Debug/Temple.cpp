@@ -64,7 +64,7 @@ void TempleInterior::Draw() noexcept
 				}
 				else
 				{
-					//					temple.templeGoTo();
+					temple.EnterRoom(room);
 				}
 			}
 		}
