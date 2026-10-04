@@ -27,6 +27,7 @@
 #include <spdlog/spdlog.h>
 
 #include "3D/CreatureBody.h"
+#include "3D/GripLandscapeEffect.h"
 #include "3D/HandAnimation.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIslandInterface.h"
@@ -39,6 +40,7 @@
 #include "CHLApi.h"
 #include "Camera/Camera.h"
 #include "Common/EventManager.h"
+#include "Common/RandomNumberManager.h"
 #include "Common/StringUtils.h"
 #include "Debug/DebugGuiInterface.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
@@ -146,6 +148,11 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 	if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_MIDDLE)
 	{
 		middleMouseButton = !middleMouseButton;
+	}
+
+	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT && !middleMouseButton)
+	{
+		PlayHandGrabSound();
 	}
 
 	_handGripping = middleMouseButton || leftMouseButton;
@@ -409,6 +416,7 @@ bool Game::Update() noexcept
 
 	camera.Update(deltaTime);
 	Locator::cameraBookmarkSystem::value().Update(deltaTime);
+	GripLandscapeEffect::Update(std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count());
 
 	// Update Game Logic in Registry
 	{
@@ -1240,4 +1248,44 @@ void Game::PlaceHand(ecs::components::Transform& handTransform, float deltaSecon
 		_handDistance = glm::clamp(glm::min(_handHoverZoomer.GetValue(), nearest), k_HandMinDistance, k_HandMaxDistance);
 	}
 	handTransform.position = eye + _handRayDirection * _handDistance;
+}
+
+void Game::PlayHandGrabSound()
+{
+	if (!_cursorWorldPosition || !Locator::terrainSystem::has_value())
+	{
+		return;
+	}
+	const auto position = *_cursorWorldPosition;
+
+	// MapCoords::IsLand: a cell of the landscape without water
+	bool isLand = false;
+	const auto cell = glm::floor(glm::vec2(position.x, position.z) / 10.0f);
+	if (cell.x >= 0.0f && cell.y >= 0.0f && cell.x < 512.0f && cell.y < 512.0f)
+	{
+		const auto* landCell = Locator::terrainSystem::value().FindCell(glm::u16vec2(cell));
+		isLand = landCell != nullptr && landCell->properties.hasWater == 0;
+	}
+
+	auto& audio = Locator::audio::value();
+	if (isLand)
+	{
+		// GInterface throws up the GRIP_LANDSCAPE spot visual where the hand grips the land, as it plays the sound
+		GripLandscapeEffect::Spawn(
+		    glm::vec3(position.x, Locator::terrainSystem::value().GetHeightAt(glm::xz(position)), position.z));
+	}
+	if (isLand)
+	{
+		// One of G_HandGrabLand_01 to _06, centred on the listener
+		const auto sample = 4 + Locator::rng::value().NextValue(0, 5);
+		const auto id = fmt::format("InGame.sad/{}", sample);
+		audio.PlaySoundEffect(entt::hashed_string(id.c_str()), std::nullopt);
+	}
+	else
+	{
+		// G_HandInWater_01 to _10 in turn, on the water's surface where the hand went in
+		const auto id = fmt::format("InGame.sad/{}", 99 + _handInWaterSample);
+		_handInWaterSample = (_handInWaterSample + 1) % 10;
+		audio.PlaySoundEffect(entt::hashed_string(id.c_str()), glm::vec3(position.x, 0.2f, position.z));
+	}
 }

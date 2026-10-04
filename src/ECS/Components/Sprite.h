@@ -22,6 +22,8 @@ struct Sprite
 	glm::vec2 uvMin;
 	glm::vec2 uvExtent;
 	glm::vec4 tint;
+	/// Adds light to what is behind, like a glow. Otherwise blends over it by the tint's and texture's alpha.
+	bool additive = true;
 };
 
 } // namespace openblack::ecs::components

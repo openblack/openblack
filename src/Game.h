@@ -161,6 +161,8 @@ private:
 	/// Grabbing the sea plays G_HandInWater_01 to _10 in turn
 	uint32_t _handInWaterSample {0};
 
+	/// Plays the sound of the hand grabbing the land or the sea at the grab point (GInterface's land grab)
+	void PlayHandGrabSound();
 	/// Places the hand on the line of sight through the cursor the way CHand does
 	void PlaceHand(ecs::components::Transform& handTransform, float deltaSeconds);
 	/// Loads the hand animations of Data/CTR/hh.hbn for the hand mesh

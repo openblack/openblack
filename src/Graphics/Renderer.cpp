@@ -951,13 +951,19 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 					    bgfx::setTransform(glm::value_ptr(modelMatrix));
 					    spriteShader->SetUniformValue("u_sampleRect", glm::value_ptr(u_sampleRect));
-					    spriteShader->SetUniformValue("u_tint", glm::value_ptr(sprite.tint));
+					    // The shader multiplies the tint by the texture's alpha, which for alpha blending gives colours
+					    // premultiplied by alpha when the tint is
+					    const auto tint =
+					        sprite.additive ? sprite.tint : glm::vec4(glm::vec3(sprite.tint) * sprite.tint.a, sprite.tint.a);
+					    spriteShader->SetUniformValue("u_tint", glm::value_ptr(tint));
 					    spriteShader->SetTextureSampler("s_diffuse", 0, sprite.texture);
 
 					    _plane->GetVertexBuffer().Bind();
 
-					    bgfx::setState(0 | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
-					                   BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE) |
+					    const auto blend = sprite.additive
+					                           ? BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE)
+					                           : BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA);
+					    bgfx::setState(0 | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | blend |
 					                   BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_ADD));
 
 					    bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(spriteShader->GetRawHandle()));
