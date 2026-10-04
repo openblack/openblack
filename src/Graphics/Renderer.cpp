@@ -610,7 +610,14 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 	DrawFootprintPass(drawDesc);
 	{
 		auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::MainPassDrawModels);
-		DrawHandShadowPass(drawDesc);
+		if (drawDesc.drawHand)
+		{
+			DrawHandShadowPass(drawDesc);
+		}
+		else
+		{
+			_handShadow.reset();
+		}
 	}
 	// Reflection Pass
 	{
@@ -835,7 +842,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			// CHand draws the hand after the rest of the scene, blended by its translucent texture. Black & White culls
 			// its back faces; here both sides are drawn, the inside first so that the outside blends over it.
 			if (const auto hand = renderCtx.instancedDrawDescs.find(ecs::components::Hand::k_MeshId);
-			    hand != renderCtx.instancedDrawDescs.end())
+			    desc.drawHand && hand != renderCtx.instancedDrawDescs.end())
 			{
 				// L3D meshes face clockwise, which the mirrored reflection pass and a mirrored hand each turn around
 				const bool facesTurned = desc.cullBack != renderCtx.handMirrored;

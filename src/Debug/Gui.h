@@ -37,6 +37,7 @@ public:
 
 	[[nodiscard]] bool StealsFocus() const noexcept override;
 	void SetScale(float scale) noexcept override;
+	void SetMenuBarVisible(bool visible) noexcept override { _menuBarVisible = visible; }
 	bool ProcessEvents(const SDL_Event& event) noexcept override;
 	bool Loop() noexcept override;
 	void Draw() noexcept override;
@@ -68,5 +69,6 @@ private:
 	std::vector<std::unique_ptr<Window>> _debugWindows;
 	std::string _screenshotFilename = "screenshot.png";
 	bool _stealsFocus = false;
+	bool _menuBarVisible = true;
 };
 } // namespace openblack::debug::gui

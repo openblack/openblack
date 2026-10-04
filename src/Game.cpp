@@ -9,6 +9,9 @@
 
 #include "Game.h"
 
+#include <cstdlib>
+
+#include <algorithm>
 #include <string>
 
 #include <LHVM.h>
@@ -64,6 +67,7 @@
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/RendererInterface.h"
+#include "Gui/GameInterface.h"
 #include "Input/GameActionMapInterface.h"
 #include "LHScriptX/Script.h"
 #include "Locator.h"
@@ -131,6 +135,8 @@ Game::Game(Arguments&& args) noexcept
 
 Game::~Game() noexcept
 {
+	// Its textures go before the renderer
+	_interface.reset();
 	ShutDownServices();
 	SDL_Quit(); // todo: move to GameWindow
 	spdlog::shutdown();
@@ -408,6 +414,8 @@ bool Game::Update() noexcept
 	// ImGui events + prepare
 	{
 		auto guiLoop = profiler.BeginScoped(Profiler::Stage::GuiLoop);
+		// The debug menu bar comes up with the game's menu, or always without it
+		Locator::debugGui::value().SetMenuBarVisible(!_interface || _interface->GetMenu().IsOpen());
 		if (Locator::debugGui::value().Loop())
 		{
 			return false; // Quit event
@@ -416,6 +424,11 @@ bool Game::Update() noexcept
 
 	camera.Update(deltaTime);
 	Locator::cameraBookmarkSystem::value().Update(deltaTime);
+	if (_interface)
+	{
+		_interface->Update(std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count());
+		HandleInterfaceAction();
+	}
 	GripLandscapeEffect::Update(std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count());
 
 	// Update Game Logic in Registry
@@ -578,6 +591,13 @@ bool Game::Initialize() noexcept
 		// If gui captures this input, do not propagate
 		if (!Locator::debugGui::value().ProcessEvents(event))
 		{
+			// The game's menu takes Escape, and the keyboard and mouse while it is open
+			if (_interface && Locator::windowing::has_value() &&
+			    _interface->ProcessEvent(event, static_cast<glm::u16vec2>(Locator::windowing::value().GetSize())))
+			{
+				HandleInterfaceAction();
+				return;
+			}
 			config.running = this->ProcessEvents(event);
 			Locator::gameActionSystem::value().ProcessEvent(event);
 		}
@@ -759,6 +779,24 @@ bool Game::Initialize() noexcept
 		meshManager.Load("river", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "river.l3d");
 		meshManager.Load("river2", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "river2.l3d");
 		meshManager.Load("metre_sphere", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "metre_sphere.l3d");
+	}
+
+	// The game's menu, which greets the player by their profile's name: openblack has no profiles, so by the name
+	// they log in with
+	{
+		const auto* user = std::getenv("USERNAME");
+		user = user != nullptr ? user : std::getenv("USER");
+		// The settings the menu starts with are the game's
+		gui::MenuSettings settings;
+		auto& audio = Locator::audio::value();
+		settings.sfxVolume = audio.GetSfxVolume();
+		settings.musicVolume = audio.GetMusicVolume();
+		settings.leftHandedHand = !Locator::config::value().rightHandedHand;
+		_interface = gui::GameInterface::Create(gui::ToUtf16(user != nullptr ? user : "Player"), std::move(settings));
+		if (!_interface)
+		{
+			SPDLOG_LOGGER_WARN(spdlog::get("game"), "The game's menu is not available, Escape quits");
+		}
 	}
 
 	// TODO(raffclar): #400: Parse level files within the resource loader
@@ -1009,8 +1047,17 @@ bool Game::Run() noexcept
 			    .drawBoundingBoxes = config.drawBoundingBoxes,
 			    .cullBack = false,
 			    .wireframe = config.wireframe,
+			    .drawHand = !_interface || !_interface->GetMenu().IsOpen(),
 			};
 			Locator::rendererInterface::value().DrawScene(drawDesc);
+		}
+
+		// The game's interface over the scene
+		if (_interface && Locator::windowing::has_value())
+		{
+			glm::ivec2 mouse;
+			SDL_GetMouseState(&mouse.x, &mouse.y);
+			_interface->Draw(static_cast<glm::u16vec2>(Locator::windowing::value().GetSize()), mouse, SDL_GetTicks());
 		}
 
 		{
@@ -1109,6 +1156,55 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 	_gameMusic->Reset();
 
 	return true;
+}
+
+void Game::HandleInterfaceAction()
+{
+	using Action = gui::GameMenu::Action;
+	const auto action = _interface->TakeAction();
+
+	// The settings the player changes take effect at once
+	if (_interface->TakeSettingsChanged())
+	{
+		const auto& settings = _interface->GetMenu().GetSettings();
+		auto& audio = Locator::audio::value();
+		audio.SetSfxVolume(settings.sfxVolume);
+		audio.SetMusicVolume(settings.musicVolume);
+		Locator::config::value().rightHandedHand = !settings.leftHandedHand;
+	}
+
+	// The menu pauses the game while it is open
+	const auto open = _interface->GetMenu().IsOpen();
+	if (open && !_menuWasOpen)
+	{
+		_pausedBeforeMenu = _paused;
+		_paused = true;
+	}
+	else if (!open && _menuWasOpen)
+	{
+		_paused = _pausedBeforeMenu;
+	}
+	_menuWasOpen = open;
+
+	switch (action)
+	{
+	case Action::Quit:
+		Locator::config::value().running = false;
+		break;
+	case Action::StartSkirmish:
+	case Action::JoinOnline:
+	case Action::Statistics:
+	case Action::CreatePlayer:
+	case Action::DeletePlayer:
+	case Action::EditTattoo:
+	case Action::StartNewGame:
+	case Action::RedefineControl:
+		SPDLOG_LOGGER_INFO(spdlog::get("game"), "This part of the menu is not available yet");
+		break;
+	case Action::Continue:
+	case Action::None:
+		break;
+	}
 }
 
 void Game::LoadLandscape(const std::filesystem::path& path)

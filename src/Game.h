@@ -33,6 +33,10 @@ class AtmosAudio;
 class GameMusic;
 } // namespace audio
 class HandAnimation;
+namespace gui
+{
+class GameInterface;
+}
 namespace ecs::components
 {
 struct Transform;
@@ -167,10 +171,17 @@ private:
 	void PlaceHand(ecs::components::Transform& handTransform, float deltaSeconds);
 	/// Loads the hand animations of Data/CTR/hh.hbn for the hand mesh
 	void LoadHandAnimation();
+	/// Acts on what the player chose in the game's menu: continuing restores the pause it had before it opened
+	void HandleInterfaceAction();
 
 	std::optional<std::pair</* frame number */ uint32_t, /* output */ std::filesystem::path>> _requestScreenshot;
 	std::unique_ptr<audio::AtmosAudio> _atmosAudio;
 	std::unique_ptr<audio::GameMusic> _gameMusic;
 	std::unique_ptr<HandAnimation> _handAnimation;
+	/// The game's own interface, null without the game's files for it
+	std::unique_ptr<gui::GameInterface> _interface;
+	/// Whether the game was paused when the menu opened, which pauses it
+	bool _pausedBeforeMenu {true};
+	bool _menuWasOpen {false};
 };
 } // namespace openblack

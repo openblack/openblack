@@ -62,6 +62,8 @@ public:
 		bool drawBoundingBoxes;
 		bool cullBack;
 		bool wireframe;
+		/// The hand and its shadow, hidden while a dialog shows its own pointer
+		bool drawHand = true;
 	};
 
 	struct L3DMeshSubmitDesc

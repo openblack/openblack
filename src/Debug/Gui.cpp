@@ -132,6 +132,8 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 			}
 		}
 	}
+	// The system's cursor stays hidden: the game shows the hand, and its menu its own pointer
+	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 
 	return gui;
 }
@@ -286,7 +288,7 @@ bool Gui::Loop() noexcept
 		window->WindowUpdate();
 	}
 	NewFrame();
-	if (ShowMenu())
+	if (_menuBarVisible && ShowMenu())
 	{
 		// Exit option selected
 		return true;
