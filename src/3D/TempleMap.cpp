@@ -134,6 +134,32 @@ glm::vec3 TempleMap::ToMap(glm::vec2 world) const
 	        (u.y - static_cast<float>(_centre.y)) * _scale};
 }
 
+glm::u8vec3 TempleMap::MarkerColour(std::optional<PlayerNames> player)
+{
+	// The players' colours (0xBFF0B8), the neutral one black
+	constexpr std::array<glm::u8vec3, 8> k_PlayerColours = {
+	    glm::u8vec3 {0xFF, 0x46, 0x46}, glm::u8vec3 {0x47, 0xFF, 0x54}, glm::u8vec3 {0xE3, 0x47, 0xFF},
+	    glm::u8vec3 {0x47, 0xF9, 0xFF}, glm::u8vec3 {0xFF, 0xFD, 0x47}, glm::u8vec3 {0x47, 0x77, 0xFF},
+	    glm::u8vec3 {0xFF, 0xA2, 0x47}, glm::u8vec3 {0x00, 0x00, 0x00},
+	};
+	// TODO(raffclar): GetRemapedPlayer gives some lands' second and third players others' colours, by the land's number
+	auto colour = player.has_value() && static_cast<size_t>(*player) < k_PlayerColours.size()
+	                  ? k_PlayerColours.at(static_cast<size_t>(*player))
+	                  : glm::u8vec3(0xFF);
+	if (colour == glm::u8vec3(0))
+	{
+		colour = glm::u8vec3(0xFF);
+	}
+	return colour + ((glm::u8vec3(0xFF) - colour) / glm::u8vec3(4));
+}
+
+glm::vec3 TempleMap::MarkerPosition(glm::vec2 world) const
+{
+	// The markers' callers give CalcPoint the cell of the thing's MapCoords, times 10
+	constexpr float k_CellSize = 10.0f;
+	return ToMap(glm::floor(world / k_CellSize) * k_CellSize);
+}
+
 glm::vec2 TempleMap::ToWorld(glm::vec3 map) const
 {
 	if (_scale <= 0.0f)

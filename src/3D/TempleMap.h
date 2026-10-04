@@ -20,6 +20,7 @@
 #include <glm/vec3.hpp>
 
 #include "3D/OrientedText.h"
+#include "Enums.h"
 
 namespace openblack
 {
@@ -27,6 +28,22 @@ namespace lnd
 {
 struct LNDCell;
 }
+
+/// What a marker on the temple's map stands for, each a mesh of data/citadel/icons
+enum class TempleMapMarkerKind : uint8_t
+{
+	Temple,
+	Creature,
+	Challenge,
+};
+
+/// A marker on the temple's map, in the main room, and its colour
+struct TempleMapMarker
+{
+	TempleMapMarkerKind kind;
+	glm::vec3 position;
+	glm::u8vec3 colour;
+};
 
 /// The island in relief over the main room's pool (MiniMap).
 ///
@@ -61,6 +78,12 @@ public:
 	[[nodiscard]] glm::vec2 ToWorld(glm::vec3 map) const;
 	/// The room's units to a world unit across the map (0xC383DC)
 	[[nodiscard]] float GetWorldScale() const { return _scale / k_WorldPerVertex; }
+
+	/// MiniMap::DrawMarker's colour of a player's things (GPlayer::GetPlayer3DColor), black as white, lightened a quarter
+	/// of the way to white. Without a player, white.
+	[[nodiscard]] static glm::u8vec3 MarkerColour(std::optional<PlayerNames> player);
+	/// Where a marker of a thing at a point of the world stands on the map: on the cell the thing is in
+	[[nodiscard]] glm::vec3 MarkerPosition(glm::vec2 world) const;
 
 private:
 	/// The map's units to a vertex, and the vertex at its centre, doubled (MiniMap +0, +4 and +8)

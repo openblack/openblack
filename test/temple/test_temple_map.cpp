@@ -112,3 +112,22 @@ TEST(TempleMap, MapsTheWorldBackAndForth)
 	EXPECT_NEAR(back.x, world.x, 1e-2f);
 	EXPECT_NEAR(back.y, world.y, 1e-2f);
 }
+
+TEST(TempleMap, ColoursMarkersByTheirPlayersLightened)
+{
+	// Player one's red, a quarter of the way to white
+	EXPECT_EQ(TempleMap::MarkerColour(PlayerNames::PLAYER_ONE), glm::u8vec3(0xFF, 0x46 + 0x2E, 0x46 + 0x2E));
+	// The neutral player's black is white, as are the things of no player
+	EXPECT_EQ(TempleMap::MarkerColour(PlayerNames::NEUTRAL), glm::u8vec3(0xFF));
+	EXPECT_EQ(TempleMap::MarkerColour(std::nullopt), glm::u8vec3(0xFF));
+}
+
+TEST(TempleMap, StandsMarkersOnTheCellOfTheirThings)
+{
+	FakeLand land;
+	TempleMap map;
+	map.Frame(land.Finder());
+	std::vector<OrientedTextVertex> triangles;
+	map.Build(land.Finder(), triangles);
+	EXPECT_EQ(map.MarkerPosition(glm::vec2(705.0f, 909.9f)), map.ToMap(glm::vec2(700.0f, 900.0f)));
+}

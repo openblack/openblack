@@ -16,6 +16,7 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
+#include "3D/TempleMap.h"
 #include "Graphics/GraphicsHandle.h"
 
 namespace openblack
@@ -116,6 +117,10 @@ public:
 	[[nodiscard]] virtual const std::vector<OrientedTextVertex>& GetMap() const = 0;
 	/// Counts the visits to the temple, on each of which the map's texture of the land is drawn afresh (BuildMapTex)
 	[[nodiscard]] virtual uint32_t GetVisits() const = 0;
+	/// The markers on the map this frame, in the main room, of the kinds its buttons show
+	[[nodiscard]] virtual const std::vector<TempleMapMarker>& GetMapMarkers() const = 0;
+	/// How far the markers have turned, in radians (0xE3A194)
+	[[nodiscard]] virtual float GetMapMarkerTurn() const = 0;
 	/// Escape takes the player back to the main room, and out of the temple from there (Temple's key handling)
 	virtual void Escape() = 0;
 	/// Leaves the temple once the frame is done with it

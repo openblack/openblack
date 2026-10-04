@@ -61,6 +61,8 @@ public:
 	[[nodiscard]] const graphics::Texture2D* GetTextTexture() const override;
 	[[nodiscard]] const std::vector<OrientedTextVertex>& GetMap() const override { return _mapTriangles; }
 	[[nodiscard]] uint32_t GetVisits() const override { return _visits; }
+	[[nodiscard]] const std::vector<TempleMapMarker>& GetMapMarkers() const override { return _mapMarkers; }
+	[[nodiscard]] float GetMapMarkerTurn() const override { return _mapMarkerTurn; }
 	void Escape() override;
 	void RequestLeave() override { _leaveRequested = true; }
 	void Update(std::chrono::microseconds dt) override;
@@ -92,6 +94,11 @@ private:
 	/// The island over the main room's pool, and its triangles this frame
 	TempleMap _map;
 	std::vector<OrientedTextVertex> _mapTriangles;
+	/// The markers on the map this frame, and how far they have turned
+	std::vector<TempleMapMarker> _mapMarkers;
+	float _mapMarkerTurn {0.0f};
+	/// WorldRoom::DrawAdditional's markers of the temples and creatures
+	void UpdateMapMarkers(float seconds);
 	uint32_t _visits {0};
 	/// How far through its slide the waterfall's texture is, from 0 to 1
 	float _waterfallSlide {0.0f};

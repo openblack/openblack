@@ -34,8 +34,10 @@
 #include "Camera/TempleCameraModel.h"
 #include "Common/EventManager.h"
 #include "ECS/Archetypes/GlowArchetype.h"
+#include "ECS/Components/Creature.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Temple.h"
+#include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/Implementations/CameraPathSystem.h"
@@ -417,6 +419,39 @@ void TempleInterior::UpdateToolTips(float milliseconds)
 	_interface->SetHandOnScreen(onScreen);
 }
 
+void TempleInterior::UpdateMapMarkers(float seconds)
+{
+	_mapMarkers.clear();
+	if (_mapTriangles.empty())
+	{
+		return;
+	}
+	using namespace ecs::components;
+	auto& registry = Locator::entitiesRegistry::value();
+	if (_toggles.IsShown(TempleToggles::Display::Temples))
+	{
+		// fn_0079D830: every player's temple
+		registry.Each<const Temple, const Transform>([this](const Temple& temple, const Transform& transform) {
+			_mapMarkers.push_back({.kind = TempleMapMarkerKind::Temple,
+			                       .position = _map.MarkerPosition(glm::vec2(transform.position.x, transform.position.z)),
+			                       .colour = TempleMap::MarkerColour(temple.owner)});
+		});
+	}
+	if (_toggles.IsShown(TempleToggles::Display::Creatures))
+	{
+		// fn_0079DAB0: every creature, in its player's colour
+		registry.Each<const Creature, const Transform>([this](const Creature& creature, const Transform& transform) {
+			_mapMarkers.push_back({.kind = TempleMapMarkerKind::Creature,
+			                       .position = _map.MarkerPosition(glm::vec2(transform.position.x, transform.position.z)),
+			                       .colour = TempleMap::MarkerColour(creature.owner)});
+		});
+	}
+	// TODO(raffclar): WorldRoom::DrawChallenges marks the challenges not yet done, DrawWorldMapSpells the miracles being
+	// cast, and InfluenceCircle::Draw the players' influence on the map, as their buttons show them
+	// The markers turn a radian a second while the map is drawn
+	_mapMarkerTurn += seconds;
+}
+
 TempleInterior::~TempleInterior() = default;
 
 namespace
@@ -642,6 +677,7 @@ void TempleInterior::Update(std::chrono::microseconds dt)
 			const auto& island = Locator::terrainSystem::value();
 			_map.Build([&island](glm::u16vec2 cell) { return island.FindCell(cell); }, _mapTriangles);
 		}
+		UpdateMapMarkers(milliseconds / 1000.0f);
 
 		// CreatureRoom::Draw moves the room's effects on while the room is drawn
 		if (_creatureCaveEffects != nullptr && IsRoomDrawn(TempleRoom::CreatureCave))

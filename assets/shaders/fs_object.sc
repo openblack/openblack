@@ -7,6 +7,8 @@ SAMPLER2D(s_handLight, 2);
 uniform vec4 u_skyAlphaThreshold;
 // The temple's controls glow under the cursor: LH3D adds the colour as the vertices' specular, after the texture stages
 uniform vec4 u_glow;
+// rgb: a colour the object is drawn in, as LH3DObject::SetColour gives it. w: 1 to draw it unlit, in that colour alone.
+uniform vec4 u_tint;
 
 #include "hand_light.sh"
 
@@ -34,7 +36,8 @@ void main()
 
 	vec4 diffuseTex = texture2D(s_diffuse, v_texcoord0.xy);
 	// The hand's light, where it is brighter
-	diffuseTex.rgb = diffuseTex.rgb * max(ambient + diffuse, vec3_splat(HandLightAt(v_position.xyz)));
+	vec3 light = max(ambient + diffuse, vec3_splat(HandLightAt(v_position.xyz)));
+	diffuseTex.rgb = diffuseTex.rgb * mix(light, vec3_splat(1.0f), u_tint.w) * u_tint.rgb;
 	if (diffuseTex.a <= alphaThreshold)
 	{
 		discard;

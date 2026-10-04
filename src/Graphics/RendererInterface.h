@@ -105,6 +105,8 @@ public:
 		std::span<const std::pair<uint32_t, glm::vec3>> subMeshGlows;
 		/// Submeshes left undrawn
 		std::span<const uint32_t> hiddenSubMeshes;
+		/// A colour the mesh is drawn in, unlit when w is 1, where its program takes one
+		glm::vec4 tint {1.0f, 1.0f, 1.0f, 0.0f};
 	};
 
 	static std::unique_ptr<RendererInterface> Create(GraphicsBackend backend, bool vsync) noexcept;

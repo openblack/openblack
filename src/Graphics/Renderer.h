@@ -91,6 +91,8 @@ private:
 	void DrawTempleMapPass(const DrawSceneDesc& desc) const;
 	/// MiniMap's draw: the island in relief over the main room's pool
 	void DrawTempleMap(const DrawSceneDesc& desc) const;
+	/// WorldRoom::DrawAdditional: the markers on the map, on soft glows that show through anything
+	void DrawTempleMapMarkers(const DrawSceneDesc& desc) const;
 
 	std::unique_ptr<ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;

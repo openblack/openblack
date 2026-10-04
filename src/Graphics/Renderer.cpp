@@ -442,6 +442,10 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				const glm::vec4 u_depthBias {desc.depthBias, 0.0f, 0.0f, 0.0f};
 				program->SetUniformValue("u_depthBias", &u_depthBias);
 			}
+			if (program->HasUniform("u_tint"))
+			{
+				program->SetUniformValue("u_tint", &desc.tint);
+			}
 			if (program->HasUniform("u_glow"))
 			{
 				const glm::vec4 u_glow {glow, 0.0f};
@@ -717,6 +721,79 @@ void Renderer::DrawTempleMap(const DrawSceneDesc& desc) const
 	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_GREATER |
 	               BGFX_STATE_MSAA | BGFX_STATE_BLEND_ALPHA);
 	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(shader->GetRawHandle()));
+}
+
+void Renderer::DrawTempleMapMarkers(const DrawSceneDesc& desc) const
+{
+	if (desc.viewId != RenderPass::Main || !Locator::temple::has_value() || !Locator::temple::value().Active())
+	{
+		return;
+	}
+	const auto& temple = Locator::temple::value();
+	const auto& markers = temple.GetMapMarkers();
+	if (markers.empty())
+	{
+		return;
+	}
+	const auto origin = temple.GetPosition();
+
+	// First a glow under each marker, the room's light glow drawn over everything: 1.3 across, a tenth above the marker
+	const auto& textures = Locator::resources::value().GetTextures();
+	const auto atmos = entt::hashed_string("raw/ATMOS");
+	const auto atmosAlpha = entt::hashed_string("raw/ATMOSA");
+	if (textures.Contains(atmos.value()) && textures.Contains(atmosAlpha.value()))
+	{
+		const auto* spriteShader = _shaderManager->GetShader("Sprite");
+		constexpr float k_GlowSize = 1.3f;
+		constexpr glm::vec4 k_GlowColour {0x61 / 255.0f, 0x6E / 255.0f, 0x7C / 255.0f, 1.0f};
+		// The glow is frame 22 of the atmosphere texture's 8 by 8 frames, facing the camera and adding to what is behind
+		const glm::vec4 u_sampleRect {1.0f / 8.0f, 1.0f / 8.0f, 6.0f / 8.0f, 2.0f / 8.0f};
+		const glm::vec4 u_spriteParams {1.0f, 1.0f, 1.0f, 0.0f};
+		for (const auto& marker : markers)
+		{
+			const auto model = glm::scale(
+			    glm::translate(glm::mat4(1.0f), origin + marker.position + glm::vec3(0.0f, 0.1f, 0.0f)), glm::vec3(k_GlowSize));
+			bgfx::setTransform(glm::value_ptr(model));
+			spriteShader->SetUniformValue("u_sampleRect", glm::value_ptr(u_sampleRect));
+			spriteShader->SetUniformValue("u_spriteParams", glm::value_ptr(u_spriteParams));
+			spriteShader->SetUniformValue("u_tint", glm::value_ptr(k_GlowColour));
+			spriteShader->SetTextureSampler("s_diffuse", 0, *textures.Handle(atmos));
+			spriteShader->SetTextureSampler("s_alpha", 1, *textures.Handle(atmosAlpha));
+			_plane->GetVertexBuffer().Bind();
+			bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
+			               BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE));
+			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(spriteShader->GetRawHandle()));
+		}
+	}
+
+	// Then the markers, a twentieth of their size, turning, in their colours
+	constexpr std::array<entt::id_type, 3> k_Icons = {
+	    entt::hashed_string("temple/icons/I_citadel_on_map"),
+	    entt::hashed_string("temple/icons/I_creature_on_map"),
+	    entt::hashed_string("temple/icons/I_challenge_on_map"),
+	};
+	constexpr float k_MarkerScale = 0.05f;
+	const auto& meshes = Locator::resources::value().GetMeshes();
+	const auto turn = glm::rotate(glm::mat4(1.0f), temple.GetMapMarkerTurn(), glm::vec3(0.0f, 1.0f, 0.0f));
+	for (const auto& marker : markers)
+	{
+		const auto icon = k_Icons.at(static_cast<size_t>(marker.kind));
+		if (!meshes.Contains(icon))
+		{
+			continue;
+		}
+		// TODO(raffclar): ApplyCitadelColoring also darkens the markers by the temple's light, as it does the rooms
+		const auto model = glm::translate(glm::mat4(1.0f), origin + marker.position) * turn *
+		                   glm::scale(glm::mat4(1.0f), glm::vec3(k_MarkerScale));
+		L3DMeshSubmitDesc submitDesc = {};
+		submitDesc.viewId = desc.viewId;
+		submitDesc.program = _shaderManager->GetShader("Object");
+		submitDesc.state = k_BgfxDefaultStateInvertedZ;
+		submitDesc.modelMatrices = &model;
+		submitDesc.matrixCount = 1;
+		submitDesc.tint = glm::vec4(glm::vec3(marker.colour) / 255.0f, 1.0f);
+		DrawMesh(*meshes.Handle(icon), submitDesc, 0);
+	}
 }
 
 void Renderer::DrawMistDomes(const DrawSceneDesc& desc) const
@@ -1595,6 +1672,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		{
 			DrawLightBeams(desc);
 			DrawTempleMap(desc);
+			DrawTempleMapMarkers(desc);
 			DrawMistDomes(desc);
 			DrawTempleText(desc);
 		}

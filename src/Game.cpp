@@ -773,6 +773,20 @@ bool Game::Initialize() noexcept
 	auto& glowManager = resources.GetGlows();
 	auto& camPathManager = resources.GetCameraPaths();
 
+	// WorldRoom::InitEngine's markers of the temples, creatures and challenges on the map
+	for (const auto* icon : {"I_citadel_on_map", "I_creature_on_map", "I_challenge_on_map"})
+	{
+		const auto path = fileSystem.GetPath<Path::Citadel>() / "icons" / fmt::format("{}.l3d", icon);
+		try
+		{
+			meshManager.Load(fmt::format("temple/icons/{}", icon), resources::L3DLoader::FromDiskTag {}, path);
+		}
+		catch (std::runtime_error& err)
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+		}
+	}
+
 	fileSystem.Iterate(
 	    fileSystem.GetPath<Path::Citadel>() / "OutsideMeshes", false, [&meshManager](const std::filesystem::path& f) {
 		    if (f.extension() == ".zzz")
