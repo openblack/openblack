@@ -109,6 +109,8 @@ public:
 
 	CameraModel& GetModel() { return *_model; }
 	[[nodiscard]] const CameraModel& GetModel() const { return *_model; }
+	/// Hands the camera's control to another model, as the temple does inside, giving back the one it had
+	std::unique_ptr<CameraModel> SetModel(std::unique_ptr<CameraModel> model);
 
 protected:
 	ZoomInterpolator3f _originInterpolators;
