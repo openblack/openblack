@@ -37,6 +37,8 @@ public:
 		throw std::runtime_error("Cannot get landscape before any are loaded");
 	}
 
+	[[nodiscard]] const lnd::LNDCell* FindCell(const glm::u16vec2&) const override { return nullptr; }
+
 	void DumpTextures() const override { throw std::runtime_error("Cannot get landscape before any are loaded"); }
 
 	void DumpMaps() const override { throw std::runtime_error("Cannot get landscape before any are loaded"); }

@@ -37,5 +37,12 @@ void main()
 
 	vec4 cs_position = mul(u_view, vec4(transformedPosition, 1.0f));
 	v_distToCamera = cs_position.z;
+	// Land at sea level is drawn flat at height 0, in the plane of the ocean. Land is never under the sea, so win the
+	// tie: pull those vertices a fraction of their distance towards the camera along their line of sight, which keeps
+	// them where they are on screen and only brings their depth forward.
+	if (a_position.y <= 0.0f)
+	{
+		cs_position.xyz *= 0.999f;
+	}
 	gl_Position = mul(u_proj, cs_position);
 }

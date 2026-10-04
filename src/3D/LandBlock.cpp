@@ -121,7 +121,7 @@ void LandBlock::BuildVertexList(std::span<LandVertex> vertices, LandIslandInterf
 			{
 				cell = &island.GetCell(blockOffset + offset);
 				position =
-				    glm::vec3(offset.x * LandIslandInterface::k_CellSize, cell->altitude * LandIslandInterface::k_HeightUnit,
+				    glm::vec3(offset.x * LandIslandInterface::k_CellSize, LandIslandInterface::GetDrawnAltitude(cell->altitude),
 				              offset.y * LandIslandInterface::k_CellSize);
 
 				const auto& country = countries.at(cell->properties.country);

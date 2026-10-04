@@ -9,6 +9,7 @@
 
 #include <cstdlib>
 
+#include <array>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -409,8 +410,13 @@ int WriteFile(const Arguments::Write& args) noexcept
 
 		const uint16_t cellX = static_cast<uint16_t>(point[0] / 10.0f) & 0xF;
 		const uint16_t cellZ = static_cast<uint16_t>(point[2] / 10.0f) & 0xF;
-		const uint16_t cellIndex = cellX * 0x11u + cellZ;
-		block.cells.at(cellIndex).altitude = static_cast<uint8_t>(point[1] / heightUnit);
+		// Raise the corners of the cell the point is in, which the block's 17x17 cells always hold, so the land is flat
+		// there and the height interpolated anywhere in the cell is the point's
+		for (const uint16_t offset : std::array<uint16_t, 4> {0, 1, 0x11, 0x12})
+		{
+			const uint16_t cellIndex = (cellX * 0x11u + cellZ) + offset;
+			block.cells.at(cellIndex).altitude = static_cast<uint8_t>(point[1] / heightUnit);
+		}
 
 		block.blockX = blockX;
 		block.blockZ = blockZ;
