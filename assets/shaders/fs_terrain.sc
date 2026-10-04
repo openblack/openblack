@@ -1,4 +1,4 @@
-$input v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera
+$input v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera, v_shadowCoord
 
 #include <bgfx_shader.sh>
 
@@ -8,8 +8,12 @@ SAMPLER2DARRAY(s0_materials, 0);
 SAMPLER2D(s1_bump, 1);
 SAMPLER2D(s2_smallBump, 2);
 SAMPLER2D(s3_footprints, 3);
+SAMPLER2D(s4_handShadow, 4);
 
 uniform vec4 u_skyAndBump;
+// x: darkness of the hand's shadow where its silhouette fully covers a texel, 0 without a shadow
+// y: how far before the hand along the light the shadow starts
+uniform vec4 u_handShadow;
 
 void main()
 {
@@ -56,6 +60,15 @@ void main()
 	// apply light map
 	float skyBightness = skyType / 2.0f;
 	col = col * mix(0.25f, clamp(v_lightLevel * 2.0f, 0.5f, 1.0f), skyBightness);
+
+	// the hand's shadow, projected along the sunlight onto the land beyond it
+	vec3 shadowCoord = v_shadowCoord.xyz;
+	if (u_handShadow.x > 0.0f && shadowCoord.z > u_handShadow.y && shadowCoord.x > 0.0f && shadowCoord.x < 1.0f &&
+	    shadowCoord.y > 0.0f && shadowCoord.y < 1.0f)
+	{
+		float coverage = texture2D(s4_handShadow, shadowCoord.xy).r;
+		col.rgb = col.rgb * (1.0f - coverage * v_shadowCoord.w * u_handShadow.x);
+	}
 
 	gl_FragColor = vec4(col.rgb, v_waterAlpha);
 

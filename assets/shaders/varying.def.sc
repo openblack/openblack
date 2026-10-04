@@ -26,3 +26,4 @@ vec3 v_materialBlend     : COLOR2;
 float v_lightLevel       : COLOR3;
 float v_waterAlpha       : COLOR4;
 float v_distToCamera     : DEPTH0;
+vec4 v_shadowCoord       : TEXCOORD2 = vec4(0.0, 0.0, -1.0, 1.0);

@@ -15,6 +15,7 @@
 #include <chrono>
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <string_view>
 #include <vector>
 
@@ -22,6 +23,7 @@
 #include <glm/fwd.hpp>
 #include <glm/mat4x4.hpp>
 
+#include "Graphics/HandShadow.h"
 #include "Graphics/RenderPass.h"
 #include "Graphics/RendererInterface.h"
 
@@ -41,6 +43,7 @@ class Registry;
 
 namespace graphics
 {
+class FrameBuffer;
 class L3DSubMesh;
 class Mesh;
 
@@ -67,6 +70,8 @@ public:
 
 private:
 	void DrawFootprintPass(const DrawSceneDesc& drawDesc) const;
+	/// Draws the hand's silhouette for its shadow, or clears the shadow when there is none
+	void DrawHandShadowPass(const DrawSceneDesc& drawDesc) const;
 	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, bool preserveState) const;
 	void DrawPass(const DrawSceneDesc& desc) const;
 
@@ -75,6 +80,10 @@ private:
 	uint32_t _bgfxReset;
 	bool _bgfxDebug = false;
 	bool _bgfxProfile = false;
+
+	std::unique_ptr<FrameBuffer> _handShadowFrameBuffer;
+	/// The hand's shadow of the frame being drawn
+	mutable std::optional<HandShadow> _handShadow;
 	std::unique_ptr<Mesh> _plane;
 };
 } // namespace graphics

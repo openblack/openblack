@@ -31,8 +31,10 @@
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Sprite.h"
+#include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "EngineConfig.h"
 #include "Game.h"
@@ -269,6 +271,10 @@ Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallb
 {
 	_shaderManager->LoadShaders();
 	_plane = Primitive::CreatePlane();
+	// LH3D rasterises shadows with eight coverage samples per texel, multisampling gives the same soft edges
+	_handShadowFrameBuffer =
+	    std::make_unique<FrameBuffer>("Hand Shadow", HandShadow::k_TextureSize, HandShadow::k_TextureSize, TextureFormat::R8,
+	                                  std::nullopt, static_cast<uint8_t>(8), Wrapping::ClampEdge);
 
 	// give debug names to views
 	// TODO (#749) use std::views::enumerate
@@ -282,6 +288,7 @@ Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallb
 Renderer::~Renderer() noexcept
 {
 	_plane.reset();
+	_handShadowFrameBuffer.reset();
 	_shaderManager.reset();
 	bgfx::frame();
 	bgfx::shutdown();
@@ -367,7 +374,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			{
 				bgfx::setTransform(desc.modelMatrices, desc.matrixCount);
 			}
-			if (texture != nullptr)
+			if (texture != nullptr && desc.program->HasUniform("s_diffuse"))
 			{
 				desc.program->SetTextureSampler("s_diffuse", 0, *texture);
 			}
@@ -376,7 +383,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				desc.program->SetTextureSampler("s_heightmap", 1, heightMap);   // vs
 				desc.program->SetUniformValue("u_islandExtent", &islandExtent); // vs
 			}
-			if (!desc.isSky)
+			if (!desc.isSky && desc.program->HasUniform("u_skyAlphaThreshold"))
 			{
 				const glm::vec4 u_skyAlphaThreshold = {
 				    Locator::skySystem::value().GetCurrentSkyType(),
@@ -534,10 +541,77 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 	}
 }
 
+void Renderer::DrawHandShadowPass(const DrawSceneDesc& drawDesc) const
+{
+	const auto viewId = static_cast<bgfx::ViewId>(RenderPass::HandShadow);
+	_handShadow.reset();
+
+	_handShadowFrameBuffer->Bind(RenderPass::HandShadow);
+	bgfx::setViewRect(viewId, 0, 0, HandShadow::k_TextureSize, HandShadow::k_TextureSize);
+	bgfx::setViewClear(viewId, BGFX_CLEAR_COLOR, 0x00000000);
+	bgfx::touch(viewId);
+
+	if (!drawDesc.drawEntities || !drawDesc.drawIsland || !Locator::handSystem::has_value() ||
+	    !Locator::skySystem::has_value() || !Locator::terrainSystem::has_value())
+	{
+		return;
+	}
+	const auto handEntity =
+	    Locator::handSystem::value().GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
+	const auto& registry = Locator::entitiesRegistry::value();
+	const auto [hand, mesh, transform] =
+	    registry.TryGet<ecs::components::Hand, ecs::components::Mesh, ecs::components::Transform>(handEntity);
+	if (hand == nullptr || mesh == nullptr || transform == nullptr)
+	{
+		return;
+	}
+	const auto& meshManager = Locator::resources::value().GetMeshes();
+	if (!meshManager.Contains(mesh->id))
+	{
+		return;
+	}
+	const auto handMesh = meshManager.Handle(mesh->id);
+	const auto& modelBones = hand->boneMatrices.empty() ? handMesh->GetBoneMatrices() : hand->boneMatrices;
+
+	// The hand's bones in the world, as the instanced draw of the main pass places them
+	const auto model = glm::translate(transform->position) * glm::mat4(transform->rotation) * glm::scale(transform->scale);
+	std::vector<glm::mat4> bones;
+	bones.reserve(modelBones.size());
+	for (const auto& bone : modelBones)
+	{
+		bones.push_back(model * bone);
+	}
+
+	const auto& sky = Locator::skySystem::value();
+	const auto groundHeight =
+	    Locator::terrainSystem::value().GetHeightAt(glm::vec2(transform->position.x, transform->position.z));
+	const auto* caps = bgfx::getCaps();
+	_handShadow = HandShadow::Compute(bones, drawDesc.camera->GetOrigin(), groundHeight, sky.GetTime(), sky.GetDayNightTimes(),
+	                                  caps->originBottomLeft, caps->homogeneousDepth);
+	if (!_handShadow)
+	{
+		return;
+	}
+
+	bgfx::setViewTransform(viewId, &_handShadow->view, &_handShadow->projection);
+	L3DMeshSubmitDesc submitDesc = {};
+	submitDesc.viewId = RenderPass::HandShadow;
+	submitDesc.program = _shaderManager->GetShader("ShadowCaster");
+	// Only the silhouette matters: no depth and both sides
+	submitDesc.state = BGFX_STATE_WRITE_R;
+	submitDesc.modelMatrices = bones.data();
+	submitDesc.matrixCount = static_cast<uint8_t>(bones.size());
+	DrawMesh(*handMesh, submitDesc, std::numeric_limits<uint8_t>::max());
+}
+
 void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 {
 	// TODO(bwrsandman): Footprint framebuffer doesn't need to be updated each frame
 	DrawFootprintPass(drawDesc);
+	{
+		auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::MainPassDrawModels);
+		DrawHandShadowPass(drawDesc);
+	}
 	// Reflection Pass
 	{
 		auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::ReflectionPass);
@@ -660,6 +734,16 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 			terrainShader->SetUniformValue("u_skyAndBump", &u_skyAndBump);
 			terrainShader->SetUniformValue("u_islandExtent", &islandExtent);
+
+			// The hand's shadow falls on the land, not on its reflection
+			const auto& handShadow = desc.viewId == RenderPass::Main ? _handShadow : std::nullopt;
+			const auto handShadowMatrix = handShadow ? handShadow->receiverMatrix : glm::mat4(0.0f);
+			const auto u_handShadow =
+			    handShadow ? glm::vec4(handShadow->strength * HandShadow::k_MaxDarkness, handShadow->startDepth, 0.0f, 0.0f)
+			               : glm::vec4(0.0f);
+			terrainShader->SetTextureSampler("s4_handShadow", 4, _handShadowFrameBuffer->GetColorAttachment());
+			terrainShader->SetUniformValue("u_handShadowMatrix", &handShadowMatrix);
+			terrainShader->SetUniformValue("u_handShadow", &u_handShadow);
 
 			// clang-format off
 			constexpr auto defaultState = 0u

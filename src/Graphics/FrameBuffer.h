@@ -25,8 +25,11 @@ class FrameBuffer
 {
 public:
 	FrameBuffer() = delete;
+	/// colorSamples multisamples the colour attachment, which is resolved for sampling, where the format allows it.
+	/// colorWrapping is how the colour attachment is sampled outside of it.
 	FrameBuffer(std::string&& name, uint16_t width, uint16_t height, TextureFormat colorFormat,
-	            std::optional<TextureFormat> depthStencilFormat = {});
+	            std::optional<TextureFormat> depthStencilFormat = {}, uint8_t colorSamples = 1,
+	            Wrapping colorWrapping = Wrapping::Repeat);
 	~FrameBuffer();
 
 	void Bind(RenderPass viewId) const;

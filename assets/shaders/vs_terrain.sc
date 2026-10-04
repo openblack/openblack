@@ -1,5 +1,5 @@
 $input a_position, a_texcoord1, a_color1, a_color2, a_texcoord2, a_color0, a_color3
-$output v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera
+$output v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera, v_shadowCoord
 
 #include <bgfx_shader.sh>
 
@@ -11,6 +11,8 @@ $output v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_mate
 
 uniform vec4 u_blockPositionAndSize;
 uniform vec4 u_islandExtent;
+// World position to hand shadow texture coordinates in xy and distance past the hand along the light in z
+uniform mat4 u_handShadowMatrix;
 
 void main()
 {
@@ -34,6 +36,11 @@ void main()
 	v_waterAlpha = a_color3;
 
 	vec3 transformedPosition = vec3(a_position.x + blockPosition.x, a_position.y, a_position.z + blockPosition.y);
+
+	v_shadowCoord = mul(u_handShadowMatrix, vec4(transformedPosition, 1.0f));
+	// LH3D gives the land's shadow vertices no alpha below altitude 2 (1.34 units), so shadows fade out towards the
+	// water's edge
+	v_shadowCoord.w = a_position.y > 1.0f ? 1.0f : 0.0f;
 
 	vec4 cs_position = mul(u_view, vec4(transformedPosition, 1.0f));
 	v_distToCamera = cs_position.z;
