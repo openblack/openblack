@@ -10,7 +10,6 @@
 #include "Light.h"
 
 #include <algorithm>
-#include <bit>
 
 #include <GLWFile.h>
 #include <glm/ext/vector_uint3_sized.hpp>
@@ -20,8 +19,8 @@ using namespace openblack;
 
 namespace
 {
-// Besides its colour and position, LH3D reads a .glw light's type, a 4x3 matrix of its axes and position (unk14 to
-// unk25), its cone's length (unk26), flags (the bits of dirX), cone angle (dirY) and size (emitterSize)
+// Besides its colour and position, LH3D reads a .glw light's type, its axes and position, its cone's length, flags,
+// inner cone angle and size
 enum LightFlags : uint32_t
 {
 	k_DrawsCone = 1u << 0,
@@ -44,14 +43,14 @@ glm::vec4 ToColour(glm::u8vec3 bytes)
 LightEmitter openblack::MakeLightEmitter(const glw::Glow& light)
 {
 	const glm::vec3 colour {light.red, light.green, light.blue};
-	const glm::vec3 axisX {light.unk14, light.unk15, light.unk16};
-	const glm::vec3 axisY {light.unk17, light.unk18, light.unk19};
-	const glm::vec3 axisZ {light.unk20, light.unk21, light.unk22};
-	const glm::vec3 origin {light.unk23, light.unk24, light.unk25};
-	const auto flags = std::bit_cast<uint32_t>(light.dirX);
-	const auto type = light.unk1;
-	const float coneLength = light.unk26;
-	const float coneAngle = light.dirY;
+	const glm::vec3 axisX {light.xAxisX, light.xAxisY, light.xAxisZ};
+	const glm::vec3 axisY {light.yAxisX, light.yAxisY, light.yAxisZ};
+	const glm::vec3 axisZ {light.zAxisX, light.zAxisY, light.zAxisZ};
+	const glm::vec3 origin {light.originX, light.originY, light.originZ};
+	const auto flags = light.flags;
+	const auto type = light.type;
+	const float coneLength = light.coneLength;
+	const float coneAngle = light.hotspotAngle;
 
 	// The glow grows with the light's brightness and size, and never quite vanishes
 	constexpr float k_MinimumSize = 0.0001f;

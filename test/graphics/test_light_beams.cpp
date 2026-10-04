@@ -7,8 +7,6 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
-#include <bit>
-
 #include <GLWFile.h>
 #include <L3DFile.h>
 #include <glm/geometric.hpp>
@@ -27,7 +25,7 @@ glw::Glow MakeLight(uint32_t type, uint32_t flags, glm::vec3 colour, float size)
 {
 	glw::Glow light {};
 	light.size = sizeof(glw::Glow);
-	light.unk1 = type;
+	light.type = type;
 	light.red = colour.r;
 	light.green = colour.g;
 	light.blue = colour.b;
@@ -35,15 +33,15 @@ glw::Glow MakeLight(uint32_t type, uint32_t flags, glm::vec3 colour, float size)
 	light.posY = 33.0f;
 	light.posZ = 2.0f;
 	// The light's x, z and y axes (its cone runs down the third), then its position
-	light.unk14 = 1.0f;
-	light.unk19 = 1.0f;
-	light.unk21 = 1.0f;
-	light.unk23 = 1.0f;
-	light.unk24 = 33.0f;
-	light.unk25 = 2.0f;
-	light.unk26 = 60.0f;
-	light.dirX = std::bit_cast<float>(flags);
-	light.dirY = 90.0f;
+	light.xAxisX = 1.0f;
+	light.yAxisZ = 1.0f;
+	light.zAxisY = 1.0f;
+	light.originX = 1.0f;
+	light.originY = 33.0f;
+	light.originZ = 2.0f;
+	light.coneLength = 60.0f;
+	light.flags = flags;
+	light.hotspotAngle = 90.0f;
 	light.emitterSize = size;
 	return light;
 }
