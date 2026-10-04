@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -30,12 +31,20 @@ struct CameraPoint
 	bool start;
 	entt::entity next;
 	glm::vec3 position;
-	glm::vec3 rotation;
+	/// What the camera looks at
+	glm::vec3 focus;
 };
 
 class CameraPath
 {
 public:
+	/// Where a path puts the camera at a time
+	struct Sample
+	{
+		glm::vec3 position;
+		glm::vec3 focus;
+	};
+
 	explicit CameraPath(std::string debugName = "");
 	virtual ~CameraPath() = default;
 
@@ -45,6 +54,9 @@ public:
 
 	[[nodiscard]] const std::vector<CameraPoint>& GetPoints() const { return _points; }
 	[[nodiscard]] std::chrono::milliseconds GetDuration() const { return _duration; };
+	/// Where the camera is a time into the path, between the points either side of it, holding the last once the path
+	/// is done, as the temple's InnerCamera follows its paths
+	[[nodiscard]] Sample SampleAt(std::chrono::milliseconds time) const;
 	/// Creates ECS entities for each camera path node. Assigns a camera-vertex component to each entity
 	void CreatePathEntities(glm::vec3 position);
 	/// Creates an ECS entity for the first camera path node

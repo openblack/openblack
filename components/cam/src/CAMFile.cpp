@@ -11,15 +11,15 @@
  * The layout of a CAM File is as follows:
  *
  * - 12 byte header
- *         ANM File size - 32-bit unsigned int
- *         movement speed - 32-bit unsigned int
+ *         CAM file size - 32-bit unsigned int
+ *         duration in milliseconds, over which the points are evenly spread - 32-bit unsigned int
  *         point count - 32 bit unsigned int
  *
  * ------------------------ start of point block -----------------------------
  *
  * - list of point count number of points consiting of
  *         position - 3 floats
- *         heading position - 3 floats
+ *         focus position - 3 floats
  *
  */
 #include "CAMFile.h"
@@ -108,7 +108,7 @@ void CAMFile::ReadFile(std::istream& stream)
 		Fail("CAM File contains no points.");
 	}
 
-	if (_header.pointCount * sizeof(CAMPoint) > fsize)
+	if (sizeof(CAMHeader) + _header.pointCount * sizeof(CAMPoint) > fsize)
 	{
 		Fail("CAM File too small to be contain all points.");
 	}

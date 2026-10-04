@@ -59,11 +59,11 @@ int PrintPoints(const openblack::cam::CAMFile& cam) noexcept
 	const auto& points = cam.GetPoints();
 
 	std::printf("file: %s\n", cam.GetFilename().c_str());
-	std::printf("%u points {position, heading}\n", cam.GetHeader().pointCount);
+	std::printf("%u points {position, focus}\n", cam.GetHeader().pointCount);
 	for (uint32_t i = 0; const auto& point : points)
 	{
-		std::printf("[%u]: {(%f, %f, %f), (%f, %f, %f)}\n", i++, point.position[0], point.position[1], point.heading[2],
-		            point.heading[0], point.heading[1], point.heading[2]);
+		std::printf("[%u]: {(%f, %f, %f), (%f, %f, %f)}\n", i++, point.position[0], point.position[1], point.position[2],
+		            point.focus[0], point.focus[1], point.focus[2]);
 	}
 
 	return EXIT_SUCCESS;
@@ -94,9 +94,9 @@ int WriteFile(const Arguments::Write& args) noexcept
 		point.position[0] = std::stof(match[1]);
 		point.position[1] = std::stof(match[2]);
 		point.position[2] = std::stof(match[3]);
-		point.heading[0] = std::stof(match[4]);
-		point.heading[1] = std::stof(match[5]);
-		point.heading[2] = std::stof(match[6]);
+		point.focus[0] = std::stof(match[4]);
+		point.focus[1] = std::stof(match[5]);
+		point.focus[2] = std::stof(match[6]);
 	}
 
 	cam.SetPoints(std::move(points));

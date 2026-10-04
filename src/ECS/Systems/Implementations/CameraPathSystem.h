@@ -15,8 +15,8 @@
 #include <entt/entt.hpp>
 #include <glm/glm.hpp>
 
-#include "ECS/Systems/CameraPathSystemInterface.h"
 #include "3D/CameraPath.h"
+#include "ECS/Systems/CameraPathSystemInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
 #error "ECS System implementations should only be included in Locator.cpp"
@@ -35,7 +35,6 @@ enum class CameraPathState : uint8_t
 class CameraPathSystem final: public CameraPathSystemInterface
 {
 public:
-	CameraPathSystem() : _startingPosition(0) {};
 	void Start(entt::id_type id) override;
 	void Stop() override;
 	void Play() override { _state = CameraPathState::PLAYING; }
@@ -46,12 +45,8 @@ public:
 
 private:
 	entt::resource<CameraPath> _path;
-	glm::vec3 _startingPosition;
-	glm::vec3 _currentStepCameraPosition;
-	glm::vec3 _currentStepLookAtPosition;
-	std::chrono::microseconds _timeElapsedDuringStep;
-	std::chrono::microseconds _duration;
-	CameraPathState _state;
-	size_t _pathIndex = 0;
+	/// How far along the path the camera is
+	std::chrono::microseconds _elapsed {0};
+	CameraPathState _state {CameraPathState::STOPPED};
 };
 } // namespace openblack::ecs::systems

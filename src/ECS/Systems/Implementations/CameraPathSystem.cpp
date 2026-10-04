@@ -31,36 +31,21 @@ void CameraPathSystem::Start(entt::id_type id)
 		return;
 	}
 
-	_startingPosition = _path->GetPoints()[0].position;
-	_currentStepCameraPosition = _path->GetPoints()[0].position;
-	_currentStepLookAtPosition = _path->GetPoints()[0].rotation;
-	_timeElapsedDuringStep = std::chrono::microseconds(0);
-	_duration = _path->GetDuration() / _path->GetPoints().size();
+	_elapsed = std::chrono::microseconds::zero();
 	_state = CameraPathState::PLAYING;
-	_pathIndex = 0;
 }
 
 void CameraPathSystem::Stop()
 {
-	if (_state == CameraPathState::STOPPED)
-	{
-		return;
-	}
-
 	_state = CameraPathState::STOPPED;
-	_startingPosition = glm::vec3(0);
-	_timeElapsedDuringStep = std::chrono::microseconds (0);
-	_duration = std::chrono::microseconds (0);
-	_state = CameraPathState::STOPPED;
-	_pathIndex = 0;
+	_elapsed = std::chrono::microseconds::zero();
 	_path = entt::resource<CameraPath>();
 }
 
 void CameraPathSystem::Update(const std::chrono::microseconds& dt)
 {
-	if (_state == CameraPathState::STOPPED || (_path && (_pathIndex + 1) >= _path->GetPoints().size()))
+	if (_state == CameraPathState::STOPPED || !_path)
 	{
-		Stop();
 		return;
 	}
 	if (_state != CameraPathState::PLAYING)
@@ -68,19 +53,15 @@ void CameraPathSystem::Update(const std::chrono::microseconds& dt)
 		return;
 	}
 
+	// The path spreads its points evenly over its duration, and the camera follows it as the temple's does
+	_elapsed += dt;
+	const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(_elapsed);
+	const auto sample = _path->SampleAt(elapsed);
 	auto& camera = Locator::camera::value();
-	const auto& currentStep = _path->GetPoints()[_pathIndex];
-	const auto& nextStep = _path->GetPoints()[_pathIndex + 1];
-	_timeElapsedDuringStep += dt;
-	float blendFactor = std::chrono::duration<float, std::micro>(_timeElapsedDuringStep / _duration).count();
-	blendFactor = glm::min(blendFactor, 1.f); // Avoid overstepping
-	camera.SetOrigin(glm::lerp(currentStep.position, nextStep.position, blendFactor));
-	camera.SetFocus(glm::lerp(currentStep.rotation, nextStep.rotation, blendFactor));
-
-	// Move to the next step
-	if (blendFactor >= 1.f)
+	camera.SetOrigin(sample.position);
+	camera.SetFocus(sample.focus);
+	if (elapsed >= _path->GetDuration())
 	{
-		_timeElapsedDuringStep = std::chrono::microseconds(0);
-		_pathIndex++;
+		Stop();
 	}
 }

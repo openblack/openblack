@@ -32,7 +32,8 @@ static_assert(sizeof(CAMHeader) == 0xc);
 struct CAMPoint
 {
 	std::array<float, 3> position;
-	std::array<float, 3> heading;
+	/// What the camera looks at
+	std::array<float, 3> focus;
 };
 static_assert(sizeof(CAMPoint) == 0x18);
 
