@@ -28,6 +28,7 @@
 #include "3D/OceanInterface.h"
 #include "3D/SkyInterface.h"
 #include "3D/TempleInteriorInterface.h"
+#include "Audio/AtmosAudio.h"
 #include "Audio/AudioManagerInterface.h"
 #include "CHLApi.h"
 #include "Camera/Camera.h"
@@ -244,6 +245,8 @@ bool Game::GameLogicLoop() noexcept
 
 	if (_paused)
 	{
+		// The ambience is silent while the game is paused
+		Locator::audio::value().AtmosProcess(false);
 		return false;
 	}
 
@@ -281,6 +284,26 @@ bool Game::GameLogicLoop() noexcept
 		auto& weatherSystem = Locator::weatherSystem::value();
 		weatherSystem.Update(_turnCount);
 		weather = weatherSystem.GetWeatherSmooth(cameraPosition);
+	}
+
+	if (_atmosAudio)
+	{
+		// TODO(raffclar): alignment of the most influential player at the camera once influence is simulated
+		_atmosAudio->SetAlignment(0.0f);
+		_atmosAudio->EndTurn({
+		    .camera = cameraPosition,
+		    .weather =
+		        {
+		            .rain = weather.rain,
+		            .snow = weather.snow,
+		            .windX = weather.windX,
+		            .windZ = weather.windZ,
+		        },
+		    .paused = false,
+		    .turn = _turnCount,
+		    .widescreen = false,
+		    .videoPlaying = false,
+		});
 	}
 
 	_lastGameLoopTime = currentTime;
@@ -976,6 +999,11 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 	_turnCount = 0;
 	_paused = true;
 
+	if (!_atmosAudio)
+	{
+		_atmosAudio = std::make_unique<audio::AtmosAudio>();
+	}
+	_atmosAudio->Init();
 	return true;
 }
 

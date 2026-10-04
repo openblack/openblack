@@ -29,6 +29,7 @@ private:
 	void Emitters() noexcept;
 	void Music() noexcept;
 	void AudioSettings() noexcept;
+	void Atmos() noexcept;
 	audio::PlayType _playType {audio::PlayType::Once};
 	entt::id_type _selectedSound;
 	std::string _selectedSoundPack;

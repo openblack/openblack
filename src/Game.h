@@ -26,6 +26,11 @@ union SDL_Event;
 namespace openblack
 {
 
+namespace audio
+{
+class AtmosAudio;
+} // namespace audio
+
 enum class LoggingSubsystem : uint8_t
 {
 	game,
@@ -94,6 +99,7 @@ public:
 	[[nodiscard]] bool IsPaused() const { return _paused; }
 	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const { return _turnDeltaTime; }
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
+	[[nodiscard]] const audio::AtmosAudio* GetAtmosAudio() const { return _atmosAudio.get(); }
 
 	void RequestScreenshot(const std::filesystem::path& path) noexcept;
 
@@ -116,5 +122,6 @@ private:
 	glm::ivec2 _mousePosition;
 	bool _handGripping;
 	std::optional<std::pair</* frame number */ uint32_t, /* output */ std::filesystem::path>> _requestScreenshot;
+	std::unique_ptr<audio::AtmosAudio> _atmosAudio;
 };
 } // namespace openblack

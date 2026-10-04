@@ -13,7 +13,13 @@
 
 #include <imgui.h>
 
+#include "Audio/AtmosAudio.h"
+#include "Audio/AtmosPlayer.h"
+#include "Camera/Camera.h"
+#include "ECS/Components/Weather.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/WeatherSystemInterface.h"
+#include "Game.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -333,6 +339,230 @@ void Audio::AudioSettings() noexcept
 	ImGui::EndChild();
 	ImGui::PopStyleVar();
 }
+namespace
+{
+std::string AtmosSampleName(const std::string& bankName, int32_t sampleId)
+{
+	auto id = fmt::format("{}/{}", bankName, sampleId);
+	const entt::id_type hashed = entt::hashed_string(id.c_str());
+	auto& sounds = Locator::resources::value().GetSounds();
+	if (sounds.Contains(hashed))
+	{
+		id += fmt::format(" ({})", sounds.Handle(hashed)->name);
+	}
+	return id;
+}
+
+constexpr ImGuiTableFlags k_TableFlags =
+    ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_ScrollY;
+} // namespace
+
+void Audio::Atmos() noexcept
+{
+	const auto* game = Game::Instance();
+	const auto* atmosAudio = game != nullptr ? game->GetAtmosAudio() : nullptr;
+	const auto* atmos = Locator::audio::value().GetAtmos();
+	if (atmosAudio == nullptr || atmos == nullptr)
+	{
+		ImGui::TextUnformatted("No ambience: no level loaded or no audio device");
+		return;
+	}
+
+	const auto& soundMap = atmosAudio->GetSoundMap();
+	const auto camera = Locator::camera::value().GetOrigin();
+	ImGui::Text("Camera (%.0f, %.0f, %.0f)  above land %.1f  one-shot clock %u", camera.x, camera.y, camera.z,
+	            soundMap.GetHeightAboveLand(), atmos->GetTick());
+	const auto& sky = Locator::skySystem::value();
+	ImGui::Text("Sky type %.2f (0 day, 2 night)  alignment %.2f, group %u (%s)",
+	            audio::AtmosAudio::CalculateSkyType(sky.GetTime(), sky.GetDayNightTimes()), atmosAudio->GetAlignmentValue(),
+	            atmosAudio->GetGroup(), atmosAudio->GetGroup() == 2 ? "evil" : "good");
+	if (Locator::weatherSystem::has_value())
+	{
+		const auto weather = Locator::weatherSystem::value().GetWeatherSmooth(camera);
+		ImGui::Text("Weather at camera: rain %d  snow %d  wind (%d, %d)  temperature %d  overcast %d", weather.rain,
+		            weather.snow, weather.windX, weather.windZ, weather.temperature, weather.overcast);
+	}
+
+	if (ImGui::CollapsingHeader("Banks", ImGuiTreeNodeFlags_DefaultOpen) &&
+	    ImGui::BeginTable("AtmosBanks", 6, k_TableFlags, ImVec2(0.0f, 280.0f)))
+	{
+		ImGui::TableSetupScrollFreeze(0, 1);
+		ImGui::TableSetupColumn("Type");
+		ImGui::TableSetupColumn("Cells");
+		ImGui::TableSetupColumn("Nearest");
+		ImGui::TableSetupColumn("Target");
+		ImGui::TableSetupColumn("Volume");
+		ImGui::TableSetupColumn("Bank (0-127)");
+		ImGui::TableHeadersRow();
+		const auto& scans = soundMap.GetScans();
+		for (size_t i = 1; i < k_AtmosTypeCount; ++i)
+		{
+			const auto volume = atmosAudio->GetVolumes().at(i);
+			const auto name = k_AtmosTypeInfos.at(i).name.substr(std::string_view("ATMOS_TYPE_").size());
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			if (volume > 0.0f)
+			{
+				ImGui::TextColored(k_GreenColor, "%.*s", static_cast<int>(name.size()), name.data());
+			}
+			else
+			{
+				ImGui::Text("%.*s", static_cast<int>(name.size()), name.data());
+			}
+			ImGui::TableNextColumn();
+			ImGui::Text("%u", scans.at(i).count);
+			ImGui::TableNextColumn();
+			if (scans.at(i).count != 0)
+			{
+				ImGui::Text("%.0f", std::sqrt(scans.at(i).distanceSquared));
+			}
+			ImGui::TableNextColumn();
+			ImGui::Text("%.3f", atmosAudio->GetTargets().at(i));
+			ImGui::TableNextColumn();
+			ImGui::ProgressBar(volume, ImVec2(-1.0f, 0.0f));
+			ImGui::TableNextColumn();
+			ImGui::Text("%d", static_cast<int>(volume * 127.0f));
+		}
+		ImGui::EndTable();
+	}
+
+	if (ImGui::CollapsingHeader("Playing voices", ImGuiTreeNodeFlags_DefaultOpen) &&
+	    ImGui::BeginTable("AtmosVoices", 3, k_TableFlags, ImVec2(0.0f, 180.0f)))
+	{
+		ImGui::TableSetupScrollFreeze(0, 1);
+		ImGui::TableSetupColumn("Sample");
+		ImGui::TableSetupColumn("Kind");
+		ImGui::TableSetupColumn("Volume (0-127)");
+		ImGui::TableHeadersRow();
+		for (const auto& voice : atmos->GetVoices())
+		{
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::TextUnformatted(AtmosSampleName(voice.bankName, voice.sampleId).c_str());
+			ImGui::TableNextColumn();
+			ImGui::TextUnformatted(voice.loop ? "loop" : "one-shot");
+			ImGui::TableNextColumn();
+			ImGui::ProgressBar(static_cast<float>(voice.volume) / 127.0f, ImVec2(-1.0f, 0.0f),
+			                   std::to_string(voice.volume).c_str());
+		}
+		ImGui::EndTable();
+	}
+
+	if (ImGui::CollapsingHeader("Loops") && ImGui::BeginTable("AtmosLoops", 5, k_TableFlags, ImVec2(0.0f, 180.0f)))
+	{
+		ImGui::TableSetupScrollFreeze(0, 1);
+		ImGui::TableSetupColumn("Sample");
+		ImGui::TableSetupColumn("Group");
+		ImGui::TableSetupColumn("Fade");
+		ImGui::TableSetupColumn("Target");
+		ImGui::TableSetupColumn("Playing");
+		ImGui::TableHeadersRow();
+		for (const auto& loop : atmos->GetLoops())
+		{
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::TextUnformatted(AtmosSampleName(loop.bankName, loop.sampleId).c_str());
+			ImGui::TableNextColumn();
+			ImGui::Text("%u", loop.group);
+			ImGui::TableNextColumn();
+			ImGui::Text("%d", loop.current);
+			ImGui::TableNextColumn();
+			ImGui::Text("%u", loop.target);
+			ImGui::TableNextColumn();
+			ImGui::TextColored(loop.playing ? k_GreenColor : k_RedColor, "%s", loop.playing ? "yes" : "no");
+		}
+		ImGui::EndTable();
+	}
+
+	if (ImGui::CollapsingHeader("Upcoming one-shots") && ImGui::BeginTable("AtmosQueue", 3, k_TableFlags, ImVec2(0.0f, 180.0f)))
+	{
+		ImGui::TableSetupScrollFreeze(0, 1);
+		ImGui::TableSetupColumn("Sample");
+		ImGui::TableSetupColumn("Group");
+		ImGui::TableSetupColumn("In turns");
+		ImGui::TableHeadersRow();
+		const auto tick = atmos->GetTick();
+		for (const auto& shot : atmos->GetQueue())
+		{
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::TextUnformatted(AtmosSampleName(shot.bankName, shot.sampleId).c_str());
+			ImGui::TableNextColumn();
+			ImGui::Text("%u", shot.group);
+			ImGui::TableNextColumn();
+			ImGui::Text("%d", static_cast<int32_t>(shot.nextTime - tick));
+		}
+		ImGui::EndTable();
+	}
+
+	if (ImGui::CollapsingHeader("Climates and storms"))
+	{
+		auto& registry = Locator::entitiesRegistry::value();
+		if (ImGui::BeginTable("Climates", 7, k_TableFlags, ImVec2(0.0f, 140.0f)))
+		{
+			ImGui::TableSetupScrollFreeze(0, 1);
+			ImGui::TableSetupColumn("Climate");
+			ImGui::TableSetupColumn("Centre");
+			ImGui::TableSetupColumn("Rain desire");
+			ImGui::TableSetupColumn("Raining days");
+			ImGui::TableSetupColumn("Temperature");
+			ImGui::TableSetupColumn("Wind");
+			ImGui::TableSetupColumn("Storms");
+			ImGui::TableHeadersRow();
+			registry.Each<const Climate>([](entt::entity, const Climate& climate) {
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+				ImGui::Text("%d%s (type %u)", climate.index, climate.global ? " global" : "", climate.info);
+				ImGui::TableNextColumn();
+				ImGui::Text("(%u, %u) r %.0f", climate.cellX * 10u, climate.cellZ * 10u, climate.outerRadius);
+				ImGui::TableNextColumn();
+				ImGui::ProgressBar(climate.rainDesire, ImVec2(-1.0f, 0.0f));
+				ImGui::TableNextColumn();
+				ImGui::Text("%d%s", climate.rainingDays, climate.raining ? " raining" : "");
+				ImGui::TableNextColumn();
+				ImGui::Text("%.1f -> %.1f", climate.temperature, climate.targetTemperature);
+				ImGui::TableNextColumn();
+				ImGui::Text("(%.0f, %.0f)", climate.windX, climate.windZ);
+				ImGui::TableNextColumn();
+				ImGui::Text("%zu / %u", climate.storms.size(), climate.maxStorms);
+			});
+			ImGui::EndTable();
+		}
+		if (ImGui::BeginTable("Storms", 6, k_TableFlags, ImVec2(0.0f, 140.0f)))
+		{
+			ImGui::TableSetupScrollFreeze(0, 1);
+			ImGui::TableSetupColumn("Storm");
+			ImGui::TableSetupColumn("Distance");
+			ImGui::TableSetupColumn("Radius");
+			ImGui::TableSetupColumn("Life");
+			ImGui::TableSetupColumn("Strength");
+			ImGui::TableSetupColumn("Rain / snow / wind");
+			ImGui::TableHeadersRow();
+			registry.Each<const Storm>([&camera](entt::entity, const Storm& storm) {
+				if (storm.dead)
+				{
+					return;
+				}
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+				ImGui::Text("(%.0f, %.0f)", storm.currentPosition.x, storm.currentPosition.z);
+				ImGui::TableNextColumn();
+				ImGui::Text("%.0f", glm::distance(glm::vec2(camera.x, camera.z),
+				                                  glm::vec2(storm.currentPosition.x, storm.currentPosition.z)));
+				ImGui::TableNextColumn();
+				ImGui::Text("%.0f / %.0f", storm.currentInnerRadius, storm.outerRadius);
+				ImGui::TableNextColumn();
+				ImGui::Text("%.0fs / %.0fs", storm.age, storm.lastsFor);
+				ImGui::TableNextColumn();
+				ImGui::ProgressBar(storm.currentStrength, ImVec2(-1.0f, 0.0f));
+				ImGui::TableNextColumn();
+				ImGui::Text("%d / %d / (%d, %d)", storm.effect.rain, storm.effect.snow, storm.effect.windX, storm.effect.windZ);
+			});
+			ImGui::EndTable();
+		}
+	}
+}
+
 void Audio::Draw() noexcept
 {
 	const ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_None;
@@ -357,6 +587,13 @@ void Audio::Draw() noexcept
 			ImGui::Text("Manage sound emitters");
 			ImGui::Separator();
 			Audio::AudioSettings();
+			ImGui::EndTabItem();
+		}
+		if (ImGui::BeginTabItem("Atmos"))
+		{
+			ImGui::Text("View Ambient sounds");
+			ImGui::Separator();
+			Audio::Atmos();
 			ImGui::EndTabItem();
 		}
 	}
