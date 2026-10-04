@@ -3,7 +3,10 @@ $input v_position, v_texcoord0, v_normal
 #include <bgfx_shader.sh>
 
 SAMPLER2D(s_diffuse, 0);
+SAMPLER2D(s_handLight, 2);
 uniform vec4 u_skyAlphaThreshold;
+
+#include "hand_light.sh"
 
 void main()
 {
@@ -28,7 +31,8 @@ void main()
 	vec3 diffuse = skyBightness * diff * lightColor * ( 1.0f - ambientStrength);
 
 	vec4 diffuseTex = texture2D(s_diffuse, v_texcoord0.xy);
-	diffuseTex.rgb = diffuseTex.rgb * (ambient + diffuse);
+	// The hand's light, where it is brighter
+	diffuseTex.rgb = diffuseTex.rgb * max(ambient + diffuse, vec3_splat(HandLightAt(v_position.xyz)));
 	if (diffuseTex.a <= alphaThreshold)
 	{
 		discard;

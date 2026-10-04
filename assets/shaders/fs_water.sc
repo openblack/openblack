@@ -5,8 +5,11 @@ $input v_texcoord0, v_texcoord1
 SAMPLER2D(s_diffuse, 0);
 SAMPLER2D(s_alpha, 1);
 SAMPLER2D(s_reflection, 2);
+SAMPLER2D(s_handLight, 3);
 
 uniform vec4 u_sky;
+
+#include "hand_light.sh"
 
 void main()
 {	// unpack uniforms
@@ -14,8 +17,12 @@ void main()
 
 	float skyBightness = skyType / 2.0f;
 
-	vec3 diffuse_colour = mix(0.25f, 1.0f, skyBightness) * texture2D(s_diffuse, v_texcoord0.xy).rgb;
-	vec3 reflect_colour = texture2DProj(s_reflection, v_texcoord1).rgb;
+	// The sea at sea level, its texture repeating every 500 units, lit by the hand's light where that is brighter
+	float skyLight = mix(0.25f, 1.0f, skyBightness);
+	float light = max(skyLight, HandLightAt(vec3(v_texcoord0.x * 500.0f, 0.0f, v_texcoord0.y * 500.0f)));
+	vec3 diffuse_colour = light * texture2D(s_diffuse, v_texcoord0.xy).rgb;
+	// The reflection, lit by the sky, brightens under the light as the sea's own colour does
+	vec3 reflect_colour = texture2DProj(s_reflection, v_texcoord1).rgb * (light / skyLight);
 
 	// This was called alpha in vanilla because they rendered parts of the scene upside down in the
 	// main backbuffer, then alpha blended the ocean on top to simulate a render texture fetch.

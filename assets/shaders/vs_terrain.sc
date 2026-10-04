@@ -13,6 +13,9 @@ uniform vec4 u_blockPositionAndSize;
 uniform vec4 u_islandExtent;
 // World position to hand shadow texture coordinates in xy and distance past the hand along the light in z
 uniform mat4 u_handShadowMatrix;
+// xy: where the first brightness of the hand's light map lies in the world's x and z (HandLight::GetOrigin)
+// z: how strongly the hand lights the land
+uniform vec4 u_handLight;
 
 void main()
 {
@@ -36,6 +39,11 @@ void main()
 	v_waterAlpha = a_color3;
 
 	vec3 transformedPosition = vec3(a_position.x + blockPosition.x, a_position.y, a_position.z + blockPosition.y);
+
+	// The hand's light map has a brightness for each of 12 by 12 vertices 10 units apart, its rows along x: sample
+	// between those around the vertex, at the centres of their texels
+	vec2 handLightCell = (transformedPosition.xz - u_handLight.xy) / 10.0f;
+	v_texcoord0.zw = (handLightCell.yx + 0.5f) / 12.0f;
 
 	v_shadowCoord = mul(u_handShadowMatrix, vec4(transformedPosition, 1.0f));
 	// LH3D gives the land's shadow vertices no alpha below altitude 2 (1.34 units), so shadows fade out towards the

@@ -62,3 +62,4 @@ openblack_setup_and_add_test(test_hand_shadow hand/test_hand_shadow.cpp)
 openblack_setup_and_add_test(
   test_object_shadows graphics/test_object_shadows.cpp
 )
+openblack_setup_and_add_test(test_hand_light graphics/test_hand_light.cpp)

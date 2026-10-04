@@ -3,7 +3,10 @@ $input v_position, v_texcoord0, v_normal
 #include <bgfx_shader.sh>
 
 SAMPLER2D(s_diffuse, 0);
+SAMPLER2D(s_handLight, 2);
 uniform vec4 u_skyAlphaThreshold;
+
+#include "hand_light.sh"
 
 void main()
 {
@@ -28,6 +31,8 @@ void main()
 
 	// Trees darken towards night with the rest of the world, down to the light the buildings then have
 	vec3 light = mix(vec3_splat(nightBrightness) * lightColor, daylight, skyBrightness);
+	// The hand's light, where it is brighter
+	light = max(light, vec3_splat(HandLightAt(v_position.xyz)));
 
 	vec4 diffuseTex = texture2D(s_diffuse, v_texcoord0.xy);
 	diffuseTex.rgb = diffuseTex.rgb * light;

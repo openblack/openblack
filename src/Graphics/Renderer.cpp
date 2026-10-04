@@ -37,10 +37,12 @@
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "EngineConfig.h"
+#include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/GraphicsHandleBgfx.h"
+#include "Graphics/HandLight.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/ObjectShadows.h"
 #include "Graphics/Primitive.h"
@@ -291,6 +293,10 @@ Renderer::~Renderer() noexcept
 	_plane.reset();
 	_handShadowFrameBuffer.reset();
 	_objectShadowFrameBuffer.reset();
+	if (_handLightTexture)
+	{
+		bgfx::destroy(toBgfx(*_handLightTexture));
+	}
 	_shaderManager.reset();
 	bgfx::frame();
 	bgfx::shutdown();
@@ -384,6 +390,11 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			{
 				desc.program->SetTextureSampler("s_heightmap", 1, heightMap);   // vs
 				desc.program->SetUniformValue("u_islandExtent", &islandExtent); // vs
+			}
+			if (desc.program->HasUniform("s_handLight"))
+			{
+				desc.program->SetTextureSampler("s_handLight", 2, GetHandLightTexture());
+				desc.program->SetUniformValue("u_handLight", &_handLight);
 			}
 			if (!desc.isSky && desc.program->HasUniform("u_skyAlphaThreshold"))
 			{
@@ -622,6 +633,49 @@ void Renderer::DrawObjectShadowPass(const DrawSceneDesc& drawDesc) const
 	}
 }
 
+glm::vec4 Renderer::GetHandLight(const DrawSceneDesc& drawDesc) const
+{
+	if (!_handLightLoaded)
+	{
+		_handLightLoaded = true;
+		auto& fileSystem = Locator::filesystem::value();
+		const auto path = fileSystem.GetPath<filesystem::Path::Textures>() / "light_hand.raw";
+		if (fileSystem.Exists(path))
+		{
+			const auto map = fileSystem.ReadAll(path);
+			if (map.size() >= static_cast<size_t>(HandLight::k_Size) * HandLight::k_Size)
+			{
+				const auto* memory = bgfx::copy(map.data(), HandLight::k_Size * HandLight::k_Size);
+				_handLightTexture =
+				    fromBgfx(bgfx::createTexture2D(HandLight::k_Size, HandLight::k_Size, false, 1, bgfx::TextureFormat::R8,
+				                                   BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP, memory));
+				bgfx::setName(toBgfx(*_handLightTexture), "Hand Light");
+			}
+		}
+	}
+
+	auto handLight = glm::vec4(0.0f);
+	if (!_handLightTexture || !drawDesc.drawHand || !Locator::handSystem::has_value() || !Locator::skySystem::has_value())
+	{
+		return handLight;
+	}
+	const auto handEntity =
+	    Locator::handSystem::value().GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
+	const auto* transform = Locator::entitiesRegistry::value().TryGet<ecs::components::Transform>(handEntity);
+	if (transform == nullptr)
+	{
+		return handLight;
+	}
+	const auto origin = HandLight::GetOrigin(transform->position);
+	handLight = glm::vec4(origin, HandLight::GetStrength(Locator::skySystem::value().GetCurrentSkyType()), 0.0f);
+	return handLight;
+}
+
+TextureHandle Renderer::GetHandLightTexture() const
+{
+	return _handLightTexture ? *_handLightTexture : _handShadowFrameBuffer->GetColorAttachment().GetNativeHandle();
+}
+
 void Renderer::DrawHandShadowPass(const DrawSceneDesc& drawDesc) const
 {
 	const auto viewId = static_cast<bgfx::ViewId>(RenderPass::HandShadow);
@@ -727,6 +781,8 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 		auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::MainPass);
 		DrawPass(drawDesc);
 	}
+	// Meshes drawn outside of the scene, as in the mesh viewer, aren't lit by the hand
+	_handLight = glm::vec4(0.0f);
 }
 
 void Renderer::DrawPass(const DrawSceneDesc& desc) const
@@ -743,6 +799,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	bgfx::touch(static_cast<bgfx::ViewId>(desc.viewId));
 
 	_shaderManager->SetCamera(desc.viewId, *desc.camera);
+	// The hand lights whatever is around it at night, the land, the sea and the things on them
+	_handLight = GetHandLight(desc);
 
 	const auto* skyShader = _shaderManager->GetShader("Sky");
 	const auto* waterShader = _shaderManager->GetShader("Water");
@@ -802,6 +860,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			waterShader->SetTextureSampler("s_reflection", 2, ocean.GetReflectionFramebuffer().GetColorAttachment());
 			const glm::vec4 u_sky = {skyType, 0.0f, 0.0f, 0.0f};
 			waterShader->SetUniformValue("u_sky", &u_sky); // fs
+			waterShader->SetTextureSampler("s_handLight", 3, GetHandLightTexture());
+			waterShader->SetUniformValue("u_handLight", &_handLight);
 			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(waterShader->GetRawHandle()));
 		}
 	}
@@ -848,6 +908,10 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			terrainShader->SetTextureSampler("s4_handShadow", 4, _handShadowFrameBuffer->GetColorAttachment());
 			terrainShader->SetUniformValue("u_handShadowMatrix", &handShadowMatrix);
 			terrainShader->SetUniformValue("u_handShadow", &u_handShadow);
+
+			// The hand's light is in the land's own lighting, so the reflection shows it too
+			terrainShader->SetTextureSampler("s6_handLight", 6, GetHandLightTexture());
+			terrainShader->SetUniformValue("u_handLight", &_handLight);
 
 			// clang-format off
 			constexpr auto defaultState = 0u

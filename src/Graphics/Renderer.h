@@ -72,6 +72,8 @@ private:
 	void DrawFootprintPass(const DrawSceneDesc& drawDesc) const;
 	/// Casts the shadows of the island's trees, rocks and buildings onto it (see ObjectShadows)
 	void DrawObjectShadowPass(const DrawSceneDesc& drawDesc) const;
+	/// u_handLight of the land: where HandLight's map lies and how strongly it lights, loading the map the first time
+	[[nodiscard]] glm::vec4 GetHandLight(const DrawSceneDesc& drawDesc) const;
 	/// Draws the hand's silhouette for its shadow, or clears the shadow when there is none
 	void DrawHandShadowPass(const DrawSceneDesc& drawDesc) const;
 	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, bool preserveState) const;
@@ -88,6 +90,13 @@ private:
 	mutable std::unique_ptr<FrameBuffer> _objectShadowFrameBuffer;
 	/// The hand's shadow of the frame being drawn
 	mutable std::optional<HandShadow> _handShadow;
+	/// HandLight's map, loaded with the first land drawn, empty when the game has none
+	mutable std::optional<TextureHandle> _handLightTexture;
+	mutable bool _handLightLoaded {false};
+	/// u_handLight of the pass being drawn, without strength outside of the scene's passes
+	mutable glm::vec4 _handLight {0.0f};
+	/// HandLight's map, or a texture to bind in its place when there is none
+	[[nodiscard]] TextureHandle GetHandLightTexture() const;
 	std::unique_ptr<Mesh> _plane;
 };
 } // namespace graphics

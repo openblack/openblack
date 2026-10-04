@@ -11,6 +11,8 @@ SAMPLER2D(s3_footprints, 3);
 SAMPLER2D(s4_handShadow, 4);
 // Where the shadows of trees, rocks and buildings cover the island, laid out as the footprints are
 SAMPLER2D(s5_objectShadows, 5);
+// The brightness the hand's light gives the land around it (HandLight)
+SAMPLER2D(s6_handLight, 6);
 
 uniform vec4 u_skyAndBump;
 // x: darkness of the objects' shadows where they fully cover a texel, 0 without them
@@ -19,6 +21,8 @@ uniform vec4 u_objectShadows;
 // x: darkness of the hand's shadow where its silhouette fully covers a texel, 0 without a shadow
 // y: how far before the hand along the light the shadow starts
 uniform vec4 u_handShadow;
+// z: how strongly the hand lights the land
+uniform vec4 u_handLight;
 
 void main()
 {
@@ -74,7 +78,10 @@ void main()
 
 	// apply light map
 	float skyBightness = skyType / 2.0f;
-	col = col * mix(0.25f, clamp(v_lightLevel * 2.0f, 0.5f, 1.0f), skyBightness);
+	float light = mix(0.25f, clamp(v_lightLevel * 2.0f, 0.5f, 1.0f), skyBightness);
+	// The hand's light, where it is brighter than the land's own
+	light = max(light, texture2D(s6_handLight, v_texcoord0.zw).r * u_handLight.z);
+	col = col * light;
 
 	// the hand's shadow, projected along the sunlight onto the land beyond it
 	vec3 shadowCoord = v_shadowCoord.xyz;
