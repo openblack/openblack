@@ -75,3 +75,5 @@ openblack_setup_and_add_test(
   test_temple_camera camera/test_temple_camera.cpp
 )
 openblack_setup_and_add_test(test_temple_doors temple/test_temple_doors.cpp)
+openblack_setup_and_add_test(test_creature_cave_effects temple/test_creature_cave_effects.cpp)
+openblack_setup_and_add_test(test_temple_scroll temple/test_temple_scroll.cpp)

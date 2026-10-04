@@ -189,3 +189,42 @@ TEST(TempleCamera, ClickingADoorOnScreenFindsIt)
 	EXPECT_EQ(TempleCameraModel::DoorAt(*hit), 7u);
 	EXPECT_EQ(TempleCameraModel::RoomBehindDoor(7), TempleRoom::Challenge);
 }
+
+TEST(TempleCamera, PictureRoomsStartLookingAlongTheEndOfTheirPaths)
+{
+	// A path ending at the options room's centre, looking out along -z
+	const TempleCameraModel::Pose end {{87.0f, 10.0f, 87.0f}, {87.0f, 10.0f, 77.0f}};
+	const float yaw = TempleCameraModel::PictureStartYaw(end);
+	const auto pose = TempleCameraModel::PictureOrbitPose(TempleRoom::Options, yaw, 0.6f, 9.0f, end.origin);
+	const auto look = glm::normalize(pose.focus - pose.origin);
+	EXPECT_NEAR(look.x, 0.0f, 1e-4f);
+	EXPECT_LT(look.z, -0.9f);
+	// It stands back from the room's centre, the other way, raised by its height
+	EXPECT_NEAR(pose.origin.x, 87.0f, 1e-3f);
+	EXPECT_NEAR(pose.origin.z, 107.0f, 1e-3f);
+	EXPECT_NEAR(pose.origin.y, 1.4f + 9.0f, 1e-3f);
+}
+
+TEST(TempleCamera, TheCreaturesRoomLooksOnFromTheEndOfItsPath)
+{
+	const TempleCameraModel::Pose end {{170.0f, -8.0f, 5.0f}, {213.0f, 4.0f, 19.0f}};
+	const auto look = TempleCameraModel::HeadingAndPitch(end);
+	const auto pose = TempleCameraModel::LookPose(end.origin, look.x, look.y);
+	EXPECT_EQ(pose.origin, end.origin);
+	const auto along = glm::normalize(pose.focus - pose.origin);
+	const auto expected = glm::normalize(end.focus - end.origin);
+	EXPECT_NEAR(glm::dot(along, expected), 1.0f, 1e-5f);
+	EXPECT_NEAR(glm::length(pose.focus - pose.origin), 20.0f, 1e-3f);
+}
+
+TEST(TempleCamera, CastsAgainstEachRoomsOwnWalls)
+{
+	// From the challenge room's centre, out along +x, to its walls 37 away
+	const auto room = TempleCameraModel::CylinderOf(TempleRoom::Challenge);
+	const auto hit =
+	    TempleCameraModel::RayCastRoom(room.centre + glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), room);
+	ASSERT_TRUE(hit.has_value());
+	EXPECT_NEAR(hit->distance, 37.0f, 1e-3f);
+	EXPECT_NEAR(hit->point.x, room.centre.x + 37.0f, 1e-3f);
+	EXPECT_NEAR(hit->height, 10.0f, 1e-3f);
+}

@@ -12,14 +12,18 @@
 #include <cmath>
 
 #include <algorithm>
+#include <array>
 #include <utility>
 
 #include <glm/common.hpp>
 #include <glm/geometric.hpp>
 #include <glm/gtc/constants.hpp>
+#include <glm/trigonometric.hpp>
 
 #include "3D/TempleDoors.h"
 #include "3D/TempleInteriorInterface.h"
+#include "Audio/AudioManagerInterface.h"
+#include "Audio/Sound.h"
 #include "Camera.h"
 #include "Input/GameActionMapInterface.h"
 #include "Locator.h"
@@ -58,9 +62,121 @@ constexpr uint32_t k_ScrollWall = 6;
 /// second: it waits over a second, then is open as the camera reaches it
 constexpr float k_DoorOpenFrom = -0.5f;
 constexpr float k_DoorOpenRate = 0.4f;
+/// Walking back to the main room from another room, the doorway opens from the start of its swing, at this rate
+constexpr float k_DoorBackOpenFrom = 0.0f;
+constexpr float k_DoorBackOpenRate = 2.0f;
 /// InnerCamera turns any doorway left open round to close, this long into a room's path, at this rate
 constexpr float k_IntroDoorCloseTime = 0.4f;
 constexpr float k_IntroDoorCloseRate = 1.6f;
+
+/// ChallengeRoomCamera's views of a room of pictures, from PictureRoomBase and the rooms' constructors: the camera and
+/// where it looks, low and looking up at lean 0 and high and looking down at lean 1, about the room's centre, turned by
+/// the camera's yaw and raised by its height
+struct PictureRoom
+{
+	glm::vec3 centre;
+	glm::vec3 lowOrigin;
+	glm::vec3 highOrigin;
+	glm::vec3 lowFocus;
+	glm::vec3 highFocus;
+	float maxHeight;
+	/// The credits room turns about where its path ends instead
+	bool aroundPathEnd;
+	/// The door of the main room the room is behind, which the camera walks back through
+	uint32_t door;
+};
+constexpr float k_PictureMinHeight = 9.0f;
+constexpr PictureRoom k_ChallengeRoom {{87.0f, 0.0f, -87.0f},
+                                       {0.0f, -7.0f, 8.0f},
+                                       {0.0f, 7.0f, 10.0f},
+                                       {0.0f, 6.0f, -4.0f},
+                                       {0.0f, -6.0f, -4.0f},
+                                       80.0f,
+                                       false,
+                                       7};
+constexpr PictureRoom k_SaveGameRoom {{-87.0f, 0.0f, -87.0f},
+                                      {0.0f, -7.0f, 8.0f},
+                                      {0.0f, 7.0f, 10.0f},
+                                      {0.0f, 6.0f, -4.0f},
+                                      {0.0f, -6.0f, -4.0f},
+                                      80.0f,
+                                      false,
+                                      5};
+constexpr PictureRoom k_OptionsRoom {{87.0f, 0.0f, 87.0f},
+                                     {0.0f, -7.0f, 20.0f},
+                                     {0.0f, 7.0f, 20.0f},
+                                     {0.0f, 6.0f, -4.0f},
+                                     {0.0f, -6.0f, -4.0f},
+                                     30.0f,
+                                     false,
+                                     1};
+constexpr PictureRoom k_MultiRoom {{-87.0f, 0.0f, 87.0f},
+                                   {0.0f, -7.0f, 20.0f},
+                                   {0.0f, 7.0f, 20.0f},
+                                   {0.0f, 6.0f, -4.0f},
+                                   {0.0f, -6.0f, -4.0f},
+                                   30.0f,
+                                   false,
+                                   3};
+constexpr PictureRoom k_CreditsRoom {
+    {-123.0f, 0.0f, 0.0f}, {0.0f, -0.1f, 0.1f}, {0.0f, 0.1f, 0.1f}, {0.0f, 0.5f, -1.0f}, {0.0f, -0.5f, -1.0f}, 30.0f, true, 4};
+/// The rooms of pictures' walls, about their centres (PictureRoomBase's InnerRoom)
+constexpr float k_PictureRoomRadius = 37.0f;
+/// ChallengeRoomCamera::Init's lean and height
+constexpr float k_PictureStartLean = 0.6f;
+constexpr float k_PictureStartHeight = 6.0f;
+/// How long the turn, lean and height take to catch up with the player
+constexpr float k_PictureYawEaseTime = 0.2f;
+constexpr float k_PictureLeanEaseTime = 0.3f;
+constexpr float k_PictureHeightEaseTime = 0.15f;
+/// The lean follows the height, from this at the lowest the camera goes, rising by this for each unit up
+constexpr float k_PictureLowLean = 0.2f;
+constexpr float k_PictureLeanPerHeight = 0.0084507046f;
+/// How fast the arrow keys lean and raise the camera
+constexpr float k_PictureLeanSpeed = 1.85f;
+constexpr float k_PictureRiseSpeed = 30.0f;
+/// CalcDoorHit's ring the rooms' doors back to the main room are on, about the main room's centre
+constexpr float k_PictureDoorRadius = 87.0f;
+/// CreatureRoomCamera's ring, and the main room's door the creature's room is behind
+constexpr float k_CreatureDoorRadius = 78.0f;
+constexpr uint32_t k_CreatureDoor = 0;
+// The way back to the main room through a room's door, facing the main room along x: halfway from the camera to the
+// door, then through it
+constexpr TempleCameraModel::Pose k_DoorBack {{40.0f, 16.0f, 0.0f}, {20.0f, 10.0f, 0.0f}};
+
+// The creature's room: CreatureRoom::InitEngine's InnerRoom, and CreatureRoomCamera's look
+constexpr TempleCameraModel::Cylinder k_CreatureRoomCylinder {{120.0f, 0.0f, -120.0f}, TempleCameraModel::k_RoomRadius, false};
+/// How far ahead the look's point is
+constexpr float k_LookDistance = 20.0f;
+/// How far up and down the look turns
+constexpr float k_LookMaxPitch = 1.4959966f;
+/// How fast the arrow keys speed up the look's turn, and how quickly it slows
+constexpr float k_LookAcceleration = 0.3f;
+constexpr float k_LookSlowing = 10.0f;
+/// How long the camera takes to catch up with the look
+constexpr float k_LookEaseTime = 0.15f;
+
+const PictureRoom* PictureRoomOf(TempleRoom room)
+{
+	switch (room)
+	{
+	case TempleRoom::Challenge:
+		return &k_ChallengeRoom;
+	case TempleRoom::SaveGame:
+		return &k_SaveGameRoom;
+	case TempleRoom::Options:
+		return &k_OptionsRoom;
+	case TempleRoom::Multi:
+		return &k_MultiRoom;
+	case TempleRoom::Credits:
+		return &k_CreditsRoom;
+	case TempleRoom::Main:
+	case TempleRoom::CreatureCave:
+	case TempleRoom::Unknown:
+		break;
+	}
+	return nullptr;
+}
 
 /// The kind of thing the mouse is over (InnerCamera::Update): the pool, the floor or a wall
 enum class HitKind : uint8_t
@@ -97,11 +213,34 @@ TempleCameraModel::Pose Mix(const TempleCameraModel::Pose& from, const TempleCam
 }
 } // namespace
 
+TempleCameraModel::Cylinder TempleCameraModel::CylinderOf(Room room)
+{
+	if (const auto* picture = PictureRoomOf(room); picture != nullptr)
+	{
+		return {picture->centre, k_PictureRoomRadius};
+	}
+	if (room == Room::CreatureCave)
+	{
+		return k_CreatureRoomCylinder;
+	}
+	return {glm::vec3(0.0f), k_RoomRadius};
+}
+
 std::optional<TempleCameraModel::RoomHit> TempleCameraModel::RayCastRoom(glm::vec3 origin, glm::vec3 direction)
 {
+	return RayCastRoom(origin, direction, Cylinder {glm::vec3(0.0f), k_RoomRadius});
+}
+
+std::optional<TempleCameraModel::RoomHit> TempleCameraModel::RayCastRoom(glm::vec3 origin, glm::vec3 direction,
+                                                                         const Cylinder& room)
+{
+	// InnerCamera::RayCast works about the room's centre
+	origin -= room.centre;
+	const float radius = room.radius;
+
 	// The floor, when the ray points at it enough
 	std::optional<float> floorDistance;
-	if (std::abs(direction.y) > 0.01f && -origin.y / direction.y > 0.0f)
+	if (room.floor && std::abs(direction.y) > 0.01f && -origin.y / direction.y > 0.0f)
 	{
 		floorDistance = -origin.y / direction.y;
 	}
@@ -109,7 +248,7 @@ std::optional<TempleCameraModel::RoomHit> TempleCameraModel::RayCastRoom(glm::ve
 	// The walls, from outside them or within
 	const float a = direction.x * direction.x + direction.z * direction.z;
 	const float b = 2.0f * (origin.x * direction.x + origin.z * direction.z);
-	const float c = origin.x * origin.x + origin.z * origin.z - k_RoomRadius * k_RoomRadius;
+	const float c = origin.x * origin.x + origin.z * origin.z - radius * radius;
 	const float discriminant = b * b - c * a * 4.0f;
 	std::optional<float> wallDistance;
 	if (discriminant > 0.0f)
@@ -142,9 +281,9 @@ std::optional<TempleCameraModel::RoomHit> TempleCameraModel::RayCastRoom(glm::ve
 	return RoomHit {
 	    .distance = std::sqrt(point.x * point.x + point.z * point.z),
 	    .angle = std::atan2(point.z, point.x),
-	    .height = point.y,
+	    .height = point.y + room.centre.y,
 	    .floor = onFloor,
-	    .point = point,
+	    .point = point + room.centre,
 	    .normal = onFloor ? glm::vec3(0.0f, 1.0f, 0.0f) : -glm::normalize(direction),
 	};
 }
@@ -208,9 +347,66 @@ TempleCameraModel::Pose TempleCameraModel::TurnToDoor(const Pose& pose, uint32_t
 	return {TurnAbout(pose.origin, angle), TurnAbout(pose.focus, angle)};
 }
 
+bool TempleCameraModel::IsPictureRoom(Room room)
+{
+	return PictureRoomOf(room) != nullptr;
+}
+
+TempleCameraModel::Pose TempleCameraModel::PictureOrbitPose(Room room, float yaw, float lean, float height, glm::vec3 pathEnd)
+{
+	// ChallengeRoomCamera's fn_00785580
+	const auto& picture = *PictureRoomOf(room);
+	const auto centre = picture.aroundPathEnd ? glm::vec3(pathEnd.x, 0.0f, pathEnd.z) : picture.centre;
+	const glm::vec3 raise {0.0f, height, 0.0f};
+	return {
+	    TurnAbout(glm::mix(picture.lowOrigin, picture.highOrigin, lean), yaw) + centre + raise,
+	    TurnAbout(glm::mix(picture.lowFocus, picture.highFocus, lean), yaw) + centre + raise,
+	};
+}
+
+float TempleCameraModel::PictureStartYaw(const Pose& pathEnd)
+{
+	// A quarter turn on from the way the path ends looking, which the orbit's views look along unturned
+	const auto along = pathEnd.focus - pathEnd.origin;
+	return std::atan2(along.z, along.x) + glm::half_pi<float>();
+}
+
+TempleCameraModel::Pose TempleCameraModel::LookPose(glm::vec3 from, float heading, float pitch)
+{
+	// AdjustBubbleZForPitch: GCamera::SetPointFromPointDistanceHeadingAndPitch's point, mirrored through the camera
+	const glm::vec3 behind {std::sin(heading) * std::cos(pitch), std::sin(pitch), std::cos(heading) * std::cos(pitch)};
+	return {from, from - behind * k_LookDistance};
+}
+
+glm::vec2 TempleCameraModel::HeadingAndPitch(const Pose& look)
+{
+	const auto behind = look.origin - look.focus;
+	const float across = std::sqrt(behind.x * behind.x + behind.z * behind.z);
+	if (across < 1e-4f)
+	{
+		// Straight up or down
+		return {0.0f, 1.5393804f};
+	}
+	return {std::atan2(behind.x, behind.z), std::atan2(behind.y, across)};
+}
+
 TempleCameraModel::TempleCameraModel(Paths paths, Room room)
     : _paths(std::move(paths))
 {
+	// ChallengeRoomCamera::Init for each room of pictures
+	for (size_t i = 0; i < k_RoomCount; ++i)
+	{
+		const auto pictureRoom = static_cast<Room>(i);
+		if (IsPictureRoom(pictureRoom))
+		{
+			ResetPictureCamera(pictureRoom);
+			auto& picture = _pictures.at(i);
+			picture.yaw.Reset(picture.yawTarget);
+			picture.lean.Reset(picture.leanTarget);
+			picture.height.Reset(picture.heightTarget);
+		}
+	}
+
 	// InnerCamera::Init puts the camera at the start of its path
 	if (const auto& path = _paths.at(static_cast<size_t>(room)); path)
 	{
@@ -251,12 +447,21 @@ void TempleCameraModel::GoToRoom(Room room)
 	{
 		return;
 	}
+	// Temple::GoToRoom skips the room's path: the room's camera starts over (Reinit), takes over from the camera, and
+	// settles where the player has it
+	if (IsPictureRoom(room))
+	{
+		ResetPictureCamera(room);
+	}
 	StartIntro(room, true);
-	// Temple::GoToRoom skips the room's path, taking the camera straight to where the player has it, and settles it there
-	_nextState = InMainRoom() ? State::Orbit : State::FreeLook;
+	_nextState = ControlOf(room);
 	ChangeState();
-	const Input still {
-	    .button = 0, .mouse = _lastMouse, .mouseScreen = glm::vec2(0.0f), .hit = std::nullopt, .door = std::nullopt};
+	const Input still {.button = 0,
+	                   .mouse = _lastMouse,
+	                   .mouseScreen = glm::vec2(0.0f),
+	                   .hit = std::nullopt,
+	                   .door = std::nullopt,
+	                   .doorBack = std::nullopt};
 	Step(1.0f, still);
 	Step(1.0f, still);
 }
@@ -303,6 +508,11 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> TempleCameraModel::Upd
 		input.button = 1;
 	}
 	input.mouse = glm::vec2(actions.GetMousePosition());
+	// SubOptionEntryScroll takes a press on a scroll, which the room's camera then doesn't see
+	if (Locator::temple::value().HoldScroll(input.button != 0, input.mouse.y))
+	{
+		input.button = 0;
+	}
 	if (Locator::windowing::has_value())
 	{
 		const auto size = glm::vec2(Locator::windowing::value().GetSize());
@@ -315,7 +525,20 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> TempleCameraModel::Upd
 		const auto forward = camera.GetForward();
 		if (const float along = glm::dot(rayDirection, forward); along > 0.0f)
 		{
-			input.hit = RayCastRoom(camera.GetOrigin(), rayDirection * (k_NearClip / along));
+			const auto ray = rayDirection * (k_NearClip / along);
+			_cursorRay = Pose {camera.GetOrigin(), camera.GetOrigin() + rayDirection};
+			input.hit = RayCastRoom(camera.GetOrigin(), ray, CylinderOf(GetRoom()));
+			// CalcDoorHit: the doors back to the main room are on a ring about its centre
+			if (GetRoom() != Room::Main)
+			{
+				const float ringRadius = GetRoom() == Room::CreatureCave ? k_CreatureDoorRadius : k_PictureDoorRadius;
+				if (const auto ring = RayCastRoom(camera.GetOrigin(), ray,
+				                                  Cylinder {glm::vec3(0.0f), ringRadius, CylinderOf(GetRoom()).floor});
+				    ring.has_value())
+				{
+					input.doorBack = DoorAt(*ring);
+				}
+			}
 		}
 	}
 	if (input.hit.has_value())
@@ -328,8 +551,15 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> TempleCameraModel::Upd
 	FollowTemple();
 	Locator::temple::value().GetDoors().Update(seconds);
 
-	const auto origin = _origin.GetValue();
-	const auto focus = _focus.GetValue();
+	auto origin = _origin.GetValue();
+	auto focus = _focus.GetValue();
+	// ChallengeRoomCamera's pose, and the others': the camera goes over to the scroll it looks at along a cosine
+	if (_subMeshLook.has_value() && _subMeshZoom > 0.0f)
+	{
+		const float along = (1.0f - std::cos(_subMeshZoom * glm::pi<float>())) * 0.5f;
+		origin = glm::mix(origin, _subMeshLook->origin, along);
+		focus = glm::mix(focus, _subMeshLook->focus, along);
+	}
 	return CameraInterpolationUpdateInfo {origin, focus, std::chrono::microseconds::zero()};
 }
 
@@ -347,22 +577,53 @@ void TempleCameraModel::Step(float dt, const Input& input)
 	{
 		_pressHit = input.hit;
 		_lastMouse = input.mouse;
+		_pressMouse = input.mouse;
+	}
+	if (IsPictureRoom(GetRoom()))
+	{
+		UpdatePictureCamera(dt);
 	}
 
-	switch (_state)
+	// InnerCamera's state 4, looking at a scroll: the room's camera keeps still, and a press elsewhere or the arrow
+	// keys send it back (CreatureRoomCamera::UpdateMain)
+	const bool inControl = _state == ControlOf(GetRoom());
+	if (_lookingAtSubMesh)
 	{
-	case State::Intro:
-		UpdateIntro(dt, input);
-		break;
-	case State::Orbit:
-		UpdateOrbit(dt, input);
-		break;
-	case State::FreeLook:
-		UpdateFreeLook(dt);
-		break;
-	case State::ThroughDoor:
-		UpdateThroughDoor(dt, input);
-		break;
+		const auto& actions = Locator::gameActionSystem::value();
+		const bool turning = actions.GetAny(BindableActionMap::MOVE_LEFT, BindableActionMap::MOVE_RIGHT,
+		                                    BindableActionMap::MOVE_FORWARDS, BindableActionMap::MOVE_BACKWARDS);
+		if ((input.button != 0 && !_wasPressed) || turning || !inControl)
+		{
+			_lookingAtSubMesh = false;
+		}
+	}
+	_subMeshZoom = std::clamp(_subMeshZoom + ((_lookingAtSubMesh ? 0.75f : -0.7f) * dt), 0.0f, 1.0f);
+	if (!_lookingAtSubMesh && _subMeshZoom <= 0.0f)
+	{
+		_subMeshLook.reset();
+	}
+	_hoveredDoor = _state == State::Orbit ? input.door : std::nullopt;
+
+	if (!_lookingAtSubMesh)
+	{
+		switch (_state)
+		{
+		case State::Intro:
+			UpdateIntro(dt, input);
+			break;
+		case State::Orbit:
+			UpdateOrbit(dt, input);
+			break;
+		case State::Look:
+			UpdateLook(dt, input);
+			break;
+		case State::PictureOrbit:
+			UpdatePictureOrbit(dt, input);
+			break;
+		case State::ThroughDoor:
+			UpdateThroughDoor(dt, input);
+			break;
+		}
 	}
 	ChangeState();
 
@@ -378,7 +639,7 @@ void TempleCameraModel::Step(float dt, const Input& input)
 
 void TempleCameraModel::UpdateIntro(float dt, const Input& input)
 {
-	const auto control = InMainRoom() ? State::Orbit : State::FreeLook;
+	const auto control = ControlOf(GetRoom());
 	_introTime += dt;
 	_blendTime += dt;
 	const auto& path = _paths.at(static_cast<size_t>(GetRoom()));
@@ -397,10 +658,10 @@ void TempleCameraModel::UpdateIntro(float dt, const Input& input)
 		_nextState = control;
 	}
 
-	// The main room's path eases into where the player takes over over its last second
-	if (const float intoOrbit = _introTime - (duration - 1.0f); intoOrbit > 0.0f && InMainRoom())
+	// The path eases into where the player takes over over its last second
+	if (const float intoControl = _introTime - (duration - 1.0f); intoControl > 0.0f)
 	{
-		_target = Mix(_target, OrbitPose(0.0f, k_StartLean), std::min(intoOrbit, 1.0f));
+		_target = Mix(_target, ControlPose(GetRoom()), std::min(intoControl, 1.0f));
 	}
 	// Coming through a door, the camera eases off the way it was going over the first two seconds
 	if (const float fromPrevious = (2.0f - _blendTime) * 0.5f; fromPrevious > 0.0f && _blendFromPrevious)
@@ -506,41 +767,208 @@ void TempleCameraModel::UpdateOrbit(float dt, const Input& input)
 	}
 }
 
-void TempleCameraModel::UpdateFreeLook(float dt)
+void TempleCameraModel::UpdateLook(float dt, const Input& input)
 {
-	// InnerCamera's state 2: the arrow keys turn the camera, slowing as they're let go
+	// CreatureRoomCamera's state 1: the camera stays where the room's path ends, and dragging turns the look with the
+	// mouse, by as much as the lens sees across the screen
 	const auto& actions = Locator::gameActionSystem::value();
+	if (input.button != 0 && !_wasPressed)
+	{
+		_lookAtPress = _look;
+	}
+	if ((input.button == 0 && _wasPressed) || input.button == 2)
+	{
+		_lookAtPress = _look;
+	}
+	if (input.button != 0 && Locator::windowing::has_value())
+	{
+		const float width = static_cast<float>(Locator::windowing::value().GetSize().x);
+		const float across = 2.0f * std::tan(glm::radians(k_FieldOfView) * 0.5f);
+		_look = _lookAtPress + across * (_pressMouse - input.mouse) / width;
+	}
+
+	// The arrow keys speed up its turn, which slows as they're let go
 	if (actions.Get(BindableActionMap::MOVE_LEFT))
 	{
-		_turnSpeed.x -= dt * 0.1f;
+		_lookSpeed.x -= dt * k_LookAcceleration;
 	}
 	if (actions.Get(BindableActionMap::MOVE_RIGHT))
 	{
-		_turnSpeed.x += dt * 0.1f;
+		_lookSpeed.x += dt * k_LookAcceleration;
 	}
 	if (actions.Get(BindableActionMap::MOVE_FORWARDS))
 	{
-		_turnSpeed.y += dt * 0.1f;
+		_lookSpeed.y -= dt * k_LookAcceleration;
 	}
 	if (actions.Get(BindableActionMap::MOVE_BACKWARDS))
 	{
-		_turnSpeed.y -= dt * 0.1f;
+		_lookSpeed.y += dt * k_LookAcceleration;
 	}
-	_turnSpeed *= std::exp(-2.0f * dt);
-	// TODO(raffclar): InnerCamera also moves the camera along its view with two keys not yet known
+	_look += _lookSpeed;
+	_lookAtPress += _lookSpeed;
+	// It never looks straight up or down
+	_look.y = std::clamp(_look.y, -k_LookMaxPitch, k_LookMaxPitch);
+	_lookAtPress.y = std::clamp(_lookAtPress.y, -k_LookMaxPitch, k_LookMaxPitch);
+	_look.x = std::fmod(_look.x, glm::two_pi<float>());
+	if (_look.x < 0.0f)
+	{
+		_look.x += glm::two_pi<float>();
+	}
+	_lookSpeed *= std::exp(-k_LookSlowing * dt);
 
-	// The view turns about the camera's own axes, by the speeds each frame
-	const auto origin = _origin.GetValue();
-	const auto forward = glm::normalize(_focus.GetValue() - origin);
-	const auto right = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), forward));
-	const auto up = glm::cross(forward, right);
-	const float yaw = _turnSpeed.x;
-	const float pitch = _turnSpeed.y;
-	const auto turned =
-	    std::sin(yaw) * right - std::cos(yaw) * std::sin(pitch) * up + std::cos(yaw) * std::cos(pitch) * forward;
-	_target = {origin, origin + turned * 10.0f};
+	_target = LookPose(_lookFrom, _look.x, _look.y);
+	_originTime = k_LookEaseTime;
+	_focusTime = k_LookEaseTime;
+	// Clicking the room's door walks back through it, from halfway between the camera and the door
+	// TODO(raffclar): CreatureRoomCamera also lets a press held from the door walk back once it is near, and zooms to the
+	//                 scrolls of the creature's attributes
+	if (input.button != 0 && !_wasPressed && input.doorBack == k_CreatureDoor)
+	{
+		WalkBackThrough(k_CreatureDoor);
+	}
+}
+
+void TempleCameraModel::ResetPictureCamera(Room room)
+{
+	// Looking along the end of the room's path, half leaning and low
+	auto& picture = _pictures.at(static_cast<size_t>(room));
+	picture.yawTarget = PictureStartYaw(PathEnd(room));
+	picture.leanTarget = k_PictureStartLean;
+	picture.heightTarget = k_PictureStartHeight;
+}
+
+void TempleCameraModel::UpdatePictureCamera(float dt)
+{
+	const auto room = GetRoom();
+	const auto& pictureRoom = *PictureRoomOf(room);
+	auto& picture = _pictures.at(static_cast<size_t>(room));
+	picture.leanTarget = std::clamp(picture.leanTarget, 0.0f, 1.0f);
+	picture.heightTarget = std::clamp(picture.heightTarget, k_PictureMinHeight, pictureRoom.maxHeight);
+	picture.yaw.SetDestination(picture.yawTarget, k_PictureYawEaseTime);
+	picture.lean.SetDestination(picture.leanTarget, k_PictureLeanEaseTime);
+	picture.height.SetDestination(picture.heightTarget, k_PictureHeightEaseTime);
+	picture.yaw.Update(dt);
+	picture.lean.Update(dt);
+	picture.height.Update(dt);
+
+	// The higher the camera, the more it looks down
+	const float leanForHeight = (picture.heightTarget - k_PictureMinHeight) * k_PictureLeanPerHeight + k_PictureLowLean;
+	picture.leanTarget += (leanForHeight - picture.leanTarget) * (1.0f - std::exp(-dt));
+}
+
+void TempleCameraModel::UpdatePictureOrbit(float dt, const Input& input)
+{
+	// ChallengeRoomCamera's state 1
+	const auto& actions = Locator::gameActionSystem::value();
+	const auto room = GetRoom();
+	const auto& pictureRoom = *PictureRoomOf(room);
+	auto& picture = _pictures.at(static_cast<size_t>(room));
+	const auto pressKind = KindOf(_pressHit);
+
+	// Dragging the floor or the walls turns the room and raises the camera to keep them under the mouse
+	if (input.button != 0 && (pressKind == HitKind::Floor || pressKind == HitKind::Wall) && input.hit.has_value())
+	{
+		float turn = _pressHit->angle - input.hit->angle;
+		if (turn < -glm::pi<float>())
+		{
+			turn += glm::two_pi<float>();
+		}
+		if (turn > glm::pi<float>())
+		{
+			turn -= glm::two_pi<float>();
+		}
+		picture.yawTarget = picture.yaw.GetValue() + turn;
+		picture.heightTarget = _pressHit->height - input.hit->height + picture.height.GetValue();
+	}
+
+	// The arrow keys turn, and lean and raise or lower the camera, which the lean then follows
+	// TODO(raffclar): in the multiplayer room while it shows the sessions, the room turns slowly by itself instead
+	if (actions.Get(BindableActionMap::MOVE_LEFT))
+	{
+		picture.yawTarget += dt;
+	}
+	if (actions.Get(BindableActionMap::MOVE_RIGHT))
+	{
+		picture.yawTarget -= dt;
+	}
+	float tilt = picture.leanTarget * 2.0f - 1.0f;
+	if (actions.Get(BindableActionMap::MOVE_FORWARDS))
+	{
+		tilt -= dt * k_PictureLeanSpeed;
+		picture.heightTarget -= tilt * dt * k_PictureRiseSpeed;
+	}
+	if (actions.Get(BindableActionMap::MOVE_BACKWARDS))
+	{
+		tilt += dt * k_PictureLeanSpeed;
+		picture.heightTarget -= tilt * dt * k_PictureRiseSpeed;
+	}
+	picture.leanTarget = tilt * 0.5f + 0.5f;
+
+	_target = PictureOrbitPose(room, picture.yaw.GetValue(), picture.lean.GetValue(), picture.height.GetValue(),
+	                           PathEnd(room).origin);
 	_originTime = 0.0f;
 	_focusTime = 0.0f;
+
+	// Clicking the room's door walks back through it, from halfway between the camera and the door
+	if (input.button != 0 && !_wasPressed && input.doorBack == pictureRoom.door)
+	{
+		WalkBackThrough(pictureRoom.door);
+	}
+	// TODO(raffclar): ChallengeRoomCamera's state 4 looks at the room's pictures
+}
+
+void TempleCameraModel::WalkBackThrough(uint32_t door)
+{
+	// The rooms' cameras head halfway from where they are to the door, at its height, then through it
+	const auto through = TurnToDoor(k_DoorBack, door);
+	_doorStart = {(through.origin + _target.origin) * 0.5f, (through.focus + _target.focus) * 0.5f};
+	_doorStart.origin.y = through.origin.y;
+	_doorEnd = through;
+	_doorRoom = Room::Main;
+	_nextState = State::ThroughDoor;
+}
+
+TempleCameraModel::State TempleCameraModel::ControlOf(Room room) const
+{
+	if (room == Room::Main)
+	{
+		return State::Orbit;
+	}
+	if (room == Room::CreatureCave)
+	{
+		return State::Look;
+	}
+	return State::PictureOrbit;
+}
+
+TempleCameraModel::Pose TempleCameraModel::PathEnd(Room room) const
+{
+	const auto& path = _paths.at(static_cast<size_t>(room));
+	if (!path)
+	{
+		return {_origin.GetValue(), _focus.GetValue()};
+	}
+	const auto end = path->SampleAt(path->GetDuration());
+	return {end.position, end.focus};
+}
+
+TempleCameraModel::Pose TempleCameraModel::ControlPose(Room room) const
+{
+	switch (ControlOf(room))
+	{
+	case State::Orbit:
+		// WorldRoomCamera eases into its start, unturned
+		return OrbitPose(0.0f, k_StartLean);
+	case State::PictureOrbit:
+	{
+		const auto& picture = _pictures.at(static_cast<size_t>(room));
+		return PictureOrbitPose(room, picture.yaw.GetValue(), picture.lean.GetValue(), picture.height.GetValue(),
+		                        PathEnd(room).origin);
+	}
+	default:
+		// CreatureRoomCamera takes over where its path ends
+		return PathEnd(room);
+	}
 }
 
 void TempleCameraModel::UpdateThroughDoor(float dt, const Input& input)
@@ -587,8 +1015,17 @@ void TempleCameraModel::ChangeState()
 		_yaw.Reset(0.0f);
 		_lean.Reset(k_StartLean);
 		break;
-	case State::FreeLook:
-		_turnSpeed = glm::vec2(0.0f);
+	case State::Look:
+	{
+		// CreatureRoomCamera::UpdateState: the look starts along the end of the room's path
+		const auto end = PathEnd(GetRoom());
+		_lookFrom = end.origin;
+		_look = HeadingAndPitch(end);
+		_lookAtPress = _look;
+		_lookSpeed = glm::vec2(0.0f);
+		break;
+	}
+	case State::PictureOrbit:
 		break;
 	case State::ThroughDoor:
 		_target = _doorStart;
@@ -602,6 +1039,22 @@ void TempleCameraModel::ChangeState()
 	_state = _nextState;
 }
 
+void TempleCameraModel::LookAtSubMesh(glm::vec3 position, glm::vec3 lookAt)
+{
+	// InnerCamera::FocusOnSubMesh wooshes unless the camera is looking at something already
+	if (!_lookingAtSubMesh && Locator::audio::has_value())
+	{
+		constexpr std::array k_Wooshes {audio::SoundId::G_Woosh_01, audio::SoundId::G_Woosh_02, audio::SoundId::G_Woosh_03,
+		                                audio::SoundId::G_Woosh_04};
+		const auto ticks =
+		    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+		Locator::audio::value().PlaySoundEffect(static_cast<entt::id_type>(k_Wooshes.at(static_cast<size_t>(ticks & 3))),
+		                                        std::nullopt);
+	}
+	_subMeshLook = Pose {position, lookAt};
+	_lookingAtSubMesh = true;
+}
+
 void TempleCameraModel::FollowTemple()
 {
 	// Temple::Update: draws the room the camera is heading into, and takes the player into it
@@ -610,7 +1063,7 @@ void TempleCameraModel::FollowTemple()
 	if (_state != State::ThroughDoor)
 	{
 		temple.SetTransitionRoom(std::nullopt);
-		if (_state == State::Orbit)
+		if (_state == State::Orbit || _state == State::Look || _state == State::PictureOrbit)
 		{
 			// InnerCamera::CalcDoorHit shuts any door the player has the room's camera back by
 			doors.FastClose();
@@ -636,8 +1089,9 @@ void TempleCameraModel::FollowTemple()
 		}
 		else
 		{
-			// Back into the main room, its doorway to this room stays shut
-			doors.Open(TempleDoors::LeafOf(GetRoom()), 2.0f, 0.0f);
+			// Back into the main room, its doorway to this room swings open quickly ahead of the camera, and the main room's
+			// camera turns it round to close behind it
+			doors.Open(TempleDoors::LeafOf(GetRoom()), k_DoorBackOpenFrom, k_DoorBackOpenRate);
 		}
 		break;
 	case DoorStage::Through:

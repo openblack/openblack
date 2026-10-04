@@ -20,6 +20,12 @@ $output v_position, v_texcoord0, v_normal
 
 #include <bgfx_shader.sh>
 
+// Pushes the mesh back by a fraction of its depth, towards the far plane at 0: the temple's rooms other than the one the
+// player is in, which overlap it at the doorways
+uniform vec4 u_depthBias;
+// Slides the texture across the mesh, as LH3DObject::SetAnimatedUV does the creature's waterfall
+uniform vec4 u_uvOffset;
+
 #ifdef USE_HEIGHT_MAP
 SAMPLER2D(s_heightmap, 1);
 uniform vec4 u_islandExtent;
@@ -70,6 +76,8 @@ void main()
 #else
 	v_texcoord0 = vec4(a_texcoord0, 0.0f, 0.0f);
 #endif // USE_LIGHTMAP
+	v_texcoord0.xy += u_uvOffset.xy;
 	v_normal = a_normal;
 	gl_Position = mul(u_viewProj, v_position);
+	gl_Position.z *= 1.0f - u_depthBias.x;
 }

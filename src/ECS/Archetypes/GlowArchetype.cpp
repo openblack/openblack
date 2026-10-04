@@ -44,7 +44,7 @@ std::array<entt::entity, 2> GlowArchetype::Create(const LightEmitter& emitter, T
 		return {entt::null, entt::null};
 	}
 
-	// LH3DAtmos::AdditiveMaterial: data/textures/atmos.raw with its alpha, atmosa.raw
+	// From the vanilla game, LH3DAtmos::AdditiveMaterial uses data/textures/atmos.raw with its alpha, atmosa.raw
 	const auto& textures = Locator::resources::value().GetTextures();
 	auto texture = textures.Handle(entt::hashed_string("raw/ATMOS"));
 	auto alpha = textures.Handle(entt::hashed_string("raw/ATMOSA"));

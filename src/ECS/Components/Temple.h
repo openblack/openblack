@@ -21,6 +21,8 @@ enum class TempleInteriorMesh
 {
 	Room,
 	Floor,
+	/// The creature's room's waterfall and pools, whose texture slides down them
+	Water,
 	Other,
 };
 

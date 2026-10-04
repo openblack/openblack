@@ -139,7 +139,11 @@ Game::Game(Arguments&& args) noexcept
 
 Game::~Game() noexcept
 {
-	// Its textures go before the renderer
+	// Its textures go before the renderer, and the temple's scrolls are written with its text
+	if (Locator::temple::has_value())
+	{
+		Locator::temple::value().SetInterface(nullptr);
+	}
 	_interface.reset();
 	ShutDownServices();
 	SDL_Quit(); // todo: move to GameWindow
@@ -505,7 +509,7 @@ bool Game::Update() noexcept
 	// The temple's camera may have taken the player out of the temple
 	if (Locator::temple::has_value())
 	{
-		Locator::temple::value().Update();
+		Locator::temple::value().Update(deltaTime);
 	}
 	Locator::cameraBookmarkSystem::value().Update(deltaTime);
 	if (_interface)
@@ -946,6 +950,10 @@ bool Game::Initialize() noexcept
 		{
 			SPDLOG_LOGGER_WARN(spdlog::get("game"), "The game's menu is not available, Escape quits");
 		}
+		else if (Locator::temple::has_value())
+		{
+			Locator::temple::value().SetInterface(_interface.get());
+		}
 	}
 
 	// TODO(raffclar): #400: Parse level files within the resource loader
@@ -1043,6 +1051,7 @@ bool Game::Initialize() noexcept
 			    for (size_t i = 0; i < audioHeaders.size(); i++)
 			    {
 				    soundName = std::filesystem::path(audioHeaders[i].name.data());
+				    // Banks have gaps between their samples, which are skipped without skipping the samples after them
 				    if (audioData[i].empty())
 				    {
 					    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Empty sound buffer found for {}/{}. Skipping", groupName,
@@ -1051,7 +1060,6 @@ bool Game::Initialize() noexcept
 				    }
 
 				    const auto stringId = fmt::format("{}/{}", groupName, audioHeaders[i].id);
-				    // Banks have gaps between their samples, which are skipped without skipping the samples after them
 				    const entt::id_type id = entt::hashed_string(stringId.c_str());
 				    const std::vector<std::vector<uint8_t>> buffer = {audioData[i]};
 				    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Loading sound {}: {}", stringId, audioHeaders[i].name.data());

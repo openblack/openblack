@@ -47,6 +47,22 @@ struct RenderContext
 		bool hiddenFromReflection {false};
 		/// The instances show the reflection pass through them, as the temple's floor does
 		bool showsReflection {false};
+		/// Only the submeshes with joints are drawn, as WorldRoom::DrawDoors draws the main room's doors
+		bool onlyJoints {false};
+		/// The submeshes with joints are drawn only while their joints turn: the side rooms' copies of their doors
+		bool hideShutJoints {false};
+		/// The instances are of a temple room the player isn't in, which gives way where it overlaps the room they are in
+		bool behindCurrentRoom {false};
+		/// The instances are drawn as each primitive's material says: blended and writing depth or not
+		bool materialBlending {false};
+		/// The instances are all blended by their materials, so they are drawn after the opaque ones
+		bool translucent {false};
+		/// How far the instances' textures have slid across them
+		glm::vec2 uvOffset {0.0f};
+		/// Textures some of the submeshes are drawn with in place of their skins, by submesh: the temple's scrolls
+		std::vector<std::pair<uint32_t, graphics::TextureHandle>> subMeshTextures;
+		/// Colours added to some of the submeshes, by submesh: the temple's controls glowing under the cursor
+		std::vector<std::pair<uint32_t, glm::vec3>> subMeshGlows;
 	};
 
 	/// A list of cpu-side uniforms which is refilled at every \ref PrepareDraw.

@@ -76,11 +76,17 @@ private:
 	[[nodiscard]] glm::vec4 GetHandLight(const DrawSceneDesc& drawDesc) const;
 	/// Draws the hand's silhouette for its shadow, or clears the shadow when there is none
 	void DrawHandShadowPass(const DrawSceneDesc& drawDesc) const;
-	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, bool preserveState) const;
+	/// Draws a submesh, with a texture in place of its skins when given one
+	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, bool preserveState,
+	                 const TextureHandle* texture = nullptr, glm::vec3 glow = glm::vec3(0.0f)) const;
 	void DrawPass(const DrawSceneDesc& desc) const;
 	/// The beams of the temple's spot lights and the light its windows shed, which InnerRoom::DrawGlow draws in its
 	/// rooms but not in the reflection of the main room
 	void DrawLightBeams(const DrawSceneDesc& desc) const;
+	/// The temple's domes of mist, which LH3DMist draws facing the camera with a frame of the smoke texture
+	void DrawMistDomes(const DrawSceneDesc& desc) const;
+	/// The text the temple's rooms write in the world this frame: the signs' labels and the scroll the camera is close to
+	void DrawTempleText(const DrawSceneDesc& desc) const;
 
 	std::unique_ptr<ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
@@ -96,6 +102,8 @@ private:
 	/// HandLight's map, loaded with the first land drawn, empty when the game has none
 	mutable std::optional<TextureHandle> _handLightTexture;
 	mutable bool _handLightLoaded {false};
+	/// Sampled by the primitives without a skin, as Direct3D's texture stages read white with no texture set
+	std::optional<TextureHandle> _whiteTexture;
 	/// u_handLight of the pass being drawn, without strength outside of the scene's passes
 	mutable glm::vec4 _handLight {0.0f};
 	/// HandLight's map, or a texture to bind in its place when there is none

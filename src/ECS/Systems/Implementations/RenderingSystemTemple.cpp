@@ -11,11 +11,13 @@
 
 #include "RenderingSystemTemple.h"
 
+#include <unordered_map>
 #include <unordered_set>
 
 #include <glm/gtx/transform.hpp>
 
 #include "3D/L3DMesh.h"
+#include "3D/L3DSubMesh.h"
 #include "3D/TempleInteriorInterface.h"
 #include "Camera/Camera.h"
 #include "ECS/Components/Hand.h"
@@ -57,13 +59,22 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 	// Count number of instances
 	uint32_t instanceCount = 0;
 	std::unordered_map<entt::id_type, std::pair<uint32_t, bool>> meshIds;
-	// Temple::Draw draws the room the player is in and the main room, which the others lead off, and the room the
-	// camera is on its way into
+	// Temple::Draw draws the room the player is in and the room the camera is on its way into. From the other rooms the
+	// main room, which they lead off, is drawn whole only while one of its doors is open, and otherwise just its doors.
 	const auto& temple = Locator::temple::value();
-	_loadedRooms = {TempleRoom::Main, temple.GetCurrentRoom()};
-	if (const auto transition = temple.GetTransitionRoom(); transition.has_value())
+	_loadedRooms.clear();
+	for (const auto room : {TempleRoom::Main, TempleRoom::CreatureCave, TempleRoom::Challenge, TempleRoom::Credits,
+	                        TempleRoom::Multi, TempleRoom::Options, TempleRoom::SaveGame})
 	{
-		_loadedRooms.insert(*transition);
+		if (temple.IsRoomDrawn(room))
+		{
+			_loadedRooms.insert(room);
+		}
+	}
+	const bool mainRoomDoorsOnly = !_loadedRooms.contains(TempleRoom::Main);
+	if (mainRoomDoorsOnly)
+	{
+		_loadedRooms.insert(TempleRoom::Main);
 	}
 
 	auto prep = [&meshIds, &instanceCount](const Mesh& mesh, bool morphWithTerrain) {
@@ -76,10 +87,46 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 	// floor over the reflection, blended by the floor's alpha
 	std::unordered_set<entt::id_type> mirroredMeshIds;
 	std::unordered_set<entt::id_type> reflectiveMeshIds;
+	std::unordered_set<entt::id_type> doorMeshIds;
+	std::unordered_set<entt::id_type> otherRoomMeshIds;
+	std::unordered_set<entt::id_type> waterMeshIds;
+	std::unordered_set<entt::id_type> sideRoomMeshIds;
+	std::unordered_map<entt::id_type, TempleRoom> roomMeshIds;
+	const auto currentRoom = temple.GetCurrentRoom();
 	registry.Each<const Mesh, const Transform, const TempleInteriorPart>(
-	    [this, &prep, &mirroredMeshIds, &reflectiveMeshIds](const Mesh& mesh, const Transform& /* unused */,
-	                                                        const TempleInteriorPart& templePart) {
-		    if (_loadedRooms.contains(templePart.room))
+	    [this, &prep, &mirroredMeshIds, &reflectiveMeshIds, &doorMeshIds, &otherRoomMeshIds, &waterMeshIds, &sideRoomMeshIds,
+	     &roomMeshIds, mainRoomDoorsOnly,
+	     currentRoom](const Mesh& mesh, const Transform& /* unused */, const TempleInteriorPart& templePart) {
+		    if (!_loadedRooms.contains(templePart.room))
+		    {
+			    return;
+		    }
+		    if (templePart.room != currentRoom)
+		    {
+			    otherRoomMeshIds.insert(mesh.id);
+		    }
+		    if (templePart.mesh == TempleInteriorMesh::Water)
+		    {
+			    waterMeshIds.insert(mesh.id);
+		    }
+		    if (templePart.room != TempleRoom::Main)
+		    {
+			    sideRoomMeshIds.insert(mesh.id);
+		    }
+		    if (templePart.mesh == TempleInteriorMesh::Room)
+		    {
+			    roomMeshIds.emplace(mesh.id, templePart.room);
+		    }
+		    if (templePart.room == TempleRoom::Main && mainRoomDoorsOnly)
+		    {
+			    // WorldRoom::DrawDoors draws just the room's mesh, and of that just the doors
+			    if (templePart.mesh == TempleInteriorMesh::Room)
+			    {
+				    prep(mesh, false);
+				    doorMeshIds.insert(mesh.id);
+			    }
+			    return;
+		    }
 		    {
 			    prep(mesh, false);
 			    if (templePart.room == TempleRoom::Main && templePart.mesh == TempleInteriorMesh::Room)
@@ -135,6 +182,57 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 		                                              std::forward_as_tuple(offset, desc.first, desc.second, false));
 		drawDesc->second.hiddenFromReflection = !mirroredMeshIds.contains(meshId);
 		drawDesc->second.showsReflection = reflectiveMeshIds.contains(meshId);
+		drawDesc->second.onlyJoints = doorMeshIds.contains(meshId);
+		// Each side room has its own copy of its door to the main room (the creature's room's "door arch03", joint 3),
+		// which is lit by the room's lightmap and pokes up above the arch of the doorway. Drawn shut, in place, it shows
+		// as a grey slab above the rotunda with a red edge, where vanilla shows nothing.
+		// Vanilla never shows it because LH3D keeps the doors' joint matrices that InnerRoom::SetDoorMatrices fills in
+		// the same table (0xe9ce28) that skinned meshes write their bones into: CHand::PrepareForDrawing writes the
+		// hand's bones there, and GameOptionsRoom::DrawAdditional calls SetDoorMatrices again after drawing the hand to
+		// put the doors back. The side room's door is presumably drawn with a bone in its slot instead, which throws it
+		// out of its doorway.
+		// TODO: which bone it is turned by, and where that puts it, needs vanilla run under a debugger. Until then the
+		// side rooms' doors are drawn only while they swing.
+		drawDesc->second.hideShutJoints = sideRoomMeshIds.contains(meshId);
+		// LH3DMesh draws each primitive of the temple's meshes by its material, blended or not, in their order. The
+		// meshes of nothing but blended primitives, as the rooms' domes and floors are, go over the rest.
+		if (meshId != Hand::k_MeshId)
+		{
+			drawDesc->second.materialBlending = true;
+			const auto mesh = Locator::resources::value().GetMeshes().Handle(meshId);
+			bool allBlended = true;
+			for (const auto& subMesh : mesh->GetSubMeshes())
+			{
+				for (const auto& primitive : subMesh->GetPrimitives())
+				{
+					allBlended = allBlended && primitive.blend != decltype(primitive.blend)::Disabled;
+				}
+			}
+			drawDesc->second.translucent = allBlended;
+		}
+		drawDesc->second.behindCurrentRoom = otherRoomMeshIds.contains(meshId);
+		// SubOptionEntryScroll::GetSubMeshData draws each scroll with its own material, the texture its room wrote
+		if (const auto room = roomMeshIds.find(meshId); room != roomMeshIds.end())
+		{
+			for (const auto& scroll : temple.GetScrollTextures(room->second))
+			{
+				drawDesc->second.subMeshTextures.emplace_back(scroll.subMesh, scroll.texture);
+			}
+			for (const auto& glow : temple.GetControlGlows(room->second))
+			{
+				drawDesc->second.subMeshGlows.emplace_back(glow.subMesh, glow.colour);
+			}
+		}
+		// CreatureRoom::Draw draws its water by the materials' alpha, sliding its texture down it
+		if (waterMeshIds.contains(meshId))
+		{
+			drawDesc->second.translucent = true;
+			drawDesc->second.uvOffset = temple.GetWaterfallSlide();
+		}
+		if (drawDesc->second.onlyJoints)
+		{
+			drawDesc->second.hiddenFromReflection = true;
+		}
 		offset += desc.first;
 	}
 }
@@ -152,10 +250,11 @@ void RenderingSystemTemple::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	                                             const TempleInteriorPart& templePart) {
 		    auto l3dMesh = entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(mesh.id);
 
-		    if (_loadedRooms.contains(templePart.room))
+		    // The parts PrepareDrawDescs left out, as the main room's but its doors from the other rooms, have no draw
+		    auto desc = _renderContext.instancedDrawDescs.find(mesh.id);
+		    if (_loadedRooms.contains(templePart.room) && desc != _renderContext.instancedDrawDescs.end())
 		    {
 			    auto offset = uniformOffsets.insert(std::make_pair(mesh.id, 0));
-			    auto desc = _renderContext.instancedDrawDescs.find(mesh.id);
 
 			    auto modelMatrix = glm::mat4(transform.rotation);
 			    modelMatrix = glm::translate(modelMatrix, transform.position * transform.rotation);

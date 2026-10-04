@@ -31,6 +31,7 @@
 #include "3D/LandBlock.h"
 #include "3D/LandIslandInterface.h"
 #include "3D/OceanInterface.h"
+#include "3D/OrientedText.h"
 #include "3D/SkyInterface.h"
 #include "3D/TempleDoors.h"
 #include "3D/TempleInteriorInterface.h"
@@ -38,6 +39,7 @@
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/LightBeam.h"
 #include "ECS/Components/Mesh.h"
+#include "ECS/Components/MistDome.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Components/Temple.h"
 #include "ECS/Components/Transform.h"
@@ -81,6 +83,10 @@ constexpr auto k_BgfxDefaultStateInvertedZ = 0 \
                                      | BGFX_STATE_DEPTH_TEST_GREATER \
                                      | BGFX_STATE_MSAA;
 // clang-format on
+
+/// How far back, as a fraction of their depth, the temple's rooms the player isn't in are drawn: a few millimetres at the
+/// doorways, past the rounding of the copies of their arches
+constexpr float k_OtherTempleRoomDepthBias = 5e-5f;
 
 struct BgfxCallback: public bgfx::CallbackI
 {
@@ -284,6 +290,12 @@ Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallb
 {
 	_shaderManager->LoadShaders();
 	_plane = Primitive::CreatePlane();
+	{
+		constexpr uint32_t k_White = 0xFFFFFFFF;
+		_whiteTexture = fromBgfx(bgfx::createTexture2D(1, 1, false, 1, bgfx::TextureFormat::RGBA8, BGFX_SAMPLER_NONE,
+		                                               bgfx::copy(&k_White, sizeof(k_White))));
+		bgfx::setName(toBgfx(*_whiteTexture), "White");
+	}
 	// LH3D rasterises shadows with eight coverage samples per texel, multisampling gives the same soft edges
 	_handShadowFrameBuffer =
 	    std::make_unique<FrameBuffer>("Hand Shadow", HandShadow::k_TextureSize, HandShadow::k_TextureSize, TextureFormat::R8,
@@ -306,6 +318,10 @@ Renderer::~Renderer() noexcept
 	if (_handLightTexture)
 	{
 		bgfx::destroy(toBgfx(*_handLightTexture));
+	}
+	if (_whiteTexture)
+	{
+		bgfx::destroy(toBgfx(*_whiteTexture));
 	}
 	_shaderManager.reset();
 	bgfx::frame();
@@ -354,7 +370,7 @@ const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, st
 }
 
 void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc,
-                           bool preserveState) const
+                           bool preserveState, const TextureHandle* subMeshTexture, glm::vec3 glow) const
 {
 	assert(&subMesh.GetMesh());
 	// We don't draw physics meshes, we haven't implemented statuses (building and graves) and modern GPUs can handle high lod
@@ -374,6 +390,17 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 	const auto lightmapSkinID = subMesh.GetLightmapSkinID();
 	const Texture2D* lightmap = lightmapSkinID.has_value() ? GetTexture(*lightmapSkinID, skins) : nullptr;
 	const auto* program = desc.lightmapProgram != nullptr && lightmap != nullptr ? desc.lightmapProgram : desc.program;
+	if (desc.onlyJoints && !subMesh.GetJoint().has_value())
+	{
+		return;
+	}
+	if (const auto& joint = subMesh.GetJoint();
+	    desc.hideShutJoints && joint.has_value() &&
+	    (joint->index >= desc.joints.size() || desc.joints[joint->index] == glm::mat4(1.0f)))
+	{
+		return;
+	}
+
 	// LH3DMesh turns a submesh with a joint about its pivot by its matrix of the table, before the mesh's own matrix
 	const auto* modelMatrices = desc.modelMatrices;
 	glm::mat4 jointModel;
@@ -395,9 +422,11 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 		const Texture2D* texture = GetTexture(prim.skinID, skins);
 		const Texture2D* nextTexture = !hasNext ? nullptr : GetTexture(std::next(it)->skinID, skins);
 
-		// Primitives drawn with their own material's blending can't share render state
-		const bool primitivePreserveState =
-		    !desc.useMaterialBlending && texture != nullptr && texture == nextTexture && (preserveState || hasNext);
+		// Primitives drawn with their own material's blending can't share render state, nor can a submesh with a texture
+		// of its own
+		const bool primitivePreserveState = !desc.useMaterialBlending && subMeshTexture == nullptr &&
+		                                    desc.subMeshGlows.empty() && texture != nullptr && texture == nextTexture &&
+		                                    (preserveState || hasNext);
 
 		uint32_t skip = Mesh::SkipState::SkipNone;
 		if (!lastPreserveState)
@@ -406,9 +435,37 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			{
 				bgfx::setTransform(modelMatrices, desc.matrixCount);
 			}
-			if (texture != nullptr && program->HasUniform("s_diffuse"))
+			if (program->HasUniform("u_depthBias"))
 			{
-				program->SetTextureSampler("s_diffuse", 0, *texture);
+				const glm::vec4 u_depthBias {desc.depthBias, 0.0f, 0.0f, 0.0f};
+				program->SetUniformValue("u_depthBias", &u_depthBias);
+			}
+			if (program->HasUniform("u_glow"))
+			{
+				const glm::vec4 u_glow {glow, 0.0f};
+				program->SetUniformValue("u_glow", &u_glow);
+			}
+			if (program->HasUniform("u_uvOffset"))
+			{
+				const glm::vec4 u_uvOffset {desc.uvOffset, 0.0f, 0.0f};
+				program->SetUniformValue("u_uvOffset", &u_uvOffset);
+			}
+			if (program->HasUniform("s_diffuse"))
+			{
+				// A primitive without a skin would otherwise sample whichever texture the draw before it left bound,
+				// changing as bgfx orders the draws. The sky has none either, but binds the sky's texture for it.
+				if (subMeshTexture != nullptr)
+				{
+					program->SetTextureSampler("s_diffuse", 0, *subMeshTexture);
+				}
+				else if (texture != nullptr)
+				{
+					program->SetTextureSampler("s_diffuse", 0, *texture);
+				}
+				else if (!desc.isSky && _whiteTexture)
+				{
+					program->SetTextureSampler("s_diffuse", 0, *_whiteTexture);
+				}
 			}
 			if (program == desc.lightmapProgram)
 			{
@@ -458,6 +515,15 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			if ((skip & Mesh::SkipState::SkipRenderState) == 0)
 			{
 				auto state = desc.state;
+				if (desc.useMaterialCulling)
+				{
+					// L3D meshes face clockwise
+					state &= ~BGFX_STATE_CULL_MASK;
+					if (!prim.twoSided)
+					{
+						state |= desc.mirrored ? BGFX_STATE_CULL_CW : BGFX_STATE_CULL_CCW;
+					}
+				}
 				if (desc.useMaterialBlending)
 				{
 					using BlendMode = decltype(prim.blend);
@@ -487,6 +553,116 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 	}
 }
 
+void Renderer::DrawTempleText(const DrawSceneDesc& desc) const
+{
+	if (desc.viewId != RenderPass::Main || !Locator::temple::has_value() || !Locator::temple::value().Active())
+	{
+		return;
+	}
+	const auto& temple = Locator::temple::value();
+	const auto& vertices = temple.GetText();
+	const auto* texture = temple.GetTextTexture();
+	if (vertices.empty() || texture == nullptr)
+	{
+		return;
+	}
+	bgfx::VertexLayout layout;
+	layout.begin()
+	    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+	    .end();
+	static_assert(sizeof(OrientedTextVertex) == (3 + 2 + 1) * sizeof(float));
+	const auto count = static_cast<uint32_t>(vertices.size());
+	if (bgfx::getAvailTransientVertexBuffer(count, layout) < count)
+	{
+		return;
+	}
+	bgfx::TransientVertexBuffer buffer;
+	bgfx::allocTransientVertexBuffer(&buffer, count, layout);
+	std::memcpy(buffer.data, vertices.data(), count * sizeof(OrientedTextVertex));
+
+	// GatheringText::DrawTextRawOriented draws the glyphs blended by their coverage, tested against the room's depth
+	const auto* shader = _shaderManager->GetShader("Text3D");
+	const auto model = glm::translate(glm::mat4(1.0f), temple.GetPosition());
+	bgfx::setTransform(glm::value_ptr(model));
+	bgfx::setVertexBuffer(0, &buffer);
+	shader->SetTextureSampler("s_texture", 0, *texture);
+	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_MSAA |
+	               BGFX_STATE_BLEND_ALPHA);
+	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(shader->GetRawHandle()));
+}
+
+void Renderer::DrawMistDomes(const DrawSceneDesc& desc) const
+{
+	if (desc.viewId == RenderPass::Reflection || !Locator::temple::has_value() || !Locator::temple::value().Active())
+	{
+		return;
+	}
+	using namespace ecs::components;
+	const auto& temple = Locator::temple::value();
+	const auto* shader = _shaderManager->GetShader("Beam");
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto& textures = Locator::resources::value().GetTextures();
+	const auto smoke = entt::hashed_string("raw/smoke");
+	const auto smokeAlpha = entt::hashed_string("raw/smokea");
+	if (!textures.Contains(smoke) || !textures.Contains(smokeAlpha))
+	{
+		return;
+	}
+
+	bgfx::VertexLayout layout;
+	layout.begin()
+	    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+	    .end();
+	// Render mode 6 of the smoke's material: blended by alpha, without writing depth, from both sides
+	constexpr uint64_t k_State = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_MSAA |
+	                             BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
+	// It turns to the camera as the camera is turned
+	const auto facing = glm::mat4(glm::mat3(Locator::camera::value().GetRotationMatrix()));
+
+	registry.Each<const MistDome, const Transform, const TempleInteriorPart>(
+	    [&](const MistDome& mist, const Transform& transform, const TempleInteriorPart& part) {
+		    if (mist.dome == nullptr || !temple.IsRoomDrawn(part.room))
+		    {
+			    return;
+		    }
+		    const auto vertexCount = static_cast<uint32_t>(mist.dome->vertices.size());
+		    const auto indexCount = static_cast<uint32_t>(mist.dome->indices.size());
+		    if (vertexCount == 0 || indexCount == 0 || bgfx::getAvailTransientVertexBuffer(vertexCount, layout) < vertexCount ||
+		        bgfx::getAvailTransientIndexBuffer(indexCount) < indexCount)
+		    {
+			    return;
+		    }
+		    bgfx::TransientVertexBuffer vertices;
+		    bgfx::TransientIndexBuffer indices;
+		    bgfx::allocTransientVertexBuffer(&vertices, vertexCount, layout);
+		    bgfx::allocTransientIndexBuffer(&indices, indexCount);
+		    auto* out = reinterpret_cast<BeamVertex*>(vertices.data);
+		    const auto colour = glm::u8vec4(glm::clamp(mist.colour, 0.0f, 1.0f) * 255.0f);
+		    for (uint32_t i = 0; i < vertexCount; ++i)
+		    {
+			    out[i] = mist.dome->vertices[i];
+			    out[i].colour = colour;
+			    out[i].uv += mist.uvOffset;
+		    }
+		    std::memcpy(indices.data, mist.dome->indices.data(), indexCount * sizeof(uint16_t));
+
+		    const glm::vec4 u_beamParams {1.0f, 0.0f, 0.0f, 0.0f};
+		    shader->SetTextureSampler("s_diffuse", 0, *textures.Handle(smoke));
+		    shader->SetTextureSampler("s_alpha", 1, *textures.Handle(smokeAlpha));
+		    shader->SetUniformValue("u_beamParams", &u_beamParams);
+		    const auto model = glm::translate(glm::mat4(1.0f), transform.position) * facing * glm::scale(transform.scale);
+		    bgfx::setTransform(glm::value_ptr(model));
+		    bgfx::setVertexBuffer(0, &vertices);
+		    bgfx::setIndexBuffer(&indices);
+		    bgfx::setState(k_State);
+		    bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(shader->GetRawHandle()));
+	    });
+}
+
 void Renderer::DrawLightBeams(const DrawSceneDesc& desc) const
 {
 	if (desc.viewId == RenderPass::Reflection || !Locator::temple::has_value() || !Locator::temple::value().Active())
@@ -494,8 +670,8 @@ void Renderer::DrawLightBeams(const DrawSceneDesc& desc) const
 		return;
 	}
 	using namespace ecs::components;
-	const auto currentRoom = Locator::temple::value().GetCurrentRoom();
-	const auto inDrawnRoom = [currentRoom](TempleRoom room) { return room == TempleRoom::Main || room == currentRoom; };
+	const auto& temple = Locator::temple::value();
+	const auto inDrawnRoom = [&temple](TempleRoom room) { return temple.IsRoomDrawn(room); };
 	const auto* beamShader = _shaderManager->GetShader("Beam");
 	auto& registry = Locator::entitiesRegistry::value();
 	auto& resources = Locator::resources::value();
@@ -602,7 +778,12 @@ void Renderer::DrawMesh(const graphics::L3DMesh& mesh, const L3DMeshSubmitDesc& 
 	for (auto it = subMeshes.begin(); it != subMeshes.end(); ++it)
 	{
 		const L3DSubMesh& subMesh = **it;
-		DrawSubMesh(mesh, subMesh, desc, std::next(it) != subMeshes.end());
+		const auto index = static_cast<uint32_t>(std::distance(subMeshes.begin(), it));
+		const auto found = std::ranges::find(desc.subMeshTextures, index, &std::pair<uint32_t, TextureHandle>::first);
+		const auto glow = std::ranges::find(desc.subMeshGlows, index, &std::pair<uint32_t, glm::vec3>::first);
+		DrawSubMesh(mesh, subMesh, desc, std::next(it) != subMeshes.end(),
+		            found != desc.subMeshTextures.end() ? &found->second : nullptr,
+		            glow != desc.subMeshGlows.end() ? glow->second : glm::vec3(0.0f));
 	}
 }
 
@@ -919,6 +1100,12 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	// This dummy draw call is here to make sure that view is cleared if no
 	// other draw calls are submitted to view
 	bgfx::touch(static_cast<bgfx::ViewId>(desc.viewId));
+	// bgfx sorts a view's blended draws by their programs unless told to keep them in order. LH3D draws the temple
+	// in the order it is submitted, and its blended parts must be too: the pool's water, drawn with the lightmap
+	// program, would otherwise land after the hand, whose faded wrist writes depth, and leave a hole in the water
+	// where the wrist should show it through.
+	const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
+	bgfx::setViewMode(static_cast<bgfx::ViewId>(desc.viewId), inTemple ? bgfx::ViewMode::Sequential : bgfx::ViewMode::Default);
 
 	_shaderManager->SetCamera(desc.viewId, *desc.camera);
 	// The hand lights whatever is around it at night, the land, the sea and the things on them
@@ -1111,6 +1298,16 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					submitDesc.matrixCount = 1;
 				}
 				submitDesc.isSky = false;
+				submitDesc.onlyJoints = placers.onlyJoints;
+				submitDesc.hideShutJoints = placers.hideShutJoints;
+				// The temple's meshes, which are drawn as their materials say
+				submitDesc.useMaterialCulling = placers.materialBlending;
+				submitDesc.mirrored = desc.cullBack;
+				submitDesc.uvOffset = placers.uvOffset;
+				submitDesc.subMeshTextures = placers.subMeshTextures;
+				submitDesc.subMeshGlows = placers.subMeshGlows;
+				// The rooms meet at their doorways, whose arches each room has a copy of: the player's room's is seen
+				submitDesc.depthBias = placers.behindCurrentRoom ? k_OtherTempleRoomDepthBias : 0.0f;
 				submitDesc.joints = {};
 				if (Locator::temple::has_value() && Locator::temple::value().Active())
 				{
@@ -1135,10 +1332,18 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			};
 			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
 			{
-				if (meshId != ecs::components::Hand::k_MeshId &&
+				if (meshId != ecs::components::Hand::k_MeshId && !placers.translucent &&
 				    !(desc.viewId == RenderPass::Reflection && placers.hiddenFromReflection))
 				{
-					drawInstances(meshId, placers, false);
+					drawInstances(meshId, placers, placers.materialBlending);
+				}
+			}
+			// The translucent meshes blend over the opaque ones
+			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
+			{
+				if (placers.translucent && !(desc.viewId == RenderPass::Reflection && placers.hiddenFromReflection))
+				{
+					drawInstances(meshId, placers, true);
 				}
 			}
 			// CHand draws the hand after the rest of the scene, blended by its translucent texture. Black & White culls
@@ -1245,6 +1450,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		if (desc.drawEntities)
 		{
 			DrawLightBeams(desc);
+			DrawMistDomes(desc);
+			DrawTempleText(desc);
 		}
 
 		{
@@ -1257,50 +1464,50 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				using namespace ecs::components;
 
 				auto& registry = Locator::entitiesRegistry::value();
-				registry.Each<const Sprite, const Transform>(
-				    [this, &spriteShader, &desc, &registry](entt::entity entity, const Sprite& sprite,
-				                                            const Transform& transform) {
-					    // Temple::Draw draws the glows of the room the player is in and of the main room, whose glows alone
-					    // WorldRoom::Draw reflects in its floor
-					    if (const auto* templePart = registry.TryGet<const TempleInteriorPart>(entity); templePart != nullptr)
-					    {
-						    const bool inMainRoom = templePart->room == TempleRoom::Main;
-						    const bool inCurrentRoom = templePart->room == Locator::temple::value().GetCurrentRoom();
-						    if (desc.viewId == RenderPass::Reflection ? !inMainRoom : !(inMainRoom || inCurrentRoom))
-						    {
-							    return;
-						    }
-					    }
-					    glm::mat4 modelMatrix = glm::mat4(1.0f);
-					    modelMatrix = glm::translate(modelMatrix, transform.position);
-					    modelMatrix *= glm::mat4(transform.rotation);
-					    modelMatrix = glm::scale(modelMatrix, transform.scale);
+				registry.Each<const Sprite, const Transform>([this, &spriteShader, &desc,
+				                                              &registry](entt::entity entity, const Sprite& sprite,
+				                                                         const Transform& transform) {
+					// Temple::Draw draws the glows of the rooms it draws whole, and WorldRoom::Draw reflects the main
+					// room's alone in its floor
+					if (const auto* templePart = registry.TryGet<const TempleInteriorPart>(entity); templePart != nullptr)
+					{
+						const bool inMainRoom = templePart->room == TempleRoom::Main;
+						const bool drawn = Locator::temple::value().IsRoomDrawn(templePart->room);
+						if (desc.viewId == RenderPass::Reflection ? !inMainRoom : !drawn)
+						{
+							return;
+						}
+					}
+					glm::mat4 modelMatrix = glm::mat4(1.0f);
+					modelMatrix = glm::translate(modelMatrix, transform.position);
+					modelMatrix *= glm::mat4(transform.rotation);
+					modelMatrix = glm::scale(modelMatrix, transform.scale);
 
-					    glm::vec4 u_sampleRect(sprite.uvExtent, sprite.uvMin);
+					glm::vec4 u_sampleRect(sprite.uvExtent, sprite.uvMin);
 
-					    bgfx::setTransform(glm::value_ptr(modelMatrix));
-					    spriteShader->SetUniformValue("u_sampleRect", glm::value_ptr(u_sampleRect));
-					    const glm::vec4 u_spriteParams {sprite.facesCamera ? 1.0f : 0.0f,
-					                                    sprite.alpha.has_value() ? 1.0f : 0.0f, 0.0f, 0.0f};
-					    spriteShader->SetUniformValue("u_spriteParams", glm::value_ptr(u_spriteParams));
-					    spriteShader->SetTextureSampler("s_alpha", 1, sprite.alpha.value_or(sprite.texture));
-					    // The shader multiplies the tint by the texture's alpha, which for alpha blending gives colours
-					    // premultiplied by alpha when the tint is
-					    const auto tint =
-					        sprite.additive ? sprite.tint : glm::vec4(glm::vec3(sprite.tint) * sprite.tint.a, sprite.tint.a);
-					    spriteShader->SetUniformValue("u_tint", glm::value_ptr(tint));
-					    spriteShader->SetTextureSampler("s_diffuse", 0, sprite.texture);
+					bgfx::setTransform(glm::value_ptr(modelMatrix));
+					spriteShader->SetUniformValue("u_sampleRect", glm::value_ptr(u_sampleRect));
+					const glm::vec4 u_spriteParams {sprite.facesCamera ? 1.0f : 0.0f, sprite.alpha.has_value() ? 1.0f : 0.0f,
+					                                sprite.additive ? 1.0f : 0.0f, 0.0f};
+					spriteShader->SetUniformValue("u_spriteParams", glm::value_ptr(u_spriteParams));
+					spriteShader->SetTextureSampler("s_alpha", 1, sprite.alpha.value_or(sprite.texture));
+					// The shader multiplies the tint by the texture's alpha, which for alpha blending gives colours
+					// premultiplied by alpha when the tint is
+					const auto tint =
+					    sprite.additive ? sprite.tint : glm::vec4(glm::vec3(sprite.tint) * sprite.tint.a, sprite.tint.a);
+					spriteShader->SetUniformValue("u_tint", glm::value_ptr(tint));
+					spriteShader->SetTextureSampler("s_diffuse", 0, sprite.texture);
 
-					    _plane->GetVertexBuffer().Bind();
+					_plane->GetVertexBuffer().Bind();
 
-					    const auto blend = sprite.additive
-					                           ? BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE)
-					                           : BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA);
-					    bgfx::setState(0 | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | blend |
-					                   BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_ADD));
+					const auto blend = sprite.additive
+					                       ? BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE)
+					                       : BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA);
+					bgfx::setState(0 | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | blend |
+					               BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_ADD));
 
-					    bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(spriteShader->GetRawHandle()));
-				    });
+					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(spriteShader->GetRawHandle()));
+				});
 			}
 		}
 	}

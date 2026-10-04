@@ -12,6 +12,8 @@
 #include <cstdint>
 
 #include <memory>
+#include <optional>
+#include <string>
 #include <string_view>
 
 #include <glm/vec2.hpp>
@@ -57,6 +59,19 @@ public:
 
 	[[nodiscard]] GameMenu& GetMenu() noexcept { return *_menu; }
 	[[nodiscard]] const TextDatabase& GetTexts() const noexcept { return _texts; }
+	/// SetupThing's font, which the temple's scrolls are written in too
+	[[nodiscard]] const GameFont& GetFont() const noexcept { return _font; }
+	/// The font's glyphs, white with their coverage in alpha
+	[[nodiscard]] const graphics::Texture2D& GetFontTexture() const noexcept { return *_fontTexture; }
+
+	/// Words shown over the screen, wrapped across the dialogs' 800 by 600 and 60 high from its top, as the temple's
+	/// future room has SetupThing::DrawTextWrap show them
+	struct Message
+	{
+		std::u16string text;
+		float alpha;
+	};
+	void SetMessage(std::optional<Message> message) { _message = std::move(message); }
 
 private:
 	GameInterface(TextDatabase texts, GameFont font, std::unique_ptr<graphics::Texture2D> atlas,
@@ -73,6 +88,7 @@ private:
 	Canvas _pointerCanvas {graphics::RenderPass::Cursor};
 	DialogPainter _painter;
 	std::unique_ptr<GameMenu> _menu;
+	std::optional<Message> _message;
 	GameMenu::Action _action {GameMenu::Action::None};
 };
 

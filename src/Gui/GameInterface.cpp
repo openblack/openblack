@@ -234,6 +234,11 @@ void GameInterface::Draw(glm::u16vec2 resolution, glm::ivec2 mouse, uint32_t mil
 	_pointerCanvas.Begin(resolution);
 	_painter.Begin(resolution);
 	const bool menuOpen = _menu->IsVisible() && _menu->IsOpen();
+	if (_message.has_value())
+	{
+		_painter.DrawTextWrapped(DialogRect {{0, 0}, DialogPainter::k_Size}, true, _message->text, 60,
+		                         glm::vec4(1.0f, 1.0f, 1.0f, _message->alpha));
+	}
 	if (_menu->IsVisible())
 	{
 		_menu->Draw(_painter);

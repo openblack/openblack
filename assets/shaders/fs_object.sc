@@ -5,6 +5,8 @@ $input v_position, v_texcoord0, v_normal
 SAMPLER2D(s_diffuse, 0);
 SAMPLER2D(s_handLight, 2);
 uniform vec4 u_skyAlphaThreshold;
+// The temple's controls glow under the cursor: LH3D adds the colour as the vertices' specular, after the texture stages
+uniform vec4 u_glow;
 
 #include "hand_light.sh"
 
@@ -37,5 +39,5 @@ void main()
 	{
 		discard;
 	}
-	gl_FragColor = diffuseTex;
+	gl_FragColor = vec4(min(diffuseTex.rgb + u_glow.rgb, vec3_splat(1.0f)), diffuseTex.a);
 }

@@ -87,6 +87,22 @@ public:
 		bool useMaterialBlending;
 		/// The table of joints the submeshes with joints turn by, about their pivots (the temple's doors)
 		std::span<const glm::mat4> joints;
+		/// Draws only the submeshes with joints
+		bool onlyJoints;
+		/// Leaves out the submeshes with joints while their joints don't turn them
+		bool hideShutJoints;
+		/// Culls the back faces of the primitives whose materials aren't two-sided, which the mirrored reflection pass
+		/// sees from the other side
+		bool useMaterialCulling;
+		bool mirrored;
+		/// The fraction of its depth the mesh is pushed back by
+		float depthBias;
+		/// How far the mesh's texture has slid across it
+		glm::vec2 uvOffset;
+		/// Textures some of the submeshes are drawn with in place of their skins, by submesh
+		std::span<const std::pair<uint32_t, TextureHandle>> subMeshTextures;
+		/// Colours added to some of the submeshes, by submesh, after everything else
+		std::span<const std::pair<uint32_t, glm::vec3>> subMeshGlows;
 	};
 
 	static std::unique_ptr<RendererInterface> Create(GraphicsBackend backend, bool vsync) noexcept;

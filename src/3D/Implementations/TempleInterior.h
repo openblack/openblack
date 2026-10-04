@@ -11,9 +11,11 @@
 
 #include <map>
 #include <memory>
+#include <vector>
 
 #include <glm/vec3.hpp>
 
+#include "3D/OrientedText.h"
 #include "3D/TempleDoors.h"
 #include "3D/TempleInteriorInterface.h"
 
@@ -24,7 +26,10 @@
 namespace openblack
 {
 class CameraModel;
+class CreatureCaveEffects;
 class TempleCameraModel;
+class TempleScrolls;
+class TempleSigns;
 
 class TempleInterior final: public TempleInteriorInterface
 {
@@ -40,12 +45,20 @@ public:
 	void SetTransitionRoom(std::optional<TempleRoom> room) override { _transitionRoom = room; }
 	void GoToRoom(TempleRoom room) override;
 	void EnterRoom(TempleRoom room) override;
+	[[nodiscard]] bool IsRoomDrawn(TempleRoom room) const override;
 	[[nodiscard]] TempleDoors& GetDoors() override { return _doors; }
 	[[nodiscard]] const TempleDoors& GetDoors() const override { return _doors; }
 	[[nodiscard]] std::optional<TempleCursorHit> GetCursorHit() const override;
+	void SetInterface(gui::GameInterface* interface) override;
+	bool HoldScroll(bool pressed, float mouseY) override;
+	[[nodiscard]] std::vector<TempleSubMeshTexture> GetScrollTextures(TempleRoom room) const override;
+	[[nodiscard]] const std::vector<OrientedTextVertex>& GetText() const override { return _text; }
+	[[nodiscard]] std::vector<TempleSubMeshGlow> GetControlGlows(TempleRoom room) const override;
+	[[nodiscard]] const graphics::Texture2D* GetTextTexture() const override;
 	void Escape() override;
 	void RequestLeave() override { _leaveRequested = true; }
-	void Update() override;
+	void Update(std::chrono::microseconds dt) override;
+	[[nodiscard]] glm::vec2 GetWaterfallSlide() const override;
 	void Activate() override { Activate(TempleRoom::Main); }
 	void Activate(TempleRoom room) override;
 	void Deactivate() override;
@@ -68,5 +81,31 @@ private:
 	std::unique_ptr<CameraModel> _outsideCameraModel;
 	TempleCameraModel* _cameraModel {nullptr};
 	TempleDoors _doors;
+	/// How far through its slide the waterfall's texture is, from 0 to 1
+	float _waterfallSlide {0.0f};
+	/// Whether the creature's room's sounds of its water and fire are playing
+	bool _soundsOfCreatureCave {false};
+	/// The flames, smoke, spray and mist of the creature's room
+	std::unique_ptr<CreatureCaveEffects> _creatureCaveEffects;
+	/// The game's interface, whose text and font the scrolls and signs are written with
+	gui::GameInterface* _interface {nullptr};
+	/// The rooms' scrolls, written as the temple opens, and the labels of their signs
+	std::unique_ptr<TempleScrolls> _scrolls;
+	std::unique_ptr<TempleSigns> _signs;
+	/// The rooms' InitEngine: makes and writes the scrolls, and finds the signs
+	void CreateScrolls();
+	/// This frame's text in the rooms
+	std::vector<OrientedTextVertex> _text;
+	/// Whether the options room has opened the game's options (GameOptionsRoom +0x160)
+	bool _optionsShown {false};
+	/// How long the future room has shown its words, which fade in (UniverseRoom +0x168)
+	float _futureTime {0.0f};
+	/// The submesh the cursor is over, and how long is left of the glow it set off, in milliseconds (TempleRoom +0xC8
+	/// and 0xE36134). Moving onto another submesh sets the glow off again, unless a control is being dragged.
+	std::optional<std::pair<TempleRoom, uint32_t>> _hovered;
+	float _hoverGlow {0.0f};
+	/// GameOptionsRoom::Update and UniverseRoom::Update and DrawAdditional
+	void UpdateOptionsAndFutureRooms(float seconds);
+	void StopCreatureCaveSounds();
 };
 } // namespace openblack
