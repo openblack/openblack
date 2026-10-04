@@ -9,74 +9,55 @@
 
 #pragma once
 
-#include "ZoomInterpolator.h"
+#include <glm/vec3.hpp>
 
 namespace openblack
 {
 
 /// Vanilla's Zoomer: a value that eases to a destination over a set time, setting off from its current value and speed
-/// so that it can be given a new destination every frame.
+/// so that it can be given a new destination every frame. Its path is a quartic in time that arrives at the destination
+/// at the destination's speed, its last term ending at nothing, and its speed is kept as Zoomer::Update keeps it.
 class Zoomer
 {
 public:
-	explicit Zoomer(float value = 0.0f)
-	    : _curve(value)
-	    , _value(value)
-	{
-	}
+	explicit Zoomer(float value = 0.0f) { Reset(value); }
 
-	/// Zoomer::SetPosition
-	void Reset(float value)
-	{
-		_curve = ZoomInterpolator<float>(value);
-		_value = value;
-		_speed = 0.0f;
-		_elapsed = 0.0f;
-		_duration = 0.0f;
-	}
-
-	/// Zoomer::SetDestinationWithSpeedAndTime, arriving at rest
-	void SetDestination(float destination, float seconds)
-	{
-		if (seconds < k_MinimumDuration)
-		{
-			Reset(destination);
-			return;
-		}
-		// ZoomInterpolator's velocities are per unit of its 0 to 1 interpolation factor
-		_curve = ZoomInterpolator<float>(_value, destination, _speed * seconds, 0.0f);
-		_elapsed = 0.0f;
-		_duration = seconds;
-	}
-
+	/// Zoomer::SetPosition: at value, still
+	void Reset(float value);
+	/// Zoomer::SetDestinationWithSpeedAndTime. Under a millisecond puts it there.
+	void SetDestination(float destination, float seconds, float speed = 0.0f);
 	/// Zoomer::Update
-	void Update(float deltaSeconds)
-	{
-		if (_duration <= 0.0f)
-		{
-			return;
-		}
-		_elapsed += deltaSeconds;
-		if (_elapsed >= _duration)
-		{
-			Reset(_curve.p1);
-			return;
-		}
-		const auto t = _elapsed / _duration;
-		_value = _curve.PositionAt(t);
-		_speed = _curve.VelocityAt(t) / _duration;
-	}
+	void Update(float deltaSeconds);
 
 	[[nodiscard]] float GetValue() const { return _value; }
+	[[nodiscard]] float GetSpeed() const { return _speed; }
+	[[nodiscard]] float GetDestination() const { return _destination; }
 
 private:
-	static constexpr float k_MinimumDuration = 0.001f;
+	float _value {0.0f};
+	float _speed {0.0f};
+	float _destination {0.0f};
+	float _destinationSpeed {0.0f};
+	float _startValue {0.0f};
+	float _startSpeed {0.0f};
+	float _elapsed {0.0f};
+	float _duration {0.0f};
+	/// The path's coefficients of t^2/2, t^3/6 and t^4/24 for the value, and of t, t^2/2 and t^3/6 for the speed
+	glm::vec3 _coefficients {0.0f};
+};
 
-	ZoomInterpolator<float> _curve;
-	float _value;
-	float _speed = 0.0f;
-	float _elapsed = 0.0f;
-	float _duration = 0.0f;
+/// Zoomer3d: a point of three zoomers
+struct Zoomer3
+{
+	Zoomer x;
+	Zoomer y;
+	Zoomer z;
+
+	explicit Zoomer3(glm::vec3 point = glm::vec3(0.0f));
+	void Reset(glm::vec3 point);
+	void SetDestination(glm::vec3 destination, float seconds);
+	void Update(float deltaSeconds);
+	[[nodiscard]] glm::vec3 GetValue() const;
 };
 
 } // namespace openblack
