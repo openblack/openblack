@@ -18,6 +18,7 @@
 #include <glm/mat4x4.hpp>
 #include <spdlog/common.h>
 
+#include "Common/Zoomer.h"
 #include "EngineConfig.h"
 #include "Windowing/WindowingInterface.h" // For DisplayMode
 
@@ -31,6 +32,11 @@ namespace audio
 class AtmosAudio;
 class GameMusic;
 } // namespace audio
+class HandAnimation;
+namespace ecs::components
+{
+struct Transform;
+}
 
 enum class LoggingSubsystem : uint8_t
 {
@@ -79,6 +85,18 @@ public:
 	static constexpr float k_TurnDurationMultiplierSlow = 2.0f;
 	static constexpr float k_TurnDurationMultiplierNormal = 1.0f;
 	static constexpr float k_TurnDurationMultiplierFast = 0.5f;
+	/// The height of the hand at standard size, which CHand pulls the hovering hand back from the land by
+	static constexpr float k_HandHeight = 3.2f;
+	/// CHand::SetDistanceFromView's limits on how far the hand is from the camera
+	static constexpr float k_HandMinDistance = 2.0f;
+	static constexpr float k_HandMaxDistance = 1800.0f;
+	/// Land lower than this is the sea, which the hand rests on
+	static constexpr float k_HandSeaAltitude = 0.1f;
+	/// Seconds the hand eases over to land further from and nearer to the camera
+	static constexpr float k_HandEaseOutTime = 0.28f;
+	static constexpr float k_HandEaseInTime = 0.1f;
+	/// Seconds the hand takes to settle onto the land it grips, CHand's pose cross-fade
+	static constexpr float k_HandGripSettleTime = 0.13f;
 
 	explicit Game(Arguments&& args) noexcept;
 	virtual ~Game() noexcept;
@@ -103,6 +121,7 @@ public:
 	[[nodiscard]] const audio::AtmosAudio* GetAtmosAudio() const { return _atmosAudio.get(); }
 	[[nodiscard]] audio::GameMusic* GetGameMusic() { return _gameMusic.get(); }
 	[[nodiscard]] const audio::GameMusic* GetGameMusic() const { return _gameMusic.get(); }
+	[[nodiscard]] const HandAnimation* GetHandAnimation() const { return _handAnimation.get(); }
 
 	void RequestScreenshot(const std::filesystem::path& path) noexcept;
 
@@ -124,8 +143,32 @@ private:
 	bool _paused {true};
 	glm::ivec2 _mousePosition;
 	bool _handGripping;
+	bool _handRotating {false};
+	/// The hand sits on the line of sight through the cursor, this far from the camera
+	glm::vec3 _handRayDirection {0.0f, -1.0f, 0.0f};
+	float _handDistance {k_HandMinDistance};
+	Zoomer _handHoverZoomer;
+	bool _handWasDragging {false};
+	/// The land the hand grips while it drags it, and where the hand was when it gripped
+	glm::vec3 _handGripPoint {0.0f, 0.0f, 0.0f};
+	glm::vec3 _handGripFrom {0.0f, 0.0f, 0.0f};
+	Zoomer _handGripBlend;
+	/// Where the hand holds on while the camera turns
+	glm::vec3 _handHoldPoint {0.0f, 0.0f, 0.0f};
+	bool _handWasRotating {false};
+	/// Where the cursor points at in the world, on the landscape or the sea
+	std::optional<glm::vec3> _cursorWorldPosition;
+	/// Grabbing the sea plays G_HandInWater_01 to _10 in turn
+	uint32_t _handInWaterSample {0};
+
+	/// Places the hand on the line of sight through the cursor the way CHand does
+	void PlaceHand(ecs::components::Transform& handTransform, float deltaSeconds);
+	/// Loads the hand animations of Data/CTR/hh.hbn for the hand mesh
+	void LoadHandAnimation();
+
 	std::optional<std::pair</* frame number */ uint32_t, /* output */ std::filesystem::path>> _requestScreenshot;
 	std::unique_ptr<audio::AtmosAudio> _atmosAudio;
 	std::unique_ptr<audio::GameMusic> _gameMusic;
+	std::unique_ptr<HandAnimation> _handAnimation;
 };
 } // namespace openblack

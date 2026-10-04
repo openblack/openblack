@@ -569,6 +569,13 @@ bool Gui::ShowMenu() noexcept
 				ImGui::EndMenu();
 			}
 
+			if (ImGui::BeginMenu("Hand"))
+			{
+				ImGui::Checkbox("Right Handed", &config.rightHandedHand);
+
+				ImGui::EndMenu();
+			}
+
 			if (ImGui::BeginMenu("Field of View"))
 			{
 				auto& camera = Locator::camera::value();

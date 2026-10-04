@@ -12,6 +12,9 @@
 #include <string>
 
 #include <LHVM.h>
+#include <LNDFile.h>
+#include <MorphFile.h>
+#include <PackFile.h>
 #include <SDL.h>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -24,6 +27,7 @@
 #include <spdlog/spdlog.h>
 
 #include "3D/CreatureBody.h"
+#include "3D/HandAnimation.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIslandInterface.h"
 #include "3D/OceanInterface.h"
@@ -39,6 +43,7 @@
 #include "Debug/DebugGuiInterface.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
+#include "ECS/Components/Hand.h"
 #include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Map.h"
@@ -144,6 +149,7 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 	}
 
 	_handGripping = middleMouseButton || leftMouseButton;
+	_handRotating = middleMouseButton;
 
 	auto& window = Locator::windowing::value();
 	auto& camera = Locator::camera::value();
@@ -436,11 +442,13 @@ bool Game::Update() noexcept
 				                              rayOrigin, rayDirection);
 				auto& dynamicsSystem = Locator::dynamicsSystem::value();
 
+				_cursorWorldPosition.reset();
 				if (!glm::any(glm::isnan(rayOrigin) || glm::isnan(rayDirection)))
 				{
 					if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
 					{
 						intersectionTransform = hit->first;
+						_cursorWorldPosition = intersectionTransform.position;
 					}
 					else // For the water
 					{
@@ -451,30 +459,60 @@ bool Game::Update() noexcept
 						{
 							intersectionTransform.position = rayOrigin + rayDirection * intersectDistance;
 							intersectionTransform.rotation = glm::mat3(1.0f);
+							_cursorWorldPosition = intersectionTransform.position;
 						}
 					}
 				}
 				intersectionTransform.scale = scale;
 			}
+		}
 
+		// Update Hand
+		{
+			const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
+
+			const auto handEntity = Locator::handSystem::value()
+			                            .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
+			auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(handEntity);
 			if (!_handGripping)
 			{
-				const glm::vec3 handOffset(0, 1.5f, 0);
-				const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
-
-				const auto handEntity =
-				    Locator::handSystem::value()
-				        .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
-				auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(handEntity);
 				// TODO(#480): move using velocity rather than snapping hand to intersectionTransform
-				handTransform.position = intersectionTransform.position;
 				handTransform.rotation = glm::eulerAngleY(camera.GetRotation().y) * modelRotationCorrection;
 				handTransform.rotation = intersectionTransform.rotation * handTransform.rotation;
-				handTransform.position += intersectionTransform.rotation * handOffset;
-				Locator::entitiesRegistry::value().SetDirty();
+			}
+			PlaceHand(handTransform, std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count());
+			Locator::entitiesRegistry::value().SetDirty();
+		}
+		// Trees sway away from where the hand now is
+		Locator::handSystem::value().Update();
+
+		// Animate the hand: HandStateCamera while it drags the land, otherwise HandStateNormal. Turning the camera with
+		// the middle button leaves the hand idle.
+		if (_handAnimation)
+		{
+			using HandState = HandAnimation::State;
+			using HandCycle = HandAnimation::Cycle;
+			const bool dragging = _handGripping && !_handRotating;
+			const auto state = dragging ? HandState::Camera : HandState::Normal;
+			const auto cycle = dragging ? HandCycle::Grip : HandCycle::Wiggle;
+			_handAnimation->Update(deltaTime, state, cycle, _mousePosition);
+
+			const auto handEntity = Locator::handSystem::value()
+			                            .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
+			auto& registry = Locator::entitiesRegistry::value();
+			if (auto* hand = registry.TryGet<ecs::components::Hand>(handEntity))
+			{
+				hand->boneMatrices = _handAnimation->GetBoneMatrices();
+			}
+			// The hand keeps about the same size on screen however far away it is
+			if (auto* handTransform = registry.TryGet<ecs::components::Transform>(handEntity))
+			{
+				const auto distance = glm::distance(camera.GetOrigin(), handTransform->position);
+				// CHand mirrors the mesh's left hand along its x axis to make a right hand
+				const auto scale = _handAnimation->ScaleAtDistance(distance);
+				handTransform->scale = glm::vec3(config.rightHandedHand ? -scale : scale, scale, scale);
 			}
 		}
-		Locator::handSystem::value().Update();
 
 		// Update Entities
 		{
@@ -697,6 +735,7 @@ bool Game::Initialize() noexcept
 
 		using LFromDiskTag = resources::L3DLoader::FromDiskTag;
 		meshManager.Load("hand", LFromDiskTag {}, fileSystem.GetPath<Path::CreatureMesh>() / "Hand_Boned_Base2.l3d");
+		LoadHandAnimation();
 		meshManager.Load("coffre", LFromDiskTag {}, fileSystem.GetPath<Path::Misc>() / "coffre.l3d");
 		meshManager.Load("cone", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "cone.l3d");
 		meshManager.Load("marker", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "marker.l3d");
@@ -1071,4 +1110,134 @@ void Game::SetTime(float time) noexcept
 void Game::RequestScreenshot(const std::filesystem::path& path) noexcept
 {
 	_requestScreenshot = std::make_pair(_frameCount, path);
+}
+
+void Game::LoadHandAnimation()
+{
+	auto& fileSystem = Locator::filesystem::value();
+	const auto path = fileSystem.GetPath<filesystem::Path::Data>() / "CTR" / "hh.hbn";
+	const auto specPath = fileSystem.GetPath<filesystem::Path::Data>() / "hndspec5.txt";
+	if (!fileSystem.Exists(path) || !fileSystem.Exists(specPath))
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("game"), "The hand is not animated: {} or {} is missing", path.string(),
+		                   specPath.string());
+		return;
+	}
+
+	pack::PackFile pack;
+	const auto packResult = pack.ReadFile(*fileSystem.GetData(path));
+	if (packResult != pack::PackResult::Success || !pack.HasBlock("Hand"))
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Unable to read the Hand block of {}: {}", path.string(),
+		                    pack::ResultToStr(packResult));
+		return;
+	}
+	morph::MorphFile morphFile;
+	const auto morphResult = morphFile.Open(pack.GetBlock("Hand"), fileSystem.FindPath(specPath).parent_path());
+	if (morphResult != morph::MorphResult::Success)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Unable to read the hand animations of {}: {}", path.string(),
+		                    morph::ResultToStr(morphResult));
+		return;
+	}
+
+	const auto mesh = Locator::resources::value().GetMeshes().Handle(entt::hashed_string("hand"));
+	auto animation = std::make_unique<HandAnimation>();
+	if (!mesh || !animation->Load(morphFile, mesh->GetBoneParents(), mesh->GetBoneMatrices()))
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "The hand animations of {} do not fit the hand mesh", path.string());
+		return;
+	}
+	_handAnimation = std::move(animation);
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loaded the hand animations of {}", path.string());
+}
+
+void Game::PlaceHand(ecs::components::Transform& handTransform, float deltaSeconds)
+{
+	const auto& camera = Locator::camera::value();
+	const auto eye = camera.GetOrigin();
+	const bool dragging = _handGripping && !_handRotating;
+	const bool rotating = _handGripping && _handRotating;
+
+	// Turning the camera, the hand holds on to the land under the cursor like it does dragging it, though it keeps
+	// its idle pose, so it hovers its height above the land as it does over it
+	if (rotating)
+	{
+		if (!_handWasRotating)
+		{
+			auto hold = handTransform.position;
+			if (_cursorWorldPosition)
+			{
+				const auto overSea =
+				    Locator::terrainSystem::value().GetHeightAt(glm::xz(*_cursorWorldPosition)) < k_HandSeaAltitude;
+				const auto towardsLand = glm::normalize(*_cursorWorldPosition - eye);
+				const auto handHeight = k_HandHeight * HandAnimation::SizeAtDistance(_handDistance);
+				hold = overSea ? *_cursorWorldPosition : *_cursorWorldPosition - towardsLand * handHeight;
+			}
+			_handHoldPoint = hold;
+			_handGripFrom = handTransform.position;
+			_handGripBlend.Reset(0.0f);
+			_handGripBlend.SetDestination(1.0f, k_HandGripSettleTime);
+		}
+		_handGripBlend.Update(deltaSeconds);
+		handTransform.position = glm::mix(_handGripFrom, _handHoldPoint, _handGripBlend.GetValue());
+		_handDistance = glm::clamp(glm::distance(eye, handTransform.position), k_HandMinDistance, k_HandMaxDistance);
+		_handHoverZoomer.Reset(_handDistance);
+		_handWasRotating = true;
+		_handWasDragging = false;
+		return;
+	}
+	_handWasRotating = false;
+
+	// Dragging the land, the camera keeps the land the hand gripped under the cursor, and CHand keeps the hand under the
+	// cursor, so the hand holds on to that land and moves with it. It settles onto it as quickly as it changes pose.
+	if (dragging)
+	{
+		if (!_handWasDragging)
+		{
+			_handGripPoint = _cursorWorldPosition.value_or(handTransform.position);
+			_handGripFrom = handTransform.position;
+			_handGripBlend.Reset(0.0f);
+			_handGripBlend.SetDestination(1.0f, k_HandGripSettleTime);
+		}
+		_handGripBlend.Update(deltaSeconds);
+		handTransform.position = glm::mix(_handGripFrom, _handGripPoint, _handGripBlend.GetValue());
+		_handDistance = glm::clamp(glm::distance(eye, handTransform.position), k_HandMinDistance, k_HandMaxDistance);
+		_handHoverZoomer.Reset(_handDistance);
+		_handWasDragging = true;
+		return;
+	}
+	_handWasDragging = false;
+
+	// CHand puts the origin of the hand, by its fingertips, on the line of sight through the cursor, so the hand is
+	// always under the cursor on screen. How far along it depends on the land the cursor is over.
+	if (_cursorWorldPosition)
+	{
+		const auto toLand = *_cursorWorldPosition - eye;
+		const auto landDistance = glm::length(toLand);
+		if (landDistance > 0.0f)
+		{
+			_handRayDirection = toLand / landDistance;
+		}
+
+		// fn_0046DF60: the hand is pulled back from the land towards the camera by its height, so its fingers hang
+		// down to the land. Over the sea it rests on the water.
+		const auto overSea = Locator::terrainSystem::value().GetHeightAt(glm::xz(*_cursorWorldPosition)) < k_HandSeaAltitude;
+		const auto handHeight = k_HandHeight * HandAnimation::SizeAtDistance(_handDistance);
+		const auto nearest =
+		    glm::clamp(overSea ? landDistance : landDistance - handHeight, k_HandMinDistance, k_HandMaxDistance);
+
+		// HandStateHolding: the hand eases out to the land, slowly away from the camera and quickly towards it
+		const auto target = glm::max(landDistance, 1.0f);
+		const auto easeTime = _handHoverZoomer.GetValue() <= target ? k_HandEaseOutTime : k_HandEaseInTime;
+		_handHoverZoomer.SetDestination(target, easeTime);
+		_handHoverZoomer.Update(deltaSeconds);
+		if (_handHoverZoomer.GetValue() < 1.0f)
+		{
+			_handHoverZoomer.Reset(1.0f);
+		}
+		// CHand::SetDistanceFromView
+		_handDistance = glm::clamp(glm::min(_handHoverZoomer.GetValue(), nearest), k_HandMinDistance, k_HandMaxDistance);
+	}
+	handTransform.position = eye + _handRayDirection * _handDistance;
 }

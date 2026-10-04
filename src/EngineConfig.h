@@ -49,6 +49,9 @@ struct EngineConfig
 	bool drawBoundingBoxes {false};
 	bool drawFootpaths {false};
 	bool drawStreams {false};
+	/// The hand mesh is a left hand, which Black & White mirrors into a right hand unless the player profile asks for
+	/// a left hand
+	bool rightHandedHand {true};
 
 	bool vsync {false};
 	bool running {false};

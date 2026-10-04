@@ -41,13 +41,16 @@ static_assert(sizeof(MorphHeader) == 0xec);
 
 struct AnimationHeader
 {
-	uint32_t unknown0x0; // TODO(#459): possibly duration or offset
-	uint32_t unknown0x4; // TODO(#459): either 0 or 1. Seem to be 1 when type C and 0 when not
-	float unknown0x8;    // TODO(#459):
-	float unknown0xc;    // TODO(#459):
-	float unknown0x10;   // TODO(#459):
-	float unknown0x14;   // TODO(#459):
-	float unknown0x18;   // TODO(#459):
+	/// Length in milliseconds. A cycle (type C) spends it on every frame including the wrap back to the first, a
+	/// pose range (type L) spans it from the first frame to the last.
+	uint32_t duration;
+	/// 1 for cycles (type C), 0 for pose ranges (type L)
+	uint32_t looping;
+	float unknown0x8;  // TODO(#459):
+	float unknown0xc;  // TODO(#459):
+	float unknown0x10; // TODO(#459):
+	float unknown0x14; // TODO(#459):
+	float unknown0x18; // TODO(#459):
 	uint32_t frameCount;
 	uint32_t meshBoneCount;
 	uint32_t rotatedJointCount;
@@ -174,6 +177,8 @@ protected:
 	MorphHeader _header;
 	AnimationSpecs _animationSpecs;
 	std::vector<Animation> _baseAnimation;
+	/// For every animation of the spec file in order, its index in _baseAnimation or -1 when the file has none
+	std::vector<int32_t> _baseAnimationIndices;
 	std::array<std::vector<Animation>, 4> _variantAnimations; // last 2 mesh variants don't have animations
 	HairHeader _hairHeader;
 	std::vector<HairGroup> _hairGroups;
@@ -198,6 +203,15 @@ public:
 	[[nodiscard]] const MorphHeader& GetHeader() const noexcept { return _header; }
 	[[nodiscard]] const AnimationSpecs& GetAnimationSpecs() const noexcept { return _animationSpecs; }
 	[[nodiscard]] const std::vector<Animation>& GetBaseAnimationSet() const noexcept { return _baseAnimation; }
+	/// The base animation for an animation of the spec file, counted across all of its sets, or null when absent
+	[[nodiscard]] const Animation* GetBaseAnimation(size_t specIndex) const noexcept
+	{
+		if (specIndex >= _baseAnimationIndices.size() || _baseAnimationIndices[specIndex] < 0)
+		{
+			return nullptr;
+		}
+		return &_baseAnimation[static_cast<size_t>(_baseAnimationIndices[specIndex])];
+	}
 	[[nodiscard]] const std::vector<Animation>& GetVariantAnimationSet(uint32_t index) const noexcept
 	{
 		return _variantAnimations.at(index);

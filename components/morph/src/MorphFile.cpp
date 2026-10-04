@@ -37,8 +37,8 @@
  * ------------------------ start of animation block --------------------------
  *
  * - 44 bytes header containing:
- *         1 unknown int, TODO: possibly duration or offset
- *         1 unknown int, TODO: seem to be 1 when type C and 0 when not
+ *         duration in milliseconds
+ *         1 when the animation is a cycle (type C), 0 for a pose range (type L)
  *         5 unknown floats, TODO: likely same role as as in ANMHeader
  *         frame count as a 32-bit int
  *         mesh bone count as a 32-bit int
@@ -353,6 +353,15 @@ MorphResult MorphFile::ReadFile(std::istream& stream, const std::filesystem::pat
 
 	// Read in the base animations using those offsets
 	_baseAnimation = ReadAnimations(stream, animationOffsets);
+	_baseAnimationIndices.resize(numAnimations, -1);
+	int32_t baseIndex = 0;
+	for (size_t i = 0; i < numAnimations; ++i)
+	{
+		if (animationOffsets[i] > 0)
+		{
+			_baseAnimationIndices[i] = baseIndex++;
+		}
+	}
 
 	// Creature files have different animations for the morph meshes (evil, good, thin, fat) weak, strong are skipped
 	for (uint32_t i = 0; i < 4; ++i)

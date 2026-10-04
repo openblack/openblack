@@ -9,7 +9,10 @@
 
 #pragma once
 
+#include <vector>
+
 #include <entt/core/hashed_string.hpp>
+#include <glm/mat4x4.hpp>
 
 namespace openblack::ecs::components
 {
@@ -26,5 +29,7 @@ struct Hand
 
 	bool rightHanded;
 	RenderType renderType;
+	/// The animated pose of the hand mesh's bones, the rest pose when empty
+	std::vector<glm::mat4> boneMatrices;
 };
 } // namespace openblack::ecs::components

@@ -28,6 +28,7 @@
 #include "3D/OceanInterface.h"
 #include "3D/SkyInterface.h"
 #include "Camera/Camera.h"
+#include "ECS/Components/Hand.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Components/Tree.h"
@@ -355,7 +356,9 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 		const Texture2D* texture = GetTexture(prim.skinID, skins);
 		const Texture2D* nextTexture = !hasNext ? nullptr : GetTexture(std::next(it)->skinID, skins);
 
-		const bool primitivePreserveState = texture != nullptr && texture == nextTexture && (preserveState || hasNext);
+		// Primitives drawn with their own material's blending can't share render state
+		const bool primitivePreserveState =
+		    !desc.useMaterialBlending && texture != nullptr && texture == nextTexture && (preserveState || hasNext);
 
 		uint32_t skip = Mesh::SkipState::SkipNone;
 		if (!lastPreserveState)
@@ -406,7 +409,27 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			}
 			if ((skip & Mesh::SkipState::SkipRenderState) == 0)
 			{
-				bgfx::setState(desc.state, desc.rgba);
+				auto state = desc.state;
+				if (desc.useMaterialBlending)
+				{
+					using BlendMode = decltype(prim.blend);
+					switch (prim.blend)
+					{
+					case BlendMode::Standard:
+						state |= BGFX_STATE_BLEND_ALPHA;
+						break;
+					case BlendMode::Additive:
+						state |= BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE);
+						break;
+					case BlendMode::Disabled:
+						break;
+					}
+					if (!prim.depthWrite)
+					{
+						state &= ~BGFX_STATE_WRITE_Z;
+					}
+				}
+				bgfx::setState(state, desc.rgba);
 			}
 
 			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(desc.program->GetRawHandle()), 0,
@@ -686,17 +709,23 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			const auto& renderCtx = Locator::rendereringSystem::value().GetContext();
 
 			// Instance meshes
-			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
-			{
+			const auto drawInstances = [&](entt::id_type meshId, const RenderContext::InstancedDrawDesc& placers,
+			                               bool useMaterialBlending) {
 				auto mesh = meshManager.Handle(meshId);
 
+				submitDesc.useMaterialBlending = useMaterialBlending;
 				submitDesc.instanceDesc =
 				    std::make_unique<graphics::InstanceDesc>(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
 				if (mesh->IsBoned())
 				{
-					submitDesc.modelMatrices = mesh->GetBoneMatrices().data();
-					submitDesc.matrixCount = static_cast<uint8_t>(mesh->GetBoneMatrices().size());
-					// TODO(bwrsandman): Get animation frame instead of default
+					const auto animated = renderCtx.animatedBoneMatrices.find(meshId);
+					const auto& bones = animated != renderCtx.animatedBoneMatrices.end() &&
+					                            animated->second.size() == mesh->GetBoneMatrices().size()
+					                        ? animated->second
+					                        : mesh->GetBoneMatrices();
+					submitDesc.modelMatrices = bones.data();
+					submitDesc.matrixCount = static_cast<uint8_t>(bones.size());
+					// TODO(bwrsandman): Get animation frame instead of default for the other boned meshes
 				}
 				else
 				{
@@ -710,6 +739,31 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 				// TODO(bwrsandman): choose the correct LOD
 				DrawMesh(*mesh, submitDesc, std::numeric_limits<uint8_t>::max());
+			};
+			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
+			{
+				if (meshId != ecs::components::Hand::k_MeshId)
+				{
+					drawInstances(meshId, placers, false);
+				}
+			}
+			// CHand draws the hand after the rest of the scene, blended by its translucent texture. Black & White culls
+			// its back faces; here both sides are drawn, the inside first so that the outside blends over it.
+			if (const auto hand = renderCtx.instancedDrawDescs.find(ecs::components::Hand::k_MeshId);
+			    hand != renderCtx.instancedDrawDescs.end())
+			{
+				// L3D meshes face clockwise, which the mirrored reflection pass and a mirrored hand each turn around
+				const bool facesTurned = desc.cullBack != renderCtx.handMirrored;
+				const auto cullFront = facesTurned ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW;
+				const auto cullBack = facesTurned ? BGFX_STATE_CULL_CW : BGFX_STATE_CULL_CCW;
+				const auto opaqueState = submitDesc.state;
+
+				// The inside does not write depth so the outside is never hidden behind it
+				submitDesc.state = (opaqueState & ~(BGFX_STATE_CULL_MASK | BGFX_STATE_WRITE_Z)) | cullFront;
+				drawInstances(hand->first, hand->second, true);
+				submitDesc.state = (opaqueState & ~BGFX_STATE_CULL_MASK) | cullBack;
+				drawInstances(hand->first, hand->second, true);
+				submitDesc.state = opaqueState;
 			}
 
 			// Debug

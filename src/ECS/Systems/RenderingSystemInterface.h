@@ -61,6 +61,11 @@ struct RenderContext
 	/// Stores information for rendering which is prepared at \ref PrepareDraw.
 	std::map<entt::id_type, InstancedDrawDesc> instancedDrawDescs;
 	std::map<entt::id_type, InstancedDrawDesc> treeInstancedDrawDescs;
+	/// Bone matrices of animated meshes, refilled at every \ref PrepareDraw. Boned meshes without an entry are drawn
+	/// in their rest pose.
+	std::map<entt::id_type, std::vector<glm::mat4>> animatedBoneMatrices;
+	/// The hand is scaled by a negative factor to mirror it, which turns its faces round
+	bool handMirrored {false};
 
 	/// Not an actual vertex buffer, but a dynamic general purpose buffer which
 	/// stores uniform data as a GPU-side copy of \ref _instanceUniforms and

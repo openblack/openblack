@@ -78,6 +78,8 @@ public:
 		bool isSky;
 		bool drawAll; ///< For use in the mesh viewer
 		bool morphWithTerrain;
+		/// Blend and write depth as each primitive's material says, instead of drawing it opaque
+		bool useMaterialBlending;
 	};
 
 	static std::unique_ptr<RendererInterface> Create(GraphicsBackend backend, bool vsync) noexcept;

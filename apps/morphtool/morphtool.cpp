@@ -120,8 +120,8 @@ int PrintSpecs(openblack::morph::MorphFile& morph)
 void PrintAnimation(const openblack::morph::Animation& animation)
 {
 	std::printf("\tHeader:\n");
-	std::printf("\t\tunknown0x0: 0x%08X\n", animation.header.unknown0x0);
-	std::printf("\t\tunknown0x4: 0x%08X\n", animation.header.unknown0x4);
+	std::printf("\t\tduration: %u ms\n", animation.header.duration);
+	std::printf("\t\tlooping: %u\n", animation.header.looping);
 	std::printf("\t\tunknown0x8: %f\n", animation.header.unknown0x8);
 	std::printf("\t\tunknown0xc: %f\n", animation.header.unknown0xc);
 	std::printf("\t\tunknown0x10: %f\n", animation.header.unknown0x10);
