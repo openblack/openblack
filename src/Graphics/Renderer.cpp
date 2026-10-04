@@ -13,7 +13,6 @@
 #include <cstdint>
 
 #include <SDL_video.h>
-#include <bgfx/platform.h>
 #include <bimg/bimg.h>
 #include <bx/file.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -140,8 +139,8 @@ struct BgfxCallback: public bgfx::CallbackI
 	}
 	void cacheWrite([[maybe_unused]] uint64_t id, [[maybe_unused]] const void* data, [[maybe_unused]] uint32_t size) override {}
 	// Saving a screenshot
-	void screenShot(const char* filePath, uint32_t width, uint32_t height, uint32_t pitch, const void* data,
-	                [[maybe_unused]] uint32_t size, bool yflip) override
+	void screenShot(const char* filePath, uint32_t width, uint32_t height, uint32_t pitch, bgfx::TextureFormat::Enum format,
+	                const void* data, [[maybe_unused]] uint32_t size, bool yflip) override
 	{
 		SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "Taking a screenshot...");
 
@@ -164,7 +163,8 @@ struct BgfxCallback: public bgfx::CallbackI
 					}
 				}
 
-				bimg::imageWritePng(&writer, width, height, pitch, noAlpha.data(), bimg::TextureFormat::BGRA8, yflip, &err);
+				bimg::imageWritePng(&writer, width, height, pitch, noAlpha.data(),
+				                    static_cast<bimg::TextureFormat::Enum>(format), yflip, &err);
 				bx::close(&writer);
 				SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "Screenshot ({}x{}) saved at {}", width, height, filePath);
 			}
@@ -224,13 +224,13 @@ std::unique_ptr<RendererInterface> RendererInterface::Create(GraphicsBackend bac
 		const auto& window = Locator::windowing::value();
 
 		drawableSize = static_cast<glm::uvec2>(window.GetSize());
-		init.resolution.width = static_cast<uint32_t>(drawableSize.x);
-		init.resolution.height = static_cast<uint32_t>(drawableSize.y);
+		init.swapChain.width = static_cast<uint32_t>(drawableSize.x);
+		init.swapChain.height = static_cast<uint32_t>(drawableSize.y);
 
 		// Get Native Handles from SDL window
 		const auto handles = window.GetNativeHandles();
-		init.platformData.nwh = handles.nativeWindow;
-		init.platformData.ndt = handles.nativeDisplay;
+		init.swapChain.nwh = handles.nativeWindow;
+		init.swapChain.ndt = handles.nativeDisplay;
 	}
 
 	uint32_t bgfxReset = BGFX_RESET_NONE;
@@ -239,7 +239,7 @@ std::unique_ptr<RendererInterface> RendererInterface::Create(GraphicsBackend bac
 	{
 		bgfxReset |= BGFX_RESET_VSYNC;
 	}
-	init.resolution.reset = bgfxReset;
+	init.reset = bgfxReset;
 	init.callback = dynamic_cast<bgfx::CallbackI*>(bgfxCallback.get());
 
 	if (!bgfx::init(init))
@@ -249,7 +249,7 @@ std::unique_ptr<RendererInterface> RendererInterface::Create(GraphicsBackend bac
 	}
 
 	const bgfx::Caps* caps = bgfx::getCaps();
-	if ((caps->supported & BGFX_CAPS_TEXTURE_2D_ARRAY) == 0 || caps->limits.maxTextureLayers < 9)
+	if (caps->limits.maxTextureLayers < 9)
 	{
 		SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "Graphics device must support texture layers.");
 		return nullptr;
@@ -291,7 +291,10 @@ void Renderer::ConfigureView(graphics::RenderPass viewId, glm::u16vec2 resolutio
 
 void Renderer::Reset(glm::u16vec2 resolution) const noexcept
 {
-	bgfx::reset(resolution.x, resolution.y, _bgfxReset);
+	bgfx::SwapChain swapChain;
+	swapChain.width = resolution.x;
+	swapChain.height = resolution.y;
+	bgfx::reset(_bgfxReset, &swapChain);
 }
 
 graphics::ShaderManager& Renderer::GetShaderManager() const noexcept

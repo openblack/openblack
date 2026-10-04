@@ -84,7 +84,15 @@ void Texture2D::DumpTexture() const
 	assert(!_name.empty());
 	std::vector<uint8_t> pixels;
 	pixels.resize(_storageSize);
-	bgfx::readTexture(toBgfx(_handle), pixels.data());
+	// bgfx::read reads back a single layer per call
+	const auto layerSize = static_cast<size_t>(_stride) * _resolution.y;
+	for (uint16_t i = 0; i < _numLayers; ++i)
+	{
+		bgfx::TextureRegion region;
+		region.handle = toBgfx(_handle);
+		region.z = i;
+		bgfx::read(region, &pixels[i * layerSize]);
+	}
 	bgfx::frame();
 	// TODO(bwrsandman): get the number of components from _info.format
 	const auto numComponents = 4u;

@@ -246,6 +246,23 @@ bool Gui::CreateFontsTextureBgfx() noexcept
 	_texture = graphics::fromBgfx(bgfx::createTexture2D(static_cast<uint16_t>(width), static_cast<uint16_t>(height), false, 1,
 	                                                    bgfx::TextureFormat::BGRA8, 0, bgfx::copy(pixels, width * height * 4)));
 
+	// ImGui requires a non-zero texture id for the font atlas, encoded the same way as ImGui::Image textures
+	union
+	{
+		struct
+		{
+			bgfx::TextureHandle handle;
+			uint8_t flags;
+			uint8_t mip;
+		} s;
+		ImTextureID ptr;
+	} texture;
+	texture.ptr = 0;
+	texture.s.handle = toBgfx(_texture);
+	texture.s.flags = IMGUI_FLAGS_ALPHA_BLEND;
+	texture.s.mip = 0;
+	io.Fonts->SetTexID(texture.ptr);
+
 	return true;
 }
 
