@@ -135,6 +135,8 @@ constexpr float k_PictureLeanPerHeight = 0.0084507046f;
 /// How fast the arrow keys lean and raise the camera
 constexpr float k_PictureLeanSpeed = 1.85f;
 constexpr float k_PictureRiseSpeed = 30.0f;
+/// How fast a room of pictures turns by itself under a dialog, in radians a second, once it has sped up over a second
+constexpr float k_PictureDialogTurnSpeed = 0.25f;
 /// CalcDoorHit's ring the rooms' doors back to the main room are on, about the main room's centre
 constexpr float k_PictureDoorRadius = 87.0f;
 /// CreatureRoomCamera's ring, and the main room's door the creature's room is behind
@@ -851,22 +853,28 @@ void TempleCameraModel::UpdatePictureCamera(float dt)
 	picture.lean.Update(dt);
 	picture.height.Update(dt);
 
-	// The higher the camera, the more it looks down
-	const float leanForHeight = (picture.heightTarget - k_PictureMinHeight) * k_PictureLeanPerHeight + k_PictureLowLean;
+	// The higher the camera, the more it looks down. Under a dialog it levels out, other than in the library, where the
+	// story's history is read in a dialog while the player looks about.
+	float leanForHeight = (picture.heightTarget - k_PictureMinHeight) * k_PictureLeanPerHeight + k_PictureLowLean;
+	if (_dialogOpen && !pictureRoom.aroundPathEnd)
+	{
+		leanForHeight = 0.0f;
+	}
 	picture.leanTarget += (leanForHeight - picture.leanTarget) * (1.0f - std::exp(-dt));
 }
 
 void TempleCameraModel::UpdatePictureOrbit(float dt, const Input& input)
 {
 	// ChallengeRoomCamera's state 1
-	const auto& actions = Locator::gameActionSystem::value();
 	const auto room = GetRoom();
 	const auto& pictureRoom = *PictureRoomOf(room);
 	auto& picture = _pictures.at(static_cast<size_t>(room));
 	const auto pressKind = KindOf(_pressHit);
 
-	// Dragging the floor or the walls turns the room and raises the camera to keep them under the mouse
-	if (input.button != 0 && (pressKind == HitKind::Floor || pressKind == HitKind::Wall) && input.hit.has_value())
+	// Dragging the floor or the walls turns the room and raises the camera to keep them under the mouse. A dialog takes
+	// the mouse.
+	if (!_dialogOpen && input.button != 0 && (pressKind == HitKind::Floor || pressKind == HitKind::Wall) &&
+	    input.hit.has_value())
 	{
 		float turn = _pressHit->angle - input.hit->angle;
 		if (turn < -glm::pi<float>())
@@ -881,8 +889,40 @@ void TempleCameraModel::UpdatePictureOrbit(float dt, const Input& input)
 		picture.heightTarget = _pressHit->height - input.hit->height + picture.height.GetValue();
 	}
 
+	// Under a dialog the room turns slowly by itself, speeding up over a second, rather than with the arrow keys. The
+	// library keeps still and the player's.
+	// TODO(raffclar): in the multiplayer room while it shows the sessions, the room turns slowly by itself too
+	const float turnSpeedUp = _pictureOrbitTime > 0.0f ? std::min(_pictureOrbitTime, 1.0f) : 0.0f;
+	_pictureOrbitTime += dt;
+	if (_dialogOpen)
+	{
+		if (!pictureRoom.aroundPathEnd)
+		{
+			picture.yawTarget += turnSpeedUp * dt * k_PictureDialogTurnSpeed;
+		}
+	}
+	else
+	{
+		UpdatePictureKeys(dt, picture);
+	}
+
+	_target = PictureOrbitPose(room, picture.yaw.GetValue(), picture.lean.GetValue(), picture.height.GetValue(),
+	                           PathEnd(room).origin);
+	_originTime = 0.0f;
+	_focusTime = 0.0f;
+
+	// Clicking the room's door walks back through it, from halfway between the camera and the door
+	if (input.button != 0 && !_wasPressed && input.doorBack == pictureRoom.door)
+	{
+		WalkBackThrough(pictureRoom.door);
+	}
+	// TODO(raffclar): ChallengeRoomCamera's state 4 looks at the room's pictures
+}
+
+void TempleCameraModel::UpdatePictureKeys(float dt, PictureCamera& picture)
+{
 	// The arrow keys turn, and lean and raise or lower the camera, which the lean then follows
-	// TODO(raffclar): in the multiplayer room while it shows the sessions, the room turns slowly by itself instead
+	const auto& actions = Locator::gameActionSystem::value();
 	if (actions.Get(BindableActionMap::MOVE_LEFT))
 	{
 		picture.yawTarget += dt;
@@ -903,18 +943,6 @@ void TempleCameraModel::UpdatePictureOrbit(float dt, const Input& input)
 		picture.heightTarget -= tilt * dt * k_PictureRiseSpeed;
 	}
 	picture.leanTarget = tilt * 0.5f + 0.5f;
-
-	_target = PictureOrbitPose(room, picture.yaw.GetValue(), picture.lean.GetValue(), picture.height.GetValue(),
-	                           PathEnd(room).origin);
-	_originTime = 0.0f;
-	_focusTime = 0.0f;
-
-	// Clicking the room's door walks back through it, from halfway between the camera and the door
-	if (input.button != 0 && !_wasPressed && input.doorBack == pictureRoom.door)
-	{
-		WalkBackThrough(pictureRoom.door);
-	}
-	// TODO(raffclar): ChallengeRoomCamera's state 4 looks at the room's pictures
 }
 
 void TempleCameraModel::WalkBackThrough(uint32_t door)
@@ -1026,6 +1054,8 @@ void TempleCameraModel::ChangeState()
 		break;
 	}
 	case State::PictureOrbit:
+		// ChallengeRoomCamera::UpdateState
+		_pictureOrbitTime = 0.0f;
 		break;
 	case State::ThroughDoor:
 		_target = _doorStart;

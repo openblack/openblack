@@ -104,6 +104,9 @@ public:
 	[[nodiscard]] bool IsVisible() const noexcept { return _open || _fade.GetValue() > 0.0f; }
 	[[nodiscard]] bool IsAskingToQuit() const noexcept { return _question.has_value(); }
 	[[nodiscard]] Page GetPage() const noexcept { return _page; }
+	/// Inside the temple the options' first tab is the World Room, which closes them (fn_0053F3E0), rather than the
+	/// Main Menu
+	void SetInsideTemple(bool inside);
 	void ShowPage(Page page);
 
 	void Update(float deltaSeconds);
@@ -171,6 +174,10 @@ private:
 	std::array<std::u16string, 4> _toolTipLabels;
 	MenuSettings _settings;
 	std::array<std::unique_ptr<Dialog>, static_cast<size_t>(Page::_Count)> _pages;
+	/// The options' first tab, outside the temple and inside it
+	std::u16string _mainMenuTab;
+	std::u16string _worldRoomTab;
+	bool _insideTemple {false};
 	List* _controls {nullptr};
 	/// The wheel's mice on the Controls page turn over
 	std::vector<std::pair<size_t, bool>> _wheelMice;

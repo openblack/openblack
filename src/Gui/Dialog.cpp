@@ -38,6 +38,8 @@ public:
 		painter.SetAlpha(alpha);
 	}
 
+	void SetLabel(std::u16string label) { _label = std::move(label); }
+
 	// Tabs without a label are only the line along the top of the box
 	[[nodiscard]] bool HitTest(glm::ivec2 point) const override { return !_label.empty() && Control::HitTest(point); }
 	[[nodiscard]] bool IsInteractive() const override { return !_label.empty(); }
@@ -59,6 +61,14 @@ Dialog::Dialog(std::vector<Tab> tabs, size_t selectedTab)
 		auto onSelect = i == selectedTab ? std::function<void()>() : std::move(tabs[i].onSelect);
 		Add<TabControl>(GetTabRect(i), std::move(tabs[i].label), i == selectedTab, i == 0, i + 1 == k_TabCount,
 		                std::move(onSelect));
+	}
+}
+
+void Dialog::SetTabLabel(size_t index, std::u16string label)
+{
+	if (_hasBox && index < k_TabCount)
+	{
+		static_cast<TabControl&>(*_controls.at(index)).SetLabel(std::move(label));
 	}
 }
 

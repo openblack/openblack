@@ -273,9 +273,14 @@ void TempleInterior::UpdateOptionsAndFutureRooms(float seconds)
 	const bool arrived = _cameraModel != nullptr && _cameraModel->IsInControl() && !_transitionRoom.has_value();
 	if (_interface != nullptr)
 	{
+		auto& menu = _interface->GetMenu();
+		menu.SetInsideTemple(_active);
+		if (_cameraModel != nullptr)
+		{
+			_cameraModel->SetDialogOpen(menu.IsOpen());
+		}
 		// GameOptionsRoom::Update, while no dialog is up: once the camera has come into the room it opens the game's
 		// options, and once they are closed it goes back to the main room
-		auto& menu = _interface->GetMenu();
 		if (_currentRoom == TempleRoom::Options && arrived && !menu.IsOpen())
 		{
 			if (!_optionsShown)
@@ -630,6 +635,7 @@ void TempleInterior::Deactivate()
 	if (_interface != nullptr)
 	{
 		_interface->SetMessage(std::nullopt);
+		_interface->GetMenu().SetInsideTemple(false);
 	}
 
 	auto& registry = Locator::entitiesRegistry::value();

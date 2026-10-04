@@ -204,6 +204,8 @@ GameMenu::GameMenu(const TextDatabase& texts, const GameFont& font, std::u16stri
     , _quitQuestion(texts.Get("HELP_TEXT_DIALOG_QUIT_QUESTION"))
     , _quitGameQuestion(texts.Get("HELP_TEXT_DIALOG_AREYOUSUREQUIT"))
     , _settings(std::move(settings))
+    , _mainMenuTab(texts.Get("HELP_TEXT_DIALOG_ADDITION_88"))
+    , _worldRoomTab(texts.Get("HELP_TEXT_ROOM_WORLD_TITLE"))
 {
 	const auto read = [&texts](auto& labels, const auto& names) {
 		for (size_t i = 0; i < labels.size(); ++i)
@@ -241,10 +243,22 @@ DialogRect GameMenu::GetButtonRect(size_t index)
 
 std::vector<Dialog::Tab> GameMenu::OptionsTabs(const TextDatabase& texts, Page selected)
 {
-	// AddOptionsTabs: Main Menu, Options, Players, Advanced and Controls
+	// AddOptionsTabs: Main Menu, Options, Players, Advanced and Controls. Inside the temple the first is the World Room,
+	// which hides the options without showing the main menu.
 	(void)selected;
 	return {
-	    {.label = std::u16string(texts.Get("HELP_TEXT_DIALOG_ADDITION_88")), .onSelect = [this] { ShowPage(Page::Main); }},
+	    {.label = _insideTemple ? _worldRoomTab : _mainMenuTab,
+	     .onSelect =
+	         [this] {
+		         if (_insideTemple)
+		         {
+			         Close();
+		         }
+		         else
+		         {
+			         ShowPage(Page::Main);
+		         }
+	         }},
 	    {.label = std::u16string(texts.Get("HELP_TEXT_DIALOG_OPTIONS")), .onSelect = [this] { ShowPage(Page::Options); }},
 	    {.label = std::u16string(texts.Get("HELP_TEXT_DIALOG_PLAYERLIST")), .onSelect = [this] { ShowPage(Page::Players); }},
 	    {.label = std::u16string(texts.Get("HELP_TEXT_FRONT_END_06")), .onSelect = [this] { ShowPage(Page::Advanced); }},
@@ -548,6 +562,19 @@ void GameMenu::ShowPage(Page page)
 	CurrentDialog().Reset();
 	_page = page;
 	CurrentDialog().Reset();
+}
+
+void GameMenu::SetInsideTemple(bool inside)
+{
+	if (_insideTemple == inside)
+	{
+		return;
+	}
+	_insideTemple = inside;
+	for (const auto page : {Page::Options, Page::Players, Page::Advanced, Page::Controls})
+	{
+		_pages.at(static_cast<size_t>(page))->SetTabLabel(0, inside ? _worldRoomTab : _mainMenuTab);
+	}
 }
 
 void GameMenu::Open()

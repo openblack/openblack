@@ -67,6 +67,8 @@ public:
 	void Draw(const DialogPainter& painter, bool active) const;
 
 	[[nodiscard]] static DialogRect GetTabRect(size_t index);
+	/// Names one of the tabs again
+	void SetTabLabel(size_t index, std::u16string label);
 	[[nodiscard]] Control* GetFocus() const noexcept { return _focused; }
 
 private:

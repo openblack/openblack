@@ -132,6 +132,9 @@ public:
 	[[nodiscard]] float GetSubMeshZoom() const { return _subMeshZoom; }
 	/// Whether the player has the room's camera, past its path in (InnerCamera's state 1)
 	[[nodiscard]] bool IsInControl() const { return _state == ControlOf(GetRoom()); }
+	/// Whether a dialog is up over the temple, as the game's options are in the Game Options room, which takes the rooms
+	/// of pictures' cameras from the player (SetupBox::GetCurrentActiveBox in ChallengeRoomCamera::UpdateMain)
+	void SetDialogOpen(bool open) { _dialogOpen = open; }
 	/// The main room's door the cursor is over, while the player has its camera (WorldRoomCamera +0x12C)
 	[[nodiscard]] std::optional<uint32_t> GetHoveredDoor() const { return _hoveredDoor; }
 
@@ -237,6 +240,8 @@ private:
 		float heightTarget {0.0f};
 	};
 	std::array<PictureCamera, k_RoomCount> _pictures {};
+	/// The arrow keys' turn, lean and rise of a room of pictures' camera
+	static void UpdatePictureKeys(float dt, PictureCamera& picture);
 
 	std::optional<RoomHit> _cursorHit;
 	/// From the camera, towards the point the cursor is over
@@ -244,6 +249,10 @@ private:
 
 	// The press the mouse is held from
 	bool _wasPressed {false};
+	bool _dialogOpen {false};
+	/// How long a room of pictures' camera has had the player, which its turn under a dialog speeds up over
+	/// (ChallengeRoomCamera +0x3D0)
+	float _pictureOrbitTime {0.0f};
 	std::optional<RoomHit> _pressHit;
 	float _lastHitAngle {0.0f};
 	glm::vec2 _lastMouse {0.0f};
