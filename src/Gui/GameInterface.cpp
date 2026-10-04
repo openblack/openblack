@@ -228,17 +228,20 @@ void GameInterface::Update(float deltaSeconds)
 	_menu->Update(deltaSeconds);
 }
 
-void GameInterface::Draw(glm::u16vec2 resolution, glm::ivec2 mouse, uint32_t milliseconds)
+void GameInterface::Draw(glm::u16vec2 resolution, glm::ivec2 mouse, uint32_t milliseconds, bool overDebugWindow)
 {
 	_canvas.Begin(resolution);
+	_pointerCanvas.Begin(resolution);
 	_painter.Begin(resolution);
+	const bool menuOpen = _menu->IsVisible() && _menu->IsOpen();
 	if (_menu->IsVisible())
 	{
 		_menu->Draw(_painter);
-		if (_menu->IsOpen())
-		{
-			_painter.DrawPointer(mouse, milliseconds);
-		}
+	}
+	if (menuOpen || overDebugWindow)
+	{
+		_painter.DrawPointer(_pointerCanvas, mouse, milliseconds);
 	}
 	_canvas.End();
+	_pointerCanvas.End();
 }

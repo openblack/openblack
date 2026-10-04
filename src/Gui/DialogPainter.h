@@ -134,8 +134,9 @@ public:
 	/// SetupThing::DrawBigButton: an arrow size pixels square with its shadow, orange when hovered and nearer its shadow
 	/// when pressed
 	void DrawArrow(glm::ivec2 position, int size, Arrow arrow, bool hovered, bool pressed) const;
-	/// FrontEnd's pointer: an animated arrow at a point of the screen, in pixels
-	void DrawPointer(glm::ivec2 screen, uint32_t milliseconds) const;
+	/// FrontEnd's pointer: an animated arrow at a point of the screen, in pixels, on a canvas of its own so that it can
+	/// be drawn over everything else
+	void DrawPointer(Canvas& canvas, glm::ivec2 screen, uint32_t milliseconds) const;
 
 	/// SetupThing::DrawText: a line of text whose top left, top centre or top right is at position, cut short to fit
 	/// width. Returns the width drawn.

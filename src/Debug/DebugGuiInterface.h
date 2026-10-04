@@ -31,6 +31,8 @@ public:
 
 	virtual ~DebugGuiInterface() noexcept = default;
 	[[nodiscard]] virtual bool StealsFocus() const noexcept = 0;
+	/// The mouse is over a debug window, or held on one, as of the last frame of them
+	[[nodiscard]] virtual bool IsMouseOverWindow() const noexcept = 0;
 	virtual void SetScale(float scale) noexcept = 0;
 	/// The main menu bar, which only shows while the game's own menu is open
 	virtual void SetMenuBarVisible(bool visible) noexcept = 0;

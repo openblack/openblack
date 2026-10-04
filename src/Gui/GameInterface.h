@@ -51,8 +51,9 @@ public:
 	bool TakeSettingsChanged() { return _menu->TakeSettingsChanged(); }
 
 	void Update(float deltaSeconds);
-	/// The open dialogs and, over them, the pointer at the mouse
-	void Draw(glm::u16vec2 resolution, glm::ivec2 mouse, uint32_t milliseconds);
+	/// The open dialogs and, over them, the pointer at the mouse. The pointer also shows over the debug windows, which
+	/// hide the hand, and is drawn over them.
+	void Draw(glm::u16vec2 resolution, glm::ivec2 mouse, uint32_t milliseconds, bool overDebugWindow);
 
 	[[nodiscard]] GameMenu& GetMenu() noexcept { return *_menu; }
 	[[nodiscard]] const TextDatabase& GetTexts() const noexcept { return _texts; }
@@ -69,6 +70,7 @@ private:
 	std::unique_ptr<graphics::Texture2D> _symbols;
 	std::unique_ptr<graphics::Texture2D> _mice;
 	Canvas _canvas;
+	Canvas _pointerCanvas {graphics::RenderPass::Cursor};
 	DialogPainter _painter;
 	std::unique_ptr<GameMenu> _menu;
 	GameMenu::Action _action {GameMenu::Action::None};

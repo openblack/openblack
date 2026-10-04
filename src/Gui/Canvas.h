@@ -18,6 +18,8 @@
 #include <glm/vec2.hpp>
 #include <glm/vec4.hpp>
 
+#include "Graphics/RenderPass.h"
+
 namespace openblack::graphics
 {
 class Texture2D;
@@ -27,11 +29,11 @@ namespace openblack::gui
 {
 
 /// Draws the game's interface over the scene: textured, tinted rectangles in screen pixels, batched into as few draw
-/// calls as the textures allow and submitted to RenderPass::Interface.
+/// calls as the textures allow and submitted to a view, RenderPass::Interface unless another is given.
 class Canvas
 {
 public:
-	Canvas();
+	explicit Canvas(graphics::RenderPass view = graphics::RenderPass::Interface);
 	~Canvas();
 	Canvas(const Canvas&) = delete;
 	Canvas& operator=(const Canvas&) = delete;
@@ -67,6 +69,7 @@ private:
 		uint32_t vertexCount;
 	};
 
+	graphics::RenderPass _view;
 	glm::u16vec2 _resolution {0, 0};
 	std::vector<Vertex> _vertices;
 	std::vector<Batch> _batches;

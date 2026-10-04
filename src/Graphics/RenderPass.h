@@ -26,6 +26,8 @@ enum class RenderPass : uint8_t
 	Main,
 	Interface,
 	ImGui,
+	/// The game's pointer, over the debug windows too
+	Cursor,
 	MeshViewer,
 
 	_count
@@ -39,6 +41,7 @@ static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_
     "Main Pass",          //
     "Interface Pass",     //
     "ImGui Pass",         //
+    "Cursor Pass",        //
     "Mesh Viewer Pass",   //
 };
 

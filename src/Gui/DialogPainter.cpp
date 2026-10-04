@@ -327,12 +327,12 @@ void DialogPainter::DrawMouse(const DialogRect& rect, int cell, bool mirrored) c
 	_canvas.DrawQuad(ToScreen(rect.min), ToScreen(rect.max), uvMin, uvMax, glm::vec4(1.0f, 1.0f, 1.0f, _alpha), _mice);
 }
 
-void DialogPainter::DrawPointer(glm::ivec2 screen, uint32_t milliseconds) const
+void DialogPainter::DrawPointer(Canvas& canvas, glm::ivec2 screen, uint32_t milliseconds) const
 {
 	const auto frame = k_PointerFrames.at((milliseconds >> 5) & 7);
 	const auto cell = glm::vec2(static_cast<float>(frame & 7), static_cast<float>(frame >> 3)) * k_PointerCell;
 	const auto min = glm::vec2(screen.x - 2, screen.y);
-	_canvas.DrawQuad(min, min + 32.0f, cell + k_HalfTexel, cell + k_PointerExtent, glm::vec4(1.0f), &_atlas);
+	canvas.DrawQuad(min, min + 32.0f, cell + k_HalfTexel, cell + k_PointerExtent, glm::vec4(1.0f), &_atlas);
 }
 
 float DialogPainter::GetTextWidth(std::u16string_view text, int size) const

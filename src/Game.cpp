@@ -1102,7 +1102,8 @@ bool Game::Run() noexcept
 		{
 			glm::ivec2 mouse;
 			SDL_GetMouseState(&mouse.x, &mouse.y);
-			_interface->Draw(static_cast<glm::u16vec2>(Locator::windowing::value().GetSize()), mouse, SDL_GetTicks());
+			_interface->Draw(static_cast<glm::u16vec2>(Locator::windowing::value().GetSize()), mouse, SDL_GetTicks(),
+			                 Locator::debugGui::value().IsMouseOverWindow());
 		}
 
 		{

@@ -29,7 +29,6 @@ using openblack::graphics::RenderPass;
 
 namespace
 {
-constexpr auto k_View = static_cast<bgfx::ViewId>(RenderPass::Interface);
 /// Quads are two triangles of their own six vertices. Batches stay well within a transient buffer.
 constexpr uint32_t k_MaxBatchVertices = 0x6000;
 
@@ -55,8 +54,9 @@ bgfx::VertexLayout& GetLayout()
 }
 } // namespace
 
-Canvas::Canvas()
-    : _white(std::make_unique<graphics::Texture2D>("InterfaceWhite"))
+Canvas::Canvas(RenderPass view)
+    : _view(view)
+    , _white(std::make_unique<graphics::Texture2D>("InterfaceWhite"))
 {
 	static constexpr std::array<uint8_t, 4> k_White = {0xFF, 0xFF, 0xFF, 0xFF};
 	_white->Create(1, 1, 1, graphics::TextureFormat::RGBA8, graphics::Wrapping::ClampEdge, graphics::Filter::Nearest,
@@ -118,14 +118,15 @@ void Canvas::DrawLine(glm::ivec2 from, glm::ivec2 to, glm::vec4 colour)
 
 void Canvas::End()
 {
-	bgfx::setViewMode(k_View, bgfx::ViewMode::Sequential);
-	bgfx::setViewClear(k_View, BGFX_CLEAR_NONE);
-	bgfx::setViewRect(k_View, 0, 0, _resolution.x, _resolution.y);
+	const auto view = static_cast<bgfx::ViewId>(_view);
+	bgfx::setViewMode(view, bgfx::ViewMode::Sequential);
+	bgfx::setViewClear(view, BGFX_CLEAR_NONE);
+	bgfx::setViewRect(view, 0, 0, _resolution.x, _resolution.y);
 	std::array<float, 16> projection {};
 	bx::mtxOrtho(projection.data(), 0.0f, static_cast<float>(_resolution.x), static_cast<float>(_resolution.y), 0.0f, 0.0f,
 	             1.0f, 0.0f, bgfx::getCaps()->homogeneousDepth);
-	bgfx::setViewTransform(k_View, nullptr, projection.data());
-	bgfx::touch(k_View);
+	bgfx::setViewTransform(view, nullptr, projection.data());
+	bgfx::touch(view);
 	if (_vertices.empty())
 	{
 		return;
@@ -147,6 +148,6 @@ void Canvas::End()
 		bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
 		               BGFX_STATE_BLEND_FUNC_SEPARATE(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA,
 		                                              BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA));
-		bgfx::submit(k_View, graphics::toBgfx(program->GetRawHandle()));
+		bgfx::submit(view, graphics::toBgfx(program->GetRawHandle()));
 	}
 }

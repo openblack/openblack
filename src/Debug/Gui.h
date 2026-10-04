@@ -36,6 +36,7 @@ public:
 	~Gui() noexcept override;
 
 	[[nodiscard]] bool StealsFocus() const noexcept override;
+	[[nodiscard]] bool IsMouseOverWindow() const noexcept override;
 	void SetScale(float scale) noexcept override;
 	void SetMenuBarVisible(bool visible) noexcept override { _menuBarVisible = visible; }
 	bool ProcessEvents(const SDL_Event& event) noexcept override;

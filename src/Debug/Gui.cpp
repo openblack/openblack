@@ -43,6 +43,7 @@
 
 #include "3D/SkyInterface.h"
 #include "Audio.h"
+#include "Camera.h"
 #include "Camera/Camera.h"
 #include "Console.h"
 #include "ECS/Components/LivingAction.h"
@@ -66,7 +67,6 @@
 #include "Temple.h"
 #include "TextureViewer.h"
 #include "Windowing/WindowingInterface.h"
-#include "Camera.h"
 
 // Turn off formatting because it adds spaces which break the stringifying
 // clang-format off
@@ -187,6 +187,11 @@ Gui::~Gui() noexcept
 bool Gui::StealsFocus() const noexcept
 {
 	return _stealsFocus;
+}
+
+bool Gui::IsMouseOverWindow() const noexcept
+{
+	return ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureMouse;
 }
 
 void Gui::SetScale(float scale) noexcept
