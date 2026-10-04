@@ -35,13 +35,9 @@ void main()
 	v_position = mul(u_model[modelIndex], vec4(a_position.xyz, 1.0f));
 
 #ifdef USE_INSTANCING
-	mat4 model;
-	model[0] = i_data0;
-	model[1] = i_data1;
-	model[2] = i_data2;
-	model[3] = i_data3;
+	mat4 model = mtxFromCols(i_data0, i_data1, i_data2, i_data3);
 
-	v_position = instMul(model, v_position);
+	v_position = mul(model, v_position);
 #endif // USE_INSTANCING
 
 #ifdef USE_HEIGHT_MAP
