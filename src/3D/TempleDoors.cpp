@@ -89,7 +89,7 @@ void TempleDoors::FastClose()
 	_rate = 2.0f;
 }
 
-void TempleDoors::Update(float deltaSeconds)
+void TempleDoors::Update(float dt)
 {
 	if (!_leaf.has_value())
 	{
@@ -98,7 +98,7 @@ void TempleDoors::Update(float deltaSeconds)
 	else if (_swing < 1.0f)
 	{
 		const bool waiting = _swing <= 0.0f;
-		_swing += _rate * deltaSeconds;
+		_swing += _rate * dt;
 		if (waiting && _swing > 0.0f)
 		{
 			_playSound(static_cast<entt::id_type>(audio::SoundId::G_CitadelDoorOpen_01));
@@ -107,7 +107,7 @@ void TempleDoors::Update(float deltaSeconds)
 	}
 	else if (_swing > 1.0f)
 	{
-		_swing += _rate * deltaSeconds;
+		_swing += _rate * dt;
 		if (_swing > 2.0f)
 		{
 			_swing = 0.0f;

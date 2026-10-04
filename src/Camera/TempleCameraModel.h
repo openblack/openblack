@@ -184,7 +184,7 @@ private:
 	void WalkBackThrough(uint32_t door);
 	/// The control state of a room's camera
 	[[nodiscard]] State ControlOf(Room room) const;
-	/// Where a room's camera has the player as it takes over, which its path eases into over its last second
+	/// Where a room's camera has the player as it takes over, which its path eases into over its last unit of camera time
 	[[nodiscard]] Pose ControlPose(Room room) const;
 	/// The pose at the end of a room's path
 	[[nodiscard]] Pose PathEnd(Room room) const;
@@ -258,7 +258,7 @@ private:
 	glm::vec2 _lastMouse {0.0f};
 	glm::vec2 _pressMouse {0.0f};
 
-	// Looking at a scroll from close by, and how close, which eases in at 0.75 a second and out at 0.7
+	// Looking at a scroll from close by, and how close, which eases in at 0.75 a unit of camera time and out at 0.7
 	std::optional<Pose> _subMeshLook;
 	bool _lookingAtSubMesh {false};
 	float _subMeshZoom {0.0f};

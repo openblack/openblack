@@ -49,6 +49,11 @@ constexpr glm::vec3 k_LowFocus {0.0f, 0.0f, 4.0f};
 constexpr glm::vec3 k_HighFocus {0.0f, 12.0f, 0.0f};
 /// Where the main room's camera leans when the player takes it over
 constexpr float k_StartLean = 0.7f;
+/// The rooms' cameras and doors keep time at twice the real rate: TempleRoom::UpdateMouse and Temple::Update hand them
+/// LH3DTech::g_delta_time's milliseconds times 0.002. The times and rates here are in that time, other than the paths,
+/// which InnerCamera samples at 500 of their milliseconds to each unit of it, so at their own pace.
+constexpr float k_CameraTimePerSecond = 2.0f;
+constexpr float k_PathMillisecondsPerCameraTime = 500.0f;
 constexpr float k_MaxLean = 1.5f;
 /// How long the turn and lean take to catch up with the player
 constexpr float k_OrbitEaseTime = 0.3f;
@@ -59,7 +64,7 @@ constexpr TempleCameraModel::Pose k_DoorEntry {{100.0f, 8.0f, 0.0f}, {120.0f, 10
 /// The door to the room of scrolls isn't one the camera goes through
 constexpr uint32_t k_ScrollWall = 6;
 /// Temple::Update starts the doorway the camera walks through this far before the start of its swing, at this rate a
-/// second: it waits over a second, then is open as the camera reaches it
+/// unit of camera time: it waits a little over a unit, then is open as the camera reaches it
 constexpr float k_DoorOpenFrom = -0.5f;
 constexpr float k_DoorOpenRate = 0.4f;
 /// Walking back to the main room from another room, the doorway opens from the start of its swing, at this rate
@@ -135,7 +140,8 @@ constexpr float k_PictureLeanPerHeight = 0.0084507046f;
 /// How fast the arrow keys lean and raise the camera
 constexpr float k_PictureLeanSpeed = 1.85f;
 constexpr float k_PictureRiseSpeed = 30.0f;
-/// How fast a room of pictures turns by itself under a dialog, in radians a second, once it has sped up over a second
+/// How fast a room of pictures turns by itself under a dialog, in radians a unit of camera time, once it has sped up
+/// over one
 constexpr float k_PictureDialogTurnSpeed = 0.25f;
 /// CalcDoorHit's ring the rooms' doors back to the main room are on, about the main room's centre
 constexpr float k_PictureDoorRadius = 87.0f;
@@ -497,7 +503,7 @@ void TempleCameraModel::HandleActions(std::chrono::microseconds /*dt*/)
 std::optional<CameraModel::CameraInterpolationUpdateInfo> TempleCameraModel::Update(std::chrono::microseconds dt,
                                                                                     const Camera& camera)
 {
-	const float seconds = std::chrono::duration_cast<std::chrono::duration<float>>(dt).count();
+	const float cameraTime = std::chrono::duration_cast<std::chrono::duration<float>>(dt).count() * k_CameraTimePerSecond;
 	const auto& actions = Locator::gameActionSystem::value();
 
 	Input input {};
@@ -549,9 +555,9 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> TempleCameraModel::Upd
 		_cursorHit = input.hit;
 	}
 
-	Step(seconds, input);
+	Step(cameraTime, input);
 	FollowTemple();
-	Locator::temple::value().GetDoors().Update(seconds);
+	Locator::temple::value().GetDoors().Update(cameraTime);
 
 	auto origin = _origin.GetValue();
 	auto focus = _focus.GetValue();
@@ -651,21 +657,22 @@ void TempleCameraModel::UpdateIntro(float dt, const Input& input)
 		return;
 	}
 
-	const auto key = path->SampleAt(std::chrono::milliseconds(static_cast<int64_t>(_introTime * 1000.0f)));
+	const auto key =
+	    path->SampleAt(std::chrono::milliseconds(static_cast<int64_t>(_introTime * k_PathMillisecondsPerCameraTime)));
 	_target = {key.position, key.focus};
-	const float duration = static_cast<float>(path->GetDuration().count()) * 0.001f;
-	// The player takes over half a second after the path ends, or with a click
+	const float duration = static_cast<float>(path->GetDuration().count()) / k_PathMillisecondsPerCameraTime;
+	// The player takes over half a unit of camera time after the path ends, or with a click
 	if (_introTime > duration + 0.5f || (input.button != 0 && !_wasPressed))
 	{
 		_nextState = control;
 	}
 
-	// The path eases into where the player takes over over its last second
+	// The path eases into where the player takes over over its last unit of camera time
 	if (const float intoControl = _introTime - (duration - 1.0f); intoControl > 0.0f)
 	{
 		_target = Mix(_target, ControlPose(GetRoom()), std::min(intoControl, 1.0f));
 	}
-	// Coming through a door, the camera eases off the way it was going over the first two seconds
+	// Coming through a door, the camera eases off the way it was going over the first two units of camera time
 	if (const float fromPrevious = (2.0f - _blendTime) * 0.5f; fromPrevious > 0.0f && _blendFromPrevious)
 	{
 		_previousOrigin.Update(dt);
@@ -889,8 +896,8 @@ void TempleCameraModel::UpdatePictureOrbit(float dt, const Input& input)
 		picture.heightTarget = _pressHit->height - input.hit->height + picture.height.GetValue();
 	}
 
-	// Under a dialog the room turns slowly by itself, speeding up over a second, rather than with the arrow keys. The
-	// library keeps still and the player's.
+	// Under a dialog the room turns slowly by itself, speeding up over a unit of camera time, rather than with the arrow
+	// keys. The library keeps still and the player's.
 	// TODO(raffclar): in the multiplayer room while it shows the sessions, the room turns slowly by itself too
 	const float turnSpeedUp = _pictureOrbitTime > 0.0f ? std::min(_pictureOrbitTime, 1.0f) : 0.0f;
 	_pictureOrbitTime += dt;
