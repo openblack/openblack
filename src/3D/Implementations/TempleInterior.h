@@ -18,6 +18,7 @@
 #include "3D/OrientedText.h"
 #include "3D/TempleDoors.h"
 #include "3D/TempleInteriorInterface.h"
+#include "3D/TempleMap.h"
 #include "3D/TempleToggles.h"
 #include "3D/TempleToolTips.h"
 
@@ -58,6 +59,8 @@ public:
 	[[nodiscard]] const std::vector<OrientedTextVertex>& GetText() const override { return _text; }
 	[[nodiscard]] std::vector<TempleSubMeshGlow> GetControlGlows(TempleRoom room) const override;
 	[[nodiscard]] const graphics::Texture2D* GetTextTexture() const override;
+	[[nodiscard]] const std::vector<OrientedTextVertex>& GetMap() const override { return _mapTriangles; }
+	[[nodiscard]] uint32_t GetVisits() const override { return _visits; }
 	void Escape() override;
 	void RequestLeave() override { _leaveRequested = true; }
 	void Update(std::chrono::microseconds dt) override;
@@ -86,6 +89,10 @@ private:
 	TempleDoors _doors;
 	/// The main room's buttons of what its map shows, which keep their state from one visit to the next
 	TempleToggles _toggles;
+	/// The island over the main room's pool, and its triangles this frame
+	TempleMap _map;
+	std::vector<OrientedTextVertex> _mapTriangles;
+	uint32_t _visits {0};
 	/// How far through its slide the waterfall's texture is, from 0 to 1
 	float _waterfallSlide {0.0f};
 	/// Whether the creature's room's sounds of its water and fire are playing

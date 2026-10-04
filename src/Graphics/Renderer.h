@@ -87,6 +87,10 @@ private:
 	void DrawMistDomes(const DrawSceneDesc& desc) const;
 	/// The text the temple's rooms write in the world this frame: the signs' labels and the scroll the camera is close to
 	void DrawTempleText(const DrawSceneDesc& desc) const;
+	/// MiniMap::BuildMapTex: the land seen from above, unlit, once a visit to the temple
+	void DrawTempleMapPass(const DrawSceneDesc& desc) const;
+	/// MiniMap's draw: the island in relief over the main room's pool
+	void DrawTempleMap(const DrawSceneDesc& desc) const;
 
 	std::unique_ptr<ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
@@ -97,6 +101,9 @@ private:
 	std::unique_ptr<FrameBuffer> _handShadowFrameBuffer;
 	/// Where the objects' shadows cover the island, laid out as its footprints are and made for the island's size
 	mutable std::unique_ptr<FrameBuffer> _objectShadowFrameBuffer;
+	/// The land seen from above for the temple's map, and the visit to the temple it was drawn for
+	mutable std::unique_ptr<FrameBuffer> _templeMapFrameBuffer;
+	mutable std::optional<uint32_t> _templeMapVisit;
 	/// The hand's shadow of the frame being drawn
 	mutable std::optional<HandShadow> _handShadow;
 	/// HandLight's map, loaded with the first land drawn, empty when the game has none

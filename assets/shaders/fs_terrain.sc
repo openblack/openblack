@@ -14,6 +14,7 @@ SAMPLER2D(s5_objectShadows, 5);
 // The brightness the hand's light gives the land around it (HandLight)
 SAMPLER2D(s6_handLight, 6);
 
+// w: 1 to draw the land's textures alone, unlit and with no sea, as the temple's map is textured with
 uniform vec4 u_skyAndBump;
 // x: darkness of the objects' shadows where they fully cover a texel, 0 without them
 // yz: size of a texel of s5_objectShadows
@@ -75,6 +76,12 @@ void main()
 		texture2D(s5_objectShadows, v_texcoord1.xy + vec2(-texel.x, texel.y)).r +
 		texture2D(s5_objectShadows, v_texcoord1.xy + vec2(texel.x, texel.y)).r);
 	col.rgb = col.rgb * (1.0f - objectShadow * u_objectShadows.x);
+
+	if (u_skyAndBump.w > 0.0f)
+	{
+		gl_FragColor = vec4(col.rgb, 1.0f);
+		return;
+	}
 
 	// apply light map
 	float skyBightness = skyType / 2.0f;

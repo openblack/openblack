@@ -21,6 +21,8 @@ enum class RenderPass : uint8_t
 {
 	Footprint,
 	ObjectShadow,
+	/// The land seen from above, which the map in the temple's pool is textured with
+	TempleMap,
 	HandShadow,
 	Reflection,
 	Main,
@@ -36,6 +38,7 @@ enum class RenderPass : uint8_t
 static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_count)> k_RenderPassNames {
     "Footprint Pass",     //
     "Object Shadow Pass", //
+    "Temple Map Pass",    //
     "Hand Shadow Pass",   //
     "Reflection Pass",    //
     "Main Pass",          //

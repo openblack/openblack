@@ -111,6 +111,11 @@ public:
 	[[nodiscard]] virtual const std::vector<OrientedTextVertex>& GetText() const = 0;
 	/// The font's texture the text is drawn from, null without the game's interface
 	[[nodiscard]] virtual const graphics::Texture2D* GetTextTexture() const = 0;
+	/// The island over the main room's pool this frame, in triangles in the room, textured with the land seen from above
+	/// (MiniMap). Empty while the main room isn't drawn.
+	[[nodiscard]] virtual const std::vector<OrientedTextVertex>& GetMap() const = 0;
+	/// Counts the visits to the temple, on each of which the map's texture of the land is drawn afresh (BuildMapTex)
+	[[nodiscard]] virtual uint32_t GetVisits() const = 0;
 	/// Escape takes the player back to the main room, and out of the temple from there (Temple's key handling)
 	virtual void Escape() = 0;
 	/// Leaves the temple once the frame is done with it

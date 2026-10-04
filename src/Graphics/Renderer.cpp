@@ -35,6 +35,7 @@
 #include "3D/SkyInterface.h"
 #include "3D/TempleDoors.h"
 #include "3D/TempleInteriorInterface.h"
+#include "3D/TempleMap.h"
 #include "Camera/Camera.h"
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/LightBeam.h"
@@ -315,6 +316,7 @@ Renderer::~Renderer() noexcept
 	_plane.reset();
 	_handShadowFrameBuffer.reset();
 	_objectShadowFrameBuffer.reset();
+	_templeMapFrameBuffer.reset();
 	if (_handLightTexture)
 	{
 		bgfx::destroy(toBgfx(*_handLightTexture));
@@ -590,6 +592,130 @@ void Renderer::DrawTempleText(const DrawSceneDesc& desc) const
 	shader->SetTextureSampler("s_texture", 0, *texture);
 	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_MSAA |
 	               BGFX_STATE_BLEND_ALPHA);
+	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(shader->GetRawHandle()));
+}
+
+void Renderer::DrawTempleMapPass(const DrawSceneDesc& desc) const
+{
+	// The view keeps its clear from one frame to the next, so it is only touched to draw the land afresh
+	const auto viewId = static_cast<bgfx::ViewId>(RenderPass::TempleMap);
+	if (!Locator::temple::has_value() || !Locator::temple::value().Active() || !Locator::terrainSystem::has_value())
+	{
+		return;
+	}
+	const auto visit = Locator::temple::value().GetVisits();
+	if (_templeMapVisit == visit)
+	{
+		return;
+	}
+	_templeMapVisit = visit;
+
+	// 8 texels a block, as LH3D's pages of the land's textures give the map, over the 32 by 32 blocks there can be
+	constexpr uint16_t k_Size = 256;
+	if (!_templeMapFrameBuffer)
+	{
+		_templeMapFrameBuffer = std::make_unique<FrameBuffer>("Temple Map", k_Size, k_Size, TextureFormat::RGBA8, std::nullopt,
+		                                                      static_cast<uint8_t>(1), Wrapping::ClampEdge);
+	}
+	_templeMapFrameBuffer->Bind(RenderPass::TempleMap);
+	bgfx::setViewRect(viewId, 0, 0, k_Size, k_Size);
+	bgfx::setViewClear(viewId, BGFX_CLEAR_COLOR, 0x00000000);
+
+	// From above, x across the texture and z down it, as the map's texture coordinates run. The terrain's shader pulls
+	// vertices at sea level towards the view's origin, so the view is centred on the texture to keep that small.
+	constexpr float k_Half = TempleMap::k_TextureSpan * 0.5f;
+	const auto view = glm::translate(glm::mat4(1.0f), glm::vec3(-k_Half, 0.0f, -k_Half));
+	const float down = bgfx::getCaps()->originBottomLeft ? 1.0f : -1.0f;
+	auto projection = glm::mat4(0.0f);
+	projection[0][0] = 1.0f / k_Half;
+	projection[2][1] = down / k_Half;
+	projection[3][2] = 0.5f;
+	projection[3][3] = 1.0f;
+	bgfx::setViewTransform(viewId, glm::value_ptr(view), glm::value_ptr(projection));
+	bgfx::touch(viewId);
+
+	const auto& island = Locator::terrainSystem::value();
+	const auto* terrainShader = _shaderManager->GetShader("Terrain");
+	const auto islandExtent = glm::vec4(island.GetExtent().minimum, island.GetExtent().maximum);
+	auto smallBump = Locator::resources::value().GetTextures().Handle(LandIslandInterface::k_SmallBumpTextureId);
+	// The land's own textures, bumped, with the footprints and the objects' shadows on them
+	const glm::vec4 u_skyAndBump = {0.0f, desc.bumpMapStrength, 0.0f, 1.0f};
+	auto u_objectShadows = glm::vec4(0.0f);
+	if (_objectShadowFrameBuffer)
+	{
+		uint16_t width = 0;
+		uint16_t height = 0;
+		_objectShadowFrameBuffer->GetSize(width, height);
+		u_objectShadows = glm::vec4(ObjectShadows::k_MaxDarkness, 1.0f / static_cast<float>(std::max<uint16_t>(width, 1)),
+		                            1.0f / static_cast<float>(std::max<uint16_t>(height, 1)), 0.0f);
+	}
+	const auto noHandShadow = glm::mat4(0.0f);
+	const auto noHand = glm::vec4(0.0f);
+	terrainShader->SetTextureSampler("s0_materials", 0, island.GetAlbedoArray());
+	terrainShader->SetTextureSampler("s1_bump", 1, island.GetBump());
+	terrainShader->SetTextureSampler("s2_smallBump", 2, *smallBump);
+	terrainShader->SetTextureSampler("s3_footprints", 3, island.GetFootprintFramebuffer().GetColorAttachment());
+	terrainShader->SetTextureSampler("s4_handShadow", 4, _handShadowFrameBuffer->GetColorAttachment());
+	terrainShader->SetTextureSampler("s5_objectShadows", 5,
+	                                 _objectShadowFrameBuffer ? _objectShadowFrameBuffer->GetColorAttachment()
+	                                                          : island.GetFootprintFramebuffer().GetColorAttachment());
+	terrainShader->SetTextureSampler("s6_handLight", 6, GetHandLightTexture());
+	terrainShader->SetUniformValue("u_skyAndBump", &u_skyAndBump);
+	terrainShader->SetUniformValue("u_objectShadows", &u_objectShadows);
+	terrainShader->SetUniformValue("u_islandExtent", &islandExtent);
+	terrainShader->SetUniformValue("u_handShadowMatrix", &noHandShadow);
+	terrainShader->SetUniformValue("u_handShadow", &noHand);
+	terrainShader->SetUniformValue("u_handLight", &noHand);
+	for (const auto& block : island.GetBlocks())
+	{
+		const glm::vec4 mapPositionAndSize = glm::vec4(block.GetMapPosition(), 160.0f, 160.0f);
+		terrainShader->SetUniformValue("u_blockPositionAndSize", &mapPositionAndSize);
+		block.GetMesh().GetVertexBuffer().Bind();
+		bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
+		// The textures stay bound from one block to the next
+		bgfx::submit(viewId, toBgfx(terrainShader->GetRawHandle()), 0,
+		             BGFX_DISCARD_INSTANCE_DATA | BGFX_DISCARD_INDEX_BUFFER | BGFX_DISCARD_TRANSFORM |
+		                 BGFX_DISCARD_VERTEX_STREAMS | BGFX_DISCARD_STATE);
+	}
+	bgfx::discard(BGFX_DISCARD_BINDINGS);
+}
+
+void Renderer::DrawTempleMap(const DrawSceneDesc& desc) const
+{
+	if (desc.viewId != RenderPass::Main || !_templeMapFrameBuffer || !Locator::temple::has_value() ||
+	    !Locator::temple::value().Active())
+	{
+		return;
+	}
+	const auto& temple = Locator::temple::value();
+	const auto& vertices = temple.GetMap();
+	if (vertices.empty())
+	{
+		return;
+	}
+	bgfx::VertexLayout layout;
+	layout.begin()
+	    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+	    .end();
+	const auto count = static_cast<uint32_t>(vertices.size());
+	if (bgfx::getAvailTransientVertexBuffer(count, layout) < count)
+	{
+		return;
+	}
+	bgfx::TransientVertexBuffer buffer;
+	bgfx::allocTransientVertexBuffer(&buffer, count, layout);
+	std::memcpy(buffer.data, vertices.data(), count * sizeof(OrientedTextVertex));
+
+	// Render mode 5: the land's texture by the vertices' colours, blended by their alpha
+	const auto* shader = _shaderManager->GetShader("Text3D");
+	const auto model = glm::translate(glm::mat4(1.0f), temple.GetPosition());
+	bgfx::setTransform(glm::value_ptr(model));
+	bgfx::setVertexBuffer(0, &buffer);
+	shader->SetTextureSampler("s_texture", 0, _templeMapFrameBuffer->GetColorAttachment());
+	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_GREATER |
+	               BGFX_STATE_MSAA | BGFX_STATE_BLEND_ALPHA);
 	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(shader->GetRawHandle()));
 }
 
@@ -1059,6 +1185,7 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 	// TODO(bwrsandman): Footprint framebuffer doesn't need to be updated each frame
 	DrawFootprintPass(drawDesc);
 	DrawObjectShadowPass(drawDesc);
+	DrawTempleMapPass(drawDesc);
 	{
 		auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::MainPassDrawModels);
 		if (drawDesc.drawHand)
@@ -1467,6 +1594,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		if (desc.drawEntities)
 		{
 			DrawLightBeams(desc);
+			DrawTempleMap(desc);
 			DrawMistDomes(desc);
 			DrawTempleText(desc);
 		}

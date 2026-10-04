@@ -25,6 +25,7 @@
 #include "3D/CreatureCaveEffects.h"
 #include "3D/L3DMesh.h"
 #include "3D/L3DSubMesh.h"
+#include "3D/LandIslandInterface.h"
 #include "3D/TempleScrolls.h"
 #include "3D/TempleSigns.h"
 #include "Audio/AudioManagerInterface.h"
@@ -634,6 +635,14 @@ void TempleInterior::Update(std::chrono::microseconds dt)
 
 		UpdateToolTips(milliseconds);
 
+		// WorldRoom::Draw takes the land's heights and brightness for the map every frame the main room is drawn
+		_mapTriangles.clear();
+		if (IsRoomDrawn(TempleRoom::Main) && Locator::terrainSystem::has_value())
+		{
+			const auto& island = Locator::terrainSystem::value();
+			_map.Build([&island](glm::u16vec2 cell) { return island.FindCell(cell); }, _mapTriangles);
+		}
+
 		// CreatureRoom::Draw moves the room's effects on while the room is drawn
 		if (_creatureCaveEffects != nullptr && IsRoomDrawn(TempleRoom::CreatureCave))
 		{
@@ -663,6 +672,14 @@ void TempleInterior::Activate(TempleRoom room)
 
 	_playerPositionOutside = camera.GetOrigin();
 	_playerRotationOutside = camera.GetRotation();
+
+	// WorldRoom::InitEngine frames the map on the island as it is each visit, and draws its texture afresh
+	++_visits;
+	if (Locator::terrainSystem::has_value())
+	{
+		const auto& island = Locator::terrainSystem::value();
+		_map.Frame([&island](glm::u16vec2 cell) { return island.FindCell(cell); });
+	}
 
 	config.drawIsland = false;
 	config.drawWater = false;
