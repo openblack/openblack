@@ -50,7 +50,10 @@ void main()
 #else
     float original_height = u_model[modelIndex][3].y;
 #endif // USE_INSTANCING
-	vec2 blockUv = (v_position.xz - extentMin) / (extentMax - extentMin);
+	// The height map has a texel for each corner of the land's cells, 10 units apart: sample at the centre of the texel
+	// of the vertex's position
+	vec2 texels = (extentMax - extentMin) / 10.0f + 1.0f;
+	vec2 blockUv = ((v_position.xz - extentMin) / 10.0f + 0.5f) / texels;
 	float terrain_height = texture2DLod(s_heightmap, blockUv, 0.0f).r * 170.85f;
 	v_position.y += terrain_height - original_height;
 #endif // USE_HEIGHT_MAP
