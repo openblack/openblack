@@ -43,6 +43,8 @@ openblack_setup_and_add_test(test_game_initialize test_game_initialize.cpp)
 openblack_setup_and_add_test(test_load_scene test_load_scene.cpp)
 openblack_setup_and_add_test(test_fixed test_fixed.cpp)
 openblack_setup_and_add_test(test_interpolator test_interpolator.cpp)
+openblack_setup_and_add_test(test_creature_mind creature/test_creature_mind.cpp)
+target_link_libraries(test_creature_mind PRIVATE pack)
 openblack_setup_and_add_test(test_set_camera_pos camera/test_set_camera_pos.cpp)
 openblack_setup_and_add_json_test(
   test_mobile_wall_hug mobile_wall_hug/test_mobile_wall_hug.cpp
