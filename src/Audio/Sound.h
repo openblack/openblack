@@ -20,6 +20,11 @@ extern "C" {
 #include <AL/alc.h>
 }
 
+namespace openblack::pack
+{
+enum class AudioBankLoop : uint16_t;
+}
+
 namespace openblack::audio
 {
 using SourceId = ALuint;
@@ -234,7 +239,10 @@ public:
 	float maxDistance;
 	float distanceScale;
 	ChannelLayout channelLayout;
-	PlayType playType;
+	/// What playing the sample does about instances of it already playing, applied with AudioBankOverride::LoopType
+	pack::AudioBankLoop loopType;
+	/// Samples of a bank in the same voice group count as the same sample for loopType, 0 for none
+	uint16_t group;
 	BufferId bufferId;
 	float duration;
 	std::vector<std::vector<uint8_t>> buffer;

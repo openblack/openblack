@@ -11,6 +11,7 @@
 
 #include <cstdint>
 
+#include <entt/entity/entity.hpp>
 #include <entt/fwd.hpp>
 #include <glm/vec3.hpp>
 
@@ -44,5 +45,11 @@ struct AudioEmitter
 	audio::AudioStatus state = audio::AudioStatus::Initial;
 	/// Follows the music volume rather than the effect volume
 	bool music = false;
+	/// What the sound is played for, such as the tree a rustle comes from. A sound whose bank header plays it once
+	/// does not start again for the same owner while it, or another of its voice group, plays.
+	entt::entity owner {entt::null};
+	/// The bank the sound is from and its voice group there (Sound::group)
+	entt::id_type bank {0};
+	uint16_t group {0};
 };
 } // namespace openblack::ecs::components

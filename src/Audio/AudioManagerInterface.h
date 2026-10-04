@@ -11,9 +11,11 @@
 
 #include <map>
 #include <optional>
+#include <span>
 
 #include <entt/fwd.hpp>
 
+#include "AnimEffectTable.h"
 #include "AudioDecoderInterface.h"
 #include "AudioPlayerInterface.h"
 #include "ECS/Components/AudioEmitter.h"
@@ -84,6 +86,14 @@ public:
 	/// and distances come from the bank header where it overrides them. With a world position it is a 3D sound
 	/// anchored there, otherwise it is centred on the listener.
 	virtual void PlaySoundEffect(entt::id_type id, std::optional<glm::vec3> worldPosition) = 0;
+	/// The animation effects of a loaded sound bank, named as its sounds are ("<bank>/<sample id>")
+	virtual void AddAnimEffects(const std::string& bankName, AnimEffectTable table) = 0;
+	/// GAudio::SamplePlayAnimEffect: one of the samples a bank's animation effects pick for keys, chosen at random, as
+	/// a one-shot 3D sound at position on behalf of owner. Nothing plays when the listener is beyond the sample's
+	/// maximum distance, or when the bank header plays the sample once and owner is playing it, or another of its
+	/// voice group, already.
+	virtual void PlayAnimEffect(const std::string& bankName, std::span<const int32_t> keys, entt::entity owner,
+	                            const glm::vec3& position) = 0;
 	virtual const Sound& GetSound(entt::id_type id) = 0;
 	virtual void CreateSoundGroup(const std::string& name) = 0;
 	virtual void AddToSoundGroup(const std::string& name, entt::id_type id) = 0;

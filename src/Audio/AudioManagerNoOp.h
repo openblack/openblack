@@ -58,6 +58,11 @@ public:
 		return result;
 	}
 	void PlaySound([[maybe_unused]] entt::id_type id, [[maybe_unused]] PlayType type) override {}
+	void AddAnimEffects([[maybe_unused]] const std::string& bankName, [[maybe_unused]] AnimEffectTable table) override {}
+	void PlayAnimEffect([[maybe_unused]] const std::string& bankName, [[maybe_unused]] std::span<const int32_t> keys,
+	                    [[maybe_unused]] entt::entity owner, [[maybe_unused]] const glm::vec3& position) override
+	{
+	}
 	void PlaySoundEffect([[maybe_unused]] entt::id_type id, [[maybe_unused]] std::optional<glm::vec3> worldPosition) override {}
 	void SetGlobalVolume([[maybe_unused]] float volume) override {}
 	void SetSfxVolume([[maybe_unused]] float volume) override {}

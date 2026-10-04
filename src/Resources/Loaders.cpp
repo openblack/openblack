@@ -198,7 +198,8 @@ SoundLoader::result_type SoundLoader::operator()(BaseLoader<audio::Sound>::FromB
 	sound->minDistance = header.minDist;
 	sound->maxDistance = header.maxDist;
 	sound->distanceScale = header.scale;
-	sound->playType = static_cast<audio::PlayType>(header.loopType);
+	sound->loopType = header.loopType;
+	sound->group = static_cast<uint16_t>(header.group);
 	sound->buffer = buffer;
 	return sound;
 }

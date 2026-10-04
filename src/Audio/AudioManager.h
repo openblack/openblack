@@ -65,6 +65,9 @@ public:
 	const Sound& GetSound(entt::id_type id) override;
 	void PlaySound(entt::id_type id, PlayType type) override;
 	void PlaySoundEffect(entt::id_type id, std::optional<glm::vec3> worldPosition) override;
+	void AddAnimEffects(const std::string& bankName, AnimEffectTable table) override;
+	void PlayAnimEffect(const std::string& bankName, std::span<const int32_t> keys, entt::entity owner,
+	                    const glm::vec3& position) override;
 	void SetGlobalVolume(float volume) override { _globalVolume = volume; }
 	void SetSfxVolume(float volume) override { _sfxVolume = volume; }
 	void SetMusicVolume(float volume) override { _musicVolume = volume; }
@@ -107,6 +110,8 @@ private:
 	/// LHSamplePlay's play parameters for a sample, with the bank header overriding LH_SamplePlayOptions' defaults
 	[[nodiscard]] static VoiceStart MakeVoiceStart(const Sound& sound, std::optional<glm::vec3> worldPosition,
 	                                               PlayType playType);
+	/// An emitter playing for owner a sound of bank that is id or else in group, null if there is none
+	[[nodiscard]] entt::entity FindPlaying(entt::entity owner, entt::id_type bank, entt::id_type id, uint16_t group) const;
 	/// A music bank loaded from a path relative to the game, shared with any channel playing it already
 	[[nodiscard]] std::shared_ptr<const MusicBank> LoadMusicBank(const std::string& bankPath);
 	/// LHAudio's listener frame (x right, y forward, z up) for a world position
@@ -115,6 +120,8 @@ private:
 	std::unique_ptr<AudioPlayerInterface> _audioPlayer;
 	/// All sounds are loaded
 	std::map<std::string, SoundGroup> _soundGroups;
+	/// Animation effects of the sound banks, by bank name
+	std::map<std::string, AnimEffectTable> _animEffects;
 	/// Music resources are loaded on demand to avoid storing large audio buffers. There are no resource IDs yet
 	std::vector<std::string> _music;
 	float _globalVolume {1.0f};

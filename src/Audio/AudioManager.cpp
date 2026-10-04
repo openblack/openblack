@@ -309,6 +309,91 @@ void AudioManager::PlaySoundEffect(entt::id_type id, std::optional<glm::vec3> wo
 	}
 }
 
+void AudioManager::AddAnimEffects(const std::string& bankName, AnimEffectTable table)
+{
+	_animEffects.insert_or_assign(bankName, std::move(table));
+}
+
+void AudioManager::PlayAnimEffect(const std::string& bankName, std::span<const int32_t> keys, entt::entity owner,
+                                  const glm::vec3& position)
+{
+	const auto effects = _animEffects.find(bankName);
+	if (effects == _animEffects.end())
+	{
+		return;
+	}
+	// LHSampleGetAnimEffectNumber: any of the samples of the effect
+	const auto samples = effects->second.Find(keys);
+	if (samples.empty())
+	{
+		return;
+	}
+	const auto sample = samples[Locator::rng::value().NextValue<size_t>(0, samples.size() - 1)];
+	const auto id = entt::hashed_string(fmt::format("{}/{}", bankName, sample).c_str()).value();
+	auto& sounds = Locator::resources::value().GetSounds();
+	if (!sounds.Contains(id))
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Sound {}/{} of an animation effect is not loaded", bankName, sample);
+		return;
+	}
+	const auto sound = sounds.Handle(id);
+
+	// LHSamplePlayAnimEffect: the sample can't be heard from further than its maximum distance, overridden or not
+	if (glm::distance(Locator::camera::value().GetOrigin(), position) > sound->maxDistance)
+	{
+		return;
+	}
+
+	// LHSamplePlay with the play type of the bank header
+	const auto bank = entt::hashed_string(bankName.c_str()).value();
+	if ((sound->overrideFlags & static_cast<uint32_t>(pack::AudioBankOverride::LoopType)) != 0)
+	{
+		if (sound->loopType == pack::AudioBankLoop::Once && FindPlaying(owner, bank, id, sound->group) != entt::null)
+		{
+			return;
+		}
+		if (sound->loopType == pack::AudioBankLoop::Restart)
+		{
+			auto playing = FindPlaying(owner, bank, id, 0);
+			if (playing == entt::null)
+			{
+				playing = FindPlaying(owner, bank, 0, sound->group);
+			}
+			if (playing != entt::null)
+			{
+				DestroyEmitter(playing);
+			}
+		}
+	}
+
+	const auto entity = CreateEmitter(id, position, PlayType::Once);
+	if (entity == entt::null)
+	{
+		return;
+	}
+	auto& emitter = Locator::entitiesRegistry::value().Get<AudioEmitter>(entity);
+	emitter.owner = owner;
+	emitter.bank = bank;
+	emitter.group = sound->group;
+	PlayEmitter(entity);
+}
+
+entt::entity AudioManager::FindPlaying(entt::entity owner, entt::id_type bank, entt::id_type id, uint16_t group) const
+{
+	auto found = entt::entity {entt::null};
+	Locator::entitiesRegistry::value().Each<const AudioEmitter>([&](entt::entity entity, const AudioEmitter& emitter) {
+		if (found != entt::null || emitter.owner != owner || emitter.bank != bank || emitter.state == AudioStatus::Stopped)
+		{
+			return;
+		}
+		if (emitter.soundId == id || (group != 0 && emitter.group == group))
+		{
+			found = entity;
+		}
+	});
+	return found;
+}
+
 void AudioManager::CreateSoundGroup(const std::string& name)
 {
 	_soundGroups[name] = SoundGroup();

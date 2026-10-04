@@ -861,6 +861,21 @@ bool Game::Initialize() noexcept
 				    soundManager.Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[i], buffer);
 				    audioManager.AddToSoundGroup(groupName, id);
 			    }
+
+			    // What the bank plays for things happening in the game, such as trees rustling
+			    if (soundPack.HasBlock("LHAudioAnimArrayTable") && soundPack.HasBlock("LHAudioWaveNumTable"))
+			    {
+				    if (auto effects = audio::AnimEffectTable::Parse(soundPack.GetBlock("LHAudioAnimArrayTable"),
+				                                                     soundPack.GetBlock("LHAudioWaveNumTable")))
+				    {
+					    audioManager.AddAnimEffects(groupName, std::move(*effects));
+				    }
+				    else
+				    {
+					    SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Malformed animation effects in sound pack {}",
+					                       f.filename().string());
+				    }
+			    }
 		    }
 	    });
 
