@@ -12,6 +12,7 @@
 #include <cctype>
 
 #include <optional>
+#include <utility>
 
 using namespace openblack::gui;
 

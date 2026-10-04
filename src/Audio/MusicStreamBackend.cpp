@@ -9,7 +9,10 @@
 
 #include "MusicStreamBackend.h"
 
+#include <algorithm>
 #include <span>
+#include <utility>
+#include <vector>
 
 #include <spdlog/spdlog.h>
 

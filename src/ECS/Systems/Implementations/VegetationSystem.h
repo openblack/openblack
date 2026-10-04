@@ -10,6 +10,7 @@
 #pragma once
 
 #include <array>
+#include <chrono>
 #include <optional>
 
 #include "ECS/Systems/VegetationInterface.h"

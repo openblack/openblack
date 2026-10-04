@@ -12,6 +12,9 @@
 #include <cmath>
 #include <cstring>
 
+#include <algorithm>
+#include <utility>
+
 #include <fmt/format.h>
 
 extern "C" {

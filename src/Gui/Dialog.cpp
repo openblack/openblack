@@ -10,6 +10,8 @@
 #include "Dialog.h"
 
 #include <algorithm>
+#include <string_view>
+#include <utility>
 
 using namespace openblack::gui;
 

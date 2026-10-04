@@ -13,6 +13,7 @@
 
 #include <cmath>
 
+#include <chrono>
 #include <string>
 
 #include <glm/geometric.hpp>

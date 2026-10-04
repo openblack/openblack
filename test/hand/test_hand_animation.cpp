@@ -13,8 +13,11 @@
 #include <cmath>
 #include <cstdlib>
 
+#include <algorithm>
+#include <chrono>
 #include <filesystem>
 #include <limits>
+#include <vector>
 
 #include <L3DFile.h>
 #include <MorphFile.h>

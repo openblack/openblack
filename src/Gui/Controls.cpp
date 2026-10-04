@@ -13,6 +13,8 @@
 
 #include <algorithm>
 #include <chrono>
+#include <string_view>
+#include <utility>
 
 #include <SDL_keycode.h>
 #include <glm/common.hpp>

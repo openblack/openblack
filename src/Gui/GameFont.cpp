@@ -12,6 +12,7 @@
 #include <cstring>
 
 #include <algorithm>
+#include <utility>
 
 #include "TextDatabase.h"
 

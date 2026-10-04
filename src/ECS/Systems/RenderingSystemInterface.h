@@ -10,6 +10,7 @@
 #pragma once
 
 #include <map>
+#include <vector>
 
 #include <entt/fwd.hpp>
 #include <glm/mat4x4.hpp>

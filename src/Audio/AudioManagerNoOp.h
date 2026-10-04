@@ -9,6 +9,11 @@
 
 #pragma once
 
+#include <optional>
+#include <span>
+#include <string>
+#include <vector>
+
 #include "AudioManagerInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)

@@ -12,7 +12,9 @@
 #include <cstdlib>
 
 #include <algorithm>
+#include <chrono>
 #include <string>
+#include <utility>
 
 #include <LHVM.h>
 #include <LNDFile.h>

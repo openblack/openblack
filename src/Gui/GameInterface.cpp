@@ -10,6 +10,11 @@
 #include "GameInterface.h"
 
 #include <array>
+#include <filesystem>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <SDL.h>
 #include <bgfx/bgfx.h>

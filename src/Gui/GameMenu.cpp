@@ -10,7 +10,10 @@
 #include "GameMenu.h"
 
 #include <algorithm>
+#include <functional>
 #include <string_view>
+#include <tuple>
+#include <vector>
 
 #include <SDL_keycode.h>
 

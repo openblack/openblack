@@ -7,6 +7,8 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include <vector>
+
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/geometric.hpp>
 #include <gtest/gtest.h>

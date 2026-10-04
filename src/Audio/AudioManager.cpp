@@ -11,8 +11,12 @@
 
 #include "AudioManager.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <optional>
+#include <span>
+#include <utility>
 
 #include <PackFile.h>
 #include <glm/geometric.hpp>

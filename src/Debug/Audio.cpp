@@ -9,7 +9,10 @@
 
 #include "Audio.h"
 
+#include <cmath>
+
 #include <string>
+#include <string_view>
 
 #include <imgui.h>
 

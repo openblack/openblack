@@ -12,6 +12,8 @@
 #include <map>
 #include <optional>
 #include <span>
+#include <string>
+#include <vector>
 
 #include <entt/fwd.hpp>
 

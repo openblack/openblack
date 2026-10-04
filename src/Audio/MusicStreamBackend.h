@@ -13,6 +13,7 @@
 #include <functional>
 #include <map>
 #include <optional>
+#include <span>
 
 #include "AudioPlayerInterface.h"
 #include "MusicPlayer.h"
