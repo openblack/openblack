@@ -117,6 +117,15 @@ public:
 	[[nodiscard]] const btConvexShape& GetPhysicsMesh() const { return *_physicsMesh; }
 	[[nodiscard]] float GetMass() const { return _physicsMass; }
 	[[nodiscard]] AxisAlignedBoundingBox GetBoundingBox() const { return _boundingBox; }
+	/// How far along a ray, in the mesh's space, it first meets a submesh drawn of the mesh (LH3DMesh's pick of the
+	/// triangle under the mouse as it draws). Only the temple's rooms keep their triangles to be picked.
+	struct PickHit
+	{
+		float distance;
+		uint32_t subMesh;
+	};
+	[[nodiscard]] std::optional<PickHit> Pick(glm::vec3 origin, glm::vec3 direction, bool onlyJoints = false,
+	                                          bool withoutJoints = false) const;
 
 private:
 	l3d::L3DMeshFlags _flags;

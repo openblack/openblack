@@ -13,9 +13,12 @@
 
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 #include <L3DFile.h>
+#include <glm/mat4x4.hpp>
+#include <glm/vec3.hpp>
 
 #include "AxisAlignedBoundingBox.h"
 
@@ -47,6 +50,8 @@ class L3DSubMesh
 		bool modulateAlpha;  ///< Multiply ouput alpha by a uniform
 		bool thresholdAlpha; ///< Dismiss fragments below a certain threshold
 		float alphaCutoutThreshold;
+		/// Drawn from both sides: LH3D culls the back faces of the rest (D3DRS_CULLMODE from the material's cull mode)
+		bool twoSided;
 	};
 
 public:
@@ -73,6 +78,19 @@ public:
 		glm::vec3 pivot;
 	};
 	[[nodiscard]] const std::optional<Joint>& GetJoint() const { return _joint; }
+	/// The submesh's name, which the temple's rooms find their scrolls and signs by
+	[[nodiscard]] const std::string& GetName() const { return _name; }
+	/// The frame of the submesh's name record, from the frame to the mesh, and the submesh's box in it
+	struct Frame
+	{
+		glm::mat4 toMesh;
+		glm::vec3 min;
+		glm::vec3 max;
+	};
+	[[nodiscard]] const Frame& GetFrame() const { return _frame; }
+	/// How far along a ray, in the mesh's space, it first meets the submesh, which the temple's rooms keep the triangles
+	/// of to find
+	[[nodiscard]] std::optional<float> Pick(glm::vec3 origin, glm::vec3 direction) const;
 
 private:
 	graphics::L3DMesh& _l3dMesh;
@@ -84,6 +102,10 @@ private:
 	std::optional<uint32_t> _lightmapSkinID;
 	bool _hasLightmapCoordinates {false};
 	std::optional<Joint> _joint;
+	std::string _name;
+	Frame _frame {glm::mat4(1.0f), glm::vec3(0.0f), glm::vec3(0.0f)};
+	/// The corners of each triangle in turn, of the temple's rooms
+	std::vector<glm::vec3> _pickTriangles;
 
 	AxisAlignedBoundingBox _boundingBox;
 };

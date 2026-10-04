@@ -331,7 +331,15 @@ struct L3DSubmeshName
 	/// The matrix of LH3D's table of joints which LH3DMesh turns the submesh by, when it is from 0 to 255. The leaves of
 	/// the temple's doors have joints.
 	int32_t jointIndex;
-	std::array<float, 30> unknown2;
+	/// The submesh's frame, which the temple's rooms place their controls' text and camera by
+	/// (InnerCamera::FocusOnSubMesh, TempleRoom::DrawNameScrolls): its x, y and z axes, then its origin. A point in the
+	/// frame is x * axes[0] + y * axes[1] + z * axes[2] + origin in the mesh.
+	std::array<L3DPoint, 3> frameAxes;
+	L3DPoint frameOrigin;
+	std::array<float, 12> unknown2;
+	/// The submesh's box, in its frame
+	L3DPoint frameMin;
+	L3DPoint frameMax;
 };
 static_assert(sizeof(L3DSubmeshName) == 0xE0);
 

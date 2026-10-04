@@ -9,6 +9,8 @@
 
 #include "L3DSubMesh.h"
 
+#include <algorithm>
+
 #include <bgfx/bgfx.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/component_wise.hpp>
@@ -47,6 +49,57 @@ L3DSubMesh::L3DSubMesh(L3DMesh& mesh) noexcept
 }
 
 L3DSubMesh::~L3DSubMesh() noexcept = default;
+
+std::optional<float> L3DSubMesh::Pick(glm::vec3 origin, glm::vec3 direction) const
+{
+	if (_pickTriangles.empty())
+	{
+		return std::nullopt;
+	}
+	// Past the submesh's box, the ray can't meet it
+	const auto inverse = 1.0f / direction;
+	const auto near = (_boundingBox.minima - origin) * inverse;
+	const auto far = (_boundingBox.maxima - origin) * inverse;
+	const float enter = glm::compMax(glm::min(near, far));
+	const float leave = glm::compMin(glm::max(near, far));
+	if (leave < 0.0f || enter > leave)
+	{
+		return std::nullopt;
+	}
+	std::optional<float> nearest;
+	for (size_t i = 0; i + 2 < _pickTriangles.size(); i += 3)
+	{
+		// Möller and Trumbore's test, from either side, as LH3D picks
+		const auto& a = _pickTriangles[i];
+		const auto edge1 = _pickTriangles[i + 1] - a;
+		const auto edge2 = _pickTriangles[i + 2] - a;
+		const auto across = glm::cross(direction, edge2);
+		const float determinant = glm::dot(edge1, across);
+		if (std::abs(determinant) < 1e-12f)
+		{
+			continue;
+		}
+		const float inverseDeterminant = 1.0f / determinant;
+		const auto fromCorner = origin - a;
+		const float u = glm::dot(fromCorner, across) * inverseDeterminant;
+		if (u < 0.0f || u > 1.0f)
+		{
+			continue;
+		}
+		const auto up = glm::cross(fromCorner, edge1);
+		const float v = glm::dot(direction, up) * inverseDeterminant;
+		if (v < 0.0f || u + v > 1.0f)
+		{
+			continue;
+		}
+		const float distance = glm::dot(edge2, up) * inverseDeterminant;
+		if (distance > 0.0f && (!nearest.has_value() || distance < *nearest))
+		{
+			nearest = distance;
+		}
+	}
+	return nearest;
+}
 
 bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 {
@@ -128,6 +181,12 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 	if (meshIndex < l3d.GetSubmeshNames().size())
 	{
 		const auto& name = l3d.GetSubmeshNames()[meshIndex];
+		_name.assign(name.name.begin(), std::find(name.name.begin(), name.name.end(), '\0'));
+		const auto point = [](const l3d::L3DPoint& p) { return glm::vec3(p.x, p.y, p.z); };
+		_frame.toMesh = glm::mat4(glm::vec4(point(name.frameAxes[0]), 0.0f), glm::vec4(point(name.frameAxes[1]), 0.0f),
+		                          glm::vec4(point(name.frameAxes[2]), 0.0f), glm::vec4(point(name.frameOrigin), 1.0f));
+		_frame.min = point(name.frameMin);
+		_frame.max = point(name.frameMax);
 		if (name.jointIndex >= 0 && name.jointIndex < 0x100)
 		{
 			_joint = Joint {
@@ -236,8 +295,23 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 		    lutEntry.modulateAlpha,
 		    lutEntry.thresholdAlpha,
 		    primitive.material.alphaCutoutThreshold / 255.0f,
+		    (primitive.material.cullMode & 1U) != 0,
 		});
 
+		// The temple's rooms, the meshes with lightmaps, keep their triangles for the hand to find where the cursor
+		// points at them
+		if (_hasLightmapCoordinates && !_flags.hasBones)
+		{
+			for (uint32_t j = 0; j < primitive.numTriangles * 3; j++)
+			{
+				const auto vertex = indexSpan[startIndex + j] + startVertex;
+				if (vertex < verticesSpan.size())
+				{
+					_pickTriangles.push_back(glm::make_vec3(&verticesSpan[vertex].position.x));
+				}
+			}
+			_pickTriangles.resize(_pickTriangles.size() - (_pickTriangles.size() % 3));
+		}
 		startVertex += static_cast<uint16_t>(primitive.numVertices);
 		startIndex += static_cast<uint16_t>(primitive.numTriangles * 3);
 	}

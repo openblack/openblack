@@ -197,6 +197,34 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 	return result;
 }
 
+std::optional<L3DMesh::PickHit> L3DMesh::Pick(glm::vec3 origin, glm::vec3 direction, bool onlyJoints, bool withoutJoints) const
+{
+	std::optional<PickHit> nearest;
+	for (uint32_t i = 0; i < _subMeshes.size(); ++i)
+	{
+		const auto& subMesh = _subMeshes[i];
+		// The submeshes drawn: no physics, statuses or low levels of detail
+		if (subMesh->IsPhysics() || subMesh->GetFlags().status != 0 || (subMesh->GetFlags().lodMask & 1) != 1)
+		{
+			continue;
+		}
+		if (onlyJoints && !subMesh->GetJoint().has_value())
+		{
+			continue;
+		}
+		if (withoutJoints && subMesh->GetJoint().has_value())
+		{
+			continue;
+		}
+		if (const auto distance = subMesh->Pick(origin, direction);
+		    distance.has_value() && (!nearest.has_value() || *distance < nearest->distance))
+		{
+			nearest = PickHit {.distance = *distance, .subMesh = i};
+		}
+	}
+	return nearest;
+}
+
 bool L3DMesh::LoadFromFilesystem(const std::filesystem::path& path) noexcept
 {
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading L3DMesh from file: {}", path.generic_string());
