@@ -89,8 +89,19 @@ inline void addRoomToRegistry(std::string_view assetName, Indoors templeRoom, gl
 {
 	auto& registry = Locator::entitiesRegistry::value();
 	auto meshId = entt::hashed_string(fmt::format("temple/interior/{}", assetName).c_str());
+	// "<room>_l3d" is the room itself and "<room>floor_l3d" its floor
+	const auto roomName = k_TempleInteriorGlows.at(templeRoom);
+	auto mesh = ecs::components::TempleInteriorMesh::Other;
+	if (assetName == fmt::format("{}_l3d", roomName))
+	{
+		mesh = ecs::components::TempleInteriorMesh::Room;
+	}
+	else if (assetName == fmt::format("{}floor_l3d", roomName))
+	{
+		mesh = ecs::components::TempleInteriorMesh::Floor;
+	}
 	auto entity = registry.Create();
-	registry.Assign<ecs::components::TempleInteriorPart>(entity, templeRoom);
+	registry.Assign<ecs::components::TempleInteriorPart>(entity, templeRoom, mesh);
 	registry.Assign<ecs::components::Transform>(entity, position, rotation, scale);
 	registry.Assign<ecs::components::Mesh>(entity, meshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
 }

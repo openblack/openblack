@@ -27,6 +27,10 @@ class TempleInterior final: public TempleInteriorInterface
 public:
 	[[nodiscard]] bool Active() const override { return _active; }
 	[[nodiscard]] glm::vec3 GetPosition() const override { return _templePosition; }
+	[[nodiscard]] TempleRoom GetCurrentRoom() const override { return _currentRoom; }
+	void SetCurrentRoom(TempleRoom room) override { _currentRoom = room; }
+	[[nodiscard]] std::optional<TempleRoom> GetTransitionRoom() const override { return _transitionRoom; }
+	void SetTransitionRoom(std::optional<TempleRoom> room) override { _transitionRoom = room; }
 	void Activate() override { Activate(TempleRoom::Main); }
 	void Activate(TempleRoom room) override;
 	void Deactivate() override;
@@ -37,5 +41,7 @@ private:
 	glm::vec3 _templeRotation;
 	glm::vec3 _playerPositionOutside;
 	glm::vec3 _playerRotationOutside;
+	TempleRoom _currentRoom {TempleRoom::Main};
+	std::optional<TempleRoom> _transitionRoom;
 };
 } // namespace openblack

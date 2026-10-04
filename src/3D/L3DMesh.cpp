@@ -167,6 +167,28 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 
 		_subMeshes.emplace_back(std::move(subMesh));
 	}
+
+	// The windows of the temple shed volumes of light, with the texture of their first primitive. The temple's windows
+	// are each a single primitive.
+	const auto& names = l3d.GetSubmeshNames();
+	for (uint32_t i = 0; i < names.size() && i < submeshCount; ++i)
+	{
+		const auto& name = names[i];
+		const auto& primitives = l3d.GetPrimitiveSpan(i);
+		if ((name.flags & l3d::L3DSubmeshName::VolumeLight) == 0 || primitives.empty())
+		{
+			continue;
+		}
+		const auto& primitive = primitives.front();
+		const auto vertices = l3d.GetVertexSpan(i).first(std::min<size_t>(primitive.numVertices, l3d.GetVertexSpan(i).size()));
+		const auto indices =
+		    l3d.GetIndexSpan(i).first(std::min<size_t>(primitive.numTriangles * 3, l3d.GetIndexSpan(i).size()));
+		const glm::vec3 source {name.volumeLightSource.x, name.volumeLightSource.y, name.volumeLightSource.z};
+		_volumeLights.push_back({
+		    .skinID = primitive.material.skinID,
+		    .mesh = MakeVolumeLight(vertices, indices, source, name.volumeLightLength),
+		});
+	}
 	// TODO(bwrsandman): if no physics mesh was found, make physics mesh the bounding box
 
 	// TODO(bwrsandman): store vertex and index buffers at mesh level

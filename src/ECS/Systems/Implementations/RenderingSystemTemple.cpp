@@ -11,9 +11,12 @@
 
 #include "RenderingSystemTemple.h"
 
+#include <unordered_set>
+
 #include <glm/gtx/transform.hpp>
 
 #include "3D/L3DMesh.h"
+#include "3D/TempleInteriorInterface.h"
 #include "Camera/Camera.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Stream.h"
@@ -34,24 +37,18 @@ RenderingSystemTemple::~RenderingSystemTemple() = default;
 void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 {
 	auto& registry = Locator::entitiesRegistry::value();
-	auto& camera = Locator::camera::value();
 
 	// Count number of instances
 	uint32_t instanceCount = 0;
 	std::unordered_map<entt::id_type, std::pair<uint32_t, bool>> meshIds;
-	std::set<TempleRoom> loadedRooms {TempleRoom::Main};
-	auto roomLoaded = [&loadedRooms, &camera](const Mesh& mesh, const Transform& transform,
-	                                          const TempleInteriorPart& templePart) {
-		auto l3dMesh = entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(mesh.id);
-		auto box = l3dMesh->GetBoundingBox();
-		auto cameraInsideRoom = box.Contains(camera.GetOrigin() - transform.position);
-		if (cameraInsideRoom)
-		{
-			loadedRooms.emplace(templePart.room);
-		}
-	};
-	registry.Each<const Mesh, const Transform, const TempleInteriorPart>(roomLoaded);
-	_loadedRooms = loadedRooms;
+	// Temple::Draw draws the room the player is in and the main room, which the others lead off, and the room the
+	// camera is on its way into
+	const auto& temple = Locator::temple::value();
+	_loadedRooms = {TempleRoom::Main, temple.GetCurrentRoom()};
+	if (const auto transition = temple.GetTransitionRoom(); transition.has_value())
+	{
+		_loadedRooms.insert(*transition);
+	}
 
 	auto prep = [&meshIds, &instanceCount](const Mesh& mesh, bool morphWithTerrain) {
 		auto count = meshIds.insert(std::make_pair(mesh.id, std::make_pair(mesh.submeshId, morphWithTerrain)));
@@ -59,15 +56,26 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 		instanceCount++;
 	};
 
+	// WorldRoom::Draw mirrors the main room, without its floor or pool, through the plane of its origin and draws the
+	// floor over the reflection, blended by the floor's alpha
+	std::unordered_set<entt::id_type> mirroredMeshIds;
+	std::unordered_set<entt::id_type> reflectiveMeshIds;
 	registry.Each<const Mesh, const Transform, const TempleInteriorPart>(
-	    [this, &prep](const Mesh& mesh, const Transform& /* unused */, const TempleInteriorPart& templePart) {
-		    auto l3dMesh = entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(mesh.id);
+	    [this, &prep, &mirroredMeshIds, &reflectiveMeshIds](const Mesh& mesh, const Transform& /* unused */,
+	                                                        const TempleInteriorPart& templePart) {
 		    if (_loadedRooms.contains(templePart.room))
 		    {
 			    prep(mesh, false);
+			    if (templePart.room == TempleRoom::Main && templePart.mesh == TempleInteriorMesh::Room)
+			    {
+				    mirroredMeshIds.insert(mesh.id);
+			    }
+			    else if (templePart.room == TempleRoom::Main && templePart.mesh == TempleInteriorMesh::Floor)
+			    {
+				    reflectiveMeshIds.insert(mesh.id);
+			    }
 		    }
 	    });
-
 	if (drawBoundingBox)
 	{
 		instanceCount *= 2;
@@ -96,8 +104,11 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 	_renderContext.instancedDrawDescs.clear();
 	for (const auto& [meshId, desc] : meshIds)
 	{
-		_renderContext.instancedDrawDescs.emplace(std::piecewise_construct, std::forward_as_tuple(meshId),
-		                                          std::forward_as_tuple(offset, desc.first, desc.second, false));
+		auto [drawDesc, _] =
+		    _renderContext.instancedDrawDescs.emplace(std::piecewise_construct, std::forward_as_tuple(meshId),
+		                                              std::forward_as_tuple(offset, desc.first, desc.second, false));
+		drawDesc->second.hiddenFromReflection = !mirroredMeshIds.contains(meshId);
+		drawDesc->second.showsReflection = reflectiveMeshIds.contains(meshId);
 		offset += desc.first;
 	}
 }
@@ -135,7 +146,6 @@ void RenderingSystemTemple::PrepareDrawUploadUniforms(bool drawBoundingBox)
 			    offset.first->second++;
 		    }
 	    });
-
 	if (!_renderContext.instanceUniforms.empty())
 	{
 		const auto size = static_cast<uint32_t>(_renderContext.instanceUniforms.size() * sizeof(glm::mat4));

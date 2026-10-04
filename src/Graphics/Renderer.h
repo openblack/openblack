@@ -78,6 +78,9 @@ private:
 	void DrawHandShadowPass(const DrawSceneDesc& drawDesc) const;
 	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, bool preserveState) const;
 	void DrawPass(const DrawSceneDesc& desc) const;
+	/// The beams of the temple's spot lights and the light its windows shed, which InnerRoom::DrawGlow draws in its
+	/// rooms but not in the reflection of the main room
+	void DrawLightBeams(const DrawSceneDesc& desc) const;
 
 	std::unique_ptr<ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;

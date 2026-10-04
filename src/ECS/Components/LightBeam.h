@@ -9,29 +9,13 @@
 
 #pragma once
 
-#include "3D/TempleInteriorInterface.h"
-#include "Enums.h"
+#include "3D/Light.h"
 
 namespace openblack::ecs::components
 {
-
-/// Which of a room's meshes a part is: InnerRoom keeps the room and its floor apart, as the main room reflects itself
-/// in its floor
-enum class TempleInteriorMesh
+/// The beam of a spot light, drawn with its glow
+struct LightBeam
 {
-	Room,
-	Floor,
-	Other,
-};
-
-struct TempleInteriorPart
-{
-	TempleRoom room;
-	TempleInteriorMesh mesh {TempleInteriorMesh::Other};
-};
-
-struct Temple
-{
-	PlayerNames owner;
+	LightCone cone;
 };
 } // namespace openblack::ecs::components

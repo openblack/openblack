@@ -69,3 +69,5 @@ openblack_setup_and_add_test(
   test_l3d_submesh_names l3d/test_l3d_submesh_names.cpp
 )
 target_link_libraries(test_l3d_submesh_names PRIVATE l3d)
+openblack_setup_and_add_test(test_light_beams graphics/test_light_beams.cpp)
+target_link_libraries(test_light_beams PRIVATE l3d glw)

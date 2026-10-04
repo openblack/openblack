@@ -19,6 +19,7 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include "AxisAlignedBoundingBox.h"
+#include "Graphics/LightBeams.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/ShaderProgram.h"
 
@@ -88,6 +89,12 @@ public:
 		std::unique_ptr<graphics::Texture2D> texture;
 		std::unique_ptr<graphics::Mesh> mesh;
 	};
+	/// The light a window submesh sheds, drawn with one of the mesh's skins
+	struct VolumeLight
+	{
+		SkinId skinID;
+		BeamMesh mesh;
+	};
 	explicit L3DMesh(std::string debugName = "") noexcept;
 	virtual ~L3DMesh() noexcept;
 
@@ -100,6 +107,7 @@ public:
 	[[nodiscard]] const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }
 	[[nodiscard]] const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& GetSkins() const { return _skins; }
 	[[nodiscard]] const std::vector<Footprint>& GetFootprints() const { return _footprints; }
+	[[nodiscard]] const std::vector<VolumeLight>& GetVolumeLights() const { return _volumeLights; }
 	[[nodiscard]] const std::vector<uint32_t>& GetBoneParents() const { return _bonesParents; }
 	[[nodiscard]] const std::vector<glm::mat4>& GetBoneMatrices() const { return _bonesDefaultMatrices; }
 	[[nodiscard]] const std::optional<glm::vec3>& GetDoorPos() const { return _doorPos; }
@@ -116,6 +124,7 @@ private:
 
 	std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>> _skins;
 	std::vector<Footprint> _footprints; ///< If ContainsLandscapeFeature() is true
+	std::vector<VolumeLight> _volumeLights;
 	std::vector<std::unique_ptr<L3DSubMesh>> _subMeshes;
 	std::vector<uint32_t> _bonesParents;
 	std::vector<glm::mat4> _bonesDefaultMatrices;

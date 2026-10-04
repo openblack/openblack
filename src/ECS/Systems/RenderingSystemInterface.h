@@ -43,6 +43,10 @@ struct RenderContext
 		bool morphWithTerrain;
 		/// The instances cast their shadows onto the land (see graphics::ObjectShadows)
 		bool castsShadow;
+		/// The instances aren't seen in the reflection pass
+		bool hiddenFromReflection {false};
+		/// The instances show the reflection pass through them, as the temple's floor does
+		bool showsReflection {false};
 	};
 
 	/// A list of cpu-side uniforms which is refilled at every \ref PrepareDraw.

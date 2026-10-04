@@ -7,6 +7,8 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include <cstring>
+
 #include <algorithm>
 #include <limits>
 #include <map>
@@ -30,10 +32,13 @@
 #include "3D/LandIslandInterface.h"
 #include "3D/OceanInterface.h"
 #include "3D/SkyInterface.h"
+#include "3D/TempleInteriorInterface.h"
 #include "Camera/Camera.h"
 #include "ECS/Components/Hand.h"
+#include "ECS/Components/LightBeam.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Sprite.h"
+#include "ECS/Components/Temple.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Registry.h"
@@ -47,6 +52,7 @@
 #include "Graphics/GraphicsHandleBgfx.h"
 #include "Graphics/HandLight.h"
 #include "Graphics/IndexBuffer.h"
+#include "Graphics/LightBeams.h"
 #include "Graphics/ObjectShadows.h"
 #include "Graphics/Primitive.h"
 #include "Graphics/ShaderManager.h"
@@ -363,6 +369,10 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 	const auto& heightMap = island.GetHeightMap();
 
 	auto const& skins = mesh.GetSkins();
+	// LH3DMesh::DrawLightMap draws the submeshes with a lightmap through it and the others as they are
+	const auto lightmapSkinID = subMesh.GetLightmapSkinID();
+	const Texture2D* lightmap = lightmapSkinID.has_value() ? GetTexture(*lightmapSkinID, skins) : nullptr;
+	const auto* program = desc.lightmapProgram != nullptr && lightmap != nullptr ? desc.lightmapProgram : desc.program;
 	bool lastPreserveState = false;
 	const auto& primitives = subMesh.GetPrimitives();
 	for (auto it = primitives.begin(); it != primitives.end(); ++it)
@@ -385,21 +395,25 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			{
 				bgfx::setTransform(desc.modelMatrices, desc.matrixCount);
 			}
-			if (texture != nullptr && desc.program->HasUniform("s_diffuse"))
+			if (texture != nullptr && program->HasUniform("s_diffuse"))
 			{
-				desc.program->SetTextureSampler("s_diffuse", 0, *texture);
+				program->SetTextureSampler("s_diffuse", 0, *texture);
+			}
+			if (program == desc.lightmapProgram)
+			{
+				program->SetTextureSampler("s_lightmap", 3, *lightmap);
 			}
 			if (desc.morphWithTerrain)
 			{
-				desc.program->SetTextureSampler("s_heightmap", 1, heightMap);   // vs
-				desc.program->SetUniformValue("u_islandExtent", &islandExtent); // vs
+				program->SetTextureSampler("s_heightmap", 1, heightMap);   // vs
+				program->SetUniformValue("u_islandExtent", &islandExtent); // vs
 			}
-			if (desc.program->HasUniform("s_handLight"))
+			if (program->HasUniform("s_handLight"))
 			{
-				desc.program->SetTextureSampler("s_handLight", 2, GetHandLightTexture());
-				desc.program->SetUniformValue("u_handLight", &_handLight);
+				program->SetTextureSampler("s_handLight", 2, GetHandLightTexture());
+				program->SetUniformValue("u_handLight", &_handLight);
 			}
-			if (!desc.isSky && desc.program->HasUniform("u_skyAlphaThreshold"))
+			if (!desc.isSky && program->HasUniform("u_skyAlphaThreshold"))
 			{
 				const glm::vec4 u_skyAlphaThreshold = {
 				    Locator::skySystem::value().GetCurrentSkyType(),
@@ -407,7 +421,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				    0.0f,
 				    0.0f,
 				};
-				desc.program->SetUniformValue("u_skyAlphaThreshold", &u_skyAlphaThreshold);
+				program->SetUniformValue("u_skyAlphaThreshold", &u_skyAlphaThreshold);
 			}
 		}
 		else
@@ -455,11 +469,101 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				bgfx::setState(state, desc.rgba);
 			}
 
-			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(desc.program->GetRawHandle()), 0,
+			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(program->GetRawHandle()), 0,
 			             primitivePreserveState ? BGFX_DISCARD_NONE : BGFX_DISCARD_ALL);
 		}
 		lastPreserveState = primitivePreserveState;
 	}
+}
+
+void Renderer::DrawLightBeams(const DrawSceneDesc& desc) const
+{
+	if (desc.viewId == RenderPass::Reflection || !Locator::temple::has_value() || !Locator::temple::value().Active())
+	{
+		return;
+	}
+	using namespace ecs::components;
+	const auto currentRoom = Locator::temple::value().GetCurrentRoom();
+	const auto inDrawnRoom = [currentRoom](TempleRoom room) { return room == TempleRoom::Main || room == currentRoom; };
+	const auto* beamShader = _shaderManager->GetShader("Beam");
+	auto& registry = Locator::entitiesRegistry::value();
+	auto& resources = Locator::resources::value();
+
+	bgfx::VertexLayout layout;
+	layout.begin()
+	    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+	    .end();
+	static_assert(sizeof(BeamVertex) == 6 * sizeof(float));
+
+	// Render mode 0xd: added by alpha, without writing depth, from both sides
+	constexpr uint64_t k_State = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_MSAA |
+	                             BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE);
+	const auto submit = [&](const BeamMesh& mesh, const glm::mat4& model, const Texture2D& texture, const Texture2D* alpha) {
+		const auto vertexCount = static_cast<uint32_t>(mesh.vertices.size());
+		const auto indexCount = static_cast<uint32_t>(mesh.indices.size());
+		if (vertexCount == 0 || indexCount == 0 || bgfx::getAvailTransientVertexBuffer(vertexCount, layout) < vertexCount ||
+		    bgfx::getAvailTransientIndexBuffer(indexCount) < indexCount)
+		{
+			return;
+		}
+		bgfx::TransientVertexBuffer vertices;
+		bgfx::TransientIndexBuffer indices;
+		bgfx::allocTransientVertexBuffer(&vertices, vertexCount, layout);
+		bgfx::allocTransientIndexBuffer(&indices, indexCount);
+		std::memcpy(vertices.data, mesh.vertices.data(), vertexCount * sizeof(BeamVertex));
+		std::memcpy(indices.data, mesh.indices.data(), indexCount * sizeof(uint16_t));
+
+		const glm::vec4 u_beamParams {alpha != nullptr ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f};
+		beamShader->SetTextureSampler("s_diffuse", 0, texture);
+		beamShader->SetTextureSampler("s_alpha", 1, alpha != nullptr ? *alpha : texture);
+		beamShader->SetUniformValue("u_beamParams", &u_beamParams);
+		bgfx::setTransform(glm::value_ptr(model));
+		bgfx::setVertexBuffer(0, &vertices);
+		bgfx::setIndexBuffer(&indices);
+		bgfx::setState(k_State);
+		bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(beamShader->GetRawHandle()));
+	};
+
+	// The spot lights' cones, with the atmosphere texture. Each room's lights drift on together, a step for each cone
+	// drawn, so a room of more cones drifts faster.
+	std::map<TempleRoom, uint32_t> coneCounts;
+	registry.Each<const LightBeam, const TempleInteriorPart>(
+	    [&coneCounts](const LightBeam& /*unused*/, const TempleInteriorPart& part) { coneCounts[part.room]++; });
+	BeamMesh cones;
+	registry.Each<const LightBeam, const TempleInteriorPart>(
+	    [&cones, &coneCounts, &inDrawnRoom, &desc](const LightBeam& beam, const TempleInteriorPart& part) {
+		    if (inDrawnRoom(part.room))
+		    {
+			    const float seconds = static_cast<float>(desc.time) * 0.001f;
+			    AppendCone(beam.cone, seconds * static_cast<float>(coneCounts[part.room]) * 0.1f, cones);
+		    }
+	    });
+	const auto atmos = resources.GetTextures().Handle(entt::hashed_string("raw/ATMOS"));
+	const auto atmosAlpha = resources.GetTextures().Handle(entt::hashed_string("raw/ATMOSA"));
+	if (atmos && atmosAlpha)
+	{
+		submit(cones, glm::mat4(1.0f), *atmos, &*atmosAlpha);
+	}
+
+	// The light the rooms' windows shed, with the windows' textures
+	registry.Each<const ecs::components::Mesh, const Transform, const TempleInteriorPart>(
+	    [&](const ecs::components::Mesh& mesh, const Transform& transform, const TempleInteriorPart& part) {
+		    if (part.mesh != TempleInteriorMesh::Room || !inDrawnRoom(part.room))
+		    {
+			    return;
+		    }
+		    const auto l3dMesh = resources.GetMeshes().Handle(mesh.id);
+		    const auto model = glm::translate(transform.position) * glm::mat4(transform.rotation) * glm::scale(transform.scale);
+		    for (const auto& volumeLight : l3dMesh->GetVolumeLights())
+		    {
+			    if (const auto* texture = GetTexture(volumeLight.skinID, l3dMesh->GetSkins()); texture != nullptr)
+			    {
+				    submit(volumeLight.mesh, model, *texture, nullptr);
+			    }
+		    }
+	    });
 }
 
 void Renderer::DrawMesh(const graphics::L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const noexcept
@@ -761,7 +865,11 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 	// Reflection Pass
 	{
 		auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::ReflectionPass);
-		if (drawDesc.drawWater)
+		const auto& instancedDrawDescs = Locator::rendereringSystem::value().GetContext().instancedDrawDescs;
+		const bool showsReflection = drawDesc.drawEntities && std::ranges::any_of(instancedDrawDescs, [](const auto& entry) {
+			                             return entry.second.showsReflection;
+		                             });
+		if (drawDesc.drawWater || showsReflection)
 		{
 			DrawSceneDesc drawPassDesc = drawDesc;
 
@@ -814,7 +922,10 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	const auto* spriteShader = _shaderManager->GetShader("Sprite");
 	const auto* debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
 	const auto* objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
+	const auto* objectShaderStaticInstanced = _shaderManager->GetShader("ObjectStaticInstanced");
 	const auto* objectShaderHeightMapInstanced = _shaderManager->GetShader("ObjectHeightMapInstanced");
+	const auto* objectShaderLightmapInstanced = _shaderManager->GetShader("ObjectLightmapInstanced");
+	const auto* objectShaderReflectiveLightmapInstanced = _shaderManager->GetShader("ObjectReflectiveLightmapInstanced");
 
 	const auto skyType = Locator::skySystem::value().GetCurrentSkyType();
 
@@ -990,14 +1101,26 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				}
 				submitDesc.isSky = false;
 				submitDesc.morphWithTerrain = placers.morphWithTerrain;
-				submitDesc.program = submitDesc.morphWithTerrain ? objectShaderHeightMapInstanced : objectShaderInstanced;
+				submitDesc.program = submitDesc.morphWithTerrain ? objectShaderHeightMapInstanced
+				                     : mesh->IsBoned()           ? objectShaderInstanced
+				                                                 : objectShaderStaticInstanced;
+				// Only the temple's meshes have lightmaps, and they don't stand on the land
+				submitDesc.lightmapProgram = submitDesc.morphWithTerrain ? nullptr
+				                             : placers.showsReflection   ? objectShaderReflectiveLightmapInstanced
+				                                                         : objectShaderLightmapInstanced;
+				if (placers.showsReflection)
+				{
+					objectShaderReflectiveLightmapInstanced->SetTextureSampler(
+					    "s_reflection", 4, Locator::oceanSystem::value().GetReflectionFramebuffer().GetColorAttachment());
+				}
 
 				// TODO(bwrsandman): choose the correct LOD
 				DrawMesh(*mesh, submitDesc, std::numeric_limits<uint8_t>::max());
 			};
 			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
 			{
-				if (meshId != ecs::components::Hand::k_MeshId)
+				if (meshId != ecs::components::Hand::k_MeshId &&
+				    !(desc.viewId == RenderPass::Reflection && placers.hiddenFromReflection))
 				{
 					drawInstances(meshId, placers, false);
 				}
@@ -1101,6 +1224,11 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			}
 		}
 
+		if (desc.drawEntities)
+		{
+			DrawLightBeams(desc);
+		}
+
 		{
 			auto subSection =
 			    profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSprites
@@ -1112,7 +1240,19 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 				auto& registry = Locator::entitiesRegistry::value();
 				registry.Each<const Sprite, const Transform>(
-				    [this, &spriteShader, &desc](const Sprite& sprite, const Transform& transform) {
+				    [this, &spriteShader, &desc, &registry](entt::entity entity, const Sprite& sprite,
+				                                            const Transform& transform) {
+					    // Temple::Draw draws the glows of the room the player is in and of the main room, whose glows alone
+					    // WorldRoom::Draw reflects in its floor
+					    if (const auto* templePart = registry.TryGet<const TempleInteriorPart>(entity); templePart != nullptr)
+					    {
+						    const bool inMainRoom = templePart->room == TempleRoom::Main;
+						    const bool inCurrentRoom = templePart->room == Locator::temple::value().GetCurrentRoom();
+						    if (desc.viewId == RenderPass::Reflection ? !inMainRoom : !(inMainRoom || inCurrentRoom))
+						    {
+							    return;
+						    }
+					    }
 					    glm::mat4 modelMatrix = glm::mat4(1.0f);
 					    modelMatrix = glm::translate(modelMatrix, transform.position);
 					    modelMatrix *= glm::mat4(transform.rotation);
@@ -1122,6 +1262,10 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 					    bgfx::setTransform(glm::value_ptr(modelMatrix));
 					    spriteShader->SetUniformValue("u_sampleRect", glm::value_ptr(u_sampleRect));
+					    const glm::vec4 u_spriteParams {sprite.facesCamera ? 1.0f : 0.0f,
+					                                    sprite.alpha.has_value() ? 1.0f : 0.0f, 0.0f, 0.0f};
+					    spriteShader->SetUniformValue("u_spriteParams", glm::value_ptr(u_spriteParams));
+					    spriteShader->SetTextureSampler("s_alpha", 1, sprite.alpha.value_or(sprite.texture));
 					    // The shader multiplies the tint by the texture's alpha, which for alpha blending gives colours
 					    // premultiplied by alpha when the tint is
 					    const auto tint =

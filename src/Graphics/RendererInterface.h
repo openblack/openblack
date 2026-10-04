@@ -70,6 +70,8 @@ public:
 	{
 		graphics::RenderPass viewId;
 		const graphics::ShaderProgram* program;
+		/// Draws the submeshes that have a lightmap, with it bound to s_lightmap, when set
+		const graphics::ShaderProgram* lightmapProgram;
 		uint64_t state;
 		uint32_t rgba;
 		const glm::mat4* modelMatrices;

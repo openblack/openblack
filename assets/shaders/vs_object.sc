@@ -1,15 +1,22 @@
-#ifdef USE_INSTANCING
+#if defined(USE_INSTANCING) && defined(USE_LIGHTMAP)
+$input a_position, a_texcoord0, a_normal, a_indices, a_texcoord3, i_data0, i_data1, i_data2, i_data3, i_data4
+#elif defined(USE_INSTANCING)
 $input a_position, a_texcoord0, a_normal, a_indices, i_data0, i_data1, i_data2, i_data3, i_data4
+#elif defined(USE_LIGHTMAP)
+$input a_position, a_texcoord0, a_normal, a_indices, a_texcoord3
 #else
 $input a_position, a_texcoord0, a_normal, a_indices
-#endif // USE_INSTANCING
+#endif
 $output v_position, v_texcoord0, v_normal
 
+// Every bone's matrix is uploaded with each draw: meshes without bones declare one
+#ifndef BGFX_CONFIG_MAX_BONES
 #if BGFX_SHADER_LANGUAGE_HLSL == 3
 #define BGFX_CONFIG_MAX_BONES 48
 #else
 #define BGFX_CONFIG_MAX_BONES 128
 #endif
+#endif // BGFX_CONFIG_MAX_BONES
 
 #include <bgfx_shader.sh>
 
@@ -58,7 +65,11 @@ void main()
 	v_position.y += terrain_height - original_height;
 #endif // USE_HEIGHT_MAP
 
+#ifdef USE_LIGHTMAP
+	v_texcoord0 = vec4(a_texcoord0, a_texcoord3);
+#else
 	v_texcoord0 = vec4(a_texcoord0, 0.0f, 0.0f);
+#endif // USE_LIGHTMAP
 	v_normal = a_normal;
 	gl_Position = mul(u_viewProj, v_position);
 }

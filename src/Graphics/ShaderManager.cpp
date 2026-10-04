@@ -62,6 +62,14 @@
 #include "ShaderIncluder.h"
 #define SHADER_NAME fs_object
 #include "ShaderIncluder.h"
+#define SHADER_NAME vs_object_static_instanced
+#include "ShaderIncluder.h"
+#define SHADER_NAME vs_object_lightmap_instanced
+#include "ShaderIncluder.h"
+#define SHADER_NAME fs_object_lightmap
+#include "ShaderIncluder.h"
+#define SHADER_NAME fs_object_reflective_lightmap
+#include "ShaderIncluder.h"
 #define SHADER_NAME fs_sky
 #include "ShaderIncluder.h"
 
@@ -98,6 +106,11 @@
 #define SHADER_NAME fs_object_shadow
 #include "ShaderIncluder.h"
 
+#define SHADER_NAME vs_beam
+#include "ShaderIncluder.h"
+#define SHADER_NAME fs_beam
+#include "ShaderIncluder.h"
+
 #define SHADER_NAME vs_interface
 #include "ShaderIncluder.h"
 #define SHADER_NAME fs_interface
@@ -115,7 +128,7 @@ struct ShaderDefinition
 	const std::string_view fragmentShaderName;
 };
 
-const std::array<bgfx::EmbeddedShader, 25> k_EmbeddedShaders = {{
+const std::array<bgfx::EmbeddedShader, 31> k_EmbeddedShaders = {{
     BGFX_EMBEDDED_SHADER(vs_line),
     BGFX_EMBEDDED_SHADER(vs_line_instanced), //
     BGFX_EMBEDDED_SHADER(fs_line),           //
@@ -123,6 +136,10 @@ const std::array<bgfx::EmbeddedShader, 25> k_EmbeddedShaders = {{
     BGFX_EMBEDDED_SHADER(vs_object_instanced),
     BGFX_EMBEDDED_SHADER(vs_object_hm_instanced), //
     BGFX_EMBEDDED_SHADER(fs_object),
+    BGFX_EMBEDDED_SHADER(vs_object_static_instanced),
+    BGFX_EMBEDDED_SHADER(vs_object_lightmap_instanced),
+    BGFX_EMBEDDED_SHADER(fs_object_lightmap),
+    BGFX_EMBEDDED_SHADER(fs_object_reflective_lightmap),
     BGFX_EMBEDDED_SHADER(fs_sky), //
     BGFX_EMBEDDED_SHADER(vs_terrain),
     BGFX_EMBEDDED_SHADER(fs_terrain), //
@@ -138,6 +155,8 @@ const std::array<bgfx::EmbeddedShader, 25> k_EmbeddedShaders = {{
     BGFX_EMBEDDED_SHADER(fs_shadow_caster), //
     BGFX_EMBEDDED_SHADER(vs_object_shadow_instanced),
     BGFX_EMBEDDED_SHADER(fs_object_shadow), //
+    BGFX_EMBEDDED_SHADER(vs_beam),
+    BGFX_EMBEDDED_SHADER(fs_beam), //
     BGFX_EMBEDDED_SHADER(vs_interface),
     BGFX_EMBEDDED_SHADER(fs_interface), //
     BGFX_EMBEDDED_SHADER_END()          //
@@ -150,6 +169,9 @@ constexpr std::array k_Shaders {
     ShaderDefinition {"Object", "vs_object", "fs_object"},
     ShaderDefinition {"ObjectInstanced", "vs_object_instanced", "fs_object"},
     ShaderDefinition {"ObjectHeightMapInstanced", "vs_object_hm_instanced", "fs_object"},
+    ShaderDefinition {"ObjectStaticInstanced", "vs_object_static_instanced", "fs_object"},
+    ShaderDefinition {"ObjectLightmapInstanced", "vs_object_lightmap_instanced", "fs_object_lightmap"},
+    ShaderDefinition {"ObjectReflectiveLightmapInstanced", "vs_object_lightmap_instanced", "fs_object_reflective_lightmap"},
     ShaderDefinition {"Sky", "vs_object", "fs_sky"},
     ShaderDefinition {"Water", "vs_water", "fs_water"},
     ShaderDefinition {"Sprite", "vs_sprite", "fs_sprite"},
@@ -158,6 +180,7 @@ constexpr std::array k_Shaders {
     ShaderDefinition {"VegetationHeightMapInstanced", "vs_vegetation_hm_instanced", "fs_vegetation"},
     ShaderDefinition {"ShadowCaster", "vs_object", "fs_shadow_caster"},
     ShaderDefinition {"ObjectShadowInstanced", "vs_object_shadow_instanced", "fs_object_shadow"},
+    ShaderDefinition {"Beam", "vs_beam", "fs_beam"},
     ShaderDefinition {"Interface", "vs_interface", "fs_interface"},
 };
 

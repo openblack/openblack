@@ -8,6 +8,7 @@ float a_color3           : COLOR3;     // water alpha
 vec2 a_texcoord0         : TEXCOORD0;
 vec3 a_texcoord1         : TEXCOORD1;  // weight
 vec3 a_texcoord2         : TEXCOORD2;  // material blend coefficient
+vec2 a_texcoord3         : TEXCOORD3;  // lightmap coordinates
 vec4 i_data0             : TEXCOORD7;
 vec4 i_data1             : TEXCOORD6;
 vec4 i_data2             : TEXCOORD5;
