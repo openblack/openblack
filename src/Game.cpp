@@ -155,13 +155,20 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 	static bool leftMouseButton = false;
 	static bool middleMouseButton = false;
 
+	// Pressed and let go, or as the mouse moving finds them: a press or a let go the menu or the debug windows took would
+	// otherwise leave the hand gripping, as on leaving the temple
 	if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_LEFT)
 	{
-		leftMouseButton = !leftMouseButton;
+		leftMouseButton = event.type == SDL_MOUSEBUTTONDOWN;
 	}
 	if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_MIDDLE)
 	{
-		middleMouseButton = !middleMouseButton;
+		middleMouseButton = event.type == SDL_MOUSEBUTTONDOWN;
+	}
+	if (event.type == SDL_MOUSEMOTION)
+	{
+		leftMouseButton = (event.motion.state & SDL_BUTTON_LMASK) != 0;
+		middleMouseButton = (event.motion.state & SDL_BUTTON_MMASK) != 0;
 	}
 
 	// The hand grips the land, which the temple has none of: its camera takes the clicks (HandStateCitadel)

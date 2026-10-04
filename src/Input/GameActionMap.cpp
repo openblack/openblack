@@ -115,6 +115,20 @@ float GameActionMap::GetMouseWheelDelta() const
 
 void GameActionMap::Frame()
 {
+	// Lets go of the buttons whose letting go went elsewhere, as to the menu or the debug windows
+	const auto heldButtons = SDL_GetMouseState(nullptr, nullptr);
+	for (uint8_t button = SDL_BUTTON_LEFT; button <= SDL_BUTTON_X2; ++button)
+	{
+		if ((_currentMouseButtons & SDL_BUTTON(button)) != 0 && (heldButtons & SDL_BUTTON(button)) == 0)
+		{
+			SDL_Event letGo {};
+			letGo.type = SDL_MOUSEBUTTONUP;
+			letGo.button.button = button;
+			letGo.button.clicks = 1;
+			ProcessEvent(letGo);
+		}
+	}
+
 	if ((SDL_GetMouseState(nullptr, nullptr) & (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK)) == (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK))
 	{
 		_unbindableMap = static_cast<UnbindableActionMap>(static_cast<uint8_t>(_unbindableMap) |
