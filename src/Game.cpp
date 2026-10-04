@@ -18,6 +18,7 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/intersect.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/vec_swizzle.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
@@ -30,6 +31,7 @@
 #include "3D/TempleInteriorInterface.h"
 #include "Audio/AtmosAudio.h"
 #include "Audio/AudioManagerInterface.h"
+#include "Audio/GameMusic.h"
 #include "CHLApi.h"
 #include "Camera/Camera.h"
 #include "Common/EventManager.h"
@@ -37,6 +39,8 @@
 #include "Debug/DebugGuiInterface.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
+#include "ECS/Components/Town.h"
+#include "ECS/Components/Transform.h"
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/CameraBookmarkSystemInterface.h"
@@ -304,6 +308,29 @@ bool Game::GameLogicLoop() noexcept
 		    .widescreen = false,
 		    .videoPlaying = false,
 		});
+	}
+
+	// GAudio::ProcessMusic picks the music for the turn
+	if (_gameMusic)
+	{
+		audio::GameMusic::TurnInputs music {
+		    .turn = _turnCount,
+		    .camera = cameraPosition,
+		    .groundHeight = Locator::terrainSystem::value().GetHeightAt(glm::xz(cameraPosition)),
+		    .inCitadel = Locator::temple::has_value() && Locator::temple::value().Active(),
+		    // TODO(raffclar): the player's alignment once it is simulated
+		    .alignment = 0.0f,
+		    .towns = {},
+		};
+		Locator::entitiesRegistry::value().Each<const ecs::components::Town, const Tribe, const ecs::components::Transform>(
+		    [&music](const ecs::components::Town& town, const Tribe tribe, const ecs::components::Transform& transform) {
+			    music.towns.push_back({
+			        .position = transform.position,
+			        .tribe = static_cast<int32_t>(tribe),
+			        .id = town.id,
+			    });
+		    });
+		_gameMusic->ProcessTurn(music);
 	}
 
 	_lastGameLoopTime = currentTime;
@@ -1004,6 +1031,12 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 		_atmosAudio = std::make_unique<audio::AtmosAudio>();
 	}
 	_atmosAudio->Init();
+	if (!_gameMusic)
+	{
+		_gameMusic = std::make_unique<audio::GameMusic>();
+	}
+	_gameMusic->Reset();
+
 	return true;
 }
 

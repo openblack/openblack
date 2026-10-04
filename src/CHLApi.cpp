@@ -25,6 +25,7 @@
 
 #include "3D/LandIslandInterface.h"
 #include "3D/TempleInteriorInterface.h"
+#include "Audio/GameMusic.h"
 #include "Camera/Camera.h"
 #include "ECS/Archetypes/MobileStaticArchetype.h"
 #include "ECS/Components/Transform.h"
@@ -32,6 +33,7 @@
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
 #include "Enums.h"
+#include "Game.h"
 #include "Locator.h"
 #include "ScriptHeaders/ScriptEnums.h"
 
@@ -560,15 +562,24 @@ void PlaySoundEffect() // 043 PLAY_SOUND_EFFECT
 
 void StartMusic() // 044 START_MUSIC
 {
-	// const auto music = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto music = Pop().intVal;
+	if (music < 0 || music >= static_cast<int32_t>(audio::MusicType::_COUNT))
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "START_MUSIC: no music type {}", music);
+		return;
+	}
+	if (auto* gameMusic = Game::Instance()->GetGameMusic())
+	{
+		gameMusic->StartScriptMusic(static_cast<audio::MusicType>(music));
+	}
 }
 
 void StopMusic() // 045 STOP_MUSIC
 {
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	if (auto* gameMusic = Game::Instance()->GetGameMusic())
+	{
+		gameMusic->StartScriptMusic(audio::MusicType::None);
+	}
 }
 
 void AttachMusic() // 046 ATTACH_MUSIC
@@ -3977,9 +3988,11 @@ void GameAddForBuilding() // 444 GAME_ADD_FOR_BUILDING
 
 void EnableDisableAlignmentMusic() // 445 ENABLE_DISABLE_ALIGNMENT_MUSIC
 {
-	// const auto enable = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto enable = Pop().intVal != 0;
+	if (auto* gameMusic = Game::Instance()->GetGameMusic())
+	{
+		gameMusic->SetAlignmentMusicEnabled(enable);
+	}
 }
 
 void GetDeadLiving() // 446 GET_DEAD_LIVING

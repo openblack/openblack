@@ -29,6 +29,7 @@ namespace openblack
 namespace audio
 {
 class AtmosAudio;
+class GameMusic;
 } // namespace audio
 
 enum class LoggingSubsystem : uint8_t
@@ -100,6 +101,8 @@ public:
 	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const { return _turnDeltaTime; }
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
 	[[nodiscard]] const audio::AtmosAudio* GetAtmosAudio() const { return _atmosAudio.get(); }
+	[[nodiscard]] audio::GameMusic* GetGameMusic() { return _gameMusic.get(); }
+	[[nodiscard]] const audio::GameMusic* GetGameMusic() const { return _gameMusic.get(); }
 
 	void RequestScreenshot(const std::filesystem::path& path) noexcept;
 
@@ -123,5 +126,6 @@ private:
 	bool _handGripping;
 	std::optional<std::pair</* frame number */ uint32_t, /* output */ std::filesystem::path>> _requestScreenshot;
 	std::unique_ptr<audio::AtmosAudio> _atmosAudio;
+	std::unique_ptr<audio::GameMusic> _gameMusic;
 };
 } // namespace openblack

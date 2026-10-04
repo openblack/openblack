@@ -15,6 +15,8 @@
 
 #include "Audio/AtmosAudio.h"
 #include "Audio/AtmosPlayer.h"
+#include "Audio/GameMusic.h"
+#include "Audio/MusicPlayer.h"
 #include "Camera/Camera.h"
 #include "ECS/Components/Weather.h"
 #include "ECS/Registry.h"
@@ -150,9 +152,67 @@ void Audio::Emitters() noexcept
 
 void Audio::Music() noexcept
 {
+	// What GAudio has picked and what LHAudio's music channels are playing
+	const auto* game = Game::Instance();
+	if (const auto* gameMusic = game != nullptr ? game->GetGameMusic() : nullptr)
+	{
+		ImGui::Text("Playing: %s", std::string(audio::GetMusicTypeName(gameMusic->GetPlaying())).c_str());
+		ImGui::Text("Land music: %s", std::string(audio::GetMusicTypeName(gameMusic->GetLandType())).c_str());
+		ImGui::Text("Script music: %s", std::string(audio::GetMusicTypeName(gameMusic->GetScriptType())).c_str());
+		ImGui::Text("Played out: %s, %u turns ago", std::string(audio::GetMusicTypeName(gameMusic->GetBlockedType())).c_str(),
+		            gameMusic->GetBlockedTurns());
+		ImGui::Text("Alignment music %s", gameMusic->IsAlignmentMusicEnabled() ? "enabled" : "disabled");
+		for (const auto& [group, chunk] : gameMusic->GetResumeChunks())
+		{
+			ImGui::Text("Group %d resumes from chunk %u", group, chunk);
+		}
+	}
+	if (const auto* music = Locator::audio::value().GetMusic())
+	{
+		if (ImGui::BeginTable("MusicChannels", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+		{
+			ImGui::TableSetupColumn("Channel");
+			ImGui::TableSetupColumn("Bank");
+			ImGui::TableSetupColumn("Group");
+			ImGui::TableSetupColumn("Chunk");
+			ImGui::TableSetupColumn("Volume");
+			ImGui::TableSetupColumn("Loops");
+			ImGui::TableHeadersRow();
+			const auto& channels = music->GetChannels();
+			for (size_t i = 0; i < channels.size(); ++i)
+			{
+				const auto& channel = channels.at(i);
+				if (!channel.active)
+				{
+					continue;
+				}
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+				ImGui::Text("%zu%s", i, music->GetCurrentChannel() == static_cast<int>(i) ? " (current)" : "");
+				ImGui::TableNextColumn();
+				ImGui::Text("%s", channel.bank->path.c_str());
+				ImGui::TableNextColumn();
+				ImGui::Text("%d", channel.groupId);
+				ImGui::TableNextColumn();
+				ImGui::Text("%u / %u", channel.playingChunk, channel.bank->GetChunkCount());
+				ImGui::TableNextColumn();
+				ImGui::Text("%d -> %d", channel.volume, channel.targetVolume);
+				ImGui::TableNextColumn();
+				ImGui::Text("%d", channel.loops);
+			}
+			ImGui::EndTable();
+		}
+	}
+	ImGui::Separator();
+
 	if (ImGui::Button("Play") && !_selectedMusicPack.empty())
 	{
 		Locator::audio::value().PlayMusic(_selectedMusicPack, _playType);
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Stop"))
+	{
+		Locator::audio::value().StopMusic();
 	}
 	ImGui::SameLine();
 	auto currentCombo = static_cast<int>(_playType);
