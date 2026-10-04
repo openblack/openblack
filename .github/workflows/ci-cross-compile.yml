@@ -24,18 +24,10 @@ jobs:
       matrix:
         # This is the matrix. They form permutations.
         triplet: [""]
-        preset: [android-armeabi-v7a-vcpkg, android-arm64-v8a-vcpkg, android-x86-vcpkg, android-x86_64-vcpkg]
+        preset: [android-arm64-v8a-vcpkg, android-x86_64-vcpkg]
         os: [ubuntu-24.04]
         # These are additional individual jobs. There are no permutations of these.
         include:
-          # - triplet: x86-linux
-          #   os: ubuntu-24.04
-          #   preset: ninja-multi-vcpkg
-          #   setup: |
-          #     sudo dpkg --add-architecture i386
-          #     sudo apt-get update
-          #     sudo apt-get install -y gcc-multilib g++-multilib libx11-dev:i386 libxext-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libtool autoconf libc6-dev-i386 libgpg-error-dev:i386 libltdl-dev:i386 libwayland-dev:i386 libwayland-egl-backend-dev:i386
-          #   additional_args: "`-DCMAKE_C_FLAGS=-m32`, `-DCMAKE_CXX_FLAGS=-m32`, `-DOPENBLACK_CROSSCOMPILING=ON`"
           - triplet: arm64-linux
             os: ubuntu-24.04-arm
             preset: ninja-multi-vcpkg
@@ -50,9 +42,6 @@ jobs:
           #     cd ${EMSDK}
           #     ./emsdk install latest
           #     ./emsdk activate latest
-          - triplet: x86-windows
-            os: windows-latest
-            preset: ninja-multi-vcpkg
           - triplet: arm64-windows
             os: windows-latest
             preset: ninja-multi-vcpkg
@@ -145,20 +134,10 @@ jobs:
       - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
         shell: bash
       - uses: actions/download-artifact@v4
-        name: Download pre-compiled android-armeabi-v7a-vcpkg
-        with:
-          name: openblack-android-armeabi-v7a-vcpkg-${{ env.GITHUB_REF_NAME_DASHES }}
-          path: android/app/src/main/jniLibs/armeabi-v7a
-      - uses: actions/download-artifact@v4
         name: Download pre-compiled android-arm64-v8a-vcpkg
         with:
           name: openblack-android-arm64-v8a-vcpkg-${{ env.GITHUB_REF_NAME_DASHES }}
           path: android/app/src/main/jniLibs/arm64-v8a
-      - uses: actions/download-artifact@v4
-        name: Download pre-compiled android-x86-vcpkg
-        with:
-          name: openblack-android-x86-vcpkg-${{ env.GITHUB_REF_NAME_DASHES }}
-          path: android/app/src/main/jniLibs/x86
       - uses: actions/download-artifact@v4
         name: Download pre-compiled android-x86_64-vcpkg
         with:
@@ -167,14 +146,10 @@ jobs:
       - name: Move downloads around
         shell: bash
         run: |
-          mkdir -p android/app/src/main/jniLibs/{debug,release}/{armeabi-v7a,arm64-v8a,x86,x86_64}
-          mv android/app/src/main/jniLibs/armeabi-v7a/Debug/libopenblack_lib.so    android/app/src/main/jniLibs/debug/armeabi-v7a
-          mv android/app/src/main/jniLibs/armeabi-v7a/Release/libopenblack_lib.so  android/app/src/main/jniLibs/release/armeabi-v7a
+          mkdir -p android/app/src/main/jniLibs/{debug,release}/{arm64-v8a,x86_64}
           mv android/app/src/main/jniLibs/arm64-v8a/Debug/libopenblack_lib.so      android/app/src/main/jniLibs/debug/arm64-v8a
           mv android/app/src/main/jniLibs/arm64-v8a/Release/libopenblack_lib.so    android/app/src/main/jniLibs/release/arm64-v8a
-          mv android/app/src/main/jniLibs/x86/Debug/libopenblack_lib.so            android/app/src/main/jniLibs/debug/x86
-          mv android/app/src/main/jniLibs/x86/Release/libopenblack_lib.so          android/app/src/main/jniLibs/release/x86
-          mv android/app/src/main/jniLibs/x86_64/Debug/libopenblack_lib.so         android/app/src/main/jniLibs/debug/x86_64
+          mv android/app/src/main/jniLibs/x86_64/Debug/libopenblack_lib.so        android/app/src/main/jniLibs/debug/x86_64
           mv android/app/src/main/jniLibs/x86_64/Release/libopenblack_lib.so       android/app/src/main/jniLibs/release/x86_64
           find android/app/src/main/jniLibs
       - name: Setup Gradle
