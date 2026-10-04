@@ -70,6 +70,8 @@ public:
 
 private:
 	void DrawFootprintPass(const DrawSceneDesc& drawDesc) const;
+	/// Casts the shadows of the island's trees, rocks and buildings onto it (see ObjectShadows)
+	void DrawObjectShadowPass(const DrawSceneDesc& drawDesc) const;
 	/// Draws the hand's silhouette for its shadow, or clears the shadow when there is none
 	void DrawHandShadowPass(const DrawSceneDesc& drawDesc) const;
 	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, bool preserveState) const;
@@ -82,6 +84,8 @@ private:
 	bool _bgfxProfile = false;
 
 	std::unique_ptr<FrameBuffer> _handShadowFrameBuffer;
+	/// Where the objects' shadows cover the island, laid out as its footprints are and made for the island's size
+	mutable std::unique_ptr<FrameBuffer> _objectShadowFrameBuffer;
 	/// The hand's shadow of the frame being drawn
 	mutable std::optional<HandShadow> _handShadow;
 	std::unique_ptr<Mesh> _plane;

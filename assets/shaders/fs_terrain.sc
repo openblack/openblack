@@ -9,8 +9,13 @@ SAMPLER2D(s1_bump, 1);
 SAMPLER2D(s2_smallBump, 2);
 SAMPLER2D(s3_footprints, 3);
 SAMPLER2D(s4_handShadow, 4);
+// Where the shadows of trees, rocks and buildings cover the island, laid out as the footprints are
+SAMPLER2D(s5_objectShadows, 5);
 
 uniform vec4 u_skyAndBump;
+// x: darkness of the objects' shadows where they fully cover a texel, 0 without them
+// yz: size of a texel of s5_objectShadows
+uniform vec4 u_objectShadows;
 // x: darkness of the hand's shadow where its silhouette fully covers a texel, 0 without a shadow
 // y: how far before the hand along the light the shadow starts
 uniform vec4 u_handShadow;
@@ -56,6 +61,16 @@ void main()
 
 	vec4 footprints = texture2D(s3_footprints, v_texcoord1.xy);
 	col.rgb = mix(col.rgb, footprints.rgb, footprints.a);
+
+	// The objects' shadows are baked into the land's textures over the footprints, under the light. LH3D counts how
+	// many of eight samples in each texel are covered; four filtered taps across a texel soften the edges as much.
+	vec2 texel = u_objectShadows.yz * 0.5f;
+	float objectShadow = 0.25f * (
+		texture2D(s5_objectShadows, v_texcoord1.xy + vec2(-texel.x, -texel.y)).r +
+		texture2D(s5_objectShadows, v_texcoord1.xy + vec2(texel.x, -texel.y)).r +
+		texture2D(s5_objectShadows, v_texcoord1.xy + vec2(-texel.x, texel.y)).r +
+		texture2D(s5_objectShadows, v_texcoord1.xy + vec2(texel.x, texel.y)).r);
+	col.rgb = col.rgb * (1.0f - objectShadow * u_objectShadows.x);
 
 	// apply light map
 	float skyBightness = skyType / 2.0f;

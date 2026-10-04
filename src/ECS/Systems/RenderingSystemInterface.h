@@ -30,15 +30,18 @@ struct RenderContext
 
 	struct InstancedDrawDesc
 	{
-		InstancedDrawDesc(uint32_t offset, uint32_t count, bool morphWithTerrain)
+		InstancedDrawDesc(uint32_t offset, uint32_t count, bool morphWithTerrain, bool castsShadow)
 		    : offset(offset)
 		    , count(count)
 		    , morphWithTerrain(morphWithTerrain)
+		    , castsShadow(castsShadow)
 		{
 		}
 		uint32_t offset;
 		uint32_t count;
 		bool morphWithTerrain;
+		/// The instances cast their shadows onto the land (see graphics::ObjectShadows)
+		bool castsShadow;
 	};
 
 	/// A list of cpu-side uniforms which is refilled at every \ref PrepareDraw.

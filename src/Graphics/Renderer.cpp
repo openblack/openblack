@@ -42,6 +42,7 @@
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/GraphicsHandleBgfx.h"
 #include "Graphics/IndexBuffer.h"
+#include "Graphics/ObjectShadows.h"
 #include "Graphics/Primitive.h"
 #include "Graphics/ShaderManager.h"
 #include "Graphics/VertexBuffer.h"
@@ -289,6 +290,7 @@ Renderer::~Renderer() noexcept
 {
 	_plane.reset();
 	_handShadowFrameBuffer.reset();
+	_objectShadowFrameBuffer.reset();
 	_shaderManager.reset();
 	bgfx::frame();
 	bgfx::shutdown();
@@ -541,6 +543,85 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 	}
 }
 
+void Renderer::DrawObjectShadowPass(const DrawSceneDesc& drawDesc) const
+{
+	const auto viewId = static_cast<bgfx::ViewId>(RenderPass::ObjectShadow);
+	auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::ObjectShadowPass);
+	if (!drawDesc.drawIsland)
+	{
+		return;
+	}
+
+	// The same texels as the footprints, so that the land finds both at the same coordinates
+	const auto& island = Locator::terrainSystem::value();
+	uint16_t width = 0;
+	uint16_t height = 0;
+	island.GetFootprintFramebuffer().GetSize(width, height);
+	uint16_t shadowWidth = 0;
+	uint16_t shadowHeight = 0;
+	if (_objectShadowFrameBuffer)
+	{
+		_objectShadowFrameBuffer->GetSize(shadowWidth, shadowHeight);
+	}
+	if (shadowWidth != width || shadowHeight != height)
+	{
+		_objectShadowFrameBuffer = std::make_unique<FrameBuffer>("Object Shadows", width, height, TextureFormat::R8,
+		                                                         std::nullopt, static_cast<uint8_t>(1), Wrapping::ClampEdge);
+	}
+
+	_objectShadowFrameBuffer->Bind(RenderPass::ObjectShadow);
+	bgfx::setViewRect(viewId, 0, 0, width, height);
+	bgfx::setViewClear(viewId, BGFX_CLEAR_COLOR, 0x00000000);
+	bgfx::touch(viewId);
+	if (!drawDesc.drawEntities)
+	{
+		return;
+	}
+
+	const auto view = island.GetOrthoView();
+	const auto proj = island.GetOrthoProj();
+	bgfx::setViewTransform(viewId, &view, &proj);
+
+	const auto* shader = _shaderManager->GetShader("ObjectShadowInstanced");
+	const auto sun = glm::vec4(ObjectShadows::k_Sun, 0.0f);
+	shader->SetUniformValue("u_shadowSun", &sun);
+
+	const auto& meshManager = Locator::resources::value().GetMeshes();
+	const auto& renderCtx = Locator::rendereringSystem::value().GetContext();
+	L3DMeshSubmitDesc submitDesc = {};
+	submitDesc.viewId = RenderPass::ObjectShadow;
+	submitDesc.program = shader;
+	// Overlapping shadows cover the same texels, both sides of every triangle cast
+	submitDesc.state = BGFX_STATE_WRITE_R;
+
+	const auto drawCasters = [&](const std::map<entt::id_type, RenderContext::InstancedDrawDesc>& descs,
+	                             const graphics::DynamicVertexBufferHandle& instances) {
+		for (const auto& [meshId, placers] : descs)
+		{
+			if (!placers.castsShadow || placers.count == 0 || !meshManager.Contains(meshId))
+			{
+				continue;
+			}
+			const auto mesh = meshManager.Handle(meshId);
+			submitDesc.instanceDesc = std::make_unique<graphics::InstanceDesc>(instances, placers.offset, placers.count);
+			const static auto identity = glm::mat4(1.0f);
+			submitDesc.modelMatrices = &identity;
+			submitDesc.matrixCount = 1;
+			if (mesh->IsBoned() && !mesh->GetBoneMatrices().empty())
+			{
+				submitDesc.modelMatrices = mesh->GetBoneMatrices().data();
+				submitDesc.matrixCount = static_cast<uint8_t>(mesh->GetBoneMatrices().size());
+			}
+			DrawMesh(*mesh, submitDesc, std::numeric_limits<uint8_t>::max());
+		}
+	};
+	drawCasters(renderCtx.instancedDrawDescs, renderCtx.instanceUniformBuffer);
+	if (drawDesc.drawVegetation)
+	{
+		drawCasters(renderCtx.treeInstancedDrawDescs, renderCtx.treeInstanceUniformBuffer);
+	}
+}
+
 void Renderer::DrawHandShadowPass(const DrawSceneDesc& drawDesc) const
 {
 	const auto viewId = static_cast<bgfx::ViewId>(RenderPass::HandShadow);
@@ -608,6 +689,7 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 {
 	// TODO(bwrsandman): Footprint framebuffer doesn't need to be updated each frame
 	DrawFootprintPass(drawDesc);
+	DrawObjectShadowPass(drawDesc);
 	{
 		auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::MainPassDrawModels);
 		if (drawDesc.drawHand)
@@ -734,13 +816,27 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 			auto texture = Locator::resources::value().GetTextures().Handle(LandIslandInterface::k_SmallBumpTextureId);
 			const glm::vec4 u_skyAndBump = {skyType, desc.bumpMapStrength, desc.smallBumpMapStrength, 0.0f};
+			auto u_objectShadows = glm::vec4(0.0f);
+			if (_objectShadowFrameBuffer)
+			{
+				uint16_t width = 0;
+				uint16_t height = 0;
+				_objectShadowFrameBuffer->GetSize(width, height);
+				u_objectShadows =
+				    glm::vec4(ObjectShadows::k_MaxDarkness, 1.0f / static_cast<float>(std::max<uint16_t>(width, 1)),
+				              1.0f / static_cast<float>(std::max<uint16_t>(height, 1)), 0.0f);
+			}
 
 			terrainShader->SetTextureSampler("s0_materials", 0, island.GetAlbedoArray());
 			terrainShader->SetTextureSampler("s1_bump", 1, island.GetBump());
 			terrainShader->SetTextureSampler("s2_smallBump", 2, *texture);
 			terrainShader->SetTextureSampler("s3_footprints", 3, island.GetFootprintFramebuffer().GetColorAttachment());
+			terrainShader->SetTextureSampler("s5_objectShadows", 5,
+			                                 _objectShadowFrameBuffer ? _objectShadowFrameBuffer->GetColorAttachment()
+			                                                          : island.GetFootprintFramebuffer().GetColorAttachment());
 
 			terrainShader->SetUniformValue("u_skyAndBump", &u_skyAndBump);
+			terrainShader->SetUniformValue("u_objectShadows", &u_objectShadows);
 			terrainShader->SetUniformValue("u_islandExtent", &islandExtent);
 
 			// The hand's shadow falls on the land, not on its reflection

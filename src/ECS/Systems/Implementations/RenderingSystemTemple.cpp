@@ -97,7 +97,7 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 	for (const auto& [meshId, desc] : meshIds)
 	{
 		_renderContext.instancedDrawDescs.emplace(std::piecewise_construct, std::forward_as_tuple(meshId),
-		                                          std::forward_as_tuple(offset, desc.first, desc.second));
+		                                          std::forward_as_tuple(offset, desc.first, desc.second, false));
 		offset += desc.first;
 	}
 }

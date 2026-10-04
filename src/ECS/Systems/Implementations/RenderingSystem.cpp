@@ -17,9 +17,13 @@
 #include <glm/gtx/transform.hpp>
 
 #include "3D/L3DMesh.h"
+#include "ECS/Components/Abode.h"
+#include "ECS/Components/Feature.h"
 #include "ECS/Components/Field.h"
 #include "ECS/Components/Mesh.h"
+#include "ECS/Components/Mobile.h"
 #include "ECS/Components/MorphWithTerrain.h"
+#include "ECS/Components/StoragePit.h"
 #include "ECS/Components/Stream.h"
 #include "ECS/Components/Swayable.h"
 #include "ECS/Components/Temple.h"
@@ -47,18 +51,31 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 
 	// Count number of instances
 	uint32_t instanceCount = 0;
-	std::unordered_map<entt::id_type, std::pair<uint32_t, bool>> meshIds;
+	struct MeshInstances
+	{
+		uint32_t count;
+		bool morphWithTerrain;
+		bool castsShadow;
+	};
+	std::unordered_map<entt::id_type, MeshInstances> meshIds;
 
-	auto prep = [&meshIds, &instanceCount](const Mesh& mesh, bool morphWithTerrain) {
-		auto count = meshIds.insert(std::make_pair(mesh.id, std::make_pair(mesh.submeshId, morphWithTerrain)));
-		count.first->second.first++;
+	auto prep = [&registry, &meshIds, &instanceCount](entt::entity entity, const Mesh& mesh, bool morphWithTerrain) {
+		auto count = meshIds.insert(std::make_pair(mesh.id, MeshInstances {.count = static_cast<uint32_t>(mesh.submeshId),
+		                                                                   .morphWithTerrain = morphWithTerrain,
+		                                                                   .castsShadow = false}));
+		count.first->second.count++;
+		// The things whose shadows Black & White bakes into the land (IsCastShadowAtNight), and its features
+		count.first->second.castsShadow |= registry.AnyOf<Abode, Feature, MobileStatic, StoragePit>(entity);
 		instanceCount++;
 	};
 
-	registry.Each<const Mesh, const Transform>([&prep](const Mesh& mesh, const Transform& /*unused*/) { prep(mesh, false); },
-	                                           entt::exclude<MorphWithTerrain, Tree, TempleInteriorPart>);
+	registry.Each<const Mesh, const Transform>(
+	    [&prep](entt::entity entity, const Mesh& mesh, const Transform& /*unused*/) { prep(entity, mesh, false); },
+	    entt::exclude<MorphWithTerrain, Tree, TempleInteriorPart>);
 	registry.Each<const Mesh, const Transform, const MorphWithTerrain>(
-	    [&prep](const Mesh& mesh, const Transform& /*unused*/, const MorphWithTerrain& /*unused*/) { prep(mesh, true); },
+	    [&prep](entt::entity entity, const Mesh& mesh, const Transform& /*unused*/, const MorphWithTerrain& /*unused*/) {
+		    prep(entity, mesh, true);
+	    },
 	    entt::exclude<Tree>);
 
 	if (drawBoundingBox)
@@ -89,9 +106,10 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 	_renderContext.instancedDrawDescs.clear();
 	for (const auto& [meshId, desc] : meshIds)
 	{
-		_renderContext.instancedDrawDescs.emplace(std::piecewise_construct, std::forward_as_tuple(meshId),
-		                                          std::forward_as_tuple(offset, desc.first, desc.second));
-		offset += desc.first;
+		_renderContext.instancedDrawDescs.emplace(
+		    std::piecewise_construct, std::forward_as_tuple(meshId),
+		    std::forward_as_tuple(offset, desc.count, desc.morphWithTerrain, desc.castsShadow));
+		offset += desc.count;
 	}
 
 	// Prepare tree instances separately
@@ -150,7 +168,7 @@ void RenderingSystem::PrepareTreeDrawDescs(bool drawBoundingBox)
 	for (const auto& [meshId, count] : treeMeshIds)
 	{
 		_renderContext.treeInstancedDrawDescs.emplace(std::piecewise_construct, std::forward_as_tuple(meshId),
-		                                              std::forward_as_tuple(treeOffset, count, false));
+		                                              std::forward_as_tuple(treeOffset, count, false, true));
 		treeOffset += count;
 	}
 }

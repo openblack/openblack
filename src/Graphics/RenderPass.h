@@ -20,6 +20,7 @@ namespace openblack::graphics
 enum class RenderPass : uint8_t
 {
 	Footprint,
+	ObjectShadow,
 	HandShadow,
 	Reflection,
 	Main,
@@ -31,13 +32,14 @@ enum class RenderPass : uint8_t
 };
 
 static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_count)> k_RenderPassNames {
-    "Footprint Pass",   //
-    "Hand Shadow Pass", //
-    "Reflection Pass",  //
-    "Main Pass",        //
-    "Interface Pass",   //
-    "ImGui Pass",       //
-    "Mesh Viewer Pass", //
+    "Footprint Pass",     //
+    "Object Shadow Pass", //
+    "Hand Shadow Pass",   //
+    "Reflection Pass",    //
+    "Main Pass",          //
+    "Interface Pass",     //
+    "ImGui Pass",         //
+    "Mesh Viewer Pass",   //
 };
 
 } // namespace openblack::graphics

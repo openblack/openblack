@@ -36,6 +36,7 @@ public:
 		GameLogic,
 		SceneDraw,
 		FootprintPass,
+		ObjectShadowPass,
 		ReflectionPass,
 		ReflectionDrawSky,
 		ReflectionDrawWater,
@@ -69,6 +70,7 @@ public:
 	    "Game Logic",           //
 	    "Encode Draw Scene",    //
 	    "Footprint Pass",       //
+	    "Object Shadow Pass",   //
 	    "Reflection Pass",      //
 	    "Draw Sky",             //
 	    "Draw Water",           //

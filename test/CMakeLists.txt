@@ -59,3 +59,6 @@ target_link_libraries(test_sound_decoding PRIVATE pack)
 openblack_setup_and_add_test(test_hand_animation hand/test_hand_animation.cpp)
 target_link_libraries(test_hand_animation PRIVATE pack l3d morph)
 openblack_setup_and_add_test(test_hand_shadow hand/test_hand_shadow.cpp)
+openblack_setup_and_add_test(
+  test_object_shadows graphics/test_object_shadows.cpp
+)
