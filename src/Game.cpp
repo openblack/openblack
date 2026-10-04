@@ -276,6 +276,23 @@ bool Game::GameLogicLoop() noexcept
 	using namespace ecs::components;
 	using namespace ecs::systems;
 
+	const auto currentTime = std::chrono::steady_clock::now();
+	const auto delta = currentTime - _lastGameLoopTime;
+	const auto turnDuration = k_TurnDuration * _gameSpeedMultiplier;
+
+	// GGame::GoInsideCitadel pauses the world while the player is in the temple, whose own turns
+	// (Temple::ProcessGameTurn) keep the audio going
+	if (Locator::temple::has_value() && Locator::temple::value().Active())
+	{
+		// NOLINTNEXTLINE(modernize-use-nullptr): clang-tidy bug
+		if (delta >= turnDuration)
+		{
+			ProcessTempleAudioTurn();
+			_lastGameLoopTime = currentTime;
+		}
+		return false;
+	}
+
 	if (_paused)
 	{
 		// The ambience is silent while the game is paused
@@ -283,9 +300,6 @@ bool Game::GameLogicLoop() noexcept
 		return false;
 	}
 
-	const auto currentTime = std::chrono::steady_clock::now();
-	const auto delta = currentTime - _lastGameLoopTime;
-	const auto turnDuration = k_TurnDuration * _gameSpeedMultiplier;
 	// NOLINTNEXTLINE(modernize-use-nullptr): clang-tidy bug
 	if (delta < turnDuration)
 	{
@@ -334,39 +348,45 @@ bool Game::GameLogicLoop() noexcept
 		        },
 		    .paused = false,
 		    .turn = _turnCount,
-		    .widescreen = false,
+		    .inCitadel = false,
 		    .videoPlaying = false,
 		});
 	}
 
-	// GAudio::ProcessMusic picks the music for the turn
-	if (_gameMusic)
-	{
-		audio::GameMusic::TurnInputs music {
-		    .turn = _turnCount,
-		    .camera = cameraPosition,
-		    .groundHeight = Locator::terrainSystem::value().GetHeightAt(glm::xz(cameraPosition)),
-		    .inCitadel = Locator::temple::has_value() && Locator::temple::value().Active(),
-		    // TODO(raffclar): the player's alignment once it is simulated
-		    .alignment = 0.0f,
-		    .towns = {},
-		};
-		Locator::entitiesRegistry::value().Each<const ecs::components::Town, const Tribe, const ecs::components::Transform>(
-		    [&music](const ecs::components::Town& town, const Tribe tribe, const ecs::components::Transform& transform) {
-			    music.towns.push_back({
-			        .position = transform.position,
-			        .tribe = static_cast<int32_t>(tribe),
-			        .id = town.id,
-			    });
-		    });
-		_gameMusic->ProcessTurn(music);
-	}
+	ProcessMusicTurn(cameraPosition, false);
 
 	_lastGameLoopTime = currentTime;
 	_turnDeltaTime = delta;
 	++_turnCount;
 
 	return false;
+}
+
+void Game::ProcessMusicTurn(glm::vec3 cameraPosition, bool inCitadel)
+{
+	// GAudio::ProcessMusic picks the music for the turn
+	if (!_gameMusic)
+	{
+		return;
+	}
+	audio::GameMusic::TurnInputs music {
+	    .turn = _turnCount,
+	    .camera = cameraPosition,
+	    .groundHeight = Locator::terrainSystem::value().GetHeightAt(glm::xz(cameraPosition)),
+	    .inCitadel = inCitadel,
+	    // TODO(raffclar): the player's alignment once it is simulated
+	    .alignment = 0.0f,
+	    .towns = {},
+	};
+	Locator::entitiesRegistry::value().Each<const ecs::components::Town, const Tribe, const ecs::components::Transform>(
+	    [&music](const ecs::components::Town& town, const Tribe tribe, const ecs::components::Transform& transform) {
+		    music.towns.push_back({
+		        .position = transform.position,
+		        .tribe = static_cast<int32_t>(tribe),
+		        .id = town.id,
+		    });
+	    });
+	_gameMusic->ProcessTurn(music);
 }
 
 void Game::ProcessTempleRoomKeys()
@@ -402,6 +422,17 @@ void Game::ProcessTempleRoomKeys()
 			temple.Activate(room);
 		}
 		return;
+	}
+}
+
+void Game::ProcessTempleAudioTurn()
+{
+	// GAudio::ProcessAudioGameTurn from Temple::ProcessGameTurn: the citadel's music, while the land's ambience fades
+	// out
+	ProcessMusicTurn(Locator::camera::value().GetOrigin(), true);
+	if (_atmosAudio)
+	{
+		_atmosAudio->ContinueTurn({.paused = false, .turn = _turnCount, .inCitadel = true, .videoPlaying = false});
 	}
 }
 

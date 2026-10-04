@@ -113,6 +113,10 @@ public:
 
 	bool ProcessEvents(const SDL_Event& event) noexcept;
 	bool GameLogicLoop() noexcept;
+	/// GAudio::ProcessMusic, for a turn of the world or of the temple
+	void ProcessMusicTurn(glm::vec3 cameraPosition, bool inCitadel);
+	/// The audio of a turn inside the temple, while the world is paused
+	void ProcessTempleAudioTurn();
 	/// The keys that take the player into the temple's rooms, from outside it or within
 	void ProcessTempleRoomKeys();
 	bool Update() noexcept;

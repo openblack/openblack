@@ -38,8 +38,8 @@ public:
 		AtmosWeather weather;
 		bool paused;
 		uint32_t turn;
-		/// Cinematic letterbox, silences the ambience
-		bool widescreen;
+		/// Inside the temple (GGame's citadel flag, which fn_00429100 checks): every bank fades out to silence
+		bool inCitadel;
 		bool videoPlaying;
 	};
 
@@ -54,6 +54,10 @@ public:
 
 	/// The ambience part of GGame::EndTurn
 	void EndTurn(const TurnInputs& inputs);
+	/// GAudio::ProcessAudioGameTurn without the sound map moving on, as Temple::ProcessGameTurn has it. The world is
+	/// paused in the temple, so GGame::EndTurn doesn't run (LocalTimerSaysDoATurn), and the banks fade out there: the
+	/// temple has no ambience.
+	void ContinueTurn(const TurnInputs& inputs);
 
 	[[nodiscard]] const SoundMap& GetSoundMap() const { return _soundMap; }
 	[[nodiscard]] const std::array<float, k_AtmosTypeCount>& GetTargets() const { return _targets; }
@@ -69,7 +73,7 @@ public:
 	[[nodiscard]] static std::pair<float, int32_t> StepBankVolume(float current, float target);
 
 private:
-	void CopyTargets(bool widescreen);
+	void CopyTargets(bool inCitadel);
 	void ProcessAtmosBanks();
 
 	SoundMap _soundMap;

@@ -170,16 +170,19 @@ void AtmosAudio::EndTurn(const TurnInputs& inputs)
 	    .skyType = CalculateSkyType(Locator::skySystem::value().GetTime(), Locator::skySystem::value().GetDayNightTimes()),
 	};
 	_soundMap.Update(Locator::terrainSystem::value(), Locator::infoConstants::value().sound, mapInputs);
-
-	auto& audio = Locator::audio::value();
 	if (inputs.paused || inputs.turn < k_FirstAudibleTurn)
 	{
-		audio.AtmosProcess(false);
+		Locator::audio::value().AtmosProcess(false);
 		return;
 	}
+	ContinueTurn(inputs);
+}
 
-	// GAudio::ProcessAudioGameTurn
-	CopyTargets(inputs.widescreen);
+void AtmosAudio::ContinueTurn(const TurnInputs& inputs)
+{
+	// GAudio::ProcessAudioGameTurn, which Temple::ProcessGameTurn calls for every turn of the temple, however early
+	auto& audio = Locator::audio::value();
+	CopyTargets(inputs.inCitadel);
 	ProcessAtmosBanks();
 	if (!inputs.videoPlaying)
 	{
@@ -187,10 +190,10 @@ void AtmosAudio::EndTurn(const TurnInputs& inputs)
 	}
 }
 
-// fn_00429100
-void AtmosAudio::CopyTargets(bool widescreen)
+// fn_00429100: the sound map's volumes, or none inside the temple
+void AtmosAudio::CopyTargets(bool inCitadel)
 {
-	if (widescreen)
+	if (inCitadel)
 	{
 		_targets.fill(0.0f);
 		return;
