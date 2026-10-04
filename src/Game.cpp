@@ -1045,12 +1045,13 @@ bool Game::Initialize() noexcept
 				    soundName = std::filesystem::path(audioHeaders[i].name.data());
 				    if (audioData[i].empty())
 				    {
-					    SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound buffer found for {}. Skipping",
-					                       soundName.string());
-					    return;
+					    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Empty sound buffer found for {}/{}. Skipping", groupName,
+					                        audioHeaders[i].id);
+					    continue;
 				    }
 
 				    const auto stringId = fmt::format("{}/{}", groupName, audioHeaders[i].id);
+				    // Banks have gaps between their samples, which are skipped without skipping the samples after them
 				    const entt::id_type id = entt::hashed_string(stringId.c_str());
 				    const std::vector<std::vector<uint8_t>> buffer = {audioData[i]};
 				    SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Loading sound {}: {}", stringId, audioHeaders[i].name.data());
