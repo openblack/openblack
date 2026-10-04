@@ -30,6 +30,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/HandSystemInterface.h"
+#include "ECS/Systems/WeatherSystemInterface.h"
 #include "Enums.h"
 #include "Locator.h"
 #include "ScriptHeaders/ScriptEnums.h"
@@ -3628,16 +3629,20 @@ void GetPlayerWindResistance() // 400 GET_PLAYER_WIND_RESISTANCE
 
 void PauseUnpauseClimateSystem() // 401 PAUSE_UNPAUSE_CLIMATE_SYSTEM
 {
-	// const auto enable = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto enable = Pop().intVal != 0;
+	if (Locator::weatherSystem::has_value())
+	{
+		Locator::weatherSystem::value().SetClimateSystemEnabled(enable);
+	}
 }
 
 void PauseUnpauseStormCreationInClimateSystem() // 402 PAUSE_UNPAUSE_STORM_CREATION_IN_CLIMATE_SYSTEM
 {
-	// const auto enable = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto enable = Pop().intVal != 0;
+	if (Locator::weatherSystem::has_value())
+	{
+		Locator::weatherSystem::value().SetStormCreationEnabled(enable);
+	}
 }
 
 void GetManaForSpell() // 403 GET_MANA_FOR_SPELL

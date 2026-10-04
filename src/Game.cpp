@@ -47,6 +47,7 @@
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "ECS/Systems/VegetationInterface.h"
+#include "ECS/Systems/WeatherSystemInterface.h"
 #include "EngineConfig.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"
@@ -271,6 +272,16 @@ bool Game::GameLogicLoop() noexcept
 
 	auto& lhvm = Locator::vm::value();
 	lhvm.LookIn(lhvm::ScriptType::All);
+
+	// The weather moves on, then the ambience follows the weather at the camera
+	const auto cameraPosition = Locator::camera::value().GetOrigin();
+	ecs::components::WeatherInfo weather {};
+	if (Locator::weatherSystem::has_value())
+	{
+		auto& weatherSystem = Locator::weatherSystem::value();
+		weatherSystem.Update(_turnCount);
+		weather = weatherSystem.GetWeatherSmooth(cameraPosition);
+	}
 
 	_lastGameLoopTime = currentTime;
 	_turnDeltaTime = delta;

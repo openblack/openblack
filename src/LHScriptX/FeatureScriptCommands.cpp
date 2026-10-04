@@ -14,6 +14,7 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/polar_coordinates.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/vec_swizzle.hpp>
 #include <spdlog/spdlog.h>
 
 #include "3D/LandIslandInterface.h"
@@ -38,6 +39,7 @@
 #include "ECS/Components/Stream.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
+#include "ECS/Systems/WeatherSystemInterface.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
 #include "InfoConstants.h"
@@ -619,28 +621,25 @@ void FeatureScriptCommands::CreateInfluenceRing([[maybe_unused]] glm::vec3 posit
 	// __func__);
 }
 
-void FeatureScriptCommands::CreateWeatherClimate(int32_t, int32_t, glm::vec3, float, float)
+void FeatureScriptCommands::CreateWeatherClimate(int32_t index, int32_t type, glm::vec3 position, float radius1, float radius2)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	Locator::weatherSystem::value().CreateClimate(index, static_cast<uint32_t>(type), glm::xz(position), radius1, radius2);
 }
 
-void FeatureScriptCommands::CreateWeatherClimateRain(int32_t, float, int32_t, int32_t, int32_t)
+void FeatureScriptCommands::CreateWeatherClimateRain(int32_t index, float desire, int32_t dryDays, int32_t rainingDays,
+                                                     int32_t raining)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	Locator::weatherSystem::value().SetClimateRain(index, desire, dryDays, rainingDays, raining);
 }
 
-void FeatureScriptCommands::CreateWeatherClimateTemp(int32_t, float, float)
+void FeatureScriptCommands::CreateWeatherClimateTemp(int32_t index, float temperature, float targetTemperature)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	Locator::weatherSystem::value().SetClimateTemperature(index, temperature, targetTemperature);
 }
 
-void FeatureScriptCommands::CreateWeatherClimateWind(int32_t, float, float, float)
+void FeatureScriptCommands::CreateWeatherClimateWind(int32_t index, float windX, float windZ, float angle)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	Locator::weatherSystem::value().SetClimateWind(index, windX, windZ, angle);
 }
 
 void FeatureScriptCommands::CreateWeatherStorm(int32_t, glm::vec3, float, int32_t, const std::string&, const std::string&,

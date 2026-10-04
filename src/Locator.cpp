@@ -37,6 +37,7 @@
 #include "ECS/Systems/Implementations/TimeSystem.h"
 #include "ECS/Systems/Implementations/TownSystem.h"
 #include "ECS/Systems/Implementations/VegetationSystem.h"
+#include "ECS/Systems/Implementations/WeatherSystem.h"
 #include "Graphics/RendererInterface.h"
 #include "Input/GameActionMap.h"
 #include "LHVM.h"
@@ -69,6 +70,7 @@ using openblack::ecs::systems::RenderingSystem;
 using openblack::ecs::systems::TimeSystem;
 using openblack::ecs::systems::TownSystem;
 using openblack::ecs::systems::VegetationSystem;
+using openblack::ecs::systems::WeatherSystem;
 using openblack::graphics::RendererInterface;
 using openblack::input::GameActionMap;
 using openblack::lhvm::LHVM;
@@ -141,6 +143,7 @@ void openblack::InitializeLevel(const std::filesystem::path& path)
 	Locator::dynamicsSystem::emplace<DynamicsSystem>();
 	Locator::livingActionSystem::emplace<LivingActionSystem>();
 	Locator::townSystem::emplace<TownSystem>();
+	Locator::weatherSystem::emplace<WeatherSystem>();
 	Locator::pathfindingSystem::emplace<PathfindingSystem>();
 	Locator::cameraBookmarkSystem::emplace<CameraBookmarkSystem>();
 	Locator::terrainSystem::emplace<LandIsland>(path);
@@ -175,6 +178,7 @@ void openblack::ShutDownServices()
 	Locator::cameraBookmarkSystem::reset();
 	Locator::livingActionSystem::reset();
 	Locator::townSystem::reset();
+	Locator::weatherSystem::reset();
 	Locator::handSystem::reset();
 	Locator::pathfindingSystem::reset();
 	Locator::terrainSystem::reset();

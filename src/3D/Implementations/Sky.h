@@ -46,6 +46,11 @@ public:
 	/// 1 -> Dawn/Dusk
 	/// 2 -> Day (max value)
 	[[nodiscard]] float GetCurrentSkyType() const noexcept override;
+	[[nodiscard]] float GetTime() const noexcept override { return _timeOfDay; }
+	[[nodiscard]] DayNightTimes GetDayNightTimes() const noexcept override
+	{
+		return {.nightFull = _nightFullTime, .duskStart = _duskStartTime, .duskEnd = _duskEndTime, .dayFull = _dayFullTime};
+	}
 	[[nodiscard]] graphics::L3DMesh& GetMesh() const noexcept override { return *_mesh; }
 	[[nodiscard]] graphics::Texture2D& GetTexture() const noexcept override { return *_texture; }
 
