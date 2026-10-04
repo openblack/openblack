@@ -103,6 +103,8 @@ public:
 		std::span<const std::pair<uint32_t, TextureHandle>> subMeshTextures;
 		/// Colours added to some of the submeshes, by submesh, after everything else
 		std::span<const std::pair<uint32_t, glm::vec3>> subMeshGlows;
+		/// Submeshes left undrawn
+		std::span<const uint32_t> hiddenSubMeshes;
 	};
 
 	static std::unique_ptr<RendererInterface> Create(GraphicsBackend backend, bool vsync) noexcept;

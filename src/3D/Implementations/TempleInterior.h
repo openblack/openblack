@@ -18,6 +18,7 @@
 #include "3D/OrientedText.h"
 #include "3D/TempleDoors.h"
 #include "3D/TempleInteriorInterface.h"
+#include "3D/TempleToggles.h"
 #include "3D/TempleToolTips.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
@@ -51,8 +52,9 @@ public:
 	[[nodiscard]] const TempleDoors& GetDoors() const override { return _doors; }
 	[[nodiscard]] std::optional<TempleCursorHit> GetCursorHit() const override;
 	void SetInterface(gui::GameInterface* interface) override;
-	bool HoldScroll(bool pressed, float mouseY) override;
+	bool HoldControl(bool pressed, float mouseY) override;
 	[[nodiscard]] std::vector<TempleSubMeshTexture> GetScrollTextures(TempleRoom room) const override;
+	[[nodiscard]] std::vector<uint32_t> GetHiddenSubMeshes(TempleRoom room) const override;
 	[[nodiscard]] const std::vector<OrientedTextVertex>& GetText() const override { return _text; }
 	[[nodiscard]] std::vector<TempleSubMeshGlow> GetControlGlows(TempleRoom room) const override;
 	[[nodiscard]] const graphics::Texture2D* GetTextTexture() const override;
@@ -82,6 +84,8 @@ private:
 	std::unique_ptr<CameraModel> _outsideCameraModel;
 	TempleCameraModel* _cameraModel {nullptr};
 	TempleDoors _doors;
+	/// The main room's buttons of what its map shows, which keep their state from one visit to the next
+	TempleToggles _toggles;
 	/// How far through its slide the waterfall's texture is, from 0 to 1
 	float _waterfallSlide {0.0f};
 	/// Whether the creature's room's sounds of its water and fire are playing
@@ -113,5 +117,8 @@ private:
 	/// The tooltip the hand shows, and where on the screen the hand is
 	void UpdateToolTips(float milliseconds);
 	void StopCreatureCaveSounds();
+	/// Whether a submesh of a room's mesh is one of its controls drawn, and whether a control has the mouse
+	[[nodiscard]] bool IsControl(TempleRoom room, uint32_t subMesh) const;
+	[[nodiscard]] bool IsControlHeld() const;
 };
 } // namespace openblack

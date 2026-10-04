@@ -222,6 +222,7 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 			{
 				drawDesc->second.subMeshGlows.emplace_back(glow.subMesh, glow.colour);
 			}
+			drawDesc->second.hiddenSubMeshes = temple.GetHiddenSubMeshes(room->second);
 		}
 		// CreatureRoom::Draw draws its water by the materials' alpha, sliding its texture down it
 		if (waterMeshIds.contains(meshId))

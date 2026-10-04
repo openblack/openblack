@@ -516,8 +516,8 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> TempleCameraModel::Upd
 		input.button = 1;
 	}
 	input.mouse = glm::vec2(actions.GetMousePosition());
-	// SubOptionEntryScroll takes a press on a scroll, which the room's camera then doesn't see
-	if (Locator::temple::value().HoldScroll(input.button != 0, input.mouse.y))
+	// TempleRoom::UpdateMouse gives a press on a control to the control, which the room's camera then doesn't see
+	if (Locator::temple::value().HoldControl(input.button != 0, input.mouse.y))
 	{
 		input.button = 0;
 	}

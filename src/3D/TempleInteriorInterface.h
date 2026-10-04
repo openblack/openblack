@@ -95,11 +95,15 @@ public:
 	/// The game's interface, whose text and font the rooms write their scrolls and signs with, whose options the options
 	/// room opens and over which the future room shows its words, or null without one
 	virtual void SetInterface(gui::GameInterface* interface) = 0;
-	/// A press on one of the scrolls takes hold of it, and dragging the mouse up and down turns it. True while a scroll
-	/// has the press, which the camera then leaves alone.
-	virtual bool HoldScroll(bool pressed, float mouseY) = 0;
+	/// A press on one of the rooms' controls takes the mouse (TempleRoom::UpdateMouse): on a scroll, dragging the mouse up
+	/// and down turns it, and letting go over a button presses it. True while a control has the press, which the camera
+	/// then leaves alone.
+	virtual bool HoldControl(bool pressed, float mouseY) = 0;
 	/// The scrolls' textures for a room's mesh
 	[[nodiscard]] virtual std::vector<TempleSubMeshTexture> GetScrollTextures(TempleRoom room) const = 0;
+	/// The submeshes of a room's mesh its controls leave undrawn, as each of the main room's buttons draws only one of
+	/// its pair (SubOptionEntry::GetSubMeshData)
+	[[nodiscard]] virtual std::vector<uint32_t> GetHiddenSubMeshes(TempleRoom room) const = 0;
 	/// The glow of the control the cursor is over in a room's mesh, if it glows (SubOptionEntry::GetSubMeshData)
 	[[nodiscard]] virtual std::vector<TempleSubMeshGlow> GetControlGlows(TempleRoom room) const = 0;
 	/// The text written in the rooms this frame, the signs' labels and the text of the scroll the camera is close to, in

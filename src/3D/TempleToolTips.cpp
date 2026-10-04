@@ -9,7 +9,9 @@
 
 #include "TempleToolTips.h"
 
+#include <algorithm>
 #include <array>
+#include <vector>
 
 using namespace openblack;
 using gui::ToolTipAction;
@@ -89,10 +91,36 @@ void openblack::UpdateTempleToolTip(TempleToolTip& toolTip, const TempleToolTipI
 				toolTip = {.index = door, .action = ToolTipAction::Select, .arrows = Arrows::k_None};
 			}
 		}
-		// TODO(raffclar): the toggles of what the map shows (WorldRoom's DisplayCitadel and the like) say what they toggle
-		for (const auto& scroll : input.scrolls)
+		// The controls' draw callbacks, in the order of their submeshes (LoadOptionData sorts them): the buttons of what
+		// the map shows say what they show when hovered, and the scroll as the others' rooms do
 		{
-			UpdateRoomScroll(toolTip, input, scroll, k_WorldStats);
+			std::vector<uint32_t> controls;
+			for (const auto& toggle : input.toggles)
+			{
+				controls.push_back(toggle.subMesh);
+			}
+			for (const auto& scroll : input.scrolls)
+			{
+				controls.push_back(scroll.subMesh);
+			}
+			std::ranges::sort(controls);
+			for (const auto subMesh : controls)
+			{
+				if (const auto toggle = std::ranges::find(input.toggles, subMesh, &TempleToggles::Control::subMesh);
+				    toggle != input.toggles.end())
+				{
+					if (input.hoveredSubMesh == subMesh)
+					{
+						toolTip = {.index = toggle->toolTip, .action = ToolTipAction::Select, .arrows = Arrows::k_None};
+					}
+				}
+				else
+				{
+					UpdateRoomScroll(toolTip, input,
+					                 *std::ranges::find(input.scrolls, subMesh, &TempleScrolls::Control::subMesh),
+					                 k_WorldStats);
+				}
+			}
 		}
 		break;
 	case TempleRoom::Challenge:

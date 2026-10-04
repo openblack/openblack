@@ -16,6 +16,7 @@
 
 #include "3D/TempleInteriorInterface.h"
 #include "3D/TempleScrolls.h"
+#include "3D/TempleToggles.h"
 #include "Gui/ToolTips.h"
 
 namespace openblack
@@ -50,6 +51,8 @@ struct TempleToolTipInput
 	/// The submesh of the room's mesh the cursor is over
 	std::optional<uint32_t> hoveredSubMesh;
 	std::span<const TempleScrolls::Control> scrolls;
+	/// The main room's buttons drawn
+	std::span<const TempleToggles::Control> toggles;
 };
 
 /// fn_0079A720's tooltip, before the temple has set one: Rotate, with the left button

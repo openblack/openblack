@@ -197,7 +197,8 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 	return result;
 }
 
-std::optional<L3DMesh::PickHit> L3DMesh::Pick(glm::vec3 origin, glm::vec3 direction, bool onlyJoints, bool withoutJoints) const
+std::optional<L3DMesh::PickHit> L3DMesh::Pick(glm::vec3 origin, glm::vec3 direction, bool onlyJoints, bool withoutJoints,
+                                              std::span<const uint32_t> hidden) const
 {
 	std::optional<PickHit> nearest;
 	for (uint32_t i = 0; i < _subMeshes.size(); ++i)
@@ -212,7 +213,7 @@ std::optional<L3DMesh::PickHit> L3DMesh::Pick(glm::vec3 origin, glm::vec3 direct
 		{
 			continue;
 		}
-		if (withoutJoints && subMesh->GetJoint().has_value())
+		if ((withoutJoints && subMesh->GetJoint().has_value()) || std::ranges::find(hidden, i) != hidden.end())
 		{
 			continue;
 		}

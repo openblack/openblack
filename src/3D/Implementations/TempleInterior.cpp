@@ -24,6 +24,7 @@
 #include "3D/CameraPath.h"
 #include "3D/CreatureCaveEffects.h"
 #include "3D/L3DMesh.h"
+#include "3D/L3DSubMesh.h"
 #include "3D/TempleScrolls.h"
 #include "3D/TempleSigns.h"
 #include "Audio/AudioManagerInterface.h"
@@ -180,6 +181,7 @@ void PlayDoorSound(entt::id_type sound)
 
 TempleInterior::TempleInterior()
     : _doors(PlayDoorSound)
+    , _toggles(PlayDoorSound)
 {
 }
 
@@ -228,21 +230,53 @@ void TempleInterior::CreateScrolls()
 	_scrolls = std::make_unique<TempleScrolls>(_interface->GetTexts(), _interface->GetFont(), std::move(parchment));
 	_scrolls->Create(GatherScrollFacts());
 	_signs = std::make_unique<TempleSigns>(_interface->GetTexts(), _interface->GetFont());
+
+	// WorldRoom::InitEngine finds the buttons of what the map shows
+	auto& meshes = Locator::resources::value().GetMeshes();
+	const entt::id_type mainMeshId = entt::hashed_string("temple/interior/main_l3d").value();
+	std::vector<std::string> names;
+	if (meshes.Contains(mainMeshId))
+	{
+		for (const auto& subMesh : meshes.Handle(mainMeshId)->GetSubMeshes())
+		{
+			names.push_back(subMesh->GetName());
+		}
+	}
+	_toggles.Find(names);
 }
 
-bool TempleInterior::HoldScroll(bool pressed, float mouseY)
+bool TempleInterior::HoldControl(bool pressed, float mouseY)
 {
-	if (_scrolls == nullptr)
+	const auto hit = GetCursorHit();
+	const auto hoveredMainSubMesh =
+	    hit.has_value() && hit->room == TempleRoom::Main ? hit->subMesh : std::optional<uint32_t> {};
+	bool held = _toggles.Hold(pressed, hoveredMainSubMesh);
+	if (_scrolls != nullptr)
 	{
-		return false;
-	}
-	std::optional<TempleScrolls::Focus> focus;
-	const bool held = _scrolls->Hold(pressed, mouseY, GetCursorHit(), GatherScrollFacts(), focus);
-	if (focus.has_value() && _cameraModel != nullptr)
-	{
-		_cameraModel->LookAtSubMesh(focus->position, focus->lookAt);
+		std::optional<TempleScrolls::Focus> focus;
+		held = _scrolls->Hold(pressed, mouseY, hit, GatherScrollFacts(), focus) || held;
+		if (focus.has_value() && _cameraModel != nullptr)
+		{
+			_cameraModel->LookAtSubMesh(focus->position, focus->lookAt);
+		}
 	}
 	return held;
+}
+
+std::vector<uint32_t> TempleInterior::GetHiddenSubMeshes(TempleRoom room) const
+{
+	return room == TempleRoom::Main ? _toggles.GetHidden() : std::vector<uint32_t> {};
+}
+
+bool TempleInterior::IsControl(TempleRoom room, uint32_t subMesh) const
+{
+	return (room == TempleRoom::Main && _toggles.IsControl(subMesh)) ||
+	       (_scrolls != nullptr && _scrolls->IsControl(room, subMesh));
+}
+
+bool TempleInterior::IsControlHeld() const
+{
+	return _toggles.IsHeld() || (_scrolls != nullptr && _scrolls->IsHeld());
 }
 
 std::vector<TempleSubMeshTexture> TempleInterior::GetScrollTextures(TempleRoom room) const
@@ -254,8 +288,7 @@ std::vector<TempleSubMeshGlow> TempleInterior::GetControlGlows(TempleRoom room) 
 {
 	// SubOptionEntry::GetSubMeshData: the control under the cursor brightens by up to 12, 12 and 20 of 255 as the glow
 	// runs out
-	if (!_hovered.has_value() || _hovered->first != room || _scrolls == nullptr ||
-	    !_scrolls->IsControl(room, _hovered->second) || _hoverGlow <= 0.0f)
+	if (!_hovered.has_value() || _hovered->first != room || !IsControl(room, _hovered->second) || _hoverGlow <= 0.0f)
 	{
 		return {};
 	}
@@ -339,18 +372,20 @@ void TempleInterior::UpdateToolTips(float milliseconds)
 	// The rooms choose the tooltip as they are drawn
 	const auto hit = GetCursorHit();
 	const auto scrolls = _scrolls != nullptr ? _scrolls->GetControls(_currentRoom) : std::vector<TempleScrolls::Control> {};
+	const auto toggles = _currentRoom == TempleRoom::Main ? _toggles.GetControls() : std::vector<TempleToggles::Control> {};
 	const TempleToolTipInput input {
 	    .room = _currentRoom,
 	    .inControl = _cameraModel->IsInControl() && !_transitionRoom.has_value(),
 	    .zoom = _cameraModel->GetSubMeshZoom(),
 	    .lookingAtScroll = _cameraModel->IsLookingAtSubMesh(),
-	    .controlHeld = _scrolls != nullptr && _scrolls->IsHeld(),
+	    .controlHeld = IsControlHeld(),
 	    .overPool = _cameraModel->IsOverPool(),
 	    .pressingPool = _cameraModel->IsPressingPool(),
 	    .hoveredDoor = _cameraModel->GetHoveredDoor(),
 	    .overWayBack = _cameraModel->IsOverWayBack(),
 	    .hoveredSubMesh = hit.has_value() && hit->room == _currentRoom ? hit->subMesh : std::nullopt,
 	    .scrolls = scrolls,
+	    .toggles = toggles,
 	};
 	UpdateTempleToolTip(_toolTip, input);
 
@@ -476,7 +511,8 @@ std::optional<TempleCursorHit> TempleInterior::GetCursorHit() const
 			}
 			// The side rooms' doors aren't drawn shut (see RenderingSystemTemple::PrepareDrawDescs), so nor are they
 			// picked
-			if (const auto pick = meshes.Handle(meshId)->Pick(origin, direction, !drawn, room != TempleRoom::Main);
+			const auto hidden = GetHiddenSubMeshes(room);
+			if (const auto pick = meshes.Handle(meshId)->Pick(origin, direction, !drawn, room != TempleRoom::Main, hidden);
 			    pick.has_value() && (!nearest.has_value() || pick->distance < nearest->distance))
 			{
 				nearest = pick;
@@ -554,7 +590,7 @@ void TempleInterior::Update(std::chrono::microseconds dt)
 		// TempleRoom::Update lets the glow of the control under the cursor run out, and TempleRoom::Draw sets it off
 		// again as the cursor moves onto another submesh, while no control is held
 		_hoverGlow = std::max(0.0f, _hoverGlow - std::floor(milliseconds));
-		if (_scrolls == nullptr || !_scrolls->IsHeld())
+		if (!IsControlHeld())
 		{
 			const auto hit = GetCursorHit();
 			std::optional<std::pair<TempleRoom, uint32_t>> hovered;

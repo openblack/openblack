@@ -775,14 +775,30 @@ void Renderer::DrawMesh(const graphics::L3DMesh& mesh, const L3DMeshSubmitDesc& 
 		return;
 	}
 
+	// The state carries on from one submesh to the next, up to the last drawn
+	const auto isDrawn = [&desc](uint32_t index) {
+		return std::ranges::find(desc.hiddenSubMeshes, index) == desc.hiddenSubMeshes.end();
+	};
+	auto lastDrawn = static_cast<uint32_t>(subMeshes.size());
+	for (auto index = static_cast<uint32_t>(subMeshes.size()); index > 0; --index)
+	{
+		if (isDrawn(index - 1))
+		{
+			lastDrawn = index - 1;
+			break;
+		}
+	}
 	for (auto it = subMeshes.begin(); it != subMeshes.end(); ++it)
 	{
 		const L3DSubMesh& subMesh = **it;
 		const auto index = static_cast<uint32_t>(std::distance(subMeshes.begin(), it));
+		if (!isDrawn(index))
+		{
+			continue;
+		}
 		const auto found = std::ranges::find(desc.subMeshTextures, index, &std::pair<uint32_t, TextureHandle>::first);
 		const auto glow = std::ranges::find(desc.subMeshGlows, index, &std::pair<uint32_t, glm::vec3>::first);
-		DrawSubMesh(mesh, subMesh, desc, std::next(it) != subMeshes.end(),
-		            found != desc.subMeshTextures.end() ? &found->second : nullptr,
+		DrawSubMesh(mesh, subMesh, desc, index != lastDrawn, found != desc.subMeshTextures.end() ? &found->second : nullptr,
 		            glow != desc.subMeshGlows.end() ? glow->second : glm::vec3(0.0f));
 	}
 }
@@ -1306,6 +1322,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				submitDesc.uvOffset = placers.uvOffset;
 				submitDesc.subMeshTextures = placers.subMeshTextures;
 				submitDesc.subMeshGlows = placers.subMeshGlows;
+				submitDesc.hiddenSubMeshes = placers.hiddenSubMeshes;
 				// The rooms meet at their doorways, whose arches each room has a copy of: the player's room's is seen
 				submitDesc.depthBias = placers.behindCurrentRoom ? k_OtherTempleRoomDepthBias : 0.0f;
 				submitDesc.joints = {};
