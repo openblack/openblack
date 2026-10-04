@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2026 openblack developers
+ * Copyright (c) 2018-2023 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -9,14 +9,14 @@
 
 #pragma once
 
-namespace openblack::ecs::components
+#include <glm/fwd.hpp>
+
+namespace openblack::utils::spiral
 {
 
-struct Field
-{
-	static constexpr float radius2D = 5.0f;
+const glm::i16vec2& Spiral(int& index, int& subIndex);
+int GetIncrementSpiralSizeFromRadius(float radius, float step);
+void SpiralIncrement(glm::vec3& point, int& index, int& subIndex, float size);
+int GetMapCellSpiralSizeFromRadius(float radius);
 
-	char dummy;
-};
-
-} // namespace openblack::ecs::components
+} // namespace openblack::utils::spiral
