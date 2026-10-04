@@ -41,6 +41,7 @@ public:
 	[[nodiscard]] bool GetUnbindableRepeat(UnbindableActionMap action) const final;
 	[[nodiscard]] glm::uvec2 GetMousePosition() const final;
 	[[nodiscard]] glm::ivec2 GetMouseDelta() const final;
+	[[nodiscard]] float GetMouseWheelDelta() const final;
 	[[nodiscard]] std::array<std::optional<glm::vec3>, 2> GetHandPositions() const final;
 
 	void Frame() final;
@@ -59,5 +60,6 @@ private:
 	std::array<std::optional<BindableActionMap>, 2> _mouseWheelBinding; // up, down
 	glm::uvec2 _mousePosition;
 	glm::ivec2 _mouseDelta;
+	float _mouseWheelDelta = 0.0f;
 };
 } // namespace openblack::input

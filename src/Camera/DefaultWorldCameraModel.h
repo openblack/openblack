@@ -60,6 +60,8 @@ private:
 	/// Modifies the given Euler angles based on the rotate Around and keyboard Move Deltas for rotation and zoom.
 	/// @param eulerAngles A reference representing Euler angles (yaw, pitch, roll) to be adjusted. Roll is always 0.
 	void TiltZoom(glm::vec3& eulerAngles, float scalingFactor, float zoomDelta);
+	/// How far a unit of zoom input moves the camera, growing with the camera's height above its focus
+	[[nodiscard]] float GetZoomScale() const;
 	/// Computes the harmonic mean of the distances from a point of origin to a set of points determined by raycasting in screen
 	/// space.
 	///

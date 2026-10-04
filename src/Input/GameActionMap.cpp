@@ -108,6 +108,11 @@ glm::ivec2 GameActionMap::GetMouseDelta() const
 	return _mouseDelta;
 }
 
+float GameActionMap::GetMouseWheelDelta() const
+{
+	return _mouseWheelDelta;
+}
+
 void GameActionMap::Frame()
 {
 	if ((SDL_GetMouseState(nullptr, nullptr) & (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK)) == (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK))
@@ -198,6 +203,7 @@ void GameActionMap::Frame()
 		_mousePosition = glm::clamp(absoluteMousePosition, glm::zero<decltype(screenSize)>(), screenSize);
 	}
 	_mouseDelta = glm::ivec2(0, 0);
+	_mouseWheelDelta = 0.0f;
 	_bindableMapPrevious = _bindableMap;
 	_bindableMap =
 	    static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) &
@@ -290,6 +296,7 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 	}
 	else if (event.type == SDL_MOUSEWHEEL)
 	{
+		_mouseWheelDelta += event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -event.wheel.preciseY : event.wheel.preciseY;
 		if (event.wheel.y > 0)
 		{
 			_bindableMap =
