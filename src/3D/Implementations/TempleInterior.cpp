@@ -447,13 +447,9 @@ std::optional<TempleCursorHit> TempleInterior::GetCursorHit() const
 	{
 		return std::nullopt;
 	}
-	// TempleRoom::Draw: the hand goes where the cursor meets the room's mesh, as LH3D picks it while drawing the room,
-	// or onto the floor where the cursor meets that
+	// TempleRoom::Draw: the cursor is over the submesh LH3D picks while drawing the room (fn_00795310), and the hand goes
+	// where the pick meets it, or onto the floor where the cursor meets that
 	const auto& hit = *_cameraModel->GetCursorHit();
-	if (hit.floor)
-	{
-		return TempleCursorHit {.point = hit.point, .normal = hit.normal};
-	}
 	const auto& ray = _cameraModel->GetCursorRay();
 	if (ray.has_value())
 	{
@@ -490,8 +486,8 @@ std::optional<TempleCursorHit> TempleInterior::GetCursorHit() const
 		if (nearest.has_value())
 		{
 			return TempleCursorHit {
-			    .point = ray->origin + (ray->focus - ray->origin) * nearest->distance,
-			    .normal = -glm::normalize(ray->focus - ray->origin),
+			    .point = hit.floor ? hit.point : ray->origin + (ray->focus - ray->origin) * nearest->distance,
+			    .normal = hit.floor ? hit.normal : -glm::normalize(ray->focus - ray->origin),
 			    .room = nearestRoom,
 			    .subMesh = nearest->subMesh,
 			};
