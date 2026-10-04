@@ -9,7 +9,7 @@
 
 #include "PathFinding.h"
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
@@ -282,7 +282,7 @@ void PathFinding::ProcessEventOpen(const SDL_Event& event) noexcept
 	{
 	default:
 		break;
-	case SDL_MOUSEBUTTONDOWN:
+	case SDL_EVENT_MOUSE_BUTTON_DOWN:
 	{
 		if (!io.WantCaptureMouse)
 		{

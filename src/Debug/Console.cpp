@@ -11,7 +11,7 @@
 
 #include <algorithm>
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <glm/gtc/constants.hpp>
 #include <imgui.h>
 
@@ -222,14 +222,14 @@ void Console::Draw() noexcept
 	const auto& io = ImGui::GetIO();
 
 	const auto screenSize = Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::ivec2 {};
-	glm::ivec2 mousePosition {};
+	glm::vec2 mousePosition {};
 	SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
 	if (!io.WantCaptureMouse && screenSize.x > 0 && screenSize.y > 0)
 	{
 		glm::vec3 rayOrigin;
 		glm::vec3 rayDirection;
-		Locator::camera::value().DeprojectScreenToWorld(
-		    static_cast<glm::vec2>(mousePosition) / static_cast<glm::vec2>(screenSize), rayOrigin, rayDirection);
+		Locator::camera::value().DeprojectScreenToWorld(mousePosition / static_cast<glm::vec2>(screenSize), rayOrigin,
+		                                                rayDirection);
 		const auto& dynamicsSystem = Locator::dynamicsSystem::value();
 		if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
 		{
@@ -478,7 +478,7 @@ void Console::ProcessEventOpen(const SDL_Event& event) noexcept
 	{
 	default:
 		break;
-	case SDL_MOUSEBUTTONDOWN:
+	case SDL_EVENT_MOUSE_BUTTON_DOWN:
 		if (event.button.clicks == 2 && !io.WantCaptureMouse)
 		{
 			_insertHandPosition = true;
@@ -493,8 +493,8 @@ void Console::ProcessEventAlways(const SDL_Event& event) noexcept
 	{
 	default:
 		break;
-	case SDL_KEYDOWN:
-		if (event.key.keysym.sym == SDLK_BACKQUOTE)
+	case SDL_EVENT_KEY_DOWN:
+		if (event.key.key == SDLK_GRAVE)
 		{
 			Toggle();
 		}
