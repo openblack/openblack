@@ -151,9 +151,11 @@ public:
 	/// The lines text breaks into at a width
 	[[nodiscard]] std::vector<std::u16string_view> GetLines(int width, std::u16string_view text, int size) const;
 
+	/// A line of text a size high in pixels, from its top left in pixels
+	void DrawString(glm::vec2 screen, std::u16string_view text, float size, glm::vec4 colour) const;
+
 private:
 	[[nodiscard]] glm::vec2 ToScreen(glm::vec2 dialog) const;
-	void DrawString(glm::vec2 screen, std::u16string_view text, float size, glm::vec4 colour) const;
 
 	Canvas& _canvas;
 	const GameFont& _font;

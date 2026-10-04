@@ -9,6 +9,9 @@
 
 #include "GameInterface.h"
 
+#include <cmath>
+
+#include <algorithm>
 #include <array>
 #include <filesystem>
 #include <optional>
@@ -23,6 +26,7 @@
 #include "Audio/AudioManagerInterface.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/Texture2D.h"
+#include "InfoConstants.h"
 #include "Locator.h"
 
 using namespace openblack::gui;
@@ -76,6 +80,43 @@ std::unique_ptr<openblack::graphics::Texture2D> LoadTexture(const std::string& n
 	                openblack::graphics::Wrapping::ClampEdge, openblack::graphics::Filter::Linear, data);
 	return texture;
 }
+
+/// The tooltips' priorities and times from the info script, or the most common of them without it
+std::array<ToolTipInfo, ToolTips::k_Count> ReadToolTipsInfo()
+{
+	std::array<ToolTipInfo, ToolTips::k_Count> info {};
+	info.fill({.priority = 0.5f, .displayTime = 1.0f, .displayTimeAfterFocus = 0.0f});
+	if (Locator::infoConstants::has_value())
+	{
+		const auto& toolTips = Locator::infoConstants::value().toolTips;
+		for (size_t i = 0; i < info.size(); ++i)
+		{
+			info.at(i) = {.priority = toolTips.at(i).priority,
+			              .displayTime = toolTips.at(i).displayTime,
+			              .displayTimeAfterFocus = toolTips.at(i).displayTimeAfterFocus};
+		}
+	}
+	return info;
+}
+
+/// atmos.raw's glow, which CameraHelp's glow boxes are cut from, a ninth at a time
+constexpr std::array k_GlowU = {0.0f, 0.078125f, 0.16797f, 0.24609f};
+constexpr std::array k_GlowV = {0.25f, 0.32813f, 0.41797f, 0.49609f};
+/// atmos.raw's arrows about a tooltip's mouse
+struct ToolTipArrow
+{
+	uint32_t bit;
+	glm::vec2 uvMin;
+	glm::vec2 uvMax;
+};
+constexpr std::array k_ToolTipArrows = {
+    ToolTipArrow {ToolTipArrows::k_Left, {0.7539f, 0.1289f}, {0.8711f, 0.2461f}},
+    ToolTipArrow {ToolTipArrows::k_Right, {0.8789f, 0.0039f}, {0.9961f, 0.1211f}},
+    ToolTipArrow {ToolTipArrows::k_Up, {0.7539f, 0.0039f}, {0.8711f, 0.1211f}},
+    ToolTipArrow {ToolTipArrows::k_Down, {0.8789f, 0.1289f}, {0.9961f, 0.2461f}},
+};
+/// fn_00447450's mice for a wheel mouse, the third row of mousehelp.raw (fn_005C4800)
+constexpr int k_ToolTipMouseRow = 2;
 } // namespace
 
 std::unique_ptr<GameInterface> GameInterface::Create(std::u16string_view playerName, MenuSettings settings)
@@ -106,6 +147,8 @@ std::unique_ptr<GameInterface> GameInterface::Create(std::u16string_view playerN
 	}
 	auto symbols = LoadTexture("ChooseSymbol");
 	auto mice = LoadTexture("mousehelp");
+	// LH3DAtmos's glows and the tooltips' arrows
+	auto atmos = LoadTexture("ATMOS");
 
 	// White glyphs, their coverage in alpha
 	const auto& coverage = font->GetAtlas();
@@ -125,20 +168,23 @@ std::unique_ptr<GameInterface> GameInterface::Create(std::u16string_view playerN
 	                    font->GetGlyphs().size());
 	return std::unique_ptr<GameInterface>(new GameInterface(std::move(texts), std::move(*font), std::move(atlas),
 	                                                        std::move(fontTexture), std::move(symbols), std::move(mice),
-	                                                        playerName, std::move(settings)));
+	                                                        std::move(atmos), playerName, std::move(settings)));
 }
 
 GameInterface::GameInterface(TextDatabase texts, GameFont font, std::unique_ptr<graphics::Texture2D> atlas,
                              std::unique_ptr<graphics::Texture2D> fontTexture, std::unique_ptr<graphics::Texture2D> symbols,
-                             std::unique_ptr<graphics::Texture2D> mice, std::u16string_view playerName, MenuSettings settings)
+                             std::unique_ptr<graphics::Texture2D> mice, std::unique_ptr<graphics::Texture2D> atmos,
+                             std::u16string_view playerName, MenuSettings settings)
     : _texts(std::move(texts))
     , _font(std::move(font))
     , _atlas(std::move(atlas))
     , _fontTexture(std::move(fontTexture))
     , _symbols(std::move(symbols))
     , _mice(std::move(mice))
+    , _atmos(std::move(atmos))
     , _painter(_canvas, _font, *_atlas, *_fontTexture)
     , _menu(std::make_unique<GameMenu>(_texts, _font, playerName, std::move(settings)))
+    , _toolTips(ReadToolTipsInfo())
 {
 	_painter.SetPictures(_symbols.get(), _mice.get());
 }
@@ -226,6 +272,7 @@ GameMenu::Action GameInterface::TakeAction()
 void GameInterface::Update(float deltaSeconds)
 {
 	_menu->Update(deltaSeconds);
+	_toolTips.Update(deltaSeconds);
 }
 
 void GameInterface::Draw(glm::u16vec2 resolution, glm::ivec2 mouse, uint32_t milliseconds, bool overDebugWindow)
@@ -239,6 +286,11 @@ void GameInterface::Draw(glm::u16vec2 resolution, glm::ivec2 mouse, uint32_t mil
 		_painter.DrawTextWrapped(DialogRect {{0, 0}, DialogPainter::k_Size}, true, _message->text, 60,
 		                         glm::vec4(1.0f, 1.0f, 1.0f, _message->alpha));
 	}
+	// KMIcon::Draw leaves the tooltip out under a dialog
+	if (!menuOpen)
+	{
+		DrawToolTip(resolution);
+	}
 	if (_menu->IsVisible())
 	{
 		_menu->Draw(_painter);
@@ -249,4 +301,144 @@ void GameInterface::Draw(glm::u16vec2 resolution, glm::ivec2 mouse, uint32_t mil
 	}
 	_canvas.End();
 	_pointerCanvas.End();
+}
+
+void GameInterface::DrawGlow(glm::vec2 min, glm::vec2 max, glm::vec4 colour)
+{
+	// A ninth of the glow at each corner, a quarter of the box's height square, outside the box
+	if (_atmos == nullptr || colour.a <= 0.0f)
+	{
+		return;
+	}
+	const float corner = (max.y - min.y) * 0.25f;
+	const std::array x = {min.x - corner, min.x, max.x, max.x + corner};
+	const std::array y = {min.y - corner, min.y, max.y, max.y + corner};
+	_canvas.SetBlend(Canvas::Blend::Additive);
+	for (size_t row = 0; row < 3; ++row)
+	{
+		for (size_t column = 0; column < 3; ++column)
+		{
+			_canvas.DrawQuad({x.at(column), y.at(row)}, {x.at(column + 1), y.at(row + 1)},
+			                 {k_GlowU.at(column), k_GlowV.at(row)}, {k_GlowU.at(column + 1), k_GlowV.at(row + 1)}, colour,
+			                 _atmos.get());
+		}
+	}
+	_canvas.SetBlend(Canvas::Blend::Alpha);
+}
+
+void GameInterface::DrawToolTip(glm::u16vec2 resolution)
+{
+	const auto shown = _toolTips.GetShown();
+	if (!shown.has_value() || !_handOnScreen.has_value())
+	{
+		return;
+	}
+	// The colours' alpha goes in 256ths, and below 4 nothing is drawn
+	const float alpha = std::floor(shown->alpha * 255.0f) / 255.0f;
+	if (alpha * 255.0f < 4.0f)
+	{
+		return;
+	}
+	const auto text = _texts.Get(ToolTips::TextName(shown->index));
+	const glm::vec4 yellow {1.0f, 1.0f, 0.0f, alpha};
+	const glm::vec4 white {1.0f, 1.0f, 1.0f, alpha};
+	const glm::vec4 shadow {0.0f, 0.0f, 0.0f, alpha};
+
+	// Sized by the screen's height, and kept on it by the hand
+	const int width = resolution.x;
+	const int height = resolution.y;
+	const int size = height / 25;
+	const int handX = std::clamp(static_cast<int>(_handOnScreen->x), 0, width - size);
+	const int handY = std::clamp(static_cast<int>(_handOnScreen->y), 0, height - size);
+
+	// The words, then the mouse with its arrows either side
+	const int iconWidth = shown->action != ToolTipAction::None && _mice != nullptr ? size : 0;
+	const bool left = (shown->arrows & ToolTipArrows::k_Left) != 0;
+	const bool right = (shown->arrows & ToolTipArrows::k_Right) != 0;
+	const int iconsWidth = iconWidth + (left ? size / 2 : 0) + (right ? size / 2 : 0);
+	const int textSize = size * 2 / 3;
+	const float textWidth = _font.GetWidth(text, static_cast<float>(textSize));
+	const float total = textWidth + static_cast<float>(iconsWidth) + 2.0f;
+
+	// Right of the hand, or left of it in the right third of the screen, until it reaches the left third
+	if (handX > width * 2 / 3)
+	{
+		_toolTipOnLeft = true;
+	}
+	else if (handX < width / 3)
+	{
+		_toolTipOnLeft = false;
+	}
+	const float x = _toolTipOnLeft ? static_cast<float>(handX + (size / 2)) - total : static_cast<float>(handX - (size / 2));
+	const float textX = x;
+	const float iconX = std::trunc(x + textWidth + 2.0f) + (left ? static_cast<float>(size / 2) : 0.0f);
+	const auto y = static_cast<float>(handY);
+	const auto sizeF = static_cast<float>(size);
+	const auto textOffset = static_cast<float>((size - textSize) / 2);
+
+	// The glows behind: white behind the mouse, and faint yellow behind the words and arrows
+	const float glowAlpha = std::trunc(128.0f * shown->alpha) / 255.0f;
+	const float faintAlpha = std::trunc(128.0f * shown->alpha / 3.0f) / 255.0f;
+	if (iconWidth != 0)
+	{
+		DrawGlow({iconX, y}, {iconX + static_cast<float>(iconWidth), y + sizeF}, glm::vec4(1.0f, 1.0f, 1.0f, glowAlpha));
+	}
+	if (!text.empty())
+	{
+		DrawGlow({textX, y + textOffset}, {textX + textWidth, y + sizeF - textOffset}, glm::vec4(1.0f, 1.0f, 0.0f, faintAlpha));
+	}
+	const float half = sizeF * 0.5f;
+	const float quarter = sizeF * 0.25f;
+	const auto arrowRect = [&](uint32_t bit) -> std::pair<glm::vec2, glm::vec2> {
+		const float iconRight = iconX + static_cast<float>(iconWidth);
+		switch (bit)
+		{
+		case ToolTipArrows::k_Left:
+			return {{iconX - half, y + quarter}, {iconX, y + (3.0f * quarter)}};
+		case ToolTipArrows::k_Right:
+			return {{iconRight, y + quarter}, {iconRight + half, y + (3.0f * quarter)}};
+		case ToolTipArrows::k_Up:
+			return {{iconX + quarter, y - half}, {iconX + (3.0f * quarter), y}};
+		default:
+			return {{iconX + quarter, y + sizeF}, {iconX + (3.0f * quarter), y + (1.5f * sizeF)}};
+		}
+	};
+	for (const auto& arrow : k_ToolTipArrows)
+	{
+		if ((shown->arrows & arrow.bit) != 0)
+		{
+			const auto [min, max] = arrowRect(arrow.bit);
+			DrawGlow(min, max, glm::vec4(1.0f, 1.0f, 0.0f, faintAlpha));
+		}
+	}
+
+	// The mouse, its button the action's, and the arrows over the glows
+	if (iconWidth != 0)
+	{
+		constexpr float k_Grid = 0.25f;
+		const bool selecting = shown->action == ToolTipAction::Select;
+		const auto uvMin = glm::vec2(1.0f, static_cast<float>(k_ToolTipMouseRow)) * k_Grid;
+		const auto uvMax = uvMin + k_Grid;
+		// The left button is the right one mirrored
+		_canvas.DrawQuad({iconX, y}, {iconX + sizeF, y + sizeF}, selecting ? glm::vec2(uvMax.x, uvMin.y) : uvMin,
+		                 selecting ? glm::vec2(uvMin.x, uvMax.y) : uvMax, white, _mice.get());
+	}
+	if (_atmos != nullptr)
+	{
+		const float grow = static_cast<float>(size / 9);
+		for (const auto& arrow : k_ToolTipArrows)
+		{
+			if ((shown->arrows & arrow.bit) != 0)
+			{
+				const auto [min, max] = arrowRect(arrow.bit);
+				_canvas.DrawQuad(min - grow, max + grow, arrow.uvMin, arrow.uvMax, white, _atmos.get());
+			}
+		}
+	}
+
+	// The words, in yellow over two black shadows
+	const auto textSizeF = static_cast<float>(textSize);
+	_painter.DrawString({textX - 1.0f, y - 1.0f + textOffset}, text, textSizeF, shadow);
+	_painter.DrawString({textX + 1.0f, y + 1.0f + textOffset}, text, textSizeF, shadow);
+	_painter.DrawString({textX, y + textOffset}, text, textSizeF, yellow);
 }

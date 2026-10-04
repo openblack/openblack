@@ -70,6 +70,7 @@ void Canvas::Begin(glm::u16vec2 resolution)
 	_resolution = resolution;
 	_vertices.clear();
 	_batches.clear();
+	_blend = Blend::Alpha;
 }
 
 void Canvas::DrawQuad(glm::vec2 min, glm::vec2 max, glm::vec2 uvMin, glm::vec2 uvMax, glm::vec4 colour,
@@ -80,9 +81,11 @@ void Canvas::DrawQuad(glm::vec2 min, glm::vec2 max, glm::vec2 uvMin, glm::vec2 u
 		return;
 	}
 	const auto* drawn = texture != nullptr ? texture : _white.get();
-	if (_batches.empty() || _batches.back().texture != drawn || _batches.back().vertexCount + 6 > k_MaxBatchVertices)
+	if (_batches.empty() || _batches.back().texture != drawn || _batches.back().blend != _blend ||
+	    _batches.back().vertexCount + 6 > k_MaxBatchVertices)
 	{
-		_batches.push_back({.texture = drawn, .firstVertex = static_cast<uint32_t>(_vertices.size()), .vertexCount = 0});
+		_batches.push_back(
+		    {.texture = drawn, .blend = _blend, .firstVertex = static_cast<uint32_t>(_vertices.size()), .vertexCount = 0});
 	}
 	const auto abgr = ToAbgr(colour);
 	const Vertex topLeft {.x = min.x, .y = min.y, .u = uvMin.x, .v = uvMin.y, .abgr = abgr};
@@ -96,9 +99,11 @@ void Canvas::DrawQuad(glm::vec2 min, glm::vec2 max, glm::vec2 uvMin, glm::vec2 u
 void Canvas::DrawShape(const std::array<glm::vec2, 4>& corners, const std::array<glm::vec4, 4>& colours)
 {
 	const auto* white = _white.get();
-	if (_batches.empty() || _batches.back().texture != white || _batches.back().vertexCount + 6 > k_MaxBatchVertices)
+	if (_batches.empty() || _batches.back().texture != white || _batches.back().blend != _blend ||
+	    _batches.back().vertexCount + 6 > k_MaxBatchVertices)
 	{
-		_batches.push_back({.texture = white, .firstVertex = static_cast<uint32_t>(_vertices.size()), .vertexCount = 0});
+		_batches.push_back(
+		    {.texture = white, .blend = _blend, .firstVertex = static_cast<uint32_t>(_vertices.size()), .vertexCount = 0});
 	}
 	std::array<Vertex, 4> vertices {};
 	for (size_t i = 0; i < 4; ++i)
@@ -145,9 +150,12 @@ void Canvas::End()
 		std::copy_n(_vertices.begin() + batch.firstVertex, batch.vertexCount, reinterpret_cast<Vertex*>(vertices.data));
 		bgfx::setVertexBuffer(0, &vertices);
 		program->SetTextureSampler("s_texture", 0, *batch.texture);
-		bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
-		               BGFX_STATE_BLEND_FUNC_SEPARATE(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA,
-		                                              BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA));
+		const auto blend = batch.blend == Blend::Additive
+		                       ? BGFX_STATE_BLEND_FUNC_SEPARATE(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE,
+		                                                        BGFX_STATE_BLEND_ZERO, BGFX_STATE_BLEND_ONE)
+		                       : BGFX_STATE_BLEND_FUNC_SEPARATE(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA,
+		                                                        BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA);
+		bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | blend);
 		bgfx::submit(view, graphics::toBgfx(program->GetRawHandle()));
 	}
 }

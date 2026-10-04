@@ -162,6 +162,15 @@ public:
 	[[nodiscard]] bool IsControl(TempleRoom room, uint32_t subMesh) const;
 	/// The scrolls' textures for a room's mesh, by submesh
 	[[nodiscard]] std::vector<TempleSubMeshTexture> GetTextures(TempleRoom room) const;
+	/// A room's scroll, as its callbacks see it to choose the tooltip
+	struct Control
+	{
+		uint32_t subMesh;
+		/// Whether the camera was last sent to look at it
+		bool focused;
+	};
+	/// The scrolls of a room's mesh, in the order its callbacks are run
+	[[nodiscard]] std::vector<Control> GetControls(TempleRoom room) const;
 	/// FormatTextureForScroll with a submesh: the text of the scroll the camera is close to, drawn in front of it in
 	/// the temple
 	void AppendFocusedText(std::vector<OrientedTextVertex>& vertices, const Facts& facts) const;

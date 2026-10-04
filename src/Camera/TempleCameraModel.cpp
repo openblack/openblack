@@ -611,6 +611,15 @@ void TempleCameraModel::Step(float dt, const Input& input)
 		_subMeshLook.reset();
 	}
 	_hoveredDoor = _state == State::Orbit ? input.door : std::nullopt;
+	_overPool = _state == State::Orbit && KindOf(input.hit) == HitKind::Pool;
+	_pressingPool = _state == State::Orbit && input.button != 0 && KindOf(_pressHit) == HitKind::Pool;
+	_overWayBack = false;
+	if (input.doorBack.has_value() && _state == ControlOf(GetRoom()))
+	{
+		const auto* picture = PictureRoomOf(GetRoom());
+		_overWayBack = GetRoom() == Room::CreatureCave ? *input.doorBack == k_CreatureDoor
+		                                               : picture != nullptr && *input.doorBack == picture->door;
+	}
 
 	if (!_lookingAtSubMesh)
 	{

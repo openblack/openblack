@@ -18,6 +18,7 @@
 #include "3D/OrientedText.h"
 #include "3D/TempleDoors.h"
 #include "3D/TempleInteriorInterface.h"
+#include "3D/TempleToolTips.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
 #error "Locator interface implementations should only be included in Locator.cpp, use interface instead."
@@ -104,8 +105,13 @@ private:
 	/// and 0xE36134). Moving onto another submesh sets the glow off again, unless a control is being dragged.
 	std::optional<std::pair<TempleRoom, uint32_t>> _hovered;
 	float _hoverGlow {0.0f};
+	/// What the hand shows, which the rooms choose every frame and submit every turn, and how long since the last turn
+	TempleToolTip _toolTip {k_FirstTempleToolTip};
+	float _toolTipTurnTime {0.0f};
 	/// GameOptionsRoom::Update and UniverseRoom::Update and DrawAdditional
 	void UpdateOptionsAndFutureRooms(float seconds);
+	/// The tooltip the hand shows, and where on the screen the hand is
+	void UpdateToolTips(float milliseconds);
 	void StopCreatureCaveSounds();
 };
 } // namespace openblack

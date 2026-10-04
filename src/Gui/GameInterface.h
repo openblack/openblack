@@ -23,6 +23,7 @@
 #include "GameFont.h"
 #include "GameMenu.h"
 #include "TextDatabase.h"
+#include "ToolTips.h"
 
 union SDL_Event;
 
@@ -73,10 +74,21 @@ public:
 	};
 	void SetMessage(std::optional<Message> message) { _message = std::move(message); }
 
+	/// What the hand shows for what it is over
+	[[nodiscard]] ToolTips& GetToolTips() noexcept { return _toolTips; }
+	/// Where on the screen the hand is, in pixels, which the tooltip is drawn by, or nowhere to show none
+	void SetHandOnScreen(std::optional<glm::vec2> position) { _handOnScreen = position; }
+
 private:
 	GameInterface(TextDatabase texts, GameFont font, std::unique_ptr<graphics::Texture2D> atlas,
 	              std::unique_ptr<graphics::Texture2D> fontTexture, std::unique_ptr<graphics::Texture2D> symbols,
-	              std::unique_ptr<graphics::Texture2D> mice, std::u16string_view playerName, MenuSettings settings);
+	              std::unique_ptr<graphics::Texture2D> mice, std::unique_ptr<graphics::Texture2D> atmos,
+	              std::u16string_view playerName, MenuSettings settings);
+
+	/// CameraHelp::DrawKeyOrMouse: the tooltip by the hand, its words and then its mouse
+	void DrawToolTip(glm::u16vec2 resolution);
+	/// CameraHelp's glow: a soft box of atmos.raw added round a rectangle
+	void DrawGlow(glm::vec2 min, glm::vec2 max, glm::vec4 colour);
 
 	TextDatabase _texts;
 	GameFont _font;
@@ -84,11 +96,17 @@ private:
 	std::unique_ptr<graphics::Texture2D> _fontTexture;
 	std::unique_ptr<graphics::Texture2D> _symbols;
 	std::unique_ptr<graphics::Texture2D> _mice;
+	/// LH3DAtmos's texture of glows and arrows
+	std::unique_ptr<graphics::Texture2D> _atmos;
 	Canvas _canvas;
 	Canvas _pointerCanvas {graphics::RenderPass::Cursor};
 	DialogPainter _painter;
 	std::unique_ptr<GameMenu> _menu;
 	std::optional<Message> _message;
+	ToolTips _toolTips;
+	std::optional<glm::vec2> _handOnScreen;
+	/// Whether the tooltip is left of the hand, which it moves to in the right third of the screen and from in the left
+	bool _toolTipOnLeft {false};
 	GameMenu::Action _action {GameMenu::Action::None};
 };
 

@@ -148,6 +148,8 @@ constexpr float k_MainRoomOpenSwing = 0.01f;
 /// CreatureRoom::Draw slides the waterfall's texture through this much of a slide each millisecond, and the slide
 /// across ten of the texture
 constexpr float k_WaterfallSlidePerMillisecond = 2.1e-5f;
+/// GGame::Loop has the temple's game turn every 100 milliseconds while the player is inside it
+constexpr float k_ToolTipTurnMilliseconds = 100.0f;
 constexpr float k_WaterfallSlideLength = -10.0f;
 /// CreatureRoom::DrawAdditional's sounds: the water at the waterfall's foot, and the fire where the creature stands, the
 /// second place movement.l3d marks
@@ -326,6 +328,57 @@ void TempleInterior::UpdateOptionsAndFutureRooms(float seconds)
 	{
 		_interface->SetMessage(std::move(message));
 	}
+}
+
+void TempleInterior::UpdateToolTips(float milliseconds)
+{
+	if (_interface == nullptr || _cameraModel == nullptr)
+	{
+		return;
+	}
+	// The rooms choose the tooltip as they are drawn
+	const auto hit = GetCursorHit();
+	const auto scrolls = _scrolls != nullptr ? _scrolls->GetControls(_currentRoom) : std::vector<TempleScrolls::Control> {};
+	const TempleToolTipInput input {
+	    .room = _currentRoom,
+	    .inControl = _cameraModel->IsInControl() && !_transitionRoom.has_value(),
+	    .zoom = _cameraModel->GetSubMeshZoom(),
+	    .lookingAtScroll = _cameraModel->IsLookingAtSubMesh(),
+	    .controlHeld = _scrolls != nullptr && _scrolls->IsHeld(),
+	    .overPool = _cameraModel->IsOverPool(),
+	    .pressingPool = _cameraModel->IsPressingPool(),
+	    .hoveredDoor = _cameraModel->GetHoveredDoor(),
+	    .overWayBack = _cameraModel->IsOverWayBack(),
+	    .hoveredSubMesh = hit.has_value() && hit->room == _currentRoom ? hit->subMesh : std::nullopt,
+	    .scrolls = scrolls,
+	};
+	UpdateTempleToolTip(_toolTip, input);
+
+	// Temple::ProcessGameTurn every 100 milliseconds: TempleRoom::CalculateTooltipsInsideCitadel submits the tooltip,
+	// or none under a dialog, and the help system keeps it or ends it
+	auto& toolTips = _interface->GetToolTips();
+	_toolTipTurnTime += milliseconds;
+	for (; _toolTipTurnTime >= k_ToolTipTurnMilliseconds; _toolTipTurnTime -= k_ToolTipTurnMilliseconds)
+	{
+		if (!_interface->GetMenu().IsOpen() && _toolTip.index.has_value())
+		{
+			toolTips.Submit(*_toolTip.index, _toolTip.action, _toolTip.arrows);
+		}
+		toolTips.ProcessTurn();
+	}
+
+	// CameraHelp::DrawKeyOrMouse puts the tooltip by the hand, which is where the cursor meets the room
+	std::optional<glm::vec2> onScreen;
+	if (hit.has_value() && Locator::windowing::has_value())
+	{
+		const auto size = glm::vec2(Locator::windowing::value().GetSize());
+		glm::vec3 screen;
+		if (Locator::camera::value().ProjectWorldToScreen(hit->point, glm::vec4(0.0f, 0.0f, size), screen))
+		{
+			onScreen = glm::vec2(screen);
+		}
+	}
+	_interface->SetHandOnScreen(onScreen);
 }
 
 TempleInterior::~TempleInterior() = default;
@@ -547,6 +600,8 @@ void TempleInterior::Update(std::chrono::microseconds dt)
 			}
 		}
 
+		UpdateToolTips(milliseconds);
+
 		// CreatureRoom::Draw moves the room's effects on while the room is drawn
 		if (_creatureCaveEffects != nullptr && IsRoomDrawn(TempleRoom::CreatureCave))
 		{
@@ -636,6 +691,9 @@ void TempleInterior::Deactivate()
 	{
 		_interface->SetMessage(std::nullopt);
 		_interface->GetMenu().SetInsideTemple(false);
+		// The tooltip ends with nothing to keep it
+		_interface->SetHandOnScreen(std::nullopt);
+		_interface->GetToolTips().ProcessTurn();
 	}
 
 	auto& registry = Locator::entitiesRegistry::value();

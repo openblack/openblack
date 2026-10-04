@@ -33,13 +33,23 @@ namespace openblack::gui
 class Canvas
 {
 public:
+	/// How what is drawn goes over what is under it
+	enum class Blend : uint8_t
+	{
+		Alpha,
+		/// Added, by its alpha, as LH3DAtmos's additive material is
+		Additive,
+	};
+
 	explicit Canvas(graphics::RenderPass view = graphics::RenderPass::Interface);
 	~Canvas();
 	Canvas(const Canvas&) = delete;
 	Canvas& operator=(const Canvas&) = delete;
 
-	/// Starts a frame of the interface for a window of a size
+	/// Starts a frame of the interface for a window of a size, blending by alpha
 	void Begin(glm::u16vec2 resolution);
+	/// How what is drawn from now on blends
+	void SetBlend(Blend blend) noexcept { _blend = blend; }
 	/// A rectangle of a texture, tinted by colour (red, green, blue and alpha from 0 to 1). Without a texture it is
 	/// filled with the colour. Corners whose minimum is beyond the maximum flip the texture.
 	void DrawQuad(glm::vec2 min, glm::vec2 max, glm::vec2 uvMin, glm::vec2 uvMax, glm::vec4 colour,
@@ -65,12 +75,14 @@ private:
 	struct Batch
 	{
 		const graphics::Texture2D* texture;
+		Blend blend;
 		uint32_t firstVertex;
 		uint32_t vertexCount;
 	};
 
 	graphics::RenderPass _view;
 	glm::u16vec2 _resolution {0, 0};
+	Blend _blend {Blend::Alpha};
 	std::vector<Vertex> _vertices;
 	std::vector<Batch> _batches;
 	std::unique_ptr<graphics::Texture2D> _white;

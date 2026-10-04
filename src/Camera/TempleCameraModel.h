@@ -137,6 +137,14 @@ public:
 	void SetDialogOpen(bool open) { _dialogOpen = open; }
 	/// The main room's door the cursor is over, while the player has its camera (WorldRoomCamera +0x12C)
 	[[nodiscard]] std::optional<uint32_t> GetHoveredDoor() const { return _hoveredDoor; }
+	/// Whether the cursor is over the main room's pool, and whether a press began on it (InnerCamera +0x3F8 and +0x13C)
+	[[nodiscard]] bool IsOverPool() const { return _overPool; }
+	[[nodiscard]] bool IsPressingPool() const { return _pressingPool; }
+	/// Whether the cursor is over the door a room other than the main room is left by, while the player has its camera
+	/// (ChallengeRoomCamera +0x12C)
+	[[nodiscard]] bool IsOverWayBack() const { return _overWayBack; }
+	/// Whether the camera looks at a scroll from close by (InnerCamera's state 4)
+	[[nodiscard]] bool IsLookingAtSubMesh() const { return _lookingAtSubMesh; }
 
 private:
 	enum class State : uint8_t
@@ -250,6 +258,9 @@ private:
 	// The press the mouse is held from
 	bool _wasPressed {false};
 	bool _dialogOpen {false};
+	bool _overPool {false};
+	bool _pressingPool {false};
+	bool _overWayBack {false};
 	/// How long a room of pictures' camera has had the player, which its turn under a dialog speeds up over
 	/// (ChallengeRoomCamera +0x3D0)
 	float _pictureOrbitTime {0.0f};

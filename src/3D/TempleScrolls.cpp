@@ -303,6 +303,19 @@ bool TempleScrolls::IsControl(TempleRoom room, uint32_t subMesh) const
 	    _scrolls, [room, subMesh](const Scroll& scroll) { return scroll.room == room && scroll.subMesh == subMesh; });
 }
 
+std::vector<TempleScrolls::Control> TempleScrolls::GetControls(TempleRoom room) const
+{
+	std::vector<Control> controls;
+	for (size_t i = 0; i < _scrolls.size(); ++i)
+	{
+		if (_scrolls[i].room == room && _scrolls[i].subMesh.has_value())
+		{
+			controls.push_back({.subMesh = *_scrolls[i].subMesh, .focused = _focused == i});
+		}
+	}
+	return controls;
+}
+
 std::vector<TempleSubMeshTexture> TempleScrolls::GetTextures(TempleRoom room) const
 {
 	std::vector<TempleSubMeshTexture> textures;
