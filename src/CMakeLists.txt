@@ -92,11 +92,11 @@ target_include_directories(
 )
 if (NOT VCPKG_TARGET_ANDROID)
   target_include_directories(
-    openblack_lib PUBLIC ${BULLET_ROOT_DIR}/${BULLET_INCLUDE_DIR}
+    openblack_lib PUBLIC ${BULLET_INCLUDE_DIR}
   )
 endif ()
 target_link_directories(
-  openblack_lib PRIVATE ${BULLET_ROOT_DIR}/${BULLET_LIBRARY_DIRS}
+  openblack_lib PRIVATE ${BULLET_LIBRARY_DIRS}
 )
 target_compile_definitions(openblack_lib PRIVATE ${BULLET_DEFINITIONS})
 target_link_libraries(
@@ -161,7 +161,7 @@ if (VCPKG_TARGET_ANDROID)
 else ()
   target_link_libraries(
     openblack_lib
-    PUBLIC $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
+    PUBLIC 
            $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
   )
 endif ()
@@ -179,6 +179,16 @@ target_compile_definitions(
     "SDL_MAIN_HANDLED"
   PUBLIC "$<$<CONFIG:DEBUG>:OPENBLACK_DEBUG>"
 )
+
+if(MINGW)
+  target_compile_definitions(
+    openblack_lib
+    PRIVATE
+      # Get rid of useless crud from windows.h
+      NOMINMAX
+      WIN32_LEAN_AND_MEAN
+  )
+endif()
 
 if (MSVC)
   target_compile_definitions(

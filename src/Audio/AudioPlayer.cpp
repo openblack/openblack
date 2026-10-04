@@ -86,6 +86,10 @@ void AudioPlayer::SetupLogging()
 		levelStr[0] += static_cast<char>(level);
 #if defined(_MSC_VER)
 		_putenv_s("ALSOFT_LOGLEVEL", levelStr.data());
+#elif defined(__MINGW32__)
+		std::array<char, 18> setstr = {"ALSOFT_LOGLEVEL="};
+		strcpy(&setstr[16], levelStr.data());
+		putenv(setstr.data());
 #else
 		setenv("ALSOFT_LOGLEVEL", levelStr.data(), 0);
 #endif
