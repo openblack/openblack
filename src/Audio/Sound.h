@@ -226,6 +226,13 @@ public:
 	float volume;
 	int pitch;
 	int pitchDeviation;
+	/// Play parameters of the bank header, used where LHSamplePlay applies them (see pack::AudioBankOverride)
+	uint32_t overrideFlags;
+	uint16_t headerVolume;
+	int32_t loop;
+	float minDistance;
+	float maxDistance;
+	float distanceScale;
 	ChannelLayout channelLayout;
 	PlayType playType;
 	BufferId bufferId;

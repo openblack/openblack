@@ -65,7 +65,7 @@
  * The layout of a LHAudioBankSampleTable block is as follows:
  *
  * - 2 byte int, containing the number of sound samples in the block.
- * - 2 byte int, unknown
+ * - 2 byte int, non-zero for atmosphere banks
  * - 640 byte audio metadata * number of sound samples, containing
  *         name - 256 characters
  *         unknown - TODO: 4 bytes
@@ -354,8 +354,7 @@ PackResult PackFile::ResolveAudioBankSampleTableBlock() noexcept
 	uint16_t sampleCount;
 	stream.read(reinterpret_cast<char*>(&sampleCount), sizeof(sampleCount));
 
-	uint16_t unknown;
-	stream.read(reinterpret_cast<char*>(&unknown), sizeof(unknown));
+	stream.read(reinterpret_cast<char*>(&_audioBankAtmosCount), sizeof(_audioBankAtmosCount));
 
 	if (sampleCount == 0)
 	{

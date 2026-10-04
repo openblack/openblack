@@ -39,9 +39,16 @@ public:
 	void PauseSource(SourceId id) const override;
 	void StopSource(SourceId id) const override;
 	void SetVolume(SourceId id, float volume) override;
+	void SetPitch(SourceId id, float pitch) override;
+	void SetPosition(SourceId id, glm::vec3 position) override;
+	void SetDistanceAttenuation(SourceId id, float referenceDistance, float maxDistance, float rolloff) override;
+	void SetLooping(SourceId id, bool loop) override;
+	void StartSource(SourceId id) override;
 	[[nodiscard]] float GetVolume() const override;
 	[[nodiscard]] AudioStatus GetStatus(SourceId id) const override;
 	[[nodiscard]] float GetProgress(size_t sizeInBytes, SourceId sourceId) const override;
+	[[nodiscard]] std::vector<BufferId> UnqueueProcessedBuffers(SourceId id) override;
+	[[nodiscard]] uint32_t GetSampleOffset(SourceId id) const override;
 
 private:
 	static void SetupLogging();

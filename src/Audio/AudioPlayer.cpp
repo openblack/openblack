@@ -11,6 +11,7 @@
 
 #include <cstdlib>
 
+#include <algorithm>
 #include <array>
 #include <random>
 
@@ -240,6 +241,33 @@ void AudioPlayer::SetVolume(SourceId id, float volume)
 	alCheckCall(alSourcef(id, AL_GAIN, volume));
 }
 
+void AudioPlayer::SetPitch(SourceId id, float pitch)
+{
+	alCheckCall(alSourcef(id, AL_PITCH, pitch));
+}
+
+void AudioPlayer::SetPosition(SourceId id, glm::vec3 position)
+{
+	alCheckCall(alSource3f(id, AL_POSITION, position.x, position.y, position.z));
+}
+
+void AudioPlayer::SetDistanceAttenuation(SourceId id, float referenceDistance, float maxDistance, float rolloff)
+{
+	alCheckCall(alSourcef(id, AL_REFERENCE_DISTANCE, referenceDistance));
+	alCheckCall(alSourcef(id, AL_MAX_DISTANCE, maxDistance));
+	alCheckCall(alSourcef(id, AL_ROLLOFF_FACTOR, rolloff));
+}
+
+void AudioPlayer::SetLooping(SourceId id, bool loop)
+{
+	alCheckCall(alSourcei(id, AL_LOOPING, loop ? AL_TRUE : AL_FALSE));
+}
+
+void AudioPlayer::StartSource(SourceId id)
+{
+	alCheckCall(alSourcePlay(id));
+}
+
 void AudioPlayer::DeleteDevice(ALCdevice* device)
 {
 	alcCloseDevice(device);
@@ -268,6 +296,25 @@ AudioStatus AudioPlayer::GetStatus(SourceId id) const
 	default:
 		throw std::runtime_error("Unknown audio status");
 	}
+}
+
+std::vector<BufferId> AudioPlayer::UnqueueProcessedBuffers(SourceId id)
+{
+	ALint processed = 0;
+	alCheckCall(alGetSourcei(id, AL_BUFFERS_PROCESSED, &processed));
+	std::vector<BufferId> buffers(static_cast<size_t>(std::max(processed, 0)));
+	if (!buffers.empty())
+	{
+		alCheckCall(alSourceUnqueueBuffers(id, static_cast<ALsizei>(buffers.size()), buffers.data()));
+	}
+	return buffers;
+}
+
+uint32_t AudioPlayer::GetSampleOffset(SourceId id) const
+{
+	ALint offset = 0;
+	alCheckCall(alGetSourcei(id, AL_SAMPLE_OFFSET, &offset));
+	return static_cast<uint32_t>(std::max(offset, 0));
 }
 
 float AudioPlayer::GetProgress(size_t sizeInBytes, SourceId sourceId) const

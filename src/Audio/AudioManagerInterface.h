@@ -10,20 +10,36 @@
 #pragma once
 
 #include <map>
+#include <optional>
 
 #include <entt/fwd.hpp>
 
 #include "AudioDecoderInterface.h"
 #include "AudioPlayerInterface.h"
 #include "ECS/Components/AudioEmitter.h"
+#include "MusicPlayer.h"
 #include "Sound.h"
 #include "SoundGroup.h"
 
 namespace openblack
 {
 
+namespace pack
+{
+struct AudioBankSampleHeader;
+}
+
 namespace audio
 {
+
+class AtmosPlayer;
+
+/// LHBankGetMusicGroupId and LHBankGetNumberOfSamples of a music bank
+struct MusicBankInfo
+{
+	int32_t groupId;
+	uint32_t chunkCount;
+};
 
 class AudioManagerInterface
 {
@@ -36,8 +52,10 @@ public:
 	virtual void PauseEmitter(entt::entity emitter) = 0;
 	virtual void StopEmitter(entt::entity emitter) = 0;
 	virtual void DestroyEmitter(entt::entity emitter) = 0;
-	virtual entt::entity CreateEmitter(entt::id_type id, PlayType playType, glm::vec3 position, glm::vec3 direction,
-	                                   glm::vec2 radius, float volume, AudioStatus status, bool relative) = 0;
+	/// An emitter for a loaded sound, ready to play. With a world position it is 3D audio sounding from there,
+	/// otherwise 2D audio centred on the listener. Repeat loops it forever, otherwise the bank header's loop count
+	/// applies.
+	virtual entt::entity CreateEmitter(entt::id_type id, std::optional<glm::vec3> worldPosition, PlayType playType) = 0;
 	virtual bool EmitterExists(entt::entity emitter) = 0;
 	[[nodiscard]] virtual float GetProgress(entt::entity emitter) = 0;
 	[[nodiscard]] virtual AudioStatus GetStatus(entt::entity emitter) = 0;
@@ -47,9 +65,25 @@ public:
 	[[nodiscard]] virtual float GetGlobalVolume() = 0;
 	[[nodiscard]] virtual float GetSfxVolume() = 0;
 	[[nodiscard]] virtual float GetMusicVolume() = 0;
+	/// Plays a music bank on its own, from the start, stopping any other music at once
 	virtual void PlayMusic(const std::string& packPath, PlayType type) = 0;
 	virtual void StopMusic() = 0;
+	/// LHMusicPlay with the bank at a path, loading it if it is not playing already. options.bank is ignored.
+	virtual bool MusicPlay(const std::string& bankPath, const MusicPlayOptions& options) = 0;
+	/// LHMusicStop
+	virtual void MusicStop(bool fadeOut) = 0;
+	/// LHMusicIsActive
+	[[nodiscard]] virtual bool MusicIsActive() const = 0;
+	/// The music group and length of a bank, null if there is no such bank
+	[[nodiscard]] virtual std::optional<MusicBankInfo> GetMusicBankInfo(const std::string& bankPath) = 0;
+	/// Null when there is no audio device
+	[[nodiscard]] virtual const MusicPlayer* GetMusic() const = 0;
+	/// Plays a sound as 2D audio
 	virtual void PlaySound(entt::id_type id, PlayType type) = 0;
+	/// A one-shot sound effect played the way GAudio::PlaySoundEffect hands it to LHSamplePlay: volume, pitch, loop
+	/// and distances come from the bank header where it overrides them. With a world position it is a 3D sound
+	/// anchored there, otherwise it is centred on the listener.
+	virtual void PlaySoundEffect(entt::id_type id, std::optional<glm::vec3> worldPosition) = 0;
 	virtual const Sound& GetSound(entt::id_type id) = 0;
 	virtual void CreateSoundGroup(const std::string& name) = 0;
 	virtual void AddToSoundGroup(const std::string& name, entt::id_type id) = 0;
@@ -57,6 +91,16 @@ public:
 	virtual const std::map<std::string, SoundGroup>& GetSoundGroups() = 0;
 	virtual void AddMusicEntry(const std::string& name) = 0;
 	[[nodiscard]] virtual const std::vector<std::string>& GetMusicTracks() const = 0;
+
+	// Atmosphere banks (LHAudioDLL LHAtmos* functions). Bank 0 is no bank and is ignored.
+	virtual uint32_t AtmosRegisterBank(const std::string& bankName, const std::vector<pack::AudioBankSampleHeader>& headers,
+	                                   uint16_t atmosCount) = 0;
+	virtual void AtmosReleaseBank(uint32_t bank) = 0;
+	virtual void AtmosSetBankVolume(uint32_t bank, int32_t volume) = 0;
+	virtual void AtmosSetGroup(uint32_t bank, uint32_t group) = 0;
+	virtual void AtmosProcess(bool active) = 0;
+	/// Null when there is no audio device
+	[[nodiscard]] virtual const AtmosPlayer* GetAtmos() const = 0;
 };
 } // namespace audio
 } // namespace openblack

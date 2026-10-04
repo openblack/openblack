@@ -44,8 +44,19 @@ public:
 	virtual void PauseSource(SourceId id) const = 0;
 	virtual void StopSource(SourceId id) const = 0;
 	virtual void SetVolume(SourceId id, float volume) = 0;
+	virtual void SetPitch(SourceId id, float pitch) = 0;
+	/// Position in OpenAL coordinates, without any axis swizzling
+	virtual void SetPosition(SourceId id, glm::vec3 position) = 0;
+	virtual void SetDistanceAttenuation(SourceId id, float referenceDistance, float maxDistance, float rolloff) = 0;
+	virtual void SetLooping(SourceId id, bool loop) = 0;
+	/// Start playback without touching any source parameters
+	virtual void StartSource(SourceId id) = 0;
 	[[nodiscard]] virtual float GetVolume() const = 0;
 	[[nodiscard]] virtual AudioStatus GetStatus(SourceId id) const = 0;
 	[[nodiscard]] virtual float GetProgress(size_t sizeInBytes, SourceId sourceId) const = 0;
+	/// Takes the buffers a streaming source has finished playing off its queue, oldest first
+	[[nodiscard]] virtual std::vector<BufferId> UnqueueProcessedBuffers(SourceId id) = 0;
+	/// Frames played into the oldest buffer queued on a source
+	[[nodiscard]] virtual uint32_t GetSampleOffset(SourceId id) const = 0;
 };
 } // namespace openblack::audio

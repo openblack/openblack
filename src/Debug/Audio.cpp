@@ -196,16 +196,20 @@ void Audio::AudioSettings() noexcept
 	ImGui::Separator();
 	ImGui::Text("Active Emitters");
 	ImGui::Separator();
-	ImGui::Columns(5, "PlayingEmitters", true);
+	ImGui::Columns(7, "PlayingEmitters", true);
 	ImGui::Text("Emitter ID");
 	ImGui::NextColumn();
 	ImGui::Text("Sound Name");
 	ImGui::NextColumn();
 	ImGui::Text("Audio source ID");
 	ImGui::NextColumn();
-	ImGui::Text("3D?");
+	ImGui::Text("Audio");
 	ImGui::NextColumn();
 	ImGui::Text("World Location");
+	ImGui::NextColumn();
+	ImGui::Text("Gain");
+	ImGui::NextColumn();
+	ImGui::Text("Pitch");
 	ImGui::NextColumn();
 	ImGui::Separator();
 	Locator::entitiesRegistry::value().Each<ecs::components::AudioEmitter>(
@@ -222,16 +226,21 @@ void Audio::AudioSettings() noexcept
 		    ImGui::NextColumn();
 		    ImGui::Text("%d", emitter.sourceId);
 		    ImGui::NextColumn();
-		    ImGui::Text("%s", emitter.relative ? "Yes" : "No");
+		    const char* kind = emitter.spatial ? "3D" : "2D";
+		    ImGui::Text("%s", emitter.music ? "Music" : kind);
 		    ImGui::NextColumn();
-		    if (emitter.relative)
+		    if (emitter.spatial)
 		    {
-			    ImGui::Text("(%.1f,%.1f, %.1f)", emitter.position.x, emitter.position.y, emitter.position.z);
+			    ImGui::Text("(%.1f, %.1f, %.1f)", emitter.position.x, emitter.position.y, emitter.position.z);
 		    }
 		    else
 		    {
 			    ImGui::Text("N/A");
 		    }
+		    ImGui::NextColumn();
+		    ImGui::Text("%.3f", emitter.gain);
+		    ImGui::NextColumn();
+		    ImGui::Text("%u%%", emitter.pitchPercent);
 		    ImGui::NextColumn();
 	    });
 	ImGui::EndChild();

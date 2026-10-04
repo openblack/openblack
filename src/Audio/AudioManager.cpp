@@ -11,53 +11,69 @@
 
 #include "AudioManager.h"
 
+#include <filesystem>
 #include <fstream>
 
 #include <PackFile.h>
+#include <glm/geometric.hpp>
 #include <glm/gtc/constants.hpp>
 #include <spdlog/spdlog.h>
 
 #include "AudioPlayerInterface.h"
 #include "Camera/Camera.h"
+#include "Common/RandomNumberManager.h"
+#include "Common/StringUtils.h"
 #include "ECS/Registry.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Locator.h"
-#include "MpegAudioDecoder.h"
 #include "Resources/Resources.h"
-#include "WavAudioDecoder.h"
+#include "SoundDecoder.h"
 
 using namespace openblack::ecs::components;
 
 namespace openblack::audio
 {
 
+namespace
+{
+// LH_SamplePlayOptions' defaults, which a bank header overrides where it says so
+constexpr uint32_t k_MaxVolume = 127;
+constexpr uint32_t k_DefaultPitchPercent = 100;
+constexpr float k_DefaultMinDistance = 1.0f;
+constexpr float k_DefaultMaxDistance = 9999.0f;
+constexpr float k_DefaultDistanceScale = 0.3f;
+} // namespace
+
 AudioManager::AudioManager()
     : _audioPlayer(new AudioPlayer())
 {
 	_audioPlayer->Initialize();
+	_atmos = std::make_unique<AtmosPlayer>(static_cast<VoiceBackend&>(*this));
+	_musicStreams = std::make_unique<MusicStreamBackend>(*_audioPlayer);
+	_musicPlayer = std::make_unique<MusicPlayer>(*_musicStreams);
 }
 
 AudioManager::~AudioManager()
 {
+	_musicPlayer.reset();
+	_musicStreams.reset();
 	auto& registry = Locator::entitiesRegistry::value();
-	registry.Each<Transform, AudioEmitter>([this](entt::entity entity, const Transform&, const AudioEmitter& emitter) {
-		DestroyEmitter(entity);
-		auto sound = Locator::resources::value().GetSounds().Handle(emitter.soundId);
-		_audioPlayer->DeleteBuffer(sound->bufferId);
-	});
+	registry.Each<AudioEmitter>([this](entt::entity entity, const AudioEmitter&) { DestroyEmitter(entity); });
 
-	if (registry.Valid(_musicEntity))
+	// Stops the atmosphere voices before their buffers go
+	_atmos.reset();
+	for (const auto buffer : _decodedBuffers)
 	{
-		DestroyEmitter(_musicEntity);
+		_audioPlayer->DeleteBuffer(buffer);
 	}
 }
 
 void AudioManager::Stop()
 {
+	_musicPlayer->Stop(false);
 	auto& registry = Locator::entitiesRegistry::value();
-	registry.Each<Transform, AudioEmitter>(
-	    [this](entt::entity entity, const Transform&, const AudioEmitter&) { DestroyEmitter(entity); });
-	StopMusic();
+	registry.Each<AudioEmitter>([this](entt::entity entity, const AudioEmitter&) { DestroyEmitter(entity); });
+	_atmos->Process(false);
 }
 
 void AudioManager::Update()
@@ -68,25 +84,34 @@ void AudioManager::Update()
 	auto forward = camera.GetForward();
 	auto top = camera.GetUp();
 	_audioPlayer->UpdateListener(pos, vel, forward, top);
+
+	// 3D emitters follow the listener, finished emitters are released
 	auto& registry = Locator::entitiesRegistry::value();
-	registry.Each<Transform, AudioEmitter>(
-	    [this](entt::entity entity, const Transform& transform, const AudioEmitter& emitter) {
-		    auto volume = _globalVolume * emitter.volume;
-		    if (entity == _musicEntity)
-		    {
-			    volume *= _musicVolume;
-		    }
-		    else
-		    {
-			    volume *= _sfxVolume;
-		    }
-		    _audioPlayer->UpdateSource(emitter.sourceId, transform.position, volume, emitter.loop == PlayType::Repeat);
-		    auto audioStatus = _audioPlayer->GetStatus(emitter.sourceId);
-		    if (audioStatus == AudioStatus::Stopped)
-		    {
-			    DestroyEmitter(entity);
-		    }
-	    });
+	registry.Each<AudioEmitter>([this](entt::entity entity, AudioEmitter& emitter) {
+		emitter.state = _audioPlayer->GetStatus(emitter.sourceId);
+		if (emitter.state == AudioStatus::Stopped)
+		{
+			DestroyEmitter(entity);
+			return;
+		}
+		if (emitter.spatial)
+		{
+			PositionSource(emitter.sourceId, ToListenerFrame(emitter.position), emitter.distanceScale);
+		}
+		_audioPlayer->SetVolume(emitter.sourceId, emitter.gain * _globalVolume * (emitter.music ? _musicVolume : _sfxVolume));
+	});
+
+	// The music thread's work: streams are fed and fade every tick
+	const auto now = std::chrono::steady_clock::now();
+	_musicStreams->SetOutputVolume(_globalVolume * _musicVolume);
+	_musicPlayer->Update(std::chrono::duration_cast<std::chrono::microseconds>(now - _lastMusicUpdate));
+	_lastMusicUpdate = now;
+
+	// Atmosphere voices are positioned relative to the listener and only follow the volume settings here
+	for (const auto& [handle, voice] : _atmosVoices)
+	{
+		_audioPlayer->SetVolume(voice.source, voice.gain * _globalVolume * _sfxVolume);
+	}
 }
 
 BufferId AudioManager::CreateBuffer(ChannelLayout layout, const std::vector<int16_t>& buffer, int sampleRate)
@@ -98,9 +123,10 @@ void AudioManager::PlayEmitter(entt::entity emitter)
 {
 	auto& registry = Locator::entitiesRegistry::value();
 	assert(registry.AnyOf<AudioEmitter>(emitter));
-	auto& emitterComponent = registry.Get<AudioEmitter>(emitter);
-	auto& transform = registry.Get<Transform>(emitter);
-	_audioPlayer->PlaySource(emitterComponent.sourceId, transform.position, 1.f, emitterComponent.loop == PlayType::Repeat);
+	auto& component = registry.Get<AudioEmitter>(emitter);
+	_audioPlayer->SetVolume(component.sourceId, component.gain * _globalVolume * (component.music ? _musicVolume : _sfxVolume));
+	_audioPlayer->StartSource(component.sourceId);
+	component.state = AudioStatus::Playing;
 }
 
 void AudioManager::PauseEmitter(entt::entity emitter)
@@ -124,63 +150,115 @@ void AudioManager::DestroyEmitter(entt::entity emitter)
 	auto& registry = Locator::entitiesRegistry::value();
 	assert(registry.AnyOf<AudioEmitter>(emitter));
 	auto& component = registry.Get<AudioEmitter>(emitter);
+	_audioPlayer->StopSource(component.sourceId);
 	_audioPlayer->DeleteSource(component.sourceId);
 	registry.Destroy(emitter);
 }
 
-entt::entity AudioManager::CreateEmitter(entt::id_type id, PlayType playType, glm::vec3 position, glm::vec3 direction,
-                                         glm::vec2 radius, float volume, AudioStatus status, bool relative)
+VoiceStart AudioManager::MakeVoiceStart(const Sound& sound, std::optional<glm::vec3> worldPosition, PlayType playType)
 {
-	auto sound = Locator::resources::value().GetSounds().Handle(id);
-	auto& registry = Locator::entitiesRegistry::value();
-	auto entity = registry.Create();
-	auto sourceId = _audioPlayer->CreateSource(static_cast<float>(sound->pitch), relative);
-	if (!sound->buffer.empty())
+	const auto overrides = [&sound](pack::AudioBankOverride flag) {
+		return (sound.overrideFlags & static_cast<uint32_t>(flag)) != 0;
+	};
+
+	// Playback rate in percent with a random deviation of up to pitchDeviation percent either way
+	auto pitch = overrides(pack::AudioBankOverride::Pitch) && sound.pitch != 0 ? static_cast<uint32_t>(sound.pitch)
+	                                                                           : k_DefaultPitchPercent;
+	const auto deviation = (pitch * static_cast<uint32_t>(sound.pitchDeviation)) / 100;
+	if (deviation != 0)
 	{
-		CreateBuffer(sound);
+		pitch = pitch - deviation + Locator::rng::value().NextValue(0u, deviation * 2);
 	}
-	_audioPlayer->QueueBuffer(sourceId, sound->bufferId);
-	registry.Assign<AudioEmitter>(entity, sourceId, id, 0, position, direction, radius, volume, playType, status, relative);
-	registry.Assign<Transform>(entity, glm::zero<glm::vec3>(), glm::one<glm::mat4>(), glm::one<glm::vec3>());
+
+	int32_t loopCount = overrides(pack::AudioBankOverride::Loop) ? sound.loop : 0;
+	if (playType == PlayType::Repeat)
+	{
+		loopCount = -1;
+	}
+
+	return VoiceStart {
+	    .bankName = {},
+	    .sampleId = sound.id,
+	    .volume =
+	        overrides(pack::AudioBankOverride::Volume) ? std::min<uint32_t>(sound.headerVolume, k_MaxVolume) : k_MaxVolume,
+	    .pitchPercent = pitch,
+	    .pitch = static_cast<float>(pitch) / 100.0f,
+	    .loopCount = loopCount,
+	    .positional = worldPosition.has_value(),
+	    .position = worldPosition ? ToListenerFrame(*worldPosition) : glm::zero<glm::vec3>(),
+	    .minDistance = overrides(pack::AudioBankOverride::MinDist) ? sound.minDistance : k_DefaultMinDistance,
+	    .maxDistance = overrides(pack::AudioBankOverride::MaxDist) ? sound.maxDistance : k_DefaultMaxDistance,
+	    .distanceScale = overrides(pack::AudioBankOverride::Scale) ? sound.distanceScale : k_DefaultDistanceScale,
+	};
+}
+
+entt::entity AudioManager::CreateEmitter(entt::id_type id, std::optional<glm::vec3> worldPosition, PlayType playType)
+{
+	auto& sounds = Locator::resources::value().GetSounds();
+	if (!sounds.Contains(id))
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Sound {} is not loaded", id);
+		return entt::null;
+	}
+	auto sound = sounds.Handle(id);
+	const auto start = MakeVoiceStart(*sound, worldPosition, playType);
+	const auto source = CreateSource(*sound, start);
+
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto entity = registry.Create();
+	registry.Assign<AudioEmitter>(entity, AudioEmitter {
+	                                          .sourceId = source,
+	                                          .soundId = id,
+	                                          .priority = sound->priority,
+	                                          .spatial = worldPosition.has_value(),
+	                                          .position = worldPosition.value_or(glm::zero<glm::vec3>()),
+	                                          .gain = _atmos->VolumeToGain(start.volume),
+	                                          .pitchPercent = start.pitchPercent,
+	                                          .minDistance = start.minDistance,
+	                                          .maxDistance = start.maxDistance,
+	                                          .distanceScale = start.distanceScale,
+	                                          .loop = start.loopCount < 0 ? PlayType::Repeat : PlayType::Once,
+	                                          .state = AudioStatus::Initial,
+	                                          .music = false,
+	                                      });
+	SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "{} emitter for {}: volume {} pitch {}%{}", worldPosition ? "3D" : "2D",
+	                    sound->name, start.volume, start.pitchPercent,
+	                    worldPosition ? fmt::format(" at ({}, {}, {})", worldPosition->x, worldPosition->y, worldPosition->z)
+	                                  : std::string());
 	return entity;
 }
 
 void AudioManager::CreateBuffer(Sound& sound)
 {
 	std::vector<int16_t> decodeBuffer;
-	for (auto& buffer : sound.buffer)
+	auto sampleRate = sound.sampleRate;
+	for (size_t i = 0; i < sound.buffer.size(); ++i)
 	{
-		bool success;
-		std::vector<int16_t> decoded;
+		const auto result = DecodeSound(sound.buffer[i], sound.sampleRate);
+		const auto part = sound.buffer.size() > 1 ? fmt::format(" part {}", i) : std::string();
+		if (!result.sound)
 		{
-			auto decoder = audio::MpegAudioDecoder();
-			success = decoder.Open(buffer);
-			if (success)
-			{
-				decoder.Read(decoded);
-				sound.channelLayout = decoder.GetChannelLayout();
-			}
+			SPDLOG_LOGGER_ERROR(spdlog::get("audio"), "Unable to decode sound {}{} ({}): {}", sound.name, part,
+			                    ToString(result.container), result.error);
+			continue;
 		}
-		if (!success)
+		for (const auto& warning : result.warnings)
 		{
-			auto decoder = audio::WavAudioDecoder();
-			success = decoder.Open(buffer);
-			if (success)
-			{
-				decoder.Read(decoded);
-				sound.channelLayout = decoder.GetChannelLayout();
-			}
+			SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Sound {}{} ({}): {}", sound.name, part, ToString(result.container),
+			                   warning);
 		}
-		if (success)
-		{
-			decodeBuffer.insert(decodeBuffer.end(), decoded.begin(), decoded.end());
-		}
-		else
-		{
-			SPDLOG_LOGGER_ERROR(spdlog::get("audio"), "Unable to decode sound");
-		}
+
+		const auto& decoded = *result.sound;
+		SPDLOG_LOGGER_TRACE(spdlog::get("audio"), "Decoded sound {}{}: {}, {} Hz, {}, {:.3f}s, {} padding frames removed",
+		                    sound.name, part, ToString(result.container), decoded.sampleRate,
+		                    decoded.channelLayout == ChannelLayout::Mono ? "mono" : "stereo", decoded.Duration(),
+		                    result.trimmedFrames);
+		sound.channelLayout = decoded.channelLayout;
+		// Play at the rate the data was recorded at, the bank header can disagree
+		sampleRate = decoded.sampleRate;
+		decodeBuffer.insert(decodeBuffer.end(), decoded.samples.begin(), decoded.samples.end());
 	}
-	sound.bufferId = CreateBuffer(sound.channelLayout, decodeBuffer, sound.sampleRate);
+	sound.bufferId = CreateBuffer(sound.channelLayout, decodeBuffer, sampleRate);
 	sound.duration = _audioPlayer->GetDuration(sound.bufferId);
 	sound.sizeInBytes = decodeBuffer.size() * sizeof(decodeBuffer[0]);
 }
@@ -215,12 +293,20 @@ const Sound& AudioManager::GetSound(entt::id_type id)
 
 void AudioManager::PlaySound(entt::id_type id, PlayType playType)
 {
-	auto position = glm::one<glm::vec3>();
-	auto direction = glm::zero<glm::vec3>();
-	auto radius = glm::zero<glm::vec3>();
-	auto sound = Locator::resources::value().GetSounds().Handle(id);
-	auto entity = CreateEmitter(id, playType, position, direction, radius, sound->volume, AudioStatus::Playing, true);
-	PlayEmitter(entity);
+	const auto entity = CreateEmitter(id, std::nullopt, playType);
+	if (entity != entt::null)
+	{
+		PlayEmitter(entity);
+	}
+}
+
+void AudioManager::PlaySoundEffect(entt::id_type id, std::optional<glm::vec3> worldPosition)
+{
+	const auto entity = CreateEmitter(id, worldPosition, PlayType::Once);
+	if (entity != entt::null)
+	{
+		PlayEmitter(entity);
+	}
 }
 
 void AudioManager::CreateSoundGroup(const std::string& name)
@@ -250,40 +336,260 @@ const std::map<std::string, SoundGroup>& AudioManager::GetSoundGroups()
 
 void AudioManager::PlayMusic(const std::string& packPath, PlayType type)
 {
-	StopMusic();
-	const entt::id_type id = entt::hashed_string(fmt::format("{}", packPath).c_str());
-	if (!Locator::resources::value().GetSounds().Contains(packPath))
-	{
-		pack::PackFile soundPack;
-		soundPack.Open(packPath);
-		const auto& audioHeaders = soundPack.GetAudioSampleHeaders();
-		const auto& audioData = soundPack.GetAudioSamplesData();
-		Locator::resources::value().GetSounds().Load(id, resources::SoundLoader::FromBufferTag {}, audioHeaders[0], audioData);
-	}
-	auto sound = Locator::resources::value().GetSounds().Handle(id);
-	auto position = glm::one<glm::vec3>();
-	auto direction = glm::zero<glm::vec3>();
-	auto radius = glm::zero<glm::vec3>();
-	_musicEntity = CreateEmitter(id, type, position, direction, radius, sound->volume, AudioStatus::Playing, true);
-	PlayEmitter(_musicEntity);
+	_musicPlayer->Stop(false);
+	MusicPlay(packPath, MusicPlayOptions {.loops = type == PlayType::Repeat ? -1 : 0});
 }
 
 void AudioManager::StopMusic()
 {
-	auto& registry = Locator::entitiesRegistry::value();
-	if (!EmitterExists(_musicEntity))
+	_musicPlayer->Stop(false);
+}
+
+namespace
+{
+/// The game names its music in lower case, which the files on a case sensitive file system may not be
+std::optional<std::filesystem::path> FindIgnoringCase(const std::filesystem::path& path)
+{
+	if (path.is_absolute())
+	{
+		return std::filesystem::exists(path) ? std::optional(path) : std::nullopt;
+	}
+	auto found = Locator::filesystem::value().GetGamePath();
+	for (const auto& part : path.relative_path())
+	{
+		auto match = found / part;
+		if (!std::filesystem::exists(match))
+		{
+			const auto wanted = string_utils::LowerCase(part.string());
+			std::error_code error;
+			for (const auto& entry : std::filesystem::directory_iterator(found, error))
+			{
+				if (string_utils::LowerCase(entry.path().filename().string()) == wanted)
+				{
+					match = entry.path();
+					break;
+				}
+			}
+		}
+		if (!std::filesystem::exists(match))
+		{
+			return std::nullopt;
+		}
+		found = match;
+	}
+	return found;
+}
+} // namespace
+
+std::shared_ptr<const MusicBank> AudioManager::LoadMusicBank(const std::string& bankPath)
+{
+	if (auto loaded = _musicBanks[bankPath].lock())
+	{
+		return loaded;
+	}
+	const auto path = FindIgnoringCase(bankPath);
+	if (!path)
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Music bank {} not found", bankPath);
+		return nullptr;
+	}
+	pack::PackFile pack;
+	if (pack.Open(*path) != pack::PackResult::Success || pack.GetAudioSampleHeaders().empty())
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Music bank {} could not be read", path->string());
+		return nullptr;
+	}
+	auto bank = std::make_shared<MusicBank>();
+	bank->path = bankPath;
+	const auto& headers = pack.GetAudioSampleHeaders();
+	const auto& first = headers.front();
+	const auto overrides = [&first](pack::AudioBankOverride flag) {
+		return (first.overrideFlags & static_cast<uint32_t>(flag)) != 0;
+	};
+	bank->groupId = first.group;
+	if (overrides(pack::AudioBankOverride::Volume))
+	{
+		bank->bankVolume = std::min<uint32_t>(first.volume, MusicPlayer::k_MaxVolume);
+	}
+	if (overrides(pack::AudioBankOverride::Loop))
+	{
+		bank->loopOverride = first.loop;
+	}
+	bank->chunks = pack.GetAudioSamplesData();
+	bank->chunkSampleRates.reserve(headers.size());
+	for (const auto& header : headers)
+	{
+		bank->chunkSampleRates.push_back(header.sampleRate);
+	}
+	_musicBankInfo[bankPath] = MusicBankInfo {.groupId = bank->groupId, .chunkCount = bank->GetChunkCount()};
+	_musicBanks[bankPath] = bank;
+	// Kept until another bank is read, so asking about a bank and then playing it reads it once
+	_recentMusicBank = bank;
+	return bank;
+}
+
+bool AudioManager::MusicPlay(const std::string& bankPath, const MusicPlayOptions& options)
+{
+	auto withBank = options;
+	withBank.bank = LoadMusicBank(bankPath);
+	return _musicPlayer->Play(withBank);
+}
+
+void AudioManager::MusicStop(bool fadeOut)
+{
+	_musicPlayer->Stop(fadeOut);
+}
+
+bool AudioManager::MusicIsActive() const
+{
+	return _musicPlayer->IsActive();
+}
+
+std::optional<MusicBankInfo> AudioManager::GetMusicBankInfo(const std::string& bankPath)
+{
+	if (const auto found = _musicBankInfo.find(bankPath); found != _musicBankInfo.end())
+	{
+		return found->second;
+	}
+	// Reading the bank tells its group and length
+	if (!LoadMusicBank(bankPath))
+	{
+		_musicBankInfo[bankPath] = std::nullopt;
+	}
+	return _musicBankInfo[bankPath];
+}
+
+uint32_t AudioManager::AtmosRegisterBank(const std::string& bankName, const std::vector<pack::AudioBankSampleHeader>& headers,
+                                         uint16_t atmosCount)
+{
+	return _atmos->RegisterBank(bankName, headers, atmosCount);
+}
+
+void AudioManager::AtmosReleaseBank(uint32_t bank)
+{
+	_atmos->ReleaseBank(bank);
+}
+
+void AudioManager::AtmosSetBankVolume(uint32_t bank, int32_t volume)
+{
+	_atmos->SetBankVolume(bank, volume);
+}
+
+void AudioManager::AtmosSetGroup(uint32_t bank, uint32_t group)
+{
+	_atmos->SetGroup(bank, group);
+}
+
+void AudioManager::AtmosProcess(bool active)
+{
+	_atmos->Process(active);
+}
+
+VoiceBackend::Handle AudioManager::Start(const VoiceStart& start)
+{
+	const auto stringId = fmt::format("{}/{}", start.bankName, start.sampleId);
+	const entt::id_type id = entt::hashed_string(stringId.c_str());
+	auto& sounds = Locator::resources::value().GetSounds();
+	if (!sounds.Contains(id))
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Atmosphere sample {} is not loaded", stringId);
+		return k_InvalidHandle;
+	}
+	auto sound = sounds.Handle(id);
+	const auto source = CreateSource(*sound, start);
+	const auto gain = _atmos->VolumeToGain(start.volume);
+	_audioPlayer->SetVolume(source, gain * _globalVolume * _sfxVolume);
+	_audioPlayer->StartSource(source);
+
+	const auto handle = _nextAtmosVoice++;
+	_atmosVoices.emplace(handle, AtmosVoice {.source = source, .gain = gain});
+	SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Atmosphere voice {}: {} volume {} pitch {}% at ({}, {})", handle, stringId,
+	                    start.volume, start.pitchPercent, start.position.x, start.position.y);
+	return handle;
+}
+
+SourceId AudioManager::CreateSource(Sound& sound, const VoiceStart& start)
+{
+	if (sound.bufferId == 0)
+	{
+		CreateBuffer(sound);
+		_decodedBuffers.push_back(sound.bufferId);
+	}
+
+	// Sources are positioned relative to the listener, in LHAudio's listener frame
+	const auto source = _audioPlayer->CreateSource(start.pitch, true);
+	// QMixer plays a sample loopCount + 1 times
+	const auto loop = start.loopCount < 0;
+	const auto playCount = loop ? 1 : start.loopCount + 1;
+	for (int32_t i = 0; i < playCount; ++i)
+	{
+		_audioPlayer->QueueBuffer(source, sound.bufferId);
+	}
+	_audioPlayer->SetLooping(source, loop);
+	if (start.positional)
+	{
+		// QSound attenuates by minDistance / (distance * scale) beyond minDistance, up to maxDistance, which is
+		// OpenAL's inverse clamped model on scaled positions
+		_audioPlayer->SetDistanceAttenuation(source, start.minDistance, start.maxDistance, 1.0f);
+		PositionSource(source, start.position, start.distanceScale);
+	}
+	else
+	{
+		_audioPlayer->SetDistanceAttenuation(source, 1.0f, 1.0f, 0.0f);
+		PositionSource(source, std::nullopt, start.distanceScale);
+	}
+	return source;
+}
+
+void AudioManager::PositionSource(SourceId source, std::optional<glm::vec3> listenerPosition, float distanceScale)
+{
+	if (!listenerPosition)
+	{
+		_audioPlayer->SetPosition(source, glm::zero<glm::vec3>());
+		return;
+	}
+	// LHAudio's listener frame is x right, y forward, z up; OpenAL's is x right, y up, -z forward
+	const auto& position = *listenerPosition;
+	_audioPlayer->SetPosition(source, glm::vec3(position.x, position.z, -position.y) * distanceScale);
+}
+
+glm::vec3 AudioManager::ToListenerFrame(glm::vec3 worldPosition)
+{
+	const auto& camera = Locator::camera::value();
+	const auto forward = glm::normalize(camera.GetForward());
+	const auto up = glm::normalize(camera.GetUp());
+	const auto right = glm::normalize(glm::cross(forward, up));
+	const auto offset = worldPosition - camera.GetOrigin();
+	return {glm::dot(offset, right), glm::dot(offset, forward), glm::dot(offset, up)};
+}
+
+bool AudioManager::IsPlaying(Handle handle) const
+{
+	const auto iter = _atmosVoices.find(handle);
+	return iter != _atmosVoices.end() && _audioPlayer->GetStatus(iter->second.source) == AudioStatus::Playing;
+}
+
+void AudioManager::SetVolume(Handle handle, uint32_t volume)
+{
+	const auto iter = _atmosVoices.find(handle);
+	if (iter == _atmosVoices.end())
 	{
 		return;
 	}
-	auto& emitter = registry.Get<AudioEmitter>(_musicEntity);
-	// Clean up the audio player's music resources
-	_audioPlayer->StopSource(emitter.sourceId);
-	_audioPlayer->DeleteSource(emitter.sourceId);
-	[[maybe_unused]] auto music = Locator::resources::value().GetSounds().Handle(emitter.soundId);
-	//	Erase the music resource as it is no longer being played
-	Locator::resources::value().GetSounds().Erase(emitter.soundId);
-	//	Remove the entity
-	registry.Destroy(_musicEntity);
-	_musicEntity = entt::null;
+	iter->second.gain = _atmos->VolumeToGain(volume);
+	_audioPlayer->SetVolume(iter->second.source, iter->second.gain * _globalVolume * _sfxVolume);
 }
+
+void AudioManager::Stop(Handle handle)
+{
+	const auto iter = _atmosVoices.find(handle);
+	if (iter == _atmosVoices.end())
+	{
+		return;
+	}
+	_audioPlayer->StopSource(iter->second.source);
+	_audioPlayer->DeleteSource(iter->second.source);
+	_atmosVoices.erase(iter);
+}
+
 } // namespace openblack::audio

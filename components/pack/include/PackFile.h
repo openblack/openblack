@@ -9,6 +9,9 @@
 
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+
 #include <array>
 #include <filesystem>
 #include <istream>
@@ -151,29 +154,52 @@ struct AudioBankSampleHeader
 	int32_t lStart;
 	int32_t lEnd;
 	std::array<char, 0x100> description;
-	uint16_t priority;        ///< 0-9999
-	uint16_t unknown9;        ///<
-	uint16_t unknown10;       ///<
-	uint16_t unknown11;       ///<
-	int16_t loop;             ///<
-	uint16_t start;           ///<
-	uint8_t pan;              ///<
-	uint16_t unknown12;       ///<
+	uint16_t priority; ///< 0-9999
+	uint16_t unknown9; ///<
+	/// Which play parameters this header overrides (LHSamplePlay applies a header value only when its bit is set
+	/// here and the caller did not set the same bit in its play options).
+	uint32_t overrideFlags;
+	int32_t loop;             ///< Loop count (-1 = forever), applied with AudioBankOverride::Loop
+	int32_t pan;              ///< Applied with AudioBankOverride::Pan
 	std::array<float, 3> pos; ///< -9999 to 9999
-	uint8_t volume;           ///<
+	uint16_t volume;          ///< 0-127, applied with AudioBankOverride::Volume
 	uint16_t userParam;       ///<
-	uint16_t pitch;           ///<
-	uint16_t unknown18;       ///<
-	uint16_t pitchDeviation;  ///<
-	uint16_t unknown20;       ///<
+	uint32_t pitch;           ///< Playback rate in percent, applied with AudioBankOverride::Pitch
+	uint32_t pitchDeviation;  ///< Random +/- percentage applied to the playback rate on every play
 	float minDist;            ///<
 	float maxDist;            ///<
-	float scale;              ///< 0-50 (multiply by 10)
+	float scale;              ///< QSound distance scale
 	AudioBankLoop loopType;   ///<
 	uint16_t unknown21;       ///<
 	uint16_t unknown22;       ///<
 	uint16_t unknown23;       ///<
-	uint16_t atmos;           ///<
+	/// Atmos banks only: 0 = looping bed, >0 = one-shot whose mean retrigger interval is 10 * atmosInterval game
+	/// turns, <0 = not part of the atmosphere
+	int32_t atmosInterval;
+};
+static_assert(sizeof(AudioBankSampleHeader) == 0x280);
+static_assert(offsetof(AudioBankSampleHeader, id) == 0x104);
+static_assert(offsetof(AudioBankSampleHeader, atmosGroup) == 0x11A);
+static_assert(offsetof(AudioBankSampleHeader, overrideFlags) == 0x244);
+static_assert(offsetof(AudioBankSampleHeader, volume) == 0x25C);
+static_assert(offsetof(AudioBankSampleHeader, pitch) == 0x260);
+static_assert(offsetof(AudioBankSampleHeader, minDist) == 0x268);
+static_assert(offsetof(AudioBankSampleHeader, atmosInterval) == 0x27C);
+
+/// Bits of AudioBankSampleHeader::overrideFlags and of the matching play options mask
+enum class AudioBankOverride : uint32_t
+{
+	Pitch = 0x1,
+	Pan = 0x2,
+	PosX = 0x4,
+	PosY = 0x8,
+	PosZ = 0x10,
+	Volume = 0x20,
+	Loop = 0x40,
+	MinDist = 0x80,
+	MaxDist = 0x100,
+	Scale = 0x200,
+	LoopType = 0x400,
 };
 
 /**
@@ -200,6 +226,8 @@ protected:
 	std::vector<AudioBankSampleHeader> _audioSampleHeaders;
 	/// Bytes of snd audio samples
 	std::vector<std::vector<uint8_t>> _audioSampleData;
+	/// High word of the LHAudioBankSampleTable header: non-zero marks an atmosphere bank
+	uint16_t _audioBankAtmosCount {0};
 
 	/// Read blocks from pack
 	PackResult ReadBlocks(std::istream& stream) noexcept;
@@ -283,6 +311,7 @@ public:
 		return _audioSampleHeaders[index];
 	}
 	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetAudioSamplesData() const noexcept { return _audioSampleData; }
+	[[nodiscard]] uint16_t GetAudioBankAtmosCount() const noexcept { return _audioBankAtmosCount; }
 	[[nodiscard]] const std::vector<uint8_t>& GetAudioSampleData(uint32_t index) const noexcept
 	{
 		return _audioSampleData[index];
