@@ -41,6 +41,9 @@
 #if __APPLE__
 #include CONCAT5(GENERATED_SHADERS_DIR, SHADER_DIR,metal/, SHADER_NAME,.sc.bin.h)
 #endif // __APPLE__
+#if __EMSCRIPTEN__
+#include CONCAT5(GENERATED_SHADERS_DIR, SHADER_DIR,wgsl/, SHADER_NAME,.sc.bin.h)
+#endif // __EMSCRIPTEN__
 
 #undef SHADER_DIR
 #undef SHADER_NAME

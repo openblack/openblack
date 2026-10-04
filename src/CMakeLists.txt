@@ -10,6 +10,11 @@ endif ()
 
 set(OPENBLACK_RC ${CMAKE_SOURCE_DIR}/assets/resource/icon/openblack.rc)
 
+set(OPENBLACK_SHADER_PROFILES)
+if (EMSCRIPTEN)
+  set(OPENBLACK_SHADER_PROFILES PROFILES spirv 430 300_es wgsl)
+endif ()
+
 file(GLOB OPENBLACK_IMGUI_VS_SHADERS
      "${CMAKE_SOURCE_DIR}/assets/shaders/imgui/vs_*.sc"
 )
@@ -22,6 +27,7 @@ bgfx_compile_shaders(
   SHADERS ${OPENBLACK_IMGUI_VS_SHADERS}
   VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/shaders/imgui/varying.def.sc
   OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders/imgui
+             ${OPENBLACK_SHADER_PROFILES}
 )
 bgfx_compile_shaders(
   AS_HEADERS
@@ -29,6 +35,7 @@ bgfx_compile_shaders(
   SHADERS ${OPENBLACK_IMGUI_FS_SHADERS}
   VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/shaders/imgui/varying.def.sc
   OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders/imgui
+             ${OPENBLACK_SHADER_PROFILES}
 )
 
 file(GLOB OPENBLACK_VERTEX_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/vs_*.sc")
@@ -45,6 +52,7 @@ bgfx_compile_shaders(
   SHADERS ${OPENBLACK_VERTEX_SHADERS}
   VARYING_DEF ${OPENBLACK_VARYING_DEF_FILE}
   OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders
+             ${OPENBLACK_SHADER_PROFILES}
 )
 bgfx_compile_shaders(
   AS_HEADERS
@@ -52,6 +60,7 @@ bgfx_compile_shaders(
   SHADERS ${OPENBLACK_FRAGMENT_SHADERS}
   VARYING_DEF ${OPENBLACK_VARYING_DEF_FILE}
   OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders
+             ${OPENBLACK_SHADER_PROFILES}
 )
 
 list(APPEND OPENBLACK_SHADERS ${OPENBLACK_IMGUI_VS_SHADERS})
@@ -179,6 +188,12 @@ target_compile_definitions(
     "SDL_MAIN_HANDLED"
   PUBLIC "$<$<CONFIG:DEBUG>:OPENBLACK_DEBUG>"
 )
+
+if (NOT EMSCRIPTEN)
+  target_compile_definitions(
+    openblack_lib PRIVATE "BGFX_PLATFORM_SUPPORTS_WGSL=0"
+  )
+endif ()
 
 if (MSVC)
   target_compile_definitions(
