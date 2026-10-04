@@ -427,9 +427,12 @@ bool Game::Update() noexcept
 		}
 	}
 
+	// Tree::PreDraw's g_game_time_inc: game time, none while paused, quicker or slower with the game speed
+	const auto gameTime = _paused ? std::chrono::duration<float, std::milli>::zero()
+	                              : std::chrono::duration<float, std::milli>(deltaTime) / _gameSpeedMultiplier;
 	{
 		auto actions = profiler.BeginScoped(Profiler::Stage::VegetationUpdate);
-		Locator::vegetation::value().Sway();
+		Locator::vegetation::value().Update(gameTime);
 	}
 
 	// Update Uniforms
@@ -491,8 +494,6 @@ bool Game::Update() noexcept
 			PlaceHand(handTransform, std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count());
 			Locator::entitiesRegistry::value().SetDirty();
 		}
-		// Trees sway away from where the hand now is
-		Locator::handSystem::value().Update();
 
 		// Animate the hand: HandStateCamera while it drags the land, otherwise HandStateNormal. Turning the camera with
 		// the middle button leaves the hand idle.
@@ -520,6 +521,14 @@ bool Game::Update() noexcept
 				const auto scale = _handAnimation->ScaleAtDistance(distance);
 				handTransform->scale = glm::vec3(config.rightHandedHand ? -scale : scale, scale, scale);
 			}
+		}
+
+		// The trees bend away from where the hand now is, and rustle
+		{
+			auto actions = profiler.BeginScoped(Profiler::Stage::VegetationUpdate);
+			auto& vegetation = Locator::vegetation::value();
+			vegetation.UpdateBendPoints();
+			vegetation.Rustle(gameTime);
 		}
 
 		// Update Entities

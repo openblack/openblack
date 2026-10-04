@@ -17,6 +17,7 @@
 #include <glm/gtx/transform.hpp>
 
 #include "3D/L3DMesh.h"
+#include "ECS/Components/Field.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/MorphWithTerrain.h"
 #include "ECS/Components/Stream.h"
@@ -27,6 +28,7 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
+#include "ECS/Systems/VegetationInterface.h"
 #include "Game.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/GraphicsHandleBgfx.h"
@@ -136,7 +138,6 @@ void RenderingSystem::PrepareTreeDrawDescs(bool drawBoundingBox)
 		    .add(bgfx::Attrib::TexCoord6, 4, bgfx::AttribType::Float) // i_data1 (matrix row 1)
 		    .add(bgfx::Attrib::TexCoord5, 4, bgfx::AttribType::Float) // i_data2 (matrix row 2)
 		    .add(bgfx::Attrib::TexCoord4, 4, bgfx::AttribType::Float) // i_data3 (matrix row 3)
-		    .add(bgfx::Attrib::TexCoord3, 4, bgfx::AttribType::Float) // i_data4 (sway params)
 		    .end();
 		_renderContext.treeInstanceUniformBuffer =
 		    graphics::fromBgfx(bgfx::createDynamicVertexBuffer(treeInstanceCount, layout));
@@ -161,15 +162,24 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	// Store offsets of uniforms for descs
 	std::map<entt::id_type, uint32_t> uniformOffsets;
 
+	const auto& vegetation = Locator::vegetation::value();
+
 	// Set transforms for instanced draw at offsets
 	registry.Each<const Mesh, const Transform>(
-	    [this, &uniformOffsets, drawBoundingBox](const Mesh& mesh, const Transform& transform) {
+	    [this, &registry, &vegetation, &uniformOffsets, drawBoundingBox](entt::entity entity, const Mesh& mesh,
+	                                                                     const Transform& transform) {
 		    auto offset = uniformOffsets.insert(std::make_pair(mesh.id, 0));
 		    auto desc = _renderContext.instancedDrawDescs.find(mesh.id);
 
 		    auto modelMatrix = glm::mat4(transform.rotation);
 		    modelMatrix = glm::translate(modelMatrix, transform.position * transform.rotation);
 		    modelMatrix = glm::scale(modelMatrix, transform.scale);
+		    // Fields' crops sway
+		    if (const auto* swayable = registry.TryGet<const Swayable>(entity);
+		        swayable != nullptr && registry.AnyOf<Field>(entity))
+		    {
+			    modelMatrix = vegetation.GetFieldMatrix(modelMatrix, transform.scale.y, swayable->swaySlot);
+		    }
 
 		    const uint32_t idx = desc->second.offset + offset.first->second;
 		    _renderContext.instanceUniforms[idx] = modelMatrix;
@@ -201,12 +211,13 @@ void RenderingSystem::PrepareTreeDrawUploadUniforms(bool drawBoundingBox)
 
 	// Store offsets of tree uniforms
 	std::map<entt::id_type, uint32_t> treeUniformOffsets;
-	// Get the hand positions from the hand system
+	const auto& vegetation = Locator::vegetation::value();
+	auto& meshes = entt::locator<resources::ResourcesInterface>::value().GetMeshes();
 
-	// Set transforms and sway params for tree instanced draw
-	registry.Each<const Mesh, const Transform, const Tree, Swayable>(
-	    [this, &treeUniformOffsets, drawBoundingBox](const Mesh& mesh, const Transform& transform, const Tree& /*unused*/,
-	                                                 Swayable& swayable) {
+	// Set the transforms of the trees, swaying or bent away from the hand
+	registry.Each<const Mesh, const Transform, const Tree, const Swayable>(
+	    [this, &treeUniformOffsets, drawBoundingBox, &vegetation, &meshes](const Mesh& mesh, const Transform& transform,
+	                                                                       const Tree& /*unused*/, const Swayable& swayable) {
 		    auto offset = treeUniformOffsets.insert(std::make_pair(mesh.id, 0));
 		    auto desc = _renderContext.treeInstancedDrawDescs.find(mesh.id);
 
@@ -214,9 +225,9 @@ void RenderingSystem::PrepareTreeDrawUploadUniforms(bool drawBoundingBox)
 		    auto modelMatrix = glm::mat4(transform.rotation);
 		    modelMatrix = glm::translate(modelMatrix, transform.position * transform.rotation);
 		    modelMatrix = glm::scale(modelMatrix, transform.scale);
-		    _renderContext.treeInstanceData[idx].modelMatrix = modelMatrix;
-		    _renderContext.treeInstanceData[idx].swayParams =
-		        glm::vec4(swayable.swayDirection.x, swayable.swayDirection.y, swayable.swayTime, swayable.swayStrength);
+		    const auto height = meshes.Contains(mesh.id) ? meshes.Handle(mesh.id)->GetBoundingBox().Size().y : 0.0f;
+		    _renderContext.treeInstanceData[idx].modelMatrix =
+		        vegetation.GetTreeMatrix(modelMatrix, transform.position, transform.scale.y, height, swayable.swaySlot);
 
 		    if (drawBoundingBox && idx + _renderContext.treeInstanceData.size() / 2 < _renderContext.treeInstanceData.size())
 		    {
@@ -232,7 +243,6 @@ void RenderingSystem::PrepareTreeDrawUploadUniforms(bool drawBoundingBox)
 
 	if (!_renderContext.treeInstanceData.empty())
 	{
-		// Calculate the full buffer size including both matrices and sway params
 		const auto size =
 		    static_cast<uint32_t>(_renderContext.treeInstanceData.size() * sizeof(RenderContext::TreeInstanceData));
 

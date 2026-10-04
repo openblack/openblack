@@ -659,7 +659,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	const auto* waterShader = _shaderManager->GetShader("Water");
 	const auto* terrainShader = _shaderManager->GetShader("Terrain");
 	const auto* debugShader = _shaderManager->GetShader("DebugLine");
-	const auto* vegetationShaderInstanced = _shaderManager->GetShader("VegetationHeightMapInstanced");
+	// Trees are placed on the land already, so they are drawn where they are rather than moved onto the height map
+	const auto* vegetationShaderInstanced = _shaderManager->GetShader("Vegetation");
 	const auto* spriteShader = _shaderManager->GetShader("Sprite");
 	const auto* debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
 	const auto* objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
@@ -912,7 +913,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					submitDesc.modelMatrices = &identity;
 					submitDesc.matrixCount = 1;
 					submitDesc.isSky = false;
-					submitDesc.morphWithTerrain = true;
+					submitDesc.morphWithTerrain = false;
 					submitDesc.program = vegetationShaderInstanced;
 					DrawMesh(*mesh, submitDesc, std::numeric_limits<uint8_t>::max());
 				}

@@ -10,16 +10,20 @@
 #include "FieldArchetype.h"
 
 #include "AbodeArchetype.h"
+#include "Common/RandomNumberManager.h"
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Field.h"
+#include "ECS/Components/Swayable.h"
 #include "ECS/Components/Town.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/VegetationInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
+using openblack::ecs::systems::VegetationInterface;
 
 entt::entity FieldArchetype::Create(int townId, const glm::vec3& position, FieldTypeInfo type, float yAngleRadians)
 {
@@ -32,6 +36,10 @@ entt::entity FieldArchetype::Create(int townId, const glm::vec3& position, Field
 
 	auto entity = AbodeArchetype::Create(townId, position, abodeInfo, yAngleRadians, 1.0f, 0, 0);
 	registry.Assign<Field>(entity, townId);
+	// Field::Draw: the crop follows one of the trees' sways, picked by where the field happens to be in memory, so as
+	// good as at random
+	registry.Assign<Swayable>(
+	    entity, static_cast<uint8_t>(Locator::rng::value().NextValue<uint32_t>(0, VegetationInterface::k_SwayCount - 1)));
 
 	return entity;
 }

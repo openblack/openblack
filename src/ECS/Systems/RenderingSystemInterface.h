@@ -48,14 +48,13 @@ struct RenderContext
 	/// bounding boxes in the second half of the list.
 	std::vector<glm::mat4> instanceUniforms;
 
-	/// Tree instance data structure that combines model matrix and sway parameters
+	/// Tree instance data: the tree's matrix, swaying or bent
 	struct TreeInstanceData
 	{
-		glm::mat4 modelMatrix; // Model transform
-		glm::vec4 swayParams;  // x,y=direction, z=time, w=strength
+		glm::mat4 modelMatrix;
 	};
 
-	/// CPU-side buffer of tree instance data (matrix + sway params)
+	/// CPU-side buffer of tree instance data
 	std::vector<TreeInstanceData> treeInstanceData;
 
 	/// Stores information for rendering which is prepared at \ref PrepareDraw.
