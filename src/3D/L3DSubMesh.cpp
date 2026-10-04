@@ -33,6 +33,14 @@ struct EnhancedL3DVertex
 	glm::i16vec2 index;
 };
 
+/// A vertex of a mesh with lightmaps, with its lightmap coordinates
+struct LightmappedL3DVertex
+{
+	EnhancedL3DVertex vertex;
+	glm::vec2 lightmapUv;
+};
+static_assert(sizeof(LightmappedL3DVertex) == sizeof(EnhancedL3DVertex) + sizeof(glm::vec2));
+
 L3DSubMesh::L3DSubMesh(L3DMesh& mesh) noexcept
     : _l3dMesh(mesh)
 {
@@ -107,17 +115,36 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 		return false;
 	}
 
+	// The UV2 block's lightmap coordinates run over the vertices of every submesh in turn, and it has a lightmap for
+	// each submesh, without a skin where there is none
+	const auto& lightmapCoordinates = l3d.GetLightmapCoordinates();
+	const auto vertexOffset = static_cast<size_t>(verticesSpan.data() - l3d.GetVertices().data());
+	_hasLightmapCoordinates = !lightmapCoordinates.empty() && vertexOffset + nVertices <= lightmapCoordinates.size();
+	if (_hasLightmapCoordinates && meshIndex < l3d.GetLightmaps().size() && l3d.GetLightmaps()[meshIndex].material.skinID != 0)
+	{
+		_lightmapSkinID = l3d.GetLightmaps()[meshIndex].material.skinID;
+	}
+
 	// Get vertices
-	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(EnhancedL3DVertex) * nVertices);
-	auto* verticesMemAccess = reinterpret_cast<EnhancedL3DVertex*>(verticesMem->data);
+	const auto stride = _hasLightmapCoordinates ? sizeof(LightmappedL3DVertex) : sizeof(EnhancedL3DVertex);
+	const bgfx::Memory* verticesMem = bgfx::alloc(static_cast<uint32_t>(stride * nVertices));
+	const auto vertexAt = [verticesMem, stride](uint32_t i) {
+		return reinterpret_cast<EnhancedL3DVertex*>(verticesMem->data + (stride * i));
+	};
 	for (uint32_t i = 0; i < nVertices; ++i)
 	{
-		verticesMemAccess[i].pos = glm::make_vec3(&verticesSpan[i].position.x);
-		verticesMemAccess[i].uv = glm::make_vec2(&verticesSpan[i].texCoord.x);
+		auto& vertex = *vertexAt(i);
+		vertex.pos = glm::make_vec3(&verticesSpan[i].position.x);
+		vertex.uv = glm::make_vec2(&verticesSpan[i].texCoord.x);
 		// TODO(bwrsandman): build normals from mesh
-		verticesMemAccess[i].norm = glm::make_vec3(&verticesSpan[i].normal.x);
-		verticesMemAccess[i].index.x = -1;
-		verticesMemAccess[i].index.y = -1;
+		vertex.norm = glm::make_vec3(&verticesSpan[i].normal.x);
+		vertex.index.x = -1;
+		vertex.index.y = -1;
+		if (_hasLightmapCoordinates)
+		{
+			const auto& lightmapUv = lightmapCoordinates[vertexOffset + i];
+			reinterpret_cast<LightmappedL3DVertex*>(&vertex)->lightmapUv = glm::vec2(lightmapUv.x, lightmapUv.y);
+		}
 	}
 
 	if (nIndices == 0)
@@ -135,8 +162,8 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 	{
 		for (uint32_t i = 0; i < vertexGroupSpan.vertexCount; ++i)
 		{
-			verticesMemAccess[vertexIndex].index[0] = vertexGroupSpan.boneIndex;
-			verticesMemAccess[vertexIndex].index[1] = -1;
+			vertexAt(vertexIndex)->index[0] = static_cast<int16_t>(vertexGroupSpan.boneIndex);
+			vertexAt(vertexIndex)->index[1] = -1;
 			vertexIndex++;
 		}
 	}
@@ -204,11 +231,15 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 	}
 
 	VertexDecl decl;
-	decl.reserve(4);
+	decl.reserve(5);
 	decl.emplace_back(VertexAttrib::Attribute::Position, static_cast<uint8_t>(3), VertexAttrib::Type::Float);
 	decl.emplace_back(VertexAttrib::Attribute::TexCoord0, static_cast<uint8_t>(2), VertexAttrib::Type::Float);
 	decl.emplace_back(VertexAttrib::Attribute::Normal, static_cast<uint8_t>(3), VertexAttrib::Type::Float);
 	decl.emplace_back(VertexAttrib::Attribute::Indices, static_cast<uint8_t>(2), VertexAttrib::Type::Int16);
+	if (_hasLightmapCoordinates)
+	{
+		decl.emplace_back(VertexAttrib::Attribute::TexCoord3, static_cast<uint8_t>(2), VertexAttrib::Type::Float);
+	}
 
 	// build our buffers
 	auto* vertexBuffer = new VertexBuffer(_l3dMesh.GetDebugName(), verticesMem, decl);

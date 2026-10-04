@@ -264,6 +264,16 @@ struct L3DMaterial
 };
 static_assert(sizeof(L3DMaterial) == 4 * sizeof(uint32_t));
 
+/// A submesh's lightmap, from the UV2 block. LH3DMesh::DrawLightMap multiplies its primitives by the skin, mapped by
+/// the vertices' second texture coordinates.
+struct L3DLightmap
+{
+	/// Textured, with the lightmap's skin
+	L3DMaterial material;
+	std::array<uint32_t, 4> reserved;
+};
+static_assert(sizeof(L3DLightmap) == 8 * sizeof(uint32_t));
+
 struct L3DPrimitiveHeader
 {
 	L3DMaterial material;
@@ -300,6 +310,36 @@ struct L3DBlend
 };
 static_assert(sizeof(L3DBlend) == 8);
 
+/// A submesh's record in the name block, one for each submesh in turn
+struct L3DSubmeshName
+{
+	enum Flags : uint32_t
+	{
+		/// The submesh, a window, sheds a volume of light: LH3D draws its edges drawn out away from volumeLightSource,
+		/// fading as they go
+		VolumeLight = 1u << 0,
+	};
+
+	std::array<char, 64> name;
+	uint32_t flags;
+	float unknown1;
+	L3DPoint volumeLightSource;
+	/// How far the edges are drawn out, before LH3DVolumeLight scales it
+	float volumeLightLength;
+	std::array<float, 34> unknown2;
+};
+static_assert(sizeof(L3DSubmeshName) == 0xE0);
+
+/// Decodes the records of a name block whose data, after its size, count and offset of the records, are at dataOffset
+/// in its file. False when the records don't lie in the data.
+bool DecodeSubmeshNames(std::span<const uint8_t> data, uint32_t dataOffset, uint32_t count, uint32_t recordsOffset,
+                        std::vector<L3DSubmeshName>& names) noexcept;
+
+/// Decodes the lightmaps of a UV2 block at blockOffset in its file, blockSize bytes long with its header: data are its
+/// bytes after the block's size, vertex count and submesh count. False when the block doesn't hold them.
+bool DecodeLightmaps(std::span<const uint8_t> data, uint32_t blockOffset, uint32_t blockSize, uint32_t vertexCount,
+                     uint32_t submeshCount, std::vector<L3DPoint2D>& coordinates, std::vector<L3DLightmap>& lightmaps) noexcept;
+
 /**
   This class is used to read L3Ds.
  */
@@ -329,7 +369,13 @@ protected:
 	std::vector<std::span<L3DBone>> _boneSpans;
 	std::optional<L3DFootprint> _footprint;
 	std::vector<uint8_t> _uv2Data;
+	/// The UV2 block's lightmap coordinates, one for each vertex of every submesh in turn
+	std::vector<L3DPoint2D> _lightmapCoordinates;
+	/// The UV2 block's lightmap of each submesh
+	std::vector<L3DLightmap> _lightmaps;
 	std::string _nameData;
+	/// The name block's record of each submesh
+	std::vector<L3DSubmeshName> _submeshNames;
 	std::vector<std::array<float, 3 * 4>> _extraMetrics;
 
 	/// Write file to the input source
@@ -364,11 +410,14 @@ public:
 	[[nodiscard]] const std::optional<L3DFootprint>& GetFootprint() const noexcept { return _footprint; }
 	[[nodiscard]] const std::vector<std::array<float, 3 * 4>>& GetExtraMetrics() const noexcept { return _extraMetrics; }
 	[[nodiscard]] const std::vector<uint8_t>& GetUv2Data() const noexcept { return _uv2Data; }
+	[[nodiscard]] const std::vector<L3DPoint2D>& GetLightmapCoordinates() const noexcept { return _lightmapCoordinates; }
+	[[nodiscard]] const std::vector<L3DLightmap>& GetLightmaps() const noexcept { return _lightmaps; }
 	void SetFootprint(const L3DFootprint& footprint) noexcept { _footprint = footprint; }
 	void SetExtraMetrics(const std::vector<std::array<float, 3 * 4>>& metrics) noexcept { _extraMetrics = metrics; }
 	void SetUv2Data(std::vector<uint8_t>& uv2Data) noexcept { _uv2Data = uv2Data; }
 	void SetNameData(std::string& nameData) noexcept { _nameData = nameData; }
 	[[nodiscard]] const std::string& GetNameData() const noexcept { return _nameData; }
+	[[nodiscard]] const std::vector<L3DSubmeshName>& GetSubmeshNames() const noexcept { return _submeshNames; }
 	[[nodiscard]] const std::span<L3DPrimitiveHeader>& GetPrimitiveSpan(uint32_t submeshIndex) const noexcept
 	{
 		return _primitiveSpans[submeshIndex];

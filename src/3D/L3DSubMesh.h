@@ -12,6 +12,7 @@
 #include <cstdint>
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include <L3DFile.h>
@@ -59,6 +60,12 @@ public:
 	[[nodiscard]] graphics::Mesh& GetMesh() const;
 	[[nodiscard]] const AxisAlignedBoundingBox& GetBoundingBox() const { return _boundingBox; }
 	[[nodiscard]] const std::vector<Primitive>& GetPrimitives() const { return _primitives; }
+	/// The skin LH3DMesh::DrawLightMap multiplies the submesh by, twice over, with the vertices' second texture
+	/// coordinates. Submeshes without one are drawn as they are.
+	[[nodiscard]] std::optional<uint32_t> GetLightmapSkinID() const { return _lightmapSkinID; }
+	/// Whether the vertices carry the lightmap coordinates of the mesh, which all of its submeshes do when any has a
+	/// lightmap
+	[[nodiscard]] bool HasLightmapCoordinates() const { return _hasLightmapCoordinates; }
 
 private:
 	graphics::L3DMesh& _l3dMesh;
@@ -67,6 +74,8 @@ private:
 
 	std::unique_ptr<graphics::Mesh> _mesh;
 	std::vector<Primitive> _primitives;
+	std::optional<uint32_t> _lightmapSkinID;
+	bool _hasLightmapCoordinates {false};
 
 	AxisAlignedBoundingBox _boundingBox;
 };

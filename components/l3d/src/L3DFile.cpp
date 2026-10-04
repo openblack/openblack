@@ -71,7 +71,18 @@
  *
  * ------------------------ start of uv2 block ---------------------------------
  *
- *  TODO(#483): Investigate optional UV2 block
+ * - 20 byte header containing:
+ *         block size, header included - 4 bytes
+ *         vertex count - 4 bytes, those of all submeshes
+ *         submesh count - 4 bytes
+ *         coordinates offset - 4 bytes, from the start of the file
+ *         lightmaps offset - 4 bytes, from the start of the file
+ * - vertex count * 2 floats: the lightmap coordinates of each vertex of every
+ *   submesh in turn
+ * - submesh count * 32 bytes, the lightmap of each submesh:
+ *         material - 16 bytes, see the primitive's material, with the
+ *                    lightmap's skin
+ *         zero - 16 bytes
  *
  * ------------------------ start of name block --------------------------------
  *
@@ -170,6 +181,7 @@
 #include <cassert>
 #include <cstring>
 
+#include <algorithm>
 #include <fstream>
 #include <limits>
 #include <utility>
@@ -296,6 +308,53 @@ std::string_view openblack::l3d::ResultToStr(L3DResult result)
 
 L3DFile::L3DFile() noexcept = default;
 L3DFile::~L3DFile() noexcept = default;
+
+bool openblack::l3d::DecodeLightmaps(std::span<const uint8_t> data, uint32_t blockOffset, uint32_t blockSize,
+                                     uint32_t vertexCount, uint32_t submeshCount, std::vector<L3DPoint2D>& coordinates,
+                                     std::vector<L3DLightmap>& lightmaps) noexcept
+{
+	constexpr uint32_t k_HeaderSize = 5 * sizeof(uint32_t);
+	// The data starts after the block's size, vertex count and submesh count
+	constexpr uint32_t k_DataStart = 3 * sizeof(uint32_t);
+	if (blockSize < k_HeaderSize || data.size() < 2 * sizeof(uint32_t))
+	{
+		return false;
+	}
+
+	// The coordinates of every vertex and the lightmap of each submesh, where the block says they are
+	uint32_t coordinatesOffset = 0;
+	uint32_t lightmapsOffset = 0;
+	std::memcpy(&coordinatesOffset, &data[0], sizeof(coordinatesOffset));
+	std::memcpy(&lightmapsOffset, &data[sizeof(uint32_t)], sizeof(lightmapsOffset));
+	const auto blockStart = static_cast<uint64_t>(blockOffset);
+	const auto blockEnd = std::min(blockStart + blockSize, blockStart + k_DataStart + data.size());
+	const auto coordinatesEnd = static_cast<uint64_t>(coordinatesOffset) + uint64_t {vertexCount} * sizeof(L3DPoint2D);
+	const auto lightmapsEnd = static_cast<uint64_t>(lightmapsOffset) + uint64_t {submeshCount} * sizeof(L3DLightmap);
+	if (coordinatesOffset < blockStart + k_HeaderSize || coordinatesEnd > blockEnd ||
+	    lightmapsOffset < blockStart + k_HeaderSize || lightmapsEnd > blockEnd)
+	{
+		return false;
+	}
+
+	coordinates.resize(vertexCount);
+	std::memcpy(coordinates.data(), &data[coordinatesOffset - blockStart - k_DataStart], vertexCount * sizeof(L3DPoint2D));
+	lightmaps.resize(submeshCount);
+	std::memcpy(lightmaps.data(), &data[lightmapsOffset - blockStart - k_DataStart], submeshCount * sizeof(L3DLightmap));
+	return true;
+}
+
+bool openblack::l3d::DecodeSubmeshNames(std::span<const uint8_t> data, uint32_t dataOffset, uint32_t count,
+                                        uint32_t recordsOffset, std::vector<L3DSubmeshName>& names) noexcept
+{
+	const auto recordsEnd = static_cast<uint64_t>(recordsOffset) + uint64_t {count} * sizeof(L3DSubmeshName);
+	if (recordsOffset < dataOffset || recordsEnd > uint64_t {dataOffset} + data.size())
+	{
+		return false;
+	}
+	names.resize(count);
+	std::memcpy(names.data(), &data[recordsOffset - dataOffset], count * sizeof(L3DSubmeshName));
+	return true;
+}
 
 L3DResult L3DFile::ReadFile(std::istream& stream) noexcept
 {
@@ -662,14 +721,22 @@ L3DResult L3DFile::ReadFile(std::istream& stream) noexcept
 	uint32_t uv2DataSize = 0;
 	if ((headerFlags & static_cast<uint32_t>(L3DMeshFlags::ContainsUV2)) != 0u)
 	{
-		// TODO(#483): Investigate optional UV2 block
 		stream.seekg(0x48, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&additionalDataOffset), sizeof(additionalDataOffset));
-		stream.seekg(additionalDataOffset + (_footprint.has_value() ? _footprint->header.size : 0), std::istream::beg);
+		const auto blockOffset = additionalDataOffset + (_footprint.has_value() ? _footprint->header.size : 0);
+		stream.seekg(blockOffset, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&uv2DataSize), sizeof(uv2DataSize));
-		stream.seekg(8, std::istream::cur);
+		uint32_t vertexCount = 0;
+		uint32_t submeshCount = 0;
+		stream.read(reinterpret_cast<char*>(&vertexCount), sizeof(vertexCount));
+		stream.read(reinterpret_cast<char*>(&submeshCount), sizeof(submeshCount));
 		_uv2Data.resize(uv2DataSize);
 		stream.read(reinterpret_cast<char*>(_uv2Data.data()), _uv2Data.size());
+
+		if (vertexCount == _vertices.size() && submeshCount == _submeshHeaders.size())
+		{
+			DecodeLightmaps(_uv2Data, blockOffset, uv2DataSize, vertexCount, submeshCount, _lightmapCoordinates, _lightmaps);
+		}
 	}
 
 	// Name data
@@ -678,12 +745,22 @@ L3DResult L3DFile::ReadFile(std::istream& stream) noexcept
 	{
 		stream.seekg(0x48, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&additionalDataOffset), sizeof(additionalDataOffset));
-		stream.seekg(additionalDataOffset + (_footprint.has_value() ? _footprint->header.size : 0) + uv2DataSize,
-		             std::istream::beg);
+		const auto blockOffset = additionalDataOffset + (_footprint.has_value() ? _footprint->header.size : 0) + uv2DataSize;
+		stream.seekg(blockOffset, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&nameDataSize), sizeof(nameDataSize));
-		stream.seekg(8, std::istream::cur);
+		uint32_t nameCount = 0;
+		uint32_t namesOffset = 0;
+		stream.read(reinterpret_cast<char*>(&nameCount), sizeof(nameCount));
+		stream.read(reinterpret_cast<char*>(&namesOffset), sizeof(namesOffset));
 		_nameData.resize(nameDataSize);
 		stream.read(_nameData.data(), _nameData.size());
+
+		if (nameCount == _submeshHeaders.size())
+		{
+			const auto dataSize = std::min<size_t>(_nameData.size(), nameDataSize - std::min(nameDataSize, 3u * 4u));
+			DecodeSubmeshNames({reinterpret_cast<const uint8_t*>(_nameData.data()), dataSize},
+			                   blockOffset + 3 * sizeof(uint32_t), nameCount, namesOffset, _submeshNames);
+		}
 	}
 
 	// Extra Metrics
