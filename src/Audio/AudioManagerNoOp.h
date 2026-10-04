@@ -69,6 +69,7 @@ public:
 	{
 	}
 	void PlaySoundEffect([[maybe_unused]] entt::id_type id, [[maybe_unused]] std::optional<glm::vec3> worldPosition) override {}
+	void StopSoundEffect([[maybe_unused]] entt::id_type id) override {}
 	void SetGlobalVolume([[maybe_unused]] float volume) override {}
 	void SetSfxVolume([[maybe_unused]] float volume) override {}
 	void SetMusicVolume([[maybe_unused]] float volume) override {}

@@ -67,6 +67,7 @@ public:
 	const Sound& GetSound(entt::id_type id) override;
 	void PlaySound(entt::id_type id, PlayType type) override;
 	void PlaySoundEffect(entt::id_type id, std::optional<glm::vec3> worldPosition) override;
+	void StopSoundEffect(entt::id_type id) override;
 	void AddAnimEffects(const std::string& bankName, AnimEffectTable table) override;
 	void PlayAnimEffect(const std::string& bankName, std::span<const int32_t> keys, entt::entity owner,
 	                    const glm::vec3& position) override;

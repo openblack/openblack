@@ -306,10 +306,43 @@ void AudioManager::PlaySound(entt::id_type id, PlayType playType)
 
 void AudioManager::PlaySoundEffect(entt::id_type id, std::optional<glm::vec3> worldPosition)
 {
+	auto& sounds = Locator::resources::value().GetSounds();
+	if (sounds.Contains(id))
+	{
+		const auto sound = sounds.Handle(id);
+		// GAudio::PlaySoundEffect: a sound with a place can't be heard from further than its maximum distance
+		if (worldPosition.has_value() &&
+		    glm::distance(Locator::camera::value().GetOrigin(), *worldPosition) > sound->maxDistance)
+		{
+			return;
+		}
+		// LHSamplePlay with the play type of the bank header: a sound played once isn't played again while it plays,
+		// which lets the game ask for a sound every frame and hear it go on, and one that restarts starts over
+		if ((sound->overrideFlags & static_cast<uint32_t>(pack::AudioBankOverride::LoopType)) != 0)
+		{
+			const auto playing = FindPlaying(entt::null, 0, id, 0);
+			if (sound->loopType == pack::AudioBankLoop::Once && playing != entt::null)
+			{
+				return;
+			}
+			if (sound->loopType == pack::AudioBankLoop::Restart && playing != entt::null)
+			{
+				DestroyEmitter(playing);
+			}
+		}
+	}
 	const auto entity = CreateEmitter(id, worldPosition, PlayType::Once);
 	if (entity != entt::null)
 	{
 		PlayEmitter(entity);
+	}
+}
+
+void AudioManager::StopSoundEffect(entt::id_type id)
+{
+	for (auto playing = FindPlaying(entt::null, 0, id, 0); playing != entt::null; playing = FindPlaying(entt::null, 0, id, 0))
+	{
+		DestroyEmitter(playing);
 	}
 }
 

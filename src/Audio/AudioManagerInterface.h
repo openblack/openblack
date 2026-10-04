@@ -88,6 +88,8 @@ public:
 	/// and distances come from the bank header where it overrides them. With a world position it is a 3D sound
 	/// anchored there, otherwise it is centred on the listener.
 	virtual void PlaySoundEffect(entt::id_type id, std::optional<glm::vec3> worldPosition) = 0;
+	/// Stops the sound effects of a sound that PlaySoundEffect started, as one that loops forever goes on until then
+	virtual void StopSoundEffect(entt::id_type id) = 0;
 	/// The animation effects of a loaded sound bank, named as its sounds are ("<bank>/<sample id>")
 	virtual void AddAnimEffects(const std::string& bankName, AnimEffectTable table) = 0;
 	/// GAudio::SamplePlayAnimEffect: one of the samples a bank's animation effects pick for keys, chosen at random, as

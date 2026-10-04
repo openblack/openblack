@@ -94,6 +94,8 @@ enum class SoundId : entt::id_type
 	G_ScrollSqueak_06 = entt::hashed_string("InGame.sad/59").value(),
 	G_CitadelDoorOpen_01 = entt::hashed_string("InGame.sad/60").value(),
 	G_CitadelDoorClose_02 = entt::hashed_string("InGame.sad/61").value(),
+	G_FireCreatureCave_01 = entt::hashed_string("InGame.sad/175").value(),
+	G_WaterCreatureCave_01 = entt::hashed_string("InGame.sad/177").value(),
 	G_CitadelButtonUp_01 = entt::hashed_string("InGame.sad/62").value(),
 	G_CitadelButtonDown_01 = entt::hashed_string("InGame.sad/63").value(),
 	G_FireballPast_01 = entt::hashed_string("InGame.sad/64").value(),
