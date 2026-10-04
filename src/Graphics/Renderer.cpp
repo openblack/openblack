@@ -732,7 +732,7 @@ void Renderer::DrawMistDomes(const DrawSceneDesc& desc) const
 	const auto& textures = Locator::resources::value().GetTextures();
 	const auto smoke = entt::hashed_string("raw/smoke");
 	const auto smokeAlpha = entt::hashed_string("raw/smokea");
-	if (!textures.Contains(smoke) || !textures.Contains(smokeAlpha))
+	if (!textures.Contains(smoke.value()) || !textures.Contains(smokeAlpha.value()))
 	{
 		return;
 	}
