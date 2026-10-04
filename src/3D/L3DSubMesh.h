@@ -66,6 +66,13 @@ public:
 	/// Whether the vertices carry the lightmap coordinates of the mesh, which all of its submeshes do when any has a
 	/// lightmap
 	[[nodiscard]] bool HasLightmapCoordinates() const { return _hasLightmapCoordinates; }
+	/// The matrix of the table of joints the submesh turns by, about its pivot, when it has one
+	struct Joint
+	{
+		uint32_t index;
+		glm::vec3 pivot;
+	};
+	[[nodiscard]] const std::optional<Joint>& GetJoint() const { return _joint; }
 
 private:
 	graphics::L3DMesh& _l3dMesh;
@@ -76,6 +83,7 @@ private:
 	std::vector<Primitive> _primitives;
 	std::optional<uint32_t> _lightmapSkinID;
 	bool _hasLightmapCoordinates {false};
+	std::optional<Joint> _joint;
 
 	AxisAlignedBoundingBox _boundingBox;
 };

@@ -11,6 +11,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <span>
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
@@ -84,6 +85,8 @@ public:
 		bool morphWithTerrain;
 		/// Blend and write depth as each primitive's material says, instead of drawing it opaque
 		bool useMaterialBlending;
+		/// The table of joints the submeshes with joints turn by, about their pivots (the temple's doors)
+		std::span<const glm::mat4> joints;
 	};
 
 	static std::unique_ptr<RendererInterface> Create(GraphicsBackend backend, bool vsync) noexcept;

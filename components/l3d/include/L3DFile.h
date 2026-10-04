@@ -326,7 +326,12 @@ struct L3DSubmeshName
 	L3DPoint volumeLightSource;
 	/// How far the edges are drawn out, before LH3DVolumeLight scales it
 	float volumeLightLength;
-	std::array<float, 34> unknown2;
+	/// The point the submesh turns about, when it has a joint
+	L3DPoint jointPivot;
+	/// The matrix of LH3D's table of joints which LH3DMesh turns the submesh by, when it is from 0 to 255. The leaves of
+	/// the temple's doors have joints.
+	int32_t jointIndex;
+	std::array<float, 30> unknown2;
 };
 static_assert(sizeof(L3DSubmeshName) == 0xE0);
 

@@ -32,6 +32,7 @@
 #include "3D/LandIslandInterface.h"
 #include "3D/OceanInterface.h"
 #include "3D/SkyInterface.h"
+#include "3D/TempleDoors.h"
 #include "3D/TempleInteriorInterface.h"
 #include "Camera/Camera.h"
 #include "ECS/Components/Hand.h"
@@ -373,6 +374,16 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 	const auto lightmapSkinID = subMesh.GetLightmapSkinID();
 	const Texture2D* lightmap = lightmapSkinID.has_value() ? GetTexture(*lightmapSkinID, skins) : nullptr;
 	const auto* program = desc.lightmapProgram != nullptr && lightmap != nullptr ? desc.lightmapProgram : desc.program;
+	// LH3DMesh turns a submesh with a joint about its pivot by its matrix of the table, before the mesh's own matrix
+	const auto* modelMatrices = desc.modelMatrices;
+	glm::mat4 jointModel;
+	if (const auto& joint = subMesh.GetJoint();
+	    joint.has_value() && joint->index < desc.joints.size() && modelMatrices != nullptr && desc.matrixCount == 1)
+	{
+		jointModel = *modelMatrices * glm::translate(glm::mat4(1.0f), joint->pivot) * desc.joints[joint->index] *
+		             glm::translate(glm::mat4(1.0f), -joint->pivot);
+		modelMatrices = &jointModel;
+	}
 	bool lastPreserveState = false;
 	const auto& primitives = subMesh.GetPrimitives();
 	for (auto it = primitives.begin(); it != primitives.end(); ++it)
@@ -391,9 +402,9 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 		uint32_t skip = Mesh::SkipState::SkipNone;
 		if (!lastPreserveState)
 		{
-			if (desc.modelMatrices != nullptr && desc.matrixCount > 0)
+			if (modelMatrices != nullptr && desc.matrixCount > 0)
 			{
-				bgfx::setTransform(desc.modelMatrices, desc.matrixCount);
+				bgfx::setTransform(modelMatrices, desc.matrixCount);
 			}
 			if (texture != nullptr && program->HasUniform("s_diffuse"))
 			{
@@ -1100,6 +1111,11 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					submitDesc.matrixCount = 1;
 				}
 				submitDesc.isSky = false;
+				submitDesc.joints = {};
+				if (Locator::temple::has_value() && Locator::temple::value().Active())
+				{
+					submitDesc.joints = Locator::temple::value().GetDoors().GetJoints();
+				}
 				submitDesc.morphWithTerrain = placers.morphWithTerrain;
 				submitDesc.program = submitDesc.morphWithTerrain ? objectShaderHeightMapInstanced
 				                     : mesh->IsBoned()           ? objectShaderInstanced

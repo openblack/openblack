@@ -74,3 +74,4 @@ target_link_libraries(test_light_beams PRIVATE l3d glw)
 openblack_setup_and_add_test(
   test_temple_camera camera/test_temple_camera.cpp
 )
+openblack_setup_and_add_test(test_temple_doors temple/test_temple_doors.cpp)

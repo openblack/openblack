@@ -19,6 +19,7 @@
 #include <spdlog/spdlog.h>
 
 #include "3D/CameraPath.h"
+#include "Audio/AudioManagerInterface.h"
 #include "Camera/Camera.h"
 #include "Camera/TempleCameraModel.h"
 #include "Common/EventManager.h"
@@ -124,7 +125,22 @@ inline void addGlowsToRegistry(Indoors templeRoom)
 	}
 }
 
-TempleInterior::TempleInterior() = default;
+namespace
+{
+void PlayDoorSound(entt::id_type sound)
+{
+	// GAudio plays the doors' sounds without a place
+	if (Locator::audio::has_value())
+	{
+		Locator::audio::value().PlaySoundEffect(sound, std::nullopt);
+	}
+}
+} // namespace
+
+TempleInterior::TempleInterior()
+    : _doors(PlayDoorSound)
+{
+}
 
 TempleInterior::~TempleInterior() = default;
 
@@ -241,6 +257,7 @@ void TempleInterior::Activate(TempleRoom room)
 	_active = true;
 	_leaveRequested = false;
 	_transitionRoom.reset();
+	_doors = TempleDoors(PlayDoorSound);
 	_currentRoom = room;
 	auto model = std::make_unique<TempleCameraModel>(LoadCameraPaths(), _currentRoom);
 	_cameraModel = model.get();

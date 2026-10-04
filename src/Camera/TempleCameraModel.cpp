@@ -18,6 +18,7 @@
 #include <glm/geometric.hpp>
 #include <glm/gtc/constants.hpp>
 
+#include "3D/TempleDoors.h"
 #include "3D/TempleInteriorInterface.h"
 #include "Camera.h"
 #include "Input/GameActionMapInterface.h"
@@ -53,6 +54,13 @@ constexpr TempleCameraModel::Pose k_DoorApproach {{0.0f, 25.0f, 0.0f}, {15.0f, 2
 constexpr TempleCameraModel::Pose k_DoorEntry {{100.0f, 8.0f, 0.0f}, {120.0f, 10.0f, 0.0f}};
 /// The door to the room of scrolls isn't one the camera goes through
 constexpr uint32_t k_ScrollWall = 6;
+/// Temple::Update starts the doorway the camera walks through this far before the start of its swing, at this rate a
+/// second: it waits over a second, then is open as the camera reaches it
+constexpr float k_DoorOpenFrom = -0.5f;
+constexpr float k_DoorOpenRate = 0.4f;
+/// InnerCamera turns any doorway left open round to close, this long into a room's path, at this rate
+constexpr float k_IntroDoorCloseTime = 0.4f;
+constexpr float k_IntroDoorCloseRate = 1.6f;
 
 /// The kind of thing the mouse is over (InnerCamera::Update): the pool, the floor or a wall
 enum class HitKind : uint8_t
@@ -238,6 +246,7 @@ void TempleCameraModel::StartIntro(Room room, bool blendFromCurrent)
 
 void TempleCameraModel::GoToRoom(Room room)
 {
+	Locator::temple::value().GetDoors().FastClose();
 	if (room == GetRoom())
 	{
 		return;
@@ -317,6 +326,7 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> TempleCameraModel::Upd
 
 	Step(seconds, input);
 	FollowTemple();
+	Locator::temple::value().GetDoors().Update(seconds);
 
 	const auto origin = _origin.GetValue();
 	const auto focus = _focus.GetValue();
@@ -550,7 +560,7 @@ void TempleCameraModel::UpdateThroughDoor(float dt, const Input& input)
 	_originTime = 3.0f;
 	_focusTime = 3.0f;
 	_doorTime += dt;
-	// Halfway along, the camera is into the room
+	// Halfway along, with the doorway near open, the camera is into the room
 	if (_doorTime > 5.0f)
 	{
 		_doorStage = DoorStage::Through;
@@ -596,21 +606,44 @@ void TempleCameraModel::FollowTemple()
 {
 	// Temple::Update: draws the room the camera is heading into, and takes the player into it
 	auto& temple = Locator::temple::value();
+	auto& doors = temple.GetDoors();
 	if (_state != State::ThroughDoor)
 	{
 		temple.SetTransitionRoom(std::nullopt);
+		if (_state == State::Orbit)
+		{
+			// InnerCamera::CalcDoorHit shuts any door the player has the room's camera back by
+			doors.FastClose();
+		}
+		else if (_state == State::Intro && _introTime > k_IntroDoorCloseTime)
+		{
+			doors.Close(k_IntroDoorCloseRate);
+		}
 		return;
 	}
 	switch (_doorStage)
 	{
 	case DoorStage::Approaching:
 		temple.SetTransitionRoom(std::nullopt);
+		doors.FastClose();
 		break;
 	case DoorStage::Entering:
 		temple.SetTransitionRoom(InMainRoom() ? _doorRoom : std::optional<Room>(Room::Main));
+		if (InMainRoom())
+		{
+			// The doorway waits a moment, then swings open ahead of the camera
+			doors.Open(_doorRoom.has_value() ? TempleDoors::LeafOf(*_doorRoom) : std::nullopt, k_DoorOpenFrom, k_DoorOpenRate);
+		}
+		else
+		{
+			// Back into the main room, its doorway to this room stays shut
+			doors.Open(TempleDoors::LeafOf(GetRoom()), 2.0f, 0.0f);
+		}
 		break;
 	case DoorStage::Through:
 	case DoorStage::Skipped:
+		// Through, the doorway swings on open behind the camera, until the next room's camera turns it round to close.
+		// Skipping cuts to the room, which shuts it.
 		temple.SetTransitionRoom(std::nullopt);
 		if (!_doorRoom.has_value())
 		{

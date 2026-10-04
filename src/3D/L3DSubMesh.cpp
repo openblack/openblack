@@ -125,6 +125,18 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 		_lightmapSkinID = l3d.GetLightmaps()[meshIndex].material.skinID;
 	}
 
+	if (meshIndex < l3d.GetSubmeshNames().size())
+	{
+		const auto& name = l3d.GetSubmeshNames()[meshIndex];
+		if (name.jointIndex >= 0 && name.jointIndex < 0x100)
+		{
+			_joint = Joint {
+			    .index = static_cast<uint32_t>(name.jointIndex),
+			    .pivot = glm::vec3(name.jointPivot.x, name.jointPivot.y, name.jointPivot.z),
+			};
+		}
+	}
+
 	// Get vertices
 	const auto stride = _hasLightmapCoordinates ? sizeof(LightmappedL3DVertex) : sizeof(EnhancedL3DVertex);
 	const bgfx::Memory* verticesMem = bgfx::alloc(static_cast<uint32_t>(stride * nVertices));

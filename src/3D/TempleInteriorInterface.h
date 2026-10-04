@@ -15,6 +15,7 @@
 
 namespace openblack
 {
+class TempleDoors;
 
 enum class TempleRoom
 {
@@ -52,6 +53,9 @@ public:
 	virtual void GoToRoom(TempleRoom room) = 0;
 	/// Walks through the main room's door to a room, or cuts to it from elsewhere
 	virtual void EnterRoom(TempleRoom room) = 0;
+	/// The main room's doors, which swing open as the camera walks through them
+	[[nodiscard]] virtual TempleDoors& GetDoors() = 0;
+	[[nodiscard]] virtual const TempleDoors& GetDoors() const = 0;
 	/// Where the cursor last met the room, which HandStateCitadel puts the hand by
 	[[nodiscard]] virtual std::optional<TempleCursorHit> GetCursorHit() const = 0;
 	/// Escape takes the player back to the main room, and out of the temple from there (Temple's key handling)

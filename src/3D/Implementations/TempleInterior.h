@@ -14,6 +14,7 @@
 
 #include <glm/vec3.hpp>
 
+#include "3D/TempleDoors.h"
 #include "3D/TempleInteriorInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
@@ -39,6 +40,8 @@ public:
 	void SetTransitionRoom(std::optional<TempleRoom> room) override { _transitionRoom = room; }
 	void GoToRoom(TempleRoom room) override;
 	void EnterRoom(TempleRoom room) override;
+	[[nodiscard]] TempleDoors& GetDoors() override { return _doors; }
+	[[nodiscard]] const TempleDoors& GetDoors() const override { return _doors; }
 	[[nodiscard]] std::optional<TempleCursorHit> GetCursorHit() const override;
 	void Escape() override;
 	void RequestLeave() override { _leaveRequested = true; }
@@ -64,5 +67,6 @@ private:
 	/// The camera's model outside, while the temple's has the camera
 	std::unique_ptr<CameraModel> _outsideCameraModel;
 	TempleCameraModel* _cameraModel {nullptr};
+	TempleDoors _doors;
 };
 } // namespace openblack
