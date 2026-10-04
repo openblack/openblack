@@ -344,9 +344,11 @@ int WriteMeshFile(const std::filesystem::path& outFilename, const std::vector<st
 {
 	openblack::pack::PackFile pack;
 
+	std::vector<std::vector<char>> keepAliveData;
+
 	for (const auto& filename : inFilenames)
 	{
-		std::vector<uint8_t> data;
+		auto& data = keepAliveData.emplace_back();
 		if (!filename.empty())
 		{
 			std::ifstream file(filename, std::ios::binary);
