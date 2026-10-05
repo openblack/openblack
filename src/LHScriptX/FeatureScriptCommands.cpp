@@ -25,6 +25,7 @@
 #include "ECS/Archetypes/BonfireArchetype.h"
 #include "ECS/Archetypes/CitadelArchetype.h"
 #include "ECS/Archetypes/CreatureArchetype.h"
+#include "ECS/Archetypes/DeadTreeArchetype.h"
 #include "ECS/Archetypes/FeatureArchetype.h"
 #include "ECS/Archetypes/FieldArchetype.h"
 #include "ECS/Archetypes/MobileObjectArchetype.h"
@@ -433,11 +434,11 @@ void FeatureScriptCommands::CreateTree(int32_t forestId, glm::vec3 position, Tre
 	CreateNewTree(forestId, position, treeType, 1, rotation * 0.001f, scale * 0.001f, scale * 0.001f);
 }
 
-void FeatureScriptCommands::CreateDeadTree(glm::vec3 position, [[maybe_unused]] const std::string& player,
-                                           [[maybe_unused]] TreeInfo treeType, float scale, [[maybe_unused]] float roll,
-                                           float yaw, [[maybe_unused]] float pitch)
+void FeatureScriptCommands::CreateDeadTree(glm::vec3 position, [[maybe_unused]] const std::string& player, TreeInfo treeType,
+                                           float scale, [[maybe_unused]] float roll, float yaw, [[maybe_unused]] float pitch)
 {
-	CreateNewTree(-1, position, TreeInfo::Burnt, 1, yaw, scale, scale);
+	// TODO: tilt the tree by its roll and pitch
+	DeadTreeArchetype::Create(position, treeType, yaw, scale);
 }
 
 void FeatureScriptCommands::CreateNewTree(int32_t forestId, glm::vec3 position, TreeInfo treeType, int32_t isNonScenic,
