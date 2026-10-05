@@ -13,7 +13,6 @@
 
 #include <algorithm>
 #include <array>
-#include <limits>
 #include <utility>
 
 #include <glm/common.hpp>
@@ -53,8 +52,6 @@ constexpr float k_StartLean = 0.7f;
 constexpr float k_MaxLean = 1.5f;
 /// How long the turn and lean take to catch up with the player
 constexpr float k_OrbitEaseTime = 0.3f;
-/// The tenths of a second into the main room's path the camera may start from coming back through a door
-constexpr int32_t k_MainPathStartTenths = 30;
 /// Holding the press on the pool's map: how far from the point pressed the camera goes, how fast it gets there, how far
 /// it turns and tilts as the mouse crosses the screen, and between which tilts
 constexpr float k_MapDistance = 6.0f;
@@ -450,26 +447,6 @@ void TempleCameraModel::StartIntro(Room room, bool blendFromCurrent)
 	{
 		_previousOrigin = _origin;
 		_previousFocus = _focus;
-	}
-
-	// WorldRoomCamera::TriggerIntro: back through a door, the main room's path starts at whichever of its first three
-	// seconds, a tenth apart, passes nearest the camera, rather than from the temple's entrance
-	const auto& path = _paths.at(static_cast<size_t>(room));
-	if (room == Room::Main && blendFromCurrent && path)
-	{
-		const auto from = _origin.GetValue();
-		float nearest = std::numeric_limits<float>::max();
-		for (int32_t tenth = 0; tenth < k_MainPathStartTenths; ++tenth)
-		{
-			const float time = static_cast<float>(tenth) * 0.1f;
-			const auto sample = path->SampleAt(std::chrono::milliseconds(static_cast<int64_t>(time * 1000.0f)));
-			const auto apart = sample.position - from;
-			if (const float distance = glm::dot(apart, apart); distance < nearest)
-			{
-				nearest = distance;
-				_introTime = time;
-			}
-		}
 	}
 }
 
