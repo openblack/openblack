@@ -11,6 +11,7 @@
 
 #include <cassert>
 
+#include <algorithm>
 #include <ranges>
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
@@ -147,7 +148,10 @@ void LandBlock::BuildVertexList(std::span<LandVertex> vertices, LandIslandInterf
 				const auto& country = countries.at(cell->properties.country);
 				const auto noise = island.GetNoise(blockOffset + offset);
 
-				material = &country.materials.at((cell->altitude + noise) % country.materials.size());
+				// The higher the land the higher the material, the noise moving it up, up to the country's last one
+				const auto level =
+				    std::min((255 * static_cast<int32_t>(cell->altitude) >> 8) + static_cast<int32_t>(noise), 255);
+				material = &country.materials.at(static_cast<size_t>(level));
 			}
 
 			// TODO(470): This is temporary way for drawing landscape, should be moved to a shader in the renderer
