@@ -56,7 +56,7 @@ std::array<uint8_t, 4> TexelAt(const std::vector<uint8_t>& rgba, int x, int z)
 
 TEST(BlockTexture, ConeWeightsAddUpTo255)
 {
-	for (const auto& weights : block_texture::GetConeWeights())
+	for (const auto& weights : block_texture::ComputeConeWeights())
 	{
 		EXPECT_EQ(std::accumulate(weights.begin(), weights.end(), 0), 255);
 	}
@@ -64,7 +64,7 @@ TEST(BlockTexture, ConeWeightsAddUpTo255)
 
 TEST(BlockTexture, ConeWeightsFavourTheNearestCorner)
 {
-	const auto& weights = block_texture::GetConeWeights();
+	const auto weights = block_texture::ComputeConeWeights();
 	EXPECT_EQ(weights[0], (std::array<uint8_t, 4> {255, 0, 0, 0}));
 	// In the middle the corners are equally far: what truncation leaves goes to the last of them
 	EXPECT_EQ(weights[(8 * 16) + 8], (std::array<uint8_t, 4> {63, 63, 63, 66}));

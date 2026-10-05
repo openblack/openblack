@@ -37,7 +37,7 @@ constexpr int k_CellsPerSide = 17;
 /// 14 less the texel's distance from it, nothing beyond. Indexed [i * 16 + j] with i along x and j along z; corners
 /// (x, z), (x, z + 1), (x + 1, z + 1) and (x + 1, z).
 using ConeWeights = std::array<std::array<uint8_t, 4>, k_TexelsPerCell * k_TexelsPerCell>;
-[[nodiscard]] const ConeWeights& GetConeWeights();
+[[nodiscard]] ConeWeights ComputeConeWeights();
 
 /// The coast alpha, 0 to 15, of a texel of weighted altitude h (255 times the altitude on a flat cell) and noise n:
 /// clear below altitude 1, opaque from altitude 4 up, and in between rising with the noise-shifted height

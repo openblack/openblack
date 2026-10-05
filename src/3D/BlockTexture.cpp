@@ -28,7 +28,14 @@ constexpr uint8_t k_OpenSeaFlag = 0x02;
 
 constexpr size_t k_MapTexels = static_cast<size_t>(k_Side) * k_Side;
 
-ConeWeights BuildConeWeights()
+uint16_t MaterialTexel(std::span<const uint16_t> materials, uint32_t material, size_t texelIndex)
+{
+	const size_t index = (material * k_MapTexels) + texelIndex;
+	return index < materials.size() ? materials[index] : uint16_t {0};
+}
+} // namespace
+
+ConeWeights block_texture::ComputeConeWeights()
 {
 	ConeWeights weights {};
 	for (int i = 0; i < k_TexelsPerCell; ++i)
@@ -71,19 +78,6 @@ ConeWeights BuildConeWeights()
 		}
 	}
 	return weights;
-}
-
-uint16_t MaterialTexel(std::span<const uint16_t> materials, uint32_t material, size_t texelIndex)
-{
-	const size_t index = (material * k_MapTexels) + texelIndex;
-	return index < materials.size() ? materials[index] : uint16_t {0};
-}
-} // namespace
-
-const ConeWeights& block_texture::GetConeWeights()
-{
-	static const ConeWeights k_Weights = BuildConeWeights();
-	return k_Weights;
 }
 
 uint8_t block_texture::CoastAlpha(int32_t h, uint8_t noise)
@@ -173,7 +167,7 @@ void block_texture::BuildBlock(std::span<const lnd::LNDCell> cells, const Source
 	{
 		return;
 	}
-	const auto& coneWeights = GetConeWeights();
+	const auto coneWeights = ComputeConeWeights();
 	const auto countryOf = [&sources](const lnd::LNDCell& cell) -> const lnd::LNDCountry& {
 		return sources.countries[std::min<size_t>(cell.properties.country, sources.countries.size() - 1)];
 	};
