@@ -20,6 +20,7 @@
 #include "Camera/Camera.h"
 #include "ECS/Components/Weather.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/SnowSystemInterface.h"
 #include "Locator.h"
 
 using namespace openblack;
@@ -149,6 +150,8 @@ void Weather::DrawAtCamera() noexcept
 	ImGui::BeginGroup();
 	AmountBar("Rain", here.rain, ImVec4(0.30f, 0.55f, 0.95f, 1.0f));
 	AmountBar("Snow", here.snow, ImVec4(0.85f, 0.90f, 0.98f, 1.0f));
+	// The snow lying on the ground, out of the most it lies
+	AmountBar("Lying", std::max<int>(here.snowCover, 0) * 100 / 127, ImVec4(0.70f, 0.80f, 0.95f, 1.0f));
 	AmountBar("Cloud", here.overcast, ImVec4(0.55f, 0.58f, 0.62f, 1.0f));
 	const auto flash = weather.GetLightningFlash(camera);
 	AmountBar("Flash", (flash * 100) / 255, ImVec4(1.0f, 0.95f, 0.55f, 1.0f));
@@ -157,7 +160,7 @@ void Weather::DrawAtCamera() noexcept
 	const auto cold = temperature < 0;
 	ImGui::TextColored(cold ? ImVec4(0.6f, 0.8f, 1.0f, 1.0f) : ImVec4(1.0f, 0.7f, 0.4f, 1.0f), "%d C", temperature);
 	ImGui::SameLine();
-	ImGui::TextDisabled("wind (%d, %d)  snow cover %d", here.windX, here.windZ, here.snowCover);
+	ImGui::TextDisabled("wind (%d, %d)", here.windX, here.windZ);
 }
 
 void Weather::DrawPresets() noexcept
@@ -282,6 +285,11 @@ void Weather::DrawActions() noexcept
 	if (ImGui::IsItemHovered())
 	{
 		ImGui::SetTooltip("Only storms with lightning flash");
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Melt all snow") && Locator::snowSystem::has_value())
+	{
+		Locator::snowSystem::value().Reset();
 	}
 
 	auto climates = weather.IsClimateSystemEnabled();

@@ -34,6 +34,8 @@ public:
 	[[nodiscard]] virtual std::span<const rain::Streak> GetStreaks() const = 0;
 	/// How high the streaks reach over the ground
 	[[nodiscard]] virtual float GetHeight() const = 0;
+	/// How high and how fast the rain falls, which the snow falls as too
+	[[nodiscard]] virtual rain::Fall GetFall() const = 0;
 };
 
 } // namespace openblack::ecs::systems

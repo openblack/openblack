@@ -80,6 +80,7 @@
 #include "ECS/Systems/RainSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/Systems/SnowSystemInterface.h"
+#include "ECS/Systems/SnowfallSystemInterface.h"
 #include "ECS/Systems/SoundTagSystemInterface.h"
 #include "ECS/Systems/TempleExteriorSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
@@ -629,6 +630,9 @@ bool Game::Update() noexcept
 	Locator::cloudSystem::value().Update(gameTime);
 	// The rain falls as the storm nearest the camera has it
 	Locator::rainSystem::value().Update(std::chrono::duration<float>(gameTime).count(), camera.GetOrigin());
+	// The snow falls as the rain does
+	Locator::snowfallSystem::value().Update(std::chrono::duration<float>(gameTime).count(),
+	                                        Locator::rainSystem::value().GetFall());
 	// The homes' smoke rises while someone is in
 	Locator::chimneySmokeSystem::value().Update(gameTime);
 	Locator::influenceSystem::value().Update(gameTime);
@@ -1393,16 +1397,11 @@ bool Game::Run() noexcept
 		{
 			auto section = profiler.BeginScoped(Profiler::Stage::GuiDraw);
 			const bool screenshotThisFrame = _requestScreenshot.has_value() && _requestScreenshot->first == _frameCount;
-			// Skip drawing Debug UI for screenshots
 			if (screenshotThisFrame)
 			{
-				SPDLOG_LOGGER_INFO(spdlog::get("game"), "Requesting a screenshot at frame {}...", _frameCount);
 				Locator::rendererInterface::value().RequestScreenshot(_requestScreenshot->second);
 			}
-			else
-			{
-				Locator::debugGui::value().Draw();
-			}
+			Locator::debugGui::value().Draw();
 		}
 
 		{

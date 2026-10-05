@@ -11,7 +11,7 @@
 
 #include <array>
 
-#include "ECS/Systems/RainSystemInterface.h"
+#include "ECS/Systems/SnowfallSystemInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
 #error "ECS System implementations should only be included in Locator.cpp"
@@ -20,22 +20,19 @@
 namespace openblack::ecs::systems
 {
 
-class RainSystem final: public RainSystemInterface
+class SnowfallSystem final: public SnowfallSystemInterface
 {
 public:
-	RainSystem();
+	SnowfallSystem();
 
 	void Reset() override;
-	void Update(float seconds, const glm::vec3& camera) override;
-	[[nodiscard]] std::vector<rain::Tile> TakeTiles(const glm::vec3& camera) override;
-	[[nodiscard]] std::span<const rain::Streak> GetStreaks() const override { return _streaks; }
-	[[nodiscard]] float GetHeight() const override { return _fall.height; }
-	[[nodiscard]] rain::Fall GetFall() const override { return _fall; }
+	void Update(float seconds, const rain::Fall& fall) override;
+	[[nodiscard]] std::vector<snowfall::Tile> TakeTiles(const glm::vec3& camera) override;
+	[[nodiscard]] std::span<const snowfall::Flake> GetFlakes() const override { return _flakes; }
 
 private:
-	std::array<rain::Streak, rain::k_Streaks> _streaks {};
-	rain::Fall _fall;
-	/// Whether the streaks were drawn since the last update, which moves them on only then
+	std::array<snowfall::Flake, snowfall::k_Flakes> _flakes {};
+	/// Whether the flakes were drawn since the last update, which moves them on only then
 	bool _drawn {false};
 };
 

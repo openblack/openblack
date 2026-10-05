@@ -98,6 +98,8 @@ private:
 	void DrawGroundBlobs(const DrawSceneDesc& desc) const;
 	/// The rain about the camera, each block's in its place among what blends, in the main view
 	void DrawRain(const DrawSceneDesc& desc) const;
+	/// The snow falling about the camera where it snows, each quarter of a land block in its place among what blends
+	void DrawSnowfall(const DrawSceneDesc& desc) const;
 	/// The smoke from the homes' chimneys, each in its place among what blends, in the main view
 	void DrawChimneySmoke(const DrawSceneDesc& desc) const;
 	/// The border of the players' influence, in the main view

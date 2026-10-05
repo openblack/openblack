@@ -46,7 +46,6 @@
 #include "3D/Rain.h"
 #include "3D/SkyInterface.h"
 #include "3D/SnowCover.h"
-#include "ECS/Systems/SnowSystemInterface.h"
 #include "3D/TempleDoors.h"
 #include "3D/TempleInteriorInterface.h"
 #include "3D/TempleMap.h"
@@ -75,6 +74,8 @@
 #include "ECS/Systems/InfluenceSystemInterface.h"
 #include "ECS/Systems/RainSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
+#include "ECS/Systems/SnowSystemInterface.h"
+#include "ECS/Systems/SnowfallSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
 #include "EngineConfig.h"
@@ -2074,6 +2075,85 @@ void Renderer::DrawChimneySmoke(const DrawSceneDesc& desc) const
 	});
 }
 
+void Renderer::DrawSnowfall(const DrawSceneDesc& desc) const
+{
+	if (desc.viewId != RenderPass::Main || !Locator::snowfallSystem::has_value() ||
+	    (Locator::temple::has_value() && Locator::temple::value().Active()))
+	{
+		return;
+	}
+	static constexpr auto k_TextureId = entt::hashed_string("raw/ATMOS");
+	static constexpr auto k_AlphaTextureId = entt::hashed_string("raw/ATMOSA");
+	const auto& textures = Locator::resources::value().GetTextures();
+	if (!textures.Contains(k_TextureId.value()) || !textures.Contains(k_AlphaTextureId.value()))
+	{
+		return;
+	}
+	auto& snowfallSystem = Locator::snowfallSystem::value();
+	const auto origin = desc.camera->GetOrigin();
+	const auto tiles = snowfallSystem.TakeTiles(origin);
+	if (tiles.empty())
+	{
+		return;
+	}
+	const auto flakes = snowfallSystem.GetFlakes();
+	struct Vertex
+	{
+		glm::vec3 position;
+		glm::vec2 uv;
+		uint32_t colour;
+	};
+	bgfx::VertexLayout layout;
+	layout.begin()
+	    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+	    .end();
+	// The flakes take the colour of the land's light at its brightest
+	const auto landColour = _landLightTable ? _landLightTable->GetLandColour() : 0xFFFFFFu;
+	const auto bgr = ((landColour & 0xFFu) << 16u) | (landColour & 0xFF00u) | ((landColour >> 16u) & 0xFFu);
+	const auto* program = _shaderManager->GetShader("WorldTextured");
+	const auto viewId = static_cast<bgfx::ViewId>(TranslucentView(desc.viewId));
+	constexpr std::array<uint16_t, 6> k_Triangles = {0, 1, 2, 2, 3, 0};
+	for (const auto& tile : tiles)
+	{
+		const auto count = static_cast<uint32_t>(tile.flakes);
+		if (bgfx::getAvailTransientVertexBuffer(count * 4, layout) < count * 4 ||
+		    bgfx::getAvailTransientIndexBuffer(count * 6) < count * 6)
+		{
+			return;
+		}
+		bgfx::TransientVertexBuffer vertexBuffer;
+		bgfx::TransientIndexBuffer indexBuffer;
+		bgfx::allocTransientVertexBuffer(&vertexBuffer, count * 4, layout);
+		bgfx::allocTransientIndexBuffer(&indexBuffer, count * 6);
+		const auto vertices = std::span(reinterpret_cast<Vertex*>(vertexBuffer.data), count * 4);
+		const auto indices = std::span(reinterpret_cast<uint16_t*>(indexBuffer.data), count * 6);
+		const glm::vec3 corner {tile.corner.x, tile.ground, tile.corner.y};
+		const auto colour = (static_cast<uint32_t>(tile.alpha) << 24u) | bgr;
+		for (size_t i = 0; i < count; ++i)
+		{
+			const auto corners = snowfall::Corners(flakes[i]);
+			for (size_t c = 0; c < corners.size(); ++c)
+			{
+				vertices[(i * 4) + c] = {corner + corners.at(c), snowfall::k_Uvs.at(c), colour};
+			}
+			for (size_t t = 0; t < k_Triangles.size(); ++t)
+			{
+				indices[(i * 6) + t] = static_cast<uint16_t>((i * 4) + k_Triangles.at(t));
+			}
+		}
+		program->SetTextureSampler("s_diffuse", 0, *textures.Handle(k_TextureId));
+		program->SetTextureSampler("s_alpha", 1, *textures.Handle(k_AlphaTextureId));
+		bgfx::setVertexBuffer(0, &vertexBuffer);
+		bgfx::setIndexBuffer(&indexBuffer);
+		// Both sides of each flake, blended over what is behind, tested against depth but leaving none
+		bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_BLEND_ALPHA);
+		// In its place among what blends, by the ground under the quarter's corner
+		bgfx::submit(viewId, toBgfx(program->GetRawHandle()), zsort::Depth(corner, origin));
+	}
+}
+
 void Renderer::DrawRain(const DrawSceneDesc& desc) const
 {
 	if (desc.viewId != RenderPass::Main || !Locator::rainSystem::has_value() ||
@@ -3296,6 +3376,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			DrawCaveTrophies(desc);
 			DrawGroundBlobs(desc);
 			DrawRain(desc);
+			DrawSnowfall(desc);
 			DrawChimneySmoke(desc);
 			DrawInfluenceBorder(desc);
 			DrawInfluenceRipples(desc);
