@@ -126,7 +126,14 @@ Game::Game(Arguments&& args) noexcept
 	{
 		if (!args.logFile.empty() && args.logFile != "stdout")
 		{
-			createLogger = [&args](const std::string& name) { return spdlog::basic_logger_mt(name, args.logFile); };
+			// Every subsystem's logger writes through the one file: each opening the file for itself, their writes
+			// overwrote each other's and lines went missing
+			auto fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(args.logFile);
+			createLogger = [fileSink](const std::string& name) {
+				auto logger = std::make_shared<spdlog::logger>(name, fileSink);
+				spdlog::register_logger(logger);
+				return logger;
+			};
 		}
 		else
 		{
