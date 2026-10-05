@@ -23,10 +23,13 @@
 
 namespace openblack
 {
+struct LandData;
+
 class LandIsland final: public LandIslandInterface
 {
 public:
 	explicit LandIsland(const std::filesystem::path& path);
+	explicit LandIsland(const LandData& data);
 	~LandIsland() noexcept;
 
 	void LoadFromFile(const std::filesystem::path& path);
@@ -42,13 +45,15 @@ public:
 	void DumpMaps() const override;
 
 private:
+	void Build(const LandData& data);
 	[[nodiscard]] std::vector<uint8_t> CreateHeightMap() const;
 	[[nodiscard]] std::vector<uint8_t> CreateLuminosityMap() const;
 	[[nodiscard]] std::vector<uint8_t> CreateCellColourMap() const;
 	std::vector<LandBlock> _landBlocks;
 	std::vector<lnd::LNDCountry> _countries;
 
-	std::array<uint8_t, 1024> _blockIndexLookup {0};
+	/// One more than the index of each block of the map, [x * 32 + z], or 0 where there is no land
+	std::array<uint16_t, 1024> _blockIndexLookup {0};
 
 	// Renderer, Dynamics
 public:

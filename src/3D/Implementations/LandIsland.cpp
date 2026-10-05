@@ -14,6 +14,7 @@
 
 #include <cmath>
 
+#include <algorithm>
 #include <span>
 #include <stdexcept>
 
@@ -27,6 +28,7 @@
 
 #include "3D/BlockTexture.h"
 #include "3D/LandBlock.h"
+#include "3D/LandData.h"
 #include "3D/LandNormal.h"
 #include "3D/MapCoords.h"
 #include "Dynamics/LandBlockBulletMeshInterface.h"
@@ -129,6 +131,11 @@ LandIsland::LandIsland(const std::filesystem::path& path)
 	LoadFromFile(path);
 }
 
+LandIsland::LandIsland(const LandData& data)
+{
+	Build(data);
+}
+
 LandIsland::~LandIsland() noexcept = default;
 
 void LandIsland::LoadFromFile(const std::filesystem::path& path)
@@ -143,10 +150,14 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 		                    lnd::ResultToStr(result));
 		throw lnd::ResultToStr(result);
 	}
+	Build(LandData::FromLnd(lnd));
+}
 
-	_blockIndexLookup = lnd.GetHeader().lookUpTable;
+void LandIsland::Build(const LandData& data)
+{
+	_blockIndexLookup = data.blockIndexLookup;
 
-	const auto& lndBlocks = lnd.GetBlocks();
+	const auto& lndBlocks = data.blocks;
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} blocks", lndBlocks.size());
 	_landBlocks.resize(lndBlocks.size());
 	for (size_t i = 0; i < _landBlocks.size(); i++)
@@ -210,27 +221,25 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	_proj = glm::ortho(_extentMin.x, _extentMax.x, _extentMin.y, _extentMax.y);
 	_view = glm::rotate(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} countries", lnd.GetCountries().size());
-	_countries = lnd.GetCountries();
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} countries", data.countries.size());
+	_countries = data.countries;
 
-	auto materialCount = static_cast<uint16_t>(lnd.GetMaterials().size());
-	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} textures", materialCount);
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} textures", data.materials.size());
 	std::vector<uint16_t> rgba5TextureData;
-	rgba5TextureData.resize(lnd::LNDMaterial::k_Width * lnd::LNDMaterial::k_Height * lnd.GetMaterials().size());
-	for (size_t i = 0; i < lnd.GetMaterials().size(); i++)
+	rgba5TextureData.resize(lnd::LNDMaterial::k_Width * lnd::LNDMaterial::k_Height * data.materials.size());
+	for (size_t i = 0; i < data.materials.size(); i++)
 	{
 		std::memcpy(&rgba5TextureData[lnd::LNDMaterial::k_Width * lnd::LNDMaterial::k_Height * i],
-		            lnd.GetMaterials()[i].texels.data(),
-		            sizeof(lnd.GetMaterials()[i].texels[0]) * lnd.GetMaterials()[i].texels.size());
+		            data.materials[i].texels.data(), sizeof(data.materials[i].texels[0]) * data.materials[i].texels.size());
 	}
-	_noiseMap = lnd.GetExtra().noise.texels;
+	std::ranges::copy(data.noise, _noiseMap.begin());
 
 	// Paint each block's texture from the countries, the materials, the noise and the bump map
 	const block_texture::Sources sources {
 	    .countries = _countries,
 	    .materials = rgba5TextureData,
 	    .noise = _noiseMap,
-	    .bump = lnd.GetExtra().bump.texels,
+	    .bump = data.bump,
 	};
 	const auto* blockTexels = bgfx::alloc(static_cast<uint32_t>(_landBlocks.size() * block_texture::k_BlockBytes));
 	const auto blockTexelSpan = std::span(blockTexels->data, blockTexels->size);
@@ -286,12 +295,12 @@ uint8_t LandIsland::GetNoise(glm::u8vec2 pos)
 const LandBlock* LandIsland::GetBlock(const glm::u8vec2& coordinates) const
 {
 	// our blocks can only be between [0-31, 0-31]
-	if (coordinates.x > 32 || coordinates.y > 32)
+	if (coordinates.x > 31 || coordinates.y > 31)
 	{
 		return nullptr;
 	}
 
-	const uint8_t blockIndex = _blockIndexLookup.at(coordinates.x * 32 + coordinates.y);
+	const auto blockIndex = _blockIndexLookup.at(coordinates.x * 32 + coordinates.y);
 	if (blockIndex == 0)
 	{
 		return nullptr;
@@ -327,7 +336,7 @@ const lnd::LNDCell* LandIsland::FindCell(const glm::u16vec2& coordinates) const
 	const auto lookupIndex = mapCoordinates.x << 5u | mapCoordinates.y;
 	const auto cellIndex = cellCoordinates.x * 0x11u + cellCoordinates.y;
 
-	const uint8_t blockIndex = _blockIndexLookup.at(lookupIndex);
+	const auto blockIndex = _blockIndexLookup.at(lookupIndex);
 
 	if (blockIndex == 0)
 	{

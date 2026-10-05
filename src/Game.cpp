@@ -36,6 +36,7 @@
 #include "3D/CreatureBody.h"
 #include "3D/CreatureCaveTrophies.h"
 #include "3D/DayNightClock.h"
+#include "3D/FlatLand.h"
 #include "3D/GripLandscapeEffect.h"
 #include "3D/HandAnimation.h"
 #include "3D/L3DMesh.h"
@@ -114,6 +115,13 @@ using namespace openblack;
 using namespace openblack::lhscriptx;
 using namespace std::chrono_literals;
 
+namespace
+{
+// Where the camera starts on the testbed: above and behind the middle of the map
+constexpr float k_TestbedCameraHeight = 60.0f;
+constexpr float k_TestbedCameraBack = 120.0f;
+} // namespace
+
 const std::string k_WindowTitle = "openblack";
 
 Game* Game::sInstance = nullptr;
@@ -121,6 +129,7 @@ Game* Game::sInstance = nullptr;
 Game::Game(Arguments&& args) noexcept
     : _gamePath(args.gamePath)
     , _startMap(args.startLevel)
+    , _startTestbed(args.startTestbed)
     , _requestScreenshot(args.requestScreenshot)
 {
 	Locator::camera::emplace(glm::zero<glm::vec3>());
@@ -1305,7 +1314,11 @@ bool Game::Run() noexcept
 {
 	auto& config = Locator::config::value();
 
-	if (!LoadMap(_startMap))
+	if (_startTestbed)
+	{
+		LoadTestbed();
+	}
+	else if (!LoadMap(_startMap))
 	{
 		return false;
 	}
@@ -1443,27 +1456,7 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 	const auto data = fileSystem.ReadAll(path);
 	const auto source = std::string(reinterpret_cast<const char*>(data.data()), data.size());
 
-	// A new land has no weather of the last one, and none of its script's fades, cinema bars or clipping
-	if (Locator::weatherSystem::has_value())
-	{
-		Locator::weatherSystem::value().Reset();
-		Locator::snowSystem::value().Reset();
-		Locator::waterRingSystem::value().Reset();
-	}
-	Locator::cinematicDirectorSystem::value().Reset();
-	Locator::influenceSystem::value().Reset();
-
-	// Reset everything. Deletes all entities and their components
-	Locator::entitiesRegistry::value().Reset();
-	// TODO(#661): split entities that are permanent from map entities and move hand and camera to init
-	// We need a hand for the player
-	Locator::handSystem::value().Initialize();
-
-	// create our camera
-	auto& config = Locator::config::value();
-	const auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
-	Locator::camera::value().SetProjectionMatrixPerspective(config.cameraXFov, aspect, config.cameraNearClip,
-	                                                        config.cameraFarClip);
+	PrepareNewLand();
 
 	Script script;
 	try
@@ -1491,6 +1484,54 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 		                   path.generic_string(), fotPath.generic_string());
 	}
 
+	StartNewLand();
+	return true;
+}
+
+void Game::LoadTestbed() noexcept
+{
+	PrepareNewLand();
+	InitializeLevel(flat_land::Build());
+	SetUpLandscape();
+
+	// Looking down over the middle of the map, from the south
+	const auto& land = Locator::terrainSystem::value();
+	const auto middle = (land.GetExtent().minimum + land.GetExtent().maximum) * 0.5f;
+	const auto ground = land.GetHeightAt(middle);
+	Locator::camera::value()
+	    .SetOrigin({middle.x, ground + k_TestbedCameraHeight, middle.y - k_TestbedCameraBack})
+	    .SetFocus({middle.x, ground, middle.y});
+
+	StartNewLand();
+}
+
+void Game::PrepareNewLand()
+{
+	// A new land has no weather of the last one, and none of its script's fades, cinema bars or clipping
+	if (Locator::weatherSystem::has_value())
+	{
+		Locator::weatherSystem::value().Reset();
+		Locator::snowSystem::value().Reset();
+		Locator::waterRingSystem::value().Reset();
+	}
+	Locator::cinematicDirectorSystem::value().Reset();
+	Locator::influenceSystem::value().Reset();
+
+	// Reset everything. Deletes all entities and their components
+	Locator::entitiesRegistry::value().Reset();
+	// TODO(#661): split entities that are permanent from map entities and move hand and camera to init
+	// We need a hand for the player
+	Locator::handSystem::value().Initialize();
+
+	// create our camera
+	auto& config = Locator::config::value();
+	const auto aspect = Locator::windowing::has_value() ? Locator::windowing::value().GetAspectRatio() : 1.0f;
+	Locator::camera::value().SetProjectionMatrixPerspective(config.cameraXFov, aspect, config.cameraNearClip,
+	                                                        config.cameraFarClip);
+}
+
+void Game::StartNewLand()
+{
 	_lastGameLoopTime = std::chrono::steady_clock::now();
 	_turnDeltaTime = 0ns;
 	// The game starts running, as Black & White does
@@ -1507,8 +1548,6 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 		_gameMusic = std::make_unique<audio::GameMusic>();
 	}
 	_gameMusic->Reset();
-
-	return true;
 }
 
 void Game::HandleInterfaceAction()
@@ -1571,7 +1610,11 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 		throw std::runtime_error("Could not find landscape " + path.generic_string());
 	}
 	InitializeLevel(fixedName);
+	SetUpLandscape();
+}
 
+void Game::SetUpLandscape()
+{
 	// A land starts at noon on the game's cycle of day and night, which its script may change, under new clouds
 	auto& sky = Locator::skySystem::value();
 	sky.GetClock().Reset();

@@ -24,6 +24,7 @@ struct EngineConfig;
 class Camera;
 class EventManager;
 class LandIslandInterface;
+struct LandData;
 class OceanInterface;
 class Profiler;
 class GameRandomInterface;
@@ -124,6 +125,8 @@ void InitializeWindow(const std::string& title, int width, int height, windowing
 bool InitializeEngine(GraphicsBackend backend, bool vsync) noexcept;
 bool InitializeGame() noexcept;
 void InitializeLevel(const std::filesystem::path& path);
+/// Starts a level on land that is generated rather than read from a file, as the flat testbed is
+void InitializeLevel(const LandData& land);
 void ShutDownServices();
 
 struct Locator

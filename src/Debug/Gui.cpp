@@ -524,6 +524,15 @@ bool Gui::ShowMenu() noexcept
 				}
 				ImGui::EndMenu();
 			}
+			ImGui::Separator();
+			if (ImGui::MenuItem("Creature Testbed"))
+			{
+				game.LoadTestbed();
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("A flat plane over the whole map, for trying out how creatures move and are animated");
+			}
 			ImGui::EndMenu();
 		}
 

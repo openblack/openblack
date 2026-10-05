@@ -81,6 +81,8 @@ struct Arguments
 	std::string logFile;
 	std::array<spdlog::level::level_enum, k_LoggingSubsystemStrs.size()> logLevels;
 	std::string startLevel;
+	/// Start on the flat creature testbed rather than startLevel
+	bool startTestbed {false};
 	std::optional<std::pair</* frame number */ uint32_t, /* output */ std::filesystem::path>> requestScreenshot;
 };
 
@@ -127,6 +129,8 @@ public:
 
 	bool LoadMap(const std::filesystem::path& path) noexcept;
 	void LoadLandscape(const std::filesystem::path& path);
+	/// Loads the testbed: a flat plane over the whole map, with nothing on it, for trying out creatures
+	void LoadTestbed() noexcept;
 
 	void SetTime(float time) noexcept;
 	/// How many times longer a turn takes: 2 is half speed
@@ -149,10 +153,18 @@ public:
 private:
 	static Game* sInstance;
 
+	/// Clears the last land's entities, weather and effects before a new one loads
+	void PrepareNewLand();
+	/// What every land starts with once its landscape is loaded: the sky's clock, a player and the land's physics
+	void SetUpLandscape();
+	/// Starts the game clock, the atmosphere's sounds and the music on the new land
+	void StartNewLand();
+
 	/// path to Lionhead Studios Ltd/Black & White folder
 	const std::filesystem::path _gamePath;
 
 	std::filesystem::path _startMap;
+	bool _startTestbed {false};
 
 	std::chrono::steady_clock::time_point _lastGameLoopTime;
 	std::chrono::steady_clock::duration _turnDeltaTime;
