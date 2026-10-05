@@ -115,6 +115,9 @@ public:
 		/// The temple's light, which the lightmapped submeshes are multiplied by, and which is added to every submesh
 		/// that doesn't glow, as LH3D adds the vertices' specular (0xE05FE8 and 0xE05FE4)
 		glm::vec3 lightMultiply {1.0f};
+		/// How much brighter than the land's light where it stands the mesh is, at most white: the god hand is half as
+		/// bright again
+		float landLightScale {1.0f};
 		glm::vec3 lightAdd {0.0f};
 	};
 

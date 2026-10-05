@@ -37,7 +37,8 @@ uniform vec4 u_islandExtent;
 // The land's light: each cell corner's luminosity, and the colour of each luminosity (LandLightTable)
 SAMPLER2D(s_landLuminosity, 3);
 SAMPLER2D(s_landLight, 4);
-// x: 1 to colour the object by the land's light where it stands, 0 for white
+// x: 1 to colour the object by the land's light where it stands, 0 for white. y: how much brighter than the land's light
+// the object is, at most white
 uniform vec4 u_landLight;
 
 // The colour of a luminosity, 0 to 255
@@ -101,7 +102,7 @@ void main()
 #ifndef USE_LIGHTMAP
 	if (u_landLight.x > 0.0f)
 	{
-		colour = LandLightAt(origin.xz);
+		colour = min(floor(LandLightAt(origin.xz) * u_landLight.y), vec3_splat(255.0f));
 	}
 #endif // USE_LIGHTMAP
 	v_color0 = vec4(ModelLightColour(colour, ModelLightFactor(a_normal, localLight)), 1.0f);
