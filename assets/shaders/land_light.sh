@@ -4,8 +4,8 @@
 // The land's light that models take where they stand (LandLightTable). Declare u_islandExtent before including.
 
 // The land's light: each cell corner's luminosity, and the colour of each luminosity (LandLightTable)
-SAMPLER2D(s_landLuminosity, 3);
-SAMPLER2D(s_landLight, 4);
+SAMPLER2D(s_landLuminosity, 6);
+SAMPLER2D(s_landLight, 7);
 // x: 1 to colour the object by the land's light where it stands, 0 for white. y: how much brighter than the land's light
 // the object is, at most white
 uniform vec4 u_landLight;
