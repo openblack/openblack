@@ -78,8 +78,9 @@ struct RenderContext
 	struct ObjectInstance
 	{
 		glm::mat4 model {1.0f};
-		/// x: 1 while someone is home, which lights its windows at night
-		glm::vec4 window {0.0f};
+		/// x: 1 while someone is home, which lights its windows at night. y: a colour, 0xRRGGBB, the land's light on it
+		/// is multiplied by, or 0 for none. z: 1 while it isn't drawn at all.
+		glm::vec4 look {0.0f};
 	};
 	std::vector<ObjectInstance> instanceUniforms;
 

@@ -9,12 +9,24 @@
 
 #pragma once
 
+#include <cstdint>
+
+#include "3D/FieldCrop.h"
+#include "Enums.h"
+
 namespace openblack::ecs::components
 {
 
+/// A town's field and the crop growing in it (see field_crop)
 struct Field
 {
 	int town;
+	FieldTypeInfo type;
+	field_crop::Crop crop;
+	/// Which of every ten turns the crop grows on
+	uint32_t growthTurn;
+	/// The crop's height as it is drawn, easing towards where its food puts it
+	field_crop::Settle height;
 };
 
 } // namespace openblack::ecs::components

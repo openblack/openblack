@@ -69,6 +69,7 @@
 #include "ECS/Systems/CinematicDirectorSystemInterface.h"
 #include "ECS/Systems/CloudSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
+#include "ECS/Systems/FieldSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/InfluenceSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
@@ -387,6 +388,8 @@ bool Game::GameLogicLoop() noexcept
 	Locator::chimneySmokeSystem::value().ProcessTurn();
 	// How far the players' influence reaches, and its border
 	Locator::influenceSystem::value().ProcessTurn(Locator::time::value().GetTurn());
+	// The crops in the fields grow
+	Locator::fieldSystem::value().ProcessTurn(Locator::time::value().GetTurn());
 	{
 		auto actions = profiler.BeginScoped(Profiler::Stage::LivingActionUpdate);
 		Locator::livingActionSystem::value().Update();
@@ -627,6 +630,7 @@ bool Game::Update() noexcept
 	Locator::influenceSystem::value().Update(gameTime);
 	Locator::mistSystem::value().Update(gameTime);
 	Locator::villageLightSystem::value().Update(gameTime);
+	Locator::fieldSystem::value().Update(gameTime);
 	Locator::cinematicDirectorSystem::value().Update(gameTime);
 	// The cinema bars coming in hide the game's dialogs
 	if (Locator::cinematicDirectorSystem::value().TakeHideDialogs() && _interface && _interface->GetMenu().IsOpen())

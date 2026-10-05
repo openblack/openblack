@@ -99,6 +99,7 @@ class LivingActionSystemInterface;
 class MistSystemInterface;
 class CloudSystemInterface;
 class VillageLightSystemInterface;
+class FieldSystemInterface;
 class CinematicDirectorSystemInterface;
 class SoundTagSystemInterface;
 class RainSystemInterface;
@@ -161,6 +162,7 @@ struct Locator
 	using mistSystem = entt::locator<ecs::systems::MistSystemInterface>;
 	using cloudSystem = entt::locator<ecs::systems::CloudSystemInterface>;
 	using villageLightSystem = entt::locator<ecs::systems::VillageLightSystemInterface>;
+	using fieldSystem = entt::locator<ecs::systems::FieldSystemInterface>;
 	using cinematicDirectorSystem = entt::locator<ecs::systems::CinematicDirectorSystemInterface>;
 	using soundTagSystem = entt::locator<ecs::systems::SoundTagSystemInterface>;
 	using rainSystem = entt::locator<ecs::systems::RainSystemInterface>;

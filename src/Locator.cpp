@@ -35,6 +35,7 @@
 #include "ECS/Systems/Implementations/CinematicDirectorSystem.h"
 #include "ECS/Systems/Implementations/CloudSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
+#include "ECS/Systems/Implementations/FieldSystem.h"
 #include "ECS/Systems/Implementations/HandSystem.h"
 #include "ECS/Systems/Implementations/InfluenceSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
@@ -81,6 +82,7 @@ using openblack::ecs::systems::ChimneySmokeSystem;
 using openblack::ecs::systems::CinematicDirectorSystem;
 using openblack::ecs::systems::CloudSystem;
 using openblack::ecs::systems::DynamicsSystem;
+using openblack::ecs::systems::FieldSystem;
 using openblack::ecs::systems::HandSystem;
 using openblack::ecs::systems::InfluenceSystem;
 using openblack::ecs::systems::LivingActionSystem;
@@ -166,6 +168,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::mistSystem::emplace<MistSystem>();
 	Locator::cloudSystem::emplace<CloudSystem>();
 	Locator::villageLightSystem::emplace<VillageLightSystem>();
+	Locator::fieldSystem::emplace<FieldSystem>();
 	Locator::cinematicDirectorSystem::emplace<CinematicDirectorSystem>();
 	Locator::soundTagSystem::emplace<SoundTagSystem>();
 	Locator::rainSystem::emplace<RainSystem>();

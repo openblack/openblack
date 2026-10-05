@@ -81,6 +81,14 @@ void main()
 		colour = min(floor(LandLightAt(origin.xz) * u_landLight.y), vec3_splat(255.0f));
 	}
 #endif // USE_LIGHTMAP
+#ifdef USE_INSTANCING
+	// An instance's own colour, 0xRRGGBB, multiplies the light in whole steps
+	if (i_data4.y > 0.0f)
+	{
+		vec3 tint = vec3(floor(i_data4.y / 65536.0f), mod(floor(i_data4.y / 256.0f), 256.0f), mod(i_data4.y, 256.0f));
+		colour = floor(colour * tint / 256.0f);
+	}
+#endif // USE_INSTANCING
 	// The distance haze, once for the object at its origin: its colour fades and the haze's is added after the texture
 	float hazeT = HazeT(mul(u_view, vec4(origin, 1.0f)).z);
 	colour = HazeDiffuse(colour, HazeFactor(hazeT));
@@ -104,10 +112,12 @@ void main()
 	// A house's window is drawn in the grey of its light, unlit, at night while someone is home, and not at all otherwise
 	bool hidden = false;
 #ifdef USE_INSTANCING
+	// Some instances aren't drawn at all, such as a field's crop that is yet too small to show
+	hidden = i_data4.z > 0.5f;
 	if (u_window.x > 0.5f)
 	{
 		float grey = (i_data4.x > 0.5f && u_window.z > 0.5f) ? WindowGrey(origin) : -1.0f;
-		hidden = grey < 0.0f;
+		hidden = hidden || grey < 0.0f;
 		v_color0 = vec4(vec3_splat(max(grey, 0.0f) / 255.0f), 1.0f);
 	}
 #endif // USE_INSTANCING

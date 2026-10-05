@@ -33,6 +33,7 @@
 #include "ECS/Components/Tree.h"
 #include "ECS/Components/Unlit.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/FieldSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "ECS/Systems/VegetationInterface.h"
@@ -200,18 +201,33 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 		    auto modelMatrix = glm::mat4(transform.rotation);
 		    modelMatrix = glm::translate(modelMatrix, transform.position * transform.rotation);
 		    modelMatrix = glm::scale(modelMatrix, transform.scale);
-		    // Fields' crops sway
-		    if (const auto* swayable = registry.TryGet<const Swayable>(entity);
-		        swayable != nullptr && registry.AnyOf<Field>(entity))
+		    // A home with someone in lights its windows at night
+		    const auto* abode = registry.TryGet<const Abode>(entity);
+		    glm::vec4 look {abode != nullptr && abode->presentAtHome > 0 ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f};
+		    // A field's crop shows once it has grown a little, in its colour for how ripe it is, sunk into the ground by
+		    // how empty it is, and sways once ripe
+		    if (const auto* field = registry.TryGet<const Field>(entity); field != nullptr)
 		    {
-			    modelMatrix = vegetation.GetFieldMatrix(modelMatrix, transform.scale.y, swayable->swaySlot);
+			    const auto crop = Locator::fieldSystem::value().GetLook(*field);
+			    if (!crop.has_value())
+			    {
+				    look.z = 1.0f;
+			    }
+			    else
+			    {
+				    look.y = static_cast<float>(crop->tint);
+				    const auto cropMesh = entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(mesh.id);
+				    const float cropHeight = cropMesh->GetBoundingBox().Size().y * transform.scale.y;
+				    modelMatrix[3].y += field_crop::Sink(field->height.position) * cropHeight;
+				    if (const auto* swayable = registry.TryGet<const Swayable>(entity); swayable != nullptr && crop->sways)
+				    {
+					    modelMatrix = vegetation.GetFieldMatrix(modelMatrix, transform.scale.y, swayable->swaySlot);
+				    }
+			    }
 		    }
 
 		    const uint32_t idx = desc->second.offset + offset.first->second;
-		    // A home with someone in lights its windows at night
-		    const auto* abode = registry.TryGet<const Abode>(entity);
-		    const float someoneHome = abode != nullptr && abode->presentAtHome > 0 ? 1.0f : 0.0f;
-		    _renderContext.instanceUniforms[idx] = {.model = modelMatrix, .window = glm::vec4(someoneHome, 0.0f, 0.0f, 0.0f)};
+		    _renderContext.instanceUniforms[idx] = {.model = modelMatrix, .look = look};
 		    if (drawBoundingBox)
 		    {
 			    auto l3dMesh = entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(mesh.id);
