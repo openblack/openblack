@@ -534,6 +534,14 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				const glm::vec4 u_uvOffset {desc.uvOffset, 0.0f, 0.0f};
 				program->SetUniformValue("u_uvOffset", &u_uvOffset);
 			}
+			if (program->HasUniform("u_seaClip"))
+			{
+				// The sea mirrors only what stands above it
+				const bool reflection =
+				    desc.viewId == RenderPass::Reflection || desc.viewId == RenderPass::ReflectionTranslucent;
+				const glm::vec4 u_seaClip {reflection ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f};
+				program->SetUniformValue("u_seaClip", &u_seaClip);
+			}
 			if (program->HasUniform("u_window"))
 			{
 				// Window submeshes are lit by their houses at night

@@ -13,6 +13,8 @@ uniform vec4 u_glow;
 // rgb: a colour the object is drawn in, as the game gives it. w: 0 to light it as usual, otherwise to draw
 // it unlit, in that colour alone, with its alpha by w
 uniform vec4 u_tint;
+// x: 1 in the sea's reflection, which shows only what stands above the sea
+uniform vec4 u_seaClip;
 
 void main()
 {
@@ -23,7 +25,7 @@ void main()
 	bool tinted = u_tint.w > 0.0f;
 	diffuseTex.rgb = diffuseTex.rgb * (tinted ? vec3_splat(1.0f) : light) * u_tint.rgb;
 	diffuseTex.a = diffuseTex.a * (tinted ? u_tint.w : 1.0f);
-	if (diffuseTex.a <= alphaThreshold)
+	if (diffuseTex.a <= alphaThreshold || (u_seaClip.x > 0.5f && v_position.y < 0.0f))
 	{
 		discard;
 	}
