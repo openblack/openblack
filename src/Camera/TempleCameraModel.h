@@ -145,6 +145,9 @@ public:
 	[[nodiscard]] bool IsOverWayBack() const { return _overWayBack; }
 	/// Whether the camera looks at a scroll from close by (InnerCamera's state 4)
 	[[nodiscard]] bool IsLookingAtSubMesh() const { return _lookingAtSubMesh; }
+	/// The point of the pool the island's map was double clicked at, once, in the camera's space: the player asks to
+	/// leave the temple for that place (WorldRoomCamera::UpdateMain)
+	[[nodiscard]] std::optional<glm::vec3> TakeMapDoubleClick() { return std::exchange(_mapDoubleClick, std::nullopt); }
 
 private:
 	enum class State : uint8_t
@@ -280,6 +283,8 @@ private:
 	glm::vec3 _mapFocus {0.0f};
 	float _mapYaw {0.0f};
 	float _mapPitch {0.0f};
+	std::optional<glm::vec3> _mapDoubleClick;
+	bool _leavingByMap {false};
 	std::optional<uint32_t> _hoveredDoor;
 
 	// Through a door

@@ -99,6 +99,10 @@ private:
 	float _mapMarkerTurn {0.0f};
 	/// WorldRoom::DrawAdditional's markers of the temples and creatures
 	void UpdateMapMarkers(float seconds);
+	/// Where the camera is to look from and at as the player leaves for a place double clicked on the map
+	std::optional<std::pair<glm::vec3, glm::vec3>> _leaveTo;
+	/// WorldRoomCamera's double click on the map: leaves the temple for that place
+	void LeaveForMapPoint(glm::vec3 point);
 	uint32_t _visits {0};
 	/// How far through its slide the waterfall's texture is, from 0 to 1
 	float _waterfallSlide {0.0f};

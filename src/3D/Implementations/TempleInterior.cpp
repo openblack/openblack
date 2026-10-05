@@ -419,6 +419,28 @@ void TempleInterior::UpdateToolTips(float milliseconds)
 	_interface->SetHandOnScreen(onScreen);
 }
 
+void TempleInterior::LeaveForMapPoint(glm::vec3 point)
+{
+	// Only for a point near the middle of the map, or on land above the sea
+	constexpr float k_NearMiddle = 10.0f;
+	constexpr float k_AboveSea = 1.0f;
+	if (!Locator::terrainSystem::has_value())
+	{
+		return;
+	}
+	const auto onMap = point - _templePosition;
+	const auto world = _map.ToWorld(onMap);
+	const float altitude = Locator::terrainSystem::value().GetHeightAt(world);
+	if (glm::length(glm::vec2(onMap.x, onMap.z)) >= k_NearMiddle && altitude <= k_AboveSea)
+	{
+		return;
+	}
+	// GGame::LeaveInsideCitadel puts the camera 50 above the place and 70 along z from it, looking at it
+	// TODO(raffclar): the temple fades out to white first (Temple::UpdateFade), and the hand feels the click
+	_leaveTo = std::make_pair(glm::vec3(world.x, altitude + 50.0f, world.y + 70.0f), glm::vec3(world.x, altitude, world.y));
+	RequestLeave();
+}
+
 void TempleInterior::UpdateMapMarkers(float seconds)
 {
 	_mapMarkers.clear();
@@ -678,6 +700,13 @@ void TempleInterior::Update(std::chrono::microseconds dt)
 			_map.Build([&island](glm::u16vec2 cell) { return island.FindCell(cell); }, _mapTriangles);
 		}
 		UpdateMapMarkers(milliseconds / 1000.0f);
+		if (_cameraModel != nullptr)
+		{
+			if (const auto point = _cameraModel->TakeMapDoubleClick(); point.has_value())
+			{
+				LeaveForMapPoint(*point);
+			}
+		}
 
 		// CreatureRoom::Draw moves the room's effects on while the room is drawn
 		if (_creatureCaveEffects != nullptr && IsRoomDrawn(TempleRoom::CreatureCave))
@@ -799,6 +828,12 @@ void TempleInterior::Deactivate()
 	ApplyLens();
 	camera.SetOrigin(_playerPositionOutside);
 	camera.SetFocus(_playerPositionOutside + glm::quat(_playerRotationOutside) * glm::vec3(0.0f, 0.0f, 1.0f));
+	if (_leaveTo.has_value())
+	{
+		camera.SetOrigin(_leaveTo->first);
+		camera.SetFocus(_leaveTo->second);
+		_leaveTo.reset();
+	}
 	if (Locator::cameraPathSystem::value().IsPathing())
 	{
 		Locator::cameraPathSystem::value().Stop();

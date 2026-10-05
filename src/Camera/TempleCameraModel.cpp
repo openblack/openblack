@@ -727,7 +727,7 @@ void TempleCameraModel::UpdateOrbit(float dt, const Input& input)
 		_lastMouse = input.mouse;
 	}
 	// Holding the press on the pool draws the camera to the point pressed on the island's map, 6 units from it, and
-	// dragging turns about it and tilts.
+	// dragging turns about it and tilts. A double click there leaves the temple for that place.
 	if (input.button != 0 && pressKind == HitKind::Pool && _pressHit.has_value())
 	{
 		if (!_wasPressed)
@@ -745,6 +745,12 @@ void TempleCameraModel::UpdateOrbit(float dt, const Input& input)
 		const auto around = glm::vec3(std::cos(pitch) * std::cos(yaw), std::sin(pitch), std::cos(pitch) * std::sin(yaw));
 		_subMeshLook = Pose {_mapFocus + (around * k_MapDistance), _mapFocus};
 		_subMeshZoom = std::min(_subMeshZoom + (dt * k_MapZoomSpeed), 1.0f);
+
+		if (input.button == 2 && !_leavingByMap)
+		{
+			_mapDoubleClick = _mapFocus;
+			_leavingByMap = true;
+		}
 	}
 
 	// With the mouse free, the screen's top and bottom edges lean, and the pool slowly draws the camera down to it
