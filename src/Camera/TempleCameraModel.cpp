@@ -438,6 +438,11 @@ void TempleCameraModel::StartIntro(Room room, bool blendFromCurrent)
 {
 	// TempleRoom::TriggerIntroCamera
 	Locator::temple::value().SetCurrentRoom(room);
+	// Each room has a camera of its own, so a scroll looked at in the room left is left with it, along with its text in
+	// front of it, which only that room draws
+	_lookingAtSubMesh = false;
+	_subMeshZoom = 0.0f;
+	_subMeshLook.reset();
 	_state = State::Intro;
 	_nextState = State::Intro;
 	_introTime = 0.0f;
