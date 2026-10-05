@@ -124,7 +124,11 @@ private:
 	std::optional<TextureHandle> _whiteTexture;
 	/// u_handLight of the pass being drawn, without strength outside of the scene's passes
 	mutable glm::vec4 _handLight {0.0f};
+	/// u_modelLight: where the game's model light is this frame, and its ambient
+	mutable glm::vec4 _modelLight {0.0f};
 	/// HandLight's map, or a texture to bind in its place when there is none
+	/// u_modelLight: the game's model light this frame
+	[[nodiscard]] glm::vec4 GetModelLight() const;
 	[[nodiscard]] TextureHandle GetHandLightTexture() const;
 	std::unique_ptr<Mesh> _plane;
 };

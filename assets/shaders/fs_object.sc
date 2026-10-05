@@ -1,4 +1,4 @@
-$input v_position, v_texcoord0, v_normal
+$input v_position, v_texcoord0, v_normal, v_color0
 
 #include <bgfx_shader.sh>
 
@@ -18,29 +18,11 @@ uniform vec4 u_tint;
 
 void main()
 {
-	// constants
-	const vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
-	const vec4 lightPos = vec4(-4000.0f, 1300.0f, -1435.0f, 1.0f);
-	const float ambientStrength = 0.25f;
-
-	// unpack uniforms
-	float skyType = u_skyAlphaThreshold.x;
 	float alphaThreshold = u_skyAlphaThreshold.y;
 
-	float skyBightness = skyType / 2.0f;
-
-	// ambient
-	vec3 ambient = (skyBightness * 0.25f + ambientStrength) * lightColor;
-
-	// diffuse
-	vec3 norm = normalize(v_normal);
-	vec4 lightDir = normalize(lightPos - v_position);
-	float diff = max(dot(v_normal, lightDir.xyz), 0.0);
-	vec3 diffuse = skyBightness * diff * lightColor * ( 1.0f - ambientStrength);
-
 	vec4 diffuseTex = texture2D(s_diffuse, v_texcoord0.xy);
-	// The hand's light, where it is brighter
-	vec3 light = max(ambient + diffuse, vec3_splat(HandLightAt(v_position.xyz)));
+	// The game's model light, or the hand's light where it is brighter
+	vec3 light = max(v_color0.rgb, vec3_splat(HandLightAt(v_position.xyz)));
 	bool tinted = u_tint.w > 0.0f;
 	diffuseTex.rgb = diffuseTex.rgb * (tinted ? vec3_splat(1.0f) : light) * u_tint.rgb;
 	diffuseTex.a = diffuseTex.a * (tinted ? u_tint.w : 1.0f);

@@ -7,7 +7,7 @@ $input a_position, a_texcoord0, a_normal, a_indices, a_texcoord3
 #else
 $input a_position, a_texcoord0, a_normal, a_indices
 #endif
-$output v_position, v_texcoord0, v_normal
+$output v_position, v_texcoord0, v_normal, v_color0
 
 // Every bone's matrix is uploaded with each draw: meshes without bones declare one
 #ifndef BGFX_CONFIG_MAX_BONES
@@ -19,6 +19,8 @@ $output v_position, v_texcoord0, v_normal
 #endif // BGFX_CONFIG_MAX_BONES
 
 #include <bgfx_shader.sh>
+
+#include "model_light.sh"
 
 // Pushes the mesh back by a fraction of its depth, towards the far plane at 0: the temple's rooms other than the one the
 // player is in, which overlap it at the doorways
@@ -45,17 +47,25 @@ void main()
 	uint modelIndex = uint(max(0, a_indices.x));
 #endif
 
-	v_position = mul(u_model[modelIndex], vec4(a_position.xyz, 1.0f));
-
 #ifdef USE_INSTANCING
 	mat4 model;
 	model[0] = i_data0;
 	model[1] = i_data1;
 	model[2] = i_data2;
 	model[3] = i_data3;
-
-	v_position = instMul(model, v_position);
+#define TO_WORLD(p) instMul(model, mul(u_model[modelIndex], p))
+#else
+#define TO_WORLD(p) mul(u_model[modelIndex], p)
 #endif // USE_INSTANCING
+
+	v_position = TO_WORLD(vec4(a_position.xyz, 1.0f));
+
+	// The game's light, from the origin of the mesh's bone, meets the vertex's normal in the bone's own space
+	vec3 origin = TO_WORLD(vec4(0.0f, 0.0f, 0.0f, 1.0f)).xyz;
+	vec3 localLight = ModelLightLocal(TO_WORLD(vec4(1.0f, 0.0f, 0.0f, 0.0f)).xyz, TO_WORLD(vec4(0.0f, 1.0f, 0.0f, 0.0f)).xyz,
+	                                  TO_WORLD(vec4(0.0f, 0.0f, 1.0f, 0.0f)).xyz, origin);
+	float lightLevel = ModelLightLevel(a_normal, localLight);
+	v_color0 = vec4(lightLevel, lightLevel, lightLevel, 1.0f);
 
 #ifdef USE_HEIGHT_MAP
 #ifdef USE_INSTANCING

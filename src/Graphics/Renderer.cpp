@@ -58,6 +58,7 @@
 #include "Graphics/HandLight.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/LightBeams.h"
+#include "Graphics/ModelLight.h"
 #include "Graphics/ObjectShadows.h"
 #include "Graphics/Primitive.h"
 #include "Graphics/ShaderManager.h"
@@ -505,6 +506,10 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			{
 				program->SetTextureSampler("s_handLight", 2, GetHandLightTexture());
 				program->SetUniformValue("u_handLight", &_handLight);
+			}
+			if (program->HasUniform("u_modelLight"))
+			{
+				program->SetUniformValue("u_modelLight", &_modelLight);
 			}
 			if (!desc.isSky && program->HasUniform("u_skyAlphaThreshold"))
 			{
@@ -1416,6 +1421,28 @@ glm::vec4 Renderer::GetHandLight(const DrawSceneDesc& drawDesc) const
 	return handLight;
 }
 
+glm::vec4 Renderer::GetModelLight() const
+{
+	// By day, or with no hand to carry it, the sun
+	auto light = model_light::k_Sun;
+	if (Locator::handSystem::has_value() && Locator::skySystem::has_value() && Locator::camera::has_value())
+	{
+		const auto handEntity =
+		    Locator::handSystem::value().GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
+		if (const auto* transform = Locator::entitiesRegistry::value().TryGet<ecs::components::Transform>(handEntity);
+		    transform != nullptr)
+		{
+			const auto ground =
+			    Locator::terrainSystem::has_value()
+			        ? Locator::terrainSystem::value().GetHeightAt(glm::vec2(transform->position.x, transform->position.z))
+			        : 0.0f;
+			light = model_light::FrameLight(transform->position, ground, Locator::camera::value().GetOrigin(),
+			                                Locator::skySystem::value().GetCurrentSkyType());
+		}
+	}
+	return model_light::Uniform(light);
+}
+
 TextureHandle Renderer::GetHandLightTexture() const
 {
 	return _handLightTexture ? *_handLightTexture : _handShadowFrameBuffer->GetColorAttachment().GetNativeHandle();
@@ -1557,6 +1584,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	_shaderManager->SetCamera(desc.viewId, *desc.camera);
 	// The hand lights whatever is around it at night, the land, the sea and the things on them
 	_handLight = GetHandLight(desc);
+	_modelLight = GetModelLight();
 
 	const auto* skyShader = _shaderManager->GetShader("Sky");
 	const auto* waterShader = _shaderManager->GetShader("Water");
