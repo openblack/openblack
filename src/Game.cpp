@@ -64,6 +64,7 @@
 #include "ECS/Systems/AlignmentSystemInterface.h"
 #include "ECS/Systems/CameraBookmarkSystemInterface.h"
 #include "ECS/Systems/CameraPathSystemInterface.h"
+#include "ECS/Systems/CloudSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
@@ -578,6 +579,8 @@ bool Game::Update() noexcept
 		auto actions = profiler.BeginScoped(Profiler::Stage::VegetationUpdate);
 		Locator::vegetation::value().Update(gameTime);
 	}
+	// The clouds drift with the wind, then every mist and cloud animates
+	Locator::cloudSystem::value().Update(gameTime);
 	Locator::mistSystem::value().Update(gameTime);
 
 	// Update Uniforms
@@ -1474,8 +1477,9 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	}
 	InitializeLevel(fixedName);
 
-	// A land starts at noon on the game's cycle of day and night, which its script may change
+	// A land starts at noon on the game's cycle of day and night, which its script may change, under new clouds
 	Locator::skySystem::value().GetClock().Reset();
+	Locator::cloudSystem::value().Reset();
 
 	// There is always a player active
 	Locator::playerSystem::value().AddPlayer(ecs::archetypes::PlayerArchetype::Create(PlayerNames::PLAYER_ONE));

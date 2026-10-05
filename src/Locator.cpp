@@ -31,6 +31,7 @@
 #include "ECS/Systems/Implementations/AlignmentSystem.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
 #include "ECS/Systems/Implementations/CameraPathSystem.h"
+#include "ECS/Systems/Implementations/CloudSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
 #include "ECS/Systems/Implementations/HandSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
@@ -69,6 +70,7 @@ using openblack::ecs::Registry;
 using openblack::ecs::systems::AlignmentSystem;
 using openblack::ecs::systems::CameraBookmarkSystem;
 using openblack::ecs::systems::CameraPathSystem;
+using openblack::ecs::systems::CloudSystem;
 using openblack::ecs::systems::DynamicsSystem;
 using openblack::ecs::systems::HandSystem;
 using openblack::ecs::systems::LivingActionSystem;
@@ -148,6 +150,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::time::emplace<TimeSystem>();
 	Locator::vegetation::emplace<VegetationSystem>();
 	Locator::mistSystem::emplace<MistSystem>();
+	Locator::cloudSystem::emplace<CloudSystem>();
 	return true;
 }
 

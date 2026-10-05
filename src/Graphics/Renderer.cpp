@@ -28,6 +28,7 @@
 #include <glm/gtx/transform.hpp>
 #include <spdlog/spdlog.h>
 
+#include "3D/Clouds.h"
 #include "3D/DayNightClock.h"
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
@@ -43,6 +44,7 @@
 #include "3D/TempleInteriorInterface.h"
 #include "3D/TempleMap.h"
 #include "Camera/Camera.h"
+#include "ECS/Components/Cloud.h"
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/LightBeam.h"
 #include "ECS/Components/Mesh.h"
@@ -1597,9 +1599,30 @@ void Renderer::DrawMists(const DrawSceneDesc& desc) const
 	// A mist that shrinks edge on is lit from straight above, more brightly
 	const glm::vec4 skyLight {0.0f, 500000.0f, 0.0f, 210.0f};
 
-	desc.entities.Each<const Mist, const ecs::components::Transform>([&](const Mist& mist,
+	// The clouds' colour follows the sky's alignment, in the land's light at full luminosity
+	const bool cloudsShown = detail_level::Clouds(Locator::config::value().detailLevel);
+	uint32_t fullLight = 0xFFFFFF;
+	if (_landLightTable)
+	{
+		const auto texel = _landLightTable->GetTexels().back();
+		fullLight = ((texel & 0xFFu) << 16u) | (texel & 0xFF00u) | ((texel >> 16u) & 0xFFu);
+	}
+	const auto cloudColour = clouds::Colour(Locator::alignmentSystem::value().GetSkyAlignment(), fullLight);
+
+	desc.entities.Each<const Mist, const ecs::components::Transform>([&](entt::entity entity, const Mist& mist,
 	                                                                     const ecs::components::Transform& transform) {
-		const auto alpha = static_cast<float>(mist.colour >> 24u);
+		auto colour = mist.colour;
+		if (desc.entities.AnyOf<ecs::components::Cloud>(entity))
+		{
+			if (!cloudsShown)
+			{
+				return;
+			}
+			// How far the cloud has faded at the track's ends, times the sky's own alpha, in whole numbers
+			const auto cloudAlpha = ((mist.colour >> 24u) * (cloudColour >> 24u)) / 255u;
+			colour = (cloudAlpha << 24u) | (cloudColour & 0xFFFFFFu);
+		}
+		const auto alpha = static_cast<float>(colour >> 24u);
 		if (alpha <= 0.0f)
 		{
 			return;
@@ -1613,9 +1636,9 @@ void Renderer::DrawMists(const DrawSceneDesc& desc) const
 		const auto model = glm::translate(transform.position) * glm::mat4(facing) * glm::scale(scale);
 		const auto frame = mists::FrameOffset(mists::Frame(mist.counter), mist.shrinksEdgeOn);
 		const glm::vec4 u_mist {frame, 0.0f, 0.0f};
-		const glm::vec4 u_mistColour {static_cast<float>((mist.colour >> 16u) & 0xFFu) / 255.0f,
-		                              static_cast<float>((mist.colour >> 8u) & 0xFFu) / 255.0f,
-		                              static_cast<float>(mist.colour & 0xFFu) / 255.0f, alpha / 255.0f};
+		const glm::vec4 u_mistColour {static_cast<float>((colour >> 16u) & 0xFFu) / 255.0f,
+		                              static_cast<float>((colour >> 8u) & 0xFFu) / 255.0f,
+		                              static_cast<float>(colour & 0xFFu) / 255.0f, alpha / 255.0f};
 		// The others take the land's light where they stand and the haze, in the models' light
 		const bool landLit = !mist.shrinksEdgeOn && _landLightTexture.has_value();
 		const glm::vec4 u_landLight {landLit ? 1.0f : 0.0f, 1.0f, 0.0f, 0.0f};
