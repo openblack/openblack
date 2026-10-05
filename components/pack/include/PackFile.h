@@ -202,6 +202,18 @@ enum class AudioBankOverride : uint32_t
 	LoopType = 0x400,
 };
 
+/// First 3 u32 of the LHFileSegmentBankInfo block of a .sad (532 bytes: 3 u32 + a 520 byte title).
+/// LHBankRegister (LHaudiodllR 0x10002240, 0x10002383..0x100023BD) reads the 3 u32 and keeps the 3rd in bank+4, which
+/// LHIsMusicBank 0x10002EE0 returns. 1 in every .sad of Audio\Music and in Dialogue\MissionariesVerse1..3.sad, 0 in the
+/// rest.
+struct AudioBankInfo
+{
+	uint32_t unknown0; ///< 0 except in SFX\Atmos\ocean.sad (7) (unknown)
+	uint32_t unknown1; ///< 0 except in SFX\Atmos\ocean.sad (6) (unknown)
+	uint32_t isMusic;  ///< non-zero = music bank (bank+4, LHIsMusicBank 0x10002EE0)
+};
+static_assert(sizeof(AudioBankInfo) == 3 * sizeof(uint32_t));
+
 /**
   This class is used to read LionHead Packs files
  */
@@ -228,6 +240,8 @@ protected:
 	std::vector<std::vector<uint8_t>> _audioSampleData;
 	/// High word of the LHAudioBankSampleTable header: non-zero marks an atmosphere bank
 	uint16_t _audioBankAtmosCount {0};
+	/// Start of the LHFileSegmentBankInfo block of a sound pack (all zero if the pack has none)
+	AudioBankInfo _audioBankInfo {};
 
 	/// Read blocks from pack
 	PackResult ReadBlocks(std::istream& stream) noexcept;
@@ -252,6 +266,9 @@ protected:
 
 	/// Extract Sounds from all Blocks named in LHAudioBankSampleTable Block
 	PackResult ExtractSoundsFromBlock() noexcept;
+
+	/// Parse the LHFileSegmentBankInfo block of a sound pack
+	PackResult ResolveFileSegmentBankInfoBlock() noexcept;
 
 	/// Parse Info Block
 	PackResult ResolveMeshBlock() noexcept;
@@ -312,6 +329,10 @@ public:
 	}
 	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetAudioSamplesData() const noexcept { return _audioSampleData; }
 	[[nodiscard]] uint16_t GetAudioBankAtmosCount() const noexcept { return _audioBankAtmosCount; }
+	[[nodiscard]] const AudioBankInfo& GetAudioBankInfo() const noexcept { return _audioBankInfo; }
+	/// LHIsMusicBank (LHaudiodllR 0x10002EE0): the 3rd u32 of LHFileSegmentBankInfo, tested for non-zero by
+	/// LHMusicPlay 0x1000DF60
+	[[nodiscard]] bool IsAudioMusicBank() const noexcept { return _audioBankInfo.isMusic != 0; }
 	[[nodiscard]] const std::vector<uint8_t>& GetAudioSampleData(uint32_t index) const noexcept
 	{
 		return _audioSampleData[index];

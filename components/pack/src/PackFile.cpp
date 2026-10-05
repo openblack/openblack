@@ -475,6 +475,30 @@ PackResult PackFile::ExtractAnimationsFromBlock() noexcept
 	return PackResult::Success;
 }
 
+PackResult PackFile::ResolveFileSegmentBankInfoBlock() noexcept
+{
+	// LHBankRegister (LHaudiodllR 0x10002240) fails without this block (0x10002368); here it stays optional so that the
+	// packs that only have a sample table keep loading.
+	_audioBankInfo = {};
+	if (!HasBlock("LHFileSegmentBankInfo"))
+	{
+		return PackResult::Success;
+	}
+
+	const auto& data = GetBlock("LHFileSegmentBankInfo");
+	// (defensive, not in the original: LHBankRegister reads the 3 u32 without checking the block size; every .sad of
+	// the installation has 532 bytes)
+	if (data.size() < sizeof(_audioBankInfo))
+	{
+		return PackResult::ErrFileTooSmall;
+	}
+
+	// 3 u32 read one after the other (0x10002383..0x100023BD)
+	std::memcpy(&_audioBankInfo, data.data(), sizeof(_audioBankInfo));
+
+	return PackResult::Success;
+}
+
 PackResult PackFile::ExtractSoundsFromBlock() noexcept
 {
 	if (!HasBlock("LHAudioWaveData"))
@@ -734,11 +758,11 @@ PackResult PackFile::ReadFile(std::istream& stream) noexcept
 			return result;
 		}
 
-		// ResolveFileSegmentBankBlock();
-		// if (result != PackResult::Success)
-		// {
-		// 	return result;
-		// }
+		result = ResolveFileSegmentBankInfoBlock();
+		if (result != PackResult::Success)
+		{
+			return result;
+		}
 		result = ExtractSoundsFromBlock();
 		if (result != PackResult::Success)
 		{
