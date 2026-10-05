@@ -2885,35 +2885,12 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				              1.0f / static_cast<float>(std::max<uint16_t>(height, 1)), 0.0f);
 			}
 
-			terrainShader->SetTextureSampler("s0_blockTextures", 0, island.GetBlockTextures());
-			terrainShader->SetTextureSampler("s9_landLuminosity", 9, GetLandLuminosity());
-			terrainShader->SetTextureSampler("s10_landColour", 10, GetLandColour());
-			terrainShader->SetTextureSampler("s1_smallBumpAlpha", 1, *smallBumpAlpha);
-			terrainShader->SetTextureSampler("s8_landAlpha", 8, island.GetLandAlphaFramebuffer().GetColorAttachment());
-			terrainShader->SetTextureSampler("s2_smallBump", 2, *smallBump);
-			terrainShader->SetUniformValue("u_smallBumpLine", &u_smallBumpLine);
-			terrainShader->SetUniformValue("u_smallBump", &u_smallBump);
-			terrainShader->SetTextureSampler("s3_footprints", 3, island.GetFootprintFramebuffer().GetColorAttachment());
-			terrainShader->SetTextureSampler("s5_objectShadows", 5,
-			                                 _objectShadowFrameBuffer ? _objectShadowFrameBuffer->GetColorAttachment()
-			                                                          : island.GetFootprintFramebuffer().GetColorAttachment());
-
-			terrainShader->SetTextureSampler("s7_landLight", 7, GetLandLightTexture());
-			terrainShader->SetUniformValue("u_haze", &_haze[0]);
-			terrainShader->SetUniformValue("u_hazeColour", &_haze[1]);
-			terrainShader->SetUniformValue("u_skyAndBump", &u_skyAndBump);
-			terrainShader->SetUniformValue("u_objectShadows", &u_objectShadows);
-			terrainShader->SetUniformValue("u_islandExtent", &islandExtent);
-
 			// The hand's shadow falls on the land, not on its reflection
 			const auto& handShadow = desc.viewId == RenderPass::Main ? _handShadow : std::nullopt;
 			const auto handShadowMatrix = handShadow ? handShadow->receiverMatrix : glm::mat4(0.0f);
 			const auto u_handShadow =
 			    handShadow ? glm::vec4(handShadow->strength * HandShadow::k_MaxDarkness, handShadow->startDepth, 0.0f, 0.0f)
 			               : glm::vec4(0.0f);
-			terrainShader->SetTextureSampler("s4_handShadow", 4, _handShadowFrameBuffer->GetColorAttachment());
-			terrainShader->SetUniformValue("u_handShadowMatrix", &handShadowMatrix);
-			terrainShader->SetUniformValue("u_handShadow", &u_handShadow);
 
 			// The hand's light is in the land's own lighting, so the reflection shows it too
 
@@ -2935,8 +2912,36 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			;
 			// clang-format on
 
+			// bgfx keeps a uniform for the draws after it in the order they come, but the blocks are drawn in another
+			// order, so each block sets them all
+			const auto setTerrainUniforms = [&]() {
+				terrainShader->SetTextureSampler("s0_blockTextures", 0, island.GetBlockTextures());
+				terrainShader->SetTextureSampler("s9_landLuminosity", 9, GetLandLuminosity());
+				terrainShader->SetTextureSampler("s10_landColour", 10, GetLandColour());
+				terrainShader->SetTextureSampler("s1_smallBumpAlpha", 1, *smallBumpAlpha);
+				terrainShader->SetTextureSampler("s8_landAlpha", 8, island.GetLandAlphaFramebuffer().GetColorAttachment());
+				terrainShader->SetTextureSampler("s2_smallBump", 2, *smallBump);
+				terrainShader->SetUniformValue("u_smallBumpLine", &u_smallBumpLine);
+				terrainShader->SetUniformValue("u_smallBump", &u_smallBump);
+				terrainShader->SetTextureSampler("s3_footprints", 3, island.GetFootprintFramebuffer().GetColorAttachment());
+				terrainShader->SetTextureSampler("s5_objectShadows", 5,
+				                                 _objectShadowFrameBuffer
+				                                     ? _objectShadowFrameBuffer->GetColorAttachment()
+				                                     : island.GetFootprintFramebuffer().GetColorAttachment());
+				terrainShader->SetTextureSampler("s7_landLight", 7, GetLandLightTexture());
+				terrainShader->SetUniformValue("u_haze", &_haze[0]);
+				terrainShader->SetUniformValue("u_hazeColour", &_haze[1]);
+				terrainShader->SetUniformValue("u_skyAndBump", &u_skyAndBump);
+				terrainShader->SetUniformValue("u_objectShadows", &u_objectShadows);
+				terrainShader->SetUniformValue("u_islandExtent", &islandExtent);
+				terrainShader->SetTextureSampler("s4_handShadow", 4, _handShadowFrameBuffer->GetColorAttachment());
+				terrainShader->SetUniformValue("u_handShadowMatrix", &handShadowMatrix);
+				terrainShader->SetUniformValue("u_handShadow", &u_handShadow);
+			};
+
 			for (size_t i = 0; const auto& block : island.GetBlocks())
 			{
+				setTerrainUniforms();
 				// pack uniforms
 				const glm::vec4 mapPositionAndSize = glm::vec4(block.GetMapPosition(), 160.0f, 160.0f);
 				terrainShader->SetUniformValue("u_blockPositionAndSize", &mapPositionAndSize);
