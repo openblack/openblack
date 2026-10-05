@@ -2130,7 +2130,13 @@ TextureHandle Renderer::UpdateLandLight() const
 		{
 			overcast = Locator::weatherSystem::value().GetOvercast(Locator::camera::value().GetOrigin());
 		}
-		_landLightTable->Build(*palettes.Handle(LandLightPalette::k_Id.value()), skyType, alignment, overcast);
+		// So does a flash of lightning
+		uint8_t flash = 0;
+		if (Locator::weatherSystem::has_value() && Locator::camera::has_value())
+		{
+			flash = Locator::weatherSystem::value().GetLightningFlash(Locator::camera::value().GetOrigin());
+		}
+		_landLightTable->Build(*palettes.Handle(LandLightPalette::k_Id.value()), skyType, alignment, overcast, flash);
 		const auto& haze = _landLightTable->GetHaze();
 		_haze = {glm::vec4(haze.nearDistance, haze.farDistance, haze.k, 1.0f), glm::vec4(haze.colour, 0.0f)};
 		const auto& texels = _landLightTable->GetTexels();

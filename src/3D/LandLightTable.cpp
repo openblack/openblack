@@ -130,7 +130,8 @@ uint32_t LandLightTable::GetLandColour(const LandLightPalette& palette, float sk
 	return Overcast(LandColour(PaletteColours(palette, skyType, alignment), alignment), overcast) & 0xFFFFFFu;
 }
 
-void LandLightTable::Build(const LandLightPalette& palette, float skyType, float alignment, float overcast) noexcept
+void LandLightTable::Build(const LandLightPalette& palette, float skyType, float alignment, float overcast,
+                           uint8_t flash) noexcept
 {
 	const auto colours = PaletteColours(palette, skyType, alignment);
 	const auto land = Overcast(LandColour(colours, alignment), overcast);
@@ -167,6 +168,13 @@ void LandLightTable::Build(const LandLightPalette& palette, float skyType, float
 			nearInverse += (k_NearInverseStorm - nearInverse) * storm;
 			farInverse += (k_FarInverseStorm - farInverse) * storm;
 		}
+		// A flash of lightning takes the haze towards white
+		if (flash != 0)
+		{
+			const float towardsWhite = static_cast<float>(flash) * (1.0f / 256.0f);
+			_haze.colour += (glm::vec3(255.0f) - _haze.colour) * towardsWhite;
+			k += static_cast<int32_t>(static_cast<float>(static_cast<int64_t>(255 - k) * flash) * (1.0f / 256.0f));
+		}
 		_haze.k = static_cast<float>(k);
 		_haze.nearDistance = 1.0f / nearInverse;
 		_haze.farDistance = 1.0f / farInverse;
@@ -186,6 +194,15 @@ void LandLightTable::Build(const LandLightPalette& palette, float skyType, float
 	for (uint32_t i = k_DarkLevels; i < k_Size; ++i)
 	{
 		table.at(i) = Ramp(colours[k_Dark], land, i);
+	}
+
+	// A flash of lightning takes every light towards white
+	if (flash != 0)
+	{
+		for (auto& light : table)
+		{
+			light = Lerp(light, 0xFFFFFFFFu, flash);
+		}
 	}
 
 	for (size_t i = 0; i < k_Size; ++i)

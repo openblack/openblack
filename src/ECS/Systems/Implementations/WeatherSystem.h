@@ -53,6 +53,7 @@ public:
 	[[nodiscard]] components::WeatherInfo GetWeather(const glm::vec3& position) override;
 	[[nodiscard]] components::WeatherInfo GetWeatherSmooth(const glm::vec3& position) override;
 	[[nodiscard]] float GetOvercast(const glm::vec3& position) override;
+	[[nodiscard]] uint8_t GetLightningFlash(const glm::vec3& camera) const override;
 
 	[[nodiscard]] float GetDaysFromStart(uint32_t turn) const override;
 	[[nodiscard]] uint32_t GetSeason(uint32_t turn) const override;

@@ -48,6 +48,9 @@ public:
 	[[nodiscard]] virtual components::WeatherInfo GetWeatherSmooth(const glm::vec3& position) = 0;
 	/// The cloud cover seen from a point, 0 for a clear sky and 1 for a full one, a little over in a storm
 	[[nodiscard]] virtual float GetOvercast(const glm::vec3& position) = 0;
+	/// How brightly lightning lights the land at the camera, 0 to 255: the last flash of the nearest storm, while the
+	/// camera is inside a storm
+	[[nodiscard]] virtual uint8_t GetLightningFlash(const glm::vec3& camera) const = 0;
 
 	// Calendar the climates follow: a game year lasts 36000 turns from 5 May 1998
 	[[nodiscard]] virtual float GetDaysFromStart(uint32_t turn) const = 0;

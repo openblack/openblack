@@ -20,7 +20,9 @@
 #include <spdlog/spdlog.h>
 
 #include "3D/LandIslandInterface.h"
+#include "3D/Lightning.h"
 #include "3D/SkyInterface.h"
+#include "Common/GameRandom.h"
 #include "Common/RandomNumberManager.h"
 #include "ECS/Registry.h"
 #include "InfoConstants.h"
@@ -564,6 +566,31 @@ void WeatherSystem::UpdateStorms()
 				storm.arrived = false;
 			}
 		}
+
+		// Once faded in, it flashes now and then, at waits drawn from the game's numbers
+		if (storm.fadeTime < storm.age)
+		{
+			auto& random = Locator::gameRandom::value();
+			if (storm.boltWait.y != 0.0f)
+			{
+				storm.boltTimer -= k_TurnDuration;
+				if (storm.boltTimer <= 0.0f)
+				{
+					storm.boltTimer = random.GameFloatRange(storm.boltWait.x, storm.boltWait.y);
+					storm.flash = lightning::Strike(storm.position, storm.outerRadius, lightning::k_BoltStrength);
+				}
+			}
+			if (storm.thunderWait.y != 0.0f)
+			{
+				storm.thunderTimer -= k_TurnDuration;
+				if (storm.thunderTimer <= 0.0f)
+				{
+					storm.thunderTimer = random.GameFloatRange(storm.thunderWait.x, storm.thunderWait.y);
+					storm.flash = lightning::Strike(storm.position, storm.outerRadius, lightning::k_ThunderStrength);
+				}
+			}
+		}
+		storm.flash = lightning::Advance(storm.flash, k_TurnDuration);
 	});
 	for (const auto entity : expired)
 	{
@@ -787,9 +814,14 @@ void WeatherSystem::CreateStorm(entt::entity climateEntity)
 	const auto temperature = static_cast<int8_t>(Ftol(climate.temperature));
 	const auto heat = (static_cast<double>(temperature) - 30.0) * (1.0 / 15.0);
 	auto cloud = static_cast<float>(std::exp(-(heat * heat)));
+	// Hot or overcast storms bring lightning
+	glm::vec2 thunderWait {0.0f};
+	glm::vec2 boltWait {0.0f};
 	if (temperature > 30 || climate.stormOvercast != 0)
 	{
 		cloud = static_cast<float>(climate.stormOvercast);
+		thunderWait = {climate.stormLightning[1], climate.stormLightning[2]};
+		boltWait = {climate.stormLightning[3], climate.stormLightning[4]};
 	}
 
 	WeatherInfo effect;
@@ -832,6 +864,8 @@ void WeatherSystem::CreateStorm(entt::entity climateEntity)
 		storm.strength = 1.0f;
 		storm.cloudHeight = climate.stormCloudHeight;
 		storm.effect = effect;
+		storm.thunderWait = thunderWait;
+		storm.boltWait = boltWait;
 		storm.climate = climateEntity;
 		storm.serial = _nextStormSerial++;
 
@@ -887,6 +921,39 @@ WeatherInfo WeatherSystem::GetWeather(const glm::vec3& position)
 }
 
 // The weather at a point, blended between the four nearest cells
+uint8_t WeatherSystem::GetLightningFlash(const glm::vec3& camera) const
+{
+	// The nearest storm along the ground, among those still alive; the camera is inside when within the middle of the
+	// storm's radii of a storm nearer than any before
+	const lightning::Flash* nearest = nullptr;
+	float nearestDistance = 0.0f;
+	bool inside = false;
+	Locator::entitiesRegistry::value().Each<const Storm>([&](const Storm& storm) {
+		if (storm.dead)
+		{
+			return;
+		}
+		const auto offset = glm::vec2(storm.position.x - camera.x, storm.position.z - camera.z);
+		const float distance = glm::dot(offset, offset);
+		if (nearest != nullptr && !(distance < nearestDistance))
+		{
+			return;
+		}
+		nearestDistance = distance;
+		const float radius = (storm.outerRadius + storm.innerRadius) * 0.5f;
+		if (distance < radius * radius)
+		{
+			inside = true;
+		}
+		nearest = &storm.flash;
+	});
+	if (nearest == nullptr || !inside)
+	{
+		return 0;
+	}
+	return lightning::LandLightFlash(lightning::Brightness(*nearest));
+}
+
 float WeatherSystem::GetOvercast(const glm::vec3& position)
 {
 	return static_cast<float>(GetWeatherSmooth(position).overcast) * 0.01f;

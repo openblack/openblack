@@ -15,7 +15,10 @@
 #include <vector>
 
 #include <entt/entity/entity.hpp>
+#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+
+#include "3D/Lightning.h"
 
 namespace openblack::ecs::components
 {
@@ -74,6 +77,8 @@ struct Climate
 	/// Parameters handed to the storms this climate creates
 	float stormCloudHeight;
 	float stormSpeed;
+	/// The lightning of its hot or overcast storms: the least and most seconds between flashes with thunder, then
+	/// between flashes with a bolt (the first is unused)
 	std::array<float, 5> stormLightning;
 	uint8_t stormOvercast;
 
@@ -108,6 +113,16 @@ struct Storm
 
 	/// What the storm brings: temperature it pulls towards, then amounts added to the weather
 	WeatherInfo effect;
+
+	/// The least and most seconds between its flashes of lightning with thunder, and between those with a bolt; none
+	/// for a most of 0
+	glm::vec2 thunderWait {0.0f};
+	glm::vec2 boltWait {0.0f};
+	/// Seconds until the next of each
+	float thunderTimer {0.0f};
+	float boltTimer {0.0f};
+	/// Its last flash
+	lightning::Flash flash;
 
 	/// Creation order: later storms are applied on top of earlier ones
 	uint32_t serial;
