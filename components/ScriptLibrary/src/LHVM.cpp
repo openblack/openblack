@@ -627,7 +627,10 @@ uint32_t LHVM::GetTicksCount()
 
 void LHVM::PushElaspedTime()
 {
-	const float time = GetTicksCount() * 10.0f;
+	// 0x1000ABD0: fild of the tick count, fmul 0.1f [0x1001F140], fstp float. The DLL runs on the game thread with the
+	// exe's FPU at 24 bits (fn_007DEE00; the DLL never sets the control word): the product is rounded once to a float,
+	// as the double product (exact below 2^29 ticks) cast to float
+	const auto time = static_cast<float>(static_cast<double>(GetTicksCount()) * static_cast<double>(0.1f));
 	Pushf(time);
 }
 
