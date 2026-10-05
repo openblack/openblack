@@ -11,6 +11,7 @@
 
 #include <cstdint>
 
+#include <entt/core/fwd.hpp>
 #include <glm/vec3.hpp>
 
 /// A storm's lightning: now and then it flashes, brightly with thunder or dimly with a forked bolt. The flash lights the
@@ -23,6 +24,11 @@ inline constexpr float k_FlashSeconds = 0.8f;
 /// The strengths of a flash with thunder and of one with a bolt
 inline constexpr float k_ThunderStrength = 1.0f;
 inline constexpr float k_BoltStrength = 0.5f;
+
+/// The thunder that comes with a bright flash is one of eleven claps of the rain's atmosphere bank
+inline constexpr int32_t k_ThunderClaps = 11;
+inline constexpr int32_t k_FirstThunderClap = 2;
+[[nodiscard]] entt::id_type ThunderSound(int32_t clap);
 
 /// A flash of lightning where it struck
 struct Flash

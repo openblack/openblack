@@ -23,6 +23,7 @@ class SoundTagSystem final: public SoundTagSystemInterface
 public:
 	void ProcessTurn(const glm::vec3& camera) override;
 	void SetActive(entt::entity entity, bool active) override;
+	entt::entity CreatePointSound(entt::id_type sound, const glm::vec3& position, bool delayed) override;
 };
 
 } // namespace openblack::ecs::systems

@@ -25,6 +25,7 @@
 #include "Common/GameRandom.h"
 #include "Common/RandomNumberManager.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/SoundTagSystemInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
 
@@ -587,6 +588,12 @@ void WeatherSystem::UpdateStorms()
 				{
 					storm.thunderTimer = random.GameFloatRange(storm.thunderWait.x, storm.thunderWait.y);
 					storm.flash = lightning::Strike(storm.position, storm.outerRadius, lightning::k_ThunderStrength);
+					// Its thunder rolls from the cloud, one of eleven claps picked from the C runtime's numbers, heard
+					// once the sound has travelled to the camera
+					const auto clap = (random.CrtRand() % lightning::k_ThunderClaps) + lightning::k_FirstThunderClap;
+					const auto ground = Locator::terrainSystem::value().GetHeightAt({storm.position.x, storm.position.z});
+					Locator::soundTagSystem::value().CreatePointSound(
+					    lightning::ThunderSound(clap), {storm.position.x, ground + storm.cloudHeight, storm.position.z}, true);
 				}
 			}
 		}

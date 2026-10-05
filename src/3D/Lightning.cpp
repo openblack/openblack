@@ -11,8 +11,16 @@
 
 #include <algorithm>
 
+#include <entt/core/hashed_string.hpp>
+#include <fmt/format.h>
+
 namespace openblack::lightning
 {
+
+entt::id_type ThunderSound(int32_t clap)
+{
+	return entt::hashed_string(fmt::format("rain.sad/{}", clap).c_str()).value();
+}
 
 Flash Strike(const glm::vec3& position, float radius, float strength)
 {
