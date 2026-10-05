@@ -12,6 +12,8 @@
 namespace openblack
 {
 
+class DayNightClock;
+
 namespace graphics
 {
 class L3DMesh;
@@ -30,12 +32,18 @@ public:
 		float dayFull;
 	};
 
+	/// The sky of the visual time: 0 at night, 1 at dusk and 2 by day, between them as it turns
 	[[nodiscard]] virtual float GetCurrentSkyType() const noexcept = 0;
-	/// Time between 0 and 24 in hours
+	/// The visual time, between 0 and 24 in hours
 	[[nodiscard]] virtual float GetTime() const noexcept = 0;
+	/// The hours of the visual time the sky turns at
 	[[nodiscard]] virtual DayNightTimes GetDayNightTimes() const noexcept = 0;
+	/// The clock of day and night the sky follows
+	[[nodiscard]] virtual DayNightClock& GetClock() noexcept = 0;
+	[[nodiscard]] virtual const DayNightClock& GetClock() const noexcept = 0;
 	[[nodiscard]] virtual graphics::L3DMesh& GetMesh() const noexcept = 0;
 	[[nodiscard]] virtual graphics::Texture2D& GetTexture() const noexcept = 0;
+	/// Jumps to an hour of script time
 	virtual void SetTime(float time) noexcept = 0;
 };
 

@@ -33,9 +33,7 @@ Sky::Sky() noexcept
 {
 	auto& fileSystem = Locator::filesystem::value();
 
-	// The hours of the day the game's scripts work in: full night until 3:30, dusk from 7:30 to 8, full day from 8:30,
-	// and the same mirrored in the evening
-	SetDayNightTimes(3.5f, 7.5f, 8.0f, 8.5f);
+	_clock.Reset();
 
 	// load in the mesh
 	_mesh = std::make_unique<graphics::L3DMesh>("Sky");
@@ -65,7 +63,6 @@ Sky::Sky() noexcept
 	}
 
 	_texture = std::make_unique<Texture2D>("Sky");
-	_timeOfDay = 1.0f;
 
 	_texture->Create(k_TextureResolution[0], k_TextureResolution[1], k_TextureResolution[2], TextureFormat::BGR5A1,
 	                 Wrapping::ClampEdge, Filter::Linear,
@@ -74,45 +71,14 @@ Sky::Sky() noexcept
 
 Sky::~Sky() noexcept = default;
 
-void Sky::SetDayNightTimes(float nightFull, float duskStart, float duskEnd, float dayFull) noexcept
-{
-	_nightFullTime = nightFull;
-	_duskStartTime = duskStart;
-	_duskEndTime = duskEnd;
-	_dayFullTime = dayFull;
-}
-
 void Sky::SetTime(float time) noexcept
 {
-	assert(time <= 24.0f);
-	_timeOfDay = time;
+	_clock.SetScriptTime(time);
 }
 
 float Sky::GetCurrentSkyType() const noexcept
 {
-	assert(_timeOfDay <= 24.0f);
-
-	// Reflect time at 12
-	float time = _timeOfDay > 12.0f ? 24.0f - _timeOfDay : _timeOfDay;
-
-	if (time < _nightFullTime) // In full night
-	{
-		return 0.0f; // Index for night texture
-	}
-	if (time < _duskStartTime) // Between night and dusk
-	{
-		return (time - _nightFullTime) / (_duskStartTime - _nightFullTime); // 0 - 1 lerp between night and dusk
-	}
-	if (time < _duskEndTime) // In full dusk
-	{
-		return 1.0f; // Index for dusk texture
-	}
-	if (time < _dayFullTime) // Between dusk and day
-	{
-		return 1.0f + (time - _duskEndTime) / (_dayFullTime - _duskEndTime); // 1 - 2 lerp between dusk and day
-	}
-	// In full day
-	return 2.0f; // Index for day texture
+	return _clock.SkyType(_clock.GetVisualTime());
 }
 
 } // namespace openblack

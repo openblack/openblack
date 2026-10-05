@@ -17,7 +17,9 @@
 #include <glm/gtx/vec_swizzle.hpp>
 #include <spdlog/spdlog.h>
 
+#include "3D/DayNightClock.h"
 #include "3D/LandIslandInterface.h"
+#include "3D/SkyInterface.h"
 #include "Camera/Camera.h"
 #include "ECS/Archetypes/AbodeArchetype.h"
 #include "ECS/Archetypes/AnimatedStaticArchetype.h"
@@ -916,10 +918,9 @@ void FeatureScriptCommands::EditLevel()
 	// __func__);
 }
 
-void FeatureScriptCommands::SetNighttime(float, float, float)
+void FeatureScriptCommands::SetNighttime(float duration, float night, float change)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	Locator::skySystem::value().GetClock().SetCycleFromLand(duration, night, change);
 }
 
 void FeatureScriptCommands::MakeLastObjectArtifact(int32_t, const std::string&, float)

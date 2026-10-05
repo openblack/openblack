@@ -23,7 +23,9 @@
 #include <glm/vec3.hpp>
 #include <spdlog/spdlog.h>
 
+#include "3D/DayNightClock.h"
 #include "3D/LandIslandInterface.h"
+#include "3D/SkyInterface.h"
 #include "3D/TempleInteriorInterface.h"
 #include "Audio/GameMusic.h"
 #include "Camera/Camera.h"
@@ -1152,16 +1154,13 @@ void RemoveReference() // 111 REMOVE_REFERENCE
 
 void SetGameTime() // 112 SET_GAME_TIME
 {
-	// const auto time = Popf();
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto time = Popf();
+	Locator::skySystem::value().GetClock().SetScriptTime(time);
 }
 
 void GetGameTime() // 113 GET_GAME_TIME
 {
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pushf(0.0f);
+	Pushf(Locator::skySystem::value().GetClock().GetScriptTime());
 }
 
 void GetRealTime() // 114 GET_REAL_TIME
@@ -2659,17 +2658,15 @@ void MoveCameraPosFocLens() // 287 MOVE_CAMERA_POS_FOC_LENS
 
 void GameTimeOnOff() // 288 GAME_TIME_ON_OFF
 {
-	// const auto enable = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto enable = Pop().intVal != 0;
+	Locator::skySystem::value().GetClock().SetRunning(enable);
 }
 
 void MoveGameTime() // 289 MOVE_GAME_TIME
 {
-	// const auto duration = Popf();
-	// const auto hourOfTheDay = Popf();
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto duration = Popf();
+	const auto hourOfTheDay = Popf();
+	Locator::skySystem::value().GetClock().MoveScriptTime(hourOfTheDay, duration);
 }
 
 void SetHighGraphicsDetail() // 290 SET_HIGH_GRAPHICS_DETAIL
@@ -3688,17 +3685,16 @@ void RestartObject() // 406 RESTART_OBJECT
 
 void SetGameTimeProperties() // 407 SET_GAME_TIME_PROPERTIES
 {
-	// const auto unk2 = Pop().intVal;
-	// const auto unk1 = Pop().intVal;
-	// const auto unk0 = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto percentageChange = Popf();
+	const auto percentageNight = Popf();
+	const auto duration = Popf();
+	Locator::skySystem::value().GetClock().SetCycle(duration, percentageNight, percentageChange);
 }
 
 void ResetGameTimeProperties() // 408 RESET_GAME_TIME_PROPERTIES
 {
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	Locator::skySystem::value().GetClock().SetCycle(DayNightClock::k_DefaultDuration, DayNightClock::k_DefaultNight,
+	                                                DayNightClock::k_DefaultChange);
 }
 
 void SoundExists() // 409 SOUND_EXISTS

@@ -35,6 +35,7 @@
 
 #include "3D/CreatureBody.h"
 #include "3D/CreatureCaveTrophies.h"
+#include "3D/DayNightClock.h"
 #include "3D/GripLandscapeEffect.h"
 #include "3D/HandAnimation.h"
 #include "3D/L3DMesh.h"
@@ -359,6 +360,9 @@ bool Game::GameLogicLoop() noexcept
 
 	auto& lhvm = Locator::vm::value();
 	lhvm.LookIn(lhvm::ScriptType::All);
+
+	// The time of day moves on
+	Locator::skySystem::value().GetClock().ProcessTurn();
 
 	// The weather moves on, then the ambience follows the weather at the camera
 	const auto cameraPosition = Locator::camera::value().GetOrigin();
@@ -1460,6 +1464,9 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 		throw std::runtime_error("Could not find landscape " + path.generic_string());
 	}
 	InitializeLevel(fixedName);
+
+	// A land starts at noon on the game's cycle of day and night, which its script may change
+	Locator::skySystem::value().GetClock().Reset();
 
 	// There is always a player active
 	Locator::playerSystem::value().AddPlayer(ecs::archetypes::PlayerArchetype::Create(PlayerNames::PLAYER_ONE));
