@@ -40,9 +40,6 @@ class Mesh;
 struct LandVertex
 {
 	glm::vec3 position;
-	glm::u8vec4 lightLevel; // aligned to 4 bytes
-
-	LandVertex(const glm::vec3& position, uint8_t lightLevel);
 };
 
 class LandIslandInterface;

@@ -25,12 +25,6 @@
 using namespace openblack;
 using namespace openblack::graphics;
 
-LandVertex::LandVertex(const glm::vec3& position, uint8_t lightLevel)
-    : position {position}
-    , lightLevel {lightLevel}
-{
-}
-
 void LandBlock::BuildMesh(LandIslandInterface& island)
 {
 	if (_mesh != nullptr)
@@ -39,10 +33,8 @@ void LandBlock::BuildMesh(LandIslandInterface& island)
 	}
 
 	VertexDecl decl;
-	decl.reserve(2);
+	decl.reserve(1);
 	decl.emplace_back(VertexAttrib::Attribute::Position, static_cast<uint8_t>(3), VertexAttrib::Type::Float);
-	// light level, align to 4 bytes
-	decl.emplace_back(VertexAttrib::Attribute::Color0, static_cast<uint8_t>(4), VertexAttrib::Type::Uint8, true);
 
 	// reserve 16*16 quads of 2 tris with 3 verts = 1536
 	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(LandVertex) * k_VertexCount);
@@ -87,7 +79,8 @@ void LandBlock::BuildMesh(LandIslandInterface& island)
 
 void LandBlock::BuildVertexList(std::span<LandVertex> vertices, LandIslandInterface& island)
 {
-	// The land is coloured by its block texture (see block_texture): its vertices carry their height and luminosity
+	// The land is coloured by its block texture (see block_texture) and lit by its luminosity of the frame: its vertices
+	// carry only where they are
 	const auto blockOffset = static_cast<glm::u16vec2>(GetBlockPosition() * 16);
 
 	uint16_t index = 0;
@@ -122,9 +115,9 @@ void LandBlock::BuildVertexList(std::span<LandVertex> vertices, LandIslandInterf
 				              offset.y * LandIslandInterface::k_CellSize);
 			}
 
-			auto makeVert = [&pos, &cells](Corner corner) -> LandVertex {
+			auto makeVert = [&pos](Corner corner) -> LandVertex {
 				// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-				return {pos[static_cast<size_t>(corner)], cells[static_cast<size_t>(corner)]->luminosity};
+				return {pos[static_cast<size_t>(corner)]};
 			};
 
 			auto makeTriangle = [&makeVert, &vertices, &index](const std::array<Corner, 3>& corners, bool forward) {
