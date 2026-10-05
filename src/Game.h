@@ -71,6 +71,8 @@ struct Arguments
 	int windowWidth;
 	int windowHeight;
 	bool vsync;
+	/// The game's graphics detail level, 0 to 6
+	uint8_t detailLevel {4};
 	openblack::windowing::DisplayMode displayMode;
 	GraphicsBackend graphicsBackend;
 	std::string gamePath;

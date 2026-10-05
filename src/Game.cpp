@@ -157,6 +157,7 @@ Game::Game(Arguments&& args) noexcept
 	config.displayMode = args.displayMode;
 	config.graphicsBackend = args.graphicsBackend;
 	config.vsync = args.vsync;
+	config.detailLevel = args.detailLevel;
 	config.guiScale = args.guiScale;
 }
 

@@ -7,6 +7,7 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include <algorithm>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -51,6 +52,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		("u,ui-scale", "Scaling of the GUI", cxxopts::value<float>()->default_value("1.0"))
 		("s,start-level", "Level that is loaded at start-up", cxxopts::value<std::string>()->default_value("Land1.txt"))
 		("V,vsync", "Enable Vertical Sync.")
+		("detail-level", "Graphics detail level of the original game, 0 to 6 (4 by default, 5 custom, 6 the highest).", cxxopts::value<uint16_t>()->default_value("4"))
 		("m,window-mode", "Which mode to run window.", cxxopts::value<std::string>()->default_value("windowed"))
 		("b,backend-type", "Which backend to use for rendering.", cxxopts::value<std::string>())
 		("n,num-frames-to-simulate", "Number of frames to simulate before quitting.", cxxopts::value<uint32_t>()->default_value("0"))
@@ -177,6 +179,7 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		args.windowHeight = result["height"].as<uint16_t>();
 		args.guiScale = result["ui-scale"].as<float>();
 		args.vsync = result["vsync"].as<bool>();
+		args.detailLevel = static_cast<uint8_t>(std::min<uint16_t>(result["detail-level"].as<uint16_t>(), 6));
 		args.displayMode = displayMode;
 		args.graphicsBackend = graphicsBackend;
 		args.numFramesToSimulate = result["num-frames-to-simulate"].as<uint32_t>();
