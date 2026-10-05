@@ -1,5 +1,5 @@
 $input a_position, a_texcoord0, a_normal, a_indices, i_data0, i_data1, i_data2, i_data3
-$output v_position, v_texcoord0, v_normal
+$output v_position, v_texcoord0, v_normal, v_color0
 
 #if BGFX_SHADER_LANGUAGE_HLSL == 3
 #define BGFX_CONFIG_MAX_BONES 48
@@ -11,8 +11,11 @@ $output v_position, v_texcoord0, v_normal
 
 #ifdef USE_HEIGHT_MAP
 SAMPLER2D(s_heightmap, 1);
-uniform vec4 u_islandExtent;
 #endif // USE_HEIGHT_MAP
+uniform vec4 u_islandExtent;
+
+#include "land_light.sh"
+#include "model_light.sh"
 
 void main()
 {
@@ -45,6 +48,13 @@ void main()
     float terrain_height = texture2DLod(s_heightmap, baseUv, 0.0).r * 170.85;
     v_position.y += terrain_height - treeBasePos.y;
 #endif // USE_HEIGHT_MAP
+
+    // Lit as every model is: the land's light where the tree stands, shaded by the game's light in the tree's own space
+    vec3 origin = instMul(model, vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+    vec3 localLight = ModelLightLocal(instMul(model, vec4(1.0, 0.0, 0.0, 0.0)).xyz, instMul(model, vec4(0.0, 1.0, 0.0, 0.0)).xyz,
+                                      instMul(model, vec4(0.0, 0.0, 1.0, 0.0)).xyz, origin);
+    vec3 colour = u_landLight.x > 0.0 ? min(floor(LandLightAt(origin.xz) * u_landLight.y), vec3_splat(255.0)) : vec3_splat(255.0);
+    v_color0 = vec4(ModelLightColour(colour, ModelLightFactor(a_normal, localLight)), 1.0);
 
     v_texcoord0 = vec4(a_texcoord0, 0.0, 0.0);
     v_normal = a_normal;
