@@ -2946,7 +2946,10 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				block.GetMesh().GetVertexBuffer().Bind();
 
 				bgfx::setState(defaultState | (desc.cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW), 0);
-				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(terrainShader->GetRawHandle()), 0, discard);
+				// The game draws the land's blocks the nearest first, which bgfx keeps by their distance
+				const auto centre = block.GetMapPosition() + glm::vec2(80.0f);
+				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(terrainShader->GetRawHandle()),
+				             zsort::Depth(glm::vec3(centre.x, 0.0f, centre.y), cameraOrigin), discard);
 			}
 			bgfx::discard(BGFX_DISCARD_BINDINGS);
 		}
