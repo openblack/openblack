@@ -23,6 +23,7 @@
 
 #include "3D/CameraPath.h"
 #include "3D/CreatureCaveEffects.h"
+#include "3D/CreatureCaveTrophies.h"
 #include "3D/L3DMesh.h"
 #include "3D/L3DSubMesh.h"
 #include "3D/LandIslandInterface.h"
@@ -475,6 +476,48 @@ void TempleInterior::FadeIntoRoom()
 	}
 }
 
+void TempleInterior::UpdateCaveTrophies()
+{
+	using namespace CreatureCaveTrophies;
+	_caveTrophies.clear();
+	const auto facts = GatherScrollFacts();
+	const entt::id_type creatureRoom = entt::hashed_string("temple/interior/creature_l3d").value();
+	auto& meshes = Locator::resources::value().GetMeshes();
+	if (!facts.creature.has_value() || !meshes.Contains(creatureRoom))
+	{
+		return;
+	}
+	std::vector<int32_t> percents;
+	for (const auto& miracle : facts.creature->miracles)
+	{
+		percents.push_back(miracle.percent);
+	}
+	const auto& points = meshes.Handle(creatureRoom)->GetExtraMetrics();
+	const auto temple = glm::translate(glm::mat4(1.0f), _templePosition) * glm::eulerAngleY(_templeRotation.y);
+	for (const auto& trophy : Choose(facts.creature->fightBalance, LearningOf(percents)))
+	{
+		const entt::id_type mesh = entt::hashed_string(fmt::format("temple/icons/{}", IconName(trophy.icon)).c_str()).value();
+		if (trophy.point >= points.size() || !meshes.Contains(mesh))
+		{
+			continue;
+		}
+		// CreatureRoom::InitEngine gives each its point's matrix with its axes made unit long (fn_007FB5C0), turned a
+		// quarter back about the point's own x axis
+		auto place = points[trophy.point];
+		const auto across = glm::normalize(glm::vec3(place[0]));
+		const auto up = glm::normalize(glm::vec3(place[1]));
+		const auto forward = glm::normalize(glm::vec3(place[2]));
+		place[0] = glm::vec4(across, 0.0f);
+		place[1] = glm::vec4(forward, 0.0f);
+		place[2] = glm::vec4(-up, 0.0f);
+		_caveTrophies.push_back({
+		    .mesh = mesh,
+		    .model = temple * place,
+		    .colour = trophy.medal ? k_MedalColour : k_BeltColour,
+		});
+	}
+}
+
 void TempleInterior::UpdateMapMarkers(float seconds)
 {
 	_mapMarkers.clear();
@@ -743,6 +786,15 @@ void TempleInterior::Update(std::chrono::microseconds dt)
 			_map.Build([&island](glm::u16vec2 cell) { return island.FindCell(cell); }, _mapTriangles);
 		}
 		UpdateMapMarkers(milliseconds / 1000.0f);
+		// CreatureRoom::Update chooses the belts and medals every frame
+		if (IsRoomDrawn(TempleRoom::CreatureCave))
+		{
+			UpdateCaveTrophies();
+		}
+		else
+		{
+			_caveTrophies.clear();
+		}
 		// WorldRoom::Draw moves the pool's shimmer on while the main room is drawn
 		if (IsRoomDrawn(TempleRoom::Main))
 		{
@@ -886,6 +938,7 @@ void TempleInterior::Deactivate()
 	_cameraModel = nullptr;
 	_transitionRoom.reset();
 	_leavingForMapPoint = false;
+	_caveTrophies.clear();
 	// GGame::LeaveInsideCitadel goes out to the island all white, which fades over a second
 	if (_interface != nullptr)
 	{

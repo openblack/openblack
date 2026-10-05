@@ -9,10 +9,13 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include <chrono>
 #include <optional>
 #include <vector>
 
+#include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
@@ -42,6 +45,14 @@ enum class TempleRoom
 	Options,
 	SaveGame,
 	Unknown
+};
+
+/// A belt or medal of the creature's room: its icon's mesh, where it is, and its colour (LH3DObject +0x1B0)
+struct TempleCaveTrophy
+{
+	uint32_t mesh;
+	glm::mat4 model;
+	uint32_t colour;
 };
 
 /// Where the cursor meets the temple's room, and the way the surface there faces
@@ -119,6 +130,8 @@ public:
 	[[nodiscard]] virtual uint32_t GetVisits() const = 0;
 	/// The markers on the map this frame, in the main room, of the kinds its buttons show
 	[[nodiscard]] virtual const std::vector<TempleMapMarker>& GetMapMarkers() const = 0;
+	/// The belts and medals the creature's room shows, while it is drawn (CreatureRoom::UpdateBeltsAndMedals)
+	[[nodiscard]] virtual const std::vector<TempleCaveTrophy>& GetCaveTrophies() const = 0;
 	/// How far the markers have turned, in radians (0xE3A194)
 	[[nodiscard]] virtual float GetMapMarkerTurn() const = 0;
 	/// How long the main room's pool has shimmered, in seconds, which its two layers' alpha and texture follow

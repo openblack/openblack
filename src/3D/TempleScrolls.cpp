@@ -431,6 +431,7 @@ TempleScrolls::Facts TempleScrolls::Facts::Mock()
 	};
 	creature.opinionOfGod = 0.3f;
 	creature.known = {0, 1, 2, 3};
+	creature.fightBalance = 0.2f;
 	creature.miracles = {
 	    {"HELP_TEXT_CREATURE_LESSON_LEARN_MAGIC_ACTION_02", 12},
 	    {"HELP_TEXT_CREATURE_LESSON_LEARN_MAGIC_ACTION_03", 9},

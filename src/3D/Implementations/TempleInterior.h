@@ -62,6 +62,7 @@ public:
 	[[nodiscard]] const std::vector<OrientedTextVertex>& GetMap() const override { return _mapTriangles; }
 	[[nodiscard]] uint32_t GetVisits() const override { return _visits; }
 	[[nodiscard]] const std::vector<TempleMapMarker>& GetMapMarkers() const override { return _mapMarkers; }
+	[[nodiscard]] const std::vector<TempleCaveTrophy>& GetCaveTrophies() const override { return _caveTrophies; }
 	[[nodiscard]] float GetMapMarkerTurn() const override { return _mapMarkerTurn; }
 	[[nodiscard]] float GetPoolTime() const override { return _poolTime; }
 	void Escape() override;
@@ -98,6 +99,10 @@ private:
 	std::vector<OrientedTextVertex> _mapTriangles;
 	/// The markers on the map this frame, and how far they have turned
 	std::vector<TempleMapMarker> _mapMarkers;
+	std::vector<TempleCaveTrophy> _caveTrophies;
+	/// CreatureRoom::UpdateBeltsAndMedals: the belts for how the creature fights and the medals for its miracles, at the
+	/// points of the room's mesh
+	void UpdateCaveTrophies();
 	float _mapMarkerTurn {0.0f};
 	/// How long the main room's pool has shimmered, in seconds (0xE3A16C)
 	float _poolTime {0.0f};

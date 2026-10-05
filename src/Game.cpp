@@ -15,6 +15,7 @@
 #include <chrono>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include <LHVM.h>
 #include <LNDFile.h>
@@ -33,6 +34,7 @@
 #include <spdlog/spdlog.h>
 
 #include "3D/CreatureBody.h"
+#include "3D/CreatureCaveTrophies.h"
 #include "3D/GripLandscapeEffect.h"
 #include "3D/HandAnimation.h"
 #include "3D/L3DMesh.h"
@@ -773,8 +775,14 @@ bool Game::Initialize() noexcept
 	auto& glowManager = resources.GetGlows();
 	auto& camPathManager = resources.GetCameraPaths();
 
-	// WorldRoom::InitEngine's markers of the temples, creatures and challenges on the map
-	for (const auto* icon : {"I_citadel_on_map", "I_creature_on_map", "I_challenge_on_map"})
+	// WorldRoom::InitEngine's markers of the temples, creatures and challenges on the map, and the creature's room's belts
+	// and medals (fn_00787340)
+	std::vector<std::string> icons {"I_citadel_on_map", "I_creature_on_map", "I_challenge_on_map"};
+	for (uint32_t i = 0; i < CreatureCaveTrophies::k_IconCount; ++i)
+	{
+		icons.push_back(CreatureCaveTrophies::IconName(i));
+	}
+	for (const auto& icon : icons)
 	{
 		const auto path = fileSystem.GetPath<Path::Citadel>() / "icons" / fmt::format("{}.l3d", icon);
 		try

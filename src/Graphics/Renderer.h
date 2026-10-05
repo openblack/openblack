@@ -97,6 +97,8 @@ private:
 	void DrawTempleUnderside(const DrawSceneDesc& desc) const;
 	/// WorldRoom::DrawAdditional: the markers on the map, on soft glows that show through anything
 	void DrawTempleMapMarkers(const DrawSceneDesc& desc) const;
+	/// CreatureRoom::Draw's belts and medals
+	void DrawCaveTrophies(const DrawSceneDesc& desc) const;
 
 	std::unique_ptr<ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
@@ -115,6 +117,9 @@ private:
 	/// HandLight's map, loaded with the first land drawn, empty when the game has none
 	mutable std::optional<TextureHandle> _handLightTexture;
 	mutable bool _handLightLoaded {false};
+	/// icons.raw with iconsa.raw's alpha, which the creature's room's belts and medals are drawn with, once loaded
+	mutable std::optional<TextureHandle> _iconsTexture;
+	mutable bool _iconsLoaded {false};
 	/// Sampled by the primitives without a skin, as Direct3D's texture stages read white with no texture set
 	std::optional<TextureHandle> _whiteTexture;
 	/// u_handLight of the pass being drawn, without strength outside of the scene's passes

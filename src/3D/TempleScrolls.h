@@ -83,6 +83,8 @@ public:
 		bool knowsGodsDesire {false};
 		/// The creatures, temples, flocks and forests it knows about
 		std::array<int32_t, 4> known {};
+		/// How it leans in its fights, from -1 to 1 (its mind's +0x17D04), which the belts on the attack dummies show
+		float fightBalance {0.0f};
 		/// The miracles it knows of, the text of each and how much of it it has learnt
 		struct Miracle
 		{

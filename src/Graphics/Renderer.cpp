@@ -321,6 +321,10 @@ Renderer::~Renderer() noexcept
 	{
 		bgfx::destroy(toBgfx(*_handLightTexture));
 	}
+	if (_iconsTexture)
+	{
+		bgfx::destroy(toBgfx(*_iconsTexture));
+	}
 	if (_whiteTexture)
 	{
 		bgfx::destroy(toBgfx(*_whiteTexture));
@@ -463,6 +467,10 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				if (subMeshTexture != nullptr)
 				{
 					program->SetTextureSampler("s_diffuse", 0, *subMeshTexture);
+				}
+				else if (desc.skinTexture != nullptr && prim.skinID != 0xFFFFFFFF)
+				{
+					program->SetTextureSampler("s_diffuse", 0, *desc.skinTexture);
 				}
 				else if (texture != nullptr)
 				{
@@ -911,6 +919,76 @@ void Renderer::DrawTempleMapMarkers(const DrawSceneDesc& desc) const
 		submitDesc.matrixCount = 1;
 		submitDesc.tint = glm::vec4(glm::vec3(marker.colour) / 255.0f, 1.0f);
 		DrawMesh(*meshes.Handle(icon), submitDesc, std::numeric_limits<uint8_t>::max());
+	}
+}
+
+void Renderer::DrawCaveTrophies(const DrawSceneDesc& desc) const
+{
+	if (desc.viewId != RenderPass::Main || !Locator::temple::has_value() || !Locator::temple::value().Active())
+	{
+		return;
+	}
+	const auto& trophies = Locator::temple::value().GetCaveTrophies();
+	if (trophies.empty())
+	{
+		return;
+	}
+	// fn_00787340 gives every material of the icons the one texture, with the alpha LH3D reads from beside it
+	if (!_iconsLoaded)
+	{
+		_iconsLoaded = true;
+		constexpr uint16_t k_Size = 256;
+		constexpr size_t k_Pixels = static_cast<size_t>(k_Size) * k_Size;
+		auto& fileSystem = Locator::filesystem::value();
+		const auto colourPath = fileSystem.GetPath<filesystem::Path::Textures>() / "icons.raw";
+		const auto alphaPath = fileSystem.GetPath<filesystem::Path::Textures>() / "iconsa.raw";
+		if (fileSystem.Exists(colourPath) && fileSystem.Exists(alphaPath))
+		{
+			const auto colour = fileSystem.ReadAll(colourPath);
+			const auto alpha = fileSystem.ReadAll(alphaPath);
+			if (colour.size() == k_Pixels * 3 && alpha.size() == k_Pixels)
+			{
+				const auto* memory = bgfx::alloc(static_cast<uint32_t>(k_Pixels * 4));
+				for (size_t i = 0; i < k_Pixels; ++i)
+				{
+					memory->data[(i * 4) + 0] = colour[(i * 3) + 0];
+					memory->data[(i * 4) + 1] = colour[(i * 3) + 1];
+					memory->data[(i * 4) + 2] = colour[(i * 3) + 2];
+					memory->data[(i * 4) + 3] = alpha[i];
+				}
+				_iconsTexture =
+				    fromBgfx(bgfx::createTexture2D(k_Size, k_Size, false, 1, bgfx::TextureFormat::RGBA8, 0, memory));
+				bgfx::setName(toBgfx(*_iconsTexture), "Icons");
+			}
+		}
+	}
+	if (!_iconsTexture)
+	{
+		return;
+	}
+	const auto& meshes = Locator::resources::value().GetMeshes();
+	for (const auto& trophy : trophies)
+	{
+		if (!meshes.Contains(trophy.mesh))
+		{
+			continue;
+		}
+		// TODO(raffclar): ApplyCitadelColoring also darkens them by the temple's light, as it does the rooms, and the
+		//                 medals past wood are drawn with LH3D's render mode 2 (DAT_00EA1AFC), which isn't known yet
+		const auto colour = glm::vec3((trophy.colour >> 16) & 0xFF, (trophy.colour >> 8) & 0xFF, trophy.colour & 0xFF);
+		L3DMeshSubmitDesc submitDesc = {};
+		submitDesc.viewId = desc.viewId;
+		submitDesc.program = _shaderManager->GetShader("Object");
+		submitDesc.state = k_BgfxDefaultStateInvertedZ;
+		submitDesc.modelMatrices = &trophy.model;
+		// Their materials are two sided
+		submitDesc.useMaterialCulling = true;
+		submitDesc.matrixCount = 1;
+		submitDesc.skinTexture = &*_iconsTexture;
+		submitDesc.useMaterialBlending = true;
+		// The colour multiplies what lights them: the medals come out the mid grey of vanilla's at 0x80
+		submitDesc.tint = glm::vec4(colour / 255.0f, 0.0f);
+		DrawMesh(*meshes.Handle(trophy.mesh), submitDesc, std::numeric_limits<uint8_t>::max());
 	}
 }
 
@@ -1691,6 +1769,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			DrawTemplePool(desc);
 			DrawTempleMap(desc);
 			DrawTempleMapMarkers(desc);
+			DrawCaveTrophies(desc);
 			// CHand draws the hand after the rest of the scene, blended by its translucent texture. Black & White culls
 			// its back faces; here both sides are drawn, the inside first so that the outside blends over it.
 			// WorldRoom::Draw's reflection of the main room has no hand in it

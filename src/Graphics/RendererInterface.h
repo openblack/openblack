@@ -99,6 +99,9 @@ public:
 		float depthBias;
 		/// How far the mesh's texture has slid across it
 		glm::vec2 uvOffset;
+		/// A texture every primitive with a skin is drawn with in place of it, when set, as fn_00787340 gives the creature
+		/// room's icons
+		const TextureHandle* skinTexture;
 		/// Textures some of the submeshes are drawn with in place of their skins, by submesh
 		std::span<const std::pair<uint32_t, TextureHandle>> subMeshTextures;
 		/// Colours added to some of the submeshes, by submesh, after everything else
