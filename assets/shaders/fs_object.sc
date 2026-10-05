@@ -1,4 +1,4 @@
-$input v_position, v_texcoord0, v_normal, v_color0
+$input v_position, v_texcoord0, v_normal, v_color0, v_haze
 
 #include <bgfx_shader.sh>
 
@@ -34,5 +34,5 @@ void main()
 	// The second texture stage adds the environment map (D3DTOP_ADD), which saturates
 	diffuseTex.rgb = min(diffuseTex.rgb + texture2D(s_environment, v_texcoord0.zw).rgb, vec3_splat(1.0f));
 #endif // USE_ENVIRONMENT
-	gl_FragColor = vec4(min(diffuseTex.rgb + u_glow.rgb, vec3_splat(1.0f)), diffuseTex.a);
+	gl_FragColor = vec4(min(diffuseTex.rgb + u_glow.rgb + v_haze.rgb, vec3_splat(1.0f)), diffuseTex.a);
 }

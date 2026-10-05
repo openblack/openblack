@@ -7,7 +7,7 @@ $input a_position, a_texcoord0, a_normal, a_indices, a_texcoord3
 #else
 $input a_position, a_texcoord0, a_normal, a_indices
 #endif
-$output v_position, v_texcoord0, v_normal, v_color0
+$output v_position, v_texcoord0, v_normal, v_color0, v_haze
 
 // Every bone's matrix is uploaded with each draw: meshes without bones declare one
 #ifndef BGFX_CONFIG_MAX_BONES
@@ -20,6 +20,7 @@ $output v_position, v_texcoord0, v_normal, v_color0
 
 #include <bgfx_shader.sh>
 
+#include "haze.sh"
 #include "model_light.sh"
 
 // Pushes the mesh back by a fraction of its depth, towards the far plane at 0: the temple's rooms other than the one the
@@ -76,6 +77,10 @@ void main()
 		colour = min(floor(LandLightAt(origin.xz) * u_landLight.y), vec3_splat(255.0f));
 	}
 #endif // USE_LIGHTMAP
+	// The distance haze, once for the object at its origin: its colour fades and the haze's is added after the texture
+	float hazeT = HazeT(mul(u_view, vec4(origin, 1.0f)).z);
+	colour = HazeDiffuse(colour, HazeFactor(hazeT));
+	v_haze = vec4(HazeColour(hazeT) / 255.0f, 0.0f);
 	v_color0 = vec4(ModelLightColour(colour, ModelLightFactor(a_normal, localLight)), 1.0f);
 
 #ifdef USE_HEIGHT_MAP

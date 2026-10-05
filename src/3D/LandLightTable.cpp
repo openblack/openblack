@@ -21,6 +21,13 @@ constexpr uint32_t k_DarkLevels = 48;
 /// The ramps divide by this rather than 255
 constexpr uint32_t k_RampDivisor = 200;
 
+// The haze's distances as their inverses, exactly as the game's floats: 400 and 900 from the camera, drawn in by dusk
+// to 100 and 800
+constexpr float k_NearInverse = 0x1.47AE14p-9f;     // 0.0025
+constexpr float k_NearInverseDusk = 0x1.EB851Ep-8f; // 0.0075
+constexpr float k_FarInverse = 0x1.234568p-10f;     // 1 / 900
+constexpr float k_FarInverseDusk = 0x1.234560p-13f; // 0.00013888883
+
 enum Row : size_t
 {
 	k_Good = 0,
@@ -88,6 +95,27 @@ void LandLightTable::Build(const LandLightPalette& palette, float skyType, float
 	const auto towardsEvil = static_cast<int32_t>(evil * 255.0f);
 	const auto land = evil < 1.0f ? Lerp(colours[k_Good], colours[k_Neutral], static_cast<uint32_t>(towardsEvil))
 	                              : Lerp(colours[k_Neutral], colours[k_Evil], static_cast<uint32_t>(towardsEvil - 256));
+
+	// The haze: a third of the land's colour, k by its brightness, and its distances drawn in at dusk
+	{
+		const uint32_t r = (land >> 16) & 0xFFu;
+		const uint32_t g = (land >> 8) & 0xFFu;
+		const uint32_t b = land & 0xFFu;
+		_haze.k = static_cast<float>(std::min(255u, (r + 4 * g + 3 * b) / 8 + 8));
+		_haze.colour = glm::vec3(static_cast<float>(r / 3), static_cast<float>(g / 3), static_cast<float>(b / 3));
+		// 0 by day and at night, 1 at dusk
+		const float dusk = std::clamp(skyType < 1.0f ? skyType : 2.0f - skyType, 0.0f, 1.0f);
+		const float duskSquared = dusk * dusk;
+		float nearInverse = k_NearInverse;
+		float farInverse = k_FarInverse;
+		if (duskSquared > 0.0f)
+		{
+			nearInverse = duskSquared * k_NearInverseDusk + k_NearInverse;
+			farInverse = duskSquared * k_FarInverseDusk + k_FarInverse;
+		}
+		_haze.nearDistance = 1.0f / nearInverse;
+		_haze.farDistance = 1.0f / farInverse;
+	}
 
 	std::array<uint32_t, k_Size> table {};
 	// The darkest levels reach the land's colour at a level by its green, then go on to the warm colour

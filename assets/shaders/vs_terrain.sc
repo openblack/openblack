@@ -1,7 +1,9 @@
 $input a_position, a_texcoord1, a_color1, a_color2, a_texcoord2, a_color0, a_color3
-$output v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera, v_shadowCoord
+$output v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera, v_shadowCoord, v_haze
 
 #include <bgfx_shader.sh>
+
+#include "haze.sh"
 
 #if BGFX_SHADER_LANGUAGE_HLSL > 300 || BGFX_SHADER_LANGUAGE_SPIRV
 #   define materialIdFix(x) (floatBitsToInt(x))
@@ -51,6 +53,9 @@ void main()
 	v_shadowCoord.w = a_position.y > 1.0f ? 1.0f : 0.0f;
 
 	vec4 cs_position = mul(u_view, vec4(transformedPosition, 1.0f));
+	// The distance haze, per vertex: rgb the haze's colour added, a what the land's light is scaled by
+	float hazeT = HazeT(cs_position.z);
+	v_haze = vec4(HazeColour(hazeT) / 255.0f, HazeFactor(hazeT) / 256.0f);
 	v_distToCamera = cs_position.z;
 	// Land at sea level is drawn flat at height 0, in the plane of the ocean. Land is never under the sea, so win the
 	// tie: pull those vertices a fraction of their distance towards the camera along their line of sight, which keeps

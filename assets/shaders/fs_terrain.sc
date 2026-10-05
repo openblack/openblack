@@ -1,4 +1,4 @@
-$input v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera, v_shadowCoord
+$input v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera, v_shadowCoord, v_haze
 
 #include <bgfx_shader.sh>
 
@@ -89,7 +89,7 @@ void main()
 	float luminosity = floor(v_lightLevel * 255.0f + 0.5f);
 	vec3 light = texture2DLod(s7_landLight, vec2((luminosity + 0.5f) / 256.0f, 0.5f), 0.0f).rgb;
 	light = max(light, vec3_splat(texture2D(s6_handLight, v_texcoord0.zw).r * u_handLight.z));
-	col.rgb = col.rgb * light;
+	col.rgb = col.rgb * light * v_haze.a;
 
 	// the hand's shadow, projected along the sunlight onto the land beyond it
 	vec3 shadowCoord = v_shadowCoord.xyz;
@@ -100,7 +100,8 @@ void main()
 		col.rgb = col.rgb * (1.0f - coverage * v_shadowCoord.w * u_handShadow.x);
 	}
 
-	gl_FragColor = vec4(col.rgb, v_waterAlpha);
+	// The distance haze is added after the texture
+	gl_FragColor = vec4(min(col.rgb + v_haze.rgb, vec3_splat(1.0f)), v_waterAlpha);
 
 	//gl_FragColor.r = v_distToCamera / 200.0f;
 

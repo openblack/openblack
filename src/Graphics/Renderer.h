@@ -120,6 +120,8 @@ private:
 	/// The land's light this frame, and the 256 by 1 texture the terrain reads it from
 	mutable std::unique_ptr<LandLightTable> _landLightTable;
 	mutable std::optional<TextureHandle> _landLightTexture;
+	/// u_haze and u_hazeColour of the frame's distance haze, off until the land's light is built
+	mutable std::array<glm::vec4, 2> _haze {};
 	mutable bool _handLightLoaded {false};
 	/// icons.raw with iconsa.raw's alpha, which the creature's room's belts and medals are drawn with, once loaded
 	mutable std::optional<TextureHandle> _iconsTexture;

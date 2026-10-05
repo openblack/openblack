@@ -1,4 +1,4 @@
-$input v_position, v_texcoord0, v_normal, v_color0
+$input v_position, v_texcoord0, v_normal, v_color0, v_haze
 
 #include <bgfx_shader.sh>
 
@@ -21,5 +21,6 @@ void main()
 	{
 		discard;
 	}
-	gl_FragColor = diffuseTex;
+	// The distance haze is added after the texture
+	gl_FragColor = vec4(min(diffuseTex.rgb + v_haze.rgb, vec3_splat(1.0f)), diffuseTex.a);
 }

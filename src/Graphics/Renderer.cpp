@@ -519,6 +519,15 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				program->SetUniformValue("u_islandExtent", &islandExtent);
 				program->SetUniformValue("u_landLight", &u_landLight);
 			}
+			if (program->HasUniform("u_haze"))
+			{
+				// The distance haze is the world's, not the sky's or the temple's
+				const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
+				const bool hazed = !desc.isSky && !desc.drawAll && !inTemple;
+				const auto u_haze = hazed ? _haze[0] : glm::vec4(0.0f);
+				program->SetUniformValue("u_haze", &u_haze);
+				program->SetUniformValue("u_hazeColour", &_haze[1]);
+			}
 			if (program->HasUniform("s_handLight"))
 			{
 				program->SetTextureSampler("s_handLight", 2, GetHandLightTexture());
@@ -782,6 +791,10 @@ void Renderer::DrawTempleMapPass(const DrawSceneDesc& desc) const
 	                                                          : island.GetFootprintFramebuffer().GetColorAttachment());
 	terrainShader->SetTextureSampler("s6_handLight", 6, GetHandLightTexture());
 	terrainShader->SetTextureSampler("s7_landLight", 7, _landLightTexture.value_or(GetHandLightTexture()));
+	// The temple's map of the land has no haze
+	const auto noHaze = glm::vec4(0.0f);
+	terrainShader->SetUniformValue("u_haze", &noHaze);
+	terrainShader->SetUniformValue("u_hazeColour", &noHaze);
 	terrainShader->SetUniformValue("u_skyAndBump", &u_skyAndBump);
 	terrainShader->SetUniformValue("u_objectShadows", &u_objectShadows);
 	terrainShader->SetUniformValue("u_islandExtent", &islandExtent);
@@ -1455,6 +1468,8 @@ TextureHandle Renderer::UpdateLandLight() const
 		const auto alignment =
 		    Locator::alignmentSystem::has_value() ? Locator::alignmentSystem::value().GetSkyAlignment() : 0.0f;
 		_landLightTable->Build(*palettes.Handle(LandLightPalette::k_Id.value()), skyType, alignment);
+		const auto& haze = _landLightTable->GetHaze();
+		_haze = {glm::vec4(haze.nearDistance, haze.farDistance, haze.k, 1.0f), glm::vec4(haze.colour, 0.0f)};
 		const auto& texels = _landLightTable->GetTexels();
 		bgfx::updateTexture2D(toBgfx(*_landLightTexture), 0, 0, 0, 0, LandLightTable::k_Size, 1,
 		                      bgfx::copy(texels.data(), static_cast<uint32_t>(texels.size() * sizeof(texels[0]))));
@@ -1726,6 +1741,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			                                                          : island.GetFootprintFramebuffer().GetColorAttachment());
 
 			terrainShader->SetTextureSampler("s7_landLight", 7, _landLightTexture.value_or(GetHandLightTexture()));
+			terrainShader->SetUniformValue("u_haze", &_haze[0]);
+			terrainShader->SetUniformValue("u_hazeColour", &_haze[1]);
 			terrainShader->SetUniformValue("u_skyAndBump", &u_skyAndBump);
 			terrainShader->SetUniformValue("u_objectShadows", &u_objectShadows);
 			terrainShader->SetUniformValue("u_islandExtent", &islandExtent);

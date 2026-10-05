@@ -16,6 +16,7 @@
 #include <vector>
 
 #include <entt/core/hashed_string.hpp>
+#include <glm/vec3.hpp>
 
 namespace openblack
 {
@@ -52,11 +53,24 @@ public:
 	/// skyType runs from 0 at night to 2 by day, and alignment from -1, evil, to 1, good
 	void Build(const LandLightPalette& palette, float skyType, float alignment) noexcept;
 
+	/// The distance haze of the frame: from `nearDistance` to `farDistance` from the camera things fade towards the haze
+	/// colour, which is added to them, while their own colour is scaled down to k of 256. The colour is a third of the
+	/// land's, k follows its brightness, and the haze closes in at dusk.
+	struct Haze
+	{
+		float nearDistance {400.0f};
+		float farDistance {900.0f};
+		float k {256.0f};
+		glm::vec3 colour {0.0f}; ///< 0 to 255
+	};
+
 	/// The table as RGBA8 texels
 	[[nodiscard]] const std::array<uint32_t, k_Size>& GetTexels() const noexcept { return _texels; }
+	[[nodiscard]] const Haze& GetHaze() const noexcept { return _haze; }
 
 private:
 	std::array<uint32_t, k_Size> _texels {};
+	Haze _haze;
 };
 
 } // namespace openblack
