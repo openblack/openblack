@@ -47,7 +47,7 @@ struct Preset
 };
 
 constexpr std::array<Preset, 6> k_Presets {{
-    {"Clear", "Ends every storm: calm air over the whole island", {0.95f, 0.75f, 0.25f, 1.0f}, 0, 0, 0, 20, 0, false},
+    {"Clear", "Every storm clears: calm air over the whole island", {0.95f, 0.75f, 0.25f, 1.0f}, 0, 0, 0, 20, 0, false},
     {"Drizzle", "A light rain under grey skies", {0.45f, 0.65f, 0.80f, 1.0f}, 30, 0, 60, 15, 5, false},
     {"Rain", "A steady downpour", {0.25f, 0.45f, 0.85f, 1.0f}, 80, 0, 90, 12, 15, false},
     {"Thunderstorm",
@@ -184,10 +184,13 @@ void Weather::DrawPresets() noexcept
 		{
 			continue;
 		}
+		// A preset becomes the island's weather: the other storms clear and the climates stop breeding new ones, so
+		// only a thunderstorm brings thunder
 		auto& weather = Locator::weatherSystem::value();
+		weather.ClearStorms();
+		weather.SetStormCreationEnabled(false);
 		if (preset.rain == 0 && preset.snow == 0)
 		{
-			weather.ClearStorms();
 			continue;
 		}
 		// The made-to-measure storm takes the preset, keeping its own length, so it can be tweaked from there
@@ -315,7 +318,8 @@ void Weather::DrawStorms() noexcept
 	ImGui::TableSetupColumn("Lightning");
 	ImGui::TableSetupColumn("");
 	ImGui::TableHeadersRow();
-	registry.Each<Storm>([](entt::entity entity, Storm& storm) {
+	auto& weather = Locator::weatherSystem::value();
+	registry.Each<const Storm>([&weather](entt::entity entity, const Storm& storm) {
 		if (storm.dead)
 		{
 			return;
@@ -334,9 +338,14 @@ void Weather::DrawStorms() noexcept
 		ImGui::TableNextColumn();
 		ImGui::TextUnformatted(storm.boltWait.y != 0.0f || storm.thunderWait.y != 0.0f ? "yes" : "-");
 		ImGui::TableNextColumn();
-		if (ImGui::SmallButton("End"))
+		// A storm that is clearing has no more than its fading time left
+		if (storm.lastsFor - storm.age < storm.fadeTime && storm.age >= storm.fadeTime)
 		{
-			storm.dead = true;
+			ImGui::TextDisabled("clearing");
+		}
+		else if (ImGui::SmallButton("End"))
+		{
+			weather.EndStorm(entity);
 		}
 		ImGui::PopID();
 	});

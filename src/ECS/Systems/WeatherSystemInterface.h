@@ -11,6 +11,7 @@
 
 #include <cstdint>
 
+#include <entt/entity/fwd.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
@@ -60,7 +61,9 @@ public:
 	// Debug tools
 	/// Lays a storm over the whole island, in place of any forced before it
 	virtual void ForceStorm(const ForcedStorm& storm) = 0;
-	/// Ends every storm at once
+	/// A storm clears from the strength it has now over its fading time, as though at the end of its life
+	virtual void EndStorm(entt::entity storm) = 0;
+	/// Every storm clears
 	virtual void ClearStorms() = 0;
 	/// Every storm with lightning flashes on its next turn, with a bolt or with thunder
 	virtual void StrikeLightning(bool bolt) = 0;

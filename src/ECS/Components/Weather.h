@@ -125,6 +125,9 @@ struct Storm
 	float boltTimer {0.0f};
 	/// Its last flash
 	lightning::Flash flash;
+	/// A storm forced over the whole island strikes around the camera, where its thunder can be heard, rather than at its
+	/// middle
+	bool strikesNearCamera {false};
 
 	/// Creation order: later storms are applied on top of earlier ones
 	uint32_t serial;

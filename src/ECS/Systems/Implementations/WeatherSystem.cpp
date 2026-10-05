@@ -22,6 +22,7 @@
 #include "3D/LandIslandInterface.h"
 #include "3D/Lightning.h"
 #include "3D/SkyInterface.h"
+#include "Camera/Camera.h"
 #include "Common/GameRandom.h"
 #include "Common/RandomNumberManager.h"
 #include "ECS/Registry.h"
@@ -91,6 +92,8 @@ constexpr int k_StormPlacementTries = 20;
 
 // Storms as they live, move and fade
 constexpr float k_TurnDuration = 0.1f;
+/// How far from the camera a storm forced over the island strikes, along x and z: within the thunder's full volume
+constexpr float k_StrikeNearCamera = 300.0f;
 constexpr float k_ArrivalDistance = 0.001f;
 constexpr float k_EffectScale = 256.0f;
 constexpr uint8_t k_DeadStormTurns = 2;
@@ -573,13 +576,21 @@ void WeatherSystem::UpdateStorms()
 		if (storm.fadeTime < storm.age)
 		{
 			auto& random = Locator::gameRandom::value();
+			auto strikeAt = storm.position;
+			if (storm.strikesNearCamera && Locator::camera::has_value())
+			{
+				const auto camera = Locator::camera::value().GetOrigin();
+				auto& local = Locator::rng::value();
+				strikeAt.x = camera.x + local.NextValue(-k_StrikeNearCamera, k_StrikeNearCamera);
+				strikeAt.z = camera.z + local.NextValue(-k_StrikeNearCamera, k_StrikeNearCamera);
+			}
 			if (storm.boltWait.y != 0.0f)
 			{
 				storm.boltTimer -= k_TurnDuration;
 				if (storm.boltTimer <= 0.0f)
 				{
 					storm.boltTimer = random.GameFloatRange(storm.boltWait.x, storm.boltWait.y);
-					storm.flash = lightning::Strike(storm.position, storm.outerRadius, lightning::k_BoltStrength);
+					storm.flash = lightning::Strike(strikeAt, storm.outerRadius, lightning::k_BoltStrength);
 				}
 			}
 			if (storm.thunderWait.y != 0.0f)
@@ -588,13 +599,13 @@ void WeatherSystem::UpdateStorms()
 				if (storm.thunderTimer <= 0.0f)
 				{
 					storm.thunderTimer = random.GameFloatRange(storm.thunderWait.x, storm.thunderWait.y);
-					storm.flash = lightning::Strike(storm.position, storm.outerRadius, lightning::k_ThunderStrength);
+					storm.flash = lightning::Strike(strikeAt, storm.outerRadius, lightning::k_ThunderStrength);
 					// Its thunder rolls from the cloud, one of eleven claps picked from the C runtime's numbers, heard
 					// once the sound has travelled to the camera
 					const auto clap = (random.CrtRand() % lightning::k_ThunderClaps) + lightning::k_FirstThunderClap;
-					const auto ground = Locator::terrainSystem::value().GetHeightAt({storm.position.x, storm.position.z});
+					const auto ground = Locator::terrainSystem::value().GetHeightAt({strikeAt.x, strikeAt.z});
 					Locator::soundTagSystem::value().CreatePointSound(
-					    lightning::ThunderSound(clap), {storm.position.x, ground + storm.cloudHeight, storm.position.z}, true);
+					    lightning::ThunderSound(clap), {strikeAt.x, ground + storm.cloudHeight, strikeAt.z}, true);
 				}
 			}
 		}
@@ -891,9 +902,10 @@ void WeatherSystem::CreateStorm(entt::entity climateEntity)
 void WeatherSystem::ForceStorm(const ForcedStorm& forced)
 {
 	auto& registry = Locator::entitiesRegistry::value();
+	// The storm forced before clears as the new one comes in
 	if (_forcedStorm != entt::null && registry.Valid(_forcedStorm))
 	{
-		registry.Destroy(_forcedStorm);
+		EndStorm(_forcedStorm);
 	}
 
 	// Over the middle of the land, reaching every corner of it at full strength
@@ -928,6 +940,7 @@ void WeatherSystem::ForceStorm(const ForcedStorm& forced)
 	storm.effect = forced.effect;
 	storm.thunderWait = forced.thunderWait;
 	storm.boltWait = forced.boltWait;
+	storm.strikesNearCamera = true;
 	storm.climate = entt::null;
 	storm.serial = _nextStormSerial++;
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), "Forced a storm over the island: {}s, rain {} snow {} cloud {} wind ({}, {})",
@@ -935,10 +948,28 @@ void WeatherSystem::ForceStorm(const ForcedStorm& forced)
 	                   forced.effect.windZ);
 }
 
+void WeatherSystem::EndStorm(entt::entity entity)
+{
+	auto* storm = Locator::entitiesRegistry::value().TryGet<Storm>(entity);
+	if (storm == nullptr || storm->dead || storm->fadeTime <= 0.0f)
+	{
+		return;
+	}
+	// Past its fading in, with as much of its fading out left as its strength now: it clears smoothly from here
+	const auto fade = std::clamp(storm->currentStrength / storm->strength, 0.0f, 1.0f);
+	storm->age = std::max(storm->age, storm->fadeTime);
+	storm->lastsFor = std::min(storm->lastsFor, storm->age + (fade * storm->fadeTime));
+}
+
 void WeatherSystem::ClearStorms()
 {
-	Locator::entitiesRegistry::value().Each<Storm>([](entt::entity, Storm& storm) { storm.dead = true; });
-	_forcedStorm = entt::null;
+	std::vector<entt::entity> storms;
+	Locator::entitiesRegistry::value().Each<const Storm>(
+	    [&storms](entt::entity entity, const Storm&) { storms.push_back(entity); });
+	for (const auto entity : storms)
+	{
+		EndStorm(entity);
+	}
 }
 
 void WeatherSystem::StrikeLightning(bool bolt)

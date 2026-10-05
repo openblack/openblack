@@ -51,6 +51,7 @@ public:
 	[[nodiscard]] bool IsStormCreationEnabled() const override { return _stormCreationEnabled; }
 
 	void ForceStorm(const ForcedStorm& storm) override;
+	void EndStorm(entt::entity storm) override;
 	void ClearStorms() override;
 	void StrikeLightning(bool bolt) override;
 
