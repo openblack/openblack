@@ -337,9 +337,11 @@ void TempleInterior::UpdateOptionsAndFutureRooms(float seconds)
 				GoToRoom(TempleRoom::Main);
 			}
 		}
-		else if (_currentRoom != TempleRoom::Options)
+		else if (_currentRoom != TempleRoom::Options && _optionsShown)
 		{
+			// The options belong to their room: put elsewhere, as the debug window can, the player leaves them behind
 			_optionsShown = false;
+			menu.Close();
 		}
 	}
 
@@ -843,15 +845,20 @@ void TempleInterior::Deactivate()
 	_scrolls.reset();
 	_signs.reset();
 	_text.clear();
-	_optionsShown = false;
 	if (_interface != nullptr)
 	{
+		// Nor do the options room's options go out of the temple with the player
+		if (_optionsShown)
+		{
+			_interface->GetMenu().Close();
+		}
 		_interface->SetMessage(std::nullopt);
 		_interface->GetMenu().SetInsideTemple(false);
 		// The tooltip ends with nothing to keep it
 		_interface->SetHandOnScreen(std::nullopt);
 		_interface->GetToolTips().ProcessTurn();
 	}
+	_optionsShown = false;
 
 	auto& registry = Locator::entitiesRegistry::value();
 	auto& config = Locator::config::value();
