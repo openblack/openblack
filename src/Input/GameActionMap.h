@@ -59,7 +59,7 @@ private:
 	uint8_t _currentMouseButtons = 0;
 	std::array<std::optional<BindableActionMap>, 2> _mouseWheelBinding; // up, down
 	glm::uvec2 _mousePosition;
-	glm::ivec2 _mouseDelta;
+	glm::ivec2 _mouseDelta {0};
 	float _mouseWheelDelta = 0.0f;
 };
 } // namespace openblack::input

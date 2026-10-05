@@ -138,7 +138,7 @@ void GameActionMap::Frame()
 		                                                static_cast<uint64_t>(_mouseModBindings[SDL_BUTTON_RMASK].second)));
 		_bindableMap = static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) &
 		                                              ~(static_cast<uint64_t>(_mouseBindings[SDL_BUTTON_LMASK]) |
-		                                                static_cast<uint64_t>(_mouseBindings[SDL_BUTTON_LMASK])));
+		                                                static_cast<uint64_t>(_mouseBindings[SDL_BUTTON_RMASK])));
 	}
 	else
 	{
@@ -245,8 +245,7 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 		}
 	}
 	// Double click will not count as a single click
-	else if (event.type == SDL_MOUSEBUTTONDOWN && (event.button.button & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0 &&
-	         event.button.clicks == 2)
+	else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT && event.button.clicks == 2)
 	{
 		_unbindableMap = static_cast<UnbindableActionMap>(static_cast<uint8_t>(_unbindableMap) |
 		                                                  static_cast<uint8_t>(UnbindableActionMap::DOUBLE_CLICK));
@@ -335,7 +334,7 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 			                                              ~static_cast<uint64_t>(_keyboardBindings[event.key.keysym.scancode]));
 		}
 	}
-	else if (event.type == SDL_MOUSEBUTTONUP && (event.button.button & SDL_BUTTON_LMASK) != 0 && event.button.clicks == 2)
+	else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT && event.button.clicks == 2)
 	{
 		_unbindableMap = static_cast<UnbindableActionMap>(static_cast<uint8_t>(_unbindableMap) &
 		                                                  ~static_cast<uint8_t>(UnbindableActionMap::DOUBLE_CLICK));
@@ -367,7 +366,8 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 	}
 	else if (event.type == SDL_MOUSEMOTION)
 	{
-		_mouseDelta = {event.motion.xrel, event.motion.yrel};
+		// Several moves can come in a frame, and the frame's delta is all of them
+		_mouseDelta += glm::ivec2(event.motion.xrel, event.motion.yrel);
 	}
 }
 
