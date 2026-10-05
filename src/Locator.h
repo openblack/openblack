@@ -97,6 +97,7 @@ class CameraPathSystemInterface;
 class LivingActionSystemInterface;
 class PathfindingSystemInterface;
 class AlignmentSystemInterface;
+class TempleExteriorSystemInterface;
 class PlayerSystemInterface;
 class RenderingSystemInterface;
 class TownSystemInterface;
@@ -141,6 +142,7 @@ struct Locator
 	using entitiesMap = entt::locator<ecs::MapInterface>;
 	using playerSystem = entt::locator<ecs::systems::PlayerSystemInterface>;
 	using alignmentSystem = entt::locator<ecs::systems::AlignmentSystemInterface>;
+	using templeExteriorSystem = entt::locator<ecs::systems::TempleExteriorSystemInterface>;
 	using handSystem = entt::locator<ecs::systems::HandSystemInterface>;
 	using temple = entt::locator<TempleInteriorInterface>;
 	using time = entt::locator<ecs::systems::TimeSystemInterface>;

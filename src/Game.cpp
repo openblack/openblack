@@ -59,6 +59,7 @@
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/AlignmentSystemInterface.h"
+#include "ECS/Systems/TempleExteriorSystemInterface.h"
 #include "ECS/Systems/CameraBookmarkSystemInterface.h"
 #include "ECS/Systems/CameraPathSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
@@ -350,6 +351,8 @@ bool Game::GameLogicLoop() noexcept
 	// GPlayer::ProcessPlayers ends each turn with the camera taking the alignment of the player of most influence where it
 	// is
 	Locator::alignmentSystem::value().UpdateTurn();
+	// Citadel::Process: the temples' outsides follow their players' alignments
+	Locator::templeExteriorSystem::value().UpdateTurn();
 
 	if (_atmosAudio)
 	{
@@ -800,21 +803,33 @@ bool Game::Initialize() noexcept
 		}
 	}
 
-	fileSystem.Iterate(
-	    fileSystem.GetPath<Path::Citadel>() / "OutsideMeshes", false, [&meshManager](const std::filesystem::path& f) {
-		    if (f.extension() == ".zzz")
-		    {
-			    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading temple mesh: {}", f.stem().string());
-			    try
-			    {
-				    meshManager.Load(fmt::format("temple/{}", f.stem().string()), resources::L3DLoader::FromDiskTag {}, f);
-			    }
-			    catch (std::runtime_error& err)
-			    {
-				    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
-			    }
-		    }
-	    });
+	fileSystem.Iterate(fileSystem.GetPath<Path::Citadel>() / "OutsideMeshes", false,
+	                   [&meshManager, &resources](const std::filesystem::path& f) {
+		                   const auto extension = string_utils::LowerCase(f.extension().string());
+		                   const auto name = fmt::format("temple/{}", string_utils::LowerCase(f.stem().string()));
+		                   try
+		                   {
+			                   if (extension == ".zzz")
+			                   {
+				                   SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading temple mesh: {}", f.stem().string());
+				                   meshManager.Load(name, resources::L3DLoader::FromDiskTag {}, f);
+				                   // Citadel's outside is blended from the temple meshes, into the first temple's (fn_00882B10)
+				                   if (name.starts_with("temple/b_temple") || name.starts_with("temple/b_first_temple"))
+				                   {
+					                   resources.GetL3DFiles().Load(name, resources::L3DFileLoader::FromDiskTag {}, f);
+				                   }
+			                   }
+			                   else if (extension == ".16b")
+			                   {
+				                   // And its texture from these, from evil to neutral to good
+				                   resources.GetBitmaps().Load(name, resources::Bitmap16BLoader::FromDiskTag {}, f);
+			                   }
+		                   }
+		                   catch (std::runtime_error& err)
+		                   {
+			                   SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+		                   }
+	                   });
 
 	fileSystem.Iterate( //
 	    fileSystem.GetPath<filesystem::Path::Citadel>() / "engine", false,

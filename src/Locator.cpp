@@ -36,6 +36,7 @@
 #include "ECS/Systems/Implementations/PathfindingSystem.h"
 #include "ECS/Systems/Implementations/PlayerSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
+#include "ECS/Systems/Implementations/TempleExteriorSystem.h"
 #include "ECS/Systems/Implementations/TimeSystem.h"
 #include "ECS/Systems/Implementations/TownSystem.h"
 #include "ECS/Systems/Implementations/VegetationSystem.h"
@@ -71,6 +72,7 @@ using openblack::ecs::systems::LivingActionSystem;
 using openblack::ecs::systems::PathfindingSystem;
 using openblack::ecs::systems::PlayerSystem;
 using openblack::ecs::systems::RenderingSystem;
+using openblack::ecs::systems::TempleExteriorSystem;
 using openblack::ecs::systems::TimeSystem;
 using openblack::ecs::systems::TownSystem;
 using openblack::ecs::systems::VegetationSystem;
@@ -137,6 +139,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::oceanSystem::emplace<Ocean>();
 	Locator::skySystem::emplace<Sky>();
 	Locator::alignmentSystem::emplace<AlignmentSystem>();
+	Locator::templeExteriorSystem::emplace<TempleExteriorSystem>();
 	Locator::time::emplace<TimeSystem>();
 	Locator::vegetation::emplace<VegetationSystem>();
 	return true;
