@@ -190,6 +190,7 @@ public:
 	[[nodiscard]] const std::vector<lnd::LNDCountry>& GetCountries() const override { throw std::logic_error("unused"); }
 	[[nodiscard]] const graphics::Texture2D& GetHeightMap() const override { throw std::logic_error("unused"); }
 	[[nodiscard]] const graphics::Texture2D& GetLuminosityMap() const override { throw std::logic_error("unused"); }
+	[[nodiscard]] const graphics::Texture2D& GetCellColourMap() const override { throw std::logic_error("unused"); }
 	[[nodiscard]] const graphics::Texture2D& GetBlockTextures() const override { throw std::logic_error("unused"); }
 	[[nodiscard]] const graphics::FrameBuffer& GetFootprintFramebuffer() const override { throw std::logic_error("unused"); }
 	[[nodiscard]] const graphics::FrameBuffer& GetLandAlphaFramebuffer() const override { throw std::logic_error("unused"); }

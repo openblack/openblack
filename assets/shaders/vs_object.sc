@@ -80,7 +80,15 @@ void main()
 	// The distance haze, once for the object at its origin: its colour fades and the haze's is added after the texture
 	float hazeT = HazeT(mul(u_view, vec4(origin, 1.0f)).z);
 	colour = HazeDiffuse(colour, HazeFactor(hazeT));
-	v_haze = vec4(HazeColour(hazeT) / 255.0f, 0.0f);
+	// The haze is added with the land's colour where the object stands, each channel at most white
+	vec3 added = HazeColour(hazeT);
+#ifndef USE_LIGHTMAP
+	if (u_landLight.x > 0.0f)
+	{
+		added = min(added + LandColourAt(origin.xz), vec3_splat(255.0f));
+	}
+#endif // USE_LIGHTMAP
+	v_haze = vec4(added / 255.0f, 0.0f);
 	v_color0 = vec4(ModelLightColour(colour, ModelLightFactor(a_normal, localLight)), 1.0f);
 #ifndef USE_LIGHTMAP
 	if (u_landLight.z > 0.0f)

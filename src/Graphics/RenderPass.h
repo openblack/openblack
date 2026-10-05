@@ -24,6 +24,8 @@ enum class RenderPass : uint8_t
 	LandShade,
 	/// The land's luminosity this frame: as it was laid, shaded by the clouds and lit by the lights
 	LandLuminosity,
+	/// The land cells' colours this frame, which light the land and the models on it
+	LandColour,
 	Footprint,
 	/// The rivers' channels, into the land's alpha
 	LandAlpha,
@@ -45,6 +47,7 @@ enum class RenderPass : uint8_t
 static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_count)> k_RenderPassNames {
     "Land Shade Pass",      //
     "Land Luminosity Pass", //
+    "Land Colour Pass",     //
     "Footprint Pass",       //
     "Land Alpha Pass",      //
     "Object Shadow Pass",   //

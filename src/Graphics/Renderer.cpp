@@ -34,8 +34,10 @@
 #include "3D/L3DMesh.h"
 #include "3D/L3DSubMesh.h"
 #include "3D/LandBlock.h"
+#include "3D/LandColourStamps.h"
 #include "3D/LandIslandInterface.h"
 #include "3D/LandLightTable.h"
+#include "3D/Lightning.h"
 #include "3D/Mists.h"
 #include "3D/OceanInterface.h"
 #include "3D/OrientedText.h"
@@ -57,6 +59,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Components/VillageLight.h"
+#include "ECS/Components/Weather.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/AlignmentSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
@@ -354,6 +357,11 @@ Renderer::~Renderer() noexcept
 	}
 	_landLuminosityFrameBuffer.reset();
 	_landShadeFrameBuffer.reset();
+	_landColourFrameBuffer.reset();
+	if (_lightningGlowTexture)
+	{
+		bgfx::destroy(toBgfx(*_lightningGlowTexture));
+	}
 	_shaderManager.reset();
 	bgfx::frame();
 	bgfx::shutdown();
@@ -534,6 +542,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				const glm::vec4 u_landLight {landLit ? 1.0f : 0.0f, desc.landLightScale, desc.unlit ? 1.0f : 0.0f, 0.0f};
 				program->SetTextureSampler("s_landLuminosity", 6, GetLandLuminosity());
 				program->SetTextureSampler("s_landLight", 7, GetLandLightTexture());
+				program->SetTextureSampler("s_landColour", 8, GetLandColour());
 				program->SetUniformValue("u_islandExtent", &islandExtent);
 				program->SetUniformValue("u_landLight", &u_landLight);
 			}
@@ -796,6 +805,7 @@ void Renderer::DrawTempleMapPass() const
 	const auto noHand = glm::vec4(0.0f);
 	terrainShader->SetTextureSampler("s0_blockTextures", 0, island.GetBlockTextures());
 	terrainShader->SetTextureSampler("s9_landLuminosity", 9, GetLandLuminosity());
+	terrainShader->SetTextureSampler("s10_landColour", 10, GetLandColour());
 	terrainShader->SetTextureSampler("s2_smallBump", 2, *smallBump);
 	terrainShader->SetTextureSampler("s3_footprints", 3, island.GetFootprintFramebuffer().GetColorAttachment());
 	terrainShader->SetTextureSampler("s4_handShadow", 4, _handShadowFrameBuffer->GetColorAttachment());
@@ -1648,6 +1658,7 @@ void Renderer::DrawMists(const DrawSceneDesc& desc) const
 				program->SetTextureSampler("s_alpha", 1, *alphaTexture);
 				program->SetTextureSampler("s_landLuminosity", 6, GetLandLuminosity());
 				program->SetTextureSampler("s_landLight", 7, GetLandLightTexture());
+				program->SetTextureSampler("s_landColour", 8, GetLandColour());
 				program->SetUniformValue("u_islandExtent", &islandExtent);
 				program->SetUniformValue("u_landLight", &u_landLight);
 				program->SetUniformValue("u_haze", landLit ? &_haze[0] : &noHaze);
@@ -1814,6 +1825,79 @@ void Renderer::DrawSunGlare(const Camera& camera) const
 	                                    });
 }
 
+namespace
+{
+/// Whether a target is made and sized to the land's cell corners
+bool FitsLand(const std::unique_ptr<FrameBuffer>& frameBuffer, glm::u16vec2 size)
+{
+	uint16_t width = 0;
+	uint16_t height = 0;
+	if (frameBuffer)
+	{
+		frameBuffer->GetSize(width, height);
+	}
+	return frameBuffer && width == size.x && height == size.y;
+}
+
+/// A view drawing into a target a texel for each of the land's cell corners, in texels, a row for each cell along z,
+/// whichever way up the backend keeps its targets. Its draws are kept in order.
+bgfx::ViewId SetUpLandView(RenderPass pass, const FrameBuffer& frameBuffer, glm::u16vec2 size)
+{
+	const auto w = static_cast<float>(size.x);
+	const auto h = static_cast<float>(size.y);
+	const auto projection = bgfx::getCaps()->originBottomLeft ? glm::ortho(0.0f, w, 0.0f, h) : glm::ortho(0.0f, w, h, 0.0f);
+	const glm::mat4 identity(1.0f);
+	const auto viewId = static_cast<bgfx::ViewId>(pass);
+	frameBuffer.Bind(pass);
+	bgfx::setViewRect(viewId, 0, 0, size.x, size.y);
+	bgfx::setViewMode(viewId, bgfx::ViewMode::Sequential);
+	bgfx::setViewTransform(viewId, glm::value_ptr(identity), glm::value_ptr(projection));
+	bgfx::touch(viewId);
+	return viewId;
+}
+
+/// A rectangle of cells drawn into a land view, from a position and texture coordinate to another; the program's
+/// samplers and uniforms are set before
+void SubmitLandQuad(bgfx::ViewId viewId, const ShaderProgram& program, glm::vec2 from, glm::vec2 to, glm::vec2 uvFrom,
+                    glm::vec2 uvTo, uint64_t state)
+{
+	struct Vertex
+	{
+		glm::vec2 position;
+		glm::vec2 uv;
+	};
+	static const auto k_Layout = [] {
+		bgfx::VertexLayout layout;
+		layout.begin()
+		    .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
+		    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+		    .end();
+		return layout;
+	}();
+	if (bgfx::getAvailTransientVertexBuffer(6, k_Layout) < 6)
+	{
+		return;
+	}
+	bgfx::TransientVertexBuffer buffer;
+	bgfx::allocTransientVertexBuffer(&buffer, 6, k_Layout);
+	const auto vertices = std::span(reinterpret_cast<Vertex*>(buffer.data), 6);
+	const std::array<Vertex, 4> corners {{
+	    {{from.x, from.y}, {uvFrom.x, uvFrom.y}},
+	    {{to.x, from.y}, {uvTo.x, uvFrom.y}},
+	    {{to.x, to.y}, {uvTo.x, uvTo.y}},
+	    {{from.x, to.y}, {uvFrom.x, uvTo.y}},
+	}};
+	constexpr std::array<size_t, 6> k_Indices {0, 1, 2, 2, 3, 0};
+	for (size_t i = 0; i < vertices.size(); ++i)
+	{
+		vertices[i] = corners.at(k_Indices.at(i));
+	}
+	bgfx::setVertexBuffer(0, &buffer);
+	bgfx::setState(state);
+	bgfx::submit(viewId, toBgfx(program.GetRawHandle()));
+}
+} // namespace
+
 const Texture2D& Renderer::GetLandLuminosity() const
 {
 	if (_landLuminosityFrameBuffer)
@@ -1832,75 +1916,21 @@ void Renderer::DrawLandLuminosityPass(const DrawSceneDesc& drawDesc) const
 	const auto& island = Locator::terrainSystem::value();
 	const auto& luminosity = island.GetLuminosityMap();
 	const auto size = luminosity.GetResolution();
-	const auto fits = [&size](const std::unique_ptr<FrameBuffer>& frameBuffer) {
-		uint16_t width = 0;
-		uint16_t height = 0;
-		if (frameBuffer)
-		{
-			frameBuffer->GetSize(width, height);
-		}
-		return frameBuffer && width == size.x && height == size.y;
-	};
-	if (!fits(_landLuminosityFrameBuffer))
+	if (!FitsLand(_landLuminosityFrameBuffer, size))
 	{
 		_landLuminosityFrameBuffer =
 		    std::make_unique<FrameBuffer>("LandLuminosity", size.x, size.y, graphics::TextureFormat::R8);
 	}
-	if (!fits(_landShadeFrameBuffer))
+	if (!FitsLand(_landShadeFrameBuffer, size))
 	{
 		_landShadeFrameBuffer = std::make_unique<FrameBuffer>("LandShade", size.x, size.y, graphics::TextureFormat::RGBA8);
 	}
-
-	// Both views in texels, a row for each cell along z, whichever way up the backend keeps its targets
 	const auto w = static_cast<float>(size.x);
 	const auto h = static_cast<float>(size.y);
-	const auto projection = bgfx::getCaps()->originBottomLeft ? glm::ortho(0.0f, w, 0.0f, h) : glm::ortho(0.0f, w, h, 0.0f);
-	const glm::mat4 identity(1.0f);
-	const auto setUpView = [&](RenderPass pass, const FrameBuffer& frameBuffer) {
-		const auto viewId = static_cast<bgfx::ViewId>(pass);
-		frameBuffer.Bind(pass);
-		bgfx::setViewRect(viewId, 0, 0, size.x, size.y);
-		bgfx::setViewMode(viewId, bgfx::ViewMode::Sequential);
-		bgfx::setViewTransform(viewId, glm::value_ptr(identity), glm::value_ptr(projection));
-		bgfx::touch(viewId);
-		return viewId;
+	const auto setUpView = [&size](RenderPass pass, const FrameBuffer& frameBuffer) {
+		return SetUpLandView(pass, frameBuffer, size);
 	};
-
-	bgfx::VertexLayout layout;
-	layout.begin()
-	    .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
-	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-	    .end();
-	struct Vertex
-	{
-		glm::vec2 position;
-		glm::vec2 uv;
-	};
-	// Samplers and uniforms are set before each quad
-	const auto submitQuad = [&layout](bgfx::ViewId viewId, const ShaderProgram& program, glm::vec2 from, glm::vec2 to,
-	                                  glm::vec2 uvFrom, glm::vec2 uvTo, uint64_t state) {
-		if (bgfx::getAvailTransientVertexBuffer(6, layout) < 6)
-		{
-			return;
-		}
-		bgfx::TransientVertexBuffer buffer;
-		bgfx::allocTransientVertexBuffer(&buffer, 6, layout);
-		const auto vertices = std::span(reinterpret_cast<Vertex*>(buffer.data), 6);
-		const std::array<Vertex, 4> corners {{
-		    {{from.x, from.y}, {uvFrom.x, uvFrom.y}},
-		    {{to.x, from.y}, {uvTo.x, uvFrom.y}},
-		    {{to.x, to.y}, {uvTo.x, uvTo.y}},
-		    {{from.x, to.y}, {uvFrom.x, uvTo.y}},
-		}};
-		constexpr std::array<size_t, 6> k_Indices {0, 1, 2, 2, 3, 0};
-		for (size_t i = 0; i < vertices.size(); ++i)
-		{
-			vertices[i] = corners.at(k_Indices.at(i));
-		}
-		bgfx::setVertexBuffer(0, &buffer);
-		bgfx::setState(state);
-		bgfx::submit(viewId, toBgfx(program.GetRawHandle()));
-	};
+	const auto& submitQuad = SubmitLandQuad;
 
 	// What shades each cell this frame: the darkest of the clouds' shadows over it in red, from white, and the brightest
 	// of the lights in alpha, from none
@@ -2005,6 +2035,91 @@ void Renderer::DrawLandLuminosityPass(const DrawSceneDesc& drawDesc) const
 	luminosityProgram.SetTextureSampler("s_shade", 1, _landShadeFrameBuffer->GetColorAttachment());
 	luminosityProgram.SetUniformValue("u_landLuminosity", &u_landLuminosity);
 	submitQuad(luminosityView, luminosityProgram, {0.0f, 0.0f}, {w, h}, {0.0f, 0.0f}, {1.0f, 1.0f}, BGFX_STATE_WRITE_R);
+}
+
+const Texture2D& Renderer::GetLandColour() const
+{
+	if (_landColourFrameBuffer)
+	{
+		return _landColourFrameBuffer->GetColorAttachment();
+	}
+	return Locator::terrainSystem::value().GetCellColourMap();
+}
+
+void Renderer::DrawLandColourPass(const DrawSceneDesc& drawDesc) const
+{
+	if (!drawDesc.drawIsland || !Locator::terrainSystem::has_value())
+	{
+		return;
+	}
+	const auto& island = Locator::terrainSystem::value();
+	const auto& cellColours = island.GetCellColourMap();
+	const auto size = cellColours.GetResolution();
+	if (!FitsLand(_landColourFrameBuffer, size))
+	{
+		_landColourFrameBuffer = std::make_unique<FrameBuffer>("LandColour", size.x, size.y, graphics::TextureFormat::RGBA8);
+	}
+	const auto viewId = SetUpLandView(RenderPass::LandColour, *_landColourFrameBuffer, size);
+	const auto& program = *_shaderManager->GetShader("LandColour");
+
+	// The cells' colours as the land was laid
+	const glm::vec4 u_copy {0.0f};
+	program.SetTextureSampler("s_texture", 0, cellColours);
+	program.SetUniformValue("u_landColourStamp", &u_copy);
+	SubmitLandQuad(viewId, program, {0.0f, 0.0f}, glm::vec2(size), {0.0f, 0.0f}, {1.0f, 1.0f}, BGFX_STATE_WRITE_RGB);
+
+	// The frame's stamps over them, in order, up to the game's most
+	if (!_lightningGlowTexture)
+	{
+		const auto image = land_colour_stamps::LightningImage();
+		constexpr auto k_Side = static_cast<uint16_t>(land_colour_stamps::k_LightningSide);
+		_lightningGlowTexture = fromBgfx(bgfx::createTexture2D(k_Side, k_Side, false, 1, bgfx::TextureFormat::RGB8,
+		                                                       BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP | BGFX_SAMPLER_POINT,
+		                                                       bgfx::copy(image.data(), static_cast<uint32_t>(image.size()))));
+		bgfx::setName(toBgfx(*_lightningGlowTexture), "Lightning Glow");
+	}
+	const glm::vec2 firstCell = island.GetExtent().minimum / LandIslandInterface::k_CellSize;
+	size_t stamps = 0;
+	const auto stamp = [&](TextureHandle image, int32_t side, glm::vec2 corner, uint8_t strength,
+	                       land_colour_stamps::Combine combine) {
+		if (strength == 0 || stamps >= land_colour_stamps::k_MaxStamps)
+		{
+			return;
+		}
+		++stamps;
+		const auto placement = land_colour_stamps::Place(corner);
+		const auto origin = glm::vec2(placement.cell) - firstCell;
+		constexpr float k_LastCell = static_cast<float>(LandIslandInterface::k_MapCellsPerSide - 1);
+		const auto from = glm::max(origin, -firstCell);
+		const auto to = glm::min(origin + static_cast<float>(side - 1), k_LastCell - firstCell);
+		if (glm::any(glm::greaterThanEqual(from, to)))
+		{
+			return;
+		}
+		const glm::vec4 u_landColourStamp {1.0f, static_cast<float>(strength), static_cast<float>(side), 0.0f};
+		const glm::vec4 u_landColourWeights {glm::vec2(placement.weight), 0.0f, 0.0f};
+		program.SetTextureSampler("s_texture", 0, image);
+		program.SetUniformValue("u_landColourStamp", &u_landColourStamp);
+		program.SetUniformValue("u_landColourWeights", &u_landColourWeights);
+		// An added stamp brightens the cells to at most white; another keeps the brighter colour
+		const auto equation =
+		    combine == land_colour_stamps::Combine::Add ? BGFX_STATE_BLEND_EQUATION_ADD : BGFX_STATE_BLEND_EQUATION_MAX;
+		SubmitLandQuad(viewId, program, from, to, from - origin, to - origin,
+		               BGFX_STATE_WRITE_RGB | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_ONE) |
+		                   BGFX_STATE_BLEND_EQUATION(equation));
+	};
+
+	// Each storm's lightning glows on the ground around where it struck
+	drawDesc.entities.Each<const ecs::components::Storm>([&](const ecs::components::Storm& storm) {
+		if (storm.dead)
+		{
+			return;
+		}
+		const auto strength = land_colour_stamps::Strength(lightning::GlowStrength(storm.flash));
+		stamp(*_lightningGlowTexture, land_colour_stamps::k_LightningSide,
+		      land_colour_stamps::CentredCorner(storm.flash.position, land_colour_stamps::k_LightningSide), strength,
+		      land_colour_stamps::Combine::Add);
+	});
 }
 
 void Renderer::DrawLandAlphaPass(const DrawSceneDesc& drawDesc) const
@@ -2240,6 +2355,7 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 {
 	// TODO(bwrsandman): Footprint framebuffer doesn't need to be updated each frame
 	DrawLandLuminosityPass(drawDesc);
+	DrawLandColourPass(drawDesc);
 	DrawFootprintPass(drawDesc);
 	DrawLandAlphaPass(drawDesc);
 	UpdateLandLight();
@@ -2428,6 +2544,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 			terrainShader->SetTextureSampler("s0_blockTextures", 0, island.GetBlockTextures());
 			terrainShader->SetTextureSampler("s9_landLuminosity", 9, GetLandLuminosity());
+			terrainShader->SetTextureSampler("s10_landColour", 10, GetLandColour());
 			terrainShader->SetTextureSampler("s1_smallBumpAlpha", 1, *smallBumpAlpha);
 			terrainShader->SetTextureSampler("s8_landAlpha", 8, island.GetLandAlphaFramebuffer().GetColorAttachment());
 			terrainShader->SetTextureSampler("s2_smallBump", 2, *smallBump);

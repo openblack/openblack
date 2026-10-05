@@ -44,6 +44,7 @@ public:
 private:
 	[[nodiscard]] std::vector<uint8_t> CreateHeightMap() const;
 	[[nodiscard]] std::vector<uint8_t> CreateLuminosityMap() const;
+	[[nodiscard]] std::vector<uint8_t> CreateCellColourMap() const;
 	std::vector<LandBlock> _landBlocks;
 	std::vector<lnd::LNDCountry> _countries;
 
@@ -57,6 +58,7 @@ public:
 
 	[[nodiscard]] const graphics::Texture2D& GetHeightMap() const override { return *_heightMap; }
 	[[nodiscard]] const graphics::Texture2D& GetLuminosityMap() const override { return *_luminosityMap; }
+	[[nodiscard]] const graphics::Texture2D& GetCellColourMap() const override { return *_cellColourMap; }
 	[[nodiscard]] const graphics::Texture2D& GetBlockTextures() const override { return *_blockTextures; }
 	[[nodiscard]] const graphics::FrameBuffer& GetFootprintFramebuffer() const override { return *_footprintFrameBuffer; }
 	[[nodiscard]] const graphics::FrameBuffer& GetLandAlphaFramebuffer() const override { return *_landAlphaFrameBuffer; }
@@ -71,6 +73,7 @@ public:
 private:
 	std::unique_ptr<graphics::Texture2D> _heightMap;
 	std::unique_ptr<graphics::Texture2D> _luminosityMap;
+	std::unique_ptr<graphics::Texture2D> _cellColourMap;
 	std::unique_ptr<graphics::Texture2D> _blockTextures;
 
 	std::unique_ptr<graphics::FrameBuffer> _footprintFrameBuffer;

@@ -6,6 +6,8 @@
 // The land's light: each cell corner's luminosity, and the colour of each luminosity (LandLightTable)
 SAMPLER2D(s_landLuminosity, 6);
 SAMPLER2D(s_landLight, 7);
+// The colour of each cell corner this frame, which is added to the land's light, red and blue as the game reads them
+SAMPLER2D(s_landColour, 8);
 // x: 1 to colour the object by the land's light where it stands, 0 for white. y: how much brighter than the land's light
 // the object is, at most white. z: 1 for an object the sun doesn't shade
 uniform vec4 u_landLight;
@@ -32,6 +34,39 @@ vec3 LandLightAt(vec2 xz)
 	vec3 z0 = c00 + floor((c01 - c00) * w.y / 256.0f);
 	vec3 z1 = c10 + floor((c11 - c10) * w.y / 256.0f);
 	return onLand ? z0 + floor((z1 - z0) * w.x / 256.0f) : LandLightColour(255.0f);
+}
+
+// A cell corner's colour, 0 to 255; black off the land
+vec3 LandColour(vec2 cell, vec2 texels)
+{
+	bool onLand = all(greaterThanEqual(cell, vec2_splat(0.0f))) && all(lessThan(cell, texels));
+	vec3 colour = floor(texture2DLod(s_landColour, (cell + 0.5f) / texels, 0.0f).rgb * 255.0f + 0.5f);
+	return onLand ? colour : vec3_splat(0.0f);
+}
+
+// The land's colour at a point, 0 to 255, the four cells around it blended as LandLightAt blends their light. Off the
+// land, black.
+vec3 LandColourAt(vec2 xz)
+{
+	vec2 texels = (u_islandExtent.zw - u_islandExtent.xy) / 10.0f + 1.0f;
+	vec2 position = (xz - u_islandExtent.xy) / 10.0f;
+	vec2 cell = floor(position);
+	bool onLand = all(greaterThanEqual(cell, vec2_splat(0.0f))) && all(lessThan(cell + 1.0f, texels));
+	vec2 w = floor((position - cell) * 256.0f);
+	vec3 c00 = LandColour(cell, texels);
+	vec3 c01 = LandColour(cell + vec2(0.0f, 1.0f), texels);
+	vec3 c10 = LandColour(cell + vec2(1.0f, 0.0f), texels);
+	vec3 c11 = LandColour(cell + 1.0f, texels);
+	vec3 z0 = c00 + floor((c01 - c00) * w.y / 256.0f);
+	vec3 z1 = c10 + floor((c11 - c10) * w.y / 256.0f);
+	return onLand ? z0 + floor((z1 - z0) * w.x / 256.0f) : vec3_splat(0.0f);
+}
+
+// The land's colour of the cell a point is in, unblended, as trees take it
+vec3 LandColourCellAt(vec2 xz)
+{
+	vec2 texels = (u_islandExtent.zw - u_islandExtent.xy) / 10.0f + 1.0f;
+	return LandColour(floor((xz - u_islandExtent.xy) / 10.0f), texels);
 }
 
 // The land's light of the cell a point is in, unblended, as trees take it

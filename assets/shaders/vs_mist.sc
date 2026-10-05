@@ -28,7 +28,8 @@ void main()
 		colour = floor(colour * LandLightAt(origin.xz) / 255.0f);
 		float hazeT = HazeT(mul(u_view, vec4(origin, 1.0f)).z);
 		colour = HazeDiffuse(colour, HazeFactor(hazeT));
-		v_haze = vec4(HazeColour(hazeT) / 255.0f, 0.0f);
+		// The haze is added with the land's colour where it stands, each channel at most white
+		v_haze = vec4(min(HazeColour(hazeT) + LandColourAt(origin.xz), vec3_splat(255.0f)) / 255.0f, 0.0f);
 	}
 	vec3 localLight = ModelLightLocal(mul(u_model[0], vec4(1.0f, 0.0f, 0.0f, 0.0f)).xyz, mul(u_model[0], vec4(0.0f, 1.0f, 0.0f, 0.0f)).xyz,
 	                                  mul(u_model[0], vec4(0.0f, 0.0f, 1.0f, 0.0f)).xyz, origin);

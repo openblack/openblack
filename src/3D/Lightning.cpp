@@ -51,6 +51,21 @@ float Brightness(const Flash& flash)
 	return brightness * flash.strength;
 }
 
+float GlowStrength(const Flash& flash)
+{
+	if (!flash.active)
+	{
+		return 0.0f;
+	}
+	const float fade = 1.0f - flash.time;
+	float glow = fade * fade * fade;
+	if (flash.time < 0.5f && flash.time > 0.1f)
+	{
+		glow = 0.1f;
+	}
+	return glow * flash.strength;
+}
+
 uint8_t LandLightFlash(float brightness)
 {
 	return static_cast<uint8_t>(static_cast<int32_t>(std::clamp(brightness, 0.0f, 1.0f) * 255.0f));

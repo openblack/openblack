@@ -63,6 +63,9 @@ public:
 	[[nodiscard]] virtual const graphics::Texture2D& GetHeightMap() const = 0;
 	/// Each cell corner's luminosity, laid out as the height map, 255 where there is no block
 	[[nodiscard]] virtual const graphics::Texture2D& GetLuminosityMap() const = 0;
+	/// Each cell corner's colour, laid out as the height map and black where there is no block. The game reads a
+	/// cell's colour bytes with red and blue swapped, as Direct3D's colours keep them, and so does this.
+	[[nodiscard]] virtual const graphics::Texture2D& GetCellColourMap() const = 0;
 	/// The blocks' painted textures (see block_texture), a layer for each block in the order of GetBlocks
 	[[nodiscard]] virtual const graphics::Texture2D& GetBlockTextures() const = 0;
 	[[nodiscard]] virtual const graphics::FrameBuffer& GetFootprintFramebuffer() const = 0;

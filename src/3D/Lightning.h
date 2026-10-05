@@ -51,6 +51,9 @@ struct Flash
 /// tenth and half of a second
 [[nodiscard]] float Brightness(const Flash& flash);
 
+/// How strongly a flash's glow lights the ground around where it struck, 0 to its strength: as Brightness, but cubed
+[[nodiscard]] float GlowStrength(const Flash& flash);
+
 /// The flash the land's light takes, 0 to 255, from a brightness
 [[nodiscard]] uint8_t LandLightFlash(float brightness);
 

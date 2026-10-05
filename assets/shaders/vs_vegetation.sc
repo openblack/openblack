@@ -55,7 +55,13 @@ void main()
     vec3 colour = u_landLight.x > 0.0 ? min(floor(LandLightCellAt(origin.xz) * u_landLight.y), vec3_splat(255.0)) : vec3_splat(255.0);
     float hazeT = HazeT(mul(u_view, vec4(origin, 1.0)).z);
     colour = HazeDiffuse(colour, HazeFactor(hazeT));
-    v_haze = vec4(HazeColour(hazeT) / 255.0, 0.0);
+    // The haze is added with the land's colour of the cell the tree stands in, each channel at most white
+    vec3 added = HazeColour(hazeT);
+    if (u_landLight.x > 0.0)
+    {
+        added = min(added + LandColourCellAt(origin.xz), vec3_splat(255.0));
+    }
+    v_haze = vec4(added / 255.0, 0.0);
     v_color0 = vec4(colour / 255.0, 1.0);
 
     v_texcoord0 = vec4(a_texcoord0, 0.0, 0.0);

@@ -9,6 +9,8 @@ uniform vec4 u_blockPositionAndSize;
 uniform vec4 u_islandExtent;
 // The land's luminosity this frame, a texel for each cell's corner
 SAMPLER2D(s9_landLuminosity, 9);
+// The colour of each cell corner this frame, which is added to the land's light, red and blue as the game reads them
+SAMPLER2D(s10_landColour, 10);
 // The land's light: a colour for each level of the cells' luminosity (LandLightTable)
 SAMPLER2D(s7_landLight, 7);
 // y: how bright the land's light is, a half for the land mirrored under the sea
@@ -55,7 +57,10 @@ void main()
 	vec4 cs_position = mul(u_view, vec4(transformedPosition, 1.0f));
 	// The distance haze, per vertex: rgb the haze's colour added, a what the land's light is scaled by
 	float hazeT = HazeT(cs_position.z);
-	v_haze = vec4(HazeColour(hazeT) / 255.0f, HazeFactor(hazeT) / 256.0f);
+	// The haze is added with the colour of the vertex's cell corner, each channel at most white
+	vec3 cellColour =
+	    floor(texture2DLod(s10_landColour, (luminosityCell + 0.5f) / luminosityTexels, 0.0f).rgb * 255.0f + 0.5f);
+	v_haze = vec4(min(HazeColour(hazeT) + cellColour, vec3_splat(255.0f)) / 255.0f, HazeFactor(hazeT) / 256.0f);
 
 	// The small bump detail is drawn over the land near the camera. It is full up to 20 units before a line across the
 	// ground ahead of the camera, and gone 20 units past it. It is never drawn at the water's edge, below altitude 2,
