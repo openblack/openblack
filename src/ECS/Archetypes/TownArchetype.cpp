@@ -19,14 +19,14 @@ using namespace openblack;
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
 
-entt::entity TownArchetype::Create(int id, const glm::vec3& position, [[maybe_unused]] PlayerNames playerOwner, Tribe tribe)
+entt::entity TownArchetype::Create(int id, const glm::vec3& position, PlayerNames playerOwner, Tribe tribe)
 {
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 
 	// const auto& info = Game::Instance()->GetInfoConstants().town;
 
-	registry.Assign<Town>(entity, static_cast<uint32_t>(id));
+	registry.Assign<Town>(entity, static_cast<uint32_t>(id), playerOwner);
 	registry.Assign<Tribe>(entity, tribe);
 	// What it wants, worked out each turn from its people and buildings
 	registry.Assign<TownDesire>(entity);
