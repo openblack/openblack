@@ -34,4 +34,14 @@ vec3 LandLightAt(vec2 xz)
 	return onLand ? z0 + floor((z1 - z0) * w.x / 256.0f) : LandLightColour(255.0f);
 }
 
+// The land's light of the cell a point is in, unblended, as trees take it
+vec3 LandLightCellAt(vec2 xz)
+{
+	vec2 texels = (u_islandExtent.zw - u_islandExtent.xy) / 10.0f + 1.0f;
+	vec2 cell = floor((xz - u_islandExtent.xy) / 10.0f);
+	bool onLand = all(greaterThanEqual(cell, vec2_splat(0.0f))) && all(lessThan(cell, texels));
+	float luminosity = floor(texture2DLod(s_landLuminosity, (cell + 0.5f) / texels, 0.0f).r * 255.0f + 0.5f);
+	return LandLightColour(onLand ? luminosity : 255.0f);
+}
+
 #endif // LAND_LIGHT_SH

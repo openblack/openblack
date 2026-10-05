@@ -16,7 +16,6 @@ uniform vec4 u_islandExtent;
 
 #include "haze.sh"
 #include "land_light.sh"
-#include "model_light.sh"
 
 void main()
 {
@@ -50,15 +49,14 @@ void main()
     v_position.y += terrain_height - treeBasePos.y;
 #endif // USE_HEIGHT_MAP
 
-    // Lit as every model is: the land's light where the tree stands, shaded by the game's light in the tree's own space
+    // The game makes its trees unlit: no light shades them, they take the land's light of the cell they stand in, scaled
+    // by the trees' brightness of the frame
     vec3 origin = instMul(model, vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-    vec3 localLight = ModelLightLocal(instMul(model, vec4(1.0, 0.0, 0.0, 0.0)).xyz, instMul(model, vec4(0.0, 1.0, 0.0, 0.0)).xyz,
-                                      instMul(model, vec4(0.0, 0.0, 1.0, 0.0)).xyz, origin);
-    vec3 colour = u_landLight.x > 0.0 ? min(floor(LandLightAt(origin.xz) * u_landLight.y), vec3_splat(255.0)) : vec3_splat(255.0);
+    vec3 colour = u_landLight.x > 0.0 ? min(floor(LandLightCellAt(origin.xz) * u_landLight.y), vec3_splat(255.0)) : vec3_splat(255.0);
     float hazeT = HazeT(mul(u_view, vec4(origin, 1.0)).z);
     colour = HazeDiffuse(colour, HazeFactor(hazeT));
     v_haze = vec4(HazeColour(hazeT) / 255.0, 0.0);
-    v_color0 = vec4(ModelLightColour(colour, ModelLightFactor(a_normal, localLight)), 1.0);
+    v_color0 = vec4(colour / 255.0, 1.0);
 
     v_texcoord0 = vec4(a_texcoord0, 0.0, 0.0);
     v_normal = a_normal;
