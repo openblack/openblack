@@ -173,6 +173,8 @@ private:
 		glm::vec2 mouse;
 		/// The mouse from -1 to 1 across the screen, down it
 		glm::vec2 mouseScreen;
+		/// The screen's size in pixels
+		glm::vec2 screen;
 		std::optional<RoomHit> hit;
 		std::optional<uint32_t> door;
 		/// The door back to the main room the cursor is over, from the other rooms
@@ -273,6 +275,11 @@ private:
 	std::optional<Pose> _subMeshLook;
 	bool _lookingAtSubMesh {false};
 	float _subMeshZoom {0.0f};
+	/// Holding the press on the pool's map: the point pressed, which the camera turns about, and the turn and tilt it
+	/// had from it as the press began (WorldRoomCamera +0x460, +0x4DC and +0x4E0)
+	glm::vec3 _mapFocus {0.0f};
+	float _mapYaw {0.0f};
+	float _mapPitch {0.0f};
 	std::optional<uint32_t> _hoveredDoor;
 
 	// Through a door

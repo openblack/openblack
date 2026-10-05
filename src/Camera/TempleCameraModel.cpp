@@ -57,6 +57,14 @@ constexpr float k_PathMillisecondsPerCameraTime = 500.0f;
 constexpr float k_MaxLean = 1.5f;
 /// How long the turn and lean take to catch up with the player
 constexpr float k_OrbitEaseTime = 0.3f;
+/// Holding the press on the pool's map: how far from the point pressed the camera goes, how fast it gets there, how far
+/// it turns and tilts as the mouse crosses the screen, and between which tilts
+constexpr float k_MapDistance = 6.0f;
+constexpr float k_MapZoomSpeed = 2.0f;
+constexpr float k_MapTurnPerScreen = 6.0f;
+constexpr float k_MapTiltPerScreen = 2.0f;
+constexpr float k_MapMinPitch = 0.62831855f;
+constexpr float k_MapMaxPitch = 1.1780972f;
 
 // The way through a door of the main room, facing the door ahead along x: up to the door, then through it
 constexpr TempleCameraModel::Pose k_DoorApproach {{0.0f, 25.0f, 0.0f}, {15.0f, 20.0f, 0.0f}};
@@ -525,6 +533,7 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> TempleCameraModel::Upd
 	{
 		const auto size = glm::vec2(Locator::windowing::value().GetSize());
 		input.mouseScreen = input.mouse / (size * 0.5f) - 1.0f;
+		input.screen = size;
 
 		// LH3DTech casts from the camera through the mouse on its near plane
 		glm::vec3 rayOrigin;
@@ -717,8 +726,26 @@ void TempleCameraModel::UpdateOrbit(float dt, const Input& input)
 		}
 		_lastMouse = input.mouse;
 	}
-	// TODO(raffclar): Pressing on the pool looks at the island's map in it, and double clicking there leaves the temple
-	//                 for that place (WorldRoomCamera's state 4)
+	// Holding the press on the pool draws the camera to the point pressed on the island's map, 6 units from it, and
+	// dragging turns about it and tilts.
+	if (input.button != 0 && pressKind == HitKind::Pool && _pressHit.has_value())
+	{
+		if (!_wasPressed)
+		{
+			// The turn and tilt from the point to where the camera is
+			_mapFocus = _pressHit->point;
+			const auto away = _target.origin - _mapFocus;
+			const auto direction = glm::length(away) > 0.0f ? glm::normalize(away) : away;
+			_mapYaw = std::atan2(direction.z, direction.x);
+			_mapPitch = std::atan2(direction.y, glm::length(glm::vec2(direction.x, direction.z)));
+		}
+		const auto moved = (input.mouse - _pressMouse) / glm::max(input.screen, glm::vec2(1.0f));
+		const float yaw = _mapYaw - (moved.x * k_MapTurnPerScreen);
+		const float pitch = std::clamp(_mapPitch + (moved.y * k_MapTiltPerScreen), k_MapMinPitch, k_MapMaxPitch);
+		const auto around = glm::vec3(std::cos(pitch) * std::cos(yaw), std::sin(pitch), std::cos(pitch) * std::sin(yaw));
+		_subMeshLook = Pose {_mapFocus + (around * k_MapDistance), _mapFocus};
+		_subMeshZoom = std::min(_subMeshZoom + (dt * k_MapZoomSpeed), 1.0f);
+	}
 
 	// With the mouse free, the screen's top and bottom edges lean, and the pool slowly draws the camera down to it
 	float leanSpeed = 0.0f;
