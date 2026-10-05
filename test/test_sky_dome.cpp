@@ -92,3 +92,59 @@ TEST(SkyDome, ChannelsBlendInWholeSteps)
 	EXPECT_EQ(sky_dome::BlendChannel(16, 8, 128), 11);
 	EXPECT_EQ(sky_dome::BlendChannel(1, 1, 128), 0);
 }
+
+TEST(SkyDome, DarknessOfAnEvilSky)
+{
+	EXPECT_EQ(sky_dome::Darkness(2.0f), 0);
+	EXPECT_EQ(sky_dome::Darkness(0.8f), 0);
+	// Evil at 0.75 of the way: (0.75 - 0.6) * 225
+	EXPECT_EQ(sky_dome::Darkness(0.5f), 33);
+	// The float 0.6 is a little over it, so even a wholly evil sky only reaches 89
+	EXPECT_EQ(sky_dome::Darkness(0.0f), 89);
+	EXPECT_EQ(sky_dome::Darkness(-1.0f), 90);
+}
+
+TEST(SkyDome, ClearDayIsUntinted)
+{
+	const auto tint = sky_dome::TintOf({.hazeColour = glm::vec3(60.0f, 70.0f, 80.0f),
+	                                    .overcast = 0.0f,
+	                                    .flash = 0,
+	                                    .darkness = 0,
+	                                    .fog = true,
+	                                    .weather = true});
+	EXPECT_EQ(tint, (sky_dome::Tint {.modulate = glm::u8vec3(255), .add = glm::u8vec3(0)}));
+}
+
+TEST(SkyDome, OvercastTurnsTowardsTheHaze)
+{
+	// A full overcast of 255: white towards the haze, rounded down, and the haze added, rounded down
+	const auto tint = sky_dome::TintOf({.hazeColour = glm::vec3(60.9f, 100.0f, 255.0f),
+	                                    .overcast = 1.0f,
+	                                    .flash = 0,
+	                                    .darkness = 0,
+	                                    .fog = true,
+	                                    .weather = true});
+	EXPECT_EQ(tint.modulate, glm::u8vec3(60, 100, 255));
+	EXPECT_EQ(tint.add, glm::u8vec3(59, 99, 254));
+	// Without the fog setting the overcast changes nothing
+	const auto noFog = sky_dome::TintOf(
+	    {.hazeColour = glm::vec3(60.0f), .overcast = 1.0f, .flash = 0, .darkness = 0, .fog = false, .weather = true});
+	EXPECT_EQ(noFog, sky_dome::Tint {});
+}
+
+TEST(SkyDome, EvilDarkensAndFlashWhitens)
+{
+	// 90 * 90 / 150 = 54 of 256 off, rounded up: 255 - 54 = 201
+	const auto evil = sky_dome::TintOf(
+	    {.hazeColour = glm::vec3(0.0f), .overcast = 0.0f, .flash = 0, .darkness = 90, .fog = true, .weather = true});
+	EXPECT_EQ(evil.modulate, glm::u8vec3(201));
+	EXPECT_EQ(sky_dome::TintOf(
+	              {.hazeColour = glm::vec3(0.0f), .overcast = 0.0f, .flash = 0, .darkness = 90, .fog = true, .weather = false})
+	              .modulate,
+	          glm::u8vec3(255));
+	// A full flash: the first nearly white, the second added half as far
+	const auto flash = sky_dome::TintOf(
+	    {.hazeColour = glm::vec3(0.0f), .overcast = 0.0f, .flash = 255, .darkness = 90, .fog = true, .weather = true});
+	EXPECT_EQ(flash.modulate, glm::u8vec3(201 + ((54 * 255) >> 8)));
+	EXPECT_EQ(flash.add, glm::u8vec3((255 * 127) >> 8));
+}

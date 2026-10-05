@@ -2310,6 +2310,15 @@ TextureHandle Renderer::UpdateLandLight() const
 		_landLightTable->Build(*palettes.Handle(LandLightPalette::k_Id.value()), skyType, alignment, overcast, flash);
 		const auto& haze = _landLightTable->GetHaze();
 		_haze = {glm::vec4(haze.nearDistance, haze.farDistance, haze.k, 1.0f), glm::vec4(haze.colour, 0.0f)};
+		const auto detailLevel = Locator::config::value().detailLevel;
+		_skyTint = sky_dome::TintOf({
+		    .hazeColour = haze.colour,
+		    .overcast = overcast,
+		    .flash = flash,
+		    .darkness = sky_dome::Darkness(alignment + 1.0f),
+		    .fog = detail_level::Fog(detailLevel),
+		    .weather = detail_level::Weather(detailLevel),
+		});
 		const auto& texels = _landLightTable->GetTexels();
 		bgfx::updateTexture2D(toBgfx(*_landLightTexture), 0, 0, 0, 0, LandLightTable::k_Size, 1,
 		                      bgfx::copy(texels.data(), static_cast<uint32_t>(texels.size() * sizeof(texels[0]))));
@@ -2521,6 +2530,10 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 			skyShader->SetTextureSampler("s_diffuse", 0, _skyDomeFrameBuffer->GetColorAttachment());
 			skyShader->SetUniformValue("u_skyAlignment", &u_skyAlignment);
+			const glm::vec4 u_skyModulate {glm::vec3(_skyTint.modulate) / 255.0f, 1.0f};
+			const glm::vec4 u_skyAdd {glm::vec3(_skyTint.add) / 255.0f, 0.0f};
+			skyShader->SetUniformValue("u_skyModulate", &u_skyModulate);
+			skyShader->SetUniformValue("u_skyAdd", &u_skyAdd);
 
 			L3DMeshSubmitDesc submitDesc = {};
 			submitDesc.viewId = desc.viewId;

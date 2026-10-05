@@ -15,6 +15,9 @@
 #include <optional>
 #include <span>
 
+#include <glm/gtc/type_precision.hpp>
+#include <glm/vec3.hpp>
+
 /// The sky's dome: three pictures of the sky for each alignment, by day, at dusk and at night, blended into one for the
 /// time of day. The blend doesn't keep up with every change of the sky: it starts again only once the sky has moved
 /// on far enough from the one it was built for, and then builds the dome a band of rows a frame, top down. The rows'
@@ -86,5 +89,37 @@ struct Pair
 [[nodiscard]] Pair AlignmentPair(float alignment);
 /// A 5-bit channel of two pictures blended by a weight of 255, in whole steps: the weights only add up to 255 of 256
 [[nodiscard]] uint8_t BlendChannel(uint8_t lower, uint8_t upper, uint8_t weight);
+
+/// The colours each alignment's dome is drawn in: its picture times the first, with the second added, 0 to 255
+struct Tint
+{
+	glm::u8vec3 modulate {255};
+	glm::u8vec3 add {0};
+
+	bool operator==(const Tint&) const = default;
+};
+
+/// What tints the dome in a frame
+struct TintInputs
+{
+	/// The colour of the distance haze, 0 to 255, which is a third of the land's
+	glm::vec3 hazeColour;
+	/// The overcast at the camera, 0 for a clear sky and 1 for a full one
+	float overcast;
+	/// A flash of lightning, 0 to 255
+	uint8_t flash;
+	/// How dark an evil sky is, 0 to 90
+	uint8_t darkness;
+	/// The fog setting: an overcast turns the dome towards the haze's colour
+	bool fog;
+	/// The weather setting: an evil sky darkens the dome
+	bool weather;
+};
+
+/// How dark the sky is for an alignment from 0, evil, to 2, good: nothing until it is a little evil, 90 at its most
+[[nodiscard]] uint8_t Darkness(float alignment);
+/// The dome's colours: white with nothing added on a clear day, towards the haze's colour as an overcast comes in, a
+/// little darker under an evil sky and towards white in a flash of lightning, all in whole steps
+[[nodiscard]] Tint TintOf(const TintInputs& inputs);
 
 } // namespace openblack::sky_dome

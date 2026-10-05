@@ -27,6 +27,22 @@ inline constexpr std::array<float, 7> k_WaterTiling = {0.0f, 0.2f, 0.4f, 0.6f, 0
 /// Whether the sky has clouds
 inline constexpr std::array<bool, 7> k_Clouds = {false, false, false, true, true, true, true};
 
+/// The fog setting: among other things, an overcast turns the sky's dome towards the haze's colour
+inline constexpr std::array<bool, 7> k_Fog = {false, false, false, true, true, true, true};
+
+/// The weather setting: among other things, an evil sky darkens the sky's dome
+inline constexpr std::array<bool, 7> k_Weather = {false, false, false, true, true, true, true};
+
+[[nodiscard]] constexpr bool Fog(uint8_t level)
+{
+	return k_Fog.at(std::min<size_t>(level, k_Fog.size() - 1));
+}
+
+[[nodiscard]] constexpr bool Weather(uint8_t level)
+{
+	return k_Weather.at(std::min<size_t>(level, k_Weather.size() - 1));
+}
+
 [[nodiscard]] constexpr bool Clouds(uint8_t level)
 {
 	return k_Clouds.at(std::min<size_t>(level, k_Clouds.size() - 1));

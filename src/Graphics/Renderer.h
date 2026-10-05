@@ -24,6 +24,7 @@
 #include <glm/fwd.hpp>
 #include <glm/mat4x4.hpp>
 
+#include "3D/SkyDome.h"
 #include "Graphics/HandShadow.h"
 #include "Graphics/RenderPass.h"
 #include "Graphics/RendererInterface.h"
@@ -171,6 +172,8 @@ private:
 	mutable std::optional<TextureHandle> _landLightTexture;
 	/// u_haze and u_hazeColour of the frame's distance haze, off until the land's light is built
 	mutable std::array<glm::vec4, 2> _haze {};
+	/// The colours the sky's dome is drawn in this frame
+	mutable sky_dome::Tint _skyTint;
 	/// icons.raw with iconsa.raw's alpha, which the creature's room's belts and medals are drawn with, once loaded
 	mutable std::optional<TextureHandle> _iconsTexture;
 	mutable bool _iconsLoaded {false};

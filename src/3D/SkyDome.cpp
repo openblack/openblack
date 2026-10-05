@@ -88,4 +88,44 @@ uint8_t BlendChannel(uint8_t lower, uint8_t upper, uint8_t weight)
 	return static_cast<uint8_t>(((lower * (255 - weight)) >> 8) + ((upper * weight) >> 8));
 }
 
+uint8_t Darkness(float alignment)
+{
+	const float evil = 1.0f - (alignment * 0.5f);
+	if (!(evil > 0.6f))
+	{
+		return 0;
+	}
+	const auto darkness = static_cast<int>(static_cast<double>(evil - 0.6f) * 225.0);
+	return static_cast<uint8_t>(std::clamp(darkness, 0, 90));
+}
+
+Tint TintOf(const TintInputs& inputs)
+{
+	const int overcast = static_cast<int>(std::clamp(inputs.overcast, 0.0f, 1.0f) * 255.0f);
+	// Both colours lose this much of 256 under an evil sky, rounded up
+	const int dark = inputs.weather ? (inputs.darkness * inputs.darkness) / 150 : 0;
+	const int halfFlash = inputs.flash / 2;
+	Tint tint;
+	for (glm::length_t c = 0; c < 3; ++c)
+	{
+		int modulate = 255;
+		int add = 0;
+		if (inputs.fog)
+		{
+			// From white towards the haze's colour, and the haze's colour added, by the overcast
+			const int haze = static_cast<int>(inputs.hazeColour[c]);
+			modulate = 255 + (((haze - 255) * overcast) >> 8);
+			add = (haze * overcast) >> 8;
+		}
+		modulate += (-modulate * dark) >> 8;
+		add += (-add * dark) >> 8;
+		// A flash takes the first towards white, and the second half as far
+		modulate += ((255 - modulate) * inputs.flash) >> 8;
+		add += ((255 - add) * halfFlash) >> 8;
+		tint.modulate[c] = static_cast<uint8_t>(modulate);
+		tint.add[c] = static_cast<uint8_t>(add);
+	}
+	return tint;
+}
+
 } // namespace openblack::sky_dome
