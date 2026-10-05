@@ -9,23 +9,22 @@
 
 #pragma once
 
-#include "ECS/Systems/VillageLightSystemInterface.h"
-
-#if !defined(LOCATOR_IMPLEMENTATIONS)
-#error "ECS System implementations should only be included in Locator.cpp"
-#endif
+#include <entt/entity/fwd.hpp>
+#include <glm/vec3.hpp>
 
 namespace openblack::ecs::systems
 {
 
-class VillageLightSystem final: public VillageLightSystemInterface
+/// The looping sounds objects keep up (components::SoundTag)
+class SoundTagSystemInterface
 {
 public:
-	void Update(std::chrono::duration<float, std::milli> gameTime) override;
-	[[nodiscard]] bool IsDark() const override { return _dark; }
-
-private:
-	bool _dark {false};
+	virtual ~SoundTagSystemInterface() = default;
+	/// Once a game turn: every switched on tag whose sound isn't playing starts it again, if the camera is within the
+	/// sound's reach of it
+	virtual void ProcessTurn(const glm::vec3& camera) = 0;
+	/// Switches an object's tag on or off; off stops its sound at once
+	virtual void SetActive(entt::entity entity, bool active) = 0;
 };
 
 } // namespace openblack::ecs::systems

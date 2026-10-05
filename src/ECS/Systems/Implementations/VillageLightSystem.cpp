@@ -22,10 +22,12 @@
 #include "Camera/Camera.h"
 #include "Common/GameRandom.h"
 #include "ECS/Components/Sprite.h"
+#include "ECS/Components/StreetLantern.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/VillageLight.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/AlignmentSystemInterface.h"
+#include "ECS/Systems/SoundTagSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
@@ -37,7 +39,7 @@ using namespace openblack::ecs::components;
 namespace
 {
 /// Whether the land's colour of the frame is dark enough for the lights
-bool IsDark()
+bool IsLandDark()
 {
 	const auto& palettes = Locator::resources::value().GetLandLightPalettes();
 	if (!palettes.Contains(LandLightPalette::k_Id.value()) || !Locator::skySystem::has_value())
@@ -59,7 +61,15 @@ bool IsDark()
 void VillageLightSystem::Update(std::chrono::duration<float, std::milli> gameTime)
 {
 	auto& registry = Locator::entitiesRegistry::value();
-	const bool dark = IsDark();
+	const bool dark = IsLandDark();
+	// The street lanterns' crackle is switched on and off with the dark
+	if (dark != _dark)
+	{
+		_dark = dark;
+		auto& soundTags = Locator::soundTagSystem::value();
+		registry.Each<const StreetLantern>(
+		    [&soundTags, dark](entt::entity entity, const StreetLantern& /*unused*/) { soundTags.SetActive(entity, dark); });
+	}
 	if (dark)
 	{
 		// The game flickers them from the C runtime's numbers, the newest light first as the registry walks them

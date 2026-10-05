@@ -73,6 +73,7 @@
 #include "ECS/Systems/PathfindingSystemInterface.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
+#include "ECS/Systems/SoundTagSystemInterface.h"
 #include "ECS/Systems/TempleExteriorSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "ECS/Systems/VegetationInterface.h"
@@ -380,6 +381,9 @@ bool Game::GameLogicLoop() noexcept
 		weatherSystem.Update(clock.GetTurn());
 		weather = weatherSystem.GetWeatherSmooth(cameraPosition);
 	}
+
+	// The objects' looping sounds start again where they have stopped
+	Locator::soundTagSystem::value().ProcessTurn(cameraPosition);
 
 	// Each turn ends with the camera taking the alignment of the player of most influence where it is
 	Locator::alignmentSystem::value().UpdateTurn();
