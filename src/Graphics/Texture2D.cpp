@@ -79,6 +79,11 @@ void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Texture
 	bgfx::frame();
 }
 
+void Texture2D::Update(const void* data, uint32_t size) const
+{
+	bgfx::updateTexture2D(toBgfx(_handle), 0, 0, 0, 0, _resolution.x, _resolution.y, bgfx::copy(data, size));
+}
+
 void Texture2D::DumpTexture() const
 {
 	assert(!_name.empty());

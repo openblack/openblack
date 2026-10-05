@@ -9,6 +9,8 @@
 
 #include "L3DMesh.h"
 
+#include <cassert>
+
 #include <filesystem>
 #include <stdexcept>
 
@@ -29,9 +31,10 @@
 using namespace openblack;
 using namespace openblack::graphics;
 
-L3DMesh::L3DMesh(std::string debugName) noexcept
+L3DMesh::L3DMesh(std::string debugName, bool dynamic) noexcept
     : _flags(static_cast<l3d::L3DMeshFlags>(0))
     , _debugName(std::move(debugName))
+    , _dynamic(dynamic)
 {
 }
 
@@ -46,9 +49,14 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 	for (const auto& skin : l3d.GetSkins())
 	{
 		_skins[skin.id] = std::make_unique<Texture2D>(_debugName.c_str());
-		_skins[skin.id]->Create(
-		    l3d::L3DTexture::k_Width, l3d::L3DTexture::k_Height, 1, TextureFormat::BGRA4, Wrapping::Repeat, Filter::Linear,
-		    bgfx::makeRef(skin.texels.data(), static_cast<uint32_t>(skin.texels.size() * sizeof(skin.texels[0]))));
+		const auto size = static_cast<uint32_t>(skin.texels.size() * sizeof(skin.texels[0]));
+		// bgfx only lets a texture created without texels have them changed
+		_skins[skin.id]->Create(l3d::L3DTexture::k_Width, l3d::L3DTexture::k_Height, 1, TextureFormat::BGRA4, Wrapping::Repeat,
+		                        Filter::Linear, _dynamic ? nullptr : bgfx::makeRef(skin.texels.data(), size));
+		if (_dynamic)
+		{
+			_skins[skin.id]->Update(skin.texels.data(), size);
+		}
 	}
 
 	if (HasDoorPosition() && !l3d.GetExtraPoints().empty())
@@ -224,6 +232,31 @@ std::optional<L3DMesh::PickHit> L3DMesh::Pick(glm::vec3 origin, glm::vec3 direct
 		}
 	}
 	return nearest;
+}
+
+void L3DMesh::UpdateVertices(const l3d::L3DFile& l3d) noexcept
+{
+	assert(_dynamic);
+	_boundingBox = {
+	    glm::vec3(std::numeric_limits<float>::max()),
+	    glm::vec3(std::numeric_limits<float>::lowest()),
+	};
+	for (const auto& subMesh : _subMeshes)
+	{
+		subMesh->UpdateVertices(l3d);
+		const auto& bb = subMesh->GetBoundingBox();
+		_boundingBox.minima = glm::min(_boundingBox.minima, bb.minima);
+		_boundingBox.maxima = glm::max(_boundingBox.maxima, bb.maxima);
+	}
+}
+
+void L3DMesh::UpdateSkin(SkinId skin, std::span<const uint16_t> texels) noexcept
+{
+	assert(_dynamic);
+	if (const auto found = _skins.find(skin); found != _skins.end())
+	{
+		found->second->Update(texels.data(), static_cast<uint32_t>(texels.size_bytes()));
+	}
 }
 
 bool L3DMesh::LoadFromFilesystem(const std::filesystem::path& path) noexcept

@@ -96,13 +96,19 @@ public:
 		SkinId skinID;
 		BeamMesh mesh;
 	};
-	explicit L3DMesh(std::string debugName = "") noexcept;
+	/// A dynamic mesh's vertices and skins can be changed after it is loaded
+	explicit L3DMesh(std::string debugName = "", bool dynamic = false) noexcept;
 	virtual ~L3DMesh() noexcept;
 
 	bool Load(const l3d::L3DFile& l3d) noexcept;
 	bool LoadFromFilesystem(const std::filesystem::path& path) noexcept;
 	bool LoadFromFile(const std::filesystem::path& path) noexcept;
 	bool LoadFromBuffer(const std::vector<uint8_t>& data) noexcept;
+	/// A dynamic mesh takes its vertices afresh from a file of the same shape
+	void UpdateVertices(const l3d::L3DFile& l3d) noexcept;
+	/// A dynamic mesh's skin takes its texels afresh
+	void UpdateSkin(SkinId skin, std::span<const uint16_t> texels) noexcept;
+	[[nodiscard]] bool IsDynamic() const { return _dynamic; }
 
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return static_cast<uint8_t>(_subMeshes.size()); }
 	[[nodiscard]] const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }
@@ -132,6 +138,7 @@ public:
 private:
 	l3d::L3DMeshFlags _flags;
 	std::string _debugName;
+	bool _dynamic;
 
 	std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>> _skins;
 	std::vector<Footprint> _footprints; ///< If ContainsLandscapeFeature() is true

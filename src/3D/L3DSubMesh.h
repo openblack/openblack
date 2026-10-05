@@ -24,6 +24,11 @@
 
 #include "../Graphics/RenderPass.h"
 
+namespace bgfx
+{
+struct Memory;
+}
+
 namespace openblack::graphics
 {
 class L3DMesh;
@@ -59,6 +64,8 @@ public:
 	~L3DSubMesh() noexcept;
 
 	bool Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept;
+	/// A dynamic mesh's submesh takes its vertices afresh from a file of the same shape
+	void UpdateVertices(const l3d::L3DFile& l3d) noexcept;
 
 	[[nodiscard]] openblack::l3d::L3DSubmeshHeader::Flags GetFlags() const { return _flags; }
 	[[nodiscard]] bool IsPhysics() const { return _flags.isPhysics; }
@@ -93,7 +100,14 @@ public:
 	[[nodiscard]] std::optional<float> Pick(glm::vec3 origin, glm::vec3 direction) const;
 
 private:
+	/// The submesh's vertices as they are drawn, in bgfx memory
+	[[nodiscard]] const bgfx::Memory* PackVertices(const l3d::L3DFile& l3d, uint32_t meshIndex) const;
+	/// The box about the submesh's vertices, as they are placed by its bones
+	void BoundVertices(const l3d::L3DFile& l3d, uint32_t meshIndex);
+
 	graphics::L3DMesh& _l3dMesh;
+	/// Which of its file's submeshes it is
+	uint32_t _meshIndex {0};
 
 	openblack::l3d::L3DSubmeshHeader::Flags _flags;
 

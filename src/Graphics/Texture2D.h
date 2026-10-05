@@ -166,6 +166,9 @@ public:
 	void Create(uint16_t width, uint16_t height, uint16_t layers, TextureFormat format, Wrapping wrapping, Filter filter,
 	            const void* memory) noexcept;
 
+	/// Replaces the first layer's texels of a texture created without any, with size bytes from data
+	void Update(const void* data, uint32_t size) const;
+
 	[[nodiscard]] const std::string& GetName() const { return _name; }
 	[[nodiscard]] const TextureHandle& GetNativeHandle() const { return _handle; }
 	[[nodiscard]] glm::u16vec2 GetResolution() const { return _resolution; }

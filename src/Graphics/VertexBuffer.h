@@ -73,7 +73,8 @@ using VertexDecl = std::vector<VertexAttrib>;
 class VertexBuffer
 {
 public:
-	VertexBuffer(std::string name, const void* memory, VertexDecl decl) noexcept;
+	/// A dynamic buffer's vertices can be changed after, by Update
+	VertexBuffer(std::string name, const void* memory, VertexDecl decl, bool dynamic = false) noexcept;
 	~VertexBuffer() noexcept;
 
 	[[nodiscard]] uint32_t GetCount() const noexcept;
@@ -81,6 +82,8 @@ public:
 	[[nodiscard]] uint32_t GetSizeInBytes() const noexcept;
 
 	void Bind() const;
+	/// Replaces a dynamic buffer's vertices, from the start, with bgfx memory of as many or fewer
+	void Update(const void* memory) const;
 
 private:
 	std::string _name;
@@ -89,6 +92,8 @@ private:
 	uint32_t _strideBytes;
 	std::vector<uint32_t> _vertexDeclOffsets;
 	VertexBufferHandle _handle;
+	DynamicVertexBufferHandle _dynamicHandle;
+	bool _dynamic;
 	VertexLayoutHandle _layoutHandle;
 };
 

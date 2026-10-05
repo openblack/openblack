@@ -35,12 +35,14 @@ constexpr std::array<bgfx::Attrib::Enum, 18> k_Attributes {
 
 } // namespace
 
-VertexBuffer::VertexBuffer(std::string name, const void* mem, VertexDecl decl) noexcept
+VertexBuffer::VertexBuffer(std::string name, const void* mem, VertexDecl decl, bool dynamic) noexcept
     : _name(std::move(name))
     , _vertexCount(0)
     , _vertexDecl(std::move(decl))
     , _strideBytes(0)
     , _handle(BGFX_INVALID_HANDLE)
+    , _dynamicHandle(BGFX_INVALID_HANDLE)
+    , _dynamic(dynamic)
     , _layoutHandle(BGFX_INVALID_HANDLE)
 {
 	// assert(vertices != nullptr);
@@ -70,9 +72,16 @@ VertexBuffer::VertexBuffer(std::string name, const void* mem, VertexDecl decl) n
 
 	_vertexCount = bgfxMem->size / _strideBytes;
 
-	_handle = fromBgfx(bgfx::createVertexBuffer(bgfxMem, layout));
+	if (_dynamic)
+	{
+		_dynamicHandle = fromBgfx(bgfx::createDynamicVertexBuffer(bgfxMem, layout));
+	}
+	else
+	{
+		_handle = fromBgfx(bgfx::createVertexBuffer(bgfxMem, layout));
+		bgfx::setName(toBgfx(_handle), _name.c_str());
+	}
 	_layoutHandle = fromBgfx(bgfx::createVertexLayout(layout));
-	bgfx::setName(toBgfx(_handle), _name.c_str());
 }
 
 VertexBuffer::~VertexBuffer() noexcept
@@ -80,6 +89,10 @@ VertexBuffer::~VertexBuffer() noexcept
 	if (bgfx::isValid(toBgfx(_handle)))
 	{
 		bgfx::destroy(toBgfx(_handle));
+	}
+	if (bgfx::isValid(toBgfx(_dynamicHandle)))
+	{
+		bgfx::destroy(toBgfx(_dynamicHandle));
 	}
 	if (bgfx::isValid(toBgfx(_layoutHandle)))
 	{
@@ -104,5 +117,18 @@ uint32_t VertexBuffer::GetSizeInBytes() const noexcept
 
 void VertexBuffer::Bind() const
 {
-	bgfx::setVertexBuffer(0, toBgfx(_handle), 0, _vertexCount, toBgfx(_layoutHandle));
+	if (_dynamic)
+	{
+		bgfx::setVertexBuffer(0, toBgfx(_dynamicHandle), 0, _vertexCount, toBgfx(_layoutHandle));
+	}
+	else
+	{
+		bgfx::setVertexBuffer(0, toBgfx(_handle), 0, _vertexCount, toBgfx(_layoutHandle));
+	}
+}
+
+void VertexBuffer::Update(const void* memory) const
+{
+	assert(_dynamic);
+	bgfx::update(toBgfx(_dynamicHandle), 0, reinterpret_cast<const bgfx::Memory*>(memory));
 }
