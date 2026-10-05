@@ -19,12 +19,14 @@
 #include "3D/LandLightTable.h"
 #include "3D/SkyInterface.h"
 #include "3D/VillageLights.h"
+#include "Camera/Camera.h"
 #include "Common/GameRandom.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/VillageLight.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/AlignmentSystemInterface.h"
+#include "ECS/Systems/WeatherSystemInterface.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -44,8 +46,13 @@ bool IsDark()
 	}
 	const auto skyType = Locator::skySystem::value().GetCurrentSkyType();
 	const auto alignment = Locator::alignmentSystem::has_value() ? Locator::alignmentSystem::value().GetSkyAlignment() : 0.0f;
+	float overcast = 0.0f;
+	if (Locator::weatherSystem::has_value() && Locator::camera::has_value())
+	{
+		overcast = Locator::weatherSystem::value().GetOvercast(Locator::camera::value().GetOrigin());
+	}
 	return village_lights::IsDark(
-	    LandLightTable::GetLandColour(*palettes.Handle(LandLightPalette::k_Id.value()), skyType, alignment));
+	    LandLightTable::GetLandColour(*palettes.Handle(LandLightPalette::k_Id.value()), skyType, alignment, overcast));
 }
 } // namespace
 

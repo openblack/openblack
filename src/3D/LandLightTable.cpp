@@ -27,6 +27,11 @@ constexpr float k_NearInverse = 0x1.47AE14p-9f;     // 0.0025
 constexpr float k_NearInverseDusk = 0x1.EB851Ep-8f; // 0.0075
 constexpr float k_FarInverse = 0x1.234568p-10f;     // 1 / 900
 constexpr float k_FarInverseDusk = 0x1.234560p-13f; // 0.00013888883
+// Under a full overcast the haze closes in to 15 and 350
+constexpr float k_NearInverseStorm = 0x1.111112p-4f; // 1 / 15
+constexpr float k_FarInverseStorm = 0x1.767DCEp-9f;  // 1 / 350
+/// How far a full overcast darkens the land's colour
+constexpr float k_OvercastDarkening = 96.0f;
 
 enum Row : size_t
 {
@@ -104,17 +109,31 @@ uint32_t LandColour(const std::array<uint32_t, k_RowCount>& colours, float align
 	return evil < 1.0f ? Lerp(colours[k_Good], colours[k_Neutral], static_cast<uint32_t>(towardsEvil))
 	                   : Lerp(colours[k_Neutral], colours[k_Evil], static_cast<uint32_t>(towardsEvil - 256));
 }
+
+/// No channel of the land's colour brighter than 255 - 96 times the overcast
+uint32_t Overcast(uint32_t land, float overcast)
+{
+	const auto limit = static_cast<int32_t>(255.0 - static_cast<double>(overcast) * k_OvercastDarkening);
+	for (const uint32_t shift : {16u, 8u, 0u})
+	{
+		if (static_cast<int32_t>((land >> shift) & 0xFFu) > limit)
+		{
+			land = (land & ~(0xFFu << shift)) | ((static_cast<uint32_t>(limit) & 0xFFu) << shift);
+		}
+	}
+	return land;
+}
 } // namespace
 
-uint32_t LandLightTable::GetLandColour(const LandLightPalette& palette, float skyType, float alignment) noexcept
+uint32_t LandLightTable::GetLandColour(const LandLightPalette& palette, float skyType, float alignment, float overcast) noexcept
 {
-	return LandColour(PaletteColours(palette, skyType, alignment), alignment) & 0xFFFFFFu;
+	return Overcast(LandColour(PaletteColours(palette, skyType, alignment), alignment), overcast) & 0xFFFFFFu;
 }
 
-void LandLightTable::Build(const LandLightPalette& palette, float skyType, float alignment) noexcept
+void LandLightTable::Build(const LandLightPalette& palette, float skyType, float alignment, float overcast) noexcept
 {
 	const auto colours = PaletteColours(palette, skyType, alignment);
-	const auto land = LandColour(colours, alignment);
+	const auto land = Overcast(LandColour(colours, alignment), overcast);
 
 	_landColour = land & 0xFFFFFFu;
 	_warmColour = colours[k_Warm] & 0xFFFFFFu;
@@ -125,7 +144,7 @@ void LandLightTable::Build(const LandLightPalette& palette, float skyType, float
 		const uint32_t r = (land >> 16) & 0xFFu;
 		const uint32_t g = (land >> 8) & 0xFFu;
 		const uint32_t b = land & 0xFFu;
-		_haze.k = static_cast<float>(std::min(255u, (r + 4 * g + 3 * b) / 8 + 8));
+		auto k = static_cast<int32_t>(std::min(255u, (r + 4 * g + 3 * b) / 8 + 8));
 		_haze.colour = glm::vec3(static_cast<float>(r / 3), static_cast<float>(g / 3), static_cast<float>(b / 3));
 		// 0 by day and at night, 1 at dusk
 		const float dusk = std::clamp(skyType < 1.0f ? skyType : 2.0f - skyType, 0.0f, 1.0f);
@@ -137,6 +156,18 @@ void LandLightTable::Build(const LandLightPalette& palette, float skyType, float
 			nearInverse = duskSquared * k_NearInverseDusk + k_NearInverse;
 			farInverse = duskSquared * k_FarInverseDusk + k_FarInverse;
 		}
+		// An overcast takes the haze towards a storm's: dark, thick and close
+		if (overcast > 0.0f)
+		{
+			const float storm = std::min(overcast, 1.0f);
+			const auto stormColour = glm::vec3(static_cast<float>((r >> 3) + 32), static_cast<float>((g >> 3) + 32),
+			                                   static_cast<float>((b >> 3) + 32));
+			_haze.colour += (stormColour - _haze.colour) * storm;
+			k += static_cast<int32_t>(static_cast<float>(48 - k) * storm);
+			nearInverse += (k_NearInverseStorm - nearInverse) * storm;
+			farInverse += (k_FarInverseStorm - farInverse) * storm;
+		}
+		_haze.k = static_cast<float>(k);
 		_haze.nearDistance = 1.0f / nearInverse;
 		_haze.farDistance = 1.0f / farInverse;
 	}

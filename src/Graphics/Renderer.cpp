@@ -63,6 +63,7 @@
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
+#include "ECS/Systems/WeatherSystemInterface.h"
 #include "EngineConfig.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
@@ -2123,7 +2124,13 @@ TextureHandle Renderer::UpdateLandLight() const
 		const auto skyType = Locator::skySystem::has_value() ? Locator::skySystem::value().GetCurrentSkyType() : 2.0f;
 		const auto alignment =
 		    Locator::alignmentSystem::has_value() ? Locator::alignmentSystem::value().GetSkyAlignment() : 0.0f;
-		_landLightTable->Build(*palettes.Handle(LandLightPalette::k_Id.value()), skyType, alignment);
+		// The clouds over the camera darken the land
+		float overcast = 0.0f;
+		if (Locator::weatherSystem::has_value() && Locator::camera::has_value())
+		{
+			overcast = Locator::weatherSystem::value().GetOvercast(Locator::camera::value().GetOrigin());
+		}
+		_landLightTable->Build(*palettes.Handle(LandLightPalette::k_Id.value()), skyType, alignment, overcast);
 		const auto& haze = _landLightTable->GetHaze();
 		_haze = {glm::vec4(haze.nearDistance, haze.farDistance, haze.k, 1.0f), glm::vec4(haze.colour, 0.0f)};
 		const auto& texels = _landLightTable->GetTexels();

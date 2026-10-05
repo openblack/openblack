@@ -887,6 +887,11 @@ WeatherInfo WeatherSystem::GetWeather(const glm::vec3& position)
 }
 
 // The weather at a point, blended between the four nearest cells
+float WeatherSystem::GetOvercast(const glm::vec3& position)
+{
+	return static_cast<float>(GetWeatherSmooth(position).overcast) * 0.01f;
+}
+
 WeatherInfo WeatherSystem::GetWeatherSmooth(const glm::vec3& position)
 {
 	const auto fx = position.x * 0.025f;

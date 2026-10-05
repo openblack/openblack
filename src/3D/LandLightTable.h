@@ -50,8 +50,9 @@ class LandLightTable
 public:
 	static constexpr size_t k_Size = 256;
 
-	/// skyType runs from 0 at night to 2 by day, and alignment from -1, evil, to 1, good
-	void Build(const LandLightPalette& palette, float skyType, float alignment) noexcept;
+	/// skyType runs from 0 at night to 2 by day, and alignment from -1, evil, to 1, good. The overcast at the camera, 0
+	/// for a clear sky and 1 for a full one, darkens the land's colour and draws the haze in.
+	void Build(const LandLightPalette& palette, float skyType, float alignment, float overcast) noexcept;
 
 	/// The distance haze of the frame: from `nearDistance` to `farDistance` from the camera things fade towards the haze
 	/// colour, which is added to them, while their own colour is scaled down to k of 256. The colour is a third of the
@@ -64,8 +65,9 @@ public:
 		glm::vec3 colour {0.0f}; ///< 0 to 255
 	};
 
-	/// The land's colour for the time of day and alignment, as Build finds it, 0xRRGGBB
-	[[nodiscard]] static uint32_t GetLandColour(const LandLightPalette& palette, float skyType, float alignment) noexcept;
+	/// The land's colour for the time of day, alignment and overcast, as Build finds it, 0xRRGGBB
+	[[nodiscard]] static uint32_t GetLandColour(const LandLightPalette& palette, float skyType, float alignment,
+	                                            float overcast) noexcept;
 
 	/// The table as RGBA8 texels
 	[[nodiscard]] const std::array<uint32_t, k_Size>& GetTexels() const noexcept { return _texels; }
