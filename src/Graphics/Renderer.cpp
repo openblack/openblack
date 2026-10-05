@@ -650,9 +650,9 @@ void Renderer::DrawTemplePool(const DrawSceneDesc& desc) const
 		                   glm::rotate(glm::mat4(1.0f), layer.yaw, glm::vec3(0.0f, 1.0f, 0.0f));
 		L3DMeshSubmitDesc submitDesc = {};
 		submitDesc.viewId = desc.viewId;
-		// LH3DMesh::DrawLightMap, as the rest of the room
+		// In their colour alone, without the pool's lightmap: through it, the water is far darker than the game's
+		// TODO(raffclar): confirm how LH3DObject::Draw lights an object given a colour
 		submitDesc.program = _shaderManager->GetShader("Object");
-		submitDesc.lightmapProgram = _shaderManager->GetShader("ObjectLightmap");
 		// Each primitive blended, culled and writing depth as its material says, as the room's meshes are
 		submitDesc.state = k_BgfxDefaultStateInvertedZ;
 		submitDesc.useMaterialBlending = true;
