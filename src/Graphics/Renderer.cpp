@@ -1232,6 +1232,12 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 	{
 		const auto& island = Locator::terrainSystem::value();
 		island.GetFootprintFramebuffer().Bind(viewId);
+		// The island's own size, as each land loaded has its own
+		uint16_t width = 0;
+		uint16_t height = 0;
+		island.GetFootprintFramebuffer().GetSize(width, height);
+		bgfx::setViewRect(static_cast<bgfx::ViewId>(viewId), 0, 0, width, height);
+		bgfx::setViewClear(static_cast<bgfx::ViewId>(viewId), BGFX_CLEAR_COLOR, 0x00000000);
 
 		// This dummy draw call is here to make sure that view is cleared if no
 		// other draw calls are submitted to view

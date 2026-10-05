@@ -1231,14 +1231,6 @@ bool Game::Run() noexcept
 		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Reflection, {width, height}, 0x274659ff);
 	}
 
-	if (config.drawIsland)
-	{
-		uint16_t width;
-		uint16_t height;
-		Locator::terrainSystem::value().GetFootprintFramebuffer().GetSize(width, height);
-		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Footprint, {width, height}, 0x00000000);
-	}
-
 	Game::SetTime(config.timeOfDay);
 	Locator::time::value().Start();
 
