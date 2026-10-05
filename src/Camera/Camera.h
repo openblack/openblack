@@ -88,6 +88,9 @@ public:
 	Camera& SetInterpolatorDuration(std::chrono::microseconds duration);
 
 	Camera& SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip);
+	/// Moves the near plane of the perspective, keeping its field of view, aspect and far plane
+	Camera& SetNearClip(float nearClip);
+	[[nodiscard]] float GetNearClip() const { return _nearClip; }
 	Camera& SetProjectionMatrix(const glm::mat4& projection);
 
 	[[nodiscard]] glm::vec3 GetForward() const;
@@ -119,6 +122,9 @@ protected:
 	std::chrono::microseconds _interpolatorTime = std::chrono::microseconds::zero();
 	std::chrono::microseconds _interpolatorDuration = std::chrono::microseconds::zero();
 	float _xFov = 0.0f; // TODO(#707): This should be a zoomer for animations
+	float _aspect = 1.0f;
+	float _nearClip = 1.0f;
+	float _farClip = 1.0f;
 	glm::mat4 _projectionMatrix = glm::mat4 {1.0f};
 	glm::mat4 _projectionMatrixReversedZ = glm::mat4 {1.0f};
 	std::unique_ptr<CameraModel> _model;

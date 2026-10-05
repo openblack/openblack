@@ -2751,10 +2751,10 @@ void SetIndestructable() // 298 SET_INDESTRUCTABLE
 
 void SetGraphicsClipping() // 299 SET_GRAPHICS_CLIPPING
 {
-	// const auto unk1 = Pop().intVal;
-	// const auto unk0 = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	// Only the first argument counts: whether the camera clips close
+	Pop();
+	const auto close = Pop().uintVal != 0;
+	Locator::cinematicDirectorSystem::value().SetCloseClipping(close);
 }
 
 void SpiritAppear() // 300 SPIRIT_APPEAR

@@ -103,9 +103,17 @@ std::optional<ecs::components::Transform> Camera::RaycastScreenCoordToLand(glm::
 Camera& Camera::SetProjectionMatrixPerspective(float xFov, float aspect, float nearClip, float farClip)
 {
 	_xFov = glm::radians(xFov);
-	const float yFov = (glm::atan(glm::tan(_xFov / 2.0f) / aspect)) * 2.0f;
+	_aspect = aspect;
+	_farClip = farClip;
+	return SetNearClip(nearClip);
+}
+
+Camera& Camera::SetNearClip(float nearClip)
+{
+	_nearClip = nearClip;
+	const float yFov = (glm::atan(glm::tan(_xFov / 2.0f) / _aspect)) * 2.0f;
 	// Inverse near and far for reverse z, we need to translate z by 1 to get back to the [0 1] range
-	_projectionMatrix = glm::perspective(yFov, aspect, nearClip, farClip);
+	_projectionMatrix = glm::perspective(yFov, _aspect, _nearClip, _farClip);
 	_projectionMatrixReversedZ = k_ReverseZMatrix * _projectionMatrix;
 
 	return *this;

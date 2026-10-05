@@ -49,6 +49,7 @@
 #include "Audio/GameMusic.h"
 #include "CHLApi.h"
 #include "Camera/Camera.h"
+#include "Camera/NearClipping.h"
 #include "Common/EventManager.h"
 #include "Common/RandomNumberManager.h"
 #include "Common/StringUtils.h"
@@ -559,6 +560,17 @@ bool Game::Update() noexcept
 	}
 
 	camera.Update(deltaTime);
+	// Outside a camera with a lens of its own, the near plane follows the camera's height over the land
+	if (!camera.GetModel().GetLens().has_value() && Locator::terrainSystem::has_value())
+	{
+		const auto origin = camera.GetOrigin();
+		const float height = origin.y - Locator::terrainSystem::value().GetHeightAt(glm::vec2(origin.x, origin.z));
+		const float nearClip = near_clipping::NearPlane(height, Locator::cinematicDirectorSystem::value().IsCloseClipping());
+		if (nearClip != camera.GetNearClip())
+		{
+			camera.SetNearClip(nearClip);
+		}
+	}
 	// The temple's camera may have taken the player out of the temple
 	if (Locator::temple::has_value())
 	{

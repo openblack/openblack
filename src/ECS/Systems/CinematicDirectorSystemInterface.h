@@ -44,6 +44,10 @@ public:
 	/// Whether the game's dialogs were told to hide since this was last asked
 	[[nodiscard]] virtual bool TakeHideDialogs() = 0;
 
+	/// A script's close clipping: the camera draws things right up to itself, for close shots
+	virtual void SetCloseClipping(bool close) = 0;
+	[[nodiscard]] virtual bool IsCloseClipping() const = 0;
+
 	/// Moves the fade on by a game turn
 	virtual void ProcessTurn() = 0;
 	/// Slides the bars on by the game time of the frame, which stops while the game is paused

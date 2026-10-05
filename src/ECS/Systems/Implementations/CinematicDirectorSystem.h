@@ -39,12 +39,16 @@ public:
 	void ProcessTurn() override;
 	void Update(std::chrono::duration<float, std::milli> gameTime) override;
 
+	void SetCloseClipping(bool close) override { _closeClipping = close; }
+	[[nodiscard]] bool IsCloseClipping() const override { return _closeClipping; }
+
 private:
 	gui::ScriptFade _fade;
 	gui::CinemaBars _bars;
 	uint32_t _wideScreenOwner {0};
 	bool _interfaceActive {true};
 	bool _hideDialogs {false};
+	bool _closeClipping {false};
 };
 
 } // namespace openblack::ecs::systems
