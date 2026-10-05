@@ -1,15 +1,9 @@
-$input a_position, a_texcoord1, a_color1, a_color2, a_texcoord2, a_color0, a_color3
-$output v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera, v_shadowCoord, v_haze
+$input a_position, a_color0
+$output v_texcoord0, v_texcoord1, v_lightLevel, v_distToCamera, v_shadowCoord, v_haze
 
 #include <bgfx_shader.sh>
 
 #include "haze.sh"
-
-#if BGFX_SHADER_LANGUAGE_HLSL > 300 || BGFX_SHADER_LANGUAGE_SPIRV
-#   define materialIdFix(x) (floatBitsToInt(x))
-#else
-#   define materialIdFix(x) (ivec3(x))
-#endif
 
 uniform vec4 u_blockPositionAndSize;
 uniform vec4 u_islandExtent;
@@ -33,12 +27,7 @@ void main()
 		blockStartUv.y = 1.0f - blockStartUv.y;
 	#endif
 	v_texcoord1 = vec4(blockStartUv, 0.0f, 0.0f);
-	v_weight = a_texcoord1;
-	v_materialID0 = materialIdFix(a_color1);
-	v_materialID1 = materialIdFix(a_color2);
-	v_materialBlend = a_texcoord2;
 	v_lightLevel = a_color0.x;
-	v_waterAlpha = a_color3;
 
 	vec3 transformedPosition = vec3(a_position.x + blockPosition.x, a_position.y, a_position.z + blockPosition.y);
 

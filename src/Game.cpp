@@ -1278,7 +1278,6 @@ bool Game::Run() noexcept
 			    .entities = Locator::entitiesRegistry::value(),
 			    .time = milliseconds.count(), // TODO(#481): get actual time
 			    .timeOfDay = config.timeOfDay,
-			    .bumpMapStrength = config.bumpMapStrength,
 			    .smallBumpMapStrength = config.smallBumpMapStrength,
 			    .viewId = graphics::RenderPass::Main,
 			    .drawSky = config.drawSky,

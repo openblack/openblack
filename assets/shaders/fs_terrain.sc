@@ -1,4 +1,4 @@
-$input v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_materialBlend, v_lightLevel, v_waterAlpha, v_distToCamera, v_shadowCoord, v_haze
+$input v_texcoord0, v_texcoord1, v_lightLevel, v_distToCamera, v_shadowCoord, v_haze
 
 #include <bgfx_shader.sh>
 

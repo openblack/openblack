@@ -216,25 +216,7 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 		            lnd.GetMaterials()[i].texels.data(),
 		            sizeof(lnd.GetMaterials()[i].texels[0]) * lnd.GetMaterials()[i].texels.size());
 	}
-	_materialArray = std::make_unique<Texture2D>("LandIslandMaterialArray");
-	_materialArray->Create(
-	    lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height, materialCount, TextureFormat::BGR5A1, Wrapping::ClampEdge,
-	    Filter::Linear,
-	    bgfx::makeRef(rgba5TextureData.data(), static_cast<uint32_t>(rgba5TextureData.size() * sizeof(rgba5TextureData[0]))));
-
-	// read noise map into Texture2D
 	_noiseMap = lnd.GetExtra().noise.texels;
-	_textureNoiseMap = std::make_unique<Texture2D>("LandIslandNoiseMap");
-	_textureNoiseMap->Create(lnd::LNDBumpMap::k_Width, lnd::LNDBumpMap::k_Height, 1, TextureFormat::R8, Wrapping::ClampEdge,
-	                         Filter::Linear,
-	                         bgfx::makeRef(_noiseMap.data(), static_cast<uint32_t>(_noiseMap.size() * sizeof(_noiseMap[0]))));
-
-	// read bump map into Texture2D
-	_textureBumpMap = std::make_unique<Texture2D>("LandIslandBumpMap");
-	_textureBumpMap->Create(
-	    lnd::LNDBumpMap::k_Width, lnd::LNDBumpMap::k_Height, 1, TextureFormat::R8, Wrapping::Repeat, Filter::Linear,
-	    bgfx::makeRef(lnd.GetExtra().bump.texels.data(),
-	                  static_cast<uint32_t>(sizeof(lnd.GetExtra().bump.texels[0]) * lnd.GetExtra().bump.texels.size())));
 
 	// Paint each block's texture from the countries, the materials, the noise and the bump map
 	const block_texture::Sources sources {
@@ -350,7 +332,7 @@ const lnd::LNDCell* LandIsland::FindCell(const glm::u16vec2& coordinates) const
 
 void LandIsland::DumpTextures() const
 {
-	_materialArray->DumpTexture();
+	_blockTextures->DumpTexture();
 }
 
 std::vector<uint8_t> LandIsland::CreateHeightMap() const

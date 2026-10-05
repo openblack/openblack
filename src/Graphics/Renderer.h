@@ -89,7 +89,7 @@ private:
 	/// The text the temple's rooms write in the world this frame: the signs' labels and the scroll the camera is close to
 	void DrawTempleText(const DrawSceneDesc& desc) const;
 	/// MiniMap::BuildMapTex: the land seen from above, unlit, once a visit to the temple
-	void DrawTempleMapPass(const DrawSceneDesc& desc) const;
+	void DrawTempleMapPass() const;
 	/// WorldRoom::Draw's pool: its water twice, turned an eighth apart, each shimmering as the other fades
 	void DrawTemplePool(const DrawSceneDesc& desc) const;
 	/// MiniMap's draw: the island in relief over the main room's pool

@@ -51,7 +51,6 @@ public:
 		const ecs::Registry& entities;
 		uint32_t time;
 		float timeOfDay;
-		float bumpMapStrength;
 		float smallBumpMapStrength;
 		graphics::RenderPass viewId;
 		bool drawSky;

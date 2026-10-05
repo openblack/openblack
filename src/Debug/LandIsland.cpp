@@ -33,7 +33,6 @@ void LandIsland::Draw() noexcept
 
 	const auto& landIsland = Locator::terrainSystem::value();
 
-	ImGui::SliderFloat("Bump", &config.bumpMapStrength, 0.0f, 1.0f, "%.3f");
 	ImGui::SliderFloat("Small Bump", &config.smallBumpMapStrength, 0.0f, 1.0f, "%.3f");
 
 	ImGui::Separator();

@@ -188,8 +188,6 @@ public:
 	[[nodiscard]] std::vector<LandBlock>& GetBlocks() override { throw std::logic_error("unused"); }
 	[[nodiscard]] const std::vector<LandBlock>& GetBlocks() const override { throw std::logic_error("unused"); }
 	[[nodiscard]] const std::vector<lnd::LNDCountry>& GetCountries() const override { throw std::logic_error("unused"); }
-	[[nodiscard]] const graphics::Texture2D& GetAlbedoArray() const override { throw std::logic_error("unused"); }
-	[[nodiscard]] const graphics::Texture2D& GetBump() const override { throw std::logic_error("unused"); }
 	[[nodiscard]] const graphics::Texture2D& GetHeightMap() const override { throw std::logic_error("unused"); }
 	[[nodiscard]] const graphics::Texture2D& GetLuminosityMap() const override { throw std::logic_error("unused"); }
 	[[nodiscard]] const graphics::Texture2D& GetBlockTextures() const override { throw std::logic_error("unused"); }

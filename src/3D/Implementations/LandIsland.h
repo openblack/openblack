@@ -55,8 +55,6 @@ public:
 	[[nodiscard]] const std::vector<LandBlock>& GetBlocks() const override { return _landBlocks; }
 	[[nodiscard]] const std::vector<lnd::LNDCountry>& GetCountries() const override { return _countries; }
 
-	[[nodiscard]] const graphics::Texture2D& GetAlbedoArray() const override { return *_materialArray; }
-	[[nodiscard]] const graphics::Texture2D& GetBump() const override { return *_textureBumpMap; }
 	[[nodiscard]] const graphics::Texture2D& GetHeightMap() const override { return *_heightMap; }
 	[[nodiscard]] const graphics::Texture2D& GetLuminosityMap() const override { return *_luminosityMap; }
 	[[nodiscard]] const graphics::Texture2D& GetBlockTextures() const override { return *_blockTextures; }
@@ -70,14 +68,9 @@ public:
 	uint8_t GetNoise(glm::u8vec2 pos) override;
 
 private:
-	std::unique_ptr<graphics::Texture2D> _materialArray;
-	std::unique_ptr<graphics::Texture2D> _countryLookup;
-
 	std::unique_ptr<graphics::Texture2D> _heightMap;
 	std::unique_ptr<graphics::Texture2D> _luminosityMap;
 	std::unique_ptr<graphics::Texture2D> _blockTextures;
-	std::unique_ptr<graphics::Texture2D> _textureNoiseMap;
-	std::unique_ptr<graphics::Texture2D> _textureBumpMap;
 
 	std::unique_ptr<graphics::FrameBuffer> _footprintFrameBuffer;
 	glm::mat4 _proj;

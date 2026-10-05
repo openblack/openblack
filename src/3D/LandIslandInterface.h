@@ -56,8 +56,6 @@ public:
 	[[nodiscard]] virtual const std::vector<LandBlock>& GetBlocks() const = 0;
 	[[nodiscard]] virtual const std::vector<lnd::LNDCountry>& GetCountries() const = 0;
 
-	[[nodiscard]] virtual const graphics::Texture2D& GetAlbedoArray() const = 0;
-	[[nodiscard]] virtual const graphics::Texture2D& GetBump() const = 0;
 	[[nodiscard]] virtual const graphics::Texture2D& GetHeightMap() const = 0;
 	/// Each cell corner's luminosity, laid out as the height map, 255 where there is no block
 	[[nodiscard]] virtual const graphics::Texture2D& GetLuminosityMap() const = 0;

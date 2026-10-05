@@ -726,7 +726,7 @@ void Renderer::DrawTemplePool(const DrawSceneDesc& desc) const
 	}
 }
 
-void Renderer::DrawTempleMapPass(const DrawSceneDesc& desc) const
+void Renderer::DrawTempleMapPass() const
 {
 	// The view keeps its clear from one frame to the next, so it is only touched to draw the land afresh
 	const auto viewId = static_cast<bgfx::ViewId>(RenderPass::TempleMap);
@@ -770,7 +770,7 @@ void Renderer::DrawTempleMapPass(const DrawSceneDesc& desc) const
 	const auto islandExtent = glm::vec4(island.GetExtent().minimum, island.GetExtent().maximum);
 	auto smallBump = Locator::resources::value().GetTextures().Handle(LandIslandInterface::k_SmallBumpTextureId);
 	// The land's own textures, bumped, with the footprints and the objects' shadows on them
-	const glm::vec4 u_skyAndBump = {0.0f, desc.bumpMapStrength, 0.0f, 1.0f};
+	const glm::vec4 u_skyAndBump = {0.0f, 0.0f, 0.0f, 1.0f};
 	auto u_objectShadows = glm::vec4(0.0f);
 	if (_objectShadowFrameBuffer)
 	{
@@ -1575,7 +1575,7 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 	DrawFootprintPass(drawDesc);
 	UpdateLandLight();
 	DrawObjectShadowPass(drawDesc);
-	DrawTempleMapPass(drawDesc);
+	DrawTempleMapPass();
 	{
 		auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::MainPassDrawModels);
 		if (drawDesc.drawHand)
@@ -1729,7 +1729,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			auto islandExtent = glm::vec4(island.GetExtent().minimum, island.GetExtent().maximum);
 
 			auto texture = Locator::resources::value().GetTextures().Handle(LandIslandInterface::k_SmallBumpTextureId);
-			const glm::vec4 u_skyAndBump = {skyType, desc.bumpMapStrength, desc.smallBumpMapStrength, 0.0f};
+			const glm::vec4 u_skyAndBump = {skyType, 0.0f, desc.smallBumpMapStrength, 0.0f};
 			auto u_objectShadows = glm::vec4(0.0f);
 			if (_objectShadowFrameBuffer)
 			{
