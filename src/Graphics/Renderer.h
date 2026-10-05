@@ -77,7 +77,7 @@ private:
 	/// The rivers' beds or channels, a footprint for each stretch of river
 	void DrawStreamFootprints(graphics::RenderPass viewId, entt::id_type meshId) const;
 	void DrawLandAlphaPass(const DrawSceneDesc& drawDesc) const;
-	/// The land's luminosity this frame: as it was laid, with the clouds' shadows over it
+	/// The land's luminosity this frame: as it was laid, shaded by the clouds and lit by the lights at night
 	void DrawLandLuminosityPass(const DrawSceneDesc& drawDesc) const;
 	[[nodiscard]] const Texture2D& GetLandLuminosity() const;
 	/// The sun in the sky, after the sky's dome
@@ -107,8 +107,6 @@ private:
 	void SetSeaUniforms(const ShaderProgram& waterShader, const Camera& camera) const;
 	/// Casts the shadows of the island's trees, rocks and buildings onto it (see ObjectShadows)
 	void DrawObjectShadowPass(const DrawSceneDesc& drawDesc) const;
-	/// u_handLight of the land: where HandLight's map lies and how strongly it lights, loading the map the first time
-	[[nodiscard]] glm::vec4 GetHandLight(const DrawSceneDesc& drawDesc) const;
 	/// Draws the hand's silhouette for its shadow, or clears the shadow when there is none
 	void DrawHandShadowPass(const DrawSceneDesc& drawDesc) const;
 	/// Draws a submesh, with a texture in place of its skins when given one
@@ -149,37 +147,34 @@ private:
 	mutable std::optional<uint32_t> _templeMapVisit;
 	/// The hand's shadow of the frame being drawn
 	mutable std::optional<HandShadow> _handShadow;
-	/// HandLight's map, loaded with the first land drawn, empty when the game has none
-	mutable std::optional<TextureHandle> _handLightTexture;
 	/// The land's light this frame, and the 256 by 1 texture the terrain reads it from
 	mutable std::unique_ptr<LandLightTable> _landLightTable;
 	/// The sea's ripple step, 0 to 15, moving on each frame the sea's rows are drawn while the game's time goes on
 	mutable uint8_t _seaRippleStep {0};
 	/// The land's luminosity this frame, sized to the land's
 	mutable std::unique_ptr<FrameBuffer> _landLuminosityFrameBuffer;
+	/// What shades the land this frame: the clouds' shadows and the lights at night
+	mutable std::unique_ptr<FrameBuffer> _landShadeFrameBuffer;
 	/// How strongly the sun glares, 0 to 255, easing towards how much of the sun shows
 	mutable float _sunGlare {0.0f};
 	mutable std::optional<TextureHandle> _landLightTexture;
 	/// u_haze and u_hazeColour of the frame's distance haze, off until the land's light is built
 	mutable std::array<glm::vec4, 2> _haze {};
-	mutable bool _handLightLoaded {false};
 	/// icons.raw with iconsa.raw's alpha, which the creature's room's belts and medals are drawn with, once loaded
 	mutable std::optional<TextureHandle> _iconsTexture;
 	mutable bool _iconsLoaded {false};
 	/// Sampled by the primitives without a skin, as Direct3D's texture stages read white with no texture set
 	std::optional<TextureHandle> _whiteTexture;
-	/// u_handLight of the pass being drawn, without strength outside of the scene's passes
-	mutable glm::vec4 _handLight {0.0f};
 	/// u_modelLight: where the game's model light is this frame, and its ambient
 	mutable glm::vec4 _modelLight {0.0f};
 	/// What the land's light is scaled by for the trees this frame, of 1
 	mutable float _treeBrightness {1.0f};
-	/// HandLight's map, or a texture to bind in its place when there is none
 	/// u_modelLight: the game's model light this frame
 	[[nodiscard]] glm::vec4 GetModelLight() const;
 	/// Rebuilds the land's light for this frame from the palette; the texture of it
 	TextureHandle UpdateLandLight() const;
-	[[nodiscard]] TextureHandle GetHandLightTexture() const;
+	/// The land's light, or a texture to bind in its place before it is first built
+	[[nodiscard]] TextureHandle GetLandLightTexture() const;
 	std::unique_ptr<Mesh> _plane;
 };
 } // namespace graphics

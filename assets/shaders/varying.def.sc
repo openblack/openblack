@@ -15,7 +15,7 @@ vec4 v_color0            : COLOR0    = vec4(1.0, 0.0, 0.0, 1.0);
 vec4 v_texcoord0         : TEXCOORD0 = vec4(0.0, 0.0, 0.0, 1.0);
 vec4 v_texcoord1         : TEXCOORD1 = vec4(0.0, 0.0, 0.0, 1.0);
 vec3 v_normal            : NORMAL;
-float v_lightLevel       : COLOR3;
+vec3 v_lightColour      : COLOR3;
 vec2 v_smallBumpFade     : TEXCOORD4 = vec2(0.0, 0.0);
 vec4 v_shadowCoord       : TEXCOORD2 = vec4(0.0, 0.0, -1.0, 1.0);
 vec4 v_haze              : TEXCOORD3 = vec4(0.0, 0.0, 0.0, 1.0);

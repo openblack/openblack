@@ -1,5 +1,5 @@
 $input a_position
-$output v_texcoord0, v_texcoord1, v_lightLevel, v_smallBumpFade, v_shadowCoord, v_haze
+$output v_texcoord0, v_texcoord1, v_lightColour, v_smallBumpFade, v_shadowCoord, v_haze
 
 #include <bgfx_shader.sh>
 
@@ -9,11 +9,12 @@ uniform vec4 u_blockPositionAndSize;
 uniform vec4 u_islandExtent;
 // The land's luminosity this frame, a texel for each cell's corner
 SAMPLER2D(s9_landLuminosity, 9);
+// The land's light: a colour for each level of the cells' luminosity (LandLightTable)
+SAMPLER2D(s7_landLight, 7);
+// y: how bright the land's light is, a half for the land mirrored under the sea
+uniform vec4 u_skyAndBump;
 // World position to hand shadow texture coordinates in xy and distance past the hand along the light in z
 uniform mat4 u_handShadowMatrix;
-// xy: where the first brightness of the hand's light map lies in the world's x and z (HandLight::GetOrigin)
-// z: how strongly the hand lights the land
-uniform vec4 u_handLight;
 // xy: the camera's x and z, zw: the direction it faces along the ground
 uniform vec4 u_smallBumpLine;
 // x: how far ahead of the camera along the ground the small bump detail fades out
@@ -39,12 +40,12 @@ void main()
 	// The luminosity of the vertex's cell corner this frame
 	vec2 luminosityTexels = (extentMax - extentMin) / 10.0f + 1.0f;
 	vec2 luminosityCell = floor((transformedPosition.xz - extentMin) / 10.0f + 0.5f);
-	v_lightLevel = texture2DLod(s9_landLuminosity, (luminosityCell + 0.5f) / luminosityTexels, 0.0f).r;
-
-	// The hand's light map has a brightness for each of 12 by 12 vertices 10 units apart, its rows along x: sample
-	// between those around the vertex, at the centres of their texels
-	vec2 handLightCell = (transformedPosition.xz - u_handLight.xy) / 10.0f;
-	v_texcoord0.zw = (handLightCell.yx + 0.5f) / 12.0f;
+	float luminosity =
+	    floor(texture2DLod(s9_landLuminosity, (luminosityCell + 0.5f) / luminosityTexels, 0.0f).r * 255.0f + 0.5f);
+	// Each vertex takes the colour of its luminosity, each channel scaled down and rounded down, and the colours are
+	// blended across the land between them
+	vec3 light = texture2DLod(s7_landLight, vec2((luminosity + 0.5f) / 256.0f, 0.5f), 0.0f).rgb;
+	v_lightColour = floor(light * 255.0f * u_skyAndBump.y + 0.001f) / 255.0f;
 
 	v_shadowCoord = mul(u_handShadowMatrix, vec4(transformedPosition, 1.0f));
 	// The game gives the land's shadow vertices no alpha below altitude 2 (1.34 units), so shadows fade out towards the

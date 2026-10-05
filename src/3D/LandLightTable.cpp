@@ -76,12 +76,14 @@ LandLightPalette::LandLightPalette(std::span<const uint8_t> bytes)
 	}
 }
 
-void LandLightTable::Build(const LandLightPalette& palette, float skyType, float alignment) noexcept
+namespace
+{
+/// The palette's colour of each row for the time of day and the alignment
+std::array<uint32_t, k_RowCount> PaletteColours(const LandLightPalette& palette, float skyType, float alignment)
 {
 	// The palette's columns: the time of day from midnight to noon, and the alignment from good to evil
 	const float timeColumn = std::clamp(skyType, 0.0f, 2.0f) * 15.0f;
-	const float evil = std::clamp(1.0f - alignment, 0.0f, 2.0f);
-	const float alignmentColumn = evil * 15.0f;
+	const float alignmentColumn = std::clamp(1.0f - alignment, 0.0f, 2.0f) * 15.0f;
 
 	std::array<uint32_t, k_RowCount> colours {};
 	for (size_t row = 0; row < colours.size(); ++row)
@@ -91,11 +93,28 @@ void LandLightTable::Build(const LandLightPalette& palette, float skyType, float
 		const auto t = static_cast<uint32_t>((column - static_cast<float>(index)) * 256.0f);
 		colours.at(row) = Lerp(palette.At(row, index), palette.At(row, index + 1), t);
 	}
+	return colours;
+}
 
-	// The land's colour, from good through neutral to evil
+/// The land's colour, from good through neutral to evil
+uint32_t LandColour(const std::array<uint32_t, k_RowCount>& colours, float alignment)
+{
+	const float evil = std::clamp(1.0f - alignment, 0.0f, 2.0f);
 	const auto towardsEvil = static_cast<int32_t>(evil * 255.0f);
-	const auto land = evil < 1.0f ? Lerp(colours[k_Good], colours[k_Neutral], static_cast<uint32_t>(towardsEvil))
-	                              : Lerp(colours[k_Neutral], colours[k_Evil], static_cast<uint32_t>(towardsEvil - 256));
+	return evil < 1.0f ? Lerp(colours[k_Good], colours[k_Neutral], static_cast<uint32_t>(towardsEvil))
+	                   : Lerp(colours[k_Neutral], colours[k_Evil], static_cast<uint32_t>(towardsEvil - 256));
+}
+} // namespace
+
+uint32_t LandLightTable::GetLandColour(const LandLightPalette& palette, float skyType, float alignment) noexcept
+{
+	return LandColour(PaletteColours(palette, skyType, alignment), alignment) & 0xFFFFFFu;
+}
+
+void LandLightTable::Build(const LandLightPalette& palette, float skyType, float alignment) noexcept
+{
+	const auto colours = PaletteColours(palette, skyType, alignment);
+	const auto land = LandColour(colours, alignment);
 
 	_landColour = land & 0xFFFFFFu;
 	_warmColour = colours[k_Warm] & 0xFFFFFFu;

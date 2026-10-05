@@ -19,7 +19,9 @@ namespace openblack::graphics
 
 enum class RenderPass : uint8_t
 {
-	/// The land's luminosity this frame: as it was laid, with the clouds' shadows over it
+	/// The clouds' shadows over the land this frame, and the lights at night
+	LandShade,
+	/// The land's luminosity this frame: as it was laid, shaded by the clouds and lit by the lights
 	LandLuminosity,
 	Footprint,
 	/// The rivers' channels, into the land's alpha
@@ -40,6 +42,7 @@ enum class RenderPass : uint8_t
 };
 
 static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_count)> k_RenderPassNames {
+    "Land Shade Pass",      //
     "Land Luminosity Pass", //
     "Footprint Pass",       //
     "Land Alpha Pass",      //

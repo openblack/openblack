@@ -3,7 +3,6 @@ $input v_position, v_texcoord0, v_normal, v_color0, v_haze
 #include <bgfx_shader.sh>
 
 SAMPLER2D(s_diffuse, 0);
-SAMPLER2D(s_handLight, 2);
 #ifdef USE_ENVIRONMENT
 SAMPLER2D(s_environment, 5);
 #endif // USE_ENVIRONMENT
@@ -15,15 +14,12 @@ uniform vec4 u_glow;
 // it unlit, in that colour alone, with its alpha by w
 uniform vec4 u_tint;
 
-#include "hand_light.sh"
-
 void main()
 {
 	float alphaThreshold = u_skyAlphaThreshold.y;
 
 	vec4 diffuseTex = texture2D(s_diffuse, v_texcoord0.xy);
-	// The game's model light, or the hand's light where it is brighter
-	vec3 light = max(v_color0.rgb, vec3_splat(HandLightAt(v_position.xyz)));
+	vec3 light = v_color0.rgb;
 	bool tinted = u_tint.w > 0.0f;
 	diffuseTex.rgb = diffuseTex.rgb * (tinted ? vec3_splat(1.0f) : light) * u_tint.rgb;
 	diffuseTex.a = diffuseTex.a * (tinted ? u_tint.w : 1.0f);

@@ -64,6 +64,9 @@ public:
 		glm::vec3 colour {0.0f}; ///< 0 to 255
 	};
 
+	/// The land's colour for the time of day and alignment, as Build finds it, 0xRRGGBB
+	[[nodiscard]] static uint32_t GetLandColour(const LandLightPalette& palette, float skyType, float alignment) noexcept;
+
 	/// The table as RGBA8 texels
 	[[nodiscard]] const std::array<uint32_t, k_Size>& GetTexels() const noexcept { return _texels; }
 	[[nodiscard]] const Haze& GetHaze() const noexcept { return _haze; }

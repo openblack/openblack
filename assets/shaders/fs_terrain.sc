@@ -1,4 +1,4 @@
-$input v_texcoord0, v_texcoord1, v_lightLevel, v_smallBumpFade, v_shadowCoord, v_haze
+$input v_texcoord0, v_texcoord1, v_lightColour, v_smallBumpFade, v_shadowCoord, v_haze
 
 #include <bgfx_shader.sh>
 
@@ -13,10 +13,6 @@ SAMPLER2D(s3_footprints, 3);
 SAMPLER2D(s4_handShadow, 4);
 // Where the shadows of trees, rocks and buildings cover the island, laid out as the footprints are
 SAMPLER2D(s5_objectShadows, 5);
-// The brightness the hand's light gives the land around it (HandLight)
-SAMPLER2D(s6_handLight, 6);
-// The land's light: a colour for each level of the cells' luminosity (LandLightTable)
-SAMPLER2D(s7_landLight, 7);
 // What of the land's alpha the rivers' channels leave, laid out as the footprints are
 SAMPLER2D(s8_landAlpha, 8);
 
@@ -32,8 +28,6 @@ uniform vec4 u_objectShadows;
 // x: darkness of the hand's shadow where its silhouette fully covers a texel, 0 without a shadow
 // y: how far before the hand along the light the shadow starts
 uniform vec4 u_handShadow;
-// z: how strongly the hand lights the land
-uniform vec4 u_handLight;
 
 void main()
 {
@@ -64,13 +58,7 @@ void main()
 		return;
 	}
 
-	// The land's light for the cell's luminosity, or the hand's light where it is brighter
-	float luminosity = floor(v_lightLevel * 255.0f + 0.5f);
-	vec3 light = texture2DLod(s7_landLight, vec2((luminosity + 0.5f) / 256.0f, 0.5f), 0.0f).rgb;
-	light = max(light, vec3_splat(texture2D(s6_handLight, v_texcoord0.zw).r * u_handLight.z));
-	// Each channel of the light scaled down, rounding down
-	light = floor(light * 255.0f * u_skyAndBump.y + 0.001f) / 255.0f;
-	col.rgb = col.rgb * light * v_haze.a;
+	col.rgb = col.rgb * v_lightColour * v_haze.a;
 
 	// the hand's shadow, projected along the sunlight onto the land beyond it
 	vec3 shadowCoord = v_shadowCoord.xyz;

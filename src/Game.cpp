@@ -75,6 +75,7 @@
 #include "ECS/Systems/TempleExteriorSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "ECS/Systems/VegetationInterface.h"
+#include "ECS/Systems/VillageLightSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
 #include "EngineConfig.h"
 #include "FileSystem/FileSystemInterface.h"
@@ -582,6 +583,7 @@ bool Game::Update() noexcept
 	// The clouds drift with the wind, then every mist and cloud animates
 	Locator::cloudSystem::value().Update(gameTime);
 	Locator::mistSystem::value().Update(gameTime);
+	Locator::villageLightSystem::value().Update(gameTime);
 
 	// Update Uniforms
 	{
