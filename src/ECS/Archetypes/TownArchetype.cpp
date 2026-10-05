@@ -10,6 +10,7 @@
 #include "TownArchetype.h"
 
 #include "ECS/Components/Town.h"
+#include "ECS/Components/TownDesire.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Locator.h"
@@ -27,6 +28,9 @@ entt::entity TownArchetype::Create(int id, const glm::vec3& position, [[maybe_un
 
 	registry.Assign<Town>(entity, static_cast<uint32_t>(id));
 	registry.Assign<Tribe>(entity, tribe);
+	// What it wants, worked out each turn from its people and buildings
+	registry.Assign<TownDesire>(entity);
+	registry.Assign<TownStats>(entity);
 	registry.Assign<Transform>(entity, position, glm::mat3(1.0f), glm::vec3(1.0f));
 	auto& registryContext = registry.Context();
 	registryContext.towns.insert({id, entity});

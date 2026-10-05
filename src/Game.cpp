@@ -76,6 +76,7 @@
 #include "ECS/Systems/SoundTagSystemInterface.h"
 #include "ECS/Systems/TempleExteriorSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
+#include "ECS/Systems/TownDesireSystemInterface.h"
 #include "ECS/Systems/VegetationInterface.h"
 #include "ECS/Systems/VillageLightSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
@@ -359,6 +360,8 @@ bool Game::GameLogicLoop() noexcept
 		auto pathfinding = profiler.BeginScoped(Profiler::Stage::PathfindingUpdate);
 		Locator::pathfindingSystem::value().Update();
 	}
+	// The towns work out what they want, then their villagers act on it
+	Locator::townDesireSystem::value().ProcessTurn();
 	{
 		auto actions = profiler.BeginScoped(Profiler::Stage::LivingActionUpdate);
 		Locator::livingActionSystem::value().Update();
