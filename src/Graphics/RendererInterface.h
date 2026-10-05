@@ -96,6 +96,8 @@ public:
 		bool mirrored;
 		/// The fraction of its depth the mesh is pushed back by
 		float depthBias;
+		/// Where the mesh comes in a pass sorted by depth, the greatest first
+		uint32_t sortDepth;
 		/// How far the mesh's texture has slid across it
 		glm::vec2 uvOffset;
 		/// A texture every primitive with a skin is drawn with in place of it, when set, as the game gives the creature

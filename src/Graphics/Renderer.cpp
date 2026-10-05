@@ -90,6 +90,7 @@
 #include "Graphics/Sun.h"
 #include "Graphics/TreeBrightness.h"
 #include "Graphics/VertexBuffer.h"
+#include "Graphics/ZSort.h"
 #include "Locator.h"
 #include "Profiler.h"
 #include "Renderer.h"
@@ -113,6 +114,16 @@ constexpr auto k_BgfxDefaultStateInvertedZ = 0 \
                                      | BGFX_STATE_DEPTH_TEST_GREATER \
                                      | BGFX_STATE_MSAA;
 // clang-format on
+
+namespace
+{
+/// The pass what blends in a scene goes to: its own pass after the scene's, but in the temple the scene's own, which
+/// draws everything in the order it comes
+RenderPass TranslucentView(RenderPass scene)
+{
+	return Locator::temple::has_value() && Locator::temple::value().Active() ? scene : TranslucentPassOf(scene);
+}
+} // namespace
 
 /// How far back, as a fraction of their depth, the temple's rooms the player isn't in are drawn: a few millimetres at the
 /// doorways, past the rounding of the copies of their arches
@@ -381,6 +392,12 @@ void Renderer::ConfigureView(graphics::RenderPass viewId, glm::u16vec2 resolutio
 	{
 		bgfx::setViewClear(static_cast<bgfx::ViewId>(viewId), BGFX_CLEAR_NONE);
 		bgfx::setViewRect(static_cast<bgfx::ViewId>(viewId), 0, 0, resolution.x, resolution.y);
+	}
+	// And what blends in it is drawn over it after
+	if (const auto translucentId = TranslucentPassOf(viewId); translucentId != viewId)
+	{
+		bgfx::setViewClear(static_cast<bgfx::ViewId>(translucentId), BGFX_CLEAR_NONE);
+		bgfx::setViewRect(static_cast<bgfx::ViewId>(translucentId), 0, 0, resolution.x, resolution.y);
 	}
 }
 
@@ -653,7 +670,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				bgfx::setState(state, desc.rgba);
 			}
 
-			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(program->GetRawHandle()), 0,
+			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(program->GetRawHandle()), desc.sortDepth,
 			             primitivePreserveState ? BGFX_DISCARD_NONE : BGFX_DISCARD_ALL);
 		}
 		lastPreserveState = primitivePreserveState;
@@ -1699,11 +1716,9 @@ void Renderer::DrawMists(const DrawSceneDesc& desc) const
 				subMesh->GetMesh().GetVertexBuffer().Bind();
 				// Both sides, blended over what is behind, tested against but not writing depth
 				bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_BLEND_ALPHA | BGFX_STATE_MSAA);
-				// bgfx draws the blended draws of a program in the order of this depth: the farthest first
-				const float distance = glm::length(transform.position - origin);
-				const auto depth =
-				    std::numeric_limits<uint32_t>::max() - static_cast<uint32_t>(std::min(distance * 64.0f, 4.0e9f));
-				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(program->GetRawHandle()), depth);
+				// In its place among everything that blends, the farthest first
+				bgfx::submit(static_cast<bgfx::ViewId>(TranslucentView(desc.viewId)), toBgfx(program->GetRawHandle()),
+				             zsort::Depth(transform.position, origin));
 			}
 		}
 	});
@@ -2603,6 +2618,19 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	// where the wrist should show it through.
 	const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
 	bgfx::setViewMode(static_cast<bgfx::ViewId>(desc.viewId), inTemple ? bgfx::ViewMode::Sequential : bgfx::ViewMode::Default);
+	// Outside the temple, what blends in the world is drawn after the rest of the scene in a pass of its own, all of it
+	// together and the farthest first, as the game sorts it
+	const auto translucentViewId = TranslucentView(desc.viewId);
+	if (translucentViewId != desc.viewId)
+	{
+		if (desc.frameBuffer != nullptr)
+		{
+			desc.frameBuffer->Bind(translucentViewId);
+		}
+		bgfx::setViewMode(static_cast<bgfx::ViewId>(translucentViewId), bgfx::ViewMode::DepthDescending);
+		_shaderManager->SetCamera(translucentViewId, *desc.camera);
+	}
+	const auto cameraOrigin = desc.camera->GetOrigin();
 
 	_shaderManager->SetCamera(skyViewId, *desc.camera);
 	_shaderManager->SetCamera(desc.viewId, *desc.camera);
@@ -2704,7 +2732,6 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 			// The small bump detail fades out about a line across the ground: where the plane square to the camera's
 			// view, 50 units ahead of it, meets the ground at the camera's height, or at 110.55 if the camera is higher
-			const auto cameraOrigin = desc.camera->GetOrigin();
 			const auto cameraForward = desc.camera->GetForward();
 			const glm::vec2 forwardAlongGround {cameraForward.x, cameraForward.z};
 			const float forwardLength = std::max(glm::length(forwardAlongGround), 1e-4f);
@@ -2810,7 +2837,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 			// Instance meshes
 			const auto drawInstances = [&](entt::id_type meshId, const RenderContext::InstancedDrawDesc& placers,
-			                               bool useMaterialBlending) {
+			                               bool useMaterialBlending, uint32_t first, uint32_t count) {
 				auto mesh = meshManager.Handle(meshId);
 
 				submitDesc.useMaterialBlending = useMaterialBlending;
@@ -2824,7 +2851,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				submitDesc.landLightScale = meshId == ecs::components::Hand::k_MeshId ? 1.5f : 1.0f;
 				submitDesc.unlit = placers.unlit;
 				submitDesc.instanceDesc =
-				    std::make_unique<graphics::InstanceDesc>(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
+				    std::make_unique<graphics::InstanceDesc>(renderCtx.instanceUniformBuffer, first, count);
 				if (mesh->IsBoned())
 				{
 					const auto animated = renderCtx.animatedBoneMatrices.find(meshId);
@@ -2881,18 +2908,26 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				if (meshId != ecs::components::Hand::k_MeshId && !placers.translucent &&
 				    !(desc.viewId == RenderPass::Reflection && placers.hiddenFromReflection))
 				{
-					drawInstances(meshId, placers, placers.materialBlending);
+					drawInstances(meshId, placers, placers.materialBlending, placers.offset, placers.count);
 				}
 			}
 			DrawTempleUnderside(desc);
-			// The translucent meshes blend over the opaque ones
+			// The translucent meshes blend over the opaque ones, each in its own place in the sort
+			submitDesc.viewId = translucentViewId;
 			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
 			{
 				if (placers.translucent && !(desc.viewId == RenderPass::Reflection && placers.hiddenFromReflection))
 				{
-					drawInstances(meshId, placers, true);
+					for (uint32_t instance = placers.offset; instance < placers.offset + placers.count; ++instance)
+					{
+						const auto position = glm::vec3(renderCtx.instanceUniforms.at(instance).model[3]);
+						submitDesc.sortDepth = zsort::Depth(position, cameraOrigin);
+						drawInstances(meshId, placers, true, instance, 1);
+					}
 				}
 			}
+			submitDesc.viewId = desc.viewId;
+			submitDesc.sortDepth = 0;
 			// The main room's pool, the map over it and its markers, ahead of the hand, whose faded wrist they show
 			// through
 			DrawTemplePool(desc);
@@ -2912,16 +2947,25 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			{
 				// L3D meshes face clockwise, which the mirrored reflection pass and a mirrored hand each turn around
 				const bool facesTurned = desc.cullBack != renderCtx.handMirrored;
+				// It takes its place in the sort by where it is
+				submitDesc.viewId = translucentViewId;
+				if (hand->second.count > 0)
+				{
+					const auto position = glm::vec3(renderCtx.instanceUniforms.at(hand->second.offset).model[3]);
+					submitDesc.sortDepth = zsort::Depth(position, cameraOrigin);
+				}
 				const auto cullFront = facesTurned ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW;
 				const auto cullBack = facesTurned ? BGFX_STATE_CULL_CW : BGFX_STATE_CULL_CCW;
 				const auto opaqueState = submitDesc.state;
 
 				// The inside does not write depth so the outside is never hidden behind it
 				submitDesc.state = (opaqueState & ~(BGFX_STATE_CULL_MASK | BGFX_STATE_WRITE_Z)) | cullFront;
-				drawInstances(hand->first, hand->second, true);
+				drawInstances(hand->first, hand->second, true, hand->second.offset, hand->second.count);
 				submitDesc.state = (opaqueState & ~BGFX_STATE_CULL_MASK) | cullBack;
-				drawInstances(hand->first, hand->second, true);
+				drawInstances(hand->first, hand->second, true, hand->second.offset, hand->second.count);
 				submitDesc.state = opaqueState;
+				submitDesc.viewId = desc.viewId;
+				submitDesc.sortDepth = 0;
 			}
 
 			// Debug
@@ -3022,7 +3066,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				using namespace ecs::components;
 
 				auto& registry = Locator::entitiesRegistry::value();
-				registry.Each<const Sprite, const Transform>([this, &spriteShader, &desc,
+				registry.Each<const Sprite, const Transform>([this, &spriteShader, &desc, translucentViewId, cameraOrigin,
 				                                              &registry](entt::entity entity, const Sprite& sprite,
 				                                                         const Transform& transform) {
 					// The temple draws the glows of the rooms it draws whole, and the main room reflects its own glows
@@ -3064,7 +3108,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					bgfx::setState(0 | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | blend |
 					               BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_ADD));
 
-					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(spriteShader->GetRawHandle()));
+					bgfx::submit(static_cast<bgfx::ViewId>(translucentViewId), toBgfx(spriteShader->GetRawHandle()),
+					             zsort::Depth(transform.position, cameraOrigin));
 				});
 			}
 		}

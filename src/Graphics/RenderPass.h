@@ -38,9 +38,13 @@ enum class RenderPass : uint8_t
 	/// The sky of the sea's reflection, drawn first into its target
 	ReflectionSky,
 	Reflection,
+	/// What blends in the sea's reflection, the farthest first
+	ReflectionTranslucent,
 	/// The sky, drawn first into the view: everything in the scene is drawn over it and in front of it
 	Sky,
 	Main,
+	/// What blends in the world, drawn after the rest of the scene, the farthest first
+	Translucent,
 	Interface,
 	ImGui,
 	/// The game's pointer, over the debug windows too
@@ -51,23 +55,25 @@ enum class RenderPass : uint8_t
 };
 
 static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_count)> k_RenderPassNames {
-    "Land Shade Pass",      //
-    "Land Luminosity Pass", //
-    "Land Colour Pass",     //
-    "Sky Dome Pass",        //
-    "Footprint Pass",       //
-    "Land Alpha Pass",      //
-    "Object Shadow Pass",   //
-    "Temple Map Pass",      //
-    "Hand Shadow Pass",     //
-    "Reflection Sky Pass",  //
-    "Reflection Pass",      //
-    "Sky Pass",             //
-    "Main Pass",            //
-    "Interface Pass",       //
-    "ImGui Pass",           //
-    "Cursor Pass",          //
-    "Mesh Viewer Pass",     //
+    "Land Shade Pass",             //
+    "Land Luminosity Pass",        //
+    "Land Colour Pass",            //
+    "Sky Dome Pass",               //
+    "Footprint Pass",              //
+    "Land Alpha Pass",             //
+    "Object Shadow Pass",          //
+    "Temple Map Pass",             //
+    "Hand Shadow Pass",            //
+    "Reflection Sky Pass",         //
+    "Reflection Pass",             //
+    "Reflection Translucent Pass", //
+    "Sky Pass",                    //
+    "Main Pass",                   //
+    "Translucent Pass",            //
+    "Interface Pass",              //
+    "ImGui Pass",                  //
+    "Cursor Pass",                 //
+    "Mesh Viewer Pass",            //
 };
 // Every pass has a name: a short list would leave the last ones empty
 static_assert(std::ranges::none_of(k_RenderPassNames, &std::string_view::empty));
@@ -76,6 +82,21 @@ static_assert(std::ranges::none_of(k_RenderPassNames, &std::string_view::empty))
 [[nodiscard]] constexpr bool HasSkyPass(RenderPass pass)
 {
 	return pass == RenderPass::Main || pass == RenderPass::Reflection;
+}
+
+/// The pass what blends in a scene is drawn in: the one after it, into the same target, or the scene's own if it has
+/// none
+[[nodiscard]] constexpr RenderPass TranslucentPassOf(RenderPass pass)
+{
+	switch (pass)
+	{
+	case RenderPass::Main:
+		return RenderPass::Translucent;
+	case RenderPass::Reflection:
+		return RenderPass::ReflectionTranslucent;
+	default:
+		return pass;
+	}
 }
 
 /// The pass a scene's sky is drawn in: the one before it, into the same target, or the scene's own if it has none
