@@ -51,10 +51,12 @@
 #include "ECS/Systems/AlignmentSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
+#include "ECS/Systems/TimeSystemInterface.h"
 #include "EngineConfig.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
 #include "Graphics/DebugLines.h"
+#include "Graphics/DetailLevel.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/GraphicsHandleBgfx.h"
 #include "Graphics/HandLight.h"
@@ -63,6 +65,7 @@
 #include "Graphics/ModelLight.h"
 #include "Graphics/ObjectShadows.h"
 #include "Graphics/Primitive.h"
+#include "Graphics/SeaRows.h"
 #include "Graphics/ShaderManager.h"
 #include "Graphics/TreeBrightness.h"
 #include "Graphics/VertexBuffer.h"
@@ -1384,6 +1387,64 @@ void Renderer::DrawStreamFootprints(RenderPass viewId, entt::id_type meshId) con
 	bgfx::submit(static_cast<bgfx::ViewId>(viewId), toBgfx(program->GetRawHandle()));
 }
 
+void Renderer::SetSeaUniforms(const ShaderProgram& waterShader, const Camera& camera) const
+{
+	const auto& config = Locator::config::value();
+	const float waterTiling = detail_level::WaterTiling(config.detailLevel);
+	const bool still = waterTiling == 0.0f;
+
+	glm::vec4 u_seaParams {still ? sea_rows::k_StillPeriod : sea_rows::Period(waterTiling), 0.0f, 0.0f, 0.0f};
+	glm::vec4 u_seaRows {0.0f};
+	glm::vec4 u_seaMode {still ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f};
+	if (!still)
+	{
+		// The rows ripple along the camera's view across the ground, 0.9 units at most
+		const auto forward = camera.GetForward();
+		const glm::vec2 forwardAlongGround {forward.x, forward.z};
+		if (forwardAlongGround != glm::vec2(0.0f))
+		{
+			const auto ripple = 0.9f * glm::normalize(forwardAlongGround);
+			u_seaParams.z = ripple.x;
+			u_seaParams.w = ripple.y;
+		}
+		const auto* stats = bgfx::getStats();
+		const glm::vec2 viewport {stats->width, stats->height};
+		if (const auto range = sea_rows::ComputeScreenRange(camera.GetViewProjectionMatrix(), viewport, config.cameraNearClip))
+		{
+			// The ripple steps on with each frame the game's time moves on in
+			if (Locator::time::value().GetFrameGameTime().count() != 0)
+			{
+				_seaRippleStep = (_seaRippleStep + 1) & 15;
+			}
+			const auto rows = sea_rows::MakeRows(*range);
+			u_seaRows = {static_cast<float>(rows.first), static_cast<float>(rows.count), rows.inverseDepth, rows.inverseStep};
+			u_seaMode.y = rows.softTop ? 1.0f : 0.0f;
+		}
+		else
+		{
+			// No rows: only what lies under the sea shows
+			u_seaRows = {viewport.y, 0.0f, 0.0f, 0.0f};
+		}
+		u_seaParams.y = static_cast<float>(_seaRippleStep);
+	}
+
+	// The sea is coloured by the land's light at full luminosity
+	glm::vec4 u_seaColour {1.0f};
+	if (_landLightTable)
+	{
+		const auto texel = _landLightTable->GetTexels().back();
+		u_seaColour = glm::vec4(static_cast<float>(texel & 0xFFu), static_cast<float>((texel >> 8) & 0xFFu),
+		                        static_cast<float>((texel >> 16) & 0xFFu), 255.0f) /
+		              255.0f;
+	}
+	const glm::vec4 u_seaCamera {camera.GetOrigin(), 0.0f};
+	waterShader.SetUniformValue("u_seaParams", &u_seaParams);
+	waterShader.SetUniformValue("u_seaRows", &u_seaRows);
+	waterShader.SetUniformValue("u_seaMode", &u_seaMode);
+	waterShader.SetUniformValue("u_seaColour", &u_seaColour);
+	waterShader.SetUniformValue("u_seaCamera", &u_seaCamera);
+}
+
 void Renderer::DrawLandAlphaPass(const DrawSceneDesc& drawDesc) const
 {
 	if (!drawDesc.drawIsland)
@@ -1783,10 +1844,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			waterShader->SetTextureSampler("s_diffuse", 0, *diffuse);
 			waterShader->SetTextureSampler("s_alpha", 1, *alpha);
 			waterShader->SetTextureSampler("s_reflection", 2, ocean.GetReflectionFramebuffer().GetColorAttachment());
-			const glm::vec4 u_sky = {skyType, 0.0f, 0.0f, 0.0f};
-			waterShader->SetUniformValue("u_sky", &u_sky); // fs
-			waterShader->SetTextureSampler("s_handLight", 3, GetHandLightTexture());
-			waterShader->SetUniformValue("u_handLight", &_handLight);
+			SetSeaUniforms(*waterShader, *desc.camera);
 			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(waterShader->GetRawHandle()));
 		}
 	}

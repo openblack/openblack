@@ -34,6 +34,7 @@
 
 namespace openblack
 {
+class Camera;
 class LandLightTable;
 struct BgfxCallback;
 class Game;
@@ -47,6 +48,7 @@ namespace graphics
 {
 class FrameBuffer;
 class L3DSubMesh;
+class ShaderProgram;
 class Mesh;
 
 class Renderer final: public RendererInterface
@@ -75,6 +77,8 @@ private:
 	/// The rivers' beds or channels, a footprint for each stretch of river
 	void DrawStreamFootprints(graphics::RenderPass viewId, entt::id_type meshId) const;
 	void DrawLandAlphaPass(const DrawSceneDesc& drawDesc) const;
+	/// The sea's rows, ripple, period and colour for the camera
+	void SetSeaUniforms(const ShaderProgram& waterShader, const Camera& camera) const;
 	/// Casts the shadows of the island's trees, rocks and buildings onto it (see ObjectShadows)
 	void DrawObjectShadowPass(const DrawSceneDesc& drawDesc) const;
 	/// u_handLight of the land: where HandLight's map lies and how strongly it lights, loading the map the first time
@@ -123,6 +127,8 @@ private:
 	mutable std::optional<TextureHandle> _handLightTexture;
 	/// The land's light this frame, and the 256 by 1 texture the terrain reads it from
 	mutable std::unique_ptr<LandLightTable> _landLightTable;
+	/// The sea's ripple step, 0 to 15, moving on each frame the sea's rows are drawn while the game's time goes on
+	mutable uint8_t _seaRippleStep {0};
 	mutable std::optional<TextureHandle> _landLightTexture;
 	/// u_haze and u_hazeColour of the frame's distance haze, off until the land's light is built
 	mutable std::array<glm::vec4, 2> _haze {};
