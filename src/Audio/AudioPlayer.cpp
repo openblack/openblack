@@ -101,12 +101,13 @@ void AudioPlayer::Initialize()
 	alcGetIntegerv(_device.get(), ALC_MINOR_VERSION, 1, &minorVersion);
 	SPDLOG_LOGGER_INFO(spdlog::get("audio"), "ALC Version {}.{}", majorVersion, minorVersion);
 	alCheckCall(alcMakeContextCurrent(_context.get()));
+	// The listener stays at rest, as the game sets it once at the start
+	alCheckCall(alListener3f(AL_VELOCITY, 0.0f, 0.0f, 0.0f));
 }
 
-void AudioPlayer::UpdateListener(glm::vec3 pos, glm::vec3 vel, glm::vec3 front, glm::vec3 up) const
+void AudioPlayer::UpdateListener(glm::vec3 pos, glm::vec3 front, glm::vec3 up) const
 {
 	alCheckCall(alListener3f(AL_POSITION, pos.z, pos.y, pos.x));
-	alCheckCall(alListener3f(AL_VELOCITY, vel.z, vel.y, vel.x));
 	ALfloat listenerOri[] = {front.x, front.y, front.z, up.x, up.y, up.z}; // NOLINT(modernize-avoid-c-arrays)
 	alCheckCall(alListenerfv(AL_ORIENTATION, listenerOri));
 }

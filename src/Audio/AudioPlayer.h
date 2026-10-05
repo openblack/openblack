@@ -25,7 +25,7 @@ public:
 	AudioPlayer();
 	~AudioPlayer() override;
 	void Initialize() override;
-	void UpdateListener(glm::vec3 pos, glm::vec3 vel, glm::vec3 front, glm::vec3 up) const override;
+	void UpdateListener(glm::vec3 pos, glm::vec3 front, glm::vec3 up) const override;
 	BufferId CreateBuffer(ChannelLayout layout, const std::vector<int16_t>& buffer, int sampleRate) override;
 	void QueueBuffer(SourceId sourceId, BufferId buffer) override;
 	void DeleteBuffer(BufferId id) override;

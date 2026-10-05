@@ -65,7 +65,7 @@ class RecordingPlayer final: public AudioPlayerInterface
 {
 public:
 	void Initialize() override {}
-	void UpdateListener(glm::vec3, glm::vec3, glm::vec3, glm::vec3) const override {}
+	void UpdateListener(glm::vec3, glm::vec3, glm::vec3) const override {}
 	BufferId CreateBuffer(ChannelLayout, const std::vector<int16_t>& buffer, int) override
 	{
 		buffers[nextBuffer] = buffer;
