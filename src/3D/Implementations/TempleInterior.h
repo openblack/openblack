@@ -63,6 +63,7 @@ public:
 	[[nodiscard]] uint32_t GetVisits() const override { return _visits; }
 	[[nodiscard]] const std::vector<TempleMapMarker>& GetMapMarkers() const override { return _mapMarkers; }
 	[[nodiscard]] float GetMapMarkerTurn() const override { return _mapMarkerTurn; }
+	[[nodiscard]] float GetPoolTime() const override { return _poolTime; }
 	void Escape() override;
 	void RequestLeave() override { _leaveRequested = true; }
 	void Update(std::chrono::microseconds dt) override;
@@ -97,6 +98,8 @@ private:
 	/// The markers on the map this frame, and how far they have turned
 	std::vector<TempleMapMarker> _mapMarkers;
 	float _mapMarkerTurn {0.0f};
+	/// How long the main room's pool has shimmered, in seconds (0xE3A16C)
+	float _poolTime {0.0f};
 	/// WorldRoom::DrawAdditional's markers of the temples and creatures
 	void UpdateMapMarkers(float seconds);
 	/// Where the camera is to look from and at as the player leaves for a place double clicked on the map

@@ -109,6 +109,11 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 		    {
 			    waterMeshIds.insert(mesh.id);
 		    }
+		    // The renderer draws the main room's pool itself, twice (Renderer::DrawTemplePool)
+		    if (templePart.mesh == TempleInteriorMesh::Pool)
+		    {
+			    return;
+		    }
 		    if (templePart.room != TempleRoom::Main)
 		    {
 			    sideRoomMeshIds.insert(mesh.id);

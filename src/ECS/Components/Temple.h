@@ -23,6 +23,8 @@ enum class TempleInteriorMesh
 	Floor,
 	/// The creature's room's waterfall and pools, whose texture slides down them
 	Water,
+	/// The main room's pool, which WorldRoom::Draw draws twice over itself, turned and shimmering
+	Pool,
 	Other,
 };
 

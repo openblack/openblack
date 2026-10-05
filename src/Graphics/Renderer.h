@@ -89,6 +89,8 @@ private:
 	void DrawTempleText(const DrawSceneDesc& desc) const;
 	/// MiniMap::BuildMapTex: the land seen from above, unlit, once a visit to the temple
 	void DrawTempleMapPass(const DrawSceneDesc& desc) const;
+	/// WorldRoom::Draw's pool: its water twice, turned an eighth apart, each shimmering as the other fades
+	void DrawTemplePool(const DrawSceneDesc& desc) const;
 	/// MiniMap's draw: the island in relief over the main room's pool
 	void DrawTempleMap(const DrawSceneDesc& desc) const;
 	/// WorldRoom::DrawAdditional: the markers on the map, on soft glows that show through anything

@@ -126,6 +126,10 @@ inline void addRoomToRegistry(std::string_view assetName, Indoors templeRoom, gl
 	{
 		mesh = ecs::components::TempleInteriorMesh::Water;
 	}
+	else if (assetName == fmt::format("{}water_l3d", roomName) && templeRoom == Indoors::Main)
+	{
+		mesh = ecs::components::TempleInteriorMesh::Pool;
+	}
 	auto entity = registry.Create();
 	registry.Assign<ecs::components::TempleInteriorPart>(entity, templeRoom, mesh);
 	registry.Assign<ecs::components::Transform>(entity, position, rotation, scale);
@@ -700,6 +704,11 @@ void TempleInterior::Update(std::chrono::microseconds dt)
 			_map.Build([&island](glm::u16vec2 cell) { return island.FindCell(cell); }, _mapTriangles);
 		}
 		UpdateMapMarkers(milliseconds / 1000.0f);
+		// WorldRoom::Draw moves the pool's shimmer on while the main room is drawn
+		if (IsRoomDrawn(TempleRoom::Main))
+		{
+			_poolTime += milliseconds / 1000.0f;
+		}
 		if (_cameraModel != nullptr)
 		{
 			if (const auto point = _cameraModel->TakeMapDoubleClick(); point.has_value())

@@ -599,6 +599,56 @@ void Renderer::DrawTempleText(const DrawSceneDesc& desc) const
 	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(shader->GetRawHandle()));
 }
 
+void Renderer::DrawTemplePool(const DrawSceneDesc& desc) const
+{
+	if (desc.viewId != RenderPass::Main || !Locator::temple::has_value() || !Locator::temple::value().Active())
+	{
+		return;
+	}
+	const auto& temple = Locator::temple::value();
+	const auto pool = entt::hashed_string("temple/interior/mainwater_l3d").value();
+	const auto& meshes = Locator::resources::value().GetMeshes();
+	if (!temple.IsRoomDrawn(TempleRoom::Main) || !meshes.Contains(pool))
+	{
+		return;
+	}
+	// The water's alpha swells and ebbs with the sine of the time, and the second layer's is what the first's lacks
+	const float time = temple.GetPoolTime();
+	const auto alpha = static_cast<int32_t>((std::sin(time) * 32.0f) + 128.0f);
+	// TODO(raffclar): the layers take 13 sixteenths of the temple's light (0xE05FE8) and its material (0xE05FE4)
+	const float k_Light = 13.0f / 16.0f;
+	struct Layer
+	{
+		glm::vec3 position;
+		float yaw;
+		int32_t alpha;
+		glm::vec2 uvOffset;
+	};
+	const std::array layers = {
+	    Layer {glm::vec3(0.0f), 0.0f, alpha, glm::vec2(-0.01f, 0.007f) * time},
+	    Layer {glm::vec3(0.0f, 0.05f, 0.0f), glm::quarter_pi<float>(), 255 - alpha, glm::vec2(0.01f, 0.005f) * time},
+	};
+	for (const auto& layer : layers)
+	{
+		const auto model = glm::translate(glm::mat4(1.0f), temple.GetPosition() + layer.position) *
+		                   glm::rotate(glm::mat4(1.0f), layer.yaw, glm::vec3(0.0f, 1.0f, 0.0f));
+		L3DMeshSubmitDesc submitDesc = {};
+		submitDesc.viewId = desc.viewId;
+		// LH3DMesh::DrawLightMap, as the rest of the room
+		submitDesc.program = _shaderManager->GetShader("Object");
+		submitDesc.lightmapProgram = _shaderManager->GetShader("ObjectLightmap");
+		// Each primitive blended, culled and writing depth as its material says, as the room's meshes are
+		submitDesc.state = k_BgfxDefaultStateInvertedZ;
+		submitDesc.useMaterialBlending = true;
+		submitDesc.useMaterialCulling = true;
+		submitDesc.modelMatrices = &model;
+		submitDesc.matrixCount = 1;
+		submitDesc.uvOffset = layer.uvOffset;
+		submitDesc.tint = glm::vec4(glm::vec3(k_Light), static_cast<float>(layer.alpha) / 255.0f);
+		DrawMesh(*meshes.Handle(pool), submitDesc, 0);
+	}
+}
+
 void Renderer::DrawTempleMapPass(const DrawSceneDesc& desc) const
 {
 	// The view keeps its clear from one frame to the next, so it is only touched to draw the land afresh
@@ -1671,6 +1721,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		if (desc.drawEntities)
 		{
 			DrawLightBeams(desc);
+			DrawTemplePool(desc);
 			DrawTempleMap(desc);
 			DrawTempleMapMarkers(desc);
 			DrawMistDomes(desc);
