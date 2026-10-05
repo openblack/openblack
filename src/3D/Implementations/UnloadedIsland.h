@@ -73,6 +73,11 @@ public:
 		throw std::runtime_error("Cannot get landscape before any are loaded");
 	}
 
+	[[nodiscard]] const graphics::Texture2D& GetLuminosityMap() const override
+	{
+		throw std::runtime_error("Cannot get landscape before any are loaded");
+	}
+
 	[[nodiscard]] const graphics::FrameBuffer& GetFootprintFramebuffer() const override
 	{
 		throw std::runtime_error("Cannot get landscape before any are loaded");

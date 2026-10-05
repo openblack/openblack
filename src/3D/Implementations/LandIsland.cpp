@@ -189,6 +189,12 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	                   Wrapping::ClampEdge, Filter::Linear,
 	                   bgfx::makeRef(heightMapData.data(), static_cast<uint32_t>(heightMapData.size())));
 
+	_luminosityMap = std::make_unique<Texture2D>("Luminosity Map");
+	const auto luminosityMapData = CreateLuminosityMap();
+	_luminosityMap->Create(indexSize.x * k_CellCount + 1, indexSize.y * k_CellCount + 1, 1, graphics::TextureFormat::R8,
+	                       Wrapping::ClampEdge, Filter::Nearest,
+	                       bgfx::copy(luminosityMapData.data(), static_cast<uint32_t>(luminosityMapData.size())));
+
 	const auto res = indexSize * glm::u16vec2(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height);
 	_footprintFrameBuffer = std::make_unique<FrameBuffer>("Footprints", res.x, res.y, graphics::TextureFormat::RGBA8);
 
@@ -355,6 +361,29 @@ std::vector<uint8_t> LandIsland::CreateHeightMap() const
 					data.at((cellPos.y * resolution.x) + cellPos.x) =
 					    static_cast<uint8_t>(std::lround(GetDrawnAltitude(cell.altitude) / k_HeightUnit));
 				}
+			}
+		}
+	}
+	return data;
+}
+
+std::vector<uint8_t> LandIsland::CreateLuminosityMap() const
+{
+	// As the height map: a texel for each cell's corner, with the far edge's from the next block's cells
+	const auto extentSize = _extentIndexMax - _extentIndexMin + glm::u16vec2(1, 1);
+	const auto resolution = extentSize * static_cast<uint16_t>(k_CellCount) + static_cast<uint16_t>(1);
+	std::vector<uint8_t> data(static_cast<size_t>(resolution.x) * resolution.y, 0xFF);
+	for (const auto& block : _landBlocks)
+	{
+		const auto blockOffset = static_cast<glm::u16vec2>(block.GetBlockPosition() * 16);
+		const auto mapPos = block.GetBlockPosition() - static_cast<glm::ivec2>(_extentIndexMin);
+		for (int y = 0; y < k_CellCount; y++)
+		{
+			for (int x = 0; x < k_CellCount; x++)
+			{
+				const auto offset = glm::u16vec2(x, y);
+				const auto cellPos = mapPos * static_cast<int>(k_CellCount) + static_cast<glm::ivec2>(offset);
+				data.at(static_cast<size_t>(cellPos.y * resolution.x + cellPos.x)) = GetCell(blockOffset + offset).luminosity;
 			}
 		}
 	}

@@ -59,6 +59,8 @@ public:
 	[[nodiscard]] virtual const graphics::Texture2D& GetAlbedoArray() const = 0;
 	[[nodiscard]] virtual const graphics::Texture2D& GetBump() const = 0;
 	[[nodiscard]] virtual const graphics::Texture2D& GetHeightMap() const = 0;
+	/// Each cell corner's luminosity, laid out as the height map, 255 where there is no block
+	[[nodiscard]] virtual const graphics::Texture2D& GetLuminosityMap() const = 0;
 	[[nodiscard]] virtual const graphics::FrameBuffer& GetFootprintFramebuffer() const = 0;
 
 	[[nodiscard]] virtual U16Extent2 GetIndexExtent() const = 0;

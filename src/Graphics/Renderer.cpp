@@ -507,6 +507,18 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				program->SetTextureSampler("s_heightmap", 1, heightMap);   // vs
 				program->SetUniformValue("u_islandExtent", &islandExtent); // vs
 			}
+			if (program->HasUniform("u_landLight"))
+			{
+				// Objects in the world take the colour of the land's light where they stand; the sky and the temple's
+				// insides have lights of their own
+				const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
+				const bool landLit = !desc.isSky && !desc.drawAll && !inTemple && _landLightTexture.has_value();
+				const glm::vec4 u_landLight {landLit ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f};
+				program->SetTextureSampler("s_landLuminosity", 3, island.GetLuminosityMap());
+				program->SetTextureSampler("s_landLight", 4, _landLightTexture.value_or(GetHandLightTexture()));
+				program->SetUniformValue("u_islandExtent", &islandExtent);
+				program->SetUniformValue("u_landLight", &u_landLight);
+			}
 			if (program->HasUniform("s_handLight"))
 			{
 				program->SetTextureSampler("s_handLight", 2, GetHandLightTexture());

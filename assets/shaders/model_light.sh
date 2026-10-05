@@ -21,10 +21,9 @@ vec3 ModelLightLocal(vec3 axisX, vec3 axisY, vec3 axisZ, vec3 origin)
 	return lengthSquared > 0.0f ? local / sqrt(lengthSquared) : vec3(0.0f, 0.0f, 0.0f);
 }
 
-// What a white vertex becomes, 0 to 1, for its local normal (as the mesh stores it, not normalised) and the light's
-// local direction: I = round(255 n.l), halves to even; f = I < 0 ? ambient : ambient + ((255 - ambient) I >> 8); and
-// the colour (255 f) >> 8
-float ModelLightLevel(vec3 localNormal, vec3 localLight)
+// The factor a vertex's colour is lit by, of 256, for its local normal (as the mesh stores it, not normalised) and the
+// light's local direction: I = round(255 n.l), halves to even; f = I < 0 ? ambient : ambient + ((255 - ambient) I >> 8)
+float ModelLightFactor(vec3 localNormal, vec3 localLight)
 {
 	float lit = 255.0f * dot(localNormal, localLight);
 	float intensity = floor(lit + 0.5f);
@@ -33,8 +32,13 @@ float ModelLightLevel(vec3 localNormal, vec3 localLight)
 		intensity -= 1.0f;
 	}
 	float ambient = u_modelLight.w;
-	float factor = intensity < 0.0f ? ambient : ambient + floor((255.0f - ambient) * intensity / 256.0f);
-	return floor(255.0f * factor / 256.0f) / 255.0f;
+	return intensity < 0.0f ? ambient : ambient + floor((255.0f - ambient) * intensity / 256.0f);
+}
+
+// A colour of 0 to 255 lit by the factor, each channel (c f) >> 8, as 0 to 1
+vec3 ModelLightColour(vec3 colour, float factor)
+{
+	return floor(colour * factor / 256.0f) / 255.0f;
 }
 
 #endif // MODEL_LIGHT_SH
