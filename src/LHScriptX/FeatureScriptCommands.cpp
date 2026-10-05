@@ -292,8 +292,13 @@ void FeatureScriptCommands::CreateAbode(int32_t townId, glm::vec3 position, cons
                                         int32_t size, int32_t foodAmount, int32_t woodAmount)
 {
 	// Does not use 3d angle to game angle
-	AbodeArchetype::Create(townId, position, GAbodeInfo::Find(abodeInfo), rotation * 0.001f, size * 0.001f,
-	                       static_cast<uint32_t>(foodAmount), static_cast<uint32_t>(woodAmount));
+	const auto type = GAbodeInfo::Find(abodeInfo);
+	if (type == AbodeInfo::None)
+	{
+		return; // the game has no check (see GAbodeInfo::Find)
+	}
+	AbodeArchetype::Create(townId, position, type, rotation * 0.001f, size * 0.001f, static_cast<uint32_t>(foodAmount),
+	                       static_cast<uint32_t>(woodAmount));
 }
 
 void FeatureScriptCommands::CreatePlannedAbode(int32_t townId, glm::vec3 position, const std::string& abodeInfo,
@@ -307,8 +312,13 @@ void FeatureScriptCommands::CreatePlannedAbode(int32_t townId, glm::vec3 positio
 void FeatureScriptCommands::CreateTownCentre(int32_t townId, glm::vec3 position, const std::string& abodeInfo, int32_t rotation,
                                              int32_t size, [[maybe_unused]] int32_t worshipPercentage)
 {
-	AbodeArchetype::Create(townId, position, GAbodeInfo::Find(abodeInfo), rotation * 0.001f, size * 0.001f,
-	                       static_cast<uint32_t>(0), static_cast<uint32_t>(0));
+	const auto type = GAbodeInfo::Find(abodeInfo);
+	if (type == AbodeInfo::None)
+	{
+		return; // the game has no check (see GAbodeInfo::Find)
+	}
+	AbodeArchetype::Create(townId, position, type, rotation * 0.001f, size * 0.001f, static_cast<uint32_t>(0),
+	                       static_cast<uint32_t>(0));
 }
 
 void FeatureScriptCommands::CreateTownSpell(int32_t townId, const std::string& spellName)
@@ -725,7 +735,12 @@ void FeatureScriptCommands::CreateBase([[maybe_unused]] glm::vec3 position, int3
 void FeatureScriptCommands::CreateNewFeature(glm::vec3 position, const std::string& type, int32_t rotation, int32_t scale,
                                              [[maybe_unused]] int32_t param5)
 {
-	FeatureArchetype::Create(position, GFeatureInfo::Find(type), rotation * 0.001f, scale * 0.001f);
+	const auto info = GFeatureInfo::Find(type);
+	if (info == FeatureInfo::None)
+	{
+		return; // the game has no check (see GFeatureInfo::Find)
+	}
+	FeatureArchetype::Create(position, info, rotation * 0.001f, scale * 0.001f);
 }
 
 void FeatureScriptCommands::SetInteractDesire(float)
@@ -801,7 +816,11 @@ void FeatureScriptCommands::TownDesireBoost([[maybe_unused]] int32_t townId, con
 
 void FeatureScriptCommands::CreateAnimatedStatic(glm::vec3 position, const std::string& type, int32_t rotation, int32_t scale)
 {
-	auto animatedStaticType = GAnimatedStaticInfo::Find(type);
+	const auto animatedStaticType = GAnimatedStaticInfo::Find(type);
+	if (animatedStaticType == AnimatedStaticInfo::None)
+	{
+		return; // the game has no check (see GAnimatedStaticInfo::Find)
+	}
 	AnimatedStaticArchetype::Create(position, animatedStaticType, rotation * 0.001f, scale * 0.001f);
 }
 
