@@ -9,13 +9,17 @@
 
 #pragma once
 
-namespace openblack::ecs::components
-{
+#include <entt/fwd.hpp>
+#include <glm/fwd.hpp>
 
-/// The entity's mesh isn't shaded by the sun: it is drawn in the colour of the land's light where it stands, hazed with
-/// distance. Black & White draws its big forests, dead trees and flowers this way, as it does its trees.
-struct Unlit
+#include "Enums.h"
+
+namespace openblack::ecs::archetypes
 {
+class FlowersArchetype
+{
+public:
+	static entt::entity Create(const glm::vec3& position, FlowersInfo type, float yAngleRadians, float scale);
+	FlowersArchetype() = delete;
 };
-
-} // namespace openblack::ecs::components
+} // namespace openblack::ecs::archetypes

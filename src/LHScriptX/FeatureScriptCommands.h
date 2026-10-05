@@ -66,7 +66,7 @@ public:
 	static void CreateFishFarm(glm::vec3 position, int32_t);
 	static void CreateTownFishFarm(int32_t townId, glm::vec3 position, int32_t);
 	static void CreateFeature(glm::vec3 position, FeatureInfo type, int32_t rotation, int32_t scale, int32_t);
-	static void CreateFlowers(glm::vec3 position, int32_t, float, float);
+	static void CreateFlowers(glm::vec3 position, FlowersInfo type, float rotation, float scale);
 	static void CreateWallSection(glm::vec3 position, int32_t, int32_t, int32_t, int32_t);
 	static void CreatePlannedWallSection(glm::vec3 position, int32_t, int32_t, int32_t, int32_t);
 	static void CreatePitch(glm::vec3 position, int32_t, int32_t, int32_t, int32_t, int32_t);

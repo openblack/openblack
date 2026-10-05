@@ -9,13 +9,15 @@
 
 #pragma once
 
+#include "Enums.h"
+
 namespace openblack::ecs::components
 {
 
-/// The entity's mesh isn't shaded by the sun: it is drawn in the colour of the land's light where it stands, hazed with
-/// distance. Black & White draws its big forests, dead trees and flowers this way, as it does its trees.
-struct Unlit
+/// A patch of flowers on the land
+struct Flowers
 {
+	FlowersInfo type;
 };
 
 } // namespace openblack::ecs::components

@@ -29,6 +29,7 @@ namespace openblack::ecs::components
 /// * TODO: PhysicalShield (not magic)
 /// * TownCentre
 /// * Field
+/// * Flowers
 struct MorphWithTerrain
 {
 	int dummy;

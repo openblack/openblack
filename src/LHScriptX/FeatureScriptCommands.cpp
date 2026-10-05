@@ -28,6 +28,7 @@
 #include "ECS/Archetypes/DeadTreeArchetype.h"
 #include "ECS/Archetypes/FeatureArchetype.h"
 #include "ECS/Archetypes/FieldArchetype.h"
+#include "ECS/Archetypes/FlowersArchetype.h"
 #include "ECS/Archetypes/MobileObjectArchetype.h"
 #include "ECS/Archetypes/MobileStaticArchetype.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
@@ -474,10 +475,9 @@ void FeatureScriptCommands::CreateFeature(glm::vec3 position, FeatureInfo type, 
 	FeatureArchetype::Create(position, type, rotation * 0.001f, scale * 0.001f);
 }
 
-void FeatureScriptCommands::CreateFlowers([[maybe_unused]] glm::vec3 position, int32_t, float, float)
+void FeatureScriptCommands::CreateFlowers(glm::vec3 position, FlowersInfo type, float rotation, float scale)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	FlowersArchetype::Create(position, type, rotation, scale);
 }
 
 void FeatureScriptCommands::CreateWallSection([[maybe_unused]] glm::vec3 position, int32_t, int32_t, int32_t, int32_t)
