@@ -25,6 +25,7 @@
 #include <stb_image_write.h>
 
 #include "3D/LandBlock.h"
+#include "3D/LandNormal.h"
 #include "3D/MapCoords.h"
 #include "Dynamics/LandBlockBulletMeshInterface.h"
 #include "FileSystem/FileSystemInterface.h"
@@ -242,29 +243,24 @@ float LandIsland::GetHeightAt(glm::vec2 vec) const
 
 glm::vec3 LandIsland::GetNormalAt(glm::vec2 vec) const
 {
-	const auto delta = 0.1f;
-	const auto posLeft = vec - glm::vec2(delta, 0.0f);
-	const auto posRight = vec + glm::vec2(delta, 0.0f);
-	const auto posBack = vec - glm::vec2(0.0f, delta);
-	const auto posForward = vec + glm::vec2(0.0f, delta);
-
-	const auto heightLeft = GetHeightAt(posLeft);
-	const auto heightRight = GetHeightAt(posRight);
-	const auto heightBack = GetHeightAt(posBack);
-	const auto heightForward = GetHeightAt(posForward);
-
-	const auto slopeLeftRight = glm::vec3(2.0f * delta, heightRight - heightLeft, 0.0f);
-	const auto slopeBackForward = glm::vec3(0.0f, heightForward - heightBack, 2.0f * delta);
-
-	auto normal = glm::cross(slopeBackForward, slopeLeftRight);
-	normal = glm::normalize(normal);
-
-	if (normal.y < 0)
+	// The flat normal of the cell triangle under the point, straight up off the map
+	const auto mapX = ToMapCoords(vec.x);
+	const auto mapZ = ToMapCoords(vec.y);
+	const auto cellX = static_cast<int16_t>(static_cast<uint32_t>(mapX) >> 16);
+	const auto cellZ = static_cast<int16_t>(static_cast<uint32_t>(mapZ) >> 16);
+	if (cellX < 0 || cellX >= k_MapSize || cellZ < 0 || cellZ >= k_MapSize)
 	{
-		normal = -normal;
+		return {0.0f, 1.0f, 0.0f};
 	}
-
-	return normal;
+	const auto* cell = FindCell({static_cast<uint16_t>(cellX), static_cast<uint16_t>(cellZ)});
+	if (cell == nullptr)
+	{
+		return {0.0f, 1.0f, 0.0f};
+	}
+	// Neighbours within the block's 17x17 cell array: +1 is z + 1, +17 is x + 1
+	return land_normal::OfCell(static_cast<uint32_t>(mapX) & 0xFFFF, static_cast<uint32_t>(mapZ) & 0xFFFF,
+	                           cell[0].properties.split != 0, cell[0].altitude, cell[1].altitude, cell[17].altitude,
+	                           cell[18].altitude);
 }
 
 uint8_t LandIsland::GetNoise(glm::u8vec2 pos)
