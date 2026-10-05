@@ -127,11 +127,12 @@ public:
 	void LoadLandscape(const std::filesystem::path& path);
 
 	void SetTime(float time) noexcept;
-	void SetGameSpeed(float multiplier) { _gameSpeedMultiplier = multiplier; }
-	[[nodiscard]] float GetGameSpeed() const { return _gameSpeedMultiplier; }
+	/// How many times longer a turn takes: 2 is half speed
+	void SetGameSpeed(float multiplier);
+	[[nodiscard]] float GetGameSpeed() const;
 
-	[[nodiscard]] uint32_t GetTurn() const { return _turnCount; }
-	[[nodiscard]] bool IsPaused() const { return _paused; }
+	[[nodiscard]] uint32_t GetTurn() const;
+	[[nodiscard]] bool IsPaused() const;
 	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const { return _turnDeltaTime; }
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
 	[[nodiscard]] const audio::AtmosAudio* GetAtmosAudio() const { return _atmosAudio.get(); }
@@ -153,10 +154,7 @@ private:
 
 	std::chrono::steady_clock::time_point _lastGameLoopTime;
 	std::chrono::steady_clock::duration _turnDeltaTime;
-	float _gameSpeedMultiplier {1.0f};
 	uint32_t _frameCount {0};
-	uint32_t _turnCount {0};
-	bool _paused {true};
 	glm::ivec2 _mousePosition;
 	bool _handGripping;
 	bool _handRotating {false};

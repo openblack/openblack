@@ -221,7 +221,7 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 			window.SetDisplayMode(windowing::DisplayMode::Fullscreen);
 			break;
 		case SDLK_p:
-			_paused = !_paused;
+			Locator::time::value().SetPaused(!IsPaused());
 			break;
 		case SDLK_F1:
 			Locator::rendererInterface::value().SetDebug(!Locator::rendererInterface::value().GetDebug());
@@ -286,6 +286,26 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 	return true;
 }
 
+void Game::SetGameSpeed(float multiplier)
+{
+	Locator::time::value().SetSpeed(1.0f / multiplier);
+}
+
+float Game::GetGameSpeed() const
+{
+	return 1.0f / Locator::time::value().GetSpeed();
+}
+
+uint32_t Game::GetTurn() const
+{
+	return Locator::time::value().GetTurn();
+}
+
+bool Game::IsPaused() const
+{
+	return Locator::time::value().IsPaused();
+}
+
 bool Game::GameLogicLoop() noexcept
 {
 	using namespace ecs::components;
@@ -293,14 +313,14 @@ bool Game::GameLogicLoop() noexcept
 
 	const auto currentTime = std::chrono::steady_clock::now();
 	const auto delta = currentTime - _lastGameLoopTime;
-	const auto turnDuration = k_TurnDuration * _gameSpeedMultiplier;
+	auto& clock = Locator::time::value();
 
 	// GGame::GoInsideCitadel pauses the world while the player is in the temple, whose own turns
 	// (Temple::ProcessGameTurn) keep the audio going
 	if (Locator::temple::has_value() && Locator::temple::value().Active())
 	{
 		// NOLINTNEXTLINE(modernize-use-nullptr): clang-tidy bug
-		if (delta >= turnDuration)
+		if (delta >= k_TurnDuration * GetGameSpeed())
 		{
 			ProcessTempleAudioTurn();
 			_lastGameLoopTime = currentTime;
@@ -308,18 +328,18 @@ bool Game::GameLogicLoop() noexcept
 		return false;
 	}
 
-	if (_paused)
+	if (clock.IsPaused())
 	{
 		// The ambience is silent while the game is paused
 		Locator::audio::value().AtmosProcess(false);
 		return false;
 	}
 
-	// NOLINTNEXTLINE(modernize-use-nullptr): clang-tidy bug
-	if (delta < turnDuration)
+	if (!clock.IsTurnDue())
 	{
 		return false;
 	}
+	clock.StartTurn();
 
 	// Build Map Grid Acceleration Structure
 	Locator::entitiesMap::value().Rebuild();
@@ -344,7 +364,7 @@ bool Game::GameLogicLoop() noexcept
 	if (Locator::weatherSystem::has_value())
 	{
 		auto& weatherSystem = Locator::weatherSystem::value();
-		weatherSystem.Update(_turnCount);
+		weatherSystem.Update(clock.GetTurn());
 		weather = weatherSystem.GetWeatherSmooth(cameraPosition);
 	}
 
@@ -367,7 +387,7 @@ bool Game::GameLogicLoop() noexcept
 		            .windZ = weather.windZ,
 		        },
 		    .paused = false,
-		    .turn = _turnCount,
+		    .turn = clock.GetTurn(),
 		    .inCitadel = false,
 		    .videoPlaying = false,
 		});
@@ -377,7 +397,6 @@ bool Game::GameLogicLoop() noexcept
 
 	_lastGameLoopTime = currentTime;
 	_turnDeltaTime = delta;
-	++_turnCount;
 
 	return false;
 }
@@ -390,7 +409,7 @@ void Game::ProcessMusicTurn(glm::vec3 cameraPosition, bool inCitadel)
 		return;
 	}
 	audio::GameMusic::TurnInputs music {
-	    .turn = _turnCount,
+	    .turn = GetTurn(),
 	    .camera = cameraPosition,
 	    .groundHeight = Locator::terrainSystem::value().GetHeightAt(glm::xz(cameraPosition)),
 	    .inCitadel = inCitadel,
@@ -452,7 +471,7 @@ void Game::ProcessTempleAudioTurn()
 	ProcessMusicTurn(Locator::camera::value().GetOrigin(), true);
 	if (_atmosAudio)
 	{
-		_atmosAudio->ContinueTurn({.paused = false, .turn = _turnCount, .inCitadel = true, .videoPlaying = false});
+		_atmosAudio->ContinueTurn({.paused = false, .turn = GetTurn(), .inCitadel = true, .videoPlaying = false});
 	}
 }
 
@@ -544,9 +563,10 @@ bool Game::Update() noexcept
 		}
 	}
 
-	// Tree::PreDraw's g_game_time_inc: game time, none while paused, quicker or slower with the game speed
-	const auto gameTime = _paused ? std::chrono::duration<float, std::milli>::zero()
-	                              : std::chrono::duration<float, std::milli>(deltaTime) / _gameSpeedMultiplier;
+	// The frame's game time: none while paused, quicker or slower with the game speed
+	auto& clock = Locator::time::value();
+	clock.UpdateFrame();
+	const auto gameTime = std::chrono::duration<float, std::milli>(clock.GetFrameGameTime());
 	Locator::alignmentSystem::value().Update(gameTime);
 	{
 		auto actions = profiler.BeginScoped(Profiler::Stage::VegetationUpdate);
@@ -1356,9 +1376,8 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 
 	_lastGameLoopTime = std::chrono::steady_clock::now();
 	_turnDeltaTime = 0ns;
+	Locator::time::value().StartGameClock(true);
 	SetGameSpeed(Game::k_TurnDurationMultiplierNormal);
-	_turnCount = 0;
-	_paused = true;
 
 	if (!_atmosAudio)
 	{
@@ -1393,12 +1412,12 @@ void Game::HandleInterfaceAction()
 	const auto open = _interface->GetMenu().IsOpen();
 	if (open && !_menuWasOpen)
 	{
-		_pausedBeforeMenu = _paused;
-		_paused = true;
+		_pausedBeforeMenu = IsPaused();
+		Locator::time::value().SetPaused(true);
 	}
 	else if (!open && _menuWasOpen)
 	{
-		_paused = _pausedBeforeMenu;
+		Locator::time::value().SetPaused(_pausedBeforeMenu);
 	}
 	_menuWasOpen = open;
 
