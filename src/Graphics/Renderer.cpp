@@ -755,6 +755,53 @@ void Renderer::DrawTempleMapPass(const DrawSceneDesc& desc) const
 	bgfx::discard(BGFX_DISCARD_BINDINGS);
 }
 
+void Renderer::DrawTempleUnderside(const DrawSceneDesc& desc) const
+{
+	// The rooms' meshes don't quite meet everywhere: the sills of the main room's doorways stand a hundredth of a unit off
+	// their doors' frames, and their edges have vertices of others part way along them. Vanilla draws the sky behind the
+	// temple (DoCitadelDraw), so it shows through the cracks there too, as specks of the outside. Looking down through
+	// them, this shows black instead. The creature's room goes deepest, to 70.5 below the temple.
+	constexpr float k_Depth = -75.0f;
+	constexpr float k_Extent = 10000.0f;
+	if (desc.viewId != RenderPass::Main || !_whiteTexture || !Locator::temple::has_value() ||
+	    !Locator::temple::value().Active())
+	{
+		return;
+	}
+	bgfx::VertexLayout layout;
+	layout.begin()
+	    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+	    .end();
+	constexpr uint32_t k_Black = 0xFF000000;
+	const std::array<OrientedTextVertex, 6> vertices {{
+	    {{-k_Extent, k_Depth, -k_Extent}, {0.0f, 0.0f}, k_Black},
+	    {{k_Extent, k_Depth, -k_Extent}, {1.0f, 0.0f}, k_Black},
+	    {{k_Extent, k_Depth, k_Extent}, {1.0f, 1.0f}, k_Black},
+	    {{-k_Extent, k_Depth, -k_Extent}, {0.0f, 0.0f}, k_Black},
+	    {{k_Extent, k_Depth, k_Extent}, {1.0f, 1.0f}, k_Black},
+	    {{-k_Extent, k_Depth, k_Extent}, {0.0f, 1.0f}, k_Black},
+	}};
+	const auto count = static_cast<uint32_t>(vertices.size());
+	if (bgfx::getAvailTransientVertexBuffer(count, layout) < count)
+	{
+		return;
+	}
+	bgfx::TransientVertexBuffer buffer;
+	bgfx::allocTransientVertexBuffer(&buffer, count, layout);
+	std::memcpy(buffer.data, vertices.data(), count * sizeof(OrientedTextVertex));
+
+	const auto* shader = _shaderManager->GetShader("Text3D");
+	const auto model = glm::translate(glm::mat4(1.0f), Locator::temple::value().GetPosition());
+	bgfx::setTransform(glm::value_ptr(model));
+	bgfx::setVertexBuffer(0, &buffer);
+	shader->SetTextureSampler("s_texture", 0, *_whiteTexture);
+	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_GREATER |
+	               BGFX_STATE_MSAA);
+	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(shader->GetRawHandle()));
+}
+
 void Renderer::DrawTempleMap(const DrawSceneDesc& desc) const
 {
 	if (desc.viewId != RenderPass::Main || !_templeMapFrameBuffer || !Locator::temple::has_value() ||
@@ -1630,6 +1677,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					drawInstances(meshId, placers, placers.materialBlending);
 				}
 			}
+			DrawTempleUnderside(desc);
 			// The translucent meshes blend over the opaque ones
 			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
 			{

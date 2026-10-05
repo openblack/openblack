@@ -93,6 +93,8 @@ private:
 	void DrawTemplePool(const DrawSceneDesc& desc) const;
 	/// MiniMap's draw: the island in relief over the main room's pool
 	void DrawTempleMap(const DrawSceneDesc& desc) const;
+	/// A black floor under the whole temple, which the cracks the rooms are modelled with show instead of the sky
+	void DrawTempleUnderside(const DrawSceneDesc& desc) const;
 	/// WorldRoom::DrawAdditional: the markers on the map, on soft glows that show through anything
 	void DrawTempleMapMarkers(const DrawSceneDesc& desc) const;
 
