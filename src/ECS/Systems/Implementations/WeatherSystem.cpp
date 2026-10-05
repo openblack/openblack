@@ -271,6 +271,7 @@ void WeatherSystem::Reset()
 	registry.Each<Climate>([&registry](entt::entity entity, Climate&) { registry.Destroy(entity); });
 	_climateSystemEnabled = true;
 	_stormCreationEnabled = true;
+	_forcedStorm = entt::null;
 	_day.reset();
 	_season = GetSeason(0);
 	_activeStorms.clear();
@@ -885,6 +886,73 @@ void WeatherSystem::CreateStorm(entt::entity climateEntity)
 		                    effect.windX, effect.windZ);
 	}
 	resetDesire();
+}
+
+void WeatherSystem::ForceStorm(const ForcedStorm& forced)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	if (_forcedStorm != entt::null && registry.Valid(_forcedStorm))
+	{
+		registry.Destroy(_forcedStorm);
+	}
+
+	// Over the middle of the land, reaching every corner of it at full strength
+	const auto extent = Locator::terrainSystem::value().GetExtent();
+	const auto middle = (extent.minimum + extent.maximum) * 0.5f;
+	const auto reach = glm::length(extent.maximum - extent.minimum) * 0.5f;
+	const glm::vec3 position {middle.x, k_StormHeight, middle.y};
+
+	auto cloudHeight = forced.cloudHeight;
+	auto rainSpeed = forced.rainSpeed;
+	if (cloudHeight <= 0.0f || rainSpeed <= 0.0f)
+	{
+		const auto& climate = registry.Get<const Climate>(GetGlobalClimate());
+		cloudHeight = cloudHeight > 0.0f ? cloudHeight : climate.stormCloudHeight;
+		rainSpeed = rainSpeed > 0.0f ? rainSpeed : climate.stormSpeed;
+	}
+
+	_forcedStorm = registry.Create();
+	auto& storm = registry.Assign<Storm>(_forcedStorm);
+	storm.position = position;
+	storm.destination = position;
+	storm.currentPosition = position;
+	storm.speed = 0.0f;
+	storm.arrived = true;
+	storm.innerRadius = reach;
+	storm.outerRadius = static_cast<float>(reach * k_StormOuterRadius);
+	storm.fadeTime = std::max(forced.fadeSeconds, k_TurnDuration);
+	storm.lastsFor = std::max(forced.seconds, 2.0f * storm.fadeTime);
+	storm.strength = 1.0f;
+	storm.cloudHeight = cloudHeight;
+	storm.rainSpeed = rainSpeed;
+	storm.effect = forced.effect;
+	storm.thunderWait = forced.thunderWait;
+	storm.boltWait = forced.boltWait;
+	storm.climate = entt::null;
+	storm.serial = _nextStormSerial++;
+	SPDLOG_LOGGER_INFO(spdlog::get("game"), "Forced a storm over the island: {}s, rain {} snow {} cloud {} wind ({}, {})",
+	                   storm.lastsFor, forced.effect.rain, forced.effect.snow, forced.effect.overcast, forced.effect.windX,
+	                   forced.effect.windZ);
+}
+
+void WeatherSystem::ClearStorms()
+{
+	Locator::entitiesRegistry::value().Each<Storm>([](entt::entity, Storm& storm) { storm.dead = true; });
+	_forcedStorm = entt::null;
+}
+
+void WeatherSystem::StrikeLightning(bool bolt)
+{
+	Locator::entitiesRegistry::value().Each<Storm>([bolt](entt::entity, Storm& storm) {
+		if (bolt && storm.boltWait.y != 0.0f)
+		{
+			storm.boltTimer = 0.0f;
+		}
+		if (!bolt && storm.thunderWait.y != 0.0f)
+		{
+			storm.thunderTimer = 0.0f;
+		}
+	});
 }
 
 void WeatherSystem::ComputeCell(WeatherInfo& cell, int x, int z)

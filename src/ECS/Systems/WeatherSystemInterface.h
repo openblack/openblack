@@ -19,6 +19,23 @@
 namespace openblack::ecs::systems
 {
 
+/// A storm laid over the whole island from the debug tools
+struct ForcedStorm
+{
+	/// What it brings: the temperature it pulls towards, and the rain, snow, cloud and wind it adds, in percent
+	components::WeatherInfo effect;
+	/// How long it lasts, and how long it takes to come in and to clear, in seconds
+	float seconds {600.0f};
+	float fadeSeconds {5.0f};
+	/// The least and most seconds between its flashes of lightning with thunder, and between those with a bolt; none
+	/// for a most of 0
+	glm::vec2 thunderWait {0.0f};
+	glm::vec2 boltWait {0.0f};
+	/// How high its clouds are and how fast its rain falls; the global climate's when 0
+	float cloudHeight {0.0f};
+	float rainSpeed {0.0f};
+};
+
 /// The island's weather: climates breed storms that drift with the wind and bring rain, snow and wind
 class WeatherSystemInterface
 {
@@ -37,6 +54,16 @@ public:
 	// Game script commands
 	virtual void SetClimateSystemEnabled(bool enabled) = 0;
 	virtual void SetStormCreationEnabled(bool enabled) = 0;
+	[[nodiscard]] virtual bool IsClimateSystemEnabled() const = 0;
+	[[nodiscard]] virtual bool IsStormCreationEnabled() const = 0;
+
+	// Debug tools
+	/// Lays a storm over the whole island, in place of any forced before it
+	virtual void ForceStorm(const ForcedStorm& storm) = 0;
+	/// Ends every storm at once
+	virtual void ClearStorms() = 0;
+	/// Every storm with lightning flashes on its next turn, with a bolt or with thunder
+	virtual void StrikeLightning(bool bolt) = 0;
 
 	/// One game turn
 	virtual void Update(uint32_t turn) = 0;

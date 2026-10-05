@@ -47,6 +47,12 @@ public:
 	void SetClimateWind(int32_t index, float windX, float windZ, float angle) override;
 	void SetClimateSystemEnabled(bool enabled) override { _climateSystemEnabled = enabled; }
 	void SetStormCreationEnabled(bool enabled) override { _stormCreationEnabled = enabled; }
+	[[nodiscard]] bool IsClimateSystemEnabled() const override { return _climateSystemEnabled; }
+	[[nodiscard]] bool IsStormCreationEnabled() const override { return _stormCreationEnabled; }
+
+	void ForceStorm(const ForcedStorm& storm) override;
+	void ClearStorms() override;
+	void StrikeLightning(bool bolt) override;
 
 	void Update(uint32_t turn) override;
 
@@ -97,6 +103,8 @@ private:
 	/// Live storms as they stood at the start of the turn, newest first
 	std::vector<components::Storm> _activeStorms;
 	uint32_t _nextStormSerial {0};
+	/// The storm forced over the island, if there is one
+	entt::entity _forcedStorm {entt::null};
 	std::vector<components::WeatherInfo> _grid;
 	uint8_t _stamp {1};
 };

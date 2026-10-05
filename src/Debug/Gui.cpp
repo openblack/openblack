@@ -67,6 +67,7 @@
 #include "Resources/ResourcesInterface.h"
 #include "Temple.h"
 #include "TextureViewer.h"
+#include "Weather.h"
 #include "Windowing/WindowingInterface.h"
 
 // Turn off formatting because it adds spaces which break the stringifying
@@ -120,6 +121,7 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 	debugWindows.emplace_back(new Audio);
 	debugWindows.emplace_back(new TempleInterior);
 	debugWindows.emplace_back(new gui::Camera);
+	debugWindows.emplace_back(new Weather);
 
 	auto gui = std::unique_ptr<DebugGuiInterface>(
 	    new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows), !Locator::windowing::has_value()));
