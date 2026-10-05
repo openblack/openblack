@@ -449,6 +449,9 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 	// We don't draw physics meshes, we haven't implemented statuses (building and graves) and modern GPUs can handle high
 	// lod. Windows fail the game's lod test unless their house lights them, which the object shader decides.
 	const bool window = subMesh.GetFlags().isWindow;
+	// A lit window is a faint glow, blended by its texture's alpha as its material says, over the wall behind it
+	const bool materialBlending = desc.useMaterialBlending || window;
+	const auto viewId = window ? TranslucentView(desc.viewId) : desc.viewId;
 	if (!desc.drawAll &&
 	    (subMesh.IsPhysics() || subMesh.GetFlags().status != 0 || (!window && (subMesh.GetFlags().lodMask & 1) != 1)))
 	{
@@ -500,9 +503,8 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 
 		// Primitives drawn with their own material's blending can't share render state, nor can a submesh with a texture
 		// of its own
-		const bool primitivePreserveState = !desc.useMaterialBlending && subMeshTexture == nullptr &&
-		                                    desc.subMeshGlows.empty() && texture != nullptr && texture == nextTexture &&
-		                                    (preserveState || hasNext);
+		const bool primitivePreserveState = !materialBlending && subMeshTexture == nullptr && desc.subMeshGlows.empty() &&
+		                                    texture != nullptr && texture == nextTexture && (preserveState || hasNext);
 
 		uint32_t skip = Mesh::SkipState::SkipNone;
 		if (!lastPreserveState)
@@ -659,7 +661,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 						state |= desc.mirrored ? BGFX_STATE_CULL_CW : BGFX_STATE_CULL_CCW;
 					}
 				}
-				if (desc.useMaterialBlending)
+				if (materialBlending)
 				{
 					using BlendMode = decltype(prim.blend);
 					switch (prim.blend)
@@ -684,7 +686,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				bgfx::setState(state, desc.rgba);
 			}
 
-			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(program->GetRawHandle()), desc.sortDepth,
+			bgfx::submit(static_cast<bgfx::ViewId>(viewId), toBgfx(program->GetRawHandle()), desc.sortDepth,
 			             primitivePreserveState ? BGFX_DISCARD_NONE : BGFX_DISCARD_ALL);
 		}
 		lastPreserveState = primitivePreserveState;
