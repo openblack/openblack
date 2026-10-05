@@ -869,8 +869,11 @@ bool Game::Initialize() noexcept
 	                   });
 
 	// The land's light is built from this every frame
-	resources.GetLandLightPalettes().Load(LandLightPalette::k_Id.value(), resources::LandLightPaletteLoader::FromDiskTag {},
-	                                      fileSystem.GetPath<filesystem::Path::WeatherSystem>() / "palette.raw");
+	if (const auto palette = fileSystem.GetPath<filesystem::Path::WeatherSystem>() / "palette.raw"; fileSystem.Exists(palette))
+	{
+		resources.GetLandLightPalettes().Load(LandLightPalette::k_Id.value(), resources::LandLightPaletteLoader::FromDiskTag {},
+		                                      palette);
+	}
 
 	fileSystem.Iterate( //
 	    fileSystem.GetPath<filesystem::Path::Citadel>() / "engine", false,
