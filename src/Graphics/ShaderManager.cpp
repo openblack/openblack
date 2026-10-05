@@ -100,6 +100,10 @@
 #include "ShaderIncluder.h"
 #define SHADER_NAME fs_land_alpha
 #include "ShaderIncluder.h"
+#define SHADER_NAME vs_celestial
+#include "ShaderIncluder.h"
+#define SHADER_NAME fs_celestial
+#include "ShaderIncluder.h"
 
 #define SHADER_NAME vs_vegetation
 #include "ShaderIncluder.h"
@@ -138,7 +142,7 @@ struct ShaderDefinition
 	const std::string_view fragmentShaderName;
 };
 
-const std::array<bgfx::EmbeddedShader, 36> k_EmbeddedShaders = {{
+const std::array<bgfx::EmbeddedShader, 38> k_EmbeddedShaders = {{
     BGFX_EMBEDDED_SHADER(vs_line),
     BGFX_EMBEDDED_SHADER(vs_line_instanced), //
     BGFX_EMBEDDED_SHADER(fs_line),           //
@@ -163,6 +167,8 @@ const std::array<bgfx::EmbeddedShader, 36> k_EmbeddedShaders = {{
     BGFX_EMBEDDED_SHADER(vs_footprint_instanced),
     BGFX_EMBEDDED_SHADER(fs_footprint),  //
     BGFX_EMBEDDED_SHADER(fs_land_alpha), //
+    BGFX_EMBEDDED_SHADER(vs_celestial),  //
+    BGFX_EMBEDDED_SHADER(fs_celestial),  //
     BGFX_EMBEDDED_SHADER(vs_vegetation),
     BGFX_EMBEDDED_SHADER(vs_vegetation_hm_instanced),
     BGFX_EMBEDDED_SHADER(fs_vegetation),    //
@@ -194,6 +200,7 @@ constexpr std::array k_Shaders {
     ShaderDefinition {"Sprite", "vs_sprite", "fs_sprite"},
     ShaderDefinition {"FootprintInstanced", "vs_footprint_instanced", "fs_footprint"},
     ShaderDefinition {"LandAlphaInstanced", "vs_footprint_instanced", "fs_land_alpha"},
+    ShaderDefinition {"Celestial", "vs_celestial", "fs_celestial"},
     ShaderDefinition {"Vegetation", "vs_vegetation", "fs_vegetation"},
     ShaderDefinition {"VegetationHeightMapInstanced", "vs_vegetation_hm_instanced", "fs_vegetation"},
     ShaderDefinition {"ShadowCaster", "vs_object", "fs_shadow_caster"},

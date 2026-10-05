@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <entt/core/hashed_string.hpp>
+
 namespace openblack
 {
 
@@ -23,6 +25,10 @@ class Texture2D;
 class SkyInterface
 {
 public:
+	/// The sun: a square far out in the sky, and its texture
+	static constexpr entt::hashed_string k_SunMeshId = entt::hashed_string("weather/sun");
+	static constexpr entt::hashed_string k_SunTextureId = entt::hashed_string("raw/sun");
+
 	/// Hours of the morning at which the sky reaches each state, mirrored around midday for the evening
 	struct DayNightTimes
 	{

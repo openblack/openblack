@@ -26,6 +26,7 @@
 #include <glm/gtx/transform.hpp>
 #include <spdlog/spdlog.h>
 
+#include "3D/DayNightClock.h"
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "3D/L3DSubMesh.h"
@@ -1516,6 +1517,64 @@ void Renderer::DrawHandWaterGlow(const DrawSceneDesc& desc) const
 	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(spriteShader->GetRawHandle()));
 }
 
+void Renderer::DrawSun(RenderPass viewId) const
+{
+	const auto& meshes = Locator::resources::value().GetMeshes();
+	const auto& textures = Locator::resources::value().GetTextures();
+	if (!meshes.Contains(SkyInterface::k_SunMeshId.value()) || !textures.Contains(SkyInterface::k_SunTextureId.value()))
+	{
+		return;
+	}
+	// The sun follows the script time: it rises from 6 to noon to 7500 units high and sets as it rose, coming up from 3
+	// and going down after 18, a third of the way each hour
+	const float hour = Locator::skySystem::value().GetClock().GetScriptTime();
+	const float height = 7500.0f * (std::clamp(std::min(hour, 24.0f - hour), 6.0f, 12.0f) - 6.0f) / 6.0f;
+	float alpha = 255.0f;
+	if (hour < 3.0f || hour > 21.0f)
+	{
+		return;
+	}
+	if (hour < 6.0f)
+	{
+		alpha = (hour - 3.0f) * 85.0f;
+	}
+	else if (hour > 18.0f)
+	{
+		alpha = 255.0f - ((hour - 18.0f) * 85.0f);
+	}
+	if (alpha <= 0.0f)
+	{
+		return;
+	}
+
+	// Far out to the north west, facing the island, added to the sky drawn before it
+	const auto model = glm::translate(glm::vec3(-30000.0f, height, -30000.0f)) *
+	                   glm::rotate(-3.0f * glm::pi<float>() / 4.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+	const glm::vec4 colour {0x95 / 255.0f, 0x7C / 255.0f, 0x63 / 255.0f, alpha / 255.0f};
+	const glm::vec4 celestial {0.0f};
+	const auto* program = _shaderManager->GetShader("Celestial");
+	const auto texture = textures.Handle(SkyInterface::k_SunTextureId);
+	const auto mesh = meshes.Handle(SkyInterface::k_SunMeshId);
+	for (const auto& subMesh : mesh->GetSubMeshes())
+	{
+		for (const auto& primitive : subMesh->GetPrimitives())
+		{
+			bgfx::setTransform(glm::value_ptr(model));
+			program->SetTextureSampler("s_diffuse", 0, *texture);
+			program->SetTextureSampler("s_alpha", 1, *texture);
+			program->SetUniformValue("u_colour", &colour);
+			program->SetUniformValue("u_celestial", &celestial);
+			if (subMesh->GetMesh().IsIndexed())
+			{
+				subMesh->GetMesh().GetIndexBuffer().Bind(primitive.indicesCount, primitive.indicesOffset);
+			}
+			subMesh->GetMesh().GetVertexBuffer().Bind();
+			bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE));
+			bgfx::submit(static_cast<bgfx::ViewId>(viewId), toBgfx(program->GetRawHandle()));
+		}
+	}
+}
+
 void Renderer::DrawLandAlphaPass(const DrawSceneDesc& drawDesc) const
 {
 	if (!drawDesc.drawIsland)
@@ -1901,6 +1960,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			submitDesc.isSky = true;
 
 			DrawMesh(Locator::skySystem::value().GetMesh(), submitDesc, 0);
+			DrawSun(desc.viewId);
 		}
 	}
 

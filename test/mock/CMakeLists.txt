@@ -63,6 +63,8 @@ set(HAND_BASE_MESH_FILE ${CREATURE_MESH_BINARY_DIR}/Hand_Boned_Base2.gltf)
 
 set(SKY_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/WeatherSystem)
 set(SKY_OUTPUT ${SKY_BINARY_DIR}/sky.l3d)
+set(SUN_MESH_OUTPUT ${SKY_BINARY_DIR}/sun.l3d)
+set(SUN_INPUT ${SKY_BINARY_DIR}/sun.gltf)
 set(SKY_MESH_FILE ${SKY_BINARY_DIR}/sky.gltf)
 
 set(COFFRE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/Misc)
@@ -192,6 +194,10 @@ add_custom_target(
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
           --output-file ${RIVER2_INPUT}
   COMMAND l3dtool write -o ${RIVER2_MESH_OUTPUT} -i ${RIVER2_INPUT}
+  # Data/WeatherSystem/sun.l3d
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
+          --output-file ${SUN_INPUT}
+  COMMAND l3dtool write -o ${SUN_MESH_OUTPUT} -i ${SUN_INPUT}
   # Data/metre_sphere.l3d
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
           --output-file ${SPHERE_INPUT}
@@ -234,6 +240,7 @@ add_custom_target(
              ${MARKER_INPUT}
              ${RIVER_INPUT}
              ${RIVER2_INPUT}
+             ${SUN_INPUT}
              ${SPHERE_INPUT}
   SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
           ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py

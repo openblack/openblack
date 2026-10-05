@@ -77,6 +77,8 @@ private:
 	/// The rivers' beds or channels, a footprint for each stretch of river
 	void DrawStreamFootprints(graphics::RenderPass viewId, entt::id_type meshId) const;
 	void DrawLandAlphaPass(const DrawSceneDesc& drawDesc) const;
+	/// The sun in the sky, after the sky's dome
+	void DrawSun(RenderPass viewId) const;
 	/// The hand's glow on the water at night, under the sea
 	void DrawHandWaterGlow(const DrawSceneDesc& desc) const;
 	/// The sea's rows, ripple, period and colour for the camera
