@@ -786,6 +786,10 @@ void TempleInterior::Update(std::chrono::microseconds dt)
 			_map.Build([&island](glm::u16vec2 cell) { return island.FindCell(cell); }, _mapTriangles);
 		}
 		UpdateMapMarkers(milliseconds / 1000.0f);
+		// Temple::Draw lights the temple by the alignment, pulsing by GetTickCount
+		_light = TempleLight::At(_alignment, static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
+		                                                               std::chrono::steady_clock::now().time_since_epoch())
+		                                                               .count()));
 		// CreatureRoom::Update chooses the belts and medals every frame
 		if (IsRoomDrawn(TempleRoom::CreatureCave))
 		{

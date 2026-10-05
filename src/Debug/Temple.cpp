@@ -68,6 +68,13 @@ void TempleInterior::Draw() noexcept
 				}
 			}
 		}
+
+		// The alignment the temple is lit by, until openblack keeps the players'
+		float alignment = temple.GetAlignment();
+		if (ImGui::SliderFloat("Alignment", &alignment, -1.0f, 1.0f))
+		{
+			temple.SetAlignment(alignment);
+		}
 	}
 	else
 	{

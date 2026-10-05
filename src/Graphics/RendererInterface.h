@@ -110,6 +110,10 @@ public:
 		std::span<const uint32_t> hiddenSubMeshes;
 		/// A colour the mesh is drawn in, where its program takes one: lit when w is 0, otherwise unlit with its alpha by w
 		glm::vec4 tint {1.0f, 1.0f, 1.0f, 0.0f};
+		/// The temple's light, which the lightmapped submeshes are multiplied by, and which is added to every submesh
+		/// that doesn't glow, as LH3D adds the vertices' specular (0xE05FE8 and 0xE05FE4)
+		glm::vec3 lightMultiply {1.0f};
+		glm::vec3 lightAdd {0.0f};
 	};
 
 	static std::unique_ptr<RendererInterface> Create(GraphicsBackend backend, bool vsync) noexcept;

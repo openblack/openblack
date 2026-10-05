@@ -452,8 +452,14 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			}
 			if (program->HasUniform("u_glow"))
 			{
-				const glm::vec4 u_glow {glow, 0.0f};
+				// A control's glow takes the place of the light's colour added
+				const glm::vec4 u_glow {glow != glm::vec3(0.0f) ? glow : desc.lightAdd, 0.0f};
 				program->SetUniformValue("u_glow", &u_glow);
+			}
+			if (program->HasUniform("u_darkening"))
+			{
+				const glm::vec4 u_darkening {1.0f - desc.lightMultiply, 0.0f};
+				program->SetUniformValue("u_darkening", &u_darkening);
 			}
 			if (program->HasUniform("u_uvOffset"))
 			{
@@ -623,8 +629,9 @@ void Renderer::DrawTemplePool(const DrawSceneDesc& desc) const
 	// The water's alpha swells and ebbs with the sine of the time, and the second layer's is what the first's lacks
 	const float time = temple.GetPoolTime();
 	const auto alpha = static_cast<int32_t>((std::sin(time) * 32.0f) + 128.0f);
-	// TODO(raffclar): the layers take 13 sixteenths of the temple's light (0xE05FE8) and its material (0xE05FE4)
+	// The layers take 13 sixteenths of the temple's light, and of its colour added
 	const float k_Light = 13.0f / 16.0f;
+	const auto& light = temple.GetLight();
 	struct Layer
 	{
 		glm::vec3 position;
@@ -673,7 +680,8 @@ void Renderer::DrawTemplePool(const DrawSceneDesc& desc) const
 		submitDesc.modelMatrices = &model;
 		submitDesc.matrixCount = 1;
 		submitDesc.uvOffset = layer.uvOffset;
-		submitDesc.tint = glm::vec4(glm::vec3(k_Light), static_cast<float>(layer.alpha) / 255.0f);
+		submitDesc.tint = glm::vec4(light.multiply * k_Light, static_cast<float>(layer.alpha) / 255.0f);
+		submitDesc.lightAdd = light.add * k_Light;
 		DrawMesh(*meshes.Handle(pool), submitDesc, std::numeric_limits<uint8_t>::max());
 	}
 }
@@ -908,7 +916,7 @@ void Renderer::DrawTempleMapMarkers(const DrawSceneDesc& desc) const
 		{
 			continue;
 		}
-		// TODO(raffclar): ApplyCitadelColoring also darkens the markers by the temple's light, as it does the rooms
+		// MiniMap::DrawMarker: ApplyCitadelColoring puts them in the temple's light
 		const auto model = glm::translate(glm::mat4(1.0f), origin + marker.position) * turn *
 		                   glm::scale(glm::mat4(1.0f), glm::vec3(k_MarkerScale));
 		L3DMeshSubmitDesc submitDesc = {};
@@ -917,7 +925,8 @@ void Renderer::DrawTempleMapMarkers(const DrawSceneDesc& desc) const
 		submitDesc.state = k_BgfxDefaultStateInvertedZ;
 		submitDesc.modelMatrices = &model;
 		submitDesc.matrixCount = 1;
-		submitDesc.tint = glm::vec4(glm::vec3(marker.colour) / 255.0f, 1.0f);
+		submitDesc.tint = glm::vec4(temple.GetLight().Colour(glm::vec3(marker.colour) / 255.0f), 1.0f);
+		submitDesc.lightAdd = temple.GetLight().add;
 		DrawMesh(*meshes.Handle(icon), submitDesc, std::numeric_limits<uint8_t>::max());
 	}
 }
@@ -973,8 +982,7 @@ void Renderer::DrawCaveTrophies(const DrawSceneDesc& desc) const
 		{
 			continue;
 		}
-		// TODO(raffclar): ApplyCitadelColoring also darkens them by the temple's light, as it does the rooms, and the
-		//                 medals past wood are drawn with LH3D's render mode 2 (DAT_00EA1AFC), which isn't known yet
+		// TODO(raffclar): the medals past wood are drawn with LH3D's render mode 2 (DAT_00EA1AFC), which isn't known yet
 		const auto colour = glm::vec3((trophy.colour >> 16) & 0xFF, (trophy.colour >> 8) & 0xFF, trophy.colour & 0xFF);
 		L3DMeshSubmitDesc submitDesc = {};
 		submitDesc.viewId = desc.viewId;
@@ -986,8 +994,11 @@ void Renderer::DrawCaveTrophies(const DrawSceneDesc& desc) const
 		submitDesc.matrixCount = 1;
 		submitDesc.skinTexture = &*_iconsTexture;
 		submitDesc.useMaterialBlending = true;
-		// The colour multiplies what lights them: the medals come out the mid grey of vanilla's at 0x80
-		submitDesc.tint = glm::vec4(colour / 255.0f, 0.0f);
+		// The colour multiplies what lights them: the medals come out the mid grey of vanilla's at 0x80. ApplyCitadelColoring
+		// puts it in the temple's light.
+		const auto& light = Locator::temple::value().GetLight();
+		submitDesc.tint = glm::vec4(light.Colour(colour / 255.0f), 0.0f);
+		submitDesc.lightAdd = light.add;
 		DrawMesh(*meshes.Handle(trophy.mesh), submitDesc, std::numeric_limits<uint8_t>::max());
 	}
 }
@@ -1694,6 +1705,13 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				auto mesh = meshManager.Handle(meshId);
 
 				submitDesc.useMaterialBlending = useMaterialBlending;
+				// TempleRoom::Draw gives the rooms the temple's light; the hand keeps its own
+				const bool templeLit = Locator::temple::has_value() && Locator::temple::value().Active() &&
+				                       meshId != ecs::components::Hand::k_MeshId;
+				const auto light = templeLit ? Locator::temple::value().GetLight() : TempleLight {};
+				submitDesc.tint = glm::vec4(light.multiply, 0.0f);
+				submitDesc.lightMultiply = light.multiply;
+				submitDesc.lightAdd = light.add;
 				submitDesc.instanceDesc =
 				    std::make_unique<graphics::InstanceDesc>(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
 				if (mesh->IsBoned())
