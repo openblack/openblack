@@ -1,4 +1,4 @@
-$input v_texcoord0, v_texcoord1, v_lightLevel, v_distToCamera, v_shadowCoord, v_haze
+$input v_texcoord0, v_texcoord1, v_lightLevel, v_smallBumpFade, v_shadowCoord, v_haze
 
 #include <bgfx_shader.sh>
 
@@ -6,6 +6,8 @@ $input v_texcoord0, v_texcoord1, v_lightLevel, v_distToCamera, v_shadowCoord, v_
 
 // The blocks' painted textures, a layer each: the land's colour, and the coast alpha that fades it into the sea
 SAMPLER2DARRAY(s0_blockTextures, 0);
+// The small bump detail's colour and alpha, 12 times across a block
+SAMPLER2D(s1_smallBumpAlpha, 1);
 SAMPLER2D(s2_smallBump, 2);
 SAMPLER2D(s3_footprints, 3);
 SAMPLER2D(s4_handShadow, 4);
@@ -38,14 +40,6 @@ void main()
 	// The block's texture, filtered across its texels
 	vec4 block = texture2DArray(s0_blockTextures, vec3(v_texcoord0.xy, u_block.x));
 	vec4 col = vec4(block.rgb, 1.0f);
-
-	// don't apply smallbump unless we're close
-	if (v_distToCamera < 200.0f) {
-		float smallStrength = (1.0f - (v_distToCamera / 200.0f)) * smallBumpMapStrength;
-
-		float smallbump = 1.0f - mix(0.0f, texture2D(s2_smallBump, v_texcoord0.xy * 10.0f).r, smallStrength);
-		col = col * smallbump;
-	}
 
 	vec4 footprints = texture2D(s3_footprints, v_texcoord1.xy);
 	col.rgb = mix(col.rgb, footprints.rgb, footprints.a);
@@ -81,7 +75,16 @@ void main()
 		col.rgb = col.rgb * (1.0f - coverage * v_shadowCoord.w * u_handShadow.x);
 	}
 
-	// The distance haze is added after the texture. The land is blended over the sea by its coast alpha, and writes its
-	// depth even where it is clear.
-	gl_FragColor = vec4(min(col.rgb + v_haze.rgb, vec3_splat(1.0f)), block.a);
+	// The small bump detail is a second layer over the lit land, its colour unlit, blended by its alpha whatever the
+	// coast alpha. The distance haze is added to both. The land is blended over the sea by its coast alpha, and writes
+	// its depth even where it is clear. Both layers are drawn at once, premultiplied: what of the sea shows through is
+	// what neither layer covers.
+	vec2 smallBumpUv = v_texcoord0.xy * 12.0f;
+	vec3 smallBump = texture2D(s2_smallBump, smallBumpUv).rgb * v_smallBumpFade.x;
+	float bumpAlpha = texture2D(s1_smallBumpAlpha, smallBumpUv).r * v_smallBumpFade.y * smallBumpMapStrength;
+	vec3 land = min(col.rgb + v_haze.rgb, vec3_splat(1.0f));
+	vec3 detail = min(smallBump + v_haze.rgb, vec3_splat(1.0f));
+	float landAlpha = block.a;
+	gl_FragColor = vec4(land * landAlpha * (1.0f - bumpAlpha) + detail * bumpAlpha,
+	                    1.0f - (1.0f - landAlpha) * (1.0f - bumpAlpha));
 }

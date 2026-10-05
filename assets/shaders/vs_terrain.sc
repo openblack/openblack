@@ -1,5 +1,5 @@
 $input a_position, a_color0
-$output v_texcoord0, v_texcoord1, v_lightLevel, v_distToCamera, v_shadowCoord, v_haze
+$output v_texcoord0, v_texcoord1, v_lightLevel, v_smallBumpFade, v_shadowCoord, v_haze
 
 #include <bgfx_shader.sh>
 
@@ -12,6 +12,10 @@ uniform mat4 u_handShadowMatrix;
 // xy: where the first brightness of the hand's light map lies in the world's x and z (HandLight::GetOrigin)
 // z: how strongly the hand lights the land
 uniform vec4 u_handLight;
+// xy: the camera's x and z, zw: the direction it faces along the ground
+uniform vec4 u_smallBumpLine;
+// x: how far ahead of the camera along the ground the small bump detail fades out
+uniform vec4 u_smallBump;
 
 void main()
 {
@@ -45,7 +49,24 @@ void main()
 	// The distance haze, per vertex: rgb the haze's colour added, a what the land's light is scaled by
 	float hazeT = HazeT(cs_position.z);
 	v_haze = vec4(HazeColour(hazeT) / 255.0f, HazeFactor(hazeT) / 256.0f);
-	v_distToCamera = cs_position.z;
+
+	// The small bump detail is drawn over the land near the camera. It is full up to 20 units before a line across the
+	// ground ahead of the camera, and gone 20 units past it. It is never drawn at the water's edge, below altitude 2,
+	// and fades out towards it from the vertices around. x: the detail's colour is kept, or black; y: its alpha.
+	float lineOffset = u_smallBump.x - dot(transformedPosition.xz - u_smallBumpLine.xy, u_smallBumpLine.zw);
+	float aboveWater = a_position.y > 1.0f ? 1.0f : 0.0f;
+	if (lineOffset >= 20.0f)
+	{
+		v_smallBumpFade = vec2(1.0f, aboveWater);
+	}
+	else if (lineOffset > -20.0f && aboveWater > 0.0f)
+	{
+		v_smallBumpFade = vec2(1.0f, floor(255.0f - (20.0f - lineOffset) * (255.0f / 40.0f) + 0.5f) / 255.0f);
+	}
+	else
+	{
+		v_smallBumpFade = vec2(0.0f, 0.0f);
+	}
 	// Land at sea level is drawn flat at height 0, in the plane of the ocean. Land is never under the sea, so win the
 	// tie: pull those vertices a fraction of their distance towards the camera along their line of sight, which keeps
 	// them where they are on screen and only brings their depth forward.

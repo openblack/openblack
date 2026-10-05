@@ -38,7 +38,9 @@ public:
 	static const uint8_t k_CellCount;
 	static const float k_HeightUnit;
 	static const float k_CellSize;
-	static constexpr entt::hashed_string k_SmallBumpTextureId = entt::hashed_string("raw/smallbumpa");
+	/// The small bump detail drawn over the land near the camera: its colour and its alpha
+	static constexpr entt::hashed_string k_SmallBumpTextureId = entt::hashed_string("raw/smallbump");
+	static constexpr entt::hashed_string k_SmallBumpAlphaTextureId = entt::hashed_string("raw/smallbumpa");
 
 	/// The height of the land at a world position, as the game works it out
 	[[nodiscard]] virtual float GetHeightAt(glm::vec2) const = 0;

@@ -1728,8 +1728,24 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			auto& island = Locator::terrainSystem::value();
 			auto islandExtent = glm::vec4(island.GetExtent().minimum, island.GetExtent().maximum);
 
-			auto texture = Locator::resources::value().GetTextures().Handle(LandIslandInterface::k_SmallBumpTextureId);
+			const auto& textures = Locator::resources::value().GetTextures();
+			auto smallBump = textures.Handle(LandIslandInterface::k_SmallBumpTextureId);
+			auto smallBumpAlpha = textures.Handle(LandIslandInterface::k_SmallBumpAlphaTextureId);
 			const glm::vec4 u_skyAndBump = {skyType, 0.0f, desc.smallBumpMapStrength, 0.0f};
+
+			// The small bump detail fades out about a line across the ground: where the plane square to the camera's
+			// view, 50 units ahead of it, meets the ground at the camera's height, or at 110.55 if the camera is higher
+			const auto cameraOrigin = desc.camera->GetOrigin();
+			const auto cameraForward = desc.camera->GetForward();
+			const glm::vec2 forwardAlongGround {cameraForward.x, cameraForward.z};
+			const float forwardLength = std::max(glm::length(forwardAlongGround), 1e-4f);
+			constexpr float k_SmallBumpDistance = 50.0f;
+			constexpr float k_SmallBumpHighestGround = 0.67f * 165.0f;
+			const float lineDistance =
+			    (k_SmallBumpDistance + cameraForward.y * std::max(0.0f, cameraOrigin.y - k_SmallBumpHighestGround)) /
+			    forwardLength;
+			const glm::vec4 u_smallBumpLine {cameraOrigin.x, cameraOrigin.z, forwardAlongGround / forwardLength};
+			const glm::vec4 u_smallBump {lineDistance, 0.0f, 0.0f, 0.0f};
 			auto u_objectShadows = glm::vec4(0.0f);
 			if (_objectShadowFrameBuffer)
 			{
@@ -1742,7 +1758,10 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			}
 
 			terrainShader->SetTextureSampler("s0_blockTextures", 0, island.GetBlockTextures());
-			terrainShader->SetTextureSampler("s2_smallBump", 2, *texture);
+			terrainShader->SetTextureSampler("s1_smallBumpAlpha", 1, *smallBumpAlpha);
+			terrainShader->SetTextureSampler("s2_smallBump", 2, *smallBump);
+			terrainShader->SetUniformValue("u_smallBumpLine", &u_smallBumpLine);
+			terrainShader->SetUniformValue("u_smallBump", &u_smallBump);
 			terrainShader->SetTextureSampler("s3_footprints", 3, island.GetFootprintFramebuffer().GetColorAttachment());
 			terrainShader->SetTextureSampler("s5_objectShadows", 5,
 			                                 _objectShadowFrameBuffer ? _objectShadowFrameBuffer->GetColorAttachment()
@@ -1770,10 +1789,11 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			terrainShader->SetUniformValue("u_handLight", &_handLight);
 
 			// clang-format off
+			// The land and its small bump detail come premultiplied over the sea
 			constexpr auto defaultState = 0u
 				| BGFX_STATE_WRITE_MASK
 				| BGFX_STATE_DEPTH_TEST_GREATER
-				| BGFX_STATE_BLEND_ALPHA
+				| BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA)
 				| BGFX_STATE_MSAA
 			;
 
