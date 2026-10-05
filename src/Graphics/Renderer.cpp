@@ -2435,7 +2435,9 @@ void Renderer::DrawSunGlare(const Camera& camera) const
 	{
 		return;
 	}
-	// Larger, in an orange colour, over everything in the view
+	// Larger, in an orange colour, over everything in the view. The temple isn't among what the samples can hit, so inside
+	// it the glare is tested against the depth of what is drawn: its solid parts hide it, and it shows through its glass
+	const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
 	DrawCelestialMesh(RenderPass::Main, {
 	                                        .meshId = SkyInterface::k_SunMeshId.value(),
 	                                        .textureId = SkyInterface::k_SunTextureId.value(),
@@ -2444,7 +2446,7 @@ void Renderer::DrawSunGlare(const Camera& camera) const
 	                                        .colour = {0xA0 / 255.0f, 0x6A / 255.0f, 0x35 / 255.0f,
 	                                                   _sunGlare * placement->alpha / (255.0f * 255.0f)},
 	                                        .celestial = glm::vec4(0.0f),
-	                                        .state = k_AdditiveState,
+	                                        .state = k_AdditiveState | (inTemple ? BGFX_STATE_DEPTH_TEST_GREATER : 0),
 	                                    });
 }
 
@@ -3411,6 +3413,12 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				}
 			}
 			DrawTempleUnderside(desc);
+			// In the temple, whose draws keep their order, the sun's glare comes after its solid parts, which hide it, and
+			// before its glass, which blends over it
+			if (inTemple && desc.viewId == RenderPass::Main && desc.drawSky)
+			{
+				DrawSunGlare(*desc.camera);
+			}
 			// The translucent meshes blend over the opaque ones, each in its own place in the sort
 			submitDesc.viewId = translucentViewId;
 			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
@@ -3621,8 +3629,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		}
 	}
 
-	// The sun's glare over everything else in the view
-	if (desc.viewId == RenderPass::Main && desc.drawSky)
+	// The sun's glare over everything else in the view; the temple's comes before its glass
+	if (desc.viewId == RenderPass::Main && desc.drawSky && !(Locator::temple::has_value() && Locator::temple::value().Active()))
 	{
 		DrawSunGlare(*desc.camera);
 	}
