@@ -456,7 +456,7 @@ void TempleInterior::LeaveForMapPoint(glm::vec3 point)
 
 void TempleInterior::FadeIntoRoom()
 {
-	// Temple::GoToRoom and Temple::Update cover the cut from 1.2, in whatever colour is still fading
+	// Temple::GoToRoom covers the cut from 1.2, in whatever colour is still fading
 	if (_interface != nullptr)
 	{
 		_interface->GetScreenFade().FadeFrom(1.2f);

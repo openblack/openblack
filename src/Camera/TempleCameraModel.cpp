@@ -1178,8 +1178,7 @@ void TempleCameraModel::FollowTemple()
 		}
 		else if (_doorStage == DoorStage::Through)
 		{
-			// Temple::Update cuts to the room behind a fade
-			temple.FadeIntoRoom();
+			// The door's path runs on into the room's own, unbroken
 			StartIntro(*_doorRoom, true);
 		}
 		else

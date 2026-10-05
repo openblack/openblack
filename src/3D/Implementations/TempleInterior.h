@@ -66,7 +66,6 @@ public:
 	[[nodiscard]] float GetPoolTime() const override { return _poolTime; }
 	void Escape() override;
 	void RequestLeave() override { _leaveRequested = true; }
-	void FadeIntoRoom() override;
 	void Update(std::chrono::microseconds dt) override;
 	[[nodiscard]] glm::vec2 GetWaterfallSlide() const override;
 	void Activate() override { Activate(TempleRoom::Main); }
@@ -109,6 +108,8 @@ private:
 	bool _leavingForMapPoint {false};
 	/// WorldRoomCamera's double click on the map: leaves the temple for that place
 	void LeaveForMapPoint(glm::vec3 point);
+	/// Covers the screen as the player is put straight into a room, and fades it back over a second and a fifth
+	void FadeIntoRoom();
 	uint32_t _visits {0};
 	/// How far through its slide the waterfall's texture is, from 0 to 1
 	float _waterfallSlide {0.0f};
