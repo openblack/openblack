@@ -12,7 +12,9 @@
 #include <cstdint>
 
 #include <map>
+#include <set>
 #include <string>
+#include <string_view>
 
 #include "GraphicsHandle.h"
 
@@ -42,9 +44,13 @@ public:
 	[[nodiscard]] ProgramHandle GetRawHandle() const { return _program; }
 
 private:
+	void WarnMissing(std::string_view name) const;
+
 	std::string _name;
 	ProgramHandle _program;
 	std::map<std::string, UniformHandle> _uniforms;
+	/// The uniforms set on this shader that it doesn't have, already warned about
+	mutable std::set<std::string, std::less<>> _warnedMissing;
 };
 
 } // namespace openblack::graphics

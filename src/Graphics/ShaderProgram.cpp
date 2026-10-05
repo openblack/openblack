@@ -67,7 +67,7 @@ void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint
 	}
 	else
 	{
-		SPDLOG_LOGGER_WARN(spdlog::get("graphics"), "Could not find texture sampler {}", samplerName);
+		WarnMissing(samplerName);
 	}
 }
 
@@ -80,7 +80,7 @@ void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint
 	}
 	else
 	{
-		SPDLOG_LOGGER_WARN(spdlog::get("graphics"), "Could not find texture sampler {}", samplerName);
+		WarnMissing(samplerName);
 	}
 }
 
@@ -93,7 +93,16 @@ void ShaderProgram::SetUniformValue(const char* uniformName, const void* value) 
 	}
 	else
 	{
-		SPDLOG_LOGGER_WARN(spdlog::get("graphics"), "Could not find uniform {} in {} Shader", uniformName, _name);
+		WarnMissing(uniformName);
+	}
+}
+
+void ShaderProgram::WarnMissing(std::string_view name) const
+{
+	// Uniforms are set every frame, so each missing one is warned about once
+	if (_warnedMissing.emplace(name).second)
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("graphics"), "Could not find uniform {} in {} Shader", name, _name);
 	}
 }
 
