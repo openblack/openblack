@@ -31,6 +31,7 @@
 #include "ECS/Systems/Implementations/AlignmentSystem.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
 #include "ECS/Systems/Implementations/CameraPathSystem.h"
+#include "ECS/Systems/Implementations/ChimneySmokeSystem.h"
 #include "ECS/Systems/Implementations/CinematicDirectorSystem.h"
 #include "ECS/Systems/Implementations/CloudSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
@@ -75,6 +76,7 @@ using openblack::ecs::Registry;
 using openblack::ecs::systems::AlignmentSystem;
 using openblack::ecs::systems::CameraBookmarkSystem;
 using openblack::ecs::systems::CameraPathSystem;
+using openblack::ecs::systems::ChimneySmokeSystem;
 using openblack::ecs::systems::CinematicDirectorSystem;
 using openblack::ecs::systems::CloudSystem;
 using openblack::ecs::systems::DynamicsSystem;
@@ -165,6 +167,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::cinematicDirectorSystem::emplace<CinematicDirectorSystem>();
 	Locator::soundTagSystem::emplace<SoundTagSystem>();
 	Locator::rainSystem::emplace<RainSystem>();
+	Locator::chimneySmokeSystem::emplace<ChimneySmokeSystem>();
 	Locator::townDesireSystem::emplace<TownDesireSystem>();
 	return true;
 }
@@ -217,6 +220,7 @@ void openblack::ShutDownServices()
 	Locator::handSystem::reset();
 	Locator::pathfindingSystem::reset();
 	Locator::cinematicDirectorSystem::reset();
+	Locator::chimneySmokeSystem::reset();
 	Locator::rainSystem::reset();
 	Locator::soundTagSystem::reset();
 	Locator::townDesireSystem::reset();

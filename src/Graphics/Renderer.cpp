@@ -28,6 +28,7 @@
 #include <glm/gtx/transform.hpp>
 #include <spdlog/spdlog.h>
 
+#include "3D/ChimneySmoke.h"
 #include "3D/Clouds.h"
 #include "3D/DayNightClock.h"
 #include "3D/L3DAnim.h"
@@ -49,6 +50,7 @@
 #include "3D/VillageLights.h"
 #include "Camera/Camera.h"
 #include "ECS/Components/AtHome.h"
+#include "ECS/Components/ChimneySmoke.h"
 #include "ECS/Components/Cloud.h"
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/LightBeam.h"
@@ -1809,6 +1811,65 @@ void Renderer::DrawGroundBlobs(const DrawSceneDesc& desc) const
 	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(program->GetRawHandle()));
 }
 
+void Renderer::DrawChimneySmoke(const DrawSceneDesc& desc) const
+{
+	using ecs::components::ChimneySmoke;
+	using ecs::components::Mist;
+	if (desc.viewId != RenderPass::Main || (Locator::temple::has_value() && Locator::temple::value().Active()))
+	{
+		return;
+	}
+	const auto& textures = Locator::resources::value().GetTextures();
+	if (!textures.Contains(Mist::k_TextureId) || !textures.Contains(Mist::k_AlphaTextureId))
+	{
+		return;
+	}
+	const auto texture = textures.Handle(Mist::k_TextureId);
+	const auto alphaTexture = textures.Handle(Mist::k_AlphaTextureId);
+	const auto* spriteShader = _shaderManager->GetShader("Sprite");
+	const auto viewId = static_cast<bgfx::ViewId>(TranslucentView(desc.viewId));
+	const auto origin = desc.camera->GetOrigin();
+	// Turned to face the camera, with the texture's own alpha, blended over what is behind
+	const glm::vec4 u_spriteParams {1.0f, 1.0f, 0.0f, 0.0f};
+	desc.entities.Each<const ChimneySmoke>([&](const ChimneySmoke& smoke) {
+		if (smoke.state == ChimneySmoke::State::Out)
+		{
+			return;
+		}
+		// The whole smoke takes its place in the sort by its chimney, its puffs in turn
+		const auto depth = zsort::Depth(smoke.chimney, origin);
+		for (const auto& puff : smoke.puffs)
+		{
+			if (puff.hidden)
+			{
+				continue;
+			}
+			const auto look = chimney_smoke::LookOf(puff.age, smoke.rgb);
+			// Spinning in the plane of the screen
+			const auto model = glm::translate(puff.position) * glm::rotate(-puff.angle, glm::vec3(0.0f, 0.0f, 1.0f)) *
+			                   glm::scale(glm::vec3(look.halfWidth));
+			const glm::vec4 u_sampleRect {0.125f, 0.125f, mists::FrameOffset(look.frame, false)};
+			const float alpha = static_cast<float>(look.argb >> 24u) / 255.0f;
+			const glm::vec3 colour =
+			    glm::vec3(static_cast<float>((look.argb >> 16u) & 0xFFu), static_cast<float>((look.argb >> 8u) & 0xFFu),
+			              static_cast<float>(look.argb & 0xFFu)) /
+			    255.0f;
+			// The shader multiplies the tint by the texture's alpha: premultiplied for the blend
+			const glm::vec4 u_tint {colour * alpha, alpha};
+			bgfx::setTransform(glm::value_ptr(model));
+			spriteShader->SetUniformValue("u_sampleRect", glm::value_ptr(u_sampleRect));
+			spriteShader->SetUniformValue("u_spriteParams", glm::value_ptr(u_spriteParams));
+			spriteShader->SetUniformValue("u_tint", glm::value_ptr(u_tint));
+			spriteShader->SetTextureSampler("s_diffuse", 0, *texture);
+			spriteShader->SetTextureSampler("s_alpha", 1, *alphaTexture);
+			_plane->GetVertexBuffer().Bind();
+			bgfx::setState(BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
+			               BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA));
+			bgfx::submit(viewId, toBgfx(spriteShader->GetRawHandle()), depth);
+		}
+	});
+}
+
 void Renderer::DrawRain(const DrawSceneDesc& desc) const
 {
 	if (desc.viewId != RenderPass::Main || !Locator::rainSystem::has_value() ||
@@ -3007,6 +3068,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			DrawCaveTrophies(desc);
 			DrawGroundBlobs(desc);
 			DrawRain(desc);
+			DrawChimneySmoke(desc);
 			// The mists blend over the rest, the farthest first
 			DrawMists(desc);
 
