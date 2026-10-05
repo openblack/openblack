@@ -103,9 +103,9 @@ int PrintHeader(openblack::l3d::L3DFile& l3d)
 		{
 			result += "Unknown10|";
 		}
-		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown11)) != 0)
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::HasChimney)) != 0)
 		{
-			result += "Unknown11|";
+			result += "HasChimney|";
 		}
 		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::HasDoorPosition)) != 0)
 		{

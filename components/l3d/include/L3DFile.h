@@ -64,8 +64,8 @@ enum class L3DMeshFlags : uint32_t
 	Unknown7 = 1U << 6U,                  // 0x40     (25)
 	Unknown8 = 1U << 7U,                  // 0x80     (24)
 	HasBones = 1U << 8U,                  // 0x100    (23)
-	Unknown10 = 1U << 9U,                 // 0x200    (22)
-	Unknown11 = 1U << 10U,                // 0x400    (21)
+	Unknown10 = 1U << 9U,                 // 0x200    (22) the object goes to the Z-sorter whole (L3DMesh::IsZSorted)
+	HasChimney = 1U << 10U,               // 0x400    (21) extra point [1] (LH3DStaticObject::GetChimneyPos 0x7F9F10)
 	HasDoorPosition = 1U << 11U,          // 0x800    (20)
 	Packed = 1U << 12U,                   // 0x1000   (19)
 	NoDraw = 1U << 13U,                   // 0x2000   (18)
@@ -353,6 +353,16 @@ bool DecodeSubmeshNames(std::span<const uint8_t> data, uint32_t dataOffset, uint
 bool DecodeLightmaps(std::span<const uint8_t> data, uint32_t blockOffset, uint32_t blockSize, uint32_t vertexCount,
                      uint32_t submeshCount, std::vector<L3DPoint2D>& coordinates, std::vector<L3DLightmap>& lightmaps) noexcept;
 
+/// EBone block (ContainsEBone), after the extra metrics: up to 16 points attached to bones. The original's animal ground
+/// blobs (fn_0081FFF0) use the positions of the first 2 or 4, in the space of the bone they name (-1 = unused).
+struct L3DEBone
+{
+	uint32_t size;                                     ///< 836
+	std::array<std::array<float, 3 * 4>, 16> matrices; ///< 3x3 rotation then position
+	std::array<int32_t, 16> bones;
+};
+static_assert(sizeof(L3DEBone) == 836);
+
 /**
   This class is used to read L3Ds.
  */
@@ -390,6 +400,7 @@ protected:
 	/// The name block's record of each submesh
 	std::vector<L3DSubmeshName> _submeshNames;
 	std::vector<std::array<float, 3 * 4>> _extraMetrics;
+	std::optional<L3DEBone> _eBone;
 
 	/// Write file to the input source
 	L3DResult WriteFile(std::ostream& stream) const noexcept;
@@ -434,6 +445,7 @@ public:
 	[[nodiscard]] const std::vector<uint8_t>& GetUv2Data() const noexcept { return _uv2Data; }
 	[[nodiscard]] const std::vector<L3DPoint2D>& GetLightmapCoordinates() const noexcept { return _lightmapCoordinates; }
 	[[nodiscard]] const std::vector<L3DLightmap>& GetLightmaps() const noexcept { return _lightmaps; }
+	[[nodiscard]] const std::optional<L3DEBone>& GetEBone() const noexcept { return _eBone; }
 	void SetFootprint(const L3DFootprint& footprint) noexcept { _footprint = footprint; }
 	void SetExtraMetrics(const std::vector<std::array<float, 3 * 4>>& metrics) noexcept { _extraMetrics = metrics; }
 	void SetUv2Data(std::vector<uint8_t>& uv2Data) noexcept { _uv2Data = uv2Data; }
