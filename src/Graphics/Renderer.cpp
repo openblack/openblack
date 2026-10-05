@@ -1581,7 +1581,8 @@ glm::vec4 Renderer::GetHandLight(const DrawSceneDesc& drawDesc) const
 		return handLight;
 	}
 	const auto origin = HandLight::GetOrigin(transform->position);
-	handLight = glm::vec4(origin, HandLight::GetStrength(Locator::skySystem::value().GetCurrentSkyType()), 0.0f);
+	const auto landColour = _landLightTable ? _landLightTable->GetLandColour() : 0xFFFFFFu;
+	handLight = glm::vec4(origin, HandLight::GetStrength(landColour), 0.0f);
 	return handLight;
 }
 

@@ -59,10 +59,14 @@ TEST(HandLight, OutsideTheMapIsDark)
 	EXPECT_FLOAT_EQ(HandLight::GetBrightness(map, k_Hand, origin + glm::vec2(200.0f, 0.0f)), 0.0f);
 }
 
-TEST(HandLight, ComesUpAsDuskTurnsToNight)
+TEST(HandLight, ComesUpAsTheLandDarkens)
 {
-	EXPECT_FLOAT_EQ(HandLight::GetStrength(2.0f), 0.0f);
-	EXPECT_FLOAT_EQ(HandLight::GetStrength(1.0f), 0.0f);
-	EXPECT_FLOAT_EQ(HandLight::GetStrength(0.5f), 0.5f);
-	EXPECT_FLOAT_EQ(HandLight::GetStrength(0.0f), 1.0f);
+	EXPECT_FLOAT_EQ(HandLight::GetStrength(0xFFFFFF), 0.0f);
+	EXPECT_FLOAT_EQ(HandLight::GetStrength(0x787878), 0.0f);
+	// A mean of 112, eight fifteenths of the way down
+	EXPECT_FLOAT_EQ(HandLight::GetStrength(0x707070), 8.0f / 15.0f);
+	// The mean is rounded down: (110 + 111 + 111) / 3 is 110
+	EXPECT_FLOAT_EQ(HandLight::GetStrength(0x6E6F6F), 10.0f / 15.0f);
+	EXPECT_FLOAT_EQ(HandLight::GetStrength(0x696969), 1.0f);
+	EXPECT_FLOAT_EQ(HandLight::GetStrength(0x000000), 1.0f);
 }

@@ -67,10 +67,16 @@ public:
 	/// The table as RGBA8 texels
 	[[nodiscard]] const std::array<uint32_t, k_Size>& GetTexels() const noexcept { return _texels; }
 	[[nodiscard]] const Haze& GetHaze() const noexcept { return _haze; }
+	/// The land's colour of the frame, by the time of day and alignment, 0xRRGGBB
+	[[nodiscard]] uint32_t GetLandColour() const noexcept { return _landColour; }
+	/// The palette's warm colour of the frame, which the darkest levels go on to, 0xRRGGBB
+	[[nodiscard]] uint32_t GetWarmColour() const noexcept { return _warmColour; }
 
 private:
 	std::array<uint32_t, k_Size> _texels {};
 	Haze _haze;
+	uint32_t _landColour {0xFFFFFF};
+	uint32_t _warmColour {0xFFFFFF};
 };
 
 } // namespace openblack

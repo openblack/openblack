@@ -29,10 +29,9 @@ struct HandLight
 
 	/// Where the map's first brightness lies in the world's x and z
 	[[nodiscard]] static glm::vec2 GetOrigin(glm::vec3 handPosition);
-	/// How strongly the hand lights the land at a sky type, from 0 at full night to 2 in full day. The game brings its
-	/// light up over the last fifteenth of the ambient light's dimming towards night; here that is the dusk's turning
-	/// to night.
-	[[nodiscard]] static float GetStrength(float skyType);
+	/// How strongly the hand lights the world, 0 to 1, by the land's colour of the frame (0xRRGGBB): its light comes up
+	/// as the mean of the land's channels falls from 120 to 105, and is full below.
+	[[nodiscard]] static float GetStrength(uint32_t landColour);
 	/// The brightness the hand gives the land at a point of the world's x and z, 0 to 1.
 	[[nodiscard]] static float GetBrightness(std::span<const uint8_t> map, glm::vec3 handPosition, glm::vec2 point);
 };

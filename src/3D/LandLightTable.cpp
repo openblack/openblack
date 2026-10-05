@@ -96,6 +96,9 @@ void LandLightTable::Build(const LandLightPalette& palette, float skyType, float
 	const auto land = evil < 1.0f ? Lerp(colours[k_Good], colours[k_Neutral], static_cast<uint32_t>(towardsEvil))
 	                              : Lerp(colours[k_Neutral], colours[k_Evil], static_cast<uint32_t>(towardsEvil - 256));
 
+	_landColour = land & 0xFFFFFFu;
+	_warmColour = colours[k_Warm] & 0xFFFFFFu;
+
 	// The haze: a third of the land's colour, k by its brightness, and its distances drawn in at dusk
 	{
 		const uint32_t r = (land >> 16) & 0xFFu;
