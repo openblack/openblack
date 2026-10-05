@@ -153,6 +153,8 @@ struct AnimationFrame
 
 struct Animation
 {
+	std::string name;    ///< Name from the spec file (e.g. "Cwiggle")
+	std::string setName; ///< Animation set from the spec file (e.g. "standard")
 	AnimationHeader header;
 	std::vector<uint32_t> rotatedJointIndices;
 	std::vector<uint32_t> translatedJointIndices;

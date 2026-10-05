@@ -254,12 +254,15 @@ std::vector<Animation> MorphFile::ReadAnimations(std::istream& stream, const std
 	uint32_t i = 0;
 	for (auto& animSet : _animationSpecs.animationSets)
 	{
-		for ([[maybe_unused]] auto& _ : animSet.animations)
+		for (const auto& animDesc : animSet.animations)
 		{
 			if (offsets[i] > 0)
 			{
 				stream.seekg(offsets[i]);
 				auto& animation = animations.emplace_back();
+				// The spec stores the node type (C/L) as the first character, followed by the name.
+				animation.name = static_cast<char>(animDesc.type) + animDesc.name;
+				animation.setName = animSet.name;
 				stream.read(reinterpret_cast<char*>(&animation.header), sizeof(animation.header));
 
 				animation.rotatedJointIndices.resize(animation.header.rotatedJointCount);
