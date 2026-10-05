@@ -59,9 +59,15 @@ constexpr glm::vec3 k_ExitPlace {229.0f, 2.0f, -40.0f};
 constexpr uint32_t k_FirstEyePoint = 44;
 constexpr uint32_t k_FirstLookPoint = 49;
 
+/// The height of the screen the game's reach is in pixels of: the interface is laid out for 800 by 600
+constexpr float k_ReachScreenHeight = 600.0f;
+
 /// The target the mouse is over, of those on the screen at their places (in pixels, down from the top), the last of
-/// them it is within reach of
-[[nodiscard]] std::optional<Target> TargetAt(const std::array<std::optional<glm::vec2>, k_Count>& places, glm::vec2 mouse);
+/// them it is within reach of. The game's reach is in pixels whatever the screen; here it is scaled to the screen's
+/// height, as it would be on the 800 by 600 screen the interface is laid out for, so that the targets are as easy to
+/// find on larger screens.
+[[nodiscard]] std::optional<Target> TargetAt(const std::array<std::optional<glm::vec2>, k_Count>& places, glm::vec2 mouse,
+                                             float screenHeight = k_ReachScreenHeight);
 
 } // namespace CreatureCaveTargets
 

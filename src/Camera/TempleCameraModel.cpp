@@ -929,7 +929,8 @@ std::optional<glm::vec3> TempleCameraModel::CaveMeshPoint(uint32_t index)
 void TempleCameraModel::UpdateCaveTargets(float dt, const Input& input)
 {
 	using namespace CreatureCaveTargets;
-	_caveTarget = _state == State::Look && !_lookingAtSubMesh ? TargetAt(input.caveTargets, input.mouse) : std::nullopt;
+	_caveTarget =
+	    _state == State::Look && !_lookingAtSubMesh ? TargetAt(input.caveTargets, input.mouse, input.screen.y) : std::nullopt;
 
 	// A press anywhere zooms back, and a click on a target, while the camera is all the way back, zooms to it
 	if (input.button != 0 && !_wasPressed)

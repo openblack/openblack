@@ -56,6 +56,16 @@ TEST(CreatureCaveTargets, TheCreatureReachesOnlyItsPixelBelowItsPoint)
 	EXPECT_FALSE(TargetAt(places, {101.0f, 110.0f}).has_value());
 }
 
+TEST(CreatureCaveTargets, TheReachGrowsWithTheScreen)
+{
+	const auto places = Only(Target::Exit, {960.0f, 540.0f});
+	// Out of the game's reach, but in it scaled from 600 high to 1080
+	EXPECT_FALSE(TargetAt(places, {960.0f, 620.0f}).has_value());
+	EXPECT_EQ(TargetAt(places, {960.0f, 620.0f}, 1080.0f), Target::Exit);
+	EXPECT_EQ(TargetAt(places, {1032.0f, 630.0f}, 1080.0f), Target::Exit);
+	EXPECT_FALSE(TargetAt(places, {1033.0f, 540.0f}, 1080.0f).has_value());
+}
+
 TEST(CreatureCaveTargets, TheLastInReachWins)
 {
 	Places places {};
