@@ -25,7 +25,7 @@ public:
 	static const std::array<const ScriptCommandSignature, 106> k_Signatures;
 
 	static void SetATownInfluenceMultiplier(int32_t townId, float mult);
-	static void CreateMist(glm::vec3 position, float param2, int32_t param3, float param4, float param5);
+	static void CreateMist(glm::vec3 position, float altitude, int32_t colour, float size, float edgeShrink);
 	static void CreatePath(int32_t param1, int32_t param2, int32_t param3, int32_t param4);
 	static void CreateTown(int32_t townId, glm::vec3 position, const std::string& playerOwner, int32_t notUsed,
 	                       const std::string& tribeType);

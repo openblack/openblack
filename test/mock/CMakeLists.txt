@@ -76,6 +76,8 @@ set(COFFRE_INPUT ${COFFRE_BINARY_DIR}/coffre.gltf)
 
 set(TERRAIN_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/Landscape)
 set(TERRAIN_MULTIPLAYER_BINARY_DIR ${TERRAIN_BINARY_DIR}/Multi_Player)
+set(MIST_MESH_OUTPUT ${TERRAIN_BINARY_DIR}/mist.l3d)
+set(MIST_INPUT ${TERRAIN_BINARY_DIR}/mist.gltf)
 set(TERRAIN_TYPE 0)
 set(TERRAIN_LAND_1_OUTPUT ${TERRAIN_BINARY_DIR}/Land1.lnd)
 set(TERRAIN_LAND_MPM_2P_1_OUTPUT ${TERRAIN_MULTIPLAYER_BINARY_DIR}/MPM_2P_1.lnd)
@@ -204,6 +206,10 @@ add_custom_target(
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
           --output-file ${MOON_INPUT}
   COMMAND l3dtool write -o ${MOON_MESH_OUTPUT} -i ${MOON_INPUT}
+  # Data/Landscape/mist.l3d
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
+          --output-file ${MIST_INPUT}
+  COMMAND l3dtool write -o ${MIST_MESH_OUTPUT} -i ${MIST_INPUT}
   # Data/metre_sphere.l3d
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
           --output-file ${SPHERE_INPUT}
@@ -248,6 +254,7 @@ add_custom_target(
              ${RIVER2_INPUT}
              ${SUN_INPUT}
              ${MOON_INPUT}
+             ${MIST_INPUT}
              ${SPHERE_INPUT}
   SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
           ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py

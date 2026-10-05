@@ -31,6 +31,7 @@
 #include "ECS/Archetypes/FeatureArchetype.h"
 #include "ECS/Archetypes/FieldArchetype.h"
 #include "ECS/Archetypes/FlowersArchetype.h"
+#include "ECS/Archetypes/MistArchetype.h"
 #include "ECS/Archetypes/MobileObjectArchetype.h"
 #include "ECS/Archetypes/MobileStaticArchetype.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
@@ -235,10 +236,9 @@ void FeatureScriptCommands::SetATownInfluenceMultiplier(int32_t townId, float mu
 	                    townId, multiplier);
 }
 
-void FeatureScriptCommands::CreateMist(glm::vec3 position, float param2, int32_t param3, float param4, float param5)
+void FeatureScriptCommands::CreateMist(glm::vec3 position, float altitude, int32_t colour, float size, float edgeShrink)
 {
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {}({}, {}, {}, {}, {}) not implemented.",
-	                    __FILE__, __LINE__, __func__, glm::to_string(position), param2, param3, param4, param5);
+	MistArchetype::Create(position, altitude, static_cast<uint32_t>(colour), size, edgeShrink);
 }
 
 void FeatureScriptCommands::CreatePath(int32_t param1, int32_t param2, int32_t param3, int32_t param4)

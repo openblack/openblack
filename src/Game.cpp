@@ -56,6 +56,7 @@
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
 #include "ECS/Components/Hand.h"
+#include "ECS/Components/Mist.h"
 #include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Map.h"
@@ -66,6 +67,7 @@
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
+#include "ECS/Systems/MistSystemInterface.h"
 #include "ECS/Systems/PathfindingSystemInterface.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
@@ -576,6 +578,7 @@ bool Game::Update() noexcept
 		auto actions = profiler.BeginScoped(Profiler::Stage::VegetationUpdate);
 		Locator::vegetation::value().Update(gameTime);
 	}
+	Locator::mistSystem::value().Update(gameTime);
 
 	// Update Uniforms
 	{
@@ -1028,6 +1031,7 @@ bool Game::Initialize() noexcept
 		                 fileSystem.GetPath<Path::WeatherSystem>() / "sun.l3d");
 		meshManager.Load(SkyInterface::k_MoonMeshId.value(), LFromDiskTag {},
 		                 fileSystem.GetPath<Path::WeatherSystem>() / "moon.l3d");
+		meshManager.Load(ecs::components::Mist::k_MeshId, LFromDiskTag {}, fileSystem.GetPath<Path::Landscape>() / "mist.l3d");
 
 		using CFromDiskTag = resources::CameraPathLoader::FromDiskTag;
 		camPathManager.Load("cam", CFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "cam.cam");

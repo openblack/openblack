@@ -81,6 +81,8 @@ private:
 	void DrawSun(RenderPass viewId) const;
 	/// The sun's glare over the finished view, dimmed by what hides the sun from the camera
 	void DrawSunGlare(const Camera& camera) const;
+	/// The puffs of mist, blended over the scene, the farthest first
+	void DrawMists(const DrawSceneDesc& desc) const;
 	/// The moon and its glow in the sky, after the sky's dome
 	void DrawMoon(RenderPass viewId) const;
 	/// A mesh of the sky's, in a colour, with a texture and that texture's alpha

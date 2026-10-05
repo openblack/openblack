@@ -34,6 +34,7 @@
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
 #include "ECS/Systems/Implementations/HandSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
+#include "ECS/Systems/Implementations/MistSystem.h"
 #include "ECS/Systems/Implementations/PathfindingSystem.h"
 #include "ECS/Systems/Implementations/PlayerSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
@@ -71,6 +72,7 @@ using openblack::ecs::systems::CameraPathSystem;
 using openblack::ecs::systems::DynamicsSystem;
 using openblack::ecs::systems::HandSystem;
 using openblack::ecs::systems::LivingActionSystem;
+using openblack::ecs::systems::MistSystem;
 using openblack::ecs::systems::PathfindingSystem;
 using openblack::ecs::systems::PlayerSystem;
 using openblack::ecs::systems::RenderingSystem;
@@ -145,6 +147,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::templeExteriorSystem::emplace<TempleExteriorSystem>();
 	Locator::time::emplace<TimeSystem>();
 	Locator::vegetation::emplace<VegetationSystem>();
+	Locator::mistSystem::emplace<MistSystem>();
 	return true;
 }
 

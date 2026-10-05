@@ -35,6 +35,7 @@
 #include "3D/LandBlock.h"
 #include "3D/LandIslandInterface.h"
 #include "3D/LandLightTable.h"
+#include "3D/Mists.h"
 #include "3D/OceanInterface.h"
 #include "3D/OrientedText.h"
 #include "3D/SkyInterface.h"
@@ -45,6 +46,7 @@
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/LightBeam.h"
 #include "ECS/Components/Mesh.h"
+#include "ECS/Components/Mist.h"
 #include "ECS/Components/MistDome.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Components/Stream.h"
@@ -1567,6 +1569,91 @@ glm::mat4 SunModel(const glm::vec3& position)
 }
 } // namespace
 
+void Renderer::DrawMists(const DrawSceneDesc& desc) const
+{
+	if (Locator::temple::has_value() && Locator::temple::value().Active())
+	{
+		return;
+	}
+	const auto& meshes = Locator::resources::value().GetMeshes();
+	const auto& textures = Locator::resources::value().GetTextures();
+	using ecs::components::Mist;
+	if (!meshes.Contains(Mist::k_MeshId) || !textures.Contains(Mist::k_TextureId) ||
+	    !textures.Contains(Mist::k_AlphaTextureId) || !Locator::terrainSystem::has_value())
+	{
+		return;
+	}
+	const auto mesh = meshes.Handle(Mist::k_MeshId);
+	const auto texture = textures.Handle(Mist::k_TextureId);
+	const auto alphaTexture = textures.Handle(Mist::k_AlphaTextureId);
+	const auto* program = _shaderManager->GetShader("Mist");
+	const auto& island = Locator::terrainSystem::value();
+	const glm::vec4 islandExtent {island.GetExtent().minimum, island.GetExtent().maximum};
+
+	// Every mist faces the camera: the mesh's x across the screen, its y towards the camera and its z up the screen
+	const auto& camera = *desc.camera;
+	const auto origin = camera.GetOrigin();
+	const glm::mat3 facing {camera.GetRight(), -camera.GetForward(), camera.GetUp()};
+	// A mist that shrinks edge on is lit from straight above, more brightly
+	const glm::vec4 skyLight {0.0f, 500000.0f, 0.0f, 210.0f};
+
+	desc.entities.Each<const Mist, const ecs::components::Transform>([&](const Mist& mist,
+	                                                                     const ecs::components::Transform& transform) {
+		const auto alpha = static_cast<float>(mist.colour >> 24u);
+		if (alpha <= 0.0f)
+		{
+			return;
+		}
+		// A mist that shrinks edge on keeps its width and squashes its depth and height
+		glm::vec3 scale {mist.size};
+		if (mist.shrinksEdgeOn)
+		{
+			scale.y = scale.z = mists::EdgeOnSize(mist.size, mist.edgeShrink, transform.position - origin);
+		}
+		const auto model = glm::translate(transform.position) * glm::mat4(facing) * glm::scale(scale);
+		const auto frame = mists::FrameOffset(mists::Frame(mist.counter), mist.shrinksEdgeOn);
+		const glm::vec4 u_mist {frame, 0.0f, 0.0f};
+		const glm::vec4 u_mistColour {static_cast<float>((mist.colour >> 16u) & 0xFFu) / 255.0f,
+		                              static_cast<float>((mist.colour >> 8u) & 0xFFu) / 255.0f,
+		                              static_cast<float>(mist.colour & 0xFFu) / 255.0f, alpha / 255.0f};
+		// The others take the land's light where they stand and the haze, in the models' light
+		const bool landLit = !mist.shrinksEdgeOn && _landLightTexture.has_value();
+		const glm::vec4 u_landLight {landLit ? 1.0f : 0.0f, 1.0f, 0.0f, 0.0f};
+		const glm::vec4 noHaze {0.0f};
+
+		for (const auto& subMesh : mesh->GetSubMeshes())
+		{
+			for (const auto& primitive : subMesh->GetPrimitives())
+			{
+				bgfx::setTransform(glm::value_ptr(model));
+				program->SetTextureSampler("s_diffuse", 0, *texture);
+				program->SetTextureSampler("s_alpha", 1, *alphaTexture);
+				program->SetTextureSampler("s_landLuminosity", 6, island.GetLuminosityMap());
+				program->SetTextureSampler("s_landLight", 7, _landLightTexture.value_or(GetHandLightTexture()));
+				program->SetUniformValue("u_islandExtent", &islandExtent);
+				program->SetUniformValue("u_landLight", &u_landLight);
+				program->SetUniformValue("u_haze", landLit ? &_haze[0] : &noHaze);
+				program->SetUniformValue("u_hazeColour", &_haze[1]);
+				program->SetUniformValue("u_modelLight", mist.shrinksEdgeOn ? &skyLight : &_modelLight);
+				program->SetUniformValue("u_mist", &u_mist);
+				program->SetUniformValue("u_mistColour", &u_mistColour);
+				if (subMesh->GetMesh().IsIndexed())
+				{
+					subMesh->GetMesh().GetIndexBuffer().Bind(primitive.indicesCount, primitive.indicesOffset);
+				}
+				subMesh->GetMesh().GetVertexBuffer().Bind();
+				// Both sides, blended over what is behind, tested against but not writing depth
+				bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_BLEND_ALPHA | BGFX_STATE_MSAA);
+				// bgfx draws the blended draws of a program in the order of this depth: the farthest first
+				const float distance = glm::length(transform.position - origin);
+				const auto depth =
+				    std::numeric_limits<uint32_t>::max() - static_cast<uint32_t>(std::min(distance * 64.0f, 4.0e9f));
+				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(program->GetRawHandle()), depth);
+			}
+		}
+	});
+}
+
 void Renderer::DrawMoon(RenderPass viewId) const
 {
 	if (!Locator::camera::has_value())
@@ -2331,6 +2418,9 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			DrawTempleMap(desc);
 			DrawTempleMapMarkers(desc);
 			DrawCaveTrophies(desc);
+			// The mists blend over the rest, the farthest first
+			DrawMists(desc);
+
 			// The game draws the hand after the rest of the scene, blended by its translucent texture. Black & White
 			// culls its back faces; here both sides are drawn, the inside first so that the outside blends over it.
 			// The game's reflection of the main room has no hand in it

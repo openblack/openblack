@@ -96,6 +96,7 @@ class DynamicsSystemInterface;
 class HandSystemInterface;
 class CameraPathSystemInterface;
 class LivingActionSystemInterface;
+class MistSystemInterface;
 class PathfindingSystemInterface;
 class AlignmentSystemInterface;
 class TempleExteriorSystemInterface;
@@ -149,6 +150,7 @@ struct Locator
 	using temple = entt::locator<TempleInteriorInterface>;
 	using time = entt::locator<ecs::systems::TimeSystemInterface>;
 	using vegetation = entt::locator<ecs::systems::VegetationInterface>;
+	using mistSystem = entt::locator<ecs::systems::MistSystemInterface>;
 	using vm = entt::locator<lhvm::LHVM>;
 	using chlapi = entt::locator<chlapi::CHLApi>;
 };
