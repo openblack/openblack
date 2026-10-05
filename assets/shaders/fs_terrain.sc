@@ -4,8 +4,8 @@ $input v_texcoord0, v_texcoord1, v_weight, v_materialID0, v_materialID1, v_mater
 
 #define M_PI 3.1415926535897932384626433832795
 
-SAMPLER2DARRAY(s0_materials, 0);
-SAMPLER2D(s1_bump, 1);
+// The blocks' painted textures, a layer each: the land's colour, and the coast alpha that fades it into the sea
+SAMPLER2DARRAY(s0_blockTextures, 0);
 SAMPLER2D(s2_smallBump, 2);
 SAMPLER2D(s3_footprints, 3);
 SAMPLER2D(s4_handShadow, 4);
@@ -16,6 +16,8 @@ SAMPLER2D(s6_handLight, 6);
 // The land's light: a colour for each level of the cells' luminosity (LandLightTable)
 SAMPLER2D(s7_landLight, 7);
 
+// x: the block's layer of s0_blockTextures
+uniform vec4 u_block;
 // w: 1 to draw the land's textures alone, unlit and with no sea, as the temple's map is textured with
 uniform vec4 u_skyAndBump;
 // x: darkness of the objects' shadows where they fully cover a texel, 0 without them
@@ -31,32 +33,11 @@ void main()
 {
 	// unpack uniforms
 	float skyType = u_skyAndBump.x;
-	float bumpMapStrength = u_skyAndBump.y;
 	float smallBumpMapStrength = u_skyAndBump.z;
 
-	// do each vert with both materials
-	vec4 colOne = mix(
-		texture2DArray(s0_materials, vec3(v_texcoord0.xy, v_materialID0.r)),
-		texture2DArray(s0_materials, vec3(v_texcoord0.xy, v_materialID1.r)),
-		v_materialBlend.r
-	) * v_weight.r;
-	vec4 colTwo = mix(
-		texture2DArray(s0_materials, vec3(v_texcoord0.xy, v_materialID0.g)),
-		texture2DArray(s0_materials, vec3(v_texcoord0.xy, v_materialID1.g)),
-		v_materialBlend.g
-	) * v_weight.g;
-	vec4 colThree = mix(
-		texture2DArray(s0_materials, vec3(v_texcoord0.xy, v_materialID0.b)),
-		texture2DArray(s0_materials, vec3(v_texcoord0.xy, v_materialID1.b)),
-		v_materialBlend.b
-	) * v_weight.b;
-
-	// add the 3 blended textures together
-	vec4 col = colOne + colTwo + colThree;
-
-	// apply bump map (2x because it's half bright?)
-	float bump = mix(1.0f, texture2D(s1_bump, v_texcoord0.xy).r * 2.0f, bumpMapStrength);
-	col = col * bump;
+	// The block's texture, filtered across its texels
+	vec4 block = texture2DArray(s0_blockTextures, vec3(v_texcoord0.xy, u_block.x));
+	vec4 col = vec4(block.rgb, 1.0f);
 
 	// don't apply smallbump unless we're close
 	if (v_distToCamera < 200.0f) {
@@ -100,12 +81,7 @@ void main()
 		col.rgb = col.rgb * (1.0f - coverage * v_shadowCoord.w * u_handShadow.x);
 	}
 
-	// The distance haze is added after the texture
-	gl_FragColor = vec4(min(col.rgb + v_haze.rgb, vec3_splat(1.0f)), v_waterAlpha);
-
-	//gl_FragColor.r = v_distToCamera / 200.0f;
-
-	if (v_waterAlpha == 0.0f) {
-		discard;
-	}
+	// The distance haze is added after the texture. The land is blended over the sea by its coast alpha, and writes its
+	// depth even where it is clear.
+	gl_FragColor = vec4(min(col.rgb + v_haze.rgb, vec3_splat(1.0f)), block.a);
 }

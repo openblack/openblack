@@ -782,8 +782,7 @@ void Renderer::DrawTempleMapPass(const DrawSceneDesc& desc) const
 	}
 	const auto noHandShadow = glm::mat4(0.0f);
 	const auto noHand = glm::vec4(0.0f);
-	terrainShader->SetTextureSampler("s0_materials", 0, island.GetAlbedoArray());
-	terrainShader->SetTextureSampler("s1_bump", 1, island.GetBump());
+	terrainShader->SetTextureSampler("s0_blockTextures", 0, island.GetBlockTextures());
 	terrainShader->SetTextureSampler("s2_smallBump", 2, *smallBump);
 	terrainShader->SetTextureSampler("s3_footprints", 3, island.GetFootprintFramebuffer().GetColorAttachment());
 	terrainShader->SetTextureSampler("s4_handShadow", 4, _handShadowFrameBuffer->GetColorAttachment());
@@ -802,10 +801,12 @@ void Renderer::DrawTempleMapPass(const DrawSceneDesc& desc) const
 	terrainShader->SetUniformValue("u_handShadowMatrix", &noHandShadow);
 	terrainShader->SetUniformValue("u_handShadow", &noHand);
 	terrainShader->SetUniformValue("u_handLight", &noHand);
-	for (const auto& block : island.GetBlocks())
+	for (size_t i = 0; const auto& block : island.GetBlocks())
 	{
 		const glm::vec4 mapPositionAndSize = glm::vec4(block.GetMapPosition(), 160.0f, 160.0f);
 		terrainShader->SetUniformValue("u_blockPositionAndSize", &mapPositionAndSize);
+		const glm::vec4 u_block {static_cast<float>(i++), 0.0f, 0.0f, 0.0f};
+		terrainShader->SetUniformValue("u_block", &u_block);
 		block.GetMesh().GetVertexBuffer().Bind();
 		bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
 		// The textures stay bound from one block to the next
@@ -1740,8 +1741,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				              1.0f / static_cast<float>(std::max<uint16_t>(height, 1)), 0.0f);
 			}
 
-			terrainShader->SetTextureSampler("s0_materials", 0, island.GetAlbedoArray());
-			terrainShader->SetTextureSampler("s1_bump", 1, island.GetBump());
+			terrainShader->SetTextureSampler("s0_blockTextures", 0, island.GetBlockTextures());
 			terrainShader->SetTextureSampler("s2_smallBump", 2, *texture);
 			terrainShader->SetTextureSampler("s3_footprints", 3, island.GetFootprintFramebuffer().GetColorAttachment());
 			terrainShader->SetTextureSampler("s5_objectShadows", 5,
@@ -1786,11 +1786,13 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			;
 			// clang-format on
 
-			for (const auto& block : island.GetBlocks())
+			for (size_t i = 0; const auto& block : island.GetBlocks())
 			{
 				// pack uniforms
 				const glm::vec4 mapPositionAndSize = glm::vec4(block.GetMapPosition(), 160.0f, 160.0f);
 				terrainShader->SetUniformValue("u_blockPositionAndSize", &mapPositionAndSize);
+				const glm::vec4 u_block {static_cast<float>(i++), 0.0f, 0.0f, 0.0f};
+				terrainShader->SetUniformValue("u_block", &u_block);
 
 				block.GetMesh().GetVertexBuffer().Bind();
 

@@ -14,6 +14,7 @@
 
 #include <cmath>
 
+#include <span>
 #include <stdexcept>
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
@@ -24,6 +25,7 @@
 #include <spdlog/spdlog.h>
 #include <stb_image_write.h>
 
+#include "3D/BlockTexture.h"
 #include "3D/LandBlock.h"
 #include "3D/LandNormal.h"
 #include "3D/MapCoords.h"
@@ -233,6 +235,24 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	    lnd::LNDBumpMap::k_Width, lnd::LNDBumpMap::k_Height, 1, TextureFormat::R8, Wrapping::Repeat, Filter::Linear,
 	    bgfx::makeRef(lnd.GetExtra().bump.texels.data(),
 	                  static_cast<uint32_t>(sizeof(lnd.GetExtra().bump.texels[0]) * lnd.GetExtra().bump.texels.size())));
+
+	// Paint each block's texture from the countries, the materials, the noise and the bump map
+	const block_texture::Sources sources {
+	    .countries = _countries,
+	    .materials = rgba5TextureData,
+	    .noise = _noiseMap,
+	    .bump = lnd.GetExtra().bump.texels,
+	};
+	const auto* blockTexels = bgfx::alloc(static_cast<uint32_t>(_landBlocks.size() * block_texture::k_BlockBytes));
+	const auto blockTexelSpan = std::span(blockTexels->data, blockTexels->size);
+	for (size_t i = 0; i < _landBlocks.size(); ++i)
+	{
+		block_texture::BuildBlock(_landBlocks[i].GetLndBlock()->cells, sources,
+		                          blockTexelSpan.subspan(i * block_texture::k_BlockBytes, block_texture::k_BlockBytes));
+	}
+	_blockTextures = std::make_unique<Texture2D>("LandIslandBlockTextures");
+	_blockTextures->Create(block_texture::k_Side, block_texture::k_Side, static_cast<uint16_t>(_landBlocks.size()),
+	                       TextureFormat::RGBA8, Wrapping::ClampEdge, Filter::Linear, blockTexels);
 
 	// build the meshes (we could move this elsewhere)
 	for (auto& block : _landBlocks)
