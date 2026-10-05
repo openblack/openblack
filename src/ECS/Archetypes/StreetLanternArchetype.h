@@ -19,7 +19,8 @@ namespace openblack::ecs::archetypes
 class StreetLanternArchetype
 {
 public:
-	static entt::entity Create(const glm::vec3& position);
+	/// A lantern of the given kind: the street lantern of the towns, or any other kind for a country lantern on a campfire
+	static entt::entity Create(const glm::vec3& position, MobileStaticInfo info);
 	StreetLanternArchetype() = delete;
 };
 } // namespace openblack::ecs::archetypes

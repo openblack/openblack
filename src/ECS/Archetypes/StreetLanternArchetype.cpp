@@ -9,8 +9,6 @@
 
 #include "StreetLanternArchetype.h"
 
-#include <glm/gtx/euler_angles.hpp>
-
 #include "3D/AllMeshes.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
@@ -22,12 +20,14 @@ using namespace openblack;
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
 
-entt::entity StreetLanternArchetype::Create(const glm::vec3& position)
+entt::entity StreetLanternArchetype::Create(const glm::vec3& position, MobileStaticInfo info)
 {
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
-	registry.Assign<Transform>(entity, position, glm::eulerAngleY(glm::radians(180.0f)), glm::vec3(1.0f));
-	const auto resourceId = resources::HashIdentifier(MeshId::ObjectTownLight);
+	// It stands as it was made, unturned
+	registry.Assign<Transform>(entity, position, glm::mat3(1.0f), glm::vec3(1.0f));
+	const bool country = info != MobileStaticInfo::StreetLantern;
+	const auto resourceId = resources::HashIdentifier(country ? MeshId::BuildingCampfire : MeshId::ObjectTownLight);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 	return entity;
 }
