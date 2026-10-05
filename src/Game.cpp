@@ -1387,7 +1387,8 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 
 	_lastGameLoopTime = std::chrono::steady_clock::now();
 	_turnDeltaTime = 0ns;
-	Locator::time::value().StartGameClock(true);
+	// The game starts running, as Black & White does
+	Locator::time::value().StartGameClock(false);
 	SetGameSpeed(Game::k_TurnDurationMultiplierNormal);
 
 	if (!_atmosAudio)
