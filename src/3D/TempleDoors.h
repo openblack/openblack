@@ -43,16 +43,15 @@ public:
 	/// The first leaf of the doorway through to a room from the main room
 	[[nodiscard]] static std::optional<uint32_t> LeafOf(TempleRoom room);
 
-	/// Starts the leaves of a doorway on their way from a point of their swing at a rate per unit of the cameras' time, unless
-	/// they're already on their way open. Between 0 and 1 the doorway opens, then closes up to 2. Before 0, it waits.
+	/// Starts the leaves of a doorway on their way from a point of their swing at a rate per second, unless they're
+	/// already on their way open. Between 0 and 1 the doorway opens, then closes up to 2. Before 0, it waits.
 	void Open(std::optional<uint32_t> leaf, float from, float rate);
-	/// Turns the open doorway round to close at a rate per unit of the cameras' time, from as far open as it is
+	/// Turns the open doorway round to close at a rate per second, from as far open as it is
 	void Close(float rate);
 	/// Shuts the open doorway at once
 	void FastClose();
-	/// Swings the doorway on by some of the temple cameras' time, which runs at twice the real rate (Temple::Update), and
-	/// lays out the joints
-	void Update(float dt);
+	/// Swings the doorway on, and lays out the joints
+	void Update(float deltaSeconds);
 
 	[[nodiscard]] std::optional<uint32_t> GetLeaf() const { return _leaf; }
 	[[nodiscard]] float GetSwing() const { return _swing; }
