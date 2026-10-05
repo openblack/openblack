@@ -102,6 +102,7 @@ class VillageLightSystemInterface;
 class FieldSystemInterface;
 class SnowSystemInterface;
 class SnowfallSystemInterface;
+class WaterRingSystemInterface;
 class CinematicDirectorSystemInterface;
 class SoundTagSystemInterface;
 class RainSystemInterface;
@@ -167,6 +168,7 @@ struct Locator
 	using fieldSystem = entt::locator<ecs::systems::FieldSystemInterface>;
 	using snowSystem = entt::locator<ecs::systems::SnowSystemInterface>;
 	using snowfallSystem = entt::locator<ecs::systems::SnowfallSystemInterface>;
+	using waterRingSystem = entt::locator<ecs::systems::WaterRingSystemInterface>;
 	using cinematicDirectorSystem = entt::locator<ecs::systems::CinematicDirectorSystemInterface>;
 	using soundTagSystem = entt::locator<ecs::systems::SoundTagSystemInterface>;
 	using rainSystem = entt::locator<ecs::systems::RainSystemInterface>;

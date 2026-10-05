@@ -38,6 +38,7 @@
 #include "3D/LandBlock.h"
 #include "3D/LandColourStamps.h"
 #include "3D/LandIslandInterface.h"
+#include "3D/LandLightFrame.h"
 #include "3D/LandLightTable.h"
 #include "3D/Lightning.h"
 #include "3D/Mists.h"
@@ -50,6 +51,7 @@
 #include "3D/TempleInteriorInterface.h"
 #include "3D/TempleMap.h"
 #include "3D/VillageLights.h"
+#include "3D/WaterRings.h"
 #include "Camera/Camera.h"
 #include "ECS/Components/AtHome.h"
 #include "ECS/Components/ChimneySmoke.h"
@@ -77,6 +79,7 @@
 #include "ECS/Systems/SnowSystemInterface.h"
 #include "ECS/Systems/SnowfallSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
+#include "ECS/Systems/WaterRingSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
 #include "EngineConfig.h"
 #include "FileSystem/FileSystemInterface.h"
@@ -2075,6 +2078,73 @@ void Renderer::DrawChimneySmoke(const DrawSceneDesc& desc) const
 	});
 }
 
+void Renderer::DrawWaterRings(const DrawSceneDesc& desc) const
+{
+	if (desc.viewId != RenderPass::Main || !Locator::waterRingSystem::has_value() ||
+	    (Locator::temple::has_value() && Locator::temple::value().Active()))
+	{
+		return;
+	}
+	const auto rings = Locator::waterRingSystem::value().GetRings();
+	const auto& textures = Locator::resources::value().GetTextures();
+	if (rings.empty() || !textures.Contains(water_rings::k_TextureId.value()) ||
+	    !textures.Contains(water_rings::k_AlphaTextureId.value()))
+	{
+		return;
+	}
+	struct Vertex
+	{
+		glm::vec3 position;
+		glm::vec2 uv;
+		uint32_t colour;
+	};
+	bgfx::VertexLayout layout;
+	layout.begin()
+	    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+	    .end();
+	const auto count = static_cast<uint32_t>(rings.size());
+	if (bgfx::getAvailTransientVertexBuffer(count * 4, layout) < count * 4 ||
+	    bgfx::getAvailTransientIndexBuffer(count * 6) < count * 6)
+	{
+		return;
+	}
+	bgfx::TransientVertexBuffer vertexBuffer;
+	bgfx::TransientIndexBuffer indexBuffer;
+	bgfx::allocTransientVertexBuffer(&vertexBuffer, count * 4, layout);
+	bgfx::allocTransientIndexBuffer(&indexBuffer, count * 6);
+	const auto vertices = std::span(reinterpret_cast<Vertex*>(vertexBuffer.data), count * 4);
+	const auto indices = std::span(reinterpret_cast<uint16_t*>(indexBuffer.data), count * 6);
+	constexpr std::array<uint16_t, 6> k_Triangles = {0, 1, 2, 0, 2, 3};
+	for (size_t i = 0; i < rings.size(); ++i)
+	{
+		const auto& ring = rings[i];
+		const auto corners = water_rings::Corners(ring);
+		const auto uvs = water_rings::CellUvs(ring.cell);
+		const auto rgb = ring.argb & 0xFFFFFFu;
+		const auto abgr = (static_cast<uint32_t>(water_rings::Alpha(ring)) << 24u) | ((rgb & 0xFFu) << 16u) | (rgb & 0xFF00u) |
+		                  ((rgb >> 16u) & 0xFFu);
+		for (size_t c = 0; c < corners.size(); ++c)
+		{
+			vertices[(i * 4) + c] = {corners.at(c), uvs.at(c), abgr};
+		}
+		for (size_t t = 0; t < k_Triangles.size(); ++t)
+		{
+			indices[(i * 6) + t] = static_cast<uint16_t>((i * 4) + k_Triangles.at(t));
+		}
+	}
+	const auto* program = _shaderManager->GetShader("WorldTextured");
+	program->SetTextureSampler("s_diffuse", 0, *textures.Handle(water_rings::k_TextureId.value()));
+	program->SetTextureSampler("s_alpha", 1, *textures.Handle(water_rings::k_AlphaTextureId.value()));
+	bgfx::setVertexBuffer(0, &vertexBuffer);
+	bgfx::setIndexBuffer(&indexBuffer);
+	// Added over what is behind by their alpha, both sides, tested against depth but leaving none
+	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_GREATER |
+	               BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE));
+	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(program->GetRawHandle()));
+}
+
 void Renderer::DrawSnowfall(const DrawSceneDesc& desc) const
 {
 	if (desc.viewId != RenderPass::Main || !Locator::snowfallSystem::has_value() ||
@@ -2828,21 +2898,8 @@ TextureHandle Renderer::UpdateLandLight() const
 	if (const auto& palettes = Locator::resources::value().GetLandLightPalettes();
 	    palettes.Contains(LandLightPalette::k_Id.value()))
 	{
-		const auto skyType = Locator::skySystem::has_value() ? Locator::skySystem::value().GetCurrentSkyType() : 2.0f;
-		const auto alignment =
-		    Locator::alignmentSystem::has_value() ? Locator::alignmentSystem::value().GetSkyAlignment() : 0.0f;
-		// The clouds over the camera darken the land
-		float overcast = 0.0f;
-		if (Locator::weatherSystem::has_value() && Locator::camera::has_value())
-		{
-			overcast = Locator::weatherSystem::value().GetOvercast(Locator::camera::value().GetOrigin());
-		}
-		// So does a flash of lightning
-		uint8_t flash = 0;
-		if (Locator::weatherSystem::has_value() && Locator::camera::has_value())
-		{
-			flash = Locator::weatherSystem::value().GetLightningFlash(Locator::camera::value().GetOrigin());
-		}
+		// The clouds over the camera darken the land, and so does a flash of lightning
+		const auto [skyType, alignment, overcast, flash] = FrameLandLightInputs();
 		_landLightTable->Build(*palettes.Handle(LandLightPalette::k_Id.value()), skyType, alignment, overcast, flash);
 		const auto& haze = _landLightTable->GetHaze();
 		_haze = {glm::vec4(haze.nearDistance, haze.farDistance, haze.k, 1.0f), glm::vec4(haze.colour, 0.0f)};
@@ -3375,6 +3432,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			DrawTempleMapMarkers(desc);
 			DrawCaveTrophies(desc);
 			DrawGroundBlobs(desc);
+			DrawWaterRings(desc);
 			DrawRain(desc);
 			DrawSnowfall(desc);
 			DrawChimneySmoke(desc);

@@ -40,11 +40,13 @@
 #include "3D/HandAnimation.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIslandInterface.h"
+#include "3D/LandLightFrame.h"
 #include "3D/LandLightTable.h"
 #include "3D/OceanInterface.h"
 #include "3D/SkyInterface.h"
 #include "3D/SnowCover.h"
 #include "3D/TempleInteriorInterface.h"
+#include "3D/WaterRings.h"
 #include "Audio/AtmosAudio.h"
 #include "Audio/AudioManagerInterface.h"
 #include "Audio/GameMusic.h"
@@ -52,6 +54,7 @@
 #include "Camera/Camera.h"
 #include "Camera/NearClipping.h"
 #include "Common/EventManager.h"
+#include "Common/GameRandom.h"
 #include "Common/RandomNumberManager.h"
 #include "Common/StringUtils.h"
 #include "Debug/DebugGuiInterface.h"
@@ -87,6 +90,7 @@
 #include "ECS/Systems/TownDesireSystemInterface.h"
 #include "ECS/Systems/VegetationInterface.h"
 #include "ECS/Systems/VillageLightSystemInterface.h"
+#include "ECS/Systems/WaterRingSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
 #include "EngineConfig.h"
 #include "FileSystem/FileSystemInterface.h"
@@ -630,6 +634,8 @@ bool Game::Update() noexcept
 	Locator::cloudSystem::value().Update(gameTime);
 	// The rain falls as the storm nearest the camera has it
 	Locator::rainSystem::value().Update(std::chrono::duration<float>(gameTime).count(), camera.GetOrigin());
+	// The rings on the water grow and fade
+	Locator::waterRingSystem::value().Update(gameTime);
 	// The snow falls as the rain does
 	Locator::snowfallSystem::value().Update(std::chrono::duration<float>(gameTime).count(),
 	                                        Locator::rainSystem::value().GetFall());
@@ -1442,6 +1448,7 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 	{
 		Locator::weatherSystem::value().Reset();
 		Locator::snowSystem::value().Reset();
+		Locator::waterRingSystem::value().Reset();
 	}
 	Locator::cinematicDirectorSystem::value().Reset();
 	Locator::influenceSystem::value().Reset();
@@ -1783,6 +1790,13 @@ void Game::PlayHandGrabSound()
 	}
 	else
 	{
+		// While the game runs, the hand splashes where it goes in: a ring on the water, in the land's brightest light
+		if (!Locator::time::value().IsPaused())
+		{
+			const auto angle = Locator::gameRandom::value().CrtRandom(0.0f, glm::two_pi<float>());
+			Locator::waterRingSystem::value().Add(
+			    water_rings::HandSplash(glm::vec2(position.x, position.z), angle, FrameLandLight(255)));
+		}
 		// G_HandInWater_01 to _10 in turn, on the water's surface where the hand went in
 		const auto id = fmt::format("InGame.sad/{}", 99 + _handInWaterSample);
 		_handInWaterSample = (_handInWaterSample + 1) % 10;
