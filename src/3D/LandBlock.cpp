@@ -65,10 +65,30 @@ void LandBlock::BuildMesh(LandIslandInterface& island)
 
 	BuildVertexList(vertices, island);
 
+	// The physics shape keeps every cell: it copies the positions before the open sea's are taken away
+	_dynamicsMeshInterface = std::make_unique<dynamics::LandBlockBulletMeshInterface>(vertices);
+
+	// The game draws no land in open sea cells, so only the sea shows there and nothing else is hidden behind them. Their
+	// six vertices collapse to a point, which draws nothing.
+	constexpr uint8_t k_OpenSeaFlag = 0x02;
+	constexpr size_t k_VerticesPerCell = 6;
+	for (size_t cell = 0; cell < static_cast<size_t>(k_Resolution.x) * k_Resolution.y; ++cell)
+	{
+		const size_t x = cell / k_Resolution.y;
+		const size_t z = cell % k_Resolution.y;
+		if ((_block->cells.at(x * 17 + z).flags & k_OpenSeaFlag) != 0)
+		{
+			const auto cellVertices = vertices.subspan(cell * k_VerticesPerCell, k_VerticesPerCell);
+			const auto point = cellVertices.front().position;
+			for (auto& vertex : cellVertices)
+			{
+				vertex.position = point;
+			}
+		}
+	}
+
 	auto* vertexBuffer = new VertexBuffer("LandBlock", verticesMem, decl);
 	_mesh = std::make_unique<Mesh>(vertexBuffer);
-
-	_dynamicsMeshInterface = std::make_unique<dynamics::LandBlockBulletMeshInterface>(vertices);
 
 	_physicsMesh = std::make_unique<btBvhTriangleMeshShape>(_dynamicsMeshInterface.get(), true);
 	_rigidBody = std::make_unique<btRigidBody>(0.0f, nullptr, _physicsMesh.get());
