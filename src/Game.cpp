@@ -238,6 +238,11 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 		switch (event.key.keysym.sym)
 		{
 		case SDLK_ESCAPE:
+			// Not while a script has the cinema bars in for its scene
+			if (!Locator::cinematicDirectorSystem::value().IsInterfaceActive())
+			{
+				break;
+			}
 			return false;
 		case SDLK_f:
 			window.SetDisplayMode(windowing::DisplayMode::Fullscreen);
@@ -256,6 +261,11 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 		case SDLK_6:
 		case SDLK_7:
 		case SDLK_8:
+			// The camera's bookmarks aren't for the player while a script has the cinema bars in
+			if (!Locator::cinematicDirectorSystem::value().IsInterfaceActive())
+			{
+				break;
+			}
 			if ((event.key.keysym.mod & KMOD_CTRL) != 0)
 			{
 				const auto index = static_cast<uint8_t>(event.key.keysym.sym - SDLK_1);
