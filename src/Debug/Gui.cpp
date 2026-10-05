@@ -46,6 +46,7 @@
 #include "Camera.h"
 #include "Camera/Camera.h"
 #include "Console.h"
+#include "CreatureSpawner.h"
 #include "ECS/Components/LivingAction.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
@@ -122,6 +123,7 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 	debugWindows.emplace_back(new TempleInterior);
 	debugWindows.emplace_back(new gui::Camera);
 	debugWindows.emplace_back(new Weather);
+	debugWindows.emplace_back(new CreatureSpawner);
 
 	auto gui = std::unique_ptr<DebugGuiInterface>(
 	    new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows), !Locator::windowing::has_value()));
@@ -207,15 +209,16 @@ bool Gui::ProcessEvents(const SDL_Event& event) noexcept
 {
 	ImGui::SetCurrentContext(_imgui);
 
+	auto takenByWindow = false;
 	for (auto& window : _debugWindows)
 	{
-		window->WindowProcessEvent(event);
+		takenByWindow = window->WindowProcessEvent(event) || takenByWindow;
 	}
 
 	ImGui_ImplSDL2_ProcessEvent(&event);
 
 	const auto& io = ImGui::GetIO();
-	_stealsFocus = io.WantCaptureMouse;
+	_stealsFocus = io.WantCaptureMouse || takenByWindow;
 	switch (event.type)
 	{
 	default:

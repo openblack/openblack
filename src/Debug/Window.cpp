@@ -62,11 +62,14 @@ void Window::WindowDraw() noexcept
 	}
 }
 
-void Window::WindowProcessEvent(const SDL_Event& event) noexcept
+bool Window::WindowProcessEvent(const SDL_Event& event) noexcept
 {
 	ProcessEventAlways(event);
-	if (_open)
+	if (!_open)
 	{
-		ProcessEventOpen(event);
+		return false;
 	}
+	const auto taken = TakesEvent(event);
+	ProcessEventOpen(event);
+	return taken;
 }

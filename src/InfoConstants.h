@@ -857,8 +857,15 @@ struct GSpeedThreshold
 
 struct GCreatureInfo: GLivingInfo
 {
-	std::array<uint8_t, 416> field0x1e4;
+	/// The species' row in the creature tables, the Giant Ape's first
+	uint32_t row;
+	float field0x1e8;
+	/// How big a new creature of the species is, and how fat, 0 to 1
+	float startScale;
+	float startFatness;
+	std::array<uint8_t, 400> field0x1f4;
 };
+static_assert(sizeof(GCreatureInfo) == 0x384);
 
 struct GMagicRadiusSpellInfo: GMagicInfo
 {

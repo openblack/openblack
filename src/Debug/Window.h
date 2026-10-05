@@ -27,7 +27,8 @@ public:
 
 	void WindowUpdate() noexcept;
 	void WindowDraw() noexcept;
-	void WindowProcessEvent(const SDL_Event& event) noexcept;
+	/// Hands the event to the window, and whether the window takes it for itself, keeping it from the game
+	bool WindowProcessEvent(const SDL_Event& event) noexcept;
 	[[nodiscard]] bool IsOpen() const noexcept { return _open; }
 	[[nodiscard]] const std::string& GetName() const noexcept { return _name; }
 	virtual void Open() noexcept;
@@ -39,6 +40,8 @@ protected:
 	virtual void Update() noexcept = 0;
 	virtual void ProcessEventOpen(const SDL_Event& event) noexcept = 0;
 	virtual void ProcessEventAlways(const SDL_Event& event) noexcept = 0;
+	/// Whether the open window takes the event for itself, such as a click on the land it acts on
+	[[nodiscard]] virtual bool TakesEvent([[maybe_unused]] const SDL_Event& event) const noexcept { return false; }
 
 private:
 	const std::string _name;

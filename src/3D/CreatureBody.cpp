@@ -70,8 +70,13 @@ entt::id_type creature::GetIdFromMeshName(const std::string& name)
 		appearance = appearanceFound->second;
 	}
 
-	// Remove the suffix and find the creature species
+	// Remove the suffix and find the creature species. The Ogre's variants keep its base mesh's name before their own,
+	// as in A_Greek_Boned_Base_Evil.
 	split.erase(split.begin() + split.size() - 1);
+	if (split.size() > 1 && split.back() == "base")
+	{
+		split.pop_back();
+	}
 	auto speciesFound = k_MeshNameToSpecies.find(fmt::format("{}", fmt::join(split, "_")));
 	if (speciesFound == k_MeshNameToSpecies.end())
 	{

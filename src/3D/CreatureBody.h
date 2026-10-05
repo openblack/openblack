@@ -43,4 +43,10 @@ public:
  */
 entt::id_type GetIdFromMeshName(const std::string& fileName);
 entt::id_type GetIdFromType(CreatureType species, CreatureBody::Appearance appearance);
+
+/// The species' row in the game's creature tables, which start with the Giant Ape and then follow the species in order
+[[nodiscard]] constexpr size_t InfoRow(CreatureType species)
+{
+	return species == CreatureType::GiantApe ? 0 : static_cast<size_t>(species);
+}
 } // namespace openblack::creature

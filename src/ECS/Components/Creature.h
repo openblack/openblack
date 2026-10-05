@@ -24,5 +24,10 @@ struct Creature
 	PlayerNames owner;
 	CreatureType species;
 	entt::id_type mind;
+	/// What the creature has become, which its body shows: alignment from -1 (evil) to 1 (good), fatness and strength
+	/// from 0 to 1
+	float alignment {0.0f};
+	float fatness {0.5f};
+	float strength {0.5f};
 };
 } // namespace openblack::ecs::components
