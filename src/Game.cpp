@@ -518,16 +518,8 @@ bool Game::Update() noexcept
 	Locator::debugGui::value().SetScale(config.guiScale);
 	Locator::time::value().Update();
 
-	// Physics
-	{
-		auto physics = profiler.BeginScoped(Profiler::Stage::PhysicsUpdate);
-		if (_frameCount > 0)
-		{
-			auto& dynamicsSystem = Locator::dynamicsSystem::value();
-			dynamicsSystem.Update(deltaTime);
-			dynamicsSystem.UpdatePhysicsTransforms();
-		}
-	}
+	// The physics world isn't stepped: the game's objects don't move as rigid bodies, and the world only answers the
+	// rays cast for the hand, the camera and the like. Stepping it let the features fall and lose their turn.
 
 	// Input events
 	{
