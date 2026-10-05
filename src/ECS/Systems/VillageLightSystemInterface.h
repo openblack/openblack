@@ -19,8 +19,8 @@ class VillageLightSystemInterface
 {
 public:
 	virtual ~VillageLightSystemInterface() = default;
-	/// Flickers the lights by the game time that has passed, which stops while the game is paused. They only flicker
-	/// while the land is dark enough for them.
+	/// Flickers the lights and plays their flames by the game time that has passed, which stops while the game is
+	/// paused. They only flicker and show while the land is dark enough for them.
 	virtual void Update(std::chrono::duration<float, std::milli> gameTime) = 0;
 };
 

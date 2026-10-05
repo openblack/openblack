@@ -9,10 +9,14 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
+
+#include <array>
 
 #include <entt/core/hashed_string.hpp>
 #include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 
 /// The lights a village keeps at night, the lanterns and campfires, and the hand's light: each lights the land around it
 /// by stamping a small image of brightness into the land's luminosity, with the warm colours of the land's light.
@@ -64,6 +68,47 @@ struct FlickerStep
 	bool flickers;
 };
 [[nodiscard]] FlickerStep AdvanceFlicker(float timer, float milliseconds);
+
+/// A light's two flames and its glow: sprites in the light's colour, their alpha half the lights' brightness. The flames
+/// play the fire's cells backwards, all in time with one clock; the glow is a cell of the smoke.
+inline constexpr size_t k_Flames = 2;
+inline constexpr size_t k_Sprites = k_Flames + 1;
+inline constexpr glm::vec3 k_SpriteColour {0xF3 / 255.0f, 0x84 / 255.0f, 0x21 / 255.0f};
+inline constexpr entt::hashed_string k_FlameTextureId = entt::hashed_string("raw/S_Fire");
+inline constexpr entt::hashed_string k_FlameAlphaTextureId = entt::hashed_string("raw/S_Firea");
+inline constexpr entt::hashed_string k_GlowTextureId = entt::hashed_string("raw/smoke");
+inline constexpr entt::hashed_string k_GlowAlphaTextureId = entt::hashed_string("raw/smokea");
+/// The textures are 8 by 8 cells
+inline constexpr float k_SpriteCell = 1.0f / 8.0f;
+inline constexpr uint8_t k_GlowCell = 56;
+/// The flames' size, and how far it varies either way
+inline constexpr float k_FlameSize = 1.0f;
+inline constexpr float k_FlameSizeVariation = 0.1f;
+/// The smallest a flame or glow is ever made
+inline constexpr float k_SmallestSprite = 1e-4f;
+/// How high the sprites are above a town lantern and a country lantern's campfire
+inline constexpr float k_TownSpriteHeight = 5.0f;
+inline constexpr float k_CountrySpriteHeight = 1.0f;
+/// The flames' cells loop every 700 ms of game time, 31 cells of the fire's 32
+inline constexpr int32_t k_FlameLoopMilliseconds = 700;
+inline constexpr int32_t k_FlameCells = 31;
+/// Where each sprite starts in the flames' loop, as the game has it before any light is made: every new light sets all
+/// three at random, and all the lights then share them
+inline constexpr std::array<int32_t, k_Sprites> k_FlameStarts = {0, 13, 0};
+
+/// The flames' clock after `milliseconds` more of game time, and how far along the loop it is, 0 to 30
+struct FlameStep
+{
+	int32_t clock;
+	int32_t step;
+};
+[[nodiscard]] FlameStep AdvanceFlames(int32_t clock, int32_t milliseconds);
+
+/// The fire's cell a flame shows, by how far along the loop the clock is and where the flame starts in it
+[[nodiscard]] uint8_t FlameCell(int32_t step, size_t flame, int32_t start);
+
+/// The top left of a cell of an 8 by 8 sprite texture
+[[nodiscard]] glm::vec2 SpriteCellUv(uint8_t cell);
 
 /// How much of a cell's luminosity, of 256, a stamp must outshine to light it, by the green of the land's brightest light:
 /// the dim edges of a stamp leave lit land as it was

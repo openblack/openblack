@@ -90,6 +90,28 @@ FlickerStep AdvanceFlicker(float timer, float milliseconds)
 	return {.timer = timer, .flickers = true};
 }
 
+FlameStep AdvanceFlames(int32_t clock, int32_t milliseconds)
+{
+	clock += milliseconds;
+	if (clock > k_FlameLoopMilliseconds)
+	{
+		clock %= k_FlameLoopMilliseconds;
+	}
+	return {.clock = clock, .step = clock * k_FlameCells / k_FlameLoopMilliseconds};
+}
+
+uint8_t FlameCell(int32_t step, size_t flame, int32_t start)
+{
+	// Each flame runs backwards through the cells, the second ten cells on from the first
+	const auto offset = static_cast<int32_t>(10 * flame);
+	return static_cast<uint8_t>((offset + k_FlameCells - ((start + step) & 31)) & 31);
+}
+
+glm::vec2 SpriteCellUv(uint8_t cell)
+{
+	return glm::vec2(static_cast<float>(cell % 8u), static_cast<float>(cell / 8u)) * k_SpriteCell;
+}
+
 int32_t Threshold(uint8_t fullLightGreen)
 {
 	return (static_cast<int32_t>(fullLightGreen) * k_WarmLevels) >> 8;

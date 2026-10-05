@@ -73,6 +73,36 @@ TEST(VillageLights, FlickerEveryThirtyMilliseconds)
 	EXPECT_TRUE(step.flickers);
 }
 
+TEST(VillageLights, FlamesLoopEverySevenHundredMilliseconds)
+{
+	auto step = village_lights::AdvanceFlames(0, 350);
+	EXPECT_EQ(step.clock, 350);
+	EXPECT_EQ(step.step, 15);
+	// The clock only wraps once past the loop
+	step = village_lights::AdvanceFlames(600, 100);
+	EXPECT_EQ(step.clock, 700);
+	EXPECT_EQ(step.step, 31);
+	step = village_lights::AdvanceFlames(600, 150);
+	EXPECT_EQ(step.clock, 50);
+	EXPECT_EQ(step.step, 2);
+}
+
+TEST(VillageLights, FlamesPlayBackwards)
+{
+	EXPECT_EQ(village_lights::FlameCell(0, 0, 0), 31);
+	EXPECT_EQ(village_lights::FlameCell(1, 0, 0), 30);
+	// The second flame is ten cells on, from where it starts
+	EXPECT_EQ(village_lights::FlameCell(1, 1, 13), (10 + 31 - 14) & 31);
+	EXPECT_EQ(village_lights::FlameCell(20, 0, 13), (31 - 1) & 31);
+}
+
+TEST(VillageLights, SpriteCellsAreEightAcross)
+{
+	EXPECT_EQ(village_lights::SpriteCellUv(0), glm::vec2(0.0f));
+	EXPECT_EQ(village_lights::SpriteCellUv(village_lights::k_GlowCell), glm::vec2(0.0f, 7.0f / 8.0f));
+	EXPECT_EQ(village_lights::SpriteCellUv(11), glm::vec2(3.0f / 8.0f, 1.0f / 8.0f));
+}
+
 TEST(VillageLights, ThresholdFollowsTheBrightestLight)
 {
 	EXPECT_EQ(village_lights::Threshold(255), 47);

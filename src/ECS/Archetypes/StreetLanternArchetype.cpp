@@ -10,14 +10,13 @@
 #include "StreetLanternArchetype.h"
 
 #include "3D/AllMeshes.h"
-#include "3D/VillageLights.h"
-#include "Common/GameRandom.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/VillageLight.h"
 #include "ECS/Registry.h"
 #include "Locator.h"
 #include "Resources/ResourceManager.h"
+#include "VillageLightArchetype.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
@@ -32,13 +31,7 @@ entt::entity StreetLanternArchetype::Create(const glm::vec3& position, MobileSta
 	const bool country = info != MobileStaticInfo::StreetLantern;
 	const auto resourceId = resources::HashIdentifier(country ? MeshId::BuildingCampfire : MeshId::ObjectTownLight);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
-	// Its light starts flickering at random, from the C runtime's numbers
-	const auto flickerTimer = Locator::gameRandom::value().CrtRandom(0.0f, village_lights::k_FlickerMilliseconds);
-	registry.Assign<VillageLight>(entity, VillageLight {
-	                                          .kind = country ? VillageLight::Kind::Country : VillageLight::Kind::Town,
-	                                          .flickerTimer = flickerTimer,
-	                                          .flicker = glm::vec2(0.0f),
-	                                          .glowSize = village_lights::k_GlowSize,
-	                                      });
+	// Its light lights the village around it at night
+	VillageLightArchetype::Create(position, country ? VillageLight::Kind::Country : VillageLight::Kind::Town);
 	return entity;
 }
