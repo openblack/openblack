@@ -148,3 +148,14 @@ TEST(SkyDome, EvilDarkensAndFlashWhitens)
 	EXPECT_EQ(flash.modulate, glm::u8vec3(201 + ((54 * 255) >> 8)));
 	EXPECT_EQ(flash.add, glm::u8vec3((255 * 127) >> 8));
 }
+
+TEST(SkyDome, SunAndMoonDimThroughAnOvercast)
+{
+	EXPECT_FLOAT_EQ(sky_dome::ThroughOvercast(200.0f, 0.0f, true), 200.0f);
+	// A full overcast leaves a ninth, in whole steps
+	EXPECT_FLOAT_EQ(sky_dome::ThroughOvercast(200.0f, 1.0f, true), 22.0f);
+	EXPECT_FLOAT_EQ(sky_dome::ThroughOvercast(255.0f, 0.5f, true), 51.0f);
+	// No further past a full one, and not at all without the fog setting
+	EXPECT_FLOAT_EQ(sky_dome::ThroughOvercast(200.0f, 2.0f, true), 22.0f);
+	EXPECT_FLOAT_EQ(sky_dome::ThroughOvercast(200.0f, 1.0f, false), 200.0f);
+}

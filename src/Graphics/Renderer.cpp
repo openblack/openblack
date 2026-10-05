@@ -370,8 +370,15 @@ Renderer::~Renderer() noexcept
 
 void Renderer::ConfigureView(graphics::RenderPass viewId, glm::u16vec2 resolution, uint32_t clearColor) const noexcept
 {
-	bgfx::setViewClear(static_cast<bgfx::ViewId>(viewId), BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, clearColor, 0.0f, 0);
-	bgfx::setViewRect(static_cast<bgfx::ViewId>(viewId), 0, 0, resolution.x, resolution.y);
+	// A scene with a sky of its own is cleared by its sky's pass, which comes first, and drawn over it
+	const auto skyId = static_cast<bgfx::ViewId>(SkyPassOf(viewId));
+	bgfx::setViewClear(skyId, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, clearColor, 0.0f, 0);
+	bgfx::setViewRect(skyId, 0, 0, resolution.x, resolution.y);
+	if (HasSkyPass(viewId))
+	{
+		bgfx::setViewClear(static_cast<bgfx::ViewId>(viewId), BGFX_CLEAR_NONE);
+		bgfx::setViewRect(static_cast<bgfx::ViewId>(viewId), 0, 0, resolution.x, resolution.y);
+	}
 }
 
 void Renderer::Reset(glm::u16vec2 resolution) const noexcept
@@ -1720,7 +1727,14 @@ void Renderer::DrawMoon(RenderPass viewId) const
 	const glm::vec3 colour = glm::vec3(static_cast<float>((moonColour >> 16) & 0xFFu),
 	                                   static_cast<float>((moonColour >> 8) & 0xFFu), static_cast<float>(moonColour & 0xFFu)) /
 	                         255.0f;
-	const float alpha = placement->alpha / 255.0f;
+	// It shows less through an overcast
+	const float alpha =
+	    sky_dome::ThroughOvercast(placement->alpha, _overcast, detail_level::Fog(Locator::config::value().detailLevel)) /
+	    255.0f;
+	if (alpha <= 0.0f)
+	{
+		return;
+	}
 
 	// First its glow, added to the sky
 	const auto& textures = Locator::resources::value().GetTextures();
@@ -1759,22 +1773,24 @@ void Renderer::DrawMoon(RenderPass viewId) const
 		program->SetUniformValue("u_colour", &glowColour);
 		program->SetUniformValue("u_celestial", &celestial);
 		bgfx::setVertexBuffer(0, &buffer);
-		bgfx::setState(k_AdditiveState);
+		bgfx::setState(k_AdditiveState | BGFX_STATE_DEPTH_TEST_GREATER);
 		bgfx::submit(static_cast<bgfx::ViewId>(viewId), toBgfx(program->GetRawHandle()));
 	}
 
-	// Then the moon, blended over the sky, its face turned to the real moon's phase
+	// Then the moon, blended over the sky, its face turned to the real moon's phase. It leaves its depth, so the land
+	// nearer than it is drawn over it and the land beyond it stays hidden.
 	const auto now = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch());
 	const auto phase = moon::Phase(now.count());
-	DrawCelestialMesh(viewId, {
-	                              .meshId = SkyInterface::k_MoonMeshId.value(),
-	                              .textureId = SkyInterface::k_MoonTextureId.value(),
-	                              .alphaTextureId = SkyInterface::k_MoonAlphaTextureId.value(),
-	                              .model = moon::Model(basis, centre, phase),
-	                              .colour = glm::vec4(colour, alpha),
-	                              .celestial = {std::cos(phase), std::sin(phase), 1.0f, 1.0f},
-	                              .state = BGFX_STATE_WRITE_RGB | BGFX_STATE_BLEND_ALPHA,
-	                          });
+	DrawCelestialMesh(
+	    viewId, {
+	                .meshId = SkyInterface::k_MoonMeshId.value(),
+	                .textureId = SkyInterface::k_MoonTextureId.value(),
+	                .alphaTextureId = SkyInterface::k_MoonAlphaTextureId.value(),
+	                .model = moon::Model(basis, centre, phase),
+	                .colour = glm::vec4(colour, alpha),
+	                .celestial = {std::cos(phase), std::sin(phase), 1.0f, 1.0f},
+	                .state = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_BLEND_ALPHA,
+	            });
 }
 
 void Renderer::DrawSun(RenderPass viewId) const
@@ -1784,15 +1800,18 @@ void Renderer::DrawSun(RenderPass viewId) const
 	{
 		return;
 	}
-	// In a warm colour, added to the sky drawn before it; the land drawn after it covers it
+	// It shows less through an overcast
+	const float alpha =
+	    sky_dome::ThroughOvercast(placement->alpha, _overcast, detail_level::Fog(Locator::config::value().detailLevel));
+	// In a warm colour, added to the sky drawn before it, leaving no depth; the land drawn after it covers it
 	DrawCelestialMesh(viewId, {
 	                              .meshId = SkyInterface::k_SunMeshId.value(),
 	                              .textureId = SkyInterface::k_SunTextureId.value(),
 	                              .alphaTextureId = SkyInterface::k_SunTextureId.value(),
 	                              .model = SunModel(placement->position),
-	                              .colour = {0x95 / 255.0f, 0x7C / 255.0f, 0x63 / 255.0f, placement->alpha / 255.0f},
+	                              .colour = {0x95 / 255.0f, 0x7C / 255.0f, 0x63 / 255.0f, alpha / 255.0f},
 	                              .celestial = glm::vec4(0.0f),
-	                              .state = k_AdditiveState,
+	                              .state = k_AdditiveState | BGFX_STATE_DEPTH_TEST_GREATER,
 	                          });
 }
 
@@ -2311,6 +2330,7 @@ TextureHandle Renderer::UpdateLandLight() const
 		const auto& haze = _landLightTable->GetHaze();
 		_haze = {glm::vec4(haze.nearDistance, haze.farDistance, haze.k, 1.0f), glm::vec4(haze.colour, 0.0f)};
 		const auto detailLevel = Locator::config::value().detailLevel;
+		_overcast = overcast;
 		_skyTint = sky_dome::TintOf({
 		    .hazeColour = haze.colour,
 		    .overcast = overcast,
@@ -2478,13 +2498,19 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	const auto& meshManager = Locator::resources::value().GetMeshes();
 	auto& profiler = Locator::profiler::value();
 
+	// The sky is drawn first, in its own pass into the same target, in the order the game draws it: the dome, the sun
+	// and the moon. The scene's pass then draws everything else over it.
+	const auto skyViewId = SkyPassOf(desc.viewId);
 	if (desc.frameBuffer != nullptr)
 	{
 		desc.frameBuffer->Bind(desc.viewId);
+		desc.frameBuffer->Bind(skyViewId);
 	}
 	// This dummy draw call is here to make sure that view is cleared if no
 	// other draw calls are submitted to view
+	bgfx::touch(static_cast<bgfx::ViewId>(skyViewId));
 	bgfx::touch(static_cast<bgfx::ViewId>(desc.viewId));
+	bgfx::setViewMode(static_cast<bgfx::ViewId>(skyViewId), bgfx::ViewMode::Sequential);
 	// bgfx sorts a view's blended draws by their programs unless told to keep them in order. The game draws the temple
 	// in the order it is submitted, and its blended parts must be too: the pool's water, drawn with the lightmap
 	// program, would otherwise land after the hand, whose faded wrist writes depth, and leave a hole in the water
@@ -2492,6 +2518,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
 	bgfx::setViewMode(static_cast<bgfx::ViewId>(desc.viewId), inTemple ? bgfx::ViewMode::Sequential : bgfx::ViewMode::Default);
 
+	_shaderManager->SetCamera(skyViewId, *desc.camera);
 	_shaderManager->SetCamera(desc.viewId, *desc.camera);
 	_modelLight = GetModelLight();
 	if (Locator::camera::has_value())
@@ -2536,7 +2563,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			skyShader->SetUniformValue("u_skyAdd", &u_skyAdd);
 
 			L3DMeshSubmitDesc submitDesc = {};
-			submitDesc.viewId = desc.viewId;
+			submitDesc.viewId = skyViewId;
 			submitDesc.program = skyShader;
 			submitDesc.state = k_BgfxDefaultStateInvertedZ;
 			if (!desc.cullBack)
@@ -2549,8 +2576,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			submitDesc.isSky = true;
 
 			DrawMesh(Locator::skySystem::value().GetMesh(), submitDesc, 0);
-			DrawMoon(desc.viewId);
-			DrawSun(desc.viewId);
+			DrawSun(skyViewId);
+			DrawMoon(skyViewId);
 		}
 	}
 

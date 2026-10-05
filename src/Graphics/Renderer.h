@@ -174,6 +174,8 @@ private:
 	mutable std::array<glm::vec4, 2> _haze {};
 	/// The colours the sky's dome is drawn in this frame
 	mutable sky_dome::Tint _skyTint;
+	/// The overcast at the camera this frame, which dims the sun and the moon
+	mutable float _overcast {0.0f};
 	/// icons.raw with iconsa.raw's alpha, which the creature's room's belts and medals are drawn with, once loaded
 	mutable std::optional<TextureHandle> _iconsTexture;
 	mutable bool _iconsLoaded {false};

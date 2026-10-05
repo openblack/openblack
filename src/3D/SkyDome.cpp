@@ -99,6 +99,16 @@ uint8_t Darkness(float alignment)
 	return static_cast<uint8_t>(std::clamp(darkness, 0, 90));
 }
 
+float ThroughOvercast(float alpha, float overcast, bool fog)
+{
+	const auto whole = static_cast<int>(alpha);
+	if (!fog || !(overcast > 0.0f))
+	{
+		return static_cast<float>(whole);
+	}
+	return static_cast<float>(static_cast<int>(static_cast<float>(whole) / ((std::min(overcast, 1.0f) * 8.0f) + 1.0f)));
+}
+
 Tint TintOf(const TintInputs& inputs)
 {
 	const int overcast = static_cast<int>(std::clamp(inputs.overcast, 0.0f, 1.0f) * 255.0f);

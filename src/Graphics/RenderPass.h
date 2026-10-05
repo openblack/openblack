@@ -35,7 +35,11 @@ enum class RenderPass : uint8_t
 	/// The land seen from above, which the map in the temple's pool is textured with
 	TempleMap,
 	HandShadow,
+	/// The sky of the sea's reflection, drawn first into its target
+	ReflectionSky,
 	Reflection,
+	/// The sky, drawn first into the view: everything in the scene is drawn over it and in front of it
+	Sky,
 	Main,
 	Interface,
 	ImGui,
@@ -56,7 +60,9 @@ static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_
     "Object Shadow Pass",   //
     "Temple Map Pass",      //
     "Hand Shadow Pass",     //
+    "Reflection Sky Pass",  //
     "Reflection Pass",      //
+    "Sky Pass",             //
     "Main Pass",            //
     "Interface Pass",       //
     "ImGui Pass",           //
@@ -65,5 +71,25 @@ static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_
 };
 // Every pass has a name: a short list would leave the last ones empty
 static_assert(std::ranges::none_of(k_RenderPassNames, &std::string_view::empty));
+
+/// Whether a pass draws a scene with its sky in a pass of its own before it
+[[nodiscard]] constexpr bool HasSkyPass(RenderPass pass)
+{
+	return pass == RenderPass::Main || pass == RenderPass::Reflection;
+}
+
+/// The pass a scene's sky is drawn in: the one before it, into the same target, or the scene's own if it has none
+[[nodiscard]] constexpr RenderPass SkyPassOf(RenderPass pass)
+{
+	switch (pass)
+	{
+	case RenderPass::Main:
+		return RenderPass::Sky;
+	case RenderPass::Reflection:
+		return RenderPass::ReflectionSky;
+	default:
+		return pass;
+	}
+}
 
 } // namespace openblack::graphics

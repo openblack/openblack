@@ -121,5 +121,7 @@ struct TintInputs
 /// The dome's colours: white with nothing added on a clear day, towards the haze's colour as an overcast comes in, a
 /// little darker under an evil sky and towards white in a flash of lightning, all in whole steps
 [[nodiscard]] Tint TintOf(const TintInputs& inputs);
+/// How strongly the sun or the moon shows through an overcast: with the fog setting, a full overcast leaves a ninth
+[[nodiscard]] float ThroughOvercast(float alpha, float overcast, bool fog);
 
 } // namespace openblack::sky_dome
