@@ -104,6 +104,8 @@ struct Storm
 	float lastsFor;
 	float strength;
 	float cloudHeight;
+	/// How fast its rain falls: how quickly the streaks' texture scrolls down them
+	float rainSpeed {1.0f};
 	float age;
 
 	/// State after the last update: centre, inner radius and strength scaled by the fade

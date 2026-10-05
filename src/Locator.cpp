@@ -39,6 +39,7 @@
 #include "ECS/Systems/Implementations/MistSystem.h"
 #include "ECS/Systems/Implementations/PathfindingSystem.h"
 #include "ECS/Systems/Implementations/PlayerSystem.h"
+#include "ECS/Systems/Implementations/RainSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/SoundTagSystem.h"
 #include "ECS/Systems/Implementations/TempleExteriorSystem.h"
@@ -82,6 +83,7 @@ using openblack::ecs::systems::LivingActionSystem;
 using openblack::ecs::systems::MistSystem;
 using openblack::ecs::systems::PathfindingSystem;
 using openblack::ecs::systems::PlayerSystem;
+using openblack::ecs::systems::RainSystem;
 using openblack::ecs::systems::RenderingSystem;
 using openblack::ecs::systems::SoundTagSystem;
 using openblack::ecs::systems::TempleExteriorSystem;
@@ -162,6 +164,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::villageLightSystem::emplace<VillageLightSystem>();
 	Locator::cinematicDirectorSystem::emplace<CinematicDirectorSystem>();
 	Locator::soundTagSystem::emplace<SoundTagSystem>();
+	Locator::rainSystem::emplace<RainSystem>();
 	Locator::townDesireSystem::emplace<TownDesireSystem>();
 	return true;
 }
@@ -214,6 +217,7 @@ void openblack::ShutDownServices()
 	Locator::handSystem::reset();
 	Locator::pathfindingSystem::reset();
 	Locator::cinematicDirectorSystem::reset();
+	Locator::rainSystem::reset();
 	Locator::soundTagSystem::reset();
 	Locator::townDesireSystem::reset();
 	Locator::terrainSystem::reset();

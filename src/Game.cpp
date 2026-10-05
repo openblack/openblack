@@ -73,6 +73,7 @@
 #include "ECS/Systems/MistSystemInterface.h"
 #include "ECS/Systems/PathfindingSystemInterface.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
+#include "ECS/Systems/RainSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/Systems/SoundTagSystemInterface.h"
 #include "ECS/Systems/TempleExteriorSystemInterface.h"
@@ -604,6 +605,8 @@ bool Game::Update() noexcept
 	}
 	// The clouds drift with the wind, then every mist and cloud animates
 	Locator::cloudSystem::value().Update(gameTime);
+	// The rain falls as the storm nearest the camera has it
+	Locator::rainSystem::value().Update(std::chrono::duration<float>(gameTime).count(), camera.GetOrigin());
 	Locator::mistSystem::value().Update(gameTime);
 	Locator::villageLightSystem::value().Update(gameTime);
 	Locator::cinematicDirectorSystem::value().Update(gameTime);

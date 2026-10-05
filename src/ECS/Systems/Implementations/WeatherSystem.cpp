@@ -870,6 +870,7 @@ void WeatherSystem::CreateStorm(entt::entity climateEntity)
 		storm.lastsFor = lastsFor;
 		storm.strength = 1.0f;
 		storm.cloudHeight = climate.stormCloudHeight;
+		storm.rainSpeed = climate.stormSpeed;
 		storm.effect = effect;
 		storm.thunderWait = thunderWait;
 		storm.boltWait = boltWait;

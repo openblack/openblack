@@ -41,6 +41,7 @@
 #include "3D/Mists.h"
 #include "3D/OceanInterface.h"
 #include "3D/OrientedText.h"
+#include "3D/Rain.h"
 #include "3D/SkyInterface.h"
 #include "3D/TempleDoors.h"
 #include "3D/TempleInteriorInterface.h"
@@ -66,6 +67,7 @@
 #include "ECS/Systems/AlignmentSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
+#include "ECS/Systems/RainSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
@@ -1807,6 +1809,75 @@ void Renderer::DrawGroundBlobs(const DrawSceneDesc& desc) const
 	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(program->GetRawHandle()));
 }
 
+void Renderer::DrawRain(const DrawSceneDesc& desc) const
+{
+	if (desc.viewId != RenderPass::Main || !Locator::rainSystem::has_value() ||
+	    (Locator::temple::has_value() && Locator::temple::value().Active()))
+	{
+		return;
+	}
+	static constexpr auto k_TextureId = entt::hashed_string("raw/ATMOS");
+	static constexpr auto k_AlphaTextureId = entt::hashed_string("raw/ATMOSA");
+	const auto& textures = Locator::resources::value().GetTextures();
+	if (!textures.Contains(k_TextureId.value()) || !textures.Contains(k_AlphaTextureId.value()))
+	{
+		return;
+	}
+	auto& rainSystem = Locator::rainSystem::value();
+	const auto origin = desc.camera->GetOrigin();
+	const auto tiles = rainSystem.TakeTiles(origin);
+	if (tiles.empty())
+	{
+		return;
+	}
+	const auto streaks = rainSystem.GetStreaks();
+	const float height = rainSystem.GetHeight();
+	struct Vertex
+	{
+		glm::vec3 position;
+		glm::vec2 uv;
+		uint32_t colour;
+	};
+	bgfx::VertexLayout layout;
+	layout.begin()
+	    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+	    .end();
+	const auto* program = _shaderManager->GetShader("Rain");
+	const auto viewId = static_cast<bgfx::ViewId>(TranslucentView(desc.viewId));
+	for (const auto& tile : tiles)
+	{
+		const auto count = static_cast<uint32_t>(tile.streaks) * 2;
+		if (bgfx::getAvailTransientVertexBuffer(count, layout) < count)
+		{
+			return;
+		}
+		bgfx::TransientVertexBuffer buffer;
+		bgfx::allocTransientVertexBuffer(&buffer, count, layout);
+		const auto vertices = std::span(reinterpret_cast<Vertex*>(buffer.data), count);
+		const glm::vec3 centre {tile.centre.x, tile.ground, tile.centre.y};
+		// Each streak is a white line, as opaque as the block's rain at the bottom and fainter at the top, with a row of
+		// the texture scrolling down it
+		for (size_t i = 0; i < static_cast<size_t>(tile.streaks); ++i)
+		{
+			const auto& streak = streaks[i];
+			const auto ends = rain::Ends(streak, height);
+			const auto bottom = static_cast<uint32_t>(rain::StreakAlpha(tile.alpha, streak.phase)) & 0xFFu;
+			const auto top = static_cast<uint32_t>(rain::StreakAlpha(tile.alphaTop, streak.phase)) & 0xFFu;
+			vertices[i * 2] = {centre + ends[0], {streak.scroll, rain::k_TextureRow}, (bottom << 24u) | 0xFFFFFFu};
+			vertices[(i * 2) + 1] = {centre + ends[1], {streak.scroll + 1.0f, rain::k_TextureRow}, (top << 24u) | 0xFFFFFFu};
+		}
+		program->SetTextureSampler("s_diffuse", 0, *textures.Handle(k_TextureId));
+		program->SetTextureSampler("s_alpha", 1, *textures.Handle(k_AlphaTextureId));
+		bgfx::setVertexBuffer(0, &buffer);
+		// Lines, blended over what is behind, tested against depth but leaving none
+		bgfx::setState(BGFX_STATE_PT_LINES | BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_BLEND_ALPHA);
+		// In its place among what blends, by the ground under the block's centre
+		bgfx::submit(viewId, toBgfx(program->GetRawHandle()), zsort::Depth(centre, origin));
+	}
+}
+
 void Renderer::DrawMoon(RenderPass viewId) const
 {
 	if (!Locator::camera::has_value())
@@ -2935,6 +3006,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			DrawTempleMapMarkers(desc);
 			DrawCaveTrophies(desc);
 			DrawGroundBlobs(desc);
+			DrawRain(desc);
 			// The mists blend over the rest, the farthest first
 			DrawMists(desc);
 

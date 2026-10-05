@@ -96,6 +96,8 @@ private:
 	void DrawMoon(RenderPass viewId) const;
 	/// The villagers' ground blobs, in the main view
 	void DrawGroundBlobs(const DrawSceneDesc& desc) const;
+	/// The rain about the camera, each block's in its place among what blends, in the main view
+	void DrawRain(const DrawSceneDesc& desc) const;
 	/// A mesh of the sky's, in a colour, with a texture and that texture's alpha
 	struct CelestialDraw
 	{
