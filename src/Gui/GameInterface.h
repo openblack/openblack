@@ -22,6 +22,7 @@
 #include "DialogPainter.h"
 #include "GameFont.h"
 #include "GameMenu.h"
+#include "ScreenFade.h"
 #include "TextDatabase.h"
 #include "ToolTips.h"
 
@@ -76,6 +77,8 @@ public:
 
 	/// What the hand shows for what it is over
 	[[nodiscard]] ToolTips& GetToolTips() noexcept { return _toolTips; }
+	/// The colour over the whole screen, over the interface too, which the temple fades in and out by
+	[[nodiscard]] ScreenFade& GetScreenFade() noexcept { return _screenFade; }
 	/// Where on the screen the hand is, in pixels, which the tooltip is drawn by, or nowhere to show none
 	void SetHandOnScreen(std::optional<glm::vec2> position) { _handOnScreen = position; }
 
@@ -104,6 +107,7 @@ private:
 	std::unique_ptr<GameMenu> _menu;
 	std::optional<Message> _message;
 	ToolTips _toolTips;
+	ScreenFade _screenFade;
 	std::optional<glm::vec2> _handOnScreen;
 	/// Whether the tooltip is left of the hand, which it moves to in the right third of the screen and from in the left
 	bool _toolTipOnLeft {false};

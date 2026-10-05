@@ -273,6 +273,7 @@ void GameInterface::Update(float deltaSeconds)
 {
 	_menu->Update(deltaSeconds);
 	_toolTips.Update(deltaSeconds);
+	_screenFade.Update(deltaSeconds);
 }
 
 void GameInterface::Draw(glm::u16vec2 resolution, glm::ivec2 mouse, uint32_t milliseconds, bool overDebugWindow)
@@ -298,6 +299,11 @@ void GameInterface::Draw(glm::u16vec2 resolution, glm::ivec2 mouse, uint32_t mil
 	if (menuOpen || overDebugWindow)
 	{
 		_painter.DrawPointer(_pointerCanvas, mouse, milliseconds);
+	}
+	// LH3DRender::FinishFrame covers the frame with the fade's colour last of all
+	if (const auto fade = _screenFade.GetColour(); fade.a > 0.0f)
+	{
+		_canvas.DrawQuad(glm::vec2(0.0f), glm::vec2(resolution), glm::vec2(0.0f), glm::vec2(1.0f), fade, nullptr);
 	}
 	_canvas.End();
 	_pointerCanvas.End();
