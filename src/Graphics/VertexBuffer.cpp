@@ -13,6 +13,8 @@
 
 #include <array>
 
+#include <spdlog/spdlog.h>
+
 #include "GraphicsHandleBgfx.h"
 
 using namespace openblack::graphics;
@@ -79,9 +81,18 @@ VertexBuffer::VertexBuffer(std::string name, const void* mem, VertexDecl decl, b
 	else
 	{
 		_handle = fromBgfx(bgfx::createVertexBuffer(bgfxMem, layout));
-		bgfx::setName(toBgfx(_handle), _name.c_str());
 	}
 	_layoutHandle = fromBgfx(bgfx::createVertexLayout(layout));
+	if (!IsValid())
+	{
+		// Out of handles, setting a name would write past bgfx's own arrays; the buffer is left empty and isn't drawn
+		SPDLOG_LOGGER_WARN(spdlog::get("graphics"), "{}: out of bgfx buffer handles, not created", _name);
+		return;
+	}
+	if (!_dynamic)
+	{
+		bgfx::setName(toBgfx(_handle), _name.c_str());
+	}
 }
 
 VertexBuffer::~VertexBuffer() noexcept
@@ -115,8 +126,17 @@ uint32_t VertexBuffer::GetSizeInBytes() const noexcept
 	return _vertexCount * _strideBytes;
 }
 
+bool VertexBuffer::IsValid() const noexcept
+{
+	return _dynamic ? bgfx::isValid(toBgfx(_dynamicHandle)) : bgfx::isValid(toBgfx(_handle));
+}
+
 void VertexBuffer::Bind() const
 {
+	if (!IsValid())
+	{
+		return;
+	}
 	if (_dynamic)
 	{
 		bgfx::setVertexBuffer(0, toBgfx(_dynamicHandle), 0, _vertexCount, toBgfx(_layoutHandle));
@@ -130,5 +150,9 @@ void VertexBuffer::Bind() const
 void VertexBuffer::Update(const void* memory) const
 {
 	assert(_dynamic);
+	if (!IsValid())
+	{
+		return;
+	}
 	bgfx::update(toBgfx(_dynamicHandle), 0, reinterpret_cast<const bgfx::Memory*>(memory));
 }

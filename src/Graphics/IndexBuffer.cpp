@@ -15,6 +15,7 @@
 #include <utility>
 
 #include <bgfx/bgfx.h>
+#include <spdlog/spdlog.h>
 
 #include "GraphicsHandleBgfx.h"
 
@@ -31,6 +32,12 @@ IndexBuffer::IndexBuffer(std::string name, const void* indices, uint32_t indexCo
 
 	const auto* mem = bgfx::makeRef(indices, indexCount * GetTypeSize(_type));
 	_handle = fromBgfx(bgfx::createIndexBuffer(mem, type == Type::Uint32 ? BGFX_BUFFER_INDEX32 : 0));
+	if (!bgfx::isValid(toBgfx(_handle)))
+	{
+		// Out of handles, setting a name would write past bgfx's own arrays; the buffer is left empty and isn't drawn
+		SPDLOG_LOGGER_WARN(spdlog::get("graphics"), "{}: out of bgfx buffer handles, not created", _name);
+		return;
+	}
 	bgfx::setName(toBgfx(_handle), _name.c_str());
 }
 
@@ -43,6 +50,12 @@ IndexBuffer::IndexBuffer(std::string name, const void* mem, Type type)
 	_count = memBgfx->size / sizeof(uint16_t);
 
 	_handle = fromBgfx(bgfx::createIndexBuffer(memBgfx, type == Type::Uint32 ? BGFX_BUFFER_INDEX32 : 0));
+	if (!bgfx::isValid(toBgfx(_handle)))
+	{
+		// Out of handles, setting a name would write past bgfx's own arrays; the buffer is left empty and isn't drawn
+		SPDLOG_LOGGER_WARN(spdlog::get("graphics"), "{}: out of bgfx buffer handles, not created", _name);
+		return;
+	}
 	bgfx::setName(toBgfx(_handle), _name.c_str());
 }
 
@@ -79,7 +92,16 @@ uint32_t IndexBuffer::GetTypeSize(Type type)
 	return static_cast<uint32_t>(type == Type::Uint16 ? sizeof(uint16_t) : sizeof(uint32_t));
 }
 
+bool IndexBuffer::IsValid() const noexcept
+{
+	return bgfx::isValid(toBgfx(_handle));
+}
+
 void IndexBuffer::Bind(uint32_t count, uint32_t startIndex) const
 {
+	if (!IsValid())
+	{
+		return;
+	}
 	bgfx::setIndexBuffer(toBgfx(_handle), startIndex, count);
 }

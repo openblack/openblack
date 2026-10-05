@@ -81,6 +81,8 @@ public:
 	[[nodiscard]] uint32_t GetStrideBytes() const noexcept;
 	[[nodiscard]] uint32_t GetSizeInBytes() const noexcept;
 
+	/// Whether bgfx made the buffer; one it couldn't make isn't drawn
+	[[nodiscard]] bool IsValid() const noexcept;
 	void Bind() const;
 	/// Replaces a dynamic buffer's vertices, from the start, with bgfx memory of as many or fewer
 	void Update(const void* memory) const;
