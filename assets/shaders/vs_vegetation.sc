@@ -1,5 +1,5 @@
 $input a_position, a_texcoord0, a_normal, a_indices, i_data0, i_data1, i_data2, i_data3
-$output v_position, v_texcoord0, v_normal, v_color0, v_haze
+$output v_position, v_texcoord0, v_normal, v_color0, v_haze, v_snow, v_snowLight
 
 #if BGFX_SHADER_LANGUAGE_HLSL == 3
 #define BGFX_CONFIG_MAX_BONES 48
@@ -19,6 +19,7 @@ uniform vec4 u_islandExtent;
 
 #include "haze.sh"
 #include "land_light.sh"
+#include "model_light.sh"
 #include "snow.sh"
 
 void main()
@@ -59,11 +60,23 @@ void main()
     {
         added = min(added + LandColourCellAt(origin.xz), vec3_splat(255.0));
     }
-    // w: how much snow shows on the tree, of 255
     v_haze = vec4(added / 255.0, 0.0);
+    // The snow on the tree: where its texture is read, how much of it shows of 255, and its own light, which unlike the
+    // tree's is shaded by the model light
+    v_snow = vec4_splat(0.0);
+    v_snowLight = vec3_splat(0.0);
     if (u_snow.x > 0.5)
     {
-        v_haze.w = SnowObjectLevel(origin.xz, 255.0, 255.0) / 255.0;
+        float snowLevel = SnowObjectLevel(origin.xz, 255.0, 255.0);
+        if (snowLevel > 0.0)
+        {
+            vec3 worldNormal = normalize(instMul(model, vec4(a_normal, 0.0)).xyz);
+            vec3 localLight = ModelLightLocal(instMul(model, vec4(1.0, 0.0, 0.0, 0.0)).xyz,
+                                              instMul(model, vec4(0.0, 1.0, 0.0, 0.0)).xyz,
+                                              instMul(model, vec4(0.0, 0.0, 1.0, 0.0)).xyz, origin);
+            v_snow = vec4(SnowUv(a_position.xyz, worldNormal), snowLevel / 255.0, 0.0);
+            v_snowLight = ModelLightColour(SnowColour(colour), ModelLightFactor(a_normal, localLight));
+        }
     }
     v_color0 = vec4(colour / 255.0, 1.0);
 

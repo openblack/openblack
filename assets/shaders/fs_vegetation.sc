@@ -1,4 +1,4 @@
-$input v_position, v_texcoord0, v_normal, v_color0, v_haze
+$input v_position, v_texcoord0, v_normal, v_color0, v_haze, v_snow, v_snowLight
 
 #include <bgfx_shader.sh>
 
@@ -19,11 +19,11 @@ void main()
 	{
 		discard;
 	}
-	// Snow covers the tree where it shows, in the same light, over its own texture
-	float snowLevel = floor(v_haze.w * 255.0f + 0.5f);
-	if (snowLevel > 0.0f && SnowShows(snowLevel, texture2D(s_snowAlpha, v_texcoord0.xy).r))
+	// Snow covers the tree where it shows, in its own light, over its own texture
+	float snowLevel = floor(v_snow.z * 255.0f + 0.5f);
+	if (snowLevel > 0.0f && SnowShows(snowLevel, texture2D(s_snowAlpha, v_snow.xy).r))
 	{
-		diffuseTex.rgb = texture2D(s_snow, v_texcoord0.xy).rgb * light;
+		diffuseTex.rgb = texture2D(s_snow, v_snow.xy).rgb * v_snowLight;
 	}
 	// The distance haze is added after the texture
 	gl_FragColor = vec4(min(diffuseTex.rgb + v_haze.rgb, vec3_splat(1.0f)), diffuseTex.a);

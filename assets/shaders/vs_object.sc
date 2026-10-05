@@ -7,7 +7,7 @@ $input a_position, a_texcoord0, a_normal, a_indices, a_texcoord3
 #else
 $input a_position, a_texcoord0, a_normal, a_indices
 #endif
-$output v_position, v_texcoord0, v_normal, v_color0, v_haze
+$output v_position, v_texcoord0, v_normal, v_color0, v_haze, v_snow, v_snowLight
 
 // Every bone's matrix is uploaded with each draw: meshes without bones declare one
 #ifndef BGFX_CONFIG_MAX_BONES
@@ -103,11 +103,20 @@ void main()
 #endif // USE_LIGHTMAP
 	// w: how much snow shows on it, of 255. An instance can have its own rate and cap of 256 for it, as a field's crop has.
 	v_haze = vec4(added / 255.0f, 0.0f);
+	// The snow on it: where its texture is read, how much of it shows of 255, and its own light, by the object's colour
+	v_snow = vec4_splat(0.0f);
+	v_snowLight = vec3_splat(0.0f);
 #ifdef USE_INSTANCING
 	if (u_snow.x > 0.5f)
 	{
 		float snowCap = i_data4.w > 0.0f ? i_data4.w : 255.0f;
-		v_haze.w = SnowObjectLevel(origin.xz, snowCap, snowCap) / 255.0f;
+		float snowLevel = SnowObjectLevel(origin.xz, snowCap, snowCap);
+		if (snowLevel > 0.0f)
+		{
+			vec3 worldNormal = normalize(TO_WORLD(vec4(a_normal, 0.0f)).xyz);
+			v_snow = vec4(SnowUv(a_position.xyz, worldNormal), snowLevel / 255.0f, 0.0f);
+			v_snowLight = ModelLightColour(SnowColour(colour), ModelLightFactor(a_normal, localLight));
+		}
 	}
 #endif // USE_INSTANCING
 	v_color0 = vec4(ModelLightColour(colour, ModelLightFactor(a_normal, localLight)), 1.0f);
