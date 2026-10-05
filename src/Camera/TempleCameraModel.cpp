@@ -980,8 +980,23 @@ void TempleCameraModel::ZoomToCaveTarget(CreatureCaveTargets::Target target)
 		_caveLook = {k_ExitEye, k_ExitPlace};
 		Locator::temple::value().FadeToWhite();
 		break;
+	case Target::Belts:
+	case Target::Medals:
+	{
+		// TODO(raffclar): with no script of the temple's running, the belts start "CitadelCreatureRoomAttackDummies" and
+		//                 the medals "CitadelCreatureRoomMagicPlinths"
+		const auto offset = static_cast<uint32_t>(target);
+		const auto eye = CaveMeshPoint(k_FirstEyePoint + offset);
+		const auto look = CaveMeshPoint(k_FirstLookPoint + offset);
+		if (!eye.has_value() || !look.has_value())
+		{
+			return;
+		}
+		_caveLook = {*eye, *look};
+		break;
+	}
 	default:
-		// TODO(raffclar): the belts and medals zoom in, and the creature opens the tattoo editor
+		// The fourth place does nothing, and the creature isn't a target yet
 		return;
 	}
 	_caveZoomTarget = 1.0f;
