@@ -51,6 +51,7 @@
 #include "ECS/Components/Tree.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/AlignmentSystemInterface.h"
+#include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
@@ -70,6 +71,7 @@
 #include "Graphics/Primitive.h"
 #include "Graphics/SeaRows.h"
 #include "Graphics/ShaderManager.h"
+#include "Graphics/Sun.h"
 #include "Graphics/TreeBrightness.h"
 #include "Graphics/VertexBuffer.h"
 #include "Locator.h"
@@ -1517,7 +1519,7 @@ void Renderer::DrawHandWaterGlow(const DrawSceneDesc& desc) const
 	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(spriteShader->GetRawHandle()));
 }
 
-void Renderer::DrawSun(RenderPass viewId) const
+void Renderer::DrawSunMesh(RenderPass viewId, const glm::mat4& model, const glm::vec4& colour, uint64_t depthTest) const
 {
 	const auto& meshes = Locator::resources::value().GetMeshes();
 	const auto& textures = Locator::resources::value().GetTextures();
@@ -1525,32 +1527,6 @@ void Renderer::DrawSun(RenderPass viewId) const
 	{
 		return;
 	}
-	// The sun follows the script time: it rises from 6 to noon to 7500 units high and sets as it rose, coming up from 3
-	// and going down after 18, a third of the way each hour
-	const float hour = Locator::skySystem::value().GetClock().GetScriptTime();
-	const float height = 7500.0f * (std::clamp(std::min(hour, 24.0f - hour), 6.0f, 12.0f) - 6.0f) / 6.0f;
-	float alpha = 255.0f;
-	if (hour < 3.0f || hour > 21.0f)
-	{
-		return;
-	}
-	if (hour < 6.0f)
-	{
-		alpha = (hour - 3.0f) * 85.0f;
-	}
-	else if (hour > 18.0f)
-	{
-		alpha = 255.0f - ((hour - 18.0f) * 85.0f);
-	}
-	if (alpha <= 0.0f)
-	{
-		return;
-	}
-
-	// Far out to the north west, facing the island, added to the sky drawn before it
-	const auto model = glm::translate(glm::vec3(-30000.0f, height, -30000.0f)) *
-	                   glm::rotate(-3.0f * glm::pi<float>() / 4.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-	const glm::vec4 colour {0x95 / 255.0f, 0x7C / 255.0f, 0x63 / 255.0f, alpha / 255.0f};
 	const glm::vec4 celestial {0.0f};
 	const auto* program = _shaderManager->GetShader("Celestial");
 	const auto texture = textures.Handle(SkyInterface::k_SunTextureId);
@@ -1569,10 +1545,70 @@ void Renderer::DrawSun(RenderPass viewId) const
 				subMesh->GetMesh().GetIndexBuffer().Bind(primitive.indicesCount, primitive.indicesOffset);
 			}
 			subMesh->GetMesh().GetVertexBuffer().Bind();
-			bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE));
+			// Added to what is behind it
+			bgfx::setState(BGFX_STATE_WRITE_RGB | depthTest |
+			               BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE));
 			bgfx::submit(static_cast<bgfx::ViewId>(viewId), toBgfx(program->GetRawHandle()));
 		}
 	}
+}
+
+namespace
+{
+/// Far out to the north west, facing the island
+glm::mat4 SunModel(const glm::vec3& position)
+{
+	return glm::translate(position) * glm::rotate(-3.0f * glm::pi<float>() / 4.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+}
+} // namespace
+
+void Renderer::DrawSun(RenderPass viewId) const
+{
+	const auto placement = sun::Place(Locator::skySystem::value().GetClock().GetScriptTime());
+	if (!placement)
+	{
+		return;
+	}
+	// In a warm colour, over the sky drawn before it; the land drawn after it covers it
+	const glm::vec4 colour {0x95 / 255.0f, 0x7C / 255.0f, 0x63 / 255.0f, placement->alpha / 255.0f};
+	DrawSunMesh(viewId, SunModel(placement->position), colour, 0);
+}
+
+void Renderer::DrawSunGlare(const Camera& camera) const
+{
+	const auto placement = sun::Place(Locator::skySystem::value().GetClock().GetScriptTime());
+	if (!placement)
+	{
+		return;
+	}
+	const auto model = SunModel(placement->position);
+
+	// Each sample of the sun the land or a thing hides from the camera dims the glare by a fifth
+	int hidden = 0;
+	const auto origin = camera.GetOrigin();
+	const auto right = glm::vec3(model * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+	if (Locator::dynamicsSystem::has_value())
+	{
+		for (const auto& offset : sun::k_GlareSamples)
+		{
+			auto sample = placement->position + (right * offset.x) + glm::vec3(0.0f, offset.y, 0.0f);
+			sample.y = std::max(sample.y, sun::k_GlareLowestSample);
+			const auto towards = sample - origin;
+			if (Locator::dynamicsSystem::value().RayCastClosestHit(origin, glm::normalize(towards), glm::length(towards)))
+			{
+				++hidden;
+			}
+		}
+	}
+	const auto frameMilliseconds = static_cast<uint32_t>(Locator::time::value().GetFrameGameTime().count());
+	_sunGlare = sun::EaseGlare(_sunGlare, hidden, frameMilliseconds);
+	if (_sunGlare <= 0.0f)
+	{
+		return;
+	}
+	// Larger, in an orange colour, over everything in the view
+	const glm::vec4 colour {0xA0 / 255.0f, 0x6A / 255.0f, 0x35 / 255.0f, _sunGlare * placement->alpha / (255.0f * 255.0f)};
+	DrawSunMesh(RenderPass::Main, model * glm::scale(glm::vec3(sun::k_GlareScale)), colour, 0);
 }
 
 void Renderer::DrawLandAlphaPass(const DrawSceneDesc& drawDesc) const
@@ -2361,6 +2397,12 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				});
 			}
 		}
+	}
+
+	// The sun's glare over everything else in the view
+	if (desc.viewId == RenderPass::Main && desc.drawSky)
+	{
+		DrawSunGlare(*desc.camera);
 	}
 
 	// The hand's glow lies on the water, under the sea that is blended over it

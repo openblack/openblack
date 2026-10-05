@@ -79,6 +79,9 @@ private:
 	void DrawLandAlphaPass(const DrawSceneDesc& drawDesc) const;
 	/// The sun in the sky, after the sky's dome
 	void DrawSun(RenderPass viewId) const;
+	/// The sun's glare over the finished view, dimmed by what hides the sun from the camera
+	void DrawSunGlare(const Camera& camera) const;
+	void DrawSunMesh(RenderPass viewId, const glm::mat4& model, const glm::vec4& colour, uint64_t depthTest) const;
 	/// The hand's glow on the water at night, under the sea
 	void DrawHandWaterGlow(const DrawSceneDesc& desc) const;
 	/// The sea's rows, ripple, period and colour for the camera
@@ -133,6 +136,8 @@ private:
 	mutable std::unique_ptr<LandLightTable> _landLightTable;
 	/// The sea's ripple step, 0 to 15, moving on each frame the sea's rows are drawn while the game's time goes on
 	mutable uint8_t _seaRippleStep {0};
+	/// How strongly the sun glares, 0 to 255, easing towards how much of the sun shows
+	mutable float _sunGlare {0.0f};
 	mutable std::optional<TextureHandle> _landLightTexture;
 	/// u_haze and u_hazeColour of the frame's distance haze, off until the land's light is built
 	mutable std::array<glm::vec4, 2> _haze {};
