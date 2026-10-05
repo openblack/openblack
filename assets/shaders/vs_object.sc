@@ -34,6 +34,9 @@ uniform vec4 u_uvOffset;
 SAMPLER2D(s_heightmap, 1);
 #endif // USE_HEIGHT_MAP
 uniform vec4 u_islandExtent;
+#ifdef USE_HEIGHT_MAP
+#include "land_altitude.sh"
+#endif // USE_HEIGHT_MAP
 
 #ifndef USE_LIGHTMAP
 #include "land_light.sh"
@@ -110,17 +113,26 @@ void main()
 #endif // USE_INSTANCING
 
 #ifdef USE_HEIGHT_MAP
+	// The model goes with the land: each vertex moves along the model's up by how much higher the land is under it
+	// than under the model's origin, and the model keeps its own height over the land
 #ifdef USE_INSTANCING
-	float original_height = i_data3.y;
+	vec3 modelOrigin = i_data3.xyz;
+	vec3 modelUp = i_data1.xyz;
+	float modelScale = length(i_data0.xyz);
 #else
-    float original_height = u_model[modelIndex][3].y;
+	vec3 modelOrigin = u_model[modelIndex][3].xyz;
+	vec3 modelUp = u_model[modelIndex][1].xyz;
+	float modelScale = length(u_model[modelIndex][0].xyz);
 #endif // USE_INSTANCING
-	// The height map has a texel for each corner of the land's cells, 10 units apart: sample at the centre of the texel
-	// of the vertex's position
-	vec2 texels = (extentMax - extentMin) / 10.0f + 1.0f;
-	vec2 blockUv = ((v_position.xz - extentMin) / 10.0f + 0.5f) / texels;
-	float terrain_height = texture2DLod(s_heightmap, blockUv, 0.0f).r * 170.85f;
-	v_position.y += terrain_height - original_height;
+	float rise = LandAltitude(v_position.xz) - LandAltitude(modelOrigin.xz);
+	if (modelUp.x == 0.0f && modelUp.z == 0.0f)
+	{
+		v_position.y += rise;
+	}
+	else
+	{
+		v_position.xyz += modelUp * (rise / modelScale);
+	}
 #endif // USE_HEIGHT_MAP
 
 #ifdef USE_LIGHTMAP

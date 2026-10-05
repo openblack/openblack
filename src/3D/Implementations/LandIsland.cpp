@@ -187,8 +187,8 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 
 	_heightMap = std::make_unique<Texture2D>("Height Map");
 	const auto heightMapData = CreateHeightMap();
-	_heightMap->Create(indexSize.x * k_CellCount + 1, indexSize.y * k_CellCount + 1, 1, graphics::TextureFormat::R8,
-	                   Wrapping::ClampEdge, Filter::Linear,
+	_heightMap->Create(indexSize.x * k_CellCount + 1, indexSize.y * k_CellCount + 1, 1, graphics::TextureFormat::RG8,
+	                   Wrapping::ClampEdge, Filter::Nearest,
 	                   bgfx::makeRef(heightMapData.data(), static_cast<uint32_t>(heightMapData.size())));
 
 	_luminosityMap = std::make_unique<Texture2D>("Luminosity Map");
@@ -351,7 +351,8 @@ std::vector<uint8_t> LandIsland::CreateHeightMap() const
 	std::vector<uint8_t> data;
 	const auto extentSize = _extentIndexMax - _extentIndexMin + glm::u16vec2(1, 1);
 	const auto resolution = extentSize * static_cast<uint16_t>(k_CellCount) + static_cast<uint16_t>(1);
-	data.resize(resolution.x * resolution.y, 0);
+	// Two bytes a corner: its altitude, and whether its cell is split the other way
+	data.resize(static_cast<size_t>(resolution.x) * resolution.y * 2, 0);
 
 	for (const auto& block : _landBlocks)
 	{
@@ -364,11 +365,11 @@ std::vector<uint8_t> LandIsland::CreateHeightMap() const
 				const auto offset = glm::u16vec2(x, y);
 				const auto cellPos = mapPos * static_cast<int>(k_CellCount) + static_cast<glm::ivec2>(offset);
 				const auto& cell = GetCell(blockOffset + offset);
-				if ((cellPos.y * resolution.x) + cellPos.x < static_cast<int>(data.size()))
+				const auto texel = static_cast<size_t>((cellPos.y * resolution.x) + cellPos.x) * 2;
+				if (texel + 1 < data.size())
 				{
-					// Flat at sea level, as the land is drawn
-					data.at((cellPos.y * resolution.x) + cellPos.x) =
-					    static_cast<uint8_t>(std::lround(GetDrawnAltitude(cell.altitude) / k_HeightUnit));
+					data.at(texel) = cell.altitude;
+					data.at(texel + 1) = cell.properties.split != 0 ? 255 : 0;
 				}
 			}
 		}

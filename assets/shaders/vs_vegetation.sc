@@ -13,6 +13,9 @@ $output v_position, v_texcoord0, v_normal, v_color0, v_haze
 SAMPLER2D(s_heightmap, 1);
 #endif // USE_HEIGHT_MAP
 uniform vec4 u_islandExtent;
+#ifdef USE_HEIGHT_MAP
+#include "land_altitude.sh"
+#endif // USE_HEIGHT_MAP
 
 #include "haze.sh"
 #include "land_light.sh"
@@ -37,16 +40,10 @@ void main()
     v_position = worldPosition;
 
 #ifdef USE_HEIGHT_MAP
-    // Move the whole tree onto the height map's land under its base. Trees are placed on the land already, so this is
-    // only for land that has changed since. The height map has a texel for each corner of the land's cells, 10 units
-    // apart: sample at the centre of the texel of the base's position.
-    vec2 extentMin = u_islandExtent.xy;
-    vec2 extentMax = u_islandExtent.zw;
+    // Move the whole tree onto the land under its base. Trees are placed on the land already, so this is only for land
+    // that has changed since.
     vec3 treeBasePos = vec3(model[3][0], model[3][1], model[3][2]);
-    vec2 texels = (extentMax - extentMin) / 10.0 + 1.0;
-    vec2 baseUv = ((treeBasePos.xz - extentMin) / 10.0 + 0.5) / texels;
-    float terrain_height = texture2DLod(s_heightmap, baseUv, 0.0).r * 170.85;
-    v_position.y += terrain_height - treeBasePos.y;
+    v_position.y += LandAltitude(treeBasePos.xz) - treeBasePos.y;
 #endif // USE_HEIGHT_MAP
 
     // The game makes its trees unlit: no light shades them, they take the land's light of the cell they stand in, scaled
