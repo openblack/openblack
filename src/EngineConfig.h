@@ -57,7 +57,6 @@ struct EngineConfig
 	bool running {false};
 
 	float timeOfDay {12.0f};
-	float skyAlignment {0.0f};
 	float bumpMapStrength {1.0f};
 	float smallBumpMapStrength {1.0f};
 

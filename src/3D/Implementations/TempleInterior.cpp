@@ -41,6 +41,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/AlignmentSystemInterface.h"
 #include "ECS/Systems/Implementations/CameraPathSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystemTemple.h"
@@ -788,9 +789,10 @@ void TempleInterior::Update(std::chrono::microseconds dt)
 		}
 		UpdateMapMarkers(milliseconds / 1000.0f);
 		// Temple::Draw lights the temple by the alignment, pulsing by GetTickCount
-		_light = TempleLight::At(_alignment, static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
-		                                                               std::chrono::steady_clock::now().time_since_epoch())
-		                                                               .count()));
+		_light = TempleLight::At(Locator::alignmentSystem::value().GetCameraAlignment(),
+		                         static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
+		                                                   std::chrono::steady_clock::now().time_since_epoch())
+		                                                   .count()));
 		// CreatureRoom::Update chooses the belts and medals every frame
 		if (IsRoomDrawn(TempleRoom::CreatureCave))
 		{

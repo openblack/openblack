@@ -135,9 +135,6 @@ public:
 	[[nodiscard]] virtual const std::vector<TempleMapMarker>& GetMapMarkers() const = 0;
 	/// The temple's light this frame, which its rooms and what is in them are drawn in (Temple::Draw)
 	[[nodiscard]] virtual const TempleLight& GetLight() const = 0;
-	/// The alignment the temple is lit by, from -1, evil, to 1, good
-	[[nodiscard]] virtual float GetAlignment() const = 0;
-	virtual void SetAlignment(float alignment) = 0;
 	/// The belts and medals the creature's room shows, while it is drawn (CreatureRoom::UpdateBeltsAndMedals)
 	[[nodiscard]] virtual const std::vector<TempleCaveTrophy>& GetCaveTrophies() const = 0;
 	/// How far the markers have turned, in radians (0xE3A194)

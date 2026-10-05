@@ -46,6 +46,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/AlignmentSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "EngineConfig.h"
@@ -1570,7 +1571,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		if (desc.drawSky)
 		{
 			const auto modelMatrix = glm::mat4(1.0f);
-			const glm::vec4 u_typeAlignment = {skyType, Locator::config::value().skyAlignment + 1.0f, 0.0f, 0.0f};
+			// The sky's alignment from 0, evil, to 2, good
+			const glm::vec4 u_typeAlignment = {skyType, Locator::alignmentSystem::value().GetSkyAlignment() + 1.0f, 0.0f, 0.0f};
 
 			skyShader->SetTextureSampler("s_diffuse", 0, Locator::skySystem::value().GetTexture());
 			skyShader->SetUniformValue("u_typeAlignment", &u_typeAlignment);

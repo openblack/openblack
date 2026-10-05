@@ -58,6 +58,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/AlignmentSystemInterface.h"
 #include "ECS/Systems/CameraBookmarkSystemInterface.h"
 #include "ECS/Systems/CameraPathSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
@@ -346,10 +347,13 @@ bool Game::GameLogicLoop() noexcept
 		weather = weatherSystem.GetWeatherSmooth(cameraPosition);
 	}
 
+	// GPlayer::ProcessPlayers ends each turn with the camera taking the alignment of the player of most influence where it
+	// is
+	Locator::alignmentSystem::value().UpdateTurn();
+
 	if (_atmosAudio)
 	{
-		// TODO(raffclar): alignment of the most influential player at the camera once influence is simulated
-		_atmosAudio->SetAlignment(0.0f);
+		_atmosAudio->SetAlignment(Locator::alignmentSystem::value().GetCameraAlignment());
 		_atmosAudio->EndTurn({
 		    .camera = cameraPosition,
 		    .weather =
@@ -540,6 +544,7 @@ bool Game::Update() noexcept
 	// Tree::PreDraw's g_game_time_inc: game time, none while paused, quicker or slower with the game speed
 	const auto gameTime = _paused ? std::chrono::duration<float, std::milli>::zero()
 	                              : std::chrono::duration<float, std::milli>(deltaTime) / _gameSpeedMultiplier;
+	Locator::alignmentSystem::value().Update(gameTime);
 	{
 		auto actions = profiler.BeginScoped(Profiler::Stage::VegetationUpdate);
 		Locator::vegetation::value().Update(gameTime);

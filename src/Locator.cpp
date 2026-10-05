@@ -27,6 +27,7 @@
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/MapProduction.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/Implementations/AlignmentSystem.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
 #include "ECS/Systems/Implementations/CameraPathSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
@@ -61,6 +62,7 @@ using openblack::chlapi::CHLApi;
 using openblack::debug::gui::DebugGuiInterface;
 using openblack::ecs::MapProduction;
 using openblack::ecs::Registry;
+using openblack::ecs::systems::AlignmentSystem;
 using openblack::ecs::systems::CameraBookmarkSystem;
 using openblack::ecs::systems::CameraPathSystem;
 using openblack::ecs::systems::DynamicsSystem;
@@ -134,6 +136,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::temple::emplace<TempleInterior>();
 	Locator::oceanSystem::emplace<Ocean>();
 	Locator::skySystem::emplace<Sky>();
+	Locator::alignmentSystem::emplace<AlignmentSystem>();
 	Locator::time::emplace<TimeSystem>();
 	Locator::vegetation::emplace<VegetationSystem>();
 	return true;

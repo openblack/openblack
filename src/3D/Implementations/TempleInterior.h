@@ -64,8 +64,6 @@ public:
 	[[nodiscard]] const std::vector<TempleMapMarker>& GetMapMarkers() const override { return _mapMarkers; }
 	[[nodiscard]] const std::vector<TempleCaveTrophy>& GetCaveTrophies() const override { return _caveTrophies; }
 	[[nodiscard]] const TempleLight& GetLight() const override { return _light; }
-	[[nodiscard]] float GetAlignment() const override { return _alignment; }
-	void SetAlignment(float alignment) override { _alignment = alignment; }
 	[[nodiscard]] float GetMapMarkerTurn() const override { return _mapMarkerTurn; }
 	[[nodiscard]] float GetPoolTime() const override { return _poolTime; }
 	void Escape() override;
@@ -103,9 +101,6 @@ private:
 	/// The markers on the map this frame, and how far they have turned
 	std::vector<TempleMapMarker> _mapMarkers;
 	std::vector<TempleCaveTrophy> _caveTrophies;
-	/// The alignment of the most influential player where the camera was outside, which fn_005E2240 keeps for the sky
-	/// TODO(raffclar): openblack has no players' alignments yet, so the temple is neutral unless the debug window says
-	float _alignment {0.0f};
 	TempleLight _light;
 	/// CreatureRoom::UpdateBeltsAndMedals: the belts for how the creature fights and the medals for its miracles, at the
 	/// points of the room's mesh
