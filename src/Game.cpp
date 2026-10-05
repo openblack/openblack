@@ -203,6 +203,8 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 			const auto resolution = glm::u16vec2(event.window.data1, event.window.data2);
 			Locator::rendererInterface::value().Reset(resolution);
 			Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Main, resolution, 0x274659ff);
+			Locator::oceanSystem::value().ResizeReflectionFramebuffer(resolution);
+			Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Reflection, resolution, 0x274659ff);
 
 			auto aspect = window.GetAspectRatio();
 			const auto& config = Locator::config::value();
@@ -1247,6 +1249,7 @@ bool Game::Run() noexcept
 	{
 		const auto size = static_cast<glm::u16vec2>(Locator::windowing::value().GetSize());
 		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Main, size, 0x274659ff);
+		Locator::oceanSystem::value().ResizeReflectionFramebuffer(size);
 	}
 
 	{
