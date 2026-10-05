@@ -10,12 +10,13 @@
 #include "LandLightTable.h"
 
 #include <algorithm>
+#include <stdexcept>
 
 using namespace openblack;
 
 namespace
 {
-constexpr size_t k_PaletteSide = 32;
+constexpr size_t k_PaletteSide = LandLightPalette::k_Side;
 constexpr uint32_t k_DarkLevels = 48;
 /// The ramps divide by this rather than 255
 constexpr uint32_t k_RampDivisor = 200;
@@ -52,28 +53,23 @@ uint32_t Ramp(uint32_t a, uint32_t b, uint32_t t)
 }
 } // namespace
 
-bool LandLightTable::Load(std::span<const uint8_t> palette) noexcept
+LandLightPalette::LandLightPalette(std::span<const uint8_t> bytes)
 {
-	if (palette.size() != k_PaletteSide * k_PaletteSide * 4)
+	if (bytes.size() != k_Side * k_Side * 4)
 	{
-		return false;
+		throw std::runtime_error("The land's light palette isn't 32 by 32 colours");
 	}
-	_palette.resize(k_PaletteSide * k_PaletteSide);
-	for (size_t i = 0; i < _palette.size(); ++i)
+	_colours.resize(k_Side * k_Side);
+	for (size_t i = 0; i < _colours.size(); ++i)
 	{
-		const auto* texel = &palette[i * 4];
-		_palette[i] = static_cast<uint32_t>(texel[0]) << 16 | static_cast<uint32_t>(texel[1]) << 8 |
-		              static_cast<uint32_t>(texel[2]) | static_cast<uint32_t>(texel[3]) << 24;
+		const auto texel = bytes.subspan(i * 4, 4);
+		_colours.at(i) = static_cast<uint32_t>(texel[0]) << 16 | static_cast<uint32_t>(texel[1]) << 8 |
+		                 static_cast<uint32_t>(texel[2]) | static_cast<uint32_t>(texel[3]) << 24;
 	}
-	return true;
 }
 
-void LandLightTable::Build(float skyType, float alignment) noexcept
+void LandLightTable::Build(const LandLightPalette& palette, float skyType, float alignment) noexcept
 {
-	if (_palette.empty())
-	{
-		return;
-	}
 	// The palette's columns: the time of day from midnight to noon, and the alignment from good to evil
 	const float timeColumn = std::clamp(skyType, 0.0f, 2.0f) * 15.0f;
 	const float evil = std::clamp(1.0f - alignment, 0.0f, 2.0f);
@@ -85,7 +81,7 @@ void LandLightTable::Build(float skyType, float alignment) noexcept
 		const float column = row <= k_Evil ? timeColumn : alignmentColumn;
 		const auto index = std::min(static_cast<size_t>(column), k_PaletteSide - 2);
 		const auto t = static_cast<uint32_t>((column - static_cast<float>(index)) * 256.0f);
-		colours.at(row) = Lerp(_palette.at(row * k_PaletteSide + index), _palette.at(row * k_PaletteSide + index + 1), t);
+		colours.at(row) = Lerp(palette.At(row, index), palette.At(row, index + 1), t);
 	}
 
 	// The land's colour, from good through neutral to evil

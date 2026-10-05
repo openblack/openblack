@@ -23,7 +23,8 @@
 namespace openblack
 {
 class Bitmap16B;
-}
+class LandLightPalette;
+} // namespace openblack
 
 namespace openblack::graphics
 {
@@ -78,6 +79,11 @@ struct L3DFileLoader final: BaseLoader<l3d::L3DFile>
 
 /// A 16 bit image, .16B
 struct Bitmap16BLoader final: BaseLoader<Bitmap16B>
+{
+	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;
+};
+
+struct LandLightPaletteLoader final: BaseLoader<LandLightPalette>
 {
 	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;
 };

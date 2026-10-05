@@ -20,6 +20,7 @@
 #include <spdlog/spdlog.h>
 
 #include "3D/L3DMesh.h"
+#include "3D/LandLightTable.h"
 #include "3D/Light.h"
 #include "Audio/AudioManagerInterface.h"
 #include "Common/Bitmap16B.h"
@@ -109,6 +110,11 @@ Bitmap16BLoader::result_type Bitmap16BLoader::operator()(FromDiskTag, const std:
 {
 	const auto data = Locator::filesystem::value().ReadAll(path);
 	return std::make_shared<Bitmap16B>(data.data());
+}
+
+LandLightPaletteLoader::result_type LandLightPaletteLoader::operator()(FromDiskTag, const std::filesystem::path& path) const
+{
+	return std::make_shared<LandLightPalette>(Locator::filesystem::value().ReadAll(path));
 }
 
 Texture2DLoader::result_type Texture2DLoader::operator()(FromPackTag, const std::string& name,

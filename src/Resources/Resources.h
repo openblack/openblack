@@ -23,6 +23,7 @@ public:
 	MeshManager& GetMeshes() override { return _meshes; }
 	L3DFileManager& GetL3DFiles() override { return _l3dFiles; }
 	Bitmap16BManager& GetBitmaps() override { return _bitmaps; }
+	LandLightPaletteManager& GetLandLightPalettes() override { return _landLightPalettes; }
 	TextureManager& GetTextures() override { return _textures; }
 	AnimationManager& GetAnimations() override { return _animations; }
 	LevelManager& GetLevels() override { return _levels; }
@@ -35,6 +36,7 @@ private:
 	MeshManager _meshes;
 	L3DFileManager _l3dFiles;
 	Bitmap16BManager _bitmaps;
+	LandLightPaletteManager _landLightPalettes;
 	TextureManager _textures;
 	AnimationManager _animations;
 	LevelManager _levels;

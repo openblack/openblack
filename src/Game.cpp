@@ -39,6 +39,7 @@
 #include "3D/HandAnimation.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIslandInterface.h"
+#include "3D/LandLightTable.h"
 #include "3D/OceanInterface.h"
 #include "3D/SkyInterface.h"
 #include "3D/TempleInteriorInterface.h"
@@ -866,6 +867,10 @@ bool Game::Initialize() noexcept
 			                   SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
 		                   }
 	                   });
+
+	// The land's light is built from this every frame
+	resources.GetLandLightPalettes().Load(LandLightPalette::k_Id.value(), resources::LandLightPaletteLoader::FromDiskTag {},
+	                                      fileSystem.GetPath<filesystem::Path::WeatherSystem>() / "palette.raw");
 
 	fileSystem.Iterate( //
 	    fileSystem.GetPath<filesystem::Path::Citadel>() / "engine", false,

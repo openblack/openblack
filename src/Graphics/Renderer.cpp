@@ -1444,22 +1444,17 @@ TextureHandle Renderer::UpdateLandLight() const
 	if (!_landLightTable)
 	{
 		_landLightTable = std::make_unique<LandLightTable>();
-		auto& fileSystem = Locator::filesystem::value();
-		const auto path = fileSystem.GetPath<filesystem::Path::WeatherSystem>() / "palette.raw";
-		if (!fileSystem.Exists(path) || !_landLightTable->Load(fileSystem.ReadAll(path)))
-		{
-			SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Could not load the land's light palette {}", path.generic_string());
-		}
 		_landLightTexture = fromBgfx(bgfx::createTexture2D(LandLightTable::k_Size, 1, false, 1, bgfx::TextureFormat::RGBA8,
 		                                                   BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP | BGFX_SAMPLER_POINT));
 		bgfx::setName(toBgfx(*_landLightTexture), "Land Light");
 	}
-	if (_landLightTable->IsLoaded())
+	if (const auto& palettes = Locator::resources::value().GetLandLightPalettes();
+	    palettes.Contains(LandLightPalette::k_Id.value()))
 	{
 		const auto skyType = Locator::skySystem::has_value() ? Locator::skySystem::value().GetCurrentSkyType() : 2.0f;
 		const auto alignment =
 		    Locator::alignmentSystem::has_value() ? Locator::alignmentSystem::value().GetSkyAlignment() : 0.0f;
-		_landLightTable->Build(skyType, alignment);
+		_landLightTable->Build(*palettes.Handle(LandLightPalette::k_Id.value()), skyType, alignment);
 		const auto& texels = _landLightTable->GetTexels();
 		bgfx::updateTexture2D(toBgfx(*_landLightTexture), 0, 0, 0, 0, LandLightTable::k_Size, 1,
 		                      bgfx::copy(texels.data(), static_cast<uint32_t>(texels.size() * sizeof(texels[0]))));

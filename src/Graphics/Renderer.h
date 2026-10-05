@@ -133,7 +133,7 @@ private:
 	/// HandLight's map, or a texture to bind in its place when there is none
 	/// u_modelLight: the game's model light this frame
 	[[nodiscard]] glm::vec4 GetModelLight() const;
-	/// Rebuilds the land's light for this frame, loading the palette the first time; the texture of it
+	/// Rebuilds the land's light for this frame from the palette; the texture of it
 	TextureHandle UpdateLandLight() const;
 	[[nodiscard]] TextureHandle GetHandLightTexture() const;
 	std::unique_ptr<Mesh> _plane;
