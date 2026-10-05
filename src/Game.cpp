@@ -59,7 +59,6 @@
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/AlignmentSystemInterface.h"
-#include "ECS/Systems/TempleExteriorSystemInterface.h"
 #include "ECS/Systems/CameraBookmarkSystemInterface.h"
 #include "ECS/Systems/CameraPathSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
@@ -68,6 +67,7 @@
 #include "ECS/Systems/PathfindingSystemInterface.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
+#include "ECS/Systems/TempleExteriorSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "ECS/Systems/VegetationInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
@@ -559,6 +559,7 @@ bool Game::Update() noexcept
 
 		// Update Hand and intersection point
 		ecs::components::Transform intersectionTransform {};
+		bool enterTemple = false;
 		{
 			const auto screenSize =
 			    Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::zero<glm::ivec2>();
@@ -591,6 +592,14 @@ bool Game::Update() noexcept
 				}
 				else if (!glm::any(glm::isnan(rayOrigin) || glm::isnan(rayDirection)))
 				{
+					// CitadelEntrance::InterfaceTap: the Action button on the player's own temple's entrance takes them inside
+					// TODO(raffclar): in a game of one player, only once a script lets it (GScript::SetCitadelInteract)
+					const auto& actions = Locator::gameActionSystem::value();
+					if (actions.GetChanged(input::BindableActionMap::ACTION) && actions.Get(input::BindableActionMap::ACTION))
+					{
+						enterTemple = Locator::templeExteriorSystem::value().EntranceAt(rayOrigin, rayDirection) ==
+						              PlayerNames::PLAYER_ONE;
+					}
 					if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
 					{
 						intersectionTransform = hit->first;
@@ -611,6 +620,11 @@ bool Game::Update() noexcept
 				}
 				intersectionTransform.scale = scale;
 			}
+		}
+
+		if (enterTemple && Locator::temple::has_value())
+		{
+			Locator::temple::value().Activate();
 		}
 
 		// Update Hand
@@ -813,8 +827,10 @@ bool Game::Initialize() noexcept
 			                   {
 				                   SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading temple mesh: {}", f.stem().string());
 				                   meshManager.Load(name, resources::L3DLoader::FromDiskTag {}, f);
-				                   // Citadel's outside is blended from the temple meshes, into the first temple's (fn_00882B10)
-				                   if (name.starts_with("temple/b_temple") || name.starts_with("temple/b_first_temple"))
+				                   // Citadel's outside is blended from the temple meshes, into the first temple's
+				                   // (fn_00882B10), and its entrance is picked under the cursor
+				                   if (name.starts_with("temple/b_temple") || name.starts_with("temple/b_first_temple") ||
+				                       name == "temple/entrance_l3d")
 				                   {
 					                   resources.GetL3DFiles().Load(name, resources::L3DFileLoader::FromDiskTag {}, f);
 				                   }

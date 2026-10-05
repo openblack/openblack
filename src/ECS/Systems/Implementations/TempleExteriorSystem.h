@@ -31,6 +31,7 @@ class TempleExteriorSystem final: public TempleExteriorSystemInterface
 {
 public:
 	void UpdateTurn() override;
+	[[nodiscard]] std::optional<PlayerNames> EntranceAt(glm::vec3 origin, glm::vec3 direction) const override;
 
 private:
 	/// fn_00882B10: blends the temple's own mesh from the four about its size and alignment, and its texture between

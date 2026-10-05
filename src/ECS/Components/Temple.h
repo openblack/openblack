@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <entt/entity/fwd.hpp>
+
 #include "3D/TempleInteriorInterface.h"
 #include "Enums.h"
 
@@ -37,5 +39,12 @@ struct TempleInteriorPart
 struct Temple
 {
 	PlayerNames owner;
+};
+
+/// The way into a temple, Entrance.l3d at the temple's place (CitadelEntrance, which CitadelHeart makes), which its player
+/// clicks the Action button on to go inside
+struct TempleEntrance
+{
+	entt::entity temple;
 };
 } // namespace openblack::ecs::components

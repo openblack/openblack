@@ -16,14 +16,17 @@
 #include <L3DFile.h>
 #include <entt/core/hashed_string.hpp>
 #include <fmt/format.h>
+#include <glm/gtc/matrix_transform.hpp>
 #include <spdlog/spdlog.h>
 
 #include "3D/L3DMesh.h"
+#include "3D/L3DRayCast.h"
 #include "3D/TempleExteriorMorph.h"
 #include "Common/Bitmap16B.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Temple.h"
 #include "ECS/Components/TempleExterior.h"
+#include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/AlignmentSystemInterface.h"
 #include "Locator.h"
@@ -39,6 +42,9 @@ namespace
 constexpr float k_ShareOfNoInfluence = 0.01f;
 /// The mesh the temples' are made from, which the outsides are blended into
 constexpr std::string_view k_FirstTemple = "temple/b_first_temple_l3d";
+/// The entrance's mesh, which isn't drawn, only picked
+/// UNVERIFIED: whether the game draws it; it is untextured, and the temples' meshes have their doorways
+constexpr std::string_view k_Entrance = "temple/entrance_l3d";
 } // namespace
 
 void TempleExteriorSystem::UpdateTurn()
@@ -60,6 +66,39 @@ void TempleExteriorSystem::UpdateTurn()
 			    exterior.morphed = look;
 		    }
 	    });
+}
+
+std::optional<PlayerNames> TempleExteriorSystem::EntranceAt(glm::vec3 origin, glm::vec3 direction) const
+{
+	const auto& files = Locator::resources::value().GetL3DFiles();
+	const auto id = entt::hashed_string(k_Entrance.data()).value();
+	if (!files.Contains(id))
+	{
+		return std::nullopt;
+	}
+	const auto& entranceMesh = *files.Handle(id);
+	const auto& registry = Locator::entitiesRegistry::value();
+	std::optional<std::pair<float, PlayerNames>> nearest;
+	registry.Each<const TempleEntrance, const Transform>(
+	    [&](const entt::entity, const TempleEntrance& entrance, const Transform& transform) {
+		    const auto* temple = registry.TryGet<const Temple>(entrance.temple);
+		    if (temple == nullptr)
+		    {
+			    return;
+		    }
+		    // Into the entrance's space, where its distance along the ray is as in the world's
+		    // As the meshes are drawn: placed, turned, then scaled
+		    const auto toEntrance = glm::inverse(glm::translate(glm::mat4(1.0f), transform.position) *
+		                                         glm::mat4(transform.rotation) * glm::scale(glm::mat4(1.0f), transform.scale));
+		    const auto localOrigin = glm::vec3(toEntrance * glm::vec4(origin, 1.0f));
+		    const auto localDirection = glm::vec3(toEntrance * glm::vec4(direction, 0.0f));
+		    if (const auto distance = RayCast(entranceMesh, localOrigin, localDirection);
+		        distance.has_value() && (!nearest.has_value() || *distance < nearest->first))
+		    {
+			    nearest = std::make_pair(*distance, temple->owner);
+		    }
+	    });
+	return nearest.has_value() ? std::optional<PlayerNames>(nearest->second) : std::nullopt;
 }
 
 void TempleExteriorSystem::Morph(entt::entity entity, Mesh& mesh, const TempleExterior& exterior, PlayerNames owner)

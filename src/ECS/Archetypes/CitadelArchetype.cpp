@@ -35,6 +35,10 @@ entt::entity CitadelArchetype::Create(const glm::vec3& position, PlayerNames pla
 	// Its outside is blended for its player's alignment, each vertex then set on the land (fn_00882B10)
 	registry.Assign<TempleExterior>(entity);
 	registry.Assign<MorphWithTerrain>(entity);
+	// CitadelHeart::CallVirtualFunctionsForCreation puts its entrance where it is, turned as it is
+	const auto entrance = registry.Create();
+	registry.Assign<Transform>(entrance, position, rotation, size);
+	registry.Assign<TempleEntrance>(entrance, entity);
 	return entity;
 }
 

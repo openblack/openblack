@@ -9,6 +9,12 @@
 
 #pragma once
 
+#include <optional>
+
+#include <glm/vec3.hpp>
+
+#include "Enums.h"
+
 namespace openblack::ecs::systems
 {
 
@@ -20,6 +26,8 @@ public:
 	virtual ~TempleExteriorSystemInterface() = default;
 
 	virtual void UpdateTurn() = 0;
+	/// The player whose temple's entrance a ray first meets, if it meets one (CitadelEntrance, picked under the cursor)
+	[[nodiscard]] virtual std::optional<PlayerNames> EntranceAt(glm::vec3 origin, glm::vec3 direction) const = 0;
 };
 
 } // namespace openblack::ecs::systems
