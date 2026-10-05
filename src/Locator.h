@@ -99,6 +99,7 @@ class LivingActionSystemInterface;
 class MistSystemInterface;
 class CloudSystemInterface;
 class VillageLightSystemInterface;
+class CinematicDirectorSystemInterface;
 class PathfindingSystemInterface;
 class AlignmentSystemInterface;
 class TempleExteriorSystemInterface;
@@ -155,6 +156,7 @@ struct Locator
 	using mistSystem = entt::locator<ecs::systems::MistSystemInterface>;
 	using cloudSystem = entt::locator<ecs::systems::CloudSystemInterface>;
 	using villageLightSystem = entt::locator<ecs::systems::VillageLightSystemInterface>;
+	using cinematicDirectorSystem = entt::locator<ecs::systems::CinematicDirectorSystemInterface>;
 	using vm = entt::locator<lhvm::LHVM>;
 	using chlapi = entt::locator<chlapi::CHLApi>;
 };

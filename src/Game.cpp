@@ -64,6 +64,7 @@
 #include "ECS/Systems/AlignmentSystemInterface.h"
 #include "ECS/Systems/CameraBookmarkSystemInterface.h"
 #include "ECS/Systems/CameraPathSystemInterface.h"
+#include "ECS/Systems/CinematicDirectorSystemInterface.h"
 #include "ECS/Systems/CloudSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
@@ -364,6 +365,8 @@ bool Game::GameLogicLoop() noexcept
 
 	auto& lhvm = Locator::vm::value();
 	lhvm.LookIn(lhvm::ScriptType::All);
+	// The scripts' fade moves on with their turn
+	Locator::cinematicDirectorSystem::value().ProcessTurn();
 
 	// The time of day moves on
 	Locator::skySystem::value().GetClock().ProcessTurn();
@@ -584,6 +587,7 @@ bool Game::Update() noexcept
 	Locator::cloudSystem::value().Update(gameTime);
 	Locator::mistSystem::value().Update(gameTime);
 	Locator::villageLightSystem::value().Update(gameTime);
+	Locator::cinematicDirectorSystem::value().Update(gameTime);
 
 	// Update Uniforms
 	{

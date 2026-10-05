@@ -32,6 +32,7 @@
 #include "ECS/Archetypes/MobileStaticArchetype.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/CinematicDirectorSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
 #include "Enums.h"
@@ -464,9 +465,8 @@ void EndCameraControl() // 031 END_CAMERA_CONTROL
 
 void SetWidescreen() // 032 SET_WIDESCREEN
 {
-	// const auto enabled = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto enabled = static_cast<bool>(Pop().intVal);
+	Locator::cinematicDirectorSystem::value().SetWideScreen(enabled);
 }
 
 void MoveGameThing() // 033 MOVE_GAME_THING
@@ -1306,9 +1306,7 @@ void SetAffectedByWind() // 131 SET_AFFECTED_BY_WIND
 
 void WidescreenTransistionFinished() // 132 WIDESCREEN_TRANSISTION_FINISHED
 {
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pushb(false);
+	Pushb(Locator::cinematicDirectorSystem::value().IsWideScreenTransitionFinished());
 }
 
 void GetResource() // 133 GET_RESOURCE
@@ -2250,26 +2248,23 @@ void CreateRewardInTown() // 240 CREATE_REWARD_IN_TOWN
 
 void SetFade() // 241 SET_FADE
 {
-	// const auto time = Popf();
-	// const auto blue = Popf();
-	// const auto green = Popf();
-	// const auto red = Popf();
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	// The game takes each as a whole number, the colour's as bytes and the seconds as a small signed one
+	const auto time = static_cast<int8_t>(static_cast<int32_t>(Popf()));
+	const auto blue = static_cast<uint8_t>(static_cast<int32_t>(Popf()));
+	const auto green = static_cast<uint8_t>(static_cast<int32_t>(Popf()));
+	const auto red = static_cast<uint8_t>(static_cast<int32_t>(Popf()));
+	Locator::cinematicDirectorSystem::value().FadeTo(red, green, blue, time);
 }
 
 void SetFadeIn() // 242 SET_FADE_IN
 {
-	// const auto duration = Popf();
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto duration = static_cast<int8_t>(static_cast<int32_t>(Popf()));
+	Locator::cinematicDirectorSystem::value().FadeBackToNormal(duration);
 }
 
 void FadeFinished() // 243 FADE_FINISHED
 {
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pushb(false);
+	Pushb(Locator::cinematicDirectorSystem::value().IsFadeFinished());
 }
 
 void SetPlayerMagic() // 244 SET_PLAYER_MAGIC
