@@ -46,6 +46,8 @@ struct Trophy
 	uint32_t point;
 	uint32_t icon;
 	bool medal;
+	/// Drawn with an environment map added: every belt and every medal past wood (the object's +0xD8)
+	bool environmentMapped;
 };
 
 /// How well the creature has learnt its miracles, from 0 to 100: all of them together, and the best four, best first

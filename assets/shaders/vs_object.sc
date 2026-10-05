@@ -73,6 +73,11 @@ void main()
 
 #ifdef USE_LIGHTMAP
 	v_texcoord0 = vec4(a_texcoord0, a_texcoord3);
+#elif defined(USE_ENVIRONMENT)
+	// LH3D's render mode 2 (fn_00852C40): the environment map's coordinates are where the normal points across and up
+	// the camera's view, from 0 to 0.498
+	vec3 viewNormal = normalize(mul(u_view, mul(u_model[modelIndex], vec4(a_normal, 0.0f))).xyz);
+	v_texcoord0 = vec4(a_texcoord0, (viewNormal.xy + 1.0f) * 0.498046875f);
 #else
 	v_texcoord0 = vec4(a_texcoord0, 0.0f, 0.0f);
 #endif // USE_LIGHTMAP

@@ -54,6 +54,8 @@ struct TempleCaveTrophy
 	uint32_t mesh;
 	glm::mat4 model;
 	uint32_t colour;
+	/// Whether it is drawn with an environment map added (LH3D's render mode 2)
+	bool environmentMapped;
 };
 
 /// Where the cursor meets the temple's room, and the way the surface there faces

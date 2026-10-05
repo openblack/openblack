@@ -72,6 +72,32 @@ TEST(CreatureCaveTrophies, MedalsByLearning)
 	EXPECT_EQ(IconName(trophies[2].icon), "I_MEDAL_BRONZE04");
 }
 
+TEST(CreatureCaveTrophies, BeltsAndMedalsPastWoodShine)
+{
+	MiracleLearning learning;
+	// 20% is the last of wood, 24% the first of bronze
+	learning.overall = 20.0f;
+	learning.best = {24.0f, 0.0f, 0.0f, 0.0f};
+	const auto trophies = Choose(0.0f, learning);
+	for (const auto& trophy : trophies)
+	{
+		if (!trophy.medal)
+		{
+			EXPECT_TRUE(trophy.environmentMapped);
+		}
+		else if (trophy.point == 6)
+		{
+			EXPECT_EQ(IconName(trophy.icon), "I_MEDAL_WOOD05");
+			EXPECT_FALSE(trophy.environmentMapped);
+		}
+		else
+		{
+			EXPECT_EQ(IconName(trophy.icon), "I_MEDAL_BRONZE01");
+			EXPECT_TRUE(trophy.environmentMapped);
+		}
+	}
+}
+
 TEST(CreatureCaveTrophies, LearningOfTheMiracles)
 {
 	const std::array<int32_t, 5> percents {12, 97, 9, 100, 30};

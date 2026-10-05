@@ -102,6 +102,8 @@ public:
 		/// A texture every primitive with a skin is drawn with in place of it, when set, as fn_00787340 gives the creature
 		/// room's icons
 		const TextureHandle* skinTexture;
+		/// The environment map added to the mesh where its program takes one (s_environment)
+		const Texture2D* environment;
 		/// Textures some of the submeshes are drawn with in place of their skins, by submesh
 		std::span<const std::pair<uint32_t, TextureHandle>> subMeshTextures;
 		/// Colours added to some of the submeshes, by submesh, after everything else

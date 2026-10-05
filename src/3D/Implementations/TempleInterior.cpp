@@ -514,6 +514,7 @@ void TempleInterior::UpdateCaveTrophies()
 		    .mesh = mesh,
 		    .model = temple * place,
 		    .colour = trophy.medal ? k_MedalColour : k_BeltColour,
+		    .environmentMapped = trophy.environmentMapped,
 		});
 	}
 }

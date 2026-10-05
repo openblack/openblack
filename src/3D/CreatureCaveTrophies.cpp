@@ -76,18 +76,22 @@ std::vector<Trophy> Choose(float fightBalance, const MiracleLearning& learning)
 		{
 			const auto icon =
 			    (colour * k_BeltLevels) + static_cast<uint32_t>(std::min(level, static_cast<int32_t>(k_BeltLevels))) - 1;
-			trophies.push_back({.point = k_FirstBeltPoint + i, .icon = icon, .medal = false});
+			trophies.push_back({.point = k_FirstBeltPoint + i, .icon = icon, .medal = false, .environmentMapped = true});
 		}
 	}
 	// A medal for all the miracles, then one for each of the best four
 	for (uint32_t k = 0; k <= k_BestMiracles; ++k)
 	{
 		const float percent = k == 0 ? learning.overall : learning.best.at(k - 1);
-		const auto level = std::min(static_cast<int32_t>(percent * 0.01f * k_MedalLevels), static_cast<int32_t>(k_MedalLevels));
+		// The game takes a hundredth of it in the FPU's extended precision, where 20% is a whole five levels
+		const auto level = std::min(static_cast<int32_t>(static_cast<double>(percent) * 0.01 * k_MedalLevels),
+		                            static_cast<int32_t>(k_MedalLevels));
 		if (level >= 1)
 		{
-			trophies.push_back(
-			    {.point = k_FirstMedalPoint + (2 * k), .icon = k_BeltIcons + static_cast<uint32_t>(level) - 1, .medal = true});
+			trophies.push_back({.point = k_FirstMedalPoint + (2 * k),
+			                    .icon = k_BeltIcons + static_cast<uint32_t>(level) - 1,
+			                    .medal = true,
+			                    .environmentMapped = level > static_cast<int32_t>(k_MedalsPerMetal)});
 		}
 	}
 	return trophies;

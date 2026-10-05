@@ -491,6 +491,10 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			{
 				program->SetTextureSampler("s_lightmap", 3, *lightmap);
 			}
+			if (desc.environment != nullptr && program->HasUniform("s_environment"))
+			{
+				program->SetTextureSampler("s_environment", 5, *desc.environment);
+			}
 			if (desc.morphWithTerrain)
 			{
 				program->SetTextureSampler("s_heightmap", 1, heightMap);   // vs
@@ -976,17 +980,23 @@ void Renderer::DrawCaveTrophies(const DrawSceneDesc& desc) const
 		return;
 	}
 	const auto& meshes = Locator::resources::value().GetMeshes();
+	const auto& textures = Locator::resources::value().GetTextures();
+	const auto envmap = entt::hashed_string("raw/envmap").value();
+	const auto* environment = textures.Contains(envmap) ? &*textures.Handle(envmap) : nullptr;
 	for (const auto& trophy : trophies)
 	{
 		if (!meshes.Contains(trophy.mesh))
 		{
 			continue;
 		}
-		// TODO(raffclar): the medals past wood are drawn with LH3D's render mode 2 (DAT_00EA1AFC), which isn't known yet
 		const auto colour = glm::vec3((trophy.colour >> 16) & 0xFF, (trophy.colour >> 8) & 0xFF, trophy.colour & 0xFF);
 		L3DMeshSubmitDesc submitDesc = {};
 		submitDesc.viewId = desc.viewId;
-		submitDesc.program = _shaderManager->GetShader("Object");
+		// CreatureRoom::Draw draws the belts and the medals past wood in LH3D's render mode 2, which adds the first of
+		// LH3DObject's environment maps, envmap.raw (0xC37EAC)
+		const bool environmentMapped = trophy.environmentMapped && environment != nullptr;
+		submitDesc.program = _shaderManager->GetShader(environmentMapped ? "ObjectEnvironment" : "Object");
+		submitDesc.environment = environmentMapped ? environment : nullptr;
 		submitDesc.state = k_BgfxDefaultStateInvertedZ;
 		submitDesc.modelMatrices = &trophy.model;
 		// Their materials are two sided
