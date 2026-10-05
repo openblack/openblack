@@ -11,6 +11,7 @@
 
 #include <cstdint>
 
+#include <algorithm>
 #include <array>
 #include <string_view>
 
@@ -56,5 +57,7 @@ static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_
     "Cursor Pass",          //
     "Mesh Viewer Pass",     //
 };
+// Every pass has a name: a short list would leave the last ones empty
+static_assert(std::ranges::none_of(k_RenderPassNames, &std::string_view::empty));
 
 } // namespace openblack::graphics

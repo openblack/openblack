@@ -11,6 +11,7 @@
 
 #include <cstdint>
 
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <map>
@@ -76,17 +77,20 @@ public:
 	    "Draw Water",           //
 	    "Draw Island",          //
 	    "Draw Models",          //
+	    "Draw Vegetation",      //
 	    "Draw Sprites",         //
 	    "Main Pass",            //
 	    "Draw Sky",             //
 	    "Draw Water",           //
 	    "Draw Island",          //
 	    "Draw Models",          //
-	    "Draw Vegetation"       //
+	    "Draw Vegetation",      //
 	    "Draw Sprites",         //
 	    "Encode GUI Draw",      //
 	    "Renderer Frame",       //
 	};
+	// Every stage has a name: a short list would leave the last ones empty
+	static_assert(std::ranges::none_of(k_StageNames, &std::string_view::empty));
 
 private:
 	struct ScopedSection
