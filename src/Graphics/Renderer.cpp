@@ -63,6 +63,7 @@
 #include "Graphics/ObjectShadows.h"
 #include "Graphics/Primitive.h"
 #include "Graphics/ShaderManager.h"
+#include "Graphics/TreeBrightness.h"
 #include "Graphics/VertexBuffer.h"
 #include "Locator.h"
 #include "Profiler.h"
@@ -1642,6 +1643,13 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	// The hand lights whatever is around it at night, the land, the sea and the things on them
 	_handLight = GetHandLight(desc);
 	_modelLight = GetModelLight();
+	if (Locator::camera::has_value())
+	{
+		const auto& camera = Locator::camera::value();
+		_treeBrightness =
+		    static_cast<float>(tree_brightness::Factor(camera.GetFocus(), camera.GetForward(), glm::vec3(_modelLight))) /
+		    256.0f;
+	}
 
 	const auto* skyShader = _shaderManager->GetShader("Sky");
 	const auto* waterShader = _shaderManager->GetShader("Water");
@@ -1982,6 +1990,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					submitDesc.matrixCount = 1;
 					submitDesc.isSky = false;
 					submitDesc.morphWithTerrain = false;
+					submitDesc.landLightScale = _treeBrightness;
 					submitDesc.program = vegetationShaderInstanced;
 					DrawMesh(*mesh, submitDesc, std::numeric_limits<uint8_t>::max());
 				}

@@ -132,6 +132,8 @@ private:
 	mutable glm::vec4 _handLight {0.0f};
 	/// u_modelLight: where the game's model light is this frame, and its ambient
 	mutable glm::vec4 _modelLight {0.0f};
+	/// What the land's light is scaled by for the trees this frame, of 1
+	mutable float _treeBrightness {1.0f};
 	/// HandLight's map, or a texture to bind in its place when there is none
 	/// u_modelLight: the game's model light this frame
 	[[nodiscard]] glm::vec4 GetModelLight() const;
