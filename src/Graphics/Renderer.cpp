@@ -47,6 +47,7 @@
 #include "3D/TempleMap.h"
 #include "3D/VillageLights.h"
 #include "Camera/Camera.h"
+#include "ECS/Components/AtHome.h"
 #include "ECS/Components/Cloud.h"
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/LightBeam.h"
@@ -59,6 +60,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Components/VillageLight.h"
+#include "ECS/Components/Villager.h"
 #include "ECS/Components/Weather.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/AlignmentSystemInterface.h"
@@ -74,6 +76,7 @@
 #include "Graphics/DetailLevel.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/GraphicsHandleBgfx.h"
+#include "Graphics/GroundBlobs.h"
 #include "Graphics/HandLight.h"
 #include "Graphics/HandWaterGlow.h"
 #include "Graphics/IndexBuffer.h"
@@ -1706,6 +1709,89 @@ void Renderer::DrawMists(const DrawSceneDesc& desc) const
 	});
 }
 
+void Renderer::DrawGroundBlobs(const DrawSceneDesc& desc) const
+{
+	if (desc.viewId != RenderPass::Main || !Locator::terrainSystem::has_value() ||
+	    (Locator::temple::has_value() && Locator::temple::value().Active()))
+	{
+		return;
+	}
+	static constexpr auto k_TextureId = entt::hashed_string("raw/human_shadow");
+	const auto& textures = Locator::resources::value().GetTextures();
+	if (!textures.Contains(k_TextureId.value()))
+	{
+		return;
+	}
+	const auto& island = Locator::terrainSystem::value();
+	const auto& meshes = Locator::resources::value().GetMeshes();
+	struct Vertex
+	{
+		glm::vec3 position;
+		glm::vec2 uv;
+		uint32_t colour;
+	};
+	std::vector<Vertex> vertices;
+	const auto addQuad = [&vertices](const ground_blobs::Quad& quad) {
+		for (const auto corner : ground_blobs::k_Indices)
+		{
+			const auto opacity = static_cast<uint32_t>(ground_blobs::k_Opacity.at(corner) * 255.0f);
+			vertices.push_back({quad.corners.at(corner), ground_blobs::k_Uvs.at(corner), (opacity << 24u) | 0xFFFFFFu});
+		}
+	};
+	// Every villager out of doors and out of the sea casts one from each foot, on the land beneath it
+	desc.entities.Each<const ecs::components::Villager, const ecs::components::Transform, const ecs::components::Mesh>(
+	    [&](const ecs::components::Villager& /*villager*/, const ecs::components::Transform& transform,
+	        const ecs::components::Mesh& mesh) {
+		    if (transform.position.y <= ground_blobs::k_LowestHeight || !meshes.Contains(mesh.id))
+		    {
+			    return;
+		    }
+		    const auto& bones = meshes.Handle(mesh.id)->GetBoneMatrices();
+		    if (std::ranges::any_of(ground_blobs::k_FootBones, [&bones](size_t bone) { return bone >= bones.size(); }))
+		    {
+			    return;
+		    }
+		    const auto model = glm::translate(transform.position) * glm::mat4(transform.rotation) * glm::scale(transform.scale);
+		    const auto foot = [&](size_t bone) {
+			    auto position = glm::vec3(model * bones.at(bone) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+			    position.y = island.GetHeightAt(glm::vec2(position.x, position.z)) + ground_blobs::k_Lift;
+			    return position;
+		    };
+		    const auto normal = island.GetNormalAt(glm::vec2(transform.position.x, transform.position.z));
+		    const auto fall = ground_blobs::Fall(normal, transform.scale.x);
+		    for (const auto& quad :
+		         ground_blobs::Feet(foot(ground_blobs::k_FootBones[0]), foot(ground_blobs::k_FootBones[1]), fall))
+		    {
+			    addQuad(quad);
+		    }
+	    },
+	    entt::exclude<ecs::components::AtHome>);
+	if (vertices.empty())
+	{
+		return;
+	}
+	bgfx::VertexLayout layout;
+	layout.begin()
+	    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+	    .end();
+	const auto count = static_cast<uint32_t>(vertices.size());
+	if (bgfx::getAvailTransientVertexBuffer(count, layout) < count)
+	{
+		return;
+	}
+	bgfx::TransientVertexBuffer buffer;
+	bgfx::allocTransientVertexBuffer(&buffer, count, layout);
+	std::memcpy(buffer.data, vertices.data(), vertices.size() * sizeof(Vertex));
+	const auto* program = _shaderManager->GetShader("Blob");
+	program->SetTextureSampler("s_diffuse", 0, *textures.Handle(k_TextureId));
+	bgfx::setVertexBuffer(0, &buffer);
+	// Blended over the land, tested against depth but leaving none, both sides
+	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_BLEND_ALPHA | BGFX_STATE_MSAA);
+	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(program->GetRawHandle()));
+}
+
 void Renderer::DrawMoon(RenderPass viewId) const
 {
 	if (!Locator::camera::has_value())
@@ -2813,6 +2899,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			DrawTempleMap(desc);
 			DrawTempleMapMarkers(desc);
 			DrawCaveTrophies(desc);
+			DrawGroundBlobs(desc);
 			// The mists blend over the rest, the farthest first
 			DrawMists(desc);
 
