@@ -642,7 +642,7 @@ void Renderer::DrawTemplePool(const DrawSceneDesc& desc) const
 		submitDesc.useMaterialCulling = true;
 		submitDesc.modelMatrices = &model;
 		submitDesc.matrixCount = 1;
-		DrawMesh(*meshes.Handle(pool), submitDesc, 0);
+		DrawMesh(*meshes.Handle(pool), submitDesc, std::numeric_limits<uint8_t>::max());
 	}
 	for (const auto& layer : layers)
 	{
@@ -661,7 +661,7 @@ void Renderer::DrawTemplePool(const DrawSceneDesc& desc) const
 		submitDesc.matrixCount = 1;
 		submitDesc.uvOffset = layer.uvOffset;
 		submitDesc.tint = glm::vec4(glm::vec3(k_Light), static_cast<float>(layer.alpha) / 255.0f);
-		DrawMesh(*meshes.Handle(pool), submitDesc, 0);
+		DrawMesh(*meshes.Handle(pool), submitDesc, std::numeric_limits<uint8_t>::max());
 	}
 }
 
@@ -858,7 +858,7 @@ void Renderer::DrawTempleMapMarkers(const DrawSceneDesc& desc) const
 		submitDesc.modelMatrices = &model;
 		submitDesc.matrixCount = 1;
 		submitDesc.tint = glm::vec4(glm::vec3(marker.colour) / 255.0f, 1.0f);
-		DrawMesh(*meshes.Handle(icon), submitDesc, 0);
+		DrawMesh(*meshes.Handle(icon), submitDesc, std::numeric_limits<uint8_t>::max());
 	}
 }
 
