@@ -186,6 +186,8 @@ private:
 
 	void Step(float dt, const Input& input);
 	void UpdateIntro(float dt, const Input& input);
+	/// Steps the camera on by a second twice, with the mouse still, as Temple::Update does putting the player in a room
+	void StepTwoSeconds();
 	void UpdateOrbit(float dt, const Input& input);
 	void UpdateLook(float dt, const Input& input);
 	/// ChallengeRoomCamera::UpdateMain's work in every state: the turn, lean and height ease after their targets
