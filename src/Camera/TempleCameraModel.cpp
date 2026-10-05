@@ -7,6 +7,8 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include "TempleCameraModel.h"
+
 #include <cmath>
 
 #include <algorithm>
@@ -26,7 +28,6 @@
 #include "Camera.h"
 #include "Input/GameActionMapInterface.h"
 #include "Locator.h"
-#include "TempleCameraModel.h"
 #include "Windowing/WindowingInterface.h"
 
 using namespace openblack;
@@ -583,8 +584,9 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> TempleCameraModel::Upd
 	if (input.hit.has_value())
 	{
 		input.door = DoorAt(*input.hit);
-		_cursorHit = input.hit;
 	}
+	// This frame's, none where the cursor meets nothing of the room's cylinder
+	_cursorHit = input.hit;
 
 	Step(seconds, input);
 	FollowTemple();

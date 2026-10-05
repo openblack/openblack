@@ -118,7 +118,8 @@ public:
 	void StartIntro(Room room, bool blendFromCurrent);
 	/// Temple::GoToRoom: cuts to a room, past its path
 	void GoToRoom(Room room);
-	/// Where the cursor last met the room's cylinder, which TempleRoom::Draw keeps for the hand
+	/// Where the cursor meets the room's cylinder this frame, if it does, which TempleRoom::Draw puts the hand on when it
+	/// is the floor
 	[[nodiscard]] const std::optional<RoomHit>& GetCursorHit() const { return _cursorHit; }
 	/// The line from the camera through the cursor, which LH3D picks the room's mesh along
 	[[nodiscard]] const std::optional<Pose>& GetCursorRay() const { return _cursorRay; }
