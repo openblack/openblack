@@ -1352,7 +1352,34 @@ void LHVM::Opcode23Cast(VMTask& task, const VMInstruction& instruction)
 	}
 	else // Mode::CAST
 	{
-		Push(Pop(), instruction.type);
+		// The original's cast (ScriptLibraryR.dll 0x10008EE0, switch table 0x100090E4 on type - 1) converts the value
+		// for two types and only retags it for the others
+		switch (instruction.type)
+		{
+		case DataType::Int:
+		{
+			// 0x10008F0A: the bits read as a float, __ftol (fistp qword with truncation, the low dword); out of range
+			// and NaN give the indefinite integer, whose low dword is 0
+			const auto f = Pop().floatVal;
+			constexpr auto k_Limit = 9.2233720368547758e18f; // 2^63
+			const auto truncated = std::isfinite(f) && std::fabs(f) < k_Limit ? static_cast<int64_t>(f) : 0;
+			Push(VMValue(static_cast<int32_t>(static_cast<uint32_t>(truncated))), DataType::Int);
+			break;
+		}
+		case DataType::Float:
+			// 0x10008F6F: the bits read as an unsigned 32-bit integer (fild qword with a zero high dword)
+			Push(VMValue(static_cast<float>(Pop().uintVal)), DataType::Float);
+			break;
+		case DataType::Vector:
+		case DataType::Object:
+		case DataType::Boolean:
+			// 0x10008F32 / 0x10008FA2 / 0x10008F57: the same bits, the new type
+			Push(Pop(), instruction.type);
+			break;
+		default:
+			// 0x100090DE (Unk5, and the types outside the table): nothing, the value stays as it was
+			break;
+		}
 	}
 }
 
