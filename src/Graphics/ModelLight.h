@@ -26,7 +26,7 @@ constexpr glm::vec3 k_Sun {-500000.0f, 500000.0f, -500000.0f};
 constexpr float k_Ambient = 90.0f;
 
 /// Where the light is this frame. `skyType` runs from 0 at night to 2 by day: at night the hand carries the light, never
-/// below 10 over the ground under it. Inside the temple the world's night doesn't reach, and the light stays the sun.
+/// below 10 over the ground under it. Inside the temple the hand carries no light, and the light stays the sun.
 [[nodiscard]] glm::vec3 FrameLight(glm::vec3 hand, float groundUnderHand, const glm::vec3& camera, float skyType,
                                    bool inTemple);
 

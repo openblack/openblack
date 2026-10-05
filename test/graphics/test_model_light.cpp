@@ -40,7 +40,7 @@ TEST(ModelLight, TheHandCarriesTheLightAtNight)
 
 TEST(ModelLight, NoNightLightOnTheHandInsideTheTemple)
 {
-	// The world's night doesn't reach into the temple: the hand doesn't light itself there
+	// Inside the temple the hand carries no light, so it doesn't light itself there
 	EXPECT_EQ(model_light::FrameLight(k_Hand, 0.0f, k_Camera, k_Night, true), model_light::k_Sun);
 	EXPECT_EQ(model_light::FrameLight(k_Hand, 0.0f, k_Camera, k_Day, true), model_light::k_Sun);
 }
