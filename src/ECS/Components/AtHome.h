@@ -9,25 +9,14 @@
 
 #pragma once
 
-#include <set>
-
-#include "Enums.h"
-
 namespace openblack::ecs::components
 {
 
-struct Abode
+/// A villager inside its abode: it isn't drawn while it is
+struct AtHome
 {
-	AbodeNumber type;
-	uint32_t townId;
-	// If a village does not have a ABODE_STORAGE_PIT then other abodes are used
-	// by the villagers
-	uint32_t foodAmount;
-	uint32_t woodAmount;
-	/// Villager
-	std::set<entt::entity> inhabitants;
-	/// How many of them are inside now
-	uint32_t presentAtHome {0};
+	/// It has been to bed since it came in
+	bool beenToBed {false};
 };
 
 } // namespace openblack::ecs::components

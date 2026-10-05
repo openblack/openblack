@@ -19,6 +19,7 @@
 
 #include "3D/L3DMesh.h"
 #include "ECS/Components/Abode.h"
+#include "ECS/Components/AtHome.h"
 #include "ECS/Components/Feature.h"
 #include "ECS/Components/Field.h"
 #include "ECS/Components/Mesh.h"
@@ -76,7 +77,7 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 
 	registry.Each<const Mesh, const Transform>(
 	    [&prep](entt::entity entity, const Mesh& mesh, const Transform& /*unused*/) { prep(entity, mesh, false); },
-	    entt::exclude<MorphWithTerrain, Tree, TempleInteriorPart>);
+	    entt::exclude<MorphWithTerrain, Tree, TempleInteriorPart, AtHome>);
 	registry.Each<const Mesh, const Transform, const MorphWithTerrain>(
 	    [&prep](entt::entity entity, const Mesh& mesh, const Transform& /*unused*/, const MorphWithTerrain& /*unused*/) {
 		    prep(entity, mesh, true);
@@ -216,7 +217,7 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 		    }
 		    offset.first->second++;
 	    },
-	    entt::exclude<TempleInteriorPart, Tree>);
+	    entt::exclude<TempleInteriorPart, Tree, AtHome>);
 
 	if (!_renderContext.instanceUniforms.empty())
 	{

@@ -1051,7 +1051,8 @@ struct GVillagerStateTableInfo
 	uint32_t field0xb4;
 	int field0xb8;
 	uint32_t field0xbc;
-	int field0xc0;
+	/// A villager leaving a home state for this one stays inside
+	int staysAtHomeOnExit;
 	int field0xc4;
 	float field0xc8;
 	float field0xcc;
