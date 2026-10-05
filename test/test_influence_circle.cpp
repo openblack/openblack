@@ -7,6 +7,8 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include <cmath>
+
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -107,4 +109,61 @@ TEST(InfluenceCircle, InfluenceFallsWithDistance)
 	// Halfway out over the last part: half of 0.2
 	EXPECT_FLOAT_EQ(influence::OnRange(80.0f, 100.0f, 0.4f, 0.2f, 0.2f), 0.1f);
 	EXPECT_FLOAT_EQ(influence::OnRange(100.0f, 100.0f, 0.4f, 0.2f, 0.2f), 0.0f);
+}
+
+TEST(InfluenceCircle, CrossingPointLiesOnTheEdge)
+{
+	const auto point = influence::CrossingPoint({0.0f, 0.0f, 0.0f}, 100.0f, {50.0f, 0.0f, 0.0f}, {150.0f, 0.0f, 0.0f});
+	EXPECT_NEAR(point.x, 100.0f, 1.0f);
+	EXPECT_FLOAT_EQ(point.z, 0.0f);
+}
+
+TEST(InfluenceCircle, RippleWhereTheHandCrossed)
+{
+	std::vector<influence::Circle> circles;
+	influence::AddCircle(circles, PlayerNames::PLAYER_TWO, {0.0f, 0.0f, 0.0f}, 100.0f, Flat(0.0f));
+	const auto ripple = influence::MakeRipple(circles[0], {90.0f, 0.0f, 0.0f}, {110.0f, 5.0f, 0.0f}, Flat(20.0f),
+	                                          [](float, float) { return 1.0f; });
+	EXPECT_NEAR(ripple.point.x, 100.0f, 1.0f);
+	// On the land, which is higher than the hand
+	EXPECT_FLOAT_EQ(ripple.point.y, 20.0f);
+	EXPECT_EQ(ripple.rgb, influence::k_PlayerColours[1]);
+	// Upright along the border, square to the line from the centre
+	EXPECT_NEAR(ripple.along.x, 0.0f, 1e-5f);
+	EXPECT_NEAR(std::abs(ripple.along.z), 1.0f, 1e-5f);
+	// Its puffs start 2 apart
+	EXPECT_FLOAT_EQ(ripple.sizes[3], 6.0f);
+	EXPECT_FLOAT_EQ(ripple.angles[3], 1.0f);
+}
+
+TEST(InfluenceCircle, RipplesGrowFadeAndGo)
+{
+	influence::Ripple ripple;
+	ripple.sizes = {0.0001f, 2.0f, 4.0f, 6.0f, 8.0f, 10.0f, 12.0f};
+	// Half a second: each grows by 5, the last wraps past 14
+	ASSERT_TRUE(influence::AdvanceRipple(ripple, 500.0f));
+	EXPECT_NEAR(ripple.sizes[1], 7.0f, 1e-4f);
+	EXPECT_NEAR(ripple.sizes[6], 3.0f, 1e-4f);
+	EXPECT_EQ(ripple.alphas[1], static_cast<uint8_t>((1.0f - 7.0f / 14.0f) * 255.0f));
+	// In its last second it fades
+	ASSERT_TRUE(influence::AdvanceRipple(ripple, 1000.0f));
+	EXPECT_LT(ripple.alphas[0], 255);
+	EXPECT_FALSE(influence::AdvanceRipple(ripple, 600.0f));
+}
+
+TEST(InfluenceCircle, PuffsLieInTheBordersPlane)
+{
+	influence::Ripple ripple;
+	ripple.point = {10.0f, 5.0f, 0.0f};
+	ripple.along = {0.0f, 0.0f, 1.0f};
+	ripple.sizes[0] = 2.0f;
+	const auto corners = influence::PuffCorners(ripple, 0);
+	for (const auto& corner : corners)
+	{
+		EXPECT_FLOAT_EQ(corner.x, 10.0f);
+	}
+	EXPECT_FLOAT_EQ(corners[0].y, 3.0f);
+	EXPECT_FLOAT_EQ(corners[2].y, 7.0f);
+	EXPECT_FLOAT_EQ(corners[0].z, -2.0f);
+	EXPECT_FLOAT_EQ(corners[2].z, 2.0f);
 }

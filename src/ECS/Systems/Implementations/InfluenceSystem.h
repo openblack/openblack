@@ -35,6 +35,7 @@ public:
 	[[nodiscard]] std::span<const influence::Circle> GetCircles() const override { return _circles; }
 	[[nodiscard]] bool IsBorderShown(PlayerNames player) const override;
 	[[nodiscard]] glm::vec2 GetScrollOffset() const override { return influence::ScrollOffset(_scrollClock); }
+	[[nodiscard]] std::span<const influence::Ripple> GetRipples() const override { return _ripples; }
 
 private:
 	static constexpr size_t k_Players = 8;
@@ -44,12 +45,20 @@ private:
 	void DrawBorders();
 	/// A reach that has moved since its border was drawn wants the border drawn again
 	void NoteReach(float reach, float drawn);
+	/// Whether the hand crossed a border shown since the last frame, sending out a ripple where it did
+	bool CrossBorders(const glm::vec3& hand);
 
 	std::vector<influence::Circle> _circles;
 	std::array<bool, k_Players> _borderShown {};
 	bool _bordersDirty {true};
 	int32_t _scrollClock {0};
 	float _scrollRemainder {0.0f};
+	/// Newest first
+	std::vector<influence::Ripple> _ripples;
+	/// Whether the hand was inside each player's border at the last frame, once it has been somewhere, and where it was
+	std::array<bool, k_Players> _handWasInside {};
+	bool _handSeen {false};
+	glm::vec3 _handBefore {0.0f};
 };
 
 } // namespace openblack::ecs::systems

@@ -1821,6 +1821,76 @@ void Renderer::DrawGroundBlobs(const DrawSceneDesc& desc) const
 	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(program->GetRawHandle()));
 }
 
+void Renderer::DrawInfluenceRipples(const DrawSceneDesc& desc) const
+{
+	using ecs::components::Mist;
+	if (desc.viewId != RenderPass::Main || !Locator::influenceSystem::has_value())
+	{
+		return;
+	}
+	const auto& textures = Locator::resources::value().GetTextures();
+	const auto ripples = Locator::influenceSystem::value().GetRipples();
+	if (ripples.empty() || !textures.Contains(Mist::k_TextureId) || !textures.Contains(Mist::k_AlphaTextureId))
+	{
+		return;
+	}
+	struct Vertex
+	{
+		glm::vec3 position;
+		glm::vec2 uv;
+		uint32_t colour;
+	};
+	bgfx::VertexLayout layout;
+	layout.begin()
+	    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+	    .end();
+	const auto* program = _shaderManager->GetShader("WorldTextured");
+	const auto viewId = static_cast<bgfx::ViewId>(TranslucentView(desc.viewId));
+	const auto origin = desc.camera->GetOrigin();
+	// The last frame of the smoke texture, its corners as the puff's
+	constexpr std::array<glm::vec2, 4> k_Uvs = {glm::vec2(0.875f, 0.875f), glm::vec2(1.0f, 0.875f), glm::vec2(1.0f, 1.0f),
+	                                            glm::vec2(0.875f, 1.0f)};
+	constexpr std::array<uint16_t, 6> k_Triangles = {0, 1, 2, 0, 2, 3};
+	constexpr auto k_Vertices = static_cast<uint32_t>(influence::Ripple::k_Puffs * 4);
+	constexpr auto k_Indices = static_cast<uint32_t>(influence::Ripple::k_Puffs * 6);
+	for (const auto& ripple : ripples)
+	{
+		if (bgfx::getAvailTransientVertexBuffer(k_Vertices, layout) < k_Vertices ||
+		    bgfx::getAvailTransientIndexBuffer(k_Indices) < k_Indices)
+		{
+			return;
+		}
+		bgfx::TransientVertexBuffer vertexBuffer;
+		bgfx::TransientIndexBuffer indexBuffer;
+		bgfx::allocTransientVertexBuffer(&vertexBuffer, k_Vertices, layout);
+		bgfx::allocTransientIndexBuffer(&indexBuffer, k_Indices);
+		const auto vertices = std::span(reinterpret_cast<Vertex*>(vertexBuffer.data), k_Vertices);
+		const auto indices = std::span(reinterpret_cast<uint16_t*>(indexBuffer.data), k_Indices);
+		const auto abgr = ((ripple.rgb & 0xFFu) << 16u) | (ripple.rgb & 0xFF00u) | ((ripple.rgb >> 16u) & 0xFFu);
+		for (size_t puff = 0; puff < influence::Ripple::k_Puffs; ++puff)
+		{
+			const auto corners = influence::PuffCorners(ripple, puff);
+			const auto colour = (static_cast<uint32_t>(ripple.alphas.at(puff)) << 24u) | abgr;
+			for (size_t c = 0; c < corners.size(); ++c)
+			{
+				vertices[(puff * 4) + c] = {corners.at(c), k_Uvs.at(c), colour};
+			}
+			for (size_t i = 0; i < k_Triangles.size(); ++i)
+			{
+				indices[(puff * 6) + i] = static_cast<uint16_t>((puff * 4) + k_Triangles.at(i));
+			}
+		}
+		program->SetTextureSampler("s_diffuse", 0, *textures.Handle(Mist::k_TextureId));
+		program->SetTextureSampler("s_alpha", 1, *textures.Handle(Mist::k_AlphaTextureId));
+		bgfx::setVertexBuffer(0, &vertexBuffer);
+		bgfx::setIndexBuffer(&indexBuffer);
+		bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_BLEND_ALPHA);
+		bgfx::submit(viewId, toBgfx(program->GetRawHandle()), zsort::Depth(ripple.point, origin));
+	}
+}
+
 void Renderer::DrawInfluenceBorder(const DrawSceneDesc& desc) const
 {
 	if (desc.viewId != RenderPass::Main || !Locator::influenceSystem::has_value() ||
@@ -3166,6 +3236,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			DrawRain(desc);
 			DrawChimneySmoke(desc);
 			DrawInfluenceBorder(desc);
+			DrawInfluenceRipples(desc);
 			// The mists blend over the rest, the farthest first
 			DrawMists(desc);
 

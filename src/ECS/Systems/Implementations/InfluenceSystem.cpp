@@ -17,6 +17,8 @@
 #include <unordered_map>
 
 #include "3D/LandIslandInterface.h"
+#include "Audio/Sound.h"
+#include "Common/GameRandom.h"
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Influence.h"
 #include "ECS/Components/Mesh.h"
@@ -25,6 +27,9 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/HandSystemInterface.h"
+#include "ECS/Systems/SoundTagSystemInterface.h"
+#include "ECS/Systems/TimeSystemInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
@@ -128,6 +133,23 @@ float CitadelReach(entt::entity temple)
 	return Globals().playerInfluenceMultiplier * stored->reach;
 }
 
+/// The player's hand in the world, if it is in it
+std::optional<glm::vec3> HandPosition()
+{
+	if (!Locator::handSystem::has_value())
+	{
+		return std::nullopt;
+	}
+	const auto& registry = Locator::entitiesRegistry::value();
+	const auto hand = Locator::handSystem::value().GetPlayerHands()[static_cast<size_t>(HandSystemInterface::Side::Left)];
+	const auto* transform = registry.TryGet<const Transform>(hand);
+	if (transform == nullptr || transform->position == glm::vec3(0.0f))
+	{
+		return std::nullopt;
+	}
+	return transform->position;
+}
+
 influence::Ground LandHeight()
 {
 	return [](glm::vec2 point) {
@@ -139,6 +161,7 @@ influence::Ground LandHeight()
 void InfluenceSystem::Reset()
 {
 	_circles.clear();
+	_ripples.clear();
 	_borderShown.fill(false);
 	_bordersDirty = true;
 }
@@ -247,6 +270,66 @@ void InfluenceSystem::Update(std::chrono::duration<float, std::milli> gameTime)
 	const auto step = static_cast<int32_t>(_scrollRemainder);
 	_scrollRemainder -= static_cast<float>(step);
 	_scrollClock = (_scrollClock + step) % influence::k_ScrollWrap;
+
+	std::erase_if(_ripples,
+	              [&gameTime](influence::Ripple& ripple) { return !influence::AdvanceRipple(ripple, gameTime.count()); });
+
+	// While the game runs, the hand crossing a border sounds once, at the hand
+	if (Locator::time::value().IsPaused())
+	{
+		return;
+	}
+	if (const auto hand = HandPosition(); hand.has_value() && CrossBorders(*hand) && Locator::soundTagSystem::has_value())
+	{
+		Locator::soundTagSystem::value().CreatePointSound(static_cast<entt::id_type>(audio::SoundId::G_HandThroughInfluence_01),
+		                                                  *hand, false);
+	}
+}
+
+bool InfluenceSystem::CrossBorders(const glm::vec3& hand)
+{
+	std::array<bool, k_Players> inside {};
+	for (const auto& circle : _circles)
+	{
+		if (influence::Inside(circle.centre, circle.radius, hand))
+		{
+			inside.at(static_cast<size_t>(circle.player)) = true;
+		}
+	}
+	bool crossed = false;
+	if (!_handSeen)
+	{
+		// The first time, only where it is
+		_handWasInside = inside;
+		_handSeen = true;
+	}
+	else
+	{
+		for (size_t player = 0; player < k_Players; ++player)
+		{
+			if (inside.at(player) == _handWasInside.at(player))
+			{
+				continue;
+			}
+			_handWasInside.at(player) = inside.at(player);
+			// The circle whose edge the hand went over: none if the border moved under a still hand
+			const auto circle = std::ranges::find_if(_circles, [&](const influence::Circle& c) {
+				return static_cast<size_t>(c.player) == player &&
+				       influence::Inside(c.centre, c.radius, _handBefore) != influence::Inside(c.centre, c.radius, hand);
+			});
+			if (circle == _circles.end() || !IsBorderShown(circle->player))
+			{
+				continue;
+			}
+			_ripples.insert(_ripples.begin(),
+			                influence::MakeRipple(*circle, _handBefore, hand, LandHeight(), [](float a, float b) {
+				                return Locator::gameRandom::value().CrtRandom(a, b);
+			                }));
+			crossed = true;
+		}
+	}
+	_handBefore = {hand.x, 0.0f, hand.z};
+	return crossed;
 }
 
 float InfluenceSystem::PlayerInfluence(PlayerNames player, const glm::vec3& position) const

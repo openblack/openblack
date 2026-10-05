@@ -77,6 +77,41 @@ void AddCircle(std::vector<Circle>& circles, PlayerNames player, const glm::vec3
 [[nodiscard]] glm::vec2 ScrollOffset(int32_t milliseconds);
 inline constexpr int32_t k_ScrollWrap = 10000;
 
+/// The ripple a hand makes crossing a player's border: seven puffs of smoke in the plane of the border, upright along
+/// it, growing out and fading over two seconds, in the player's colour
+struct Ripple
+{
+	static constexpr size_t k_Puffs = 7;
+	static constexpr float k_Life = 2000.0f;
+
+	glm::vec3 point {0.0f};
+	/// Milliseconds of game time left
+	float life {k_Life};
+	uint32_t rgb {0};
+	/// Along the border: its tangent across the ground, and up
+	glm::vec3 along {1.0f, 0.0f, 0.0f};
+	std::array<float, k_Puffs> sizes {};
+	std::array<float, k_Puffs> angles {};
+	/// Each puff's opacity, of 255, as it last moved on
+	std::array<uint8_t, k_Puffs> alphas {};
+};
+
+/// Draws a number between two, as the game's random numbers for the ripples
+using Random = std::function<float(float, float)>;
+
+/// Whether a point is inside a circle, across the ground
+[[nodiscard]] bool Inside(const glm::vec3& centre, float radius, const glm::vec3& point);
+/// Where a circle's edge lies between a point inside it and one outside, by halving the way between them
+[[nodiscard]] glm::vec3 CrossingPoint(const glm::vec3& centre, float radius, glm::vec3 inside, glm::vec3 outside);
+/// A ripple where the hand crossed a circle, on the land or the hand's height, whichever is higher
+[[nodiscard]] Ripple MakeRipple(const Circle& circle, const glm::vec3& previous, const glm::vec3& hand, const Ground& ground,
+                                const Random& random);
+/// Moves a ripple on by some milliseconds of game time: its puffs grow, wrap round and fade, and it ages. Returns
+/// whether anything is left of it.
+[[nodiscard]] bool AdvanceRipple(Ripple& ripple, float milliseconds);
+/// A ripple puff's four corners: a square of its size in the border's plane, turned by its angle
+[[nodiscard]] std::array<glm::vec3, 4> PuffCorners(const Ripple& ripple, size_t puff);
+
 /// How much a place a distance from an influence's centre is in it, for a radius: whole up to a part of the radius,
 /// falling from a little less to nothing over the next part, then from a fifth to nothing out to the radius
 [[nodiscard]] float OnRange(float distance, float radius, float fullPart, float fallingPart, float small);

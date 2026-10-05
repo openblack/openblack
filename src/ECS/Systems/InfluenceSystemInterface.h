@@ -31,7 +31,8 @@ public:
 	virtual void Reset() = 0;
 	/// Once a game turn: the towns' and citadels' reach, and the border drawn again every ten turns once one has moved
 	virtual void ProcessTurn(uint32_t turn) = 0;
-	/// Once a frame: the border's texture scrolls with the game time
+	/// Once a frame: the border's texture scrolls with the game time, and while the game runs the hand crossing a border
+	/// sends out a ripple and a sound, and the ripples grow and fade
 	virtual void Update(std::chrono::duration<float, std::milli> gameTime) = 0;
 
 	/// How much a place is in a player's influence, from -1 to 1
@@ -41,6 +42,7 @@ public:
 	/// Whether a player's border shows yet: once their citadel stands
 	[[nodiscard]] virtual bool IsBorderShown(PlayerNames player) const = 0;
 	[[nodiscard]] virtual glm::vec2 GetScrollOffset() const = 0;
+	[[nodiscard]] virtual std::span<const influence::Ripple> GetRipples() const = 0;
 };
 
 } // namespace openblack::ecs::systems
