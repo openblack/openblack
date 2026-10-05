@@ -1188,7 +1188,8 @@ void TempleCameraModel::FollowTemple()
 		}
 		else
 		{
-			GoToRoom(*_doorRoom);
+			// Clicking on the way through cuts to the room, behind Temple::GoToRoom's fade
+			temple.GoToRoom(*_doorRoom);
 		}
 		break;
 	}
