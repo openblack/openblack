@@ -26,6 +26,7 @@ class EventManager;
 class LandIslandInterface;
 class OceanInterface;
 class Profiler;
+class GameRandomInterface;
 class RandomNumberManagerInterface;
 class SkyInterface;
 class TempleInteriorInterface;
@@ -123,6 +124,7 @@ struct Locator
 	using filesystem = entt::locator<filesystem::FileSystemInterface>;
 	using resources = entt::locator<resources::ResourcesInterface>;
 	using rng = entt::locator<RandomNumberManagerInterface>;
+	using gameRandom = entt::locator<GameRandomInterface>;
 	using terrainSystem = entt::locator<LandIslandInterface>;
 	using oceanSystem = entt::locator<OceanInterface>;
 	using skySystem = entt::locator<SkyInterface>;

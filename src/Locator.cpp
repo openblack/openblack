@@ -22,6 +22,7 @@
 #include "Audio/AudioManagerNoOp.h"
 #include "CHLApi.h"
 #include "Common/EventManager.h"
+#include "Common/GameRandomProduction.h"
 #include "Common/RandomNumberManagerProduction.h"
 #include "Debug/DebugGuiInterface.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
@@ -55,6 +56,7 @@
 
 using namespace openblack::audio;
 using namespace openblack::filesystem;
+using openblack::GameRandomProduction;
 using openblack::LandIsland;
 using openblack::RandomNumberManagerProduction;
 using openblack::TempleInterior;
@@ -111,6 +113,7 @@ bool openblack::InitializeEngine(GraphicsBackend backend, bool vsync) noexcept
 	Locator::filesystem::emplace<DefaultFileSystem>();
 #endif
 	Locator::rng::emplace<RandomNumberManagerProduction>();
+	Locator::gameRandom::emplace<GameRandomProduction>();
 	try
 	{
 		Locator::audio::emplace<AudioManager>();
@@ -147,6 +150,8 @@ bool openblack::InitializeGame() noexcept
 
 void openblack::InitializeLevel(const std::filesystem::path& path)
 {
+	// GGame::ClearMap -> GData::Reset 0x510750: both seeds go to 0 with every map
+	Locator::gameRandom::value().SetSeeds({0, 0});
 	Locator::entitiesMap::emplace<MapProduction>();
 	Locator::dynamicsSystem::emplace<DynamicsSystem>();
 	Locator::livingActionSystem::emplace<LivingActionSystem>();
