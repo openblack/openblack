@@ -37,10 +37,10 @@ public:
 	/// The sky turns toward the camera's alignment, by game time, none while paused
 	virtual void Update(std::chrono::duration<float, std::milli> gameTime) = 0;
 
-	/// The alignment the camera is in, as of the last turn (1 - DAT_00BF337C), which the temple's insides are lit by and
-	/// the ambience follows
+	/// The alignment the camera is in, as of the last turn, from -1, evil, to 1, good, which the temple's insides are lit by
+	/// and the ambience follows
 	[[nodiscard]] virtual float GetCameraAlignment() const = 0;
-	/// The alignment the sky shows (1 - DAT_00BF3378)
+	/// The alignment the sky shows, from -1, evil, to 1, good
 	[[nodiscard]] virtual float GetSkyAlignment() const = 0;
 };
 
