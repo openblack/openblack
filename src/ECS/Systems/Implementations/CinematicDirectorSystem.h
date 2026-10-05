@@ -36,6 +36,7 @@ public:
 	[[nodiscard]] bool IsInterfaceActive() const override;
 	[[nodiscard]] bool TakeHideDialogs() override;
 
+	void Reset() override { *this = CinematicDirectorSystem {}; }
 	void ProcessTurn() override;
 	void Update(std::chrono::duration<float, std::milli> gameTime) override;
 

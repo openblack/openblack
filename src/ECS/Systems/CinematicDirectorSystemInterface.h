@@ -48,6 +48,8 @@ public:
 	virtual void SetCloseClipping(bool close) = 0;
 	[[nodiscard]] virtual bool IsCloseClipping() const = 0;
 
+	/// As a new land opens: no fade, no bars, no close clipping
+	virtual void Reset() = 0;
 	/// Moves the fade on by a game turn
 	virtual void ProcessTurn() = 0;
 	/// Slides the bars on by the game time of the frame, which stops while the game is paused

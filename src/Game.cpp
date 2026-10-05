@@ -1415,6 +1415,13 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 	const auto data = fileSystem.ReadAll(path);
 	const auto source = std::string(reinterpret_cast<const char*>(data.data()), data.size());
 
+	// A new land has no weather of the last one, and none of its script's fades, cinema bars or clipping
+	if (Locator::weatherSystem::has_value())
+	{
+		Locator::weatherSystem::value().Reset();
+	}
+	Locator::cinematicDirectorSystem::value().Reset();
+
 	// Reset everything. Deletes all entities and their components
 	Locator::entitiesRegistry::value().Reset();
 	// TODO(#661): split entities that are permanent from map entities and move hand and camera to init
@@ -1428,7 +1435,15 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 	                                                        config.cameraFarClip);
 
 	Script script;
-	script.Load(source);
+	try
+	{
+		script.Load(source);
+	}
+	catch (const std::exception& e)
+	{
+		// A script that can't be read leaves the land as far as it got, rather than ending the game
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "Error in the map script {}: {}", path.generic_string(), e.what());
+	}
 
 	// Each released map comes with an optional .fot file which contains the footpath information for the map
 	const auto stem = string_utils::LowerCase(path.stem().generic_string());
@@ -1527,7 +1542,9 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	InitializeLevel(fixedName);
 
 	// A land starts at noon on the game's cycle of day and night, which its script may change, under new clouds
-	Locator::skySystem::value().GetClock().Reset();
+	auto& sky = Locator::skySystem::value();
+	sky.GetClock().Reset();
+	sky.SetTime(sky.GetClock().GetScriptTime());
 	Locator::cloudSystem::value().Reset();
 
 	// There is always a player active
