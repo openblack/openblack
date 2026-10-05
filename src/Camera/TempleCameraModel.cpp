@@ -489,12 +489,6 @@ void TempleCameraModel::GoToRoom(Room room)
 	StartIntro(room, true);
 	_nextState = ControlOf(room);
 	ChangeState();
-	StepTwoSeconds();
-}
-
-void TempleCameraModel::StepTwoSeconds()
-{
-	// Temple::Update steps the room's camera on by a second twice, with the mouse still, as the player is put in a room
 	const Input still {.button = 0,
 	                   .mouse = _lastMouse,
 	                   .mouseScreen = glm::vec2(0.0f),
@@ -1207,10 +1201,9 @@ void TempleCameraModel::FollowTemple()
 		}
 		else if (_doorStage == DoorStage::Through)
 		{
-			// Temple::Update cuts to the room behind a fade, its camera two seconds into its path
+			// Temple::Update cuts to the room behind a fade
 			temple.FadeIntoRoom();
 			StartIntro(*_doorRoom, true);
-			StepTwoSeconds();
 		}
 		else
 		{
