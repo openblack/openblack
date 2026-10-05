@@ -13,6 +13,8 @@ SAMPLER2D(s4_handShadow, 4);
 SAMPLER2D(s5_objectShadows, 5);
 // The brightness the hand's light gives the land around it (HandLight)
 SAMPLER2D(s6_handLight, 6);
+// The land's light: a colour for each level of the cells' luminosity (LandLightTable)
+SAMPLER2D(s7_landLight, 7);
 
 // w: 1 to draw the land's textures alone, unlit and with no sea, as the temple's map is textured with
 uniform vec4 u_skyAndBump;
@@ -83,12 +85,11 @@ void main()
 		return;
 	}
 
-	// apply light map
-	float skyBightness = skyType / 2.0f;
-	float light = mix(0.25f, clamp(v_lightLevel * 2.0f, 0.5f, 1.0f), skyBightness);
-	// The hand's light, where it is brighter than the land's own
-	light = max(light, texture2D(s6_handLight, v_texcoord0.zw).r * u_handLight.z);
-	col = col * light;
+	// The land's light for the cell's luminosity, or the hand's light where it is brighter
+	float luminosity = floor(v_lightLevel * 255.0f + 0.5f);
+	vec3 light = texture2DLod(s7_landLight, vec2((luminosity + 0.5f) / 256.0f, 0.5f), 0.0f).rgb;
+	light = max(light, vec3_splat(texture2D(s6_handLight, v_texcoord0.zw).r * u_handLight.z));
+	col.rgb = col.rgb * light;
 
 	// the hand's shadow, projected along the sunlight onto the land beyond it
 	vec3 shadowCoord = v_shadowCoord.xyz;

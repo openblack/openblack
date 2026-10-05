@@ -30,6 +30,7 @@
 #include "3D/L3DSubMesh.h"
 #include "3D/LandBlock.h"
 #include "3D/LandIslandInterface.h"
+#include "3D/LandLightTable.h"
 #include "3D/OceanInterface.h"
 #include "3D/OrientedText.h"
 #include "3D/SkyInterface.h"
@@ -322,6 +323,10 @@ Renderer::~Renderer() noexcept
 	if (_handLightTexture)
 	{
 		bgfx::destroy(toBgfx(*_handLightTexture));
+	}
+	if (_landLightTexture)
+	{
+		bgfx::destroy(toBgfx(*_landLightTexture));
 	}
 	if (_iconsTexture)
 	{
@@ -764,6 +769,7 @@ void Renderer::DrawTempleMapPass(const DrawSceneDesc& desc) const
 	                                 _objectShadowFrameBuffer ? _objectShadowFrameBuffer->GetColorAttachment()
 	                                                          : island.GetFootprintFramebuffer().GetColorAttachment());
 	terrainShader->SetTextureSampler("s6_handLight", 6, GetHandLightTexture());
+	terrainShader->SetTextureSampler("s7_landLight", 7, _landLightTexture.value_or(GetHandLightTexture()));
 	terrainShader->SetUniformValue("u_skyAndBump", &u_skyAndBump);
 	terrainShader->SetUniformValue("u_objectShadows", &u_objectShadows);
 	terrainShader->SetUniformValue("u_islandExtent", &islandExtent);
@@ -1421,6 +1427,34 @@ glm::vec4 Renderer::GetHandLight(const DrawSceneDesc& drawDesc) const
 	return handLight;
 }
 
+TextureHandle Renderer::UpdateLandLight() const
+{
+	if (!_landLightTable)
+	{
+		_landLightTable = std::make_unique<LandLightTable>();
+		auto& fileSystem = Locator::filesystem::value();
+		const auto path = fileSystem.GetPath<filesystem::Path::WeatherSystem>() / "palette.raw";
+		if (!fileSystem.Exists(path) || !_landLightTable->Load(fileSystem.ReadAll(path)))
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Could not load the land's light palette {}", path.generic_string());
+		}
+		_landLightTexture = fromBgfx(bgfx::createTexture2D(LandLightTable::k_Size, 1, false, 1, bgfx::TextureFormat::RGBA8,
+		                                                   BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP | BGFX_SAMPLER_POINT));
+		bgfx::setName(toBgfx(*_landLightTexture), "Land Light");
+	}
+	if (_landLightTable->IsLoaded())
+	{
+		const auto skyType = Locator::skySystem::has_value() ? Locator::skySystem::value().GetCurrentSkyType() : 2.0f;
+		const auto alignment =
+		    Locator::alignmentSystem::has_value() ? Locator::alignmentSystem::value().GetSkyAlignment() : 0.0f;
+		_landLightTable->Build(skyType, alignment);
+		const auto& texels = _landLightTable->GetTexels();
+		bgfx::updateTexture2D(toBgfx(*_landLightTexture), 0, 0, 0, 0, LandLightTable::k_Size, 1,
+		                      bgfx::copy(texels.data(), static_cast<uint32_t>(texels.size() * sizeof(texels[0]))));
+	}
+	return *_landLightTexture;
+}
+
 glm::vec4 Renderer::GetModelLight() const
 {
 	// By day, or with no hand to carry it, the sun
@@ -1515,6 +1549,7 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 {
 	// TODO(bwrsandman): Footprint framebuffer doesn't need to be updated each frame
 	DrawFootprintPass(drawDesc);
+	UpdateLandLight();
 	DrawObjectShadowPass(drawDesc);
 	DrawTempleMapPass(drawDesc);
 	{
@@ -1683,6 +1718,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			                                 _objectShadowFrameBuffer ? _objectShadowFrameBuffer->GetColorAttachment()
 			                                                          : island.GetFootprintFramebuffer().GetColorAttachment());
 
+			terrainShader->SetTextureSampler("s7_landLight", 7, _landLightTexture.value_or(GetHandLightTexture()));
 			terrainShader->SetUniformValue("u_skyAndBump", &u_skyAndBump);
 			terrainShader->SetUniformValue("u_objectShadows", &u_objectShadows);
 			terrainShader->SetUniformValue("u_islandExtent", &islandExtent);

@@ -33,6 +33,7 @@
 
 namespace openblack
 {
+class LandLightTable;
 struct BgfxCallback;
 class Game;
 
@@ -116,6 +117,9 @@ private:
 	mutable std::optional<HandShadow> _handShadow;
 	/// HandLight's map, loaded with the first land drawn, empty when the game has none
 	mutable std::optional<TextureHandle> _handLightTexture;
+	/// The land's light this frame, and the 256 by 1 texture the terrain reads it from
+	mutable std::unique_ptr<LandLightTable> _landLightTable;
+	mutable std::optional<TextureHandle> _landLightTexture;
 	mutable bool _handLightLoaded {false};
 	/// icons.raw with iconsa.raw's alpha, which the creature's room's belts and medals are drawn with, once loaded
 	mutable std::optional<TextureHandle> _iconsTexture;
@@ -129,6 +133,8 @@ private:
 	/// HandLight's map, or a texture to bind in its place when there is none
 	/// u_modelLight: the game's model light this frame
 	[[nodiscard]] glm::vec4 GetModelLight() const;
+	/// Rebuilds the land's light for this frame, loading the palette the first time; the texture of it
+	TextureHandle UpdateLandLight() const;
 	[[nodiscard]] TextureHandle GetHandLightTexture() const;
 	std::unique_ptr<Mesh> _plane;
 };
