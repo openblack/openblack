@@ -1638,6 +1638,11 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					drawInstances(meshId, placers, true);
 				}
 			}
+			// WorldRoom::Draw's pool, the map over it and its markers, ahead of the hand, whose faded wrist they show
+			// through
+			DrawTemplePool(desc);
+			DrawTempleMap(desc);
+			DrawTempleMapMarkers(desc);
 			// CHand draws the hand after the rest of the scene, blended by its translucent texture. Black & White culls
 			// its back faces; here both sides are drawn, the inside first so that the outside blends over it.
 			// WorldRoom::Draw's reflection of the main room has no hand in it
@@ -1742,9 +1747,6 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 		if (desc.drawEntities)
 		{
 			DrawLightBeams(desc);
-			DrawTemplePool(desc);
-			DrawTempleMap(desc);
-			DrawTempleMapMarkers(desc);
 			DrawMistDomes(desc);
 			DrawTempleText(desc);
 		}
