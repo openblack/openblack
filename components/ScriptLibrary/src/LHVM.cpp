@@ -799,7 +799,8 @@ void LHVM::Opcode03Pop(VMTask& task, const VMInstruction& instruction)
 		}
 		if (var.type == DataType::Object)
 		{
-			RemoveReference(newVal.uintVal);
+			// the object the variable held until now
+			RemoveReference(var.value.uintVal);
 		}
 		var.value = newVal;
 		var.type = type;
