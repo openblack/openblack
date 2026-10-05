@@ -71,12 +71,15 @@ public:
 	[[nodiscard]] uint32_t GetLandColour() const noexcept { return _landColour; }
 	/// The palette's warm colour of the frame, which the darkest levels go on to, 0xRRGGBB
 	[[nodiscard]] uint32_t GetWarmColour() const noexcept { return _warmColour; }
+	/// The moon's colour of the frame, by the alignment, 0xRRGGBB
+	[[nodiscard]] uint32_t GetMoonColour() const noexcept { return _moonColour; }
 
 private:
 	std::array<uint32_t, k_Size> _texels {};
 	Haze _haze;
 	uint32_t _landColour {0xFFFFFF};
 	uint32_t _warmColour {0xFFFFFF};
+	uint32_t _moonColour {0xFFFFFF};
 };
 
 } // namespace openblack

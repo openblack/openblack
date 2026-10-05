@@ -65,6 +65,8 @@ set(SKY_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/WeatherSystem)
 set(SKY_OUTPUT ${SKY_BINARY_DIR}/sky.l3d)
 set(SUN_MESH_OUTPUT ${SKY_BINARY_DIR}/sun.l3d)
 set(SUN_INPUT ${SKY_BINARY_DIR}/sun.gltf)
+set(MOON_MESH_OUTPUT ${SKY_BINARY_DIR}/moon.l3d)
+set(MOON_INPUT ${SKY_BINARY_DIR}/moon.gltf)
 set(SKY_MESH_FILE ${SKY_BINARY_DIR}/sky.gltf)
 
 set(COFFRE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/Data/Misc)
@@ -198,6 +200,10 @@ add_custom_target(
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
           --output-file ${SUN_INPUT}
   COMMAND l3dtool write -o ${SUN_MESH_OUTPUT} -i ${SUN_INPUT}
+  # Data/WeatherSystem/moon.l3d
+  COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
+          --output-file ${MOON_INPUT}
+  COMMAND l3dtool write -o ${MOON_MESH_OUTPUT} -i ${MOON_INPUT}
   # Data/metre_sphere.l3d
   COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
           --output-file ${SPHERE_INPUT}
@@ -241,6 +247,7 @@ add_custom_target(
              ${RIVER_INPUT}
              ${RIVER2_INPUT}
              ${SUN_INPUT}
+             ${MOON_INPUT}
              ${SPHERE_INPUT}
   SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/gen_meshes.py
           ${CMAKE_CURRENT_SOURCE_DIR}/gen_zeroed_file.py

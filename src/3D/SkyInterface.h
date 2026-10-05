@@ -28,6 +28,10 @@ public:
 	/// The sun: a square far out in the sky, and its texture
 	static constexpr entt::hashed_string k_SunMeshId = entt::hashed_string("weather/sun");
 	static constexpr entt::hashed_string k_SunTextureId = entt::hashed_string("raw/sun");
+	/// The moon: a half sphere beside the camera, its texture and that texture's alpha
+	static constexpr entt::hashed_string k_MoonMeshId = entt::hashed_string("weather/moon");
+	static constexpr entt::hashed_string k_MoonTextureId = entt::hashed_string("raw/weather");
+	static constexpr entt::hashed_string k_MoonAlphaTextureId = entt::hashed_string("raw/weathera");
 
 	/// Hours of the morning at which the sky reaches each state, mirrored around midday for the evening
 	struct DayNightTimes

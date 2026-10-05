@@ -81,7 +81,21 @@ private:
 	void DrawSun(RenderPass viewId) const;
 	/// The sun's glare over the finished view, dimmed by what hides the sun from the camera
 	void DrawSunGlare(const Camera& camera) const;
-	void DrawSunMesh(RenderPass viewId, const glm::mat4& model, const glm::vec4& colour, uint64_t depthTest) const;
+	/// The moon and its glow in the sky, after the sky's dome
+	void DrawMoon(RenderPass viewId) const;
+	/// A mesh of the sky's, in a colour, with a texture and that texture's alpha
+	struct CelestialDraw
+	{
+		entt::id_type meshId;
+		entt::id_type textureId;
+		entt::id_type alphaTextureId;
+		glm::mat4 model;
+		glm::vec4 colour;
+		/// See vs_celestial
+		glm::vec4 celestial;
+		uint64_t state;
+	};
+	void DrawCelestialMesh(RenderPass viewId, const CelestialDraw& draw) const;
 	/// The hand's glow on the water at night, under the sea
 	void DrawHandWaterGlow(const DrawSceneDesc& desc) const;
 	/// The sea's rows, ripple, period and colour for the camera

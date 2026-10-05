@@ -10,9 +10,11 @@
 #include <cstring>
 
 #include <algorithm>
+#include <chrono>
 #include <limits>
 #include <map>
 #include <memory>
+#include <span>
 #define LOCATOR_IMPLEMENTATIONS
 
 #include <cstdint>
@@ -67,6 +69,7 @@
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/LightBeams.h"
 #include "Graphics/ModelLight.h"
+#include "Graphics/Moon.h"
 #include "Graphics/ObjectShadows.h"
 #include "Graphics/Primitive.h"
 #include "Graphics/SeaRows.h"
@@ -1519,35 +1522,33 @@ void Renderer::DrawHandWaterGlow(const DrawSceneDesc& desc) const
 	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(spriteShader->GetRawHandle()));
 }
 
-void Renderer::DrawSunMesh(RenderPass viewId, const glm::mat4& model, const glm::vec4& colour, uint64_t depthTest) const
+void Renderer::DrawCelestialMesh(RenderPass viewId, const CelestialDraw& draw) const
 {
 	const auto& meshes = Locator::resources::value().GetMeshes();
 	const auto& textures = Locator::resources::value().GetTextures();
-	if (!meshes.Contains(SkyInterface::k_SunMeshId.value()) || !textures.Contains(SkyInterface::k_SunTextureId.value()))
+	if (!meshes.Contains(draw.meshId) || !textures.Contains(draw.textureId) || !textures.Contains(draw.alphaTextureId))
 	{
 		return;
 	}
-	const glm::vec4 celestial {0.0f};
 	const auto* program = _shaderManager->GetShader("Celestial");
-	const auto texture = textures.Handle(SkyInterface::k_SunTextureId);
-	const auto mesh = meshes.Handle(SkyInterface::k_SunMeshId);
+	const auto texture = textures.Handle(draw.textureId);
+	const auto alphaTexture = textures.Handle(draw.alphaTextureId);
+	const auto mesh = meshes.Handle(draw.meshId);
 	for (const auto& subMesh : mesh->GetSubMeshes())
 	{
 		for (const auto& primitive : subMesh->GetPrimitives())
 		{
-			bgfx::setTransform(glm::value_ptr(model));
+			bgfx::setTransform(glm::value_ptr(draw.model));
 			program->SetTextureSampler("s_diffuse", 0, *texture);
-			program->SetTextureSampler("s_alpha", 1, *texture);
-			program->SetUniformValue("u_colour", &colour);
-			program->SetUniformValue("u_celestial", &celestial);
+			program->SetTextureSampler("s_alpha", 1, *alphaTexture);
+			program->SetUniformValue("u_colour", &draw.colour);
+			program->SetUniformValue("u_celestial", &draw.celestial);
 			if (subMesh->GetMesh().IsIndexed())
 			{
 				subMesh->GetMesh().GetIndexBuffer().Bind(primitive.indicesCount, primitive.indicesOffset);
 			}
 			subMesh->GetMesh().GetVertexBuffer().Bind();
-			// Added to what is behind it
-			bgfx::setState(BGFX_STATE_WRITE_RGB | depthTest |
-			               BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE));
+			bgfx::setState(draw.state);
 			bgfx::submit(static_cast<bgfx::ViewId>(viewId), toBgfx(program->GetRawHandle()));
 		}
 	}
@@ -1555,12 +1556,94 @@ void Renderer::DrawSunMesh(RenderPass viewId, const glm::mat4& model, const glm:
 
 namespace
 {
+/// Added to what is behind it
+constexpr uint64_t k_AdditiveState =
+    BGFX_STATE_WRITE_RGB | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE);
+
 /// Far out to the north west, facing the island
 glm::mat4 SunModel(const glm::vec3& position)
 {
 	return glm::translate(position) * glm::rotate(-3.0f * glm::pi<float>() / 4.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 } // namespace
+
+void Renderer::DrawMoon(RenderPass viewId) const
+{
+	if (!Locator::camera::has_value())
+	{
+		return;
+	}
+	const auto placement = moon::Place(Locator::skySystem::value().GetClock().GetScriptTime());
+	if (!placement)
+	{
+		return;
+	}
+	// The moon keeps its place beside the player's camera and faces it. Drawn so in the mirrored view, it is mirrored
+	// in the sea with everything else.
+	const auto& camera = Locator::camera::value();
+	const auto centre = camera.GetOrigin() + placement->offset;
+	const auto view = camera.GetViewMatrix(Camera::Interpolation::Current);
+	const auto basis = moon::Basis(view, glm::inverse(view), centre);
+	const auto moonColour = _landLightTable ? _landLightTable->GetMoonColour() : 0xFFFFFFu;
+	const glm::vec3 colour = glm::vec3(static_cast<float>((moonColour >> 16) & 0xFFu),
+	                                   static_cast<float>((moonColour >> 8) & 0xFFu), static_cast<float>(moonColour & 0xFFu)) /
+	                         255.0f;
+	const float alpha = placement->alpha / 255.0f;
+
+	// First its glow, added to the sky
+	const auto& textures = Locator::resources::value().GetTextures();
+	const auto atmos = entt::hashed_string("raw/ATMOS");
+	const auto atmosAlpha = entt::hashed_string("raw/ATMOSA");
+	bgfx::VertexLayout layout;
+	layout.begin()
+	    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+	    .end();
+	constexpr auto k_GlowVertices = static_cast<uint32_t>(moon::k_GlowIndices.size());
+	if (textures.Contains(atmos.value()) && textures.Contains(atmosAlpha.value()) &&
+	    bgfx::getAvailTransientVertexBuffer(k_GlowVertices, layout) == k_GlowVertices)
+	{
+		struct Vertex
+		{
+			glm::vec3 position;
+			glm::vec2 uv;
+		};
+		bgfx::TransientVertexBuffer buffer;
+		bgfx::allocTransientVertexBuffer(&buffer, k_GlowVertices, layout);
+		const auto vertices = std::span(reinterpret_cast<Vertex*>(buffer.data), k_GlowVertices);
+		const auto glow = moon::MakeGlow(basis, centre);
+		for (size_t i = 0; i < vertices.size(); ++i)
+		{
+			const auto corner = moon::k_GlowIndices.at(i);
+			vertices[i] = {glow.corners.at(corner), glow.uvs.at(corner)};
+		}
+		const auto* program = _shaderManager->GetShader("Celestial");
+		const glm::mat4 identity(1.0f);
+		const glm::vec4 glowColour {moon::GlowColour(colour), alpha};
+		const glm::vec4 celestial {0.0f, 0.0f, 0.0f, 1.0f};
+		bgfx::setTransform(glm::value_ptr(identity));
+		program->SetTextureSampler("s_diffuse", 0, *textures.Handle(atmos));
+		program->SetTextureSampler("s_alpha", 1, *textures.Handle(atmosAlpha));
+		program->SetUniformValue("u_colour", &glowColour);
+		program->SetUniformValue("u_celestial", &celestial);
+		bgfx::setVertexBuffer(0, &buffer);
+		bgfx::setState(k_AdditiveState);
+		bgfx::submit(static_cast<bgfx::ViewId>(viewId), toBgfx(program->GetRawHandle()));
+	}
+
+	// Then the moon, blended over the sky, its face turned to the real moon's phase
+	const auto now = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch());
+	const auto phase = moon::Phase(now.count());
+	DrawCelestialMesh(viewId, {
+	                              .meshId = SkyInterface::k_MoonMeshId.value(),
+	                              .textureId = SkyInterface::k_MoonTextureId.value(),
+	                              .alphaTextureId = SkyInterface::k_MoonAlphaTextureId.value(),
+	                              .model = moon::Model(basis, centre, phase),
+	                              .colour = glm::vec4(colour, alpha),
+	                              .celestial = {std::cos(phase), std::sin(phase), 1.0f, 1.0f},
+	                              .state = BGFX_STATE_WRITE_RGB | BGFX_STATE_BLEND_ALPHA,
+	                          });
+}
 
 void Renderer::DrawSun(RenderPass viewId) const
 {
@@ -1569,9 +1652,16 @@ void Renderer::DrawSun(RenderPass viewId) const
 	{
 		return;
 	}
-	// In a warm colour, over the sky drawn before it; the land drawn after it covers it
-	const glm::vec4 colour {0x95 / 255.0f, 0x7C / 255.0f, 0x63 / 255.0f, placement->alpha / 255.0f};
-	DrawSunMesh(viewId, SunModel(placement->position), colour, 0);
+	// In a warm colour, added to the sky drawn before it; the land drawn after it covers it
+	DrawCelestialMesh(viewId, {
+	                              .meshId = SkyInterface::k_SunMeshId.value(),
+	                              .textureId = SkyInterface::k_SunTextureId.value(),
+	                              .alphaTextureId = SkyInterface::k_SunTextureId.value(),
+	                              .model = SunModel(placement->position),
+	                              .colour = {0x95 / 255.0f, 0x7C / 255.0f, 0x63 / 255.0f, placement->alpha / 255.0f},
+	                              .celestial = glm::vec4(0.0f),
+	                              .state = k_AdditiveState,
+	                          });
 }
 
 void Renderer::DrawSunGlare(const Camera& camera) const
@@ -1607,8 +1697,16 @@ void Renderer::DrawSunGlare(const Camera& camera) const
 		return;
 	}
 	// Larger, in an orange colour, over everything in the view
-	const glm::vec4 colour {0xA0 / 255.0f, 0x6A / 255.0f, 0x35 / 255.0f, _sunGlare * placement->alpha / (255.0f * 255.0f)};
-	DrawSunMesh(RenderPass::Main, model * glm::scale(glm::vec3(sun::k_GlareScale)), colour, 0);
+	DrawCelestialMesh(RenderPass::Main, {
+	                                        .meshId = SkyInterface::k_SunMeshId.value(),
+	                                        .textureId = SkyInterface::k_SunTextureId.value(),
+	                                        .alphaTextureId = SkyInterface::k_SunTextureId.value(),
+	                                        .model = model * glm::scale(glm::vec3(sun::k_GlareScale)),
+	                                        .colour = {0xA0 / 255.0f, 0x6A / 255.0f, 0x35 / 255.0f,
+	                                                   _sunGlare * placement->alpha / (255.0f * 255.0f)},
+	                                        .celestial = glm::vec4(0.0f),
+	                                        .state = k_AdditiveState,
+	                                    });
 }
 
 void Renderer::DrawLandAlphaPass(const DrawSceneDesc& drawDesc) const
@@ -1996,6 +2094,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			submitDesc.isSky = true;
 
 			DrawMesh(Locator::skySystem::value().GetMesh(), submitDesc, 0);
+			DrawMoon(desc.viewId);
 			DrawSun(desc.viewId);
 		}
 	}

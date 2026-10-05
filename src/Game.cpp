@@ -1026,6 +1026,8 @@ bool Game::Initialize() noexcept
 		meshManager.Load("metre_sphere", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "metre_sphere.l3d");
 		meshManager.Load(SkyInterface::k_SunMeshId.value(), LFromDiskTag {},
 		                 fileSystem.GetPath<Path::WeatherSystem>() / "sun.l3d");
+		meshManager.Load(SkyInterface::k_MoonMeshId.value(), LFromDiskTag {},
+		                 fileSystem.GetPath<Path::WeatherSystem>() / "moon.l3d");
 
 		using CFromDiskTag = resources::CameraPathLoader::FromDiskTag;
 		camPathManager.Load("cam", CFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "cam.cam");
