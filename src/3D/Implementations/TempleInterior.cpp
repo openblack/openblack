@@ -440,9 +440,27 @@ void TempleInterior::LeaveForMapPoint(glm::vec3 point)
 		return;
 	}
 	// GGame::LeaveInsideCitadel puts the camera 50 above the place and 70 along z from it, looking at it
-	// TODO(raffclar): the temple fades out to white first (Temple::UpdateFade), and the hand feels the click
+	// TODO(raffclar): the hand feels the click
 	_leaveTo = std::make_pair(glm::vec3(world.x, altitude + 50.0f, world.y + 70.0f), glm::vec3(world.x, altitude, world.y));
-	RequestLeave();
+	// WorldRoomCamera::UpdateMain fades the temple out to white, and WorldRoom::Update leaves once it is
+	if (_interface != nullptr)
+	{
+		_interface->GetScreenFade().FadeThrough(glm::vec3(1.0f));
+		_leavingForMapPoint = true;
+	}
+	else
+	{
+		RequestLeave();
+	}
+}
+
+void TempleInterior::FadeIntoRoom()
+{
+	// Temple::GoToRoom and Temple::Update cover the cut from 1.2, in whatever colour is still fading
+	if (_interface != nullptr)
+	{
+		_interface->GetScreenFade().FadeFrom(1.2f);
+	}
 }
 
 void TempleInterior::UpdateMapMarkers(float seconds)
@@ -526,6 +544,10 @@ void TempleInterior::GoToRoom(TempleRoom room)
 {
 	if (_active && _cameraModel != nullptr)
 	{
+		if (room != _currentRoom)
+		{
+			FadeIntoRoom();
+		}
 		_cameraModel->GoToRoom(room);
 	}
 }
@@ -732,6 +754,10 @@ void TempleInterior::Update(std::chrono::microseconds dt)
 		}
 	}
 
+	if (_leavingForMapPoint && _interface != nullptr && _interface->GetScreenFade().GetTurns() > 0)
+	{
+		RequestLeave();
+	}
 	if (_leaveRequested)
 	{
 		_leaveRequested = false;
@@ -781,6 +807,9 @@ void TempleInterior::Activate(TempleRoom room)
 	// The temple's camera takes over from the island's, coming into the room along its path
 	_active = true;
 	_leaveRequested = false;
+	_leavingForMapPoint = false;
+	// Temple::InitEngine covers the way in from 1.2
+	FadeIntoRoom();
 	_transitionRoom.reset();
 	_doors = TempleDoors(PlayDoorSound);
 	// CreatureRoom::InitEngine
@@ -839,6 +868,12 @@ void TempleInterior::Deactivate()
 	}
 	_cameraModel = nullptr;
 	_transitionRoom.reset();
+	_leavingForMapPoint = false;
+	// GGame::LeaveInsideCitadel goes out to the island all white, which fades over a second
+	if (_interface != nullptr)
+	{
+		_interface->GetScreenFade().FadeFrom(1.0f, glm::vec3(1.0f));
+	}
 	ApplyLens();
 	camera.SetOrigin(_playerPositionOutside);
 	camera.SetFocus(_playerPositionOutside + glm::quat(_playerRotationOutside) * glm::vec3(0.0f, 0.0f, 1.0f));

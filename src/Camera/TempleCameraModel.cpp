@@ -1208,7 +1208,7 @@ void TempleCameraModel::FollowTemple()
 		else if (_doorStage == DoorStage::Through)
 		{
 			// Temple::Update cuts to the room behind a fade, its camera two seconds into its path
-			// TODO(raffclar): the fade, from 1.2 down at 1.0 a second
+			temple.FadeIntoRoom();
 			StartIntro(*_doorRoom, true);
 			StepTwoSeconds();
 		}

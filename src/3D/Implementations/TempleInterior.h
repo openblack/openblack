@@ -66,6 +66,7 @@ public:
 	[[nodiscard]] float GetPoolTime() const override { return _poolTime; }
 	void Escape() override;
 	void RequestLeave() override { _leaveRequested = true; }
+	void FadeIntoRoom() override;
 	void Update(std::chrono::microseconds dt) override;
 	[[nodiscard]] glm::vec2 GetWaterfallSlide() const override;
 	void Activate() override { Activate(TempleRoom::Main); }
@@ -104,6 +105,8 @@ private:
 	void UpdateMapMarkers(float seconds);
 	/// Where the camera is to look from and at as the player leaves for a place double clicked on the map
 	std::optional<std::pair<glm::vec3, glm::vec3>> _leaveTo;
+	/// Whether the temple is fading to white to leave for the place on the map, which it does once the screen is white
+	bool _leavingForMapPoint {false};
 	/// WorldRoomCamera's double click on the map: leaves the temple for that place
 	void LeaveForMapPoint(glm::vec3 point);
 	uint32_t _visits {0};
