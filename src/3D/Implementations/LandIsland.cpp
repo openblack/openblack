@@ -25,6 +25,7 @@
 #include <stb_image_write.h>
 
 #include "3D/LandBlock.h"
+#include "3D/MapCoords.h"
 #include "Dynamics/LandBlockBulletMeshInterface.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"
@@ -41,8 +42,6 @@ const float LandIslandInterface::k_CellSize = 10.0f;
 
 namespace
 {
-// MapCoords are 16.16 fixed point cells
-constexpr float k_MapCoordsPerUnit = 6553.6f;
 constexpr int32_t k_MapSize = 0x200;
 // The 1/256 of LH3DIsland::GetAltitude's integer interpolation
 constexpr double k_AltitudeFraction = 1.0 / 256.0;
@@ -50,21 +49,11 @@ constexpr double k_AltitudeFraction = 1.0 / 256.0;
 // in cells no higher than k_SeaLevelClampAltitude. The game only turns the latter off while it creates a fish farm.
 constexpr uint8_t k_SeaLevelAltitude = 3;
 constexpr uint8_t k_SeaLevelClampAltitude = 4;
-
-/// MSVC _ftol: truncation, with the integer indefinite value when out of range
-int32_t Ftol(double value)
-{
-	if (value <= -2147483649.0 || value >= 2147483648.0)
-	{
-		return INT32_MIN;
-	}
-	return static_cast<int32_t>(value);
-}
 } // namespace
 
 int32_t LandIslandInterface::ToMapCoords(float unit)
 {
-	return Ftol(static_cast<double>(unit) * static_cast<double>(k_MapCoordsPerUnit));
+	return map_coords::ToFixed(unit);
 }
 
 float LandIslandInterface::GetDrawnAltitude(uint8_t altitude)

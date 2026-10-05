@@ -70,7 +70,7 @@ public:
 	/// LH3DIsland::GetAltitude: the height of the land at a map position, in 1/65536 of a cell. It is interpolated
 	/// over the triangle of the cell the position is in, the way the land is drawn, with land at sea level flat.
 	[[nodiscard]] double GetAltitude(int32_t mapX, int32_t mapZ) const;
-	/// MapCoords::Set: a world coordinate in 1/65536 of a cell
+	/// MapCoords::Set: a world coordinate in 1/65536 of a cell (map_coords::ToFixed)
 	[[nodiscard]] static int32_t ToMapCoords(float unit);
 	/// The height LH3D draws land of a cell altitude at: land at or below sea level is drawn flat at height 0
 	[[nodiscard]] static float GetDrawnAltitude(uint8_t altitude);
