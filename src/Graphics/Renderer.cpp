@@ -628,6 +628,22 @@ void Renderer::DrawTemplePool(const DrawSceneDesc& desc) const
 	    Layer {glm::vec3(0.0f), 0.0f, alpha, glm::vec2(-0.01f, 0.007f) * time},
 	    Layer {glm::vec3(0.0f, 0.05f, 0.0f), glm::quarter_pi<float>(), 255 - alpha, glm::vec2(0.01f, 0.005f) * time},
 	};
+	// Under the water the room's reflection shows, where the floor leaves it uncovered
+	{
+		const auto model = glm::translate(glm::mat4(1.0f), temple.GetPosition());
+		const auto* reflection = _shaderManager->GetShader("Reflection");
+		reflection->SetTextureSampler("s_reflection", 4,
+		                              Locator::oceanSystem::value().GetReflectionFramebuffer().GetColorAttachment());
+		L3DMeshSubmitDesc submitDesc = {};
+		submitDesc.viewId = desc.viewId;
+		submitDesc.program = reflection;
+		// Beneath the first layer, at its height, so it leaves the depth to the layers
+		submitDesc.state = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_MSAA;
+		submitDesc.useMaterialCulling = true;
+		submitDesc.modelMatrices = &model;
+		submitDesc.matrixCount = 1;
+		DrawMesh(*meshes.Handle(pool), submitDesc, 0);
+	}
 	for (const auto& layer : layers)
 	{
 		const auto model = glm::translate(glm::mat4(1.0f), temple.GetPosition() + layer.position) *

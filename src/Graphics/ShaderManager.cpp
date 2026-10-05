@@ -72,6 +72,8 @@
 #include "ShaderIncluder.h"
 #define SHADER_NAME fs_object_reflective_lightmap
 #include "ShaderIncluder.h"
+#define SHADER_NAME fs_reflection
+#include "ShaderIncluder.h"
 #define SHADER_NAME fs_sky
 #include "ShaderIncluder.h"
 
@@ -132,7 +134,7 @@ struct ShaderDefinition
 	const std::string_view fragmentShaderName;
 };
 
-const std::array<bgfx::EmbeddedShader, 33> k_EmbeddedShaders = {{
+const std::array<bgfx::EmbeddedShader, 34> k_EmbeddedShaders = {{
     BGFX_EMBEDDED_SHADER(vs_line),
     BGFX_EMBEDDED_SHADER(vs_line_instanced), //
     BGFX_EMBEDDED_SHADER(fs_line),           //
@@ -143,6 +145,7 @@ const std::array<bgfx::EmbeddedShader, 33> k_EmbeddedShaders = {{
     BGFX_EMBEDDED_SHADER(vs_object_static_instanced),
     BGFX_EMBEDDED_SHADER(vs_object_lightmap_instanced),
     BGFX_EMBEDDED_SHADER(vs_object_lightmap),
+    BGFX_EMBEDDED_SHADER(fs_reflection),
     BGFX_EMBEDDED_SHADER(fs_object_lightmap),
     BGFX_EMBEDDED_SHADER(fs_object_reflective_lightmap),
     BGFX_EMBEDDED_SHADER(fs_sky), //
@@ -178,6 +181,7 @@ constexpr std::array k_Shaders {
     ShaderDefinition {"ObjectStaticInstanced", "vs_object_static_instanced", "fs_object"},
     ShaderDefinition {"ObjectLightmapInstanced", "vs_object_lightmap_instanced", "fs_object_lightmap"},
     ShaderDefinition {"ObjectLightmap", "vs_object_lightmap", "fs_object_lightmap"},
+    ShaderDefinition {"Reflection", "vs_object", "fs_reflection"},
     ShaderDefinition {"ObjectReflectiveLightmapInstanced", "vs_object_lightmap_instanced", "fs_object_reflective_lightmap"},
     ShaderDefinition {"Sky", "vs_object", "fs_sky"},
     ShaderDefinition {"Water", "vs_water", "fs_water"},
