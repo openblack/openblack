@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <algorithm>
 #include <fstream>
 #include <stdexcept>
 
@@ -860,6 +861,20 @@ void LHVM::Opcode05Sys(VMTask& /*task*/, const VMInstruction& instruction)
 			_currentStack->popCount = 0;
 			InvokeNativeCallEnterCallback(id);
 			func.impl();
+			// The game's functions always take their arguments off the stack. One that hasn't been written yet may leave
+			// them, which would shift every argument after it, so they are taken from under whatever it pushed.
+			auto& stack = *_currentStack;
+			const auto in = static_cast<uint32_t>(std::max(func.stackIn, 0));
+			if (stack.popCount == 0 && in > 0 && stack.count >= in + stack.pushCount)
+			{
+				const auto top = stack.count - stack.pushCount;
+				for (uint32_t i = 0; i < stack.pushCount; ++i)
+				{
+					stack.values.at(top - in + i) = stack.values.at(top + i);
+					stack.types.at(top - in + i) = stack.types.at(top + i);
+				}
+				stack.count -= in;
+			}
 			InvokeNativeCallExitCallback(id);
 		}
 		else // if impl not provided, then just adjust the stack
