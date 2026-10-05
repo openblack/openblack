@@ -79,7 +79,8 @@ struct RenderContext
 	{
 		glm::mat4 model {1.0f};
 		/// x: 1 while someone is home, which lights its windows at night. y: a colour, 0xRRGGBB, the land's light on it
-		/// is multiplied by, or 0 for none. z: 1 while it isn't drawn at all.
+		/// is multiplied by, or 0 for none. z: 1 while it isn't drawn at all. w: how much of the snow lying under it shows
+		/// on it, of 256, and the most it shows, or 0 for all of it.
 		glm::vec4 look {0.0f};
 	};
 	std::vector<ObjectInstance> instanceUniforms;

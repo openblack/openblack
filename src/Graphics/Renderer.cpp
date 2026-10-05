@@ -45,6 +45,8 @@
 #include "3D/OrientedText.h"
 #include "3D/Rain.h"
 #include "3D/SkyInterface.h"
+#include "3D/SnowCover.h"
+#include "ECS/Systems/SnowSystemInterface.h"
 #include "3D/TempleDoors.h"
 #include "3D/TempleInteriorInterface.h"
 #include "3D/TempleMap.h"
@@ -123,6 +125,31 @@ constexpr auto k_BgfxDefaultStateInvertedZ = 0 \
 
 namespace
 {
+/// How deep the snow lies over the island, as a texture the shaders read point by point, refreshed when the snow
+/// changes; none without snow
+const Texture2D* SnowDepth(std::unique_ptr<Texture2D>& texture, std::optional<uint32_t>& revision)
+{
+	if (!Locator::snowSystem::has_value())
+	{
+		return nullptr;
+	}
+	const auto& snow = Locator::snowSystem::value();
+	if (!texture)
+	{
+		texture = std::make_unique<Texture2D>("SnowDepth");
+		texture->Create(snow_cover::k_GridSize, snow_cover::k_GridSize, 1, TextureFormat::R32F, Wrapping::ClampEdge,
+		                Filter::Nearest, nullptr);
+		revision.reset();
+	}
+	if (revision != snow.GetRevision())
+	{
+		const auto depths = snow.GetDepths();
+		texture->Update(depths.data(), static_cast<uint32_t>(depths.size_bytes()));
+		revision = snow.GetRevision();
+	}
+	return texture.get();
+}
+
 /// The pass what blends in a scene goes to: its own pass after the scene's, but in the temple the scene's own, which
 /// draws everything in the order it comes
 RenderPass TranslucentView(RenderPass scene)
@@ -359,6 +386,7 @@ Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallb
 
 Renderer::~Renderer() noexcept
 {
+	_snowDepth.reset();
 	_plane.reset();
 	_handShadowFrameBuffer.reset();
 	_objectShadowFrameBuffer.reset();
@@ -545,6 +573,22 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				    desc.viewId == RenderPass::Reflection || desc.viewId == RenderPass::ReflectionTranslucent;
 				const glm::vec4 u_seaClip {reflection ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f};
 				program->SetUniformValue("u_seaClip", &u_seaClip);
+			}
+			if (program->HasUniform("u_snow"))
+			{
+				// Snow shows where the primitive writes its depth, as the game draws it over the object at the same depth
+				const auto& textures = Locator::resources::value().GetTextures();
+				const auto* depth = desc.snow ? SnowDepth(_snowDepth, _snowRevision) : nullptr;
+				const bool snowed = depth != nullptr && prim.depthWrite && textures.Contains(snow_cover::k_TextureId.value()) &&
+				                    textures.Contains(snow_cover::k_AlphaTextureId.value());
+				const glm::vec4 u_snow {snowed ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f};
+				program->SetUniformValue("u_snow", &u_snow);
+				if (snowed)
+				{
+					program->SetTextureSampler("s_snowDepth", 11, *depth);
+					program->SetTextureSampler("s_snow", 12, *textures.Handle(snow_cover::k_TextureId.value()));
+					program->SetTextureSampler("s_snowAlpha", 13, *textures.Handle(snow_cover::k_AlphaTextureId.value()));
+				}
 			}
 			if (program->HasUniform("u_window"))
 			{
@@ -3072,6 +3116,20 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			;
 			// clang-format on
 
+			// The snow lying on the land, when there is its noise to draw it with
+			const auto setTerrainSnow = [&]() {
+				const auto& textures = Locator::resources::value().GetTextures();
+				const auto* depth = SnowDepth(_snowDepth, _snowRevision);
+				const bool snowed = depth != nullptr && textures.Contains(snow_cover::k_NoiseTextureId.value());
+				const glm::vec4 u_snow {snowed ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f};
+				terrainShader->SetUniformValue("u_snow", &u_snow);
+				if (snowed)
+				{
+					terrainShader->SetTextureSampler("s_snowDepth", 11, *depth);
+					terrainShader->SetTextureSampler("s12_snowNoise", 12,
+					                                 *textures.Handle(snow_cover::k_NoiseTextureId.value()));
+				}
+			};
 			// bgfx keeps a uniform for the draws after it in the order they come, but the blocks are drawn in another
 			// order, so each block sets them all
 			const auto setTerrainUniforms = [&]() {
@@ -3097,6 +3155,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				terrainShader->SetTextureSampler("s4_handShadow", 4, _handShadowFrameBuffer->GetColorAttachment());
 				terrainShader->SetUniformValue("u_handShadowMatrix", &handShadowMatrix);
 				terrainShader->SetUniformValue("u_handShadow", &u_handShadow);
+				setTerrainSnow();
 			};
 
 			for (size_t i = 0; const auto& block : island.GetBlocks())
@@ -3149,6 +3208,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				submitDesc.lightMultiply = light.multiply;
 				submitDesc.lightAdd = light.add;
 				submitDesc.landLightScale = meshId == ecs::components::Hand::k_MeshId ? 1.5f : 1.0f;
+				submitDesc.snow = !inTemple && meshId != ecs::components::Hand::k_MeshId;
 				submitDesc.unlit = placers.unlit;
 				submitDesc.instanceDesc =
 				    std::make_unique<graphics::InstanceDesc>(renderCtx.instanceUniformBuffer, first, count);
@@ -3336,6 +3396,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					submitDesc.isSky = false;
 					submitDesc.morphWithTerrain = false;
 					submitDesc.landLightScale = _treeBrightness;
+					submitDesc.snow = !inTemple;
 					submitDesc.program = vegetationShaderInstanced;
 					DrawMesh(*mesh, submitDesc, std::numeric_limits<uint8_t>::max());
 				}

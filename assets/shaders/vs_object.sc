@@ -23,6 +23,7 @@ $output v_position, v_texcoord0, v_normal, v_color0, v_haze
 #include "haze.sh"
 #include "model_light.sh"
 #include "window_light.sh"
+#include "snow.sh"
 
 // Pushes the mesh back by a fraction of its depth, towards the far plane at 0: the temple's rooms other than the one the
 // player is in, which overlap it at the doorways
@@ -100,7 +101,15 @@ void main()
 		added = min(added + LandColourAt(origin.xz), vec3_splat(255.0f));
 	}
 #endif // USE_LIGHTMAP
+	// w: how much snow shows on it, of 255. An instance can have its own rate and cap of 256 for it, as a field's crop has.
 	v_haze = vec4(added / 255.0f, 0.0f);
+#ifdef USE_INSTANCING
+	if (u_snow.x > 0.5f)
+	{
+		float snowCap = i_data4.w > 0.0f ? i_data4.w : 255.0f;
+		v_haze.w = SnowObjectLevel(origin.xz, snowCap, snowCap) / 255.0f;
+	}
+#endif // USE_INSTANCING
 	v_color0 = vec4(ModelLightColour(colour, ModelLightFactor(a_normal, localLight)), 1.0f);
 #ifndef USE_LIGHTMAP
 	if (u_landLight.z > 0.0f)

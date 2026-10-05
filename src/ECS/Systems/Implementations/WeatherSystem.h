@@ -56,6 +56,7 @@ public:
 	void StrikeLightning(bool bolt) override;
 
 	void Update(uint32_t turn) override;
+	[[nodiscard]] std::span<const components::Storm> GetActiveStorms() const override { return _activeStorms; }
 
 	[[nodiscard]] components::WeatherInfo GetWeather(const glm::vec3& position) override;
 	[[nodiscard]] components::WeatherInfo GetWeatherSmooth(const glm::vec3& position) override;

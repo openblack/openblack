@@ -19,6 +19,7 @@ uniform vec4 u_islandExtent;
 
 #include "haze.sh"
 #include "land_light.sh"
+#include "snow.sh"
 
 void main()
 {
@@ -58,7 +59,12 @@ void main()
     {
         added = min(added + LandColourCellAt(origin.xz), vec3_splat(255.0));
     }
+    // w: how much snow shows on the tree, of 255
     v_haze = vec4(added / 255.0, 0.0);
+    if (u_snow.x > 0.5)
+    {
+        v_haze.w = SnowObjectLevel(origin.xz, 255.0, 255.0) / 255.0;
+    }
     v_color0 = vec4(colour / 255.0, 1.0);
 
     v_texcoord0 = vec4(a_texcoord0, 0.0, 0.0);

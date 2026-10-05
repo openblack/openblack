@@ -180,6 +180,9 @@ private:
 	/// How strongly the sun glares, 0 to 255, easing towards how much of the sun shows
 	mutable float _sunGlare {0.0f};
 	mutable std::optional<TextureHandle> _landLightTexture;
+	/// How deep the snow lies over the island, refreshed when it changes
+	mutable std::unique_ptr<Texture2D> _snowDepth;
+	mutable std::optional<uint32_t> _snowRevision;
 	/// u_haze and u_hazeColour of the frame's distance haze, off until the land's light is built
 	mutable std::array<glm::vec4, 2> _haze {};
 	/// The colours the sky's dome is drawn in this frame

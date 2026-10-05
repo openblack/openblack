@@ -216,6 +216,7 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 			    else
 			    {
 				    look.y = static_cast<float>(crop->tint);
+				    look.w = field_crop::k_SnowCap;
 				    const auto cropMesh = entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(mesh.id);
 				    const float cropHeight = cropMesh->GetBoundingBox().Size().y * transform.scale.y;
 				    modelMatrix[3].y += field_crop::Sink(field->height.position) * cropHeight;

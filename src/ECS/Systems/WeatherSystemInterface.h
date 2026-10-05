@@ -11,6 +11,8 @@
 
 #include <cstdint>
 
+#include <span>
+
 #include <entt/entity/fwd.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -70,6 +72,8 @@ public:
 
 	/// One game turn
 	virtual void Update(uint32_t turn) = 0;
+	/// The storms alive after the last turn, newest first
+	[[nodiscard]] virtual std::span<const components::Storm> GetActiveStorms() const = 0;
 
 	/// Weather in the atmosphere cell containing a point
 	[[nodiscard]] virtual components::WeatherInfo GetWeather(const glm::vec3& position) = 0;

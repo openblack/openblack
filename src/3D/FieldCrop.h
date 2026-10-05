@@ -84,6 +84,9 @@ struct Settle
 };
 [[nodiscard]] Settle Advance(Settle settle, float target, float seconds);
 
+/// A crop holds little snow: it shows at most a quarter of what an object standing there would
+inline constexpr float k_SnowCap = 64.0f;
+
 /// How far into the ground the crop is drawn, as a fraction of its height: it never sinks more than 80% of it
 [[nodiscard]] float Sink(float height);
 

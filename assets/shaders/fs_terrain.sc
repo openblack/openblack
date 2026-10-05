@@ -2,6 +2,8 @@ $input v_texcoord0, v_texcoord1, v_lightColour, v_smallBumpFade, v_shadowCoord, 
 
 #include <bgfx_shader.sh>
 
+#include "snow.sh"
+
 #define M_PI 3.1415926535897932384626433832795
 
 // The blocks' painted textures, a layer each: the land's colour, and the coast alpha that fades it into the sea
@@ -15,6 +17,35 @@ SAMPLER2D(s4_handShadow, 4);
 SAMPLER2D(s5_objectShadows, 5);
 // What of the land's alpha the rivers' channels leave, laid out as the footprints are
 SAMPLER2D(s8_landAlpha, 8);
+
+// The noise that makes the snow's edges ragged, once across each land block of 160 units
+SAMPLER2D(s12_snowNoise, 12);
+
+// The land under the snow lying on it: whiter the deeper the snow over each texel of the noise, from its own colour to
+// a grey that is blue-white where it lies thickest. Where no corner of its cell has more than a little snow, none shows.
+vec3 LandUnderSnow(vec3 colour, vec2 xz)
+{
+	vec2 cell = floor(xz * 0.025f);
+	float most = max(max(SnowDepthCell(cell), SnowDepthCell(cell + vec2(1.0f, 0.0f))),
+	                 max(SnowDepthCell(cell + vec2(0.0f, 1.0f)), SnowDepthCell(cell + 1.0f)));
+	if (most <= 5.0f)
+	{
+		return colour;
+	}
+	vec2 texel = floor(fract(xz / 160.0f) * 256.0f);
+	float noise = floor(texture2DLod(s12_snowNoise, (texel + 0.5f) / 256.0f, 0.0f).r * 255.0f + 0.5f);
+	float level = clamp(floor((floor(SnowDepthAt(xz)) - noise) / 8.0f), 0.0f, 16.0f);
+	if (level <= 0.0f)
+	{
+		return colour;
+	}
+	float white = 14.0f + mod(floor(noise / 4.0f) + floor(noise / 2.0f), 2.0f);
+	if (level >= 16.0f)
+	{
+		return vec3(white, white, 15.0f) / 15.0f;
+	}
+	return colour * (16.0f - level) / 16.0f + vec3_splat(floor(white * level / 16.0f) / 15.0f);
+}
 
 // x: the block's layer of s0_blockTextures
 uniform vec4 u_block;
@@ -51,6 +82,12 @@ void main()
 		texture2D(s5_objectShadows, v_texcoord1.xy + vec2(-texel.x, texel.y)).r +
 		texture2D(s5_objectShadows, v_texcoord1.xy + vec2(texel.x, texel.y)).r);
 	col.rgb = col.rgb * (1.0f - objectShadow * u_objectShadows.x);
+
+	// The snow lies over all of it, under the light
+	if (u_snow.x > 0.5f)
+	{
+		col.rgb = LandUnderSnow(col.rgb, v_texcoord1.zw);
+	}
 
 	if (u_skyAndBump.w > 0.0f)
 	{

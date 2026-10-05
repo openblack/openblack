@@ -43,6 +43,7 @@
 #include "3D/LandLightTable.h"
 #include "3D/OceanInterface.h"
 #include "3D/SkyInterface.h"
+#include "3D/SnowCover.h"
 #include "3D/TempleInteriorInterface.h"
 #include "Audio/AtmosAudio.h"
 #include "Audio/AudioManagerInterface.h"
@@ -78,6 +79,7 @@
 #include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/RainSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
+#include "ECS/Systems/SnowSystemInterface.h"
 #include "ECS/Systems/SoundTagSystemInterface.h"
 #include "ECS/Systems/TempleExteriorSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
@@ -410,6 +412,8 @@ bool Game::GameLogicLoop() noexcept
 	{
 		auto& weatherSystem = Locator::weatherSystem::value();
 		weatherSystem.Update(clock.GetTurn());
+		// The storms that snow lay it on the land, and it melts
+		Locator::snowSystem::value().ProcessTurn(weatherSystem.GetActiveStorms());
 		weather = weatherSystem.GetWeatherSmooth(cameraPosition);
 	}
 
@@ -1273,6 +1277,17 @@ bool Game::Initialize() noexcept
 		}
 	});
 
+	// The noise that makes the snow's edges on the land ragged
+	try
+	{
+		textureManager.Load(snow_cover::k_NoiseTextureId.value(), resources::Texture2DLoader::FromDiskTag {},
+		                    fileSystem.GetPath<Path::WeatherSystem>() / "snowmap.raw");
+	}
+	catch (std::runtime_error& err)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+	}
+
 	return true;
 }
 
@@ -1427,6 +1442,7 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 	if (Locator::weatherSystem::has_value())
 	{
 		Locator::weatherSystem::value().Reset();
+		Locator::snowSystem::value().Reset();
 	}
 	Locator::cinematicDirectorSystem::value().Reset();
 	Locator::influenceSystem::value().Reset();

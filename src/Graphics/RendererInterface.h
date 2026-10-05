@@ -121,6 +121,8 @@ public:
 		float landLightScale {1.0f};
 		/// The mesh isn't shaded by the sun, only coloured by the land's light where it stands
 		bool unlit {false};
+		/// The snow lying where the mesh stands shows on it
+		bool snow {false};
 		glm::vec3 lightAdd {0.0f};
 	};
 

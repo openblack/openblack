@@ -26,6 +26,7 @@
 #include "Common/GameRandom.h"
 #include "Common/RandomNumberManager.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/SnowSystemInterface.h"
 #include "ECS/Systems/SoundTagSystemInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
@@ -994,6 +995,12 @@ void WeatherSystem::ComputeCell(WeatherInfo& cell, int x, int z)
 	for (const auto& storm : _activeStorms)
 	{
 		ApplyStorm(storm, point, cell);
+	}
+	// The snow lying there
+	if (Locator::snowSystem::has_value())
+	{
+		const auto depth = static_cast<int32_t>(Locator::snowSystem::value().GetDepth({point.x, point.z}));
+		cell.snowCover = static_cast<int8_t>(std::clamp(depth, -128, 127));
 	}
 	cell.stamp = _stamp;
 }

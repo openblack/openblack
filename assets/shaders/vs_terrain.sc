@@ -35,9 +35,9 @@ void main()
 	#if !BGFX_SHADER_LANGUAGE_GLSL
 		blockStartUv.y = 1.0f - blockStartUv.y;
 	#endif
-	v_texcoord1 = vec4(blockStartUv, 0.0f, 0.0f);
-
 	vec3 transformedPosition = vec3(a_position.x + blockPosition.x, a_position.y, a_position.z + blockPosition.y);
+	// zw: where the vertex is along x and z, for the snow lying there
+	v_texcoord1 = vec4(blockStartUv, transformedPosition.xz);
 
 	// The luminosity of the vertex's cell corner this frame
 	vec2 luminosityTexels = (extentMax - extentMin) / 10.0f + 1.0f;

@@ -2,6 +2,8 @@ $input v_position, v_texcoord0, v_normal, v_color0, v_haze
 
 #include <bgfx_shader.sh>
 
+#include "snow_object.sh"
+
 SAMPLER2D(s_diffuse, 0);
 #ifdef USE_ENVIRONMENT
 SAMPLER2D(s_environment, 5);
@@ -28,6 +30,12 @@ void main()
 	if (diffuseTex.a <= alphaThreshold || (u_seaClip.x > 0.5f && v_position.y < 0.0f))
 	{
 		discard;
+	}
+	// Snow covers the object where it shows, in the same light, over its own texture
+	float snowLevel = floor(v_haze.w * 255.0f + 0.5f);
+	if (snowLevel > 0.0f && SnowShows(snowLevel, texture2D(s_snowAlpha, v_texcoord0.xy).r))
+	{
+		diffuseTex.rgb = texture2D(s_snow, v_texcoord0.xy).rgb * (tinted ? vec3_splat(1.0f) : light) * u_tint.rgb;
 	}
 #ifdef USE_ENVIRONMENT
 	// The second texture stage adds the environment map, which saturates
