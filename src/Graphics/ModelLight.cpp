@@ -25,9 +25,9 @@ constexpr float k_NightSkyType = 0.5f;
 constexpr float k_DistanceFromHand = 3.0f;
 } // namespace
 
-glm::vec3 model_light::FrameLight(glm::vec3 hand, float groundUnderHand, const glm::vec3& camera, float skyType)
+glm::vec3 model_light::FrameLight(glm::vec3 hand, float groundUnderHand, const glm::vec3& camera, float skyType, bool inTemple)
 {
-	if (!(skyType < k_NightSkyType))
+	if (inTemple || !(skyType < k_NightSkyType))
 	{
 		return k_Sun;
 	}

@@ -1576,7 +1576,8 @@ void Renderer::DrawHandWaterGlow(const DrawSceneDesc& desc) const
 		return;
 	}
 	const float strength = HandLight::GetStrength(_landLightTable->GetLandColour());
-	if (strength <= hand_water_glow::k_MinimumStrength)
+	const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
+	if (!hand_water_glow::Shows(inTemple, strength))
 	{
 		return;
 	}
@@ -2935,8 +2936,9 @@ glm::vec4 Renderer::GetModelLight() const
 			    Locator::terrainSystem::has_value()
 			        ? Locator::terrainSystem::value().GetHeightAt(glm::vec2(transform->position.x, transform->position.z))
 			        : 0.0f;
+			const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
 			light = model_light::FrameLight(transform->position, ground, Locator::camera::value().GetOrigin(),
-			                                Locator::skySystem::value().GetCurrentSkyType());
+			                                Locator::skySystem::value().GetCurrentSkyType(), inTemple);
 		}
 	}
 	return model_light::Uniform(light);

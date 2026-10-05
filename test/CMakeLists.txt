@@ -69,6 +69,7 @@ openblack_setup_and_add_test(
 )
 openblack_setup_and_add_test(test_hand_light graphics/test_hand_light.cpp)
 openblack_setup_and_add_test(test_hand_water_glow graphics/test_hand_water_glow.cpp)
+openblack_setup_and_add_test(test_model_light graphics/test_model_light.cpp)
 openblack_setup_and_add_test(test_sun graphics/test_sun.cpp)
 openblack_setup_and_add_test(test_moon graphics/test_moon.cpp)
 openblack_setup_and_add_test(test_pack_bank_info pack/test_pack_bank_info.cpp)

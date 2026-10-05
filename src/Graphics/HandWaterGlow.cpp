@@ -19,6 +19,11 @@ namespace
 constexpr int k_LastCell = 511;
 } // namespace
 
+bool hand_water_glow::Shows(bool inTemple, float strength)
+{
+	return !inTemple && strength > k_MinimumStrength;
+}
+
 uint32_t hand_water_glow::Colour(uint32_t warmColour, float strength)
 {
 	const auto towards = [warmColour](uint32_t shift, uint32_t target) {

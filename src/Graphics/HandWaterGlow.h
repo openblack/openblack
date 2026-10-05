@@ -37,6 +37,10 @@ inline constexpr float k_MinimumStrength = 0.01f;
 /// and as opaque as the hand's light is strong, up to 190
 [[nodiscard]] uint32_t Colour(uint32_t warmColour, float strength);
 
+/// Whether the glow shows: never inside the temple, which has no sea for it to lie on, and outside only while the hand's
+/// light, 0 to 1, is strong enough
+[[nodiscard]] bool Shows(bool inTemple, float strength);
+
 /// The altitude of the land's cell at a cell's x and z, none where there is no land
 using AltitudeAt = std::function<std::optional<uint8_t>(int x, int z)>;
 

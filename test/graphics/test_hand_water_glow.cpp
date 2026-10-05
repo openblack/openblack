@@ -21,6 +21,16 @@ TEST(HandWaterGlow, WarmsThePaletteColourTowardsOrange)
 	EXPECT_EQ(hand_water_glow::Colour(0x123456, 0.0f), 0x004D4750u);
 }
 
+TEST(HandWaterGlow, NeverShowsInsideTheTemple)
+{
+	// However strong the hand's light, the temple has no sea for the glow to lie on
+	EXPECT_FALSE(hand_water_glow::Shows(true, 1.0f));
+	EXPECT_FALSE(hand_water_glow::Shows(true, 0.5f));
+	// Outside, it shows once the hand's light is strong enough
+	EXPECT_TRUE(hand_water_glow::Shows(false, 1.0f));
+	EXPECT_FALSE(hand_water_glow::Shows(false, hand_water_glow::k_MinimumStrength));
+}
+
 TEST(HandWaterGlow, ShowsOnlyNearWater)
 {
 	// High land everywhere
