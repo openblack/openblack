@@ -170,6 +170,8 @@ public:
 	[[nodiscard]] const std::vector<VMInstruction>& GetInstructions() const { return _instructions; }
 	[[nodiscard]] const std::vector<VMScript>& GetScripts() const { return _scripts; }
 	[[nodiscard]] const std::map<uint32_t, VMTask>& GetTasks() const { return _tasks; }
+	/// The number of the task running now, 0 between tasks
+	[[nodiscard]] uint32_t GetCurrentTaskNumber() const { return _currentTask != nullptr ? _currentTask->id : 0; }
 	[[nodiscard]] const std::vector<char>& GetData() const { return _data; }
 };
 

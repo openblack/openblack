@@ -30,11 +30,19 @@ public:
 	/// The fade's colour over the picture, 0xAARRGGBB, nothing for an alpha of 0
 	[[nodiscard]] virtual uint32_t GetFadeColour() const = 0;
 
-	/// Slides the cinema bars in or out
-	virtual void SetWideScreen(bool on) = 0;
+	/// Slides the cinema bars in or out. Bringing them in hides the game's dialogs, and while a script task has them
+	/// in, `owner` being its number, the player's interface is put away. 0 is for the game's own bars.
+	virtual void SetWideScreen(bool on, uint32_t owner) = 0;
+	[[nodiscard]] virtual bool IsWideScreenOn() const = 0;
+	/// The script task that brought the bars in, 0 for none
+	[[nodiscard]] virtual uint32_t GetWideScreenOwner() const = 0;
 	[[nodiscard]] virtual bool IsWideScreenTransitionFinished() const = 0;
 	/// How far in the bars are, 0 for none and 1 for a 16:9 picture
 	[[nodiscard]] virtual float GetWideScreenFraction() const = 0;
+	/// Whether the player has their interface: the hand and its actions are put away while a script has the bars in
+	[[nodiscard]] virtual bool IsInterfaceActive() const = 0;
+	/// Whether the game's dialogs were told to hide since this was last asked
+	[[nodiscard]] virtual bool TakeHideDialogs() = 0;
 
 	/// Moves the fade on by a game turn
 	virtual void ProcessTurn() = 0;

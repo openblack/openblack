@@ -11,6 +11,8 @@
 
 #include "CinematicDirectorSystem.h"
 
+#include <utility>
+
 #include "InfoConstants.h"
 #include "Locator.h"
 
@@ -46,11 +48,40 @@ uint32_t CinematicDirectorSystem::GetFadeColour() const
 	return _fade.GetColour();
 }
 
-void CinematicDirectorSystem::SetWideScreen(bool on)
+void CinematicDirectorSystem::SetWideScreen(bool on, uint32_t owner)
 {
-	// TODO: the game also hides its dialogs and stops the player's interface while the bars are in, and only lets the
-	// script that brought them in take them out
+	if (on == _bars.IsOn())
+	{
+		return;
+	}
+	if (on)
+	{
+		_hideDialogs = true;
+	}
+	// The game's own bars leave the interface be; a script's put it away until they go
+	_interfaceActive = !on || owner == 0;
+	_wideScreenOwner = on ? owner : 0;
 	_bars.Set(on, WideScreenTime());
+}
+
+bool CinematicDirectorSystem::IsWideScreenOn() const
+{
+	return _bars.IsOn();
+}
+
+uint32_t CinematicDirectorSystem::GetWideScreenOwner() const
+{
+	return _wideScreenOwner;
+}
+
+bool CinematicDirectorSystem::IsInterfaceActive() const
+{
+	return _interfaceActive;
+}
+
+bool CinematicDirectorSystem::TakeHideDialogs()
+{
+	return std::exchange(_hideDialogs, false);
 }
 
 bool CinematicDirectorSystem::IsWideScreenTransitionFinished() const

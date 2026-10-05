@@ -28,9 +28,13 @@ public:
 	[[nodiscard]] bool IsFadeFinished() const override;
 	[[nodiscard]] uint32_t GetFadeColour() const override;
 
-	void SetWideScreen(bool on) override;
+	void SetWideScreen(bool on, uint32_t owner) override;
+	[[nodiscard]] bool IsWideScreenOn() const override;
+	[[nodiscard]] uint32_t GetWideScreenOwner() const override;
 	[[nodiscard]] bool IsWideScreenTransitionFinished() const override;
 	[[nodiscard]] float GetWideScreenFraction() const override;
+	[[nodiscard]] bool IsInterfaceActive() const override;
+	[[nodiscard]] bool TakeHideDialogs() override;
 
 	void ProcessTurn() override;
 	void Update(std::chrono::duration<float, std::milli> gameTime) override;
@@ -38,6 +42,9 @@ public:
 private:
 	gui::ScriptFade _fade;
 	gui::CinemaBars _bars;
+	uint32_t _wideScreenOwner {0};
+	bool _interfaceActive {true};
+	bool _hideDialogs {false};
 };
 
 } // namespace openblack::ecs::systems

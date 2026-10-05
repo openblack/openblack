@@ -466,7 +466,18 @@ void EndCameraControl() // 031 END_CAMERA_CONTROL
 void SetWidescreen() // 032 SET_WIDESCREEN
 {
 	const auto enabled = static_cast<bool>(Pop().intVal);
-	Locator::cinematicDirectorSystem::value().SetWideScreen(enabled);
+	// Only the task that brought the bars in may change them, or any while none has
+	auto& director = Locator::cinematicDirectorSystem::value();
+	const auto owner = director.GetWideScreenOwner();
+	const auto task = Locator::vm::value().GetCurrentTaskNumber();
+	if (enabled && owner == task)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "Script asking for widescreen it has control of");
+	}
+	if (owner == 0 || owner == task)
+	{
+		director.SetWideScreen(enabled, task);
+	}
 }
 
 void MoveGameThing() // 033 MOVE_GAME_THING

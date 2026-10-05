@@ -588,6 +588,11 @@ bool Game::Update() noexcept
 	Locator::mistSystem::value().Update(gameTime);
 	Locator::villageLightSystem::value().Update(gameTime);
 	Locator::cinematicDirectorSystem::value().Update(gameTime);
+	// The cinema bars coming in hide the game's dialogs
+	if (Locator::cinematicDirectorSystem::value().TakeHideDialogs() && _interface && _interface->GetMenu().IsOpen())
+	{
+		_interface->GetMenu().Close();
+	}
 
 	// Update Uniforms
 	{
@@ -631,7 +636,8 @@ bool Game::Update() noexcept
 					// The Action button on the player's own temple's entrance takes them inside
 					// TODO(raffclar): in a game of one player, only once a script lets the player use the temple
 					const auto& actions = Locator::gameActionSystem::value();
-					if (actions.GetChanged(input::BindableActionMap::ACTION) && actions.Get(input::BindableActionMap::ACTION))
+					if (Locator::cinematicDirectorSystem::value().IsInterfaceActive() &&
+					    actions.GetChanged(input::BindableActionMap::ACTION) && actions.Get(input::BindableActionMap::ACTION))
 					{
 						enterTemple = Locator::templeExteriorSystem::value().EntranceAt(rayOrigin, rayDirection) ==
 						              PlayerNames::PLAYER_ONE;
@@ -1310,7 +1316,8 @@ bool Game::Run() noexcept
 			    .drawBoundingBoxes = config.drawBoundingBoxes,
 			    .cullBack = false,
 			    .wireframe = config.wireframe,
-			    .drawHand = !_interface || !_interface->GetMenu().IsOpen(),
+			    .drawHand = (!_interface || !_interface->GetMenu().IsOpen()) &&
+			                Locator::cinematicDirectorSystem::value().IsInterfaceActive(),
 			};
 			Locator::rendererInterface::value().DrawScene(drawDesc);
 		}
