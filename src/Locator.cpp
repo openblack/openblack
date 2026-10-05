@@ -36,6 +36,7 @@
 #include "ECS/Systems/Implementations/CloudSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
 #include "ECS/Systems/Implementations/HandSystem.h"
+#include "ECS/Systems/Implementations/InfluenceSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
 #include "ECS/Systems/Implementations/MistSystem.h"
 #include "ECS/Systems/Implementations/PathfindingSystem.h"
@@ -81,6 +82,7 @@ using openblack::ecs::systems::CinematicDirectorSystem;
 using openblack::ecs::systems::CloudSystem;
 using openblack::ecs::systems::DynamicsSystem;
 using openblack::ecs::systems::HandSystem;
+using openblack::ecs::systems::InfluenceSystem;
 using openblack::ecs::systems::LivingActionSystem;
 using openblack::ecs::systems::MistSystem;
 using openblack::ecs::systems::PathfindingSystem;
@@ -168,6 +170,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::soundTagSystem::emplace<SoundTagSystem>();
 	Locator::rainSystem::emplace<RainSystem>();
 	Locator::chimneySmokeSystem::emplace<ChimneySmokeSystem>();
+	Locator::influenceSystem::emplace<InfluenceSystem>();
 	Locator::townDesireSystem::emplace<TownDesireSystem>();
 	return true;
 }
@@ -220,6 +223,7 @@ void openblack::ShutDownServices()
 	Locator::handSystem::reset();
 	Locator::pathfindingSystem::reset();
 	Locator::cinematicDirectorSystem::reset();
+	Locator::influenceSystem::reset();
 	Locator::chimneySmokeSystem::reset();
 	Locator::rainSystem::reset();
 	Locator::soundTagSystem::reset();

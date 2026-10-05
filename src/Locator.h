@@ -103,6 +103,7 @@ class CinematicDirectorSystemInterface;
 class SoundTagSystemInterface;
 class RainSystemInterface;
 class ChimneySmokeSystemInterface;
+class InfluenceSystemInterface;
 class TownDesireSystemInterface;
 class PathfindingSystemInterface;
 class AlignmentSystemInterface;
@@ -164,6 +165,7 @@ struct Locator
 	using soundTagSystem = entt::locator<ecs::systems::SoundTagSystemInterface>;
 	using rainSystem = entt::locator<ecs::systems::RainSystemInterface>;
 	using chimneySmokeSystem = entt::locator<ecs::systems::ChimneySmokeSystemInterface>;
+	using influenceSystem = entt::locator<ecs::systems::InfluenceSystemInterface>;
 	using townDesireSystem = entt::locator<ecs::systems::TownDesireSystemInterface>;
 	using vm = entt::locator<lhvm::LHVM>;
 	using chlapi = entt::locator<chlapi::CHLApi>;

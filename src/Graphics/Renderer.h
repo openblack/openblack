@@ -100,6 +100,8 @@ private:
 	void DrawRain(const DrawSceneDesc& desc) const;
 	/// The smoke from the homes' chimneys, each in its place among what blends, in the main view
 	void DrawChimneySmoke(const DrawSceneDesc& desc) const;
+	/// The border of the players' influence, in the main view
+	void DrawInfluenceBorder(const DrawSceneDesc& desc) const;
 	/// A mesh of the sky's, in a colour, with a texture and that texture's alpha
 	struct CelestialDraw
 	{

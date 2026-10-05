@@ -70,6 +70,7 @@
 #include "ECS/Systems/CloudSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
+#include "ECS/Systems/InfluenceSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "ECS/Systems/MistSystemInterface.h"
 #include "ECS/Systems/PathfindingSystemInterface.h"
@@ -384,6 +385,8 @@ bool Game::GameLogicLoop() noexcept
 	// The towns work out what they want, then their villagers act on it
 	Locator::townDesireSystem::value().ProcessTurn();
 	Locator::chimneySmokeSystem::value().ProcessTurn();
+	// How far the players' influence reaches, and its border
+	Locator::influenceSystem::value().ProcessTurn(Locator::time::value().GetTurn());
 	{
 		auto actions = profiler.BeginScoped(Profiler::Stage::LivingActionUpdate);
 		Locator::livingActionSystem::value().Update();
@@ -621,6 +624,7 @@ bool Game::Update() noexcept
 	Locator::rainSystem::value().Update(std::chrono::duration<float>(gameTime).count(), camera.GetOrigin());
 	// The homes' smoke rises while someone is in
 	Locator::chimneySmokeSystem::value().Update(gameTime);
+	Locator::influenceSystem::value().Update(gameTime);
 	Locator::mistSystem::value().Update(gameTime);
 	Locator::villageLightSystem::value().Update(gameTime);
 	Locator::cinematicDirectorSystem::value().Update(gameTime);
@@ -1421,6 +1425,7 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 		Locator::weatherSystem::value().Reset();
 	}
 	Locator::cinematicDirectorSystem::value().Reset();
+	Locator::influenceSystem::value().Reset();
 
 	// Reset everything. Deletes all entities and their components
 	Locator::entitiesRegistry::value().Reset();

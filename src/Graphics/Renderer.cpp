@@ -31,6 +31,7 @@
 #include "3D/ChimneySmoke.h"
 #include "3D/Clouds.h"
 #include "3D/DayNightClock.h"
+#include "3D/InfluenceCircle.h"
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "3D/L3DSubMesh.h"
@@ -69,6 +70,7 @@
 #include "ECS/Systems/AlignmentSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
+#include "ECS/Systems/InfluenceSystemInterface.h"
 #include "ECS/Systems/RainSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
@@ -1819,6 +1821,84 @@ void Renderer::DrawGroundBlobs(const DrawSceneDesc& desc) const
 	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(program->GetRawHandle()));
 }
 
+void Renderer::DrawInfluenceBorder(const DrawSceneDesc& desc) const
+{
+	if (desc.viewId != RenderPass::Main || !Locator::influenceSystem::has_value() ||
+	    (Locator::temple::has_value() && Locator::temple::value().Active()))
+	{
+		return;
+	}
+	// The border only shows from high enough over the land
+	const auto alpha = influence::CurtainAlpha(desc.camera->GetOrigin().y);
+	static constexpr auto k_TextureId = entt::hashed_string("raw/burn");
+	static constexpr auto k_AlphaTextureId = entt::hashed_string("raw/burna");
+	const auto& textures = Locator::resources::value().GetTextures();
+	if (!alpha.has_value() || !textures.Contains(k_TextureId.value()) || !textures.Contains(k_AlphaTextureId.value()))
+	{
+		return;
+	}
+	const auto& influenceSystem = Locator::influenceSystem::value();
+	const auto offset = influenceSystem.GetScrollOffset();
+	struct Vertex
+	{
+		glm::vec3 position;
+		glm::vec2 uv;
+		uint32_t colour;
+	};
+	bgfx::VertexLayout layout;
+	layout.begin()
+	    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+	    .end();
+	const auto* program = _shaderManager->GetShader("WorldTextured");
+	for (const auto& circle : influenceSystem.GetCircles())
+	{
+		if (!influenceSystem.IsBorderShown(circle.player))
+		{
+			continue;
+		}
+		const auto& curtain = circle.curtain;
+		const auto vertexCount = static_cast<uint32_t>(curtain.positions.size());
+		const auto indexCount = static_cast<uint32_t>(curtain.indices.size());
+		if (bgfx::getAvailTransientVertexBuffer(vertexCount, layout) < vertexCount ||
+		    bgfx::getAvailTransientIndexBuffer(indexCount) < indexCount)
+		{
+			return;
+		}
+		bgfx::TransientVertexBuffer vertexBuffer;
+		bgfx::TransientIndexBuffer indexBuffer;
+		bgfx::allocTransientVertexBuffer(&vertexBuffer, vertexCount, layout);
+		bgfx::allocTransientIndexBuffer(&indexBuffer, indexCount);
+		const auto vertices = std::span(reinterpret_cast<Vertex*>(vertexBuffer.data), vertexCount);
+		const auto indices = std::span(reinterpret_cast<uint16_t*>(indexBuffer.data), indexCount);
+		// The player's colour; only the middle row shows, the ground and top fading out to it, and not where the
+		// circle is inside another of the player's. A hidden closing column fades to white, as the game's does.
+		const auto rgb = influence::k_PlayerColours.at(static_cast<size_t>(circle.player) & 7u);
+		const auto abgr = ((rgb & 0xFFu) << 16u) | (rgb & 0xFF00u) | ((rgb >> 16u) & 0xFFu);
+		const auto lastColumn = circle.Columns() - 1;
+		for (size_t i = 0; i < vertices.size(); ++i)
+		{
+			const auto column = i / 3;
+			const bool hidden = circle.hidden.at(column);
+			const auto colour = hidden && column == lastColumn ? 0xFFFFFFu : abgr;
+			const uint32_t a = i % 3 == 1 && !hidden ? *alpha : 0u;
+			vertices[i] = {curtain.positions[i], curtain.uvs[i] + offset, (a << 24u) | colour};
+		}
+		for (size_t i = 0; i < indices.size(); ++i)
+		{
+			indices[i] = static_cast<uint16_t>(curtain.indices[i]);
+		}
+		program->SetTextureSampler("s_diffuse", 0, *textures.Handle(k_TextureId));
+		program->SetTextureSampler("s_alpha", 1, *textures.Handle(k_AlphaTextureId));
+		bgfx::setVertexBuffer(0, &vertexBuffer);
+		bgfx::setIndexBuffer(&indexBuffer);
+		// Blended over what is behind, tested against depth but leaving none, both sides
+		bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_BLEND_ALPHA);
+		bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(program->GetRawHandle()));
+	}
+}
+
 void Renderer::DrawChimneySmoke(const DrawSceneDesc& desc) const
 {
 	using ecs::components::ChimneySmoke;
@@ -1913,7 +1993,7 @@ void Renderer::DrawRain(const DrawSceneDesc& desc) const
 	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
 	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
 	    .end();
-	const auto* program = _shaderManager->GetShader("Rain");
+	const auto* program = _shaderManager->GetShader("WorldTextured");
 	const auto viewId = static_cast<bgfx::ViewId>(TranslucentView(desc.viewId));
 	for (const auto& tile : tiles)
 	{
@@ -3085,6 +3165,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			DrawGroundBlobs(desc);
 			DrawRain(desc);
 			DrawChimneySmoke(desc);
+			DrawInfluenceBorder(desc);
 			// The mists blend over the rest, the farthest first
 			DrawMists(desc);
 

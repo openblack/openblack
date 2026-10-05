@@ -122,7 +122,7 @@
 #include "ShaderIncluder.h"
 #define SHADER_NAME fs_blob
 #include "ShaderIncluder.h"
-#define SHADER_NAME fs_rain
+#define SHADER_NAME fs_world_textured
 #include "ShaderIncluder.h"
 
 #define SHADER_NAME vs_vegetation
@@ -198,7 +198,7 @@ const std::array<bgfx::EmbeddedShader, 48> k_EmbeddedShaders = {{
     BGFX_EMBEDDED_SHADER(fs_sky_dome),        //
     BGFX_EMBEDDED_SHADER(vs_blob),            //
     BGFX_EMBEDDED_SHADER(fs_blob),            //
-    BGFX_EMBEDDED_SHADER(fs_rain),            //
+    BGFX_EMBEDDED_SHADER(fs_world_textured),  //
     BGFX_EMBEDDED_SHADER(vs_vegetation),
     BGFX_EMBEDDED_SHADER(vs_vegetation_hm_instanced),
     BGFX_EMBEDDED_SHADER(fs_vegetation),    //
@@ -237,7 +237,7 @@ constexpr std::array k_Shaders {
     ShaderDefinition {"LandColour", "vs_land_luminosity", "fs_land_colour"},
     ShaderDefinition {"SkyDome", "vs_land_luminosity", "fs_sky_dome"},
     ShaderDefinition {"Blob", "vs_blob", "fs_blob"},
-    ShaderDefinition {"Rain", "vs_blob", "fs_rain"},
+    ShaderDefinition {"WorldTextured", "vs_blob", "fs_world_textured"},
     ShaderDefinition {"Vegetation", "vs_vegetation", "fs_vegetation"},
     ShaderDefinition {"VegetationHeightMapInstanced", "vs_vegetation_hm_instanced", "fs_vegetation"},
     ShaderDefinition {"ShadowCaster", "vs_object", "fs_shadow_caster"},

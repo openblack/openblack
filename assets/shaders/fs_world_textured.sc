@@ -6,7 +6,8 @@ $input v_texcoord0, v_color0
 SAMPLER2D(s_diffuse, 0);
 SAMPLER2D(s_alpha, 1);
 
-// A streak of rain: the texture in the streak's colour, as opaque as both the texture's alpha and the streak's
+// A world triangle textured in its vertices' colour, as opaque as both the texture's alpha and the vertices':
+// rain streaks and the influence border
 void main()
 {
 	vec3 colour = texture2D(s_diffuse, v_texcoord0.xy).rgb * v_color0.rgb;
