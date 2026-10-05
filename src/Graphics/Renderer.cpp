@@ -17,6 +17,7 @@
 
 #include <cstdint>
 
+#include <LNDFile.h>
 #include <SDL_video.h>
 #include <bgfx/platform.h>
 #include <bimg/bimg.h>
@@ -60,6 +61,7 @@
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/GraphicsHandleBgfx.h"
 #include "Graphics/HandLight.h"
+#include "Graphics/HandWaterGlow.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/LightBeams.h"
 #include "Graphics/ModelLight.h"
@@ -1445,6 +1447,75 @@ void Renderer::SetSeaUniforms(const ShaderProgram& waterShader, const Camera& ca
 	waterShader.SetUniformValue("u_seaCamera", &u_seaCamera);
 }
 
+void Renderer::DrawHandWaterGlow(const DrawSceneDesc& desc) const
+{
+	if (!_landLightTable || !Locator::handSystem::has_value() || !Locator::terrainSystem::has_value())
+	{
+		return;
+	}
+	const float strength = HandLight::GetStrength(_landLightTable->GetLandColour());
+	if (strength <= hand_water_glow::k_MinimumStrength)
+	{
+		return;
+	}
+	const auto handEntity =
+	    Locator::handSystem::value().GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
+	const auto* transform = Locator::entitiesRegistry::value().TryGet<ecs::components::Transform>(handEntity);
+	if (transform == nullptr)
+	{
+		return;
+	}
+	const glm::vec2 centre {transform->position.x, transform->position.z};
+	const auto& island = Locator::terrainSystem::value();
+	const auto altitudeAt = [&island](int x, int z) -> std::optional<uint8_t> {
+		if (x < 0 || z < 0 || x >= LandIslandInterface::k_MapCellsPerSide || z >= LandIslandInterface::k_MapCellsPerSide)
+		{
+			return std::nullopt;
+		}
+		const auto* cell = island.FindCell({static_cast<uint16_t>(x), static_cast<uint16_t>(z)});
+		return cell != nullptr ? std::optional<uint8_t>(cell->altitude) : std::nullopt;
+	};
+	if (!hand_water_glow::NearLowLand(centre, altitudeAt))
+	{
+		return;
+	}
+
+	const auto& textures = Locator::resources::value().GetTextures();
+	const auto atmos = entt::hashed_string("raw/ATMOS");
+	const auto atmosAlpha = entt::hashed_string("raw/ATMOSA");
+	if (!textures.Contains(atmos.value()) || !textures.Contains(atmosAlpha.value()))
+	{
+		return;
+	}
+	const auto colour = hand_water_glow::Colour(_landLightTable->GetWarmColour(), strength);
+	const glm::vec4 u_tint = glm::vec4(static_cast<float>((colour >> 16) & 0xFFu), static_cast<float>((colour >> 8) & 0xFFu),
+	                                   static_cast<float>(colour & 0xFFu), static_cast<float>(colour >> 24)) /
+	                         255.0f;
+	// The sprite's x runs along the world's x and its y against the world's z, so the texture's corners fall as the
+	// game lays them
+	const glm::vec2 uvSize = hand_water_glow::k_UvMaximum - hand_water_glow::k_UvMinimum;
+	const glm::vec4 u_sampleRect {uvSize, hand_water_glow::k_UvMinimum};
+	// Lying flat, with its own alpha, adding to what is under the sea
+	const glm::vec4 u_spriteParams {0.0f, 1.0f, 1.0f, 0.0f};
+	glm::mat4 model(0.0f);
+	model[0] = glm::vec4(hand_water_glow::k_HalfSize, 0.0f, 0.0f, 0.0f);
+	model[1] = glm::vec4(0.0f, 0.0f, -hand_water_glow::k_HalfSize, 0.0f);
+	model[2] = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+	model[3] = glm::vec4(centre.x, 0.0f, centre.y, 1.0f);
+
+	const auto* spriteShader = _shaderManager->GetShader("Sprite");
+	bgfx::setTransform(glm::value_ptr(model));
+	spriteShader->SetUniformValue("u_sampleRect", glm::value_ptr(u_sampleRect));
+	spriteShader->SetUniformValue("u_spriteParams", glm::value_ptr(u_spriteParams));
+	spriteShader->SetUniformValue("u_tint", glm::value_ptr(u_tint));
+	spriteShader->SetTextureSampler("s_diffuse", 0, *textures.Handle(atmos));
+	spriteShader->SetTextureSampler("s_alpha", 1, *textures.Handle(atmosAlpha));
+	_plane->GetVertexBuffer().Bind();
+	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
+	               BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE));
+	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(spriteShader->GetRawHandle()));
+}
+
 void Renderer::DrawLandAlphaPass(const DrawSceneDesc& drawDesc) const
 {
 	if (!drawDesc.drawIsland)
@@ -2225,6 +2296,12 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				});
 			}
 		}
+	}
+
+	// The hand's glow lies on the water, under the sea that is blended over it
+	if (desc.viewId == RenderPass::Reflection && desc.drawHand)
+	{
+		DrawHandWaterGlow(desc);
 	}
 
 	// Enable stats or debug text.

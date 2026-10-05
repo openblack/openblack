@@ -36,6 +36,8 @@ class LandIslandInterface
 {
 public:
 	static const uint8_t k_CellCount;
+	/// Cells along each side of the map
+	static constexpr int32_t k_MapCellsPerSide = 512;
 	static const float k_HeightUnit;
 	static const float k_CellSize;
 	/// The small bump detail drawn over the land near the camera: its colour and its alpha

@@ -77,6 +77,8 @@ private:
 	/// The rivers' beds or channels, a footprint for each stretch of river
 	void DrawStreamFootprints(graphics::RenderPass viewId, entt::id_type meshId) const;
 	void DrawLandAlphaPass(const DrawSceneDesc& drawDesc) const;
+	/// The hand's glow on the water at night, under the sea
+	void DrawHandWaterGlow(const DrawSceneDesc& desc) const;
 	/// The sea's rows, ripple, period and colour for the camera
 	void SetSeaUniforms(const ShaderProgram& waterShader, const Camera& camera) const;
 	/// Casts the shadows of the island's trees, rocks and buildings onto it (see ObjectShadows)
