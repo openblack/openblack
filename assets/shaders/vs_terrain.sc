@@ -1,4 +1,4 @@
-$input a_position, a_color0
+$input a_position
 $output v_texcoord0, v_texcoord1, v_lightLevel, v_smallBumpFade, v_shadowCoord, v_haze
 
 #include <bgfx_shader.sh>
@@ -7,6 +7,8 @@ $output v_texcoord0, v_texcoord1, v_lightLevel, v_smallBumpFade, v_shadowCoord, 
 
 uniform vec4 u_blockPositionAndSize;
 uniform vec4 u_islandExtent;
+// The land's luminosity this frame, a texel for each cell's corner
+SAMPLER2D(s9_landLuminosity, 9);
 // World position to hand shadow texture coordinates in xy and distance past the hand along the light in z
 uniform mat4 u_handShadowMatrix;
 // xy: where the first brightness of the hand's light map lies in the world's x and z (HandLight::GetOrigin)
@@ -31,9 +33,13 @@ void main()
 		blockStartUv.y = 1.0f - blockStartUv.y;
 	#endif
 	v_texcoord1 = vec4(blockStartUv, 0.0f, 0.0f);
-	v_lightLevel = a_color0.x;
 
 	vec3 transformedPosition = vec3(a_position.x + blockPosition.x, a_position.y, a_position.z + blockPosition.y);
+
+	// The luminosity of the vertex's cell corner this frame
+	vec2 luminosityTexels = (extentMax - extentMin) / 10.0f + 1.0f;
+	vec2 luminosityCell = floor((transformedPosition.xz - extentMin) / 10.0f + 0.5f);
+	v_lightLevel = texture2DLod(s9_landLuminosity, (luminosityCell + 0.5f) / luminosityTexels, 0.0f).r;
 
 	// The hand's light map has a brightness for each of 12 by 12 vertices 10 units apart, its rows along x: sample
 	// between those around the vertex, at the centres of their texels

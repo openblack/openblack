@@ -77,6 +77,9 @@ private:
 	/// The rivers' beds or channels, a footprint for each stretch of river
 	void DrawStreamFootprints(graphics::RenderPass viewId, entt::id_type meshId) const;
 	void DrawLandAlphaPass(const DrawSceneDesc& drawDesc) const;
+	/// The land's luminosity this frame: as it was laid, with the clouds' shadows over it
+	void DrawLandLuminosityPass(const DrawSceneDesc& drawDesc) const;
+	[[nodiscard]] const Texture2D& GetLandLuminosity() const;
 	/// The sun in the sky, after the sky's dome
 	void DrawSun(RenderPass viewId) const;
 	/// The sun's glare over the finished view, dimmed by what hides the sun from the camera
@@ -152,6 +155,8 @@ private:
 	mutable std::unique_ptr<LandLightTable> _landLightTable;
 	/// The sea's ripple step, 0 to 15, moving on each frame the sea's rows are drawn while the game's time goes on
 	mutable uint8_t _seaRippleStep {0};
+	/// The land's luminosity this frame, sized to the land's
+	mutable std::unique_ptr<FrameBuffer> _landLuminosityFrameBuffer;
 	/// How strongly the sun glares, 0 to 255, easing towards how much of the sun shows
 	mutable float _sunGlare {0.0f};
 	mutable std::optional<TextureHandle> _landLightTexture;

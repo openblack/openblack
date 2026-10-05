@@ -353,6 +353,7 @@ Renderer::~Renderer() noexcept
 	{
 		bgfx::destroy(toBgfx(*_whiteTexture));
 	}
+	_landLuminosityFrameBuffer.reset();
 	_shaderManager.reset();
 	bgfx::frame();
 	bgfx::shutdown();
@@ -531,7 +532,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
 				const bool landLit = !desc.isSky && !desc.drawAll && !inTemple && _landLightTexture.has_value();
 				const glm::vec4 u_landLight {landLit ? 1.0f : 0.0f, desc.landLightScale, desc.unlit ? 1.0f : 0.0f, 0.0f};
-				program->SetTextureSampler("s_landLuminosity", 6, island.GetLuminosityMap());
+				program->SetTextureSampler("s_landLuminosity", 6, GetLandLuminosity());
 				program->SetTextureSampler("s_landLight", 7, _landLightTexture.value_or(GetHandLightTexture()));
 				program->SetUniformValue("u_islandExtent", &islandExtent);
 				program->SetUniformValue("u_landLight", &u_landLight);
@@ -799,6 +800,7 @@ void Renderer::DrawTempleMapPass() const
 	const auto noHandShadow = glm::mat4(0.0f);
 	const auto noHand = glm::vec4(0.0f);
 	terrainShader->SetTextureSampler("s0_blockTextures", 0, island.GetBlockTextures());
+	terrainShader->SetTextureSampler("s9_landLuminosity", 9, GetLandLuminosity());
 	terrainShader->SetTextureSampler("s2_smallBump", 2, *smallBump);
 	terrainShader->SetTextureSampler("s3_footprints", 3, island.GetFootprintFramebuffer().GetColorAttachment());
 	terrainShader->SetTextureSampler("s4_handShadow", 4, _handShadowFrameBuffer->GetColorAttachment());
@@ -1651,7 +1653,7 @@ void Renderer::DrawMists(const DrawSceneDesc& desc) const
 				bgfx::setTransform(glm::value_ptr(model));
 				program->SetTextureSampler("s_diffuse", 0, *texture);
 				program->SetTextureSampler("s_alpha", 1, *alphaTexture);
-				program->SetTextureSampler("s_landLuminosity", 6, island.GetLuminosityMap());
+				program->SetTextureSampler("s_landLuminosity", 6, GetLandLuminosity());
 				program->SetTextureSampler("s_landLight", 7, _landLightTexture.value_or(GetHandLightTexture()));
 				program->SetUniformValue("u_islandExtent", &islandExtent);
 				program->SetUniformValue("u_landLight", &u_landLight);
@@ -1817,6 +1819,119 @@ void Renderer::DrawSunGlare(const Camera& camera) const
 	                                        .celestial = glm::vec4(0.0f),
 	                                        .state = k_AdditiveState,
 	                                    });
+}
+
+const Texture2D& Renderer::GetLandLuminosity() const
+{
+	if (_landLuminosityFrameBuffer)
+	{
+		return _landLuminosityFrameBuffer->GetColorAttachment();
+	}
+	return Locator::terrainSystem::value().GetLuminosityMap();
+}
+
+void Renderer::DrawLandLuminosityPass(const DrawSceneDesc& drawDesc) const
+{
+	if (!drawDesc.drawIsland || !Locator::terrainSystem::has_value())
+	{
+		return;
+	}
+	const auto& island = Locator::terrainSystem::value();
+	const auto& luminosity = island.GetLuminosityMap();
+	const auto size = luminosity.GetResolution();
+	uint16_t width = 0;
+	uint16_t height = 0;
+	if (_landLuminosityFrameBuffer)
+	{
+		_landLuminosityFrameBuffer->GetSize(width, height);
+	}
+	if (!_landLuminosityFrameBuffer || width != size.x || height != size.y)
+	{
+		_landLuminosityFrameBuffer =
+		    std::make_unique<FrameBuffer>("LandLuminosity", size.x, size.y, graphics::TextureFormat::R8);
+	}
+	const auto viewId = static_cast<bgfx::ViewId>(RenderPass::LandLuminosity);
+	_landLuminosityFrameBuffer->Bind(RenderPass::LandLuminosity);
+	bgfx::setViewRect(viewId, 0, 0, size.x, size.y);
+	bgfx::setViewMode(viewId, bgfx::ViewMode::Sequential);
+	bgfx::touch(viewId);
+	// In texels, a row for each cell along z, whichever way up the backend keeps its targets
+	const auto w = static_cast<float>(size.x);
+	const auto h = static_cast<float>(size.y);
+	const auto projection = bgfx::getCaps()->originBottomLeft ? glm::ortho(0.0f, w, 0.0f, h) : glm::ortho(0.0f, w, h, 0.0f);
+	const glm::mat4 identity(1.0f);
+	bgfx::setViewTransform(viewId, glm::value_ptr(identity), glm::value_ptr(projection));
+
+	const auto* program = _shaderManager->GetShader("LandLuminosity");
+	bgfx::VertexLayout layout;
+	layout.begin()
+	    .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+	    .end();
+	struct Vertex
+	{
+		glm::vec2 position;
+		glm::vec2 uv;
+	};
+	const auto drawQuad = [&](glm::vec2 from, glm::vec2 to, glm::vec2 uvFrom, glm::vec2 uvTo, const Texture2D& texture,
+	                          const glm::vec4& mode, uint64_t blend) {
+		if (bgfx::getAvailTransientVertexBuffer(6, layout) < 6)
+		{
+			return;
+		}
+		bgfx::TransientVertexBuffer buffer;
+		bgfx::allocTransientVertexBuffer(&buffer, 6, layout);
+		const auto vertices = std::span(reinterpret_cast<Vertex*>(buffer.data), 6);
+		const std::array<Vertex, 4> corners {{
+		    {{from.x, from.y}, {uvFrom.x, uvFrom.y}},
+		    {{to.x, from.y}, {uvTo.x, uvFrom.y}},
+		    {{to.x, to.y}, {uvTo.x, uvTo.y}},
+		    {{from.x, to.y}, {uvFrom.x, uvTo.y}},
+		}};
+		constexpr std::array<size_t, 6> k_Indices {0, 1, 2, 2, 3, 0};
+		for (size_t i = 0; i < vertices.size(); ++i)
+		{
+			vertices[i] = corners.at(k_Indices.at(i));
+		}
+		bgfx::setVertexBuffer(0, &buffer);
+		program->SetTextureSampler("s_texture", 0, texture);
+		program->SetUniformValue("u_landLuminosity", &mode);
+		bgfx::setState(BGFX_STATE_WRITE_R | blend);
+		bgfx::submit(viewId, toBgfx(program->GetRawHandle()));
+	};
+
+	// The luminosity as the land was laid
+	drawQuad({0.0f, 0.0f}, {w, h}, {0.0f, 0.0f}, {1.0f, 1.0f}, luminosity, glm::vec4(0.0f), 0);
+
+	// The clouds' shadows: each of the 40 by 40 cells under a cloud, from its corner, takes the darker of its luminosity
+	// and the shadow's, by the cloud's alpha
+	const auto& textures = Locator::resources::value().GetTextures();
+	const auto shadowId = entt::hashed_string("raw/sclouds");
+	if (!detail_level::Clouds(Locator::config::value().detailLevel) || !textures.Contains(shadowId.value()))
+	{
+		return;
+	}
+	const auto shadow = textures.Handle(shadowId);
+	constexpr float k_ShadowCells = 40.0f;
+	const glm::vec2 firstCell = island.GetExtent().minimum / LandIslandInterface::k_CellSize;
+	const auto skyColour = clouds::Colour(Locator::alignmentSystem::value().GetSkyAlignment(), 0xFFFFFF);
+	drawDesc.entities.Each<const ecs::components::Cloud, const ecs::components::Mist, const ecs::components::Transform>(
+	    [&](const ecs::components::Cloud& /*unused*/, const ecs::components::Mist& mist,
+	        const ecs::components::Transform& transform) {
+		    const auto alpha = ((mist.colour >> 24u) * (skyColour >> 24u)) / 255u;
+		    if (alpha == 0)
+		    {
+			    return;
+		    }
+		    // A texel's middle falls on each cell's corner
+		    const glm::vec2 corner =
+		        glm::vec2(transform.position.x, transform.position.z) / LandIslandInterface::k_CellSize - firstCell + 0.5f;
+		    const float half = 0.5f / k_ShadowCells;
+		    drawQuad(corner, corner + (k_ShadowCells - 1.0f), glm::vec2(half), glm::vec2(1.0f - half), *shadow,
+		             glm::vec4(1.0f, static_cast<float>(alpha), 0.0f, 0.0f),
+		             BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_ONE) |
+		                 BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_MIN));
+	    });
 }
 
 void Renderer::DrawLandAlphaPass(const DrawSceneDesc& drawDesc) const
@@ -2078,6 +2193,7 @@ void Renderer::DrawHandShadowPass(const DrawSceneDesc& drawDesc) const
 void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 {
 	// TODO(bwrsandman): Footprint framebuffer doesn't need to be updated each frame
+	DrawLandLuminosityPass(drawDesc);
 	DrawFootprintPass(drawDesc);
 	DrawLandAlphaPass(drawDesc);
 	UpdateLandLight();
@@ -2269,6 +2385,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			}
 
 			terrainShader->SetTextureSampler("s0_blockTextures", 0, island.GetBlockTextures());
+			terrainShader->SetTextureSampler("s9_landLuminosity", 9, GetLandLuminosity());
 			terrainShader->SetTextureSampler("s1_smallBumpAlpha", 1, *smallBumpAlpha);
 			terrainShader->SetTextureSampler("s8_landAlpha", 8, island.GetLandAlphaFramebuffer().GetColorAttachment());
 			terrainShader->SetTextureSampler("s2_smallBump", 2, *smallBump);
