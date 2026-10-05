@@ -15,6 +15,8 @@
 namespace openblack::resources
 {
 using MeshManager = ResourceManager<L3DLoader>;
+using L3DFileManager = ResourceManager<L3DFileLoader>;
+using Bitmap16BManager = ResourceManager<Bitmap16BLoader>;
 using TextureManager = ResourceManager<Texture2DLoader>;
 using AnimationManager = ResourceManager<L3DAnimLoader>;
 using LevelManager = ResourceManager<LevelLoader>;
@@ -27,6 +29,9 @@ class ResourcesInterface
 {
 public:
 	virtual MeshManager& GetMeshes() = 0;
+	/// Meshes' data, for meshes changed on the CPU
+	virtual L3DFileManager& GetL3DFiles() = 0;
+	virtual Bitmap16BManager& GetBitmaps() = 0;
 	virtual TextureManager& GetTextures() = 0;
 	virtual AnimationManager& GetAnimations() = 0;
 	virtual LevelManager& GetLevels() = 0;

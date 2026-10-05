@@ -21,6 +21,8 @@ class Resources final: public ResourcesInterface
 {
 public:
 	MeshManager& GetMeshes() override { return _meshes; }
+	L3DFileManager& GetL3DFiles() override { return _l3dFiles; }
+	Bitmap16BManager& GetBitmaps() override { return _bitmaps; }
 	TextureManager& GetTextures() override { return _textures; }
 	AnimationManager& GetAnimations() override { return _animations; }
 	LevelManager& GetLevels() override { return _levels; }
@@ -31,6 +33,8 @@ public:
 
 private:
 	MeshManager _meshes;
+	L3DFileManager _l3dFiles;
+	Bitmap16BManager _bitmaps;
 	TextureManager _textures;
 	AnimationManager _animations;
 	LevelManager _levels;

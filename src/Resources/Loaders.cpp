@@ -14,6 +14,7 @@
 #include <utility>
 
 #include <GLWFile.h>
+#include <L3DFile.h>
 #include <PackFile.h>
 #include <bgfx/bgfx.h>
 #include <spdlog/spdlog.h>
@@ -21,6 +22,7 @@
 #include "3D/L3DMesh.h"
 #include "3D/Light.h"
 #include "Audio/AudioManagerInterface.h"
+#include "Common/Bitmap16B.h"
 #include "Common/StringUtils.h"
 #include "Common/Zip.h"
 #include "FileSystem/FileSystemInterface.h"
@@ -43,6 +45,20 @@ L3DLoader::result_type L3DLoader::operator()(FromBufferTag, const std::string& d
 	return mesh;
 }
 
+namespace
+{
+/// The bytes of a zipped .zzz file: its size unzipped, then the zipped data
+std::vector<uint8_t> ReadZipped(const std::filesystem::path& path)
+{
+	auto stream = Locator::filesystem::value().Open(path, Stream::Mode::Read);
+	uint32_t decompressedSize = 0;
+	stream->Read(&decompressedSize);
+	auto buffer = std::vector<uint8_t>(stream->Size() - sizeof(decompressedSize));
+	stream->Read(buffer.data(), buffer.size());
+	return zip::Inflate(buffer, decompressedSize);
+}
+} // namespace
+
 L3DLoader::result_type L3DLoader::operator()(FromDiskTag, const std::filesystem::path& path) const
 {
 	auto mesh = std::make_shared<graphics::L3DMesh>(path.stem().string());
@@ -57,19 +73,42 @@ L3DLoader::result_type L3DLoader::operator()(FromDiskTag, const std::filesystem:
 	}
 	else if (pathExt == ".zzz")
 	{
-		auto stream = Locator::filesystem::value().Open(path, Stream::Mode::Read);
-		uint32_t decompressedSize = 0;
-		stream->Read(&decompressedSize);
-		auto buffer = std::vector<uint8_t>(stream->Size() - sizeof(decompressedSize));
-		stream->Read(buffer.data(), buffer.size());
-		auto decompressedBuffer = zip::Inflate(buffer, decompressedSize);
-		if (!mesh->LoadFromBuffer(decompressedBuffer))
+		if (!mesh->LoadFromBuffer(ReadZipped(path)))
 		{
 			throw std::runtime_error("Unable to load decompressed mesh");
 		}
 	}
 
 	return mesh;
+}
+
+L3DLoader::result_type L3DLoader::operator()(FromDynamicFileTag, const std::string& debugName, const l3d::L3DFile& file) const
+{
+	auto mesh = std::make_shared<graphics::L3DMesh>(debugName, true);
+	if (!mesh->Load(file))
+	{
+		throw std::runtime_error("Unable to load mesh");
+	}
+	return mesh;
+}
+
+L3DFileLoader::result_type L3DFileLoader::operator()(FromDiskTag, const std::filesystem::path& path) const
+{
+	auto file = std::make_shared<l3d::L3DFile>();
+	const auto result = string_utils::LowerCase(path.extension().string()) == ".zzz"
+	                        ? file->Open(ReadZipped(path))
+	                        : file->Open(Locator::filesystem::value().ReadAll(path));
+	if (result != l3d::L3DResult::Success)
+	{
+		throw std::runtime_error("Unable to read L3D file: " + std::string(l3d::ResultToStr(result)));
+	}
+	return file;
+}
+
+Bitmap16BLoader::result_type Bitmap16BLoader::operator()(FromDiskTag, const std::filesystem::path& path) const
+{
+	const auto data = Locator::filesystem::value().ReadAll(path);
+	return std::make_shared<Bitmap16B>(data.data());
 }
 
 Texture2DLoader::result_type Texture2DLoader::operator()(FromPackTag, const std::string& name,

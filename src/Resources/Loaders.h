@@ -20,11 +20,21 @@
 #include "Creature/CreatureMind.h"
 #include "Level.h"
 
+namespace openblack
+{
+class Bitmap16B;
+}
+
 namespace openblack::graphics
 {
 class L3DMesh;
 class Texture2D;
 } // namespace openblack::graphics
+
+namespace openblack::l3d
+{
+class L3DFile;
+}
 
 namespace openblack::pack
 {
@@ -50,7 +60,25 @@ struct BaseLoader
 
 struct L3DLoader final: BaseLoader<graphics::L3DMesh>
 {
+	/// From a file already read, as a mesh whose vertices and skins can be changed after
+	struct FromDynamicFileTag
+	{
+	};
+
 	[[nodiscard]] result_type operator()(FromBufferTag, const std::string& debugName, const std::vector<uint8_t>& data) const;
+	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;
+	[[nodiscard]] result_type operator()(FromDynamicFileTag, const std::string& debugName, const l3d::L3DFile& file) const;
+};
+
+/// The data of an L3D file, .l3d or zipped .zzz, for what changes meshes on the CPU
+struct L3DFileLoader final: BaseLoader<l3d::L3DFile>
+{
+	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;
+};
+
+/// A 16 bit image, .16B
+struct Bitmap16BLoader final: BaseLoader<Bitmap16B>
+{
 	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;
 };
 
