@@ -397,6 +397,11 @@ protected:
 public:
 	L3DFile() noexcept;
 	virtual ~L3DFile() noexcept;
+	/// A copy's spans of each submesh's data are into its own data
+	L3DFile(const L3DFile& other);
+	L3DFile& operator=(const L3DFile& other);
+	L3DFile(L3DFile&& other) noexcept = default;
+	L3DFile& operator=(L3DFile&& other) noexcept = default;
 
 	/// Read file from the input source
 	L3DResult ReadFile(std::istream& stream) noexcept;
@@ -416,6 +421,10 @@ public:
 	[[nodiscard]] const std::vector<L3DPoint>& GetExtraPoints() const noexcept { return _extraPoints; }
 	[[nodiscard]] const std::vector<L3DPrimitiveHeader>& GetPrimitiveHeaders() const noexcept { return _primitiveHeaders; }
 	[[nodiscard]] const std::vector<L3DVertex>& GetVertices() const noexcept { return _vertices; }
+	/// The vertices to change in place, all of the submeshes' in turn
+	[[nodiscard]] std::span<L3DVertex> EditVertices() noexcept { return _vertices; }
+	/// The skins to change in place
+	[[nodiscard]] std::span<L3DTexture> EditSkins() noexcept { return _skins; }
 	[[nodiscard]] const std::vector<uint16_t>& GetIndices() const noexcept { return _indices; }
 	[[nodiscard]] const std::vector<L3DVertexGroup>& GetLookUpTableData() const noexcept { return _vertexGroups; }
 	[[nodiscard]] const std::vector<L3DBlend>& GetBlends() const noexcept { return _blends; }

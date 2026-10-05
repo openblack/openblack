@@ -68,6 +68,8 @@ openblack_setup_and_add_test(
 openblack_setup_and_add_test(test_hand_light graphics/test_hand_light.cpp)
 openblack_setup_and_add_test(test_l3d_lightmaps l3d/test_l3d_lightmaps.cpp)
 target_link_libraries(test_l3d_lightmaps PRIVATE l3d)
+openblack_setup_and_add_test(test_l3d_copy l3d/test_l3d_copy.cpp)
+target_link_libraries(test_l3d_copy PRIVATE l3d)
 openblack_setup_and_add_test(
   test_l3d_submesh_names l3d/test_l3d_submesh_names.cpp
 )

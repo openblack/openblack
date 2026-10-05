@@ -309,6 +309,66 @@ std::string_view openblack::l3d::ResultToStr(L3DResult result)
 L3DFile::L3DFile() noexcept = default;
 L3DFile::~L3DFile() noexcept = default;
 
+namespace
+{
+/// Spans into items at the same places as spans into other items
+template <typename Item>
+std::vector<std::span<Item>> Rebind(const std::vector<std::span<Item>>& spans, const std::vector<Item>& from,
+                                    std::vector<Item>& to)
+{
+	std::vector<std::span<Item>> rebound;
+	rebound.reserve(spans.size());
+	for (const auto& span : spans)
+	{
+		if (span.empty())
+		{
+			rebound.emplace_back();
+			continue;
+		}
+		const auto offset = static_cast<size_t>(span.data() - from.data());
+		rebound.emplace_back(to.data() + offset, span.size());
+	}
+	return rebound;
+}
+} // namespace
+
+L3DFile::L3DFile(const L3DFile& other)
+{
+	*this = other;
+}
+
+L3DFile& L3DFile::operator=(const L3DFile& other)
+{
+	if (this == &other)
+	{
+		return *this;
+	}
+	_isLoaded = other._isLoaded;
+	_header = other._header;
+	_submeshHeaders = other._submeshHeaders;
+	_skins = other._skins;
+	_extraPoints = other._extraPoints;
+	_primitiveHeaders = other._primitiveHeaders;
+	_vertices = other._vertices;
+	_indices = other._indices;
+	_vertexGroups = other._vertexGroups;
+	_blends = other._blends;
+	_bones = other._bones;
+	_primitiveSpans = Rebind(other._primitiveSpans, other._primitiveHeaders, _primitiveHeaders);
+	_vertexSpans = Rebind(other._vertexSpans, other._vertices, _vertices);
+	_indexSpans = Rebind(other._indexSpans, other._indices, _indices);
+	_vertexGroupSpans = Rebind(other._vertexGroupSpans, other._vertexGroups, _vertexGroups);
+	_boneSpans = Rebind(other._boneSpans, other._bones, _bones);
+	_footprint = other._footprint;
+	_uv2Data = other._uv2Data;
+	_lightmapCoordinates = other._lightmapCoordinates;
+	_lightmaps = other._lightmaps;
+	_nameData = other._nameData;
+	_submeshNames = other._submeshNames;
+	_extraMetrics = other._extraMetrics;
+	return *this;
+}
+
 bool openblack::l3d::DecodeLightmaps(std::span<const uint8_t> data, uint32_t blockOffset, uint32_t blockSize,
                                      uint32_t vertexCount, uint32_t submeshCount, std::vector<L3DPoint2D>& coordinates,
                                      std::vector<L3DLightmap>& lightmaps) noexcept
